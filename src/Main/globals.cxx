@@ -24,7 +24,6 @@
 #  include <config.h>
 #endif
 
-#include <simgear/scene/model/modellib.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -92,7 +91,6 @@ FGGlobals::FGGlobals() :
     initial_state( NULL ),
     locale( NULL ),
     commands( SGCommandMgr::instance() ),
-    model_lib( NULL ),
     acmodel( NULL ),
     model_mgr( NULL ),
     channel_options_list( NULL ),
@@ -127,35 +125,32 @@ FGGlobals::~FGGlobals()
     // shut down all subsystems, make sure we take down the 
     // AIModels system first.
     subsystem_mgr->get_group(SGSubsystemMgr::GENERAL)->remove_subsystem("ai_model");
-     delete subsystem_mgr;
-     delete event_mgr;
-     delete time_params;
-     delete ephem;
-     delete mag;
-     delete matlib;
-     delete route_mgr;
-     delete current_panel;
-     delete soundmgr;
-     delete airports;
+    delete subsystem_mgr;
+    delete event_mgr;
+    delete time_params;
+    delete ephem;
+    delete mag;
+    delete matlib;
+    delete route_mgr;
+    delete current_panel;
+    delete soundmgr;
+    delete airports;
 
-     delete runways;
-     delete ATC_mgr;
-     delete AI_mgr;
-     delete controls;
-     delete viewmgr;
+    delete runways;
+    delete ATC_mgr;
+    delete AI_mgr;
+    delete controls;
+    delete viewmgr;
 
-     delete initial_state;
-//     //delete locale; Don't delete locale
 //     delete commands;
-     delete model_lib;
-     delete acmodel;
-     delete model_mgr;
-     delete channel_options_list;
-     delete initial_waypoints;
-     delete scenery;
-     //delete tile_mgr; // Don't delete tile manager yet, because loader thread problems
-     delete io;
-     delete fontcache;
+    delete acmodel;
+    delete model_mgr;
+    delete channel_options_list;
+    delete initial_waypoints;
+    delete tile_mgr;
+    delete scenery;
+    delete io;
+    delete fontcache;
 
     delete navlist;
     delete loclist;
@@ -168,8 +163,6 @@ FGGlobals::~FGGlobals()
     delete fixlist;
     delete airwaynet;
     delete multiplayer_mgr;
- 
-    delete props;
 }
 
 
@@ -272,7 +265,6 @@ FGGlobals::get_event_mgr () const
 void
 FGGlobals::saveInitialState ()
 {
-  delete initial_state;
   initial_state = new SGPropertyNode();
 
   if (!copyProperties(props, initial_state))

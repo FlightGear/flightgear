@@ -436,7 +436,7 @@ FGTileEntry::loadTileByName(const string& index_str,
             if ( obj->type == OBJECT_STATIC ) {
                 custom_path = obj->path;
             } else {
-                custom_path = globals->get_fg_root();
+                // custom_path = globals->get_fg_root();
             }
             custom_path.append( obj->name );
 

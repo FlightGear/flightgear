@@ -27,6 +27,7 @@
 #include <Main/globals.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/scene/model/modellib.hxx>
 #include <list>
 
 #ifdef _MSC_VER
@@ -47,6 +48,8 @@
 
 SG_USING_STD(list);
 SG_USING_STD(cout);
+
+using namespace simgear;
 
 FGAIMgr::FGAIMgr() {
 	ATC = globals->get_ATC_mgr();
@@ -81,10 +84,7 @@ void FGAIMgr::init() {
 	string planepath = "Aircraft/c172p/Models/c172p.xml";
 	bool _loadedDefaultOK = true;
 	try {
-		_defaultModel = sgLoad3DModel( globals->get_fg_root(),
-	    	                           planepath.c_str(),
-									   globals->get_props(),
-									   globals->get_sim_time_sec() );
+		_defaultModel = SGModelLib::loadPagedModel(planepath.c_str(), globals->get_props());
 	} catch(sg_exception&) {
 		_loadedDefaultOK = false;
 	}
@@ -93,18 +93,12 @@ void FGAIMgr::init() {
 		// Just load the same 3D model as the default user plane - that's *bound* to exist!
 		// TODO - implement robust determination of availability of GA AI aircraft models
 		planepath = "Aircraft/c172p/Models/c172p.ac";
-		_defaultModel = sgLoad3DModel( globals->get_fg_root(),
-	    	                           planepath.c_str(),
-									   globals->get_props(),
-									   globals->get_sim_time_sec() );
+		_defaultModel = SGModelLib::loadPagedModel(planepath.c_str(), globals->get_props());
 	}
 
 	planepath = "Aircraft/pa28-161/Models/pa28-161.ac";
 	try {
-		_piperModel = sgLoad3DModel( globals->get_fg_root(),
-	    	                         planepath.c_str(),
-									 globals->get_props(),
-									 globals->get_sim_time_sec() );
+		_piperModel = SGModelLib::loadPagedModel(planepath.c_str(), globals->get_props());
 	} catch(sg_exception&) {
 		_havePiperModel = false;
 	}

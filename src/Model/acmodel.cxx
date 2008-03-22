@@ -50,36 +50,17 @@ FGAircraftModel::~FGAircraftModel ()
 void 
 FGAircraftModel::init ()
 {
-  SGPath liveryPath;
   _aircraft = new SGModelPlacement;
   string path = fgGetString("/sim/model/path", "Models/Geometry/glider.ac");
-  string texture_path = fgGetString("/sim/model/texture-path");
-  if( texture_path.size() ) {
-      SGPath temp_path;
-      if ( !ulIsAbsolutePathName( texture_path.c_str() ) ) {
-          temp_path = globals->get_fg_root();
-          temp_path.append( SGPath( path ).dir() );
-          temp_path.append( texture_path );
-          liveryPath = temp_path;
-      } else
-          liveryPath = texture_path;
-  }
   try {
-    osg::Node *model = fgLoad3DModelPanel( globals->get_fg_root(),
-                                           path,
-                                           globals->get_props(),
-                                           globals->get_sim_time_sec(),
-                                           liveryPath);
+    osg::Node *model = fgLoad3DModelPanel( path, globals->get_props());
     _aircraft->init( model );
   } catch (const sg_exception &ex) {
     SG_LOG(SG_GENERAL, SG_ALERT, "Failed to load aircraft from " << path << ':');
     SG_LOG(SG_GENERAL, SG_ALERT, "  " << ex.getFormattedMessage());
     SG_LOG(SG_GENERAL, SG_ALERT, "(Falling back to glider.ac.)");
-    osg::Node *model = fgLoad3DModelPanel( globals->get_fg_root(),
-                                           "Models/Geometry/glider.ac",
-                                           globals->get_props(),
-                                           globals->get_sim_time_sec(),
-                                           liveryPath);
+    osg::Node *model = fgLoad3DModelPanel( "Models/Geometry/glider.ac",
+                                           globals->get_props());
     _aircraft->init( model );
   }
   _selector->addChild(_aircraft->getSceneGraph(), true);

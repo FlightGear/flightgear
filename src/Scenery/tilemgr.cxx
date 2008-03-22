@@ -50,6 +50,7 @@
 
 using std::for_each;
 using flightgear::SceneryPager;
+using simgear::SGModelLib;
 
 #define TEST_LAST_HIT_CACHE
 
@@ -244,13 +245,18 @@ FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
 {
     osg::Node* result = 0;
     try {
-        result =
-            globals->get_model_lib()->load_model(".",
-                                                 modelPath,
-                                                 globals->get_props(),
-                                                 globals->get_sim_time_sec(),
-                                                 cacheModel,
-                                                 new FGNasalModelData );
+        if(cacheModel)
+        {
+            result =
+                SGModelLib::loadModel(modelPath, globals->get_props(),
+                                      new FGNasalModelData);
+        }
+        else
+        {
+            result=
+                SGModelLib::loadPagedModel(modelPath, globals->get_props(),
+                                           new FGNasalModelData);
+        }
     } catch (const sg_io_exception& exc) {
         string m(exc.getMessage());
         m += " ";

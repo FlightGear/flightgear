@@ -103,6 +103,7 @@ public:
     bool OutsideBox();
 
     bool init(bool search_in_AI_path=false);
+    void initModel(osg::Node *node);
 
     virtual const char* getTypeString(void) const { return "carrier"; }
 

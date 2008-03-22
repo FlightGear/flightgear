@@ -33,6 +33,11 @@ class SceneryPager : public osgDB::DatabasePager
 public:
     SceneryPager();
     SceneryPager(const SceneryPager& rhs);
+
+    // reimplement to add readerWriterOptions from SGPagedLOD
+    virtual void requestNodeFile(const std::string& fileName,osg::Group* group,
+                                 float priority, const osg::FrameStamp* framestamp);
+
     void queueRequest(const std::string& fileName, osg::Group* node,
                       float priority, osg::FrameStamp* frameStamp);
     // This is passed a ref_ptr so that it can "take ownership" of the

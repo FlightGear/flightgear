@@ -30,6 +30,7 @@
 
 #include <osgUtil/IntersectVisitor>
 
+#include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -37,9 +38,11 @@
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
+#include <simgear/scene/model/CheckSceneryVisitor.hxx>
 
 #include <Main/fg_props.hxx>
 
+#include "tilemgr.hxx"
 #include "scenery.hxx"
 
 using namespace flightgear;
@@ -72,12 +75,11 @@ FGScenery::FGScenery()
     SG_LOG( SG_TERRAIN, SG_INFO, "Initializing scenery subsystem" );
 }
 
-
-// Initialize the Scenery Management system
 FGScenery::~FGScenery() {
 }
 
 
+// Initialize the Scenery Management system
 void FGScenery::init() {
     // Scene graph root
     scene_graph = new osg::Group;
@@ -100,8 +102,7 @@ void FGScenery::init() {
     scene_graph->addChild( aircraft_branch.get() );
 
     // Initials values needed by the draw-time object loader
-    sgUserDataInit( globals->get_model_lib(), globals->get_fg_root(),
-                    globals->get_props(), globals->get_sim_time_sec() );
+    sgUserDataInit( globals->get_props() );
 }
 
 
@@ -209,6 +210,25 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
   }
 
   return hits;
+}
+
+bool FGScenery::scenery_available(double lat, double lon, double range_m)
+{
+  if(globals->get_tile_mgr()->scenery_available(lat, lon, range_m))
+  {
+    double elev;
+    get_elevation_m(lat, lon, SG_MAX_ELEVATION_M, elev, 0);
+    SGVec3f p = SGVec3f::fromGeod(SGGeod::fromDegM(lon,lat,elev));
+    simgear::CheckSceneryVisitor csnv(getPagerSingleton(), p.osg(), range_m);
+    // currently the PagedLODs will not be loaded by the DatabasePager
+    // while the splashscreen is there, so CheckSceneryVisitor force-loads
+    // missing objects in the main thread
+    get_scene_graph()->accept(csnv);
+    if(!csnv.isLoaded())
+        return false;
+    return true;
+  }
+  return false;
 }
 
 SceneryPager* FGScenery::getPagerSingleton()

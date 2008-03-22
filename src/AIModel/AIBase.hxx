@@ -40,7 +40,7 @@ SG_USING_STD(list);
 class FGAIManager;
 class FGAIFlightPlan;
 
-class FGAIBase : public SGReferenced {
+class FGAIBase : public osg::Referenced {
 
 public:
     enum object_type { otNull = 0, otAircraft, otShip, otCarrier, otBallistic,
@@ -54,6 +54,7 @@ public:
     virtual void readFromScenario(SGPropertyNode* scFileNode);
 
     virtual bool init(bool search_in_AI_path=false);
+    virtual void initModel(osg::Node *node);
     virtual void update(double dt);
     virtual void bind();
     virtual void unbind();
@@ -266,11 +267,9 @@ public:
     inline double _getRange() { return range; };
     inline double _getBearing() { return bearing; };
 
-    osg::Node* load3DModel(const string& fg_root,
-                            const string &path,
-                            SGPropertyNode *prop_root,
-                            double sim_time_sec);
-
+    virtual osg::Node* load3DModel(const string &path,
+                           SGPropertyNode *prop_root);
+ 
     static bool _isNight();
 };
 

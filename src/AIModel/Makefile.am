@@ -3,6 +3,7 @@ noinst_LIBRARIES = libAIModel.a
 libAIModel_a_SOURCES = submodel.cxx submodel.hxx 	\
 			AIManager.hxx AIManager.cxx \
 			AIBase.hxx AIBase.cxx 	\
+			AIModelData.cxx \
 			AIAircraft.hxx AIAircraft.cxx \
 			AIMultiplayer.hxx AIMultiplayer.cxx \
 			AIShip.hxx AIShip.cxx \

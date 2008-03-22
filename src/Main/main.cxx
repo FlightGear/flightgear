@@ -47,6 +47,8 @@
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/math/sg_random.h>
 
+#include <osgDB/Registry>
+
 // Class references
 #include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/scene/model/modellib.hxx>
@@ -135,9 +137,9 @@ void fgUpdateTimeDepCalcs() {
         double lat = fgGetDouble("/sim/presets/latitude-deg");
         // We require just to have 50 meter scenery availabe around
         // the aircraft.
-        double range = 50.0;
-        if (globals->get_tile_mgr()->scenery_available(lat, lon, range)) {
-            SG_LOG(SG_FLIGHT,SG_INFO, "Finally initializing fdm");
+        double range = 1000.0;
+        if (globals->get_scenery()->scenery_available(lat, lon, range)) {
+            SG_LOG(SG_FLIGHT,SG_ALERT, "Finally initializing fdm");
             cur_fdm_state->init();
             if ( cur_fdm_state->get_bound() ) {
                 cur_fdm_state->unbind();
@@ -766,7 +768,7 @@ static void fgIdleFunction ( void ) {
         // Initialize the material manager
         ////////////////////////////////////////////////////////////////////
         globals->set_matlib( new SGMaterialLib );
-        globals->set_model_lib(new SGModelLib);
+        simgear::SGModelLib::init(globals->get_fg_root());
 
 
         ////////////////////////////////////////////////////////////////////

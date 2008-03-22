@@ -57,7 +57,6 @@ class SGEphemeris;
 class SGCommandMgr;
 class SGMagVar;
 class SGMaterialLib;
-class SGModelLib;
 class SGPropertyNode;
 class SGTime;
 class SGSoundMgr;
@@ -96,6 +95,13 @@ class FGGlobals
 {
 
 private:
+
+    // properties, destroy last
+    SGPropertyNode_ptr props;
+    SGPropertyNode_ptr initial_state;
+
+    // localization
+    SGPropertyNode_ptr locale;
 
     FGRenderer *renderer;
     SGSubsystemMgr *subsystem_mgr;
@@ -162,16 +168,7 @@ private:
     // viewer manager
     FGViewMgr *viewmgr;
 
-    // properties
-    SGPropertyNode *props;
-    SGPropertyNode *initial_state;
-
-    // localization
-    SGPropertyNode *locale;
-
     SGCommandMgr *commands;
-
-    SGModelLib *model_lib;
 
   //FGFlightPlanDispatcher *fpDispatcher;
 
@@ -298,12 +295,6 @@ public:
     inline void set_locale( SGPropertyNode *n ) { locale = n; }
 
     inline SGCommandMgr *get_commands () { return commands; }
-
-    inline SGModelLib * get_model_lib () { return model_lib; }
-
-    inline void set_model_lib (SGModelLib *m) {
-        model_lib = m;
-    }
 
     inline FGAircraftModel *get_aircraft_model () { return acmodel; }
 

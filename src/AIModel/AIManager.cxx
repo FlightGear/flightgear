@@ -145,7 +145,7 @@ FGAIManager::update(double dt) {
             tmgr->release((*ai_list_itr)->getID());
             --mNumAiModels;
             --(mNumAiTypeModels[(*ai_list_itr)->getType()]);
-            FGAIBase *base = *ai_list_itr;
+            FGAIBase *base = (*ai_list_itr).get();
             SGPropertyNode *props = base->_getProps();
 
             props->setBoolValue("valid", false);
@@ -162,7 +162,7 @@ FGAIManager::update(double dt) {
         } else {
             fetchUserState();
             if ((*ai_list_itr)->isa(FGAIBase::otThermal)) {
-                FGAIBase *base = *ai_list_itr;
+                FGAIBase *base = (*ai_list_itr).get();
                 processThermal((FGAIThermal*)base);
             } else {
                 (*ai_list_itr)->update(_dt);
@@ -175,7 +175,7 @@ FGAIManager::update(double dt) {
 }
 
 void
-FGAIManager::attach(SGSharedPtr<FGAIBase> model)
+FGAIManager::attach(FGAIBase *model)
 {
     //unsigned idx = mNumAiTypeModels[model->getType()];
     const char* typeString = model->getTypeString();
@@ -365,7 +365,7 @@ FGAIManager::getStartPosition(const string& id, const string& pid,
                         std::string pnumber = scEntry->getStringValue("pennant-number");
                         std::string name = scEntry->getStringValue("name");
                         if (type == "carrier" && (pnumber == id || name == id)) {
-                            SGSharedPtr<FGAICarrier> carrier = new FGAICarrier;
+                            osg::ref_ptr<FGAICarrier> carrier = new FGAICarrier;
                             carrier->readFromScenario(scEntry);
 
                             if (carrier->getParkPosition(pid, geodPos, hdng, uvw)) {
@@ -431,7 +431,7 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
                 << " range " << range
                 << " alt " << tgt_alt
                 );
-            return *ai_list_itr;
+            return (*ai_list_itr).get();
         }
         ++ai_list_itr;
     }

@@ -799,7 +799,7 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
                                const std::string& modelName)
 {
   if (0 < mMultiPlayerMap.count(callsign))
-    return mMultiPlayerMap[callsign];
+    return mMultiPlayerMap[callsign].get();
 
   FGAIMultiplayer* mp = new FGAIMultiplayer;
   mp->setPath(modelName.c_str());
@@ -825,7 +825,7 @@ FGAIMultiplayer*
 FGMultiplayMgr::getMultiplayer(const std::string& callsign)
 {
   if (0 < mMultiPlayerMap.count(callsign))
-    return mMultiPlayerMap[callsign];
+    return mMultiPlayerMap[callsign].get();
   else
     return 0;
 }

@@ -102,6 +102,11 @@ public:
     osg::Group *get_models_branch () const { return models_branch.get(); }
     osg::Group *get_aircraft_branch () const { return aircraft_branch.get(); }
 
+    /// Returns true if scenery is avaliable for the given lat, lon position
+    /// within a range of range_m.
+    /// lat and lon are expected to be in degrees.
+    bool scenery_available(double lat, double lon, double range_m);
+
     // Static because access to the pager is needed before the rest of
     // the scenery is initialized.
     static flightgear::SceneryPager* getPagerSingleton();

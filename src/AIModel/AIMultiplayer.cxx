@@ -44,6 +44,7 @@ FGAIMultiplayer::~FGAIMultiplayer() {
 }
 
 bool FGAIMultiplayer::init(bool search_in_AI_path) {
+    props->setStringValue("sim/model/path", model_path.c_str());
     //refuel_node = fgGetNode("systems/refuel/contact", true);
     isTanker = false; // do this until this property is
                       // passed over the net

@@ -260,6 +260,7 @@ static int status = 0;
 void fgOSExit(int code)
 {
     viewer->setDone(true);
+    viewer->getDatabasePager()->cancel();
     status = code;
 }
 

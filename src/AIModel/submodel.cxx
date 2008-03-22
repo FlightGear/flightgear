@@ -514,7 +514,7 @@ void FGSubmodelMgr::loadAI()
     sm_list = ai->get_ai_list();
 
     if (sm_list.empty()) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Submodels: Unable to read AI submodel list");
+        SG_LOG(SG_GENERAL, SG_DEBUG, "Submodels: Unable to read AI submodel list");
         return;
     }
 
@@ -559,7 +559,7 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
                 "Submodels: Trying to read AI submodels file: " << config.str());
         readProperties(config.str(), &root);
     } catch (const sg_exception &e) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_GENERAL, SG_DEBUG,
                 "Submodels: Unable to read AI submodels file: " << config.str());
         return;
     }
@@ -664,7 +664,7 @@ void FGSubmodelMgr::setSubData(int id, string& path, bool serviceable)
         readProperties(config.str(), &root);
 
     } catch (const sg_exception &e) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_GENERAL, SG_DEBUG,
                 "Submodels: Unable to read AI submodels file: " << config.str());
         return;
     }

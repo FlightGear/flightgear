@@ -27,9 +27,10 @@
 
 SG_USING_STD(vector);
 
+using namespace simgear;
+
 // OSGFIXME
 // extern SGShadowVolume *shadows;
-
 
 FGModelMgr::FGModelMgr ()
   : _models(fgGetNode("/models", true)),
@@ -68,17 +69,12 @@ FGModelMgr::add_model (SGPropertyNode * node)
   SGModelPlacement *model = new SGModelPlacement;
   instance->model = model;
   instance->node = node;
-  SGModelLib *model_lib = globals->get_model_lib();
 
   const char *path = node->getStringValue("path", "Models/Geometry/glider.ac");
   osg::Node *object;
 
   try {
-    object = model_lib->load_model(
-        globals->get_fg_root(),
-        path,
-        globals->get_props(),
-        globals->get_sim_time_sec(), /*cache_object=*/false);
+    object = SGModelLib::loadPagedModel(path, globals->get_props());
   } catch (const sg_throwable& t) {
     SG_LOG(SG_GENERAL, SG_ALERT, "Error loading " << path << ":\n  "
         << t.getFormattedMessage() << t.getOrigin());

@@ -67,7 +67,7 @@ SG_USING_STD(setfill);
 #include "wxradar.hxx"
 
 
-typedef list <SGSharedPtr<FGAIBase> > radar_list_type;
+typedef list <osg::ref_ptr<FGAIBase> > radar_list_type;
 typedef radar_list_type::iterator radar_list_iterator;
 typedef radar_list_type::const_iterator radar_list_const_iterator;
 
@@ -617,7 +617,7 @@ wxRadarBg::update_aircraft()
     int selected_id = fgGetInt("/instrumentation/radar/selected-id", -1);
 
     for (; it != end; ++it) {
-        FGAIBase *ac = *it;
+        FGAIBase *ac = (*it).get();
         int type       = ac->getType();
         double lat     = ac->_getLatitude();
         double lon     = ac->_getLongitude();

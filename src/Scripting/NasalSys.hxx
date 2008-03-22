@@ -4,7 +4,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/nasal/nasal.h>
-#include <simgear/scene/model/model.hxx>
+#include <simgear/scene/model/modellib.hxx>
 #include <simgear/xml/easyxml.hxx>
 
 #include <map>
@@ -159,7 +159,7 @@ private:
 };
 
 
-class FGNasalModelData : public SGModelData {
+class FGNasalModelData : public simgear::SGModelData {
 public:
     FGNasalModelData(SGPropertyNode *props = 0) : _props(props), _unload(0) {}
     ~FGNasalModelData();

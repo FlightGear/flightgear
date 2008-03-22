@@ -66,8 +66,6 @@
 #include <simgear/screen/extensions.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/animation.hxx>
-#include <simgear/scene/model/model.hxx>
-#include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/scene/util/SGUpdateVisitor.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>

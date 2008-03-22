@@ -71,6 +71,7 @@ public:
         != mSolidObjects.end()) {
       mFoundHot = true;
       mUserData = FGAICarrierHardware::newSolid(mCarrier);
+      //SG_LOG(SG_GENERAL, SG_ALERT, "AICarrierVisitor::apply() solidObject" );
     }
     node.setUserData(mUserData.get());
 
@@ -313,20 +314,6 @@ bool FGAICarrier::init(bool search_in_AI_path) {
     if (!FGAIShip::init(search_in_AI_path))
         return false;
 
-    // process the 3d model here
-    // mark some objects solid, mark the wires ...
-
-    // The model should be used for altitude computations.
-    // To avoid that every detail in a carrier 3D model will end into
-    // the aircraft local cache, only set the HOT traversal bit on
-    // selected objects.
-    osg::Node* sel = aip.getSceneGraph();
-    // Clear the HOT traversal flag
-    // Selectively set that flag again for wires/cats/solid objects.
-    // Attach a pointer to this carrier class to those objects.
-    FGCarrierVisitor carrierVisitor(this, wire_objects, catapult_objects, solid_objects);
-    sel->accept(carrierVisitor);
-
     _longitude_node = fgGetNode("/position/longitude-deg", true);
     _latitude_node = fgGetNode("/position/latitude-deg", true);
     _altitude_node = fgGetNode("/position/altitude-ft", true);
@@ -355,6 +342,27 @@ bool FGAICarrier::init(bool search_in_AI_path) {
     jbd_transition_time = 3;
     jbd_time_constant = 0.1;
     return true;
+}
+
+void FGAICarrier::initModel(osg::Node *node)
+{
+    SG_LOG(SG_GENERAL, SG_ALERT, "AICarrier::initModel()" );
+    FGAIShip::initModel(node);
+    // process the 3d model here
+    // mark some objects solid, mark the wires ...
+
+    // The model should be used for altitude computations.
+    // To avoid that every detail in a carrier 3D model will end into
+    // the aircraft local cache, only set the HOT traversal bit on
+    // selected objects.
+
+    // Clear the HOT traversal flag
+    // Selectively set that flag again for wires/cats/solid objects.
+    // Attach a pointer to this carrier class to those objects.
+    SG_LOG(SG_GENERAL, SG_ALERT, "AICarrier::initModel() visit" );
+    FGCarrierVisitor carrierVisitor(this, wire_objects, catapult_objects, solid_objects);
+    model->accept(carrierVisitor);
+//    model->setNodeMask(node->getNodeMask() & SG_NODEMASK_TERRAIN_BIT | model->getNodeMask());
 }
 
 void FGAICarrier::bind() {

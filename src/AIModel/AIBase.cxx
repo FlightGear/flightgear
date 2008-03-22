@@ -24,20 +24,20 @@
 #  include <config.h>
 #endif
 
-
 #include <simgear/compiler.h>
 
 #include STL_STRING
 
 #include <osg/ref_ptr>
 #include <osg/Node>
+#include <osgDB/FileUtils>
 
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/location.hxx>
-#include <simgear/scene/model/model.hxx>
+#include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/props/props.hxx>
@@ -47,11 +47,13 @@
 #include <Scripting/NasalSys.hxx>
 
 #include "AIBase.hxx"
+#include "AIModelData.hxx"
 #include "AIManager.hxx"
 
 const double FGAIBase::e = 2.71828183;
 const double FGAIBase::lbs_to_slugs = 0.031080950172;   //conversion factor
 
+using namespace simgear;
 
 FGAIBase::FGAIBase(object_type ot) :
     props( NULL ),
@@ -155,38 +157,41 @@ void FGAIBase::Transform() {
 }
 
 bool FGAIBase::init(bool search_in_AI_path) {
+    osg::ref_ptr<osgDB::ReaderWriter::Options> opt=
+        new osgDB::ReaderWriter::Options(*osgDB::Registry::instance()->getOptions());
 
-    if (!model_path.empty()) {
-
-        if ( search_in_AI_path
-                && (model_path.substr(model_path.size() - 4, 4) == ".xml")) {
-            SGPath ai_path("AI");
-            ai_path.append(model_path);
-            try {
-                model = load3DModel( globals->get_fg_root(), ai_path.str(), props,
-                        globals->get_sim_time_sec() );
-            } catch (const sg_exception &e) {
-                model = NULL;
-            }
-        } else
-            model = NULL;
-
-        if (!model.get()) {
-            try {
-                model = load3DModel( globals->get_fg_root(), model_path, props,
-                        globals->get_sim_time_sec() );
-            } catch (const sg_exception &e) {
-                model = NULL;
-            }
-        }
-
+    if(search_in_AI_path)
+    {
+        SGPath ai_path(globals->get_fg_root());
+        ai_path.append("AI");
+        opt->getDatabasePathList().push_front(ai_path.str());
     }
 
-    if (model.get()) {
+    string f = osgDB::findDataFile(model_path, opt.get());
+
+    if(f.empty())
+        f="Models/Geometry/glider.ac";
+
+    model = load3DModel(f, props);
+
+    if (model.valid()) {
+        model->setNodeMask(model->getNodeMask() & ~SG_NODEMASK_TERRAIN_BIT);
         aip.init( model.get() );
         aip.setVisible(true);
         invisible = false;
         globals->get_scenery()->get_scene_graph()->addChild(aip.getSceneGraph());
+
+    } else if (!model_path.empty()) {
+        SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);
+    }
+
+    setDie(false);
+    return true;
+}
+
+void FGAIBase::initModel(osg::Node *node)
+{
+    if (model.valid()) {
         fgSetString("/ai/models/model-added", props->getPath());
 
     } else if (!model_path.empty()) {
@@ -195,18 +200,12 @@ bool FGAIBase::init(bool search_in_AI_path) {
 
     props->setStringValue("submodels/path", _path.c_str());
     setDie(false);
-    return true;
 }
 
 
-osg::Node* FGAIBase::load3DModel(const string& fg_root,
-                      const string &path,
-                      SGPropertyNode *prop_root,
-                      double sim_time_sec)
+osg::Node* FGAIBase::load3DModel(const string &path, SGPropertyNode *prop_root)
 {
-  model = sgLoad3DModel(fg_root, path, prop_root, sim_time_sec, 0,
-                        new FGNasalModelData(prop_root));
-  model->setNodeMask(model->getNodeMask() & ~SG_NODEMASK_TERRAIN_BIT);
+  model = SGModelLib::loadPagedModel(path, prop_root, new FGAIModelData(this, prop_root));
   return model.get();
 }
 

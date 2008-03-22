@@ -1082,12 +1082,16 @@ bool FGNasalListener::changed(SGPropertyNode* node)
 void FGNasalModelData::modelLoaded(const string& path, SGPropertyNode *prop,
                                    osg::Node *)
 {
+    if(!prop)
+        return;
+
+/*
     SGPropertyNode *n = prop->getNode("nasal"), *load;
     if(!n)
         return;
-
-    load = n->getNode("load");
-    _unload = n->getNode("unload");
+*/
+    SGPropertyNode *load = load = prop->getNode("load");
+    _unload = prop->getNode("unload");
     if(!load && !_unload)
         return;
 

@@ -150,7 +150,7 @@ private:
 
     SGPropertyNode_ptr view_number;
     vector<SGPropertyNode_ptr> config_list;
-    typedef vector<FGViewer *> viewer_list;
+    typedef vector<SGSharedPtr<FGViewer> > viewer_list;
     viewer_list views;
 
     int current;

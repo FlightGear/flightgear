@@ -46,13 +46,13 @@ class FGAIManager : public SGSubsystem
 public:
 
     // A list of pointers to AI objects
-    typedef list <SGSharedPtr<FGAIBase> > ai_list_type;
+    typedef list <osg::ref_ptr<FGAIBase> > ai_list_type;
     typedef ai_list_type::iterator ai_list_iterator;
     typedef ai_list_type::const_iterator ai_list_const_iterator;
 
     ai_list_type ai_list;
 
-    inline const list <SGSharedPtr<FGAIBase> >& get_ai_list() const {
+    inline const ai_list_type& get_ai_list() const {
         SG_LOG(SG_GENERAL, SG_DEBUG, "AI Manager: AI model return list size " << ai_list.size());
         return ai_list;
     }
@@ -66,7 +66,7 @@ public:
     void bind();
     void unbind();
     void update(double dt);
-    void attach(SGSharedPtr<FGAIBase> model);
+    void attach(FGAIBase *model);
 
     void destroyObject( int ID );
     const FGAIBase *calcCollision(double alt, double lat, double lon, double fuse_range);

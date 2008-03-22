@@ -32,7 +32,6 @@
 #include STL_STRING
 
 #include <simgear/props/props.hxx>
-#include <simgear/scene/model/model.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>

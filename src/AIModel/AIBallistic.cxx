@@ -26,15 +26,19 @@
 #include <simgear/math/point3d.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/scene/model/modellib.hxx>
 
 #include <Scenery/scenery.hxx>
 
+#include "AIModelData.hxx"
 #include "AIBallistic.hxx"
 
 #include <Main/util.hxx>
 
 const double FGAIBallistic::slugs_to_kgs = 14.5939029372;
 const double FGAIBallistic::slugs_to_lbs = 32.1740485564;
+
+using namespace simgear;
 
 FGAIBallistic::FGAIBallistic(object_type ot) :
 FGAIBase(ot),
@@ -112,6 +116,12 @@ void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
     setSlavedLoad(scFileNode->getBoolValue("slaved-load", false));
     setContentsNode(scFileNode->getStringValue("contents"));
     setRandom(scFileNode->getBoolValue("random", false));
+}
+
+osg::Node* FGAIBallistic::load3DModel(const string &path, SGPropertyNode *prop_root)
+{
+  model = SGModelLib::loadModel(path, prop_root, new FGAIModelData(this, prop_root));
+  return model.get();
 }
 
 bool FGAIBallistic::init(bool search_in_AI_path) {
