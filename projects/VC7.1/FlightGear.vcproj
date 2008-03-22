@@ -1801,12 +1801,6 @@
 				RelativePath="..\..\src\Gui\property_list.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\GUI\puList.cxx">
-			</File>
-			<File
-				RelativePath="..\..\src\GUI\puList.hxx">
-			</File>
-			<File
 				RelativePath="..\..\src\GUI\sgVec3Slider.cxx">
 			</File>
 			<File
@@ -2356,6 +2350,12 @@
 				RelativePath="..\..\src\Instrumentation\adf.hxx">
 			</File>
 			<File
+				RelativePath="..\..\src\Instrumentation\agradar.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Instrumentation\agradar.hxx">
+			</File>
+			<File
 				RelativePath="..\..\src\Instrumentation\airspeed_indicator.cxx">
 			</File>
 			<File
@@ -2504,6 +2504,12 @@
 			</File>
 			<File
 				RelativePath="..\..\src\Instrumentation\od_gauge.hxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Instrumentation\rad_alt.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Instrumentation\rad_alt.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Instrumentation\render_area_2d.cxx">
@@ -2701,6 +2707,12 @@
 			</File>
 			<File
 				RelativePath="..\..\src\AIModel\AIManager.hxx">
+			</File>
+			<File
+				RelativePath="..\..\src\AIModel\AIModelData.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\AIModel\AIModelData.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\AIModel\AIMultiplayer.cxx">
