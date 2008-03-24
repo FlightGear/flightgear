@@ -621,7 +621,8 @@ public:
 
     class TerrainClearanceFilter
     {
-      deque< Sample<double> >	samples;
+      typedef deque< Sample<double> > samples_type;
+      samples_type		samples;
       double			value;
 
     public:
@@ -654,7 +655,8 @@ public:
     bool last_landing_gear;
     bool last_real_flaps_down;
 
-    deque< Sample< Parameter<double> > > altitude_samples;
+    typedef deque< Sample< Parameter<double> > > altitude_samples_type;
+    altitude_samples_type altitude_samples;
 
     struct
     {

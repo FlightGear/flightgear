@@ -1008,7 +1008,7 @@ MK_VIII::IOHandler::TerrainClearanceFilter::update (double agl)
   // [PILOT] page 20 specifies that the terrain clearance is equal to
   // 75% of the radio altitude, averaged over the previous 15 seconds.
 
-  deque< Sample<double> >::iterator iter;
+  samples_type::iterator iter;
 
   // remove samples older than 15 seconds
   for (iter = samples.begin(); iter != samples.end() && globals->get_sim_time_sec() - (*iter).timestamp >= 15; iter = samples.begin())
@@ -1267,8 +1267,8 @@ MK_VIII::IOHandler::update_inputs ()
   // Erase everything from the beginning of the list up to the sample
   // preceding the most recent sample whose age is >= 1 second.
 
-  deque< Sample< Parameter<double> > >::iterator erase_last = altitude_samples.begin();
-  deque< Sample< Parameter<double> > >::iterator iter;
+  altitude_samples_type::iterator erase_last = altitude_samples.begin();
+  altitude_samples_type::iterator iter;
 
   for (iter = altitude_samples.begin(); iter != altitude_samples.end(); iter++)
     if (globals->get_sim_time_sec() - (*iter).timestamp >= 1)

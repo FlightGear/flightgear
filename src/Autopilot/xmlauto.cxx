@@ -742,7 +742,6 @@ void FGDigitalFilter::update(double dt)
             // first time being enabled, initialize output to the
             // value of the output property to avoid bumping.
             output.push_front(output_list[0]->getDoubleValue());
-            output.resize(1);
         }
 
         enabled = true;
@@ -821,7 +820,7 @@ void FGDigitalFilter::update(double dt)
         for ( i = 0; i < output_list.size(); ++i ) {
             output_list[i]->setDoubleValue( output[0] );
         }
-        output.resize(1);
+        output.resize(2);
 
         if (debug)
         {
