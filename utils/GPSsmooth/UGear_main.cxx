@@ -24,6 +24,7 @@
 #include <Network/net_fdm.hxx>
 
 #include "UGear.hxx"
+#include "UGear_opengc.hxx"
 
 
 SG_USING_STD(cout);
@@ -32,7 +33,7 @@ SG_USING_STD(string);
 
 
 // Network channels
-static netSocket fdm_sock, ctrls_sock;
+static netSocket fdm_sock, ctrls_sock, opengc_sock;
 
 // ugear data
 UGEARTrack track;
@@ -40,6 +41,7 @@ UGEARTrack track;
 // Default ports
 static int fdm_port = 5505;
 static int ctrls_port = 5506;
+static int opengc_port = 6000;
 
 // Default path
 static string infile = "";
@@ -77,6 +79,9 @@ bool use_ground_track_hdg = false;
 bool use_ground_speed = false;
 
 bool est_controls = false;
+
+float gps_status = -1.0;
+
 
 // The function htond is defined this way due to the way some
 // processors and OSes treat floating point values.  Some will raise
@@ -355,19 +360,145 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
 }
 
 
+static void ugear2opengc( gps *gpspacket, imu *imupacket, nav *navpacket,
+                          servo *servopacket, health *healthpacket,
+                          ogcFGData *ogc )
+{
+    unsigned int i;
+
+    // Version sanity checking
+    ogc->version_id = OGC_VERSION;
+
+    // Aero parameters
+    ogc->longitude = navpacket->lon * SG_DEGREES_TO_RADIANS;
+    ogc->latitude = navpacket->lat * SG_DEGREES_TO_RADIANS;
+    ogc->altitude = ogc->elevation = navpacket->alt + alt_offset;
+    ogc->heading = imupacket->psi * SG_RADIANS_TO_DEGREES; // heading
+    ogc->bank = imupacket->phi * SG_RADIANS_TO_DEGREES; // roll
+    ogc->pitch = imupacket->the * SG_RADIANS_TO_DEGREES; // pitch;
+
+    ogc->phi_dot = 0.0;
+    ogc->theta_dot = 0.0;
+    ogc->psi_dot = 0.0;
+
+    ogc->alpha = 0.0;
+    ogc->beta = 0.0;
+    ogc->alpha_dot = 0.0;
+    ogc->beta_dot = 0.0;
+
+    ogc->left_aileron = 1.0 - ((double)servopacket->chn[0] / 32768.0);
+    ogc->right_aileron = ((double)servopacket->chn[0] / 32768.0) - 1.0;
+    ogc->elevator = 1.0 - ((double)servopacket->chn[1] / 32768.0);
+    ogc->elevator_trim = 0.0;
+    ogc->rudder = 1.0 - ((double)servopacket->chn[3] / 32768.0);
+    ogc->flaps = 0.0;
+    ogc->flaps_cmd = 0.0;
+
+    ogc->wind = 0.0;
+    ogc->wind_dir = 0.0;
+
+    // estimate speed
+    // double az1, az2, dist;
+    // geo_inverse_wgs_84( fdm->altitude, last_lat, last_lon,
+    //                     fdm->latitude, fdm->longitude, &az1, &az2, &dist );
+    // last_lat = fdm->latitude;
+    // last_lon = fdm->longitude;
+    // double v_ms = dist / (frame_us / 1000000);
+    // double v_kts = v_ms * SG_METER_TO_NM * 3600;
+    // kts_filter = (0.9 * kts_filter) + (0.1 * v_kts);
+    // printf("dist = %.5f  kts est = %.2f\n", dist, kts_filter);
+
+    double vn = navpacket->vn;
+    double ve = navpacket->ve;
+    double vd = navpacket->vd;
+
+    if ( use_ground_track_hdg ) {
+        ogc->heading = (SGD_PI * 0.5 - atan2(vn, ve)) * SG_RADIANS_TO_DEGREES;
+    }
+
+    if ( ogc->heading < 0 ) { ogc->heading += 360.0; }
+
+    double mps = 0.0;
+    if ( use_ground_speed ) {
+        mps = sqrt( vn*vn + ve*ve + vd*vd );
+    } else {
+        mps = imupacket->Pt;
+    }
+    // double mph = mps * 3600 / 1609.3440;
+    double kts = mps * SG_MPS_TO_KT;
+    ogc->v_kcas = kts;
+    // printf("speed = %.2f mph  %.2f kts\n", mph, kts );
+    static double Ps = 0.0, Ps_last = 0.0, t_last = 0.0;
+    Ps_last = Ps;
+    Ps = 0.92 * Ps + 0.08 * imupacket->Ps;
+    double climb = (Ps - Ps_last) / (imupacket->time - t_last);
+    t_last = imupacket->time;
+    static double climbf = 0.0;
+    climbf = 0.994 * climbf + 0.006 * climb;
+    ogc->vvi = climbf; // fps
+
+    static double Ps_error = 0.0;
+    static double Ps_count = 0;
+    const double span = 10000.0;
+    Ps_count += 1.0; if (Ps_count > (span-1.0)) { Ps_count = (span-1.0); }
+    double error = navpacket->alt - Ps;
+    Ps_error = (Ps_count/span) * Ps_error + ((span-Ps_count)/span) * error;
+    ogc->elevation = Ps +  Ps_error;
+
+    printf("%.3f, %.3f, %.3f, %.3f, %.8f, %.8f, %.3f, %.3f, %.3f, %.3f, %.3f\n",
+           imupacket->time, imupacket->the, -navpacket->vd, climbf,
+           navpacket->lat, navpacket->lon, gpspacket->alt, navpacket->alt,
+           imupacket->Ps, Ps, Ps + Ps_error);
+
+    if ( est_controls ) {
+        static float est_elev = 0.0;
+        static float est_aileron = 0.0;
+        static float est_rudder = 0.0;
+        est_elev = 0.99 * est_elev + 0.01 * (imupacket->q * 4);
+        est_aileron = 0.95 * est_aileron + 0.05 * (imupacket->p * 5);
+        est_rudder = 0.95 * est_rudder + 0.05 * (imupacket->r * 2);
+        ogc->elevator = -est_elev;
+        ogc->left_aileron = est_aileron;
+        ogc->right_aileron = -est_aileron;
+        ogc->rudder = est_rudder;
+    } else {
+        ogc->elevator = 1.0 - ((double)servopacket->chn[1] / 32768.0);
+        ogc->left_aileron = 1.0 - ((double)servopacket->chn[0] / 32768.0);
+        ogc->right_aileron = ((double)servopacket->chn[0] / 32768.0) - 1.0;
+        ogc->rudder = 1.0 - ((double)servopacket->chn[3] / 32768.0);
+    }
+
+    // additional "abused" data fields
+    double fd_bank = 0.0;
+    double fd_pitch = 0.0;
+    ogc->egt[0] = ogc->bank + fd_bank;        // flight director target roll
+    ogc->egt[1] = -ogc->pitch * 2 + fd_pitch; // flight director target pitch
+    ogc->egt[2] = ogc->heading + 15; // target heading bug
+    ogc->egt[3] = -ogc->vvi;         // target VVI bug
+    ogc->epr[0] = ogc->altitude + 100; // target altitude bug
+    ogc->epr[1] = ogc->v_kcas + 5;   // target speed bug
+    ogc->epr[2] = gps_status;   // gps status box
+}
+
+
 static void send_data( gps *gpspacket, imu *imupacket, nav *navpacket,
 		       servo *servopacket, health *healthpacket ) {
     int len;
+    int ogcsize = sizeof( ogcFGData );
     int fdmsize = sizeof( FGNetFDM );
     int ctrlsize = sizeof( FGNetCtrls );
 
     // cout << "Running main loop" << endl;
 
+    ogcFGData fgogc;
     FGNetFDM fgfdm;
     FGNetCtrls fgctrls;
 
     ugear2fg( gpspacket, imupacket, navpacket, servopacket, healthpacket,
 	      &fgfdm, &fgctrls );
+    ugear2opengc( gpspacket, imupacket, navpacket, servopacket, healthpacket,
+                  &fgogc );
+    len = opengc_sock.send(&fgogc, ogcsize, 0);
     len = fdm_sock.send(&fgfdm, fdmsize, 0);
     // len = ctrls_sock.send(&fgctrls, ctrlsize, 0);
 }
@@ -383,6 +514,7 @@ void usage( const string &argv0 ) {
     cout << "\t[ --hertz <hertz> ]" << endl;
     cout << "\t[ --host <hostname> ]" << endl;
     cout << "\t[ --broadcast ]" << endl;
+    cout << "\t[ --opengc-port <opengc output port #> ]" << endl;
     cout << "\t[ --fdm-port <fdm output port #> ]" << endl;
     cout << "\t[ --ctrls-port <ctrls output port #> ]" << endl;
     cout << "\t[ --groundtrack-heading ]" << endl;
@@ -456,6 +588,14 @@ int main( int argc, char **argv ) {
             }
         } else if ( strcmp( argv[i], "--broadcast" ) == 0 ) {
 	  do_broadcast = true;
+        } else if ( strcmp( argv[i], "--opengc-port" ) == 0 ) {
+            ++i;
+            if ( i < argc ) {
+                opengc_port = atoi( argv[i] );
+            } else {
+                usage( argv[0] );
+                exit( -1 );
+            }
         } else if ( strcmp( argv[i], "--fdm-port" ) == 0 ) {
             ++i;
             if ( i < argc ) {
@@ -510,6 +650,10 @@ int main( int argc, char **argv ) {
 
     netInit( &argc,argv ); // We must call this before any other net stuff
 
+    if ( ! opengc_sock.open( false ) ) {  // open a UDP socket
+        cout << "error opening opengc output socket" << endl;
+        return -1;
+    }
     if ( ! fdm_sock.open( false ) ) {  // open a UDP socket
         cout << "error opening fdm output socket" << endl;
         return -1;
@@ -520,14 +664,24 @@ int main( int argc, char **argv ) {
     }
     cout << "open net channels" << endl;
 
+    opengc_sock.setBlocking( false );
     fdm_sock.setBlocking( false );
     ctrls_sock.setBlocking( false );
     cout << "blocking false" << endl;
 
     if ( do_broadcast ) {
+        opengc_sock.setBroadcast( true );
         fdm_sock.setBroadcast( true );
         ctrls_sock.setBroadcast( true );
     }
+
+    if ( opengc_sock.connect( out_host.c_str(), opengc_port ) == -1 ) {
+        perror("connect");
+        cout << "error connecting to outgoing opengc port: " << out_host
+	     << ":" << opengc_port << endl;
+        return -1;
+    }
+    cout << "connected outgoing opengc socket" << endl;
 
     if ( fdm_sock.connect( out_host.c_str(), fdm_port ) == -1 ) {
         perror("connect");
@@ -766,6 +920,16 @@ int main( int argc, char **argv ) {
                 }
 	    }
 
+            if ( (fabs(gpspacket.lat) < 0.0001 &&
+                  fabs(gpspacket.lon) < 0.0001 &&
+                  fabs(gpspacket.alt) < 0.0001) )
+            {
+                printf("WARNING: LOST GPS!!!\n");
+                gps_status = -1.0;
+            } else {
+                gps_status = 1.0;
+            }
+
             send_data( &gpspacket, &imupacket, &navpacket, &servopacket,
 		       &healthpacket );
 
@@ -893,11 +1057,31 @@ int main( int argc, char **argv ) {
                 }
             }
 
+            if ( (current_time > gps_time + 2) ||
+                 (fabs(gpspacket.lat) < 0.0001 &&
+                  fabs(gpspacket.lon) < 0.0001 &&
+                  fabs(gpspacket.alt) < 0.0001) )
+            {
+                printf("WARNING: LOST GPS!!!\n");
+                gps_status = 1.0;
+            } else {
+                gps_status = -1.0;
+            }
+
             if ( current_time >= last_time + (1/hertz) ) {
                 // if ( gpspacket.lat > -500 ) {
-                printf( "%.2f  %.6f %.6f %.1f  %.2f %.2f %.2f  %.2f %d\n",
+                int londeg = (int)navpacket.lon;
+                double lonmin = fabs(navpacket.lon - londeg);
+                int latdeg = (int)navpacket.lat;
+                double latmin = fabs(navpacket.lat - latdeg);
+                char londir = 'E'; if ( londeg < 0 ) londir = 'W';
+                char latdir = 'N'; if ( latdeg < 0 ) latdir = 'S';
+                londeg = abs(londeg);
+                latdeg = abs(latdeg);
+                printf( "%.2f  %c%02d:%.4f %c%03d:%.4f %.1f  %.2f %.2f %.2f  %.2f %d\n",
                         current_time,
-                        navpacket.lat, navpacket.lon, navpacket.alt,
+                        latdir, latdeg, latmin, londir, londeg, lonmin,
+                        navpacket.alt,
                         imupacket.phi*SGD_RADIANS_TO_DEGREES,
                         imupacket.the*SGD_RADIANS_TO_DEGREES,
                         imupacket.psi*SGD_RADIANS_TO_DEGREES,
