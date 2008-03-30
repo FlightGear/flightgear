@@ -24,6 +24,7 @@
 #include <Network/net_fdm.hxx>
 
 #include "UGear.hxx"
+#include "UGear_command.hxx"
 #include "UGear_opengc.hxx"
 
 
@@ -36,7 +37,7 @@ SG_USING_STD(string);
 static netSocket fdm_sock, ctrls_sock, opengc_sock;
 
 // ugear data
-UGEARTrack track;
+UGTrack track;
 
 // Default ports
 static int fdm_port = 5505;
@@ -193,10 +194,10 @@ static void ugear2fg( gps *gpspacket, imu *imupacket, nav *navpacket,
     Ps_error = (Ps_count/span) * Ps_error + ((span-Ps_count)/span) * error;
     fdm->altitude = Ps +  Ps_error;
 
-    printf("%.3f, %.3f, %.3f, %.3f, %.8f, %.8f, %.3f, %.3f, %.3f, %.3f, %.3f\n",
+    /* printf("%.3f, %.3f, %.3f, %.3f, %.8f, %.8f, %.3f, %.3f, %.3f, %.3f, %.3f\n",
            imupacket->time, imupacket->the, -navpacket->vd, climbf,
            navpacket->lat, navpacket->lon, gpspacket->alt, navpacket->alt,
-           imupacket->Ps, Ps, Ps + Ps_error);
+           imupacket->Ps, Ps, Ps + Ps_error); */
 
     // cout << "climb rate = " << aero->hdota << endl;
     fdm->v_north = 0.0;
@@ -364,15 +365,12 @@ static void ugear2opengc( gps *gpspacket, imu *imupacket, nav *navpacket,
                           servo *servopacket, health *healthpacket,
                           ogcFGData *ogc )
 {
-    unsigned int i;
-
     // Version sanity checking
     ogc->version_id = OGC_VERSION;
 
     // Aero parameters
-    ogc->longitude = navpacket->lon * SG_DEGREES_TO_RADIANS;
-    ogc->latitude = navpacket->lat * SG_DEGREES_TO_RADIANS;
-    ogc->altitude = ogc->elevation = navpacket->alt + alt_offset;
+    ogc->longitude = navpacket->lon;
+    ogc->latitude = navpacket->lat;
     ogc->heading = imupacket->psi * SG_RADIANS_TO_DEGREES; // heading
     ogc->bank = imupacket->phi * SG_RADIANS_TO_DEGREES; // roll
     ogc->pitch = imupacket->the * SG_RADIANS_TO_DEGREES; // pitch;
@@ -437,18 +435,26 @@ static void ugear2opengc( gps *gpspacket, imu *imupacket, nav *navpacket,
     climbf = 0.994 * climbf + 0.006 * climb;
     ogc->vvi = climbf; // fps
 
+    // uncomment one of the following schemes for setting elevation:
+
+    // use the navigation (inertially augmented gps estimate)
+    // ogc->altitude = ogc->elevation
+    //     = (navpacket->alt + alt_offset * SG_METER_TO_FEET);
+
+    // use estimate error between pressure sensor and gps altitude over time
+    // use pressure sensor + error average for altitude estimate.
     static double Ps_error = 0.0;
     static double Ps_count = 0;
     const double span = 10000.0;
     Ps_count += 1.0; if (Ps_count > (span-1.0)) { Ps_count = (span-1.0); }
     double error = navpacket->alt - Ps;
     Ps_error = (Ps_count/span) * Ps_error + ((span-Ps_count)/span) * error;
-    ogc->elevation = Ps +  Ps_error;
+    ogc->elevation = (Ps +  Ps_error) * SG_METER_TO_FEET;
 
-    printf("%.3f, %.3f, %.3f, %.3f, %.8f, %.8f, %.3f, %.3f, %.3f, %.3f, %.3f\n",
+    /* printf("%.3f, %.3f, %.3f, %.3f, %.8f, %.8f, %.3f, %.3f, %.3f, %.3f, %.3f\n",
            imupacket->time, imupacket->the, -navpacket->vd, climbf,
            navpacket->lat, navpacket->lon, gpspacket->alt, navpacket->alt,
-           imupacket->Ps, Ps, Ps + Ps_error);
+           imupacket->Ps, Ps, Ps + Ps_error); */
 
     if ( est_controls ) {
         static float est_elev = 0.0;
@@ -472,21 +478,22 @@ static void ugear2opengc( gps *gpspacket, imu *imupacket, nav *navpacket,
     double fd_bank = 0.0;
     double fd_pitch = 0.0;
     ogc->egt[0] = ogc->bank + fd_bank;        // flight director target roll
-    ogc->egt[1] = -ogc->pitch * 2 + fd_pitch; // flight director target pitch
+    ogc->egt[1] = -ogc->pitch + fd_pitch; // flight director target pitch
     ogc->egt[2] = ogc->heading + 15; // target heading bug
     ogc->egt[3] = -ogc->vvi;         // target VVI bug
-    ogc->epr[0] = ogc->altitude + 100; // target altitude bug
+    ogc->epr[0] = 1400 /*ogc->elevation - 50*/ ; // target altitude bug
     ogc->epr[1] = ogc->v_kcas + 5;   // target speed bug
     ogc->epr[2] = gps_status;   // gps status box
 }
 
 
-static void send_data( gps *gpspacket, imu *imupacket, nav *navpacket,
-		       servo *servopacket, health *healthpacket ) {
+static void send_data_udp( gps *gpspacket, imu *imupacket, nav *navpacket,
+                           servo *servopacket, health *healthpacket )
+{
     int len;
     int ogcsize = sizeof( ogcFGData );
     int fdmsize = sizeof( FGNetFDM );
-    int ctrlsize = sizeof( FGNetCtrls );
+    // int ctrlsize = sizeof( FGNetCtrls );
 
     // cout << "Running main loop" << endl;
 
@@ -727,11 +734,11 @@ int main( int argc, char **argv ) {
 
         if ( track.gps_size() > 0 ) {
             double tmp = track.get_gpspt(track.gps_size()-1).ITOW;
-            int days = tmp / (24 * 60 * 60);
+            int days = (int)(tmp / (24 * 60 * 60));
             tmp -= days * 24 * 60 * 60;
-            int hours = tmp / (60 * 60);
+            int hours = (int)(tmp / (60 * 60));
             tmp -= hours * 60 * 60;
-            int min = tmp / 60;
+            int min = (int)(tmp / 60);
             tmp -= min * 60;
             double sec = tmp;
             printf("[GPS  ]:ITOW= %.3f[sec]  %dd %02d:%02d:%06.3f\n",
@@ -930,8 +937,8 @@ int main( int argc, char **argv ) {
                 gps_status = 1.0;
             }
 
-            send_data( &gpspacket, &imupacket, &navpacket, &servopacket,
-		       &healthpacket );
+            send_data_udp( &gpspacket, &imupacket, &navpacket, &servopacket,
+                           &healthpacket );
 
             if ( run_real_time ) {
                 // Update the elapsed time.
@@ -987,15 +994,17 @@ int main( int argc, char **argv ) {
 	servo servopacket; bzero( &servopacket, sizeof(servopacket) );
 	health healthpacket; bzero( &healthpacket, sizeof(healthpacket) );
 
-        double gps_time = 0;
-        double imu_time = 0;
-        double nav_time = 0;
-        double servo_time = 0;
-        double health_time = 0;
+        double gps_time = 0.0;
+        double imu_time = 0.0;
+        double nav_time = 0.0;
+        double servo_time = 0.0;
+        double health_time = 0.0;
+        double command_time = 0.0;
+        double command_heartbeat = 0.0;
 
         // open the serial port device
-        SGSerialPort input( serialdev, 115200 );
-        if ( !input.is_enabled() ) {
+        SGSerialPort uavcom( serialdev, 115200 );
+        if ( !uavcom.is_enabled() ) {
             cout << "Cannot open: " << serialdev << endl;
             return false;
         }
@@ -1006,15 +1015,23 @@ int main( int argc, char **argv ) {
                  << endl;
             return false;
         }
-        SGFile output( outfile );
-        if ( !output.open( SG_IO_OUT ) ) {
+        SGFile log( outfile );
+        if ( !log.open( SG_IO_OUT ) ) {
             cout << "Cannot open: " << outfile << endl;
             return false;
         }
 
-        while ( input.is_enabled() ) {
+        // create the command channel manager
+        UGCommand command;
+
+        // add some test commands
+        command.add("apalt,1000");
+        command.add("home,158.0,32.5");
+        command.add("gohome");
+
+        while ( uavcom.is_enabled() ) {
 	    // cout << "looking for next message ..." << endl;
-            int id = track.next_message( &input, &output, &gpspacket,
+            int id = track.next_message( &uavcom, &log, &gpspacket,
 					 &imupacket, &navpacket, &servopacket,
 					 &healthpacket, ignore_checksum );
             // cout << "message id = " << id << endl;
@@ -1052,9 +1069,13 @@ int main( int argc, char **argv ) {
                 if ( healthpacket.time > health_time ) {
                     health_time = healthpacket.time;
                     current_time = health_time;
+                    printf("Received a health packet, sequence: %d\n",
+                           healthpacket.command_sequence);
+                    command.update_cmd_sequence(healthpacket.command_sequence);
                 } else {
                     cout << "oops health back in time: " << healthpacket.time << " " << health_time << endl;
                 }
+                
             }
 
             if ( (current_time > gps_time + 2) ||
@@ -1068,6 +1089,19 @@ int main( int argc, char **argv ) {
                 gps_status = -1.0;
             }
 
+            // Generate a ground station heart beat every 5 seconds
+            if ( current_time >= command_heartbeat + 5 ) {
+                command.add("hb");
+                command_heartbeat = current_time;
+            }
+                
+            // Command update @ 1hz
+            if ( current_time >= command_time + 1 ) {
+                command.update(&uavcom);
+                command_time = current_time;
+            }
+
+            // Relay data on to FlightGear and LFSTech Glass
             if ( current_time >= last_time + (1/hertz) ) {
                 // if ( gpspacket.lat > -500 ) {
                 int londeg = (int)navpacket.lon;
@@ -1078,20 +1112,18 @@ int main( int argc, char **argv ) {
                 char latdir = 'N'; if ( latdeg < 0 ) latdir = 'S';
                 londeg = abs(londeg);
                 latdeg = abs(latdeg);
-                printf( "%.2f  %c%02d:%.4f %c%03d:%.4f %.1f  %.2f %.2f %.2f  %.2f %d\n",
+                /*printf( "%.2f  %c%02d:%.4f %c%03d:%.4f %.1f  %.2f %.2f %.2f\n",
                         current_time,
                         latdir, latdeg, latmin, londir, londeg, lonmin,
                         navpacket.alt,
                         imupacket.phi*SGD_RADIANS_TO_DEGREES,
                         imupacket.the*SGD_RADIANS_TO_DEGREES,
-                        imupacket.psi*SGD_RADIANS_TO_DEGREES,
-                        healthpacket.volts,
-                        healthpacket.est_seconds);
+                        imupacket.psi*SGD_RADIANS_TO_DEGREES ); */
                 // }
 
                 last_time = current_time;
-                send_data( &gpspacket, &imupacket, &navpacket, &servopacket,
-                           &healthpacket );
+                send_data_udp( &gpspacket, &imupacket, &navpacket,
+                               &servopacket, &healthpacket );
             }
         }
     }

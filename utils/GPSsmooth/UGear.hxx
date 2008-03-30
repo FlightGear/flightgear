@@ -65,16 +65,14 @@ struct servo {
 
 struct health {
     double time;
-    float volts_raw;            /* raw volt reading */
-    float volts;                /* filtered volts */
-    uint32_t est_seconds;       /* estimated useful seconds remaining */
-    uint32_t loadavg;            /* system "1 minute" load average */
-    uint32_t ahrs_hz;            /* actual ahrs loop hz */
-    uint32_t nav_hz;             /* actual nav loop hz */
+    uint64_t command_sequence;  /* highest received command sequence num */
+    uint64_t loadavg;           /* system "1 minute" load average */
+    uint64_t ahrs_hz;           /* actual ahrs loop hz */
+    uint64_t nav_hz;            /* actual nav loop hz */
 };
 
 // Manage a saved ugear log (track file)
-class UGEARTrack {
+class UGTrack {
 
 private:
 
@@ -96,8 +94,8 @@ private:
 
 public:
 
-    UGEARTrack();
-    ~UGEARTrack();
+    UGTrack();
+    ~UGTrack();
 
     // read/parse the next message from the specified data stream,
     // returns id # if a valid message found.

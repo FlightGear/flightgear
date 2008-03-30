@@ -22,12 +22,12 @@ SG_USING_STD(endl);
 #define START_OF_MSG1 224
 
 
-UGEARTrack::UGEARTrack():
+UGTrack::UGTrack():
     sg_swap(false)
 {
 };
 
-UGEARTrack::~UGEARTrack() {};
+UGTrack::~UGTrack() {};
 
 
 // swap the 1st 4 bytes with the last 4 bytes of a stargate double so
@@ -91,7 +91,7 @@ static bool validate_cksum( uint8_t id, uint8_t size, char *buf,
 }
 
 
-void UGEARTrack::parse_msg( const int id, char *buf,
+void UGTrack::parse_msg( const int id, char *buf,
 			    struct gps *gpspacket, imu *imupacket,
 			    nav *navpacket, servo *servopacket,
 			    health *healthpacket )
@@ -157,7 +157,7 @@ void UGEARTrack::parse_msg( const int id, char *buf,
 
 
 // load the named stream log file into internal buffers
-bool UGEARTrack::load_stream( const string &file, bool ignore_checksum ) {
+bool UGTrack::load_stream( const string &file, bool ignore_checksum ) {
     int count = 0;
 
     gps gpspacket;
@@ -236,7 +236,7 @@ bool UGEARTrack::load_stream( const string &file, bool ignore_checksum ) {
 
 
 // load the named stream log file into internal buffers
-bool UGEARTrack::load_flight( const string &path ) {
+bool UGTrack::load_flight( const string &path ) {
     gps gpspacket;
     imu imupacket;
     nav navpacket;
@@ -261,7 +261,7 @@ bool UGEARTrack::load_flight( const string &path ) {
     // open the gps file
     file = path; file.append( "gps.dat.gz" );
     if ( (fgps = gzopen( file.c_str(), "r" )) == NULL ) {
-        printf("Cannont open %s\n", file.c_str());
+        printf("Cannot open %s\n", file.c_str());
         return false;
     }
 
@@ -373,7 +373,7 @@ int serial_read( SGSerialPort *serial, SGIOChannel *log,
 
 
 // load the next message of a real time data stream
-int UGEARTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
+int UGTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
 			      gps *gpspacket, imu *imupacket, nav *navpacket,
 			      servo *servopacket, health *healthpacket,
 			      bool ignore_checksum )
@@ -443,10 +443,10 @@ int UGEARTrack::next_message( SGIOChannel *ch, SGIOChannel *log,
 
 
 // load the next message of a real time data stream
-int UGEARTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
-			      gps *gpspacket, imu *imupacket, nav *navpacket,
-			      servo *servopacket, health *healthpacket,
-			      bool ignore_checksum )
+int UGTrack::next_message( SGSerialPort *serial, SGIOChannel *log,
+                           gps *gpspacket, imu *imupacket, nav *navpacket,
+                           servo *servopacket, health *healthpacket,
+                           bool ignore_checksum )
 {
     char tmpbuf[256];
     char savebuf[256];
@@ -592,9 +592,7 @@ servo UGEARInterpSERVO( const servo A, const servo B, const double percent )
 health UGEARInterpHEALTH( const health A, const health B, const double percent )
 {
     health p;
-    p.volts_raw = interp(A.volts_raw, B.volts_raw, percent);
-    p.volts = interp(A.volts, B.volts, percent);
-    p.est_seconds = (uint16_t)interp(A.est_seconds, B.est_seconds, percent);
+    p.command_sequence = B.command_sequence;
     p.time = interp(A.time, B.time, percent);
 
     return p;

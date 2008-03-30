@@ -19,7 +19,9 @@ MIDGsmooth_LDADD = \
 
 UGsmooth_SOURCES = \
         UGear.cxx UGear.hxx \
-        UGear_main.cxx
+	UGear_command.cxx UGear_command.hxx \
+        UGear_main.cxx \
+	UGear_opengc.hxx
 
 UGsmooth_LDADD = \
         -lsgio -lsgserial -lsgtiming -lsgmath -lsgbucket -lsgmisc -lsgdebug \
