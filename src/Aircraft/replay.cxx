@@ -56,7 +56,26 @@ FGReplay::FGReplay() {
  */
 
 FGReplay::~FGReplay() {
-    // no dynamically allocated memory to free
+    while ( !short_term.empty() ) {
+	//cerr << "Deleting Short term" <<endl;
+        delete short_term.front();
+        short_term.pop_front();
+    }
+    while ( !medium_term.empty() ) {
+	//cerr << "Deleting Medium term" <<endl;
+	delete medium_term.front();
+        medium_term.pop_front();
+    }
+    while ( !long_term.empty() ) {
+	//cerr << "Deleting Long term" <<endl;
+	delete long_term.front();
+        long_term.pop_front();
+    }
+    while ( !recycler.empty() ) {
+	//cerr << "Deleting Recycler" <<endl;
+	delete recycler.front();
+        recycler.pop_front();
+    }
 }
 
 
@@ -71,13 +90,28 @@ void FGReplay::init() {
 
     // Make sure all queues are flushed
     while ( !short_term.empty() ) {
+        delete short_term.front();
         short_term.pop_front();
     }
     while ( !medium_term.empty() ) {
+	delete medium_term.front();
         medium_term.pop_front();
     }
-    while ( !medium_term.empty() ) {
-        medium_term.pop_front();
+    while ( !long_term.empty() ) {
+	delete long_term.front();
+        long_term.pop_front();
+    }
+    while ( !recycler.empty() ) {
+	delete recycler.front();
+        recycler.pop_front();
+    }
+    // Create an estimated nr of required ReplayData objects
+    // 120 is an estimated maximum frame rate. 
+    int estNrObjects = (int) ((st_list_time*120) + (mt_list_time*mt_dt) +
+                             (lt_list_time*lt_dt)); 
+    for (int i = 0; i < estNrObjects; i++) {
+        recycler.push_back(new FGReplayData);
+
     }
 }
 
@@ -105,6 +139,8 @@ void FGReplay::unbind() {
  */
 
 void FGReplay::update( double dt ) {
+    timingInfo.clear();
+    stamp("begin");
     static SGPropertyNode *replay_master
         = fgGetNode( "/sim/freeze/replay", true );
 
@@ -115,62 +151,84 @@ void FGReplay::update( double dt ) {
         }
         return;
     }
-
+    //stamp("point_01");
     if ( replay_master->getBoolValue() ) {
         // don't record the replay session
         return;
     }
-
+    //cerr << "Recording replay" << endl;
     sim_time += dt;
 
     // build the replay record
-    FGNetFDM f;
-    FGProps2NetFDM( &f, false );
+    //FGNetFDM f;
+    //FGProps2NetFDM( &f, false );
 
     // sanity check, don't collect data if FDM data isn't good
     if ( !cur_fdm_state->get_inited() ) {
         return;
     }
-
-    FGNetCtrls c;
-    FGProps2NetCtrls( &c, false, false );
-
-    FGReplayData r;
-    r.sim_time = sim_time;
-    r.ctrls = c;
-    r.fdm = f;
+    //FGNetCtrls c;
+    //FGProps2NetCtrls( &c, false, false );
+    //stamp("point_04ba");
+    FGReplayData *r;
+    //stamp("point_04bb");
+    if (!recycler.size()) {
+        stamp("Replay_01");
+        r = new FGReplayData;
+	stamp("Replay_02");
+    } else {
+      r = recycler.front();
+      recycler.pop_front();
+    //stamp("point_04be");
+    }
+    r->sim_time = sim_time;
+    //r->ctrls = c;
+    //stamp("point_04e");
+    FGProps2NetFDM( &(r->fdm), false );
+    FGProps2NetCtrls( &(r->ctrls), false, false );
+    //r->fdm = f;
+    //stamp("point_05");
 
     // update the short term list
+    //stamp("point_06");
     short_term.push_back( r );
-
-    FGReplayData st_front = short_term.front();
-    if ( sim_time - st_front.sim_time > st_list_time ) {
-        while ( sim_time - st_front.sim_time > st_list_time ) {
+    //stamp("point_07");
+    FGReplayData *st_front = short_term.front();
+    if ( sim_time - st_front->sim_time > st_list_time ) {
+        while ( sim_time - st_front->sim_time > st_list_time ) {
             st_front = short_term.front();
+            recycler.push_back(st_front);
             short_term.pop_front();
         }
-
+        //stamp("point_08");
         // update the medium term list
         if ( sim_time - last_mt_time > mt_dt ) {
             last_mt_time = sim_time;
+            st_front = short_term.front();
             medium_term.push_back( st_front );
+            short_term.pop_front();
 
-            FGReplayData mt_front = medium_term.front();
-            if ( sim_time - mt_front.sim_time > mt_list_time ) {
-                while ( sim_time - mt_front.sim_time > mt_list_time ) {
+            FGReplayData *mt_front = medium_term.front();
+            if ( sim_time - mt_front->sim_time > mt_list_time ) {
+            //stamp("point_09");
+                while ( sim_time - mt_front->sim_time > mt_list_time ) {
                     mt_front = medium_term.front();
+                    recycler.push_back(mt_front);
                     medium_term.pop_front();
                 }
-
                 // update the long term list
                 if ( sim_time - last_lt_time > lt_dt ) {
                     last_lt_time = sim_time;
+                    mt_front = medium_term.front();
                     long_term.push_back( mt_front );
+                    medium_term.pop_front();
 
-                    FGReplayData lt_front = long_term.front();
-                    if ( sim_time - lt_front.sim_time > lt_list_time ) {
-                        while ( sim_time - lt_front.sim_time > lt_list_time ) {
+                    FGReplayData *lt_front = long_term.front();
+                    if ( sim_time - lt_front->sim_time > lt_list_time ) {
+			//stamp("point_10");
+                        while ( sim_time - lt_front->sim_time > lt_list_time ) {
                             lt_front = long_term.front();
+                            recycler.push_back(lt_front);
                             long_term.pop_front();
                         }
                     }
@@ -190,6 +248,7 @@ void FGReplay::update( double dt ) {
          << "  time = " << sim_time - long_term.front().sim_time
          << endl;
 #endif
+   //stamp("point_finished");
 }
 
 
@@ -409,7 +468,7 @@ static void interpolate( double time, const replay_list_type &list ) {
         return;
     } else if ( list.size() == 1 ) {
         // handle list size == 1
-        update_fdm( list[0] );
+        update_fdm( (*list[0]) );
         return;
     }
 
@@ -423,11 +482,11 @@ static void interpolate( double time, const replay_list_type &list ) {
         // cout << "  " << first << " <=> " << last << endl;
         if ( last == first ) {
             done = true;
-        } else if ( list[mid].sim_time < time && list[mid+1].sim_time < time ) {
+        } else if ( list[mid]->sim_time < time && list[mid+1]->sim_time < time ) {
             // too low
             first = mid;
             mid = ( last + first ) / 2;
-        } else if ( list[mid].sim_time > time && list[mid+1].sim_time > time ) {
+        } else if ( list[mid]->sim_time > time && list[mid+1]->sim_time > time ) {
             // too high
             last = mid;
             mid = ( last + first ) / 2;
@@ -436,7 +495,7 @@ static void interpolate( double time, const replay_list_type &list ) {
         }
     }
 
-    FGReplayData result = interpolate( time, list[mid], list[mid+1] );
+    FGReplayData result = interpolate( time, (*list[mid]), (*list[mid+1]) );
 
     update_fdm( result );
 }
@@ -453,60 +512,60 @@ void FGReplay::replay( double time ) {
     double t1, t2;
 
     if ( short_term.size() > 0 ) {
-        t1 = short_term.back().sim_time;
-        t2 = short_term.front().sim_time;
+        t1 = short_term.back()->sim_time;
+        t2 = short_term.front()->sim_time;
         if ( time > t1 ) {
             // replay the most recent frame
-            update_fdm( short_term.back() );
+            update_fdm( (*short_term.back()) );
             // cout << "first frame" << endl;
         } else if ( time <= t1 && time >= t2 ) {
             interpolate( time, short_term );
             // cout << "from short term" << endl;
         } else if ( medium_term.size() > 0 ) {
-            t1 = short_term.front().sim_time;
-            t2 = medium_term.back().sim_time;
+            t1 = short_term.front()->sim_time;
+            t2 = medium_term.back()->sim_time;
             if ( time <= t1 && time >= t2 ) {
                 FGReplayData result = interpolate( time,
-                                                   medium_term.back(),
-                                                   short_term.front() );
+                                                   (*medium_term.back()),
+                                                   (*short_term.front()) );
                 update_fdm( result );
                 // cout << "from short/medium term" << endl;
             } else {
-                t1 = medium_term.back().sim_time;
-                t2 = medium_term.front().sim_time;
+                t1 = medium_term.back()->sim_time;
+                t2 = medium_term.front()->sim_time;
                 if ( time <= t1 && time >= t2 ) {
                     interpolate( time, medium_term );
                     // cout << "from medium term" << endl;
                 } else if ( long_term.size() > 0 ) {
-                    t1 = medium_term.front().sim_time;
-                    t2 = long_term.back().sim_time;
+                    t1 = medium_term.front()->sim_time;
+                    t2 = long_term.back()->sim_time;
                     if ( time <= t1 && time >= t2 ) {
                         FGReplayData result = interpolate( time,
-                                                           long_term.back(),
-                                                           medium_term.front());
+                                                           (*long_term.back()),
+                                                           (*medium_term.front()));
                         update_fdm( result );
                         // cout << "from medium/long term" << endl;
                     } else {
-                        t1 = long_term.back().sim_time;
-                        t2 = long_term.front().sim_time;
+                        t1 = long_term.back()->sim_time;
+                        t2 = long_term.front()->sim_time;
                         if ( time <= t1 && time >= t2 ) {
                             interpolate( time, long_term );
                             // cout << "from long term" << endl;
                         } else {
                             // replay the oldest long term frame
-                            update_fdm( long_term.front() );
+                            update_fdm( (*long_term.front()) );
                             // cout << "oldest long term frame" << endl;
                         }
                     }
                 } else {
                     // replay the oldest medium term frame
-                    update_fdm( medium_term.front() );
+                    update_fdm( (*medium_term.front()) );
                     // cout << "oldest medium term frame" << endl;
                 }
             }
         } else {
             // replay the oldest short term frame
-            update_fdm( short_term.front() );
+            update_fdm( (*short_term.front()) );
             // cout << "oldest short term frame" << endl;
         }
     } else {
@@ -517,11 +576,11 @@ void FGReplay::replay( double time ) {
 
 double FGReplay::get_start_time() {
     if ( long_term.size() > 0 ) {
-        return long_term.front().sim_time;
+        return (*long_term.front()).sim_time;
     } else if ( medium_term.size() > 0 ) {
-        return medium_term.front().sim_time;
+        return (*medium_term.front()).sim_time;
     } else if ( short_term.size() ) {
-        return short_term.front().sim_time;
+        return (*short_term.front()).sim_time;
     } else {
         return 0.0;
     }
@@ -529,7 +588,7 @@ double FGReplay::get_start_time() {
 
 double FGReplay::get_end_time() {
     if ( short_term.size() ) {
-        return short_term.back().sim_time;
+        return (*short_term.back()).sim_time;
     } else {
         return 0.0;
     } 

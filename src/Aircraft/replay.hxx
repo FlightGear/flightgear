@@ -51,7 +51,7 @@ public:
     FGNetCtrls ctrls;
 };
 
-typedef deque < FGReplayData > replay_list_type;
+typedef deque < FGReplayData *> replay_list_type;
 
 
 
@@ -94,6 +94,7 @@ private:
     replay_list_type short_term;
     replay_list_type medium_term;
     replay_list_type long_term;
+    replay_list_type recycler;
     SGPropertyNode_ptr disable_replay;
 };
 
