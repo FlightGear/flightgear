@@ -167,16 +167,7 @@ void FGTrafficManager::init()
 
 void FGTrafficManager::update(double /*dt*/)
 {
-  //SG_LOG( SG_GENERAL, SG_INFO, "Running TrafficManager::Update() ");
-  // Hack alert: Skip running for the first frames 1000 after 
-  // initialization to allow proper initialization of wheather stuff 
-  // and runway assignments
-  if (runCount < 1000)
-    {
-      runCount++;
-      return;
-    }
-  //runCount = 0;
+
   time_t now = time(NULL) + fgGetLong("/sim/time/warp");
   if (scheduledAircraft.size() == 0) {
     //SG_LOG( SG_GENERAL, SG_INFO, "Returned Running TrafficManager::Update() ");
@@ -184,7 +175,6 @@ void FGTrafficManager::update(double /*dt*/)
   }
   if(currAircraft == scheduledAircraft.end())
     {
-      //cerr << "resetting schedule " << endl;
       currAircraft = scheduledAircraft.begin();
     }
   if (!((*currAircraft)->update(now)))

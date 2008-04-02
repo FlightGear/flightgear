@@ -172,7 +172,7 @@ FGAIFlightPlan::FGAIFlightPlan(const std::string& p,
 	cerr << "Errno = " << errno << endl;
 	if (errno == ENOENT)
 	  {
-	    cerr << "Reason: No such file or directory" << endl;
+	    SG_LOG(SG_GENERAL, SG_WARN, "Reason: No such file or directory");
 	  }
       }
     }
@@ -184,6 +184,7 @@ FGAIFlightPlan::FGAIFlightPlan(const std::string& p,
       time_t now = time(NULL) + fgGetLong("/sim/time/warp");
       time_t timeDiff = now-start; 
       leg = 1;
+      /*
       if ((timeDiff > 300) && (timeDiff < 1200))
 	leg = 2;
       else if ((timeDiff >= 1200) && (timeDiff < 1500))
@@ -192,6 +193,9 @@ FGAIFlightPlan::FGAIFlightPlan(const std::string& p,
 	leg = 4;
       else if (timeDiff >= 2000)
 	leg = 5;
+      */
+      if (timeDiff >= 2000)
+          leg = 5;
 
       SG_LOG(SG_GENERAL, SG_INFO, "Route from " << dep->getId() << " to " << arr->getId() << ". Set leg to : " << leg);
       wpt_iterator = waypoints.begin();
@@ -353,39 +357,44 @@ void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
 
 // gives distance in feet from a position to a waypoint
 double FGAIFlightPlan::getDistanceToGo(double lat, double lon, waypoint* wp) const{
+   double course, distance;
    // get size of a degree2 at the present latitude
    // this won't work over large distances
-   double ft_per_deg_lat = 366468.96 - 3717.12 * cos(lat / SG_RADIANS_TO_DEGREES);
-   double ft_per_deg_lon = 365228.16 * cos(lat / SG_RADIANS_TO_DEGREES);
-   double lat_diff_ft = fabs(wp->latitude - lat) * ft_per_deg_lat;
-   double lon_diff_ft = fabs(wp->longitude - lon) * ft_per_deg_lon;
-   return sqrt((lat_diff_ft * lat_diff_ft) + (lon_diff_ft * lon_diff_ft));
+   //double ft_per_deg_lat = 366468.96 - 3717.12 * cos(lat / SG_RADIANS_TO_DEGREES);
+   //double ft_per_deg_lon = 365228.16 * cos(lat / SG_RADIANS_TO_DEGREES);
+   //double lat_diff_ft = fabs(wp->latitude - lat) * ft_per_deg_lat;
+   //double lon_diff_ft = fabs(wp->longitude - lon) * ft_per_deg_lon;
+   //return sqrt((lat_diff_ft * lat_diff_ft) + (lon_diff_ft * lon_diff_ft));
+   SGWayPoint sgWp(wp->longitude,wp->latitude, wp->altitude, SGWayPoint::WGS84, string("temp"));
+   sgWp.CourseAndDistance(lon, lat, wp->altitude, &course, &distance);
+   return distance;
 }
 
 // sets distance in feet from a lead point to the current waypoint
 void FGAIFlightPlan::setLeadDistance(double speed, double bearing, 
                                      waypoint* current, waypoint* next){
   double turn_radius;
-    if (fabs(speed) > 1) 
+  // Handle Ground steering
+  // At a turn rate of 30 degrees per second, it takes 12 seconds to do a full 360 degree turn
+  // So, to get an estimate of the turn radius, calculate the cicumference of the circle
+  // we travel on. Get the turn radius by dividing by PI (*2).
+  if (speed < 25) {
+       turn_radius = ((360/30)*15) / (2*M_PI);
+  } else 
       turn_radius = 0.1911 * speed * speed; // an estimate for 25 degrees bank
-    else
-      turn_radius = 1.0;
 
   double inbound = bearing;
   double outbound = getBearing(current, next);
   leadInAngle = fabs(inbound - outbound);
   if (leadInAngle > 180.0) 
     leadInAngle = 360.0 - leadInAngle;
-  if (leadInAngle < 1.0) // To prevent lead_dist from getting so small it is skipped 
-    leadInAngle = 1.0;
+  //if (leadInAngle < 30.0) // To prevent lead_dist from getting so small it is skipped 
+  //  leadInAngle = 30.0;
   
-  lead_distance = turn_radius * sin(leadInAngle * SG_DEGREES_TO_RADIANS); 
+  //lead_distance = turn_radius * sin(leadInAngle * SG_DEGREES_TO_RADIANS); 
+  lead_distance = turn_radius * tan((leadInAngle * SG_DEGREES_TO_RADIANS)/2);
   //  if ((errno == EDOM) || (errno == ERANGE) || lead_distance < 1.0)
   //  {
-  //    cerr << "Lead Distance = " << lead_distance
-  //	   << "Diff          = " << diff
-  //	   << "Turn Radius   = " << turn_radius 
-  //	   << "Speed         = " << speed << endl;
   //  }
 }
 

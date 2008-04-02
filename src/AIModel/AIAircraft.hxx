@@ -95,6 +95,7 @@ private:
     double dt_count;
     double dt_elev_count;
     double headingChangeRate;
+    double headingError;
     double groundTargetSpeed;
     double groundOffset;
     double dt;

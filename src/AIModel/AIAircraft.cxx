@@ -1,4 +1,4 @@
-// // FGAIAircraft - FGAIBase-derived class creates an AI airplane
+// // // FGAIAircraft - FGAIBase-derived class creates an AI airplane
 //
 // Written by David Culp, started October 2003.
 //
@@ -290,7 +290,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         }
 
         if (next) {
-            fp->setLeadDistance(speed, tgt_heading, curr, next);
+            fp->setLeadDistance(tgt_speed, tgt_heading, curr, next);
         }
 
         if (!(prev->on_ground))  // only update the tgt altitude from flightplan if not on the ground
@@ -522,6 +522,7 @@ void FGAIAircraft::processATC(FGATCInstruction instruction) {
 
 void FGAIAircraft::handleFirstWaypoint() {
     bool eraseWaypoints;         //TODO YAGNI
+    headingError = 0;
     if (trafficRef) {
         eraseWaypoints = true;
     } else {
@@ -609,7 +610,6 @@ bool FGAIAircraft::leadPointReached(FGAIFlightPlan::waypoint* curr) {
 
     //cerr << "2" << endl;
     double lead_dist = fp->getLeadDistance();
-    //cerr << " Distance : " << dist_to_go << ": Lead distance " << lead_dist << endl;
     // experimental: Use fabs, because speed can be negative (I hope) during push_back.
 
     if (lead_dist < fabs(2*speed)) {
@@ -619,6 +619,8 @@ bool FGAIAircraft::leadPointReached(FGAIFlightPlan::waypoint* curr) {
     }
 
     //prev_dist_to_go = dist_to_go;
+    //if (dist_to_go < lead_dist)
+    //    cerr << trafficRef->getCallSign() << " Distance : " << dist_to_go << ": Lead distance " << lead_dist << " " << curr->name << endl;
     return dist_to_go < lead_dist;
 }
 
@@ -819,30 +821,62 @@ void FGAIAircraft::updateHeading() {
         // If on ground, calculate heading change directly
         if (onGround()) {
             double headingDiff = fabs(hdg-tgt_heading);
+            double bank_sense = 0.0;
+        /*
+        double diff = fabs(hdg - tgt_heading);
+        if (diff > 180)
+            diff = fabs(diff - 360);
 
+        double sum = hdg + diff;
+        if (sum > 360.0)
+            sum -= 360.0;
+        if (fabs(sum - tgt_heading) < 1.0) {
+            bank_sense = 1.0;    // right turn
+        } else {
+            bank_sense = -1.0;   // left turn
+        }*/
             if (headingDiff > 180)
                 headingDiff = fabs(headingDiff - 360);
-
-            groundTargetSpeed = tgt_speed - (tgt_speed * (headingDiff/45));
+            double sum = hdg + headingDiff;
+            if (sum > 360.0) 
+                sum -= 360.0;
+            if (fabs(sum - tgt_heading) > 0.0001) {
+                bank_sense = -1.0;
+            } else {
+                bank_sense = 1.0;
+            }
+            if (trafficRef)
+            	//cerr << trafficRef->getCallSign() << " Heading " 
+                //     << hdg << ". Target " << tgt_heading <<  ". Diff " << fabs(sum - tgt_heading) << ". Speed " << speed << endl;
+            //if (headingDiff > 60) {
+            groundTargetSpeed = tgt_speed; // * cos(headingDiff * SG_DEGREES_TO_RADIANS);
+                //groundTargetSpeed = tgt_speed - tgt_speed * (headingDiff/180);
+            //} else {
+            //    groundTargetSpeed = tgt_speed;
+            //}
             if (sign(groundTargetSpeed) != sign(tgt_speed))
                 groundTargetSpeed = 0.21 * sign(tgt_speed); // to prevent speed getting stuck in 'negative' mode
 
             if (headingDiff > 30.0) {
                 // invert if pushed backward
-                headingChangeRate += dt * sign(roll);
+                headingChangeRate += 10.0 * dt * sign(roll);
 
-                if (headingChangeRate > 30)
-                    headingChangeRate = 30;
-                else if (headingChangeRate < -30)
-                    headingChangeRate = -30;
-
+                // Clamp the maximum steering rate to 30 degrees per second,
+                // But only do this when the heading error is decreasing.
+                if ((headingDiff < headingError)) {
+                    if (headingChangeRate > 30)
+                        headingChangeRate = 30;
+                    else if (headingChangeRate < -30)
+                        headingChangeRate = -30;
+                }
             } else {
-                if (fabs(headingChangeRate) > headingDiff)
-                    headingChangeRate = headingDiff*sign(roll);
-                else
-                    headingChangeRate += dt * sign(roll);
+                   if (fabs(headingChangeRate) > headingDiff)
+                       headingChangeRate = headingDiff*sign(roll);
+                   else
+                       headingChangeRate += dt * sign(roll);
             }
-            hdg += headingChangeRate * dt;
+	    hdg += headingChangeRate * dt;
+            headingError = headingDiff;
         } else {
             if (fabs(speed) > 1.0) {
                 turn_radius_ft = 0.088362 * speed * speed
