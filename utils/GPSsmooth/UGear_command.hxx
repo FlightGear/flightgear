@@ -50,4 +50,7 @@ public:
 };
 
 
+extern UGCommand command_mgr;
+
+
 #endif // _FG_UGEAR_COMMAND_HXX

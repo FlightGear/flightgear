@@ -21,7 +21,8 @@ UGsmooth_SOURCES = \
         UGear.cxx UGear.hxx \
 	UGear_command.cxx UGear_command.hxx \
         UGear_main.cxx \
-	UGear_opengc.hxx
+	UGear_opengc.hxx \
+	UGear_telnet.cxx UGear_telnet.hxx
 
 UGsmooth_LDADD = \
         -lsgio -lsgserial -lsgtiming -lsgmath -lsgbucket -lsgmisc -lsgdebug \

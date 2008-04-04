@@ -96,3 +96,8 @@ void UGCommand::add( const string command )
     printf("command queue: %s\n", command.c_str());
     cmd_queue.push( command );
 }
+
+
+// create the global command channel manager
+UGCommand command_mgr;
+

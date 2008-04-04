@@ -26,6 +26,7 @@
 #include "UGear.hxx"
 #include "UGear_command.hxx"
 #include "UGear_opengc.hxx"
+#include "UGear_telnet.hxx"
 
 
 SG_USING_STD(cout);
@@ -712,6 +713,9 @@ int main( int argc, char **argv ) {
         track.set_stargate_swap_mode();
     }
 
+    UGTelnet telnet( 5402 );
+    telnet.open();
+
     if ( infile.length() || flight_dir.length() ) {
         if ( infile.length() ) {
             // Load data from a stream log data file
@@ -1023,14 +1027,11 @@ int main( int argc, char **argv ) {
             return false;
         }
 
-        // create the command channel manager
-        UGCommand command;
-
         // add some test commands
-        //command.add("ap,alt,1000");
-        //command.add("home,158.0,32.5");
-        //command.add("go,home");
-        //command.add("go,route");
+        //command_mgr.add("ap,alt,1000");
+        //command_mgr.add("home,158.0,32.5");
+        //command_mgr.add("go,home");
+        //command_mgr.add("go,route");
 
         while ( uavcom.is_enabled() ) {
 	    // cout << "looking for next message ..." << endl;
@@ -1039,6 +1040,8 @@ int main( int argc, char **argv ) {
 					 &healthpacket, ignore_checksum );
             // cout << "message id = " << id << endl;
             count++;
+
+            telnet.process();
 
             if ( id == GPS_PACKET ) {
                 if ( gpspacket.time > gps_time ) {
@@ -1074,7 +1077,7 @@ int main( int argc, char **argv ) {
                     current_time = health_time;
                     printf("Received a health packet, sequence: %d\n",
                            healthpacket.command_sequence);
-                    command.update_cmd_sequence(healthpacket.command_sequence);
+                    command_mgr.update_cmd_sequence(healthpacket.command_sequence);
                 } else {
                     cout << "oops health back in time: " << healthpacket.time << " " << health_time << endl;
                 }
@@ -1092,15 +1095,15 @@ int main( int argc, char **argv ) {
                 gps_status = 1.0;
             }
 
-            // Generate a ground station heart beat every 5 seconds
-            if ( current_time >= command_heartbeat + 5 ) {
-                command.add("hb");
+            // Generate a ground station heart beat every 4 seconds
+            if ( current_time >= command_heartbeat + 4 ) {
+                command_mgr.add("hb");
                 command_heartbeat = current_time;
             }
                 
             // Command update @ 1hz
             if ( current_time >= command_time + 1 ) {
-                command.update(&uavcom);
+                command_mgr.update(&uavcom);
                 command_time = current_time;
             }
 
