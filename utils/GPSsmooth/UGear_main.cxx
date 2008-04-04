@@ -473,16 +473,18 @@ static void ugear2opengc( gps *gpspacket, imu *imupacket, nav *navpacket,
         ogc->right_aileron = ((double)servopacket->chn[0] / 32768.0) - 1.0;
         ogc->rudder = 1.0 - ((double)servopacket->chn[3] / 32768.0);
     }
+    ogc->elevator *= 4.0;
+    ogc->left_aileron *= 4.0;
+    ogc->right_aileron *= 4.0;
+    ogc->rudder *= 4.0;
 
     // additional "abused" data fields
-    double fd_bank = 0.0;
-    double fd_pitch = 0.0;
-    ogc->egt[0] = ogc->bank + fd_bank;        // flight director target roll
-    ogc->egt[1] = -ogc->pitch + fd_pitch; // flight director target pitch
-    ogc->egt[2] = ogc->heading + 15; // target heading bug
-    ogc->egt[3] = -ogc->vvi;         // target VVI bug
-    ogc->epr[0] = 1400 /*ogc->elevation - 50*/ ; // target altitude bug
-    ogc->epr[1] = ogc->v_kcas + 5;   // target speed bug
+    ogc->egt[0] = ogc->bank - healthpacket->target_roll_deg; // flight director target roll
+    ogc->egt[1] = -ogc->pitch + healthpacket->target_pitch_deg; // flight director target pitch
+    ogc->egt[2] = healthpacket->target_heading_deg; // target heading bug
+    ogc->egt[3] = healthpacket->target_climb_fps;   // target VVI bug
+    ogc->epr[0] = healthpacket->target_altitude_ft; // target altitude bug
+    ogc->epr[1] = 30.0;                              // target speed bug
     ogc->epr[2] = gps_status;   // gps status box
 }
 
@@ -1025,9 +1027,10 @@ int main( int argc, char **argv ) {
         UGCommand command;
 
         // add some test commands
-        command.add("apalt,1000");
-        command.add("home,158.0,32.5");
-        command.add("gohome");
+        //command.add("ap,alt,1000");
+        //command.add("home,158.0,32.5");
+        //command.add("go,home");
+        //command.add("go,route");
 
         while ( uavcom.is_enabled() ) {
 	    // cout << "looking for next message ..." << endl;
@@ -1084,9 +1087,9 @@ int main( int argc, char **argv ) {
                   fabs(gpspacket.alt) < 0.0001) )
             {
                 printf("WARNING: LOST GPS!!!\n");
-                gps_status = 1.0;
-            } else {
                 gps_status = -1.0;
+            } else {
+                gps_status = 1.0;
             }
 
             // Generate a ground station heart beat every 5 seconds

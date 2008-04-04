@@ -46,7 +46,7 @@ struct gps {
    double lat,lon,alt;          /* gps position          */
    double ve,vn,vd;             /* gps velocity          */
    double ITOW;
-   uint64_t err_type;             /* error type            */
+   uint64_t err_type;           /* error type            */
 };
 
 struct nav {
@@ -65,7 +65,13 @@ struct servo {
 
 struct health {
     double time;
+    double target_roll_deg;     /* AP target roll angle */
+    double target_heading_deg;  /* AP target heading angle */
+    double target_pitch_deg;    /* AP target pitch angle */
+    double target_climb_fps;    /* AP target climb rate */
+    double target_altitude_ft;  /* AP target altitude */
     uint64_t command_sequence;  /* highest received command sequence num */
+    uint64_t target_waypoint;   /* index of current waypoint target */
     uint64_t loadavg;           /* system "1 minute" load average */
     uint64_t ahrs_hz;           /* actual ahrs loop hz */
     uint64_t nav_hz;            /* actual nav loop hz */
