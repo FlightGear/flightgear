@@ -122,10 +122,13 @@ private:
                                 // (usually 0.0)
 
     double Ti;                  // Integrator time (sec)
+    SGPropertyNode_ptr Ti_prop;
     double Td;                  // Derivator time (sec)
-
+    SGPropertyNode_ptr Td_prop;
     double u_min;               // Minimum output clamp
+    SGPropertyNode_ptr umin_prop;
     double u_max;               // Maximum output clamp
+    SGPropertyNode_ptr umax_prop;
 
     // Previous state tracking values
     double ep_n_1;              // ep[n-1]  (prop error)
@@ -159,6 +162,7 @@ private:
     // proportional component data
     bool proportional;
     double Kp;
+    SGPropertyNode_ptr Kp_prop;
     SGPropertyNode_ptr offset_prop;
     double offset_value;
 
@@ -180,7 +184,9 @@ private:
     double r_scale;             // scale reference input from property system
 
     double u_min;               // Minimum output clamp
+    SGPropertyNode_ptr umin_prop;
     double u_max;               // Maximum output clamp
+    SGPropertyNode_ptr umax_prop;
 
     
 public:

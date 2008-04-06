@@ -173,22 +173,102 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
 
             config = child->getChild( "Ti" );
             if ( config != NULL ) {
+                SGPropertyNode *val = config->getChild( "value" );
+                if ( val != NULL ) {
+                    Ti = val->getDoubleValue();
+                }
+
+                SGPropertyNode *prop = config->getChild( "prop" );
+                if ( prop != NULL ) {
+                    Ti_prop = fgGetNode( prop->getStringValue(), true );
+                    if ( val != NULL ) {
+                        Ti_prop->setDoubleValue(Kp);
+                    }
+                }
+
+                // output deprecated usage warning
+                if (val == NULL && prop == NULL) {
                 Ti = config->getDoubleValue();
+                    SG_LOG( SG_AUTOPILOT, SG_WARN, "Deprecated Ti config. Please use <prop> and/or <value> tags." );
+                    if ( name.length() ) {
+                        SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+                    }
+                }
             }
 
             config = child->getChild( "Td" );
             if ( config != NULL ) {
+                SGPropertyNode *val = config->getChild( "value" );
+                if ( val != NULL ) {
+                    Td = val->getDoubleValue();
+                }
+
+                SGPropertyNode *prop = config->getChild( "prop" );
+                if ( prop != NULL ) {
+                    Td_prop = fgGetNode( prop->getStringValue(), true );
+                    if ( val != NULL ) {
+                        Td_prop->setDoubleValue(Kp);
+                    }
+                }
+
+                // output deprecated usage warning
+                if (val == NULL && prop == NULL) {
                 Td = config->getDoubleValue();
+                    SG_LOG( SG_AUTOPILOT, SG_WARN, "Deprecated Td config. Please use <prop> and/or <value> tags." );
+                    if ( name.length() ) {
+                        SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+                    }
+                }
             }
 
             config = child->getChild( "u_min" );
             if ( config != NULL ) {
+                SGPropertyNode *val = config->getChild( "value" );
+                if ( val != NULL ) {
+                    u_min = val->getDoubleValue();
+                }
+
+                SGPropertyNode *prop = config->getChild( "prop" );
+                if ( prop != NULL ) {
+                    umin_prop = fgGetNode( prop->getStringValue(), true );
+                    if ( val != NULL ) {
+                        umin_prop->setDoubleValue(u_min);
+                    }
+                }
+
+                // output deprecated usage warning
+                if (val == NULL && prop == NULL) {
                 u_min = config->getDoubleValue();
+                    SG_LOG( SG_AUTOPILOT, SG_WARN, "Deprecated u_min config. Please use <prop> and/or <value> tags." );
+                    if ( name.length() ) {
+                        SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+                    }
+                }
             }
 
             config = child->getChild( "u_max" );
             if ( config != NULL ) {
+                SGPropertyNode *val = config->getChild( "value" );
+                if ( val != NULL ) {
+                    u_max = val->getDoubleValue();
+                }
+
+                SGPropertyNode *prop = config->getChild( "prop" );
+                if ( prop != NULL ) {
+                    umax_prop = fgGetNode( prop->getStringValue(), true );
+                    if ( val != NULL ) {
+                        umax_prop->setDoubleValue(u_max);
+                    }
+                }
+
+                // output deprecated usage warning
+                if (val == NULL && prop == NULL) {
                 u_max = config->getDoubleValue();
+                    SG_LOG( SG_AUTOPILOT, SG_WARN, "Deprecated u_max config. Please use <prop> and/or <value> tags." );
+                    if ( name.length() ) {
+                        SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+                    }
+                }
             }
         } else {
             SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in autopilot config logic" );
@@ -260,6 +340,10 @@ void FGPIDController::update( double dt ) {
     double delta_u_n = 0.0; // incremental output
     double u_n = 0.0;       // absolute output
     double Ts;              // sampling interval (sec)
+    if (umin_prop != NULL)u_min = umin_prop->getDoubleValue();
+    if (umax_prop != NULL)u_max = umax_prop->getDoubleValue();
+    if (Ti_prop != NULL)Ti = Ti_prop->getDoubleValue();
+    if (Td_prop != NULL)Td = Td_prop->getDoubleValue();
     
     elapsedTime += dt;
     if ( elapsedTime <= desiredTs ) {
@@ -466,7 +550,24 @@ FGPISimpleController::FGPISimpleController( SGPropertyNode *node ):
 
             prop = child->getChild( "Kp" );
             if ( prop != NULL ) {
+                SGPropertyNode *val = prop->getChild( "value" );
+                if ( val != NULL ) {
+                    Kp = val->getDoubleValue();
+                }
+
+                SGPropertyNode *prop1 = prop->getChild( "prop" );
+                if ( prop1 != NULL ) {
+                    Kp_prop = fgGetNode( prop1->getStringValue(), true );
+                    if ( val != NULL ) {
+                        Kp_prop->setDoubleValue(Kp);
+                    }
+                }
+
+                // output deprecated usage warning
+                if (val == NULL && prop1 == NULL) {
                 Kp = prop->getDoubleValue();
+                    SG_LOG( SG_AUTOPILOT, SG_WARN, "Deprecated Kp config. Please use <prop> and/or <value> tags." );
+                }
                 proportional = true;
             }
 
@@ -478,13 +579,47 @@ FGPISimpleController::FGPISimpleController( SGPropertyNode *node ):
 
             prop = child->getChild( "u_min" );
             if ( prop != NULL ) {
+                SGPropertyNode *val = prop->getChild( "value" );
+                if ( val != NULL ) {
+                    u_min = val->getDoubleValue();
+                }
+
+                SGPropertyNode *prop1 = prop->getChild( "prop" );
+                if ( prop1 != NULL ) {
+                    umin_prop = fgGetNode( prop1->getStringValue(), true );
+                    if ( val != NULL ) {
+                        umin_prop->setDoubleValue(u_min);
+                    }
+                }
+
+                // output deprecated usage warning
+                if (val == NULL && prop1 == NULL) {
                 u_min = prop->getDoubleValue();
+                    SG_LOG( SG_AUTOPILOT, SG_WARN, "Deprecated u_min config. Please use <prop> and/or <value> tags." );
+                }
                 clamp = true;
             }
 
             prop = child->getChild( "u_max" );
             if ( prop != NULL ) {
+                SGPropertyNode *val = prop->getChild( "value" );
+                if ( val != NULL ) {
+                    u_max = val->getDoubleValue();
+                }
+
+                SGPropertyNode *prop1 = prop->getChild( "prop" );
+                if ( prop1 != NULL ) {
+                    umax_prop = fgGetNode( prop1->getStringValue(), true );
+                    if ( val != NULL ) {
+                        umax_prop->setDoubleValue(u_max);
+                    }
+                }
+
+                // output deprecated usage warning
+                if (val == NULL && prop1 == NULL) {
                 u_max = prop->getDoubleValue();
+                    SG_LOG( SG_AUTOPILOT, SG_WARN, "Deprecated u_max config. Please use <prop> and/or <value> tags." );
+                }
                 clamp = true;
             }
         } else {
@@ -498,6 +633,10 @@ FGPISimpleController::FGPISimpleController( SGPropertyNode *node ):
 
 
 void FGPISimpleController::update( double dt ) {
+    if (umin_prop != NULL)u_min = umin_prop->getDoubleValue();
+    if (umax_prop != NULL)u_max = umax_prop->getDoubleValue();
+    if (Kp_prop != NULL)Kp = Kp_prop->getDoubleValue();
+
     if (enable_prop != NULL && enable_prop->getStringValue() == enable_value) {
         if ( !enabled ) {
             // we have just been enabled, zero out int_sum
