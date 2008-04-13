@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include "UGear_command.hxx"
 
 
@@ -18,7 +20,7 @@ static char calc_nmea_cksum(const char *sentence) {
 
     // cout << sentence << endl;
 
-    len = strlen(sentence);
+    len = std::strlen(sentence);
     sum = sentence[0];
     for ( i = 1; i < len; i++ ) {
         // cout << sentence[i];

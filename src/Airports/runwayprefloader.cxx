@@ -13,9 +13,14 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
+#include <cstring>
+#include <cstdlib>
+
 #include <simgear/debug/logstream.hxx>
 
 #include "runwayprefloader.hxx"
+
+using namespace std;
 
 FGRunwayPreferenceXMLLoader::FGRunwayPreferenceXMLLoader(FGRunwayPreference* p):XMLVisitor(), _pref(p) {}
 

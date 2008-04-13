@@ -13,6 +13,8 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
+#include <cstdlib>
+
 #include "dynamicloader.hxx"
 
 FGAirportDynamicsXMLLoader::FGAirportDynamicsXMLLoader(FGAirportDynamics* dyn):
@@ -50,7 +52,7 @@ void  FGAirportDynamicsXMLLoader::startElement (const char * name, const XMLAttr
 	  //cout << "  " << atts.getName(i) << '=' << atts.getValue(i) << endl; 
 	  attname = atts.getName(i);
 	  if (attname == string("index"))
-	    park.setIndex(atoi(atts.getValue(i)));
+	    park.setIndex(std::atoi(atts.getValue(i)));
 	  else if (attname == string("type"))
 	    park.setType(atts.getValue(i));
 	 else if (attname == string("name"))
@@ -62,13 +64,13 @@ void  FGAirportDynamicsXMLLoader::startElement (const char * name, const XMLAttr
 	  else if (attname == string("lon"))
 	    park.setLongitude(atts.getValue(i)); 
 	  else if (attname == string("heading"))
-	    park.setHeading(atof(atts.getValue(i)));
+	    park.setHeading(std::atof(atts.getValue(i)));
 	  else if (attname == string("radius")) {
 	    string radius = atts.getValue(i);
 	    if (radius.find("M") != string::npos)
 	      radius = radius.substr(0, radius.find("M",0));
 	    //cerr << "Radius " << radius <<endl;
-	    park.setRadius(atof(radius.c_str()));
+	    park.setRadius(std::atof(radius.c_str()));
 	  }
 	   else if (attname == string("airlineCodes"))
 	     park.setCodes(atts.getValue(i));
@@ -82,13 +84,13 @@ void  FGAirportDynamicsXMLLoader::startElement (const char * name, const XMLAttr
 	{
 	  attname = atts.getName(i);
 	  if (attname == string("index"))
-	    taxiNode.setIndex(atoi(atts.getValue(i)));
+	    taxiNode.setIndex(std::atoi(atts.getValue(i)));
 	  if (attname == string("lat"))
 	    taxiNode.setLatitude(atts.getValue(i));
 	  if (attname == string("lon"))
 	    taxiNode.setLongitude(atts.getValue(i));
 	  if (attname == string("isOnRunway"))
-            taxiNode.setOnRunway((bool) atoi(atts.getValue(i)));
+            taxiNode.setOnRunway((bool) std::atoi(atts.getValue(i)));
 	  if (attname == string("holdPointType")) {
             attval = atts.getValue(i);
             if (attval==string("none")) {
@@ -113,11 +115,11 @@ void  FGAirportDynamicsXMLLoader::startElement (const char * name, const XMLAttr
 	{
 	  attname = atts.getName(i);
 	  if (attname == string("begin"))
-	    taxiSegment.setStartNodeRef(atoi(atts.getValue(i)));
+	    taxiSegment.setStartNodeRef(std::atoi(atts.getValue(i)));
 	  if (attname == string("end"))
-	    taxiSegment.setEndNodeRef(atoi(atts.getValue(i)));
+	    taxiSegment.setEndNodeRef(std::atoi(atts.getValue(i)));
           if (attname == string("isPushBackRoute"))
-	    taxiSegment.setPushBackType((bool) atoi(atts.getValue(i)));
+	    taxiSegment.setPushBackType((bool) std::atoi(atts.getValue(i)));
 	}
       _dynamics->getGroundNetwork()->addSegment(taxiSegment);
     }

@@ -1,5 +1,8 @@
 #include <stdio.h>
 
+#include <cstring>
+#include <cstdlib>
+
 #include <simgear/props/props.hxx>
 #include <simgear/xml/easyxml.hxx>
 
@@ -93,8 +96,8 @@ int main(int argc, char** argv)
     if(!a->getFailureMsg() && argc > 2 && strcmp(argv[2], "-g") == 0) {
         float alt = 5000, kts = 100;
         for(int i=3; i<argc; i++) {
-            if     (strcmp(argv[i], "-a") == 0) alt = atof(argv[++i]);
-            else if(strcmp(argv[i], "-s") == 0) kts = atof(argv[++i]);
+            if     (std::strcmp(argv[i], "-a") == 0) alt = std::atof(argv[++i]);
+            else if(std::strcmp(argv[i], "-s") == 0) kts = std::atof(argv[++i]);
             else return usage();
         }
         yasim_graph(a, alt, kts);

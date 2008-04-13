@@ -67,17 +67,17 @@ extern void printScreen(puObject *);
 extern void helpCb(puObject *);
 
 typedef struct {
-        char *name;
+        const char *name;
         void (*fn)(puObject *);
 } __fg_gui_fn_t;
 extern const __fg_gui_fn_t __fg_gui_fn[];
 
 // GLOBAL COMMON DIALOG BOX TEXT STRINGS
-extern char *gui_msg_OK;     // "OK"
-extern char *gui_msg_NO;     // "NO"
-extern char *gui_msg_YES;    // "YES"
-extern char *gui_msg_CANCEL; // "CANCEL"
-extern char *gui_msg_RESET;  // "RESET"
+extern const char *gui_msg_OK;     // "OK"
+extern const char *gui_msg_NO;     // "NO"
+extern const char *gui_msg_YES;    // "YES"
+extern const char *gui_msg_CANCEL; // "CANCEL"
+extern const char *gui_msg_RESET;  // "RESET"
 
 // mouse.cxx
 extern void guiInitMouse(int width, int height);

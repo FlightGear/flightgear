@@ -103,11 +103,11 @@ extern void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
 
 
 // TODO: remove after the last hardcoded dialog has died
-char *gui_msg_OK     = "OK";
-char *gui_msg_NO     = "NO";
-char *gui_msg_YES    = "YES";
-char *gui_msg_CANCEL = "CANCEL";
-char *gui_msg_RESET  = "RESET";
+const char *gui_msg_OK     = "OK";
+const char *gui_msg_NO     = "NO";
+const char *gui_msg_YES    = "YES";
+const char *gui_msg_CANCEL = "CANCEL";
+const char *gui_msg_RESET  = "RESET";
 
 
 const __fg_gui_fn_t __fg_gui_fn[] = {

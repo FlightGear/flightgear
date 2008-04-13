@@ -37,6 +37,8 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <cstring>
+
 #include "FGfdmSocket.h"
 
 namespace JSBSim {
@@ -79,7 +81,7 @@ FGfdmSocket::FGfdmSocket(string address, int port)
       memset(&scktName, 0, sizeof(struct sockaddr_in));
       scktName.sin_family = AF_INET;
       scktName.sin_port = htons(port);
-      memcpy(&scktName.sin_addr, host->h_addr_list[0], host->h_length);
+      std::memcpy(&scktName.sin_addr, host->h_addr_list[0], host->h_length);
       int len = sizeof(struct sockaddr_in);
       if (connect(sckt, (struct sockaddr*)&scktName, len) == 0) {   // successful
         cout << "Successfully connected to socket for output ..." << endl;
@@ -113,7 +115,7 @@ FGfdmSocket::FGfdmSocket(int port)
   sckt = socket(AF_INET, SOCK_STREAM, 0);
 
   if (sckt >= 0) {  // successful
-    memset(&scktName, 0, sizeof(struct sockaddr_in));
+    std::memset(&scktName, 0, sizeof(struct sockaddr_in));
     scktName.sin_family = AF_INET;
     scktName.sin_port = htons(port);
     int len = sizeof(struct sockaddr_in);

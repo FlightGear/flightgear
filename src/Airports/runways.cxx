@@ -25,8 +25,9 @@
 #  include <config.h>
 #endif
 
-#include <math.h>               // fabs()
-#include <stdio.h>              // sprintf()
+#include <cmath>               // fabs()
+#include <cstdio>              // sprintf()
+#include <cstdlib>             // atoi()
 
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>

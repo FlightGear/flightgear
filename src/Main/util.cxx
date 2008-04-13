@@ -22,6 +22,8 @@
 
 #include <math.h>
 
+#include <cstdlib>
+
 #include <vector>
 SG_USING_STD(vector);
 
@@ -112,7 +114,7 @@ fgExit (int status)
 #endif
 
     SG_LOG(SG_GENERAL, SG_INFO, "Exiting FlightGear with status " << status);
-    exit(status);
+    std::exit(status);
 }
 
 
