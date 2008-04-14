@@ -124,7 +124,13 @@
 				RelativePath="..\..\utils\GPSsmooth\UGear.cxx">
 			</File>
 			<File
+				RelativePath="..\..\utils\GPSsmooth\UGear_command.cxx">
+			</File>
+			<File
 				RelativePath="..\..\utils\GPSsmooth\UGear_main.cxx">
+			</File>
+			<File
+				RelativePath="..\..\utils\GPSsmooth\UGear_telnet.cxx">
 			</File>
 		</Filter>
 		<Filter
@@ -133,6 +139,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
 				RelativePath="..\..\utils\GPSsmooth\UGear.hxx">
+			</File>
+			<File
+				RelativePath="..\..\utils\GPSsmooth\UGear_command.hxx">
+			</File>
+			<File
+				RelativePath="..\..\utils\GPSsmooth\UGear_opengc.hxx">
+			</File>
+			<File
+				RelativePath="..\..\utils\GPSsmooth\UGear_telnet.hxx">
 			</File>
 		</Filter>
 		<Filter
