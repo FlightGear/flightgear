@@ -172,7 +172,6 @@ void fgOSOpenWindow(int w, int h, int bpp,
         if (strcmp(cameraNode->getName(), "camera") != 0)
           continue;
 
-	nCameras++;
         // get a new copy of the traits struct
         osg::ref_ptr<osg::GraphicsContext::Traits> cameraTraits;
         cameraTraits = new osg::GraphicsContext::Traits(*traits);
@@ -209,14 +208,17 @@ void fgOSOpenWindow(int w, int h, int bpp,
 
         osg::GraphicsContext* gc;
         gc = osg::GraphicsContext::createGraphicsContext(cameraTraits.get());
-        gc->realize();
-        camera->setGraphicsContext(gc);
-        // If a viewport isn't set on the camera, then it's hard to dig it
-        // out of the SceneView objects in the viewer, and the coordinates
-        // of mouse events are somewhat bizzare.
-        camera->setViewport(new osg::Viewport(0, 0, cameraTraits->width, cameraTraits->height));
-        camera->setProjectionResizePolicy(rsp);
-        viewer->addSlave(camera.get(), osg::Matrix::translate(-shearx, -sheary, 0), osg::Matrix());
+        if( gc != NULL ) {
+          gc->realize();
+          camera->setGraphicsContext(gc);
+          // If a viewport isn't set on the camera, then it's hard to dig it
+          // out of the SceneView objects in the viewer, and the coordinates
+          // of mouse events are somewhat bizzare.
+          camera->setViewport(new osg::Viewport(0, 0, cameraTraits->width, cameraTraits->height));
+          camera->setProjectionResizePolicy(rsp);
+          viewer->addSlave(camera.get(), osg::Matrix::translate(-shearx, -sheary, 0), osg::Matrix());
+          nCameras++;
+        }
       }
       if (nCameras > 1)
 	manipulator->setResizable(false);
