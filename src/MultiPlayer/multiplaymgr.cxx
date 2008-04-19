@@ -233,21 +233,29 @@ FGMultiplayMgr::init (void)
   //  Set members from property values
   //////////////////////////////////////////////////
   short rxPort = fgGetInt("/sim/multiplay/rxport");
-  if (rxPort <= 0)
-    rxPort = 5000;
-  mCallsign = fgGetString("/sim/multiplay/callsign");
-  if (mCallsign.empty())
-    // FIXME: use getpwuid
-    mCallsign = "JohnDoe"; 
   string rxAddress = fgGetString("/sim/multiplay/rxhost");
-  if (rxAddress.empty())
-    rxAddress = "127.0.0.1";
   short txPort = fgGetInt("/sim/multiplay/txport");
   string txAddress = fgGetString("/sim/multiplay/txhost");
+  mCallsign = fgGetString("/sim/multiplay/callsign");
   if (txPort > 0 && !txAddress.empty()) {
-    mHaveServer = true;
     mServer.set(txAddress.c_str(), txPort);
+    if (strncmp (mServer.getHost(), "0.0.0.0", 8) == 0) {
+      mHaveServer = false;
+      SG_LOG(SG_NETWORK, SG_ALERT,
+        "FGMultiplayMgr - could not resolve '"
+        << txAddress << "', Multiplayermode disabled");
+    } else {
+      mHaveServer = true;
+    }
+    rxPort = txPort;
   }
+  if (rxPort <= 0) {
+    SG_LOG(SG_NETWORK, SG_ALERT,
+      "FGMultiplayMgr - No receiver port, Multiplayermode disabled");
+    return (false);
+  }
+  if (mCallsign.empty())
+    mCallsign = "JohnDoe"; // FIXME: use getpwuid
   SG_LOG(SG_NETWORK,SG_INFO,"FGMultiplayMgr::init-txaddress= "<<txAddress);
   SG_LOG(SG_NETWORK,SG_INFO,"FGMultiplayMgr::init-txport= "<<txPort );
   SG_LOG(SG_NETWORK,SG_INFO,"FGMultiplayMgr::init-rxaddress="<<rxAddress );
@@ -301,13 +309,10 @@ FGMultiplayMgr::Close (void)
 void
 FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
 {
-  if ((! mInitialised) || (! mHaveServer)) {
-    if (! mInitialised)
-      SG_LOG( SG_NETWORK, SG_ALERT,
-              "FGMultiplayMgr::SendMyPosition - not initialised" );
-    if (! mHaveServer)
-      SG_LOG( SG_NETWORK, SG_ALERT,
-              "FGMultiplayMgr::SendMyPosition - no server" );
+  if ((! mInitialised) || (! mHaveServer))
+        return;
+  if (! mHaveServer) {
+    SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayMgr::SendMyPosition - no server");
     return;
   }
 
@@ -762,8 +767,8 @@ FGMultiplayMgr::ProcessChatMsg(const char *Msg, netAddress& SenderAddress)
   MsgBuf[MsgHdr->MsgLen - sizeof(T_MsgHdr) - 1] = '\0';
   
   T_ChatMsg* ChatMsg = (T_ChatMsg *)(Msg + sizeof(T_MsgHdr));
-  SG_LOG ( SG_NETWORK, SG_ALERT, "Chat [" << MsgHdr->Callsign << "]"
-           << " " << MsgBuf << endl);
+  SG_LOG (SG_NETWORK, SG_ALERT, "Chat [" << MsgHdr->Callsign << "]"
+           << " " << MsgBuf);
 
   delete [] MsgBuf;
 } // FGMultiplayMgr::ProcessChatMsg ()
