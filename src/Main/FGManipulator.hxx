@@ -4,6 +4,7 @@
 #include <map>
 #include <osg/Quat>
 #include <osgGA/MatrixManipulator>
+#include <osgViewer/ViewerEventHandlers>
 
 #include "fg_os.hxx"
 
@@ -128,6 +129,8 @@ protected:
     fgKeyHandler keyHandler;
     fgMouseClickHandler mouseClickHandler;
     fgMouseMotionHandler mouseMotionHandler;
+    osg::ref_ptr<osgViewer::StatsHandler> statsHandler;
+    osg::ref_ptr<osgGA::GUIEventAdapter> statsEvent;
     int currentModifiers;
     // work-around for OSG bug
     int osgModifiers;
@@ -145,5 +148,6 @@ protected:
     // When the viewer is embedded, the host toolkit may deliver a
     // valid event mask but not control keys.
     bool useEventModifiers;
+    void handleStats(osgGA::GUIActionAdapter& us);
 };
 #endif

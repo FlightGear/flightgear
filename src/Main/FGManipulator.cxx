@@ -4,11 +4,16 @@
 #include <osg/Math>
 #include <osgViewer/Viewer>
 #include <plib/pu.h>
+#include <Main/fg_props.hxx>
 #include "FGManipulator.hxx"
 
 #if !defined(X_DISPLAY_MISSING)
 #define X_DOUBLE_SCROLL_BUG 1
 #endif
+
+const int displayStatsKey = 1;
+const int printStatsKey = 2;
+
 
 // The manipulator is responsible for updating a Viewer's camera. It's
 // event handling method is also a convenient place to run the the FG
@@ -16,12 +21,16 @@
 
 FGManipulator::FGManipulator() :
     idleHandler(0), drawHandler(0), windowResizeHandler(0), keyHandler(0),
-    mouseClickHandler(0), mouseMotionHandler(0), currentModifiers(0),
-    osgModifiers(0), resizable(true), mouseWarped(false),
+    mouseClickHandler(0), mouseMotionHandler(0),
+    statsHandler(new osgViewer::StatsHandler), statsEvent(new osgGA::GUIEventAdapter),
+    currentModifiers(0), osgModifiers(0), resizable(true), mouseWarped(false),
     scrollButtonPressed(false), useEventModifiers(false)
 {
     using namespace osgGA;
-    
+    statsHandler->setKeyEventTogglesOnScreenStats(displayStatsKey);
+    statsHandler->setKeyEventPrintsOutStats(printStatsKey);
+    statsEvent->setEventType(GUIEventAdapter::KEYDOWN);
+
     keyMaskMap[GUIEventAdapter::KEY_Shift_L]
 	= GUIEventAdapter::MODKEY_LEFT_SHIFT;
     keyMaskMap[GUIEventAdapter::KEY_Shift_R]
@@ -142,6 +151,8 @@ bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
 {
     int x = 0;
     int y = 0;
+    handleStats(us);
+
     switch (ea.getEventType()) {
     case osgGA::GUIEventAdapter::FRAME:
 	if (idleHandler)
@@ -306,6 +317,24 @@ void FGManipulator::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
                 release_keys[toupper(key)] = key;
             }
         }
+    }
+}
+
+void FGManipulator::handleStats(osgGA::GUIActionAdapter& us)
+{
+    static SGPropertyNode_ptr display = fgGetNode("/sim/rendering/on-screen-statistics", true);
+    static SGPropertyNode_ptr print = fgGetNode("/sim/rendering/print-statistics", true);
+
+    if (display->getBoolValue()) {
+        statsEvent->setKey(displayStatsKey);
+        statsHandler->handle(*statsEvent, us);
+        display->setBoolValue(false);
+    }
+
+    if (print->getBoolValue()) {
+        statsEvent->setKey(printStatsKey);
+        statsHandler->handle(*statsEvent, us);
+        print->setBoolValue(false);
     }
 }
 

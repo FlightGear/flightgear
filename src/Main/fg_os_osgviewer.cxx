@@ -248,10 +248,6 @@ void fgOSOpenWindow(int w, int h, int bpp,
     viewer->setCameraManipulator(globals->get_renderer()->getManipulator());
     // Let FG handle the escape key with a confirmation
     viewer->setKeyEventSetsDone(0);
-    osgViewer::StatsHandler* statsHandler = new osgViewer::StatsHandler;
-    statsHandler->setKeyEventTogglesOnScreenStats('*');
-    statsHandler->setKeyEventPrintsOutStats(0);
-    viewer->addEventHandler(statsHandler);
     // The viewer won't start without some root.
     viewer->setSceneData(new osg::Group);
     globals->get_renderer()->setViewer(viewer.get());
