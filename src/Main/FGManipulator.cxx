@@ -20,11 +20,21 @@ const int printStatsKey = 2;
 // idle and draw handlers.
 
 FGManipulator::FGManipulator() :
-    idleHandler(0), drawHandler(0), windowResizeHandler(0), keyHandler(0),
-    mouseClickHandler(0), mouseMotionHandler(0),
-    statsHandler(new osgViewer::StatsHandler), statsEvent(new osgGA::GUIEventAdapter),
-    currentModifiers(0), osgModifiers(0), resizable(true), mouseWarped(false),
-    scrollButtonPressed(false), useEventModifiers(false)
+    idleHandler(0),
+    drawHandler(0),
+    windowResizeHandler(0),
+    keyHandler(0),
+    mouseClickHandler(0),
+    mouseMotionHandler(0),
+    statsHandler(new osgViewer::StatsHandler),
+    statsEvent(new osgGA::GUIEventAdapter),
+    statsType(osgViewer::StatsHandler::NO_STATS),
+    currentModifiers(0),
+    osgModifiers(0),
+    resizable(true),
+    mouseWarped(false),
+    scrollButtonPressed(false),
+    useEventModifiers(false)
 {
     using namespace osgGA;
     statsHandler->setKeyEventTogglesOnScreenStats(displayStatsKey);
@@ -325,10 +335,15 @@ void FGManipulator::handleStats(osgGA::GUIActionAdapter& us)
     static SGPropertyNode_ptr display = fgGetNode("/sim/rendering/on-screen-statistics", true);
     static SGPropertyNode_ptr print = fgGetNode("/sim/rendering/print-statistics", true);
 
-    if (display->getBoolValue()) {
+    int type = display->getIntValue() % osgViewer::StatsHandler::LAST;
+    if (type != statsType) {
         statsEvent->setKey(displayStatsKey);
-        statsHandler->handle(*statsEvent, us);
-        display->setBoolValue(false);
+        do {
+            statsType = ++statsType % osgViewer::StatsHandler::LAST;
+            statsHandler->handle(*statsEvent, us);
+        } while (statsType != type);
+
+        display->setIntValue(statsType);
     }
 
     if (print->getBoolValue()) {

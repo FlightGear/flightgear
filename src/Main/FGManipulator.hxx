@@ -131,6 +131,7 @@ protected:
     fgMouseMotionHandler mouseMotionHandler;
     osg::ref_ptr<osgViewer::StatsHandler> statsHandler;
     osg::ref_ptr<osgGA::GUIEventAdapter> statsEvent;
+    int statsType;
     int currentModifiers;
     // work-around for OSG bug
     int osgModifiers;
