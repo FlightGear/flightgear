@@ -68,9 +68,9 @@ conditions (see README.conditions):
  </key>
 
 Keyboard definitions can embed bindings in tags <mod-up> (key released),
-<mod-shift>, <mod-ctrl>, <mod-alt>, <mod-meta>, and <mod-super>. Nesting
-is supported. Meta and Super modifier tags are for local use only, and
-must be supported by the operating system to work.
+<mod-shift>, <mod-ctrl>, <mod-alt>, <mod-meta>, <mod-super>, and <mod-hyper>.
+Nesting is supported. Meta, Super, and Hyper modifier tags are for local
+use only, and must be supported by the operating system to work.
 
  <key n="113">
   <name>q</name>
