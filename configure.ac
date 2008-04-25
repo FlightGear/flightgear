@@ -98,7 +98,7 @@ if test "x$with_logging" = "xno" ; then
     AC_DEFINE([FG_NDEBUG], 1, [Define for no logging output])
 fi
 
-AC_ARG_ENABLE(sp_fdms, [  --enable-sp-fdms              Include special purpose Flight Models], [enable_sp_fdms="$enableval"] )
+AC_ARG_ENABLE(sp_fdms, [  --enable-sp-fdms               Include special purpose Flight Models], [enable_sp_fdms="$enableval"] )
 if test "x$enable_sp_fdms" != "xno"; then
     AC_DEFINE([ENABLE_SP_FDM], 1, [Define to include special purpose FDMs])
 else
@@ -197,23 +197,28 @@ AC_SEARCH_LIBS(dlclose, dl)
 
 base_LIBS="$LIBS"
 
-dnl Check for SDL if enabled.
-AC_ARG_ENABLE(sdl, [  --enable-sdl                  Configure to use SDL instead of GLUT], [enable_sdl="$enableval"])
-AC_ARG_ENABLE(osgviewer, [  --enable-osgviewer                  Configure to use osgViewer], [enable_osgviewer="$enableval"])
+dnl Check for SDL or glut if enabled.
+AC_ARG_ENABLE(osgviewer, [  --enable-osgviewer                  Configure to use osgViewer(default)], [enable_osgviewer="$enableval"])
+AC_ARG_ENABLE(sdl,  [  --enable-sdl                   Configure to use SDL], [enable_sdl="$enableval"])
+AC_ARG_ENABLE(glut, [  --enable-glut                  Configure to use GLUT], [enable_glut="$enableval"])
 AM_CONDITIONAL(USE_SDL, test "x$enable_sdl" = "xyes")
-AM_CONDITIONAL(USE_OSGVIEWER, test "x$enable_osgviewer" = "xyes")
-if test "x$enable_sdl" = "xyes"; then
-    AC_DEFINE([PU_USE_SDL], 1, [Define to use SDL])
+AM_CONDITIONAL(USE_GLUT, test "x$enable_glut" = "xyes")
+if test "x$enable_sdl" != "xyes" -a "x$enable_glut" != "xyes" -a "x$enable_osgviewer" != "xno"; then
+   enable_osgviewer="yes"
+fi
+if test "x$enable_osgviewer" = "xyes"; then
+   AC_DEFINE([USE_OSGVIEWER], 1, [Define to use osgViewer in renderer])
+   AC_DEFINE([ENABLE_OSGVIEWER], 1, [Define to use osgViewer in renderer])
+   AC_DEFINE([PU_USE_NATIVE], 1, [Define to use native system])
+elif test "x$enable_sdl" = "xyes"; then
+   AC_DEFINE([PU_USE_SDL], 1, [Define to use SDL])
+elif test "x$enable_glut" = "xyes"; then
+   AC_DEFINE([PU_USE_GLUT], 1, [Define to use glut])
 else
-    if test "x$enable_osgviewer" = "xyes"; then
-       AC_DEFINE([ENABLE_OSGVIEWER], 1, [Define to use osgViewer in renderer])
-       AC_DEFINE([PU_USE_NATIVE], 1, [Define to use native system])
-    else
-        AC_DEFINE([PU_USE_GLUT], 1, [Define to use glut])
-    fi
+   AC_MSG_ERROR([One (and only one) of --enable-osgviewer, --enable-sdl, or --enable-glut must be supplied])
 fi
 
-AC_ARG_ENABLE(osgdebug, [  --enable-osgdebug                  Use OSG debug libraries], [enable_osgdebug="$enableval"])
+AC_ARG_ENABLE(osgdebug, [  --enable-osgdebug              Use OSG debug libraries], [enable_osgdebug="$enableval"])
 
 dnl check for OpenGL related libraries
 case "${host}" in
