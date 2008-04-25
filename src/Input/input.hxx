@@ -341,6 +341,7 @@ private:
   bool _key_alt;
   bool _key_meta;
   bool _key_super;
+  bool _key_hyper;
 };
 
 #endif // _INPUT_HXX

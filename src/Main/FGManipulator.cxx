@@ -95,18 +95,23 @@ osg::Node* FGManipulator::getNode()
 static int osgToFGModifiers(int modifiers)
 {
     int result = 0;
-    if (modifiers & (osgGA::GUIEventAdapter::MODKEY_LEFT_SHIFT |
-		     osgGA::GUIEventAdapter::MODKEY_RIGHT_SHIFT))
-	result |= KEYMOD_SHIFT;
-    if (modifiers & (osgGA::GUIEventAdapter::MODKEY_LEFT_CTRL |
-		     osgGA::GUIEventAdapter::MODKEY_RIGHT_CTRL))
-	result |= KEYMOD_CTRL;
-    if (modifiers & (osgGA::GUIEventAdapter::MODKEY_LEFT_ALT |
-		     osgGA::GUIEventAdapter::MODKEY_RIGHT_ALT))
-	result |= KEYMOD_ALT;
-    if (modifiers & (osgGA::GUIEventAdapter::MODKEY_LEFT_META |
-		     osgGA::GUIEventAdapter::MODKEY_RIGHT_META))
-	result |= KEYMOD_META;
+    if (modifiers & osgGA::GUIEventAdapter::MODKEY_SHIFT)
+        result |= KEYMOD_SHIFT;
+
+    if (modifiers & osgGA::GUIEventAdapter::MODKEY_CTRL)
+        result |= KEYMOD_CTRL;
+
+    if (modifiers & osgGA::GUIEventAdapter::MODKEY_ALT)
+        result |= KEYMOD_ALT;
+
+    if (modifiers & osgGA::GUIEventAdapter::MODKEY_META)
+        result |= KEYMOD_META;
+
+    if (modifiers & osgGA::GUIEventAdapter::MODKEY_SUPER)
+        result |= KEYMOD_SUPER;
+
+    if (modifiers & osgGA::GUIEventAdapter::MODKEY_HYPER)
+        result |= KEYMOD_HYPER;
     return result;
 }
 

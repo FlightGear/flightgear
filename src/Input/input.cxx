@@ -114,6 +114,12 @@ getModSuper ()
   return bool(fgGetKeyModifiers() & KEYMOD_SUPER);
 }
 
+static bool
+getModHyper ()
+{
+  return bool(fgGetKeyModifiers() & KEYMOD_HYPER);
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGInput.
@@ -165,6 +171,7 @@ FGInput::bind ()
   fgTie("/devices/status/keyboard/alt", getModAlt);
   fgTie("/devices/status/keyboard/meta", getModMeta);
   fgTie("/devices/status/keyboard/super", getModSuper);
+  fgTie("/devices/status/keyboard/hyper", getModHyper);
 
   _key_event->tie("key", SGRawValuePointer<int>(&_key_code));
   _key_event->tie("pressed", SGRawValuePointer<bool>(&_key_pressed));
@@ -174,6 +181,7 @@ FGInput::bind ()
   _key_event->tie("modifier/alt", SGRawValuePointer<bool>(&_key_alt));
   _key_event->tie("modifier/meta", SGRawValuePointer<bool>(&_key_meta));
   _key_event->tie("modifier/super", SGRawValuePointer<bool>(&_key_super));
+  _key_event->tie("modifier/hyper", SGRawValuePointer<bool>(&_key_hyper));
 }
 
 void
@@ -184,6 +192,7 @@ FGInput::unbind ()
   fgUntie("/devices/status/keyboard/alt");
   fgUntie("/devices/status/keyboard/meta");
   fgUntie("/devices/status/keyboard/super");
+  fgUntie("/devices/status/keyboard/hyper");
 
   _key_event->untie("key");
   _key_event->untie("pressed");
@@ -193,6 +202,7 @@ FGInput::unbind ()
   _key_event->untie("modifier/alt");
   _key_event->untie("modifier/meta");
   _key_event->untie("modifier/super");
+  _key_event->untie("modifier/hyper");
 }
 
 void 
@@ -247,6 +257,7 @@ FGInput::doKey (int k, int modifiers, int x, int y)
   _key_alt = bool(modifiers & KEYMOD_ALT);
   _key_meta = bool(modifiers & KEYMOD_META);
   _key_super = bool(modifiers & KEYMOD_SUPER);
+  _key_hyper = bool(modifiers & KEYMOD_HYPER);
   _key_event->fireValueChanged();
   if (!_key_code)
     return;
@@ -981,6 +992,10 @@ FGInput::_read_bindings (const SGPropertyNode * node,
   if (node->getChild("mod-super") != 0)
     _read_bindings(node->getChild("mod-super"), binding_list,
                    modifiers|KEYMOD_SUPER);
+
+  if (node->getChild("mod-hyper") != 0)
+    _read_bindings(node->getChild("mod-hyper"), binding_list,
+                   modifiers|KEYMOD_HYPER);
 }
 
 
