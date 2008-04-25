@@ -30,31 +30,16 @@ FGManipulator::FGManipulator() :
     statsEvent(new osgGA::GUIEventAdapter),
     statsType(osgViewer::StatsHandler::NO_STATS),
     currentModifiers(0),
-    osgModifiers(0),
     resizable(true),
     mouseWarped(false),
-    scrollButtonPressed(false),
-    useEventModifiers(false)
+    scrollButtonPressed(false)
 {
     using namespace osgGA;
     statsHandler->setKeyEventTogglesOnScreenStats(displayStatsKey);
     statsHandler->setKeyEventPrintsOutStats(printStatsKey);
     statsEvent->setEventType(GUIEventAdapter::KEYDOWN);
 
-    keyMaskMap[GUIEventAdapter::KEY_Shift_L]
-	= GUIEventAdapter::MODKEY_LEFT_SHIFT;
-    keyMaskMap[GUIEventAdapter::KEY_Shift_R]
-	= GUIEventAdapter::MODKEY_RIGHT_SHIFT;
-    keyMaskMap[GUIEventAdapter::KEY_Control_L]
-	= GUIEventAdapter::MODKEY_LEFT_CTRL;
-    keyMaskMap[GUIEventAdapter::KEY_Control_R]
-	= GUIEventAdapter::MODKEY_RIGHT_CTRL;
-    keyMaskMap[GUIEventAdapter::KEY_Alt_L] = GUIEventAdapter::MODKEY_LEFT_ALT;
-    keyMaskMap[GUIEventAdapter::KEY_Alt_R] = GUIEventAdapter::MODKEY_RIGHT_ALT;
-    keyMaskMap[GUIEventAdapter::KEY_Meta_L] = GUIEventAdapter::MODKEY_LEFT_META;
-    keyMaskMap[GUIEventAdapter::KEY_Meta_R] = GUIEventAdapter::MODKEY_RIGHT_META;
-    keyMaskMap[GUIEventAdapter::KEY_Super_L] = GUIEventAdapter::MODKEY_LEFT_META;
-    keyMaskMap[GUIEventAdapter::KEY_Super_R] = GUIEventAdapter::MODKEY_RIGHT_META;
+#if 0
     // We have to implement numlock too.
     numlockKeyMap[GUIEventAdapter::KEY_KP_Insert]  = '0';
     numlockKeyMap[GUIEventAdapter::KEY_KP_End] = '1';
@@ -66,6 +51,7 @@ FGManipulator::FGManipulator() :
     numlockKeyMap[GUIEventAdapter::KEY_KP_Home] = '7';
     numlockKeyMap[GUIEventAdapter::KEY_KP_Up] = '8';
     numlockKeyMap[GUIEventAdapter::KEY_KP_Page_Up] = '9';
+#endif
 
     for (int i = 0; i < 128; i++)
         release_keys[i] = i;
@@ -286,26 +272,17 @@ void FGManipulator::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
     case osgGA::GUIEventAdapter::KEY_KP_Subtract: key = '-'; break;
     }
     osgGA::GUIEventAdapter::EventType eventType = ea.getEventType();
+
+#if 0
     std::map<int, int>::iterator numPadIter = numlockKeyMap.find(key);
 
     if (numPadIter != numlockKeyMap.end()) {
 	if (ea.getModKeyMask() & osgGA::GUIEventAdapter::MODKEY_NUM_LOCK) {
 	    key = numPadIter->second;
 	}
-    } else if (useEventModifiers) {
-        
-    }else {
-	// Track the modifiers because OSG is currently (2.0) broken
-	KeyMaskMap::iterator iter = keyMaskMap.find(key);
-	if (iter != keyMaskMap.end()) {
-	    int mask = iter->second;
-	    if (eventType == osgGA::GUIEventAdapter::KEYUP)
-		osgModifiers &= ~mask;
-	    else
-		osgModifiers |= mask;
-	}
     }
-    modifiers = osgToFGModifiers(osgModifiers);
+#endif
+    modifiers = osgToFGModifiers(ea.getModKeyMask());
     currentModifiers = modifiers;
     if (eventType == osgGA::GUIEventAdapter::KEYUP)
 	modifiers |= KEYMOD_RELEASED;

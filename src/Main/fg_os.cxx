@@ -268,7 +268,6 @@ void fgOSOpenWindow(int w, int h, int bpp, bool alpha,
     camera->setViewport(new osg::Viewport(0, 0, realw, realh));
     camera->setProjectionResizePolicy(rsp);
     //viewer->addSlave(camera.get());
-    globals->get_renderer()->getManipulator()->setUseEventModifiers(true);
     viewer->setCameraManipulator(globals->get_renderer()->getManipulator());
     // Let FG handle the escape key with a confirmation
     viewer->setKeyEventSetsDone(0);

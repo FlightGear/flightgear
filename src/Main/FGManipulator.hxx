@@ -119,8 +119,6 @@ public:
     bool getResizable() { return resizable; }
     void setResizable(bool _resizable) { resizable = _resizable; }
 
-    bool getUseEventModifiers() { return useEventModifiers; }
-    void setUseEventModifiers(bool val) { useEventModifiers = val; }
 protected:
     osg::ref_ptr<osg::Node> _node;
     fgIdleHandler idleHandler;
@@ -133,11 +131,9 @@ protected:
     osg::ref_ptr<osgGA::GUIEventAdapter> statsEvent;
     int statsType;
     int currentModifiers;
-    // work-around for OSG bug
-    int osgModifiers;
-    typedef std::map<int, osgGA::GUIEventAdapter::ModKeyMask> KeyMaskMap;
-    KeyMaskMap keyMaskMap;
+#if 0
     std::map<int, int> numlockKeyMap;
+#endif
     osg::Vec3d position;
     osg::Quat attitude;
     void handleKey(const osgGA::GUIEventAdapter& ea, int& key, int& modifiers);
@@ -146,9 +142,6 @@ protected:
     // workaround for osgViewer double scroll events
     bool scrollButtonPressed;
     int release_keys[128];
-    // When the viewer is embedded, the host toolkit may deliver a
-    // valid event mask but not control keys.
-    bool useEventModifiers;
     void handleStats(osgGA::GUIActionAdapter& us);
 };
 #endif
