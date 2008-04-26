@@ -102,14 +102,6 @@ extern void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
 #endif
 
 
-// TODO: remove after the last hardcoded dialog has died
-const char *gui_msg_OK     = "OK";
-const char *gui_msg_NO     = "NO";
-const char *gui_msg_YES    = "YES";
-const char *gui_msg_CANCEL = "CANCEL";
-const char *gui_msg_RESET  = "RESET";
-
-
 const __fg_gui_fn_t __fg_gui_fn[] = {
 
         // File
@@ -531,13 +523,9 @@ void fgHiResDumpWrapper ( puObject *obj ) {
 
 
 // do a screen snap shot
-void fgDumpSnapShot () {
+bool fgDumpSnapShot () {
     bool show_pu_cursor = false;
-    char *filename = new char [24];
-    static int count = 1;
-
-    static const SGPropertyNode *master_freeze
-	= fgGetNode("/sim/freeze/master");
+    static SGConstPropertyNode_ptr master_freeze = fgGetNode("/sim/freeze/master");
 
     bool freeze = master_freeze->getBoolValue();
     if ( !freeze ) {
@@ -546,15 +534,14 @@ void fgDumpSnapShot () {
 
     TurnCursorOff();
     if ( !puCursorIsHidden() ) {
-	show_pu_cursor = true;
-	puHideCursor();
+        show_pu_cursor = true;
+        puHideCursor();
     }
     fgSetBool("/sim/signals/screenshot", true);
 
     FGRenderer *renderer = globals->get_renderer();
-//     renderer->init();
     renderer->resize( fgGetInt("/sim/startup/xsize"),
-                        fgGetInt("/sim/startup/ysize") );
+                      fgGetInt("/sim/startup/ysize") );
 
     // we need two render frames here to clear the menu and cursor
     // ... not sure why but doing an extra fgRenderFrame() shouldn't
@@ -562,26 +549,36 @@ void fgDumpSnapShot () {
     renderer->update( true );
     renderer->update( true );
 
-    while (count < 1000) {
-        FILE *fp;
-        snprintf(filename, 24, "fgfs-screen-%03d.ppm", count++);
-        if ( (fp = fopen(filename, "r")) == NULL )
-            break;
-        fclose(fp);
+    string dir = fgGetString("/sim/paths/screenshot-dir", fgGetString("/sim/fg-current"));
+    SGPath path(dir + '/');
+    if (path.create_dir( 0755 )) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Cannot create screenshot directory '"
+                << dir << "'. Trying home directory.");
+        dir = fgGetString("/sim/fg-home");
     }
 
-    int result = sg_glDumpWindow(filename,
+    char filename[24];
+    static int count = 1;
+    while (count < 1000) {
+        snprintf(filename, 24, "fgfs-screen-%03d.ppm", count++);
+
+        SGPath p(dir);
+        p.append(filename);
+        if (!p.exists()) {
+            path.set(p.str());
+            break;
+        }
+    }
+
+    int result = sg_glDumpWindow(path.c_str(),
                                  fgGetInt("/sim/startup/xsize"),
                                  fgGetInt("/sim/startup/ysize"));
-    fgSetString("/sim/last-screenshot", result ? filename : "");
 
+    fgSetString("/sim/paths/screenshot-last", path.c_str());
     fgSetBool("/sim/signals/screenshot", false);
-    //mkDialog (message.c_str());
-
-    delete [] filename;
 
     if ( show_pu_cursor ) {
-	puShowCursor();
+        puShowCursor();
     }
 
     TurnCursorOn();
@@ -589,6 +586,7 @@ void fgDumpSnapShot () {
     if ( !freeze ) {
         fgSetBool("/sim/freeze/master", false);
     }
+    return result != 0;
 }
 
 // do an entire scenegraph dump

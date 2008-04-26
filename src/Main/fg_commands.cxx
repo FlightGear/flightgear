@@ -463,8 +463,7 @@ do_view_cycle (const SGPropertyNode * arg)
 static bool
 do_screen_capture (const SGPropertyNode * arg)
 {
-  fgDumpSnapShot();
-  return true;
+  return fgDumpSnapShot();
 }
 
 static bool
