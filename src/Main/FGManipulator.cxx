@@ -39,8 +39,9 @@ FGManipulator::FGManipulator() :
     statsHandler->setKeyEventPrintsOutStats(printStatsKey);
     statsEvent->setEventType(GUIEventAdapter::KEYDOWN);
 
-#if 0
-    // We have to implement numlock too.
+    // OSG reports KeyPad keycodes independent of the NumLock modifier.
+    // KP-4/KP-Left is always KEY_KP_Left (ff96), so we have to generate
+    // the locked keys ourselves.
     numlockKeyMap[GUIEventAdapter::KEY_KP_Insert]  = '0';
     numlockKeyMap[GUIEventAdapter::KEY_KP_End] = '1';
     numlockKeyMap[GUIEventAdapter::KEY_KP_Down] = '2';
@@ -51,7 +52,6 @@ FGManipulator::FGManipulator() :
     numlockKeyMap[GUIEventAdapter::KEY_KP_Home] = '7';
     numlockKeyMap[GUIEventAdapter::KEY_KP_Up] = '8';
     numlockKeyMap[GUIEventAdapter::KEY_KP_Page_Up] = '9';
-#endif
 
     for (int i = 0; i < 128; i++)
         release_keys[i] = i;
@@ -278,7 +278,6 @@ void FGManipulator::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
     }
     osgGA::GUIEventAdapter::EventType eventType = ea.getEventType();
 
-#if 0
     std::map<int, int>::iterator numPadIter = numlockKeyMap.find(key);
 
     if (numPadIter != numlockKeyMap.end()) {
@@ -286,7 +285,7 @@ void FGManipulator::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
 	    key = numPadIter->second;
 	}
     }
-#endif
+
     modifiers = osgToFGModifiers(ea.getModKeyMask());
     currentModifiers = modifiers;
     if (eventType == osgGA::GUIEventAdapter::KEYUP)

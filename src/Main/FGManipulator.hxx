@@ -131,9 +131,7 @@ protected:
     osg::ref_ptr<osgGA::GUIEventAdapter> statsEvent;
     int statsType;
     int currentModifiers;
-#if 0
     std::map<int, int> numlockKeyMap;
-#endif
     osg::Vec3d position;
     osg::Quat attitude;
     void handleKey(const osgGA::GUIEventAdapter& ea, int& key, int& modifiers);
