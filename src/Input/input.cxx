@@ -84,6 +84,12 @@ static FGInput * default_input = 0;
 // Local functions.
 ////////////////////////////////////////////////////////////////////////
 
+static int
+getModifiers ()
+{
+  return fgGetKeyModifiers() >> 1;
+}
+
 static bool
 getModShift ()
 {
@@ -166,6 +172,7 @@ FGInput::postinit ()
 void
 FGInput::bind ()
 {
+  fgTie("/devices/status/keyboard", getModifiers);
   fgTie("/devices/status/keyboard/shift", getModShift);
   fgTie("/devices/status/keyboard/ctrl", getModCtrl);
   fgTie("/devices/status/keyboard/alt", getModAlt);
@@ -187,6 +194,7 @@ FGInput::bind ()
 void
 FGInput::unbind ()
 {
+  fgUntie("/devices/status/keyboard");
   fgUntie("/devices/status/keyboard/shift");
   fgUntie("/devices/status/keyboard/ctrl");
   fgUntie("/devices/status/keyboard/alt");
@@ -250,7 +258,7 @@ FGInput::doKey (int k, int modifiers, int x, int y)
   }
 
   _key_code = k;
-  _key_modifiers = modifiers & ~KEYMOD_RELEASED;
+  _key_modifiers = modifiers >> 1;
   _key_pressed = !bool(modifiers & KEYMOD_RELEASED);
   _key_shift = bool(modifiers & KEYMOD_SHIFT);
   _key_ctrl = bool(modifiers & KEYMOD_CTRL);
@@ -259,11 +267,13 @@ FGInput::doKey (int k, int modifiers, int x, int y)
   _key_super = bool(modifiers & KEYMOD_SUPER);
   _key_hyper = bool(modifiers & KEYMOD_HYPER);
   _key_event->fireValueChanged();
-  if (!_key_code)
+  if (_key_code < 0)
     return;
 
   k = _key_code;
-  modifiers = _key_modifiers | (_key_pressed ? KEYMOD_NONE : KEYMOD_RELEASED);
+  modifiers = _key_modifiers << 1;
+  if (!_key_pressed)
+      modifiers |= KEYMOD_RELEASED;
   button &b = _key_bindings[k];
 
                                 // Key pressed.

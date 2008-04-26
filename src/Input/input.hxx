@@ -233,13 +233,13 @@ private:
     virtual ~mouse ();
     int x;
     int y;
+    int save_x;
+    int save_y;
     SGPropertyNode_ptr mode_node;
     SGPropertyNode_ptr mouse_button_nodes[MAX_MOUSE_BUTTONS];
     int nModes;
     int current_mode;
     double timeout;
-    int save_x;
-    int save_y;
     mouse_mode * modes;
   };
 
