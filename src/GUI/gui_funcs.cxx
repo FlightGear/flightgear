@@ -89,7 +89,6 @@
 
 #include "gui.h"
 #include "gui_local.hxx"
-#include "sgVec3Slider.hxx"
 
 SG_USING_STD(string);
 SG_USING_STD(cout);
