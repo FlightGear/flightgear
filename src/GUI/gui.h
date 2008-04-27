@@ -73,11 +73,11 @@ typedef struct {
 extern const __fg_gui_fn_t __fg_gui_fn[];
 
 // GLOBAL COMMON DIALOG BOX TEXT STRINGS
-extern const char *gui_msg_OK;     // "OK"
-extern const char *gui_msg_NO;     // "NO"
-extern const char *gui_msg_YES;    // "YES"
-extern const char *gui_msg_CANCEL; // "CANCEL"
-extern const char *gui_msg_RESET;  // "RESET"
+//extern const char *gui_msg_OK;     // "OK"
+//extern const char *gui_msg_NO;     // "NO"
+//extern const char *gui_msg_YES;    // "YES"
+//extern const char *gui_msg_CANCEL; // "CANCEL"
+//extern const char *gui_msg_RESET;  // "RESET"
 
 // mouse.cxx
 extern void guiInitMouse(int width, int height);
