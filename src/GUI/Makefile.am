@@ -8,11 +8,11 @@ libGUI_a_SOURCES = \
 	gui.cxx gui.h gui_funcs.cxx \
 	gui_local.cxx gui_local.hxx \
 	mouse.cxx fonts.cxx \
-	sgVec3Slider.cxx sgVec3Slider.hxx \
 	trackball.c trackball.h \
 	AirportList.cxx AirportList.hxx \
         property_list.cxx property_list.hxx \
         layout.cxx layout-props.cxx layout.hxx
+	#sgVec3Slider.cxx sgVec3Slider.hxx \
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
 
