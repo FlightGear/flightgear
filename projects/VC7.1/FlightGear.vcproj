@@ -99,7 +99,7 @@
 				ProgramDataBaseFileName=".\Release/"
 				WarningLevel="3"
 				SuppressStartupBanner="TRUE"
-				DebugInformationFormat="0"
+				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -112,7 +112,7 @@
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="..\..\..\install\msvc71\OpenSceneGraph\lib;..\..\..\install\OpenThreads\lib;..\..\..\plib;..\..\..\SimGear\Release;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\..\OpenSceneGraph\lib\win32;..\..\..\3rdParty\lib"
 				IgnoreDefaultLibraryNames=""
-				GenerateDebugInformation="FALSE"
+				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Release/FlightGear.pdb"
 				SubSystem="1"/>
 			<Tool
@@ -1799,12 +1799,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\Gui\property_list.hxx">
-			</File>
-			<File
-				RelativePath="..\..\src\GUI\sgVec3Slider.cxx">
-			</File>
-			<File
-				RelativePath="..\..\src\GUI\sgVec3Slider.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\GUI\trackball.c">
