@@ -13,7 +13,6 @@ gui_local.[ch]xx        More internal GUI functions (deprecated).
 menubar.[ch]xx          XML-configurable menu bar.
 mouse.cxx               Old GUI mouse support (deprecated).
 new_gui.[ch]xx          Top-level for the GUI subsystem.
-sgVec3Slider.[ch]xx     Built-in dialog for adjusting the view.
 trackball.[ch]          Old mouse view support (deprecated).
 
 
