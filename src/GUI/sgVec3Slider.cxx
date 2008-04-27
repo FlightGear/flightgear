@@ -16,6 +16,14 @@
 #include <Main/fg_props.hxx>
 #include <simgear/sg_inlines.h>
 
+
+const char *gui_msg_OK     = "OK";
+const char *gui_msg_NO     = "NO";
+const char *gui_msg_YES    = "YES";
+const char *gui_msg_CANCEL = "CANCEL";
+const char *gui_msg_RESET  = "RESET";
+
+
 static void
 setPilotXOffset (float value)
 {
