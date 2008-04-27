@@ -12,7 +12,6 @@ libGUI_a_SOURCES = \
 	AirportList.cxx AirportList.hxx \
         property_list.cxx property_list.hxx \
         layout.cxx layout-props.cxx layout.hxx
-	#sgVec3Slider.cxx sgVec3Slider.hxx \
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
 
