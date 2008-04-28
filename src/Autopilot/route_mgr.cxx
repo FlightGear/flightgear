@@ -332,15 +332,6 @@ int FGRouteMgr::make_waypoint( SGWayPoint **wp, const string& tgt ) {
         return 2;
     }
 
-    // check for fix id
-    FGFix f;
-    if ( globals->get_fixlist()->query( target, &f ) ) {
-        SG_LOG( SG_GENERAL, SG_INFO, "Adding waypoint (fix) = " << target );
-        *wp = new SGWayPoint( f.get_lon(), f.get_lat(), alt, SGWayPoint::WGS84, target );
-        return 3;
-    }
-
-    // Try finding a nav matching the ID
     double lat, lon;
     // The base lon/lat are determined by the last WP,
     // or the current pos if the WP list is empty.
@@ -355,6 +346,18 @@ int FGRouteMgr::make_waypoint( SGWayPoint **wp, const string& tgt ) {
         lon = fgGetNode("/position/longitude-deg")->getDoubleValue();
     }
 
+    // check for fix id
+    FGFix f;
+    double heading;
+    double dist;
+
+    if ( globals->get_fixlist()->query_and_offset( target, lon, lat, 0, &f, &heading, &dist ) ) {
+        SG_LOG( SG_GENERAL, SG_INFO, "Adding waypoint (fix) = " << target );
+        *wp = new SGWayPoint( f.get_lon(), f.get_lat(), alt, SGWayPoint::WGS84, target );
+        return 3;
+    }
+
+    // Try finding a nav matching the ID
     lat *= SGD_DEGREES_TO_RADIANS;
     lon *= SGD_DEGREES_TO_RADIANS;
 

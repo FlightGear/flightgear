@@ -34,12 +34,12 @@
 
 #include "fix.hxx"
 
-SG_USING_STD(map);
+SG_USING_STD(multimap);
 SG_USING_STD(vector);
 SG_USING_STD(string);
 
-// TODO - fix names may be globally non-unique.  Allow for this.
-typedef map < string, FGFix > fix_map_type;
+// fix names may be globally non-unique.  Allow for this.
+typedef multimap < string, FGFix > fix_map_type;
 typedef fix_map_type::iterator fix_map_iterator;
 typedef fix_map_type::const_iterator fix_map_const_iterator;
 
@@ -57,8 +57,8 @@ public:
 
     // query the database for the specified fix
     bool query( const string& ident, FGFix *f );
-	
-    // Find fix of requested type with closest exact or following ident 
+
+    // Find fix of requested type with closest exact or following ident
     // (by ACSII values) to that supplied (ie. a lower-bound lookup).
     // Supplying true for exact forces only exact matches to be returned (similar to above function)
     // Returns NULL if no match found.
@@ -69,7 +69,7 @@ public:
     bool query_and_offset( const string& ident, double lon, double lat,
                            double elev, FGFix *f, double *heading,
                            double *dist );
-						   
+
     // Return a pointer to the master fixlist
     inline const fix_map_type* getFixList() { return(&fixlist); }
 };

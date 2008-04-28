@@ -30,6 +30,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 
 #include "fixlist.hxx"
+SG_USING_STD(pair);
 
 
 // Constructor
@@ -76,7 +77,7 @@ bool FGFixList::init( SGPath path ) {
              << ", lat=" << fix.get_lat()
              << ", lon=" << fix.get_lon() << endl; */
 
-        fixlist[fix.get_ident()] = fix;
+        fixlist.insert(pair<string, FGFix>(fix.get_ident(), fix));
         in >> skipcomment;
     }
     return true;
@@ -86,9 +87,10 @@ bool FGFixList::init( SGPath path ) {
 // query the database for the specified fix, lon and lat are in
 // degrees, elev is in meters
 bool FGFixList::query( const string& ident, FGFix *fix ) {
-    *fix = fixlist[ident];
-    if ( ! fix->get_ident().empty() ) {
-	return true;
+    fix_map_const_iterator it = fixlist.find(ident);
+    if ( it != fixlist.end() ) {
+        *fix = it->second;
+        return true;
     } else {
         return false;
     }
@@ -101,18 +103,27 @@ bool FGFixList::query_and_offset( const string& ident, double lon, double lat,
                                   double elev, FGFix *fix, double *heading,
                                   double *dist )
 {
-    *fix = fixlist[ident];
-    if ( fix->get_ident().empty() ) {
-	return false;
+    pair<fix_map_const_iterator, fix_map_const_iterator> range = fixlist.equal_range(ident);
+
+    if (range.first == range.second) {
+        return false;
     }
 
-    double az1, az2, s;
-    geo_inverse_wgs_84( elev, lat, lon, 
-			fix->get_lat(), fix->get_lon(),
-			&az1, &az2, &s );
-    // cout << "  dist = " << s << endl;
-    *heading = az2;
-    *dist = s;
+    double min_s = -1.0;
+    for (fix_map_const_iterator current = range.first; current != range.second; ++current) {
+        double az1, az2, s;
+        geo_inverse_wgs_84( elev, lat, lon,
+                        current->second.get_lat(), current->second.get_lon(),
+                        &az1, &az2, &s );
+        // cout << "  dist = " << s << endl;
+        if (min_s < 0 || s < min_s) {
+            *heading = az2;
+            *dist = s;
+            min_s = s;
+            *fix = current->second;
+        }
+    }
+
     return true;
 }
 
