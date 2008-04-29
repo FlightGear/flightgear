@@ -15,9 +15,9 @@ const int displayStatsKey = 1;
 const int printStatsKey = 2;
 
 
-// The manipulator is responsible for updating a Viewer's camera. It's
-// event handling method is also a convenient place to run the the FG
-// idle and draw handlers.
+// The manipulator is responsible for updating a Viewer's camera. Its
+// event handling method is also a convenient place to run the FG idle
+// and draw handlers.
 
 FGManipulator::FGManipulator() :
     idleHandler(0),
@@ -39,9 +39,9 @@ FGManipulator::FGManipulator() :
     statsHandler->setKeyEventPrintsOutStats(printStatsKey);
     statsEvent->setEventType(GUIEventAdapter::KEYDOWN);
 
-    // OSG reports KeyPad keycodes independent of the NumLock modifier.
-    // KP-4/KP-Left is always KEY_KP_Left (ff96), so we have to generate
-    // the locked keys ourselves.
+    // OSG reports NumPad keycodes independent of the NumLock modifier.
+    // Both KP-4 and KP-Left are reported as KEY_KP_Left (0xff96), so we
+    // have to generate the locked keys ourselves.
     numlockKeyMap[GUIEventAdapter::KEY_KP_Insert]  = '0';
     numlockKeyMap[GUIEventAdapter::KEY_KP_End] = '1';
     numlockKeyMap[GUIEventAdapter::KEY_KP_Down] = '2';
@@ -72,7 +72,7 @@ osg::Matrixd FGManipulator::getMatrix() const
 osg::Matrixd FGManipulator::getInverseMatrix() const
 {
     return (osg::Matrixd::translate(-position)
-	    * osg::Matrixd::rotate(attitude.inverse())) ;
+            * osg::Matrixd::rotate(attitude.inverse())) ;
 }
 
 // Not used, but part of the interface.
@@ -80,7 +80,7 @@ void FGManipulator::setNode(osg::Node* node)
 {
     _node = node;
 }
-    
+
 const osg::Node* FGManipulator::getNode() const
 {
     return _node.get();
@@ -91,7 +91,7 @@ osg::Node* FGManipulator::getNode()
     return _node.get();
 }
 
-// All the usual translation from window system to FG / plib
+// Translate OSG modifier mask to FG modifier mask.
 static int osgToFGModifiers(int modifiers)
 {
     int result = 0;
@@ -116,7 +116,7 @@ static int osgToFGModifiers(int modifiers)
 }
 
 void FGManipulator::init(const osgGA::GUIEventAdapter& ea,
-			 osgGA::GUIActionAdapter& us)
+                         osgGA::GUIActionAdapter& us)
 {
     currentModifiers = osgToFGModifiers(ea.getModKeyMask());
     (void)handle(ea, us);
@@ -126,73 +126,73 @@ static bool
 eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
                 int& x, int& y)
 {
-  x = -1;
-  y = -1;
+    x = -1;
+    y = -1;
 
-  const osgViewer::Viewer* viewer;
-  viewer = dynamic_cast<const osgViewer::Viewer*>(&us);
-  if (!viewer)
-      return false;
+    const osgViewer::Viewer* viewer;
+    viewer = dynamic_cast<const osgViewer::Viewer*>(&us);
+    if (!viewer)
+        return false;
 
-  float lx, ly;
-  const osg::Camera* camera;
-  camera = viewer->getCameraContainingPosition(ea.getX(), ea.getY(), lx, ly);
+    float lx, ly;
+    const osg::Camera* camera;
+    camera = viewer->getCameraContainingPosition(ea.getX(), ea.getY(), lx, ly);
 
-  if (!(camera && fgOSIsMainCamera(camera)))
-      return false;
+    if (!(camera && fgOSIsMainCamera(camera)))
+        return false;
 
-  x = int(lx);
-  y = int(camera->getViewport()->height() - ly);
+    x = int(lx);
+    y = int(camera->getViewport()->height() - ly);
 
-  return true;
+    return true;
 }
 
 bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
-			   osgGA::GUIActionAdapter& us)
+                           osgGA::GUIActionAdapter& us)
 {
     int x = 0;
     int y = 0;
-    handleStats(us);
 
     switch (ea.getEventType()) {
     case osgGA::GUIEventAdapter::FRAME:
-	if (idleHandler)
-	    (*idleHandler)();
-	if (drawHandler)
-	    (*drawHandler)();
-	mouseWarped = false;
-	return true;
+        if (idleHandler)
+            (*idleHandler)();
+        if (drawHandler)
+            (*drawHandler)();
+        mouseWarped = false;
+        handleStats(us);
+        return true;
     case osgGA::GUIEventAdapter::KEYDOWN:
     case osgGA::GUIEventAdapter::KEYUP:
     {
-	int key, modmask;
-	handleKey(ea, key, modmask);
-	eventToViewport(ea, us, x, y);
-	if (keyHandler)
-	    (*keyHandler)(key, modmask, x, y);
+        int key, modmask;
+        handleKey(ea, key, modmask);
+        eventToViewport(ea, us, x, y);
+        if (keyHandler)
+            (*keyHandler)(key, modmask, x, y);
         return true;
     }
     case osgGA::GUIEventAdapter::PUSH:
     case osgGA::GUIEventAdapter::RELEASE:
     {
         bool mainWindow = eventToViewport(ea, us, x, y);
-	int button = 0;
-	switch (ea.getButton()) {
-	case osgGA::GUIEventAdapter::LEFT_MOUSE_BUTTON:
-	    button = 0;
-	    break;
-	case osgGA::GUIEventAdapter::MIDDLE_MOUSE_BUTTON:
-	    button = 1;
-	    break;
-	case osgGA::GUIEventAdapter::RIGHT_MOUSE_BUTTON:
-	    button = 2;
-	    break;
-	}
-	if (mouseClickHandler)
-	    (*mouseClickHandler)(button,
-				 (ea.getEventType()
-				  == osgGA::GUIEventAdapter::RELEASE), x, y, mainWindow, &ea);
-	return true;
+        int button = 0;
+        switch (ea.getButton()) {
+        case osgGA::GUIEventAdapter::LEFT_MOUSE_BUTTON:
+            button = 0;
+            break;
+        case osgGA::GUIEventAdapter::MIDDLE_MOUSE_BUTTON:
+            button = 1;
+            break;
+        case osgGA::GUIEventAdapter::RIGHT_MOUSE_BUTTON:
+            button = 2;
+            break;
+        }
+        if (mouseClickHandler)
+            (*mouseClickHandler)(button,
+                                 (ea.getEventType()
+                                  == osgGA::GUIEventAdapter::RELEASE), x, y, mainWindow, &ea);
+        return true;
     }
     case osgGA::GUIEventAdapter::SCROLL:
     {
@@ -219,79 +219,82 @@ bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
         // events for this frame. We really want to flush the event
         // queue of mouse events, but don't have the ability to do
         // that with osgViewer.
-	if (mouseWarped)
-	    return true;
-	if (eventToViewport(ea, us, x, y) && mouseMotionHandler)
-	    (*mouseMotionHandler)(x, y);
-	return true;
+        if (mouseWarped)
+            return true;
+        if (eventToViewport(ea, us, x, y) && mouseMotionHandler)
+            (*mouseMotionHandler)(x, y);
+        return true;
     case osgGA::GUIEventAdapter::RESIZE:
-	if (resizable && windowResizeHandler)
-	    (*windowResizeHandler)(ea.getWindowWidth(), ea.getWindowHeight());
-	return true;
+        if (resizable && windowResizeHandler)
+            (*windowResizeHandler)(ea.getWindowWidth(), ea.getWindowHeight());
+        return true;
      case osgGA::GUIEventAdapter::CLOSE_WINDOW:
     case osgGA::GUIEventAdapter::QUIT_APPLICATION:
         fgOSExit(0);
         return true;
     default:
-	return false;
+        return false;
     }
 }
 
 void FGManipulator::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
-			      int& modifiers)
+                              int& modifiers)
 {
+    using namespace osgGA;
     key = ea.getKey();
     // XXX Probably other translations are needed too.
     switch (key) {
-    case osgGA::GUIEventAdapter::KEY_Escape: key = 0x1b; break;
-    case osgGA::GUIEventAdapter::KEY_Return: key = '\n'; break;
-    case osgGA::GUIEventAdapter::KEY_BackSpace: key = '\b'; break;
-    case osgGA::GUIEventAdapter::KEY_Delete:   key = 0x7f; break;
-    case osgGA::GUIEventAdapter::KEY_Tab:      key = '\t'; break;
-    case osgGA::GUIEventAdapter::KEY_Left:     key = PU_KEY_LEFT;      break;
-    case osgGA::GUIEventAdapter::KEY_Up:       key = PU_KEY_UP;        break;
-    case osgGA::GUIEventAdapter::KEY_Right:    key = PU_KEY_RIGHT;     break;
-    case osgGA::GUIEventAdapter::KEY_Down:     key = PU_KEY_DOWN;      break;
-    case osgGA::GUIEventAdapter::KEY_Page_Up:   key = PU_KEY_PAGE_UP;   break;
-    case osgGA::GUIEventAdapter::KEY_Page_Down: key = PU_KEY_PAGE_DOWN; break;
-    case osgGA::GUIEventAdapter::KEY_Home:     key = PU_KEY_HOME;      break;
-    case osgGA::GUIEventAdapter::KEY_End:      key = PU_KEY_END;       break;
-    case osgGA::GUIEventAdapter::KEY_Insert:   key = PU_KEY_INSERT;    break;
-    case osgGA::GUIEventAdapter::KEY_F1:       key = PU_KEY_F1;        break;
-    case osgGA::GUIEventAdapter::KEY_F2:       key = PU_KEY_F2;        break;
-    case osgGA::GUIEventAdapter::KEY_F3:       key = PU_KEY_F3;        break;
-    case osgGA::GUIEventAdapter::KEY_F4:       key = PU_KEY_F4;        break;
-    case osgGA::GUIEventAdapter::KEY_F5:       key = PU_KEY_F5;        break;
-    case osgGA::GUIEventAdapter::KEY_F6:       key = PU_KEY_F6;        break;
-    case osgGA::GUIEventAdapter::KEY_F7:       key = PU_KEY_F7;        break;
-    case osgGA::GUIEventAdapter::KEY_F8:       key = PU_KEY_F8;        break;
-    case osgGA::GUIEventAdapter::KEY_F9:       key = PU_KEY_F9;        break;
-    case osgGA::GUIEventAdapter::KEY_F10:      key = PU_KEY_F10;       break;
-    case osgGA::GUIEventAdapter::KEY_F11:      key = PU_KEY_F11;       break;
-    case osgGA::GUIEventAdapter::KEY_F12:      key = PU_KEY_F12;       break;
-    case osgGA::GUIEventAdapter::KEY_KP_Delete: key = '.'; break;
-    case osgGA::GUIEventAdapter::KEY_KP_Enter: key = '\r'; break;
-    case osgGA::GUIEventAdapter::KEY_KP_Add:   key = '+'; break;
-    case osgGA::GUIEventAdapter::KEY_KP_Divide: key = '/'; break;
-    case osgGA::GUIEventAdapter::KEY_KP_Multiply: key = '*'; break;
-    case osgGA::GUIEventAdapter::KEY_KP_Subtract: key = '-'; break;
+    case GUIEventAdapter::KEY_Escape:      key = 0x1b; break;
+    case GUIEventAdapter::KEY_Return:      key = '\n'; break;
+    case GUIEventAdapter::KEY_BackSpace:   key = '\b'; break;
+    case GUIEventAdapter::KEY_Delete:      key = 0x7f; break;
+    case GUIEventAdapter::KEY_Tab:         key = '\t'; break;
+    case GUIEventAdapter::KEY_Left:        key = PU_KEY_LEFT;      break;
+    case GUIEventAdapter::KEY_Up:          key = PU_KEY_UP;        break;
+    case GUIEventAdapter::KEY_Right:       key = PU_KEY_RIGHT;     break;
+    case GUIEventAdapter::KEY_Down:        key = PU_KEY_DOWN;      break;
+    case GUIEventAdapter::KEY_Page_Up:     key = PU_KEY_PAGE_UP;   break;
+    case GUIEventAdapter::KEY_Page_Down:   key = PU_KEY_PAGE_DOWN; break;
+    case GUIEventAdapter::KEY_Home:        key = PU_KEY_HOME;      break;
+    case GUIEventAdapter::KEY_End:         key = PU_KEY_END;       break;
+    case GUIEventAdapter::KEY_Insert:      key = PU_KEY_INSERT;    break;
+    case GUIEventAdapter::KEY_F1:          key = PU_KEY_F1;        break;
+    case GUIEventAdapter::KEY_F2:          key = PU_KEY_F2;        break;
+    case GUIEventAdapter::KEY_F3:          key = PU_KEY_F3;        break;
+    case GUIEventAdapter::KEY_F4:          key = PU_KEY_F4;        break;
+    case GUIEventAdapter::KEY_F5:          key = PU_KEY_F5;        break;
+    case GUIEventAdapter::KEY_F6:          key = PU_KEY_F6;        break;
+    case GUIEventAdapter::KEY_F7:          key = PU_KEY_F7;        break;
+    case GUIEventAdapter::KEY_F8:          key = PU_KEY_F8;        break;
+    case GUIEventAdapter::KEY_F9:          key = PU_KEY_F9;        break;
+    case GUIEventAdapter::KEY_F10:         key = PU_KEY_F10;       break;
+    case GUIEventAdapter::KEY_F11:         key = PU_KEY_F11;       break;
+    case GUIEventAdapter::KEY_F12:         key = PU_KEY_F12;       break;
+    case GUIEventAdapter::KEY_KP_Delete:   key = '.';  break;
+    case GUIEventAdapter::KEY_KP_Enter:    key = '\r'; break;
+    case GUIEventAdapter::KEY_KP_Add:      key = '+';  break;
+    case GUIEventAdapter::KEY_KP_Divide:   key = '/';  break;
+    case GUIEventAdapter::KEY_KP_Multiply: key = '*';  break;
+    case GUIEventAdapter::KEY_KP_Subtract: key = '-';  break;
     }
     osgGA::GUIEventAdapter::EventType eventType = ea.getEventType();
 
     std::map<int, int>::iterator numPadIter = numlockKeyMap.find(key);
 
     if (numPadIter != numlockKeyMap.end()) {
-	if (ea.getModKeyMask() & osgGA::GUIEventAdapter::MODKEY_NUM_LOCK) {
-	    key = numPadIter->second;
-	}
+        if (ea.getModKeyMask() & osgGA::GUIEventAdapter::MODKEY_NUM_LOCK) {
+            key = numPadIter->second;
+        }
     }
 
     modifiers = osgToFGModifiers(ea.getModKeyMask());
     currentModifiers = modifiers;
     if (eventType == osgGA::GUIEventAdapter::KEYUP)
-	modifiers |= KEYMOD_RELEASED;
+        modifiers |= KEYMOD_RELEASED;
 
-    // Release the letter key, for which the keypress was reported
+    // Release the letter key, for which the key press was reported. This
+    // is to deal with Ctrl-press -> a-press -> Ctrl-release -> a-release
+    // correctly.
     if (key >= 0 && key < 128) {
         if (modifiers & KEYMOD_RELEASED) {
             key = release_keys[key];
@@ -320,7 +323,7 @@ void FGManipulator::handleStats(osgGA::GUIActionAdapter& us)
     if (type != statsType) {
         statsEvent->setKey(displayStatsKey);
         do {
-            statsType = ++statsType % osgViewer::StatsHandler::LAST;
+            statsType = (statsType + 1) % osgViewer::StatsHandler::LAST;
             statsHandler->handle(*statsEvent, us);
         } while (statsType != type);
 
