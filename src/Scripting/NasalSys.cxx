@@ -1085,12 +1085,7 @@ void FGNasalModelData::modelLoaded(const string& path, SGPropertyNode *prop,
     if(!prop)
         return;
 
-/*
-    SGPropertyNode *n = prop->getNode("nasal"), *load;
-    if(!n)
-        return;
-*/
-    SGPropertyNode *load = load = prop->getNode("load");
+    SGPropertyNode *load = prop->getNode("load");
     _unload = prop->getNode("unload");
     if(!load && !_unload)
         return;
