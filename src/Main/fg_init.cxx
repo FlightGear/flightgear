@@ -790,13 +790,13 @@ static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
                         r._length * SG_FEET_TO_METER * 0.5 - 5.0,
                         &lat2, &lon2, &az2 );
 
-    if ( fabs( fgGetDouble("/sim/presets/offset-distance") ) > SG_EPSILON ) {
+    if ( fabs( fgGetDouble("/sim/presets/offset-distance-nm") ) > SG_EPSILON ) {
         double olat, olon;
-        double odist = fgGetDouble("/sim/presets/offset-distance");
+        double odist = fgGetDouble("/sim/presets/offset-distance-nm");
         odist *= SG_NM_TO_METER;
         double oaz = azimuth;
-        if ( fabs(fgGetDouble("/sim/presets/offset-azimuth")) > SG_EPSILON ) {
-            oaz = fgGetDouble("/sim/presets/offset-azimuth") + 180;
+        if ( fabs(fgGetDouble("/sim/presets/offset-azimuth-deg")) > SG_EPSILON ) {
+            oaz = fgGetDouble("/sim/presets/offset-azimuth-deg") + 180;
             heading = tgt_hdg;
         }
         while ( oaz >= 360.0 ) { oaz -= 360.0; }
@@ -913,15 +913,15 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bo
     r._length * SG_FEET_TO_METER * 0.5 - 5.0,
     &lat2, &lon2, &az2 );
     
-    if ( fabs( fgGetDouble("/sim/presets/offset-distance") ) > SG_EPSILON )
+    if ( fabs( fgGetDouble("/sim/presets/offset-distance-nm") ) > SG_EPSILON )
     {
 	double olat, olon;
-	double odist = fgGetDouble("/sim/presets/offset-distance");
+	double odist = fgGetDouble("/sim/presets/offset-distance-nm");
 	odist *= SG_NM_TO_METER;
 	double oaz = azimuth;
-	if ( fabs(fgGetDouble("/sim/presets/offset-azimuth")) > SG_EPSILON )
+	if ( fabs(fgGetDouble("/sim/presets/offset-azimuth-deg")) > SG_EPSILON )
 	{
-	    oaz = fgGetDouble("/sim/presets/offset-azimuth") + 180;
+	    oaz = fgGetDouble("/sim/presets/offset-azimuth-deg") + 180;
             heading = fgGetDouble("/sim/presets/heading-deg");
 	}
 	while ( oaz >= 360.0 ) { oaz -= 360.0; }
@@ -955,7 +955,7 @@ static void fgSetDistOrAltFromGlideSlope() {
     string apt_id = fgGetString("/sim/presets/airport-id");
     double gs = fgGetDouble("/sim/presets/glideslope-deg")
         * SG_DEGREES_TO_RADIANS ;
-    double od = fgGetDouble("/sim/presets/offset-distance");
+    double od = fgGetDouble("/sim/presets/offset-distance-nm");
     double alt = fgGetDouble("/sim/presets/altitude-ft");
 
     double apt_elev = 0.0;
@@ -980,7 +980,7 @@ static void fgSetDistOrAltFromGlideSlope() {
         // set offset-distance from glideslope and altitude
         od  = (alt - apt_elev) / tan(gs);
         od *= -1*SG_FEET_TO_METER * SG_METER_TO_NM;
-        fgSetDouble("/sim/presets/offset-distance", od);
+        fgSetDouble("/sim/presets/offset-distance-nm", od);
         fgSetBool("/sim/presets/onground", false);
         SG_LOG( SG_GENERAL, SG_INFO, "Calculated offset distance as: " 
                 << od  << " nm" );
@@ -1007,11 +1007,11 @@ static bool fgSetPosFromNAV( const string& id, const double& freq ) {
         double lon = nav->get_lon();
         double lat = nav->get_lat();
 
-        if ( fabs( fgGetDouble("/sim/presets/offset-distance") ) > SG_EPSILON )
+        if ( fabs( fgGetDouble("/sim/presets/offset-distance-nm") ) > SG_EPSILON )
         {
-            double odist = fgGetDouble("/sim/presets/offset-distance")
+            double odist = fgGetDouble("/sim/presets/offset-distance-nm")
                 * SG_NM_TO_METER;
-            double oaz = fabs(fgGetDouble("/sim/presets/offset-azimuth"))
+            double oaz = fabs(fgGetDouble("/sim/presets/offset-azimuth-deg"))
                 + 180.0;
             while ( oaz >= 360.0 ) { oaz -= 360.0; }
             double olat, olon, az2;
@@ -1098,11 +1098,11 @@ static bool fgSetPosFromFix( const string& id ) {
         double lon = fix.get_lon();
         double lat = fix.get_lat();
 
-        if ( fabs( fgGetDouble("/sim/presets/offset-distance") ) > SG_EPSILON )
+        if ( fabs( fgGetDouble("/sim/presets/offset-distance-nm") ) > SG_EPSILON )
         {
-            double odist = fgGetDouble("/sim/presets/offset-distance")
+            double odist = fgGetDouble("/sim/presets/offset-distance-nm")
                 * SG_NM_TO_METER;
-            double oaz = fabs(fgGetDouble("/sim/presets/offset-azimuth"))
+            double oaz = fabs(fgGetDouble("/sim/presets/offset-azimuth-deg"))
                 + 180.0;
             while ( oaz >= 360.0 ) { oaz -= 360.0; }
             double olat, olon, az2;
@@ -1217,7 +1217,7 @@ bool fgInitPosition() {
     // cout << "fgInitPosition()" << endl;
     double gs = fgGetDouble("/sim/presets/glideslope-deg")
         * SG_DEGREES_TO_RADIANS ;
-    double od = fgGetDouble("/sim/presets/offset-distance");
+    double od = fgGetDouble("/sim/presets/offset-distance-nm");
     double alt = fgGetDouble("/sim/presets/altitude-ft");
 
     bool set_pos = false;
