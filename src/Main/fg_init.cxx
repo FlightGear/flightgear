@@ -785,10 +785,10 @@ static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
             "runway =  " << r._lon << ", " << r._lat
             << " length = " << r._length * SG_FEET_TO_METER 
             << " heading = " << azimuth );
-	    
-    geo_direct_wgs_84 ( 0, r._lat, r._lon, azimuth, 
-                        r._length * SG_FEET_TO_METER * 0.5 - 5.0,
-                        &lat2, &lon2, &az2 );
+
+    geo_direct_wgs_84 ( 0, r._lat, r._lon, azimuth, r._length * SG_FEET_TO_METER * 0.5
+            - fgGetDouble("/sim/airport/runways/start-offset-m", 5.0),
+            &lat2, &lon2, &az2 );
 
     if ( fabs( fgGetDouble("/sim/presets/offset-distance-nm") ) > SG_EPSILON ) {
         double olat, olon;
@@ -904,14 +904,13 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bo
     while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
     
     SG_LOG( SG_GENERAL, SG_INFO,
-    "runway =  " << r._lon << ", " << r._lat
-    << " length = " << r._length * SG_FEET_TO_METER 
-    << " heading = " << azimuth );
+            "runway =  " << r._lon << ", " << r._lat
+            << " length = " << r._length * SG_FEET_TO_METER 
+            << " heading = " << azimuth );
     
-    geo_direct_wgs_84 ( 0, r._lat, r._lon, 
-    azimuth,
-    r._length * SG_FEET_TO_METER * 0.5 - 5.0,
-    &lat2, &lon2, &az2 );
+    geo_direct_wgs_84 ( 0, r._lat, r._lon, azimuth, r._length * SG_FEET_TO_METER * 0.5
+            - fgGetDouble("/sim/airport/runways/start-offset-m", 5.0),
+            &lat2, &lon2, &az2 );
     
     if ( fabs( fgGetDouble("/sim/presets/offset-distance-nm") ) > SG_EPSILON )
     {
@@ -990,7 +989,7 @@ static void fgSetDistOrAltFromGlideSlope() {
         SG_LOG( SG_GENERAL, SG_ALERT, "Resetting glideslope to zero" );
         fgSetDouble("/sim/presets/glideslope-deg", 0);
         fgSetBool("/sim/presets/onground", true);
-    }                              
+    }
 }
 
 
