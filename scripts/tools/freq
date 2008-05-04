@@ -1,0 +1,302 @@
+#!/usr/bin/perl -w
+# $Id$
+# Melchior FRANZ <mfranz#aon:at>	Public Domain
+#
+# Usage:	$ freq [IACO:ksfo [RANGE:15]]
+#
+# Examples:	$ freq
+#		$ freq ksjc
+#		$ freq ksjc 30
+#
+# The RANGE is in km and defines which NDB, VOR, VORTAC, ... to
+# display. Default is 15 km.
+#
+# Note that the directions given for NDB, VOR, VORTAC, ... are
+# always the heading from this radio facility to the airport!
+
+use strict;
+use POSIX qw(ceil floor);
+
+my $ID = shift || "KSFO";
+my $RANGE = shift || 15;		# for NDB/VOR [km]
+
+my $FG_ROOT = $ENV{'FG_ROOT'} || "/usr/local/share/FlightGear";
+my $APTFILE = "$FG_ROOT/Airports/apt.dat.gz" || die "airport file not found";
+my $NAVFILE = "$FG_ROOT/Navaids/nav.dat.gz" || die "nav file not found";
+
+$ID = uc($ID);
+my $PI = 3.1415926535897932384626433832795029;
+my $D2R = $PI / 180;
+my $R2D = 180 / $PI;
+my $ERAD = 6378138.12;
+my %COLOR = (
+	'NONE' => "\033[m",
+	'DME'  => "\033[34;1",
+	'ILS'  => "\033[33;1m",
+	'TWR'  => "\033[31;1m",
+	'ATIS' => "\033[32;1m",
+	'NDB'  => "\033[36;1m",
+	'VOR'  => "\033[35;1m",
+);
+my $USECOLOR = 1;
+
+my %FREQ;
+
+my $aptdatacnt = 0;
+my $aptlat = 0;
+my $aptlon = 0;
+
+open(F, "gzip -d -c $APTFILE|") or die "can't open airport file $APTFILE";
+while (<F>) {
+	if (/^1\s+\S+\s+\S+\s+\S+\s+$ID\s+(.+)\s+/) {
+		my $title = "$ID - $1";
+		print "$title\n";
+		print "=" x length($title) . "\n";
+
+		foreach (<F>) {
+			chomp;
+			last if /^\s*$/;
+
+			if (/^1.\s+(\S+)\s+(\S+)\s+/) {
+				my ($lat, $lon) = ($1, $2);
+				map { s/^(-?)0+/$1/ } ($lat, $lon);
+				$aptlat += $lat;
+				$aptlon += $lon;
+				$aptdatacnt++;
+			} elsif (/^(5\d+)\s+(\d+)\s+(.*)\s*/) {
+				my ($id, $freq, $desc) = ($1, $2, $3);
+				$freq =~ s/(..)$/.$1/;
+				&addfreq($freq, $desc);
+			}
+		}
+		last;
+	}
+}
+close F or die "can't close airport file $APTFILE";
+
+die "no data for $ID" unless $aptdatacnt;
+
+# calculate mean location from all structures on the airport
+$aptlat /= $aptdatacnt;
+$aptlon /= $aptdatacnt;
+my ($aptx, $apty, $aptz) = &ll2xyz($aptlat, $aptlon);
+
+
+my @OM;
+my @MM;
+my @IM;
+my @NDB;
+my @VOR;
+my @DME;
+my @OTHERS;
+
+open(F, "gzip -d -c $NAVFILE|") or die "can't open airport file $NAVFILE";
+while (<F>) {
+	chomp;
+	if (/^2\s/) {			# NDB
+		my @l = split /\s+/, $_, 9;
+		map { s/^(-?)0+/$1/ } @l[1,2];
+		my $dist = &coord_dist_sq(&ll2xyz($l[1], $l[2]), $aptx, $apty, $aptz);
+		push @NDB, [$dist, @l];
+
+	} elsif (/^3\s/) {		# VOR/VOR-DME/DME/VORTAC/TACAN
+		my @l = split /\s+/, $_, 9;
+		map { s/^(-?)0+/$1/ } @l[1,2];
+		my $dist = &coord_dist_sq(&ll2xyz($l[1], $l[2]), $aptx, $apty, $aptz);
+		if ($l[8] =~ /\b(VOR|VOR-DME)$/) {
+			push @VOR, [$dist, @l];
+		} elsif ($l[8] =~ /\bDME\b/) {
+			push @DME, [$dist, @l];
+		} else {
+			push @OTHERS, [$dist, @l];
+		}
+
+	} elsif (/^(4|5)\s/) {		# LLZ
+		my @l = split /\s+/, $_, 11;
+		next unless $l[8] eq $ID;
+		$l[4] =~ s/(..)$/.$1/;
+		&addfreq($l[4], "LLZ " . $l[9]);
+
+	} elsif (/^6\s/) {		# GS
+		my @l = split /\s+/, $_, 11;
+		next unless $l[8] eq $ID;
+		$l[4] =~ s/(..)$/.$1/;
+		&addfreq($l[4], "GS " . $l[9]);
+
+	} elsif (/^7\s/) {		# OM
+		my @l = split /\s+/, $_, 11;
+		next unless $l[8] eq $ID;
+		push @OM, $l[9];
+
+	} elsif (/^8\s/) {		# MM
+		my @l = split /\s+/, $_, 11;
+		next unless $l[8] eq $ID;
+		push @MM, $l[9];
+
+	} elsif (/^9\s/) {		# IM
+		my @l = split /\s+/, $_, 11;
+		next unless $l[8] eq $ID;
+		push @IM, $l[9];
+
+	} elsif (/^12\s/) {		# DME (ILS)
+		my @l = split /\s+/, $_, 11;
+		next unless $l[8] eq $ID;
+		$l[4] =~ s/(..)$/.$1/;
+		&addfreq($l[4], "DME " . $l[9]);
+
+	}
+}
+close F or die "can't close airport file $NAVFILE";
+
+
+foreach my $freq (sort { $a <=> $b } keys %FREQ) {
+	my %h;
+	map { $h{$_} = 1 } @{$FREQ{$freq}};
+	my @uniq = keys %h;
+
+	my @desc;
+	my %rwy;
+	foreach my $d (@uniq) {
+		if ($d =~ /(\S*)\s*(\d\d[LRC]?)\s*(\S*)/) {
+			push @{$rwy{$2}}, ($1 . $3);
+		} else {
+			push @desc, $d;
+		}
+	}
+	foreach my $r (keys %rwy) {
+		push @desc, ((join "/", sort @{$rwy{$r}}) . " $r");
+	}
+
+	my $s;
+	my $k = join ", ", @desc;
+	if ($k =~ /\bTWR\b/) {
+		$s = $COLOR{'TWR'};
+	} elsif ($k =~ /\bATIS\b/) {
+		$s = $COLOR{'ATIS'};
+	} elsif ($k =~ /\b(GZ|LLZ)\b/) {
+		$s = $COLOR{'ILS'};
+	}
+	$s .= sprintf "%-7s %s\033[m\n", $freq, join ", ", $k;
+	print $s;
+}
+
+
+&printfreq(0, $COLOR{'NDB'}, @NDB);
+&printfreq(1, $COLOR{'VOR'}, @VOR);
+&printfreq(1, $COLOR{'DME'}, @DME);
+&printfreq(1, $COLOR{'NONE'}, @OTHERS);
+
+print "        OM " . (join ", ", sort @OM) . "\n" if @OM;
+print "        MM " . (join ", ", sort @MM) . "\n" if @MM;
+print "        IM " . (join ", ", sort @IM) . "\n" if @IM;
+
+exit 0;
+
+
+
+sub printfreq($$$)
+{
+	my $divfreq = shift;		# divide frequency by 100?
+	my $color = shift;
+	foreach (sort { @{$a}[0] <=> @{$b}[0] } @_) {
+		my @l = @{$_};
+		my $dist = &distance($l[0]);
+		my $dir = &llll2dir($l[2], $l[3], $aptlat, $aptlon);
+		my $freq = $l[5];
+		$freq =~ s/(..)$/.$1/ if $divfreq;
+		printf "$color%-7s %s (\"%s\")\t-->\t%s km/%s nm  @  %s (%s)$COLOR{'NONE'}\n",
+				$freq, $l[9], $l[8],
+				&round($dist, 0.1),		# km
+				&round($dist / 1.852, 0.1),	# nm
+				int $dir, &symdir($dir);
+		next if $l[9] =~ /\b$ID\b/;
+		last if $dist > $RANGE;
+	}
+}
+
+
+sub addfreq($$)
+{
+	my ($freq, $desc) = @_;
+	push @{$FREQ{$freq}}, $desc;
+}
+
+
+sub distance($)		# km
+{
+	my $t = shift;
+	return $ERAD * sqrt($t) / 1000;
+}
+
+
+sub round($)
+{
+	my $i = shift;
+	my $m = (shift or 1);
+	$i /= $m;
+	$i = $i - &floor($i) >= 0.5 ? &ceil($i) : &floor($i);
+	$i *= $m;
+	return $i;
+}
+
+
+sub llll2dir($$$$)
+{
+	my $latA = (shift) * $D2R;
+	my $lonA = (shift) * $D2R;
+	my $latB = (shift) * $D2R;
+	my $lonB = (shift) * $D2R;
+	my $xdist = sin($lonB - $lonA) * $ERAD * cos(($latA + $latB) / 2);
+	my $ydist = sin($latB - $latA) * $ERAD;
+	my $dir = atan2($xdist, $ydist) * $R2D;
+	$dir += 360 if $dir < 0;
+	return $dir;
+}
+
+
+sub ll2xyz($$)
+{
+	my $lat = (shift) * $D2R;
+	my $lon = (shift) * $D2R;
+	my $cosphi = cos $lat;
+	my $di = $cosphi * cos $lon;
+	my $dj = $cosphi * sin $lon;
+	my $dk = sin $lat;
+	return ($di, $dj, $dk);
+}
+
+
+sub xyz2ll($$$)
+{
+	my ($di, $dj, $dk) = @_;
+	my $aux = $di * $di + $dj * $dj;
+	my $lat = atan2($dk, sqrt $aux) * $R2D;
+	my $lon = atan2($dj, $di) * $R2D;
+	return ($lat, $lon);
+}
+
+
+sub coord_dist_sq($$$$$$)
+{
+	my ($xa, $ya, $za, $xb, $yb, $zb) = @_;
+	my $x = $xb - $xa;
+	my $y = $yb - $ya;
+	my $z = $zb - $za;
+	return $x * $x + $y * $y + $z * $z;
+}
+
+
+sub symdir($)
+{
+	my $dir = shift;
+	my @names = ("N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+			"S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW");
+	my $nnames = scalar @names;
+	my $idx = int($nnames * (($dir / 360) + (0.5 / $nnames)));
+	if ($idx >= $nnames) {
+		$idx = 0;
+	}
+	return $names[$idx];
+}
+
+
