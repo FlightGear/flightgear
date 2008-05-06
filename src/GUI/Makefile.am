@@ -11,7 +11,8 @@ libGUI_a_SOURCES = \
 	trackball.c trackball.h \
 	AirportList.cxx AirportList.hxx \
         property_list.cxx property_list.hxx \
-        layout.cxx layout-props.cxx layout.hxx
+        layout.cxx layout-props.cxx layout.hxx \
+	SafeTexFont.cxx SafeTexFont.hxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
 

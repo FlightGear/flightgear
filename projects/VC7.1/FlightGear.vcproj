@@ -1806,6 +1806,13 @@
 			<File
 				RelativePath="..\..\src\GUI\trackball.h">
 			</File>
+			<File
+				RelativePath="..\..\src\GUI\SafeTexFont.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\GUI\SafeTexFont.hxx">
+			</File>
+
 		</Filter>
 		<Filter
 			Name="Lib_Input"

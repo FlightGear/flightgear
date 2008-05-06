@@ -12,6 +12,7 @@
 
 #include "menubar.hxx"
 #include "dialog.hxx"
+#include "SafeTexFont.hxx"
 
 extern puFont FONT_HELVETICA_14;
 extern puFont FONT_SANS_12B;
@@ -432,7 +433,7 @@ FGFontCache::getfnt(const char *name, float size, float slant)
     SGPath path = getfntpath(name);
 
     fnt *f = new fnt();
-    f->texfont = new fntTexFont;
+    f->texfont = new flightgear::SafeTexFont;
 
     if (f->texfont->load((char *)path.c_str())) {
         f->pufont = new puFont;
