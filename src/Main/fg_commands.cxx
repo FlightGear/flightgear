@@ -1149,6 +1149,28 @@ do_gui_redraw (const SGPropertyNode * arg)
     return true;
 }
 
+
+/**
+ * Set mouse coordinates and cursor.
+ */
+static bool
+do_set_mouse (const SGPropertyNode * arg)
+{
+    if (arg->hasValue("x") || arg->hasValue("y")) {
+        int x = arg->getIntValue("x", fgGetInt("/devices/status/mice/mouse/x"));
+        int y = arg->getIntValue("y", fgGetInt("/devices/status/mice/mouse/y"));
+        fgWarpMouse(x, y);
+    }
+
+    SGPropertyNode *cursor = const_cast<SGPropertyNode *>(arg)->getNode("cursor", true);
+    if (cursor->getType() != SGPropertyNode::NONE)
+        fgSetMouseCursor(cursor->getIntValue());
+
+    cursor->setIntValue(fgGetMouseCursor());
+    return true;
+}
+
+
 /**
  * Built-in command: play an audio message (i.e. a wav file) This is
  * fire and forget.  Call this once per message and it will get dumped
@@ -1451,6 +1473,7 @@ static struct {
     { "dialog-update", do_dialog_update },
     { "dialog-apply", do_dialog_apply },
     { "gui-redraw", do_gui_redraw },
+    { "set-mouse", do_set_mouse },
     { "play-audio-sample", do_play_audio_sample },
     { "presets-commit", do_presets_commit },
     { "log-level", do_log_level },
