@@ -231,7 +231,7 @@ bool FGAISchedule::update(time_t now)
   if (!deptime)
     deptime = (*flights.begin())->getDepartureTime();
   FGScheduledFlightVecIterator i = flights.begin();
-  SG_LOG (SG_GENERAL, SG_DEBUG,"Processing registration " << registration << " with callsign " << (*i)->getCallSign());
+  SG_LOG (SG_GENERAL, SG_DEBUG,"Traffic Manager: Processing registration " << registration << " with callsign " << (*i)->getCallSign());
   if (AIManagerRef)
     {
       // Check if this aircraft has been released. 
@@ -250,6 +250,7 @@ bool FGAISchedule::update(time_t now)
       // push it forward in time to the next scheduled departure. 
       if (((*i)->getDepartureTime() < now) && ((*i)->getArrivalTime() < now))
 	{
+          SG_LOG (SG_GENERAL, SG_DEBUG, "Traffic Manager:      Flight is in the Past");
 	  (*i)->update();
 	  return true;
 	}
@@ -263,6 +264,7 @@ bool FGAISchedule::update(time_t now)
       // Part of this flight is in the future.
       if ((*i)->getArrivalTime() > now)
 	{
+          
 	  dep = (*i)->getDepartureAirport();
 	  arr = (*i)->getArrivalAirport  ();
 	  if (!(dep && arr))
@@ -288,6 +290,7 @@ bool FGAISchedule::update(time_t now)
 	      //cerr << "Time diff: " << now-i->getDepartureTime() << endl;
 	      elapsedTimeEnroute   = now - (*i)->getDepartureTime();
 	      remainingTimeEnroute = (*i)->getArrivalTime()   - now;  
+              SG_LOG (SG_GENERAL, SG_DEBUG, "Traffic Manager:      Flight is in progress.");
 	    }
 	  else
 	    {
@@ -295,6 +298,7 @@ bool FGAISchedule::update(time_t now)
 	      lon = dep->getLongitude();
 	      elapsedTimeEnroute = 0;
 	      remainingTimeEnroute = totalTimeEnroute;
+              SG_LOG (SG_GENERAL, SG_DEBUG, "Traffic Manager:      Flight is pending.");
 	    }
 	  	  
 	  angle *= ( (double) elapsedTimeEnroute/ (double) totalTimeEnroute);
@@ -350,13 +354,14 @@ bool FGAISchedule::update(time_t now)
 	  // then 500nm, create this flight. At jet speeds 500 nm is roughly
 	  // one hour flight time, so that would be a good approximate point
 	  // to start a more detailed simulation of this aircraft.
-	  //cerr << registration << " is currently enroute from " 
-	  //   << dep->_id << " to " << arr->_id << "distance : " 
-          //   << distanceToUser*SG_METER_TO_NM << endl;
+	  SG_LOG (SG_GENERAL, SG_DEBUG, "Traffic manager: " << registration << " is scheduled for a flight from " 
+	     << dep->getId() << " to " << arr->getId() << ". Current distance to user: " 
+             << distanceToUser*SG_METER_TO_NM);
 	  if ((distanceToUser*SG_METER_TO_NM) < TRAFFICTOAIDIST)
 	    {
 	      string flightPlanName = dep->getId() + string("-") + arr->getId() + 
 		string(".xml");
+              SG_LOG (SG_GENERAL, SG_DEBUG, "Traffic manager: Creating AIModel");
 	      //int alt;
 	      //if  ((i->getDepartureTime() < now))
 	      //{

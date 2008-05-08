@@ -307,8 +307,10 @@ void  FGTrafficManager::endElement (const char * name) {
     }
   else if (element == string("aircraft"))
     {
-      //cerr << "Pushing back aircraft " << registration << endl;
-      scheduledAircraft.push_back(new FGAISchedule(mdl, 
+      int proportion = (int) (fgGetDouble("/sim/traffic-manager/proportion") * 100);
+      int randval = rand() & 100;
+      if (randval < proportion) {
+          scheduledAircraft.push_back(new FGAISchedule(mdl, 
 					       livery, 
 					       registration, 
 					       heavy,
@@ -323,6 +325,7 @@ void  FGTrafficManager::endElement (const char * name) {
      //  while(flights.begin() != flights.end()) {
 // 	flights.pop_back();
 //       }
+      }
       for (FGScheduledFlightVecIterator flt = flights.begin(); flt != flights.end(); flt++)
     {
       delete (*flt);
