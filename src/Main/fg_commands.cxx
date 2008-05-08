@@ -1151,15 +1151,19 @@ do_gui_redraw (const SGPropertyNode * arg)
 
 
 /**
- * Set mouse coordinates and cursor.
+ * Set mouse cursor coordinates and cursor shape.
  */
 static bool
-do_set_mouse (const SGPropertyNode * arg)
+do_set_cursor (const SGPropertyNode * arg)
 {
     if (arg->hasValue("x") || arg->hasValue("y")) {
-        int x = arg->getIntValue("x", fgGetInt("/devices/status/mice/mouse/x"));
-        int y = arg->getIntValue("y", fgGetInt("/devices/status/mice/mouse/y"));
+        SGPropertyNode *mx = fgGetNode("/devices/status/mice/mouse/x", true);
+        SGPropertyNode *my = fgGetNode("/devices/status/mice/mouse/y", true);
+        int x = arg->getIntValue("x", mx->getIntValue());
+        int y = arg->getIntValue("y", my->getIntValue());
         fgWarpMouse(x, y);
+        mx->setIntValue(x);
+        my->setIntValue(y);
     }
 
     SGPropertyNode *cursor = const_cast<SGPropertyNode *>(arg)->getNode("cursor", true);
@@ -1473,7 +1477,7 @@ static struct {
     { "dialog-update", do_dialog_update },
     { "dialog-apply", do_dialog_apply },
     { "gui-redraw", do_gui_redraw },
-    { "set-mouse", do_set_mouse },
+    { "set-cursor", do_set_cursor },
     { "play-audio-sample", do_play_audio_sample },
     { "presets-commit", do_presets_commit },
     { "log-level", do_log_level },
