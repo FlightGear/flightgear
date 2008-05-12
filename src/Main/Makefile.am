@@ -69,7 +69,7 @@ fgfs_SOURCES = bootstrap.cxx
 fgfs_LDADD = \
 	$(top_builddir)/src/Main/libMain.a \
 	$(top_builddir)/src/Aircraft/libAircraft.a \
-	$(top_builddir)/src/ATC/libATC.a \
+	$(top_builddir)/src/ATCDCL/libATC.a \
 	$(top_builddir)/src/Cockpit/libCockpit.a \
 	$(top_builddir)/src/Cockpit/built_in/libBuilt_in.a \
 	$(top_builddir)/src/FDM/libFlight.a \
