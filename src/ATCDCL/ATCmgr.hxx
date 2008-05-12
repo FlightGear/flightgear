@@ -1,0 +1,212 @@
+// ATCMgr.hxx - definition of FGATCMgr 
+// - a global management class for FlightGear generated ATC
+//
+// Written by David Luff, started February 2002.
+//
+// Copyright (C) 2002  David C Luff - david.luff@nottingham.ac.uk
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+#ifndef _FG_ATCMGR_HXX
+#define _FG_ATCMGR_HXX
+
+#include <simgear/structure/subsystem_mgr.hxx>
+
+#include <Main/fg_props.hxx>
+#include <GUI/gui.h>
+
+#include <string>
+#include <list>
+#include <map>
+
+#include "tower.hxx"
+#include "approach.hxx"
+
+SG_USING_STD(string);
+SG_USING_STD(list);
+SG_USING_STD(map);
+
+// Structure for holding details of the ATC frequencies at a given airport, and whether they are in the active list or not.
+// These can then be cross referenced with the commlists which are stored by frequency or bucket.
+// Non-available services are denoted by a frequency of zero.
+// These structures are only intended to be created for in-use airports, and removed when no longer needed. 
+struct AirportATC {
+	AirportATC();
+	
+    float lon;
+    float lat;
+    float elev;
+    float atis_freq;
+    bool atis_active;
+    float tower_freq;
+    bool tower_active;
+    float ground_freq;
+    bool ground_active;
+    //float approach_freq;
+    //bool approach_active;
+    //float departure_freq;
+    //bool departure_active;
+	
+	// NOTE - the *_active flags determine whether the service is active in atc_list,
+	// *NOT* whether the tower etc is closed or not!!!!
+
+    // Flags to ensure the stations don't get wrongly deactivated
+    bool set_by_AI;	// true when the AI manager has activated this station
+	unsigned int numAI;	// Ref count of the number of AI planes registered
+    bool set_by_comm[2][ATC_NUM_TYPES];	// true when the relevant comm_freq has activated this station and type
+};
+
+class FGATCMgr : public SGSubsystem
+{
+
+private:
+
+	bool initDone;	// Hack - guard against update getting called before init
+
+    // A map of airport ID vs frequencies and ATC provision
+    typedef map < string, AirportATC* > airport_atc_map_type;
+    typedef airport_atc_map_type::iterator airport_atc_map_iterator;
+    typedef airport_atc_map_type::const_iterator airport_atc_map_const_iterator;
+
+    airport_atc_map_type airport_atc_map;
+    airport_atc_map_iterator airport_atc_map_itr;
+
+    // A list of pointers to all currently active ATC classes
+    typedef list <FGATC*> atc_list_type;
+    typedef atc_list_type::iterator atc_list_iterator;
+    typedef atc_list_type::const_iterator atc_list_const_iterator;
+
+    // Everything put in this list should be created dynamically
+    // on the heap and ***DELETED WHEN REMOVED!!!!!***
+    atc_list_type atc_list;
+    atc_list_iterator atc_list_itr;
+    // Any member function of FGATCMgr is permitted to leave this iterator pointing
+    // at any point in or at the end of the list.
+    // Hence any new access must explicitly first check for atc_list.end() before dereferencing.
+
+    // Position of the Users Aircraft
+    double lon;
+    double lat;
+    double elev;
+
+    // Type of ATC control that the user's radios are tuned to.
+    atc_type comm_type[2];
+	
+	// Pointer to the ATC station that the user is currently tuned into.
+	FGATC* comm_atc_ptr[2];
+
+    double comm_freq[2];
+
+    // Pointers to users current communication frequencies.
+    SGPropertyNode_ptr comm_node[2];
+
+    // Pointers to current users position
+    SGPropertyNode_ptr lon_node;
+    SGPropertyNode_ptr lat_node;
+    SGPropertyNode_ptr elev_node;
+
+    // Position of the ATC that the comm radios are tuned to in order to decide 
+	// whether transmission will be received.
+    double comm_x[2], comm_y[2], comm_z[2], comm_lon[2], comm_lat[2], comm_elev[2];
+
+    double comm_range[2], comm_effective_range[2];
+    bool comm_valid[2]; 
+    string comm_ident[2];
+    //string last_comm_ident[2];
+    //string approach_ident;
+    bool last_in_range;
+
+    //FGATIS atis;
+    //FGGround ground;
+    FGTower tower;
+    FGApproach approach;
+    //FGDeparture departure;
+	
+	// Voice related stuff
+	bool voice;			// Flag - true if we are using voice
+#ifdef ENABLE_AUDIO_SUPPORT
+	bool voiceOK;		// Flag - true if at least one voice has loaded OK
+	FGATCVoice* v1;
+#endif
+
+public:
+
+    FGATCMgr();
+    ~FGATCMgr();
+
+    void init();
+
+    void bind();
+
+    void unbind();
+
+    void update(double dt);
+
+    // Returns true if the airport is found in the map
+    bool GetAirportATCDetails(const string& icao, AirportATC* a);
+
+    // Return a pointer to a given sort of ATC at a given airport and activate if necessary
+	// Returns NULL if service doesn't exist - calling function should check for this.
+    FGATC* GetATCPointer(const string& icao, const atc_type& type);
+	
+	// Return a pointer to an appropriate voice for a given type of ATC
+	// creating the voice if necessary - ie. make sure exactly one copy
+	// of every voice in use exists in memory.
+	//
+	// TODO - in the future this will get more complex and dole out country/airport
+	// specific voices, and possible make sure that the same voice doesn't get used
+	// at different airports in quick succession if a large enough selection are available.
+	FGATCVoice* GetVoicePointer(const atc_type& type);
+	
+	atc_type GetComm1ATCType() { return(comm_type[0]); }
+	FGATC* GetComm1ATCPointer() { return(comm_atc_ptr[0]); }
+	atc_type GetComm2ATCType() { return(comm_type[1]); }
+	FGATC* GetComm2ATCPointer() { return(comm_atc_ptr[1]); }
+	
+	// Get the frequency of a given service at a given airport
+	// Returns zero if not found
+	unsigned short int GetFrequency(const string& ident, const atc_type& tp);
+	
+	// Register the fact that the AI system wants to activate an airport
+	bool AIRegisterAirport(const string& ident);
+	
+	// Register the fact that the comm radio is tuned to an airport
+	bool CommRegisterAirport(const string& ident, int chan, const atc_type& tp);
+	
+private:
+
+    // Remove a class from the atc_list and delete it from memory
+	// *if* no other comm channel or AI plane is using it.
+    void CommRemoveFromList(const string& id, const atc_type& tp, int chan);
+
+    // Remove a class from the atc_list and delete it from memory
+	// Should be called from the above - not directly!!
+    void RemoveFromList(const string& id, const atc_type& tp);
+
+    // Return a pointer to a class in the list given ICAO code and type
+	// (external interface to this is through GetATCPointer) 
+	// Return NULL if the given service is not in the list
+	// - *** THE CALLING FUNCTION MUST CHECK FOR THIS ***
+    FGATC* FindInList(const string& id, const atc_type& tp);
+
+    // Search the specified channel for stations on the same frequency and in range.
+    void FreqSearch(int channel);
+	
+	// Search ATC stations by area in order that we appear 'on the radar'
+	void AreaSearch(); 
+
+};
+
+#endif  // _FG_ATCMGR_HXX
