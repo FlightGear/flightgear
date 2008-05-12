@@ -43,7 +43,7 @@
 #include "kln89_symbols.hxx"
 #include <iostream>
 
-#include <ATC/ATCProjection.hxx>
+#include <ATCDCL/ATCProjection.hxx>
 #include <Main/fg_props.hxx>
 #include <simgear/math/point3d.hxx>
 

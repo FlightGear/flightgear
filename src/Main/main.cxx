@@ -68,8 +68,8 @@
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 #include <FDM/flight.hxx>
-#include <ATC/ATCmgr.hxx>
-#include <ATC/AIMgr.hxx>
+#include <ATCDCL/ATCmgr.hxx>
+#include <ATCDCL/AIMgr.hxx>
 #include <Time/tmp.hxx>
 #include <Time/fg_timer.hxx>
 #include <Environment/environment_mgr.hxx>

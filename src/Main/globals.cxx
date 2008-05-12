@@ -34,8 +34,8 @@
 
 #include <Aircraft/controls.hxx>
 #include <Airports/runways.hxx>
-#include <ATC/AIMgr.hxx>
-#include <ATC/ATCmgr.hxx>
+#include <ATCDCL/AIMgr.hxx>
+#include <ATCDCL/ATCmgr.hxx>
 #include <Autopilot/route_mgr.hxx>
 #include <Cockpit/panel.hxx>
 #include <GUI/new_gui.hxx>

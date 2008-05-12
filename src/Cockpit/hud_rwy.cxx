@@ -33,7 +33,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/polar3d.hxx>
 #include SG_GLU_H
-#include <ATC/ATCutils.hxx>
+#include <ATCDCL/ATCutils.hxx>
 
 
 // int x, int y, int width, int height, float scale_data, bool working)

@@ -2,7 +2,7 @@ SUBDIRS = \
         Include \
         Aircraft \
         Airports \
-        ATC \
+        ATCDCL \
         Autopilot \
         Cockpit \
         Environment \

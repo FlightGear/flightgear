@@ -649,7 +649,7 @@ AC_CONFIG_FILES([ \
 	src/Include/config.h-msvc8 \
 	src/Aircraft/Makefile \
 	src/Airports/Makefile \
-	src/ATC/Makefile \
+	src/ATCDCL/Makefile \
 	src/Autopilot/Makefile \
 	src/Cockpit/Makefile \
 	src/Cockpit/built_in/Makefile \

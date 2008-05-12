@@ -72,8 +72,8 @@
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
 #include <AIModel/AIManager.hxx>
-#include <ATC/ATCmgr.hxx>
-#include <ATC/AIMgr.hxx>
+#include <ATCDCL/ATCmgr.hxx>
+#include <ATCDCL/AIMgr.hxx>
 #include <Autopilot/route_mgr.hxx>
 #include <Autopilot/xmlauto.hxx>
 #include <Cockpit/cockpit.hxx>

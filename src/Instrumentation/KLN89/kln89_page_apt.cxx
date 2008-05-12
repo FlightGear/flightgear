@@ -26,7 +26,7 @@
 #endif
 
 #include "kln89_page_apt.hxx"
-#include <ATC/commlist.hxx>
+#include <ATCDCL/commlist.hxx>
 #include <Main/globals.hxx>
 
 // This function is copied from Airports/runways.cxx

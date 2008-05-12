@@ -35,7 +35,7 @@
 #include <Environment/environment_mgr.hxx>
 #include <Main/viewer.hxx>
 #include <Main/viewmgr.hxx>
-#include <ATC/ATCutils.hxx>
+#include <ATCDCL/ATCutils.hxx>
 
 #include "HUD.hxx"
 
