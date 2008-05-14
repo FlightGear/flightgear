@@ -242,94 +242,94 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="Lib_ATC"
+			Name="Lib_ATCDCL"
 			Filter="">
 			<File
-				RelativePath="..\..\src\ATC\AIEntity.cxx">
+				RelativePath="..\..\src\ATCDCL\AIEntity.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\AIEntity.hxx">
+				RelativePath="..\..\src\ATCDCL\AIEntity.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\AIGAVFRTraffic.cxx">
+				RelativePath="..\..\src\ATCDCL\AIGAVFRTraffic.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\AIGAVFRTraffic.hxx">
+				RelativePath="..\..\src\ATCDCL\AIGAVFRTraffic.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\AILocalTraffic.cxx">
+				RelativePath="..\..\src\ATCDCL\AILocalTraffic.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\AILocalTraffic.hxx">
+				RelativePath="..\..\src\ATCDCL\AILocalTraffic.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\AIMgr.cxx">
+				RelativePath="..\..\src\ATCDCL\AIMgr.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\AIMgr.hxx">
+				RelativePath="..\..\src\ATCDCL\AIMgr.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\AIPlane.cxx">
+				RelativePath="..\..\src\ATCDCL\AIPlane.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\AIPlane.hxx">
+				RelativePath="..\..\src\ATCDCL\AIPlane.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\approach.cxx">
+				RelativePath="..\..\src\ATCDCL\approach.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\approach.hxx">
+				RelativePath="..\..\src\ATCDCL\approach.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\ATC.cxx">
+				RelativePath="..\..\src\ATCDCL\ATC.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\ATC.hxx">
+				RelativePath="..\..\src\ATCDCL\ATC.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\ATCDialog.cxx">
+				RelativePath="..\..\src\ATCDCL\ATCDialog.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\ATCDialog.hxx">
+				RelativePath="..\..\src\ATCDCL\ATCDialog.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\ATCmgr.cxx">
+				RelativePath="..\..\src\ATCDCL\ATCmgr.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\ATCmgr.hxx">
+				RelativePath="..\..\src\ATCDCL\ATCmgr.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\ATCProjection.cxx">
+				RelativePath="..\..\src\ATCDCL\ATCProjection.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\ATCProjection.hxx">
+				RelativePath="..\..\src\ATCDCL\ATCProjection.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\ATCutils.cxx">
+				RelativePath="..\..\src\ATCDCL\ATCutils.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\ATCutils.hxx">
+				RelativePath="..\..\src\ATCDCL\ATCutils.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\ATCVoice.cxx">
+				RelativePath="..\..\src\ATCDCL\ATCVoice.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\ATCVoice.hxx">
+				RelativePath="..\..\src\ATCDCL\ATCVoice.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\atis.cxx">
+				RelativePath="..\..\src\ATCDCL\atis.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\atis.hxx">
+				RelativePath="..\..\src\ATCDCL\atis.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\commlist.cxx">
+				RelativePath="..\..\src\ATCDCL\commlist.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\commlist.hxx">
+				RelativePath="..\..\src\ATCDCL\commlist.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\Atc\ground.cxx">
+				RelativePath="..\..\src\ATCDCL\ground.cxx">
 				<FileConfiguration
 					Name="Release|Win32">
 					<Tool
@@ -338,25 +338,25 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\Atc\ground.hxx">
+				RelativePath="..\..\src\ATCDCL\ground.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\tower.cxx">
+				RelativePath="..\..\src\ATCDCL\tower.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\tower.hxx">
+				RelativePath="..\..\src\ATCDCL\tower.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\transmission.cxx">
+				RelativePath="..\..\src\ATCDCL\transmission.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\transmission.hxx">
+				RelativePath="..\..\src\ATCDCL\transmission.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\transmissionlist.cxx">
+				RelativePath="..\..\src\ATCDCL\transmissionlist.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\ATC\transmissionlist.hxx">
+				RelativePath="..\..\src\ATCDCL\transmissionlist.hxx">
 			</File>
 		</Filter>
 		<Filter
