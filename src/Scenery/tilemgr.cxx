@@ -36,6 +36,7 @@
 #include <simgear/math/vector.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/scene/model/modellib.hxx>
+#include <simgear/scene/tgdb/SGReaderWriterBTGOptions.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -43,7 +44,6 @@
 #include <Main/viewer.hxx>
 #include <Scripting/NasalSys.hxx>
 
-#include "newcache.hxx"
 #include "scenery.hxx"
 #include "SceneryPager.hxx"
 #include "tilemgr.hxx"
@@ -51,26 +51,37 @@
 using std::for_each;
 using flightgear::SceneryPager;
 using simgear::SGModelLib;
+using simgear::TileEntry;
+using simgear::TileCache;
 
-#define TEST_LAST_HIT_CACHE
-
-// Constructor
 FGTileMgr::FGTileMgr():
     state( Start ),
-    current_tile( NULL ),
     vis( 16000 )
 {
 }
 
 
-// Destructor
 FGTileMgr::~FGTileMgr() {
+    // remove all nodes we might have left behind
+    osg::Group* group = globals->get_scenery()->get_terrain_branch();
+    group->removeChildren(0, group->getNumChildren());
 }
 
 
 // Initialize the Tile Manager subsystem
 int FGTileMgr::init() {
     SG_LOG( SG_TERRAIN, SG_INFO, "Initializing Tile Manager subsystem." );
+
+    _options = new SGReaderWriterBTGOptions;
+    _options->setMatlib(globals->get_matlib());
+    _options->setUseRandomObjects(fgGetBool("/sim/rendering/random-objects", true));
+    _options->setUseRandomVegetation(fgGetBool("/sim/rendering/random-vegetation", true));
+    osgDB::FilePathList &fp = _options->getDatabasePathList();
+    const string_list &sc = globals->get_fg_scenery();
+    fp.clear();
+    std::copy(sc.begin(), sc.end(), back_inserter(fp));
+
+    TileEntry::setModelLoadHelper(this);
 
     tile_cache.init();
 
@@ -84,22 +95,21 @@ int FGTileMgr::init() {
     return 1;
 }
 
-
 // schedule a tile for loading
 void FGTileMgr::sched_tile( const SGBucket& b, const bool is_inner_ring ) {
     // see if tile already exists in the cache
-    FGTileEntry *t = tile_cache.get_tile( b );
+    TileEntry *t = tile_cache.get_tile( b );
 
-    if ( t == NULL ) {
+    if ( !t ) {
         // make space in the cache
         SceneryPager* pager = FGScenery::getPagerSingleton();
         while ( (int)tile_cache.get_size() > tile_cache.get_max_cache_size() ) {
             long index = tile_cache.get_oldest_tile();
             if ( index >= 0 ) {
-                FGTileEntry *old = tile_cache.get_tile( index );
+                TileEntry *old = tile_cache.get_tile( index );
                 tile_cache.clear_entry( index );
                 osg::ref_ptr<osg::Object> subgraph = old->getNode();
-                old->disconnect_ssg_nodes();
+                old->removeFromSceneGraph();
                 delete old;
                 // zeros out subgraph ref_ptr, so subgraph is owned by
                 // the pager and will be deleted in the pager thread.
@@ -111,7 +121,7 @@ void FGTileMgr::sched_tile( const SGBucket& b, const bool is_inner_ring ) {
         }
 
         // create a new entry
-        FGTileEntry *e = new FGTileEntry( b );
+        TileEntry *e = new TileEntry( b );
 
         // insert the tile into the cache
         if ( tile_cache.insert_tile( e ) ) {
@@ -122,7 +132,7 @@ void FGTileMgr::sched_tile( const SGBucket& b, const bool is_inner_ring ) {
             delete e;
         }
         // Attach to scene graph
-        e->add_ssg_nodes(globals->get_scenery()->get_terrain_branch());
+        e->addToSceneGraph(globals->get_scenery()->get_terrain_branch());
     } else {
         t->set_inner_ring( is_inner_ring );
     }
@@ -159,7 +169,8 @@ void FGTileMgr::schedule_needed( double vis, const SGBucket& curr_bucket) {
     if ( xrange < 1 ) { xrange = 1; }
     if ( yrange < 1 ) { yrange = 1; }
 
-    // note * 2 at end doubles cache size (for fdm and viewer)
+    // make the cache twice as large to avoid losing terrain when switching
+    // between aircraft and tower views
     tile_cache.set_max_cache_size( (2*xrange + 2) * (2*yrange + 2) * 2 );
     // cout << "xrange = " << xrange << "  yrange = " << yrange << endl;
     // cout << "max cache size = " << tile_cache.get_max_cache_size()
@@ -221,23 +232,6 @@ void FGTileMgr::initialize_queue()
 
     double visibility_meters = fgGetDouble("/environment/visibility-m");
     schedule_needed(visibility_meters, current_bucket);
-
-    // do we really want to lose this? CLO
-#if 0
-    // Now force a load of the center tile and inner ring so we
-    // have something to see in our first frame.
-    int i;
-    for ( i = 0; i < 9; ++i ) {
-        if ( load_queue.size() ) {
-            SG_LOG( SG_TERRAIN, SG_DEBUG, 
-                    "Load queue not empty, loading a tile" );
-
-            SGBucket pending = load_queue.front();
-            load_queue.pop_front();
-            load_tile( pending );
-        }
-    }
-#endif
 }
 
 osg::Node*
@@ -246,17 +240,14 @@ FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
     osg::Node* result = 0;
     try {
         if(cacheModel)
-        {
             result =
                 SGModelLib::loadModel(modelPath, globals->get_props(),
                                       new FGNasalModelData);
-        }
+
         else
-        {
             result=
                 SGModelLib::loadPagedModel(modelPath, globals->get_props(),
                                            new FGNasalModelData);
-        }
     } catch (const sg_io_exception& exc) {
         string m(exc.getMessage());
         m += " ";
@@ -269,28 +260,32 @@ FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
 }
 
 // Helper class for STL fun
-class TileLoad : public std::unary_function<FGNewCache::tile_map::value_type,
+class TileLoad : public std::unary_function<TileCache::tile_map::value_type,
                                             void>
 {
 public:
     TileLoad(SceneryPager *pager, osg::FrameStamp* framestamp,
-             osg::Group* terrainBranch) :
-        _pager(pager), _framestamp(framestamp) {}
+             osg::Group* terrainBranch, osgDB::ReaderWriter::Options* options) :
+        _pager(pager), _framestamp(framestamp), _options(options) {}
+
     TileLoad(const TileLoad& rhs) :
-        _pager(rhs._pager), _framestamp(rhs._framestamp) {}
-    void operator()(FGNewCache::tile_map::value_type& tilePair)
+        _pager(rhs._pager), _framestamp(rhs._framestamp),
+        _options(rhs._options) {}
+
+    void operator()(TileCache::tile_map::value_type& tilePair)
     {
-        FGTileEntry* entry = tilePair.second;
+        TileEntry* entry = tilePair.second;
         if (entry->getNode()->getNumChildren() == 0) {
             _pager->queueRequest(entry->tileFileName,
                                  entry->getNode(),
                                  entry->get_inner_ring() ? 10.0f : 1.0f,
-                                 _framestamp);
+                                 _framestamp, _options);
         }
     }
 private:
     SceneryPager* _pager;
     osg::FrameStamp* _framestamp;
+    osgDB::ReaderWriter::Options* _options;
 };
 
 /**
@@ -303,7 +298,7 @@ void FGTileMgr::update_queues()
     for_each(tile_cache.begin(), tile_cache.end(),
              TileLoad(pager,
                       globals->get_renderer()->getViewer()->getFrameStamp(),
-                      globals->get_scenery()->get_terrain_branch()));
+                      globals->get_scenery()->get_terrain_branch(), _options.get()));
 }
 
 
@@ -374,7 +369,7 @@ void FGTileMgr::prep_ssg_nodes(float vis) {
     // traverse the potentially viewable tile list and update range
     // selector and transform
 
-    FGTileEntry *e;
+    TileEntry *e;
     tile_cache.reset_traversal();
 
     while ( ! tile_cache.at_end() ) {
@@ -395,7 +390,7 @@ bool FGTileMgr::scenery_available(double lat, double lon, double range_m)
     return false;
   
   SGBucket bucket(lon, lat);
-  FGTileEntry *te = tile_cache.get_tile(bucket);
+  TileEntry *te = tile_cache.get_tile(bucket);
   if (!te || !te->is_loaded())
     return false;
 
@@ -412,7 +407,7 @@ bool FGTileMgr::scenery_available(double lat, double lon, double range_m)
       // We have already checked for the center tile.
       if ( x != 0 || y != 0 ) {
         SGBucket b = sgBucketOffset( lon, lat, x, y );
-        FGTileEntry *te = tile_cache.get_tile(b);
+        TileEntry *te = tile_cache.get_tile(b);
         if (!te || !te->is_loaded())
           return false;
       }
@@ -426,9 +421,9 @@ bool FGTileMgr::scenery_available(double lat, double lon, double range_m)
 namespace
 {
 struct IsTileLoaded :
-        public std::unary_function<FGNewCache::tile_map::value_type, bool>
+        public std::unary_function<TileCache::tile_map::value_type, bool>
 {
-    bool operator()(const FGNewCache::tile_map::value_type& tilePair) const
+    bool operator()(const TileCache::tile_map::value_type& tilePair) const
     {
         return tilePair.second->is_loaded();
     }

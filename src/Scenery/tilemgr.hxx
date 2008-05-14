@@ -24,30 +24,18 @@
 #ifndef _TILEMGR_HXX
 #define _TILEMGR_HXX
 
-
-#ifndef __cplusplus                                                          
-# error This library requires C++
-#endif                                   
-
 #include <simgear/compiler.h>
 #include <simgear/math/point3d.hxx>
 #include <simgear/scene/model/location.hxx>
 
 #include <simgear/bucket/newbucket.hxx>
-#include "newcache.hxx"
+#include <simgear/scene/tgdb/TileEntry.hxx>
+#include <simgear/scene/tgdb/TileCache.hxx>
 
-#if defined(USE_MEM) || defined(WIN32)
-#  define FG_MEM_COPY(to,from,n)        memcpy(to, from, n)
-#else
-#  define FG_MEM_COPY(to,from,n)        bcopy(from, to, n)
-#endif
-
-// forward declaration
-class FGTileEntry;
-
+class SGReaderWriterBTGOptions;
 class osg::Node;
 
-class FGTileMgr {
+class FGTileMgr : public simgear::ModelLoadHelper {
 
 private:
 
@@ -72,13 +60,12 @@ private:
     SGBucket previous_bucket;
     SGBucket current_bucket;
     SGBucket pending;
-	
-    FGTileEntry *current_tile;
-	
+    osg::ref_ptr<SGReaderWriterBTGOptions> _options;
+
     // x and y distance of tiles to load/draw
     float vis;
     int xrange, yrange;
-	
+
     // current longitude latitude
     double longitude;
     double latitude;
@@ -87,17 +74,14 @@ private:
     /**
      * tile cache
      */
-    FGNewCache tile_cache;
+    simgear::TileCache tile_cache;
 
 public:
-
-    // Constructor
     FGTileMgr();
 
-    // Destructor
     ~FGTileMgr();
 
-    // Initialize the Tile Manager subsystem
+    // Initialize the Tile Manager
     int init();
 
     // Update the various queues maintained by the tilemagr (private
@@ -124,7 +108,7 @@ public:
     bool scenery_available(double lat, double lon, double range_m);
 
     // Load a model for a tile
-    static osg::Node* loadTileModel(const string& modelPath, bool cacheModel);
+    osg::Node* loadTileModel(const string& modelPath, bool cacheModel);
 
     // Returns true if all the tiles in the tile cache have been loaded
     bool isSceneryLoaded();

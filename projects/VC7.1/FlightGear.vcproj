@@ -2134,12 +2134,6 @@
 			Name="Lib_Scenery"
 			Filter="">
 			<File
-				RelativePath="..\..\src\Scenery\newcache.cxx">
-			</File>
-			<File
-				RelativePath="..\..\src\Scenery\newcache.hxx">
-			</File>
-			<File
 				RelativePath="..\..\src\Scenery\redout.cxx">
 			</File>
 			<File
@@ -2156,12 +2150,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\Scenery\SceneryPager.hxx">
-			</File>
-			<File
-				RelativePath="..\..\src\Scenery\tileentry.cxx">
-			</File>
-			<File
-				RelativePath="..\..\src\Scenery\tileentry.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Scenery\tilemgr.cxx">

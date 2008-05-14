@@ -52,10 +52,11 @@ void SceneryPager::requestNodeFile(const std::string& fileName,osg::Group* group
 }
 
 void SceneryPager::queueRequest(const std::string& fileName, osg::Group* group,
-                                float priority, osg::FrameStamp* frameStamp)
+                                float priority, osg::FrameStamp* frameStamp,
+                                osgDB::ReaderWriter::Options* options)
 {
     _pagerRequests.push_back(PagerRequest(fileName, group, priority,
-                                          frameStamp));
+                                          frameStamp, options));
 }
 
 void SceneryPager::queueDeleteRequest(osg::ref_ptr<osg::Object>& objptr)

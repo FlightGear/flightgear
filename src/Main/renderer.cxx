@@ -81,7 +81,6 @@
 
 #include <simgear/environment/visual_enviro.hxx>
 
-#include <Scenery/tileentry.hxx>
 #include <Time/light.hxx>
 #include <Time/light.hxx>
 #include <Aircraft/aircraft.hxx>
