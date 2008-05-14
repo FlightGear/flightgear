@@ -31,7 +31,7 @@ namespace flightgear
 class SafeTexFont : public fntTexFont
 {
 public:
-    SafeTexFont() : _status(NOT_LOADED) {}
+    SafeTexFont() : _status(e_NOT_LOADED) {}
     /** Load the texture for this font.
      * @param mag OpenGL texture magnification; default is GL_NEAREST
      * @param min OpenGL texture minification; default is
@@ -46,9 +46,9 @@ public:
     void puts(sgVec3 curpos, float pointsize, float italic, const char *s);
     enum FontStatus
     {
-        ERROR = -1,
-        NOT_LOADED = 0,
-        LOADED = 1
+        e_ERROR = -1,
+        e_NOT_LOADED = 0,
+        e_LOADED = 1
     };
     FontStatus getStatus() { return _status; }
     std::string& fntError() { return _error; }

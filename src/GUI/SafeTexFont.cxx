@@ -26,7 +26,7 @@ int SafeTexFont::load(const char *fname, GLenum mag, GLenum min)
 {
     struct stat buf;
     if (stat(fname, &buf) == -1) {
-        _status = ERROR;
+        _status = e_ERROR;
         return FNT_FALSE;
     }
     _name = fname;
@@ -37,16 +37,16 @@ int SafeTexFont::load(const char *fname, GLenum mag, GLenum min)
 
 bool SafeTexFont::ensureTextureLoaded()
 {
-    if (_status != ERROR) {
-        if (_status == LOADED) {
+    if (_status != e_ERROR) {
+        if (_status == e_LOADED) {
             return true;
         } else {
             int loadStatus = fntTexFont::load(_name.c_str(), _mag, _min);
             if (loadStatus == FNT_TRUE) {
-                _status = LOADED;
+                _status = e_LOADED;
                 return true;
             } else {
-                _status = ERROR;
+                _status = e_ERROR;
                 _error = ulGetError();
                 return false;
             }    
