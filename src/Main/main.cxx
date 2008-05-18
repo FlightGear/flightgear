@@ -139,7 +139,7 @@ void fgUpdateTimeDepCalcs() {
         // the aircraft.
         double range = 1000.0;
         if (globals->get_scenery()->scenery_available(lat, lon, range)) {
-            SG_LOG(SG_FLIGHT,SG_ALERT, "Finally initializing fdm");
+            //SG_LOG(SG_FLIGHT, SG_INFO, "Finally initializing fdm");
             cur_fdm_state->init();
             if ( cur_fdm_state->get_bound() ) {
                 cur_fdm_state->unbind();
@@ -218,7 +218,7 @@ static void fgMainLoop( void ) {
     static SGPropertyNode_ptr frame_signal
         = fgGetNode("/sim/signals/frame", true);
 
-    frame_signal->setBoolValue(true);
+    frame_signal->fireValueChanged();
     SGCloudLayer::enable_bump_mapping = fgGetBool("/sim/rendering/bump-mapping");
 
     bool scenery_loaded = fgGetBool("sim/sceneryloaded");
