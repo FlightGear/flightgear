@@ -346,7 +346,7 @@ bool FGAICarrier::init(bool search_in_AI_path) {
 
 void FGAICarrier::initModel(osg::Node *node)
 {
-    SG_LOG(SG_GENERAL, SG_ALERT, "AICarrier::initModel()" );
+    // SG_LOG(SG_GENERAL, SG_BULK, "AICarrier::initModel()" );
     FGAIShip::initModel(node);
     // process the 3d model here
     // mark some objects solid, mark the wires ...
@@ -359,7 +359,7 @@ void FGAICarrier::initModel(osg::Node *node)
     // Clear the HOT traversal flag
     // Selectively set that flag again for wires/cats/solid objects.
     // Attach a pointer to this carrier class to those objects.
-    SG_LOG(SG_GENERAL, SG_ALERT, "AICarrier::initModel() visit" );
+    // SG_LOG(SG_GENERAL, SG_BULK, "AICarrier::initModel() visit" );
     FGCarrierVisitor carrierVisitor(this, wire_objects, catapult_objects, solid_objects);
     model->accept(carrierVisitor);
 //    model->setNodeMask(node->getNodeMask() & SG_NODEMASK_TERRAIN_BIT | model->getNodeMask());
