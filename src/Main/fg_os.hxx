@@ -1,12 +1,16 @@
 #ifndef _FG_OS_HXX
 #define _FG_OS_HXX
 
-// Plib pui needs to know at compile time what toolkit is in use.
-// Change this when we move to something other than glut.
-// #define PU_USE_GLUT -- moved to configure.ac -- EMH
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
+
+#include <string>
+#include <vector>
+
+#include <osg/ref_ptr>
+#include <osg/Camera>
+#include <osg/GraphicsContext>
 
 
 enum { MOUSE_BUTTON_LEFT,
@@ -45,8 +49,7 @@ enum { KEYMOD_NONE     = 0,
 //
 
 void fgOSInit(int* argc, char** argv);
-void fgOSOpenWindow(int w, int h, int bpp, bool alpha, bool stencil,
-                    bool fullscreen);
+void fgOSOpenWindow(bool stencil);
 void fgOSFullScreen();
 void fgOSMainLoop();
 void fgOSExit(int code);
@@ -82,9 +85,17 @@ void fgRegisterKeyHandler(fgKeyHandler func);
 void fgRegisterMouseClickHandler(fgMouseClickHandler func);
 void fgRegisterMouseMotionHandler(fgMouseMotionHandler func);
 
-void fgMakeCurrent();
-
 bool fgOSIsMainCamera(const osg::Camera* camera);
 bool fgOSIsMainContext(const osg::GraphicsContext* context);
+
+/** Get graphics context of the main camera. This is the principal
+ * window in multi-window configurations, or the only window in an
+ * embedded configuration. The GUI will be added to this context.
+ */
+osg::GraphicsContext* fgOSGetMainContext();
+
+
+
+
 
 #endif // _FG_OS_HXX

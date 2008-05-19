@@ -34,6 +34,8 @@
 #  include <windows.h>
 #endif
 
+#include <string>
+
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
@@ -45,12 +47,15 @@
 #include <Main/main.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/WindowSystemAdapter.hxx>
 #include <GUI/new_gui.hxx>
 
 #include "gui.h"
 #include "gui_local.hxx"
 #include "layout.hxx"
 
+using namespace osg;
+using namespace flightgear;
 
 puFont guiFnt = 0;
 
@@ -59,48 +64,76 @@ puFont guiFnt = 0;
 init the gui
 _____________________________________________________________________*/
 
-
-void guiInit()
+namespace
 {
-    char *mesa_win_state;
+class GUIInitOperation : public GraphicsContextOperation
+{
+public:
+    GUIInitOperation() : GraphicsContextOperation(std::string("GUI init"))
+    {
+    }
+    void run(GraphicsContext* gc)
+    {
+        WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
+        wsa->puInitialize();
+        puSetDefaultStyle         ( PUSTYLE_SMALL_SHADED ); //PUSTYLE_DEFAULT
+        puSetDefaultColourScheme  (0.8, 0.8, 0.9, 1);
 
-    // Initialize PUI
-#ifndef PU_USE_NONE
-    puInit();
-#endif
-    puSetDefaultStyle         ( PUSTYLE_SMALL_SHADED ); //PUSTYLE_DEFAULT
-    puSetDefaultColourScheme  (0.8, 0.8, 0.9, 1);
+        FGFontCache *fc = globals->get_fontcache();
+        puFont *GuiFont
+            = fc->get(globals->get_locale()->getStringValue("font",
+                                                            "typewriter.txf"),
+                      15);
+        puSetDefaultFonts(*GuiFont, *GuiFont);
+        guiFnt = puGetDefaultLabelFont();
 
-    FGFontCache *fc = globals->get_fontcache();
-    puFont *GuiFont = fc->get(globals->get_locale()->getStringValue("font", "typewriter.txf"), 15);
-    puSetDefaultFonts(*GuiFont, *GuiFont);
-    guiFnt = puGetDefaultLabelFont();
-
-    LayoutWidget::setDefaultFont(GuiFont, 15);
+        LayoutWidget::setDefaultFont(GuiFont, 15);
   
-    if (!fgHasNode("/sim/startup/mouse-pointer")) {
-        // no preference specified for mouse pointer, attempt to autodetect...
-        // Determine if we need to render the cursor, or if the windowing
-        // system will do it.  First test if we are rendering with glide.
-        if ( strstr ( general.get_glRenderer(), "Glide" ) ) {
-            // Test for the MESA_GLX_FX env variable
-            if ( (mesa_win_state = getenv( "MESA_GLX_FX" )) != NULL) {
-                // test if we are fullscreen mesa/glide
-                if ( (mesa_win_state[0] == 'f') ||
-                     (mesa_win_state[0] == 'F') ) {
-                    puShowCursor ();
+        if (!fgHasNode("/sim/startup/mouse-pointer")) {
+            // no preference specified for mouse pointer, attempt to autodetect...
+            // Determine if we need to render the cursor, or if the windowing
+            // system will do it.  First test if we are rendering with
+            // glide.
+            // XXX Not bloody likely in 2008...
+            if ( strstr ( general.get_glRenderer(), "Glide" ) ) {
+                // Test for the MESA_GLX_FX env variable
+                char *mesa_win_state = getenv( "MESA_GLX_FX" );
+                if (mesa_win_state  != NULL) {
+                    // test if we are fullscreen mesa/glide
+                    if ( (mesa_win_state[0] == 'f') ||
+                         (mesa_win_state[0] == 'F') ) {
+                        puShowCursor ();
+                    }
                 }
             }
+        } else if ( !fgGetBool("/sim/startup/mouse-pointer") ) {
+            // don't show pointer
+        } else {
+            // force showing pointer
+            puShowCursor();
         }
-//        mouse_active = ~mouse_active;
-    } else if ( !fgGetBool("/sim/startup/mouse-pointer") ) {
-        // don't show pointer
-    } else {
-        // force showing pointer
-        puShowCursor();
-//        mouse_active = ~mouse_active;
     }
-	
-    // MOUSE_VIEW mode stuff
-	initMouseQuat();
+};
+
+ref_ptr<GUIInitOperation> initOp;
 }
+
+void guiStartInit()
+{
+    initOp = new GUIInitOperation;
+    WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
+    GraphicsContext* gc = wsa->getGUIGraphicsContext();
+    gc->add(initOp.get());
+}
+
+bool guiFinishInit()
+{
+    if (!initOp.valid())
+        return false;
+    if (!initOp->isFinished())
+        return false;
+    initMouseQuat();
+    initOp = 0;
+    return true;
+}
+

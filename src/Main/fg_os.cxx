@@ -21,6 +21,9 @@
 #include "globals.hxx"
 #include "renderer.hxx"
 #include "fg_props.hxx"
+#include "WindowSystemAdapter.hxx"
+
+using namespace flightgear;
 
 //
 // Native glut callbacks.
@@ -153,6 +156,7 @@ static void GLUTreshape(int w, int h)
 void fgOSInit(int* argc, char** argv)
 {
     glutInit(argc, argv);
+    WindowSystemAdapter::setWSA(new WindowSystemAdapter);
 }
 
 void fgOSFullScreen()
@@ -216,10 +220,16 @@ static unsigned int getOSGModifiers(int glutModifiers)
     return result;
 }
 
-void fgOSOpenWindow(int w, int h, int bpp, bool alpha,
-                    bool stencil, bool fullscreen)
+void fgOSOpenWindow(bool stencil)
 {
+    int w = fgGetInt("/sim/startup/xsize");
+    int h = fgGetInt("/sim/startup/ysize");
+    int bpp = fgGetInt("/sim/rendering/bits-per-pixel");
+    bool alpha = fgGetBool("/sim/rendering/clouds3d-enable");
+    bool fullscreen = fgGetBool("/sim/startup/fullscreen");
+    WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
     int mode = GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE;
+
     if(alpha) mode |= GLUT_ALPHA;
     if(stencil && bpp > 16) mode |= GLUT_STENCIL;
 
@@ -256,18 +266,21 @@ void fgOSOpenWindow(int w, int h, int bpp, bool alpha,
     int realh = h;
     viewer = new osgViewer::Viewer;
     gw = viewer->setUpViewerAsEmbeddedInWindow(0, 0, realw, realh);
+    GraphicsWindow* window = wsa->registerWindow(gw.get(), string("main"));
+    window->flags |= GraphicsWindow::GUI;
     viewer->setDatabasePager(FGScenery::getPagerSingleton());
     // now the main camera ...
-    //osg::ref_ptr<osg::Camera> camera = new osg::Camera;
-    osg::ref_ptr<osg::Camera> camera = viewer->getCamera();
+    osg::Camera* camera = new osg::Camera;
     mainCamera = camera;
-    osg::Camera::ProjectionResizePolicy rsp = osg::Camera::VERTICAL;
     // If a viewport isn't set on the camera, then it's hard to dig it
     // out of the SceneView objects in the viewer, and the coordinates
     // of mouse events are somewhat bizzare.
     camera->setViewport(new osg::Viewport(0, 0, realw, realh));
-    camera->setProjectionResizePolicy(rsp);
-    //viewer->addSlave(camera.get());
+    camera->setProjectionResizePolicy(osg::Camera::FIXED);
+    Camera3D* cam3D = wsa->registerCamera3D(window, camera, string("main"));
+    cam3D->flags |= Camera3D::MASTER; 
+    // Add as a slave for compatibility with the non-embedded osgViewer.
+    viewer->addSlave(camera);
     viewer->setCameraManipulator(globals->get_renderer()->getManipulator());
     // Let FG handle the escape key with a confirmation
     viewer->setKeyEventSetsDone(0);
@@ -280,11 +293,6 @@ void fgOSOpenWindow(int w, int h, int bpp, bool alpha,
     globals->get_renderer()->setViewer(viewer.get());
 }
 
-// Noop; the graphics context is always current
-void fgMakeCurrent()
-{
-}
-
 bool fgOSIsMainCamera(const osg::Camera*)
 {
   return true;
@@ -293,4 +301,9 @@ bool fgOSIsMainCamera(const osg::Camera*)
 bool fgOSIsMainContext(const osg::GraphicsContext*)
 {
   return true;
+}
+
+osg::GraphicsContext* fgOSGetMainContext()
+{
+    return gw.get();
 }

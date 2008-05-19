@@ -566,7 +566,7 @@ void fgCockpitUpdate( osg::State* state ) {
 
 
 struct FuncTable {
-    char *name;
+    const char *name;
     FLTFNPTR func;
 } fn_table[] = {
     { "agl", get_agl },

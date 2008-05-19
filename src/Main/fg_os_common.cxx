@@ -17,6 +17,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+#include <config.h>
+#include <plib/pu.h>
+#include <osg/GraphicsContext>
+
 #include "fg_os.hxx"
 #include "globals.hxx"
 #include "renderer.hxx"
@@ -60,3 +64,5 @@ void fgRegisterMouseMotionHandler(fgMouseMotionHandler func)
 void fgRequestRedraw()
 {
 }
+
+

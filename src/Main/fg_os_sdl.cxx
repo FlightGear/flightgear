@@ -8,12 +8,15 @@
 #include <simgear/debug/logstream.hxx>
 
 #include <SDL/SDL.h>
-#include <plib/pu.h>
 
 #include <Scenery/scenery.hxx>
 #include "fg_os.hxx"
 #include "globals.hxx"
 #include "renderer.hxx"
+#include "fg_props.hxx"
+#include "WindowSystemAdapter.hxx"
+
+using namespace flightgear;
 
 //
 // fg_os callback registration APIs
@@ -34,11 +37,16 @@ static osg::ref_ptr<osgViewer::Viewer> viewer;
 static osg::ref_ptr<osg::Camera> mainCamera;
 static osg::ref_ptr<osgViewer::GraphicsWindowEmbedded> gw;
 
-void fgOSOpenWindow(int w, int h, int bpp,
-                    bool alpha, bool stencil, bool fullscreen)
+void fgOSOpenWindow(bool stencil)
 {
+    int w = fgGetInt("/sim/startup/xsize");
+    int h = fgGetInt("/sim/startup/ysize");
+    int bpp = fgGetInt("/sim/rendering/bits-per-pixel");
+    bool alpha = fgGetBool("/sim/rendering/clouds3d-enable");
+    bool fullscreen = fgGetBool("/sim/startup/fullscreen");
     int cbits = (bpp <= 16) ?  5 :  8;
     int zbits = (bpp <= 16) ? 16 : 24;
+    WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
 
     if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_NOPARACHUTE) == -1)
         throw sg_throwable(string("Failed to initialize SDL: ")
@@ -84,17 +92,20 @@ void fgOSOpenWindow(int w, int h, int bpp,
     viewer = new osgViewer::Viewer;
     viewer->setDatabasePager(FGScenery::getPagerSingleton());
     gw = viewer->setUpViewerAsEmbeddedInWindow(0, 0, realw, realh);
+    GraphicsWindow* window = wsa->registerWindow(gw.get(), string("main"));
+    window->flags |= GraphicsWindow::GUI;
     // now the main camera ...
-    //osg::ref_ptr<osg::Camera> camera = new osg::Camera;
-    osg::ref_ptr<osg::Camera> camera = viewer->getCamera();
+    osg::Camera* camera = new osg::Camera;
     mainCamera = camera;
-    osg::Camera::ProjectionResizePolicy rsp = osg::Camera::VERTICAL;
     // If a viewport isn't set on the camera, then it's hard to dig it
     // out of the SceneView objects in the viewer, and the coordinates
     // of mouse events are somewhat bizzare.
     camera->setViewport(new osg::Viewport(0, 0, realw, realh));
-    camera->setProjectionResizePolicy(rsp);
-    //viewer->addSlave(camera.get());
+    camera->setProjectionResizePolicy(osg::Camera::FIXED);
+    Camera3D* cam3D = wsa->registerCamera3D(window, camera, string("main"));
+    cam3D->flags |= Camera3D::MASTER; 
+    // Add as a slave for compatibility with the non-embedded osgViewer.
+    viewer->addSlave(camera);
     viewer->setCameraManipulator(globals->get_renderer()->getManipulator());
     // Let FG handle the escape key with a confirmation
     viewer->setKeyEventSetsDone(0);
@@ -265,7 +276,7 @@ void fgWarpMouse(int x, int y)
 
 void fgOSInit(int* argc, char** argv)
 {
-    // Nothing to do here.  SDL has no command line options.
+    WindowSystemAdapter::setWSA(new WindowSystemAdapter);
 }
 
 void fgOSFullScreen()
@@ -281,7 +292,7 @@ static struct cursor_rec {
     int h;
     int hotx;
     int hoty;
-    char *img[32]; // '.' == white, '#' == black, ' ' == transparent
+    const char *img[32]; // '.' == white, '#' == black, ' ' == transparent
 } cursors[] = {
     { MOUSE_CURSOR_POINTER, 0, // must be first!
       10, 16, 1, 1,
@@ -400,11 +411,6 @@ static void initCursors()
     }
 }
 
-// Noop; the graphics context is always current
-void fgMakeCurrent()
-{
-}
-
 bool fgOSIsMainCamera(const osg::Camera*)
 {
   return true;
@@ -413,4 +419,9 @@ bool fgOSIsMainCamera(const osg::Camera*)
 bool fgOSIsMainContext(const osg::GraphicsContext*)
 {
   return true;
+}
+
+osg::GraphicsContext* fgOSGetMainContext()
+{
+    return gw.get();
 }

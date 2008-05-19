@@ -327,8 +327,6 @@ FGInput::doMouseClick (int b, int updown, int x, int y, bool mainWindow, const o
   }
 
   if (mode.pass_through) {
-    // The pu stuff seems to need that. May be it does opengl picking ...
-    fgMakeCurrent();
     if (0 <= x && 0 <= y && puMouse(b, updown, x, y))
       return;
     else if (0 <= x && 0 <= y && (globals->get_current_panel() != 0) &&

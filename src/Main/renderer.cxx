@@ -18,9 +18,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-//
-// $Id$
-
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -162,11 +159,6 @@ public:
   {
     if (!fgOSIsMainContext(state.getGraphicsContext()))
       return;
-
-    state.pushStateSet(getStateSet());
-    state.apply();
-    state.setActiveTextureUnit(0);
-    state.setClientActiveTextureUnit(0);
     state.disableAllVertexArrays();
 
     glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -176,11 +168,6 @@ public:
 
     glPopClientAttrib();
     glPopAttrib();
-
-    state.popStateSet();
-    state.dirtyAllModes();
-    state.dirtyAllAttributes();
-    state.dirtyAllVertexArrays();
   }
 
   virtual osg::Object* cloneType() const { return new SGPuDrawable; }
@@ -212,14 +199,9 @@ public:
   { drawImplementation(*renderInfo.getState()); }
   void drawImplementation(osg::State& state) const
   {
-//     std::cout << state.getGraphicsContext() << std::endl;
     if (!fgOSIsMainContext(state.getGraphicsContext()))
       return;
 
-    state.pushStateSet(getStateSet());
-    state.apply();
-    state.setActiveTextureUnit(0);
-    state.setClientActiveTextureUnit(0);
     state.disableAllVertexArrays();
 
     glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -240,11 +222,6 @@ public:
 
     glPopClientAttrib();
     glPopAttrib();
-
-    state.popStateSet();
-    state.dirtyAllModes();
-    state.dirtyAllAttributes();
-    state.dirtyAllVertexArrays();
   }
 
   virtual osg::Object* cloneType() const { return new SGHUDAndPanelDrawable; }
@@ -428,12 +405,41 @@ FGRenderer::splashinit( void ) {
 #endif
 }
 
+namespace
+{
+// Create a slave camera that will be used to render a fixed GUI-like
+// element.
+osg::Camera*
+makeSlaveCamera(osg::Camera::RenderOrder renderOrder, int orderNum)
+{
+    using namespace osg;
+    Camera* camera = new osg::Camera;
+    GraphicsContext *gc = fgOSGetMainContext();
+    
+    camera->setRenderOrder(renderOrder, orderNum);
+    camera->setClearMask(0);
+    camera->setInheritanceMask(CullSettings::ALL_VARIABLES
+                               & ~(CullSettings::COMPUTE_NEAR_FAR_MODE
+                                   | CullSettings::CULLING_MODE));
+    camera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+    camera->setCullingMode(osg::CullSettings::NO_CULLING);
+    camera->setGraphicsContext(gc);
+    // Establish an initial viewport. This may be altered,
+    // particularly when drawing a 2d panel.
+    const GraphicsContext::Traits *traits = gc->getTraits();
+    camera->setViewport(new Viewport(0, 0, traits->width, traits->height));
+    camera->setProjectionResizePolicy(Camera::FIXED);
+    camera->setReferenceFrame(Transform::ABSOLUTE_RF);
+    camera->setAllowEventFocus(false);
+    globals->get_renderer()->getViewer()->addSlave(camera, false);
+    return camera;
+}
+
+}
+
 void
-FGRenderer::init( void ) {
-    // The viewer can call this before the graphics context is current
-    // in the main thread; indeed, in a multithreaded setup it might
-    // never be current in the main thread.
-    fgMakeCurrent();
+FGRenderer::init( void )
+{
     osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
     osg::initNotifyLevel();
 
@@ -534,15 +540,8 @@ FGRenderer::init( void ) {
     stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
 
     // plug in the GUI
-    osg::Camera* guiCamera = new osg::Camera;
-    guiCamera->setRenderOrder(osg::Camera::POST_RENDER, 100);
-    guiCamera->setClearMask(0);
-    GLbitfield inheritanceMask = osg::CullSettings::ALL_VARIABLES;
-    inheritanceMask &= ~osg::CullSettings::COMPUTE_NEAR_FAR_MODE;
-    inheritanceMask &= ~osg::CullSettings::CULLING_MODE;
-    guiCamera->setInheritanceMask(inheritanceMask);
-    guiCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
-    guiCamera->setCullingMode(osg::CullSettings::NO_CULLING);
+    osg::Camera* guiCamera = makeSlaveCamera(osg::Camera::POST_RENDER, 100);
+    guiCamera->setName("GUI");
     osg::Geode* geode = new osg::Geode;
     geode->addDrawable(new SGPuDrawable);
     geode->addDrawable(new SGHUDAndPanelDrawable);

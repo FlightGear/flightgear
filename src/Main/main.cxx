@@ -679,9 +679,6 @@ static void fgMainLoop( void ) {
 // then on.
 
 static void fgIdleFunction ( void ) {
-    // Some intialization requires a valid graphics context, in
-    // particular that of plib. Boo, hiss!
-    fgMakeCurrent();
     if ( idle_state == 0 ) {
         idle_state++;
 
@@ -703,10 +700,12 @@ static void fgIdleFunction ( void ) {
         SG_LOG ( SG_GENERAL, SG_INFO, "Depth buffer bits = " << tmp );
 
         // Initialize the user interface so that we can use fonts
-        guiInit();
+        guiStartInit();
 
 
     } else if ( idle_state == 1 ) {
+        if (!guiFinishInit())
+            return;
         idle_state++;
         fgSplashProgress("reading aircraft list");
 
@@ -715,23 +714,6 @@ static void fgIdleFunction ( void ) {
         idle_state++;
         // Read the list of available aircraft
         fgReadAircraft();
-
-        // get the address of our OpenGL extensions
-//         if (SGIsOpenGLExtensionSupported("GL_EXT_point_parameters") ) {
-//             glPointParameterIsSupported = true;
-//             glPointParameterfPtr = (glPointParameterfProc)
-//                 SGLookupFunction("glPointParameterfEXT");
-//             glPointParameterfvPtr = (glPointParameterfvProc)
-//                 SGLookupFunction("glPointParameterfvEXT");
-//         } else if ( SGIsOpenGLExtensionSupported("GL_ARB_point_parameters") ) {
-//             glPointParameterIsSupported = true;
-//             glPointParameterfPtr = (glPointParameterfProc)
-//                 SGLookupFunction("glPointParameterfARB");
-//             glPointParameterfvPtr = (glPointParameterfvProc)
-//                 SGLookupFunction("glPointParameterfvARB");
-//         } else {
-//             glPointParameterIsSupported = false;
-//         }
         fgSplashProgress("reading airport & navigation data");
 
 
@@ -1060,12 +1042,7 @@ bool fgMainInit( int argc, char **argv ) {
 
     // Clouds3D requires an alpha channel
     // clouds may require stencil buffer
-    fgOSOpenWindow( fgGetInt("/sim/startup/xsize"),
-                    fgGetInt("/sim/startup/ysize"),
-                    fgGetInt("/sim/rendering/bits-per-pixel"),
-                    fgGetBool("/sim/rendering/clouds3d-enable"),
-                    get_stencil_buffer,
-                    fgGetBool("/sim/startup/fullscreen") );
+    fgOSOpenWindow(get_stencil_buffer);
 
     // Initialize the splash screen right away
     fntInit();

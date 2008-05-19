@@ -206,17 +206,14 @@ AM_CONDITIONAL(USE_GLUT, test "x$enable_glut" = "xyes")
 if test "x$enable_sdl" != "xyes" -a "x$enable_glut" != "xyes" -a "x$enable_osgviewer" != "xno"; then
    enable_osgviewer="yes"
 fi
-if test "x$enable_osgviewer" = "xyes"; then
-   AC_DEFINE([USE_OSGVIEWER], 1, [Define to use osgViewer in renderer])
-   AC_DEFINE([ENABLE_OSGVIEWER], 1, [Define to use osgViewer in renderer])
-   AC_DEFINE([PU_USE_NATIVE], 1, [Define to use native system])
-elif test "x$enable_sdl" = "xyes"; then
-   AC_DEFINE([PU_USE_SDL], 1, [Define to use SDL])
-elif test "x$enable_glut" = "xyes"; then
-   AC_DEFINE([PU_USE_GLUT], 1, [Define to use glut])
-else
-   AC_MSG_ERROR([One (and only one) of --enable-osgviewer, --enable-sdl, or --enable-glut must be supplied])
+if test \( "x$enable_osgviewer" = "xyes" \
+   -a \( "x$enable_sdl" = "xyes" -o "x$enable_glut" = "xyes" \) \) \
+   -o \( "x$enable_sdl" = "xyes" -a "x$enable_glut" = "xyes" \); then
+   echo " Only one of --enable-osgviewer, --enable-sdl, or --enable -glut may"
+   echo " be supplied."
+   exit
 fi
+AC_DEFINE([PU_USE_NONE], 1, [Define to use application's pu callbacks])
 
 AC_ARG_ENABLE(osgdebug, [  --enable-osgdebug              Use OSG debug libraries], [enable_osgdebug="$enableval"])
 

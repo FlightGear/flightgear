@@ -41,7 +41,8 @@
 
 
 // gui.cxx
-extern void guiInit();
+extern void guiStartInit();
+extern bool guiFinishInit();
 extern void mkDialog(const char *txt);
 extern void guiErrorMessage(const char *txt);
 extern void guiErrorMessage(const char *txt, const sg_throwable &throwable);
