@@ -111,7 +111,7 @@ void WindowSystemAdapter::puGetWindowSize(int* width, int* height)
     *height = traits->height;
 }
 
-bool WindowSystemAdapter::puInitialize()
+void WindowSystemAdapter::puInitialize()
 {
     puSetWindowFuncs(puGetWindow, 0, puGetWindowSize, 0);
     puRealInit();

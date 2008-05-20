@@ -119,7 +119,7 @@ public:
     /** Initialize the plib pui interface library. This might happen
      *in another thread and may be deferred.
      */
-    virtual bool puInitialize();
+    virtual void puInitialize();
     /** Returns true if pui initialization has finished.
      */
     template<typename T>
