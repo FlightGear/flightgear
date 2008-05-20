@@ -1801,18 +1801,17 @@
 				RelativePath="..\..\src\Gui\property_list.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\GUI\trackball.c">
-			</File>
-			<File
-				RelativePath="..\..\src\GUI\trackball.h">
-			</File>
-			<File
 				RelativePath="..\..\src\GUI\SafeTexFont.cxx">
 			</File>
 			<File
 				RelativePath="..\..\src\GUI\SafeTexFont.hxx">
 			</File>
-
+			<File
+				RelativePath="..\..\src\GUI\trackball.c">
+			</File>
+			<File
+				RelativePath="..\..\src\GUI\trackball.h">
+			</File>
 		</Filter>
 		<Filter
 			Name="Lib_Input"
@@ -1937,6 +1936,12 @@
 			</File>
 			<File
 				RelativePath="..\..\src\Main\ViewPartitionNode.hxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Main\WindowSystemAdapter.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Main\WindowSystemAdapter.hxx">
 			</File>
 		</Filter>
 		<Filter
