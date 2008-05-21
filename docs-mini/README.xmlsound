@@ -63,142 +63,149 @@ Configuration description:
 -------------------------
    
 <fx>
- 	Named FX subtree living under /sim/sound
+        Named FX subtree living under /sim/sound
  
  < ... >
- 	This is the event separator. The text inside the brackets
- 	can be anything. Bit it is advised to give it a meaningful name
-	like: crank, engine, rumble, gear, squeal, flap, wind or stall
+        This is the event separator. The text inside the brackets
+        can be anything. Bit it is advised to give it a meaningful name
+        like: crank, engine, rumble, gear, squeal, flap, wind or stall
  
- 	The value can be defined multiple times, thus anything which is
- 	related may have the same name (grouping them together).
+        The value can be defined multiple times, thus anything which is
+        related may have the same name (grouping them together).
  
    <name>
- 	This defines the name of the event. This name is used internally
- 	and, although it can me defined multiple times in the same file,
-	should normally have an unique value.
+        This defines the name of the event. This name is used internally
+        and, although it can me defined multiple times in the same file,
+        should normally have an unique value.
  
-	Multiple definitions of the same name will allow multiple sections
-	to interfere in the starting and stopping of the sample.
+        Multiple definitions of the same name will allow multiple sections
+        to interfere in the starting and stopping of the sample.
 
-	This method can't be used to control the pitch or volume of the 
-	sample, but instead multiple volume or pitch section should be
-	included inside the same event.
+        This method can't be used to control the pitch or volume of the 
+        sample, but instead multiple volume or pitch section should be
+        included inside the same event.
 
-	The types "raise" and "fall" will stop the playback of the sample
-	regardless of any other event. This means that when the type "raise"
-	is supplied, sample playback will stop when the event turns false.
-	Using the type "fall" will stop playback when the event turns true.
+        The types "raise" and "fall" will stop the playback of the sample
+        regardless of any other event. This means that when the type "raise"
+        is supplied, sample playback will stop when the event turns false.
+        Using the type "fall" will stop playback when the event turns true.
 
-	IMPORTANT:
-	If the trigger is used for anything else but stopping the sound
- 	at a certain event, all sections with the same name *should* have
-	exactly the same sections for everything but property and type.
+        IMPORTANT:
+        If the trigger is used for anything else but stopping the sound
+         at a certain event, all sections with the same name *should* have
+        exactly the same sections for everything but property and type.
 
-	In the case of just stopping the sample at a certain event, the
-	sections for path, volume and pitch may be omitted.
- 	
+        In the case of just stopping the sample at a certain event, the
+        sections for path, volume and pitch may be omitted.
+
    <path>
- 	This defined th path to the sound file. The path is relative to the
- 	FlightGear root directory but could be specified absolute.
+        This defined th path to the sound file. The path is relative to the
+        FlightGear root directory but could be specified absolute.
 
    <condition>
-	Define a condition that triggers the event.
-	For a complete description of the FlightGear conditions,
-	please read docs-mini/README.conditions
+        Define a condition that triggers the event.
+        For a complete description of the FlightGear conditions,
+        please read docs-mini/README.conditions
 
-	An event should define either a condition or a property.
+        An event should define either a condition or a property.
  
    <property>
- 	Define which property triggers the event, and refers to a node
- 	in the FlightGear property tree. Action is taken when the property
-	is non zero.
+        Define which property triggers the event, and refers to a node
+        in the FlightGear property tree. Action is taken when the property
+        is non zero.
 
-	A more sophisticated mechanism to trigger the event is described
-	in <condition>
+        A more sophisticated mechanism to trigger the event is described
+        in <condition>
  
    <mode>
- 	This defines how the sample should be played:
+        This defines how the sample should be played:
  
- 	once:		the sample is played once.
- 			this is the default.
+        once:           the sample is played once.
+                        this is the default.
  
- 	looped:		the sample plays continuesly,
- 			until the event turns false.
+        looped:         the sample plays continuously,
+                        until the event turns false.
 
- 	in-transit:	the sample plays continuesly,
-			while the property is changing its value.
+        in-transit:     the sample plays continuously,
+                        while the property is changing its value.
    
    <volume> / <pitch>
- 	Volume or Pitch definition. Currently there may be up to 5
-	volume and up to 5 pitch definitions defined within one sound
-	event. Normally all offset values are added together and the
-	results after property calculations will be multiplied.
-	A special condition occurs when the value of factor is negative,
-	in which case the offset doesn't get added to the other offset values
-	but instead will be used in the multiplication section.
+        Volume or Pitch definition. Currently there may be up to 5
+        volume and up to 5 pitch definitions defined within one sound
+        event. Normally all offset values are added together and the
+        results after property calculations will be multiplied.
+        A special condition occurs when the value of factor is negative,
+        in which case the offset doesn't get added to the other offset values
+        but instead will be used in the multiplication section.
  
      <property>
- 	Defines which property supplies the value for the calculation.
-	Either a <property> or an <internal> should be defined.
- 	The value is threated as a floating point number.
+        Defines which property supplies the value for the calculation.
+        Either a <property> or an <internal> should be defined.
+        The value is treated as a floating point number.
 
      <internal>
-	Defines which internal variable should be used for the calculation.
-	The value is threated as a floating point number.
-	The following internals are available at this time:
+        Defines which internal variable should be used for the calculation.
+        The value is treated as a floating point number.
+        The following internals are available at this time:
 
-	dt_play:	the number of seconds since the sound started playing.
+        dt_play:        the number of seconds since the sound started playing.
 
-	dt_stop:	the number of seconds after the sound has stopped.
+        dt_stop:        the number of seconds after the sound has stopped.
  
+     <delay-sec>
+        Delay after which the sound starts playing. This is useful to let
+        a property start two sounds at the same time, where the second is
+        delayed until the first stopped playing.
+
      <type>
-	Defines the function that should be used upon the property
-	before it is used for calculating the net result:
+        Defines the function that should be used upon the property
+        before it is used for calculating the net result:
 
- 	lin:		linear handling of the property value.
- 			this is the default.
+        lin:            linear handling of the property value.
+                        this is the default.
  
- 	ln:		convert the absolute property value to a natural
-			logarithmic value before scaling it. 
- 			Anything below 1 will return zero.
+        ln:             convert the property value to a natural logarithmic
+                        value before scaling it. Anything below 1 will return
+                        zero.
+ 
+        log:            convert the property value to a true logarithmic
+                        value before scaling it. Anything below 1 will return
+                        zero.
 
- 	log:		convert the absolute property value to a true
-			logarithmic value before scaling it.
- 			Anything below 1 will return zero.
+        inv:            inverse linear handling (1/x).
 
-	inv:		inverse linear handling (1/x).
+        abs:            absolute handling of the value (always positive).
 
-	abs:		absolute handling of the value (always positive).
-
-	sqrt:		calculate the square root of the absolute value
-			before scaling it.
+        sqrt:           calculate the square root of the absolute value
+                        before scaling it.
  
      <factor>
- 	Defines the multiplication factor for the property value.
- 	A special condition is when scale is defined as a negative
- 	value. In this case the result of |<scale>| * <property) will be
- 	subtracted from <default>
+        Defines the multiplication factor for the property value.
+        A special condition is when scale is defined as a negative
+        value. In this case the result of |<scale>| * <property) will be
+        subtracted from <default>
  
      <offset>
- 	The initial value for this sound. This value is also used as an
- 	offset value for calculating the end result.
+        The initial value for this sound. This value is also used as an
+        offset value for calculating the end result.
  
      <min>
- 	Minimum allowed value.
- 	This is useful if sounds start to sound funny. Anything lower
- 	will be truncated to this value.
+        Minimum allowed value.
+        This is useful if sounds start to sound funny. Anything lower
+        will be truncated to this value.
  
      <max>
- 	Maximum allowed value.
- 	This is useful if sounds gets to loud. Anything higher will be
- 	truncated to this value.
+        Maximum allowed value.
+        This is useful if sounds gets to loud. Anything higher will be
+        truncated to this value.
 
    <position>
         Specify the position of the sounds source relative to the
-        pilot's ears.  The coordinate system used is a right hand
-        coordinate system where -X = left, +X = right, -Y = down, +Y =
-        up, -Z = forward, +Z = aft.  Distances are in meters.
+        aircraft center.  The coordinate system used is a right hand
+        coordinate system where +Y = left, -Y = right, -Z = down, +Z =
+        up, -X = forward, +X = aft.  Distances are in meters.
+        The volume calculation due to distance and orientation of the
+        sounds source ONLY work on mono samples!
 
      <x>
         X dimension offset
@@ -214,22 +221,23 @@ Configuration description:
         Specify the orientation of the sounds source.
 
         The zero vector is default, indicating that a Source is not directional.
-        Specifying a non-zero vector will make the Source directional.
+        Specifying a non-zero vector will make the Source directional in
+        the X,Y,Z direction
 
      <x>
-        X dimension angle (0.0 - 360.0)
+        X dimension
 
      <y>
-        Y dimension angle (0.0 - 360.0)
+        Y dimension
 
      <z>
-        Z dimension angle (0.0 - 360.0)
+        Z dimension
 
-     <inner-cone>
+     <inner-angle>
         The inner edge of the audio cone in degrees (0.0 - 360.0).
         Any sound withing that angle will be played at the current gain.
 
-     <outer-cone>
+     <outer-angle>
         The outer edge of the audio cone in degrees (0.0 - 360.0).
         Any sound beyond the outer cone will be played at "outer-gain" volume.
 
@@ -247,19 +255,19 @@ Configuration description:
         This can be useful for limiting cockpit sounds to the cockpit.
 
 
-Creating a configration file:
-----------------------------
+Creating a configuration file:
+------------------------------
 
 To make things easy, there is a default value for most entries to allow a
 sane configuration when a certain entry is omitted.
 
 Default values are:
 
-type:	lin
-factor:	1.0
-offset:	0.0 for volume, 1.0 for pitch
-min:	0.0
-max:	0.0 (don't check)
+type:   lin
+factor: 1.0
+offset: 0.0 for volume, 1.0 for pitch
+min:    0.0
+max:    0.0 (don't check)
 
  
  
@@ -271,12 +279,12 @@ Calculations are made the following way (for both pitch and volume):
    for (n = 0;  n < max; n++) {
       if (factor < 0)
       {
-	 value += offset[n] - abs(factor[n]) * function(property[n]);
+         value += offset[n] - abs(factor[n]) * function(property[n]);
       }
       else
       {
-	 value += factor[n] * function(property[n]);
-	 offs += offset[n];
+          value += factor[n] * function(property[n]);
+          offs += offset[n];
       }
    }
 
