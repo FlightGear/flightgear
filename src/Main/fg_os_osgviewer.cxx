@@ -208,6 +208,7 @@ void fgOSOpenWindow(bool stencil)
             cameraTraits = new osg::GraphicsContext::Traits(*traits);
             double shearx = cameraNode->getDoubleValue("shear-x", 0);
             double sheary = cameraNode->getDoubleValue("shear-y", 0);
+            double heading = cameraNode->getDoubleValue("heading-deg", 0);
             setTraitsFromProperties(cameraTraits.get(), cameraNode, wsi);
             // FIXME, currently this is too much of a problem to route
             // the resize events. When we do no longer need sdl and
@@ -236,8 +237,11 @@ void fgOSOpenWindow(bool stencil)
                                                         cameraNameString);
                 if (shearx == 0 && sheary == 0)
                     cam3D->flags |= Camera3D::MASTER;
-                viewer->addSlave(camera, Matrix::translate(-shearx, -sheary, 0),
-                                 Matrix());
+                
+                osg::Matrix pOff = osg::Matrix::translate(-shearx, -sheary, 0);
+                osg::Matrix vOff;
+                vOff.makeRotate(SGMiscd::deg2rad(heading), osg::Vec3(0, 1, 0));
+                viewer->addSlave(camera, pOff, vOff);
             } else {
                 SG_LOG(SG_GENERAL, SG_WARN,
                        "Couldn't create graphics context on "
