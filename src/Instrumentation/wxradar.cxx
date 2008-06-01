@@ -75,45 +75,44 @@ typedef radar_list_type::const_iterator radar_list_const_iterator;
 static const float UNIT = 1.0f / 8.0f;  // 8 symbols in a row/column in the texture
 static const char *DEFAULT_FONT = "typewriter.txf";
 
-wxRadarBg::wxRadarBg ( SGPropertyNode *node) :
+wxRadarBg::wxRadarBg(SGPropertyNode *node) :
     _name(node->getStringValue("name", "radar")),
     _num(node->getIntValue("number", 0)),
     _interval(node->getDoubleValue("update-interval-sec", 1.0)),
-    _time( 0.0 ),
-    _last_switchKnob( "off" ),
-    _sim_init_done ( false ),
-    _resultTexture( 0 ),
-    _wxEcho( 0 ),
-    _odg( 0 )
+    _time(0.0),
+    _last_switchKnob("off"),
+    _sim_init_done(false),
+    _resultTexture(0),
+    _wxEcho(0),
+    _odg(0)
 {
-    const char *tacan_source = node->getStringValue("tacan-source",
-            "/instrumentation/tacan");
+    string branch;
+    branch = "/instrumentation/" + _name;
+    _Instrument = fgGetNode(branch.c_str(), _num, true );
+
+    const char *tacan_source = node->getStringValue("tacan-source", "/instrumentation/tacan");
     _Tacan = fgGetNode(tacan_source, true);
+
+    _font_node = _Instrument->getNode("font", true);
+    _font_node->addChangeListener(this, true);
 }
 
 
 wxRadarBg::~wxRadarBg ()
 {
-    if (_radar_font_node != 0) {
-        _radar_font_node->removeChangeListener(this);
-    }
+    _font_node->removeChangeListener(this);
 }
 
 
 void
 wxRadarBg::init ()
 {
-    string branch;
-    branch = "/instrumentation/" + _name;
-
-    _Instrument = fgGetNode(branch.c_str(), _num, true );
     _serviceable_node = _Instrument->getNode("serviceable", true);
 
     // texture name to use in 2D and 3D instruments
     _texture_path = _Instrument->getStringValue("radar-texture-path",
             "Aircraft/Instruments/Textures/od_wxradar.rgb");
-    _resultTexture = FGTextureManager::createTexture(_texture_path.c_str(),
-                                                     false);
+    _resultTexture = FGTextureManager::createTexture(_texture_path.c_str(), false);
 
     SGPath tpath(globals->get_fg_root());
     string path = _Instrument->getStringValue("echo-texture-path",
@@ -138,8 +137,8 @@ wxRadarBg::init ()
     // input range = n nm (20/40/80)
     // input display-mode = arc | rose | map | plan
 
-    FGInstrumentMgr *imgr = (FGInstrumentMgr *) globals->get_subsystem("instrumentation");
-    _odg = (FGODGauge *) imgr->get_subsystem("od_gauge");
+    FGInstrumentMgr *imgr = (FGInstrumentMgr *)globals->get_subsystem("instrumentation");
+    _odg = (FGODGauge *)imgr->get_subsystem("od_gauge");
     _odg->setSize(512);
 
     _ai = (FGAIManager*)globals->get_subsystem("ai_model");
@@ -170,10 +169,6 @@ wxRadarBg::init ()
     _radar_symbol_node      = n->getNode("symbol", true);
     _radar_centre_node      = n->getNode("centre", true);
     _radar_rotate_node      = n->getNode("rotate", true);
-    _radar_font_node        = _Instrument->getNode("font", true);
-    _radar_font_node->addChangeListener(this);
-    
-    updateFont();
 
     _radar_centre_node->setBoolValue(false);
     if (_radar_coverage_node->getType() == SGPropertyNode::NONE)
@@ -549,14 +544,15 @@ wxRadarBg::update_weather()
     }
 }
 
+
 void
 wxRadarBg::update_data(FGAIBase* ac, double radius, double bearing, bool selected)
 {
     osgText::Text* callsign = new osgText::Text;
     callsign->setFont(_font.get());
     callsign->setFontResolution(12, 12);
-    callsign->setCharacterSize(12);
-    callsign->setColor(selected ? osg::Vec4(1, 1, 1, 1) : osg::Vec4(0, 1, 0, 1));
+    callsign->setCharacterSize(_font_size);
+    callsign->setColor(selected ? osg::Vec4(1, 1, 1, 1) : _font_color);
     osg::Matrixf m(wxRotate(-bearing)
             * osg::Matrixf::translate(0.0f, radius, 0.0f)
             * wxRotate(bearing) * _centerTrans);
@@ -565,10 +561,10 @@ wxRadarBg::update_data(FGAIBase* ac, double radius, double bearing, bool selecte
     // cast to int's, otherwise text comes out ugly
     callsign->setPosition(osg::Vec3((int)pos.x(), (int)pos.y(), 0));
     callsign->setAlignment(osgText::Text::LEFT_BOTTOM_BASE_LINE);
-    callsign->setLineSpacing(0.25);
-                        
+    callsign->setLineSpacing(_font_spacing);
+
     stringstream text;
-    text << ac->_getCallsign() << endl 
+    text << ac->_getCallsign() << endl
         << setprecision(0) << fixed
         << setw(3) << setfill('0') << ac->_getHeading() << "\xB0 "
         << setw(0) << ac->_getAltitude() << "ft" << endl
@@ -577,6 +573,7 @@ wxRadarBg::update_data(FGAIBase* ac, double radius, double bearing, bool selecte
     callsign->setText(text.str());
     _textGeode->addDrawable(callsign);
 }
+
 
 void
 wxRadarBg::update_aircraft()
@@ -689,7 +686,7 @@ wxRadarBg::update_aircraft()
             //        << " bearing=" << angle * SG_RADIANS_TO_DEGREES
             //        << " radius=" << radius);
         }
-        
+
         if (draw_data) {
             if (ac->getID() == selected_id) {
                 selected_ac = ac;
@@ -857,14 +854,21 @@ wxRadarBg::calcRelBearing(float bearing, float heading)
     return angle;
 }
 
+
 void
 wxRadarBg::updateFont()
 {
+    float red = _font_node->getFloatValue("color/red", 0);
+    float green = _font_node->getFloatValue("color/green", 0.8);
+    float blue = _font_node->getFloatValue("color/blue", 0);
+    float alpha = _font_node->getFloatValue("color/alpha", 1);
+    _font_color.set(red, green, blue, alpha);
+
+    _font_size = _font_node->getFloatValue("size", 12);
+    _font_spacing = _font_size * _font_node->getFloatValue("line-spacing", 0.25);
+    string path = _font_node->getStringValue("name", DEFAULT_FONT);
+
     SGPath tpath;
-    string path = _radar_font_node->getStringValue();
-    if (path.length() == 0) {
-        path = DEFAULT_FONT;
-    }
     if (path[0] != '/') {
         tpath = globals->get_fg_root();
         tpath.append("Fonts");
@@ -872,12 +876,14 @@ wxRadarBg::updateFont()
     } else {
         tpath = path;
     }
+
 #if (FG_OSG_VERSION >= 21000)
     osg::ref_ptr<osgDB::ReaderWriter::Options> fontOptions = new osgDB::ReaderWriter::Options("monochrome");
-    osg::ref_ptr<osgText::Font> font = osgText::readFontFile(tpath.c_str(), fontOptions.get());    
-#else    
+    osg::ref_ptr<osgText::Font> font = osgText::readFontFile(tpath.c_str(), fontOptions.get());
+#else
     osg::ref_ptr<osgText::Font> font = osgText::readFontFile(tpath.c_str());
 #endif
+
     if (font != 0) {
         _font = font;
         _font->setMinFilterHint(osg::Texture::NEAREST);
@@ -892,3 +898,4 @@ wxRadarBg::valueChanged(SGPropertyNode*)
 {
     updateFont();
 }
+

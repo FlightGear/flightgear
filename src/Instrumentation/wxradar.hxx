@@ -58,12 +58,9 @@ public:
 
     double _interval;
     double _time;
-
     bool _sim_init_done;
-
     string _name;
-
-    int _num; 
+    int _num;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _Instrument;
@@ -82,7 +79,6 @@ public:
     SGPropertyNode* getInstrumentNode(const char* name, DefaultType value);
 
 private:
-
     string _texture_path;
 
     typedef enum { ARC, MAP, PLAN, ROSE } DisplayMode;
@@ -115,14 +111,14 @@ private:
     SGPropertyNode_ptr _radar_position_node;
     SGPropertyNode_ptr _radar_data_node;
     SGPropertyNode_ptr _radar_symbol_node;
-    
+
     SGPropertyNode_ptr _radar_centre_node;
     SGPropertyNode_ptr _radar_coverage_node;
     SGPropertyNode_ptr _radar_ref_rng_node;
     SGPropertyNode_ptr _radar_hdg_marker_node;
     SGPropertyNode_ptr _radar_rotate_node;
-    SGPropertyNode_ptr _radar_font_node;
 
+    SGPropertyNode_ptr _font_node;
     SGPropertyNode_ptr _ai_enabled_node;
 
     osg::ref_ptr<osg::Texture2D> _resultTexture;
@@ -134,6 +130,9 @@ private:
     osg::Vec2Array *_texCoords;
     osg::Matrixf _centerTrans;
     osg::ref_ptr<osgText::Font> _font;
+    osg::Vec4 _font_color;
+    float _font_size;
+    float _font_spacing;
 
     list_of_SGWxRadarEcho _radarEchoBuffer;
 
@@ -154,8 +153,8 @@ private:
     bool inRadarRange(int type, double range);
 
     float calcRelBearing(float bearing, float heading);
-    
 };
+
 
 template<> inline
 SGPropertyNode* wxRadarBg::getInstrumentNode(const char* name, bool value)
@@ -166,6 +165,7 @@ SGPropertyNode* wxRadarBg::getInstrumentNode(const char* name, bool value)
     return result;
 }
 
+
 template<> inline
 SGPropertyNode* wxRadarBg::getInstrumentNode(const char* name, double value)
 {
@@ -174,6 +174,7 @@ SGPropertyNode* wxRadarBg::getInstrumentNode(const char* name, double value)
         result->setDoubleValue(value);
     return result;
 }
+
 
 template<> inline
 SGPropertyNode* wxRadarBg::getInstrumentNode(const char* name,
