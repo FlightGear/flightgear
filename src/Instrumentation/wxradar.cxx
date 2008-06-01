@@ -864,8 +864,8 @@ wxRadarBg::updateFont()
     float alpha = _font_node->getFloatValue("color/alpha", 1);
     _font_color.set(red, green, blue, alpha);
 
-    _font_size = _font_node->getFloatValue("size", 12);
-    _font_spacing = _font_size * _font_node->getFloatValue("line-spacing", 0.25);
+    _font_size = _font_node->getFloatValue("size", 8);
+    _font_spacing = _font_size * _font_node->getFloatValue("line-spacing", 1.5);
     string path = _font_node->getStringValue("name", DEFAULT_FONT);
 
     SGPath tpath;
