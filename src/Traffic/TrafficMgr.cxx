@@ -231,12 +231,16 @@ void  FGTrafficManager::startElement (const char * name, const XMLAttributes &at
 	path.append(attval);
 	readXML(path.str(), *this);
       }
+  elementValueStack.push_back( "" );
   //  cout << "  " << atts.getName(i) << '=' << atts.getValue(i) << endl; 
 }
 
 void  FGTrafficManager::endElement (const char * name) {
   //cout << "End element " << name << endl;
   string element(name);
+  string value = elementValueStack.back();
+  elementValueStack.pop_back();
+
   if (element == string("model"))
     mdl = value;
   else if (element == string("livery"))
@@ -326,7 +330,7 @@ void  FGTrafficManager::endElement (const char * name) {
 // 	flights.pop_back();
 //       }
       }
-      for (FGScheduledFlightVecIterator flt = flights.begin(); flt != flights.end(); flt++)
+  for (FGScheduledFlightVecIterator flt = flights.begin(); flt != flights.end(); flt++)
     {
       delete (*flt);
     }
@@ -342,10 +346,7 @@ void  FGTrafficManager::endElement (const char * name) {
 void  FGTrafficManager::data (const char * s, int len) {
   string token = string(s,len);
   //cout << "Character data " << string(s,len) << endl;
-  if ((token.find(" ") == string::npos && (token.find('\n')) == string::npos))
-      value += token;
-  else
-    value = string("");
+  elementValueStack.back() += token;
 }
 
 void  FGTrafficManager::pi (const char * target, const char * data) {

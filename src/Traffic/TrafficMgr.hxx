@@ -43,7 +43,7 @@ class FGTrafficManager : public SGSubsystem, public XMLVisitor
 private:
   ScheduleVector scheduledAircraft;
   ScheduleVectorIterator currAircraft, currAircraftClosest;
-  string value;
+  vector<string> elementValueStack;
 
   string mdl, livery, registration, callsign, fltrules, 
     port, timeString, departurePort, departureTime, arrivalPort, arrivalTime,
