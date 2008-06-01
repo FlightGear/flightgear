@@ -558,7 +558,7 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
         SG_LOG(SG_GENERAL, SG_DEBUG,
                 "Submodels: Trying to read AI submodels file: " << config.str());
         readProperties(config.str(), &root);
-    } catch (const sg_exception &e) {
+    } catch (const sg_exception &) {
         SG_LOG(SG_GENERAL, SG_DEBUG,
                 "Submodels: Unable to read AI submodels file: " << config.str());
         return;
@@ -663,7 +663,7 @@ void FGSubmodelMgr::setSubData(int id, string& path, bool serviceable)
                 "Submodels: Trying to read AI submodels file: " << config.str());
         readProperties(config.str(), &root);
 
-    } catch (const sg_exception &e) {
+    } catch (const sg_exception &) {
         SG_LOG(SG_GENERAL, SG_DEBUG,
                 "Submodels: Unable to read AI submodels file: " << config.str());
         return;

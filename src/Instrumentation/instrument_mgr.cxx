@@ -74,7 +74,7 @@ FGInstrumentMgr::FGInstrumentMgr ()
                         "Detected an internal inconsistency in the instrumentation\n"
                         "system specification file.  See earlier errors for details."));
             }
-        } catch (const sg_exception& exc) {
+        } catch (const sg_exception&) {
             SG_LOG( SG_ALL, SG_ALERT, "Failed to load instrumentation system model: "
                     << config.str() );
         }
