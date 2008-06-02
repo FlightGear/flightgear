@@ -26,6 +26,13 @@
 #include <osg/Group>
 #include <osgDB/DatabasePager>
 
+#include <simgear/structure/OSGVersion.hxx>
+
+// Pager request change in OpenSceneGraph 2.5.1
+#if SG_OSG_VERSION >= 25001
+#define FGOSGPAGER25
+#endif
+
 namespace flightgear
 {
 class SceneryPager : public osgDB::DatabasePager
@@ -33,20 +40,22 @@ class SceneryPager : public osgDB::DatabasePager
 public:
     SceneryPager();
     SceneryPager(const SceneryPager& rhs);
-
+    // Unhide DatabasePager::requestNodeFile
+    using osgDB::DatabasePager::requestNodeFile;
     // reimplement to add readerWriterOptions from SGPagedLOD
-    virtual void requestNodeFile(const std::string& fileName,osg::Group* group,
-                                 float priority, const osg::FrameStamp* framestamp);
-
-    virtual void requestNodeFile(const std::string& fileName,osg::Group* group,
-                                 float priority, const osg::FrameStamp* framestamp,
-                                 osgDB::ReaderWriter::Options* options) {
-        osgDB::DatabasePager::requestNodeFile(fileName, group, priority,
-                                              framestamp, options);
-    }
-
+    virtual void requestNodeFile(const std::string& fileName, osg::Group* group,
+                                 float priority,
+                                 const osg::FrameStamp* framestamp,
+#ifdef FGOSGPAGER25
+                                 osg::ref_ptr<osg::Referenced>&
+                                 databaseRequest
+#endif
+        );
     void queueRequest(const std::string& fileName, osg::Group* node,
                       float priority, osg::FrameStamp* frameStamp,
+#ifdef FGOSGPAGER25
+                      osg::ref_ptr<osg::Referenced>& databaseRequest,
+#endif
                       osgDB::ReaderWriter::Options* options);
     // This is passed a ref_ptr so that it can "take ownership" of the
     // node to delete and decrement its refcount while holding the
@@ -57,23 +66,36 @@ protected:
     // Queue up file requests until the end of the frame
     struct PagerRequest
     {
-        PagerRequest() {}
+        PagerRequest() : _priority(0.0f), _databaseRequest(0) {}
         PagerRequest(const PagerRequest& rhs) :
             _fileName(rhs._fileName), _group(rhs._group),
             _priority(rhs._priority), _frameStamp(rhs._frameStamp),
-            _options(rhs._options) {}
+            _options(rhs._options), _databaseRequest(rhs._databaseRequest) {}
 
         PagerRequest(const std::string& fileName, osg::Group* group,
                      float priority, osg::FrameStamp* frameStamp,
+#ifdef FGOSGPAGER25
+                     osg::ref_ptr<Referenced>& databaseRequest,
+#endif
                      osgDB::ReaderWriter::Options* options):
             _fileName(fileName), _group(group), _priority(priority),
-            _frameStamp(frameStamp), _options(options) {}
+            _frameStamp(frameStamp), _options(options),
+#ifdef FGOSGPAGER25
+            _databaseRequest(&databaseRequest)
+#else
+            _databaseRequest(0)
+#endif
+        {}
 
         void doRequest(SceneryPager* pager)
         {
             if (_group->getNumChildren() == 0)
                 pager->requestNodeFile(_fileName, _group.get(), _priority,
-                                       _frameStamp.get(), _options.get());
+                                       _frameStamp.get(),
+#ifdef FGOSGPAGER25
+                                       *_databaseRequest,
+#endif
+                                       _options.get());
         }
 
         std::string _fileName;
@@ -81,6 +103,7 @@ protected:
         float _priority;
         osg::ref_ptr<osg::FrameStamp> _frameStamp;
         osg::ref_ptr<osgDB::ReaderWriter::Options> _options;
+        osg::ref_ptr<osg::Referenced>* _databaseRequest;
     };
     typedef std::vector<PagerRequest> PagerRequestList;
     PagerRequestList _pagerRequests;

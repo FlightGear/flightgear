@@ -21,9 +21,8 @@
 #include <algorithm>
 #include <functional>
 
+using namespace osg;
 using namespace flightgear;
-using osg::ref_ptr;
-using osg::Node;
 
 SceneryPager::SceneryPager()
 {
@@ -41,22 +40,42 @@ SceneryPager::~SceneryPager()
 {
 }
 
-void SceneryPager::requestNodeFile(const std::string& fileName,osg::Group* group,
-                                    float priority, const osg::FrameStamp* framestamp)
+void SceneryPager::requestNodeFile(const std::string& fileName, Group* group,
+                                   float priority,
+                                   const FrameStamp* framestamp,
+#ifdef FGOSGPAGER25
+                                   ref_ptr<Referenced>& databaseRequest
+#endif
+    )
 {
     simgear::SGPagedLOD *sgplod = dynamic_cast<simgear::SGPagedLOD*>(group);
     if(sgplod)
-        DatabasePager::requestNodeFile(fileName,group,priority,framestamp,sgplod->getReaderWriterOptions());
+        DatabasePager::requestNodeFile(fileName, group, priority, framestamp,
+#ifdef FGOSGPAGER25
+                                       databaseRequest,
+#endif
+                                       sgplod->getReaderWriterOptions());
     else
-        DatabasePager::requestNodeFile(fileName,group,priority,framestamp);
+        DatabasePager::requestNodeFile(fileName, group, priority, framestamp,
+#ifdef FGOSGPAGER25
+                                       databaseRequest
+#endif
+            );
 }
 
-void SceneryPager::queueRequest(const std::string& fileName, osg::Group* group,
-                                float priority, osg::FrameStamp* frameStamp,
+void SceneryPager::queueRequest(const std::string& fileName, Group* group,
+                                float priority, FrameStamp* frameStamp,
+#ifdef FGOSGPAGER25
+                                ref_ptr<Referenced>& databaseRequest,
+#endif
                                 osgDB::ReaderWriter::Options* options)
 {
     _pagerRequests.push_back(PagerRequest(fileName, group, priority,
-                                          frameStamp, options));
+                                          frameStamp,
+#ifdef FGOSGPAGER25
+                                          databaseRequest,
+#endif
+                                          options));
 }
 
 void SceneryPager::queueDeleteRequest(osg::ref_ptr<osg::Object>& objptr)
@@ -71,11 +90,18 @@ void SceneryPager::signalEndFrame()
     bool arePagerRequests = false;
     if (!_deleteRequests.empty()) {
         areDeleteRequests = true;
+#ifdef FGOSGPAGER25
+        OpenThreads::ScopedLock<OpenThreads::Mutex>
+            lock(_fileRequestQueue->_childrenToDeleteListMutex);
+        ObjectList& deleteList = _fileRequestQueue->_childrenToDeleteList;
+#else
         OpenThreads::ScopedLock<OpenThreads::Mutex>
             lock(_childrenToDeleteListMutex);
-        _childrenToDeleteList.insert(_childrenToDeleteList.end(),
-                                     _deleteRequests.begin(),
-                                     _deleteRequests.end());
+        ObjectList& deleteList = _childrenToDeleteList;
+#endif
+        deleteList.insert(deleteList.end(),
+                          _deleteRequests.begin(),
+                          _deleteRequests.end());
         _deleteRequests.clear();
     }
     if (!_pagerRequests.empty()) {
@@ -84,8 +110,13 @@ void SceneryPager::signalEndFrame()
                  bind2nd(mem_fun_ref(&PagerRequest::doRequest), this));
         _pagerRequests.clear();
     }
-    if (areDeleteRequests && !arePagerRequests)
+    if (areDeleteRequests && !arePagerRequests) {
+#ifdef FGOSGPAGER25
+        _fileRequestQueue->updateBlock();
+#else
         updateDatabasePagerThreadBlock();
+#endif        
+    }
     DatabasePager::signalEndFrame();
 }
 

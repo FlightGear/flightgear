@@ -279,7 +279,11 @@ public:
             _pager->queueRequest(entry->tileFileName,
                                  entry->getNode(),
                                  entry->get_inner_ring() ? 10.0f : 1.0f,
-                                 _framestamp, _options);
+                                 _framestamp,
+#ifdef FGOSGPAGER25
+                                 entry->getDatabaseRequest(),
+#endif
+                                 _options);
         }
     }
 private:

@@ -31,11 +31,8 @@
 # error This library requires C++
 #endif                                   
 
-#include <osg/Version>
-
-#define FG_OSG_VERSION \
-    ((OPENSCENEGRAPH_MAJOR_VERSION*10000)\
-     + (OPENSCENEGRAPH_MINOR_VERSION*1000) + OPENSCENEGRAPH_PATCH_VERSION)
+#include <simgear/structure/OSGVersion.hxx>
+#define FG_OSG_VERSION SG_OSG_VERSION
 
 // #define FANCY_FRAME_COUNTER
 #ifdef FANCY_FRAME_COUNTER
