@@ -34,12 +34,19 @@ COMMENTS, REFERENCES,  and NOTES
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <iostream>
+
 #include "FGCondition.h"
 
 namespace JSBSim {
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_CONDITION;
+
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::vector;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION

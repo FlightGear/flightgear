@@ -42,16 +42,6 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  include STL_IOSTREAM
-#  include STL_FSTREAM
-#else
-#  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
-#    include <iostream.h>
-#    include <fstream.h>
-#  else
-#    include <iostream>
-#    include <fstream>
-#  endif
 #endif
 
 #include <input_output/FGfdmSocket.h>

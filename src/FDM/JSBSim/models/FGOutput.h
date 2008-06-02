@@ -42,17 +42,17 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
-#  include STL_IOSTREAM
 #  include STL_FSTREAM
 #else
 #  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
-#    include <iostream.h>
 #    include <fstream.h>
 #  else
-#    include <iostream>
 #    include <fstream>
 #  endif
 #endif
+
+#include <string>
+#include <vector>
 
 #include <input_output/FGfdmSocket.h>
 #include <input_output/FGXMLFileRead.h>
@@ -165,10 +165,10 @@ private:
   enum {otNone, otCSV, otTab, otSocket, otTerminal, otUnknown} Type;
   bool sFirstPass, dFirstPass, enabled;
   int SubSystems;
-  string output_file_name, delimeter, Filename, DirectivesFile;
-  ofstream datafile;
+  std::string output_file_name, delimeter, Filename, DirectivesFile;
+  std::ofstream datafile;
   FGfdmSocket* socket;
-  vector <FGPropertyManager*> OutputProperties;
+  std::vector <FGPropertyManager*> OutputProperties;
 
   void Debug(int from);
 };

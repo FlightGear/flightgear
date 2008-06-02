@@ -39,11 +39,17 @@ INCLUDES
 
 #include "FGColumnVector3.h"
 #include <stdio.h>
+#include <iostream>
 
 namespace JSBSim {
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_COLUMNVECTOR3;
+
+using std::ostream;
+using std::cerr;
+using std::cout;
+using std::endl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION

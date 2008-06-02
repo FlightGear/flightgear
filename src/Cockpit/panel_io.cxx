@@ -34,7 +34,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 
-#include STL_IOSTREAM
+#include <istream>
 #include STL_FSTREAM
 #include STL_STRING
 

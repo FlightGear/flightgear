@@ -45,14 +45,7 @@ INCLUDES
 #  include <math.h>
 #  include <simgear/compiler.h>
 #  include STL_STRING
-#  include STL_FSTREAM
-#  include STL_IOSTREAM
-   SG_USING_STD(string);
-   SG_USING_STD(ostream);
-   SG_USING_STD(istream);
-   SG_USING_STD(cerr);
-   SG_USING_STD(cout);
-   SG_USING_STD(endl);
+#  include <iosfwd>
 #else
 #  include <string>
 #  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
@@ -61,19 +54,13 @@ INCLUDES
 #    include <math.h>
 #  else
 #    include <fstream>
-#    include <iostream>
+#    include <iosfwd>
 #    if defined(sgi) && !defined(__GNUC__)
 #      include <math.h>
 #    else
 #      include <cmath>
 #    endif
-     using std::ostream;
-     using std::istream;
-     using std::cerr;
-     using std::cout;
-     using std::endl;
 #  endif
-   using std::string;
 #endif
 
 #include "FGColumnVector3.h"
@@ -107,7 +94,7 @@ DECLARATION: MatrixException
 class MatrixException : public FGJSBBase
 {
 public:
-  string Message;
+  std::string Message;
 };
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -473,7 +460,7 @@ inline FGMatrix33 operator*(double scalar, const FGMatrix33& A) {
 
     Write the matrix to a stream.
 */
-ostream& operator<<(ostream& os, const FGMatrix33& M);
+std::ostream& operator<<(std::ostream& os, const FGMatrix33& M);
 
 /** Read matrix from a stream.
 
@@ -482,7 +469,7 @@ ostream& operator<<(ostream& os, const FGMatrix33& M);
 
     Read matrix from a stream.
 */
-istream& operator>>(istream& is, FGMatrix33& M);
+std::istream& operator>>(std::istream& is, FGMatrix33& M);
 
 } // namespace JSBSim
 

@@ -25,6 +25,7 @@
 
 #include "transmission.hxx"
 
+#include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 
 
@@ -60,7 +61,7 @@ TransPar FGTransmission::Parse() {
       if ( tkn <= 20 ) {
 	tkn += 1;
       } else {
-	cout << "Too many tokens" << endl;
+        SG_LOG(SG_ATC, SG_WARN,"Too many tokens");
       }
     }
   }

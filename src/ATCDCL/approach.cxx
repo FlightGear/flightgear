@@ -22,6 +22,8 @@
 #  include <config.h>
 #endif
 
+#include <iostream>
+
 #include "approach.hxx"
 #include "transmission.hxx"
 #include "transmissionlist.hxx"
@@ -37,6 +39,9 @@
 
 
 #include <GUI/gui.h>
+
+using std::cout;
+using std::endl;
 
 //Constructor
 FGApproach::FGApproach(){

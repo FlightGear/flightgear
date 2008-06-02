@@ -130,13 +130,13 @@ bool FGTransmissionList::query_station( const atc_type &station, FGTransmission 
       num_trans += 1;
     }
     else {
-      cout << "Transmissionlist error: Too many transmissions" << endl; 
+      SG_LOG(SG_GENERAL, SG_WARN, "Transmissionlist error: Too many transmissions"); 
     }
   }
 
   if ( num_trans != 0 ) return true;
   else {
-    cout << "No transmission with station " << station << "found." << endl;
+    SG_LOG(SG_GENERAL, SG_WARN, "No transmission with station " << station << "found.");
     string empty;
     return false;
   }
@@ -240,7 +240,7 @@ string FGTransmissionList::gen_text(const atc_type &station, const TransCode cod
 				else if ( strcmp ( tag, "@RW" ) == 0 )
 					strcat( &dum[0], tpars.runway.c_str() );
 				else {
-					cout << "Tag " << tag << " not found" << endl;
+					SG_LOG(SG_GENERAL, SG_WARN, "Tag " << tag << " not found");
 					break;
 				}
 				strcat( &dum[0], &mes[len+3] );
@@ -248,7 +248,7 @@ string FGTransmissionList::gen_text(const atc_type &station, const TransCode cod
 				
 				++check;
 				if(check > 10) {
-					SG_LOG(SG_ATC, SG_WARN, "WARNING: Possibly endless loop terminated in FGTransmissionlist::gen_text(...)"); 
+					SG_LOG(SG_GENERAL, SG_WARN, "WARNING: Possibly endless loop terminated in FGTransmissionlist::gen_text(...)"); 
 					break;
 				}
 			}

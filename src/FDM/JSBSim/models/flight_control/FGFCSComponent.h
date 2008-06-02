@@ -53,8 +53,6 @@ DEFINITIONS
 
 #define ID_FCSCOMPONENT "$Id$"
 
-using std::string;
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -103,8 +101,8 @@ public:
   virtual void SetOutput(void);
   inline double GetOutput (void) const {return Output;}
   inline FGPropertyManager* GetOutputNode(void) { return OutputNode; }
-  inline string GetName(void) const {return Name;}
-  inline string GetType(void) const { return Type; }
+  inline std::string GetName(void) const {return Name;}
+  inline std::string GetType(void) const { return Type; }
   virtual double GetOutputPct(void) const { return 0; }
 
 protected:
@@ -114,10 +112,10 @@ protected:
   FGPropertyManager* OutputNode;
   FGPropertyManager* ClipMinPropertyNode;
   FGPropertyManager* ClipMaxPropertyNode;
-  vector <FGPropertyManager*> InputNodes;
-  vector <float> InputSigns;
-  string Type;
-  string Name;
+  std::vector <FGPropertyManager*> InputNodes;
+  std::vector <float> InputSigns;
+  std::string Type;
+  std::string Name;
   double Input;
   double Output;
   double clipmax, clipmin;

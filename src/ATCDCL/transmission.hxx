@@ -48,12 +48,6 @@
 
 #include "ATC.hxx"
 
-#if ! defined( SG_HAVE_NATIVE_SGI_COMPILERS )
-SG_USING_STD(istream);
-#endif
-
-SG_USING_STD(string);
-
 struct TransCode {
   int c1;
   int c2;
@@ -62,18 +56,18 @@ struct TransCode {
 
 // TransPar - a representation of the logic of a parsed speech transmission
 struct TransPar {
-  string  station;
-  string  callsign;
-  string  airport;
-  string  intention;      // landing, crossing
-  string  intid;          // (airport) ID for intention
+  std::string  station;
+  std::string  callsign;
+  std::string  airport;
+  std::string  intention;      // landing, crossing
+  std::string  intid;          // (airport) ID for intention
   bool    request;        // is the transmission a request or an answer?
   int     tdir;           // turning direction: 1=left, 2=right
   double  heading;
   int     VDir;           // vertical direction: 1=descent, 2=maintain, 3=climb
   double  alt;
   double  miles;
-  string  runway;
+  std::string  runway;
   double  freq;
   double  time;
 };
@@ -84,8 +78,8 @@ class FGTransmission {
   //int       StationType;    // Type of ATC station: 1 Approach
   atc_type  StationType;
   TransCode Code;           // DCL - no idea what this is.
-  string    TransText;      // The text of the spoken transmission
-  string    MenuText;       // An abbreviated version of the text for the menu entry
+  std::string    TransText;      // The text of the spoken transmission
+  std::string    MenuText;       // An abbreviated version of the text for the menu entry
 
 public:
 
@@ -96,21 +90,21 @@ public:
 
   inline atc_type  get_station()   const { return StationType; }
   inline const TransCode& get_code()      { return Code; }
-  inline const string&    get_transtext() { return TransText; }
-  inline const string&    get_menutext()  { return MenuText; }
+  inline const std::string&    get_transtext() { return TransText; }
+  inline const std::string&    get_menutext()  { return MenuText; }
 
   // Return the parsed logic of the transmission  
   TransPar Parse();
 
 private:
 
-  friend istream& operator>> ( istream&, FGTransmission& );
+  friend std::istream& operator>> ( std::istream&, FGTransmission& );
 
 };
 
 
-inline istream&
-operator >> ( istream& in, FGTransmission& a ) {
+inline std::istream&
+operator >> ( std::istream& in, FGTransmission& a ) {
 	char ch;
 	int tmp;
 	

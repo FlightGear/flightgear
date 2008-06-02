@@ -43,9 +43,6 @@
 #  include <istream.h>
 #endif
 
-SG_USING_STD(istream);
-
-
 #define FG_NAV_DEFAULT_RANGE 50 // nm
 #define FG_LOC_DEFAULT_RANGE 18 // nm
 #define FG_DME_DEFAULT_RANGE 50 // nm
@@ -105,7 +102,7 @@ public:
     inline bool get_serviceable() const { return serviceable; }
     inline const char *get_trans_ident() const { return trans_ident.c_str(); }
 
-    friend istream& operator>> ( istream&, FGNavRecord& );
+    friend std::istream& operator>> ( std::istream&, FGNavRecord& );
 };
 
 
@@ -136,8 +133,8 @@ inline fg_nav_types FGNavRecord::get_fg_type() const {
 }
 
 
-inline istream&
-operator >> ( istream& in, FGNavRecord& n )
+inline std::istream&
+operator >> ( std::istream& in, FGNavRecord& n )
 {
     in >> n.type;
     
@@ -209,7 +206,7 @@ public:
 
     inline const string& get_channel() const { return channel; }
     inline int get_freq() const { return freq; }
-    friend istream& operator>> ( istream&, FGTACANRecord& );
+    friend std::istream& operator>> ( std::istream&, FGTACANRecord& );
     };
 
 
@@ -221,8 +218,8 @@ FGTACANRecord::FGTACANRecord(void) :
 {
 }
 
-inline istream&
-operator >> ( istream& in, FGTACANRecord& n )
+inline std::istream&
+operator >> ( std::istream& in, FGTACANRecord& n )
 {
     in >> n.channel >> n.freq ;
     //getline( in, n.name );

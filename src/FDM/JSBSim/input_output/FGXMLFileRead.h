@@ -35,6 +35,7 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <fstream>
 #include <input_output/FGXMLParse.h>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -58,7 +59,7 @@ protected:
   Element* document;
   Element* LoadXMLDocument(string XML_filename)
   {
-    ifstream infile;
+    std::ifstream infile;
 
     if ( !XML_filename.empty() ) {
       if (XML_filename.find(".xml") == string::npos) XML_filename += ".xml";

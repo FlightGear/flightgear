@@ -250,7 +250,7 @@ bool FGEngine::LoadThruster(Element *thruster_element)
   double P_Factor = 0, Sense = 0.0;
   string enginePath = FDMExec->GetEnginePath();
   string aircraftPath = FDMExec->GetFullAircraftPath();
-  ifstream thruster_file;
+  std::ifstream thruster_file;
   FGColumnVector3 location, orientation;
   string separator = "/";
 

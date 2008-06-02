@@ -26,11 +26,8 @@
 #include <simgear/misc/sgstream.hxx>
 #include <plib/sg.h>
 
-#include STL_IOSTREAM
+#include <iosfwd>
 #include STL_STRING
-
-SG_USING_STD(string);
-SG_USING_STD(ios);
 
 #include "ATC.hxx"
 #include "ATCProjection.hxx"
@@ -117,7 +114,7 @@ public:
 };
 
 
-typedef list < TowerPlaneRec* > tower_plane_rec_list_type;
+typedef std::list < TowerPlaneRec* > tower_plane_rec_list_type;
 typedef tower_plane_rec_list_type::iterator tower_plane_rec_list_iterator;
 typedef tower_plane_rec_list_type::const_iterator tower_plane_rec_list_const_iterator;
 
@@ -138,21 +135,21 @@ public:
 	// Contact tower for VFR approach
 	// eg "Cessna Charlie Foxtrot Golf Foxtrot Sierra eight miles South of the airport for full stop with Bravo"
 	// This function probably only called via user interaction - AI planes will have an overloaded function taking a planerec.
-	void VFRArrivalContact(const string& ID, const LandingType& opt = AIP_LT_UNKNOWN);
+	void VFRArrivalContact(const std::string& ID, const LandingType& opt = AIP_LT_UNKNOWN);
 	// For the AI planes...
 	void VFRArrivalContact(const PlaneRec& plane, FGAIPlane* requestee, const LandingType& lt = AIP_LT_UNKNOWN);
 	
-	void RequestDepartureClearance(const string& ID);
-	void RequestTakeOffClearance(const string& ID);
-	void ReportFinal(const string& ID);
-	void ReportLongFinal(const string& ID);
-	void ReportOuterMarker(const string& ID);
-	void ReportMiddleMarker(const string& ID);
-	void ReportInnerMarker(const string& ID);
-	void ReportRunwayVacated(const string& ID);
-	void ReportReadyForDeparture(const string& ID);
-	void ReportDownwind(const string& ID);
-	void ReportGoingAround(const string& ID);
+	void RequestDepartureClearance(const std::string& ID);
+	void RequestTakeOffClearance(const std::string& ID);
+	void ReportFinal(const std::string& ID);
+	void ReportLongFinal(const std::string& ID);
+	void ReportOuterMarker(const std::string& ID);
+	void ReportMiddleMarker(const std::string& ID);
+	void ReportInnerMarker(const std::string& ID);
+	void ReportRunwayVacated(const std::string& ID);
+	void ReportReadyForDeparture(const std::string& ID);
+	void ReportDownwind(const std::string& ID);
+	void ReportGoingAround(const std::string& ID);
 	
 	// Contact tower when at a hold short for departure - for now we'll assume plane - maybe vehicles might want to cross runway eventually?
 	void ContactAtHoldShort(const PlaneRec& plane, FGAIPlane* requestee, tower_traffic_type operation);
@@ -162,16 +159,16 @@ public:
 	void RegisterAIPlane(const PlaneRec& plane, FGAIPlane* ai, const tower_traffic_type& op, const PatternLeg& lg = LEG_UNKNOWN);
 	
 	// Deregister and remove an AI plane.
-	void DeregisterAIPlane(const string& id);
+	void DeregisterAIPlane(const std::string& id);
 	
 	// Public interface to the active runway - this will get more complex 
 	// in the future and consider multi-runway use, airplane weight etc.
-	inline const string& GetActiveRunway() const { return activeRwy; }
+	inline const std::string& GetActiveRunway() const { return activeRwy; }
 	inline const RunwayDetails& GetActiveRunwayDetails() const { return rwy; }
 	// Get the pattern direction of the active rwy.
 	inline int GetPatternDirection() const { return rwy.patternDirection; }
 	
-	inline const string& get_trans_ident() const { return trans_ident; }
+	inline const std::string& get_trans_ident() const { return trans_ident; }
 	
 	inline FGGround* const GetGroundPtr() const { return ground; }
 	
@@ -181,9 +178,9 @@ public:
 	bool GetDownwindConstraint(double& dpos);
 	bool GetBaseConstraint(double& bpos);
 	
-	string GenText(const string& m, int c);
-	string GetWeather();
-	string GetATISID();
+	std::string GenText(const std::string& m, int c);
+	std::string GetWeather();
+	std::string GetATISID();
 
 private:
 	FGATCMgr* ATCmgr;
@@ -210,10 +207,10 @@ private:
 	void ClearHoldingPlane(TowerPlaneRec* t);
 	
 	// Find a pointer to plane of callsign ID within the internal data structures
-	TowerPlaneRec* FindPlane(const string& ID);
+	TowerPlaneRec* FindPlane(const std::string& ID);
 	
 	// Remove and delete all instances of a plane with a given ID
-	void RemovePlane(const string& ID);
+	void RemovePlane(const std::string& ID);
 	
 	// Figure out if a given position lies on the active runway
 	// Might have to change when we consider more than one active rwy.
@@ -227,10 +224,10 @@ private:
 	// For air traffic this is the middle approximation.
 	void CalcETA(TowerPlaneRec* tpr, bool printout = false);
 	
-	// Iterate through all the lists and call CalcETA for all the planes.
+	// Iterate through all the std::lists and call CalcETA for all the planes.
 	void doThresholdETACalc();
 	
-	// Order the list of traffic as per expected threshold use and flag any conflicts
+	// Order the std::list of traffic as per expected threshold use and flag any conflicts
 	bool doThresholdUseOrder();
 	
 	// Calculate the crow-flys distance of a plane to the threshold in meters
@@ -258,7 +255,7 @@ private:
 	SGPropertyNode_ptr wind_speed_knots;		//knots
 	
 	double aptElev;		// Airport elevation
-	string activeRwy;	// Active runway number - For now we'll disregard multiple / alternate runway operation.
+	std::string activeRwy;	// Active runway number - For now we'll disregard multiple / alternate runway operation.
 	RunwayDetails rwy;	// Assumed to be the active one for now.
 	bool rwyOccupied;	// Active runway occupied flag.  For now we'll disregard land-and-hold-short operations.
 	FGATCAlignedProjection ortho;	// Orthogonal mapping of the local area with the active runway threshold at the origin
@@ -311,9 +308,9 @@ private:
 	tower_plane_rec_list_iterator vacatedListItr;
 	
 	// Returns true if successful
-	bool RemoveFromTrafficList(const string& id);
-	bool RemoveFromAppList(const string& id);
-	bool RemoveFromRwyList(const string& id);
+        bool RemoveFromTrafficList(const std::string& id);
+	bool RemoveFromAppList(const std::string& id);
+	bool RemoveFromRwyList(const std::string& id);
 	
 	// Return the ETA of plane no. list_pos (1-based) in the traffic list.
 	// i.e. list_pos = 1 implies next to use runway.
@@ -340,7 +337,7 @@ private:
 	//FGDeparture* _departure;	// The relevant departure control (once we've actually written it!)
 	
 	// for failure modeling
-	string trans_ident;		// transmitted ident
+	std::string trans_ident;		// transmitted ident
 	bool tower_failed;		// tower failed?
 	
 	// Pointers to current users position and orientation
@@ -359,7 +356,7 @@ private:
 	double nominal_downwind_leg_pos;
 	double nominal_base_leg_pos;
 	
-	friend istream& operator>> ( istream&, FGTower& );
+        friend std::istream& operator>> ( std::istream&, FGTower& );
 };
 
 #endif  //_FG_TOWER_HXX

@@ -33,17 +33,12 @@
 #include <simgear/timing/sg_time.hxx>
 
 #ifdef SG_HAVE_STD_INCLUDES
-#  include <istream>
-#  include <iomanip>
+#  include <iosfwd>
 #elif defined( __BORLANDC__ ) || (__APPLE__)
 #  include <iostream>
 #else
 #  include <istream.h>
-#  include <iomanip.h>
 #endif
-
-SG_USING_STD(istream);
-SG_USING_STD(string);
 
 #include "ATC.hxx"
 
@@ -53,12 +48,12 @@ SG_USING_STD(string);
 class FGATIS : public FGATC {
 	
 	//atc_type type;
-	string transmission;	// The actual ATIS transmission
+	std::string transmission;	// The actual ATIS transmission
 	// This is not stored in default.atis but is generated
 	// from the prevailing conditions when required.
 	
 	// for failure modeling
-	string trans_ident;		// transmitted ident
+	std::string trans_ident;		// transmitted ident
 	bool atis_failed;		// atis failed?
 	
 	// Aircraft position
@@ -79,17 +74,17 @@ class FGATIS : public FGATC {
 	void Update(double dt);
 	
 	//inline void set_type(const atc_type tp) {type = tp;}
-	inline const string& get_trans_ident() { return trans_ident; }
-	inline void set_refname(const string& r) { refname = r; } 
+	inline const std::string& get_trans_ident() { return trans_ident; }
+	inline void set_refname(const std::string& r) { refname = r; } 
 	
 	private:
 	
-	string refname;		// Holds the refname of a transmission in progress
+	std::string refname;		// Holds the refname of a transmission in progress
 	
 	//Update the transmission string
 	void UpdateTransmission(void);
 	
-	friend istream& operator>> ( istream&, FGATIS& );
+	friend std::istream& operator>> ( std::istream&, FGATIS& );
 };
 
 #endif // _FG_ATIS_HXX

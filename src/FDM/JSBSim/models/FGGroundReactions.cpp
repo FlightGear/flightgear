@@ -46,6 +46,9 @@ namespace JSBSim {
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_GROUNDREACTIONS;
 
+using std::ostringstream;
+using std::setprecision;
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -139,7 +142,7 @@ bool FGGroundReactions::Load(Element* el)
 
 string FGGroundReactions::GetGroundReactionStrings(string delimeter)
 {
-  std::ostringstream buf;
+  ostringstream buf;
 
   for (unsigned int i=0;i<lGear.size();i++) {
     if (lGear[i].IsBogey()) {

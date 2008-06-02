@@ -33,15 +33,7 @@
 #include "ATC.hxx"
 #include "ATCProjection.hxx"
 
-#include STL_IOSTREAM
 #include STL_STRING
-
-SG_USING_STD(string);
-SG_USING_STD(ios);
-
-SG_USING_STD(map);
-SG_USING_STD(vector);
-SG_USING_STD(list);
 
 class FGAIEntity;
 class FGATCMgr;
@@ -86,7 +78,7 @@ struct ground_network_element {
 
 struct arc : public ground_network_element {
 	int distance;
-	string name;
+	std::string name;
 	arc_type type;
 	bool directed;	//false if 2-way, true if 1-way.  
 	//This is a can of worms since arcs might be one way in different directions under different circumstances
@@ -95,7 +87,7 @@ struct arc : public ground_network_element {
 	// If the arc is directed then flow is normally from n1 to n2.  See the above can of worms comment though.
 };
 
-typedef vector <arc*> arc_array_type;	// This was and may become again a list instead of vector
+typedef std::vector <arc*> arc_array_type;	// This was and may become again a list instead of vector
 typedef arc_array_type::iterator arc_array_iterator;
 typedef arc_array_type::const_iterator arc_array_const_iterator; 
 
@@ -106,13 +98,13 @@ struct node : public ground_network_element {
 	unsigned int nodeID;	//each node in an airport needs a unique ID number - this is ZERO-BASED to match array position
 	Point3D pos;
 	Point3D orthoPos;
-	string name;
+	std::string name;
 	node_type type;
 	arc_array_type arcs;
 	double max_turn_radius;
 };
 
-typedef vector <node*> node_array_type;
+typedef std::vector <node*> node_array_type;
 typedef node_array_type::iterator node_array_iterator;
 typedef node_array_type::const_iterator node_array_const_iterator;
 
@@ -121,18 +113,18 @@ struct Gate : public node {
 	int max_weight;	//units??
 	//airline_code airline;	//For the future - we don't have any airline codes ATM
 	int id;	// The gate number in the logical scheme of things
-	string name;	// The real-world gate letter/number
+	std::string name;	// The real-world gate letter/number
 	//node* pNode;
 	bool used;
 	double heading;	// The direction the parked-up plane should point in degrees
 };
 
-typedef vector < Gate* > gate_vec_type;
+typedef std::vector < Gate* > gate_vec_type;
 typedef gate_vec_type::iterator gate_vec_iterator;
 typedef gate_vec_type::const_iterator gate_vec_const_iterator;
 
 // A map of gate vs. the logical (internal FGFS) gate ID
-typedef map < int, Gate* > gate_map_type;
+typedef std::map < int, Gate* > gate_map_type;
 typedef gate_map_type::iterator gate_map_iterator;
 typedef gate_map_type::const_iterator gate_map_const_iterator;
 
@@ -146,7 +138,7 @@ struct Rwy {
 	// This will get us up and running for single runway airports though.
 };
 
-typedef vector < Rwy > runway_array_type;
+typedef std::vector < Rwy > runway_array_type;
 typedef runway_array_type::iterator runway_array_iterator;
 typedef runway_array_type::const_iterator runway_array_const_iterator;
 
@@ -157,7 +149,7 @@ typedef runway_array_type::const_iterator runway_array_const_iterator;
 // Structures to use the network
 
 // A path through the network 
-typedef vector < ground_network_element* > ground_network_path_type;
+typedef std::vector < ground_network_element* > ground_network_path_type;
 typedef ground_network_path_type::iterator ground_network_path_iterator;
 typedef ground_network_path_type::const_iterator ground_network_path_const_iterator;
 
@@ -174,7 +166,7 @@ struct a_path {
 };
 
 // Paths mapped by nodeID reached so-far
-typedef map < unsigned int, a_path* > shortest_path_map_type;
+typedef std::map < unsigned int, a_path* > shortest_path_map_type;
 typedef shortest_path_map_type::iterator shortest_path_map_iterator;
 
 // Nodes mapped by their ID
@@ -201,7 +193,7 @@ struct GroundRec {
     // Almost certainly need to add more here
 };
 
-typedef list < GroundRec* > ground_rec_list;
+typedef std::list < GroundRec* > ground_rec_list;
 typedef ground_rec_list::iterator ground_rec_list_itr;
 typedef ground_rec_list::const_iterator ground_rec_list_const_itr;
 
@@ -215,7 +207,7 @@ struct GRunwayDetails {
 	Point3D end2ortho;	// ortho projection end2 (the take off end in the current hardwired scheme)
 	double hdg;		// true runway heading
 	double length;	// In *METERS*
-	string rwyID;
+	std::string rwyID;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -227,13 +219,13 @@ class FGGround : public FGATC {
 
 public:
 	FGGround();
-	FGGround(const string& id);
+	FGGround(const std::string& id);
 	~FGGround();
     void Init();
 
     void Update(double dt);
 	
-	inline const string& get_trans_ident() { return trans_ident; }
+	inline const std::string& get_trans_ident() { return trans_ident; }
 
     // Contact ground control on arrival, assumed to request any gate
     //void NewArrival(plane_rec plane);
@@ -258,22 +250,22 @@ public:
 	Gate* GetGateNode();
 	
 	// Return a pointer to a hold short node
-	node* GetHoldShortNode(const string& rwyID);
+	node* GetHoldShortNode(const std::string& rwyID);
 	
 	// Runway stuff - this might change in the future.
 	// Get a list of exits from a given runway
 	// It is up to the calling function to check for non-zero size of returned array before use
-	node_array_type GetExits(const string& rwyID);
+	node_array_type GetExits(const std::string& rwyID);
 	
 	// Get a path from one node to another
 	ground_network_path_type GetPath(node* A, node* B);
 	
 	// Get a path from a node to a runway threshold
-	ground_network_path_type GetPath(node* A, const string& rwyID);
+	ground_network_path_type GetPath(node* A, const std::string& rwyID);
 	
 	// Get a path from a node to a runway hold short point
 	// Bit of a hack this at the moment!
-	ground_network_path_type GetPathToHoldShort(node* A, const string& rwyID);
+	ground_network_path_type GetPathToHoldShort(node* A, const std::string& rwyID);
 
 private:
 	FGATCMgr* ATCmgr;	
@@ -314,7 +306,7 @@ private:
 	SGPropertyNode_ptr wind_speed_knots;		//knots
 	
 	// for failure modeling
-	string trans_ident;		// transmitted ident
+	std::string trans_ident;		// transmitted ident
 	bool ground_failed;		// ground failed?
 	bool networkLoadOK;		// Indicates whether LoadNetwork returned true or false at last attempt
 	
@@ -328,7 +320,7 @@ private:
 	
 	// Physical runway details
 	double aptElev;		// Airport elevation
-	string activeRwy;	// Active runway number - For now we'll disregard multiple / alternate runway operation.
+	std::string activeRwy;	// Active runway number - For now we'll disregard multiple / alternate runway operation.
 	RunwayDetails rwy;	// Assumed to be the active one for now.// Figure out which runways are active.
 	
 	// For now we'll just be simple and do one active runway - eventually this will get much more complex
@@ -353,7 +345,7 @@ private:
 	
 	// Return a pointer to the node at a runway threshold
 	// Returns NULL if unsuccessful.
-	node* GetThresholdNode(const string& rwyID);
+	node* GetThresholdNode(const std::string& rwyID);
 	
 	// A shortest path algorithm from memory (I can't find the bl&*dy book again!)
 	ground_network_path_type GetShortestPath(node* A, node* B); 

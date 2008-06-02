@@ -144,16 +144,11 @@
 #include <FDM/LaRCsim/ls_types.h>
 
 #include <map>
-#include STL_IOSTREAM
+#include <fstream>
 #include <cmath>
 
 #include "uiuc_parsefile.h"
 #include "uiuc_flapdata.h"
-
-SG_USING_STD(map);
-SG_USING_STD(iostream);
-SG_USING_STD(ofstream);
-
 
 typedef stack :: iterator LIST;
 
@@ -635,7 +630,7 @@ struct AIRCRAFT
 #define  recordParts        aircraft_->recordParts
   
   /*= Keywords (token1) ===========================================*/
-  map <string,int>      Keyword_map;
+  std::map <string,int>      Keyword_map;
 #define      Keyword_map         aircraft_->Keyword_map       
 
   double CD, CX, CL, CZ, Cm, CY, Cl, Cn;
@@ -670,7 +665,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* init ========== Initial values for equations of motion =======*/
 
-  map <string,int> init_map;
+  std::map <string,int> init_map;
 #define      init_map          aircraft_->init_map          
 
   int recordRate;
@@ -777,7 +772,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* geometry ====== Aircraft-specific geometric quantities =======*/
   
-  map <string,int> geometry_map;
+  std::map <string,int> geometry_map;
 #define      geometry_map        aircraft_->geometry_map       
   
   double bw, cbar, Sw, ih, bh, chord_h, Sh;
@@ -793,7 +788,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* controlSurface  Control surface deflections and properties ===*/
   
-  map <string,int> controlSurface_map;
+  std::map <string,int> controlSurface_map;
 #define      controlSurface_map  aircraft_->controlSurface_map
   
   double demax, demin;
@@ -980,7 +975,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* controlsMixer = Control mixer ================================*/
   
-  map <string,int> controlsMixer_map;
+  std::map <string,int> controlsMixer_map;
 #define      controlsMixer_map  aircraft_->controlsMixer_map
   
   double nomix;
@@ -990,7 +985,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* mass =========== Aircraft-specific mass properties ===========*/
   
-  map <string,int> mass_map;
+  std::map <string,int> mass_map;
 #define      mass_map            aircraft_->mass_map
 
   double Weight;
@@ -1016,7 +1011,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* engine ======== Propulsion data ==============================*/
   
-  map <string,int> engine_map;
+  std::map <string,int> engine_map;
 #define      engine_map            aircraft_->engine_map          
   
   double simpleSingleMaxThrust;
@@ -1158,7 +1153,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* CD ============ Aerodynamic x-force quantities (longitudinal) */
   
-  map <string,int> CD_map;
+  std::map <string,int> CD_map;
 #define      CD_map              aircraft_->CD_map            
   
   double CDo, CDK, CLK, CD_a, CD_adot, CD_q, CD_ih, CD_de, CD_dr, CD_da, CD_beta;
@@ -1358,7 +1353,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* CL ============ Aerodynamic z-force quantities (longitudinal) */
   
-  map <string,int> CL_map;
+  std::map <string,int> CL_map;
 #define      CL_map              aircraft_->CL_map            
   
   double CLo, CL_a, CL_adot, CL_q, CL_ih, CL_de;
@@ -1545,7 +1540,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* Cm ============ Aerodynamic m-moment quantities (longitudinal) */
   
-  map <string,int> Cm_map;
+  std::map <string,int> Cm_map;
 #define      Cm_map              aircraft_->Cm_map            
   
   double Cmo, Cm_a, Cm_a2, Cm_adot, Cm_q;
@@ -1709,7 +1704,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* CY ============ Aerodynamic y-force quantities (lateral) =====*/
   
-  map <string,int> CY_map;
+  std::map <string,int> CY_map;
 #define      CY_map              aircraft_->CY_map            
   
   double CYo, CY_beta, CY_p, CY_r, CY_da, CY_dr, CY_dra, CY_bdot;
@@ -1884,7 +1879,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* Cl ============ Aerodynamic l-moment quantities (lateral) ====*/
   
-  map <string,int> Cl_map;
+  std::map <string,int> Cl_map;
 #define      Cl_map              aircraft_->Cl_map            
   
   double Clo, Cl_beta, Cl_p, Cl_r, Cl_da, Cl_dr, Cl_daa;
@@ -2057,7 +2052,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* Cn ============ Aerodynamic n-moment quantities (lateral) ====*/
   
-  map <string,int> Cn_map;
+  std::map <string,int> Cn_map;
 #define      Cn_map              aircraft_->Cn_map
 
   double Cno, Cn_beta, Cn_p, Cn_r, Cn_da, Cn_dr, Cn_q, Cn_b3;
@@ -2232,7 +2227,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* gear ========== Landing gear model quantities ================*/
   
-  map <string,int> gear_map;
+  std::map <string,int> gear_map;
   
 #define      gear_map              aircraft_->gear_map
 #define MAX_GEAR 16
@@ -2258,7 +2253,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* ice =========== Ice model quantities ======================== */
   
-  map <string,int> ice_map;
+  std::map <string,int> ice_map;
 #define      ice_map              aircraft_->ice_map            
 
   bool ice_model, ice_on, beta_model;
@@ -2793,7 +2788,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* fog =========== Fog field quantities ======================== */
 
-  map <string,int> fog_map;
+  std::map <string,int> fog_map;
 #define fog_map 	aircraft_->fog_map
 
   bool fog_field;
@@ -2821,7 +2816,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* record ======== Record desired quantites to file =============*/
   
-  map <string,int> record_map;
+  std::map <string,int> record_map;
 #define      record_map              aircraft_->record_map
 
   /***** Angles ******/
@@ -2899,7 +2894,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* misc ========== Miscellaneous input commands =================*/
 
-  map <string,int> misc_map;
+  std::map <string,int> misc_map;
 #define      misc_map        aircraft_->misc_map       
 
   double simpleHingeMomentCoef;
@@ -3036,7 +3031,7 @@ struct AIRCRAFT
 #define Cn_iced          aircraft_->Cn_iced
 #define Ch_iced          aircraft_->Ch_iced
 
-  ofstream fout;
+  std::ofstream fout;
   
 #define fout aircraft_->fout
   

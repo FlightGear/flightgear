@@ -38,6 +38,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include <cstring>
+#include <iostream>
 
 #include "FGfdmSocket.h"
 
@@ -45,6 +46,10 @@ namespace JSBSim {
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FDMSOCKET;
+
+using std::cerr;
+using std::cout;
+using std::endl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION

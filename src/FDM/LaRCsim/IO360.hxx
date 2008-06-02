@@ -27,11 +27,6 @@
 
 #include <math.h>
 
-#include STL_IOSTREAM
-#include STL_FSTREAM
-
-SG_USING_STD(ofstream);
-
 class FGNewEngine {
 
 private:

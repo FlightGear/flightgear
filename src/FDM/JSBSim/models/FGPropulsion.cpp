@@ -62,6 +62,7 @@ static const char *IdHdr = ID_PROPULSION;
 
 extern short debug_lvl;
 
+using std::ifstream;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION

@@ -462,7 +462,7 @@ SGPropertyNode *fgInitLocale(const char *language) {
 
 // Initialize the localization routines
 bool fgDetectLanguage() {
-    char *language = ::getenv("LANG");
+    const char *language = ::getenv("LANG");
 
     if (language == NULL) {
         SG_LOG(SG_GENERAL, SG_INFO, "Unable to detect the language" );

@@ -25,10 +25,8 @@
 
 #if defined( SG_HAVE_STD_INCLUDES ) || defined( __BORLANDC__ ) || (__APPLE__)
 #  include <fstream>
-#  include <iostream>
 #else
 #  include <fstream.h>
-#  include <iostream.h>
 #endif
 
 #include <map>
@@ -41,18 +39,13 @@ SG_USING_STD(map);
 SG_USING_STD(list);
 SG_USING_STD(string);
 
-SG_USING_STD(cout);
-SG_USING_STD(ios);
-SG_USING_STD(ofstream);
-SG_USING_STD(ifstream);
-
 
 struct WordData {
 	unsigned int offset;	// Offset of beginning of word sample into raw sound sample
 	unsigned int length;	// Byte length of word sample
 };
 
-typedef map < string, WordData > atc_word_map_type;
+typedef std::map < std::string, WordData > atc_word_map_type;
 typedef atc_word_map_type::iterator atc_word_map_iterator;
 typedef atc_word_map_type::const_iterator atc_word_map_const_iterator;
 
@@ -65,7 +58,7 @@ public:
 
 	// Load the two voice files - one containing the raw sound data (.wav) and one containing the word positions (.vce).
 	// Return true if successful.	
-	bool LoadVoice(const string& voice);
+	bool LoadVoice(const std::string& voice);
 	
 	// Given a desired message, return a pointer to the data buffer and write the buffer length into len.
 	// Sets dataOK = true if the returned buffer is valid.

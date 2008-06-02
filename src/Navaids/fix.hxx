@@ -40,10 +40,7 @@
 #  include <istream.h>
 #endif
 
-SG_USING_STD(istream);
-
 #include STL_STRING
-SG_USING_STD(string);
 
 // SG_USING_STD(cout);
 // SG_USING_STD(endl);
@@ -51,7 +48,7 @@ SG_USING_STD(string);
 
 class FGFix {
 
-    string ident;
+    std::string ident;
     double lon, lat;
 
 public:
@@ -59,11 +56,11 @@ public:
     inline FGFix(void);
     inline ~FGFix(void) {}
 
-    inline const string& get_ident() const { return ident; }
+    inline const std::string& get_ident() const { return ident; }
     inline double get_lon() const { return lon; }
     inline double get_lat() const { return lat; }
 
-    friend istream& operator>> ( istream&, FGFix& );
+    friend std::istream& operator>> ( std::istream&, FGFix& );
 };
 
 
@@ -76,8 +73,8 @@ FGFix::FGFix()
 }
 
 
-inline istream&
-operator >> ( istream& in, FGFix& f )
+inline std::istream&
+operator >> ( std::istream& in, FGFix& f )
 {
     in >> f.lat;
 

@@ -14,7 +14,7 @@
 #  include <config.h>
 #endif
 
-#include <ostream>
+#include <iosfwd>
 #include <vector>
 
 #include <simgear/compiler.h>
@@ -22,10 +22,6 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/props.hxx>
-
-SG_USING_STD(ostream);
-SG_USING_STD(vector);
-
 
 /**
  * Log any property values to any number of CSV files.

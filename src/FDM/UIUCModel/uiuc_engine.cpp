@@ -72,8 +72,6 @@
 
 #include "uiuc_engine.h"
 
-SG_USING_STD(cerr);
-
 void uiuc_engine() 
 {
   stack command_list;

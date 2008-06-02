@@ -154,7 +154,7 @@ private:
     double Weight;
   };
 
-  vector <struct PointMass> PointMasses;
+  std::vector <struct PointMass> PointMasses;
 
   void Debug(int from);
 };

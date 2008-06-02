@@ -45,6 +45,9 @@ namespace JSBSim {
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_MATRIX33;
 
+using std::cout;
+using std::endl;
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -61,7 +64,7 @@ FGMatrix33::FGMatrix33(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-ostream& operator<<(ostream& os, const FGMatrix33& M)
+std::ostream& operator<<(std::ostream& os, const FGMatrix33& M)
 {
   for (unsigned int i=1; i<=M.Rows(); i++) {
     for (unsigned int j=1; j<=M.Cols(); j++) {
@@ -76,7 +79,7 @@ ostream& operator<<(ostream& os, const FGMatrix33& M)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-istream& operator>>(istream& is, FGMatrix33& M)
+std::istream& operator>>(std::istream& is, FGMatrix33& M)
 {
   for (unsigned int i=1; i<=M.Rows(); i++) {
     for (unsigned int j=1; j<=M.Cols(); j++) {

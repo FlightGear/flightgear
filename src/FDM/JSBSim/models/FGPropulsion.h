@@ -153,8 +153,8 @@ public:
       be done before calling this (i.e. magnetos, starter engage, etc.) */
   bool ICEngineStart(void);
 
-  string GetPropulsionStrings(string delimeter);
-  string GetPropulsionValues(string delimeter);
+  std::string GetPropulsionStrings(std::string delimeter);
+  std::string GetPropulsionValues(std::string delimeter);
 
   inline FGColumnVector3& GetForces(void)  {return vForces; }
   inline double GetForces(int n) const { return vForces(n);}
@@ -169,8 +169,8 @@ public:
   FGColumnVector3& GetTanksMoment(void);
   double GetTanksWeight(void);
 
-  ifstream* FindEngineFile(string filename);
-  string FindEngineFullPathname(string engine_filename);
+  std::ifstream* FindEngineFile(std::string filename);
+  std::string FindEngineFullPathname(std::string engine_filename);
   inline int GetActiveEngine(void) const {return ActiveEngine;}
   inline bool GetFuelFreeze(void) {return fuel_freeze;}
   double GetTotalFuelQuantity(void) const {return TotalFuelQuantity;}
@@ -186,9 +186,9 @@ public:
   void unbind();
 
 private:
-  vector <FGEngine*>   Engines;
-  vector <FGTank*>     Tanks;
-  vector <FGTank*>::iterator iTank;
+  std::vector <FGEngine*>   Engines;
+  std::vector <FGTank*>     Tanks;
+  std::vector <FGTank*>::iterator iTank;
   unsigned int numSelectedFuelTanks;
   unsigned int numSelectedOxiTanks;
   unsigned int numFuelTanks;

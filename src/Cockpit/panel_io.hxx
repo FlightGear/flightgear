@@ -31,15 +31,12 @@
 
 #include <simgear/compiler.h>
 
-#include STL_IOSTREAM
+#include <iosfwd>
 #include STL_STRING
-
-SG_USING_STD(istream);
-SG_USING_STD(string);
 
 class FGPanel;
 
-extern FGPanel * fgReadPanel (istream &input);
-extern FGPanel * fgReadPanel (const string &relative_path);
+extern FGPanel * fgReadPanel (std::istream &input);
+extern FGPanel * fgReadPanel (const std::string &relative_path);
 
 #endif // __PANEL_IO_HXX

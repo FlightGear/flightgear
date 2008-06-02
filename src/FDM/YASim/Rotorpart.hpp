@@ -1,7 +1,7 @@
 #ifndef _ROTORPART_HPP
 #define _ROTORPART_HPP
-#include <sstream>
-#include <iostream>
+#include <iosfwd>
+
 namespace yasim {
     class Rotor;
     class Rotorpart

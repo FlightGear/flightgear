@@ -53,6 +53,8 @@ INCLUDES
 #include <stdlib.h>
 #include <math.h>
 
+#include <iostream>
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -61,6 +63,10 @@ namespace JSBSim {
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_XMLELEMENT;
+
+using std::cerr;
+using std::cout;
+using std::endl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION

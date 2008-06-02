@@ -74,6 +74,8 @@ Prints to screen the follow:
 
 **********************************************************************/
 
+#include <iostream>
+
 #include "uiuc_warnings_errors.h"
 
 SG_USING_STD (cerr);
@@ -83,7 +85,7 @@ SG_USING_STD (endl);
 SG_USING_STD (exit);
 #endif
 
-void uiuc_warnings_errors(int errorCode, string line)
+void uiuc_warnings_errors(int errorCode, std::string line)
 {
   switch (errorCode)
     {

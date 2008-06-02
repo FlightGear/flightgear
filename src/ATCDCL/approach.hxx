@@ -34,22 +34,14 @@
 #include <Main/fg_props.hxx>
 
 #ifdef SG_HAVE_STD_INCLUDES
-#  include <istream>
-#include <iomanip>
+#  include <iosfwd>
 #elif defined( SG_HAVE_NATIVE_SGI_COMPILERS )
 #  include <iostream.h>
 #elif defined( __BORLANDC__ )
 #  include <iostream>
 #else
 #  include <istream.h>
-#include <iomanip.h>
 #endif
-
-#if ! defined( SG_HAVE_NATIVE_SGI_COMPILERS )
-SG_USING_STD(istream);
-#endif
-
-SG_USING_STD(string);
 
 #include "ATC.hxx"
 #include "transmission.hxx"
@@ -67,7 +59,7 @@ const double lfl    = 10.0;    // length of final leg
 struct PlaneApp {
 
   // variables for plane if it's on the radar
-  string ident;          // indentification of plane
+  std::string ident;          // indentification of plane
   double lon;            // longitude in degrees
   double lat;            // latitude in degrees
   double alt;            // Altitute above sea level in feet
@@ -111,7 +103,7 @@ class FGApproach : public FGATC {
 
   int      bucket;
 
-  string active_runway;         
+  std::string active_runway;         
   double active_rw_hdg;
   double active_rw_lon;
   double active_rw_lat;
@@ -119,7 +111,7 @@ class FGApproach : public FGATC {
 
   int      num_planes;          // number of planes on the stack
   PlaneApp planes[max_planes];  // Array of planes
-  string   transmission;
+  std::string   transmission;
   bool     first;
 
   SGPropertyNode_ptr comm1_node;
@@ -138,7 +130,7 @@ class FGApproach : public FGATC {
   SGPropertyNode_ptr atcopt9_node;
 
   // for failure modeling
-  string trans_ident;	// transmitted ident
+  std::string trans_ident;	// transmitted ident
   bool approach_failed;	// approach failed?
 
 public:
@@ -153,14 +145,14 @@ public:
   // Add new plane to stack if not already registered 
   // Input:  pid - id of plane (name) 
   // Output: "true" if added; "false" if already existend
-  void AddPlane(const string& pid);
+  void AddPlane(const std::string& pid);
 
   // Remove plane from stack if out of range
   int RemovePlane();
   
   inline double get_bucket() const { return bucket; }
   inline int get_pnum() const { return num_planes; }
-  inline const string& get_trans_ident() { return trans_ident; }
+  inline const std::string& get_trans_ident() { return trans_ident; }
   
 private:
 
@@ -176,7 +168,7 @@ private:
 
   double angle_diff_deg( const double &a1, const double &a2);
 
-  void set_message(const string &s);
+  void set_message(const std::string &s);
 
 // ========================================================================
 // get point2 given starting point1 and course and distance
@@ -225,7 +217,7 @@ private:
   //Update the transmission string
   void UpdateTransmission(void);
   
-  friend istream& operator>> ( istream&, FGApproach& );
+  friend std::istream& operator>> ( std::istream&, FGApproach& );
 };
 
 #endif // _FG_APPROACH_HXX

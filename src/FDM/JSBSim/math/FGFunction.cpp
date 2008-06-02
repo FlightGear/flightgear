@@ -29,6 +29,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include <stdio.h>
+#include <iostream>
 
 #include "FGFunction.h"
 #include "FGTable.h"
@@ -39,6 +40,9 @@ namespace JSBSim {
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_FUNCTION;
+
+using std::cerr;
+using std::cout;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
