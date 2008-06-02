@@ -95,7 +95,6 @@ wxRadarBg::wxRadarBg(SGPropertyNode *node) :
     _Tacan = fgGetNode(tacan_source, true);
 
     _font_node = _Instrument->getNode("font", true);
-    _font_node->addChangeListener(this, true);
 
 #define INITFONT(p, val, type) if (!_font_node->hasValue(p)) _font_node->set##type##Value(p, val)
     INITFONT("name", DEFAULT_FONT, String);
@@ -106,6 +105,8 @@ wxRadarBg::wxRadarBg(SGPropertyNode *node) :
     INITFONT("color/blue", 0, Float);
     INITFONT("color/alpha", 1, Float);
 #undef INITFONT
+
+    _font_node->addChangeListener(this, true);
 }
 
 
