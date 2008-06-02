@@ -14,7 +14,7 @@
 #  include <config.h>
 #endif
 
-#include <iostream>
+#include <ostream>
 #include <vector>
 
 #include <simgear/compiler.h>
@@ -52,14 +52,14 @@ private:
   struct Log {
     Log ();
     virtual ~Log ();
-    vector<SGPropertyNode_ptr> nodes;
-    ostream * output;
+    std::vector<SGPropertyNode_ptr> nodes;
+    std::ostream * output;
     long interval_ms;
     double last_time_ms;
     char delimiter;
   };
 
-  vector<Log> _logs;
+  std::vector<Log> _logs;
 
 };
 
