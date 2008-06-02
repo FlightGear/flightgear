@@ -19,8 +19,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-//
-//
 
 #ifndef _INST_WXRADAR_HXX
 #define _INST_WXRADAR_HXX
@@ -42,25 +40,25 @@ SG_USING_STD(vector);
 SG_USING_STD(string);
 
 class FGAIBase;
-
 class FGODGauge;
 
 class wxRadarBg : public SGSubsystem, public SGPropertyChangeListener {
 public:
 
-    wxRadarBg ( SGPropertyNode *node );
-    wxRadarBg ();
-    virtual ~wxRadarBg ();
+    wxRadarBg(SGPropertyNode *node);
+    wxRadarBg();
+    virtual ~wxRadarBg();
 
-    virtual void init ();
-    virtual void update (double dt);
-    virtual void valueChanged(SGPropertyNode*);
+    virtual void init();
+    virtual void update(double dt);
+    virtual void valueChanged(SGPropertyNode *);
 
+protected:
+    string _name;
+    int _num;
     double _interval;
     double _time;
     bool _sim_init_done;
-    string _name;
-    int _num;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _Instrument;
@@ -76,7 +74,7 @@ public:
     // Convenience function for creating a property node with a
     // default value
     template<typename DefaultType>
-    SGPropertyNode* getInstrumentNode(const char* name, DefaultType value);
+    SGPropertyNode *getInstrumentNode(const char *name, DefaultType value);
 
 private:
     string _texture_path;
@@ -136,7 +134,7 @@ private:
 
     list_of_SGWxRadarEcho _radarEchoBuffer;
 
-    FGAIManager* _ai;
+    FGAIManager *_ai;
 
     void update_weather();
     void update_aircraft();
@@ -157,31 +155,30 @@ private:
 
 
 template<> inline
-SGPropertyNode* wxRadarBg::getInstrumentNode(const char* name, bool value)
+SGPropertyNode *wxRadarBg::getInstrumentNode(const char *name, bool value)
 {
-    SGPropertyNode* result = _Instrument->getNode(name, true);
-    if (result->getType() == SGPropertyNode::NONE)
+    SGPropertyNode *result = _Instrument->getNode(name, true);
+    if (!result->hasValue())
         result->setBoolValue(value);
     return result;
 }
 
 
 template<> inline
-SGPropertyNode* wxRadarBg::getInstrumentNode(const char* name, double value)
+SGPropertyNode *wxRadarBg::getInstrumentNode(const char *name, double value)
 {
-    SGPropertyNode* result = _Instrument->getNode(name, true);
-    if (result->getType() == SGPropertyNode::NONE)
+    SGPropertyNode *result = _Instrument->getNode(name, true);
+    if (!result->hasValue())
         result->setDoubleValue(value);
     return result;
 }
 
 
 template<> inline
-SGPropertyNode* wxRadarBg::getInstrumentNode(const char* name,
-                                             const char* value)
+SGPropertyNode *wxRadarBg::getInstrumentNode(const char *name, const char *value)
 {
-    SGPropertyNode* result = _Instrument->getNode(name, true);
-    if (result->getType() == SGPropertyNode::NONE)
+    SGPropertyNode *result = _Instrument->getNode(name, true);
+    if (result->hasValue())
         result->setStringValue(value);
     return result;
 }

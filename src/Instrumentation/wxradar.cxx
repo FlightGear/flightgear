@@ -75,26 +75,37 @@ typedef radar_list_type::const_iterator radar_list_const_iterator;
 static const float UNIT = 1.0f / 8.0f;  // 8 symbols in a row/column in the texture
 static const char *DEFAULT_FONT = "typewriter.txf";
 
+
 wxRadarBg::wxRadarBg(SGPropertyNode *node) :
     _name(node->getStringValue("name", "radar")),
     _num(node->getIntValue("number", 0)),
     _interval(node->getDoubleValue("update-interval-sec", 1.0)),
     _time(0.0),
-    _last_switchKnob("off"),
     _sim_init_done(false),
+    _odg(0),
+    _last_switchKnob("off"),
     _resultTexture(0),
-    _wxEcho(0),
-    _odg(0)
+    _wxEcho(0)
 {
     string branch;
     branch = "/instrumentation/" + _name;
-    _Instrument = fgGetNode(branch.c_str(), _num, true );
+    _Instrument = fgGetNode(branch.c_str(), _num, true);
 
     const char *tacan_source = node->getStringValue("tacan-source", "/instrumentation/tacan");
     _Tacan = fgGetNode(tacan_source, true);
 
     _font_node = _Instrument->getNode("font", true);
     _font_node->addChangeListener(this, true);
+
+#define INITFONT(p, val, type) if (!_font_node->hasValue(p)) _font_node->set##type##Value(p, val)
+    INITFONT("name", DEFAULT_FONT, String);
+    INITFONT("size", 8, Float);
+    INITFONT("line-spacing", 0.25, Float);
+    INITFONT("color/red", 0, Float);
+    INITFONT("color/green", 0.8, Float);
+    INITFONT("color/blue", 0, Float);
+    INITFONT("color/alpha", 1, Float);
+#undef INITFONT
 }
 
 
@@ -125,7 +136,7 @@ wxRadarBg::init ()
 
     _Instrument->setFloatValue("trk", 0.0);
     _Instrument->setFloatValue("tilt", 0.0);
-    _Instrument->setStringValue("status","");
+    _Instrument->setStringValue("status", "");
     // those properties are used by a radar instrument of a MFD
     // input switch = OFF | TST | STBY | ON
     // input mode = WX | WXA | MAP
@@ -171,11 +182,11 @@ wxRadarBg::init ()
     _radar_rotate_node      = n->getNode("rotate", true);
 
     _radar_centre_node->setBoolValue(false);
-    if (_radar_coverage_node->getType() == SGPropertyNode::NONE)
+    if (!_radar_coverage_node->hasValue())
         _radar_coverage_node->setFloatValue(120);
-    if (_radar_ref_rng_node->getType() == SGPropertyNode::NONE)
+    if (!_radar_ref_rng_node->hasValue())
         _radar_ref_rng_node->setDoubleValue(35);
-    if (_radar_hdg_marker_node->getType() == SGPropertyNode::NONE)
+    if (!_radar_hdg_marker_node->hasValue())
         _radar_hdg_marker_node->setBoolValue(true);
 
     _x_offset = 0;
@@ -186,7 +197,7 @@ wxRadarBg::init ()
     // primitive sets so we can have different kinds of polys and
     // choose a different overall color for each set.
     _radarGeode = new osg::Geode;
-    osg::StateSet* stateSet = _radarGeode->getOrCreateStateSet();
+    osg::StateSet *stateSet = _radarGeode->getOrCreateStateSet();
     stateSet->setTextureAttributeAndModes(0, _wxEcho.get());
     _geom = new osg::Geometry;
     _geom->setUseDisplayList(false);
@@ -199,13 +210,13 @@ wxRadarBg::init ()
     _texCoords->setDataVariance(osg::Object::DYNAMIC);
     _texCoords->reserve(128 * 4);
     _geom->setTexCoordArray(0, _texCoords);
-    osg::Vec3Array* colors = new osg::Vec3Array;
+    osg::Vec3Array *colors = new osg::Vec3Array;
     colors->push_back(osg::Vec3(1.0f, 1.0f, 1.0f)); // color of echos
     colors->push_back(osg::Vec3(1.0f, 0.0f, 0.0f)); // arc mask
     colors->push_back(osg::Vec3(0.0f, 0.0f, 0.0f)); // rest of mask
     _geom->setColorBinding(osg::Geometry::BIND_PER_PRIMITIVE_SET);
     _geom->setColorArray(colors);
-    osg::PrimitiveSet* pset = new osg::DrawArrays(osg::PrimitiveSet::QUADS);
+    osg::PrimitiveSet *pset = new osg::DrawArrays(osg::PrimitiveSet::QUADS);
     pset->setDataVariance(osg::Object::DYNAMIC);
     _geom->addPrimitiveSet(pset);
     pset = new osg::DrawArrays(osg::PrimitiveSet::QUADS);
@@ -223,7 +234,7 @@ wxRadarBg::init ()
 
     _textGeode = new osg::Geode;
 
-    osg::Camera* camera = _odg->getCamera();
+    osg::Camera *camera = _odg->getCamera();
     camera->addChild(_radarGeode.get());
     camera->addChild(_textGeode.get());
 }
@@ -244,7 +255,7 @@ const osg::Vec2f echoTexCoords[4] = {
 
 // helper
 static void
-addQuad(osg::Vec2Array* vertices, osg::Vec2Array* texCoords,
+addQuad(osg::Vec2Array *vertices, osg::Vec2Array *texCoords,
         const osg::Matrixf& transform, const osg::Vec2f& texBase)
 {
     for (int i = 0; i < 4; i++) {
@@ -266,14 +277,14 @@ osg::Matrixf wxRotate(float angle)
 void
 wxRadarBg::update (double delta_time_sec)
 {
-    if ( ! _sim_init_done ) {
-        if ( ! fgGetBool("sim/sceneryloaded", false) )
+    if (!_sim_init_done) {
+        if (!fgGetBool("sim/sceneryloaded", false))
             return;
 
         _sim_init_done = true;
     }
-    if ( !_odg || ! _serviceable_node->getBoolValue() ) {
-        _Instrument->setStringValue("status","");
+    if (!_odg || !_serviceable_node->getBoolValue()) {
+        _Instrument->setStringValue("status", "");
         return;
     }
     _time += delta_time_sec;
@@ -295,22 +306,22 @@ wxRadarBg::update (double delta_time_sec)
     }
 
     string switchKnob = _Instrument->getStringValue("switch", "on");
-    if ( _last_switchKnob != switchKnob ) {
+    if (_last_switchKnob != switchKnob) {
         // since 3D models don't share textures with the rest of the world
         // we must locate them and replace their handle by hand
         // only do that when the instrument is turned on
-        //if ( _last_switchKnob == "off" )
+        //if (_last_switchKnob == "off")
         //_odg->set_texture(_texture_path.c_str(), _resultTexture->getHandle());
 
         _last_switchKnob = switchKnob;
     }
 
-    if ( switchKnob == "off" ) {
-        _Instrument->setStringValue("status","");
-    } else if ( switchKnob == "stby" ) {
-        _Instrument->setStringValue("status","STBY");
-    } else if ( switchKnob == "tst" ) {
-        _Instrument->setStringValue("status","TST");
+    if (switchKnob == "off") {
+        _Instrument->setStringValue("status", "");
+    } else if (switchKnob == "stby") {
+        _Instrument->setStringValue("status", "STBY");
+    } else if (switchKnob == "tst") {
+        _Instrument->setStringValue("status", "TST");
         // find something interesting to do...
     } else {
         float r = _Instrument->getFloatValue("range", 40.0);
@@ -326,12 +337,12 @@ wxRadarBg::update (double delta_time_sec)
         _scale = 200.0 / _range_nm;
         _angle_offset = 0;
 
-        if ( _display_mode == ARC ) {
+        if (_display_mode == ARC) {
             _scale = 2*200.0f / _range_nm;
             _angle_offset = -_view_heading;
             _centerTrans.makeTranslate(0.0f, -200.0f, 0.0f);
 
-        } else if ( _display_mode == MAP ) {
+        } else if (_display_mode == MAP) {
             apply_map_offset();
 
             bool centre = _radar_centre_node->getBoolValue();
@@ -350,7 +361,7 @@ wxRadarBg::update (double delta_time_sec)
 
             _centerTrans.makeTranslate(_x_offset, _y_offset, 0.0f);
 
-        } else if ( _display_mode == PLAN ) {
+        } else if (_display_mode == PLAN) {
             if (_radar_rotate_node->getBoolValue()) {
                 _angle_offset = -_view_heading;
             }
@@ -366,7 +377,7 @@ wxRadarBg::update (double delta_time_sec)
         update_weather();
 
 
-        osg::DrawArrays* quadPSet
+        osg::DrawArrays *quadPSet
                 = static_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(0));
         quadPSet->set(osg::PrimitiveSet::QUADS, 0, _vertices->size());
         quadPSet->dirty();
@@ -382,12 +393,12 @@ wxRadarBg::update (double delta_time_sec)
             ---------
         */
 
-        osg::DrawArrays* maskPSet
+        osg::DrawArrays *maskPSet
                 = static_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(1));
-        osg::DrawArrays* trimaskPSet
+        osg::DrawArrays *trimaskPSet
                 = static_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(2));
 
-        if ( _display_mode == ARC ) {
+        if (_display_mode == ARC) {
             float xOffset = 256.0f;
             float yOffset = 200.0f;
 
@@ -427,8 +438,7 @@ wxRadarBg::update (double delta_time_sec)
             for (int i = 0; i < 3 * 4; i++)
                 _texCoords->push_back(whiteSpot);
 
-            trimaskPSet->set(osg::PrimitiveSet::TRIANGLES, firstQuadVert + 4,
-                    3 * 4);
+            trimaskPSet->set(osg::PrimitiveSet::TRIANGLES, firstQuadVert + 4, 3 * 4);
 
         } else {
             maskPSet->set(osg::PrimitiveSet::QUADS, 0, 0);
@@ -523,7 +533,7 @@ wxRadarBg::update_weather()
 
     // draw lightning echos
     bool drawLightning = _Instrument->getBoolValue("lightning", true);
-    if ( drawLightning ) {
+    if (drawLightning) {
         const osg::Vec2f texBase(3 * UNIT, 4 * UNIT);
 
         for (iradarEcho = radarEcho->begin(); iradarEcho != end; ++iradarEcho) {
@@ -546,9 +556,9 @@ wxRadarBg::update_weather()
 
 
 void
-wxRadarBg::update_data(FGAIBase* ac, double radius, double bearing, bool selected)
+wxRadarBg::update_data(FGAIBase *ac, double radius, double bearing, bool selected)
 {
-    osgText::Text* callsign = new osgText::Text;
+    osgText::Text *callsign = new osgText::Text;
     callsign->setFont(_font.get());
     callsign->setFontResolution(12, 12);
     callsign->setCharacterSize(_font_size);
@@ -565,10 +575,10 @@ wxRadarBg::update_data(FGAIBase* ac, double radius, double bearing, bool selecte
 
     stringstream text;
     text << ac->_getCallsign() << endl
-        << setprecision(0) << fixed
-        << setw(3) << setfill('0') << ac->_getHeading() << "\xB0 "
-        << setw(0) << ac->_getAltitude() << "ft" << endl
-        << ac->_getSpeed() << "kts";
+            << setprecision(0) << fixed
+            << setw(3) << setfill('0') << ac->_getHeading() << "\xB0 "
+            << setw(0) << ac->_getAltitude() << "ft" << endl
+            << ac->_getSpeed() << "kts";
 
     callsign->setText(text.str());
     _textGeode->addDrawable(callsign);
@@ -831,7 +841,7 @@ wxRadarBg::inRadarRange(int type, double range_nm)
 
 void
 wxRadarBg::calcRangeBearing(double lat, double lon, double lat2, double lon2,
-        double &range, double &bearing ) const
+        double &range, double &bearing) const
 {
     // calculate the bearing and range of the second pos from the first
     double az2, distance;
@@ -858,14 +868,14 @@ wxRadarBg::calcRelBearing(float bearing, float heading)
 void
 wxRadarBg::updateFont()
 {
-    float red = _font_node->getFloatValue("color/red", 0);
-    float green = _font_node->getFloatValue("color/green", 0.8);
-    float blue = _font_node->getFloatValue("color/blue", 0);
-    float alpha = _font_node->getFloatValue("color/alpha", 1);
+    float red = _font_node->getFloatValue("color/red");
+    float green = _font_node->getFloatValue("color/green");
+    float blue = _font_node->getFloatValue("color/blue");
+    float alpha = _font_node->getFloatValue("color/alpha");
     _font_color.set(red, green, blue, alpha);
 
-    _font_size = _font_node->getFloatValue("size", 8);
-    _font_spacing = _font_size * _font_node->getFloatValue("line-spacing", 1.5);
+    _font_size = _font_node->getFloatValue("size");
+    _font_spacing = _font_size * _font_node->getFloatValue("line-spacing");
     string path = _font_node->getStringValue("name", DEFAULT_FONT);
 
     SGPath tpath;
