@@ -1,4 +1,5 @@
 // new_gui.cxx: implementation of XML-configurable GUI support.
+#include <iostream>
 
 #include "new_gui.hxx"
 
@@ -351,6 +352,12 @@ NewGUI::setupFont (SGPropertyNode *node)
 ////////////////////////////////////////////////////////////////////////
 // FGColor class.
 ////////////////////////////////////////////////////////////////////////
+
+void
+FGColor::print() const {
+    std::cerr << "red=" << _red << ", green=" << _green
+              << ", blue=" << _blue << ", alpha=" << _alpha << std::endl;
+}
 
 bool
 FGColor::merge(const SGPropertyNode *node)

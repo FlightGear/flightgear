@@ -24,6 +24,8 @@
 #  include "config.h"
 #endif
 
+#include <iostream>
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/io/iochannel.hxx>
@@ -167,7 +169,7 @@ bool FGGarmin::gen_message() {
     garmin_sentence += gsa;
     garmin_sentence += "\r\n";
 
-    cout << garmin_sentence;
+    std::cout << garmin_sentence;
 
     length = garmin_sentence.length();
     strncpy( buf, garmin_sentence.c_str(), length );

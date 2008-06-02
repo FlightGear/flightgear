@@ -25,6 +25,7 @@
 
 #include <math.h>
 #include <algorithm>
+#include <iostream>
 
 #include <simgear/compiler.h>
 
@@ -35,6 +36,9 @@
 #include "awynet.hxx"
 
 SG_USING_STD(sort);
+
+using std::cerr;
+using std::endl;
 
 /**************************************************************************
  * FGNode

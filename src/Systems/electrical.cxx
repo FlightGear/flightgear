@@ -26,6 +26,7 @@
 
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/debug/logstream.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -453,7 +454,8 @@ void FGElectricalSystem::update (double dt) {
                               " " );
 
             if ( node->apply_load( load, dt ) < 0.0 ) {
-                cout << "Error drawing more current than available!" << endl;
+                SG_LOG(SG_ALL, SG_ALERT,
+                       "Error drawing more current than available!");
             }
         }     
     }
@@ -472,7 +474,8 @@ void FGElectricalSystem::update (double dt) {
                               " " );
 
             if ( node->apply_load( load, dt ) < 0.0 ) {
-                cout << "Error drawing more current than available!" << endl;
+                SG_LOG(SG_ALL, SG_ALERT,
+                       "Error drawing more current than available!");
             }
         }     
     }
@@ -492,7 +495,8 @@ void FGElectricalSystem::update (double dt) {
             // cout << "battery load = " << load << endl;
 
             if ( node->apply_load( load, dt ) < 0.0 ) {
-                cout << "Error drawing more current than available!" << endl;
+                SG_LOG(SG_ALL, SG_ALERT,
+                       "Error drawing more current than available!");
             }
         }     
     }

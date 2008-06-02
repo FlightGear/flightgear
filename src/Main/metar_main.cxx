@@ -22,6 +22,7 @@
 
 #include <iomanip>
 #include <sstream>
+#include <iostream>
 #include <string.h>
 
 #include <simgear/debug/logstream.hxx>

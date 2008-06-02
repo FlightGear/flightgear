@@ -35,6 +35,7 @@
 #include <simgear/props/props_io.hxx>
 
 #include <sstream>
+#include <iostream>
 
 #include <Main/globals.hxx>
 #include <Main/viewmgr.hxx>
@@ -45,6 +46,9 @@
 
 SG_USING_STD(stringstream);
 SG_USING_STD(ends);
+
+using std::cout;
+using std::endl;
 
 /**
  * Props connection class.

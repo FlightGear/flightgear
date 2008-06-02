@@ -32,6 +32,7 @@
 #endif
 
 #include <stdio.h>              // FILE*, fopen(), fread(), fwrite(), et. al.
+#include <iostream>             // for cout, endl
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/lowlevel.hxx> // endian tests
@@ -44,6 +45,8 @@
 
 #include "ExternalPipe.hxx"
 
+using std::cout;
+using std::endl;
 
 static const int MAX_BUF = 32768;
 

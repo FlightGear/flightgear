@@ -25,16 +25,10 @@
 #define _AIRWAYNETWORK_HXX_
 
 #include STL_STRING
-#include <fstream>
+#include <istream>
 #include <set>
 #include <map>
 #include <vector>
-
-SG_USING_STD(string);
-SG_USING_STD(map);
-SG_USING_STD(set);
-SG_USING_STD(vector);
-SG_USING_STD(fstream);
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sgstream.hxx>
@@ -44,10 +38,10 @@ SG_USING_STD(fstream);
 
 class FGAirway; // forward reference
 
-typedef vector<FGAirway>  FGAirwayVector;
-typedef vector<FGAirway *> FGAirwayPointerVector;
-typedef vector<FGAirway>::iterator FGAirwayVectorIterator;
-typedef vector<FGAirway*>::iterator FGAirwayPointerVectorIterator;
+typedef std::vector<FGAirway>  FGAirwayVector;
+typedef std::vector<FGAirway *> FGAirwayPointerVector;
+typedef std::vector<FGAirway>::iterator FGAirwayVectorIterator;
+typedef std::vector<FGAirway*>::iterator FGAirwayPointerVectorIterator;
 
 /**************************************************************************************
  * class FGNode
@@ -55,7 +49,7 @@ typedef vector<FGAirway*>::iterator FGAirwayPointerVectorIterator;
 class FGNode
 {
 private:
-  string ident;
+  std::string ident;
   double lat;
   double lon;
   int index;
@@ -63,32 +57,32 @@ private:
 
 public:
   FGNode();
-  FGNode(double lt, double ln, int idx, string id) { lat = lt; lon = ln; index = idx; ident = id;};
+  FGNode(double lt, double ln, int idx, std::string id) { lat = lt; lon = ln; index = idx; ident = id;};
 
   void setIndex(int idx)                  { index = idx;};
   void setLatitude (double val)           { lat = val;};
   void setLongitude(double val)           { lon = val;};
-  //void setLatitude (const string& val)           { lat = processPosition(val);  };
-  //void setLongitude(const string& val)           { lon = processPosition(val);  };
+  //void setLatitude (const std::string& val)           { lat = processPosition(val);  };
+  //void setLongitude(const std::string& val)           { lon = processPosition(val);  };
   void addAirway(FGAirway *segment) { next.push_back(segment); };
 
   double getLatitude() { return lat;};
   double getLongitude(){ return lon;};
 
   int getIndex() { return index; };
-  string getIdent() { return ident; };
+  std::string getIdent() { return ident; };
   FGNode *getAddress() { return this;};
   FGAirwayPointerVectorIterator getBeginRoute() { return next.begin(); };
   FGAirwayPointerVectorIterator getEndRoute()   { return next.end();   };
 
-  bool matches(string ident, double lat, double lon);
+  bool matches(std::string ident, double lat, double lon);
 };
 
-typedef vector<FGNode *> FGNodeVector;
-typedef vector<FGNode *>::iterator FGNodeVectorIterator;
+typedef std::vector<FGNode *> FGNodeVector;
+typedef std::vector<FGNode *>::iterator FGNodeVectorIterator;
 
 
-typedef map < string, FGNode *> node_map;
+typedef std::map < std::string, FGNode *> node_map;
 typedef node_map::iterator node_map_iterator;
 typedef node_map::const_iterator const_node_map_iterator;
 
@@ -99,8 +93,8 @@ typedef node_map::const_iterator const_node_map_iterator;
 class FGAirway
 {
 private:
-  string startNode;
-  string endNode;
+  std::string startNode;
+  std::string endNode;
   double length;
   FGNode *start;
   FGNode *end;
@@ -108,37 +102,37 @@ private:
   int type; // 1=low altitude; 2=high altitude airway
   int base; // base altitude
   int top;  // top altitude
-  string name;
+  std::string name;
 
 public:
   FGAirway();
   FGAirway(FGNode *, FGNode *, int);
 
   void setIndex        (int val) { index     = val; };
-  void setStartNodeRef (string val) { startNode = val; };
-  void setEndNodeRef   (string val) { endNode   = val; };
+  void setStartNodeRef (std::string val) { startNode = val; };
+  void setEndNodeRef   (std::string val) { endNode   = val; };
 
   void setStart(node_map *nodes);
   void setEnd  (node_map *nodes);
   void setType (int tp) { type = tp;};
   void setBase (int val) { base = val;};
   void setTop  (int val) { top  = val;};
-  void setName (string val) { name = val;};
+  void setName (std::string val) { name = val;};
 
   void setTrackDistance();
 
   FGNode * getEnd() { return end;};
   double getLength() { if (length == 0) setTrackDistance(); return length; };
   int getIndex() { return index; };
-  string getName() { return name; };
+  std::string getName() { return name; };
 
 
 };
 
 
-typedef vector<int> intVec;
-typedef vector<int>::iterator intVecIterator;
-typedef vector<int>::const_iterator constIntVecIterator;
+typedef std::vector<int> intVec;
+typedef std::vector<int>::iterator intVecIterator;
+typedef std::vector<int>::const_iterator constIntVecIterator;
 
 class FGAirRoute
 {
@@ -158,10 +152,10 @@ public:
   void add(const FGAirRoute &other);
   void add(int node) {nodes.push_back(node);};
 
-  friend istream& operator >> (istream& in, FGAirRoute& r);
+  friend std::istream& operator >> (std::istream& in, FGAirRoute& r);
 };
 
-inline istream& operator >> ( istream& in, FGAirRoute& r )
+inline std::istream& operator >> ( std::istream& in, FGAirRoute& r )
 {
   int node;
   in >> node;
@@ -170,8 +164,8 @@ inline istream& operator >> ( istream& in, FGAirRoute& r )
   return in;
 }
 
-typedef vector<FGAirRoute> AirRouteVector;
-typedef vector<FGAirRoute>::iterator AirRouteVectorIterator;
+typedef std::vector<FGAirRoute> AirRouteVector;
+typedef std::vector<FGAirRoute>::iterator AirRouteVectorIterator;
 
 /**************************************************************************************
  * class FGAirwayNetwork

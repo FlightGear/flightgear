@@ -264,10 +264,7 @@ public:
     bool isValid() const {
         return _red >= 0.0 && _green >= 0.0 && _blue >= 0.0;
     }
-    void print() const {
-        std::cerr << "red=" << _red << ", green=" << _green
-        << ", blue=" << _blue << ", alpha=" << _alpha << std::endl;
-    }
+    void print() const;
 
     inline void setRed(float red) { _red = red; }
     inline void setGreen(float green) { _green = green; }

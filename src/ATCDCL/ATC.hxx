@@ -28,7 +28,9 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/debug/logstream.hxx>
 
-#include STL_IOSTREAM
+#include <istream>
+#include <ostream>
+
 #include STL_STRING
 
 #include "ATCVoice.hxx"
@@ -52,7 +54,7 @@ enum plane_type {
 // This might move or change eventually
 struct PlaneRec {
 	plane_type type;
-	string callsign;
+	std::string callsign;
 	int squawkcode;
 };
 
@@ -82,8 +84,8 @@ struct ATCData {
 	unsigned short int freq;
 	//int range;
 	unsigned short int range;
-	string ident;
-	string name;
+	std::string ident;
+	std::string name;
 };
 
 // perhaps we could use an FGRunway instead of this.
@@ -95,11 +97,11 @@ struct RunwayDetails {
 	double hdg;		// true runway heading
 	double length;	// In *METERS*
 	double width;	// ditto
-	string rwyID;
+	std::string rwyID;
 	int patternDirection;	// -1 for left, 1 for right
 };
 
-ostream& operator << (ostream& os, atc_type atc);
+std::ostream& operator << (std::ostream& os, atc_type atc);
 
 class FGATC {
 	
@@ -117,7 +119,7 @@ public:
 	virtual void ReceiveUserCallback(int code);
 	
 	// Add plane to a stack
-	virtual void AddPlane(const string& pid);
+	virtual void AddPlane(const std::string& pid);
 	
 	// Remove plane from stack
 	virtual int RemovePlane();
@@ -129,16 +131,16 @@ public:
 	inline void SetNoDisplay() { _display = false; }
 	
 	// Generate the text of a message from its parameters and the current context.
-	virtual string GenText(const string& m, int c);
+	virtual std::string GenText(const std::string& m, int c);
 	
 	// Returns true if OK to transmit on this frequency
 	inline bool GetFreqClear() { return freqClear; }
 	// Indicate that the frequency is in use
 	inline void SetFreqInUse() { freqClear = false; receiving = true; }
 	// Transmission to the ATC is finished and a response is required
-	void SetResponseReqd(const string& rid);
+	void SetResponseReqd(const std::string& rid);
 	// Transmission finished - let ATC decide if a response is reqd and clear freq if necessary
-	void NotifyTransmissionFinished(const string& rid);
+	void NotifyTransmissionFinished(const std::string& rid);
 	// Transmission finished and no response required
 	inline void ReleaseFreq() { freqClear = true; receiving = false; }	// TODO - check that the plane releasing the freq is the right one etc.
 	// The above 3 funcs under development!!
@@ -169,10 +171,10 @@ public:
 	inline void set_freq(const int fq) {freq = fq;}
 	inline int get_range() const { return range; }
 	inline void set_range(const int rg) {range = rg;}
-	inline const string& get_ident() { return ident; }
-	inline void set_ident(const string& id) { ident = id; }
-	inline const string& get_name() { return name; }
-	inline void set_name(const string& nm) { name = nm; }
+	inline const std::string& get_ident() { return ident; }
+	inline void set_ident(const std::string& id) { ident = id; }
+	inline const std::string& get_name() { return name; }
+	inline void set_name(const std::string& nm) { name = nm; }
 	
 protected:
 	
@@ -180,11 +182,11 @@ protected:
 	// Outputs the transmission either on screen or as audio depending on user preference
 	// The refname is a string to identify this sample to the sound manager
 	// The repeating flag indicates whether the message should be repeated continuously or played once.
-	void Render(string& msg, const string& refname = "", bool repeating = false);
+	void Render(std::string& msg, const std::string& refname = "", bool repeating = false);
 	
 	// Cease rendering all transmission from this station.
 	// Requires the sound manager refname if audio, else "".
-	void NoRender(const string& refname);
+	void NoRender(const std::string& refname);
 	
 	// Transmit a message when channel becomes free of other dialog
     void Transmit(int callback_code = 0);
@@ -201,8 +203,8 @@ protected:
 	double x, y, z;
 	int freq;
 	int range;
-	string ident;		// Code of the airport its at.
-	string name;		// Name transmitted in the broadcast.
+	std::string ident;		// Code of the airport its at.
+	std::string name;		// Name transmitted in the broadcast.
 	atc_type _type;
 	
 	// Rendering related stuff
@@ -211,7 +213,7 @@ protected:
 	bool _voiceOK;		// Flag - true if at least one voice has loaded OK
 	FGATCVoice* _vPtr;
 
-	string pending_transmission;	// derived classes set this string before calling Transmit(...)	
+	std::string pending_transmission;	// derived classes set this string before calling Transmit(...)	
 	bool freqClear;		// Flag to indicate if the frequency is clear of ongoing dialog
 	bool receiving;		// Flag to indicate we are receiving a transmission
 	bool responseReqd;	// Flag to indicate we should be responding to a request/report 
@@ -219,7 +221,7 @@ protected:
 	double responseTime;	// Time to take from end of request transmission to beginning of response
 							// The idea is that this will be slightly random.
 	double responseCounter;		// counter to implement the above
-	string responseID;	// ID of the plane to respond to
+	std::string responseID;	// ID of the plane to respond to
 	bool respond;	// Flag to indicate now is the time to respond - ie set following the count down of the response timer.
 	// Derived classes only need monitor this flag, and use the response ID, as long as they call FGATC::Update(...)
 	bool _runReleaseCounter;	// A timer for releasing the frequency after giving the message enough time to display
@@ -241,8 +243,8 @@ private:
 	double _max_count;
 };
 
-inline istream&
-operator >> ( istream& fin, ATCData& a )
+inline std::istream&
+operator >> ( std::istream& fin, ATCData& a )
 {
 	double f;
 	char ch;
@@ -280,14 +282,14 @@ operator >> ( istream& fin, ATCData& a )
 	if(ch != '"') a.name += ch;
 	while(1) {
 		//in >> noskipws
-		fin.unsetf(ios::skipws);
+		fin.unsetf(std::ios::skipws);
 		fin >> ch;
 		if((ch == '"') || (ch == 0x0A)) {
 			break;
 		}   // we shouldn't need the 0x0A but it makes a nice safely in case someone leaves off the "
 		a.name += ch;
 	}
-	fin.setf(ios::skipws);
+	fin.setf(std::ios::skipws);
 	//cout << "Comm name = " << a.name << '\n';
 	
 	a.freq = (int)(f*100.0 + 0.5);

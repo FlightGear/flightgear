@@ -24,6 +24,8 @@
 #  include <config.h>
 #endif
 
+#include <iostream>
+
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/sg_inlines.h>
@@ -34,6 +36,8 @@
 
 #include "xmlauto.hxx"
 
+using std::cout;
+using std::endl;
 
 FGPIDController::FGPIDController( SGPropertyNode *node ):
     debug( false ),

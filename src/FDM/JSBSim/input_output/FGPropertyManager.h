@@ -38,8 +38,12 @@ INCLUDES
 #include <string>
 #ifdef FGFS
 #  include <simgear/props/props.hxx>
+#  include <simgear/debug/logstream.hxx>
+#  define JSBDEBUG sglog() << loglevel(SG_FLIGHT, SG_ALERT)
 #else
+#  include <iostream>
 #  include "simgear/props/props.hxx"
+#  define JSBDEBUG std::cout
 #endif
 
 #include "FGJSBBase.h"
@@ -54,9 +58,10 @@ DEFINITIONS
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-using namespace std;
-
 namespace JSBSim {
+  // Yuck - shouldn't be using in header files
+  using std::string;
+  using std::endl;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -513,9 +518,9 @@ class FGPropertyManager : public SGPropertyNode, public FGJSBBase
     Tie (const string &name, V (*getter)(), void (*setter)(V) = 0, bool useDefault = true)
     {
       if (!tie(name.c_str(), SGRawValueFunctions<V>(getter, setter), useDefault))
-        cout << "Failed to tie property " << name << " to functions" << endl;
+        JSBDEBUG << "Failed to tie property " << name << " to functions" << endl;
       else if (debug_lvl & 0x20)
-        cout << name << endl;
+        JSBDEBUG << name << endl;
     }
 
 
@@ -541,9 +546,9 @@ class FGPropertyManager : public SGPropertyNode, public FGJSBBase
                                 void (*setter)(int, V) = 0, bool useDefault = true)
     {
       if (!tie(name.c_str(), SGRawValueFunctionsIndexed<V>(index, getter, setter), useDefault))
-        cout << "Failed to tie property " << name << " to indexed functions" << endl;
+        JSBDEBUG << "Failed to tie property " << name << " to indexed functions" << endl;
       else if (debug_lvl & 0x20)
-        cout << name << endl;
+        JSBDEBUG << name << endl;
     }
 
 
@@ -571,9 +576,9 @@ class FGPropertyManager : public SGPropertyNode, public FGJSBBase
            void (T::*setter)(V) = 0, bool useDefault = true)
     {
       if (!tie(name.c_str(), SGRawValueMethods<T,V>(*obj, getter, setter), useDefault))
-        cout << "Failed to tie property " << name << " to object methods" << endl;
+        JSBDEBUG << "Failed to tie property " << name << " to object methods" << endl;
       else if (debug_lvl & 0x20)
-        cout << name << endl;
+        JSBDEBUG << name << endl;
     }
 
     /**
@@ -600,9 +605,9 @@ class FGPropertyManager : public SGPropertyNode, public FGJSBBase
                          void (T::*setter)(int, V) = 0, bool useDefault = true)
     {
       if (!tie(name.c_str(), SGRawValueMethodsIndexed<T,V>(*obj, index, getter, setter), useDefault))
-        cout << "Failed to tie property " << name << " to indexed object methods" << endl;
+        JSBDEBUG << "Failed to tie property " << name << " to indexed object methods" << endl;
       else if (debug_lvl & 0x20)
-        cout << name << endl;
+        JSBDEBUG << name << endl;
    }
 };
 }

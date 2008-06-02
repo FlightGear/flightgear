@@ -57,5 +57,5 @@ int main(int argc, char** argv)
     int pw=0, ph=0;
     w.calcPrefSize(&pw, &ph);
     w.layout(0, 0, pw, ph);
-    writeProperties(cout, &props, true);
+    writeProperties(std::cout, &props, true);
 }

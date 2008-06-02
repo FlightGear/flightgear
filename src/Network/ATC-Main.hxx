@@ -71,7 +71,6 @@ public:
     { }
 
     ~FGATCMain() {
-        cout << "FGATCMain destructor" << endl;
         delete input0;
         delete input1;
         delete output0;

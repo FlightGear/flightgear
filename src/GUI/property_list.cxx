@@ -29,8 +29,11 @@
 
 #include <sstream>
 #include STL_IOMANIP
+#include <iostream>
 #include STL_STRING
 SG_USING_STD(string);
+using std::cout;
+
 typedef string stdString;      // puObject has a "string" member
 
 #include <Main/fg_os.hxx>      // fgGetKeyModifiers()
