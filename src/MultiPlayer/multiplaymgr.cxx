@@ -247,7 +247,8 @@ FGMultiplayMgr::init (void)
     } else {
       mHaveServer = true;
     }
-    rxPort = txPort;
+    if (rxPort <= 0)
+      rxPort = txPort;
   }
   if (rxPort <= 0) {
     SG_LOG(SG_NETWORK, SG_ALERT,
