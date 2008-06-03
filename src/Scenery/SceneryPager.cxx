@@ -42,9 +42,9 @@ SceneryPager::~SceneryPager()
 
 void SceneryPager::requestNodeFile(const std::string& fileName, Group* group,
                                    float priority,
-                                   const FrameStamp* framestamp,
+                                   const FrameStamp* framestamp
 #ifdef FGOSGPAGER25
-                                   ref_ptr<Referenced>& databaseRequest
+                                   , ref_ptr<Referenced>& databaseRequest
 #endif
     )
 {
@@ -56,9 +56,9 @@ void SceneryPager::requestNodeFile(const std::string& fileName, Group* group,
 #endif
                                        sgplod->getReaderWriterOptions());
     else
-        DatabasePager::requestNodeFile(fileName, group, priority, framestamp,
+        DatabasePager::requestNodeFile(fileName, group, priority, framestamp
 #ifdef FGOSGPAGER25
-                                       databaseRequest
+                                       , databaseRequest
 #endif
             );
 }
