@@ -45,9 +45,9 @@ public:
     // reimplement to add readerWriterOptions from SGPagedLOD
     virtual void requestNodeFile(const std::string& fileName, osg::Group* group,
                                  float priority,
-                                 const osg::FrameStamp* framestamp,
+                                 const osg::FrameStamp* framestamp
 #ifdef FGOSGPAGER25
-                                 osg::ref_ptr<osg::Referenced>&
+                                 , osg::ref_ptr<osg::Referenced>&
                                  databaseRequest
 #endif
         );
