@@ -1,7 +1,7 @@
 The generic communication protocol for FlightGear provides a powerful way
 of adding a simple ASCII based or binary input/output protocol, just by
 defining an XML encoded configuration file and placing it in the
-$FG_ROOT/data/Protocols/ directory.
+$FG_ROOT/Protocol/ directory.
 
 
 
@@ -186,7 +186,7 @@ P=3.59
 
 -- writing data in XML syntax -------------------------------------------------
 
-Assuming the file is called $FG_ROOT/Protocols/xmltest.xml, then it could be
+Assuming the file is called $FG_ROOT/Protocol/xmltest.xml, then it could be
 used as   $ fgfs --generic=file,out,1,/tmp/data.xml,xmltest
 
 
