@@ -408,22 +408,22 @@ bool FGRouteMgr::near_ground() {
 
 // command interface /autopilot/route-manager/input:
 //
-//   @clear             ... clear route
-//   @pop               ... remove first entry
-//   @delete3           ... delete 4th entry
-//   @insert2:ksfo@900  ... insert "ksfo@900" as 3rd entry
-//   ksfo@900           ... append "ksfo@900"
+//   @CLEAR             ... clear route
+//   @POP               ... remove first entry
+//   @DELETE3           ... delete 4th entry
+//   @INSERT2:KSFO@900  ... insert "KSFO@900" as 3rd entry
+//   KSFO@900           ... append "KSFO@900"
 //
 void FGRouteMgr::Listener::valueChanged(SGPropertyNode *prop)
 {
     const char *s = prop->getStringValue();
-    if (!strcmp(s, "@clear"))
+    if (!strcmp(s, "@CLEAR"))
         mgr->init();
-    else if (!strcmp(s, "@pop"))
+    else if (!strcmp(s, "@POP"))
         mgr->pop_waypoint(0);
-    else if (!strncmp(s, "@delete", 7))
+    else if (!strncmp(s, "@DELETE", 7))
         mgr->pop_waypoint(atoi(s + 7));
-    else if (!strncmp(s, "@insert", 7)) {
+    else if (!strncmp(s, "@INSERT", 7)) {
         char *r;
         int pos = strtol(s + 7, &r, 10);
         if (*r++ != ':')

@@ -987,6 +987,7 @@ bool fgMainInit( int argc, char **argv ) {
     upper_case_property("/sim/presets/airport-id");
     upper_case_property("/sim/presets/runway");
     upper_case_property("/sim/tower/airport-id");
+    upper_case_property("/autopilot/route-manager/input");
 
     // Scan the config file(s) and command line options to see if
     // fg_root was specified (ignore all other options for now)
