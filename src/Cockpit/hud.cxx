@@ -542,6 +542,7 @@ void fgTextList::draw()
     vector<fgText>::iterator lastString = List.end();
 
     glPushAttrib(GL_COLOR_BUFFER_BIT);
+    glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
     if (HUDprop->isTransparent())
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);

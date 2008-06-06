@@ -1,5 +1,9 @@
 // new_gui.cxx: implementation of XML-configurable GUI support.
+#include <algorithm>
 #include <iostream>
+#include <cstring>
+#include <sys/types.h>
+#include <dirent.h>
 
 #include "new_gui.hxx"
 
@@ -13,7 +17,6 @@
 
 #include "menubar.hxx"
 #include "dialog.hxx"
-#include "SafeTexFont.hxx"
 
 extern puFont FONT_HELVETICA_14;
 extern puFont FONT_SANS_12B;
@@ -400,10 +403,25 @@ FGColor::merge(const FGColor *color)
 // FGFontCache class.
 ////////////////////////////////////////////////////////////////////////
 
-static const struct {
+namespace
+{
+struct GuiFont
+{
     const char *name;
     puFont *font;
-} guifonts[] = {
+    struct Predicate
+        : public std::unary_function<const GuiFont, bool>
+    {
+        Predicate(const char* name_) : name(name_) {}
+        bool operator() (const GuiFont& f1) const
+        {
+            return std::strcmp(f1.name, name) == 0;
+        }
+        const char* name;
+    };
+};
+
+const GuiFont guifonts[] = {
     { "default",      &FONT_HELVETICA_14 },
     { "FIXED_8x13",   &PUFONT_8_BY_13 },
     { "FIXED_9x15",   &PUFONT_9_BY_15 },
@@ -413,10 +431,11 @@ static const struct {
     { "HELVETICA_12", &PUFONT_HELVETICA_12 },
     { "HELVETICA_14", &FONT_HELVETICA_14 },
     { "HELVETICA_18", &PUFONT_HELVETICA_18 },
-    { "SANS_12B",     &FONT_SANS_12B },
-    { 0, 0 }
+    { "SANS_12B",     &FONT_SANS_12B }
 };
 
+const GuiFont* guifontsEnd = &guifonts[sizeof(guifonts)/ sizeof(guifonts[0])];
+}
 
 FGFontCache::FGFontCache() :
     _initialized(false)
@@ -425,31 +444,59 @@ FGFontCache::FGFontCache() :
 
 FGFontCache::~FGFontCache()
 {
-   map<const string, fnt *>::iterator it, end = _fonts.end();
-   for (it = _fonts.begin(); it != end; ++it)
+   PuFontMap::iterator it, end = _puFonts.end();
+   for (it = _puFonts.begin(); it != end; ++it)
        delete it->second;
+}
+
+inline bool FGFontCache::FntParamsLess::operator()(const FntParams& f1,
+                                                   const FntParams& f2) const
+{
+    int comp = f1.name.compare(f2.name);
+    if (comp < 0)
+        return true;
+    else if (comp > 0)
+        return false;
+    if (f1.size < f2.size)
+        return true;
+    else if (f1.size > f2.size)
+        return false;
+    return f1.slant < f2.slant;
 }
 
 struct FGFontCache::fnt *
 FGFontCache::getfnt(const char *name, float size, float slant)
 {
-    _itt_t it;
-    if ((it = _fonts.find(name)) != _fonts.end())
-        return it->second;
-
-    SGPath path = getfntpath(name);
-
-    fnt *f = new fnt();
-    f->texfont = new flightgear::SafeTexFont;
-
-    if (f->texfont->load((char *)path.c_str())) {
+    string fontName(name);
+    FntParams fntParams(fontName, size, slant);
+    PuFontMap::iterator i = _puFonts.find(fntParams);
+    if (i != _puFonts.end())
+        return i->second;
+    // fntTexFont s are all preloaded into the _texFonts map
+    TexFontMap::iterator texi = _texFonts.find(fontName);
+    fntTexFont* texfont = 0;
+    puFont* pufont = 0;
+    if (texi != _texFonts.end()) {
+        texfont = texi->second;
+    } else {
+        const GuiFont* guifont = std::find_if(&guifonts[0], guifontsEnd,
+                                              GuiFont::Predicate(name));
+        if (guifont != guifontsEnd) {
+            pufont = guifont->font;
+        }
+    }
+    fnt* f = new fnt;
+    if (pufont) {
+        f->pufont = pufont;
+    } else if (texfont) {
+        f->texfont = texfont;
         f->pufont = new puFont;
         f->pufont->initialize(static_cast<fntFont *>(f->texfont), size, slant);
-        return _fonts[name] = f;
+    } else {
+        f->pufont = guifonts[0].font;
     }
-
-    delete f;
-    return _fonts["default"];
+    _puFonts[fntParams] = f;
+    return f;
 }
 
 puFont *
@@ -477,8 +524,7 @@ FGFontCache::get(SGPropertyNode *node)
     return get(name, size, slant);
 }
 
-SGPath
-FGFontCache::getfntpath(const char *name)
+void FGFontCache::init()
 {
     if (!_initialized) {
         char *envp = ::getenv("FG_FONTS");
@@ -488,13 +534,14 @@ FGFontCache::getfntpath(const char *name)
             _path.set(globals->get_fg_root());
             _path.append("Fonts");
         }
-
-        for (int i = 0; guifonts[i].name; i++)
-            _fonts[guifonts[i].name] = new fnt(guifonts[i].font);
-
         _initialized = true;
     }
+}
 
+SGPath
+FGFontCache::getfntpath(const char *name)
+{
+    init();
     SGPath path(_path);
     if (name && std::string(name) != "") {
         path.append(name);
@@ -506,6 +553,29 @@ FGFontCache::getfntpath(const char *name)
     path.append("Helvetica.txf");
     
     return path;
+}
+
+bool FGFontCache::initializeFonts()
+{
+    static string fontext("txf");
+    init();
+    DIR* fontdir = opendir(_path.c_str());
+    if (!fontdir)
+        return false;
+    const dirent *dirEntry;
+    while ((dirEntry = readdir(fontdir)) != 0) {
+        SGPath path(_path);
+        path.append(dirEntry->d_name);
+        if (path.extension() == fontext) {
+            fntTexFont* f = new fntTexFont;
+            if (f->load((char *)path.c_str()))
+                _texFonts[string(dirEntry->d_name)] = f;
+            else
+                delete f;
+        }
+    }
+    closedir(fontdir);
+    return true;
 }
 
 // end of new_gui.cxx

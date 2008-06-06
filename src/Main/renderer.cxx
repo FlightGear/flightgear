@@ -159,6 +159,9 @@ public:
   {
     if (!fgOSIsMainContext(state.getGraphicsContext()))
       return;
+    state.setActiveTextureUnit(0);
+    state.setClientActiveTextureUnit(0);
+
     state.disableAllVertexArrays();
 
     glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -201,7 +204,8 @@ public:
   {
     if (!fgOSIsMainContext(state.getGraphicsContext()))
       return;
-
+    state.setActiveTextureUnit(0);
+    state.setClientActiveTextureUnit(0);
     state.disableAllVertexArrays();
 
     glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -222,6 +226,7 @@ public:
 
     glPopClientAttrib();
     glPopAttrib();
+
   }
 
   virtual osg::Object* cloneType() const { return new SGHUDAndPanelDrawable; }

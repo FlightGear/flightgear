@@ -80,6 +80,7 @@ public:
         puSetDefaultColourScheme  (0.8, 0.8, 0.9, 1);
 
         FGFontCache *fc = globals->get_fontcache();
+        fc->initializeFonts();
         puFont *GuiFont
             = fc->get(globals->get_locale()->getStringValue("font",
                                                             "typewriter.txf"),
