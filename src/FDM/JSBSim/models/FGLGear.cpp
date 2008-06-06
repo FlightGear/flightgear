@@ -38,8 +38,6 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <algorithm>
-
 #include "FGLGear.h"
 
 namespace JSBSim {
@@ -652,11 +650,11 @@ void FGLGear::ComputeVerticalStrutForce(void)
   } else {
     dampForce   = -compressSpeed * bDampRebound;
   }
-  vLocalForce(eZ) =  std::min(springForce + dampForce, (double)0.0);
+  vLocalForce(eZ) =  min(springForce + dampForce, (double)0.0);
 
   // Remember these values for reporting
-  MaximumStrutForce = std::max(MaximumStrutForce, fabs(vLocalForce(eZ)));
-  MaximumStrutTravel = std::max(MaximumStrutTravel, fabs(compressLength));
+  MaximumStrutForce = max(MaximumStrutForce, fabs(vLocalForce(eZ)));
+  MaximumStrutTravel = max(MaximumStrutTravel, fabs(compressLength));
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

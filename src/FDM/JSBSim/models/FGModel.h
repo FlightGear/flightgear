@@ -44,6 +44,17 @@ INCLUDES
 
 #ifdef FGFS
 #  include <simgear/compiler.h>
+#  ifdef SG_HAVE_STD_INCLUDES
+#    include <iostream>
+#  else
+#    include <iostream.h>
+#  endif
+#else
+#  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
+#    include <iostream.h>
+#  else
+#    include <iostream>
+#  endif
 #endif
 
 #include <string>
@@ -53,6 +64,8 @@ DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #define ID_MODEL "$Id$"
+
+using namespace std;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -100,7 +113,7 @@ public:
   virtual bool Load(Element* el) {return true;}
 
   FGModel* NextModel;
-  std::string Name;
+  string Name;
 
   /** Runs the model; called by the Executive
       @see JSBSim.cpp documentation

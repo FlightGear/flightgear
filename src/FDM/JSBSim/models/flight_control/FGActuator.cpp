@@ -37,8 +37,6 @@ COMMENTS, REFERENCES,  and NOTES
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <algorithm>
-
 #include "FGActuator.h"
 
 namespace JSBSim {
@@ -155,9 +153,9 @@ void FGActuator::Hysteresis(void)
   double input = Output;
   
   if (input > PreviousHystOutput) {
-    Output = std::max(PreviousHystOutput, input-0.5*hysteresis_width);
+    Output = max(PreviousHystOutput, input-0.5*hysteresis_width);
   } else if (input < PreviousHystOutput) {
-    Output = std::min(PreviousHystOutput, input+0.5*hysteresis_width);
+    Output = min(PreviousHystOutput, input+0.5*hysteresis_width);
   }
 
   PreviousHystOutput = Output;

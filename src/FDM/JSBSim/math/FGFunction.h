@@ -180,7 +180,7 @@ public:
   void cacheValue(bool shouldCache);
 
 private:
-  std::vector <FGParameter*> Parameters;
+  vector <FGParameter*> Parameters;
   FGPropertyManager* const PropertyManager;
   bool cached;
   string Prefix;

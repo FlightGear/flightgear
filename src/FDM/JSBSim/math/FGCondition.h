@@ -38,8 +38,6 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include <map>
-#include <string>
-
 #include <FGJSBBase.h>
 #include <input_output/FGXMLElement.h>
 #include <input_output/FGPropertyManager.h>
@@ -71,7 +69,7 @@ class FGCondition : public FGJSBBase
 {
 public:
   FGCondition(Element* element, FGPropertyManager* PropertyManager);
-  FGCondition(std::string test, FGPropertyManager* PropertyManager);
+  FGCondition(string test, FGPropertyManager* PropertyManager);
   ~FGCondition(void);
 
   bool Evaluate(void);
@@ -80,18 +78,18 @@ public:
 private:
   enum eComparison {ecUndef=0, eEQ, eNE, eGT, eGE, eLT, eLE};
   enum eLogic {elUndef=0, eAND, eOR};
-  std::map <std::string, eComparison> mComparison;
+  map <string, eComparison> mComparison;
   eLogic Logic;
 
   FGPropertyManager *TestParam1, *TestParam2, *PropertyManager;
   double TestValue;
   eComparison Comparison;
   bool isGroup;
-  std::string conditional;
+  string conditional;
 
-  static std::string indent;
+  static string indent;
 
-  std::vector <FGCondition> conditions;
+  vector <FGCondition> conditions;
   void InitializeConditionals(void);
 
   void Debug(int from);

@@ -165,20 +165,20 @@ public:
   /** Gets the strings for the current set of coefficients.
       @param delimeter either a tab or comma string depending on output type
       @return a string containing the descriptive names for all coefficients */
-  std::string GetCoefficientStrings(std::string delimeter);
+  string GetCoefficientStrings(string delimeter);
 
   /** Gets the coefficient values.
       @param delimeter either a tab or comma string depending on output type
       @return a string containing the numeric values for the current set of
       coefficients */
-  std::string GetCoefficientValues(std::string delimeter);
+  string GetCoefficientValues(string delimeter);
 
 private:
-  typedef std::map<std::string,int> AxisIndex;
+  typedef map<string,int> AxisIndex;
   AxisIndex AxisIdx;
   FGFunction* AeroRPShift;
-  std::vector <FGFunction*> variables;
-  typedef std::vector <FGFunction*> CoeffArray;
+  vector <FGFunction*> variables;
+  typedef vector <FGFunction*> CoeffArray;
   CoeffArray* Coeff;
   FGColumnVector3 vFs;
   FGColumnVector3 vForces;

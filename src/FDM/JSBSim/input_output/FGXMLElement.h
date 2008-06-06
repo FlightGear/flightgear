@@ -39,17 +39,30 @@ INCLUDES
 #  ifdef SG_HAVE_STD_INCLUDES
 #    include <string>
 #    include <vector>
+#    include <iostream>
 #    include <map>
 #  else
 #    include <vector.h>
 #    include <string>
+#    include <iostream.h>
 #    include <map.h>
 #  endif
 #else
 #  include <string>
 #  include <map>
+#  include <iostream>
 #  include <vector>
+   using std::string;
+   using std::map;
+   using std::vector;
+   using std::cout;
+   using std::endl;
 #endif
+   using std::string;
+   using std::map;
+   using std::vector;
+   using std::cout;
+   using std::endl;
 
 #include <math/FGColumnVector3.h>
 
@@ -146,7 +159,7 @@ public:
   /** Constructor
       @param nm the name of this element (if given)
       */
-  Element(std::string nm);
+  Element(string nm);
   /// Destructor
   ~Element(void);
 
@@ -154,23 +167,23 @@ public:
       @param key specifies the attribute key to retrieve the value of.
       @return the key value (as a string), or the empty string if no such
               attribute exists. */
-  std::string GetAttributeValue(std::string key);
+  string GetAttributeValue(string key);
 
   /** Retrieves an attribute value as a double precision real number.
       @param key specifies the attribute key to retrieve the value of.
       @return the key value (as a number), or the HUGE_VAL if no such
               attribute exists. */
-  double GetAttributeValueAsNumber(std::string key);
+  double GetAttributeValueAsNumber(string key);
 
   /** Retrieves the element name.
       @return the element name, or the empty string if no name has been set.*/
-  std::string GetName(void) {return name;}
+  string GetName(void) {return name;}
 
   /** Gets a line of data belonging to an element.
       @param i the index of the data line to return (0 by default).
       @return a string representing the data line requested, or the empty string
               if none exists.*/
-  std::string GetDataLine(unsigned int i=0);
+  string GetDataLine(unsigned int i=0);
 
   /// Returns the number of lines of data stored
   unsigned int GetNumDataLines(void) {return (unsigned int)data_lines.size();}
@@ -179,7 +192,7 @@ public:
   unsigned int GetNumElements(void) {return (unsigned int)children.size();}
 
   /// Returns the number of named child elements for this element.
-  unsigned int GetNumElements(std::string);
+  unsigned int GetNumElements(string);
 
   /** Converts the element data to a number.
       This function attempts to convert the first (and presumably only) line of
@@ -212,12 +225,12 @@ public:
   Element* GetParent(void) {return parent;}
 
   /** Searches for a specified element.
-      Finds the first element that matches the supplied std::string, or simply the first
-      element if no search std::string is supplied. This function call resets the internal
+      Finds the first element that matches the supplied string, or simply the first
+      element if no search string is supplied. This function call resets the internal
       element counter to the first element.
-      @param el the search std::string (empty std::string by default).
-      @return a pointer to the first element that matches the supplied search std::string. */
-  Element* FindElement(std::string el="");
+      @param el the search string (empty string by default).
+      @return a pointer to the first element that matches the supplied search string. */
+  Element* FindElement(string el="");
 
   /** Searches for the next element as specified.
       This function would be called after FindElement() is first called (in order to
@@ -228,7 +241,7 @@ public:
       @param el the name of the next element to find.
       @return the pointer to the found element, or 0 if no appropriate element us
               found.*/
-  Element* FindNextElement(std::string el="");
+  Element* FindNextElement(string el="");
 
   /** Searches for the named element and returns the string data belonging to it.
       This function allows the data belonging to a named element to be returned
@@ -238,7 +251,7 @@ public:
       default)
       @return the data value for the named element as a string, or the empty
               string if the element cannot be found. */
-  std::string FindElementValue(std::string el="");
+  string FindElementValue(string el="");
 
   /** Searches for the named element and returns the data belonging to it as a number.
       This function allows the data belonging to a named element to be returned
@@ -248,7 +261,7 @@ public:
       default)
       @return the data value for the named element as a double, or HUGE_VAL if the
               data is missing. */
-  double FindElementValueAsNumber(std::string el="");
+  double FindElementValueAsNumber(string el="");
 
   /** Searches for the named element and converts and returns the data belonging to it.
       This function allows the data belonging to a named element to be returned
@@ -265,7 +278,7 @@ public:
              to which the value returned will be converted.
       @return the unit-converted data value for the named element as a double,
               or HUGE_VAL if the data is missing. */
-  double FindElementValueAsNumberConvertTo(std::string el, std::string target_units);
+  double FindElementValueAsNumberConvertTo(string el, string target_units);
 
   /** Searches for the named element and converts and returns the data belonging to it.
       This function allows the data belonging to a named element to be returned
@@ -284,9 +297,9 @@ public:
              to which the value returned will be converted.
       @return the unit-converted data value for the named element as a double,
               or HUGE_VAL if the data is missing. */
-  double FindElementValueAsNumberConvertFromTo( std::string el,
-                                                std::string supplied_units,
-                                                std::string target_units);
+  double FindElementValueAsNumberConvertFromTo( string el,
+                                                string supplied_units,
+                                                string target_units);
 
   /** Composes a 3-element column vector for the supplied location or orientation.
       This function processes a LOCATION or ORIENTATION construct, returning a
@@ -297,7 +310,7 @@ public:
       @param target_units the string representing the native units used by JSBSim
              to which the value returned will be converted.
       @return a column vector object built from the LOCATION or ORIENT components. */
-  FGColumnVector3 FindElementTripletConvertTo( std::string target_units);
+  FGColumnVector3 FindElementTripletConvertTo( string target_units);
 
   /** This function sets the value of the parent class attribute to the supplied
       Element pointer.
@@ -311,11 +324,11 @@ public:
   /** Stores an attribute belonging to this element.
   *   @param name The string name of the attribute.
   *   @param value The string value of the attribute. */
-  void AddAttribute(std::string name, std::string value);
+  void AddAttribute(string name, string value);
 
   /** Stores data belonging to this element.
   *   @param d the data to store. */
-  void AddData(std::string d);
+  void AddData(string d);
 
   /** Prints the element.
   *   Prints this element and calls the Print routine for child elements.
@@ -323,14 +336,14 @@ public:
   void Print(unsigned int level=0);
 
 private:
-  std::string name;
-  std::map <std::string, std::string> attributes;
-  std::vector <std::string> data_lines;
-  std::vector <Element*> children;
-  std::vector <std::string> attribute_key;
+  string name;
+  map <string, string> attributes;
+  vector <string> data_lines;
+  vector <Element*> children;
+  vector <string> attribute_key;
   Element *parent;
   unsigned int element_index;
-  typedef std::map <std::string, std::map <std::string, double> > tMapConvert;
+  typedef map <string, map <string, double> > tMapConvert;
   tMapConvert convert;
 };
 
