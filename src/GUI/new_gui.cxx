@@ -3,7 +3,7 @@
 #include <iostream>
 #include <cstring>
 #include <sys/types.h>
-#include <dirent.h>
+#include <plib/ul.h>
 
 #include "new_gui.hxx"
 
@@ -559,11 +559,11 @@ bool FGFontCache::initializeFonts()
 {
     static string fontext("txf");
     init();
-    DIR* fontdir = opendir(_path.c_str());
+    ulDir* fontdir = ulOpenDir(_path.c_str());
     if (!fontdir)
         return false;
-    const dirent *dirEntry;
-    while ((dirEntry = readdir(fontdir)) != 0) {
+    const ulDirEnt *dirEntry;
+    while ((dirEntry = ulReadDir(fontdir)) != 0) {
         SGPath path(_path);
         path.append(dirEntry->d_name);
         if (path.extension() == fontext) {
@@ -574,7 +574,7 @@ bool FGFontCache::initializeFonts()
                 delete f;
         }
     }
-    closedir(fontdir);
+    ulCloseDir(fontdir);
     return true;
 }
 
