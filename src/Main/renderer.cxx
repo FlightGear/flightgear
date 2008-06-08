@@ -560,7 +560,6 @@ FGRenderer::init( void )
 
     mRealRoot->addChild(viewPartition.get());
     mRealRoot->addChild(FGCreateRedoutNode());
-    mRealRoot->addChild(guiCamera);
 }
 
 
