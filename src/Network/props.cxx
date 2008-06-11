@@ -64,8 +64,8 @@ class PropsChannel : public netChat
     string path;
 
     enum Mode {
-	PROMPT,
-	DATA
+        PROMPT,
+        DATA
     };
     Mode mode;
 
@@ -74,7 +74,7 @@ public:
      * Constructor.
      */
     PropsChannel();
-    
+
     /**
      * Append incoming data to our request buffer.
      *
@@ -95,7 +95,7 @@ private:
 };
 
 /**
- * 
+ *
  */
 PropsChannel::PropsChannel()
     : buffer(512),
@@ -106,7 +106,7 @@ PropsChannel::PropsChannel()
 }
 
 /**
- * 
+ *
  */
 void
 PropsChannel::collectIncomingData( const char* s, int n )
@@ -122,26 +122,26 @@ getValueTypeString( const SGPropertyNode *node )
 
     if ( node == NULL )
     {
-	return "unknown";
+        return "unknown";
     }
 
     SGPropertyNode::Type type = node->getType();
     if ( type == SGPropertyNode::UNSPECIFIED ) {
-	result = "unspecified";
+        result = "unspecified";
     } else if ( type == SGPropertyNode::NONE ) {
         result = "none";
     } else if ( type == SGPropertyNode::BOOL ) {
-	result = "bool";
+        result = "bool";
     } else if ( type == SGPropertyNode::INT ) {
-	result = "int";
+        result = "int";
     } else if ( type == SGPropertyNode::LONG ) {
-	result = "long";
+        result = "long";
     } else if ( type == SGPropertyNode::FLOAT ) {
-	result = "float";
+        result = "float";
     } else if ( type == SGPropertyNode::DOUBLE ) {
-	result = "double";
+        result = "double";
     } else if ( type == SGPropertyNode::STRING ) {
-	result = "string";
+        result = "string";
     }
 
     return result;
@@ -149,7 +149,7 @@ getValueTypeString( const SGPropertyNode *node )
 
 /**
  * We have a command.
- * 
+ *
  */
 void
 PropsChannel::foundTerminator()
@@ -162,229 +162,229 @@ PropsChannel::foundTerminator()
     SGPropertyNode* node = globals->get_props()->getNode( path.c_str() );
 
     try {
-    if (!tokens.empty()) {
-	string command = tokens[0];
+        if (!tokens.empty()) {
+            string command = tokens[0];
 
-	if (command == "ls") {
-	    SGPropertyNode* dir = node;
-	    if (tokens.size() == 2) {
-		if (tokens[1][0] == '/') {
-		    dir = globals->get_props()->getNode( tokens[1].c_str() );
-		} else {
-		    string s = path;
-		    s += "/";
-		    s += tokens[1];
-		    dir = globals->get_props()->getNode( s.c_str() );
-		}
-
-		if (dir == 0) {
-		    node_not_found_error( tokens[1] );
-		}
-	    }
-
-	    for (int i = 0; i < dir->nChildren(); i++) {
-		SGPropertyNode * child = dir->getChild(i);
-		string line = child->getDisplayName(true);
-
-		if ( child->nChildren() > 0 ) {
-		    line += "/";
-		} else {
-		    if (mode == PROMPT) {
-			string value = child->getStringValue();
-			line += " =\t'" + value + "'\t(";
-			line += getValueTypeString( child );
-			line += ")";
-		    }
-		}
-
-		line += getTerminator();
-		push( line.c_str() );
-	    }
-	} else if ( command == "dump" ) {
-	    stringstream buf;
-	    if ( tokens.size() <= 1 ) {
-		writeProperties( buf, node );
-		buf << ends; // null terminate the string
-		push( buf.str().c_str() );
-		push( getTerminator() );
-	    } else {
-		SGPropertyNode *child = node->getNode( tokens[1].c_str() );
-		if ( child ) {
-		    writeProperties ( buf, child );
-		    buf << ends; // null terminate the string
-		    push( buf.str().c_str() );
-		    push( getTerminator() );
-		} else {
-		    node_not_found_error( tokens[1] );
-		}
-	    }
-	}
-	else if ( command == "cd" ) {
-	    if (tokens.size() == 2) {
-		SGPropertyNode* child = node->getNode( tokens[1].c_str() );
-		if ( child ) {
-		    node = child;
-		    path = node->getPath();
-		} else {
-		    node_not_found_error( tokens[1] );
-		}
-	    }
-	} else if ( command == "pwd" ) {
-	    string ttt = node->getPath();
-	    if (ttt.empty()) {
-		ttt = "/";
-	    }
-
-	    push( ttt.c_str() );
-	    push( getTerminator() );
-	} else if ( command == "get" || command == "show" ) {
-	    if ( tokens.size() == 2 ) {
-		string tmp;	
-		string value = node->getStringValue ( tokens[1].c_str(), "" );
-		if ( mode == PROMPT ) {
-		    tmp = tokens[1];
-		    tmp += " = '";
-		    tmp += value;
-		    tmp += "' (";
-		    tmp += getValueTypeString(
-				     node->getNode( tokens[1].c_str() ) );
-		    tmp += ")";
-		} else {
-		    tmp = value;
-		}
-		push( tmp.c_str() );
-		push( getTerminator() );
-	    }
-	} else if ( command == "set" ) {
-	    if ( tokens.size() >= 2 ) {
-                string value, tmp;
-                for (unsigned int i = 2; i < tokens.size(); i++) {
-                    if (i > 2)
-                        value += " ";
-                    value += tokens[i];
-                }
-                node->getNode( tokens[1].c_str(), true )
-                    ->setStringValue(value.c_str());
-
-		if ( mode == PROMPT ) {
-		    // now fetch and write out the new value as confirmation
-		    // of the change
-		    value = node->getStringValue ( tokens[1].c_str(), "" );
-		    tmp = tokens[1] + " = '" + value + "' (";
-		    tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
-		    tmp += ")";
-		    push( tmp.c_str() );
-		    push( getTerminator() );
-		}
-	    } 
-	} else if ( command == "reinit" ) {
-	    if ( tokens.size() == 2 ) {
-		string tmp;	
-                SGPropertyNode args;
-                for ( unsigned int i = 1; i < tokens.size(); ++i ) {
-                    cout << "props: adding subsystem = " << tokens[i] << endl;
-                    SGPropertyNode *node = args.getNode("subsystem", i-1, true);
-                    node->setStringValue( tokens[i].c_str() );
-                }
-                if ( !globals->get_commands()
-                         ->execute( "reinit", &args) )
-                {
-                    SG_LOG( SG_GENERAL, SG_ALERT,
-                            "Command " << tokens[1] << " failed.");
-                    if ( mode == PROMPT ) {
-                        tmp += "*failed*";
-                        push( tmp.c_str() );
-                        push( getTerminator() );
+            if (command == "ls") {
+                SGPropertyNode* dir = node;
+                if (tokens.size() == 2) {
+                    if (tokens[1][0] == '/') {
+                        dir = globals->get_props()->getNode( tokens[1].c_str() );
+                    } else {
+                        string s = path;
+                        s += "/";
+                        s += tokens[1];
+                        dir = globals->get_props()->getNode( s.c_str() );
                     }
+
+                    if (dir == 0) {
+                        node_not_found_error( tokens[1] );
+                    }
+                }
+
+                for (int i = 0; i < dir->nChildren(); i++) {
+                    SGPropertyNode * child = dir->getChild(i);
+                    string line = child->getDisplayName(true);
+
+                    if ( child->nChildren() > 0 ) {
+                        line += "/";
+                    } else {
+                        if (mode == PROMPT) {
+                            string value = child->getStringValue();
+                            line += " =\t'" + value + "'\t(";
+                            line += getValueTypeString( child );
+                            line += ")";
+                        }
+                    }
+
+                    line += getTerminator();
+                    push( line.c_str() );
+                }
+            } else if ( command == "dump" ) {
+                stringstream buf;
+                if ( tokens.size() <= 1 ) {
+                    writeProperties( buf, node );
+                    buf << ends; // null terminate the string
+                    push( buf.str().c_str() );
+                    push( getTerminator() );
                 } else {
-                    if ( mode == PROMPT ) {
-                        tmp += "<completed>";
-                        push( tmp.c_str() );
+                    SGPropertyNode *child = node->getNode( tokens[1].c_str() );
+                    if ( child ) {
+                        writeProperties ( buf, child );
+                        buf << ends; // null terminate the string
+                        push( buf.str().c_str() );
                         push( getTerminator() );
+                    } else {
+                        node_not_found_error( tokens[1] );
                     }
                 }
-	    }
-	} else if ( command == "run" ) {
-            string tmp;	
-            if ( tokens.size() >= 2 ) {
-                SGPropertyNode args;
-                if ( tokens[1] == "reinit" ) {
-                    for ( unsigned int i = 2; i < tokens.size(); ++i ) {
-                        cout << "props: adding subsystem = " << tokens[i]
-                             << endl;
-                        SGPropertyNode *node
-                            = args.getNode("subsystem", i-2, true);
-                        node->setStringValue( tokens[i].c_str() );
-                    }
-                } else if ( tokens[1] == "set-sea-level-air-temp-degc" ) {
-                    for ( unsigned int i = 2; i < tokens.size(); ++i ) {
-                        cout << "props: set-sl command = " << tokens[i]
-                             << endl;
-                        SGPropertyNode *node
-                            = args.getNode("temp-degc", i-2, true);
-                        node->setStringValue( tokens[i].c_str() );
-                    }
-                } else if ( tokens[1] == "set-outside-air-temp-degc" ) {
-                    for ( unsigned int i = 2; i < tokens.size(); ++i ) {
-                        cout << "props: set-oat command = " << tokens[i]
-                             << endl;
-                        SGPropertyNode *node
-                            = args.getNode("temp-degc", i-2, true);
-                        node->setStringValue( tokens[i].c_str() );
-                    }
-                } else if ( tokens[1] == "timeofday" ) {
-                    for ( unsigned int i = 2; i < tokens.size(); ++i ) {
-                        cout << "props: time of day command = " << tokens[i]
-                             << endl;
-                        SGPropertyNode *node
-                            = args.getNode("timeofday", i-2, true);
-                        node->setStringValue( tokens[i].c_str() );
-                    }
-                } else if ( tokens[1] == "play-audio-message" ) {
-                    if ( tokens.size() == 4 ) {
-                        cout << "props: play audio message = " << tokens[2]
-                             << " " << tokens[3] << endl;
-                        SGPropertyNode *node;
-                        node = args.getNode("path", 0, true);
-                        node->setStringValue( tokens[2].c_str() );
-                        node = args.getNode("file", 0, true);
-                        node->setStringValue( tokens[3].c_str() );
-                   }
-                }
-                if ( !globals->get_commands()
-                         ->execute(tokens[1].c_str(), &args) )
-                {
-                    SG_LOG( SG_GENERAL, SG_ALERT,
-                            "Command " << tokens[1] << " failed.");
-                    if ( mode == PROMPT ) {
-                        tmp += "*failed*";
-                        push( tmp.c_str() );
-                        push( getTerminator() );
-                    }
-                } else {
-                    if ( mode == PROMPT ) {
-                        tmp += "<completed>";
-                        push( tmp.c_str() );
-                        push( getTerminator() );
+            }
+            else if ( command == "cd" ) {
+                if (tokens.size() == 2) {
+                    SGPropertyNode* child = node->getNode( tokens[1].c_str() );
+                    if ( child ) {
+                        node = child;
+                        path = node->getPath();
+                    } else {
+                        node_not_found_error( tokens[1] );
                     }
                 }
-	    } else {
-                if ( mode == PROMPT ) {
-                    tmp += "no command specified";
+            } else if ( command == "pwd" ) {
+                string pwd = node->getPath();
+                if (pwd.empty()) {
+                    pwd = "/";
+                }
+
+                push( pwd.c_str() );
+                push( getTerminator() );
+            } else if ( command == "get" || command == "show" ) {
+                if ( tokens.size() == 2 ) {
+                    string tmp;
+                    string value = node->getStringValue ( tokens[1].c_str(), "" );
+                    if ( mode == PROMPT ) {
+                        tmp = tokens[1];
+                        tmp += " = '";
+                        tmp += value;
+                        tmp += "' (";
+                        tmp += getValueTypeString(
+                                         node->getNode( tokens[1].c_str() ) );
+                        tmp += ")";
+                    } else {
+                        tmp = value;
+                    }
                     push( tmp.c_str() );
                     push( getTerminator() );
                 }
-            }
-	} else if ( command == "quit" || command == "exit" ) {
-	    close();
-	    shouldDelete();
-	    return;
-	} else if ( command == "data" ) {
-	    mode = DATA;
-	} else if ( command == "prompt" ) {
-	    mode = PROMPT;
-	} else {
-	    const char* msg = "\
+            } else if ( command == "set" ) {
+                if ( tokens.size() >= 2 ) {
+                    string value, tmp;
+                    for (unsigned int i = 2; i < tokens.size(); i++) {
+                        if (i > 2)
+                            value += " ";
+                        value += tokens[i];
+                    }
+                    node->getNode( tokens[1].c_str(), true )
+                        ->setStringValue(value.c_str());
+
+                    if ( mode == PROMPT ) {
+                        // now fetch and write out the new value as confirmation
+                        // of the change
+                        value = node->getStringValue ( tokens[1].c_str(), "" );
+                        tmp = tokens[1] + " = '" + value + "' (";
+                        tmp += getValueTypeString( node->getNode( tokens[1].c_str() ) );
+                        tmp += ")";
+                        push( tmp.c_str() );
+                        push( getTerminator() );
+                    }
+                }
+            } else if ( command == "reinit" ) {
+                if ( tokens.size() == 2 ) {
+                    string tmp;
+                    SGPropertyNode args;
+                    for ( unsigned int i = 1; i < tokens.size(); ++i ) {
+                        cout << "props: adding subsystem = " << tokens[i] << endl;
+                        SGPropertyNode *node = args.getNode("subsystem", i-1, true);
+                        node->setStringValue( tokens[i].c_str() );
+                    }
+                    if ( !globals->get_commands()
+                             ->execute( "reinit", &args) )
+                    {
+                        SG_LOG( SG_GENERAL, SG_ALERT,
+                                "Command " << tokens[1] << " failed.");
+                        if ( mode == PROMPT ) {
+                            tmp += "*failed*";
+                            push( tmp.c_str() );
+                            push( getTerminator() );
+                        }
+                    } else {
+                        if ( mode == PROMPT ) {
+                            tmp += "<completed>";
+                            push( tmp.c_str() );
+                            push( getTerminator() );
+                        }
+                    }
+                }
+            } else if ( command == "run" ) {
+                string tmp;
+                if ( tokens.size() >= 2 ) {
+                    SGPropertyNode args;
+                    if ( tokens[1] == "reinit" ) {
+                        for ( unsigned int i = 2; i < tokens.size(); ++i ) {
+                            cout << "props: adding subsystem = " << tokens[i]
+                                 << endl;
+                            SGPropertyNode *node
+                                = args.getNode("subsystem", i-2, true);
+                            node->setStringValue( tokens[i].c_str() );
+                        }
+                    } else if ( tokens[1] == "set-sea-level-air-temp-degc" ) {
+                        for ( unsigned int i = 2; i < tokens.size(); ++i ) {
+                            cout << "props: set-sl command = " << tokens[i]
+                                 << endl;
+                            SGPropertyNode *node
+                                = args.getNode("temp-degc", i-2, true);
+                            node->setStringValue( tokens[i].c_str() );
+                        }
+                    } else if ( tokens[1] == "set-outside-air-temp-degc" ) {
+                        for ( unsigned int i = 2; i < tokens.size(); ++i ) {
+                            cout << "props: set-oat command = " << tokens[i]
+                                 << endl;
+                            SGPropertyNode *node
+                                = args.getNode("temp-degc", i-2, true);
+                            node->setStringValue( tokens[i].c_str() );
+                        }
+                    } else if ( tokens[1] == "timeofday" ) {
+                        for ( unsigned int i = 2; i < tokens.size(); ++i ) {
+                            cout << "props: time of day command = " << tokens[i]
+                                 << endl;
+                            SGPropertyNode *node
+                                = args.getNode("timeofday", i-2, true);
+                            node->setStringValue( tokens[i].c_str() );
+                        }
+                    } else if ( tokens[1] == "play-audio-message" ) {
+                        if ( tokens.size() == 4 ) {
+                            cout << "props: play audio message = " << tokens[2]
+                                 << " " << tokens[3] << endl;
+                            SGPropertyNode *node;
+                            node = args.getNode("path", 0, true);
+                            node->setStringValue( tokens[2].c_str() );
+                            node = args.getNode("file", 0, true);
+                            node->setStringValue( tokens[3].c_str() );
+                       }
+                    }
+                    if ( !globals->get_commands()
+                             ->execute(tokens[1].c_str(), &args) )
+                    {
+                        SG_LOG( SG_GENERAL, SG_ALERT,
+                                "Command " << tokens[1] << " failed.");
+                        if ( mode == PROMPT ) {
+                            tmp += "*failed*";
+                            push( tmp.c_str() );
+                            push( getTerminator() );
+                        }
+                    } else {
+                        if ( mode == PROMPT ) {
+                            tmp += "<completed>";
+                            push( tmp.c_str() );
+                            push( getTerminator() );
+                        }
+                    }
+                } else {
+                    if ( mode == PROMPT ) {
+                        tmp += "no command specified";
+                        push( tmp.c_str() );
+                        push( getTerminator() );
+                    }
+                }
+            } else if ( command == "quit" || command == "exit" ) {
+                close();
+                shouldDelete();
+                return;
+            } else if ( command == "data" ) {
+                mode = DATA;
+            } else if ( command == "prompt" ) {
+                mode = PROMPT;
+            } else {
+                const char* msg = "\
 Valid commands are:\r\n\
 \r\n\
 cd <dir>           cd to a directory, '..' to move back\r\n\
@@ -398,9 +398,9 @@ pwd                display your current path\r\n\
 quit               terminate connection\r\n\
 run <command>      run built in command\r\n\
 set <var> <val>    set <var> to a new <val>\r\n";
-	    push( msg );
-	}
-    }
+                push( msg );
+            }
+        }
 
     } catch ( const string& msg ) {
         string error = "-ERR \"" + msg + "\"";
@@ -409,19 +409,19 @@ set <var> <val>    set <var> to a new <val>\r\n";
     }
 
     if ( mode == PROMPT ) {
-	string prompt = node->getPath();
-	if (prompt.empty()) {
-	    prompt = "/";
-	}
-	prompt += "> ";
-	push( prompt.c_str() );
+        string prompt = node->getPath();
+        if (prompt.empty()) {
+            prompt = "/";
+        }
+        prompt += "> ";
+        push( prompt.c_str() );
     }
 
     buffer.remove();
 }
 
 /**
- * 
+ *
  */
 FGProps::FGProps( const vector<string>& tokens )
 {
@@ -429,7 +429,7 @@ FGProps::FGProps( const vector<string>& tokens )
     //   props,port#
     //   props,medium,direction,hz,hostname,port#,style
     if (tokens.size() == 2) {
-	port = atoi( tokens[1].c_str() );
+        port = atoi( tokens[1].c_str() );
         set_hz( 5 );                // default to processing requests @ 5Hz
     } else if (tokens.size() == 7) {
         char* endptr;
@@ -443,30 +443,30 @@ FGProps::FGProps( const vector<string>& tokens )
                     << hz << " Hz");
             set_hz( hz );
         }
-	port = atoi( tokens[5].c_str() );
+        port = atoi( tokens[5].c_str() );
     } else {
-	throw FGProtocolConfigError( "FGProps: incorrect number of configuration arguments" );
+        throw FGProtocolConfigError( "FGProps: incorrect number of configuration arguments" );
     }
 }
 
 /**
- * 
+ *
  */
 FGProps::~FGProps()
 {
 }
 
 /**
- * 
+ *
  */
 bool
 FGProps::open()
 {
     if ( is_enabled() )
     {
-	SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel " 
-		<< "is already in use, ignoring" );
-	return false;
+        SG_LOG( SG_IO, SG_ALERT, "This shouldn't happen, but the channel "
+                << "is already in use, ignoring" );
+        return false;
     }
 
     netChannel::open();
@@ -479,17 +479,17 @@ FGProps::open()
 }
 
 /**
- * 
+ *
  */
 bool
 FGProps::close()
 {
-    SG_LOG( SG_IO, SG_INFO, "closing FGProps" );   
+    SG_LOG( SG_IO, SG_INFO, "closing FGProps" );
     return true;
 }
 
 /**
- * 
+ *
  */
 bool
 FGProps::process()
@@ -499,7 +499,7 @@ FGProps::process()
 }
 
 /**
- * 
+ *
  */
 void
 FGProps::handleAccept()
@@ -507,7 +507,7 @@ FGProps::handleAccept()
     netAddress addr;
     int handle = accept( &addr );
     SG_LOG( SG_IO, SG_INFO, "Props server accepted connection from "
-	    << addr.getHost() << ":" << addr.getPort() );
+            << addr.getHost() << ":" << addr.getPort() );
     PropsChannel* channel = new PropsChannel();
     channel->setHandle( handle );
 }
