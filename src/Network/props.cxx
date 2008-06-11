@@ -89,10 +89,9 @@ public:
     void foundTerminator();
 
 private:
-    /**
-     * Return a "Node no found" error message to the client.
-     */
-    void node_not_found_error( const string& node_name );
+    inline void node_not_found_error( const string& s ) const {
+        throw "node '" + s + "' not found";
+    }
 };
 
 /**
@@ -113,19 +112,6 @@ void
 PropsChannel::collectIncomingData( const char* s, int n )
 {
     buffer.append( s, n );
-}
-
-/**
- * 
- */
-void
-PropsChannel::node_not_found_error( const string& node_name )
-{
-    string error = "-ERR Node \"";
-    error += node_name;
-    error += "\" not found.";
-    push( error.c_str() );
-    push( getTerminator() );
 }
 
 // return a human readable form of the value "type"
@@ -175,6 +161,7 @@ PropsChannel::foundTerminator()
 
     SGPropertyNode* node = globals->get_props()->getNode( path.c_str() );
 
+    try {
     if (!tokens.empty()) {
 	string command = tokens[0];
 
@@ -192,7 +179,6 @@ PropsChannel::foundTerminator()
 
 		if (dir == 0) {
 		    node_not_found_error( tokens[1] );
-		    goto prompt;
 		}
 	    }
 
@@ -235,16 +221,12 @@ PropsChannel::foundTerminator()
 	}
 	else if ( command == "cd" ) {
 	    if (tokens.size() == 2) {
-		try {
-		    SGPropertyNode* child = node->getNode( tokens[1].c_str() );
-		    if ( child ) {
-			node = child;
-			path = node->getPath();
-		    } else {
-			node_not_found_error( tokens[1] );
-		    }
-		} catch (...) {
-		    // Ignore attempt to move past root node with ".."
+		SGPropertyNode* child = node->getNode( tokens[1].c_str() );
+		if ( child ) {
+		    node = child;
+		    path = node->getPath();
+		} else {
+		    node_not_found_error( tokens[1] );
 		}
 	    }
 	} else if ( command == "pwd" ) {
@@ -393,7 +375,7 @@ PropsChannel::foundTerminator()
                     push( getTerminator() );
                 }
             }
-	} else if (command == "quit") {
+	} else if ( command == "quit" || command == "exit" ) {
 	    close();
 	    shouldDelete();
 	    return;
@@ -420,8 +402,13 @@ set <var> <val>    set <var> to a new <val>\r\n";
 	}
     }
 
- prompt:
-    if (mode == PROMPT) {
+    } catch ( const string& msg ) {
+        string error = "-ERR \"" + msg + "\"";
+        push( error.c_str() );
+        push( getTerminator() );
+    }
+
+    if ( mode == PROMPT ) {
 	string prompt = node->getPath();
 	if (prompt.empty()) {
 	    prompt = "/";
