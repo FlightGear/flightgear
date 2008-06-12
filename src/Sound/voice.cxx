@@ -71,7 +71,8 @@ void FGVoiceMgr::init()
 	}
 
 #if defined(ENABLE_THREADS)
-	_thread->start(1);
+	_thread->setProcessorAffinity(1);
+	_thread->start();
 #endif
 }
 

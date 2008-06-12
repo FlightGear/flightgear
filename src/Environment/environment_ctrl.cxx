@@ -356,7 +356,8 @@ FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
 {
 #if defined(ENABLE_THREADS)
     thread = new MetarThread(this);
-    thread->start( 1 );
+    thread->setProcessorAffinity(1);
+    thread->start();
 #endif // ENABLE_THREADS
 }
 

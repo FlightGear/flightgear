@@ -32,7 +32,7 @@
 #include <simgear/environment/metar.hxx>
 
 #if defined(ENABLE_THREADS)
-# include <simgear/threads/SGThread.hxx>
+# include <OpenThreads/Thread>
 # include <simgear/threads/SGQueue.hxx>
 #endif
 
@@ -233,7 +233,7 @@ private:
      * This class represents the thread of execution responsible for
      * fetching the metar data.
      */
-    class MetarThread : public SGThread
+    class MetarThread : public OpenThreads::Thread
     {
     public:
         MetarThread( FGMetarEnvironmentCtrl* f ) : fetcher(f) {}

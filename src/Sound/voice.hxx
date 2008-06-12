@@ -37,7 +37,10 @@
 #include <Main/fg_props.hxx>
 
 #if defined(ENABLE_THREADS)
-#  include <simgear/threads/SGThread.hxx>
+#  include <OpenThreads/Thread>
+#  include <OpenThreads/Mutex>
+#  include <OpenThreads/ScopedLock>
+#  include <OpenThreads/Condition>
 #  include <simgear/threads/SGQueue.hxx>
 #else
 #  include <queue>
@@ -74,16 +77,16 @@ private:
 
 
 #if defined(ENABLE_THREADS)
-class FGVoiceMgr::FGVoiceThread : public SGThread {
+class FGVoiceMgr::FGVoiceThread : public OpenThreads::Thread {
 public:
 	FGVoiceThread(FGVoiceMgr *mgr) : _mgr(mgr) {}
 	void run();
 	void wake_up() { _jobs.signal(); }
 
 private:
-	void wait_for_jobs() { SGGuard<SGMutex> g(_mutex); _jobs.wait(_mutex); }
-	SGPthreadCond _jobs;
-	SGMutex _mutex;
+	void wait_for_jobs() { OpenThreads::ScopedLock<OpenThreads::Mutex> g(_mutex); _jobs.wait(&_mutex); }
+	OpenThreads::Condition _jobs;
+	OpenThreads::Mutex _mutex;
 	FGVoiceMgr *_mgr;
 };
 #endif
