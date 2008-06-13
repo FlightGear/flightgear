@@ -607,7 +607,18 @@ bool fgInitConfig ( int argc, char **argv ) {
         SGPath config( homedir );
         config.append( ".fgfs" );
 #endif
-        fgSetString("/sim/fg-home", config.c_str());
+        const char *fg_home = getenv("FG_HOME");
+        if (fg_home)
+            config = fg_home;
+
+        // Set /sim/fg-home and don't allow malign code to override it until
+        // Nasal security is set up.  Use FG_HOME if necessary.
+        SGPropertyNode *home = fgGetNode("/sim", true);
+        home->removeChild("fg-home", 0, false);
+        home = home->getChild("fg-home", 0, true);
+        home->setStringValue(config.c_str());
+        home->setAttribute(SGPropertyNode::WRITE, false);
+
         config.append( "autosave.xml" );
         SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << config.str());
         try {
