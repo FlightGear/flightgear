@@ -169,7 +169,7 @@ FGGlobals::~FGGlobals()
 // set the fg_root path
 void FGGlobals::set_fg_root (const string &root) {
     fg_root = root;
-    
+
     // append /data to root if it exists
     SGPath tmp( fg_root );
     tmp.append( "data" );
@@ -178,7 +178,12 @@ void FGGlobals::set_fg_root (const string &root) {
         fg_root += "/data";
     }
 
-    fgSetString("/sim/fg-root", fg_root.c_str());   
+    // remove /sim/fg-root before writing to prevent hijacking
+    SGPropertyNode *n = fgGetNode("/sim", true);
+    n->removeChild("fg-root", 0, false);
+    n = n->getChild("fg-root", 0, true);
+    n->setStringValue(fg_root.c_str());
+    n->setAttribute(SGPropertyNode::WRITE, false);
 }
 
 void FGGlobals::set_fg_scenery (const string &scenery) {
