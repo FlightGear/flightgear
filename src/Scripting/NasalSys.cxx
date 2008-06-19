@@ -347,6 +347,12 @@ static naRef f_srand(naContext c, naRef me, int argc, naRef* args)
     return naNum(0);
 }
 
+static naRef f_abort(naContext c, naRef me, int argc, naRef* args)
+{
+    abort();
+    return naNil();
+}
+
 // Return an array listing of all files in a directory
 static naRef f_directory(naContext c, naRef me, int argc, naRef* args)
 {
@@ -597,6 +603,7 @@ static struct { const char* name; naCFunction func; } funcs[] = {
     { "_interpolate",  f_interpolate },
     { "rand",  f_rand },
     { "srand",  f_srand },
+    { "abort", f_abort },
     { "directory", f_directory },
     { "parsexml", f_parsexml },
     { "systime", f_systime },
@@ -1023,7 +1030,6 @@ void FGNasalListener::valueChanged(SGPropertyNode* node)
     if(_type < 2 && node != _node) return;   // skip child events
     if(_type > 0 || changed(_node) || _first_call)
         call(node, naNum(0));
-    if(_type == -1) abort();
 
     _first_call = false;
 }
