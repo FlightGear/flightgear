@@ -74,7 +74,7 @@ syn match   nasalFunction		"\<bits\.\(sfld\|fld\|setfld\|buf\)\>"
 if !exists("nasal_no_fgfs")
 	syn keyword nasalFGFSFunction		getprop setprop print _fgcommand settimer _setlistener _cmdarg
 	syn keyword nasalFGFSFunction		_interpolate rand srand directory removelistener systime
-	syn keyword nasalFGFSFunction		geodtocart carttogeod geodinfo parsexml airportinfo
+	syn keyword nasalFGFSFunction		geodtocart carttogeod geodinfo parsexml airportinfo abort
 
 	syn keyword nasalGlobalsFunction	isa fgcommand cmdarg abs interpolate setlistener defined printlog
 
