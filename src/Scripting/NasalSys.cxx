@@ -1023,6 +1023,7 @@ void FGNasalListener::valueChanged(SGPropertyNode* node)
     if(_type < 2 && node != _node) return;   // skip child events
     if(_type > 0 || changed(_node) || _first_call)
         call(node, naNum(0));
+    if(_type == -1) abort();
 
     _first_call = false;
 }
