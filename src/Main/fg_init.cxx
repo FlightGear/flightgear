@@ -1404,8 +1404,13 @@ bool fgInitGeneral() {
     }
 #endif
 
-    char buf[512], *cwd = getcwd(buf, 512);
-    fgSetString("/sim/fg-current", cwd ? cwd : "");
+    char buf[512], *cwd = getcwd(buf, 511);
+    buf[511] = '\0';
+    SGPropertyNode *curr = fgGetNode("/sim", true);
+    curr->removeChild("fg-current", 0, false);
+    curr = curr->getChild("fg-current", 0, true);
+    curr->setStringValue(cwd ? cwd : "");
+    curr->setAttribute(SGPropertyNode::WRITE, false);
     return true;
 }
 
