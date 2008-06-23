@@ -56,20 +56,20 @@ extern fntTexFont *guiFntHandle;
 extern int gui_menu_on;
 
 // from gui_funcs.cxx
-extern void reInit(puObject *);
-extern void fgDumpSnapShotWrapper(puObject *);
+extern void reInit(void);
+extern void fgDumpSnapShotWrapper();
 #ifdef TR_HIRES_SNAP
-extern void fgHiResDumpWrapper(puObject *);
+extern void fgHiResDumpWrapper();
 extern void fgHiResDump();
 #endif
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
-extern void printScreen(puObject *);
+extern void printScreen();
 #endif
-extern void helpCb(puObject *);
+extern void helpCb();
 
 typedef struct {
         const char *name;
-        void (*fn)(puObject *);
+        void (*fn)();
 } __fg_gui_fn_t;
 extern const __fg_gui_fn_t __fg_gui_fn[];
 
@@ -79,30 +79,4 @@ extern void maybeToggleMouse( void );
 extern void TurnCursorOn( void );
 extern void TurnCursorOff( void );
 
-// MACROS TO HELP KEEP PUI LIVE INTERFACE STACK IN SYNC
-// These insure that the mouse is active when dialog is shown
-// and try to the maintain the original mouse state when hidden
-// These will also repair any damage done to the Panel if active
-
-// Activate Dialog Box
-inline void FG_PUSH_PUI_DIALOG( puObject *X ) {
-    maybeToggleMouse(); 
-    puPushLiveInterface( (puInterface *)X ) ; 
-    X->reveal() ;
-}
-
-// Deactivate Dialog Box
-inline void FG_POP_PUI_DIALOG( puObject *X ) {
-    X->hide(); 
-    puPopLiveInterface(); 
-    maybeToggleMouse();
-}
-
-// Finalize Dialog Box Construction 
-inline void FG_FINALIZE_PUI_DIALOG( puObject *X ) {
-    ((puGroup *)X)->close();
-    X->hide();
-    puPopLiveInterface();
-}
-            
 #endif // _GUI_H_

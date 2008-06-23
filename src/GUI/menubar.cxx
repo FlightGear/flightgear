@@ -26,39 +26,39 @@
 // user-configured dialogs and new commands where necessary.
 ////////////////////////////////////////////////////////////////////////
 
-extern void reInit (puObject *);
+extern void reInit (void);
 static bool
 do_reinit_dialog (const SGPropertyNode * arg)
 {
-    reInit(0);
+    reInit();
     return true;
 }
 
 #if defined(TR_HIRES_SNAP)
-extern void dumpHiResSnapShot (puObject *);
+extern void dumpHiResSnapShot ();
 static bool
 do_hires_snapshot_dialog (const SGPropertyNode * arg)
 {
-    dumpHiResSnapShot(0);
+    dumpHiResSnapShot();
     return true;
 }
 #endif // TR_HIRES_SNAP
 
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
-extern void printScreen (puObject *);
+extern void printScreen ();
 static bool
 do_print_dialog (const SGPropertyNode * arg)
 {
-    printScreen(0);
+    printScreen();
     return true;
 }
 #endif
 
-extern void helpCb (puObject *);
+extern void helpCb ();
 static bool
 do_help_dialog (const SGPropertyNode * arg)
 {
-    helpCb(0);
+    helpCb();
     return true;
 }
 

@@ -197,7 +197,7 @@ ____________________________________________________________________*/
 // on Sunday 3rd of December
 
 
-void helpCb (puObject *)
+void helpCb ()
 {
     string command;
 	
@@ -489,7 +489,7 @@ GLubyte *hiResScreenCapture( int multiplier )
 
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
 // win32 print screen function
-void printScreen ( puObject *obj ) {
+void printScreen () {
     bool show_pu_cursor = false;
     TurnCursorOff();
     if ( !puCursorIsHidden() ) {
@@ -511,12 +511,12 @@ void printScreen ( puObject *obj ) {
 #endif // #ifdef WIN32
 
 
-void fgDumpSnapShotWrapper ( puObject *obj ) {
+void fgDumpSnapShotWrapper () {
     fgDumpSnapShot();
 }
 
 
-void fgHiResDumpWrapper ( puObject *obj ) {
+void fgHiResDumpWrapper () {
     fgHiResDump();
 }
 

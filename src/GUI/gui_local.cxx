@@ -24,7 +24,6 @@
 // stashed trackball(_quat0, 0.0, 0.0, 0.0, 0.0);
 static float _quat0[4];
 
-float lastGuiQuat[4];
 float curGuiQuat[4];
 
 // To apply our mouse rotation quat to VIEW
@@ -46,7 +45,7 @@ void initMouseQuat(void) {
 }
 
 
-void reInit(puObject *cb)
+void reInit(void)
 {
     Quat0();
 

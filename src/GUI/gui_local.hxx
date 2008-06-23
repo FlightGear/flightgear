@@ -23,12 +23,10 @@ typedef enum {
 extern MouseMode mouse_mode;
 extern int gui_menu_on;
 
-extern float lastGuiQuat[4];
 extern float curGuiQuat[4];
 extern float GuiQuat_mat[4][4];
 
 extern void initMouseQuat( void );
 extern void Quat0( void );
 
-class puObject;
-extern void reInit(puObject *cb);
+extern void reInit(void);
