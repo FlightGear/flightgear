@@ -1,0 +1,191 @@
+/* Copyright (c) 2007, 2008 by Adalin B.V.
+ * Copyright (c) 2007, 2008 by Erik Hofman
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of (any of) the copyrightholder(s) nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL 
+ * THE COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#ifndef __XML_CONFIG
+#define __XML_CONFIG 1
+
+/**
+ * Open an XML file for processing
+ *
+ * @param fname path to the file 
+ * @return XML-id which is used for further processing
+ */
+void *xmlOpen(const char *);
+
+/**
+ * Close the XML file after which no further processing is possible
+ *
+ * @param xid XML-id
+ */
+void xmlClose(const void *);
+
+
+/**
+ * Locate a subsection of the xml tree for further processing.
+ * This adds processing speed since the reuired nodes will only be searched
+ * in the subsection.
+ *
+ * The memory allocated for the XML-subsection-id has to be freed by the
+ * calling program.
+ *
+ * @param xid XML-id
+ * @param node path to the node containing the subsection
+ * @return XML-subsection-id for further processing
+ */
+void *xmlGetNode(const void *, const char *);
+
+/**
+ * Copy a subsection of the xml tree for further processing.
+ * This is useful when it's required to process a section of the XML code
+ * after the file has been closed. The drawback is the added memory
+ * requirements.
+ *
+ * The memory allocated for the XML-subsection-id has to be freed by the
+ * calling program.
+ *
+ * @param xid XML-id
+ * @param node path to the node containing the subsection
+ * @return XML-subsection-id for further processing
+ */
+void *xmlCopyNode(void *, const char *);
+
+/**
+ * Get the number of elements  with the same name from a specified xml path
+ *
+ * @param xid XML-id
+ * @param path path to the xml node
+ * @return the number count of the nodename
+ */
+unsigned int xmlGetNumElements(void *, const char *);
+
+/**
+ * Get the next occurrence of element in the parent node
+ *
+ * @param pid XML-id of the parent node of this node
+ * @param xid XML-id
+ * @param element name of the element to search for
+ * @return XML-subsection-id for further processing
+ */
+void *xmlGetNextElement(const void *, void *, const char *);
+
+/**
+ * Compare the value of this element to a reference string.
+ * Comparing is done in a case insensitive way.
+ *
+ * @param xid XML-id
+ * @param s the string to compare to.
+ * @return an integer less than, equal to, ro greater than zero if the value
+ * of the node is found, respectively, to be less than, to match, or be greater
+ * than s
+ */
+int xmlCompareString(const void *, const char *);
+
+
+/**
+ * Get a string of characters from a specified xml path
+ * This function has the advantage of not allocating its own return buffer,
+ * keeping the memory management to an absolute minimum but the disadvantage
+ * is that it's unreliable in multithread environments.
+ *
+ * @param xid XML-id
+ * @param path path to the xml node
+ * @param buffer the buffer to copy the string to
+ * @param buflen length of the destination buffer
+ * @return the length of the string
+ */
+unsigned int xmlCopyNodeString(void *, const char *, char *, const unsigned int);
+
+/**
+ * Get a string of characters from the current node
+ * The returned string has to be freed by the calling program.
+ *
+ * @param xid XML-id
+ * @return a newly alocated string containing the contents of the node.
+ */
+char *xmlGetString(void *);
+
+/**
+ * Get a string of characters from a specified xml path
+ * The returned string has to be freed by the calling program.
+ *
+ * @param xid XML-id
+ * @param path path to the xml node
+ * @return a newly alocated string containing the contents of the node.
+ */
+char *xmlGetNodeString(void *, const char *);
+
+/**
+ * Compare the value of a node to a reference string.
+ * Comparing is done in a case insensitive way.
+ *
+ * @param xid XML-id
+ * @param path path to the xml node to compare to
+ * @param s the string to compare to.
+ * @return an integer less than, equal to, ro greater than zero if the value
+ * of the node is found, respectively, to be less than, to match, or be greater
+ * than s
+ */
+int xmlCompareNodeString(const void *, const char *, const char *);
+
+/**
+ * Get the integer value from the current node
+ *
+ * @param xid XML-id
+ * @return the contents of the node converted to an integer value.
+ */
+long int xmlGetInt(void *);
+
+/**
+ * Get an integer value from a specified xml path
+ *
+ * @param xid XML-id
+ * @param path path to the xml node
+ * @return the contents of the node converted to an integer value.
+ */
+long int xmlGetNodeInt(void *, const char *);
+
+/**
+ * Get the double value from the curent node
+ *
+ * @param xid XML-id
+ * @return the contents of the node converted to a double value.
+ */
+double xmlGetDouble(void *);
+
+/**
+ * Get a double value from a specified xml path
+ *
+ * @param xid XML-id
+ * @param path path to the xml node
+ * @return the contents of the node converted to a double value.
+ */
+double xmlGetNodeDouble(void *, const char *);
+
+void *xmlMarkId(void *);
+
+#endif /* __XML_CONFIG */
+
