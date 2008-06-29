@@ -1,0 +1,62 @@
+#
+# Functions to Open and Close the XML file
+# e.g.
+#   id = xmlOpen("/tmp/file.xml");
+#   xmlClose(id);
+#
+void *xmlOpen(const char *);
+void xmlClose(const void *);
+
+#
+# Get the Id of a node at the specified path
+# e.g.
+#    xnid = xmlGetNode(id, "/path/to/specified/node");
+#
+void *xmlGetNode(const void *, const char *);
+void *xmlCopyNode(void *, const char *);
+
+#
+# Functions to walk the node tree an process them one by one.
+# e.g.
+#   xmid = xmlMarkId(id);
+#   num = xmlGetNumElements(xmid);
+#   for (i=0; i<num; i++) {
+#      if (xmlGetNextElement(id, xmid, "element") != 0) {
+#         if ((s = xmlGetString(xmid)) != 0) {
+#            printf("%s\n", s);
+#            free(s);
+#         }
+#      }
+#   }
+#
+void *xmlMarkId(void *);
+unsigned int xmlGetNumElements(void *, const char *);
+void *xmlGetNextElement(const void *, void *, const char *);
+
+#
+# These functions work on the current node.
+# e.g.
+#    xnid = xmlGetNode(id, "/path/to/last/node");
+#    i = xmlGetInt(xnid);
+# or
+#    xnid = xmlGetNode(id, "/path/to/specified/node");
+#    if (xmlCompareString(xnid, "value") == 0) printf("We have a match!\n");
+#
+long int xmlGetInt(void *);
+double xmlGetDouble(void *);
+char *xmlGetString(void *);
+int xmlCompareString(const void *, const char *);
+
+#
+# These functions work on a specified node path
+# e.g.
+#    d = xmlGetNodeDouble(id, "/path/to/node");
+# or
+#    xnid = xmlGetNode(id, "/path/to");
+#    i = xmlGetNodeInt(xnid, "node");
+#
+long int xmlGetNodeInt(void *, const char *);
+double xmlGetNodeDouble(void *, const char *);
+char *xmlGetNodeString(void *, const char *);
+unsigned xmlCopyNodeString(void *, const char *, char *, const unsigned int);
+int xmlCompareNodeString(const void *, const char *, const char *);

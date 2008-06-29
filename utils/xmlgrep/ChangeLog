@@ -1,0 +1,15 @@
+29-06-2008:
+ * rename xmlGet(Int/Double/String) to xmlGetNode(Int/Double/String)
+ * add new xmlGet(Int/Double/String) functions
+ * rename xmlCompareString to xmlCompareNodeString for consistency
+ * rename xmlCompareElement to xmlCompareString for consistency
+ * add a README file with short examples of various functions
+
+27-06-2008:
+ * removed some memorly allocation in xmlGetNode and XMLGetNextElement
+ * use the filesize for mmap and remove the root node from the xml-id
+ * rearange xmlGetNode to work with complicated xml files
+ * add the xmlMarkId function to save the id before using xmlGetNextElement
+ * speed up xmlGetNextId
+
+23-06-2008: Initial release
