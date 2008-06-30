@@ -1,3 +1,46 @@
+This library is specially designed for reading xml configuration files and
+to be as low on memory management as possible. Modifying or writing xml files
+is not planned for the future. In most situations being able to gather data
+by reading an xml file is more than enough and the read-only decision
+provides a number of advantages over a one-size fits all approach. For isntance
+the memory footprint can be kept low and the library can be kept simple.
+
+To achieve these goals the mmap function is used to map the configuration file
+to a memory region. The only places where memory is allocated is when creating
+a new XML-id, when requesting a string from a node or when a request is made to
+copy a node.
+
+Using this library should be pretty simple for most tasks; just open a file,
+read every parameter one by one and close the id again.
+{
+   void *xid;
+
+   xid = xmlOpen("/tmp/file.xml");
+   xpos = xmlGetNodeDouble(xid, "/configuration/x-pos");
+   ypos = xmlGetNodeDouble(xid, "/configuration/y-pos");
+   zpos = xmlGetNodeDouble(xid, "/configuration/z-pos");
+   xmlClose(xid);
+}
+
+While it is certainly possible to access every node directly by calling the
+xmlGetNode(Int/Double/String) functions, when more than one node need to be
+gathered from a parent node it is advised to get the id of the parent node
+and work from there. This is because the XML-id holds the boundaries of the
+(parent)node which limits the searching area causing improved searching speed.
+{
+   void *xnid;
+   char *s;
+
+   xnid = xmlGetNode(id, "/configuration/setup/");
+   version = xmlGetNodeDouble(xnid, "version");
+   s = xmlGetNodeString(xnid, "author");
+   if (s) author = s;
+   free(s);
+   free(xnid);
+}
+
+Overview of the available functions:
+ ----------------------------------------------------------------------------- 
 #
 # Functions to Open and Close the XML file
 # e.g.
@@ -16,7 +59,7 @@ void *xmlGetNode(const void *, const char *);
 void *xmlCopyNode(void *, const char *);
 
 #
-# Functions to walk the node tree an process them one by one.
+# Functions to walk the node tree and process them one by one.
 # e.g.
 #   xmid = xmlMarkId(id);
 #   num = xmlGetNumElements(xmid);
@@ -28,6 +71,7 @@ void *xmlCopyNode(void *, const char *);
 #         }
 #      }
 #   }
+#   free(xmid);
 #
 void *xmlMarkId(void *);
 unsigned int xmlGetNumElements(void *, const char *);

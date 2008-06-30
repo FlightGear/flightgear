@@ -249,22 +249,21 @@ void walk_the_tree(size_t num, void *xid, char *tree)
 
 void grep_file(unsigned num)
 {
-    void *xrid;
+    void *xid;
 
-    xrid = xmlOpen(_filenames[num]);
-    if (xrid)
+    xid = xmlOpen(_filenames[num]);
+    if (xid)
     {
-       void *xid = xmlMarkId(xrid);
+       void *xrid = xmlMarkId(xid);
        walk_the_tree(num, xrid, _root);
        free(xrid);
-       xrid = xid;
     }
     else
     {
         fprintf(stderr, "Error reading file '%s'\n", _filenames[num]);
     }
 
-    xmlClose(xrid);
+    xmlClose(xid);
 }
 
 int

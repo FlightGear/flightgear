@@ -1,5 +1,5 @@
-/* Copyright (c) 2007,2008 by Adalin B.V.
- * Copyright (c) 2007,2008 by Erik Hofman
+/* Copyright (c) 2007, 2008 by Adalin B.V.
+ * Copyright (c) 2007, 2008 by Erik Hofman
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
