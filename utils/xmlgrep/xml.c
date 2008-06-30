@@ -413,7 +413,7 @@ xmlGetNumElements(void *id, const char *path)
         if (nname)
         {
            clen = nname-pathname;
-           p = __xmlGetNode(xid->start, xid->len, pname, &clen);
+           p = __xmlGetNode(xid->start, xid->len, path, &clen);
         }
         else
         {
