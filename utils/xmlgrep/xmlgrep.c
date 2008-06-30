@@ -45,7 +45,7 @@ show_help ()
 void
 free_and_exit(int i)
 {
-    if (_root != _static_root) free(_root);
+    if (_root && _root != _static_root) free(_root);
     if (_element) free(_element);
     if (_value) free(_value);
     if (_print) free(_print);

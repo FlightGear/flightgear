@@ -1,5 +1,5 @@
-/* Copyright (c) 2007, 2008 by Adalin B.V.
- * Copyright (c) 2007, 2008 by Erik Hofman
+/* Copyright (c) 2007,2008 by Adalin B.V.
+ * Copyright (c) 2007,2008 by Erik Hofman
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -59,7 +59,6 @@ void simple_unmmap(SIMPLE_UNMMAP *);
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 
 struct _xml_id
 {
@@ -124,6 +123,7 @@ xmlCopyNode(void *id, char *path)
         char *ptr, *p;
         size_t rlen;
 
+        rlen = strlen(path);
         ptr = __xmlGetNode(xid->start, xid->len, path, &rlen);
         if (ptr)
         {
@@ -155,6 +155,7 @@ xmlGetNode(void *id, char *path)
       size_t rlen;
       char *ptr;
 
+      rlen = strlen(path);
       ptr = __xmlGetNode(xid->start, xid->len, path, &rlen);
       if (ptr)
       {
@@ -183,6 +184,7 @@ xmlGetNextElement(const void *pid, void *id, char *path)
         if (xid->len < xpid->len) xid->start += xid->len;
         nlen = xpid->len - (xid->start - xpid->start);
 
+        rlen = strlen(path);
         ptr = __xmlGetNode(xid->start, nlen, path, &rlen);
         if (ptr)
         {
@@ -220,6 +222,7 @@ xmlCompareNodeString(const void *id, const char *path, const char *s)
         size_t rlen;
         char *str;
 
+        rlen = strlen(path);
         str = __xmlGetNode(xid->start, xid->len, path, &rlen);
         if (str) ret = strncasecmp(str, s, rlen);
     }
@@ -303,6 +306,7 @@ xmlCopyString(void *id, const char *path, char *buffer, unsigned int buflen)
         char *str;
 
         *buffer = 0;
+        rlen = strlen(path);
         str = __xmlGetNode(xid->start, xid->len, path, &rlen);
         if (str)
         {
@@ -337,6 +341,7 @@ xmlGetNodeInt(void *id, const char *path)
         unsigned int rlen;
         char *str;
 
+        rlen = strlen(path);
         str = __xmlGetNode(xid->start, xid->len, path, &rlen);
         if (str) li = strtol(str, (char **)NULL, 10);
     }
@@ -367,6 +372,7 @@ xmlGetNodeDouble(void *id, const char *path)
         unsigned int rlen;
         char *str;
 
+        rlen = strlen(path);
         str = __xmlGetNode(xid->start, xid->len, path, &rlen);
 
         if (str) d = strtod(str, (char **)NULL);
@@ -406,13 +412,8 @@ xmlGetNumElements(void *id, const char *path)
         nname = strrchr(pathname, '/');
         if (nname)
         {
-           unsigned int plen = nname-pathname;
-
-           pname = calloc(1, plen+1);
-           memcpy(pname, path, plen);
-
+           clen = nname-pathname;
            p = __xmlGetNode(xid->start, xid->len, pname, &clen);
-           free(pname);
         }
         else
         {
@@ -454,6 +455,7 @@ __xmlCopyNode(char *start, size_t len, const char *path)
    char *p, *ret = 0;
    size_t rlen;
 
+   rlen = strlen(path);
    p = __xmlGetNode(start, len, path, &rlen);
    if (p && rlen)
    {
@@ -482,7 +484,7 @@ __xmlGetNode(char *start, size_t len, const char *path, size_t *rlen)
         if (!ptr)
         {
            last_node = 1;
-           ptr = name+strlen(name);
+           ptr = name + *rlen;
         }
         plen = ptr - name;
          
@@ -529,7 +531,9 @@ __xmlGetNode(char *start, size_t len, const char *path, size_t *rlen)
                     }
                 }
                 else
+                {
                     ret = __xmlGetNode(cur, len, ptr+1, rlen);
+                }
             }
         }
     }
