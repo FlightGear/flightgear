@@ -26,7 +26,8 @@ While it is certainly possible to access every node directly by calling the
 xmlGetNode(Int/Double/String) functions, when more than one node need to be
 gathered from a parent node it is advised to get the id of the parent node
 and work from there. This is because the XML-id holds the boundaries of the
-(parent)node which limits the searching area causing improved searching speed.
+(parent)node which limits the searching area resulting in improved searching
+speed.
 {
    void *xnid;
    char *s;

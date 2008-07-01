@@ -1,5 +1,10 @@
+01-07-2008
+ * fix a problem caused by removing the last unnecessary alloc
+ * strip leading-, and trailing spaces from the string before comparing
+ * fix a problem where trailing spaces weren't removed
+
 30-06-2008:
- * some small changes; fix some typo's en fix a small memory leak
+ * some small changes; fix some typo's and fix a small memory leak
  * update the documentation in README
  * remove the last unnecessary alloc
 
@@ -11,9 +16,9 @@
  * add a README file with short examples of various functions
 
 27-06-2008:
- * removed some memorly allocation in xmlGetNode and XMLGetNextElement
- * use the filesize for mmap and remove the root node from the xml-id
- * rearange xmlGetNode to work with complicated xml files
+ * removed some memory allocation in xmlGetNode and XMLGetNextElement
+ * use the file-size for mmap and remove the root node from the xml-id
+ * rearrange xmlGetNode to work with complicated xml files
  * add the xmlMarkId function to save the id before using xmlGetNextElement
  * speed up xmlGetNextId
 

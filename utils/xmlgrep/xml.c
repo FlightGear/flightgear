@@ -205,7 +205,17 @@ xmlCompareString(const void *id, const char *s)
 
     if (xid && xid->len && s && (strlen(s) > 0))
     {
-        ret = strncasecmp(xid->start, s, xid->len);
+        char *ps, *pe;
+
+        ps = xid->start;
+        pe = ps + xid->len;
+        pe--;
+
+        while ((ps<pe) && isspace(*ps)) ps++;
+        while ((pe>ps) && isspace(*pe)) pe--;
+        pe++;
+
+        ret = strncasecmp(ps, s, pe-ps);
     }
 
     return ret;
@@ -219,12 +229,21 @@ xmlCompareNodeString(const void *id, const char *path, const char *s)
 
     if (xid && xid->len && path && s && (strlen(s) > 0))
     {
+        char *str, *ps, *pe;
         size_t rlen;
-        char *str;
 
         rlen = strlen(path);
         str = __xmlGetNode(xid->start, xid->len, path, &rlen);
-        if (str) ret = strncasecmp(str, s, rlen);
+
+        ps = str;
+        pe = ps + rlen;
+        pe--;
+
+        while ((ps<pe) && isspace(*ps)) ps++;
+        while ((pe>ps) && isspace(*pe)) pe--;
+        pe++;
+
+        if (str) ret = strncasecmp(pe, s, pe-ps);
     }
 
     return ret;
@@ -241,19 +260,20 @@ xmlGetNodeString(void *id, const char *path)
         str = __xmlCopyNode(xid->start, xid->len, path);
         if (str)
         {
-            char *ps, *pe, *pem;
+            char *ps, *pe, *pend;
             int slen;
 
             slen = strlen(str);
             ps = str;
-            pe = pem = ps+slen;
+            pend = ps+slen;
+            pe = pend-1;
 
             while ((ps<pe) && isspace(*ps)) ps++;
             while ((pe>ps) && isspace(*pe)) pe--;
 
-            if (pe<pem) *++pe = 0;
+            *++pe = 0;
             slen = (pe-ps);
-            if ((ps>str) && slen) memmove(str, ps, slen+1);
+            if (slen && (ps>str)) memmove(str, ps, slen);
             else if (!slen) *str = 0;
         }
     }
@@ -272,20 +292,21 @@ xmlGetString(void *id)
         str = malloc(xid->len+1);
         if (str)
         {
-            char *ps, *pe, *pem;
+            char *ps, *pe, *pend;
             int slen;
 
             slen = xid->len;
             memcpy(str, xid->start, slen);
-            *(str+slen) = 0;
 
             ps = str;
-            pe = pem = ps+slen;
+            pend = ps+slen;
+            pe = pend-1;
+            *pend = 0;
 
             while ((ps<pe) && isspace(*ps)) ps++;
             while ((pe>ps) && isspace(*pe)) pe--;
 
-            if (pe<pem) *++pe = 0;
+            if (pe<pend) *++pe = 0;
             slen = (pe-ps);
             if ((ps>str) && slen) memmove(str, ps, slen+1);
             else if (!slen) *str = 0;
@@ -404,7 +425,7 @@ xmlGetNumElements(void *id, const char *path)
     {
         unsigned int clen;
         char *p, *pathname;
-        char *pname, *nname;
+        char *nname;
 
         pathname = (char *)path;
         if (*path == '/') pathname++;
@@ -413,7 +434,7 @@ xmlGetNumElements(void *id, const char *path)
         if (nname)
         {
            clen = nname-pathname;
-           p = __xmlGetNode(xid->start, xid->len, path, &clen);
+           p = __xmlGetNode(xid->start, xid->len, pathname, &clen);
         }
         else
         {
@@ -471,22 +492,31 @@ __xmlGetNode(char *start, size_t len, const char *path, size_t *rlen)
 {
     char *ret = 0;
 
-    if (len)
+    if (len && rlen && *rlen)
     {
         char last_node = 0;
         char *ptr, *name;
-        int plen;
+        size_t plen, slen;
 
+        slen = *rlen;
         name = (char *)path;
-        if (*name == '/') name++;	/* skip the leading '/' character */
+        if (*name == '/')
+        {
+            name++;	/* skip the leading '/' character */
+            slen--;
+        }
 
         ptr = strchr(name, '/');
         if (!ptr)
         {
            last_node = 1;
-           ptr = name + *rlen;
+           plen = slen;
         }
-        plen = ptr - name;
+        else
+        {
+           plen = ptr++ - name;
+           slen -= (ptr - name);
+        }
          
         if (plen)
         {
@@ -532,7 +562,8 @@ __xmlGetNode(char *start, size_t len, const char *path, size_t *rlen)
                 }
                 else
                 {
-                    ret = __xmlGetNode(cur, len, ptr+1, rlen);
+                    *rlen = slen;
+                    ret = __xmlGetNode(cur, len, ptr, rlen);
                 }
             }
         }
