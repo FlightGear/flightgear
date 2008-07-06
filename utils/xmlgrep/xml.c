@@ -1,5 +1,5 @@
-/* Copyright (c) 2007,2008 by Adalin B.V.
- * Copyright (c) 2007,2008 by Erik Hofman
+/* Copyright (c) 2007, 2008 by Adalin B.V.
+ * Copyright (c) 2007, 2008 by Erik Hofman
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,6 +60,7 @@ void simple_unmmap(SIMPLE_UNMMAP *);
 #include <stdlib.h>
 #include <string.h>
 
+
 struct _xml_id
 {
     char *start;
@@ -69,8 +70,17 @@ struct _xml_id
 
 static char *__xmlCopyNode(char *, size_t, const char *);
 static char *__xmlGetNode(char *, size_t, const char *, size_t *);
-static char *__xmlFindNextElement(char *, size_t, const char *);
-static void *memncasemem(const void *, size_t, const void *, size_t);
+static void *__xml_memmem(const void *, size_t, const void *, size_t);
+static void *__xml_memncasecmp(void *, size_t, void **, size_t *);
+
+#define PRINT(a, b, c) { \
+   size_t q, len=(((b)>(c)) ? (c) : (b)); \
+   if (a) { \
+      printf("(%i) '", len); \
+      for (q=0; q<len; q++) printf("%c", (a)[q]); \
+      printf("'\n"); \
+   } else printf("NULL pointer at line %i\n", __LINE__); \
+}
 
 void *
 xmlOpen(char *fn)
@@ -169,11 +179,11 @@ xmlGetNode(void *id, char *path)
    return (void *)xsid;
 }
 
-void *
+const char *
 xmlGetNextElement(const void *pid, void *id, char *path)
 {
     struct _xml_id *xpid = (struct _xml_id *)pid;
-    struct _xml_id *xsid = 0;
+    const char *ret;
 
     if (id && path)
     {
@@ -190,11 +200,13 @@ xmlGetNextElement(const void *pid, void *id, char *path)
         {
              xid->len = rlen;
              xid->start = ptr;
-             xsid = xid;
+             ret = path;
         }
+        else ret = 0;
     }
+    else ret = 0;
 
-    return (void *)xsid;
+    return ret;
 }
 
 int
@@ -443,8 +455,13 @@ xmlGetNumElements(void *id, const char *path)
             clen = xid->len;
         }
            
-        while ((p = __xmlFindNextElement(p, clen, nname)) != 0)
-            ret++;
+        do
+        {
+           unsigned int slen = strlen(nname);
+           p = __xmlGetNode(p, clen, nname, &slen);
+           if (p) ret++;
+        }
+        while (p);
     }
 
     return ret;
@@ -494,47 +511,110 @@ __xmlGetNode(char *start, size_t len, const char *path, size_t *rlen)
 
     if (len && rlen && *rlen)
     {
+        size_t elem_len, newpath_len;
+        char *newpath, *element;
         char last_node = 0;
-        char *ptr, *name;
-        size_t plen, slen;
 
-        slen = *rlen;
-        name = (char *)path;
-        if (*name == '/')
+        newpath_len = *rlen;
+        element = (char *)path;
+        if (*element == '/')
         {
-            name++;	/* skip the leading '/' character */
-            slen--;
+            element++;	/* skip the leading '/' character */
+            newpath_len--;
         }
 
-        ptr = strchr(name, '/');
-        if (!ptr)
+        newpath = strchr(element, '/');
+        if (!newpath)
         {
            last_node = 1;
-           plen = slen;
+           elem_len = newpath_len;
         }
         else
         {
-           plen = ptr++ - name;
-           slen -= (ptr - name);
+           elem_len = newpath++ - element;
+           newpath_len -= (newpath - element);
         }
          
-        if (plen)
+        if (elem_len)
         {
             char *p, *cur;
+            size_t newlen;
+            void *newelem;
 
-            cur = start;
+            cur = p = start;
             do
             {
-                if ((p = memncasemem(cur, len, name, plen)) != 0)
+                len -= cur - p;
+                p = memchr(cur, '<', len);
+
+                if (p)
                 {
-                    len -= (p + plen) - cur;
-                    cur = p + plen;
+                    p++;
+                    if (p >= (cur+len)) return 0;
+
+                    len -= p - cur;
+                    cur = p;
+
+                    /* skip comments */
+                    if (memcmp(cur, "!--", 3) == 0)
+                    {
+                        if (len < 6) return 0;
+
+                        cur += 3;
+                        len -= 3;
+
+                        do
+                        {
+                            p = memchr(cur, '-', len);
+                            if (p)
+                            {
+                                len -= p - cur;
+                                if ((len > 3) && (memcmp(cur, "-->", 3) == 0))
+                                {
+                                    p += 3;
+                                    len -= 3;
+                                    break;
+                                }
+                                cur = p+1;
+                            }
+                            else return 0;
+                        }
+                        while (p && (len > 2));
+
+                        if (!p || (len < 2)) return 0;
+                    }
+                    else if (*cur == '?')
+                    {
+                        if (len < 3) return 0;
+
+                        cur++;
+                        len--;
+                        p = memchr(cur, '?', len);
+                        if (!p || *(p+1) != '>') return 0;
+
+                        p += 2;
+                        len -= (p - cur);
+                    }
+                    else
+                    {
+                        newlen = elem_len;
+                        newelem = element;
+
+                        cur = __xml_memncasecmp(p, len, &newelem, &newlen);
+                        if (cur)
+                        {
+                            break;
+                        }
+
+                        cur = p + elem_len;
+                    }
                 }
             }
-            while (p && (*(p-1) != '<'));
+            while (p);
 
-            if (p)
+            if (cur && p)
             {
+                len -= elem_len;
                 p = cur;
                 while ((*cur++ != '>') && (cur<(p+len)));
                 len -= cur - p;
@@ -544,26 +624,28 @@ __xmlGetNode(char *start, size_t len, const char *path, size_t *rlen)
                     char *rptr = cur;
                     do
                     {
-                        if ((p = memncasemem(cur, len, name, plen)) != 0) 
+                        if ((p = __xml_memmem(cur, len, "</", 2)) != 0) 
                         {
-                            len -= (p + plen) - cur;
-                            cur = p + plen;
-                            if (*(p-2) == '<' && *(p-1) == '/'
-                                && *(p+plen) == '>') break;
+                            char *r;
+
+                            len -= (p + 2) - cur;
+                            cur = p + 2;
+                            r = __xml_memncasecmp(cur, len, &newelem, &newlen);
+                            if (r && *r == '>') break;
                         }
                     }
                     while (p);
 
                     if (p)
                     {
-                        *rlen = p-rptr-2;
+                        *rlen = p-rptr;
                         ret = rptr;
                     }
                 }
                 else
                 {
-                    *rlen = slen;
-                    ret = __xmlGetNode(cur, len, ptr, rlen);
+                    *rlen = newpath_len;
+                    ret = __xmlGetNode(cur, len, newpath, rlen);
                 }
             }
         }
@@ -572,156 +654,89 @@ __xmlGetNode(char *start, size_t len, const char *path, size_t *rlen)
     return ret;
 }
 
-char *
-__xmlFindNextElement(char *start, size_t len, const char *name)
-{
-    char *ret = 0;
 
-    if (start && len && name)
-    {
-        unsigned int plen;
-
-        plen = strlen(name);
-        if (plen)
-        {
-            char *p, *cur;
-
-            cur = start;
-            do
-            {
-                if ((p = memncasemem(cur, len, name, plen)) != 0)
-                {
-                    len -= (p + plen) - cur;
-                    cur = p + plen;
-                }
-            }
-            while (p && (*(p-1) != '<'));
-
-            if (p)
-            {
-                char *rptr = cur;
-
-                p = cur;
-                while ((*cur++ != '>') && (cur<(p+len)));
-                len -= cur - p;
-
-                do
-                {
-                    if ((p = memncasemem(cur, len, name, plen)) != 0)
-                    {
-                        len -= (p + plen) - cur;
-                        cur = p + plen;
-                        if (*(p-2) == '<' && *(p-1) == '/' && *(p+plen) == '>')
-                            break;
-                    }
-                }
-                while (p);
-
-                ret = rptr;
-          }
-      }
-   }
-
-   return ret;
-}
-
-
-#define CASECMP(a,b)	( ((a) & 0xdf) == ((b) & 0xdf) )
 #define NOCASECMP(a,b)	( ((a)^(b)) & 0xdf )
 
 void *
-memncasemem(const void *haystack, size_t haystacklen,
+__xml_memmem(const void *haystack, size_t haystacklen,
                          const void *needle, size_t needlelen)
 {
     void *rptr = 0;
 
     if (haystack && needle && (needlelen > 0) && (haystacklen >= needlelen))
     {
-        const char *ne = (const char *)needle + needlelen;
-        const char *he = (const char *)haystack + haystacklen;
-        const char *hne = he - needlelen;
-        char *ns, *hs = (char *)haystack;
+        char *ns, *hs, *ptr;
+
+        hs = (char *)haystack;
+        ns = (char *)needle;
 
         do
         {
-            rptr = 0;
-            ns = (char *)needle;
-            while((hs <= hne) && NOCASECMP(*hs,*ns))
-               hs++;
-
-            if (hs < hne)
+            ptr = memchr(hs, *ns, haystacklen);
+            if (ptr)
             {
-                rptr = hs;
-                while((hs < he) && (ns < ne) && !NOCASECMP(*hs,*ns))
+                haystacklen -= (ptr - hs);
+
+                if (haystacklen < needlelen) break;
+                if (memcmp(ptr, needle, needlelen) == 0)
                 {
-                    hs++;
-                    ns++;
+                   rptr = ptr;
+                   break;
                 }
+
+                hs = ptr+1;
             }
             else break;
         }
-        while (ns < ne);
+        while (haystacklen > needlelen);
     }
 
     return rptr;
 }
 
-#if 0
-const unsigned char *
-boyermoore_horspool_memmem(const unsigned char* haystack, size_t hlen,
-                           const unsigned char* needle,   size_t nlen)
+void *
+__xml_memncasecmp(void *haystack, size_t haystacklen,
+                  void **needle, size_t *needlelen)
 {
-    size_t scan = 0;
-    size_t bad_char_skip[UCHAR_MAX + 1]; /* Officially called:
-                                          * bad character shift */
- 
-    /* Sanity checks on the parameters */
-    if (nlen <= 0 || !haystack || !needle)
-        return NULL;
- 
-    /* ---- Preprocess ---- */
-    /* Initialize the table to default value */
-    /* When a character is encountered that does not occur
-     * in the needle, we can safely skip ahead for the whole
-     * length of the needle.
-     */
-    for (scan = 0; scan <= UCHAR_MAX; scan = scan + 1)
-        bad_char_skip[scan] = nlen;
- 
-    /* C arrays have the first byte at [0], therefore:
-     * [nlen - 1] is the last byte of the array. */
-    size_t last = nlen - 1;
- 
-    /* Then populate it with the analysis of the needle */
-    for (scan = 0; scan < last; scan = scan + 1)
-        bad_char_skip[needle[scan]] = last - scan;
- 
-    /* ---- Do the matching ---- */
- 
-    /* Search the haystack, while the needle can still be within it. */
-    while (hlen >= nlen)
+    void *rptr = 0;
+
+    if (haystack && needle && needlelen && (*needlelen > 0)
+        && (haystacklen >= *needlelen))
     {
-        /* scan from the end of the needle */
-        for (scan = last; haystack[scan] == needle[scan]; scan = scan - 1)
-            if (scan == 0) /* If the first byte matches, we've found it. */
-                return haystack;
- 
-        /* otherwise, we need to skip some bytes and start again. 
-           Note that here we are getting the skip value based on the last byte
-           of needle, no matter where we didn't match. So if needle is: "abcd"
-           then we are skipping based on 'd' and that value will be 4, and
-           for "abcdd" we again skip on 'd' but the value will be only 1.
-           The alternative of pretending that the mismatched character was 
-           the last character is slower in the normal case (Eg. finding 
-           "abcd" in "...azcd..." gives 4 by using 'd' but only 
-           4-2==2 using 'z'. */
-        hlen     -= bad_char_skip[haystack[last]];
-        haystack += bad_char_skip[haystack[last]];
+        char *ns, *hs;
+        size_t i;
+
+        ns = (char *)*needle;
+        hs = (char *)haystack;
+
+        /* search for everything */
+        if ((*ns == '*') && (*needlelen == 1))
+        {
+           char *he = hs + haystacklen;
+
+           while ((hs < he) && (*hs != ' ') && (*hs != '>')) hs++;
+           *needle = (void *)haystack;
+           *needlelen = hs - (char *)haystack;
+           rptr = hs;
+        }
+        else
+        {
+            size_t nlen = *needlelen;
+
+            for (i=0; i<nlen; i++)
+            {
+                if (NOCASECMP(*hs,*ns) && (*ns != '?'))
+                    break;
+                hs++;
+                ns++;
+            }
+
+            if (i == nlen) rptr = hs;
+        }
     }
- 
-    return NULL;
+
+    return rptr;
 }
-#endif
 
 #ifdef WIN32
 /* Source:

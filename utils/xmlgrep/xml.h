@@ -84,13 +84,14 @@ unsigned int xmlGetNumElements(void *, const char *);
 
 /**
  * Get the next occurrence of element in the parent node
+ * The return value should neevr be altered or freed by the caller
  *
  * @param pid XML-id of the parent node of this node
  * @param xid XML-id
  * @param element name of the element to search for
- * @return XML-subsection-id for further processing
+ * @return name of the element or NULL if unsuccessful
  */
-void *xmlGetNextElement(const void *, void *, const char *);
+const char *xmlGetNextElement(const void *, void *, const char *);
 
 /**
  * Compare the value of this element to a reference string.

@@ -5,6 +5,7 @@
 #include "xml.h"
 
 static const char *_static_root = "/";
+static const char *_static_element = "*";
 static unsigned int _fcount = 0;
 static char **_filenames = 0;
 static char *_element = 0;
@@ -46,7 +47,7 @@ void
 free_and_exit(int i)
 {
     if (_root && _root != _static_root) free(_root);
-    if (_element) free(_element);
+    if (_element && _element != _static_element) free(_element);
     if (_value) free(_value);
     if (_print) free(_print);
     if (_filenames)
@@ -153,92 +154,71 @@ parse_option(char **args, int n, int max)
 
 void walk_the_tree(size_t num, void *xid, char *tree)
 {
-    unsigned int q, no_elements;
-    char *elem, *next;
+    unsigned int i, no_elements;
 
-    elem = tree;
-    if (*elem == '/') elem++;
-
-    next = strchr(elem, '/');
-    if (!next)					/* last node from the tree */
+    if (!tree)					/* last node from the tree */
     {
-        void *elem_id = xmlMarkId(xid);
-
-        no_elements = xmlGetNumElements(xid, elem);
-        for (q=0; q<no_elements; q++)
+        void *xmid = xmlMarkId(xid);
+        if (xmid && _print)
         {
-            void *node_id = xmlGetNextElement(xid, elem_id, elem);
-            if (node_id && _print)
+            no_elements = xmlGetNumElements(xmid, _print);
+            for (i=0; i<no_elements; i++)
             {
-                unsigned int i, no_nodes;
-                void *xmid;
-
-                xmid = xmlMarkId(node_id);
-
-                no_nodes = xmlGetNumElements(node_id, _print);
-                for (i=0; i<no_nodes; i++)
+                if (xmlGetNextElement(xid, xmid, _print) != 0)
                 {
-                    if (xmlGetNextElement(node_id, xmid, _print) != 0)
+                    char *value = xmlGetString(xmid);
+                    if (value)
                     {
-                        char *value = xmlGetString(xmid);
-                        if (value)
-                        {
-                            printf("%s: <%s>%s</%s>\n",
-                                   _filenames[num], _print, value, _print);
-                            free(value);
-                        }
+                        printf("%s: <%s>%s</%s>\n",
+                               _filenames[num], _print, value, _print);
+                        free(value);
                     }
                 }
-                free(xmid);
             }
-            else if (node_id && _value)
-            {
-                if (_element)
-                {
-                    unsigned int i, no_nodes;
-                    void *xmid;
-
-                    xmid = xmlMarkId(node_id);
-
-                    no_nodes = xmlGetNumElements(node_id, _element);
-                    for (i=0; i<no_nodes; i++)
-                    {
-                        xmlGetNextElement(node_id, xmid, _element);
-                        if (xmlCompareString(xmid, _value) == 0)
-                        {
-                            printf("%s: <%s>%s</%s>\n",
-                                   _filenames[num], _element, _value, _element);
-                        }
-                    }
-                    free(xmid);
-                }
-                else
-                {
-                }
-            }
-            else if (node_id && _element)
-            {
-            }
+            free(xmid);
         }
-        free(elem_id);
+        else if (xmid && _value)
+        {
+            no_elements = xmlGetNumElements(xmid, _element);
+            for (i=0; i<no_elements; i++)
+            {
+                if ((xmlGetNextElement(xid, xmid, _element) != 0)
+                    && (xmlCompareString(xmid, _value) == 0))
+                {
+                    printf("%s: <%s>%s</%s>\n",
+                           _filenames[num], _element, _value, _element);
+                }
+            }
+            free(xmid);
+        }
+        else if (xmid && _element)
+        {
+        }
+        else printf("Error executing xmlMarkId\n");
     }
-    else				 /* walk the rest of the tree */
+    else if (xid)				 /* walk the rest of the tree */
     {
+        char *elem, *next;
         void *xmid;
 
+        elem = tree;
+        if (*elem == '/') elem++;
+
+        next = strchr(elem, '/');
+        
         xmid = xmlMarkId(xid);
         if (xmid)
         {
-            *next++ = 0;
+            if (next) *next++ = 0;
 
             no_elements = xmlGetNumElements(xid, elem);
-            for (q=0; q<no_elements; q++)
+            for (i=0; i<no_elements; i++)
             {
-                void *elem_id = xmlGetNextElement(xid, xmid, elem);
-                walk_the_tree(num, elem_id, next);
+                if (xmlGetNextElement(xid, xmid, elem) != 0)
+                    walk_the_tree(num, xmid, next);
             }
 
-            *--next = '/';
+            if (next) *--next = '/';
 
             free(xmid);
         }
@@ -280,7 +260,8 @@ main (int argc, char **argv)
         i += ret;
     }
 
-    if (_root == 0) (_root = (char *)_static_root);
+    if (_root == 0) _root = (char *)_static_root;
+    if (_element == 0) _element = (char *)_static_element;
 
     for (i=0; i<_fcount; i++)
         grep_file(i);

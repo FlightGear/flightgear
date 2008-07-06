@@ -1,3 +1,9 @@
+06-07-2008
+  * reorganize the code to be able to skip comment sections
+  * depreciate __xmlFindNextElement and use __xmlGetNode instead
+  * xmlGetNextElement now returns char* instead of void* for furute use
+  * add preliminary support for wildcards in the search path ('*' and '?')
+
 01-07-2008
  * fix a problem caused by removing the last unnecessary alloc
  * strip leading-, and trailing spaces from the string before comparing
