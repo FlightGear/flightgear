@@ -87,8 +87,8 @@ static naRef f_getAttribute(naContext c, naRef me, int argc, naRef* args)
     else if(!strcmp(a, "references"))  return naNum(node->getNumRefs());
     else if(!strcmp(a, "tied"))        return naNum((*node)->isTied());
     else if(!strcmp(a, "alias"))       return naNum((*node)->isAlias());
-    else if(!strcmp(a, "read"))        attr = SGPropertyNode::READ;
-    else if(!strcmp(a, "write"))       attr = SGPropertyNode::WRITE;
+    else if(!strcmp(a, "readable"))    attr = SGPropertyNode::READ;
+    else if(!strcmp(a, "writable"))    attr = SGPropertyNode::WRITE;
     else if(!strcmp(a, "archive"))     attr = SGPropertyNode::ARCHIVE;
     else if(!strcmp(a, "trace-read"))  attr = SGPropertyNode::TRACE_READ;
     else if(!strcmp(a, "trace-write")) attr = SGPropertyNode::TRACE_WRITE;
@@ -112,8 +112,8 @@ static naRef f_setAttribute(naContext c, naRef me, int argc, naRef* args)
     SGPropertyNode::Attribute attr;
     char *a = naStr_data(val);
     if(!a) a = "";
-    if(!strcmp(a, "read"))             attr = SGPropertyNode::READ;
-    else if(!strcmp(a, "write"))       attr = SGPropertyNode::WRITE;
+    if(!strcmp(a, "readable"))         attr = SGPropertyNode::READ;
+    else if(!strcmp(a, "writable"))    attr = SGPropertyNode::WRITE;
     else if(!strcmp(a, "archive"))     attr = SGPropertyNode::ARCHIVE;
     else if(!strcmp(a, "trace-read"))  attr = SGPropertyNode::TRACE_READ;
     else if(!strcmp(a, "trace-write")) attr = SGPropertyNode::TRACE_WRITE;
