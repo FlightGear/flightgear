@@ -1443,22 +1443,29 @@ set_property(const string& arg)
     }
     SGPropertyNode *n = fgGetNode(name.c_str(), true);
 
-    if (type.empty())
-        return n->setUnspecifiedValue(value.c_str());
-    else if (type == "s" || type == "string")
-        return n->setStringValue(value.c_str());
-    else if (type == "d" || type == "double")
-        return n->setDoubleValue(strtod(value.c_str(), 0));
-    else if (type == "f" || type == "float")
-        return n->setFloatValue(atof(value.c_str()));
-    else if (type == "l" || type == "long")
-        return n->setLongValue(strtol(value.c_str(), 0, 0));
-    else if (type == "i" || type == "int")
-        return n->setIntValue(atoi(value.c_str()));
-    else if (type == "b" || type == "bool")
-        return n->setBoolValue(value == "true" || atoi(value.c_str()) != 0);
+    bool writable = n->getAttribute(SGPropertyNode::WRITE);
+    if (!writable)
+        n->setAttribute(SGPropertyNode::WRITE, true);
 
-    return false;
+    bool ret = false;
+    if (type.empty())
+        ret = n->setUnspecifiedValue(value.c_str());
+    else if (type == "s" || type == "string")
+        ret = n->setStringValue(value.c_str());
+    else if (type == "d" || type == "double")
+        ret = n->setDoubleValue(strtod(value.c_str(), 0));
+    else if (type == "f" || type == "float")
+        ret = n->setFloatValue(atof(value.c_str()));
+    else if (type == "l" || type == "long")
+        ret =  n->setLongValue(strtol(value.c_str(), 0, 0));
+    else if (type == "i" || type == "int")
+        ret =  n->setIntValue(atoi(value.c_str()));
+    else if (type == "b" || type == "bool")
+        ret =  n->setBoolValue(value == "true" || atoi(value.c_str()) != 0);
+
+    if (!writable)
+        n->setAttribute(SGPropertyNode::WRITE, false);
+    return ret;
 }
 
 
