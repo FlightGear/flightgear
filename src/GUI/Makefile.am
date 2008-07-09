@@ -7,7 +7,6 @@ libGUI_a_SOURCES = \
 	menubar.cxx menubar.hxx \
 	gui.cxx gui.h gui_funcs.cxx \
 	mouse.cxx fonts.cxx \
-	trackball.c trackball.h \
 	AirportList.cxx AirportList.hxx \
         property_list.cxx property_list.hxx \
         layout.cxx layout-props.cxx layout.hxx \
