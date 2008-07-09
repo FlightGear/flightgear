@@ -124,6 +124,7 @@
 #include "options.hxx"
 #include "globals.hxx"
 #include "logger.hxx"
+#include "renderer.hxx"
 #include "viewmgr.hxx"
 #include "main.hxx"
 
@@ -1984,5 +1985,47 @@ void fgReInitSubsystems()
         fgSetBool("/sim/freeze/master", false);
     }
     fgSetBool("/sim/sceneryloaded",false);
+}
+
+
+void reInit(void)  // from gui_local.cxx -- TODO merge with fgReInitSubsystems()
+{
+    static SGPropertyNode_ptr master_freeze = fgGetNode("/sim/freeze/master", true);
+
+    bool freeze = master_freeze->getBoolValue();
+    if (!freeze)
+        master_freeze->setBoolValue(true);
+
+    fgSetBool("/sim/signals/reinit", true);
+    cur_fdm_state->unbind();
+
+    // in case user has changed window size as
+    // restoreInitialState() overwrites these
+    int xsize = fgGetInt("/sim/startup/xsize");
+    int ysize = fgGetInt("/sim/startup/ysize");
+
+    globals->restoreInitialState();
+
+    // update our position based on current presets
+    fgInitPosition();
+
+    // We don't know how to resize the window, so keep the last values
+    //  for xsize and ysize, and don't use the one set initially
+    fgSetInt("/sim/startup/xsize", xsize);
+    fgSetInt("/sim/startup/ysize", ysize);
+
+    SGTime *t = globals->get_time_params();
+    delete t;
+    t = fgInitTime();
+    globals->set_time_params(t);
+
+    fgReInitSubsystems();
+
+    globals->get_tile_mgr()->update(fgGetDouble("/environment/visibility-m"));
+    globals->get_renderer()->resize(xsize, ysize);
+    fgSetBool("/sim/signals/reinit", false);
+
+    if (!freeze)
+        master_freeze->setBoolValue(false);
 }
 

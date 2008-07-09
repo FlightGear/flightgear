@@ -6,7 +6,6 @@ libGUI_a_SOURCES = \
         dialog.cxx dialog.hxx \
 	menubar.cxx menubar.hxx \
 	gui.cxx gui.h gui_funcs.cxx \
-	gui_local.cxx gui_local.hxx \
 	mouse.cxx fonts.cxx \
 	trackball.c trackball.h \
 	AirportList.cxx AirportList.hxx \

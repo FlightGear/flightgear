@@ -88,7 +88,6 @@
 #endif
 
 #include "gui.h"
-#include "gui_local.hxx"
 
 SG_USING_STD(string);
 SG_USING_STD(cout);

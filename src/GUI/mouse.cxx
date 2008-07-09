@@ -64,7 +64,6 @@
 #include <Main/viewmgr.hxx>
 
 #include "gui.h"
-#include "gui_local.hxx"
 
 SG_USING_STD(string);
 SG_USING_STD(cout);
@@ -73,10 +72,24 @@ SG_USING_STD(cout);
 Mouse stuff
 ---------------------------------------------------------------------*/
 
+#if defined(WIN32) || defined(__CYGWIN32__)
+#define WIN32_CURSOR_TWEAKS
+// uncomment this for cursor to turn off when menu is disabled
+// #define WIN32_CURSOR_TWEAKS_OFF
+#elif (GLUT_API_VERSION >= 4 || GLUT_XLIB_IMPLEMENTATION >= 9)
+#define X_CURSOR_TWEAKS
+#endif
+
 static int mouse_active = 0;
 
 static int MOUSE_XSIZE = 0;
 static int MOUSE_YSIZE = 0;
+
+typedef enum {
+	MOUSE_POINTER,
+	MOUSE_YOKE,
+	MOUSE_VIEW
+} MouseMode;
 
 /* --------------------------------------------------------------------
 Support for mouse as control yoke (david@megginson.com)

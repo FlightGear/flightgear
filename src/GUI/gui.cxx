@@ -51,7 +51,6 @@
 #include <GUI/new_gui.hxx>
 
 #include "gui.h"
-#include "gui_local.hxx"
 #include "layout.hxx"
 
 using namespace osg;
@@ -133,7 +132,6 @@ bool guiFinishInit()
         return false;
     if (!initOp->isFinished())
         return false;
-    initMouseQuat();
     initOp = 0;
     return true;
 }

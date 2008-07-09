@@ -212,6 +212,17 @@ do_exit (const SGPropertyNode * arg)
 
 
 /**
+ * Reset FlightGear (Shift-Escape or Menu->File->Reset)
+ */
+static bool
+do_reset (const SGPropertyNode * arg)
+{
+    reInit();
+    return true;
+}
+
+
+/**
  * Built-in command: reinitialize one or more subsystems.
  *
  * subsystem[*]: the name(s) of the subsystem(s) to reinitialize; if
@@ -1445,6 +1456,7 @@ static struct {
     { "null", do_null },
     { "nasal", do_nasal },
     { "exit", do_exit },
+    { "reset", do_reset },
     { "reinit", do_reinit },
     { "suspend", do_reinit },
     { "resume", do_reinit },

@@ -26,14 +26,6 @@
 // user-configured dialogs and new commands where necessary.
 ////////////////////////////////////////////////////////////////////////
 
-extern void reInit (void);
-static bool
-do_reinit_dialog (const SGPropertyNode * arg)
-{
-    reInit();
-    return true;
-}
-
 #if defined(TR_HIRES_SNAP)
 extern void dumpHiResSnapShot ();
 static bool
@@ -66,7 +58,6 @@ static struct {
     const char * name;
     SGCommandMgr::command_t command;
 } deprecated_dialogs [] = {
-    { "old-reinit-dialog", do_reinit_dialog },
 #if defined(TR_HIRES_SNAP)
     { "old-hires-snapshot-dialog", do_hires_snapshot_dialog },
 #endif
