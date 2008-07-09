@@ -12,7 +12,6 @@ gui_funcs.cxx           Implementation of internal GUI functions (deprecated).
 menubar.[ch]xx          XML-configurable menu bar.
 mouse.cxx               Old GUI mouse support (deprecated).
 new_gui.[ch]xx          Top-level for the GUI subsystem.
-trackball.[ch]          Old mouse view support (deprecated).
 
 
 David Megginson
