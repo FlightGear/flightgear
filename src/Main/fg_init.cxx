@@ -1390,6 +1390,8 @@ bool fgInitGeneral() {
     }
     SG_LOG( SG_GENERAL, SG_INFO, "FG_ROOT = " << '"' << root << '"' << endl );
 
+    globals->set_browser(fgGetString("/sim/startup/browser-app", "firefox %u"));
+
 #if defined(FX) && defined(XMESA)
     // initialize full screen flag
     globals->set_fullscreen(false);

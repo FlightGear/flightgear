@@ -116,6 +116,8 @@ private:
     // Roots of FlightGear scenery tree
     string_list fg_scenery;
 
+    string browser;
+
     // Fullscreen mode for old 3DFX cards.
 #if defined(FX) && defined(XMESA)
     bool fullscreen;
@@ -237,6 +239,9 @@ public:
 
     inline const string_list &get_fg_scenery () const { return fg_scenery; }
     void set_fg_scenery (const string &scenery);
+
+    inline const string &get_browser () const { return browser; }
+    void set_browser (const string &b) { browser = b; }
 
 #if defined(FX) && defined(XMESA)
     inline bool get_fullscreen() const { return fullscreen; }

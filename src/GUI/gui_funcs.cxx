@@ -101,9 +101,6 @@ extern void fgUpdateHUD( GLfloat x_start, GLfloat y_start,
 
 
 const __fg_gui_fn_t __fg_gui_fn[] = {
-
-        // File
-        {"reInit", reInit},
 #ifdef TR_HIRES_SNAP
         {"dumpHiResSnapShot", fgHiResDumpWrapper},
 #endif
@@ -214,13 +211,13 @@ void helpCb ()
 	
 #if !defined(WIN32)
 
-    string help_app = fgGetString("/sim/startup/browser-app");
+    command = globals->get_browser();
+    string::size_type pos;
+    if ((pos = command.find("%u", 0)) != string::npos)
+        command.replace(pos, 2, path.str());
+    else
+        command += " " + path.str();
 
-    if ( system("xwininfo -name Netscape > /dev/null 2>&1") == 0 ) {
-        command = help_app + " -remote \"openURL(" + path.str() + ")\"";
-    } else {
-        command = help_app + " " + path.str();
-    }
     command += " &";
     system( command.c_str() );
 
