@@ -87,6 +87,7 @@ static naRef f_getAttribute(naContext c, naRef me, int argc, naRef* args)
     else if(!strcmp(a, "references"))  return naNum(node->getNumRefs());
     else if(!strcmp(a, "tied"))        return naNum((*node)->isTied());
     else if(!strcmp(a, "alias"))       return naNum((*node)->isAlias());
+    else if(!strcmp(a, "last"))        return naNum(SGPropertyNode::LAST_USED_ATTRIBUTE);
     else if(!strcmp(a, "readable"))    attr = SGPropertyNode::READ;
     else if(!strcmp(a, "writable"))    attr = SGPropertyNode::WRITE;
     else if(!strcmp(a, "archive"))     attr = SGPropertyNode::ARCHIVE;
