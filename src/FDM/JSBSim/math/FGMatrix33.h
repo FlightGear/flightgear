@@ -216,8 +216,8 @@ public:
   }
 
   /** Read access the entries of the matrix.
-      This function is just a shortcut for the @ref double&
-      operator()(unsigned int row, unsigned int col) function. It is
+      This function is just a shortcut for the <tt>double&
+      operator()(unsigned int row, unsigned int col)</tt> function. It is
       used internally to access the elements in a more convenient way.
 
       Note that the indices given in the arguments are unchecked.
@@ -233,8 +233,8 @@ public:
   }
 
   /** Write access the entries of the matrix.
-      This function is just a shortcut for the @ref double&
-      operator()(unsigned int row, unsigned int col) function. It is
+      This function is just a shortcut for the <tt>double&
+      operator()(unsigned int row, unsigned int col)</tt> function. It is
       used internally to access the elements in a more convenient way.
 
       Note that the indices given in the arguments are unchecked.

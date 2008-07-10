@@ -54,6 +54,7 @@ FGGain::FGGain(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
   string strScheduledBy, gain_string, sZeroCentered;
 
   GainPropertyNode = 0;
+  GainPropertySign = 1.0;
   Gain = 1.000;
   Rows = 0;
   Table = 0;
@@ -69,8 +70,11 @@ FGGain::FGGain(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
 
   if ( element->FindElement("gain") ) {
     gain_string = element->FindElementValue("gain");
-    //ToDo allow for negative sign here for property
-    if (gain_string.find_first_not_of("+-.0123456789") != string::npos) { // property
+    if (gain_string.find_first_not_of("+-.0123456789Ee") != string::npos) { // property
+      if (gain_string[0] == '-') {
+       GainPropertySign = -1.0;
+       gain_string.erase(0,1);
+      }
       GainPropertyNode = PropertyManager->GetNode(gain_string);
     } else {
       Gain = element->FindElementValueAsNumber("gain");
@@ -126,6 +130,8 @@ FGGain::FGGain(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
 
 FGGain::~FGGain()
 {
+  delete Table;
+
   Debug(1);
 }
 
@@ -137,7 +143,7 @@ bool FGGain::Run(void )
 
   Input = InputNodes[0]->getDoubleValue() * InputSigns[0];
 
-  if (GainPropertyNode != 0) Gain = GainPropertyNode->getDoubleValue();
+  if (GainPropertyNode != 0) Gain = GainPropertyNode->getDoubleValue() * GainPropertySign;
 
   if (Type == "PURE_GAIN") {                       // PURE_GAIN
 

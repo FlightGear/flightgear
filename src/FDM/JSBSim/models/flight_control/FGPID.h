@@ -69,6 +69,27 @@ CLASS DOCUMENTATION
 
 /** Encapsulates a PID control component for the flight control system.
 
+<h3>Configuration Format:</h3>
+
+@code
+<pid name="{string}">
+  <kp> {number} </kp>
+  <ki> {number} </ki>
+  <kd> {number} </kd>
+  <trigger> {string} </trigger>
+</pid>
+@endcode
+
+<h3>Configuration Parameters:</h3>
+<pre>
+
+  kp      - Proportional constant, default value 0.
+  ki      - Integrative constant, default value 0.
+  kd      - Derivative constant, default value 0.
+  trigger - Property which is used to sense wind-up, optional.
+
+</pre>
+
     @author Jon S. Berndt
     @version $Revision$
 */
@@ -89,8 +110,14 @@ private:
   double dt;
   FGPropertyManager *Trigger;
   double Kp, Ki, Kd;
-  double P_out, D_out, I_out;
+  double I_out_total;
   double Input_prev, Input_prev2;
+  double KpPropertySign;
+  double KiPropertySign;
+  double KdPropertySign;
+  FGPropertyManager* KpPropertyNode;
+  FGPropertyManager* KiPropertyNode;
+  FGPropertyManager* KdPropertyNode;
 
   void Debug(int from);
 };

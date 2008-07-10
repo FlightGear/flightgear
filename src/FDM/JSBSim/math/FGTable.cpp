@@ -300,11 +300,6 @@ double** FGTable::Allocate(void)
 
 FGTable::~FGTable()
 {
-  if (!Name.empty() && !internal) {
-    string tmp = PropertyManager->mkPropertyName(Name, false); // Allow upper case
-    PropertyManager->Untie(tmp);
-  }
-
   if (nTables > 0) {
     for (unsigned int i=0; i<nTables; i++) delete Tables[i];
     Tables.clear();

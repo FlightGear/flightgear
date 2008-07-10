@@ -39,7 +39,7 @@ INCLUDES
 #include "FGAerodynamics.h"
 #include "FGPropagate.h"
 #include "FGAircraft.h"
-#include "FGState.h"
+#include "FGAuxiliary.h"
 #include "FGMassBalance.h"
 #include <input_output/FGPropertyManager.h>
 
@@ -47,10 +47,6 @@ namespace JSBSim {
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_AERODYNAMICS;
-
-const unsigned NAxes=6;
-const char* AxisNames[] = { "drag", "side-force", "lift", "rolling-moment",
-                            "pitching-moment","yawing-moment" };
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -61,12 +57,21 @@ FGAerodynamics::FGAerodynamics(FGFDMExec* FDMExec) : FGModel(FDMExec)
 {
   Name = "FGAerodynamics";
 
-  AxisIdx["DRAG"]  = 0;
-  AxisIdx["SIDE"]  = 1;
-  AxisIdx["LIFT"]  = 2;
-  AxisIdx["ROLL"]  = 3;
-  AxisIdx["PITCH"] = 4;
-  AxisIdx["YAW"]   = 5;
+  AxisIdx["DRAG"]   = 0;
+  AxisIdx["SIDE"]   = 1;
+  AxisIdx["LIFT"]   = 2;
+  AxisIdx["ROLL"]   = 3;
+  AxisIdx["PITCH"]  = 4;
+  AxisIdx["YAW"]    = 5;
+
+  AxisIdx["AXIAL"]  = 0;
+  AxisIdx["NORMAL"] = 2;
+
+  AxisIdx["X"] = 0;
+  AxisIdx["Y"] = 1;
+  AxisIdx["Z"] = 2;
+
+  axisType = atNone;
 
   Coeff = new CoeffArray[6];
 
@@ -99,13 +104,28 @@ FGAerodynamics::~FGAerodynamics()
   for (i=0; i<variables.size(); i++)
     delete variables[i];
 
-  if (AeroRPShift) delete AeroRPShift;
-
-  unbind();
+  delete AeroRPShift;
 
   Debug(1);
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGAerodynamics::InitModel(void)
+{
+  if (!FGModel::InitModel()) return false;
+
+  impending_stall = stall_hyst = 0.0;
+  alphaclmin = alphaclmax = 0.0;
+  alphahystmin = alphahystmax = 0.0;
+  clsq = lod = 0.0;
+  alphaw = 0.0;
+  bi2vel = ci2vel = 0.0;
+  AeroRPShift = 0;
+  vDeltaRP.InitMatrix();
+
+  return true;
+}
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bool FGAerodynamics::Run(void)
@@ -143,42 +163,58 @@ bool FGAerodynamics::Run(void)
     }
   }
 
-  vLastFs = vFs;
-  vFs.InitMatrix();
+  vFw.InitMatrix();
+  vFnative.InitMatrix();
 
   // Tell the variable functions to cache their values, so while the aerodynamic
   // functions are being calculated for each axis, these functions do not get
   // calculated each time, but instead use the values that have already
   // been calculated for this frame.
+
   for (i=0; i<variables.size(); i++) variables[i]->cacheValue(true);
 
   for (axis_ctr = 0; axis_ctr < 3; axis_ctr++) {
     for (ctr=0; ctr < Coeff[axis_ctr].size(); ctr++) {
-      vFs(axis_ctr+1) += Coeff[axis_ctr][ctr]->GetValue();
+      vFnative(axis_ctr+1) += Coeff[axis_ctr][ctr]->GetValue();
     }
   }
 
-  // Calculate aerodynamic reference point shift, if any
-  if (AeroRPShift) {
-    vDeltaRP(eX) = AeroRPShift->GetValue()*Aircraft->Getcbar()*12.0;
+  // Note that we still need to convert to wind axes here, because it is
+  // used in the L/D calculation, and we still may want to look at Lift
+  // and Drag.
+
+  switch (axisType) {
+    case atBodyXYZ:       // Forces already in body axes; no manipulation needed
+      vFw = GetTb2w()*vFnative;
+      vForces = vFnative;
+      break;
+    case atLiftDrag:      // Copy forces into wind axes
+      vFw = vFnative;
+      vFw(eDrag)*=-1; vFw(eLift)*=-1;
+      vForces = GetTw2b()*vFw;
+      break;
+    case atAxialNormal:   // Convert native forces into Axial|Normal|Side system
+      vFw = GetTb2w()*vFnative;
+      vFnative(eX)*=-1; vFnative(eZ)*=-1;
+      vForces = vFnative;
+      break;
+    default:
+      cerr << endl << "  A proper axis type has NOT been selected. Check "
+                   << "your aerodynamics definition." << endl;
+      exit(-1);
   }
 
-  // calculate lift coefficient squared
+  // Calculate aerodynamic reference point shift, if any
+  if (AeroRPShift) vDeltaRP(eX) = AeroRPShift->GetValue()*Aircraft->Getcbar()*12.0;
+
+  // Calculate lift coefficient squared
   if ( Auxiliary->Getqbar() > 0) {
-    clsq = vFs(eLift) / (Aircraft->GetWingArea()*Auxiliary->Getqbar());
+    clsq = vFw(eLift) / (Aircraft->GetWingArea()*Auxiliary->Getqbar());
     clsq *= clsq;
   }
 
-  if ( vFs(eDrag)  > 0) {
-    lod = vFs(eLift) / vFs(eDrag);
-  }
-
-  //correct signs of drag and lift to wind axes convention
-  //positive forward, right, down
-  vFs(eDrag)*=-1; vFs(eLift)*=-1;
-
-  // transform stability axis forces into body axes
-  vForces = State->GetTs2b()*vFs;
+  // Calculate lift Lift over Drag
+  if ( fabs(vFw(eDrag)) > 0.0) lod = fabs( vFw(eLift) / vFw(eDrag) );
 
   vDXYZcg = MassBalance->StructuralToBody(Aircraft->GetXYZrp() + vDeltaRP);
 
@@ -194,36 +230,126 @@ bool FGAerodynamics::Run(void)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+// From Stevens and Lewis, "Aircraft Control and Simulation", 3rd Ed., the
+// transformation from body to wind axes is defined (where "a" is alpha and "B"
+// is beta):
+//
+//   cos(a)*cos(B)     sin(B)    sin(a)*cos(B)
+//  -cos(a)*sin(B)     cos(B)   -sin(a)*sin(B)
+//  -sin(a)              0       cos(a)
+//
+// The transform from wind to body axes is then,
+//
+//   cos(a)*cos(B)  -cos(a)*sin(B)  -sin(a)
+//          sin(B)          cos(B)     0
+//   sin(a)*cos(B)  -sin(a)*sin(B)   cos(a)
+
+FGMatrix33& FGAerodynamics::GetTw2b(void)
+{
+  double ca, cb, sa, sb;
+
+  double alpha = Auxiliary->Getalpha();
+  double beta  = Auxiliary->Getbeta();
+
+  ca = cos(alpha);
+  sa = sin(alpha);
+  cb = cos(beta);
+  sb = sin(beta);
+
+  mTw2b(1,1) = ca*cb;
+  mTw2b(1,2) = -ca*sb;
+  mTw2b(1,3) = -sa;
+  mTw2b(2,1) = sb;
+  mTw2b(2,2) = cb;
+  mTw2b(2,3) = 0.0;
+  mTw2b(3,1) = sa*cb;
+  mTw2b(3,2) = -sa*sb;
+  mTw2b(3,3) = ca;
+
+  return mTw2b;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+FGMatrix33& FGAerodynamics::GetTb2w(void)
+{
+  double alpha,beta;
+  double ca, cb, sa, sb;
+
+  alpha = Auxiliary->Getalpha();
+  beta  = Auxiliary->Getbeta();
+
+  ca = cos(alpha);
+  sa = sin(alpha);
+  cb = cos(beta);
+  sb = sin(beta);
+
+  mTb2w(1,1) = ca*cb;
+  mTb2w(1,2) = sb;
+  mTb2w(1,3) = sa*cb;
+  mTb2w(2,1) = -ca*sb;
+  mTb2w(2,2) = cb;
+  mTb2w(2,3) = -sa*sb;
+  mTb2w(3,1) = -sa;
+  mTb2w(3,2) = 0.0;
+  mTb2w(3,3) = ca;
+
+  return mTb2w;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bool FGAerodynamics::Load(Element *element)
 {
   string parameter, axis, scratch;
+  string scratch_unit="";
+  string fname="", file="";
   Element *temp_element, *axis_element, *function_element;
+
+  string separator = "/";
+#ifdef macintosh
+  separator = ";";
+#endif
+
+  fname = element->GetAttributeValue("file");
+  if (!fname.empty()) {
+    file = FDMExec->GetFullAircraftPath() + separator + fname;
+    document = LoadXMLDocument(file);
+  } else {
+    document = element;
+  }
+
+  DetermineAxisSystem(); // Detemine if Lift/Side/Drag, etc. is used.
 
   Debug(2);
 
-  if (temp_element = element->FindElement("alphalimits")) {
-    alphaclmin = temp_element->FindElementValueAsNumberConvertTo("min", "DEG");
-    alphaclmax = temp_element->FindElementValueAsNumberConvertTo("max", "DEG");
+  if (temp_element = document->FindElement("alphalimits")) {
+    scratch_unit = temp_element->GetAttributeValue("unit");
+    if (scratch_unit.empty()) scratch_unit = "RAD";
+    alphaclmin = temp_element->FindElementValueAsNumberConvertFromTo("min", scratch_unit, "RAD");
+    alphaclmax = temp_element->FindElementValueAsNumberConvertFromTo("max", scratch_unit, "RAD");
   }
 
-  if (temp_element = element->FindElement("hysteresis_limits")) {
-    alphahystmin = temp_element->FindElementValueAsNumberConvertTo("min", "DEG");
-    alphahystmax = temp_element->FindElementValueAsNumberConvertTo("max", "DEG");
+  if (temp_element = document->FindElement("hysteresis_limits")) {
+    scratch_unit = temp_element->GetAttributeValue("unit");
+    if (scratch_unit.empty()) scratch_unit = "RAD";
+    alphahystmin = temp_element->FindElementValueAsNumberConvertFromTo("min", scratch_unit, "RAD");
+    alphahystmax = temp_element->FindElementValueAsNumberConvertFromTo("max", scratch_unit, "RAD");
   }
 
-  if (temp_element = element->FindElement("aero_ref_pt_shift_x")) {
+  if (temp_element = document->FindElement("aero_ref_pt_shift_x")) {
     function_element = temp_element->FindElement("function");
     AeroRPShift = new FGFunction(PropertyManager, function_element);
   }
 
-  function_element = element->FindElement("function");
+  function_element = document->FindElement("function");
   while (function_element) {
     variables.push_back( new FGFunction(PropertyManager, function_element) );
-    function_element = element->FindNextElement("function");
+    function_element = document->FindNextElement("function");
   }
 
-  axis_element = element->FindElement("axis");
+  axis_element = document->FindElement("axis");
   while (axis_element) {
     CoeffArray ca;
     axis = axis_element->GetAttributeValue("name");
@@ -233,10 +359,58 @@ bool FGAerodynamics::Load(Element *element)
       function_element = axis_element->FindNextElement("function");
     }
     Coeff[AxisIdx[axis]] = ca;
-    axis_element = element->FindNextElement("axis");
+    axis_element = document->FindNextElement("axis");
   }
 
   return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+// This private class function checks to verify consistency in the choice of
+// aerodynamic axes used in the config file. One set of LIFT|DRAG|SIDE, or 
+// X|Y|Z, or AXIAL|NORMAL|SIDE must be chosen; mixed system axes are not allowed.
+// Note that if the "SIDE" axis specifier is entered first in a config file, 
+// a warning message will be given IF the AXIAL|NORMAL specifiers are also given.
+// This is OK, and the warning is due to the SIDE specifier used for both
+// the Lift/Drag and Axial/Normal axis systems.
+
+void FGAerodynamics::DetermineAxisSystem()
+{
+  Element* axis_element = document->FindElement("axis");
+  string axis;
+  while (axis_element) {
+    axis = axis_element->GetAttributeValue("name");
+    if (axis == "LIFT" || axis == "DRAG" || axis == "SIDE") {
+      if (axisType == atNone) axisType = atLiftDrag;
+      else if (axisType != atLiftDrag) {
+        cerr << endl << "  Mixed aerodynamic axis systems have been used in the"
+                     << " aircraft config file." << endl;
+      }
+    } else if (axis == "AXIAL" || axis == "NORMAL") {
+      if (axisType == atNone) axisType = atAxialNormal;
+      else if (axisType != atAxialNormal) {
+        cerr << endl << "  Mixed aerodynamic axis systems have been used in the"
+                     << " aircraft config file." << endl;
+      }
+    } else if (axis == "X" || axis == "Y" || axis == "Z") {
+      if (axisType == atNone) axisType = atBodyXYZ;
+      else if (axisType != atBodyXYZ) {
+        cerr << endl << "  Mixed aerodynamic axis systems have been used in the"
+                     << " aircraft config file." << endl;
+      }
+    } else if (axis != "ROLL" && axis != "PITCH" && axis != "YAW") { // error
+      cerr << endl << "  An unknown axis type, " << axis << " has been specified"
+                   << " in the aircraft configuration file." << endl;
+      exit(-1);
+    }
+    axis_element = document->FindNextElement("axis");
+  }
+  if (axisType == atNone) {
+    axisType = atLiftDrag;
+    cerr << endl << "  The aerodynamic axis system has been set by default"
+                 << " to the Lift/Side/Drag system." << endl;
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -319,21 +493,21 @@ void FGAerodynamics::bind(void)
   PropertyManager->Tie("moments/n-aero-lbsft", this,3,
                        (PMF)&FGAerodynamics::GetMoments);
   PropertyManager->Tie("forces/fwx-aero-lbs", this,1,
-                       (PMF)&FGAerodynamics::GetvFs);
+                       (PMF)&FGAerodynamics::GetvFw);
   PropertyManager->Tie("forces/fwy-aero-lbs", this,2,
-                       (PMF)&FGAerodynamics::GetvFs);
+                       (PMF)&FGAerodynamics::GetvFw);
   PropertyManager->Tie("forces/fwz-aero-lbs", this,3,
-                       (PMF)&FGAerodynamics::GetvFs);
+                       (PMF)&FGAerodynamics::GetvFw);
   PropertyManager->Tie("forces/lod-norm", this,
                        &FGAerodynamics::GetLoD);
   PropertyManager->Tie("aero/cl-squared", this,
                        &FGAerodynamics::GetClSquared);
   PropertyManager->Tie("aero/qbar-area", &qbar_area);
-  PropertyManager->Tie("aero/alpha-max-deg", this,
+  PropertyManager->Tie("aero/alpha-max-rad", this,
                        &FGAerodynamics::GetAlphaCLMax,
                        &FGAerodynamics::SetAlphaCLMax,
                        true);
-  PropertyManager->Tie("aero/alpha-min-deg", this,
+  PropertyManager->Tie("aero/alpha-min-rad", this,
                        &FGAerodynamics::GetAlphaCLMin,
                        &FGAerodynamics::SetAlphaCLMin,
                        true);
@@ -347,31 +521,6 @@ void FGAerodynamics::bind(void)
                         &FGAerodynamics::GetStallWarn);
   PropertyManager->Tie("aero/stall-hyst-norm", this,
                         &FGAerodynamics::GetHysteresisParm);
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGAerodynamics::unbind(void)
-{
-  PropertyManager->Untie("forces/fbx-aero-lbs");
-  PropertyManager->Untie("forces/fby-aero-lbs");
-  PropertyManager->Untie("forces/fbz-aero-lbs");
-  PropertyManager->Untie("moments/l-aero-lbsft");
-  PropertyManager->Untie("moments/m-aero-lbsft");
-  PropertyManager->Untie("moments/n-aero-lbsft");
-  PropertyManager->Untie("forces/fwx-aero-lbs");
-  PropertyManager->Untie("forces/fwy-aero-lbs");
-  PropertyManager->Untie("forces/fwz-aero-lbs");
-  PropertyManager->Untie("forces/lod-norm");
-  PropertyManager->Untie("aero/cl-squared");
-  PropertyManager->Untie("aero/qbar-area");
-  PropertyManager->Untie("aero/alpha-max-deg");
-  PropertyManager->Untie("aero/alpha-min-deg");
-  PropertyManager->Untie("aero/bi2vel");
-  PropertyManager->Untie("aero/ci2vel");
-  PropertyManager->Untie("aero/alpha-wing-rad");
-  PropertyManager->Untie("aero/stall-hyst-norm");
-  PropertyManager->Untie("systems/stall-warn-norm");
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -399,7 +548,17 @@ void FGAerodynamics::Debug(int from)
 
   if (debug_lvl & 1) { // Standard console startup message output
     if (from == 2) { // Loader
-      cout << endl << "  Aerodynamics: " << endl;
+      switch (axisType) {
+        case (atLiftDrag):
+          cout << endl << "  Aerodynamics (Lift|Side|Drag axes):" << endl << endl;
+          break;
+        case (atAxialNormal):
+          cout << endl << "  Aerodynamics (Axial|Side|Normal axes):" << endl << endl;
+          break;
+        case (atBodyXYZ):
+          cout << endl << "  Aerodynamics (X|Y|Z axes):" << endl << endl;
+          break;
+      }
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification

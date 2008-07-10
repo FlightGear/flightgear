@@ -80,7 +80,7 @@ FGTrim::FGTrim(FGFDMExec *FDMExec,TrimMode tt) {
   fgic=fdmex->GetIC();
   total_its=0;
   trimudot=true;
-  gamma_fallback=true;
+  gamma_fallback=false;
   axis_count=0;
   mode=tt;
   xlo=xhi=alo=ahi=0.0;
@@ -633,7 +633,7 @@ void FGTrim::SetMode(TrimMode tt) {
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tWdot,tAlpha ));
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tUdot,tThrottle ));
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tQdot,tPitchTrim ));
-        TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tHmgt,tBeta ));
+        //TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tHmgt,tBeta ));
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tVdot,tPhi ));
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tPdot,tAileron ));
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tRdot,tRudder ));

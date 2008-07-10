@@ -60,7 +60,6 @@ INCLUDES
 #include <map>
 #include "FGJSBBase.h"
 #include <initialization/FGInitialCondition.h>
-#include <math/FGMatrix33.h>
 #include <math/FGColumnVector3.h>
 #include <math/FGQuaternion.h>
 #include "FGFDMExec.h"
@@ -149,27 +148,15 @@ public:
     return sim_time;
   }
 
-  /** Calculates and returns the stability-to-body axis transformation matrix.
-      @return a reference to the stability-to-body transformation matrix.
-      */
-  FGMatrix33& GetTs2b(void);
-
-  /** Calculates and returns the body-to-stability axis transformation matrix.
-      @return a reference to the stability-to-body transformation matrix.
-      */
-  FGMatrix33& GetTb2s(void);
-
   /** Prints a summary of simulator state (speed, altitude,
       configuration, etc.)  */
-  void ReportState(void);
+//  void ReportState(void);
 
 private:
   double sim_time, dt;
   double saved_dt;
 
   FGFDMExec* FDMExec;
-  FGMatrix33 mTs2b;
-  FGMatrix33 mTb2s;
 
   FGAircraft* Aircraft;
   FGPropagate* Propagate;
@@ -182,7 +169,6 @@ private:
   FGPropertyManager* PropertyManager;
 
   void bind();
-  void unbind();
 
   void Debug(int from);
 };

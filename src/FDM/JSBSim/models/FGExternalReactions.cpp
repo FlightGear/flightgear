@@ -1,11 +1,12 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
- Module:       FGState.cpp
- Author:       Jon Berndt
- Date started: 11/17/98
- Called by:    FGFDMExec and accessed by all models.
+ Module:       FGExternalReactions.cpp
+ Author:       David P. Culp
+ Date started: 17/11/06
+ Purpose:      Manages the External Forces
+ Called by:    FGAircraft
 
- ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
+ ------------- Copyright (C) 2006  David P. Culp (davidculp2@comcast.net) -------------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU Lesser General Public License as published by the Free Software
@@ -26,113 +27,117 @@
 
 FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
-See header file.
 
 HISTORY
 --------------------------------------------------------------------------------
-11/17/98   JSB   Created
+17/11/06   DC   Created
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  include <math.h>
-#else
-#  if defined(sgi) && !defined(__GNUC__)
-#    include <math.h>
-#  else
-#    include <cmath>
-#  endif
-#endif
-
-#include "FGState.h"
+#include "FGExternalReactions.h"
+#include <string>
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id$";
-static const char *IdHdr = ID_STATE;
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DEFINITIONS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-MACROS
+GLOBAL DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+static const char *IdSrc = "$Id$";
+static const char *IdHdr = ID_EXTERNALREACTIONS;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-FGState::FGState(FGFDMExec* fdex)
+FGExternalReactions::FGExternalReactions(FGFDMExec* fdmex) : FGModel(fdmex)
 {
-  FDMExec = fdex;
-
-  sim_time = 0.0;
-  dt = 1.0/120.0;
-
-  Aircraft     = FDMExec->GetAircraft();
-  Propagate    = FDMExec->GetPropagate();
-  Auxiliary    = FDMExec->GetAuxiliary();
-  FCS          = FDMExec->GetFCS();
-  Atmosphere   = FDMExec->GetAtmosphere();
-  Aerodynamics = FDMExec->GetAerodynamics();
-  GroundReactions = FDMExec->GetGroundReactions();
-  Propulsion      = FDMExec->GetPropulsion();
-  PropertyManager = FDMExec->GetPropertyManager();
-
-  bind();
-
+  NoneDefined = true;
   Debug(0);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGState::~FGState()
+bool FGExternalReactions::Load(Element* el)
 {
+  Debug(2);
+
+  // Interface properties are all stored in the interface properties array.
+  // ToDo: Interface properties should not be created if they already exist.
+  // A check should be done prior to creation. This ought to make it easier 
+  // to work with FlightGear, where some properties used in definitions may 
+  // already have been created, but would not be seen when JSBSim is run
+  // in standalone mode.
+
+  Element* property_element;
+  property_element = el->FindElement("property");
+  while (property_element) {
+    double value=0.0;
+    if ( ! property_element->GetAttributeValue("value").empty())
+      value = property_element->GetAttributeValueAsNumber("value");
+    interface_properties.push_back(new double(value));
+    string interface_property_string = property_element->GetDataLine();
+    PropertyManager->Tie(interface_property_string, interface_properties.back());
+    property_element = el->FindNextElement("property");
+  }
+
+  // Parse force elements
+
+  int index=0;
+  Element* force_element = el->FindElement("force");
+  while (force_element) {
+    Forces.push_back( new FGExternalForce(FDMExec, force_element, index) );
+    NoneDefined = false;
+    index++; 
+    force_element = el->FindNextElement("force");
+  }
+
+  return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+FGExternalReactions::~FGExternalReactions()
+{
+  for (unsigned int i=0; i<Forces.size(); i++) delete Forces[i];
+  Forces.clear();
+  for (unsigned int i=0; i<interface_properties.size(); i++) delete interface_properties[i];
+  interface_properties.clear();
   Debug(1);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGState::Initialize(FGInitialCondition *FGIC)
+bool FGExternalReactions::InitModel(void)
 {
-  sim_time = 0.0;
+  if (!FGModel::InitModel()) return false;
 
-  Propagate->SetInitialState( FGIC );
-
-  Atmosphere->Run();
-  Atmosphere->SetWindNED( FGIC->GetWindNFpsIC(),
-                          FGIC->GetWindEFpsIC(),
-                          FGIC->GetWindDFpsIC() );
-
-  FGColumnVector3 vAeroUVW;
-  vAeroUVW = Propagate->GetUVW() + Propagate->GetTl2b()*Atmosphere->GetWindNED();
-
-  double alpha, beta;
-  if (vAeroUVW(eW) != 0.0)
-    alpha = vAeroUVW(eU)*vAeroUVW(eU) > 0.0 ? atan2(vAeroUVW(eW), vAeroUVW(eU)) : 0.0;
-  else
-    alpha = 0.0;
-  if (vAeroUVW(eV) != 0.0)
-    beta = vAeroUVW(eU)*vAeroUVW(eU)+vAeroUVW(eW)*vAeroUVW(eW) > 0.0 ? atan2(vAeroUVW(eV), (fabs(vAeroUVW(eU))/vAeroUVW(eU))*sqrt(vAeroUVW(eU)*vAeroUVW(eU) + vAeroUVW(eW)*vAeroUVW(eW))) : 0.0;
-  else
-    beta = 0.0;
-
-  Auxiliary->SetAB(alpha, beta);
-
-  double Vt = vAeroUVW.Magnitude();
-  Auxiliary->SetVt(Vt);
-
-  Auxiliary->SetMach(Vt/Atmosphere->GetSoundSpeed());
-
-  double qbar = 0.5*Vt*Vt*Atmosphere->GetDensity();
-  Auxiliary->Setqbar(qbar);
+  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGState::bind(void)
+bool FGExternalReactions::Run()
 {
-  PropertyManager->Tie("sim-time-sec", this, &FGState::Getsim_time);
+  if (FGModel::Run()) return true;
+  if (FDMExec->Holding()) return false; // if paused don't execute
+  if (NoneDefined) return true;
+
+  vTotalForces.InitMatrix();
+  vTotalMoments.InitMatrix();
+
+  for (unsigned int i=0; i<Forces.size(); i++) {
+    vTotalForces  += Forces[i]->GetBodyForces();
+    vTotalMoments += Forces[i]->GetMoments();
+  }
+
+  return false;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -154,18 +159,20 @@ void FGState::bind(void)
 //    16: When set various parameters are sanity checked and
 //       a message is printed out when they go out of bounds
 
-void FGState::Debug(int from)
+void FGExternalReactions::Debug(int from)
 {
   if (debug_lvl <= 0) return;
 
   if (debug_lvl & 1) { // Standard console startup message output
-    if (from == 0) { // Constructor
-
+    if (from == 0) { // Constructor - loading and initialization
+    }
+    if (from == 2) { // Loading
+      cout << endl << "  External Reactions: " << endl;
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification
-    if (from == 0) cout << "Instantiated: FGState" << endl;
-    if (from == 1) cout << "Destroyed:    FGState" << endl;
+    if (from == 0) cout << "Instantiated: FGExternalReactions" << endl;
+    if (from == 1) cout << "Destroyed:    FGExternalReactions" << endl;
   }
   if (debug_lvl & 4 ) { // Run() method entry print for FGModel-derived objects
   }
@@ -180,4 +187,6 @@ void FGState::Debug(int from)
     }
   }
 }
-}
+
+} // namespace JSBSim
+

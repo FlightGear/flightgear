@@ -55,11 +55,19 @@ FGInertial::FGInertial(FGFDMExec* fgex) : FGModel(fgex)
   Name = "FGInertial";
 
   // Defaults
-  RotationRate    = 0.00007272205217;
-  GM              = 14.06252720E15;
-  RadiusReference = 20925650.00;
+  RotationRate    = 0.00007292115;
+  GM              = 14.07644180E15;     // WGS84 value
+  RadiusReference = 20925650.00;        // Equatorial radius (WGS84)
+  C2_0            = -4.84165371736E-04; // WGS84 value for the C2,0 coefficient
+  J2              = 1.0826266836E-03;   // WGS84 value for J2
+  a               = 20925646.3255;      // WGS84 semimajor axis length in feet 
+  b               = 20855486.5951;      // WGS84 semiminor axis length in feet
+  earthPosAngle   = 0.0;
+
   gAccelReference = GM/(RadiusReference*RadiusReference);
   gAccel          = GM/(RadiusReference*RadiusReference);
+
+  bind();
 
   Debug(0);
 }
@@ -73,6 +81,17 @@ FGInertial::~FGInertial(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+bool FGInertial::InitModel(void)
+{
+  if (!FGModel::InitModel()) return false;
+
+  earthPosAngle   = 0.0;
+
+  return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 bool FGInertial::Run(void)
 {
   // Fast return if we have nothing to do ...
@@ -82,8 +101,23 @@ bool FGInertial::Run(void)
   // Gravitation accel
   double r = Propagate->GetRadius();
   gAccel = GetGAccel(r);
+  earthPosAngle += State->Getdt()*RotationRate;
 
   return false;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGInertial::GetGAccel(double r) const
+{
+  return GM/(r*r);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGInertial::bind(void)
+{
+  PropertyManager->Tie("position/epa-rad", this, &FGInertial::GetEarthPositionAngle);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

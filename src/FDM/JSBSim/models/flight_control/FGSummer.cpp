@@ -119,8 +119,6 @@ void FGSummer::Debug(int from)
           cout << "       " << InputNodes[i]->getName() << endl;
       }
       if (Bias != 0.0) cout << "       Bias: " << Bias << endl;
-      if (clip) cout << "      CLIPTO: " << clipmin
-                                  << ", " << clipmax << endl;
       if (IsOutput) cout << "      OUTPUT: " <<OutputNode->getName() <<  endl;
     }
   }

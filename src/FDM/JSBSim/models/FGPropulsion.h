@@ -42,16 +42,13 @@ INCLUDES
 #  include <simgear/compiler.h>
 #  ifdef SG_HAVE_STD_INCLUDES
 #    include <vector>
-#    include <iterator>
 #    include <fstream>
 #  else
 #    include <vector.h>
-#    include <iterator.h>
 #    include <fstream.h>
 #  endif
 #else
 #  include <vector>
-#  include <iterator>
 #  include <fstream>
 #endif
 
@@ -80,12 +77,29 @@ CLASS DOCUMENTATION
 /** Propulsion management class.
     The Propulsion class is the container for the entire propulsion system, which is
     comprised of engines, and tanks. Once the Propulsion class gets the config file,
-    it reads in information which is specific to a type of engine. Then:
+    it reads in the \<propulsion> section. Then:
 
     -# The appropriate engine type instance is created
     -# At least one tank object is created, and is linked to an engine.
 
-    At Run time each engines Calculate() method is called.
+    At Run time each engine's Calculate() method is called.
+
+    <h3>Configuration File Format:</h3>
+
+  @code
+    <propulsion>
+        <engine file="{string}">
+          ... see FGEngine, FGThruster, and class for engine type ...
+        </engine>
+        ... more engines ...
+        <tank type="{FUEL | OXIDIZER}"> 
+          ... see FGTank ...
+        </tank>
+        ... more tanks ...
+        <dump-rate unit="{LBS/MIN | KG/MIN}"> {number} </dump-rate>
+    </propulsion>
+  @endcode
+
     @author Jon S. Berndt
     @version $Id$
     @see
@@ -111,6 +125,8 @@ public:
 
       [Note: Should we be checking the Starved flag here?] */
   bool Run(void);
+
+  bool InitModel(void);
 
   /** Loads the propulsion system (engine[s] and tank[s]).
       Characteristics of the propulsion system are read in from the config file.
@@ -149,9 +165,8 @@ public:
   /** Loops the engines until thrust output steady (used for trimming) */
   bool GetSteadyState(void);
 
-  /** starts the engines in IC mode (dt=0).  All engine-specific setup must
-      be done before calling this (i.e. magnetos, starter engage, etc.) */
-  bool ICEngineStart(void);
+  /** Sets up the engines as running */
+  void InitRunning(int n);
 
   string GetPropulsionStrings(string delimeter);
   string GetPropulsionValues(string delimeter);
@@ -161,10 +176,13 @@ public:
   inline FGColumnVector3& GetMoments(void) {return vMoments;}
   inline double GetMoments(int n) const {return vMoments(n);}
 
-  inline bool GetRefuel(void) {return refuel;}
+  inline bool GetRefuel(void) const {return refuel;}
   inline void SetRefuel(bool setting) {refuel = setting;}
+  inline bool GetFuelDump(void) const {return dump;}
+  inline void SetFuelDump(bool setting) {dump = setting;}
   double Transfer(int source, int target, double amount);
   void DoRefuel(double time_slice);
+  void DumpFuel(double time_slice);
 
   FGColumnVector3& GetTanksMoment(void);
   double GetTanksWeight(void);
@@ -182,13 +200,9 @@ public:
   void SetFuelFreeze(bool f);
   FGMatrix33& CalculateTankInertias(void);
 
-  void bind();
-  void unbind();
-
 private:
   vector <FGEngine*>   Engines;
   vector <FGTank*>     Tanks;
-  vector <FGTank*>::iterator iTank;
   unsigned int numSelectedFuelTanks;
   unsigned int numSelectedOxiTanks;
   unsigned int numFuelTanks;
@@ -202,8 +216,10 @@ private:
   FGColumnVector3 vXYZtank_arm;
   FGMatrix33 tankJ;
   bool refuel;
+  bool dump;
   bool fuel_freeze;
   double TotalFuelQuantity;
+  double DumpRate;
   bool IsBound;
   bool HavePistonEngine;
   bool HaveTurbineEngine;
@@ -211,6 +227,10 @@ private:
   bool HaveRocketEngine;
   bool HaveElectricEngine;
 
+  int InitializedEngines;
+  bool HasInitializedEngines;
+
+  void bind();
   void Debug(int from);
 };
 }

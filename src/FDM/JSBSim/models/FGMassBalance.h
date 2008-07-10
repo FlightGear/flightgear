@@ -60,7 +60,36 @@ namespace JSBSim {
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-/** Models weight and balance information.
+/** Models weight, balance and moment of inertia information.  Maintains a vector
+    of point masses. Sums the contribution of all, and provides this to FGPropagate.
+    Loads the \<mass_balance> section of the aircraft configuration file.
+
+    <h3>Configuration File Format:</h3>
+@code
+    <mass_balance>
+        <ixx unit="{SLUG*FT2 | KG*M2}"> {number} </ixx>
+        <iyy unit="{SLUG*FT2 | KG*M2}"> {number} </iyy>
+        <izz unit="{SLUG*FT2 | KG*M2}"> {number} </izz>
+        <ixy unit="{SLUG*FT2 | KG*M2}"> {number} </ixy>
+        <ixz unit="{SLUG*FT2 | KG*M2}"> {number} </ixz>
+        <iyz unit="{SLUG*FT2 | KG*M2}"> {number} </iyz>
+        <emptywt unit="{LBS | KG"> {number} </emptywt>
+        <location name="CG" unit="{IN | M}">
+            <x> {number} </x>
+            <y> {number} </y>
+            <z> {number} </z>
+        </location>
+        <pointmass name="{string}">
+            <weight unit="{LBS | KG}"> {number} </weight>
+            <location name="POINTMASS" unit="{IN | M}">
+                <x> {number} </x>
+                <y> {number} </y>
+                <z> {number} </z>
+            </location>
+        </pointmass>
+        ... other point masses ...
+    </mass_balance>
+@endcode
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -75,7 +104,7 @@ public:
   ~FGMassBalance();
 
   bool Load(Element* el);
-
+  bool InitModel(void);
   bool Run(void);
 
   inline double GetMass(void) const {return Mass;}
@@ -122,13 +151,21 @@ public:
 
   void AddPointMass(Element* el);
   double GetPointMassWeight(void);
+  double GetPointMassWeight(int idx) const {
+    if (idx < (int)PointMasses.size()) return(PointMasses[idx]->Weight);
+    else return 0.0;
+  }
+
+  void SetPointMassWeight(int idx, double pmw) {
+    if (idx < (int)PointMasses.size()) {
+      PointMasses[idx]->Weight = pmw;
+    }
+  }
+
   FGColumnVector3& GetPointMassMoment(void);
   FGMatrix33& GetJ(void) {return mJ;}
   FGMatrix33& GetJinv(void) {return mJinv;}
   void SetAircraftBaseInertias(FGMatrix33 BaseJ) {baseJ = BaseJ;}
-
-  void bind(void);
-  void unbind(void);
 
 private:
   double Weight;
@@ -154,8 +191,9 @@ private:
     double Weight;
   };
 
-  vector <struct PointMass> PointMasses;
+  vector <struct PointMass*> PointMasses;
 
+  void bind(void);
   void Debug(int from);
 };
 }

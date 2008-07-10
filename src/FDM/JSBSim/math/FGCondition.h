@@ -89,7 +89,7 @@ private:
 
   static string indent;
 
-  vector <FGCondition> conditions;
+  vector <FGCondition*> conditions;
   void InitializeConditionals(void);
 
   void Debug(int from);

@@ -40,12 +40,12 @@ and the cg.
 
 */
 
+#include "FGForce.h"
 #include <FGFDMExec.h>
 #include <models/FGAircraft.h>
 #include <models/FGPropagate.h>
 #include <models/FGMassBalance.h>
-#include <FGState.h>
-#include "FGForce.h"
+#include <models/FGAerodynamics.h>
 
 namespace JSBSim {
 
@@ -95,7 +95,7 @@ FGMatrix33 FGForce::Transform(void)
 {
   switch(ttype) {
   case tWindBody:
-    return fdmex->GetState()->GetTs2b();
+    return fdmex->GetAerodynamics()->GetTw2b();
   case tLocalBody:
     return fdmex->GetPropagate()->GetTl2b();
   case tCustom:

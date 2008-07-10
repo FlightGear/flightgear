@@ -26,6 +26,7 @@
 HISTORY
 --------------------------------------------------------------------------------
 11/08/99   JSB   Created
+11/08/07   HDW   Added Generic Socket Send
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
@@ -113,9 +114,12 @@ class FGfdmSocket : public FGJSBBase
 {
 public:
   FGfdmSocket(string, int);
+  FGfdmSocket(string, int, int);
   FGfdmSocket(int);
   ~FGfdmSocket();
   void Send(void);
+  void Send(char *data, int length);
+
   string Receive(void);
   int Reply(string text);
   void Append(const string s) {Append(s.c_str());}
@@ -126,6 +130,8 @@ public:
   void Clear(string s);
   void Close(void);
   bool GetConnectStatus(void) {return connected;}
+
+  enum {ptUDP, ptTCP};
 
 private:
   int sckt;

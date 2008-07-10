@@ -36,8 +36,6 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <FGFDMExec.h>
-#include <models/FGAuxiliary.h>
 #include "FGTank.h"
 
 #if !defined ( sgi ) || defined( __GNUC__ ) && (_COMPILER_VERSION < 740)
@@ -55,14 +53,18 @@ static const char *IdHdr = ID_TANK;
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-FGTank::FGTank(FGFDMExec* exec, Element* el)
+FGTank::FGTank(FGFDMExec* exec, Element* el, int tank_number)
+                  : TankNumber(tank_number)
 {
   string token;
   Element* element;
   Area = 1.0;
   Temperature = -9999.0;
   Auxiliary = exec->GetAuxiliary();
-  Radius = Capacity = Contents = 0.0;
+  Radius = Capacity = Contents = Standpipe = 0.0;
+  PropertyManager = exec->GetPropertyManager();
+  vXYZ.InitMatrix();
+  vXYZ_drain.InitMatrix();
 
   type = el->GetAttributeValue("type");
   if      (type == "FUEL")     Type = ttFUEL;
@@ -73,14 +75,23 @@ FGTank::FGTank(FGFDMExec* exec, Element* el)
   if (element)  vXYZ = element->FindElementTripletConvertTo("IN");
   else          cerr << "No location found for this tank." << endl;
 
+  vXYZ_drain = vXYZ; // Set initial drain location to initial tank CG
+
+  element = el->FindElement("drain_location");
+  if (element)  {
+    vXYZ_drain = element->FindElementTripletConvertTo("IN");
+  }
+
   if (el->FindElement("radius"))
     Radius = el->FindElementValueAsNumberConvertTo("radius", "IN");
   if (el->FindElement("capacity"))
     Capacity = el->FindElementValueAsNumberConvertTo("capacity", "LBS");
   if (el->FindElement("contents"))
-    Contents = el->FindElementValueAsNumberConvertTo("contents", "LBS");
+    InitialContents = Contents = el->FindElementValueAsNumberConvertTo("contents", "LBS");
   if (el->FindElement("temperature"))
-    Temperature = el->FindElementValueAsNumber("temperature");
+    InitialTemperature = Temperature = el->FindElementValueAsNumber("temperature");
+  if (el->FindElement("standpipe"))
+    InitialStandpipe = Standpipe = el->FindElementValueAsNumberConvertTo("standpipe", "LBS");
 
   Selected = true;
 
@@ -91,7 +102,12 @@ FGTank::FGTank(FGFDMExec* exec, Element* el)
     PctFull  = 0;
   }
 
-  if (Temperature != -9999.0)  Temperature = FahrenheitToCelsius(Temperature);
+  char property_name[80];
+  snprintf(property_name, 80, "propulsion/tank[%d]/contents-lbs", TankNumber);
+  PropertyManager->Tie( property_name, (FGTank*)this, &FGTank::GetContents,
+                                       &FGTank::SetContents );
+
+  if (Temperature != -9999.0)  InitialTemperature = Temperature = FahrenheitToCelsius(Temperature);
   Area = 40.0 * pow(Capacity/1975, 0.666666667);
 
   Debug(0);
@@ -106,19 +122,47 @@ FGTank::~FGTank()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+void FGTank::ResetToIC(void)
+{
+  Temperature = InitialTemperature;
+  Standpipe = InitialStandpipe;
+  Contents = InitialContents;
+  PctFull = 100.0*Contents/Capacity;
+  Selected = true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+const FGColumnVector3 FGTank::GetXYZ(void)
+{
+  return vXYZ_drain + (Contents/Capacity)*(vXYZ - vXYZ_drain);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+const double FGTank::GetXYZ(int idx)
+{
+  return vXYZ_drain(idx) + (Contents/Capacity)*(vXYZ(idx)-vXYZ_drain(idx));
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 double FGTank::Drain(double used)
 {
-  double shortage = Contents - used;
+  double remaining = Contents - used;
 
-  if (shortage >= 0) {
+  if (remaining >= 0) { // Reduce contents by amount used.
+
     Contents -= used;
     PctFull = 100.0*Contents/Capacity;
-  } else {
+
+  } else { // This tank must be empty.
+
     Contents = 0.0;
     PctFull = 0.0;
     Selected = false;
   }
-  return shortage;
+  return remaining;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -161,11 +205,11 @@ double FGTank::Calculate(double dt)
   double TempFlowFactor = 1.115;      // Watts/sqft/C
   double TAT = Auxiliary->GetTAT_C();
   double Tdiff = TAT - Temperature;
-  double dT = 0.0;                    // Temp change due to one surface
+  double dTemp = 0.0;                 // Temp change due to one surface
   if (fabs(Tdiff) > 0.1) {
-    dT = (TempFlowFactor * Area * Tdiff * dt) / (Contents * HeatCapacity);
+    dTemp = (TempFlowFactor * Area * Tdiff * dt) / (Contents * HeatCapacity);
   }
-  return Temperature += (dT + dT);    // For now, assume upper/lower the same
+  return Temperature += (dTemp + dTemp);    // For now, assume upper/lower the same
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -116,6 +116,8 @@ public:
   /// Destructor
   ~FGAuxiliary();
 
+  bool InitModel(void);
+
   /** Runs the Auxiliary routines; called by the Executive
       @return false if no error */
   bool Run(void);
@@ -123,14 +125,28 @@ public:
 // GET functions
 
   // Atmospheric parameters GET functions
+  /** Returns Calibrated airspeed in feet/second.*/
   double GetVcalibratedFPS(void) const { return vcas; }
+  /** Returns Calibrated airspeed in knots.*/
   double GetVcalibratedKTS(void) const { return vcas*fpstokts; }
+  /** Returns equivalent airspeed in feet/second. */
   double GetVequivalentFPS(void) const { return veas; }
+  /** Returns equivalent airspeed in knots. */
   double GetVequivalentKTS(void) const { return veas*fpstokts; }
 
-  // total pressure above is freestream total pressure for subsonic only
-  // for supersonic it is the 1D total pressure behind a normal shock
+  /** Returns the total pressure.
+      Total pressure is freestream total pressure for
+      subsonic only. For supersonic it is the 1D total pressure
+      behind a normal shock. */
   double GetTotalPressure(void) const { return pt; }
+
+  /** Returns the total temperature.
+    The total temperature ("tat", isentropic flow) is calculated:
+    @code
+    tat = sat*(1 + 0.2*Mach*Mach)
+    @endcode
+    (where "sat" is standard temperature) */
+
   double GetTotalTemperature(void) const { return tat; }
   double GetTAT_C(void) const { return tatc; }
 
@@ -172,16 +188,16 @@ public:
   double GetVground (void) const { return Vground;    }
   double GetMach    (void) const { return Mach;       }
   double GetMachU   (void) const { return MachU;      }
+  double GetNz      (void) const { return Nz;         }
 
   double GetHOverBCG(void) const { return hoverbcg; }
   double GetHOverBMAC(void) const { return hoverbmac; }
 
   double GetGamma(void)              const { return gamma;         }
   double GetGroundTrack(void)        const { return psigt;         }
-  double GetEarthPositionAngle(void) const { return earthPosAngle; }
 
-  double GetHeadWind(void);
-  double GetCrossWind(void);
+  double GetHeadWind(void) const;
+  double GetCrossWind(void) const;
 
 // SET functions
 
@@ -200,7 +216,7 @@ public:
   void SetAB    (double t1, double t2) { alpha=t1; beta=t2; }
   void SetGamma (double tt)            { gamma = tt;        }
 
-// Time routines, SET and GET functions
+// Time routines, SET and GET functions, used by FGMSIS atmosphere
 
   void SetDayOfYear    (int doy)    { day_of_year = doy;    }
   void SetSecondsInDay (double sid) { seconds_in_day = sid; }
@@ -208,8 +224,11 @@ public:
   int    GetDayOfYear    (void) const { return day_of_year;    }
   double GetSecondsInDay (void) const { return seconds_in_day; }
 
-  void bind(void);
-  void unbind(void);
+  double GetLongitudeRelativePosition (void) const { return lon_relative_position; }
+  double GetLatitudeRelativePosition  (void) const { return lat_relative_position; }
+  double GetDistanceRelativePosition  (void) const { return relative_position; }
+
+  void SetAeroPQR(FGColumnVector3 tt) { vAeroPQR = tt; }
 
 private:
   double vcas, veas;
@@ -223,6 +242,7 @@ private:
   FGColumnVector3 vEuler;
   FGColumnVector3 vEulerRates;
   FGColumnVector3 vMachUVW;
+  FGColumnVector3 vAircraftAccel;
   FGLocation vLocationVRP;
 
   double Vt, Vground, Mach, MachU;
@@ -230,12 +250,21 @@ private:
   double alpha, beta;
   double adot,bdot;
   double psigt, gamma;
+  double Nz;
   double seconds_in_day;  // seconds since current GMT day began
   int    day_of_year;     // GMT day, 1 .. 366
 
-  double earthPosAngle;
   double hoverbcg, hoverbmac;
 
+  // helper data, calculation of distance from initial position
+
+  double lon_relative_position;
+  double lat_relative_position;
+  double relative_position;
+
+  void CalculateRelativePosition(void);
+
+  void bind(void);
   void Debug(int from);
 };
 

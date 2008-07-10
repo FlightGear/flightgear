@@ -85,13 +85,13 @@ FGScript::FGScript(FGFDMExec* fgex) : FDMExec(fgex)
 FGScript::~FGScript()
 {
   unsigned int i;
-  for (i=0; i<local_properties.size(); i++)
-    PropertyManager->Untie(local_properties[i]->title);
-  
-  for (i=0; i<local_properties.size(); i++)
-    delete local_properties[i];
 
+  for (i=0; i<local_properties.size(); i++) delete local_properties[i];
   local_properties.clear();
+
+  for (i=0; i<Events.size(); i++) delete Events[i].Condition;
+  Events.clear();
+
   Debug(1);
 }
 
@@ -105,12 +105,24 @@ bool FGScript::LoadScript( string script )
   Element *condition_element=0, *set_element=0, *delay_element=0;
   Element *notify_element = 0L, *notify_property_element = 0L;
   Element *property_element = 0L;
+  Element *output_element = 0L;
+  Element *input_element = 0L;
   bool result = false;
   double dt = 0.0, value = 0.0;
   struct event *newEvent;
   FGCondition *newCondition;
 
   document = LoadXMLDocument(script);
+
+  if (!document) {
+    cerr << "File: " << script << " could not be loaded." << endl;
+    return false;
+  }
+
+  // Set up input and output files if specified
+  
+  output_element = document->FindElement("output");
+  input_element = document->FindElement("input");
 
   if (document->GetName() != string("runscript")) {
     cerr << "File: " << script << " is not a script file" << endl;
@@ -135,7 +147,7 @@ bool FGScript::LoadScript( string script )
   EndTime   = run_element->GetAttributeValueAsNumber("end");
   dt        = run_element->GetAttributeValueAsNumber("dt");
   State->Setdt(dt);
-
+  
   // read aircraft and initialization files
 
   element = document->FindElement("use");
@@ -160,12 +172,33 @@ bool FGScript::LoadScript( string script )
     return false;
   }
 
-  // Read local property declarations
+  // Now, read input spec if given.
+  if (input_element > 0) {
+    FDMExec->GetInput()->Load(input_element);
+  }
+
+  // Now, read output spec if given.
+  if (output_element > 0) {
+    string output_file = output_element->GetAttributeValue("file");
+    if (output_file.empty()) {
+      cerr << "No logging directives file was specified." << endl;
+    } else {
+      FDMExec->SetOutputDirectives(output_file);
+    }
+  }
+
+  // Read local property/value declarations
   property_element = run_element->FindElement("property");
   while (property_element) {
-    LocalProps *localProp = new LocalProps();
+
+    double value=0.0;
+    if ( ! property_element->GetAttributeValue("value").empty())
+      value = property_element->GetAttributeValueAsNumber("value");
+
+    LocalProps *localProp = new LocalProps(value);
     localProp->title = property_element->GetDataLine();
     local_properties.push_back(localProp);
+
     PropertyManager->Tie(localProp->title, (local_properties.back())->value);
     property_element = run_element->FindNextElement("property");
   }
@@ -210,7 +243,14 @@ bool FGScript::LoadScript( string script )
       notify_property_element = notify_element->FindElement("property");
       while (notify_property_element) {
         notifyPropertyName = notify_property_element->GetDataLine();
-        newEvent->NotifyProperties.push_back( PropertyManager->GetNode(notifyPropertyName) );
+        if (PropertyManager->GetNode(notifyPropertyName)) {
+          newEvent->NotifyProperties.push_back( PropertyManager->GetNode(notifyPropertyName) );
+        } else {
+          cout << endl << fgred << "  Could not find the property named "
+               << notifyPropertyName << " in script" << endl << "  \""
+               << ScriptName << "\". This unknown property will not be "
+               << "echoed for notification." << reset << endl;
+        }
         notify_property_element = notify_element->FindNextElement("property");
       }
     }
@@ -220,7 +260,15 @@ bool FGScript::LoadScript( string script )
     while (set_element) {
       prop_name = set_element->GetAttributeValue("name");
       newEvent->SetParam.push_back( PropertyManager->GetNode(prop_name) );
-      value = set_element->GetAttributeValueAsNumber("value");
+      //Todo - should probably do some safety checking here to make sure one or the other
+      //of value or function is specified.
+      if (!set_element->GetAttributeValue("value").empty()) {
+        value = set_element->GetAttributeValueAsNumber("value");
+        newEvent->Functions.push_back((FGFunction*)0L);
+      } else if (set_element->FindElement("function")) {
+        value = 0.0;
+        newEvent->Functions.push_back(new FGFunction(PropertyManager, set_element->FindElement("function")));
+      }
       newEvent->SetValue.push_back(value);
       newEvent->OriginalValue.push_back(0.0);
       newEvent->newValue.push_back(0.0);
@@ -246,6 +294,8 @@ bool FGScript::LoadScript( string script )
       set_element = event_element->FindNextElement("set");
     }
     Events.push_back(*newEvent);
+    delete newEvent;
+
     event_element = run_element->FindNextElement("event");
   }
 
@@ -284,6 +334,9 @@ bool FGScript::RunScript(void)
         // The conditions are true, do the setting of the desired Event parameters
         for (i=0; i<iEvent->SetValue.size(); i++) {
           iEvent->OriginalValue[i] = iEvent->SetParam[i]->getDoubleValue();
+          if (iEvent->Functions[i] != 0) { // Parameter should be set to a function value
+            iEvent->SetValue[i] = iEvent->Functions[i]->GetValue();
+          }
           switch (iEvent->Type[i]) {
           case FG_VALUE:
           case FG_BOOL:
@@ -312,25 +365,29 @@ bool FGScript::RunScript(void)
       for (i=0; i<iEvent->SetValue.size(); i++) {
         if (iEvent->Transiting[i]) {
           iEvent->TimeSpan = currentTime - iEvent->StartTime;
-          switch (iEvent->Action[i]) {
-          case FG_RAMP:
-            if (iEvent->TimeSpan <= iEvent->TC[i]) {
-              newSetValue = iEvent->TimeSpan/iEvent->TC[i] * iEvent->ValueSpan[i] + iEvent->OriginalValue[i];
-            } else {
+          if (iEvent->Functions[i] == 0) {
+            switch (iEvent->Action[i]) {
+            case FG_RAMP:
+              if (iEvent->TimeSpan <= iEvent->TC[i]) {
+                newSetValue = iEvent->TimeSpan/iEvent->TC[i] * iEvent->ValueSpan[i] + iEvent->OriginalValue[i];
+              } else {
+                newSetValue = iEvent->newValue[i];
+                iEvent->Transiting[i] = false;
+              }
+              break;
+            case FG_STEP:
               newSetValue = iEvent->newValue[i];
               iEvent->Transiting[i] = false;
+              break;
+            case FG_EXP:
+              newSetValue = (1 - exp( -iEvent->TimeSpan/iEvent->TC[i] )) * iEvent->ValueSpan[i] + iEvent->OriginalValue[i];
+              break;
+            default:
+              cerr << "Invalid Action specified" << endl;
+              break;
             }
-            break;
-          case FG_STEP:
-            newSetValue = iEvent->newValue[i];
-            iEvent->Transiting[i] = false;
-            break;
-          case FG_EXP:
-            newSetValue = (1 - exp( -iEvent->TimeSpan/iEvent->TC[i] )) * iEvent->ValueSpan[i] + iEvent->OriginalValue[i];
-            break;
-          default:
-            cerr << "Invalid Action specified" << endl;
-            break;
+          } else { // Set the new value based on a function
+            newSetValue = iEvent->Functions[i]->GetValue();
           }
           iEvent->SetParam[i]->setDoubleValue(newSetValue);
         }
@@ -403,8 +460,27 @@ void FGScript::Debug(int from)
 
         cout << endl << "  Actions taken:" << endl << "    {";
         for (unsigned j=0; j<Events[i].SetValue.size(); j++) {
-          cout << endl << "      set " << Events[i].SetParam[j]->GetName()
-               << " to " << Events[i].SetValue[j];
+          if (Events[i].SetValue[j] == 0.0 && Events[i].Functions[j] != 0L) {
+            if (Events[i].SetParam[j] == 0) {
+              cerr << fgred << highint << endl
+                   << "  An attempt has been made to access a non-existent property" << endl
+                   << "  in this event. Please check the property names used, spelling, etc."
+                   << reset << endl;
+              exit(-1);
+            }
+            cout << endl << "      set " << Events[i].SetParam[j]->GetName()
+                 << " to function value";
+          } else {
+            if (Events[i].SetParam[j] == 0) {
+              cerr << fgred << highint << endl
+                   << "  An attempt has been made to access a non-existent property" << endl
+                   << "  in this event. Please check the property names used, spelling, etc."
+                   << reset << endl;
+              exit(-1);
+            }
+            cout << endl << "      set " << Events[i].SetParam[j]->GetName()
+                 << " to " << Events[i].SetValue[j];
+          }
 
           switch (Events[i].Type[j]) {
           case FG_VALUE:

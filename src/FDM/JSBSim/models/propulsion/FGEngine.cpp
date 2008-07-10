@@ -81,17 +81,8 @@ FGEngine::FGEngine(FGFDMExec* exec, Element* engine_element, int engine_number)
   SLFuelFlowMax = SLOxiFlowMax = 0.0;
   MaxThrottle = 1.0;
   MinThrottle = 0.0;
-  Thrust = 0.0;
-  Throttle = 0.0;
-  Mixture = 1.0;
-  Starter = false;
-  FuelNeed = OxidizerNeed = 0.0;
-  Starved = Running = Cranking = false;
-  PctPower = 0.0;
-  TrimMode = false;
-  FuelFlow_gph = 0.0;
-  FuelFlow_pph = 0.0;
-  FuelFreeze = false;
+
+  ResetToIC(); // initialize dynamic terms
 
   FDMExec = exec;
   State = FDMExec->GetState();
@@ -113,15 +104,16 @@ FGEngine::FGEngine(FGFDMExec* exec, Element* engine_element, int engine_number)
   else      cerr << "No engine location found for this engine." << endl;
 
   local_element = engine_element->GetParent()->FindElement("orient");
-  if (local_element)  orientation = local_element->FindElementTripletConvertTo("DEG");
-  else          cerr << "No engine orientation found for this engine." << endl;
+  if (local_element)  orientation = local_element->FindElementTripletConvertTo("RAD");
+//  else          cerr << "No engine orientation found for this engine." << endl;
+// Jon: The engine orientation has a default and is not normally used.
 
   SetPlacement(location, orientation);
 
   // Load thruster
   local_element = engine_element->GetParent()->FindElement("thruster");
   if (local_element) {
-    LoadThruster(local_element);
+    if (!LoadThruster(local_element)) exit(-1);
   } else {
     cerr << "No thruster definition supplied with engine definition." << endl;
   }
@@ -137,6 +129,11 @@ FGEngine::FGEngine(FGFDMExec* exec, Element* engine_element, int engine_number)
     cerr << "No feed tank specified in engine definition." << endl;
   }
 
+  char property_name[80];
+  snprintf(property_name, 80, "propulsion/engine[%d]/set-running", EngineNumber);
+  PropertyManager->Tie( property_name, (FGEngine*)this, &FGEngine::GetRunning,
+                                       &FGEngine::SetRunning );
+
   Debug(0);
 }
 
@@ -146,6 +143,23 @@ FGEngine::~FGEngine()
 {
   delete Thruster;
   Debug(1);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGEngine::ResetToIC(void)
+{
+  Thrust = 0.0;
+  Throttle = 0.0;
+  Mixture = 1.0;
+  Starter = false;
+  FuelNeed = OxidizerNeed = 0.0;
+  Starved = Running = Cranking = false;
+  PctPower = 0.0;
+  TrimMode = false;
+  FuelFlow_gph = 0.0;
+  FuelFlow_pph = 0.0;
+  FuelFreeze = false;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

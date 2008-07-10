@@ -63,6 +63,8 @@ INCLUDES
 #include <models/FGPropulsion.h>
 #include <models/FGMassBalance.h>
 #include <models/FGGroundReactions.h>
+#include <models/FGExternalReactions.h>
+#include <models/FGBuoyantForces.h>
 #include <models/FGAerodynamics.h>
 #include <models/FGInertial.h>
 #include <models/FGAircraft.h>
@@ -71,6 +73,7 @@ INCLUDES
 #include <models/FGInput.h>
 #include <models/FGOutput.h>
 #include <initialization/FGInitialCondition.h>
+//#include <initialization/FGTrimAnalysis.h> // Remove until later
 #include <input_output/FGPropertyManager.h>
 #include <input_output/FGScript.h>
 
@@ -97,10 +100,11 @@ void checkTied ( FGPropertyManager *node )
 
   for (int i=0; i<N; i++) {
     if (node->getChild(i)->nChildren() ) {
+//      cout << "Untieing " << node->getChild(i)->getName() << " property branch." << endl;
       checkTied( (FGPropertyManager*)node->getChild(i) );
     } else if ( node->getChild(i)->isTied() ) {
       name = ((FGPropertyManager*)node->getChild(i))->GetFullyQualifiedName();
-      cerr << name << " is tied" << endl;
+      node->Untie(name);
     }
   }
 }
@@ -123,6 +127,8 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root) : Root(root)
   Aerodynamics    = 0;
   Inertial        = 0;
   GroundReactions = 0;
+  ExternalReactions = 0;
+  BuoyantForces   = 0;
   Aircraft        = 0;
   Propagate       = 0;
   Auxiliary       = 0;
@@ -153,10 +159,13 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root) : Root(root)
     debug_lvl = 1;
   }
 
-  if (Root == 0)  master= new FGPropertyManager;
-  else            master = Root;
+  if (Root == 0) {
+    if (master == 0)
+      master = new FGPropertyManager;
+    Root = master;
+  }
 
-  instance = master->GetNode("/fdm/jsbsim",IdFDM,true);
+  instance = Root->GetNode("/fdm/jsbsim",IdFDM,true);
   Debug(0);
   // this is to catch errors in binding member functions to the property tree.
   try {
@@ -166,9 +175,13 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root) : Root(root)
     exit(1);
   }
 
+  trim_status = false;
+  ta_mode     = 99;
+
   Constructing = true;
   typedef int (FGFDMExec::*iPMF)(void) const;
-  instance->Tie("simulation/do_trim", this, (iPMF)0, &FGFDMExec::DoTrim);
+//  instance->Tie("simulation/do_trim_analysis", this, (iPMF)0, &FGFDMExec::DoTrimAnalysis);
+  instance->Tie("simulation/do_simple_trim", this, (iPMF)0, &FGFDMExec::DoTrim);
   instance->Tie("simulation/terminate", (int *)&Terminate);
   Constructing = false;
 }
@@ -177,12 +190,9 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root) : Root(root)
 
 FGFDMExec::~FGFDMExec()
 {
-  instance->Untie("simulation/do_trim");
-  instance->Untie("simulation/terminate");
-
   try {
-    DeAllocate();
     checkTied( instance );
+    DeAllocate();
     if (Root == 0)  delete master;
   } catch ( string msg ) {
     cout << "Caught error: " << msg << endl;
@@ -208,54 +218,36 @@ bool FGFDMExec::Allocate(void)
   MassBalance     = new FGMassBalance(this);
   Aerodynamics    = new FGAerodynamics (this);
   Inertial        = new FGInertial(this);
+
+  GroundCallback  = new FGGroundCallback(Inertial->GetRefRadius());
+
   GroundReactions = new FGGroundReactions(this);
+  ExternalReactions = new FGExternalReactions(this);
+  BuoyantForces   = new FGBuoyantForces(this);
   Aircraft        = new FGAircraft(this);
   Propagate       = new FGPropagate(this);
   Auxiliary       = new FGAuxiliary(this);
   Input           = new FGInput(this);
 
-  GroundCallback  = new FGGroundCallback();
   State           = new FGState(this); // This must be done here, as the FGState
                                        // class needs valid pointers to the above
                                        // model classes
 
   // Initialize models so they can communicate with each other
 
-  if (!Atmosphere->InitModel()) {
-    cerr << fgred << "Atmosphere model init failed" << fgdef << endl;
-    Error+=1;}
-  if (!FCS->InitModel())        {
-    cerr << fgred << "FCS model init failed" << fgdef << endl;
-    Error+=2;}
-  if (!Propulsion->InitModel()) {
-    cerr << fgred << "FGPropulsion model init failed" << fgdef << endl;
-    Error+=4;}
-  if (!MassBalance->InitModel()) {
-    cerr << fgred << "FGMassBalance model init failed" << fgdef << endl;
-    Error+=8;}
-  if (!Aerodynamics->InitModel()) {
-    cerr << fgred << "FGAerodynamics model init failed" << fgdef << endl;
-    Error+=16;}
-  if (!Inertial->InitModel()) {
-    cerr << fgred << "FGInertial model init failed" << fgdef << endl;
-    Error+=32;}
-  if (!GroundReactions->InitModel())   {
-    cerr << fgred << "Ground Reactions model init failed" << fgdef << endl;
-    Error+=64;}
-  if (!Aircraft->InitModel())   {
-    cerr << fgred << "Aircraft model init failed" << fgdef << endl;
-    Error+=128;}
-  if (!Propagate->InitModel())   {
-    cerr << fgred << "Propagate model init failed" << fgdef << endl;
-    Error+=256;}
-  if (!Auxiliary->InitModel())  {
-    cerr << fgred << "Auxiliary model init failed" << fgdef << endl;
-    Error+=512;}
-  if (!Input->InitModel())  {
-    cerr << fgred << "Input model init failed" << fgdef << endl;
-    Error+=1024;}
-
-  if (Error > 0) result = false;
+  Atmosphere->InitModel();
+  FCS->InitModel();
+  Propulsion->InitModel();
+  MassBalance->InitModel();
+  Aerodynamics->InitModel();
+  Inertial->InitModel();
+  GroundReactions->InitModel();
+  ExternalReactions->InitModel();
+  BuoyantForces->InitModel();
+  Aircraft->InitModel();
+  Propagate->InitModel();
+  Auxiliary->InitModel();
+  Input->InitModel();
 
   IC = new FGInitialCondition(this);
 
@@ -271,6 +263,8 @@ bool FGFDMExec::Allocate(void)
   Schedule(Aerodynamics,    1);
   Schedule(Inertial,        1);
   Schedule(GroundReactions, 1);
+  Schedule(ExternalReactions, 1);
+  Schedule(BuoyantForces,   1);
   Schedule(Aircraft,        1);
   Schedule(Propagate,       1);
   Schedule(Auxiliary,       1);
@@ -292,6 +286,8 @@ bool FGFDMExec::DeAllocate(void)
   delete Aerodynamics;
   delete Inertial;
   delete GroundReactions;
+  delete ExternalReactions;
+  delete BuoyantForces;
   delete Aircraft;
   delete Propagate;
   delete Auxiliary;
@@ -318,9 +314,12 @@ bool FGFDMExec::DeAllocate(void)
   Aerodynamics    = 0;
   Inertial        = 0;
   GroundReactions = 0;
+  ExternalReactions = 0;
+  BuoyantForces   = 0;
   Aircraft        = 0;
   Propagate       = 0;
   Auxiliary       = 0;
+  Script          = 0;
 
   modelLoaded = false;
   return modelLoaded;
@@ -357,7 +356,7 @@ int FGFDMExec::Schedule(FGModel* model, int rate)
 
 bool FGFDMExec::Run(void)
 {
-  bool success=false;
+  bool success=true;
   FGModel* model_iterator;
 
   model_iterator = FirstModel;
@@ -370,8 +369,10 @@ bool FGFDMExec::Run(void)
 //    SlaveFDMList[i]->exec->Run();
   }
 
-  if (Script != 0) success = Script->RunScript(); // returns true if success
-                                                  // false if complete
+  // returns true if success
+  // false if complete
+  if (Script != 0 && !State->IntegrationSuspended()) success = Script->RunScript();
+
   while (model_iterator != 0L) {
     model_iterator->Run();
     model_iterator = model_iterator->NextModel;
@@ -380,6 +381,7 @@ bool FGFDMExec::Run(void)
   Frame++;
   if (!Holding()) State->IncrTime();
   if (Terminate) success = false;
+
   return (success);
 }
 
@@ -394,6 +396,24 @@ bool FGFDMExec::RunIC(void)
   State->ResumeIntegration();
 
   return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFDMExec::ResetToInitialConditions(void)
+{
+  FGModel* model_iterator;
+
+  model_iterator = FirstModel;
+  if (model_iterator == 0L) return;
+
+  while (model_iterator != 0L) {
+    model_iterator->InitModel();
+    model_iterator = model_iterator->NextModel;
+  }
+
+  RunIC();
+  if (Script) Script->ResetEvents();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -447,11 +467,12 @@ bool FGFDMExec::LoadScript(string script)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGFDMExec::LoadModel(string AircraftPath, string EnginePath, string model,
-                bool addModelToPath)
+bool FGFDMExec::LoadModel(string AircraftPath, string EnginePath, string SystemsPath,
+                string model, bool addModelToPath)
 {
   FGFDMExec::AircraftPath = AircraftPath;
   FGFDMExec::EnginePath = EnginePath;
+  FGFDMExec::SystemsPath = SystemsPath;
 
   return LoadModel(model, addModelToPath);
 }
@@ -464,6 +485,7 @@ bool FGFDMExec::LoadModel(string model, bool addModelToPath)
   string aircraftCfgFileName;
   string separator = "/";
   Element* element = 0L;
+  bool result = false; // initialize result to false, indicating input file not yet read
 
   modelName = model; // Set the class modelName attribute
 
@@ -471,9 +493,9 @@ bool FGFDMExec::LoadModel(string model, bool addModelToPath)
     separator = ";";
 # endif
 
-  if( AircraftPath.empty() || EnginePath.empty() ) {
+  if( AircraftPath.empty() || EnginePath.empty() || SystemsPath.empty()) {
     cerr << "Error: attempted to load aircraft with undefined ";
-    cerr << "aircraft and engine paths" << endl;
+    cerr << "aircraft, engine, and system paths" << endl;
     return false;
   }
 
@@ -487,35 +509,48 @@ bool FGFDMExec::LoadModel(string model, bool addModelToPath)
   }
 
   document = LoadXMLDocument(aircraftCfgFileName); // "document" is a class member
-  ReadPrologue(document);
-  element = document->GetElement();
+  if (document) {
+    ReadPrologue(document);
+    element = document->GetElement();
 
-  bool result = true;
-  while (element && result) {
-    string element_name = element->GetName();
-    if (element_name == "fileheader" )           result = ReadFileHeader(element);
-    else if (element_name == "slave")            result = ReadSlave(element);
-    else if (element_name == "metrics")          result = Aircraft->Load(element);
-    else if (element_name == "mass_balance")     result = MassBalance->Load(element);
-    else if (element_name == "ground_reactions") result = GroundReactions->Load(element);
-    else if (element_name == "propulsion")       result = Propulsion->Load(element);
-    else if (element_name == "autopilot")        result = FCS->Load(element);
-    else if (element_name == "flight_control")   result = FCS->Load(element);
-    else if (element_name == "aerodynamics")     result = Aerodynamics->Load(element);
-    else if (element_name == "input")            result = Input->Load(element);
-    else if (element_name == "output")           {
-        FGOutput* Output = new FGOutput(this);
-        Output->InitModel();
-        Schedule(Output,       1);
-        Outputs.push_back(Output);
-        result = Output->Load(element);
+    result = true;
+    while (element && result) {
+      string element_name = element->GetName();
+      if (element_name == "fileheader" )           result = ReadFileHeader(element);
+      else if (element_name == "slave")            result = ReadSlave(element);
+      else if (element_name == "metrics")          result = Aircraft->Load(element);
+      else if (element_name == "mass_balance")     result = MassBalance->Load(element);
+      else if (element_name == "ground_reactions") result = GroundReactions->Load(element);
+      else if (element_name == "external_reactions") result = ExternalReactions->Load(element);
+      else if (element_name == "buoyant_forces")   result = BuoyantForces->Load(element);
+      else if (element_name == "propulsion")       result = Propulsion->Load(element);
+      else if (element_name == "system")           result = FCS->Load(element,
+                                                            FGFCS::stSystem);
+      else if (element_name == "autopilot")        result = FCS->Load(element,
+                                                            FGFCS::stAutoPilot);
+      else if (element_name == "flight_control")   result = FCS->Load(element,
+                                                            FGFCS::stFCS);
+      else if (element_name == "aerodynamics")     result = Aerodynamics->Load(element);
+      else if (element_name == "input")            result = Input->Load(element);
+      else if (element_name == "output")           {
+          FGOutput* Output = new FGOutput(this);
+          Output->InitModel();
+          Schedule(Output,       1);
+          result = Output->Load(element);
+          Outputs.push_back(Output);
+      }
+      else {
+        cerr << "Found unexpected subsystem: " << element_name << ", exiting." << endl;
+        result = false;
+        break;
+      }
+      element = document->GetNextElement();
     }
-    else {
-      cerr << "Found unexpected subsystem: " << element_name << ", exiting." << endl;
-      result = false;
-      break;
-    }
-    element = document->GetNextElement();
+  } else {
+    cerr << fgred
+         << "  JSBSim failed to load aircraft model."
+         << fgdef << endl;
+    return false;
   }
 
   if (result) {
@@ -523,14 +558,14 @@ bool FGFDMExec::LoadModel(string model, bool addModelToPath)
     Debug(3);
   } else {
     cerr << fgred
-         << "  JSBSim failed to load aircraft and/or engine model"
+         << "  JSBSim failed to load properly."
          << fgdef << endl;
     return false;
   }
 
   struct PropertyCatalogStructure masterPCS;
   masterPCS.base_string = "";
-  masterPCS.node = (FGPropertyManager*)master;
+  masterPCS.node = (FGPropertyManager*)Root;
 
   BuildPropertyCatalog(&masterPCS);
 
@@ -689,6 +724,7 @@ bool FGFDMExec::ReadSlave(Element* el)
 
   SlaveFDMList.back()->exec->SetAircraftPath( AircraftPath );
   SlaveFDMList.back()->exec->SetEnginePath( EnginePath );
+  SlaveFDMList.back()->exec->SetSystemsPath( SystemsPath );
   SlaveFDMList.back()->exec->LoadModel(AircraftName);
   debug_lvl = saved_debug_lvl;   // turn debug output back on for master vehicle
 
@@ -754,19 +790,15 @@ void FGFDMExec::EnableOutput(void)
 
 bool FGFDMExec::SetOutputDirectives(string fname)
 {
-  bool result=true; // for now always return true
+  bool result;
 
-  if (Outputs.size() == 0) {
-    FGOutput* Output = new FGOutput(this);
-    Output->InitModel();
-    Schedule(Output,       1);
-    Output->SetDirectivesFile(fname);
-    Output->Load(0);
-    Outputs.push_back(Output);
-  } else { // Outputs > 1
-    cerr << "First output file being overridden" << endl;
-    Outputs[0]->SetDirectivesFile(fname);
-  }
+  FGOutput* Output = new FGOutput(this);
+  Output->SetDirectivesFile(fname);
+  Output->InitModel();
+  Schedule(Output,       1);
+  result = Output->Load(0);
+  Outputs.push_back(Output);
+
   return result;
 }
 
@@ -789,6 +821,38 @@ void FGFDMExec::DoTrim(int mode)
   State->Setsim_time(saved_time);
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+/*
+void FGFDMExec::DoTrimAnalysis(int mode)
+{
+  double saved_time;
+  if (Constructing) return;
+
+  if (mode < 0 || mode > JSBSim::taNone) {
+    cerr << endl << "Illegal trimming mode!" << endl << endl;
+    return;
+  }
+  saved_time = State->Getsim_time();
+
+  FGTrimAnalysis trimAnalysis(this, (JSBSim::TrimAnalysisMode)mode);
+
+  if ( !trimAnalysis.Load(IC->GetInitFile(), false) ) {
+    cerr << "A problem occurred with trim configuration file " << trimAnalysis.Load(IC->GetInitFile()) << endl;
+    exit(-1);
+  }
+
+  bool result = trimAnalysis.DoTrim();
+
+  if ( !result ) cerr << endl << "Trim Failed" << endl << endl;
+
+  trimAnalysis.Report();
+  State->Setsim_time(saved_time);
+
+  EnableOutput();
+  cout << "\nOutput: " << GetOutputFileName() << endl;
+
+}
+*/
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGFDMExec::UseAtmosphereMSIS(void)

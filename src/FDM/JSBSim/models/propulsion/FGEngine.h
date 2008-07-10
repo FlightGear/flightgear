@@ -94,7 +94,45 @@ CLASS DOCUMENTATION
 
 /** Base class for all engines.
     This base class contains methods and members common to all engines, such as
-    logic to drain fuel from the appropriate tank, etc.
+    logic to drain fuel from the appropriate tank, etc. 
+    <br>
+    <h3>Configuration File Format:</h3>
+@code
+        <engine file="{string}">
+            <location unit="{IN | M}">
+                <x> {number} </x>
+                <y> {number} </y>
+                <z> {number} </z>
+            </location>
+            <!-- optional orientation definition -->
+            <orient unit="{RAD | DEG}">
+                <roll>  {number} </roll>
+                <pitch> {number} </pitch>
+                <yaw> {number} </yaw>
+            </orient>
+            <feed> {integer} </feed>
+            ... optional more feed tank index numbers ... 
+            <thruster file="{string}">
+                <location unit="{IN | M}">
+                    <x> {number} </x>
+                    <y> {number} </y>
+                    <z> {number} </z>
+                </location>
+                <orient unit="{RAD | DEG}">
+                    <roll> {number} </roll>
+                    <pitch> {number} </pitch>
+                    <yaw> {number} </yaw>
+                </orient>
+            </thruster>
+        </engine>
+@endcode
+<pre>
+    NOTES:
+	Engines feed from all tanks equally.
+
+	Not all thruster types can be matched with a given engine type.  See the class
+	documentation for engine and thruster classes.
+</pre>     
     @author Jon S. Berndt
     @version $Id$
 */
@@ -125,7 +163,7 @@ public:
   virtual double getFuelFlow_pph () const {return FuelFlow_pph;}
   virtual double GetThrust(void) { return Thrust; }
   virtual bool   GetStarved(void) { return Starved; }
-  virtual bool   GetRunning(void) { return Running; }
+  virtual bool   GetRunning(void) const { return Running; }
   virtual bool   GetCranking(void) { return Cranking; }
 
   virtual void SetStarved(bool tt) { Starved = tt; }
@@ -137,6 +175,11 @@ public:
   virtual void SetFuelFreeze(bool f) { FuelFreeze = f; }
 
   virtual void SetStarter(bool s) { Starter = s; }
+
+  virtual int InitRunning(void){ return 1; }
+
+  /** Resets the Engine parameters to the initial conditions */
+  void ResetToIC(void);
 
   /** Calculates the thrust of the engine, and other engine functions.
       @return Thrust in pounds */

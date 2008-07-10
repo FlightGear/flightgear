@@ -69,6 +69,7 @@ FGFCSFunction::FGFCSFunction(FGFCS* fcs, Element* element) : FGFCSComponent(fcs,
 
 FGFCSFunction::~FGFCSFunction()
 {
+  delete function;
   Debug(1);
 }
 
@@ -118,8 +119,6 @@ void FGFCSFunction::Debug(int from)
       if (InputNodes.size()>0)
         cout << "      INPUT: " << InputNodes[0]->getName() << endl;
 //    cout << "      Function: " << endl;
-      if (clip) cout << "      CLIPTO: " << clipmin
-                                  << ", " << clipmax << endl;
       if (IsOutput) cout << "      OUTPUT: " << OutputNode->getName() << endl;
     }
   }

@@ -27,7 +27,7 @@
 
 #include <simgear/compiler.h>
 
-#include <stdio.h>	//	size_t
+#include <stdio.h>    //    size_t
 #ifdef SG_MATH_EXCEPTION_CLASH
 #  include <math.h>
 #endif
@@ -58,6 +58,7 @@
 #include <FDM/JSBSim/models/FGFCS.h>
 #include <FDM/JSBSim/models/FGPropagate.h>
 #include <FDM/JSBSim/models/FGAuxiliary.h>
+#include <FDM/JSBSim/models/FGInertial.h>
 #include <FDM/JSBSim/models/FGAtmosphere.h>
 #include <FDM/JSBSim/models/FGMassBalance.h>
 #include <FDM/JSBSim/models/FGAerodynamics.h>
@@ -119,7 +120,7 @@ private:
 /******************************************************************************/
 
 FGJSBsim::FGJSBsim( double dt )
-  : FGInterface(dt)
+  : FGInterface(dt), got_wire(false)
 {
     bool result;
                                 // Set up the debugging level
@@ -160,6 +161,7 @@ FGJSBsim::FGJSBsim( double dt )
     Aircraft        = fdmex->GetAircraft();
     Propagate        = fdmex->GetPropagate();
     Auxiliary       = fdmex->GetAuxiliary();
+    Inertial        = fdmex->GetInertial();
     Aerodynamics    = fdmex->GetAerodynamics();
     GroundReactions = fdmex->GetGroundReactions();
 
@@ -170,10 +172,15 @@ FGJSBsim::FGJSBsim( double dt )
 
     SGPath engine_path( fgGetString("/sim/aircraft-dir") );
     engine_path.append( "Engine" );
+
+    SGPath systems_path( fgGetString("/sim/aircraft-dir") );
+    systems_path.append( "Systems" );
+
     State->Setdt( dt );
 
     result = fdmex->LoadModel( aircraft_path.str(),
                                engine_path.str(),
+                               systems_path.str(),
                                fgGetString("/sim/aero"), false );
 
     if (result) {
@@ -211,6 +218,8 @@ FGJSBsim::FGJSBsim( double dt )
         node->setDoubleValue("level-lb", Propulsion->GetTank(i)->GetContents());
         node->setDoubleValue("level-gal_us", Propulsion->GetTank(i)->GetContents() / 6.6);
       }
+      node->setDoubleValue("capacity-gal_us",
+                           Propulsion->GetTank(i)->GetCapacity() / 6.6);
     }
     Propulsion->SetFuelFreeze((fgGetNode("/sim/freeze/fuel",true))->getBoolValue());
 
@@ -269,6 +278,11 @@ FGJSBsim::FGJSBsim( double dt )
       Propulsion->GetEngine(i)->GetThruster()->SetRPM(node->getDoubleValue("rpm") /
                      Propulsion->GetEngine(i)->GetThruster()->GetGearRatio());
     }
+
+    hook_root_struct = FGColumnVector3(
+        fgGetDouble("/fdm/jsbsim/systems/hook/tailhook-offset-x-in", 196),
+        fgGetDouble("/fdm/jsbsim/systems/hook/tailhook-offset-y-in", 0),
+        fgGetDouble("/fdm/jsbsim/systems/hook/tailhook-offset-z-in", -16));
 }
 
 /******************************************************************************/
@@ -297,20 +311,16 @@ void FGJSBsim::init()
                   9.0/5.0*(temperature->getDoubleValue()+273.15) );
       Atmosphere->SetExPressure(pressure->getDoubleValue()*70.726566);
       Atmosphere->SetExDensity(density->getDoubleValue());
-
-      tmp = turbulence_gain->getDoubleValue();
-      Atmosphere->SetTurbGain(tmp * tmp * 100.0);
-
-      tmp = turbulence_rate->getDoubleValue();
-      Atmosphere->SetTurbRate(tmp);
+      Atmosphere->SetTurbGain(turbulence_gain->getDoubleValue());
+      Atmosphere->SetTurbRate(turbulence_rate->getDoubleValue());
 
     } else {
       Atmosphere->UseInternal();
     }
 
-    fgic->SetVnorthFpsIC( wind_from_north->getDoubleValue() );
-    fgic->SetVeastFpsIC( wind_from_east->getDoubleValue() );
-    fgic->SetVdownFpsIC( wind_from_down->getDoubleValue() );
+    fgic->SetVNorthFpsIC( wind_from_north->getDoubleValue() );
+    fgic->SetVEastFpsIC( wind_from_east->getDoubleValue() );
+    fgic->SetVDownFpsIC( wind_from_down->getDoubleValue() );
 
     //Atmosphere->SetExTemperature(get_Static_temperature());
     //Atmosphere->SetExPressure(get_Static_pressure());
@@ -326,6 +336,8 @@ void FGJSBsim::init()
             Propulsion->GetEngine(i)->SetRunning(true);
           }
     }
+
+    FCS->SetDfPos( ofNorm, globals->get_controls()->get_flaps() );
 
     common_init();
 
@@ -463,6 +475,7 @@ void FGJSBsim::update( double dt )
 
     for ( i=0; i < multiloop; i++ ) {
       fdmex->Run();
+      update_external_forces(State->Getsim_time() + i * State->Getdt());      
     }
 
     FGJSBBase::Message* msg;
@@ -509,8 +522,6 @@ bool FGJSBsim::copy_to_JSBsim()
     FCS->SetPitchTrimCmd( globals->get_controls()->get_elevator_trim() );
     FCS->SetDrCmd( -globals->get_controls()->get_rudder() );
     FCS->SetYawTrimCmd( -globals->get_controls()->get_rudder_trim() );
-    // FIXME: make that get_steering work
-//     FCS->SetDsCmd( globals->get_controls()->get_steering()/80.0 );
     FCS->SetDsCmd( globals->get_controls()->get_rudder() );
     FCS->SetDfCmd( globals->get_controls()->get_flaps() );
     FCS->SetDsbCmd( globals->get_controls()->get_speedbrake() );
@@ -545,7 +556,7 @@ bool FGJSBsim::copy_to_JSBsim()
         FGTurbine* eng = (FGTurbine*)Propulsion->GetEngine(i);
         eng->SetAugmentation( globals->get_controls()->get_augmentation(i) );
         eng->SetReverse( globals->get_controls()->get_reverser(i) );
-        eng->SetInjection( globals->get_controls()->get_water_injection(i) );
+        //eng->SetInjection( globals->get_controls()->get_water_injection(i) );
         eng->SetCutoff( globals->get_controls()->get_cutoff(i) );
         eng->SetIgnition( globals->get_controls()->get_ignition(i) );
         break;
@@ -562,8 +573,8 @@ bool FGJSBsim::copy_to_JSBsim()
         eng->SetCutoff( globals->get_controls()->get_cutoff(i) );
         eng->SetIgnition( globals->get_controls()->get_ignition(i) );
 
-		eng->SetGeneratorPower( globals->get_controls()->get_generator_breaker(i) );
-		eng->SetCondition( globals->get_controls()->get_condition(i) );
+        eng->SetGeneratorPower( globals->get_controls()->get_generator_breaker(i) );
+        eng->SetCondition( globals->get_controls()->get_condition(i) );
         break;
         } // end FGTurboProp code block
       }
@@ -585,10 +596,10 @@ bool FGJSBsim::copy_to_JSBsim()
     Atmosphere->SetExDensity(density->getDoubleValue());
 
     tmp = turbulence_gain->getDoubleValue();
-    Atmosphere->SetTurbGain(tmp * tmp * 100.0);
+    //Atmosphere->SetTurbGain(tmp * tmp * 100.0);
 
     tmp = turbulence_rate->getDoubleValue();
-    Atmosphere->SetTurbRate(tmp);
+    //Atmosphere->SetTurbRate(tmp);
 
     Atmosphere->SetWindNED( wind_from_north->getDoubleValue(),
                             wind_from_east->getDoubleValue(),
@@ -604,8 +615,7 @@ bool FGJSBsim::copy_to_JSBsim()
       tank->SetContents(node->getDoubleValue("level-gal_us") * 6.6);
 //       tank->SetContents(node->getDoubleValue("level-lb"));
     }
-    SGPropertyNode* node = fgGetNode("/systems/refuel", true);
-    Propulsion->SetRefuel(node->getDoubleValue("contact"));
+
     Propulsion->SetFuelFreeze((fgGetNode("/sim/freeze/fuel",true))->getBoolValue());
     fdmex->SetSlave(slaved->getBoolValue());
 
@@ -704,7 +714,7 @@ bool FGJSBsim::copy_from_JSBsim()
 
     _set_Gamma_vert_rad( Auxiliary->GetGamma() );
 
-    _set_Earth_position_angle( Auxiliary->GetEarthPositionAngle() );
+    _set_Earth_position_angle( Inertial->GetEarthPositionAngle() );
 
     _set_Climb_Rate( Propagate->Gethdot() );
 
@@ -985,9 +995,9 @@ void FGJSBsim::set_Velocities_Local( double north, double east, double down )
     FGInterface::set_Velocities_Local(north, east, down);
 
     update_ic();
-    fgic->SetVnorthFpsIC(north);
-    fgic->SetVeastFpsIC(east);
-    fgic->SetVdownFpsIC(down);
+    fgic->SetVNorthFpsIC(north);
+    fgic->SetVEastFpsIC(east);
+    fgic->SetVDownFpsIC(down);
     needTrim=true;
 }
 
@@ -1063,7 +1073,7 @@ void FGJSBsim::init_gear(void )
       node->setDoubleValue("zoffset-in", gear->GetBodyLocation()(3));
       node->setBoolValue("wow", gear->GetWOW());
       node->setBoolValue("has-brake", gear->GetBrakeGroup() > 0);
-      node->setDoubleValue("position-norm", FCS->GetGearPos());
+      node->setDoubleValue("position-norm", gear->GetGearUnitPos());
       node->setDoubleValue("tire-pressure-norm", gear->GetTirePressure());
       node->setDoubleValue("compression-norm", gear->GetCompLen());
       if ( gear->GetSteerable() )
@@ -1079,7 +1089,7 @@ void FGJSBsim::update_gear(void)
       FGLGear *gear = gr->GetGearUnit(i);
       SGPropertyNode * node = fgGetNode("gear/gear", i, true);
       node->getChild("wow", 0, true)->setBoolValue( gear->GetWOW());
-      node->getChild("position-norm", 0, true)->setDoubleValue(FCS->GetGearPos());
+      node->getChild("position-norm", 0, true)->setDoubleValue(gear->GetGearUnitPos());
       gear->SetTirePressure(node->getDoubleValue("tire-pressure-norm"));
       node->setDoubleValue("compression-norm", gear->GetCompLen());
       if ( gear->GetSteerable() )
@@ -1093,7 +1103,6 @@ void FGJSBsim::do_trim(void)
 
   if ( fgGetBool("/sim/presets/onground") )
   {
-    fgic->SetVcalibratedKtsIC(0.0);
     fgtrim = new FGTrim(fdmex,tGround);
   } else {
     fgtrim = new FGTrim(fdmex,tLongitudinal);
@@ -1105,10 +1114,8 @@ void FGJSBsim::do_trim(void)
   } else {
     trimmed->setBoolValue(true);
   }
-#if 0
-  if (FGJSBBase::debug_lvl > 0)
-      State->ReportState();	/* FIXME: Function not implemented */
-#endif
+//  if (FGJSBBase::debug_lvl > 0)
+//      State->ReportState();
 
   delete fgtrim;
 
@@ -1140,5 +1147,192 @@ void FGJSBsim::update_ic(void)
      fgic->SetPsiRadIC( get_Psi() );
      fgic->SetClimbRateFpsIC( get_Climb_Rate() );
    }
+}
+
+inline static double dot3(const FGColumnVector3& a, const FGColumnVector3& b)
+{
+    return a(1) * b(1) + a(2) * b(2) + a(3) * b(3);
+}
+
+inline static double sqr(double x)
+{
+    return x * x;
+}
+
+static double angle_diff(double a, double b)
+{
+    double diff = fabs(a - b);
+    if (diff > 180) diff = 360 - diff;
+    
+    return diff;
+}
+
+static void check_hook_solution(const FGColumnVector3& ground_normal_body, double E, double hook_length, double sin_fi_guess, double cos_fi_guess, double* sin_fis, double* cos_fis, double* fis, int* points)
+{
+    FGColumnVector3 tip(-hook_length * cos_fi_guess, 0, hook_length * sin_fi_guess);
+    double dist = dot3(tip, ground_normal_body);
+    if (fabs(dist + E) < 0.0001) {
+	sin_fis[*points] = sin_fi_guess;
+	cos_fis[*points] = cos_fi_guess;
+	fis[*points] = atan2(sin_fi_guess, cos_fi_guess) * SG_RADIANS_TO_DEGREES;
+	(*points)++;
+    } 
+}
+
+
+static void check_hook_solution(const FGColumnVector3& ground_normal_body, double E, double hook_length, double sin_fi_guess, double* sin_fis, double* cos_fis, double* fis, int* points)
+{
+    if (sin_fi_guess >= -1 && sin_fi_guess <= 1) {
+	double cos_fi_guess = sqrt(1 - sqr(sin_fi_guess));
+	check_hook_solution(ground_normal_body, E, hook_length, sin_fi_guess, cos_fi_guess, sin_fis, cos_fis, fis, points);
+	if (fabs(cos_fi_guess) > SG_EPSILON) {
+	    check_hook_solution(ground_normal_body, E, hook_length, sin_fi_guess, -cos_fi_guess, sin_fis, cos_fis, fis, points);
+	}
+    }
+}
+
+void FGJSBsim::update_external_forces(double t_off)
+{
+    const FGMatrix33& Tb2l = Propagate->GetTb2l();
+    const FGMatrix33& Tl2b = Propagate->GetTl2b();
+    const FGLocation& Location = Propagate->GetLocation();
+    const FGMatrix33& Tec2l = Location.GetTec2l();
+        
+    double hook_area[4][3];
+    
+    FGColumnVector3 hook_root_body = MassBalance->StructuralToBody(hook_root_struct);
+    FGColumnVector3 hook_root = Location.LocalToLocation(Tb2l *   hook_root_body);
+    hook_area[1][0] = hook_root(1);
+    hook_area[1][1] = hook_root(2);
+    hook_area[1][2] = hook_root(3);
+    
+    hook_length = fgGetDouble("/fdm/jsbsim/systems/hook/tailhook-length-ft", 6.75);
+    double fi_min = fgGetDouble("/fdm/jsbsim/systems/hook/tailhook-pos-min-deg", -18);
+    double fi_max = fgGetDouble("/fdm/jsbsim/systems/hook/tailhook-pos-max-deg", 30);
+    double fi = fgGetDouble("/fdm/jsbsim/systems/hook/tailhook-pos-norm") * (fi_max - fi_min) + fi_min;
+    double cos_fi = cos(fi * SG_DEGREES_TO_RADIANS);
+    double sin_fi = sin(fi * SG_DEGREES_TO_RADIANS);
+
+    FGColumnVector3 hook_tip_body = hook_root_body;
+    hook_tip_body(1) -= hook_length * cos_fi;
+    hook_tip_body(3) += hook_length * sin_fi;    
+    bool hook_tip_valid = true;
+    
+    double contact[3];
+    double ground_normal[3];
+    double ground_vel[3];
+    int ground_type;
+    const SGMaterial* ground_material;
+    double root_agl_ft;
+
+    if (!got_wire) {
+        bool got = get_agl_ft(t_off, hook_area[1], 0, contact, ground_normal, ground_vel, &ground_type, &ground_material, &root_agl_ft);
+        if (got && root_agl_ft > 0 && root_agl_ft < hook_length) {
+            FGColumnVector3 ground_normal_body = Tl2b * (Tec2l * FGColumnVector3(ground_normal[0], ground_normal[1], ground_normal[2]));
+            FGColumnVector3 contact_body = Tl2b * Location.LocationToLocal(FGColumnVector3(contact[0], contact[1], contact[2]));
+            double D = -dot3(contact_body, ground_normal_body);
+
+	    // check hook tip agl against same ground plane
+	    double hook_tip_agl_ft = dot3(hook_tip_body, ground_normal_body) + D;
+	    if (hook_tip_agl_ft < 0) {
+
+        	// hook tip: hx - l cos, hy, hz + l sin
+        	// on ground:  - n0 l cos + n2 l sin + E = 0
+
+        	double E = D + dot3(hook_root_body, ground_normal_body);
+
+        	// substitue x = sin fi, cos fi = sqrt(1 - x * x)
+		// and rearrange to get a quadratic with coeffs:
+        	double a = sqr(hook_length) * (sqr(ground_normal_body(1)) + sqr(ground_normal_body(3)));
+        	double b = 2 * E * ground_normal_body(3) * hook_length;
+        	double c = sqr(E) - sqr(ground_normal_body(1) * hook_length);	
+
+        	double disc = sqr(b) - 4 * a * c;
+        	if (disc >= 0) {
+		    double delta = sqrt(disc) / (2 * a);
+		
+		    // allow 4 solutions for safety, should never happen
+		    double sin_fis[4];
+		    double cos_fis[4];
+		    double fis[4];
+		    int points = 0;
+		
+        	    double sin_fi_guess = -b / (2 * a) - delta;
+		    check_hook_solution(ground_normal_body, E, hook_length, sin_fi_guess, sin_fis, cos_fis, fis, &points);
+		    check_hook_solution(ground_normal_body, E, hook_length, sin_fi_guess + 2 * delta, sin_fis, cos_fis, fis, &points);
+		
+		    if (points == 2) {
+			double diff1 = angle_diff(fi, fis[0]);
+			double diff2 = angle_diff(fi, fis[1]);
+			int point = diff1 < diff2 ? 0 : 1;
+			fi = fis[point];
+			sin_fi = sin_fis[point];
+			cos_fi = cos_fis[point];
+			hook_tip_body(1) = hook_root_body(1) - hook_length * cos_fi;
+			hook_tip_body(3) = hook_root_body(3) + hook_length * sin_fi;
+		    }
+        	}
+    	    }
+	}
+    } else {
+        FGColumnVector3 hook_root_vel = Propagate->GetVel() + (Tb2l * (Propagate->GetPQR() *  hook_root_body));
+        double wire_ends_ec[2][3];
+        double wire_vel_ec[2][3];
+        get_wire_ends_ft(t_off, wire_ends_ec, wire_vel_ec);
+        FGColumnVector3 wire_vel_1 = Tec2l * FGColumnVector3(wire_vel_ec[0][0], wire_vel_ec[0][1], wire_vel_ec[0][2]);
+        FGColumnVector3 wire_vel_2 = Tec2l * FGColumnVector3(wire_vel_ec[1][0], wire_vel_ec[1][1], wire_vel_ec[1][2]);
+        FGColumnVector3 rel_vel = hook_root_vel - (wire_vel_1 + wire_vel_2) / 2;
+        if (rel_vel.Magnitude() < 3) {
+            got_wire = false;
+            release_wire();
+            fgSetDouble("/fdm/jsbsim/external_reactions/hook/magnitude", 0.0);
+        } else {
+            FGColumnVector3 wire_end1_body = Tl2b * Location.LocationToLocal(FGColumnVector3(wire_ends_ec[0][0], wire_ends_ec[0][1], wire_ends_ec[0][2])) - hook_root_body;
+            FGColumnVector3 wire_end2_body = Tl2b * Location.LocationToLocal(FGColumnVector3(wire_ends_ec[1][0], wire_ends_ec[1][1], wire_ends_ec[1][2])) - hook_root_body;
+            FGColumnVector3 force_plane_normal = wire_end1_body * wire_end2_body;
+            force_plane_normal.Normalize();
+            cos_fi = dot3(force_plane_normal, FGColumnVector3(0, 0, 1));
+            if (cos_fi < 0) cos_fi = -cos_fi;
+            sin_fi = sqrt(1 - sqr(cos_fi));
+            fi = atan2(sin_fi, cos_fi) * SG_RADIANS_TO_DEGREES;
+        
+            fgSetDouble("/fdm/jsbsim/external_reactions/hook/x", -cos_fi);
+            fgSetDouble("/fdm/jsbsim/external_reactions/hook/y", 0);
+            fgSetDouble("/fdm/jsbsim/external_reactions/hook/z", sin_fi);
+            fgSetDouble("/fdm/jsbsim/external_reactions/hook/magnitude", fgGetDouble("/fdm/jsbsim/systems/hook/force"));
+        }
+    }
+
+    FGColumnVector3 hook_tip = Location.LocalToLocation(Tb2l * hook_tip_body);
+
+    hook_area[0][0] = hook_tip(1);
+    hook_area[0][1] = hook_tip(2);
+    hook_area[0][2] = hook_tip(3);
+
+    if (!got_wire) {
+        // The previous positions.
+        hook_area[2][0] = last_hook_root[0];
+        hook_area[2][1] = last_hook_root[1];
+        hook_area[2][2] = last_hook_root[2];
+        hook_area[3][0] = last_hook_tip[0];
+        hook_area[3][1] = last_hook_tip[1];
+        hook_area[3][2] = last_hook_tip[2];
+
+        // Check if we caught a wire.
+        // Returns true if we caught one.
+        if (caught_wire_ft(t_off, hook_area)) {
+                got_wire = true;
+        }
+    }
+    
+    // save actual position as old position ...
+    last_hook_tip[0] = hook_area[0][0];
+    last_hook_tip[1] = hook_area[0][1];
+    last_hook_tip[2] = hook_area[0][2];
+    last_hook_root[0] = hook_area[1][0];
+    last_hook_root[1] = hook_area[1][1];
+    last_hook_root[2] = hook_area[1][2];
+    
+    fgSetDouble("/fdm/jsbsim/systems/hook/tailhook-pos-deg", fi);
 }
 

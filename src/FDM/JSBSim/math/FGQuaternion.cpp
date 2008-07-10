@@ -125,9 +125,10 @@ FGQuaternion::FGQuaternion(double phi, double tht, double psi)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-/**
-   Returns the derivative of the quaternion coresponding to the
-   angular velocities PQR.
+/** Returns the derivative of the quaternion corresponding to the
+    angular velocities PQR.
+    See Stevens and Lewis, "Aircraft Control and Simulation", Second Edition,
+    Equation 1.3-36. 
 */
 FGQuaternion FGQuaternion::GetQDot(const FGColumnVector3& PQR) const {
   double norm = Magnitude();

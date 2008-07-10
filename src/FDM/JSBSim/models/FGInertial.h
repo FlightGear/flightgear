@@ -68,7 +68,8 @@ namespace JSBSim {
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-/** Models inertial forces (e.g. centripetal and coriolis accelerations).
+/** Models inertial forces (e.g. centripetal and coriolis accelerations). Starting
+    conversion to WGS84.
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -81,19 +82,32 @@ public:
   FGInertial(FGFDMExec*);
   ~FGInertial(void);
 
+  bool InitModel(void);
+
   bool Run(void);
   double SLgravity(void) const {return gAccelReference;}
   double gravity(void) const {return gAccel;}
   double omega(void) const {return RotationRate;}
-  double GetGAccel(double r) const { return GM/(r*r); }
-  double RefRadius(void) const {return RadiusReference;}
+  double GetEarthPositionAngle(void) const { return earthPosAngle; }
+  double GetEarthPositionAngleDeg(void) const { return earthPosAngle*radtodeg;}
+  double GetGAccel(double r) const;
+  double GetRefRadius(void) const {return RadiusReference;}
+  double GetSemimajor(void) const {return a;}
+  double GetSemiminor(void) const {return b;}
 
 private:
   double gAccel;
   double gAccelReference;
   double RadiusReference;
   double RotationRate;
+  double earthPosAngle;
   double GM;
+  double C2_0; // WGS84 value for the C2,0 coefficient
+  double J2;   // WGS84 value for J2
+  double a;    // WGS84 semimajor axis length in feet 
+  double b;    // WGS84 semiminor axis length in feet
+
+  void bind(void);
   void Debug(int from);
 };
 }

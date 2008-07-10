@@ -82,6 +82,8 @@ class FGMassBalance;
 class FGAerodynamics;
 class FGInertial;
 class FGGroundReactions;
+class FGExternalReactions;
+class FGBuoyantForces;
 class FGAircraft;
 class FGPropagate;
 class FGAuxiliary;
@@ -140,6 +142,8 @@ protected:
   FGAerodynamics*    Aerodynamics;
   FGInertial*        Inertial;
   FGGroundReactions* GroundReactions;
+  FGExternalReactions* ExternalReactions;
+  FGBuoyantForces*   BuoyantForces;
   FGAircraft*        Aircraft;
   FGPropagate*       Propagate;
   FGAuxiliary*       Auxiliary;

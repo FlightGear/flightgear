@@ -42,14 +42,11 @@ INCLUDES
 #  include <simgear/compiler.h>
 #  ifdef SG_HAVE_STD_INCLUDES
 #    include <vector>
-#    include <iterator>
 #  else
 #    include <vector.h>
-#    include <iterator.h>
 #  endif
 #else
 #  include <vector>
-#  include <iterator>
 #endif
 
 #include "FGModel.h"
@@ -73,11 +70,33 @@ CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /** Encapsulates an Aircraft and its systems.
-    Owns all the parts (other classes) which make up this aircraft. This includes
+<p> Owns all the parts (other classes) which make up this aircraft. This includes
     the Engines, Tanks, Propellers, Nozzles, Aerodynamic and Mass properties,
     landing gear, etc. These constituent parts may actually run as separate
     JSBSim models themselves, but the responsibility for initializing them and
     for retrieving their force and moment contributions falls to FGAircraft.
+<p> The \<metrics> section of the aircraft configuration file is read here, and
+    the metrical information is held by this class.
+<h3>Configuration File Format for \<metrics> Section:</h3>
+@code
+    <metrics>
+        <wingarea unit="{FT2 | M2}"> {number} </wingarea>
+        <wingspan unit="{FT | M}"> {number} </wingspan>
+        <chord unit="{FT | M}"> {number} </chord>
+        <htailarea unit="{FT2 | M2}"> {number} </htailarea>
+        <htailarm unit="{FT | M}"> {number} </htailarm>
+        <vtailarea unit="{FT2 | M}"> {number} </vtailarea>
+        <vtailarm unit="{FT | M}"> {number} </vtailarm>
+        <wing_incidence unit="{RAD | DEG}"> {number} </wing_incidence>
+        <location name="{AERORP | EYEPOINT | VRP}" unit="{IN | M}">
+            <x> {number} </x>
+            <y> {number} </y>
+            <z> {number} </z>
+        </location>
+        {other location blocks}
+    </metrics>
+@endcode
+
     @author Jon S. Berndt
     @version $Id$
     @see Cooke, Zyda, Pratt, and McGhee, "NPSNET: Flight Simulation Dynamic Modeling
@@ -111,6 +130,8 @@ public:
       @return false if no error */
   bool Run(void);
 
+  bool InitModel(void);
+
   /** Loads the aircraft.
       The executive calls this method to load the aircraft into JSBSim.
       @param el a pointer to the element tree
@@ -128,6 +149,7 @@ public:
   /// Gets the average wing chord
   double Getcbar(void) const { return cbar; }
   inline double GetWingIncidence(void) const { return WingIncidence; }
+  inline double GetWingIncidenceDeg(void) const { return WingIncidence*radtodeg; }
   inline double GetHTailArea(void) const { return HTailArea; }
   inline double GetHTailArm(void)  const { return HTailArm; }
   inline double GetVTailArea(void) const { return VTailArea; }
@@ -155,6 +177,8 @@ public:
   inline int GetHoldDown(void) const {return HoldDown;}
 
   void SetXYZrp(int idx, double value) {vXYZrp(idx) = value;}
+
+  void SetWingArea(double S) {WingArea = S;}
 
   double GetNlf(void);
 

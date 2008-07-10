@@ -64,13 +64,14 @@ CLASS DOCUMENTATION
 
 One of the most recent additions to the FCS component set is the FCS Function
 component. This component allows a function to be created when no other component
-is suitable. The function component is defined as follows:
+is suitable. Available mathematical operations are described in the FGFunction class.  
+The function component is defined as follows:
 
 @code
 <fcs_function name="Windup Trigger">
   [<input> [-]property </input>]
   <function>
-    …
+    ...
   </function>
   [<clipto>
     <min> {[-]property name | value} </min>
@@ -81,7 +82,7 @@ is suitable. The function component is defined as follows:
 @endcode
 
 The function definition itself can include a nested series of products, sums,
-quotients, etc. as well as trig and other math functions. Here’s an example of
+quotients, etc. as well as trig and other math functions. Here's an example of
 a function (from an aero specification):
 
 @code
@@ -103,6 +104,7 @@ a function (from an aero specification):
     </product>
 </function>
 @endcode
+
     @version $Id$
 */
 

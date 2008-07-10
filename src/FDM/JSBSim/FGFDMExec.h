@@ -53,6 +53,7 @@ INCLUDES
 #include <models/FGPropagate.h>
 
 #include <vector>
+#include <string>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -214,6 +215,8 @@ public:
       modeled aircraft such as C172/, x15/, etc.
       @param EnginePath path to the directory under which engine config
       files are kept, for instance "engine"
+      @param SystemsPath path to the directory under which systems config
+      files are kept, for instance "systems"
       @param model the name of the aircraft model itself. This file will
       be looked for in the directory specified in the AircraftPath variable,
       and in turn under the directory with the same name as the model. For
@@ -221,8 +224,8 @@ public:
       @param addModelToPath set to true to add the model name to the
       AircraftPath, defaults to true
       @return true if successful */
-  bool LoadModel(string AircraftPath, string EnginePath, string model,
-                 bool addModelToPath = true);
+  bool LoadModel(string AircraftPath, string EnginePath, string SystemsPath,
+                 string model, bool addModelToPath = true);
 
   /** Loads an aircraft model.  The paths to the aircraft and engine
       config file directories must be set prior to calling this.  See
@@ -251,7 +254,12 @@ public:
       "aircraft". Under aircraft, then, would be directories for various
       modeled aircraft such as C172/, x15/, etc.  */
   bool SetAircraftPath(string path) { AircraftPath = path; return true; }
-
+  
+  /** Sets the path to the systems config file directories.
+      @param path path to the directory under which systems config
+      files are kept, for instance "systems"  */
+  bool SetSystemsPath(string path)   { SystemsPath = path; return true; }
+  
   /// @name Top-level executive State and Model retrieval mechanism
   //@{
   /// Returns the FGAtmosphere pointer.
@@ -268,6 +276,10 @@ public:
   inline FGInertial* GetInertial(void)        {return Inertial;}
   /// Returns the FGGroundReactions pointer.
   inline FGGroundReactions* GetGroundReactions(void) {return GroundReactions;}
+  /// Returns the FGExternalReactions pointer.
+  inline FGExternalReactions* GetExternalReactions(void) {return ExternalReactions;}
+  /// Returns the FGBuoyantForces pointer.
+  inline FGBuoyantForces* GetBuoyantForces(void) {return BuoyantForces;}
   /// Returns the FGAircraft pointer.
   inline FGAircraft* GetAircraft(void)        {return Aircraft;}
   /// Returns the FGPropagate pointer.
@@ -280,16 +292,20 @@ public:
   inline FGGroundCallback* GetGroundCallback(void) {return GroundCallback;}
   /// Returns the FGState pointer.
   inline FGState* GetState(void)              {return State;}
+  /// Retrieves the script object
+  inline FGScript* GetScript(void) {return Script;}
   // Returns a pointer to the FGInitialCondition object
   inline FGInitialCondition* GetIC(void)      {return IC;}
   // Returns a pointer to the FGTrim object
-  inline FGTrim* GetTrim(void);
+  FGTrim* GetTrim(void);
   //@}
 
   /// Retrieves the engine path.
   inline string GetEnginePath(void)          {return EnginePath;}
   /// Retrieves the aircraft path.
   inline string GetAircraftPath(void)        {return AircraftPath;}
+  /// Retrieves the systems path.
+  inline string GetSystemsPath(void)         {return SystemsPath;}
   /// Retrieves the full aircraft path name.
   inline string GetFullAircraftPath(void)    {return FullAircraftPath;}
 
@@ -313,7 +329,7 @@ public:
 
   /// Returns the current frame time (delta T).
   double GetDeltaT(void);
-
+  
   /// Returns a pointer to the property manager object.
   FGPropertyManager* GetPropertyManager(void);
   /// Returns a vector of strings representing the names of all loaded models (future)
@@ -365,6 +381,7 @@ public:
   * - tTurn
   * - tNone  */
   void DoTrim(int mode);
+//  void DoTrimAnalysis(int mode);
 
   /// Disables data logging to all outputs.
   void DisableOutput(void);
@@ -376,6 +393,8 @@ public:
   void Resume(void) {holding = false;}
   /// Returns true if the simulation is Holding (i.e. simulation time is not moving).
   bool Holding(void) {return holding;}
+  /// Resets the initial conditions object and prepares the simulation to run again.
+  void ResetToInitialConditions(void);
   /// Sets the debug level.
   void SetDebugLevel(int level) {debug_lvl = level;}
 
@@ -409,6 +428,11 @@ public:
   /// Use the Mars atmosphere model. (Not operative yet.)
   void UseAtmosphereMars(void);
 
+  void SetTrimStatus(bool status){ trim_status = status; }
+  bool GetTrimStatus(void) const { return trim_status; }
+  void SetTrimMode(int mode){ ta_mode = mode; }
+  int GetTrimMode(void) const { return ta_mode; }
+
 private:
   static unsigned int FDMctr;
   int Error;
@@ -423,8 +447,13 @@ private:
   string AircraftPath;
   string FullAircraftPath;
   string EnginePath;
+  string SystemsPath;
   string CFGVersion;
   string Release;
+
+  bool trim_status;
+  int ta_mode;
+
 
   struct slaveData {
     FGFDMExec* exec;
@@ -457,6 +486,8 @@ private:
   FGAerodynamics*     Aerodynamics;
   FGInertial*         Inertial;
   FGGroundReactions*  GroundReactions;
+  FGExternalReactions* ExternalReactions;
+  FGBuoyantForces*    BuoyantForces;
   FGAircraft*         Aircraft;
   FGPropagate*        Propagate;
   FGAuxiliary*        Auxiliary;

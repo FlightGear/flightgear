@@ -78,7 +78,7 @@ CLASS DOCUMENTATION
     very dynamic state (unless, of course, you have chosen your IC's wisely, or
     started on the ground) even after setting it up with this class.
 
-   <h2>Usage Notes</h2>
+   <h3>Usage Notes</h3>
 
    With a valid object of FGFDMExec and an aircraft model loaded:
 
@@ -96,7 +96,7 @@ CLASS DOCUMENTATION
    FDMExec->RunIC(fgic)
    @endcode
 
-   <h2>Speed</h2>
+   <h3>Speed</h3>
 
    Since vc, ve, vt, and mach all represent speed, the remaining
    three are recalculated each time one of them is set (using the
@@ -106,7 +106,7 @@ CLASS DOCUMENTATION
    components forces a recalculation of vt and vt then becomes the
    most recent speed set.
 
-   <h2>Alpha,Gamma, and Theta</h2>
+   <h3>Alpha,Gamma, and Theta</h3>
 
    This class assumes that it will be used to set up the sim for a
    steady, zero pitch rate condition. Since any two of those angles
@@ -128,6 +128,9 @@ CLASS DOCUMENTATION
    - ubody (velocity, ft/sec)
    - vbody (velocity, ft/sec)
    - wbody (velocity, ft/sec)
+   - vnorth (velocity, ft/sec)
+   - veast (velocity, ft/sec)
+   - vdown (velocity, ft/sec)
    - latitude (position, degrees)
    - longitude (position, degrees)
    - phi (orientation, degrees)
@@ -147,7 +150,7 @@ CLASS DOCUMENTATION
    - vground (ground speed, ft/sec)
    - running (0 or 1)
 
-   <h2>Properties</h2>
+   <h3>Properties</h3>
    @property ic/vc-kts (read/write) Calibrated airspeed initial condition in knots
    @property ic/ve-kts (read/write) Knots equivalent airspeed initial condition
    @property ic/vg-kts (read/write) Ground speed initial condition in knots
@@ -180,6 +183,9 @@ CLASS DOCUMENTATION
    @property ic/u-fps (read/write) Body frame x-axis velocity initial condition in feet/second
    @property ic/v-fps (read/write) Body frame y-axis velocity initial condition in feet/second
    @property ic/w-fps (read/write) Body frame z-axis velocity initial condition in feet/second
+   @property ic/vn-fps (read/write) Local frame x-axis (north) velocity initial condition in feet/second
+   @property ic/ve-fps (read/write) Local frame y-axis (east) velocity initial condition in feet/second
+   @property ic/vd-fps (read/write) Local frame z-axis (down) velocity initial condition in feet/second
    @property ic/gamma-rad (read/write) Flight path angle initial condition in radians
    @property ic/alpha-rad (read/write) Angle of attack initial condition in radians
    @property ic/theta-rad (read/write) Pitch angle initial condition in radians
@@ -239,6 +245,13 @@ public:
   /** Sets pitch angle initial condition in degrees.
       @param theta Theta (pitch) angle in degrees */
   inline void SetThetaDegIC(double theta) { SetThetaRadIC(theta*degtorad); }
+
+  /** Resets the IC data structure to new values
+      @param u, v, w, ... **/
+  void ResetIC(double u0, double v0, double w0, double p0, double q0, double r0,
+               double alpha0, double beta0, double phi0, double theta0, double psi0,
+               double latitudeRad0, double longitudeRad0, double altitudeAGL0,
+               double gamma0);
 
   /** Sets the roll angle initial condition in degrees.
       @param phi roll angle in degrees */
@@ -374,15 +387,15 @@ public:
 
   /** Sets the initial local axis north velocity.
       @param vn Initial north velocity in feet/second */
-  void SetVnorthFpsIC(double vn);
+  void SetVNorthFpsIC(double vn);
 
   /** Sets the initial local axis east velocity.
       @param ve Initial east velocity in feet/second */
-  void SetVeastFpsIC(double ve);
+  void SetVEastFpsIC(double ve);
 
   /** Sets the initial local axis down velocity.
       @param vd Initial down velocity in feet/second */
-  void SetVdownFpsIC(double vd);
+  void SetVDownFpsIC(double vd);
 
   /** Sets the initial roll rate.
       @param P Initial roll rate in radians/second */
@@ -482,6 +495,18 @@ public:
       @return Initial body axis Z velocity in feet/second. */
   double GetWBodyFpsIC(void) const;
 
+  /** Gets the initial local frame X (North) velocity.
+      @return Initial local frame X (North) axis velocity in feet/second. */
+  double GetVNorthFpsIC(void) const {return vnorth;};
+
+  /** Gets the initial local frame Y (East) velocity.
+      @return Initial local frame Y (East) axis velocity in feet/second. */
+  double GetVEastFpsIC(void) const {return veast;};
+
+  /** Gets the initial local frame Z (Down) velocity.
+      @return Initial local frame Z (Down) axis velocity in feet/second. */
+  double GetVDownFpsIC(void) const {return vdown;};
+
   /** Gets the initial body axis roll rate.
       @return Initial body axis roll rate in radians/second */
   double GetPRadpsIC() const { return p; }
@@ -526,6 +551,10 @@ public:
       @param lon Initial longitude in radians */
   inline void SetLongitudeRadIC(double lon) { longitude=lon; }
 
+  /** Sets the target normal load factor.
+      @param nlf Normal load factor*/
+  inline void SetTargetNlfIC(double nlf) { targetNlfIC=nlf; }
+
   /** Gets the initial flight path angle.
       @return Initial flight path angle in radians */
   inline double GetFlightPathAngleRadIC(void) const { return gamma; }
@@ -566,11 +595,23 @@ public:
       @return Initial windset */
   inline windset GetWindSet(void) { return lastWindSet; }
 
+  /** Gets the target normal load factor set from IC.
+      @return target normal load factor set from IC*/
+  inline double GetTargetNlfIC(void) { return targetNlfIC; }
+
   /** Loads the initial conditions.
       @param rstname The name of an initial conditions file
       @param useStoredPath true if the stored path to the IC file should be used
       @return true if successful */
   bool Load(string rstname, bool useStoredPath = true );
+
+  /** Get init-file name
+  */
+  string GetInitFile(void) {return init_file_name;}
+  /** Set init-file name
+  */
+  void SetInitFile(string f) { init_file_name = f;}
+  void WriteStateFile(int num);
 
 private:
   double vt,vc,ve,vg;
@@ -586,6 +627,7 @@ private:
   double sea_level_radius;
   double terrain_altitude;
   double radius_to_vehicle;
+  double targetNlfIC;
 
   double  alpha, beta, theta, phi, psi, gamma;
   double salpha,sbeta,stheta,sphi,spsi,sgamma;
@@ -607,6 +649,7 @@ private:
   bool getMachFromVcas(double *Mach,double vcas);
 
   double GammaEqOfTheta(double Theta);
+  void InitializeIC(void);
   double GammaEqOfAlpha(double Alpha);
   double calcVcas(double Mach);
   void calcUVWfromNED(void);
@@ -615,8 +658,9 @@ private:
   bool findInterval(double x,double guess);
   bool solve(double *y, double x);
   void bind(void);
-  void unbind(void);
   void Debug(int from);
+
+  string init_file_name;
 };
 }
 #endif

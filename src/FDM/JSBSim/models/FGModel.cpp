@@ -48,6 +48,7 @@ INCLUDES
 #include "FGAerodynamics.h"
 #include "FGInertial.h"
 #include "FGGroundReactions.h"
+#include "FGExternalReactions.h"
 #include "FGAircraft.h"
 #include "FGPropagate.h"
 #include "FGAuxiliary.h"
@@ -78,6 +79,7 @@ FGModel::FGModel(FGFDMExec* fdmex)
   Aerodynamics    = 0;
   Inertial        = 0;
   GroundReactions = 0;
+  ExternalReactions = 0;
   Aircraft        = 0;
   Propagate       = 0;
   Auxiliary       = 0;
@@ -112,6 +114,8 @@ bool FGModel::InitModel(void)
   Aerodynamics    = FDMExec->GetAerodynamics();
   Inertial        = FDMExec->GetInertial();
   GroundReactions = FDMExec->GetGroundReactions();
+  ExternalReactions = FDMExec->GetExternalReactions();
+  BuoyantForces   = FDMExec->GetBuoyantForces();
   Aircraft        = FDMExec->GetAircraft();
   Propagate       = FDMExec->GetPropagate();
   Auxiliary       = FDMExec->GetAuxiliary();
@@ -124,6 +128,7 @@ bool FGModel::InitModel(void)
       !Aerodynamics ||
       !Inertial ||
       !GroundReactions ||
+      !ExternalReactions ||
       !Aircraft ||
       !Propagate ||
       !Auxiliary) return(false);

@@ -122,6 +122,7 @@ output property of the component, addressed by the property, ap/roll-ap-autoswit
 is 0.0.  If or when the attitude hold switch is selected (property
 ap/attitude_hold takes the value 1), the value of the switch component will be
 whatever value fcs/roll-ap-error-summer is.
+
 @author Jon S. Berndt
 @version $Id$
 */
@@ -152,7 +153,7 @@ public:
 private:
 
   struct test {
-    vector <FGCondition> conditions;
+    vector <FGCondition*> conditions;
     eLogic Logic;
     double OutputVal;
     FGPropertyManager *OutputProp;
@@ -172,7 +173,7 @@ private:
 
   };
 
-  vector <test> tests;
+  vector <test*> tests;
 
   void Debug(int from);
 };

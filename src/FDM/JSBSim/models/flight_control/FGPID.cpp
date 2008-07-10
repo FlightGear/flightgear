@@ -48,16 +48,62 @@ CLASS IMPLEMENTATION
 
 FGPID::FGPID(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
 {
+  string kp_string, ki_string, kd_string;
   dt = fcs->GetState()->Getdt();
 
   Kp = Ki = Kd = 0.0;
-  P_out = D_out = I_out = 0.0;
+  KpPropertyNode = 0;
+  KiPropertyNode = 0;
+  KdPropertyNode = 0;
+  KpPropertySign = 1.0;
+  KiPropertySign = 1.0;
+  KdPropertySign = 1.0;
+  I_out_total = 0.0;
   Input_prev = Input_prev2 = 0.0;
   Trigger = 0;
 
-  if (element->FindElement("kp")) Kp = element->FindElementValueAsNumber("kp");
-  if (element->FindElement("ki")) Ki = element->FindElementValueAsNumber("ki");
-  if (element->FindElement("kd")) Kd = element->FindElementValueAsNumber("kd");
+  if ( element->FindElement("kp") ) {
+    kp_string = element->FindElementValue("kp");
+    if (kp_string.find_first_not_of("+-.0123456789Ee") != string::npos) { // property
+      if (kp_string[0] == '-') {
+       KpPropertySign = -1.0;
+       kp_string.erase(0,1);
+      }
+      KpPropertyNode = PropertyManager->GetNode(kp_string);
+    } else {
+      Kp = element->FindElementValueAsNumber("kp");
+    }
+  }
+
+  if ( element->FindElement("ki") ) {
+    ki_string = element->FindElementValue("ki");
+    if (ki_string.find_first_not_of("+-.0123456789Ee") != string::npos) { // property
+      if (ki_string[0] == '-') {
+       KiPropertySign = -1.0;
+       ki_string.erase(0,1);
+      }
+      KiPropertyNode = PropertyManager->GetNode(ki_string);
+    } else {
+      Ki = element->FindElementValueAsNumber("ki");
+    }
+  }
+
+  if ( element->FindElement("kd") ) {
+    kd_string = element->FindElementValue("kd");
+    if (kd_string.find_first_not_of("+-.0123456789Ee") != string::npos) { // property
+      if (kd_string[0] == '-') {
+       KdPropertySign = -1.0;
+       kd_string.erase(0,1);
+      }
+      KdPropertyNode = PropertyManager->GetNode(kd_string);
+    } else {
+      Kd = element->FindElementValueAsNumber("kd");
+    }
+  }
+
+  //if (element->FindElement("kp")) Kp = element->FindElementValueAsNumber("kp");
+  //if (element->FindElement("ki")) Ki = element->FindElementValueAsNumber("ki");
+  //if (element->FindElement("kd")) Kd = element->FindElementValueAsNumber("kd");
   if (element->FindElement("trigger")) {
     Trigger =  PropertyManager->GetNode(element->FindElementValue("trigger"));
   }
@@ -78,28 +124,37 @@ FGPID::~FGPID()
 
 bool FGPID::Run(void )
 {
+  double I_out_delta = 0.0;
+  double P_out, D_out;
+
   Input = InputNodes[0]->getDoubleValue() * InputSigns[0];
 
-  P_out = Kp * (Input - Input_prev);
-  D_out = (Kd / dt) * (Input - 2*Input_prev + Input_prev2);
+  if (KpPropertyNode != 0) Kp = KpPropertyNode->getDoubleValue() * KpPropertySign;
+  if (KiPropertyNode != 0) Ki = KiPropertyNode->getDoubleValue() * KiPropertySign;
+  if (KdPropertyNode != 0) Kd = KdPropertyNode->getDoubleValue() * KdPropertySign;
+
+  P_out = Kp * Input;
+  D_out = (Kd / dt) * (Input - Input_prev);
 
   // Do not continue to integrate the input to the integrator if a wind-up
   // condition is sensed - that is, if the property pointed to by the trigger
-  // element is non-zero.
+  // element is non-zero. Reset the integrator to 0.0 if the Trigger value
+  // is negative.
 
   if (Trigger != 0) {
     double test = Trigger->getDoubleValue();
-    if (fabs(test) < 0.000001) {
-      I_out = Ki * dt * Input;
-    }
+    if (fabs(test) < 0.000001) I_out_delta = Ki * dt * Input;  // Normal
+    if (test < 0.0)            I_out_total = 0.0;  // Reset integrator to 0.0
   } else { // no anti-wind-up trigger defined
-    I_out = Ki * dt * Input;
+    I_out_delta = Ki * dt * Input;
   }
+  
+  I_out_total += I_out_delta;
 
+  Output = P_out + I_out_total + D_out;
+  
   Input_prev = Input;
   Input_prev2 = Input_prev;
-
-  Output += P_out + I_out + D_out;
 
   Clip();
   if (IsOutput) SetOutput();

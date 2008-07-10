@@ -77,6 +77,13 @@ A function definition consists of an operation, a value, a table, or a property
 - acos (takes 1 arg)
 - atan (takes 1 arg)
 - atan2 (takes 2 args)
+- min (takes n args)
+- max (takes n args)
+- avg (takes n args)
+- fraction
+- mod
+- random (Gaussian random number)
+- integer
 
 An operation is defined in the configuration file as in the following example:
 
@@ -137,6 +144,8 @@ functions require (except atan2, which takes two arguments).
 DECLARATION: FGFunction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+// Todo: Does this class need a copy constructor, like FGLGear?
+
 class FGFunction : public FGParameter
 {
 public:
@@ -184,10 +193,41 @@ private:
   FGPropertyManager* const PropertyManager;
   bool cached;
   string Prefix;
+  string description_string;
+  string property_string;
+  string value_string;
+  string table_string;
+  string p_string;
+  string v_string;
+  string t_string;
+  string function_string;
+  string sum_string;
+  string difference_string;
+  string product_string;
+  string quotient_string;
+  string pow_string;
+  string exp_string;
+  string abs_string;
+  string sin_string;
+  string cos_string;
+  string tan_string;
+  string asin_string;
+  string acos_string;
+  string atan_string;
+  string atan2_string;
+  string min_string;
+  string max_string;
+  string avg_string;
+  string fraction_string;
+  string mod_string;
+  string random_string;
+  string integer_string;
   double cachedValue;
   enum functionType {eTopLevel=0, eProduct, eDifference, eSum, eQuotient, ePow,
-                     eExp, eAbs, eSin, eCos, eTan, eASin, eACos, eATan, eATan2} Type;
+                     eExp, eAbs, eSin, eCos, eTan, eASin, eACos, eATan, eATan2,
+                     eMin, eMax, eAvg, eFrac, eInteger, eMod, eRandom} Type;
   string Name;
+  double GaussianRandomNumber(void) const;
   void bind(void);
   void Debug(int from);
 };

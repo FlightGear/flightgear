@@ -56,7 +56,28 @@ namespace JSBSim {
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-/** Models a rocket nozzle.
+/** Models a rocket nozzle. 
+
+<h3>Configuration File Format:</h3>
+
+@code
+<nozzle name="{string}">
+  <pe unit="{PSF}"> {number}  </pe>
+  <expr>  {number}  </expr>
+  <nzl_eff>  {number}  </nzl_eff>
+  <diam unit="{FT | M | IN}"> {number}  </diam>
+</nozzle>
+@endcode
+
+<h3>Configuration parameters are:</h3>
+<pre>
+    <b>pe</b> -      Nozzle exit pressure.
+    <b>expr</b> -    Nozzle expansion ratio, Ae/At, sqft. dimensionless ratio.
+    <b>nzl_eff</b> - Nozzle efficiency, 0.0 - 1.0.
+    <b>diam</b> -    Nozzle diameter.
+</pre>
+
+    All parameters MUST be specified.  
     @author Jon S. Berndt
     @version $Id$
 */

@@ -234,6 +234,7 @@ public:
 private:
   FGTable* Table;
   FGPropertyManager* GainPropertyNode;
+  double GainPropertySign;
   double Gain;
   double InMin, InMax, OutMin, OutMax;
   int Rows;

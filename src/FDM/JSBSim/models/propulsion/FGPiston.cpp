@@ -67,12 +67,14 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   // Defaults and initializations
 
   Type = etPiston;
+  dt = State->Getdt();
 
   // These items are read from the configuration file
 
   Cycles = 2;
   IdleRPM = 600;
   Displacement = 360;
+  SparkFailDrop = 1.0;
   MaxHP = 200;
   MinManifoldPressure_inHg = 6.5;
   MaxManifoldPressure_inHg = 28.5;
@@ -80,17 +82,11 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   // These are internal program variables
 
   crank_counter = 0;
-  OilTemp_degK = RankineToKelvin(Atmosphere->GetTemperature());
-  ManifoldPressure_inHg = Atmosphere->GetPressure() * psftoinhg; // psf to in Hg
+  Magnetos = 0;
   minMAP = 21950;
   maxMAP = 96250;
-  MAP = Atmosphere->GetPressure() * psftopa;
-  CylinderHeadTemp_degK = RankineToKelvin(Atmosphere->GetTemperature());
-  Magnetos = 0;
-  ExhaustGasTemp_degK = RankineToKelvin(Atmosphere->GetTemperature());
-  EGT_degC = ExhaustGasTemp_degK - 273;
 
-  dt = State->Getdt();
+  ResetToIC();
 
   // Supercharging
   BoostSpeeds = 0;  // Default to no supercharging
@@ -157,6 +153,8 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
     Displacement = el->FindElementValueAsNumberConvertTo("displacement","IN3");
   if (el->FindElement("maxhp"))
     MaxHP = el->FindElementValueAsNumberConvertTo("maxhp","HP");
+  if (el->FindElement("sparkfaildrop"))
+    SparkFailDrop = Constrain(0, 1 - el->FindElementValueAsNumber("sparkfaildrop"), 1);
   if (el->FindElement("cycles"))
     Cycles = el->FindElementValueAsNumber("cycles");
   if (el->FindElement("idlerpm"))
@@ -196,8 +194,8 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
     if (el->FindElement("ratedaltitude3"))
       RatedAltitude[2] = el->FindElementValueAsNumberConvertTo("ratedaltitude3", "FT");
   }
-  minMAP = MinManifoldPressure_inHg * 3386.38;  // inHg to Pa
-  maxMAP = MaxManifoldPressure_inHg * 3386.38;
+  minMAP = MinManifoldPressure_inHg * inhgtopa;  // inHg to Pa
+  maxMAP = MaxManifoldPressure_inHg * inhgtopa;
   StarterHP = sqrt(MaxHP) * 0.4;
 
   // Set up and sanity-check the turbo/supercharging configuration based on the input values.
@@ -254,7 +252,26 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
 
 FGPiston::~FGPiston()
 {
+  delete Lookup_Combustion_Efficiency;
+  delete Power_Mixture_Correlation;
   Debug(1); // Call Debug() routine from constructor if needed
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPiston::ResetToIC(void)
+{
+  FGEngine::ResetToIC();
+  
+  ManifoldPressure_inHg = Atmosphere->GetPressure() * psftoinhg; // psf to in Hg
+  MAP = Atmosphere->GetPressure() * psftopa;
+  double airTemperature_degK = RankineToKelvin(Atmosphere->GetTemperature());
+  OilTemp_degK = airTemperature_degK;
+  CylinderHeadTemp_degK = airTemperature_degK;
+  ExhaustGasTemp_degK = airTemperature_degK;
+  EGT_degC = ExhaustGasTemp_degK - 273;
+  Thruster->SetRPM(0.0);
+  RPM = 0.0;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -305,6 +322,23 @@ double FGPiston::Calculate(void)
   PowerAvailable = (HP * hptoftlbssec) - Thruster->GetPowerRequired();
 
   return Thruster->Calculate(PowerAvailable);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGPiston::CalcFuelNeed(void)
+{
+  return FuelFlow_gph / 3600 * 6 * State->Getdt() * Propulsion->GetRate();
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+int FGPiston::InitRunning(void) {
+  Magnetos=3;
+  //Thruster->SetRPM( 1.1*IdleRPM/Thruster->GetGearRatio() );
+  Thruster->SetRPM( 1000 );
+  Running=true;
+  return 1;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -469,7 +503,7 @@ void FGPiston::doMAP(void)
   }
 
   // And set the value in American units as well
-  ManifoldPressure_inHg = MAP / 3386.38;
+  ManifoldPressure_inHg = MAP / inhgtopa;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -566,6 +600,9 @@ void FGPiston::doEnginePower(void)
       Power_Mixture_Correlation->GetValue(14.7 / equivalence_ratio);
 
     Percentage_Power *= Percentage_of_best_power_mixture_power / 100.0;
+
+    if( Magnetos != 3 )
+      Percentage_Power *= SparkFailDrop;
 
     if (Boosted) {
       HP = Percentage_Power * RatedPower[BoostSpeed] / 100.0;
@@ -819,11 +856,4 @@ void FGPiston::Debug(int from)
     }
   }
 }
-
-double
-FGPiston::CalcFuelNeed(void)
-{
-  return FuelFlow_gph / 3600 * 6 * State->Getdt() * Propulsion->GetRate();
-}
-
 } // namespace JSBSim

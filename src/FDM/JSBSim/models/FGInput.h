@@ -73,7 +73,7 @@ namespace JSBSim {
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-/** Handles simulation input.
+/** Handles simulation socket input.
  */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -86,6 +86,7 @@ public:
   FGInput(FGFDMExec*);
   ~FGInput();
 
+  bool InitModel(void);
   bool Run(void);
 
   void SetType(string);

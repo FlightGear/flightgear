@@ -123,8 +123,6 @@ void FGDeadBand::Debug(int from)
       cout << "      INPUT: " << InputNodes[0]->getName() << endl;
       cout << "      DEADBAND WIDTH: " << width << endl;
       cout << "      GAIN: " << gain << endl;
-      if (clip) cout << "      CLIPTO: " << clipmin
-                                  << ", " << clipmax << endl;
       if (IsOutput) cout << "      OUTPUT: " << OutputNode->getName() << endl;
     }
   }

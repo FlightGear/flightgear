@@ -81,7 +81,7 @@ vehicle control or configuration. The form of the component specification is:
       <position> number </position>
       <time> number </time>
     </setting>
-    …
+    ...
   </traverse>
   [<clipto>
     <min> {[-]property name | value} </min>
@@ -123,12 +123,8 @@ CLASS DECLARATION
 class FGKinemat  : public FGFCSComponent {
 public:
   /** Constructor.
-      @param fcs A reference to the ccurrent flightcontrolsystem.
-      @param AC_cfg reference to the current aircraft configuration file.
-      Initializes the FGKinemat object from the given configuration
-      file. The Configuration file is expected to be at the stream
-      position where the kinematic object starts. Also it is expected to
-      be past the end of the current kinematic configuration on exit.
+      @param fcs A reference to the current flight control system.
+      @param element reference to the current configuration file node.
    */
   FGKinemat(FGFCS* fcs, Element* element);
 

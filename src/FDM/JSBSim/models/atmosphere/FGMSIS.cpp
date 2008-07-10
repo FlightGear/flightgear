@@ -103,7 +103,6 @@ MSIS::MSIS(FGFDMExec* fdmex) : FGAtmosphere(fdmex)
 
 MSIS::~MSIS()
 {
-  unbind();
   Debug(1);
 }
 

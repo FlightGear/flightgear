@@ -71,12 +71,14 @@ FGPropulsion::FGPropulsion(FGFDMExec* exec) : FGModel(exec)
 {
   Name = "FGPropulsion";
 
+  InitializedEngines = 0;
   numSelectedFuelTanks = numSelectedOxiTanks = 0;
   numTanks = numEngines = 0;
   numOxiTanks = numFuelTanks = 0;
   ActiveEngine = -1; // -1: ALL, 0: Engine 1, 1: Engine 2 ...
   tankJ.InitMatrix();
-  refuel = false;
+  refuel = dump = false;
+  DumpRate = 0.0;
   fuel_freeze = false;
   TotalFuelQuantity = 0.0;
   IsBound =
@@ -85,6 +87,7 @@ FGPropulsion::FGPropulsion(FGFDMExec* exec) : FGModel(exec)
   HaveRocketEngine =
   HaveTurboPropEngine =
   HaveElectricEngine = false;
+  HasInitializedEngines = false;
 
   Debug(0);
 }
@@ -95,8 +98,35 @@ FGPropulsion::~FGPropulsion()
 {
   for (unsigned int i=0; i<Engines.size(); i++) delete Engines[i];
   Engines.clear();
-  unbind();
+  for (unsigned int i=0; i<Tanks.size(); i++) delete Tanks[i];
+  Tanks.clear();
   Debug(1);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGPropulsion::InitModel(void)
+{
+  if (!FGModel::InitModel()) return false;
+
+  for (unsigned int i=0; i<numTanks; i++) Tanks[i]->ResetToIC();
+
+  for (unsigned int i=0; i<numEngines; i++) {
+    switch (Engines[i]->GetType()) {
+      case FGEngine::etPiston:
+        ((FGPiston*)Engines[i])->ResetToIC();
+        if (HasInitializedEngines && (InitializedEngines & i)) InitRunning(i);
+        break;
+      case FGEngine::etTurbine:
+        ((FGTurbine*)Engines[i])->ResetToIC();
+        if (HasInitializedEngines && (InitializedEngines & i)) InitRunning(i);
+        break;
+      default:
+        break;
+    }
+  }
+
+  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -128,6 +158,7 @@ bool FGPropulsion::Run(void)
   }
 
   if (refuel) DoRefuel( dt * rate );
+  if (dump) DumpFuel( dt * rate );
 
   return false;
 }
@@ -145,20 +176,28 @@ bool FGPropulsion::GetSteadyState(void)
 
   if (!FGModel::Run()) {
     for (unsigned int i=0; i<numEngines; i++) {
+      cout << "  Finding steady state for engine " << i << endl;
       Engines[i]->SetTrimMode(true);
       steady=false;
       steady_count=0;
+      j=0;
       while (!steady && j < 6000) {
         Engines[i]->Calculate();
         lastThrust = currentThrust;
         currentThrust = Engines[i]->GetThrust();
         if (fabs(lastThrust-currentThrust) < 0.0001) {
           steady_count++;
-          if (steady_count > 120) { steady=true; }
+          if (steady_count > 120) {
+            steady=true;
+            cout << "    Steady state found at thrust: " << currentThrust << " lbs." << endl;
+          }
         } else {
           steady_count=0;
         }
         j++;
+      }
+      if (j >= 6000) {
+        cout << "    Could not find a steady state for this engine." << endl;
       }
       vForces  += Engines[i]->GetBodyForces();  // sum body frame forces
       vMoments += Engines[i]->GetMoments();     // sum body frame moments
@@ -173,25 +212,36 @@ bool FGPropulsion::GetSteadyState(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGPropulsion::ICEngineStart(void)
+void FGPropulsion::InitRunning(int n)
 {
-  int j;
+  if (n > 0) { // A specific engine is supposed to be initialized
 
-  vForces.InitMatrix();
-  vMoments.InitMatrix();
-
-  for (unsigned int i=0; i<numEngines; i++) {
-    Engines[i]->SetTrimMode(true);
-    j=0;
-    while (!Engines[i]->GetRunning() && j < 2000) {
-      Engines[i]->Calculate();
-      j++;
+    if (n >= GetNumEngines() ) {
+      cerr << "Tried to initialize a non-existent engine!" << endl;
+      throw;
     }
-    vForces  += Engines[i]->GetBodyForces();  // sum body frame forces
-    vMoments += Engines[i]->GetMoments();     // sum body frame moments
-    Engines[i]->SetTrimMode(false);
+    FCS->SetThrottleCmd(n,1);
+    FCS->SetMixtureCmd(n,1);
+    GetEngine(n)->InitRunning();
+    GetSteadyState();
+
+    InitializedEngines = 1 << n;
+    HasInitializedEngines = true;
+
+  } else if (n < 0) { // -1 refers to "All Engines"
+
+    for (unsigned int i=0; i<GetNumEngines(); i++) {
+      FCS->SetThrottleCmd(i,1);
+      FCS->SetMixtureCmd(i,1);
+      GetEngine(i)->InitRunning();
+    }
+    GetSteadyState();
+    InitializedEngines = -1;
+    HasInitializedEngines = true;
+
+  } else if (n == 0) { // No engines are to be initialized
+    // Do nothing
   }
-  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -255,7 +305,7 @@ bool FGPropulsion::Load(Element* el)
 
   Element* tank_element = el->FindElement("tank");
   while (tank_element) {
-    Tanks.push_back(new FGTank(FDMExec, tank_element));
+    Tanks.push_back(new FGTank(FDMExec, tank_element, numTanks));
     if (Tanks.back()->GetType() == FGTank::ttFUEL) numFuelTanks++;
     else if (Tanks.back()->GetType() == FGTank::ttOXIDIZER) numOxiTanks++;
     else {cerr << "Unknown tank type specified." << endl; return false;}
@@ -268,6 +318,11 @@ bool FGPropulsion::Load(Element* el)
   CalculateTankInertias();
   if (!ThrottleAdded) FCS->AddThrottle(); // need to have at least one throttle
 
+  // Process fuel dump rate
+  if (el->FindElement("dump-rate"))
+    DumpRate = el->FindElementValueAsNumberConvertTo("dump-rate", "LBS/MIN");
+
+
   return true;
 }
 
@@ -278,7 +333,7 @@ string FGPropulsion::FindEngineFullPathname(string engine_filename)
   string fullpath, localpath;
   string enginePath = FDMExec->GetEnginePath();
   string aircraftPath = FDMExec->GetFullAircraftPath();
-  ifstream* engine_file = new ifstream();
+  ifstream engine_file;
 
   string separator = "/";
 # ifdef macintosh
@@ -288,10 +343,10 @@ string FGPropulsion::FindEngineFullPathname(string engine_filename)
   fullpath = enginePath + separator;
   localpath = aircraftPath + separator + "Engines" + separator;
 
-  engine_file->open(string(fullpath + engine_filename + ".xml").c_str());
-  if ( !engine_file->is_open()) {
-    engine_file->open(string(localpath + engine_filename + ".xml").c_str());
-      if ( !engine_file->is_open()) {
+  engine_file.open(string(fullpath + engine_filename + ".xml").c_str());
+  if ( !engine_file.is_open()) {
+    engine_file.open(string(localpath + engine_filename + ".xml").c_str());
+      if ( !engine_file.is_open()) {
         cerr << " Could not open engine file: " << engine_filename << " in path "
              << fullpath << " or " << localpath << endl;
         return string("");
@@ -382,13 +437,11 @@ string FGPropulsion::GetPropulsionValues(string delimeter)
 
 FGColumnVector3& FGPropulsion::GetTanksMoment(void)
 {
-  iTank = Tanks.begin();
   vXYZtank_arm.InitMatrix();
-  while (iTank < Tanks.end()) {
-    vXYZtank_arm(eX) += (*iTank)->GetXYZ(eX)*(*iTank)->GetContents();
-    vXYZtank_arm(eY) += (*iTank)->GetXYZ(eY)*(*iTank)->GetContents();
-    vXYZtank_arm(eZ) += (*iTank)->GetXYZ(eZ)*(*iTank)->GetContents();
-    iTank++;
+  for (unsigned int i=0; i<Tanks.size(); i++) {
+    vXYZtank_arm(eX) += Tanks[i]->GetXYZ(eX) * Tanks[i]->GetContents();
+    vXYZtank_arm(eY) += Tanks[i]->GetXYZ(eY) * Tanks[i]->GetContents();
+    vXYZtank_arm(eZ) += Tanks[i]->GetXYZ(eZ) * Tanks[i]->GetContents();
   }
   return vXYZtank_arm;
 }
@@ -399,11 +452,8 @@ double FGPropulsion::GetTanksWeight(void)
 {
   double Tw = 0.0;
 
-  iTank = Tanks.begin();
-  while (iTank < Tanks.end()) {
-    Tw += (*iTank)->GetContents();
-    iTank++;
-  }
+  for (unsigned int i=0; i<Tanks.size(); i++) Tw += Tanks[i]->GetContents();
+
   return Tw;
 }
 
@@ -531,6 +581,28 @@ void FGPropulsion::DoRefuel(double time_slice)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+void FGPropulsion::DumpFuel(double time_slice)
+{
+  unsigned int i;
+  int TanksDumping = 0;
+
+  for (i=0; i<numTanks; i++) {
+    if (Tanks[i]->GetContents() > Tanks[i]->GetStandpipe()) ++TanksDumping;
+  }
+
+  if (TanksDumping == 0) return;
+
+  double dump_rate_per_tank = DumpRate / 60.0 * time_slice / TanksDumping;
+
+  for (i=0; i<numTanks; i++) {
+    if (Tanks[i]->GetContents() > Tanks[i]->GetStandpipe()) {
+      Transfer(i, -1, dump_rate_per_tank);
+    }
+  }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 void FGPropulsion::SetFuelFreeze(bool f)
 {
   fuel_freeze = f;
@@ -547,7 +619,7 @@ void FGPropulsion::bind(void)
   typedef int (FGPropulsion::*iPMF)(void) const;
 
   IsBound = true;
-
+  PropertyManager->Tie("propulsion/set-running", this, (iPMF)0, &FGPropulsion::InitRunning, true);
   if (HaveTurbineEngine) {
     PropertyManager->Tie("propulsion/starter_cmd", this, (iPMF)0, &FGPropulsion::SetStarter,  true);
     PropertyManager->Tie("propulsion/cutoff_cmd", this,  (iPMF)0, &FGPropulsion::SetCutoff,   true);
@@ -561,24 +633,23 @@ void FGPropulsion::bind(void)
   PropertyManager->Tie("propulsion/active_engine", this, (iPMF)&FGPropulsion::GetActiveEngine,
                         &FGPropulsion::SetActiveEngine, true);
   PropertyManager->Tie("propulsion/total-fuel-lbs", this, &FGPropulsion::GetTotalFuelQuantity);
-}
+  PropertyManager->Tie("propulsion/refuel", this, &FGPropulsion::GetRefuel,
+                        &FGPropulsion::SetRefuel, true);
+  PropertyManager->Tie("propulsion/fuel_dump", this, &FGPropulsion::GetFuelDump,
+                        &FGPropulsion::SetFuelDump, true);
+  PropertyManager->Tie("forces/fbx-prop-lbs", this,1,
+                       (PMF)&FGPropulsion::GetForces);
+  PropertyManager->Tie("forces/fby-prop-lbs", this,2,
+                       (PMF)&FGPropulsion::GetForces);
+  PropertyManager->Tie("forces/fbz-prop-lbs", this,3,
+                       (PMF)&FGPropulsion::GetForces);
+  PropertyManager->Tie("moments/l-prop-lbsft", this,1,
+                       (PMF)&FGPropulsion::GetMoments);
+  PropertyManager->Tie("moments/m-prop-lbsft", this,2,
+                       (PMF)&FGPropulsion::GetMoments);
+  PropertyManager->Tie("moments/n-prop-lbsft", this,3,
+                       (PMF)&FGPropulsion::GetMoments);
 
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGPropulsion::unbind(void)
-{
-  if (!IsBound) return;
-
-  if (HaveTurbineEngine) {
-    PropertyManager->Untie("propulsion/starter_cmd");
-    PropertyManager->Untie("propulsion/cutoff_cmd");
-  }
-  if (HavePistonEngine) {
-    PropertyManager->Untie("propulsion/starter_cmd");
-    PropertyManager->Untie("propulsion/magneto_cmd");
-  }
-  PropertyManager->Untie("propulsion/active_engine");
-  PropertyManager->Untie("propulsion/total-fuel-lbs");
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
