@@ -77,17 +77,17 @@ static naRef f_getType(naContext c, naRef me, int argc, naRef* args)
 static naRef f_getAttribute(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
-    if(naVec_size(argv) == 0) return naNum((*node)->getAttributes());
+    if(naVec_size(argv) == 0) return naNum(unsigned((*node)->getAttributes()));
     naRef val = naVec_get(argv, 0);
     char *a = naStr_data(val);
     SGPropertyNode::Attribute attr;
     if(!a) a = "";
-    if(!strcmp(a, "children"))         return naNum((*node)->nChildren());
+    if(!strcmp(a, "last")) return naNum(SGPropertyNode::LAST_USED_ATTRIBUTE);
+    else if(!strcmp(a, "children"))    return naNum((*node)->nChildren());
     else if(!strcmp(a, "listeners"))   return naNum((*node)->nListeners());
     else if(!strcmp(a, "references"))  return naNum(node->getNumRefs());
     else if(!strcmp(a, "tied"))        return naNum((*node)->isTied());
     else if(!strcmp(a, "alias"))       return naNum((*node)->isAlias());
-    else if(!strcmp(a, "last"))        return naNum(SGPropertyNode::LAST_USED_ATTRIBUTE);
     else if(!strcmp(a, "readable"))    attr = SGPropertyNode::READ;
     else if(!strcmp(a, "writable"))    attr = SGPropertyNode::WRITE;
     else if(!strcmp(a, "archive"))     attr = SGPropertyNode::ARCHIVE;
