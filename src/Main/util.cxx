@@ -147,7 +147,7 @@ fgGetLowPass (double current, double target, double timeratio)
 
 
 string
-fgUnescape(const char *s)
+fgUnescape (const char *s)
 {
     string r;
     while (*s) {
@@ -195,6 +195,20 @@ fgUnescape(const char *s)
         s++;
     }
     return r;
+}
+
+
+const char *fgValidatePath (const char *str, bool write)
+{
+    static SGPropertyNode_ptr r, w;
+    if (!r) {
+        r = fgGetNode("/sim/paths/validate/read", true);
+        w = fgGetNode("/sim/paths/validate/write", true);
+    }
+    SGPropertyNode *prop = write ? w : r;
+    prop->setStringValue(str);
+    const char *result = prop->getStringValue();
+    return result[0] ? result : 0;
 }
 
 // end of util.cxx

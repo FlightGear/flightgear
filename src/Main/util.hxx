@@ -83,4 +83,12 @@ extern double fgGetLowPass (double current, double target, double timeratio);
 extern std::string fgUnescape (const char *str);
 
 
+/**
+ * Validation listener interface for io.nas, used by fgcommands.
+ * @param path Path to be validated
+ * @param write True for write operations and false for read operations.
+ * @return The validated path on success or 0 if access denied.
+ */
+extern const char *fgValidatePath (const char *path, bool write);
+
 #endif // __UTIL_HXX

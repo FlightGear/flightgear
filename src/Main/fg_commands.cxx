@@ -320,16 +320,23 @@ do_resume (const SGPropertyNode * arg)
 static bool
 do_load (const SGPropertyNode * arg)
 {
-  const string &file = arg->getStringValue("file", "fgfs.sav");
-  ifstream input(file.c_str());
-  if (input.good() && fgLoadFlight(input)) {
-    input.close();
-    SG_LOG(SG_INPUT, SG_INFO, "Restored flight from " << file);
-    return true;
-  } else {
-    SG_LOG(SG_INPUT, SG_WARN, "Cannot load flight from " << file);
-    return false;
-  }
+    const string &file = arg->getStringValue("file", "fgfs.sav");
+
+    if (!fgValidatePath(file.c_str(), false)) {
+        SG_LOG(SG_IO, SG_ALERT, "load: reading '" << file << "' denied "
+                "(unauthorized access)");
+        return false;
+    }
+
+    ifstream input(file.c_str());
+    if (input.good() && fgLoadFlight(input)) {
+        input.close();
+        SG_LOG(SG_INPUT, SG_INFO, "Restored flight from " << file);
+        return true;
+    } else {
+        SG_LOG(SG_INPUT, SG_WARN, "Cannot load flight from " << file);
+        return false;
+    }
 }
 
 
@@ -342,18 +349,25 @@ do_load (const SGPropertyNode * arg)
 static bool
 do_save (const SGPropertyNode * arg)
 {
-  const string &file = arg->getStringValue("file", "fgfs.sav");
-  bool write_all = arg->getBoolValue("write-all", false);
-  SG_LOG(SG_INPUT, SG_INFO, "Saving flight");
-  ofstream output(file.c_str());
-  if (output.good() && fgSaveFlight(output, write_all)) {
-    output.close();
-    SG_LOG(SG_INPUT, SG_INFO, "Saved flight to " << file);
-    return true;
-  } else {
-    SG_LOG(SG_INPUT, SG_ALERT, "Cannot save flight to " << file);
-    return false;
-  }
+    const string &file = arg->getStringValue("file", "fgfs.sav");
+
+    if (!fgValidatePath(file.c_str(), false)) {
+        SG_LOG(SG_IO, SG_ALERT, "save: reading '" << file << "' denied "
+                "(unauthorized access)");
+        return false;
+    }
+
+    bool write_all = arg->getBoolValue("write-all", false);
+    SG_LOG(SG_INPUT, SG_INFO, "Saving flight");
+    ofstream output(file.c_str());
+    if (output.good() && fgSaveFlight(output, write_all)) {
+        output.close();
+        SG_LOG(SG_INPUT, SG_INFO, "Saved flight to " << file);
+        return true;
+    } else {
+        SG_LOG(SG_INPUT, SG_ALERT, "Cannot save flight to " << file);
+        return false;
+    }
 }
 
 
@@ -1336,6 +1350,12 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
     if (file.extension() != "xml")
         file.concat(".xml");
 
+    if (!fgValidatePath(file.c_str(), false)) {
+        SG_LOG(SG_IO, SG_ALERT, "loadxml: reading '" << file.str() << "' denied "
+                "(unauthorized access)");
+        return false;
+    }
+
     SGPropertyNode *targetnode;
     if (arg->hasValue("targetnode"))
         targetnode = fgGetNode(arg->getStringValue("targetnode"), true);
@@ -1349,7 +1369,7 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
         return false;
     }
 
-    return  true;
+    return true;
 }
 
 
@@ -1375,6 +1395,12 @@ do_save_xml_from_proptree(const SGPropertyNode * arg)
 
     if (file.extension() != "xml")
         file.concat(".xml");
+
+    if (!fgValidatePath(file.c_str(), true)) {
+        SG_LOG(SG_IO, SG_ALERT, "savexml: writing to '" << file.str() << "' denied "
+                "(unauthorized access)");
+        return false;
+    }
 
     SGPropertyNode *sourcenode;
     if (arg->hasValue("sourcenode"))

@@ -81,6 +81,7 @@
 #include "renderer.hxx"
 #include "splash.hxx"
 #include "main.hxx"
+#include "util.hxx"
 
 
 static double real_delta_time_sec = 0.0;
@@ -984,6 +985,7 @@ bool fgMainInit( int argc, char **argv ) {
     string_list *col = new string_list;
     globals->set_channel_options_list( col );
 
+    fgValidatePath("", false);  // initialize static variables
     upper_case_property("/sim/presets/airport-id");
     upper_case_property("/sim/presets/runway");
     upper_case_property("/sim/tower/airport-id");
