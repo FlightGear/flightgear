@@ -320,7 +320,9 @@ do_resume (const SGPropertyNode * arg)
 static bool
 do_load (const SGPropertyNode * arg)
 {
-    const string &file = arg->getStringValue("file", "fgfs.sav");
+    string file = arg->getStringValue("file", "fgfs.sav");
+    if (file.size() < 4 || file.substr(file.size() - 4) != ".sav")
+        file += ".sav";
 
     if (!fgValidatePath(file.c_str(), false)) {
         SG_LOG(SG_IO, SG_ALERT, "load: reading '" << file << "' denied "
@@ -349,7 +351,9 @@ do_load (const SGPropertyNode * arg)
 static bool
 do_save (const SGPropertyNode * arg)
 {
-    const string &file = arg->getStringValue("file", "fgfs.sav");
+    string file = arg->getStringValue("file", "fgfs.sav");
+    if (file.size() < 4 || file.substr(file.size() - 4) != ".sav")
+        file += ".sav";
 
     if (!fgValidatePath(file.c_str(), false)) {
         SG_LOG(SG_IO, SG_ALERT, "save: reading '" << file << "' denied "
