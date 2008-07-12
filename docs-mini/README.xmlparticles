@@ -135,14 +135,14 @@ offset (result = (prop*factor)+offset ) in the usual way
 
 <particlesystem>  = the base tag
   <type>string</type> can be "normal" or "trail", normal is the usual quad particles, trail is a string of connected quads, see note near the end
-  <offset>  = this places the source of the particles (the emitter) in relation to the perhaps already offsetted model (see model-howto.html for details)
+  <offsets>  = this places the source of the particles (the emitter) in relation to the perhaps already offsetted model (see model-howto.html for details)
     <x-m>float</x-m>
     <y-m>float</y-m>
     <z-m>float</z-m>
     <pitch-deg>float</pitch-deg>
     <roll-deg>float</roll-deg>
     <heading-deg>float</heading-deg>
-  </offset>
+  </offsets>
   <condition> =a typical condition that if not true stops particles from being emitted (PPS=0)
     ....
   </condition>
