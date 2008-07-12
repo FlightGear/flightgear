@@ -1,0 +1,241 @@
+Document started 27/01/2008 by Tiago Gusmão
+Updated 02/02/2008 to reflect syntax changes
+Updated 03/02/2008 to add trails (connected particles)
+
+This is a short specification/tutorial to define particle systems in FlightGear using XML
+
+Meaningless example (what i had accumulated due to tests):
+
+  <particlesystem>
+    <name>fuel</name>
+<!--     <texture>particle.rgb</texture> -->
+    <emissive>false</emissive>
+    <lighting>true</lighting>
+
+    <offsets>
+      <x-m>35</x-m>
+      <y-m>-0.3</y-m>
+      <z-m>0</z-m>
+      <!--<pitch-deg>90</pitch-deg>-->
+    </offsets>
+
+    <!--<condition>
+      <and>
+        <equals>
+          <property>engines/engine/smoking</property>
+          <value>true</value>
+        </equals>
+        <less-than>
+          <property>position/altitude-agl-ft</property>
+          <value>12000</value>
+        </less-than>
+      </and>
+    </condition>-->
+
+    <attach>world</attach>
+
+    <placer>
+      <type>point</type>
+    </placer>
+
+    <shooter>
+      <theta-min-deg>84</theta-min-deg>
+      <theta-max-deg>86</theta-max-deg>
+      <phi-min-deg>-1.5</phi-min-deg>
+      <phi-max-deg>1.5</phi-max-deg>
+      <speed>
+        <value>10</value>
+        <spread>2.5</spread>
+      </speed>
+      <rotation-speed>
+        <x-min-deg-sec>0</x-min-deg-sec>
+        <y-min-deg-sec>0</y-min-deg-sec>
+        <z-min-deg-sec>0</z-min-deg-sec>
+        <x-max-deg-sec>0</x-max-deg-sec>
+        <y-max-deg-sec>0</y-max-deg-sec>
+        <z-max-deg-sec>0</z-max-deg-sec>
+      </rotation-speed>
+    </shooter>
+    
+    <counter>
+      <particles-per-sec>
+        <value>1</value>
+        <spread>0</spread>
+      </particles-per-sec>
+    </counter>
+    
+    <align>billboard</align>
+    
+    <particle>
+      <start>
+        <color>
+          <red>
+            <value>0.9</value>
+          </red>
+          <green>
+            <value>0.09</value>
+          </green>
+          <blue>
+            <value>0.09</value>
+          </blue>
+          <alpha>
+            <value>1.0</value>
+          </alpha>
+        </color>
+        <size>
+          <value>0.25</value>
+        </size>
+      </start>
+
+      <end>
+        <color>
+          <red>
+            <value>1</value>
+          </red>
+          <green>
+            <value>0.1</value>
+          </green>
+          <blue>
+            <value>0.1</value>
+          </blue>
+          <alpha>
+            <value>0.0</value>
+          </alpha>
+        </color>
+        <size>
+          <value>4</value>
+        </size>
+      </end>
+
+      <life-sec>
+        <value>10</value>
+      </life-sec>
+
+      <mass-kg>0.25</mass-kg>
+      <radius-m>0.1</radius-m>
+    </particle>
+
+    <program>
+      <fluid>air</fluid>
+      <gravity type="bool">true</gravity>
+      <wind type="bool">true</wind>
+    </program>
+</particlesystem>
+
+Stick this inside any model XML like it was an animation and it should
+work (notice the condition requires wheel on the ground)
+
+Specification:
+
+Note:
+<VALUEORPROP/> means you can either specify a property with factor and
+offset (result = (prop*factor)+offset ) in the usual way
+
+
+
+<particlesystem>  = the base tag
+  <type>string</type> can be "normal" or "trail", normal is the usual quad particles, trail is a string of connected quads, see note near the end
+  <offset>  = this places the source of the particles (the emitter) in relation to the perhaps already offsetted model (see model-howto.html for details)
+    <x-m>float</x-m>
+    <y-m>float</y-m>
+    <z-m>float</z-m>
+    <pitch-deg>float</pitch-deg>
+    <roll-deg>float</roll-deg>
+    <heading-deg>float</heading-deg>
+  </offset>
+  <condition> =a typical condition that if not true stops particles from being emitted (PPS=0)
+    ....
+  </condition>
+  <name>string</name> = the name of the particle system (so it can then be referenced by animations)
+  <attach>string</attach> = can be "world" or "local". "world means the particles aren't "physically linked" to the model (necessary for use outside moving models), "local" means the opposite (can be used for static objects or inside moving objects)
+  <texture>string</texture> = the texture path relative to the XML file location
+  <emissive>bool</emissive> = self-explanatory
+  <lighting>bool</lighting> = yet to be tested, but seems obvious
+  <align>string</align> = can be "billboard" or "fixed", still being worked, don't use
+  <placer> = where particles are born
+    <type>string</type> = can be "sector" (inside a circle), "segments"(user-defined segments) and "point" (default)
+    *<radius-min-m>float</radius-min-m> = only for sector, inner radius at which particles appear
+    *<radius-max-m>float</radius-max-m> = only for sector, outer radius at which particles appear
+    *<phi-min-deg>float</phi-min-deg> = only for sector, starting angle of the slide at which particles appear
+    *<phi-max-deg>float</phi-max-deg> = only for sector, ending angle of the slide at which particles appear
+    <segments> = only for segments, encloses sequential points that form segments
+      <vertex> = specifies one point, put as many as you want
+        <x-m>float</x-m>
+        <y-m>float</y-m>
+        <z-m>float</z-m>
+      </vertex>
+      ....
+      <vertex>
+      ...
+      </vertex>
+    </segments>
+  </placer>
+  <shooter> = the shooter defines the initial velocity vector for your particles
+    *<theta-min-deg>float</theta-min-deg> = horizontal angle limits of the particle cone
+    *<theta-max-deg>float</theta-max-deg>
+    *<phi-min-deg>float</phi-min-deg> = vertical angle limits of the particle cone
+    *<phi-max-deg>float</phi-max-deg>   for an illustration of theta/phi see http://www.cs.clemson.edu/~malloy/courses/3dgames-2007/tutor/web/particles/particles.html
+    <speed-mps> = the scalar velocity (meter per second)
+     <VALUEORPROP/> = see note
+     *<spread> the "tolerance" in each direction so values are in the range [value-spread, value+spread]
+    </speed-mps>
+    <rotation-speed> = the range of initial rotational speed of the particles
+      *<x-min-deg-sec>float</x-min-deg-sec>
+      *<y-min-deg-sec>float</y-min-deg-sec>
+      *<z-min-deg-sec>float</z-min-deg-sec>
+      *<x-max-deg-sec>float</x-max-deg-sec>
+      *<y-max-deg-sec>float</y-max-deg-sec>
+      *<z-max-deg-sec>float</z-max-deg-sec>
+    </rotation-speed>
+  </shooter>
+  <counter>
+    <particles-per-sec>
+      <VALUEORPROP/> = see note
+      *<spread> the "tolerance" in each direction so values are in the range [value-spread, value+spread]
+    </particles-per-sec>
+  </counter>
+  <particle> = defines the particle properties
+    <start>
+      <color> = initial color (at time of emission)
+        <red><VALUEORPROP/></red> = color component in normalized value [0,1]
+        <green><VALUEORPROP/></green>
+        <blue><VALUEORPROP/></blue>
+        <alpha><VALUEORPROP/></alpha>
+      </color>
+      <size> = as above, but for size
+        <VALUEORPROP/>
+      </size>
+    </start>
+    <end>
+      <color> = final color (at the end of the particle life)
+        <red><VALUEORPROP/></red>
+        <green><VALUEORPROP/></green>
+        <blue><VALUEORPROP/></blue>
+        <alpha><VALUEORPROP/></alpha>
+      </color>
+      <size>
+        <VALUEORPROP/>
+      </size>
+    </end>
+    *<life-sec> = the time the particles will be alive, in seconds
+      <VALUEORPROP/>
+    *</life-sec>
+    *<radius-m>float</radius-m> = each particles is physically treated as a sphere with this radius
+    *<mass-kg>float</mass-kg> = mass in KG
+  </particle>
+  <program> = defines external forces acting upon a particle
+    <fluid>string<fluid> = can be "air" or "water"
+    <gravity>bool</gravity> = can be "true" or "false". uses standard gravity
+    <wind>bool</wind> = can be "true" or "false". uses user position wind (not the model position, but shouldn't be noticeable, you want to disabled it when using local attach)
+  </program>
+</particles>
+
+Remarks:
+  Don't forget you can use existing animations with particles, so if you want to direct or translate the emitter, just use translate, rotate, spin and so on (other animations might have interesting effects too I guess)
+  Particle XML should be compatible with plib, as the tags will be ignored (you might get some warning if you attach them to animations though)
+  Try not to use a lot of particles in a way that fills the screen, that will demand lots of fill rate and hurt FPS
+  If you don't use any properties nor conditions, your particle system doesn't need to use a callback a so it's slightly better on the CPU (mostly useful for static models)
+  If your particle lifetime is too big you might run out of particles temporarily (still being investigated)
+  Use mass and size(radius) to adjust the reaction to gravity and wind (mass/size = density)
+  Although at the moment severe graphical bugs can be seen in the trails, they are usable. Consider your options correctly! You should consider giving them no initial velocity and most important, no spread, otherwise particles will race and the trail will fold. Start simple (no velocities and forces) and work your way up.
+  
