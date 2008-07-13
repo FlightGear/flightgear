@@ -205,10 +205,10 @@ bool FGAirportDynamics::getAvailableParking(double *lat, double *lon, double *he
 	  if (!(i->getCodes().empty()))
 	    {
 	      if ((i->getCodes().find(airline,0) == string::npos))
-	  {
-	    available = false;
-	    continue;
-	  }
+	        {
+	            available = false;
+	            continue;
+	        }
 	    }
 	  if (i->getType() != flType)
 	    {
@@ -231,7 +231,7 @@ bool FGAirportDynamics::getAvailableParking(double *lat, double *lon, double *he
 	      i->setAvailable(false);
 	      found = true;
 	    }
-	} 
+	}
       // And finally once more if that didn't work. Now ignore the airline codes, as a last resort
       for (i = parkings.begin(); !(i == parkings.end() || found); i++)
 	{
@@ -303,18 +303,27 @@ void FGAirportDynamics::getParking (int id, double *lat, double* lon, double *he
     }
 } 
 
-FGParking *FGAirportDynamics::getParking(int i) 
+FGParking *FGAirportDynamics::getParking(int id) 
 { 
-  if (i < (int)parkings.size() && (i >= 0)) 
-    return &(parkings[i]); 
-  else 
+    FGParkingVecIterator i = parkings.begin();
+    for (i = parkings.begin(); i != parkings.end(); i++)
+	{
+	  if (id == i->getIndex()) {
+               return &(*i);
+          }
+        }
     return 0;
 }
-string FGAirportDynamics::getParkingName(int i) 
+string FGAirportDynamics::getParkingName(int id) 
 { 
-  if (i < (int)parkings.size() && i >= 0) 
-    return (parkings[i].getName()); 
-  else 
+    FGParkingVecIterator i = parkings.begin();
+    for (i = parkings.begin(); i != parkings.end(); i++)
+	{
+	  if (id == i->getIndex()) {
+               return i->getName();
+          }
+        }
+
     return string("overflow");
 }
 void FGAirportDynamics::releaseParking(int id)

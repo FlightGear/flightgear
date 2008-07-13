@@ -36,6 +36,7 @@ protected:
 
 private:
     FGAirportDynamics* _dynamics;
+    string value;
 };
 
 #endif

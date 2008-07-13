@@ -35,7 +35,7 @@ SG_USING_STD(vector);
 
 #include "gnnode.hxx"
 #include "parking.hxx"
-#include "trafficcontrol.hxx"
+#include <ATC/trafficcontrol.hxx>
 
 class FGTaxiSegment; // forward reference
 class FGAIFlightPlan; // forward reference
@@ -265,7 +265,7 @@ public:
 
   virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute, 
 				double lat, double lon, double hdg, double spd, double alt, 
-				double radius, int leg, string callsign);
+				double radius, int leg, FGAIAircraft *aircraft);
   virtual void signOff(int id);
   virtual void update(int id, double lat, double lon, double heading, double speed, double alt, double dt);
   virtual bool hasInstruction(int id);

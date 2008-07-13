@@ -150,7 +150,8 @@ void FGAIAircraft::setPerformance(const std::string& acclass) {
          return;
      }
      catch (FP_Inactive) {
-         return;
+         //return;
+         groundTargetSpeed = 0;
      }
 
      handleATCRequests(); // ATC also has a word to say
@@ -365,7 +366,7 @@ void FGAIAircraft::getGroundElev(double dt) {
     dt_elev_count += dt;
 
     // Update minimally every three secs, but add some randomness
-    // to prevent all IA objects doing this in synchrony
+    // to prevent all AI objects doing this in synchrony
     if (dt_elev_count < (3.0) + (rand() % 10))
         return;
 
@@ -413,10 +414,14 @@ void FGAIAircraft::announcePositionToController() {
     if (trafficRef) {
         int leg = fp->getLeg();
 
-        // Note that leg was been incremented after creating the current leg, so we should use
+        // Note that leg has been incremented after creating the current leg, so we should use
         // leg numbers here that are one higher than the number that is used to create the leg
         //
         switch (leg) {
+          case 2:              // Startup and Push back
+            if (trafficRef->getDepartureAirport()->getDynamics())
+                controller = trafficRef->getDepartureAirport()->getDynamics()->getStartupController();
+            break;
         case 3:              // Taxiing to runway
             if (trafficRef->getDepartureAirport()->getDynamics()->getGroundNetwork()->exists())
                 controller = trafficRef->getDepartureAirport()->getDynamics()->getGroundNetwork();
@@ -425,12 +430,14 @@ void FGAIAircraft::announcePositionToController() {
             if (trafficRef->getDepartureAirport()->getDynamics()) {
                 controller = trafficRef->getDepartureAirport()->getDynamics()->getTowerController();
                 //if (trafficRef->getDepartureAirport()->getId() == "EHAM") {
-                //cerr << trafficRef->getCallSign() << " at runway " << fp->getRunway() << "Ready for departure "
-                //   << trafficRef->getFlightType() << " to " << trafficRef->getArrivalAirport()->getId() << endl;
+                //string trns = trafficRef->getCallSign() + " at runway " + fp->getRunway() + 
+                //              ". Ready for departure. " + trafficRef->getFlightType() + " to " +
+                //              trafficRef->getArrivalAirport()->getId();
+                //fgSetString("/sim/messages/atc", trns.c_str());
                 //  if (controller == 0) {
                 //cerr << "Error in assigning controller at " << trafficRef->getDepartureAirport()->getId() << endl;
                 //}
-
+                //}
             } else {
                 cerr << "Error: Could not find Dynamics at airport : " << trafficRef->getDepartureAirport()->getId() << endl;
             }
@@ -446,29 +453,17 @@ void FGAIAircraft::announcePositionToController() {
 
         if ((controller != prevController) && (prevController != 0)) {
             prevController->signOff(getID());
-            string callsign =  trafficRef->getCallSign();
-            if ( trafficRef->getHeavy())
-                callsign += "Heavy";
-            switch (leg) {
-            case 3:
-                //cerr << callsign << " ready to taxi to runway " << fp->getRunway() << endl;
-                break;
-            case 4:
-                //cerr << callsign << " at runway " << fp->getRunway() << "Ready for take-off. "
-                //     << trafficRef->getFlightRules() << " to " << trafficRef->getArrivalAirport()->getId()
-                //     << "(" << trafficRef->getArrivalAirport()->getName() << ")."<< endl;
-                break;
-            }
         }
         prevController = controller;
         if (controller) {
             controller->announcePosition(getID(), fp, fp->getCurrentWaypoint()->routeIndex,
                                          _getLatitude(), _getLongitude(), hdg, speed, altitude_ft,
-                                         trafficRef->getRadius(), leg, trafficRef->getCallSign());
+                                         trafficRef->getRadius(), leg, this);
         }
     }
 }
 
+// Process ATC instructions and report back
 
 void FGAIAircraft::processATC(FGATCInstruction instruction) {
     if (instruction.getCheckForCircularWait()) {
@@ -494,7 +489,7 @@ void FGAIAircraft::processATC(FGATCInstruction instruction) {
     } else {
         if (holdPos) {
             //if (trafficRef)
-            //	cerr << trafficRef->getCallSign() << " Resuming Taxi " << endl;
+            //	cerr << trafficRef->getCallSign() << " Resuming Taxi." << endl;
             holdPos = false;
         }
         // Change speed Instruction. This can only be excecuted when there is no
@@ -760,6 +755,7 @@ void FGAIAircraft::updatePrimaryTargetValues() {
                 throw AI_OutOfSight();
             }
         }
+        timeElapsed = now - fp->getStartTime();
         if (! fp->isActive(now)) { 
             throw FP_Inactive();
         }
@@ -845,7 +841,7 @@ void FGAIAircraft::updateHeading() {
             } else {
                 bank_sense = 1.0;
             }
-            if (trafficRef)
+            //if (trafficRef)
             	//cerr << trafficRef->getCallSign() << " Heading " 
                 //     << hdg << ". Target " << tgt_heading <<  ". Diff " << fabs(sum - tgt_heading) << ". Speed " << speed << endl;
             //if (headingDiff > 60) {
@@ -875,7 +871,8 @@ void FGAIAircraft::updateHeading() {
                    else
                        headingChangeRate += dt * sign(roll);
             }
-	    hdg += headingChangeRate * dt;
+
+	    hdg += headingChangeRate * dt * (fabs(speed) / 15);
             headingError = headingDiff;
         } else {
             if (fabs(speed) > 1.0) {
@@ -977,6 +974,20 @@ void FGAIAircraft::updatePitchAngleTarget() {
     } else {
         tgt_pitch = tgt_vs * 0.002;
     }
+}
+
+string FGAIAircraft::atGate() {
+     string tmp("");
+     if (fp->getLeg() < 3) {
+         if (trafficRef) {
+             if (fp->getGate() > 0) {
+                 FGParking *park =
+                     trafficRef->getDepartureAirport()->getDynamics()->getParking(fp->getGate());
+                 tmp = park->getName();
+             }
+         }
+     }
+     return tmp;
 }
 
 void FGAIAircraft::handleATCRequests() {

@@ -11,7 +11,6 @@ libAirports_a_SOURCES = \
 	gnnode.cxx gnnode.hxx \
 	groundnetwork.cxx groundnetwork.hxx \
 	dynamics.cxx dynamics.hxx \
-	trafficcontrol.cxx trafficcontrol.hxx \
 	dynamicloader.cxx dynamicloader.hxx \
 	runwayprefloader.cxx runwayprefloader.hxx \
 	xmlloader.cxx xmlloader.hxx 

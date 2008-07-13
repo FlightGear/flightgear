@@ -58,11 +58,8 @@ public:
   FGParking() :
       heading(0),
       radius(0),
-      //parkingName(0),
-      //type(0),
-      //airlineCodes(0),
       available(true),
-      pushBackPoint(-1),
+      pushBackPoint(0),
       pushBackRoute(0)
   {
   };

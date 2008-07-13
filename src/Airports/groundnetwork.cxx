@@ -476,189 +476,12 @@ int FGTaxiSegment::getPenalty(int nGates) {
      return penalty;
 }
 
-// void FGGroundNetwork::trace(FGTaxiNode *currNode, int end, int depth, double distance)
-// {
-//   // Just check some preconditions of the trace algorithm
-//   if (nodesStack.size() != routesStack.size()) 
-//     {
-//       SG_LOG(SG_GENERAL, SG_ALERT, "size of nodesStack and routesStack is not equal. NodesStack :" 
-// 	     << nodesStack.size() << ". RoutesStack : " << routesStack.size());
-//     }
-//   nodesStack.push_back(currNode->getIndex());
-//   totalDistance += distance;
-//   //cerr << "Starting trace " << currNode->getIndex() << " " << "total distance: " << totalDistance << endl;
-//   //     << currNode->getIndex() << endl;
-// 
-//   // If the current route matches the required end point we found a valid route
-//   // So we can add this to the routing table
-//   if (currNode->getIndex() == end)
-//     {
-//       maxDepth = depth;
-//       //cerr << "Found route : " <<  totalDistance << "" << " " << *(nodesStack.end()-1) << " Depth = " << depth << endl;
-//       routes.push_back(FGTaxiRoute(nodesStack,routesStack,totalDistance, depth));
-//       if (nodesStack.empty() || routesStack.empty())
-// 	{
-// 	  printRoutingError(string("while finishing route"));
-// 	}
-//       nodesStack.pop_back();
-//       routesStack.pop_back();
-//       if (!(foundRoute)) {
-// 	maxDistance = totalDistance;
-//       }
-//       else
-// 	if (totalDistance < maxDistance)
-// 	  maxDistance = totalDistance;
-//       foundRoute = true;
-//       totalDistance -= distance;
-//       return;
-//     }
-//  
-// 
-//   // search if the currentNode has been encountered before
-//   // if so, we should step back one level, because it is
-//   // rather rediculous to proceed further from here. 
-//   // if the current node has not been encountered before,
-//   // i should point to nodesStack.end()-1; and we can continue
-//   // if i is not nodesStack.end, the previous node was found, 
-//   // and we should return. 
-//   // This only works at trace levels of 1 or higher though
-//   if (depth > 0) {
-//     intVecIterator i = nodesStack.begin();
-//     while ((*i) != currNode->getIndex()) {
-//       //cerr << "Route so far : " << (*i) << endl;
-//       i++;
-//     }
-//     if (i != nodesStack.end()-1) {
-//       if (nodesStack.empty() || routesStack.empty())
-// 	{
-// 	  printRoutingError(string("while returning from an already encountered node"));
-// 	}
-//       nodesStack.pop_back();
-//       routesStack.pop_back();
-//       totalDistance -= distance;
-//       return;
-//     }
-//     if (depth >= maxDepth) {
-//       count++;
-//       if (!(count % 100000)) {
-// 	maxDepth--; // Gradually decrease maxdepth, to prevent "eternal searches"
-// 	//cerr << "Reducing maxdepth to " << maxDepth << endl;
-//       }
-//       nodesStack.pop_back();
-//       routesStack.pop_back();
-//       totalDistance -= distance;
-//       return;
-//     }
-//     // If the total distance from start to the current waypoint
-//     // is longer than that of a route we can also stop this trace 
-//     // and go back one level. 
-//     if ((totalDistance > maxDistance) && foundRoute)
-//       //if (foundRoute)
-//       {
-// 	//cerr << "Stopping rediculously long trace: " << totalDistance << endl;
-// 	if (nodesStack.empty() || routesStack.empty())
-// 	{
-// 	  printRoutingError(string("while returning from finding a rediculously long route"));
-// 	}
-// 	nodesStack.pop_back();
-// 	routesStack.pop_back();
-// 	totalDistance -= distance;
-// 	return;
-//       }
-//   }
-/*  
-  //cerr << "2" << endl;
-  if (currNode->getBeginRoute() != currNode->getEndRoute())
-    {
-      double course, length;
-      //cerr << "3" << endl;
-      // calculate distance and heading "as the crow flies" between starn and end points"
-      SGWayPoint first(currNode->getLongitude(),
-		       currNode->getLatitude(),
-		       0);
-      //SGWayPoint second (lastNode->getLongitude(),
-      //		 lastNode->getLatitude(),
-      //		     0);
-  
-      first.CourseAndDistance(destination, &course, &length);
-      //for (FGTaxiSegmentVectorIterator 
-      //	     itr = segments.begin();
-      //	   itr != segments.end(); itr++)
-      //	{
-      //	  (*itr)->setCourseDiff(course);
-      //	} 
-      //FGTaxiNodeVectorIterator nde = nodes.begin();
-      //while (nde != nodes.end()) {
-      //(*nde)->sortEndSegments();
-      //nde++;
-      
-      for (FGTaxiSegmentVectorIterator 
-	     i = currNode->getBeginRoute();
-	   i != currNode->getEndRoute();
-	   i++)
-	{
-	  (*i)->setCourseDiff(course);
-	}
-      currNode->sortEndSegments(foundRoute);
-      for (FGTaxiSegmentVectorIterator 
-	     i = currNode->getBeginRoute();
-	   i != currNode->getEndRoute();
-	   i++)
-	{
-	  //cerr << (*i)->getLength() << endl;
-	  //cerr << (*i)->getIndex() << endl;
-	  int idx = (*i)->getIndex();
-	  routesStack.push_back((*i)->getIndex());
-	  trace((*i)->getEnd(), end, depth+1, (*i)->getLength());
-	//  {
-	//      // cerr << currNode -> getIndex() << " ";
-	//      route.push_back(currNode->getIndex());
-	//      return true;
-	//    }
-	}
-    }
-  else
-    {
-      //SG_LOG( SG_GENERAL, SG_DEBUG, "4" );
-    }
-  if (nodesStack.empty())
-    {
-      printRoutingError(string("while finishing trace"));
-    }
-  nodesStack.pop_back();
-  // Make sure not to dump the level-zero routesStack entry, because that was never created.
-  if (depth)
-    {
-      routesStack.pop_back();
-      //cerr << "leaving trace " << routesStack.size() << endl;
-    }
-  totalDistance -= distance;
-  return;
-}*/
-/*
-void FGGroundNetwork::printRoutingError(string mess)
-{
-  SG_LOG(SG_GENERAL, SG_ALERT,  "Error in ground network trace algorithm " << mess);
-  if (nodesStack.empty())
-    {
-      SG_LOG(SG_GENERAL, SG_ALERT, " nodesStack is empty. Dumping routesStack");
-      for (intVecIterator i = routesStack.begin() ; i != routesStack.end(); i++)
-	SG_LOG(SG_GENERAL, SG_ALERT, "Route " << (*i));
-    }
-  if (routesStack.empty())
-    {
-      SG_LOG(SG_GENERAL, SG_ALERT, " routesStack is empty. Dumping nodesStack"); 
-      for (intVecIterator i = nodesStack.begin() ; i != nodesStack.end(); i++)
-	SG_LOG(SG_GENERAL, SG_ALERT, "Node " << (*i));
-    }
-  //exit(1);
-}
-*/
+/* ATC Related Functions */
 
 void FGGroundNetwork::announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentPosition,
 				       double lat, double lon, double heading, 
 				       double speed, double alt, double radius, int leg,
-				       string callsign)
+				       FGAIAircraft *aircraft)
 {
    TrafficVectorIterator i = activeTraffic.begin();
    // Search search if the current id alread has an entry
@@ -679,7 +502,7 @@ void FGGroundNetwork::announcePosition(int id, FGAIFlightPlan *intendedRoute, in
      rec.setPositionAndIntentions(currentPosition, intendedRoute);
      rec.setPositionAndHeading(lat, lon, heading, speed, alt);
      rec.setRadius(radius); // only need to do this when creating the record.
-     rec.setCallSign(callsign);
+     rec.setAircraft(aircraft);
      activeTraffic.push_back(rec);
    } else {
      i->setPositionAndIntentions(currentPosition, intendedRoute); 

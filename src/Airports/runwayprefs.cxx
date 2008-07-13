@@ -118,7 +118,7 @@ string ScheduleTime::getName(time_t dayStart)
       //couldn't find one so return 0;
       //cerr << "Returning 0 " << endl;
     }
-    return string(0);
+    return string("");
 }			      
 /******************************************************************************
  * RunwayList

@@ -70,6 +70,7 @@ public:
 
     void announcePositionToController(); //TODO have to be public?
     void processATC(FGATCInstruction instruction);
+    FGAISchedule * getTrafficRef() { return trafficRef; };
 
     virtual const char* getTypeString(void) const { return "aircraft"; }
 
@@ -82,6 +83,7 @@ public:
     inline double getVerticalSpeed() const { return vs; };
     inline double altitudeAGL() const { return props->getFloatValue("position/altitude-agl-ft");};
     inline double airspeed() const { return props->getFloatValue("velocities/airspeed-kt");};
+    string atGate();
     
 protected:
     void Run(double dt);
@@ -138,6 +140,7 @@ private:
     bool _getGearDown() const;
 
     bool reachedWaypoint;
+    time_t timeElapsed;
 
     PerformanceData* _performance; // the performance data for this aircraft
 };

@@ -34,6 +34,7 @@ void  FGAirportDynamicsXMLLoader::startElement (const char * name, const XMLAttr
   FGTaxiNode taxiNode;
   FGTaxiSegment taxiSegment;
   int index = 0;
+  string idxStr;
   taxiSegment.setIndex(index);
   //cout << "Start element " << name << endl;
   string attname;
@@ -44,15 +45,19 @@ void  FGAirportDynamicsXMLLoader::startElement (const char * name, const XMLAttr
   string lat;
   string lon;
   int holdPointType;
+  int pushBackPoint;
   
   if (name == string("Parking"))
     {
+      pushBackPoint = 0;
       for (int i = 0; i < atts.size(); i++)
 	{
 	  //cout << "  " << atts.getName(i) << '=' << atts.getValue(i) << endl; 
 	  attname = atts.getName(i);
-	  if (attname == string("index"))
-	    park.setIndex(std::atoi(atts.getValue(i)));
+	  if (attname == string("index")) {
+	        park.setIndex(std::atoi(atts.getValue(i)));
+                idxStr = atts.getValue(i);
+          }
 	  else if (attname == string("type"))
 	    park.setType(atts.getValue(i));
 	 else if (attname == string("name"))
@@ -72,10 +77,17 @@ void  FGAirportDynamicsXMLLoader::startElement (const char * name, const XMLAttr
 	    //cerr << "Radius " << radius <<endl;
 	    park.setRadius(std::atof(radius.c_str()));
 	  }
-	   else if (attname == string("airlineCodes"))
+	  else if (attname == string("airlineCodes"))
 	     park.setCodes(atts.getValue(i));
+          else if (attname == string("pushBackRoute")) {
+             pushBackPoint = std::atoi(atts.getValue(i));
+	     //park.setPushBackPoint(std::atoi(atts.getValue(i)));
+
+           }
 	}
+      park.setPushBackPoint(pushBackPoint);
       park.setName((gateName+gateNumber));
+      //cerr << "Parking " << idxStr << "( " << gateName << gateNumber << ") has pushBackPoint " << pushBackPoint << endl;
       _dynamics->addParking(park);
     }
   if (name == string("node")) 
@@ -128,16 +140,41 @@ void  FGAirportDynamicsXMLLoader::startElement (const char * name, const XMLAttr
 
 void  FGAirportDynamicsXMLLoader::endElement (const char * name) {
   //cout << "End element " << name << endl;
+  if (name == string("AWOS")) {
+       _dynamics->addAwosFreq(atoi(value.c_str()));
+       //cerr << "Adding AWOS" << value<< endl;
+  }
+  if (name == string("UNICOM")) {
+       _dynamics->addUnicomFreq(atoi(value.c_str()));
+       //cerr << "UNICOM" << value<< endl;
+  }
+if (name == string("CLEARANCE")) {
+       _dynamics->addClearanceFreq(atoi(value.c_str()));
+       //cerr << "Adding CLEARANCE" << value<< endl;
+  }
+if (name == string("GROUND")) {
+       _dynamics->addGroundFreq(atoi(value.c_str()));
+       //cerr << "Adding GROUND" << value<< endl;
+  }
+
+if (name == string("TOWER")) {
+       _dynamics->addTowerFreq(atoi(value.c_str()));
+      //cerr << "Adding TOWER" << value<< endl;
+  }
+if (name == string("APPROACH")) {
+       _dynamics->addApproachFreq(atoi(value.c_str()));
+       //cerr << "Adding approach" << value<< endl;
+  }
 
 }
 
 void  FGAirportDynamicsXMLLoader::data (const char * s, int len) {
   string token = string(s,len);
   //cout << "Character data " << string(s,len) << endl;
-  //if ((token.find(" ") == string::npos && (token.find('\n')) == string::npos))
-    //value += token;
-  //else
-    //value = string("");
+  if ((token.find(" ") == string::npos && (token.find('\n')) == string::npos))
+    value += token;
+  else
+    value = string("");
 }
 
 void  FGAirportDynamicsXMLLoader::pi (const char * target, const char * data) {

@@ -29,22 +29,27 @@
 
 #include <simgear/xml/easyxml.hxx>
 
+#include <ATC/trafficcontrol.hxx>
 #include "parking.hxx"
 #include "groundnetwork.hxx"
 #include "runwayprefs.hxx"
-#include "trafficcontrol.hxx"
+
+//typedef vector<float> DoubleVec;
+//typedef vector<float>::iterator DoubleVecIterator;
 
 class FGAirport;
+
 
 class FGAirportDynamics {
 
 private:
   FGAirport* _ap;
 
-  FGParkingVec       parkings;
-  FGRunwayPreference rwyPrefs;
-  FGGroundNetwork    groundNetwork;
-  FGTowerController  towerController;
+  FGParkingVec        parkings;
+  FGRunwayPreference  rwyPrefs;
+  FGStartupController startupController;
+  FGGroundNetwork     groundNetwork;
+  FGTowerController   towerController;
 
   time_t lastUpdate;
   string prevTrafficType;
@@ -52,6 +57,12 @@ private:
   stringVec takeoff;
   stringVec milActive, comActive, genActive, ulActive;
   stringVec *currentlyActive;
+  intVec freqAwos;     // </AWOS>
+  intVec freqUnicom;   // </UNICOM>
+  intVec freqClearance;// </CLEARANCE>
+  intVec freqGround;   // </GROUND>
+  intVec freqTower;    // </TOWER>
+  intVec freqApproach; // </APPROACH>
 
   // Experimental keep a running average of wind dir and speed to prevent
   // Erratic runway changes. 
@@ -67,6 +78,12 @@ public:
   FGAirportDynamics(const FGAirportDynamics &other);
   ~FGAirportDynamics();
 
+  void addAwosFreq     (int val) { freqAwos.push_back(val);      };
+  void addUnicomFreq   (int val) { freqUnicom.push_back(val);    };
+  void addClearanceFreq(int val) { freqClearance.push_back(val); };
+  void addGroundFreq   (int val) { freqGround.push_back(val);    };
+  void addTowerFreq    (int val) { freqTower.push_back(val);     };
+  void addApproachFreq (int val) { freqApproach.push_back(val);  };
 
   void init();
   double getLongitude() const; 
@@ -90,9 +107,12 @@ public:
   //FGAirport *getAddress() { return this; };
   //const string &getName() const { return _name;};
   // Returns degrees
+  int getGroundFrequency() { return freqGround.size() ? freqGround[0] : 0; };
 
-  FGGroundNetwork   *getGroundNetwork()   { return &groundNetwork; };
-  FGTowerController *getTowerController() { return &towerController; };
+  FGStartupController *getStartupController() { return &startupController; };
+  FGGroundNetwork     *getGroundNetwork()     { return &groundNetwork; };
+  FGTowerController   *getTowerController()   { return &towerController; };
+
   
 
   void setRwyUse(const FGRunwayPreference& ref);

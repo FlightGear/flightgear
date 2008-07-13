@@ -41,6 +41,7 @@ void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep,
                                radius, fltType, aircraftType, airline);
     } else {
         if (firstFlight) {
+             
              if (!(dep->getDynamics()->getAvailableParking(&lat, &lon, 
                                                            &heading, &gateId, 
                                                            radius, fltType, 
@@ -70,6 +71,12 @@ void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep,
                    wpt->routeIndex = -1;
                    waypoints.push_back(wpt);
             }
+           //cerr << "Success : GateId = " << gateId << endl;
+           SG_LOG(SG_INPUT, SG_WARN, "Warning: Succesfully found a parking for a " << 
+                                              aircraftType <<
+                                              " of flight type " << fltType << 
+                                              " of airline     " << airline <<
+                                              " at airport     " << dep->getId());
         } else {
 	    //cerr << "Push Back follow-up Flight" << endl;
             dep->getDynamics()->getParking(gateId, &lat, &lon, &heading);
@@ -89,61 +96,21 @@ void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep,
 	FGParking *parking = dep->getDynamics()->getParking(gateId);
         int pushBackNode = parking->getPushBackPoint();
 
-	// initialize the pushback route. Note that parts
-	// of this procedure should probably be done inside
-        // taxidraw. This code is likely to change once this
-        // this is fully implemented in taxidraw. Until that time,
-        // however, the full initialization procedure looks like this:
-        // 1) Build a list of all the nodes that are classified as 
-        //    pushBack hold points
-        // 2) For each hold point, use the dykstra algorithm to find a route
-        //    between the gate and the pushBack hold nodes, however use only
-        //    segments that are classified as "pushback" routes.
-        // 3) return the TaxiRoute class that is non empty. 
-        // 4) store refer this route in the parking object, for future use
 
-	if (pushBackNode < 0) {
-            //cerr << "Initializing PushBackRoute " << endl;
-            intVec pushBackNodes;
-	    int nAINodes = dep->getDynamics()->getGroundNetwork()->getNrOfNodes();
-            int hits = 0;
-	    parking->setPushBackPoint(0); // default in case no network was found.
-
-            // Collect all the nodes that are classified as having pushBack hold status
-            for (int i = 0; i < nAINodes; i++) {
-                if (dep->getDynamics()->getGroundNetwork()->findNode(i)->getHoldPointType() == 3) {
-                    pushBackNodes.push_back(i);
-                }
-	    }
-
-            // For each node found in step 1, check if it can be reached
-            FGTaxiRoute route;
-            for (intVecIterator nodes = pushBackNodes.begin();
-                                 nodes != pushBackNodes.end();
-                                 nodes++) {
-	        route = dep->getDynamics()->getGroundNetwork()->findShortestRoute(gateId, *nodes, false);
-                if (!(route.empty())) {
-		    //cerr << "Found Pushback route of size " << route.size() << endl;
-                    hits++;
-                    parking->setPushBackRoute(new FGTaxiRoute(route));
-                    parking->setPushBackPoint(*nodes);
-		    pushBackNode = *nodes;
-                }
-             }
-             if (hits == 0) {
-                 SG_LOG(SG_GENERAL, SG_INFO, "No pushback route found for gate " << gateId << " at " << dep->getId());
-             }
-             if (hits > 1) {
-                 SG_LOG(SG_GENERAL, SG_WARN, hits << " pushback routes found for gate " << gateId << " at " << dep->getId());
-             }
-        }
-        if (pushBackNode > 0) {
+        pushBackRoute = parking->getPushBackRoute();
+        if ((pushBackNode > 0) && (pushBackRoute == 0)) {
             int node, rte;
-            //cerr << "Found valid pusback node " << pushBackNode << "for gate " << gateId << endl;
+            FGTaxiRoute route;
+            //cerr << "Creating push-back for " << gateId << " (" << parking->getName() << ") using push-back point " << pushBackNode << endl;
+            route = dep->getDynamics()->getGroundNetwork()->findShortestRoute(gateId, pushBackNode, false);
+            parking->setPushBackRoute(new FGTaxiRoute(route));
+            
+
             pushBackRoute = parking->getPushBackRoute();
             int size = pushBackRoute->size();
             if (size < 2) {
 		SG_LOG(SG_GENERAL, SG_WARN, "Push back route from gate " << gateId << " has only " << size << " nodes.");
+                SG_LOG(SG_GENERAL, SG_WARN, "Using  " << pushBackNode);
             }
             pushBackRoute->first();
             waypoint *wpt;
