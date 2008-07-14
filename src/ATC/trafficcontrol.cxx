@@ -397,7 +397,7 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
                break;
     }
     double currFreq = fgGetDouble("/instrumentation/comm/frequencies/selected-mhz");
-    int currFreqI = (int) round(currFreq * 100);
+    int currFreqI = (int) floor(currFreq * 100 + 0.5);
     //cerr << "Using " << currFreqI << " and " << commFreq << endl;
     if (currFreqI == commFreq) {
         fgSetString("/sim/messages/atc", text.c_str());
