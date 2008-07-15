@@ -55,6 +55,7 @@ INCLUDES
 #include "models/propulsion/FGPiston.h"
 #include <fstream>
 #include <iomanip>
+#include <cstring>
 
 #include "input_output/net_fdm.hxx"
 
