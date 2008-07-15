@@ -27,12 +27,10 @@
 
 #if defined(__linux__) && defined(__i386__)
 #  include <fpu_control.h>
-#  include <signal.h>
-#elif defined(__FreeBSD__)
-#  include <signal.h>
 #endif
 
 #include <errno.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -172,6 +170,7 @@ int main ( int argc, char **argv ) {
     // Ignore floating-point exceptions on FreeBSD
     signal(SIGFPE, SIG_IGN);
 #endif
+    signal(SIGPIPE, SIG_IGN);
 
 #if defined(sgi)
     flush_fpe();
