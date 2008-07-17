@@ -203,7 +203,12 @@ const char *fgValidatePath (const char *str, bool write)
     static SGPropertyNode_ptr r, w;
     if (!r) {
         r = fgGetNode("/sim/paths/validate/read", true);
+        r->setAttribute(SGPropertyNode::READ, true);
+        r->setAttribute(SGPropertyNode::WRITE, true);
+
         w = fgGetNode("/sim/paths/validate/write", true);
+        w->setAttribute(SGPropertyNode::READ, true);
+        w->setAttribute(SGPropertyNode::WRITE, true);
     }
     SGPropertyNode *prop = write ? w : r;
     prop->setStringValue(str);
