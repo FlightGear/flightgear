@@ -233,11 +233,11 @@ int main ( int argc, char **argv ) {
     } catch (const char *s) {
         cerr << "Fatal error: " << s << endl;
 
-/*    } catch (...) {
+    } catch (...) {
         cerr << "Unknown exception in the main loop. Aborting..." << endl;
         if (errno)
             perror("Possible cause");
-*/    }
+    }
 
     return 0;
 }
