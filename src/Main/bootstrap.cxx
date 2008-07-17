@@ -170,7 +170,9 @@ int main ( int argc, char **argv ) {
     // Ignore floating-point exceptions on FreeBSD
     signal(SIGFPE, SIG_IGN);
 #endif
+#ifndef _MSC_VER
     signal(SIGPIPE, SIG_IGN);
+#endif
 
 #if defined(sgi)
     flush_fpe();
@@ -231,11 +233,11 @@ int main ( int argc, char **argv ) {
     } catch (const char *s) {
         cerr << "Fatal error: " << s << endl;
 
-    } catch (...) {
+/*    } catch (...) {
         cerr << "Unknown exception in the main loop. Aborting..." << endl;
         if (errno)
             perror("Possible cause");
-    }
+*/    }
 
     return 0;
 }
