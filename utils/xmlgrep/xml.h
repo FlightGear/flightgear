@@ -74,27 +74,28 @@ void *xmlGetNode(const void *, const char *);
 void *xmlCopyNode(void *, const char *);
 
 /**
- * Get the number of elements  with the same name from a specified xml path
+ * Get the number of nodes with the same name from a specified xml path
  *
  * @param xid XML-id
  * @param path path to the xml node
  * @return the number count of the nodename
  */
-unsigned int xmlGetNumElements(void *, const char *);
+unsigned int xmlGetNumNodes(void *, const char *);
 
 /**
- * Get the next occurrence of element in the parent node
+ * Get the nth occurrence of node in the parent node
  * The return value should neevr be altered or freed by the caller
  *
  * @param pid XML-id of the parent node of this node
  * @param xid XML-id
- * @param element name of the element to search for
- * @return name of the element or NULL if unsuccessful
+ * @param node name of the node to search for
+ * @param num specify which occurence to return
+ * @return name of the node or NULL if unsuccessful
  */
-const char *xmlGetNextElement(const void *, void *, const char *);
+const char *xmlGetNodeNum(const void *, void *, const char *, int);
 
 /**
- * Compare the value of this element to a reference string.
+ * Compare the value of this node to a reference string.
  * Comparing is done in a case insensitive way.
  *
  * @param xid XML-id

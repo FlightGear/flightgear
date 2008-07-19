@@ -161,10 +161,10 @@ void walk_the_tree(size_t num, void *xid, char *tree)
         void *xmid = xmlMarkId(xid);
         if (xmid && _print)
         {
-            no_elements = xmlGetNumElements(xmid, _print);
+            no_elements = xmlGetNumNodes(xid, _print);
             for (i=0; i<no_elements; i++)
             {
-                if (xmlGetNextElement(xid, xmid, _print) != 0)
+                if (xmlGetNodeNum(xid, xmid, _print, i) != 0)
                 {
                     char *value = xmlGetString(xmid);
                     if (value)
@@ -179,10 +179,10 @@ void walk_the_tree(size_t num, void *xid, char *tree)
         }
         else if (xmid && _value)
         {
-            no_elements = xmlGetNumElements(xmid, _element);
+            no_elements = xmlGetNumNodes(xmid, _element);
             for (i=0; i<no_elements; i++)
             {
-                if ((xmlGetNextElement(xid, xmid, _element) != 0)
+                if ((xmlGetNodeNum(xid, xmid, _element, i) != 0)
                     && (xmlCompareString(xmid, _value) == 0))
                 {
                     printf("%s: <%s>%s</%s>\n",
@@ -196,7 +196,7 @@ void walk_the_tree(size_t num, void *xid, char *tree)
         }
         else printf("Error executing xmlMarkId\n");
     }
-    else if (xid)				 /* walk the rest of the tree */
+    else if (xid)			 /* walk the rest of the tree */
     {
         char *elem, *next;
         void *xmid;
@@ -211,10 +211,10 @@ void walk_the_tree(size_t num, void *xid, char *tree)
         {
             if (next) *next++ = 0;
 
-            no_elements = xmlGetNumElements(xid, elem);
+            no_elements = xmlGetNumNodes(xid, elem);
             for (i=0; i<no_elements; i++)
             {
-                if (xmlGetNextElement(xid, xmid, elem) != 0)
+                if (xmlGetNodeNum(xid, xmid, elem, i) != 0)
                     walk_the_tree(num, xmid, next);
             }
 

@@ -1,3 +1,13 @@
+19-07-2008
+  * rewrite the code to always recursively walk the node tree when searching
+    for a particular node. this is required for cases where a node with a
+    particular name is located deeper in a node with the same name;
+    for example -r /configuration/device/reference/device would fail in the 
+    previous verion
+  * rename xmlGetElement to xmlGetNodeNum and add the possibility to request
+    the nth node with this name
+  * rename xmlGetNumElements to xmlGetNumNodes
+
 06-07-2008
   * reorganize the code to be able to skip comment sections
   * depreciate __xmlFindNextElement and use __xmlGetNode instead

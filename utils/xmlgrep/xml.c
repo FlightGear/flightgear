@@ -53,13 +53,13 @@ void simple_unmmap(SIMPLE_UNMMAP *);
 
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <assert.h>
 #include <unistd.h>
 #include <ctype.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 
 struct _xml_id
 {
@@ -69,16 +69,24 @@ struct _xml_id
 };
 
 static char *__xmlCopyNode(char *, size_t, const char *);
-static char *__xmlGetNode(char *, size_t, const char *, size_t *);
+static char *__xmlGetNode(const char *, size_t *, const char *, size_t *, int *);
+static char *__xmlGetNodePath(const char *, size_t *, const char *, size_t *);
+static char *__xmlSkipComment(const char *, size_t);
+static char *__xmlSkipInfo(const char *, size_t);
+
 static void *__xml_memmem(const void *, size_t, const void *, size_t);
-static void *__xml_memncasecmp(void *, size_t, void **, size_t *);
+static void *__xml_memncasecmp(void *, size_t *, void **, size_t *);
+static void *__xml_memchr(const void *, int, size_t);
 
 #define PRINT(a, b, c) { \
-   size_t q, len=(((b)>(c)) ? (c) : (b)); \
    if (a) { \
-      printf("(%i) '", len); \
-      for (q=0; q<len; q++) printf("%c", (a)[q]); \
-      printf("'\n"); \
+      size_t q, len = c; \
+      if (b < c) len = b; \
+      if (len < 50000) { \
+         printf("(%i) '", len); \
+         for (q=0; q<len; q++) printf("%c", ((char *)(a))[q]); \
+         printf("'\n"); \
+      } else printf("Length (%u) seems too large at line %i\n",len, __LINE__); \
    } else printf("NULL pointer at line %i\n", __LINE__); \
 }
 
@@ -130,23 +138,24 @@ xmlCopyNode(void *id, char *path)
     if (id && path)
     {
         struct _xml_id *xid = (struct _xml_id *)id;
+        size_t slen, len;
         char *ptr, *p;
-        size_t rlen;
 
-        rlen = strlen(path);
-        ptr = __xmlGetNode(xid->start, xid->len, path, &rlen);
+        len = xid->len;
+        slen = strlen(path);
+        ptr = __xmlGetNodePath(xid->start, &len, path, &slen);
         if (ptr)
         {
-            xsid = malloc(sizeof(struct _xml_id) + rlen);
+            xsid = malloc(sizeof(struct _xml_id) + len);
             if (xsid)
             {
                 p = (char *)xsid + sizeof(struct _xml_id);
 
-                xsid->len = rlen;
+                xsid->len = len;
                 xsid->start = p;
                 xsid->fd = 0;
 
-                memcpy(xsid->start, ptr, rlen);
+                memcpy(xsid->start, ptr, len);
            }
        }
    }
@@ -162,15 +171,16 @@ xmlGetNode(void *id, char *path)
    if (id && path)
    {
       struct _xml_id *xid = (struct _xml_id *)id;
-      size_t rlen;
+      size_t len, slen;
       char *ptr;
 
-      rlen = strlen(path);
-      ptr = __xmlGetNode(xid->start, xid->len, path, &rlen);
+      len = xid->len;
+      slen = strlen(path);
+      ptr = __xmlGetNodePath(xid->start, &len, path, &slen);
       if (ptr)
       {
          xsid = malloc(sizeof(struct _xml_id));
-         xsid->len = rlen;
+         xsid->len = len;
          xsid->start = ptr;
          xsid->fd = 0;
       }
@@ -180,31 +190,27 @@ xmlGetNode(void *id, char *path)
 }
 
 const char *
-xmlGetNextElement(const void *pid, void *id, char *path)
+xmlGetNodeNum(const void *rid, void *id, char *element, int num)
 {
-    struct _xml_id *xpid = (struct _xml_id *)pid;
-    const char *ret;
+    struct _xml_id *xrid = (struct _xml_id *)rid;
+    const char *ret = 0;
 
-    if (id && path)
+    if (id && element)
     {
         struct _xml_id *xid = (struct _xml_id *)id;
-        size_t rlen, nlen;
+        size_t len, slen;
         char *ptr;
 
-        if (xid->len < xpid->len) xid->start += xid->len;
-        nlen = xpid->len - (xid->start - xpid->start);
-
-        rlen = strlen(path);
-        ptr = __xmlGetNode(xid->start, nlen, path, &rlen);
+        len = xrid->len;
+        slen = strlen(element);
+        ptr = __xmlGetNode(xrid->start, &len, element, &slen, &num);
         if (ptr)
         {
-             xid->len = rlen;
+             xid->len = len;
              xid->start = ptr;
-             ret = path;
+             ret = element;
         }
-        else ret = 0;
     }
-    else ret = 0;
 
     return ret;
 }
@@ -242,20 +248,23 @@ xmlCompareNodeString(const void *id, const char *path, const char *s)
     if (xid && xid->len && path && s && (strlen(s) > 0))
     {
         char *str, *ps, *pe;
-        size_t rlen;
+        size_t len, slen;
 
-        rlen = strlen(path);
-        str = __xmlGetNode(xid->start, xid->len, path, &rlen);
+        len = xid->len;
+        slen = strlen(path);
+        str = __xmlGetNodePath(xid->start, &len, path, &slen);
+        if (str)
+        {
+            ps = str;
+            pe = ps + len;
+            pe--;
 
-        ps = str;
-        pe = ps + rlen;
-        pe--;
+            while ((ps<pe) && isspace(*ps)) ps++;
+            while ((pe>ps) && isspace(*pe)) pe--;
+            pe++;
 
-        while ((ps<pe) && isspace(*ps)) ps++;
-        while ((pe>ps) && isspace(*pe)) pe--;
-        pe++;
-
-        if (str) ret = strncasecmp(pe, s, pe-ps);
+            ret = strncasecmp(pe, s, pe-ps);
+        }
     }
 
     return ret;
@@ -332,35 +341,37 @@ unsigned int
 xmlCopyString(void *id, const char *path, char *buffer, unsigned int buflen)
 {
     struct _xml_id *xid = (struct _xml_id *)id;
-    unsigned int rlen = 0;
+    unsigned int len = 0;
 
     if (xid && xid->len && path && buffer && buflen)
     {
+        size_t slen;
         char *str;
 
         *buffer = 0;
-        rlen = strlen(path);
-        str = __xmlGetNode(xid->start, xid->len, path, &rlen);
+        len = xid->len;
+        slen = strlen(path);
+        str = __xmlGetNodePath(xid->start, &len, path, &slen);
         if (str)
         {
             char *ps, *pe;
 
             ps = str;
-            pe = ps+rlen-1;
+            pe = ps+len-1;
 
             while ((ps<pe) && isspace(*ps)) ps++;
             while ((pe>ps) && isspace(*pe)) pe--;
 
-            rlen = (pe-ps)+1;
-            if (rlen >= buflen) rlen = buflen-1;
+            len = (pe-ps)+1;
+            if (len >= buflen) len = buflen-1;
 
-            memcpy(buffer, ps, rlen);
-            str = buffer + rlen;
+            memcpy(buffer, ps, len);
+            str = buffer + len;
             *str = 0;
         }
     }
 
-    return rlen;
+    return len;
 }
 
 long int
@@ -371,12 +382,17 @@ xmlGetNodeInt(void *id, const char *path)
 
     if (path && xid && xid->len)
     {
-        unsigned int rlen;
+        size_t len, slen;
         char *str;
 
-        rlen = strlen(path);
-        str = __xmlGetNode(xid->start, xid->len, path, &rlen);
-        if (str) li = strtol(str, (char **)NULL, 10);
+        len = xid->len;
+        slen = strlen(path);
+        str = __xmlGetNodePath(xid->start, &len, path, &slen);
+        if (str)
+        {
+            char *end = str+len;
+            li = strtol(str, &end, 10);
+        }
     }
 
     return li;
@@ -389,7 +405,10 @@ xmlGetInt(void *id)
     long int li = 0;
 
     if (xid && xid->len)
-        li = strtol(xid->start, (char **)NULL, 10);
+    {
+        char *end = xid->start + xid->len;
+        li = strtol(xid->start, &end, 10);
+    }
 
     return li;
 }
@@ -402,13 +421,17 @@ xmlGetNodeDouble(void *id, const char *path)
 
     if (path && xid && xid->len)
     {
-        unsigned int rlen;
+        size_t len, slen;
         char *str;
 
-        rlen = strlen(path);
-        str = __xmlGetNode(xid->start, xid->len, path, &rlen);
-
-        if (str) d = strtod(str, (char **)NULL);
+        len = xid->len;
+        slen = strlen(path);
+        str = __xmlGetNodePath(xid->start, &len, path, &slen);
+        if (str)
+        {
+            char *end = str+len;
+            d = strtod(str, &end);
+        }
     }
 
     return d;
@@ -421,50 +444,49 @@ xmlGetDouble(void *id)
    double d = 0.0;
 
     if (xid && xid->len)
-        d = strtod(xid->start, (char **)NULL);
+    {
+        char *end = xid->start + xid->len;
+        d = strtod(xid->start, &end);
+    }
 
     return d;
 }
 
 
 unsigned int
-xmlGetNumElements(void *id, const char *path)
+xmlGetNumNodes(void *id, const char *path)
 {
     struct _xml_id *xid = (struct _xml_id *)id;
-    unsigned ret = 0;
+    unsigned num = 0;
 
     if (xid && xid->len && path)
     {
-        unsigned int clen;
-        char *p, *pathname;
-        char *nname;
+        char *nodename, *pathname;
+        size_t len, slen;
+        char *p;
 
-        pathname = (char *)path;
-        if (*path == '/') pathname++;
+        nodename = (char *)path;
+        if (*path == '/') nodename++;
+        slen = strlen(nodename);
 
-        nname = strrchr(pathname, '/');
-        if (nname)
+        pathname = strchr(nodename, '/');
+        if (pathname)
         {
-           clen = nname-pathname;
-           p = __xmlGetNode(xid->start, xid->len, pathname, &clen);
+           len = xid->len;
+           pathname++;
+           slen -= pathname-nodename;
+           p = __xmlGetNodePath(xid->start, &len, pathname, &slen);
         }
         else
         {
-            nname = (char *)pathname;
             p = (char *)xid->start;
-            clen = xid->len;
+            len = xid->len;
         }
            
-        do
-        {
-           unsigned int slen = strlen(nname);
-           p = __xmlGetNode(p, clen, nname, &slen);
-           if (p) ret++;
-        }
-        while (p);
+        if (p) __xmlGetNode(p, &len, nodename, &slen, &num);
     }
 
-    return ret;
+    return num;
 }
 
 void *
@@ -487,14 +509,15 @@ xmlMarkId(void *id)
 
 /* -------------------------------------------------------------------------- */
 
-char *
+static char *
 __xmlCopyNode(char *start, size_t len, const char *path)
 {
    char *p, *ret = 0;
-   size_t rlen;
+   size_t rlen, slen;
 
-   rlen = strlen(path);
-   p = __xmlGetNode(start, len, path, &rlen);
+   rlen = len;
+   slen = strlen(path);
+   p = __xmlGetNodePath(start, &rlen, path, &slen);
    if (p && rlen)
    {
       ret = calloc(1, rlen+1);
@@ -505,157 +528,228 @@ __xmlCopyNode(char *start, size_t len, const char *path)
 }
 
 char *
-__xmlGetNode(char *start, size_t len, const char *path, size_t *rlen)
+__xmlGetNodePath(const char *start, size_t *len, const char *name, size_t *plen)
 {
+    char *node;
     char *ret = 0;
 
-    if (len && rlen && *rlen)
+    assert (start != 0);
+    assert (len != 0);
+    assert (name != 0);
+    assert (plen != 0);
+
+    if ((*len == 0) || (*plen == 0) || (*plen > *len))
+        return 0;
+
+    node = (char *)name;
+    if (*name == '/') node++;
+    if (node)
     {
-        size_t elem_len, newpath_len;
-        char *newpath, *element;
-        char last_node = 0;
+        size_t plen, slen;
+        char *path;
+        int num;
 
-        newpath_len = *rlen;
-        element = (char *)path;
-        if (*element == '/')
+        slen = strlen(node);
+        path = strchr(node, '/');
+
+        if (!path) plen = slen;
+        else plen = path++ - node;
+
+        num = 0;
+        ret = __xmlGetNode(start, len, node, &plen, &num);
+        if (ret && path)
         {
-            element++;	/* skip the leading '/' character */
-            newpath_len--;
-        }
-
-        newpath = strchr(element, '/');
-        if (!newpath)
-        {
-           last_node = 1;
-           elem_len = newpath_len;
-        }
-        else
-        {
-           elem_len = newpath++ - element;
-           newpath_len -= (newpath - element);
-        }
-         
-        if (elem_len)
-        {
-            char *p, *cur;
-            size_t newlen;
-            void *newelem;
-
-            cur = p = start;
-            do
-            {
-                len -= cur - p;
-                p = memchr(cur, '<', len);
-
-                if (p)
-                {
-                    p++;
-                    if (p >= (cur+len)) return 0;
-
-                    len -= p - cur;
-                    cur = p;
-
-                    /* skip comments */
-                    if (memcmp(cur, "!--", 3) == 0)
-                    {
-                        if (len < 6) return 0;
-
-                        cur += 3;
-                        len -= 3;
-
-                        do
-                        {
-                            p = memchr(cur, '-', len);
-                            if (p)
-                            {
-                                len -= p - cur;
-                                if ((len > 3) && (memcmp(cur, "-->", 3) == 0))
-                                {
-                                    p += 3;
-                                    len -= 3;
-                                    break;
-                                }
-                                cur = p+1;
-                            }
-                            else return 0;
-                        }
-                        while (p && (len > 2));
-
-                        if (!p || (len < 2)) return 0;
-                    }
-                    else if (*cur == '?')
-                    {
-                        if (len < 3) return 0;
-
-                        cur++;
-                        len--;
-                        p = memchr(cur, '?', len);
-                        if (!p || *(p+1) != '>') return 0;
-
-                        p += 2;
-                        len -= (p - cur);
-                    }
-                    else
-                    {
-                        newlen = elem_len;
-                        newelem = element;
-
-                        cur = __xml_memncasecmp(p, len, &newelem, &newlen);
-                        if (cur)
-                        {
-                            break;
-                        }
-
-                        cur = p + elem_len;
-                    }
-                }
-            }
-            while (p);
-
-            if (cur && p)
-            {
-                len -= elem_len;
-                p = cur;
-                while ((*cur++ != '>') && (cur<(p+len)));
-                len -= cur - p;
-
-                if (last_node)
-                {
-                    char *rptr = cur;
-                    do
-                    {
-                        if ((p = __xml_memmem(cur, len, "</", 2)) != 0) 
-                        {
-                            char *r;
-
-                            len -= (p + 2) - cur;
-                            cur = p + 2;
-                            r = __xml_memncasecmp(cur, len, &newelem, &newlen);
-                            if (r && *r == '>') break;
-                        }
-                    }
-                    while (p);
-
-                    if (p)
-                    {
-                        *rlen = p-rptr;
-                        ret = rptr;
-                    }
-                }
-                else
-                {
-                    *rlen = newpath_len;
-                    ret = __xmlGetNode(cur, len, newpath, rlen);
-                }
-            }
+           plen = slen - (path-node);
+           ret = __xmlGetNodePath(ret, len, path, &plen);
         }
     }
 
     return ret;
 }
 
+char *
+__xmlGetNode(const char *start, size_t *len, const char *name, size_t *rlen, int *nodenum)
+{
+    char *new, *cur, *ne, *ret = 0;
+    size_t restlen, elementlen;
+    int found, num;
+    void *element;
 
-#define NOCASECMP(a,b)	( ((a)^(b)) & 0xdf )
+    assert (start != 0);
+    assert (len != 0);
+    assert (name != 0);
+    assert (rlen != 0);
+    assert (nodenum != 0);
+
+    if ((*len == 0) || (*rlen == 0) || (*rlen > *len))
+        return 0;
+
+    found = 0;
+    num = *nodenum;
+    restlen = *len;
+    cur = (char *)start;
+    ne = cur + restlen;
+
+    while ((new = memchr(cur, '<', restlen)) != 0)
+    {
+        if (*(new+1) == '/')		/* cascading closing tag found */
+        {
+            *len -= restlen;
+             break;
+        }
+
+        new++;
+        restlen -= new-cur;
+        cur = new;
+
+        if (*cur == '!')
+        {
+            new = __xmlSkipComment(cur, restlen);
+            if (!new) return 0;
+            restlen -= new-cur;
+            cur = new;
+            continue;
+        }
+        else if (*cur == '?')
+        {
+            new = __xmlSkipInfo(cur, restlen);
+            if (!new) return 0;
+
+            restlen -= new-cur;
+            cur = new;
+            continue;
+        }
+
+        element = (char *)name;
+        elementlen = *rlen;
+        new = __xml_memncasecmp(cur, &restlen, &element, &elementlen);
+        if (new)
+        {
+            if (found == num ) ret = new+1;
+        }
+        else
+        {
+            new = cur+elementlen;
+            if (new >= ne) return 0;
+            element = (char *)name;
+            elementlen = *rlen;
+        }
+
+        /* restlen -= new-cur; not necessary because of __xml_memncasecmp */
+        cur = new;
+        new = memchr(cur, '<', restlen);
+        if (!new) return 0;
+
+        restlen -= new-cur;
+        cur = new;
+        if (*(cur+1) != '/')                            /* new node found */
+        {
+            size_t slen = restlen;
+            size_t nlen = 1;
+            int pos = -1;
+
+            new = __xmlGetNode(cur, &slen, "*", &nlen, &pos);
+            if (!new)
+            {
+                if (slen == restlen) return 0;
+                else new = cur + slen;
+            }
+
+            restlen -= slen;
+            cur = new;
+
+            new = memchr(cur, '<', restlen);
+            if (!new) return 0;
+
+            restlen -= new-cur;
+            cur = new;
+        }
+
+        if (*(cur+1) == '/')				/* closing tag found */
+        {
+            if (!strncasecmp(new+2, element, elementlen))
+            {
+                if (found == num) *len = new-ret;
+                found++;
+            }
+
+            new = memchr(cur, '>', restlen);
+            if (!new) return 0;
+
+            restlen -= new-cur;
+            cur = new;
+        }
+        else return 0;
+    }
+
+    *rlen = elementlen;
+    *nodenum = found;
+
+    return ret;
+}
+
+char *
+__xmlSkipComment(const char *start, size_t len)
+{
+    char *cur, *new;
+
+    cur = (char *)start;
+    new = 0;
+
+    if (memcmp(cur, "!--", 3) == 0)
+    {
+        if (len < 6) return 0;
+
+        cur += 3;
+        len -= 3;
+
+        do
+        {
+            new = memchr(cur, '-', len);
+            if (new)
+            {
+                len -= new - cur;
+                if ((len > 3) && (memcmp(cur, "-->", 3) == 0))
+                {
+                    new += 3;
+                    len -= 3;
+                    break;
+                }
+                cur = new+1;
+            }
+            else return 0;
+        }
+        while (new && (len > 2));
+
+        if (!new || (len < 2)) return 0;
+    }
+
+    return new;
+}
+
+char *
+__xmlSkipInfo(const char *start, size_t len)
+{
+    char *cur, *new;
+
+    cur = (char *)start;
+    new = 0;
+
+    if (*cur == '?')
+    {
+        if (len < 3) return 0;
+
+        cur++;
+        len--;
+        new = memchr(cur, '?', len);
+        if (!new || *(new+1) != '>') return 0;
+
+        new += 2;
+    }
+
+    return new;
+}
+
 
 void *
 __xml_memmem(const void *haystack, size_t haystacklen,
@@ -694,49 +788,92 @@ __xml_memmem(const void *haystack, size_t haystacklen,
     return rptr;
 }
 
+
+#define NOCASECMP(a,b)  ( ((a)^(b)) & 0xdf )
 void *
-__xml_memncasecmp(void *haystack, size_t haystacklen,
+__xml_memncasecmp(void *haystack, size_t *haystacklen,
                   void **needle, size_t *needlelen)
 {
     void *rptr = 0;
+    char *hs = (char *)haystack;
 
     if (haystack && needle && needlelen && (*needlelen > 0)
-        && (haystacklen >= *needlelen))
+        && (*haystacklen >= *needlelen))
     {
-        char *ns, *hs;
+        char *ns;
         size_t i;
 
         ns = (char *)*needle;
-        hs = (char *)haystack;
 
         /* search for everything */
         if ((*ns == '*') && (*needlelen == 1))
         {
-           char *he = hs + haystacklen;
+           char *he = hs + *haystacklen;
 
            while ((hs < he) && (*hs != ' ') && (*hs != '>')) hs++;
            *needle = (void *)haystack;
            *needlelen = hs - (char *)haystack;
+
+           while ((hs < he) && (*hs != '>')) hs++;
            rptr = hs;
         }
         else
         {
             size_t nlen = *needlelen;
+            char *he = hs + *haystacklen;
 
             for (i=0; i<nlen; i++)
             {
-                if (NOCASECMP(*hs,*ns) && (*ns != '?'))
-                    break;
+                if (NOCASECMP(*hs,*ns) && (*ns != '?')) break;
+                if ((*hs == ' ') || (*hs == '>')) break;
                 hs++;
                 ns++;
             }
 
-            if (i == nlen) rptr = hs;
+            if (i != nlen)
+            {
+                while((hs < he) && (*hs != ' ') && (*hs != '>')) hs++;
+                *needle = (void *)haystack;
+                *needlelen = hs - (char *)haystack;
+            }
+            else
+            {
+                *needle = (void *)haystack;
+                *needlelen = hs - (char *)haystack;
+                while ((hs < he) && (*hs != '>')) hs++;
+                rptr = hs;
+            }
         }
+
+        *haystacklen -= hs - (char *)haystack;
     }
 
     return rptr;
 }
+
+#if 0
+void *
+__xml_memchr(const void *d, int c, size_t len)
+{
+   char *s, *ret = 0;
+   size_t i;
+
+   s = (char *)d;
+   for (i=0; i<len; i++)
+   {
+#if 1
+      printf("i: %u, len: %u\n", i, len);
+#endif
+      if (s[i] == c)
+      {
+         ret = (char *)s + i;
+         break;
+      }
+   }
+
+   return (void *)ret;
+}
+#endif
 
 #ifdef WIN32
 /* Source:
