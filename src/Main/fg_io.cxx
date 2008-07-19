@@ -182,10 +182,14 @@ FGIO::parse_port_config( const string& config )
 	    FGRUL *rul = new FGRUL;
 	    io = rul;
         } else if ( protocol == "generic" ) {
-            int n = 6;
-            if (tokens[1] == "socket")  n++;
-            else if (tokens[1] == "file") n--;
-            FGGeneric *generic = new FGGeneric( tokens[n] );
+            int configToken;
+            if (tokens[1] == "socket")
+                configToken = 7;
+            else if (tokens[1] == "file")
+                configToken = 5;
+            else
+                configToken = 6;
+            FGGeneric *generic = new FGGeneric( tokens[configToken] );
             io = generic;
 	} else if ( protocol == "multiplay" ) {
 	    if ( tokens.size() != 5 ) {
@@ -249,8 +253,10 @@ FGIO::parse_port_config( const string& config )
 	  
 	string file = tokens[4];
 	SG_LOG( SG_IO, SG_INFO, "  file name = " << file );
-
-	SGFile *ch = new SGFile( file );
+        bool repeat = false;
+        if (tokens.size() >= 7 && tokens[6] == "repeat")
+            repeat = true;
+	SGFile *ch = new SGFile( file, repeat );
 	io->set_io_channel( ch );
     } else if ( medium == "socket" ) {
         if ( tokens.size() < 6) {
