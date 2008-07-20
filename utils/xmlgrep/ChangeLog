@@ -1,3 +1,9 @@
+20-07-2008
+  * fix __xmlSkipComment to properly find the end of comment tag.
+  * add the xmlGetNodeName and xmlCopyNodeName functions
+  * add the xmlCopyString function
+  * clean up some code
+
 19-07-2008
   * rewrite the code to always recursively walk the node tree when searching
     for a particular node. this is required for cases where a node with a

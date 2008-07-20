@@ -185,8 +185,10 @@ void walk_the_tree(size_t num, void *xid, char *tree)
                 if ((xmlGetNodeNum(xid, xmid, _element, i) != 0)
                     && (xmlCompareString(xmid, _value) == 0))
                 {
+                    char *node = xmlGetNodeName(xid);
                     printf("%s: <%s>%s</%s>\n",
-                           _filenames[num], _element, _value, _element);
+                           _filenames[num], node, _value, node);
+                    free(node);
                 }
             }
             free(xmid);

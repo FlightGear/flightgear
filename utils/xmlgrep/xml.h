@@ -74,6 +74,25 @@ void *xmlGetNode(const void *, const char *);
 void *xmlCopyNode(void *, const char *);
 
 /**
+ * Return the name of this node.
+ * The returned string has to be freed by the calling program.
+ *
+ * @param xid XML-id
+ * @return a newly alocated string containing the node name.
+ */
+char *xmlGetNodeName(void *);
+
+/**
+ * Copy the name of this node in a pre-allocated buffer
+ *
+ * @param xid XML-id
+ * @param buffer the buffer to copy the string to
+ * @param buflen length of the destination buffer
+ * @return the length of the node name.
+ */
+size_t xmlCopyNodeName(void *, const char *, size_t);
+
+/**
  * Get the number of nodes with the same name from a specified xml path
  *
  * @param xid XML-id
@@ -90,9 +109,9 @@ unsigned int xmlGetNumNodes(void *, const char *);
  * @param xid XML-id
  * @param node name of the node to search for
  * @param num specify which occurence to return
- * @return name of the node or NULL if unsuccessful
+ * @return XML-subsection-id for further processing or NULL if unsuccessful
  */
-const char *xmlGetNodeNum(const void *, void *, const char *, int);
+void *xmlGetNodeNum(const void *, void *, const char *, int);
 
 /**
  * Compare the value of this node to a reference string.
@@ -119,7 +138,7 @@ int xmlCompareString(const void *, const char *);
  * @param buflen length of the destination buffer
  * @return the length of the string
  */
-unsigned int xmlCopyNodeString(void *, const char *, char *, const unsigned int);
+size_t xmlCopyNodeString(void *, const char *, char *, size_t);
 
 /**
  * Get a string of characters from the current node
@@ -139,6 +158,19 @@ char *xmlGetString(void *);
  * @return a newly alocated string containing the contents of the node.
  */
 char *xmlGetNodeString(void *, const char *);
+
+/**
+ * Get a string of characters from the current node
+ * This function has the advantage of not allocating its own return buffer,
+ * keeping the memory management to an absolute minimum but the disadvantage
+ * is that it's unreliable in multithread environments.
+ *
+ * @param xid XML-id
+ * @param buffer the buffer to copy the string to
+ * @param buflen length of the destination buffer
+ * @return the length of the string
+ */
+size_t xmlCopyString(void *,  char *, size_t);
 
 /**
  * Compare the value of a node to a reference string.
