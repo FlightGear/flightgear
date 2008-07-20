@@ -229,12 +229,6 @@
 				RelativePath="..\..\src\Airports\simple.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\Airports\trafficcontrol.cxx">
-			</File>
-			<File
-				RelativePath="..\..\src\Airports\trafficcontrol.hxx">
-			</File>
-			<File
 				RelativePath="..\..\src\Airports\xmlloader.cxx">
 			</File>
 			<File
@@ -581,10 +575,34 @@
 					RelativePath="..\..\src\Fdm\JSBSim\models\FGAuxiliary.h">
 				</File>
 				<File
+					RelativePath="..\..\src\Fdm\JSBSim\models\FGBuoyantForces.cpp">
+				</File>
+				<File
+					RelativePath="..\..\src\Fdm\JSBSim\models\FGBuoyantForces.h">
+				</File>
+				<File
+					RelativePath="..\..\src\Fdm\JSBSim\models\FGExternalForce.cpp">
+				</File>
+				<File
+					RelativePath="..\..\src\Fdm\JSBSim\models\FGExternalForce.h">
+				</File>
+				<File
+					RelativePath="..\..\src\Fdm\JSBSim\models\FGExternalReactions.cpp">
+				</File>
+				<File
+					RelativePath="..\..\src\Fdm\JSBSim\models\FGExternalReactions.h">
+				</File>
+				<File
 					RelativePath="..\..\src\Fdm\JSBSim\models\FGFCS.cpp">
 				</File>
 				<File
 					RelativePath="..\..\src\Fdm\JSBSim\models\FGFCS.h">
+				</File>
+				<File
+					RelativePath="..\..\src\Fdm\JSBSim\models\FGGasCell.cpp">
+				</File>
+				<File
+					RelativePath="..\..\src\Fdm\JSBSim\models\FGGasCell.h">
 				</File>
 				<File
 					RelativePath="..\..\src\Fdm\JSBSim\models\FGGroundReactions.cpp">
@@ -846,10 +864,16 @@
 					RelativePath="..\..\src\Fdm\JSBSim\input_output\FGXMLElement.h">
 				</File>
 				<File
+					RelativePath="..\..\src\Fdm\JSBSim\input_output\FGXMLFileRead.h">
+				</File>
+				<File
 					RelativePath="..\..\src\Fdm\JSBSim\input_output\FGXMLParse.cpp">
 				</File>
 				<File
 					RelativePath="..\..\src\Fdm\JSBSim\input_output\FGXMLParse.h">
+				</File>
+				<File
+					RelativePath="..\..\src\Fdm\JSBSim\input_output\net_fdm.hxx">
 				</File>
 			</Filter>
 			<Filter
@@ -1765,12 +1789,6 @@
 				RelativePath="..\..\src\GUI\gui_funcs.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\GUI\gui_local.cxx">
-			</File>
-			<File
-				RelativePath="..\..\src\GUI\gui_local.hxx">
-			</File>
-			<File
 				RelativePath="..\..\src\GUI\layout-props.cxx">
 			</File>
 			<File
@@ -1805,12 +1823,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\GUI\SafeTexFont.hxx">
-			</File>
-			<File
-				RelativePath="..\..\src\GUI\trackball.c">
-			</File>
-			<File
-				RelativePath="..\..\src\GUI\trackball.h">
 			</File>
 		</Filter>
 		<Filter
@@ -2902,6 +2914,16 @@
 			</File>
 			<File
 				RelativePath="..\..\src\Instrumentation\Kln89\kln89_symbols.hxx">
+			</File>
+		</Filter>
+		<Filter
+			Name="Lib_ATC"
+			Filter="">
+			<File
+				RelativePath="..\..\src\Atc\trafficcontrol.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Atc\trafficcontrol.hxx">
 			</File>
 		</Filter>
 		<File
