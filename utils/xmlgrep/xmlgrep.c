@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <strings.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -166,13 +167,11 @@ void walk_the_tree(size_t num, void *xid, char *tree)
             {
                 if (xmlGetNodeNum(xid, xmid, _print, i) != 0)
                 {
-                    char *value = xmlGetString(xmid);
-                    if (value)
-                    {
-                        printf("%s: <%s>%s</%s>\n",
-                               _filenames[num], _print, value, _print);
-                        free(value);
-                    }
+                    char value[64];
+
+                    xmlCopyString(xmid, (char *)&value, 64);
+                    printf("%s: <%s>%s</%s>\n",
+                           _filenames[num], _print, value, _print);
                 }
             }
             free(xmid);
@@ -182,19 +181,44 @@ void walk_the_tree(size_t num, void *xid, char *tree)
             no_elements = xmlGetNumNodes(xmid, _element);
             for (i=0; i<no_elements; i++)
             {
-                if ((xmlGetNodeNum(xid, xmid, _element, i) != 0)
-                    && (xmlCompareString(xmid, _value) == 0))
+                if (xmlGetNodeNum(xid, xmid, _element, i) != 0)
                 {
-                    char *node = xmlGetNodeName(xid);
-                    printf("%s: <%s>%s</%s>\n",
-                           _filenames[num], node, _value, node);
-                    free(node);
+                    char nodename[64];
+
+                    xmlCopyNodeName(xmid, (char *)&nodename, 64);
+                    if (xmlCompareString(xmid, _value) == 0)
+                    {
+                        printf("%s: <%s>%s</%s>\n",
+                               _filenames[num], nodename, _value, nodename);
+                    }
                 }
             }
             free(xmid);
         }
         else if (xmid && _element)
         {
+            char parentname[64];
+
+            xmlCopyNodeName(xid, (char *)&parentname, 64);
+
+            no_elements = xmlGetNumNodes(xmid, _element);
+            for (i=0; i<no_elements; i++)
+            {
+                if (xmlGetNodeNum(xid, xmid, _element, i) != 0)
+                {
+                    char nodename[64];
+
+                    xmlCopyNodeName(xmid, (char *)&nodename, 64);
+                    if (strncasecmp((char *)&nodename, _element, 64) == 0)
+                    {
+                        char value[64];
+                        xmlCopyString(xmid, (char *)&value, 64);
+                        printf("%s: <%s> <%s>%s</%s> </%s>\n",
+                                _filenames[num], parentname, nodename, value,
+                                                 nodename, parentname);
+                    }
+                }
+            }
         }
         else printf("Error executing xmlMarkId\n");
     }

@@ -1,3 +1,10 @@
+21-07-2008
+  * change a number of function parameters to const where appropriate
+  * fix a problem where the wrong node-name length was returned
+  * xmlgrep now also works when only the -e options is specified
+  * fix xmlgrep to show the correct node-name (it reported the parent
+    node-name in the previous version)
+
 20-07-2008
   * fix __xmlSkipComment to properly find the end of comment tag.
   * add the xmlGetNodeName and xmlCopyNodeName functions
@@ -9,7 +16,7 @@
     for a particular node. this is required for cases where a node with a
     particular name is located deeper in a node with the same name;
     for example -r /configuration/device/reference/device would fail in the 
-    previous verion
+    previous version
   * rename xmlGetElement to xmlGetNodeNum and add the possibility to request
     the nth node with this name
   * rename xmlGetNumElements to xmlGetNumNodes
@@ -17,7 +24,7 @@
 06-07-2008
   * reorganize the code to be able to skip comment sections
   * depreciate __xmlFindNextElement and use __xmlGetNode instead
-  * xmlGetNextElement now returns char* instead of void* for furute use
+  * xmlGetNextElement now returns char* instead of void* for future use
   * add preliminary support for wildcards in the search path ('*' and '?')
 
 01-07-2008

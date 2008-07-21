@@ -7,8 +7,8 @@ the memory footprint can be kept low and the library can be kept simple.
 
 To achieve these goals the mmap function is used to map the configuration file
 to a memory region. The only places where memory is allocated is when creating
-a new XML-id, when requesting a string from a node or when a request is made to
-copy a node.
+a new XML-id, when requesting a string from a node, when requesting the node
+name or when a request is made to copy a node into a new memory region.
 
 Using this library should be pretty simple for most tasks; just open a file,
 read every parameter one by one and close the id again.
@@ -25,9 +25,8 @@ read every parameter one by one and close the id again.
 While it is certainly possible to access every node directly by calling the
 xmlGetNode(Int/Double/String) functions, when more than one node need to be
 gathered from a parent node it is advised to get the id of the parent node
-and work from there. This is because the XML-id holds the boundaries of the
-(parent)node which limits the searching area resulting in improved searching
-speed.
+and work from there since the XML-id holds the boundaries of the (parent)node
+which limits the searching area resulting in improved searching speed.
 {
    void *xnid;
    char *s;
@@ -63,9 +62,9 @@ void *xmlCopyNode(void *, const char *);
 # Functions to walk the node tree and process them one by one.
 # e.g.
 #   xmid = xmlMarkId(id);
-#   num = xmlGetNumElements(xmid);
+#   num = xmlGetNumNodes(xmid);
 #   for (i=0; i<num; i++) {
-#      if (xmlGetNextElement(id, xmid, "element") != 0) {
+#      if (xmlGetNodeNum(id, xmid, "element", i) != 0) {
 #         if ((s = xmlGetString(xmid)) != 0) {
 #            printf("%s\n", s);
 #            free(s);
@@ -75,8 +74,14 @@ void *xmlCopyNode(void *, const char *);
 #   free(xmid);
 #
 void *xmlMarkId(void *);
-unsigned int xmlGetNumElements(void *, const char *);
-void *xmlGetNextElement(const void *, void *, const char *);
+unsigned int xmlGetNumNodes(void *, const char *);
+void *xmlGetNodeNum(const void *, void *, const char *, int);
+
+#
+# Get the name of the current node
+#
+char *xmlGetNodeName(void *);
+size_t xmlCopyNodeName(void *, const char *, size_t);
 
 #
 # These functions work on the current node.
@@ -90,6 +95,7 @@ void *xmlGetNextElement(const void *, void *, const char *);
 long int xmlGetInt(void *);
 double xmlGetDouble(void *);
 char *xmlGetString(void *);
+size_t xmlCopyString(void *, char *, const size_t);
 int xmlCompareString(const void *, const char *);
 
 #
@@ -103,5 +109,5 @@ int xmlCompareString(const void *, const char *);
 long int xmlGetNodeInt(void *, const char *);
 double xmlGetNodeDouble(void *, const char *);
 char *xmlGetNodeString(void *, const char *);
-unsigned xmlCopyNodeString(void *, const char *, char *, const unsigned int);
+size_t xmlCopyNodeString(void *, const char *, char *, const size_t);
 int xmlCompareNodeString(const void *, const char *, const char *);
