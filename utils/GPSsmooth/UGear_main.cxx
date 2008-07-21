@@ -1076,7 +1076,7 @@ int main( int argc, char **argv ) {
                     health_time = healthpacket.time;
                     current_time = health_time;
                     printf("Received a health packet, sequence: %d\n",
-                           healthpacket.command_sequence);
+                           (int)healthpacket.command_sequence);
                     command_mgr.update_cmd_sequence(healthpacket.command_sequence);
                 } else {
                     cout << "oops health back in time: " << healthpacket.time << " " << health_time << endl;
@@ -1111,9 +1111,9 @@ int main( int argc, char **argv ) {
             if ( current_time >= last_time + (1/hertz) ) {
                 // if ( gpspacket.lat > -500 ) {
                 int londeg = (int)navpacket.lon;
-                double lonmin = fabs(navpacket.lon - londeg);
+                // double lonmin = fabs(navpacket.lon - londeg);
                 int latdeg = (int)navpacket.lat;
-                double latmin = fabs(navpacket.lat - latdeg);
+                // double latmin = fabs(navpacket.lat - latdeg);
                 char londir = 'E'; if ( londeg < 0 ) londir = 'W';
                 char latdir = 'N'; if ( latdeg < 0 ) latdir = 'S';
                 londeg = abs(londeg);
