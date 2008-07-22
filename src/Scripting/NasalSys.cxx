@@ -28,6 +28,7 @@
 #include <Airports/simple.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/util.hxx>
 #include <Scenery/scenery.hxx>
 
 #include "NasalSys.hxx"
@@ -380,7 +381,7 @@ static naRef f_directory(naContext c, naRef me, int argc, naRef* args)
 // <pi>        ... callback function with two args: target, data
 //                 (pi = "processing instruction")
 // All four callback functions are optional and default to nil.
-// The function returns nil on error, and the file name otherwise.
+// The function returns nil on error, or the validated file name otherwise.
 static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
 {
     if(argc < 1 || !naIsString(args[0]))
@@ -390,7 +391,12 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
         if(!(naIsNil(args[i]) || naIsFunc(args[i])))
             naRuntimeError(c, "parsexml(): callback argument not a function");
 
-    const char* file = naStr_data(args[0]);
+    const char* file = fgValidatePath(naStr_data(args[0]), false);
+    if(!file) {
+        naRuntimeError(c, "parsexml(): reading '%s' denied "
+                "(unauthorized access)", naStr_data(args[0]));
+        return naNil();
+    }
     std::ifstream input(file);
     NasalXMLVisitor visitor(c, argc, args);
     try {
@@ -400,7 +406,7 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
                 file, e.getFormattedMessage().c_str());
         return naNil();
     }
-    return args[0];
+    return naStr_fromdata(naNewString(c), const_cast<char*>(file), strlen(file));
 }
 
 // Return UNIX epoch time in seconds.
@@ -418,7 +424,6 @@ static naRef f_systime(naContext c, naRef me, int argc, naRef* args)
     do { t = time(0); gettimeofday(&td, 0); } while(t != time(0));
     return naNum(t + 1e-6 * td.tv_usec);
 #endif
-
 }
 
 // Convert a cartesian point to a geodetic lat/lon/altitude.

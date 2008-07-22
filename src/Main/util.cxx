@@ -198,6 +198,9 @@ fgUnescape (const char *s)
 }
 
 
+// Write out path to validation node and read it back in. A Nasal
+// listener is supposed to replace the path with a validated version
+// or an empty string otherwise.
 const char *fgValidatePath (const char *str, bool write)
 {
     static SGPropertyNode_ptr r, w;
