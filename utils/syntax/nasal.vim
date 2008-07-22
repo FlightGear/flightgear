@@ -77,13 +77,14 @@ if !exists("nasal_no_fgfs")
 	syn keyword nasalFGFSFunction		geodtocart carttogeod geodinfo parsexml airportinfo abort
 
 	syn keyword nasalGlobalsFunction	isa fgcommand cmdarg abs interpolate setlistener defined printlog
+	syn keyword nasalGlobalsFunction	thisfunc
 
 	syn keyword nasalPropsFunction		getType getName getIndex getValue setValue setIntValue
 	syn keyword nasalPropsFunction		setBoolValue setDoubleValue getParent getChild getChildren
 	syn keyword nasalPropsFunction		getAttribute setAttribute
 	syn keyword nasalPropsFunction		removeChild removeChildren getNode
 	syn keyword nasalPropsFunction		getPath getBoolValue setValues getValues
-	syn match   nasalPropsFunction		"\<props\.\(_\?globals\|Node\|nodeList\|initNode\)\>\.\="
+	syn match   nasalPropsFunction		"\<props\.\(_\?globals\|Node\|nodeList\|initNode\|condition\)\>\.\="
 endif
 
 
