@@ -38,11 +38,9 @@ INCLUDES
 
 #include "FGTank.h"
 
-#if !defined ( sgi ) || defined( __GNUC__ ) && (_COMPILER_VERSION < 740)
 using std::cerr;
 using std::endl;
 using std::cout;
-#endif
 
 namespace JSBSim {
 

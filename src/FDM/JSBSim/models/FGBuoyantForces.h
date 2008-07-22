@@ -39,19 +39,8 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
-#    include <vector>
-#    include <map>
-#  else
-#    include <vector.h>
-#    include <map.h>
-#  endif
-#else
-#  include <vector>
-#  include <map>
-#endif
+#include <vector>
+#include <map>
 
 #include "FGModel.h"
 #include "FGGasCell.h"

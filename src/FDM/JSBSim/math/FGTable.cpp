@@ -37,12 +37,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGTable.h"
-
-#if defined ( sgi ) && !defined( __GNUC__ ) && (_COMPILER_VERSION < 740)
-# include <iomanip.h>
-#else
-# include <iomanip>
-#endif
+#include <iomanip>
 
 using namespace std;
 

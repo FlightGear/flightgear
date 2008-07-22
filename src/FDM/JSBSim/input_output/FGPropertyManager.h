@@ -37,11 +37,7 @@ INCLUDES
 
 #include <string>
 #include <iostream>
-#ifdef FGFS
-#  include <simgear/props/props.hxx>
-#else
-#  include "simgear/props/props.hxx"
-#endif
+#include "simgear/props/props.hxx"
 
 #include "FGJSBBase.h"
 

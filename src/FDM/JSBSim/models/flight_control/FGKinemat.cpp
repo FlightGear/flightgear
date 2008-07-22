@@ -37,10 +37,9 @@ COMMENTS, REFERENCES,  and NOTES
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include "FGKinemat.h"
 #include <math.h>
 #include <float.h>
-
-#include "FGKinemat.h"
 
 namespace JSBSim {
 

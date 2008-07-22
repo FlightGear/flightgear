@@ -38,20 +38,7 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
-#    include <cmath>
-#  else
-#    include <math.h>
-#  endif
-#else
-#  if defined(sgi) && !defined(__GNUC__)
-#    include <math.h>
-#  else
-#    include <cmath>
-#  endif
-#endif
+#include <cmath>
 
 #include "FGLocation.h"
 #include <input_output/FGPropertyManager.h>

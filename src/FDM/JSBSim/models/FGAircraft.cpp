@@ -41,22 +41,7 @@ INCLUDES
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#ifdef FGFS
-#  ifndef __BORLANDC__
-#    include <simgear/compiler.h>
-#  endif
-#  ifdef SG_HAVE_STD_INCLUDES
-#    include <cmath>
-#  else
-#    include <math.h>
-#  endif
-#else
-#  if defined (sgi) && !defined(__GNUC__)
-#    include <math.h>
-#  else
-#    include <cmath>
-#  endif
-#endif
+#include <cmath>
 
 #include "FGAircraft.h"
 #include "FGMassBalance.h"

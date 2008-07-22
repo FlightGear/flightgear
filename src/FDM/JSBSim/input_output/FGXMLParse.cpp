@@ -30,7 +30,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGXMLParse.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace JSBSim {
 

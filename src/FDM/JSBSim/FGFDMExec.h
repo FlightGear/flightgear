@@ -68,6 +68,7 @@ FORWARD DECLARATIONS
 namespace JSBSim {
 
 class FGScript;
+class FGTrim;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION

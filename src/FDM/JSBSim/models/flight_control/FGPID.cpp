@@ -101,9 +101,6 @@ FGPID::FGPID(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
     }
   }
 
-  //if (element->FindElement("kp")) Kp = element->FindElementValueAsNumber("kp");
-  //if (element->FindElement("ki")) Ki = element->FindElementValueAsNumber("ki");
-  //if (element->FindElement("kd")) Kd = element->FindElementValueAsNumber("kd");
   if (element->FindElement("trigger")) {
     Trigger =  PropertyManager->GetNode(element->FindElementValue("trigger"));
   }

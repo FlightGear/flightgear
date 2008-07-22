@@ -39,30 +39,15 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <stdio.h>
-
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  include STL_STRING
-#  include STL_IOSTREAM
-#  include STL_FSTREAM
-   SG_USING_STD(cout);
-   SG_USING_STD(endl);
-#else
-#  include <string>
-#  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
-#    include <iostream.h>
-#    include <fstream.h>
-#  else
-#    include <iostream>
-#    include <fstream>
-     using std::cout;
-     using std::endl;
-#  endif
-#endif
-
+#include <cstdio>
+#include <string>
+#include <iostream>
+#include <fstream>
 #include <sys/types.h>
 #include "FGJSBBase.h"
+
+using std::cout;
+using std::endl;
 
 #if defined(__BORLANDC__) || defined(_MSC_VER) || defined(__MINGW32__)
   #include <winsock.h>
@@ -77,9 +62,7 @@ INCLUDES
 #endif
 
 #ifdef _MSC_VER
-
-#pragma comment (lib,"WSock32.lib")
-
+#  pragma comment (lib,"WSock32.lib")
 #endif
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

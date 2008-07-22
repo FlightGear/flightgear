@@ -38,10 +38,6 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#endif
-
 #include "FGModel.h"
 #include "FGExternalForce.h"
 #include <input_output/FGXMLElement.h>

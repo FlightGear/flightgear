@@ -41,19 +41,6 @@ COMMENTS, REFERENCES,  and NOTES
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  include STL_IOSTREAM
-#  include STL_ITERATOR
-#else
-#  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
-#    include <iostream.h>
-#  else
-#    include <iostream>
-#  endif
-#  include <iterator>
-#endif
-
 #include "FGFDMExec.h"
 #include "FGState.h"
 #include <models/FGAtmosphere.h>
@@ -76,6 +63,9 @@ INCLUDES
 //#include <initialization/FGTrimAnalysis.h> // Remove until later
 #include <input_output/FGPropertyManager.h>
 #include <input_output/FGScript.h>
+
+#include <iostream>
+#include <iterator>
 
 namespace JSBSim {
 

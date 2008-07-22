@@ -64,7 +64,6 @@ static const char *IdHdr = ID_ATMOSPHERE;
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-
 FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Name = "FGAtmosphere";

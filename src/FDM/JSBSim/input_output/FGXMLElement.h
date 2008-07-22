@@ -34,35 +34,16 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
-#    include <string>
-#    include <vector>
-#    include <iostream>
-#    include <map>
-#  else
-#    include <vector.h>
-#    include <string>
-#    include <iostream.h>
-#    include <map.h>
-#  endif
-#else
-#  include <string>
-#  include <map>
-#  include <iostream>
-#  include <vector>
-   using std::string;
-   using std::map;
-   using std::vector;
-   using std::cout;
-   using std::endl;
-#endif
-   using std::string;
-   using std::map;
-   using std::vector;
-   using std::cout;
-   using std::endl;
+#include <string>
+#include <map>
+#include <iostream>
+#include <vector>
+
+using std::string;
+using std::map;
+using std::vector;
+using std::cout;
+using std::endl;
 
 #include <math/FGColumnVector3.h>
 

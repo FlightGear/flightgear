@@ -42,21 +42,6 @@ you have chosen your IC's wisely) even after setting it up with this class.
 INCLUDES
 *******************************************************************************/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
-#    include <fstream>
-#  else
-#    include <fstream.h>
-#  endif
-#else
-#  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
-#    include <fstream.h>
-#  else
-#    include <fstream>
-#  endif
-#endif
-
 #include "FGInitialCondition.h"
 #include <FGFDMExec.h>
 #include <models/FGInertial.h>
@@ -66,8 +51,8 @@ INCLUDES
 #include <input_output/FGPropertyManager.h>
 #include <models/FGPropulsion.h>
 #include <input_output/FGXMLParse.h>
-
 #include <math/FGQuaternion.h>
+#include <fstream>
 
 namespace JSBSim {
 

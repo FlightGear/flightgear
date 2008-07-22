@@ -41,22 +41,12 @@ COMMENTS, REFERENCES,  and NOTES
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  include STL_IOSTREAM
-#  include STL_ITERATOR
-#else
-#  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
-#    include <iostream.h>
-#  else
-#    include <iostream>
-#  endif
-#  include <iterator>
-#endif
-
 #include "FGScript.h"
 #include <input_output/FGXMLParse.h>
 #include <initialization/FGTrim.h>
+
+#include <iostream>
+#include <iterator>
 
 namespace JSBSim {
 

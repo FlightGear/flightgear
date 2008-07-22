@@ -23,11 +23,9 @@
  Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
-
  HISTORY
 --------------------------------------------------------------------------------
 9/8/99   TP   Created
-
 
 FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
@@ -43,12 +41,10 @@ scheme. */
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <stdlib.h>
-
-#include <FGFDMExec.h>
+#include <cstdlib>
+#include "FGTrim.h"
 #include <models/FGAtmosphere.h>
 #include "FGInitialCondition.h"
-#include "FGTrim.h"
 #include <models/FGAircraft.h>
 #include <models/FGMassBalance.h>
 #include <models/FGGroundReactions.h>

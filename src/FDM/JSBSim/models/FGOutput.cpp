@@ -68,7 +68,6 @@ INCLUDES
 static const int endianTest = 1;
 #define isLittleEndian (*((char *) &endianTest ) != 0)
 
-
 namespace JSBSim {
 
 static const char *IdSrc = "$Id$";

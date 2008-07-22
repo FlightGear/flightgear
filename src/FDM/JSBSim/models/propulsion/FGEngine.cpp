@@ -37,27 +37,13 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
-#    include <fstream>
-#  else
-#    include <fstream.h>
-#  endif
-#else
-#  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
-#    include <fstream.h>
-#  else
-#    include <fstream>
-#  endif
-#endif
-
 #include "FGEngine.h"
 #include "FGTank.h"
 #include "FGPropeller.h"
 #include "FGNozzle.h"
 #include <input_output/FGXMLParse.h>
 #include <math/FGColumnVector3.h>
+#include <fstream>
 
 namespace JSBSim {
 

@@ -41,21 +41,7 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
-#    include <fstream>
-#  else
-#    include <fstream.h>
-#  endif
-#else
-#  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
-#    include <fstream.h>
-#  else
-#    include <fstream>
-#  endif
-#endif
-
+#include <fstream>
 #include <string>
 #include <map>
 #include "FGJSBBase.h"

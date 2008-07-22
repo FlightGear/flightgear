@@ -29,29 +29,9 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGXMLElement.h"
-#ifdef FGFS
-#  ifndef __BORLANDC__
-#    include <simgear/compiler.h>
-#  endif
-#  ifdef SG_HAVE_STD_INCLUDES
-#    include <cmath>
-#    include <cstdlib>
-#  else
-#    include <math.h>
-#    include <stdlib.h>
-#  endif
-#else
-#  if defined (sgi) && !defined(__GNUC__)
-#    include <math.h>
-#    include <stdlib.h>
-#  else
-#    include <cmath>
-#    include <cstdlib>
-#  endif
-#endif
 
-#include <stdlib.h>
-#include <math.h>
+#include <cmath>
+#include <cstdlib>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS

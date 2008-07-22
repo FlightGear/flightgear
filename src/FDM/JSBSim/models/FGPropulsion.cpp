@@ -167,16 +167,16 @@ bool FGPropulsion::Run(void)
 
 bool FGPropulsion::GetSteadyState(void)
 {
-  double currentThrust = 0, lastThrust=-1;
-  int steady_count,j=0;
-  bool steady=false;
+  double currentThrust = 0, lastThrust = -1;
+  int steady_count = 0, j = 0;
+  bool steady = false;
 
   vForces.InitMatrix();
   vMoments.InitMatrix();
 
   if (!FGModel::Run()) {
     for (unsigned int i=0; i<numEngines; i++) {
-      cout << "  Finding steady state for engine " << i << endl;
+//      cout << "  Finding steady state for engine " << i << endl;
       Engines[i]->SetTrimMode(true);
       steady=false;
       steady_count=0;
@@ -189,16 +189,16 @@ bool FGPropulsion::GetSteadyState(void)
           steady_count++;
           if (steady_count > 120) {
             steady=true;
-            cout << "    Steady state found at thrust: " << currentThrust << " lbs." << endl;
+//            cout << "    Steady state found at thrust: " << currentThrust << " lbs." << endl;
           }
         } else {
           steady_count=0;
         }
         j++;
       }
-      if (j >= 6000) {
-        cout << "    Could not find a steady state for this engine." << endl;
-      }
+//      if (j >= 6000) {
+//        cout << "    Could not find a steady state for this engine." << endl;
+//      }
       vForces  += Engines[i]->GetBodyForces();  // sum body frame forces
       vMoments += Engines[i]->GetMoments();     // sum body frame moments
       Engines[i]->SetTrimMode(false);
