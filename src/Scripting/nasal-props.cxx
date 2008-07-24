@@ -267,12 +267,13 @@ static naRef f_removeChild(naContext c, naRef me, int argc, naRef* args)
     naRef child = naVec_get(argv, 0);
     naRef index = naVec_get(argv, 1);
     if(!naIsString(child) || !naIsNum(index)) return naNil();
+    SGPropertyNode* n = 0;
     try {
-        (*node)->removeChild(naStr_data(child), (int)index.num, false);
+        n = (*node)->removeChild(naStr_data(child), (int)index.num, false);
     } catch (const string& err) {
         naRuntimeError(c, (char *)err.c_str());
     }
-    return naNil();
+    return propNodeGhostCreate(c, n);
 }
 
 static naRef f_removeChildren(naContext c, naRef me, int argc, naRef* args)
