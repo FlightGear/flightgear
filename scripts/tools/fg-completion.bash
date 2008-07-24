@@ -263,7 +263,7 @@ __fgfs() {
 		alt=$(__fgfs_offer jsbsim yasim uiuc larcsim ufo magic)
 		;;
 	--geometry=*)
-		atl=$(__fgfs_offer 640x480 800x600 1024x768 1152x864 1600x1200)
+		alt=$(__fgfs_offer 640x480 800x600 1024x768 1152x864 1600x1200)
 		;;
 	--log-level=*)
 		alt=$(__fgfs_offer bulk debug info warn alert)
