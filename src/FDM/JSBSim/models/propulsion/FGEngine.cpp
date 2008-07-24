@@ -254,10 +254,6 @@ bool FGEngine::LoadThruster(Element *thruster_element)
   FGColumnVector3 location, orientation;
   string separator = "/";
 
-# ifdef macintosh
-    separator = ";";
-# endif
-
   fullpath = enginePath + separator;
   localpath = aircraftPath + separator + "Engines" + separator;
 

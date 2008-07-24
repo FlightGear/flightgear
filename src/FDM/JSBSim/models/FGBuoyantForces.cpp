@@ -116,9 +116,6 @@ bool FGBuoyantForces::Load(Element *element)
   Debug(2);
 
   string separator = "/";
-#ifdef macintosh
-  separator = ";";
-#endif
 
   fname = element->GetAttributeValue("file");
   if (!fname.empty()) {

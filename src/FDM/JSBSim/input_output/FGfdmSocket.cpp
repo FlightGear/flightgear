@@ -205,10 +205,8 @@ FGfdmSocket::FGfdmSocket(int port)
 
 FGfdmSocket::~FGfdmSocket()
 {
-  #ifndef macintosh
   if (sckt) shutdown(sckt,2);
   if (sckt_in) shutdown(sckt_in,2);
-  #endif
 
   #ifdef __BORLANDC__
     WSACleanup();

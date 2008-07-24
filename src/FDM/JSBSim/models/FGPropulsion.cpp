@@ -336,9 +336,6 @@ string FGPropulsion::FindEngineFullPathname(string engine_filename)
   ifstream engine_file;
 
   string separator = "/";
-# ifdef macintosh
-  separator = ";";
-# endif
 
   fullpath = enginePath + separator;
   localpath = aircraftPath + separator + "Engines" + separator;
@@ -367,9 +364,6 @@ ifstream* FGPropulsion::FindEngineFile(string engine_filename)
   ifstream* engine_file = new ifstream();
 
   string separator = "/";
-# ifdef macintosh
-  separator = ";";
-# endif
 
   fullpath = enginePath + separator;
   localpath = aircraftPath + separator + "Engines" + separator;

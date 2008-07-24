@@ -308,9 +308,6 @@ bool FGAerodynamics::Load(Element *element)
   Element *temp_element, *axis_element, *function_element;
 
   string separator = "/";
-#ifdef macintosh
-  separator = ";";
-#endif
 
   fname = element->GetAttributeValue("file");
   if (!fname.empty()) {

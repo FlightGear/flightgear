@@ -479,10 +479,6 @@ bool FGFDMExec::LoadModel(string model, bool addModelToPath)
 
   modelName = model; // Set the class modelName attribute
 
-# ifdef macintosh
-    separator = ";";
-# endif
-
   if( AircraftPath.empty() || EnginePath.empty() || SystemsPath.empty()) {
     cerr << "Error: attempted to load aircraft with undefined ";
     cerr << "aircraft, engine, and system paths" << endl;

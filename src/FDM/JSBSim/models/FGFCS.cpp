@@ -494,9 +494,6 @@ bool FGFCS::Load(Element* el, SystemType systype)
   Components=0;
 
   string separator = "/";
-#ifdef macintosh
-  separator = ";";
-#endif
 
 // ToDo: The handling of name and file attributes could be improved, here,
 //       considering that a name can be in the external file, as well.
@@ -649,9 +646,6 @@ string FGFCS::FindSystemFullPathname(string system_filename)
   ifstream system_file;
 
   string separator = "/";
-# ifdef macintosh
-  separator = ";";
-# endif
 
   fullpath = systemPath + separator;
   localpath = aircraftPath + separator + "Systems" + separator;
@@ -680,9 +674,6 @@ ifstream* FGFCS::FindSystemFile(string system_filename)
   ifstream* system_file = new ifstream();
 
   string separator = "/";
-# ifdef macintosh
-  separator = ";";
-# endif
 
   fullpath = systemPath + separator;
   localpath = aircraftPath + separator + "Systems" + separator;

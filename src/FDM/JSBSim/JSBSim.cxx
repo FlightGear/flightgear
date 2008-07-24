@@ -311,6 +311,7 @@ void FGJSBsim::init()
                   9.0/5.0*(temperature->getDoubleValue()+273.15) );
       Atmosphere->SetExPressure(pressure->getDoubleValue()*70.726566);
       Atmosphere->SetExDensity(density->getDoubleValue());
+      Atmosphere->SetTurbType(FGAtmosphere::ttCulp);
       Atmosphere->SetTurbGain(turbulence_gain->getDoubleValue());
       Atmosphere->SetTurbRate(turbulence_rate->getDoubleValue());
 

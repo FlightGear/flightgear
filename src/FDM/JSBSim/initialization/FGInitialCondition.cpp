@@ -826,10 +826,6 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
   int n;
 
   string sep = "/";
-# ifdef macintosh
-   sep = ";";
-# endif
-
   if( useStoredPath ) {
     init_file_name = fdmex->GetFullAircraftPath() + sep + rstfile + ".xml";
   } else {

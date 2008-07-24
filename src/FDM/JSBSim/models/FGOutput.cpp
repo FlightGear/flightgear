@@ -885,9 +885,6 @@ bool FGOutput::Load(Element* element)
   Element *property_element;
 
   string separator = "/";
-# ifdef macintosh
-  separator = ";";
-# endif
 
   if (!DirectivesFile.empty()) { // A directives filename from the command line overrides
     output_file_name = DirectivesFile;      // one found in the config file.

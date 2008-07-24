@@ -75,11 +75,6 @@
 
 #include <simgear/compiler.h>
 
-#if defined( __MWERKS__ )
-// -dw- optimizer chokes (big-time) trying to optimize humongous
-// loop/switch statements
-#pragma optimization_level 0
-#endif
 
 #include <cstdlib>
 #include <string>
