@@ -450,16 +450,6 @@
 			</Filter>
 		</Filter>
 		<Filter
-			Name="Lib_Balloon"
-			Filter="">
-			<File
-				RelativePath="..\..\src\FDM\Balloon\BalloonSim.cpp">
-			</File>
-			<File
-				RelativePath="..\..\src\FDM\Balloon\BalloonSim.h">
-			</File>
-		</Filter>
-		<Filter
 			Name="Lib_JSBSim"
 			Filter="">
 			<File
@@ -1731,12 +1721,6 @@
 			Name="Lib_Flight"
 			Filter="">
 			<File
-				RelativePath="..\..\src\FDM\Balloon.cxx">
-			</File>
-			<File
-				RelativePath="..\..\src\FDM\Balloon.h">
-			</File>
-			<File
 				RelativePath="..\..\src\FDM\flight.cxx">
 			</File>
 			<File
@@ -1747,12 +1731,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\Fdm\groundcache.hxx">
-			</File>
-			<File
-				RelativePath="..\..\src\FDM\MagicCarpet.cxx">
-			</File>
-			<File
-				RelativePath="..\..\src\FDM\MagicCarpet.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\FDM\NullFDM.cxx">
