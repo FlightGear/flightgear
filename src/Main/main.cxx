@@ -340,14 +340,6 @@ static void fgMainLoop( void ) {
     SG_LOG( SG_ALL, SG_DEBUG, "Running Main Loop");
     SG_LOG( SG_ALL, SG_DEBUG, "======= ==== ====");
 
-#if defined( ENABLE_PLIB_JOYSTICK )
-    // Read joystick and update control settings
-    // if ( fgGetString("/sim/control-mode") == "joystick" )
-    // {
-    //    fgJoystickRead();
-    // }
-#endif
-
     // Fix elevation.  I'm just sticking this here for now, it should
     // probably move eventually
 
@@ -879,16 +871,6 @@ static void fgIdleFunction ( void ) {
             system ( command.c_str() );
         }
 #endif
-
-        // These are a few miscellaneous things that aren't really
-        // "subsystems" but still need to be initialized.
-
-#ifdef USE_GLIDE
-        if ( strstr ( general.get_glRenderer(), "Glide" ) ) {
-            grTexLodBiasValue ( GR_TMU0, 1.0 ) ;
-        }
-#endif
-
         // This is the top level init routine which calls all the
         // other subsystem initialization routines.  If you are adding
         // a subsystem to flightgear, its initialization call should be
@@ -1011,13 +993,8 @@ bool fgMainInit( int argc, char **argv ) {
     }
 
     // Initialize the Window/Graphics environment.
-#if !defined(__APPLE__) || defined(OSX_BUNDLE)
-    // Mac OS X command line ("non-bundle") applications call this
-    // from main(), in bootstrap.cxx.  Andy doesn't know why, someone
-    // feel free to add comments...
     fgOSInit(&argc, argv);
     _bootstrap_OSInit++;
-#endif
 
     fgRegisterWindowResizeHandler( &FGRenderer::resize );
     fgRegisterIdleHandler( &fgIdleFunction );

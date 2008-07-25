@@ -88,25 +88,6 @@ handleFPE (int num)
 }
 #endif
 
-#ifdef __APPLE__
-
-typedef struct
-{
-  int  lo;
-  int  hi;
-} PSN;
-
-extern "C" {
-  short CPSGetCurrentProcess(PSN *psn);
-  short CPSSetProcessName (PSN *psn, char *processname);
-  short CPSEnableForegroundOperation(PSN *psn, int _arg2, int _arg3, int _arg4, int _arg5);
-  short CPSSetFrontProcess(PSN *psn);
-};
-
-#define CPSEnableFG(psn) CPSEnableForegroundOperation(psn,0x03,0x3C,0x2C,0x1103)
-
-#endif
-
 #ifdef _MSC_VER
 int main ( int argc, char **argv );
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
@@ -192,21 +173,6 @@ int main ( int argc, char **argv ) {
 
 #if defined( HAVE_BC5PLUS )
     _control87(MCW_EM, MCW_EM);  /* defined in float.h */
-#endif
-
-    // Keyboard focus hack
-#if defined(__APPLE__) && !defined(OSX_BUNDLE)
-    {
-      PSN psn;
-
-      fgOSInit (&argc, argv);
-      _bootstrap_OSInit++;
-
-      CPSGetCurrentProcess(&psn);
-      CPSSetProcessName(&psn, "FlightGear");
-      CPSEnableFG(&psn);
-      CPSSetFrontProcess(&psn);
-    }
 #endif
 
     // FIXME: add other, more specific
