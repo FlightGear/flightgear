@@ -1421,11 +1421,11 @@ void fgInitFDM() {
         cur_fdm_state = new FGADA( dt );
     } else if ( model == "acms" ) {
         cur_fdm_state = new FGACMS( dt );
-#endif
     } else if ( model == "balloon" ) {
         cur_fdm_state = new FGBalloonSim( dt );
     } else if ( model == "magic" ) {
         cur_fdm_state = new FGMagicCarpet( dt );
+#endif
     } else if ( model == "ufo" ) {
         cur_fdm_state = new FGUFO( dt );
     } else if ( model == "external" ) {
