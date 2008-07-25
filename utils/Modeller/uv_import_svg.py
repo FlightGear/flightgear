@@ -9,7 +9,7 @@
 
 __author__ = "Melchior FRANZ < mfranz # aon : at >"
 __url__ = "http://www.flightgear.org/"
-__version__ = "0.1"
+__version__ = "0.2"
 __bpydoc__ = """\
 Imports an SVG file containing UV maps, which has been saved by the
 uv_export.svg script. This allows to move, scale, and rotate object
@@ -42,7 +42,7 @@ ID_SEPARATOR = '_.:._'
 
 
 import Blender, BPyMessages, sys, math, re
-from xml.sax import saxexts
+from xml.sax import handler, make_parser
 
 
 numwsp = re.compile('(?<=[\d.])\s+(?=[-+.\d])')
@@ -73,9 +73,7 @@ class Matrix:
 		self.a = a; self.b = b; self.c = c; self.d = d; self.e = e; self.f = f
 
 	def transform(self, u, v):
-		x = u * self.a + v * self.c + self.e
-		y = u * self.b + v * self.d + self.f
-		return (x, y)
+		return u * self.a + v * self.c + self.e, u * self.b + v * self.d + self.f
 
 	def translate(self, dx, dy):
 		self.multiply(Matrix(1, 0, 0, 1, dx, dy))
@@ -167,7 +165,7 @@ def parse_transform(s):
 	return matrix
 
 
-class import_svg:
+class import_svg(handler.ContentHandler):
 	# err_handler
 	def error(self, exception):
 		raise Abort(str(exception))
@@ -200,29 +198,32 @@ class import_svg:
 	def endDocument(self):
 		pass
 
-	def characters(self, data, start, length):
+	def characters(self, data):
 		if not self.scandesc:
 			return
-		if data[start:start + length].startswith("uv_export_svg.py"):
+		if data.startswith("uv_export_svg.py"):
 			self.verified = True
 
 	def ignorableWhitespace(self, data, start, length):
 		pass
 
+	def processingInstruction(self, target, data):
+		pass
+
 	def startElement(self, name, attrs):
 		currmat = self.matrices[-1]
-		if "transform" in attrs:
+		try:
 			m = parse_transform(attrs["transform"])
 			if currmat != None:
 				m.multiply(currmat)
 			self.matrices.append(m)
-		else:
+		except:
 			self.matrices.append(currmat)
 
 		if name == "polygon":
 			self.handlePolygon(attrs)
 		elif name == "svg":
-			if "viewBox" in attrs:
+			try:
 				x, y, w, h = commawsp.split(attrs["viewBox"], 4)
 				if int(x) or int(y):
 					raise Abort("bad viewBox")
@@ -230,7 +231,7 @@ class import_svg:
 				self.height = int(h)
 				if self.width != self.height:
 					raise Abort("viewBox isn't a square")
-			else:
+			except:
 				raise Abort("no viewBox")
 		elif name == "desc" and not self.verified:
 			self.scandesc = True
@@ -275,6 +276,7 @@ class import_svg:
 			uv[1] = transuv[i][1]
 
 
+
 def run_parser(path):
 	if BPyMessages.Error_NoFile(path):
 		return
@@ -285,8 +287,8 @@ def run_parser(path):
 	Blender.Window.WaitCursor(1)
 
 	try:
-		svg = saxexts.ParserFactory().make_parser("xml.sax.drivers.drv_xmlproc")
-		svg.setDocumentHandler(import_svg())
+		svg = make_parser()
+		svg.setContentHandler(import_svg())
 		svg.setErrorHandler(import_svg())
 		svg.parse(path)
 		Blender.Registry.SetKey("UVImportExportSVG", { "path" : path }, False)
