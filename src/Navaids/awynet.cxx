@@ -214,14 +214,7 @@ void FGAirwayNetwork::load(SGPath path)
   in >> skipeol;
 
   // read in each remaining line of the file
-
-#ifdef __MWERKS__
-  char c = 0;
-  while ( in.get(c) && c != '\0' ) {
-    in.putback(c);
-#else
     while ( ! in.eof() ) {
-#endif
       string token;
       in >> token;
 

@@ -70,20 +70,6 @@ bool FGTransmissionList::init( const SGPath& path ) {
     // in >> skipeol;
     // in >> skipcomment;
 
-#ifdef __MWERKS__
-
-    char c = 0;
-    while ( in.get(c) && c != '\0' ) {
-        in.putback(c);
-        in >> a;
-	if ( a.get_type() != '[' ) {
-	    transmissionlist_code[a.get_station()].push_back(a);
-	}
-        in >> skipcomment;
-    }
-
-#else
-
     double min = 100000;
     double max = 0;
 
@@ -107,8 +93,6 @@ bool FGTransmissionList::init( const SGPath& path ) {
         */
     }
  
-#endif
-
     // init ATC menu
     fgSetBool("/sim/atc/menu",false);
 

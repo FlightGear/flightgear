@@ -81,13 +81,7 @@ bool FGCommList::LoadComms(const SGPath& path) {
     // read in each line of the file
     fin >> skipcomment;
 
-#ifdef __MWERKS__
-    char c = 0;
-    while ( fin.get(c) && c != '\0' ) {
-        fin.putback(c);
-#else
     while ( !fin.eof() ) {
-#endif
         ATCData a;
 		fin >> a;
 		if(a.type == INVALID) {

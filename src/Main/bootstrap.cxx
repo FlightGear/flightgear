@@ -54,10 +54,6 @@ SG_USING_STD(endl);
 
 #include "fg_os.hxx"
 
-#ifdef macintosh
-#  include <console.h>		// -dw- for command line dialog
-#endif
-
 char *homedir = ::getenv( "HOME" );
 char *hostname = ::getenv( "HOSTNAME" );
 bool free_hostname = false;

@@ -185,20 +185,9 @@ static string fgScanForOption( const string& option, const string& path ) {
     int len = option.length();
 
     in >> skipcomment;
-#ifndef __MWERKS__
     while ( ! in.eof() ) {
-#else
-    char c = '\0';
-    while ( in.get(c) && c != '\0' ) {
-	in.putback(c);
-#endif
 	string line;
-
-#if defined( macintosh )
-        getline( in, line, '\r' );
-#else
 	getline( in, line, '\n' );
-#endif
 
         // catch extraneous (DOS) line ending character
         if ( line[line.length() - 1] < 32 ) {

@@ -30,9 +30,6 @@
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <cmath>
 #  include <ctime>
-#  ifdef macintosh
-     SG_USING_STD(time_t);
-#  endif
 #else
 #  include <math.h>
 #  include <time.h>

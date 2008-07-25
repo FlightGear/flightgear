@@ -83,24 +83,13 @@ enum
 static double
 atof( const string& str )
 {
-
-#ifdef __MWERKS__
-    // -dw- if ::atof is called, then we get an infinite loop
-    return std::atof( str.c_str() );
-#else
     return ::atof( str.c_str() );
-#endif
 }
 
 static int
 atoi( const string& str )
 {
-#ifdef __MWERKS__
-    // -dw- if ::atoi is called, then we get an infinite loop
-    return std::atoi( str.c_str() );
-#else
     return ::atoi( str.c_str() );
-#endif
 }
 
 /**
@@ -571,12 +560,8 @@ parse_flightplan(const string& arg)
 
     while ( true ) {
         string line;
-
-#if defined( macintosh )
-        getline( in, line, '\r' );
-#else
         getline( in, line, '\n' );
-#endif
+
         // catch extraneous (DOS) line ending character
         if ( line[line.length() - 1] < 32 )
             line = line.substr( 0, line.length()-1 );
@@ -1646,20 +1631,9 @@ fgParseOptions (const string& path) {
     SG_LOG( SG_GENERAL, SG_INFO, "Processing config file: " << path );
 
     in >> skipcomment;
-#ifndef __MWERKS__
     while ( ! in.eof() ) {
-#else
-    char c = '\0';
-    while ( in.get(c) && c != '\0' ) {
-	in.putback(c);
-#endif
 	string line;
-
-#if defined( macintosh )
-        getline( in, line, '\r' );
-#else
 	getline( in, line, '\n' );
-#endif
 
         // catch extraneous (DOS) line ending character
         int i;

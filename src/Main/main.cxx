@@ -88,11 +88,6 @@ static double real_delta_time_sec = 0.0;
 double delta_time_sec = 0.0;
 extern float init_volume;
 
-
-#ifdef macintosh
-#  include <console.h>		// -dw- for command line dialog
-#endif
-
 // This is a record containing a bit of global housekeeping information
 FGGeneral general;
 
@@ -951,12 +946,6 @@ static void upper_case_property(const char *name)
 
 // Main top level initialization
 bool fgMainInit( int argc, char **argv ) {
-
-#if defined( macintosh )
-    freopen ("stdout.txt", "w", stdout );
-    freopen ("stderr.txt", "w", stderr );
-    argc = ccommand( &argv );
-#endif
 
     // set default log levels
     sglog().setLogLevels( SG_ALL, SG_ALERT );

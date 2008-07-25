@@ -73,21 +73,7 @@ bool fgNavDBInit( FGAirportList *airports,
     in >> skipeol;
     in >> skipeol;
 
-
-#ifdef __MWERKS__
-
- FIXME -- Please report to the FlightGear mailing list, if you still use a
-          compiler identifying itself as __MWERKS__ that needs this hack.
-          There are 41 instances of it in the SimGear & FilghtGear code,
-          and they are scheduled for removal.
-
-    char c = 0;
-    while ( in.get(c) && c != '\0' ) {
-        in.putback(c);
-#else
     while ( ! in.eof() ) {
-#endif
-
         FGNavRecord *r = new FGNavRecord;
         in >> (*r);
         if ( r->get_type() > 95 ) {
@@ -169,14 +155,7 @@ bool fgNavDBInit( FGAirportList *airports,
     //incarrier >> skipeol;
     //incarrier >> skipeol;
     
-#ifdef __MWERKS__
-    char c = 0;
-    while ( incarrier.get(c) && c != '\0'  ) {
-        incarrier.putback(c);
-#else
     while ( ! incarrier.eof() ) {
-#endif
-        
         FGNavRecord *r = new FGNavRecord;
         incarrier >> (*r);
         carrierlist->add ( r );
@@ -208,15 +187,7 @@ bool fgNavDBInit( FGAirportList *airports,
     
     // skip first line
     inchannel >> skipeol;
-    
-#ifdef __MWERKS__
-    char c = 0;
-    while ( inchannel.get(c) && c != '\0'  ) {
-        in.putback(c);
-#else
     while ( ! inchannel.eof() ) {
-#endif
-
         FGTACANRecord *r = new FGTACANRecord;
         inchannel >> (*r);
         channellist->add ( r );
