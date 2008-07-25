@@ -34,10 +34,6 @@
 
 #include SG_GL_H
 
-#ifdef SG_MATH_EXCEPTION_CLASH
-#  define exception c_exception
-#endif
-
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <cmath>
 #else

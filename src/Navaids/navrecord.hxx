@@ -35,13 +35,7 @@
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/structure/SGReferenced.hxx>
 
-#ifdef SG_HAVE_STD_INCLUDES
 #  include <istream>
-#elif defined( __BORLANDC__ ) || (__APPLE__)
-#  include <iostream>
-#else
-#  include <istream.h>
-#endif
 
 #define FG_NAV_DEFAULT_RANGE 50 // nm
 #define FG_LOC_DEFAULT_RANGE 18 // nm

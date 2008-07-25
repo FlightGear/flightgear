@@ -23,12 +23,7 @@
 
 #include <simgear/compiler.h>
 
-#if defined( SG_HAVE_STD_INCLUDES ) || defined( __BORLANDC__ ) || (__APPLE__)
 #  include <fstream>
-#else
-#  include <fstream.h>
-#endif
-
 #include <map>
 #include <list>
 #include <string>

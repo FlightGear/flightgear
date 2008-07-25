@@ -26,9 +26,6 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/constants.h>
-#ifdef __BORLANDC__
-#  define exception c_exception
-#endif
 #include <simgear/props/props.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>

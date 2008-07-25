@@ -31,9 +31,6 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
-#ifdef __BORLANDC__
-#  define exception c_exception
-#endif
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/sound/xmlsound.hxx>

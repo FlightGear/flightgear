@@ -32,13 +32,7 @@
 #include <simgear/compiler.h>
 #include <simgear/misc/sgstream.hxx>
 
-#ifdef SG_HAVE_STD_INCLUDES
 #  include <istream>
-#elif defined( __BORLANDC__ ) || (__APPLE__)
-#  include <iostream>
-#else
-#  include <istream.h>
-#endif
 
 #include STL_STRING
 

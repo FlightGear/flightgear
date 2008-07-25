@@ -25,11 +25,6 @@
 #  include <config.h>
 #endif
 
-// For BC 5.01 this must be included before OpenGL includes.
-#ifdef SG_MATH_EXCEPTION_CLASH
-#  include <math.h>
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>             // strcmp()

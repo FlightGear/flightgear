@@ -49,7 +49,7 @@ INCLUDES
 using std::cout;
 using std::endl;
 
-#if defined(__BORLANDC__) || defined(_MSC_VER) || defined(__MINGW32__)
+#if defined(_MSC_VER) || defined(__MINGW32__)
   #include <winsock.h>
   #include <io.h>
 #else

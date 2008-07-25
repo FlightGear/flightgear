@@ -43,10 +43,6 @@ HISTORY
 
 #include <simgear/compiler.h>
 
-#ifdef SG_MATH_EXCEPTION_CLASH
-#  include <math.h>
-#endif
-
 #include STL_STRING
 
 #include <simgear/constants.h>

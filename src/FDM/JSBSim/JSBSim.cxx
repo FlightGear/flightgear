@@ -28,9 +28,6 @@
 #include <simgear/compiler.h>
 
 #include <stdio.h>    //    size_t
-#ifdef SG_MATH_EXCEPTION_CLASH
-#  include <math.h>
-#endif
 
 #include STL_STRING
 

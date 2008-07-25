@@ -32,13 +32,7 @@
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx>
 
-#ifdef SG_HAVE_STD_INCLUDES
 #  include <iosfwd>
-#elif defined( __BORLANDC__ ) || (__APPLE__)
-#  include <iostream>
-#else
-#  include <istream.h>
-#endif
 
 #include "ATC.hxx"
 

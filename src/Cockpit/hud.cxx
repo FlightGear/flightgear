@@ -34,12 +34,7 @@
 #  include <windows.h>
 #endif
 
-#ifdef __BORLANDC__
-#  define exception c_exception
-#endif
-
 #include <math.h>
-
 #include <stdlib.h>
 #include <stdio.h>              // char related functions
 #include <string.h>             // strcmp()

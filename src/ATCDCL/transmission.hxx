@@ -34,17 +34,7 @@
 
 #include <Main/fg_props.hxx>
 
-#ifdef SG_HAVE_STD_INCLUDES
 #  include <istream>
-#include <iomanip>
-#elif defined( SG_HAVE_NATIVE_SGI_COMPILERS )
-#  include <iostream.h>
-#elif defined( __BORLANDC__ )
-#  include <iostream>
-#else
-#  include <istream.h>
-#include <iomanip.h>
-#endif
 
 #include "ATC.hxx"
 
