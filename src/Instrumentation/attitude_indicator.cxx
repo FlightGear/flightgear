@@ -8,8 +8,8 @@
 
 #include <simgear/compiler.h>
 
-#include STL_IOSTREAM
-#include STL_STRING
+#include <iostream>
+#include <string>
 #include <sstream>
 
 #include <math.h>	// fabs()

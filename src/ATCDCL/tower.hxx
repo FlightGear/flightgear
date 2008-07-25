@@ -27,7 +27,7 @@
 #include <plib/sg.h>
 
 #include <iosfwd>
-#include STL_STRING
+#include <string>
 
 #include "ATC.hxx"
 #include "ATCProjection.hxx"

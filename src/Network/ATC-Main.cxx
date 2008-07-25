@@ -36,7 +36,7 @@
 #  include <io.h>                 //lseek, read, write
 #endif
 
-#include STL_STRING
+#include <string>
 
 #include <plib/ul.h>
 

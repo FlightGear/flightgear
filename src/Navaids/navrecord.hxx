@@ -35,7 +35,7 @@
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/structure/SGReferenced.hxx>
 
-#  include <istream>
+#include <istream>
 
 #define FG_NAV_DEFAULT_RANGE 50 // nm
 #define FG_LOC_DEFAULT_RANGE 18 // nm
@@ -63,13 +63,13 @@ class FGNavRecord : public SGReferenced {
                                 // (degrees) or localizer heading
                                 // (degrees) or dme bias (nm)
 
-    string ident;		// navaid ident
-    string name;                // verbose name in nav database
-    string apt_id;              // corresponding airport id
+    std::string ident;		// navaid ident
+    std::string name;                // verbose name in nav database
+    std::string apt_id;              // corresponding airport id
 
 
     bool serviceable;		// for failure modeling
-    string trans_ident;         // for failure modeling
+    std::string trans_ident;         // for failure modeling
 
 public:
 
@@ -91,8 +91,8 @@ public:
     inline double get_multiuse() const { return multiuse; }
     inline void set_multiuse( double m ) { multiuse = m; }
     inline const char *get_ident() const { return ident.c_str(); }
-    inline const string& get_name() const { return name; }
-    inline const string& get_apt_id() const { return apt_id; }
+    inline const std::string& get_name() const { return name; }
+    inline const std::string& get_apt_id() const { return apt_id; }
     inline bool get_serviceable() const { return serviceable; }
     inline const char *get_trans_ident() const { return trans_ident.c_str(); }
 
@@ -157,7 +157,7 @@ operator >> ( std::istream& in, FGNavRecord& n )
 
     if ( n.type >= 4 && n.type <= 9 ) {
         // these types are always associated with an airport id
-        string::size_type pos = n.name.find(" ");
+        std::string::size_type pos = n.name.find(" ");
         n.apt_id = n.name.substr(0, pos);
     }
 
@@ -190,7 +190,7 @@ operator >> ( std::istream& in, FGNavRecord& n )
 
 class FGTACANRecord : public SGReferenced {
 
-    string channel;		
+    std::string channel;		
     int freq;
      
 public:
@@ -198,7 +198,7 @@ public:
     inline FGTACANRecord(void);
     inline ~FGTACANRecord(void) {}
 
-    inline const string& get_channel() const { return channel; }
+    inline const std::string& get_channel() const { return channel; }
     inline int get_freq() const { return freq; }
     friend std::istream& operator>> ( std::istream&, FGTACANRecord& );
     };

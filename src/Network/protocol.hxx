@@ -28,7 +28,7 @@
 #include <simgear/compiler.h>
 #include <simgear/io/iochannel.hxx>
 
-#include STL_STRING
+#include <string>
 #include <vector>
 
 SG_USING_STD(string);

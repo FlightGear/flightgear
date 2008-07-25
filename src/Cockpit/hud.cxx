@@ -23,8 +23,8 @@
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
 
-#include STL_STRING
-#include STL_FSTREAM
+#include <string>
+#include <fstream>
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>

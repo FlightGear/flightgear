@@ -32,7 +32,7 @@
 #include <simgear/compiler.h>
 
 #include <iosfwd>
-#include STL_STRING
+#include <string>
 
 class FGPanel;
 

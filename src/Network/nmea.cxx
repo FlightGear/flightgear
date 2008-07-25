@@ -35,9 +35,6 @@
 
 #include "nmea.hxx"
 
-SG_USING_NAMESPACE(std);
-
-
 FGNMEA::FGNMEA() {
 }
 

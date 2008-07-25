@@ -652,7 +652,6 @@ AC_CONFIG_FILES([ \
 	src/Cockpit/Makefile \
 	src/Cockpit/built_in/Makefile \
 	src/Environment/Makefile \
-	src/FDM/Balloon/Makefile \
 	src/FDM/ExternalNet/Makefile \
 	src/FDM/ExternalPipe/Makefile \
 	src/FDM/JSBSim/Makefile \

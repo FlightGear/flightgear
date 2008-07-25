@@ -23,8 +23,8 @@
 
 #include <math.h>
 
-#include STL_FSTREAM
-#include STL_IOSTREAM
+#include <fstream>
+#include <iostream>
 
 #include <Main/fg_props.hxx>
 

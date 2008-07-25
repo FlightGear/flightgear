@@ -38,7 +38,7 @@
 #include <simgear/compiler.h>
 #include <simgear/timing/sg_time.hxx>
 
-#include STL_STRING
+#include <string>
 
 #include <Airports/simple.hxx>
 

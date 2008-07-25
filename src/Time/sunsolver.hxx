@@ -34,11 +34,7 @@
 
 #include <simgear/compiler.h>
 
-#ifdef SG_HAVE_STD_INCLUDES
-#  include <ctime>
-#else
-#  include <time.h>
-#endif
+#include <ctime>
 
 /**
  * Given the current unix time in seconds, calculate seconds to the

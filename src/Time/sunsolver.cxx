@@ -27,13 +27,8 @@
 #      include <config.h>
 #endif
 
-#ifdef SG_HAVE_STD_INCLUDES
-#  include <cmath>
-#  include <ctime>
-#else
-#  include <math.h>
-#  include <time.h>
-#endif
+#include <cmath>
+#include <ctime>
 
 #include <simgear/math/SGMath.hxx>
 #include <simgear/ephemeris/ephemeris.hxx>

@@ -31,7 +31,7 @@
 #include <string>
 SG_USING_STD(string);
 
-#include STL_IOSTREAM
+#include <iostream>
 SG_USING_STD(cout);
 
 #include <simgear/misc/sg_path.hxx>

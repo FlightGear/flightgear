@@ -26,12 +26,7 @@
 
 #include <simgear/compiler.h>
 
-#ifdef SG_HAVE_STD_INCLUDES
-#  include <cmath>
-#else
-#  include <math.h>
-#endif
-
+#include <cmath>
 
 /**
  * Model the natural environment.

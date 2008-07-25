@@ -20,7 +20,7 @@
 
 #include <simgear/compiler.h>
 
-#include STL_IOSTREAM
+#include <iostream>
 
 SG_USING_STD(cout);
 SG_USING_STD(cin);

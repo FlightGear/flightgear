@@ -34,9 +34,9 @@
 
 #include <math.h>
 
-#include STL_IOSTREAM
-#include STL_FSTREAM
-#include STL_STRING
+#include <iostream>
+#include <fstream>
+#include <string>
 
 SG_USING_STD(fstream);
 SG_USING_STD(cout);

@@ -45,7 +45,7 @@
 
 #include <simgear/compiler.h>
 
-#include STL_STRING
+#include <string>
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
@@ -77,13 +77,13 @@
 #ifdef ENABLE_SP_FDM
 #include <FDM/SP/ADA.hxx>
 #include <FDM/SP/ACMS.hxx>
+#include <FDM/SP/MagicCarpet.hxx>
+#include <FDM/SP/Balloon.h>
 #endif
-#include <FDM/Balloon.h>
 #include <FDM/ExternalNet/ExternalNet.hxx>
 #include <FDM/ExternalPipe/ExternalPipe.hxx>
 #include <FDM/JSBSim/JSBSim.hxx>
 #include <FDM/LaRCsim/LaRCsim.hxx>
-#include <FDM/MagicCarpet.hxx>
 #include <FDM/UFO.hxx>
 #include <FDM/NullFDM.hxx>
 #include <FDM/YASim/YASim.hxx>

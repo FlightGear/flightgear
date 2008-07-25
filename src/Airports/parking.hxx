@@ -31,7 +31,7 @@
 
 #include <simgear/compiler.h>
 
-#include STL_STRING
+#include <string>
 #include <vector>
 
 #include "gnnode.hxx"

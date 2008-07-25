@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 #include <iostream>
-#include STL_STRING
+#include <string>
 
 #include <plib/sg.h>
 

@@ -13,7 +13,7 @@
 
 #include <simgear/compiler.h>
 
-#include STL_STRING
+#include <string>
 SG_USING_STD(string);
 
 #include <simgear/props/props.hxx>

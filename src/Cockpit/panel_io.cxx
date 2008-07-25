@@ -35,8 +35,8 @@
 #include <simgear/props/props.hxx>
 
 #include <istream>
-#include STL_FSTREAM
-#include STL_STRING
+#include <fstream>
+#include <string>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>

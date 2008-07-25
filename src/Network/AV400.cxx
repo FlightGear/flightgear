@@ -36,8 +36,6 @@
 
 #include "AV400.hxx"
 
-SG_USING_NAMESPACE(std);
-
 FGAV400::FGAV400() {
 }
 

@@ -28,7 +28,7 @@
 #include <simgear/compiler.h>
 
 #include <math.h>
-#include STL_IOSTREAM
+#include <iostream>
 
 #include "ls_cockpit.h"
 #include "ls_generic.h"

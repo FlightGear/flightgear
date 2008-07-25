@@ -33,7 +33,7 @@
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 
-#include STL_IOSTREAM
+#include <iostream>
 
 #include <Aircraft/aircraft.hxx>
 #include <Time/tmp.hxx>

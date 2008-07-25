@@ -29,7 +29,7 @@
 
 #include <simgear/compiler.h>
 
-#include STL_STRING
+#include <string>
 
 #include "protocol.hxx"
 

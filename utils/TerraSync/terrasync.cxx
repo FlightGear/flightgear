@@ -33,8 +33,8 @@
 
 #include <simgear/compiler.h>
 
-#include STL_IOSTREAM
-#include STL_STRING
+#include <iostream>
+#include <string>
 
 #include <plib/netSocket.h>
 #include <plib/ul.h>

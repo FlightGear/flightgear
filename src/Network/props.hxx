@@ -27,7 +27,7 @@
 #define _FG_PROPS_HXX
 
 #include <simgear/compiler.h>
-#include STL_STRING
+#include <string>
 #include <vector>
 
 SG_USING_STD(string);

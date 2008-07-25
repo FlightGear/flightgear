@@ -28,9 +28,9 @@
 #include <simgear/compiler.h>
 
 #include <sstream>
-#include STL_IOMANIP
+#include <iomanip>
 #include <iostream>
-#include STL_STRING
+#include <string>
 SG_USING_STD(string);
 using std::cout;
 

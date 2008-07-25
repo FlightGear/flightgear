@@ -37,7 +37,7 @@
 
 #include "garmin.hxx"
 
-SG_USING_NAMESPACE(std);
+using std::string;
 
 FGGarmin::FGGarmin() {
 }

@@ -43,7 +43,7 @@
 
 #include <AIModel/AIFlightPlan.hxx>
 
-//#include STL_STRING
+//#include <string>
 
 #include "groundnetwork.hxx"
 

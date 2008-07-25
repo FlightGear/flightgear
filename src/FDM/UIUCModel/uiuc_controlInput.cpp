@@ -73,7 +73,7 @@
 
 #include "uiuc_controlInput.h"
 
-#include STL_IOSTREAM
+#include <iostream>
 
 void uiuc_controlInput()
 {

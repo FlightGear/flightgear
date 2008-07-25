@@ -38,7 +38,7 @@
 #include <errno.h>
 #include <math.h>
 
-#include STL_STRING
+#include <string>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>

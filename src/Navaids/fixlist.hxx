@@ -30,7 +30,7 @@
 
 #include <map>
 #include <vector>
-#include STL_STRING
+#include <string>
 
 #include "fix.hxx"
 

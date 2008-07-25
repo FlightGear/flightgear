@@ -37,7 +37,7 @@
 #  include <config.h>
 #endif
 
-#include STL_STRING
+#include <string>
 SG_USING_STD(string);
 #include <vector>
 SG_USING_STD(vector);

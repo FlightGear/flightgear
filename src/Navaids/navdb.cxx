@@ -26,7 +26,7 @@
 
 #include <simgear/compiler.h>
 
-#include STL_STRING
+#include <string>
 
 #include <simgear/debug/logstream.hxx>
 

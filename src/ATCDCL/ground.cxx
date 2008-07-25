@@ -30,7 +30,7 @@
 #include <Main/globals.hxx>
 
 #include <stdlib.h>
-#include STL_FSTREAM
+#include <fstream>
 
 #include "ground.hxx"
 #include "ATCutils.hxx"

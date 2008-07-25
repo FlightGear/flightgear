@@ -34,8 +34,8 @@
 #include <ctype.h>
 #include <sstream>
 
-#include STL_FSTREAM
-#include STL_STRING
+#include <fstream>
+#include <string>
 #include <vector>
 
 #include <simgear/compiler.h>

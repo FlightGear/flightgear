@@ -29,7 +29,7 @@
 
 #include <stdio.h>    //    size_t
 
-#include STL_STRING
+#include <string>
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>

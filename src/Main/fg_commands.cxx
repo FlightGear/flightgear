@@ -8,8 +8,8 @@
 
 #include <simgear/compiler.h>
 
-#include STL_STRING
-#include STL_FSTREAM
+#include <string>
+#include <fstream>
 
 #include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>

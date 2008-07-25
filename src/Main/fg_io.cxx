@@ -28,7 +28,7 @@
 
 #include <stdlib.h>             // atoi()
 
-#include STL_STRING
+#include <string>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
@@ -74,7 +74,7 @@ FGIO::FGIO()
 {
 }
 
-#include STL_ALGORITHM
+#include <algorithm>
 SG_USING_STD(for_each);
 
 static void delete_ptr( FGProtocol* p ) { delete p; }

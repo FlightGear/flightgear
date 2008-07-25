@@ -32,7 +32,7 @@
 
 #include <map>
 #include <vector>
-#include STL_STRING
+#include <string>
 
 #include "navrecord.hxx"
 

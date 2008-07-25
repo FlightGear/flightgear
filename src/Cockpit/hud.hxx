@@ -48,7 +48,7 @@
 #include <algorithm>    // for_each()
 #include <vector>       // STL vector
 #include <deque>        // STL double ended queue
-#include STL_FSTREAM
+#include <fstream>
 
 #include <osg/State>
 
@@ -69,7 +69,6 @@
 
 SG_USING_STD(deque);
 SG_USING_STD(vector);
-SG_USING_NAMESPACE(std);
 
 #define float_to_int(v) SGMiscf::roundToInt(v)
 

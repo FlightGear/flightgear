@@ -33,12 +33,11 @@
 #include <simgear/debug/logstream.hxx>
 #include <Main/fg_props.hxx>
 
-#include STL_STRING
+#include <string>
 #include <map>
 
 #include "runways.hxx"
 
-SG_USING_NAMESPACE(std);
 SG_USING_STD(istream);
 SG_USING_STD(multimap);
 

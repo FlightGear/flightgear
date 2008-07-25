@@ -28,11 +28,7 @@
 #include <simgear/compiler.h>
 #include <simgear/math/interpolater.hxx>
 
-#ifdef SG_HAVE_STD_INCLUDES
-#  include <cmath>
-#else
-#  include <math.h>
-#endif
+#include <cmath>
 
 using namespace std;
 

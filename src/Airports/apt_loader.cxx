@@ -37,7 +37,7 @@
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/strutils.hxx>
 
-#include STL_STRING
+#include <string>
 
 #include "simple.hxx"
 #include "runways.hxx"

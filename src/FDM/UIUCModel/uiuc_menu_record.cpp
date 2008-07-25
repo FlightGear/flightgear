@@ -78,7 +78,7 @@
 
 #include <cstdlib>
 #include <string>
-#include STL_IOSTREAM
+#include <iostream>
 
 #include "uiuc_menu_record.h"
 

@@ -24,7 +24,7 @@
 #ifndef _AIRWAYNETWORK_HXX_
 #define _AIRWAYNETWORK_HXX_
 
-#include STL_STRING
+#include <string>
 #include <istream>
 #include <set>
 #include <map>

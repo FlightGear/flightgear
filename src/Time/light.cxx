@@ -34,11 +34,7 @@
 
 #include SG_GL_H
 
-#ifdef SG_HAVE_STD_INCLUDES
-#  include <cmath>
-#else
-#  include <math.h>
-#endif
+#include <cmath>
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>

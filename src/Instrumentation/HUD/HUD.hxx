@@ -31,11 +31,10 @@
 
 #include <vector>
 #include <deque>
-#include STL_FSTREAM
+#include <fstream>
 
 SG_USING_STD(deque);
 SG_USING_STD(vector);
-SG_USING_NAMESPACE(std);
 
 #include <osg/State>
 
@@ -174,7 +173,7 @@ public:
 protected:
     void common_draw();
     int load(const char *, float x = 320.0f, float y = 240.0f,
-            int level = 0, const string& indent = "");
+            int level = 0, const std::string& indent = "");
 
 private:
     void draw3D();
@@ -338,7 +337,7 @@ protected:
     void draw_bullet(float, float, float);
 
     HUD         *_hud;
-    string      _name;
+    std::string      _name;
     int         _options;
     float       _x, _y, _w, _h;
     float       _center_x, _center_y;
@@ -362,7 +361,7 @@ private:
 
     Input   _input;
     Format  _mode;
-    string  _format;
+    std::string  _format;
     int     _halign;    // HUDText alignment
     int     _blink;
     bool    _box;
@@ -438,7 +437,7 @@ private:
     float  _label_gap;
     bool   _pointer;
     Format _label_fmt;
-    string _format;
+    std::string _format;
     int    _div_ratio;          // _major_divs/_minor_divs
     bool   _odd_type;           // whether to put numbers at 0/2/4 or 1/3/5
 

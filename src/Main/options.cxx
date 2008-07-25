@@ -35,7 +35,7 @@
 #include <string.h>		// strcmp()
 #include <algorithm>
 
-#include STL_STRING
+#include <string>
 
 #include <plib/ul.h>
 
@@ -62,7 +62,6 @@
 
 SG_USING_STD(string);
 SG_USING_STD(sort);
-SG_USING_NAMESPACE(std);
 
 #ifndef VERSION
 #define VERSION "CVS "__DATE__

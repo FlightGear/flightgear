@@ -38,7 +38,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
 
-#include STL_IOSTREAM
+#include <iostream>
 SG_USING_STD(cerr);
 SG_USING_STD(endl);
 

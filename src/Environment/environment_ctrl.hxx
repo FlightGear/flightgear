@@ -36,12 +36,7 @@
 # include <simgear/threads/SGQueue.hxx>
 #endif
 
-#ifdef SG_HAVE_STD_INCLUDES
-#  include <cmath>
-#else
-#  include <math.h>
-#endif
-
+#include <cmath>
 #include <queue>
 #include <vector>
 

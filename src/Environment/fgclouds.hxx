@@ -30,7 +30,7 @@
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <Main/fg_props.hxx>
 
-#include STL_STRING
+#include <string>
 
 SG_USING_STD(string);
 

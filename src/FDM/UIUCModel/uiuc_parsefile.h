@@ -5,7 +5,7 @@
 
 #include <string>
 #include <list>
-#include STL_FSTREAM
+#include <fstream>
 
 SG_USING_STD(list);
 SG_USING_STD(string);

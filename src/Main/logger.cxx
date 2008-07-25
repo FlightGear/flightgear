@@ -5,7 +5,7 @@
 
 #include "logger.hxx"
 
-#include STL_FSTREAM
+#include <fstream>
 #include <string>
 
 SG_USING_STD(ofstream);

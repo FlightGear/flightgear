@@ -6,7 +6,7 @@
 
 #include <simgear/compiler.h>
 
-#include STL_IOSTREAM
+#include <iostream>
 
 #include <plib/sg.h>
 

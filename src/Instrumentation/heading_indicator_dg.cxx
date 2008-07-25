@@ -7,8 +7,8 @@
 // This file is in the Public Domain and comes with no warranty.
 
 #include <simgear/compiler.h>
-#include STL_IOSTREAM
-#include STL_STRING
+#include <iostream>
+#include <string>
 #include <sstream>
 
 #include <Main/fg_props.hxx>

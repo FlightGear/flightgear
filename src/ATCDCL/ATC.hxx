@@ -31,7 +31,7 @@
 #include <istream>
 #include <ostream>
 
-#include STL_STRING
+#include <string>
 
 #include "ATCVoice.hxx"
 

@@ -42,8 +42,8 @@
 #  include <GL/xmesa.h>
 #endif
 
-#include STL_FSTREAM
-#include STL_STRING
+#include <fstream>
+#include <string>
 
 #include <stdlib.h>
 #include <string.h>

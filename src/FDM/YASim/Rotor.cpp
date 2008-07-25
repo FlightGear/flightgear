@@ -8,8 +8,8 @@
 #include "Ground.hpp"
 #include "Rotor.hpp"
 
-#include STL_IOSTREAM
-#include STL_IOMANIP
+#include <iostream>
+#include <iomanip>
 
 SG_USING_STD(setprecision);
 

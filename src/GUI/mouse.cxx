@@ -40,7 +40,7 @@
 #  include <GL/xmesa.h>
 #endif
 
-#include STL_STRING
+#include <string>
 
 #include <stdlib.h>
 #include <string.h>

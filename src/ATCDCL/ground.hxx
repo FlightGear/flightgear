@@ -33,7 +33,7 @@
 #include "ATC.hxx"
 #include "ATCProjection.hxx"
 
-#include STL_STRING
+#include <string>
 
 class FGAIEntity;
 class FGATCMgr;

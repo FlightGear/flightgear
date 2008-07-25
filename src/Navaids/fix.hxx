@@ -34,7 +34,7 @@
 
 #  include <istream>
 
-#include STL_STRING
+#include <string>
 
 // SG_USING_STD(cout);
 // SG_USING_STD(endl);

@@ -47,7 +47,7 @@
 #include <Main/fg_props.hxx>
 #include <Airports/runways.hxx>
 
-#include STL_STRING
+#include <string>
 
 #include "simple.hxx"
 #include "xmlloader.hxx"

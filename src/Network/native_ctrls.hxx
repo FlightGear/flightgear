@@ -27,7 +27,7 @@
 
 #include <simgear/compiler.h>
 
-#include STL_STRING
+#include <string>
 
 #include <Aircraft/controls.hxx>
 #include "protocol.hxx"

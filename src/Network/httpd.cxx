@@ -34,7 +34,7 @@
 #include <algorithm>		// sort()
 #include <stdlib.h>		// atoi() atof()
 
-#include STL_STRING
+#include <string>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
