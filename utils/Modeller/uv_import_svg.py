@@ -8,7 +8,7 @@
 # """
 
 __author__ = "Melchior FRANZ < mfranz # aon : at >"
-__url__ = "http://www.flightgear.org/"
+__url__ = ["http://www.flightgear.org/", "http://cvs.flightgear.org/viewvc/source/utils/Modeller/uv_import_svg.py"]
 __version__ = "0.2"
 __bpydoc__ = """\
 Imports an SVG file containing UV maps, which has been saved by the
@@ -274,7 +274,6 @@ class import_svg(handler.ContentHandler):
 		for i, uv in enumerate(self.meshes[meshname].faces[int(num)].uv):
 			uv[0] = transuv[i][0]
 			uv[1] = transuv[i][1]
-
 
 
 def run_parser(path):

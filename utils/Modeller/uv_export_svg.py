@@ -8,7 +8,7 @@
 # """
 
 __author__ = "Melchior FRANZ < mfranz # aon : at >"
-__url__ = "http://www.flightgear.org/"
+__url__ = ["http://www.flightgear.org/", "http://cvs.flightgear.org/viewvc/source/utils/Modeller/uv_export_svg.py"]
 __version__ = "0.1"
 __bpydoc__ = """\
 Saves the UV mappings of all selected objects to an SVG file. The uv_import_svg.py
