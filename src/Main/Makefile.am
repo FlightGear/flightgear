@@ -74,7 +74,6 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Cockpit/libCockpit.a \
 	$(top_builddir)/src/Cockpit/built_in/libBuilt_in.a \
 	$(top_builddir)/src/FDM/libFlight.a \
-	$(top_builddir)/src/FDM/Balloon/libBalloon.a \
 	$(top_builddir)/src/FDM/ExternalNet/libExternalNet.a \
 	$(top_builddir)/src/FDM/ExternalPipe/libExternalPipe.a \
 	$(JSBSIM_LIBS) \
