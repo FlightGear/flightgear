@@ -28,7 +28,7 @@
 #include "AILocalTraffic.hxx"
 
 #include <string>
-SG_USING_STD(string);
+using std::string;
 
 class FGAIGAVFRTraffic : public FGAILocalTraffic {
 	

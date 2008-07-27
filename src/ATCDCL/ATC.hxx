@@ -35,9 +35,9 @@
 
 #include "ATCVoice.hxx"
 
-SG_USING_STD(ostream);
-SG_USING_STD(string);
-SG_USING_STD(ios);
+using std::ostream;
+using std::string;
+using std::ios;
 
 enum plane_type {
 	UNKNOWN,

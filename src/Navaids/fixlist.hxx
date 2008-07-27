@@ -34,9 +34,9 @@
 
 #include "fix.hxx"
 
-SG_USING_STD(multimap);
-SG_USING_STD(vector);
-SG_USING_STD(string);
+using std::multimap;
+using std::vector;
+using std::string;
 
 // fix names may be globally non-unique.  Allow for this.
 typedef multimap < string, FGFix > fix_map_type;

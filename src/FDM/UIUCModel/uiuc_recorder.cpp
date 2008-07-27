@@ -99,7 +99,7 @@
 
 #include "uiuc_recorder.h"
 
-SG_USING_STD(endl);		// -dw
+using std::endl;		// -dw
 
 void uiuc_recorder( double dt )
 {

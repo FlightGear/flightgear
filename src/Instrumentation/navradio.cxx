@@ -40,7 +40,7 @@
 #include "navradio.hxx"
 
 #include <string>
-SG_USING_STD(string);
+using std::string;
 
 
 // Constructor

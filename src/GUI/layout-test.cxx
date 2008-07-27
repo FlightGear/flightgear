@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include <simgear/compiler.h>
-#include SG_GL_H
+#include <osg/GL>
 #include <plib/pw.h>
 #include <plib/pu.h>
 #include <simgear/props/props.hxx>

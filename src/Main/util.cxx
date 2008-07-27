@@ -25,7 +25,7 @@
 #include <cstdlib>
 
 #include <vector>
-SG_USING_STD(vector);
+using std::vector;
 
 #include <simgear/debug/logstream.hxx>
 

@@ -38,12 +38,12 @@
 #include <fstream>
 #include <string>
 
-SG_USING_STD(fstream);
-SG_USING_STD(cout);
-SG_USING_STD(cin);
-SG_USING_STD(endl);
-SG_USING_STD(ios);
-SG_USING_STD(string);
+using std::fstream;
+using std::cout;
+using std::cin;
+using std::endl;
+using std::ios;
+using std::string;
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>

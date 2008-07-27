@@ -42,7 +42,7 @@
 
 #include "multiplay.hxx"
 
-SG_USING_STD(string);
+using std::string;
 
 
 // These constants are provided so that the ident command can list file versions.

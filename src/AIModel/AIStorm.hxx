@@ -25,7 +25,7 @@
 #include "AIBase.hxx"
 
 #include <string>
-SG_USING_STD(string);
+using std::string;
 
 
 class FGAIStorm : public FGAIBase {

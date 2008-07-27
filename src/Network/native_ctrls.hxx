@@ -33,7 +33,7 @@
 #include "protocol.hxx"
 #include "net_ctrls.hxx"
 
-SG_USING_STD(string);
+using std::string;
 
 class FGNativeCtrls : public FGProtocol {
 

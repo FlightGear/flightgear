@@ -31,8 +31,8 @@
 #include <string>
 #include <vector>
 
-SG_USING_STD(string);
-SG_USING_STD(vector);
+using std::string;
+using std::vector;
 
 
 #define FG_MAX_MSG_SIZE 16384
@@ -100,7 +100,7 @@ typedef io_container::iterator io_iterator;
 typedef io_container::const_iterator const_io_iterator;
 
 #include <stdexcept>
-SG_USING_STD(invalid_argument);
+using std::invalid_argument;
 
 //namespace flightgear { namespace network {
 class FGProtocolConfigError : public invalid_argument

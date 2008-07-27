@@ -31,7 +31,7 @@
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
 
-SG_USING_STD(iostream);
+using std::iostream;
 
 void FGAIFlightPlan::evaluateRoutePart(double deplat,
 				       double deplon,

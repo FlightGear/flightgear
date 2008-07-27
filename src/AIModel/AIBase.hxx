@@ -34,8 +34,8 @@
 #include <Main/fg_props.hxx>
 
 
-SG_USING_STD(string);
-SG_USING_STD(list);
+using std::string;
+using std::list;
 
 class FGAIManager;
 class FGAIFlightPlan;

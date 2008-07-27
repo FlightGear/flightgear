@@ -36,7 +36,7 @@
 #include "fg_props.hxx"
 #include "viewer.hxx"
 
-SG_USING_STD(vector);
+using std::vector;
 
 
 // Define a structure containing view information

@@ -52,7 +52,7 @@
 
 #include "ATC-Main.hxx"
 
-SG_USING_STD(string);
+using std::string;
 
 
 // Lock the ATC hardware

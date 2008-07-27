@@ -22,9 +22,9 @@
 
 #include <iostream>
 
-SG_USING_STD(cout);
-SG_USING_STD(cin);
-SG_USING_STD(endl);
+using std::cout;
+using std::cin;
+using std::endl;
 
 #include "jsinput.h"
 

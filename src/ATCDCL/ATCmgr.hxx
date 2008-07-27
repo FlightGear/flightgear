@@ -34,9 +34,9 @@
 #include "tower.hxx"
 #include "approach.hxx"
 
-SG_USING_STD(string);
-SG_USING_STD(list);
-SG_USING_STD(map);
+using std::string;
+using std::list;
+using std::map;
 
 // Structure for holding details of the ATC frequencies at a given airport, and whether they are in the active list or not.
 // These can then be cross referenced with the commlists which are stored by frequency or bucket.

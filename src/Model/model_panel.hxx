@@ -12,7 +12,7 @@
 
 #include <vector>
 
-SG_USING_STD(vector);
+using std::vector;
 
 #include <simgear/math/point3d.hxx>
 #include <simgear/props/props.hxx>

@@ -10,7 +10,7 @@
 #include "uiuc_aircraft.h"
 #include "uiuc_warnings_errors.h"
 
-//SG_USING_STD(istrstream);
+//using std::istrstream;
 
 int uiuc_1DdataFileReader( string file_name, 
                             double x[], 

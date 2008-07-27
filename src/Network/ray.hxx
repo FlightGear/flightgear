@@ -33,7 +33,7 @@
 
 #include "protocol.hxx"
 
-SG_USING_STD(string);
+using std::string;
 
 
 class FGRAY : public FGProtocol {

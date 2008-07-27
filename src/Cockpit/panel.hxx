@@ -50,8 +50,8 @@
 #include <Input/input.hxx>
 #include <Instrumentation/dclgps.hxx>
 
-SG_USING_STD(vector);
-SG_USING_STD(map);
+using std::vector;
+using std::map;
 
 
 class FGPanelInstrument;

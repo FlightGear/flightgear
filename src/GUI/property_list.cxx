@@ -31,7 +31,7 @@
 #include <iomanip>
 #include <iostream>
 #include <string>
-SG_USING_STD(string);
+using std::string;
 using std::cout;
 
 typedef string stdString;      // puObject has a "string" member

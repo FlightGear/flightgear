@@ -31,13 +31,12 @@
 
 #include <simgear/constants.h>
 #include <simgear/misc/sg_path.hxx>
+#include <osg/GLU>
 
 #include <Main/globals.hxx>
 #include <Main/viewmgr.hxx>
 
 #include "HUD.hxx"
-
-#include SG_GLU_H
 
 
 static float clamp(float f)

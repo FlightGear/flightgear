@@ -33,8 +33,8 @@
 #include <deque>
 #include <fstream>
 
-SG_USING_STD(deque);
-SG_USING_STD(vector);
+using std::deque;
+using std::vector;
 
 #include <osg/State>
 

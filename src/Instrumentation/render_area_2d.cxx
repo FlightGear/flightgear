@@ -28,7 +28,6 @@
 
 #include "render_area_2d.hxx"
 
-
 static const float dummy_normals[][3] = {{0.0f, 0.0f, 0.0f},
                                          {0.0f, 0.0f, 0.0f},
                                          {0.0f, 0.0f, 0.0f},

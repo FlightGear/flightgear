@@ -39,8 +39,8 @@
 #include <simgear/debug/logstream.hxx>
 
 #include <iostream>
-SG_USING_STD(cerr);
-SG_USING_STD(endl);
+using std::cerr;
+using std::endl;
 
 #include "main.hxx"
 #include "globals.hxx"

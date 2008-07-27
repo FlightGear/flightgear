@@ -59,10 +59,10 @@
 #include <Scenery/scenery.hxx>
 #include <Main/renderer.hxx>
 
-SG_USING_STD(ifstream);
-SG_USING_STD(ostringstream);
-SG_USING_STD(string);
-SG_USING_STD(vector);
+using std::ifstream;
+using std::ostringstream;
+using std::string;
+using std::vector;
 
 void mouseClickHandler(int button, int updown, int x, int y, bool mainWindow, const osgGA::GUIEventAdapter*);
 void mouseMotionHandler(int x, int y);

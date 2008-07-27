@@ -74,7 +74,7 @@
 
 
 
-SG_USING_STD(cerr);
+using std::cerr;
 
 
 #define HEIGHT_AGL_WHEEL d_wheel_rwy_local_v[2]

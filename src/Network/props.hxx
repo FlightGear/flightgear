@@ -30,8 +30,8 @@
 #include <string>
 #include <vector>
 
-SG_USING_STD(string);
-SG_USING_STD(vector);
+using std::string;
+using std::vector;
 
 #include <plib/netChannel.h>
 

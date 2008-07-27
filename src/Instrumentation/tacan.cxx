@@ -17,7 +17,7 @@
 
 #include "tacan.hxx"
 
-SG_USING_STD(vector);
+using std::vector;
 
 
 /**

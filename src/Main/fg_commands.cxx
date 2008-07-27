@@ -45,9 +45,9 @@
 #include "viewmgr.hxx"
 #include "main.hxx"
 
-SG_USING_STD(string);
-SG_USING_STD(ifstream);
-SG_USING_STD(ofstream);
+using std::string;
+using std::ifstream;
+using std::ofstream;
 
 
 

@@ -44,8 +44,8 @@
 
 #include "props.hxx"
 
-SG_USING_STD(stringstream);
-SG_USING_STD(ends);
+using std::stringstream;
+using std::ends;
 
 using std::cout;
 using std::endl;

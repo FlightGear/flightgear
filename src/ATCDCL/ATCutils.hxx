@@ -24,7 +24,7 @@
 #include <math.h>
 #include <simgear/math/point3d.hxx>
 #include <string>
-SG_USING_STD(string);
+using std::string;
 
 // These are defined here because I had a problem with SG_DEGREES_TO_RADIANS
 #define DCL_PI  3.1415926535f

@@ -47,6 +47,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/model.hxx>
+#include <osg/GLU>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -56,8 +57,6 @@
 
 #include "hud.hxx"
 #include "panel.hxx"
-
-#include SG_GLU_H
 
 #define WIN_X 0
 #define WIN_Y 0

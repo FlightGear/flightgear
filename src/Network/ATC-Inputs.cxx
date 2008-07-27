@@ -47,7 +47,7 @@
 
 #include "ATC-Inputs.hxx"
 
-SG_USING_STD(string);
+using std::string;
 
 
 

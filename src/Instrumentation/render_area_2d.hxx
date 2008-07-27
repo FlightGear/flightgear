@@ -33,7 +33,7 @@
 
 #include <vector>
 
-SG_USING_STD(vector);
+using std::vector;
 
 enum RA2DDrawingType {
 	RA2D_LINE,

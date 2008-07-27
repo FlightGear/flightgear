@@ -13,8 +13,8 @@
 #include <vector>
 #include <string>
 
-SG_USING_STD(string);
-SG_USING_STD(vector);
+using std::string;
+using std::vector;
 
 #include <osg/ref_ptr>
 #include <osg/Group>

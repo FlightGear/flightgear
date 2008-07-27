@@ -34,7 +34,7 @@
 
 #include "protocol.hxx"
 
-SG_USING_STD(string);
+using std::string;
 
 
 class FGJsClient : public FGProtocol {

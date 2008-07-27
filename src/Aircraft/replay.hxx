@@ -39,7 +39,7 @@
 #include <Network/net_ctrls.hxx>
 #include <Network/net_fdm.hxx>
 
-SG_USING_STD(deque);
+using std::deque;
 
 
 class FGReplayData {

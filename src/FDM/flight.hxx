@@ -84,9 +84,9 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <FDM/groundcache.hxx>
 
-SG_USING_STD(list);
-SG_USING_STD(vector);
-SG_USING_STD(string);
+using std::list;
+using std::vector;
+using std::string;
 
 // This is based heavily on LaRCsim/ls_generic.h
 class FGInterface : public SGSubsystem {

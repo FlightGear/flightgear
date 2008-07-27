@@ -47,7 +47,7 @@
 
 #include "ATC-Outputs.hxx"
 
-SG_USING_STD(string);
+using std::string;
 
 
 

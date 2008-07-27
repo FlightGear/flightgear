@@ -14,7 +14,7 @@
 #include <simgear/compiler.h>
 
 #include <string>
-SG_USING_STD(string);
+using std::string;
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>

@@ -39,7 +39,7 @@
 #include "environment_mgr.hxx"
 #include "environment_ctrl.hxx"
 
-SG_USING_STD(sort);
+using std::sort;
 
 class metar_filter : public FGAirportSearchFilter {
     virtual bool pass(FGAirport *a) { return a->getMetar(); }

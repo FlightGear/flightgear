@@ -8,7 +8,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include SG_GL_H
+#include <osg/GL>
 
 #include <simgear/screen/texture.hxx>
 

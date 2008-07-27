@@ -32,8 +32,8 @@
 #include <simgear/sound/sample_openal.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
-SG_USING_STD(queue);
-SG_USING_STD(vector);
+using std::queue;
+using std::vector;
 
 class SGXmlSound;
 

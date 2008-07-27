@@ -46,8 +46,8 @@
 #include "ATCutils.hxx"
 #include "commlist.hxx"
 
-SG_USING_STD(list);
-SG_USING_STD(cout);
+using std::list;
+using std::cout;
 
 using namespace simgear;
 

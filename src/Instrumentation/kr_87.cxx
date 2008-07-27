@@ -36,7 +36,7 @@
 #include "kr_87.hxx"
 
 #include <string>
-SG_USING_STD(string);
+using std::string;
 
 static int play_count = 0;
 static time_t last_time = 0;

@@ -15,7 +15,7 @@
 #include <simgear/compiler.h>	// for SG_USING_STD
 #include <simgear/structure/subsystem_mgr.hxx>
 
-SG_USING_STD(vector);
+using std::vector;
 
 // Don't pull in headers, since we don't need them here.
 class SGPropertyNode;

@@ -19,9 +19,9 @@
 
 #include <Main/fg_props.hxx>
 
-SG_USING_STD(vector);
-SG_USING_STD(string);
-SG_USING_STD(list);
+using std::vector;
+using std::string;
+using std::list;
 
 class FGAIBase;
 

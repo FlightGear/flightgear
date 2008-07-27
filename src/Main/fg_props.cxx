@@ -44,8 +44,8 @@
 #include "globals.hxx"
 #include "fg_props.hxx"
 
-SG_USING_STD(istream);
-SG_USING_STD(ostream);
+using std::istream;
+using std::ostream;
 
 static bool winding_ccw = true; // FIXME: temporary
 

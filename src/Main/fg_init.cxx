@@ -123,8 +123,11 @@
 #include "viewmgr.hxx"
 #include "main.hxx"
 
-SG_USING_STD(string);
+#ifdef __APPLE__
+#  include <CoreFoundation/CoreFoundation.h>
+#endif
 
+using std::string;
 
 class Sound;
 extern const char *default_root;

@@ -51,10 +51,10 @@
 #include "dynamics.hxx"
 
 
-SG_USING_STD(string);
-SG_USING_STD(map);
-SG_USING_STD(set);
-SG_USING_STD(vector);
+using std::string;
+using std::map;
+using std::set;
+using std::vector;
 
 
 

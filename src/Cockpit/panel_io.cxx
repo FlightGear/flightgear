@@ -46,9 +46,9 @@
 //built-in layers
 #include "built_in/FGMagRibbon.hxx"
 
-SG_USING_STD(istream);
-SG_USING_STD(ifstream);
-SG_USING_STD(string);
+using std::istream;
+using std::ifstream;
+using std::string;
 
 
 

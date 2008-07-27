@@ -29,7 +29,7 @@
 #include <string>
 #include <math.h>
 
-SG_USING_STD(string);
+using std::string;
 
 #include "ATC.hxx"
 #include "ATCmgr.hxx"

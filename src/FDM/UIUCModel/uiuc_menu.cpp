@@ -166,12 +166,12 @@
 
 #include "uiuc_menu.h"
 
-SG_USING_STD(cerr);
-SG_USING_STD(cout);
-SG_USING_STD(endl);
+using std::cerr;
+using std::cout;
+using std::endl;
 
 #ifndef _MSC_VER
-SG_USING_STD(exit);
+using std::exit;
 #endif
 
 void uiuc_menu( string aircraft_name )

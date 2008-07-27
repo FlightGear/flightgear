@@ -65,8 +65,8 @@ namespace osg {
 
 #include <plib/sg.h>
 
-SG_USING_STD(deque);
-SG_USING_STD(vector);
+using std::deque;
+using std::vector;
 
 #define float_to_int(v) SGMiscf::roundToInt(v)
 

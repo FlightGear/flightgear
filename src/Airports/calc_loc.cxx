@@ -17,9 +17,9 @@
 #include <simgear/math/sg_geodesy.hxx>
 
 
-SG_USING_STD(string);
-SG_USING_STD(cout);
-SG_USING_STD(endl);
+using std::string;
+using std::cout;
+using std::endl;
 
 int main( int argc, char **argv ) {
 

@@ -36,7 +36,7 @@
 #include <Traffic/SchedFlight.hxx>
 #include <Traffic/Schedule.hxx>
 
-SG_USING_STD(list);
+using std::list;
 
 class FGAIThermal;
 

@@ -24,7 +24,7 @@
 
 #include "gps.hxx"
 
-SG_USING_STD(string);
+using std::string;
 
 
 GPS::GPS ( SGPropertyNode *node)

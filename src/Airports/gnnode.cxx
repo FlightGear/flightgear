@@ -2,7 +2,7 @@
 #include "groundnetwork.hxx"
 
 #include <algorithm>
-SG_USING_STD(sort);
+using std::sort;
 
 /*****************************************************************************
  * Helper function for parsing position string

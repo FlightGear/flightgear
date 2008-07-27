@@ -24,7 +24,7 @@
 
 #include "runwayprefs.hxx"
 
-SG_USING_STD(string);
+using std::string;
 
 class FGRunwayPreferenceXMLLoader : public XMLVisitor {
 public:

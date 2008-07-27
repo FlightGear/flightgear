@@ -8,7 +8,7 @@
 #include <simgear/xml/easyxml.hxx>
 
 #include <map>
-SG_USING_STD(map);
+using std::map;
 
 
 class FGNasalScript;

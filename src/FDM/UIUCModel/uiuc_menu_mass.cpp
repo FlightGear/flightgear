@@ -79,12 +79,12 @@
 
 #include "uiuc_menu_mass.h"
 
-SG_USING_STD(cerr);
-SG_USING_STD(cout);
-SG_USING_STD(endl);
+using std::cerr;
+using std::cout;
+using std::endl;
 
 #ifndef _MSC_VER
-SG_USING_STD(exit);
+using std::exit;
 #endif
 
 void parse_mass( const string& linetoken2, const string& linetoken3,

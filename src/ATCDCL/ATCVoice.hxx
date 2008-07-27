@@ -30,9 +30,9 @@
 
 #include <simgear/sound/sample_openal.hxx>
 
-SG_USING_STD(map);
-SG_USING_STD(list);
-SG_USING_STD(string);
+using std::map;
+using std::list;
+using std::string;
 
 
 struct WordData {

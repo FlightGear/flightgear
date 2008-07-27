@@ -67,7 +67,7 @@
 #include "globals.hxx"
 #include "fg_io.hxx"
 
-SG_USING_STD(string);
+using std::string;
 
 
 FGIO::FGIO()
@@ -75,7 +75,7 @@ FGIO::FGIO()
 }
 
 #include <algorithm>
-SG_USING_STD(for_each);
+using std::for_each;
 
 static void delete_ptr( FGProtocol* p ) { delete p; }
 

@@ -35,7 +35,7 @@
 
 #include "awynet.hxx"
 
-SG_USING_STD(sort);
+using std::sort;
 
 using std::cerr;
 using std::endl;

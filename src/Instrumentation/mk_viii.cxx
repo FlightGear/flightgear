@@ -72,7 +72,7 @@
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/structure/exception.hxx>
 
-SG_USING_STD(string);
+using std::string;
 
 #include "Airports/runways.hxx"
 #include "Airports/simple.hxx"

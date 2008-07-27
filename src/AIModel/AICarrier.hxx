@@ -29,8 +29,8 @@
 
 #include <simgear/compiler.h>
 
-SG_USING_STD(string);
-SG_USING_STD(list);
+using std::string;
+using std::list;
 
 #include "AIShip.hxx"
 

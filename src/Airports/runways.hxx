@@ -39,8 +39,8 @@
 #include <string>
 #include <map>
 
-SG_USING_STD(string);
-SG_USING_STD(multimap);
+using std::string;
+using std::multimap;
 
 
 struct ltstr {

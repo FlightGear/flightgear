@@ -46,12 +46,12 @@
 
 #include <sstream>
 #include <iomanip>
-SG_USING_STD(stringstream);
-SG_USING_STD(endl);
-SG_USING_STD(setprecision);
-SG_USING_STD(fixed);
-SG_USING_STD(setw);
-SG_USING_STD(setfill);
+using std::stringstream;
+using std::endl;
+using std::setprecision;
+using std::fixed;
+using std::setw;
+using std::setfill;
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>

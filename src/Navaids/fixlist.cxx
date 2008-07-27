@@ -30,7 +30,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 
 #include "fixlist.hxx"
-SG_USING_STD(pair);
+using std::pair;
 
 
 // Constructor

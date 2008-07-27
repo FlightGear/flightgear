@@ -16,8 +16,8 @@ robinst@ecf.toronto.edu
 #include "uiuc_warnings_errors.h"
 //#include "uiuc_aircraft.h"
 
-SG_USING_STD(ifstream);
-SG_USING_STD(istringstream);
+using std::ifstream;
+using std::istringstream;
 
 class flapStruct {
 private:

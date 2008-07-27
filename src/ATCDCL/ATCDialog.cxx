@@ -39,7 +39,7 @@
 
 #include <sstream>
 
-SG_USING_STD(ostringstream);
+using std::ostringstream;
 
 FGATCDialog *current_atcdialog;
 

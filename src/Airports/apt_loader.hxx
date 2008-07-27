@@ -34,7 +34,7 @@
 
 #include <string>
 
-SG_USING_STD(string);
+using std::string;
 
 #include "simple.hxx"
 #include "runways.hxx"

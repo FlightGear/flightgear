@@ -8,9 +8,9 @@
 #include <fstream>
 #include <string>
 
-SG_USING_STD(ofstream);
-SG_USING_STD(endl);
-SG_USING_STD(string);
+using std::ofstream;
+using std::endl;
+using std::string;
 
 #include <simgear/debug/logstream.hxx>
 

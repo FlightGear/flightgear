@@ -48,7 +48,7 @@
 #include "AILocalTraffic.hxx"
 
 
-SG_USING_STD(cout);
+using std::cout;
 
 // TowerPlaneRec
 

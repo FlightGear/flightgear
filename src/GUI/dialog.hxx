@@ -15,7 +15,7 @@
 #include <simgear/misc/sg_path.hxx>
 
 #include <vector>
-SG_USING_STD(vector);
+using std::vector;
 
 
 // ugly temporary workaround for plib's lack of user defined class ids  FIXME

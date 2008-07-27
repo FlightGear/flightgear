@@ -38,9 +38,9 @@
 #include <vector>
 #include <deque>
 
-SG_USING_STD(string);
-SG_USING_STD(vector);
-SG_USING_STD(deque);
+using std::string;
+using std::vector;
+using std::deque;
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>

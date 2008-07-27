@@ -11,8 +11,13 @@
 #include <math.h>
 
 #include <simgear/compiler.h>
-
-#include SG_GLUT_H
+#if defined( __APPLE__)
+# include <OpenGL/OpenGL.h>
+# include <GLUT/glut.h>
+#else
+# include <GL/gl.h>
+# include <GL/glut.h>
+#endif
 
 #define TEXRES_X 256
 #define TEXRES_Y 256

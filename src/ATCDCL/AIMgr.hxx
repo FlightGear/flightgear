@@ -31,7 +31,7 @@
 #include "ATCmgr.hxx"
 #include "AIEntity.hxx"
 
-SG_USING_STD(list);
+using std::list;
 
 
 class FGAIMgr : public SGSubsystem

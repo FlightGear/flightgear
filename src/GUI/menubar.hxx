@@ -13,10 +13,10 @@
 #include <plib/pu.h>
 
 #include <map>
-SG_USING_STD(map);
+using std::map;
 
 #include <vector>
-SG_USING_STD(vector);
+using std::vector;
 
 
 class puMenuBar;

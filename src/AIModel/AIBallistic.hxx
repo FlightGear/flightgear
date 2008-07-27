@@ -31,8 +31,8 @@
 #include "AIManager.hxx"
 #include "AIBase.hxx"
 
-SG_USING_STD(vector);
-SG_USING_STD(list);
+using std::vector;
+using std::list;
 
 class FGAIBallistic : public FGAIBase {
 

@@ -52,8 +52,8 @@
 #include "simple.hxx"
 #include "xmlloader.hxx"
 
-SG_USING_STD(sort);
-SG_USING_STD(random_shuffle);
+using std::sort;
+using std::random_shuffle;
 
 
 

@@ -36,8 +36,8 @@
 #include <AIModel/AIManager.hxx>
 #include <vector>
 #include <string>
-SG_USING_STD(vector);
-SG_USING_STD(string);
+using std::vector;
+using std::string;
 
 class FGAIBase;
 class FGODGauge;

@@ -32,7 +32,7 @@
 
 #include <string>
 
-SG_USING_STD(string);
+using std::string;
 
 class SGNewCloud;
 class SGCloudField;

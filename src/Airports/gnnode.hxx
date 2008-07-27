@@ -20,8 +20,8 @@
 #include <string>
 #include <simgear/compiler.h>
 
-SG_USING_STD(string);
-SG_USING_STD(vector);
+using std::string;
+using std::vector;
 
 class FGTaxiSegment;
 typedef vector<FGTaxiSegment*>  FGTaxiSegmentVector;

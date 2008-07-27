@@ -30,8 +30,8 @@
 
 #include <simgear/compiler.h>
 
-SG_USING_STD(vector);
-SG_USING_STD(string);
+using std::vector;
+using std::string;
 
 typedef vector<time_t> timeVec;
 typedef vector<time_t>::const_iterator timeVecConstIterator;

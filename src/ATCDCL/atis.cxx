@@ -29,10 +29,10 @@
 #include <stdlib.h>	// atoi()
 #include <stdio.h>	// sprintf
 #include <string>
-SG_USING_STD(string);
+using std::string;
 
 #include <iostream>
-SG_USING_STD(cout);
+using std::cout;
 
 #include <simgear/misc/sg_path.hxx>
 

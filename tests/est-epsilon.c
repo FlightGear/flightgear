@@ -9,9 +9,11 @@
 #include <stdio.h>
 
 #include <simgear/compiler.h>
-
-#include SG_GLUT_H
-
+#if defined( __APPLE__)
+# include <OpenGL/OpenGL.h>
+#else
+# include <GL/gl.h>
+#endif
 
 int main() {
     GLfloat a, t;

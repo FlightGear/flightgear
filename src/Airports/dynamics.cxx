@@ -43,10 +43,10 @@
 #include <string>
 #include <vector>
 
-SG_USING_STD(string);
-SG_USING_STD(vector);
-SG_USING_STD(sort);
-SG_USING_STD(random_shuffle);
+using std::string;
+using std::vector;
+using std::sort;
+using std::random_shuffle;
 
 #include "simple.hxx"
 #include "dynamics.hxx"

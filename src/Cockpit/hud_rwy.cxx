@@ -34,7 +34,7 @@
 #include <simgear/math/polar3d.hxx>
 #include <ATCDCL/ATCutils.hxx>
 
-#include SG_GLU_H
+#include <osg/GLU>
 
 
 // int x, int y, int width, int height, float scale_data, bool working)

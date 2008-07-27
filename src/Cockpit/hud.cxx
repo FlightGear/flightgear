@@ -38,6 +38,7 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <osg/GLU>
 
 #include <Aircraft/aircraft.hxx>
 //#include <Autopilot/xmlauto.hxx>
@@ -46,8 +47,6 @@
 #include <Scenery/scenery.hxx>
 
 #include "hud.hxx"
-
-#include SG_GLU_H
 
 
 static HUD_Properties *HUDprop = 0;

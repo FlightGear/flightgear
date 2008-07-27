@@ -19,7 +19,7 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <Sound/morse.hxx>
 
-SG_USING_STD(string);
+using std::string;
 
 
 /**

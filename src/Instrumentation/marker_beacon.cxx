@@ -36,7 +36,7 @@
 #include "marker_beacon.hxx"
 
 #include <string>
-SG_USING_STD(string);
+using std::string;
 
 
 // Constructor

@@ -28,8 +28,8 @@
 
 #include "ATC.hxx"
 
-SG_USING_STD(vector);
-SG_USING_STD(map);
+using std::vector;
+using std::map;
 
 class NewGUI;
 

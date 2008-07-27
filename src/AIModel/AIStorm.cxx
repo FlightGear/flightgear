@@ -31,7 +31,7 @@
 #include <cstdlib>
 #include <time.h>
 
-SG_USING_STD(string);
+using std::string;
 
 #include "AIStorm.hxx"
 

@@ -47,7 +47,7 @@
 
 #include "httpd.hxx"
 
-SG_USING_STD(string);
+using std::string;
 
 bool FGHttpd::open() {
     if ( is_enabled() ) {

@@ -102,8 +102,8 @@
 //#include "uiuc_network.h"
 #include "uiuc_get_flapper.h"
 
-SG_USING_STD(cout);
-SG_USING_STD(endl);
+using std::cout;
+using std::endl;
 
 extern "C" void uiuc_initial_init ();
 extern "C" void uiuc_defaults_inits ();

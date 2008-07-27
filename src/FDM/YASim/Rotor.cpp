@@ -11,7 +11,7 @@
 #include <iostream>
 #include <iomanip>
 
-SG_USING_STD(setprecision);
+using std::setprecision;
 
 #ifdef TEST_DEBUG
 #include <stdio.h>

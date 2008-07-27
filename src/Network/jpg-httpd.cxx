@@ -54,7 +54,7 @@
 #include <osgUtil/SceneView>
 extern osg::ref_ptr<osgUtil::SceneView> sceneView;
 
-SG_USING_STD(string);
+using std::string;
 
 
 bool FGJpegHttpd::open() {

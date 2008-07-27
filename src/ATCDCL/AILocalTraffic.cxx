@@ -47,7 +47,7 @@ during descent to avoid occasionally landing short or long.
 #include <string>
 #include <math.h>
 
-SG_USING_STD(string);
+using std::string;
 
 #include "ATCmgr.hxx"
 #include "AILocalTraffic.hxx"

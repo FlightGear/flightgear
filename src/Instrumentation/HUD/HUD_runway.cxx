@@ -26,7 +26,7 @@
 #include <simgear/compiler.h>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/polar3d.hxx>
-#include SG_GLU_H
+#include <osg/GLU>
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>

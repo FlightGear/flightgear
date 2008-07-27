@@ -34,7 +34,7 @@ class FGTower;
 struct Gate;
 
 #include <string>
-SG_USING_STD(string);
+using std::string;
 
 enum TaxiState {
 	TD_INBOUND,

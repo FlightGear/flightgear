@@ -38,8 +38,8 @@
 
 #include "runways.hxx"
 
-SG_USING_STD(istream);
-SG_USING_STD(multimap);
+using std::istream;
+using std::multimap;
 
 
 // add an entry to the list

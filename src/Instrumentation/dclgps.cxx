@@ -29,7 +29,7 @@
 #include <simgear/structure/commands.hxx>
 #include <Main/fg_props.hxx>
 #include <iostream>
-SG_USING_STD(cout);
+using std::cout;
 
 //using namespace std;
 

@@ -34,8 +34,8 @@
 #include "ATC.hxx"
 #include "transmission.hxx"
 
-SG_USING_STD(map);
-SG_USING_STD(vector);
+using std::map;
+using std::vector;
 
 class FGTransmissionList {
 

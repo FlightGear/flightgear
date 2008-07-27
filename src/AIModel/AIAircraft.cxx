@@ -40,7 +40,7 @@
 #  include <ieeefp.h>
 #endif
 
-SG_USING_STD(string);
+using std::string;
 
 #include "AIAircraft.hxx"
 #include "performancedata.hxx"

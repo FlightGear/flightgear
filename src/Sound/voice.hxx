@@ -44,10 +44,10 @@
 #  include <simgear/threads/SGQueue.hxx>
 #else
 #  include <queue>
-   SG_USING_STD(queue);
+   using std::queue;
 #endif // ENABLE_THREADS
 
-SG_USING_STD(vector);
+using std::vector;
 
 
 

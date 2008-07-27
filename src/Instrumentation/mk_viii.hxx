@@ -32,9 +32,9 @@
 #include <simgear/sound/sample_openal.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
-SG_USING_STD(vector);
-SG_USING_STD(deque);
-SG_USING_STD(map);
+using std::vector;
+using std::deque;
+using std::map;
 
 #include "Airports/runways.hxx"
 #include "Airports/simple.hxx"

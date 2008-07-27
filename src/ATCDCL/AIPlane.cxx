@@ -25,7 +25,7 @@
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <math.h>
 #include <string>
-SG_USING_STD(string);
+using std::string;
 
 
 #include "AIPlane.hxx"

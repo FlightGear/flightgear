@@ -43,7 +43,7 @@
 
 using namespace std;
 
-SG_USING_STD(vector);
+using std::vector;
 
 
 class FGScheduledFlight

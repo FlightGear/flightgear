@@ -12,8 +12,11 @@
 
 #include <simgear/compiler.h>
 
-#include SG_GLUT_H
-
+#if defined( __APPLE__)
+# include <GLUT/glut.h>
+#else
+# include <GL/glut.h>
+#endif
 #include <plib/pu.h>
 
 #include <Scenery/scenery.hxx>

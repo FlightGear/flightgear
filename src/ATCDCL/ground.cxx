@@ -37,8 +37,8 @@
 #include "AILocalTraffic.hxx"
 #include "ATCmgr.hxx"
 
-SG_USING_STD(ifstream);
-SG_USING_STD(cout);
+using std::ifstream;
+using std::cout;
 
 node::node() {
 }

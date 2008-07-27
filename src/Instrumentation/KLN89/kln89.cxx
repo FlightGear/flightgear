@@ -47,7 +47,7 @@
 #include <Main/fg_props.hxx>
 #include <simgear/math/point3d.hxx>
 
-SG_USING_STD(cout);
+using std::cout;
 
 KLN89::KLN89(RenderArea2D* instrument) 
 : DCLGPS(instrument) {

@@ -42,7 +42,7 @@
 
 #include <Airports/simple.hxx>
 
-SG_USING_STD(string);
+using std::string;
 
 
 // Read in configuration (files and command line optoins) but only set

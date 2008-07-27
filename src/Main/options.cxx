@@ -60,8 +60,8 @@
 #include "viewmgr.hxx"
 
 
-SG_USING_STD(string);
-SG_USING_STD(sort);
+using std::string;
+using std::sort;
 
 #ifndef VERSION
 #define VERSION "CVS "__DATE__

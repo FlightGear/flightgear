@@ -70,7 +70,7 @@
 
 #include "TrafficMgr.hxx"
 
-SG_USING_STD(sort);
+using std::sort;
  
 /******************************************************************************
  * TrafficManager

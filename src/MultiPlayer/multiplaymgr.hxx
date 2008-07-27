@@ -38,9 +38,9 @@
 #endif
 
 #include <string>
-SG_USING_STD(string);
+using std::string;
 #include <vector>
-SG_USING_STD(vector);
+using std::vector;
 
 #include <simgear/compiler.h>
 #include <simgear/props/props.hxx>

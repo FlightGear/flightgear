@@ -42,7 +42,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 
-SG_USING_STD(vector);
+using std::vector;
 
 FGOpenGC::FGOpenGC() : 
 	press_node(fgGetNode("/environment/pressure-inhg[0]", true)),

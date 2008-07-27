@@ -13,7 +13,7 @@
 #include <Cockpit/panel_io.hxx>
 #include "panelnode.hxx"
 
-SG_USING_STD(vector);
+using std::vector;
 
 
 // Static (!) handling for all 3D panels in the program.

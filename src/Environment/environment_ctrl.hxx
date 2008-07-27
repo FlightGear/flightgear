@@ -40,8 +40,8 @@
 #include <queue>
 #include <vector>
 
-SG_USING_STD(queue);
-SG_USING_STD(vector);
+using std::queue;
+using std::vector;
 
 class SGPropertyNode;
 class FGAirport;

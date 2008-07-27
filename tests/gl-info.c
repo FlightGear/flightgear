@@ -19,8 +19,13 @@ Date: Fri, 24 Apr 1998 07:33:51 -0800
 #include <stdlib.h>
 
 #include <simgear/compiler.h>
-
-#include SG_GLUT_H
+#if defined( __APPLE__)
+# include <OpenGL/OpenGL.h>
+# include <GLUT/glut.h>
+#else
+# include <GL/gl.h>
+# include <GL/glut.h>
+#endif
 
 
 void getPrints ( GLenum token, char *string )
