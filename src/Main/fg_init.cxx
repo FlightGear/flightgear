@@ -403,7 +403,7 @@ SGPropertyNode *fgInitLocale(const char *language) {
    SGPropertyNode *strings = c_node->getNode("strings");
    try {
       readProperties(d_path.str(), strings);
-   } catch (const sg_exception &e) {
+   } catch (const sg_exception &) {
       SG_LOG(SG_GENERAL, SG_ALERT, "Unable to read the localized strings");
       return NULL;
    }
@@ -425,7 +425,7 @@ SGPropertyNode *fgInitLocale(const char *language) {
 
       try {
          readProperties(c_path.str(), strings);
-      } catch (const sg_exception &e) {
+      } catch (const sg_exception &) {
          SG_LOG(SG_GENERAL, SG_ALERT,
                  "Unable to read the localized strings from " << c_path.str());
          return NULL;
