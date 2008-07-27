@@ -13,7 +13,7 @@ __version__ = "0.2"
 __bpydoc__ = """\
 Imports an SVG file containing UV maps, which has been saved by the
 uv_export.svg script. This allows to move, scale, and rotate object
-mapping in SVG editors like Inkscape. Note that all contained UV maps
+mappings in SVG editors like Inkscape. Note that all contained UV maps
 will be set, no matter which objects are actually selected at the moment.
 The choice has been made when the file was saved!
 """
@@ -212,18 +212,18 @@ class import_svg(handler.ContentHandler):
 
 	def startElement(self, name, attrs):
 		currmat = self.matrices[-1]
-		try:
+		if "transform" in attrs:
 			m = parse_transform(attrs["transform"])
 			if currmat != None:
 				m.multiply(currmat)
 			self.matrices.append(m)
-		except:
+		else:
 			self.matrices.append(currmat)
 
 		if name == "polygon":
 			self.handlePolygon(attrs)
 		elif name == "svg":
-			try:
+			if "viewBox" in attrs:
 				x, y, w, h = commawsp.split(attrs["viewBox"], 4)
 				if int(x) or int(y):
 					raise Abort("bad viewBox")
@@ -231,7 +231,7 @@ class import_svg(handler.ContentHandler):
 				self.height = int(h)
 				if self.width != self.height:
 					raise Abort("viewBox isn't a square")
-			except:
+			else:
 				raise Abort("no viewBox")
 		elif name == "desc" and not self.verified:
 			self.scandesc = True
