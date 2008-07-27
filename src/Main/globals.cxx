@@ -69,9 +69,6 @@ FGGlobals::FGGlobals() :
     event_mgr( new SGEventMgr ),
     sim_time_sec( 0.0 ),
     fg_root( "" ),
-#if defined(FX) && defined(XMESA)
-    fullscreen( true ),
-#endif
     warp( 0 ),
     warp_delta( 0 ),
     time_params( NULL ),

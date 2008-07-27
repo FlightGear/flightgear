@@ -396,27 +396,6 @@ setWindingCCW (bool state)
 }
 
 static bool
-getFullScreen ()
-{
-#if defined(FX) && !defined(WIN32)
-  return globals->get_fullscreen();
-#else
-  return false;
-#endif
-}
-
-static void
-setFullScreen (bool state)
-{
-#if defined(FX) && !defined(WIN32)
-  globals->set_fullscreen(state);
-#  if defined(XMESA_FX_FULLSCREEN) && defined(XMESA_FX_WINDOW)
-  XMesaSetFXmode( state ? XMESA_FX_FULLSCREEN : XMESA_FX_WINDOW );
-#  endif
-#endif
-}
-
-static bool
 getFDMDataLogging ()
 {
   return fdm_data_logging;
@@ -544,7 +523,6 @@ FGProperties::bind ()
 
 				// Misc. Temporary junk.
   fgTie("/sim/temp/winding-ccw", getWindingCCW, setWindingCCW, false);
-  fgTie("/sim/temp/full-screen", getFullScreen, setFullScreen);
   fgTie("/sim/temp/fdm-data-logging", getFDMDataLogging, setFDMDataLogging);
 }
 

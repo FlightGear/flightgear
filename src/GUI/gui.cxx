@@ -90,22 +90,7 @@ public:
         LayoutWidget::setDefaultFont(GuiFont, 15);
   
         if (!fgHasNode("/sim/startup/mouse-pointer")) {
-            // no preference specified for mouse pointer, attempt to autodetect...
-            // Determine if we need to render the cursor, or if the windowing
-            // system will do it.  First test if we are rendering with
-            // glide.
-            // XXX Not bloody likely in 2008...
-            if ( strstr ( general.get_glRenderer(), "Glide" ) ) {
-                // Test for the MESA_GLX_FX env variable
-                char *mesa_win_state = getenv( "MESA_GLX_FX" );
-                if (mesa_win_state  != NULL) {
-                    // test if we are fullscreen mesa/glide
-                    if ( (mesa_win_state[0] == 'f') ||
-                         (mesa_win_state[0] == 'F') ) {
-                        puShowCursor ();
-                    }
-                }
-            }
+            // no preference specified for mouse pointer
         } else if ( !fgGetBool("/sim/startup/mouse-pointer") ) {
             // don't show pointer
         } else {

@@ -36,10 +36,6 @@
 
 #include <Main/fg_os.hxx>
 
-#if defined(FX) && defined(XMESA)
-#  include <GL/xmesa.h>
-#endif
-
 #include <string>
 
 #include <stdlib.h>

@@ -118,11 +118,6 @@ private:
 
     string browser;
 
-    // Fullscreen mode for old 3DFX cards.
-#if defined(FX) && defined(XMESA)
-    bool fullscreen;
-#endif
-
     // An offset in seconds from the true time.  Allows us to adjust
     // the effective time of day.
     long int warp;
@@ -242,11 +237,6 @@ public:
 
     inline const string &get_browser () const { return browser; }
     void set_browser (const string &b) { browser = b; }
-
-#if defined(FX) && defined(XMESA)
-    inline bool get_fullscreen() const { return fullscreen; }
-    inline bool set_fullscreen( bool f ) { fullscreen = f; }
-#endif
 
     inline long int get_warp() const { return warp; }
     inline void set_warp( long int w ) { warp = w; }

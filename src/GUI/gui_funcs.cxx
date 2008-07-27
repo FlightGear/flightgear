@@ -38,10 +38,6 @@
 
 #include SG_GL_H
 
-#if defined(FX) && defined(XMESA)
-#  include <GL/xmesa.h>
-#endif
-
 #include <fstream>
 #include <string>
 
@@ -192,15 +188,6 @@ ____________________________________________________________________*/
 void helpCb ()
 {
     string command;
-	
-#if defined(FX) && !defined(WIN32)
-#  if defined(XMESA_FX_FULLSCREEN) && defined(XMESA_FX_WINDOW)
-    if ( globals->get_fullscreen() ) {
-        globals->set_fullscreen(false);
-        XMesaSetFXmode( XMESA_FX_WINDOW );
-    }
-#  endif
-#endif
 	
     SGPath path( globals->get_fg_root() );
     path.append( "Docs/index.html" );

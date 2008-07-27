@@ -123,10 +123,6 @@
 #include "viewmgr.hxx"
 #include "main.hxx"
 
-#if defined(FX) && defined(XMESA)
-#include <GL/xmesa.h>
-#endif
-
 SG_USING_STD(string);
 
 
@@ -1353,10 +1349,6 @@ bool fgInitPosition() {
 bool fgInitGeneral() {
     string root;
 
-#if defined(FX) && defined(XMESA)
-    char *mesa_win_state;
-#endif
-
     SG_LOG( SG_GENERAL, SG_INFO, "General Initialization" );
     SG_LOG( SG_GENERAL, SG_INFO, "======= ==============" );
 
@@ -1371,21 +1363,6 @@ bool fgInitGeneral() {
     SG_LOG( SG_GENERAL, SG_INFO, "FG_ROOT = " << '"' << root << '"' << endl );
 
     globals->set_browser(fgGetString("/sim/startup/browser-app", "firefox %u"));
-
-#if defined(FX) && defined(XMESA)
-    // initialize full screen flag
-    globals->set_fullscreen(false);
-    if ( strstr ( general.get_glRenderer(), "Glide" ) ) {
-        // Test for the MESA_GLX_FX env variable
-        if ( (mesa_win_state = getenv( "MESA_GLX_FX" )) != NULL) {
-            // test if we are fullscreen mesa/glide
-            if ( (mesa_win_state[0] == 'f') ||
-                 (mesa_win_state[0] == 'F') ) {
-                globals->set_fullscreen(true);
-            }
-        }
-    }
-#endif
 
     char buf[512], *cwd = getcwd(buf, 511);
     buf[511] = '\0';
