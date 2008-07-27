@@ -25,10 +25,6 @@
 
 #include <simgear/compiler.h>
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
 #include <osg/ref_ptr>
 #include <osg/AlphaFunc>
 #include <osg/BlendFunc>

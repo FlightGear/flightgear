@@ -31,10 +31,6 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
 #include <stdio.h>	// sprintf
 #include <string.h>
 
@@ -45,8 +41,6 @@
 #include <osg/PolygonOffset>
 
 #include <simgear/compiler.h>
-
-#include SG_GLU_H
 
 #include <plib/fnt.h>
 

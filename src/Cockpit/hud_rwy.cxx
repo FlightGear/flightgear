@@ -32,7 +32,6 @@
 #include <Environment/environment_mgr.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/polar3d.hxx>
-#include SG_GLU_H
 #include <ATCDCL/ATCutils.hxx>
 
 

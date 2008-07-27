@@ -34,10 +34,6 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
 #include <simgear/compiler.h>
 
 #include <simgear/structure/subsystem_mgr.hxx>

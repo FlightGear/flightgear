@@ -36,10 +36,6 @@
 #include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#include <windows.h>
-#endif
-
 #include <simgear/math/sg_random.h>
 #include <simgear/timing/sg_time.hxx>
 #include <Main/fg_props.hxx>

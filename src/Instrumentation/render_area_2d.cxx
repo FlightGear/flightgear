@@ -26,13 +26,7 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#   include <windows.h>
-#endif
-
 #include "render_area_2d.hxx"
-
-#include SG_GL_H
 
 
 static const float dummy_normals[][3] = {{0.0f, 0.0f, 0.0f},

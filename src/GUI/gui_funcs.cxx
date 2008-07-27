@@ -32,26 +32,12 @@
 
 #include <simgear/compiler.h>
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
-#include SG_GL_H
-
 #include <fstream>
 #include <string>
 #include <cstring>
 #include <sstream>
 
 #include <stdlib.h>
-
-// for help call back
-#ifdef WIN32
-# include <shellapi.h>
-# ifdef __CYGWIN__
-#  include <sys/cygwin.h>
-# endif
-#endif
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>

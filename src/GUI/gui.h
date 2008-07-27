@@ -29,10 +29,6 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
 #include <plib/pu.h>
 
 #include <simgear/structure/exception.hxx>

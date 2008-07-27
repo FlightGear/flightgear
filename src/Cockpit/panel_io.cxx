@@ -22,10 +22,6 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
 #include <string.h>		// for strcmp()
 
 #include <simgear/compiler.h>

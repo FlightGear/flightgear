@@ -24,10 +24,6 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
 #include <simgear/compiler.h>
 
 #include <math.h>

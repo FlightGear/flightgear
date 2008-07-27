@@ -46,12 +46,6 @@ SG_USING_STD(endl);
 #include "globals.hxx"
 
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#  include <float.h>
-#  include <pthread.h>
-#endif
-
 #include "fg_os.hxx"
 
 char *homedir = ::getenv( "HOME" );

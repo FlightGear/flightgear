@@ -30,10 +30,6 @@
 
 #include <simgear/compiler.h>
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
 #include <string>
 
 #include <simgear/structure/exception.hxx>

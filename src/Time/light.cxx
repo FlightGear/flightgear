@@ -26,13 +26,7 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
 #include <simgear/compiler.h>
-
-#include SG_GL_H
 
 #include <cmath>
 

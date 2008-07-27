@@ -30,16 +30,10 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>              // char related functions
 #include <string.h>             // strcmp()
-
-#include SG_GLU_H
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>

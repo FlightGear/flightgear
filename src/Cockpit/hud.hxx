@@ -34,10 +34,6 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
 #ifdef __CYGWIN__
 #include <ieeefp.h>
 #endif
@@ -50,7 +46,9 @@
 #include <deque>        // STL double ended queue
 #include <fstream>
 
-#include <osg/State>
+namespace osg {
+    class State;
+}
 
 #include <simgear/math/SGMath.hxx>
 #include <simgear/constants.h>

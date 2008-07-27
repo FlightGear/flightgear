@@ -31,10 +31,6 @@
 #include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#include <windows.h>
-#endif
-
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
 

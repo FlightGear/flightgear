@@ -32,11 +32,6 @@
 #  include <signal.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#  include <float.h>
-#endif
-
 #include <plib/netSocket.h>
 
 #include <simgear/props/props.hxx>

@@ -30,10 +30,6 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
 #include <osg/ref_ptr>
 #include <osg/StateSet>
 #include <osg/Texture2D>

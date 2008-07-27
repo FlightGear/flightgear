@@ -25,13 +25,7 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
 #include <simgear/compiler.h>
-
-#include SG_GLU_H
 
 #include <stdlib.h>
 #include <stdio.h>
