@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-#include SG_GLUT_H
+#include <GL/glut.h>
 
 #include <plib/ssg.h>
 
