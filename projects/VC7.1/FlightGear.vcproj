@@ -1782,9 +1782,6 @@
 				RelativePath="..\..\src\GUI\menubar.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\GUI\mouse.cxx">
-			</File>
-			<File
 				RelativePath="..\..\src\GUI\new_gui.cxx">
 			</File>
 			<File

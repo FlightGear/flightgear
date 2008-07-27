@@ -40,9 +40,10 @@
 
 #include <fstream>
 #include <string>
+#include <cstring>
+#include <sstream>
 
 #include <stdlib.h>
-#include <string.h>
 
 // for help call back
 #ifdef WIN32
@@ -52,22 +53,11 @@
 # endif
 #endif
 
-#include <sstream>
-
-#include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/screen/screen-dump.hxx>
 
-#include <Include/general.hxx>
-#include <Aircraft/aircraft.hxx>
-#include <Aircraft/controls.hxx>
-#include <Airports/simple.hxx>
 #include <Cockpit/panel.hxx>
-#include <FDM/flight.hxx>
-#include <Main/main.hxx>
-#include <Main/fg_init.hxx>
-#include <Main/fg_io.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/renderer.hxx>
@@ -81,8 +71,7 @@
 
 #include "gui.h"
 
-SG_USING_STD(string);
-SG_USING_STD(cout);
+using std::string;
 
 
 #if defined( TR_HIRES_SNAP)
@@ -230,7 +219,6 @@ void fgHiResDump()
 {
     FILE *f;
     string message;
-    bool show_pu_cursor = false;
     bool menu_status = fgGetBool("/sim/menubar/visibility");
     char *filename = new char [24];
     static int count = 1;
@@ -244,11 +232,8 @@ void fgHiResDump()
     }
 
     fgSetBool("/sim/menubar/visibility", false);
-    TurnCursorOff();
-    if ( !puCursorIsHidden() ) {
-	show_pu_cursor = true;
-	puHideCursor();
-    }
+    int mouse = fgGetMouseCursor();
+    fgSetMouseCursor(MOUSE_CURSOR_NONE);
 
     FGRenderer *renderer = globals->get_renderer();
 //     renderer->init();
@@ -415,11 +400,7 @@ void fgHiResDump()
 
     delete [] filename;
 
-    if ( show_pu_cursor ) {
-        puShowCursor();
-    }
-
-    TurnCursorOn();
+    fgSetMouseCursor(mouse);
     fgSetBool("/sim/menubar/visibility", menu_status);
 
     if ( !freeze ) {
@@ -469,12 +450,8 @@ GLubyte *hiResScreenCapture( int multiplier )
 #if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
 // win32 print screen function
 void printScreen () {
-    bool show_pu_cursor = false;
-    TurnCursorOff();
-    if ( !puCursorIsHidden() ) {
-	show_pu_cursor = true;
-	puHideCursor();
-    }
+    int mouse = fgGetMouseCursor();
+    fgSetMouseCursor(MOUSE_CURSOR_NONE);
 
     CGlPrinter p( CGlPrinter::PRINT_BITMAP );
     int cur_width = fgGetInt("/sim/startup/xsize");
@@ -482,10 +459,7 @@ void printScreen () {
     p.Begin( "FlightGear", cur_width*3, cur_height*3 );
     p.End( hiResScreenCapture(3) );
 
-    if ( show_pu_cursor ) {
-	puShowCursor();
-    }
-    TurnCursorOn();
+    fgSetMouseCursor(mouse);
 }
 #endif // #ifdef WIN32
 
@@ -502,7 +476,6 @@ void fgHiResDumpWrapper () {
 
 // do a screen snap shot
 bool fgDumpSnapShot () {
-    bool show_pu_cursor = false;
     static SGConstPropertyNode_ptr master_freeze = fgGetNode("/sim/freeze/master");
 
     bool freeze = master_freeze->getBoolValue();
@@ -510,11 +483,9 @@ bool fgDumpSnapShot () {
         fgSetBool("/sim/freeze/master", true);
     }
 
-    TurnCursorOff();
-    if ( !puCursorIsHidden() ) {
-        show_pu_cursor = true;
-        puHideCursor();
-    }
+    int mouse = fgGetMouseCursor();
+    fgSetMouseCursor(MOUSE_CURSOR_NONE);
+
     fgSetBool("/sim/signals/screenshot", true);
 
     FGRenderer *renderer = globals->get_renderer();
@@ -555,11 +526,7 @@ bool fgDumpSnapShot () {
     fgSetString("/sim/paths/screenshot-last", path.c_str());
     fgSetBool("/sim/signals/screenshot", false);
 
-    if ( show_pu_cursor ) {
-        puShowCursor();
-    }
-
-    TurnCursorOn();
+    fgSetMouseCursor(mouse);
 
     if ( !freeze ) {
         fgSetBool("/sim/freeze/master", false);

@@ -2923,10 +2923,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\gui\mouse.cxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\Instrumentation\mrg.cxx"
 				>
 			</File>

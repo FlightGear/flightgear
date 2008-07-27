@@ -833,8 +833,6 @@ FGRenderer::resize( int width, int height ) {
     if (height != lastheight)
         fgSetInt("/sim/startup/ysize", lastheight = height);
 
-    guiInitMouse(width, height);
-
     // for all views
     FGViewMgr *viewmgr = globals->get_viewmgr();
     if (viewmgr) {

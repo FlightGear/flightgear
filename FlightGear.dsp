@@ -6956,21 +6956,6 @@ SOURCE=.\src\GUI\gui_local.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\GUI\mouse.cxx
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_GUI"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_GUI"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\src\GUI\fonts.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"

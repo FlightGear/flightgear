@@ -73,10 +73,4 @@ typedef struct {
 } __fg_gui_fn_t;
 extern const __fg_gui_fn_t __fg_gui_fn[];
 
-// mouse.cxx
-extern void guiInitMouse(int width, int height);
-extern void maybeToggleMouse( void );
-extern void TurnCursorOn( void );
-extern void TurnCursorOff( void );
-
 #endif // _GUI_H_
