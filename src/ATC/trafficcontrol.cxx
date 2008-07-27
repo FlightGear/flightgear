@@ -1,4 +1,4 @@
-// trafficrecord.cxx - Implementation of AIModels ATC code.
+/// trafficrecord.cxx - Implementation of AIModels ATC code.
 //
 // Written by Durk Talsma, started September 2006.
 //
@@ -335,14 +335,14 @@ string FGATCController::getGateName(FGAIAircraft *ref)
 void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir msgDir)
 {
     string sender, receiver;
-    int commFreq = 0;
+    int stationFreq = 0;
     //double commFreqD;
     switch (msgDir) {
          case ATC_AIR_TO_GROUND:
              sender = rec->getAircraft()->getTrafficRef()->getCallSign();
              switch (rec->getLeg()) {
                  case 2:
-                     commFreq =
+                     stationFreq =
                         rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getGroundFrequency();
                      receiver = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getName() + "-Ground";
                      break;
@@ -358,7 +358,7 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
              receiver = rec->getAircraft()->getTrafficRef()->getCallSign();
              switch (rec->getLeg()) {
                  case 2:
-                 commFreq =
+                 stationFreq =
                         rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getGroundFrequency();
                      sender = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getName() + "-Ground";
                      break;
@@ -396,10 +396,16 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
            default:
                break;
     }
-    double currFreq = fgGetDouble("/instrumentation/comm/frequencies/selected-mhz");
-    int currFreqI = (int) floor(currFreq * 100 + 0.5);
+    double onBoardRadioFreq0 = fgGetDouble("/instrumentation/comm[0]/frequencies/selected-mhz");
+    double onBoardRadioFreq1 = fgGetDouble("/instrumentation/comm[1]/frequencies/selected-mhz");
+    int onBoardRadioFreqI0 = (int) floor(onBoardRadioFreq0 * 100 + 0.5);
+    int onBoardRadioFreqI1 = (int) floor(onBoardRadioFreq1 * 100 + 0.5);
     //cerr << "Using " << currFreqI << " and " << commFreq << endl;
-    if (currFreqI == commFreq) {
+
+    // Display ATC message only when one of the radios is tuned
+    // the relevant frequency.
+    // Note that distance attenuation is currently not yet implemented
+    if ((onBoardRadioFreqI0 == stationFreq) || (onBoardRadioFreqI1 == stationFreq)) {
         fgSetString("/sim/messages/atc", text.c_str());
         //cerr << "Printing Message: " << endl;
     }
