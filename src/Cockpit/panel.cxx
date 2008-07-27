@@ -57,6 +57,8 @@
 #include "hud.hxx"
 #include "panel.hxx"
 
+#include SG_GLU_H
+
 #define WIN_X 0
 #define WIN_Y 0
 #define WIN_W 1024

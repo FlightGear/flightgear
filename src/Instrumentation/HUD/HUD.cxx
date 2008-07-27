@@ -37,6 +37,8 @@
 
 #include "HUD.hxx"
 
+#include SG_GLU_H
+
 
 static float clamp(float f)
 {
