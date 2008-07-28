@@ -23,6 +23,7 @@
 #  include <config.h>
 #endif
 
+#include <sstream>
 #include <simgear/math/vector.hxx>
 #include <Main/viewer.hxx>
 #include "HUD.hxx"
@@ -48,7 +49,10 @@ HUD::Ladder::Ladder(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _roll(n->getNode("roll-input", false)),
     _width_units(int(n->getFloatValue("display-span"))),
     _div_units(int(fabs(n->getFloatValue("divisions")))),
-    _scr_hole(n->getIntValue("screen-hole")),
+    _scr_hole(fabsf(n->getFloatValue("screen-hole")) * 0.5f),
+    _zero_bar_overlength(n->getFloatValue("zero-bar-overlength", 10)),
+    _dive_bar_angle(n->getBoolValue("enable-dive-bar-angle")),
+    _tick_length(n->getFloatValue("tick-length")),
     _compression(n->getFloatValue("compression-factor")),
     _dynamic_origin(n->getBoolValue("enable-dynamic-origin")),
     _clip_plane(n->getBoolValue("enable-clip-plane")),
@@ -444,133 +448,33 @@ void HUD::Ladder::draw(void)
     }
 
     glRotatef(roll_value * SGD_RADIANS_TO_DEGREES, 0.0, 0.0, 1.0);
+
     // FRL marker not rotated - this line shifted below
-    float half_span = _w / 2.0;
-    float y = 0, y_end = 0;
-    float x_ini, x_ini2;
-    float x_end, x_end2;
+    float half_span = _w * 0.5f;
+    float y = 0;
+    struct { float x, y; } lo, li, ri, ro, numoffs;  // left/right inner/outer
 
     if (_div_units) {
-        const int BUFSIZE = 8;
-        char buf[BUFSIZE];
-        const float zero_offset = 50.0f; // horizon line is wider by this much
-
         _locTextList.setFont(_hud->_font_renderer);
         _locTextList.erase();
         _locLineList.erase();
         _locStippleLineList.erase();
 
-        int last = int(_vmax) + 1;
-        int i = int(_vmin);
+        for (int i = int(_vmin); i < int(_vmax) + 1; i++) {
+            if (i % _div_units)
+                continue;
 
-        if (!_scr_hole) {
-            x_end = half_span;
+            if (_type == PITCH)
+                y = float(i - pitch_value) * _compression + .5;
+            else  // _type == CLIMB_DIVE
+                y = float(i - actslope) * _compression + .5;
 
-            for (; i < last; i++) {
-                y = (i - pitch_value) * _compression + .5f;
+            // draw symbols
+            if (i == 90 && _zenith)
+                draw_zenith(0.0, y);
 
-                if (!(i % _div_units)) {           //  At integral multiple of div
-                    snprintf(buf, BUFSIZE, "%d", i);
-                    x_ini = -half_span;
-
-                    if (i == 0) {
-                        draw_line(x_ini - zero_offset, y, x_end + zero_offset, y);
-                        continue;
-
-                    } else if (i > 0) {
-                        // Zero or above draw solid lines
-                        draw_line(x_ini, y, x_end, y);
-
-                        if (i == 90 && _zenith)
-                            draw_zenith(0.0, y);
-                    } else {
-                        // Below zero draw dashed lines.
-                        draw_stipple_line(x_ini, y, x_end, y);
-
-                        if (i == -90 && _nadir)
-                            draw_nadir(0.0, y);
-                    }
-
-                    draw_text(x_ini - 4, y, buf, VCENTER|RIGHT);
-                    draw_text(x_end + 4, y, buf, VCENTER|LEFT);
-                }
-            }
-
-        } else { // if (_scr_hole)
-            // Draw ladder with space in the middle of the lines
-            float hole = _scr_hole / 2.0f;
-
-            x_end = -half_span + hole;
-            x_ini2 = half_span - hole;
-
-            for (; i < last; i++) {
-                if (_type == PITCH) {
-                    y = float(i - pitch_value) * _compression + .5;
-                } else { // _type == CLIMB_DIVE
-                    y = float(i - actslope) * _compression + .5;
-                }
-
-                if (!(i % _div_units)) {  //  At integral multiple of div
-                    snprintf(buf, BUFSIZE, "%d", i);
-
-                    // Start by calculating the points and drawing the
-                    // left side lines.
-                    x_ini = -half_span;
-                    x_end2 = half_span;
-                    y_end = y;
-
-                    if (i == 0) {
-                        // make zero point wider
-                        x_ini -= zero_offset;
-                        x_end2 += zero_offset;
-
-                        draw_line(x_ini, y, x_end, y);
-                        draw_line(x_ini2, y, x_end2, y);
-
-                        draw_text(x_ini - 2.0, y, buf, VCENTER|RIGHT);
-                        draw_text(x_end2 + 2.0, y, buf, VCENTER|LEFT);
-
-                    } else if (i > 0) {
-                        // draw climb bar vertical lines
-                        draw_line(x_ini, y - 5.0, x_ini, y);
-                        draw_line(x_end2, y - 5.0, x_end2, y);
-
-                        // draw pitch / climb bar
-                        draw_line(x_ini, y, x_end, y);
-                        draw_line(x_ini2, y, x_end2, y);
-
-                        draw_text(x_ini + 0.5, y - 0.5, buf, TOP|LEFT);
-                        draw_text(x_end2 - 0.5, y - 0.5, buf, TOP|RIGHT);
-
-                        if (i == 90 && _zenith)
-                            draw_zenith(0.0, y);
-
-                    } else { // i < 0
-                        float alpha = i * SG_DEGREES_TO_RADIANS / 2.0;
-                        y_end = y + (x_end - x_ini) * sin(alpha);
-
-                        float w = (x_end - x_ini) * cos(alpha);
-                        x_ini = x_end - w;
-                        x_end2 = x_ini2 + w;
-
-                        // draw dive bar vertical lines
-                        draw_line(x_end, y + 5.0, x_end, y);
-                        draw_line(x_ini2, y + 5.0, x_ini2, y);
-
-                        // draw pitch / dive bars
-                        draw_stipple_line(x_end, y, x_ini, y_end);
-                        draw_stipple_line(x_ini2, y, x_end2, y_end);
-
-                        float yoffs = 1.0 + (y - y_end) / 4.0;  // too hackish?
-                        draw_text(x_ini + 3.0, y_end + yoffs, buf, BOTTOM|HCENTER);
-                        // right number shifted in a little more, because of the minus
-                        draw_text(x_end2 - 4.0, y_end + yoffs, buf, BOTTOM|HCENTER);
-
-                        if (i == -90 && _nadir)
-                            draw_nadir(0.0, y);
-                    }
-                }
-            }
+            if (i == -90 && _nadir)
+                draw_nadir(0.0, y);
 
             // OBJECT LADDER MARK
             // TYPE LINE
@@ -584,6 +488,74 @@ void HUD::Ladder::draw(void)
                         half_span - hole, (_glide_slope - actslope) * _compression);
             }
 #endif
+
+            if (i > 85 || i < -85)
+                continue;
+
+            lo.x = -half_span;
+            ro.x = half_span;
+            li.x = ri.x = 0;
+            lo.y = ro.y = li.y = ri.y = y;
+            numoffs.x = 4;
+            numoffs.y = 0;
+
+            if (i == 0) {
+                lo.x -= _zero_bar_overlength;
+                ro.x += _zero_bar_overlength;
+            }
+
+            if (_scr_hole > 0.0f) {
+                li.x = -_scr_hole;
+                ri.x = _scr_hole;
+
+                if (_dive_bar_angle && i < 0) {
+                    float alpha = i * SG_DEGREES_TO_RADIANS * 0.5;
+                    float xoffs = (ro.x - ri.x) * cos(alpha);
+                    float yoffs = (ro.x - ri.x) * sin(alpha);
+                    lo.x = li.x - xoffs;
+                    ro.x = ri.x + xoffs;
+                    lo.y = ro.y = li.y + yoffs;
+                    numoffs.x = 0;
+                    numoffs.y = 4 - yoffs * 0.3;
+                }
+            }
+
+            // draw bars
+            if (_scr_hole) {
+                draw_line(li.x, li.y, lo.x, lo.y, i < 0);
+                draw_line(ri.x, ri.y, ro.x, ro.y, i < 0);
+            } else {
+                draw_line(lo.x, lo.y, ro.x, ro.y, i < 0);
+            }
+
+            // draw ticks
+            if (_tick_length) {
+                if (i < 0) {
+                    draw_line(li.x, li.y, li.x, li.y + _tick_length);
+                    draw_line(ri.x, ri.y, ri.x, ri.y + _tick_length);
+                } else if (i > 0 || _zero_bar_overlength == 0) {
+                    if (_tick_length > 0) {
+                        numoffs.x = -0.3;
+                        numoffs.y = -0.3;
+                        draw_line(lo.x, lo.y, lo.x, lo.y - _tick_length);
+                        draw_line(ro.x, ro.y, ro.x, ro.y - _tick_length);
+                    } else {
+                        draw_line(li.x, li.y, li.x, li.y - _tick_length);
+                        draw_line(ri.x, ri.y, ri.x, ri.y - _tick_length);
+                    }
+                }
+            }
+
+            // draw numbers
+            std::ostringstream str;
+            str << i;
+            const char *num = str.str().c_str();
+            int valign = numoffs.y > 0 ? BOTTOM : numoffs.y < 0 ? TOP : VCENTER;
+            draw_text(lo.x - numoffs.x, lo.y + numoffs.y, num,
+                    valign | (numoffs.x == 0 ? CENTER : numoffs.x > 0 ? RIGHT : LEFT));
+            draw_text(ro.x + numoffs.x, lo.y + numoffs.y, num,
+                    valign | (numoffs.x == 0 ? CENTER : numoffs.x > 0 ? LEFT : RIGHT));
+
         }
         _locTextList.draw();
 

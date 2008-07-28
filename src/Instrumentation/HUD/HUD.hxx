@@ -332,7 +332,7 @@ protected:
 
     void draw_line(float x1, float y1, float x2, float y2);
     void draw_stipple_line(float x1, float y1, float x2, float y2);
-    void draw_text(float x, float y, char *msg, int align = 0, int digit = 0);
+    void draw_text(float x, float y, const char *msg, int align = 0, int digit = 0);
     void draw_circle(float x1, float y1, float r) const;
     void draw_bullet(float, float, float);
 
@@ -492,16 +492,15 @@ private:
     void draw_zenith(float, float);
     void draw_nadir(float, float);
 
-    void draw_text(float x, float y, char *s, int align = 0) {
+    void draw_text(float x, float y, const char *s, int align = 0) {
         _locTextList.add(x, y, s, align, 0);
     }
 
-    void draw_line(float x1, float y1, float x2, float y2) {
-        _locLineList.add(LineSegment(x1, y1, x2, y2));
-    }
-
-    void draw_stipple_line(float x1, float y1, float x2, float y2) {
-        _locStippleLineList.add(LineSegment(x1, y1, x2, y2));
+    void draw_line(float x1, float y1, float x2, float y2, bool stipple = false) {
+        if (stipple)
+            _locStippleLineList.add(LineSegment(x1, y1, x2, y2));
+        else
+            _locLineList.add(LineSegment(x1, y1, x2, y2));
     }
 
     enum   Type { PITCH, CLIMB_DIVE } _type;
@@ -509,7 +508,10 @@ private:
     Input  _roll;
     float  _width_units;
     int    _div_units;
-    unsigned int _scr_hole;
+    float  _scr_hole;
+    float  _zero_bar_overlength;
+    bool   _dive_bar_angle;
+    float  _tick_length;
     float  _vmax;
     float  _vmin;
     float  _compression;

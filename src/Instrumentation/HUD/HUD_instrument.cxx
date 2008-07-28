@@ -38,10 +38,10 @@ HUD::Item::Item(HUD *hud, const SGPropertyNode *n, float x, float y) :
     if (node)
         _condition = sgReadCondition(globals->get_props(), node);
 
-    _x = n->getIntValue("x") + x;
-    _y = n->getIntValue("y") + y;
-    _w = n->getIntValue("width");
-    _h = n->getIntValue("height");
+    _x = n->getFloatValue("x") + x;
+    _y = n->getFloatValue("y") + y;
+    _w = n->getFloatValue("width");
+    _h = n->getFloatValue("height");
 
     vector<SGPropertyNode_ptr> opt = n->getChildren("option");
     for (unsigned int i = 0; i < opt.size(); i++) {
@@ -100,7 +100,7 @@ void HUD::Item::draw_stipple_line(float x1, float y1, float x2, float y2)
 }
 
 
-void HUD::Item::draw_text(float x, float y, char *msg, int align, int digit)
+void HUD::Item::draw_text(float x, float y, const char *msg, int align, int digit)
 {
     _hud->_text_list.add(x, y, msg, align, digit);
 }
