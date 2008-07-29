@@ -51,9 +51,8 @@ protected:
     typedef std::vector< osg::ref_ptr<osg::Camera> > CameraList;
     CameraList cameras;
     enum CameraNum {
-        BACKGROUND_CAMERA = 0,
-        FAR_CAMERA = 1,
-        NEAR_CAMERA = 2
+        FAR_CAMERA = 0,
+        NEAR_CAMERA = 1
     };
     double visibility;
     static const double nearCameraFar;

@@ -36,12 +36,13 @@ using namespace osg;
 
 const double ViewPartitionNode::nearCameraFar = 100.0;
 ViewPartitionNode::ViewPartitionNode():
-    cameras(3), visibility(40000.0)
+    cameras(2), visibility(40000.0)
 {
     const GLbitfield inheritanceMask = (CullSettings::ALL_VARIABLES
                                         & ~CullSettings::COMPUTE_NEAR_FAR_MODE
                                         & ~CullSettings::NEAR_FAR_RATIO
-                                        & ~CullSettings::CULLING_MODE);
+                                        & ~CullSettings::CULLING_MODE
+                                        & ~CullSettings::CULL_MASK);
     int i = 1;
     for (CameraList::iterator iter = cameras.begin();
          iter != cameras.end();
@@ -54,28 +55,21 @@ ViewPartitionNode::ViewPartitionNode():
         camera->setRenderOrder(Camera::POST_RENDER, i);
         *iter = camera;
     }
-    Camera* backgroundCamera = cameras[BACKGROUND_CAMERA].get();
-    backgroundCamera->setClearMask(GL_DEPTH_BUFFER_BIT);
-    // Turn off depth test for the background
-    Depth* depth = new Depth(Depth::LESS, 0.0, 1.0, false);
-    StateSet* backgroundSS = new StateSet;
-    backgroundSS->setAttribute(depth);
-    backgroundSS->setMode(GL_DEPTH_TEST, StateAttribute::OFF);
-    backgroundCamera->setStateSet(backgroundSS);
-    backgroundCamera->setInheritanceMask(backgroundCamera->getInheritanceMask()
-                                         & ~CullSettings::CULL_MASK);
-    backgroundCamera->setCullMask(simgear::BACKGROUND_BIT);
+
     cameras[NEAR_CAMERA]->setClearMask(GL_DEPTH_BUFFER_BIT);
     // Background camera will have cleared the buffers and doesn't
     // touch the depth buffer
-    cameras[FAR_CAMERA]->setClearMask(0);
+    cameras[FAR_CAMERA]->setClearMask(GL_DEPTH_BUFFER_BIT);
+    // near camera shouldn't render the background.
+    cameras[NEAR_CAMERA]->setCullMask(cameras[NEAR_CAMERA]->getCullMask()
+                                      & ~simgear::BACKGROUND_BIT);
 }
 
 ViewPartitionNode::ViewPartitionNode(const ViewPartitionNode& rhs,
                                      const CopyOp& copyop):
-cameras(3), visibility(rhs.visibility)
+cameras(2), visibility(rhs.visibility)
 {
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 2; i++)
         cameras[i] = static_cast<Camera*>(copyop(rhs.cameras[i].get()));
 }
 
@@ -88,23 +82,18 @@ void ViewPartitionNode::traverse(NodeVisitor& nv)
     }
     RefMatrix& modelview = *(cv->getModelViewMatrix());
     RefMatrix& projection = *(cv->getProjectionMatrix());
+    // Get the frustum of the enclosing camera. The ViewPartitionNode
+    // will divide up the frustum between that camera's near and far
+    // planes i.e., parentNear and ParentFar.
     double left, right, bottom, top, parentNear, parentFar;
     projection.getFrustum(left, right, bottom, top, parentNear, parentFar);
-    double farCameraFar = visibility + 1000.0;
-    double nearPlanes[3], farPlanes[3];
-    nearPlanes[0] = farCameraFar;  farPlanes[0] = parentFar;
-    nearPlanes[2] = parentNear;
-    // If visibility is low, only use two cameras
-    if (farCameraFar < nearCameraFar) {
-        nearPlanes[1] = farPlanes[1] = 0.0;
-        farPlanes[2] = farCameraFar;
-    } else {
-        nearPlanes[1] = farPlanes[2] = nearCameraFar;
-        farPlanes[1] = farCameraFar;
-        farPlanes[2] = nearCameraFar;
-        
-    }
-    for (int i = 0; i < 3; ++i) {
+    double nearPlanes[2], farPlanes[2];
+    nearPlanes[0] = nearCameraFar;
+    farPlanes[0] = parentFar;
+    nearPlanes[1] = parentNear;
+    farPlanes[1] = nearCameraFar;
+    
+    for (int i = 0; i < 2; ++i) {
         if (farPlanes[i] >0.0) {
             ref_ptr<RefMatrix> newProj = new RefMatrix();
             makeNewProjMat(projection, nearPlanes[i], farPlanes[i],
