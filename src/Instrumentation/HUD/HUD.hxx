@@ -54,6 +54,26 @@ using std::vector;
 class FGViewer;
 
 
+class ClipBox {
+public:
+    ClipBox(const SGPropertyNode *, float xoffset = 0, float yoffset = 0);
+    void set();
+
+private:
+    bool _active;
+    float _xoffs, _yoffs;
+    SGConstPropertyNode_ptr _top_node;
+    SGConstPropertyNode_ptr _bot_node;
+    SGConstPropertyNode_ptr _left_node;
+    SGConstPropertyNode_ptr _right_node;
+    GLdouble _top[4];
+    GLdouble _bot[4];
+    GLdouble _left[4];
+    GLdouble _right[4];
+};
+
+
+
 class LineSegment {
 public:
     LineSegment(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1)
@@ -192,6 +212,7 @@ private:
     class AimingReticle;
 
     deque<Item *> _items;
+    deque<Item *> _ladders;
 
     SGPropertyNode_ptr _current;
     SGPropertyNode_ptr _visibility;
@@ -219,6 +240,7 @@ private:
     float _font_size;
     int _style;
 
+    ClipBox *_clip_box;
     TextList _text_list;
     LineList _line_list;
     LineList _stipple_line_list;
@@ -486,6 +508,7 @@ private:
 class HUD::Ladder : public Item {
 public:
     Ladder(HUD *parent, const SGPropertyNode *, float x, float y);
+    ~Ladder();
     virtual void draw();
 
 private:
@@ -516,7 +539,6 @@ private:
     float  _vmin;
     float  _compression;
     bool   _dynamic_origin;
-    bool   _clip_plane;
     bool   _frl;               // fuselage reference line
     bool   _target_spot;
     bool   _target_markers;
@@ -533,6 +555,7 @@ private:
     bool   _nadir;
     bool   _hat;
 
+    ClipBox *_clip_box;
     // The Ladder has its own temporary display lists
     TextList _locTextList;
     LineList _locLineList;
@@ -589,7 +612,6 @@ private:
     float   _bullet_size;
     float   _inner_radius;
 };
-
 
 
 #endif // _HUD_HXX

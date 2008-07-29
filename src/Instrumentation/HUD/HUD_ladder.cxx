@@ -35,9 +35,9 @@ float get__throttleval() { return fgGetFloat("/controls/engines/engine/throttle"
 float get__Vx() { return fgGetFloat("/velocities/uBody-fps"); }
 float get__Vy() { return fgGetFloat("/velocities/vBody-fps"); }
 float get__Vz() { return fgGetFloat("/velocities/wBody-fps"); }
-float get__Ax() { return fgGetFloat("/acclerations/pilot/x-accel-fps_sec"); }
-float get__Ay() { return fgGetFloat("/acclerations/pilot/y-accel-fps_sec"); }
-float get__Az() { return fgGetFloat("/acclerations/pilot/z-accel-fps_sec"); }
+float get__Ax() { return fgGetFloat("/accelerations/pilot/x-accel-fps_sec"); }
+float get__Ay() { return fgGetFloat("/accelerations/pilot/y-accel-fps_sec"); }
+float get__Az() { return fgGetFloat("/accelerations/pilot/z-accel-fps_sec"); }
 float get__alpha() { return fgGetFloat("/orientation/alpha-deg"); }
 float get__beta() { return fgGetFloat("/orientation/side-slip-deg"); }
 #undef ENABLE_SP_FDM
@@ -55,7 +55,6 @@ HUD::Ladder::Ladder(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _tick_length(n->getFloatValue("tick-length")),
     _compression(n->getFloatValue("compression-factor")),
     _dynamic_origin(n->getBoolValue("enable-dynamic-origin")),
-    _clip_plane(n->getBoolValue("enable-clip-plane")),
     _frl(n->getBoolValue("enable-fuselage-ref-line")),
     _target_spot(n->getBoolValue("enable-target-spot")),
     _target_markers(n->getBoolValue("enable-target-markers")),
@@ -70,7 +69,8 @@ HUD::Ladder::Ladder(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _waypoint_marker(n->getBoolValue("enable-waypoint-marker")),
     _zenith(n->getBoolValue("enable-zenith")),
     _nadir(n->getBoolValue("enable-nadir")),
-    _hat(n->getBoolValue("enable-hat"))
+    _hat(n->getBoolValue("enable-hat")),
+    _clip_box(new ClipBox(n->getNode("clip")))
 {
     const char *t = n->getStringValue("type");
     _type = strcmp(t, "climb-dive") ? PITCH : CLIMB_DIVE;
@@ -82,6 +82,11 @@ HUD::Ladder::Ladder(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _vmin = -_vmax;
 }
 
+
+HUD::Ladder::~Ladder()
+{
+    delete _clip_box;
+}
 
 void HUD::Ladder::draw(void)
 {
@@ -189,23 +194,6 @@ void HUD::Ladder::draw(void)
             glVertex2f(xvvr * 25 / 120, 8);
             glVertex2f((xvvr * 25 / 120) + 6, -4);
             glEnd();
-        }
-
-        //****************************************************************
-        // Clipping coordinates for ladder to be input from xml file
-        // Clip hud ladder.  FIXME, these should be configurable, but they
-        // have always been hardcoded here.
-        if (_clip_plane) {
-            GLdouble eqn_top[4] = {0.0, -1.0, 0.0, 0.0};
-            GLdouble eqn_left[4] = {-1.0, 0.0, 0.0, 100.0};
-            GLdouble eqn_right[4] = {1.0, 0.0, 0.0, 100.0};
-
-            glClipPlane(GL_CLIP_PLANE0, eqn_top);
-            glEnable(GL_CLIP_PLANE0);
-            glClipPlane(GL_CLIP_PLANE1, eqn_left);
-            glEnable(GL_CLIP_PLANE1);
-            glClipPlane(GL_CLIP_PLANE2, eqn_right);
-            glEnable(GL_CLIP_PLANE2);
         }
 
         //****************************************************************
@@ -423,6 +411,8 @@ void HUD::Ladder::draw(void)
 
     //****************************************************************
 
+    _clip_box->set();
+
     if (_dynamic_origin) {
         // ladder moves with alpha/beta offset projected onto horizon
         // line (so that the horizon line always aligns with the
@@ -469,17 +459,10 @@ void HUD::Ladder::draw(void)
             else  // _type == CLIMB_DIVE
                 y = float(i - actslope) * _compression + .5;
 
-            // draw symbols
-            if (i == 90 && _zenith)
-                draw_zenith(0.0, y);
-
-            if (i == -90 && _nadir)
-                draw_nadir(0.0, y);
-
             // OBJECT LADDER MARK
             // TYPE LINE
             // ATTRIB - ON CONDITION
-            // draw appraoch glide slope marker
+            // draw approach glide slope marker
 #ifdef ENABLE_SP_FDM
             if (_glide_slope_marker && ihook) {
                 draw_line(-half_span + 15, (_glide_slope - actslope) * _compression,
@@ -489,7 +472,15 @@ void HUD::Ladder::draw(void)
             }
 #endif
 
-            if (i > 85 || i < -85)
+            // draw symbols
+            if (i == 90 && _zenith)
+                draw_zenith(0.0, y);
+            else if (i == -90 && _nadir)
+                draw_nadir(0.0, y);
+
+            if (_zenith && i > 85 || i > 90)
+                continue;
+            if (_nadir && i < -85 || i < -90)
                 continue;
 
             lo.x = -half_span;

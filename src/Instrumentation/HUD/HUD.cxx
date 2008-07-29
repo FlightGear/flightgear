@@ -71,7 +71,8 @@ HUD::HUD() :
     _font_renderer(new fntRenderer()),
     _font(0),
     _font_size(0.0),
-    _style(0)
+    _style(0),
+    _clip_box(0)
 {
     SG_LOG(SG_COCKPIT, SG_INFO, "Initializing HUD Instrument");
 
@@ -109,9 +110,13 @@ HUD::~HUD()
     _scr_heightN->removeChangeListener(this);
     _unitsN->removeChangeListener(this);
     delete _font_renderer;
+    delete _clip_box;
 
     deque<Item *>::const_iterator it, end = _items.end();
     for (it = _items.begin(); it != end; ++it)
+        delete *it;
+    end = _ladders.end();
+    for (it = _ladders.begin(); it != end; ++it)
         delete *it;
 }
 
@@ -144,7 +149,7 @@ void HUD::draw(osg::State&)
     if (!isVisible())
         return;
 
-    if (!_items.size())
+    if (!_items.size() && !_ladders.size())
         return;
 
     if (is3D()) {
@@ -265,6 +270,8 @@ void HUD::common_draw()
     }
 
     setColor();
+    _clip_box->set();
+
     deque<Item *>::const_iterator it, end = _items.end();
     for (it = _items.begin(); it != end; ++it)
         if ((*it)->isEnabled())
@@ -279,6 +286,12 @@ void HUD::common_draw()
         _stipple_line_list.draw();
         glDisable(GL_LINE_STIPPLE);
     }
+
+    // ladders last, as they can have their own clip planes
+    end = _ladders.end();
+    for (it = _ladders.begin(); it != end; ++it)
+        if ((*it)->isEnabled())
+            (*it)->draw();
 
     if (isAntialiased()) {
         glDisable(GL_ALPHA_TEST);
@@ -305,6 +318,7 @@ int HUD::load(const char *file, float x, float y, int level, const string& inden
     if (!level) {
         SG_LOG(SG_INPUT, TREE, endl << "load " << file);
         _items.erase(_items.begin(), _items.end());
+        _ladders.erase(_ladders.begin(), _ladders.end());
     } else if (level > MAXNEST) {
         SG_LOG(SG_INPUT, SG_ALERT, "HUD: files nested more than " << MAXNEST << " levels");
         return 0x1;
@@ -328,6 +342,9 @@ int HUD::load(const char *file, float x, float y, int level, const string& inden
         guiErrorMessage("HUD: Error ", e);
         return 0x8;
     }
+
+    delete _clip_box;
+    _clip_box = new ClipBox(fgGetNode("/sim/hud/clip"), x, y);
 
     for (int i = 0; i < root.nChildren(); i++) {
         SGPropertyNode *n = root.getChild(i);
@@ -372,6 +389,8 @@ int HUD::load(const char *file, float x, float y, int level, const string& inden
             item = static_cast<Item *>(new TurnBankIndicator(this, n, x, y));
         } else if (!strcmp(name, "ladder")) {
             item = static_cast<Item *>(new Ladder(this, n, x, y));
+            _ladders.insert(_ladders.begin(), item);
+            continue;
         } else if (!strcmp(name, "runway")) {
             item = static_cast<Item *>(new Runway(this, n, x, y));
         } else if (!strcmp(name, "aiming-reticle")) {
@@ -572,4 +591,48 @@ void TextList::draw()
     glPopAttrib();
 }
 
+
+ClipBox::ClipBox(const SGPropertyNode *n, float xoffset, float yoffset) :
+    _active(false),
+    _xoffs(xoffset),
+    _yoffs(yoffset)
+{
+    if (!n)
+        return;
+
+    // const_cast is necessary because ATM there's no matching getChild(const ...)
+    // prototype and getNode(const ..., <bool>) is wrongly interpreted as
+    // getNode(const ..., <int>)
+    _top_node = (const_cast<SGPropertyNode *>(n))->getChild("top", 0, true);
+    _bot_node = (const_cast<SGPropertyNode *>(n))->getChild("bottom", 0, true);
+    _left_node = (const_cast<SGPropertyNode *>(n))->getChild("left", 0, true);
+    _right_node = (const_cast<SGPropertyNode *>(n))->getChild("right", 0, true);
+
+    _left[0] = 1.0, _left[1] = _left[2] = 0.0;
+    _right[0] = -1.0, _right[1] = _right[2] = 0.0;
+    _top[0] = 0.0, _top[1] = -1.0, _top[2] = 0.0;
+    _bot[0] = 0.0, _bot[1] = 1.0, _bot[2] = 0.0;
+    _active = true;
+}
+
+
+void ClipBox::set()
+{
+    if (!_active)
+        return;
+
+    _left[3] = -_left_node->getDoubleValue() - _xoffs;
+    _right[3] = _right_node->getDoubleValue() + _xoffs;
+    _bot[3] = -_bot_node->getDoubleValue() - _yoffs;
+    _top[3] = _top_node->getDoubleValue() + _yoffs;
+
+    glClipPlane(GL_CLIP_PLANE0, _top);
+    glEnable(GL_CLIP_PLANE0);
+    glClipPlane(GL_CLIP_PLANE1, _bot);
+    glEnable(GL_CLIP_PLANE1);
+    glClipPlane(GL_CLIP_PLANE2, _left);
+    glEnable(GL_CLIP_PLANE2);
+    glClipPlane(GL_CLIP_PLANE3, _right);
+    glEnable(GL_CLIP_PLANE3);
+}
 
