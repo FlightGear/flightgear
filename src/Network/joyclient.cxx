@@ -27,7 +27,8 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
 
-#include <Aircraft/aircraft.hxx>
+#include <Aircraft/controls.hxx>
+#include <Main/globals.hxx>
 
 #include "joyclient.hxx"
 

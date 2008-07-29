@@ -36,6 +36,8 @@
 #include <iostream>
 
 #include <Aircraft/aircraft.hxx>
+#include <FDM/flight.hxx>
+
 #include <Time/tmp.hxx>
 #include <Environment/environment.hxx>
 

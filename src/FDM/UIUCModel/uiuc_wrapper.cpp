@@ -82,6 +82,8 @@
 #  include <config.h>
 #endif
 
+#include <iostream>
+
 #include <simgear/compiler.h>
 #include <simgear/misc/sg_path.hxx>
 #include <Aircraft/aircraft.hxx>
@@ -101,9 +103,6 @@
 #include "uiuc_fog.h" //321654
 //#include "uiuc_network.h"
 #include "uiuc_get_flapper.h"
-
-using std::cout;
-using std::endl;
 
 extern "C" void uiuc_initial_init ();
 extern "C" void uiuc_defaults_inits ();
@@ -323,7 +322,7 @@ void uiuc_init_aeromodel ()
   SGPath path(globals->get_fg_root());
   path.append(fgGetString("/sim/aircraft-dir"));
   path.append("aircraft.dat");
-  cout << "We are using "<< path.str() << endl;
+  std::cout << "We are using "<< path.str() << std::endl;
   uiuc_initializemaps(); // Initialize the <string,int> maps
   uiuc_menu(path.str());   // Read the specified aircraft file 
 }

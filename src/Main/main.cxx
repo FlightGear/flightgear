@@ -73,7 +73,7 @@
 #include "splash.hxx"
 #include "main.hxx"
 #include "util.hxx"
-
+#include "fg_init.hxx"
 
 static double real_delta_time_sec = 0.0;
 double delta_time_sec = 0.0;

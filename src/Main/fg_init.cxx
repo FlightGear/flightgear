@@ -62,6 +62,7 @@
 #include <simgear/timing/lowleveltime.h>
 
 #include <Aircraft/aircraft.hxx>
+#include <Aircraft/controls.hxx>
 #include <Aircraft/replay.hxx>
 #include <Airports/apt_loader.hxx>
 #include <Airports/runways.hxx>

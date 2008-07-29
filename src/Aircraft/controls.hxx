@@ -24,15 +24,7 @@
 #ifndef _CONTROLS_HXX
 #define _CONTROLS_HXX
 
-#include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-
-#include <Main/globals.hxx>
-
-#ifndef __cplusplus                                                          
-# error This library requires C++
-#endif                                   
-
 
 // Define a structure containing the control parameters
 

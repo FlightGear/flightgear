@@ -21,9 +21,9 @@
 #include "MIDG-II.hxx"
 
 
-SG_USING_STD(cout);
-SG_USING_STD(endl);
-SG_USING_STD(string);
+using std::cout;
+using std::endl;
+using std::string;
 
 
 // Network channels

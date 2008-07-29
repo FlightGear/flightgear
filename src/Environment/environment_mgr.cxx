@@ -31,6 +31,7 @@
 #include <Main/main.hxx>
 #include <Main/fg_props.hxx>
 #include <Aircraft/aircraft.hxx>
+#include <FDM/flight.hxx>
 
 #include "environment.hxx"
 #include "environment_ctrl.hxx"

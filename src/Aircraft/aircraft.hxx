@@ -25,18 +25,10 @@
 
 #ifndef _AIRCRAFT_HXX
 #define _AIRCRAFT_HXX
-
-
-#ifndef __cplusplus                                                          
-# error This library requires C++
-#endif                                   
-
-
-#include <FDM/flight.hxx>
-#include <Main/fg_init.hxx>
-
-#include "controls.hxx"
-
+                                 
+class FGInterface;
+class FGControls;
+class SGPropertyNode;
 
 // Define a structure containing all the parameters for an aircraft
 typedef struct{

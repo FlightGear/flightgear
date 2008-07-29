@@ -8,10 +8,10 @@
 #include <string>
 #include <vector>
 
-SG_USING_STD(cout);
-SG_USING_STD(endl);
-SG_USING_STD(string);
-SG_USING_STD(vector);
+using std::cout;
+using std::endl;
+using std::string;
+using std::vector;
 
 
 // encapsulate a gps integer time (fixme, assumes all times in a track

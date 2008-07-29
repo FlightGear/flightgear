@@ -33,6 +33,7 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/math/sg_random.h>
 #include <simgear/math/vector.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Navaids/navlist.hxx>

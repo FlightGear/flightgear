@@ -24,8 +24,8 @@
 #  include "config.h"
 #endif
 
-#include <stdio.h>
-#include <string.h>		// strdup
+#include <cstdio>
+#include <cstring>		// strdup
 
 #include <plib/ul.h>
 
@@ -36,6 +36,7 @@
 #include <simgear/structure/exception.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/fg_init.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/viewmgr.hxx>
 #include <Cockpit/panel.hxx>

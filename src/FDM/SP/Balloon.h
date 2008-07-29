@@ -42,7 +42,6 @@ HISTORY
 /* INCLUDES								    */
 /****************************************************************************/
 
-#include <Aircraft/aircraft.hxx>
 #include <FDM/flight.hxx>
 
 #include "BalloonSim.h"

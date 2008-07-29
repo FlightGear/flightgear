@@ -78,11 +78,11 @@ Prints to screen the follow:
 
 #include "uiuc_warnings_errors.h"
 
-SG_USING_STD (cerr);
-SG_USING_STD (endl);
+using std::cerr;
+using std::endl;
 
 #ifndef _MSC_VER
-SG_USING_STD (exit);
+using std::exit;
 #endif
 
 void uiuc_warnings_errors(int errorCode, std::string line)

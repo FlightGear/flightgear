@@ -50,11 +50,12 @@ HISTORY
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
 
-#include <Aircraft/aircraft.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Aircraft/controls.hxx>
 
 #include "Balloon.h"
+
 
 /****************************************************************************/
 /********************************** CODE ************************************/

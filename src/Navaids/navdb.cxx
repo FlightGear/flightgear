@@ -37,7 +37,7 @@
 #include "navrecord.hxx"
 #include "navdb.hxx"
 
-SG_USING_STD( string );
+using std::string;
 
 
 // load and initialize the navigational databases

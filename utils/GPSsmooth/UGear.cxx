@@ -14,8 +14,8 @@
 
 #include "UGear.hxx"
 
-SG_USING_STD(cout);
-SG_USING_STD(endl);
+using std::cout;
+using std::endl;
 
 
 #define START_OF_MSG0 147

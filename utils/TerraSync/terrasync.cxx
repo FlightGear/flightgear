@@ -41,9 +41,9 @@
 
 #include <simgear/bucket/newbucket.hxx>
 
-SG_USING_STD(string);
-SG_USING_STD(cout);
-SG_USING_STD(endl);
+using std::string;
+using std::cout;
+using std::endl;
 
 static string server = "scenery.flightgear.org";
 static string source_module = "Scenery";

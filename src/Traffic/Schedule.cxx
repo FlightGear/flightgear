@@ -57,7 +57,7 @@
 #include "SchedFlight.hxx"
 #include "TrafficMgr.hxx"
 
-SG_USING_STD( sort );
+using std::sort;
 
 /******************************************************************************
  * the FGAISchedule class contains data members and code to maintain a

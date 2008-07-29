@@ -16,10 +16,10 @@
 #include <simgear/io/iochannel.hxx>
 #include <simgear/serial/serial.hxx>
 
-SG_USING_STD(cout);
-SG_USING_STD(endl);
-SG_USING_STD(string);
-SG_USING_STD(queue);
+using std::cout;
+using std::endl;
+using std::string;
+using std::queue;
 
 
 // Manage UGear Command Channel
