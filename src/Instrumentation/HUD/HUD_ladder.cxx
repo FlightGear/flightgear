@@ -70,7 +70,7 @@ HUD::Ladder::Ladder(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _zenith(n->getBoolValue("enable-zenith")),
     _nadir(n->getBoolValue("enable-nadir")),
     _hat(n->getBoolValue("enable-hat")),
-    _clip_box(new ClipBox(n->getNode("clip")))
+    _clip_box(new ClipBox(n->getNode("clipping")))
 {
     const char *t = n->getStringValue("type");
     _type = strcmp(t, "climb-dive") ? PITCH : CLIMB_DIVE;

@@ -344,7 +344,7 @@ int HUD::load(const char *file, float x, float y, int level, const string& inden
     }
 
     delete _clip_box;
-    _clip_box = new ClipBox(fgGetNode("/sim/hud/clip"), x, y);
+    _clip_box = new ClipBox(fgGetNode("/sim/hud/clipping"), x, y);
 
     for (int i = 0; i < root.nChildren(); i++) {
         SGPropertyNode *n = root.getChild(i);
