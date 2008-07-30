@@ -58,6 +58,7 @@ class ClipBox {
 public:
     ClipBox(const SGPropertyNode *, float xoffset = 0, float yoffset = 0);
     void set();
+    void unset();
 
 private:
     bool _active;

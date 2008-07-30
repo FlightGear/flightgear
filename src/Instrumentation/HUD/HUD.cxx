@@ -293,6 +293,8 @@ void HUD::common_draw()
         if ((*it)->isEnabled())
             (*it)->draw();
 
+    _clip_box->unset();
+
     if (isAntialiased()) {
         glDisable(GL_ALPHA_TEST);
         glDisable(GL_LINE_SMOOTH);
@@ -636,3 +638,13 @@ void ClipBox::set()
     glEnable(GL_CLIP_PLANE3);
 }
 
+
+void ClipBox::unset()
+{
+    if (_active) {
+        glDisable(GL_CLIP_PLANE0);
+        glDisable(GL_CLIP_PLANE1);
+        glDisable(GL_CLIP_PLANE2);
+        glDisable(GL_CLIP_PLANE3);
+    }
+}

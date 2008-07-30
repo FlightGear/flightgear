@@ -559,9 +559,7 @@ void HUD::Ladder::draw(void)
         _locStippleLineList.draw();
         glDisable(GL_LINE_STIPPLE);
     }
-    glDisable(GL_CLIP_PLANE0);
-    glDisable(GL_CLIP_PLANE1);
-    glDisable(GL_CLIP_PLANE2);
+    _clip_box->set();
     glPopMatrix();
     //*************************************************************
 
