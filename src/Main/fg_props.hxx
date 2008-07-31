@@ -6,13 +6,11 @@
 #ifndef __FG_PROPS_HXX
 #define __FG_PROPS_HXX 1
 
-#include <simgear/debug/logstream.hxx>
-#include <simgear/props/props.hxx>
-#include <simgear/props/props_io.hxx>
+#include <iosfwd>
+
 #include <simgear/structure/subsystem_mgr.hxx>
 
-#include "globals.hxx"
-
+#include <Main/globals.hxx>
 
 ////////////////////////////////////////////////////////////////////////
 // Property management.
@@ -42,7 +40,7 @@ public:
  *        just the ones flagged as archivable.
  * @return true if the flight was saved successfully.
  */
-extern bool fgSaveFlight (ostream &output, bool write_all = false);
+extern bool fgSaveFlight (std::ostream &output, bool write_all = false);
 
 
 /**
@@ -54,7 +52,7 @@ extern bool fgSaveFlight (ostream &output, bool write_all = false);
  * @param input The input stream to read the XML from.
  * @return true if the flight was restored successfully.
  */
-extern bool fgLoadFlight (istream &input);
+extern bool fgLoadFlight (std::istream &input);
 
 
 /**

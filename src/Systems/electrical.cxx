@@ -27,6 +27,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>

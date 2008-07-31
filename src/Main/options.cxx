@@ -40,6 +40,7 @@
 #include <plib/ul.h>
 
 #include <simgear/math/sg_random.h>
+#include <simgear/props/props_io.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/material/mat.hxx>

@@ -41,6 +41,7 @@
 #include <plib/ul.h>
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/props/props_io.hxx>
 #include <simgear/io/iochannel.hxx>
 #include <simgear/math/sg_types.hxx>
 #include <simgear/misc/sg_path.hxx>

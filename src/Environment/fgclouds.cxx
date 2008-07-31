@@ -33,6 +33,8 @@
 #include <simgear/scene/sky/cloudfield.hxx>
 #include <simgear/scene/sky/newcloud.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/props/props_io.hxx>
+
 #include <Main/globals.hxx>
 #include <Airports/simple.hxx>
 #include <Main/util.hxx>

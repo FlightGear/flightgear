@@ -12,6 +12,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <Main/fg_props.hxx>
 

@@ -18,6 +18,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+#include <simgear/math/sg_geodesy.hxx>
+#include <simgear/props/props_io.hxx>
+
 #include <Main/globals.hxx>
 
 #include <Airports/simple.hxx>
@@ -34,9 +37,6 @@
 #include "AIMultiplayer.hxx"
 #include "AITanker.hxx"
 #include "AIWingman.hxx"
-
-#include <simgear/math/sg_geodesy.hxx>
-
 
 FGAIManager::FGAIManager() {
     _dt = 0.0;

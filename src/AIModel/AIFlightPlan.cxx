@@ -27,6 +27,8 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/constants.h>
 #include <simgear/props/props.hxx>
+#include <simgear/props/props_io.hxx>
+
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/fg_init.hxx>

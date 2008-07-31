@@ -25,29 +25,21 @@
 #endif
 
 #include <simgear/compiler.h>
-
 #include <simgear/structure/exception.hxx>
+#include <simgear/props/props_io.hxx>
+
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/scene/material/matlib.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
-
-#include <iostream>
 
 #include <Aircraft/aircraft.hxx>
 #include <FDM/flight.hxx>
-
-#include <Time/tmp.hxx>
-#include <Environment/environment.hxx>
-
 #include <GUI/gui.h>
 
 #include "globals.hxx"
 #include "fg_props.hxx"
 
-using std::istream;
-using std::ostream;
 
 static bool winding_ccw = true; // FIXME: temporary
 
@@ -55,7 +47,7 @@ static bool fdm_data_logging = false; // FIXME: temporary
 
 static bool frozen = false;	// FIXME: temporary
 
-
+using std::string;
 
 ////////////////////////////////////////////////////////////////////////
 // Default property bindings (not yet handled by any module).
@@ -592,7 +584,7 @@ FGProperties::update (double dt)
  * Save the current state of the simulator to a stream.
  */
 bool
-fgSaveFlight (ostream &output, bool write_all)
+fgSaveFlight (std::ostream &output, bool write_all)
 {
 
   fgSetBool("/sim/presets/onground", false);
@@ -616,7 +608,7 @@ fgSaveFlight (ostream &output, bool write_all)
  * Restore the current state of the simulator from a stream.
  */
 bool
-fgLoadFlight (istream &input)
+fgLoadFlight (std::istream &input)
 {
   SGPropertyNode props;
   try {

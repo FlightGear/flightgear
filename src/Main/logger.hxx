@@ -6,22 +6,11 @@
 #ifndef __LOGGER_HXX
 #define __LOGGER_HXX 1
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <iosfwd>
 #include <vector>
 
 #include <simgear/compiler.h>
-#include <simgear/debug/logstream.hxx>
-#include <simgear/structure/exception.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/props/props.hxx>
 
 /**
  * Log any property values to any number of CSV files.

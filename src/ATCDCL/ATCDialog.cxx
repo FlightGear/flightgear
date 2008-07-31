@@ -25,6 +25,7 @@
 #include <simgear/compiler.h>
 
 #include <simgear/structure/commands.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <Main/globals.hxx>
 #include <GUI/gui.h>		// mkDialog

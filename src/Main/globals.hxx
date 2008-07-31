@@ -24,23 +24,14 @@
 #ifndef _GLOBALS_HXX
 #define _GLOBALS_HXX
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <simgear/compiler.h>
-#include <simgear/structure/callback.hxx>
+#include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/structure/event_mgr.hxx>
 
 #include <vector>
 #include <string>
 
-using std::vector;
-using std::string;
-
-typedef vector<string> string_list;
-
+typedef std::vector<std::string> string_list;
 
 // Forward declarations
 
@@ -53,14 +44,15 @@ typedef vector<string> string_list;
 // anyway.
 
 class SGEphemeris;
-
 class SGCommandMgr;
 class SGMagVar;
 class SGMaterialLib;
 class SGPropertyNode;
 class SGTime;
 class SGSoundMgr;
-
+class SGEventMgr;
+class SGSubsystemMgr;
+class SGSubsystem;
 
 class FGAirportList;
 class FGRunwayList;
@@ -111,12 +103,12 @@ private:
     double sim_time_sec;
 
     // Root of FlightGear data tree
-    string fg_root;
+    std::string fg_root;
 
     // Roots of FlightGear scenery tree
     string_list fg_scenery;
 
-    string browser;
+    std::string browser;
 
     // An offset in seconds from the true time.  Allows us to adjust
     // the effective time of day.
@@ -229,14 +221,14 @@ public:
     inline void inc_sim_time_sec (double dt) { sim_time_sec += dt; }
     inline void set_sim_time_sec (double t) { sim_time_sec = t; }
 
-    inline const string &get_fg_root () const { return fg_root; }
-    void set_fg_root (const string &root);
+    inline const std::string &get_fg_root () const { return fg_root; }
+    void set_fg_root (const std::string &root);
 
     inline const string_list &get_fg_scenery () const { return fg_scenery; }
-    void set_fg_scenery (const string &scenery);
+    void set_fg_scenery (const std::string &scenery);
 
-    inline const string &get_browser () const { return browser; }
-    void set_browser (const string &b) { browser = b; }
+    inline const std::string &get_browser () const { return browser; }
+    void set_browser (const std::string &b) { browser = b; }
 
     inline long int get_warp() const { return warp; }
     inline void set_warp( long int w ) { warp = w; }

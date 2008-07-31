@@ -42,6 +42,7 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <Main/fg_props.hxx>
 

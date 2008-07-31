@@ -3,20 +3,21 @@
 //
 // This file is in the Public Domain, and comes with no warranty.
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "logger.hxx"
 
 #include <fstream>
 #include <string>
 
-using std::ofstream;
-using std::endl;
-using std::string;
-
 #include <simgear/debug/logstream.hxx>
 
 #include "fg_props.hxx"
 
-
+using std::string;
+using std::endl;
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGLogger
@@ -72,7 +73,7 @@ FGLogger::init ()
     //
     // Process the individual entries (Time is automatic).
     //
-    vector<SGPropertyNode_ptr> entries = child->getChildren("entry");
+    std::vector<SGPropertyNode_ptr> entries = child->getChildren("entry");
     (*log.output) << "Time";
     for (unsigned int j = 0; j < entries.size(); j++) {
       SGPropertyNode * entry = entries[j];

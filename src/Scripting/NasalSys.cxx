@@ -23,6 +23,7 @@
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/structure/event_mgr.hxx>
 
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>

@@ -38,6 +38,8 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/props/props_io.hxx>
+
 #include <osg/GLU>
 
 #include <Aircraft/aircraft.hxx>

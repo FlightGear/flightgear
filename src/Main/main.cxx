@@ -34,10 +34,6 @@
 
 #include <plib/netSocket.h>
 
-#include <simgear/props/props.hxx>
-#include <simgear/timing/sg_time.hxx>
-#include <simgear/math/sg_random.h>
-
 #include <osgDB/Registry>
 
 // Class references
@@ -46,6 +42,11 @@
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/animation.hxx>
 #include <simgear/scene/sky/sky.hxx>
+#include <simgear/structure/event_mgr.hxx>
+#include <simgear/props/props.hxx>
+#include <simgear/timing/sg_time.hxx>
+#include <simgear/math/sg_random.h>
+
 #include <Time/light.hxx>
 #include <Include/general.hxx>
 #include <Aircraft/replay.hxx>

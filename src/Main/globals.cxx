@@ -31,6 +31,8 @@
 #include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/scene/material/matlib.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/structure/event_mgr.hxx>
 
 #include <Aircraft/controls.hxx>
 #include <Airports/runways.hxx>
