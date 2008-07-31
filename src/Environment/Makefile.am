@@ -10,6 +10,6 @@ libEnvironment_a_SOURCES = \
 	environment_ctrl.cxx environment_ctrl.hxx \
 	fgmetar.cxx fgmetar.hxx fgclouds.cxx fgclouds.hxx \
 	atmosphere.cxx atmosphere.hxx \
-	precipitation_mgr.cxx fgprecipitation_mgr.hxx
+	precipitation_mgr.cxx precipitation_mgr.hxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
