@@ -41,8 +41,7 @@ ViewPartitionNode::ViewPartitionNode():
     const GLbitfield inheritanceMask = (CullSettings::ALL_VARIABLES
                                         & ~CullSettings::COMPUTE_NEAR_FAR_MODE
                                         & ~CullSettings::NEAR_FAR_RATIO
-                                        & ~CullSettings::CULLING_MODE
-                                        & ~CullSettings::CULL_MASK);
+                                        & ~CullSettings::CULLING_MODE);
     int i = 1;
     for (CameraList::iterator iter = cameras.begin();
          iter != cameras.end();
@@ -53,21 +52,17 @@ ViewPartitionNode::ViewPartitionNode():
         camera->setComputeNearFarMode(CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
         camera->setCullingMode(CullSettings::VIEW_FRUSTUM_CULLING);
         camera->setRenderOrder(Camera::POST_RENDER, i);
+        // Slave camera "above" us clears the viewport. Perhaps the
+        // far camera doesn't need to clear the depth buffer; it
+        // probably doesn't make much difference.
+        camera->setClearMask(GL_DEPTH_BUFFER_BIT);
         *iter = camera;
     }
-
-    cameras[NEAR_CAMERA]->setClearMask(GL_DEPTH_BUFFER_BIT);
-    // Background camera will have cleared the buffers and doesn't
-    // touch the depth buffer
-    cameras[FAR_CAMERA]->setClearMask(GL_DEPTH_BUFFER_BIT);
-    // near camera shouldn't render the background.
-    cameras[NEAR_CAMERA]->setCullMask(cameras[NEAR_CAMERA]->getCullMask()
-                                      & ~simgear::BACKGROUND_BIT);
 }
 
 ViewPartitionNode::ViewPartitionNode(const ViewPartitionNode& rhs,
-                                     const CopyOp& copyop):
-cameras(2), visibility(rhs.visibility)
+                                     const CopyOp& copyop) :
+    cameras(2), visibility(rhs.visibility)
 {
     for (int i = 0; i < 2; i++)
         cameras[i] = static_cast<Camera*>(copyop(rhs.cameras[i].get()));
@@ -92,14 +87,23 @@ void ViewPartitionNode::traverse(NodeVisitor& nv)
     farPlanes[0] = parentFar;
     nearPlanes[1] = parentNear;
     farPlanes[1] = nearCameraFar;
-    
     for (int i = 0; i < 2; ++i) {
         if (farPlanes[i] >0.0) {
             ref_ptr<RefMatrix> newProj = new RefMatrix();
             makeNewProjMat(projection, nearPlanes[i], farPlanes[i],
                            *newProj.get());
             cv->pushProjectionMatrix(newProj.get());
-            cameras[i]->accept(nv);
+            if (i == NEAR_CAMERA) {
+                // The near camera shouldn't draw the background,
+                // which is hard to cull out.
+                unsigned int savedTraversalMask = cv->getTraversalMask();
+                cv->setTraversalMask(savedTraversalMask
+                                     & ~simgear::BACKGROUND_BIT);
+                cameras[i]->accept(nv);
+                cv->setTraversalMask(savedTraversalMask);
+            } else {
+                cameras[i]->accept(nv);
+            }
             cv->popProjectionMatrix();
         }
     }
@@ -187,7 +191,6 @@ void ViewPartitionNode::makeNewProjMat(Matrixd& oldProj, double znear,
                                          0.0, 0.0, ratio, 0.0,
                                          0.0, 0.0, center*ratio, 1.0));
     }
-
 }
 
 namespace
