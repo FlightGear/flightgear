@@ -3,7 +3,6 @@
 #define __FG_RENDERER_HXX 1
 
 #include <simgear/screen/extensions.hxx>
-#include <simgear/scene/sky/sky.hxx>
 #include <simgear/scene/util/SGPickCallback.hxx>
 
 #include <osg/Camera>
@@ -46,8 +45,7 @@ public:
                                     float zNear, float zFar);
     /** Just pick into the scene and return the pick callbacks on the way ...
      */
-    static bool pick( unsigned x, unsigned y,
-                      std::vector<SGSceneryPick>& pickList,
+    static bool pick( std::vector<SGSceneryPick>& pickList,
                       const osgGA::GUIEventAdapter* ea );
 
     /** Get and set the OSG Viewer object, if any.
@@ -57,9 +55,9 @@ public:
     void setViewer(osgViewer::Viewer* viewer) { this->viewer = viewer; }
     /** Get and set the manipulator object, if any.
      */
-    FGManipulator* getManipulator() { return manipulator.get(); }
-    const FGManipulator* getManipulator() const { return manipulator.get(); }
-    void setManipulator(FGManipulator* manipulator) {
+    flightgear::FGManipulator* getManipulator() { return manipulator.get(); }
+    const flightgear::FGManipulator* getManipulator() const { return manipulator.get(); }
+    void setManipulator(flightgear::FGManipulator* manipulator) {
         this->manipulator = manipulator;
     }
 
@@ -69,7 +67,7 @@ public:
 
 protected:
     osg::ref_ptr<osgViewer::Viewer> viewer;
-    osg::ref_ptr<FGManipulator> manipulator;
+    osg::ref_ptr<flightgear::FGManipulator> manipulator;
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);

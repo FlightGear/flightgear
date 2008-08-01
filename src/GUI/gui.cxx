@@ -49,7 +49,8 @@
 #include "gui.h"
 #include "layout.hxx"
 
-using namespace osg;
+#include <osg/GraphicsContext>
+
 using namespace flightgear;
 
 puFont guiFnt = 0;
@@ -67,7 +68,7 @@ public:
     GUIInitOperation() : GraphicsContextOperation(std::string("GUI init"))
     {
     }
-    void run(GraphicsContext* gc)
+    void run(osg::GraphicsContext* gc)
     {
         WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
         wsa->puInitialize();
@@ -96,21 +97,21 @@ public:
     }
 };
 
-ref_ptr<GUIInitOperation> initOp;
+osg::ref_ptr<GUIInitOperation> initOp;
 }
 
-void guiStartInit()
+void guiStartInit(osg::GraphicsContext* gc)
 {
-    initOp = new GUIInitOperation;
-    WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
-    GraphicsContext* gc = wsa->getGUIGraphicsContext();
-    gc->add(initOp.get());
+    if (gc) {
+        initOp = new GUIInitOperation;
+        gc->add(initOp.get());
+    }
 }
 
 bool guiFinishInit()
 {
     if (!initOp.valid())
-        return false;
+        return true;
     if (!initOp->isFinished())
         return false;
     initOp = 0;

@@ -32,6 +32,13 @@
 # error This library requires C++
 #endif                                   
 
+namespace flightgear
+{
+class CameraGroup;
+}
+
+#include <osg/ref_ptr>
+
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -361,6 +368,8 @@ private:
     // surface at the spot we are directly above
     SGVec3f _world_up;
 
+    // camera group controled by this view
+    osg::ref_ptr<flightgear::CameraGroup> _cameraGroup;
     //////////////////////////////////////////////////////////////////
     // private functions                                            //
     //////////////////////////////////////////////////////////////////

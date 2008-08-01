@@ -8,6 +8,8 @@
 
 #include "fg_os.hxx"
 
+namespace flightgear
+{
 class FGManipulator : public osgGA::MatrixManipulator {
 public:
     FGManipulator();
@@ -142,4 +144,9 @@ protected:
     int release_keys[128];
     void handleStats(osgGA::GUIActionAdapter& us);
 };
+
+void eventToWindowCoords(const osgGA::GUIEventAdapter* ea, double& x, double& y);
+void eventToWindowCoordsYDown(const osgGA::GUIEventAdapter* ea,
+                              double& x, double& y);
+}
 #endif

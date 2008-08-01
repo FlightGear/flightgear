@@ -35,9 +35,12 @@
 
 #define TR_HIRES_SNAP   1
 
-
+namespace osg
+{
+class GraphicsContext;
+}
 // gui.cxx
-extern void guiStartInit();
+extern void guiStartInit(osg::GraphicsContext*);
 extern bool guiFinishInit();
 extern void mkDialog(const char *txt);
 extern void guiErrorMessage(const char *txt);

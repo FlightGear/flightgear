@@ -342,7 +342,7 @@ FGInput::doMouseClick (int b, int updown, int x, int y, bool mainWindow, const o
         // The nearest one is the first one and the deepest
         // (the most specialized one in the scenegraph) is the first.
         std::vector<SGSceneryPick> pickList;
-        if (FGRenderer::pick(x, y, pickList, ea)) {
+        if (FGRenderer::pick(pickList, ea)) {
           std::vector<SGSceneryPick>::const_iterator i;
           for (i = pickList.begin(); i != pickList.end(); ++i) {
             if (i->callback->buttonPressed(b, i->info)) {

@@ -14,6 +14,7 @@
 #include "globals.hxx"
 #include "renderer.hxx"
 #include "fg_props.hxx"
+#include "CameraGroup.hxx"
 #include "WindowSystemAdapter.hxx"
 
 using namespace flightgear;
@@ -34,7 +35,6 @@ static int VidMask = SDL_OPENGL|SDL_RESIZABLE;
 static void initCursors();
 
 static osg::ref_ptr<osgViewer::Viewer> viewer;
-static osg::ref_ptr<osg::Camera> mainCamera;
 static osg::ref_ptr<osgViewer::GraphicsWindowEmbedded> gw;
 
 void fgOSOpenWindow(bool stencil)
@@ -96,16 +96,17 @@ void fgOSOpenWindow(bool stencil)
     window->flags |= GraphicsWindow::GUI;
     // now the main camera ...
     osg::Camera* camera = new osg::Camera;
-    mainCamera = camera;
     // If a viewport isn't set on the camera, then it's hard to dig it
     // out of the SceneView objects in the viewer, and the coordinates
     // of mouse events are somewhat bizzare.
     camera->setViewport(new osg::Viewport(0, 0, realw, realh));
     camera->setProjectionResizePolicy(osg::Camera::FIXED);
-    Camera3D* cam3D = wsa->registerCamera3D(window, camera, string("main"));
-    cam3D->flags |= Camera3D::MASTER; 
-    // Add as a slave for compatibility with the non-embedded osgViewer.
-    viewer->addSlave(camera);
+    CameraGroup* cgroup = new CameraGroup(viewer.get());
+    cgroup->addCamera(CameraGroup::DO_INTERSECTION_TEST, camera,
+                      osg::Matrixd::identity(), osg::Matrixd::identity(),
+                      true);
+    cgroup->buildGUICamera(0, window);
+    CameraGroup::setDefault(cgroup);
     viewer->setCameraManipulator(globals->get_renderer()->getManipulator());
     // Let FG handle the escape key with a confirmation
     viewer->setKeyEventSetsDone(0);
@@ -409,19 +410,4 @@ static void initCursors()
                                                 cursors[i].hotx,
                                                 cursors[i].hoty);
     }
-}
-
-bool fgOSIsMainCamera(const osg::Camera*)
-{
-  return true;
-}
-
-bool fgOSIsMainContext(const osg::GraphicsContext*)
-{
-  return true;
-}
-
-osg::GraphicsContext* fgOSGetMainContext()
-{
-    return gw.get();
 }

@@ -84,18 +84,4 @@ void fgRegisterWindowResizeHandler(fgWindowResizeHandler func);
 void fgRegisterKeyHandler(fgKeyHandler func);
 void fgRegisterMouseClickHandler(fgMouseClickHandler func);
 void fgRegisterMouseMotionHandler(fgMouseMotionHandler func);
-
-bool fgOSIsMainCamera(const osg::Camera* camera);
-bool fgOSIsMainContext(const osg::GraphicsContext* context);
-
-/** Get graphics context of the main camera. This is the principal
- * window in multi-window configurations, or the only window in an
- * embedded configuration. The GUI will be added to this context.
- */
-osg::GraphicsContext* fgOSGetMainContext();
-
-
-
-
-
 #endif // _FG_OS_HXX

@@ -33,7 +33,11 @@
 #include <simgear/scene/tgdb/TileCache.hxx>
 
 class SGReaderWriterBTGOptions;
-class osg::Node;
+
+namespace osg
+{
+class Node;
+}
 
 class FGTileMgr : public simgear::ModelLoadHelper {
 

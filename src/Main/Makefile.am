@@ -60,9 +60,11 @@ libMain_a_SOURCES = \
 	util.cxx util.hxx \
 	viewer.cxx viewer.hxx \
 	viewmgr.cxx viewmgr.hxx \
+	CameraGroup.cxx CameraGroup.hxx \
 	FGManipulator.cxx FGManipulator.hxx \
 	ViewPartitionNode.cxx ViewPartitionNode.hxx \
 	WindowSystemAdapter.hxx WindowSystemAdapter.cxx \
+	WindowBuilder.hxx WindowBuilder.cxx \
 	$(GFX_CODE)
 
 fgfs_SOURCES = bootstrap.cxx

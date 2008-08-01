@@ -22,15 +22,20 @@
 
 #include <osg/Referenced>
 #include <osg/Camera>
-#include <osg/GraphicsContext>
 #include <osg/GraphicsThread>
+#include <osg/ref_ptr>
 
 #include <simgear/structure/SGAtomic.hxx>
 
-// Flexible Camera and window support
+namespace osg
+{
+class GraphicsContext;
+}
+
+// Flexible window support
 namespace flightgear
 {
-/** A window opened by default or via rendering properties
+/** A window with a graphics context and an integer ID
  */
 class GraphicsWindow : public osg::Referenced
 {
@@ -46,42 +51,23 @@ public:
     /** The window's internal name.
      */
     std::string name;
-    enum Flags {
-        /** The GUI (and 2D cockpit) will be drawn on this window.
-         */
-        GUI = 1
-    };
+    /** A unique ID for the window.
+     */
     int id;
-    unsigned flags;
-};
-
-/** Camera associated with a 3d view. The camera might occupy an
- * entire window or share one with other cameras.
- */
-class Camera3D : public osg::Referenced
-{
-public:
-    Camera3D(GraphicsWindow* window_, osg::Camera* camera_, const std::string& name_,
-             unsigned flags_ = 0) :
-        window(window_), camera(camera_), name(name_), flags(flags_)
-    {
-    }
-    osg::ref_ptr<GraphicsWindow> window;
-    osg::ref_ptr<osg::Camera> camera;
-    std::string name;
     enum Flags {
-        SHARES_WINDOW = 1,      /**< Camera shares window with other cameras*/
-        MASTER = 2              /**< Camera has same view as master camera*/
+        GUI = 1 /**< The GUI (and 2D cockpit) will be drawn on this window. */
     };
+    /** Flags for the window.
+     */
     unsigned flags;
 };
 
 typedef std::vector<osg::ref_ptr<GraphicsWindow> >  WindowVector;
-typedef std::vector<osg::ref_ptr<Camera3D> >  Camera3DVector;
 
 /**
  * An operation that is run once with a particular GraphicsContext
- * current.
+ * current. It will probably be deferred and may run in a different
+ * thread.
  */
 class GraphicsContextOperation : public osg::GraphicsOperation
 {
@@ -90,8 +76,15 @@ public:
         osg::GraphicsOperation(name, false)
     {
     }
+    /** Don't override this!
+     */
     virtual void operator()(osg::GraphicsContext* gc);
+    /** The body of the operation.
+     */
     virtual void run(osg::GraphicsContext* gc) = 0;
+    /** Test if the operation has completed.
+     * @return true if the run() method has finished.
+     */
     bool isFinished() const { return done != 0; }
 private:
     SGAtomic done;
@@ -99,7 +92,7 @@ private:
 
 /** Adapter from windows system / graphics context management API to
  * functions used by flightgear. This papers over the difference
- * between osgViewer Viewer, which handles multiple windows, graphics
+ * between osgViewer::Viewer, which handles multiple windows, graphics
  * threads, etc., and the embedded viewer used with GLUT and SDL.
  */
 class WindowSystemAdapter : public osg::Referenced
@@ -107,37 +100,35 @@ class WindowSystemAdapter : public osg::Referenced
 public:
     WindowSystemAdapter();
     virtual ~WindowSystemAdapter() {}
+    /** Vector of all the registered windows.
+     */
     WindowVector windows;
-    Camera3DVector cameras;
+    /** Register a window, assigning  it an ID.
+     * @param gc graphics context
+     * @param windowName internal name (not displayed)
+     * @return a graphics window
+     */
     GraphicsWindow* registerWindow(osg::GraphicsContext* gc,
                                    const std::string& windowName);
-    Camera3D* registerCamera3D(GraphicsWindow* gw, osg::Camera* camera,
-                               const std::string& cameraName);
-    GraphicsWindow* getGUIWindow();
-    int getGUIWindowID();
-    osg::GraphicsContext* getGUIGraphicsContext();
     /** Initialize the plib pui interface library. This might happen
      *in another thread and may be deferred.
      */
     virtual void puInitialize();
-    /** Returns true if pui initialization has finished.
+    /** Find a window by name.
+     * @param name the window name
+     * @return the window or 0
      */
-    template<typename T>
-    class FlagTester : public std::unary_function<osg::ref_ptr<T>, bool>
-    {
-    public:
-        FlagTester(unsigned flags_) : flags(flags_) {}
-        bool operator() (const osg::ref_ptr<T>& obj)
-        {
-            return (obj->flags & flags) != 0;
-        }
-        unsigned flags;
-    };
+    GraphicsWindow* findWindow(const std::string& name);
+    /** Get the global WindowSystemAdapter
+     * @return the adapter
+     */
     static WindowSystemAdapter* getWSA() { return _wsa.get(); }
+    /** Set the global adapter
+     * @param wsa the adapter
+     */
     static void setWSA(WindowSystemAdapter* wsa) { _wsa = wsa; }
 protected:
     int _nextWindowID;
-    int _nextCameraID;
     osg::ref_ptr<GraphicsContextOperation> _puInitOp;
     bool _isPuInitialized;
     static osg::ref_ptr<WindowSystemAdapter> _wsa;
@@ -146,5 +137,29 @@ protected:
     static void puGetWindowSize(int* width, int* height);
 
 };
+
+/**
+ * Class for testing if flags are set in an object with a flags member.
+ */
+template<typename T>
+class FlagTester : public std::unary_function<osg::ref_ptr<T>, bool>
+{
+public:
+    /** Initialize with flags to test for.
+     * @param flags logical or of flags to test.
+     */
+    FlagTester(unsigned flags_) : flags(flags_) {}
+    /** test operator
+     * @param obj An object with a flags member
+     * @return true if flags member of obj contains any of the flags
+     * (bitwise and with flags is nonzero).
+     */
+    bool operator() (const osg::ref_ptr<T>& obj)
+    {
+        return (obj->flags & flags) != 0;
+    }
+    unsigned flags;
+};
+
 }
 #endif

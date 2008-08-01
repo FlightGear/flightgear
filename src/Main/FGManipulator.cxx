@@ -1,16 +1,24 @@
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
+#include <osg/Camera>
+#include <osg/GraphicsContext>
 #include <osg/Math>
+#include <osg/Viewport>
 #include <osgViewer/Viewer>
+
 #include <plib/pu.h>
 #include <Main/fg_props.hxx>
+#include "CameraGroup.hxx"
 #include "FGManipulator.hxx"
+#include "WindowSystemAdapter.hxx"
 
 #if !defined(X_DISPLAY_MISSING)
 #define X_DOUBLE_SCROLL_BUG 1
 #endif
 
+namespace flightgear
+{
 const int displayStatsKey = 1;
 const int printStatsKey = 2;
 
@@ -91,8 +99,10 @@ osg::Node* FGManipulator::getNode()
     return _node.get();
 }
 
+namespace
+{
 // Translate OSG modifier mask to FG modifier mask.
-static int osgToFGModifiers(int modifiers)
+int osgToFGModifiers(int modifiers)
 {
     int result = 0;
     if (modifiers & osgGA::GUIEventAdapter::MODKEY_SHIFT)
@@ -114,6 +124,7 @@ static int osgToFGModifiers(int modifiers)
         result |= KEYMOD_HYPER;
     return result;
 }
+}
 
 void FGManipulator::init(const osgGA::GUIEventAdapter& ea,
                          osgGA::GUIActionAdapter& us)
@@ -122,29 +133,42 @@ void FGManipulator::init(const osgGA::GUIEventAdapter& ea,
     (void)handle(ea, us);
 }
 
-static bool
+// Calculate event coordinates in the viewport of the GUI camera, if
+// possible. Otherwise return false and (-1, -1).
+namespace
+{
+bool
 eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
                 int& x, int& y)
 {
     x = -1;
     y = -1;
 
-    const osgViewer::Viewer* viewer;
-    viewer = dynamic_cast<const osgViewer::Viewer*>(&us);
-    if (!viewer)
+    const osg::GraphicsContext* eventGC = ea.getGraphicsContext();
+    const osg::GraphicsContext::Traits* traits = eventGC->getTraits();
+    osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
+    if (!guiCamera)
         return false;
-
-    float lx, ly;
-    const osg::Camera* camera;
-    camera = viewer->getCameraContainingPosition(ea.getX(), ea.getY(), lx, ly);
-
-    if (!(camera && fgOSIsMainCamera(camera)))
+    osg::Viewport* vport = guiCamera->getViewport();
+    if (!vport)
         return false;
-
-    x = int(lx);
-    y = int(camera->getViewport()->height() - ly);
-
-    return true;
+    
+    // Scale x, y to the dimensions of the window
+    double wx = (((ea.getX() - ea.getXmin()) / (ea.getXmax() - ea.getXmin()))
+                 * (float)traits->width);
+    double wy = (((ea.getY() - ea.getYmin()) / (ea.getYmax() - ea.getYmin()))
+                 * (float)traits->height);
+    if (vport->x() <= wx && wx <= vport->x() + vport->width()
+        && vport->y() <= wy && wy <= vport->y() + vport->height()) {
+        // Finally, into viewport coordinates. Change y to "increasing
+        // downwards".
+        x = wx - vport->x();
+        y = vport->height() - (wy - vport->y());
+        return true;
+    } else {
+        return false;
+    }
+}
 }
 
 bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
@@ -337,3 +361,33 @@ void FGManipulator::handleStats(osgGA::GUIActionAdapter& us)
     }
 }
 
+void eventToWindowCoords(const osgGA::GUIEventAdapter* ea,
+                         double& x, double& y)
+{
+    using namespace osg;
+    const GraphicsContext* gc = ea->getGraphicsContext();
+    const GraphicsContext::Traits* traits = gc->getTraits() ;
+    // Scale x, y to the dimensions of the window
+    x = (((ea->getX() - ea->getXmin()) / (ea->getXmax() - ea->getXmin()))
+         * (double)traits->width);
+    y = (((ea->getY() - ea->getYmin()) / (ea->getYmax() - ea->getYmin()))
+         * (double)traits->height);
+    if (ea->getMouseYOrientation() == osgGA::GUIEventAdapter::Y_INCREASING_DOWNWARDS)
+        y = (double)traits->height - y;
+}
+
+void eventToWindowCoordsYDown(const osgGA::GUIEventAdapter* ea,
+                              double& x, double& y)
+{
+    using namespace osg;
+    const GraphicsContext* gc = ea->getGraphicsContext();
+    const GraphicsContext::Traits* traits = gc->getTraits() ;
+    // Scale x, y to the dimensions of the window
+    x = (((ea->getX() - ea->getXmin()) / (ea->getXmax() - ea->getXmin()))
+         * (double)traits->width);
+    y = (((ea->getY() - ea->getYmin()) / (ea->getYmax() - ea->getYmin()))
+         * (double)traits->height);
+    if (ea->getMouseYOrientation() == osgGA::GUIEventAdapter::Y_INCREASING_UPWARDS)
+        y = (double)traits->height - y;
+}
+}

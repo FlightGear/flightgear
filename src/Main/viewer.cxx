@@ -50,6 +50,9 @@
 
 #include "viewer.hxx"
 
+#include "CameraGroup.hxx"
+
+using namespace flightgear;
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGViewer.
@@ -81,7 +84,8 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
     _damp_heading(0),
     _scaling_type(FG_SCALING_MAX),
     _location(0),
-    _target_location(0)
+    _target_location(0),
+    _cameraGroup(CameraGroup::getDefault())
 {
     _absolute_view_pos = SGVec3d(0, 0, 0);
     _type = Type;
@@ -764,5 +768,7 @@ FGViewer::update (double dt)
       }
     }
   }
-
+  recalc();
+  _cameraGroup->update(_absolute_view_pos.osg(), mViewOrientation.osg());
+  _cameraGroup->setCameraParameters(get_v_fov(), get_aspect_ratio());
 }

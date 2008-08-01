@@ -22,13 +22,18 @@
 #include<algorithm>
 #include <functional>
 
+#include "CameraGroup.hxx"
 #include "WindowSystemAdapter.hxx"
+
+#include <osg/Camera>
+#include <osg/GraphicsContext>
+#include <osg/Viewport>
 
 using namespace osg;
 using namespace std;
 
-using namespace flightgear;
-
+namespace flightgear
+{
 ref_ptr<WindowSystemAdapter> WindowSystemAdapter::_wsa;
 
 void GraphicsContextOperation::operator()(GraphicsContext* gc)
@@ -38,7 +43,7 @@ void GraphicsContextOperation::operator()(GraphicsContext* gc)
 }
 
 WindowSystemAdapter::WindowSystemAdapter() :
-    _nextWindowID(0), _nextCameraID(0), _isPuInitialized(false)
+    _nextWindowID(0), _isPuInitialized(false)
 {
 }
 
@@ -52,67 +57,41 @@ WindowSystemAdapter::registerWindow(GraphicsContext* gc,
     return window;
 }
 
-Camera3D*
-WindowSystemAdapter::registerCamera3D(GraphicsWindow* gw, Camera* camera,
-                                      const string& cameraName)
-{
-    Camera3D* camera3D = new Camera3D(gw, camera, cameraName);
-    cameras.push_back(camera3D);
-    return camera3D;
-}
-
-GraphicsWindow*
-WindowSystemAdapter::getGUIWindow()
-{
-    WindowVector::const_iterator contextIter
-        = std::find_if(windows.begin(), windows.end(),
-                       FlagTester<GraphicsWindow>(GraphicsWindow::GUI));
-    if (contextIter == windows.end())
-        return 0;
-    else
-        return contextIter->get();
-}
-
-int
-WindowSystemAdapter::getGUIWindowID()
-{
-    const GraphicsWindow* gw = getGUIWindow();
-    if (!gw)
-        return -1;
-    else
-        return gw->id;
-}
-
-GraphicsContext*
-WindowSystemAdapter::getGUIGraphicsContext()
-{
-    GraphicsWindow* gw = getGUIWindow();
-    if (!gw)
-        return 0;
-    else
-        return gw->gc.get();
-}
-
-
+// The pu getWindow callback is supposed to return a window ID that
+// would allow drawing a GUI on different windows. All that stuff is
+// broken in multi-threaded OSG, and we only have one GUI "window"
+// anyway, so just return a constant. 
 int WindowSystemAdapter::puGetWindow()
 {
-    WindowSystemAdapter* wsa = getWSA();
-    return wsa->getGUIWindowID();
+    return 1;
 }
 
 void WindowSystemAdapter::puGetWindowSize(int* width, int* height)
 {
-    // XXX This will have to be different when multiple cameras share
-    // a single window.
-    WindowSystemAdapter* wsa = getWSA();
-    const GraphicsContext* gc = wsa->getGUIGraphicsContext();
-    const GraphicsContext::Traits *traits = gc->getTraits();
-    *width = traits->width;
-    *height = traits->height;
+    *width = 0;
+    *height = 0;
+    Camera* camera = getGUICamera(CameraGroup::getDefault());
+    if (!camera)
+        return;
+    Viewport* vport = camera->getViewport();
+    *width = (int)vport->width();
+    *height = (int)vport->height();
 }
 
 void WindowSystemAdapter::puInitialize()
 {
     puSetWindowFuncs(puGetWindow, 0, puGetWindowSize, 0);
     puRealInit();
+}
+
+GraphicsWindow* WindowSystemAdapter::findWindow(const string& name)
+{
+    for (WindowVector::iterator iter = windows.begin(), e = windows.end();
+         iter != e;
+         ++iter) {
+        if ((*iter)->name == name)
+            return iter->get();
+    }
+    return 0;
+}
 }

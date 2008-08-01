@@ -37,6 +37,7 @@
 #include <osg/Light>
 #include <osg/LightModel>
 #include <osg/LightSource>
+#include <osg/Material>
 #include <osg/NodeCallback>
 #include <osg/Notify>
 #include <osg/PolygonMode>
@@ -60,6 +61,7 @@
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/animation.hxx>
 #include <simgear/scene/model/placement.hxx>
+#include <simgear/scene/sky/sky.hxx>
 #include <simgear/scene/util/SGUpdateVisitor.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>
 #include <simgear/scene/tgdb/GroundLightManager.hxx>
@@ -95,12 +97,15 @@
 #include "splash.hxx"
 #include "renderer.hxx"
 #include "main.hxx"
+#include "CameraGroup.hxx"
 #include "ViewPartitionNode.hxx"
 
 // XXX Make this go away when OSG 2.2 is released.
 #if (FG_OSG_VERSION >= 21004)
 #define UPDATE_VISITOR_IN_VIEWER 1
 #endif
+
+using namespace flightgear;
 
 class FGHintUpdateCallback : public osg::StateAttribute::Callback {
 public:
@@ -153,8 +158,6 @@ public:
   { drawImplementation(*renderInfo.getState()); }
   void drawImplementation(osg::State& state) const
   {
-    if (!fgOSIsMainContext(state.getGraphicsContext()))
-      return;
     state.setActiveTextureUnit(0);
     state.setClientActiveTextureUnit(0);
 
@@ -198,8 +201,6 @@ public:
   { drawImplementation(*renderInfo.getState()); }
   void drawImplementation(osg::State& state) const
   {
-    if (!fgOSIsMainContext(state.getGraphicsContext()))
-      return;
     state.setActiveTextureUnit(0);
     state.setClientActiveTextureUnit(0);
     state.disableAllVertexArrays();
@@ -406,38 +407,6 @@ FGRenderer::splashinit( void ) {
 #endif
 }
 
-namespace
-{
-// Create a slave camera that will be used to render a fixed GUI-like
-// element.
-osg::Camera*
-makeSlaveCamera(osg::Camera::RenderOrder renderOrder, int orderNum)
-{
-    using namespace osg;
-    Camera* camera = new osg::Camera;
-    GraphicsContext *gc = fgOSGetMainContext();
-    
-    camera->setRenderOrder(renderOrder, orderNum);
-    camera->setClearMask(0);
-    camera->setInheritanceMask(CullSettings::ALL_VARIABLES
-                               & ~(CullSettings::COMPUTE_NEAR_FAR_MODE
-                                   | CullSettings::CULLING_MODE));
-    camera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
-    camera->setCullingMode(osg::CullSettings::NO_CULLING);
-    camera->setGraphicsContext(gc);
-    // Establish an initial viewport. This may be altered,
-    // particularly when drawing a 2d panel.
-    const GraphicsContext::Traits *traits = gc->getTraits();
-    camera->setViewport(new Viewport(0, 0, traits->width, traits->height));
-    camera->setProjectionResizePolicy(Camera::FIXED);
-    camera->setReferenceFrame(Transform::ABSOLUTE_RF);
-    camera->setAllowEventFocus(false);
-    globals->get_renderer()->getViewer()->addSlave(camera, false);
-    return camera;
-}
-
-}
-
 void
 FGRenderer::init( void )
 {
@@ -541,13 +510,13 @@ FGRenderer::init( void )
     stateSet->setUpdateCallback(new FGFogEnableUpdateCallback);
 
     // plug in the GUI
-    osg::Camera* guiCamera = makeSlaveCamera(osg::Camera::POST_RENDER, 100);
-    guiCamera->setName("GUI");
-    osg::Geode* geode = new osg::Geode;
-    geode->addDrawable(new SGPuDrawable);
-    geode->addDrawable(new SGHUDAndPanelDrawable);
-    guiCamera->addChild(geode);
-
+    osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
+    if (guiCamera) {
+        osg::Geode* geode = new osg::Geode;
+        geode->addDrawable(new SGPuDrawable);
+        geode->addDrawable(new SGHUDAndPanelDrawable);
+        guiCamera->addChild(geode);
+    }
     osg::Switch* sw = new osg::Switch;
     sw->setUpdateCallback(new FGScenerySwitchCallback);
     sw->addChild(mRoot.get());
@@ -612,14 +581,14 @@ FGRenderer::update( bool refresh_camera_settings ) {
         // update view port
         resize( fgGetInt("/sim/startup/xsize"),
                 fgGetInt("/sim/startup/ysize") );
-
+#if 0
         SGVec3d position = current__view->getViewPosition();
         SGQuatd attitude = current__view->getViewOrientation();
-        SGVec3d osgPosition = attitude.transform(-position);
 
         FGManipulator *manipulator = globals->get_renderer()->getManipulator();
         manipulator->setPosition(position.osg());
         manipulator->setAttitude(attitude.osg());
+#endif
     }
     osg::Camera *camera = viewer->getCamera();
 
@@ -743,7 +712,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
     }
 
 //     sgEnviro.setLight(l->adj_fog_color());
-
+#if 0
     double agl = current__view->getAltitudeASL_ft()*SG_FEET_TO_METER
       - current__view->getSGLocation()->get_cur_elev_m();
 
@@ -761,7 +730,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
     setCameraParameters(current__view->get_v_fov(),
                         current__view->get_aspect_ratio(),
                         scene_nearplane, scene_farplane);
-
+#endif
 //     sgEnviro.startOfFrame(current__view->get_view_pos(), 
 //         current__view->get_world_up(),
 //         current__view->getLongitude_deg(),
@@ -850,44 +819,40 @@ void FGRenderer::setCameraParameters(float vfov, float aspectRatio,
     
 }
 bool
-FGRenderer::pick( unsigned x, unsigned y,
-                  std::vector<SGSceneryPick>& pickList,
-                  const osgGA::GUIEventAdapter* ea )
+FGRenderer::pick(std::vector<SGSceneryPick>& pickList,
+                 const osgGA::GUIEventAdapter* ea)
 {
-  osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
-  // wipe out the return ...
-  pickList.resize(0);
-
-  if (viewer) {
-    // just compute intersections in the viewers method ...
+    osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
+    // wipe out the return ...
+    pickList.clear();
     typedef osgUtil::LineSegmentIntersector::Intersections Intersections;
     Intersections intersections;
-    viewer->computeIntersections(ea->getX(), ea->getY(), intersections);
 
-    Intersections::iterator hit;
-    for (hit = intersections.begin(); hit != intersections.end(); ++hit) {
-      const osg::NodePath& np = hit->nodePath;
-      osg::NodePath::const_reverse_iterator npi;
-      for (npi = np.rbegin(); npi != np.rend(); ++npi) {
-        SGSceneUserData* ud = SGSceneUserData::getSceneUserData(*npi);
-        if (!ud)
-          continue;
-        for (unsigned i = 0; i < ud->getNumPickCallbacks(); ++i) {
-          SGPickCallback* pickCallback = ud->getPickCallback(i);
-          if (!pickCallback)
-            continue;
-          SGSceneryPick sceneryPick;
-          sceneryPick.info.local = SGVec3d(hit->getLocalIntersectPoint());
-          sceneryPick.info.wgs84 = SGVec3d(hit->getWorldIntersectPoint());
-          sceneryPick.callback = pickCallback;
-          pickList.push_back(sceneryPick);
+    if (!computeIntersections(CameraGroup::getDefault(), ea, intersections))
+        return false;
+    for (Intersections::iterator hit = intersections.begin(),
+             e = intersections.end();
+         hit != e;
+         ++hit) {
+        const osg::NodePath& np = hit->nodePath;
+        osg::NodePath::const_reverse_iterator npi;
+        for (npi = np.rbegin(); npi != np.rend(); ++npi) {
+            SGSceneUserData* ud = SGSceneUserData::getSceneUserData(*npi);
+            if (!ud)
+                continue;
+            for (unsigned i = 0; i < ud->getNumPickCallbacks(); ++i) {
+                SGPickCallback* pickCallback = ud->getPickCallback(i);
+                if (!pickCallback)
+                    continue;
+                SGSceneryPick sceneryPick;
+                sceneryPick.info.local = SGVec3d(hit->getLocalIntersectPoint());
+                sceneryPick.info.wgs84 = SGVec3d(hit->getWorldIntersectPoint());
+                sceneryPick.callback = pickCallback;
+                pickList.push_back(sceneryPick);
+            }
         }
-      }
     }
     return !pickList.empty();
-  } else {			// we can get called early ...
-    return false;
-  }
 }
 
 void

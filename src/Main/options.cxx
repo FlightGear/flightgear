@@ -1227,12 +1227,12 @@ where:
 
 enum OptionType { OPTION_BOOL, OPTION_STRING, OPTION_DOUBLE, OPTION_INT, OPTION_CHANNEL, OPTION_FUNC };
 struct OptionDesc {
-    char *option;
+    const char *option;
     bool has_param;
     enum OptionType type;
-    char *property;
+    const char *property;
     bool b_param;
-    char *s_param;
+    const char *s_param;
     int (*func)( const char * );
     } fgOptionArray[] = {
        

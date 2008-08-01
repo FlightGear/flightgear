@@ -34,6 +34,8 @@
 
 #include <plib/netSocket.h>
 
+#include <osg/Camera>
+#include <osg/GraphicsContext>
 #include <osgDB/Registry>
 
 // Class references
@@ -68,6 +70,7 @@
 #include <GUI/new_gui.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
 
+#include "CameraGroup.hxx"
 #include "fg_commands.hxx"
 #include "fg_io.hxx"
 #include "renderer.hxx"
@@ -75,10 +78,14 @@
 #include "main.hxx"
 #include "util.hxx"
 #include "fg_init.hxx"
+#include "WindowSystemAdapter.hxx"
+
 
 static double real_delta_time_sec = 0.0;
 double delta_time_sec = 0.0;
 extern float init_volume;
+
+using namespace flightgear;
 
 // This is a record containing a bit of global housekeeping information
 FGGeneral general;
@@ -650,21 +657,18 @@ static void fgMainLoop( void ) {
     SG_LOG( SG_ALL, SG_DEBUG, "" );
 }
 
-
-// This is the top level master main function that is registered as
-// our idle funciton
-
-// The first few passes take care of initialization things (a couple
-// per pass) and once everything has been initialized fgMainLoop from
-// then on.
-
-static void fgIdleFunction ( void ) {
-    if ( idle_state == 0 ) {
-        idle_state++;
-
-        // This seems to be the absolute earliest in the init sequence
-        // that these calls will return valid info.  Too bad it's after
-        // we've already created and sized our window. :-(
+// Operation for querying OpenGL parameters. This must be done in a
+// valid OpenGL context, potentially in another thread.
+namespace
+{
+struct GeneralInitOperation : public GraphicsContextOperation
+{
+    GeneralInitOperation()
+        : GraphicsContextOperation(std::string("General init"))
+    {
+    }
+    void run(osg::GraphicsContext* gc)
+    {
         general.set_glVendor( (char *)glGetString ( GL_VENDOR ) );
         general.set_glRenderer( (char *)glGetString ( GL_RENDERER ) );
         general.set_glVersion( (char *)glGetString ( GL_VERSION ) );
@@ -678,12 +682,42 @@ static void fgIdleFunction ( void ) {
         glGetIntegerv( GL_DEPTH_BITS, &tmp );
         general.set_glDepthBits( tmp );
         SG_LOG ( SG_GENERAL, SG_INFO, "Depth buffer bits = " << tmp );
+    }
+};
+}
 
-        // Initialize the user interface so that we can use fonts
-        guiStartInit();
+// This is the top level master main function that is registered as
+// our idle funciton
 
+// The first few passes take care of initialization things (a couple
+// per pass) and once everything has been initialized fgMainLoop from
+// then on.
 
+static void fgIdleFunction ( void ) {
+    static osg::ref_ptr<GeneralInitOperation> genOp;
+    if ( idle_state == 0 ) {
+        idle_state++;
+        // Pick some window on which to do queries.
+        // XXX Perhaps all this graphics initialization code should be
+        // moved to renderer.cxx?
+        genOp = new GeneralInitOperation;
+        osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
+        WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
+        osg::GraphicsContext* gc = 0;
+        if (guiCamera)
+            gc = guiCamera->getGraphicsContext();
+        if (gc) {
+            gc->add(genOp.get());
+        } else {
+            wsa->windows[0]->gc->add(genOp.get());
+        }
+        guiStartInit(gc);
     } else if ( idle_state == 1 ) {
+        if (genOp.valid()) {
+            if (!genOp->isFinished())
+                return;
+            genOp = 0;
+        }
         if (!guiFinishInit())
             return;
         idle_state++;
