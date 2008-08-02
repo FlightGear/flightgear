@@ -41,8 +41,7 @@ The choice has been made when the file was saved!
 ID_SEPARATOR = '_.:._'
 
 
-import Blender, BPyMessages, sys, math, re
-from xml.sax import handler, make_parser
+import Blender, BPyMessages, sys, math, re, xml.sax
 
 
 numwsp = re.compile('(?<=[\d.])\s+(?=[-+.\d])')
@@ -165,7 +164,7 @@ def parse_transform(s):
 	return matrix
 
 
-class import_svg(handler.ContentHandler):
+class import_svg(xml.sax.handler.ContentHandler):
 	# err_handler
 	def error(self, exception):
 		raise Abort(str(exception))
@@ -286,10 +285,7 @@ def run_parser(path):
 	Blender.Window.WaitCursor(1)
 
 	try:
-		svg = make_parser()
-		svg.setContentHandler(import_svg())
-		svg.setErrorHandler(import_svg())
-		svg.parse(path)
+		xml.sax.parse(path, import_svg(), import_svg())
 		Blender.Registry.SetKey("UVImportExportSVG", { "path" : path }, False)
 
 	except Abort, e:
