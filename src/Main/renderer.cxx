@@ -763,8 +763,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
     viewPartition->setVisibility(actual_visibility);
     simgear::GroundLightManager::instance()->update(mUpdateVisitor.get());
     bool hotspots = fgGetBool("/sim/panel-hotspots");
-    osg::Node::NodeMask cullMask = (~simgear::LIGHTS_BITS & ~simgear::PICK_BIT
-                                    & ~simgear::BACKGROUND_BIT);
+    osg::Node::NodeMask cullMask = ~simgear::LIGHTS_BITS & ~simgear::PICK_BIT;
     cullMask |= simgear::GroundLightManager::instance()
         ->getLightNodeMask(mUpdateVisitor.get());
     if (hotspots)
