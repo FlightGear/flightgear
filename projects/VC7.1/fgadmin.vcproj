@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\..\fltk-1.1.7&quot;;..\..\..;..\..\..\SimGear;..\..\..\OpenSceneGraph\include;..\..\..\..\..\OpenThreads\include;..\..\..\3rdParty\include"
+				AdditionalIncludeDirectories="&quot;..\..\..\fltk-1.1.7&quot;;..\..\..;..\..\..\SimGear;..\..\..\install\msvc71\OpenSceneGraph\include;..\..\..\..\..\OpenThreads\include;..\..\..\3rdParty\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_ZLIB;NOMINMAX;_USE_MATH_DEFINES;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -72,7 +72,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				OmitFramePointers="TRUE"
-				AdditionalIncludeDirectories="&quot;..\..\..\fltk-1.1.7&quot;;..\..\..;..\..\..\SimGear;..\..\..\OpenSceneGraph\include;..\..\..\3rdParty\include"
+				AdditionalIncludeDirectories="&quot;..\..\..\fltk-1.1.7&quot;;..\..\..;..\..\..\SimGear;..\..\..\install\msvc71\OpenSceneGraph\include;..\..\..\3rdParty\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_ZLIB;NOMINMAX;_USE_MATH_DEFINES;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
