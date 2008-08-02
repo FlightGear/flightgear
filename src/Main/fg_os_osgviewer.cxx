@@ -1,4 +1,4 @@
-// fg_os_common.cxx -- common functions for fg_os interface
+// fg_os_osgviewer.cxx -- common functions for fg_os interface
 // implemented as an osgViewer
 //
 // Copyright (C) 2007  Tim Moore timoore@redhat.com
@@ -17,6 +17,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <algorithm>
 #include <iostream>
@@ -81,13 +85,13 @@ CameraGroup* buildDefaultCameraGroup(osgViewer::Viewer* viewer,
     CameraGroup* cgroup = CameraGroup::buildCameraGroup(viewer, gnode);
     // Look for a camera with no shear
     Camera* masterCamera = 0;
-    for (CameraGroup::CameraIterator iter = cgroup->camerasBegin(),
+    for (CameraGroup::CameraIterator citer = cgroup->camerasBegin(),
              e = cgroup->camerasEnd();
-         iter != e;
-         ++iter) {
-        const View::Slave& slave = viewer->getSlave((*iter)->slaveIndex);
+         citer != e;
+         ++citer) {
+        const View::Slave& slave = viewer->getSlave((*citer)->slaveIndex);
         if (slave._projectionOffset.isIdentity()) {
-            masterCamera = (*iter)->camera.get();
+            masterCamera = (*citer)->camera.get();
             break;
         }
     }
