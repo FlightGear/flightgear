@@ -85,6 +85,11 @@ if !exists("nasal_no_fgfs")
 	syn keyword nasalPropsFunction		removeChild removeChildren getNode
 	syn keyword nasalPropsFunction		getPath getBoolValue setValues getValues
 	syn match   nasalPropsFunction		"\<props\.\(_\?globals\|Node\|nodeList\|initNode\|condition\)\>\.\="
+
+	" mark obvious XML parts as comments (for editing XML embedded nasal)
+	syn match   nasalComment		"^\s*</\?[[:alnum:]!].*[[:alnum:]\"-]>\s*$"
+	syn match   nasalComment		"^\s*<!\[CDATA\[\s*$"
+	syn match   nasalComment		"^\s*\]\]>\s*$"
 endif
 
 
