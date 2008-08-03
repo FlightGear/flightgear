@@ -13,6 +13,8 @@
 #include <simgear/route/route.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/sg_inlines.h>
+#include <simgear/math/sg_geodesy.hxx>
+
 #include <Airports/simple.hxx>
 
 #include <Main/fg_init.hxx>

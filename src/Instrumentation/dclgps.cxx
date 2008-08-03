@@ -27,6 +27,9 @@
 
 #include <simgear/sg_inlines.h>
 #include <simgear/structure/commands.hxx>
+#include <simgear/timing/sg_time.hxx>
+#include <simgear/magvar/magvar.hxx>
+
 #include <Main/fg_props.hxx>
 #include <iostream>
 using std::cout;

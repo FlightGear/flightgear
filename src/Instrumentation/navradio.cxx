@@ -25,24 +25,19 @@
 #  include <config.h>
 #endif
 
-#include <iostream>
-#include <string>
 #include <sstream>
 
-#include <simgear/compiler.h>
 #include <simgear/sg_inlines.h>
-#include <simgear/math/sg_random.h>
+#include <simgear/timing/sg_time.hxx>
 #include <simgear/math/vector.hxx>
+#include <simgear/math/sg_random.h>
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/exception.hxx>
 
-#include <Aircraft/aircraft.hxx>
 #include <Navaids/navlist.hxx>
-
 #include "navradio.hxx"
 
-#include <string>
 using std::string;
-
 
 // Constructor
 FGNavRadio::FGNavRadio(SGPropertyNode *node) :

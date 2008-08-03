@@ -29,6 +29,7 @@
 #include <string>
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>

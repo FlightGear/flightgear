@@ -24,18 +24,10 @@
 #ifndef _FG_NAVRECORD_HXX
 #define _FG_NAVRECORD_HXX
 
-#include <stdio.h>
+#include <iosfwd>
 
-#include <simgear/compiler.h>
-#include <simgear/math/sg_geodesy.hxx>
-#include <simgear/misc/sgstream.hxx>
-#include <simgear/magvar/magvar.hxx>
-#include <simgear/timing/sg_time.hxx>
-
-#include <simgear/structure/SGSharedPtr.hxx>
+#include <simgear/math/SGMath.hxx>
 #include <simgear/structure/SGReferenced.hxx>
-
-#include <istream>
 
 #define FG_NAV_DEFAULT_RANGE 50 // nm
 #define FG_LOC_DEFAULT_RANGE 18 // nm
@@ -72,12 +64,16 @@ class FGNavRecord : public SGReferenced {
     std::string trans_ident;         // for failure modeling
 
 public:
-
-    inline FGNavRecord(void);
+    FGNavRecord(void);
     inline ~FGNavRecord(void) {}
 
+    FGNavRecord(int type, const std::string& ident, const std::string& name, const std::string& airport,
+      double lat, double lon, int freq, int range, double multiuse);
+
     inline int get_type() const { return type; }
-    inline fg_nav_types get_fg_type() const;
+    
+    fg_nav_types get_fg_type() const;
+    
     inline double get_lon() const { return pos.getLongitudeDeg(); } // degrees
     inline void set_lon( double l ) { pos.setLongitudeDeg(l); } // degrees
     inline double get_lat() const { return pos.getLatitudeDeg(); } // degrees
@@ -99,95 +95,6 @@ public:
     friend std::istream& operator>> ( std::istream&, FGNavRecord& );
 };
 
-
-inline
-FGNavRecord::FGNavRecord(void) :
-    type(0),
-    pos(SGGeod::fromDeg(0, 0)),
-    cart(0, 0, 0),
-    freq(0),
-    range(0),
-    multiuse(0.0),
-    ident(""),
-    name(""),
-    apt_id(""),
-    serviceable(true),
-    trans_ident("")
-{
-}
-
-
-inline fg_nav_types FGNavRecord::get_fg_type() const {
-    switch(type) {
-    case 2: return(FG_NAV_NDB);
-    case 3: return(FG_NAV_VOR);
-    case 4: return(FG_NAV_ILS);
-    default: return(FG_NAV_ANY);
-    }
-}
-
-
-inline std::istream&
-operator >> ( std::istream& in, FGNavRecord& n )
-{
-    in >> n.type;
-    
-    if ( n.type == 99 ) {
-        return in >> skipeol;
-    }
-
-    double lat, lon, elev_ft;
-    in >> lat >> lon >> elev_ft >> n.freq >> n.range >> n.multiuse
-       >> n.ident;
-    n.pos.setLatitudeDeg(lat);
-    n.pos.setLongitudeDeg(lon);
-    n.pos.setElevationFt(elev_ft);
-    getline( in, n.name );
-
-    // silently multiply adf frequencies by 100 so that adf
-    // vs. nav/loc frequency lookups can use the same code.
-    if ( n.type == 2 ) {
-        n.freq *= 100;
-    }
-
-    // Remove any leading spaces before the name
-    while ( n.name.substr(0,1) == " " ) {
-        n.name = n.name.erase(0,1);
-    }
-
-    if ( n.type >= 4 && n.type <= 9 ) {
-        // these types are always associated with an airport id
-        std::string::size_type pos = n.name.find(" ");
-        n.apt_id = n.name.substr(0, pos);
-    }
-
-    // Ranges are included with the latest data format, no need to
-    // assign our own defaults, unless the range is not set for some
-    // reason.
-
-    if ( n.range < 0.1 ) {
-        // assign default ranges
-    
-        if ( n.type == 2 || n.type == 3 ) {
-            n.range = FG_NAV_DEFAULT_RANGE;
-        } else if ( n.type == 4 || n.type == 5 || n.type == 6 ) {
-            n.range = FG_LOC_DEFAULT_RANGE;
-        } else if ( n.type == 12 ) {
-            n.range = FG_DME_DEFAULT_RANGE;
-        } else {
-            n.range = FG_LOC_DEFAULT_RANGE;
-        }
-    }
-
-    // transmitted ident (same as ident unless modeling a fault)
-    n.trans_ident = n.ident;
-
-    // generate cartesian coordinates
-    n.cart = SGVec3d::fromGeod(n.pos);
-
-    return in;
-}
-
 class FGTACANRecord : public SGReferenced {
 
     std::string channel;		
@@ -195,7 +102,7 @@ class FGTACANRecord : public SGReferenced {
      
 public:
     
-    inline FGTACANRecord(void);
+     FGTACANRecord(void);
     inline ~FGTACANRecord(void) {}
 
     inline const std::string& get_channel() const { return channel; }
@@ -203,21 +110,4 @@ public:
     friend std::istream& operator>> ( std::istream&, FGTACANRecord& );
     };
 
-
-inline
-FGTACANRecord::FGTACANRecord(void) :
-    channel(""),
-    freq(0)
-    
-{
-}
-
-inline std::istream&
-operator >> ( std::istream& in, FGTACANRecord& n )
-{
-    in >> n.channel >> n.freq ;
-    //getline( in, n.name );
-
-    return in;
-}
 #endif // _FG_NAVRECORD_HXX

@@ -40,6 +40,8 @@
 
 using namespace std;
 
+class SGTime;
+
 enum GPSDistanceUnits {
 	GPS_DIST_UNITS_NM = 0,
 	GPS_DIST_UNITS_KM

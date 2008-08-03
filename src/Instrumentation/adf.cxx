@@ -10,6 +10,7 @@
 #include <simgear/compiler.h>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/timing/sg_time.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
