@@ -28,7 +28,6 @@
 #include <simgear/compiler.h>
 
 #include <stdio.h>    //    size_t
-
 #include <string>
 
 #include <simgear/constants.h>

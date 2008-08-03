@@ -91,6 +91,9 @@ Element::Element(string nm)
   // Damping force
   convert["LBS/FT/SEC"]["N/M/SEC"] = 14.5939;
   convert["N/M/SEC"]["LBS/FT/SEC"] = 1.0/convert["LBS/FT/SEC"]["N/M/SEC"];
+  // Damping force (Square Law)
+  convert["LBS/FT/SEC2"]["N/M/SEC2"] = 14.5939;
+  convert["N/M/SEC2"]["LBS/FT/SEC2"] = 1.0/convert["LBS/FT/SEC2"]["N/M/SEC2"];
   // Power
   convert["WATTS"]["HP"] = 0.001341022;
   convert["HP"]["WATTS"] = 1.0/convert["WATTS"]["HP"];
@@ -154,6 +157,9 @@ Element::Element(string nm)
   // Damping force
   convert["LBS/FT/SEC"]["LBS/FT/SEC"] = 1.00;
   convert["N/M/SEC"]["N/M/SEC"] = 1.00;
+  // Damping force (Square law)
+  convert["LBS/FT/SEC2"]["LBS/FT/SEC2"] = 1.00;
+  convert["N/M/SEC2"]["N/M/SEC2"] = 1.00;
   // Power
   convert["HP"]["HP"] = 1.00;
   convert["WATTS"]["WATTS"] = 1.00;

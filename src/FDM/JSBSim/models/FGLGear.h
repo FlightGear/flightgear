@@ -210,6 +210,8 @@ public:
   enum ContactType {ctBOGEY, ctSTRUCTURE, ctUNKNOWN};
   /// Report type enumerators
   enum ReportType {erNone=0, erTakeoff, erLand};
+  /// Damping types
+  enum DampType {dtLinear=0, dtSquare};
   /** Constructor
       @param el a pointer to the XML element that contains the CONTACT info.
       @param Executive a pointer to the parent executive object
@@ -348,6 +350,8 @@ private:
   BrakeGroup  eBrakeGrp;
   ContactType eContactType;
   SteerType   eSteerType;
+  DampType    eDampType;
+  DampType    eDampTypeRebound;
   double  maxSteerAngle;
   double RFRV;  // Rolling force relaxation velocity
   double SFRV;  // Side force relaxation velocity
