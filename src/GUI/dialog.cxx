@@ -517,7 +517,7 @@ FGDialog::display (SGPropertyNode * props)
 puObject *
 FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
 {
-    if (props->getBoolValue("hide"))
+    if (!props->getBoolValue("enabled", true))
         return 0;
 
     bool presetSize = props->hasValue("width") && props->hasValue("height");

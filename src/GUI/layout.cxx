@@ -39,7 +39,7 @@ void LayoutWidget::calcPrefSize(int* w, int* h)
 {
     *w = *h = 0; // Ask for nothing by default
 
-    if (getBool("hide") || isType("nasal"))
+    if (!getBool("enabled", true) || isType("nasal"))
         return;
 
     int legw = stringLength(getStr("legend"));
@@ -97,7 +97,7 @@ void LayoutWidget::calcPrefSize(int* w, int* h)
 // Set up geometry such that the widget lives "inside" the specified 
 void LayoutWidget::layout(int x, int y, int w, int h)
 {
-    if (getBool("hide") || isType("nasal"))
+    if (!getBool("enabled", true) || isType("nasal"))
         return;
 
     setNum("__bx", x);
@@ -198,7 +198,7 @@ void LayoutWidget::doHVBox(bool doLayout, bool vertical, int* w, int* h)
     int nEq = 0, eqA = 0, eqB = 0, eqTotalA = 0;
     for(i=0; i<nc; i++) {
         LayoutWidget child = getChild(i);
-        if (child.getBool("hide"))
+        if (!child.getBool("enabled", true))
             continue;
 
         int a, b;
@@ -236,7 +236,7 @@ void LayoutWidget::doHVBox(bool doLayout, bool vertical, int* w, int* h)
         // from top to bottom instead of along the cartesian Y axis.
         int idx = vertical ? (nc-i-1) : i;
         LayoutWidget child = getChild(idx);
-        if (child.getBool("hide"))
+        if (!child.getBool("enabled", true))
             continue;
 
         if(child.getBool("equal")) {

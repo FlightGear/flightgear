@@ -31,7 +31,7 @@ public:
     LayoutWidget getChild(int i);
     bool         hasField(const char* f);
     int          getNum(const char* f);
-    bool         getBool(const char* f);
+    bool         getBool(const char* f, bool dflt = false);
     const char*  getStr(const char* f);
     void         setNum(const char* f, int num);
 

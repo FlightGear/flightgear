@@ -82,9 +82,9 @@ int LayoutWidget::getNum(const char* f)
     return _prop->getIntValue(f);
 }
 
-bool LayoutWidget::getBool(const char* f)
+bool LayoutWidget::getBool(const char* f, bool dflt)
 {
-    return _prop->getBoolValue(f);
+    return _prop->getBoolValue(f, dflt);
 }
 
 const char* LayoutWidget::getStr(const char* f)
