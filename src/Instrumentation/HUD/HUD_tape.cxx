@@ -32,8 +32,8 @@ HUD::Tape::Tape(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _draw_cap_top(n->getBoolValue("cap-top", false)),
     _draw_cap_right(n->getBoolValue("cap-right", false)),
     _draw_cap_left(n->getBoolValue("cap-left", false)),
-    _marker_offset(n->getFloatValue("marker-offset", 0.0)),
-    _label_gap(n->getFloatValue("label-gap-width", 0.0) / 2.0),
+    _marker_offset(n->getFloatValue("marker-offset")),
+    _label_gap(n->getFloatValue("label-gap-width") / 2.0),
     _pointer(n->getBoolValue("enable-pointer", true)),
     _format(n->getStringValue("format", "%d"))
 {
@@ -531,9 +531,9 @@ char *HUD::Tape::format_value(float v)
         v = 0.0f;
 
     if (_label_fmt == INT)
-        snprintf(_buf, BUFSIZE, _format.c_str(), int(v + 0.5f));
+        snprintf(_buf, BUFSIZE, _format.c_str(), int(v));
     else if (_label_fmt == LONG)
-        snprintf(_buf, BUFSIZE, _format.c_str(), long(v + 0.5f));
+        snprintf(_buf, BUFSIZE, _format.c_str(), long(v));
     else if (_label_fmt == FLOAT)
         snprintf(_buf, BUFSIZE, _format.c_str(), v);
     else // _label_fmt == DOUBLE

@@ -462,10 +462,8 @@ void HUD::setColor() const
 }
 
 
-
-
 void HUD::textAlign(fntRenderer *rend, const char *s, int align,
-        float *x, float *y, float *l, float *r, float *t, float *b)
+        float *x, float *y, float *l, float *r, float *b, float *t)
 {
     fntFont *font = rend->getFont();
     float gap = font->getGap();
