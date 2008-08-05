@@ -87,7 +87,7 @@ if !exists("nasal_no_fgfs")
 	syn match   nasalPropsFunction		"\<props\.\(_\?globals\|Node\|nodeList\|initNode\|condition\)\>\.\="
 
 	" mark obvious XML parts as comments (for editing XML embedded nasal)
-	syn match   nasalComment		"^\s*</\?[[:alnum:]!].*[[:alnum:]\"-]>\s*$"
+	syn match   nasalComment		"^\s*</\?[[:alnum:]!].*[[:alnum:]\"-]/\?>\s*$"
 	syn match   nasalComment		"^\s*<!\[CDATA\[\s*$"
 	syn match   nasalComment		"^\s*\]\]>\s*$"
 endif
