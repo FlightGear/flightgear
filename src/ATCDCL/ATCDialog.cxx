@@ -239,7 +239,7 @@ void FGATCDialog::PopupDialog() {
 		// add transmission button (modified copy of <button-template>)
 		SGPropertyNode *entry = button_group->getNode("button", n, true);
 		copyProperties(button_group->getNode("button-template", true), entry);
-		entry->removeChildren("hide", false);
+		entry->removeChildren("enabled", true);
 		entry->setStringValue("property", buf);
 		entry->setIntValue("keynum", '1' + n);
 		if (n == 0)
@@ -341,7 +341,7 @@ void FGATCDialog::FreqDialog() {
 		for (int n = 0; uit != uniq.end() && n < 6; ++uit, ++n) { // max 6 buttons
 			SGPropertyNode *entry = button_group->getNode("button", n, true);
 			copyProperties(button_group->getNode("button-template", true), entry);
-			entry->removeChildren("hide", false);
+			entry->removeChildren("enabled", true);
 			entry->setStringValue("legend", uit->first.id.c_str());
 			entry->setStringValue("binding[0]/value", uit->first.id.c_str());
 		}
@@ -349,7 +349,7 @@ void FGATCDialog::FreqDialog() {
 
 	// (un)hide message saying no things in range
 	SGPropertyNode_ptr range_error = getNamedNode(dlg, "no-atc-in-range");
-	range_error->setBoolValue("hide", num_stat);
+	range_error->setBoolValue("enabled", !num_stat);
 
 	_gui->showDialog(dialog_name);
 }
@@ -397,7 +397,7 @@ void FGATCDialog::FreqDisplay(string& ident) {
 			// add frequency line (modified copy of <group-template>)
 			SGPropertyNode *entry = freq_group->getNode("group", n, true);
 			copyProperties(freq_group->getNode("group-template", true), entry);
-			entry->removeChildren("hide", false);
+			entry->removeChildren("enabled", true);
 
 			ostr << itr->type;
 			entry->setStringValue("text[0]/label", ostr.str().c_str());
