@@ -26,7 +26,7 @@
 
 #include <simgear/compiler.h>
 
-#include <stdlib.h>             // atoi()
+#include <cstdlib>             // atoi()
 
 #include <string>
 
@@ -67,6 +67,7 @@
 #include "globals.hxx"
 #include "fg_io.hxx"
 
+using std::atoi;
 using std::string;
 
 
@@ -242,6 +243,7 @@ FGIO::parse_port_config( const string& config )
 	string baud = tokens[5];
 	SG_LOG( SG_IO, SG_INFO, "  baud = " << baud );
 
+        
 	SGSerial *ch = new SGSerial( device, baud );
 	io->set_io_channel( ch );
     } else if ( medium == "file" ) {
@@ -253,9 +255,17 @@ FGIO::parse_port_config( const string& config )
 	  
 	string file = tokens[4];
 	SG_LOG( SG_IO, SG_INFO, "  file name = " << file );
-        bool repeat = false;
-        if (tokens.size() >= 7 && tokens[6] == "repeat")
-            repeat = true;
+        int repeat = 1;
+        if (tokens.size() >= 7 && tokens[6] == "repeat") {
+            if (tokens.size() >= 8) {
+                repeat = atoi(tokens[7].c_str());
+                FGGeneric* generic = dynamic_cast<FGGeneric*>(io);
+                if (generic)
+                    generic->setExitOnError(true);
+            } else {
+                repeat = -1;
+            }
+        }
 	SGFile *ch = new SGFile( file, repeat );
 	io->set_io_channel( ch );
     } else if ( medium == "socket" ) {

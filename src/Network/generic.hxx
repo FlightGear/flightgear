@@ -53,6 +53,8 @@ public:
     // close the channel
     bool close();
 
+    void setExitOnError(bool val) { exitOnError = val; }
+    bool getExitOnError() { return exitOnError; }
 protected:
 
     enum e_type { FG_BOOL=0, FG_INT, FG_DOUBLE, FG_STRING };
@@ -85,7 +87,7 @@ private:
     int binary_footer_value;
 
     void read_config(SGPropertyNode *root, vector<_serial_prot> &msg);
-
+    bool exitOnError;
 };
 
 

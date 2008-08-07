@@ -70,7 +70,8 @@ FGAIBase::FGAIBase(object_type ot) :
     _impact_speed(0),
 
     _refID( _newAIModelID() ),
-    _otype(ot)
+    _otype(ot),
+    _initialized(false)
 {
     tgt_heading = hdg = tgt_altitude_ft = tgt_speed = 0.0;
     tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
@@ -174,12 +175,13 @@ bool FGAIBase::init(bool search_in_AI_path) {
 
     model = load3DModel(f, props);
 
-    if (model.valid()) {
+    if (model.valid() && _initialized == false) {
         model->setNodeMask(model->getNodeMask() & ~SG_NODEMASK_TERRAIN_BIT);
         aip.init( model.get() );
         aip.setVisible(true);
         invisible = false;
         globals->get_scenery()->get_scene_graph()->addChild(aip.getSceneGraph());
+        _initialized = true;
 
     } else if (!model_path.empty()) {
         SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);

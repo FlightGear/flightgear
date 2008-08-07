@@ -43,7 +43,8 @@
 
 
 
-FGGeneric::FGGeneric(string& config) {
+FGGeneric::FGGeneric(string& config) : exitOnError(false)
+{
 
     string file = config+".xml";
 
@@ -256,18 +257,22 @@ bool FGGeneric::process() {
         gen_message();
         if ( ! io->write( buf, length ) ) {
             SG_LOG( SG_IO, SG_WARN, "Error writing data." );
-            return false;
+            goto error_out;
         }
     } else if ( get_direction() == SG_IO_IN ) {
         if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
             parse_message();
         } else {
             SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
-            return false;
+            goto error_out;
         }
     }
-
     return true;
+error_out:
+    if (exitOnError)
+        fgExit(1);
+    else
+        return false;
 }
 
 

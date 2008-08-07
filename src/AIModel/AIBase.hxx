@@ -192,6 +192,7 @@ protected:
 private:
     int _refID;
     object_type _otype;
+    bool _initialized;
 
 public:
     object_type getType();

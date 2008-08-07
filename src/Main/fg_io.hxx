@@ -31,9 +31,6 @@
 #include <vector>
 #include <string>
 
-using std::vector;
-using std::string;
-
 class FGProtocol;
 
 class FGIO : public SGSubsystem
@@ -51,13 +48,13 @@ public:
 
 private:
 
-    FGProtocol* parse_port_config( const string& cfgstr );
+    FGProtocol* parse_port_config( const std::string& cfgstr );
 
 private:
 
     // define the global I/O channel list
     //io_container global_io_list;
-    vector< FGProtocol* > io_channels;
+    std::vector< FGProtocol* > io_channels;
 };
 
 
