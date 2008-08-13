@@ -26,8 +26,8 @@ endif
 
 syn keyword nasalCommentTodo		TODO FIXME XXX contained
 syn match   nasalComment		"#.*$" contains=nasalCommentTodo
-syn region  nasalStringS		start=+'+  skip=+\\'+  end=+'+  contains=nasalSpecialS
-syn region  nasalStringD		start=+"+  skip=+\\"+  end=+"+  contains=nasalSpecialD,nasalSpecial
+syn region  nasalStringS		start=+'+ skip=+\\'+ end=+'+ contains=nasalSpecialS
+syn region  nasalStringD		start=+"+ skip=+\\"+ end=+"+ contains=nasalSpecialD,nasalSpecial
 syn match   nasalSpecialS		contained "\\'"
 syn match   nasalSpecialD		contained "\\[\\rnt\"]"
 syn match   nasalSpecial		contained "\\x[[:xdigit:]][[:xdigit:]]"
@@ -86,10 +86,14 @@ if !exists("nasal_no_fgfs")
 	syn keyword nasalPropsFunction		getPath getBoolValue setValues getValues
 	syn match   nasalPropsFunction		"\<props\.\(_\?globals\|Node\|nodeList\|initNode\|condition\)\>\.\="
 
-	" mark obvious XML parts as comments (for editing XML embedded nasal)
-	syn match   nasalComment		"^\s*</\?[[:alnum:]!].*[[:alnum:]\"-]/\?>\s*$"
-	syn match   nasalComment		"^\s*<!\[CDATA\[\s*$"
-	syn match   nasalComment		"^\s*\]\]>\s*$"
+	" XML embedded mode
+	if expand("%:e") == "xml"
+		syn region  nasalComment	start="<!--" end="-->" contains=nasalCommentTodo
+		syn region  nasalComment	start="<?" end="?>" contains=nasalCommentTodo
+		syn match   nasalComment	"^\s*</\?[[:alnum:]!].*[[:alnum:]\"-]/\?>\s*$"
+		syn match   nasalComment	"^\s*<!\[CDATA\[\s*$"
+		syn match   nasalComment	"^\s*\]\]>\s*$"
+	endif
 endif
 
 
