@@ -30,6 +30,7 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/misc/strutils.hxx>
 
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
@@ -268,7 +269,7 @@ static void update_loc_position( FGNavRecord *loc, FGRunway *rwy,
 // it then "moves" the localizer and updates it's heading so it
 // *perfectly* aligns with the runway, but is still the same distance
 // from the runway threshold.
-void fgNavDBAlignLOCwithRunway( FGRunwayList *runways, FGNavList *loclist,
+void fgNavDBAlignLOCwithRunway( FGAirportList *airports, FGNavList *loclist,
                                 double threshold ) {
     nav_map_type navmap = loclist->get_navaids();
 
@@ -277,18 +278,19 @@ void fgNavDBAlignLOCwithRunway( FGRunwayList *runways, FGNavList *loclist,
         nav_list_type locs = freq->second;
         nav_list_const_iterator loc = locs.begin();
         while ( loc != locs.end() ) {
-            string name = (*loc)->get_name();
-            string::size_type pos1 = name.find(" ");
-            string id = name.substr(0, pos1);
-            name = name.substr(pos1+1);
-            string::size_type pos2 = name.find(" ");
-            string rwy = name.substr(0, pos2);
-
-            FGRunway r;
-            if ( runways->search(id, rwy, &r) ) {
-                update_loc_position( (*loc), &r, threshold );
-            }
-            ++loc;
+          vector<string> parts = simgear::strutils::split((*loc)->get_name());
+          if (parts.size() < 2) {
+            SG_LOG(SG_GENERAL, SG_ALERT, "can't parse navaid " << (*loc)->get_ident() 
+              << " name for airport/runway:" << (*loc)->get_name());
+            continue;
+          }
+          
+          FGAirport* airport = airports->search(parts[0]);
+          if (!airport) continue; // not found
+            
+          FGRunway r = airport->getRunwayByIdent(parts[1]);
+          update_loc_position( (*loc), &r, threshold );
+          ++loc;
         }
         ++freq;
     }

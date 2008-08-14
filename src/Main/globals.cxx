@@ -81,7 +81,6 @@ FGGlobals::FGGlobals() :
     current_panel( NULL ),
     soundmgr( NULL ),
     airports( NULL ),
-    runways( NULL ),
     ATC_mgr( NULL ),
     AI_mgr( NULL ),
     controls( NULL ),
@@ -135,7 +134,6 @@ FGGlobals::~FGGlobals()
     delete soundmgr;
     delete airports;
 
-    delete runways;
     delete ATC_mgr;
     delete AI_mgr;
     delete controls;

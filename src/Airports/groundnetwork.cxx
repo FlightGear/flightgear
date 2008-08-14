@@ -41,6 +41,8 @@
 //#include <Main/fg_props.hxx>
 //#include <Airports/runways.hxx>
 
+#include <Airports/dynamics.hxx>
+
 #include <AIModel/AIFlightPlan.hxx>
 
 //#include <string>

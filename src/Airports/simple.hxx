@@ -27,15 +27,6 @@
 #ifndef _FG_SIMPLE_HXX
 #define _FG_SIMPLE_HXX
 
-
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
 #include <simgear/math/point3d.hxx>
 
 #include <simgear/compiler.h>
@@ -45,29 +36,20 @@
 #include <set>
 #include <vector>
 
-#include "runwayprefs.hxx"
-#include "parking.hxx"
-#include "groundnetwork.hxx"
-#include "dynamics.hxx"
+#include "Airports/runways.hxx"
 
-
-using std::string;
-using std::map;
-using std::set;
-using std::vector;
-
-
-
+// forward decls
+class FGAirportDynamics;
 
 /***************************************************************************************
  *
  **************************************************************************************/
 class FGAirport {
 private:
-    string _id;
+    std::string _id;
     SGGeod _location;
     SGGeod _tower_location;
-    string _name;
+    std::string _name;
     bool _has_metar;
     bool _is_airport;
     bool _is_seaport;
@@ -77,12 +59,13 @@ private:
 public:
     FGAirport();
     // FGAirport(const FGAirport &other);
-    FGAirport(const string& id, const SGGeod& location, const SGGeod& tower, const string& name,
+    FGAirport(const std::string& id, const SGGeod& location, const SGGeod& tower, 
+            const std::string& name,
             bool has_metar, bool is_airport, bool is_seaport, bool is_heliport);
     ~FGAirport();
 
-    const string& getId() const { return _id; }
-    const string& getName() const { return _name; }
+    const std::string& getId() const { return _id; }
+    const std::string& getName() const { return _name; }
     double getLongitude() const { return _location.getLongitudeDeg(); }
     // Returns degrees
     double getLatitude()  const { return _location.getLatitudeDeg(); }
@@ -95,14 +78,35 @@ public:
 
     const SGGeod& getTowerLocation() const { return _tower_location; }
 
-    void setId(const string& id) { _id = id; }
+    void setId(const std::string& id) { _id = id; }
     void setMetar(bool value) { _has_metar = value; }
 
-    FGAirportDynamics *getDynamics();
+    FGRunway getActiveRunwayForUsage() const;
 
+    FGAirportDynamics *getDynamics();
+    
+    unsigned int numRunways() const;
+    FGRunway getRunwayByIndex(unsigned int aIndex) const;
+
+    bool hasRunwayWithIdent(const std::string& aIdent) const;
+    FGRunway getRunwayByIdent(const std::string& aIdent) const;
+    FGRunway findBestRunwayForHeading(double aHeading) const;
+    
+    unsigned int numTaxiways() const;
+    FGRunway getTaxiwayByIndex(unsigned int aIndex) const;
+    
+    void addRunway(const FGRunway& aRunway);
 private:
+    /**
+     * Helper to locate a runway by ident
+     */
+    FGRunwayVector::const_iterator getIteratorForRunwayIdent(const std::string& aIdent, bool& aReversed) const;
+
     FGAirport operator=(FGAirport &other);
     FGAirport(const FGAirport&);
+    
+    std::vector<FGRunway> mRunways;
+    std::vector<FGRunway> mTaxiways;
 };
 
 
@@ -114,11 +118,11 @@ public:
 };
 
 
-typedef map < string, FGAirport* > airport_map;
+typedef std::map < std::string, FGAirport* > airport_map;
 typedef airport_map::iterator airport_map_iterator;
 typedef airport_map::const_iterator const_airport_map_iterator;
 
-typedef vector < FGAirport * > airport_list;
+typedef std::vector < FGAirport * > airport_list;
 typedef airport_list::iterator airport_list_iterator;
 typedef airport_list::const_iterator const_airport_list_iterator;
 
@@ -138,13 +142,13 @@ public:
     ~FGAirportList();
 
     // add an entry to the list
-    void add( const string& id, const SGGeod& location, const SGGeod& tower,
-              const string& name, bool has_metar, bool is_airport,
+    FGAirport* add( const std::string& id, const SGGeod& location, const SGGeod& tower,
+              const std::string& name, bool has_metar, bool is_airport,
               bool is_seaport, bool is_heliport );
 
     // search for the specified id.
     // Returns NULL if unsucessfull.
-    FGAirport* search( const string& id );
+    FGAirport* search( const std::string& id );
 
     // Search for the next airport in ASCII sequence to the supplied id.
     // eg. id = "KDC" or "KDCA" would both return "KDCA".
@@ -152,7 +156,7 @@ public:
     // NOTE: Numbers come prior to A-Z in ASCII sequence so id = "LD" would return "LD57", not "LDDP"
     // Implementation assumes airport codes are unique.
     // Returns NULL if unsucessfull.
-    const FGAirport* findFirstById( const string& id, bool exact = false );
+    const FGAirport* findFirstById( const std::string& id, bool exact = false );
 
     // search for the airport closest to the specified position
     // (currently a linear inefficient search so it's probably not
@@ -179,23 +183,23 @@ public:
     /**
      * Mark the specified airport record as not having metar
      */
-    void no_metar( const string &id );
+    void no_metar( const std::string &id );
 
     /**
      * Mark the specified airport record as (yes) having metar
      */
-    void has_metar( const string &id );
+    void has_metar( const std::string &id );
 
 };
 
 // find basic airport location info from airport database
-const FGAirport *fgFindAirportID( const string& id);
+const FGAirport *fgFindAirportID( const std::string& id);
 
 // get airport elevation
-double fgGetAirportElev( const string& id );
+double fgGetAirportElev( const std::string& id );
 
 // get airport position
-Point3D fgGetAirportPos( const string& id );
+Point3D fgGetAirportPos( const std::string& id );
 
 #endif // _FG_SIMPLE_HXX
 

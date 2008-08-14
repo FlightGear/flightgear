@@ -548,37 +548,32 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
 
     string id = apt->getId();
     string name = apt->getName();
-
+    
     // set runway hash
-    FGRunwayList *rwylst = globals->get_runways();
-    FGRunway rwy;
     naRef rwys = naNewHash(c);
-    if(rwylst->search(id, &rwy)) {
-        do {
-            if(rwy._id != id) break;
-            if(rwy._type[0] != 'r') continue;
-
-            naRef rwyid = naStr_fromdata(naNewString(c),
+    for (unsigned int r=0; r<apt->numRunways(); ++r) {
+      FGRunway rwy(apt->getRunwayByIndex(r));
+      
+      naRef rwyid = naStr_fromdata(naNewString(c),
                     const_cast<char *>(rwy._rwy_no.c_str()),
                     rwy._rwy_no.length());
 
-            naRef rwydata = naNewHash(c);
+      naRef rwydata = naNewHash(c);
 #define HASHSET(s,l,n) naHash_set(rwydata, naStr_fromdata(naNewString(c),s,l),n)
-            HASHSET("id", 2, rwyid);
-            HASHSET("lat", 3, naNum(rwy._lat));
-            HASHSET("lon", 3, naNum(rwy._lon));
-            HASHSET("heading", 7, naNum(rwy._heading));
-            HASHSET("length", 6, naNum(rwy._length * SG_FEET_TO_METER));
-            HASHSET("width", 5, naNum(rwy._width * SG_FEET_TO_METER));
-            HASHSET("threshold1", 10, naNum(rwy._displ_thresh1 * SG_FEET_TO_METER));
-            HASHSET("threshold2", 10, naNum(rwy._displ_thresh2 * SG_FEET_TO_METER));
-            HASHSET("stopway1", 8, naNum(rwy._stopway1 * SG_FEET_TO_METER));
-            HASHSET("stopway2", 8, naNum(rwy._stopway2 * SG_FEET_TO_METER));
+      HASHSET("id", 2, rwyid);
+      HASHSET("lat", 3, naNum(rwy._lat));
+      HASHSET("lon", 3, naNum(rwy._lon));
+      HASHSET("heading", 7, naNum(rwy._heading));
+      HASHSET("length", 6, naNum(rwy._length * SG_FEET_TO_METER));
+      HASHSET("width", 5, naNum(rwy._width * SG_FEET_TO_METER));
+      HASHSET("threshold1", 10, naNum(rwy._displ_thresh1 * SG_FEET_TO_METER));
+      HASHSET("threshold2", 10, naNum(rwy._displ_thresh2 * SG_FEET_TO_METER));
+      HASHSET("stopway1", 8, naNum(rwy._stopway1 * SG_FEET_TO_METER));
+      HASHSET("stopway2", 8, naNum(rwy._stopway2 * SG_FEET_TO_METER));
 #undef HASHSET
-            naHash_set(rwys, rwyid, rwydata);
-        } while(rwylst->next(&rwy));
+      naHash_set(rwys, rwyid, rwydata);
     }
-
+    
     // set airport hash
     naRef aptdata = naNewHash(c);
 #define HASHSET(s,l,n) naHash_set(aptdata, naStr_fromdata(naNewString(c),s,l),n)

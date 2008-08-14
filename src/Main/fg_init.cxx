@@ -67,6 +67,8 @@
 #include <Airports/apt_loader.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
+#include <Airports/dynamics.hxx>
+
 #include <AIModel/AIManager.hxx>
 #include <ATCDCL/ATCmgr.hxx>
 #include <ATCDCL/AIMgr.hxx>
@@ -751,8 +753,6 @@ void fgInitTowerLocationListener() {
 
 // Set current_options lon/lat given an airport id and heading (degrees)
 static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
-    FGRunway r;
-
     if ( id.empty() )
         return false;
 
@@ -761,11 +761,9 @@ static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
             "Attempting to set starting position from airport code "
             << id << " heading " << tgt_hdg );
 
-    if ( ! globals->get_runways()->search( id, (int)tgt_hdg, &r ) ) {
-        SG_LOG( SG_GENERAL, SG_ALERT,
-                "Failed to find a good runway for " << id << '\n' );
-        return false;
-    }
+    const FGAirport* apt = fgFindAirportID(id);
+    if (!apt) return false;
+    FGRunway r = apt->findBestRunwayForHeading(tgt_hdg);
     fgSetString("/sim/atc/runway", r._rwy_no.c_str());
 
     double lat2, lon2, az2;
@@ -872,8 +870,6 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
 
 // Set current_options lon/lat given an airport id and runway number
 static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bool rwy_req ) {
-    FGRunway r;
-
     if ( id.empty() )
         return false;
 
@@ -882,12 +878,20 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bo
             "Attempting to set starting position for "
             << id << ":" << rwy );
 
-    if ( ! globals->get_runways()->search( id, rwy, &r ) ) {
-        SG_LOG( SG_GENERAL, rwy_req ? SG_ALERT : SG_INFO,
+    const FGAirport* apt = fgFindAirportID(id);
+    if (!apt) {
+      SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find airport:" << id);
+      return false;
+    }
+    
+    if (!apt->hasRunwayWithIdent(rwy)) {
+      SG_LOG( SG_GENERAL, rwy_req ? SG_ALERT : SG_INFO,
                 "Failed to find runway " << rwy <<
                 " at airport " << id << ". Using default runway." );
-        return false;
+      return false;
     }
+    
+    FGRunway r(apt->getRunwayByIdent(rwy));
     fgSetString("/sim/atc/runway", r._rwy_no.c_str());
 
     double lat2, lon2, az2;
@@ -1143,10 +1147,8 @@ fgInitNav ()
 
     FGAirportList *airports = new FGAirportList();
     globals->set_airports( airports );
-    FGRunwayList *runways = new FGRunwayList();
-    globals->set_runways( runways );
 
-    fgAirportDBLoad( airports, runways, aptdb.str(), p_metar.str() );
+    fgAirportDBLoad( airports, aptdb.str(), p_metar.str() );
 
     FGNavList *navlist = new FGNavList;
     FGNavList *loclist = new FGNavList;
@@ -1179,7 +1181,7 @@ fgInitNav ()
         double threshold
             = fgGetDouble( "/sim/navdb/localizers/auto-align-threshold-deg",
                            5.0 );
-        fgNavDBAlignLOCwithRunway( runways, loclist, threshold );
+        fgNavDBAlignLOCwithRunway( airports, loclist, threshold );
     }
 
     SG_LOG(SG_GENERAL, SG_INFO, "  Fixes");

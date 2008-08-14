@@ -31,6 +31,7 @@
 #include <config.h>
 #endif
 
+#include <iostream>
 #include <plib/netSocket.h>
 
 #include <simgear/misc/stdint.hxx>
@@ -42,6 +43,8 @@
 #include <Main/fg_props.hxx>
 #include "multiplaymgr.hxx"
 #include "mpmessages.hxx"
+
+using std::cerr;
 
 #define MAX_PACKET_SIZE 1200
 #define MAX_TEXT_SIZE 128

@@ -112,13 +112,30 @@ void GroundRadar::createTexture(const char* texture_name)
     FGTextureManager::addTexture(texture_name, getTexture());
 }
 
+void GroundRadar::addRunwayVertices(const FGRunway& aRunway, double aTowerLat, double aTowerLon, double aScale, osg::Vec3Array* aVertices)
+{
+  double az1, az2, dist_m;
+  geo_inverse_wgs_84(aTowerLat, aTowerLon, aRunway._lat, aRunway._lon, &az1, &az2, &dist_m);
+
+  osg::Vec3 center = fromPolar(az1, dist_m * aScale) + osg::Vec3(256, 256, 0);
+  osg::Vec3 leftcenter = fromPolar(aRunway._heading, aRunway._length * SG_FEET_TO_METER * aScale / 2) + center;
+  osg::Vec3 lefttop = fromPolar(aRunway._heading - 90, aRunway._width * SG_FEET_TO_METER * aScale / 2) + leftcenter;
+  osg::Vec3 leftbottom = leftcenter * 2 - lefttop;
+  osg::Vec3 rightbottom = center * 2 - lefttop;
+  osg::Vec3 righttop = center * 2 - leftbottom;
+
+  aVertices->push_back(lefttop);
+  aVertices->push_back(leftbottom);
+  aVertices->push_back(rightbottom);
+  aVertices->push_back(righttop);
+}
+
 void GroundRadar::updateTexture()
 {
     osg::ref_ptr<osg::Vec3Array> rwy_vertices = new osg::Vec3Array;
     osg::ref_ptr<osg::Vec3Array> taxi_vertices = new osg::Vec3Array;
 
     const string airport_name = _airport_node->getStringValue();
-    FGRunwayList* runways = globals->get_runways();
 
     const FGAirport* airport = fgFindAirportID(airport_name);
     if (airport == 0)
@@ -128,26 +145,22 @@ void GroundRadar::updateTexture()
     const double tower_lat = tower_location.getLatitudeDeg();
     const double tower_lon = tower_location.getLongitudeDeg();
     double scale = SG_METER_TO_NM * 200 / _range_node->getDoubleValue();
+  
+    const FGAirport* apt = fgFindAirportID(airport_name);
+    assert(apt);
 
-    for (FGRunway runway = runways->search(airport_name); runway._id == airport_name; runway = runways->next())
+    for (unsigned int i=0; i<apt->numRunways(); ++i)
     {
-        double az1, az2, dist_m;
-        geo_inverse_wgs_84(tower_lat, tower_lon, runway._lat, runway._lon, &az1, &az2, &dist_m);
-
-        osg::Vec3 center = fromPolar(az1, dist_m * scale) + osg::Vec3(256, 256, 0);
-        osg::Vec3 leftcenter = fromPolar(runway._heading, runway._length * SG_FEET_TO_METER * scale / 2) + center;
-        osg::Vec3 lefttop = fromPolar(runway._heading - 90, runway._width * SG_FEET_TO_METER * scale / 2) + leftcenter;
-        osg::Vec3 leftbottom = leftcenter * 2 - lefttop;
-        osg::Vec3 rightbottom = center * 2 - lefttop;
-        osg::Vec3 righttop = center * 2 - leftbottom;
-
-        osg::Vec3Array* vertices = runway._rwy_no[0] == 'x' ? taxi_vertices.get() : rwy_vertices.get();
-        vertices->push_back(lefttop);
-        vertices->push_back(leftbottom);
-        vertices->push_back(rightbottom);
-        vertices->push_back(righttop);
+      FGRunway runway(apt->getRunwayByIndex(i));
+      addRunwayVertices(runway, tower_lat, tower_lon, scale, rwy_vertices.get());
     }
-
+    
+    for (unsigned int i=0; i<apt->numTaxiways(); ++i)
+    {
+      FGRunway runway(apt->getTaxiwayByIndex(i));
+      addRunwayVertices(runway, tower_lat, tower_lon, scale, taxi_vertices.get());
+    }
+    
     osg::Vec3Array* vertices = new osg::Vec3Array(*taxi_vertices.get());
     vertices->insert(vertices->end(), rwy_vertices->begin(), rwy_vertices->end());
     _geom->setVertexArray(vertices);

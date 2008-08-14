@@ -514,23 +514,19 @@ void KLN89AptPage::UpdateAirport(const string& id) {
 	
 	// Runways
 	_aptRwys.clear();
-	FGRunway r;
-	bool haveRwy = globals->get_runways()->search(id, &r);
-	while(haveRwy && r._id == id) {
-		// Insert the runway with longest at the start of the array
-		for(unsigned int i = 0; i <= _aptRwys.size(); ++i) {
-			if(i == _aptRwys.size()) {
-				_aptRwys.push_back(r);
-				break;
-			} else {
-				if(r._length > _aptRwys[i]._length) {
-					_aptRwys.insert(_aptRwys.begin() + i, r);
-					break;
-				}
-			}
-		}
-		haveRwy = globals->get_runways()->next(&r);
-	}
+  const FGAirport* apt = fgFindAirportID(id);
+  assert(apt);
+  
+  // build local array, longest runway first
+  for (unsigned int r=0; r<apt->numRunways(); ++r) {
+    FGRunway rwy(apt->getRunwayByIndex(r));
+    if ((r > 0) && (rwy._length > _aptRwys.front()._length)) {
+      _aptRwys.insert(_aptRwys.begin(), rwy);
+    } else {
+      _aptRwys.push_back(rwy);
+    }
+  }
+  
 	_nRwyPages = (_aptRwys.size() + 1) / 2;	// 2 runways per page.
 	if(_nFreqPages < 1) _nFreqPages = 1;
 	if(_nRwyPages < 1) _nRwyPages = 1;

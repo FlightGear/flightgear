@@ -30,6 +30,8 @@
 #include "ATCDialog.hxx"
 
 #include <Airports/runways.hxx>
+#include <Airports/simple.hxx>
+
 #include <simgear/constants.h>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -559,26 +561,15 @@ double FGApproach::round_alt( const bool hl, double alt ) {
 void FGApproach::get_active_runway() {
 	//cout << "Entering FGApproach::get_active_runway()\n";
 
-  FGEnvironment stationweather =
-      ((FGEnvironmentMgr *)globals->get_subsystem("environment"))
-        ->getEnvironment(lat, lon, elev);
+  const FGAirport* apt = fgFindAirportID(ident);
+  assert(apt);
+  FGRunway runway = apt->getActiveRunwayForUsage();
 
-  double hdg = stationweather.get_wind_from_heading_deg();
-  
-  FGRunway runway;
-  if ( globals->get_runways()->search( ident, int(hdg), &runway) ) {
-    active_runway = runway._rwy_no;
-    active_rw_hdg = runway._heading;
-    active_rw_lon = runway._lon;
-    active_rw_lat = runway._lat;
-    active_rw_len = runway._length;
-    //cout << "Active runway is: " << active_runway << "  heading = " 
-    // << active_rw_hdg 
-    // << " lon = " << active_rw_lon 
-    // << " lat = " << active_rw_lat <<endl;
-  }
-  else cout << "FGRunways search failed\n";
-
+  active_runway = runway._rwy_no;
+  active_rw_hdg = runway._heading;
+  active_rw_lon = runway._lon;
+  active_rw_lat = runway._lat;
+  active_rw_len = runway._length;
 }
 
 // ========================================================================

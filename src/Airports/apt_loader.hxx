@@ -25,26 +25,17 @@
 #ifndef _FG_APT_LOADER_HXX
 #define _FG_APT_LOADER_HXX
 
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <simgear/compiler.h>
 
 #include <string>
 
-using std::string;
-
 #include "simple.hxx"
-#include "runways.hxx"
 
 
 // Load the airport data base from the specified aptdb file.  The
 // metar file is used to mark the airports as having metar available
 // or not.
-bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
-                      const string &aptdb_file, const string &metar_file );
+bool fgAirportDBLoad( FGAirportList *airports, const string &aptdb_file, const std::string &metar_file );
 
 
 #endif // _FG_APT_LOADER_HXX

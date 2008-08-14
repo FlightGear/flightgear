@@ -44,17 +44,17 @@
 
 #include "apt_loader.hxx"
 
-static void addAirport(FGAirportList *airports, const string& apt_id, const string& apt_name,
+FGAirport* addAirport(FGAirportList *airports, const string& apt_id, const string& apt_name,
     int rwy_count, double rwy_lat_accum, double rwy_lon_accum, double last_rwy_heading,
     double apt_elev, SGGeod& tower, bool got_tower, int type)
 {
     if (apt_id.empty())
-        return;
+        return NULL;
 
     if (!rwy_count) {
         SG_LOG(SG_GENERAL, SG_ALERT, "ERROR: No runways for " << apt_id
                 << ", skipping." );
-        return;
+        return NULL;
     }
 
     double lat = rwy_lat_accum / (double)rwy_count;
@@ -69,14 +69,14 @@ static void addAirport(FGAirportList *airports, const string& apt_id, const stri
         tower = SGGeod::fromDegFt(lon + fudge_lon, lat + fudge_lat, apt_elev + tower_height);
     }
 
-    airports->add(apt_id, SGGeod::fromDegFt(lon, lat, apt_elev), tower, apt_name, false,
+    return airports->add(apt_id, SGGeod::fromDegFt(lon, lat, apt_elev), tower, apt_name, false,
             type == 1/*airport*/, type == 16/*seaport*/, type == 17/*heliport*/);
 }
 
 // Load the airport data base from the specified aptdb file.  The
 // metar file is used to mark the airports as having metar available
 // or not.
-bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
+bool fgAirportDBLoad( FGAirportList *airports, 
                       const string &aptdb_file, const string &metar_file )
 {
     //
@@ -100,7 +100,8 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
     string line;
     char tmp[2049];
     tmp[2048] = 0;
-
+    vector<FGRunway> runways;
+    
     unsigned int line_id = 0;
     unsigned int line_num = 0;
     double rwy_lon_accum = 0.0;
@@ -150,9 +151,15 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
             SG_LOG( SG_GENERAL, SG_BULK, "Next airport = " << id << " "
                     << elev );
 
-            addAirport(airports, last_apt_id, last_apt_name, rwy_count, rwy_lat_accum, rwy_lon_accum,
+            FGAirport* apt = addAirport(airports, last_apt_id, last_apt_name, rwy_count, rwy_lat_accum, rwy_lon_accum,
                 last_rwy_heading, last_apt_elev, last_tower, got_tower, last_apt_type);
 
+            for (unsigned int r=0; r< runways.size(); ++r) {
+              apt->addRunway(runways[r]);
+            }
+
+            runways.clear();
+            
             last_apt_id = id;
             last_apt_elev = elev;
             last_apt_name = "";
@@ -210,11 +217,12 @@ bool fgAirportDBLoad( FGAirportList *airports, FGRunwayList *runways,
             double smoothness = atof( token[13].c_str() );
             bool dist_remaining = (atoi( token[14].c_str() ) == 1 );
 
-            runways->add( last_apt_id, rwy_no, lon, lat, heading, length,
+            FGRunway rwy(last_apt_id, rwy_no, lon, lat, heading, length,
                           width, displ_thresh1, displ_thresh2,
                           stopway1, stopway2, lighting_flags, surface_code,
                           shoulder_code, marking_code, smoothness,
-                          dist_remaining );
+                          dist_remaining);
+            runways.push_back(rwy);
         } else if ( line_id == 18 ) {
             // beacon entry (ignore)
         } else if ( line_id == 14 ) {

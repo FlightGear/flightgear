@@ -285,6 +285,18 @@ FGEnvironmentMgr::getEnvironment (double lat, double lon, double alt) const
   return env;
 }
 
+FGEnvironment
+FGEnvironmentMgr::getEnvironment(const SGGeod& aPos) const
+{
+  // Always returns the same environment
+  // for now; we'll make it interesting
+  // later.
+  FGEnvironment env = *_environment;
+  env.set_elevation_ft(aPos.getElevationFt());
+  return env;
+
+}
+
 void
 FGEnvironmentMgr::_update_fdm () const
 {

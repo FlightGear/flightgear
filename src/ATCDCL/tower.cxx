@@ -31,6 +31,7 @@
 
 #include <sstream>
 #include <iomanip>
+#include <iostream>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -1510,61 +1511,53 @@ void FGTower::DoRwyDetails() {
 	
 	// Based on the airport-id and wind get the active runway
 	
-	//wind
-	double hdg = wind_from_hdg->getDoubleValue();
-	double speed = wind_speed_knots->getDoubleValue();
-	hdg = (speed == 0.0 ? 270.0 : hdg);
-	//cout << "Heading = " << hdg << '\n';
-	
-	FGRunway runway;
-	bool rwyGood = globals->get_runways()->search(ident, int(hdg), &runway);
-	if(rwyGood) {
-		//cout << "RUNWAY GOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOD\n";
-		activeRwy = runway._rwy_no;
-		rwy.rwyID = runway._rwy_no;
-		SG_LOG(SG_ATC, SG_INFO, "Active runway for airport " << ident << " is " << activeRwy);
-		
-		// Get the threshold position
-		double other_way = runway._heading - 180.0;
-		while(other_way <= 0.0) {
-			other_way += 360.0;
-		}
-    	// move to the +l end/center of the runway
-		//cout << "Runway center is at " << runway._lon << ", " << runway._lat << '\n';
-    	Point3D origin = Point3D(runway._lon, runway._lat, aptElev);
-		Point3D ref = origin;
-    	double tshlon, tshlat, tshr;
-		double tolon, tolat, tor;
-		rwy.length = runway._length * SG_FEET_TO_METER;
-		rwy.width = runway._width * SG_FEET_TO_METER;
-    	geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), other_way, 
-        	                rwy.length / 2.0 - 25.0, &tshlat, &tshlon, &tshr );
-    	geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), runway._heading, 
-        	                rwy.length / 2.0 - 25.0, &tolat, &tolon, &tor );
-		// Note - 25 meters in from the runway end is a bit of a hack to put the plane ahead of the user.
-		// now copy what we need out of runway into rwy
-    	rwy.threshold_pos = Point3D(tshlon, tshlat, aptElev);
-		Point3D takeoff_end = Point3D(tolon, tolat, aptElev);
-		//cout << "Threshold position = " << tshlon << ", " << tshlat << ", " << aptElev << '\n';
-		//cout << "Takeoff position = " << tolon << ", " << tolat << ", " << aptElev << '\n';
-		rwy.hdg = runway._heading;
-		// Set the projection for the local area based on this active runway
-		ortho.Init(rwy.threshold_pos, rwy.hdg);	
-		rwy.end1ortho = ortho.ConvertToLocal(rwy.threshold_pos);	// should come out as zero
-		rwy.end2ortho = ortho.ConvertToLocal(takeoff_end);
-		
-		// Set the pattern direction
-		// TODO - we'll check for a facilities file with this in eventually - for now assume left traffic except
-		// for certain circumstances (RH parallel rwy).
-		rwy.patternDirection = -1;		// Left
-		if(rwy.rwyID.size() == 3) {
-			rwy.patternDirection = (rwy.rwyID.substr(2,1) == "R" ? 1 : -1);
-		}
-		//cout << "Doing details, rwy.patterDirection is " << rwy.patternDirection << '\n';
-	} else {
-		SG_LOG(SG_ATC, SG_ALERT, "Help  - can't get good runway in FGTower!!");
-		activeRwy = "NN";
-	}
+  const FGAirport* apt = fgFindAirportID(ident);
+  assert(apt);
+	FGRunway runway = apt->getActiveRunwayForUsage();
+  
+  //cout << "RUNWAY GOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOD\n";
+
+  activeRwy = runway._rwy_no;
+  rwy.rwyID = runway._rwy_no;
+  SG_LOG(SG_ATC, SG_INFO, "Active runway for airport " << ident << " is " << activeRwy);
+  
+  // Get the threshold position
+  double other_way = runway._heading - 180.0;
+  while(other_way <= 0.0) {
+    other_way += 360.0;
+  }
+    // move to the +l end/center of the runway
+  //cout << "Runway center is at " << runway._lon << ", " << runway._lat << '\n';
+    Point3D origin = Point3D(runway._lon, runway._lat, aptElev);
+  Point3D ref = origin;
+    double tshlon, tshlat, tshr;
+  double tolon, tolat, tor;
+  rwy.length = runway._length * SG_FEET_TO_METER;
+  rwy.width = runway._width * SG_FEET_TO_METER;
+    geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), other_way, 
+                        rwy.length / 2.0 - 25.0, &tshlat, &tshlon, &tshr );
+    geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), runway._heading, 
+                        rwy.length / 2.0 - 25.0, &tolat, &tolon, &tor );
+  // Note - 25 meters in from the runway end is a bit of a hack to put the plane ahead of the user.
+  // now copy what we need out of runway into rwy
+    rwy.threshold_pos = Point3D(tshlon, tshlat, aptElev);
+  Point3D takeoff_end = Point3D(tolon, tolat, aptElev);
+  //cout << "Threshold position = " << tshlon << ", " << tshlat << ", " << aptElev << '\n';
+  //cout << "Takeoff position = " << tolon << ", " << tolat << ", " << aptElev << '\n';
+  rwy.hdg = runway._heading;
+  // Set the projection for the local area based on this active runway
+  ortho.Init(rwy.threshold_pos, rwy.hdg);	
+  rwy.end1ortho = ortho.ConvertToLocal(rwy.threshold_pos);	// should come out as zero
+  rwy.end2ortho = ortho.ConvertToLocal(takeoff_end);
+  
+  // Set the pattern direction
+  // TODO - we'll check for a facilities file with this in eventually - for now assume left traffic except
+  // for certain circumstances (RH parallel rwy).
+  rwy.patternDirection = -1;		// Left
+  if(rwy.rwyID.size() == 3) {
+    rwy.patternDirection = (rwy.rwyID.substr(2,1) == "R" ? 1 : -1);
+  }
+  //cout << "Doing details, rwy.patterDirection is " << rwy.patternDirection << '\n';
 }
 
 
@@ -1596,28 +1589,27 @@ bool FGTower::OnAnyRunway(const Point3D& pt, bool onGround) {
 	}
 	
 	// Based on the airport-id, go through all the runways and check for a point in them
-	
-	// TODO - do we actually need to search for the airport - surely we already know our ident and
-	// can just search runways of our airport???
-	//cout << "Airport ident is " << ad.ident << '\n';
-	FGRunway runway;
-	bool rwyGood = globals->get_runways()->search(ad.ident, &runway);
-	if(!rwyGood) {
-		SG_LOG(SG_ATC, SG_WARN, "Unable to find any runways for airport ID " << ad.ident << " in FGTower");
-	}
-	bool on = false;
-	while(runway._id == ad.ident) {
-		on = OnRunway(pt, runway);
-		//cout << "Runway " << runway._rwy_no << ": On = " << (on ? "true\n" : "false\n");
-		if(on) {
-			if(onGround == false)
-				return(true);
-			if(runway._rwy_no != "xx")
-				return(true);
-		}
-		globals->get_runways()->next(&runway);
-	}
-	return(on);
+
+  const FGAirport* apt = fgFindAirportID(ad.ident);
+  assert(apt);
+  
+  for (unsigned int i=0; i<apt->numRunways(); ++i) {
+    if (OnRunway(pt, apt->getRunwayByIndex(i))) {
+      return true;
+    }
+  }
+
+  // if onGround is true, we only match real runways, so we're done
+  if (onGround) return false;
+
+  // try taxiways as well
+  for (unsigned int i=0; i<apt->numTaxiways(); ++i) {
+    if (OnRunway(pt, apt->getTaxiwayByIndex(i))) {
+      return true;
+    }
+  }
+  
+	return false;
 }
 
 

@@ -4288,19 +4288,15 @@ MK_VIII::Mode6Handler::test_runway (const FGRunway *_runway)
 bool
 MK_VIII::Mode6Handler::test_airport (const FGAirport *airport)
 {
-  FGRunway r;
-  if (globals->get_runways()->search(airport->getId(), &r))
-    do
-      {
-	if (test_runway(&r))
-	  return true;
-
-	// reciprocal runway
-	r._heading = get_reciprocal_heading(r._heading);
-	if (test_runway(&r))
-	  return true;
-      }
-    while (globals->get_runways()->next(&r) && r._id == airport->getId());
+  for (unsigned int r=0; r<airport->numRunways(); ++r) {
+    FGRunway rwy(airport->getRunwayByIndex(r));
+    
+    if (test_runway(&rwy)) return true;
+    
+    // reciprocal runway
+    rwy._heading = get_reciprocal_heading(rwy._heading);
+    if (test_runway(&rwy)) return true;
+  }
 
   return false;
 }
@@ -4525,46 +4521,46 @@ void
 MK_VIII::TCFHandler::select_runway (const FGAirport *airport,
 				    FGRunway *_runway)
 {
+/*
   FGRunway r;
   bool status = globals->get_runways()->search(airport->getId(), &r);
   assert(status);
 
-  double min_diff = 360;
-  do
-    {
-      double diff;
-
-      diff = get_azimuth_difference(&r);
-      if (diff < min_diff)
-	{
-	  min_diff = diff;
-	  *_runway = r;
-	}
-
-      // reciprocal runway
-      r._heading = get_reciprocal_heading(r._heading);
-      diff = get_azimuth_difference(&r);
-      if (diff < min_diff)
-	{
-	  min_diff = diff;
-	  *_runway = r;
-	}
-    }
+      }
   while (globals->get_runways()->next(&r) && r._id == airport->getId());
+  */
+  
+  double min_diff = 360;
+  
+  for (unsigned int r=0; r<airport->numRunways(); ++r) {
+    FGRunway rwy(airport->getRunwayByIndex(r));
+    double diff = get_azimuth_difference(&rwy);
+    if (diff < min_diff)
+	  {
+      min_diff = diff;
+      *_runway = rwy;
+    }
+    
+    // reciprocal runway
+    rwy._heading = get_reciprocal_heading(rwy._heading);
+    diff = get_azimuth_difference(&rwy);
+    if (diff < min_diff)
+    {
+      min_diff = diff;
+      *_runway = rwy;
+    }
+  } // of airport runways iteration
 }
 
 bool
 MK_VIII::TCFHandler::test_airport (const FGAirport *airport)
 {
-  FGRunway r;
-  if (globals->get_runways()->search(airport->getId(), &r))
-    do
-      {
-	if (r._length >= mk->conf.runway_database)
-	  return true;
-      }
-    while (globals->get_runways()->next(&r) && r._id == airport->getId());
-
+  for (unsigned int r=0; r<airport->numRunways(); ++r) {
+    if (airport->getRunwayByIndex(r)._length >= mk->conf.runway_database) {
+      return true;
+    }
+  }
+  
   return false;
 }
 

@@ -26,6 +26,7 @@
 
 #include <Traffic/SchedFlight.hxx>
 #include <Traffic/Schedule.hxx>
+#include <ATC/trafficcontrol.hxx>
 
 #include <string>
 using std::string;

@@ -32,6 +32,8 @@
 #  include <signal.h>
 #endif
 
+#include <iostream>
+
 #include <plib/netSocket.h>
 
 #include <osg/Camera>
@@ -86,6 +88,8 @@ double delta_time_sec = 0.0;
 extern float init_volume;
 
 using namespace flightgear;
+
+using std::cerr;
 
 // This is a record containing a bit of global housekeeping information
 FGGeneral general;

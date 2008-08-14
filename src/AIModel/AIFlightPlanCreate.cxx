@@ -20,6 +20,7 @@
 #include "AIFlightPlan.hxx"
 #include <simgear/math/sg_geodesy.hxx>
 #include <Airports/runways.hxx>
+#include <Airports/dynamics.hxx>
 
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
@@ -137,16 +138,8 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
 	}
       string rwyClass = getRunwayClassFromTrafficType(fltType);
       apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway);
-      if (!(globals->get_runways()->search(apt->getId(), 
-					    activeRunway, 
-					    &rwy)))
-	{
-	   SG_LOG(SG_INPUT, SG_ALERT, "Failed to find runway " << 
-		  activeRunway << 
-		  " at airport     " << apt->getId() << " of class " << rwyClass << " (1)");
-	   exit(1);
-	} 
-
+      rwy = apt->getRunwayByIdent(activeRunway);
+      
       // Determine the beginning of he runway
       heading = rwy._heading;
       double azimuth = heading + 180.0;
@@ -503,15 +496,7 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
       //string name;
       string rwyClass = getRunwayClassFromTrafficType(fltType);
       apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway);
-	if (!(globals->get_runways()->search(apt->getId(), 
-					      activeRunway, 
-					      &rwy)))
-	  {
-	    SG_LOG(SG_INPUT, SG_ALERT, "Failed to find runway " << 
-		   activeRunway << 
-		   " at airport     " << apt->getId()<< " of class " << rwyClass << " (2)");
-	    exit(1);
-	  }
+      rwy = apt->getRunwayByIdent(activeRunway);
     }
   // Acceleration point, 105 meters into the runway,
   heading = rwy._heading;
@@ -637,15 +622,7 @@ void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed,
       //string name;
       string rwyClass = getRunwayClassFromTrafficType(fltType);
       apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway);
-	if (!(globals->get_runways()->search(apt->getId(), 
-					      activeRunway, 
-					      &rwy)))
-	  {
-	    SG_LOG(SG_INPUT, SG_ALERT, "Failed to find runway " << 
-		   activeRunway << 
-		   " at airport     " << apt->getId()<< " of class " << rwyClass << " (3)");
-	    exit(1);
-	  }
+      rwy = apt->getRunwayByIdent(activeRunway);
     }
   
   
@@ -774,16 +751,8 @@ void FGAIFlightPlan::createDecent(FGAirport *apt, const string &fltType)
   // allow "mil" and "gen" as well
   string rwyClass = getRunwayClassFromTrafficType(fltType);
   apt->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway);
-  if (!(globals->get_runways()->search(apt->getId(), 
-				       activeRunway, 
-				       &rwy)))
-    {
-      SG_LOG(SG_INPUT, SG_ALERT, "Failed to find runway " << 
-	     activeRunway << 
-	     " at airport     " << apt->getId()<< " of class " << rwyClass << " (4)");
-      exit(1);
-    }
-  
+  rwy = apt->getRunwayByIdent(activeRunway);
+     
   heading = rwy._heading;
   azimuth = heading + 180.0;
   while ( azimuth >= 360.0 ) { azimuth -= 360.0; }

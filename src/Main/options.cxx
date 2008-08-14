@@ -35,6 +35,7 @@
 #include <string.h>		// strcmp()
 #include <algorithm>
 
+#include <iostream>
 #include <string>
 
 #include <plib/ul.h>
@@ -63,6 +64,9 @@
 
 using std::string;
 using std::sort;
+using std::cout;
+using std::cerr;
+using std::endl;
 
 #ifndef VERSION
 #define VERSION "CVS "__DATE__

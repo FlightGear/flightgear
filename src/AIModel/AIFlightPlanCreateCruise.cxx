@@ -27,6 +27,7 @@
 
 #include <Navaids/awynet.hxx>
 #include <Airports/runways.hxx>
+#include <Airports/dynamics.hxx>
 
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
@@ -334,15 +335,8 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
  
   string rwyClass = getRunwayClassFromTrafficType(fltType);
   arr->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway);
-  if (!(globals->get_runways()->search(arr->getId(), 
-				       activeRunway, 
-				       &rwy)))
-    {
-      SG_LOG(SG_INPUT, SG_ALERT, "Failed to find runway " << 
-	     activeRunway << 
-	     " at airport     " << arr->getId()<< " of class " << rwyClass << " (5)");
-      exit(1);
-    }
+  rwy = arr->getRunwayByIdent(activeRunway);
+  
   heading = rwy._heading;
   azimuth = heading + 180.0;
   while ( azimuth >= 360.0 ) { azimuth -= 360.0; }

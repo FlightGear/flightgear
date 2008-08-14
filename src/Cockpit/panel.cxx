@@ -33,6 +33,7 @@
 
 #include <stdio.h>	// sprintf
 #include <string.h>
+#include <iostream>
 
 #include <osg/CullFace>
 #include <osg/Depth>

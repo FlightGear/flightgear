@@ -46,6 +46,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Airports/runways.hxx>
+#include <Airports/dynamics.hxx>
 
 #include <string>
 
@@ -103,9 +104,159 @@ FGAirportDynamics * FGAirport::getDynamics()
     return _dynamics;
 }
 
+unsigned int FGAirport::numRunways() const
+{
+  return mRunways.size();
+}
 
+FGRunway FGAirport::getRunwayByIndex(unsigned int aIndex) const
+{
+  assert(aIndex >= 0 && aIndex < mRunways.size());
+  return mRunways[aIndex];
+}
 
+bool FGAirport::hasRunwayWithIdent(const string& aIdent) const
+{
+  bool dummy;
+  return (getIteratorForRunwayIdent(aIdent, dummy) != mRunways.end());
+}
 
+FGRunway FGAirport::getRunwayByIdent(const string& aIdent) const
+{
+  bool reversed;
+  FGRunwayVector::const_iterator it = getIteratorForRunwayIdent(aIdent, reversed);
+  if (it == mRunways.end()) {
+    SG_LOG(SG_GENERAL, SG_ALERT, "no such runway '" << aIdent << "' at airport " << _id);
+    throw sg_range_exception("unknown runway " + aIdent + " at airport:" + _id, "FGAirport::getRunwayByIdent");
+  }
+  
+  if (!reversed) {
+    return *it;
+  }
+
+  FGRunway result(*it);
+  result._heading += 180.0;
+  result._rwy_no = FGRunway::reverseIdent(it->_rwy_no);
+  return result;
+}
+
+FGRunwayVector::const_iterator
+FGAirport::getIteratorForRunwayIdent(const string& aIdent, bool& aReversed) const
+{
+  string ident(aIdent);
+  if ((aIdent.size() == 1) || !isdigit(aIdent[1])) {
+    ident = "0" + aIdent;
+  }
+
+  string reversedRunway = FGRunway::reverseIdent(ident);
+  FGRunwayVector::const_iterator it = mRunways.begin();
+  
+  for (; it != mRunways.end(); ++it) {
+    if (it->_rwy_no == ident) {
+      aReversed = false;
+      return it;
+    }
+    
+    if (it->_rwy_no == reversedRunway) {
+      aReversed = true;
+      return it;
+    }
+  }
+
+  return it; // end()
+}
+
+static double normaliseBearing(double aBearing)
+{
+  while (aBearing < -180.0) {
+    aBearing += 360.0;
+  }
+  
+  while (aBearing > 180.0) {
+    aBearing -= 180.0;
+  }
+  
+  return aBearing;
+}
+
+FGRunway FGAirport::findBestRunwayForHeading(double aHeading) const
+{
+  FGRunwayVector::const_iterator it = mRunways.begin();
+  FGRunway result;
+  double currentBestQuality = 0.0;
+  
+  SGPropertyNode *param = fgGetNode("/sim/airport/runways/search", true);
+  double lengthWeight = param->getDoubleValue("length-weight", 0.01);
+  double widthWeight = param->getDoubleValue("width-weight", 0.01);
+  double surfaceWeight = param->getDoubleValue("surface-weight", 10);
+  double deviationWeight = param->getDoubleValue("deviation-weight", 1);
+    
+  for (; it != mRunways.end(); ++it) {
+    double good = it->score(lengthWeight, widthWeight, surfaceWeight);
+    
+    // first side
+    double dev = normaliseBearing(aHeading - it->_heading);
+    double bad = fabs(deviationWeight * dev) + 1e-20;
+    double quality = good / bad;
+    
+    if (quality > currentBestQuality) {
+      currentBestQuality = quality;
+      result = *it;
+    }
+    
+    dev = normaliseBearing(aHeading - it->_heading - 180.0);
+    bad = fabs(deviationWeight * dev) + 1e-20;
+    quality = good / bad;
+    
+    if (quality > currentBestQuality) {
+      currentBestQuality = quality;
+      result = *it;
+      result._heading += 180.0;
+      result._rwy_no = FGRunway::reverseIdent(it->_rwy_no);
+    }
+  }
+
+  return result;
+}
+
+unsigned int FGAirport::numTaxiways() const
+{
+  return mTaxiways.size();
+}
+
+FGRunway FGAirport::getTaxiwayByIndex(unsigned int aIndex) const
+{
+  assert(aIndex >= 0 && aIndex < mTaxiways.size());
+  return mTaxiways[aIndex];
+}
+
+void FGAirport::addRunway(const FGRunway& aRunway)
+{
+  if (aRunway.isTaxiway()) {
+    mTaxiways.push_back(aRunway);
+  } else {
+    mRunways.push_back(aRunway);
+  }
+}
+
+FGRunway FGAirport::getActiveRunwayForUsage() const
+{
+  static FGEnvironmentMgr* envMgr = NULL;
+  if (!envMgr) {
+    envMgr = (FGEnvironmentMgr *) globals->get_subsystem("environment");
+  }
+  
+  FGEnvironment stationWeather(envMgr->getEnvironment(_location));
+  
+  double windSpeed = stationWeather.get_wind_speed_kt();
+  double hdg = stationWeather.get_wind_from_heading_deg();
+  if (windSpeed <= 0.0) {
+    hdg = 270;	// This forces West-facing rwys to be used in no-wind situations
+    // which is consistent with Flightgear's initial setup.
+  }
+  
+  return findBestRunwayForHeading(hdg);
+}
 
 /******************************************************************************
  * FGAirportList
@@ -145,7 +296,7 @@ FGAirportList::~FGAirportList( void )
 
 
 // add an entry to the list
-void FGAirportList::add( const string &id, const SGGeod& location, const SGGeod& tower_location,
+FGAirport* FGAirportList::add( const string &id, const SGGeod& location, const SGGeod& tower_location,
                          const string &name, bool has_metar, bool is_airport, bool is_seaport,
                          bool is_heliport)
 {
@@ -158,6 +309,8 @@ void FGAirportList::add( const string &id, const SGGeod& location, const SGGeod&
     airports_array.push_back( a );
     SG_LOG( SG_GENERAL, SG_BULK, "Adding " << id << " pos = " << location.getLongitudeDeg()
             << ", " << location.getLatitudeDeg() << " elev = " << location.getElevationFt() );
+            
+    return a;
 }
 
 

@@ -32,6 +32,7 @@
 using std::vector;
 using std::string;
 
+class FGTaxiRoute;
 
 class FGAIFlightPlan {
 

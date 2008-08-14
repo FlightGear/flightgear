@@ -28,7 +28,8 @@
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/AIFlightPlan.hxx>
 #include <Traffic/TrafficMgr.hxx>
-
+#include <Airports/groundnetwork.hxx>
+#include <Airports/dynamics.hxx>
 
 /***************************************************************************
  * FGTrafficRecord

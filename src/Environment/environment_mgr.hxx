@@ -25,6 +25,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/math/SGMath.hxx>
 
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <cmath>
@@ -70,6 +71,7 @@ public:
   virtual FGEnvironment getEnvironment (double lat, double lon,
 					double alt) const;
 
+  virtual FGEnvironment getEnvironment(const SGGeod& aPos) const;
 private:
 
   void _update_fdm () const;

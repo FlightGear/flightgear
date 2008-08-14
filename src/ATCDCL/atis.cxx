@@ -210,8 +210,10 @@ void FGATIS::UpdateTransmission() {
 		                            + ConvertNumToSpokenDigits(tempstr2) + " degrees";
 	}
 	
-	string rwy_no = globals->get_runways()->search(ident, int(hdg));
-	if(rwy_no != "NN") {
+  const FGAirport* apt = fgFindAirportID(ident);
+  assert(apt);
+	string rwy_no = apt->getActiveRunwayForUsage()._rwy_no;
+  if(rwy_no != "NN") {
 		transmission += " / Landing_and_departing_runway ";
 		transmission += ConvertRwyNumToSpokenString(atoi(rwy_no.c_str()));
 		//cout << "in atis.cxx, r.rwy_no = " << rwy_no << " r.id = " << r->id << " r.heading = " << r->heading << endl;

@@ -174,15 +174,16 @@ void FGAILocalTraffic::GetRwyDetails(const string& id) {
 	
 	// Now we need to get the threshold position and rwy heading
 	
-	FGRunway runway;
-	bool rwyGood = globals->get_runways()->search(id, rwy.rwyID, &runway);
-	if(rwyGood) {
-    	double hdg = runway._heading;
-		double other_way = hdg - 180.0;
-		while(other_way <= 0.0) {
-			other_way += 360.0;
-		}
+  const FGAirport* apt = fgFindAirportID(id);
+  assert(apt);
+  FGRunway runway(apt->getRunwayByIdent(rwy.rwyID));
 
+  double hdg = runway._heading;
+  double other_way = hdg - 180.0;
+  while(other_way <= 0.0) {
+    other_way += 360.0;
+  }
+  
     	// move to the +l end/center of the runway
 		//cout << "Runway center is at " << runway._lon << ", " << runway._lat << '\n';
     	Point3D origin = Point3D(runway._lon, runway._lat, aptElev);
@@ -207,9 +208,6 @@ void FGAILocalTraffic::GetRwyDetails(const string& id) {
 		ortho.Init(rwy.threshold_pos, rwy.hdg);	
 		rwy.end1ortho = ortho.ConvertToLocal(rwy.threshold_pos);	// should come out as zero
 		rwy.end2ortho = ortho.ConvertToLocal(takeoff_end);
-	} else {
-		SG_LOG(SG_ATC, SG_ALERT, "Help  - can't get good runway at airport " << id << " in FGAILocalTraffic!!");
-	}
 }
 
 

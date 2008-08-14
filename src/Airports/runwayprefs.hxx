@@ -112,7 +112,7 @@ public:
 
   void setName(const string& nm) { name = nm;                };
   void add(const RunwayList& list) { rwyList.push_back(list);};
-  void setActive(const string& aptId, double windSpeed, double windHeading, double maxTail, double maxCross, stringVec *curr);
+  void setActive(const FGAirport* airport, double windSpeed, double windHeading, double maxTail, double maxCross, stringVec *curr);
 
   int getNrActiveRunways() { return nrActive;};
   void getActive(int i, string& name, string& type);

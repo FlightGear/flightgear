@@ -170,11 +170,13 @@ void HUD::Runway::draw()
 
 bool HUD::Runway::get_active_runway(FGRunway& runway)
 {
-    FGEnvironment stationweather =
-            ((FGEnvironmentMgr *)globals->get_subsystem("environment"))->getEnvironment();
-    double hdg = stationweather.get_wind_from_heading_deg();
-    return globals->get_runways()->search(fgGetString("/sim/presets/airport-id"), int(hdg), &runway);
+  const FGAirport* apt = fgFindAirportID(fgGetString("/sim/presets/airport-id"));
+  if (!apt) return false;
+  
+  runway = apt->getActiveRunwayForUsage();
+  return (!runway._rwy_no.empty());
 }
+
 
 
 void HUD::Runway::get_rwy_points(sgdVec3 *_points3d)
@@ -424,7 +426,7 @@ void HUD::Runway::setLineWidth()
 
     alt_nm *= SG_METER_TO_NM;
 
-    //Calculate distance away from runway, C = v(A²+B²)
+    //Calculate distance away from runway, C = v(Aâ‰¤+Bâ‰¤)
     distance = sqrt(alt_nm * alt_nm + distance*distance);
     if (distance < _scale_dist)
         glLineWidth(1.0 + ((_line_scale - 1) * ((_scale_dist - distance) / _scale_dist)));

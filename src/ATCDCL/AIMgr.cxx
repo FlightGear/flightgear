@@ -23,6 +23,8 @@
 #  include <config.h>
 #endif
 
+#include <iostream>
+
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <simgear/misc/sg_path.hxx>

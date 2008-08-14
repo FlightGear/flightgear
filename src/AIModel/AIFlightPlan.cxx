@@ -20,6 +20,8 @@
 #  include <config.h>
 #endif
 
+#include <iostream>
+
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/route/waypoint.hxx>
@@ -34,12 +36,14 @@
 #include <Main/fg_init.hxx>
 #include <Airports/simple.hxx>
 #include <Airports/runways.hxx>
-
+#include <Airports/groundnetwork.hxx>
 
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
 
 #include "AIFlightPlan.hxx"
+
+using std::cerr;
 
 
 FGAIFlightPlan::FGAIFlightPlan(const string& filename)

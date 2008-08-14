@@ -26,7 +26,9 @@
 #endif
 
 #include "kln89_page_fpl.hxx"
+
 #include <algorithm>
+#include <iostream>
 
 using namespace std;
 

@@ -419,7 +419,7 @@ void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, s
           currentlyActive = &ulActive;
         }
 	  // 
-	  currRunwayGroup->setActive(_ap->getId(), 
+	  currRunwayGroup->setActive(_ap, 
 				     windSpeed, 
 				     windHeading, 
 				     maxTail, 
@@ -485,20 +485,8 @@ void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, s
 
 string FGAirportDynamics::chooseRunwayFallback()
 {   
-  FGEnvironment 
-    stationweather = ((FGEnvironmentMgr *) globals->get_subsystem("environment"))
-    ->getEnvironment(getLatitude(), 
-		     getLongitude(),
-		     getElevation());
-  
-  double windSpeed = stationweather.get_wind_speed_kt();
-  double windHeading = stationweather.get_wind_from_heading_deg();
-  if (windSpeed == 0) {
-    windHeading = 270;	// This forces West-facing rwys to be used in no-wind situations
-    //which is consistent with Flightgear's initial setup.
-  }
-  
-   return globals->get_runways()->search(_ap->getId(), int(windHeading));
+  FGRunway rwy = _ap->getActiveRunwayForUsage();
+  return rwy._rwy_no;
 }
 
 void FGAirportDynamics::addParking(FGParking& park) {

@@ -20,6 +20,7 @@
 #include "AIFlightPlan.hxx"
 #include <simgear/math/sg_geodesy.hxx>
 #include <Airports/runways.hxx>
+#include <Airports/dynamics.hxx>
 
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>

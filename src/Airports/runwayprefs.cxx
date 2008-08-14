@@ -194,7 +194,7 @@ RunwayGroup& RunwayGroup:: operator= (const RunwayGroup &other)
   return *this;
 }
 
-void RunwayGroup::setActive(const string &aptId, 
+void RunwayGroup::setActive(const FGAirport* airport, 
 			    double windSpeed, 
 			    double windHeading, 
 			    double maxTail, 
@@ -234,15 +234,10 @@ void RunwayGroup::setActive(const string &aptId,
 	  //
 	  validSelection = true;
 	  for (int j = 0; j < activeRwys; j++)
-	    {
-	     
-	      name = rwyList[j].getRwyList(i);
-	      //cerr << "Name of Runway: " << name;
-	      if (globals->get_runways()->search( aptId, 
-						  name, 
-						  &rwy))
-		{
-		  //cerr << "Succes" << endl;
+    {
+	     rwy = airport->getRunwayByIdent(rwyList[j].getRwyList(i));
+       
+	    		  //cerr << "Succes" << endl;
 		  hdgDiff = fabs(windHeading - rwy._heading);
 		  //cerr << "Wind Heading: " << windHeading << "Runway Heading: " <<rwy._heading << endl;
 		  //cerr << "Wind Speed  : " << windSpeed << endl;
@@ -263,12 +258,9 @@ void RunwayGroup::setActive(const string &aptId,
 		    {
 		      //cerr << ". [Valid] ";
 		  }
-		}else {
-		SG_LOG( SG_GENERAL, SG_INFO, "Failed to find runway " << name << " at " << aptId );
-		exit(1);
-	      }
-              //cerr << endl;
-	    }
+		              //cerr << endl;
+    } // of active runways iteration
+      
 	  if (validSelection) 
 	    {
 	      //cerr << "Valid selection  : " << i << endl;;
@@ -311,13 +303,9 @@ void RunwayGroup::setActive(const string &aptId,
 	  bool validSelection = true;
 	  for (int j = 0; j < 2; j++)
 	    {
-	      //cerr << "I J " << i << " " << j << endl;
-	      name = rwyList[choice[j]].getRwyList(i);
-	      //cerr << "Name of Runway: " << name << endl;
-	      if (globals->get_runways()->search( aptId, 
-						  name, 
-						  &rwy))
-		{
+        name = rwyList[choice[j]].getRwyList(i);
+        rwy = airport->getRunwayByIdent(name);
+        
 		  //cerr << "Succes" << endl;
 		  hdgDiff = fabs(windHeading - rwy._heading);
 		  if (hdgDiff > 180)
@@ -327,10 +315,7 @@ void RunwayGroup::setActive(const string &aptId,
 		  tailWind  = -windSpeed * cos(hdgDiff);
 		  if ((tailWind > maxTail) || (crossWind > maxCross))
 		    validSelection = false;
-		}else {
-		  SG_LOG( SG_GENERAL, SG_INFO, "Failed to find runway " << name << " at " << aptId );
-		  exit(1);
-		}
+		
 
 	    }
 	  if (validSelection)
