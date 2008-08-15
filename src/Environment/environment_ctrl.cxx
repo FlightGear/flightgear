@@ -652,6 +652,7 @@ FGMetarEnvironmentCtrl::init ()
         const FGAirport* a = globals->get_airports()
                    ->search( longitude->getDoubleValue(),
                              latitude->getDoubleValue(),
+                             360.0,
                              metar_only );
         if ( a ) {  
             FGMetarResult result = fetch_data( a->getId() );
@@ -715,6 +716,7 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
         const FGAirport* a = globals->get_airports()
                    ->search( longitude->getDoubleValue(),
                              latitude->getDoubleValue(),
+                             360.0,
                              metar_only );
         if ( a ) {
             if ( !last_apt || last_apt->getId() != a->getId()

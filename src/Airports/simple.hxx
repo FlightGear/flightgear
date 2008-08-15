@@ -162,8 +162,9 @@ public:
     // (currently a linear inefficient search so it's probably not
     // best to use this at runtime.)  An FGAirportSearchFilter class
     // can be used to restrict the possible choices to a subtype.
-    FGAirport* search( double lon_deg, double lat_deg );
-    FGAirport* search( double lon_deg, double lat_deg, FGAirportSearchFilter& );
+    // max_range limits search - specified as an arc distance, in degrees
+    FGAirport* search( double lon_deg, double lat_deg, double max_range );
+    FGAirport* search( double lon_deg, double lat_deg, double max_range, FGAirportSearchFilter& );
 
     /**
      * Return the number of airports in the list.

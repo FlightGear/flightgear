@@ -340,19 +340,20 @@ const FGAirport* FGAirportList::findFirstById( const string& id, bool exact )
 
 
 // search for the airport nearest the specified position
-FGAirport* FGAirportList::search(double lon_deg, double lat_deg)
+FGAirport* FGAirportList::search(double lon_deg, double lat_deg, double max_range)
 {
     static FGAirportSearchFilter accept_any;
-    return search(lon_deg, lat_deg, accept_any);
+    return search(lon_deg, lat_deg, max_range, accept_any);
 }
 
 
 // search for the airport nearest the specified position and
 // passing the filter
 FGAirport* FGAirportList::search(double lon_deg, double lat_deg,
+        double max_range,
         FGAirportSearchFilter& filter)
 {
-    double min_dist = 360.0;
+    double min_dist = max_range;
     airport_list_iterator it = airports_array.begin();
     airport_list_iterator end = airports_array.end();
     airport_list_iterator closest = end;

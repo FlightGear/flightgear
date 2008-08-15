@@ -532,13 +532,16 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
         lat = latn->getDoubleValue();
         lon = lonn->getDoubleValue();
     }
+    
+    double maxRange = 360.0; // expose this? or pick a smaller value?
+    
     if(argc == 0) {
-        apt = aptlst->search(lon, lat, airport);
+        apt = aptlst->search(lon, lat, maxRange, airport);
     } else if(argc == 1 && naIsString(args[0])) {
         const char *s = naStr_data(args[0]);
-        if(!strcmp(s, "airport")) apt = aptlst->search(lon, lat, airport);
-        else if(!strcmp(s, "seaport")) apt = aptlst->search(lon, lat, seaport);
-        else if(!strcmp(s, "heliport")) apt = aptlst->search(lon, lat, heliport);
+        if(!strcmp(s, "airport")) apt = aptlst->search(lon, lat, maxRange, airport);
+        else if(!strcmp(s, "seaport")) apt = aptlst->search(lon, lat, maxRange, seaport);
+        else if(!strcmp(s, "heliport")) apt = aptlst->search(lon, lat, maxRange, heliport);
         else apt = aptlst->search(s);
     } else {
         naRuntimeError(c, "airportinfo() with invalid function arguments");

@@ -1504,6 +1504,18 @@ private:
     bool is_high_bank_angle ();
     unsigned int get_bank_angle_alerts ();
     void update_bank_angle ();
+    
+    class AirportFilter : public FGAirportSearchFilter
+    {
+    public: 
+      AirportFilter(Mode6Handler *s)
+        : self(s) {}
+        
+      virtual bool pass(FGAirport *a);
+      
+    private:
+      Mode6Handler* self;
+    };
   };
 
   /////////////////////////////////////////////////////////////////////////////
@@ -1552,7 +1564,6 @@ private:
     double get_azimuth_difference (const FGRunway *_runway);
 
     void select_runway (const FGAirport *airport, FGRunway *_runway);
-    bool test_airport (const FGAirport *airport);
     void update_runway ();
 
     void get_bias_area_edges (Position *edge,
@@ -1567,6 +1578,17 @@ private:
     bool is_tcf ();
     bool is_rfcf ();
 
+    class AirportFilter : public FGAirportSearchFilter
+    {
+    public: 
+      AirportFilter(MK_VIII *device)
+        : mk(device) {}
+        
+      virtual bool pass(FGAirport *a);
+      
+    private:
+      MK_VIII* mk;
+    };
   public:
     struct
     {

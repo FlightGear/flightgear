@@ -168,35 +168,6 @@ get_reciprocal_heading (double h)
   return heading_add(h, 180);
 }
 
-// Searches for the closest airport whose Manhattan distance to
-// @lat,@lon is inferior to @min_manhattan_distance (expressed in
-// degrees) and for which @test_airport returns true. Returns NULL if
-// no airport was found.
-template <class C>
-static const FGAirport *
-get_closest_airport (double lat,
-		     double lon,
-		     double min_manhattan_distance,
-		     C &obj,
-		     bool (C::*test_airport) (const FGAirport *))
-{
-  const FGAirport *airport = NULL;
-  const airport_list *airport_list = globals->get_airports()->getAirportList();
-
-  for (size_t i = 0; i < airport_list->size(); i++)
-    {
-      const FGAirport *a = (*airport_list)[i];
-      double dist = fabs(lat - a->getLatitude()) + fabs(lon - a->getLongitude());
-      if (dist < min_manhattan_distance && (obj.*test_airport)(a))
-	{
-	  airport = a;
-	  min_manhattan_distance = dist;
-	}
-    }
-
-  return airport;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // PropertiesHandler //////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -4301,30 +4272,35 @@ MK_VIII::Mode6Handler::test_airport (const FGAirport *airport)
   return false;
 }
 
+bool MK_VIII::Mode6Handler::AirportFilter::pass(FGAirport* a)
+{
+  return self->test_airport(a);
+}
+
 void
 MK_VIII::Mode6Handler::update_runway ()
 {
-  if (! mk_data(gps_latitude).ncd && ! mk_data(gps_longitude).ncd)
-    {
-      // Search for the closest runway threshold in range 5
-      // nm. Passing 0.5 degrees (approximatively 30 nm) to
-      // get_closest_airport() provides enough margin for large
-      // airports, which may have a runway located far away from the
-      // airport's reference point.
+ 
+  if (mk_data(gps_latitude).ncd || mk_data(gps_longitude).ncd) {
+     has_runway.unset();
+     return;
+  }
 
-      const FGAirport *airport = get_closest_airport(mk_data(gps_latitude).get(),
-						     mk_data(gps_longitude).get(),
-						     0.5,
-						     *this,
-						     &MK_VIII::Mode6Handler::test_airport);
+  // Search for the closest runway threshold in range 5
+  // nm. Passing 0.5 degrees (approximatively 30 nm) to
+  // get_closest_airport() provides enough margin for large
+  // airports, which may have a runway located far away from the
+  // airport's reference point.
+  AirportFilter filter(this);
+  const FGAirport *airport = globals->get_airports()->search(
+    mk_data(gps_latitude).get(), mk_data(gps_longitude).get(),
+			0.5, filter);
 
-      if (airport)
-	runway.elevation = airport->getElevation();
-
-      has_runway.set(airport != NULL);
-    }
-  else
-    has_runway.unset();
+  if (airport) {
+    runway.elevation = airport->getElevation();
+  }
+  
+  has_runway.set(airport != NULL);
 }
 
 void
@@ -4552,15 +4528,14 @@ MK_VIII::TCFHandler::select_runway (const FGAirport *airport,
   } // of airport runways iteration
 }
 
-bool
-MK_VIII::TCFHandler::test_airport (const FGAirport *airport)
+bool MK_VIII::TCFHandler::AirportFilter::pass(FGAirport *a)
 {
-  for (unsigned int r=0; r<airport->numRunways(); ++r) {
-    if (airport->getRunwayByIndex(r)._length >= mk->conf.runway_database) {
+  for (unsigned int r=0; r<a->numRunways(); ++r) {
+    if (a->getRunwayByIndex(r)._length >= mk->conf.runway_database) {
       return true;
     }
   }
-  
+    
   return false;
 }
 
@@ -4568,22 +4543,22 @@ void
 MK_VIII::TCFHandler::update_runway ()
 {
   has_runway = false;
-  if (! mk_data(gps_latitude).ncd && ! mk_data(gps_longitude).ncd)
-    {
-      // Search for the intended destination runway of the closest
-      // airport in range 15 nm. Passing 0.5 degrees (approximatively
-      // 30 nm) to get_closest_airport() provides enough margin for
-      // large airports, which may have a runway located far away from
-      // the airport's reference point.
+  if (mk_data(gps_latitude).ncd || mk_data(gps_longitude).ncd) {
+    return;
+  }
 
-      const FGAirport *airport = get_closest_airport(mk_data(gps_latitude).get(),
-						     mk_data(gps_longitude).get(),
-						     0.5,
-						     *this,
-						     &MK_VIII::TCFHandler::test_airport);
+  // Search for the intended destination runway of the closest
+  // airport in range 15 nm. Passing 0.5 degrees (approximatively
+  // 30 nm) to get_closest_airport() provides enough margin for
+  // large airports, which may have a runway located far away from
+  // the airport's reference point.
+  AirportFilter filter(mk);
+  const FGAirport *airport = globals->get_airports()->search(
+      mk_data(gps_latitude).get(), mk_data(gps_longitude).get(),
+			0.5, filter);
 
-      if (airport)
-	{
+  if (!airport) return;
+  
 	  has_runway = true;
 
 	  FGRunway _runway;
@@ -4644,8 +4619,6 @@ MK_VIII::TCFHandler::update_runway ()
 			      half_width_m,
 			      &runway.bias_area[2],
 			      &runway.bias_area[3]);
-	}
-    }
 }
 
 void
