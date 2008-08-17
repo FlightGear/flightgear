@@ -1976,6 +1976,9 @@
 			<File
 				RelativePath="..\..\src\Navaids\navlist.hxx">
 			</File>
+			<File
+				RelativePath="..\..\src\Navaids\navrecord.cxx">
+			</File>
 		</Filter>
 		<Filter
 			Name="Lib_Network"
