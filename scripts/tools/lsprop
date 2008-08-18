@@ -149,12 +149,12 @@ class parse_xml_file(xml.sax.handler.ContentHandler):
 					"t": self.type,
 					"V": value,
 					"v": cooked_value,
-					"v'": cooked_value.replace("'", "\\'"),
-					'v"': cooked_value.replace('"', '\\"'),
+					"'v": cooked_value.replace("'", "\\'"),
+					'"v': cooked_value.replace('"', '\\"'),
 				}
 
 		elif len(string.strip(value)):
-			raise XMLError(self.locator, "garbage found '" + string.strip(value) + "'")
+			raise XMLError(self.locator, "garbage found '%s'" % string.strip(value))
 
 		self.level -= 1
 		if self.level:
@@ -195,8 +195,10 @@ class parse_xml_file(xml.sax.handler.ContentHandler):
 
 	def warning(self, exception):
 		raise XMLError(self.locator, "WARNING: " + str(exception))
+
 	def error(self, exception):
 		raise XMLError(self.locator, "ERROR: " + str(exception))
+
 	def fatalError(self, exception):
 		raise XMLError(self.locator, "FATAL: " + str(exception))
 
@@ -212,8 +214,8 @@ def main():
 	# options
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], \
-				"hviIf:p", \
-				["help", "verbose", "all-indices", "no-indices", "format=", "unify-paths"])
+				"hviIpf:", \
+				["help", "verbose", "all-indices", "no-indices", "raw-paths", "format="])
 	except getopt.GetoptError, msg:
 		print >>sys.stderr, str(msg)
 		return 0
@@ -249,8 +251,8 @@ def main():
 	f = f.replace("%t", "\x01(t)s")
 	f = f.replace("%V", "\x01(V)s")
 	f = f.replace("%v", "\x01(v)s")
-	f = f.replace("%'v", "\x01(v')s")
-	f = f.replace('%"v', '\x01(v")s')
+	f = f.replace("%'v", "\x01('v)s")
+	f = f.replace('%"v', '\x01("v)s')
 	f = f.replace("%", "%%")
 	f = f.replace("\x01", "%")
 	config.cooked_format = f
@@ -258,6 +260,7 @@ def main():
 	if config.verbose > 2:
 		print >>sys.stderr, "internal format = [%s]" % config.cooked_format
 
+	# arguments
 	if not len(args):
 		args = [config.root + "/preferences.xml"]
 		if not os.path.exists(args[0]):
@@ -284,3 +287,4 @@ def main():
 
 if __name__ == "__main__":
 	sys.exit(main())
+
