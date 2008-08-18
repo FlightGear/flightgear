@@ -14,7 +14,8 @@ Options:
 	-v, --verbose      increase verbosity (can be used multiple times)
 	-i, --all-indices  also show null indices in properties
 	-I, --no-indices   don't show any indices in properties
-	-f, --format       set output format  (default: --format="%f +%l: %p = '%'v'")
+	-p, --raw-paths    don't replace FG_ROOT/FG_HOME prefix by environment variables
+	-f, --format       set output format  (default: --format="%f +%l: %p = '%v'")
 
 Format:
 	%f   file path
@@ -42,7 +43,8 @@ If no file arguments are specified, then the following files are assumed:
 class config:
 	root = "/usr/local/share/FlightGear"
 	home = os.environ["HOME"] + "/.fgfs"
-	format = "%f +%l: %p = '%'v'"
+	raw_paths = 0
+	format = "%f +%l: %p = '%v'"
 	verbose = 1
 	indices = 1	# 0: no indices;   1: only indices != [0];   2: all indices
 
@@ -52,6 +54,17 @@ def errmsg(msg, color = "31;1"):
 		print >>sys.stderr, "\033[%sm%s\033[m" % (color, msg)
 	else:
 		print >>sys.stderr, msg
+
+
+def cook_path(path, force = 0):
+	path = os.path.normpath(path)
+	if config.raw_paths and not force:
+		return path
+	if path.startswith(config.root):
+		path = path.replace(config.root, "$FG_ROOT", 1)
+	elif path.startswith(config.home):
+		path = path.replace(config.home, "$FG_HOME", 1)
+	return path
 
 
 class Error(Exception):
@@ -64,9 +77,9 @@ class Abort(Exception):
 
 class XMLError(Exception):
 	def __init__(self, locator, msg):
-		msg = "%s\n\tin %s, line %d, column %d" \
-				% (msg, locator.getSystemId(), locator.getLineNumber(), \
-				locator.getColumnNumber())
+		msg = "%s in %s +%d:%d" \
+				% (msg.replace("\n", "\\n"), cook_path(locator.getSystemId()), \
+				locator.getLineNumber(), locator.getColumnNumber())
 		raise Error(msg)
 
 
@@ -79,19 +92,19 @@ class parse_xml_file(xml.sax.handler.ContentHandler):
 		if stack:
 			self.stack = stack
 		else:
-			self.stack = [[None, None, {}, ""]]  # name, index, indices, data
+			self.stack = [[None, None, {}, []]]  # name, index, indices, data
 
-		self.pretty_path = os.path.normpath(path)
-		if path.startswith(config.root):
-			self.pretty_path = self.pretty_path.replace(config.root, "$FG_ROOT", 1)
-		elif path.startswith(config.home):
-			self.pretty_path = self.pretty_path.replace(config.home, "$FG_HOME", 1)
+		self.pretty_path = cook_path(path)
 
 		if config.verbose > 1:
 			errmsg("%s  (%d)" % (path, nesting), "35")
 		if not os.path.exists(path):
-			raise Error("file doesn't exist: " + path)
-		xml.sax.parse(path, self, self)
+			raise Error("file doesn't exist: " + self.pretty_path)
+
+		try:
+			xml.sax.parse(path, self, self)
+		except ValueError:
+			pass			# FIXME hack arount DTD error
 
 	def startElement(self, name, attrs):
 		self.level += 1
@@ -111,47 +124,44 @@ class parse_xml_file(xml.sax.handler.ContentHandler):
 		if attrs.has_key("include"):
 			path = os.path.dirname(self.path) + "/" + attrs["include"]
 			if attrs.has_key("omit-node") and attrs["omit-node"] == "y":
-				self.stack.append([None, None, self.stack[-1][2], ""])
+				self.stack.append([None, None, self.stack[-1][2], []])
 			else:
-				self.stack.append([name, index, {}, ""])
+				self.stack.append([name, index, {}, []])
 			parse_xml_file(path, self.nesting + 1, self.stack)
 		else:
-			self.stack.append([name, index, {}, ""])
+			self.stack.append([name, index, {}, []])
 
 		self.type = "unspecified"
 		if attrs.has_key("type"):
 			self.type = attrs["type"]
 
 	def endElement(self, name):
+		value = string.join(self.stack[-1][3], '')
 		if not len(self.stack[-1][2]):
 			path = self.pathname()
 			if path:
-				value = self.stack[-1][3]
 				cooked_value = self.escape(value.encode("iso-8859-15", "backslashreplace"))
-				try:
-					print config.cooked_format % {
-						"f": self.pretty_path,
-						"l": self.locator.getLineNumber(),
-						"c": self.locator.getColumnNumber(),
-						"p": path,
-						"t": self.type,
-						"V": value,
-						"v": cooked_value,
-						"v'": cooked_value.replace("'", "\\'"),
-						'v"': cooked_value.replace('"', '\\"'),
-					}
-				except TypeError, e:
-					raise Abort("invalid --format value")
+				print config.cooked_format % {
+					"f": self.pretty_path,
+					"l": self.locator.getLineNumber(),
+					"c": self.locator.getColumnNumber(),
+					"p": path,
+					"t": self.type,
+					"V": value,
+					"v": cooked_value,
+					"v'": cooked_value.replace("'", "\\'"),
+					'v"': cooked_value.replace('"', '\\"'),
+				}
 
-		elif len(string.strip(self.stack[-1][3])):
-			raise XMLError(self.locator, "child data '" + string.strip(self.stack[-1][3]) + "'")
+		elif len(string.strip(value)):
+			raise XMLError(self.locator, "garbage found '" + string.strip(value) + "'")
 
 		self.level -= 1
 		if self.level:
 			self.stack.pop()
 
 	def characters(self, data):
-		self.stack[-1][3] += data
+		self.stack[-1][3].append(data)
 
 	def setDocumentLocator(self, locator):
 		self.locator = locator
@@ -193,17 +203,17 @@ class parse_xml_file(xml.sax.handler.ContentHandler):
 
 def main():
 	if 'FG_ROOT' in os.environ:
-		config.root = os.environ['FG_ROOT'].rstrip("/\\\t ").lstrip()
+		config.root = os.environ['FG_ROOT'].lstrip().rstrip("/\\\t ")
 	if 'FG_HOME' in os.environ:
-		config.home = os.environ['FG_HOME'].rstrip("/\\\t ").lstrip()
+		config.home = os.environ['FG_HOME'].lstrip().rstrip("/\\\t ")
 	if 'LSPROP_FORMAT' in os.environ:
 		config.format = os.environ['LSPROP_FORMAT']
 
 	# options
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], \
-				"hviIf:", \
-				["help", "verbose", "all-indices", "no-indices", "format="])
+				"hviIf:p", \
+				["help", "verbose", "all-indices", "no-indices", "format=", "unify-paths"])
 	except getopt.GetoptError, msg:
 		print >>sys.stderr, str(msg)
 		return 0
@@ -220,6 +230,8 @@ def main():
 			config.indices = 2
 		if o in ("-I", "--no-indices"):
 			config.indices = 0
+		if o in ("-p", "--raw-paths"):
+			config.raw_paths = 1
 		if o in ("-f", "--format"):
 			config.format = a
 
@@ -243,7 +255,7 @@ def main():
 	f = f.replace("\x01", "%")
 	config.cooked_format = f
 
-	if config.verbose > 1:
+	if config.verbose > 2:
 		print >>sys.stderr, "internal format = [%s]" % config.cooked_format
 
 	if not len(args):
