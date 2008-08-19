@@ -3,10 +3,10 @@ import glob, os, sys, string, xml.sax, getopt
 
 
 __doc__ = """\
-List properties of FlightGear's <PropertyList> XML files.
+List properties defined in FlightGear's <PropertyList> XML files.
 
 Usage:
-	lsprop [-v] [-i|-I] [-f <format>] [<list-of-xml-files>]
+	lsprop [-v] [-p] [-i|-I] [-f <format>] [<list-of-xml-files>]
 	lsprop -h
 
 Options:
@@ -14,7 +14,7 @@ Options:
 	-v, --verbose      increase verbosity
 	-i, --all-indices  also show null indices in properties
 	-I, --no-indices   don't show any indices in properties
-	-p, --raw-paths    don't replace path prefix by symbols "$FG_ROOT" and "$FG_HOME"
+	-p, --raw-paths    don't use symbols "$FG_ROOT" and "$FG_HOME" as path prefix
 	-f, --format       set output format  (default: --format="%f +%l: %p = '%v'")
 
 Format:
@@ -25,8 +25,8 @@ Format:
 	%t   property type
 	%V   raw value (unescaped)
 	%v   cooked value (carriage return, non printable chars etc. escaped)
-	%'v  like %v, but single quotes escaped to \\'
-	%"v  like %v, but double quotes escaped to \\"
+	%q   like %v, but single quotes escaped to \\'
+	%Q   like %v, but double quotes escaped to \\"
 	%%   percent sign
 
 Environment:
@@ -150,8 +150,8 @@ class parse_xml_file(xml.sax.handler.ContentHandler):
 					"t": self.type,
 					"V": value,
 					"v": cooked_value,
-					"'v": cooked_value.replace("'", "\\'"),
-					'"v': cooked_value.replace('"', '\\"'),
+					"q": cooked_value.replace("'", "\\'"),
+					'Q': cooked_value.replace('"', '\\"'),
 				}
 
 		elif len(string.strip(value)):
@@ -251,8 +251,8 @@ def main():
 	f = f.replace("%t", "\x01(t)s")
 	f = f.replace("%V", "\x01(V)s")
 	f = f.replace("%v", "\x01(v)s")
-	f = f.replace("%'v", "\x01('v)s")
-	f = f.replace('%"v', '\x01("v)s')
+	f = f.replace("%q", "\x01(q)s")
+	f = f.replace('%Q', '\x01(Q)s')
 	f = f.replace("%", "%%")
 	f = f.replace("\x01", "%")
 	config.cooked_format = f
