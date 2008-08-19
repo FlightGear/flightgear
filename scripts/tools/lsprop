@@ -127,7 +127,7 @@ class parse_xml_file(xml.sax.handler.ContentHandler):
 				self.type = attrs["type"]
 
 		if attrs.has_key("include"):
-			path = os.path.dirname(self.path) + "/" + attrs["include"]
+			path = os.path.dirname(os.path.abspath(self.path)) + "/" + attrs["include"]
 			if attrs.has_key("omit-node") and attrs["omit-node"] == "y" or self.level == 1:
 				self.stack.append([None, None, self.stack[-1][2], []])
 			else:
