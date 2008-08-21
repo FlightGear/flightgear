@@ -76,6 +76,8 @@ public:
 
 private:
 
+    void update_pos_and_orientation(SGSoundMgr *smgr, double dt);
+
     vector<SGXmlSound *> _sound;
     queue<SGSoundSample *> _samplequeue;
 
@@ -84,7 +86,6 @@ private:
 
     SGPropertyNode_ptr _pause;
     SGPropertyNode_ptr _volume;
-
 };
 
 
