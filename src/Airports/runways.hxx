@@ -34,15 +34,13 @@ class FGRunway
 public:
   FGRunway();
   
-  FGRunway(const std::string& id, const std::string& rwy_no,
+  FGRunway(const std::string& rwy_no,
             const double longitude, const double latitude,
             const double heading, const double length,
             const double width,
             const double displ_thresh1, const double displ_thresh2,
             const double stopway1, const double stopway2,
-            const std::string& lighting_flags, const int surface_code,
-            const std::string& shoulder_code, const int marking_code,
-            const double smoothness, const bool dist_remaining);
+            const int surface_code);
   
   /**
    * given a runway identifier (06, 18L, 31R) compute the identifier for the
@@ -58,7 +56,6 @@ public:
 
   bool isTaxiway() const;
   
-    std::string _id;
     std::string _rwy_no;
     std::string _type;                // runway / taxiway
 
@@ -72,12 +69,7 @@ public:
     double _stopway1;
     double _stopway2;
 
-    std::string _lighting_flags;
     int _surface_code;
-    std::string _shoulder_code;
-    int _marking_code;
-    double _smoothness;
-    bool   _dist_remaining;
 };
 
 typedef std::vector<FGRunway> FGRunwayVector;

@@ -94,7 +94,6 @@ public:
   int getGate() const { return gateId; }
   double getLeadInAngle() const { return leadInAngle; }
   const string& getRunway() const { return rwy._rwy_no; }
-  const string& getRunwayId() const { return rwy._id; }
   void setRepeat(bool r) { repeat = r; }
   bool getRepeat(void) const { return repeat; }
   void restart(void);

@@ -46,15 +46,13 @@ FGRunway::FGRunway()
 {
 }
 
-FGRunway::FGRunway( const string& id, const string& rwy_no,
+FGRunway::FGRunway(const string& rwy_no,
                         const double longitude, const double latitude,
                         const double heading, const double length,
                         const double width,
                         const double displ_thresh1, const double displ_thresh2,
                         const double stopway1, const double stopway2,
-                        const string& lighting_flags, const int surface_code,
-                        const string& shoulder_code, const int marking_code,
-                        const double smoothness, const bool dist_remaining )
+                        const int surface_code)
 {
   _rwy_no = rwy_no;
   if (rwy_no[0] == 'x') {
@@ -72,7 +70,6 @@ FGRunway::FGRunway( const string& id, const string& rwy_no,
     }
   }
 
-  _id = id;
   _lon = longitude;
   _lat = latitude;
   _heading = heading;
@@ -83,12 +80,7 @@ FGRunway::FGRunway( const string& id, const string& rwy_no,
   _stopway1 = stopway1;
   _stopway2 = stopway2;
 
-  _lighting_flags = lighting_flags;
   _surface_code = surface_code;
-  _shoulder_code = shoulder_code;
-  _marking_code = marking_code;
-  _smoothness = smoothness;
-  _dist_remaining = dist_remaining;
 }
 
 string FGRunway::reverseIdent(const string& aRunwayIdent)

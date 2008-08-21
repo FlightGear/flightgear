@@ -210,18 +210,11 @@ bool fgAirportDBLoad( FGAirportList *airports,
             double stopway1 = atof( stop[0].c_str() );
             double stopway2 = atof( stop[1].c_str() );
 
-            string lighting_flags = token[9];
             int surface_code = atoi( token[10].c_str() );
-            string shoulder_code = token[11];
-            int marking_code = atoi( token[12].c_str() );
-            double smoothness = atof( token[13].c_str() );
-            bool dist_remaining = (atoi( token[14].c_str() ) == 1 );
 
-            FGRunway rwy(last_apt_id, rwy_no, lon, lat, heading, length,
+            FGRunway rwy(rwy_no, lon, lat, heading, length,
                           width, displ_thresh1, displ_thresh2,
-                          stopway1, stopway2, lighting_flags, surface_code,
-                          shoulder_code, marking_code, smoothness,
-                          dist_remaining);
+                          stopway1, stopway2, surface_code);
             runways.push_back(rwy);
         } else if ( line_id == 18 ) {
             // beacon entry (ignore)
