@@ -25,6 +25,8 @@
 #  include <config.h>
 #endif
 
+#include <algorithm>
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
