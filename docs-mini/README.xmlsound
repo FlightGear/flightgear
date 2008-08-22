@@ -234,11 +234,11 @@ Configuration description:
         Z dimension
 
      <inner-angle>
-        The inner edge of the audio cone in degrees (0.0 - 360.0).
+        The inner edge of the audio cone in degrees (0.0 - 180.0).
         Any sound withing that angle will be played at the current gain.
 
      <outer-angle>
-        The outer edge of the audio cone in degrees (0.0 - 360.0).
+        The outer edge of the audio cone in degrees (0.0 - 180.0).
         Any sound beyond the outer cone will be played at "outer-gain" volume.
 
      <outer-gain>
