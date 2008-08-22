@@ -305,7 +305,7 @@ FGFX::update_pos_and_orientation(SGSoundMgr *smgr, double dt)
     SGVec3d sgv_dsource_pos_offset;
     sgv_dsource_pos_offset = model_or.rotateBack(
                                 surf_or.rotateBack(
-                                   GVec3d(dsource_pos_offset[0],
+                                   SGVec3d(dsource_pos_offset[0],
                                           dsource_pos_offset[1],
                                           dsource_pos_offset[2])
                                 ));
