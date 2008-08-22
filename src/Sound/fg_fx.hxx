@@ -77,6 +77,8 @@ public:
 private:
 
     void update_pos_and_orientation(SGSoundMgr *smgr, double dt);
+    sgdVec3 last_visitor_pos;
+    sgdVec3 last_model_pos;
 
     vector<SGXmlSound *> _sound;
     queue<SGSoundSample *> _samplequeue;
