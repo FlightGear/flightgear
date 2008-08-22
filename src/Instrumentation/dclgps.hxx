@@ -91,6 +91,13 @@ ostream& operator << (ostream& os, GPSAppWpType type);
 
 struct GPSWaypoint {
     GPSWaypoint();
+  
+  GPSWaypoint(const std::string& aIdent, float lat, float lon, GPSWpType aType);
+  
+  static GPSWaypoint* createFromFix(const FGFix* aFix);
+  static GPSWaypoint* createFromNav(const FGNavRecord* aNav);
+  static GPSWaypoint* createFromAirport(const FGAirport* aApt);
+  
     ~GPSWaypoint();
 	string GetAprId();	// Returns the id with i, f, m or h added if appropriate. (Initial approach fix, final approach fix, etc)
 	string id;
@@ -407,14 +414,13 @@ protected:
 	// 
 	
 	// Data and lookup functions
-	// All waypoints mapped by id.
-	gps_waypoint_map _waypoints;
-private:
-	// Worker function for the below.
-	const GPSWaypoint* ActualFindFirstById(const string& id, bool exact = false);
+
+
 protected:
 	// Find first of any type of waypoint by id.  (TODO - Possibly we should return multiple waypoints here).
-	const GPSWaypoint* FindFirstById(const string& id, bool &multi, bool exact = false); 
+  GPSWaypoint* FindFirstById(const string& id) const;
+  GPSWaypoint* FindFirstByExactId(const string& id) const;
+   
 	FGNavRecord* FindFirstVorById(const string& id, bool &multi, bool exact = false);
 	FGNavRecord* FindFirstNDBById(const string& id, bool &multi, bool exact = false);
 	const FGAirport* FindFirstAptById(const string& id, bool &multi, bool exact = false);

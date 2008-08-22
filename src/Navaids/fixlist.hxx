@@ -43,6 +43,8 @@ typedef multimap < string, FGFix > fix_map_type;
 typedef fix_map_type::iterator fix_map_iterator;
 typedef fix_map_type::const_iterator fix_map_const_iterator;
 
+class FGIdentOrdering; // FIXME, currently declared in Airports/simple.hxx
+
 class FGFixList {
 
     fix_map_type fixlist;
@@ -58,11 +60,13 @@ public:
     // query the database for the specified fix
     bool query( const string& ident, FGFix *f );
 
+    const FGFix* search(const string& ident);
+
     // Find fix of requested type with closest exact or following ident
     // (by ACSII values) to that supplied (ie. a lower-bound lookup).
     // Supplying true for exact forces only exact matches to be returned (similar to above function)
     // Returns NULL if no match found.
-    const FGFix* findFirstByIdent( const string& ident, bool exact = false );
+    const FGFix* findFirstByIdent( const string& ident, FGIdentOrdering* aOrder = NULL);
 
     // query the database for the specified fix, lon and lat are
     // in degrees, elev is in meters

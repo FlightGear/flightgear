@@ -30,6 +30,8 @@
 #include <simgear/math/sg_geodesy.hxx>
 
 #include "fixlist.hxx"
+#include "Airports/simple.hxx";
+
 using std::pair;
 
 
@@ -120,17 +122,45 @@ bool FGFixList::query_and_offset( const string& ident, double lon, double lat,
     return true;
 }
 
-const FGFix* FGFixList::findFirstByIdent( const string& ident, bool exact)
+const FGFix* FGFixList::search(const string& ident)
 {
-    fix_map_iterator itr;
-    if(exact) {
-        itr = fixlist.find(ident);
-    } else {
-        itr = fixlist.lower_bound(ident);
-    }
-    if(itr == fixlist.end()) {
-        return(NULL);
-    } else {
-        return(&(itr->second));
-    }
+  fix_map_iterator itr = fixlist.find(ident);
+  if (itr == fixlist.end()) {
+    return NULL;
+  }
+  
+  return &itr->second;
+}
+
+class orderingFunctor
+{
+public:
+  orderingFunctor(FGIdentOrdering* aOrder) :
+    mOrdering(aOrder)
+  { assert(aOrder); }
+  
+  bool operator()(const fix_map_type::value_type& aA, const std::string& aB) const
+  {
+    return mOrdering->compare(aA.first,aB);
+  }
+  
+private:
+  FGIdentOrdering* mOrdering;
+};
+
+const FGFix* FGFixList::findFirstByIdent( const string& ident, FGIdentOrdering* aOrder)
+{
+  fix_map_iterator itr;
+  if (aOrder) {
+    orderingFunctor func(aOrder);
+    itr = std::lower_bound(fixlist.begin(),fixlist.end(), ident, func);
+  } else {
+    itr = fixlist.lower_bound(ident);
+  }
+  
+  if (itr == fixlist.end()) {
+    return NULL;
+  }
+  
+  return &itr->second;
 }

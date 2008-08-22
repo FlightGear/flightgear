@@ -117,6 +117,14 @@ public:
     virtual bool pass(FGAirport*) { return true; }
 };
 
+class FGIdentOrdering {
+public:
+  virtual ~FGIdentOrdering()
+  { ; }
+  
+  virtual bool compare(const std::string& aA, const std::string& aB) const
+  { return aA < aB; }
+};
 
 typedef std::map < std::string, FGAirport* > airport_map;
 typedef airport_map::iterator airport_map_iterator;
@@ -152,11 +160,11 @@ public:
 
     // Search for the next airport in ASCII sequence to the supplied id.
     // eg. id = "KDC" or "KDCA" would both return "KDCA".
-    // If exact = true then only exact matches are returned.
     // NOTE: Numbers come prior to A-Z in ASCII sequence so id = "LD" would return "LD57", not "LDDP"
+    // optional ordering can make letters come before numbers
     // Implementation assumes airport codes are unique.
     // Returns NULL if unsucessfull.
-    const FGAirport* findFirstById( const std::string& id, bool exact = false );
+    const FGAirport* findFirstById(const std::string& aIdent, FGIdentOrdering* aOrder = NULL);
 
     // search for the airport closest to the specified position
     // (currently a linear inefficient search so it's probably not

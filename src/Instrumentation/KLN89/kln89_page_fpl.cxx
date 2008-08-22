@@ -940,21 +940,21 @@ void KLN89FplPage::Knob2Left1() {
 				_bEntWp = true;
 				_fp0SelWpId.clear();	// Waypoints don't become the DTO default whilst being entered.
 				
-				bool multi;
-				const GPSWaypoint* wp = _kln89->FindFirstById(_entWpStr.substr(0, _wLinePos+1), multi, false);
+        GPSWaypoint* wp = _kln89->FindFirstById(_entWpStr.substr(0, _wLinePos+1));
 				if(NULL == wp) {
 					// no-op
 				} else {
-					if(_entWp == NULL) {
-						_entWp = new GPSWaypoint;
-						if(_fplPos + (_uLinePos - 4) >= _kln89->_flightPlans[_subPage]->waypoints.size()) {
+					if(_entWp) {
+            *_entWp = *wp; // copy
+            delete wp;
+          } else {
+            _entWp = wp;
+            if(_fplPos + (_uLinePos - 4) >= _kln89->_flightPlans[_subPage]->waypoints.size()) {
 							_kln89->_flightPlans[_subPage]->waypoints.push_back(_entWp);
 						} else {
 							_kln89->_flightPlans[_subPage]->waypoints.insert(_kln89->_flightPlans[_subPage]->waypoints.begin()+(_fplPos + (_uLinePos - 4)), _entWp);
 						}
-					}
-					// copy
-					*_entWp = *wp;
+          }
 				}
 			}
 		}
@@ -1013,21 +1013,21 @@ void KLN89FplPage::Knob2Right1() {
 				_bEntWp = true;
 				_fp0SelWpId.clear();	// Waypoints don't become the DTO default whilst being entered.
 				
-				bool multi;
-				const GPSWaypoint* wp = _kln89->FindFirstById(_entWpStr.substr(0, _wLinePos+1), multi, false);
+        GPSWaypoint* wp = _kln89->FindFirstById(_entWpStr.substr(0, _wLinePos+1));
 				if(NULL == wp) {
 					// no-op
 				} else {
-					if(_entWp == NULL) {
-						_entWp = new GPSWaypoint;
-						if(_fplPos + (_uLinePos - 4) >= _kln89->_flightPlans[_subPage]->waypoints.size()) {
+					if(_entWp) {
+            *_entWp = *wp; // copy
+            delete wp;
+          } else {
+            _entWp = wp;
+            if(_fplPos + (_uLinePos - 4) >= _kln89->_flightPlans[_subPage]->waypoints.size()) {
 							_kln89->_flightPlans[_subPage]->waypoints.push_back(_entWp);
 						} else {
 							_kln89->_flightPlans[_subPage]->waypoints.insert(_kln89->_flightPlans[_subPage]->waypoints.begin()+(_fplPos + (_uLinePos - 4)), _entWp);
 						}
-					}
-					// copy
-					*_entWp = *wp;
+          }
 				}
 			}
 		}

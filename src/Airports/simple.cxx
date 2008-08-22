@@ -321,23 +321,41 @@ FGAirport* FGAirportList::search( const string& id)
     return (itr == airports_by_id.end() ? NULL : itr->second);
 }
 
-
-// search for first subsequent alphabetically to supplied id
-const FGAirport* FGAirportList::findFirstById( const string& id, bool exact )
+// wrap an FGIdentOrdering in an STL-compatible functor. not the most
+// efficent / pretty thing in the world, but avoids template nastiness in the 
+// headers, and we're only doing O(log(N)) comparisoms per search
+class orderingFunctor
 {
-    airport_map_iterator itr;
-    if (exact) {
-        itr = airports_by_id.find(id);
-    } else {
-        itr = airports_by_id.lower_bound(id);
-    }
-    if (itr == airports_by_id.end()) {
-        return (NULL);
-    } else {
-        return (itr->second);
-    }
-}
+public:
+  orderingFunctor(FGIdentOrdering* aOrder) :
+    mOrdering(aOrder)
+  { assert(aOrder); }
+  
+  bool operator()(const airport_map::value_type& aA, const std::string& aB) const
+  {
+    return mOrdering->compare(aA.first,aB);
+  }
+  
+private:
+  FGIdentOrdering* mOrdering;
+};
 
+const FGAirport* FGAirportList::findFirstById(const std::string& aIdent, FGIdentOrdering* aOrder)
+{
+  airport_map_iterator itr;
+  if (aOrder) {
+    orderingFunctor func(aOrder);
+    itr = std::lower_bound(airports_by_id.begin(),airports_by_id.end(), aIdent, func);
+  } else {
+    itr = airports_by_id.lower_bound(aIdent);
+  }
+  
+  if (itr == airports_by_id.end()) {
+    return NULL;
+  }
+  
+  return itr->second;
+}
 
 // search for the airport nearest the specified position
 FGAirport* FGAirportList::search(double lon_deg, double lat_deg, double max_range)
@@ -354,6 +372,7 @@ FGAirport* FGAirportList::search(double lon_deg, double lat_deg,
         FGAirportSearchFilter& filter)
 {
     double min_dist = max_range;
+
     airport_list_iterator it = airports_array.begin();
     airport_list_iterator end = airports_array.end();
     airport_list_iterator closest = end;

@@ -119,6 +119,15 @@ GPSWaypoint::GPSWaypoint() {
     appType = GPS_APP_NONE;
 }
 
+GPSWaypoint::GPSWaypoint(const std::string& aIdent, float aLat, float aLon, GPSWpType aType) :
+  id(aIdent),
+  lat(aLat),
+  lon(aLon),
+  type(aType),
+  appType(GPS_APP_NONE)
+{
+}
+
 GPSWaypoint::~GPSWaypoint() {}
 
 string GPSWaypoint::GetAprId() {
@@ -127,6 +136,33 @@ string GPSWaypoint::GetAprId() {
 	else if(appType == GPS_MAP) return(id + 'm');
 	else if(appType == GPS_MAHP) return(id + 'h');
 	else return(id);
+}
+
+GPSWaypoint* GPSWaypoint::createFromFix(const FGFix* aFix)
+{
+  assert(aFix);
+  return new GPSWaypoint(aFix->get_ident(), 
+    aFix->get_lat() * SG_DEGREES_TO_RADIANS,
+    aFix->get_lon() * SG_DEGREES_TO_RADIANS,
+    GPS_WP_INT);
+}
+
+GPSWaypoint* GPSWaypoint::createFromNav(const FGNavRecord* aNav)
+{
+  assert(aNav);
+  return new GPSWaypoint(aNav->get_ident(), 
+    aNav->get_lat() * SG_DEGREES_TO_RADIANS,
+    aNav->get_lon() * SG_DEGREES_TO_RADIANS,
+    (aNav->get_fg_type() == FG_NAV_VOR ? GPS_WP_VOR : GPS_WP_NDB));
+}
+
+GPSWaypoint* GPSWaypoint::createFromAirport(const FGAirport* aApt)
+{
+  assert(aApt);
+  return new GPSWaypoint(aApt->getId(), 
+    aApt->getLatitude() * SG_DEGREES_TO_RADIANS,
+    aApt->getLongitude() * SG_DEGREES_TO_RADIANS,
+    GPS_WP_APT);
 }
 
 ostream& operator << (ostream& os, GPSAppWpType type) {
@@ -301,12 +337,7 @@ DCLGPS::DCLGPS(RenderArea2D* instrument) {
 
 DCLGPS::~DCLGPS() {
 	delete _time;
-	for(gps_waypoint_map_iterator itr = _waypoints.begin(); itr != _waypoints.end(); ++itr) {
-		for(unsigned int i = 0; i < (*itr).second.size(); ++i) {
-			delete(((*itr).second)[i]);
-		}
-	}
-	delete _approachFP;		// Don't need to delete the waypoints inside since they point to
+  delete _approachFP;		// Don't need to delete the waypoints inside since they point to
 							// the waypoints in the approach database.
 	// TODO - may need to delete the approach database!!
 }
@@ -329,332 +360,9 @@ void DCLGPS::init() {
 	globals->get_commands()->addCommand("kln89_knob1right1", do_kln89_knob1right1);
 	globals->get_commands()->addCommand("kln89_knob2left1", do_kln89_knob2left1);
 	globals->get_commands()->addCommand("kln89_knob2right1", do_kln89_knob2right1);
-	
-	// Build the GPS-specific databases.
-	// TODO - consider splitting into real life GPS database regions - eg Americas, Europe etc.
-	// Note that this needs to run after FG's airport and nav databases are up and running
-	_waypoints.clear();
-	const airport_list* apts = globals->get_airports()->getAirportList();
-	for(unsigned int i = 0; i < apts->size(); ++i) {
-		FGAirport* a = (*apts)[i];
-		GPSWaypoint* w = new GPSWaypoint;
-		w->id = a->getId();
-		w->lat = a->getLatitude() * SG_DEGREES_TO_RADIANS;
-		w->lon = a->getLongitude() * SG_DEGREES_TO_RADIANS;
-		w->type = GPS_WP_APT;
-		gps_waypoint_map_iterator wtr = _waypoints.find(a->getId());
-		if(wtr == _waypoints.end()) {
-			gps_waypoint_array arr;
-			arr.push_back(w);
-			_waypoints[w->id] = arr;
-		} else {
-			wtr->second.push_back(w);
-		}
-	}
-	nav_map_type navs = globals->get_navlist()->get_navaids();
-	for(nav_map_iterator itr = navs.begin(); itr != navs.end(); ++itr) {
-		nav_list_type nlst = itr->second;
-		for(unsigned int i = 0; i < nlst.size(); ++i) {
-			FGNavRecord* n = nlst[i];
-			if(n->get_fg_type() == FG_NAV_VOR || n->get_fg_type() == FG_NAV_NDB) {	// We don't bother with ILS etc.
-				GPSWaypoint* w = new GPSWaypoint;
-				w->id = n->get_ident();
-				w->lat = n->get_lat() * SG_DEGREES_TO_RADIANS;
-				w->lon = n->get_lon() * SG_DEGREES_TO_RADIANS;
-				w->type = (n->get_fg_type() == FG_NAV_VOR ? GPS_WP_VOR : GPS_WP_NDB);
-				gps_waypoint_map_iterator wtr = _waypoints.find(n->get_ident());
-				if(wtr == _waypoints.end()) {
-					gps_waypoint_array arr;
-					arr.push_back(w);
-					_waypoints[w->id] = arr;
-				} else {
-					wtr->second.push_back(w);
-				}
-			}
-		}
-	}
-	const fix_map_type* fixes = globals->get_fixlist()->getFixList();
-	for(fix_map_const_iterator itr = fixes->begin(); itr != fixes->end(); ++itr) {
-		FGFix f = itr->second;
-		GPSWaypoint* w = new GPSWaypoint;
-		w->id = f.get_ident();
-		w->lat = f.get_lat() * SG_DEGREES_TO_RADIANS;
-		w->lon = f.get_lon() * SG_DEGREES_TO_RADIANS;
-		w->type = GPS_WP_INT;
-		gps_waypoint_map_iterator wtr = _waypoints.find(f.get_ident());
-		if(wtr == _waypoints.end()) {
-			gps_waypoint_array arr;
-			arr.push_back(w);
-			_waypoints[w->id] = arr;
-		} else {
-			wtr->second.push_back(w);
-		}
-	}
-	// TODO - add USR waypoints as well.
-	
+		
 	// Not sure if this should be here, but OK for now.
 	CreateDefaultFlightPlans();
-	
-	// Hack - hardwire some instrument approaches for testing.
-	// TODO - read these from file - either all at startup or as needed.
-	FGNPIAP* iap = new FGNPIAP;
-	iap->_id = "KHWD";
-	iap->_name = "VOR/DME OR GPS-B";
-	iap->_abbrev = "VOR/D";
-	iap->_rwyStr = "B";
-	iap->_IAF.clear();
-	iap->_IAP.clear();
-	iap->_MAP.clear();
-	// -------
-	GPSWaypoint* wp = new GPSWaypoint;
-	wp->id = "SUNOL";
-	bool multi;
-	// Nasty using the find any function here, but it saves converting data from FGFix etc. 
-	const GPSWaypoint* fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_IAF;
-	iap->_IAF.push_back(wp);
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "MABRY";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_IAF;
-	iap->_IAF.push_back(wp);
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "IMPLY";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_IAP;
-	iap->_IAP.push_back(wp);
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "DECOT";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_FAF;
-	iap->_IAP.push_back(wp);
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "MAPVV";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_MAP;
-	iap->_IAP.push_back(wp);
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "OAK";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_MAHP;
-	iap->_MAP.push_back(wp);
-	// -------
-	_np_iap[iap->_id].push_back(iap);
-	// -----------------------
-	// -----------------------
-	iap = new FGNPIAP;
-	iap->_id = "KHWD";
-	iap->_name = "VOR OR GPS-A";
-	iap->_abbrev = "VOR-";
-	iap->_rwyStr = "A";
-	iap->_IAF.clear();
-	iap->_IAP.clear();
-	iap->_MAP.clear();
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "SUNOL";
-	// Nasty using the find any function here, but it saves converting data from FGFix etc. 
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_IAF;
-	iap->_IAF.push_back(wp);
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "MABRY";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_IAF;
-	iap->_IAF.push_back(wp);
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "IMPLY";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_IAP;
-	iap->_IAP.push_back(wp);
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "DECOT";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_FAF;
-	iap->_IAP.push_back(wp);
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "MAPVV";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_MAP;
-	iap->_IAP.push_back(wp);
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "OAK";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_MAHP;
-	iap->_MAP.push_back(wp);
-	// -------
-	_np_iap[iap->_id].push_back(iap);
-	// ------------------
-	// ------------------
-	/*
-	// Ugh - don't load this one - the waypoints required aren't in fix.dat.gz - result: program crash!
-	// TODO - make the IAP loader robust to absent waypoints.
-	iap = new FGNPIAP;
-	iap->_id = "KHWD";
-	iap->_name = "GPS RWY 28L";
-	iap->_abbrev = "GPS";
-	iap->_rwyStr = "28L";
-	iap->_IAF.clear();
-	iap->_IAP.clear();
-	iap->_MAP.clear();
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "SUNOL";
-	// Nasty using the find any function here, but it saves converting data from FGFix etc. 
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_IAF;
-	iap->_IAF.push_back(wp);
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "SJC";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_IAF;
-	iap->_IAF.push_back(wp);
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "JOCPI";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_IAP;
-	iap->_IAP.push_back(wp);
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "SUDGE";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_FAF;
-	iap->_IAP.push_back(wp);
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "RW28L";
-	wp->appType = GPS_MAP;
-	if(wp->id.substr(0, 2) == "RW" && wp->appType == GPS_MAP) {
-		// Assume that this is a missed-approach point based on the runway number
-		// Get the runway threshold location etc
-	} else {
-		fp = FindFirstById(wp->id, multi, true);
-		if(fp == NULL) {
-			cout << "Failed to find waypoint " << wp->id << " in database...\n";
-		} else {
-			*wp = *fp;
-		}
-	}
-	iap->_IAP.push_back(wp);
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "OAK";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_MAHP;
-	iap->_MAP.push_back(wp);
-	// -------
-	_np_iap[iap->_id].push_back(iap);
-	*/
-	iap = new FGNPIAP;
-	iap->_id = "C83";
-	iap->_name = "GPS RWY 30";
-	iap->_abbrev = "GPS";
-	iap->_rwyStr = "30";
-	iap->_IAF.clear();
-	iap->_IAP.clear();
-	iap->_MAP.clear();
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "MAXNI";
-	// Nasty using the find any function here, but it saves converting data from FGFix etc. 
-	fp = FindFirstById(wp->id, multi, true);
-	if(fp) {
-		*wp = *fp;
-		wp->appType = GPS_IAF;
-		iap->_IAF.push_back(wp);
-	}
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "PATYY";
-	fp = FindFirstById(wp->id, multi, true);
-	if(fp) {
-		*wp = *fp;
-		wp->appType = GPS_IAF;
-		iap->_IAF.push_back(wp);
-	}
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "TRACY";
-	fp = FindFirstById(wp->id, multi, true);
-	if(fp) {
-		*wp = *fp;
-		wp->appType = GPS_IAF;
-		iap->_IAF.push_back(wp);
-	}
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "TRACY";
-	fp = FindFirstById(wp->id, multi, true);
-	if(fp) {
-		*wp = *fp;
-		wp->appType = GPS_IAP;
-		iap->_IAP.push_back(wp);
-	}
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "BABPI";
-	fp = FindFirstById(wp->id, multi, true);
-	if(fp) {
-		*wp = *fp;
-		wp->appType = GPS_FAF;
-		iap->_IAP.push_back(wp);
-	}
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "AMOSY";
-	wp->appType = GPS_MAP;
-	if(wp->id.substr(0, 2) == "RW" && wp->appType == GPS_MAP) {
-		// Assume that this is a missed-approach point based on the runway number
-		// TODO: Get the runway threshold location etc
-		cout << "TODO - implement missed-approach point based on rwy no.\n";
-	} else {
-		fp = FindFirstById(wp->id, multi, true);
-		if(fp == NULL) {
-			cout << "Failed to find waypoint " << wp->id << " in database...\n";
-		} else {
-			*wp = *fp;
-			wp->appType = GPS_MAP;
-		}
-	}
-	iap->_IAP.push_back(wp);
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "HAIRE";
-	fp = FindFirstById(wp->id, multi, true); 
-	*wp = *fp;
-	wp->appType = GPS_MAHP;
-	iap->_MAP.push_back(wp);
-	// -------
-	_np_iap[iap->_id].push_back(iap);
 }
 
 void DCLGPS::bind() {
@@ -962,8 +670,7 @@ double DCLGPS::GetCDIDeflection() const {
 
 void DCLGPS::DtoInitiate(const string& s) {
 	//cout << "DtoInitiate, s = " << s << '\n';
-	bool multi;
-	const GPSWaypoint* wp = FindFirstById(s, multi, true);
+	const GPSWaypoint* wp = FindFirstByExactId(s);
 	if(wp) {
 		//cout << "Waypoint found, starting dto operation!\n";
 		_dto = true;
@@ -972,6 +679,7 @@ void DCLGPS::DtoInitiate(const string& s) {
 		_fromWaypoint.lon = _gpsLon;
 		_fromWaypoint.type = GPS_WP_VIRT;
 		_fromWaypoint.id = "DTOWP";
+    delete wp;
 	} else {
 		//cout << "Waypoint not found, ignoring dto request\n";
 		// Should bring up the user waypoint page, but we're not implementing that yet.
@@ -1105,10 +813,10 @@ double DCLGPS::GetTimeToWaypoint(const string& id) {
 	} else if(id == _activeWaypoint.id) {
 		return(_eta);
 	} else {
-		bool multi;
-		const GPSWaypoint* wp = FindFirstById(id, multi, true);
+		const GPSWaypoint* wp = FindFirstByExactId(id);
 		if(wp == NULL) return(-1.0);
 		double distm = GetGreatCircleDistance(_gpsLat, _gpsLon, wp->lat, wp->lon);
+    delete wp;
 		return(distm / _groundSpeed_ms);
 	}
 	return(-1.0);	// Hopefully we never get here!
@@ -1312,79 +1020,116 @@ void DCLGPS::CreateFlightPlan(GPSFlightPlan* fp, vector<string> ids, vector<GPSW
 
 /***************************************/
 
-const GPSWaypoint* DCLGPS::ActualFindFirstById(const string& id, bool exact) {
-    gps_waypoint_map_const_iterator itr;
-    if(exact) {
-        itr = _waypoints.find(id);
-    } else {
-        itr = _waypoints.lower_bound(id);
+/**
+ * STL functor for use with algorithms. This comapres strings according to
+ * the KLN-89's notion of ordering, with digits after letters.
+ * Also implements FGIdentOrdering so it can be passed into the various list
+ * find helpers.
+ */
+ 
+class stringOrderKLN89 : public FGIdentOrdering
+{
+public:
+  bool operator()(const gps_waypoint_map::value_type& aA, const std::string& aB) const
+  {
+    return compare(aA.first, aB);
+  }
+  
+  bool operator()(const std::string& aS1, const std::string& aS2) const
+  {
+    return compare(aS1, aS2);
+  }
+  
+  virtual bool compare(const std::string& aS1, const std::string& aS2) const
+  {
+    if (aS1.empty()) return true;
+    if (aS2.empty()) return false;
+    
+    char* a = (char*) aS1.c_str();
+    char* b = (char*) aS2.c_str();
+    
+    for ( ; *a && *b; ++a, ++b) {
+      if (*a == *b) continue;
+      
+      bool aDigit = isdigit(*a);
+      bool bDigit = isdigit(*b);
+      
+      if (aDigit == bDigit) {
+        return (*a < *b); // we already know they're not equal
+      }
+      
+      // digit-ness differs
+      if (aDigit) return false; // s1 = KS9 goes *after* s2 = KSA
+      assert(bDigit);
+      return true; // s1 = KSF, s2 = KS5, s1 is indeed < s2
     }
-    if(itr == _waypoints.end()) {
-        return(NULL);
-    } else {
-		// TODO - don't just return the first one - either return all or the nearest one.
-        return((itr->second)[0]);
-    }
+    
+    if (*b) return true; // *a == 0, s2 is longer
+    return false; // s1 is longer, or strings are equal
+  }
+};
+
+GPSWaypoint* DCLGPS::FindFirstById(const string& id) const
+{
+  stringOrderKLN89 ordering;
+  nav_list_type vors = globals->get_navlist()->findFirstByIdent(id, FG_NAV_VOR, false);
+  nav_list_type ndbs = globals->get_navlist()->findFirstByIdent(id, FG_NAV_NDB, false);
+  const FGFix* fix = globals->get_fixlist()->findFirstByIdent(id, &ordering);
+  const FGAirport* apt = globals->get_airports()->findFirstById(id, &ordering);
+  // search local gps waypoints (USR)
+
+// pick the best - ugly logic, sorry. This is a temporary fix to getting rid
+// of the huge local waypoint table, it'll die when there's a way to query
+// this stuff centrally.
+// what we're doing is using map inserts to order the result, then using
+// the first entry (begin()) as the lowest, hence best, match
+  map<string, GPSWpType, stringOrderKLN89> sorter;
+  if (fix) sorter[fix->get_ident()] = GPS_WP_INT;
+  if (apt) sorter[apt->getId()] = GPS_WP_APT;
+  if (!vors.empty()) sorter[vors.front()->get_ident()] = GPS_WP_VOR;
+  if (!ndbs.empty()) sorter[ndbs.front()->get_ident()] = GPS_WP_NDB;
+
+  if (sorter.empty()) return NULL; // no results at all
+  GPSWpType ty = sorter.begin()->second;
+  
+  switch (ty) {
+  case GPS_WP_INT: 
+    return GPSWaypoint::createFromFix(fix);
+  
+  case GPS_WP_APT:
+    return GPSWaypoint::createFromAirport(apt);
+  
+  case GPS_WP_VOR:
+    return GPSWaypoint::createFromNav(vors.front());
+    
+  case GPS_WP_NDB:
+    return GPSWaypoint::createFromNav(ndbs.front());
+  default:
+    return NULL; // can't happen
+  }
 }
 
-const GPSWaypoint* DCLGPS::FindFirstById(const string& id, bool &multi, bool exact) {
-	multi = false;
-	if(exact) return(ActualFindFirstById(id, exact));
-	
-	// OK, that was the easy case, now the fuzzy case
-	const GPSWaypoint* w1 = ActualFindFirstById(id);
-	if(w1 == NULL) return(w1);
-	
-	// The non-trivial code from here to the end of the function is all to deal with the fact that
-	// the KLN89 alphabetical order (numbers AFTER letters) differs from ASCII order (numbers BEFORE letters).
-	string id2 = id;
-	//string id3 = id+'0';
-	string id4 = id+'A';
-	// Increment the last char to provide the boundary.  Note that 'Z' -> '[' but we also need to check '0' for all since GPS has numbers after letters
-	//bool alfa = isalpha(id2[id2.size() - 1]);
-	id2[id2.size() - 1] = id2[id2.size() - 1] + 1;
-	const GPSWaypoint* w2 = ActualFindFirstById(id2);
-	//FGAirport* a3 = globals->get_airports()->findFirstById(id3);
-	const GPSWaypoint* w4 = ActualFindFirstById(id4);
-	//cout << "Strings sent were " << id << ", " << id2 << " and " << id4 << '\n';
-	//cout << "Airports returned were (a1, a2, a4): " << a1->getId() << ", " << a2->getId() << ", " << a4->getId() << '\n';
-	//cout << "Pointers were " << a1 << ", " << a2 << ", " << a4 << '\n';
-	
-	// TODO - the below handles the imediately following char OK
-	// eg id = "KD" returns "KDAA" instead of "KD5"
-	// but it doesn't handle numbers / letters further down the string,
-	// eg - id = "I" returns "IA01" instead of "IAN"
-	// We either need to provide a custom comparison operator, or recurse this function if !isalpha further down the string.
-	// (Currenly fixed with recursion).
-	
-	if(w4 != w2) { // A-Z match - preferred
-		//cout << "A-Z match!\n";
-		if(w4->id.size() - id.size() > 2) {
-			// Check for numbers further on
-			for(unsigned int i=id.size(); i<w4->id.size(); ++i) {
-				if(!isalpha(w4->id[i])) {
-					//cout << "SUBSTR is " << (a4->getId()).substr(0, i) << '\n';
-					return(FindFirstById(w4->id.substr(0, i), multi, exact));
-				}
-			}
-		}
-		return(w4);
-	} else if(w1 != w2) {  // 0-9 match
-		//cout << "0-9 match!\n";
-		if(w1->id.size() - id.size() > 2) {
-			// Check for numbers further on
-			for(unsigned int i=id.size(); i<w1->id.size(); ++i) {
-				if(!isalpha(w1->id[i])) {
-					//cout << "SUBSTR2 is " << (a4->getId()).substr(0, i) << '\n';
-					return(FindFirstById(w1->id.substr(0, i), multi, exact));
-				}
-			}
-		}
-		return(w1);
-	} else {  // No match
-		return(NULL);
-	}
-	return NULL;
+GPSWaypoint* DCLGPS::FindFirstByExactId(const string& id) const
+{
+  if (const FGAirport* apt = globals->get_airports()->search(id)) {
+    return GPSWaypoint::createFromAirport(apt);
+  }
+  
+  if (const FGFix* fix = globals->get_fixlist()->search(id)) {
+    return GPSWaypoint::createFromFix(fix);
+  }
+  
+  nav_list_type vors = globals->get_navlist()->findFirstByIdent(id, FG_NAV_VOR, true);
+  if (!vors.empty()) {
+    return GPSWaypoint::createFromNav(vors.front());
+  }
+  
+  nav_list_type ndbs = globals->get_navlist()->findFirstByIdent(id, FG_NAV_NDB, true);
+  if (!ndbs.empty()) {
+    return GPSWaypoint::createFromNav(ndbs.front());
+  }
+  
+  return NULL;
 }
 
 // Host specific lookup functions
@@ -1407,55 +1152,6 @@ FGNavRecord* DCLGPS::FindFirstVorById(const string& id, bool &multi, bool exact)
 	}
 	return(NULL);	// Shouldn't get here!
 }
-#if 0
-Overlays::NAV* DCLGPS::FindFirstVorById(const string& id, bool &multi, bool exact) {
-	// NOTE - at the moment multi is never set.
-	multi = false;
-	if(exact) return(_overlays->FindFirstVorById(id, exact));
-	
-	// OK, that was the easy case, now the fuzzy case
-	Overlays::NAV* n1 = _overlays->FindFirstVorById(id);
-	if(n1 == NULL) return(n1);
-	
-	string id2 = id;
-	string id3 = id+'0';
-	string id4 = id+'A';
-	// Increment the last char to provide the boundary.  Note that 'Z' -> '[' but we also need to check '0' for all since GPS has numbers after letters
-	bool alfa = isalpha(id2[id2.size() - 1]);
-	id2[id2.size() - 1] = id2[id2.size() - 1] + 1;
-	Overlays::NAV* n2 = _overlays->FindFirstVorById(id2);
-	//Overlays::NAV* n3 = _overlays->FindFirstVorById(id3);
-	//Overlays::NAV* n4 = _overlays->FindFirstVorById(id4);
-	//cout << "Strings sent were " << id << ", " << id2 << ", " << id3 << ", " << id4 << '\n';
-	
-	
-	if(alfa) {
-		if(n1 != n2) { // match
-			return(n1);
-		} else {
-			return(NULL);
-		}
-	}
-	
-	/*
-	if(n1 != n2) {
-		// Something matches - the problem is the number/letter preference order is reversed between the GPS and the STL
-		if(n4 != n2) {
-			// There's a letter match - return that
-			return(n4);
-		} else {
-			// By definition we must have a number match
-			if(n3 == n2) cout << "HELP - LOGIC FLAW in find VOR!\n";
-			return(n3);
-		}
-	} else {
-		// No match
-		return(NULL);
-	}
-	*/
-	return NULL;
-}
-#endif //0
 
 // TODO - add the ASCII / alphabetical stuff from the Atlas version
 FGNavRecord* DCLGPS::FindFirstNDBById(const string& id, bool &multi, bool exact) {
@@ -1476,179 +1172,25 @@ FGNavRecord* DCLGPS::FindFirstNDBById(const string& id, bool &multi, bool exact)
 	}
 	return(NULL);	// Shouldn't get here!
 }
-#if 0
-Overlays::NAV* DCLGPS::FindFirstNDBById(const string& id, bool &multi, bool exact) {
-	// NOTE - at the moment multi is never set.
-	multi = false;
-	if(exact) return(_overlays->FindFirstNDBById(id, exact));
-	
-	// OK, that was the easy case, now the fuzzy case
-	Overlays::NAV* n1 = _overlays->FindFirstNDBById(id);
-	if(n1 == NULL) return(n1);
-	
-	string id2 = id;
-	string id3 = id+'0';
-	string id4 = id+'A';
-	// Increment the last char to provide the boundary.  Note that 'Z' -> '[' but we also need to check '0' for all since GPS has numbers after letters
-	bool alfa = isalpha(id2[id2.size() - 1]);
-	id2[id2.size() - 1] = id2[id2.size() - 1] + 1;
-	Overlays::NAV* n2 = _overlays->FindFirstNDBById(id2);
-	//Overlays::NAV* n3 = _overlays->FindFirstNDBById(id3);
-	//Overlays::NAV* n4 = _overlays->FindFirstNDBById(id4);
-	//cout << "Strings sent were " << id << ", " << id2 << ", " << id3 << ", " << id4 << '\n';
-	
-	
-	if(alfa) {
-		if(n1 != n2) { // match
-			return(n1);
-		} else {
-			return(NULL);
-		}
-	}
-	
-	/*
-	if(n1 != n2) {
-		// Something matches - the problem is the number/letter preference order is reversed between the GPS and the STL
-		if(n4 != n2) {
-			// There's a letter match - return that
-			return(n4);
-		} else {
-			// By definition we must have a number match
-			if(n3 == n2) cout << "HELP - LOGIC FLAW in find VOR!\n";
-			return(n3);
-		}
-	} else {
-		// No match
-		return(NULL);
-	}
-	*/
-	return NULL;
-}
-#endif //0
 
-// TODO - add the ASCII / alphabetical stuff from the Atlas version
 const FGFix* DCLGPS::FindFirstIntById(const string& id, bool &multi, bool exact) {
 	// NOTE - at the moment multi is never set, and indeed can't be
 	// since FG can only map one Fix per ID at the moment.
 	multi = false;
-	if(exact) return(globals->get_fixlist()->findFirstByIdent(id, exact));
+	if (exact) return globals->get_fixlist()->search(id);
 	
-	const FGFix* f1 = globals->get_fixlist()->findFirstByIdent(id, exact);
-	if(f1 == NULL) return(f1);
-	
-	// The non-trivial code from here to the end of the function is all to deal with the fact that
-	// the KLN89 alphabetical order (numbers AFTER letters) differs from ASCII order (numbers BEFORE letters).
-	// It is copied from the airport version which is definately needed, but at present I'm not actually 
-	// sure if any fixes in FG or real-life have numbers in them!
-	string id2 = id;
-	//string id3 = id+'0';
-	string id4 = id+'A';
-	// Increment the last char to provide the boundary.  Note that 'Z' -> '[' but we also need to check '0' for all since GPS has numbers after letters
-	//bool alfa = isalpha(id2[id2.size() - 1]);
-	id2[id2.size() - 1] = id2[id2.size() - 1] + 1;
-	const FGFix* f2 = globals->get_fixlist()->findFirstByIdent(id2);
-	//const FGFix* a3 = globals->get_fixlist()->findFirstByIdent(id3);
-	const FGFix* f4 = globals->get_fixlist()->findFirstByIdent(id4);
-	
-	// TODO - the below handles the imediately following char OK
-	// eg id = "KD" returns "KDAA" instead of "KD5"
-	// but it doesn't handle numbers / letters further down the string,
-	// eg - id = "I" returns "IA01" instead of "IAN"
-	// We either need to provide a custom comparison operator, or recurse this function if !isalpha further down the string.
-	// (Currenly fixed with recursion).
-	
-	if(f4 != f2) { // A-Z match - preferred
-		//cout << "A-Z match!\n";
-		if(f4->get_ident().size() - id.size() > 2) {
-			// Check for numbers further on
-			for(unsigned int i=id.size(); i<f4->get_ident().size(); ++i) {
-				if(!isalpha(f4->get_ident()[i])) {
-					//cout << "SUBSTR is " << (a4->getId()).substr(0, i) << '\n';
-					return(FindFirstIntById(f4->get_ident().substr(0, i), multi, exact));
-				}
-			}
-		}
-		return(f4);
-	} else if(f1 != f2) {  // 0-9 match
-		//cout << "0-9 match!\n";
-		if(f1->get_ident().size() - id.size() > 2) {
-			// Check for numbers further on
-			for(unsigned int i=id.size(); i<f1->get_ident().size(); ++i) {
-				if(!isalpha(f1->get_ident()[i])) {
-					//cout << "SUBSTR2 is " << (a4->getId()).substr(0, i) << '\n';
-					return(FindFirstIntById(f1->get_ident().substr(0, i), multi, exact));
-				}
-			}
-		}
-		return(f1);
-	} else {  // No match
-		return(NULL);
-	}
-		
-	return NULL;	// Don't think we can ever get here.
+  stringOrderKLN89 ordering;
+  return globals->get_fixlist()->findFirstByIdent(id, &ordering);
 }
 
 const FGAirport* DCLGPS::FindFirstAptById(const string& id, bool &multi, bool exact) {
 	// NOTE - at the moment multi is never set.
 	//cout << "FindFirstAptById, id = " << id << '\n';
 	multi = false;
-	if(exact) return(globals->get_airports()->findFirstById(id, exact));
+	if(exact) return(globals->get_airports()->search(id));
 	
-	// OK, that was the easy case, now the fuzzy case
-	const FGAirport* a1 = globals->get_airports()->findFirstById(id);
-	if(a1 == NULL) return(a1);
-	
-	// The non-trivial code from here to the end of the function is all to deal with the fact that
-	// the KLN89 alphabetical order (numbers AFTER letters) differs from ASCII order (numbers BEFORE letters).
-	string id2 = id;
-	//string id3 = id+'0';
-	string id4 = id+'A';
-	// Increment the last char to provide the boundary.  Note that 'Z' -> '[' but we also need to check '0' for all since GPS has numbers after letters
-	//bool alfa = isalpha(id2[id2.size() - 1]);
-	id2[id2.size() - 1] = id2[id2.size() - 1] + 1;
-	const FGAirport* a2 = globals->get_airports()->findFirstById(id2);
-	//FGAirport* a3 = globals->get_airports()->findFirstById(id3);
-	const FGAirport* a4 = globals->get_airports()->findFirstById(id4);
-	//cout << "Strings sent were " << id << ", " << id2 << " and " << id4 << '\n';
-	//cout << "Airports returned were (a1, a2, a4): " << a1->getId() << ", " << a2->getId() << ", " << a4->getId() << '\n';
-	//cout << "Pointers were " << a1 << ", " << a2 << ", " << a4 << '\n';
-	
-	// TODO - the below handles the imediately following char OK
-	// eg id = "KD" returns "KDAA" instead of "KD5"
-	// but it doesn't handle numbers / letters further down the string,
-	// eg - id = "I" returns "IA01" instead of "IAN"
-	// We either need to provide a custom comparison operator, or recurse this function if !isalpha further down the string.
-	// (Currenly fixed with recursion).
-	
-	if(a4 != a2) { // A-Z match - preferred
-		//cout << "A-Z match!\n";
-		if(a4->getId().size() - id.size() > 2) {
-			// Check for numbers further on
-			for(unsigned int i=id.size(); i<a4->getId().size(); ++i) {
-				if(!isalpha(a4->getId()[i])) {
-					//cout << "SUBSTR is " << (a4->getId()).substr(0, i) << '\n';
-					return(FindFirstAptById(a4->getId().substr(0, i), multi, exact));
-				}
-			}
-		}
-		return(a4);
-	} else if(a1 != a2) {  // 0-9 match
-		//cout << "0-9 match!\n";
-		if(a1->getId().size() - id.size() > 2) {
-			// Check for numbers further on
-			for(unsigned int i=id.size(); i<a1->getId().size(); ++i) {
-				if(!isalpha(a1->getId()[i])) {
-					//cout << "SUBSTR2 is " << (a4->getId()).substr(0, i) << '\n';
-					return(FindFirstAptById(a1->getId().substr(0, i), multi, exact));
-				}
-			}
-		}
-		return(a1);
-	} else {  // No match
-		return(NULL);
-	}
-		
-	return NULL;
+  stringOrderKLN89 ordering;
+  return globals->get_airports()->findFirstById(id, &ordering);
 }
 
 FGNavRecord* DCLGPS::FindClosestVor(double lat_rad, double lon_rad) {
