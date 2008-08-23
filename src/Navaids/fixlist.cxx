@@ -32,7 +32,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 
 #include "fixlist.hxx"
-#include "Airports/simple.hxx";
+#include "Airports/simple.hxx"
 
 using std::pair;
 
