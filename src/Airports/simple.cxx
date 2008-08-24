@@ -168,12 +168,12 @@ FGAirport::getIteratorForRunwayIdent(const string& aIdent, bool& aReversed) cons
 
 static double normaliseBearing(double aBearing)
 {
-  while (aBearing < -180.0) {
+  while (aBearing < 0.0) {
     aBearing += 360.0;
   }
   
-  while (aBearing > 180.0) {
-    aBearing -= 180.0;
+  while (aBearing > 360.0) {
+    aBearing -= 360.0;
   }
   
   return aBearing;
