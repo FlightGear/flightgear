@@ -11,7 +11,7 @@ dual_instr_item::dual_instr_item(
         bool         working,
         UINT         options) :
     instr_item(x, y, width, height,
-                chn1_source, options, working),
+                chn1_source, 1, options, working),
                 alt_data_source(chn2_source)
 {
 }
