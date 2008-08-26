@@ -80,7 +80,7 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   MaxHP = 200;
   MinManifoldPressure_inHg = 6.5;
   MaxManifoldPressure_inHg = 28.5;
-  BSFC = 0.45;
+  BSFC = -1;
 
   // These are internal program variables
 
@@ -233,6 +233,12 @@ Manifold_Pressure_Lookup = new
       RatedAltitude[1] = el->FindElementValueAsNumberConvertTo("ratedaltitude2", "FT");
     if (el->FindElement("ratedaltitude3"))
       RatedAltitude[2] = el->FindElementValueAsNumberConvertTo("ratedaltitude3", "FT");
+  }
+
+  // Create a BSFC to match the engine if not provided
+  // The 0.8 in the equation below is volumetric efficiency
+  if (BSFC < 0) {
+      BSFC = ( Displacement * MaxRPM * 0.8 ) / (9411 * MaxHP);
   }
   char property_name[80];
   snprintf(property_name, 80, "propulsion/engine[%d]/power_hp", EngineNumber);

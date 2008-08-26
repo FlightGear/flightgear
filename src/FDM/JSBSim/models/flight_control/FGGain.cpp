@@ -105,7 +105,7 @@ FGGain::FGGain(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
     zero_centered = element->FindElement("zero_centered");
     //ToDo if zero centered, then mins must be <0 and max's must be >0
     if (zero_centered) {
-      sZeroCentered = zero_centered->FindElementValue("zero_centered");
+      sZeroCentered = element->FindElementValue("zero_centered");
       if (sZeroCentered == string("0") || sZeroCentered == string("false")) {
         ZeroCentered = false;
       }
