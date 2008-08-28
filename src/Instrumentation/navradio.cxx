@@ -35,6 +35,7 @@
 #include <simgear/structure/exception.hxx>
 
 #include <Navaids/navlist.hxx>
+#include <Main/util.hxx>
 #include "navradio.hxx"
 
 using std::string;
@@ -68,6 +69,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     to_flag_node(NULL),
     from_flag_node(NULL),
     inrange_node(NULL),
+    signal_quality_norm_node(NULL),
     cdi_deflection_node(NULL),
     cdi_xtrack_error_node(NULL),
     cdi_xtrack_hdg_err_node(NULL),
@@ -176,6 +178,7 @@ FGNavRadio::init ()
     to_flag_node = node->getChild("to-flag", 0, true);
     from_flag_node = node->getChild("from-flag", 0, true);
     inrange_node = node->getChild("in-range", 0, true);
+    signal_quality_norm_node = node->getChild("signal-quality-norm", 0, true);
     cdi_deflection_node = node->getChild("heading-needle-deflection", 0, true);
     cdi_xtrack_error_node = node->getChild("crosstrack-error-m", 0, true);
     cdi_xtrack_hdg_err_node
@@ -314,6 +317,8 @@ FGNavRadio::update(double dt)
     bool has_gs = has_gs_node->getBoolValue();
     bool is_loc = loc_node->getBoolValue();
     double loc_dist = loc_dist_node->getDoubleValue();
+    double effective_range_m;
+    double signal_quality_norm = signal_quality_norm_node->getDoubleValue();
 
     double az1, az2, s;
 
@@ -418,18 +423,32 @@ FGNavRadio::update(double dt)
 	    effective_range
                 = adjustNavRange( nav_elev, pos.getElevationM(), range );
 	}
+
+        effective_range_m = effective_range * SG_NM_TO_METER;
+
 	// cout << "nav range = " << effective_range
 	//      << " (" << range << ")" << endl;
 
-	if ( loc_dist < effective_range * SG_NM_TO_METER ) {
-	    inrange = true;
-	} else if ( loc_dist < 2 * effective_range * SG_NM_TO_METER ) {
-	    inrange = sg_random() < ( 2 * effective_range * SG_NM_TO_METER
-                                      - loc_dist )
-                                      / (effective_range * SG_NM_TO_METER);
-	} else {
-	    inrange = false;
-	}
+        //////////////////////////////////////////////////////////
+        // compute signal quality
+        // 100% within effective_range
+        // decreases 1/x^2 further out
+        //////////////////////////////////////////////////////////
+        {
+            double last_signal_quality_norm = signal_quality_norm;
+
+	    if ( loc_dist < effective_range_m ) {
+              signal_quality_norm = 1.0;
+            } else {
+              double range_exceed_norm = loc_dist/effective_range_m;
+              signal_quality_norm = 1/(range_exceed_norm*range_exceed_norm);
+            }
+
+            signal_quality_norm = fgGetLowPass( last_signal_quality_norm, 
+                   signal_quality_norm, dt );
+        }
+        signal_quality_norm_node->setDoubleValue( signal_quality_norm );
+        inrange = signal_quality_norm > 0.2;
         inrange_node->setBoolValue( inrange );
 
 	if ( !is_loc ) {
@@ -507,6 +526,7 @@ FGNavRadio::update(double dt)
                     r *= 4.0;
                 }
                 SG_CLAMP_RANGE( r, -10.0, 10.0 );
+                r *= signal_quality_norm;
             }
         }
         cdi_deflection_node->setDoubleValue( r );
@@ -591,6 +611,7 @@ FGNavRadio::update(double dt)
                 // cout << "dist = " << x << " height = " << y << endl;
                 double angle = asin( y / x ) * SGD_RADIANS_TO_DEGREES;
                 r = (target_gs - angle) * 5.0;
+                r *= signal_quality_norm;
             }
         }
         gs_deflection_node->setDoubleValue( r );

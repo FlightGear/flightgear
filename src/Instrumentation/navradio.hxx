@@ -85,6 +85,7 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode_ptr to_flag_node;
     SGPropertyNode_ptr from_flag_node;
     SGPropertyNode_ptr inrange_node;
+    SGPropertyNode_ptr signal_quality_norm_node;
     SGPropertyNode_ptr cdi_deflection_node;
     SGPropertyNode_ptr cdi_xtrack_error_node;
     SGPropertyNode_ptr cdi_xtrack_hdg_err_node;
