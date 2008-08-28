@@ -1,5 +1,5 @@
 
-/* Special single config.h for MSVC8 build  */
+/* Special single config.h for MSVC6 build - Geoff McLane - 23 July, 2003  */
 
 /* Define to enable plib joystick support */
 #ifndef  ENABLE_PLIB_JOYSTICK
@@ -50,7 +50,7 @@
 #define PACKAGE "FlightGear"
 
 /* Define to package version - use in main.cxx */
-#define FLIGHTGEAR_VERSION "MSVC8-WIN32-0.9.10"
+#define FLIGHTGEAR_VERSION "MSVC8-WIN32-1.99.4"
 
 /* Define as the return type of signal handlers (int or void).  */
 #define RETSIGTYPE void
@@ -68,7 +68,7 @@
 #define TM_IN_SYS_TIME 1
 
 /* Define to version number */
-#define VERSION "0.9.10"
+#define VERSION "1.99.4"
 
 /* Define if compiling on a Winbloze (95, NT, etc.) platform */
 #define WIN32 1
