@@ -409,9 +409,6 @@
 				RelativePath="..\..\src\Cockpit\hud_ladr.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\Cockpit\hud_opts.hxx">
-			</File>
-			<File
 				RelativePath="..\..\src\Cockpit\hud_rwy.cxx">
 			</File>
 			<File
