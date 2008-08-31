@@ -24,6 +24,7 @@
 #include <sstream>
 #include <iostream>
 #include <string.h>
+#include <time.h>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/environment/metar.hxx>
@@ -76,7 +77,7 @@ const char *azimuthName(double d)
 double rnd(double r, int g = 0)
 {
 	double f = pow(10.0, g);
-	return f * rint(r / f);
+	return f * floor(r / f + 0.5);
 }
 
 

@@ -145,6 +145,16 @@ public:
   {
     return mOrdering->compare(aA.first,aB);
   }
+
+  bool operator()(const std::string& aA, const fix_map_type::value_type& aB) const
+  {
+    return mOrdering->compare(aA, aB.first);
+  }
+
+  bool operator()(const fix_map_type::value_type& aA, const fix_map_type::value_type& aB) const
+  {
+    return mOrdering->compare(aA.first, aB.first);
+  }
   
 private:
   FGIdentOrdering* mOrdering;

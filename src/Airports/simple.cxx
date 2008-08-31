@@ -335,6 +335,16 @@ public:
   {
     return mOrdering->compare(aA.first,aB);
   }
+
+  bool operator()(const std::string& aA, const airport_map::value_type& aB) const
+  {
+    return mOrdering->compare(aA, aB.first);
+  }
+
+  bool operator()(const airport_map::value_type& aA, const airport_map::value_type& aB) const
+  {
+    return mOrdering->compare(aA.first, aB.first);
+  }
   
 private:
   FGIdentOrdering* mOrdering;
