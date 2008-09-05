@@ -137,7 +137,10 @@ FGFX::update (double dt)
         return;
     }
 
+#if 0
+    // moved back to the mainloop to prevent audio problems
     smgr->update(dt);
+#endif
     update_pos_and_orientation(smgr, dt);
 
     // command sound manger

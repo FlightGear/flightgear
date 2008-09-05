@@ -481,6 +481,8 @@ static void fgMainLoop( void ) {
             "Elapsed time is zero ... we're zinging" );
     }
 
+    SGSoundMgr *smgr = globals->get_soundmgr();
+    smgr->update(delta_time_sec);
     globals->get_subsystem_mgr()->update(delta_time_sec);
 
     //
