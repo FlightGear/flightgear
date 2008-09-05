@@ -140,8 +140,8 @@ FGFX::update (double dt)
 #if 0
     // moved back to the mainloop to prevent audio problems
     smgr->update(dt);
-#endif
     update_pos_and_orientation(smgr, dt);
+#endif
 
     // command sound manger
     bool pause = _pause->getBoolValue();
