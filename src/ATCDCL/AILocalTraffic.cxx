@@ -165,18 +165,9 @@ void FGAILocalTraffic::GetAirportDetails(const string& id) {
 void FGAILocalTraffic::GetRwyDetails(const string& id) {
 	//cout << "GetRwyDetails called" << endl;
 	
-	if(_controlled) {
-		rwy.rwyID = tower->GetActiveRunway();
-	} else {
-		// TODO - get a proper runway ID from uncontrolled airports
-		rwy.rwyID = "00";
-	}
-	
-	// Now we need to get the threshold position and rwy heading
-	
   const FGAirport* apt = fgFindAirportID(id);
   assert(apt);
-  FGRunway runway(apt->getRunwayByIdent(rwy.rwyID));
+  FGRunway runway(apt->getActiveRunwayForUsage());
 
   double hdg = runway._heading;
   double other_way = hdg - 180.0;
