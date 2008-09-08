@@ -7,7 +7,8 @@ libNavaids_a_SOURCES = \
 	fix.hxx fixlist.hxx fixlist.cxx \
 	awynet.hxx awynet.cxx \
 	navrecord.hxx navrecord.cxx \
-	navlist.hxx navlist.cxx
+	navlist.hxx navlist.cxx \
+	positioned.hxx positioned.cxx
 
 #	ils.hxx ilslist.hxx ilslist.cxx \
 #	mkrbeacons.hxx mkrbeacons.cxx 
