@@ -24,6 +24,7 @@
 
 #include <map>
 #include <set>
+#include <algorithm>
 
 #include <simgear/math/sg_geodesy.hxx>
 
