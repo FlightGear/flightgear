@@ -26,6 +26,8 @@
 
 #include "kln89.hxx"
 
+class FGFix;
+
 class KLN89IntPage : public KLN89Page {
 
 public:

@@ -29,6 +29,8 @@
 #include <string>
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/misc/sgstream.hxx>
+
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/strutils.hxx>
 

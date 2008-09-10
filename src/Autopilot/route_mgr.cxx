@@ -33,6 +33,7 @@
 #include <FDM/flight.hxx>
 #include <Main/fg_props.hxx>
 #include <Navaids/fixlist.hxx>
+#include <Navaids/fix.hxx>
 #include <Navaids/navlist.hxx>
 
 #include "route_mgr.hxx"
@@ -347,13 +348,13 @@ int FGRouteMgr::make_waypoint( SGWayPoint **wp, const string& tgt ) {
     }
 
     // check for fix id
-    FGFix f;
+    FGFix* f;
     double heading;
     double dist;
 
-    if ( globals->get_fixlist()->query_and_offset( target, lon, lat, 0, &f, &heading, &dist ) ) {
+    if ( globals->get_fixlist()->query_and_offset( target, lon, lat, 0, f, &heading, &dist ) ) {
         SG_LOG( SG_GENERAL, SG_INFO, "Adding waypoint (fix) = " << target );
-        *wp = new SGWayPoint( f.get_lon(), f.get_lat(), alt, SGWayPoint::WGS84, target );
+        *wp = new SGWayPoint( f->get_lon(), f->get_lat(), alt, SGWayPoint::WGS84, target );
         return 3;
     }
 

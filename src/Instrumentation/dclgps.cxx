@@ -31,6 +31,8 @@
 #include <simgear/magvar/magvar.hxx>
 
 #include <Main/fg_props.hxx>
+#include <Navaids/fix.hxx>
+
 #include <iostream>
 using std::cout;
 

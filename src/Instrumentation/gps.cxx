@@ -22,6 +22,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 #include <Navaids/fixlist.hxx>
+#include <Navaids/fix.hxx>
 #include <Navaids/navlist.hxx>
 
 #include "gps.hxx"
@@ -350,11 +351,11 @@ GPS::update (double delta_time_sec)
                 }
             }
             else if (waypont_type == "fix") {
-                FGFix f;
-                if ( globals->get_fixlist()->query(wp0_ID, &f) ) {
+                FGFix* f;
+                if ( globals->get_fixlist()->query(wp0_ID, f) ) {
                     //cout << "Fix found" << endl;
-                    wp0_longitude_deg = f.get_lon();
-                    wp0_latitude_deg = f.get_lat();
+                    wp0_longitude_deg = f->get_lon();
+                    wp0_latitude_deg = f->get_lat();
                     _wp0_name_node->setStringValue(wp0_ID.c_str());
                 }
             }
@@ -387,11 +388,11 @@ GPS::update (double delta_time_sec)
                 }
             }
             else if (waypont_type == "fix") {
-                FGFix f;
-                if ( globals->get_fixlist()->query(wp1_ID, &f) ) {
+                FGFix* f;
+                if ( globals->get_fixlist()->query(wp1_ID, f) ) {
                     //cout << "Fix found" << endl;
-                    wp1_longitude_deg = f.get_lon();
-                    wp1_latitude_deg = f.get_lat();
+                    wp1_longitude_deg = f->get_lon();
+                    wp1_latitude_deg = f->get_lat();
                     _wp1_name_node->setStringValue(wp1_ID.c_str());
                 }
             }

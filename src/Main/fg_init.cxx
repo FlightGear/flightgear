@@ -99,6 +99,7 @@
 #include <AIModel/AIManager.hxx>
 #include <Navaids/navdb.hxx>
 #include <Navaids/navlist.hxx>
+#include <Navaids/fix.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
@@ -1083,15 +1084,15 @@ static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) {
  
 // Set current_options lon/lat given an airport id and heading (degrees)
 static bool fgSetPosFromFix( const string& id ) {
-    FGFix fix;
+    FGFix* fix;
 
     // set initial position from runway and heading
-    if ( globals->get_fixlist()->query( id.c_str(), &fix ) ) {
+    if ( globals->get_fixlist()->query( id.c_str(), fix ) ) {
         SG_LOG( SG_GENERAL, SG_INFO, "Attempting to set starting position for "
                 << id );
 
-        double lon = fix.get_lon();
-        double lat = fix.get_lat();
+        double lon = fix->get_lon();
+        double lat = fix->get_lat();
 
         if ( fabs( fgGetDouble("/sim/presets/offset-distance-nm") ) > SG_EPSILON )
         {

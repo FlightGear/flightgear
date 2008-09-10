@@ -24,63 +24,21 @@
 #ifndef _FG_FIX_HXX
 #define _FG_FIX_HXX
 
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <simgear/compiler.h>
-#include <simgear/misc/sgstream.hxx>
-
-#  include <istream>
 
 #include <string>
 
-// using std::cout;
-// using std::endl;
+#include "positioned.hxx"
 
-
-class FGFix {
-
-    std::string ident;
-    double lon, lat;
-
+class FGFix : public FGPositioned
+{
 public:
+  FGFix(const std::string& aIdent, const SGGeod& aPos);
+  inline ~FGFix(void) {}
 
-    inline FGFix(void);
-    inline ~FGFix(void) {}
-
-    inline const std::string& get_ident() const { return ident; }
-    inline double get_lon() const { return lon; }
-    inline double get_lat() const { return lat; }
-
-    friend std::istream& operator>> ( std::istream&, FGFix& );
+  inline const std::string& get_ident() const { return ident(); }
+  inline double get_lon() const { return longitude(); }
+  inline double get_lat() const { return latitude(); }
 };
-
-
-inline
-FGFix::FGFix()
-  : ident(""),
-    lon(0.0),
-    lat(0.0)
-{
-}
-
-
-inline std::istream&
-operator >> ( std::istream& in, FGFix& f )
-{
-    in >> f.lat;
-
-    if ( f.lat > 95.0 ) {
-        return in >> skipeol;
-    }
-    in >> f.lon >> f.ident;
-
-    // cout << "id = " << f.ident << endl;
-
-    return in >> skipeol;
-}
-
 
 #endif // _FG_FIX_HXX
