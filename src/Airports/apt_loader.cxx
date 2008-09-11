@@ -100,7 +100,7 @@ bool fgAirportDBLoad( FGAirportList *airports,
     string line;
     char tmp[2049];
     tmp[2048] = 0;
-    vector<FGRunway> runways;
+    vector<FGRunwayPtr> runways;
     
     unsigned int line_id = 0;
     unsigned int line_num = 0;
@@ -212,10 +212,15 @@ bool fgAirportDBLoad( FGAirportList *airports,
 
             int surface_code = atoi( token[10].c_str() );
 
-            FGRunway rwy(rwy_no, lon, lat, heading, length,
-                          width, displ_thresh1, displ_thresh2,
-                          stopway1, stopway2, surface_code);
+            FGRunway* rwy = new FGRunway(NULL, rwy_no, lon, lat, heading, length,
+                width, displ_thresh1, stopway1, surface_code, false);
+            
+            FGRunway* reciprocal = new FGRunway(NULL, FGRunway::reverseIdent(rwy_no), 
+                          lon, lat, heading + 180.0, length, width, 
+                          displ_thresh2, stopway2, surface_code, true);
+                          
             runways.push_back(rwy);
+            runways.push_back(reciprocal);
         } else if ( line_id == 18 ) {
             // beacon entry (ignore)
         } else if ( line_id == 14 ) {

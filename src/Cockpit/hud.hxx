@@ -61,9 +61,10 @@ namespace osg {
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/viewmgr.hxx>
-#include <Airports/runways.hxx>
 
 #include <plib/sg.h>
+
+class FGRunway;
 
 using std::deque;
 using std::vector;
@@ -509,7 +510,7 @@ private:
         bool drawLine(const sgdVec3& a1, const sgdVec3& a2,
                 const sgdVec3& p1, const sgdVec3& p2);
         void drawArrow();
-        bool get_active_runway(FGRunway& rwy);
+        FGRunway* get_active_runway();
         void get_rwy_points(sgdVec3 *points);
         void setLineWidth(void);
 
@@ -517,7 +518,7 @@ private:
         double mm[16],pm[16], arrowScale, arrowRad, lnScale;
         double scaleDist, default_pitch, default_heading;
         GLint view[4];
-        FGRunway runway;
+        FGRunway* runway;
         FGViewer* cockpit_view;
         unsigned short stippleOut, stippleCen;
         bool drawIA, drawIAAlways;

@@ -28,6 +28,8 @@
 #include "kln89_page_apt.hxx"
 #include <ATCDCL/commlist.hxx>
 #include <Main/globals.hxx>
+#include <Airports/runways.hxx>
+
 
 // This function is copied from Airports/runways.cxx
 // TODO - Make the original properly available and remove this instance!!!!
@@ -202,8 +204,8 @@ void KLN89AptPage::Update(double dt) {
 			// I guess we can make a heuristic guess as to fuel availability from the runway sizes
 			// For now assume that airports with asphalt or concrete runways will have at least 100L,
 			// and that runways over 4000ft will have JET.
-			if(_aptRwys[0]._surface_code <= 2) {
-				if(_aptRwys[0]._length >= 4000) {
+			if(_aptRwys[0]->_surface_code <= 2) {
+				if(_aptRwys[0]->lengthFt() >= 4000) {
 					_kln89->DrawText("JET 100L", 2, 0, 1);
 				} else {
 					_kln89->DrawText("100L", 2, 0, 1);
@@ -223,17 +225,17 @@ void KLN89AptPage::Update(double dt) {
 			string s;
 			if(i < _aptRwys.size()) {
 				// Rwy No.
-				string s = _aptRwys[i]._rwy_no;
+				string s = _aptRwys[i]->ident();
 				_kln89->DrawText(s, 2, 9, 3);
 				_kln89->DrawText("/", 2, 12, 3);
 				_kln89->DrawText(GetReverseRunwayNo(s), 2, 13, 3);
 				// Length
-				s = GPSitoa(int(float(_aptRwys[i]._length) * (_kln89->_altUnits == GPS_ALT_UNITS_FT ? 1.0 : SG_FEET_TO_METER) + 0.5));
+				s = GPSitoa(int(float(_aptRwys[i]->lengthFt()) * (_kln89->_altUnits == GPS_ALT_UNITS_FT ? 1.0 : SG_FEET_TO_METER) + 0.5));
 				_kln89->DrawText(s, 2, 5 - s.size(), 2);
 				_kln89->DrawText((_kln89->_altUnits == GPS_ALT_UNITS_FT ? "ft" : "m"), 2, 5, 2);
 				// Surface
 				// TODO - why not store these strings as an array?
-				switch(_aptRwys[i]._surface_code) {
+				switch(_aptRwys[i]->_surface_code) {
 				case 1:
 					// Asphalt - fall through
 				case 2:
@@ -271,17 +273,17 @@ void KLN89AptPage::Update(double dt) {
 			i++;
 			if(i < _aptRwys.size()) {
 				// Rwy No.
-				string s = _aptRwys[i]._rwy_no;
+				string s = _aptRwys[i]->ident();
 				_kln89->DrawText(s, 2, 9, 1);
 				_kln89->DrawText("/", 2, 12, 1);
 				_kln89->DrawText(GetReverseRunwayNo(s), 2, 13, 1);
 				// Length
-				s = GPSitoa(int(float(_aptRwys[i]._length) * (_kln89->_altUnits == GPS_ALT_UNITS_FT ? 1.0 : SG_FEET_TO_METER) + 0.5));
+				s = GPSitoa(int(float(_aptRwys[i]->lengthFt()) * (_kln89->_altUnits == GPS_ALT_UNITS_FT ? 1.0 : SG_FEET_TO_METER) + 0.5));
 				_kln89->DrawText(s, 2, 5 - s.size(), 0);
 				_kln89->DrawText((_kln89->_altUnits == GPS_ALT_UNITS_FT ? "ft" : "m"), 2, 5, 0);
 				// Surface
 				// TODO - why not store these strings as an array?
-				switch(_aptRwys[i]._surface_code) {
+				switch(_aptRwys[i]->_surface_code) {
 				case 1:
 					// Asphalt - fall through
 				case 2:
@@ -519,8 +521,8 @@ void KLN89AptPage::UpdateAirport(const string& id) {
   
   // build local array, longest runway first
   for (unsigned int r=0; r<apt->numRunways(); ++r) {
-    FGRunway rwy(apt->getRunwayByIndex(r));
-    if ((r > 0) && (rwy._length > _aptRwys.front()._length)) {
+    FGRunway* rwy(apt->getRunwayByIndex(r));
+    if ((r > 0) && (rwy->lengthFt() > _aptRwys.front()->lengthFt())) {
       _aptRwys.insert(_aptRwys.begin(), rwy);
     } else {
       _aptRwys.push_back(rwy);

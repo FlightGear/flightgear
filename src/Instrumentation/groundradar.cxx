@@ -112,14 +112,14 @@ void GroundRadar::createTexture(const char* texture_name)
     FGTextureManager::addTexture(texture_name, getTexture());
 }
 
-void GroundRadar::addRunwayVertices(const FGRunway& aRunway, double aTowerLat, double aTowerLon, double aScale, osg::Vec3Array* aVertices)
+void GroundRadar::addRunwayVertices(const FGRunway* aRunway, double aTowerLat, double aTowerLon, double aScale, osg::Vec3Array* aVertices)
 {
   double az1, az2, dist_m;
-  geo_inverse_wgs_84(aTowerLat, aTowerLon, aRunway._lat, aRunway._lon, &az1, &az2, &dist_m);
+  geo_inverse_wgs_84(aTowerLat, aTowerLon, aRunway->latitude(), aRunway->longitude(), &az1, &az2, &dist_m);
 
   osg::Vec3 center = fromPolar(az1, dist_m * aScale) + osg::Vec3(256, 256, 0);
-  osg::Vec3 leftcenter = fromPolar(aRunway._heading, aRunway._length * SG_FEET_TO_METER * aScale / 2) + center;
-  osg::Vec3 lefttop = fromPolar(aRunway._heading - 90, aRunway._width * SG_FEET_TO_METER * aScale / 2) + leftcenter;
+  osg::Vec3 leftcenter = fromPolar(aRunway->headingDeg(), aRunway->lengthM() * aScale / 2) + center;
+  osg::Vec3 lefttop = fromPolar(aRunway->headingDeg() - 90, aRunway->widthM() * aScale / 2) + leftcenter;
   osg::Vec3 leftbottom = leftcenter * 2 - lefttop;
   osg::Vec3 rightbottom = center * 2 - lefttop;
   osg::Vec3 righttop = center * 2 - leftbottom;
@@ -151,13 +151,15 @@ void GroundRadar::updateTexture()
 
     for (unsigned int i=0; i<apt->numRunways(); ++i)
     {
-      FGRunway runway(apt->getRunwayByIndex(i));
+      FGRunway* runway(apt->getRunwayByIndex(i));
+      if (runway->isReciprocal()) continue;
+      
       addRunwayVertices(runway, tower_lat, tower_lon, scale, rwy_vertices.get());
     }
     
     for (unsigned int i=0; i<apt->numTaxiways(); ++i)
     {
-      FGRunway runway(apt->getTaxiwayByIndex(i));
+      FGRunway* runway(apt->getTaxiwayByIndex(i));
       addRunwayVertices(runway, tower_lat, tower_lon, scale, taxi_vertices.get());
     }
     

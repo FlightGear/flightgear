@@ -47,6 +47,7 @@
 #include <Main/fg_props.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/dynamics.hxx>
+#include <Airports/runways.hxx>
 
 #include <string>
 
@@ -109,7 +110,7 @@ unsigned int FGAirport::numRunways() const
   return mRunways.size();
 }
 
-FGRunway FGAirport::getRunwayByIndex(unsigned int aIndex) const
+FGRunway* FGAirport::getRunwayByIndex(unsigned int aIndex) const
 {
   assert(aIndex >= 0 && aIndex < mRunways.size());
   return mRunways[aIndex];
@@ -117,48 +118,31 @@ FGRunway FGAirport::getRunwayByIndex(unsigned int aIndex) const
 
 bool FGAirport::hasRunwayWithIdent(const string& aIdent) const
 {
-  bool dummy;
-  return (getIteratorForRunwayIdent(aIdent, dummy) != mRunways.end());
+  return (getIteratorForRunwayIdent(aIdent) != mRunways.end());
 }
 
-FGRunway FGAirport::getRunwayByIdent(const string& aIdent) const
+FGRunway* FGAirport::getRunwayByIdent(const string& aIdent) const
 {
-  bool reversed;
-  FGRunwayVector::const_iterator it = getIteratorForRunwayIdent(aIdent, reversed);
+  Runway_iterator it = getIteratorForRunwayIdent(aIdent);
   if (it == mRunways.end()) {
     SG_LOG(SG_GENERAL, SG_ALERT, "no such runway '" << aIdent << "' at airport " << _id);
     throw sg_range_exception("unknown runway " + aIdent + " at airport:" + _id, "FGAirport::getRunwayByIdent");
   }
   
-  if (!reversed) {
-    return *it;
-  }
-
-  FGRunway result(*it);
-  result._heading += 180.0;
-  result._rwy_no = FGRunway::reverseIdent(it->_rwy_no);
-  return result;
+  return *it;
 }
 
-FGRunwayVector::const_iterator
-FGAirport::getIteratorForRunwayIdent(const string& aIdent, bool& aReversed) const
+FGAirport::Runway_iterator
+FGAirport::getIteratorForRunwayIdent(const string& aIdent) const
 {
   string ident(aIdent);
   if ((aIdent.size() == 1) || !isdigit(aIdent[1])) {
     ident = "0" + aIdent;
   }
 
-  string reversedRunway = FGRunway::reverseIdent(ident);
-  FGRunwayVector::const_iterator it = mRunways.begin();
-  
+  Runway_iterator it = mRunways.begin();
   for (; it != mRunways.end(); ++it) {
-    if (it->_rwy_no == ident) {
-      aReversed = false;
-      return it;
-    }
-    
-    if (it->_rwy_no == reversedRunway) {
-      aReversed = true;
+    if ((*it)->ident() == ident) {
       return it;
     }
   }
@@ -179,10 +163,10 @@ static double normaliseBearing(double aBearing)
   return aBearing;
 }
 
-FGRunway FGAirport::findBestRunwayForHeading(double aHeading) const
+FGRunway* FGAirport::findBestRunwayForHeading(double aHeading) const
 {
-  FGRunwayVector::const_iterator it = mRunways.begin();
-  FGRunway result;
+  Runway_iterator it = mRunways.begin();
+  FGRunway* result = NULL;
   double currentBestQuality = 0.0;
   
   SGPropertyNode *param = fgGetNode("/sim/airport/runways/search", true);
@@ -192,27 +176,15 @@ FGRunway FGAirport::findBestRunwayForHeading(double aHeading) const
   double deviationWeight = param->getDoubleValue("deviation-weight", 1);
     
   for (; it != mRunways.end(); ++it) {
-    double good = it->score(lengthWeight, widthWeight, surfaceWeight);
+    double good = (*it)->score(lengthWeight, widthWeight, surfaceWeight);
     
-    // first side
-    double dev = normaliseBearing(aHeading - it->_heading);
+    double dev = normaliseBearing(aHeading - (*it)->headingDeg());
     double bad = fabs(deviationWeight * dev) + 1e-20;
     double quality = good / bad;
     
     if (quality > currentBestQuality) {
       currentBestQuality = quality;
       result = *it;
-    }
-    
-    dev = normaliseBearing(aHeading - it->_heading - 180.0);
-    bad = fabs(deviationWeight * dev) + 1e-20;
-    quality = good / bad;
-    
-    if (quality > currentBestQuality) {
-      currentBestQuality = quality;
-      result = *it;
-      result._heading += 180.0;
-      result._rwy_no = FGRunway::reverseIdent(it->_rwy_no);
     }
   }
 
@@ -224,22 +196,24 @@ unsigned int FGAirport::numTaxiways() const
   return mTaxiways.size();
 }
 
-FGRunway FGAirport::getTaxiwayByIndex(unsigned int aIndex) const
+FGRunway* FGAirport::getTaxiwayByIndex(unsigned int aIndex) const
 {
   assert(aIndex >= 0 && aIndex < mTaxiways.size());
   return mTaxiways[aIndex];
 }
 
-void FGAirport::addRunway(const FGRunway& aRunway)
+void FGAirport::addRunway(FGRunway* aRunway)
 {
-  if (aRunway.isTaxiway()) {
+  aRunway->setAirport(this);
+  
+  if (aRunway->isTaxiway()) {
     mTaxiways.push_back(aRunway);
   } else {
     mRunways.push_back(aRunway);
   }
 }
 
-FGRunway FGAirport::getActiveRunwayForUsage() const
+FGRunway* FGAirport::getActiveRunwayForUsage() const
 {
   static FGEnvironmentMgr* envMgr = NULL;
   if (!envMgr) {

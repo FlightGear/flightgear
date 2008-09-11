@@ -47,6 +47,7 @@
 #include <GUI/new_gui.hxx>           // FGFontCache
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
+#include <Airports/runways.hxx>
 
 #include "hud.hxx"
 

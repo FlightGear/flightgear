@@ -141,11 +141,11 @@ void FGAIFlightPlan::createTaxi(bool firstFlight, int direction,
       rwy = apt->getRunwayByIdent(activeRunway);
       
       // Determine the beginning of he runway
-      heading = rwy._heading;
+      heading = rwy->headingDeg();
       double azimuth = heading + 180.0;
       while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
-      geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
-			  rwy._length * SG_FEET_TO_METER * 0.5 - 5.0,
+      geo_direct_wgs_84 ( 0, rwy->latitude(), rwy->longitude(), azimuth, 
+			  rwy->lengthM() * 0.5 - 5.0,
 			  &lat2, &lon2, &az2 );
 
       if (apt->getDynamics()->getGroundNetwork()->exists())
@@ -499,11 +499,11 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
       rwy = apt->getRunwayByIdent(activeRunway);
     }
   // Acceleration point, 105 meters into the runway,
-  heading = rwy._heading;
+  heading = rwy->headingDeg();
   double azimuth = heading + 180.0;
   while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
-  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
-		      rwy._length * SG_FEET_TO_METER * 0.5 - 105.0,
+  geo_direct_wgs_84 ( 0, rwy->latitude(), rwy->longitude(), azimuth, 
+		      rwy->lengthM() * 0.5 - 105.0,
 		      &lat2, &lon2, &az2 );
   wpt = new waypoint; 
   wpt->name      = "accel"; 
@@ -532,8 +532,8 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
   
   wpt = new waypoint;
   wpt->name      = "SOC";
-  wpt->latitude  = rwy._lat;
-  wpt->longitude = rwy._lon;
+  wpt->latitude  = rwy->latitude();
+  wpt->longitude = rwy->longitude();
   wpt->altitude  = apt->getElevation()+1000;
   wpt->speed     = speed; 
   wpt->crossat   = -10000;
@@ -545,8 +545,8 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
   waypoints.push_back(wpt);
 
 
- geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, heading, 
-  rwy._length * SG_FEET_TO_METER,
+ geo_direct_wgs_84 ( 0, rwy->latitude(), rwy->longitude(), heading, 
+  rwy->lengthM(),
   &lat2, &lon2, &az2 );
 
   wpt = new waypoint;
@@ -567,7 +567,7 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
   // Tower control until they have reached the 3000 ft climb point
 
 
- geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, heading, 
+ geo_direct_wgs_84 ( 0, rwy->latitude(), rwy->longitude(), heading, 
   5000,
   &lat2, &lon2, &az2 );
 
@@ -586,7 +586,7 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
   wpt->routeIndex = 0;
   waypoints.push_back(wpt);  
 
- //  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, heading, 
+ //  geo_direct_wgs_84 ( 0, rwy->latitude(), rwy->longitude(), heading, 
 //   100000,
 //   &lat2, &lon2, &az2 );
 //   wpt = new waypoint;
@@ -626,11 +626,11 @@ void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed,
     }
   
   
-  heading = rwy._heading;
+  heading = rwy->headingDeg();
   double azimuth = heading + 180.0;
   while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
   //cerr << "Creating climb at : " << rwy._id << " " << rwy._rwy_no << endl;
-  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, heading, 
+  geo_direct_wgs_84 ( 0, rwy->latitude(), rwy->longitude(), heading, 
 		      10*SG_NM_TO_METER,
 		      &lat2, &lon2, &az2 );
   wpt = new waypoint;
@@ -648,7 +648,7 @@ void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed,
   waypoints.push_back(wpt); 
   
 
-  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, heading, 
+  geo_direct_wgs_84 ( 0, rwy->latitude(), rwy->longitude(), heading, 
 		      20*SG_NM_TO_METER,
 		      &lat2, &lon2, &az2 );
   wpt = new waypoint;
@@ -709,12 +709,12 @@ void FGAIFlightPlan::createClimb(bool firstFlight, FGAirport *apt, double speed,
 // 	     " at airport     " << arr->getId());
 //       exit(1);
 //     }
-//   heading = rwy._heading;
+//   heading = rwy->headingDeg();
 //   azimuth = heading + 180.0;
 //   while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
   
   
-//   geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
+//   geo_direct_wgs_84 ( 0, rwy->latitude(), rwy->longitude(), azimuth, 
 // 		      110000,
 // 		      &lat2, &lon2, &az2 );
 //   wpt = new waypoint;
@@ -753,10 +753,10 @@ void FGAIFlightPlan::createDecent(FGAirport *apt, const string &fltType)
   apt->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway);
   rwy = apt->getRunwayByIdent(activeRunway);
      
-  heading = rwy._heading;
+  heading = rwy->headingDeg();
   azimuth = heading + 180.0;
   while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
-  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
+  geo_direct_wgs_84 ( 0, rwy->latitude(), rwy->longitude(), azimuth, 
 		      100000,
 		      &lat2, &lon2, &az2 );
   
@@ -775,7 +775,7 @@ void FGAIFlightPlan::createDecent(FGAirport *apt, const string &fltType)
   waypoints.push_back(wpt);  
   
   // Three thousand ft. Slowing down to 160 kts
-  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
+  geo_direct_wgs_84 ( 0, rwy->latitude(), rwy->longitude(), azimuth, 
 		      8*SG_NM_TO_METER,
 		      &lat2, &lon2, &az2 );
   wpt = new waypoint;
@@ -807,13 +807,13 @@ void FGAIFlightPlan::createLanding(FGAirport *apt)
   waypoint *wpt;
 
   
-  heading = rwy._heading;
+  heading = rwy->headingDeg();
   azimuth = heading + 180.0;
   while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
 
   //Runway Threshold
- geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
-		     rwy._length*0.45 * SG_FEET_TO_METER,
+ geo_direct_wgs_84 ( 0, rwy->latitude(), rwy->longitude(), azimuth, 
+		     rwy->lengthM() *0.45,
 		     &lat2, &lon2, &az2 );
   wpt = new waypoint;
   wpt->name      = "Threshold"; //wpt_node->getStringValue("name", "END");
@@ -830,13 +830,13 @@ void FGAIFlightPlan::createLanding(FGAirport *apt)
   waypoints.push_back(wpt); 
 
  //Full stop at the runway centerpoint
- geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
-		     rwy._length*0.45,
+ geo_direct_wgs_84 ( 0, rwy->latitude(), rwy->longitude(), azimuth, 
+		     rwy->lengthFt() *0.45,
 		      &lat2, &lon2, &az2 );
   wpt = new waypoint;
   wpt->name      = "Center"; //wpt_node->getStringValue("name", "END");
-  wpt->latitude  = rwy._lat;
-  wpt->longitude = rwy._lon;
+  wpt->latitude  = rwy->latitude();
+  wpt->longitude = rwy->longitude();
   wpt->altitude  = apt->getElevation();
   wpt->speed     = 30; 
   wpt->crossat   = -10000;
@@ -847,8 +847,8 @@ void FGAIFlightPlan::createLanding(FGAirport *apt)
   wpt->routeIndex = 0;
   waypoints.push_back(wpt);
 
- geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, heading, 
-		     rwy._length*0.45 * SG_FEET_TO_METER,
+ geo_direct_wgs_84 ( 0, rwy->latitude(), rwy->longitude(), heading, 
+		     rwy->lengthM() *0.45,
 		     &lat2, &lon2, &az2 );
   wpt = new waypoint;
   wpt->name      = "Threshold"; //wpt_node->getStringValue("name", "END");

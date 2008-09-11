@@ -764,20 +764,15 @@ static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
 
     const FGAirport* apt = fgFindAirportID(id);
     if (!apt) return false;
-    FGRunway r = apt->findBestRunwayForHeading(tgt_hdg);
-    fgSetString("/sim/atc/runway", r._rwy_no.c_str());
+    FGRunway* r = apt->findBestRunwayForHeading(tgt_hdg);
+    fgSetString("/sim/atc/runway", r->ident().c_str());
 
     double lat2, lon2, az2;
-    double heading = r._heading;
+    double heading = r->headingDeg();
     double azimuth = heading + 180.0;
     while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
 
-    SG_LOG( SG_GENERAL, SG_INFO,
-            "runway =  " << r._lon << ", " << r._lat
-            << " length = " << r._length * SG_FEET_TO_METER 
-            << " heading = " << azimuth );
-
-    geo_direct_wgs_84 ( 0, r._lat, r._lon, azimuth, r._length * SG_FEET_TO_METER * 0.5
+    geo_direct_wgs_84 ( 0, r->latitude(), r->longitude(), azimuth, r->lengthM() * 0.5
             - fgGetDouble("/sim/airport/runways/start-offset-m", 5.0),
             &lat2, &lon2, &az2 );
 
@@ -892,20 +887,15 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bo
       return false;
     }
     
-    FGRunway r(apt->getRunwayByIdent(rwy));
-    fgSetString("/sim/atc/runway", r._rwy_no.c_str());
+    FGRunway* r(apt->getRunwayByIdent(rwy));
+    fgSetString("/sim/atc/runway", r->ident().c_str());
 
     double lat2, lon2, az2;
-    double heading = r._heading;
+    double heading = r->headingDeg();
     double azimuth = heading + 180.0;
     while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
     
-    SG_LOG( SG_GENERAL, SG_INFO,
-            "runway =  " << r._lon << ", " << r._lat
-            << " length = " << r._length * SG_FEET_TO_METER 
-            << " heading = " << azimuth );
-    
-    geo_direct_wgs_84 ( 0, r._lat, r._lon, azimuth, r._length * SG_FEET_TO_METER * 0.5
+    geo_direct_wgs_84 ( 0, r->latitude(), r->longitude(), azimuth, r->lengthM() * 0.5
             - fgGetDouble("/sim/airport/runways/start-offset-m", 5.0),
             &lat2, &lon2, &az2 );
     

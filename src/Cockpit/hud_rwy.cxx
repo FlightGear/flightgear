@@ -82,7 +82,7 @@ runway_instr::runway_instr(const SGPropertyNode *node) :
 
 void runway_instr::draw()
 {
-    if (!is_broken() && get_active_runway(runway)) {
+    if (!is_broken() && (runway = get_active_runway())) {
         glPushAttrib(GL_LINE_STIPPLE | GL_LINE_STIPPLE_PATTERN | GL_LINE_WIDTH);
         float modelView[4][4], projMat[4][4];
         bool anyLines;
@@ -175,39 +175,38 @@ void runway_instr::draw()
 }
 
 
-bool runway_instr::get_active_runway(FGRunway& runway)
+FGRunway* runway_instr::get_active_runway()
 {
   const FGAirport* apt = fgFindAirportID(fgGetString("/sim/presets/airport-id"));
-  if (!apt) return false;
+  if (!apt) return NULL;
   
-  runway = apt->getActiveRunwayForUsage();
-  return (!runway._rwy_no.empty());
+  return apt->getActiveRunwayForUsage();
 }
 
 
 void runway_instr::get_rwy_points(sgdVec3 *points3d)
 {
     double alt = current_aircraft.fdm_state->get_Runway_altitude() * SG_FEET_TO_METER;
-    double length = (runway._length / 2.0) * SG_FEET_TO_METER;
-    double width = (runway._width / 2.0) * SG_FEET_TO_METER;
+    double length = runway->lengthM() * 0.5;
+    double width = runway->widthM() * 0.5;
     double frontLat, frontLon, backLat, backLon,az, tempLat, tempLon;
 
-    geo_direct_wgs_84(alt, runway._lat, runway._lon, runway._heading, length, &backLat, &backLon, &az);
+    geo_direct_wgs_84(alt, runway->_lat, runway->_lon, runway->_heading, length, &backLat, &backLon, &az);
     sgGeodToCart(backLat * SG_DEGREES_TO_RADIANS, backLon * SG_DEGREES_TO_RADIANS, alt, points3d[4]);
 
-    geo_direct_wgs_84(alt, runway._lat, runway._lon, runway._heading + 180, length, &frontLat, &frontLon, &az);
+    geo_direct_wgs_84(alt, runway->_lat, runway->_lon, runway->_heading + 180, length, &frontLat, &frontLon, &az);
     sgGeodToCart(frontLat * SG_DEGREES_TO_RADIANS, frontLon * SG_DEGREES_TO_RADIANS, alt, points3d[5]);
 
-    geo_direct_wgs_84(alt, backLat, backLon, runway._heading + 90, width, &tempLat, &tempLon, &az);
+    geo_direct_wgs_84(alt, backLat, backLon, runway->_heading + 90, width, &tempLat, &tempLon, &az);
     sgGeodToCart(tempLat * SG_DEGREES_TO_RADIANS, tempLon * SG_DEGREES_TO_RADIANS, alt, points3d[0]);
 
-    geo_direct_wgs_84(alt, backLat, backLon, runway._heading - 90, width, &tempLat, &tempLon, &az);
+    geo_direct_wgs_84(alt, backLat, backLon, runway->_heading - 90, width, &tempLat, &tempLon, &az);
     sgGeodToCart(tempLat * SG_DEGREES_TO_RADIANS, tempLon * SG_DEGREES_TO_RADIANS, alt, points3d[1]);
 
-    geo_direct_wgs_84(alt, frontLat, frontLon, runway._heading - 90, width, &tempLat, &tempLon, &az);
+    geo_direct_wgs_84(alt, frontLat, frontLon, runway->_heading - 90, width, &tempLat, &tempLon, &az);
     sgGeodToCart(tempLat * SG_DEGREES_TO_RADIANS, tempLon * SG_DEGREES_TO_RADIANS, alt, points3d[2]);
 
-    geo_direct_wgs_84(alt, frontLat, frontLon, runway._heading + 90, width, &tempLat, &tempLon, &az);
+    geo_direct_wgs_84(alt, frontLat, frontLon, runway->_heading + 90, width, &tempLat, &tempLon, &az);
     sgGeodToCart(tempLat * SG_DEGREES_TO_RADIANS, tempLon * SG_DEGREES_TO_RADIANS, alt, points3d[3]);
 }
 
@@ -387,8 +386,8 @@ void runway_instr::drawArrow()
     Point3D ac(0.0), rwy(0.0);
     ac.setlat(current_aircraft.fdm_state->get_Latitude_deg());
     ac.setlon(current_aircraft.fdm_state->get_Longitude_deg());
-    rwy.setlat(runway._lat);
-    rwy.setlon(runway._lon);
+    rwy.setlat(runway->_lat);
+    rwy.setlon(runway->_lon);
     float theta = GetHeadingFromTo(ac, rwy);
     theta -= fgGetDouble("/orientation/heading-deg");
     theta = -theta;
@@ -418,8 +417,8 @@ void runway_instr::setLineWidth()
 {
     //Calculate the distance from the runway, A
     double course, distance;
-    calc_gc_course_dist(Point3D(runway._lon * SGD_DEGREES_TO_RADIANS,
-            runway._lat * SGD_DEGREES_TO_RADIANS, 0.0),
+    calc_gc_course_dist(Point3D(runway->longitude() * SGD_DEGREES_TO_RADIANS,
+            runway->latitude() * SGD_DEGREES_TO_RADIANS, 0.0),
             Point3D(current_aircraft.fdm_state->get_Longitude(),
             current_aircraft.fdm_state->get_Latitude(), 0.0 ),
             &course, &distance);

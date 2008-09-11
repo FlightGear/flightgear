@@ -42,43 +42,55 @@ using std::istream;
 using std::multimap;
 using std::string;
 
-FGRunway::FGRunway()
+static FGPositioned::Type runwayTypeFromNumber(const std::string& aRwyNo)
 {
+  return (aRwyNo[0] == 'x') ? FGPositioned::TAXIWAY : FGPositioned::RUNWAY;
 }
 
-FGRunway::FGRunway(const string& rwy_no,
+static std::string cleanRunwayNo(const std::string& aRwyNo)
+{
+  if (aRwyNo[0] == 'x') {
+    return std::string(); // no ident for taxiways
+  }
+  
+  string result(aRwyNo);
+  // canonicalise runway ident
+  if ((aRwyNo.size() == 1) || !isdigit(aRwyNo[1])) {
+	  result = "0" + aRwyNo;
+  }
+
+  // trim off trailing garbage
+  if (result.size() > 2) {
+    char suffix = toupper(result[2]);
+    if (suffix == 'X') {
+       result = result.substr(0, 2);
+    }
+  }
+  
+  return result;
+}
+
+FGRunway::FGRunway(FGAirport* aAirport, const string& rwy_no,
                         const double longitude, const double latitude,
                         const double heading, const double length,
                         const double width,
-                        const double displ_thresh1, const double displ_thresh2,
-                        const double stopway1, const double stopway2,
-                        const int surface_code)
+                        const double displ_thresh,
+                        const double stopway,
+                        const int surface_code,
+                        bool reciprocal) :
+  FGPositioned(runwayTypeFromNumber(rwy_no), cleanRunwayNo(rwy_no), latitude, longitude, 0.0),
+  _airport(aAirport),
+  _reciprocal(reciprocal)
 {
-  _rwy_no = rwy_no;
-  if (rwy_no[0] == 'x') {
-    _type = "taxiway";
-  } else {
-    _type = "runway";
-    
-  // canonicalise runway ident
-    if ((rwy_no.size() == 1) || !isdigit(rwy_no[1])) {
-	  _rwy_no = "0" + rwy_no;
-    }
-
-    if ((_rwy_no.size() > 2) && (_rwy_no[2] == 'x')) {
-      _rwy_no = _rwy_no.substr(0, 2);
-    }
-  }
-
+  _rwy_no = ident();
+  
   _lon = longitude;
   _lat = latitude;
   _heading = heading;
   _length = length;
   _width = width;
-  _displ_thresh1 = displ_thresh1;
-  _displ_thresh2 = displ_thresh2;
-  _stopway1 = stopway1;
-  _stopway2 = stopway2;
+  _displ_thresh = displ_thresh;
+  _stopway = stopway;
 
   _surface_code = surface_code;
 }
@@ -101,22 +113,17 @@ string FGRunway::reverseIdent(const string& aRunwayIdent)
   
   sprintf(buf, "%02i", rn);
   if(ident.size() == 3) {
-    if(ident.substr(2,1) == "L") {
-        buf[2] = 'R';
-        buf[3] = '\0';
-    } else if (ident.substr(2,1) == "R") {
-        buf[2] = 'L';
-        buf[3] = '\0';
-    } else if (ident.substr(2,1) == "C") {
-        buf[2] = 'C';
-        buf[3] = '\0';
-    } else if (ident.substr(2,1) == "T") {
-        buf[2] = 'T';
-        buf[3] = '\0';
+    char suffix = toupper(ident[2]);
+    if(suffix == 'L') {
+      buf[2] = 'R';
+    } else if (suffix == 'R') {
+      buf[2] = 'L';
     } else {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Unknown runway code "
-        << aRunwayIdent << " passed to FGRunway::reverseIdent");
+      // something else, just copy
+      buf[2] = suffix;
     }
+    
+    buf[3] = 0;
   }
   
   return buf;
@@ -135,5 +142,32 @@ double FGRunway::score(double aLengthWt, double aWidthWt, double aSurfaceWt) con
 
 bool FGRunway::isTaxiway() const
 {
-  return (_rwy_no[0] == 'x');
+  return (type() == TAXIWAY);
+}
+
+SGGeod FGRunway::threshold() const
+{
+  return pointOnCenterline(0.0);
+}
+
+SGGeod FGRunway::reverseThreshold() const
+{
+  return pointOnCenterline(lengthM());
+}
+
+SGGeod FGRunway::displacedThreshold() const
+{
+  return pointOnCenterline(_displ_thresh * SG_FEET_TO_METER);
+}
+
+SGGeod FGRunway::pointOnCenterline(double aOffset) const
+{
+  SGGeod result;
+  double dummyAz2;
+  double halfLengthMetres = lengthM() * 0.5;
+  
+  SGGeodesy::direct(mPosition, _heading, 
+    aOffset - halfLengthMetres,
+    result, dummyAz2);
+  return result;
 }

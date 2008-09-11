@@ -4260,13 +4260,9 @@ bool
 MK_VIII::Mode6Handler::test_airport (const FGAirport *airport)
 {
   for (unsigned int r=0; r<airport->numRunways(); ++r) {
-    FGRunway rwy(airport->getRunwayByIndex(r));
+    FGRunway* rwy(airport->getRunwayByIndex(r));
     
-    if (test_runway(&rwy)) return true;
-    
-    // reciprocal runway
-    rwy._heading = get_reciprocal_heading(rwy._heading);
-    if (test_runway(&rwy)) return true;
+    if (test_runway(rwy)) return true;
   }
 
   return false;
@@ -4497,33 +4493,15 @@ void
 MK_VIII::TCFHandler::select_runway (const FGAirport *airport,
 				    FGRunway *_runway)
 {
-/*
-  FGRunway r;
-  bool status = globals->get_runways()->search(airport->getId(), &r);
-  assert(status);
-
-      }
-  while (globals->get_runways()->next(&r) && r._id == airport->getId());
-  */
-  
   double min_diff = 360;
   
   for (unsigned int r=0; r<airport->numRunways(); ++r) {
-    FGRunway rwy(airport->getRunwayByIndex(r));
-    double diff = get_azimuth_difference(&rwy);
+    FGRunway* rwy(airport->getRunwayByIndex(r));
+    double diff = get_azimuth_difference(rwy);
     if (diff < min_diff)
 	  {
       min_diff = diff;
-      *_runway = rwy;
-    }
-    
-    // reciprocal runway
-    rwy._heading = get_reciprocal_heading(rwy._heading);
-    diff = get_azimuth_difference(&rwy);
-    if (diff < min_diff)
-    {
-      min_diff = diff;
-      *_runway = rwy;
+      _runway = rwy;
     }
   } // of airport runways iteration
 }
@@ -4531,7 +4509,7 @@ MK_VIII::TCFHandler::select_runway (const FGAirport *airport,
 bool MK_VIII::TCFHandler::AirportFilter::pass(FGAirport *a)
 {
   for (unsigned int r=0; r<a->numRunways(); ++r) {
-    if (a->getRunwayByIndex(r)._length >= mk->conf.runway_database) {
+    if (a->getRunwayByIndex(r)->lengthFt() >= mk->conf.runway_database) {
       return true;
     }
   }
@@ -4561,15 +4539,15 @@ MK_VIII::TCFHandler::update_runway ()
   
 	  has_runway = true;
 
-	  FGRunway _runway;
-	  select_runway(airport, &_runway);
+	  FGRunway* _runway;
+	  select_runway(airport, _runway);
 
-	  runway.center.latitude = _runway._lat;
-	  runway.center.longitude = _runway._lon;
+	  runway.center.latitude = _runway->latitude();
+	  runway.center.longitude = _runway->longitude();
 
 	  runway.elevation = airport->getElevation();
 
-	  double half_length_m = _runway._length / 2 * SG_FEET_TO_METER;
+	  double half_length_m = _runway->lengthM() * 0.5;
 	  runway.half_length = half_length_m * SG_METER_TO_NM;
 
 	  //        b3 ________________ b0
@@ -4579,8 +4557,8 @@ MK_VIII::TCFHandler::update_runway ()
 	  //        b2                  b1
 
 	  // get heading to runway threshold (h0) and end (h1)
-	  runway.edges[0].heading = _runway._heading;
-	  runway.edges[1].heading = get_reciprocal_heading(_runway._heading);
+	  runway.edges[0].heading = _runway->headingDeg();
+	  runway.edges[1].heading = get_reciprocal_heading(_runway->headingDeg());
 
 	  double az;
 
@@ -4604,7 +4582,7 @@ MK_VIII::TCFHandler::update_runway ()
 			    &runway.edges[1].position.longitude,
 			    &az);
 
-	  double half_width_m = _runway._width / 2 * SG_FEET_TO_METER;
+	  double half_width_m = _runway->widthM() * 0.5;
 
 	  // get position of threshold bias area edges (b0 and b1)
 	  get_bias_area_edges(&runway.edges[0].position,

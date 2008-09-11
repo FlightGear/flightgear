@@ -271,7 +271,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
     //  {
     //    cerr << "Creating cruise to EHAM " << latitude << " " << longitude << endl;
     //  }
-    heading = rwy._heading;
+    heading = rwy->headingDeg();
     azimuth = heading + 180.0;
     while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
 
@@ -337,12 +337,12 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
   arr->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway);
   rwy = arr->getRunwayByIdent(activeRunway);
   
-  heading = rwy._heading;
+  heading = rwy->headingDeg();
   azimuth = heading + 180.0;
   while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
   
   
-  geo_direct_wgs_84 ( 0, rwy._lat, rwy._lon, azimuth, 
+  geo_direct_wgs_84 ( 0, rwy->latitude(), rwy->longitude(), azimuth, 
 		      110000,
 		      &lat2, &lon2, &az2 );
   wpt = new waypoint;

@@ -212,7 +212,7 @@ void FGATIS::UpdateTransmission() {
 	
   const FGAirport* apt = fgFindAirportID(ident);
   assert(apt);
-	string rwy_no = apt->getActiveRunwayForUsage()._rwy_no;
+	string rwy_no = apt->getActiveRunwayForUsage()->ident();
   if(rwy_no != "NN") {
 		transmission += " / Landing_and_departing_runway ";
 		transmission += ConvertRwyNumToSpokenString(atoi(rwy_no.c_str()));

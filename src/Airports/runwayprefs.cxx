@@ -202,7 +202,7 @@ void RunwayGroup::setActive(const FGAirport* airport,
 			    stringVec *currentlyActive)
 {
 
-  FGRunway rwy;
+  FGRunway* rwy;
   int activeRwys = rwyList.size(); // get the number of runways active
   int nrOfPreferences;
   // bool found = true;
@@ -238,7 +238,7 @@ void RunwayGroup::setActive(const FGAirport* airport,
 	     rwy = airport->getRunwayByIdent(rwyList[j].getRwyList(i));
        
 	    		  //cerr << "Succes" << endl;
-		  hdgDiff = fabs(windHeading - rwy._heading);
+		  hdgDiff = fabs(windHeading - rwy->headingDeg());
 		  //cerr << "Wind Heading: " << windHeading << "Runway Heading: " <<rwy._heading << endl;
 		  //cerr << "Wind Speed  : " << windSpeed << endl;
 		  if (hdgDiff > 180)
@@ -307,7 +307,7 @@ void RunwayGroup::setActive(const FGAirport* airport,
         rwy = airport->getRunwayByIdent(name);
         
 		  //cerr << "Succes" << endl;
-		  hdgDiff = fabs(windHeading - rwy._heading);
+		  hdgDiff = fabs(windHeading - rwy->headingDeg());
 		  if (hdgDiff > 180)
 		    hdgDiff = 360 - hdgDiff;
 		  hdgDiff *= ((2*M_PI)/360.0); // convert to radians

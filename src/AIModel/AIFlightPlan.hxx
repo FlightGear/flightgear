@@ -24,7 +24,6 @@
 #include <string>
 
 #include <Airports/simple.hxx>
-#include <Airports/runways.hxx>
 #include <Navaids/awynet.hxx>
 
 #include "AIBase.hxx"
@@ -33,6 +32,7 @@ using std::vector;
 using std::string;
 
 class FGTaxiRoute;
+class FGRunway;
 
 class FGAIFlightPlan {
 
@@ -93,7 +93,8 @@ public:
   void setTime(time_t st) { start_time = st; }
   int getGate() const { return gateId; }
   double getLeadInAngle() const { return leadInAngle; }
-  const string& getRunway() const { return rwy._rwy_no; }
+  const string& getRunway() const;
+  
   void setRepeat(bool r) { repeat = r; }
   bool getRepeat(void) const { return repeat; }
   void restart(void);
@@ -105,7 +106,7 @@ public:
   bool isActive(time_t time) {return time >= this->getStartTime();}
 
 private:
-  FGRunway rwy;
+  FGRunway* rwy;
   typedef vector <waypoint*> wpt_vector_type;
   typedef wpt_vector_type::const_iterator wpt_vector_iterator;
 

@@ -214,7 +214,7 @@ bool fgNavDBInit( FGAirportList *airports,
 static void update_loc_position( FGNavRecord *loc, FGRunway *rwy,
                                  double threshold )
 {
-    double hdg = rwy->_heading;
+    double hdg = rwy->headingDeg();
     hdg += 180.0;
     if ( hdg > 360.0 ) {
         hdg -= 360.0;
@@ -222,8 +222,8 @@ static void update_loc_position( FGNavRecord *loc, FGRunway *rwy,
 
     // calculate runway threshold point
     double thresh_lat, thresh_lon, return_az;
-    geo_direct_wgs_84 ( 0.0, rwy->_lat, rwy->_lon, hdg,
-                        rwy->_length/2.0 * SG_FEET_TO_METER,
+    geo_direct_wgs_84 ( 0.0, rwy->latitude(), rwy->longitude(), hdg,
+                        rwy->lengthM() * 0.5,
                         &thresh_lat, &thresh_lon, &return_az );
     // cout << "Threshold = " << thresh_lat << "," << thresh_lon << endl;
 
@@ -249,7 +249,7 @@ static void update_loc_position( FGNavRecord *loc, FGRunway *rwy,
     // cout << "orig heading = " << loc->get_multiuse() << endl;
     // cout << "new heading = " << rwy->_heading << endl;
 
-    double hdg_diff = loc->get_multiuse() - rwy->_heading;
+    double hdg_diff = loc->get_multiuse() - rwy->headingDeg();
 
     // clamp to [-180.0 ... 180.0]
     if ( hdg_diff < -180.0 ) {
@@ -261,7 +261,7 @@ static void update_loc_position( FGNavRecord *loc, FGRunway *rwy,
     if ( fabs(hdg_diff) <= threshold ) {
         loc->set_lat( nloc_lat );
         loc->set_lon( nloc_lon );
-        loc->set_multiuse( rwy->_heading );
+        loc->set_multiuse( rwy->headingDeg() );
     }
 }
 
@@ -290,8 +290,8 @@ void fgNavDBAlignLOCwithRunway( FGAirportList *airports, FGNavList *loclist,
           FGAirport* airport = airports->search(parts[0]);
           if (!airport) continue; // not found
             
-          FGRunway r = airport->getRunwayByIdent(parts[1]);
-          update_loc_position( (*loc), &r, threshold );
+          FGRunway* r = airport->getRunwayByIdent(parts[1]);
+          update_loc_position( (*loc), r, threshold );
           ++loc;
         }
         ++freq;

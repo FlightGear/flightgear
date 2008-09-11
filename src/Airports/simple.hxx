@@ -27,8 +27,6 @@
 #ifndef _FG_SIMPLE_HXX
 #define _FG_SIMPLE_HXX
 
-#include <simgear/math/point3d.hxx>
-
 #include <simgear/compiler.h>
 
 #include <string>
@@ -36,10 +34,15 @@
 #include <set>
 #include <vector>
 
-#include "Airports/runways.hxx"
+#include <simgear/math/point3d.hxx>
+
+#include "Navaids/positioned.hxx"
 
 // forward decls
 class FGAirportDynamics;
+class FGRunway;
+
+typedef SGSharedPtr<FGRunway> FGRunwayPtr;
 
 /***************************************************************************************
  *
@@ -81,32 +84,34 @@ public:
     void setId(const std::string& id) { _id = id; }
     void setMetar(bool value) { _has_metar = value; }
 
-    FGRunway getActiveRunwayForUsage() const;
+    FGRunway* getActiveRunwayForUsage() const;
 
     FGAirportDynamics *getDynamics();
     
     unsigned int numRunways() const;
-    FGRunway getRunwayByIndex(unsigned int aIndex) const;
+    FGRunway* getRunwayByIndex(unsigned int aIndex) const;
 
     bool hasRunwayWithIdent(const std::string& aIdent) const;
-    FGRunway getRunwayByIdent(const std::string& aIdent) const;
-    FGRunway findBestRunwayForHeading(double aHeading) const;
+    FGRunway* getRunwayByIdent(const std::string& aIdent) const;
+    FGRunway* findBestRunwayForHeading(double aHeading) const;
     
     unsigned int numTaxiways() const;
-    FGRunway getTaxiwayByIndex(unsigned int aIndex) const;
+    FGRunway* getTaxiwayByIndex(unsigned int aIndex) const;
     
-    void addRunway(const FGRunway& aRunway);
+    void addRunway(FGRunway* aRunway);
 private:
+    typedef std::vector<FGRunwayPtr>::const_iterator Runway_iterator;
+    
     /**
      * Helper to locate a runway by ident
      */
-    FGRunwayVector::const_iterator getIteratorForRunwayIdent(const std::string& aIdent, bool& aReversed) const;
+    Runway_iterator getIteratorForRunwayIdent(const std::string& aIdent) const;
 
     FGAirport operator=(FGAirport &other);
     FGAirport(const FGAirport&);
     
-    std::vector<FGRunway> mRunways;
-    std::vector<FGRunway> mTaxiways;
+    std::vector<FGRunwayPtr> mRunways;
+    std::vector<FGRunwayPtr> mTaxiways;
 };
 
 

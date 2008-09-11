@@ -577,7 +577,7 @@ private:
     bool boundOutsidePoints(sgdVec3& v, sgdVec3& m);
     bool drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& p1, const sgdVec3& p2);
     void drawArrow();
-    bool get_active_runway(FGRunway& rwy);
+    FGRunway* get_active_runway();
     void get_rwy_points(sgdVec3 *points);
     void setLineWidth();
 
@@ -592,7 +592,7 @@ private:
     double _default_pitch;
     double _default_heading;
     GLint  _view[4];
-    FGRunway _runway;
+    FGRunway* _runway;
     FGViewer* _cockpit_view;
     unsigned short _stipple_out;    // stipple pattern of the outline of the runway
     unsigned short _stipple_center; // stipple pattern of the center line of the runway

@@ -485,8 +485,8 @@ void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, s
 
 string FGAirportDynamics::chooseRunwayFallback()
 {   
-  FGRunway rwy = _ap->getActiveRunwayForUsage();
-  return rwy._rwy_no;
+  FGRunway* rwy = _ap->getActiveRunwayForUsage();
+  return rwy->ident();
 }
 
 void FGAirportDynamics::addParking(FGParking& park) {

@@ -26,52 +26,121 @@
 
 #include <simgear/compiler.h>
 
-#include <string>
-#include <vector>
+#include <simgear/math/sg_geodesy.hxx>
 
-class FGRunway
-{
+#include "Navaids/positioned.hxx"
+
+#include <string>
+
+// forward decls
+class FGAirport;
+
+class FGRunway : public FGPositioned
+{  
+  FGAirport* _airport; ///< owning airport
+  bool _reciprocal;
 public:
-  FGRunway();
   
-  FGRunway(const std::string& rwy_no,
+  FGRunway(FGAirport* aAirport, const std::string& rwy_no,
             const double longitude, const double latitude,
             const double heading, const double length,
             const double width,
-            const double displ_thresh1, const double displ_thresh2,
-            const double stopway1, const double stopway2,
-            const int surface_code);
+            const double displ_thresh,
+            const double stopway,
+            const int surface_code,
+            const bool reciprocal);
   
   /**
    * given a runway identifier (06, 18L, 31R) compute the identifier for the
-   * opposite heading runway (24, 36R, 13L) string.
+   * reciprocal heading runway (24, 36R, 13L) string.
    */
   static std::string reverseIdent(const std::string& aRunayIdent);
-  
+    
   /**
    * score this runway according to the specified weights. Used by
    * FGAirport::findBestRunwayForHeading
    */
   double score(double aLengthWt, double aWidthWt, double aSurfaceWt) const;
 
+  /**
+   * Test if this runway is the reciprocal. This allows users who iterate
+   * over runways to avoid counting runways twice, if desired.
+   */
+  bool isReciprocal() const
+  { return _reciprocal; }
+
+  /**
+   * Test if this is a taxiway or not
+   */
   bool isTaxiway() const;
   
+  /**
+   * Get the runway threshold point - this is syntatic sugar, equivalent to
+   * calling pointOnCenterline(0.0);
+   */
+  SGGeod threshold() const;
+  
+  /**
+   * Get the (possibly displaced) threshold point.
+   */
+  SGGeod displacedThreshold() const;
+  
+  /**
+   * Get the opposite threshold - this is equivalent to calling
+   * pointOnCenterline(lengthFt());
+   */
+  SGGeod reverseThreshold() const;
+  
+  /**
+   * Retrieve a position on the extended runway centerline. Positive values
+   * are in the direction of the runway heading, negative values are in the
+   * opposited direction. 0.0 corresponds to the (non-displaced) threshold
+   */
+  SGGeod pointOnCenterline(double aOffset) const;
+  
+  /**
+   * Runway length in ft
+   */
+  double lengthFt() const
+  { return _length; }
+  
+  double lengthM() const
+  { return _length * SG_FEET_TO_METER; }
+  
+  double widthFt() const
+  { return _width; }
+  
+  double widthM() const
+  { return _width * SG_FEET_TO_METER; }
+  
+  /**
+   * Runway heading in degrees.
+   */
+  double headingDeg() const
+  { return _heading; }
+  
+  /**
+   * Airport this runway is located at
+   */
+  FGAirport* airport() const
+  { return _airport; }
+  
+  // FIXME - should die once airport / runway creation is cleaned up
+  void setAirport(FGAirport* aAirport)
+  { _airport = aAirport; }
+  
     std::string _rwy_no;
-    std::string _type;                // runway / taxiway
 
     double _lon;
     double _lat;
+    double _displ_thresh;
+    double _stopway;
+
     double _heading;
     double _length;
     double _width;
-    double _displ_thresh1;
-    double _displ_thresh2;
-    double _stopway1;
-    double _stopway2;
-
+    
     int _surface_code;
 };
-
-typedef std::vector<FGRunway> FGRunwayVector;
 
 #endif // _FG_RUNWAYS_HXX

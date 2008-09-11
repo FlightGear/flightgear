@@ -563,13 +563,13 @@ void FGApproach::get_active_runway() {
 
   const FGAirport* apt = fgFindAirportID(ident);
   assert(apt);
-  FGRunway runway = apt->getActiveRunwayForUsage();
+  FGRunway* runway = apt->getActiveRunwayForUsage();
 
-  active_runway = runway._rwy_no;
-  active_rw_hdg = runway._heading;
-  active_rw_lon = runway._lon;
-  active_rw_lat = runway._lat;
-  active_rw_len = runway._length;
+  active_runway = runway->ident();
+  active_rw_hdg = runway->headingDeg();
+  active_rw_lon = runway->longitude();
+  active_rw_lat = runway->latitude();
+  active_rw_len = runway->lengthFt();
 }
 
 // ========================================================================

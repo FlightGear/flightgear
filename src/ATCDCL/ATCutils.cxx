@@ -293,10 +293,10 @@ double GetAngleDiff_deg( const double &a1, const double &a2) {
 
 // Runway stuff
 // Given a Point3D (lon/lat/elev) and an FGRunway struct, determine if the point lies on the runway
-bool OnRunway(const Point3D& pt, const FGRunway& rwy) {
+bool OnRunway(const Point3D& pt, const FGRunway* rwy) {
 	FGATCAlignedProjection ortho;
-	Point3D centre(rwy._lon, rwy._lat, 0.0);	// We don't need the elev
-	ortho.Init(centre, rwy._heading);
+	Point3D centre(rwy->longitude(), rwy->latitude(), 0.0);	// We don't need the elev
+	ortho.Init(centre, rwy->headingDeg());
 	
 	Point3D xyc = ortho.ConvertToLocal(centre);
 	Point3D xyp = ortho.ConvertToLocal(pt);
@@ -304,8 +304,8 @@ bool OnRunway(const Point3D& pt, const FGRunway& rwy) {
 	//cout << "Length offset = " << fabs(xyp.y() - xyc.y()) << '\n';
 	//cout << "Width offset = " << fabs(xyp.x() - xyc.x()) << '\n';
 	
-	if((fabs(xyp.y() - xyc.y()) < ((rwy._length/2.0) + 5.0)) 
-		&& (fabs(xyp.x() - xyc.x()) < (rwy._width/2.0))) {
+	if((fabs(xyp.y() - xyc.y()) < ((rwy->lengthFt()/2.0) + 5.0)) 
+		&& (fabs(xyp.x() - xyc.x()) < (rwy->widthFt()/2.0))) {
 		return(true);
 	}
 	

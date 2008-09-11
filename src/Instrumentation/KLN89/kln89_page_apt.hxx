@@ -26,7 +26,7 @@
 
 #include "kln89.hxx"
 
-#include <Airports/runways.hxx>
+class FGRunway;
 
 struct AptFreq {
 	string service;
@@ -60,7 +60,7 @@ private:
 	string _save_apt_id;
 	const FGAirport* ap;
 	
-	vector<FGRunway> _aptRwys;
+	vector<FGRunway*> _aptRwys;
 	vector<AptFreq> _aptFreqs;
 	
 	iap_list_type _iaps;
