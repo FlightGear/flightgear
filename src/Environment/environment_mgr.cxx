@@ -24,9 +24,11 @@
 #  include <config.h>
 #endif
 
+#include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/sky/sky.hxx>
 #include <simgear/environment/visual_enviro.hxx>
+#include <simgear/scene/model/particles.hxx>
 
 #include <Main/main.hxx>
 #include <Main/fg_props.hxx>
@@ -264,6 +266,10 @@ FGEnvironmentMgr::update (double dt)
 				   _environment->get_wind_from_east_fps(),
 				   _environment->get_wind_from_down_fps());
   _environment->set_elevation_ft(fgGetDouble("/position/altitude-ft"));
+  osg::Vec3 windVec(-_environment->get_wind_from_north_fps(),
+                    -_environment->get_wind_from_east_fps(),
+                    _environment->get_wind_from_down_fps());
+  simgear::Particles::setWindVector(windVec * SG_FEET_TO_METER);
 
   _update_fdm();
 }
