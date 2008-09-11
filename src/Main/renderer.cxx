@@ -42,19 +42,13 @@
 #include <osg/Notify>
 #include <osg/PolygonMode>
 #include <osg/PolygonOffset>
-#include <osg/ShadeModel>
 #include <osg/Version>
 #include <osg/TexEnv>
 
-#include <osgUtil/SceneView>
-#include <osgUtil/UpdateVisitor>
-#include <osgUtil/IntersectVisitor>
 #include <osgUtil/LineSegmentIntersector>
 
 #include <osg/io_utils>
 #include <osgDB/WriteFile>
-#include <osgDB/ReadFile>
-#include <sstream>
 
 #include <simgear/math/SGMath.hxx>
 #include <simgear/screen/extensions.hxx>
@@ -105,6 +99,8 @@
 #define UPDATE_VISITOR_IN_VIEWER 1
 #endif
 
+using namespace osg;
+using namespace simgear;
 using namespace flightgear;
 
 class FGHintUpdateCallback : public osg::StateAttribute::Callback {
@@ -472,7 +468,6 @@ FGRenderer::init( void )
     //sceneGroup->addChild(thesky->getCloudRoot());
 
     stateSet = sceneGroup->getOrCreateStateSet();
-    stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
 
     // need to update the light on every frame
@@ -487,8 +482,6 @@ FGRenderer::init( void )
     mRoot->addChild(lightSource);
 
     stateSet = globals->get_scenery()->get_scene_graph()->getOrCreateStateSet();
-    stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
-    stateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::ON);
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::ON);
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
 
@@ -581,14 +574,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
         // update view port
         resize( fgGetInt("/sim/startup/xsize"),
                 fgGetInt("/sim/startup/ysize") );
-#if 0
-        SGVec3d position = current__view->getViewPosition();
-        SGQuatd attitude = current__view->getViewOrientation();
-
-        FGManipulator *manipulator = globals->get_renderer()->getManipulator();
-        manipulator->setPosition(position.osg());
-        manipulator->setAttitude(attitude.osg());
-#endif
     }
     osg::Camera *camera = viewer->getCamera();
 
@@ -712,25 +697,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
     }
 
 //     sgEnviro.setLight(l->adj_fog_color());
-#if 0
-    double agl = current__view->getAltitudeASL_ft()*SG_FEET_TO_METER
-      - current__view->getSGLocation()->get_cur_elev_m();
-
-    float scene_nearplane, scene_farplane;
-    // XXX Given that the own airplane model is part of the scene
-    // graph, should this business be ripped out? The near plane is
-    // ignored by setCameraParameters.
-    if ( agl > 10.0 ) {
-        scene_nearplane = 10.0f;
-        scene_farplane = 120000.0f;
-    } else {
-        scene_nearplane = groundlevel_nearplane->getDoubleValue();
-        scene_farplane = 120000.0f;
-    }
-    setCameraParameters(current__view->get_v_fov(),
-                        current__view->get_aspect_ratio(),
-                        scene_nearplane, scene_farplane);
-#endif
 //     sgEnviro.startOfFrame(current__view->get_view_pos(), 
 //         current__view->get_world_up(),
 //         current__view->getLongitude_deg(),
