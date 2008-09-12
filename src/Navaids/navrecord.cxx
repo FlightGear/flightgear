@@ -25,111 +25,183 @@
 #endif
 
 #include <istream>
+
 #include <simgear/misc/sgstream.hxx>
+#include <simgear/structure/exception.hxx>
+#include <simgear/misc/strutils.hxx>
+#include <simgear/debug/logstream.hxx>
+
 #include "Navaids/navrecord.hxx"
+#include "Airports/simple.hxx"
+#include "Airports/runways.hxx"
+#include "Main/fg_props.hxx"
 
-FGNavRecord::FGNavRecord(void) :
-    type(0),
-    pos(SGGeod::fromDeg(0, 0)),
-    cart(0, 0, 0),
-    freq(0),
-    range(0),
-    multiuse(0.0),
-    ident(""),
-    name(""),
-    apt_id(""),
-    serviceable(true),
-    trans_ident("")
-{
-}
-
-FGNavRecord::FGNavRecord(int aTy, const std::string& aIdent, 
-  const std::string& aName, const std::string& aAirport,
-  double lat, double lon, int aFreq, int aRange, double aMultiuse) :
-  type(aTy),
+FGNavRecord::FGNavRecord(Type aTy, const std::string& aIdent, 
+  const std::string& aName,
+  double lat, double lon, double aElevFt,
+  int aFreq, int aRange, double aMultiuse) :
+  FGPositioned(aTy, aIdent, lat, lon, aElevFt),
   freq(aFreq),
   range(aRange),
   multiuse(aMultiuse),
-  ident(aIdent),
   name(aName),
-  apt_id(aAirport),
   serviceable(true),
   trans_ident(aIdent)
-{
-  pos = SGGeod::fromDeg(lon, lat);
-  cart = SGVec3d::fromGeod(pos);
-}
+{ 
+  initAirportRelation();
 
-fg_nav_types FGNavRecord::get_fg_type() const {
-    switch(type) {
-    case 2: return(FG_NAV_NDB);
-    case 3: return(FG_NAV_VOR);
-    case 4: return(FG_NAV_ILS);
-    default: return(FG_NAV_ANY);
-    }
-}
-
-
-std::istream& operator>>( std::istream& in, FGNavRecord& n )
-{
-    in >> n.type;
+  // Ranges are included with the latest data format, no need to
+  // assign our own defaults, unless the range is not set for some
+  // reason.
+  if (range < 0.1) {
+    SG_LOG(SG_GENERAL, SG_WARN, "navaid " << ident() << " has no range set, using defaults");
+    switch (type()) {
+    case NDB:
+    case VOR:
+      range = FG_NAV_DEFAULT_RANGE;
+      break;
     
-    if ( n.type == 99 ) {
-        return in >> skipeol;
-    }
-
-    double lat, lon, elev_ft;
-    in >> lat >> lon >> elev_ft >> n.freq >> n.range >> n.multiuse
-       >> n.ident;
-    n.pos.setLatitudeDeg(lat);
-    n.pos.setLongitudeDeg(lon);
-    n.pos.setElevationFt(elev_ft);
-    getline( in, n.name );
-
-    // silently multiply adf frequencies by 100 so that adf
-    // vs. nav/loc frequency lookups can use the same code.
-    if ( n.type == 2 ) {
-        n.freq *= 100;
-    }
-
-    // Remove any leading spaces before the name
-    while ( n.name.substr(0,1) == " " ) {
-        n.name = n.name.erase(0,1);
-    }
-
-    if ( n.type >= 4 && n.type <= 9 ) {
-        // these types are always associated with an airport id
-        std::string::size_type pos = n.name.find(" ");
-        n.apt_id = n.name.substr(0, pos);
-    }
-
-    // Ranges are included with the latest data format, no need to
-    // assign our own defaults, unless the range is not set for some
-    // reason.
-
-    if ( n.range < 0.1 ) {
-        // assign default ranges
+    case LOC:
+    case ILS:
+    case GS:
+      range = FG_LOC_DEFAULT_RANGE;
+      break;
+      
+    case DME:
+      range = FG_DME_DEFAULT_RANGE;
+      break;
     
-        if ( n.type == 2 || n.type == 3 ) {
-            n.range = FG_NAV_DEFAULT_RANGE;
-        } else if ( n.type == 4 || n.type == 5 || n.type == 6 ) {
-            n.range = FG_LOC_DEFAULT_RANGE;
-        } else if ( n.type == 12 ) {
-            n.range = FG_DME_DEFAULT_RANGE;
-        } else {
-            n.range = FG_LOC_DEFAULT_RANGE;
-        }
+    default:
+      range = FG_LOC_DEFAULT_RANGE;
     }
-
-    // transmitted ident (same as ident unless modeling a fault)
-    n.trans_ident = n.ident;
-
-    // generate cartesian coordinates
-    n.cart = SGVec3d::fromGeod(n.pos);
-
-    return in;
+  }
+  
 }
 
+SGVec3d FGNavRecord::get_cart() const
+{
+  return SGVec3d::fromGeod(geod());
+}
+
+
+static FGPositioned::Type
+mapRobinTypeToFGPType(int aTy)
+{
+  switch (aTy) {
+ // case 1:
+  case 2: return FGPositioned::NDB;
+  case 3: return FGPositioned::VOR;
+  case 4: return FGPositioned::LOC;
+  case 5: return FGPositioned::ILS;
+  case 6: return FGPositioned::GS;
+  case 7: return FGPositioned::OM;
+  case 8: return FGPositioned::MM;
+  case 9: return FGPositioned::IM;
+  case 12:
+  case 13: return FGPositioned::DME;
+  case 99: return FGPositioned::INVALID; // end-of-file code
+  default:
+    throw sg_range_exception("Got a nav.dat type we don't recgonize", "FGNavRecord::createFromStream");
+  }
+}
+
+FGNavRecord* FGNavRecord::createFromStream(std::istream& aStream)
+{
+  int rawType;
+  aStream >> rawType;
+  if (aStream.eof()) {
+    return NULL; // happens with, eg, carrier_nav.dat
+  }
+  
+  Type type = mapRobinTypeToFGPType(rawType);
+  if (type == INVALID) return NULL;
+  
+  double lat, lon, elev_ft, multiuse;
+  int freq, range;
+  std::string apt_id, name, ident;
+  aStream >> lat >> lon >> elev_ft >> freq >> range >> multiuse >> ident;
+  getline(aStream, name);
+  
+  // silently multiply adf frequencies by 100 so that adf
+  // vs. nav/loc frequency lookups can use the same code.
+  if (type == NDB) {
+    freq *= 100;
+  }
+  
+  FGNavRecord* result = new FGNavRecord(type, ident,
+    simgear::strutils::strip(name), 
+    lat, lon, elev_ft, freq, range, multiuse);
+    
+  return result;
+}
+
+void FGNavRecord::initAirportRelation()
+{
+  if (type() < ILS || type() > IM) {
+    return; // not airport-located
+  }
+  
+  vector<string> parts = simgear::strutils::split(name);
+  apt_id = parts[0];
+  const FGAirport* apt = fgFindAirportID(apt_id);
+  
+  if (!apt) {
+    SG_LOG(SG_GENERAL, SG_WARN, "navaid " << ident() << " associated with bogus airport ID:" << apt_id);
+    return;
+  }
+  
+  // fudge elevation to the field elevation if it's not specified
+  if (fabs(elevation()) < 0.01) {
+    mPosition.setElevationFt(apt->getElevation());
+  }
+  
+  // align localizers with their runway
+  if ((type() == ILS) || (type() == LOC)) {
+    if (!fgGetBool("/sim/navdb/localizers/auto-align", true)) {
+      return;
+    }
+    
+    if (parts.size() < 2) {
+      SG_LOG(SG_GENERAL, SG_ALERT, "can't parse navaid " << ident() 
+              << " name for airport/runway:" << name);
+      return;
+    }
+    
+     double threshold
+            = fgGetDouble( "/sim/navdb/localizers/auto-align-threshold-deg",
+                           5.0 );
+    FGRunway* runway = apt->getRunwayByIdent(parts[1]);
+    alignLocaliserWithRunway(runway, threshold);
+  }
+}
+
+void FGNavRecord::alignLocaliserWithRunway(FGRunway* aRunway, double aThreshold)
+{
+// find the distance from the threshold to the localizer
+  SGGeod runwayThreshold(aRunway->threshold());
+  double dist, az1, az2;
+  SGGeodesy::inverse(mPosition, runwayThreshold, az1, az2, dist);
+
+// back project that distance along the runway center line
+  SGGeod newPos = aRunway->pointOnCenterline(dist);
+
+  double hdg_diff = get_multiuse() - aRunway->headingDeg();
+
+  // clamp to [-180.0 ... 180.0]
+  if ( hdg_diff < -180.0 ) {
+      hdg_diff += 360.0;
+  } else if ( hdg_diff > 180.0 ) {
+      hdg_diff -= 360.0;
+  }
+
+  if ( fabs(hdg_diff) <= aThreshold ) {
+    mPosition = newPos;
+    set_multiuse( aRunway->headingDeg() );
+  } else {
+    SG_LOG(SG_GENERAL, SG_WARN, "localizer:" << ident() << ", aligning with runway " 
+      << aRunway->_rwy_no << " exceeded heading threshold");
+  }
+}
 
 FGTACANRecord::FGTACANRecord(void) :
     channel(""),

@@ -269,11 +269,11 @@ void FGMarkerBeacon::search()
     fgMkrBeacType beacon_type = NOBEACON;
     bool inrange = false;
     if ( b != NULL ) {
-        if ( b->get_type() == 7 ) {
+        if ( b->type() == FGPositioned::OM ) {
             beacon_type = OUTER;
-        } else if ( b->get_type() == 8 ) {
+        } else if ( b->type() == FGPositioned::MM ) {
             beacon_type = MIDDLE;
-        } else if ( b->get_type() == 9 ) {
+        } else if ( b->type() == FGPositioned::IM ) {
             beacon_type = INNER;
         }
         inrange = check_beacon_range( pos, b );

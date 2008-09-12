@@ -26,36 +26,33 @@
 
 #include <iosfwd>
 
-#include <simgear/math/SGMath.hxx>
-#include <simgear/structure/SGReferenced.hxx>
+#include "positioned.hxx"
 
 #define FG_NAV_DEFAULT_RANGE 50 // nm
 #define FG_LOC_DEFAULT_RANGE 18 // nm
 #define FG_DME_DEFAULT_RANGE 50 // nm
 #define FG_NAV_MAX_RANGE 300    // nm
 
-// Shield the rest of FG from possibly changing details of Robins navaid type numbering system.
-// Currently only the GPS code uses this - extra types (LOC, GS etc) may need to be added
-// should other FG code choose to use this. 
-enum fg_nav_types {
-    FG_NAV_VOR,
-    FG_NAV_NDB,
-    FG_NAV_ILS,
-    FG_NAV_ANY
-};
+// FIXME - get rid of these, and use the real enum directly
+#define FG_NAV_VOR FGPositioned::VOR
+#define FG_NAV_NDB FGPositioned::NDB
+#define FG_NAV_ILS FGPositioned::ILS
+#define FG_NAV_ANY FGPositioned::INVALID
 
-class FGNavRecord : public SGReferenced {
+typedef FGPositioned::Type fg_nav_types;
 
-    int type;
-    SGGeod pos;                // location in geodetic coords (degrees)
-    SGVec3d cart;              // location in cartesian coords (earth centered)
+// forward decls
+class FGRunway;
+
+class FGNavRecord : public FGPositioned 
+{
+
     int freq;
     int range;
     double multiuse;            // can be slaved variation of VOR
                                 // (degrees) or localizer heading
                                 // (degrees) or dme bias (nm)
 
-    std::string ident;		// navaid ident
     std::string name;                // verbose name in nav database
     std::string apt_id;              // corresponding airport id
 
@@ -63,36 +60,41 @@ class FGNavRecord : public SGReferenced {
     bool serviceable;		// for failure modeling
     std::string trans_ident;         // for failure modeling
 
+  /**
+   * Helper to init data when a navrecord is associated with an airport
+   */
+  void initAirportRelation();
+  
+  void alignLocaliserWithRunway(FGRunway* aRunway, double aThreshold);
 public:
-    FGNavRecord(void);
-    inline ~FGNavRecord(void) {}
+  inline ~FGNavRecord(void) {}
 
-    FGNavRecord(int type, const std::string& ident, const std::string& name, const std::string& airport,
-      double lat, double lon, int freq, int range, double multiuse);
+  static FGNavRecord* createFromStream(std::istream& aStream);
 
-    inline int get_type() const { return type; }
+    FGNavRecord(Type type, const std::string& ident, const std::string& name,
+      double lat, double lon, double aElevFt,
+      int freq, int range, double multiuse);
     
-    fg_nav_types get_fg_type() const;
+    inline double get_lon() const { return longitude(); } // degrees
+    inline double get_lat() const { return latitude(); } // degrees
+    inline double get_elev_ft() const { return elevation(); }
+
+    const SGGeod& get_pos() const { return geod(); }
+    SGVec3d get_cart() const;
     
-    inline double get_lon() const { return pos.getLongitudeDeg(); } // degrees
-    inline void set_lon( double l ) { pos.setLongitudeDeg(l); } // degrees
-    inline double get_lat() const { return pos.getLatitudeDeg(); } // degrees
-    inline void set_lat( double l ) { pos.setLatitudeDeg(l); } // degrees
-    inline double get_elev_ft() const { return pos.getElevationFt(); }
-    inline void set_elev_ft( double e ) { pos.setElevationFt(e); }
-    const SGGeod& get_pos() const { return pos; }
-    const SGVec3d& get_cart() const { return cart; }
+    Type get_fg_type() const { return type(); }
+    
     inline int get_freq() const { return freq; }
     inline int get_range() const { return range; }
     inline double get_multiuse() const { return multiuse; }
     inline void set_multiuse( double m ) { multiuse = m; }
-    inline const char *get_ident() const { return ident.c_str(); }
+    inline const char *get_ident() const { return ident().c_str(); }
     inline const std::string& get_name() const { return name; }
     inline const std::string& get_apt_id() const { return apt_id; }
     inline bool get_serviceable() const { return serviceable; }
     inline const char *get_trans_ident() const { return trans_ident.c_str(); }
 
-    friend std::istream& operator>> ( std::istream&, FGNavRecord& );
+  
 };
 
 class FGTACANRecord : public SGReferenced {

@@ -94,7 +94,7 @@ public:
     // (by ASCII code value) to that supplied.
     // Supplying true for exact forces only exact matches to be returned (similar to above function)
     // Returns an empty list if no match found - calling function should check for this!
-    nav_list_type findFirstByIdent( const string& ident, fg_nav_types type, bool exact = false );
+    nav_list_type findFirstByIdent( const string& ident, FGPositioned::Type type, bool exact = false );
 
     // Given an Ident and optional freqency, return the first matching
     // station.
@@ -102,7 +102,8 @@ public:
                                      const double freq = 0.0 );
 
     // returns the closest entry to the give lon/lat/elev
-    FGNavRecord *findClosest( double lon_rad, double lat_rad, double elev_m, fg_nav_types type = FG_NAV_ANY );
+    FGNavRecord *findClosest( double lon_rad, double lat_rad, double elev_m, 
+      FGPositioned::Type type = FG_NAV_ANY );
 
     // given a frequency returns the first matching entry
     FGNavRecord *findStationByFreq( double frequency );

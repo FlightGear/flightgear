@@ -1150,7 +1150,7 @@ FGNavRecord* DCLGPS::FindFirstVorById(const string& id, bool &multi, bool exact)
 	if(nav.empty()) return(NULL);
 	
 	for(nav_list_iterator it = nav.begin(); it != nav.end(); ++it) {
-		if((*it)->get_type() == 3) return(*it);
+		if((*it)->type() == FGPositioned::VOR) return(*it);
 	}
 	return(NULL);	// Shouldn't get here!
 }
@@ -1170,7 +1170,7 @@ FGNavRecord* DCLGPS::FindFirstNDBById(const string& id, bool &multi, bool exact)
 	if(nav.empty()) return(NULL);
 	
 	for(nav_list_iterator it = nav.begin(); it != nav.end(); ++it) {
-		if((*it)->get_type() == 2) return(*it);
+		if((*it)->type() == FGPositioned::NDB) return(*it);
 	}
 	return(NULL);	// Shouldn't get here!
 }

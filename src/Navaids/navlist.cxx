@@ -33,14 +33,10 @@
 
 
 // Return true if the nav record matches the type
-static bool isTypeMatch(const FGNavRecord* n, fg_nav_types type) {
-    switch(type) {
-        case FG_NAV_ANY: return(true);
-        case FG_NAV_VOR: return(n->get_type() == 3);
-        case FG_NAV_NDB: return(n->get_type() == 2);
-        case FG_NAV_ILS: return(n->get_type() == 4);	// Note - very simplified, only matches loc as part of full ILS.
-        default: return false;
-    }
+static bool isTypeMatch(const FGNavRecord* n, fg_nav_types type)
+{
+  if (type == FG_NAV_ANY) return true;
+  return type == n->type();
 }
 
 
@@ -174,14 +170,13 @@ FGNavRecord *FGNavList::findByIdent( const char* ident,
 
 nav_list_type FGNavList::findFirstByIdent( const string& ident, fg_nav_types type, bool exact)
 {
-    nav_list_type n2;
-    n2.clear();
+  nav_list_type n2;
+  n2.clear();
 
-    int iType;
-    if(type == FG_NAV_VOR) iType = 3;
-    else if(type == FG_NAV_NDB) iType = 2;
-    else return(n2);
-
+  if ((type != FG_NAV_VOR) && (type != FG_NAV_NDB)) {
+    return n2;
+  }
+  
     nav_ident_map_iterator it;
     if(exact) {
         it = ident_navaids.find(ident);
@@ -195,7 +190,7 @@ nav_list_type FGNavList::findFirstByIdent( const string& ident, fg_nav_types typ
             // Remove the types that don't match request.
             for(nav_list_iterator it0 = n0.begin(); it0 != n0.end();) {
                 FGNavRecord* nv = *it0;
-                if(nv->get_type() == iType) {
+                if(nv->type() == type) {
                     typeMatch = true;
                     ++it0;
                 } else {
@@ -231,7 +226,7 @@ nav_list_type FGNavList::findFirstByIdent( const string& ident, fg_nav_types typ
         n2.clear();
         for(nav_list_iterator it2 = n1.begin(); it2 != n1.end(); ++it2) {
             FGNavRecord* nv = *it2;
-            if(nv->get_type() == iType) n2.push_back(nv);
+            if(nv->type() == type) n2.push_back(nv);
         }
         return(n2);
     }
@@ -261,6 +256,48 @@ FGNavRecord *FGNavList::findByIdentAndFreq( const char* ident, const double freq
     return NULL;
 }
 
+// LOC, ILS, GS, and DME antenna's could potentially be
+// installed at the opposite end of the runway.  So it's not
+// enough to simply find the closest antenna with the right
+// frequency.  We need the closest antenna with the right
+// frequency that is most oriented towards us.  (We penalize
+// stations that are facing away from us by adding 5000 meters
+// which is further than matching stations would ever be
+// placed from each other.  (Do the expensive check only for
+// directional atennas and only when there is a chance it is
+// the closest station.)
+
+static bool penaltyForNav(FGNavRecord* aNav, const SGVec3d &aPos)
+{
+  switch (aNav->type()) {
+  case FGPositioned::ILS:
+  case FGPositioned::LOC:
+  case FGPositioned::GS:
+// FIXME
+//  case FGPositioned::DME: we can't get the heading for a DME transmitter, oops
+    break;
+  default:
+    return false;
+  }
+  
+  double hdg_deg = 0.0;
+  if (aNav->type() == FGPositioned::GS) {
+    int tmp = (int)(aNav->get_multiuse() / 1000.0);
+    hdg_deg = aNav->get_multiuse() - (tmp * 1000);
+  } else {    
+    hdg_deg = aNav->get_multiuse();
+  }
+  
+  double az1 = 0.0, az2 = 0.0, s = 0.0;
+  SGGeod geod = SGGeod::fromCart(aPos);
+  geo_inverse_wgs_84( geod, aNav->geod(), &az1, &az2, &s);
+  az1 = az1 - hdg_deg;
+  
+  if ( az1 >  180.0) az1 -= 360.0;
+  if ( az1 < -180.0) az1 += 360.0;
+  
+  return fabs(az1 > 90.0);
+}
 
 // Given a point and a list of stations, return the closest one to the
 // specified point.
@@ -279,54 +316,12 @@ FGNavRecord *FGNavList::findNavFromList( const SGVec3d &aircraft,
         FGNavRecord *station = *it;
         // cout << "testing " << current->get_ident() << endl;
         d2 = distSqr(station->get_cart(), aircraft);
-
-        // cout << "  dist = " << sqrt(d)
-        //      << "  range = " << current->get_range() * SG_NM_TO_METER
-        //      << endl;
-
-        // LOC, ILS, GS, and DME antenna's could potentially be
-        // installed at the opposite end of the runway.  So it's not
-        // enough to simply find the closest antenna with the right
-        // frequency.  We need the closest antenna with the right
-        // frequency that is most oriented towards us.  (We penalize
-        // stations that are facing away from us by adding 5000 meters
-        // which is further than matching stations would ever be
-        // placed from each other.  (Do the expensive check only for
-        // directional atennas and only when there is a chance it is
-        // the closest station.)
-        int type = station->get_type();
-        if ( d2 < min_dist &&
-             (type == 4 || type == 5 || type == 6 || type == 12 || type == 13) )
+        if ( d2 < min_dist && penaltyForNav(station, aircraft))
         {
-            double hdg_deg = 0.0;
-            if ( type == 4 || type == 5 ){
-                hdg_deg = station->get_multiuse();
-
-            } else if ( type == 6 ) {
-                int tmp = (int)(station->get_multiuse() / 1000.0);
-                hdg_deg = station->get_multiuse() - (tmp * 1000);
-
-            } else if ( type == 12 || type == 13 ) {
-                // oops, Robin's data format doesn't give us the
-                // needed information to compute a heading for a DME
-                // transmitter.  FIXME Robin!
-            }
-
-            double az1 = 0.0, az2 = 0.0, s = 0.0;
-            SGGeod geod = SGGeod::fromCart(aircraft);
-            geo_inverse_wgs_84( geod, station->get_pos(), &az1, &az2, &s);
-            az1 = az1 - station->get_multiuse();
-            if ( az1 >  180.0) az1 -= 360.0;
-            if ( az1 < -180.0) az1 += 360.0;
-            // penalize opposite facing stations by adding 5000 meters
-            // (squared) which is further than matching stations would
-            // ever be placed from each other.
-            if ( fabs(az1) > 90.0 ) {
-                double dist = sqrt(d2);
-                d2 = (dist + 5000) * (dist + 5000);
-            }
+          double dist = sqrt(d2);
+          d2 = (dist + 5000) * (dist + 5000);
         }
-
+        
         if ( d2 < min_dist ) {
             min_dist = d2;
             nav = station;

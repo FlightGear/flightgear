@@ -29,24 +29,20 @@
 #include <string>
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/sgstream.hxx>
-
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/strutils.hxx>
-
-#include <Airports/runways.hxx>
-#include <Airports/simple.hxx>
-#include <Main/globals.hxx>
+#include <simgear/structure/exception.hxx>
+#include <simgear/misc/sgstream.hxx>
 
 #include "navrecord.hxx"
 #include "navdb.hxx"
+#include "Main/globals.hxx"
 
 using std::string;
 
 
 // load and initialize the navigational databases
-bool fgNavDBInit( FGAirportList *airports,
-                  FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
+bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
                   FGNavList *dmelist, FGNavList *mkrlist, 
                   FGNavList *tacanlist, FGNavList *carrierlist,
                   FGTACANList *channellist)
@@ -77,71 +73,56 @@ bool fgNavDBInit( FGAirportList *airports,
     in >> skipeol;
     in >> skipeol;
 
-    while ( ! in.eof() ) {
-        FGNavRecord *r = new FGNavRecord;
-        in >> (*r);
-        if ( r->get_type() > 95 ) {
-            delete r;
-            break;
-        }
-
-	/*cout << "id = " << r->get_ident() << endl;
-	cout << " type = " << r->get_type() << endl;
-	cout << " lon = " << r->get_lon() << endl;
-	cout << " lat = " << r->get_lat() << endl;
-	cout << " elev = " <<r->get_elev_ft() << endl;
-	cout << " freq = " << r->get_freq() << endl;
-	cout << " range = " << r->get_range() << endl;
- 	cout << " name = " << r->get_name() << endl << endl; */
-
-        // fudge elevation to the field elevation if it's not specified
-        if ( fabs(r->get_elev_ft()) < 0.01 && r->get_apt_id().length() ) {
-            // cout << r->get_type() << " " << r->get_apt_id() << " zero elev"
-            //      << endl;
-            const FGAirport* a = airports->search( r->get_apt_id() );
-            if ( a ) {
-                r->set_elev_ft( a->getElevation() );
-                // cout << "  setting to " << a.elevation << endl;
-            }
-        }
-
-        if ( r->get_type() == 2 || r->get_type() == 3 ) {
-            // NDB=2, VOR=3
-            navlist->add( r );
-        } else if ( r->get_type() == 4 || r->get_type() == 5 ) {
-            // ILS=4, LOC(only)=5
-            loclist->add( r );
-        } else if ( r->get_type() == 6 ) {
-            // GS=6
-            gslist->add( r );
-        } else if ( r->get_type() == 7 || r->get_type() == 8
-                    || r->get_type() == 9 )
-        {
-            // Marker Beacon = 7,8,9
-            mkrlist->add( r );
-        } else if ( r->get_type() == 12 || r->get_type() == 13) {
-            // DME with ILS=12; standalone DME=13
-            string str1( r->get_name() );
-            string::size_type loc1= str1.find( "TACAN", 0 );
-            string::size_type loc2 = str1.find( "VORTAC", 0 );
+    while (!in.eof()) {
+      FGNavRecord *r = FGNavRecord::createFromStream(in);
+      if (!r) {
+        break;
+      }
+      
+      switch (r->type()) {
+      case FGPositioned::NDB:
+      case FGPositioned::VOR:
+        navlist->add(r);
+        break;
+        
+      case FGPositioned::ILS:
+      case FGPositioned::LOC:
+        loclist->add(r);
+        break;
+        
+      case FGPositioned::GS:
+        gslist->add(r);
+        break;
+      
+      case FGPositioned::OM:
+      case FGPositioned::MM:
+      case FGPositioned::IM:
+        mkrlist->add(r);
+        break;
+      
+      case FGPositioned::DME:
+      {
+        dmelist->add(r);
+        string::size_type loc1= r->get_name().find( "TACAN", 0 );
+        string::size_type loc2 = r->get_name().find( "VORTAC", 0 );
                        
-            if( loc1 != string::npos || loc2 != string::npos ){
-                 //cout << " name = " << r->get_name() ;
-                 //cout << " freq = " << r->get_freq() ;
-                 tacanlist->add( r );
-                 }
-                
-            dmelist->add( r );
-            
+        if( loc1 != string::npos || loc2 != string::npos) {
+          tacanlist->add(r);
         }
-		
-        in >> skipcomment;
-    }
+
+        break;
+      }
+      
+      default:
+        throw sg_range_exception("got unsupported NavRecord type", "fgNavDBInit");
+      }
+
+      in >> skipcomment;
+    } // of stream data loop
 
 // load the carrier navaids file
     
     string file, name;
-    path = "";
     path = globals->get_fg_root() ;
     path.append( "Navaids/carrier_nav.dat" );
     
@@ -160,16 +141,12 @@ bool fgNavDBInit( FGAirportList *airports,
     //incarrier >> skipeol;
     
     while ( ! incarrier.eof() ) {
-        FGNavRecord *r = new FGNavRecord;
-        incarrier >> (*r);
-        carrierlist->add ( r );
-        /*cout << " carrier lon: "<<  r->get_lon() ;
-        cout << " carrier lat: "<<  r->get_lat() ;
-        cout << " freq: " << r->get_freq() ;
-        cout << " carrier name: "<<  r->get_name() << endl;*/
-                
-        //if ( r->get_type() > 95 ) {
-        //   break;}
+      FGNavRecord *r = FGNavRecord::createFromStream(incarrier);
+      if (!r) {
+        continue;
+      }
+      
+      carrierlist->add (r);
     } // end while
 
 // end loading the carrier navaids file
@@ -206,95 +183,3 @@ bool fgNavDBInit( FGAirportList *airports,
 
     return true;
 }
-
-
-// Given a localizer record and it's corresponding runway record,
-// adjust the localizer position so it is in perfect alignment with
-// the runway.
-static void update_loc_position( FGNavRecord *loc, FGRunway *rwy,
-                                 double threshold )
-{
-    double hdg = rwy->headingDeg();
-    hdg += 180.0;
-    if ( hdg > 360.0 ) {
-        hdg -= 360.0;
-    }
-
-    // calculate runway threshold point
-    double thresh_lat, thresh_lon, return_az;
-    geo_direct_wgs_84 ( 0.0, rwy->latitude(), rwy->longitude(), hdg,
-                        rwy->lengthM() * 0.5,
-                        &thresh_lat, &thresh_lon, &return_az );
-    // cout << "Threshold = " << thresh_lat << "," << thresh_lon << endl;
-
-    // calculate distance from threshold to localizer
-    double az1, az2, dist_m;
-    geo_inverse_wgs_84( 0.0, loc->get_lat(), loc->get_lon(),
-                        thresh_lat, thresh_lon,
-                        &az1, &az2, &dist_m );
-    // cout << "Distance = " << dist_m << endl;
-
-    // back project that distance along the runway center line
-    double nloc_lat, nloc_lon;
-    geo_direct_wgs_84 ( 0.0, thresh_lat, thresh_lon, hdg + 180.0, 
-                        dist_m, &nloc_lat, &nloc_lon, &return_az );
-    // printf("New localizer = %.6f %.6f\n", nloc_lat, nloc_lon );
-
-    // sanity check, how far have we moved the localizer?
-    geo_inverse_wgs_84( 0.0, loc->get_lat(), loc->get_lon(),
-                        nloc_lat, nloc_lon,
-                        &az1, &az2, &dist_m );
-    // cout << "Distance moved = " << dist_m << endl;
-
-    // cout << "orig heading = " << loc->get_multiuse() << endl;
-    // cout << "new heading = " << rwy->_heading << endl;
-
-    double hdg_diff = loc->get_multiuse() - rwy->headingDeg();
-
-    // clamp to [-180.0 ... 180.0]
-    if ( hdg_diff < -180.0 ) {
-        hdg_diff += 360.0;
-    } else if ( hdg_diff > 180.0 ) {
-        hdg_diff -= 360.0;
-    }
-
-    if ( fabs(hdg_diff) <= threshold ) {
-        loc->set_lat( nloc_lat );
-        loc->set_lon( nloc_lon );
-        loc->set_multiuse( rwy->headingDeg() );
-    }
-}
-
-
-// This routines traverses the localizer list and attempts to match
-// each entry with it's corresponding runway.  When it is successful,
-// it then "moves" the localizer and updates it's heading so it
-// *perfectly* aligns with the runway, but is still the same distance
-// from the runway threshold.
-void fgNavDBAlignLOCwithRunway( FGAirportList *airports, FGNavList *loclist,
-                                double threshold ) {
-    nav_map_type navmap = loclist->get_navaids();
-
-    nav_map_const_iterator freq = navmap.begin();
-    while ( freq != navmap.end() ) {
-        nav_list_type locs = freq->second;
-        nav_list_const_iterator loc = locs.begin();
-        while ( loc != locs.end() ) {
-          vector<string> parts = simgear::strutils::split((*loc)->get_name());
-          if (parts.size() < 2) {
-            SG_LOG(SG_GENERAL, SG_ALERT, "can't parse navaid " << (*loc)->get_ident() 
-              << " name for airport/runway:" << (*loc)->get_name());
-            continue;
-          }
-          
-          FGAirport* airport = airports->search(parts[0]);
-          if (!airport) continue; // not found
-            
-          FGRunway* r = airport->getRunwayByIdent(parts[1]);
-          update_loc_position( (*loc), r, threshold );
-          ++loc;
-        }
-        ++freq;
-    }
-}
-

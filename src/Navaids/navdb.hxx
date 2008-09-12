@@ -28,31 +28,14 @@
 #include <simgear/compiler.h>
 #include <simgear/misc/sg_path.hxx>
 
-// #include <map>
-// #include <vector>
-// #include <string>
-
 #include "navlist.hxx"
 #include "fixlist.hxx"
 
-// using std::map;
-// using std::vector;
-// using std::string;
-
-
 // load and initialize the navigational databases
-bool fgNavDBInit( FGAirportList *airports,
-                  FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
+bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
                   FGNavList *dmelist, FGNavList *mkrbeacons,
                   FGNavList *tacanlist, FGNavList *carrierlist,
                   FGTACANList *channellist );
 
-// This routines traverses the localizer list and attempts to match
-// each entry with it's corresponding runway.  When it is successful,
-// it then "moves" the localizer and updates it's heading so it
-// *perfectly* aligns with the runway, but is still the same distance
-// from the runway threshold.
-void fgNavDBAlignLOCwithRunway( FGAirportList *airport, FGNavList *loclist,
-                                double threshold );
 
 #endif // _FG_NAVDB_HXX
