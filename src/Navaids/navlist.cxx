@@ -296,7 +296,7 @@ static bool penaltyForNav(FGNavRecord* aNav, const SGVec3d &aPos)
   if ( az1 >  180.0) az1 -= 360.0;
   if ( az1 < -180.0) az1 += 360.0;
   
-  return fabs(az1 > 90.0);
+  return fabs(az1) > 90.0;
 }
 
 // Given a point and a list of stations, return the closest one to the
