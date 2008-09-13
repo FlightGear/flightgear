@@ -36,6 +36,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <string>
 
@@ -43,6 +44,18 @@
 #include "runways.hxx"
 
 #include "apt_loader.hxx"
+
+static FGPositioned::Type fptypeFromRobinType(int aType)
+{
+  switch (aType) {
+  case 1: return FGPositioned::AIRPORT;
+  case 16: return FGPositioned::SEAPORT;
+  case 17: return FGPositioned::HELIPORT;
+  default:
+    SG_LOG(SG_GENERAL, SG_ALERT, "unsupported type:" << aType);
+    throw sg_range_exception("Unsupported airport type", "fptypeFromRobinType");
+  }
+}
 
 FGAirport* addAirport(FGAirportList *airports, const string& apt_id, const string& apt_name,
     int rwy_count, double rwy_lat_accum, double rwy_lon_accum, double last_rwy_heading,
@@ -69,8 +82,10 @@ FGAirport* addAirport(FGAirportList *airports, const string& apt_id, const strin
         tower = SGGeod::fromDegFt(lon + fudge_lon, lat + fudge_lat, apt_elev + tower_height);
     }
 
+  
+
     return airports->add(apt_id, SGGeod::fromDegFt(lon, lat, apt_elev), tower, apt_name, false,
-            type == 1/*airport*/, type == 16/*seaport*/, type == 17/*heliport*/);
+        fptypeFromRobinType(type));
 }
 
 // Load the airport data base from the specified aptdb file.  The
@@ -213,14 +228,14 @@ bool fgAirportDBLoad( FGAirportList *airports,
             int surface_code = atoi( token[10].c_str() );
 
             FGRunway* rwy = new FGRunway(NULL, rwy_no, lon, lat, heading, length,
-                width, displ_thresh1, stopway1, surface_code, false);
+                          width, displ_thresh1, stopway1, surface_code, false);
             
             FGRunway* reciprocal = new FGRunway(NULL, FGRunway::reverseIdent(rwy_no), 
                           lon, lat, heading + 180.0, length, width, 
                           displ_thresh2, stopway2, surface_code, true);
-                          
             runways.push_back(rwy);
             runways.push_back(reciprocal);
+            
         } else if ( line_id == 18 ) {
             // beacon entry (ignore)
         } else if ( line_id == 14 ) {
@@ -252,7 +267,7 @@ bool fgAirportDBLoad( FGAirportList *airports,
 
     // add the last airport being processed if any
     addAirport(airports, last_apt_id, last_apt_name, rwy_count, rwy_lat_accum, rwy_lon_accum,
-        last_rwy_heading, last_apt_elev, last_tower, got_tower, 0);
+        last_rwy_heading, last_apt_elev, last_tower, got_tower, last_apt_type);
 
 
     //

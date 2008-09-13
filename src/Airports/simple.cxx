@@ -33,21 +33,16 @@
 
 #include <simgear/compiler.h>
 
-#include <plib/sg.h>
-#include <plib/ul.h>
-
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-//#include <simgear/route/waypoint.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/dynamics.hxx>
-#include <Airports/runways.hxx>
 
 #include <string>
 
@@ -63,21 +58,13 @@ using std::random_shuffle;
 /***************************************************************************
  * FGAirport
  ***************************************************************************/
-FGAirport::FGAirport() : _dynamics(0)
-{
-}
 
 FGAirport::FGAirport(const string &id, const SGGeod& location, const SGGeod& tower_location,
-        const string &name, bool has_metar, bool is_airport, bool is_seaport,
-        bool is_heliport) :
-    _id(id),
-    _location(location),
+        const string &name, bool has_metar, Type aType) :
+    FGPositioned(aType, id, location),
     _tower_location(tower_location),
     _name(name),
     _has_metar(has_metar),
-    _is_airport(is_airport),
-    _is_seaport(is_seaport),
-    _is_heliport(is_heliport),
     _dynamics(0)
 {
 }
@@ -88,6 +75,20 @@ FGAirport::~FGAirport()
     delete _dynamics;
 }
 
+bool FGAirport::isAirport() const
+{
+  return type() == AIRPORT;
+}
+
+bool FGAirport::isSeaport() const
+{
+  return type() == SEAPORT;
+}
+
+bool FGAirport::isHeliport() const
+{
+  return type() == HELIPORT;
+}
 
 FGAirportDynamics * FGAirport::getDynamics()
 {
@@ -125,8 +126,8 @@ FGRunway* FGAirport::getRunwayByIdent(const string& aIdent) const
 {
   Runway_iterator it = getIteratorForRunwayIdent(aIdent);
   if (it == mRunways.end()) {
-    SG_LOG(SG_GENERAL, SG_ALERT, "no such runway '" << aIdent << "' at airport " << _id);
-    throw sg_range_exception("unknown runway " + aIdent + " at airport:" + _id, "FGAirport::getRunwayByIdent");
+    SG_LOG(SG_GENERAL, SG_ALERT, "no such runway '" << aIdent << "' at airport " << ident());
+    throw sg_range_exception("unknown runway " + aIdent + " at airport:" + ident(), "FGAirport::getRunwayByIdent");
   }
   
   return *it;
@@ -220,7 +221,7 @@ FGRunway* FGAirport::getActiveRunwayForUsage() const
     envMgr = (FGEnvironmentMgr *) globals->get_subsystem("environment");
   }
   
-  FGEnvironment stationWeather(envMgr->getEnvironment(_location));
+  FGEnvironment stationWeather(envMgr->getEnvironment(mPosition));
   
   double windSpeed = stationWeather.get_wind_speed_kt();
   double hdg = stationWeather.get_wind_from_heading_deg();
@@ -271,12 +272,9 @@ FGAirportList::~FGAirportList( void )
 
 // add an entry to the list
 FGAirport* FGAirportList::add( const string &id, const SGGeod& location, const SGGeod& tower_location,
-                         const string &name, bool has_metar, bool is_airport, bool is_seaport,
-                         bool is_heliport)
+                         const string &name, bool has_metar, FGPositioned::Type aType)
 {
-    FGAirport* a = new FGAirport(id, location, tower_location, name, has_metar,
-            is_airport, is_seaport, is_heliport);
-
+    FGAirport* a = new FGAirport(id, location, tower_location, name, has_metar, aType);
     airports_by_id[a->getId()] = a;
     // try and read in an auxilary file
 

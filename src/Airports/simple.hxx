@@ -35,7 +35,6 @@
 #include <vector>
 
 #include <simgear/math/point3d.hxx>
-
 #include "Navaids/positioned.hxx"
 
 // forward decls
@@ -47,41 +46,33 @@ typedef SGSharedPtr<FGRunway> FGRunwayPtr;
 /***************************************************************************************
  *
  **************************************************************************************/
-class FGAirport {
+class FGAirport : public FGPositioned
+{
 private:
-    std::string _id;
-    SGGeod _location;
     SGGeod _tower_location;
     std::string _name;
     bool _has_metar;
-    bool _is_airport;
-    bool _is_seaport;
-    bool _is_heliport;
     FGAirportDynamics *_dynamics;
 
 public:
-    FGAirport();
-    // FGAirport(const FGAirport &other);
     FGAirport(const std::string& id, const SGGeod& location, const SGGeod& tower, 
-            const std::string& name,
-            bool has_metar, bool is_airport, bool is_seaport, bool is_heliport);
+            const std::string& name, bool has_metar, Type aType);
     ~FGAirport();
 
-    const std::string& getId() const { return _id; }
+    const std::string& getId() const { return ident(); }
     const std::string& getName() const { return _name; }
-    double getLongitude() const { return _location.getLongitudeDeg(); }
+    double getLongitude() const { return longitude(); }
     // Returns degrees
-    double getLatitude()  const { return _location.getLatitudeDeg(); }
+    double getLatitude()  const { return latitude(); }
     // Returns ft
-    double getElevation() const { return _location.getElevationFt(); }
+    double getElevation() const { return elevation(); }
     bool   getMetar()     const { return _has_metar; }
-    bool   isAirport()    const { return _is_airport; }
-    bool   isSeaport()    const { return _is_seaport; }
-    bool   isHeliport()   const { return _is_heliport; }
+    bool   isAirport()    const;
+    bool   isSeaport()    const;
+    bool   isHeliport()   const;
 
     const SGGeod& getTowerLocation() const { return _tower_location; }
 
-    void setId(const std::string& id) { _id = id; }
     void setMetar(bool value) { _has_metar = value; }
 
     FGRunway* getActiveRunwayForUsage() const;
@@ -101,7 +92,6 @@ public:
     void addRunway(FGRunway* aRunway);
 private:
     typedef std::vector<FGRunwayPtr>::const_iterator Runway_iterator;
-    
     /**
      * Helper to locate a runway by ident
      */
@@ -156,8 +146,7 @@ public:
 
     // add an entry to the list
     FGAirport* add( const std::string& id, const SGGeod& location, const SGGeod& tower,
-              const std::string& name, bool has_metar, bool is_airport,
-              bool is_seaport, bool is_heliport );
+              const std::string& name, bool has_metar, FGPositioned::Type aType);
 
     // search for the specified id.
     // Returns NULL if unsucessfull.
