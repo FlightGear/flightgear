@@ -16,3 +16,5 @@ yasim_Debug
 yasim_Release
 FlightGear.ncb
 FlightGear.suo
+metar_Debug
+metar_Release
