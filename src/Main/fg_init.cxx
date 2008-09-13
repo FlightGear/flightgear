@@ -686,45 +686,6 @@ bool fgInitConfig ( int argc, char **argv ) {
     return true;
 }
 
-
-
-
-
-#if 0 
-  // 
-  // This function is never used, but maybe useful in the future ???
-  //
-
-// Preset lon/lat given an airport id
-static bool fgSetPosFromAirportID( const string& id ) {
-    FGAirport *a;
-    // double lon, lat;
-
-    SG_LOG( SG_GENERAL, SG_INFO,
-            "Attempting to set starting position from airport code " << id );
-
-    if ( fgFindAirportID( id, &a ) ) {
-        // presets
-        fgSetDouble("/sim/presets/longitude-deg", a->longitude );
-        fgSetDouble("/sim/presets/latitude-deg", a->latitude );
-
-        // other code depends on the actual postition being set so set
-        // that as well
-        fgSetDouble("/position/longitude-deg", a->longitude );
-        fgSetDouble("/position/latitude-deg", a->latitude );
-
-        SG_LOG( SG_GENERAL, SG_INFO,
-                "Position for " << id << " is (" << a->longitude
-                << ", " << a->latitude << ")" );
-
-        return true;
-    } else {
-        return false;
-    }
-}
-#endif
-
-
 // Set current tower position lon/lat given an airport id
 static bool fgSetTowerPosFromAirportID( const string& id) {
     const FGAirport *a = fgFindAirportID( id);
@@ -752,6 +713,39 @@ void fgInitTowerLocationListener() {
         ->addChangeListener( new FGTowerLocationListener(), true );
 }
 
+static void fgApplyStartOffset(const SGGeod& aStartPos, double aHeading, double aTargetHeading = HUGE_VAL)
+{
+  SGGeod startPos(aStartPos);
+  if (aTargetHeading == HUGE_VAL) {
+    aTargetHeading = aHeading;
+  }
+  
+  if ( fabs( fgGetDouble("/sim/presets/offset-distance-nm") ) > SG_EPSILON ) {
+    double offsetDistance = fgGetDouble("/sim/presets/offset-distance-nm");
+    offsetDistance *= SG_NM_TO_METER;
+    double offsetAzimuth = aHeading;
+    if ( fabs(fgGetDouble("/sim/presets/offset-azimuth-deg")) > SG_EPSILON ) {
+      offsetAzimuth = fgGetDouble("/sim/presets/offset-azimuth-deg");
+      aHeading = aTargetHeading;
+    }
+
+    SGGeod offset;
+    double az2; // dummy
+    SGGeodesy::direct(startPos, offsetAzimuth + 180, offsetDistance, offset, az2);
+    startPos = offset;
+  }
+
+  // presets
+  fgSetDouble("/sim/presets/longitude-deg", startPos.getLongitudeDeg() );
+  fgSetDouble("/sim/presets/latitude-deg", startPos.getLatitudeDeg() );
+  fgSetDouble("/sim/presets/heading-deg", aHeading );
+
+  // other code depends on the actual values being set ...
+  fgSetDouble("/position/longitude-deg",  startPos.getLongitudeDeg() );
+  fgSetDouble("/position/latitude-deg",  startPos.getLatitudeDeg() );
+  fgSetDouble("/orientation/heading-deg", aHeading );
+}
+
 // Set current_options lon/lat given an airport id and heading (degrees)
 static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     if ( id.empty() )
@@ -767,46 +761,8 @@ static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     FGRunway* r = apt->findBestRunwayForHeading(tgt_hdg);
     fgSetString("/sim/atc/runway", r->ident().c_str());
 
-    double lat2, lon2, az2;
-    double heading = r->headingDeg();
-    double azimuth = heading + 180.0;
-    while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
-
-    geo_direct_wgs_84 ( 0, r->latitude(), r->longitude(), azimuth, r->lengthM() * 0.5
-            - fgGetDouble("/sim/airport/runways/start-offset-m", 5.0),
-            &lat2, &lon2, &az2 );
-
-    if ( fabs( fgGetDouble("/sim/presets/offset-distance-nm") ) > SG_EPSILON ) {
-        double olat, olon;
-        double odist = fgGetDouble("/sim/presets/offset-distance-nm");
-        odist *= SG_NM_TO_METER;
-        double oaz = azimuth;
-        if ( fabs(fgGetDouble("/sim/presets/offset-azimuth-deg")) > SG_EPSILON ) {
-            oaz = fgGetDouble("/sim/presets/offset-azimuth-deg") + 180;
-            heading = tgt_hdg;
-        }
-        while ( oaz >= 360.0 ) { oaz -= 360.0; }
-        geo_direct_wgs_84 ( 0, lat2, lon2, oaz, odist, &olat, &olon, &az2 );
-        lat2=olat;
-        lon2=olon;
-    }
-
-    // presets
-    fgSetDouble("/sim/presets/longitude-deg",  lon2 );
-    fgSetDouble("/sim/presets/latitude-deg",  lat2 );
-    fgSetDouble("/sim/presets/heading-deg", heading );
-
-    // other code depends on the actual values being set ...
-    fgSetDouble("/position/longitude-deg",  lon2 );
-    fgSetDouble("/position/latitude-deg",  lat2 );
-    fgSetDouble("/orientation/heading-deg", heading );
-
-    SG_LOG( SG_GENERAL, SG_INFO,
-            "Position for " << id << " is ("
-            << lon2 << ", "
-            << lat2 << ") new heading is "
-            << heading );
-	    
+    SGGeod startPos = r->pointOnCenterline(fgGetDouble("/sim/airport/runways/start-offset-m", 5.0));
+	  fgApplyStartOffset(startPos, r->headingDeg(), tgt_hdg);
     return true;
 }
 
@@ -818,8 +774,7 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
     // can't see an easy way around this const_cast at the moment
     FGAirport* apt = const_cast<FGAirport*>(fgFindAirportID(id));
     if (!apt) {
-        SG_LOG( SG_GENERAL, SG_ALERT,
-                "Failed to find airport " << id );
+        SG_LOG( SG_GENERAL, SG_ALERT, "Failed to find airport " << id );
         return false;
     }
     FGAirportDynamics* dcs = apt->getDynamics();
@@ -839,27 +794,9 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
         return false;
     }
     FGParking* parking = dcs->getParking(park_index);
-    
-    double lat = parking->getLatitude();
-    double lon = parking->getLongitude();
-    double hdg = parking->getHeading();
-    
-    // presets
-    fgSetDouble("/sim/presets/longitude-deg",  lon );
-    fgSetDouble("/sim/presets/latitude-deg",  lat );
-    fgSetDouble("/sim/presets/heading-deg", hdg );
-    
-    // other code depends on the actual values being set ...
-    fgSetDouble("/position/longitude-deg",  lon );
-    fgSetDouble("/position/latitude-deg",  lat );
-    fgSetDouble("/orientation/heading-deg", hdg );
-    
-    SG_LOG( SG_GENERAL, SG_INFO,
-    "Position for " << id << " is ("
-    << lon << ", "
-    << lat << ") new heading is "
-    << hdg );
-    
+    fgApplyStartOffset(
+      SGGeod::fromDeg(parking->getLongitude(), parking->getLatitude()),
+      parking->getHeading());
     return true;
 }
 
@@ -889,49 +826,8 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bo
     
     FGRunway* r(apt->getRunwayByIdent(rwy));
     fgSetString("/sim/atc/runway", r->ident().c_str());
-
-    double lat2, lon2, az2;
-    double heading = r->headingDeg();
-    double azimuth = heading + 180.0;
-    while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
-    
-    geo_direct_wgs_84 ( 0, r->latitude(), r->longitude(), azimuth, r->lengthM() * 0.5
-            - fgGetDouble("/sim/airport/runways/start-offset-m", 5.0),
-            &lat2, &lon2, &az2 );
-    
-    if ( fabs( fgGetDouble("/sim/presets/offset-distance-nm") ) > SG_EPSILON )
-    {
-	double olat, olon;
-	double odist = fgGetDouble("/sim/presets/offset-distance-nm");
-	odist *= SG_NM_TO_METER;
-	double oaz = azimuth;
-	if ( fabs(fgGetDouble("/sim/presets/offset-azimuth-deg")) > SG_EPSILON )
-	{
-	    oaz = fgGetDouble("/sim/presets/offset-azimuth-deg") + 180;
-            heading = fgGetDouble("/sim/presets/heading-deg");
-	}
-	while ( oaz >= 360.0 ) { oaz -= 360.0; }
-	geo_direct_wgs_84 ( 0, lat2, lon2, oaz, odist, &olat, &olon, &az2 );
-	lat2=olat;
-	lon2=olon;
-    }
-    
-    // presets
-    fgSetDouble("/sim/presets/longitude-deg",  lon2 );
-    fgSetDouble("/sim/presets/latitude-deg",  lat2 );
-    fgSetDouble("/sim/presets/heading-deg", heading );
-    
-    // other code depends on the actual values being set ...
-    fgSetDouble("/position/longitude-deg",  lon2 );
-    fgSetDouble("/position/latitude-deg",  lat2 );
-    fgSetDouble("/orientation/heading-deg", heading );
-    
-    SG_LOG( SG_GENERAL, SG_INFO,
-    "Position for " << id << " is ("
-    << lon2 << ", "
-    << lat2 << ") new heading is "
-    << heading );
-    
+    SGGeod startPos = r->pointOnCenterline( fgGetDouble("/sim/airport/runways/start-offset-m", 5.0));
+	  fgApplyStartOffset(startPos, r->headingDeg());
     return true;
 }
 
@@ -985,48 +881,14 @@ static bool fgSetPosFromNAV( const string& id, const double& freq ) {
     FGNavRecord *nav
         = globals->get_navlist()->findByIdentAndFreq( id.c_str(), freq );
 
-    // set initial position from runway and heading
-    if ( nav != NULL ) {
-        SG_LOG( SG_GENERAL, SG_INFO, "Attempting to set starting position for "
+  if (!nav) {
+    SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate NAV = "
                 << id << ":" << freq );
-
-        double lon = nav->get_lon();
-        double lat = nav->get_lat();
-
-        if ( fabs( fgGetDouble("/sim/presets/offset-distance-nm") ) > SG_EPSILON )
-        {
-            double odist = fgGetDouble("/sim/presets/offset-distance-nm")
-                * SG_NM_TO_METER;
-            double oaz = fabs(fgGetDouble("/sim/presets/offset-azimuth-deg"))
-                + 180.0;
-            while ( oaz >= 360.0 ) { oaz -= 360.0; }
-            double olat, olon, az2;
-            geo_direct_wgs_84 ( 0, lat, lon, oaz, odist, &olat, &olon, &az2 );
-
-            lat = olat;
-            lon = olon;
-        }
-
-        // presets
-        fgSetDouble("/sim/presets/longitude-deg",  lon );
-        fgSetDouble("/sim/presets/latitude-deg",  lat );
-
-        // other code depends on the actual values being set ...
-        fgSetDouble("/position/longitude-deg",  lon );
-        fgSetDouble("/position/latitude-deg",  lat );
-        fgSetDouble("/orientation/heading-deg", 
-                    fgGetDouble("/sim/presets/heading-deg") );
-
-        SG_LOG( SG_GENERAL, SG_INFO,
-                "Position for " << id << ":" << freq << " is ("
-                << lon << ", "<< lat << ")" );
-
-        return true;
-    } else {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate NAV = "
-                << id << ":" << freq );
-        return false;
-    }
+    return false;
+  }
+  
+  fgApplyStartOffset(nav->geod(), fgGetDouble("/sim/presets/heading-deg"));
+  return true;
 }
 
 // Set current_options lon/lat given an aircraft carrier id
@@ -1073,51 +935,18 @@ static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) {
 }
  
 // Set current_options lon/lat given an airport id and heading (degrees)
-static bool fgSetPosFromFix( const string& id ) {
-    FGFix* fix;
-
-    // set initial position from runway and heading
-    if ( globals->get_fixlist()->query( id.c_str(), fix ) ) {
-        SG_LOG( SG_GENERAL, SG_INFO, "Attempting to set starting position for "
-                << id );
-
-        double lon = fix->get_lon();
-        double lat = fix->get_lat();
-
-        if ( fabs( fgGetDouble("/sim/presets/offset-distance-nm") ) > SG_EPSILON )
-        {
-            double odist = fgGetDouble("/sim/presets/offset-distance-nm")
-                * SG_NM_TO_METER;
-            double oaz = fabs(fgGetDouble("/sim/presets/offset-azimuth-deg"))
-                + 180.0;
-            while ( oaz >= 360.0 ) { oaz -= 360.0; }
-            double olat, olon, az2;
-            geo_direct_wgs_84 ( 0, lat, lon, oaz, odist, &olat, &olon, &az2 );
-
-            lat = olat;
-            lon = olon;
-        }
-
-        // presets
-        fgSetDouble("/sim/presets/longitude-deg",  lon );
-        fgSetDouble("/sim/presets/latitude-deg",  lat );
-
-        // other code depends on the actual values being set ...
-        fgSetDouble("/position/longitude-deg",  lon );
-        fgSetDouble("/position/latitude-deg",  lat );
-        fgSetDouble("/orientation/heading-deg", 
-                    fgGetDouble("/sim/presets/heading-deg") );
-
-        SG_LOG( SG_GENERAL, SG_INFO,
-                "Position for " << id << " is ("
-                << lon << ", "<< lat << ")" );
-
-        return true;
-    } else {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate NAV = "
-                << id );
-        return false;
-    }
+static bool fgSetPosFromFix( const string& id )
+{
+  FGFix* fix;
+  
+  // set initial position from runway and heading
+  if ( !globals->get_fixlist()->query( id.c_str(), fix ) ) {
+    SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate NAV = " << id );
+    return false;
+  }
+  
+  fgApplyStartOffset(fix->geod(), fgGetDouble("/sim/presets/heading-deg"));
+  return true;
 }
 
 
@@ -1163,7 +992,7 @@ fgInitNav ()
         SG_LOG( SG_GENERAL, SG_ALERT,
                 "Problems loading one or more navigational database" );
     }
-
+    
     SG_LOG(SG_GENERAL, SG_INFO, "  Fixes");
     SGPath p_fix( globals->get_fg_root() );
     p_fix.append( "Navaids/fix.dat" );
