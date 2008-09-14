@@ -486,6 +486,7 @@ FGRenderer::init( void )
     mRoot->addChild(lightSource);
 
     stateSet = globals->get_scenery()->get_scene_graph()->getOrCreateStateSet();
+    stateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::ON);
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::ON);
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
 
