@@ -532,9 +532,9 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
         lat = latn->getDoubleValue();
         lon = lonn->getDoubleValue();
     }
-    
+
     double maxRange = 360.0; // expose this? or pick a smaller value?
-    
+
     if(argc == 0) {
         apt = aptlst->search(lon, lat, maxRange, airport);
     } else if(argc == 1 && naIsString(args[0])) {
@@ -551,30 +551,30 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
 
     string id = apt->getId();
     string name = apt->getName();
-    
+
     // set runway hash
     naRef rwys = naNewHash(c);
     for (unsigned int r=0; r<apt->numRunways(); ++r) {
-      FGRunway* rwy(apt->getRunwayByIndex(r));
-      
-      naRef rwyid = naStr_fromdata(naNewString(c),
-                    const_cast<char *>(rwy->ident().c_str()),
-                    rwy->ident().length());
+        FGRunway* rwy(apt->getRunwayByIndex(r));
 
-      naRef rwydata = naNewHash(c);
+        naRef rwyid = naStr_fromdata(naNewString(c),
+                      const_cast<char *>(rwy->ident().c_str()),
+                      rwy->ident().length());
+
+        naRef rwydata = naNewHash(c);
 #define HASHSET(s,l,n) naHash_set(rwydata, naStr_fromdata(naNewString(c),s,l),n)
-      HASHSET("id", 2, rwyid);
-      HASHSET("lat", 3, naNum(rwy->latitude()));
-      HASHSET("lon", 3, naNum(rwy->longitude()));
-      HASHSET("heading", 7, naNum(rwy->headingDeg()));
-      HASHSET("length", 6, naNum(rwy->lengthM()));
-      HASHSET("width", 5, naNum(rwy->widthM()));
-      HASHSET("threshold1", 10, naNum(rwy->_displ_thresh * SG_FEET_TO_METER));
-      HASHSET("stopway1", 8, naNum(rwy->_stopway * SG_FEET_TO_METER));
+        HASHSET("id", 2, rwyid);
+        HASHSET("lat", 3, naNum(rwy->latitude()));
+        HASHSET("lon", 3, naNum(rwy->longitude()));
+        HASHSET("heading", 7, naNum(rwy->headingDeg()));
+        HASHSET("length", 6, naNum(rwy->lengthM()));
+        HASHSET("width", 5, naNum(rwy->widthM()));
+        HASHSET("threshold", 9, naNum(rwy->_displ_thresh * SG_FEET_TO_METER));
+        HASHSET("stopway", 7, naNum(rwy->_stopway * SG_FEET_TO_METER));
 #undef HASHSET
-      naHash_set(rwys, rwyid, rwydata);
+        naHash_set(rwys, rwyid, rwydata);
     }
-    
+
     // set airport hash
     naRef aptdata = naNewHash(c);
 #define HASHSET(s,l,n) naHash_set(aptdata, naStr_fromdata(naNewString(c),s,l),n)
@@ -719,7 +719,7 @@ void FGNasalSys::loadPropertyScripts()
         int j = 0;
         SGPropertyNode *fn;
         bool file_specified = false;
-        while ( (fn = n->getChild("file", j)) != NULL ) {
+        while((fn = n->getChild("file", j)) != NULL) {
             file_specified = true;
             const char* file = fn->getStringValue();
             SGPath p(globals->get_fg_root());
