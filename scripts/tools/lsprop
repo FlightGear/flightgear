@@ -18,16 +18,16 @@ Options:
 	-f, --format       set output format  (default: --format="%f +%l: %p = '%v'")
 
 Format:
-	%f   file path
-	%l   line number
-	%c   column number
-	%p   property path
-	%t   property type
-	%V   raw value (unescaped)
-	%v   cooked value (carriage return, non printable chars etc. escaped)
-	%q   like %v, but single quotes escaped to \\'
-	%Q   like %v, but double quotes escaped to \\"
-	%%   percent sign
+	%f  file path
+	%l  line number
+	%c  column number
+	%p  property path
+	%t  property type
+	%V  raw value (unescaped)
+	%v  cooked value (carriage return, non printable chars etc. escaped)
+	%q  like %v, but single quotes escaped to \\'
+	%Q  like %v, but double quotes escaped to \\"
+	%%  percent sign
 
 Environment:
 	FG_ROOT
@@ -243,7 +243,6 @@ def main():
 	f = f.replace("\\033", "\x1b")
 	f = f.replace("\\x1b", "\x1b")
 	f = f.replace("%%", "\x01\x01")
-	f = f.replace("%(", "\x01\x01(")
 	f = f.replace("%f", "\x01(f)s")
 	f = f.replace("%l", "\x01(l)d")
 	f = f.replace("%c", "\x01(c)d")
