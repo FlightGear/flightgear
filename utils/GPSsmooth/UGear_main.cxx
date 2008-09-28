@@ -2,7 +2,7 @@
 #  include <config.h>
 #endif
 
-#ifndef _MSC_VER
+#if !defined( _MSC_VER ) && !defined( __MINGW32__ )
 #  include <strings.h>		// for bzero()
 #else
 #  define bzero(a,b) memset(a,0,b)

@@ -54,7 +54,9 @@
 #  include <simgear/screen/win32-printer.h>
 #  include <simgear/screen/GlBitmaps.h>
 #endif
-
+#ifdef __MINGW32__
+#include <shellapi.h>
+#endif
 #include "gui.h"
 
 using std::string;

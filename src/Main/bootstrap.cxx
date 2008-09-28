@@ -141,7 +141,7 @@ int main ( int argc, char **argv ) {
     // Ignore floating-point exceptions on FreeBSD
     signal(SIGFPE, SIG_IGN);
 #endif
-#ifndef _MSC_VER
+#if !defined( _MSC_VER ) && !defined( __MINGW32__ )
     signal(SIGPIPE, SIG_IGN);
 #endif
 

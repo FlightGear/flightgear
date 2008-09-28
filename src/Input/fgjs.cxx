@@ -28,8 +28,8 @@
 
 #include <simgear/compiler.h>
 
-#ifdef _MSC_VER
-#include <Winsock2.h>
+#if defined( _MSC_VER ) || defined( __MINGW32__ )
+#  include <Winsock2.h>
 #endif
 
 #include <math.h>

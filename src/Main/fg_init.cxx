@@ -581,7 +581,7 @@ bool fgInitConfig ( int argc, char **argv ) {
     }
 
     SGPropertyNode autosave;
-#ifdef _MSC_VER
+#if defined( _MSC_VER ) || defined( __MINGW32__ )
     char *envp = ::getenv( "APPDATA" );
     if (envp != NULL ) {
         SGPath config( envp );
