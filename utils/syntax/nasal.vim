@@ -2,8 +2,7 @@
 " Language:	Nasal (FlightGear)
 " Maintainer:	Melchior FRANZ <mfranz # aon : at>
 " URL:		http://members.aon.at/mfranz/nasal.vim
-" Last Change:	2005 Apr 25
-" $Id$
+" Last Change:	2008 Sep 29
 
 " ________________________________CUSTOMIZATION______________________________
 "
@@ -39,10 +38,11 @@ syn match   nasalCharConstant		"`[^`\\]`"
 syn match   nasalCharConstant		"`\\[`\\rnt]`"
 syn match   nasalCharConstant		"`\\x[[:xdigit:]][[:xdigit:]]`"
 
+syn match   nasalNumber			"-\=\<0x\x\+\>"
 syn match   nasalNumber			"-\=\<\d\+\>"
-syn match   nasalNumber			"\.\d\+\([eE][+-]\=\d\+\)\=\>"
-syn match   nasalNumber			"\<\d\+\.\([eE][+-]\=\d\+\)\=\>"
-syn match   nasalNumber			"\<\d\+\.\d\+\([eE][+-]\=\d\+\)\=\>"
+syn match   nasalNumber			"-\=\.\d\+\([eE][+-]\=\d\+\)\=\>"
+syn match   nasalNumber			"-\=\<\d\+\.\=\([eE][+-]\=\d\+\)\=\>"
+syn match   nasalNumber			"-\=\<\d\+\.\d\+\([eE][+-]\=\d\+\)\=\>"
 
 syn keyword nasalStatement		func return var
 syn keyword nasalConditional		if elsif else
@@ -56,7 +56,7 @@ syn match   nasalFoo			"\~"
 syn match   nasalFunction		display "\<contains\>"
 syn keyword nasalFunction		size keys append pop setsize subvec delete int num streq substr
 syn keyword nasalFunction		chr typeof compile call die sprintf caller closure find cmp
-syn keyword nasalFunction		split rand bind sort ghosttype
+syn keyword nasalFunction		split rand bind sort ghosttype id
 
 " math lib
 syn match   nasalFunction		"\<math\.\(sin\|cos\|exp\|ln\|sqrt\|atan2\)\>"
@@ -68,6 +68,14 @@ syn match   nasalVar			"\<io\.\(SEEK_SET\|SEEK_CUR\|SEEK_END\|stdin\|stdout\|std
 
 " bits lib
 syn match   nasalFunction		"\<bits\.\(sfld\|fld\|setfld\|buf\)\>"
+
+
+syn sync fromstart
+syn sync maxlines=100
+
+syn match   nasalParenError	")"
+syn match   nasalBrackError	"]"
+syn match   nasalBraceError	"}"
 
 
 " FlightGear specific commands
@@ -91,18 +99,13 @@ if !exists("nasal_no_fgfs")
 		syn region  nasalComment	start="<!--" end="-->" contains=nasalCommentTodo
 		syn region  nasalComment	start="<?" end="?>" contains=nasalCommentTodo
 		syn match   nasalComment	"^\s*</\?[[:alnum:]!].*[[:alnum:]\"-]/\?>\s*$"
-		syn match   nasalComment	"^\s*<!\[CDATA\[\s*$"
-		syn match   nasalComment	"^\s*\]\]>\s*$"
+		syn match   nasalComment	"^\s*<script>"
+		syn match   nasalComment	"</script>.*"
+		syn match   nasalCDATA		"<!\[CDATA\["
+		syn match   nasalCDATA		"\]\]>"
 	endif
 endif
 
-
-syn sync fromstart
-syn sync maxlines=100
-
-syn match   nasalParenError	")"
-syn match   nasalBrackError	"]"
-syn match   nasalBraceError	"}"
 
 syn region  nasalEncl transparent matchgroup=nasalParenEncl start="(" matchgroup=nasalParenEncl end=")" contains=ALLBUT,nasalParenError
 syn region  nasalEncl transparent matchgroup=nasalBrackEncl start="\[" matchgroup=nasalBrackEncl end="\]" contains=ALLBUT,nasalBrackError
@@ -131,6 +134,7 @@ if version >= 508 || !exists("did_nasal_syn_inits")
 	HiLink nasalConstant		Constant
 	HiLink nasalCharConstant	Type
 	HiLink nasalFoo			NonText
+	HiLink nasalCDATA		Type
 
 	HiLink nasalRepeat		Repeat
 	HiLink nasalBranch		Conditional
