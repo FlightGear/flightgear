@@ -73,9 +73,9 @@ syn match   nasalFunction		"\<bits\.\(sfld\|fld\|setfld\|buf\)\>"
 syn sync fromstart
 syn sync maxlines=100
 
-syn match   nasalParenError	")"
-syn match   nasalBrackError	"]"
-syn match   nasalBraceError	"}"
+syn match   nasalParenError	"[()]"
+syn match   nasalBrackError	"[[]]"
+syn match   nasalBraceError	"[{}]"
 
 
 " FlightGear specific commands
@@ -107,9 +107,9 @@ if !exists("nasal_no_fgfs")
 endif
 
 
-syn region  nasalEncl transparent matchgroup=nasalParenEncl start="(" matchgroup=nasalParenEncl end=")" contains=ALLBUT,nasalParenError
-syn region  nasalEncl transparent matchgroup=nasalBrackEncl start="\[" matchgroup=nasalBrackEncl end="\]" contains=ALLBUT,nasalBrackError
-syn region  nasalEncl transparent matchgroup=nasalBraceEncl start="{" matchgroup=nasalBraceEncl end="}" contains=ALLBUT,nasalBraceError
+syn region  nasalEncl transparent matchgroup=nasalParenEncl start="(" end=")" contains=ALLBUT,nasalParenError
+syn region  nasalEncl transparent matchgroup=nasalBrackEncl start="\[" end="\]" contains=ALLBUT,nasalBrackError
+syn region  nasalEncl transparent matchgroup=nasalBraceEncl start="{" end="}" contains=ALLBUT,nasalBraceError
 
 
 if version >= 508 || !exists("did_nasal_syn_inits")
