@@ -35,6 +35,8 @@
 #if defined( _MSC_VER) || defined(__MINGW32__)
 #  include <direct.h>           // for getcwd()
 #  define getcwd _getcwd
+#  include <io.h>               // isatty()
+#  define isatty _isatty
 #endif
 
 // work around a stdc++ lib bug in some versions of linux, but doesn't
@@ -1186,6 +1188,9 @@ bool fgInitGeneral() {
     curr = curr->getChild("fg-current", 0, true);
     curr->setStringValue(cwd ? cwd : "");
     curr->setAttribute(SGPropertyNode::WRITE, false);
+
+    fgSetBool("/sim/startup/stdout-to-terminal", isatty(1));
+    fgSetBool("/sim/startup/stderr-to-terminal", isatty(2));
     return true;
 }
 
