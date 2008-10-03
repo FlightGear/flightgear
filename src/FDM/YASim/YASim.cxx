@@ -113,8 +113,6 @@ void YASim::init()
     Airplane* a = _fdm->getAirplane();
     Model* m = a->getModel();
 
-    fgSetBool("/yasim/initialized", false);
-
     // Superclass hook
     common_init();
 
@@ -227,11 +225,6 @@ void YASim::update(double dt)
 
     // Reset the time increment.
     gr->setTimeOffset(0.0);
-
-    // Set this only after our first successful iteration, when all
-    // our output properties are there.
-    if(!fgGetBool("/yasim/initialized"))
-        fgSetBool("/yasim/initialized", true);
 }
 
 void YASim::copyToYASim(bool copyState)

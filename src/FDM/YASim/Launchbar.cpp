@@ -7,8 +7,8 @@
 
 namespace yasim {
 
-  static const float YASIM_PI2 = 3.14159265358979323846/2;
-  static const float YASIM_PI = 3.14159265358979323846;
+  static const float YASIM_PI2 = 3.14159265358979323846f/2;
+  static const float YASIM_PI = 3.14159265358979323846f;
   static const float RAD2DEG = 180/YASIM_PI;
 
 Launchbar::Launchbar()

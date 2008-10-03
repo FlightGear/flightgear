@@ -49,13 +49,13 @@ private:
     bool eq(const char* a, const char* b);
     bool caseeq(const char* a, const char* b);
     char* dup(const char* s);
-    int attri(XMLAttributes* atts, char* attr);
-    int attri(XMLAttributes* atts, char* attr, int def); 
-    float attrf(XMLAttributes* atts, char* attr);
-    float attrf(XMLAttributes* atts, char* attr, float def); 
-    double attrd(XMLAttributes* atts, char* attr);
-    double attrd(XMLAttributes* atts, char* attr, double def); 
-    bool attrb(XMLAttributes* atts, char* attr);
+    int attri(XMLAttributes* atts, const char* attr);
+    int attri(XMLAttributes* atts, const char* attr, int def); 
+    float attrf(XMLAttributes* atts, const char* attr);
+    float attrf(XMLAttributes* atts, const char* attr, float def); 
+    double attrd(XMLAttributes* atts, const char* attr);
+    double attrd(XMLAttributes* atts, const char* attr, double def); 
+    bool attrb(XMLAttributes* atts, const char* attr);
 
     // The core Airplane object we manage.
     Airplane _airplane;

@@ -34,6 +34,10 @@ public:
     void setSlat(float pos);
     void setSpoiler(float pos);
 
+    // Modifier for flap lift coefficient, useful for simulating flap blowing etc.
+    void setFlapEffectiveness(float effectiveness);
+	double getFlapEffectiveness();
+
     // local -> Surface coords
     void setOrientation(float* o);
 
@@ -88,6 +92,7 @@ private:
     float _slatDrag;
     float _flapLift;
     float _flapDrag;
+    float _flapEffectiveness;
     float _spoilerLift;
     float _spoilerDrag;
 

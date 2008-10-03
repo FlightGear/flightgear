@@ -90,7 +90,7 @@ public:
     float getCruiseAoA();
     float getTailIncidence();
     float getApproachElevator() { return _approachElevator.val; }
-    char* getFailureMsg();
+    const char* getFailureMsg();
 
     static void setupState(float aoa, float speed, float gla, State* s); // utility
 
@@ -172,7 +172,7 @@ private:
     float _cruiseAoA;
     float _tailIncidence;
     Control _approachElevator;
-    char* _failureMsg;
+    const char* _failureMsg;
 };
 
 }; // namespace yasim

@@ -206,7 +206,9 @@ void ControlMap::applyControls(float dt)
 	case CASTERING:((Gear*)obj)->setCastering(lval != 0);      break;
 	case SLAT:     ((Wing*)obj)->setSlat(lval);                break;
 	case FLAP0:    ((Wing*)obj)->setFlap0(lval, rval);         break;
+	case FLAP0EFFECTIVENESS: ((Wing*)obj)->setFlap0Effectiveness(lval); break;
 	case FLAP1:    ((Wing*)obj)->setFlap1(lval, rval);         break;
+	case FLAP1EFFECTIVENESS: ((Wing*)obj)->setFlap1Effectiveness(lval); break;
 	case SPOILER:  ((Wing*)obj)->setSpoiler(lval, rval);       break;
         case COLLECTIVE:   ((Rotor*)obj)->setCollective(lval);     break;
         case CYCLICAIL:    ((Rotor*)obj)->setCyclicail(lval,rval); break;
@@ -250,6 +252,8 @@ float ControlMap::rangeMin(int type)
     case COLLECTIVE: return -1;
     case WINCHRELSPEED: return -1;
     case MAGNETOS: return 0;   // [0:3]
+    case FLAP0EFFECTIVENESS: return 1;  // [0:10]
+    case FLAP1EFFECTIVENESS: return 1;  // [0:10]
     default:       return 0;   // [0:1]
     }
 }
@@ -262,6 +266,8 @@ float ControlMap::rangeMax(int type)
     case FLAP1:    return 1;
     case STEER:    return 1;
     case MAGNETOS: return 3; // [0:3]
+    case FLAP0EFFECTIVENESS: return 10;//  [0:10]
+    case FLAP1EFFECTIVENESS: return 10;//  [0:10]
     default:       return 1; // [0:1]
     }
 }

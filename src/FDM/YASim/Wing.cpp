@@ -1,6 +1,7 @@
 #include "Math.hpp"
 #include "Surface.hpp"
 #include "Wing.hpp"
+
 namespace yasim {
 
 Wing::Wing()
@@ -176,6 +177,16 @@ void Wing::setFlap0(float lval, float rval)
     }
 }
 
+void Wing::setFlap0Effectiveness(float lval)
+{
+    lval = Math::clamp(lval, 1, 10);
+    int i;
+    for(i=0; i<_flap0Surfs.size(); i++) {
+        ((Surface*)_flap0Surfs.get(i))->setFlapEffectiveness(lval);
+//	if(_mirror) ((Surface*)_flap0Surfs.get(++i))->setFlapEffectiveness(rval);
+    }
+}
+
 void Wing::setFlap1(float lval, float rval)
 {
     lval = Math::clamp(lval, -1, 1);
@@ -184,6 +195,16 @@ void Wing::setFlap1(float lval, float rval)
     for(i=0; i<_flap1Surfs.size(); i++) {
 	((Surface*)_flap1Surfs.get(i))->setFlap(lval);
 	if(_mirror) ((Surface*)_flap1Surfs.get(++i))->setFlap(rval);
+    }
+}
+
+void Wing::setFlap1Effectiveness(float lval)
+{
+    lval = Math::clamp(lval, 1, 10);
+    int i;
+    for(i=0; i<_flap1Surfs.size(); i++) {
+        ((Surface*)_flap1Surfs.get(i))->setFlapEffectiveness(lval);
+//	if(_mirror) ((Surface*)_flap1Surfs.get(++i))->setFlap(rval);
     }
 }
 

@@ -948,7 +948,9 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "LEXTEND"))   return ControlMap::LEXTEND;
     if(eq(name, "INCIDENCE")) return ControlMap::INCIDENCE;
     if(eq(name, "FLAP0"))     return ControlMap::FLAP0;
+    if(eq(name, "FLAP0EFFECTIVENESS"))   return ControlMap::FLAP0EFFECTIVENESS;
     if(eq(name, "FLAP1"))     return ControlMap::FLAP1;
+    if(eq(name, "FLAP1EFFECTIVENESS"))   return ControlMap::FLAP1EFFECTIVENESS;
     if(eq(name, "SLAT"))      return ControlMap::SLAT;
     if(eq(name, "SPOILER"))   return ControlMap::SPOILER;
     if(eq(name, "CASTERING")) return ControlMap::CASTERING;
@@ -1013,7 +1015,7 @@ char* FGFDM::dup(const char* s)
     return s2;
 }
 
-int FGFDM::attri(XMLAttributes* atts, char* attr)
+int FGFDM::attri(XMLAttributes* atts, const char* attr)
 {
     if(!atts->hasAttribute(attr)) {
         SG_LOG(SG_FLIGHT,SG_ALERT,"Missing '" << attr <<
@@ -1023,14 +1025,14 @@ int FGFDM::attri(XMLAttributes* atts, char* attr)
     return attri(atts, attr, 0);
 }
 
-int FGFDM::attri(XMLAttributes* atts, char* attr, int def)
+int FGFDM::attri(XMLAttributes* atts, const char* attr, int def)
 {
     const char* val = atts->getValue(attr);
     if(val == 0) return def;
     else         return atol(val);
 }
 
-float FGFDM::attrf(XMLAttributes* atts, char* attr)
+float FGFDM::attrf(XMLAttributes* atts, const char* attr)
 {
     if(!atts->hasAttribute(attr)) {
         SG_LOG(SG_FLIGHT,SG_ALERT,"Missing '" << attr <<
@@ -1040,14 +1042,14 @@ float FGFDM::attrf(XMLAttributes* atts, char* attr)
     return attrf(atts, attr, 0);
 }
 
-float FGFDM::attrf(XMLAttributes* atts, char* attr, float def)
+float FGFDM::attrf(XMLAttributes* atts, const char* attr, float def)
 {
     const char* val = atts->getValue(attr);
     if(val == 0) return def;
     else         return (float)atof(val);    
 }
 
-double FGFDM::attrd(XMLAttributes* atts, char* attr)
+double FGFDM::attrd(XMLAttributes* atts, const char* attr)
 {
     if(!atts->hasAttribute(attr)) {
         SG_LOG(SG_FLIGHT,SG_ALERT,"Missing '" << attr <<
@@ -1057,7 +1059,7 @@ double FGFDM::attrd(XMLAttributes* atts, char* attr)
     return attrd(atts, attr, 0);
 }
 
-double FGFDM::attrd(XMLAttributes* atts, char* attr, double def)
+double FGFDM::attrd(XMLAttributes* atts, const char* attr, double def)
 {
     const char* val = atts->getValue(attr);
     if(val == 0) return def;
@@ -1075,7 +1077,7 @@ double FGFDM::attrd(XMLAttributes* atts, char* attr, double def)
 // Unfortunately, this usage creeped into existing configuration files
 // while I wasn't active, and it's going to be hard to remove.  Issue
 // a warning to nag people into changing their ways for now...
-bool FGFDM::attrb(XMLAttributes* atts, char* attr)
+bool FGFDM::attrb(XMLAttributes* atts, const char* attr)
 {
     const char* val = atts->getValue(attr);
     if(val == 0) return false;

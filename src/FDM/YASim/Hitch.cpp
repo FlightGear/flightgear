@@ -734,13 +734,8 @@ void Hitch::integrate (float dt)
             }
         }
     }
-    //set the _reported_tow_end_force (smoothed)
-    //smooth it a bit and store it
-    float sc=10.*dt; //100ms
-    float tmp[3];
-    Math::mul3(sc,_towEndForce,tmp);
-    Math::mul3(1.-sc,_reportTowEndForce,_reportTowEndForce);
-    Math::add3(tmp,_reportTowEndForce,_reportTowEndForce);
+    //set the _reported_tow_end_force
+    Math::set3(_towEndForce,_reportTowEndForce);
 
     if (_open) return;
     if (_winchRelSpeed==0) return;

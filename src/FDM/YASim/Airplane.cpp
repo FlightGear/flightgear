@@ -417,7 +417,7 @@ float Airplane::getTailIncidence()
     return _tailIncidence;
 }
 
-char* Airplane::getFailureMsg()
+const char* Airplane::getFailureMsg()
 {
     return _failureMsg;
 }

@@ -42,6 +42,8 @@ public:
     void setFlap1(float lval, float rval);
     void setSpoiler(float lval, float rval);
     void setSlat(float val);
+    void setFlap0Effectiveness(float lval);
+    void setFlap1Effectiveness(float lval);
 
     // Compile the thing into a bunch of Surface objects
     void compile();

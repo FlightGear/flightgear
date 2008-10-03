@@ -1,3 +1,5 @@
+#include <ostream>
+
 #include <simgear/debug/logstream.hxx>
 
 #include "Math.hpp"
@@ -6,6 +8,8 @@
 #include <stdio.h>
 #include <string.h>
 namespace yasim {
+using std::endl;
+
 const float pi=3.14159;
 float _help = 0;
 Rotorpart::Rotorpart()

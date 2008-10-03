@@ -25,6 +25,7 @@ Surface::Surface()
     _slatDrag = _spoilerDrag = _flapDrag = 1;
 
     _flapLift = 0;
+    _flapEffectiveness = 1;
     _slatAlpha = 0;
     _spoilerLift = 1;
     _inducedDrag = 1;
@@ -131,6 +132,17 @@ void Surface::setFlap(float pos)
 {
     _flapPos = pos;
 }
+
+void Surface::setFlapEffectiveness(float effectiveness)
+{
+    _flapEffectiveness = effectiveness;
+}
+
+double Surface::getFlapEffectiveness()
+{
+    return _flapEffectiveness;
+}
+
 
 void Surface::setSlat(float pos)
 {
@@ -294,7 +306,8 @@ float Surface::stallFunc(float* v)
 // stall alpha
 float Surface::flapLift(float alpha)
 {
-    float flapLift = _cz * _flapPos * (_flapLift-1);
+    float flapLift = _cz * _flapPos * (_flapLift-1) * _flapEffectiveness;
+
     if(_stalls[0] == 0)
         return 0;
 
