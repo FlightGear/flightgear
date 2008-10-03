@@ -36,11 +36,8 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include <string>
-#ifdef FGFS
-#  include <simgear/props/props.hxx>
-#else
-#  include "simgear/props/props.hxx"
-#endif
+#include <iostream>
+#include "simgear/props/props.hxx"
 
 #include "FGJSBBase.h"
 
@@ -563,7 +560,7 @@ class FGPropertyManager : public SGPropertyNode, public FGJSBBase
      * @param setter The object's setter method, or 0 if the value is
      *        unmodifiable.
      * @param useDefault true if the setter should be invoked with any existing
-     *        property value should be; false if the old value should be
+     *        property value should there be one; false if the old value should be
      *        discarded; defaults to true.
      */
     template <class T, class V> inline void

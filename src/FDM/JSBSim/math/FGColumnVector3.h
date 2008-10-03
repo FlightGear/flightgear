@@ -39,44 +39,19 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <stdlib.h>
-#ifdef FGFS
-#  include <math.h>
-#  include <simgear/compiler.h>
-#  include STL_STRING
-#  include STL_FSTREAM
-#  include STL_IOSTREAM
-   SG_USING_STD(string);
-   SG_USING_STD(ostream);
-   SG_USING_STD(istream);
-   SG_USING_STD(cerr);
-   SG_USING_STD(cout);
-   SG_USING_STD(endl);
-#else
-#  include <string>
-#  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
-#    include <fstream.h>
-#    include <iostream.h>
-#    include <math.h>
-#  else
-#    include <fstream>
-#    include <iostream>
-#    if defined(sgi) && !defined(__GNUC__)
-#      include <math.h>
-#    else
-#      include <cmath>
-#    endif
-     using std::ostream;
-     using std::istream;
-     using std::cerr;
-     using std::cout;
-     using std::endl;
-#    if !(defined(_MSC_VER) && _MSC_VER <= 1200)
-       using std::sqrt;
-#    endif
-#  endif
-   using std::string;
-#endif
+#include <cstdlib>
+#include <string>
+#include <fstream>
+#include <iostream>
+#include <cmath>
+
+using std::ostream;
+using std::istream;
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::sqrt;
+using std::string;
 
 #include "FGJSBBase.h"
 
@@ -96,7 +71,7 @@ namespace JSBSim {
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-/** This class implements a 3 dimensional vector.
+/** This class implements a 3 element column vector.
     @author Jon S. Berndt, Tony Peden, et. al.
     @version $Id$
 */
@@ -155,8 +130,8 @@ public:
       @param idx the component index.
       Return the value of the matrix entry at the given index.
       Indices are counted starting with 1.
-      This function is just a shortcut for the @ref double
-      operator()(unsigned int idx) const function. It is
+      This function is just a shortcut for the <tt>double
+      operator()(unsigned int idx) const</tt> function. It is
       used internally to access the elements in a more convenient way.
       Note that the index given in the argument is unchecked.   */
   double Entry(unsigned int idx) const { return data[idx-1]; }
@@ -165,8 +140,8 @@ public:
       @param idx the component index.
       Return a reference to the vector entry at the given index.
       Indices are counted starting with 1.
-      This function is just a shortcut for the @ref double&
-      operator()(unsigned int idx) function. It is
+      This function is just a shortcut for the <tt>double&
+      operator()(unsigned int idx)</tt> function. It is
       used internally to access the elements in a more convenient way.
       Note that the index given in the argument is unchecked.   */
   double& Entry(unsigned int idx) { return data[idx-1]; }
@@ -213,7 +188,7 @@ public:
   FGColumnVector3 operator/(const double scalar) const;
 
   /** Cross product multiplication.
-      @param v vector to multiply with.
+      @param V vector to multiply with.
       @return The resulting vector from the cross product multiplication.
       Compute and return the cross product of the current vector with
       the given argument.   */

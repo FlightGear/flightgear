@@ -63,12 +63,7 @@ string FGPropertyManager::mkPropertyName(string name, bool lowercase) {
     else if( isspace(name[i]) )
       name[i]='-';
   }
-  /*
-  for(i=0;i<name.length();i++) {
-    if( name[i] == '/' )
-      name.erase(i,1);
-  }
-  */
+  
   return name;
 }
 
@@ -78,9 +73,9 @@ FGPropertyManager*
 FGPropertyManager::GetNode (const string &path, bool create)
 {
   SGPropertyNode* node=this->getNode(path.c_str(), create);
-  if (node == 0 && !suppress_warning)
-    cout << "FGPropertyManager::GetNode() No node found for "
-         << path << endl;
+  if (node == 0 && !suppress_warning) {
+    cout << "FGPropertyManager::GetNode() No node found for " << path << endl;
+  }
   return (FGPropertyManager*)node;
 }
 

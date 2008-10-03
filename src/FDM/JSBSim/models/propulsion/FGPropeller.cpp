@@ -71,6 +71,7 @@ FGPropeller::FGPropeller(FGFDMExec* exec, Element* prop_element, int num)
   Feathered = false;
   Reverse_coef = 0.0;
   GearRatio = 1.0;
+  CtFactor = CpFactor = 1.0;
 
   if (prop_element->FindElement("ixx"))
     Ixx = prop_element->FindElementValueAsNumberConvertTo("ixx", "SLUG*FT2");
@@ -114,6 +115,10 @@ FGPropeller::FGPropeller(FGFDMExec* exec, Element* prop_element, int num)
   if (P_Factor < 0) {
     cerr << "P-Factor value in config file must be greater than zero" << endl;
   }
+  if (prop_element->FindElement("ct_factor"))
+    SetCtFactor( prop_element->FindElementValueAsNumber("ct_factor") );
+  if (prop_element->FindElement("cp_factor"))
+    SetCpFactor( prop_element->FindElementValueAsNumber("cp_factor") );
 
   Type = ttPropeller;
   RPM = 0;
@@ -128,6 +133,8 @@ FGPropeller::FGPropeller(FGFDMExec* exec, Element* prop_element, int num)
   PropertyManager->Tie( property_name, &Pitch );
   snprintf(property_name, 80, "propulsion/engine[%d]/thrust-coefficient", EngineNum);
   PropertyManager->Tie( property_name, this, &FGPropeller::GetThrustCoefficient );
+  snprintf(property_name, 80, "propulsion/engine[%d]/propeller-rpm", EngineNum);
+  PropertyManager->Tie( property_name, this, &FGPropeller::GetRPM );
 
   Debug(0);
 }
@@ -138,14 +145,6 @@ FGPropeller::~FGPropeller()
 {
   delete cThrust;
   delete cPower;
-
-  char property_name[80];
-  snprintf(property_name, 80, "propulsion/engine[%d]/advance-ratio", EngineNum);
-  PropertyManager->Untie( property_name );
-  snprintf(property_name, 80, "propulsion/engine[%d]/blade-angle", EngineNum);
-  PropertyManager->Untie( property_name );
-  snprintf(property_name, 80, "propulsion/engine[%d]/thrust-coefficient", EngineNum);
-  PropertyManager->Untie( property_name );
 
   Debug(1);
 }
@@ -177,6 +176,7 @@ double FGPropeller::Calculate(double PowerAvailable)
 
   if (MaxPitch == MinPitch)  ThrustCoeff = cThrust->GetValue(J);
   else                       ThrustCoeff = cThrust->GetValue(J, Pitch);
+  ThrustCoeff *= CtFactor;
 
   if (P_Factor > 0.0001) {
     alpha = fdmex->GetAuxiliary()->Getalpha();
@@ -266,6 +266,7 @@ double FGPropeller::GetPowerRequired(void)
     }
     cPReq = cPower->GetValue(J, Pitch);
   }
+  cPReq *= CpFactor;
 
   if (RPS > 0) {
     PowerRequired = cPReq*RPS*RPS*RPS*D5*rho;

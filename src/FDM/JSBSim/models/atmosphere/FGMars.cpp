@@ -80,7 +80,6 @@ FGMars::FGMars(FGFDMExec* fdmex) : FGAtmosphere(fdmex)
 /*
 FGMars::~FGMars()
 {
-  unbind();
   Debug(1);
 }
 */

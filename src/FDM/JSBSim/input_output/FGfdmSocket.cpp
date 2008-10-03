@@ -32,13 +32,14 @@ This class excapsulates a socket for simple data writing
 HISTORY
 --------------------------------------------------------------------------------
 11/08/99   JSB   Created
+11/08/07   HDW   Added Generic Socket Send
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <cstring>
 #include "FGfdmSocket.h"
+#include <cstring>
 
 namespace JSBSim {
 
@@ -49,18 +50,76 @@ static const char *IdHdr = ID_FDMSOCKET;
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-FGfdmSocket::FGfdmSocket(string address, int port)
+FGfdmSocket::FGfdmSocket(string address, int port, int protocol)
 {
   sckt = sckt_in = size = 0;
   connected = false;
 
-  #if defined(__BORLANDC__) || defined(_MSC_VER) || defined(__MINGW32__)
+  #if defined(_MSC_VER) || defined(__MINGW32__)
     WSADATA wsaData;
     int wsaReturnCode;
     wsaReturnCode = WSAStartup(MAKEWORD(1,1), &wsaData);
     if (wsaReturnCode == 0) cout << "Winsock DLL loaded ..." << endl;
     else cout << "Winsock DLL not initialized ..." << endl;
   #endif
+
+  if (address.find_first_not_of("0123456789.",0) != address.npos) {
+    if ((host = gethostbyname(address.c_str())) == NULL) {
+      cout << "Could not get host net address by name..." << endl;
+    }
+  } else {
+    if ((host = gethostbyaddr(address.c_str(), address.size(), PF_INET)) == NULL) {
+      cout << "Could not get host net address by number..." << endl;
+    }
+  }
+
+  if (host != NULL) {
+    if (protocol == ptUDP) {  //use udp protocol
+       sckt = socket(AF_INET, SOCK_DGRAM, 0);
+       cout << "Creating UDP socket on port " << port << endl;
+    }
+    else { //use tcp protocol
+       sckt = socket(AF_INET, SOCK_STREAM, 0);
+       cout << "Creating TCP socket on port " << port << endl;
+    }
+
+    if (sckt >= 0) {  // successful
+      memset(&scktName, 0, sizeof(struct sockaddr_in));
+      scktName.sin_family = AF_INET;
+      scktName.sin_port = htons(port);
+      memcpy(&scktName.sin_addr, host->h_addr_list[0], host->h_length);
+      int len = sizeof(struct sockaddr_in);
+      if (connect(sckt, (struct sockaddr*)&scktName, len) == 0) {   // successful
+        cout << "Successfully connected to socket for output ..." << endl;
+        connected = true;
+      } else {                // unsuccessful
+        cout << "Could not connect to socket for output ..." << endl;
+      }
+    } else {          // unsuccessful
+      cout << "Could not create socket for FDM output, error = " << errno << endl;
+    }
+  }
+  Debug(0);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+FGfdmSocket::FGfdmSocket(string address, int port)
+{
+  sckt = sckt_in = size = 0;
+  connected = false;
+
+  #if defined(_MSC_VER) || defined(__MINGW32__)
+    WSADATA wsaData;
+    int wsaReturnCode;
+    wsaReturnCode = WSAStartup(MAKEWORD(1,1), &wsaData);
+    if (wsaReturnCode == 0) cout << "Winsock DLL loaded ..." << endl;
+    else cout << "Winsock DLL not initialized ..." << endl;
+  #endif
+
+  cout << "... Socket Configuration Sanity Check ..." << endl;
+  cout << "Host name...   " << address << ",  Port...  " << port << "." << endl;
+  cout << "Host name... (char)  " << address.c_str() << "." << endl;
 
   if (address.find_first_not_of("0123456789.",0) != address.npos) {
     if ((host = gethostbyname(address.c_str())) == NULL) {
@@ -103,7 +162,7 @@ FGfdmSocket::FGfdmSocket(int port)
   connected = false;
   unsigned long NoBlock = true;
 
-  #if defined(__BORLANDC__) || defined(_MSC_VER) || defined(__MINGW32__)
+  #if defined(_MSC_VER) || defined(__MINGW32__)
     WSADATA wsaData;
     int wsaReturnCode;
     wsaReturnCode = WSAStartup(MAKEWORD(1,1), &wsaData);
@@ -121,7 +180,7 @@ FGfdmSocket::FGfdmSocket(int port)
     if (bind(sckt, (struct sockaddr*)&scktName, len) == 0) {   // successful
       cout << "Successfully bound to socket for input on port " << port << endl;
       if (listen(sckt, 5) >= 0) { // successful listen()
-        #if defined(__BORLANDC__) || defined(_MSC_VER) || defined(__MINGW32__)
+        #if defined(_MSC_VER) || defined(__MINGW32__)
           ioctlsocket(sckt, FIONBIO, &NoBlock);
           sckt_in = accept(sckt, (struct sockaddr*)&scktName, &len);
         #else
@@ -146,14 +205,8 @@ FGfdmSocket::FGfdmSocket(int port)
 
 FGfdmSocket::~FGfdmSocket()
 {
-  #ifndef macintosh
   if (sckt) shutdown(sckt,2);
   if (sckt_in) shutdown(sckt_in,2);
-  #endif
-
-  #ifdef __BORLANDC__
-    WSACleanup();
-  #endif
   Debug(1);
 }
 
@@ -170,13 +223,13 @@ string FGfdmSocket::Receive(void)
                     // class attribute and pass as a reference?
 
   if (sckt_in <= 0) {
-    #if defined(__BORLANDC__) || defined(_MSC_VER) || defined(__MINGW32__)
+    #if defined(_MSC_VER) || defined(__MINGW32__)
       sckt_in = accept(sckt, (struct sockaddr*)&scktName, &len);
     #else
       sckt_in = accept(sckt, (struct sockaddr*)&scktName, (socklen_t*)&len);
     #endif
     if (sckt_in > 0) {
-      #if defined(__BORLANDC__) || defined(_MSC_VER) || defined(__MINGW32__)
+      #if defined(_MSC_VER) || defined(__MINGW32__)
          ioctlsocket(sckt_in, FIONBIO,&NoBlock);
       #else
          ioctl(sckt_in, FIONBIO, &NoBlock);
@@ -288,6 +341,16 @@ void FGfdmSocket::Send(void)
 {
   buffer += string("\n");
   if ((send(sckt,buffer.c_str(),buffer.size(),0)) <= 0) {
+    perror("send");
+  } else {
+  }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGfdmSocket::Send(char *data, int length)
+{
+  if ((send(sckt,data,length,0)) <= 0) {
     perror("send");
   } else {
   }

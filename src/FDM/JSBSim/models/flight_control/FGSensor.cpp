@@ -144,6 +144,7 @@ bool FGSensor::Run(void )
   if (bits != 0)             Quantize();  // models quantization degradation
 //  if (delay != 0.0)          Delay();     // models system signal transport latencies
 
+  Clip(); // Is it right to clip a sensor?
   return true;
 }
 

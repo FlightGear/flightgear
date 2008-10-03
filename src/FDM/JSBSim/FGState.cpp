@@ -36,16 +36,7 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  include <math.h>
-#else
-#  if defined(sgi) && !defined(__GNUC__)
-#    include <math.h>
-#  else
-#    include <cmath>
-#  endif
-#endif
+#include <cmath>
 
 #include "FGState.h"
 
@@ -88,7 +79,6 @@ FGState::FGState(FGFDMExec* fdex)
 
 FGState::~FGState()
 {
-  unbind();
   Debug(1);
 }
 
@@ -131,71 +121,9 @@ void FGState::Initialize(FGInitialCondition *FGIC)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGMatrix33& FGState::GetTs2b(void)
-{
-  double ca, cb, sa, sb;
-
-  double alpha = Auxiliary->Getalpha();
-  double beta  = Auxiliary->Getbeta();
-
-  ca = cos(alpha);
-  sa = sin(alpha);
-  cb = cos(beta);
-  sb = sin(beta);
-
-  mTs2b(1,1) = ca*cb;
-  mTs2b(1,2) = -ca*sb;
-  mTs2b(1,3) = -sa;
-  mTs2b(2,1) = sb;
-  mTs2b(2,2) = cb;
-  mTs2b(2,3) = 0.0;
-  mTs2b(3,1) = sa*cb;
-  mTs2b(3,2) = -sa*sb;
-  mTs2b(3,3) = ca;
-
-  return mTs2b;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-FGMatrix33& FGState::GetTb2s(void)
-{
-  double alpha,beta;
-  double ca, cb, sa, sb;
-
-  alpha = Auxiliary->Getalpha();
-  beta  = Auxiliary->Getbeta();
-
-  ca = cos(alpha);
-  sa = sin(alpha);
-  cb = cos(beta);
-  sb = sin(beta);
-
-  mTb2s(1,1) = ca*cb;
-  mTb2s(1,2) = sb;
-  mTb2s(1,3) = sa*cb;
-  mTb2s(2,1) = -ca*sb;
-  mTb2s(2,2) = cb;
-  mTb2s(2,3) = -sa*sb;
-  mTb2s(3,1) = -sa;
-  mTb2s(3,2) = 0.0;
-  mTb2s(3,3) = ca;
-
-  return mTb2s;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 void FGState::bind(void)
 {
   PropertyManager->Tie("sim-time-sec", this, &FGState::Getsim_time);
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGState::unbind(void)
-{
-  PropertyManager->Untie("sim-time-sec");
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

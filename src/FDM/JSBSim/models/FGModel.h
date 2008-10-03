@@ -42,21 +42,7 @@ INCLUDES
 #include <input_output/FGPropertyManager.h>
 #include <input_output/FGXMLElement.h>
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
-#    include <iostream>
-#  else
-#    include <iostream.h>
-#  endif
-#else
-#  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
-#    include <iostream.h>
-#  else
-#    include <iostream>
-#  endif
-#endif
-
+#include <iostream>
 #include <string>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -82,6 +68,8 @@ class FGMassBalance;
 class FGAerodynamics;
 class FGInertial;
 class FGGroundReactions;
+class FGExternalReactions;
+class FGBuoyantForces;
 class FGAircraft;
 class FGPropagate;
 class FGAuxiliary;
@@ -140,6 +128,8 @@ protected:
   FGAerodynamics*    Aerodynamics;
   FGInertial*        Inertial;
   FGGroundReactions* GroundReactions;
+  FGExternalReactions* ExternalReactions;
+  FGBuoyantForces*   BuoyantForces;
   FGAircraft*        Aircraft;
   FGPropagate*       Propagate;
   FGAuxiliary*       Auxiliary;

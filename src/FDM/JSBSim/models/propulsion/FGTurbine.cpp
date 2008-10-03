@@ -57,7 +57,19 @@ CLASS IMPLEMENTATION
 FGTurbine::FGTurbine(FGFDMExec* exec, Element *el, int engine_number)
   : FGEngine(exec, el, engine_number)
 {
-  SetDefaults();
+  Type = etTurbine;
+
+  MilThrust = MaxThrust = 10000.0;
+  TSFC = 0.8;
+  ATSFC = 1.7;
+  IdleN1 = 30.0;
+  IdleN2 = 60.0;
+  MaxN1 = MaxN2 = 100.0;
+  Augmented = AugMethod = Injected = 0;
+  BypassRatio = BleedDemand = 0.0;
+  IdleThrustLookup = MilThrustLookup = MaxThrustLookup = InjectionLookup = 0;
+
+  ResetToIC();
 
   Load(exec, el);
   Debug(0);
@@ -71,8 +83,22 @@ FGTurbine::~FGTurbine()
   delete MilThrustLookup;
   delete MaxThrustLookup;
   delete InjectionLookup;
-  unbind();
   Debug(1);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGTurbine::ResetToIC(void)
+{
+  N1 = N2 = 0.0;
+  correctedTSFC = TSFC;
+  ThrottlePos = AugmentCmd = 0.0;
+  InletPosition = NozzlePosition = 1.0;
+  Stalled = Seized = Overtemp = Fire = Augmentation = Injection = Reversed = false;
+  Cutoff = true;
+  phase = tpOff;
+  EGT_degC = 0.0;
+  OilTemp_degK = (Auxiliary->GetTotalTemperature() - 491.69) * 0.5555556 + 273.0;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -148,6 +174,7 @@ double FGTurbine::Off(void)
   NozzlePosition = Seek(&NozzlePosition, 1.0, 0.8, 0.8);
   EPR = Seek(&EPR, 1.0, 0.2, 0.2);
   Augmentation = false;
+  ConsumeFuel();  
   return 0.0;
 }
 
@@ -205,7 +232,12 @@ double FGTurbine::Run()
   }
 
   if ((Injected == 1) && Injection) {
-    thrust = thrust * InjectionLookup->GetValue();
+    InjectionTimer += dt;
+    if (InjectionTimer < InjectionTime) {
+       thrust = thrust * InjectionLookup->GetValue();
+    } else {
+       Injection = false;
+    }
   }
 
   ConsumeFuel();
@@ -294,10 +326,12 @@ double FGTurbine::Seize(void)
 
 double FGTurbine::Trim()
 {
-    double idlethrust, milthrust, thrust, tdiff;
+    double idlethrust, milthrust, thrust, tdiff, N2norm;
     idlethrust = MilThrust * IdleThrustLookup->GetValue();
     milthrust = (MilThrust - idlethrust) * MilThrustLookup->GetValue();
-    thrust = (idlethrust + (milthrust * ThrottlePos * ThrottlePos))
+    N2 = IdleN2 + ThrottlePos * N2_factor;
+    N2norm = (N2 - IdleN2) / N2_factor;
+    thrust = (idlethrust + (milthrust * N2norm * N2norm))
           * (1.0 - BleedDemand);
 
     if (AugMethod == 1) {
@@ -355,43 +389,6 @@ double FGTurbine::Seek(double *var, double target, double accel, double decel) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGTurbine::SetDefaults(void)
-{
-  N1 = N2 = 0.0;
-  Type = etTurbine;
-  MilThrust = 10000.0;
-  MaxThrust = 10000.0;
-  BypassRatio = 0.0;
-  TSFC = 0.8;
-  correctedTSFC = TSFC;
-  ATSFC = 1.7;
-  IdleN1 = 30.0;
-  IdleN2 = 60.0;
-  MaxN1 = 100.0;
-  MaxN2 = 100.0;
-  Augmented = 0;
-  AugMethod = 0;
-  Injected = 0;
-  BleedDemand = 0.0;
-  ThrottlePos = 0.0;
-  AugmentCmd = 0.0;
-  InletPosition = 1.0;
-  NozzlePosition = 1.0;
-  Augmentation = false;
-  Injection = false;
-  Reversed = false;
-  Cutoff = true;
-  phase = tpOff;
-  Stalled = false;
-  Seized = false;
-  Overtemp = false;
-  Fire = false;
-  EGT_degC = 0.0;
-  IdleThrustLookup = MilThrustLookup = MaxThrustLookup = InjectionLookup = 0;
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 bool FGTurbine::Load(FGFDMExec* exec, Element *el)
 {
   char property_prefix[80];
@@ -423,6 +420,8 @@ bool FGTurbine::Load(FGFDMExec* exec, Element *el)
     AugMethod = (int)el->FindElementValueAsNumber("augmethod");
   if (el->FindElement("injected"))
     Injected = (int)el->FindElementValueAsNumber("injected");
+  if (el->FindElement("injection-time"))
+    InjectionTime = el->FindElementValueAsNumber("injection-time");
 
   Element *function_element;
   string name;
@@ -496,20 +495,21 @@ void FGTurbine::bindmodel()
   PropertyManager->Tie( property_name, &N2);
   snprintf(property_name, 80, "propulsion/engine[%u]/thrust", EngineNumber);
   PropertyManager->Tie( property_name, this, &FGTurbine::GetThrust);
+  snprintf(property_name, 80, "propulsion/engine[%u]/injection_cmd", EngineNumber);
+  PropertyManager->Tie( property_name, (FGTurbine*)this, 
+                        &FGTurbine::GetInjection, &FGTurbine::SetInjection);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGTurbine::unbind()
-{
-  char property_name[80];
-
-  snprintf(property_name, 80, "propulsion/engine[%u]/n1", EngineNumber);
-  PropertyManager->Untie(property_name);
-  snprintf(property_name, 80, "propulsion/engine[%u]/n2", EngineNumber);
-  PropertyManager->Untie(property_name);
-  snprintf(property_name, 80, "propulsion/engine[%u]/thrust", EngineNumber);
-  PropertyManager->Untie(property_name);
+int FGTurbine::InitRunning(void) {
+  State->SuspendIntegration();
+  Cutoff=false;
+  Running=true;  
+  N2=16.0;
+  Calculate();
+  State->ResumeIntegration();
+  return phase==tpRun;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

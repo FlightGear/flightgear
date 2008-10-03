@@ -40,6 +40,7 @@ INCLUDES
 #include "FGJSBBase.h"
 #include "FGState.h"
 #include "FGFDMExec.h"
+#include <math/FGFunction.h>
 #include <math/FGCondition.h>
 #include <vector>
 #include <input_output/FGXMLFileRead.h>
@@ -183,6 +184,10 @@ public:
       @return false if script should exit (i.e. if time limits are violated */
   bool RunScript(void);
 
+  void ResetEvents(void) {
+    for (int i=0; i<Events.size(); i++) Events[i].reset();
+  }
+
 private:
   enum eAction {
     FG_RAMP  = 1,
@@ -217,6 +222,7 @@ private:
     vector <double>  OriginalValue;
     vector <double>  ValueSpan;
     vector <bool>    Transiting;
+    vector <FGFunction*> Functions;
 
     event() {
       Triggered = false;
@@ -228,13 +234,20 @@ private:
       StartTime = 0.0;
       TimeSpan = 0.0;
     }
+
+    void reset(void) {
+      Triggered = false;
+      PrevTriggered = false;
+      Notified = false;
+      StartTime = 0.0;
+    }
   };
 
   struct LocalProps {
     double *value;
     string title;
-    LocalProps() {
-      value = new double(0.0);
+    LocalProps(double initial_value=0) {
+      value = new double(initial_value);
       title = "";
     }
   };

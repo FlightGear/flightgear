@@ -38,30 +38,12 @@ SENTRY
   INCLUDES
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <math.h>
-#  include <simgear/compiler.h>
-#  include STL_IOSTREAM
-   SG_USING_STD(cerr);
-   SG_USING_STD(cout);
-   SG_USING_STD(endl);
-#else
-#  include <string>
-#  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
-#    include <iostream.h>
-#    include <math.h>
-#  else
-#    include <iostream>
-#    if defined(sgi) && !defined(__GNUC__)
-#      include <math.h>
-#    else
-#      include <cmath>
-#    endif
-     using std::cerr;
-     using std::cout;
-     using std::endl;
-#  endif
-#endif
+#include <string>
+#include <iostream>
+#include <cmath>
+using std::cerr;
+using std::cout;
+using std::endl;
 
 #include "FGMatrix33.h"
 #include "FGColumnVector3.h"
@@ -125,9 +107,10 @@ FGQuaternion::FGQuaternion(double phi, double tht, double psi)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-/**
-   Returns the derivative of the quaternion coresponding to the
-   angular velocities PQR.
+/** Returns the derivative of the quaternion corresponding to the
+    angular velocities PQR.
+    See Stevens and Lewis, "Aircraft Control and Simulation", Second Edition,
+    Equation 1.3-36. 
 */
 FGQuaternion FGQuaternion::GetQDot(const FGColumnVector3& PQR) const {
   double norm = Magnitude();

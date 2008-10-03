@@ -37,17 +37,12 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  include STL_STRING
-   SG_USING_STD(string);
-#else
-#  include <string>
-#endif
-
 #include "FGFCSComponent.h"
+#include <string>
 #include <input_output/FGXMLElement.h>
 #include <math/FGTable.h>
+
+using std::string;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -234,6 +229,7 @@ public:
 private:
   FGTable* Table;
   FGPropertyManager* GainPropertyNode;
+  double GainPropertySign;
   double Gain;
   double InMin, InMax, OutMin, OutMax;
   int Rows;

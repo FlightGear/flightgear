@@ -90,8 +90,8 @@ CLASS DOCUMENTATION
     normalized thrust value looks roughly like this:
 
 <pre>    
-  <thrust_table name="propulsion/thrust_time" type="internal">
-    <tableData>
+ \<thrust_table name="propulsion/thrust_time" type="internal">
+   \<tableData>
       0.0   0.00
       0.2   0.91
       8.0   0.97
@@ -114,8 +114,8 @@ CLASS DOCUMENTATION
     112.0   0.46
     120.0   0.09
     132.0   0.00
-    </tableData>
-  </thrust_table>
+   \</tableData>
+ \</thrust_table>
 </pre>
 
 The left column is time, the right column is normalized thrust. Inside the

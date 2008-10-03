@@ -195,7 +195,7 @@ other hand, will require it to be be called only once.</p>
 
 <p>Retrieval of the computed forces and moments is done as detailed above.</p>
 <br>
-<blockquote>
+<pre>
     <p><i>CAVEAT: If the custom system is used to compute
     the wind-to-body transform, then the sign of the sideslip
     angle must be reversed when calling SetAnglesToBody().
@@ -203,8 +203,8 @@ other hand, will require it to be be called only once.</p>
     hand rule. Using the custom transform type this way
     should not be necessary, as it is already provided as a built
     in type (and the sign differences are correctly accounted for).</i>
-    <br></p>
-</blockquote>
+    </p>
+</pre>
 
 <h4>Use as a Base Type</h4>
 
@@ -227,12 +227,18 @@ class FGForce : public FGJSBBase
 public:
   /// Constructor
   FGForce(FGFDMExec *FDMExec);
+  FGForce(const FGForce& force) {
+    vFn = force.vFn;
+    vXYZn = force.vXYZn;
+    ttype = force.ttype;
+    fdmex = force.fdmex;
+  }
   /// Destructor
   ~FGForce();
 
   enum TransformType { tNone, tWindBody, tLocalBody, tCustom };
 
-  FGColumnVector3& GetBodyForces(void);
+  virtual FGColumnVector3& GetBodyForces(void);
 
   inline FGColumnVector3& GetMoments(void) { return vM; }
 

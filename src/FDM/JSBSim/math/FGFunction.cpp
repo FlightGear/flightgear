@@ -53,40 +53,85 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, string prefix)
   cached = false;
   cachedValue = -HUGE_VAL;
 
+  property_string = "property";
+  value_string = "value";
+  table_string = "table";
+  p_string = "p";
+  v_string = "v";
+  t_string = "t";
+
+  function_string = "function";
+  description_string = "description";
+  sum_string = "sum";
+  difference_string = "difference";
+  product_string = "product";
+  quotient_string = "quotient";
+  pow_string = "pow";
+  exp_string = "exp";
+  abs_string = "abs";
+  sin_string = "sin";
+  cos_string = "cos";
+  tan_string = "tan";
+  asin_string = "asin";
+  acos_string = "acos";
+  atan_string = "atan";
+  atan2_string = "atan2";
+  min_string = "min";
+  max_string = "max";
+  avg_string = "avg";
+  fraction_string = "fraction";
+  mod_string = "mod";
+  random_string = "random";
+  integer_string = "integer";
+
   Name = el->GetAttributeValue("name");
   operation = el->GetName();
 
-  if (operation == string("function")) {
+  if (operation == function_string) {
     Type = eTopLevel;
-  } else if (operation == string("product")) {
+  } else if (operation == product_string) {
     Type = eProduct;
-  } else if (operation == string("difference")) {
+  } else if (operation == difference_string) {
     Type = eDifference;
-  } else if (operation == string("sum")) {
+  } else if (operation == sum_string) {
     Type = eSum;
-  } else if (operation == string("quotient")) {
+  } else if (operation == quotient_string) {
     Type = eQuotient;
-  } else if (operation == string("pow")) {
+  } else if (operation == pow_string) {
     Type = ePow;
-  } else if (operation == string("abs")) {
+  } else if (operation == abs_string) {
     Type = eAbs;
-  } else if (operation == string("sin")) {
+  } else if (operation == sin_string) {
     Type = eSin;
-  } else if (operation == string("exp")) {
+  } else if (operation == exp_string) {
     Type = eExp;
-  } else if (operation == string("cos")) {
+  } else if (operation == cos_string) {
     Type = eCos;
-  } else if (operation == string("tan")) {
+  } else if (operation == tan_string) {
     Type = eTan;
-  } else if (operation == string("asin")) {
+  } else if (operation == asin_string) {
     Type = eASin;
-  } else if (operation == string("acos")) {
+  } else if (operation == acos_string) {
     Type = eACos;
-  } else if (operation == string("atan")) {
+  } else if (operation == atan_string) {
     Type = eATan;
-  } else if (operation == string("atan2")) {
+  } else if (operation == atan2_string) {
     Type = eATan2;
-  } else if (operation != string("description")) {
+  } else if (operation == min_string) {
+    Type = eMin;
+  } else if (operation == max_string) {
+    Type = eMax;
+  } else if (operation == avg_string) {
+    Type = eAvg;
+  } else if (operation == fraction_string) {
+    Type = eFrac;
+  } else if (operation == integer_string) {
+    Type = eInteger;
+  } else if (operation == mod_string) {
+    Type = eMod;
+  } else if (operation == random_string) {
+    Type = eRandom;
+  } else if (operation != description_string) {
     cerr << "Bad operation " << operation << " detected in configuration file" << endl;
   }
 
@@ -105,7 +150,7 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, string prefix)
     operation = element->GetName();
 
     // data types
-    if (operation == string("property")) {
+    if (operation == property_string || operation == p_string) {
       property_name = element->GetDataLine();
       FGPropertyManager* newNode = PropertyManager->GetNode(property_name);
       if (newNode == 0) {
@@ -114,28 +159,35 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, string prefix)
       } else {
         Parameters.push_back(new FGPropertyValue( newNode ));
       }
-    } else if (operation == string("value")) {
+    } else if (operation == value_string || operation == v_string) {
       Parameters.push_back(new FGRealValue(element->GetDataAsNumber()));
-    } else if (operation == string("table")) {
+    } else if (operation == table_string || operation == t_string) {
       Parameters.push_back(new FGTable(PropertyManager, element));
     // operations
-    } else if (operation == string("product") ||
-               operation == string("difference") ||
-               operation == string("sum") ||
-               operation == string("quotient") ||
-               operation == string("pow") ||
-               operation == string("exp") ||
-               operation == string("abs") ||
-               operation == string("sin") ||
-               operation == string("cos") ||
-               operation == string("tan") ||
-               operation == string("asin") ||
-               operation == string("acos") ||
-               operation == string("atan") ||
-               operation == string("atan2"))
+    } else if (operation == product_string ||
+               operation == difference_string ||
+               operation == sum_string ||
+               operation == quotient_string ||
+               operation == pow_string ||
+               operation == exp_string ||
+               operation == abs_string ||
+               operation == sin_string ||
+               operation == cos_string ||
+               operation == tan_string ||
+               operation == asin_string ||
+               operation == acos_string ||
+               operation == atan_string ||
+               operation == atan2_string ||
+               operation == min_string ||
+               operation == max_string ||
+               operation == fraction_string ||
+               operation == integer_string ||
+               operation == mod_string ||
+               operation == random_string ||
+               operation == avg_string )
     {
       Parameters.push_back(new FGFunction(PropertyManager, element));
-    } else if (operation != string("description")) {
+    } else if (operation != description_string) {
       cerr << "Bad operation " << operation << " detected in configuration file" << endl;
     }
     element = el->GetNextElement();
@@ -150,14 +202,7 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, string prefix)
 
 FGFunction::~FGFunction(void)
 {
-  if (!Name.empty()) {
-    string tmp = PropertyManager->mkPropertyName(Prefix + Name, false); // Allow upper case
-    PropertyManager->Untie(tmp);
-  }
-
-  for (unsigned int i=0; i<Parameters.size(); i++) {
-    delete Parameters[i];
-  }
+  for (unsigned int i=0; i<Parameters.size(); i++) delete Parameters[i];
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -177,6 +222,7 @@ void FGFunction::cacheValue(bool cache)
 double FGFunction::GetValue(void) const
 {
   unsigned int i;
+  double scratch;
 
   if (cached) return cachedValue;
 
@@ -233,6 +279,35 @@ double FGFunction::GetValue(void) const
   case eATan2:
     temp = atan2(temp, Parameters[1]->GetValue());
     break;
+  case eMod:
+    temp = ((int)temp) % ((int) Parameters[1]->GetValue());
+    break;
+  case eMin:
+    for (i=1;i<Parameters.size();i++) {
+      if (Parameters[i]->GetValue() < temp) temp = Parameters[i]->GetValue();
+    }    
+    break;
+  case eMax:
+    for (i=1;i<Parameters.size();i++) {
+      if (Parameters[i]->GetValue() > temp) temp = Parameters[i]->GetValue();
+    }    
+    break;
+  case eAvg:
+    for (i=1;i<Parameters.size();i++) {
+      temp += Parameters[i]->GetValue();
+    }
+    temp /= Parameters.size();
+    break;
+  case eFrac:
+    temp = modf(temp, &scratch);
+    break;
+  case eInteger:
+    modf(temp, &scratch);
+    temp = scratch;
+    break;
+  case eRandom:
+    temp = GaussianRandomNumber();
+    break;
   default:
     cerr << "Unknown function operation type" << endl;
     break;
@@ -251,6 +326,33 @@ string FGFunction::GetValueAsString(void) const
   sprintf(buffer,"%9.6f",GetValue());
   value = string(buffer);
   return value;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGFunction::GaussianRandomNumber(void) const
+{
+  static double V1, V2, S;
+  static int phase = 0;
+  double X;
+
+  if (phase == 0) {
+    do {
+      double U1 = (double)rand() / RAND_MAX;
+      double U2 = (double)rand() / RAND_MAX;
+
+      V1 = 2 * U1 - 1;
+      V2 = 2 * U2 - 1;
+      S = V1 * V1 + V2 * V2;
+    } while(S >= 1 || S == 0);
+
+      X = V1 * sqrt(-2 * log(S) / S);
+  } else
+    X = V2 * sqrt(-2 * log(S) / S);
+
+  phase = 1 - phase;
+
+  return X;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

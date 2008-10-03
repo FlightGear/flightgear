@@ -42,21 +42,6 @@ you have chosen your IC's wisely) even after setting it up with this class.
 INCLUDES
 *******************************************************************************/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
-#    include <fstream>
-#  else
-#    include <fstream.h>
-#  endif
-#else
-#  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
-#    include <fstream.h>
-#  else
-#    include <fstream>
-#  endif
-#endif
-
 #include "FGInitialCondition.h"
 #include <FGFDMExec.h>
 #include <models/FGInertial.h>
@@ -66,6 +51,8 @@ INCLUDES
 #include <input_output/FGPropertyManager.h>
 #include <models/FGPropulsion.h>
 #include <input_output/FGXMLParse.h>
+#include <math/FGQuaternion.h>
+#include <fstream>
 
 namespace JSBSim {
 
@@ -74,7 +61,72 @@ static const char *IdHdr = ID_INITIALCONDITION;
 
 //******************************************************************************
 
-FGInitialCondition::FGInitialCondition(FGFDMExec *FDMExec)
+FGInitialCondition::FGInitialCondition(FGFDMExec *FDMExec) : fdmex(FDMExec)
+{
+  InitializeIC();
+
+  if(FDMExec != NULL ) {
+    fdmex->GetPropagate()->Seth(altitude);
+    fdmex->GetAtmosphere()->Run();
+    PropertyManager=fdmex->GetPropertyManager();
+    bind();
+  } else {
+    cout << "FGInitialCondition: This class requires a pointer to a valid FGFDMExec object" << endl;
+  }
+
+  Debug(0);
+}
+
+//******************************************************************************
+
+FGInitialCondition::~FGInitialCondition()
+{
+  Debug(1);
+}
+
+//******************************************************************************
+
+void FGInitialCondition::ResetIC(double u0, double v0, double w0,
+                                 double p0, double q0, double r0,
+                                 double alpha0, double beta0,
+                                 double phi0, double theta0, double psi0,
+                                 double latRad0, double lonRad0, double altAGLFt0,
+                                 double gamma0)
+{
+  InitializeIC();
+
+  u = u0;  v = v0;  w = w0;
+  p = p0;  q = q0;  r = r0;
+  alpha = alpha0;  beta = beta0;
+  phi = phi0;  theta = theta0;  psi = psi0;
+  gamma = gamma0;
+
+  latitude = latRad0;
+  longitude = lonRad0;
+  SetAltitudeAGLFtIC(altAGLFt0);
+
+  cphi   = cos(phi);   sphi   = sin(phi);   // phi, rad
+  ctheta = cos(theta); stheta = sin(theta); // theta, rad
+  cpsi   = cos(psi);   spsi   = sin(psi);   // psi, rad
+
+  FGQuaternion Quat( phi, theta, psi );
+  Quat.Normalize();
+
+  const FGMatrix33& _Tl2b  = Quat.GetT();     // local to body frame
+  const FGMatrix33& _Tb2l  = Quat.GetTInv();  // body to local
+
+  FGColumnVector3 _vUVW_BODY(u,v,w);
+  FGColumnVector3 _vUVW_NED = _Tb2l * _vUVW_BODY;
+  FGColumnVector3 _vWIND_NED(wnorth,weast,wdown);
+  FGColumnVector3 _vUVWAero = _Tl2b * ( _vUVW_NED + _vWIND_NED );
+
+  uw=_vWIND_NED(1); vw=_vWIND_NED(2); ww=_vWIND_NED(3);
+
+}
+
+//******************************************************************************
+
+void FGInitialCondition::InitializeIC(void)
 {
   vt=vc=ve=vg=0;
   mach=0;
@@ -91,32 +143,41 @@ FGInitialCondition::FGInitialCondition(FGFDMExec *FDMExec)
   wdir=wmag=0;
   lastSpeedSet=setvt;
   lastWindSet=setwned;
-  sea_level_radius = FDMExec->GetInertial()->RefRadius();
-  radius_to_vehicle = FDMExec->GetInertial()->RefRadius();
+  radius_to_vehicle = sea_level_radius = fdmex->GetInertial()->GetRefRadius();
   terrain_altitude = 0;
+
+  targetNlfIC = 1.0;
 
   salpha=sbeta=stheta=sphi=spsi=sgamma=0;
   calpha=cbeta=ctheta=cphi=cpsi=cgamma=1;
-
-  if(FDMExec != NULL ) {
-    fdmex=FDMExec;
-    fdmex->GetPropagate()->Seth(altitude);
-    fdmex->GetAtmosphere()->Run();
-    PropertyManager=fdmex->GetPropertyManager();
-    bind();
-  } else {
-    cout << "FGInitialCondition: This class requires a pointer to a valid FGFDMExec object" << endl;
-  }
-
-  Debug(0);
 }
 
 //******************************************************************************
 
-FGInitialCondition::~FGInitialCondition()
+void FGInitialCondition::WriteStateFile(int num)
 {
-  unbind();
-  Debug(1);
+  string filename = fdmex->GetFullAircraftPath() + "/" + "initfile.xml";
+  ofstream outfile(filename.c_str());
+  FGPropagate* Propagate = fdmex->GetPropagate();
+  
+  if (outfile.is_open()) {
+    outfile << "<?xml version=\"1.0\"?>" << endl;
+    outfile << "<initialize name=\"reset00\">" << endl;
+    outfile << "  <ubody unit=\"FT/SEC\"> " << Propagate->GetUVW(eX) << " </ubody> " << endl;
+    outfile << "  <vbody unit=\"FT/SEC\"> " << Propagate->GetUVW(eY) << " </vbody> " << endl;
+    outfile << "  <wbody unit=\"FT/SEC\"> " << Propagate->GetUVW(eZ) << " </wbody> " << endl;
+    outfile << "  <phi unit=\"DEG\"> " << Propagate->GetEuler(ePhi) << " </phi>" << endl;
+    outfile << "  <theta unit=\"DEG\"> " << Propagate->GetEuler(eTht) << " </theta>" << endl;
+    outfile << "  <psi unit=\"DEG\"> " << Propagate->GetEuler(ePsi) << " </psi>" << endl;
+    outfile << "  <longitude unit=\"DEG\"> " << Propagate->GetLongitudeDeg() << " </longitude>" << endl;
+    outfile << "  <latitude unit=\"DEG\"> " << Propagate->GetLatitudeDeg() << " </latitude>" << endl;
+    outfile << "  <altitude unit=\"FT\"> " << Propagate->Geth() << " </altitude>" << endl;
+    outfile << "</initialize>" << endl;
+  } else {
+    cerr << "Could not open and/or write the state to the initial conditions file." << endl;
+  }
+
+  outfile.close();
 }
 
 //******************************************************************************
@@ -280,10 +341,69 @@ void FGInitialCondition::SetWBodyFpsIC(double tt) {
   lastSpeedSet=setuvw;
 }
 
+
+//******************************************************************************
+
+void FGInitialCondition::SetVNorthFpsIC(double tt) {
+  double ua,va,wa;
+  double vxz;
+  vnorth = tt;
+  calcUVWfromNED();
+  ua = u + uw; va = v + vw; wa = w + ww;
+  vt = sqrt( ua*ua + va*va + wa*wa );
+  alpha = beta = 0;
+  vxz = sqrt( u*u + w*w );
+  if( w != 0 ) alpha = atan2( w, u );
+  if( vxz != 0 ) beta = atan2( v, vxz );
+  mach=vt/fdmex->GetAtmosphere()->GetSoundSpeed();
+  vc=calcVcas(mach);
+  ve=vt*sqrt(fdmex->GetAtmosphere()->GetDensityRatio());
+  lastSpeedSet=setned;
+}
+
+//******************************************************************************
+
+void FGInitialCondition::SetVEastFpsIC(double tt) {
+  double ua,va,wa;
+  double vxz;
+  veast = tt;
+  calcUVWfromNED();
+  ua = u + uw; va = v + vw; wa = w + ww;
+  vt = sqrt( ua*ua + va*va + wa*wa );
+  alpha = beta = 0;
+  vxz = sqrt( u*u + w*w );
+  if( w != 0 ) alpha = atan2( w, u );
+  if( vxz != 0 ) beta = atan2( v, vxz );
+  mach=vt/fdmex->GetAtmosphere()->GetSoundSpeed();
+  vc=calcVcas(mach);
+  ve=vt*sqrt(fdmex->GetAtmosphere()->GetDensityRatio());
+  lastSpeedSet=setned;
+}
+
+//******************************************************************************
+
+void FGInitialCondition::SetVDownFpsIC(double tt) {
+  double ua,va,wa;
+  double vxz;
+  vdown = tt;
+  calcUVWfromNED();
+  ua = u + uw; va = v + vw; wa = w + ww;
+  vt = sqrt( ua*ua + va*va + wa*wa );
+  alpha = beta = 0;
+  vxz = sqrt( u*u + w*w );
+  if( w != 0 ) alpha = atan2( w, u );
+  if( vxz != 0 ) beta = atan2( v, vxz );
+  mach=vt/fdmex->GetAtmosphere()->GetSoundSpeed();
+  vc=calcVcas(mach);
+  ve=vt*sqrt(fdmex->GetAtmosphere()->GetDensityRatio());
+  SetClimbRateFpsIC(-1*vdown);
+  lastSpeedSet=setned;
+}
+
 //******************************************************************************
 
 double FGInitialCondition::GetUBodyFpsIC(void) const {
-    if(lastSpeedSet == setvg )
+    if (lastSpeedSet == setvg || lastSpeedSet == setned)
       return u;
     else
       return vt*calpha*cbeta - uw;
@@ -292,7 +412,7 @@ double FGInitialCondition::GetUBodyFpsIC(void) const {
 //******************************************************************************
 
 double FGInitialCondition::GetVBodyFpsIC(void) const {
-    if( lastSpeedSet == setvg )
+    if (lastSpeedSet == setvg || lastSpeedSet == setned)
       return v;
     else {
       return vt*sbeta - vw;
@@ -302,7 +422,7 @@ double FGInitialCondition::GetVBodyFpsIC(void) const {
 //******************************************************************************
 
 double FGInitialCondition::GetWBodyFpsIC(void) const {
-    if( lastSpeedSet == setvg )
+    if (lastSpeedSet == setvg || lastSpeedSet == setned)
       return w;
     else
       return vt*salpha*cbeta -ww;
@@ -466,34 +586,6 @@ void FGInitialCondition::calcUVWfromNED(void) {
   w=vnorth*( cphi*stheta*cpsi + sphi*spsi ) +
      veast*( cphi*stheta*spsi - sphi*cpsi ) +
      vdown*cphi*ctheta;
-}
-
-//******************************************************************************
-
-void FGInitialCondition::SetVnorthFpsIC(double tt) {
-  vnorth=tt;
-  calcUVWfromNED();
-  vt=sqrt(u*u + v*v + w*w);
-  lastSpeedSet=setned;
-}
-
-//******************************************************************************
-
-void FGInitialCondition::SetVeastFpsIC(double tt) {
-  veast=tt;
-  calcUVWfromNED();
-  vt=sqrt(u*u + v*v + w*w);
-  lastSpeedSet=setned;
-}
-
-//******************************************************************************
-
-void FGInitialCondition::SetVdownFpsIC(double tt) {
-  vdown=tt;
-  calcUVWfromNED();
-  vt=sqrt(u*u + v*v + w*w);
-  SetClimbRateFpsIC(-1*vdown);
-  lastSpeedSet=setned;
 }
 
 //******************************************************************************
@@ -731,49 +823,58 @@ double FGInitialCondition::GetWindDirDegIC(void) const {
 
 bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
 {
-  string resetDef;
   int n;
 
   string sep = "/";
-# ifdef macintosh
-   sep = ";";
-# endif
-
   if( useStoredPath ) {
-    resetDef = fdmex->GetFullAircraftPath() + sep + rstfile + ".xml";
+    init_file_name = fdmex->GetFullAircraftPath() + sep + rstfile + ".xml";
   } else {
-    resetDef = rstfile;
+    init_file_name = rstfile;
   }
 
-  document = LoadXMLDocument(resetDef);
+  document = LoadXMLDocument(init_file_name);
 
-  if (document->GetName() != string("initialize")) {
-    cerr << "File: " << resetDef << " is not a reset file" << endl;
+  // Make sure that the document is valid
+  if (!document) {
+    cerr << "File: " << init_file_name << " could not be read." << endl;
     exit(-1);
   }
 
-  if (document->FindElement("ubody"))
-    SetUBodyFpsIC(document->FindElementValueAsNumberConvertTo("ubody", "FT/SEC"));
-  if (document->FindElement("vbody"))
-    SetVBodyFpsIC(document->FindElementValueAsNumberConvertTo("vbody", "FT/SEC"));
-  if (document->FindElement("wbody"))
-    SetWBodyFpsIC(document->FindElementValueAsNumberConvertTo("wbody", "FT/SEC"));
+  if (document->GetName() != string("initialize")) {
+    cerr << "File: " << init_file_name << " is not a reset file." << endl;
+    exit(-1);
+  }
+
   if (document->FindElement("latitude"))
     SetLatitudeDegIC(document->FindElementValueAsNumberConvertTo("latitude", "DEG"));
   if (document->FindElement("longitude"))
     SetLongitudeDegIC(document->FindElementValueAsNumberConvertTo("longitude", "DEG"));
   if (document->FindElement("altitude"))
     SetAltitudeFtIC(document->FindElementValueAsNumberConvertTo("altitude", "FT"));
+  if (document->FindElement("ubody"))
+    SetUBodyFpsIC(document->FindElementValueAsNumberConvertTo("ubody", "FT/SEC"));
+  if (document->FindElement("vbody"))
+    SetVBodyFpsIC(document->FindElementValueAsNumberConvertTo("vbody", "FT/SEC"));
+  if (document->FindElement("wbody"))
+    SetWBodyFpsIC(document->FindElementValueAsNumberConvertTo("wbody", "FT/SEC"));
+  if (document->FindElement("vnorth"))
+    SetVNorthFpsIC(document->FindElementValueAsNumberConvertTo("vnorth", "FT/SEC"));
+  if (document->FindElement("veast"))
+    SetVEastFpsIC(document->FindElementValueAsNumberConvertTo("veast", "FT/SEC"));
+  if (document->FindElement("vdown"))
+    SetVDownFpsIC(document->FindElementValueAsNumberConvertTo("vdown", "FT/SEC"));
   if (document->FindElement("winddir"))
     SetWindDirDegIC(document->FindElementValueAsNumberConvertTo("winddir", "DEG"));
   if (document->FindElement("vwind"))
-    SetWindMagKtsIC(document->FindElementValueAsNumberConvertTo("vwind", "FT/SEC"));
+    SetWindMagKtsIC(document->FindElementValueAsNumberConvertTo("vwind", "KTS"));
   if (document->FindElement("hwind"))
     SetHeadWindKtsIC(document->FindElementValueAsNumberConvertTo("hwind", "KTS"));
   if (document->FindElement("xwind"))
     SetCrossWindKtsIC(document->FindElementValueAsNumberConvertTo("xwind", "KTS"));
   if (document->FindElement("vc"))
-    SetVcalibratedKtsIC(document->FindElementValueAsNumberConvertTo("vc", "FT/SEC"));
+    SetVcalibratedKtsIC(document->FindElementValueAsNumberConvertTo("vc", "KTS"));
+  if (document->FindElement("vt"))
+    SetVtrueKtsIC(document->FindElementValueAsNumberConvertTo("vt", "KTS"));
   if (document->FindElement("mach"))
     SetMachIC(document->FindElementValueAsNumber("mach"));
   if (document->FindElement("phi"))
@@ -791,15 +892,19 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
   if (document->FindElement("roc"))
     SetClimbRateFpsIC(document->FindElementValueAsNumberConvertTo("roc", "FT/SEC"));
   if (document->FindElement("vground"))
-    SetVgroundKtsIC(document->FindElementValueAsNumberConvertTo("vground", "FT/SEC"));
-  if (document->FindElement("running")) {
-    n = int(document->FindElementValueAsNumber("running"));
-    if (n != 0) {
-      FGPropulsion* propulsion = fdmex->GetPropulsion();
-      for(unsigned int i=0; i<propulsion->GetNumEngines(); i++) {
-         propulsion->GetEngine(i)->SetRunning(true);
-      }
-    }
+    SetVgroundKtsIC(document->FindElementValueAsNumberConvertTo("vground", "KTS"));
+  if (document->FindElement("targetNlf"))
+  {
+    SetTargetNlfIC(document->FindElementValueAsNumber("targetNlf"));
+  }
+
+  // Check to see if any engines are specified to be initialized in a running state
+  FGPropulsion* propulsion = fdmex->GetPropulsion();
+  Element* running_elements = document->FindElement("running");
+  while (running_elements) {
+    n = int(running_elements->GetDataAsNumber());
+    propulsion->InitRunning(n);
+    running_elements = document->FindNextElement("running");
   }
 
   fdmex->RunIC();
@@ -923,7 +1028,18 @@ void FGInitialCondition::bind(void){
                        &FGInitialCondition::GetWBodyFpsIC,
                        &FGInitialCondition::SetWBodyFpsIC,
                        true);
-
+  PropertyManager->Tie("ic/vn-fps", this,
+                       &FGInitialCondition::GetVNorthFpsIC,
+                       &FGInitialCondition::SetVNorthFpsIC,
+                       true);
+  PropertyManager->Tie("ic/ve-fps", this,
+                       &FGInitialCondition::GetVEastFpsIC,
+                       &FGInitialCondition::SetVEastFpsIC,
+                       true);
+  PropertyManager->Tie("ic/vd-fps", this,
+                       &FGInitialCondition::GetVDownFpsIC,
+                       &FGInitialCondition::SetVDownFpsIC,
+                       true);
   PropertyManager->Tie("ic/gamma-rad", this,
                        &FGInitialCondition::GetFlightPathAngleRadIC,
                        &FGInitialCondition::SetFlightPathAngleRadIC,
@@ -967,58 +1083,11 @@ void FGInitialCondition::bind(void){
                        &FGInitialCondition::SetRRadpsIC,
                        true);
 
-}
-
-//******************************************************************************
-
-void FGInitialCondition::unbind(void)
-{
-  PropertyManager->Untie("ic/vc-kts");
-  PropertyManager->Untie("ic/ve-kts");
-  PropertyManager->Untie("ic/vg-kts");
-  PropertyManager->Untie("ic/vt-kts");
-  PropertyManager->Untie("ic/mach");
-  PropertyManager->Untie("ic/roc-fpm");
-  PropertyManager->Untie("ic/gamma-deg");
-  PropertyManager->Untie("ic/alpha-deg");
-  PropertyManager->Untie("ic/beta-deg");
-  PropertyManager->Untie("ic/theta-deg");
-  PropertyManager->Untie("ic/phi-deg");
-  PropertyManager->Untie("ic/psi-true-deg");
-  PropertyManager->Untie("ic/lat-gc-deg");
-  PropertyManager->Untie("ic/long-gc-deg");
-  PropertyManager->Untie("ic/h-sl-ft");
-  PropertyManager->Untie("ic/h-agl-ft");
-  PropertyManager->Untie("ic/sea-level-radius-ft");
-  PropertyManager->Untie("ic/terrain-altitude-ft");
-  PropertyManager->Untie("ic/vg-fps");
-  PropertyManager->Untie("ic/vt-fps");
-  PropertyManager->Untie("ic/vw-bx-fps");
-  PropertyManager->Untie("ic/vw-by-fps");
-  PropertyManager->Untie("ic/vw-bz-fps");
-  PropertyManager->Untie("ic/vw-north-fps");
-  PropertyManager->Untie("ic/vw-east-fps");
-  PropertyManager->Untie("ic/vw-down-fps");
-  PropertyManager->Untie("ic/vw-mag-fps");
-  PropertyManager->Untie("ic/vw-dir-deg");
-
-  PropertyManager->Untie("ic/roc-fps");
-
-  PropertyManager->Untie("ic/u-fps");
-  PropertyManager->Untie("ic/v-fps");
-  PropertyManager->Untie("ic/w-fps");
-
-  PropertyManager->Untie("ic/gamma-rad");
-  PropertyManager->Untie("ic/alpha-rad");
-  PropertyManager->Untie("ic/theta-rad");
-  PropertyManager->Untie("ic/beta-rad");
-  PropertyManager->Untie("ic/phi-rad");
-  PropertyManager->Untie("ic/psi-true-rad");
-  PropertyManager->Untie("ic/lat-gc-rad");
-  PropertyManager->Untie("ic/long-gc-rad");
-  PropertyManager->Untie("ic/p-rad_sec");
-  PropertyManager->Untie("ic/q-rad_sec");
-  PropertyManager->Untie("ic/r-rad_sec");
+  typedef int (FGInitialCondition::*iPMF)(void) const;
+  PropertyManager->Tie("simulation/write-state-file",
+                       this,
+                       (iPMF)0,
+                       &FGInitialCondition::WriteStateFile);
 
 }
 

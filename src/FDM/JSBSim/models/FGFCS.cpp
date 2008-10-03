@@ -1,6 +1,6 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
- Module:       FGFCS.cpp
+ Module:       FGFCS.cpp 
  Author:       Jon Berndt
  Date started: 12/12/98
  Purpose:      Model the flight controls
@@ -90,11 +90,6 @@ FGFCS::FGFCS(FGFDMExec* fdmex) : FGModel(fdmex)
 
 FGFCS::~FGFCS()
 {
-  if (PropertyManager->HasNode("fcs")) unbind( PropertyManager->GetNode("fcs") );
-  if (PropertyManager->HasNode("ap")) unbind( PropertyManager->GetNode("ap") );
-  PropertyManager->Untie( "gear/gear-cmd-norm" );
-  PropertyManager->Untie( "gear/gear-pos-norm" );
-
   ThrottleCmd.clear();
   ThrottlePos.clear();
   MixtureCmd.clear();
@@ -107,18 +102,47 @@ FGFCS::~FGFCS()
 
   unsigned int i;
 
-  for (i=0;i<APComponents.size();i++) delete APComponents[i];
-  for (i=0;i<FCSComponents.size();i++) delete FCSComponents[i];
   for (i=0;i<sensors.size();i++) delete sensors[i];
-
-  APComponents.clear();
-  FCSComponents.clear();
   sensors.clear();
+  for (i=0;i<APComponents.size();i++) delete APComponents[i];
+  APComponents.clear();
+  for (i=0;i<FCSComponents.size();i++) delete FCSComponents[i];
+  FCSComponents.clear();
+  for (i=0;i<Systems.size();i++) delete Systems[i];
+  Systems.clear();
+
+  for (unsigned int i=0; i<interface_properties.size(); i++) delete interface_properties[i];
   interface_properties.clear();
 
   Debug(1);
 }
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGFCS::InitModel(void)
+{
+  unsigned int i;
+
+  if (!FGModel::InitModel()) return false;
+
+  for (i=0; i<ThrottlePos.size(); i++) ThrottlePos[i] = 0.0;
+  for (i=0; i<MixturePos.size(); i++) MixturePos[i] = 0.0;
+  for (i=0; i<ThrottleCmd.size(); i++) ThrottleCmd[i] = 0.0;
+  for (i=0; i<MixtureCmd.size(); i++) MixtureCmd[i] = 0.0;
+  for (i=0; i<PropAdvance.size(); i++) PropAdvance[i] = 0.0;
+  for (i=0; i<PropFeather.size(); i++) PropFeather[i] = 0.0;
+
+  DaCmd = DeCmd = DrCmd = DsCmd = DfCmd = DsbCmd = DspCmd = 0;
+  PTrimCmd = YTrimCmd = RTrimCmd = 0.0;
+
+  for (i=0;i<NForms;i++) {
+    DePos[i] = DaLPos[i] = DaRPos[i] = DrPos[i] = 0.0;
+    DfPos[i] = DsbPos[i] = DspPos[i] = 0.0;
+  }
+
+  return true;
+}
+  
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // Notes: In this logic the default engine commands are set. This is simply a
 // sort of safe-mode method in case the user has not defined control laws for
@@ -139,18 +163,23 @@ bool FGFCS::Run(void)
   for (i=0; i<PropAdvance.size(); i++) PropAdvance[i] = PropAdvanceCmd[i];
   for (i=0; i<PropFeather.size(); i++) PropFeather[i] = PropFeatherCmd[i];
 
-
   // Set the default steering angle
   for (i=0; i<SteerPosDeg.size(); i++) {
     FGLGear* gear = GroundReactions->GetGearUnit(i);
     SteerPosDeg[i] = gear->GetDefaultSteerAngle( GetDsCmd() );
   }
 
-  // Cycle through the sensor, autopilot, and flight control components
+  // Cycle through the sensor, systems, autopilot, and flight control components
+  // Execute Sensors
   for (i=0; i<sensors.size(); i++) sensors[i]->Run();
-  for (i=0; i<APComponents.size(); i++) {
-    APComponents[i]->Run();
-  }
+
+  // Execute Systems in order
+  for (i=0; i<Systems.size(); i++) Systems[i]->Run();
+
+  // Execute Autopilot
+  for (i=0; i<APComponents.size(); i++) APComponents[i]->Run();
+
+  // Execute Flight Control System
   for (i=0; i<FCSComponents.size(); i++) FCSComponents[i]->Run();
 
   return false;
@@ -455,32 +484,35 @@ void FGFCS::SetPropFeather(int engineNum, bool setting)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGFCS::Load(Element* el)
+bool FGFCS::Load(Element* el, SystemType systype)
 {
-  string name, file, fname, interface_property_string;
+  string name, file, fname, interface_property_string, parent_name;
   vector <FGFCSComponent*> *Components;
   Element *component_element, *property_element, *sensor_element;
   Element *channel_element;
 
   Components=0;
-  // Determine if the FCS/Autopilot is defined inline in the aircraft configuration
-  // file or in a separate file. Set up the Element pointer as appropriate.
 
   string separator = "/";
-#ifdef macintosh
-  separator = ";";
-#endif
+
+// ToDo: The handling of name and file attributes could be improved, here,
+//       considering that a name can be in the external file, as well.
 
   name = el->GetAttributeValue("name");
 
   if (name.empty()) {
     fname = el->GetAttributeValue("file");
+    if (systype == stSystem) {
+      file = FindSystemFullPathname(fname);
+    } else { 
     file = FDMExec->GetFullAircraftPath() + separator + fname + ".xml";
+    }
     if (fname.empty()) {
-      cerr << "FCS/Autopilot does not appear to be defined inline nor in a file" << endl;
+      cerr << "FCS, Autopilot, or system does not appear to be defined inline nor in a file" << endl;
       return false;
     } else {
       document = LoadXMLDocument(file);
+      name = document->GetAttributeValue("name");
     }
   } else {
     document = el;
@@ -492,8 +524,10 @@ bool FGFCS::Load(Element* el)
   } else if (document->GetName() == "flight_control") {
     Components = &FCSComponents;
     Name = "FCS: " + document->GetAttributeValue("name");
+  } else if (document->GetName() == "system") {
+    Components = &Systems;
+    Name = "System: " + document->GetAttributeValue("name");
   }
-
   Debug(2);
 
   // ToDo: How do these get untied?
@@ -504,13 +538,24 @@ bool FGFCS::Load(Element* el)
 
   if (document->GetName() == "flight_control") bindModel();
 
+  // Interface properties from any autopilot, flight control, or other system are
+  // all stored in the interface properties array.
+
   property_element = document->FindElement("property");
   while (property_element) {
-    interface_properties.push_back(new double(0));
+    double value=0.0;
+    if ( ! property_element->GetAttributeValue("value").empty())
+      value = property_element->GetAttributeValueAsNumber("value");
+    interface_properties.push_back(new double(value));
     interface_property_string = property_element->GetDataLine();
     PropertyManager->Tie(interface_property_string, interface_properties.back());
     property_element = document->FindNextElement("property");
   }
+
+  // Any sensor elements that are outside of a channel (in either the autopilot
+  // or the flight_control, or even any possible "system") are placed into the global
+  // "sensors" array, and are executed prior to any autopilot, flight control, or
+  // system.
 
   sensor_element = document->FindElement("sensor");
   while (sensor_element) {
@@ -554,6 +599,8 @@ bool FGFCS::Load(Element* el)
           Components->push_back(new FGPID(this, component_element));
         } else if (component_element->GetName() == string("actuator")) {
           Components->push_back(new FGActuator(this, component_element));
+        } else if (component_element->GetName() == string("sensor")) {
+          Components->push_back(new FGSensor(this, component_element));
         } else {
           cerr << "Unknown FCS component: " << component_element->GetName() << endl;
         }
@@ -566,6 +613,8 @@ bool FGFCS::Load(Element* el)
     }
     channel_element = document->FindNextElement("channel");
   }
+
+  ResetParser();
 
   return true;
 }
@@ -589,17 +638,72 @@ double FGFCS::GetBrake(FGLGear::BrakeGroup bg)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+string FGFCS::FindSystemFullPathname(string system_filename)
+{
+  string fullpath, localpath;
+  string systemPath = FDMExec->GetSystemsPath();
+  string aircraftPath = FDMExec->GetFullAircraftPath();
+  ifstream system_file;
+
+  string separator = "/";
+
+  fullpath = systemPath + separator;
+  localpath = aircraftPath + separator + "Systems" + separator;
+
+  system_file.open(string(fullpath + system_filename + ".xml").c_str());
+  if ( !system_file.is_open()) {
+    system_file.open(string(localpath + system_filename + ".xml").c_str());
+      if ( !system_file.is_open()) {
+        cerr << " Could not open system file: " << system_filename << " in path "
+             << fullpath << " or " << localpath << endl;
+        return string("");
+      } else {
+        return string(localpath + system_filename + ".xml");
+      }
+  }
+  return string(fullpath + system_filename + ".xml");
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+ifstream* FGFCS::FindSystemFile(string system_filename)
+{
+  string fullpath, localpath;
+  string systemPath = FDMExec->GetSystemsPath();
+  string aircraftPath = FDMExec->GetFullAircraftPath();
+  ifstream* system_file = new ifstream();
+
+  string separator = "/";
+
+  fullpath = systemPath + separator;
+  localpath = aircraftPath + separator + "Systems" + separator;
+
+  system_file->open(string(fullpath + system_filename + ".xml").c_str());
+  if ( !system_file->is_open()) {
+    system_file->open(string(localpath + system_filename + ".xml").c_str());
+      if ( !system_file->is_open()) {
+        cerr << " Could not open system file: " << system_filename << " in path "
+             << fullpath << " or " << localpath << endl;
+      }
+  }
+  return system_file;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 string FGFCS::GetComponentStrings(string delimeter)
 {
   unsigned int comp;
   string CompStrings = "";
   bool firstime = true;
+  int total_count=0;
 
-  for (comp = 0; comp < FCSComponents.size(); comp++) {
+  for (unsigned int i=0; i<Systems.size(); i++) {
     if (firstime) firstime = false;
     else          CompStrings += delimeter;
 
-    CompStrings += FCSComponents[comp]->GetName();
+    CompStrings += Systems[i]->GetName();
+    total_count++;
   }
 
   for (comp = 0; comp < APComponents.size(); comp++)
@@ -608,6 +712,15 @@ string FGFCS::GetComponentStrings(string delimeter)
     else          CompStrings += delimeter;
 
     CompStrings += APComponents[comp]->GetName();
+    total_count++;
+  }
+
+  for (comp = 0; comp < FCSComponents.size(); comp++) {
+    if (firstime) firstime = false;
+    else          CompStrings += delimeter;
+
+    CompStrings += FCSComponents[comp]->GetName();
+    total_count++;
   }
 
   return CompStrings;
@@ -619,15 +732,17 @@ string FGFCS::GetComponentValues(string delimeter)
 {
   unsigned int comp;
   string CompValues = "";
-  char buffer[17];
+  char buffer[20];
   bool firstime = true;
+  int total_count=0;
 
-  for (comp = 0; comp < FCSComponents.size(); comp++) {
+  for (unsigned int i=0; i<Systems.size(); i++) {
     if (firstime) firstime = false;
     else          CompValues += delimeter;
 
-    sprintf(buffer, "%9.6f", FCSComponents[comp]->GetOutput());
+    sprintf(buffer, "%9.6f", Systems[i]->GetOutput());
     CompValues += string(buffer);
+    total_count++;
   }
 
   for (comp = 0; comp < APComponents.size(); comp++) {
@@ -636,6 +751,16 @@ string FGFCS::GetComponentValues(string delimeter)
 
     sprintf(buffer, "%9.6f", APComponents[comp]->GetOutput());
     CompValues += string(buffer);
+    total_count++;
+  }
+
+  for (comp = 0; comp < FCSComponents.size(); comp++) {
+    if (firstime) firstime = false;
+    else          CompValues += delimeter;
+
+    sprintf(buffer, "%9.6f", FCSComponents[comp]->GetOutput());
+    CompValues += string(buffer);
+    total_count++;
   }
 
   CompValues += "\0";
@@ -775,20 +900,6 @@ void FGFCS::bindModel(void)
     if (GroundReactions->GetGearUnit(i)->GetSteerable()) {
       snprintf(tmp,80,"fcs/steer-pos-deg[%u]",i);
       PropertyManager->Tie( tmp, this, i, &FGFCS::GetSteerPosDeg, &FGFCS::SetSteerPosDeg);
-    }
-  }
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGFCS::unbind(FGPropertyManager *node)
-{
-  int N = node->nChildren();
-  for (int i=0; i<N; i++) {
-    if (node->getChild(i)->nChildren() ) {
-      unbind( (FGPropertyManager*)node->getChild(i) );
-    } else if ( node->getChild(i)->isTied() ) {
-      node->getChild(i)->untie();
     }
   }
 }

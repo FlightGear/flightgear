@@ -39,54 +39,19 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include <float.h>
-
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  include <math.h>
-#  include <queue>
-#  include STL_STRING
-
-SG_USING_STD(string);
-
-#  ifndef M_PI
-#    include <simgear/constants.h>
-#    define M_PI SG_PI
-#  endif
-
-#else  // JSBSim section
-
-#  include <queue>
-#  include <string>
-#  if defined(sgi) && !defined(__GNUC__)
-#    include <math.h>
-#  else
-#    include <cmath>
-#  endif
-
-using std::string;
-
-#  if defined(_MSC_VER) && _MSC_VER <= 1200
-#    ifndef max
-#      define max(a,b)            (((a) > (b)) ? (a) : (b))
-#    endif
-
-#    ifndef min
-#      define min(a,b)            (((a) < (b)) ? (a) : (b))
-#    endif
-#  else
+#include <queue>
+#include <string>
+#include <cmath>
 
 using std::fabs;
+using std::string;
 
-#  endif
-
-#  ifndef M_PI
-#    define M_PI 3.14159265358979323846
-#  endif
-
+#ifndef M_PI
+#  define M_PI 3.14159265358979323846
 #endif
 
 #if !defined(WIN32) || defined(__GNUC__) || (defined(_MSC_VER) && (_MSC_VER >= 1300))
-using std::max;
+  using std::max;
 #endif
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -212,11 +177,25 @@ void PutMessage(const string& text, double dVal);
     return 1.8*kelvin - 459.4;
   }
 
+  /** Converts from degrees Celsius to degrees Rankine.
+  *   @param celsius The temperature in degrees Celsius.
+  *   @return The temperature in Rankine. */
+  static double CelsiusToRankine (double celsius) {
+    return celsius * 1.8 + 491.67;
+  }
+
   /** Converts from degrees Rankine to degrees Celsius.
   *   @param rankine The temperature in degrees Rankine.
   *   @return The temperature in Celsius. */
   static double RankineToCelsius (double rankine) {
     return (rankine - 491.67)/1.8;
+  }
+
+  /** Converts from degrees Kelvin to degrees Rankine.
+  *   @param kelvin The temperature in degrees Kelvin.
+  *   @return The temperature in Rankine. */
+  static double KelvinToRankine (double kelvin) {
+    return kelvin * 1.8;
   }
 
   /** Converts from degrees Rankine to degrees Kelvin.
@@ -238,6 +217,20 @@ void PutMessage(const string& text, double dVal);
   *   @return The temperature in Fahrenheit. */
   static double CelsiusToFahrenheit (double celsius) {
     return celsius * 1.8 + 32.0;
+  }
+
+  /** Converts from degrees Celsius to degrees Kelvin
+  *   @param celsius The temperature in degrees Celsius.
+  *   @return The temperature in Kelvin. */
+  static double CelsiusToKelvin (double celsius) {
+    return celsius + 273.15;
+  }
+
+  /** Converts from degrees Kelvin to degrees Celsius
+  *   @param celsius The temperature in degrees Kelvin.
+  *   @return The temperature in Celsius. */
+  static double KelvinToCelsius (double kelvin) {
+    return kelvin - 273.15;
   }
 
   /** Finite precision comparison.
@@ -273,6 +266,12 @@ void PutMessage(const string& text, double dVal);
   static bool EqualToRoundoff(double a, float b) {
     return EqualToRoundoff((float)a, b);
   }
+  
+  /** Constrain a value between a minimum and a maximum value.
+  */
+  static double Constrain(double min, double value, double max) {
+    return value<min?(min):(value>max?(max):(value));
+  }
 
 protected:
   static Message localMsg;
@@ -292,10 +291,15 @@ protected:
   static const double ktstofps;
   static const double inchtoft;
   static const double in3tom3;
+  static const double m3toft3;
+  static const double inhgtopa;
+  static const double fttom;
   static double Reng;         // Specific Gas Constant,ft^2/(sec^2*R)
   static const double SHRatio;
   static const double lbtoslug;
   static const double slugtolb;
+  static const double kgtolb;
+  static const double kgtoslug;
   static const string needed_cfg_version;
   static const string JSBSim_version;
 

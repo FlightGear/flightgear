@@ -61,6 +61,17 @@ CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /** Base class for specific thrusting devices such as propellers, nozzles, etc.
+
+<h3>reverser angle:</h3>
+
+    "Reverser angle" as used here is a way to manipulate the thrust vector,
+    along the thrust axis ONLY, during run time.  This should not be confused
+    with a thrust vectoring nozzle.  The angle is defined in radians, and is
+    used thus:  Final_thrust = cosine( reverser_angle ) * unmodified_thrust.  
+    Therefore a reverser angle of 0 results in no change, and a reverser angle
+    of 3.14 (pi) results in a completely reversed thrust vector.  An angle of
+    1.57 (pi/2) results in no thrust at all.
+ 
     @author Jon Berndt
     @version $Id$
     */
@@ -93,7 +104,7 @@ public:
   string GetName(void) {return Name;}
   void SetReverserAngle(double angle) {ReverserAngle = angle;}
   double GetReverserAngle(void) const {return ReverserAngle;}
-  virtual double GetRPM(void) { return 0.0; };
+  virtual double GetRPM(void) const { return 0.0; };
   double GetGearRatio(void) {return GearRatio; }
   virtual string GetThrusterLabels(int id, string delimeter);
   virtual string GetThrusterValues(int id, string delimeter);

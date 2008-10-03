@@ -490,6 +490,15 @@ string FGTurboProp::GetEngineValues(string delimeter)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+int FGTurboProp::InitRunning(void) {
+  State->SuspendIntegration();
+  Cutoff=false;
+  Running=true;  
+  N2=16.0;
+  Calculate();
+  State->ResumeIntegration();
+  return phase==tpRun;
+}
 
 void FGTurboProp::bindmodel()
 {
@@ -505,21 +514,6 @@ void FGTurboProp::bindmodel()
   PropertyManager->Tie( property_name, &Reversed);
 
 }
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGTurboProp::unbind()
-{
-  char property_name[80];
-
-  snprintf(property_name, 80, "propulsion/engine[%u]/n1", EngineNumber);
-  PropertyManager->Untie(property_name);
-  snprintf(property_name, 80, "propulsion/engine[%u]/n2", EngineNumber);
-  PropertyManager->Untie(property_name);
-  snprintf(property_name, 80, "propulsion/engine[%u]/reverser", EngineNumber);
-  PropertyManager->Untie(property_name);
-}
-
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //    The bitmasked value choices are as follows:

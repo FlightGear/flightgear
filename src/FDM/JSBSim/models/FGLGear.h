@@ -38,10 +38,6 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#endif
-
 #include <FGJSBBase.h>
 #include <FGFDMExec.h>
 #include <input_output/FGXMLElement.h>
@@ -78,7 +74,7 @@ CLASS DOCUMENTATION
     are the parameters that can be specified in the config file for modeling
     landing gear:
     <p>
-    <b><u>Physical Characteristics</u></b><br>
+    <h3>Physical Characteristics</h3>
     <ol>
     <li>X, Y, Z location, in inches in structural coordinate frame</li>
     <li>Spring constant, in lbs/ft</li>
@@ -86,7 +82,7 @@ CLASS DOCUMENTATION
     <li>Dynamic Friction Coefficient</li>
     <li>Static Friction Coefficient</li>
     </ol></p><p>
-    <b><u>Operational Properties</b></u><br>
+    <h3>Operational Properties</h3>
     <ol>
     <li>Name</li>
     <li>Steerability attribute {one of STEERABLE | FIXED | CASTERED}</li>
@@ -94,7 +90,7 @@ CLASS DOCUMENTATION
     <li>Max Steer Angle, in degrees</li>
     </ol></p>
     <p>
-    <b><u>Algorithm and Approach to Modeling</u></b><br>
+    <h3>Algorithm and Approach to Modeling</h3>
     <ol>
     <li>Find the location of the uncompressed landing gear relative to the CG of
     the aircraft. Remember, the structural coordinate frame that the aircraft is
@@ -158,6 +154,37 @@ CLASS DOCUMENTATION
     (radius to wheel crossed into the wheel force). Both of these operands are
     in body frame.</li>
     </ol>
+
+    <h3>Configuration File Format:</h3>
+@code
+        <contact type="{BOGEY | STRUCTURE}" name="{string}">
+            <location unit="{IN | M}">
+                <x> {number} </x>
+                <y> {number} </y>
+                <z> {number} </z>
+            </location>
+            <static_friction> {number} </static_friction>
+            <dynamic_friction> {number} </dynamic_friction>
+            <rolling_friction> {number} </rolling_friction>
+            <spring_coeff unit="{LBS/FT | N/M}"> {number} </spring_coeff>
+            <damping_coeff unit="{LBS/FT/SEC | N/M/SEC}"> {number} </damping_coeff>
+            <damping_coeff_rebound unit="{LBS/FT/SEC | N/M/SEC}"> {number} </damping_coeff_rebound>
+            <max_steer unit="DEG"> {number | 0 | 360} </max_steer>
+            <brake_group> {NONE | LEFT | RIGHT | CENTER | NOSE | TAIL} </brake_group>
+            <retractable>{0 | 1}</retractable>
+            <table type="{CORNERING_COEFF}">
+            </table>
+            <relaxation_velocity>
+               <rolling unit="{FT/SEC | KTS | M/S}"> {number} </rolling>
+               <side unit="{FT/SEC | KTS | M/S}"> {number} </side>
+            </relaxation_velocity>
+            <force_lag_filter>
+               <rolling> {number} </rolling>
+               <side> {number} </side>
+            </force_lag_filter>
+            <wheel_slip_filter> {number} </wheel_slip_filter>  
+        </contact>
+@endcode
     @author Jon S. Berndt
     @version $Id$
     @see Richard E. McFarland, "A Standard Kinematic Model for Flight Simulation at
@@ -179,12 +206,17 @@ public:
   enum BrakeGroup {bgNone=0, bgLeft, bgRight, bgCenter, bgNose, bgTail };
   /// Steering group membership enumerators
   enum SteerType {stSteer, stFixed, stCaster};
+  /// Contact point type
+  enum ContactType {ctBOGEY, ctSTRUCTURE, ctUNKNOWN};
   /// Report type enumerators
   enum ReportType {erNone=0, erTakeoff, erLand};
+  /// Damping types
+  enum DampType {dtLinear=0, dtSquare};
   /** Constructor
       @param el a pointer to the XML element that contains the CONTACT info.
       @param Executive a pointer to the parent executive object
-      @param File a pointer to the config file instance */
+      @param number integer identifier for this instance of FGLGear
+  */
   FGLGear(Element* el, FGFDMExec* Executive, int number);
   /** Constructor
       @param lgear a reference to an existing FGLGear object     */
@@ -200,25 +232,25 @@ public:
 
   /// Gets the location of the gear in Body axes
   FGColumnVector3& GetBodyLocation(void) { return vWhlBodyVec; }
-  double GetBodyLocation(int idx) { return vWhlBodyVec(idx); }
+  double GetBodyLocation(int idx) const { return vWhlBodyVec(idx); }
 
   FGColumnVector3& GetLocalGear(void) { return vLocalGear; }
-  double GetLocalGear(int idx) { return vLocalGear(idx); }
+  double GetLocalGear(int idx) const { return vLocalGear(idx); }
 
   /// Gets the name of the gear
-  inline string GetName(void)      {return name;          }
+  inline string GetName(void) const {return name;          }
   /// Gets the Weight On Wheels flag value
-  inline bool   GetWOW(void)       {return WOW;           }
+  inline bool   GetWOW(void) const {return WOW;           }
   /// Gets the current compressed length of the gear in feet
-  inline double  GetCompLen(void)   {return compressLength;}
+  inline double  GetCompLen(void) const {return compressLength;}
   /// Gets the current gear compression velocity in ft/sec
-  inline double  GetCompVel(void)   {return compressSpeed; }
+  inline double  GetCompVel(void) const {return compressSpeed; }
   /// Gets the gear compression force in pounds
-  inline double  GetCompForce(void) {return Force()(3);    }
-  inline double  GetBrakeFCoeff(void) {return BrakeFCoeff;}
+  inline double  GetCompForce(void) const {return vForce(eZ);    }
+  inline double  GetBrakeFCoeff(void) const {return BrakeFCoeff;}
 
   /// Gets the current normalized tire pressure
-  inline double  GetTirePressure(void) { return TirePressureNorm; }
+  inline double  GetTirePressure(void) const { return TirePressureNorm; }
   /// Sets the new normalized tire pressure
   inline void    SetTirePressure(double p) { TirePressureNorm = p; }
 
@@ -230,31 +262,33 @@ public:
   inline void SetReport(bool flag) { ReportEnable = flag; }
   /** Get the console touchdown reporting feature
       @return true if reporting is turned on */
-  inline bool GetReport(void)    { return ReportEnable; }
-  double GetSteerNorm(void) const { return radtodeg/maxSteerAngle*SteerAngle; }
+  inline bool GetReport(void) const  { return ReportEnable; }
+  double GetSteerNorm(void) const    { return radtodeg/maxSteerAngle*SteerAngle; }
   double GetDefaultSteerAngle(double cmd) const { return cmd*maxSteerAngle; }
-  double GetstaticFCoeff(void) { return staticFCoeff; }
+  double GetstaticFCoeff(void) const { return staticFCoeff; }
 
-  inline int GetBrakeGroup(void) { return (int)eBrakeGrp; }
-  inline int GetSteerType(void)  { return (int)eSteerType; }
+  inline int GetBrakeGroup(void) const { return (int)eBrakeGrp; }
+  inline int GetSteerType(void) const  { return (int)eSteerType; }
+
+  inline double GetZPosition(void) const { return vXYZ(3); }
+  inline void SetZPosition(double z) { vXYZ(3) = z; }
 
   bool GetSteerable(void) const { return eSteerType != stFixed; }
-  inline bool GetRetractable(void)         { return isRetractable;   }
-  inline bool GetGearUnitUp(void)          { return GearUp;          }
-  inline bool GetGearUnitDown(void)        { return GearDown;        }
-  inline double GetWheelSideForce(void)    { return SideForce;       }
-  inline double GetWheelRollForce(void)    { return RollingForce;    }
-  inline double GetWheelSideVel(void)      { return SideWhlVel;      }
-  inline double GetWheelRollVel(void)      { return RollingWhlVel;   }
-  inline double GetBodyXForce(void)        { return vLocalForce(eX); }
-  inline double GetBodyYForce(void)        { return vLocalForce(eY); }
-  inline double GetWheelSlipAngle(void)    { return WheelSlip;       }
-  double GetWheelVel(int axis)             { return vWhlVelVec(axis);}
-
-  bool IsBogey(void) {return (sContactType == string("BOGEY"));}
+  inline bool GetRetractable(void) const      { return isRetractable;   }
+  inline bool GetGearUnitUp(void) const       { return GearUp;          }
+  inline bool GetGearUnitDown(void) const     { return GearDown;        }
+  inline double GetWheelSideForce(void) const { return SideForce;       }
+  inline double GetWheelRollForce(void) const { return RollingForce;    }
+  inline double GetWheelSideVel(void) const   { return SideWhlVel;      }
+  inline double GetWheelRollVel(void) const   { return RollingWhlVel;   }
+  inline double GetBodyXForce(void) const     { return vLocalForce(eX); }
+  inline double GetBodyYForce(void) const     { return vLocalForce(eY); }
+  inline double GetWheelSlipAngle(void) const { return WheelSlip;       }
+  double GetWheelVel(int axis) const          { return vWhlVelVec(axis);}
+  bool IsBogey(void) const                    { return (eContactType == ctBOGEY);}
+  double GetGearUnitPos(void);
 
   void bind(void);
-  void unbind(void);
 
 private:
   int GearNumber;
@@ -266,7 +300,9 @@ private:
   FGColumnVector3 last_vForce; // remove this
   FGColumnVector3 vLocalForce;
   FGColumnVector3 vWhlVelVec;     // Velocity of this wheel (Local)
+  FGColumnVector3 normal, cvel;
   FGColumnVector3 prevOut, prevIn;
+  FGLocation contact, gearLoc;
   FGTable *ForceY_Table;
   double dT;
   double SteerAngle;
@@ -293,6 +329,8 @@ private:
   double prevSlipOut;
   double TirePressureNorm;
   double SinWheel, CosWheel;
+  double GearPos;
+  bool   useFCSGearPos;
   bool WOW;
   bool lastWOW;
   bool FirstContact;
@@ -309,8 +347,11 @@ private:
   string sRetractable;
   string sContactType;
 
-  BrakeGroup eBrakeGrp;
-  SteerType  eSteerType;
+  BrakeGroup  eBrakeGrp;
+  ContactType eContactType;
+  SteerType   eSteerType;
+  DampType    eDampType;
+  DampType    eDampTypeRebound;
   double  maxSteerAngle;
   double RFRV;  // Rolling force relaxation velocity
   double SFRV;  // Side force relaxation velocity

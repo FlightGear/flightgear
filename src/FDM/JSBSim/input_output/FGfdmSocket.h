@@ -26,6 +26,7 @@
 HISTORY
 --------------------------------------------------------------------------------
 11/08/99   JSB   Created
+11/08/07   HDW   Added Generic Socket Send
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
@@ -38,32 +39,17 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <stdio.h>
-
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  include STL_STRING
-#  include STL_IOSTREAM
-#  include STL_FSTREAM
-   SG_USING_STD(cout);
-   SG_USING_STD(endl);
-#else
-#  include <string>
-#  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
-#    include <iostream.h>
-#    include <fstream.h>
-#  else
-#    include <iostream>
-#    include <fstream>
-     using std::cout;
-     using std::endl;
-#  endif
-#endif
-
+#include <cstdio>
+#include <string>
+#include <iostream>
+#include <fstream>
 #include <sys/types.h>
 #include "FGJSBBase.h"
 
-#if defined(__BORLANDC__) || defined(_MSC_VER) || defined(__MINGW32__)
+using std::cout;
+using std::endl;
+
+#if defined(_MSC_VER) || defined(__MINGW32__)
   #include <winsock.h>
   #include <io.h>
 #else
@@ -76,9 +62,7 @@ INCLUDES
 #endif
 
 #ifdef _MSC_VER
-
-#pragma comment (lib,"WSock32.lib")
-
+#  pragma comment (lib,"WSock32.lib")
 #endif
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -113,9 +97,12 @@ class FGfdmSocket : public FGJSBBase
 {
 public:
   FGfdmSocket(string, int);
+  FGfdmSocket(string, int, int);
   FGfdmSocket(int);
   ~FGfdmSocket();
   void Send(void);
+  void Send(char *data, int length);
+
   string Receive(void);
   int Reply(string text);
   void Append(const string s) {Append(s.c_str());}
@@ -126,6 +113,8 @@ public:
   void Clear(string s);
   void Close(void);
   bool GetConnectStatus(void) {return connected;}
+
+  enum {ptUDP, ptTCP};
 
 private:
   int sckt;

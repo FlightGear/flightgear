@@ -40,6 +40,7 @@ INCLUDES
 
 #include "FGMassBalance.h"
 #include "FGPropulsion.h"
+#include "FGBuoyantForces.h"
 #include <input_output/FGPropertyManager.h>
 
 namespace JSBSim {
@@ -72,9 +73,19 @@ FGMassBalance::FGMassBalance(FGFDMExec* fdmex) : FGModel(fdmex)
 
 FGMassBalance::~FGMassBalance()
 {
-  unbind();
+  for (unsigned int i=0; i<PointMasses.size(); i++) delete PointMasses[i];
   PointMasses.clear();
+
   Debug(1);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGMassBalance::InitModel(void)
+{
+  if (!FGModel::InitModel()) return false;
+
+  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -98,9 +109,9 @@ bool FGMassBalance::Load(Element* el)
     bixz = el->FindElementValueAsNumberConvertTo("ixz", "SLUG*FT2");
   if (el->FindElement("iyz"))
     biyz = el->FindElementValueAsNumberConvertTo("iyz", "SLUG*FT2");
-  SetAircraftBaseInertias(FGMatrix33(  bixx,  -bixy,  -bixz,
+  SetAircraftBaseInertias(FGMatrix33(  bixx,  -bixy,  bixz,
                                       -bixy,  biyy,  -biyz,
-                                      -bixz,  -biyz,  bizz ));
+                                       bixz,  -biyz,  bizz ));
   EmptyWeight = el->FindElementValueAsNumberConvertTo("emptywt", "LBS");
 
   element = el->FindElement("location");
@@ -133,14 +144,16 @@ bool FGMassBalance::Run(void)
   if (FGModel::Run()) return true;
   if (FDMExec->Holding()) return false;
 
-  Weight = EmptyWeight + Propulsion->GetTanksWeight() + GetPointMassWeight();
+  Weight = EmptyWeight + Propulsion->GetTanksWeight() + GetPointMassWeight()
+    + BuoyantForces->GetGasMass()*slugtolb;
 
   Mass = lbtoslug*Weight;
 
 // Calculate new CG
 
   vXYZcg = (Propulsion->GetTanksMoment() + EmptyWeight*vbaseXYZcg
-                                     + GetPointMassMoment() ) / Weight;
+            + GetPointMassMoment()
+            + BuoyantForces->GetGasMassMoment()) / Weight;
 
 // Calculate new total moments of inertia
 
@@ -151,6 +164,7 @@ bool FGMassBalance::Run(void)
   // Then add the contributions from the additional pointmasses.
   mJ += CalculatePMInertias();
   mJ += Propulsion->CalculateTankInertias();
+  mJ += BuoyantForces->GetGasMassInertia();
 
   Ixx = mJ(1,1);
   Iyy = mJ(2,2);
@@ -186,6 +200,8 @@ bool FGMassBalance::Run(void)
 
 void FGMassBalance::AddPointMass(Element* el)
 {
+  char tmp[80];
+
   Element* loc_element = el->FindElement("location");
   string pointmass_name = el->GetAttributeValue("name");
   if (!loc_element) {
@@ -195,7 +211,13 @@ void FGMassBalance::AddPointMass(Element* el)
 
   double w = el->FindElementValueAsNumberConvertTo("weight", "LBS");
   FGColumnVector3 vXYZ = loc_element->FindElementTripletConvertTo("IN");
-  PointMasses.push_back(PointMass(w, vXYZ));
+  PointMasses.push_back(new PointMass(w, vXYZ));
+
+  int num = PointMasses.size()-1;
+
+  snprintf(tmp, 80, "inertia/pointmass-weight-lbs[%u]", num);
+  PropertyManager->Tie( tmp, this, num, &FGMassBalance::GetPointMassWeight,
+                                        &FGMassBalance::SetPointMassWeight);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -205,7 +227,7 @@ double FGMassBalance::GetPointMassWeight(void)
   double PM_total_weight = 0.0;
 
   for (unsigned int i=0; i<PointMasses.size(); i++) {
-    PM_total_weight += PointMasses[i].Weight;
+    PM_total_weight += PointMasses[i]->Weight;
   }
   return PM_total_weight;
 }
@@ -217,7 +239,7 @@ FGColumnVector3& FGMassBalance::GetPointMassMoment(void)
   PointMassCG.InitMatrix();
 
   for (unsigned int i=0; i<PointMasses.size(); i++) {
-    PointMassCG += PointMasses[i].Weight*PointMasses[i].Location;
+    PointMassCG += PointMasses[i]->Weight*PointMasses[i]->Location;
   }
   return PointMassCG;
 }
@@ -234,7 +256,7 @@ FGMatrix33& FGMassBalance::CalculatePMInertias(void)
   pmJ = FGMatrix33();
 
   for (unsigned int i=0; i<size; i++)
-    pmJ += GetPointmassInertia( lbtoslug * PointMasses[i].Weight, PointMasses[i].Location );
+    pmJ += GetPointmassInertia( lbtoslug * PointMasses[i]->Weight, PointMasses[i]->Location );
 
   return pmJ;
 }
@@ -281,23 +303,14 @@ void FGMassBalance::bind(void)
                        &FGMassBalance::GetMass);
   PropertyManager->Tie("inertia/weight-lbs", this,
                        &FGMassBalance::GetWeight);
+  PropertyManager->Tie("inertia/empty-weight-lbs", this,
+    &FGMassBalance::GetWeight, &FGMassBalance::SetEmptyWeight);
   PropertyManager->Tie("inertia/cg-x-in", this,1,
                        (PMF)&FGMassBalance::GetXYZcg);
   PropertyManager->Tie("inertia/cg-y-in", this,2,
                        (PMF)&FGMassBalance::GetXYZcg);
   PropertyManager->Tie("inertia/cg-z-in", this,3,
                        (PMF)&FGMassBalance::GetXYZcg);
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGMassBalance::unbind(void)
-{
-  PropertyManager->Untie("inertia/mass-slugs");
-  PropertyManager->Untie("inertia/weight-lbs");
-  PropertyManager->Untie("inertia/cg-x-in");
-  PropertyManager->Untie("inertia/cg-y-in");
-  PropertyManager->Untie("inertia/cg-z-in");
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -336,10 +349,10 @@ void FGMassBalance::Debug(int from)
       cout << "    CG (x, y, z): " << vbaseXYZcg << endl;
       // ToDo: Need to add point mass outputs here
       for (unsigned int i=0; i<PointMasses.size(); i++) {
-        cout << "    Point Mass Object: " << PointMasses[i].Weight << " lbs. at "
-                   << "X, Y, Z (in.): " << PointMasses[i].Location(eX) << "  "
-                   << PointMasses[i].Location(eY) << "  "
-                   << PointMasses[i].Location(eZ) << endl;
+        cout << "    Point Mass Object: " << PointMasses[i]->Weight << " lbs. at "
+                   << "X, Y, Z (in.): " << PointMasses[i]->Location(eX) << "  "
+                   << PointMasses[i]->Location(eY) << "  "
+                   << PointMasses[i]->Location(eZ) << endl;
       }
     }
   }

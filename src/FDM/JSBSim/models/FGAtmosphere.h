@@ -61,7 +61,7 @@ namespace JSBSim {
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-/** Models the standard atmosphere.
+/** Models the 1976 Standard Atmosphere.
     @author Tony Peden, Jon Berndt
     @version $Id$
     @see Anderson, John D. "Introduction to Flight, Third Edition", McGraw-Hill,
@@ -83,6 +83,7 @@ public:
       @return false if no error */
   bool Run(void);
   bool InitModel(void);
+  enum tType {ttStandard, ttBerndt, ttCulp, ttNone} turbType;
 
   /// Returns the temperature in degrees Rankine.
   inline double GetTemperature(void) const {return *temperature;}
@@ -94,9 +95,9 @@ public:
   /// Returns the standard pressure at a specified altitude
   double GetPressure(double altitude);
   /// Returns the standard temperature at a specified altitude
-  inline double GetTemperature(double altitude);
+  double GetTemperature(double altitude);
   /// Returns the standard density at a specified altitude
-  inline double GetDensity(double altitude);
+  double GetDensity(double altitude);
   /// Returns the speed of sound in ft/sec.
   inline double GetSoundSpeed(void) const {return soundspeed;}
 
@@ -151,26 +152,46 @@ public:
   /// Retrieves the wind components in NED frame.
   inline FGColumnVector3& GetWindNED(void) { return vWindNED; }
 
+  /// Sets gust components in NED frame.
+  inline void SetGustNED(int idx, double gust) { vGustNED(idx)=gust;}
+
+  /// Retrieves the gust components in NED frame.
+  inline double GetGustNED(int idx) const {return vGustNED(idx);}
+
+  /// Retrieves the gust components in NED frame.
+  inline FGColumnVector3& GetGustNED(void) {return vGustNED;}
+
   /** Retrieves the wind direction. The direction is defined as north=0 and
       increases counterclockwise. The wind heading is returned in radians.*/
   inline double GetWindPsi(void) const { return psiw; }
 
-  inline void SetTurbGain(double tt) {TurbGain = tt;}
-  inline void SetTurbRate(double tt) {TurbRate = tt;}
+  /** Turbulence models available: ttStandard, ttBerndt, ttCulp, ttNone */
+  inline void   SetTurbType(tType tt) {turbType = tt;}
+  inline tType  GetTurbType() const {return turbType;}
+
+  inline void   SetTurbGain(double tg) {TurbGain = tg;}
+  inline double GetTurbGain() const {return TurbGain;}
+
+  inline void   SetTurbRate(double tr) {TurbRate = tr;}
+  inline double GetTurbRate() const {return TurbRate;}
+
+  inline void   SetRhythmicity(double r) {Rhythmicity=r;}
+  inline double GetRhythmicity() const {return Rhythmicity;}
+
+  /** Sets wind vortex, clockwise as seen from a point in front of aircraft,
+      looking aft. Units are radians/second. */
+  inline void   SetWindFromClockwise(double wC) { wind_from_clockwise=wC; }
+  inline double GetWindFromClockwise(void) const {return wind_from_clockwise;}
 
   inline double GetTurbPQR(int idx) const {return vTurbPQR(idx);}
+  double GetTurbMagnitude(void) const {return Magnitude;}
+  FGColumnVector3& GetTurbDirection(void) {return vDirection;}
   inline FGColumnVector3& GetTurbPQR(void) {return vTurbPQR;}
-
-  void bind(void);
-  void unbind(void);
-
 
 protected:
   double rho;
 
-  enum tType {ttStandard, ttBerndt, ttNone} turbType;
   struct atmType {double Temperature; double Pressure; double Density;};
-
   int lastIndex;
   double h;
   double htab[8];
@@ -190,6 +211,9 @@ protected:
   double MagnitudedAccelDt, MagnitudeAccel, Magnitude;
   double TurbGain;
   double TurbRate;
+  double Rhythmicity;
+  double wind_from_clockwise;
+  double spike, target_time, strength;
   FGColumnVector3 vDirectiondAccelDt;
   FGColumnVector3 vDirectionAccel;
   FGColumnVector3 vDirection;
@@ -201,6 +225,9 @@ protected:
   FGColumnVector3 vWindNED;
   double psiw;
 
+  FGColumnVector3 vGustNED;
+  bool bgustSet;
+
   /// Calculate the atmosphere for the given altitude, including effects of temperature deviation.
   void Calculate(double altitude);
   /// Calculate atmospheric properties other than the basic T, P and rho.
@@ -208,6 +235,7 @@ protected:
   /// Get T, P and rho for a standard atmosphere at the given altitude.
   void GetStdAtmosphere(double altitude);
   void Turbulence(void);
+  void bind(void);
   void Debug(int from);
 };
 

@@ -64,11 +64,19 @@ FGGroundReactions::FGGroundReactions(FGFDMExec* fgex) : FGModel(fgex)
 
 FGGroundReactions::~FGGroundReactions(void)
 {
-  for (unsigned int i=0; i<lGear.size();i++) lGear[i].unbind();
+  for (unsigned int i=0; i<lGear.size();i++) delete lGear[i];
   lGear.clear();
 
-  unbind();
   Debug(1);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGGroundReactions::InitModel(void)
+{
+  if (!FGModel::InitModel()) return false;
+
+  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -81,19 +89,15 @@ bool FGGroundReactions::Run(void)
   vForces.InitMatrix();
   vMoments.InitMatrix();
 
-  if ( Propagate->GetDistanceAGL() < 300.0 ) { // Only execute gear code below 300 feet
-    vector <FGLGear>::iterator iGear = lGear.begin();
-
     // Sum forces and moments for all gear, here.
     // Some optimizations may be made here - or rather in the gear code itself.
     // The gear ::Run() method is called several times - once for each gear.
     // Perhaps there is some commonality for things which only need to be
     // calculated once.
-
-    while (iGear != lGear.end()) {
-      vForces  += iGear->Force();
-      vMoments += iGear->Moment();
-      iGear++;
+  if ( Propagate->GetDistanceAGL() < 300.0 ) { // Only execute gear code below 300 feet
+    for (unsigned int i=0; i<lGear.size(); i++) {
+      vForces  += lGear[i]->Force();
+      vMoments += lGear[i]->Moment();
     }
 
   }
@@ -107,7 +111,7 @@ bool FGGroundReactions::GetWOW(void)
 {
   bool result = false;
   for (unsigned int i=0; i<lGear.size(); i++) {
-    if (lGear[i].IsBogey() && lGear[i].GetWOW()) {
+    if (lGear[i]->IsBogey() && lGear[i]->GetWOW()) {
       result = true;
       break;
     }
@@ -125,12 +129,12 @@ bool FGGroundReactions::Load(Element* el)
 
   Element* contact_element = el->FindElement("contact");
   while (contact_element) {
-    lGear.push_back(FGLGear(contact_element, FDMExec, num++));
+    lGear.push_back(new FGLGear(contact_element, FDMExec, num++));
     FCS->AddGear(); // make the FCS aware of the landing gear
     contact_element = el->FindNextElement("contact");
   }
 
-  for (unsigned int i=0; i<lGear.size();i++) lGear[i].bind();
+  for (unsigned int i=0; i<lGear.size();i++) lGear[i]->bind();
 
   return true;
 }
@@ -142,8 +146,8 @@ string FGGroundReactions::GetGroundReactionStrings(string delimeter)
   std::ostringstream buf;
 
   for (unsigned int i=0;i<lGear.size();i++) {
-    if (lGear[i].IsBogey()) {
-      string name = lGear[i].GetName();
+    if (lGear[i]->IsBogey()) {
+      string name = lGear[i]->GetName();
       buf << name << " WOW" << delimeter
           << name << " stroke (ft)" << delimeter
           << name << " stroke velocity (ft/sec)" << delimeter
@@ -177,21 +181,21 @@ string FGGroundReactions::GetGroundReactionValues(string delimeter)
   std::ostringstream buf;
 
   for (unsigned int i=0;i<lGear.size();i++) {
-    if (lGear[i].IsBogey()) {
-      FGLGear& gear = lGear[i];
-      buf << (gear.GetWOW() ? "1, " : "0, ")
-          << setprecision(5) << gear.GetCompLen() << delimeter
-          << setprecision(6) << gear.GetCompVel() << delimeter
-          << setprecision(10) << gear.GetCompForce() << delimeter
-          << gear.GetWheelSideForce() << delimeter
-          << gear.GetWheelRollForce() << delimeter
-          << gear.GetBodyXForce() << delimeter
-          << gear.GetBodyYForce() << delimeter
-          << setprecision(6) << gear.GetWheelVel(eX) << delimeter
-          << gear.GetWheelVel(eY) << delimeter
-          << gear.GetWheelRollVel() << delimeter
-          << gear.GetWheelSideVel() << delimeter
-          << gear.GetWheelSlipAngle() << delimeter;
+    if (lGear[i]->IsBogey()) {
+      FGLGear *gear = lGear[i];
+      buf << (gear->GetWOW() ? "1, " : "0, ")
+          << setprecision(5) << gear->GetCompLen() << delimeter
+          << setprecision(6) << gear->GetCompVel() << delimeter
+          << setprecision(10) << gear->GetCompForce() << delimeter
+          << gear->GetWheelSideForce() << delimeter
+          << gear->GetWheelRollForce() << delimeter
+          << gear->GetBodyXForce() << delimeter
+          << gear->GetBodyYForce() << delimeter
+          << setprecision(6) << gear->GetWheelVel(eX) << delimeter
+          << gear->GetWheelVel(eY) << delimeter
+          << gear->GetWheelRollVel() << delimeter
+          << gear->GetWheelSideVel() << delimeter
+          << gear->GetWheelSlipAngle() << delimeter;
     }
   }
 
@@ -217,19 +221,6 @@ void FGGroundReactions::bind(void)
   PropertyManager->Tie("forces/fbx-gear-lbs", this, eX, (PMF)&FGGroundReactions::GetForces);
   PropertyManager->Tie("forces/fby-gear-lbs", this, eY, (PMF)&FGGroundReactions::GetForces);
   PropertyManager->Tie("forces/fbz-gear-lbs", this, eZ, (PMF)&FGGroundReactions::GetForces);
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGGroundReactions::unbind(void)
-{
-  PropertyManager->Untie("gear/num-units");
-  PropertyManager->Untie("moments/l-gear-lbsft");
-  PropertyManager->Untie("moments/m-gear-lbsft");
-  PropertyManager->Untie("moments/n-gear-lbsft");
-  PropertyManager->Untie("forces/fbx-gear-lbs");
-  PropertyManager->Untie("forces/fby-gear-lbs");
-  PropertyManager->Untie("forces/fbz-gear-lbs");
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -40,41 +40,18 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <stdlib.h>
-#ifdef FGFS
-#  include <math.h>
-#  include <simgear/compiler.h>
-#  include STL_STRING
-#  include STL_FSTREAM
-#  include STL_IOSTREAM
-   SG_USING_STD(string);
-   SG_USING_STD(ostream);
-   SG_USING_STD(istream);
-   SG_USING_STD(cerr);
-   SG_USING_STD(cout);
-   SG_USING_STD(endl);
-#else
-#  include <string>
-#  if defined(sgi) && !defined(__GNUC__) && (_COMPILER_VERSION < 740)
-     include <fstream.h>
-     include <iostream.h>
-#    include <math.h>
-#  else
-#    include <fstream>
-#    include <iostream>
-#    if defined(sgi) && !defined(__GNUC__)
-#      include <math.h>
-#    else
-#      include <cmath>
-#    endif
-     using std::ostream;
-     using std::istream;
-     using std::cerr;
-     using std::cout;
-     using std::endl;
-#  endif
-   using std::string;
-#endif
+#include <cstdlib>
+#include <string>
+#include <fstream>
+#include <iostream>
+#include <cmath>
+
+using std::ostream;
+using std::istream;
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::string;
 
 #include "FGColumnVector3.h"
 #include "FGJSBBase.h"
@@ -216,8 +193,8 @@ public:
   }
 
   /** Read access the entries of the matrix.
-      This function is just a shortcut for the @ref double&
-      operator()(unsigned int row, unsigned int col) function. It is
+      This function is just a shortcut for the <tt>double&
+      operator()(unsigned int row, unsigned int col)</tt> function. It is
       used internally to access the elements in a more convenient way.
 
       Note that the indices given in the arguments are unchecked.
@@ -233,8 +210,8 @@ public:
   }
 
   /** Write access the entries of the matrix.
-      This function is just a shortcut for the @ref double&
-      operator()(unsigned int row, unsigned int col) function. It is
+      This function is just a shortcut for the <tt>double&
+      operator()(unsigned int row, unsigned int col)</tt> function. It is
       used internally to access the elements in a more convenient way.
 
       Note that the indices given in the arguments are unchecked.

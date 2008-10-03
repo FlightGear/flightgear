@@ -34,17 +34,13 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  include STL_STRING
-#else
-#  include <string>
-#  include <iostream>
-   using std::string;
-   using std::cout;
-   using std::cerr;
-   using std::endl;
-#endif
+#include <string>
+#include <iostream>
+
+using std::string;
+using std::cout;
+using std::cerr;
+using std::endl;
 
 #include "FGXMLElement.h"
 #include "simgear/xml/easyxml.hxx"

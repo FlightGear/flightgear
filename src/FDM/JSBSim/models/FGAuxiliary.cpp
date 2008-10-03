@@ -44,10 +44,13 @@ INCLUDES
 #include "FGAerodynamics.h"
 #include "FGPropagate.h"
 #include "FGAtmosphere.h"
-#include <FGState.h>
 #include <FGFDMExec.h>
 #include "FGAircraft.h"
 #include "FGInertial.h"
+#include "FGExternalReactions.h"
+#include "FGBuoyantForces.h"
+#include "FGGroundReactions.h"
+#include "FGPropulsion.h"
 #include <input_output/FGPropertyManager.h>
 
 namespace JSBSim {
@@ -65,7 +68,6 @@ FGAuxiliary::FGAuxiliary(FGFDMExec* fdmex) : FGModel(fdmex)
   Name = "FGAuxiliary";
   vcas = veas = pt = tat = 0;
   psl = rhosl = 1;
-  earthPosAngle = 0.0;
   qbar = 0;
   qbarUW = 0.0;
   qbarUV = 0.0;
@@ -91,9 +93,37 @@ FGAuxiliary::FGAuxiliary(FGFDMExec* fdmex) : FGModel(fdmex)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+bool FGAuxiliary::InitModel(void)
+{
+  if (!FGModel::InitModel()) return false;
+
+  vcas = veas = pt = tat = 0;
+  psl = rhosl = 1;
+  qbar = 0;
+  qbarUW = 0.0;
+  qbarUV = 0.0;
+  Mach = 0.0;
+  alpha = beta = 0.0;
+  adot = bdot = 0.0;
+  gamma = Vt = Vground = 0.0;
+  psigt = 0.0;
+  day_of_year = 1;
+  seconds_in_day = 0.0;
+  hoverbmac = hoverbcg = 0.0;
+
+  vPilotAccel.InitMatrix();
+  vPilotAccelN.InitMatrix();
+  vToEyePt.InitMatrix();
+  vAeroPQR.InitMatrix();
+  vEulerRates.InitMatrix();
+
+  return true;
+}
+  
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 FGAuxiliary::~FGAuxiliary()
 {
-  unbind();
   Debug(1);
 }
 
@@ -139,10 +169,10 @@ bool FGAuxiliary::Run()
   } else if (GroundReactions->GetWOW() && vUVW(eU) < 30) {
     double factor = (vUVW(eU) - 10.0)/20.0;
     vAeroPQR = vPQR + factor*Atmosphere->GetTurbPQR();
-    vAeroUVW = vUVW + factor*Propagate->GetTl2b()*Atmosphere->GetWindNED();
+    vAeroUVW = vUVW + factor*Propagate->GetTl2b()*(Atmosphere->GetWindNED()+Atmosphere->GetGustNED());
   } else {
     vAeroPQR = vPQR + Atmosphere->GetTurbPQR();
-    vAeroUVW = vUVW + Propagate->GetTl2b()*Atmosphere->GetWindNED();
+    vAeroUVW = vUVW + Propagate->GetTl2b()*(Atmosphere->GetWindNED()+Atmosphere->GetGustNED());
   }
 
   Vt = vAeroUVW.Magnitude();
@@ -208,12 +238,17 @@ bool FGAuxiliary::Run()
 
   vPilotAccel.InitMatrix();
   if ( Vt > 1.0 ) {
-     vPilotAccel =  Aerodynamics->GetForces()
-                    +  Propulsion->GetForces()
-                    +  GroundReactions->GetForces();
-     vPilotAccel /= MassBalance->GetMass();
+     vAircraftAccel = Aerodynamics->GetForces()
+                    + Propulsion->GetForces()
+                    + GroundReactions->GetForces()
+                    + ExternalReactions->GetForces()
+                    + BuoyantForces->GetForces();
+
+     vAircraftAccel /= MassBalance->GetMass();
+     // Nz is Acceleration in "g's", along normal axis (-Z body axis)
+     Nz = -vAircraftAccel(eZ)/Inertial->gravity();
      vToEyePt = MassBalance->StructuralToBody(Aircraft->GetXYZep());
-     vPilotAccel += Propagate->GetPQRdot() * vToEyePt;
+     vPilotAccel = vAircraftAccel + Propagate->GetPQRdot() * vToEyePt;
      vPilotAccel += vPQR * (vPQR * vToEyePt);
   } else {
      // The line below handles low velocity (and on-ground) cases, basically
@@ -223,11 +258,10 @@ bool FGAuxiliary::Run()
      // this branch could be eliminated, with a penalty of having a short
      // transient at startup (lasting only a fraction of a second).
      vPilotAccel = Propagate->GetTl2b() * FGColumnVector3( 0.0, 0.0, -Inertial->gravity() );
+     Nz = -vPilotAccel(eZ)/Inertial->gravity();
   }
 
   vPilotAccelN = vPilotAccel/Inertial->gravity();
-
-  earthPosAngle += State->Getdt()*Inertial->omega();
 
   // VRP computation
   const FGLocation& vLocation = Propagate->GetLocation();
@@ -242,12 +276,17 @@ bool FGAuxiliary::Run()
   FGColumnVector3 vMac = Propagate->GetTb2l()*MassBalance->StructuralToBody(Aircraft->GetXYZrp());
   hoverbmac = (Propagate->GetDistanceAGL() + vMac(3)) / Aircraft->GetWingSpan();
 
+  // when all model are executed, 
+  // please calculate the distance from the initial point
+
+  CalculateRelativePosition();
+
   return false;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-double FGAuxiliary::GetHeadWind(void)
+double FGAuxiliary::GetHeadWind(void) const
 {
   double psiw,vw;
 
@@ -259,7 +298,7 @@ double FGAuxiliary::GetHeadWind(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-double FGAuxiliary::GetCrossWind(void)
+double FGAuxiliary::GetCrossWind(void) const
 {
   double psiw,vw;
 
@@ -301,7 +340,7 @@ void FGAuxiliary::bind(void)
   PropertyManager->Tie("accelerations/n-pilot-x-norm", this, eX, (PMF)&FGAuxiliary::GetNpilot);
   PropertyManager->Tie("accelerations/n-pilot-y-norm", this, eY, (PMF)&FGAuxiliary::GetNpilot);
   PropertyManager->Tie("accelerations/n-pilot-z-norm", this, eZ, (PMF)&FGAuxiliary::GetNpilot);
-  PropertyManager->Tie("position/epa-rad", this, &FGAuxiliary::GetEarthPositionAngle);
+  PropertyManager->Tie("accelerations/Nz", this, &FGAuxiliary::GetNz);
   /* PropertyManager->Tie("atmosphere/headwind-fps", this, &FGAuxiliary::GetHeadWind, true);
   PropertyManager->Tie("atmosphere/crosswind-fps", this, &FGAuxiliary::GetCrossWind, true); */
   PropertyManager->Tie("aero/alpha-rad", this, (PF)&FGAuxiliary::Getalpha, &FGAuxiliary::Setalpha, true);
@@ -321,60 +360,21 @@ void FGAuxiliary::bind(void)
   PropertyManager->Tie("aero/h_b-mac-ft", this, &FGAuxiliary::GetHOverBMAC);
   PropertyManager->Tie("flight-path/gamma-rad", this, &FGAuxiliary::GetGamma, &FGAuxiliary::SetGamma);
   PropertyManager->Tie("flight-path/psi-gt-rad", this, &FGAuxiliary::GetGroundTrack);
+
+  PropertyManager->Tie("position/distance-from-start-lon-mt", this, &FGAuxiliary::GetLongitudeRelativePosition);
+  PropertyManager->Tie("position/distance-from-start-lat-mt", this, &FGAuxiliary::GetLatitudeRelativePosition);
+  PropertyManager->Tie("position/distance-from-start-mag-mt", this, &FGAuxiliary::GetDistanceRelativePosition);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGAuxiliary::unbind(void)
-{
-  PropertyManager->Untie("propulsion/tat-r");
-  PropertyManager->Untie("propulsion/tat-c");
-  PropertyManager->Untie("propulsion/pt-lbs_sqft");
-
-  PropertyManager->Untie("velocities/vc-fps");
-  PropertyManager->Untie("velocities/vc-kts");
-  PropertyManager->Untie("velocities/ve-fps");
-  PropertyManager->Untie("velocities/ve-kts");
-  PropertyManager->Untie("velocities/machU");
-  PropertyManager->Untie("velocities/p-aero-rad_sec");
-  PropertyManager->Untie("velocities/q-aero-rad_sec");
-  PropertyManager->Untie("velocities/r-aero-rad_sec");
-  PropertyManager->Untie("velocities/phidot-rad_sec");
-  PropertyManager->Untie("velocities/thetadot-rad_sec");
-  PropertyManager->Untie("velocities/psidot-rad_sec");
-  PropertyManager->Untie("velocities/u-aero-fps");
-  PropertyManager->Untie("velocities/v-aero-fps");
-  PropertyManager->Untie("velocities/w-aero-fps");
-  PropertyManager->Untie("velocities/vt-fps");
-  PropertyManager->Untie("velocities/mach");
-  PropertyManager->Untie("velocities/vg-fps");
-  PropertyManager->Untie("accelerations/a-pilot-x-ft_sec2");
-  PropertyManager->Untie("accelerations/a-pilot-y-ft_sec2");
-  PropertyManager->Untie("accelerations/a-pilot-z-ft_sec2");
-  PropertyManager->Untie("accelerations/n-pilot-x-norm");
-  PropertyManager->Untie("accelerations/n-pilot-y-norm");
-  PropertyManager->Untie("accelerations/n-pilot-z-norm");
-  PropertyManager->Untie("position/epa-rad");
-  /* PropertyManager->Untie("atmosphere/headwind-fps");
-  PropertyManager->Untie("atmosphere/crosswind-fps"); */
-  PropertyManager->Untie("aero/qbar-psf");
-  PropertyManager->Untie("aero/qbarUW-psf");
-  PropertyManager->Untie("aero/qbarUV-psf");
-  PropertyManager->Untie("aero/alpha-rad");
-  PropertyManager->Untie("aero/beta-rad");
-  PropertyManager->Untie("aero/alpha-deg");
-  PropertyManager->Untie("aero/beta-deg");
-  PropertyManager->Untie("aero/alphadot-rad_sec");
-  PropertyManager->Untie("aero/betadot-rad_sec");
-  PropertyManager->Untie("aero/mag-beta-rad");
-  PropertyManager->Untie("aero/alphadot-deg_sec");
-  PropertyManager->Untie("aero/betadot-deg_sec");
-  PropertyManager->Untie("aero/mag-beta-deg");
-  PropertyManager->Untie("aero/h_b-cg-ft");
-  PropertyManager->Untie("aero/h_b-mac-ft");
-  PropertyManager->Untie("flight-path/gamma-rad");
-  PropertyManager->Untie("flight-path/psi-gt-rad");
-}
+void FGAuxiliary::CalculateRelativePosition(void)
+{ 
+  const double earth_radius_mt = Inertial->GetRefRadius()*fttom;
+  lat_relative_position=(FDMExec->GetPropagate()->GetLatitude()  - FDMExec->GetIC()->GetLatitudeDegIC() *degtorad)*earth_radius_mt;
+  lon_relative_position=(FDMExec->GetPropagate()->GetLongitude() - FDMExec->GetIC()->GetLongitudeDegIC()*degtorad)*earth_radius_mt;
+  relative_position = sqrt(lat_relative_position*lat_relative_position + lon_relative_position*lon_relative_position);
+};
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //    The bitmasked value choices are as follows:

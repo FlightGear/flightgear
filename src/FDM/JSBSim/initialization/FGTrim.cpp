@@ -23,11 +23,9 @@
  Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
-
  HISTORY
 --------------------------------------------------------------------------------
 9/8/99   TP   Created
-
 
 FUNCTIONAL DESCRIPTION
 --------------------------------------------------------------------------------
@@ -43,12 +41,10 @@ scheme. */
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <stdlib.h>
-
-#include <FGFDMExec.h>
+#include <cstdlib>
+#include "FGTrim.h"
 #include <models/FGAtmosphere.h>
 #include "FGInitialCondition.h"
-#include "FGTrim.h"
 #include <models/FGAircraft.h>
 #include <models/FGMassBalance.h>
 #include <models/FGGroundReactions.h>
@@ -80,7 +76,7 @@ FGTrim::FGTrim(FGFDMExec *FDMExec,TrimMode tt) {
   fgic=fdmex->GetIC();
   total_its=0;
   trimudot=true;
-  gamma_fallback=true;
+  gamma_fallback=false;
   axis_count=0;
   mode=tt;
   xlo=xhi=alo=ahi=0.0;
@@ -633,7 +629,7 @@ void FGTrim::SetMode(TrimMode tt) {
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tWdot,tAlpha ));
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tUdot,tThrottle ));
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tQdot,tPitchTrim ));
-        TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tHmgt,tBeta ));
+        //TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tHmgt,tBeta ));
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tVdot,tPhi ));
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tPdot,tAileron ));
         TrimAxes.push_back(new FGTrimAxis(fdmex,fgic,tRdot,tRudder ));

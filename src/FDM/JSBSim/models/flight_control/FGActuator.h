@@ -65,12 +65,12 @@ CLASS DOCUMENTATION
     applied to the actuator. In order of application to the input signal,
     these are:
     
-    -System lag (input lag, really)
-    -Rate limiting
-    -Deadband
-    -Hysteresis (mechanical hysteresis)
-    -Bias (mechanical bias)
-    -Position limiting ("hard stops")
+    - System lag (input lag, really)
+    - Rate limiting
+    - Deadband
+    - Hysteresis (mechanical hysteresis)
+    - Bias (mechanical bias)
+    - Position limiting ("hard stops")
     
     There are also several malfunctions that can be applied to the actuator
     by setting a property to true or false (or 1 or 0).
@@ -78,7 +78,7 @@ CLASS DOCUMENTATION
 Syntax:
 
 @code
-<actuator name=”name”>
+<actuator name="name">
   <input> {[-]property} </input>
   <lag> number </lag>
   <rate_limit> number <rate_limit>
@@ -96,7 +96,7 @@ Syntax:
 Example:
 
 @code
-<actuator name=”fcs/gimbal_pitch_position”>
+<actuator name="fcs/gimbal_pitch_position">
   <input> fcs/gimbal_pitch_command </input>
   <lag> 60 </lag>
   <rate_limit> 0.085 <rate_limit> <!-- 5 degrees/sec -->

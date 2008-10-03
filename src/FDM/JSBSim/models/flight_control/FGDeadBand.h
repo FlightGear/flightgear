@@ -59,7 +59,7 @@ CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /** Models a deadband object.
-    This is a component that allows for some “play” in a control path, in the
+    This is a component that allows for some "play" in a control path, in the
     form of a dead zone, or deadband. The form of the deadband component
     specification is:
 
@@ -77,7 +77,7 @@ CLASS DOCUMENTATION
 
     The width value is the total deadband region within which an input will
     produce no output. For example, say that the width value is 2.0. If the
-    input is between –1.0 and +1.0, the output will be zero.
+    input is between -1.0 and +1.0, the output will be zero.
     @author Jon S. Berndt
     @version $Id$
 */

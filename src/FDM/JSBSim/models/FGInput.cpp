@@ -74,6 +74,15 @@ FGInput::~FGInput()
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGInput::InitModel(void)
+{
+  if (!FGModel::InitModel()) return false;
+
+  return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //
 // This function handles accepting input commands from the socket interface.
 //
@@ -205,6 +214,12 @@ bool FGInput::Load(Element* element)
   string type="", parameter="";
   string name="", fname="";
   string property;
+
+  // if the input has already been set up, print a warning message and return
+  if (port > 0) {
+    cerr << "An input port has already been assigned for this run" << endl;
+    return false;
+  }
 
   port = int(element->GetAttributeValueAsNumber("port"));
   if (port == 0) {

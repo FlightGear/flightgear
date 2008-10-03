@@ -34,35 +34,16 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
-#    include <string>
-#    include <vector>
-#    include <iostream>
-#    include <map>
-#  else
-#    include <vector.h>
-#    include <string>
-#    include <iostream.h>
-#    include <map.h>
-#  endif
-#else
-#  include <string>
-#  include <map>
-#  include <iostream>
-#  include <vector>
-   using std::string;
-   using std::map;
-   using std::vector;
-   using std::cout;
-   using std::endl;
-#endif
-   using std::string;
-   using std::map;
-   using std::vector;
-   using std::cout;
-   using std::endl;
+#include <string>
+#include <map>
+#include <iostream>
+#include <vector>
+
+using std::string;
+using std::map;
+using std::vector;
+using std::cout;
+using std::endl;
 
 #include <math/FGColumnVector3.h>
 
@@ -108,6 +89,7 @@ CLASS DOCUMENTATION
     - convert["N"]["LBS"] = 0.22482;
     - convert["LBS"]["N"] = 1.0/convert["N"]["LBS"];
     - convert["KTS"]["FT/SEC"] = ktstofps;
+    - convert["KG/MIN"]["LBS/MIN"] = convert["KG"]["LBS"];
 
     - convert["M"]["M"] = 1.00;
     - convert["FT"]["FT"] = 1.00;
@@ -131,6 +113,8 @@ CLASS DOCUMENTATION
     - convert["WATTS"]["WATTS"] = 1.00;
     - convert["KTS"]["KTS"] = 1.0;
     - convert["FT/SEC"]["FT/SEC"] = 1.0;
+    - convert["KG/MIN"]["KG/MIN"] = 1.0;
+    - convert["LBS/MIN"]["LBS/MIN"] = 1.0;
 
     Where:
     - N = newtons
@@ -141,6 +125,7 @@ CLASS DOCUMENTATION
     - FT = feet
     - FT2 = feet squared
     - SEC = seconds
+    - MIN = minutes
     - SLUG = slug
     - DEG = degrees
     - RAD = radians

@@ -33,6 +33,7 @@ later.
 HISTORY
 --------------------------------------------------------------------------------
 12/02/98   JSB   Created
+11/09/07   HDW   Added FlightGear Socket Interface
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
@@ -50,14 +51,70 @@ INCLUDES
 #include "FGPropagate.h"
 #include "FGAuxiliary.h"
 #include "FGInertial.h"
-
+#include "FGPropulsion.h"   //access to FGEngine, FGTank
+#include "models/propulsion/FGPiston.h"
 #include <fstream>
 #include <iomanip>
+#include <cstring>
+
+#include "input_output/net_fdm.hxx"
+
+#if defined(WIN32) && !defined(__CYGWIN__)
+#  include <windows.h>
+#else
+#  include <netinet/in.h>       // htonl() ntohl()
+#endif
+
+static const int endianTest = 1;
+#define isLittleEndian (*((char *) &endianTest ) != 0)
 
 namespace JSBSim {
 
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_OUTPUT;
+
+// (stolen from FGFS native_fdm.cxx)
+// The function htond is defined this way due to the way some
+// processors and OSes treat floating point values.  Some will raise
+// an exception whenever a "bad" floating point value is loaded into a
+// floating point register.  Solaris is notorious for this, but then
+// so is LynxOS on the PowerPC.  By translating the data in place,
+// there is no need to load a FP register with the "corruped" floating
+// point value.  By doing the BIG_ENDIAN test, I can optimize the
+// routine for big-endian processors so it can be as efficient as
+// possible
+static void htond (double &x)
+{
+    if ( isLittleEndian ) {
+        int    *Double_Overlay;
+        int     Holding_Buffer;
+
+        Double_Overlay = (int *) &x;
+        Holding_Buffer = Double_Overlay [0];
+
+        Double_Overlay [0] = htonl (Double_Overlay [1]);
+        Double_Overlay [1] = htonl (Holding_Buffer);
+    } else {
+        return;
+    }
+}
+
+// Float version
+static void htonf (float &x)
+{
+    if ( isLittleEndian ) {
+        int    *Float_Overlay;
+        int     Holding_Buffer;
+
+        Float_Overlay = (int *) &x;
+        Holding_Buffer = Float_Overlay [0];
+
+        Float_Overlay [0] = htonl (Holding_Buffer);
+    } else {
+        return;
+    }
+}
+
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -68,12 +125,16 @@ FGOutput::FGOutput(FGFDMExec* fdmex) : FGModel(fdmex)
   Name = "FGOutput";
   sFirstPass = dFirstPass = true;
   socket = 0;
+  flightGearSocket = 0;
   Type = otNone;
   SubSystems = 0;
   enabled = true;
   delimeter = ", ";
   Filename = "";
   DirectivesFile = "";
+  output_file_name = "";
+
+  memset(&fgSockBuf, 0x00, sizeof(fgSockBuf));
 
   Debug(0);
 }
@@ -83,8 +144,18 @@ FGOutput::FGOutput(FGFDMExec* fdmex) : FGModel(fdmex)
 FGOutput::~FGOutput()
 {
   delete socket;
+  delete flightGearSocket;
   OutputProperties.clear();
   Debug(1);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bool FGOutput::InitModel(void)
+{
+  if (!FGModel::InitModel()) return false;
+
+  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -96,6 +167,8 @@ bool FGOutput::Run(void)
   if (enabled && !State->IntegrationSuspended()&& !FDMExec->Holding()) {
     if (Type == otSocket) {
       SocketOutput();
+    } else if (Type == otFlightGear) {
+      FlightGearSocketOutput();
     } else if (Type == otCSV || Type == otTab) {
       DelimitedOutput(Filename);
     } else if (Type == otTerminal) {
@@ -121,6 +194,8 @@ void FGOutput::SetType(string type)
     delimeter = "\t";
   } else if (type == "SOCKET") {
     Type = otSocket;
+  } else if (type == "FLIGHTGEAR") {
+    Type = otFlightGear;
   } else if (type == "TERMINAL") {
     Type = otTerminal;
   } else if (type != string("NONE")) {
@@ -173,6 +248,7 @@ void FGOutput::DelimitedOutput(string fname)
       outstream << delimeter;
       outstream << "q bar (psf)" + delimeter;
       outstream << "V_{Total} (ft/s)" + delimeter;
+      outstream << "V_{Inertial} (ft/s)" + delimeter;
       outstream << "UBody" + delimeter + "VBody" + delimeter + "WBody" + delimeter;
       outstream << "Aero V_{X Body} (ft/s)" + delimeter + "Aero V_{Y Body} (ft/s)" + delimeter + "Aero V_{Z Body} (ft/s)" + delimeter;
       outstream << "V_{North} (ft/s)" + delimeter + "V_{East} (ft/s)" + delimeter + "V_{Down} (ft/s)";
@@ -192,6 +268,8 @@ void FGOutput::DelimitedOutput(string fname)
       outstream << "Rho (slugs/ft^3)" + delimeter;
       outstream << "P_{SL} (psf)" + delimeter;
       outstream << "P_{Ambient} (psf)" + delimeter;
+      outstream << "Turbulence Magnitude (ft/sec)" + delimeter;
+      outstream << "Turbulence X Direction (rad)" + delimeter + "Turbulence Y Direction (rad)" + delimeter + "Turbulence Z Direction (rad)" + delimeter;
       outstream << "Wind V_{North} (ft/s)" + delimeter + "Wind V_{East} (ft/s)" + delimeter + "Wind V_{Down} (ft/s)";
     }
     if (SubSystems & ssMassProps) {
@@ -216,6 +294,8 @@ void FGOutput::DelimitedOutput(string fname)
       outstream << "Beta (deg)" + delimeter;
       outstream << "Latitude (deg)" + delimeter;
       outstream << "Longitude (deg)" + delimeter;
+      outstream << "ECEF X (ft)" + delimeter + "ECEF Y (ft)" + delimeter + "ECEF Z (ft)" + delimeter;
+      outstream << "EPA (deg)" + delimeter;
       outstream << "Distance AGL (ft)" + delimeter;
       outstream << "Runway Radius (ft)";
     }
@@ -269,13 +349,14 @@ void FGOutput::DelimitedOutput(string fname)
     outstream << delimeter;
     outstream << Auxiliary->Getqbar() << delimeter;
     outstream << setprecision(12) << Auxiliary->GetVt() << delimeter;
+    outstream << Propagate->GetInertialVelocityMagnitude() << delimeter;
     outstream << setprecision(12) << Propagate->GetUVW().Dump(delimeter) << delimeter;
     outstream << Auxiliary->GetAeroUVW().Dump(delimeter) << delimeter;
     outstream << Propagate->GetVel().Dump(delimeter);
   }
   if (SubSystems & ssForces) {
     outstream << delimeter;
-    outstream << Aerodynamics->GetvFs() << delimeter;
+    outstream << Aerodynamics->GetvFw() << delimeter;
     outstream << Aerodynamics->GetLoD() << delimeter;
     outstream << Aircraft->GetForces().Dump(delimeter);
   }
@@ -288,6 +369,8 @@ void FGOutput::DelimitedOutput(string fname)
     outstream << Atmosphere->GetDensity() << delimeter;
     outstream << Atmosphere->GetPressureSL() << delimeter;
     outstream << Atmosphere->GetPressure() << delimeter;
+    outstream << Atmosphere->GetTurbMagnitude() << delimeter;
+    outstream << Atmosphere->GetTurbDirection().Dump(delimeter) << delimeter;
     outstream << Atmosphere->GetWindNED().Dump(delimeter);
   }
   if (SubSystems & ssMassProps) {
@@ -304,6 +387,8 @@ void FGOutput::DelimitedOutput(string fname)
     outstream << Auxiliary->Getbeta(inDegrees) << delimeter;
     outstream << Propagate->GetLocation().GetLatitudeDeg() << delimeter;
     outstream << Propagate->GetLocation().GetLongitudeDeg() << delimeter;
+    outstream << ((FGColumnVector3)Propagate->GetLocation()).Dump(delimeter) << delimeter;
+    outstream << Inertial->GetEarthPositionAngleDeg() << delimeter;
     outstream << Propagate->GetDistanceAGL() << delimeter;
     outstream << Propagate->GetRunwayRadius();
   }
@@ -330,6 +415,220 @@ void FGOutput::DelimitedOutput(string fname)
 
   outstream << endl;
   outstream.flush();
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGOutput::SocketDataFill(FGNetFDM* net)
+{
+    unsigned int i;
+
+    // Version
+    net->version = FG_NET_FDM_VERSION;
+
+    // Positions
+    net->longitude = Propagate->GetLocation().GetLongitude(); // geodetic (radians)
+    net->latitude  = Propagate->GetLocation().GetLatitude(); // geodetic (radians)
+    net->altitude  = Propagate->Geth()*0.3048; // altitude, above sea level (meters)
+    net->agl       = (float)(Propagate->GetDistanceAGL()*0.3048); // altitude, above ground level (meters)
+
+    net->phi       = (float)(Propagate->GetEuler(ePhi)); // roll (radians)
+    net->theta     = (float)(Propagate->GetEuler(eTht)); // pitch (radians)
+    net->psi       = (float)(Propagate->GetEuler(ePsi)); // yaw or true heading (radians)
+
+    net->alpha     = (float)(Auxiliary->Getalpha()); // angle of attack (radians)
+    net->beta      = (float)(Auxiliary->Getbeta()); // side slip angle (radians)
+
+    // Velocities
+    net->phidot     = (float)(Auxiliary->GetEulerRates(ePhi)); // roll rate (radians/sec)
+    net->thetadot   = (float)(Auxiliary->GetEulerRates(eTht)); // pitch rate (radians/sec)
+    net->psidot     = (float)(Auxiliary->GetEulerRates(ePsi)); // yaw rate (radians/sec)
+    net->vcas       = (float)(Auxiliary->GetVcalibratedFPS()); // VCAS, ft/sec
+    net->climb_rate = (float)(Propagate->Gethdot());           // altitude rate, ft/sec
+    net->v_north    = (float)(Propagate->GetVel(eNorth));      // north vel in NED frame, fps
+    net->v_east     = (float)(Propagate->GetVel(eEast));       // east vel in NED frame, fps
+    net->v_down     = (float)(Propagate->GetVel(eDown));       // down vel in NED frame, fps
+//---ADD METHOD TO CALCULATE THESE TERMS---
+    net->v_wind_body_north = (float)(Propagate->GetVel(eNorth)); // north vel in NED relative to airmass, fps
+    net->v_wind_body_east = (float)(Propagate->GetVel(eEast)); // east vel in NED relative to airmass, fps
+    net->v_wind_body_down = (float)(Propagate->GetVel(eDown)); // down vel in NED relative to airmass, fps
+
+    // Accelerations
+    net->A_X_pilot   = (float)(Auxiliary->GetPilotAccel(1));    // X body accel, ft/s/s
+    net->A_Y_pilot   = (float)(Auxiliary->GetPilotAccel(2));    // Y body accel, ft/s/s
+    net->A_Z_pilot   = (float)(Auxiliary->GetPilotAccel(3));    // Z body accel, ft/s/s
+
+    // Stall
+    net->stall_warning = 0.0;  // 0.0 - 1.0 indicating the amount of stall
+    net->slip_deg    = (float)(Auxiliary->Getbeta(inDegrees));  // slip ball deflection, deg
+
+    // Engine status
+    net->num_engines = Propulsion->GetNumEngines(); // Number of valid engines
+
+    for (i=0; i<net->num_engines; i++) {
+       if (Propulsion->GetEngine(i)->GetRunning())
+          net->eng_state[i] = 2;       // Engine state running
+       else if (Propulsion->GetEngine(i)->GetCranking())
+          net->eng_state[i] = 1;       // Engine state cranking
+       else
+          net->eng_state[i] = 0;       // Engine state off
+
+       switch (Propulsion->GetEngine(i)->GetType()) {
+       case (FGEngine::etRocket):
+       break;
+       case (FGEngine::etPiston):
+          net->rpm[i]       = (float)(((FGPiston *)Propulsion->GetEngine(i))->getRPM());
+          net->fuel_flow[i] = (float)(((FGPiston *)Propulsion->GetEngine(i))->getFuelFlow_gph());
+          net->fuel_px[i]   = 0; // Fuel pressure, psi  (N/A in current model)
+          net->egt[i]       = (float)(((FGPiston *)Propulsion->GetEngine(i))->GetEGT());
+          net->cht[i]       = (float)(((FGPiston *)Propulsion->GetEngine(i))->getCylinderHeadTemp_degF());
+          net->mp_osi[i]    = (float)(((FGPiston *)Propulsion->GetEngine(i))->getManifoldPressure_inHg());
+          net->oil_temp[i]  = (float)(((FGPiston *)Propulsion->GetEngine(i))->getOilTemp_degF());
+          net->oil_px[i]    = (float)(((FGPiston *)Propulsion->GetEngine(i))->getOilPressure_psi());
+          net->tit[i]       = 0; // Turbine Inlet Temperature  (N/A for piston)
+       break;
+       case (FGEngine::etTurbine):
+       break;
+       case (FGEngine::etTurboprop):
+       break;
+       case (FGEngine::etElectric):
+       break;
+       case (FGEngine::etUnknown):
+       break;
+       }
+    }
+
+
+    // Consumables
+    net->num_tanks = Propulsion->GetNumTanks();   // Max number of fuel tanks
+
+    for (i=0; i<net->num_tanks; i++) {
+       net->fuel_quantity[i] = (float)(((FGTank *)Propulsion->GetTank(i))->GetContents());
+    }
+
+
+    // Gear status
+    net->num_wheels  = GroundReactions->GetNumGearUnits();
+
+    for (i=0; i<net->num_wheels; i++) {
+       net->wow[i]              = GroundReactions->GetGearUnit(i)->GetWOW();
+       if (GroundReactions->GetGearUnit(i)->GetGearUnitDown())
+          net->gear_pos[i]      = 1;  //gear down, using FCS convention
+       else
+          net->gear_pos[i]      = 0;  //gear up, using FCS convention
+       net->gear_steer[i]       = (float)(GroundReactions->GetGearUnit(i)->GetSteerNorm());
+       net->gear_compression[i] = (float)(GroundReactions->GetGearUnit(i)->GetCompLen());
+    }
+
+
+    // Environment
+    net->cur_time    = (long int)1234567890;	// Friday, Feb 13, 2009, 23:31:30 UTC (not processed by FGFS anyway)
+    net->warp        = 0;                       // offset in seconds to unix time
+    net->visibility  = 25000.0;                 // visibility in meters (for env. effects)
+
+
+    // Control surface positions (normalized values)
+    net->elevator          = (float)(FCS->GetDePos(ofNorm));    // Norm Elevator Pos, --
+    net->elevator_trim_tab = (float)(FCS->GetPitchTrimCmd());   // Norm Elev Trim Tab Pos, --
+    net->left_flap         = (float)(FCS->GetDfPos(ofNorm));    // Norm Flap Pos, --
+    net->right_flap        = (float)(FCS->GetDfPos(ofNorm));    // Norm Flap Pos, --
+    net->left_aileron      = (float)(FCS->GetDaLPos(ofNorm));   // Norm L Aileron Pos, --
+    net->right_aileron     = (float)(FCS->GetDaRPos(ofNorm));   // Norm R Aileron Pos, --
+    net->rudder            = (float)(FCS->GetDrPos(ofNorm));    // Norm Rudder Pos, --
+    net->nose_wheel        = (float)(FCS->GetDrPos(ofNorm));    // *** FIX ***  Using Rudder Pos for NWS, --
+    net->speedbrake        = (float)(FCS->GetDsbPos(ofNorm));   // Norm Speedbrake Pos, --
+    net->spoilers          = (float)(FCS->GetDspPos(ofNorm));   // Norm Spoiler Pos, --
+
+
+    // Convert the net buffer to network format
+    if ( isLittleEndian ) {
+        net->version = htonl(net->version);
+
+        htond(net->longitude);
+        htond(net->latitude);
+        htond(net->altitude);
+        htonf(net->agl);
+        htonf(net->phi);
+        htonf(net->theta);
+        htonf(net->psi);
+        htonf(net->alpha);
+        htonf(net->beta);
+
+        htonf(net->phidot);
+        htonf(net->thetadot);
+        htonf(net->psidot);
+        htonf(net->vcas);
+        htonf(net->climb_rate);
+        htonf(net->v_north);
+        htonf(net->v_east);
+        htonf(net->v_down);
+        htonf(net->v_wind_body_north);
+        htonf(net->v_wind_body_east);
+        htonf(net->v_wind_body_down);
+
+        htonf(net->A_X_pilot);
+        htonf(net->A_Y_pilot);
+        htonf(net->A_Z_pilot);
+
+        htonf(net->stall_warning);
+        htonf(net->slip_deg);
+
+        for (i=0; i<net->num_engines; ++i ) {
+            net->eng_state[i] = htonl(net->eng_state[i]);
+            htonf(net->rpm[i]);
+            htonf(net->fuel_flow[i]);
+            htonf(net->fuel_px[i]);
+            htonf(net->egt[i]);
+            htonf(net->cht[i]);
+            htonf(net->mp_osi[i]);
+            htonf(net->tit[i]);
+            htonf(net->oil_temp[i]);
+            htonf(net->oil_px[i]);
+        }
+        net->num_engines = htonl(net->num_engines);
+
+        for (i=0; i<net->num_tanks; ++i ) {
+            htonf(net->fuel_quantity[i]);
+        }
+        net->num_tanks = htonl(net->num_tanks);
+
+        for (i=0; i<net->num_wheels; ++i ) {
+            net->wow[i] = htonl(net->wow[i]);
+            htonf(net->gear_pos[i]);
+            htonf(net->gear_steer[i]);
+            htonf(net->gear_compression[i]);
+        }
+        net->num_wheels = htonl(net->num_wheels);
+
+        net->cur_time = htonl( net->cur_time );
+        net->warp = htonl( net->warp );
+        htonf(net->visibility);
+
+        htonf(net->elevator);
+        htonf(net->elevator_trim_tab);
+        htonf(net->left_flap);
+        htonf(net->right_flap);
+        htonf(net->left_aileron);
+        htonf(net->right_aileron);
+        htonf(net->rudder);
+        htonf(net->nose_wheel);
+        htonf(net->speedbrake);
+        htonf(net->spoilers);
+    }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGOutput::FlightGearSocketOutput(void)
+{
+  int length = sizeof(fgSockBuf);
+
+
+  if (flightGearSocket == NULL) return;
+  if (!flightGearSocket->GetConnectStatus()) return;
+
+  SocketDataFill(&fgSockBuf);
+  flightGearSocket->Send((char *)&fgSockBuf, length);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -398,6 +697,10 @@ void FGOutput::SocketOutput(void)
       socket->Append("Rho");
       socket->Append("SL pressure");
       socket->Append("Ambient pressure");
+      socket->Append("Turbulence Magnitude");
+      socket->Append("Turbulence Direction X");
+      socket->Append("Turbulence Direction Y");
+      socket->Append("Turbulence Direction Z");
       socket->Append("NWind");
       socket->Append("EWind");
       socket->Append("DWind");
@@ -487,9 +790,9 @@ void FGOutput::SocketOutput(void)
     socket->Append(Propagate->GetVel(eDown));
   }
   if (SubSystems & ssForces) {
-    socket->Append(Aerodynamics->GetvFs()(eDrag));
-    socket->Append(Aerodynamics->GetvFs()(eSide));
-    socket->Append(Aerodynamics->GetvFs()(eLift));
+    socket->Append(Aerodynamics->GetvFw()(eDrag));
+    socket->Append(Aerodynamics->GetvFw()(eSide));
+    socket->Append(Aerodynamics->GetvFw()(eLift));
     socket->Append(Aerodynamics->GetLoD());
     socket->Append(Aircraft->GetForces(eX));
     socket->Append(Aircraft->GetForces(eY));
@@ -504,6 +807,8 @@ void FGOutput::SocketOutput(void)
     socket->Append(Atmosphere->GetDensity());
     socket->Append(Atmosphere->GetPressureSL());
     socket->Append(Atmosphere->GetPressure());
+    socket->Append(Atmosphere->GetTurbMagnitude());
+    socket->Append(Atmosphere->GetTurbDirection().Dump(","));
     socket->Append(Atmosphere->GetWindNED().Dump(","));
   }
   if (SubSystems & ssMassProps) {
@@ -572,30 +877,20 @@ void FGOutput::SocketStatusOutput(string out_str)
 bool FGOutput::Load(Element* element)
 {
   string type="", parameter="";
-  string name="", fname="";
+  string name="";
+  string protocol="tcp";
   int OutRate = 0;
   string property;
   unsigned int port;
   Element *property_element;
 
   string separator = "/";
-# ifdef macintosh
-  separator = ";";
-# endif
 
   if (!DirectivesFile.empty()) { // A directives filename from the command line overrides
-    fname = DirectivesFile;      // one found in the config file.
-  } else {
-    fname = element->GetAttributeValue("file");
-  }
-
-  if (!fname.empty()) {
-    int len = fname.size();
-    if (fname.find(".xml") != string::npos) {
-      output_file_name = fname; // Use supplied name if last four letters are ".xml"
-    } else {
-      output_file_name = FDMExec->GetFullAircraftPath() + separator + fname + ".xml";
-    }
+    output_file_name = DirectivesFile;      // one found in the config file.
+    document = LoadXMLDocument(output_file_name);
+  } else if (!element->GetAttributeValue("file").empty()) {
+    output_file_name = element->GetAttributeValue("file");
     document = LoadXMLDocument(output_file_name);
   } else {
     document = element;
@@ -607,6 +902,14 @@ bool FGOutput::Load(Element* element)
   if (!document->GetAttributeValue("port").empty() && type == string("SOCKET")) {
     port = atoi(document->GetAttributeValue("port").c_str());
     socket = new FGfdmSocket(name, port);
+  } else if (!document->GetAttributeValue("port").empty() && type == string("FLIGHTGEAR")) {
+    port = atoi(document->GetAttributeValue("port").c_str());
+    if (!document->GetAttributeValue("protocol").empty())
+       protocol = document->GetAttributeValue("protocol");
+    if (protocol == "udp")
+       flightGearSocket = new FGfdmSocket(name, port, FGfdmSocket::ptUDP);  // create udp socket
+    else
+       flightGearSocket = new FGfdmSocket(name, port, FGfdmSocket::ptTCP);  // create tcp socket (default)
   } else {
     Filename = name;
   }
@@ -644,8 +947,16 @@ bool FGOutput::Load(Element* element)
     SubSystems += ssPropulsion;
   property_element = document->FindElement("property");
   while (property_element) {
-    string property = property_element->GetDataLine();
-    OutputProperties.push_back(PropertyManager->GetNode(property));
+    string property_str = property_element->GetDataLine();
+    FGPropertyManager* node = PropertyManager->GetNode(property_str);
+    if (!node) {
+      cerr << fgred << highint << endl << "  No property by the name "
+           << property_str << " has been defined. This property will " << endl
+           << "  not be logged. You should check your configuration file."
+           << reset << endl;
+    } else {
+      OutputProperties.push_back(node);
+    }
     property_element = document->FindNextElement("property");
   }
 

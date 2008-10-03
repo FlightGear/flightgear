@@ -57,11 +57,13 @@ namespace JSBSim {
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-/** Models and electric motor.
+/** Models an electric motor.
     FGElectric models an electric motor based on the configuration file
-    POWER_WATTS parameter.  The throttle controls motor output linearly from
-    zero to POWER_WATTS.  This power value (converted internally to horsepower)
-    is then used by FGPropeller to apply torque to the propeller.
+    \<power> parameter.  The throttle controls motor output linearly from
+    zero to \<power>.  This power value (converted internally to horsepower)
+    is then used by FGPropeller to apply torque to the propeller.  At present
+    there is no battery model available, so this motor does not consume any
+    energy.  There is no internal friction.
     @author David Culp
     @version "$Id$"
   */

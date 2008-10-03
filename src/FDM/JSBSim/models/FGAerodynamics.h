@@ -38,23 +38,14 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
-#    include <vector>
-#    include <map>
-#  else
-#    include <vector.h>
-#    include <map.h>
-#  endif
-#else
-#  include <vector>
-#  include <map>
-#endif
+#include <vector>
+#include <map>
 
 #include "FGModel.h"
 #include <math/FGFunction.h>
 #include <math/FGColumnVector3.h>
+#include <math/FGMatrix33.h>
+#include <input_output/FGXMLFileRead.h>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -80,22 +71,52 @@ CLASS DOCUMENTATION
 
     @code
     <aerodynamics>
-       <axis name="{LIFT|DRAG|SIDE|ROLL|PITCH|YAW}">
+       <alphalimits unit="{RAD | DEG}">
+         <min> {number} </min>
+         <max> {number} </max>
+       </alphalimits>
+       <hysteresis_limits unit="{RAD | DEG}">
+         <min> {number} </min>
+         <max> {number} </max>
+       </hysteresis_limits>
+       <aero_ref_pt_shift_x>  
+         <function>
+           {function contents}
+         </function> 
+       </aero_ref_pt_shift_x>  
+       <function>
+         {function contents}
+       </function>
+       <axis name="{LIFT | DRAG | SIDE | ROLL | PITCH | YAW}">
          {force coefficient definitions}
        </axis>
        {additional axis definitions}
     </aerodynamics>
     @endcode
 
+    Optionally two other coordinate systems may be used.<br><br>
+    1) Body coordinate system:
+    @code
+       <axis name="{X | Y | Z}">
+    @endcode
+    <br>
+    2) Axial-Normal coordinate system:
+    @code
+       <axis name="{AXIAL | NORMAL}">
+    @endcode
+    <br>
+    Systems may NOT be combined, or a load error will occur.
+
     @author Jon S. Berndt, Tony Peden
-    @Id $Revision$
+    @version $Revision$
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGAerodynamics : public FGModel {
+class FGAerodynamics : public FGModel, public FGXMLFileRead
+{
 
 public:
   /** Constructor
@@ -103,6 +124,8 @@ public:
   FGAerodynamics(FGFDMExec* Executive);
   /// Destructor
   ~FGAerodynamics();
+
+  bool InitModel(void);
 
   /** Runs the Aerodynamics model; called by the Executive
       @return false if no error */
@@ -134,15 +157,15 @@ public:
               similar call to GetForces(int n).*/
   double GetMoments(int n) const {return vMoments(n);}
 
-  /** Retrieves the aerodynamic forces in the stability axes.
-      @return a reference to a column vector containing the stability axis forces. */
-  FGColumnVector3& GetvFs(void) { return vFs; }
+  /** Retrieves the aerodynamic forces in the wind axes.
+      @return a reference to a column vector containing the wind axis forces. */
+  FGColumnVector3& GetvFw(void) { return vFw; }
 
-  /** Retrieves the aerodynamic forces in the stability axes, given an axis.
+  /** Retrieves the aerodynamic forces in the wind axes, given an axis.
       @param axis the axis to return the force for (eX, eY, eZ).
-      @return a reference to a column vector containing the requested stability
+      @return a reference to a column vector containing the requested wind
       axis force. */
-  double GetvFs(int axis) const { return vFs(axis); }
+  double GetvFw(int axis) const { return vFw(axis); }
 
   /** Retrieves the lift over drag ratio */
   inline double GetLoD(void) const { return lod; }
@@ -173,19 +196,34 @@ public:
       coefficients */
   string GetCoefficientValues(string delimeter);
 
+  /** Calculates and returns the wind-to-body axis transformation matrix.
+      @return a reference to the wind-to-body transformation matrix.
+      */
+  FGMatrix33& GetTw2b(void);
+
+  /** Calculates and returns the body-to-wind axis transformation matrix.
+      @return a reference to the wind-to-body transformation matrix.
+      */
+  FGMatrix33& GetTb2w(void);
+
+  vector <FGFunction*> * GetCoeff(void) const { return Coeff; }
+
 private:
+  enum eAxisType {atNone, atLiftDrag, atAxialNormal, atBodyXYZ} axisType;
   typedef map<string,int> AxisIndex;
   AxisIndex AxisIdx;
   FGFunction* AeroRPShift;
   vector <FGFunction*> variables;
   typedef vector <FGFunction*> CoeffArray;
   CoeffArray* Coeff;
-  FGColumnVector3 vFs;
+  FGColumnVector3 vFnative;
+  FGColumnVector3 vFw;
   FGColumnVector3 vForces;
   FGColumnVector3 vMoments;
-  FGColumnVector3 vLastFs;
   FGColumnVector3 vDXYZcg;
   FGColumnVector3 vDeltaRP;
+  FGMatrix33 mTw2b;
+  FGMatrix33 mTb2w;
   double alphaclmax, alphaclmin;
   double alphahystmax, alphahystmin;
   double impending_stall, stall_hyst;
@@ -193,8 +231,8 @@ private:
   double clsq, lod, qbar_area;
 
   typedef double (FGAerodynamics::*PMF)(int) const;
+  void DetermineAxisSystem(void);
   void bind(void);
-  void unbind(void);
 
   void Debug(int from);
 };

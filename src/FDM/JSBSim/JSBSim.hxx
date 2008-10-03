@@ -39,6 +39,7 @@ INCLUDES
 
 #undef MAX_ENGINES
 #include <Aircraft/aircraft.hxx>
+#include "math/FGColumnVector3.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -220,7 +221,8 @@ private:
     JSBSim::FGPropagate*    Propagate;
     JSBSim::FGAuxiliary*    Auxiliary;
     JSBSim::FGAerodynamics* Aerodynamics;
-    JSBSim::FGGroundReactions *GroundReactions;
+    JSBSim::FGGroundReactions* GroundReactions;
+    JSBSim::FGInertial*     Inertial;
 
     int runcount;
     double trim_elev;
@@ -263,8 +265,16 @@ private:
 
     SGPropertyNode_ptr slaved;
 
+    double last_hook_tip[3];
+    double last_hook_root[3];
+    JSBSim::FGColumnVector3 hook_root_struct;
+    double hook_length;
+    bool got_wire;
+
     void init_gear(void);
     void update_gear(void);
+
+    void update_external_forces(double t_off);
 
 };
 

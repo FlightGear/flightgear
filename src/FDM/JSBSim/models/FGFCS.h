@@ -38,16 +38,7 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef FGFS
-#  include <simgear/compiler.h>
-#  ifdef SG_HAVE_STD_INCLUDES
-#    include <vector>
-#  else
-#    include <vector.h>
-#  endif
-#else
-#  include <vector>
-#endif
+#include <vector>
 
 #include <string>
 #include <models/flight_control/FGFCSComponent.h>
@@ -74,12 +65,13 @@ CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 /** Encapsulates the Flight Control System (FCS) functionality.
-    This class owns and contains the list of FGFCSComponents
-    that define the control system for this aircraft. The config file for the
-    aircraft contains a description of the control path that starts at an input
-    or command and ends at an effector, e.g. an aerosurface. The FCS components
-    which comprise the control laws for an axis are defined sequentially in
-    the configuration file. For instance, for the X-15:
+    This class also encapsulates the identical "system" and "autopilot" capability.
+    FGFCS owns and contains the list of FGFCSComponents
+    that define a system or systems for the modeled aircraft. The config file
+    for the aircraft contains a description of the control path that starts at
+    an input or command and ends at an effector, e.g. an aerosurface. The FCS
+    components which comprise the control laws for an axis are defined
+    sequentially in the configuration file. For instance, for the X-15:
 
     @code
     <flight_control name="X-15 SAS">
@@ -119,14 +111,14 @@ CLASS DOCUMENTATION
     addition to using the "NAME" attribute in,
 
     @code
-    \<flight_control name="X-15 SAS">
+    <flight_control name="X-15 SAS">
     @endcode
 
     one can also supply a filename:
 
     @code
-    \<flight_control name="X-15 SAS" file="X15.xml">
-    \</flight_control>
+    <flight_control name="X-15 SAS" file="X15.xml">
+    </flight_control>
     @endcode
 
     In this case, the FCS would be read in from another file.
@@ -174,17 +166,18 @@ CLASS DOCUMENTATION
 
     @author Jon S. Berndt
     @version $Revision$
-    @see FGFCSComponent
-    @see FGXMLElement
+    @see FGActuator
+    @see FGDeadBand
+    @see FGFCSFunction
+    @see FGFilter
     @see FGGain
+    @see FGKinemat
+    @see FGPID
+    @see FGSensor
     @see FGSummer
     @see FGSwitch
-    @see FGFCSFunction
-    @see FGCondition
-    @see FGGradient
-    @see FGFilter
-    @see FGDeadBand
-    @see FGKinemat
+    @see FGFCSComponent
+    @see Element
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -200,6 +193,8 @@ public:
   FGFCS(FGFDMExec*);
   /// Destructor
   ~FGFCS();
+
+  bool InitModel(void);
 
   /** Runs the Flight Controls model; called by the Executive
       @return false if no error */
@@ -516,11 +511,17 @@ public:
   double GetCBrake(void) const {return CenterBrake;}
   //@}
 
+  enum SystemType { stFCS, stSystem, stAutoPilot }; 
+
   /** Loads the Flight Control System.
       Load() is called from FGFDMExec.
       @param el pointer to the Element instance
+      @param systype type of system (FCS, Autopilot, System) 
       @return true if succesful */
-  bool Load(Element* el);
+  bool Load(Element* el, SystemType systype);
+
+  ifstream* FindSystemFile(string system_filename);
+  string FindSystemFullPathname(string system_filename);
 
   void AddThrottle(void);
   void AddGear(void);
@@ -545,14 +546,15 @@ private:
   double LeftBrake, RightBrake, CenterBrake; // Brake settings
   double GearCmd,GearPos;
 
-  vector <FGFCSComponent*> FCSComponents;
-  vector <FGFCSComponent*> APComponents;
+  typedef vector <FGFCSComponent*> FCSCompVec;
+  FCSCompVec Systems;
+  FCSCompVec FCSComponents;
+  FCSCompVec APComponents;
+  FCSCompVec sensors;
   vector <double*> interface_properties;
-  vector <FGFCSComponent*> sensors;
   void bind(void);
   void bindModel(void);
   void bindThrottle(unsigned int);
-  void unbind(FGPropertyManager *node);
   void Debug(int from);
 };
 }

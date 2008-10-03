@@ -37,8 +37,7 @@ INCLUDES
 #endif
 
 #include <string>
-#include <stdlib.h>
-
+#include <cstdlib>
 #include <FGFDMExec.h>
 #include <models/FGAtmosphere.h>
 #include "FGInitialCondition.h"
@@ -46,7 +45,6 @@ INCLUDES
 #include <models/FGAircraft.h>
 #include <models/FGPropulsion.h>
 #include <models/FGAerodynamics.h>
-
 
 namespace JSBSim {
 
