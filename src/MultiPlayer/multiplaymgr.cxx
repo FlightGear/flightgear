@@ -70,6 +70,8 @@ FGMultiplayMgr::sIdPropertyList[] = {
   {108, "gear/launchbar/state",                     SGPropertyNode::STRING},
   {109, "gear/launchbar/holdback-position-norm",    SGPropertyNode::FLOAT},
   {110, "canopy/position-norm",                     SGPropertyNode::FLOAT},
+  {111, "surface-positions/wing-pos-norm",          SGPropertyNode::FLOAT},
+  {112, "surface-positions/wing-fold-pos-norm",     SGPropertyNode::FLOAT},
 
   {200, "gear/gear[0]/compression-norm",           SGPropertyNode::FLOAT},
   {201, "gear/gear[0]/position-norm",              SGPropertyNode::FLOAT},
