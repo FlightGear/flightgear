@@ -2,8 +2,9 @@ TerraSync
 =========
 
 Usage:
-
-    terrasync -p <port> [ -s <rsync_source> ] -d <rsync_dest>
+	
+    terrasync -p <port> [ -R ] [ -s <rsync_source> ] -d <dest>
+    terrasync -p <port>   -S   [ -s <svn_source> ] -d <dest>
 
 Example:
 
@@ -13,7 +14,7 @@ Example:
 Requirements:
 
     - rsync util installed in your path.
-    - mkdir util installed in your path.
+or	- svn util installed in your path
 
 NOTE!!!!  Do not run terrasync against the default
 $FG_ROOT/data/Scenery/ directory.  I recommend creating a separate
@@ -43,7 +44,7 @@ As you fly, terrasync will periodically refresh and pull any new
 scenery tiles that you need for your position from the server.
 
 This also works if the scenery on the scenery server is updated.
-Rsync will pull any missing files, or any newly updated files.
+Rsync ( or svn ) will pull any missing files, or any newly updated files.
 
 There is a chicken/egg problem when you first start up in a brand new
 area.  FlightGear is expecting the scenery to be there *now* but it
