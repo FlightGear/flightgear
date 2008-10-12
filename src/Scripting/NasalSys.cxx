@@ -1022,7 +1022,6 @@ void FGNasalListener::call(SGPropertyNode* which, naRef mode)
     arg[1] = _nas->propNodeGhost(_node);
     arg[2] = mode;                  // value changed, child added/removed
     arg[3] = naNum(_node != which); // child event?
-    _nas->_cmdArg = _node;
     _nas->call(_code, 4, arg, naNil());
     _active--;
 }
