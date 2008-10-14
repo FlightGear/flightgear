@@ -157,7 +157,7 @@ static osg::Node* fgCreateSplashCamera()
 
     tpath.append( "Textures/Splash" );
     tpath.concat( num_str );
-    tpath.concat( ".rgb" );
+    tpath.concat( ".png" );
   } else
     tpath.append( splash_texture );
 
