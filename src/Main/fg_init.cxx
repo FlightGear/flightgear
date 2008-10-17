@@ -1494,6 +1494,7 @@ bool fgInitSubsystems() {
 
     globals->get_scenery()->get_scene_graph()
         ->addChild(simgear::Particles::getCommonRoot());
+    simgear::GlobalParticleCallback::setSwitch(fgGetNode("/sim/rendering/particles", true));
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the flight model subsystem.
