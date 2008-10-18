@@ -788,7 +788,9 @@ void FGNasalSys::loadModule(SGPath file, const char* module)
 // used to pass an associated property node to the module, which can then
 // be accessed via cmdarg().  (This is, for example, used by XML dialogs.)
 void FGNasalSys::createModule(const char* moduleName, const char* fileName,
-                              const char* src, int len, const SGPropertyNode* arg)
+                              const char* src, int len,
+                              const SGPropertyNode* cmdarg,
+                              int argc, naRef* args)
 {
     naRef code = parse(fileName, src, len);
     if(naIsNil(code))
@@ -803,9 +805,9 @@ void FGNasalSys::createModule(const char* moduleName, const char* fileName,
     if(!naHash_get(_globals, modname, &locals))
         locals = naNewHash(_context);
 
-    _cmdArg = (SGPropertyNode*)arg;
+    _cmdArg = (SGPropertyNode*)cmdarg;
 
-    call(code, 0, 0, locals);
+    call(code, argc, args, locals);
     hashset(_globals, moduleName, locals);
 }
 
@@ -1105,7 +1107,12 @@ void FGNasalModelData::modelLoaded(const string& path, SGPropertyNode *prop,
     if(_props)
         _module += ':' + _props->getPath();
     const char *s = load ? load->getStringValue() : "";
-    nasalSys->createModule(_module.c_str(), _module.c_str(), s, strlen(s), _root);
+
+    naRef arg[2];
+    arg[0] = nasalSys->propNodeGhost(_root);
+    arg[1] = nasalSys->propNodeGhost(prop);
+    nasalSys->createModule(_module.c_str(), _module.c_str(), s, strlen(s),
+                           _root, 2, arg);
     _props = 0;
 }
 

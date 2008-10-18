@@ -54,11 +54,13 @@ public:
     virtual bool handleCommand(const SGPropertyNode* arg);
 
     void createModule(const char* moduleName, const char* fileName,
-                    const char* src, int len, const SGPropertyNode* arg=0);
+                      const char* src, int len, const SGPropertyNode* cmdarg=0,
+                      int argc=0, naRef*args=0);
 
     void deleteModule(const char* moduleName);
 
     naRef call(naRef code, int argc, naRef* args, naRef locals);
+    naRef propNodeGhost(SGPropertyNode* handle);
 
 private:
     friend class FGNasalScript;
@@ -87,7 +89,6 @@ private:
     void logError(naContext);
     naRef parse(const char* filename, const char* buf, int len);
     naRef genPropsModule();
-    naRef propNodeGhost(SGPropertyNode* handle);
 
     // This mechanism is here to allow naRefs to be passed to
     // locations "outside" the interpreter.  Normally, such a
