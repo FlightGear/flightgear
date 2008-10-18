@@ -161,13 +161,13 @@ private:
 
 class FGNasalModelData : public simgear::SGModelData {
 public:
-    FGNasalModelData(SGPropertyNode *props = 0) : _props(props), _unload(0) {}
+    FGNasalModelData(SGPropertyNode *root = 0) : _root(root), _unload(0) {}
     ~FGNasalModelData();
     void modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *);
 
 private:
     string _module;
-    SGPropertyNode_ptr _props;
+    SGPropertyNode_ptr _root;
     SGConstPropertyNode_ptr _unload;
 };
 
