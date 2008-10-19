@@ -486,7 +486,10 @@ bool fgDumpSnapShot () {
     renderer->update( true );
     renderer->update( true );
 
-    string dir = fgGetString("/sim/paths/screenshot-dir", fgGetString("/sim/fg-current"));
+    string dir = fgGetString("/sim/paths/screenshot-dir");
+    if (dir.empty())
+        dir = fgGetString("/sim/fg-current");
+
     SGPath path(dir + '/');
     if (path.create_dir( 0755 )) {
         SG_LOG(SG_GENERAL, SG_ALERT, "Cannot create screenshot directory '"
