@@ -145,8 +145,7 @@ void FGAIAircraft::setPerformance(const std::string& acclass) {
       FGAIAircraft::dt = dt;
 
      try {
-         if ( !updatePrimaryTargetValues() ) // target hdg, alt, speed
-             return;
+         updatePrimaryTargetValues(); // target hdg, alt, speed
      }
      catch (AI_OutOfSight) {
          return;
@@ -730,7 +729,7 @@ void FGAIAircraft::controlSpeed(FGAIFlightPlan::waypoint* curr, FGAIFlightPlan::
 /**
  * Update target values (heading, alt, speed) depending on flight plan or control properties
  */
-bool FGAIAircraft::updatePrimaryTargetValues() {
+void FGAIAircraft::updatePrimaryTargetValues() {
     if (fp)                      // AI object has a flightplan
     {
         //TODO make this a function of AIBase
@@ -759,7 +758,7 @@ bool FGAIAircraft::updatePrimaryTargetValues() {
         }
         timeElapsed = now - fp->getStartTime();
         if (! fp->isActive(now)) { 
-            return false;
+            throw FP_Inactive();
         }
     } else {
         // no flight plan, update target heading, speed, and altitude
@@ -790,7 +789,6 @@ bool FGAIAircraft::updatePrimaryTargetValues() {
 
         AccelTo( props->getDoubleValue("controls/flight/target-spd" ) );
     }
-    return true;
 }
 
 void FGAIAircraft::updatePosition() {
