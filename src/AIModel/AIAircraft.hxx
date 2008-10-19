@@ -117,7 +117,7 @@ private:
     void controlHeading(FGAIFlightPlan::waypoint* curr);
     void controlSpeed(FGAIFlightPlan::waypoint* curr,
                       FGAIFlightPlan::waypoint* next);
-    void updatePrimaryTargetValues();
+    bool updatePrimaryTargetValues();
     void updateSecondaryTargetValues();
     void updatePosition();
     void updateHeading();

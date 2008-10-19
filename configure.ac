@@ -597,7 +597,27 @@ if test "x$ac_cv_header_zlib_h" != "xyes"; then
     echo
 fi
 
-
+dnl Check for Subversion library support
+save_LIBS=$LIBS
+save_CPPFLAGS=$CPPFLAGS
+LIBS=""
+CPPFLAGS="-I/usr/include/subversion-1 -I/usr/include/apr-1.0"
+AC_CHECK_LIB(svn_client-1, svn_client_checkout3)
+AC_CHECK_HEADERS([svn_client.h])
+if test "x$ac_cv_header_svn_client_h" != "xyes"; then
+  echo "TerraSync will shell out for command line subversion"
+  svn_LIBS=""
+  svn_CPPFLAGS=""
+else
+  echo "TerraSync will use integrated subversion library"
+  AC_SEARCH_LIBS(svn_client_checkout, svn_client-1)
+  svn_LIBS=$LIBS
+  svn_CPPFLAGS=$CPPFLAGS
+  AC_SUBST(svn_LIBS)
+  AC_SUBST(svn_CPPFLAGS)
+fi
+LIBS=$save_LIBS
+CPPFLAGS=$save_CPPFLAGS
 
 dnl Checks for header files.
 AC_HEADER_STDC

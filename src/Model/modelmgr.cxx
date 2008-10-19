@@ -156,23 +156,23 @@ struct UpdateFunctor : public std::unary_function<FGModelMgr::Instance*, void>
         SGModelPlacement* model = instance->model;
         double lon, lat, elev, roll, pitch, heading;
 
-        try {
-            // Optionally set position from properties
-            if (instance->lon_deg_node != 0)
-                lon = testNan(instance->lon_deg_node->getDoubleValue());
-            if (instance->lat_deg_node != 0)
-                lat = testNan(instance->lat_deg_node->getDoubleValue());
-            if (instance->elev_ft_node != 0)
-                elev = testNan(instance->elev_ft_node->getDoubleValue());
+        // Optionally set position from properties
+        if (instance->lon_deg_node != 0)
+            lon =instance->lon_deg_node->getDoubleValue();
+        if (instance->lat_deg_node != 0)
+            lat = instance->lat_deg_node->getDoubleValue();
+        if (instance->elev_ft_node != 0)
+            elev = instance->elev_ft_node->getDoubleValue();
 
-            // Optionally set orientation from properties
-            if (instance->roll_deg_node != 0)
-                roll = testNan(instance->roll_deg_node->getDoubleValue());
-            if (instance->pitch_deg_node != 0)
-                pitch = testNan(instance->pitch_deg_node->getDoubleValue());
-            if (instance->heading_deg_node != 0)
-                heading = testNan(instance->heading_deg_node->getDoubleValue());
-        } catch (const sg_range_exception& e) {
+        // Optionally set orientation from properties
+        if (instance->roll_deg_node != 0)
+            roll = instance->roll_deg_node->getDoubleValue();
+        if (instance->pitch_deg_node != 0)
+            pitch = instance->pitch_deg_node->getDoubleValue();
+        if (instance->heading_deg_node != 0)
+            heading = instance->heading_deg_node->getDoubleValue();
+        if ( osg::isNaN(lon) || osg::isNaN(lat) || osg::isNaN(elev) ||
+             osg::isNaN(roll) || osg::isNaN(pitch) || osg::isNaN(heading) ) {
             const char *path = instance->node->getStringValue("path",
                                                               "unknown");
             SG_LOG(SG_GENERAL, SG_INFO, "Instance of model " << path

@@ -43,29 +43,338 @@
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/misc/sg_path.hxx>
 
+#ifdef HAVE_SVN_CLIENT_H
+#  ifdef HAVE_LIBSVN_CLIENT_1
+#    include <svn_auth.h>
+#    include <svn_client.h>
+#    include <svn_cmdline.h>
+#    include <svn_pools.h>
+#  else
+#    undef HAVE_SVN_CLIENT_H
+#  endif
+#endif
+
 using std::string;
 using std::cout;
 using std::endl;
 
+const char* source_base = NULL;
 const char* svn_base =
   "http://terrascenery.googlecode.com/svn/trunk/data/Scenery";
 const char* rsync_base = "scenery.flightgear.org::Scenery";
-const char* source_base = NULL;
 const char* dest_base = "terrasyncdir";
-bool use_svn = false;
-
-const char* svn_cmd = "svn checkout";
 const char* rsync_cmd = 
     "rsync --verbose --archive --delete --perms --owner --group";
 
+#ifdef HAVE_SVN_CLIENT_H
+bool use_svn = true;
+#else
+bool use_svn = false;
+const char* svn_cmd = "svn checkout";
+#endif
 
 // display usage
 static void usage( const string& prog ) {
     cout << "Usage: " << endl
          << prog << " -p <port> "
-	 << "[ -R ] [ -s <rsync_source> ] -d <dest>" << endl
+	 << "-R [ -s <rsync_source> ] -d <dest>" << endl
          << prog << " -p <port> "
-         << "  -S   [ -s <svn_source> ] -d <dest>" << endl;
+<<<<<<< terrasync.cxx
+         << "-S [ -s <svn_source> ] -d <dest>" << endl;
+#ifdef HAVE_SVN_CLIENT_H
+    cout << "    (defaults to the built in subversion)" << endl;
+#else
+    cout << "    (defaults to rsync, using external commands)" << endl;
+#endif
+}
+
+#ifdef HAVE_SVN_CLIENT_H
+
+// Things we need for doing subversion checkout - often
+apr_pool_t *mysvn_pool = NULL;
+svn_client_ctx_t *mysvn_ctx = NULL;
+svn_opt_revision_t *mysvn_rev = NULL;
+
+static const svn_version_checklist_t mysvn_checklist[] = {
+    { "svn_subr",   svn_subr_version },
+    { "svn_client", svn_client_version },
+    { "svn_wc",     svn_wc_version },
+    { "svn_ra",     svn_ra_version },
+    { "svn_delta",  svn_delta_version },
+    { "svn_diff",   svn_diff_version },
+    { NULL, NULL }
+};
+
+// Configure our subversion session
+int mysvn_setup(void) {
+    // Are we already prepared?
+    if (mysvn_pool) return EXIT_SUCCESS;
+    // No, so initialize svn internals generally
+    if (svn_cmdline_init("terrasync", stderr) != EXIT_SUCCESS)
+        return EXIT_FAILURE;
+    apr_pool_t *pool;
+    apr_pool_create(&pool, NULL);
+    svn_error_t *err = NULL;
+    SVN_VERSION_DEFINE(mysvn_version);
+    err = svn_ver_check_list(&mysvn_version, mysvn_checklist);
+    if (err)
+        return svn_cmdline_handle_exit_error(err, pool, "terrasync: ");
+    err = svn_ra_initialize(pool);
+    if (err)
+        return svn_cmdline_handle_exit_error(err, pool, "terrasync: ");
+    char *config_dir = NULL;
+    err = svn_config_ensure(config_dir, pool);
+    if (err)
+        return svn_cmdline_handle_exit_error(err, pool, "terrasync: ");
+    err = svn_client_create_context(&mysvn_ctx, pool);
+    if (err)
+        return svn_cmdline_handle_exit_error(err, pool, "terrasync: ");
+    err = svn_config_get_config(&(mysvn_ctx->config),
+        config_dir, pool);
+    if (err)
+        return svn_cmdline_handle_exit_error(err, pool, "terrasync: ");
+    svn_config_t *cfg;
+    cfg = ( svn_config_t*) apr_hash_get(
+        mysvn_ctx->config,
+    	SVN_CONFIG_CATEGORY_CONFIG,
+        APR_HASH_KEY_STRING);
+    if (err)
+        return svn_cmdline_handle_exit_error(err, pool, "terrasync: ");
+    svn_auth_baton_t *ab;
+    err = svn_cmdline_setup_auth_baton(&ab,
+        TRUE, NULL, NULL, config_dir, TRUE, cfg,
+        mysvn_ctx->cancel_func, mysvn_ctx->cancel_baton, pool);
+    if (err)
+        return svn_cmdline_handle_exit_error(err, pool, "terrasync: ");
+    mysvn_ctx->auth_baton = ab;
+    mysvn_ctx->conflict_func = NULL;
+    mysvn_ctx->conflict_baton = NULL;
+    mysvn_rev = (svn_opt_revision_t*) apr_palloc(pool, 
+        sizeof(svn_opt_revision_t));
+    if (!mysvn_rev)
+        return EXIT_FAILURE;
+    mysvn_rev->kind = svn_opt_revision_head;
+    // Success if we got this far
+    mysvn_pool = pool;
+    return EXIT_SUCCESS;
+}
+
+#endif
+
+// sync one directory tree
+void sync_tree(char* dir) {
+    int rc;
+    char command[512];
+    SGPath path( dest_base );
+
+    path.append( dir );
+    rc = path.create_dir( 0755 );
+    if (rc) {
+        cout << "Return code = " << rc << endl;
+        exit(1);
+    }
+
+    if (use_svn) {
+#ifdef HAVE_SVN_CLIENT_H
+        cout << dir << " ... ";
+	cout.flush();
+        char dest_base_dir[512];
+        snprintf( command, 512,
+            "%s/%s", source_base, dir);
+        snprintf( dest_base_dir, 512,
+            "%s/%s", dest_base, dir);
+	svn_error_t *err = NULL;
+	if (mysvn_setup() != EXIT_SUCCESS)
+	    exit(1);
+	apr_pool_t *subpool = svn_pool_create(mysvn_pool);
+	err = svn_client_checkout(NULL,
+	    command,
+	    dest_base_dir,
+	    mysvn_rev,
+	    1,
+	    mysvn_ctx,
+	    subpool);
+	if (err) {
+	    // Report errors from the checkout attempt
+	    cout << "failed: " << endl
+	         << err->message << endl;
+	    svn_error_clear(err);
+	    return;
+	} else {
+	    cout << "done" << endl;
+	}
+	svn_pool_destroy(subpool);
+	return;
+#else
+
+        snprintf( command, 512,
+            "%s %s/%s %s/%s", svn_cmd,
+            source_base, dir,
+	    dest_base, dir );
+#endif
+    } else {
+        snprintf( command, 512,
+            "%s %s/%s/ %s/%s/", rsync_cmd,
+            source_base, dir,
+	    dest_base, dir );
+    }
+    cout << command << endl;
+    rc = system( command );
+    if (rc) {
+        cout << "Return code = " << rc << endl;
+        if (rc == 5120) exit(1);
+    }
+=======
+         << "-S [ -s <svn_source> ] -d <dest>" << endl;
+#ifdef HAVE_SVN_CLIENT_H
+    cout << "    (defaults to the built in subversion)" << endl;
+#else
+    cout << "    (defaults to rsync, using external commands)" << endl;
+#endif
+}
+
+#ifdef HAVE_SVN_CLIENT_H
+
+// Things we need for doing subversion checkout - often
+apr_pool_t *mysvn_pool = NULL;
+svn_client_ctx_t *mysvn_ctx = NULL;
+svn_opt_revision_t *mysvn_rev = NULL;
+
+static const svn_version_checklist_t mysvn_checklist[] = {
+    { "svn_subr",   svn_subr_version },
+    { "svn_client", svn_client_version },
+    { "svn_wc",     svn_wc_version },
+    { "svn_ra",     svn_ra_version },
+    { "svn_delta",  svn_delta_version },
+    { "svn_diff",   svn_diff_version },
+    { NULL, NULL }
+};
+
+// Configure our subversion session
+int mysvn_setup(void) {
+    // Are we already prepared?
+    if (mysvn_pool) return EXIT_SUCCESS;
+    // No, so initialize svn internals generally
+#ifdef _MSC_VER
+    if (svn_cmdline_init("terrasync", 0) != EXIT_SUCCESS)
+        return EXIT_FAILURE;
+#else
+    if (svn_cmdline_init("terrasync", stderr) != EXIT_SUCCESS)
+        return EXIT_FAILURE;
+#endif
+    apr_pool_t *pool;
+    apr_pool_create(&pool, NULL);
+    svn_error_t *err = NULL;
+    SVN_VERSION_DEFINE(mysvn_version);
+    err = svn_ver_check_list(&mysvn_version, mysvn_checklist);
+    if (err)
+        return svn_cmdline_handle_exit_error(err, pool, "terrasync: ");
+    err = svn_ra_initialize(pool);
+    if (err)
+        return svn_cmdline_handle_exit_error(err, pool, "terrasync: ");
+    char *config_dir = NULL;
+    err = svn_config_ensure(config_dir, pool);
+    if (err)
+        return svn_cmdline_handle_exit_error(err, pool, "terrasync: ");
+    err = svn_client_create_context(&mysvn_ctx, pool);
+    if (err)
+        return svn_cmdline_handle_exit_error(err, pool, "terrasync: ");
+    err = svn_config_get_config(&(mysvn_ctx->config),
+        config_dir, pool);
+    if (err)
+        return svn_cmdline_handle_exit_error(err, pool, "terrasync: ");
+    svn_config_t *cfg;
+    cfg = ( svn_config_t*) apr_hash_get(
+        mysvn_ctx->config,
+    	SVN_CONFIG_CATEGORY_CONFIG,
+        APR_HASH_KEY_STRING);
+    if (err)
+        return svn_cmdline_handle_exit_error(err, pool, "terrasync: ");
+    svn_auth_baton_t *ab;
+    err = svn_cmdline_setup_auth_baton(&ab,
+        TRUE, NULL, NULL, config_dir, TRUE, cfg,
+        mysvn_ctx->cancel_func, mysvn_ctx->cancel_baton, pool);
+    if (err)
+        return svn_cmdline_handle_exit_error(err, pool, "terrasync: ");
+    mysvn_ctx->auth_baton = ab;
+    mysvn_ctx->conflict_func = NULL;
+    mysvn_ctx->conflict_baton = NULL;
+    mysvn_rev = (svn_opt_revision_t*) apr_palloc(pool, 
+        sizeof(svn_opt_revision_t));
+    if (!mysvn_rev)
+        return EXIT_FAILURE;
+    mysvn_rev->kind = svn_opt_revision_head;
+    // Success if we got this far
+    mysvn_pool = pool;
+    return EXIT_SUCCESS;
+}
+
+#endif
+
+// sync one directory tree
+void sync_tree(char* dir) {
+    int rc;
+    char command[512];
+    SGPath path( dest_base );
+
+    path.append( dir );
+    rc = path.create_dir( 0755 );
+    if (rc) {
+        cout << "Return code = " << rc << endl;
+        exit(1);
+    }
+
+    if (use_svn) {
+#ifdef HAVE_SVN_CLIENT_H
+        cout << dir << " ... ";
+	cout.flush();
+        char dest_base_dir[512];
+        snprintf( command, 512,
+            "%s/%s", source_base, dir);
+        snprintf( dest_base_dir, 512,
+            "%s/%s", dest_base, dir);
+	svn_error_t *err = NULL;
+	if (mysvn_setup() != EXIT_SUCCESS)
+	    exit(1);
+	apr_pool_t *subpool = svn_pool_create(mysvn_pool);
+	err = svn_client_checkout(NULL,
+	    command,
+	    dest_base_dir,
+	    mysvn_rev,
+	    1,
+	    mysvn_ctx,
+	    subpool);
+	if (err) {
+	    // Report errors from the checkout attempt
+	    cout << "failed: " << endl
+	         << err->message << endl;
+	    svn_error_clear(err);
+	    return;
+	} else {
+	    cout << "done" << endl;
+	}
+	svn_pool_destroy(subpool);
+	return;
+#else
+
+        snprintf( command, 512,
+            "%s %s/%s %s/%s", svn_cmd,
+            source_base, dir,
+	    dest_base, dir );
+#endif
+    } else {
+        snprintf( command, 512,
+            "%s %s/%s/ %s/%s/", rsync_cmd,
+            source_base, dir,
+	    dest_base, dir );
+    }
+    cout << command << endl;
+    rc = system( command );
+    if (rc) {
+        cout << "Return code = " << rc << endl;
+        if (rc == 5120) exit(1);
+    }
+>>>>>>> 1.15
 }
 
 
@@ -122,39 +431,6 @@ static void parse_message( const string &msg, int *lat, int *lon ) {
     if ((dlon == 0) && (dlat == 0)) {
       *lon = nowhere;
       *lat = nowhere;
-    }
-
-}
-
-// sync one directory tree
-void sync_tree(char* dir) {
-    int rc;
-    char command[512];
-    SGPath path( dest_base );
-
-    path.append( dir );
-    rc = path.create_dir( 0755 );
-    if (rc) {
-        cout << "Return code = " << rc << endl;
-        exit(1);
-    }
-
-    if (use_svn) {
-        snprintf( command, 512,
-            "%s %s/%s %s/%s", svn_cmd,
-            source_base, dir,
-	    dest_base, dir );
-    } else {
-      snprintf( command, 512,
-          "%s %s/%s/ %s/%s/", rsync_cmd,
-          source_base, dir,
-	  dest_base, dir );
-    }
-    cout << command << endl;
-    rc = system( command );
-    if (rc) {
-        cout << "Return code = " << rc << endl;
-        if (rc == 5120) exit(1);
     }
 }
 
@@ -235,6 +511,7 @@ static void sync_areas( int lat, int lon, int lat_dir, int lon_dir ) {
 int main( int argc, char **argv ) {
     int port = 5501;
     char host[256] = "";        // accept messages from anyone
+    bool testing = false;
 
     // parse arguments
     int i = 1;
@@ -253,8 +530,7 @@ int main( int argc, char **argv ) {
         } else if ( (string)argv[i] == "-S" ) {
 	    use_svn = true;
         } else if ( (string)argv[i] == "-T" ) {
-          sync_areas( 37, -123, 0, 0 );
-	  exit(0);
+	    testing = true;
         } else {
             usage( argv[0] );
             exit(-1);        
@@ -268,6 +544,12 @@ int main( int argc, char **argv ) {
 	    source_base = svn_base;
 	else
 	    source_base = rsync_base;
+    }
+    
+    // We just want one grid square, no FGFS communications
+    if (testing) {
+          sync_areas( 37, -123, 0, 0 );
+	  exit(0);
     }
 
     // Must call this before any other net stuff
@@ -354,3 +636,4 @@ int main( int argc, char **argv ) {
         
     return 0;
 }
+
