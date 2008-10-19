@@ -110,6 +110,9 @@ int mysvn_setup(void) {
     if (mysvn_pool) return EXIT_SUCCESS;
     // No, so initialize svn internals generally
 #ifdef _MSC_VER
+    // there is a segfault when providing an error stream.
+    //  Apparently, calling setvbuf with a nul buffer is
+    //  not supported under msvc 7.1 ( code inside svn_cmdline_init )
     if (svn_cmdline_init("terrasync", 0) != EXIT_SUCCESS)
         return EXIT_FAILURE;
 #else
