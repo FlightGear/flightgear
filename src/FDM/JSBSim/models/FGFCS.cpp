@@ -76,6 +76,7 @@ FGFCS::FGFCS(FGFDMExec* fdmex) : FGModel(fdmex)
   PTrimCmd = YTrimCmd = RTrimCmd = 0.0;
   GearCmd = GearPos = 1; // default to gear down
   LeftBrake = RightBrake = CenterBrake = 0.0;
+  TailhookPos = WingFoldPos = 0.0; 
 
   bind();
   for (i=0;i<NForms;i++) {
@@ -134,6 +135,7 @@ bool FGFCS::InitModel(void)
 
   DaCmd = DeCmd = DrCmd = DsCmd = DfCmd = DsbCmd = DspCmd = 0;
   PTrimCmd = YTrimCmd = RTrimCmd = 0.0;
+  TailhookPos = WingFoldPos = 0.0;
 
   for (i=0;i<NForms;i++) {
     DePos[i] = DaLPos[i] = DaRPos[i] = DrPos[i] = 0.0;
@@ -486,7 +488,7 @@ void FGFCS::SetPropFeather(int engineNum, bool setting)
 
 bool FGFCS::Load(Element* el, SystemType systype)
 {
-  string name, file, fname, interface_property_string, parent_name;
+  string name, file, fname="", interface_property_string, parent_name;
   vector <FGFCSComponent*> *Components;
   Element *component_element, *property_element, *sensor_element;
   Element *channel_element;
@@ -505,7 +507,7 @@ bool FGFCS::Load(Element* el, SystemType systype)
     if (systype == stSystem) {
       file = FindSystemFullPathname(fname);
     } else { 
-    file = FDMExec->GetFullAircraftPath() + separator + fname + ".xml";
+      file = FDMExec->GetFullAircraftPath() + separator + fname + ".xml";
     }
     if (fname.empty()) {
       cerr << "FCS, Autopilot, or system does not appear to be defined inline nor in a file" << endl;
@@ -530,18 +532,13 @@ bool FGFCS::Load(Element* el, SystemType systype)
   }
   Debug(2);
 
-  // ToDo: How do these get untied?
-  // ToDo: Consider having INPUT and OUTPUT interface properties. Would then
-  //       have to duplicate this block of code after channel read code.
-  //       Input properties could be write only (nah), and output could be read
-  //       only.
-
   if (document->GetName() == "flight_control") bindModel();
 
   // Interface properties from any autopilot, flight control, or other system are
   // all stored in the interface properties array.
 
   property_element = document->FindElement("property");
+  if (property_element) cout << endl << "    Declared properties" << endl << endl;
   while (property_element) {
     double value=0.0;
     if ( ! property_element->GetAttributeValue("value").empty())
@@ -549,7 +546,39 @@ bool FGFCS::Load(Element* el, SystemType systype)
     interface_properties.push_back(new double(value));
     interface_property_string = property_element->GetDataLine();
     PropertyManager->Tie(interface_property_string, interface_properties.back());
+    cout << "      " << interface_property_string << " (initial value: " << value << ")" << endl;
     property_element = document->FindNextElement("property");
+  }
+
+  // After reading interface properties in a file, read properties in the local
+  // flight_control, autopiot, or system element. This allows general-purpose
+  // systems to be defined in a file, with overrides or initial loaded constants
+  // supplied in the relevant element of the aircraft configuration file.
+
+  if (!fname.empty()) {
+    property_element = el->FindElement("property");
+    if (property_element) cout << endl << "    Declared properties" << endl << endl;
+    while (property_element) {
+      double value=0.0;
+      if ( ! property_element->GetAttributeValue("value").empty())
+        value = property_element->GetAttributeValueAsNumber("value");
+
+      interface_property_string = property_element->GetDataLine();
+      
+      FGPropertyManager* node = PropertyManager->GetNode(interface_property_string);
+      if (node) {
+        cout << "      " << "Overriding value for property " << interface_property_string
+             << " (old value: " << node->getDoubleValue() << "  new value: " << value << ")" << endl;
+        node->setDoubleValue(value);
+      } else {
+        interface_properties.push_back(new double(value));
+        PropertyManager->Tie(interface_property_string, interface_properties.back());
+        cout << "      " << interface_property_string << " (initial value: " << value << ")" << endl;
+      }
+      
+      
+      property_element = el->FindNextElement("property");
+    }
   }
 
   // Any sensor elements that are outside of a channel (in either the autopilot
@@ -570,6 +599,10 @@ bool FGFCS::Load(Element* el, SystemType systype)
 
   channel_element = document->FindElement("channel");
   while (channel_element) {
+  
+    cout << endl << highint << fgblue << "    Channel " 
+         << normint << channel_element->GetAttributeValue("name") << reset << endl;
+  
     component_element = channel_element->GetElement();
     while (component_element) {
       try {
@@ -732,7 +765,7 @@ string FGFCS::GetComponentValues(string delimeter)
 {
   unsigned int comp;
   string CompValues = "";
-  char buffer[20];
+  char buffer[100];
   bool firstime = true;
   int total_count=0;
 
@@ -740,7 +773,7 @@ string FGFCS::GetComponentValues(string delimeter)
     if (firstime) firstime = false;
     else          CompValues += delimeter;
 
-    sprintf(buffer, "%9.6f", Systems[i]->GetOutput());
+    snprintf(buffer, 100, "%9.6f", Systems[i]->GetOutput());
     CompValues += string(buffer);
     total_count++;
   }
@@ -852,6 +885,9 @@ void FGFCS::bind(void)
   PropertyManager->Tie("fcs/right-brake-cmd-norm", this, &FGFCS::GetRBrake, &FGFCS::SetRBrake);
   PropertyManager->Tie("fcs/center-brake-cmd-norm", this, &FGFCS::GetCBrake, &FGFCS::SetCBrake);
   PropertyManager->Tie("fcs/steer-cmd-norm", this, &FGFCS::GetDsCmd, &FGFCS::SetDsCmd);
+
+  PropertyManager->Tie("gear/tailhook-pos-norm", this, &FGFCS::GetTailhookPos, &FGFCS::SetTailhookPos);
+  PropertyManager->Tie("fcs/wing-fold-pos-norm", this, &FGFCS::GetWingFoldPos, &FGFCS::SetWingFoldPos);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

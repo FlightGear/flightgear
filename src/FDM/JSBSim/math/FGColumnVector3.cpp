@@ -60,7 +60,7 @@ FGColumnVector3::FGColumnVector3(void)
 string FGColumnVector3::Dump(string delimeter) const
 {
   char buffer[256];
-  sprintf(buffer, "%f%s%f%s%f", Entry(1), delimeter.c_str(), Entry(2), delimeter.c_str(), Entry(3));
+  sprintf(buffer, "%10.3e%s%10.3e%s%10.3e", Entry(1), delimeter.c_str(), Entry(2), delimeter.c_str(), Entry(3));
   return string(buffer);
 }
 

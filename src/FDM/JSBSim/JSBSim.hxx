@@ -252,6 +252,8 @@ private:
     SGPropertyNode_ptr spoilers_pos_pct;
 
     SGPropertyNode_ptr gear_pos_pct;
+    SGPropertyNode_ptr wing_fold_pos_pct;
+    SGPropertyNode_ptr tailhook_pos_pct;
 
     SGPropertyNode_ptr temperature;
     SGPropertyNode_ptr pressure;
@@ -270,6 +272,8 @@ private:
     JSBSim::FGColumnVector3 hook_root_struct;
     double hook_length;
     bool got_wire;
+
+    bool crashed;
 
     void init_gear(void);
     void update_gear(void);

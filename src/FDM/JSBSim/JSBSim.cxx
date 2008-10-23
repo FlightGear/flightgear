@@ -248,6 +248,8 @@ FGJSBsim::FGJSBsim( double dt )
     speedbrake_pos_pct
         =fgGetNode("/surface-positions/speedbrake-pos-norm",true);
     spoilers_pos_pct=fgGetNode("/surface-positions/spoilers-pos-norm",true);
+    tailhook_pos_pct=fgGetNode("/gear/tailhook/position-norm",true);
+    wing_fold_pos_pct=fgGetNode("surface-positions/wing-fold-pos-norm",true);
 
     elevator_pos_pct->setDoubleValue(0);
     left_aileron_pos_pct->setDoubleValue(0);
@@ -279,6 +281,8 @@ FGJSBsim::FGJSBsim( double dt )
         fgGetDouble("/fdm/jsbsim/systems/hook/tailhook-offset-x-in", 196),
         fgGetDouble("/fdm/jsbsim/systems/hook/tailhook-offset-y-in", 0),
         fgGetDouble("/fdm/jsbsim/systems/hook/tailhook-offset-z-in", -16));
+
+    crashed = false;
 }
 
 /******************************************************************************/
@@ -398,6 +402,12 @@ void FGJSBsim::init()
 
 void FGJSBsim::update( double dt )
 {
+    if(crashed) {
+      if(!fgGetBool("/sim/crashed"))
+        fgSetBool("/sim/crashed", true);
+      return;
+    }
+
     if (is_suspended())
       return;
 
@@ -480,6 +490,8 @@ void FGJSBsim::update( double dt )
       msg = fdmex->ProcessMessage();
       switch (msg->type) {
       case FGJSBBase::Message::eText:
+        if (msg->text == "Crash Detected: Simulation FREEZE.")
+          crashed = true;
         SG_LOG( SG_FLIGHT, SG_INFO, msg->messageId << ": " << msg->text );
         break;
       case FGJSBBase::Message::eBool:
@@ -862,12 +874,13 @@ bool FGJSBsim::copy_from_JSBsim()
     flap_pos_pct->setDoubleValue( FCS->GetDfPos(ofNorm) );
     speedbrake_pos_pct->setDoubleValue( FCS->GetDsbPos(ofNorm) );
     spoilers_pos_pct->setDoubleValue( FCS->GetDspPos(ofNorm) );
+    tailhook_pos_pct->setDoubleValue( FCS->GetTailhookPos() );
+    wing_fold_pos_pct->setDoubleValue( FCS->GetWingFoldPos() );
 
-    // force a sim reset if crashed (altitude AGL < 0)
+    // force a sim crashed if crashed (altitude AGL < 0)
     if (get_Altitude_AGL() < -100.0) {
-         fgSetBool("/sim/crashed", true);
-         SGPropertyNode* node = fgGetNode("/sim/presets", true);
-         globals->get_commands()->execute("old-reinit-dialog", node);
+         State->SuspendIntegration();
+         crashed = true;
     }
 
     return true;
@@ -1073,6 +1086,7 @@ void FGJSBsim::init_gear(void )
       node->setDoubleValue("position-norm", gear->GetGearUnitPos());
       node->setDoubleValue("tire-pressure-norm", gear->GetTirePressure());
       node->setDoubleValue("compression-norm", gear->GetCompLen());
+      node->setDoubleValue("compression-ft", gear->GetCompLen());
       if ( gear->GetSteerable() )
         node->setDoubleValue("steering-norm", gear->GetSteerNorm());
     }
@@ -1089,6 +1103,7 @@ void FGJSBsim::update_gear(void)
       node->getChild("position-norm", 0, true)->setDoubleValue(gear->GetGearUnitPos());
       gear->SetTirePressure(node->getDoubleValue("tire-pressure-norm"));
       node->setDoubleValue("compression-norm", gear->GetCompLen());
+      node->setDoubleValue("compression-ft", gear->GetCompLen());
       if ( gear->GetSteerable() )
         node->setDoubleValue("steering-norm", gear->GetSteerNorm());
     }

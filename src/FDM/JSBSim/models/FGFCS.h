@@ -162,7 +162,9 @@ CLASS DOCUMENTATION
     @property fcs/spoiler-pos-deg
     @property fcs/spoiler-pos-norm
     @property fcs/mag-spoiler-pos-rad
+    @property fcs/wing-fold-pos-norm
     @property gear/gear-pos-norm
+    @property gear/tailhook-pos-norm
 
     @author Jon S. Berndt
     @version $Revision$
@@ -325,6 +327,14 @@ public:
       @return gear position (0 up, 1 down) */
   inline double GetGearPos(void) const { return GearPos; }
 
+  /** Gets the tailhook position (0 up, 1 down)
+      @return tailhook position (0 up, 1 down) */
+  inline double GetTailhookPos(void) const { return TailhookPos; }
+
+  /** Gets the wing fold position (0 unfolded, 1 folded)
+      @return wing fold position (0 unfolded, 1 folded) */
+  inline double GetWingFoldPos(void) const { return WingFoldPos; }
+
   /** Gets the prop pitch position.
       @param engine engine ID number
       @return prop pitch position for the given engine in range from 0 - 1.0 */
@@ -467,6 +477,13 @@ public:
       @param gear position 0 up, 1 down       */
    void SetGearPos(double gearpos) { GearPos = gearpos; }
 
+  /** Set the tailhook position
+      @param tailhook position 0 up, 1 down       */
+   void SetTailhookPos(double hookpos) { TailhookPos = hookpos; }
+
+  /** Set the wing fold position
+      @param wing fold position 0 unfolded, 1 folded  */
+   void SetWingFoldPos(double foldpos) { WingFoldPos = foldpos; }
 
   /** Sets the actual prop pitch setting for the specified engine
       @param engine engine ID number
@@ -545,6 +562,7 @@ private:
   vector <double> SteerPosDeg;
   double LeftBrake, RightBrake, CenterBrake; // Brake settings
   double GearCmd,GearPos;
+  double TailhookPos, WingFoldPos;
 
   typedef vector <FGFCSComponent*> FCSCompVec;
   FCSCompVec Systems;

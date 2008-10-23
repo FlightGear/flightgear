@@ -130,6 +130,11 @@ bool FGMassBalance::Load(Element* el)
     element = el->FindNextElement("pointmass");
   }
 
+  Weight = EmptyWeight + Propulsion->GetTanksWeight() + GetPointMassWeight()
+    + BuoyantForces->GetGasMass()*slugtolb;
+
+  Mass = lbtoslug*Weight;
+
   Debug(2);
   return true;
 }
