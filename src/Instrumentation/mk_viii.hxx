@@ -1563,7 +1563,7 @@ private:
 				   double to_heading);
     double get_azimuth_difference (const FGRunway *_runway);
 
-    void select_runway (const FGAirport *airport, FGRunway *_runway);
+    FGRunway* select_runway (const FGAirport *airport);
     void update_runway ();
 
     void get_bias_area_edges (Position *edge,

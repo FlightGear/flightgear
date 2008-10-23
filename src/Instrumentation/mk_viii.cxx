@@ -4489,10 +4489,10 @@ MK_VIII::TCFHandler::get_azimuth_difference (const FGRunway *_runway)
 // This selection algorithm is not specified in [SPEC], but
 // http://www.egpws.com/general_information/description/runway_select.htm
 // talks about automatic runway selection.
-void
-MK_VIII::TCFHandler::select_runway (const FGAirport *airport,
-				    FGRunway *_runway)
+FGRunway*
+MK_VIII::TCFHandler::select_runway (const FGAirport *airport)
 {
+  FGRunway* _runway = 0;
   double min_diff = 360;
   
   for (unsigned int r=0; r<airport->numRunways(); ++r) {
@@ -4504,6 +4504,7 @@ MK_VIII::TCFHandler::select_runway (const FGAirport *airport,
       _runway = rwy;
     }
   } // of airport runways iteration
+  return _runway;
 }
 
 bool MK_VIII::TCFHandler::AirportFilter::pass(FGAirport *a)
@@ -4532,15 +4533,14 @@ MK_VIII::TCFHandler::update_runway ()
   // the airport's reference point.
   AirportFilter filter(mk);
   const FGAirport *airport = globals->get_airports()->search(
-      mk_data(gps_latitude).get(), mk_data(gps_longitude).get(),
+      mk_data(gps_longitude).get(), mk_data(gps_latitude).get(),
 			0.5, filter);
 
   if (!airport) return;
   
 	  has_runway = true;
 
-	  FGRunway* _runway;
-	  select_runway(airport, _runway);
+	  FGRunway* _runway = select_runway(airport);
 
 	  runway.center.latitude = _runway->latitude();
 	  runway.center.longitude = _runway->longitude();
