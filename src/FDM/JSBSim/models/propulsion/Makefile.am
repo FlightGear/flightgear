@@ -1,5 +1,3 @@
-includedir = @includedir@/JSBSim/models/propulsion
-
 noinst_LIBRARIES = libPropulsion.a
 
 libPropulsion_a_SOURCES = \
@@ -11,4 +9,4 @@ noinst_HEADERS = FGElectric.h FGEngine.h FGForce.h FGNozzle.h FGPiston.h \
                   FGPropeller.h FGRocket.h FGTank.h FGThruster.h \
                   FGTurbine.h FGTurboProp.h
 
-INCLUDES = -I$(top_srcdir)/src -I../../
+INCLUDES = -I$(top_srcdir)/src/FDM/JSBSim
