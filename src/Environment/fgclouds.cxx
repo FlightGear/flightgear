@@ -80,55 +80,92 @@ void FGClouds::init(void) {
 	}
 }
 
-SGNewCloud *FGClouds::buildCloud(SGPropertyNode *cloud_def_root, const string& name) {
-	SGPropertyNode *cld_def=NULL;
+void FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode  *box_def_root, const string& name, sgVec3 pos, SGCloudField *layer) {
+	SGPropertyNode *box_def=NULL;
+        SGPropertyNode *cld_def=NULL;
+        
+        SGPath texture_root = globals->get_fg_root();
+        texture_root.append("Textures");
+        texture_root.append("Sky");
 
-	cld_def = cloud_def_root->getChild(name.c_str());
+	box_def = box_def_root->getChild(name.c_str());
+  
 	string base_name = name.substr(0,2);
-	if( !cld_def ) {
+	if( !box_def ) {
 		if( name[2] == '-' ) {
-			cld_def = cloud_def_root->getChild(base_name.c_str());
+			box_def = box_def_root->getChild(base_name.c_str());
 		}
-		if( !cld_def )
-			return NULL;
+		if( !box_def )
+			return;
 	}
-	string familly = cld_def->getStringValue("familly", base_name.c_str());
-	SGNewCloud *cld = new SGNewCloud(familly);
-	for(int i = 0; i < cld_def->nChildren() ; i++) {
-		SGPropertyNode *abox = cld_def->getChild(i);
+        
+	for(int i = 0; i < box_def->nChildren() ; i++) {
+		SGPropertyNode *abox = box_def->getChild(i);
 		if( strcmp(abox->getName(), "box") == 0) {
-			double x = abox->getDoubleValue("x");
-			double y = abox->getDoubleValue("y");
-			double z = abox->getDoubleValue("z");
-			double size = abox->getDoubleValue("size");
-			int type = abox->getIntValue("type", SGNewCloud::CLbox_standard);
-			cld->addContainer(x, y, z, size, (SGNewCloud::CLbox_type) type);
+			double x = abox->getDoubleValue("x") + pos[0];
+			double y = abox->getDoubleValue("y") + pos[1];
+			double z = abox->getDoubleValue("z") + pos[2];
+                        SGVec3f newpos = SGVec3f(x, z, y);
+                        
+                        string type = abox->getStringValue("type", "cu-small");
+                               
+                        cld_def = cloud_def_root->getChild(type.c_str());
+                        if ( !cld_def ) return;
+                        
+                        double min_width = cld_def->getDoubleValue("min-cloud-width-m", 500.0);
+                        double max_width = cld_def->getDoubleValue("max-cloud-width-m", 1000.0);
+                        double min_height = cld_def->getDoubleValue("min-cloud-height-m", min_width);
+                        double max_height = cld_def->getDoubleValue("max-cloud-height-m", max_width);
+                        double min_sprite_width = cld_def->getDoubleValue("min-sprite-width-m", 200.0);
+                        double max_sprite_width = cld_def->getDoubleValue("max-sprite-width-m", min_sprite_width);
+                        double min_sprite_height = cld_def->getDoubleValue("min-sprite-height-m", min_sprite_width);
+                        double max_sprite_height = cld_def->getDoubleValue("max-sprite-height-m", max_sprite_width);
+                        int num_sprites = cld_def->getIntValue("num-sprites", 20);
+                        int num_textures_x = cld_def->getIntValue("num-textures-x", 1);
+                        int num_textures_y = cld_def->getIntValue("num-textures-y", 1);
+                        double bottom_shade = cld_def->getDoubleValue("bottom-shade", 1.0);
+                        string texture = cld_def->getStringValue("texture", "cl_cumulus.rgb");
+          
+                        SGNewCloud *cld = 
+                                new SGNewCloud(texture_root, 
+                                               texture, 
+                                               min_width, 
+                                               max_width, 
+                                               min_height,
+                                               max_height,
+                                               min_sprite_width,
+                                               max_sprite_width,
+                                               min_sprite_height,
+                                               max_sprite_height,
+                                               bottom_shade,
+                                               num_sprites,
+                                               num_textures_x,
+                                               num_textures_y);
+                        layer->addCloud(newpos, cld);
 		}
 	}
-	cld->genSprites();
-	return cld;
 }
 
-void FGClouds::buildLayer(SGCloudField *layer, const string& name, double alt, double coverage) {
+void FGClouds::buildLayer(int iLayer, const string& name, double alt, double coverage) {
 	struct {
 		string name;
 		double count;
 	} tCloudVariety[20];
 	int CloudVarietyCount = 0;
 	double totalCount = 0.0;
-
+        
 	SGPropertyNode *cloud_def_root = fgGetNode("/environment/cloudlayers/clouds", false);
+	SGPropertyNode *box_def_root   = fgGetNode("/environment/cloudlayers/boxes", false);
 	SGPropertyNode *layer_def_root = fgGetNode("/environment/cloudlayers/layers", false);
+        SGCloudField *layer = thesky->get_cloud_layer(iLayer)->get_layer3D();
 
 	layer->clear();
 	// when we don't generate clouds the layer is rendered in 2D
 	if( coverage == 0.0 )
 		return;
-	if( layer_def_root == NULL || cloud_def_root == NULL)
+	if( layer_def_root == NULL || cloud_def_root == NULL || box_def_root == NULL)
 		return;
-	if( name == "ci" || name == "sc" || name == "st")
-		return;
-
+	
 	SGPropertyNode *layer_def=NULL;
 
 	layer_def = layer_def_root->getChild(name.c_str());
@@ -140,7 +177,7 @@ void FGClouds::buildLayer(SGCloudField *layer, const string& name, double alt, d
 		if( !layer_def )
 			return;
 	}
-
+        
 	double grid_x_size = layer_def->getDoubleValue("grid-x-size", 1000.0);
 	double grid_y_size = layer_def->getDoubleValue("grid-y-size", 1000.0);
 	double grid_x_rand = layer_def->getDoubleValue("grid-x-rand", grid_x_size);
@@ -160,7 +197,7 @@ void FGClouds::buildLayer(SGCloudField *layer, const string& name, double alt, d
 			do {
 				variety++;
 				snprintf(variety_name, sizeof(variety_name), cloud_name.c_str(), variety);
-			} while( cloud_def_root->getChild(variety_name, 0, false) );
+			} while( box_def_root->getChild(variety_name, 0, false) );
 
 			totalCount += count;
 			if( CloudVarietyCount < 20 )
@@ -172,8 +209,8 @@ void FGClouds::buildLayer(SGCloudField *layer, const string& name, double alt, d
 
 	for(double px = 0.0; px < SGCloudField::fieldSize; px += grid_x_size) {
 		for(double py = 0.0; py < SGCloudField::fieldSize; py += grid_y_size) {
-			double x = px + grid_x_rand * (sg_random() - 0.5);
-			double y = py + grid_y_rand * (sg_random() - 0.5);
+			double x = px + grid_x_rand * (sg_random() - 0.5) - (SGCloudField::fieldSize / 2.0);
+			double y = py + grid_y_rand * (sg_random() - 0.5) - (SGCloudField::fieldSize / 2.0);
 			double z = alt + grid_z_rand * (sg_random() - 0.5);
 			double choice = sg_random();
 			currCoverage += coverage;
@@ -184,23 +221,23 @@ void FGClouds::buildLayer(SGCloudField *layer, const string& name, double alt, d
 			for(int i = 0; i < CloudVarietyCount ; i ++) {
 				choice -= tCloudVariety[i].count * totalCount;
 				if( choice <= 0.0 ) {
-					SGNewCloud *cld = buildCloud(cloud_def_root, tCloudVariety[i].name);
 					sgVec3 pos={x,z,y};
-					if( cld )
-						layer->addCloud(pos, cld);
 
+                                        buildCloud(cloud_def_root, box_def_root, tCloudVariety[i].name, pos, layer);
 					break;
 				}
 			}
 		}
 	}
 
+        // Now we've built any clouds, enable them
+        thesky->get_cloud_layer(iLayer)->set_enable3dClouds(thesky->get_3dClouds());
 }
 
 // TODO:call this after real metar updates
 void FGClouds::buildMETAR(void) {
 	SGPropertyNode *metar_root = fgGetNode("/environment", true);
-
+        
 	double wind_speed_kt	 = metar_root->getDoubleValue("wind-speed-kt");
 	double temperature_degc  = metar_root->getDoubleValue("temperature-sea-level-degc");
 	double dewpoint_degc	 = metar_root->getDoubleValue("dewpoint-sea-level-degc");
@@ -262,8 +299,7 @@ void FGClouds::buildMETAR(void) {
 			}
 		}
 
-		SGCloudField *layer3D = thesky->get_cloud_layer(iLayer)->get_layer3D();
-		buildLayer(layer3D, layer_type, alt_m, coverage_norm);
+		buildLayer(iLayer, layer_type, alt_m, coverage_norm);
 	}
 }
 
@@ -395,8 +431,7 @@ void FGClouds::setLayer( int iLayer, float alt_ft, const string& coverage, const
 	else if( coverage == "overcast" )
 		coverage_norm = 8.0/8.0;	// 8
 
-	SGCloudField *layer3D = thesky->get_cloud_layer(iLayer)->get_layer3D();
-	buildLayer(layer3D, layer_type, station_elevation_ft + alt_ft * SG_FEET_TO_METER, coverage_norm);
+	buildLayer(iLayer, layer_type, station_elevation_ft + alt_ft * SG_FEET_TO_METER, coverage_norm);
 }
 
 void FGClouds::buildScenario( const string& scenario ) {

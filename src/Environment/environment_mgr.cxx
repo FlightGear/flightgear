@@ -182,21 +182,12 @@ FGEnvironmentMgr::bind ()
 	  &FGEnvironmentMgr::set_cloud_layer_coverage);
     fgSetArchivable(buf);
   }
-  fgTie("/sim/rendering/clouds3d-enable", &sgEnviro,
-	  &SGEnviro::get_clouds_enable_state,
-	  &SGEnviro::set_clouds_enable_state);
-  fgTie("/sim/rendering/clouds3d-vis-range", &sgEnviro,
-	  &SGEnviro::get_clouds_visibility,
-	  &SGEnviro::set_clouds_visibility);
-  fgTie("/sim/rendering/clouds3d-density", &sgEnviro,
-	  &SGEnviro::get_clouds_density,
-	  &SGEnviro::set_clouds_density);
-  fgTie("/sim/rendering/clouds3d-cache-size", &sgEnviro,
-	  &SGEnviro::get_clouds_CacheSize,
-	  &SGEnviro::set_clouds_CacheSize);
-  fgTie("/sim/rendering/clouds3d-cache-resolution", &sgEnviro,
-	  &SGEnviro::get_CacheResolution,
-	  &SGEnviro::set_CacheResolution);
+  fgTie("/sim/rendering/clouds3d-enable", thesky,
+	  &SGSky::get_3dClouds,
+	  &SGSky::set_3dClouds);
+  fgTie("/sim/rendering/clouds3d-density", thesky,
+	  &SGSky::get_3dCloudDensity,
+	  &SGSky::set_3dCloudDensity);
   fgTie("/sim/rendering/precipitation-enable", &sgEnviro,
 	  &SGEnviro::get_precipitation_enable_state,
 	  &SGEnviro::set_precipitation_enable_state);
