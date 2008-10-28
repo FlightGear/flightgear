@@ -265,8 +265,11 @@ CameraInfo* CameraGroup::buildGUICamera(const SGPropertyNode* cameraNode,
     camera->setProjectionResizePolicy(Camera::FIXED);
     camera->setReferenceFrame(Transform::ABSOLUTE_RF);
     const int cameraFlags = GUI;
-    return addCamera(cameraFlags, camera,
-                     Matrixd::identity(), Matrixd::identity(), false);
+    CameraInfo* result = addCamera(cameraFlags, camera, Matrixd::identity(),
+                                   Matrixd::identity(), false);
+    // Disable statistics for the GUI camera.
+    result->camera->setStats(0);
+    return result;
 }
 
 CameraGroup* CameraGroup::buildCameraGroup(osgViewer::Viewer* viewer,
