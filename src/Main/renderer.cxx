@@ -42,6 +42,7 @@
 #include <osg/LightModel>
 #include <osg/LightSource>
 #include <osg/Material>
+#include <osg/Math>
 #include <osg/NodeCallback>
 #include <osg/Notify>
 #include <osg/PolygonMode>
@@ -612,8 +613,14 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
         double sun_horiz_eff, moon_horiz_eff;
         if (fgGetBool("/sim/rendering/horizon-effect")) {
-           sun_horiz_eff = 0.67+pow(0.5+cos(l->get_sun_angle())*2/2, 0.33)/3;
-           moon_horiz_eff = 0.67+pow(0.5+cos(l->get_moon_angle())*2/2, 0.33)/3;
+            sun_horiz_eff
+                = 0.67 + pow(osg::clampAbove(0.5 + cos(l->get_sun_angle()),
+                                             0.0),
+                             0.33) / 3.0;
+            moon_horiz_eff
+                = 0.67 + pow(osg::clampAbove(0.5 + cos(l->get_moon_angle()),
+                                             0.0),
+                             0.33)/3.0;
         } else {
            sun_horiz_eff = moon_horiz_eff = 1.0;
         }
