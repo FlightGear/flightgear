@@ -95,7 +95,15 @@ void FGATCMain::init_config() {
     if ( envp != NULL ) {
         SGPath atcsim_config( envp );
         atcsim_config.append( ".fgfs-atc610x.xml" );
-        readProperties( atcsim_config.str(), globals->get_props() );
+	try {
+	  SG_LOG(SG_GENERAL, SG_ALERT,
+		 "Warning: loading depricated config file: " <<
+		 atcsim_config.str() );
+	  readProperties( atcsim_config.str(), globals->get_props() );
+	} catch (const sg_exception &e) {
+	  // fail silently, this is an old style config file I want to continue
+	  // to support if it exists.
+	}
     }
 #endif
 }
