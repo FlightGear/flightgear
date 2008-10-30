@@ -10,7 +10,7 @@ AC_PREREQ(2.52)
 dnl Initialize the automake stuff
 dnl set the $host variable based on local machine/os
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE(FlightGear, 1.99.4)
+AM_INIT_AUTOMAKE(FlightGear, 1.99.5)
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET
@@ -22,7 +22,7 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 
 # specify the simgear location
-AC_ARG_WITH(simgear, [  --with-simgear=PREFIX   Specify the prefix path to simgear])
+AC_ARG_WITH(simgear, [  --with-simgear=PREFIX   Specify the prefix path to SimGear])
 
 if test "x$with_simgear" != "x" ; then
     echo "SimGear prefix path is $with_simgear"
@@ -390,7 +390,7 @@ if test "x$ac_cv_header_simgear_version_h" != "xyes"; then
     exit
 fi
 
-AC_MSG_CHECKING([for simgear 0.3.10 or newer])
+AC_MSG_CHECKING([for SimGear 1.99.5 or newer])
 AC_TRY_RUN([
 #include <stdio.h>
 
@@ -399,9 +399,9 @@ AC_TRY_RUN([
 #define STRINGIFY(X) XSTRINGIFY(X)
 #define XSTRINGIFY(X) #X
 
-#define MIN_MAJOR 0
-#define MIN_MINOR 3
-#define MIN_MICRO 10
+#define MIN_MAJOR 1
+#define MIN_MINOR 99
+#define MIN_MICRO 5
 
 int main() {
     int major, minor, micro;
@@ -423,7 +423,7 @@ int main() {
 ],
   AC_MSG_RESULT(yes),
   [AC_MSG_RESULT(wrong version);
-   AC_MSG_ERROR([Install latest simgear first...])],
+   AC_MSG_ERROR([Install latest SimGear first...])],
   AC_MSG_RESULT(yes)
 )
 

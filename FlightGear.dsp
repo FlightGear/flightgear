@@ -2672,21 +2672,6 @@ SOURCE=.\src\FDM\JSBSim\models\propulsion\FGRocket.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\FDM\JSBSim\models\propulsion\FGRotor.cpp
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_Propulsion"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_Propulsion"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\src\FDM\JSBSim\models\propulsion\FGTank.cpp
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
@@ -10537,6 +10522,36 @@ SOURCE=.\src\Navaids\navlist.hxx
 # Begin Source File
 
 SOURCE=.\src\Navaids\navlist.cxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Navaids"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Navaids"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Navaids\positioned.hxx
+
+!IF  "$(CFG)" == "FlightGear - Win32 Release"
+
+# PROP Intermediate_Dir "Release\Lib_Navaids"
+
+!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
+
+# PROP Intermediate_Dir "Debug\Lib_Navaids"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\Navaids\positioned.cxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
 

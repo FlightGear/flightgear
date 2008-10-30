@@ -525,6 +525,7 @@ void FGExternalPipe::update_property( double dt ) {
             cout << "Error reading data" << endl;
         } else {
             // cout << "  read " << strlen(cmd) << " bytes" << endl;
+            // cout << cmd << endl;
         }
 
         // chop trailing newline
