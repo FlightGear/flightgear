@@ -156,14 +156,20 @@ FGMarkerBeacon::update(double dt)
 {
     need_update = false;
 
+    // On timeout, scan again, this needs to run every iteration no
+    // matter what the power or serviceable state.  If power is turned
+    // off or the unit becomes unserviceable while a beacon sound is
+    // playing, the search() routine still needs to be called so the
+    // sound effect can be properly disabled.
+
+    _time_before_search_sec -= dt;
+    if ( _time_before_search_sec < 0 ) {
+	search();
+    }
+
     if ( has_power() && serviceable->getBoolValue()
             && !sound_pause->getBoolValue()) {
 
-        // On timeout, scan again
-        _time_before_search_sec -= dt;
-        if ( _time_before_search_sec < 0 ) {
-            search();
-        }
         // marker beacon blinking
         bool light_on = ( outer_blink || middle_blink || inner_blink );
         SGTimeStamp current;
