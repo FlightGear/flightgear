@@ -36,6 +36,7 @@
 #include <simgear/math/SGMath.hxx>
 #include <simgear/scene/sky/sky.hxx>
 #include <simgear/scene/sky/cloud.hxx>
+#include <simgear/environment/visual_enviro.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -116,7 +117,9 @@ float FGPrecipitationMgr::getPrecipitationAtAltitudeMax(void)
 {
     int i;
     int max;
+	double elev;
     float result;
+    SGPropertyNode *boundaryNode, *boundaryEntry;
 
 
     // By default (not cloud layer)
@@ -148,6 +151,32 @@ float FGPrecipitationMgr::getPrecipitationAtAltitudeMax(void)
         }
     }
 
+
+    // If we haven't found clouds layers, we read the bounday layers table.
+    if (result > 0)
+        return result;
+
+
+    // Read boundary layers node
+    boundaryNode = fgGetNode("/environment/config/boundary");
+
+    if (boundaryNode != NULL) {
+        i = 0;
+
+        // For each boundary layers
+        while ( ( boundaryEntry = boundaryNode->getNode( "entry", i ) ) != NULL ) {
+            elev = boundaryEntry->getDoubleValue( "elevation-ft" );
+
+            if (elev > result)
+                result = elev;
+
+            ++i;
+        }
+    }
+
+	// Convert the result in meter
+	result = result * SG_FEET_TO_METER;
+
     return result;
 }
 
@@ -155,6 +184,10 @@ float FGPrecipitationMgr::getPrecipitationAtAltitudeMax(void)
 /** 
  * @brief Update the precipitation drawing
  * 
+ * To seem real, we stop the precipitation above the cloud or boundary layer.
+ * If METAR information doesn't give us this altitude, we will see precipitations
+ * in space...
+ * Moreover, below 0°C we change rain into snow.
  */
 void FGPrecipitationMgr::update(double dt)
 {
@@ -166,11 +199,24 @@ void FGPrecipitationMgr::update(double dt)
     float altitudeAircraft;
     float altitudeCloudLayer;
 
+	// Does the user enable the precipitation ?
+	if (!sgEnviro.get_precipitation_enable_state()) {
+		// Disable precipitations
+	    precipitation->setRainIntensity(0);
+	    precipitation->setSnowIntensity(0);
+
+	    // Update the drawing...
+	    precipitation->update();
+
+		// Exit
+		return;
+	}
+
     // Get the elevation of aicraft and of the cloud layer
     altitudeAircraft = fgGetDouble("/position/altitude-ft", 0.0);
     altitudeCloudLayer = this->getPrecipitationAtAltitudeMax() * SG_METER_TO_FEET;
 
-    if (altitudeAircraft > altitudeCloudLayer) {
+    if ((altitudeCloudLayer > 0) && (altitudeAircraft > altitudeCloudLayer)) {
         // The aircraft is above the cloud layer
         rain_intensity = 0;
         snow_intensity = 0;
