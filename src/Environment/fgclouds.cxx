@@ -51,6 +51,7 @@ FGClouds::FGClouds(FGEnvironmentCtrl * controller) :
 	station_elevation_ft(0.0),
 	_controller( controller ),
 	snd_lightning(NULL),
+        rebuild_required(true),
     last_scenario( "none" ),
     last_env_config( new SGPropertyNode() ),
     last_env_clouds( new SGPropertyNode() )
@@ -78,6 +79,8 @@ void FGClouds::init(void) {
 		soundMgr->add( snd_lightning, "thunder" );
 		sgEnviro.set_soundMgr( soundMgr );
 	}
+        
+        rebuild_required = true;
 }
 
 void FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode  *box_def_root, const string& name, sgVec3 pos, SGCloudField *layer) {
@@ -153,6 +156,8 @@ void FGClouds::buildLayer(int iLayer, const string& name, double alt, double cov
 	} tCloudVariety[20];
 	int CloudVarietyCount = 0;
 	double totalCount = 0.0;
+        
+        if (! clouds_3d_enabled) return;
         
 	SGPropertyNode *cloud_def_root = fgGetNode("/environment/cloudlayers/clouds", false);
 	SGPropertyNode *box_def_root   = fgGetNode("/environment/cloudlayers/boxes", false);
@@ -231,7 +236,7 @@ void FGClouds::buildLayer(int iLayer, const string& name, double alt, double cov
 	}
 
         // Now we've built any clouds, enable them
-        thesky->get_cloud_layer(iLayer)->set_enable3dClouds(thesky->get_3dClouds());
+        thesky->get_cloud_layer(iLayer)->set_enable3dClouds(clouds_3d_enabled);
 }
 
 // TODO:call this after real metar updates
@@ -476,48 +481,80 @@ void FGClouds::buildScenario( const string& scenario ) {
 }
 
 
-void FGClouds::build(void) {
+void FGClouds::build() {
 	string scenario = fgGetString("/environment/weather-scenario", "METAR");
 
-    if( scenario == last_scenario)
-        return;
-    if( last_scenario == "none" ) {
+        if(!rebuild_required && (scenario == last_scenario))
+            return;
+        
+        
+        
+        if( last_scenario == "none" ) {
         // save clouds and weather conditions
-        SGPropertyNode *param = fgGetNode("/environment/config", true);
-        copyProperties( param, last_env_config );
-        param = fgGetNode("/environment/clouds", true);
-        copyProperties( param, last_env_clouds );
-    }
-	if( scenario == "METAR" ) {
-		string realMetar = fgGetString("/environment/metar/real-metar", "");
-		if( realMetar != "" ) {
-			fgSetString("/environment/metar/last-metar", realMetar.c_str());
-			FGMetar *m = new FGMetar( realMetar );
-			update_metar_properties( m );
-			update_env_config();
+            SGPropertyNode *param = fgGetNode("/environment/config", true);
+            copyProperties( param, last_env_config );
+            param = fgGetNode("/environment/clouds", true);
+            copyProperties( param, last_env_clouds );
+        }
+        if( scenario == "METAR" ) {
+            string realMetar = fgGetString("/environment/metar/real-metar", "");
+            if( realMetar != "" ) {
+                fgSetString("/environment/metar/last-metar", realMetar.c_str());
+                FGMetar *m = new FGMetar( realMetar );
+                update_metar_properties( m );
+                update_env_config();
 			// propagate aloft tables
-			_controller->reinit();
-		}
-		buildMETAR();
-	}
-    else if( scenario == "none" ) {
+                _controller->reinit();
+            }
+            buildMETAR();
+        }
+        else if( scenario == "none" ) {
         // restore clouds and weather conditions
-        SGPropertyNode *param = fgGetNode("/environment/config", true);
-        copyProperties( last_env_config, param );
-        param = fgGetNode("/environment/clouds", true);
-        copyProperties( last_env_clouds, param );
-        fgSetDouble("/environment/metar/rain-norm", 0.0);
-        fgSetDouble("/environment/metar/snow-norm", 0.0);
+            SGPropertyNode *param = fgGetNode("/environment/config", true);
+            copyProperties( last_env_config, param );
+            param = fgGetNode("/environment/clouds", true);
+            copyProperties( last_env_clouds, param );
+            fgSetDouble("/environment/metar/rain-norm", 0.0);
+            fgSetDouble("/environment/metar/snow-norm", 0.0);
 //	    update_env_config();
 	    // propagate aloft tables
-	    _controller->reinit();
-		buildMETAR();
-    }
-	else
-		buildScenario( scenario );
-    last_scenario = scenario;
+            _controller->reinit();
+            buildMETAR();
+        }
+        else
+            buildScenario( scenario );
+        
+        last_scenario = scenario;
+        rebuild_required = false;
 
 	// ...
-	if( snd_lightning == NULL )
-		init();
+        if( snd_lightning == NULL )
+            init();
 }
+
+void FGClouds::set_3dClouds(bool enable)
+{
+    if (enable != clouds_3d_enabled)
+    {
+        clouds_3d_enabled = enable;
+        
+        for(int iLayer = 0 ; iLayer < thesky->get_cloud_layer_count(); iLayer++) {
+            thesky->get_cloud_layer(iLayer)->set_enable3dClouds(enable);
+            
+            if (!enable) {            
+                thesky->get_cloud_layer(iLayer)->get_layer3D()->clear();        
+            }
+        }
+        
+        if (enable)
+        {
+            rebuild_required = true;
+            build();
+        }
+    }
+}
+    
+bool FGClouds::get_3dClouds() const {
+    return clouds_3d_enabled;
+}
+  
