@@ -208,6 +208,12 @@ static void fgMainLoop( void ) {
         = fgGetNode("/position/latitude-deg");
     static SGConstPropertyNode_ptr altitude
         = fgGetNode("/position/altitude-ft");
+    static SGConstPropertyNode_ptr vn_fps
+        = fgGetNode("/velocities/speed-north-fps");
+    static SGConstPropertyNode_ptr ve_fps
+        = fgGetNode("/velocities/speed-east-fps");
+    static SGConstPropertyNode_ptr vd_fps
+        = fgGetNode("/velocities/speed-down-fps");
     static SGConstPropertyNode_ptr clock_freeze
         = fgGetNode("/sim/freeze/clock", true);
     static SGConstPropertyNode_ptr cur_time_override
@@ -543,7 +549,7 @@ static void fgMainLoop( void ) {
     // aircraft is the source of all sounds and that all sounds are
     // positioned in the aircraft base
 
-    static sgdVec3 last_visitor_pos = {0, 0, 0};
+    static sgdVec3 last_listener_pos = {0, 0, 0};
     static sgdVec3 last_model_pos = {0, 0, 0};
 
     // get the orientation
@@ -574,20 +580,28 @@ static void fgMainLoop( void ) {
     acmodel_loc = (SGLocation *)globals->
         get_aircraft_model()->get3DModel()->getSGLocation();
 
-    // calculate speed of visitor and model
+    // Calculate speed of listener and model.  This code assumes the
+    // listener is either tracking the model at the same speed or
+    // stationary.
+
     sgVec3 listener_vel, model_vel;
     SGVec3d SGV3d_help;
     sgdVec3 sgdv3_help;
     sgdVec3 sgdv3_null = {0, 0, 0};
 
-    sgdSubVec3( sgdv3_help,
-                last_visitor_pos, (double *)&current_view->get_view_pos());
-    sgdAddVec3( last_visitor_pos, sgdv3_null, (double *)&current_view->get_view_pos());
-    SGV3d_help = model_or.rotateBack(
-        surf_or.rotateBack(SGVec3d(sgdv3_help[0],
-        sgdv3_help[1], sgdv3_help[2])));
-    sgSetVec3( listener_vel, SGV3d_help[0], SGV3d_help[1], SGV3d_help[2]);
+    // the aircraft velocity as reported by the fdm (this will not
+    // vary or be affected by frame rates or timing jitter.)
+    sgVec3 fdm_vel_vec;
+    sgSetVec3( fdm_vel_vec,
+	       vn_fps->getDoubleValue() * SG_FEET_TO_METER,
+	       ve_fps->getDoubleValue() * SG_FEET_TO_METER,
+	       vd_fps->getDoubleValue() * SG_FEET_TO_METER );
+    double fdm_vel = sgLengthVec3(fdm_vel_vec);
 
+    // compute the aircraft velocity vector and scale it to the length
+    // of the fdm velocity vector.  This gives us a vector in the
+    // proper coordinate system, but also with the proper time
+    // invariant magnitude.
     sgdSubVec3( sgdv3_help,
                 last_model_pos, acmodel_loc->get_absolute_view_pos());
     sgdAddVec3( last_model_pos, sgdv3_null, acmodel_loc->get_absolute_view_pos());
@@ -596,24 +610,26 @@ static void fgMainLoop( void ) {
         sgdv3_help[1], sgdv3_help[2])));
     sgSetVec3( model_vel, SGV3d_help[0], SGV3d_help[1], SGV3d_help[2]);
 
-    if (delta_time_sec > 0) {
-        sgScaleVec3( model_vel, 1 / delta_time_sec );
-        sgScaleVec3( listener_vel, 1 / delta_time_sec );
+    float vel = sgLengthVec3(model_vel);
+    if ( fabs(vel) > 0.0001 ) {
+	if ( fabs(fdm_vel / vel) > 0.0001 ) {
+	    sgScaleVec3( model_vel, fdm_vel / vel );
+	}
     }
 
-    // checking, if the listener pos has moved suddenly
-    if (sgLengthVec3(listener_vel) > 1000)
-    {
-        // check if the relative speed model vs listener has moved suddenly, too
-        sgVec3 delta_vel;
-        sgSubVec3(delta_vel, listener_vel, model_vel );
-        if (sgLengthVec3(delta_vel) > 1000)
-            sgSetVec3(listener_vel, model_vel[0], model_vel[1], model_vel[2] ); // a sane value
-        else
-            globals->get_soundmgr()->set_listener_vel( listener_vel );
+    // check for moving or stationary listener (view position)
+    sgdSubVec3( sgdv3_help,
+                last_listener_pos, (double *)&current_view->get_view_pos());
+    sgdAddVec3( last_listener_pos,
+		sgdv3_null, (double *)&current_view->get_view_pos());
+
+    if ( sgdLengthVec3(sgdv3_help) > 0.00001 ) {
+	sgCopyVec3( listener_vel, model_vel );
+    } else {
+	sgSetVec3( listener_vel, 0.0, 0.0, 0.0 );
     }
-    else
-        globals->get_soundmgr()->set_listener_vel( listener_vel );
+
+    globals->get_soundmgr()->set_listener_vel( listener_vel );
 
     // set positional offset for sources
     sgdVec3 dsource_pos_offset;
