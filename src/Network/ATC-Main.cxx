@@ -97,7 +97,7 @@ void FGATCMain::init_config() {
         atcsim_config.append( ".fgfs-atc610x.xml" );
 	try {
 	  SG_LOG(SG_GENERAL, SG_ALERT,
-		 "Warning: loading depricated config file: " <<
+		 "Warning: loading deprecated config file: " <<
 		 atcsim_config.str() );
 	  readProperties( atcsim_config.str(), globals->get_props() );
 	} catch (const sg_exception &e) {
