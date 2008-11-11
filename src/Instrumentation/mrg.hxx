@@ -15,7 +15,7 @@
 
 
 /**
- * Model a vacuum-powered attitude indicator.
+ * Model an electrically-powered master reference gyro.
  *
  * Input properties:
  *
@@ -64,6 +64,7 @@ private:
     double _last_roll_rate;
     double _last_pitch_rate;
     double _last_yaw_rate;
+    double _last_g;
 
     Gyro _gyro;
 
@@ -74,6 +75,7 @@ private:
     SGPropertyNode_ptr _pitch_in_node;
     SGPropertyNode_ptr _roll_in_node;
     SGPropertyNode_ptr _hdg_in_node;
+    SGPropertyNode_ptr _hdg_mag_in_node;
     SGPropertyNode_ptr _g_in_node;
     SGPropertyNode_ptr _electrical_node;
     SGPropertyNode_ptr _pitch_int_node;
@@ -82,6 +84,7 @@ private:
     SGPropertyNode_ptr _pitch_out_node;
     SGPropertyNode_ptr _roll_out_node;
     SGPropertyNode_ptr _hdg_out_node;
+    SGPropertyNode_ptr _hdg_mag_out_node;
     SGPropertyNode_ptr _pitch_rate_out_node;
     SGPropertyNode_ptr _roll_rate_out_node;
     SGPropertyNode_ptr _hdg_rate_out_node;
@@ -90,6 +93,7 @@ private:
     SGPropertyNode_ptr _roll_rate_node;
     SGPropertyNode_ptr _pitch_rate_node;
     SGPropertyNode_ptr _responsiveness_node;
+    SGPropertyNode_ptr _hdg_input_source_node;
 };
 
 #endif // __INSTRUMENTS_MRG_HXX
