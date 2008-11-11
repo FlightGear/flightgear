@@ -21,6 +21,8 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	sglog().setLogLevels(SG_ALL, SG_ALERT);
+
 	int numfiles = 0;
 	string out;
 	SGPropertyNode root;
