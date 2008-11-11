@@ -713,6 +713,7 @@ AC_CONFIG_FILES([ \
 	utils/fgadmin/src/Makefile \
 	utils/js_server/Makefile \
 	utils/Modeller/Makefile \
+	utils/propmerge/Makefile \
 	utils/TerraSync/Makefile \
 	utils/xmlgrep/Makefile \
 ])
