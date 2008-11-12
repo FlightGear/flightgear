@@ -301,6 +301,26 @@ static naRef f_removeChildren(naContext c, naRef me, int argc, naRef* args)
     return result;
 }
 
+static naRef f_alias(naContext c, naRef me, int argc, naRef* args)
+{
+    NODEARG();
+    SGPropertyNode* al;
+    naRef prop = naVec_get(argv, 0);
+    if(naIsString(prop)) al = globals->get_props()->getNode(naStr_data(prop), true);
+    else if(naIsGhost(prop)) al = *(SGPropertyNode_ptr*)naGhost_ptr(prop);
+    else {
+        naRuntimeError(c, "props.alias() with bad argument");
+        return naNil();
+    }
+    return naNum((*node)->alias(al));
+}
+
+static naRef f_unalias(naContext c, naRef me, int argc, naRef* args)
+{
+    NODEARG();
+    return naNum((*node)->unalias());
+}
+
 static naRef f_getNode(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
@@ -346,6 +366,8 @@ static struct {
     { f_getChildren, "_getChildren" },
     { f_removeChild, "_removeChild" },
     { f_removeChildren, "_removeChildren" },
+    { f_alias, "_alias" },
+    { f_unalias, "_unalias" },
     { f_getNode, "_getNode" },
     { f_new, "_new" },
     { f_globals, "_globals" },
