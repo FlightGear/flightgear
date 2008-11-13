@@ -306,10 +306,12 @@ static naRef f_alias(naContext c, naRef me, int argc, naRef* args)
     NODEARG();
     SGPropertyNode* al;
     naRef prop = naVec_get(argv, 0);
-    if(naIsString(prop)) al = globals->get_props()->getNode(naStr_data(prop), true);
-    else if(naIsGhost(prop)) al = *(SGPropertyNode_ptr*)naGhost_ptr(prop);
-    else {
-        naRuntimeError(c, "props.alias() with bad argument");
+    try {
+        if(naIsString(prop)) al = globals->get_props()->getNode(naStr_data(prop), true);
+        else if(naIsGhost(prop)) al = *(SGPropertyNode_ptr*)naGhost_ptr(prop);
+        else throw string("props.alias() with bad argument");
+    } catch (const string& err) {
+        naRuntimeError(c, (char *)err.c_str());
         return naNil();
     }
     return naNum((*node)->alias(al));
