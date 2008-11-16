@@ -55,11 +55,14 @@ private:
   FGAirport *arrivalPort;
   string depId;
   string arrId;
+  string requiredAircraft;
   time_t departureTime;
   time_t arrivalTime;
   time_t repeatPeriod;
   int cruiseAltitude;
+  
   bool initialized;
+  bool available;
 
  
  
@@ -74,7 +77,8 @@ public:
 		     int cruiseAlt,
 		     const string& deptime,
 		     const string& arrtime,
-		     const string& rep
+		     const string& rep,
+                     const string& reqAC
 		     );
   ~FGScheduledFlight();
 
@@ -99,10 +103,18 @@ public:
 
   time_t processTimeString(const string& time);
   const string& getCallSign() {return callsign; };
+  const string& getRequirement() { return requiredAircraft; }
+
+  void lock() { available = false; };
+  void release() { available = true; };
+
+  bool isAvailable() { return available; };
 };
 
 typedef vector<FGScheduledFlight*>           FGScheduledFlightVec;
 typedef vector<FGScheduledFlight*>::iterator FGScheduledFlightVecIterator;
+
+typedef std::map < std::string, FGScheduledFlightVec > FGScheduledFlightMap;
 
 bool compareScheduledFlights(FGScheduledFlight *a, FGScheduledFlight *b);
 

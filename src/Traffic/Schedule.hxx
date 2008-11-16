@@ -29,19 +29,23 @@
 #ifndef _FGSCHEDULE_HXX_
 #define _FGSCHEDULE_HXX_
 
-#define TRAFFICTOAIDIST 150.0
+#define TRAFFICTOAIDISTTOSTART 150.0
+#define TRAFFICTOAIDISTTODIE   200.0
 
 
 class FGAISchedule
 {
  private:
   string modelPath;
+  string homePort;
   string livery;
   string registration;
   string airline;
   string acType;
   string m_class;
   string flightType;
+  string flightIdentifier;
+  string currentDestination;
   bool heavy;
   FGScheduledFlightVec flights;
   float lat;
@@ -50,14 +54,25 @@ class FGAISchedule
   double groundOffset;
   double distanceToUser;
   int AIManagerRef;
-  int score;
+  //int score;
   bool firstRun;
+  
 
 
  public:
   FGAISchedule();                                           // constructor
-  FGAISchedule(string, string, string, bool, string, string, string, string, double, double, 
-	       int, FGScheduledFlightVec);                  // construct & init
+  FGAISchedule(string model, 
+               string livery,
+               string homePort, 
+               string registration, 
+               string flightId,
+               bool   heavy, 
+               string acType, 
+               string airline, 
+               string m_class, 
+               string flight_type, 
+               double radius, 
+               double offset);                              // construct & init
   FGAISchedule(const FGAISchedule &other);                  // copy constructor
 
 
@@ -69,9 +84,10 @@ class FGAISchedule
 
   double getSpeed         ();
   //void setClosestDistanceToUser();
-  void next();   // forces the schedule to move on to the next flight.
+  bool next();   // forces the schedule to move on to the next flight.
 
-  time_t      getDepartureTime    () { return (*flights.begin())->getDepartureTime   (); };
+  // TODO: rework these four functions
+   time_t      getDepartureTime    () { return (*flights.begin())->getDepartureTime   (); };
   FGAirport * getDepartureAirport () { return (*flights.begin())->getDepartureAirport(); };
   FGAirport * getArrivalAirport   () { return (*flights.begin())->getArrivalAirport  (); };
   int         getCruiseAlt        () { return (*flights.begin())->getCruiseAlt       (); };
@@ -84,9 +100,10 @@ class FGAISchedule
   const string& getRegistration   () { return registration;};
   const string& getFlightRules    () { return (*flights.begin())->getFlightRules (); };
   bool getHeavy                   () { return heavy; };
+  FGScheduledFlight*findAvailableFlight (const string &currentDestination, const string &req);
   // used to sort in decending order of score: I've probably found a better way to
   // decending order sorting, but still need to test that.
-  bool operator< (const FGAISchedule &other) const { return (score > other.score); };
+  //bool operator< (const FGAISchedule &other) const { return (score > other.score); };
   //void * getAiRef                 () { return AIManagerRef; };
   //FGAISchedule* getAddress        () { return this;};
 

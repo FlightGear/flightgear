@@ -74,9 +74,10 @@ FGAISchedule::FGAISchedule()
   radius = 0;
   groundOffset = 0;
   distanceToUser = 0;
-  score = 0;
+  //score = 0;
 }
 
+/*
 FGAISchedule::FGAISchedule(string    mdl, 
 			   string    liv, 
 			   string    reg, 
@@ -88,59 +89,77 @@ FGAISchedule::FGAISchedule(string    mdl,
 			   double rad,
 			   double grnd,
 			   int    scre,
-			   FGScheduledFlightVec flt)
+			   FGScheduledFlightVec flt)*/
+FGAISchedule::FGAISchedule(string model, 
+                           string lvry,
+                           string port, 
+                           string reg, 
+                           string flightId,
+                           bool   hvy, 
+                           string act, 
+                           string arln, 
+                           string mclass, 
+                           string fltpe, 
+                           double rad, 
+                           double grnd)
 {
-  modelPath    = mdl; 
-  livery       = liv; 
-  registration = reg;
-  acType       = act;
-  airline      = arln;
-  m_class      = mclass;
-  flightType   = fltpe;
-  lat = 0;
-  lon = 0;
-  radius       = rad;
-  groundOffset = grnd;
-  distanceToUser = 0;
-  heavy = hvy;
-  for (FGScheduledFlightVecIterator i = flt.begin();
+  modelPath        = model; 
+  livery           = lvry; 
+  homePort         = port;
+  registration     = reg;
+  flightIdentifier = flightId;
+  acType           = act;
+  airline          = arln;
+  m_class          = mclass;
+  flightType       = fltpe;
+  lat              = 0;
+  lon              = 0;
+  radius           = rad;
+  groundOffset     = grnd;
+  distanceToUser   = 0;
+  heavy            = hvy;
+  /*for (FGScheduledFlightVecIterator i = flt.begin();
        i != flt.end();
        i++)
-    flights.push_back(new FGScheduledFlight((*(*i))));
-  AIManagerRef = 0;
-  score    = scre;
-  firstRun = true;
+    flights.push_back(new FGScheduledFlight((*(*i))));*/
+  AIManagerRef     = 0;
+  //score    = scre;
+  firstRun         = true;
 }
 
 FGAISchedule::FGAISchedule(const FGAISchedule &other)
 {
-  modelPath    = other.modelPath;
-  livery       = other.livery;
-  registration = other.registration;
-  heavy        = other.heavy;
-  flights      = other.flights;
-  lat          = other.lat;
-  lon          = other.lon;
-  AIManagerRef = other.AIManagerRef;
-  acType       = other.acType;
-  airline      = other.airline;
-  m_class      = other.m_class;
-  firstRun     = other.firstRun;
-  radius       = other.radius;
-  groundOffset = other.groundOffset;
-  flightType   = other.flightType;
-  score        = other.score;
-  distanceToUser = other.distanceToUser;
+  modelPath          = other.modelPath;
+  homePort           = other.homePort;
+  livery             = other.livery;
+  registration       = other.registration;
+  heavy              = other.heavy;
+  flightIdentifier   = other.flightIdentifier;
+  flights            = other.flights;
+  lat                = other.lat;
+  lon                = other.lon;
+  AIManagerRef       = other.AIManagerRef;
+  acType             = other.acType;
+  airline            = other.airline;
+  m_class            = other.m_class;
+  firstRun           = other.firstRun;
+  radius             = other.radius;
+  groundOffset       = other.groundOffset;
+  flightType         = other.flightType;
+  //score            = other.score;
+  distanceToUser     = other.distanceToUser;
+  currentDestination = other.currentDestination;
+  firstRun           = other.firstRun;
 }
 
 
 FGAISchedule::~FGAISchedule()
 {
-  for (FGScheduledFlightVecIterator flt = flights.begin(); flt != flights.end(); flt++)
+/*  for (FGScheduledFlightVecIterator flt = flights.begin(); flt != flights.end(); flt++)
     {
       delete (*flt);
     }
-  flights.clear();
+  flights.clear();*/
 } 
 
 bool FGAISchedule::init()
@@ -153,14 +172,14 @@ bool FGAISchedule::init()
   //sgTimeFormatTime(&targetTimeDate, buffer);
   //cout << "Scheduled Time " << buffer << endl; 
   //cout << "Time :" << time(NULL) << " SGTime : " << sgTimeGetGMT(temp) << endl;
-  for (FGScheduledFlightVecIterator i = flights.begin(); 
+  /*for (FGScheduledFlightVecIterator i = flights.begin(); 
        i != flights.end(); 
        i++)
     {
       //i->adjustTime(now);
       if (!((*i)->initializeAirports()))
 	return false;
-    } 
+    } */
   //sort(flights.begin(), flights.end());
   // Since time isn't initialized yet when this function is called,
   // Find the closest possible airport.
@@ -170,7 +189,7 @@ bool FGAISchedule::init()
 }
 
 bool FGAISchedule::update(time_t now)
-{
+{ 
   FGAirport *dep;
   FGAirport *arr;
   double angle;
@@ -194,40 +213,51 @@ bool FGAISchedule::update(time_t now)
     return true;
   
   aimgr = (FGAIManager *) globals-> get_subsystem("ai_model");  
-  // Before the flight status of this traffic entity is updated 
-  // for the first time, we need to roll back it's flight schedule so
-  // so that all the flights are centered around this simulated week's time
-  // table. This is to avoid the situation where the first scheduled flight is
-  // in the future, causing the traffic manager to not generate traffic until
-  // simulated time has caught up with the real world time at initialization.
-  // This is to counter a more general initialization bug, caused by the fact
-  // that warp is not yet set when the  schedule is initialized. This is
-  // especially a problem when using a negative time offset.
-  // i.e let's say we specify FlightGear to run with --time-offset=-24:00:00. 
-  // Then the schedule will initialize using today, but we will fly yesterday.
-  // Thus, it would take a whole day of simulation before the traffic manager
-  // finally kicks in. 
-  if (firstRun)
-    {
-      if (init() == false)
-	AIManagerRef = BOGUS;
-	
-      for (FGScheduledFlightVecIterator i = flights.begin(); 
-  	   i != flights.end(); 
-  	   i++)
-  	{
-  	  (*i)->adjustTime(now);
-  	}
-      if (fgGetBool("/sim/traffic-manager/instantaneous-action") == true)
-	deptime = now + rand() % 300; // Wait up to 5 minutes until traffic starts moving to prevent too many aircraft 
-                                      // from cluttering the gate areas.
-      firstRun = false;
+    // Out-of-work aircraft seeks employment. Willing to work irregular hours ...
+    //cerr << "About to find a flight " << endl;
+    if (flights.empty()) {
+        //execute this loop at least once. 
+        SG_LOG(SG_GENERAL, SG_INFO, "Scheduling for : " << modelPath << " " <<  registration << " " << homePort);
+        FGScheduledFlight *flight = 0;
+         do {
+            flight = findAvailableFlight(currentDestination, flightIdentifier);
+            if (flight) {
+                currentDestination = flight->getArrivalAirport()->getId();
+                time_t arr, dep;
+                dep = flight->getDepartureTime();
+                arr = flight->getArrivalTime();
+                string depT = asctime(gmtime(&dep));
+                string arrT = asctime(gmtime(&arr));
+
+                depT = depT.substr(0,24);
+                arrT = arrT.substr(0,24);
+                SG_LOG(SG_GENERAL, SG_INFO, "  " << flight->getCallSign() << ":" 
+                                         << "  " << flight->getDepartureAirport()->getId() << ":"
+                                         << "  " << depT << ":"
+                                         << " \"" << flight->getArrivalAirport()->getId() << "\"" << ":"
+                                         << "  " << arrT << ":");
+            flights.push_back(flight);
+            }
+        } while ((currentDestination != homePort) && (flight != 0));
+        SG_LOG(SG_GENERAL, SG_INFO, cerr << " Done " << endl);
     }
-  
+    //cerr << " Done " << endl;
+   // No flights available for this aircraft
+  if (flights.size() == 0) {
+      return false;
+  }
   // Sort all the scheduled flights according to scheduled departure time.
   // Because this is done at every update, we only need to check the status
   // of the first listed flight. 
-  sort(flights.begin(), flights.end(), compareScheduledFlights);
+  //sort(flights.begin(), flights.end(), compareScheduledFlights);
+ if (firstRun) {
+     if (fgGetBool("/sim/traffic-manager/instantaneous-action") == true) {
+         deptime = now + rand() % 300; // Wait up to 5 minutes until traffic starts moving to prevent too many aircraft 
+                                   // from cluttering the gate areas.
+         cerr << "Scheduling " << registration << " for instantaneous action flight " << endl;
+     }
+     firstRun = false;
+  }
   if (!deptime)
     deptime = (*flights.begin())->getDepartureTime();
   FGScheduledFlightVecIterator i = flights.begin();
@@ -251,7 +281,13 @@ bool FGAISchedule::update(time_t now)
       if (((*i)->getDepartureTime() < now) && ((*i)->getArrivalTime() < now))
 	{
           SG_LOG (SG_GENERAL, SG_DEBUG, "Traffic Manager:      Flight is in the Past");
+          //cerr << modelPath << " " <<  registration << ": Flights from the past belong to the past :-)" << endl;
+          //exit(1);
+          // Don't just update: check whether we need to load a new leg. etc.
+          // This update occurs for distant aircraft, so we can update the current leg
+          // and detach it from the current list of aircraft. 
 	  (*i)->update();
+          i = flights.erase(i);
 	  return true;
 	}
 
@@ -357,7 +393,7 @@ bool FGAISchedule::update(time_t now)
 	  SG_LOG (SG_GENERAL, SG_DEBUG, "Traffic manager: " << registration << " is scheduled for a flight from " 
 	     << dep->getId() << " to " << arr->getId() << ". Current distance to user: " 
              << distanceToUser*SG_METER_TO_NM);
-	  if ((distanceToUser*SG_METER_TO_NM) < TRAFFICTOAIDIST)
+	  if ((distanceToUser*SG_METER_TO_NM) < TRAFFICTOAIDISTTOSTART)
 	    {
 	      string flightPlanName = dep->getId() + string("-") + arr->getId() + 
 		string(".xml");
@@ -441,10 +477,102 @@ bool FGAISchedule::update(time_t now)
 }
 
 
-void FGAISchedule::next()
+bool FGAISchedule::next()
 {
-  (*flights.begin())->update();
-  sort(flights.begin(), flights.end(), compareScheduledFlights);
+  FGScheduledFlightVecIterator i = flights.begin();
+  (*i)->release();
+  //FIXME: remove first entry, 
+  // load new flights until back at home airport
+  // Lock loaded flights
+  //sort(flights.begin(), flights.end(), compareScheduledFlights);
+  // until that time
+  i = flights.erase(i);
+  //cerr << "Next: scheduling for : " << modelPath << " " <<  registration << endl;
+  FGScheduledFlight *flight = findAvailableFlight(currentDestination, flightIdentifier);
+  if (flight) {
+      currentDestination = flight->getArrivalAirport()->getId();
+      time_t arr, dep;
+      dep = flight->getDepartureTime();
+      arr = flight->getArrivalTime();
+      string depT = asctime(gmtime(&dep));
+      string arrT = asctime(gmtime(&arr));
+
+      depT = depT.substr(0,24);
+      arrT = arrT.substr(0,24);
+      //cerr << "  " << flight->getCallSign() << ":" 
+      //     << "  " << flight->getDepartureAirport()->getId() << ":"
+      //     << "  " << depT << ":"
+      //     << " \"" << flight->getArrivalAirport()->getId() << "\"" << ":"
+      //     << "  " << arrT << ":" << endl;
+
+       flights.push_back(flight);
+       return true;
+  } else {
+       return false;
+  }
+  //cerr << "FGAISchedule :: next needs updating" << endl;
+  //exit(1);
+}
+
+FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDestination,
+                                                      const string &req)
+{
+    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+
+    FGTrafficManager *tmgr = (FGTrafficManager *) globals->get_subsystem("Traffic Manager");
+    FGScheduledFlightVecIterator fltBegin, fltEnd;
+    fltBegin = tmgr->getFirstFlight(req);
+    fltEnd   = tmgr->getLastFlight(req);
+
+
+     //cerr << "Finding available flight " << endl;
+     // For Now:
+     // Traverse every registered flight
+     if (fltBegin == fltEnd) {
+          //cerr << "No Flights Scheduled for " << req << endl;
+     }
+     int counter = 0;
+     for (FGScheduledFlightVecIterator i = fltBegin; i != fltEnd; i++) {
+          (*i)->adjustTime(now);
+           //sort(fltBegin, fltEnd, compareScheduledFlights);
+           //cerr << counter++ << endl;
+     }
+     sort(fltBegin, fltEnd, compareScheduledFlights);
+     for (FGScheduledFlightVecIterator i = fltBegin; i != fltEnd; i++) {
+          //bool valid = true;
+          counter++;
+          if (!(*i)->isAvailable()) {
+               //cerr << (*i)->getCallSign() << "is no longer available" << endl;
+               continue;
+          }
+          if (!((*i)->getRequirement() == req)) {
+               continue;
+          }
+          if (!(((*i)->getArrivalAirport()) && ((*i)->getDepartureAirport()))) {
+              continue;
+          }
+          if (!(currentDestination.empty())) {
+              if (currentDestination != (*i)->getDepartureAirport()->getId()) {
+                   //cerr << (*i)->getCallSign() << "Doesn't match destination" << endl;
+                   //cerr << "Current Destination " << currentDestination << "Doesnt match flight's " <<
+                   //          (*i)->getArrivalAirport()->getId() << endl;
+                   continue;
+              }
+          }
+          //TODO: check time
+          // So, if we actually get here, we have a winner
+          //cerr << "found flight: " << req << " : " << currentDestination << " : " <<       
+          //         (*i)->getArrivalAirport()->getId() << endl;
+          (*i)->lock();
+          return (*i);
+     }
+     // matches req?
+     // if currentDestination has a value, does it match departure of next flight?
+     // is departure time later than planned arrival?
+     // is departure port valid?
+     // is arrival port valid?
+     //cerr << "Ack no flight found: " << endl;
+     return 0;
 }
 
 double FGAISchedule::getSpeed()
@@ -472,12 +600,20 @@ double FGAISchedule::getSpeed()
   dest.CourseAndDistance(curr, &courseToDest, &distanceToDest);
   speed =  (distanceToDest*SG_METER_TO_NM) / 
     ((double) remainingTimeEnroute/3600.0);
+  if (speed < 300) {
+     //cerr << "Warning : calculated speed for " << (*i)->getCallSign() << " is low : " << speed << " clamping to 300" << endl;
+     speed = 300.0;
+  }
+  if (speed > 500) {
+     //cerr << "Warning : calculated speed for " << (*i)->getCallSign() << " is high : " << speed << " clamping to 300" << endl;
+     speed = 500.0;
+  }
   return speed;
 }
 
 bool compareSchedules(FGAISchedule*a, FGAISchedule*b)
 { 
-  return (*a) < (*b); 
+  //return (*a) < (*b); 
 } 
 
 

@@ -79,21 +79,25 @@
 
 FGScheduledFlight::FGScheduledFlight()
 {
+   initialized = false;
+   available = true;
 }
   
 FGScheduledFlight::FGScheduledFlight(const FGScheduledFlight &other)
 {
-  callsign        = other.callsign;
-  fltRules        = other.fltRules;
-  departurePort   = other.departurePort;
-  depId           = other.depId;
-  arrId           = other.arrId;
-  departureTime   = other.departureTime;
-  cruiseAltitude  = other.cruiseAltitude;
-  arrivalPort     = other.arrivalPort;
-  arrivalTime     = other.arrivalTime;
-  repeatPeriod    = other.repeatPeriod;
-  initialized     = other.initialized;
+  callsign          = other.callsign;
+  fltRules          = other.fltRules;
+  departurePort     = other.departurePort;
+  depId             = other.depId;
+  arrId             = other.arrId;
+  departureTime     = other.departureTime;
+  cruiseAltitude    = other.cruiseAltitude;
+  arrivalPort       = other.arrivalPort;
+  arrivalTime       = other.arrivalTime;
+  repeatPeriod      = other.repeatPeriod;
+  initialized       = other.initialized;
+  requiredAircraft  = other.requiredAircraft;
+  available         = other.available;
 }
 
 FGScheduledFlight::FGScheduledFlight(const string& cs,
@@ -103,7 +107,8 @@ FGScheduledFlight::FGScheduledFlight(const string& cs,
 		   int cruiseAlt,
 		   const string& deptime,
 		   const string& arrtime,
-		   const string& rep)
+		   const string& rep,
+                   const string& reqAC)
 {
   callsign          = cs;
   fltRules          = fr;
@@ -115,6 +120,7 @@ FGScheduledFlight::FGScheduledFlight(const string& cs,
   //departureTime     = processTimeString(deptime);
   //arrivalTime       = processTimeString(arrtime);
   cruiseAltitude    = cruiseAlt;
+  requiredAircraft  = reqAC;
 
   // Process the repeat period string
   if (rep.find("WEEK",0) != string::npos)
@@ -136,11 +142,13 @@ FGScheduledFlight::FGScheduledFlight(const string& cs,
   // arrival times. 
   departureTime = processTimeString(deptime);
   arrivalTime   = processTimeString(arrtime);
+  //departureTime += rand() % 300; // Make sure departure times are not limited to 5 minute increments.
   if (departureTime > arrivalTime)
     {
       departureTime -= repeatPeriod;
     }
   initialized = false;
+  available   = true;
 }
 
 

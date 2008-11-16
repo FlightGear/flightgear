@@ -22,6 +22,25 @@
 /**************************************************************************
  * This file contains the class definitions for a (Top Level) traffic
  * manager for FlightGear. 
+ * 
+ * This is traffic manager version II. The major difference from version 
+ * I is that the Flight Schedules are decoupled from the AIAircraft
+ * entities. This allows for a much greater flexibility in setting up
+ * Irregular schedules. Traffic Manager II also makes no longer use of .xml
+ * based configuration files. 
+ * 
+ * Here is a step plan to achieve the goal of creating Traffic Manager II
+ * 
+ * 1) Read aircraft data from a simple text file, like the one provided by
+ *    Gabor Toth
+ * 2) Create a new database structure of SchedFlights. This new database 
+ *    should not be part of the Schedule class, but of TrafficManager itself
+ * 3) Each aircraft should have a list of possible Flights it can operate
+ *    (i.e. airline and AC type match). 
+ * 4) Aircraft processing proceeds as current. During initialization, we seek 
+ *    the most urgent flight that needs to be operated 
+ * 5) Modify the getNextLeg function so that the next flight is loaded smoothly.
+ 
  **************************************************************************/
 
 #ifndef _TRAFFICMGR_HXX_
@@ -29,6 +48,7 @@
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/xml/easyxml.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include "SchedFlight.hxx"
 #include "Schedule.hxx"
@@ -47,15 +67,18 @@ private:
 
   string mdl, livery, registration, callsign, fltrules, 
     port, timeString, departurePort, departureTime, arrivalPort, arrivalTime,
-    repeat, acType, airline, m_class, flighttype;
+    repeat, acType, airline, m_class, flighttype, requiredAircraft, homePort;
   int cruiseAlt;
-  int score, runCount;
+  int score, runCount, acCounter;
   double radius, offset;
   bool heavy;
 
   IdList releaseList;
     
-  FGScheduledFlightVec flights;
+  FGScheduledFlightMap flights;
+
+  //void readTimeTableFromFile(SGPath infilename);
+  //void Tokenize(const string& str, vector<string>& tokens, const string& delimiters = " ");
 
 public:
   FGTrafficManager();
@@ -64,6 +87,9 @@ public:
   void update(double time);
   void release(int ref);
   bool isReleased(int id);
+
+  FGScheduledFlightVecIterator getFirstFlight(const string &ref) { return flights[ref].begin(); }
+  FGScheduledFlightVecIterator getLastFlight(const string &ref) { return flights[ref].end(); }
 
   // Some overloaded virtual XMLVisitor members
   virtual void startXML (); 
