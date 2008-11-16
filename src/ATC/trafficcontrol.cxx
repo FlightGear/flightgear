@@ -1,4 +1,4 @@
-/// trafficrecord.cxx - Implementation of AIModels ATC code.
+// trafficrecord.cxx - Implementation of AIModels ATC code.
 //
 // Written by Durk Talsma, started September 2006.
 //
@@ -401,7 +401,7 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
     double onBoardRadioFreq1 = fgGetDouble("/instrumentation/comm[1]/frequencies/selected-mhz");
     int onBoardRadioFreqI0 = (int) floor(onBoardRadioFreq0 * 100 + 0.5);
     int onBoardRadioFreqI1 = (int) floor(onBoardRadioFreq1 * 100 + 0.5);
-    //cerr << "Using " << currFreqI << " and " << commFreq << endl;
+    //cerr << "Using " << onBoardRadioFreq0 << ", " << onBoardRadioFreq1 << " and " << stationFreq << endl;
 
     // Display ATC message only when one of the radios is tuned
     // the relevant frequency.
@@ -608,7 +608,8 @@ FGATCInstruction FGTowerController::getInstruction(int id)
 FGStartupController::FGStartupController() :
   FGATCController()
 {
-    available = true;
+    available        = false;
+    lastTransmission = 0;
 }
 
 void FGStartupController::announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentPosition,
@@ -749,6 +750,9 @@ void FGStartupController::update(int id, double lat, double lon, double heading,
     int state = i->getState();
     time_t startTime = i->getAircraft()->getTrafficRef()->getDepartureTime();
     time_t now       = time(NULL) + fgGetLong("/sim/time/warp");
+    //cerr << i->getAircraft()->getTrafficRef()->getCallSign() 
+    //     << " is scheduled to depart in " << startTime-now << " seconds. Available = " << available
+    //     << " at parking " << getGateName(i->getAircraft()) << endl;
 
     if ((now - lastTransmission) > 3 + (rand() % 15)) {
         available = true;
@@ -756,6 +760,7 @@ void FGStartupController::update(int id, double lat, double lon, double heading,
 
     if ((state == 0) && available) {
         if (now > startTime) {
+             //cerr << "Transmitting startup msg" << endl;
              transmit(&(*i), MSG_ANNOUNCE_ENGINE_START, ATC_AIR_TO_GROUND);
              i->updateState();
              lastTransmission = now;
