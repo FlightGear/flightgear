@@ -610,12 +610,12 @@ double FGAISchedule::getSpeed()
   }
   return speed;
 }
-
+/*
 bool compareSchedules(FGAISchedule*a, FGAISchedule*b)
 { 
   //return (*a) < (*b); 
 } 
-
+*/
 
 // void FGAISchedule::setClosestDistanceToUser()
 // {
