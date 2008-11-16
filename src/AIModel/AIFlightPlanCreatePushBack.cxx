@@ -141,6 +141,9 @@ void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep,
               // some special considerations for the last point:
               wpt->name = string("PushBackPoint");
               wpt->speed = 15;
+              //for (wpt_vector_iterator i = waypoints.begin(); i != waypoints.end(); i++) {
+              //    cerr << "Waypoint Name: " << (*i)->name << endl;
+              //}
         } else {
            //cerr << "Creating direct forward departure route fragment" << endl;
            double lat2, lon2, az2;

@@ -20,6 +20,7 @@
 
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Main/globals.hxx>
 

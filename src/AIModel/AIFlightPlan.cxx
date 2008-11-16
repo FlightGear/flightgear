@@ -381,6 +381,10 @@ void FGAIFlightPlan::setLeadDistance(double speed, double bearing,
   // At a turn rate of 30 degrees per second, it takes 12 seconds to do a full 360 degree turn
   // So, to get an estimate of the turn radius, calculate the cicumference of the circle
   // we travel on. Get the turn radius by dividing by PI (*2).
+  if (speed < 0.5) {
+        lead_distance = 0.5;
+        return;
+  }
   if (speed < 25) {
        turn_radius = ((360/30)*15) / (2*M_PI);
   } else 

@@ -64,7 +64,7 @@ public:
     
     void getGroundElev(double dt); //TODO these 3 really need to be public?
     void doGroundAltitude();
-    void loadNextLeg  ();
+    bool loadNextLeg  ();
 
     void setAcType(const string& ac) { acType = ac; };
     void setCompany(const string& comp) { company = comp;};

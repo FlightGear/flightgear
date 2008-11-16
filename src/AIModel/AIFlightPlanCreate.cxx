@@ -577,7 +577,7 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
   wpt->latitude  = lat2;
   wpt->longitude = lon2;
   wpt->altitude  = apt->getElevation()+5000;
-  wpt->speed     = speed; 
+  wpt->speed     = speed;
   wpt->crossat   = -10000;
   wpt->gear_down = true;
   wpt->flaps_down= true;
@@ -585,6 +585,11 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
   wpt->on_ground = false;
   wpt->routeIndex = 0;
   waypoints.push_back(wpt);  
+  //cerr << "Created takeoff plan : " << endl;
+  //for (wpt_vector_iterator i = waypoints.begin(); i != waypoints.end(); i++) {
+  //     cerr << "Waypoint Name: " << (*i)->name << ". Speed = " << (*i)->speed << endl;
+  //}
+
 
  //  geo_direct_wgs_84 ( 0, rwy->latitude(), rwy->longitude(), heading, 
 //   100000,

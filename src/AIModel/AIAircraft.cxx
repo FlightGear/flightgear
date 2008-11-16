@@ -268,7 +268,10 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         //TODO let the fp handle this (loading of next leg)
         fp->IncrementWaypoint((bool) trafficRef);
         if (!(fp->getNextWaypoint()) && trafficRef)
-            loadNextLeg();
+            if (!loadNextLeg()) {
+                setDie(true);
+                return;
+            }
 
         prev = fp->getPreviousWaypoint();
         curr = fp->getCurrentWaypoint();
@@ -323,11 +326,13 @@ bool FGAIAircraft::_getGearDown() const {
 }
 
 
-void FGAIAircraft::loadNextLeg() {
+bool FGAIAircraft::loadNextLeg() {
 
     int leg;
     if ((leg = fp->getLeg())  == 10) {
-        trafficRef->next();
+        if (!trafficRef->next()) {
+            return false;
+        }
         setCallSign(trafficRef->getCallSign());
 	//props->setStringValue("callsign", callsign.c_str());
         leg = 1;
@@ -354,7 +359,9 @@ void FGAIAircraft::loadNextLeg() {
                     trafficRef->getFlightType(),
                     acType,
                     company);
+       //cerr << "created  leg " << leg << " for " << trafficRef->getCallSign() << endl;
     }
+    return true;
 }
 
 
@@ -535,7 +542,10 @@ void FGAIAircraft::handleFirstWaypoint() {
     //TODO fp should handle this
     fp->IncrementWaypoint(eraseWaypoints);
     if (!(fp->getNextWaypoint()) && trafficRef)
-        loadNextLeg();
+        if (!loadNextLeg()) {
+            setDie(true);
+            return;
+        }
 
     prev = fp->getPreviousWaypoint();   //first waypoint
     curr = fp->getCurrentWaypoint();    //second waypoint
@@ -616,7 +626,11 @@ bool FGAIAircraft::leadPointReached(FGAIFlightPlan::waypoint* curr) {
 
     //prev_dist_to_go = dist_to_go;
     //if (dist_to_go < lead_dist)
-    //    cerr << trafficRef->getCallSign() << " Distance : " << dist_to_go << ": Lead distance " << lead_dist << " " << curr->name << endl;
+    //     cerr << trafficRef->getCallSign() << " Distance : " 
+    //          << dist_to_go << ": Lead distance " 
+    //          << lead_dist << " " << curr->name 
+    //          << " Ground target speed " << groundTargetSpeed << endl;
+         
     return dist_to_go < lead_dist;
 }
 
@@ -631,7 +645,7 @@ bool FGAIAircraft::aiTrafficVisible() {
 
     user.CourseAndDistance(current, &course, &distance);
 
-    return ((distance * SG_METER_TO_NM) <= TRAFFICTOAIDIST);
+    return ((distance * SG_METER_TO_NM) <= TRAFFICTOAIDISTTODIE);
 }
 
 
@@ -654,6 +668,7 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIFlightPlan::waypoint* prev, time_t
 
     // This waypoint marks the fact that the aircraft has passed the initial taxi
     // departure waypoint, so it can release the parking.
+    //cerr << trafficRef->getCallSign() << " has passed waypoint " << prev->name << " at speed " << speed << endl;
     if (prev->name == "PushBackPoint") {
         dep->getDynamics()->releaseParking(fp->getGate());
         time_t holdUntil = now + 120;
