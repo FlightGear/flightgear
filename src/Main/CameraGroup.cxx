@@ -446,6 +446,18 @@ void CameraGroup::setCameraCullMasks(Node::NodeMask nm)
     }
 }
 
+void CameraGroup::resized()
+{
+    for (CameraIterator i = camerasBegin(), e = camerasEnd(); i != e; ++i) {
+        CameraInfo *info = i->get();
+        const Viewport* viewport = info->camera->getViewport();
+        info->x = viewport->x();
+        info->y = viewport->y();
+        info->width = viewport->width();
+        info->height = viewport->height();
+    }
+}
+
 Camera* getGUICamera(CameraGroup* cgroup)
 {
     CameraGroup::CameraIterator end = cgroup->camerasEnd();

@@ -171,7 +171,9 @@ public:
     /** Set the cull mask on all non-GUI cameras
      */
     void setCameraCullMasks(osg::Node::NodeMask nm);
-
+    /** Update camera properties after a resize event.
+     */
+    void resized();
 protected:
     CameraList _cameras;
     osg::ref_ptr<osgViewer::Viewer> _viewer;

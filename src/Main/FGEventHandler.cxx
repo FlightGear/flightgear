@@ -217,6 +217,7 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
             (*mouseMotionHandler)(x, y);
         return true;
     case osgGA::GUIEventAdapter::RESIZE:
+        CameraGroup::getDefault()->resized();
         if (resizable && windowResizeHandler)
             (*windowResizeHandler)(ea.getWindowWidth(), ea.getWindowHeight());
         return true;
