@@ -29,9 +29,12 @@
 
 #include <stdlib.h>
 
+#include <boost/foreach.hpp>
+
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <osg/Camera>
 #include <osg/GraphicsContext>
@@ -52,6 +55,7 @@
 #include "globals.hxx"
 #include "renderer.hxx"
 #include "CameraGroup.hxx"
+#include "FGEventHandler.hxx"
 #include "WindowBuilder.hxx"
 #include "WindowSystemAdapter.hxx"
 
@@ -72,55 +76,6 @@ using namespace osg;
 
 static osg::ref_ptr<osgViewer::Viewer> viewer;
 static osg::ref_ptr<osg::Camera> mainCamera;
-
-namespace
-{
-// If a camera group isn't specified, build one from the top-level
-// camera specs and then add a camera aligned with the master camera
-// if it doesn't seem to exist.
-CameraGroup* buildDefaultCameraGroup(osgViewer::Viewer* viewer,
-                                     const SGPropertyNode* gnode)
-{
-    WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
-    CameraGroup* cgroup = CameraGroup::buildCameraGroup(viewer, gnode);
-    // Look for a camera with no shear
-    Camera* masterCamera = 0;
-    for (CameraGroup::CameraIterator citer = cgroup->camerasBegin(),
-             e = cgroup->camerasEnd();
-         citer != e;
-         ++citer) {
-        const View::Slave& slave = viewer->getSlave((*citer)->slaveIndex);
-        if (slave._projectionOffset.isIdentity()) {
-            masterCamera = (*citer)->camera.get();
-            break;
-        }
-    }
-    if (!masterCamera) {
-        // No master camera found; better add one.
-        GraphicsWindow* window
-            = WindowBuilder::getWindowBuilder()->getDefaultWindow();
-        masterCamera = new Camera();
-        masterCamera->setGraphicsContext(window->gc.get());
-        const GraphicsContext::Traits *traits = window->gc->getTraits();
-        masterCamera->setViewport(new Viewport(0, 0,
-                                               traits->width, traits->height));
-        cgroup->addCamera(CameraGroup::DO_INTERSECTION_TEST, masterCamera,
-                          Matrix(), Matrix());
-    }
-    // Find window on which the GUI is drawn.
-    WindowVector::iterator iter = wsa->windows.begin();
-    WindowVector::iterator end = wsa->windows.end();
-    for (; iter != end; ++iter) {
-        if ((*iter)->gc.get() == masterCamera->getGraphicsContext())
-            break;
-    }
-    if (iter != end) {            // Better not happen
-        (*iter)->flags |= GraphicsWindow::GUI;
-        cgroup->buildGUICamera(0, iter->get());
-    }
-    return cgroup;
-}
-}
 
 void fgOSOpenWindow(bool stencil)
 {
@@ -147,31 +102,52 @@ void fgOSOpenWindow(bool stencil)
 
     // Look for windows, camera groups, and the old syntax of
     // top-level cameras
-    const SGPropertyNode* renderingNode = fgGetNode("/sim/rendering");
-    for (int i = 0; i < renderingNode->nChildren(); ++i) {
-        const SGPropertyNode* propNode = renderingNode->getChild(i);
-        const char* propName = propNode->getName();
-        if (!strcmp(propName, "window")) {
-            windowBuilder->buildWindow(propNode);
-        } else if (!strcmp(propName, "camera-group")) {
-            cameraGroup = CameraGroup::buildCameraGroup(viewer.get(), propNode);
+    SGPropertyNode* renderingNode = fgGetNode("/sim/rendering");
+    SGPropertyNode* cgroupNode = renderingNode->getChild("camera-group");
+    if (!cgroupNode) {
+        cgroupNode = renderingNode->getNode("camera-group", true);
+        for (int i = 0; i < renderingNode->nChildren(); ++i) {
+            SGPropertyNode* propNode = renderingNode->getChild(i);
+            const char* propName = propNode->getName();
+            if (!strcmp(propName, "window") || !strcmp(propName, "camera")) {
+                SGPropertyNode* copiedNode
+                    = cgroupNode->getNode(propName, propNode->getIndex(), true);
+                copyProperties(propNode, copiedNode);
+            }
         }
+        vector<SGPropertyNode_ptr> cameras = cgroupNode->getChildren("camera");
+        SGPropertyNode* masterCamera = 0;
+        BOOST_FOREACH(SGPropertyNode_ptr& camera, cameras) {
+            if (camera->getDoubleValue("shear-x", 0.0) == 0.0
+                && camera->getDoubleValue("shear-y", 0.0) == 0.0) {
+                masterCamera = camera.ptr();
+                break;
+            }
+        }
+        if (!masterCamera) {
+            masterCamera = cgroupNode->getChild("camera", cameras.size(), true);
+            setValue(masterCamera->getNode("window/name", true),
+                     windowBuilder->getDefaultWindowName());
+        }
+        SGPropertyNode* nameNode = masterCamera->getNode("window/name");
+        if (nameNode)
+            setValue(cgroupNode->getNode("gui/window/name", true),
+                     nameNode->getStringValue());
     }
-    if (!cameraGroup)
-        cameraGroup = buildDefaultCameraGroup(viewer.get(), renderingNode);
+    cameraGroup = CameraGroup::buildCameraGroup(viewer.get(), cgroupNode);
     Camera* guiCamera = getGUICamera(cameraGroup);
     if (guiCamera) {
         Viewport* guiViewport = guiCamera->getViewport();
         fgSetInt("/sim/startup/xsize", guiViewport->width());
         fgSetInt("/sim/startup/ysize", guiViewport->height());
     }
-    FGManipulator* manipulator = globals->get_renderer()->getManipulator();
+    FGEventHandler* manipulator = globals->get_renderer()->getEventHandler();
     WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
     if (wsa->windows.size() != 1) {
         manipulator->setResizable(false);
     }
     viewer->getCamera()->setProjectionResizePolicy(osg::Camera::FIXED);
-    viewer->setCameraManipulator(manipulator);
+    viewer->addEventHandler(manipulator);
     // Let FG handle the escape key with a confirmation
     viewer->setKeyEventSetsDone(0);
     // The viewer won't start without some root.
@@ -191,13 +167,24 @@ void fgOSExit(int code)
 
 void fgOSMainLoop()
 {
-    viewer->run();
+    ref_ptr<FGEventHandler> manipulator
+        = globals->get_renderer()->getEventHandler();
+    viewer->setReleaseContextAtEndOfFrameHint(false);
+    while (!viewer->done()) {
+        fgIdleHandler idleFunc = manipulator->getIdleHandler();
+        fgDrawHandler drawFunc = manipulator->getDrawHandler();
+        if (idleFunc)
+            (*idleFunc)();
+        if (drawFunc)
+            (*drawFunc)();
+        viewer->frame();
+    }
     fgExit(status);
 }
 
 int fgGetKeyModifiers()
 {
-    return globals->get_renderer()->getManipulator()->getCurrentModifiers();
+    return globals->get_renderer()->getEventHandler()->getCurrentModifiers();
 }
 
 void fgWarpMouse(int x, int y)

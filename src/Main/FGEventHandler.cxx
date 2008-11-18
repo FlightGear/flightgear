@@ -10,7 +10,7 @@
 #include <plib/pu.h>
 #include <Main/fg_props.hxx>
 #include "CameraGroup.hxx"
-#include "FGManipulator.hxx"
+#include "FGEventHandler.hxx"
 #include "WindowSystemAdapter.hxx"
 
 #if !defined(X_DISPLAY_MISSING)
@@ -27,7 +27,7 @@ const int printStatsKey = 2;
 // event handling method is also a convenient place to run the FG idle
 // and draw handlers.
 
-FGManipulator::FGManipulator() :
+FGEventHandler::FGEventHandler() :
     idleHandler(0),
     drawHandler(0),
     windowResizeHandler(0),
@@ -65,40 +65,6 @@ FGManipulator::FGManipulator() :
         release_keys[i] = i;
 }
 
-void FGManipulator::setByMatrix(const osg::Matrixd& matrix)
-{
-    // Yuck
-    position = matrix.getTrans();
-    attitude = matrix.getRotate();
-}
-
-osg::Matrixd FGManipulator::getMatrix() const
-{
-    return osg::Matrixd::rotate(attitude) * osg::Matrixd::translate(position);
-}
-
-osg::Matrixd FGManipulator::getInverseMatrix() const
-{
-    return (osg::Matrixd::translate(-position)
-            * osg::Matrixd::rotate(attitude.inverse())) ;
-}
-
-// Not used, but part of the interface.
-void FGManipulator::setNode(osg::Node* node)
-{
-    _node = node;
-}
-
-const osg::Node* FGManipulator::getNode() const
-{
-    return _node.get();
-}
-
-osg::Node* FGManipulator::getNode()
-{
-    return _node.get();
-}
-
 namespace
 {
 // Translate OSG modifier mask to FG modifier mask.
@@ -126,12 +92,14 @@ int osgToFGModifiers(int modifiers)
 }
 }
 
-void FGManipulator::init(const osgGA::GUIEventAdapter& ea,
-                         osgGA::GUIActionAdapter& us)
+#if 0
+void FGEventHandler::init(const osgGA::GUIEventAdapter& ea,
+                          osgGA::GUIActionAdapter& us)
 {
     currentModifiers = osgToFGModifiers(ea.getModKeyMask());
     (void)handle(ea, us);
 }
+#endif
 
 // Calculate event coordinates in the viewport of the GUI camera, if
 // possible. Otherwise return false and (-1, -1).
@@ -171,8 +139,8 @@ eventToViewport(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& us,
 }
 }
 
-bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
-                           osgGA::GUIActionAdapter& us)
+bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
+                            osgGA::GUIActionAdapter& us)
 {
     int x = 0;
     int y = 0;
@@ -261,8 +229,8 @@ bool FGManipulator::handle(const osgGA::GUIEventAdapter& ea,
     }
 }
 
-void FGManipulator::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
-                              int& modifiers)
+void FGEventHandler::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
+                               int& modifiers)
 {
     using namespace osgGA;
     key = ea.getKey();
@@ -338,7 +306,7 @@ void FGManipulator::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
     }
 }
 
-void FGManipulator::handleStats(osgGA::GUIActionAdapter& us)
+void FGEventHandler::handleStats(osgGA::GUIActionAdapter& us)
 {
     static SGPropertyNode_ptr display = fgGetNode("/sim/rendering/on-screen-statistics", true);
     static SGPropertyNode_ptr print = fgGetNode("/sim/rendering/print-statistics", true);

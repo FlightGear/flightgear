@@ -28,6 +28,8 @@
 #include <algorithm>
 #include <functional>
 
+#include <osgViewer/Viewer>
+
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/point3d.hxx>

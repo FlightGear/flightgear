@@ -5,10 +5,33 @@
 #include <simgear/screen/extensions.hxx>
 #include <simgear/scene/util/SGPickCallback.hxx>
 
-#include <osg/Camera>
-#include <osgViewer/Viewer>
+#include <osg/ref_ptr>
 
-#include "FGManipulator.hxx"
+namespace osg
+{
+class Camera;
+class Group;
+}
+
+namespace osgGA
+{
+class GUIEventAdapter;
+}
+
+namespace osgShadow
+{
+class ShadowedScene;
+}
+
+namespace osgViewer
+{
+class Viewer;
+}
+
+namespace flightgear
+{
+class FGEventHandler;
+}
 
 #define FG_ENABLE_MULTIPASS_CLOUDS 1
 
@@ -52,14 +75,12 @@ public:
      */
     osgViewer::Viewer* getViewer() { return viewer.get(); }
     const osgViewer::Viewer* getViewer() const { return viewer.get(); }
-    void setViewer(osgViewer::Viewer* viewer) { this->viewer = viewer; }
+    void setViewer(osgViewer::Viewer* viewer);
     /** Get and set the manipulator object, if any.
      */
-    flightgear::FGManipulator* getManipulator() { return manipulator.get(); }
-    const flightgear::FGManipulator* getManipulator() const { return manipulator.get(); }
-    void setManipulator(flightgear::FGManipulator* manipulator) {
-        this->manipulator = manipulator;
-    }
+    flightgear::FGEventHandler* getEventHandler() { return eventHandler.get(); }
+    const flightgear::FGEventHandler* getEventHandler() const { return eventHandler.get(); }
+    void setEventHandler(flightgear::FGEventHandler* manipulator);
 
     /** Add a top level camera.
     */
@@ -67,7 +88,7 @@ public:
 
 protected:
     osg::ref_ptr<osgViewer::Viewer> viewer;
-    osg::ref_ptr<flightgear::FGManipulator> manipulator;
+    osg::ref_ptr<flightgear::FGEventHandler> eventHandler;
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);

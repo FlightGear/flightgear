@@ -35,6 +35,8 @@ string makeName(const string& prefix, int num)
 
 ref_ptr<WindowBuilder> WindowBuilder::windowBuilder;
 
+const string WindowBuilder::defaultWindowName("FlightGear");
+
 void WindowBuilder::initWindowBuilder(bool stencil)
 {
     windowBuilder = new WindowBuilder(stencil);
@@ -204,14 +206,18 @@ GraphicsWindow* WindowBuilder::buildWindow(const SGPropertyNode* winNode)
             return 0;
         }
     } else {
+        // XXX What if the window has no traits, but does have a name?
+        // We should create a "default window" registered with that name.
         return getDefaultWindow();
     }
 }
 
 GraphicsWindow* WindowBuilder::getDefaultWindow()
 {
-    if (defaultWindow.valid())
-        return defaultWindow.get();
+    GraphicsWindow* defaultWindow
+        = WindowSystemAdapter::getWSA()->findWindow(defaultWindowName);
+    if (defaultWindow)
+        return defaultWindow;
     GraphicsContext::Traits* traits
         = new GraphicsContext::Traits(*defaultTraits);
     traits->windowName = "FlightGear";
@@ -219,8 +225,8 @@ GraphicsWindow* WindowBuilder::getDefaultWindow()
     if (gc) {
         gc->realize();
         defaultWindow = WindowSystemAdapter::getWSA()
-            ->registerWindow(gc, traits->windowName);
-        return defaultWindow.get();
+            ->registerWindow(gc, defaultWindowName);
+        return defaultWindow;
     } else {
         return 0;
     }

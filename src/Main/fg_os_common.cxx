@@ -27,40 +27,41 @@
 #include "fg_os.hxx"
 #include "globals.hxx"
 #include "renderer.hxx"
+#include "FGEventHandler.hxx"
 
 // fg_os callback registration APIs
 //
 
 // Event handling and scene graph update is all handled by a
-// manipulator. See FGManipulator.cpp
+// manipulator. See FGEventHandler.cpp
 void fgRegisterIdleHandler(fgIdleHandler func)
 {
-    globals->get_renderer()->getManipulator()->setIdleHandler(func);
+    globals->get_renderer()->getEventHandler()->setIdleHandler(func);
 }
 
 void fgRegisterDrawHandler(fgDrawHandler func)
 {
-    globals->get_renderer()->getManipulator()->setDrawHandler(func);
+    globals->get_renderer()->getEventHandler()->setDrawHandler(func);
 }
 
 void fgRegisterWindowResizeHandler(fgWindowResizeHandler func)
 {
-    globals->get_renderer()->getManipulator()->setWindowResizeHandler(func);
+    globals->get_renderer()->getEventHandler()->setWindowResizeHandler(func);
 }
 
 void fgRegisterKeyHandler(fgKeyHandler func)
 {
-    globals->get_renderer()->getManipulator()->setKeyHandler(func);
+    globals->get_renderer()->getEventHandler()->setKeyHandler(func);
 }
 
 void fgRegisterMouseClickHandler(fgMouseClickHandler func)
 {
-    globals->get_renderer()->getManipulator()->setMouseClickHandler(func);
+    globals->get_renderer()->getEventHandler()->setMouseClickHandler(func);
 }
 
 void fgRegisterMouseMotionHandler(fgMouseMotionHandler func)
 {
-    globals->get_renderer()->getManipulator()->setMouseMotionHandler(func);
+    globals->get_renderer()->getEventHandler()->setMouseMotionHandler(func);
 }
 
 // Redraw "happens" every frame whether you want it or not.

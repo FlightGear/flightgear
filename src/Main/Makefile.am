@@ -1,5 +1,5 @@
 EXTRA_DIST = 3dfx.sh runfgfs.in runfgfs.bat.in \
-             fg_os_sdl.cxx fg_os.cxx fg_os_osgviewer.cxx fg_os.hxx
+             fg_os_osgviewer.cxx fg_os.hxx
 
 MPLAYER_LIBS = $(top_builddir)/src/MultiPlayer/libMultiPlayer.a
 
@@ -15,16 +15,7 @@ else
 THREAD_LIBS =
 endif
 
-GFX_COMMON = fg_os_common.cxx fg_os.hxx
-if USE_SDL
-GFX_CODE = fg_os_sdl.cxx $(GFX_COMMON)
-else
-if USE_GLUT
-GFX_CODE = fg_os.cxx $(GFX_COMMON)
-else
-GFX_CODE = fg_os_osgviewer.cxx $(GFX_COMMON)
-endif
-endif
+GFX_CODE = fg_os_osgviewer.cxx fg_os_common.cxx fg_os.hxx
 
 JSBSIM_LIBS = \
 	$(top_builddir)/src/FDM/JSBSim/libJSBSim.a \
@@ -61,7 +52,7 @@ libMain_a_SOURCES = \
 	viewer.cxx viewer.hxx \
 	viewmgr.cxx viewmgr.hxx \
 	CameraGroup.cxx CameraGroup.hxx \
-	FGManipulator.cxx FGManipulator.hxx \
+	FGEventHandler.cxx FGEventHandler.hxx \
 	ViewPartitionNode.cxx ViewPartitionNode.hxx \
 	WindowSystemAdapter.hxx WindowSystemAdapter.cxx \
 	WindowBuilder.hxx WindowBuilder.cxx \

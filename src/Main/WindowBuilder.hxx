@@ -54,13 +54,16 @@ public:
      * @return the default graphics window
      */
     GraphicsWindow* getDefaultWindow();
+    /** Get the name used to look up the default window.
+     */
+    const std::string& getDefaultWindowName() { return defaultWindowName; }
 protected:
     WindowBuilder(bool stencil);
     static osg::GraphicsContext::Traits* makeDefaultTraits(bool stencil);
     osg::ref_ptr<osg::GraphicsContext::Traits> defaultTraits;
     int defaultCounter;
     static osg::ref_ptr<WindowBuilder> windowBuilder;
-    osg::ref_ptr<GraphicsWindow> defaultWindow;
+    static const std::string defaultWindowName;
 };
 
 /** Silly function for making the default window and camera

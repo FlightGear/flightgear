@@ -97,7 +97,7 @@
 #include "renderer.hxx"
 #include "main.hxx"
 #include "CameraGroup.hxx"
-#include "ViewPartitionNode.hxx"
+#include "FGEventHandler.hxx"
 
 // XXX Make this go away when OSG 2.2 is released.
 #if (FG_OSG_VERSION >= 21004)
@@ -371,14 +371,12 @@ static osg::ref_ptr<osg::Group> mRealRoot = new osg::Group;
 
 static osg::ref_ptr<osg::Group> mRoot = new osg::Group;
 
-static osg::ref_ptr<ViewPartitionNode> viewPartition = new ViewPartitionNode;
-
 FGRenderer::FGRenderer()
 {
 #ifdef FG_JPEG_SERVER
    jpgRenderFrame = FGRenderer::update;
 #endif
-   manipulator = new FGManipulator;
+   eventHandler = new FGEventHandler;
 }
 
 FGRenderer::~FGRenderer()
@@ -519,10 +517,8 @@ FGRenderer::init( void )
     osg::Switch* sw = new osg::Switch;
     sw->setUpdateCallback(new FGScenerySwitchCallback);
     sw->addChild(mRoot.get());
-    viewPartition->addChild(sw);
-    viewPartition->addChild(thesky->getCloudRoot());
-
-    mRealRoot->addChild(viewPartition.get());
+    mRealRoot->addChild(sw);
+    mRealRoot->addChild(thesky->getCloudRoot());
     mRealRoot->addChild(FGCreateRedoutNode());
 }
 
@@ -738,7 +734,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
                              l->adj_fog_color(),
                              l->get_sun_angle()*SGD_RADIANS_TO_DEGREES);
     mUpdateVisitor->setVisibility(actual_visibility);
-    viewPartition->setVisibility(actual_visibility);
     simgear::GroundLightManager::instance()->update(mUpdateVisitor.get());
     bool hotspots = fgGetBool("/sim/panel-hotspots");
     osg::Node::NodeMask cullMask = ~simgear::LIGHTS_BITS & ~simgear::PICK_BIT;
@@ -746,10 +741,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
         ->getLightNodeMask(mUpdateVisitor.get());
     if (hotspots)
         cullMask |= simgear::PICK_BIT;
-    camera->setCullMask(cullMask);
-    // XXX
-    for (int i = 0; i < viewer->getNumSlaves(); ++i)
-        viewer->getSlave(i)._camera->setCullMask(cullMask);
+    CameraGroup::getDefault()->setCameraCullMasks(cullMask);
 }
 
 
@@ -830,6 +822,18 @@ FGRenderer::pick(std::vector<SGSceneryPick>& pickList,
         }
     }
     return !pickList.empty();
+}
+
+void
+FGRenderer::setViewer(osgViewer::Viewer* viewer_)
+{
+    viewer = viewer_;
+}
+
+void
+FGRenderer::setEventHandler(FGEventHandler* eventHandler_)
+{
+    eventHandler = eventHandler_;
 }
 
 void

@@ -18,10 +18,11 @@
 
 #include "globals.hxx"
 #include "renderer.hxx"
-#include "FGManipulator.hxx"
+#include "FGEventHandler.hxx"
 #include "WindowBuilder.hxx"
 #include "WindowSystemAdapter.hxx"
 #include <simgear/props/props.hxx>
+#include <simgear/scene/util/RenderConstants.hxx>
 
 #include <algorithm>
 #include <cstring>
@@ -53,50 +54,149 @@ CameraGroup::CameraGroup(osgViewer::Viewer* viewer) :
 {
 }
 
+}
+
+namespace
+{
+using namespace osg;
+
+// Given a projection matrix, return a new one with the same frustum
+// sides and new near / far values.
+
+void makeNewProjMat(Matrixd& oldProj, double znear,
+                                       double zfar, Matrixd& projection)
+{
+    projection = oldProj;
+    // Slightly inflate the near & far planes to avoid objects at the
+    // extremes being clipped out.
+    znear *= 0.999;
+    zfar *= 1.001;
+
+    // Clamp the projection matrix z values to the range (near, far)
+    double epsilon = 1.0e-6;
+    if (fabs(projection(0,3)) < epsilon &&
+        fabs(projection(1,3)) < epsilon &&
+        fabs(projection(2,3)) < epsilon) {
+        // Projection is Orthographic
+        epsilon = -1.0/(zfar - znear); // Used as a temp variable
+        projection(2,2) = 2.0*epsilon;
+        projection(3,2) = (zfar + znear)*epsilon;
+    } else {
+        // Projection is Perspective
+        double trans_near = (-znear*projection(2,2) + projection(3,2)) /
+            (-znear*projection(2,3) + projection(3,3));
+        double trans_far = (-zfar*projection(2,2) + projection(3,2)) /
+            (-zfar*projection(2,3) + projection(3,3));
+        double ratio = fabs(2.0/(trans_near - trans_far));
+        double center = -0.5*(trans_near + trans_far);
+
+        projection.postMult(osg::Matrixd(1.0, 0.0, 0.0, 0.0,
+                                         0.0, 1.0, 0.0, 0.0,
+                                         0.0, 0.0, ratio, 0.0,
+                                         0.0, 0.0, center*ratio, 1.0));
+    }
+}
+
+void installCullVisitor(Camera* camera)
+{
+#if 0 // Not yet
+    osgViewer::Renderer* renderer
+        = static_cast<osgViewer::Renderer*>(camera->getRenderer());
+    for (int i = 0; i < 2; ++i) {
+        osgUtil::SceneView* sceneView = renderer->getSceneView(i);
+        sceneView->setCullVisitor(new simgear::EffectCullVisitor);
+    }
+#endif
+}
+}
+
+namespace flightgear
+{
 CameraInfo* CameraGroup::addCamera(unsigned flags, Camera* camera,
                                    const Matrix& view,
                                    const Matrix& projection,
                                    bool useMasterSceneData)
 {
-    if ((flags & (VIEW_ABSOLUTE | PROJECTION_ABSOLUTE)) != 0)
-        camera->setReferenceFrame(Transform::ABSOLUTE_RF);
-    else
-        camera->setReferenceFrame(Transform::RELATIVE_RF);
-    CameraInfo* info = new CameraInfo(flags, camera);
-    _cameras.push_back(info);
+    CameraInfo* info = new CameraInfo(flags);
+    // The camera group will always update the camera
+    camera->setReferenceFrame(Transform::ABSOLUTE_RF);
+
+    Camera* farCamera = 0;
+    if ((flags & (GUI | ORTHO)) == 0) {
+        farCamera = osg::clone(camera);
+        farCamera->setGraphicsContext(camera->getGraphicsContext());
+        // Each camera's viewport is written when the window is
+        // resized; if the the viewport isn't copied here, it gets updated
+        // twice and ends up with the wrong value.
+        farCamera->setViewport(osg::clone(camera->getViewport()));
+        _viewer->addSlave(farCamera, view, projection, useMasterSceneData);
+        installCullVisitor(farCamera);
+        info->farCamera = farCamera;
+        info->farSlaveIndex = _viewer->getNumSlaves() - 1;
+        farCamera->setRenderOrder(Camera::NESTED_RENDER, info->farSlaveIndex);
+        camera->setCullMask(camera->getCullMask() & ~simgear::BACKGROUND_BIT);
+    }
+    camera->setClearMask(GL_DEPTH_BUFFER_BIT);
     _viewer->addSlave(camera, view, projection, useMasterSceneData);
+    installCullVisitor(camera);
+    info->camera = camera;
     info->slaveIndex = _viewer->getNumSlaves() - 1;
+    camera->setRenderOrder(Camera::NESTED_RENDER, info->slaveIndex);
+    _cameras.push_back(info);
     return info;
 }
 
 void CameraGroup::update(const osg::Vec3d& position,
                          const osg::Quat& orientation)
 {
-    FGManipulator *manipulator
-        = dynamic_cast<FGManipulator*>(_viewer->getCameraManipulator());
-    if (!manipulator)
-        return;
-    manipulator->setPosition(position);
-    manipulator->setAttitude(orientation);
-    const Matrix masterView(manipulator->getInverseMatrix());
+    const Matrix masterView(osg::Matrix::translate(-position)
+                            * osg::Matrix::rotate(orientation.inverse()));
+    _viewer->getCamera()->setViewMatrix(masterView);
     const Matrix& masterProj = _viewer->getCamera()->getProjectionMatrix();
     for (CameraList::iterator i = _cameras.begin(); i != _cameras.end(); ++i) {
         const CameraInfo* info = i->get();
-        if ((info->flags & (VIEW_ABSOLUTE | PROJECTION_ABSOLUTE)) == 0) {
-            // Camera has relative reference frame and is updated by
-            // osg::View.
-            continue;
-        }
         const View::Slave& slave = _viewer->getSlave(info->slaveIndex);
         Camera* camera = info->camera.get();
+        camera->getViewport()->setViewport(info->x, info->y, info->width,
+                                           info->height);
+        Matrix viewMatrix;
         if ((info->flags & VIEW_ABSOLUTE) != 0)
-            camera->setViewMatrix(slave._viewOffset);
+            viewMatrix = slave._viewOffset;
         else
-            camera->setViewMatrix(masterView * slave._viewOffset);
+            viewMatrix = masterView * slave._viewOffset;
+        camera->setViewMatrix(viewMatrix);
+        Matrix projectionMatrix;
         if ((info->flags & PROJECTION_ABSOLUTE) != 0)
-            camera->setProjectionMatrix(slave._projectionOffset);
+            projectionMatrix = slave._projectionOffset;
         else
-            camera->setViewMatrix(masterProj * slave._projectionOffset);
+            projectionMatrix = masterProj * slave._projectionOffset;
+
+        if (!info->farCamera.valid()) {
+            camera->setProjectionMatrix(projectionMatrix);
+        } else {
+            Camera* farCamera = info->farCamera.get();
+            farCamera->getViewport()->setViewport(info->x, info->y, info->width,
+                                                  info->height);
+            farCamera->setViewMatrix(viewMatrix);
+            double left, right, bottom, top, parentNear, parentFar;
+            projectionMatrix.getFrustum(left, right, bottom, top,
+                                        parentNear, parentFar);
+            if (parentFar < 100.0) {
+                camera->setProjectionMatrix(projectionMatrix);
+                camera->setCullMask(camera->getCullMask()
+                                    | simgear::BACKGROUND_BIT);
+                farCamera->setNodeMask(0);
+            } else {
+                Matrix nearProj, farProj;
+                makeNewProjMat(projectionMatrix, parentNear, 100.0, nearProj);
+                makeNewProjMat(projectionMatrix, 100.0, parentFar, farProj);
+                camera->setProjectionMatrix(nearProj);
+                camera->setCullMask(camera->getCullMask()
+                                    & ~simgear::BACKGROUND_BIT);
+                farCamera->setProjectionMatrix(farProj);
+                farCamera->setNodeMask(camera->getNodeMask());
+            }
+        }
     }
 }
 
@@ -112,19 +212,71 @@ void CameraGroup::setCameraParameters(float vfov, float aspectRatio)
 
 namespace
 {
-osg::Viewport* buildViewport(const SGPropertyNode* viewportNode)
+// A raw value for property nodes that references a class member via
+// an osg::ref_ptr.
+template<class C, class T>
+class RefMember : public SGRawValue<T>
 {
-    double x = viewportNode->getDoubleValue("x", 0.0);
-    double y = viewportNode->getDoubleValue("y", 0.0);
-    double width = viewportNode->getDoubleValue("width", 0.0);
-    double height = viewportNode->getDoubleValue("height", 0.0);
-    return new osg::Viewport(x, y, width, height);
+public:
+    RefMember (C *obj, T C::*ptr)
+        : _obj(obj), _ptr(ptr) {}
+    virtual ~RefMember () {}
+    virtual T getValue () const
+    {
+        return _obj.get()->*_ptr;
+    }
+    virtual bool setValue (T value)
+    {
+        _obj.get()->*_ptr = value;
+        return true;
+    }
+    virtual SGRawValue<T> * clone () const
+    {
+        return new RefMember(_obj.get(), _ptr);
+    }
+private:
+    ref_ptr<C> _obj;
+    T C::* const _ptr;
+};
+
+template<typename C, typename T>
+RefMember<C, T> makeRefMember(C *obj, T C::*ptr)
+{
+    return RefMember<C, T>(obj, ptr);
+}
+
+template<typename C, typename T>
+void bindMemberToNode(SGPropertyNode* parent, const char* childName,
+                      C* obj, T C::*ptr, T value)
+{
+    SGPropertyNode* valNode = parent->getNode(childName);
+    RefMember<C, T> refMember = makeRefMember(obj, ptr);
+    if (!valNode) {
+        valNode = parent->getNode(childName, true);
+        valNode->tie(refMember, false);
+        setValue(valNode, value);
+    } else {
+        valNode->tie(refMember, true);
+    }
+}
+
+void buildViewport(flightgear::CameraInfo* info, SGPropertyNode* viewportNode,
+                   const osg::GraphicsContext::Traits *traits)
+{
+    using namespace flightgear;
+    bindMemberToNode(viewportNode, "x", info, &CameraInfo::x, 0.0);
+    bindMemberToNode(viewportNode, "y", info, &CameraInfo::y, 0.0);
+    bindMemberToNode(viewportNode, "width", info, &CameraInfo::width,
+                     static_cast<double>(traits->width));
+    bindMemberToNode(viewportNode, "height", info, &CameraInfo::height,
+                     static_cast<double>(traits->height));
 }
 }
 
 namespace flightgear
 {
-CameraInfo* CameraGroup::buildCamera(const SGPropertyNode* cameraNode)
+
+CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
 {
     WindowBuilder *wBuild = WindowBuilder::getWindowBuilder();
     const SGPropertyNode* windowNode = cameraNode->getNode("window");
@@ -144,18 +296,13 @@ CameraInfo* CameraGroup::buildCamera(const SGPropertyNode* cameraNode)
     Camera* camera = new Camera;
     camera->setAllowEventFocus(false);
     camera->setGraphicsContext(window->gc.get());
-    // If a viewport isn't set on the camera, then it's hard to dig it
-    // out of the SceneView objects in the viewer, and the coordinates
-    // of mouse events are somewhat bizzare.
-    const SGPropertyNode* viewportNode = cameraNode->getNode("viewport");
-    Viewport* viewport = 0;
-    if (viewportNode) {
-        viewport = buildViewport(viewportNode);
-    } else {
-        const GraphicsContext::Traits *traits = window->gc->getTraits();
-        viewport = new Viewport(0, 0, traits->width, traits->height);
-    }
-    camera->setViewport(viewport);
+    camera->setViewport(new Viewport);
+    camera->setCullingMode(CullSettings::SMALL_FEATURE_CULLING
+                           | CullSettings::VIEW_FRUSTUM_CULLING);
+    camera->setInheritanceMask(CullSettings::ALL_VARIABLES
+                               & ~(CullSettings::CULL_MASK
+                                   | CullSettings::CULLING_MODE));
+
     osg::Matrix pOff;
     osg::Matrix vOff;
     const SGPropertyNode* viewNode = cameraNode->getNode("view");
@@ -219,10 +366,16 @@ CameraInfo* CameraGroup::buildCamera(const SGPropertyNode* cameraNode)
         double sheary = cameraNode->getDoubleValue("shear-y", 0);
         pOff.makeTranslate(-shearx, -sheary, 0);
     }
-    return addCamera(cameraFlags, camera, pOff, vOff);
+    CameraInfo* info = addCamera(cameraFlags, camera, pOff, vOff);
+    // If a viewport isn't set on the camera, then it's hard to dig it
+    // out of the SceneView objects in the viewer, and the coordinates
+    // of mouse events are somewhat bizzare.
+    SGPropertyNode* viewportNode = cameraNode->getNode("viewport", true);
+    buildViewport(info, viewportNode, window->gc->getTraits());
+    return info;
 }
 
-CameraInfo* CameraGroup::buildGUICamera(const SGPropertyNode* cameraNode,
+CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
                                         GraphicsWindow* window)
 {
     WindowBuilder *wBuild = WindowBuilder::getWindowBuilder();
@@ -242,17 +395,7 @@ CameraInfo* CameraGroup::buildGUICamera(const SGPropertyNode* cameraNode,
     Camera* camera = new Camera;
     camera->setAllowEventFocus(false);
     camera->setGraphicsContext(window->gc.get());
-    const SGPropertyNode* viewportNode = (cameraNode
-                                          ? cameraNode->getNode("viewport")
-                                          : 0);
-    Viewport* viewport = 0;
-    if (viewportNode) {
-        viewport = buildViewport(viewportNode);
-    } else {
-        const GraphicsContext::Traits *traits = window->gc->getTraits();
-        viewport = new Viewport(0, 0, traits->width, traits->height);
-    }
-    camera->setViewport(viewport);
+    camera->setViewport(new Viewport);
     // XXX Camera needs to be drawn last; eventually the render order
     // should be assigned by a camera manager.
     camera->setRenderOrder(osg::Camera::POST_RENDER, 100);
@@ -267,17 +410,20 @@ CameraInfo* CameraGroup::buildGUICamera(const SGPropertyNode* cameraNode,
     const int cameraFlags = GUI;
     CameraInfo* result = addCamera(cameraFlags, camera, Matrixd::identity(),
                                    Matrixd::identity(), false);
+    SGPropertyNode* viewportNode = cameraNode->getNode("viewport", true);
+    buildViewport(result, viewportNode, window->gc->getTraits());
+
     // Disable statistics for the GUI camera.
     result->camera->setStats(0);
     return result;
 }
 
 CameraGroup* CameraGroup::buildCameraGroup(osgViewer::Viewer* viewer,
-                                           const SGPropertyNode* gnode)
+                                           SGPropertyNode* gnode)
 {
     CameraGroup* cgroup = new CameraGroup(viewer);
     for (int i = 0; i < gnode->nChildren(); ++i) {
-        const SGPropertyNode* pNode = gnode->getChild(i);
+        SGPropertyNode* pNode = gnode->getChild(i);
         const char* name = pNode->getName();
         if (!strcmp(name, "camera")) {
             cgroup->buildCamera(pNode);
@@ -288,6 +434,16 @@ CameraGroup* CameraGroup::buildCameraGroup(osgViewer::Viewer* viewer,
         }
     }
     return cgroup;
+}
+
+void CameraGroup::setCameraCullMasks(Node::NodeMask nm)
+{
+    for (CameraIterator i = camerasBegin(), e = camerasEnd(); i != e; ++i) {
+        if ((*i)->flags & GUI)
+            continue;
+        (*i)->camera->setCullMask(nm & ~simgear::BACKGROUND_BIT);
+        (*i)->farCamera->setCullMask(nm);
+    }
 }
 
 Camera* getGUICamera(CameraGroup* cgroup)
@@ -355,7 +511,7 @@ void warpGUIPointer(CameraGroup* cgroup, int x, int y)
         = dynamic_cast<GraphicsWindow*>(guiCamera->getGraphicsContext());
     if (!gw)
         return;
-    globals->get_renderer()->getManipulator()->setMouseWarped();    
+    globals->get_renderer()->getEventHandler()->setMouseWarped();    
     // Translate the warp request into the viewport of the GUI camera,
     // send the request to the window, then transform the coordinates
     // for the Viewer's event queue.

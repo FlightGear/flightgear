@@ -23,6 +23,7 @@
 #include <osg/Matrix>
 #include <osg/ref_ptr>
 #include <osg/Referenced>
+#include <osg/Node>
 
 // For osgUtil::LineSegmentIntersector::Intersections, which is a typedef.
 #include <osgUtil/LineSegmentIntersector>
@@ -47,8 +48,9 @@ class GraphicsWindow;
  */
 struct CameraInfo : public osg::Referenced
 {
-    CameraInfo(unsigned flags_, osg::Camera* camera_)
-        : flags(flags_), camera(camera_), slaveIndex(-1)
+    CameraInfo(unsigned flags_, osg::Camera* camera_ = 0)
+        : flags(flags_), camera(camera_), slaveIndex(-1), farSlaveIndex(-1),
+          x(0.0), y(0.0), width(0.0), height(0.0)
     {
     }
     /** Properties of the camera. @see CameraGroup::Flags.
@@ -57,9 +59,21 @@ struct CameraInfo : public osg::Referenced
     /** the camera object
      */
     osg::ref_ptr<osg::Camera> camera;
+    /** camera for rendering far field, if needed
+     */
+    osg::ref_ptr<osg::Camera> farCamera;
     /** Index of this camera in the osgViewer::Viewer slave list.
      */
     int slaveIndex;
+    /** index of far camera in slave list
+     */
+    int farSlaveIndex;
+    /** Viewport parameters.
+     */
+    double x;
+    double y;
+    double width;
+    double height;
 };
 
 class CameraGroup : public osg::Referenced
@@ -103,7 +117,7 @@ public:
      * @param cameraNode the property node.
      * @return a CameraInfo object for the camera.
      */
-    CameraInfo* buildCamera(const SGPropertyNode* cameraNode);
+    CameraInfo* buildCamera(SGPropertyNode* cameraNode);
     /** Create a camera from properties that will draw the GUI and add
      * it to the camera group.
      * @param cameraNode the property node. This can be 0, in which
@@ -112,7 +126,7 @@ public:
      * this is 0, the window is determined from the property node.
      * @return a CameraInfo object for the GUI camera.
      */
-    CameraInfo* buildGUICamera(const SGPropertyNode* cameraNode,
+    CameraInfo* buildGUICamera(SGPropertyNode* cameraNode,
                                GraphicsWindow* window = 0);
     /** Update the view for the camera group.
      * @param position the world position of the view
@@ -153,7 +167,11 @@ public:
      * @param the camera group property node.
      */
     static CameraGroup* buildCameraGroup(osgViewer::Viewer* viewer,
-                                         const SGPropertyNode* node);
+                                         SGPropertyNode* node);
+    /** Set the cull mask on all non-GUI cameras
+     */
+    void setCameraCullMasks(osg::Node::NodeMask nm);
+
 protected:
     CameraList _cameras;
     osg::ref_ptr<osgViewer::Viewer> _viewer;

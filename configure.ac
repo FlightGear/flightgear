@@ -46,6 +46,14 @@ if test "x$with_osg" != "x" ; then
     EXTRA_DIRS="${EXTRA_DIRS} $with_osg"
 fi
 
+# specify Boost location
+AC_ARG_WITH(osg, [  --with-boost=PREFIX       Specify the prefix path to Boost])
+
+if test "x$with_boost" != "x" ; then
+    echo "Boost prefix is $with_boost"
+    EXTRA_DIRS="${EXTRA_DIRS} $with_boost"
+fi
+
 dnl Determine an extra directories to add to include/lib search paths
 case "${host}" in
 *-apple-darwin* | *-*-mingw32*)
@@ -503,6 +511,15 @@ if test "x$ac_cv_header_osg_Version" != "xyes"; then
     echo
     echo "configure aborted."
     exit
+fi
+
+AC_CHECK_HEADER(boost/foreach.hpp)
+if test "x$ac_cv_header_boost_foreach_hpp" != "xyes"; then
+   echo
+   echo "You *must* have the Boost libraries installed."
+   echo
+   echo "configure aborted."
+   exit
 fi
 
 # Find the OSG libraries.  Note special handling for OS X frameworks
