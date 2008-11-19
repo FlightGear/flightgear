@@ -177,7 +177,6 @@ void fgUpdateTimeDepCalcs() {
         // do nothing, fdm isn't inited yet
     }
 
-    globals->get_model_mgr()->update(delta_time_sec);
     globals->get_aircraft_model()->update(delta_time_sec);
 
     // Update solar system
@@ -537,6 +536,10 @@ static void fgMainLoop( void ) {
 
     // run Nasal's settimer() loops right before the view manager
     globals->get_event_mgr()->update(delta_time_sec);
+
+    // pick up model coordidnates that Nasal code may have set relative to the
+    // aircraft's
+    globals->get_model_mgr()->update(delta_time_sec);
 
     // update the view angle as late as possible, but before sound calculations
     globals->get_viewmgr()->update(delta_time_sec);
