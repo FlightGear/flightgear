@@ -52,6 +52,7 @@
 #define __HTTP_GET_STRING           "GET "
 
 #include <osgUtil/SceneView>
+#include <osgViewer/Viewer>
 extern osg::ref_ptr<osgUtil::SceneView> sceneView;
 
 using std::string;
