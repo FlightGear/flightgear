@@ -1181,6 +1181,33 @@ do_gui_redraw (const SGPropertyNode * arg)
 
 
 /**
+ * Adds model to the scenery. The path to the added branch (/models/model[*])
+ * is returned in property "property".
+ */
+static bool
+do_add_model (const SGPropertyNode * arg)
+{
+    SGPropertyNode * model = fgGetNode("models", true);
+    for (int i = 0;; i++) {
+        if (i < 0)
+            return false;
+        if (!model->getChild("model", i, false)) {
+            model = model->getChild("model", i, true);
+            break;
+        }
+    }
+    copyProperties(arg, model);
+    if (model->hasValue("elevation-m"))
+        model->setDoubleValue("elevation-ft", model->getDoubleValue("elevation-m")
+                * SG_METER_TO_FEET);
+    model->getNode("load", true);
+    model->removeChildren("load");
+    const_cast<SGPropertyNode *>(arg)->setStringValue("property", model->getPath());
+    return true;
+}
+
+
+/**
  * Set mouse cursor coordinates and cursor shape.
  */
 static bool
@@ -1520,6 +1547,7 @@ static struct {
     { "dialog-update", do_dialog_update },
     { "dialog-apply", do_dialog_apply },
     { "gui-redraw", do_gui_redraw },
+    { "add-model", do_add_model },
     { "set-cursor", do_set_cursor },
     { "play-audio-sample", do_play_audio_sample },
     { "presets-commit", do_presets_commit },
