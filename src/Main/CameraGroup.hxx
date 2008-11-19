@@ -76,6 +76,10 @@ struct CameraInfo : public osg::Referenced
     double height;
 };
 
+/** Update the OSG cameras from the camera info.
+ */
+void updateCameras(const CameraInfo* info);
+
 class CameraGroup : public osg::Referenced
 {
 public:

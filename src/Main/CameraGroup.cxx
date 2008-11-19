@@ -112,6 +112,16 @@ void installCullVisitor(Camera* camera)
 
 namespace flightgear
 {
+void updateCameras(const CameraInfo* info)
+{
+    if (info->camera.valid())
+        info->camera->getViewport()->setViewport(info->x, info->y,
+                                                 info->width, info->height);
+    if (info->farCamera.valid())
+        info->farCamera->getViewport()->setViewport(info->x, info->y,
+                                                    info->width, info->height);
+}
+
 CameraInfo* CameraGroup::addCamera(unsigned flags, Camera* camera,
                                    const Matrix& view,
                                    const Matrix& projection,
@@ -156,9 +166,9 @@ void CameraGroup::update(const osg::Vec3d& position,
     for (CameraList::iterator i = _cameras.begin(); i != _cameras.end(); ++i) {
         const CameraInfo* info = i->get();
         const View::Slave& slave = _viewer->getSlave(info->slaveIndex);
+        // refreshes camera viewports (for now)
+        updateCameras(info);
         Camera* camera = info->camera.get();
-        camera->getViewport()->setViewport(info->x, info->y, info->width,
-                                           info->height);
         Matrix viewMatrix;
         if ((info->flags & VIEW_ABSOLUTE) != 0)
             viewMatrix = slave._viewOffset;
@@ -175,8 +185,6 @@ void CameraGroup::update(const osg::Vec3d& position,
             camera->setProjectionMatrix(projectionMatrix);
         } else {
             Camera* farCamera = info->farCamera.get();
-            farCamera->getViewport()->setViewport(info->x, info->y, info->width,
-                                                  info->height);
             farCamera->setViewMatrix(viewMatrix);
             double left, right, bottom, top, parentNear, parentFar;
             projectionMatrix.getFrustum(left, right, bottom, top,
@@ -415,6 +423,7 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
 
     // Disable statistics for the GUI camera.
     result->camera->setStats(0);
+    updateCameras(result);
     return result;
 }
 
