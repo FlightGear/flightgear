@@ -147,10 +147,6 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
 
     switch (ea.getEventType()) {
     case osgGA::GUIEventAdapter::FRAME:
-        if (idleHandler)
-            (*idleHandler)();
-        if (drawHandler)
-            (*drawHandler)();
         mouseWarped = false;
         handleStats(us);
         return true;
