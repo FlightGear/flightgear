@@ -89,10 +89,10 @@ if !exists("nasal_no_fgfs")
 
 	syn keyword nasalPropsFunction		getType getName getIndex getValue setValue setIntValue
 	syn keyword nasalPropsFunction		setBoolValue setDoubleValue getParent getChild getChildren
-	syn keyword nasalPropsFunction		getAttribute setAttribute
-	syn keyword nasalPropsFunction		removeChild removeChildren getNode
+	syn keyword nasalPropsFunction		getAttribute setAttribute alias unalias
+	syn keyword nasalPropsFunction		removeChild removeChildren getNode initNode
 	syn keyword nasalPropsFunction		getPath getBoolValue setValues getValues
-	syn match   nasalPropsFunction		"\<props\.\(_\?globals\|Node\|nodeList\|initNode\|condition\)\>\.\="
+	syn match   nasalPropsFunction		"\<props\.\(_\?globals\|Node\|nodeList\|condition\)\>\.\="
 
 	" XML embedded mode
 	if expand("%:e") == "xml"
