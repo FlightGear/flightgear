@@ -22,6 +22,7 @@
 #include "WindowBuilder.hxx"
 #include "WindowSystemAdapter.hxx"
 #include <simgear/props/props.hxx>
+#include <simgear/structure/OSGUtils.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>
 
 #include <algorithm>
@@ -133,12 +134,12 @@ CameraInfo* CameraGroup::addCamera(unsigned flags, Camera* camera,
 
     Camera* farCamera = 0;
     if ((flags & (GUI | ORTHO)) == 0) {
-        farCamera = osg::clone(camera);
+        farCamera = simgear::clone(camera);
         farCamera->setGraphicsContext(camera->getGraphicsContext());
         // Each camera's viewport is written when the window is
         // resized; if the the viewport isn't copied here, it gets updated
         // twice and ends up with the wrong value.
-        farCamera->setViewport(osg::clone(camera->getViewport()));
+        farCamera->setViewport(simgear::clone(camera->getViewport()));
         _viewer->addSlave(farCamera, view, projection, useMasterSceneData);
         installCullVisitor(farCamera);
         info->farCamera = farCamera;
