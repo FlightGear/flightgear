@@ -381,6 +381,7 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     // of mouse events are somewhat bizzare.
     SGPropertyNode* viewportNode = cameraNode->getNode("viewport", true);
     buildViewport(info, viewportNode, window->gc->getTraits());
+    updateCameras(info);
     return info;
 }
 
