@@ -23,7 +23,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..;..\..\src;..\..\src\include;..\..\..\SimGear;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\src\FDM\JSBSim;..\..\..\install\msvc71\OpenSceneGraph\include;..\..\..\3rdParty\include"
+				AdditionalIncludeDirectories="..\..\..;..\..\src;..\..\src\include;..\..\..\SimGear;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\src\FDM\JSBSim;..\..\..\install\msvc71\OpenSceneGraph\include;..\..\..\3rdParty\include;..\..\..\boost_1_36_0"
 				PreprocessorDefinitions="_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				StringPooling="TRUE"
 				BasicRuntimeChecks="0"
@@ -87,7 +87,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\..;..\..\src;..\..\src\include;..\..\src\FDM\JSBSim;..\..\..\SimGear;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\..\install\msvc71\OpenSceneGraph\include;..\..\..\Producer\include;..\..\..\3rdParty\include"
+				AdditionalIncludeDirectories="..\..\..;..\..\src;..\..\src\include;..\..\src\FDM\JSBSim;..\..\..\SimGear;&quot;..\..\..\pthreads-w32-2-7-0-release&quot;;..\..\..\install\msvc71\OpenSceneGraph\include;..\..\..\Producer\include;..\..\..\3rdParty\include;..\..\..\boost_1_36_0"
 				PreprocessorDefinitions="NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
@@ -1853,10 +1853,10 @@
 				RelativePath="..\..\src\Main\fg_props.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\Main\FGManipulator.cxx">
+				RelativePath="..\..\src\Main\FGEventHandler.cxx">
 			</File>
 			<File
-				RelativePath="..\..\src\Main\FGManipulator.hxx">
+				RelativePath="..\..\src\Main\FGEventHandler.hxx">
 			</File>
 			<File
 				RelativePath="..\..\src\Main\globals.cxx">
