@@ -821,9 +821,8 @@ FGInput::_update_keyboard ()
 void
 FGInput::_update_joystick (double dt)
 {
-  int modifiers = KEYMOD_NONE;  // FIXME: any way to get the real ones?
+  int modifiers = fgGetKeyModifiers();
   int buttons;
-  // float js_val, diff;
   float axis_values[MAX_JOYSTICK_AXES];
 
   int i;
