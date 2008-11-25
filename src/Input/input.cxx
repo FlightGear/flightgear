@@ -821,14 +821,11 @@ FGInput::_update_keyboard ()
 void
 FGInput::_update_joystick (double dt)
 {
+  float axis_values[MAX_JOYSTICK_AXES];
   int modifiers = fgGetKeyModifiers();
   int buttons;
-  float axis_values[MAX_JOYSTICK_AXES];
 
-  int i;
-  int j;
-
-  for ( i = 0; i < MAX_JOYSTICKS; i++) {
+  for (int i = 0; i < MAX_JOYSTICKS; i++) {
 
     jsJoystick * js = _joystick_bindings[i].js;
     if (js == 0 || js->notWorking())
@@ -837,21 +834,18 @@ FGInput::_update_joystick (double dt)
     js->read(&buttons, axis_values);
 
                                 // Fire bindings for the axes.
-    for ( j = 0; j < _joystick_bindings[i].naxes; j++) {
+    for (int j = 0; j < _joystick_bindings[i].naxes; j++) {
       axis &a = _joystick_bindings[i].axes[j];
-      
+
                                 // Do nothing if the axis position
                                 // is unchanged; only a change in
                                 // position fires the bindings.
       if (fabs(axis_values[j] - a.last_value) > a.tolerance) {
-//      SG_LOG(SG_INPUT, SG_DEBUG, "Axis " << j << " has moved");
         a.last_value = axis_values[j];
-//      SG_LOG(SG_INPUT, SG_DEBUG, "There are "
-//             << a.bindings[modifiers].size() << " bindings");
-        for (unsigned int k = 0; k < a.bindings[modifiers].size(); k++)
-          a.bindings[modifiers][k]->fire(axis_values[j]);
+        for (unsigned int k = 0; k < a.bindings[KEYMOD_NONE].size(); k++)
+          a.bindings[KEYMOD_NONE][k]->fire(axis_values[j]);
       }
-     
+
                                 // do we have to emulate axis buttons?
       a.last_dt += dt;
       if(a.last_dt >= a.interval_sec) {
@@ -860,7 +854,7 @@ FGInput::_update_joystick (double dt)
                          modifiers,
                          axis_values[j] < a.low_threshold,
                          -1, -1);
-      
+
         if (a.high.bindings[modifiers].size())
           _update_button(_joystick_bindings[i].axes[j].high,
                          modifiers,
@@ -871,7 +865,7 @@ FGInput::_update_joystick (double dt)
     }
 
                                 // Fire bindings for the buttons.
-    for (j = 0; j < _joystick_bindings[i].nbuttons; j++) {
+    for (int j = 0; j < _joystick_bindings[i].nbuttons; j++) {
       button &b = _joystick_bindings[i].buttons[j];
       b.last_dt += dt;
       if(b.last_dt >= b.interval_sec) {
