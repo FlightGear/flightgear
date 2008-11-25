@@ -301,9 +301,12 @@ private:
 void FGTileMgr::update_queues()
 {
     SceneryPager* pager = FGScenery::getPagerSingleton();
+    osg::FrameStamp* framestamp
+        = globals->get_renderer()->getViewer()->getFrameStamp();
+    tile_cache.set_current_time(framestamp->getReferenceTime());
     for_each(tile_cache.begin(), tile_cache.end(),
              TileLoad(pager,
-                      globals->get_renderer()->getViewer()->getFrameStamp(),
+                      framestamp,
                       globals->get_scenery()->get_terrain_branch(), _options.get()));
 }
 
