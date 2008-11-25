@@ -32,6 +32,7 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/environment/precipitation.hxx>
 
+
 class FGPrecipitationMgr : public SGSubsystem
 {
 private:
@@ -39,7 +40,6 @@ private:
     osg::ref_ptr<osg::MatrixTransform> transform;
     osg::ref_ptr<SGPrecipitation> precipitation;
     float getPrecipitationAtAltitudeMax(void);
-
 
 public:
     FGPrecipitationMgr();
@@ -49,7 +49,10 @@ public:
     virtual void init ();
     virtual void update (double dt);
     
+    void setPrecipitationLevel(double l);
+
     osg::Group * getObject(void);
+
 };
 
 #endif

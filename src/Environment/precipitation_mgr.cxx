@@ -44,7 +44,6 @@
 
 #include "precipitation_mgr.hxx"
 
-
 extern SGSky *thesky;
 
 
@@ -63,7 +62,6 @@ FGPrecipitationMgr::FGPrecipitationMgr()
     // By default, no precipitation
     precipitation->setRainIntensity(0);
     precipitation->setSnowIntensity(0);
-
     transform->addChild(precipitation->build());
     group->addChild(transform.get());
 }
@@ -92,6 +90,12 @@ void FGPrecipitationMgr::init()
     // Add to scene graph
     osg::Group* scenery = globals->get_scenery()->get_scene_graph();
     scenery->addChild(getObject());
+    fgGetNode("environment/params/precipitation-level-ft", true);
+}
+
+void FGPrecipitationMgr::setPrecipitationLevel(double a)
+{
+    fgSetDouble("environment/params/precipitation-level-ft",a);
 }
 
 /** 
@@ -103,7 +107,6 @@ osg::Group * FGPrecipitationMgr::getObject(void)
 {
     return this->group.get();
 }
-
 
 /** 
  * @brief Calculate the max alitutude with precipitation
@@ -199,6 +202,9 @@ void FGPrecipitationMgr::update(double dt)
     float altitudeAircraft;
     float altitudeCloudLayer;
 
+    altitudeCloudLayer = this->getPrecipitationAtAltitudeMax() * SG_METER_TO_FEET;
+    setPrecipitationLevel(altitudeCloudLayer);
+
 	// Does the user enable the precipitation ?
 	if (!sgEnviro.get_precipitation_enable_state()) {
 		// Disable precipitations
@@ -214,7 +220,6 @@ void FGPrecipitationMgr::update(double dt)
 
     // Get the elevation of aicraft and of the cloud layer
     altitudeAircraft = fgGetDouble("/position/altitude-ft", 0.0);
-    altitudeCloudLayer = this->getPrecipitationAtAltitudeMax() * SG_METER_TO_FEET;
 
     if ((altitudeCloudLayer > 0) && (altitudeAircraft > altitudeCloudLayer)) {
         // The aircraft is above the cloud layer
