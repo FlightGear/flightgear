@@ -1784,6 +1784,14 @@ void reInit(void)  // from gui_local.cxx -- TODO merge with fgReInitSubsystems()
     int xsize = fgGetInt("/sim/startup/xsize");
     int ysize = fgGetInt("/sim/startup/ysize");
 
+    // viewports also needs to be saved/restored as
+    // restoreInitialState() overwrites these
+    SGPropertyNode *guiNode = new SGPropertyNode;
+    SGPropertyNode *cameraNode = new SGPropertyNode;
+    SGPropertyNode *cameraGroupNode = fgGetNode("/sim/rendering/camera-group");
+    copyProperties(cameraGroupNode->getChild("camera"), cameraNode);
+    copyProperties(cameraGroupNode->getChild("gui"), guiNode);
+
     globals->restoreInitialState();
 
     // update our position based on current presets
@@ -1793,6 +1801,12 @@ void reInit(void)  // from gui_local.cxx -- TODO merge with fgReInitSubsystems()
     //  for xsize and ysize, and don't use the one set initially
     fgSetInt("/sim/startup/xsize", xsize);
     fgSetInt("/sim/startup/ysize", ysize);
+
+    copyProperties(cameraNode, cameraGroupNode->getChild("camera"));
+    copyProperties(guiNode, cameraGroupNode->getChild("gui"));
+
+    delete guiNode;
+    delete cameraNode;
 
     SGTime *t = globals->get_time_params();
     delete t;
