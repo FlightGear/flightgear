@@ -323,6 +323,12 @@ static naRef f_unalias(naContext c, naRef me, int argc, naRef* args)
     return naNum((*node)->unalias());
 }
 
+static naRef f_getAliasTarget(naContext c, naRef me, int argc, naRef* args)
+{
+    NODEARG();
+    return propNodeGhostCreate(c, (*node)->getAliasTarget());
+}
+
 static naRef f_getNode(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
@@ -370,6 +376,7 @@ static struct {
     { f_removeChildren, "_removeChildren" },
     { f_alias, "_alias" },
     { f_unalias, "_unalias" },
+    { f_getAliasTarget, "_getAliasTarget" },
     { f_getNode, "_getNode" },
     { f_new, "_new" },
     { f_globals, "_globals" },
