@@ -507,9 +507,22 @@ bool computeIntersections(const CameraGroup* cgroup,
               && y >= viewport->y() - epsilon
               && y < viewport->y() + viewport->height() -1.0 + epsilon))
             continue;
-        LineSegmentIntersector::CoordinateFrame cf = Intersector::WINDOW;
+        Vec4d start(x, y, 0.0, 1.0);
+        Vec4d end(x, y, 1.0, 1.0);
+        Matrix windowMat = viewport->computeWindowMatrix();
+        Matrix startPtMat = Matrix::inverse(camera->getProjectionMatrix()
+                                            * windowMat);
+        Matrix endPtMat
+            = Matrix::inverse(cinfo->farCamera->getProjectionMatrix()
+                              * windowMat);
+        start = start * startPtMat;
+        start /= start.w();
+        end = end * endPtMat;
+        end /= end.w();
         ref_ptr<LineSegmentIntersector> picker
-            = new LineSegmentIntersector(cf, x, y);
+            = new LineSegmentIntersector(Intersector::VIEW,
+                                         Vec3d(start.x(), start.y(), start.z()),
+                                         Vec3d(end.x(), end.y(), end.z()));
         osgUtil::IntersectionVisitor iv(picker.get());
         const_cast<Camera*>(camera)->accept(iv);
         if (picker->containsIntersections()) {
