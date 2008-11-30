@@ -371,7 +371,7 @@ void FGOutput::DelimitedOutput(string fname)
     outstream << Atmosphere->GetPressure() << delimeter;
     outstream << Atmosphere->GetTurbMagnitude() << delimeter;
     outstream << Atmosphere->GetTurbDirection().Dump(delimeter) << delimeter;
-    outstream << Atmosphere->GetWindNED().Dump(delimeter);
+    outstream << Atmosphere->GetTotalWindNED().Dump(delimeter);
   }
   if (SubSystems & ssMassProps) {
     outstream << delimeter;
@@ -809,7 +809,7 @@ void FGOutput::SocketOutput(void)
     socket->Append(Atmosphere->GetPressure());
     socket->Append(Atmosphere->GetTurbMagnitude());
     socket->Append(Atmosphere->GetTurbDirection().Dump(","));
-    socket->Append(Atmosphere->GetWindNED().Dump(","));
+    socket->Append(Atmosphere->GetTotalWindNED().Dump(","));
   }
   if (SubSystems & ssMassProps) {
     socket->Append(MassBalance->GetJ()(1,1));

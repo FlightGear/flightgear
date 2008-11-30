@@ -169,7 +169,7 @@ public:
   double Calculate(void);
   double CalcFuelNeed(void);
   double GetPowerAvailable(void);
-  double GetThrust(void) const {return Thrust;}
+//  double GetThrust(void) const {return Thrust;}
   /** A lag filter.
       Used to control the rate at which values are allowed to change.
       @param var a pointer to a variable of type double

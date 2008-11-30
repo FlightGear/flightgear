@@ -169,10 +169,10 @@ bool FGAuxiliary::Run()
   } else if (GroundReactions->GetWOW() && vUVW(eU) < 30) {
     double factor = (vUVW(eU) - 10.0)/20.0;
     vAeroPQR = vPQR + factor*Atmosphere->GetTurbPQR();
-    vAeroUVW = vUVW + factor*Propagate->GetTl2b()*(Atmosphere->GetWindNED()+Atmosphere->GetGustNED());
+    vAeroUVW = vUVW + factor*Propagate->GetTl2b()*Atmosphere->GetTotalWindNED();
   } else {
     vAeroPQR = vPQR + Atmosphere->GetTurbPQR();
-    vAeroUVW = vUVW + Propagate->GetTl2b()*(Atmosphere->GetWindNED()+Atmosphere->GetGustNED());
+    vAeroUVW = vUVW + Propagate->GetTl2b()*Atmosphere->GetTotalWindNED();
   }
 
   Vt = vAeroUVW.Magnitude();
@@ -291,7 +291,7 @@ double FGAuxiliary::GetHeadWind(void) const
   double psiw,vw;
 
   psiw = Atmosphere->GetWindPsi();
-  vw = Atmosphere->GetWindNED().Magnitude();
+  vw = Atmosphere->GetTotalWindNED().Magnitude();
 
   return vw*cos(psiw - Propagate->GetEuler(ePsi));
 }
@@ -303,7 +303,7 @@ double FGAuxiliary::GetCrossWind(void) const
   double psiw,vw;
 
   psiw = Atmosphere->GetWindPsi();
-  vw = Atmosphere->GetWindNED().Magnitude();
+  vw = Atmosphere->GetTotalWindNED().Magnitude();
 
   return  vw*sin(psiw - Propagate->GetEuler(ePsi));
 }

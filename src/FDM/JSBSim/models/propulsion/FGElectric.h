@@ -82,12 +82,13 @@ public:
 
   double Calculate(void);
   double GetPowerAvailable(void) {return PowerAvailable;}
-  double CalcFuelNeed(void);
   double getRPM(void) {return RPM;}
   string GetEngineLabels(string delimeter);
   string GetEngineValues(string delimeter);
 
 private:
+
+  double CalcFuelNeed(void);
 
   double BrakeHorsePower;
   double PowerAvailable;

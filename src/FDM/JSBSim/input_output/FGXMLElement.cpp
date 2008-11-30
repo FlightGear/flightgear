@@ -65,6 +65,8 @@ Element::Element(string nm)
   convert["FT2"]["M2"] = 1.0/convert["M2"]["FT2"];
   convert["M2"]["IN2"] = convert["M"]["IN"]*convert["M"]["IN"];
   convert["IN2"]["M2"] = 1.0/convert["M2"]["IN2"];
+  convert["FT2"]["IN2"] = 144.0;
+  convert["IN2"]["FT2"] = 1.0/convert["FT2"]["IN2"];
   // Volume
   convert["IN3"]["CC"] = 16.387064;
   convert["CC"]["IN3"] = 1.0/convert["IN3"]["CC"];
@@ -128,6 +130,9 @@ Element::Element(string nm)
   convert["PA"]["LBS/FT2"] = 1.0/convert["LBS/FT2"]["PA"];
   // Mass flow
   convert["KG/MIN"]["LBS/MIN"] = convert["KG"]["LBS"];
+  // Fuel Consumption
+  convert["LBS/HP*HR"]["KG/KW*HR"] = 0.6083;
+  convert["KG/KW*HR"]["LBS/HP*HR"] = 1.0/convert["LBS/HP*HR"]["KG/KW*HR"];
 
   // Length
   convert["M"]["M"] = 1.00;
@@ -187,6 +192,9 @@ Element::Element(string nm)
   convert["LBS/SEC"]["LBS/SEC"] = 1.00;
   convert["KG/MIN"]["KG/MIN"] = 1.0;
   convert["LBS/MIN"]["LBS/MIN"] = 1.0;
+  // Fuel Consumption
+  convert["LBS/HP*HR"]["LBS/HP*HR"] = 1.0;
+  convert["KG/KW*HR"]["KG/KW*HR"] = 1.0;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -389,12 +397,12 @@ double Element::FindElementValueAsNumberConvertFromTo( string el,
                                                        string target_units)
 {
   Element* element = FindElement(el);
-  
+
   if (!element) {
     cerr << "Attempting to get non-existent element " << el << endl;
     exit(0);
   }
-  
+
   if (!supplied_units.empty()) {
     if (convert.find(supplied_units) == convert.end()) {
       cerr << endl << "Supplied unit: \"" << supplied_units << "\" does not exist (typo?). Add new unit"

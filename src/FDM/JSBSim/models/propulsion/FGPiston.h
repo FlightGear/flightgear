@@ -27,7 +27,7 @@ HISTORY
 --------------------------------------------------------------------------------
 09/12/2000  JSB  Created
 10/01/2001  DPM  Modified to use equations from Dave Luff's piston model.
-
+11/01/2008  RKJ  Modified piston engine model for more general use.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -66,15 +66,19 @@ CLASS DOCUMENTATION
 
 @code
 <piston_engine name="{string}">
-  <minmp unit="{INHG | PA | ATM}"> {number} </minmp>
-  <maxmp unit="{INHG | PA | ATM}"> {number} </maxmp>
+  <minmp unit="{INHG | PA | ATM}"> {number} </minmp> <!-- Depricated -->
+  <maxmp unit="{INHG | PA | ATM}"> {number} </maxmp> <!-- Depricated -->
   <displacement unit="{IN3 | LTR | CC}"> {number} </displacement>
+  <sparkfaildrop> {number} </sparkfaildrop>
   <maxhp unit="{HP | WATTS}"> {number} </maxhp>
   <cycles> {number} </cycles>
   <idlerpm> {number} </idlerpm>
+  <maxrpm> {number} </maxrpm>
   <maxthrottle> {number} </maxthrottle>
   <minthrottle> {number} </minthrottle>
   <numboostspeeds> {number} </numboostspeeds>
+  <bsfc unit="{LBS/HP*HR | "KG/KW*HR"}"> {number} </bsft>
+  <volumetric_efficiency> {number} </volumetric_efficiency>
   <boostoverride> {0 | 1} </boostoverride>
   <ratedboost1 unit="{INHG | PA | ATM}"> {number} </ratedboost1>
   <ratedpower1 unit="{HP | WATTS}"> {number} </ratedpower1>
@@ -164,6 +168,7 @@ CLASS DOCUMENTATION
     @author Jon S. Berndt (Engine framework code and framework-related mods)
     @author Dave Luff (engine operational code)
     @author David Megginson (initial porting and additional code)
+    @author Ron Jensen (additional engine code)
     @version $Id$
   */
 
@@ -279,7 +284,7 @@ private:
   double minMAP;  // Pa
   double maxMAP;  // Pa
   double MAP;     // Pa
-  double BSFC;    // unitless
+  double BSFC;    // brake specific fuel consumption [lbs/horsepower*hour
 
   //
   // Inputs (in addition to those in FGEngine).

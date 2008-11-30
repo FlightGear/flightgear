@@ -398,7 +398,10 @@ double FGTurboProp::Start(void)
 
 double FGTurboProp::CalcFuelNeed(void)
 {
-  return FuelFlow_pph /3600 * State->Getdt() * Propulsion->GetRate();
+  double dT = State->Getdt() * Propulsion->GetRate();
+  FuelFlowRate = FuelFlow_pph / 3600.0;
+  FuelExpended = FuelFlowRate * dT;
+  return FuelExpended;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

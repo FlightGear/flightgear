@@ -96,7 +96,7 @@ void FGState::Initialize(FGInitialCondition *FGIC)
                           FGIC->GetWindDFpsIC() );
 
   FGColumnVector3 vAeroUVW;
-  vAeroUVW = Propagate->GetUVW() + Propagate->GetTl2b()*Atmosphere->GetWindNED();
+  vAeroUVW = Propagate->GetUVW() + Propagate->GetTl2b()*Atmosphere->GetTotalWindNED();
 
   double alpha, beta;
   if (vAeroUVW(eW) != 0.0)

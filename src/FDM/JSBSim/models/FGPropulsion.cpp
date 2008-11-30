@@ -462,9 +462,13 @@ FGMatrix33& FGPropulsion::CalculateTankInertias(void)
 
   tankJ = FGMatrix33();
 
-  for (unsigned int i=0; i<size; i++)
+  for (unsigned int i=0; i<size; i++) {
     tankJ += MassBalance->GetPointmassInertia( lbtoslug * Tanks[i]->GetContents(),
                                                Tanks[i]->GetXYZ() );
+    tankJ(1,1) += Tanks[i]->GetIxx();
+    tankJ(2,2) += Tanks[i]->GetIyy();
+    tankJ(3,3) += Tanks[i]->GetIzz();
+  }
 
   return tankJ;
 }

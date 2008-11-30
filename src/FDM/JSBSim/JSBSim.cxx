@@ -750,6 +750,10 @@ bool FGJSBsim::copy_from_JSBsim()
         node->setDoubleValue("oil-temperature-degf", eng->getOilTemp_degF());
         node->setDoubleValue("oil-pressure-psi", eng->getOilPressure_psi());
         node->setDoubleValue("mp-osi", eng->getManifoldPressure_inHg());
+        // NOTE: mp-osi is not in ounces per square inch.
+        // This error is left for reasons of backwards compatibility with
+        // existing FlightGear sound and instrument configurations.
+        node->setDoubleValue("mp-inhg", eng->getManifoldPressure_inHg());
         node->setDoubleValue("cht-degf", eng->getCylinderHeadTemp_degF());
         node->setDoubleValue("rpm", eng->getRPM());
         } // end FGPiston code block

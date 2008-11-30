@@ -130,7 +130,7 @@ bool FGMassBalance::Load(Element* el)
     element = el->FindNextElement("pointmass");
   }
 
-  Weight = EmptyWeight + Propulsion->GetTanksWeight() + GetPointMassWeight()
+  Weight = EmptyWeight + Propulsion->GetTanksWeight() + GetTotalPointMassWeight()
     + BuoyantForces->GetGasMass()*slugtolb;
 
   Mass = lbtoslug*Weight;
@@ -149,7 +149,7 @@ bool FGMassBalance::Run(void)
   if (FGModel::Run()) return true;
   if (FDMExec->Holding()) return false;
 
-  Weight = EmptyWeight + Propulsion->GetTanksWeight() + GetPointMassWeight()
+  Weight = EmptyWeight + Propulsion->GetTanksWeight() + GetTotalPointMassWeight()
     + BuoyantForces->GetGasMass()*slugtolb;
 
   Mass = lbtoslug*Weight;
@@ -205,8 +205,6 @@ bool FGMassBalance::Run(void)
 
 void FGMassBalance::AddPointMass(Element* el)
 {
-  char tmp[80];
-
   Element* loc_element = el->FindElement("location");
   string pointmass_name = el->GetAttributeValue("name");
   if (!loc_element) {
@@ -216,18 +214,14 @@ void FGMassBalance::AddPointMass(Element* el)
 
   double w = el->FindElementValueAsNumberConvertTo("weight", "LBS");
   FGColumnVector3 vXYZ = loc_element->FindElementTripletConvertTo("IN");
+
   PointMasses.push_back(new PointMass(w, vXYZ));
-
-  int num = PointMasses.size()-1;
-
-  snprintf(tmp, 80, "inertia/pointmass-weight-lbs[%u]", num);
-  PropertyManager->Tie( tmp, this, num, &FGMassBalance::GetPointMassWeight,
-                                        &FGMassBalance::SetPointMassWeight);
+  PointMasses.back()->bind(PropertyManager, PointMasses.size()-1);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-double FGMassBalance::GetPointMassWeight(void)
+double FGMassBalance::GetTotalPointMassWeight(void)
 {
   double PM_total_weight = 0.0;
 

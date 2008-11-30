@@ -50,6 +50,10 @@ DEFINITIONS
 
 #define ID_MASSBALANCE "$Id$"
 
+#if defined(WIN32) && !defined(__CYGWIN__)
+#define snprintf _snprintf
+#endif
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONSS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -150,23 +154,13 @@ public:
   inline void SetBaseCG(const FGColumnVector3& CG) {vbaseXYZcg = vXYZcg = CG;}
 
   void AddPointMass(Element* el);
-  double GetPointMassWeight(void);
-  double GetPointMassWeight(int idx) const {
-    if (idx < (int)PointMasses.size()) return(PointMasses[idx]->Weight);
-    else return 0.0;
-  }
-
-  void SetPointMassWeight(int idx, double pmw) {
-    if (idx < (int)PointMasses.size()) {
-      PointMasses[idx]->Weight = pmw;
-    }
-  }
+  double GetTotalPointMassWeight(void);
 
   FGColumnVector3& GetPointMassMoment(void);
   FGMatrix33& GetJ(void) {return mJ;}
   FGMatrix33& GetJinv(void) {return mJinv;}
   void SetAircraftBaseInertias(FGMatrix33 BaseJ) {baseJ = BaseJ;}
-
+  
 private:
   double Weight;
   double EmptyWeight;
@@ -183,12 +177,33 @@ private:
   FGMatrix33& CalculatePMInertias(void);
 
   struct PointMass {
+    char tmp[80];
     PointMass(double w, FGColumnVector3& vXYZ) {
       Weight = w;
       Location = vXYZ;
     }
     FGColumnVector3 Location;
     double Weight;
+    double GetPointMassLocation(int axis) const {return Location(axis);}
+    void SetPointMassLocation(int axis, double value) {Location(axis) = value;}
+    void SetPointMassWeight(double wt) {Weight = wt;}
+    double GetPointMassWeight(void) const {return Weight;}
+
+    void bind(FGPropertyManager* PropertyManager, int num) {
+      snprintf(tmp, 80, "inertia/pointmass-weight-lbs[%u]", num);
+      PropertyManager->Tie( tmp, this, &PointMass::GetPointMassWeight,
+                                       &PointMass::SetPointMassWeight);
+
+      snprintf(tmp, 80, "inertia/pointmass-location-X-inches[%u]", num);
+      PropertyManager->Tie( tmp, this, eX, &PointMass::GetPointMassLocation,
+                                           &PointMass::SetPointMassLocation);
+      snprintf(tmp, 80, "inertia/pointmass-location-Y-inches[%u]", num);
+      PropertyManager->Tie( tmp, this, eY, &PointMass::GetPointMassLocation,
+                                           &PointMass::SetPointMassLocation);
+      snprintf(tmp, 80, "inertia/pointmass-location-Z-inches[%u]", num);
+      PropertyManager->Tie( tmp, this, eZ, &PointMass::GetPointMassLocation,
+                                           &PointMass::SetPointMassLocation);
+    }
   };
 
   vector <struct PointMass*> PointMasses;
