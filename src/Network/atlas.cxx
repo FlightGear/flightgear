@@ -69,7 +69,7 @@ bool FGAtlas::gen_message() {
     // cout << "generating atlas message" << endl;
 
     static SGPropertyNode *adf_freq
-        = fgGetNode("/instrumentation/kr-87/outputs/selected-khz", true);
+        = fgGetNode("/instrumentation/adf/outputs/selected-khz", true);
     static SGPropertyNode *nav_freq
         = fgGetNode("/instrumentation/nav/frequencies/selected-mhz", true);
     static SGPropertyNode *nav_sel_radial
