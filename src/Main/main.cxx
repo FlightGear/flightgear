@@ -626,7 +626,7 @@ static void fgMainLoop( void ) {
     sgdAddVec3( last_listener_pos,
 		sgdv3_null, (double *)&current_view->get_view_pos());
 
-    if ( sgdLengthVec3(sgdv3_help) > 0.00001 ) {
+    if ( sgdLengthVec3(sgdv3_help) > 0.2 ) {
 	sgCopyVec3( listener_vel, model_vel );
     } else {
 	sgSetVec3( listener_vel, 0.0, 0.0, 0.0 );
