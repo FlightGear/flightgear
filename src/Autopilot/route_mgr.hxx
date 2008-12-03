@@ -93,7 +93,7 @@ private:
     SGPropertyNode_ptr mirror;
     bool altitude_set;
 
-    int make_waypoint( SGWayPoint **wp, const string& target );
+    SGWayPoint* make_waypoint(const string& target);
     void update_mirror();
     bool near_ground();
 
@@ -110,7 +110,7 @@ public:
 
     bool build ();
 
-    int new_waypoint( const string& tgt_alt, int n = -1 );
+    void new_waypoint( const string& tgt_alt, int n = -1 );
     void add_waypoint( const SGWayPoint& wp, int n = -1 );
     SGWayPoint pop_waypoint( int i = 0 );
 

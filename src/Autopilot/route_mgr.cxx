@@ -281,24 +281,24 @@ bool FGRouteMgr::build() {
 }
 
 
-int FGRouteMgr::new_waypoint( const string& target, int n ) {
-    SGWayPoint *wp = 0;
-    int type = make_waypoint( &wp, target );
-
-    if (wp) {
-        add_waypoint( *wp, n );
-        delete wp;
-
-        if ( !near_ground() )
-            fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
+void FGRouteMgr::new_waypoint( const string& target, int n ) {
+    SGWayPoint* wp = make_waypoint( target );
+    if (!wp) {
+        return;
     }
-    return type;
+    
+    add_waypoint( *wp, n );
+    delete wp;
+
+    if ( !near_ground() ) {
+        fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
+    }
 }
 
 
-int FGRouteMgr::make_waypoint( SGWayPoint **wp, const string& tgt ) {
+SGWayPoint* FGRouteMgr::make_waypoint(const string& tgt ) {
     string target = tgt;
-
+    
     // make upper case
     for (unsigned int i = 0; i < target.size(); i++)
         if (target[i] >= 'a' && target[i] <= 'z')
@@ -321,57 +321,28 @@ int FGRouteMgr::make_waypoint( SGWayPoint **wp, const string& tgt ) {
         double lat = atof( target.c_str() + pos + 1);
 
         SG_LOG( SG_GENERAL, SG_INFO, "Adding waypoint lon = " << lon << ", lat = " << lat );
-        *wp = new SGWayPoint( lon, lat, alt, SGWayPoint::WGS84, target );
-        return 1;
-    }
+        return new SGWayPoint( lon, lat, alt, SGWayPoint::WGS84, target );
+    }    
 
-    // check for airport id
-    const FGAirport *apt = fgFindAirportID( target );
-    if (apt) {
-        SG_LOG( SG_GENERAL, SG_INFO, "Adding waypoint (airport) = " << target );
-        *wp = new SGWayPoint( apt->getLongitude(), apt->getLatitude(), alt, SGWayPoint::WGS84, target );
-        return 2;
-    }
-
-    double lat, lon;
-    // The base lon/lat are determined by the last WP,
-    // or the current pos if the WP list is empty.
-    const int wps = this->size();
-
-    if (wps > 0) {
-        SGWayPoint wp = get_waypoint(wps-1);
-        lat = wp.get_target_lat();
-        lon = wp.get_target_lon();
+    SGGeod basePosition;
+    if (route->size() > 0) {
+        SGWayPoint wp = get_waypoint(route->size()-1);
+        basePosition = SGGeod::fromDeg(wp.get_target_lon(), wp.get_target_lat());
     } else {
-        lat = fgGetNode("/position/latitude-deg")->getDoubleValue();
-        lon = fgGetNode("/position/longitude-deg")->getDoubleValue();
+        // route is empty, use current position
+        basePosition = SGGeod::fromDeg(
+            fgGetNode("/position/longitude-deg")->getDoubleValue(), 
+            fgGetNode("/position/latitude-deg")->getDoubleValue());
     }
 
-    // check for fix id
-    FGFix* f;
-    double heading;
-    double dist;
 
-    if ( globals->get_fixlist()->query_and_offset( target, lon, lat, 0, f, &heading, &dist ) ) {
-        SG_LOG( SG_GENERAL, SG_INFO, "Adding waypoint (fix) = " << target );
-        *wp = new SGWayPoint( f->get_lon(), f->get_lat(), alt, SGWayPoint::WGS84, target );
-        return 3;
+    FGPositionedRef p = FGPositioned::findClosestWithIdent(target, basePosition);
+    if (!p) {
+        SG_LOG( SG_GENERAL, SG_INFO, "Unable to find FGPositioned with ident:" << target);
+        return NULL;
     }
-
-    // Try finding a nav matching the ID
-    lat *= SGD_DEGREES_TO_RADIANS;
-    lon *= SGD_DEGREES_TO_RADIANS;
-
-    SG_LOG( SG_GENERAL, SG_INFO, "Looking for nav " << target << " at " << lon << " " << lat);
-
-    if (FGNavRecord* nav = globals->get_navlist()->findByIdent(target.c_str(), lon, lat)) {
-        SG_LOG( SG_GENERAL, SG_INFO, "Adding waypoint (nav) = " << target );
-        *wp = new SGWayPoint( nav->get_lon(), nav->get_lat(), alt, SGWayPoint::WGS84, target );
-        return 4;
-    }
-
-    // unknown target
-    return 0;
+    
+    return new SGWayPoint(p->longitude(), p->latitude(), p->elevation(), SGWayPoint::WGS84, target);
 }
 
 

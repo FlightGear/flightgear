@@ -182,38 +182,31 @@ spatialFindTyped(const SGGeod& aPos, double aRange, FGPositioned::Type aLower, F
 }
 
 /**
- * Cartesian range predicate. Note that for really long ranges, might need to
- * to use geodetic / geocentric distance instead
  */
 class RangePredictate
 {
 public:
-  RangePredictate(const Point3D& aOrigin, double aRange) :
+  RangePredictate(const SGGeod& aOrigin, double aRange) :
     mOrigin(aOrigin),
-    mRangeSquared(aRange * aRange)
+    mRange(aRange)
   { ; }
   
   bool operator()(const FGPositionedRef& aPos)
   {
-    Point3D p(Point3D::fromSGGeod(aPos->geod()));
-    bool ok = (mOrigin.distance3Dsquared(p) > mRangeSquared);
-    if (ok) {
-      double x = sqrt(mOrigin.distance3Dsquared(p) - mRangeSquared);
-      x *= SG_METER_TO_NM;
-      //std::cout << "pos:" << aPos->ident() << " failed range check by " << x << std::endl;
-    }
-    return ok;
+    double d, az1, az2;
+    SGGeodesy::inverse(aPos->geod(), mOrigin, az1, az2, d);
+    return (d > mRange);
   }
   
 private:
-  Point3D mOrigin;
-  double mRangeSquared;
+  SGGeod mOrigin;
+  double mRange;
 };
 
 static void
 filterListByRange(const SGGeod& aPos, double aRange, FGPositioned::List& aResult)
 {
-  RangePredictate pred(Point3D::fromSGGeod(aPos), aRange * SG_NM_TO_METER);
+  RangePredictate pred(aPos, aRange * SG_NM_TO_METER);
   FGPositioned::List::iterator newEnd; 
   newEnd = std::remove_if(aResult.begin(), aResult.end(), pred);
   aResult.erase(newEnd, aResult.end());
@@ -223,17 +216,19 @@ class DistanceOrdering
 {
 public:
   DistanceOrdering(const SGGeod& aPos) :
-    mPos(Point3D::fromSGGeod(aPos))
+    mPos(aPos)
   { }
   
   bool operator()(const FGPositionedRef& a, const FGPositionedRef& b) const
   {
-    return mPos.distance3Dsquared(Point3D::fromSGGeod(a->geod())) < 
-      mPos.distance3Dsquared(Point3D::fromSGGeod(b->geod()));
+    double dA, dB, az1, az2;
+    SGGeodesy::inverse(mPos, a->geod(), az1, az2, dA);
+    SGGeodesy::inverse(mPos, b->geod(), az1, az2, dB);
+    return dA < dB;
   }
 
 private:
-  Point3D mPos;
+  SGGeod mPos;
 };
 
 static void
@@ -247,7 +242,9 @@ namedFindClosestTyped(const std::string& aIdent, const SGGeod& aOrigin,
   FGPositioned::Type aLower, FGPositioned::Type aUpper)
 {
   NamedIndexRange range = global_namedIndex.equal_range(aIdent);
-  if (range.first == range.second) return NULL;
+  if (range.first == range.second) {
+    return NULL;
+  }
   
 // common case, only one result. looks a bit ugly because these are
 // sequential iterators, not random-access ones
@@ -265,21 +262,21 @@ namedFindClosestTyped(const std::string& aIdent, const SGGeod& aOrigin,
 // multiple matches, we need to actually check the distance to each one
   double minDist = HUGE_VAL;
   FGPositionedRef result;
-  Point3D origin(Point3D::fromSGGeod(aOrigin));
-  
-  for (; range.first != range.second; ++range.first) {
+  NamedPositionedIndex::const_iterator it = range.first;
+    
+  for (; it != range.second; ++it) {
   // filter by type
-    FGPositioned::Type ty = range.first->second->type();
+    FGPositioned::Type ty = it->second->type();
     if ((ty < aLower) || (ty > aUpper)) {
       continue;
     }
     
   // find distance
-    Point3D p(Point3D::fromSGGeod(range.first->second->geod()));
-    double ds = origin.distance3Dsquared(p);
-    if (ds < minDist) {
-      minDist = ds;
-      result = range.first->second;
+    double d, az1, az2;
+    SGGeodesy::inverse(aOrigin, it->second->geod(), az2, az2, d);
+    if (d < minDist) {
+      minDist = d;
+      result = it->second;
     }
   }
   
@@ -340,26 +337,25 @@ FGPositioned::FGPositioned() :
 
 FGPositioned::FGPositioned(Type ty, const std::string& aIdent, double aLat, double aLon, double aElev) :
   mType(ty),
-  mIdent(aIdent),
-  mPosition(SGGeod::fromDegFt(aLon, aLat, aElev))
+  mPosition(SGGeod::fromDegFt(aLon, aLat, aElev)),
+  mIdent(aIdent)
 {
-  //addToIndices(this);
-  //SGReferenced::get(this); // hold an owning ref, for the moment
+  addToIndices(this);
+  SGReferenced::get(this); // hold an owning ref, for the moment
 }
 
 FGPositioned::FGPositioned(Type ty, const std::string& aIdent, const SGGeod& aPos) :
   mType(ty),
-  mIdent(aIdent),
-  mPosition(aPos)
+  mPosition(aPos),
+  mIdent(aIdent)
 {
-  //addToIndices(this);
-  //SGReferenced::get(this); // hold an owning ref, for the moment
+  addToIndices(this);
+  SGReferenced::get(this); // hold an owning ref, for the moment
 }
 
 FGPositioned::~FGPositioned()
 {
-  //std::cout << "~FGPositioned:" << mIdent << std::endl;
-  //removeFromIndices(this);
+  removeFromIndices(this);
 }
 
 SGBucket
