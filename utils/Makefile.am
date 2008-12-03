@@ -1,4 +1,4 @@
 DIST_SUBDIRS = GPSsmooth TerraSync Modeller js_server fgadmin xmlgrep
 
-SUBDIRS = GPSsmooth TerraSync Modeller js_server
+SUBDIRS = GPSsmooth TerraSync Modeller js_server propmerge
 
