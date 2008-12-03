@@ -194,7 +194,7 @@ void PropertyList::handle_select(puObject *list_box)
         const char *src = prop_list->_entries[selected];
 
         if (prop_list->_dot_files && (selected < 2)) {
-            if (!strcmp(src, ".")) {
+            if (src[0] == '.' && (src[1] == '\0' || src[1] == ' ')) {
                 if (mod_ctrl)
                     prop_list->toggleVerbosity();
                 else if (mod_shift)
@@ -260,8 +260,8 @@ void PropertyList::update(bool restore_pos)
         _num_entries += 2;    // for . and ..
         _entries = new char*[_num_entries + 1];
 
-        _entries[0] = new char[2];
-        strcpy(_entries[0], ".");
+        _entries[0] = new char[16];
+        strcpy(_entries[0], _verbose ? ".     [verbose]" : ".");
 
         _entries[1] = new char[3];
         strcpy(_entries[1], "..");
