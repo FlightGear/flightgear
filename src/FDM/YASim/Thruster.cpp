@@ -42,7 +42,7 @@ void Thruster::setDirection(float* dir)
 
 void Thruster::setThrottle(float throttle)
 {
-    _throttle = Math::clamp(throttle, 0, 1);
+    _throttle = Math::clamp(throttle, -1, 1);
 }
 
 void Thruster::setMixture(float mixture)
