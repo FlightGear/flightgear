@@ -188,6 +188,12 @@ FGEnvironmentMgr::bind ()
   fgTie("/sim/rendering/clouds3d-density", thesky,
 	  &SGSky::get_3dCloudDensity,
 	  &SGSky::set_3dCloudDensity);
+  fgTie("/sim/rendering/clouds3d-vis-range", thesky,
+        &SGSky::get_3dCloudVisRange,
+        &SGSky::set_3dCloudVisRange);
+  fgTie("/sim/rendering/clouds3d-num-flavours", thesky,
+        &SGSky::get_3dCloudNumFlavours,
+        &SGSky::set_3dCloudNumFlavours);
   fgTie("/sim/rendering/precipitation-enable", &sgEnviro,
 	  &SGEnviro::get_precipitation_enable_state, 
 	  &SGEnviro::set_precipitation_enable_state);
@@ -238,8 +244,7 @@ FGEnvironmentMgr::unbind ()
   fgUntie("/sim/rendering/clouds3d-enable");
   fgUntie("/sim/rendering/clouds3d-vis-range");
   fgUntie("/sim/rendering/clouds3d-density");
-  fgUntie("/sim/rendering/clouds3d-cache-size");
-  fgUntie("/sim/rendering/clouds3d-cache-resolution");
+  fgUntie("/sim/rendering/clouds3d-num-flavours");
   fgUntie("/sim/rendering/precipitation-enable");
   fgUntie("/environment/rebuild-layers");
   fgUntie("/sim/rendering/lightning-enable");

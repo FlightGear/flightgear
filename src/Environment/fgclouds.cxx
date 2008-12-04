@@ -130,7 +130,8 @@ void FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode  *box_d
                         string texture = cld_def->getStringValue("texture", "cl_cumulus.rgb");
           
                         SGNewCloud *cld = 
-                                new SGNewCloud(texture_root, 
+                                new SGNewCloud(type,
+                                               texture_root, 
                                                texture, 
                                                min_width, 
                                                max_width, 
@@ -165,6 +166,7 @@ void FGClouds::buildLayer(int iLayer, const string& name, double alt, double cov
         SGCloudField *layer = thesky->get_cloud_layer(iLayer)->get_layer3D();
 
 	layer->clear();
+        
 	// when we don't generate clouds the layer is rendered in 2D
 	if( coverage == 0.0 )
 		return;
@@ -210,7 +212,6 @@ void FGClouds::buildLayer(int iLayer, const string& name, double alt, double cov
 		}
 	}
 	totalCount = 1.0 / totalCount;
-	double currCoverage = 0.0;
 
 	for(double px = 0.0; px < SGCloudField::fieldSize; px += grid_x_size) {
 		for(double py = 0.0; py < SGCloudField::fieldSize; py += grid_y_size) {
@@ -218,16 +219,11 @@ void FGClouds::buildLayer(int iLayer, const string& name, double alt, double cov
 			double y = py + grid_y_rand * (sg_random() - 0.5) - (SGCloudField::fieldSize / 2.0);
 			double z = alt + grid_z_rand * (sg_random() - 0.5);
 			double choice = sg_random();
-			currCoverage += coverage;
-			if( currCoverage < 1.0 )
-				continue;
-			currCoverage -= 1.0;
 
 			for(int i = 0; i < CloudVarietyCount ; i ++) {
 				choice -= tCloudVariety[i].count * totalCount;
 				if( choice <= 0.0 ) {
 					sgVec3 pos={x,z,y};
-
                                         buildCloud(cloud_def_root, box_def_root, tCloudVariety[i].name, pos, layer);
 					break;
 				}
@@ -235,7 +231,9 @@ void FGClouds::buildLayer(int iLayer, const string& name, double alt, double cov
 		}
 	}
 
-        // Now we've built any clouds, enable them
+        // Now we've built any clouds, enable them and set the density (coverage)
+        layer->setCoverage(coverage);
+        layer->applyCoverage();
         thesky->get_cloud_layer(iLayer)->set_enable3dClouds(clouds_3d_enabled);
 }
 
@@ -263,7 +261,8 @@ void FGClouds::buildMETAR(void) {
 
 		double alt_ft = cloud_root->getDoubleValue("elevation-ft");
 		double alt_m = alt_ft * SG_FEET_TO_METER;
-		string coverage = cloud_root->getStringValue("coverage");
+                printf("Alt m: %.0f\n", alt_m);
+                string coverage = cloud_root->getStringValue("coverage");
 		double coverage_norm = 0.0;
 		if( coverage == "few" )
 			coverage_norm = 2.0/8.0;	// <1-2
@@ -287,13 +286,13 @@ void FGClouds::buildMETAR(void) {
 				layer_type = "ns";
 		} else {
 //			layer_type = "st|cu|cb|sc";
-			// +/- 20% from stratus probable base
-			if( stratus_base * 0.80 < alt_m && stratus_base * 1.40 > alt_m )
-				layer_type = "st";
-			// +/- 20% from cumulus probable base
-			else if( cumulus_base * 0.80 < alt_m && cumulus_base * 1.20 > alt_m )
-				layer_type = "cu";
-			else {
+                        if( cumulus_base * 0.80 < alt_m && cumulus_base * 1.20 > alt_m ) {
+                                // +/- 20% from cumulus probable base
+                                layer_type = "cu";
+                        } else if( stratus_base * 0.80 < alt_m && stratus_base * 1.40 > alt_m ) {
+                                // +/- 20% from stratus probable base
+                                layer_type = "st";
+                        } else {
 				// above formulae is far from perfect
 				if ( alt_ft < 2000 )
 					layer_type = "st";
@@ -444,12 +443,12 @@ void FGClouds::buildScenario( const string& scenario ) {
 	string station = fgGetString("/environment/metar/station-id", "XXXX");
 
 	// fetch station elevation if exists
-    if( station == "XXXX" )
-        station_elevation_ft = fgGetDouble("/position/ground-elev-m", 0.0);
-    else {
-        const FGAirport* a = globals->get_airports()->search( station );
-        station_elevation_ft = (a ? a->getElevation() : 0.0);
-    }
+        if( station == "XXXX" )
+            station_elevation_ft = fgGetDouble("/position/ground-elev-m", 0.0);
+        else {
+            const FGAirport* a = globals->get_airports()->search( station );
+            station_elevation_ft = (a ? a->getElevation() : 0.0);
+        }
 
 	for(int iLayer = 0 ; iLayer < thesky->get_cloud_layer_count(); iLayer++) {
             thesky->get_cloud_layer(iLayer)
@@ -461,7 +460,7 @@ void FGClouds::buildScenario( const string& scenario ) {
 	if( scenario == "Fair weather" ) {
 		fakeMetar = "15003KT 12SM SCT033 FEW200 20/08 Q1015 NOSIG";
 		setLayer(0, 3300.0, "scattered", "cu");
-	} else if( scenario == "Thunderstorm" ) {
+        } else if( scenario == "Thunderstorm" ) {
 		fakeMetar = "15012KT 08SM TSRA SCT040 BKN070 20/12 Q0995";
 		setLayer(0, 4000.0, "scattered", "cb");
 		setLayer(1, 7000.0, "scattered", "ns");
@@ -486,8 +485,6 @@ void FGClouds::build() {
 
         if(!rebuild_required && (scenario == last_scenario))
             return;
-        
-        
         
         if( last_scenario == "none" ) {
         // save clouds and weather conditions
@@ -534,26 +531,24 @@ void FGClouds::build() {
 
 void FGClouds::set_3dClouds(bool enable)
 {
-    if (enable != clouds_3d_enabled)
-    {
+    if (enable != clouds_3d_enabled) {
         clouds_3d_enabled = enable;
-        
+
         for(int iLayer = 0 ; iLayer < thesky->get_cloud_layer_count(); iLayer++) {
             thesky->get_cloud_layer(iLayer)->set_enable3dClouds(enable);
-            
-            if (!enable) {            
-                thesky->get_cloud_layer(iLayer)->get_layer3D()->clear();        
+
+            if (!enable) {
+                thesky->get_cloud_layer(iLayer)->get_layer3D()->clear();
             }
         }
-        
-        if (enable)
-        {
+
+        if (enable) {
             rebuild_required = true;
             build();
         }
     }
 }
-    
+
 bool FGClouds::get_3dClouds() const {
     return clouds_3d_enabled;
 }
