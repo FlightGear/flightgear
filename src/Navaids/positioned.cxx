@@ -330,11 +330,6 @@ spatialGetClosest(const SGGeod& aPos, unsigned int aN, double aCutoffNm, const F
 
 ///////////////////////////////////////////////////////////////////////////////
 
-FGPositioned::FGPositioned() :
-  mType(INVALID)
-{
-}
-
 FGPositioned::FGPositioned(Type ty, const std::string& aIdent, double aLat, double aLon, double aElev) :
   mType(ty),
   mPosition(SGGeod::fromDegFt(aLon, aLat, aElev)),

@@ -132,9 +132,6 @@ protected:
   
   SGGeod mPosition; // can't be const right now
   
-//private: // make private once FGFix and FGRunway are heap-based
-  FGPositioned();
-  
   Type mType;
   std::string mIdent;
 };
