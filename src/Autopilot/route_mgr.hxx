@@ -24,22 +24,6 @@
 #ifndef _ROUTE_MGR_HXX
 #define _ROUTE_MGR_HXX 1
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
-#include <simgear/compiler.h>
-
-#include <string>
-#include <vector>
-
-using std::string;
-using std::vector;
-
 #include <simgear/props/props.hxx>
 #include <simgear/route/route.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -97,6 +81,18 @@ private:
     void update_mirror();
     bool near_ground();
 
+    /**
+     * Helper to set a string property to the estimated arrival time (ETA),
+     * formatted as either hours:minutes or minutes:seconds, based on a distance
+     * and the current groundspeed.
+     */
+    void setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDistance);
+    
+    /**
+     * Helper to update the target_altitude_ft and altitude_set flag when wp0
+     * changes
+     */
+    void updateTargetAltitude();
 public:
 
     FGRouteMgr();

@@ -29,12 +29,9 @@
 
 #include <simgear/compiler.h>
 
-#include <Airports/simple.hxx>
 #include <FDM/flight.hxx>
 #include <Main/fg_props.hxx>
-#include <Navaids/fixlist.hxx>
-#include <Navaids/fix.hxx>
-#include <Navaids/navlist.hxx>
+#include <Navaids/positioned.hxx>
 
 #include "route_mgr.hxx"
 
@@ -126,80 +123,66 @@ static double get_ground_speed() {
     return kts;
 }
 
+void FGRouteMgr::updateTargetAltitude() {
+    if (route->size() == 0) {
+        altitude_set = false;
+        return;
+    }
+    
+    SGWayPoint wp = route->get_waypoint( 0 );
+    if (wp.get_target_alt() < -9990.0) {
+        altitude_set = false;
+        return;
+    }
+    
+    altitude_set = true;
+    target_altitude_ft->setDoubleValue( wp.get_target_alt() * SG_METER_TO_FEET );
+            
+    if ( !near_ground() ) {
+        // James Turner [zakalawe]: there's no explanation for this logic,
+        // it feels like the autopilot should pull the target altitude out of
+        // wp0 instead of us pushing it through here. Hmmm.
+        altitude_lock->setStringValue( "altitude-hold" );
+    }
+}
 
 void FGRouteMgr::update( double dt ) {
-    double accum = 0.0;
+    if (route->size() == 0) {
+      return; // no route set, early return
+    }
+    
     double wp_course, wp_distance;
-    char eta_str[128];
 
     // first way point
-    if ( route->size() > 0 ) {
-        SGWayPoint wp = route->get_waypoint( 0 );
-        wp.CourseAndDistance( lon->getDoubleValue(), lat->getDoubleValue(),
-                              alt->getDoubleValue(), &wp_course, &wp_distance );
+    SGWayPoint wp = route->get_waypoint( 0 );
+    wp.CourseAndDistance( lon->getDoubleValue(), lat->getDoubleValue(),
+                          alt->getDoubleValue(), &wp_course, &wp_distance );
+    true_hdg_deg->setDoubleValue( wp_course );
 
-        true_hdg_deg->setDoubleValue( wp_course );
-        double target_alt = wp.get_target_alt();
-
-        if ( !altitude_set && target_alt > -9990 ) {
-            target_altitude_ft->setDoubleValue( target_alt * SG_METER_TO_FEET );
-            altitude_set = true;
-
-            if ( !near_ground() )
-                altitude_lock->setStringValue( "altitude-hold" );
+    if ( wp_distance < 200.0 ) {
+        pop_waypoint();
+        if (route->size() == 0) {
+            return; // end of route, we're done for the time being
         }
-
-        if ( wp_distance < 200.0 ) {
-            pop_waypoint();
-            altitude_set = false;
-        }
+        
+        wp = route->get_waypoint( 0 );
     }
 
-    // next way point
-    if ( route->size() > 0 ) {
-        SGWayPoint wp = route->get_waypoint( 0 );
-        // update the property tree info
-
-        wp0_id->setStringValue( wp.get_id().c_str() );
-
-        accum += wp_distance;
-        wp0_dist->setDoubleValue( accum * SG_METER_TO_NM );
-
-        double eta = accum * SG_METER_TO_NM / get_ground_speed();
-        if ( eta >= 100.0 ) { eta = 99.999; }
-        int major, minor;
-        if ( eta < (1.0/6.0) ) {
-            // within 10 minutes, bump up to min/secs
-            eta *= 60.0;
-        }
-        major = (int)eta;
-        minor = (int)((eta - (int)eta) * 60.0);
-        snprintf( eta_str, 128, "%d:%02d", major, minor );
-        wp0_eta->setStringValue( eta_str );
-    }
+  // update the property tree info for WP0
+    wp0_id->setStringValue( wp.get_id().c_str() );
+    double accum = wp_distance;
+    wp0_dist->setDoubleValue( accum * SG_METER_TO_NM );
+    setETAPropertyFromDistance(wp0_eta, accum);
 
     // next way point
     if ( route->size() > 1 ) {
         SGWayPoint wp = route->get_waypoint( 1 );
 
         // update the property tree info
-
         wp1_id->setStringValue( wp.get_id().c_str() );
-
         accum += wp.get_distance();
         wp1_dist->setDoubleValue( accum * SG_METER_TO_NM );
-
-        double eta = accum * SG_METER_TO_NM / get_ground_speed();
-        if ( eta >= 100.0 ) { eta = 99.999; }
-        int major, minor;
-        if ( eta < (1.0/6.0) ) {
-            // within 10 minutes, bump up to min/secs
-            eta *= 60.0;
-        }
-        major = (int)eta;
-        minor = (int)((eta - (int)eta) * 60.0);
-        snprintf( eta_str, 128, "%d:%02d", major, minor );
-        wp1_eta->setStringValue( eta_str );
+        setETAPropertyFromDistance(wp1_eta, accum);
     }
 
     // summarize remaining way points
@@ -211,32 +194,36 @@ void FGRouteMgr::update( double dt ) {
         }
 
         // update the property tree info
-
         wpn_id->setStringValue( wp.get_id().c_str() );
-
         wpn_dist->setDoubleValue( accum * SG_METER_TO_NM );
-
-        double eta = accum * SG_METER_TO_NM / get_ground_speed();
-        if ( eta >= 100.0 ) { eta = 99.999; }
-        int major, minor;
-        if ( eta < (1.0/6.0) ) {
-            // within 10 minutes, bump up to min/secs
-            eta *= 60.0;
-        }
-        major = (int)eta;
-        minor = (int)((eta - (int)eta) * 60.0);
-        snprintf( eta_str, 128, "%d:%02d", major, minor );
-        wpn_eta->setStringValue( eta_str );
+        setETAPropertyFromDistance(wpn_eta, accum);
     }
 }
 
+void FGRouteMgr::setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDistance) {
+    char eta_str[64];
+    double eta = aDistance * SG_METER_TO_NM / get_ground_speed();
+    if ( eta >= 100.0 ) { 
+        eta = 99.999; // clamp
+    }
+    
+    if ( eta < (1.0/6.0) ) {
+        // within 10 minutes, bump up to min/secs
+        eta *= 60.0;
+    }
+    
+    int major = (int)eta, 
+        minor = (int)((eta - (int)eta) * 60.0);
+    snprintf( eta_str, 64, "%d:%02d", major, minor );
+    aProp->setStringValue( eta_str );
+}
 
 void FGRouteMgr::add_waypoint( const SGWayPoint& wp, int n ) {
-    if ( n == 0 || !route->size() )
-        altitude_set = false;
-
     route->add_waypoint( wp, n );
     update_mirror();
+    if ((n==0) || (route->size() == 1)) {
+        updateTargetAltitude();
+    }
 }
 
 
@@ -268,9 +255,7 @@ SGWayPoint FGRouteMgr::pop_waypoint( int n ) {
         wp0_eta->setStringValue( "" );
     }
 
-    if ( n == 0 && route->size() )
-        altitude_set = false;
-
+    updateTargetAltitude();
     update_mirror();
     return wp;
 }
@@ -342,7 +327,7 @@ SGWayPoint* FGRouteMgr::make_waypoint(const string& tgt ) {
         return NULL;
     }
     
-    return new SGWayPoint(p->longitude(), p->latitude(), p->elevation(), SGWayPoint::WGS84, target);
+    return new SGWayPoint(p->longitude(), p->latitude(), alt, SGWayPoint::WGS84, target);
 }
 
 
