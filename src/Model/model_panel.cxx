@@ -16,7 +16,6 @@
 #include <simgear/scene/util/SGNodeMasks.hxx>
 
 #include "panelnode.hxx"
-
 #include "model_panel.hxx"
 
 using std::vector;
@@ -40,7 +39,8 @@ osg::Node *
 fgLoad3DModelPanel(const string &path, SGPropertyNode *prop_root)
 {
     osg::Node* node = SGModelLib::loadModel(path, prop_root, load_panel);
-    node->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
+    if (node)
+        node->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
     return node;
 }
 
