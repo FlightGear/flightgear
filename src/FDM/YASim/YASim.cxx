@@ -416,7 +416,7 @@ void YASim::copyFromYASim()
     _set_V_rel_wind(Math::mag3(v)*M2FT); // units?
 
     float P = fgGetDouble("/environment/pressure-inhg") * INHG2PA;
-    float T = fgGetDouble("/environment/temperature-degC") + 273.15;
+    float T = fgGetDouble("/environment/temperature-degc") + 273.15;
     float D = fgGetFloat("/environment/density-slugft3")
         *SLUG2KG * M2FT*M2FT*M2FT;
     _set_V_equiv_kts(Atmosphere::calcVEAS(v[0], P, T, D)*MPS2KTS);
