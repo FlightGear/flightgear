@@ -198,6 +198,10 @@ private:
                                                 // interpolate at. Any cloud
                                                 // changes above this height
                                                 // difference are not interpolated
+    const double MaxCloudInterpolationDeltaFt;  // Max difference in altitude to 
+                                                // interpolate. Any cloud changing height
+                                                // by more than this value is not 
+                                                // interpolated
 
 private:
 

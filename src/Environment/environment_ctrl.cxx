@@ -348,6 +348,7 @@ FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
       MaxCloudAltitudeChangeFtSec( 20.0 ),
       MaxCloudThicknessChangeFtSec( 50.0 ),
       MaxCloudInterpolationHeightFt( 5000.0 ),
+      MaxCloudInterpolationDeltaFt( 4000.0 ),
 
       _error_count( 0 ),
       _stale_count( 0 ),
@@ -404,6 +405,9 @@ FGMetarEnvironmentCtrl::update_env_config ()
     double pressure;
     double temp;
     double dewpoint;
+    
+    // If we aren't in the METAR scenario, don't attempt to interpolate.
+    if (fgGetString("/environment/weather-scenario", "METAR") != "METAR") return;
 
     if (metar_loaded) {
         // Generate interpolated values between the METAR and the current
@@ -521,12 +525,15 @@ FGMetarEnvironmentCtrl::update_env_config ()
             double current_alt = fgGetDouble(s);
             double required_alt = (*layer)->getDoubleValue("elevation-ft");
 
-            if (current_alt < -9000 || required_alt < -9000
-                    || fabs(aircraft_alt - required_alt) > MaxCloudInterpolationHeightFt) {
-                // We don't interpolate any values that are too high above us,
-                // or too far below us to be visible. Nor do we interpolate
-                // values to or from -9999, which is used as a placeholder
-                // when there isn't actually a cloud layer present.
+            if (current_alt < -9000 || required_alt < -9000 ||
+                fabs(aircraft_alt - required_alt) > MaxCloudInterpolationHeightFt ||
+                fabs(current_alt - required_alt) > MaxCloudInterpolationDeltaFt) {
+                // We don't interpolate any layers that are
+                //  - too far above us to be visible
+                //  - too far below us to be visible
+                //  - with too large a difference to make interpolation sensible
+                //  - to or from -9999 (used as a placeholder)
+                //  - any values that are too high above us,
                 snprintf(s, 128, cl, i);
                 strncat(s, "/elevation-ft", 128);
                 if (current_alt != required_alt)
@@ -684,10 +691,7 @@ FGMetarEnvironmentCtrl::reinit ()
 {
     _error_count = 0;
     _error_dt = 0.0;
-
-#if 0
-    update_env_config();
-#endif
+    metar_loaded = false;
 
     env->reinit();
 }

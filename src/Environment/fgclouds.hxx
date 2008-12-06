@@ -45,7 +45,7 @@ private:
 void buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_def_root, const string& name, sgVec3 pos, SGCloudField *layer);
 	void buildLayer(int iLayer, const string& name, double alt, double coverage);
 
-	void buildMETAR(void);
+	void buildCloudLayers(void);
 
 	void buildScenario( const string& scenario );
 

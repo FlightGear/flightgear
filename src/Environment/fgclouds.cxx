@@ -212,7 +212,7 @@ void FGClouds::buildLayer(int iLayer, const string& name, double alt, double cov
 		}
 	}
 	totalCount = 1.0 / totalCount;
-
+        
 	for(double px = 0.0; px < SGCloudField::fieldSize; px += grid_x_size) {
 		for(double py = 0.0; py < SGCloudField::fieldSize; py += grid_y_size) {
 			double x = px + grid_x_rand * (sg_random() - 0.5) - (SGCloudField::fieldSize / 2.0);
@@ -238,7 +238,7 @@ void FGClouds::buildLayer(int iLayer, const string& name, double alt, double cov
 }
 
 // TODO:call this after real metar updates
-void FGClouds::buildMETAR(void) {
+void FGClouds::buildCloudLayers(void) {
 	SGPropertyNode *metar_root = fgGetNode("/environment", true);
         
 	double wind_speed_kt	 = metar_root->getDoubleValue("wind-speed-kt");
@@ -261,8 +261,9 @@ void FGClouds::buildMETAR(void) {
 
 		double alt_ft = cloud_root->getDoubleValue("elevation-ft");
 		double alt_m = alt_ft * SG_FEET_TO_METER;
-                printf("Alt m: %.0f\n", alt_m);
                 string coverage = cloud_root->getStringValue("coverage");
+                
+                
 		double coverage_norm = 0.0;
 		if( coverage == "few" )
 			coverage_norm = 2.0/8.0;	// <1-2
@@ -312,6 +313,7 @@ void
 FGClouds::update_metar_properties( const FGMetar *m )
 {
     int i;
+    int j;
     double d;
     char s[128];
 
@@ -354,47 +356,55 @@ FGClouds::update_metar_properties( const FGMetar *m )
     vector<SGMetarCloud> cv = m->getClouds();
     vector<SGMetarCloud>::const_iterator cloud;
 
-    const char *cl = "/environment/clouds/layer[%i]";
-    for (i = 0, cloud = cv.begin(); cloud != cv.end(); cloud++, i++) {
-        const char *coverage_string[5] = 
-            { "clear", "few", "scattered", "broken", "overcast" };
-        const double thickness[5] = { 0, 65, 600,750, 1000};
-        int q;
+    // Load into both the METAR and environment properties to stop interpolation
+    const char *cl[] = {"/environment/metar/clouds/layer[%i]",
+                        "/environment/clouds/layer[%i]"};
 
-        snprintf(s, 128, cl, i);
-        strncat(s, "/coverage", 128);
-        q = cloud->getCoverage();
-        fgSetString(s, coverage_string[q] );
-
-        snprintf(s, 128, cl, i);
-        strncat(s, "/elevation-ft", 128);
-        fgSetDouble(s, cloud->getAltitude_ft() + station_elevation_ft);
-
-        snprintf(s, 128, cl, i);
-        strncat(s, "/thickness-ft", 128);
-        fgSetDouble(s, thickness[q]);
-
-        snprintf(s, 128, cl, i);
-        strncat(s, "/span-m", 128);
-        fgSetDouble(s, 40000.0);
-    }
-
-    for (; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
-        snprintf(s, 128, cl, i);
-        strncat(s, "/coverage", 128);
-        fgSetString(s, "clear");
-
-        snprintf(s, 128, cl, i);
-        strncat(s, "/elevation-ft", 128);
-        fgSetDouble(s, -9999);
-
-        snprintf(s, 128, cl, i);
-        strncat(s, "/thickness-ft", 128);
-        fgSetDouble(s, 0);
-
-        snprintf(s, 128, cl, i);
-        strncat(s, "/span-m", 128);
-        fgSetDouble(s, 40000.0);
+    for (j = 0; j < 2; j++)
+    {
+        for (i = 0, cloud = cv.begin(); cloud != cv.end(); cloud++, i++) {
+            const char *coverage_string[5] = 
+                { "clear", "few", "scattered", "broken", "overcast" };
+            const double thickness[5] = { 0, 65, 600,750, 1000};
+            int q;
+    
+            snprintf(s, 128, cl[j], i);
+            strncat(s, "/coverage", 128);
+            q = cloud->getCoverage();
+            fgSetString(s, coverage_string[q] );
+            
+            snprintf(s, 128, cl[j], i);
+            strncat(s, "/elevation-ft", 128);
+            fgSetDouble(s, cloud->getAltitude_ft() + station_elevation_ft);
+            
+            snprintf(s, 128, cl[j], i);
+            strncat(s, "/thickness-ft", 128);
+            fgSetDouble(s, thickness[q]);
+            
+            snprintf(s, 128, cl[j], i);
+            strncat(s, "/span-m", 128);
+            fgSetDouble(s, 40000.0);
+        }
+    
+        for (; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
+            
+            
+            snprintf(s, 128, cl[j], i);
+            strncat(s, "/coverage", 128);
+            fgSetString(s, "clear");
+    
+            snprintf(s, 128, cl[j], i);
+            strncat(s, "/elevation-ft", 128);
+            fgSetDouble(s, -9999);
+    
+            snprintf(s, 128, cl[j], i);
+            strncat(s, "/thickness-ft", 128);
+            fgSetDouble(s, 0);
+    
+            snprintf(s, 128, cl[j], i);
+            strncat(s, "/span-m", 128);
+            fgSetDouble(s, 40000.0);
+        }
     }
 
     fgSetDouble("/environment/metar/rain-norm", m->getRain());
@@ -441,7 +451,7 @@ void FGClouds::setLayer( int iLayer, float alt_ft, const string& coverage, const
 void FGClouds::buildScenario( const string& scenario ) {
 	string fakeMetar="";
 	string station = fgGetString("/environment/metar/station-id", "XXXX");
-
+        
 	// fetch station elevation if exists
         if( station == "XXXX" )
             station_elevation_ft = fgGetDouble("/position/ground-elev-m", 0.0);
@@ -459,7 +469,7 @@ void FGClouds::buildScenario( const string& scenario ) {
 	station += " 011000Z ";
 	if( scenario == "Fair weather" ) {
 		fakeMetar = "15003KT 12SM SCT033 FEW200 20/08 Q1015 NOSIG";
-		setLayer(0, 3300.0, "scattered", "cu");
+		//setLayer(0, 3300.0, "scattered", "cu");
         } else if( scenario == "Thunderstorm" ) {
 		fakeMetar = "15012KT 08SM TSRA SCT040 BKN070 20/12 Q0995";
 		setLayer(0, 4000.0, "scattered", "cb");
@@ -470,10 +480,10 @@ void FGClouds::buildScenario( const string& scenario ) {
 	update_metar_properties( m );
 	update_env_config();
 	// propagate aloft tables
-	_controller->reinit();
+	//_controller->reinit();
 
 	fgSetString("/environment/metar/last-metar", m->getData());
-	// TODO:desactivate real metar updates
+	// TODO:de-activate real metar updates
 	if( scenario == "Fair weather" ) {
 		fgSetString("/environment/clouds/layer[1]/coverage", "cirrus");
 	}
@@ -493,6 +503,7 @@ void FGClouds::build() {
             param = fgGetNode("/environment/clouds", true);
             copyProperties( param, last_env_clouds );
         }
+                
         if( scenario == "METAR" ) {
             string realMetar = fgGetString("/environment/metar/real-metar", "");
             if( realMetar != "" ) {
@@ -502,8 +513,8 @@ void FGClouds::build() {
                 update_env_config();
 			// propagate aloft tables
                 _controller->reinit();
+                buildCloudLayers();
             }
-            buildMETAR();
         }
         else if( scenario == "none" ) {
         // restore clouds and weather conditions
@@ -516,15 +527,17 @@ void FGClouds::build() {
 //	    update_env_config();
 	    // propagate aloft tables
             _controller->reinit();
-            buildMETAR();
+            buildCloudLayers();
         }
-        else
+        else {
             buildScenario( scenario );
+            _controller->reinit();
+            buildCloudLayers();
+        }
         
         last_scenario = scenario;
         rebuild_required = false;
 
-	// ...
         if( snd_lightning == NULL )
             init();
 }
