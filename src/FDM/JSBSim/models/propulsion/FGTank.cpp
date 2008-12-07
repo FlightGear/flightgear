@@ -59,6 +59,7 @@ FGTank::FGTank(FGFDMExec* exec, Element* el, int tank_number)
   Element* element_Grain;
   Area = 1.0;
   Temperature = -9999.0;
+  Ixx = Iyy = Izz = 0.0;
   Auxiliary = exec->GetAuxiliary();
   Radius = Capacity = Contents = Standpipe = Length = InnerRadius = 0.0;
   PropertyManager = exec->GetPropertyManager();
