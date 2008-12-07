@@ -104,9 +104,9 @@ FGMetar::FGMetar(const string& icao, const string& proxy, const string& port, co
 
 	// clouds
 	vector<SGMetarCloud> cv = _clouds;
-	vector<SGMetarCloud>::iterator cloud;
+	vector<SGMetarCloud>::iterator cloud, cv_end = cv.end();
 
-	for (i = 0, cloud = cv.begin(); cloud != cv.end(); cloud++, i++) {
+	for (i = 0, cloud = cv.begin(); cloud != cv_end; ++cloud, i++) {
 		int cov = cloud->getCoverage();
 		if (cov == -1)
 			cov = 0;
@@ -131,8 +131,8 @@ FGMetar::FGMetar(const string& icao, const string& proxy, const string& port, co
 
 	// snow cover
 	map<string, SGMetarRunway> rm = getRunways();
-	map<string, SGMetarRunway>::const_iterator runway;
-	for (runway = rm.begin(); runway != rm.end(); runway++) {
+	map<string, SGMetarRunway>::const_iterator runway, rm_end = rm.end();
+	for (runway = rm.begin(); runway != rm_end; ++runway) {
 		SGMetarRunway rwy = runway->second;
 		if (rwy.getDeposit() >= 3 ) {
 			_snow_cover = true;
