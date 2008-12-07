@@ -56,7 +56,7 @@ Name: "{group}\FlightGear Launcher"; Filename: "{app}\bin\Win32\fgrun.exe"; Work
 Name: "{group}\Tools\Install & Uninstall Scenery"; Filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}";
 Name: "{group}\Tools\TerraSync"; Filename: "{app}\bin\Win32\terrasync.exe"; WorkingDir: "{app}";
 Name: "{group}\FlightGear Documentation"; Filename: "{app}\data\Docs\index.html"
-Name: "{group}\Explore Documentation Folder"; Filename: "{app}\docs"
+Name: "{group}\Explore Documentation Folder"; Filename: "{app}\data\Docs"
 Name: "{group}\Flightgear Wiki"; Filename: "http://wiki.flightgear.org"
 Name: "{group}\Tools\Uninstall FlightGear v1.99.5-pre1"; Filename: "{uninstallexe}"
 Name: "{userdesktop}\FlightGear v1.99.5-pre1"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
