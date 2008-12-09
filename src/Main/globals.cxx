@@ -47,9 +47,9 @@
 #include <Navaids/awynet.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
-#include <Airports\simple.hxx>
-#include <Navaids\navlist.hxx>
-#include <Navaids\fixlist.hxx>
+#include <Airports/simple.hxx>
+#include <Navaids/navlist.hxx>
+#include <Navaids/fixlist.hxx>
 
 #include "globals.hxx"
 #include "renderer.hxx"
