@@ -7,70 +7,87 @@
 #  include <config.h>
 #endif
 
+#include "gps.hxx"
+
 #include <simgear/compiler.h>
 #include <Aircraft/aircraft.hxx>
+#include "Main/fg_props.hxx"
+#include "Main/util.hxx" // for fgLowPass
+#include "Navaids/positioned.hxx"
 
-#include <simgear/route/route.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
 
-#include <Airports/simple.hxx>
-
-#include <Main/fg_init.hxx>
-#include <Main/globals.hxx>
-#include <Main/fg_props.hxx>
-#include <Main/util.hxx>
-#include <Navaids/fixlist.hxx>
-#include <Navaids/fix.hxx>
-#include <Navaids/navlist.hxx>
-
-#include "gps.hxx"
-
 using std::string;
+
+ 
+void SGGeodProperty::init(SGPropertyNode* base, const char* lonStr, const char* latStr, const char* altStr)
+{
+    _lon = base->getChild(lonStr, 0, true);
+    _lat = base->getChild(latStr, 0, true);
+    if (altStr) {
+        _alt = base->getChild(altStr, 0, true);
+    }
+}
+
+void SGGeodProperty::init(const char* lonStr, const char* latStr, const char* altStr)
+{
+    _lon = fgGetNode(lonStr, true);
+    _lat = fgGetNode(latStr, true);
+    if (altStr) {
+        _alt = fgGetNode(altStr, true);
+    }
+}
+
+void SGGeodProperty::clear()
+{
+    _lon = _lat = _alt = NULL;
+}
+
+void SGGeodProperty::operator=(const SGGeod& geod)
+{
+    _lon->setDoubleValue(geod.getLongitudeDeg());
+    _lat->setDoubleValue(geod.getLatitudeDeg());
+    if (_alt) {
+        _alt->setDoubleValue(geod.getElevationFt());
+    }
+}
+
+SGGeod SGGeodProperty::get() const
+{
+    double lon = _lon->getDoubleValue(),
+        lat = _lat->getDoubleValue();
+    if (_alt) {
+        return SGGeod::fromDegFt(lon, lat, _alt->getDoubleValue());
+    } else {
+        return SGGeod::fromDeg(lon,lat);
+    }
+}
 
 
 GPS::GPS ( SGPropertyNode *node)
     : _last_valid(false),
-      _last_longitude_deg(0),
-      _last_latitude_deg(0),
-      _last_altitude_m(0),
-      _last_speed_kts(0),
-      _wp0_latitude_deg(0),
-      _wp0_longitude_deg(0),
-      _wp0_altitude_m(0),
-      _wp1_latitude_deg(0),
-      _wp1_longitude_deg(0),
-      _wp1_altitude_m(0),
       _alt_dist_ratio(0),
       _distance_m(0),
       _course_deg(0),
       _name(node->getStringValue("name", "gps")),
-      _num(node->getIntValue("number", 0)),
-      route(0)
+      _num(node->getIntValue("number", 0))
 {
 }
 
 GPS::~GPS ()
 {
-    delete route;
 }
 
 void
 GPS::init ()
 {
-    delete route; // in case init is called twice
-    route = new SGRoute;
-    route->clear();
-
     string branch;
     branch = "/instrumentation/" + _name;
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
-
-    _longitude_node = fgGetNode("/position/longitude-deg", true);
-    _latitude_node = fgGetNode("/position/latitude-deg", true);
-    _altitude_node = fgGetNode("/position/altitude-ft", true);
+    _position.init("/position/longitude-deg", "/position/latitude-deg", "/position/altitude-ft");
     _magvar_node = fgGetNode("/environment/magnetic-variation-deg", true);
     _serviceable_node = node->getChild("serviceable", 0, true);
     _electrical_node = fgGetNode("/systems/electrical/outputs/gps", true);
@@ -78,15 +95,11 @@ GPS::init ()
     SGPropertyNode *wp_node = node->getChild("wp", 0, true);
     SGPropertyNode *wp0_node = wp_node->getChild("wp", 0, true);
     SGPropertyNode *wp1_node = wp_node->getChild("wp", 1, true);
-    addWp = wp1_node->getChild("Add-to-route", 0, true);
 
-    _wp0_longitude_node = wp0_node->getChild("longitude-deg", 0, true);
-    _wp0_latitude_node = wp0_node->getChild("latitude-deg", 0, true);
-    _wp0_altitude_node = wp0_node->getChild("altitude-ft", 0, true);
+    _wp0_position.init(wp0_node, "longitude-deg", "latitude-deg", "altitude-ft");
     _wp0_ID_node = wp0_node->getChild("ID", 0, true);
     _wp0_name_node = wp0_node->getChild("name", 0, true);
     _wp0_course_node = wp0_node->getChild("desired-course-deg", 0, true);
-    _wp0_waypoint_type_node = wp0_node->getChild("waypoint-type", 0, true);
     _wp0_distance_node = wp0_node->getChild("distance-nm", 0, true);
     _wp0_ttw_node = wp0_node->getChild("TTW", 0, true);
     _wp0_bearing_node = wp0_node->getChild("bearing-true-deg", 0, true);
@@ -100,13 +113,10 @@ GPS::init ()
     _magnetic_wp0_bearing_error_node =
         wp0_node->getChild("magnetic-bearing-error-deg", 0, true);
 
-    _wp1_longitude_node = wp1_node->getChild("longitude-deg", 0, true);
-    _wp1_latitude_node = wp1_node->getChild("latitude-deg", 0, true);
-    _wp1_altitude_node = wp1_node->getChild("altitude-ft", 0, true);
+    _wp1_position.init(wp1_node, "longitude-deg", "latitude-deg", "altitude-ft");
     _wp1_ID_node = wp1_node->getChild("ID", 0, true);
     _wp1_name_node = wp1_node->getChild("name", 0, true);
     _wp1_course_node = wp1_node->getChild("desired-course-deg", 0, true);
-    _wp1_waypoint_type_node = wp1_node->getChild("waypoint-type", 0, true);
     _wp1_distance_node = wp1_node->getChild("distance-nm", 0, true);
     _wp1_ttw_node = wp1_node->getChild("TTW", 0, true);
     _wp1_bearing_node = wp1_node->getChild("bearing-true-deg", 0, true);
@@ -125,12 +135,9 @@ GPS::init ()
     _tracking_bug_node = node->getChild("tracking-bug", 0, true);
     _raim_node = node->getChild("raim", 0, true);
 
-    _indicated_longitude_node =
-        node->getChild("indicated-longitude-deg", 0, true);
-    _indicated_latitude_node =
-        node->getChild("indicated-latitude-deg", 0, true);
-    _indicated_altitude_node =
-        node->getChild("indicated-altitude-ft", 0, true);
+    _indicated_pos.init(node, "indicated-longitude-deg", 
+        "indicated-latitude-deg", "indicated-altitude-ft");
+        
     _indicated_vertical_speed_node =
         node->getChild("indicated-vertical-speed", 0, true);
     _true_track_node =
@@ -164,57 +171,50 @@ GPS::init ()
         wp_node->getChild("leg-to-flag", 0, true);
     _alt_deviation_node =
         wp_node->getChild("alt-deviation-ft", 0, true);
-
-    _route = node->getChild("route", 0, true);
-    popWp = _route->getChild("Pop-WP", 0, true);
-
-    addWp->setBoolValue(false);
-    popWp->setBoolValue(false);
-
+        
     _serviceable_node->setBoolValue(true);
+}
+
+void
+GPS::clearOutput()
+{
+    _last_valid = false;
+    _last_speed_kts = 0;
+    _last_pos = SGGeod();
+    _raim_node->setDoubleValue(false);
+    _indicated_pos = SGGeod();
+	  _indicated_vertical_speed_node->setDoubleValue(0);
+    _true_track_node->setDoubleValue(0);
+    _magnetic_track_node->setDoubleValue(0);
+    _speed_node->setDoubleValue(0);
+    _wp1_distance_node->setDoubleValue(0);
+    _wp1_bearing_node->setDoubleValue(0);
+    _wp1_position = SGGeod();
+    _wp1_course_node->setDoubleValue(0);
+    _odometer_node->setDoubleValue(0);
+    _trip_odometer_node->setDoubleValue(0);
+    _tracking_bug_node->setDoubleValue(0);
+    _true_bug_error_node->setDoubleValue(0);
+    _magnetic_bug_error_node->setDoubleValue(0);
+	  _true_wp1_bearing_error_node->setDoubleValue(0);
+	  _magnetic_wp1_bearing_error_node->setDoubleValue(0);
 }
 
 void
 GPS::update (double delta_time_sec)
 {
-                                // If it's off, don't bother.
-    if (!_serviceable_node->getBoolValue() ||
-        !_electrical_node->getBoolValue()) {
-        _last_valid = false;
-        _last_longitude_deg = 0;
-        _last_latitude_deg = 0;
-        _last_altitude_m = 0;
-        _last_speed_kts = 0;
-        _raim_node->setDoubleValue(false);
-        _indicated_longitude_node->setDoubleValue(0);
-        _indicated_latitude_node->setDoubleValue(0);
-        _indicated_altitude_node->setDoubleValue(0);
-	_indicated_vertical_speed_node->setDoubleValue(0);
-        _true_track_node->setDoubleValue(0);
-        _magnetic_track_node->setDoubleValue(0);
-        _speed_node->setDoubleValue(0);
-        _wp1_distance_node->setDoubleValue(0);
-        _wp1_bearing_node->setDoubleValue(0);
-        _wp1_longitude_node->setDoubleValue(0);
-        _wp1_latitude_node->setDoubleValue(0);
-        _wp1_course_node->setDoubleValue(0);
-        _odometer_node->setDoubleValue(0);
-        _trip_odometer_node->setDoubleValue(0);
-        _tracking_bug_node->setDoubleValue(0);
-        _true_bug_error_node->setDoubleValue(0);
-        _magnetic_bug_error_node->setDoubleValue(0);
-	_true_wp1_bearing_error_node->setDoubleValue(0);
-	_magnetic_wp1_bearing_error_node->setDoubleValue(0);
+   // If it's off, don't bother.
+    if (!_serviceable_node->getBoolValue() || !_electrical_node->getBoolValue()) {
+        clearOutput();
         return;
     }
 
-    // Get the aircraft position
+    UpdateContext ctx;
+    ctx.dt = delta_time_sec;
+    ctx.waypoint_changed = false;
+    ctx.pos = _position.get();
+    
     // TODO: Add noise and other errors.
-    double longitude_deg = _longitude_node->getDoubleValue();
-    double latitude_deg = _latitude_node->getDoubleValue();
-    double altitude_m = _altitude_node->getDoubleValue() * SG_FEET_TO_METER;
-    double magvar_deg = _magvar_node->getDoubleValue();
-
 /*
 
     // Bias and random error
@@ -256,443 +256,348 @@ GPS::update (double delta_time_sec)
     printf("%f %f \n", error_length, error_angle);
 
 */
-
-
-
-    double speed_kt, vertical_speed_mpm;
-
     _raim_node->setBoolValue(true);
-    _indicated_longitude_node->setDoubleValue(longitude_deg);
-    _indicated_latitude_node->setDoubleValue(latitude_deg);
-    _indicated_altitude_node->setDoubleValue(altitude_m * SG_METER_TO_FEET);
+    _indicated_pos = ctx.pos;
 
     if (_last_valid) {
-        double track1_deg, track2_deg, distance_m, odometer, mag_track_bearing;
-        geo_inverse_wgs_84(altitude_m,
-                           _last_latitude_deg, _last_longitude_deg,
-                           latitude_deg, longitude_deg,
-                           &track1_deg, &track2_deg, &distance_m);
-        speed_kt = ((distance_m * SG_METER_TO_NM) *
-                    ((1 / delta_time_sec) * 3600.0));
-        vertical_speed_mpm = ((altitude_m - _last_altitude_m) * 60 /
-			      delta_time_sec);
-	_indicated_vertical_speed_node->setDoubleValue
-            (vertical_speed_mpm * SG_METER_TO_FEET);
-        _true_track_node->setDoubleValue(track1_deg);
-	mag_track_bearing = track1_deg - magvar_deg;
-        SG_NORMALIZE_RANGE(mag_track_bearing, 0.0, 360.0);
-        _magnetic_track_node->setDoubleValue(mag_track_bearing);
-        speed_kt = fgGetLowPass(_last_speed_kts, speed_kt, delta_time_sec/20.0);
-        _last_speed_kts = speed_kt;
-        _speed_node->setDoubleValue(speed_kt);
-
-        odometer = _odometer_node->getDoubleValue();
-        _odometer_node->setDoubleValue(odometer + distance_m * SG_METER_TO_NM);
-        odometer = _trip_odometer_node->getDoubleValue();
-        _trip_odometer_node->setDoubleValue(odometer + distance_m * SG_METER_TO_NM);
-
-        // Get waypoint 0 position
-        double wp0_longitude_deg = _wp0_longitude_node->getDoubleValue();
-        double wp0_latitude_deg = _wp0_latitude_node->getDoubleValue();
-	double wp0_altitude_m = _wp0_altitude_node->getDoubleValue() 
-	    * SG_FEET_TO_METER;
-        double wp0_course_deg = _wp0_course_node->getDoubleValue();
-        double wp0_distance, wp0_bearing_deg, wp0_course_deviation_deg,
-            wp0_course_error_m, wp0_TTW, wp0_bearing_error_deg;
-        string wp0_ID = _wp0_ID_node->getStringValue();
-
-        // Get waypoint 1 position
-        double wp1_longitude_deg = _wp1_longitude_node->getDoubleValue();
-        double wp1_latitude_deg = _wp1_latitude_node->getDoubleValue();
-	double wp1_altitude_m = _wp1_altitude_node->getDoubleValue() 
-	    * SG_FEET_TO_METER;
-        double wp1_course_deg = _wp1_course_node->getDoubleValue();
-        double wp1_distance, wp1_bearing_deg, wp1_course_deviation_deg,
-            wp1_course_error_m, wp1_TTW, wp1_bearing_error_deg;
-        string wp1_ID = _wp1_ID_node->getStringValue();
-        
-        // If the get-nearest-airport-node is true.
-        // Get the nearest airport, and set it as waypoint 1.
-        if (_get_nearest_airport_node->getBoolValue()) {
-            const FGAirport* a = globals->get_airports()->search(longitude_deg, latitude_deg, 360.0);
-            if(a) {
-                _wp1_ID_node->setStringValue(a->getId().c_str());
-                wp1_longitude_deg = a->getLongitude();
-                wp1_latitude_deg = a->getLatitude();
-                _wp1_name_node->setStringValue(a->getName().c_str());
-                _get_nearest_airport_node->setBoolValue(false);
-                _last_wp1_ID = wp1_ID = a->getId().c_str();
-            }
-        }
-        
-        // If the waypoint 0 ID has changed, try to find the new ID
-        // in the airport-, fix-, nav-database.
-        if ( !(_last_wp0_ID == wp0_ID) ) {
-            string waypont_type =
-                _wp0_waypoint_type_node->getStringValue();
-            if (waypont_type == "airport") {
-                const FGAirport* a = globals->get_airports()->search( wp0_ID );
-                if ( a ) {
-                    wp0_longitude_deg = a->getLongitude();
-                    wp0_latitude_deg = a->getLatitude();
-                    _wp0_name_node->setStringValue(a->getName().c_str());
-                }
-            }
-            else if (waypont_type == "nav") {
-                FGNavRecord *n
-                    = globals->get_navlist()->findByIdent(wp0_ID.c_str(), 
-                                                          longitude_deg, 
-                                                          latitude_deg);
-                if ( n != NULL ) {
-                    //cout << "Nav found" << endl;
-                    wp0_longitude_deg = n->get_lon();
-                    wp0_latitude_deg = n->get_lat();
-                    _wp0_name_node->setStringValue(n->get_name().c_str());
-                }
-            }
-            else if (waypont_type == "fix") {
-                FGFix* f;
-                if ( globals->get_fixlist()->query(wp0_ID, f) ) {
-                    //cout << "Fix found" << endl;
-                    wp0_longitude_deg = f->get_lon();
-                    wp0_latitude_deg = f->get_lat();
-                    _wp0_name_node->setStringValue(wp0_ID.c_str());
-                }
-            }
-            _last_wp0_ID = wp0_ID;
-        }
-        
-        // If the waypoint 1 ID has changed, try to find the new ID
-        // in the airport-, fix-, nav-database.
-        if ( !(_last_wp1_ID == wp1_ID) ) {
-            string waypont_type =
-                _wp1_waypoint_type_node->getStringValue();
-            if (waypont_type == "airport") {
-                const FGAirport* a = globals->get_airports()->search( wp1_ID );
-                if ( a ) {
-                    wp1_longitude_deg = a->getLongitude();
-                    wp1_latitude_deg = a->getLatitude();
-                    _wp1_name_node->setStringValue(a->getName().c_str());
-                }
-            }
-            else if (waypont_type == "nav") {
-                FGNavRecord *n
-                    = globals->get_navlist()->findByIdent(wp1_ID.c_str(), 
-                                                          longitude_deg, 
-                                                          latitude_deg);
-                if ( n != NULL ) {
-                    //cout << "Nav found" << endl;
-                    wp1_longitude_deg = n->get_lon();
-                    wp1_latitude_deg = n->get_lat();
-                    _wp1_name_node->setStringValue(n->get_name().c_str());
-                }
-            }
-            else if (waypont_type == "fix") {
-                FGFix* f;
-                if ( globals->get_fixlist()->query(wp1_ID, f) ) {
-                    //cout << "Fix found" << endl;
-                    wp1_longitude_deg = f->get_lon();
-                    wp1_latitude_deg = f->get_lat();
-                    _wp1_name_node->setStringValue(wp1_ID.c_str());
-                }
-            }
-            _last_wp1_ID = wp1_ID;
-        }
-
-
-
-        // If any of the two waypoints have changed
-        // we need to calculate a new course between them,
-        // and values for vertical navigation.
-        if ( wp0_longitude_deg != _wp0_longitude_deg ||
-             wp0_latitude_deg  != _wp0_latitude_deg  ||
-             wp0_altitude_m    != _wp0_altitude_m    ||
-             wp1_longitude_deg != _wp1_longitude_deg ||
-             wp1_latitude_deg  != _wp1_latitude_deg  ||
-             wp1_altitude_m    != _wp1_altitude_m )
-        {
-            // Update the global variables
-            _wp0_longitude_deg = wp0_longitude_deg;
-            _wp0_latitude_deg  = wp0_latitude_deg;
-            _wp0_altitude_m    = wp0_altitude_m;
-            _wp1_longitude_deg = wp1_longitude_deg;
-            _wp1_latitude_deg  = wp1_latitude_deg;
-            _wp1_altitude_m    = wp1_altitude_m;
-
-            // Get the course and distance from wp0 to wp1
-            SGWayPoint wp0(wp0_longitude_deg, 
-                           wp0_latitude_deg, wp0_altitude_m);
-            SGWayPoint wp1(wp1_longitude_deg, 
-                           wp1_latitude_deg, wp1_altitude_m);
-
-            wp1.CourseAndDistance(wp0, &_course_deg, &_distance_m);
-            double leg_mag_course = _course_deg - magvar_deg;
-            SG_NORMALIZE_RANGE(leg_mag_course, 0.0, 360.0);
-
-            // Get the altitude / distance ratio
-            if ( distance_m > 0.0 ) {
-                double alt_difference_m = wp0_altitude_m - wp1_altitude_m;
-                _alt_dist_ratio = alt_difference_m / _distance_m;
-            }
-
-            _leg_distance_node->setDoubleValue(_distance_m * SG_METER_TO_NM);
-            _leg_course_node->setDoubleValue(_course_deg);
-            _leg_magnetic_course_node->setDoubleValue(leg_mag_course);
-            _alt_dist_ratio_node->setDoubleValue(_alt_dist_ratio);
-
-            _wp0_longitude_node->setDoubleValue(wp0_longitude_deg);
-            _wp0_latitude_node->setDoubleValue(wp0_latitude_deg);
-            _wp1_longitude_node->setDoubleValue(wp1_longitude_deg);
-            _wp1_latitude_node->setDoubleValue(wp1_latitude_deg);
-        }
-
-
-        // Find the bearing and distance to waypoint 0.
-        SGWayPoint wp0(wp0_longitude_deg, wp0_latitude_deg, wp0_altitude_m);
-        wp0.CourseAndDistance(longitude_deg, latitude_deg, altitude_m,
-                              &wp0_bearing_deg, &wp0_distance);
-        _wp0_distance_node->setDoubleValue(wp0_distance * SG_METER_TO_NM);
-        _wp0_bearing_node->setDoubleValue(wp0_bearing_deg);
-	double wp0_mag_bearing_deg = wp0_bearing_deg - magvar_deg;
-        SG_NORMALIZE_RANGE(wp0_mag_bearing_deg, 0.0, 360.0);
-	_wp0_mag_bearing_node->setDoubleValue(wp0_mag_bearing_deg);
-        wp0_bearing_error_deg = track1_deg - wp0_bearing_deg;
-        SG_NORMALIZE_RANGE(wp0_bearing_error_deg, -180.0, 180.0);
-        _true_wp0_bearing_error_node->setDoubleValue(wp0_bearing_error_deg);
-        
-        // Estimate time to waypoint 0.
-        // The estimation does not take track into consideration,
-        // so if you are going away from the waypoint the TTW will
-        // increase. Makes most sense when travelling directly towards
-        // the waypoint.
-        if (speed_kt > 0.0 && wp0_distance > 0.0) {
-          wp0_TTW = (wp0_distance * SG_METER_TO_NM) / (speed_kt / 3600);
-        }
-        else {
-          wp0_TTW = 0.0;
-        }
-        unsigned int wp0_TTW_seconds = (int) (wp0_TTW + 0.5);
-        if (wp0_TTW_seconds < 356400) { // That's 99 hours
-          unsigned int wp0_TTW_minutes = 0;
-          unsigned int wp0_TTW_hours   = 0;
-          char wp0_TTW_str[9];
-          while (wp0_TTW_seconds >= 3600) {
-            wp0_TTW_seconds -= 3600;
-            wp0_TTW_hours++;
-          }
-          while (wp0_TTW_seconds >= 60) {
-            wp0_TTW_seconds -= 60;
-            wp0_TTW_minutes++;
-          }
-          snprintf(wp0_TTW_str, 9, "%02d:%02d:%02d",
-            wp0_TTW_hours, wp0_TTW_minutes, wp0_TTW_seconds);
-          _wp0_ttw_node->setStringValue(wp0_TTW_str);
-        }
-        else
-          _wp0_ttw_node->setStringValue("--:--:--");
-
-        // Course deviation is the diffenrence between the bearing
-        // and the course.
-        wp0_course_deviation_deg = wp0_bearing_deg -
-            wp0_course_deg;
-        SG_NORMALIZE_RANGE(wp0_course_deviation_deg, -180.0, 180.0);
-
-        // If the course deviation is less than 90 degrees to either side,
-        // our desired course is towards the waypoint.
-        // It does not matter if we are actually moving 
-        // towards or from the waypoint.
-        if (fabs(wp0_course_deviation_deg) < 90.0) {
-            _wp0_to_flag_node->setBoolValue(true); }
-        // If it's more than 90 degrees the desired
-        // course is from the waypoint.
-        else if (fabs(wp0_course_deviation_deg) > 90.0) {
-          _wp0_to_flag_node->setBoolValue(false);
-          // When the course is away from the waypoint, 
-          // it makes sense to change the sign of the deviation.
-          wp0_course_deviation_deg *= -1.0;
-          SG_NORMALIZE_RANGE(wp0_course_deviation_deg, -90.0, 90.0);
-	}
-
-        _wp0_course_deviation_node->setDoubleValue(wp0_course_deviation_deg);
-
-        // Cross track error.
-        wp0_course_error_m = sin(wp0_course_deviation_deg * SG_PI / 180.0)
-          * (wp0_distance);
-        _wp0_course_error_nm_node->setDoubleValue(wp0_course_error_m 
-                                                 * SG_METER_TO_NM);
-
-
-
-        // Find the bearing and distance to waypoint 1.
-        SGWayPoint wp1(wp1_longitude_deg, wp1_latitude_deg, wp1_altitude_m);
-        wp1.CourseAndDistance(longitude_deg, latitude_deg, altitude_m,
-                              &wp1_bearing_deg, &wp1_distance);
-        _wp1_distance_node->setDoubleValue(wp1_distance * SG_METER_TO_NM);
-        _wp1_bearing_node->setDoubleValue(wp1_bearing_deg);
-	double wp1_mag_bearing_deg = wp1_bearing_deg - magvar_deg;
-        SG_NORMALIZE_RANGE(wp1_mag_bearing_deg, 0.0, 360.0);
-	_wp1_mag_bearing_node->setDoubleValue(wp1_mag_bearing_deg);
-        wp1_bearing_error_deg = track1_deg - wp1_bearing_deg;
-        SG_NORMALIZE_RANGE(wp1_bearing_error_deg, -180.0, 180.0);
-        _true_wp1_bearing_error_node->setDoubleValue(wp1_bearing_error_deg);
-        
-        // Estimate time to waypoint 1.
-        // The estimation does not take track into consideration,
-        // so if you are going away from the waypoint the TTW will
-        // increase. Makes most sense when travelling directly towards
-        // the waypoint.
-        if (speed_kt > 0.0 && wp1_distance > 0.0) {
-          wp1_TTW = (wp1_distance * SG_METER_TO_NM) / (speed_kt / 3600);
-        }
-        else {
-          wp1_TTW = 0.0;
-        }
-        unsigned int wp1_TTW_seconds = (int) (wp1_TTW + 0.5);
-        if (wp1_TTW_seconds < 356400) { // That's 99 hours
-          unsigned int wp1_TTW_minutes = 0;
-          unsigned int wp1_TTW_hours   = 0;
-          char wp1_TTW_str[9];
-          while (wp1_TTW_seconds >= 3600) {
-            wp1_TTW_seconds -= 3600;
-            wp1_TTW_hours++;
-          }
-          while (wp1_TTW_seconds >= 60) {
-            wp1_TTW_seconds -= 60;
-            wp1_TTW_minutes++;
-          }
-          snprintf(wp1_TTW_str, 9, "%02d:%02d:%02d",
-            wp1_TTW_hours, wp1_TTW_minutes, wp1_TTW_seconds);
-          _wp1_ttw_node->setStringValue(wp1_TTW_str);
-        }
-        else
-          _wp1_ttw_node->setStringValue("--:--:--");
-
-        // Course deviation is the diffenrence between the bearing
-        // and the course.
-        wp1_course_deviation_deg = wp1_bearing_deg - wp1_course_deg;
-        SG_NORMALIZE_RANGE(wp1_course_deviation_deg, -180.0, 180.0);
-
-        // If the course deviation is less than 90 degrees to either side,
-        // our desired course is towards the waypoint.
-        // It does not matter if we are actually moving 
-        // towards or from the waypoint.
-        if (fabs(wp1_course_deviation_deg) < 90.0) {
-            _wp1_to_flag_node->setBoolValue(true); }
-        // If it's more than 90 degrees the desired
-        // course is from the waypoint.
-        else if (fabs(wp1_course_deviation_deg) > 90.0) {
-            _wp1_to_flag_node->setBoolValue(false);
-            // When the course is away from the waypoint, 
-            // it makes sense to change the sign of the deviation.
-            wp1_course_deviation_deg *= -1.0;
-            SG_NORMALIZE_RANGE(wp1_course_deviation_deg, -90.0, 90.0);
-	}
-
-        _wp1_course_deviation_node->setDoubleValue(wp1_course_deviation_deg);
-
-        // Cross track error.
-        wp1_course_error_m = sin(wp1_course_deviation_deg * SG_PI / 180.0) 
-          * (wp1_distance);
-        _wp1_course_error_nm_node->setDoubleValue(wp1_course_error_m 
-                                                 * SG_METER_TO_NM);
-
-
-        // Leg course deviation is the diffenrence between the bearing
-        // and the course.
-        double course_deviation_deg = wp1_bearing_deg - _course_deg;
-        SG_NORMALIZE_RANGE(course_deviation_deg, -180.0, 180.0);
-        
-        // If the course deviation is less than 90 degrees to either side,
-        // our desired course is towards the waypoint.
-        // It does not matter if we are actually moving 
-        // towards or from the waypoint.
-        if (fabs(course_deviation_deg) < 90.0) {
-            _leg_to_flag_node->setBoolValue(true); }
-        // If it's more than 90 degrees the desired
-        // course is from the waypoint.
-        else if (fabs(course_deviation_deg) > 90.0) {
-            _leg_to_flag_node->setBoolValue(false);
-            // When the course is away from the waypoint, 
-            // it makes sense to change the sign of the deviation.
-            course_deviation_deg *= -1.0;
-            SG_NORMALIZE_RANGE(course_deviation_deg, -90.0, 90.0);
-	}
-        
-        _leg_course_deviation_node->setDoubleValue(course_deviation_deg);
-        
-        // Cross track error.
-        double course_error_m = sin(course_deviation_deg * SG_PI / 180.0)
-            * (_distance_m);
-        _leg_course_error_nm_node->setDoubleValue(course_error_m * SG_METER_TO_NM);
-
-        // Altitude deviation
-        double desired_altitude_m = wp1_altitude_m
-            + wp1_distance * _alt_dist_ratio;
-        double altitude_deviation_m = altitude_m - desired_altitude_m;
-        _alt_deviation_node->setDoubleValue(altitude_deviation_m * SG_METER_TO_FEET);
-
-
-
-        // Tracking bug.
-	double tracking_bug = _tracking_bug_node->getDoubleValue();
-	double true_bug_error = tracking_bug - track1_deg;
-	double magnetic_bug_error = tracking_bug - mag_track_bearing;
-
-        // Get the errors into the (-180,180) range.
-        SG_NORMALIZE_RANGE(true_bug_error, -180.0, 180.0);
-        SG_NORMALIZE_RANGE(magnetic_bug_error, -180.0, 180.0);
-
-	_true_bug_error_node->setDoubleValue(true_bug_error);
-	_magnetic_bug_error_node->setDoubleValue(magnetic_bug_error);
-
-
-        // Add WP 1 to the route.
-        if ( addWp->getBoolValue() )
-        {
-            addWp->setBoolValue(false);
-
-            SGWayPoint tempWp( _wp1_longitude_node->getDoubleValue(),
-                               _wp1_latitude_node->getDoubleValue(),
-                               _wp1_altitude_node->getDoubleValue(),
-                               SGWayPoint::WGS84,
-                               _wp1_ID_node->getStringValue(),
-                               _wp1_name_node->getStringValue() );
-
-            route->add_waypoint(tempWp);
-
-            SGPropertyNode *wp = 
-                _route->getChild("Waypoint", route->size()-1, true);
-            SGPropertyNode *id = wp->getChild("ID", 0, true);
-            SGPropertyNode *name = wp->getChild("Name", 0, true);
-            SGPropertyNode *lat = wp->getChild("Latitude", 0, true);
-            SGPropertyNode *lon = wp->getChild("Longitude", 0, true);
-            SGPropertyNode *alt = wp->getChild("Altitude", 0, true);
-            
-            id->setStringValue( tempWp.get_id().c_str() );
-            name->setStringValue( tempWp.get_name().c_str() );
-            lat->setDoubleValue( tempWp.get_target_lat() );
-            lon->setDoubleValue( tempWp.get_target_lon() );
-            alt->setDoubleValue( tempWp.get_target_alt() );
-        }
-
-        if ( popWp->getBoolValue() )
-        {
-            popWp->setBoolValue(false);
-
-            route->delete_first();
-	    _route->removeChild("Waypoint", 0, false);
-        }
-
+        updateWithValid(ctx);
     } else {
         _true_track_node->setDoubleValue(0.0);
         _magnetic_track_node->setDoubleValue(0.0);
         _speed_node->setDoubleValue(0.0);
+        _last_valid = true;
     }
 
-    _last_valid = true;
-    _last_longitude_deg = longitude_deg;
-    _last_latitude_deg = latitude_deg;
-    _last_altitude_m = altitude_m;
+    _last_pos = ctx.pos;
+}
+
+void
+GPS::updateNearestAirport(UpdateContext& ctx)
+{
+    if (!_get_nearest_airport_node->getBoolValue()) {
+        return;
+    }
+    
+    // If the get-nearest-airport-node is true.
+    // Get the nearest airport, and set it as waypoint 1.
+    
+    FGPositioned::TypeFilter aptFilter(FGPositioned::AIRPORT);
+    FGPositionedRef a = FGPositioned::findClosest(ctx.pos, 360.0, &aptFilter);
+    if (!a) {
+        return;
+    }
+
+    _wp1_position = a->geod();
+    _wp1_ID_node->setStringValue(a->ident().c_str());
+    _wp1_name_node->setStringValue(a->name().c_str());
+    _get_nearest_airport_node->setBoolValue(false);
+    _last_wp1_ID = a->ident(); // don't trigger updateWaypoint1();
+    ctx.waypoint_changed = true;
+}
+
+void
+GPS::updateWithValid(UpdateContext& ctx)
+{
+    assert(_last_valid);
+    double distance_m;
+    SGGeodesy::inverse(_last_pos, ctx.pos, ctx.track1_deg, ctx.track2_deg, distance_m );
+    
+    ctx.speed_kt = ((distance_m * SG_METER_TO_NM) * ((1 / ctx.dt) * 3600.0));
+    
+    double vertical_speed_mpm = ((ctx.pos.getElevationM() - _last_pos.getElevationM()) * 60 /
+			      ctx.dt);
+	  _indicated_vertical_speed_node->setDoubleValue(vertical_speed_mpm * SG_METER_TO_FEET);
+    _true_track_node->setDoubleValue(ctx.track1_deg);
+    
+    ctx.magvar_deg = _magvar_node->getDoubleValue();
+    double mag_track_bearing = ctx.track1_deg - ctx.magvar_deg;
+    SG_NORMALIZE_RANGE(mag_track_bearing, 0.0, 360.0);
+    _magnetic_track_node->setDoubleValue(mag_track_bearing);
+    ctx.speed_kt = fgGetLowPass(_last_speed_kts, ctx.speed_kt, ctx.dt/20.0);
+    _last_speed_kts = ctx.speed_kt;
+    _speed_node->setDoubleValue(ctx.speed_kt);
+
+    double odometer = _odometer_node->getDoubleValue();
+    _odometer_node->setDoubleValue(odometer + distance_m * SG_METER_TO_NM);
+    odometer = _trip_odometer_node->getDoubleValue();
+    _trip_odometer_node->setDoubleValue(odometer + distance_m * SG_METER_TO_NM);
+  
+    updateNearestAirport(ctx);
+    updateWaypoint0(ctx);
+    updateWaypoint1(ctx);
+
+    ctx.wp0_pos = _wp0_position.get();
+    ctx.wp1_pos = _wp1_position.get();
+    // if this flag is set, we need to recompute leg data, because either
+    // WP0 or WP1 has been updated
+    if (ctx.waypoint_changed) {
+      waypointChanged(ctx);
+    }
+
+    ctx.wp0_course_deg = _wp0_course_node->getDoubleValue();
+    ctx.wp1_course_deg = _wp1_course_node->getDoubleValue();
+    
+    updateWaypoint0Course(ctx);
+    updateWaypoint1Course(ctx);
+    updateLegCourse(ctx);
+  
+    // Altitude deviation
+    //double desired_altitude_m = wp1_altitude_m
+    //        + wp1_distance * _alt_dist_ratio;
+    //double altitude_deviation_m = altitude_m - desired_altitude_m;
+    //    _alt_deviation_node->setDoubleValue(altitude_deviation_m * SG_METER_TO_FEET);
+    
+    updateTrackingBug(ctx);
+}
+
+void
+GPS::updateLegCourse(UpdateContext& ctx)
+{
+     // Leg course deviation is the diffenrence between the bearing
+    // and the course.
+    double course_deviation_deg = ctx.wp1_bearing_deg - _course_deg;
+    SG_NORMALIZE_RANGE(course_deviation_deg, -180.0, 180.0);
+        
+    // If the course deviation is less than 90 degrees to either side,
+    // our desired course is towards the waypoint.
+    // It does not matter if we are actually moving 
+    // towards or from the waypoint.
+    if (fabs(course_deviation_deg) < 90.0) {
+        _leg_to_flag_node->setBoolValue(true); 
+    }
+    // If it's more than 90 degrees the desired
+    // course is from the waypoint.
+    else if (fabs(course_deviation_deg) > 90.0) {
+        _leg_to_flag_node->setBoolValue(false);
+        // When the course is away from the waypoint, 
+        // it makes sense to change the sign of the deviation.
+        course_deviation_deg *= -1.0;
+        SG_NORMALIZE_RANGE(course_deviation_deg, -90.0, 90.0);
+    }
+    
+    _leg_course_deviation_node->setDoubleValue(course_deviation_deg);
+        
+    // Cross track error.
+    double course_error_m = sin(course_deviation_deg * SG_PI / 180.0)
+            * (_distance_m);
+    _leg_course_error_nm_node->setDoubleValue(course_error_m * SG_METER_TO_NM);
+
+}
+
+void
+GPS::updateTrackingBug(UpdateContext& ctx)
+{
+    double tracking_bug = _tracking_bug_node->getDoubleValue();
+    double true_bug_error = tracking_bug - ctx.track1_deg;
+    double magnetic_bug_error = tracking_bug - _magnetic_track_node->getDoubleValue();
+
+    // Get the errors into the (-180,180) range.
+    SG_NORMALIZE_RANGE(true_bug_error, -180.0, 180.0);
+    SG_NORMALIZE_RANGE(magnetic_bug_error, -180.0, 180.0);
+
+    _true_bug_error_node->setDoubleValue(true_bug_error);
+    _magnetic_bug_error_node->setDoubleValue(magnetic_bug_error);
+}
+
+void
+GPS::waypointChanged(UpdateContext& ctx)
+{
+    // If any of the two waypoints have changed
+    // we need to calculate a new course between them,
+    // and values for vertical navigation.
+    assert(ctx.waypoint_changed);
+
+    double track2;
+    SGGeodesy::inverse(ctx.wp0_pos, ctx.wp1_pos, _course_deg, track2, _distance_m);
+    
+    double leg_mag_course = _course_deg - _magvar_node->getDoubleValue();
+    SG_NORMALIZE_RANGE(leg_mag_course, 0.0, 360.0);
+
+    // Get the altitude / distance ratio
+    if ( _distance_m > 0.0 ) {
+        double alt_difference_m = ctx.wp0_pos.getElevationM() - ctx.wp1_pos.getElevationM();
+        _alt_dist_ratio = alt_difference_m / _distance_m;
+    }
+
+    _leg_distance_node->setDoubleValue(_distance_m * SG_METER_TO_NM);
+    _leg_course_node->setDoubleValue(_course_deg);
+    _leg_magnetic_course_node->setDoubleValue(leg_mag_course);
+    _alt_dist_ratio_node->setDoubleValue(_alt_dist_ratio);
+}
+
+void
+GPS::updateWaypoint0(UpdateContext& ctx)
+{
+    string id(_wp0_ID_node->getStringValue());
+    if (_last_wp0_ID == id) {
+        return; // easy, nothing to do
+    }
+    
+    FGPositionedRef result = FGPositioned::findClosestWithIdent(id, ctx.pos);
+    if (!result) {
+        // not found, hmm
+        _last_wp0_ID = id;
+        return;
+    }
+    
+    _wp0_position = result->geod();
+    _wp0_name_node->setStringValue(result->name().c_str());
+    _last_wp0_ID = id;
+    ctx.waypoint_changed = true;
+}
+
+void
+GPS::updateWaypoint1(UpdateContext& ctx)
+{
+    string id(_wp1_ID_node->getStringValue());
+    if (_last_wp1_ID == id) {
+        return; // easy, nothing to do
+    }
+    
+    FGPositionedRef result = FGPositioned::findClosestWithIdent(id, ctx.pos);
+    if (!result) {
+        // not found, hmm
+        _last_wp1_ID = id;
+        return;
+    }
+    
+    _wp1_position = result->geod();
+    _wp1_name_node->setStringValue(result->name().c_str());
+    _last_wp1_ID = id;
+    ctx.waypoint_changed = true;
+}
+
+void
+GPS::updateTTWNode(UpdateContext& ctx, double distance_m, SGPropertyNode_ptr node)
+{
+    // Estimate time to waypoint.
+    // The estimation does not take track into consideration,
+    // so if you are going away from the waypoint the TTW will
+    // increase. Makes most sense when travelling directly towards
+    // the waypoint.
+    double TTW = 0.0;
+    if (ctx.speed_kt > 0.0 && distance_m > 0.0) {
+        TTW = (distance_m * SG_METER_TO_NM) / (ctx.speed_kt / 3600);
+    }
+   
+    unsigned int TTW_seconds = (int) (TTW + 0.5);
+    if (TTW_seconds < 356400) { // That's 99 hours
+      unsigned int TTW_minutes = 0;
+      unsigned int TTW_hours   = 0;
+      char TTW_str[9];
+      while (TTW_seconds >= 3600) {
+        TTW_seconds -= 3600;
+        TTW_hours++;
+      }
+      while (TTW_seconds >= 60) {
+        TTW_seconds -= 60;
+        TTW_minutes++;
+      }
+      snprintf(TTW_str, 9, "%02d:%02d:%02d",
+        TTW_hours, TTW_minutes, TTW_seconds);
+      node->setStringValue(TTW_str);
+    } else {
+      node->setStringValue("--:--:--");
+    }
+}
+
+void
+GPS::updateWaypoint0Course(UpdateContext& ctx)
+{
+    // Find the bearing and distance to waypoint 0.
+    double az2;
+    SGGeodesy::inverse(ctx.pos, ctx.wp0_pos, ctx.wp0_bearing_deg, az2,ctx.wp0_distance);
+    _wp0_distance_node->setDoubleValue(ctx.wp0_distance * SG_METER_TO_NM);
+    _wp0_bearing_node->setDoubleValue(ctx.wp0_bearing_deg);
+        
+    double mag_bearing_deg = ctx.wp0_bearing_deg - ctx.magvar_deg;
+    SG_NORMALIZE_RANGE(mag_bearing_deg, 0.0, 360.0);
+    _wp0_mag_bearing_node->setDoubleValue(mag_bearing_deg);
+    double bearing_error_deg = ctx.track1_deg - ctx.wp0_bearing_deg;
+    SG_NORMALIZE_RANGE(bearing_error_deg, -180.0, 180.0);
+    _true_wp0_bearing_error_node->setDoubleValue(bearing_error_deg);
+    
+    updateTTWNode(ctx, ctx.wp0_distance, _wp0_ttw_node);
+        
+    // Course deviation is the diffenrence between the bearing
+    // and the course.
+    double course_deviation_deg = ctx.wp0_bearing_deg -
+        ctx.wp0_course_deg;
+    SG_NORMALIZE_RANGE(course_deviation_deg, -180.0, 180.0);
+
+    // If the course deviation is less than 90 degrees to either side,
+    // our desired course is towards the waypoint.
+    // It does not matter if we are actually moving 
+    // towards or from the waypoint.
+    if (fabs(course_deviation_deg) < 90.0) {
+        _wp0_to_flag_node->setBoolValue(true); 
+    }
+    // If it's more than 90 degrees the desired
+    // course is from the waypoint.
+    else if (fabs(course_deviation_deg) > 90.0) {
+      _wp0_to_flag_node->setBoolValue(false);
+      // When the course is away from the waypoint, 
+      // it makes sense to change the sign of the deviation.
+      course_deviation_deg *= -1.0;
+      SG_NORMALIZE_RANGE(course_deviation_deg, -90.0, 90.0);
+    }
+
+    _wp0_course_deviation_node->setDoubleValue(course_deviation_deg);
+
+    // Cross track error.
+    double course_error_m = sin(course_deviation_deg * SG_PI / 180.0)
+          * (ctx.wp0_distance);
+    _wp0_course_error_nm_node->setDoubleValue(course_error_m * SG_METER_TO_NM);
+}
+
+void
+GPS::updateWaypoint1Course(UpdateContext& ctx)
+{
+    // Find the bearing and distance to waypoint 0.
+    double az2;
+    SGGeodesy::inverse(ctx.pos, ctx.wp1_pos, ctx.wp1_bearing_deg, az2,ctx.wp1_distance);
+    _wp1_distance_node->setDoubleValue(ctx.wp1_distance * SG_METER_TO_NM);
+    _wp1_bearing_node->setDoubleValue(ctx.wp1_bearing_deg);
+        
+    double mag_bearing_deg = ctx.wp1_bearing_deg - ctx.magvar_deg;
+    SG_NORMALIZE_RANGE(mag_bearing_deg, 0.0, 360.0);
+    _wp1_mag_bearing_node->setDoubleValue(mag_bearing_deg);
+    double bearing_error_deg = ctx.track1_deg - ctx.wp1_bearing_deg;
+    SG_NORMALIZE_RANGE(bearing_error_deg, -180.0, 180.0);
+    _true_wp1_bearing_error_node->setDoubleValue(bearing_error_deg);
+    
+    updateTTWNode(ctx, ctx.wp1_distance, _wp1_ttw_node);
+        
+    // Course deviation is the diffenrence between the bearing
+    // and the course.
+    double course_deviation_deg = ctx.wp1_bearing_deg -
+        ctx.wp1_course_deg;
+    SG_NORMALIZE_RANGE(course_deviation_deg, -180.0, 180.0);
+
+    // If the course deviation is less than 90 degrees to either side,
+    // our desired course is towards the waypoint.
+    // It does not matter if we are actually moving 
+    // towards or from the waypoint.
+    if (fabs(course_deviation_deg) < 90.0) {
+        _wp1_to_flag_node->setBoolValue(true); 
+    }
+    // If it's more than 90 degrees the desired
+    // course is from the waypoint.
+    else if (fabs(course_deviation_deg) > 90.0) {
+      _wp1_to_flag_node->setBoolValue(false);
+      // When the course is away from the waypoint, 
+      // it makes sense to change the sign of the deviation.
+      course_deviation_deg *= -1.0;
+      SG_NORMALIZE_RANGE(course_deviation_deg, -90.0, 90.0);
+    }
+
+    _wp1_course_deviation_node->setDoubleValue(course_deviation_deg);
+
+    // Cross track error.
+    double course_error_m = sin(course_deviation_deg * SG_PI / 180.0)
+          * (ctx.wp1_distance);
+    _wp1_course_error_nm_node->setDoubleValue(course_error_m * SG_METER_TO_NM);
+
 }
 
 // end of gps.cxx

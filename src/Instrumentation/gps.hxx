@@ -7,14 +7,28 @@
 #ifndef __INSTRUMENTS_GPS_HXX
 #define __INSTRUMENTS_GPS_HXX 1
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
 #include <simgear/props/props.hxx>
-#include <simgear/route/route.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/math/SGMath.hxx>
 
+// forward decls
+class SGRoute;
+
+class SGGeodProperty
+{
+public:
+    SGGeodProperty()
+    {
+    }
+        
+    void init(SGPropertyNode* base, const char* lonStr, const char* latStr, const char* altStr = NULL);    
+    void init(const char* lonStr, const char* latStr, const char* altStr = NULL);    
+    void clear();    
+    void operator=(const SGGeod& geod);    
+    SGGeod get() const;
+private:
+    SGPropertyNode_ptr _lon, _lat, _alt;
+};
 
 /**
  * Model a GPS radio.
@@ -75,37 +89,58 @@ public:
     virtual void update (double delta_time_sec);
 
 private:
+    typedef struct {
+        double dt;
+        SGGeod pos;
+        SGGeod wp0_pos;
+        SGGeod wp1_pos;
+        bool waypoint_changed;
+        double speed_kt;
+        double track1_deg;
+        double track2_deg;
+        double magvar_deg;
+        double wp0_distance;
+        double wp0_course_deg;
+        double wp0_bearing_deg;
+        double wp1_distance;
+        double wp1_course_deg;
+        double wp1_bearing_deg;
+    } UpdateContext;
+    
+    void search (double frequency, const SGGeod& pos);
 
-    void search (double frequency, double longitude_rad,
-                 double latitude_rad, double altitude_m);
+    /**
+     * reset all output properties to default / non-service values
+     */
+    void clearOutput();
 
-    SGPropertyNode_ptr _longitude_node;
-    SGPropertyNode_ptr _latitude_node;
-    SGPropertyNode_ptr _altitude_node;
+    void updateWithValid(UpdateContext& ctx);
+    
+    void updateNearestAirport(UpdateContext& ctx);
+    void updateWaypoint0(UpdateContext& ctx);
+    void updateWaypoint1(UpdateContext& ctx);
+
+    void updateLegCourse(UpdateContext& ctx);
+    void updateWaypoint0Course(UpdateContext& ctx);
+    void updateWaypoint1Course(UpdateContext& ctx);
+
+    void waypointChanged(UpdateContext& ctx);
+    void updateTTWNode(UpdateContext& ctx, double distance_m, SGPropertyNode_ptr node);
+    void updateTrackingBug(UpdateContext& ctx);
+    
     SGPropertyNode_ptr _magvar_node;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _electrical_node;
-    SGPropertyNode_ptr _wp0_longitude_node;
-    SGPropertyNode_ptr _wp0_latitude_node;
-    SGPropertyNode_ptr _wp0_altitude_node;
     SGPropertyNode_ptr _wp0_ID_node;
     SGPropertyNode_ptr _wp0_name_node;
     SGPropertyNode_ptr _wp0_course_node;
     SGPropertyNode_ptr _get_nearest_airport_node;
-    SGPropertyNode_ptr _wp0_waypoint_type_node;
-    SGPropertyNode_ptr _wp1_longitude_node;
-    SGPropertyNode_ptr _wp1_latitude_node;
-    SGPropertyNode_ptr _wp1_altitude_node;
     SGPropertyNode_ptr _wp1_ID_node;
     SGPropertyNode_ptr _wp1_name_node;
     SGPropertyNode_ptr _wp1_course_node;
-    SGPropertyNode_ptr _wp1_waypoint_type_node;
     SGPropertyNode_ptr _tracking_bug_node;
 
     SGPropertyNode_ptr _raim_node;
-    SGPropertyNode_ptr _indicated_longitude_node;
-    SGPropertyNode_ptr _indicated_latitude_node;
-    SGPropertyNode_ptr _indicated_altitude_node;
     SGPropertyNode_ptr _indicated_vertical_speed_node;
     SGPropertyNode_ptr _true_track_node;
     SGPropertyNode_ptr _magnetic_track_node;
@@ -141,26 +176,12 @@ private:
     SGPropertyNode_ptr _leg_to_flag_node;
     SGPropertyNode_ptr _alt_deviation_node;
 
-    SGPropertyNode_ptr _route;
-    SGPropertyNode_ptr addWp;
-    SGPropertyNode_ptr popWp;
-
-    SGRoute *route;
-
     bool _last_valid;
-    double _last_longitude_deg;
-    double _last_latitude_deg;
-    double _last_altitude_m;
+    SGGeod _last_pos;
     double _last_speed_kts;
 
-    double _wp0_latitude_deg;
-    double _wp0_longitude_deg;
-    double _wp0_altitude_m;
-    double _wp1_latitude_deg;
-    double _wp1_longitude_deg;
-    double _wp1_altitude_m;
-    string _last_wp0_ID;
-    string _last_wp1_ID;
+    std::string _last_wp0_ID;
+    std::string _last_wp1_ID;
 
     double _alt_dist_ratio;
     double _distance_m;
@@ -172,9 +193,13 @@ private:
     double _range_error;
     double _elapsed_time;
 
-    string _name;
+    std::string _name;
     int _num;
 
+    SGGeodProperty _position;
+    SGGeodProperty _wp0_position;
+    SGGeodProperty _wp1_position;
+    SGGeodProperty _indicated_pos;
 };
 
 
