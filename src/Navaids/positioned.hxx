@@ -71,6 +71,14 @@ public:
   const std::string& ident() const
   { return mIdent; }
 
+  /**
+   * Return the name of this positioned. By default this is the same as the
+   * ident, but for many derived classes it's more meaningful - the aiport or
+   * navaid name, for example.
+   */
+  virtual const std::string& name() const
+  { return mIdent; }
+
   const SGGeod& geod() const
   { return mPosition; }
 
@@ -87,27 +95,64 @@ public:
   
   /**
    * Predicate class to support custom filtering of FGPositioned queries
+   * Default implementation of this passes any FGPositioned instance.
    */
   class Filter
   {
   public:
     virtual ~Filter() { ; }
     
-    virtual bool pass(FGPositioned* aPos) const = 0;
+    /**
+     * Over-rideable filter method. Default implementation returns true.
+     */
+    virtual bool pass(FGPositioned* aPos) const
+    { return true; }
     
     bool operator()(FGPositioned* aPos) const
     { return pass(aPos); }
   };
   
-  static List findWithinRange(const SGGeod& aPos, double aRangeNm, const Filter& aFilter);
-      
-  static List findWithinRangeByType(const SGGeod& aPos, double aRangeNm, Type aTy);
-
-  static FGPositionedRef findClosestWithIdent(const std::string& aIdent, double aLat, double aLon);
+  class TypeFilter : public Filter
+  {
+  public:
+    TypeFilter(Type aTy) : mType(aTy) { ; }
+    virtual bool pass(FGPositioned* aPos) const
+    { return (mType == aPos->type()); }
+  private:
+    const Type mType;
+  };
   
-  static FGPositionedRef findClosestWithIdent(const std::string& aIdent, const SGGeod& aPos);
+  static List findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilter = NULL);
+        
+  static FGPositionedRef findClosestWithIdent(const std::string& aIdent, const SGGeod& aPos, Filter* aFilter = NULL);
   
-  static List findAllWithIdent(const std::string& aIdent);
+  /**
+   * Find the next item with the specified partial ID, after the 'current' item
+   * Note this function is not hyper-efficient, particular where the partial id
+   * spans a large number of candidates.
+   *
+   * @param aCur - Current item, or NULL to retrieve the first item with partial id
+   * @param aId - the (partial) id to lookup
+   */
+  static FGPositionedRef findNextWithPartialId(FGPositionedRef aCur, const std::string& aId, Filter* aFilter = NULL);
+  
+  /**
+   * Find all items with the specified ident, and return then sorted by
+   * distance from a position
+   *
+   * @param aFilter - optional filter on items
+   */
+  static List findAllWithIdentSortedByRange(const std::string& aIdent, const SGGeod& aPos, Filter* aFilter = NULL);
+  
+  /**
+   * Find the closest item to a position, which pass the specified filter
+   * A cutoff range in NM must be specified, to constrain the search acceptably.
+   * Very large cutoff values will make this slow.
+   * 
+   * @result The closest item passing the filter, or NULL
+   * @param aCutoffNm - maximum distance to search within, in nautical miles
+   */
+  static FGPositionedRef findClosest(const SGGeod& aPos, double aCutoffNm, Filter* aFilter = NULL);
   
   /**
    * Find the closest N items to a position, which pass the specified filter
@@ -119,7 +164,9 @@ public:
    * @param aN - number of matches to find
    * @param aCutoffNm - maximum distance to search within, in nautical miles
    */
-  static List findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm, const Filter& aFilter);
+  static List findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm, Filter* aFilter = NULL);
+  
+  
   
   /**
    * Debug helper, map a type to a human-readable string

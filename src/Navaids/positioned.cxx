@@ -98,7 +98,7 @@ removeFromIndices(FGPositioned* aPos)
 }
 
 static void
-spatialFilterInBucket(const SGBucket& aBucket, const FGPositioned::Filter& aFilter, FGPositioned::List& aResult)
+spatialFilterInBucket(const SGBucket& aBucket, FGPositioned::Filter* aFilter, FGPositioned::List& aResult)
 {
   SpatialPositionedIndex::const_iterator it;
   it = global_spatialIndex.find(aBucket.gen_index());
@@ -109,8 +109,13 @@ spatialFilterInBucket(const SGBucket& aBucket, const FGPositioned::Filter& aFilt
   BucketEntry::const_iterator l = it->second.begin();
   BucketEntry::const_iterator u = it->second.end();
 
+  if (!aFilter) { // pass everything
+    aResult.insert(aResult.end(), l, u);
+    return;
+  }
+
   for ( ; l != u; ++l) {
-    if (aFilter(*l)) {
+    if ((*aFilter)(*l)) {
       aResult.push_back(*l);
     }
   }
@@ -118,7 +123,7 @@ spatialFilterInBucket(const SGBucket& aBucket, const FGPositioned::Filter& aFilt
 
 static void
 spatialFind(const SGGeod& aPos, double aRange, 
-  const FGPositioned::Filter& aFilter, FGPositioned::List& aResult)
+  FGPositioned::Filter* aFilter, FGPositioned::List& aResult)
 {
   SGBucket buck(aPos);
   double lat = aPos.getLatitudeDeg(),
@@ -135,6 +140,7 @@ spatialFind(const SGGeod& aPos, double aRange,
   } // of i-iteration  
 }
 
+/*
 class LowerLimitOfType
 {
 public:
@@ -148,6 +154,7 @@ public:
     return a < b->type();
   }
 };
+
 
 static void
 spatialFindTyped(const SGGeod& aPos, double aRange, FGPositioned::Type aLower, FGPositioned::Type aUpper, FGPositioned::List& aResult)
@@ -180,6 +187,7 @@ spatialFindTyped(const SGGeod& aPos, double aRange, FGPositioned::Type aLower, F
     } // of j-iteration
   } // of i-iteration  
 }
+*/
 
 /**
  */
@@ -238,8 +246,7 @@ sortByDistance(const SGGeod& aPos, FGPositioned::List& aResult)
 }
 
 static FGPositionedRef
-namedFindClosestTyped(const std::string& aIdent, const SGGeod& aOrigin, 
-  FGPositioned::Type aLower, FGPositioned::Type aUpper)
+namedFindClosest(const std::string& aIdent, const SGGeod& aOrigin, FGPositioned::Filter* aFilter)
 {
   NamedIndexRange range = global_namedIndex.equal_range(aIdent);
   if (range.first == range.second) {
@@ -251,8 +258,7 @@ namedFindClosestTyped(const std::string& aIdent, const SGGeod& aOrigin,
   NamedPositionedIndex::const_iterator check = range.first;
   if (++check == range.second) {
     // excellent, only one match in the range - all we care about is the type
-    FGPositioned::Type ty = range.first->second->type();
-    if ((ty < aLower) || (ty > aUpper)) {
+    if (aFilter && !aFilter->pass(range.first->second)) {
       return NULL; // type check failed
     }
     
@@ -267,7 +273,7 @@ namedFindClosestTyped(const std::string& aIdent, const SGGeod& aOrigin,
   for (; it != range.second; ++it) {
   // filter by type
     FGPositioned::Type ty = it->second->type();
-    if ((ty < aLower) || (ty > aUpper)) {
+    if (aFilter && !aFilter->pass(range.first->second)) {
       continue;
     }
     
@@ -284,7 +290,7 @@ namedFindClosestTyped(const std::string& aIdent, const SGGeod& aOrigin,
 }
 
 static FGPositioned::List
-spatialGetClosest(const SGGeod& aPos, unsigned int aN, double aCutoffNm, const FGPositioned::Filter& aFilter)
+spatialGetClosest(const SGGeod& aPos, unsigned int aN, double aCutoffNm, FGPositioned::Filter* aFilter)
 {
   FGPositioned::List result;
   int radius = 1; // start at 1, radius 0 is handled explicitly
@@ -381,28 +387,13 @@ const char* FGPositioned::nameForType(Type aTy)
 // search / query functions
 
 FGPositionedRef
-FGPositioned::findClosestWithIdent(const std::string& aIdent, double aLat, double aLon)
+FGPositioned::findClosestWithIdent(const std::string& aIdent, const SGGeod& aPos, Filter* aFilter)
 {
-  return findClosestWithIdent(aIdent, SGGeod::fromDeg(aLon, aLat));
-}
-
-FGPositionedRef
-FGPositioned::findClosestWithIdent(const std::string& aIdent, const SGGeod& aPos)
-{
-  return namedFindClosestTyped(aIdent, aPos, INVALID, LAST_TYPE);
+  return namedFindClosest(aIdent, aPos, aFilter);
 }
 
 FGPositioned::List
-FGPositioned::findWithinRangeByType(const SGGeod& aPos, double aRangeNm, Type aTy)
-{
-  List result;
-  spatialFindTyped(aPos, aRangeNm, aTy, aTy, result);
-  filterListByRange(aPos, aRangeNm, result);
-  return result;
-}
-
-FGPositioned::List
-FGPositioned::findWithinRange(const SGGeod& aPos, double aRangeNm, const Filter& aFilter)
+FGPositioned::findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilter)
 {
   List result;
   spatialFind(aPos, aRangeNm, aFilter, result);
@@ -411,20 +402,60 @@ FGPositioned::findWithinRange(const SGGeod& aPos, double aRangeNm, const Filter&
 }
 
 FGPositioned::List
-FGPositioned::findAllWithIdent(const std::string& aIdent)
+FGPositioned::findAllWithIdentSortedByRange(const std::string& aIdent, const SGGeod& aPos, Filter* aFilter)
 {
   List result;
   NamedIndexRange range = global_namedIndex.equal_range(aIdent);
   for (; range.first != range.second; ++range.first) {
+    if (aFilter && !aFilter->pass(range.first->second)) {
+      continue;
+    }
+    
     result.push_back(range.first->second);
   }
   
+  sortByDistance(aPos, result);
   return result;
 }
 
+FGPositionedRef
+FGPositioned::findClosest(const SGGeod& aPos, double aCutoffNm, Filter* aFilter)
+{
+   FGPositioned::List l(spatialGetClosest(aPos, 1, aCutoffNm, aFilter));
+   if (l.empty()) {
+      return NULL;
+   }
+   
+   assert(l.size() == 1);
+   return l.front();
+}
+
 FGPositioned::List
-FGPositioned::findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm, const Filter& aFilter)
+FGPositioned::findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm, Filter* aFilter)
 {
   return spatialGetClosest(aPos, aN, aCutoffNm, aFilter);
+}
+
+FGPositionedRef
+FGPositioned::findNextWithPartialId(FGPositionedRef aCur, const std::string& aId, Filter* aFilter)
+{
+  NamedIndexRange range = global_namedIndex.equal_range(aId);
+  for (; range.first != range.second; ++range.first) {
+    FGPositionedRef candidate = range.first->second;
+    if (aCur == candidate) {
+      aCur = NULL; // found our start point, next match will pass
+      continue;
+    }
+    
+    if (aFilter && !aFilter->pass(candidate)) {
+      continue;
+    }
+  
+    if (!aCur) {
+      return candidate;
+    }
+  }
+  
+  return NULL; // fell out, no match in range
 }
 

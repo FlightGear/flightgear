@@ -32,15 +32,16 @@
 #include <vector>
 #include <map>
 
-#include <Navaids/navrecord.hxx>
-#include <Navaids/navlist.hxx>
-#include <Navaids/fixlist.hxx>
-#include <Airports/simple.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-
-using namespace std;
+#include <Navaids/positioned.hxx>
 
 class SGTime;
+class FGPositioned;
+
+// XXX fix me
+class FGNavRecord;
+class FGAirport;
+class FGFix;
 
 enum GPSDistanceUnits {
 	GPS_DIST_UNITS_NM = 0,
@@ -94,9 +95,7 @@ struct GPSWaypoint {
   
   GPSWaypoint(const std::string& aIdent, float lat, float lon, GPSWpType aType);
   
-  static GPSWaypoint* createFromFix(const FGFix* aFix);
-  static GPSWaypoint* createFromNav(const FGNavRecord* aNav);
-  static GPSWaypoint* createFromAirport(const FGAirport* aApt);
+  static GPSWaypoint* createFromPositioned(const FGPositioned* aFix);
   
     ~GPSWaypoint();
 	string GetAprId();	// Returns the id with i, f, m or h added if appropriate. (Initial approach fix, final approach fix, etc)
@@ -427,6 +426,9 @@ protected:
 	const FGFix* FindFirstIntById(const string& id, bool &multi, bool exact = false);
 	// Find the closest VOR to a position in RADIANS.
 	FGNavRecord* FindClosestVor(double lat_rad, double lon_rad);
+
+  // helper to implement the above FindFirstXXX methods
+  FGPositioned* FindTypedFirstById(const std::string& id, FGPositioned::Type ty, bool &multi, bool exact);
 
 	// Position, orientation and velocity.
 	// These should be read from FG's built-in GPS logic if possible.

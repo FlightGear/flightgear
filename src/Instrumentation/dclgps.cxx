@@ -32,11 +32,12 @@
 
 #include <Main/fg_props.hxx>
 #include <Navaids/fix.hxx>
+#include <Navaids/navrecord.hxx>
+#include <Airports/simple.hxx>
 
 #include <iostream>
-using std::cout;
 
-//using namespace std;
+using namespace std;
 
 // Command callbacks for FlightGear
 
@@ -140,31 +141,43 @@ string GPSWaypoint::GetAprId() {
 	else return(id);
 }
 
-GPSWaypoint* GPSWaypoint::createFromFix(const FGFix* aFix)
+static GPSWpType
+GPSWpTypeFromFGPosType(FGPositioned::Type aType)
 {
-  assert(aFix);
-  return new GPSWaypoint(aFix->get_ident(), 
-    aFix->get_lat() * SG_DEGREES_TO_RADIANS,
-    aFix->get_lon() * SG_DEGREES_TO_RADIANS,
-    GPS_WP_INT);
+  switch (aType) {
+  case FGPositioned::AIRPORT:
+  case FGPositioned::SEAPORT:
+  case FGPositioned::HELIPORT:
+    return GPS_WP_APT;
+  
+  case FGPositioned::VOR:
+    return GPS_WP_VOR;
+  
+  case FGPositioned::NDB:
+    return GPS_WP_NDB;
+  
+  case FGPositioned::WAYPOINT:
+    return GPS_WP_USR;
+  
+  case FGPositioned::FIX:
+    return GPS_WP_INT;
+  
+  default:
+    return GPS_WP_USR;
+  }
 }
 
-GPSWaypoint* GPSWaypoint::createFromNav(const FGNavRecord* aNav)
+GPSWaypoint* GPSWaypoint::createFromPositioned(const FGPositioned* aPos)
 {
-  assert(aNav);
-  return new GPSWaypoint(aNav->get_ident(), 
-    aNav->get_lat() * SG_DEGREES_TO_RADIANS,
-    aNav->get_lon() * SG_DEGREES_TO_RADIANS,
-    (aNav->get_fg_type() == FG_NAV_VOR ? GPS_WP_VOR : GPS_WP_NDB));
-}
-
-GPSWaypoint* GPSWaypoint::createFromAirport(const FGAirport* aApt)
-{
-  assert(aApt);
-  return new GPSWaypoint(aApt->getId(), 
-    aApt->getLatitude() * SG_DEGREES_TO_RADIANS,
-    aApt->getLongitude() * SG_DEGREES_TO_RADIANS,
-    GPS_WP_APT);
+  if (!aPos) {
+    return NULL; // happens if find returns no match
+  }
+  
+  return new GPSWaypoint(aPos->ident(), 
+    aPos->latitude() * SG_DEGREES_TO_RADIANS,
+    aPos->longitude() * SG_DEGREES_TO_RADIANS,
+    GPSWpTypeFromFGPosType(aPos->type())
+  );
 }
 
 ostream& operator << (ostream& os, GPSAppWpType type) {
@@ -1071,132 +1084,83 @@ public:
   }
 };
 
+class DCLGPSFilter : public FGPositioned::Filter
+{
+public:
+  virtual bool pass(const FGPositioned* aPos) const {
+    switch (aPos->type()) {
+    case FGPositioned::AIRPORT:
+    // how about heliports and seaports?
+    case FGPositioned::NDB:
+    case FGPositioned::VOR:
+    case FGPositioned::WAYPOINT:
+    case FGPositioned::FIX:
+      break;
+    default: return false; // reject all other types
+    }
+    return true;
+  }
+};
+
 GPSWaypoint* DCLGPS::FindFirstById(const string& id) const
 {
-  stringOrderKLN89 ordering;
-  nav_list_type vors = globals->get_navlist()->findFirstByIdent(id, FG_NAV_VOR, false);
-  nav_list_type ndbs = globals->get_navlist()->findFirstByIdent(id, FG_NAV_NDB, false);
-  const FGFix* fix = globals->get_fixlist()->findFirstByIdent(id, &ordering);
-  const FGAirport* apt = globals->get_airports()->findFirstById(id, &ordering);
-  // search local gps waypoints (USR)
-
-// pick the best - ugly logic, sorry. This is a temporary fix to getting rid
-// of the huge local waypoint table, it'll die when there's a way to query
-// this stuff centrally.
-// what we're doing is using map inserts to order the result, then using
-// the first entry (begin()) as the lowest, hence best, match
-  map<string, GPSWpType, stringOrderKLN89> sorter;
-  if (fix) sorter[fix->get_ident()] = GPS_WP_INT;
-  if (apt) sorter[apt->getId()] = GPS_WP_APT;
-  if (!vors.empty()) sorter[vors.front()->get_ident()] = GPS_WP_VOR;
-  if (!ndbs.empty()) sorter[ndbs.front()->get_ident()] = GPS_WP_NDB;
-
-  if (sorter.empty()) return NULL; // no results at all
-  GPSWpType ty = sorter.begin()->second;
-  
-  switch (ty) {
-  case GPS_WP_INT: 
-    return GPSWaypoint::createFromFix(fix);
-  
-  case GPS_WP_APT:
-    return GPSWaypoint::createFromAirport(apt);
-  
-  case GPS_WP_VOR:
-    return GPSWaypoint::createFromNav(vors.front());
-    
-  case GPS_WP_NDB:
-    return GPSWaypoint::createFromNav(ndbs.front());
-  default:
-    return NULL; // can't happen
-  }
+  DCLGPSFilter filter;
+  FGPositionedRef result = FGPositioned::findNextWithPartialId(NULL, id, &filter);
+  return GPSWaypoint::createFromPositioned(result);
 }
 
 GPSWaypoint* DCLGPS::FindFirstByExactId(const string& id) const
 {
-  if (const FGAirport* apt = globals->get_airports()->search(id)) {
-    return GPSWaypoint::createFromAirport(apt);
-  }
-  
-  if (const FGFix* fix = globals->get_fixlist()->search(id)) {
-    return GPSWaypoint::createFromFix(fix);
-  }
-  
-  nav_list_type vors = globals->get_navlist()->findFirstByIdent(id, FG_NAV_VOR, true);
-  if (!vors.empty()) {
-    return GPSWaypoint::createFromNav(vors.front());
-  }
-  
-  nav_list_type ndbs = globals->get_navlist()->findFirstByIdent(id, FG_NAV_NDB, true);
-  if (!ndbs.empty()) {
-    return GPSWaypoint::createFromNav(ndbs.front());
-  }
-  
-  return NULL;
-}
-
-// Host specific lookup functions
-// TODO - add the ASCII / alphabetical stuff from the Atlas version
-FGNavRecord* DCLGPS::FindFirstVorById(const string& id, bool &multi, bool exact) {
-	// NOTE - at the moment multi is never set.
-	multi = false;
-	//if(exact) return(_overlays->FindFirstVorById(id, exact));
-	
-	nav_list_type nav = globals->get_navlist()->findFirstByIdent(id, FG_NAV_VOR, exact);
-	
-	if(nav.size() > 1) multi = true;
-	//return(nav.empty() ? NULL : *(nav.begin()));
-	
-	// The above is sort of what we want - unfortunately we can't guarantee no NDB/ILS at the moment
-	if(nav.empty()) return(NULL);
-	
-	for(nav_list_iterator it = nav.begin(); it != nav.end(); ++it) {
-		if((*it)->type() == FGPositioned::VOR) return(*it);
-	}
-	return(NULL);	// Shouldn't get here!
+  SGGeod pos(SGGeod::fromRad(_lon, _lat));
+  FGPositionedRef result = FGPositioned::findClosestWithIdent(id, pos);
+  return GPSWaypoint::createFromPositioned(result);
 }
 
 // TODO - add the ASCII / alphabetical stuff from the Atlas version
-FGNavRecord* DCLGPS::FindFirstNDBById(const string& id, bool &multi, bool exact) {
-	// NOTE - at the moment multi is never set.
-	multi = false;
-	//if(exact) return(_overlays->FindFirstVorById(id, exact));
-	
-	nav_list_type nav = globals->get_navlist()->findFirstByIdent(id, FG_NAV_NDB, exact);
-	
-	if(nav.size() > 1) multi = true;
-	//return(nav.empty() ? NULL : *(nav.begin()));
-	
-	// The above is sort of what we want - unfortunately we can't guarantee no NDB/ILS at the moment
-	if(nav.empty()) return(NULL);
-	
-	for(nav_list_iterator it = nav.begin(); it != nav.end(); ++it) {
-		if((*it)->type() == FGPositioned::NDB) return(*it);
-	}
-	return(NULL);	// Shouldn't get here!
+FGPositioned* DCLGPS::FindTypedFirstById(const string& id, FGPositioned::Type ty, bool &multi, bool exact)
+{
+  multi = false;
+  FGPositioned::TypeFilter filter(ty);
+  
+  if (exact) {
+    FGPositioned::List matches = 
+      FGPositioned::findAllWithIdentSortedByRange(id, SGGeod::fromRad(_lon, _lat), &filter);
+    multi = (matches.size() > 1);
+    return matches.empty() ? NULL : matches.front().ptr();
+  }
+  
+  return FGPositioned::findNextWithPartialId(NULL, id, &filter);
 }
 
-const FGFix* DCLGPS::FindFirstIntById(const string& id, bool &multi, bool exact) {
-	// NOTE - at the moment multi is never set, and indeed can't be
-	// since FG can only map one Fix per ID at the moment.
-	multi = false;
-	if (exact) return globals->get_fixlist()->search(id);
-	
-  stringOrderKLN89 ordering;
-  return globals->get_fixlist()->findFirstByIdent(id, &ordering);
+FGNavRecord* DCLGPS::FindFirstVorById(const string& id, bool &multi, bool exact)
+{
+  return dynamic_cast<FGNavRecord*>(FindTypedFirstById(id, FGPositioned::VOR, multi, exact));
 }
 
-const FGAirport* DCLGPS::FindFirstAptById(const string& id, bool &multi, bool exact) {
-	// NOTE - at the moment multi is never set.
-	//cout << "FindFirstAptById, id = " << id << '\n';
-	multi = false;
-	if(exact) return(globals->get_airports()->search(id));
-	
-  stringOrderKLN89 ordering;
-  return globals->get_airports()->findFirstById(id, &ordering);
+FGNavRecord* DCLGPS::FindFirstNDBById(const string& id, bool &multi, bool exact)
+{
+  return dynamic_cast<FGNavRecord*>(FindTypedFirstById(id, FGPositioned::NDB, multi, exact));
 }
 
-FGNavRecord* DCLGPS::FindClosestVor(double lat_rad, double lon_rad) {
-	return(globals->get_navlist()->findClosest(lon_rad, lat_rad, 0.0, FG_NAV_VOR));
+const FGFix* DCLGPS::FindFirstIntById(const string& id, bool &multi, bool exact)
+{
+  return dynamic_cast<FGFix*>(FindTypedFirstById(id, FGPositioned::FIX, multi, exact));
+}
+
+const FGAirport* DCLGPS::FindFirstAptById(const string& id, bool &multi, bool exact)
+{
+  return dynamic_cast<FGAirport*>(FindTypedFirstById(id, FGPositioned::AIRPORT, multi, exact));
+}
+
+FGNavRecord* DCLGPS::FindClosestVor(double lat_rad, double lon_rad) {  
+  FGPositioned::TypeFilter filter(FGPositioned::VOR);
+  double cutoff = 1000; // nautical miles
+  FGPositionedRef v = FGPositioned::findClosest(SGGeod::fromRad(lon_rad, lat_rad), cutoff, &filter);
+  if (!v) {
+    return NULL;
+  }
+  
+  return dynamic_cast<FGNavRecord*>(v.ptr());
 }
 
 //----------------------------------------------------------------------------------------------------------
