@@ -61,24 +61,20 @@ data-tar:
                 data/Aircraft/Instruments \
                 data/Aircraft/Instruments-3d \
                 data/Aircraft/UIUC \
-                data/Aircraft/737-300 \
-                data/Aircraft/A-10 \
-                data/Aircraft/bf109 \
+		data/Aircraft/777-200 \
+		data/Aircraft/A6M2 \
+		data/Aircraft/b1900d \
                 data/Aircraft/bo105 \
-                data/Aircraft/c172 \
                 data/Aircraft/c172p \
-                data/Aircraft/c310 \
-                data/Aircraft/c310u3a \
-                data/Aircraft/Citation-Bravo \
-                data/Aircraft/f16 \
-                data/Aircraft/j3cub \
-                data/Aircraft/Hunter \
-                data/Aircraft/p51d \
-                data/Aircraft/pa28-161 \
-                data/Aircraft/Rascal \
-                data/Aircraft/T38 \
+                data/Aircraft/CitationX \
+		data/Aircraft/Concorde \
+		data/Aircraft/Dragonfly \
+		data/Aircraft/dhc2 \
+		data/Aircraft/f-14b \
+		data/Aircraft/SenecaII \
+		data/Aircraft/sopwithCamel \
                 data/Aircraft/ufo \
-                data/Aircraft/wrightFlyer1903 \
+		data/Aircraft/ZLT-NT \
 		data/Airports \
 		data/Astro \
 		data/ATC \
