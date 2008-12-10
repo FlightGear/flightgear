@@ -71,6 +71,7 @@ data-tar:
 		data/Aircraft/Dragonfly \
 		data/Aircraft/dhc2 \
 		data/Aircraft/f-14b \
+		data/Aircraft/j3cub \
 		data/Aircraft/SenecaII \
 		data/Aircraft/sopwithCamel \
                 data/Aircraft/ufo \
