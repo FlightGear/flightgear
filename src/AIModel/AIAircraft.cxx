@@ -159,7 +159,27 @@ void FGAIAircraft::setPerformance(const std::string& acclass) {
      updateSecondaryTargetValues(); // target roll, vertical speed, pitch
      updateActualState(); 
      UpdateRadar(manager);
+     checkVisibility();
   }
+
+void FGAIAircraft::checkVisibility() 
+{
+     double visibility_meters = fgGetDouble("/environment/visibility-m");
+
+     FGViewer* vw = globals->get_current_view();
+     double course, distance;
+
+     SGWayPoint current(pos.getLongitudeDeg(), pos.getLatitudeDeg(), 0);
+     SGWayPoint view (vw->getLongitude_deg(), vw->getLatitude_deg(), 0);
+     view.CourseAndDistance(current, &course, &distance);
+     if (distance > visibility_meters) {
+         //aip.getSGLocation()->set_cur_elev_m(aptElev);
+         //return;
+         invisible = true;
+      } else {
+         invisible = false;
+      }
+}
 
 
 

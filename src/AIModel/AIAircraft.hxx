@@ -126,6 +126,7 @@ private:
     void updatePitchAngleTarget();
     void updateActualState();
     void handleATCRequests();
+    void checkVisibility();
 
     double sign(double x);
 
