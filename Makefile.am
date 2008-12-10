@@ -67,7 +67,6 @@ data-tar:
                 data/Aircraft/bo105 \
                 data/Aircraft/c172p \
                 data/Aircraft/CitationX \
-		data/Aircraft/Concorde \
 		data/Aircraft/Dragonfly \
 		data/Aircraft/dhc2 \
 		data/Aircraft/f-14b \
