@@ -20,18 +20,18 @@
 
 [Setup]
 AppName=FlightGear
-OutputBaseFilename=fgsetup-1.99.5-pre1
-AppVerName=FlightGear v1.99.5-pre1
+OutputBaseFilename=fgsetup-1.99.5-rc2
+AppVerName=FlightGear v1.99.5-rc2
 AppPublisher=The FlightGear Organization
 AppPublisherURL=http://www.flightgear.org
 AppSupportURL=http://www.flightgear.org
 AppUpdatesURL=http://www.flightgear.org
 DefaultDirName={pf}\FlightGear
-DefaultGroupName=FlightGear v1.99.5-pre1
+DefaultGroupName=FlightGear v1.99.5-rc2
 LicenseFile=X:\data\COPYING
 Uninstallable=yes
 SetupIconFile=x:\flightgear.ico
-VersionInfoVersion=1.99.4.9991
+VersionInfoVersion=1.99.4.9992
 WizardImageFile=X:\setupimg.bmp
 WizardSmallImageFile=X:\setupsmall.bmp
 
@@ -54,14 +54,14 @@ Source: "X:\data\*.*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdir
 Name: "{group}\FlightGear Launcher"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}";
 ; Name: "{group}\FlightGear"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}";
 Name: "{group}\Tools\Install & Uninstall Scenery"; Filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}";
-Name: "{group}\Tools\TerraSync"; Filename: "{app}\bin\Win32\terrasync.exe"; WorkingDir: "{app}";
+Name: "{group}\Tools\TerraSync (insert command line parameters in this shortcut)"; Filename: "{app}\bin\Win32\terrasync.exe"; WorkingDir: "{app}";
 Name: "{group}\FlightGear Documentation"; Filename: "{app}\data\Docs\index.html"
 Name: "{group}\Explore Documentation Folder"; Filename: "{app}\data\Docs"
 Name: "{group}\Flightgear Wiki"; Filename: "http://wiki.flightgear.org"
-Name: "{group}\Tools\Uninstall FlightGear v1.99.5-pre1"; Filename: "{uninstallexe}"
-Name: "{userdesktop}\FlightGear v1.99.5-pre1"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{group}\Tools\Uninstall FlightGear v1.99.5-rc2"; Filename: "{uninstallexe}"
+Name: "{userdesktop}\FlightGear v1.99.5-rc2"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 ; For running flightgear directly
-; Name: "{userdesktop}\FlightGear v1.99.5-pre1"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}"; Tasks: desktopicon
+; Name: "{userdesktop}\FlightGear v1.99.5-rc2"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
 ; Put installation directory into the fgrun.prefs
