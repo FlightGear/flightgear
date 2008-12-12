@@ -103,7 +103,7 @@ FGFX::init()
                             globals->get_soundmgr(), globals->get_fg_root());
   
                 _sound.push_back(sound);
-            } catch ( sg_io_exception &e ) {
+            } catch ( sg_exception &e ) {
                 SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
                 delete sound;
             }
