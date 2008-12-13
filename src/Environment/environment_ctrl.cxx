@@ -407,7 +407,7 @@ FGMetarEnvironmentCtrl::update_env_config ()
     double dewpoint;
     
     // If we aren't in the METAR scenario, don't attempt to interpolate.
-    if (fgGetString("/environment/weather-scenario", "METAR") != "METAR") return;
+    if (strcmp(fgGetString("/environment/weather-scenario", "METAR"), "METAR")) return;
 
     if (metar_loaded) {
         // Generate interpolated values between the METAR and the current
