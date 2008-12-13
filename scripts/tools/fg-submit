@@ -148,7 +148,7 @@ DEFAULT_RULES="
 	+.cvsignore +*/.cvsignore
 	-*~ -*. -*.bak -*.orig
 	-*.RGB -*.RGBA -*.MDL
-	-*.xcf -*.XCF -*.tga -*.TGA -*.bmp -*.BMP -*.png -*.PNG
+	-*.XCF -*.tga -*.TGA -*.bmp -*.BMP -*.PNG
 	-*.blend -*.blend[0-9] -*blend[0-9][0-9] -*.blend[0-9][0-9][0-9]
 	-*.gz -*.tgz -*.bz2 -*.zip -*.tar.gz* -*.tar.bz2*
 "
