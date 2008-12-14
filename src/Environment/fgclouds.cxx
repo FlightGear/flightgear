@@ -217,7 +217,7 @@ void FGClouds::buildLayer(int iLayer, const string& name, double alt, double cov
 		for(double py = 0.0; py < SGCloudField::fieldSize; py += grid_y_size) {
 			double x = px + grid_x_rand * (sg_random() - 0.5) - (SGCloudField::fieldSize / 2.0);
 			double y = py + grid_y_rand * (sg_random() - 0.5) - (SGCloudField::fieldSize / 2.0);
-			double z = alt + grid_z_rand * (sg_random() - 0.5);
+			double z = grid_z_rand * (sg_random() - 0.5);
 			double choice = sg_random();
 
 			for(int i = 0; i < CloudVarietyCount ; i ++) {
