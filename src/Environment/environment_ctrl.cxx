@@ -606,6 +606,9 @@ FGMetarEnvironmentCtrl::update_env_config ()
             strncat(s, "/span-m", 128);
             fgSetDouble(s, 40000.0);
         }
+
+        // Force an update of the 3D clouds
+        fgSetDouble("/environment/rebuild-layers", 1.0);
     }
 
     fgSetupWind(dir_from, dir_to, speed, gust);

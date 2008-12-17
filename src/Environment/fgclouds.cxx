@@ -52,12 +52,11 @@ FGClouds::FGClouds(FGEnvironmentCtrl * controller) :
 	_controller( controller ),
 	snd_lightning(NULL),
         rebuild_required(true),
-    last_scenario( "none" ),
+    last_scenario( "unset" ),
     last_env_config( new SGPropertyNode() ),
     last_env_clouds( new SGPropertyNode() )
 {
 	update_event = 0;
-	fgSetString("/environment/weather-scenario", last_scenario.c_str());
 }
 FGClouds::~FGClouds() {
 }
@@ -506,6 +505,7 @@ void FGClouds::build() {
                 
         if( scenario == "METAR" ) {
             string realMetar = fgGetString("/environment/metar/real-metar", "");
+
             if( realMetar != "" ) {
                 fgSetString("/environment/metar/last-metar", realMetar.c_str());
                 FGMetar *m = new FGMetar( realMetar );
