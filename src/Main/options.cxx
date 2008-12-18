@@ -586,6 +586,15 @@ fgOptLanguage( const char *arg )
     return FG_OPTIONS_OK;
 }
 
+static int
+fgOptWeather( const char *arg )
+{
+    if (arg[0])
+        fgSetString("/environment/weather-scenario", arg);
+    fgSetBool("/environment/params/real-world-weather-fetch", !strcmp(arg, "METAR"));
+    return FG_OPTIONS_OK;
+}
+
 static void
 clearLocation ()
 {
@@ -1220,7 +1229,7 @@ where:
              value set to the property if has_param is false
  func      : function called if type==OPTION_FUNC. if has_param is true,
              the value is passed to the function as a string, otherwise,
-             0 is passed. 
+             s_param is passed.
 
     For OPTION_DOUBLE and OPTION_INT, the parameter value is converted into a
     double or an integer and set to the property.
@@ -1251,8 +1260,8 @@ struct OptionDesc {
     {"enable-mouse-pointer",         false, OPTION_STRING, "/sim/startup/mouse-pointer", false, "enabled", 0 },
     {"disable-random-objects",       false, OPTION_BOOL,   "/sim/rendering/random-objects", false, "", 0 },
     {"enable-random-objects",        false, OPTION_BOOL,   "/sim/rendering/random-objects", true, "", 0 },
-    {"disable-real-weather-fetch",   false, OPTION_BOOL,   "/environment/params/real-world-weather-fetch", false, "", 0 },
-    {"enable-real-weather-fetch",    false, OPTION_BOOL,   "/environment/params/real-world-weather-fetch", true, "", 0 },
+    {"disable-real-weather-fetch",   false, OPTION_FUNC,   "", false, "", fgOptWeather },
+    {"enable-real-weather-fetch",    false, OPTION_FUNC,   "", false, "METAR", fgOptWeather },
     {"disable-ai-models",            false, OPTION_BOOL,   "/sim/ai/enabled", false, "", 0 },
     {"enable-ai-models",             false, OPTION_BOOL,   "/sim/ai/enabled", true, "", 0 },
     {"disable-freeze",               false, OPTION_BOOL,   "/sim/freeze/master", false, "", 0 },
@@ -1548,7 +1557,7 @@ parse_option (const string& arg)
                     if ( pt->has_param && !arg_value.empty() ) {
                         return pt->func( arg_value.c_str() );
                     } else if ( !pt->has_param && arg_value.empty() ) {
-                        return pt->func( 0 );
+                        return pt->func( pt->s_param );
                     } else if ( pt->has_param ) {
                         SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
                         return FG_OPTIONS_ERROR;
