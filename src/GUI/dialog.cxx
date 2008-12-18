@@ -84,22 +84,19 @@ struct GUIInfo
 {
     GUIInfo(FGDialog * d);
     virtual ~GUIInfo();
-    char *format(SGPropertyNode *);
+    void apply_format(SGPropertyNode *);
 
     FGDialog * dialog;
     vector <SGBinding *> bindings;
     int key;
-    char *text;
-    char *fmt_string;
+    string label, legend, text, format;
     format_type fmt_type;
 };
 
-GUIInfo::GUIInfo (FGDialog * d)
-    : dialog(d),
-      key(-1),
-      text(0),
-      fmt_string(0),
-      fmt_type(f_INVALID)
+GUIInfo::GUIInfo (FGDialog * d) :
+    dialog(d),
+    key(-1),
+    fmt_type(f_INVALID)
 {
 }
 
@@ -109,25 +106,24 @@ GUIInfo::~GUIInfo ()
         delete bindings[i];
         bindings[i] = 0;
     }
-    delete [] text;
-    delete [] fmt_string;
 }
 
-char *GUIInfo::format(SGPropertyNode *n)
+void GUIInfo::apply_format(SGPropertyNode *n)
 {
+    char buf[FORMAT_BUFSIZE + 1];
     if (fmt_type == f_INT)
-        snprintf(text, FORMAT_BUFSIZE, fmt_string, n->getIntValue());
+        snprintf(buf, FORMAT_BUFSIZE, format.c_str(), n->getIntValue());
     else if (fmt_type == f_LONG)
-        snprintf(text, FORMAT_BUFSIZE, fmt_string, n->getLongValue());
+        snprintf(buf, FORMAT_BUFSIZE, format.c_str(), n->getLongValue());
     else if (fmt_type == f_FLOAT)
-        snprintf(text, FORMAT_BUFSIZE, fmt_string, n->getFloatValue());
+        snprintf(buf, FORMAT_BUFSIZE, format.c_str(), n->getFloatValue());
     else if (fmt_type == f_DOUBLE)
-        snprintf(text, FORMAT_BUFSIZE, fmt_string, n->getDoubleValue());
+        snprintf(buf, FORMAT_BUFSIZE, format.c_str(), n->getDoubleValue());
     else
-        snprintf(text, FORMAT_BUFSIZE, fmt_string, n->getStringValue());
+        snprintf(buf, FORMAT_BUFSIZE, format.c_str(), n->getStringValue());
 
-    text[FORMAT_BUFSIZE] = '\0';
-    return text;
+    buf[FORMAT_BUFSIZE] = '\0';
+    text = buf;
 }
 
 
@@ -281,14 +277,21 @@ action_callback (puObject * object)
 static void
 copy_to_pui (SGPropertyNode * node, puObject * object)
 {
+    GUIInfo *info = (GUIInfo *)object->getUserData();
+    if (!info) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "dialog: widget without GUIInfo!");
+        return;   // this can't really happen
+    }
+
     // Treat puText objects specially, so their "values" can be set
     // from properties.
     if (object->getType() & PUCLASS_TEXT) {
-        GUIInfo *info = (GUIInfo *)object->getUserData();
-        if (info && info->fmt_string)
-            object->setLabel(info->format(node));
+        if (info->fmt_type != f_INVALID)
+            info->apply_format(node);
         else
-            object->setLabel(node->getStringValue());
+            info->text = node->getStringValue();
+
+        object->setLabel(info->text.c_str());
         return;
     }
 
@@ -303,7 +306,8 @@ copy_to_pui (SGPropertyNode * node, puObject * object)
         object->setValue(node->getFloatValue());
         break;
     default:
-        object->setValue(node->getStringValue());
+        info->text = node->getStringValue();
+        object->setValue(info->text.c_str());
         break;
     }
 }
@@ -688,14 +692,21 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
 void
 FGDialog::setupObject (puObject * object, SGPropertyNode * props)
 {
-    string type = props->getName();
+    GUIInfo *info = new GUIInfo(this);
+    object->setUserData(info);
+    _info.push_back(info);
     object->setLabelPlace(PUPLACE_CENTERED_RIGHT);
+    object->makeReturnDefault(props->getBoolValue("default"));
 
-    if (props->hasValue("legend"))
-        object->setLegend(props->getStringValue("legend"));
+    if (props->hasValue("legend")) {
+        info->legend = props->getStringValue("legend");
+        object->setLegend(info->legend.c_str());
+    }
 
-    if (props->hasValue("label"))
-        object->setLabel(props->getStringValue("label"));
+    if (props->hasValue("label")) {
+        info->label = props->getStringValue("label");
+        object->setLabel(info->label.c_str());
+    }
 
     if (props->hasValue("border"))
         object->setBorderThickness( props->getIntValue("border", 2) );
@@ -724,8 +735,7 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
 
     SGPropertyNode * dest = fgGetNode("/sim/bindings/gui", true);
     vector<SGPropertyNode_ptr> bindings = props->getChildren("binding");
-    if (type == "text" || bindings.size() > 0) {
-        GUIInfo * info = new GUIInfo(this);
+    if (bindings.size() > 0) {
         info->key = props->getIntValue("keynum", -1);
         if (props->hasValue("key"))
             info->key = getKeyCode(props->getStringValue("key", ""));
@@ -745,30 +755,23 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
             info->bindings.push_back(new SGBinding(binding, globals->get_props()));
         }
         object->setCallback(action_callback);
-
-        if (type == "input" && props->getBoolValue("live"))
-            object->setDownCallback(action_callback);
-
-        if (type == "text") {
-            const char *format = props->getStringValue("format", 0);
-            if (format) {
-                info->fmt_type = validate_format(props->getStringValue("format", 0));
-                if (info->fmt_type != f_INVALID) {
-                    info->text = new char[FORMAT_BUFSIZE + 1];
-                    info->fmt_string = new char[strlen(format) + 1];
-                    strcpy(info->fmt_string, format);
-                } else {
-                    SG_LOG(SG_GENERAL, SG_ALERT, "DIALOG: invalid <format> '"
-                            << format << '\'');
-                }
-            }
-        }
-
-        object->setUserData(info);
-        _info.push_back(info);
     }
 
-    object->makeReturnDefault(props->getBoolValue("default"));
+    string type = props->getName();
+    if (type == "input" && props->getBoolValue("live"))
+        object->setDownCallback(action_callback);
+
+    if (type == "text") {
+        const char *format = props->getStringValue("format", 0);
+        if (format) {
+            info->fmt_type = validate_format(format);
+            if (info->fmt_type != f_INVALID)
+                info->format = format;
+            else
+                SG_LOG(SG_GENERAL, SG_ALERT, "DIALOG: invalid <format> '"
+                        << format << '\'');
+        }
+    }
 }
 
 void
