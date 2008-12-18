@@ -579,7 +579,7 @@ FGMetarEnvironmentCtrl::update_env_config ()
         dewpoint = fgGetDouble("/environment/metar/dewpoint-degc");
 
         // Set the cloud layers by copying over the METAR versions.
-        SGPropertyNode * clouds = fgGetNode("/environment/metar/clouds");
+        SGPropertyNode * clouds = fgGetNode("/environment/metar/clouds", true);
 
         vector<SGPropertyNode_ptr> layers = clouds->getChildren("layer");
         vector<SGPropertyNode_ptr>::const_iterator layer;
