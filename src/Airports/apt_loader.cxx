@@ -246,7 +246,7 @@ bool fgAirportDBLoad( FGAirportList *airports,
             double lat = atof( token[1].c_str() );
             double lon = atof( token[2].c_str() );
             double elev = atof( token[3].c_str() );
-            last_tower = SGGeod::fromDegFt(lon, lat, elev);
+            last_tower = SGGeod::fromDegFt(lon, lat, elev + last_apt_elev);
             got_tower = true;
         } else if ( line_id == 19 ) {
             // windsock entry (ignore)
