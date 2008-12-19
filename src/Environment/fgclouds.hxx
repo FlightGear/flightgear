@@ -55,20 +55,19 @@ void buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_def_root, co
 
 	void update_env_config ();
 
+        void build(void);
+
 	int update_event;
 	SGSoundSample *snd_lightning;
 	FGEnvironmentCtrl * _controller;
 	float station_elevation_ft;
         bool clouds_3d_enabled;
-        bool rebuild_required;
         string last_scenario;
         SGPropertyNode *last_env_config, *last_env_clouds;
 
 public:
 	FGClouds(FGEnvironmentCtrl * controller);
 	~FGClouds();
-
-	void build(void);
 
 	void init(void);
 

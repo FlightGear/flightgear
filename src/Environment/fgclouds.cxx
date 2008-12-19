@@ -51,7 +51,6 @@ FGClouds::FGClouds(FGEnvironmentCtrl * controller) :
 	station_elevation_ft(0.0),
 	_controller( controller ),
 	snd_lightning(NULL),
-        rebuild_required(true),
     last_scenario( "unset" ),
     last_env_config( new SGPropertyNode() ),
     last_env_clouds( new SGPropertyNode() )
@@ -78,8 +77,6 @@ void FGClouds::init(void) {
 		soundMgr->add( snd_lightning, "thunder" );
 		sgEnviro.set_soundMgr( soundMgr );
 	}
-        
-        rebuild_required = true;
 }
 
 void FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode  *box_def_root, const string& name, sgVec3 pos, SGCloudField *layer) {
@@ -157,20 +154,19 @@ void FGClouds::buildLayer(int iLayer, const string& name, double alt, double cov
 	int CloudVarietyCount = 0;
 	double totalCount = 0.0;
         
-        if (! clouds_3d_enabled) return;
-        
 	SGPropertyNode *cloud_def_root = fgGetNode("/environment/cloudlayers/clouds", false);
 	SGPropertyNode *box_def_root   = fgGetNode("/environment/cloudlayers/boxes", false);
 	SGPropertyNode *layer_def_root = fgGetNode("/environment/cloudlayers/layers", false);
         SGCloudField *layer = thesky->get_cloud_layer(iLayer)->get_layer3D();
-
 	layer->clear();
         
 	// when we don't generate clouds the layer is rendered in 2D
-	if( coverage == 0.0 )
+        if ((! clouds_3d_enabled) || coverage == 0.0 ||
+	    layer_def_root == NULL || cloud_def_root == NULL || box_def_root == NULL)
+        {
+                thesky->get_cloud_layer(iLayer)->set_enable3dClouds(false);
 		return;
-	if( layer_def_root == NULL || cloud_def_root == NULL || box_def_root == NULL)
-		return;
+        }
 	
 	SGPropertyNode *layer_def=NULL;
 
@@ -181,7 +177,10 @@ void FGClouds::buildLayer(int iLayer, const string& name, double alt, double cov
 			layer_def = layer_def_root->getChild(base_name.c_str());
 		}
 		if( !layer_def )
-			return;
+                {
+                        thesky->get_cloud_layer(iLayer)->set_enable3dClouds(false);
+                        return;
+                }
 	}
         
 	double grid_x_size = layer_def->getDoubleValue("grid-x-size", 1000.0);
@@ -217,22 +216,31 @@ void FGClouds::buildLayer(int iLayer, const string& name, double alt, double cov
 			double x = px + grid_x_rand * (sg_random() - 0.5) - (SGCloudField::fieldSize / 2.0);
 			double y = py + grid_y_rand * (sg_random() - 0.5) - (SGCloudField::fieldSize / 2.0);
 			double z = grid_z_rand * (sg_random() - 0.5);
-			double choice = sg_random();
-
-			for(int i = 0; i < CloudVarietyCount ; i ++) {
-				choice -= tCloudVariety[i].count * totalCount;
-				if( choice <= 0.0 ) {
-					sgVec3 pos={x,z,y};
-                                        buildCloud(cloud_def_root, box_def_root, tCloudVariety[i].name, pos, layer);
-					break;
-				}
-			}
+                        
+                        if (sg_random() < coverage)
+                        {
+                            double choice = sg_random();
+    
+                            for(int i = 0; i < CloudVarietyCount ; i ++) {
+                                    choice -= tCloudVariety[i].count * totalCount;
+                                    if( choice <= 0.0 ) {
+                                            sgVec3 pos={x,z,y};
+                                            
+                                            buildCloud(cloud_def_root, 
+                                                       box_def_root, 
+                                                       tCloudVariety[i].name, 
+                                                       pos, 
+                                                       layer);
+                                            break;
+                                    }
+                            }
+                        }
 		}
 	}
 
         // Now we've built any clouds, enable them and set the density (coverage)
-        layer->setCoverage(coverage);
-        layer->applyCoverage();
+        //layer->setCoverage(coverage);
+        //layer->applyCoverage();
         thesky->get_cloud_layer(iLayer)->set_enable3dClouds(clouds_3d_enabled);
 }
 
@@ -282,7 +290,7 @@ void FGClouds::buildCloudLayers(void) {
 		} else if( alt_ft > 6500 ) {
 //			layer_type = "as|ac|ns";
 			layer_type = "ac";
-			if( pressure_mb < 1005.0 && coverage_norm >= 5.5 )
+			if( pressure_mb < 1005.0 && coverage_norm >= 0.5 )
 				layer_type = "ns";
 		} else {
 //			layer_type = "st|cu|cb|sc";
@@ -294,7 +302,7 @@ void FGClouds::buildCloudLayers(void) {
                                 layer_type = "st";
                         } else {
 				// above formulae is far from perfect
-				if ( alt_ft < 2000 )
+                                if ( alt_ft < 2000 )
 					layer_type = "st";
 				else if( alt_ft < 4500 )
 					layer_type = "cu";
@@ -302,7 +310,7 @@ void FGClouds::buildCloudLayers(void) {
 					layer_type = "sc";
 			}
 		}
-
+                
 		buildLayer(iLayer, layer_type, alt_m, coverage_norm);
 	}
 }
@@ -491,9 +499,9 @@ void FGClouds::buildScenario( const string& scenario ) {
 
 void FGClouds::build() {
 	string scenario = fgGetString("/environment/weather-scenario", "METAR");
-
-        if(!rebuild_required && (scenario == last_scenario))
-            return;
+        
+//        if(!rebuild_required && (scenario == last_scenario))
+//            return;
         
         if( last_scenario == "none" ) {
         // save clouds and weather conditions
@@ -536,7 +544,6 @@ void FGClouds::build() {
         }
         
         last_scenario = scenario;
-        rebuild_required = false;
 
         if( snd_lightning == NULL )
             init();
@@ -556,7 +563,6 @@ void FGClouds::set_3dClouds(bool enable)
         }
 
         if (enable) {
-            rebuild_required = true;
             build();
         }
     }
