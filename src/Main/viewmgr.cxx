@@ -212,6 +212,9 @@ FGViewMgr::bind ()
 	&FGViewMgr::getNear_m, &FGViewMgr::setNear_m);
   fgSetArchivable("/sim/current-view/ground-level-nearplane-m");
 
+  fgTie("/sim/current-view/viewer-x-m", this, &FGViewMgr::getViewerPositionX_m);
+  fgTie("/sim/current-view/viewer-y-m", this, &FGViewMgr::getViewerPositionY_m);
+  fgTie("/sim/current-view/viewer-z-m", this, &FGViewMgr::getViewerPositionZ_m);
 }
 
 void
@@ -229,6 +232,9 @@ FGViewMgr::unbind ()
   fgUntie("/sim/current-view/axes/long");
   fgUntie("/sim/current-view/axes/lat");
   fgUntie("/sim/current-view/ground-level-nearplane-m");
+  fgUntie("/sim/current-view/viewer-x-m");
+  fgUntie("/sim/current-view/viewer-y-m");
+  fgUntie("/sim/current-view/viewer-z-m");
 }
 
 void
@@ -287,6 +293,7 @@ FGViewMgr::update (double dt)
   // Update the current view
   do_axes();
   view->update(dt);
+  abs_viewer_position = loop_view->getViewPosition();
 }
 
 void
