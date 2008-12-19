@@ -502,7 +502,6 @@ FGMetarEnvironmentCtrl::update_env_config ()
         double aircraft_alt = fgGetDouble("/position/altitude-ft");
         char s[128];
         int i;
-        bool rebuild_clouds = false;
 
         for (i = 0, layer = layers.begin(); layer != layers_end; ++layer, i++) {
             double currentval;
@@ -518,10 +517,8 @@ FGMetarEnvironmentCtrl::update_env_config ()
             snprintf(s, 128, cl, i);
             strncat(s, "/coverage", 128);
             const char* coverage = (*layer)->getStringValue("coverage", "clear");
-            if (strncmp(fgGetString(s), coverage, 128) != 0) {
+            if (strncmp(fgGetString(s), coverage, 128) != 0)
                 fgSetString(s, coverage);
-                rebuild_clouds = true;
-            }
 
             snprintf(s, 128, cl, i);
             strncat(s, "/elevation-ft", 128);
@@ -569,11 +566,7 @@ FGMetarEnvironmentCtrl::update_env_config ()
                 }
             }
         }
-        
-        if (rebuild_clouds) {
-            // Force an update of the 3D clouds
-            fgSetDouble("/environment/rebuild-layers", 1.0);
-        }
+
     } else {
         // We haven't already loaded a METAR, so apply it immediately.
         dir_from = fgGetDouble("/environment/metar/base-wind-range-from");
