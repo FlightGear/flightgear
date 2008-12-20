@@ -20,64 +20,68 @@
 
 [Setup]
 AppName=FlightGear
-OutputBaseFilename=fgsetup-1.99.5-rc2
-AppVerName=FlightGear v1.99.5-rc2
+OutputBaseFilename=fgsetup-1.9.0
+AppVerName=FlightGear v1.9.0
 AppPublisher=The FlightGear Organization
 AppPublisherURL=http://www.flightgear.org
 AppSupportURL=http://www.flightgear.org
 AppUpdatesURL=http://www.flightgear.org
 DefaultDirName={pf}\FlightGear
-DefaultGroupName=FlightGear v1.99.5-rc2
+DefaultGroupName=FlightGear v1.9.0
 LicenseFile=X:\data\COPYING
 Uninstallable=yes
 SetupIconFile=x:\flightgear.ico
-VersionInfoVersion=1.99.4.9992
+VersionInfoVersion=1.9.0.0
 WizardImageFile=X:\setupimg.bmp
 WizardSmallImageFile=X:\setupsmall.bmp
 
 [Tasks]
 ; NOTE: The following entry contains English phrases ("Create a desktop icon" and "Additional icons"). You are free to translate them into another language if required.
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"
+Name: "insoal"; Description: "Install OpenAL (the sound engine)"
 
 [Files]
 ; NOTE: run subst X: F:\ (or whatever path the expanded tree resides at)
-Source: "X:\*.*"; DestDir: "{app}"; Flags: ignoreversion
+Source: "X:\*.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "X:\bin\*.*"; DestDir: "{app}\bin"; Flags: ignoreversion recursesubdirs
 Source: "X:\data\*.*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs
-; Source: "X:\docs\*.*"; DestDir: "{app}\docs"; Flags: ignoreversion recursesubdirs
-; Source: "X:\bin\Win32\fgrun.prefs"; DestDir: "{userappdata}\flightgear.org"; Flags: ignoreversion
-; Source: "X:\bin\Win32\fgadmin.prefs"; DestDir: "{userappdata}\flightgear.org"; Flags: ignoreversion
-; Source: "X:\src\*.*"; DestDir: "{app}\src"; Flags: ignoreversion recursesubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
 Name: "{group}\FlightGear Launcher"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}";
 ; Name: "{group}\FlightGear"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}";
-Name: "{group}\Tools\Install & Uninstall Scenery"; Filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}";
-Name: "{group}\Tools\TerraSync (insert command line parameters in this shortcut)"; Filename: "{app}\bin\Win32\terrasync.exe"; WorkingDir: "{app}";
+Name: "{group}\FlightGear Manual"; Filename: "{app}\data\Docs\getstart.pdf"
 Name: "{group}\FlightGear Documentation"; Filename: "{app}\data\Docs\index.html"
-Name: "{group}\Explore Documentation Folder"; Filename: "{app}\data\Docs"
 Name: "{group}\Flightgear Wiki"; Filename: "http://wiki.flightgear.org"
-Name: "{group}\Tools\Uninstall FlightGear v1.99.5-rc2"; Filename: "{uninstallexe}"
-Name: "{userdesktop}\FlightGear v1.99.5-rc2"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{userdesktop}\FlightGear v1.9.0"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+
+Name: "{group}\Tools\Install & Uninstall Scenery"; Filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}";
+Name: "{group}\Tools\TerraSync"; Filename: "{app}\bin\Win32\terrasync.exe"; Parameters: "-S -p 5505 -d ""{app}\terrasync"""; WorkingDir: "{app}";
+Name: "{group}\Tools\Uninstall FlightGear"; Filename: "{uninstallexe}"
+
+Name: "{group}\Tools\fgjs"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\fgjs.exe"""; WorkingDir: "{app}";
+Name: "{group}\Tools\GPSsmooth"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\GPSsmooth.exe"" -h"; WorkingDir: "{app}";
+Name: "{group}\Tools\UGsmooth"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\UGsmooth.exe"" -h"; WorkingDir: "{app}";
+Name: "{group}\Tools\MIDSsmooth"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\MIDSsmooth.exe"" -h"; WorkingDir: "{app}";
+Name: "{group}\Tools\metar"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\metar.exe"" -h"; WorkingDir: "{app}";
+Name: "{group}\Tools\yasim"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\yasim.exe"" -h"; WorkingDir: "{app}";
+
+Name: "{group}\Tools\Explore Documentation Folder"; Filename: "{app}\data\Docs"
+
 ; For running flightgear directly
-; Name: "{userdesktop}\FlightGear v1.99.5-rc2"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}"; Tasks: desktopicon
+; Name: "{userdesktop}\FlightGear v1.9.0"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
 ; Put installation directory into the fgrun.prefs
-; filename: "{app}\bin\Win32\mkfgrunp.bat"; WorkingDir: "{app}\bin\Win32"; Parameters: """{app}"" ""{userappdata}"""
-filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--fg-exe={app}\bin\Win32\fgfs.exe"" ""--fg-root={app}\data"" ""--fg-scenery={app}\data\Scenery;{app}\scenery"""
+filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--fg-exe={app}\bin\Win32\fgfs.exe"" ""--fg-root={app}\data"" ""--fg-scenery={app}\data\Scenery;{app}\scenery;{app}\terrasync"""
 
 ; Put installation and source directories into the fgadmin.prefs
-; filename: "{app}\bin\Win32\mkfgadminp.bat"; WorkingDir: "{app}\bin\Win32"; Parameters: """{src}"" ""{app}"" ""{userappdata}"""
 filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--install-source={src}\..\Scenery"" ""--scenery-dest={app}\scenery"""
-; filename: "{app}\bin\Win32\testbatch.bat"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--install-source={src}"" ""--scenery-dest={app}\scenery"""
 
 ; Make the user installable scenery directory
 filename: "{app}\bin\Win32\mkscenerydir.bat"; WorkingDir: "{app}"
 
-; NOTE: The following entry contains an English phrase ("Launch"). You are free to translate it into another language if required.
+Filename: "{app}\bin\OpenAL\oalinst.exe"; WorkingDir: "{app}"; Description: "Installing OpenAL"; Tasks: insoal
+
 Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Description: "Launch FlightGear"; Flags: postinstall skipifsilent
-; For running flightgear directly
-; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}"; Description: "Launch FlightGear"; Flags: postinstall skipifsilent
 
