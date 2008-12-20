@@ -3,13 +3,7 @@
 #
 # 1. define $FG_HOME (or accept the default "$HOME/.fgfs/")
 #
-# 2. run this script to build the $FG_HOME/aircraft.list file and repeat this
-#    step whenever you added an aircraft (or maintain the aircraft list manually):
-#
-#      $ $FG_HOME/fg-completion.bash
-#
-#
-# 3. source this file from your ~/.bashrc:
+# 2. source this file from your ~/.bashrc:
 #
 #      [ -e $FG_HOME/fg-completion.bash ] && source $FG_HOME/fg-completion.bash
 #
@@ -19,7 +13,6 @@ __fgfs_root=${FG_ROOT:-/usr/local/share/FlightGear}
 __fgfs_home=${FG_HOME:-$HOME/.fgfs}
 [ -d "$__fgfs_home" ] || mkdir -p "$__fgfs_home"
 
-__fgfs_ac_list="$__fgfs_home/aircraft.list"
 __fgfs_apt_list="$__fgfs_home/airport.list"
 
 __fgfs_options="
@@ -189,32 +182,19 @@ fi
 shopt -s progcomp
 
 
-__fgfs_make_ac_list() {
-	ls $__fgfs_root/Aircraft/*/*-set.xml|
-		while read i; do
-			i=${i##*/}
-			echo "${i%-set.xml} "
-		done >"$__fgfs_ac_list"
-}
-
-
-if [ "${0##*/}" == "$__fgfs_scriptname" ]; then  # run explicitly -- not sourced
-	echo "creating list of available aircraft: $__fgfs_ac_list"
-	__fgfs_make_ac_list
-	exit 0
-fi
-
-
-if [ ! -e "$__fgfs_ac_list" ]; then
-	echo "$0: creating list of available aircraft: $__fgfs_ac_list"
-	__fgfs_make_ac_list
-fi
-
-
 __fgfs_ai_scenario() {
 	local i
 	for i in $__fgfs_root/AI/*.xml; do
 		i=${i%.xml}
+		echo ${i##*/}
+	done
+}
+
+
+__fgfs_aircraft() {
+	local i
+	for i in $__fgfs_root/Aircraft/*/*-set.xml; do
+		i=${i%-set.xml}
 		echo ${i##*/}
 	done
 }
@@ -241,7 +221,7 @@ __fgfs() {
 		alt=$(__fgfs_offer $(__fgfs_ai_scenario))
 		;;
 	--aircraft=*|--vehicle=*)
-		alt=$(cat "$__fgfs_ac_list")
+		alt=$(__fgfs_offer $(__fgfs_aircraft))
 		;;
 	--airport=*)
 		if [ -e "$__fgfs_apt_list" ]; then
