@@ -3,16 +3,19 @@
 You *must* have OpenSceneGraph (OSG) installed to build this version of 
 FlightGear.
 
+Notice that FlightGear 1.9.0 requires at least version 2.7.8. Using earlier 
+versions of OSG will yield serious rendering bugs. 
+
 You can get the latest version of OSG from:
 
 http://www.openscenegraph.org/
 
 Build notes:
 
-Unzip the file OpenSceneGraph-2.0.zip and install using the following
+Unzip the file OpenSceneGraph-x.x.zip and install using the following
 commands:
 
-unzip OpenSceneGraph-2.0
+unzip OpenSceneGraph-x.x
 cd OpenSceneGraph
 ccmake .
 
