@@ -9,12 +9,16 @@
 # "$HOME/.fgfs/". The script doesn't offer all available airports
 # for the --airport option, but only those listed in a file
 # $FG_HOME/airport.list if available, or a short default list otherwise.
+#
+# After installing new aircraft you have to rebuild the aircraft list
+# by typing   $ fgfs --aircraft=?<TAB>
 
 __fgfs_root=${FG_ROOT:-/usr/local/share/FlightGear}
 __fgfs_home=${FG_HOME:-$HOME/.fgfs}
 [ -d "$__fgfs_home" ] || mkdir -p "$__fgfs_home"
 
 
+__fgfs_ac_list="$__fgfs_home/aircraft.list"
 __fgfs_apt_list="$__fgfs_home/airport.list"
 
 __fgfs_options="
@@ -184,6 +188,18 @@ fi
 shopt -s progcomp
 
 
+__fgfs_write_ac_list() {
+	rm -f $__fgfs_ac_list
+	for i in $__fgfs_root/Aircraft/*/*-set.xml; do
+		i=${i%-set.xml}
+		echo ${i##*/} >>$__fgfs_ac_list
+	done
+}
+
+
+[ -e $__fgfs_ac_list ] || __fgfs_write_ac_list
+
+
 __fgfs_ai_scenario() {
 	local i
 	for i in $__fgfs_root/AI/*.xml; do
@@ -194,11 +210,9 @@ __fgfs_ai_scenario() {
 
 
 __fgfs_aircraft() {
-	local i
-	for i in $__fgfs_root/Aircraft/*/*-set.xml; do
-		i=${i%-set.xml}
-		echo ${i##*/}
-	done
+	while read i; do
+		echo $i
+	done <$__fgfs_ac_list
 }
 
 
@@ -221,6 +235,9 @@ __fgfs() {
 	case "$cur" in
 	--ai-scenario=*)
 		alt=$(__fgfs_offer $(__fgfs_ai_scenario))
+		;;
+	--aircraft=\?)
+		__fgfs_write_ac_list
 		;;
 	--aircraft=*|--vehicle=*)
 		alt=$(__fgfs_offer $(__fgfs_aircraft))
