@@ -1,17 +1,19 @@
 #!/bin/bash
-# Tab completion for FlightGear command line options.
+# Tab completion for FlightGear command line options. To use it put
+# this in your ~/.bashrc file:
 #
-# 1. define $FG_HOME (or accept the default "$HOME/.fgfs/")
+#   export FG_HOME=$HOME/.fgfs/
+#   [ -e $FG_HOME/fg-completion.bash ] && source $FG_HOME/fg-completion.bash
 #
-# 2. source this file from your ~/.bashrc:
-#
-#      [ -e $FG_HOME/fg-completion.bash ] && source $FG_HOME/fg-completion.bash
-#
-__fgfs_scriptname="fg-completion.bash"  # adapt this if you renamed this script!
+# Defining FG_HOME is only required if you don't like the default
+# "$HOME/.fgfs/". The script doesn't offer all available airports
+# for the --airport option, but only those listed in a file
+# $FG_HOME/airport.list if available, or a short default list otherwise.
 
 __fgfs_root=${FG_ROOT:-/usr/local/share/FlightGear}
 __fgfs_home=${FG_HOME:-$HOME/.fgfs}
 [ -d "$__fgfs_home" ] || mkdir -p "$__fgfs_home"
+
 
 __fgfs_apt_list="$__fgfs_home/airport.list"
 
