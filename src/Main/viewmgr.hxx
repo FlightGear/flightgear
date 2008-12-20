@@ -147,9 +147,6 @@ private:
     void setViewAxisLat (double axis);
     int getView () const;
     void setView (int newview);
-    double getViewerPositionX_m () const { return abs_viewer_position[0]; }
-    double getViewerPositionY_m () const { return abs_viewer_position[1]; }
-    double getViewerPositionZ_m () const { return abs_viewer_position[2]; }
 
     SGPropertyNode_ptr view_number;
     vector<SGPropertyNode_ptr> config_list;

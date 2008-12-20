@@ -212,9 +212,10 @@ FGViewMgr::bind ()
 	&FGViewMgr::getNear_m, &FGViewMgr::setNear_m);
   fgSetArchivable("/sim/current-view/ground-level-nearplane-m");
 
-  fgTie("/sim/current-view/viewer-x-m", this, &FGViewMgr::getViewerPositionX_m);
-  fgTie("/sim/current-view/viewer-y-m", this, &FGViewMgr::getViewerPositionY_m);
-  fgTie("/sim/current-view/viewer-z-m", this, &FGViewMgr::getViewerPositionZ_m);
+  SGPropertyNode *n = fgGetNode("/sim/current-view", true);
+  n->tie("viewer-x-m", SGRawValuePointer<double>(&abs_viewer_position[0]));
+  n->tie("viewer-y-m", SGRawValuePointer<double>(&abs_viewer_position[1]));
+  n->tie("viewer-z-m", SGRawValuePointer<double>(&abs_viewer_position[2]));
 }
 
 void
