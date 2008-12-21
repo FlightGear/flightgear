@@ -293,6 +293,8 @@ static void parse_message( const string &msg, int *lat, int *lon ) {
 
 // sync area
 static void sync_area( int lat, int lon ) {
+    if ( lat < -90 || lat > 90 || lon < -180 || lon > 180 )
+        return;
     char NS, EW;
     int baselat, baselon;
 
@@ -317,9 +319,9 @@ static void sync_area( int lat, int lon ) {
         }
         EW = 'w';
     } else {
-            baselon = (int)(lon / 10) * 10;
-            EW = 'e';
-        }
+        baselon = (int)(lon / 10) * 10;
+        EW = 'e';
+    }
     
     const char* terrainobjects[3] = { "Terrain", "Objects", 0 };
     const char** tree;
@@ -327,10 +329,10 @@ static void sync_area( int lat, int lon ) {
   
     for (tree = &terrainobjects[0]; *tree; tree++) {
         snprintf( dir, 512, "%s/%c%03d%c%02d/%c%03d%c%02d",
-	      *tree,
-    	      EW, abs(baselon), NS, abs(baselat),
-    	      EW, abs(lon), NS, abs(lat) );
-	sync_tree(dir);
+          *tree,
+              EW, abs(baselon), NS, abs(baselat),
+              EW, abs(lon), NS, abs(lat) );
+        sync_tree(dir);
     }
 }
 
