@@ -198,6 +198,9 @@ FGEnvironmentMgr::bind ()
   fgTie("/environment/rebuild-layers", fgClouds,
       &FGClouds::get_update_event,
       &FGClouds::set_update_event);
+  fgTie("/environment/weather-scenario", fgClouds,
+        &FGClouds::get_scenario,
+        &FGClouds::set_scenario);
   fgTie("/sim/rendering/lightning-enable", &sgEnviro,
       &SGEnviro::get_lightning_enable_state,
       &SGEnviro::set_lightning_enable_state);
@@ -244,6 +247,7 @@ FGEnvironmentMgr::unbind ()
   fgUntie("/sim/rendering/clouds3d-density");
   fgUntie("/sim/rendering/precipitation-enable");
   fgUntie("/environment/rebuild-layers");
+  fgUntie("/environment/weather-scenario");
   fgUntie("/sim/rendering/lightning-enable");
   fgUntie("/environment/turbulence/use-cloud-turbulence");
 }

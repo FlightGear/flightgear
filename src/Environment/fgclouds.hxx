@@ -63,6 +63,7 @@ void buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_def_root, co
 	float station_elevation_ft;
         bool clouds_3d_enabled;
         string last_scenario;
+        string scenario;
         SGPropertyNode *last_env_config, *last_env_clouds;
 
 public:
@@ -70,6 +71,9 @@ public:
 	~FGClouds();
 
 	void init(void);
+
+        void set_scenario(const char * sc);
+        const char * get_scenario(void) const;
 
 	int get_update_event(void) const;
 	void set_update_event(int count);

@@ -65,7 +65,7 @@ int FGClouds::get_update_event(void) const {
 }
 void FGClouds::set_update_event(int count) {
 	update_event = count;
-	build();
+	buildCloudLayers();
 }
 
 void FGClouds::init(void) {
@@ -160,16 +160,16 @@ void FGClouds::buildLayer(int iLayer, const string& name, double alt, double cov
         SGCloudField *layer = thesky->get_cloud_layer(iLayer)->get_layer3D();
 	layer->clear();
         
-	// when we don't generate clouds the layer is rendered in 2D
+	// If we don't have the required properties, then render the cloud in 2D
         if ((! clouds_3d_enabled) || coverage == 0.0 ||
 	    layer_def_root == NULL || cloud_def_root == NULL || box_def_root == NULL)
         {
                 thesky->get_cloud_layer(iLayer)->set_enable3dClouds(false);
 		return;
         }
-	
+        
+        // If we can't find a definition for this cloud type, then render the cloud in 2D
 	SGPropertyNode *layer_def=NULL;
-
 	layer_def = layer_def_root->getChild(name.c_str());
 	if( !layer_def ) {
 		if( name[2] == '-' ) {
@@ -183,6 +183,9 @@ void FGClouds::buildLayer(int iLayer, const string& name, double alt, double cov
                 }
 	}
         
+        // At this point, we know we've got some 3D clouds to generate.
+        thesky->get_cloud_layer(iLayer)->set_enable3dClouds(true);
+
 	double grid_x_size = layer_def->getDoubleValue("grid-x-size", 1000.0);
 	double grid_y_size = layer_def->getDoubleValue("grid-y-size", 1000.0);
 	double grid_x_rand = layer_def->getDoubleValue("grid-x-rand", grid_x_size);
@@ -244,7 +247,6 @@ void FGClouds::buildLayer(int iLayer, const string& name, double alt, double cov
         thesky->get_cloud_layer(iLayer)->set_enable3dClouds(clouds_3d_enabled);
 }
 
-// TODO:call this after real metar updates
 void FGClouds::buildCloudLayers(void) {
 	SGPropertyNode *metar_root = fgGetNode("/environment", true);
         
@@ -440,7 +442,6 @@ FGClouds::update_env_config ()
                            fgGetDouble("/environment/metar/pressure-inhg") );
 }
 
-
 void FGClouds::setLayer( int iLayer, float alt_ft, const string& coverage, const string& layer_type ) {
 	double coverage_norm = 0.0;
 	if( coverage == "few" )
@@ -475,7 +476,7 @@ void FGClouds::buildScenario( const string& scenario ) {
 
 	station += " 011000Z ";
 	if( scenario == "Fair weather" ) {
-		fakeMetar = "15003KT 12SM SCT033 FEW200 20/08 Q1015 NOSIG";
+		fakeMetar = "15003KT 12SM SCT041 FEW200 20/08 Q1015 NOSIG";
 		//setLayer(0, 3300.0, "scattered", "cu");
         } else if( scenario == "Thunderstorm" ) {
 		fakeMetar = "15012KT 08SM TSRA SCT040 BKN070 20/12 Q0995";
@@ -496,9 +497,9 @@ void FGClouds::buildScenario( const string& scenario ) {
 	}
 }
 
+void FGClouds::set_scenario(const char * sc) {
 
-void FGClouds::build() {
-	string scenario = fgGetString("/environment/weather-scenario", "METAR");
+        scenario = string(sc);
         
 //        if(!rebuild_required && (scenario == last_scenario))
 //            return;
@@ -549,22 +550,16 @@ void FGClouds::build() {
             init();
 }
 
+const char * FGClouds::get_scenario(void) const
+{
+    return scenario.c_str();
+}
+
 void FGClouds::set_3dClouds(bool enable)
 {
     if (enable != clouds_3d_enabled) {
         clouds_3d_enabled = enable;
-
-        for(int iLayer = 0 ; iLayer < thesky->get_cloud_layer_count(); iLayer++) {
-            thesky->get_cloud_layer(iLayer)->set_enable3dClouds(enable);
-
-            if (!enable) {
-                thesky->get_cloud_layer(iLayer)->get_layer3D()->clear();
-            }
-        }
-
-        if (enable) {
-            build();
-        }
+        buildCloudLayers();
     }
 }
 
