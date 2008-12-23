@@ -129,6 +129,9 @@ public:
   void setAirport(FGAirport* aAirport)
   { _airport = aAirport; }
   
+  int surface() const 
+  { return _surface_code; }
+  
     std::string _rwy_no;
 
     double _lon;

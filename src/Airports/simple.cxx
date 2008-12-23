@@ -192,6 +192,28 @@ FGRunway* FGAirport::findBestRunwayForHeading(double aHeading) const
   return result;
 }
 
+bool FGAirport::hasHardRunwayOfLengthFt(double aLengthFt) const
+{
+  unsigned int numRunways(mRunways.size());
+  for (unsigned int r=0; r<numRunways; ++r) {
+    FGRunway* rwy = mRunways[r];
+    if (rwy->isReciprocal()) {
+      continue; // we only care about lengths, so don't do work twice
+    }
+    
+    int surface = rwy->surface();
+    if ((surface != 1) && (surface != 2)) {
+      continue; // no hard surface
+    }
+    
+    if (rwy->lengthFt() >= aLengthFt) {
+      return true; // we're done!
+    }
+  } // of runways iteration
+
+  return false;
+}
+
 unsigned int FGAirport::numTaxiways() const
 {
   return mTaxiways.size();
@@ -231,6 +253,35 @@ FGRunway* FGAirport::getActiveRunwayForUsage() const
   }
   
   return findBestRunwayForHeading(hdg);
+}
+
+FGAirport* FGAirport::findClosest(const SGGeod& aPos, double aCuttofNm, Filter* filter)
+{
+  AirportFilter aptFilter;
+  if (filter == NULL) {
+    filter = &aptFilter;
+  }
+  
+  FGPositionedRef r = FGPositioned::findClosest(aPos, aCuttofNm, filter);
+  if (!r) {
+    return NULL;
+  }
+  
+  return static_cast<FGAirport*>(r.ptr());
+}
+
+FGAirport::HardSurfaceFilter::HardSurfaceFilter(double minLengthFt) :
+  mMinLengthFt(minLengthFt)
+{
+}
+      
+bool FGAirport::HardSurfaceFilter::pass(FGPositioned* aPos) const
+{
+  if (aPos->type() != AIRPORT) {
+    return false; // exclude seaports and heliports as well, we need a runways
+  }
+   
+  return static_cast<FGAirport*>(aPos)->hasHardRunwayOfLengthFt(mMinLengthFt);
 }
 
 /******************************************************************************

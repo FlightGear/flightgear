@@ -86,10 +86,44 @@ public:
     FGRunway* getRunwayByIdent(const std::string& aIdent) const;
     FGRunway* findBestRunwayForHeading(double aHeading) const;
     
+     /**
+     * Useful predicate for FMS/GPS/NAV displays and similar - check if this
+     * aiport has a hard-surfaced runway of at least the specified length.
+     * For the moment, hard means asphalt or concrete, not gravel or a
+     * lake bed.
+     */
+    bool hasHardRunwayOfLengthFt(double aLengthFt) const;
+    
     unsigned int numTaxiways() const;
     FGRunway* getTaxiwayByIndex(unsigned int aIndex) const;
     
     void addRunway(FGRunway* aRunway);
+    
+    class AirportFilter : public Filter
+     {
+     public:
+       virtual bool pass(FGPositioned* aPos) const { 
+         Type ty(aPos->type());
+         return (ty >= AIRPORT) && (ty <= SEAPORT);
+       }
+     };
+     
+     class HardSurfaceFilter : public Filter
+     {
+     public:
+       HardSurfaceFilter(double minLengthFt);
+       
+       virtual bool pass(FGPositioned* aPos) const;
+     private:
+       double mMinLengthFt;
+     };
+     
+     /**
+      * Syntactic wrapper around FGPositioned::findClosest - find the closest
+      * match for filter, and return it cast to FGAirport. The default filter
+      * passes all airports, including seaports and heliports.
+      */
+     static FGAirport* findClosest(const SGGeod& aPos, double aCuttofNm, Filter* filter = NULL);
 private:
     typedef std::vector<FGRunwayPtr>::const_iterator Runway_iterator;
     /**
