@@ -108,7 +108,6 @@ FGGlobals::FGGlobals() :
     tacanlist( NULL ),
     carrierlist( NULL ),
     channellist( NULL ),
-    fixlist( NULL ),
     airwaynet( NULL ),
     multiplayer_mgr( NULL )
 {
@@ -160,7 +159,6 @@ FGGlobals::~FGGlobals()
     delete tacanlist;
     delete carrierlist;
     delete channellist;
-    delete fixlist;
     delete airwaynet;
     delete multiplayer_mgr;
 }

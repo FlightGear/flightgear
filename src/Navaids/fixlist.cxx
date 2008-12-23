@@ -29,6 +29,7 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sgstream.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 
 #include "fixlist.hxx"
@@ -51,9 +52,7 @@ FGFixList::~FGFixList( void ) {
 
 
 // load the navaids and build the map
-bool FGFixList::init( SGPath path ) {
-    fixlist.erase( fixlist.begin(), fixlist.end() );
-
+bool FGFixList::init(const SGPath& path ) {
     sg_gzifstream in( path.str() );
     if ( !in.is_open() ) {
         SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << path.str() );
@@ -71,106 +70,10 @@ bool FGFixList::init( SGPath path ) {
       in >> lat >> lon >> ident;
       if (lat > 95) break;
 
-      FGFix* fix = new FGFix(ident, SGGeod::fromDeg(lon, lat));
-      fixlist.insert(std::make_pair(fix->ident(), fix));
+      // fix gets added to the FGPositioned spatial indices, so we don't need
+      // to hold onto it here.
+      new FGFix(ident, SGGeod::fromDeg(lon, lat));
       in >> skipcomment;
     }
     return true;
-}
-
-
-// query the database for the specified fix, lon and lat are in
-// degrees, elev is in meters
-bool FGFixList::query( const string& ident, FGFix* &fix ) {
-    fix_map_const_iterator it = fixlist.find(ident);
-    if ( it != fixlist.end() ) {
-        fix = it->second;
-        return true;
-    } else {
-        return false;
-    }
-}
-
-
-// query the database for the specified fix, lon and lat are in
-// degrees, elev is in meters
-bool FGFixList::query_and_offset( const string& ident, double lon, double lat,
-                                  double elev, FGFix* &fix, double *heading,
-                                  double *dist )
-{
-    std::pair<fix_map_const_iterator, fix_map_const_iterator> range = fixlist.equal_range(ident);
-
-    if (range.first == range.second) {
-        return false;
-    }
-
-    double min_s = -1.0;
-    for (fix_map_const_iterator current = range.first; current != range.second; ++current) {
-        double az1, az2, s;
-        geo_inverse_wgs_84( elev, lat, lon,
-                        current->second->get_lat(), current->second->get_lon(),
-                        &az1, &az2, &s );
-        // cout << "  dist = " << s << endl;
-        if (min_s < 0 || s < min_s) {
-            *heading = az2;
-            *dist = s;
-            min_s = s;
-            fix = current->second;
-        }
-    }
-
-    return true;
-}
-
-const FGFix* FGFixList::search(const string& ident)
-{
-  fix_map_iterator itr = fixlist.find(ident);
-  if (itr == fixlist.end()) {
-    return NULL;
-  }
-  
-  return itr->second;
-}
-
-class orderingFunctor
-{
-public:
-  orderingFunctor(FGIdentOrdering* aOrder) :
-    mOrdering(aOrder)
-  { assert(aOrder); }
-  
-  bool operator()(const fix_map_type::value_type& aA, const std::string& aB) const
-  {
-    return mOrdering->compare(aA.first,aB);
-  }
-
-  bool operator()(const std::string& aA, const fix_map_type::value_type& aB) const
-  {
-    return mOrdering->compare(aA, aB.first);
-  }
-
-  bool operator()(const fix_map_type::value_type& aA, const fix_map_type::value_type& aB) const
-  {
-    return mOrdering->compare(aA.first, aB.first);
-  }
-  
-private:
-  FGIdentOrdering* mOrdering;
-};
-
-const FGFix* FGFixList::findFirstByIdent( const string& ident, FGIdentOrdering* aOrder)
-{
-  fix_map_iterator itr;
-  if (aOrder) {
-    orderingFunctor func(aOrder);
-    itr = std::lower_bound(fixlist.begin(),fixlist.end(), ident, func);
-  } else {
-    itr = fixlist.lower_bound(ident);
-  }
-  
-  if (itr == fixlist.end()) {
-    return NULL;
-  }
-  
-  return itr->second;
 }

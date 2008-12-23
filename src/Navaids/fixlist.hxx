@@ -26,56 +26,18 @@
 
 
 #include <simgear/compiler.h>
-#include <simgear/misc/sg_path.hxx>
-
-#include <map>
-#include <vector>
-#include <string>
 
 class FGFix;
-
-using std::multimap;
-using std::vector;
-using std::string;
-
-// fix names may be globally non-unique.  Allow for this.
-typedef multimap < string, FGFix* > fix_map_type;
-typedef fix_map_type::iterator fix_map_iterator;
-typedef fix_map_type::const_iterator fix_map_const_iterator;
-
-class FGIdentOrdering; // FIXME, currently declared in Airports/simple.hxx
+class SGPath;
 
 class FGFixList {
-
-    fix_map_type fixlist;
-
 public:
 
     FGFixList();
     ~FGFixList();
 
     // load the navaids and build the map
-    bool init( SGPath path );
-
-    // query the database for the specified fix
-    bool query( const string& ident, FGFix* &f );
-
-    const FGFix* search(const string& ident);
-
-    // Find fix of requested type with closest exact or following ident
-    // (by ACSII values) to that supplied (ie. a lower-bound lookup).
-    // Supplying true for exact forces only exact matches to be returned (similar to above function)
-    // Returns NULL if no match found.
-    const FGFix* findFirstByIdent( const string& ident, FGIdentOrdering* aOrder = NULL);
-
-    // query the database for the specified fix, lon and lat are
-    // in degrees, elev is in meters
-    bool query_and_offset( const string& ident, double lon, double lat,
-                           double elev, FGFix* &f, double *heading,
-                           double *dist );
-
-    // Return a pointer to the master fixlist
-   // inline const fix_map_type* getFixList() { return(&fixlist); }
+    bool init(const SGPath& path);
 };
 
 

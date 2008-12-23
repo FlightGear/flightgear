@@ -64,7 +64,6 @@ class FGIO;
 class FGNavList;
 class FGAirwayNetwork;
 class FGTACANList;
-class FGFixList;
 class FGLight;
 class FGModelMgr;
 class FGRouteMgr;
@@ -188,7 +187,6 @@ private:
     FGNavList *tacanlist;
     FGNavList *carrierlist;
     FGTACANList *channellist;
-    FGFixList *fixlist;
     FGAirwayNetwork *airwaynet;
 
     //Mulitplayer managers
@@ -335,8 +333,6 @@ public:
     inline void set_carrierlist( FGNavList *n ) { carrierlist = n; }
     inline FGNavList *get_mkrlist() const { return mkrlist; }
     inline void set_mkrlist( FGNavList *n ) { mkrlist = n; }
-    inline FGFixList *get_fixlist() const { return fixlist; }
-    inline void set_fixlist( FGFixList *f ) { fixlist = f; }
     inline FGTACANList *get_channellist() const { return channellist; }
     inline void set_channellist( FGTACANList *c ) { channellist = c; }
 

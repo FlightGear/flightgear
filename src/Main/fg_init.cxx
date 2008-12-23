@@ -939,18 +939,16 @@ static bool fgSetPosFromCarrier( const string& carrier, const string& posid ) {
 // Set current_options lon/lat given an airport id and heading (degrees)
 static bool fgSetPosFromFix( const string& id )
 {
-  FGFix* fix;
-  
-  // set initial position from runway and heading
-  if ( !globals->get_fixlist()->query( id.c_str(), fix ) ) {
-    SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate NAV = " << id );
+  FGPositioned::TypeFilter fixFilter(FGPositioned::FIX);
+  FGPositioned* fix = FGPositioned::findNextWithPartialId(NULL, id, &fixFilter);
+  if (!fix) {
+    SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate fix = " << id );
     return false;
   }
   
   fgApplyStartOffset(fix->geod(), fgGetDouble("/sim/presets/heading-deg"));
   return true;
 }
-
 
 /**
  * Initialize vor/ndb/ils/fix list management and query systems (as
@@ -1000,7 +998,6 @@ fgInitNav ()
     p_fix.append( "Navaids/fix.dat" );
     FGFixList *fixlist = new FGFixList;
     fixlist->init( p_fix );
-    globals->set_fixlist( fixlist );
 
     SG_LOG(SG_GENERAL, SG_INFO, "  Airways");
     SGPath p_awy( globals->get_fg_root() );
