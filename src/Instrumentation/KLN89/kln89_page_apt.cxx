@@ -204,7 +204,7 @@ void KLN89AptPage::Update(double dt) {
 			// I guess we can make a heuristic guess as to fuel availability from the runway sizes
 			// For now assume that airports with asphalt or concrete runways will have at least 100L,
 			// and that runways over 4000ft will have JET.
-			if(_aptRwys[0]->_surface_code <= 2) {
+			if(_aptRwys[0]->surface() <= 2) {
 				if(_aptRwys[0]->lengthFt() >= 4000) {
 					_kln89->DrawText("JET 100L", 2, 0, 1);
 				} else {
@@ -235,7 +235,7 @@ void KLN89AptPage::Update(double dt) {
 				_kln89->DrawText((_kln89->_altUnits == GPS_ALT_UNITS_FT ? "ft" : "m"), 2, 5, 2);
 				// Surface
 				// TODO - why not store these strings as an array?
-				switch(_aptRwys[i]->_surface_code) {
+				switch(_aptRwys[i]->surface()) {
 				case 1:
 					// Asphalt - fall through
 				case 2:
@@ -283,7 +283,7 @@ void KLN89AptPage::Update(double dt) {
 				_kln89->DrawText((_kln89->_altUnits == GPS_ALT_UNITS_FT ? "ft" : "m"), 2, 5, 0);
 				// Surface
 				// TODO - why not store these strings as an array?
-				switch(_aptRwys[i]->_surface_code) {
+				switch(_aptRwys[i]->surface()) {
 				case 1:
 					// Asphalt - fall through
 				case 2:

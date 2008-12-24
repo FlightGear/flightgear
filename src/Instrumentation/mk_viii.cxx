@@ -4230,7 +4230,7 @@ MK_VIII::Mode6Handler::update_altitude_callouts ()
 bool
 MK_VIII::Mode6Handler::test_runway (const FGRunway *_runway)
 {
-  if (_runway->_length < mk->conf.runway_database)
+  if (_runway->lengthFt() < mk->conf.runway_database)
     return false;
 
   SGGeod pos(

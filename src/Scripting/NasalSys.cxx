@@ -569,8 +569,8 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
         HASHSET("heading", 7, naNum(rwy->headingDeg()));
         HASHSET("length", 6, naNum(rwy->lengthM()));
         HASHSET("width", 5, naNum(rwy->widthM()));
-        HASHSET("threshold", 9, naNum(rwy->_displ_thresh * SG_FEET_TO_METER));
-        HASHSET("stopway", 7, naNum(rwy->_stopway * SG_FEET_TO_METER));
+        HASHSET("threshold", 9, naNum(rwy->displacedThresholdM()));
+        HASHSET("stopway", 7, naNum(rwy->stopwayM()));
 #undef HASHSET
         naHash_set(rwys, rwyid, rwydata);
     }

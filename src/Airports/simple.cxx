@@ -200,13 +200,8 @@ bool FGAirport::hasHardRunwayOfLengthFt(double aLengthFt) const
     if (rwy->isReciprocal()) {
       continue; // we only care about lengths, so don't do work twice
     }
-    
-    int surface = rwy->surface();
-    if ((surface != 1) && (surface != 2)) {
-      continue; // no hard surface
-    }
-    
-    if (rwy->lengthFt() >= aLengthFt) {
+
+    if (rwy->isHardSurface() && (rwy->lengthFt() >= aLengthFt)) {
       return true; // we're done!
     }
   } // of runways iteration

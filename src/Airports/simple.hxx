@@ -89,8 +89,6 @@ public:
      /**
      * Useful predicate for FMS/GPS/NAV displays and similar - check if this
      * aiport has a hard-surfaced runway of at least the specified length.
-     * For the moment, hard means asphalt or concrete, not gravel or a
-     * lake bed.
      */
     bool hasHardRunwayOfLengthFt(double aLengthFt) const;
     

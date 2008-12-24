@@ -42,6 +42,20 @@ using std::istream;
 using std::multimap;
 using std::string;
 
+/*
+ * surface codes
+ * 1 - asphalt
+ * 2 - concrete
+ * 3 - turf
+ * 4 - dirt
+ * 5 - gravel
+ * 6 - asphalt helipad
+ * 7 - concrete helipad
+ * 8 - turf helipad
+ * 9 - dirt helipad
+ * 12 -  lakebed
+ */
+ 
 static FGPositioned::Type runwayTypeFromNumber(const std::string& aRwyNo)
 {
   return (aRwyNo[0] == 'x') ? FGPositioned::TAXIWAY : FGPositioned::RUNWAY;
@@ -168,3 +182,9 @@ SGGeod FGRunway::pointOnCenterline(double aOffset) const
     result, dummyAz2);
   return result;
 }
+
+bool FGRunway::isHardSurface() const
+{
+  return ((_surface_code == 1) || (_surface_code == 2));
+}
+

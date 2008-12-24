@@ -39,6 +39,13 @@ class FGRunway : public FGPositioned
 {  
   FGAirport* _airport; ///< owning airport
   bool _reciprocal;
+  double _heading;
+  double _length;
+  double _width;
+  double _displ_thresh;
+  double _stopway;
+  int _surface_code;
+  
 public:
   
   FGRunway(FGAirport* aAirport, const std::string& rwy_no,
@@ -113,6 +120,12 @@ public:
   double widthM() const
   { return _width * SG_FEET_TO_METER; }
   
+  double displacedThresholdM() const
+  { return _displ_thresh * SG_FEET_TO_METER; }
+  
+  double stopwayM() const
+  { return _stopway * SG_FEET_TO_METER; }
+  
   /**
    * Runway heading in degrees.
    */
@@ -129,17 +142,17 @@ public:
   void setAirport(FGAirport* aAirport)
   { _airport = aAirport; }
   
+  /**
+   * Predicate to test if this runway has a hard surface. For the moment, this
+   * means concrete or asphalt
+   */
+  bool isHardSurface() const;
+  
+  /**
+   * Retrieve runway surface code, as define in Robin Peel's data
+   */
   int surface() const 
   { return _surface_code; }
-  
-  double _displ_thresh;
-  double _stopway;
-
-  double _heading;
-  double _length;
-  double _width;
-  
-  int _surface_code;
 };
 
 #endif // _FG_RUNWAYS_HXX
