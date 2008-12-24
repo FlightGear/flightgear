@@ -1035,55 +1035,6 @@ void DCLGPS::CreateFlightPlan(GPSFlightPlan* fp, vector<string> ids, vector<GPSW
 
 /***************************************/
 
-/**
- * STL functor for use with algorithms. This comapres strings according to
- * the KLN-89's notion of ordering, with digits after letters.
- * Also implements FGIdentOrdering so it can be passed into the various list
- * find helpers.
- */
- 
-class stringOrderKLN89 : public FGIdentOrdering
-{
-public:
-  bool operator()(const gps_waypoint_map::value_type& aA, const std::string& aB) const
-  {
-    return compare(aA.first, aB);
-  }
-  
-  bool operator()(const std::string& aS1, const std::string& aS2) const
-  {
-    return compare(aS1, aS2);
-  }
-  
-  virtual bool compare(const std::string& aS1, const std::string& aS2) const
-  {
-    if (aS1.empty()) return true;
-    if (aS2.empty()) return false;
-    
-    char* a = (char*) aS1.c_str();
-    char* b = (char*) aS2.c_str();
-    
-    for ( ; *a && *b; ++a, ++b) {
-      if (*a == *b) continue;
-      
-      bool aDigit = isdigit(*a);
-      bool bDigit = isdigit(*b);
-      
-      if (aDigit == bDigit) {
-        return (*a < *b); // we already know they're not equal
-      }
-      
-      // digit-ness differs
-      if (aDigit) return false; // s1 = KS9 goes *after* s2 = KSA
-      assert(bDigit);
-      return true; // s1 = KSF, s2 = KS5, s1 is indeed < s2
-    }
-    
-    if (*b) return true; // *a == 0, s2 is longer
-    return false; // s1 is longer, or strings are equal
-  }
-};
-
 class DCLGPSFilter : public FGPositioned::Filter
 {
 public:

@@ -146,15 +146,6 @@ public:
     virtual bool pass(FGAirport*) { return true; }
 };
 
-class FGIdentOrdering {
-public:
-  virtual ~FGIdentOrdering()
-  { ; }
-  
-  virtual bool compare(const std::string& aA, const std::string& aB) const
-  { return aA < aB; }
-};
-
 typedef std::map < std::string, FGAirport* > airport_map;
 typedef airport_map::iterator airport_map_iterator;
 typedef airport_map::const_iterator const_airport_map_iterator;
@@ -186,14 +177,6 @@ public:
     // Returns NULL if unsucessfull.
     FGAirport* search( const std::string& id );
 
-    // Search for the next airport in ASCII sequence to the supplied id.
-    // eg. id = "KDC" or "KDCA" would both return "KDCA".
-    // NOTE: Numbers come prior to A-Z in ASCII sequence so id = "LD" would return "LD57", not "LDDP"
-    // optional ordering can make letters come before numbers
-    // Implementation assumes airport codes are unique.
-    // Returns NULL if unsucessfull.
-    const FGAirport* findFirstById(const std::string& aIdent, FGIdentOrdering* aOrder = NULL);
-
     // search for the airport closest to the specified position
     // (currently a linear inefficient search so it's probably not
     // best to use this at runtime.)  An FGAirportSearchFilter class
@@ -211,11 +194,6 @@ public:
      * Return a specific airport, by position.
      */
     const FGAirport *getAirport( unsigned int index ) const;
-
-    /**
-     * Return a pointer to the raw airport list
-     */
-    inline const airport_list* getAirportList() { return (&airports_array); }
 
     /**
      * Mark the specified airport record as not having metar

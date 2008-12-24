@@ -344,52 +344,6 @@ FGAirport* FGAirportList::search( const string& id)
     return (itr == airports_by_id.end() ? NULL : itr->second);
 }
 
-// wrap an FGIdentOrdering in an STL-compatible functor. not the most
-// efficent / pretty thing in the world, but avoids template nastiness in the 
-// headers, and we're only doing O(log(N)) comparisoms per search
-class orderingFunctor
-{
-public:
-  orderingFunctor(FGIdentOrdering* aOrder) :
-    mOrdering(aOrder)
-  { assert(aOrder); }
-  
-  bool operator()(const airport_map::value_type& aA, const std::string& aB) const
-  {
-    return mOrdering->compare(aA.first,aB);
-  }
-
-  bool operator()(const std::string& aA, const airport_map::value_type& aB) const
-  {
-    return mOrdering->compare(aA, aB.first);
-  }
-
-  bool operator()(const airport_map::value_type& aA, const airport_map::value_type& aB) const
-  {
-    return mOrdering->compare(aA.first, aB.first);
-  }
-  
-private:
-  FGIdentOrdering* mOrdering;
-};
-
-const FGAirport* FGAirportList::findFirstById(const std::string& aIdent, FGIdentOrdering* aOrder)
-{
-  airport_map_iterator itr;
-  if (aOrder) {
-    orderingFunctor func(aOrder);
-    itr = std::lower_bound(airports_by_id.begin(),airports_by_id.end(), aIdent, func);
-  } else {
-    itr = airports_by_id.lower_bound(aIdent);
-  }
-  
-  if (itr == airports_by_id.end()) {
-    return NULL;
-  }
-  
-  return itr->second;
-}
-
 // search for the airport nearest the specified position
 FGAirport* FGAirportList::search(double lon_deg, double lat_deg, double max_range)
 {
