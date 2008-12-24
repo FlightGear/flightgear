@@ -173,14 +173,15 @@ public:
    */
   static const char* nameForType(Type aTy);
 protected:
-  FGPositioned(Type ty, const std::string& aIdent, double aLat, double aLon, double aElev);
   
-  FGPositioned(Type ty, const std::string& aIdent, const SGGeod& aPos);
+  FGPositioned(Type ty, const std::string& aIdent, const SGGeod& aPos, bool aIndex = true);
   
-  SGGeod mPosition; // can't be const right now
+  // can't be const right now, navrecord at least needs to fix up the position
+  // after navaids are parsed
+  SGGeod mPosition; 
   
-  Type mType;
-  std::string mIdent;
+  const Type mType;
+  const std::string mIdent;
 };
 
 #endif // of FG_POSITIONED_HXX

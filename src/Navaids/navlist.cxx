@@ -145,7 +145,6 @@ bool FGNavList::add( FGNavRecord *n )
     return true;
 }
 
-
 FGNavRecord *FGNavList::findByFreq( double freq, double lon, double lat, double elev )
 {
     const nav_list_type& stations = navaids[(int)(freq*100.0 + 0.5)];
@@ -168,69 +167,6 @@ FGNavRecord *FGNavList::findByIdent( const char* ident,
 }
 
 
-nav_list_type FGNavList::findFirstByIdent( const string& ident, fg_nav_types type, bool exact)
-{
-  nav_list_type n2;
-  n2.clear();
-
-  if ((type != FG_NAV_VOR) && (type != FG_NAV_NDB)) {
-    return n2;
-  }
-  
-    nav_ident_map_iterator it;
-    if(exact) {
-        it = ident_navaids.find(ident);
-    } else {
-        bool typeMatch = false;
-        int safety_count = 0;
-        it = ident_navaids.lower_bound(ident);
-        while(!typeMatch) {
-            nav_list_type n0 = it->second;
-            // local copy, so we should be able to do anything with n0.
-            // Remove the types that don't match request.
-            for(nav_list_iterator it0 = n0.begin(); it0 != n0.end();) {
-                FGNavRecord* nv = *it0;
-                if(nv->type() == type) {
-                    typeMatch = true;
-                    ++it0;
-                } else {
-                    it0 = n0.erase(it0);
-                }
-            }
-            if(typeMatch) {
-                return(n0);
-            }
-            if(it == ident_navaids.begin()) {
-                // We didn't find a match before reaching the beginning of the map
-                n0.clear();
-                return(n0);
-            }
-            safety_count++;
-            if(safety_count == 1000000) {
-                SG_LOG(SG_INSTR, SG_ALERT,
-                       "safety_count triggered exit from while loop in findFirstByIdent!");
-                break;
-            }
-            ++it;
-            if(it == ident_navaids.end()) {
-                n0.clear();
-                return(n0);
-            }
-        }
-    }
-    if(it == ident_navaids.end()) {
-        n2.clear();
-        return(n2);
-    } else {
-        nav_list_type n1 = it->second;
-        n2.clear();
-        for(nav_list_iterator it2 = n1.begin(); it2 != n1.end(); ++it2) {
-            FGNavRecord* nv = *it2;
-            if(nv->type() == type) n2.push_back(nv);
-        }
-        return(n2);
-    }
-}
 
 
 // Given an Ident and optional freqency, return the first matching

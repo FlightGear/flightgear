@@ -71,21 +71,18 @@ static std::string cleanRunwayNo(const std::string& aRwyNo)
 }
 
 FGRunway::FGRunway(FGAirport* aAirport, const string& rwy_no,
-                        const double longitude, const double latitude,
+                        const SGGeod& aGeod,
                         const double heading, const double length,
                         const double width,
                         const double displ_thresh,
                         const double stopway,
                         const int surface_code,
                         bool reciprocal) :
-  FGPositioned(runwayTypeFromNumber(rwy_no), cleanRunwayNo(rwy_no), latitude, longitude, 0.0),
+  FGPositioned(runwayTypeFromNumber(rwy_no), cleanRunwayNo(rwy_no), aGeod, 
+    (runwayTypeFromNumber(rwy_no) == FGPositioned::RUNWAY)),
   _airport(aAirport),
   _reciprocal(reciprocal)
 {
-  _rwy_no = ident();
-  
-  _lon = longitude;
-  _lat = latitude;
   _heading = heading;
   _length = length;
   _width = width;

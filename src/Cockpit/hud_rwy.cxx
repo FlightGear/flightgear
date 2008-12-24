@@ -190,23 +190,26 @@ void runway_instr::get_rwy_points(sgdVec3 *points3d)
     double length = runway->lengthM() * 0.5;
     double width = runway->widthM() * 0.5;
     double frontLat, frontLon, backLat, backLon,az, tempLat, tempLon;
-
-    geo_direct_wgs_84(alt, runway->_lat, runway->_lon, runway->_heading, length, &backLat, &backLon, &az);
+    double runwayLon = runway->geod().getLongitudeDeg(),
+      runwayLat = runway->geod().getLatitudeDeg();
+    double heading = runway->headingDeg();
+    
+    geo_direct_wgs_84(alt, runwayLat, runwayLon, heading, length, &backLat, &backLon, &az);
     sgGeodToCart(backLat * SG_DEGREES_TO_RADIANS, backLon * SG_DEGREES_TO_RADIANS, alt, points3d[4]);
 
-    geo_direct_wgs_84(alt, runway->_lat, runway->_lon, runway->_heading + 180, length, &frontLat, &frontLon, &az);
+    geo_direct_wgs_84(alt, runwayLat, runwayLon, heading + 180, length, &frontLat, &frontLon, &az);
     sgGeodToCart(frontLat * SG_DEGREES_TO_RADIANS, frontLon * SG_DEGREES_TO_RADIANS, alt, points3d[5]);
 
-    geo_direct_wgs_84(alt, backLat, backLon, runway->_heading + 90, width, &tempLat, &tempLon, &az);
+    geo_direct_wgs_84(alt, backLat, backLon, heading + 90, width, &tempLat, &tempLon, &az);
     sgGeodToCart(tempLat * SG_DEGREES_TO_RADIANS, tempLon * SG_DEGREES_TO_RADIANS, alt, points3d[0]);
 
-    geo_direct_wgs_84(alt, backLat, backLon, runway->_heading - 90, width, &tempLat, &tempLon, &az);
+    geo_direct_wgs_84(alt, backLat, backLon, heading - 90, width, &tempLat, &tempLon, &az);
     sgGeodToCart(tempLat * SG_DEGREES_TO_RADIANS, tempLon * SG_DEGREES_TO_RADIANS, alt, points3d[1]);
 
-    geo_direct_wgs_84(alt, frontLat, frontLon, runway->_heading - 90, width, &tempLat, &tempLon, &az);
+    geo_direct_wgs_84(alt, frontLat, frontLon, heading - 90, width, &tempLat, &tempLon, &az);
     sgGeodToCart(tempLat * SG_DEGREES_TO_RADIANS, tempLon * SG_DEGREES_TO_RADIANS, alt, points3d[2]);
 
-    geo_direct_wgs_84(alt, frontLat, frontLon, runway->_heading + 90, width, &tempLat, &tempLon, &az);
+    geo_direct_wgs_84(alt, frontLat, frontLon, heading + 90, width, &tempLat, &tempLon, &az);
     sgGeodToCart(tempLat * SG_DEGREES_TO_RADIANS, tempLon * SG_DEGREES_TO_RADIANS, alt, points3d[3]);
 }
 
@@ -386,8 +389,8 @@ void runway_instr::drawArrow()
     Point3D ac(0.0), rwy(0.0);
     ac.setlat(current_aircraft.fdm_state->get_Latitude_deg());
     ac.setlon(current_aircraft.fdm_state->get_Longitude_deg());
-    rwy.setlat(runway->_lat);
-    rwy.setlon(runway->_lon);
+    rwy.setlat(runway->latitude());
+    rwy.setlon(runway->longitude());
     float theta = GetHeadingFromTo(ac, rwy);
     theta -= fgGetDouble("/orientation/heading-deg");
     theta = -theta;

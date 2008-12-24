@@ -72,7 +72,7 @@ public:
   static FGNavRecord* createFromStream(std::istream& aStream);
 
     FGNavRecord(Type type, const std::string& ident, const std::string& name,
-      double lat, double lon, double aElevFt,
+      const SGGeod& aPos,
       int freq, int range, double multiuse);
     
     inline double get_lon() const { return longitude(); } // degrees

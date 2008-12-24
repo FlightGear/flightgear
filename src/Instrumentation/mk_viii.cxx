@@ -4233,26 +4233,12 @@ MK_VIII::Mode6Handler::test_runway (const FGRunway *_runway)
   if (_runway->_length < mk->conf.runway_database)
     return false;
 
-  // get position of threshold
-  double latitude, longitude, az;
-  geo_direct_wgs_84(0,
-		    _runway->_lat,
-		    _runway->_lon,
-		    get_reciprocal_heading(_runway->_heading),
-		    _runway->_length / 2 * SG_FEET_TO_METER,
-		    &latitude,
-		    &longitude,
-		    &az);
-
+  SGGeod pos(
+    SGGeod::fromDeg(mk_data(gps_longitude).get(), mk_data(gps_latitude).get()));
+  
   // get distance to threshold
   double distance, az1, az2;
-  geo_inverse_wgs_84(0,
-		     mk_data(gps_latitude).get(),
-		     mk_data(gps_longitude).get(),
-		     latitude,
-		     longitude,
-		     &az1, &az2, &distance);
-
+  SGGeodesy::inverse(pos, _runway->threshold(), az1, az2, distance);
   return distance * SG_METER_TO_NM <= 5;
 }
 
@@ -4475,9 +4461,9 @@ MK_VIII::TCFHandler::get_azimuth_difference (const FGRunway *_runway)
 {
   return get_azimuth_difference(mk_data(gps_latitude).get(),
 				mk_data(gps_longitude).get(),
-				_runway->_lat,
-				_runway->_lon,
-				_runway->_heading);
+				_runway->latitude(),
+				_runway->longitude(),
+				_runway->headingDeg());
 }
 
 // Selects the most likely intended destination runway of @airport,

@@ -226,16 +226,19 @@ bool fgAirportDBLoad( FGAirportList *airports,
             double stopway2 = atof( stop[1].c_str() );
 
             int surface_code = atoi( token[10].c_str() );
-
-            FGRunway* rwy = new FGRunway(NULL, rwy_no, lon, lat, heading, length,
+            SGGeod pos(SGGeod::fromDegFt(lon, lat, 0.0));
+            FGRunway* rwy = new FGRunway(NULL, rwy_no, pos, heading, length,
                           width, displ_thresh1, stopway1, surface_code, false);
-            
-            FGRunway* reciprocal = new FGRunway(NULL, FGRunway::reverseIdent(rwy_no), 
-                          lon, lat, heading + 180.0, length, width, 
-                          displ_thresh2, stopway2, surface_code, true);
             runways.push_back(rwy);
-            runways.push_back(reciprocal);
             
+            if (rwy_no[0] != 'x') {
+              // runways need a reciprocal, taxiways do not
+              FGRunway* reciprocal = new FGRunway(NULL, FGRunway::reverseIdent(rwy_no), 
+              pos, heading + 180.0, length, width, 
+              displ_thresh2, stopway2, surface_code, true);
+            
+              runways.push_back(reciprocal);
+            }
         } else if ( line_id == 18 ) {
             // beacon entry (ignore)
         } else if ( line_id == 14 ) {

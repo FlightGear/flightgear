@@ -37,10 +37,9 @@
 #include "Main/fg_props.hxx"
 
 FGNavRecord::FGNavRecord(Type aTy, const std::string& aIdent, 
-  const std::string& aName,
-  double lat, double lon, double aElevFt,
+  const std::string& aName, const SGGeod& aPos,
   int aFreq, int aRange, double aMultiuse) :
-  FGPositioned(aTy, aIdent, lat, lon, aElevFt),
+  FGPositioned(aTy, aIdent, aPos),
   freq(aFreq),
   range(aRange),
   multiuse(aMultiuse),
@@ -129,8 +128,8 @@ FGNavRecord* FGNavRecord::createFromStream(std::istream& aStream)
   }
   
   FGNavRecord* result = new FGNavRecord(type, ident,
-    simgear::strutils::strip(name), 
-    lat, lon, elev_ft, freq, range, multiuse);
+    simgear::strutils::strip(name), SGGeod::fromDegFt(lon, lat, elev_ft),
+    freq, range, multiuse);
     
   return result;
 }
@@ -199,7 +198,7 @@ void FGNavRecord::alignLocaliserWithRunway(FGRunway* aRunway, double aThreshold)
     set_multiuse( aRunway->headingDeg() );
   } else {
     SG_LOG(SG_GENERAL, SG_WARN, "localizer:" << ident() << ", aligning with runway " 
-      << aRunway->_rwy_no << " exceeded heading threshold");
+      << aRunway->ident() << " exceeded heading threshold");
   }
 }
 

@@ -90,12 +90,6 @@ public:
     // locate closest item in the DB matching the requested ident
     FGNavRecord *findByIdent( const char* ident, const double lon, const double lat );
 
-    // Find items of requested type with closest exact or subsequent ident
-    // (by ASCII code value) to that supplied.
-    // Supplying true for exact forces only exact matches to be returned (similar to above function)
-    // Returns an empty list if no match found - calling function should check for this!
-    nav_list_type findFirstByIdent( const string& ident, FGPositioned::Type type, bool exact = false );
-
     // Given an Ident and optional freqency, return the first matching
     // station.
     FGNavRecord *findByIdentAndFreq( const char* ident,

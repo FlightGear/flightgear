@@ -71,8 +71,10 @@ static void
 addToIndices(FGPositioned* aPos)
 {
   assert(aPos);
-  global_namedIndex.insert(global_namedIndex.begin(), 
-    std::make_pair(aPos->ident(), aPos));
+  if (!aPos->ident().empty()) {
+    global_namedIndex.insert(global_namedIndex.begin(), 
+      std::make_pair(aPos->ident(), aPos));
+  }
     
   SpatialPositionedIndex::iterator it = bucketEntryForPositioned(aPos);
   it->second.insert(aPos);
@@ -83,14 +85,16 @@ removeFromIndices(FGPositioned* aPos)
 {
   assert(aPos);
   
-  NamedPositionedIndex::iterator it = global_namedIndex.find(aPos->ident());
-  while (it != global_namedIndex.end() && (it->first == aPos->ident())) {
-    if (it->second == aPos) {
-      global_namedIndex.erase(it);
-      break;
-    }
-    
-    ++it;
+  if (!aPos->ident().empty()) {
+    NamedPositionedIndex::iterator it = global_namedIndex.find(aPos->ident());
+    while (it != global_namedIndex.end() && (it->first == aPos->ident())) {
+      if (it->second == aPos) {
+        global_namedIndex.erase(it);
+        break;
+      }
+      
+      ++it;
+    } // of multimap walk
   }
   
   SpatialPositionedIndex::iterator sit = bucketEntryForPositioned(aPos);
@@ -271,15 +275,13 @@ namedFindClosest(const std::string& aIdent, const SGGeod& aOrigin, FGPositioned:
   NamedPositionedIndex::const_iterator it = range.first;
     
   for (; it != range.second; ++it) {
-  // filter by type
-    FGPositioned::Type ty = it->second->type();
     if (aFilter && !aFilter->pass(range.first->second)) {
       continue;
     }
     
   // find distance
     double d, az1, az2;
-    SGGeodesy::inverse(aOrigin, it->second->geod(), az2, az2, d);
+    SGGeodesy::inverse(aOrigin, it->second->geod(), az1, az2, d);
     if (d < minDist) {
       minDist = d;
       result = it->second;
@@ -336,22 +338,17 @@ spatialGetClosest(const SGGeod& aPos, unsigned int aN, double aCutoffNm, FGPosit
 
 ///////////////////////////////////////////////////////////////////////////////
 
-FGPositioned::FGPositioned(Type ty, const std::string& aIdent, double aLat, double aLon, double aElev) :
-  mType(ty),
-  mPosition(SGGeod::fromDegFt(aLon, aLat, aElev)),
-  mIdent(aIdent)
-{
-  addToIndices(this);
-  SGReferenced::get(this); // hold an owning ref, for the moment
-}
-
-FGPositioned::FGPositioned(Type ty, const std::string& aIdent, const SGGeod& aPos) :
+FGPositioned::FGPositioned(Type ty, const std::string& aIdent, const SGGeod& aPos, bool aIndexed) :
   mType(ty),
   mPosition(aPos),
   mIdent(aIdent)
-{
-  addToIndices(this);
+{  
   SGReferenced::get(this); // hold an owning ref, for the moment
+  
+  if (aIndexed) {
+    assert(ty != TAXIWAY);
+    addToIndices(this);
+  }
 }
 
 FGPositioned::~FGPositioned()

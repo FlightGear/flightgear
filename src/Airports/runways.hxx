@@ -42,7 +42,7 @@ class FGRunway : public FGPositioned
 public:
   
   FGRunway(FGAirport* aAirport, const std::string& rwy_no,
-            const double longitude, const double latitude,
+            const SGGeod& aGeod,
             const double heading, const double length,
             const double width,
             const double displ_thresh,
@@ -132,18 +132,14 @@ public:
   int surface() const 
   { return _surface_code; }
   
-    std::string _rwy_no;
+  double _displ_thresh;
+  double _stopway;
 
-    double _lon;
-    double _lat;
-    double _displ_thresh;
-    double _stopway;
-
-    double _heading;
-    double _length;
-    double _width;
-    
-    int _surface_code;
+  double _heading;
+  double _length;
+  double _width;
+  
+  int _surface_code;
 };
 
 #endif // _FG_RUNWAYS_HXX
