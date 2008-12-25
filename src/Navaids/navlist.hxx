@@ -26,9 +26,8 @@
 
 
 #include <simgear/compiler.h>
-#include <simgear/misc/sg_path.hxx>
+
 #include <simgear/structure/SGSharedPtr.hxx>
-#include <simgear/structure/SGReferenced.hxx>
 
 #include <map>
 #include <vector>
@@ -36,37 +35,28 @@
 
 #include "navrecord.hxx"
 
-using std::map;
-using std::vector;
-using std::string;
-
-
+// forward decls
+class SGGeod;
 
 // FGNavList ------------------------------------------------------------------
 
 typedef SGSharedPtr<FGNavRecord> nav_rec_ptr;
-typedef vector < nav_rec_ptr > nav_list_type;
+typedef std::vector < nav_rec_ptr > nav_list_type;
 typedef nav_list_type::iterator nav_list_iterator;
 typedef nav_list_type::const_iterator nav_list_const_iterator;
 
-typedef map < int, nav_list_type > nav_map_type;
+typedef std::map < int, nav_list_type > nav_map_type;
 typedef nav_map_type::iterator nav_map_iterator;
 typedef nav_map_type::const_iterator nav_map_const_iterator;
-
-typedef map < string, nav_list_type > nav_ident_map_type;
-typedef nav_ident_map_type::iterator nav_ident_map_iterator;
-
 
 class FGNavList {
 
     nav_list_type carrierlist;
     nav_map_type navaids;
-    nav_map_type navaids_by_tile;
-    nav_ident_map_type ident_navaids;
 
     // Given a point and a list of stations, return the closest one to
     // the specified point.
-    FGNavRecord *findNavFromList( const SGVec3d &aircraft,
+    FGNavRecord *findNavFromList( const SGGeod &aircraft,
                                   const nav_list_type &stations );
 
 public:
@@ -82,27 +72,17 @@ public:
 
     /** Query the database for the specified station.  It is assumed
       * that there will be multiple stations with matching frequencies
-      * so a position must be specified.  Lon and lat are in radians,
-      * elev is in meters.
+      * so a position must be specified.
       */
-    FGNavRecord *findByFreq( double freq, double lon, double lat, double elev );
-
-    // locate closest item in the DB matching the requested ident
-    FGNavRecord *findByIdent( const char* ident, const double lon, const double lat );
+    FGNavRecord *findByFreq( double freq, const SGGeod& position);
 
     // Given an Ident and optional freqency, return the first matching
     // station.
-    FGNavRecord *findByIdentAndFreq( const char* ident,
+    FGNavRecord *findByIdentAndFreq( const std::string& ident,
                                      const double freq = 0.0 );
-
-    // returns the closest entry to the give lon/lat/elev
-    FGNavRecord *findClosest( double lon_rad, double lat_rad, double elev_m, 
-      FGPositioned::Type type = FG_NAV_ANY );
 
     // given a frequency returns the first matching entry
     FGNavRecord *findStationByFreq( double frequency );
-
-    inline const nav_map_type& get_navaids() const { return navaids; }
 };
 
 
@@ -112,10 +92,9 @@ public:
 
 
 typedef SGSharedPtr<FGTACANRecord> tacan_rec_ptr;
-typedef vector < tacan_rec_ptr > tacan_list_type;
-typedef map < int, tacan_list_type > tacan_map_type;
-typedef map < string, tacan_list_type > tacan_ident_map_type;
-
+typedef std::vector < tacan_rec_ptr > tacan_list_type;
+typedef std::map < int, tacan_list_type > tacan_map_type;
+typedef std::map < std::string, tacan_list_type > tacan_ident_map_type;
 
 class FGTACANList {
 
@@ -135,7 +114,7 @@ public:
     bool add( FGTACANRecord *r );
 
     // Given a TACAN Channel, return the appropriate frequency.
-    FGTACANRecord *findByChannel( const string& channel );
+    FGTACANRecord *findByChannel( const std::string& channel );
 
 
 };

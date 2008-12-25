@@ -165,14 +165,14 @@ DME::search (double frequency_mhz, double longitude_rad,
     _time_before_search_sec = 1.0;
 
     // try the ILS list first
-    FGNavRecord *dme
-        = globals->get_dmelist()->findByFreq( frequency_mhz, longitude_rad,
-                                              latitude_rad, altitude_m);
+    
+    FGNavRecord *dme = globals->get_dmelist()->findByFreq( frequency_mhz,
+      SGGeod::fromRadM(longitude_rad, latitude_rad, altitude_m));
 
     _transmitter_valid = (dme != NULL);
 
     if ( _transmitter_valid ) {
-        _transmitter = dme->get_cart();
+        _transmitter = dme->cart();
         _transmitter_elevation_ft = dme->get_elev_ft();
         _transmitter_range_nm = dme->get_range();
         _transmitter_bias = dme->get_multiuse();

@@ -71,6 +71,9 @@ public:
     bool   isSeaport()    const;
     bool   isHeliport()   const;
 
+    virtual const std::string& name() const
+    { return _name; }
+
     const SGGeod& getTowerLocation() const { return _tower_location; }
 
     void setMetar(bool value) { _has_metar = value; }

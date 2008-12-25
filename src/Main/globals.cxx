@@ -104,7 +104,6 @@ FGGlobals::FGGlobals() :
     loclist( NULL ),
     gslist( NULL ),
     dmelist( NULL ),
-    mkrlist( NULL ),
     tacanlist( NULL ),
     carrierlist( NULL ),
     channellist( NULL ),
@@ -155,7 +154,6 @@ FGGlobals::~FGGlobals()
     delete loclist;
     delete gslist;
     delete dmelist;
-    delete mkrlist;
     delete tacanlist;
     delete carrierlist;
     delete channellist;

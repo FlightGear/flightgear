@@ -26,6 +26,8 @@
 #include <set>
 #include <algorithm>
 
+#include <iostream>
+
 #include <simgear/math/sg_geodesy.hxx>
 
 #include "positioned.hxx"
@@ -199,20 +201,19 @@ class RangePredictate
 {
 public:
   RangePredictate(const SGGeod& aOrigin, double aRange) :
-    mOrigin(aOrigin),
-    mRange(aRange)
+    mOrigin(SGVec3d::fromGeod(aOrigin)),
+    mRangeSqr(aRange * aRange)
   { ; }
   
   bool operator()(const FGPositionedRef& aPos)
   {
-    double d, az1, az2;
-    SGGeodesy::inverse(aPos->geod(), mOrigin, az1, az2, d);
-    return (d > mRange);
+    double dSqr = distSqr(aPos->cart(), mOrigin);
+    return (dSqr > mRangeSqr);
   }
   
 private:
-  SGGeod mOrigin;
-  double mRange;
+  SGVec3d mOrigin;
+  double mRangeSqr;
 };
 
 static void
@@ -228,19 +229,18 @@ class DistanceOrdering
 {
 public:
   DistanceOrdering(const SGGeod& aPos) :
-    mPos(aPos)
+    mPos(SGVec3d::fromGeod(aPos))
   { }
   
   bool operator()(const FGPositionedRef& a, const FGPositionedRef& b) const
   {
-    double dA, dB, az1, az2;
-    SGGeodesy::inverse(mPos, a->geod(), az1, az2, dA);
-    SGGeodesy::inverse(mPos, b->geod(), az1, az2, dB);
+    double dA = distSqr(a->cart(), mPos),
+      dB = distSqr(b->cart(), mPos);
     return dA < dB;
   }
 
 private:
-  SGGeod mPos;
+  SGVec3d mPos;
 };
 
 static void
@@ -273,17 +273,17 @@ namedFindClosest(const std::string& aIdent, const SGGeod& aOrigin, FGPositioned:
   double minDist = HUGE_VAL;
   FGPositionedRef result;
   NamedPositionedIndex::const_iterator it = range.first;
-    
+  SGVec3d cartOrigin(SGVec3d::fromGeod(aOrigin));
+  
   for (; it != range.second; ++it) {
     if (aFilter && !aFilter->pass(range.first->second)) {
       continue;
     }
     
   // find distance
-    double d, az1, az2;
-    SGGeodesy::inverse(aOrigin, it->second->geod(), az1, az2, d);
-    if (d < minDist) {
-      minDist = d;
+    double d2 = distSqr(cartOrigin, it->second->cart());
+    if (d2 < minDist) {
+      minDist = d2;
       result = it->second;
     }
   }
@@ -328,11 +328,11 @@ spatialGetClosest(const SGGeod& aPos, unsigned int aN, double aCutoffNm, FGPosit
     result.insert(result.end(), hits.begin(), hits.end()); // append
   } // of outer loop
   
+  sortByDistance(aPos, result);
   if (result.size() > aN) {
     result.resize(aN); // truncate at requested number of matches
   }
   
-  sortByDistance(aPos, result);
   return result;
 }
 
@@ -353,6 +353,7 @@ FGPositioned::FGPositioned(Type ty, const std::string& aIdent, const SGGeod& aPo
 
 FGPositioned::~FGPositioned()
 {
+  //std::cout << "destroying:" << mIdent << "/" << nameForType(mType) << std::endl;
   removeFromIndices(this);
 }
 
@@ -362,12 +363,24 @@ FGPositioned::bucket() const
   return SGBucket(mPosition);
 }
 
+SGVec3d
+FGPositioned::cart() const
+{
+  return SGVec3d::fromGeod(mPosition);
+}
+
 const char* FGPositioned::nameForType(Type aTy)
 {
  switch (aTy) {
+ case RUNWAY: return "runway";
+ case TAXIWAY: return "taxiway";
+ case PARK_STAND: return "parking stand";
  case FIX: return "fix";
  case VOR: return "VOR";
  case NDB: return "NDB";
+ case ILS: return "ILS";
+ case LOC: return "localiser";
+ case GS: return "glideslope";
  case OM: return "outer-marker";
  case MM: return "middle-marker";
  case IM: return "inner-marker";
@@ -375,6 +388,8 @@ const char* FGPositioned::nameForType(Type aTy)
  case HELIPORT: return "heliport";
  case SEAPORT: return "seaport";
  case WAYPOINT: return "waypoint";
+ case DME: return "dme";
+ case TACAN: return "tacan";
  default:
   return "unknown";
  }

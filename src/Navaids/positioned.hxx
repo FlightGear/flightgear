@@ -82,6 +82,11 @@ public:
   const SGGeod& geod() const
   { return mPosition; }
 
+  /**
+   * Compute the cartesian position associated with this object
+   */
+  SGVec3d cart() const;
+
   SGBucket bucket() const;
   
   double latitude() const

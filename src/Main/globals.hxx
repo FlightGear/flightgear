@@ -183,7 +183,6 @@ private:
     FGNavList *loclist;
     FGNavList *gslist;
     FGNavList *dmelist;
-    FGNavList *mkrlist;
     FGNavList *tacanlist;
     FGNavList *carrierlist;
     FGTACANList *channellist;
@@ -331,8 +330,6 @@ public:
     inline void set_tacanlist( FGNavList *n ) { tacanlist = n; }
     inline FGNavList *get_carrierlist() const { return carrierlist; }
     inline void set_carrierlist( FGNavList *n ) { carrierlist = n; }
-    inline FGNavList *get_mkrlist() const { return mkrlist; }
-    inline void set_mkrlist( FGNavList *n ) { mkrlist = n; }
     inline FGTACANList *get_channellist() const { return channellist; }
     inline void set_channellist( FGTACANList *c ) { channellist = c; }
 

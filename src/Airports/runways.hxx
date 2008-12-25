@@ -44,6 +44,10 @@ class FGRunway : public FGPositioned
   double _width;
   double _displ_thresh;
   double _stopway;
+  
+  /** surface, as defined by:
+   * http://www.x-plane.org/home/robinp/Apt810.htm#RwySfcCodes
+   */
   int _surface_code;
   
 public:

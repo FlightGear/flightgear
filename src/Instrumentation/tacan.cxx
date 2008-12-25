@@ -293,7 +293,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
 
     if ( freq_valid ) {
 
-        string str1( mobile_tacan->get_name() );
+        string str1( mobile_tacan->name() );
 
         SGPropertyNode * branch = fgGetNode("ai/models", true);
         vector<SGPropertyNode_ptr> carrier = branch->getChildren("carrier");
@@ -315,7 +315,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
                     _mobile_elevation_ft = mobile_tacan->get_elev_ft();
                     _mobile_range_nm = mobile_tacan->get_range();
                     _mobile_bias = mobile_tacan->get_multiuse();
-                    _mobile_name = mobile_tacan->get_name();
+                    _mobile_name = mobile_tacan->name();
                     _mobile_ident = mobile_tacan->get_trans_ident();
                     _mobile_valid = true;
                     SG_LOG( SG_INSTR, SG_DEBUG, " carrier transmitter valid " << _mobile_valid );
@@ -353,7 +353,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
                     _mobile_elevation_ft = tanker[i]->getDoubleValue("position/altitude-ft");
                     _mobile_range_nm = mobile_tacan->get_range();
                     _mobile_bias = mobile_tacan->get_multiuse();
-                    _mobile_name = mobile_tacan->get_name();
+                    _mobile_name = mobile_tacan->name();
                     _mobile_ident = mobile_tacan->get_trans_ident();
                     _mobile_valid = true;
                     SG_LOG( SG_INSTR, SG_DEBUG, " tanker transmitter valid " << _mobile_valid );
@@ -392,7 +392,7 @@ TACAN::search (double frequency_mhz, double longitude_rad,
                     _mobile_elevation_ft = mp_tanker[i]->getDoubleValue("position/altitude-ft");
                     _mobile_range_nm = mobile_tacan->get_range();
                     _mobile_bias = mobile_tacan->get_multiuse();
-                    _mobile_name = mobile_tacan->get_name();
+                    _mobile_name = mobile_tacan->name();
                     _mobile_ident = mobile_tacan->get_trans_ident();
                     _mobile_valid = true;
 
@@ -415,19 +415,18 @@ TACAN::search (double frequency_mhz, double longitude_rad,
     }
 
     // try the TACAN/VORTAC list next
-    FGNavRecord *tacan
-        = globals->get_tacanlist()->findByFreq( frequency_mhz, longitude_rad,
-                                                latitude_rad, altitude_m);
+    FGNavRecord *tacan = globals->get_tacanlist()->findByFreq( frequency_mhz,
+      SGGeod::fromRadM(longitude_rad, latitude_rad, altitude_m));
 
     _transmitter_valid = (tacan != NULL);
 
     if ( _transmitter_valid ) {
         SG_LOG( SG_INSTR, SG_DEBUG, "transmitter valid " << _transmitter_valid );
 
-        _transmitter_pos = tacan->get_pos();
+        _transmitter_pos = tacan->geod();
         _transmitter_range_nm = tacan->get_range();
         _transmitter_bias = tacan->get_multiuse();
-        _transmitter_name = tacan->get_name();
+        _transmitter_name = tacan->name();
         _name_node->setStringValue(_transmitter_name.c_str());
         _transmitter_ident = tacan->get_trans_ident();
         _ident_node->setStringValue(_transmitter_ident.c_str());

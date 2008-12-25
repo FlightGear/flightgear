@@ -217,16 +217,15 @@ ADF::search (double frequency_khz, double longitude_rad,
     _time_before_search_sec = 1.0;
 
                                 // try the ILS list first
-    FGNavRecord *nav =
-        globals->get_navlist()->findByFreq(frequency_khz, longitude_rad,
-                                           latitude_rad, altitude_m);
+    FGNavRecord *nav = globals->get_navlist()->findByFreq(frequency_khz,
+      SGGeod::fromRadM(longitude_rad, latitude_rad, altitude_m));
 
     _transmitter_valid = (nav != NULL);
     if ( _transmitter_valid ) {
         ident = nav->get_trans_ident();
         if ( ident != _last_ident ) {
-            _transmitter_pos = nav->get_pos();
-            _transmitter_cart = nav->get_cart();
+            _transmitter_pos = nav->geod();
+            _transmitter_cart = nav->cart();
             _transmitter_range_nm = nav->get_range();
         }
     }

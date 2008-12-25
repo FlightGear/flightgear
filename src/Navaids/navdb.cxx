@@ -31,10 +31,12 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sgstream.hxx>
 
 #include "navrecord.hxx"
+#include "navlist.hxx"
 #include "navdb.hxx"
 #include "Main/globals.hxx"
 
@@ -43,7 +45,7 @@ using std::string;
 
 // load and initialize the navigational databases
 bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
-                  FGNavList *dmelist, FGNavList *mkrlist, 
+                  FGNavList *dmelist, 
                   FGNavList *tacanlist, FGNavList *carrierlist,
                   FGTACANList *channellist)
 {
@@ -97,14 +99,14 @@ bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
       case FGPositioned::OM:
       case FGPositioned::MM:
       case FGPositioned::IM:
-        mkrlist->add(r);
+        // no need to add this to a list, never searched by frequency
         break;
       
       case FGPositioned::DME:
       {
         dmelist->add(r);
-        string::size_type loc1= r->get_name().find( "TACAN", 0 );
-        string::size_type loc2 = r->get_name().find( "VORTAC", 0 );
+        string::size_type loc1= r->name().find( "TACAN", 0 );
+        string::size_type loc2 = r->name().find( "VORTAC", 0 );
                        
         if( loc1 != string::npos || loc2 != string::npos) {
           tacanlist->add(r);

@@ -29,6 +29,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/math/sg_random.h>
+#include <simgear/misc/sg_path.hxx>
 
 #include <Aircraft/aircraft.hxx>
 #include <Navaids/navlist.hxx>
@@ -210,20 +211,20 @@ FGMarkerBeacon::update(double dt)
 
 
 static bool check_beacon_range( const SGGeod& pos,
-                                FGNavRecord *b )
+                                FGPositioned *b )
 {
-    double d = distSqr(b->get_cart(), SGVec3d::fromGeod(pos));
+    double d = distSqr(b->cart(), SGVec3d::fromGeod(pos));
     // cout << "  distance = " << d << " ("
     //      << FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
     //         * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
     //      << ")" << endl;
 
-    // cout << "  range = " << sqrt(d) << endl;
+    //std::cout << "  range = " << sqrt(d) << std::endl;
 
     // cout << "elev = " << elev * SG_METER_TO_FEET
     //      << " current->get_elev() = " << current->get_elev() << endl;
     double elev_ft = pos.getElevationFt();
-    double delev = elev_ft - b->get_elev_ft();
+    double delev = elev_ft - b->elevation();
 
     // max range is the area under r = 2.4 * alt or r^2 = 4000^2 - alt^2
     // whichever is smaller.  The intersection point is 1538 ...
@@ -236,7 +237,7 @@ static bool check_beacon_range( const SGGeod& pos,
         maxrange2 = 0.0;
     }
     maxrange2 *= SG_FEET_TO_METER * SG_FEET_TO_METER; // convert to meter^2
-    // cout << "delev = " << delev << " maxrange = " << maxrange << endl;
+    //std::cout << "delev = " << delev << " maxrange = " << sqrt(maxrange2) << std::endl;
 
     // match up to twice the published range so we can model
     // reduced signal strength
@@ -247,10 +248,18 @@ static bool check_beacon_range( const SGGeod& pos,
     }
 }
 
+class BeaconFilter : public FGPositioned::Filter
+{
+public:
+  virtual bool pass(FGPositioned* aPos) const
+  {
+    return (aPos->type() >= FGPositioned::OM) && (aPos->type() <= FGPositioned::IM);
+  }
+};
+
 // Update current nav/adf radio stations based on current postition
 void FGMarkerBeacon::search()
 {
-
     // reset search time
     _time_before_search_sec = 1.0;
 
@@ -264,14 +273,10 @@ void FGMarkerBeacon::search()
     // Beacons.
     ////////////////////////////////////////////////////////////////////////
 
-    // get closest marker beacon
-    FGNavRecord *b
-      = globals->get_mkrlist()->findClosest( pos.getLongitudeRad(),
-                                             pos.getLatitudeRad(),
-                                             pos.getElevationM() );
-
-    // cout << "marker beacon = " << b << " (" << b->get_type() << ")" << endl;
-
+    // get closest marker beacon - within a 1nm cutoff
+    BeaconFilter filter;
+    FGPositionedRef b = FGPositioned::findClosest(pos, 1.0, &filter);
+     
     fgMkrBeacType beacon_type = NOBEACON;
     bool inrange = false;
     if ( b != NULL ) {
@@ -282,8 +287,7 @@ void FGMarkerBeacon::search()
         } else if ( b->type() == FGPositioned::IM ) {
             beacon_type = INNER;
         }
-        inrange = check_beacon_range( pos, b );
-        // cout << "  inrange = " << inrange << endl;
+        inrange = check_beacon_range( pos, b.ptr() );
     }
 
     outer_marker = middle_marker = inner_marker = false;

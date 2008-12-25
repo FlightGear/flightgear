@@ -102,6 +102,7 @@
 #include <Navaids/navdb.hxx>
 #include <Navaids/navlist.hxx>
 #include <Navaids/fix.hxx>
+#include <Navaids/fixlist.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
@@ -974,7 +975,6 @@ fgInitNav ()
     FGNavList *loclist = new FGNavList;
     FGNavList *gslist = new FGNavList;
     FGNavList *dmelist = new FGNavList;
-    FGNavList *mkrlist = new FGNavList;
     FGNavList *tacanlist = new FGNavList;
     FGNavList *carrierlist = new FGNavList;
     FGTACANList *channellist = new FGTACANList;
@@ -983,12 +983,11 @@ fgInitNav ()
     globals->set_loclist( loclist );
     globals->set_gslist( gslist );
     globals->set_dmelist( dmelist );
-    globals->set_mkrlist( mkrlist );
     globals->set_tacanlist( tacanlist );
     globals->set_carrierlist( carrierlist );
     globals->set_channellist( channellist );
 
-    if ( !fgNavDBInit(navlist, loclist, gslist, dmelist, mkrlist, tacanlist, carrierlist, channellist) ) {
+    if ( !fgNavDBInit(navlist, loclist, gslist, dmelist, tacanlist, carrierlist, channellist) ) {
         SG_LOG( SG_GENERAL, SG_ALERT,
                 "Problems loading one or more navigational database" );
     }

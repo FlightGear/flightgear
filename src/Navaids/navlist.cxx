@@ -26,20 +26,12 @@
 #endif
 
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/sgstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/sg_inlines.h>
 
 #include "navlist.hxx"
 
-
-// Return true if the nav record matches the type
-static bool isTypeMatch(const FGNavRecord* n, fg_nav_types type)
-{
-  if (type == FG_NAV_ANY) return true;
-  return type == n->type();
-}
-
-
+using std::string;
 
 // FGNavList ------------------------------------------------------------------
 
@@ -50,7 +42,6 @@ FGNavList::FGNavList( void )
 
 FGNavList::~FGNavList( void )
 {
-    navaids_by_tile.erase( navaids_by_tile.begin(), navaids_by_tile.end() );
     nav_list_type navlist = navaids.begin()->second;
     navaids.erase( navaids.begin(), navaids.end() );
 }
@@ -63,133 +54,55 @@ bool FGNavList::init()
     // since we're using an SGSharedPointer
     nav_list_type navlist = navaids.begin()->second;
     navaids.erase( navaids.begin(), navaids.end() );
-    navaids_by_tile.erase( navaids_by_tile.begin(), navaids_by_tile.end() );
-    ident_navaids.erase( ident_navaids.begin(), ident_navaids.end() );
-
     return true;
 }
-
-
-// real add a marker beacon
-static void real_add( nav_map_type &navmap, const int master_index,
-                      FGNavRecord *n )
-{
-    navmap[master_index].push_back( n );
-}
-
-
-// front end for add a marker beacon
-static void tile_add( nav_map_type &navmap, FGNavRecord *n )
-{
-    double diff = 0;
-
-    double lon = n->get_lon();
-    double lat = n->get_lat();
-
-    int lonidx = (int)lon;
-    diff = lon - (double)lonidx;
-    if ( (lon < 0.0) && (fabs(diff) > SG_EPSILON) ) {
-        lonidx -= 1;
-    }
-    double lonfrac = lon - (double)lonidx;
-    lonidx += 180;
-
-    int latidx = (int)lat;
-    diff = lat - (double)latidx;
-    if ( (lat < 0.0) && (fabs(diff) > SG_EPSILON) ) {
-        latidx -= 1;
-    }
-    double latfrac = lat - (double)latidx;
-    latidx += 90;
-
-    int master_index = lonidx * 1000 + latidx;
-    // cout << "lonidx = " << lonidx << " latidx = " << latidx << "  ";
-    // cout << "Master index = " << master_index << endl;
-
-    // add to the actual bucket
-    real_add( navmap, master_index, n );
-
-    // if we are close to the edge, add to adjacent buckets so we only
-    // have to search one bucket at run time
-
-    // there are 8 cases since there are 8 adjacent tiles
-
-    if ( lonfrac < 0.2 ) {
-        real_add( navmap, master_index - 1000, n );
-        if ( latfrac < 0.2 ) {
-            real_add( navmap, master_index - 1000 - 1, n );
-        } else if ( latfrac > 0.8 ) {
-            real_add( navmap, master_index - 1000 + 1, n );
-        }
-    } else if ( lonfrac > 0.8 ) {
-        real_add( navmap, master_index + 1000, n );
-        if ( latfrac < 0.2 ) {
-            real_add( navmap, master_index + 1000 - 1, n );
-        } else if ( latfrac > 0.8 ) {
-            real_add( navmap, master_index + 1000 + 1, n );
-        }
-    } else if ( latfrac < 0.2 ) {
-        real_add( navmap, master_index - 1, n );
-    } else if ( latfrac > 0.8 ) {
-        real_add( navmap, master_index + 1, n );
-    }
-}
-
 
 // add an entry to the lists
 bool FGNavList::add( FGNavRecord *n )
 {
     navaids[n->get_freq()].push_back(n);
-    ident_navaids[n->get_ident()].push_back(n);
-    tile_add( navaids_by_tile, n );
     return true;
 }
 
-FGNavRecord *FGNavList::findByFreq( double freq, double lon, double lat, double elev )
+FGNavRecord *FGNavList::findByFreq( double freq, const SGGeod& position)
 {
     const nav_list_type& stations = navaids[(int)(freq*100.0 + 0.5)];
-
-    SGGeod geod = SGGeod::fromRadM(lon, lat, elev);
-    SGVec3d aircraft = SGVec3d::fromGeod(geod);
     SG_LOG( SG_INSTR, SG_DEBUG, "findbyFreq " << freq << " size " << stations.size()  );
-
-    return findNavFromList( aircraft, stations );
+    return findNavFromList( position, stations );
 }
 
-
-FGNavRecord *FGNavList::findByIdent( const char* ident,
-                               const double lon, const double lat )
+class VORNDBFilter : public FGPositioned::Filter
 {
-    const nav_list_type& stations = ident_navaids[ident];
-    SGGeod geod = SGGeod::fromRad(lon, lat);
-    SGVec3d aircraft = SGVec3d::fromGeod(geod);
-    return findNavFromList( aircraft, stations );
-}
-
-
-
+public:
+  virtual bool pass(FGPositioned* aPos) const
+  {
+    return (aPos->type() == FGPositioned::VOR) || (aPos->type() == FGPositioned::NDB);
+  }
+};
 
 // Given an Ident and optional freqency, return the first matching
 // station.
-FGNavRecord *FGNavList::findByIdentAndFreq( const char* ident, const double freq )
+FGNavRecord *FGNavList::findByIdentAndFreq(const string& ident, const double freq )
 {
-    nav_list_type stations = ident_navaids[ident];
-    SG_LOG( SG_INSTR, SG_DEBUG, "findByIdent " << ident<< " size " << stations.size()  );
-    if ( freq > 0.0 ) {
-        // sometimes there can be duplicated idents.  If a freq is
-        // specified, use it to refine the search.
-        int f = (int)(freq*100.0 + 0.5);
-        nav_list_const_iterator it, end = stations.end();
-        for ( it = stations.begin(); it != end; ++it ) {
-            if ( f == (*it)->get_freq() ) {
-                return (*it);
-            }
-        }
-    } else if (!stations.empty()) {
-        return stations[0];
+  FGPositionedRef cur;
+  VORNDBFilter filter;
+  cur = FGPositioned::findNextWithPartialId(cur, ident, &filter);
+  
+  if (freq <= 0.0) {
+    return static_cast<FGNavRecord*>(cur.ptr()); // might be null
+  }
+  
+  int f = (int)(freq*100.0 + 0.5);
+  while (cur) {
+    FGNavRecord* nav = static_cast<FGNavRecord*>(cur.ptr());
+    if (nav->get_freq() == f) {
+      return nav;
     }
+    
+    cur = FGPositioned::findNextWithPartialId(cur, ident, &filter);
+  }
 
-    return NULL;
+  return NULL;
 }
 
 // LOC, ILS, GS, and DME antenna's could potentially be
@@ -203,7 +116,7 @@ FGNavRecord *FGNavList::findByIdentAndFreq( const char* ident, const double freq
 // directional atennas and only when there is a chance it is
 // the closest station.)
 
-static bool penaltyForNav(FGNavRecord* aNav, const SGVec3d &aPos)
+static bool penaltyForNav(FGNavRecord* aNav, const SGGeod &aGeod)
 {
   switch (aNav->type()) {
   case FGPositioned::ILS:
@@ -224,34 +137,31 @@ static bool penaltyForNav(FGNavRecord* aNav, const SGVec3d &aPos)
     hdg_deg = aNav->get_multiuse();
   }
   
-  double az1 = 0.0, az2 = 0.0, s = 0.0;
-  SGGeod geod = SGGeod::fromCart(aPos);
-  geo_inverse_wgs_84( geod, aNav->geod(), &az1, &az2, &s);
+  double az1, az2, s;
+  SGGeodesy::inverse(aGeod, aNav->geod(), az1, az2, s);
   az1 = az1 - hdg_deg;
-  
-  if ( az1 >  180.0) az1 -= 360.0;
-  if ( az1 < -180.0) az1 += 360.0;
-  
+  SG_NORMALIZE_RANGE(az1, -180.0, 180.0);
   return fabs(az1) > 90.0;
 }
 
 // Given a point and a list of stations, return the closest one to the
 // specified point.
-FGNavRecord *FGNavList::findNavFromList( const SGVec3d &aircraft,
+FGNavRecord *FGNavList::findNavFromList( const SGGeod &aircraft,
                                          const nav_list_type &stations )
 {
     FGNavRecord *nav = NULL;
     double d2;                  // in meters squared
     double min_dist
         = FG_NAV_MAX_RANGE*SG_NM_TO_METER*FG_NAV_MAX_RANGE*SG_NM_TO_METER;
-
+    SGVec3d aircraftCart = SGVec3d::fromGeod(aircraft);
+    
     nav_list_const_iterator it;
     nav_list_const_iterator end = stations.end();
     // find the closest station within a sensible range (FG_NAV_MAX_RANGE)
     for ( it = stations.begin(); it != end; ++it ) {
         FGNavRecord *station = *it;
         // cout << "testing " << current->get_ident() << endl;
-        d2 = distSqr(station->get_cart(), aircraft);
+        d2 = distSqr(station->cart(), aircraftCart);
         if ( d2 < min_dist && penaltyForNav(station, aircraft))
         {
           double dist = sqrt(d2);
@@ -265,69 +175,6 @@ FGNavRecord *FGNavList::findNavFromList( const SGVec3d &aircraft,
     }
 
     return nav;
-}
-
-
-// returns the closest entry to the give lon/lat/elev
-FGNavRecord *FGNavList::findClosest( double lon_rad, double lat_rad,
-                                     double elev_m, fg_nav_types type)
-{
-    FGNavRecord *result = NULL;
-    double diff;
-
-    double lon_deg = lon_rad * SG_RADIANS_TO_DEGREES;
-    double lat_deg = lat_rad * SG_RADIANS_TO_DEGREES;
-    int lonidx = (int)lon_deg;
-    diff = lon_deg - (double)lonidx;
-    if ( (lon_deg < 0.0) && (fabs(diff) > SG_EPSILON) ) {
-        lonidx -= 1;
-    }
-    lonidx += 180;
-
-    int latidx = (int)lat_deg;
-    diff = lat_deg - (double)latidx;
-    if ( (lat_deg < 0.0) && (fabs(diff) > SG_EPSILON) ) {
-        latidx -= 1;
-    }
-    latidx += 90;
-
-    int master_index = lonidx * 1000 + latidx;
-
-    const nav_list_type& navs = navaids_by_tile[ master_index ];
-    // cout << "Master index = " << master_index << endl;
-    // cout << "beacon search length = " << beacons.size() << endl;
-
-    nav_list_const_iterator current = navs.begin();
-    nav_list_const_iterator last = navs.end();
-
-    SGGeod geod = SGGeod::fromRadM(lon_rad, lat_rad, elev_m);
-    SGVec3d aircraft = SGVec3d::fromGeod(geod);
-
-    double min_dist = 999999999.0;
-
-    for ( ; current != last ; ++current ) {
-        if(isTypeMatch(*current, type)) {
-            // cout << "  testing " << (*current)->get_ident() << endl;
-
-            double d = distSqr((*current)->get_cart(), aircraft);
-            // cout << "  distance = " << d << " ("
-            //      << FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
-            //         * FG_ILS_DEFAULT_RANGE * SG_NM_TO_METER
-            //      << ")" << endl;
-
-            // cout << "  range = " << sqrt(d) << endl;
-
-            if ( d < min_dist ) {
-                min_dist = d;
-                result = (*current);
-            }
-        }
-    }
-
-    // cout << "lon = " << lon << " lat = " << lat
-    //      << "  closest beacon = " << sqrt( min_dist ) << endl;
-
-    return result;
 }
 
 // Given a frequency, return the first matching station.

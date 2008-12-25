@@ -92,7 +92,7 @@ void KLN89VorPage::Update(double dt) {
 			//// TODO - will almost certainly have to process freq below for FG
 			_kln89->DrawFreq(np->get_freq(), 2, 9, 3);
 			// TODO - trim VOR-DME from the name, convert to uppercase, abbreviate, etc
-			_kln89->DrawText(np->get_name(), 2, 0, 2);
+			_kln89->DrawText(np->name(), 2, 0, 2);
 			//cout << np->lat << "... ";
 			_kln89->DrawLatitude(np->get_lat(), 2, 3, 1);
 			_kln89->DrawLongitude(np->get_lon(), 2, 3, 0);

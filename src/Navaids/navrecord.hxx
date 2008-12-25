@@ -53,9 +53,8 @@ class FGNavRecord : public FGPositioned
                                 // (degrees) or localizer heading
                                 // (degrees) or dme bias (nm)
 
-    std::string name;                // verbose name in nav database
-    std::string apt_id;              // corresponding airport id
-
+    std::string _name;                // verbose name in nav database
+    FGRunway* runway;
 
     bool serviceable;		// for failure modeling
     std::string trans_ident;         // for failure modeling
@@ -78,23 +77,18 @@ public:
     inline double get_lon() const { return longitude(); } // degrees
     inline double get_lat() const { return latitude(); } // degrees
     inline double get_elev_ft() const { return elevation(); }
-
-    const SGGeod& get_pos() const { return geod(); }
-    SGVec3d get_cart() const;
-    
-    Type get_fg_type() const { return type(); }
-    
+        
     inline int get_freq() const { return freq; }
     inline int get_range() const { return range; }
     inline double get_multiuse() const { return multiuse; }
     inline void set_multiuse( double m ) { multiuse = m; }
     inline const char *get_ident() const { return ident().c_str(); }
-    inline const std::string& get_name() const { return name; }
-    inline const std::string& get_apt_id() const { return apt_id; }
+
     inline bool get_serviceable() const { return serviceable; }
     inline const char *get_trans_ident() const { return trans_ident.c_str(); }
 
-  
+  virtual const std::string& name() const
+  { return _name; }
 };
 
 class FGTACANRecord : public SGReferenced {

@@ -90,7 +90,7 @@ void KLN89NDBPage::Update(double dt) {
 		}
 		if(_subPage == 0) {
 			// TODO - trim VOR-DME from the name, convert to uppercase, abbreviate, etc
-			_kln89->DrawText(np->get_name(), 2, 0, 2);
+			_kln89->DrawText(np->name(), 2, 0, 2);
 			_kln89->DrawLatitude(np->get_lat(), 2, 3, 1);
 			_kln89->DrawLongitude(np->get_lon(), 2, 3, 0);
 		} else {

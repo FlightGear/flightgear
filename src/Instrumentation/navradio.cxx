@@ -31,6 +31,7 @@
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/math/vector.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/exception.hxx>
 
@@ -764,10 +765,8 @@ void FGNavRadio::search()
     _time_before_search_sec = 1.0;
 
     // cache values locally for speed
-    double lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
-
+    SGGeod pos = SGGeod::fromDegFt(lon_node->getDoubleValue(),
+      lat_node->getDoubleValue(), alt_node->getDoubleValue());
     FGNavRecord *nav = NULL;
     FGNavRecord *loc = NULL;
     FGNavRecord *dme = NULL;
@@ -778,11 +777,11 @@ void FGNavRadio::search()
     ////////////////////////////////////////////////////////////////////////
 
     double freq = freq_node->getDoubleValue();
-    nav = globals->get_navlist()->findByFreq(freq, lon, lat, elev);
-    dme = globals->get_dmelist()->findByFreq(freq, lon, lat, elev);
+    nav = globals->get_navlist()->findByFreq(freq, pos);
+    dme = globals->get_dmelist()->findByFreq(freq, pos);
     if ( nav == NULL ) {
-        loc = globals->get_loclist()->findByFreq(freq, lon, lat, elev);
-        gs = globals->get_gslist()->findByFreq(freq, lon, lat, elev);
+        loc = globals->get_loclist()->findByFreq(freq, pos);
+        gs = globals->get_gslist()->findByFreq(freq, pos);
     }
 
     string nav_id = "";
@@ -799,7 +798,7 @@ void FGNavRadio::search()
 	    while ( target_radial > 360.0 ) { target_radial -= 360.0; }
 	    loc_lon = loc->get_lon();
 	    loc_lat = loc->get_lat();
-	    nav_xyz = loc->get_cart();
+	    nav_xyz = loc->cart();
 	    last_nav_id = nav_id;
 	    last_nav_vor = false;
 	    loc_node->setBoolValue( true );
@@ -811,7 +810,7 @@ void FGNavRadio::search()
                 nav_elev = gs->get_elev_ft();
                 int tmp = (int)(gs->get_multiuse() / 1000.0);
                 target_gs = (double)tmp / 100.0;
-                gs_xyz = gs->get_cart();
+                gs_xyz = gs->cart();
 
                 // derive GS baseline (perpendicular to the runay
                 // along the ground)
@@ -884,10 +883,10 @@ void FGNavRadio::search()
 	    nav_elev = nav->get_elev_ft();
 	    twist = nav->get_multiuse();
 	    range = nav->get_range();
-	    effective_range = adjustNavRange(nav_elev, elev, range);
+	    effective_range = adjustNavRange(nav_elev, pos.getElevationM(), range);
 	    target_gs = 0.0;
 	    target_radial = sel_radial_node->getDoubleValue();
-	    nav_xyz = nav->get_cart();
+	    nav_xyz = nav->cart();
 
 	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
 		globals->get_soundmgr()->remove( nav_fx_name );

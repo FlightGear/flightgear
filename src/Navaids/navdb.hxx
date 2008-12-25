@@ -26,14 +26,13 @@
 
 
 #include <simgear/compiler.h>
-#include <simgear/misc/sg_path.hxx>
 
-#include "navlist.hxx"
-#include "fixlist.hxx"
+class FGNavList;
+class FGTACANList;
 
 // load and initialize the navigational databases
 bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
-                  FGNavList *dmelist, FGNavList *mkrbeacons,
+                  FGNavList *dmelist,
                   FGNavList *tacanlist, FGNavList *carrierlist,
                   FGTACANList *channellist );
 

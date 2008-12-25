@@ -494,10 +494,9 @@ void FGKR_87::update( double dt_sec ) {
 
 // Update current nav/adf radio stations based on current postition
 void FGKR_87::search() {
-    double acft_lon = lon_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double acft_lat = lat_node->getDoubleValue() * SGD_DEGREES_TO_RADIANS;
-    double acft_elev = alt_node->getDoubleValue() * SG_FEET_TO_METER;
-
+  SGGeod pos = SGGeod::fromDegFt(lon_node->getDoubleValue(), 
+    lat_node->getDoubleValue(), alt_node->getDoubleValue());
+  
 				// FIXME: the panel should handle this
     static string last_ident = "";
 
@@ -508,9 +507,8 @@ void FGKR_87::search() {
     // ADF.
     ////////////////////////////////////////////////////////////////////////
 
-    FGNavRecord *adf
-        = globals->get_navlist()->findByFreq( freq, acft_lon, acft_lat,
-                                              acft_elev );
+  
+    FGNavRecord *adf = globals->get_navlist()->findByFreq( freq, pos);
     if ( adf != NULL ) {
 	char sfreq[128];
 	snprintf( sfreq, 10, "%d", freq );
@@ -526,8 +524,8 @@ void FGKR_87::search() {
 	    stn_lat = adf->get_lat();
 	    stn_elev = adf->get_elev_ft();
 	    range = adf->get_range();
-	    effective_range = kludgeRange(stn_elev, acft_elev, range);
-	    xyz = adf->get_cart();
+	    effective_range = kludgeRange(stn_elev, pos.getElevationM(), range);
+	    xyz = adf->cart();
 
 	    if ( globals->get_soundmgr()->exists( "adf-ident" ) ) {
 		globals->get_soundmgr()->remove( "adf-ident" );

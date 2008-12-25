@@ -43,7 +43,7 @@ FGNavRecord::FGNavRecord(Type aTy, const std::string& aIdent,
   freq(aFreq),
   range(aRange),
   multiuse(aMultiuse),
-  name(aName),
+  _name(aName),
   serviceable(true),
   trans_ident(aIdent)
 { 
@@ -77,12 +77,6 @@ FGNavRecord::FGNavRecord(Type aTy, const std::string& aIdent,
   
 }
 
-SGVec3d FGNavRecord::get_cart() const
-{
-  return SGVec3d::fromGeod(geod());
-}
-
-
 static FGPositioned::Type
 mapRobinTypeToFGPType(int aTy)
 {
@@ -100,7 +94,7 @@ mapRobinTypeToFGPType(int aTy)
   case 13: return FGPositioned::DME;
   case 99: return FGPositioned::INVALID; // end-of-file code
   default:
-    throw sg_range_exception("Got a nav.dat type we don't recgonize", "FGNavRecord::createFromStream");
+    throw sg_range_exception("Got a nav.dat type we don't recognize", "FGNavRecord::createFromStream");
   }
 }
 
@@ -117,7 +111,7 @@ FGNavRecord* FGNavRecord::createFromStream(std::istream& aStream)
   
   double lat, lon, elev_ft, multiuse;
   int freq, range;
-  std::string apt_id, name, ident;
+  std::string name, ident;
   aStream >> lat >> lon >> elev_ft >> freq >> range >> multiuse >> ident;
   getline(aStream, name);
   
@@ -125,6 +119,12 @@ FGNavRecord* FGNavRecord::createFromStream(std::istream& aStream)
   // vs. nav/loc frequency lookups can use the same code.
   if (type == NDB) {
     freq *= 100;
+  }
+  
+  // ensure marker beacons are anonymous, so they don't get added to the
+  // name index
+  if ((type >= OM) && (type <= IM)) {
+    ident.clear();
   }
   
   FGNavRecord* result = new FGNavRecord(type, ident,
@@ -136,19 +136,29 @@ FGNavRecord* FGNavRecord::createFromStream(std::istream& aStream)
 
 void FGNavRecord::initAirportRelation()
 {
-  if (type() < ILS || type() > IM) {
+  if ((type() < ILS) || (type() > IM)) {
     return; // not airport-located
   }
   
-  vector<string> parts = simgear::strutils::split(name);
-  apt_id = parts[0];
-  const FGAirport* apt = fgFindAirportID(apt_id);
-  
-  if (!apt) {
-    SG_LOG(SG_GENERAL, SG_WARN, "navaid " << ident() << " associated with bogus airport ID:" << apt_id);
+  vector<string> parts = simgear::strutils::split(_name);
+  if (parts.size() < 2) {
+    SG_LOG(SG_GENERAL, SG_WARN, "navaid has malformed name:" << _name);
     return;
   }
   
+  const FGAirport* apt = fgFindAirportID(parts[0]);
+  
+  if (!apt) {
+    SG_LOG(SG_GENERAL, SG_WARN, "navaid " << _name << " associated with bogus airport ID:" << parts[0]);
+    return;
+  }
+  
+  runway = apt->getRunwayByIdent(parts[1]);
+  if (!runway) {
+    SG_LOG(SG_GENERAL, SG_WARN, "navaid " << _name << " associated with bogus runway ID:" << parts[1]);
+    return;
+  }
+    
   // fudge elevation to the field elevation if it's not specified
   if (fabs(elevation()) < 0.01) {
     mPosition.setElevationFt(apt->getElevation());
@@ -160,16 +170,8 @@ void FGNavRecord::initAirportRelation()
       return;
     }
     
-    if (parts.size() < 2) {
-      SG_LOG(SG_GENERAL, SG_ALERT, "can't parse navaid " << ident() 
-              << " name for airport/runway:" << name);
-      return;
-    }
-    
-     double threshold
-            = fgGetDouble( "/sim/navdb/localizers/auto-align-threshold-deg",
-                           5.0 );
-    FGRunway* runway = apt->getRunwayByIdent(parts[1]);
+   double threshold 
+     = fgGetDouble( "/sim/navdb/localizers/auto-align-threshold-deg", 5.0 );
     alignLocaliserWithRunway(runway, threshold);
   }
 }
