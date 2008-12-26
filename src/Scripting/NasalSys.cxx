@@ -524,7 +524,7 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
     static SGConstPropertyNode_ptr latn = fgGetNode("/position/latitude-deg", true);
     static SGConstPropertyNode_ptr lonn = fgGetNode("/position/longitude-deg", true);
     SGGeod pos;
-    FGPositionedRef ref;
+    FGAirport* apt = NULL;
     
     if(argc >= 2 && naIsNum(args[0]) && naIsNum(args[1])) {
         pos = SGGeod::fromDeg(args[1].num, args[0].num);
@@ -547,8 +547,8 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
         else if(!strcmp(s, "heliport")) filter.type = FGPositioned::HELIPORT;
         else {
             // user provided an <id>, hopefully
-            ref = globals->get_airports()->search(s);
-            if (!ref) {
+            apt = FGAirport::findByIdent(s);
+            if (!apt) {
                 naRuntimeError(c, "airportinfo() couldn't find airport:%s", s);
                 return naNil();
             }
@@ -558,12 +558,10 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
         return naNil();
     }
     
-    if (!ref) {
-        ref = FGPositioned::findClosest(pos, maxRange, &filter);
+    if (!apt) {
+        apt = FGAirport::findClosest(pos, maxRange, &filter);
+        if(!apt) return naNil();
     }
-    
-    if(!ref) return naNil();
-    FGAirport *apt = static_cast<FGAirport*>(ref.ptr());
     
     string id = apt->ident();
     string name = apt->name();

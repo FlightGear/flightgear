@@ -4521,7 +4521,7 @@ MK_VIII::TCFHandler::update_runway ()
   // large airports, which may have a runway located far away from
   // the airport's reference point.
   AirportFilter filter(mk);
-  FGPositionedRef apt = FGPositioned::findClosest(
+  FGAirport* apt = FGAirport::findClosest(
     SGGeod::fromDeg(mk_data(gps_longitude).get(), mk_data(gps_latitude).get()),
     30.0, &filter);
       
@@ -4529,7 +4529,7 @@ MK_VIII::TCFHandler::update_runway ()
   
 	  has_runway = true;
 
-	  FGRunway* _runway = select_runway(static_cast<FGAirport*>(apt.ptr()));
+	  FGRunway* _runway = select_runway(apt);
     
 	  runway.center.latitude = _runway->latitude();
 	  runway.center.longitude = _runway->longitude();

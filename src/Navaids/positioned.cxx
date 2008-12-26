@@ -24,7 +24,8 @@
 
 #include <map>
 #include <set>
-#include <algorithm>
+#include <algorithm> // for sort
+#include <locale> // for char-traits toupper
 
 #include <iostream>
 
@@ -331,6 +332,78 @@ spatialGetClosest(const SGGeod& aPos, unsigned int aN, double aCutoffNm, FGPosit
   sortByDistance(aPos, result);
   if (result.size() > aN) {
     result.resize(aN); // truncate at requested number of matches
+  }
+  
+  return result;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+/**
+ * A special purpose helper (imported by FGAirport::searchNamesAndIdents) to
+ * implement the AirportList dialog. It's unfortunate that it needs to reside
+ * here, but for now it's least ugly solution.
+ */
+char** searchAirportNamesAndIdents(const std::string& aFilter)
+{
+  const std::ctype<char> &ct = std::use_facet<std::ctype<char> >(std::locale());
+  std::string filter(aFilter);
+  if (!filter.empty()) {
+    ct.toupper((char *)filter.data(), (char *)filter.data() + filter.size());
+  }
+  
+  NamedPositionedIndex::const_iterator it = global_namedIndex.begin();
+  NamedPositionedIndex::const_iterator end = global_namedIndex.end();
+  
+  FGPositioned::List matches;
+  if (aFilter.empty()) {
+    matches.reserve(2000);
+  }
+  
+  for (; it != end; ++it) {
+    FGPositioned::Type ty = it->second->type();
+    if ((ty < FGPositioned::AIRPORT) || (ty > FGPositioned::SEAPORT)) {
+      continue;
+    }
+    
+    if (aFilter.empty()) {
+      matches.push_back(it->second);
+      continue;
+    }
+    
+    if ((it->second->name().find(aFilter) == std::string::npos) &&
+        (it->second->ident().find(aFilter) == std::string::npos)) {
+      continue;
+    }
+    
+    matches.push_back(it->second);
+  }
+  
+  // convert results to format comptible with puaList
+  unsigned int numMatches = matches.size();
+  char** result = new char*[numMatches + 1];
+  result[numMatches] = NULL; // end-of-list marker
+  
+  // nasty code to avoid excessive string copying and allocations.
+  // We format results as follows (note whitespace!):
+  //   ' name-of-airport-chars   (icao)'
+  // so the total length is:
+  //    1 + strlen(name) + 4 + 4 (for the ICAO) + 1 + 1 (for the null)
+  // which gives a grand total of 11 + the length of the name.
+  
+  for (unsigned int i=0; i<numMatches; ++i) {
+    int nameLength = matches[i]->name().size();
+    char* entry = new char[nameLength + 11];
+    entry[0] = ' ';
+    memcpy(entry + 1, matches[i]->name().c_str(), nameLength);
+    entry[nameLength + 1] = ' ';
+    entry[nameLength + 2] = ' ';
+    entry[nameLength + 3] = ' ';
+    entry[nameLength + 4] = '(';
+    memcpy(entry + nameLength + 5, matches[i]->ident().c_str(), 4);
+    entry[nameLength + 9] = ')';
+    entry[nameLength + 10] = 0;
+    result[i] = entry;
   }
   
   return result;

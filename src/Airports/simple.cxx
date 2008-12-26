@@ -52,8 +52,8 @@
 using std::sort;
 using std::random_shuffle;
 
-
-
+// magic import of a helper which uses FGPositioned internals
+extern char** searchAirportNamesAndIdents(const std::string& aFilter);
 
 /***************************************************************************
  * FGAirport
@@ -279,32 +279,41 @@ bool FGAirport::HardSurfaceFilter::pass(FGPositioned* aPos) const
   return static_cast<FGAirport*>(aPos)->hasHardRunwayOfLengthFt(mMinLengthFt);
 }
 
+FGAirport* FGAirport::findByIdent(const std::string& aIdent)
+{
+  FGPositionedRef r;
+  AirportFilter filter;
+  r = FGPositioned::findNextWithPartialId(r, aIdent, &filter);
+  if (!r) {
+    return NULL; // we don't warn here, let the caller do that
+  }
+  return static_cast<FGAirport*>(r.ptr());
+}
+
+FGAirport* FGAirport::getByIdent(const std::string& aIdent)
+{
+  FGPositionedRef r;
+  AirportFilter filter;
+  r = FGPositioned::findNextWithPartialId(r, aIdent, &filter);
+  if (!r) {
+    throw sg_range_exception("No such airport with ident: " + aIdent);
+  }
+  return static_cast<FGAirport*>(r.ptr());
+}
+
+char** FGAirport::searchNamesAndIdents(const std::string& aFilter)
+{
+  // we delegate all the work to a horrible helper in FGPositioned, which can
+  // access the (private) index data.
+  return searchAirportNamesAndIdents(aFilter);
+}
+
 /******************************************************************************
  * FGAirportList
  *****************************************************************************/
 
-// Populates a list of subdirectories of $FG_ROOT/Airports/AI so that
-// the add() method doesn't have to try opening 2 XML files in each of
-// thousands of non-existent directories.  FIXME: should probably add
-// code to free this list after parsing of apt.dat is finished;
-// non-issue at the moment, however, as there are no AI subdirectories
-// in the base package.
-//
-// Note: 2005/12/23: This is probably not necessary anymore, because I'm
-// Switching to runtime airport dynamics loading (DT).
 FGAirportList::FGAirportList()
 {
-//     ulDir* d;
-//     ulDirEnt* dent;
-//     SGPath aid( globals->get_fg_root() );
-//     aid.append( "/Airports/AI" );
-//     if((d = ulOpenDir(aid.c_str())) == NULL)
-//         return;
-//     while((dent = ulReadDir(d)) != NULL) {
-//         SG_LOG( SG_GENERAL, SG_DEBUG, "Dent: " << dent->d_name );
-//         ai_dirs.insert(dent->d_name);
-//     }
-//     ulCloseDir(d);
 }
 
 
@@ -321,18 +330,9 @@ FGAirport* FGAirportList::add( const string &id, const SGGeod& location, const S
                          const string &name, bool has_metar, FGPositioned::Type aType)
 {
     FGAirport* a = new FGAirport(id, location, tower_location, name, has_metar, aType);
-    airports_by_id[a->getId()] = a;
     // try and read in an auxilary file
-
     airports_array.push_back( a );
     return a;
-}
-
-// search for the specified id
-FGAirport* FGAirportList::search( const string& id)
-{
-    airport_map_iterator itr = airports_by_id.find(id);
-    return (itr == airports_by_id.end() ? NULL : itr->second);
 }
 
 int
@@ -354,26 +354,11 @@ const FGAirport *FGAirportList::getAirport( unsigned int index ) const
 // find basic airport location info from airport database
 const FGAirport *fgFindAirportID( const string& id)
 {
-    const FGAirport* result = NULL;
-    if ( id.length() ) {
-        SG_LOG( SG_GENERAL, SG_BULK, "Searching for airport code = " << id );
-
-        result = globals->get_airports()->search( id );
-
-        if ( result == NULL ) {
-            SG_LOG( SG_GENERAL, SG_ALERT,
-                    "Failed to find " << id << " in apt.dat.gz" );
-            return NULL;
-        }
-    } else {
+    if ( id.empty() ) {
         return NULL;
     }
-    SG_LOG( SG_GENERAL, SG_BULK,
-            "Position for " << id << " is ("
-            << result->getLongitude() << ", "
-            << result->getLatitude() << ")" );
-
-    return result;
+    
+    return FGAirport::findByIdent(id);
 }
 
 

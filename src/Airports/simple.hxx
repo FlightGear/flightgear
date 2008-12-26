@@ -30,7 +30,6 @@
 #include <simgear/compiler.h>
 
 #include <string>
-#include <map>
 #include <vector>
 
 #include "Navaids/positioned.hxx"
@@ -123,6 +122,26 @@ public:
       * passes all airports, including seaports and heliports.
       */
      static FGAirport* findClosest(const SGGeod& aPos, double aCuttofNm, Filter* filter = NULL);
+     
+     /**
+      * Helper to look up an FGAirport instance by unique ident. Throws an 
+      * exception if the airport could not be found - so callers can assume
+      * the result is non-NULL.
+      */
+     static FGAirport* getByIdent(const std::string& aIdent);
+     
+     /**
+      * Helper to look up an FGAirport instance by unique ident. Returns NULL
+      * if the airport could not be found.
+      */
+     static FGAirport* findByIdent(const std::string& aIdent);
+     
+     /**
+      * Specialised helper to implement the AirportList dialog. Performs a
+      * case-insensitive search on airport names and ICAO codes, and returns
+      * matches in a format suitable for use by a puaList. 
+      */
+     static char** searchNamesAndIdents(const std::string& aFilter);
 private:
     typedef std::vector<FGRunwayPtr>::const_iterator Runway_iterator;
     /**
@@ -137,10 +156,6 @@ private:
     std::vector<FGRunwayPtr> mTaxiways;
 };
 
-typedef std::map < std::string, FGAirport* > airport_map;
-typedef airport_map::iterator airport_map_iterator;
-typedef airport_map::const_iterator const_airport_map_iterator;
-
 typedef std::vector < FGAirport * > airport_list;
 typedef airport_list::iterator airport_list_iterator;
 typedef airport_list::const_iterator const_airport_list_iterator;
@@ -150,7 +165,6 @@ typedef airport_list::const_iterator const_airport_list_iterator;
 class FGAirportList {
 private:
 
-    airport_map airports_by_id;
     airport_list airports_array;
 
 public:
@@ -163,10 +177,6 @@ public:
     // add an entry to the list
     FGAirport* add( const std::string& id, const SGGeod& location, const SGGeod& tower,
               const std::string& name, bool has_metar, FGPositioned::Type aType);
-
-    // search for the specified id.
-    // Returns NULL if unsucessfull.
-    FGAirport* search( const std::string& id );
 
     /**
      * Return the number of airports in the list.

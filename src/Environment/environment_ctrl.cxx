@@ -336,7 +336,6 @@ FGInterpolateEnvironmentCtrl::bucket::lessThan(bucket *a, bucket *b)
 
 FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
     : env( new FGInterpolateEnvironmentCtrl ),
-      _icao( "" ),
       metar_loaded( false ),
       search_interval_sec( 60.0 ),        // 1 minute
       same_station_interval_sec( 900.0 ), // 15 minutes
@@ -667,17 +666,16 @@ FGMetarEnvironmentCtrl::init ()
 
     while ( !found_metar && (_error_count < 3) ) {
         AirportWithMetar filter;
-        FGPositionedRef a = FGPositioned::findClosest(pos, 10000.0, &filter);
+        FGAirport* a = FGAirport::findClosest(pos, 10000.0, &filter);
         if (!a) {
           break;
         }
         
-        FGMetarResult result = fetch_data(a->ident());
+        FGMetarResult result = fetch_data(a);
         if ( result.m != NULL ) {
             SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = "
                     << a->ident());
             last_apt = a;
-            _icao = a->ident();
             search_elapsed = 0.0;
             fetch_elapsed = 0.0;
             update_metar_properties( result.m );
@@ -688,7 +686,7 @@ FGMetarEnvironmentCtrl::init ()
             // mark as no metar so it doesn't show up in subsequent
             // searches.
             SG_LOG( SG_GENERAL, SG_INFO, "no metar at metar = " << a->ident() );
-            static_cast<FGAirport*>(a.ptr())->setMetar(false);
+            a->setMetar(false);
         }
     } // of airprot-with-metar search iteration
     
@@ -729,16 +727,15 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
     // queue
     if ( search_elapsed > search_interval_sec ) {
         AirportWithMetar filter;
-        FGPositionedRef a = FGPositioned::findClosest(pos, 10000.0, &filter);
+        FGAirport* a = FGAirport::findClosest(pos, 10000.0, &filter);
         if (a) {
           if ( !last_apt || last_apt->ident() != a->ident()
                  || fetch_elapsed > same_station_interval_sec )
             {
                 SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = "
                         << a->ident());
-                request_queue.push( a->ident() );
+                request_queue.push(a);
                 last_apt = a;
-                _icao = a->ident();
                 search_elapsed = 0.0;
                 fetch_elapsed = 0.0;
             } else {
@@ -760,15 +757,15 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
 
 #if !defined(ENABLE_THREADS)
     // No loader thread running so manually fetch the data
-    string id = "";
+    FGAirport* apt = NULL;
     while ( !request_queue.empty() ) {
-        id = request_queue.front();
+        apt = request_queue.front();
         request_queue.pop();
     }
 
-    if ( !id.empty() ) {
-        SG_LOG( SG_GENERAL, SG_INFO, "inline fetching = " << id );
-        result = fetch_data( id );
+    if (apt) {
+        SG_LOG( SG_GENERAL, SG_INFO, "inline fetching = " << apt->ident() );
+        result = fetch_data( apt );
         result_queue.push( result );
     }
 #endif // ENABLE_THREADS
@@ -786,9 +783,8 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
             // mark as no metar so it doesn't show up in subsequent
             // searches, and signal an immediate re-search.
             SG_LOG( SG_GENERAL, SG_WARN,
-                    "no metar at station = " << result.icao );
-            const FGAirport* apt = globals->get_airports()->search(result.icao);
-            const_cast<FGAirport*>(apt)->setMetar(false);
+                    "no metar at station = " << result.airport->ident() );
+            result.airport->setMetar(false);
             search_elapsed = 9999.0;
         }
     }
@@ -804,10 +800,10 @@ FGMetarEnvironmentCtrl::setEnvironment (FGEnvironment * environment)
 }
 
 FGMetarResult
-FGMetarEnvironmentCtrl::fetch_data( const string &icao )
+FGMetarEnvironmentCtrl::fetch_data(FGAirport* apt)
 {
     FGMetarResult result;
-    result.icao = icao;
+    result.airport = apt;
 
     // if the last error was more than three seconds ago,
     // then pretent nothing happened.
@@ -819,18 +815,14 @@ FGMetarEnvironmentCtrl::fetch_data( const string &icao )
         _error_count = 0;
     }
 
-    // fetch station elevation if exists
-    const FGAirport* a = globals->get_airports()->search( icao );
-    if ( a ) {
-        station_elevation_ft = a->getElevation();
-    }
+    station_elevation_ft = apt->getElevation();
 
     // fetch current metar data
     try {
         string host = proxy_host->getStringValue();
         string auth = proxy_auth->getStringValue();
         string port = proxy_port->getStringValue();
-        result.m = new FGMetar( icao, host, port, auth);
+        result.m = new FGMetar( apt->ident(), host, port, auth);
 
         long max_age = metar_max_age->getLongValue();
         long age = result.m->getAge_min();

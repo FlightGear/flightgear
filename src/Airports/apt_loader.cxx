@@ -289,8 +289,10 @@ bool fgAirportDBLoad( FGAirportList *airports,
         if ( ident == "#" || ident == "//" ) {
             metar_in >> skipeol;
         } else {
-            const FGAirport* a = airports->search( ident );
-            if ( a ) const_cast<FGAirport*>(a)->setMetar(true);
+            FGAirport* apt = FGAirport::findByIdent(ident);
+            if (apt) {
+                apt->setMetar(true);
+            }
         }
     }
 

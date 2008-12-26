@@ -137,7 +137,7 @@ private:
 
 // A convenience wrapper around FGMetar
 struct FGMetarResult {
-    std::string icao;
+    FGAirport* airport;
     FGMetar *m;
 };
 
@@ -160,7 +160,6 @@ public:
 private:
     FGInterpolateEnvironmentCtrl *env;
 
-    std::string _icao;
     bool metar_loaded;
     float station_elevation_ft;
     float search_interval_sec;
@@ -174,7 +173,7 @@ private:
     SGPropertyNode_ptr proxy_auth;
     SGPropertyNode_ptr metar_max_age;
 
-    FGMetarResult fetch_data( const string &icao );
+    FGMetarResult fetch_data(FGAirport* apt);
     virtual void update_metar_properties( const FGMetar *m );
     void update_env_config();
     double interpolate_prop(const char * currentname, const char * requiredname, double dvalue);
@@ -200,7 +199,7 @@ private:
     /**
      * FIFO queue which holds a pointer to the fetched metar data.
      */
-    SGBlockingQueue <std::string > request_queue;
+    SGBlockingQueue <FGAirport*> request_queue;
 
     /**
      * FIFO queue which holds a pointer to the fetched metar data.
@@ -210,7 +209,7 @@ private:
     /**
      * FIFO queue which holds a pointer to the fetched metar data.
      */
-    std::queue <std::string > request_queue;
+    std::queue <FGAirport*> request_queue;
 
     /**
      * FIFO queue which holds a pointer to the fetched metar data.
