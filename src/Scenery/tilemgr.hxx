@@ -25,7 +25,6 @@
 #define _TILEMGR_HXX
 
 #include <simgear/compiler.h>
-#include <simgear/math/point3d.hxx>
 #include <simgear/scene/model/location.hxx>
 
 #include <simgear/bucket/newbucket.hxx>

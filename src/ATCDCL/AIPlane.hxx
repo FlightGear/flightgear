@@ -21,8 +21,6 @@
 #ifndef _FG_AI_PLANE_HXX
 #define _FG_AI_PLANE_HXX
 
-#include <simgear/math/point3d.hxx>
-
 #include "AIEntity.hxx"
 #include "ATC.hxx"
 

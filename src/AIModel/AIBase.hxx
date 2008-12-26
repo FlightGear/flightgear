@@ -25,7 +25,6 @@
 
 #include <simgear/constants.h>
 #include <simgear/math/SGMath.hxx>
-#include <simgear/math/point3d.hxx>
 #include <simgear/scene/model/placement.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>

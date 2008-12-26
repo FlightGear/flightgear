@@ -7,11 +7,6 @@
 #ifndef __INSTRUMENTS_DME_HXX
 #define __INSTRUMENTS_DME_HXX 1
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
-#include <simgear/math/point3d.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 

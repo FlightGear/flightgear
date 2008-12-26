@@ -14,7 +14,6 @@
 
 using std::vector;
 
-#include <simgear/math/point3d.hxx>
 #include <simgear/props/props.hxx>
 
 

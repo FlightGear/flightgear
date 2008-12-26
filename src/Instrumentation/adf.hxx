@@ -13,7 +13,6 @@
 
 #include <string>
 
-#include <simgear/math/point3d.hxx>
 #include <simgear/props/props.hxx>
 
 #include <simgear/structure/subsystem_mgr.hxx>

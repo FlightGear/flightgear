@@ -22,7 +22,6 @@
 #  include <config.h>
 #endif
 
-#include <simgear/math/point3d.hxx>
 #include <simgear/route/waypoint.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>

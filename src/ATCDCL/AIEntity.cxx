@@ -33,7 +33,6 @@
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 #include <simgear/constants.h>
-#include <simgear/math/point3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <string>

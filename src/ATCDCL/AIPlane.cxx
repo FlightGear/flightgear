@@ -20,7 +20,6 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-#include <simgear/math/point3d.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <math.h>

@@ -386,12 +386,10 @@ bool runway_instr::boundOutsidePoints(sgdVec3& v, sgdVec3& m)
 
 void runway_instr::drawArrow()
 {
-    Point3D ac(0.0), rwy(0.0);
-    ac.setlat(current_aircraft.fdm_state->get_Latitude_deg());
-    ac.setlon(current_aircraft.fdm_state->get_Longitude_deg());
-    rwy.setlat(runway->latitude());
-    rwy.setlon(runway->longitude());
-    float theta = GetHeadingFromTo(ac, rwy);
+    SGGeod acPos(SGGeod::fromDeg(
+        fgGetDouble("/position/longitude-deg"), 
+        fgGetDouble("/position/latitude-deg")));
+    float theta = SGGeodesy::courseDeg(acPos, runway->geod());
     theta -= fgGetDouble("/orientation/heading-deg");
     theta = -theta;
     glMatrixMode(GL_MODELVIEW);
@@ -419,13 +417,11 @@ void runway_instr::drawArrow()
 void runway_instr::setLineWidth()
 {
     //Calculate the distance from the runway, A
-    double course, distance;
-    calc_gc_course_dist(Point3D(runway->longitude() * SGD_DEGREES_TO_RADIANS,
-            runway->latitude() * SGD_DEGREES_TO_RADIANS, 0.0),
-            Point3D(current_aircraft.fdm_state->get_Longitude(),
-            current_aircraft.fdm_state->get_Latitude(), 0.0 ),
-            &course, &distance);
-    distance *= SG_METER_TO_NM;
+    SGGeod acPos(SGGeod::fromDeg(
+        fgGetDouble("/position/longitude-deg"), 
+        fgGetDouble("/position/latitude-deg")));
+    double distance = SGGeodesy::distanceNm(acPos, runway->geod());
+    
     //Get altitude above runway, B
     double alt_nm = get_agl();
     static const SGPropertyNode *startup_units_node = fgGetNode("/sim/startup/units");

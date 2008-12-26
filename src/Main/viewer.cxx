@@ -37,7 +37,6 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/constants.h>
-#include <simgear/math/point3d.hxx>
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/scene/model/location.hxx>

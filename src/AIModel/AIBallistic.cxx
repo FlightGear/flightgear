@@ -23,7 +23,6 @@
 #  include <config.h>
 #endif
 
-#include <simgear/math/point3d.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/scene/model/modellib.hxx>

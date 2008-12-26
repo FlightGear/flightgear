@@ -38,7 +38,6 @@
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/interpolater.hxx>
-#include <simgear/math/point3d.hxx>
 
 
 // Define a structure containing the global lighting parameters
