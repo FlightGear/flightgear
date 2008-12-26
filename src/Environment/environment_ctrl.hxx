@@ -23,34 +23,25 @@
 #ifndef _ENVIRONMENT_CTRL_HXX
 #define _ENVIRONMENT_CTRL_HXX
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
-
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/environment/metar.hxx>
 
 #if defined(ENABLE_THREADS)
 # include <OpenThreads/Thread>
 # include <simgear/threads/SGQueue.hxx>
 #endif
 
-#include <cmath>
 #include <queue>
 #include <vector>
 
-using std::queue;
-using std::vector;
+#include "Navaids/positioned.hxx"
+#include "Environment/environment.hxx"
 
+// forward decls
 class SGPropertyNode;
 class FGAirport;
+class FGMetar;
 
-#include "environment.hxx"
-#include "fgmetar.hxx"
-
-
-
 /**
  * Interface to control environment information for a specific location.
  */
@@ -133,20 +124,20 @@ private:
         static bool lessThan(bucket *a, bucket *b);
     };
 
-    void read_table (const SGPropertyNode * node, vector<bucket *> &table);
-    void do_interpolate (vector<bucket *> &table, double altitude_ft,
+    void read_table (const SGPropertyNode * node, std::vector<bucket *> &table);
+    void do_interpolate (std::vector<bucket *> &table, double altitude_ft,
                          FGEnvironment * environment);
 
     FGEnvironment env1, env2;   // temporaries
 
-    vector<bucket *> _boundary_table;
-    vector<bucket *> _aloft_table;
+    std::vector<bucket *> _boundary_table;
+    std::vector<bucket *> _aloft_table;
 };
 
 
 // A convenience wrapper around FGMetar
 struct FGMetarResult {
-    string icao;
+    std::string icao;
     FGMetar *m;
 };
 
@@ -169,7 +160,7 @@ public:
 private:
     FGInterpolateEnvironmentCtrl *env;
 
-    string _icao;
+    std::string _icao;
     bool metar_loaded;
     float station_elevation_ft;
     float search_interval_sec;
@@ -177,7 +168,7 @@ private:
     float search_elapsed;
     float fetch_elapsed;
     float interpolate_elapsed;
-    const FGAirport *last_apt;
+    FGPositionedRef last_apt;
     SGPropertyNode_ptr proxy_host;
     SGPropertyNode_ptr proxy_port;
     SGPropertyNode_ptr proxy_auth;
@@ -209,7 +200,7 @@ private:
     /**
      * FIFO queue which holds a pointer to the fetched metar data.
      */
-    SGBlockingQueue < string > request_queue;
+    SGBlockingQueue <std::string > request_queue;
 
     /**
      * FIFO queue which holds a pointer to the fetched metar data.
@@ -219,12 +210,12 @@ private:
     /**
      * FIFO queue which holds a pointer to the fetched metar data.
      */
-    queue < string > request_queue;
+    std::queue <std::string > request_queue;
 
     /**
      * FIFO queue which holds a pointer to the fetched metar data.
      */
-    queue < FGMetarResult > result_queue;
+    std::queue < FGMetarResult > result_queue;
 #endif
 
 #if defined(ENABLE_THREADS)

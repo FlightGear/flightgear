@@ -325,12 +325,8 @@ FGAirport* FGAirportList::add( const string &id, const SGGeod& location, const S
     // try and read in an auxilary file
 
     airports_array.push_back( a );
-    SG_LOG( SG_GENERAL, SG_BULK, "Adding " << id << " pos = " << location.getLongitudeDeg()
-            << ", " << location.getLatitudeDeg() << " elev = " << location.getElevationFt() );
-            
     return a;
 }
-
 
 // search for the specified id
 FGAirport* FGAirportList::search( const string& id)
@@ -338,41 +334,6 @@ FGAirport* FGAirportList::search( const string& id)
     airport_map_iterator itr = airports_by_id.find(id);
     return (itr == airports_by_id.end() ? NULL : itr->second);
 }
-
-// search for the airport nearest the specified position
-FGAirport* FGAirportList::search(double lon_deg, double lat_deg, double max_range)
-{
-    static FGAirportSearchFilter accept_any;
-    return search(lon_deg, lat_deg, max_range, accept_any);
-}
-
-
-// search for the airport nearest the specified position and
-// passing the filter
-FGAirport* FGAirportList::search(double lon_deg, double lat_deg,
-        double max_range,
-        FGAirportSearchFilter& filter)
-{
-    double min_dist = max_range;
-
-    airport_list_iterator it = airports_array.begin();
-    airport_list_iterator end = airports_array.end();
-    airport_list_iterator closest = end;
-    for (; it != end; ++it) {
-        if (!filter.pass(*it))
-            continue;
-
-        // crude manhatten distance based on lat/lon difference
-        double d = fabs(lon_deg - (*it)->getLongitude())
-                + fabs(lat_deg - (*it)->getLatitude());
-        if (d < min_dist) {
-            closest = it;
-            min_dist = d;
-        }
-    }
-    return closest != end ? *closest : 0;
-}
-
 
 int
 FGAirportList::size () const
@@ -389,29 +350,6 @@ const FGAirport *FGAirportList::getAirport( unsigned int index ) const
         return(NULL);
     }
 }
-
-
-/**
- * Mark the specified airport record as not having metar
- */
-void FGAirportList::no_metar( const string &id )
-{
-    if(airports_by_id.find(id) != airports_by_id.end()) {
-        airports_by_id[id]->setMetar(false);
-    }
-}
-
-
-/**
- * Mark the specified airport record as (yes) having metar
- */
-void FGAirportList::has_metar( const string &id )
-{
-    if(airports_by_id.find(id) != airports_by_id.end()) {
-        airports_by_id[id]->setMetar(true);
-    }
-}
-
 
 // find basic airport location info from airport database
 const FGAirport *fgFindAirportID( const string& id)

@@ -38,6 +38,9 @@ using std::string;
 #include "ATCutils.hxx"
 #include "tower.hxx"
 
+// extern from Airports/simple.cxx
+extern Point3D fgGetAirportPos( const std::string& id );
+
 FGAIGAVFRTraffic::FGAIGAVFRTraffic() {
 	ATC = globals->get_ATC_mgr();
 	_towerContactedIncoming = false;

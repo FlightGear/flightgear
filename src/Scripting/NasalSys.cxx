@@ -497,19 +497,23 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
 #undef HASHSET
 }
 
-
-class airport_filter : public FGAirportSearchFilter {
-    virtual bool pass(FGAirport *a) { return a->isAirport(); }
-} airport;
-class seaport_filter : public FGAirportSearchFilter {
-    virtual bool pass(FGAirport *a) { return a->isSeaport(); }
-} seaport;
-class heliport_filter : public FGAirportSearchFilter {
-    virtual bool pass(FGAirport *a) { return a->isHeliport(); }
-} heliport;
+class AirportInfoFilter : public FGPositioned::Filter
+{
+public:
+  AirportInfoFilter() :
+    type(FGPositioned::AIRPORT)
+  { }
+  
+  virtual bool pass(FGPositioned* aPos) const
+  {
+    return (aPos->type() == type);
+  }
+  
+  FGPositioned::Type type;
+};
 
 // Returns data hash for particular or nearest airport of a <type>, or nil
-// on error. Only one side of each runway is contained.
+// on error.
 //
 // airportinfo(<id>);                   e.g. "KSFO"
 // airportinfo(<type>);                 type := ("airport"|"seaport"|"heliport")
@@ -519,38 +523,50 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
 {
     static SGConstPropertyNode_ptr latn = fgGetNode("/position/latitude-deg", true);
     static SGConstPropertyNode_ptr lonn = fgGetNode("/position/longitude-deg", true);
-    double lat, lon;
-
-    FGAirportList *aptlst = globals->get_airports();
-    FGAirport *apt;
+    SGGeod pos;
+    FGPositionedRef ref;
+    
     if(argc >= 2 && naIsNum(args[0]) && naIsNum(args[1])) {
-        lat = args[0].num;
-        lon = args[1].num;
+        pos = SGGeod::fromDeg(args[1].num, args[0].num);
         args += 2;
         argc -= 2;
     } else {
-        lat = latn->getDoubleValue();
-        lon = lonn->getDoubleValue();
+        pos = SGGeod::fromDeg(lonn->getDoubleValue(), latn->getDoubleValue());
     }
 
-    double maxRange = 360.0; // expose this? or pick a smaller value?
+    double maxRange = 10000.0; // expose this? or pick a smaller value?
+
+    AirportInfoFilter filter; // defaults to airports only
 
     if(argc == 0) {
-        apt = aptlst->search(lon, lat, maxRange, airport);
+      // fine, just fall through and use AIRPORT
     } else if(argc == 1 && naIsString(args[0])) {
         const char *s = naStr_data(args[0]);
-        if(!strcmp(s, "airport")) apt = aptlst->search(lon, lat, maxRange, airport);
-        else if(!strcmp(s, "seaport")) apt = aptlst->search(lon, lat, maxRange, seaport);
-        else if(!strcmp(s, "heliport")) apt = aptlst->search(lon, lat, maxRange, heliport);
-        else apt = aptlst->search(s);
+        if (!strcmp(s, "airport")) filter.type = FGPositioned::AIRPORT;
+        else if(!strcmp(s, "seaport")) filter.type = FGPositioned::SEAPORT;
+        else if(!strcmp(s, "heliport")) filter.type = FGPositioned::HELIPORT;
+        else {
+            // user provided an <id>, hopefully
+            ref = globals->get_airports()->search(s);
+            if (!ref) {
+                naRuntimeError(c, "airportinfo() couldn't find airport:%s", s);
+                return naNil();
+            }
+        }
     } else {
         naRuntimeError(c, "airportinfo() with invalid function arguments");
         return naNil();
     }
-    if(!apt) return naNil();
-
-    string id = apt->getId();
-    string name = apt->getName();
+    
+    if (!ref) {
+        ref = FGPositioned::findClosest(pos, maxRange, &filter);
+    }
+    
+    if(!ref) return naNil();
+    FGAirport *apt = static_cast<FGAirport*>(ref.ptr());
+    
+    string id = apt->ident();
+    string name = apt->name();
 
     // set runway hash
     naRef rwys = naNewHash(c);

@@ -24,8 +24,6 @@
 #  include "config.h"
 #endif
 
-#include <stdlib.h>
-#include <math.h>
 #include <algorithm>
 
 #include <simgear/debug/logstream.hxx>
@@ -36,15 +34,25 @@
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 
+#include "Environment/fgmetar.hxx"
 #include "environment_mgr.hxx"
 #include "environment_ctrl.hxx"
 
 using std::sort;
 
-class metar_filter : public FGAirportSearchFilter {
-    virtual bool pass(FGAirport *a) { return a->getMetar(); }
-} metar_only;
-
+class AirportWithMetar : public FGPositioned::Filter
+{
+public:
+  virtual bool pass(FGPositioned* aPos) const
+  {
+    if ((aPos->type() < FGPositioned::AIRPORT) || (aPos->type() > FGPositioned::SEAPORT)) {
+      return false;
+    }
+    
+    FGAirport* apt = static_cast<FGAirport*>(aPos);
+    return apt->getMetar();
+  }
+};
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGEnvironmentCtrl abstract base class.
@@ -645,10 +653,9 @@ double FGMetarEnvironmentCtrl::interpolate_val(double currentval,
 void
 FGMetarEnvironmentCtrl::init ()
 {
-    const SGPropertyNode *longitude
-        = fgGetNode( "/position/longitude-deg", true );
-    const SGPropertyNode *latitude
-        = fgGetNode( "/position/latitude-deg", true );
+    SGGeod pos = SGGeod::fromDeg(
+      fgGetDouble("/position/longitude-deg", true), 
+      fgGetDouble( "/position/latitude-deg", true));
 
     metar_loaded = false;
     bool found_metar = false;
@@ -659,33 +666,32 @@ FGMetarEnvironmentCtrl::init ()
     metar_max_age->setLongValue(0);
 
     while ( !found_metar && (_error_count < 3) ) {
-        const FGAirport* a = globals->get_airports()
-                   ->search( longitude->getDoubleValue(),
-                             latitude->getDoubleValue(),
-                             360.0,
-                             metar_only );
-        if ( a ) {  
-            FGMetarResult result = fetch_data( a->getId() );
-            if ( result.m != NULL ) {
-                SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = "
-                        << a->getId());
-                last_apt = a;
-                _icao = a->getId();
-                search_elapsed = 0.0;
-                fetch_elapsed = 0.0;
-                update_metar_properties( result.m );
-                update_env_config();
-                env->init();
-                found_metar = true;
-            } else {
-                // mark as no metar so it doesn't show up in subsequent
-                // searches.
-                SG_LOG( SG_GENERAL, SG_INFO, "no metar at metar = "
-                        << a->getId() );
-                globals->get_airports()->no_metar( a->getId() );
-            }
+        AirportWithMetar filter;
+        FGPositionedRef a = FGPositioned::findClosest(pos, 10000.0, &filter);
+        if (!a) {
+          break;
         }
-    }
+        
+        FGMetarResult result = fetch_data(a->ident());
+        if ( result.m != NULL ) {
+            SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = "
+                    << a->ident());
+            last_apt = a;
+            _icao = a->ident();
+            search_elapsed = 0.0;
+            fetch_elapsed = 0.0;
+            update_metar_properties( result.m );
+            update_env_config();
+            env->init();
+            found_metar = true;
+        } else {
+            // mark as no metar so it doesn't show up in subsequent
+            // searches.
+            SG_LOG( SG_GENERAL, SG_INFO, "no metar at metar = " << a->ident() );
+            static_cast<FGAirport*>(a.ptr())->setMetar(false);
+        }
+    } // of airprot-with-metar search iteration
+    
     metar_max_age->setLongValue(max_age);
 }
 
@@ -702,7 +708,6 @@ FGMetarEnvironmentCtrl::reinit ()
 void
 FGMetarEnvironmentCtrl::update(double delta_time_sec)
 {
-
     _dt += delta_time_sec;
     if (_error_count >= 3)
        return;
@@ -713,6 +718,9 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
         = fgGetNode( "/position/longitude-deg", true );
     static const SGPropertyNode *latitude
         = fgGetNode( "/position/latitude-deg", true );
+    SGGeod pos = SGGeod::fromDeg(longitude->getDoubleValue(), 
+      latitude->getDoubleValue());
+        
     search_elapsed += delta_time_sec;
     fetch_elapsed += delta_time_sec;
     interpolate_elapsed += delta_time_sec;
@@ -720,20 +728,17 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
     // if time for a new search request, push it onto the request
     // queue
     if ( search_elapsed > search_interval_sec ) {
-        const FGAirport* a = globals->get_airports()
-                   ->search( longitude->getDoubleValue(),
-                             latitude->getDoubleValue(),
-                             360.0,
-                             metar_only );
-        if ( a ) {
-            if ( !last_apt || last_apt->getId() != a->getId()
+        AirportWithMetar filter;
+        FGPositionedRef a = FGPositioned::findClosest(pos, 10000.0, &filter);
+        if (a) {
+          if ( !last_apt || last_apt->ident() != a->ident()
                  || fetch_elapsed > same_station_interval_sec )
             {
                 SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = "
-                        << a->getId());
-                request_queue.push( a->getId() );
+                        << a->ident());
+                request_queue.push( a->ident() );
                 last_apt = a;
-                _icao = a->getId();
+                _icao = a->ident();
                 search_elapsed = 0.0;
                 fetch_elapsed = 0.0;
             } else {
@@ -741,8 +746,9 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
                 SG_LOG( SG_GENERAL, SG_INFO, "same station, waiting = "
                         << same_station_interval_sec - fetch_elapsed );
             }
+
         } else {
-            SG_LOG( SG_GENERAL, SG_WARN,
+          SG_LOG( SG_GENERAL, SG_WARN,
                     "Unable to find any airports with metar" );
         }
     } else if ( interpolate_elapsed > EnvironmentUpdatePeriodSec ) {
@@ -781,7 +787,8 @@ FGMetarEnvironmentCtrl::update(double delta_time_sec)
             // searches, and signal an immediate re-search.
             SG_LOG( SG_GENERAL, SG_WARN,
                     "no metar at station = " << result.icao );
-            globals->get_airports()->no_metar( result.icao );
+            const FGAirport* apt = globals->get_airports()->search(result.icao);
+            const_cast<FGAirport*>(apt)->setMetar(false);
             search_elapsed = 9999.0;
         }
     }

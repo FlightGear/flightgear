@@ -290,7 +290,7 @@ bool fgAirportDBLoad( FGAirportList *airports,
             metar_in >> skipeol;
         } else {
             const FGAirport* a = airports->search( ident );
-            if ( a ) airports->has_metar( ident );
+            if ( a ) const_cast<FGAirport*>(a)->setMetar(true);
         }
     }
 

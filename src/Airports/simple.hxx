@@ -31,10 +31,8 @@
 
 #include <string>
 #include <map>
-#include <set>
 #include <vector>
 
-#include <simgear/math/point3d.hxx>
 #include "Navaids/positioned.hxx"
 
 // forward decls
@@ -139,14 +137,6 @@ private:
     std::vector<FGRunwayPtr> mTaxiways;
 };
 
-
-class FGAirportSearchFilter {
-public:
-    virtual ~FGAirportSearchFilter() {}
-    // all airports pass the filter by default
-    virtual bool pass(FGAirport*) { return true; }
-};
-
 typedef std::map < std::string, FGAirport* > airport_map;
 typedef airport_map::iterator airport_map_iterator;
 typedef airport_map::const_iterator const_airport_map_iterator;
@@ -178,14 +168,6 @@ public:
     // Returns NULL if unsucessfull.
     FGAirport* search( const std::string& id );
 
-    // search for the airport closest to the specified position
-    // (currently a linear inefficient search so it's probably not
-    // best to use this at runtime.)  An FGAirportSearchFilter class
-    // can be used to restrict the possible choices to a subtype.
-    // max_range limits search - specified as an arc distance, in degrees
-    FGAirport* search( double lon_deg, double lat_deg, double max_range );
-    FGAirport* search( double lon_deg, double lat_deg, double max_range, FGAirportSearchFilter& );
-
     /**
      * Return the number of airports in the list.
      */
@@ -196,16 +178,6 @@ public:
      */
     const FGAirport *getAirport( unsigned int index ) const;
 
-    /**
-     * Mark the specified airport record as not having metar
-     */
-    void no_metar( const std::string &id );
-
-    /**
-     * Mark the specified airport record as (yes) having metar
-     */
-    void has_metar( const std::string &id );
-
 };
 
 // find basic airport location info from airport database
@@ -213,9 +185,6 @@ const FGAirport *fgFindAirportID( const std::string& id);
 
 // get airport elevation
 double fgGetAirportElev( const std::string& id );
-
-// get airport position
-Point3D fgGetAirportPos( const std::string& id );
 
 #endif // _FG_SIMPLE_HXX
 

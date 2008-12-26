@@ -53,6 +53,9 @@ using std::cout;
 
 using namespace simgear;
 
+// extern from Airports/simple.cxx
+extern Point3D fgGetAirportPos( const std::string& id );
+
 FGAIMgr::FGAIMgr() {
 	ATC = globals->get_ATC_mgr();
 	initDone = false;
