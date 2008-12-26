@@ -16,6 +16,6 @@ libAirports_a_SOURCES = \
 	xmlloader.cxx xmlloader.hxx 
 
 calc_loc_SOURCES = calc_loc.cxx
-calc_loc_LDADD = -lsgmath -lsgdebug -lsgmisc -lz $(base_LIBS)
+calc_loc_LDADD = -lsgmath -lsgdebug -lsgmisc -lsgstructure -lz $(base_LIBS)
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

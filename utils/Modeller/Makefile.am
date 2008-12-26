@@ -11,4 +11,5 @@ normalmap_SOURCES = normalmap.cxx
 normalmap_LDADD = -lsgscreen $(opengl_LIBS) $(base_LIBS) -lz
 
 photomodel_SOURCES = photomodel.cxx
-photomodel_LDADD = $(base_LIBS) -lsgbucket -lsgmath -lsgmisc -lsgdebug
+photomodel_LDADD = $(base_LIBS) -lsgbucket -lsgmath -lsgmisc -lsgdebug \
+  		    -lsgstructure

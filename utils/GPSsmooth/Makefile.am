@@ -14,6 +14,7 @@ MIDGsmooth_SOURCES = \
 
 MIDGsmooth_LDADD = \
 	-lsgio -lsgserial -lsgtiming -lsgmath -lsgbucket -lsgmisc -lsgdebug \
+        -lsgstructure \
 	-lplibnet -lplibul \
 	$(joystick_LIBS) $(network_LIBS) $(base_LIBS) -lz
 
