@@ -964,7 +964,7 @@ FGMetarEnvironmentCtrl::update_metar_properties( const FGMetar *m )
 void
 FGMetarEnvironmentCtrl::thread_stop()
 {
-    request_queue.push( string() );	// ask thread to terminate
+    request_queue.push(NULL);	// ask thread to terminate
     thread->join();
 }
 
@@ -973,11 +973,11 @@ FGMetarEnvironmentCtrl::MetarThread::run()
 {
     while ( true )
     {
-        string icao = fetcher->request_queue.pop();
-        if (icao.empty())
+        FGAirport* apt = fetcher->request_queue.pop();
+        if (!apt)
             return;
-        SG_LOG( SG_GENERAL, SG_INFO, "Thread: fetch metar data = " << icao );
-        FGMetarResult result = fetcher->fetch_data( icao );
+        SG_LOG( SG_GENERAL, SG_INFO, "Thread: fetch metar data = " << apt->ident() );
+        FGMetarResult result = fetcher->fetch_data( apt );
         fetcher->result_queue.push( result );
     }
 }
