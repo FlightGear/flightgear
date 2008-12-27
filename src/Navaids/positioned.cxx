@@ -30,6 +30,7 @@
 #include <iostream>
 
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/timing/timestamp.hxx>
 
 #include "positioned.hxx"
 
@@ -339,6 +340,15 @@ spatialGetClosest(const SGGeod& aPos, unsigned int aN, double aCutoffNm, FGPosit
 
 //////////////////////////////////////////////////////////////////////////////
 
+class OrderByName
+{
+public:
+  bool operator()(FGPositioned* a, FGPositioned* b) const
+  {
+    return a->name() < b->name();
+  }
+};
+
 /**
  * A special purpose helper (imported by FGAirport::searchNamesAndIdents) to
  * implement the AirportList dialog. It's unfortunate that it needs to reside
@@ -348,17 +358,18 @@ char** searchAirportNamesAndIdents(const std::string& aFilter)
 {
   const std::ctype<char> &ct = std::use_facet<std::ctype<char> >(std::locale());
   std::string filter(aFilter);
-  if (!filter.empty()) {
+  bool hasFilter = !filter.empty();
+  if (hasFilter) {
     ct.toupper((char *)filter.data(), (char *)filter.data() + filter.size());
   }
   
   NamedPositionedIndex::const_iterator it = global_namedIndex.begin();
   NamedPositionedIndex::const_iterator end = global_namedIndex.end();
   
-  FGPositioned::List matches;
-  if (aFilter.empty()) {
-    matches.reserve(2000);
-  }
+  // note this is a vector of raw pointers, not smart pointers, because it
+  // may get very large and smart-pointer-atomicity-locking then becomes a
+  // bottleneck for this case.
+  std::vector<FGPositioned*> matches;
   
   for (; it != end; ++it) {
     FGPositioned::Type ty = it->second->type();
@@ -366,18 +377,17 @@ char** searchAirportNamesAndIdents(const std::string& aFilter)
       continue;
     }
     
-    if (aFilter.empty()) {
-      matches.push_back(it->second);
-      continue;
-    }
-    
-    if ((it->second->name().find(aFilter) == std::string::npos) &&
+    if (hasFilter &&
+        (it->second->name().find(aFilter) == std::string::npos) &&
         (it->second->ident().find(aFilter) == std::string::npos)) {
       continue;
     }
     
     matches.push_back(it->second);
   }
+  
+  // sort alphabetically on name
+  std::sort(matches.begin(), matches.end(), OrderByName());
   
   // convert results to format comptible with puaList
   unsigned int numMatches = matches.size();
