@@ -103,9 +103,9 @@ void fgOSOpenWindow(bool stencil)
     // Look for windows, camera groups, and the old syntax of
     // top-level cameras
     SGPropertyNode* renderingNode = fgGetNode("/sim/rendering");
-    SGPropertyNode* cgroupNode = renderingNode->getChild("camera-group");
-    if (!cgroupNode) {
-        cgroupNode = renderingNode->getNode("camera-group", true);
+    SGPropertyNode* cgroupNode = renderingNode->getNode("camera-group", true);
+    bool oldSyntax = !cgroupNode->hasChild("camera");
+    if (oldSyntax) {
         for (int i = 0; i < renderingNode->nChildren(); ++i) {
             SGPropertyNode* propNode = renderingNode->getChild(i);
             const char* propName = propNode->getName();
