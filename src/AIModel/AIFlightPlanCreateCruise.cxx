@@ -18,6 +18,11 @@
  *
  *
  **************************************************************************/
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <fstream>
 #include <iostream>
 #include "AIFlightPlan.hxx"
