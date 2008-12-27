@@ -54,7 +54,6 @@ class SGEventMgr;
 class SGSubsystemMgr;
 class SGSubsystem;
 
-class FGAirportList;
 class FGAIMgr;
 class FGATCMgr;
 class FGAircraftModel;
@@ -136,9 +135,6 @@ private:
 
     // sound manager
     SGSoundMgr *soundmgr;
-
-    // Simple Airport List
-    FGAirportList *airports;
 
     // ATC manager
     FGATCMgr *ATC_mgr;
@@ -242,9 +238,6 @@ public:
 
     inline SGMaterialLib *get_matlib() const { return matlib; }
     inline void set_matlib( SGMaterialLib *m ) { matlib = m; }
-
-    inline FGAirportList *get_airports() const { return airports; }
-    inline void set_airports( FGAirportList *a ) {airports = a; }
 
     inline FGATCMgr *get_ATC_mgr() const { return ATC_mgr; }
     inline void set_ATC_mgr( FGATCMgr *a ) {ATC_mgr = a; }

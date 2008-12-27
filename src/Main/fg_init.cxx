@@ -965,10 +965,7 @@ fgInitNav ()
     SGPath p_metar( globals->get_fg_root() );
     p_metar.append( "Airports/metar.dat" );
 
-    FGAirportList *airports = new FGAirportList();
-    globals->set_airports( airports );
-
-    fgAirportDBLoad( airports, aptdb.str(), p_metar.str() );
+    fgAirportDBLoad( aptdb.str(), p_metar.str() );
 
     FGNavList *navlist = new FGNavList;
     FGNavList *loclist = new FGNavList;

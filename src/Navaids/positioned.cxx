@@ -370,6 +370,7 @@ char** searchAirportNamesAndIdents(const std::string& aFilter)
   // may get very large and smart-pointer-atomicity-locking then becomes a
   // bottleneck for this case.
   std::vector<FGPositioned*> matches;
+  std::string upper;
   
   for (; it != end; ++it) {
     FGPositioned::Type ty = it->second->type();
@@ -377,10 +378,12 @@ char** searchAirportNamesAndIdents(const std::string& aFilter)
       continue;
     }
     
-    if (hasFilter &&
-        (it->second->name().find(aFilter) == std::string::npos) &&
-        (it->second->ident().find(aFilter) == std::string::npos)) {
-      continue;
+    if (hasFilter && (it->second->ident().find(aFilter) == std::string::npos)) {
+      upper = it->second->name(); // string copy, sadly
+      ct.toupper((char *)upper.data(), (char *)upper.data() + upper.size());
+      if (upper.find(aFilter) == std::string::npos) {
+        continue;
+      }
     }
     
     matches.push_back(it->second);
@@ -396,23 +399,27 @@ char** searchAirportNamesAndIdents(const std::string& aFilter)
   
   // nasty code to avoid excessive string copying and allocations.
   // We format results as follows (note whitespace!):
-  //   ' name-of-airport-chars   (icao)'
+  //   ' name-of-airport-chars   (ident)'
   // so the total length is:
-  //    1 + strlen(name) + 4 + 4 (for the ICAO) + 1 + 1 (for the null)
+  //    1 + strlen(name) + 4 + 4 (for the ident) + 1 + 1 (for the null)
   // which gives a grand total of 11 + the length of the name.
-  
+  // note the ident is sometimes only three letters for non-ICAO small strips
   for (unsigned int i=0; i<numMatches; ++i) {
     int nameLength = matches[i]->name().size();
+    int icaoLength = matches[i]->ident().size();
     char* entry = new char[nameLength + 11];
-    entry[0] = ' ';
-    memcpy(entry + 1, matches[i]->name().c_str(), nameLength);
-    entry[nameLength + 1] = ' ';
-    entry[nameLength + 2] = ' ';
-    entry[nameLength + 3] = ' ';
-    entry[nameLength + 4] = '(';
-    memcpy(entry + nameLength + 5, matches[i]->ident().c_str(), 4);
-    entry[nameLength + 9] = ')';
-    entry[nameLength + 10] = 0;
+    char* dst = entry;
+    *dst++ = ' ';
+    memcpy(dst, matches[i]->name().c_str(), nameLength);
+    dst += nameLength;
+    *dst++ = ' ';
+    *dst++ = ' ';
+    *dst++ = ' ';
+    *dst++ = '(';
+    memcpy(dst, matches[i]->ident().c_str(), icaoLength);
+    dst += icaoLength;
+    *dst++ = ')';
+    *dst++ = 0;
     result[i] = entry;
   }
   

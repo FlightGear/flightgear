@@ -57,7 +57,7 @@ static FGPositioned::Type fptypeFromRobinType(int aType)
   }
 }
 
-FGAirport* addAirport(FGAirportList *airports, const string& apt_id, const string& apt_name,
+FGAirport* addAirport(const string& apt_id, const string& apt_name,
     int rwy_count, double rwy_lat_accum, double rwy_lon_accum, double last_rwy_heading,
     double apt_elev, SGGeod& tower, bool got_tower, int type)
 {
@@ -82,17 +82,14 @@ FGAirport* addAirport(FGAirportList *airports, const string& apt_id, const strin
         tower = SGGeod::fromDegFt(lon + fudge_lon, lat + fudge_lat, apt_elev + tower_height);
     }
 
-  
-
-    return airports->add(apt_id, SGGeod::fromDegFt(lon, lat, apt_elev), tower, apt_name, false,
+    return new FGAirport(apt_id, SGGeod::fromDegFt(lon, lat, apt_elev), tower, apt_name, false,
         fptypeFromRobinType(type));
 }
 
 // Load the airport data base from the specified aptdb file.  The
 // metar file is used to mark the airports as having metar available
 // or not.
-bool fgAirportDBLoad( FGAirportList *airports, 
-                      const string &aptdb_file, const string &metar_file )
+bool fgAirportDBLoad( const string &aptdb_file, const string &metar_file )
 {
     //
     // Load the apt.dat file
@@ -166,7 +163,7 @@ bool fgAirportDBLoad( FGAirportList *airports,
             SG_LOG( SG_GENERAL, SG_BULK, "Next airport = " << id << " "
                     << elev );
 
-            FGAirport* apt = addAirport(airports, last_apt_id, last_apt_name, rwy_count, rwy_lat_accum, rwy_lon_accum,
+            FGAirport* apt = addAirport(last_apt_id, last_apt_name, rwy_count, rwy_lat_accum, rwy_lon_accum,
                 last_rwy_heading, last_apt_elev, last_tower, got_tower, last_apt_type);
 
             for (unsigned int r=0; r< runways.size(); ++r) {
@@ -269,7 +266,7 @@ bool fgAirportDBLoad( FGAirportList *airports,
     }
 
     // add the last airport being processed if any
-    addAirport(airports, last_apt_id, last_apt_name, rwy_count, rwy_lat_accum, rwy_lon_accum,
+    addAirport( last_apt_id, last_apt_name, rwy_count, rwy_lat_accum, rwy_lon_accum,
         last_rwy_heading, last_apt_elev, last_tower, got_tower, last_apt_type);
 
 

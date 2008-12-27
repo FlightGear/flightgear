@@ -577,7 +577,6 @@ void KLN89::DrawMap(bool draw_avs) {
 	// Annotation then gets drawn by Nav page, NOT this function.
 
 	if(_drawApt && draw_avs) {
-		airport_list apt;
 		/*
 		bool have_apt = _overlays->FindArpByRegion(&apt, bottomLeft.lat(), bottomLeft.lon(), topRight.lat(), topRight.lon());
 		//cout << "Vors enclosed are: ";

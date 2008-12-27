@@ -28,29 +28,19 @@
 #  include <config.h>
 #endif
 
-#include <math.h>
-#include <algorithm>
+#include "simple.hxx"
 
-#include <simgear/compiler.h>
+#include <simgear/misc/sg_path.hxx>
+#include <simgear/props/props.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/sg_inlines.h>
 
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
-#include <simgear/misc/sg_path.hxx>
-#include <simgear/props/props.hxx>
-#include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/debug/logstream.hxx>
-#include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/dynamics.hxx>
-
-#include <string>
-
-#include "simple.hxx"
-#include "xmlloader.hxx"
-
-using std::sort;
-using std::random_shuffle;
+#include <Airports/xmlloader.hxx>
 
 // magic import of a helper which uses FGPositioned internals
 extern char** searchAirportNamesAndIdents(const std::string& aFilter);
@@ -151,19 +141,6 @@ FGAirport::getIteratorForRunwayIdent(const string& aIdent) const
   return it; // end()
 }
 
-static double normaliseBearing(double aBearing)
-{
-  while (aBearing < -180) {
-    aBearing += 360.0;
-  }
-  
-  while (aBearing > 180.0) {
-    aBearing -= 360.0;
-  }
-  
-  return aBearing;
-}
-
 FGRunway* FGAirport::findBestRunwayForHeading(double aHeading) const
 {
   Runway_iterator it = mRunways.begin();
@@ -179,7 +156,8 @@ FGRunway* FGAirport::findBestRunwayForHeading(double aHeading) const
   for (; it != mRunways.end(); ++it) {
     double good = (*it)->score(lengthWeight, widthWeight, surfaceWeight);
     
-    double dev = normaliseBearing(aHeading - (*it)->headingDeg());
+    double dev = aHeading - (*it)->headingDeg();
+    SG_NORMALIZE_RANGE(dev, -180.0, 180.0);
     double bad = fabs(deviationWeight * dev) + 1e-20;
     double quality = good / bad;
     
@@ -306,49 +284,6 @@ char** FGAirport::searchNamesAndIdents(const std::string& aFilter)
   // we delegate all the work to a horrible helper in FGPositioned, which can
   // access the (private) index data.
   return searchAirportNamesAndIdents(aFilter);
-}
-
-/******************************************************************************
- * FGAirportList
- *****************************************************************************/
-
-FGAirportList::FGAirportList()
-{
-}
-
-
-FGAirportList::~FGAirportList( void )
-{
-    for (unsigned int i = 0; i < airports_array.size(); ++i) {
-        delete airports_array[i];
-    }
-}
-
-
-// add an entry to the list
-FGAirport* FGAirportList::add( const string &id, const SGGeod& location, const SGGeod& tower_location,
-                         const string &name, bool has_metar, FGPositioned::Type aType)
-{
-    FGAirport* a = new FGAirport(id, location, tower_location, name, has_metar, aType);
-    // try and read in an auxilary file
-    airports_array.push_back( a );
-    return a;
-}
-
-int
-FGAirportList::size () const
-{
-    return airports_array.size();
-}
-
-
-const FGAirport *FGAirportList::getAirport( unsigned int index ) const
-{
-    if (index < airports_array.size()) {
-        return(airports_array[index]);
-    } else {
-        return(NULL);
-    }
 }
 
 // find basic airport location info from airport database

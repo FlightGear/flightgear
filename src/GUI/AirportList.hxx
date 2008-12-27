@@ -19,7 +19,6 @@ public:
     virtual void setValue(const char *);
 
 private:
-    FGAirportList *_airports;
     char **_content;
     std::string _filter;
 };

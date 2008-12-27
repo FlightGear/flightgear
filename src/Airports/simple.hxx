@@ -156,40 +156,6 @@ private:
     std::vector<FGRunwayPtr> mTaxiways;
 };
 
-typedef std::vector < FGAirport * > airport_list;
-typedef airport_list::iterator airport_list_iterator;
-typedef airport_list::const_iterator const_airport_list_iterator;
-
-
-
-class FGAirportList {
-private:
-
-    airport_list airports_array;
-
-public:
-    // Constructor (new)
-    FGAirportList();
-
-    // Destructor
-    ~FGAirportList();
-
-    // add an entry to the list
-    FGAirport* add( const std::string& id, const SGGeod& location, const SGGeod& tower,
-              const std::string& name, bool has_metar, FGPositioned::Type aType);
-
-    /**
-     * Return the number of airports in the list.
-     */
-    int size() const;
-
-    /**
-     * Return a specific airport, by position.
-     */
-    const FGAirport *getAirport( unsigned int index ) const;
-
-};
-
 // find basic airport location info from airport database
 const FGAirport *fgFindAirportID( const std::string& id);
 

@@ -47,7 +47,6 @@
 #include <Navaids/awynet.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
-#include <Airports/simple.hxx>
 #include <Navaids/navlist.hxx>
 #include <Navaids/fixlist.hxx>
 
@@ -83,7 +82,6 @@ FGGlobals::FGGlobals() :
     route_mgr( NULL ),
     current_panel( NULL ),
     soundmgr( NULL ),
-    airports( NULL ),
     ATC_mgr( NULL ),
     AI_mgr( NULL ),
     controls( NULL ),
@@ -133,7 +131,6 @@ FGGlobals::~FGGlobals()
     delete route_mgr;
     delete current_panel;
     delete soundmgr;
-    delete airports;
 
     delete ATC_mgr;
     delete AI_mgr;
