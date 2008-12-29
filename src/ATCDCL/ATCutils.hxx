@@ -99,5 +99,5 @@ double GetAngleDiff_deg( const double &a1, const double &a2);
 ****************/
 
 // Given a Point3D (lon/lat/elev) and an FGRunway struct, determine if the point lies on the runway
-bool OnRunway(const Point3D& pt, const FGRunway* rwy);
+bool OnRunway(const Point3D& pt, const FGRunwayBase* rwy);
 

@@ -26,30 +26,17 @@
 
 #include <simgear/compiler.h>
 
-#include <simgear/math/sg_geodesy.hxx>
-
-#include "Navaids/positioned.hxx"
-
-#include <string>
+#include "Airports/runwaybase.hxx"
 
 // forward decls
 class FGAirport;
 
-class FGRunway : public FGPositioned
-{  
-  FGAirport* _airport; ///< owning airport
+class FGRunway : public FGRunwayBase
+{
+  FGAirport* _airport;
   bool _reciprocal;
-  double _heading;
-  double _length;
-  double _width;
   double _displ_thresh;
   double _stopway;
-  
-  /** surface, as defined by:
-   * http://www.x-plane.org/home/robinp/Apt810.htm#RwySfcCodes
-   */
-  int _surface_code;
-  
 public:
   
   FGRunway(FGAirport* aAirport, const std::string& rwy_no,
@@ -81,11 +68,6 @@ public:
   { return _reciprocal; }
 
   /**
-   * Test if this is a taxiway or not
-   */
-  bool isTaxiway() const;
-  
-  /**
    * Get the runway threshold point - this is syntatic sugar, equivalent to
    * calling pointOnCenterline(0.0);
    */
@@ -102,41 +84,13 @@ public:
    */
   SGGeod reverseThreshold() const;
   
-  /**
-   * Retrieve a position on the extended runway centerline. Positive values
-   * are in the direction of the runway heading, negative values are in the
-   * opposited direction. 0.0 corresponds to the (non-displaced) threshold
-   */
-  SGGeod pointOnCenterline(double aOffset) const;
-  
-  /**
-   * Runway length in ft
-   */
-  double lengthFt() const
-  { return _length; }
-  
-  double lengthM() const
-  { return _length * SG_FEET_TO_METER; }
-  
-  double widthFt() const
-  { return _width; }
-  
-  double widthM() const
-  { return _width * SG_FEET_TO_METER; }
-  
   double displacedThresholdM() const
   { return _displ_thresh * SG_FEET_TO_METER; }
   
   double stopwayM() const
   { return _stopway * SG_FEET_TO_METER; }
   
-  /**
-   * Runway heading in degrees.
-   */
-  double headingDeg() const
-  { return _heading; }
-  
-  /**
+    /**
    * Airport this runway is located at
    */
   FGAirport* airport() const
@@ -145,18 +99,6 @@ public:
   // FIXME - should die once airport / runway creation is cleaned up
   void setAirport(FGAirport* aAirport)
   { _airport = aAirport; }
-  
-  /**
-   * Predicate to test if this runway has a hard surface. For the moment, this
-   * means concrete or asphalt
-   */
-  bool isHardSurface() const;
-  
-  /**
-   * Retrieve runway surface code, as define in Robin Peel's data
-   */
-  int surface() const 
-  { return _surface_code; }
 };
 
 #endif // _FG_RUNWAYS_HXX

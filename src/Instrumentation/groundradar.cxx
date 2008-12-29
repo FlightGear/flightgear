@@ -112,7 +112,7 @@ void GroundRadar::createTexture(const char* texture_name)
     FGTextureManager::addTexture(texture_name, getTexture());
 }
 
-void GroundRadar::addRunwayVertices(const FGRunway* aRunway, double aTowerLat, double aTowerLon, double aScale, osg::Vec3Array* aVertices)
+void GroundRadar::addRunwayVertices(const FGRunwayBase* aRunway, double aTowerLat, double aTowerLon, double aScale, osg::Vec3Array* aVertices)
 {
   double az1, az2, dist_m;
   geo_inverse_wgs_84(aTowerLat, aTowerLon, aRunway->latitude(), aRunway->longitude(), &az1, &az2, &dist_m);
@@ -159,8 +159,8 @@ void GroundRadar::updateTexture()
     
     for (unsigned int i=0; i<apt->numTaxiways(); ++i)
     {
-      FGRunway* runway(apt->getTaxiwayByIndex(i));
-      addRunwayVertices(runway, tower_lat, tower_lon, scale, taxi_vertices.get());
+      FGTaxiway* txwy(apt->getTaxiwayByIndex(i));
+      addRunwayVertices(txwy, tower_lat, tower_lon, scale, taxi_vertices.get());
     }
     
     osg::Vec3Array* vertices = new osg::Vec3Array(*taxi_vertices.get());

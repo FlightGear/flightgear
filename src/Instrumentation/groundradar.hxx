@@ -26,7 +26,7 @@
 #include "od_gauge.hxx"
 
 // forward decls
-class FGRunway;
+class FGRunwayBase;
 
 ////////////////////////////////////////////////////////////////////////
 // Built-in layer for the atc radar.
@@ -43,7 +43,7 @@ public:
 protected:
     void createTexture(const char* texture_name);
     
-    void addRunwayVertices(const FGRunway* aRunway, double aTowerLat, double aTowerLon, double aScale, osg::Vec3Array* aVertices);
+    void addRunwayVertices(const FGRunwayBase* aRunway, double aTowerLat, double aTowerLon, double aScale, osg::Vec3Array* aVertices);
     
     osg::ref_ptr<osg::Geometry> _geom;
     SGPropertyNode_ptr _airport_node;
