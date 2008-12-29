@@ -25,41 +25,16 @@
 #  include <config.h>
 #endif
 
-#include <cmath>               // fabs()
 #include <cstdio>              // sprintf()
 #include <cstdlib>             // atoi()
 
 #include <simgear/compiler.h>
-#include <simgear/debug/logstream.hxx>
-#include <Main/fg_props.hxx>
 
 #include <string>
-#include <map>
 
 #include "runways.hxx"
 
-using std::istream;
-using std::multimap;
 using std::string;
-
-/*
- * surface codes
- * 1 - asphalt
- * 2 - concrete
- * 3 - turf
- * 4 - dirt
- * 5 - gravel
- * 6 - asphalt helipad
- * 7 - concrete helipad
- * 8 - turf helipad
- * 9 - dirt helipad
- * 12 -  lakebed
- */
- 
-static FGPositioned::Type runwayTypeFromNumber(const std::string& aRwyNo)
-{
-  return (aRwyNo[0] == 'x') ? FGPositioned::TAXIWAY : FGPositioned::RUNWAY;
-}
 
 static std::string cleanRunwayNo(const std::string& aRwyNo)
 {
@@ -84,7 +59,7 @@ static std::string cleanRunwayNo(const std::string& aRwyNo)
   return result;
 }
 
-FGRunway::FGRunway(FGAirport* aAirport, const string& rwy_no,
+FGRunway::FGRunway(FGAirport* aAirport, const string& aIdent,
                         const SGGeod& aGeod,
                         const double heading, const double length,
                         const double width,
@@ -92,18 +67,12 @@ FGRunway::FGRunway(FGAirport* aAirport, const string& rwy_no,
                         const double stopway,
                         const int surface_code,
                         bool reciprocal) :
-  FGPositioned(runwayTypeFromNumber(rwy_no), cleanRunwayNo(rwy_no), aGeod, 
-    (runwayTypeFromNumber(rwy_no) == FGPositioned::RUNWAY)),
+  FGRunwayBase(RUNWAY, cleanRunwayNo(aIdent), aGeod, heading, length, width, surface_code, true),
   _airport(aAirport),
-  _reciprocal(reciprocal)
+  _reciprocal(reciprocal),
+  _displ_thresh(displ_thresh),
+  _stopway(stopway)
 {
-  _heading = heading;
-  _length = length;
-  _width = width;
-  _displ_thresh = displ_thresh;
-  _stopway = stopway;
-
-  _surface_code = surface_code;
 }
 
 string FGRunway::reverseIdent(const string& aRunwayIdent)
@@ -151,11 +120,6 @@ double FGRunway::score(double aLengthWt, double aWidthWt, double aSurfaceWt) con
   return _length * aLengthWt + _width * aWidthWt + surface * aSurfaceWt + 1e-20;
 }
 
-bool FGRunway::isTaxiway() const
-{
-  return (type() == TAXIWAY);
-}
-
 SGGeod FGRunway::threshold() const
 {
   return pointOnCenterline(0.0);
@@ -169,22 +133,5 @@ SGGeod FGRunway::reverseThreshold() const
 SGGeod FGRunway::displacedThreshold() const
 {
   return pointOnCenterline(_displ_thresh * SG_FEET_TO_METER);
-}
-
-SGGeod FGRunway::pointOnCenterline(double aOffset) const
-{
-  SGGeod result;
-  double dummyAz2;
-  double halfLengthMetres = lengthM() * 0.5;
-  
-  SGGeodesy::direct(mPosition, _heading, 
-    aOffset - halfLengthMetres,
-    result, dummyAz2);
-  return result;
-}
-
-bool FGRunway::isHardSurface() const
-{
-  return ((_surface_code == 1) || (_surface_code == 2));
 }
 

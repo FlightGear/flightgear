@@ -13,7 +13,8 @@ libAirports_a_SOURCES = \
 	dynamics.cxx dynamics.hxx \
 	dynamicloader.cxx dynamicloader.hxx \
 	runwayprefloader.cxx runwayprefloader.hxx \
-	xmlloader.cxx xmlloader.hxx 
+	xmlloader.cxx xmlloader.hxx \
+	runwaybase.cxx runwaybase.hxx \
 
 calc_loc_SOURCES = calc_loc.cxx
 calc_loc_LDADD = -lsgmath -lsgdebug -lsgmisc -lsgstructure -lz $(base_LIBS)
