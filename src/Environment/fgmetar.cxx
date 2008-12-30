@@ -99,6 +99,8 @@ FGMetar::FGMetar(const string& icao, const string& proxy, const string& port, co
 		_wind_range_from = _wind_range_to = _wind_dir;
 	}
 
+	if (_wind_speed == SGMetarNaN)
+		_wind_speed = 0.0;
 	if (_gust_speed == SGMetarNaN)
 		_gust_speed = 0.0;
 
