@@ -312,7 +312,10 @@ void FGGroundNetwork::init()
   //exit(1);
 }
 
-
+int FGGroundNetwork::findNearestNode(const SGGeod& aGeod)
+{
+  return findNearestNode(aGeod.getLatitudeDeg(), aGeod.getLongitudeDeg());
+}
 
 int FGGroundNetwork::findNearestNode(double lat, double lon)
 {
