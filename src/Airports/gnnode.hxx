@@ -18,7 +18,9 @@
 
 #include <vector>
 #include <string>
+
 #include <simgear/compiler.h>
+#include <simgear/math/sg_geodesy.hxx>
 
 using std::string;
 using std::vector;
@@ -106,6 +108,8 @@ FGTaxiNode &operator =(const FGTaxiNode &other)
   double getPathScore() { return pathScore; };
   double getLatitude() { return lat;};
   double getLongitude(){ return lon;};
+
+  SGGeod geod() const { return SGGeod::fromDeg(lon, lat); }
 
   int getIndex() { return index; };
   int getHoldPointType() { return holdType; };

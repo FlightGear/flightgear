@@ -276,7 +276,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
     //  {
     //    cerr << "Creating cruise to EHAM " << latitude << " " << longitude << endl;
     //  }
-    heading = rwy->headingDeg();
+    heading = rwy._heading;
     azimuth = heading + 180.0;
     while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
 
@@ -315,52 +315,16 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
 				  double longitude, double speed, 
 				  double alt, const string& fltType)
 {
-  double wind_speed;
-  double wind_heading;
-  double heading;
-  double lat, lon, az;
-  double lat2, lon2, az2;
-  double azimuth;
   waypoint *wpt;
-
-  wpt = new waypoint;
-  wpt->name      = "Cruise"; //wpt_node->getStringValue("name", "END");
-  wpt->latitude  = latitude;
-  wpt->longitude = longitude;
-  wpt->altitude  = alt;
-  wpt->speed     = speed; 
-  wpt->crossat   = -10000;
-  wpt->gear_down = false;
-  wpt->flaps_down= false;
-  wpt->finished  = false;
-  wpt->on_ground = false;
-  wpt->routeIndex = 0;
+  wpt = createInAir("Cruise", SGGeod::fromDeg(longitude, latitude), alt, speed);
   waypoints.push_back(wpt); 
   
- 
   string rwyClass = getRunwayClassFromTrafficType(fltType);
   arr->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway);
   rwy = arr->getRunwayByIdent(activeRunway);
+  // begin descent 110km out
+  SGGeod beginDescentPoint = rwy->pointOnCenterline(-110000);
   
-  heading = rwy->headingDeg();
-  azimuth = heading + 180.0;
-  while ( azimuth >= 360.0 ) { azimuth -= 360.0; }
-  
-  
-  geo_direct_wgs_84 ( 0, rwy->latitude(), rwy->longitude(), azimuth, 
-		      110000,
-		      &lat2, &lon2, &az2 );
-  wpt = new waypoint;
-  wpt->name      = "BOD";
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = alt;
-  wpt->speed     = speed; 
-  wpt->crossat   = alt;
-  wpt->gear_down = false;
-  wpt->flaps_down= false;
-  wpt->finished  = false;
-  wpt->on_ground = false;
-  wpt->routeIndex = 0;
+  wpt = createInAir("BOD", beginDescentPoint, alt, speed);
   waypoints.push_back(wpt); 
 }
