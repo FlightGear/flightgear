@@ -147,7 +147,7 @@ CameraInfo* CameraGroup::addCamera(unsigned flags, Camera* camera,
         installCullVisitor(farCamera);
         info->farCamera = farCamera;
         info->farSlaveIndex = _viewer->getNumSlaves() - 1;
-        farCamera->setRenderOrder(Camera::NESTED_RENDER, info->farSlaveIndex);
+        farCamera->setRenderOrder(Camera::POST_RENDER, info->farSlaveIndex);
         camera->setCullMask(camera->getCullMask() & ~simgear::BACKGROUND_BIT);
         camera->setClearMask(GL_DEPTH_BUFFER_BIT);
     }
@@ -155,7 +155,7 @@ CameraInfo* CameraGroup::addCamera(unsigned flags, Camera* camera,
     installCullVisitor(camera);
     info->camera = camera;
     info->slaveIndex = _viewer->getNumSlaves() - 1;
-    camera->setRenderOrder(Camera::NESTED_RENDER, info->slaveIndex);
+    camera->setRenderOrder(Camera::POST_RENDER, info->slaveIndex);
     _cameras.push_back(info);
     return info;
 }
