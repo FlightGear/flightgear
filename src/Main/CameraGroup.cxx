@@ -134,8 +134,11 @@ CameraInfo* CameraGroup::addCamera(unsigned flags, Camera* camera,
 
     Camera* farCamera = 0;
     if ((flags & (GUI | ORTHO)) == 0) {
-        farCamera = simgear::clone(camera);
+        farCamera = new Camera;
+        farCamera->setAllowEventFocus(camera->getAllowEventFocus());
         farCamera->setGraphicsContext(camera->getGraphicsContext());
+        farCamera->setCullingMode(camera->getCullingMode());
+        farCamera->setInheritanceMask(camera->getInheritanceMask());
         // Each camera's viewport is written when the window is
         // resized; if the the viewport isn't copied here, it gets updated
         // twice and ends up with the wrong value.
