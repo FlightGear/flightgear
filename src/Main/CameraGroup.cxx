@@ -139,6 +139,7 @@ CameraInfo* CameraGroup::addCamera(unsigned flags, Camera* camera,
         farCamera->setGraphicsContext(camera->getGraphicsContext());
         farCamera->setCullingMode(camera->getCullingMode());
         farCamera->setInheritanceMask(camera->getInheritanceMask());
+        farCamera->setReferenceFrame(Transform::ABSOLUTE_RF);
         // Each camera's viewport is written when the window is
         // resized; if the the viewport isn't copied here, it gets updated
         // twice and ends up with the wrong value.
