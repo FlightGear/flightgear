@@ -169,7 +169,7 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     // pressure change can be assumed to be adiabatic.  Calculate a
     // temperature change, and use that to get the density.
     // Note: need to model intercoolers here...
-    float T = temp * Math::pow(_mp/pressure, 2.0/7.0);
+    float T = temp * Math::pow((_mp*_mp)/(pressure*pressure), 1.0/7.0);
     float rho = _mp / (287.1f * T);
 
     // The actual fuel flow is determined only by engine RPM and the
