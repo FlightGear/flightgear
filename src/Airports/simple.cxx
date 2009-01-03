@@ -192,21 +192,22 @@ unsigned int FGAirport::numTaxiways() const
   return mTaxiways.size();
 }
 
-FGRunway* FGAirport::getTaxiwayByIndex(unsigned int aIndex) const
+FGTaxiway* FGAirport::getTaxiwayByIndex(unsigned int aIndex) const
 {
   assert(aIndex >= 0 && aIndex < mTaxiways.size());
   return mTaxiways[aIndex];
 }
 
-void FGAirport::addRunway(FGRunway* aRunway)
+void FGAirport::setRunwaysAndTaxiways(vector<FGRunwayPtr>& rwys,
+       vector<FGTaxiwayPtr>& txwys)
 {
-  aRunway->setAirport(this);
-  
-  if (aRunway->isTaxiway()) {
-    mTaxiways.push_back(aRunway);
-  } else {
-    mRunways.push_back(aRunway);
+  mRunways.swap(rwys);
+  Runway_iterator it = mRunways.begin();
+  for (; it != mRunways.end(); ++it) {
+    (*it)->setAirport(this);
   }
+  
+  mTaxiways.swap(txwys);
 }
 
 FGRunway* FGAirport::getActiveRunwayForUsage() const

@@ -37,8 +37,10 @@
 // forward decls
 class FGAirportDynamics;
 class FGRunway;
+class FGTaxiway;
 
 typedef SGSharedPtr<FGRunway> FGRunwayPtr;
+typedef SGSharedPtr<FGTaxiway> FGTaxiwayPtr;
 
 /***************************************************************************************
  *
@@ -93,9 +95,10 @@ public:
     bool hasHardRunwayOfLengthFt(double aLengthFt) const;
     
     unsigned int numTaxiways() const;
-    FGRunway* getTaxiwayByIndex(unsigned int aIndex) const;
+    FGTaxiway* getTaxiwayByIndex(unsigned int aIndex) const;
     
-    void addRunway(FGRunway* aRunway);
+    void setRunwaysAndTaxiways(std::vector<FGRunwayPtr>& rwys,
+      std::vector<FGTaxiwayPtr>& txwys);
     
     class AirportFilter : public Filter
      {
@@ -153,7 +156,7 @@ private:
     FGAirport(const FGAirport&);
     
     std::vector<FGRunwayPtr> mRunways;
-    std::vector<FGRunwayPtr> mTaxiways;
+    std::vector<FGTaxiwayPtr> mTaxiways;
 };
 
 // find basic airport location info from airport database

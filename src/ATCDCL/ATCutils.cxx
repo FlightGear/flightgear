@@ -293,7 +293,7 @@ double GetAngleDiff_deg( const double &a1, const double &a2) {
 
 // Runway stuff
 // Given a Point3D (lon/lat/elev) and an FGRunway struct, determine if the point lies on the runway
-bool OnRunway(const Point3D& pt, const FGRunway* rwy) {
+bool OnRunway(const Point3D& pt, const FGRunwayBase* rwy) {
 	FGATCAlignedProjection ortho;
 	Point3D centre(rwy->longitude(), rwy->latitude(), 0.0);	// We don't need the elev
 	ortho.Init(centre, rwy->headingDeg());
