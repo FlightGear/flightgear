@@ -120,17 +120,17 @@ double FGRunway::score(double aLengthWt, double aWidthWt, double aSurfaceWt) con
   return _length * aLengthWt + _width * aWidthWt + surface * aSurfaceWt + 1e-20;
 }
 
-SGGeod FGRunway::threshold() const
+SGGeod FGRunway::begin() const
 {
   return pointOnCenterline(0.0);
 }
 
-SGGeod FGRunway::reverseThreshold() const
+SGGeod FGRunway::end() const
 {
   return pointOnCenterline(lengthM());
 }
 
-SGGeod FGRunway::displacedThreshold() const
+SGGeod FGRunway::threshold() const
 {
   return pointOnCenterline(_displ_thresh * SG_FEET_TO_METER);
 }

@@ -363,7 +363,7 @@ void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double spee
  wpt->on_ground = false;
  waypoints.push_back(wpt);
 
- wpt = cloneWithPos(wpt, "3000 ft", rwy->reverseThreshold());
+ wpt = cloneWithPos(wpt, "3000 ft", rwy->end());
  wpt->altitude  = airportElev+3000;
  waypoints.push_back(wpt);
 
@@ -441,7 +441,7 @@ void FGAIFlightPlan::createLanding(FGAirport *apt)
   waypoint *wpt;
   double aptElev = apt->getElevation();
   //Runway Threshold
-  wpt = createOnGround("Threshold", rwy->displacedThreshold(), aptElev, 150);
+  wpt = createOnGround("Threshold", rwy->threshold(), aptElev, 150);
   wpt->crossat = apt->getElevation();
   waypoints.push_back(wpt); 
 

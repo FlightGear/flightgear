@@ -68,21 +68,21 @@ public:
   { return _reciprocal; }
 
   /**
-   * Get the runway threshold point - this is syntatic sugar, equivalent to
+   * Get the runway begining point - this is syntatic sugar, equivalent to
    * calling pointOnCenterline(0.0);
    */
-  SGGeod threshold() const;
+  SGGeod begin() const;
   
   /**
    * Get the (possibly displaced) threshold point.
    */
-  SGGeod displacedThreshold() const;
+  SGGeod threshold() const;
   
   /**
-   * Get the opposite threshold - this is equivalent to calling
+   * Get the 'far' end - this is equivalent to calling
    * pointOnCenterline(lengthFt());
    */
-  SGGeod reverseThreshold() const;
+  SGGeod end() const;
   
   double displacedThresholdM() const
   { return _displ_thresh * SG_FEET_TO_METER; }
