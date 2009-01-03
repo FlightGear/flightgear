@@ -39,9 +39,9 @@ struct State {
         gpos[2] = tmp[2] + pos[2];
     }
     void posGlobalToLocal(double* gpos, float *lpos) {
-        lpos[0] = gpos[0] - pos[0];
-        lpos[1] = gpos[1] - pos[1];
-        lpos[2] = gpos[2] - pos[2];
+        lpos[0] = (float)(gpos[0] - pos[0]);
+        lpos[1] = (float)(gpos[1] - pos[1]);
+        lpos[2] = (float)(gpos[2] - pos[2]);
         Math::vmul33(orient, lpos, lpos);
     }
     void velLocalToGlobal(float* lvel, float *gvel) {
@@ -53,9 +53,9 @@ struct State {
 
     void planeGlobalToLocal(double* gplane, float *lplane) {
       // First the normal vector transformed to local coordinates.
-      lplane[0] = -gplane[0];
-      lplane[1] = -gplane[1];
-      lplane[2] = -gplane[2];
+      lplane[0] = (float)-gplane[0];
+      lplane[1] = (float)-gplane[1];
+      lplane[2] = (float)-gplane[2];
       Math::vmul33(orient, lplane, lplane);
 
       // Then the distance from the plane to the Aircraft's origin.
