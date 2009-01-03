@@ -485,14 +485,9 @@ GPS::updateTTWNode(UpdateContext& ctx, double distance_m, SGPropertyNode_ptr nod
       unsigned int TTW_minutes = 0;
       unsigned int TTW_hours   = 0;
       char TTW_str[9];
-      while (TTW_seconds >= 3600) {
-        TTW_seconds -= 3600;
-        TTW_hours++;
-      }
-      while (TTW_seconds >= 60) {
-        TTW_seconds -= 60;
-        TTW_minutes++;
-      }
+      TTW_hours   = TTW_seconds / 3600;
+      TTW_minutes = (TTW_seconds / 60) % 60;
+      TTW_seconds = TTW_seconds % 60;
       snprintf(TTW_str, 9, "%02d:%02d:%02d",
         TTW_hours, TTW_minutes, TTW_seconds);
       node->setStringValue(TTW_str);
