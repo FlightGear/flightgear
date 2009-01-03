@@ -39,9 +39,66 @@
 #include "navlist.hxx"
 #include "navdb.hxx"
 #include "Main/globals.hxx"
+#include "Navaids/markerbeacon.hxx"
+#include "Airports/simple.hxx"
 
 using std::string;
 
+static FGPositioned::Type
+mapRobinTypeToFGPType(int aTy)
+{
+  switch (aTy) {
+ // case 1:
+  case 2: return FGPositioned::NDB;
+  case 3: return FGPositioned::VOR;
+  case 4: return FGPositioned::LOC;
+  case 5: return FGPositioned::ILS;
+  case 6: return FGPositioned::GS;
+  case 12:
+  case 13: return FGPositioned::DME;
+  case 99: return FGPositioned::INVALID; // end-of-file code
+  default:
+    throw sg_range_exception("Got a nav.dat type we don't recognize", "FGNavRecord::createFromStream");
+  }
+}
+
+static FGNavRecord* createNavFromStream(std::istream& aStream)
+{
+  int rawType;
+  aStream >> rawType;
+  if (aStream.eof()) {
+    return NULL; // happens with, eg, carrier_nav.dat
+  }
+  
+  double lat, lon, elev_ft, multiuse;
+  int freq, range;
+  std::string name, ident;
+  aStream >> lat >> lon >> elev_ft >> freq >> range >> multiuse >> ident;
+  getline(aStream, name);
+  
+  SGGeod pos(SGGeod::fromDegFt(lon, lat, elev_ft));
+  name = simgear::strutils::strip(name);
+  
+  if ((rawType >= 7) && (rawType <= 9)) {
+    // marker beacons use a different run-time class now
+     FGMarkerBeacon::create(rawType, name, pos);
+     return NULL; // not a nav-record, but that's okay
+  }
+  
+  FGPositioned::Type type = mapRobinTypeToFGPType(rawType);
+  if (type == FGPositioned::INVALID) {
+    return NULL;
+  }
+  
+  // silently multiply adf frequencies by 100 so that adf
+  // vs. nav/loc frequency lookups can use the same code.
+  if (type == FGPositioned::NDB) {
+    freq *= 100;
+  }
+  
+  return new FGNavRecord(type, ident, name, pos,
+    freq, range, multiuse);
+}
 
 // load and initialize the navigational databases
 bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
@@ -50,17 +107,6 @@ bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
                   FGTACANList *channellist)
 {
     SG_LOG(SG_GENERAL, SG_INFO, "Loading Navaid Databases");
-    // SG_LOG(SG_GENERAL, SG_INFO, "  VOR/NDB");
-    // SGPath p_nav( globals->get_fg_root() );
-    // p_nav.append( "Navaids/default.nav" );
-    // navlist->init( p_nav );
-
-    // SG_LOG(SG_GENERAL, SG_INFO, "  ILS and Marker Beacons");
-    // beacons->init();
-    // SGPath p_ils( globals->get_fg_root() );
-    // p_ils.append( "Navaids/default.ils" );
-    // ilslist->init( p_ils );
-
 
     SGPath path( globals->get_fg_root() );
     path.append( "Navaids/nav.dat" );
@@ -76,9 +122,9 @@ bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
     in >> skipeol;
 
     while (!in.eof()) {
-      FGNavRecord *r = FGNavRecord::createFromStream(in);
+      FGNavRecord *r = createNavFromStream(in);
       if (!r) {
-        break;
+        continue;
       }
       
       switch (r->type()) {
@@ -94,12 +140,6 @@ bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
         
       case FGPositioned::GS:
         gslist->add(r);
-        break;
-      
-      case FGPositioned::OM:
-      case FGPositioned::MM:
-      case FGPositioned::IM:
-        // no need to add this to a list, never searched by frequency
         break;
       
       case FGPositioned::DME:
@@ -143,7 +183,7 @@ bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
     //incarrier >> skipeol;
     
     while ( ! incarrier.eof() ) {
-      FGNavRecord *r = FGNavRecord::createFromStream(incarrier);
+      FGNavRecord *r = createNavFromStream(incarrier);
       if (!r) {
         continue;
       }
@@ -184,4 +224,27 @@ bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
 
 
     return true;
+}
+
+FGRunway* getRunwayFromName(const std::string& aName)
+{
+  vector<string> parts = simgear::strutils::split(aName);
+  if (parts.size() < 2) {
+    SG_LOG(SG_GENERAL, SG_WARN, "getRunwayFromName: malformed name:" << aName);
+    return NULL;
+  }
+  
+  const FGAirport* apt = fgFindAirportID(parts[0]);
+  if (!apt) {
+    SG_LOG(SG_GENERAL, SG_WARN, "navaid " << aName << " associated with bogus airport ID:" << parts[0]);
+    return NULL;
+  }
+  
+  FGRunway* runway = apt->getRunwayByIdent(parts[1]);
+  if (!runway) {
+    SG_LOG(SG_GENERAL, SG_WARN, "navaid " << aName << " associated with bogus runway ID:" << parts[1]);
+    return NULL;
+  }
+
+  return runway;
 }
