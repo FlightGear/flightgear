@@ -101,7 +101,7 @@ osg::Node* FGCreateRedoutNode()
   camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
   camera->setProjectionMatrix(osg::Matrix::ortho2D(-1, 1, -1, 1));
   camera->setViewMatrix(osg::Matrix::identity());
-  camera->setRenderOrder(osg::Camera::POST_RENDER, 10);
+  camera->setRenderOrder(osg::Camera::POST_RENDER, 99);
   camera->setClearMask(0);
   camera->setAllowEventFocus(false);
   camera->setCullingActive(false);
