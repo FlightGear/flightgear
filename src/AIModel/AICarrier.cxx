@@ -514,7 +514,7 @@ void FGAICarrier::UpdateWind( double dt) {
     + (rel_wind_speed_from_north_kts * rel_wind_speed_from_north_kts));
 
     //calculate the relative wind direction
-    rel_wind_from_deg = atan(rel_wind_speed_from_east_kts/rel_wind_speed_from_north_kts)
+    rel_wind_from_deg = atan2(rel_wind_speed_from_east_kts, rel_wind_speed_from_north_kts)
                             * SG_RADIANS_TO_DEGREES;
 
     // rationalise the output

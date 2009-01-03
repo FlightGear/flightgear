@@ -219,9 +219,11 @@ void CameraGroup::update(const osg::Vec3d& position,
 
 void CameraGroup::setCameraParameters(float vfov, float aspectRatio)
 {
-    _viewer->getCamera()->setProjectionMatrixAsPerspective(vfov,
-                                                           1.0f / aspectRatio,
-                                                           _zNear, _zFar);
+    if (vfov != 0.0f && aspectRatio != 0.0f)
+        _viewer->getCamera()
+            ->setProjectionMatrixAsPerspective(vfov,
+                                               1.0f / aspectRatio,
+                                               _zNear, _zFar);
 }
 }
 
