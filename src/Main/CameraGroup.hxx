@@ -182,6 +182,10 @@ protected:
     CameraList _cameras;
     osg::ref_ptr<osgViewer::Viewer> _viewer;
     static osg::ref_ptr<CameraGroup> _defaultGroup;
+    // Near, far for the master camera if used.
+    float _zNear;
+    float _zFar;
+    float _nearField;
 };
 
 }

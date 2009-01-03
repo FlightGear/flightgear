@@ -37,6 +37,7 @@
 #include <osg/StateSet>
 #include <osgDB/FileNameUtils>
 
+#include <simgear/scene/util/RenderConstants.hxx>
 #include <simgear/screen/extensions.hxx>
 #include <simgear/debug/logstream.hxx>
 
@@ -53,6 +54,8 @@ FGODGauge::FGODGauge() :
 
 void FGODGauge::allocRT () {
     camera = new osg::Camera;
+    // Only the far camera should trigger this texture to be rendered.
+    camera->setNodeMask(simgear::BACKGROUND_BIT);
     camera->setProjectionMatrix(osg::Matrix::ortho2D(-256.0, 256.0, -256.0,
             256.0));
     camera->setViewport(0, 0, textureWH, textureWH);

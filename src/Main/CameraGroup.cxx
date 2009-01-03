@@ -134,8 +134,12 @@ CameraInfo* CameraGroup::addCamera(unsigned flags, Camera* camera,
 
     Camera* farCamera = 0;
     if ((flags & (GUI | ORTHO)) == 0) {
-        farCamera = simgear::clone(camera);
+        farCamera = new Camera;
+        farCamera->setAllowEventFocus(camera->getAllowEventFocus());
         farCamera->setGraphicsContext(camera->getGraphicsContext());
+        farCamera->setCullingMode(camera->getCullingMode());
+        farCamera->setInheritanceMask(camera->getInheritanceMask());
+        farCamera->setReferenceFrame(Transform::ABSOLUTE_RF);
         // Each camera's viewport is written when the window is
         // resized; if the the viewport isn't copied here, it gets updated
         // twice and ends up with the wrong value.
@@ -144,15 +148,15 @@ CameraInfo* CameraGroup::addCamera(unsigned flags, Camera* camera,
         installCullVisitor(farCamera);
         info->farCamera = farCamera;
         info->farSlaveIndex = _viewer->getNumSlaves() - 1;
-        farCamera->setRenderOrder(Camera::NESTED_RENDER, info->farSlaveIndex);
+        farCamera->setRenderOrder(Camera::POST_RENDER, info->farSlaveIndex);
         camera->setCullMask(camera->getCullMask() & ~simgear::BACKGROUND_BIT);
+        camera->setClearMask(GL_DEPTH_BUFFER_BIT);
     }
-    camera->setClearMask(GL_DEPTH_BUFFER_BIT);
     _viewer->addSlave(camera, view, projection, useMasterSceneData);
     installCullVisitor(camera);
     info->camera = camera;
     info->slaveIndex = _viewer->getNumSlaves() - 1;
-    camera->setRenderOrder(Camera::NESTED_RENDER, info->slaveIndex);
+    camera->setRenderOrder(Camera::POST_RENDER, info->slaveIndex);
     _cameras.push_back(info);
     return info;
 }
@@ -190,18 +194,22 @@ void CameraGroup::update(const osg::Vec3d& position,
             double left, right, bottom, top, parentNear, parentFar;
             projectionMatrix.getFrustum(left, right, bottom, top,
                                         parentNear, parentFar);
-            if (parentFar < 100.0) {
+            if (parentFar < _nearField || _nearField == 0.0f) {
                 camera->setProjectionMatrix(projectionMatrix);
                 camera->setCullMask(camera->getCullMask()
                                     | simgear::BACKGROUND_BIT);
+                camera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 farCamera->setNodeMask(0);
             } else {
                 Matrix nearProj, farProj;
-                makeNewProjMat(projectionMatrix, parentNear, 100.0, nearProj);
-                makeNewProjMat(projectionMatrix, 100.0, parentFar, farProj);
+                makeNewProjMat(projectionMatrix, parentNear, _nearField,
+                               nearProj);
+                makeNewProjMat(projectionMatrix, _nearField, parentFar,
+                               farProj);
                 camera->setProjectionMatrix(nearProj);
                 camera->setCullMask(camera->getCullMask()
                                     & ~simgear::BACKGROUND_BIT);
+                camera->setClearMask(GL_DEPTH_BUFFER_BIT);
                 farCamera->setProjectionMatrix(farProj);
                 farCamera->setNodeMask(camera->getNodeMask());
             }
@@ -211,11 +219,9 @@ void CameraGroup::update(const osg::Vec3d& position,
 
 void CameraGroup::setCameraParameters(float vfov, float aspectRatio)
 {
-    const float zNear = .1f;
-    const float zFar = 120000.0f;
     _viewer->getCamera()->setProjectionMatrixAsPerspective(vfov,
                                                            1.0f / aspectRatio,
-                                                           zNear, zFar);
+                                                           _zNear, _zFar);
 }
 }
 
@@ -444,16 +450,25 @@ CameraGroup* CameraGroup::buildCameraGroup(osgViewer::Viewer* viewer,
             cgroup->buildGUICamera(pNode);
         }
     }
+    bindMemberToNode(gnode, "znear", cgroup, &CameraGroup::_zNear, .4f);
+    bindMemberToNode(gnode, "zfar", cgroup, &CameraGroup::_zFar, 120000.0f);
+    bindMemberToNode(gnode, "near-field", cgroup, &CameraGroup::_nearField,
+                     100.0f);
     return cgroup;
 }
 
 void CameraGroup::setCameraCullMasks(Node::NodeMask nm)
 {
     for (CameraIterator i = camerasBegin(), e = camerasEnd(); i != e; ++i) {
-        if ((*i)->flags & GUI)
+        CameraInfo* info = i->get();
+        if (info->flags & GUI)
             continue;
-        (*i)->camera->setCullMask(nm & ~simgear::BACKGROUND_BIT);
-        (*i)->farCamera->setCullMask(nm);
+        if (info->farCamera.valid() && info->farCamera->getNodeMask() != 0) {
+            info->camera->setCullMask(nm & ~simgear::BACKGROUND_BIT);
+            info->farCamera->setCullMask(nm);
+        } else {
+            info->camera->setCullMask(nm);
+        }
     }
 }
 
@@ -512,9 +527,12 @@ bool computeIntersections(const CameraGroup* cgroup,
         Matrix windowMat = viewport->computeWindowMatrix();
         Matrix startPtMat = Matrix::inverse(camera->getProjectionMatrix()
                                             * windowMat);
-        Matrix endPtMat
-            = Matrix::inverse(cinfo->farCamera->getProjectionMatrix()
-                              * windowMat);
+        Matrix endPtMat;
+        if (!cinfo->farCamera.valid() || cinfo->farCamera->getNodeMask() == 0)
+            endPtMat = startPtMat;
+        else
+            endPtMat = Matrix::inverse(cinfo->farCamera->getProjectionMatrix()
+                                       * windowMat);
         start = start * startPtMat;
         start /= start.w();
         end = end * endPtMat;
