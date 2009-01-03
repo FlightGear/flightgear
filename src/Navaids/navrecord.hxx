@@ -68,8 +68,6 @@ class FGNavRecord : public FGPositioned
 public:
   inline ~FGNavRecord(void) {}
 
-  static FGNavRecord* createFromStream(std::istream& aStream);
-
     FGNavRecord(Type type, const std::string& ident, const std::string& name,
       const SGGeod& aPos,
       int freq, int range, double multiuse);

@@ -8,10 +8,9 @@ libNavaids_a_SOURCES = \
 	awynet.hxx awynet.cxx \
 	navrecord.hxx navrecord.cxx \
 	navlist.hxx navlist.cxx \
-	positioned.hxx positioned.cxx
+	positioned.hxx positioned.cxx \
+	markerbeacon.hxx markerbeacon.cxx
 
-#	ils.hxx ilslist.hxx ilslist.cxx \
-#	mkrbeacons.hxx mkrbeacons.cxx 
 #
 # testnavs_SOURCES = testnavs.cxx
 # testnavs_LDADD = \

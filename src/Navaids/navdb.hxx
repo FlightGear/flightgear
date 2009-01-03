@@ -37,4 +37,10 @@ bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
                   FGTACANList *channellist );
 
 
+/**
+ * Helper to map a nav.data name (eg 'KBWI 33R GS') into a FGRunway reference.
+ * returns NULL, and complains loudly, if the airport/runway is not found.
+ */
+FGRunway* getRunwayFromName(const std::string& aName);
+
 #endif // _FG_NAVDB_HXX
