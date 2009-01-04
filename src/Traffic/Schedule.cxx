@@ -37,10 +37,8 @@
 #include <vector>
 #include <algorithm>
 
-#include <plib/sg.h>
-
 #include <simgear/compiler.h>
-#include <simgear/math/polar3d.hxx>
+#include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/route/waypoint.hxx>
@@ -577,37 +575,15 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
 
 double FGAISchedule::getSpeed()
 {
-  double courseToDest;
-  double distanceToDest;
-  double speed, remainingTimeEnroute;
-  FGAirport *dep, *arr;
-
   FGScheduledFlightVecIterator i = flights.begin();
-  dep = (*i)->getDepartureAirport();
-  arr = (*i)->getArrivalAirport  ();
-  if (!(dep && arr))
-    return 0;
  
-  SGWayPoint dest (   dep->getLongitude(),
-		      dep->getLatitude(),
-		      (*i)->getCruiseAlt(), 
-		      SGWayPoint::SPHERICAL); 
-  SGWayPoint curr (    arr->getLongitude(),
-		      arr->getLatitude(),
-		       (*i)->getCruiseAlt(), 
-		       SGWayPoint::SPHERICAL);
-  remainingTimeEnroute     = (*i)->getArrivalTime() - (*i)->getDepartureTime();
-  dest.CourseAndDistance(curr, &courseToDest, &distanceToDest);
-  speed =  (distanceToDest*SG_METER_TO_NM) / 
-    ((double) remainingTimeEnroute/3600.0);
-  if (speed < 300) {
-     //cerr << "Warning : calculated speed for " << (*i)->getCallSign() << " is low : " << speed << " clamping to 300" << endl;
-     speed = 300.0;
-  }
-  if (speed > 500) {
-     //cerr << "Warning : calculated speed for " << (*i)->getCallSign() << " is high : " << speed << " clamping to 300" << endl;
-     speed = 500.0;
-  }
+  FGAirport* dep = (*i)->getDepartureAirport(),
+   *arr = (*i)->getArrivalAirport();
+  double dist = SGGeodesy::distanceNm(dep->geod(), arr->geod());
+  double remainingTimeEnroute = (*i)->getArrivalTime() - (*i)->getDepartureTime();
+
+  double speed = dist / (remainingTimeEnroute/3600.0);
+  SG_CLAMP_RANGE(speed, 300.0, 500.0);
   return speed;
 }
 /*
