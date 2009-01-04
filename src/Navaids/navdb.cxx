@@ -66,7 +66,7 @@ static FGNavRecord* createNavFromStream(std::istream& aStream)
 {
   int rawType;
   aStream >> rawType;
-  if (aStream.eof()) {
+  if (aStream.eof() || (rawType == 99)) {
     return NULL; // happens with, eg, carrier_nav.dat
   }
   
