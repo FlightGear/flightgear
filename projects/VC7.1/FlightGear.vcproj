@@ -1965,6 +1965,12 @@
 				RelativePath="..\..\src\Navaids\fixlist.hxx">
 			</File>
 			<File
+				RelativePath="..\..\src\Navaids\markerbeacon.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Navaids\markerbeacon.hxx">
+			</File>
+			<File
 				RelativePath="..\..\src\Navaids\nav.hxx">
 			</File>
 			<File
