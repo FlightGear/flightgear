@@ -81,7 +81,7 @@ static FGNavRecord* createNavFromStream(std::istream& aStream)
   
   if ((rawType >= 7) && (rawType <= 9)) {
     // marker beacons use a different run-time class now
-     FGMarkerBeacon::create(rawType, name, pos);
+     FGMarkerBeaconRecord::create(rawType, name, pos);
      return NULL; // not a nav-record, but that's okay
   }
   

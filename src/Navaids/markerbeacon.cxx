@@ -34,7 +34,7 @@
 using std::string;
 
 FGPositioned::Type
-FGMarkerBeacon::mapType(int aTy)
+FGMarkerBeaconRecord::mapType(int aTy)
 {
   switch (aTy) {
   case 7: return FGPositioned::OM;
@@ -42,12 +42,12 @@ FGMarkerBeacon::mapType(int aTy)
   case 9: return FGPositioned::IM;
   default:
     throw sg_range_exception("Got a non-marker-beacon-type", 
-      "FGMarkerBeacon::mapType");
+      "FGMarkerBeaconRecord::mapType");
   }
 }
 
-FGMarkerBeacon*
-FGMarkerBeacon::create(int aTy, const string& aName, const SGGeod& aPos)
+FGMarkerBeaconRecord*
+FGMarkerBeaconRecord::create(int aTy, const string& aName, const SGGeod& aPos)
 {
   Type fgpTy = mapType(aTy);
   FGRunway* runway = getRunwayFromName(aName);
@@ -57,11 +57,11 @@ FGMarkerBeacon::create(int aTy, const string& aName, const SGGeod& aPos)
     pos.setElevationFt(runway->elevation());
   }
   
-  return new FGMarkerBeacon(fgpTy, runway, pos);
+  return new FGMarkerBeaconRecord(fgpTy, runway, pos);
 }
 
 
-FGMarkerBeacon::FGMarkerBeacon(Type aTy, FGRunway* aRunway, const SGGeod& aPos) :
+FGMarkerBeaconRecord::FGMarkerBeaconRecord(Type aTy, FGRunway* aRunway, const SGGeod& aPos) :
   FGPositioned(aTy, string(), aPos),
   _runway(aRunway)
 {
