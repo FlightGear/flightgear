@@ -31,13 +31,13 @@
 // forward decls
 class FGRunway;
 
-class FGMarkerBeacon : public FGPositioned
+class FGMarkerBeaconRecord : public FGPositioned
 {
 public:
-  static FGMarkerBeacon* create(int aTy, const std::string& aName, const SGGeod& aPos);
+  static FGMarkerBeaconRecord* create(int aTy, const std::string& aName, const SGGeod& aPos);
 
 private:
-  FGMarkerBeacon(Type aTy, FGRunway* aRunway, const SGGeod& aPos);
+  FGMarkerBeaconRecord(Type aTy, FGRunway* aRunway, const SGGeod& aPos);
   
   FGRunway* _runway; // should this be ref-ptr?
   
