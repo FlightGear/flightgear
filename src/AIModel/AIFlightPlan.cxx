@@ -360,17 +360,8 @@ void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
 
 // gives distance in feet from a position to a waypoint
 double FGAIFlightPlan::getDistanceToGo(double lat, double lon, waypoint* wp) const{
-   double course, distance;
-   // get size of a degree2 at the present latitude
-   // this won't work over large distances
-   //double ft_per_deg_lat = 366468.96 - 3717.12 * cos(lat / SG_RADIANS_TO_DEGREES);
-   //double ft_per_deg_lon = 365228.16 * cos(lat / SG_RADIANS_TO_DEGREES);
-   //double lat_diff_ft = fabs(wp->latitude - lat) * ft_per_deg_lat;
-   //double lon_diff_ft = fabs(wp->longitude - lon) * ft_per_deg_lon;
-   //return sqrt((lat_diff_ft * lat_diff_ft) + (lon_diff_ft * lon_diff_ft));
-   SGWayPoint sgWp(wp->longitude,wp->latitude, wp->altitude, SGWayPoint::WGS84, string("temp"));
-   sgWp.CourseAndDistance(lon, lat, wp->altitude, &course, &distance);
-   return distance;
+  return SGGeodesy::distanceM(SGGeod::fromDeg(lon, lat), 
+      SGGeod::fromDeg(wp->longitude, wp->latitude));
 }
 
 // sets distance in feet from a lead point to the current waypoint
@@ -416,53 +407,9 @@ double FGAIFlightPlan::getBearing(waypoint* first, waypoint* second) const{
 
 
 double FGAIFlightPlan::getBearing(double lat, double lon, waypoint* wp) const{
-  double course, distance;
- //  double latd = lat;
-//   double lond = lon;
-//   double latt = wp->latitude;
-//   double lont = wp->longitude;
-//   double ft_per_deg_lat = 366468.96 - 3717.12 * cos(lat/SG_RADIANS_TO_DEGREES);
-//   double ft_per_deg_lon = 365228.16 * cos(lat/SG_RADIANS_TO_DEGREES);
-
-//   if (lond < 0.0) {
-//     lond+=360.0;
-//     lont+=360;
-//   }
-//   if (lont < 0.0) {
-//     lond+=360.0;
-//     lont+=360.0;
-//   }
-//   latd+=90.0;
-//   latt+=90.0;
-
-//   double lat_diff = (latt - latd) * ft_per_deg_lat;
-//   double lon_diff = (lont - lond) * ft_per_deg_lon;
-//   double angle = atan(fabs(lat_diff / lon_diff)) * SG_RADIANS_TO_DEGREES;
-
-//   bool southerly = true;
-//   if (latt > latd) southerly = false;
-//   bool easterly = false;
-//   if (lont > lond) easterly = true;
-//   if (southerly && easterly) return 90.0 + angle;
-//   if (!southerly && easterly) return 90.0 - angle;
-//   if (southerly && !easterly) return 270.0 - angle;
-//   if (!southerly && !easterly) return 270.0 + angle; 
-  SGWayPoint sgWp(wp->longitude,wp->latitude, wp->altitude, SGWayPoint::WGS84, string("temp"));
-  sgWp.CourseAndDistance(lon, lat, wp->altitude, &course, &distance);
-  
-  return course;
-  // Omit a compiler warning. 
-  //if ((errno == EDOM) || (errno == ERANGE))
-  //  {
-  //    cerr << "Lon:  " << wp->longitude
-  //	   << "Lat       = " << wp->latitude
-  //   << "Tgt Lon   = " <<  
-  //   << "TgT Lat   = " << speed << endl;
-  //  }
-  
+  return SGGeodesy::courseDeg(SGGeod::fromDeg(lon, lat), 
+      SGGeod::fromDeg(wp->longitude, wp->latitude));
 }
-
-
 
 void FGAIFlightPlan::deleteWaypoints()
 {
