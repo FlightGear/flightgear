@@ -72,7 +72,7 @@ private:
   //double avWindSpeed   [10];
 
   string chooseRunwayFallback();
-
+  bool innerGetActiveRunway(const string &trafficType, int action, string &runway);
 public:
   FGAirportDynamics(FGAirport* ap);
   FGAirportDynamics(const FGAirportDynamics &other);

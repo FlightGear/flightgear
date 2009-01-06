@@ -348,26 +348,24 @@ void FGAirportDynamics::setRwyUse(const FGRunwayPreference& ref)
   //cerr << "Exiting due to not implemented yet" << endl;
   //exit(1);
 }
-void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, string &runway)
+
+bool FGAirportDynamics::innerGetActiveRunway(const string &trafficType, int action, string &runway)
 {
-  double windSpeed;
+double windSpeed;
   double windHeading;
   double maxTail;
   double maxCross;
   string name;
   string type;
 
-  if (!(rwyPrefs.available()))
-    {
-      runway = chooseRunwayFallback();
-      return; // generic fall back goes here
-    }
-  else
-    {
-      RunwayGroup *currRunwayGroup = 0;
-      int nrActiveRunways = 0;
-      time_t dayStart = fgGetLong("/sim/time/utc/day-seconds");
-      if ((abs((long)(dayStart - lastUpdate)) > 600) || trafficType != prevTrafficType)
+  if (!rwyPrefs.available()) {
+    return false;
+  }
+  
+  RunwayGroup *currRunwayGroup = 0;
+  int nrActiveRunways = 0;
+  time_t dayStart = fgGetLong("/sim/time/utc/day-seconds");
+  if ((abs((long)(dayStart - lastUpdate)) > 600) || trafficType != prevTrafficType)
 	{
 	  landing.clear();
 	  takeoff.clear();
@@ -390,19 +388,19 @@ void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, s
 	  //cerr << "A"<< endl;
 	  currSched = rwyPrefs.getSchedule(trafficType.c_str());
 	  if (!(currSched))
-	    return;
+	    return false;
 	  //cerr << "B"<< endl;
 	  scheduleName = currSched->getName(dayStart);
 	  maxTail  = currSched->getTailWind  ();
 	  maxCross = currSched->getCrossWind ();
 	  //cerr << "SChedule anme = " << scheduleName << endl;
 	  if (scheduleName.empty())
-	    return;
+	    return false;
 	  //cerr << "C"<< endl;
 	  currRunwayGroup = rwyPrefs.getGroup(scheduleName); 
 	  //cerr << "D"<< endl;
 	  if (!(currRunwayGroup))
-	    return;
+	    return false;
 	  nrActiveRunways = currRunwayGroup->getNrActiveRunways();
 
         // Keep a history of the currently active runways, to ensure
@@ -451,7 +449,8 @@ void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, s
 	    }
           //cerr << endl;
 	}
-      if (action == 1) // takeoff 
+  
+  if (action == 1) // takeoff 
 	{
 	  int nr = takeoff.size();
 	  if (nr)
@@ -466,7 +465,8 @@ void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, s
 	      runway = chooseRunwayFallback();
 	    }
 	} 
-      if (action == 2) // landing
+  
+  if (action == 2) // landing
 	{
 	  int nr = landing.size();
 	  if (nr)
@@ -478,9 +478,16 @@ void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, s
 	       runway = chooseRunwayFallback();
 	    }
 	} 
-      //runway = globals->get_runways()->search(_ap->getId(), int(windHeading));
-      //cerr << "Seleceted runway: " << runway << endl;
-    }
+
+  return true;
+}
+
+void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, string &runway)
+{
+  bool ok = innerGetActiveRunway(trafficType, action, runway);
+  if (!ok) {
+    runway = chooseRunwayFallback();
+  }
 }
 
 string FGAirportDynamics::chooseRunwayFallback()
