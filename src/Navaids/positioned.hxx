@@ -113,6 +113,22 @@ public:
     virtual bool pass(FGPositioned* aPos) const
     { return true; }
     
+    virtual Type minType() const
+    { return INVALID; }
+    
+    virtual Type maxType() const
+    { return INVALID; }
+    
+    /**
+     * Test if this filter has a non-empty type range
+     */
+    bool hasTypeRange() const;
+    
+    /**
+     * Assuming hasTypeRange is true, test if a given type passes the range
+     */
+    bool passType(Type aTy) const;
+    
     bool operator()(FGPositioned* aPos) const
     { return pass(aPos); }
   };

@@ -37,6 +37,9 @@
 typedef std::multimap<std::string, FGPositioned*> NamedPositionedIndex;
 typedef std::pair<NamedPositionedIndex::const_iterator, NamedPositionedIndex::const_iterator> NamedIndexRange;
 
+using std::lower_bound;
+using std::upper_bound;
+
 /**
  * Order positioned elements by type, then pointer address. This allows us to
  * use range searches (lower_ and upper_bound) to grab items of a particular
@@ -51,6 +54,21 @@ public:
     return a->type() < b->type();
   }
 };
+
+class LowerLimitOfType
+{
+public:
+  bool operator()(const FGPositioned* a, const FGPositioned::Type b) const
+  {
+    return a->type() < b;
+  }
+  
+  bool operator()(const FGPositioned::Type a, const FGPositioned* b) const
+  {
+    return a < b->type();
+  }
+};
+
 
 typedef std::set<FGPositioned*, OrderByType> BucketEntry;
 typedef std::map<long int, BucketEntry> SpatialPositionedIndex;
@@ -122,6 +140,12 @@ spatialFilterInBucket(const SGBucket& aBucket, FGPositioned::Filter* aFilter, FG
     return;
   }
 
+  if (aFilter->hasTypeRange()) {
+    // avoid many calls to the filter hook
+    l = lower_bound(it->second.begin(), it->second.end(), aFilter->minType(), LowerLimitOfType());
+    u = upper_bound(l, it->second.end(), aFilter->maxType(), LowerLimitOfType());
+  }
+
   for ( ; l != u; ++l) {
     if ((*aFilter)(*l)) {
       aResult.push_back(*l);
@@ -147,55 +171,6 @@ spatialFind(const SGGeod& aPos, double aRange,
     } // of j-iteration
   } // of i-iteration  
 }
-
-/*
-class LowerLimitOfType
-{
-public:
-  bool operator()(const FGPositioned* a, const FGPositioned::Type b) const
-  {
-    return a->type() < b;
-  }
-  
-  bool operator()(const FGPositioned::Type a, const FGPositioned* b) const
-  {
-    return a < b->type();
-  }
-};
-
-
-static void
-spatialFindTyped(const SGGeod& aPos, double aRange, FGPositioned::Type aLower, FGPositioned::Type aUpper, FGPositioned::List& aResult)
-{
-  SGBucket buck(aPos);
-  double lat = aPos.getLatitudeDeg(),
-    lon = aPos.getLongitudeDeg();
-  
-  int bx = (int)( aRange*SG_NM_TO_METER / buck.get_width_m() / 2);
-  int by = (int)( aRange*SG_NM_TO_METER / buck.get_height_m() / 2 );
-    
-  // loop over bucket range 
-  for ( int i=-bx; i<=bx; i++) {
-    for ( int j=-by; j<=by; j++) {
-      buck = sgBucketOffset(lon, lat, i, j);
-      
-      SpatialPositionedIndex::const_iterator it;
-      it = global_spatialIndex.find(buck.gen_index());
-      if (it == global_spatialIndex.end()) {
-        continue;
-      }
-      
-      BucketEntry::const_iterator l = std::lower_bound(it->second.begin(), it->second.end(), aLower, LowerLimitOfType());
-      BucketEntry::const_iterator u = std::upper_bound(l, it->second.end(), aUpper, LowerLimitOfType());
-      
-      for ( ; l != u; ++l) {
-        aResult.push_back(*l);
-      }
-      
-    } // of j-iteration
-  } // of i-iteration  
-}
-*/
 
 /**
  */
@@ -263,12 +238,19 @@ namedFindClosest(const std::string& aIdent, const SGGeod& aOrigin, FGPositioned:
 // sequential iterators, not random-access ones
   NamedPositionedIndex::const_iterator check = range.first;
   if (++check == range.second) {
-    // excellent, only one match in the range - all we care about is the type
-    if (aFilter && !aFilter->pass(range.first->second)) {
-      return NULL; // type check failed
-    }
-    
-    return range.first->second;
+    // excellent, only one match in the range
+    FGPositioned* r = range.first->second;
+    if (aFilter) {
+      if (aFilter->hasTypeRange() && !aFilter->passType(r->type())) {
+        return NULL;
+      }
+      
+      if (!aFilter->pass(r)) {
+        return NULL;
+      }
+    } // of have a filter
+  
+    return r;
   } // of short-circuit logic for single-element range
   
 // multiple matches, we need to actually check the distance to each one
@@ -278,8 +260,15 @@ namedFindClosest(const std::string& aIdent, const SGGeod& aOrigin, FGPositioned:
   SGVec3d cartOrigin(SGVec3d::fromGeod(aOrigin));
   
   for (; it != range.second; ++it) {
-    if (aFilter && !aFilter->pass(range.first->second)) {
-      continue;
+    FGPositioned::Type ty = range.first->second->type();
+    if (aFilter) {
+      if (aFilter->hasTypeRange() && !aFilter->passType(ty)) {
+        continue;
+      }
+      
+      if (!aFilter->pass(range.first->second)) {
+        continue;
+      }
     }
     
   // find distance
@@ -424,6 +413,22 @@ char** searchAirportNamesAndIdents(const std::string& aFilter)
   }
   
   return result;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool
+FGPositioned::Filter::hasTypeRange() const
+{
+  assert(minType() <= maxType());
+  return (minType() != INVALID) && (maxType() != INVALID);
+}
+
+bool
+FGPositioned::Filter::passType(Type aTy) const
+{
+  assert(hasTypeRange());
+  return (minType() <= aTy) && (maxType() >= aTy);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
