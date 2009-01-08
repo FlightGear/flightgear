@@ -104,17 +104,32 @@ public:
      {
      public:
        virtual bool pass(FGPositioned* aPos) const { 
-         Type ty(aPos->type());
-         return (ty >= AIRPORT) && (ty <= SEAPORT);
+         return passAirport(static_cast<FGAirport*>(aPos));
+       }
+       
+       virtual Type minType() const {
+         return AIRPORT;
+       }
+       
+       virtual Type maxType() const {
+         return SEAPORT;
+       }
+       
+       virtual bool passAirport(FGAirport* aApt) const {
+         return true;
        }
      };
      
-     class HardSurfaceFilter : public Filter
+     class HardSurfaceFilter : public AirportFilter
      {
      public:
        HardSurfaceFilter(double minLengthFt);
        
-       virtual bool pass(FGPositioned* aPos) const;
+       virtual bool passAirport(FGAirport* aApt) const;
+       
+       virtual Type maxType() const {
+         return AIRPORT;
+       }
      private:
        double mMinLengthFt;
      };

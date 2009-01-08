@@ -40,17 +40,12 @@
 
 using std::sort;
 
-class AirportWithMetar : public FGPositioned::Filter
+class AirportWithMetar : public FGAirport::AirportFilter
 {
 public:
-  virtual bool pass(FGPositioned* aPos) const
+  virtual bool passAirport(FGAirport* aApt) const
   {
-    if ((aPos->type() < FGPositioned::AIRPORT) || (aPos->type() > FGPositioned::SEAPORT)) {
-      return false;
-    }
-    
-    FGAirport* apt = static_cast<FGAirport*>(aPos);
-    return apt->getMetar();
+    return aApt->getMetar();
   }
 };
 

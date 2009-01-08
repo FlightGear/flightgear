@@ -4254,13 +4254,9 @@ MK_VIII::Mode6Handler::test_airport (const FGAirport *airport)
   return false;
 }
 
-bool MK_VIII::Mode6Handler::AirportFilter::pass(FGPositioned* a) const
+bool MK_VIII::Mode6Handler::AirportFilter::passAirport(FGAirport* a) const
 {
-  if (a->type() != FGPositioned::AIRPORT) {
-    return false;
-  }
-    
-  bool ok = self->test_airport(static_cast<FGAirport*>(a));
+  bool ok = self->test_airport(a);
   return ok;
 }
 
@@ -4497,14 +4493,9 @@ MK_VIII::TCFHandler::select_runway (const FGAirport *airport)
   return _runway;
 }
 
-bool MK_VIII::TCFHandler::AirportFilter::pass(FGPositioned* aPos) const
+bool MK_VIII::TCFHandler::AirportFilter::passAirport(FGAirport* aApt) const
 {
-  if (aPos->type() != FGPositioned::AIRPORT) {
-    return false;
-  }
-  
-  FGAirport* apt = static_cast<FGAirport*>(aPos);
-  return apt->hasHardRunwayOfLengthFt(mk->conf.runway_database);
+  return aApt->hasHardRunwayOfLengthFt(mk->conf.runway_database);
 }
    
 void

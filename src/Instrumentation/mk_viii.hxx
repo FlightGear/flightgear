@@ -1505,13 +1505,17 @@ private:
     unsigned int get_bank_angle_alerts ();
     void update_bank_angle ();
     
-    class AirportFilter : public FGPositioned::Filter
+    class AirportFilter : public FGAirport::AirportFilter
     {
     public: 
       AirportFilter(Mode6Handler *s)
         : self(s) {}
         
-      virtual bool pass(FGPositioned *a) const;
+      virtual bool passAirport(FGAirport *a) const;
+      
+      virtual FGPositioned::Type maxType() const {
+        return FGPositioned::AIRPORT;
+      }
       
     private:
       Mode6Handler* self;
@@ -1578,14 +1582,17 @@ private:
     bool is_tcf ();
     bool is_rfcf ();
 
-    class AirportFilter : public FGPositioned::Filter
+    class AirportFilter : public FGAirport::AirportFilter
     {
     public: 
       AirportFilter(MK_VIII *device)
         : mk(device) {}
         
-      virtual bool pass(FGPositioned *a) const;
+      virtual bool passAirport(FGAirport *a) const;
       
+      virtual FGPositioned::Type maxType() const {
+        return FGPositioned::AIRPORT;
+      }
     private:
       MK_VIII* mk;
     };

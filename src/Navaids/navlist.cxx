@@ -74,9 +74,12 @@ FGNavRecord *FGNavList::findByFreq( double freq, const SGGeod& position)
 class VORNDBFilter : public FGPositioned::Filter
 {
 public:
-  virtual bool pass(FGPositioned* aPos) const
-  {
-    return (aPos->type() == FGPositioned::VOR) || (aPos->type() == FGPositioned::NDB);
+  virtual FGPositioned::Type minType() const {
+    return FGPositioned::VOR;
+  }
+
+  virtual FGPositioned::Type maxType()  const {
+    return FGPositioned::NDB;
   }
 };
 
