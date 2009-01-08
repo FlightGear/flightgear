@@ -497,19 +497,22 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
 #undef HASHSET
 }
 
-class AirportInfoFilter : public FGPositioned::Filter
+class AirportInfoFilter : public FGAirport::AirportFilter
 {
 public:
   AirportInfoFilter() :
     type(FGPositioned::AIRPORT)
   { }
   
-  virtual bool pass(FGPositioned* aPos) const
-  {
-    return (aPos->type() == type);
+  virtual FGPositioned::Type minType() const {
+    return type;
   }
   
-  FGPositioned::Type type;
+  virtual FGPositioned::Type maxType() const {
+    return type;
+  }
+  
+ FGPositioned::Type type;
 };
 
 // Returns data hash for particular or nearest airport of a <type>, or nil

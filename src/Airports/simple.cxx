@@ -249,13 +249,9 @@ FGAirport::HardSurfaceFilter::HardSurfaceFilter(double minLengthFt) :
 {
 }
       
-bool FGAirport::HardSurfaceFilter::pass(FGPositioned* aPos) const
+bool FGAirport::HardSurfaceFilter::passAirport(FGAirport* aApt) const
 {
-  if (aPos->type() != AIRPORT) {
-    return false; // exclude seaports and heliports as well, we need a runways
-  }
-   
-  return static_cast<FGAirport*>(aPos)->hasHardRunwayOfLengthFt(mMinLengthFt);
+  return aApt->hasHardRunwayOfLengthFt(mMinLengthFt);
 }
 
 FGAirport* FGAirport::findByIdent(const std::string& aIdent)

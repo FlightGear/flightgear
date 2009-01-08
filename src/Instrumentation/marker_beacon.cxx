@@ -250,11 +250,15 @@ static bool check_beacon_range( const SGGeod& pos,
 
 class BeaconFilter : public FGPositioned::Filter
 {
-public:
-  virtual bool pass(FGPositioned* aPos) const
-  {
-    return (aPos->type() >= FGPositioned::OM) && (aPos->type() <= FGPositioned::IM);
+public:  
+  virtual FGPositioned::Type minType() const {
+    return FGPositioned::OM;
   }
+
+  virtual FGPositioned::Type maxType()  const {
+    return FGPositioned::IM;
+  }
+
 };
 
 // Update current nav/adf radio stations based on current postition
