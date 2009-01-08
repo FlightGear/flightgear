@@ -87,7 +87,7 @@ HeadingIndicator::update (double dt)
 
                                 // Next, calculate the indicated heading,
                                 // introducing errors.
-    double factor = 0.01 / (spin * spin * spin * spin * spin * spin);
+    double factor = 100 * (spin * spin * spin * spin * spin * spin);
     double heading = _heading_in_node->getDoubleValue();
 
                                 // Now, we have to get the current
@@ -98,7 +98,7 @@ HeadingIndicator::update (double dt)
     while ((heading - _last_heading_deg) < -180)
         _last_heading_deg -= 360;
 
-    heading = fgGetLowPass(_last_heading_deg, heading, dt/factor);
+    heading = fgGetLowPass(_last_heading_deg, heading, dt * factor);
     _last_heading_deg = heading;
 
     heading += offset;
