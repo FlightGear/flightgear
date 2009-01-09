@@ -554,8 +554,14 @@ FGPositioned::findNextWithPartialId(FGPositionedRef aCur, const std::string& aId
       continue;
     }
     
-    if (aFilter && !aFilter->pass(candidate)) {
-      continue;
+    if (aFilter) {
+      if (aFilter->hasTypeRange() && !aFilter->passType(candidate->type())) {
+        continue;
+      }
+
+      if(!aFilter->pass(candidate)) {
+        continue;
+      }
     }
   
     if (!aCur) {
