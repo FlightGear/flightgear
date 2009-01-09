@@ -452,7 +452,7 @@ CameraGroup* CameraGroup::buildCameraGroup(osgViewer::Viewer* viewer,
             cgroup->buildGUICamera(pNode);
         }
     }
-    bindMemberToNode(gnode, "znear", cgroup, &CameraGroup::_zNear, .4f);
+    bindMemberToNode(gnode, "znear", cgroup, &CameraGroup::_zNear, .1f);
     bindMemberToNode(gnode, "zfar", cgroup, &CameraGroup::_zFar, 120000.0f);
     bindMemberToNode(gnode, "near-field", cgroup, &CameraGroup::_nearField,
                      100.0f);
