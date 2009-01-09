@@ -711,10 +711,11 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
     if (props->hasValue("border"))
         object->setBorderThickness( props->getIntValue("border", 2) );
 
-    if ( SGPropertyNode *nft = props->getNode("font", false) ) {
+    if (SGPropertyNode *nft = props->getNode("font", false)) {
        FGFontCache *fc = globals->get_fontcache();
        puFont *lfnt = fc->get(nft);
        object->setLabelFont(*lfnt);
+       object->setLegendFont(*lfnt);
     } else {
        object->setLabelFont(*_font);
     }
