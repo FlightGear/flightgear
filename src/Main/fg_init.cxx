@@ -597,6 +597,10 @@ bool fgInitConfig ( int argc, char **argv ) {
         if (fg_home)
             config = fg_home;
 
+        SGPath home_export(config.str());
+        home_export.append("Export/dummy");
+        home_export.create_dir(0777);
+
         // Set /sim/fg-home and don't allow malign code to override it until
         // Nasal security is set up.  Use FG_HOME if necessary.
         SGPropertyNode *home = fgGetNode("/sim", true);
