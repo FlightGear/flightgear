@@ -6,6 +6,7 @@
 
 #include <Input/input.hxx>
 #include <Scripting/NasalSys.hxx>
+#include <Main/fg_os.hxx>
 
 #include "dialog.hxx"
 #include "new_gui.hxx"
@@ -87,6 +88,7 @@ struct GUIInfo
     void apply_format(SGPropertyNode *);
 
     FGDialog * dialog;
+    SGPropertyNode_ptr node;
     vector <SGBinding *> bindings;
     int key;
     string label, legend, text, format;
@@ -190,7 +192,9 @@ puObject *fgPopup::getActiveInputField(puObject *object)
  */
 int fgPopup::checkHit(int button, int updown, int x, int y)
 {
-    int result = puPopup::checkHit(button, updown, x, y);
+    int result = 0;
+    if (updown != PU_DRAG)
+        result = puPopup::checkHit(button, updown, x, y);
 
     if (!_draggable)
        return result;
@@ -209,13 +213,44 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
         if (hit & (PUCLASS_BUTTON|PUCLASS_ONESHOT|PUCLASS_INPUT))
             return result;
 
-        int px, py;
-        getPosition(&px, &py);
+        getPosition(&_dlgX, &_dlgY);
+        getSize(&_dlgW, &_dlgH);
+        _modifier = fgGetKeyModifiers();
         _dragging = true;
-        _dX = px - x;
-        _dY = py - y;
+        _startX = x;
+        _startY = y;
+
     } else if (updown == PU_DRAG && _dragging) {
-        setPosition(x + _dX, y + _dY);
+        if (_modifier & KEYMOD_CTRL) {
+            if (!_resizable)
+                return result;
+
+            int w = _dlgW + x - _startX;
+            int h = _dlgH + y - _startY;
+
+            GUIInfo *info = (GUIInfo *)getUserData();
+            if (info && info->node) {
+                int y = _dlgY; // + _dlgH - h;
+                int pw, ph;
+                LayoutWidget wid(info->node);
+                wid.calcPrefSize(&pw, &ph);
+                if (w < pw)
+                    w = pw;
+                if (h < ph)
+                    h = ph;
+
+                // first child is always the dialog background puFrame
+                getFirstChild()->setSize(w, h);
+                setSize(w, h);
+                setPosition(_dlgX, y);
+
+                wid.layout(_dlgX, y, w, h);
+                applySize(static_cast<puObject *>(this));
+            }
+        } else {
+            setPosition(x + _dlgX - _startX, y + _dlgY - _startY);
+        }
+
     } else {
         _dragging = false;
     }
@@ -241,6 +276,36 @@ int fgPopup::getHitObjects(puObject *object, int x, int y)
     return type;
 }
 
+void fgPopup::applySize(puObject *object)
+{
+    // compound plib widgets use setUserData() for internal purposes, so refuse to
+    // descend into anything that has more bits set than the following
+    const int validUserData = PUCLASS_VALUE|PUCLASS_OBJECT|PUCLASS_GROUP|PUCLASS_INTERFACE
+            |PUCLASS_FRAME|PUCLASS_TEXT|PUCLASS_BUTTON|PUCLASS_ONESHOT|PUCLASS_INPUT
+            |PUCLASS_ARROW|PUCLASS_DIAL|PUCLASS_POPUP;
+
+    int type = object->getType();
+    if (type & PUCLASS_GROUP && !(type & ~validUserData))
+        for (puObject *obj = ((puGroup *)object)->getFirstChild();
+                obj; obj = obj->getNextObject())
+            applySize(obj);
+
+    GUIInfo *info = (GUIInfo *)object->getUserData();
+    if (!info)
+        return;
+
+    SGPropertyNode *n = info->node;
+    if (!n) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "applySize: no props");
+        return;
+    }
+    int x = n->getIntValue("x");
+    int y = n->getIntValue("y");
+    int w = n->getIntValue("width", 4);
+    int h = n->getIntValue("height", 4);
+    object->setPosition(x, y);
+    object->setSize(w, h);
+}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -537,10 +602,11 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
     if (type == "dialog") {
         puPopup * obj;
         bool draggable = props->getBoolValue("draggable", true);
+        bool resizable = props->getBoolValue("resizable", false);
         if (props->getBoolValue("modal", false))
             obj = new puDialogBox(x, y);
         else
-            obj = new fgPopup(x, y, draggable);
+            obj = new fgPopup(x, y, resizable, draggable);
         setupGroup(obj, props, width, height, true);
         setColor(obj, props);
         return obj;
@@ -560,6 +626,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
     } else if (type == "hrule" || type == "vrule") {
         puFrame * obj = new puFrame(x, y, x + width, y + height);
         obj->setBorderThickness(0);
+        setupObject(obj, props);
         setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
         return obj;
 
@@ -697,6 +764,7 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
     _info.push_back(info);
     object->setLabelPlace(PUPLACE_CENTERED_RIGHT);
     object->makeReturnDefault(props->getBoolValue("default"));
+    info->node = props;
 
     if (props->hasValue("legend")) {
         info->legend = props->getStringValue("legend");

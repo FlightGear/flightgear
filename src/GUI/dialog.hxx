@@ -175,16 +175,22 @@ private:
 //
 class fgPopup : public puPopup {
 public:
-    fgPopup(int x, int y, bool d = true) : puPopup(x, y) { _dragging = false; _draggable = d;}
+    fgPopup(int x, int y, bool r = true, bool d = true) :
+            puPopup(x, y), _draggable(d), _resizable(r), _dragging(false)
+    {}
     int checkHit(int b, int up, int x, int y);
     int checkKey(int key, int updown);
     int getHitObjects(puObject *, int x, int y);
     puObject *getKeyObject(puObject *, int key);
     puObject *getActiveInputField(puObject *);
+    void applySize(puObject *);
 private:
     bool _draggable;
+    bool _resizable;
     bool _dragging;
-    int _dX, _dY;
+    int _modifier;
+    int _dlgX, _dlgY, _dlgW, _dlgH;
+    int _startX, _startY;
 };
 
 
