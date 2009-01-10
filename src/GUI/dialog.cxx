@@ -226,11 +226,10 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
                 return result;
 
             int w = _dlgW + x - _startX;
-            int h = _dlgH + y - _startY;
+            int h = _dlgH + _startY - y;
 
             GUIInfo *info = (GUIInfo *)getUserData();
             if (info && info->node) {
-                int y = _dlgY; // + _dlgH - h;
                 int pw, ph;
                 LayoutWidget wid(info->node);
                 wid.calcPrefSize(&pw, &ph);
@@ -238,6 +237,7 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
                     w = pw;
                 if (h < ph)
                     h = ph;
+                int y = _dlgY + _dlgH - h;
 
                 // first child is always the dialog background puFrame
                 getFirstChild()->setSize(w, h);
