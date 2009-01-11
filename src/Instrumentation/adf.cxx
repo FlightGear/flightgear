@@ -100,6 +100,10 @@ ADF::init ()
     _bearing_node = node->getChild("indicated-bearing-deg", 0, true);
     _ident_node = node->getChild("ident", 0, true);
     _ident_audible_node = node->getChild("ident-audible", 0, true);
+    _power_btn_node = node->getChild("power-btn", 0, true);
+
+    if (_power_btn_node->getType() == SGPropertyNode::NONE) 
+      _power_btn_node->setBoolValue(true); // front end didn't implement a power button
 
     morse.init();
 
@@ -112,13 +116,19 @@ void
 ADF::update (double delta_time_sec)
 {
                                 // If it's off, don't waste any time.
-    if (_electrical_node->getDoubleValue() < 1.0
-            || !_serviceable_node->getBoolValue()) {
-        set_bearing(delta_time_sec, 90);
+    if (_electrical_node->getDoubleValue() < 8.0
+            || !_serviceable_node->getBoolValue()
+            || !_power_btn_node->getBoolValue()     ) {
         _ident_node->setStringValue("");
         return;
     }
 
+    string mode = _mode_node->getStringValue();
+    if (mode == "ant" || mode == "test") set_bearing(delta_time_sec, 90);
+    if (mode != "bfo" && mode != "adf") {
+        _ident_node->setStringValue("");
+        return;
+    }
                                 // Get the frequency
     int frequency_khz = _frequency_node->getIntValue();
     if (frequency_khz != _last_frequency_khz) {
@@ -139,11 +149,7 @@ ADF::update (double delta_time_sec)
     if (_time_before_search_sec < 0)
         search(frequency_khz, longitude_rad, latitude_rad, altitude_m);
 
-                                // If it's off, don't bother.
-    string mode = _mode_node->getStringValue();
-    if (!_transmitter_valid || (mode != "bfo" && mode != "adf"))
-    {
-        set_bearing(delta_time_sec, 90);
+    if (!_transmitter_valid) {
         _ident_node->setStringValue("");
         return;
     }
@@ -202,7 +208,6 @@ ADF::update (double delta_time_sec)
         }
     } else {
         _in_range_node->setBoolValue(false);
-        set_bearing(delta_time_sec, 90);
         _ident_node->setStringValue("");
         globals->get_soundmgr()->stop( _adf_ident );
     }
