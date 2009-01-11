@@ -901,7 +901,8 @@ FGInput::_update_mouse ( double dt )
   if ( fgGetBool( "/sim/mouse/hide-cursor", true ) ) {
       if ( m.x != m.save_x || m.y != m.save_y ) {
           m.timeout = fgGetDouble( "/sim/mouse/cursor-timeout-sec", 10.0 );
-          fgSetMouseCursor(m.modes[mode].cursor);
+          if (fgGetMouseCursor() == MOUSE_CURSOR_NONE)
+              fgSetMouseCursor(m.modes[mode].cursor);
       } else {
           m.timeout -= dt;
           if ( m.timeout <= 0.0 ) {
