@@ -261,10 +261,14 @@ FGControls::bind ()
   fgTie("/controls/flight/elevator", this,
        &FGControls::get_elevator, &FGControls::set_elevator);
   fgSetArchivable("/controls/flight/elevator");
+  fgTie("/controls/flight/flipper", this,
+       &FGControls::get_flipper, &FGControls::set_flipper);
 
   fgTie("/controls/flight/elevator-trim", this,
        &FGControls::get_elevator_trim, &FGControls::set_elevator_trim);
   fgSetArchivable("/controls/flight/elevator-trim");
+  fgTie("/controls/flight/flipper-trim", this,
+       &FGControls::get_flipper_trim, &FGControls::set_flipper_trim);
 
   fgTie("/controls/flight/rudder", this,
        &FGControls::get_rudder, &FGControls::set_rudder);
@@ -854,7 +858,9 @@ void FGControls::unbind ()
   fgUntie("/controls/flight/aileron");
   fgUntie("/controls/flight/aileron-trim");
   fgUntie("/controls/flight/elevator");
+  fgUntie("/controls/flight/flipper");
   fgUntie("/controls/flight/elevator-trim");
+  fgUntie("/controls/flight/flipper-trim");
   fgUntie("/controls/flight/rudder");
   fgUntie("/controls/flight/rudder-trim");
   fgUntie("/controls/flight/flaps");
@@ -1123,6 +1129,12 @@ FGControls::set_elevator( double pos )
     elevator = pos;
     CLAMP( &elevator, -1.0, 1.0 );
 }
+void
+FGControls::set_flipper( double pos )
+{
+    elevator = -pos;
+    CLAMP( &elevator, -1.0, 1.0 );
+}
 
 void
 FGControls::move_elevator( double amt )
@@ -1135,6 +1147,12 @@ void
 FGControls::set_elevator_trim( double pos )
 {
     elevator_trim = pos;
+    CLAMP( &elevator_trim, -1.0, 1.0 );
+}
+void
+FGControls::set_flipper_trim( double pos )
+{
+    elevator_trim = -pos;
     CLAMP( &elevator_trim, -1.0, 1.0 );
 }
 

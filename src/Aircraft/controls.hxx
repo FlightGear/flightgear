@@ -272,7 +272,9 @@ public:
     inline double get_aileron() const { return aileron; }
     inline double get_aileron_trim() const { return aileron_trim; }
     inline double get_elevator() const { return elevator; }
+    inline double get_flipper()  const { return -elevator; }
     inline double get_elevator_trim() const { return elevator_trim; }
+    inline double get_flipper_trim()  const { return -elevator_trim; }
     inline double get_rudder() const { return rudder; }
     inline double get_rudder_trim() const { return rudder_trim; }
     inline double get_flaps() const { return flaps; }
@@ -457,8 +459,10 @@ public:
     void set_aileron_trim( double pos );
     void move_aileron_trim( double amt );
     void set_elevator( double pos );
+    void set_flipper ( double pos );
     void move_elevator( double amt );
     void set_elevator_trim( double pos );
+    void set_flipper_trim ( double pos );
     void move_elevator_trim( double amt );
     void set_rudder( double pos );
     void move_rudder( double amt );
