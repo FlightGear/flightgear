@@ -63,8 +63,7 @@ FGMarkerBeacon::FGMarkerBeacon(SGPropertyNode *node) :
     low_tbl = new SGInterpTable( low.str() );
     high_tbl = new SGInterpTable( high.str() );
 
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
+    for ( int i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
         string cname = child->getName();
         string cval = child->getStringValue();
@@ -110,9 +109,12 @@ FGMarkerBeacon::init ()
     audio_vol = node->getChild("volume", 0, true);
     serviceable = node->getChild("serviceable", 0, true);
 
-    power_btn->setBoolValue( true );
-    audio_btn->setBoolValue( true );
-    serviceable->setBoolValue( true );
+    if (power_btn->getType() == SGPropertyNode::NONE)
+        power_btn->setBoolValue( true );
+    if (audio_btn->getType() == SGPropertyNode::NONE)
+        audio_btn->setBoolValue( true );
+    if (serviceable->getType() == SGPropertyNode::NONE)
+        serviceable->setBoolValue( true );
 
     morse.init();
     beacon.init();
@@ -165,7 +167,7 @@ FGMarkerBeacon::update(double dt)
 
     _time_before_search_sec -= dt;
     if ( _time_before_search_sec < 0 ) {
-	search();
+        search();
     }
 
     if ( has_power() && serviceable->getBoolValue()
@@ -250,7 +252,7 @@ static bool check_beacon_range( const SGGeod& pos,
 
 class BeaconFilter : public FGPositioned::Filter
 {
-public:  
+public:
   virtual FGPositioned::Type minType() const {
     return FGPositioned::OM;
   }
@@ -280,7 +282,7 @@ void FGMarkerBeacon::search()
     // get closest marker beacon - within a 1nm cutoff
     BeaconFilter filter;
     FGPositionedRef b = FGPositioned::findClosest(pos, 1.0, &filter);
-     
+
     fgMkrBeacType beacon_type = NOBEACON;
     bool inrange = false;
     if ( b != NULL ) {
