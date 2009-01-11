@@ -227,6 +227,22 @@ static void setMouseCursor(osg::Camera* camera, int cursor)
         mouseCursor = osgViewer::GraphicsWindow::CrosshairCursor;
     else if(cursor == MOUSE_CURSOR_LEFTRIGHT)
         mouseCursor = osgViewer::GraphicsWindow::LeftRightCursor;
+    else if(cursor == MOUSE_CURSOR_TOPSIDE)
+        mouseCursor = osgViewer::GraphicsWindow::TopSideCursor;
+    else if(cursor == MOUSE_CURSOR_BOTTOMSIDE)
+        mouseCursor = osgViewer::GraphicsWindow::BottomSideCursor;
+    else if(cursor == MOUSE_CURSOR_LEFTSIDE)
+        mouseCursor = osgViewer::GraphicsWindow::LeftSideCursor;
+    else if(cursor == MOUSE_CURSOR_RIGHTSIDE)
+        mouseCursor = osgViewer::GraphicsWindow::RightSideCursor;
+    else if(cursor == MOUSE_CURSOR_TOPLEFT)
+        mouseCursor = osgViewer::GraphicsWindow::TopLeftCorner;
+    else if(cursor == MOUSE_CURSOR_TOPRIGHT)
+        mouseCursor = osgViewer::GraphicsWindow::TopRightCorner;
+    else if(cursor == MOUSE_CURSOR_BOTTOMLEFT)
+        mouseCursor = osgViewer::GraphicsWindow::BottomLeftCorner;
+    else if(cursor == MOUSE_CURSOR_BOTTOMRIGHT)
+        mouseCursor = osgViewer::GraphicsWindow::BottomRightCorner;
 
     gw->setCursor(mouseCursor);
 }
