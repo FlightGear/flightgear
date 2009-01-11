@@ -294,9 +294,9 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
             setPosition(x + _dlgX - _startX, y + _dlgY - _startY);
         }
 
-    } else {
-        _dragging = false;
+    } else if (_dragging) {
         fgSetMouseCursor(_start_cursor);
+        _dragging = false;
     }
     return result;
 }
