@@ -211,40 +211,83 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
 
         int hit = getHitObjects(this, x, y);
         if (hit & (PUCLASS_BUTTON|PUCLASS_ONESHOT|PUCLASS_INPUT|PUCLASS_LARGEINPUT))
-            return puPopup::checkHit(button, updown, x, y);
+            return result;
 
         getPosition(&_dlgX, &_dlgY);
         getSize(&_dlgW, &_dlgH);
-        _modifier = fgGetKeyModifiers();
+        _start_cursor = fgGetMouseCursor();
         _dragging = true;
         _startX = x;
         _startY = y;
 
+        // check and prepare for resizing
+        static const int cursor[] = {
+            MOUSE_CURSOR_POINTER, MOUSE_CURSOR_LEFTSIDE, MOUSE_CURSOR_RIGHTSIDE, 0,
+            MOUSE_CURSOR_TOPSIDE, MOUSE_CURSOR_TOPLEFT, MOUSE_CURSOR_TOPRIGHT, 0,
+            MOUSE_CURSOR_BOTTOMSIDE, MOUSE_CURSOR_BOTTOMLEFT, MOUSE_CURSOR_BOTTOMRIGHT, 0,
+        };
+
+        _resizing = 0;
+        int global_resize = fgGetKeyModifiers() & KEYMOD_CTRL;
+        int hmargin = global_resize ? _dlgW / 3 : 10;
+        int vmargin = global_resize ? _dlgH / 3 : 10;
+
+        if (y - _dlgY < vmargin)
+            _resizing |= BOTTOM;
+        else if (_dlgY + _dlgH - y < vmargin)
+            _resizing |= TOP;
+
+        if (x - _dlgX < hmargin)
+            _resizing |= LEFT;
+        else if (_dlgX + _dlgW - x < hmargin)
+            _resizing |= RIGHT;
+
+        if (!_resizing && global_resize)
+            _resizing = BOTTOM|RIGHT;
+
+        _cursor = cursor[_resizing];
+        if (_resizing && _resizable)
+            fgSetMouseCursor(_cursor);
+
     } else if (updown == PU_DRAG && _dragging) {
-        if (_modifier & KEYMOD_CTRL) {
+        if (_resizing) {
             if (!_resizable)
                 return result;
 
-            int w = _dlgW + x - _startX;
-            int h = _dlgH + _startY - y;
-
             GUIInfo *info = (GUIInfo *)getUserData();
             if (info && info->node) {
-                int pw, ph;
+                int w = _dlgW;
+                int h = _dlgH;
+                int prefw, prefh;
                 LayoutWidget wid(info->node);
-                wid.calcPrefSize(&pw, &ph);
-                if (w < pw)
-                    w = pw;
-                if (h < ph)
-                    h = ph;
-                int y = _dlgY + _dlgH - h;
+                wid.calcPrefSize(&prefw, &prefh);
 
-                // first child is always the dialog background puFrame
-                getFirstChild()->setSize(w, h);
+                if (_resizing & LEFT)
+                    w += _startX - x;
+                if (_resizing & RIGHT)
+                    w += x - _startX;
+                if (_resizing & TOP)
+                    h += y - _startY;
+                if (_resizing & BOTTOM)
+                    h += _startY - y;
+
+                if (w < prefw)
+                    w = prefw;
+                if (h < prefh)
+                    h = prefh;
+
+                int x = _dlgX;
+                int y = _dlgY;
+                if (_resizing & LEFT)
+                    x += _dlgW - w;
+                if (_resizing & BOTTOM)
+                    y += _dlgH - h;
+
+                getFirstChild()->setSize(w, h); // dialog background puFrame
                 setSize(w, h);
-                setPosition(_dlgX, y);
+                setPosition(x, y);
 
-                wid.layout(_dlgX, y, w, h);
+                wid.layout(x, y, w, h);
                 applySize(static_cast<puObject *>(this));
             }
         } else {
@@ -253,6 +296,7 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
 
     } else {
         _dragging = false;
+        fgSetMouseCursor(_start_cursor);
     }
     return result;
 }
@@ -278,8 +322,8 @@ int fgPopup::getHitObjects(puObject *object, int x, int y)
 
 void fgPopup::applySize(puObject *object)
 {
-    // compound plib widgets use setUserData() for internal purposes, so refuse to
-    // descend into anything that has more bits set than the following
+    // compound plib widgets use setUserData() for internal purposes, so refuse
+    // to descend into anything that has other bits set than the following
     const int validUserData = PUCLASS_VALUE|PUCLASS_OBJECT|PUCLASS_GROUP|PUCLASS_INTERFACE
             |PUCLASS_FRAME|PUCLASS_TEXT|PUCLASS_BUTTON|PUCLASS_ONESHOT|PUCLASS_INPUT
             |PUCLASS_ARROW|PUCLASS_DIAL|PUCLASS_POPUP;
@@ -296,7 +340,7 @@ void fgPopup::applySize(puObject *object)
 
     SGPropertyNode *n = info->node;
     if (!n) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "applySize: no props");
+        SG_LOG(SG_GENERAL, SG_ALERT, "fgPopup::applySize: no props");
         return;
     }
     int x = n->getIntValue("x");

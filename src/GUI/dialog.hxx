@@ -185,10 +185,13 @@ public:
     puObject *getActiveInputField(puObject *);
     void applySize(puObject *);
 private:
+    enum { LEFT = 1, RIGHT = 2, TOP = 4, BOTTOM = 8 };
     bool _draggable;
     bool _resizable;
     bool _dragging;
-    int _modifier;
+    int _resizing;
+    int _start_cursor;
+    int _cursor;
     int _dlgX, _dlgY, _dlgW, _dlgH;
     int _startX, _startY;
 };
