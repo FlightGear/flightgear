@@ -28,9 +28,6 @@
 
 #include "positioned.hxx"
 
-#define FG_NAV_DEFAULT_RANGE 50 // nm
-#define FG_LOC_DEFAULT_RANGE 18 // nm
-#define FG_DME_DEFAULT_RANGE 50 // nm
 #define FG_NAV_MAX_RANGE 300    // nm
 
 // FIXME - get rid of these, and use the real enum directly
@@ -84,6 +81,7 @@ public:
 
     inline bool get_serviceable() const { return serviceable; }
     inline const char *get_trans_ident() const { return trans_ident.c_str(); }
+    inline FGRunway* get_runway() const { return runway; }
 
   virtual const std::string& name() const
   { return _name; }

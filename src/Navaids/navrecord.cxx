@@ -35,6 +35,14 @@
 #include "Airports/runways.hxx"
 #include "Main/fg_props.hxx"
 
+// We use the defaults only in an emergency, 
+// which probably never happens,
+// and nobody else should be using them at all,
+// so they don't belong in the .h file.
+#define FG_NAV_DEFAULT_RANGE 50 // nm
+#define FG_LOC_DEFAULT_RANGE 18 // nm
+#define FG_DME_DEFAULT_RANGE 50 // nm
+
 FGNavRecord::FGNavRecord(Type aTy, const std::string& aIdent, 
   const std::string& aName, const SGGeod& aPos,
   int aFreq, int aRange, double aMultiuse) :
@@ -78,6 +86,7 @@ FGNavRecord::FGNavRecord(Type aTy, const std::string& aIdent,
 
 void FGNavRecord::initAirportRelation()
 {
+  runway = 0;		// in case we return early
   if ((type() < ILS) || (type() > GS)) {
     return; // not airport-located
   }

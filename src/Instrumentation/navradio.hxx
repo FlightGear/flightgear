@@ -33,6 +33,7 @@
 #include <simgear/timing/timestamp.hxx>
 
 #include <Navaids/navlist.hxx>
+#include "Airports/runways.hxx"
 #include <Sound/morse.hxx>
 
 class FGNavRadio : public SGSubsystem
@@ -52,6 +53,7 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode_ptr is_valid_node;   // is station data valid (may be way out
                                         // of range.)
     SGPropertyNode_ptr power_btn_node;
+    SGPropertyNode_ptr gs_park_node;    // where GS needle parks when undriven
     SGPropertyNode_ptr freq_node;       // primary freq
     SGPropertyNode_ptr alt_freq_node;   // standby freq
     SGPropertyNode_ptr sel_radial_node; // selected radial
@@ -84,8 +86,9 @@ class FGNavRadio : public SGSubsystem
                                        // radial at current speed and heading
     SGPropertyNode_ptr to_flag_node;
     SGPropertyNode_ptr from_flag_node;
-    SGPropertyNode_ptr inrange_node;
-    SGPropertyNode_ptr signal_quality_norm_node;
+    SGPropertyNode_ptr inrange_node;	// azimuth, not DME or GS
+    SGPropertyNode_ptr signal_quality_norm_node;	// azimuth, not DME or GS
+
     SGPropertyNode_ptr cdi_deflection_node;
     SGPropertyNode_ptr cdi_xtrack_error_node;
     SGPropertyNode_ptr cdi_xtrack_hdg_err_node;
@@ -93,6 +96,7 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode_ptr loc_node;
     SGPropertyNode_ptr loc_dist_node;
     SGPropertyNode_ptr gs_deflection_node;
+    SGPropertyNode_ptr gs_barber_node;  // true ==> barber pole is showing
     SGPropertyNode_ptr gs_rate_of_climb_node;
     SGPropertyNode_ptr gs_dist_node;
     SGPropertyNode_ptr nav_id_node;
@@ -121,21 +125,27 @@ class FGNavRadio : public SGSubsystem
     string trans_ident;
     bool is_valid;
     bool has_dme;
+    double dme_range;
     double radial;
     double target_radial;
-    double loc_lon;
-    double loc_lat;
-    SGVec3d nav_xyz;
+    FGRunway* loc_runway;
+    SGGeod loc_ldg_threshold;
+    double loc_width;		// in degrees, full width peg-to-peg
+    double az_lon;		// azimuth: vor or loc
+    double az_lat;
+    double az_elev;
+    double az_range;
+    double az_eff_range;
+    SGVec3d az_xyz;
+
     double gs_lon;
     double gs_lat;
-    double nav_elev;            // use gs elev if available
+    double gs_elev;
+    double gs_range;
     SGVec3d gs_xyz;
     SGVec3d gs_base_vec;
-    double gs_dist_signed;
     SGTimeStamp prev_time;
     SGTimeStamp curr_time;
-    double range;
-    double effective_range;
     double target_gs;
     double twist;
     double horiz_vel;
@@ -153,9 +163,9 @@ class FGNavRadio : public SGSubsystem
     double adjustNavRange( double stationElev, double aircraftElev,
 			   double nominalRange );
 
-    // model standard ILS service volumes as per AIM 1-1-9
-    double adjustILSRange( double stationElev, double aircraftElev,
-			   double offsetDegrees, double distance );
+    // model standard localizer service volumes as per AIM 1-1-9
+    double adjustLocRange( double stationElev, double aircraftElev,
+			   double offsetDegrees, double nominalRange );
 
 public:
 
@@ -166,7 +176,11 @@ public:
     void bind ();
     void unbind ();
     void update (double dt);
-
+    // Accessors
+    inline double get_loc_width() const { return loc_width; }
+    inline void set_loc_width( double val ) {
+	loc_width = val;
+    }
     // Update nav/adf radios based on current postition
     void search ();
 };
