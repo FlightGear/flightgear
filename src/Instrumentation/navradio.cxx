@@ -70,7 +70,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     time_to_intercept(NULL),
     to_flag_node(NULL),
     from_flag_node(NULL),
-    inrange_node(NULL),
+    inrange_node(NULL),                 // azimuth inrange
     signal_quality_norm_node(NULL),
     heading_needle_deflection_node(NULL),
     heading_needle_deflection_norm(0.),
@@ -83,7 +83,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     gs_needle_deflection_norm(0.),
     gs_inrange(0),
     gs_rate_of_climb_node(NULL),
-    gs_dist_node(NULL),
+    gs_distance(0.),
     nav_id_node(NULL),
     id_c1_node(NULL),
     id_c2_node(NULL),
@@ -195,7 +195,6 @@ FGNavRadio::init ()
     loc_dist_node = node->getChild("nav-distance", 0, true);
     gs_needle_deflection_node = node->getChild("gs-needle-deflection", 0, true);
     gs_rate_of_climb_node = node->getChild("gs-rate-of-climb", 0, true);
-    gs_dist_node = node->getChild("gs-distance", 0, true);
     nav_id_node = node->getChild("nav-id", 0, true);
     id_c1_node = node->getChild("nav-id_asc1", 0, true);
     id_c2_node = node->getChild("nav-id_asc2", 0, true);
@@ -232,6 +231,10 @@ void FGNavRadio::bind ()
     fgTie((branch + "/gs-inrange").c_str(), this,
           &FGNavRadio::get_gs_inrange,
           &FGNavRadio::set_gs_inrange);
+
+    fgTie((branch + "/gs-distance").c_str(), this,
+          &FGNavRadio::get_gs_distance,
+          &FGNavRadio::set_gs_distance);
 
     fgTie((branch + "/heading-needle-deflection-norm").c_str(), this,
           &FGNavRadio::get_heading_needle_deflection_norm,
@@ -394,26 +397,6 @@ FGNavRadio::update(double dt)
 	loc_dist_node->setDoubleValue( loc_dist );
         // cout << "dt = " << dt << " dist = " << loc_dist << endl;
 
-	if ( has_gs ) {
-            // find closest distance to the gs base line
-            SGVec3d p = aircraft;
-            double dist = sgdClosestPointToLineDistSquared(p.sg(), gs_xyz.sg(),
-                                                           gs_base_vec.sg());
-            gs_dist_node->setDoubleValue( sqrt( dist ) );
-            // cout << "gs_dist = " << gs_dist_node->getDoubleValue()
-            //      << endl;
-
-            // wgs84 heading to glide slope (to determine sign of distance)
-            geo_inverse_wgs_84( pos, SGGeod::fromDeg(gs_lon, gs_lat),
-                                &az1, &az2, &s );
-            /* cout << "Target Radial = " << target_radial 
-                 << "  Bearing = " << az1
-                 << endl; */
-            
-	} else {
-	    gs_dist_node->setDoubleValue( 0.0 );
-	}
-	
         //////////////////////////////////////////////////////////
 	// compute forward and reverse wgs84 headings to localizer
         //////////////////////////////////////////////////////////
@@ -650,8 +633,9 @@ FGNavRadio::update(double dt)
         // Normalization is discussed below.
         //////////////////////////////////////////////////////////
         int gsok(0);
+	if ( !has_gs ) gs_distance = 0.0;      // no valid gs info
+
         if ( has_gs && gs_serviceable_node->getBoolValue() ) {
-            double dist = gs_dist_node->getDoubleValue();       // dist in m
             if ( nav_slaved_to_gps_node->getBoolValue() ) {
                 //
                 // FIXME/FINISHME, what should be set here?
@@ -661,25 +645,47 @@ FGNavRadio::update(double dt)
                 // tuned up, above.
                 //
             }
-            if ( dist < gs_range * SG_NM_TO_METER) {
-                double y = (fgGetDouble("/position/altitude-ft") - gs_elev)
-                    * SG_FEET_TO_METER;
-                // cout << "dist = " << dist << " height = " << y << endl;
-                double angle = asin( y / dist ) * SGD_RADIANS_TO_DEGREES;
 
-                // The factor of 1.5 gives a period of 6 degrees.
-                // There will be zeros at 3, 6r, 9, 12r et cetera
-                // where "r" indicates reverse sensing.
-                // This is is consistent with conventional pilot lore
-                // e.g. http://www.allstar.fiu.edu/aerojava/ILS.htm
-                // but inconsistent with
-                // http://www.freepatentsonline.com/3757338.html
-                //
-                // It may be that some of each exist.
-                r = 1.5 * sawtooth((target_gs - angle) / 1.5);
+            gs_distance = dist(aircraft, gs_xyz);    // in meters
+                                                // needed for range check
+
+            if ( gs_distance < gs_range * SG_NM_TO_METER) {
+                SGVec3d pos(aircraft);
+                pos -= gs_xyz;         // relative vector from gs antenna to aircraft
+
+// The positive GS axis points along the runway in the landing direction,
+// toward the far end, not toward the approach area, so we need a - sign here:
+                double dot_h = -dot(pos, gs_axis);
+                double dot_v = dot(pos, gs_vertical);
+                double angle = atan2(dot_v, dot_h) * SGD_RADIANS_TO_DEGREES;
+                #if 0
+                  cout << "h,v,angle: " << dot_h 
+                        << ", " << dot_v 
+                        << ", " << angle << endl;
+                #endif
+
+                r = target_gs - angle;          // positive ==> fly up.
+// 90 degrees of fly-up means we are underground, below the transmitter
+// which is a good place to put the branch cut:
+                if (r > 90.0) r -= 360.0;
+
+// Construct false glideslopes.  The scale factor of 1.5 
+// in the sawtooth gives a period of 6 degrees.  
+// There will be zeros at 3, 6r, 9, 12r et cetera
+// where "r" indicates reverse sensing.
+// This is is consistent with conventional pilot lore
+// e.g. http://www.allstar.fiu.edu/aerojava/ILS.htm
+// but inconsistent with
+// http://www.freepatentsonline.com/3757338.html
+//
+// It may be that some transmitters of each type exist.
+                if (r < 0) r = 1.5 * sawtooth( r / 1.5);
+                else {} // never any false GS below the true GS.
 
                 gsok = 1;
-            } // else GS out of range ... park the needle
+            } else {
+              // GS out of range
+            } 
         } else {
           // didn't have working GS
         }
@@ -695,12 +701,12 @@ FGNavRadio::update(double dt)
         // This node uses [-3.5 .. 3.5] nominal "full" range,
         // i.e. degrees * 5.0
         gs_needle_deflection_node->setDoubleValue( rnorm * 3.5);
-        gs_inrange = gsok;
+        gs_inrange = gsok;              // tied to property tree
 
         //////////////////////////////////////////////////////////
         // Calculate desired rate of climb for intercepting the GS
         //////////////////////////////////////////////////////////
-        double x = gs_dist_node->getDoubleValue();
+        double x = gs_distance;
         double y = (alt_node->getDoubleValue() - gs_elev)
             * SG_FEET_TO_METER;
         double current_angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
@@ -840,6 +846,40 @@ FGNavRadio::update(double dt)
 }
 
 
+////////
+// Calculate a unit vector in the horizontal tangent plane
+// starting at the given "tail" of the vector and going off 
+// with the given heading.
+// Lots of redundant args, 
+// but it is efficient to precalculate them.
+SGVec3d tangentVector(
+          const double tail_lat, const double tail_lon, 
+          const double tail_elev, const SGVec3d tail_xyz, 
+          const double heading) {
+
+    double head_lon, head_lat, headaz;    // head of vector
+// The fudge factor here is presumably intended to improve
+// numerical stability.  I don't know if it is necessary.
+// It gets divided out later.
+    double fudge(100.0);
+    geo_direct_wgs_84 ( 0.0, tail_lat, tail_lon, heading,
+                        fudge, &head_lat, &head_lon, &headaz );
+    #if 0
+      cout << "tangentVector: heading = " << heading << endl;
+      cout << "tail: " << tail_lon << ", " << tail_lat << endl;
+      cout << "head: " << head_lon << ", " << head_lat 
+              <<  " (" << tail_elev << ")" << endl;
+    #endif
+    SGGeod head = SGGeod::fromDegFt(head_lon, head_lat, tail_elev);
+    SGVec3d head_xyz = SGVec3d::fromGeod(head);
+
+    #if 0
+      cout << tail_xyz << endl;
+      cout << head_xyz << endl;
+    #endif
+    return (head_xyz - tail_xyz) * (1.0/fudge);
+}
+
 // Update current nav/adf radio stations based on current postition
 void FGNavRadio::search() 
 {
@@ -947,32 +987,30 @@ void FGNavRadio::search()
 // We assume without checking that the GS and LOC
 // serve the same airport and same runway.
                 has_gs_node->setBoolValue( true );
-                gs_lon = gs->get_lon();
-                gs_lat = gs->get_lat();
-                gs_range = gs->get_range();
                 gs_elev = gs->get_elev_ft();
+                gs_lat = gs->get_lat();
+                gs_lon = gs->get_lon();
+                gs_xyz = gs->cart();
+                gs_range = gs->get_range();
                 int tmp = (int)(gs->get_multiuse() / 1000.0);
                 target_gs = (double)tmp / 100.0;
-                gs_xyz = gs->cart();
 
-                // derive GS baseline (perpendicular to the runay
-                // along the ground)
-                double tlon, tlat, taz;
-                geo_direct_wgs_84 ( 0.0, gs_lat, gs_lon,
-                                    target_radial + 90,
-                                    100.0, &tlat, &tlon, &taz );
-                // cout << "target_radial = " << target_radial << endl;
-                // cout << "nav_loc = " << loc_node->getBoolValue() << endl;
-                // cout << gs_lon << "," << gs_lat << "  "
-                //      << tlon << "," << tlat << "  (" << gs_elev << ")"
-                //      << endl;
-                SGGeod tpos = SGGeod::fromDegFt(tlon, tlat, gs_elev);
-                SGVec3d p1 = SGVec3d::fromGeod(tpos);
+                // GS axis unit tangent vector
+                // (along the runway)
+                gs_axis = tangentVector(gs_lat, gs_lon, gs_elev,
+                        gs_xyz, target_radial);
 
-                // cout << gs_xyz << endl;
-                // cout << p1 << endl;
-                gs_base_vec = p1 - gs_xyz;
-                // cout << gs_base_vec << endl;
+                // GS baseline unit tangent vector
+                // (perpendicular to the runay along the ground)
+                gs_baseline = tangentVector(gs_lat, gs_lon, gs_elev,
+                        gs_xyz, target_radial + 90.0);
+
+                gs_vertical = cross(gs_baseline, gs_axis);
+                #if 0
+                  cout << "axis: "     << gs_axis      << " @ " << norm(gs_axis)     << endl;
+                  cout << "baseline: " << gs_baseline  << " @ " << norm(gs_baseline) << endl;
+                  cout << "vertical: " << gs_vertical  << " @ " << norm(gs_vertical) << endl;
+                #endif
             } else {
                 has_gs_node->setBoolValue( false );
                 az_elev = loc->get_elev_ft();

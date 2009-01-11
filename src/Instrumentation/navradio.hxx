@@ -101,7 +101,7 @@ class FGNavRadio : public SGSubsystem
     double             gs_needle_deflection_norm;
     bool               gs_inrange;
     SGPropertyNode_ptr gs_rate_of_climb_node;
-    SGPropertyNode_ptr gs_dist_node;
+    double gs_distance;
     SGPropertyNode_ptr nav_id_node;
     SGPropertyNode_ptr id_c1_node;
     SGPropertyNode_ptr id_c2_node;
@@ -143,10 +143,12 @@ class FGNavRadio : public SGSubsystem
 
     double gs_lon;
     double gs_lat;
-    double gs_elev;
+    double gs_elev;             // in feet
     double gs_range;
     SGVec3d gs_xyz;
-    SGVec3d gs_base_vec;
+    SGVec3d gs_baseline;
+    SGVec3d gs_axis;
+    SGVec3d gs_vertical;
     SGTimeStamp prev_time;
     SGTimeStamp curr_time;
     double target_gs;
@@ -185,6 +187,9 @@ public:
 
     inline bool get_gs_inrange() const     { return gs_inrange; }
     inline void set_gs_inrange( bool val ) { gs_inrange = val; }
+
+    inline double get_gs_distance() const     { return gs_distance; }
+    inline void set_gs_distance( double val ) { gs_distance = val; }
 
     inline double get_heading_needle_deflection_norm() const { 
        return heading_needle_deflection_norm; }
