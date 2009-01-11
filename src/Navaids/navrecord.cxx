@@ -86,12 +86,12 @@ FGNavRecord::FGNavRecord(Type aTy, const std::string& aIdent,
 
 void FGNavRecord::initAirportRelation()
 {
-  runway = 0;		// in case we return early
+  runway = 0;                   // in case we return early
   if ((type() < ILS) || (type() > GS)) {
     return; // not airport-located
   }
   
-  FGRunway* runway = getRunwayFromName(_name);    
+  runway = getRunwayFromName(_name);    
   // fudge elevation to the runway elevation if it's not specified
   if (fabs(elevation()) < 0.01) {
     mPosition.setElevationFt(runway->elevation());

@@ -35,7 +35,7 @@ class FGRunway : public FGRunwayBase
 {
   FGAirport* _airport;
   bool _reciprocal;
-  double _displ_thresh;
+  double _displ_thresh;         // in feet, apparently
   double _stopway;
 public:
   
@@ -75,6 +75,7 @@ public:
   
   /**
    * Get the (possibly displaced) threshold point.
+   * In meters, apparently.
    */
   SGGeod threshold() const;
   

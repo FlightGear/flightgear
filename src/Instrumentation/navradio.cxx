@@ -72,14 +72,16 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     from_flag_node(NULL),
     inrange_node(NULL),
     signal_quality_norm_node(NULL),
-    cdi_deflection_node(NULL),
+    heading_needle_deflection_node(NULL),
+    heading_needle_deflection_norm(0.),
     cdi_xtrack_error_node(NULL),
     cdi_xtrack_hdg_err_node(NULL),
     has_gs_node(NULL),
     loc_node(NULL),
     loc_dist_node(NULL),
-    gs_deflection_node(NULL),
-    gs_barber_node(NULL),
+    gs_needle_deflection_node(NULL),
+    gs_needle_deflection_norm(0.),
+    gs_inrange(0),
     gs_rate_of_climb_node(NULL),
     gs_dist_node(NULL),
     nav_id_node(NULL),
@@ -142,7 +144,6 @@ FGNavRadio::init ()
 
     string opt_branch = "/sim/instrument-options/" + _name;
     SGPropertyNode *options = fgGetNode(opt_branch.c_str(), _num, true);
-    gs_park_node = options->getChild("gs-park", 0, true);
 
     // inputs
     is_valid_node = node->getChild("data-is-valid", 0, true);
@@ -185,15 +186,14 @@ FGNavRadio::init ()
     from_flag_node = node->getChild("from-flag", 0, true);
     inrange_node = node->getChild("in-range", 0, true);
     signal_quality_norm_node = node->getChild("signal-quality-norm", 0, true);
-    cdi_deflection_node = node->getChild("heading-needle-deflection", 0, true);
+    heading_needle_deflection_node = node->getChild("heading-needle-deflection", 0, true);
     cdi_xtrack_error_node = node->getChild("crosstrack-error-m", 0, true);
     cdi_xtrack_hdg_err_node
         = node->getChild("crosstrack-heading-error-deg", 0, true);
     has_gs_node = node->getChild("has-gs", 0, true);
     loc_node = node->getChild("nav-loc", 0, true);
     loc_dist_node = node->getChild("nav-distance", 0, true);
-    gs_deflection_node = node->getChild("gs-needle-deflection", 0, true);
-    gs_barber_node = node->getChild("gs-barber-flag", 0, true);
+    gs_needle_deflection_node = node->getChild("gs-needle-deflection", 0, true);
     gs_rate_of_climb_node = node->getChild("gs-rate-of-climb", 0, true);
     gs_dist_node = node->getChild("gs-distance", 0, true);
     nav_id_node = node->getChild("nav-id", 0, true);
@@ -219,13 +219,31 @@ FGNavRadio::init ()
 void FGNavRadio::bind ()
 {
     std::ostringstream temp;
-    string branch;
     temp << _num;
-    branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
+    string branch = "/instrumentation/"
+        + _name + "[" + temp.str() + "]";
+    string opt_branch = "/sim/instrument-options/" 
+        + _name + "[" + temp.str() + "]";
 
     fgTie((branch + "/loc-width").c_str(), this,
           &FGNavRadio::get_loc_width,
           &FGNavRadio::set_loc_width);
+
+    fgTie((branch + "/gs-inrange").c_str(), this,
+          &FGNavRadio::get_gs_inrange,
+          &FGNavRadio::set_gs_inrange);
+
+    fgTie((branch + "/heading-needle-deflection-norm").c_str(), this,
+          &FGNavRadio::get_heading_needle_deflection_norm,
+          &FGNavRadio::set_heading_needle_deflection_norm);
+
+    fgTie((branch + "/gs-needle-deflection-norm").c_str(), this,
+          &FGNavRadio::get_gs_needle_deflection_norm,
+          &FGNavRadio::set_gs_needle_deflection_norm);
+
+    fgTie((opt_branch + "/gs-park-norm").c_str(), this,
+          &FGNavRadio::get_gs_park_norm,
+          &FGNavRadio::set_gs_park_norm);
 }
 
 
@@ -233,11 +251,18 @@ void
 FGNavRadio::unbind ()
 {
     std::ostringstream temp;
-    string branch;
     temp << _num;
-    branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
+    string branch = "/instrumentation/"
+        + _name + "[" + temp.str() + "]";
+    string opt_branch = "/sim/instrument-options/" 
+        + _name + "[" + temp.str() + "]";
 
     fgUntie((branch + "/loc-width").c_str());
+    fgUntie((branch + "/gs-inrange").c_str());
+    fgUntie((branch + "/heading-needle-deflection-norm").c_str());
+    fgUntie((branch + "/gs-needle-deflection-norm").c_str());
+    fgUntie((opt_branch + "/gs-park-norm").c_str());
+
 }
 
 
@@ -434,7 +459,7 @@ FGNavRadio::update(double dt)
 	    // cout << "ils offset = " << offset << endl;
             az_eff_range = adjustLocRange( az_elev, pos.getElevationM(), 
                   offset, loc_dist * SG_METER_TO_NM );
-	} else {
+	} else {        // not a localizer
             az_eff_range
                 = adjustNavRange( az_elev, pos.getElevationM(), az_range );
 	}
@@ -507,19 +532,18 @@ FGNavRadio::update(double dt)
         from_flag_node->setBoolValue( value );
 
         //////////////////////////////////////////////////////////
-        // compute the deflection of the CDI needle, clamped to the range
-        // of ( -10 , 10 )
+        // compute the deflection of the CDI needle
         //////////////////////////////////////////////////////////
         double r = 0.0;
+        double rnorm = 0.0;
 
         if ( cdi_serviceable ) {
             if ( nav_slaved_to_gps_node->getBoolValue() ) {
+                // This is normalized old-style: [-10 .. 10]
                 r = gps_cdi_deflection_node->getDoubleValue();
-                // We want +- 5 dots deflection for the gps, so clamp
-                // to -12.5/12.5
-                SG_CLAMP_RANGE( r, -12.5, 12.5 );
+                rnorm = r / 10.0;
             } else if ( inrange ) {
-                r = target_radial - radial;
+                r = target_radial - radial;     // in degrees
                 // cout << "Target radial = " << target_radial 
                 //      << "  Actual radial = " << radial << endl;
                 
@@ -534,24 +558,34 @@ FGNavRadio::update(double dt)
                     // and four false courses.
                     // Three of the six are reverse sensing.
                    r = 30.0 * sawtooth(r / 30.0);
-                   // A VOR is 20 degrees peg-to-peg, and that
-                   // tells us how sensitive CDI instruments are:
-                   const double vor_fs = 20.0;
-                   // A localizer is more sensitive:
                    if (loc_width <= 0.) loc_width = 5.;
-                   r *= vor_fs / loc_width;
+                   // loc_width is peg-to-peg,
+                   // so we want half that excurson to each side:
+                   rnorm = r / (0.5 * loc_width);
                 } else {
                     // Handle the "TO" side of the VOR.
                   if ( fabs(r) > 90.0 ) {
                      r = ( r<0.0 ? -r-180.0 : -r+180.0 );
                   }
+                  // here with r = VOR CDI normed to [-10 .. 10] degrees
+                  rnorm = r / 10.0;    //  normed to [-1 .. 1] nominal "full"
                 }
 
-                SG_CLAMP_RANGE( r, -10.0, 10.0 );
                 r *= signal_quality_norm;
+                rnorm *= signal_quality_norm;
             }
+        }  else {
+          // CDI not serviceable
         }
-        cdi_deflection_node->setDoubleValue( r );
+        // Here with r in degrees, which we pass on to xtrack;
+        // Here with rnorm in [-1 .. 1] nominal "full" but not clamped 
+        // ... so it may go outside the nominal interval.
+        heading_needle_deflection_norm = rnorm;
+
+        // Also normalize to [-10 .. 10] for historical reasons
+        // which made sense for VOR (in degrees)
+        // but not so much for LOC or RNAV
+        heading_needle_deflection_node->setDoubleValue( rnorm * 10.0 );
 
         //////////////////////////////////////////////////////////
         // compute the amount of cross track distance error in meters
@@ -612,15 +646,8 @@ FGNavRadio::update(double dt)
         time_to_intercept->setDoubleValue( t );
 
         //////////////////////////////////////////////////////////
-        // compute the amount of glide slope needle deflection
-        // (i.e. the number of degrees we are off the glide slope * 5.0)
-        //
-        // CLO - 13 Mar 2006: The glide slope needle should peg at
-        // +/-0.7 degrees off the ideal glideslope.  I'm not sure why
-        // we compute the factor the way we do (5*gs_error), but we
-        // need to compensate for our 'odd' number in the glideslope
-        // needle animation.  This means that the needle should peg
-        // when this value is +/-3.5.
+        // Compute the amount of glide slope needle deflection.
+        // Normalization is discussed below.
         //////////////////////////////////////////////////////////
         int gsok(0);
         if ( has_gs && gs_serviceable_node->getBoolValue() ) {
@@ -639,6 +666,7 @@ FGNavRadio::update(double dt)
                     * SG_FEET_TO_METER;
                 // cout << "dist = " << dist << " height = " << y << endl;
                 double angle = asin( y / dist ) * SGD_RADIANS_TO_DEGREES;
+
                 // The factor of 1.5 gives a period of 6 degrees.
                 // There will be zeros at 3, 6r, 9, 12r et cetera
                 // where "r" indicates reverse sensing.
@@ -650,17 +678,24 @@ FGNavRadio::update(double dt)
                 // It may be that some of each exist.
                 r = 1.5 * sawtooth((target_gs - angle) / 1.5);
 
-                // Magic factor of 5.0;
-                // it knows where it comes from, but it means
-                // that our GS output is 7 units peg-to-peg,
-                // i.e. 3.5 each side of zero.
-                r *=  5.0;
                 gsok = 1;
             } // else GS out of range ... park the needle
+        } else {
+          // didn't have working GS
         }
-        if (!gsok) r = gs_park_node->getDoubleValue();
-        gs_deflection_node->setDoubleValue( r );
-        gs_barber_node->setBoolValue(!gsok);
+        // Here with GS angle r in degrees.
+        // rnorm is normed to std glideslope thickness, so that
+        // rnorm lies in the interval [-1 .. 1] nominal "full" scale
+        // but not clamped.
+        rnorm = r / 0.7;     // GS sector is 1.4 degrees peg-to-peg
+
+        if (!gsok) rnorm = gs_park_norm;
+        gs_needle_deflection_norm = rnorm;
+        // Magic factor of 3.5 for unfathomable historical reasons.
+        // This node uses [-3.5 .. 3.5] nominal "full" range,
+        // i.e. degrees * 5.0
+        gs_needle_deflection_node->setDoubleValue( rnorm * 3.5);
+        gs_inrange = gsok;
 
         //////////////////////////////////////////////////////////
         // Calculate desired rate of climb for intercepting the GS
@@ -706,7 +741,7 @@ FGNavRadio::update(double dt)
         // The cdi deflection should be +/-10 for a full range of deflection
         // so multiplying this by 3 gives us +/- 30 degrees heading
         // compensation.
-        double adjustment = cdi_deflection_node->getDoubleValue() * 3.0;
+        double adjustment = heading_needle_deflection_node->getDoubleValue() * 3.0;
         SG_CLAMP_RANGE( adjustment, -30.0, 30.0 );
 
         // determine the target heading to fly to intercept the
@@ -728,13 +763,15 @@ FGNavRadio::update(double dt)
 
         last_xtrack_error = xtrack_error;
    } else {
+   // not a valid tuning at all.
 	inrange_node->setBoolValue( false );
-        cdi_deflection_node->setDoubleValue( 0.0 );
+        heading_needle_deflection_node->setDoubleValue( 0.0 );
         cdi_xtrack_error_node->setDoubleValue( 0.0 );
         cdi_xtrack_hdg_err_node->setDoubleValue( 0.0 );
         time_to_intercept->setDoubleValue( 0.0 );
-        gs_deflection_node->setDoubleValue( gs_park_node->getDoubleValue() );
-        gs_barber_node->setBoolValue( 1 );
+        gs_needle_deflection_norm = gs_park_norm;
+        gs_needle_deflection_node->setDoubleValue( gs_park_norm * 3.5);
+        gs_inrange = false;
         to_flag_node->setBoolValue( false );
         from_flag_node->setBoolValue( false );
 	// cout << "not picking up vor. :-(" << endl;
@@ -819,7 +856,7 @@ void FGNavRadio::search()
     FGNavRecord *gs = NULL;
 
     ////////////////////////////////////////////////////////////////////////
-    // Nav.
+    // Tune the nav.
     ////////////////////////////////////////////////////////////////////////
 
     double freq = freq_node->getDoubleValue();
@@ -862,7 +899,7 @@ void FGNavRadio::search()
             if (loc_runway) {
 // landing threshold (which may or may not be displaced relative
 // to the beginning of the runway):
-              loc_ldg_threshold = loc_runway->landingThreshold();
+              loc_ldg_threshold = loc_runway->threshold();
               SGVec3d ldg_xyz = SGVec3d::fromGeod(loc_ldg_threshold);
               SGVec3d end_xyz = SGVec3d::fromGeod(loc_runway->end());
               double axis_length = dist(az_xyz, ldg_xyz);

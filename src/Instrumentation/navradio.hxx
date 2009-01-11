@@ -53,7 +53,7 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode_ptr is_valid_node;   // is station data valid (may be way out
                                         // of range.)
     SGPropertyNode_ptr power_btn_node;
-    SGPropertyNode_ptr gs_park_node;    // where GS needle parks when undriven
+    double gs_park_norm;                // where GS needle parks when undriven
     SGPropertyNode_ptr freq_node;       // primary freq
     SGPropertyNode_ptr alt_freq_node;   // standby freq
     SGPropertyNode_ptr sel_radial_node; // selected radial
@@ -86,17 +86,20 @@ class FGNavRadio : public SGSubsystem
                                        // radial at current speed and heading
     SGPropertyNode_ptr to_flag_node;
     SGPropertyNode_ptr from_flag_node;
-    SGPropertyNode_ptr inrange_node;	// azimuth, not DME or GS
+    SGPropertyNode_ptr inrange_node;	// means azimuth inrange, 
+                        // not to be confused with dme_inrange or gs_inrange
     SGPropertyNode_ptr signal_quality_norm_node;	// azimuth, not DME or GS
 
-    SGPropertyNode_ptr cdi_deflection_node;
+    SGPropertyNode_ptr heading_needle_deflection_node;
+    double heading_needle_deflection_norm;
     SGPropertyNode_ptr cdi_xtrack_error_node;
     SGPropertyNode_ptr cdi_xtrack_hdg_err_node;
     SGPropertyNode_ptr has_gs_node;
     SGPropertyNode_ptr loc_node;
     SGPropertyNode_ptr loc_dist_node;
-    SGPropertyNode_ptr gs_deflection_node;
-    SGPropertyNode_ptr gs_barber_node;  // true ==> barber pole is showing
+    SGPropertyNode_ptr gs_needle_deflection_node;
+    double             gs_needle_deflection_norm;
+    bool               gs_inrange;
     SGPropertyNode_ptr gs_rate_of_climb_node;
     SGPropertyNode_ptr gs_dist_node;
     SGPropertyNode_ptr nav_id_node;
@@ -161,11 +164,11 @@ class FGNavRadio : public SGSubsystem
 
     // model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
     double adjustNavRange( double stationElev, double aircraftElev,
-			   double nominalRange );
+                         double nominalRange );
 
     // model standard localizer service volumes as per AIM 1-1-9
     double adjustLocRange( double stationElev, double aircraftElev,
-			   double offsetDegrees, double nominalRange );
+                         double offsetDegrees, double nominalRange );
 
 public:
 
@@ -178,9 +181,26 @@ public:
     void update (double dt);
     // Accessors
     inline double get_loc_width() const { return loc_width; }
-    inline void set_loc_width( double val ) {
-	loc_width = val;
-    }
+    inline void   set_loc_width( double val ) { loc_width = val; }
+
+    inline bool get_gs_inrange() const     { return gs_inrange; }
+    inline void set_gs_inrange( bool val ) { gs_inrange = val; }
+
+    inline double get_heading_needle_deflection_norm() const { 
+       return heading_needle_deflection_norm; }
+    inline void set_heading_needle_deflection_norm( double val ) { 
+      heading_needle_deflection_norm = val; }
+
+    inline double get_gs_needle_deflection_norm() const { 
+      return gs_needle_deflection_norm; }
+    inline void set_gs_needle_deflection_norm( double val ) { 
+      gs_needle_deflection_norm = val; }
+
+    inline double get_gs_park_norm() const { 
+      return gs_park_norm; }
+    inline void set_gs_park_norm( double val ) { 
+      gs_park_norm = val; }
+
     // Update nav/adf radios based on current postition
     void search ();
 };
