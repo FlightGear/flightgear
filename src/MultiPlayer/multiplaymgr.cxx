@@ -155,6 +155,8 @@ FGMultiplayMgr::sIdPropertyList[] = {
   {1100, "sim/model/variant", SGPropertyNode::INT},
   {1101, "sim/model/livery/file", SGPropertyNode::STRING},
 
+  {1200, "environment/wildfire/data", SGPropertyNode::STRING},
+
   {10001, "sim/multiplay/transmission-freq-hz",  SGPropertyNode::STRING},
   {10002, "sim/multiplay/chat",  SGPropertyNode::STRING},
 
