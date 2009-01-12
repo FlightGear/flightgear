@@ -83,11 +83,11 @@ validate_format(const char *f)
  */
 struct GUIInfo
 {
-    GUIInfo(FGDialog * d);
+    GUIInfo(FGDialog *d);
     virtual ~GUIInfo();
     void apply_format(SGPropertyNode *);
 
-    FGDialog * dialog;
+    FGDialog *dialog;
     SGPropertyNode_ptr node;
     vector <SGBinding *> bindings;
     int key;
@@ -95,7 +95,7 @@ struct GUIInfo
     format_type fmt_type;
 };
 
-GUIInfo::GUIInfo (FGDialog * d) :
+GUIInfo::GUIInfo (FGDialog *d) :
     dialog(d),
     key(-1),
     fmt_type(f_INVALID)
@@ -208,9 +208,11 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
     if (updown == PU_DOWN && !_dragging) {
         if (!result)
             return 0;
+        int global_drag = fgGetKeyModifiers() & KEYMOD_SHIFT;
+        int global_resize = fgGetKeyModifiers() & KEYMOD_CTRL;
 
         int hit = getHitObjects(this, x, y);
-        if (hit & (PUCLASS_BUTTON|PUCLASS_ONESHOT|PUCLASS_INPUT|PUCLASS_LARGEINPUT))
+        if (!global_resize && hit & (PUCLASS_BUTTON|PUCLASS_ONESHOT|PUCLASS_INPUT|PUCLASS_LARGEINPUT))
             return result;
 
         getPosition(&_dlgX, &_dlgY);
@@ -228,40 +230,34 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
         };
 
         _resizing = 0;
-        int global_resize = fgGetKeyModifiers() & KEYMOD_CTRL;
-        int hmargin = global_resize ? _dlgW / 3 : 10;
-        int vmargin = global_resize ? _dlgH / 3 : 10;
+        if (!global_drag) {
+            int hmargin = global_resize ? _dlgW / 3 : 10;
+            int vmargin = global_resize ? _dlgH / 3 : 10;
 
-        if (y - _dlgY < vmargin)
-            _resizing |= BOTTOM;
-        else if (_dlgY + _dlgH - y < vmargin)
-            _resizing |= TOP;
+            if (y - _dlgY < vmargin)
+                _resizing |= BOTTOM;
+            else if (_dlgY + _dlgH - y < vmargin)
+                _resizing |= TOP;
 
-        if (x - _dlgX < hmargin)
-            _resizing |= LEFT;
-        else if (_dlgX + _dlgW - x < hmargin)
-            _resizing |= RIGHT;
+            if (x - _dlgX < hmargin)
+                _resizing |= LEFT;
+            else if (_dlgX + _dlgW - x < hmargin)
+                _resizing |= RIGHT;
 
-        if (!_resizing && global_resize)
-            _resizing = BOTTOM|RIGHT;
+            if (!_resizing && global_resize)
+                _resizing = BOTTOM|RIGHT;
 
-        _cursor = cursor[_resizing];
-        if (_resizing && _resizable)
-            fgSetMouseCursor(_cursor);
+            _cursor = cursor[_resizing];
+           if (_resizing && _resizable)
+                fgSetMouseCursor(_cursor);
+       }
 
     } else if (updown == PU_DRAG && _dragging) {
         if (_resizing) {
-            if (!_resizable)
-                return result;
-
             GUIInfo *info = (GUIInfo *)getUserData();
-            if (info && info->node) {
+            if (_resizable && info && info->node) {
                 int w = _dlgW;
                 int h = _dlgH;
-                int prefw, prefh;
-                LayoutWidget wid(info->node);
-                wid.calcPrefSize(&prefw, &prefh);
-
                 if (_resizing & LEFT)
                     w += _startX - x;
                 if (_resizing & RIGHT)
@@ -271,6 +267,9 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
                 if (_resizing & BOTTOM)
                     h += _startY - y;
 
+                int prefw, prefh;
+                LayoutWidget wid(info->node);
+                wid.calcPrefSize(&prefw, &prefh);
                 if (w < prefw)
                     w = prefw;
                 if (h < prefh)
@@ -283,12 +282,11 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
                 if (_resizing & BOTTOM)
                     y += _dlgH - h;
 
-                getFirstChild()->setSize(w, h); // dialog background puFrame
+                wid.layout(x, y, w, h);
                 setSize(w, h);
                 setPosition(x, y);
-
-                wid.layout(x, y, w, h);
                 applySize(static_cast<puObject *>(this));
+                getFirstChild()->setSize(w, h); // dialog background puFrame
             }
         } else {
             setPosition(x + _dlgX - _startX, y + _dlgY - _startY);
@@ -360,10 +358,10 @@ void fgPopup::applySize(puObject *object)
  * Action callback.
  */
 static void
-action_callback (puObject * object)
+action_callback (puObject *object)
 {
-    GUIInfo * info = (GUIInfo *)object->getUserData();
-    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+    GUIInfo *info = (GUIInfo *)object->getUserData();
+    NewGUI *gui = (NewGUI *)globals->get_subsystem("gui");
     gui->setActiveDialog(info->dialog);
     int nBindings = info->bindings.size();
     for (int i = 0; i < nBindings; i++) {
@@ -384,7 +382,7 @@ action_callback (puObject * object)
  * Copy a property value to a PUI object.
  */
 static void
-copy_to_pui (SGPropertyNode * node, puObject * object)
+copy_to_pui (SGPropertyNode *node, puObject *object)
 {
     GUIInfo *info = (GUIInfo *)object->getUserData();
     if (!info) {
@@ -423,7 +421,7 @@ copy_to_pui (SGPropertyNode * node, puObject * object)
 
 
 static void
-copy_from_pui (puObject * object, SGPropertyNode * node)
+copy_from_pui (puObject *object, SGPropertyNode *node)
 {
     // puText objects are immutable, so should not be copied out
     if (object->getType() & PUCLASS_TEXT)
@@ -453,10 +451,10 @@ copy_from_pui (puObject * object, SGPropertyNode * node)
 // Implementation of FGDialog.
 ////////////////////////////////////////////////////////////////////////
 
-FGDialog::FGDialog (SGPropertyNode * props)
-    : _object(0),
-      _gui((NewGUI *)globals->get_subsystem("gui")),
-      _props(props)
+FGDialog::FGDialog (SGPropertyNode *props) :
+    _object(0),
+    _gui((NewGUI *)globals->get_subsystem("gui")),
+    _props(props)
 {
     _module = string("__dlg:") + props->getStringValue("name", "[unnamed]");
     SGPropertyNode *nasal = props->getNode("nasal");
@@ -504,7 +502,7 @@ FGDialog::~FGDialog ()
 }
 
 void
-FGDialog::updateValues (const char * objectName)
+FGDialog::updateValues (const char *objectName)
 {
     if (objectName && !objectName[0])
         objectName = 0;
@@ -524,7 +522,7 @@ FGDialog::updateValues (const char * objectName)
 }
 
 void
-FGDialog::applyValues (const char * objectName)
+FGDialog::applyValues (const char *objectName)
 {
     if (objectName && !objectName[0])
         objectName = 0;
@@ -552,7 +550,7 @@ FGDialog::update ()
 }
 
 void
-FGDialog::display (SGPropertyNode * props)
+FGDialog::display (SGPropertyNode *props)
 {
     if (_object != 0) {
         SG_LOG(SG_GENERAL, SG_ALERT, "This widget is already active");
@@ -579,9 +577,9 @@ FGDialog::display (SGPropertyNode * props)
     }
     wid.setDefaultFont(_font, int(_font->getPointSize()));
 
-    int pw=0, ph=0;
+    int pw = 0, ph = 0;
     int px, py, savex, savey;
-    if(!userw || !userh)
+    if (!userw || !userh)
         wid.calcPrefSize(&pw, &ph);
     pw = props->getIntValue("width", pw);
     ph = props->getIntValue("height", ph);
@@ -605,18 +603,18 @@ FGDialog::display (SGPropertyNode * props)
 
     // Remove automatically generated properties, so the layout looks
     // the same next time around, or restore x and y to preserve negative coords.
-    if(userx)
+    if (userx)
         props->setIntValue("x", savex);
     else
         props->removeChild("x");
 
-    if(usery)
+    if (usery)
         props->setIntValue("y", savey);
     else
         props->removeChild("y");
 
-    if(!userw) props->removeChild("width");
-    if(!userh) props->removeChild("height");
+    if (!userw) props->removeChild("width");
+    if (!userh) props->removeChild("height");
 
     if (_object != 0) {
         _object->reveal();
@@ -628,7 +626,7 @@ FGDialog::display (SGPropertyNode * props)
 }
 
 puObject *
-FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
+FGDialog::makeObject (SGPropertyNode *props, int parentWidth, int parentHeight)
 {
     if (!props->getBoolValue("enabled", true))
         return 0;
@@ -644,7 +642,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         type = "dialog";
 
     if (type == "dialog") {
-        puPopup * obj;
+        puPopup *obj;
         bool draggable = props->getBoolValue("draggable", true);
         bool resizable = props->getBoolValue("resizable", false);
         if (props->getBoolValue("modal", false))
@@ -656,19 +654,19 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         return obj;
 
     } else if (type == "group") {
-        puGroup * obj = new puGroup(x, y);
+        puGroup *obj = new puGroup(x, y);
         setupGroup(obj, props, width, height, false);
         setColor(obj, props);
         return obj;
 
     } else if (type == "frame") {
-        puGroup * obj = new puGroup(x, y);
+        puGroup *obj = new puGroup(x, y);
         setupGroup(obj, props, width, height, true);
         setColor(obj, props);
         return obj;
 
     } else if (type == "hrule" || type == "vrule") {
-        puFrame * obj = new puFrame(x, y, x + width, y + height);
+        puFrame *obj = new puFrame(x, y, x + width, y + height);
         obj->setBorderThickness(0);
         setupObject(obj, props);
         setColor(obj, props, BACKGROUND|FOREGROUND|HIGHLIGHT);
@@ -676,7 +674,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
 
     } else if (type == "list") {
         int slider_width = props->getIntValue("slider", 20);
-        fgList * obj = new fgList(x, y, x + width, y + height, props, slider_width);
+        fgList *obj = new fgList(x, y, x + width, y + height, props, slider_width);
         if (presetSize)
             obj->setSize(width, height);
         setupObject(obj, props);
@@ -684,7 +682,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         return obj;
 
     } else if (type == "airport-list") {
-        AirportList * obj = new AirportList(x, y, x + width, y + height);
+        AirportList *obj = new AirportList(x, y, x + width, y + height);
         if (presetSize)
             obj->setSize(width, height);
         setupObject(obj, props);
@@ -692,7 +690,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         return obj;
 
     } else if (type == "property-list") {
-        PropertyList * obj = new PropertyList(x, y, x + width, y + height, globals->get_props());
+        PropertyList *obj = new PropertyList(x, y, x + width, y + height, globals->get_props());
         if (presetSize)
             obj->setSize(width, height);
         setupObject(obj, props);
@@ -700,13 +698,13 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         return obj;
 
     } else if (type == "input") {
-        puInput * obj = new puInput(x, y, x + width, y + height);
+        puInput *obj = new puInput(x, y, x + width, y + height);
         setupObject(obj, props);
         setColor(obj, props, FOREGROUND|LABEL);
         return obj;
 
     } else if (type == "text") {
-        puText * obj = new puText(x, y);
+        puText *obj = new puText(x, y);
         setupObject(obj, props);
 
         // Layed-out objects need their size set, and non-layout ones
@@ -719,22 +717,22 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         return obj;
 
     } else if (type == "checkbox") {
-        puButton * obj;
+        puButton *obj;
         obj = new puButton(x, y, x + width, y + height, PUBUTTON_XCHECK);
         setupObject(obj, props);
         setColor(obj, props, FOREGROUND|LABEL);
         return obj;
 
     } else if (type == "radio") {
-        puButton * obj;
+        puButton *obj;
         obj = new puButton(x, y, x + width, y + height, PUBUTTON_CIRCLE);
         setupObject(obj, props);
         setColor(obj, props, FOREGROUND|LABEL);
         return obj;
 
     } else if (type == "button") {
-        puButton * obj;
-        const char * legend = props->getStringValue("legend", "[none]");
+        puButton *obj;
+        const char *legend = props->getStringValue("legend", "[none]");
         if (props->getBoolValue("one-shot", true))
             obj = new puOneShot(x, y, legend);
         else
@@ -746,15 +744,15 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         return obj;
 
     } else if (type == "combo") {
-        fgComboBox * obj = new fgComboBox(x, y, x + width, y + height, props,
-                           props->getBoolValue("editable", false));
+        fgComboBox *obj = new fgComboBox(x, y, x + width, y + height, props,
+                props->getBoolValue("editable", false));
         setupObject(obj, props);
         setColor(obj, props, EDITFIELD);
         return obj;
 
     } else if (type == "slider") {
         bool vertical = props->getBoolValue("vertical", false);
-        puSlider * obj = new puSlider(x, y, (vertical ? height : width));
+        puSlider *obj = new puSlider(x, y, (vertical ? height : width));
         obj->setMinValue(props->getFloatValue("min", 0.0));
         obj->setMaxValue(props->getFloatValue("max", 1.0));
         setupObject(obj, props);
@@ -764,7 +762,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         return obj;
 
     } else if (type == "dial") {
-        puDial * obj = new puDial(x, y, width);
+        puDial *obj = new puDial(x, y, width);
         obj->setMinValue(props->getFloatValue("min", 0.0));
         obj->setMaxValue(props->getFloatValue("max", 1.0));
         obj->setWrap(props->getBoolValue("wrap", true));
@@ -776,7 +774,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         int slider_width = props->getIntValue("slider", 20);
         int wrap = props->getBoolValue("wrap", true);
         puaLargeInput * obj = new puaLargeInput(x, y,
-                x+width, x+height, 2, slider_width, wrap);
+                x + width, x + height, 2, slider_width, wrap);
 
         if (props->hasValue("editable")) {
             if (props->getBoolValue("editable")==false)
@@ -791,7 +789,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
         return obj;
 
     } else if (type == "select") {
-        fgSelectBox * obj = new fgSelectBox(x, y, x + width, y + height, props);
+        fgSelectBox *obj = new fgSelectBox(x, y, x + width, y + height, props);
         setupObject(obj, props);
         setColor(obj, props, EDITFIELD);
         return obj;
@@ -801,7 +799,7 @@ FGDialog::makeObject (SGPropertyNode * props, int parentWidth, int parentHeight)
 }
 
 void
-FGDialog::setupObject (puObject * object, SGPropertyNode * props)
+FGDialog::setupObject (puObject *object, SGPropertyNode *props)
 {
     GUIInfo *info = new GUIInfo(this);
     object->setUserData(info);
@@ -833,20 +831,20 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
     }
 
     if (props->hasValue("property")) {
-        const char * name = props->getStringValue("name");
+        const char *name = props->getStringValue("name");
         if (name == 0)
             name = "";
-        const char * propname = props->getStringValue("property");
+        const char *propname = props->getStringValue("property");
         SGPropertyNode_ptr node = fgGetNode(propname, true);
         copy_to_pui(node, object);
 
-        PropertyObject* po = new PropertyObject(name, object, node);
+        PropertyObject *po = new PropertyObject(name, object, node);
         _propertyObjects.push_back(po);
         if (props->getBoolValue("live"))
             _liveObjects.push_back(po);
     }
 
-    SGPropertyNode * dest = fgGetNode("/sim/bindings/gui", true);
+    SGPropertyNode *dest = fgGetNode("/sim/bindings/gui", true);
     vector<SGPropertyNode_ptr> bindings = props->getChildren("binding");
     if (bindings.size() > 0) {
         info->key = props->getIntValue("keynum", -1);
@@ -888,8 +886,8 @@ FGDialog::setupObject (puObject * object, SGPropertyNode * props)
 }
 
 void
-FGDialog::setupGroup (puGroup * group, SGPropertyNode * props,
-                    int width, int height, bool makeFrame)
+FGDialog::setupGroup(puGroup *group, SGPropertyNode *props,
+       int width, int height, bool makeFrame)
 {
     setupObject(group, props);
 
@@ -905,7 +903,7 @@ FGDialog::setupGroup (puGroup * group, SGPropertyNode * props,
 }
 
 void
-FGDialog::setColor(puObject * object, SGPropertyNode * props, int which)
+FGDialog::setColor(puObject *object, SGPropertyNode *props, int which)
 {
     string type = props->getName();
     if (type.empty())
@@ -1033,7 +1031,7 @@ FGDialog::getKeyCode(const char *str)
         if (mod & SHIFT)
             key = toupper(key);
         if (mod & CTRL)
-            key = toupper(key) - 64;
+            key = toupper(key) - '@';
         if (mod & ALT)
             ;   // Alt not propagated to the gui
     } else {
@@ -1056,12 +1054,11 @@ FGDialog::getKeyCode(const char *str)
 // Implementation of FGDialog::PropertyObject.
 ////////////////////////////////////////////////////////////////////////
 
-FGDialog::PropertyObject::PropertyObject (const char * n,
-                                           puObject * o,
-                                           SGPropertyNode_ptr p)
-    : name(n),
-      object(o),
-      node(p)
+FGDialog::PropertyObject::PropertyObject(const char *n,
+        puObject *o, SGPropertyNode_ptr p) :
+    name(n),
+    object(o),
+    node(p)
 {
 }
 
