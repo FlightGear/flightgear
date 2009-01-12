@@ -76,10 +76,10 @@ public:
       */
     FGNavRecord *findByFreq( double freq, const SGGeod& position);
 
-    // Given an Ident and optional freqency, return the first matching
-    // station.
-    FGNavRecord *findByIdentAndFreq( const std::string& ident,
-                                     const double freq = 0.0 );
+    // Given a postion, ident, and optional frequency, return the 
+    // nearest station that matches the ident and (?) frequency.
+    FGNavRecord *findByIdentAndFreq( const SGGeod& pos,
+       const std::string& ident, const double freq = 0.0 );
 
     // given a frequency returns the first matching entry
     FGNavRecord *findStationByFreq( double frequency );

@@ -83,29 +83,32 @@ public:
   }
 };
 
-// Given an Ident and optional freqency, return the first matching
-// station.
-FGNavRecord *FGNavList::findByIdentAndFreq(const string& ident, const double freq )
+// Given a postion, ident, and optional frequency, return the 
+// nearest station that matches the ident and (?) frequency.
+FGNavRecord *FGNavList::findByIdentAndFreq( const SGGeod& pos,
+       const string& ident, const double freq )
 {
   FGPositionedRef cur;
   VORNDBFilter filter;
   cur = FGPositioned::findNextWithPartialId(cur, ident, &filter);
   
-  if (freq <= 0.0) {
-    return static_cast<FGNavRecord*>(cur.ptr()); // might be null
-  }
-  
+  nav_list_type stations;
   int f = (int)(freq*100.0 + 0.5);
   while (cur) {
     FGNavRecord* nav = static_cast<FGNavRecord*>(cur.ptr());
-    if (nav->get_freq() == f) {
-      return nav;
+    if (freq <= 0.0 || nav->get_freq() == f) {
+      stations.push_back(nav);
     }
     
     cur = FGPositioned::findNextWithPartialId(cur, ident, &filter);
   }
+  SG_LOG( SG_INSTR, SG_DEBUG,
+    "findByIdentAndFreq: ident: " << ident
+    << "  freq: " << freq << "  size: " << stations.size()  
+    << "  pos:  " << pos );
 
-  return NULL;
+  return findNavFromList( pos, stations );
+
 }
 
 // LOC, ILS, GS, and DME antenna's could potentially be
@@ -154,13 +157,14 @@ FGNavRecord *FGNavList::findNavFromList( const SGGeod &aircraft,
 {
     FGNavRecord *nav = NULL;
     double d2;                  // in meters squared
-    double min_dist
-        = FG_NAV_MAX_RANGE*SG_NM_TO_METER*FG_NAV_MAX_RANGE*SG_NM_TO_METER;
+    double min_dist = 99e99;    // larger than largest possible
     SGVec3d aircraftCart = SGVec3d::fromGeod(aircraft);
     
     nav_list_const_iterator it;
     nav_list_const_iterator end = stations.end();
-    // find the closest station within a sensible range (FG_NAV_MAX_RANGE)
+    // Find the closest station.
+    // Not restricted to "sensible" range since used by fg_init()
+    // to locate to arbitrary places.
     for ( it = stations.begin(); it != end; ++it ) {
         FGNavRecord *station = *it;
         // cout << "testing " << current->get_ident() << endl;

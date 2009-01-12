@@ -883,9 +883,10 @@ static void fgSetDistOrAltFromGlideSlope() {
 
 
 // Set current_options lon/lat given an airport id and heading (degrees)
-static bool fgSetPosFromNAV( const string& id, const double& freq ) {
-    FGNavRecord *nav
-        = globals->get_navlist()->findByIdentAndFreq( id.c_str(), freq );
+static bool fgSetPosFromNAV( const SGGeod& pos, 
+     const string& id, const double& freq ) {
+  FGNavRecord *nav = globals->get_navlist()->findByIdentAndFreq( pos, 
+        id.c_str(), freq );
 
   if (!nav) {
     SG_LOG( SG_GENERAL, SG_ALERT, "Failed to locate NAV = "
@@ -1019,7 +1020,7 @@ bool fgInitPosition() {
         * SG_DEGREES_TO_RADIANS ;
     double od = fgGetDouble("/sim/presets/offset-distance-nm");
     double alt = fgGetDouble("/sim/presets/altitude-ft");
-
+    SGGeod vicinity_point;
     bool set_pos = false;
 
     // If glideslope is specified, then calculate offset-distance or
@@ -1044,6 +1045,7 @@ bool fgInitPosition() {
         set_pos = true;
     }
 
+    string vicinity = fgGetString("/sim/presets/vicinity");
     string apt = fgGetString("/sim/presets/airport-id");
     string rwy_no = fgGetString("/sim/presets/runway");
     bool rwy_req = fgGetBool("/sim/presets/runway-requested");
@@ -1069,6 +1071,19 @@ bool fgInitPosition() {
         opt->setDoubleValue("heading-deg", hdg);
         opt->setStringValue("airport", apt.c_str());
         opt->setStringValue("runway", rwy_no.c_str());
+    }
+
+    {
+      if (vicinity.empty()) vicinity = "KOKC";
+      unsigned int where = vicinity.find_first_of(":,/");
+      if (where == string::npos) {
+        const FGAirport* apt = fgFindAirportID(vicinity);
+        if (apt) vicinity_point = apt->getTowerLocation();
+      } else {
+        double lat = atof(vicinity.substr(0,where).c_str());
+        double lon = atof(vicinity.substr(1+where).c_str());
+        vicinity_point = SGGeod::fromDeg(lon, lat);
+      }
     }
 
     if (hdg > 9990.0)
@@ -1108,14 +1123,14 @@ bool fgInitPosition() {
 
     if ( !set_pos && !vor.empty() ) {
         // a VOR is requested
-        if ( fgSetPosFromNAV( vor, vor_freq ) ) {
+        if ( fgSetPosFromNAV( vicinity_point, vor, vor_freq ) ) {
             set_pos = true;
         }
     }
 
     if ( !set_pos && !ndb.empty() ) {
         // an NDB is requested
-        if ( fgSetPosFromNAV( ndb, ndb_freq ) ) {
+        if ( fgSetPosFromNAV( vicinity_point, ndb, ndb_freq ) ) {
             set_pos = true;
         }
     }
