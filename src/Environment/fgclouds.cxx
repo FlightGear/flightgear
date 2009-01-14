@@ -51,6 +51,7 @@ FGClouds::FGClouds(FGEnvironmentCtrl * controller) :
 	station_elevation_ft(0.0),
 	_controller( controller ),
 	snd_lightning(NULL),
+    clouds_3d_enabled(false),
     last_scenario( "unset" ),
     last_env_config( new SGPropertyNode() ),
     last_env_clouds( new SGPropertyNode() )
