@@ -540,7 +540,9 @@ void HUD::Ladder::draw(void)
             // draw numbers
             std::ostringstream str;
             str << i;
-            const char *num = str.str().c_str();
+            // must keep this string, otherwise it will free the c_str!
+            string num_str = str.str();
+            const char *num = num_str.c_str();
             int valign = numoffs.y > 0 ? BOTTOM : numoffs.y < 0 ? TOP : VCENTER;
             draw_text(lo.x - numoffs.x, lo.y + numoffs.y, num,
                     valign | (numoffs.x == 0 ? CENTER : numoffs.x > 0 ? RIGHT : LEFT));
