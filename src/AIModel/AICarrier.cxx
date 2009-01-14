@@ -27,6 +27,7 @@
 
 #include <osg/NodeVisitor>
 
+#include <simgear/sg_inlines.h>
 #include <simgear/math/SGMath.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
@@ -482,17 +483,6 @@ bool FGAICarrier::getParkPosition(const string& id, SGGeod& geodPos,
 // find relative wind
 void FGAICarrier::UpdateWind( double dt) {
 
-    double recip;
-
-    //calculate the reciprocal hdg
-
-    if (hdg >= 180)
-        recip = hdg - 180;
-    else
-        recip = hdg + 180;
-
-    //cout <<" heading: " << hdg << "recip: " << recip << endl;
-
     //get the surface wind speed and direction
     wind_from_deg = _surface_wind_from_deg_node->getDoubleValue();
     wind_speed_kts  = _surface_wind_speed_node->getDoubleValue();
@@ -517,18 +507,9 @@ void FGAICarrier::UpdateWind( double dt) {
     rel_wind_from_deg = atan2(rel_wind_speed_from_east_kts, rel_wind_speed_from_north_kts)
                             * SG_RADIANS_TO_DEGREES;
 
-    // rationalise the output
-    if (rel_wind_speed_from_north_kts <= 0) {
-        rel_wind_from_deg = 180 + rel_wind_from_deg;
-    } else {
-        if(rel_wind_speed_from_east_kts <= 0)
-            rel_wind_from_deg = 360 + rel_wind_from_deg;
-    }
-
     //calculate rel wind
     rel_wind = rel_wind_from_deg - hdg;
-    if (rel_wind > 180)
-        rel_wind -= 360;
+    SG_NORMALIZE_RANGE(rel_wind, -180.0, 180.0);
 
     //switch the wave-off lights
     if (InToWind())
