@@ -98,7 +98,7 @@ public:
   virtual void set_altitude_tropo_top_m (double alt);
 
 private:
-
+  void _init();
   void _recalc_hdgspd ();
   void _recalc_ne ();
 
