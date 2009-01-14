@@ -118,33 +118,39 @@ _setup_tables ()
 // Implementation of FGEnvironment.
 ////////////////////////////////////////////////////////////////////////
 
-FGEnvironment::FGEnvironment()
-  : elevation_ft(0),
-    visibility_m(32000),
-    temperature_sea_level_degc(15),
-    temperature_degc(15),
-    dewpoint_sea_level_degc(5), // guess
-    dewpoint_degc(5),
-    pressure_sea_level_inhg(29.92),
-    pressure_inhg(29.92),
-    turbulence_magnitude_norm(0),
-    turbulence_rate_hz(1),
-    wind_from_heading_deg(0),
-    wind_speed_kt(0),
-    wind_from_north_fps(0),
-    wind_from_east_fps(0),
-    wind_from_down_fps(0),
-    altitude_half_to_sun_m(1000),
-    altitude_tropo_top_m(10000)
+void FGEnvironment::_init()
 {
-  _setup_tables();
-  _recalc_density();
-  _recalc_relative_humidity();
+    elevation_ft = 0;
+    visibility_m = 32000;
+    temperature_sea_level_degc = 15;
+    temperature_degc = 15;
+    dewpoint_sea_level_degc = 5; // guess
+    dewpoint_degc = 5;
+    pressure_sea_level_inhg = 29.92;
+    pressure_inhg = 29.92;
+    turbulence_magnitude_norm = 0;
+    turbulence_rate_hz = 1;
+    wind_from_heading_deg = 0;
+    wind_speed_kt = 0;
+    wind_from_north_fps = 0;
+    wind_from_east_fps = 0;
+    wind_from_down_fps = 0;
+    altitude_half_to_sun_m = 1000;
+    altitude_tropo_top_m = 10000;
+    _setup_tables();
+    _recalc_density();
+    _recalc_relative_humidity();
+    
+}
+
+FGEnvironment::FGEnvironment()
+{
+    _init();
 }
 
 FGEnvironment::FGEnvironment (const FGEnvironment &env)
 {
-    FGEnvironment();
+    _init();
     copy(env);
 }
 
