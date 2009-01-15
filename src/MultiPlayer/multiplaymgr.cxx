@@ -33,6 +33,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <osg/Math>             // isNaN
 #include <plib/netSocket.h>
 
 #include <simgear/misc/stdint.hxx>
@@ -264,6 +265,74 @@ const FGMultiplayMgr::IdPropertyList* FGMultiplayMgr::findProperty(unsigned id)
   }
 }
 
+namespace
+{
+  bool verifyProperties(const xdr_data_t* data, const xdr_data_t* end)
+  {
+    const xdr_data_t* xdr = data;
+    while (xdr < end) {
+      unsigned id = XDR_decode_uint32(*xdr);
+      const FGMultiplayMgr::IdPropertyList* plist
+        = FGMultiplayMgr::findProperty(id);
+    
+      if (plist) {
+        xdr++;
+        // How we decode the remainder of the property depends on the type
+        switch (plist->type) {
+        case SGPropertyNode::INT:        
+        case SGPropertyNode::BOOL:
+        case SGPropertyNode::LONG:
+          xdr++;
+          break;
+        case SGPropertyNode::FLOAT:
+        case SGPropertyNode::DOUBLE:
+          {
+            float val = XDR_decode_float(*xdr);
+            if (osg::isNaN(val))
+              return false;
+            xdr++;
+            break;
+          }
+        case SGPropertyNode::STRING:
+        case SGPropertyNode::UNSPECIFIED:
+          {
+            // String is complicated. It consists of
+            // The length of the string
+            // The string itself
+            // Padding to the nearest 4-bytes.
+            // XXX Yes, each byte is padded out to a word! Too late
+            // to change...
+            uint32_t length = XDR_decode_uint32(*xdr);
+            xdr++;
+            if ((length > 0) && (length < MAX_TEXT_SIZE)) {
+              xdr += length;
+              // Now handle the padding
+              while ((length % 4) != 0)
+                {
+                  xdr++;
+                  length++;
+                  //cout << "0";
+                }
+            } else {
+              // The string appears to be invalid; bail.
+              return false;
+            }
+          }
+          break;
+        default:
+          // cerr << "Unknown Prop type " << id << " " << type << "\n";
+          xdr++;
+          break;
+        }            
+      }
+      else {
+        // give up; this is a malformed property list.
+        return false;
+      }
+    }
+    return true;
+  }
+}
 //////////////////////////////////////////////////////////////////////
 //
 //  MultiplayMgr constructor
@@ -392,6 +461,8 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
   }
 
   T_PositionMsg PosMsg;
+
+  memset(&PosMsg, 0, sizeof(PosMsg));
   strncpy(PosMsg.Model, fgGetString("/sim/model/path"), MAX_MODEL_NAME_LEN);
   PosMsg.Model[MAX_MODEL_NAME_LEN - 1] = '\0';
   
@@ -714,6 +785,29 @@ FGMultiplayMgr::ProcessPosMsg(const char *Msg, netAddress & SenderAddress,
   //cout << "INPUT MESSAGE\n";
   xdr_data_t* xdr = (xdr_data_t*) 
                    (Msg + sizeof(T_MsgHdr) + sizeof(T_PositionMsg));
+  // There was a bug in 1.9.0 and before: T_PositionMsg was 196 bytes
+  // on 32 bit architectures and 200 bytes on 64 bit, and this
+  // structure is put directly on the wire. By looking at the padding,
+  // we can sort through the mess, mostly:
+  // If padding is 0 (which is not a valid property type), then the
+  // message was produced by a new client or an old 64 bit client that
+  // happened to have 0 on the stack;
+  // Else if the property list starting with the padding word is
+  // well-formed, then the client is probably an old 32 bit client and
+  // we'll go with that;
+  // Else it is an old 64-bit client and properties start after the
+  // padding.
+  // There is a chance that we could be fooled by garbage in the
+  // padding looking like a valid property, so verifyProperties() is
+  // strict about the validity of the property values.
+  if (PosMsg->pad != 0) {
+    if (verifyProperties(&PosMsg->pad,
+                         reinterpret_cast<const xdr_data_t*>(Msg + len)))
+      xdr = &PosMsg->pad;
+    else if (!verifyProperties(xdr,
+                               reinterpret_cast<const xdr_data_t*>(Msg + len)))
+      goto noprops;
+  }
   while ((char*)xdr < Msg + len) {
     FGPropertyData* pData = new FGPropertyData;
     SGPropertyNode::Type type = SGPropertyNode::UNSPECIFIED;
@@ -803,7 +897,7 @@ FGMultiplayMgr::ProcessPosMsg(const char *Msg, netAddress & SenderAddress,
              << "found unknown property id" << pData->id); 
     }
   }
-  
+ noprops:
   FGAIMultiplayer* mp = getMultiplayer(MsgHdr->Callsign);
   if (!mp)
     mp = addMultiplayer(MsgHdr->Callsign, PosMsg->Model);
