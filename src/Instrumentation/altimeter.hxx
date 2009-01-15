@@ -29,32 +29,51 @@
 class Altimeter : public SGSubsystem
 {
 
-public:
-
-    Altimeter (SGPropertyNode *node, double quantum = 0);
-    virtual ~Altimeter ();
-
-    virtual void init ();
-    virtual void update (double dt);
-
 private:
 
     string _name;
     int _num;
-    string _static_pressure;
+    string _static_source;
+    SGPropertyNode_ptr _static_pressure_node;
     double _tau;
     double _quantum;
+    double _setting;
     double _kollsman;
-    double raw_PA;
 
-    SGPropertyNode_ptr _serviceable_node;
-    SGPropertyNode_ptr _setting_node;
-    SGPropertyNode_ptr _pressure_node;
-    SGPropertyNode_ptr _press_alt_node;
-    SGPropertyNode_ptr _mode_c_node;
-    SGPropertyNode_ptr _altitude_node;
+    bool _serviceable;
+    double _press_alt;
+    double _mode_c_alt;
+    double _altitude;
+    double _filtered_PA;
 
     FGAltimeter _altimeter;
+
+public:
+
+// Constructor:
+    Altimeter (SGPropertyNode *node, double quantum = 0);
+    ~Altimeter ();
+
+    void init ();
+    void bind ();
+    void unbind ();
+    void update (double dt);
+
+    inline bool get_serviceable() const     { return _serviceable; }
+    inline void set_serviceable( bool val ) { _serviceable = val; }
+
+    inline double get_setting() const     { return _setting; }
+    inline void set_setting( double val ) { _setting = val; }
+
+    inline double get_press_alt() const     { return _press_alt; }
+    inline void set_press_alt( double val ) { _press_alt = val; }
+
+    inline double get_mode_c() const     { return _mode_c_alt; }
+    inline void set_mode_c( double val ) { _mode_c_alt = val; }
+
+    inline double get_altitude() const     { return _altitude; }
+    inline void set_altitude( double val ) { _altitude = val; }
+
 };
 
 #endif // __INSTRUMENTS_ALTIMETER_HXX

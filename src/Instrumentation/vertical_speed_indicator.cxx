@@ -4,7 +4,7 @@
 // This file is in the Public Domain and comes with no warranty.
 
 #include <simgear/math/interpolater.hxx>
-
+#include <simgear/math/SGMath.hxx>
 #include "vertical_speed_indicator.hxx"
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
@@ -46,10 +46,17 @@ VerticalSpeedIndicator::update (double dt)
         double pressure = _pressure_node->getDoubleValue();
         _speed_node
             ->setDoubleValue((_internal_pressure_inhg - pressure) * 10500);
-        _internal_pressure_inhg =
-            fgGetLowPass(_internal_pressure_inhg,
-                         _pressure_node->getDoubleValue(),
-                         dt/6.0);
+        double new_pressure = _pressure_node->getDoubleValue();
+        if (dt > 0.0 && 
+              fabs(_internal_pressure_inhg - new_pressure)/dt > 50.) {
+          SG_LOG( SG_COCKPIT, SG_DEBUG, "VSI snap: " << dt 
+              << "  internal: " << _internal_pressure_inhg
+              << "  new: " << new_pressure);
+          _internal_pressure_inhg = new_pressure;
+        } else {
+          _internal_pressure_inhg =
+              fgGetLowPass(_internal_pressure_inhg, new_pressure, dt/6.0);
+        }
     }
 }
 

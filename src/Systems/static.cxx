@@ -3,9 +3,10 @@
 //
 // This file is in the Public Domain and comes with no warranty.
 
-#include "static.hxx"
+#include <simgear/math/SGMath.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
+#include "static.hxx"
 
 
 StaticSystem::StaticSystem ( SGPropertyNode *node )
@@ -50,7 +51,12 @@ StaticSystem::update (double dt)
         double trat = _tau ? dt/_tau : 100;
         double target = _pressure_in_node->getDoubleValue();
         double current = _pressure_out_node->getDoubleValue();
-        // double delta = target - current;
+        if (dt > 0.0 && fabs(current - target)/dt > 50.) {
+          SG_LOG( SG_COCKPIT, SG_DEBUG, "Static snap: " << dt 
+              << "  current: " << current
+              << "  target: " << target);
+          trat = 100;
+        }
         _pressure_out_node->setDoubleValue(fgGetLowPass(current, target, trat));
     }
 }
