@@ -108,6 +108,12 @@ struct T_PositionMsg {
     // angular acceleration wrt the earth centered frame measured in
     // the earth centered frame
     xdr_data_t angularAccel[3];
+    // Padding. The alignment is 8 bytes on x86_64 because there are
+    // 8-byte types in the message, so the size should be explicitly
+    // rounded out to a multiple of 8. Of course, it's a bad idea to
+    // put a C struct directly on the wire, but that's a fight for
+    // another day...
+    xdr_data_t pad;
 };
 
 struct FGPropertyData {

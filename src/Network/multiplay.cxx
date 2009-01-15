@@ -101,13 +101,12 @@ bool FGMultiplay::open() {
     SGPropertyNode* root = globals->get_props();
 
     /// Build up the id to property map
-    unsigned i = 0;
-    while (FGMultiplayMgr::sIdPropertyList[i].name) {
+    
+    for (unsigned i = 0; i < FGMultiplayMgr::numProperties; ++i) {
       const char* name = FGMultiplayMgr::sIdPropertyList[i].name;
       SGPropertyNode* pNode = root->getNode(name);
       if (pNode)
         mPropertyMap[FGMultiplayMgr::sIdPropertyList[i].id] = pNode;
-      ++i;
     }
 
     return is_enabled();
