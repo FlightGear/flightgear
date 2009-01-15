@@ -32,6 +32,7 @@
 #endif
 
 #include <iostream>
+#include <algorithm>
 #include <plib/netSocket.h>
 
 #include <simgear/misc/stdint.hxx>
@@ -58,7 +59,7 @@ const char sMULTIPLAYMGR_HID[] = MULTIPLAYTXMGR_HID;
 // This should be extendable dynamically for every specific aircraft ...
 // For now only that static list
 FGMultiplayMgr::IdPropertyList
-FGMultiplayMgr::sIdPropertyList[] = {
+const FGMultiplayMgr::sIdPropertyList[] = {
   {100, "surface-positions/left-aileron-pos-norm",  SGPropertyNode::FLOAT},
   {101, "surface-positions/right-aileron-pos-norm", SGPropertyNode::FLOAT},
   {102, "surface-positions/elevator-pos-norm",      SGPropertyNode::FLOAT},
@@ -222,10 +223,46 @@ FGMultiplayMgr::sIdPropertyList[] = {
   {10317, "sim/multiplay/generic/int[17]", SGPropertyNode::INT},
   {10318, "sim/multiplay/generic/int[18]", SGPropertyNode::INT},
   {10319, "sim/multiplay/generic/int[19]", SGPropertyNode::INT},
-
-  /// termination
-  {0, 0, SGPropertyNode::UNSPECIFIED}
 };
+
+const unsigned
+FGMultiplayMgr::numProperties = (sizeof(FGMultiplayMgr::sIdPropertyList)
+                                 / sizeof(FGMultiplayMgr::sIdPropertyList[0]));
+
+// Look up a property ID using binary search.
+namespace
+{
+  struct ComparePropertyId
+  {
+    bool operator()(const FGMultiplayMgr::IdPropertyList& lhs,
+                    const FGMultiplayMgr::IdPropertyList& rhs)
+    {
+      return lhs.id < rhs.id;
+    }
+    bool operator()(const FGMultiplayMgr::IdPropertyList& lhs,
+                    unsigned id)
+    {
+      return lhs.id < id;
+    }
+    bool operator()(unsigned id,
+                    const FGMultiplayMgr::IdPropertyList& rhs)
+    {
+      return id < rhs.id;
+    }
+  };
+    
+}
+const FGMultiplayMgr::IdPropertyList* FGMultiplayMgr::findProperty(unsigned id)
+{
+  std::pair<const IdPropertyList*, const IdPropertyList*> result
+    = std::equal_range(sIdPropertyList, sIdPropertyList + numProperties, id,
+                       ComparePropertyId());
+  if (result.first == result.second) {
+    return 0;
+  } else {
+    return result.first;
+  }
+}
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -687,21 +724,11 @@ FGMultiplayMgr::ProcessPosMsg(const char *Msg, netAddress & SenderAddress,
     xdr++;
     
     // Check the ID actually exists and get the type
-    unsigned i = 0;
-    bool found = false;
-    while (FGMultiplayMgr::sIdPropertyList[i].name) 
-    {
-      if (sIdPropertyList[i].id == pData->id)
-      {
-        found = true;
-        pData->type = sIdPropertyList[i].type;
-      } 
-      
-      i++;
-    }
+    const IdPropertyList* plist = findProperty(pData->id);
     
-    if (found == true)
+    if (plist)
     {
+      pData->type = plist->type;
       // How we decode the remainder of the property depends on the type
       switch (pData->type) {
         case SGPropertyNode::INT:        
@@ -772,7 +799,8 @@ FGMultiplayMgr::ProcessPosMsg(const char *Msg, netAddress & SenderAddress,
     else
     {
       // We failed to find the property. We'll try the next packet immediately.
-      //cout << " Unknown\n";
+      SG_LOG(SG_NETWORK, SG_WARN, "FGMultiplayMgr::ProcessPosMsg - "
+             << "found unknown property id" << pData->id); 
     }
   }
   
@@ -854,11 +882,8 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
     aiMgr->attach(mp);
 
     /// FIXME: that must follow the attach ATM ...
-    unsigned i = 0;
-    while (sIdPropertyList[i].name) {
+    for (unsigned i = 0; i < numProperties; ++i)
       mp->addPropertyId(sIdPropertyList[i].id, sIdPropertyList[i].name);
-      ++i;
-    }
   }
 
   return mp;
