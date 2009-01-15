@@ -60,8 +60,11 @@ public:
     const char* name;
     SGPropertyNode::Type type;
   };
-  static IdPropertyList sIdPropertyList[];
+  static const IdPropertyList sIdPropertyList[];
+  static const unsigned numProperties;
 
+  static const IdPropertyList* findProperty(unsigned id);
+  
   FGMultiplayMgr();
   ~FGMultiplayMgr();
   bool init(void);
