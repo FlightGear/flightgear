@@ -33,10 +33,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="sg_d.lib ul_d.lib"
+				AdditionalDependencies="sg_d.lib ul_d.lib OpenThreadsd.lib"
 				OutputFile="$(OutDir)/yasim.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\..\..\plib"
+				AdditionalLibraryDirectories="..\..\..\install\msvc71\OpenSceneGraph\lib;..\..\..\plib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/yasim.pdb"
 				SubSystem="1"
@@ -82,10 +82,10 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="sg.lib ul.lib"
+				AdditionalDependencies="sg.lib ul.lib OpenThreads.lib"
 				OutputFile="$(OutDir)/yasim.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\..\..\plib"
+				AdditionalLibraryDirectories="..\..\..\install\msvc71\OpenSceneGraph\lib;..\..\..\plib"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"
