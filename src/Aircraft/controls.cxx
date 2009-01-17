@@ -228,9 +228,10 @@ FGControls::init ()
         to_engine[tank] = 0;
         to_tank[tank] = 0;
     }
-    
-    // controls/fuel/tank[n]/pump[p]/
-    bool boost_pump[MAX_TANKS * MAX_BOOSTPUMPS];
+
+    for( int pump = 0; pump < MAX_TANKS * MAX_BOOSTPUMPS; pump++ ) {
+        boost_pump[pump] = false;
+    }
 
     brake_left = brake_right
         = copilot_brake_left = copilot_brake_right
