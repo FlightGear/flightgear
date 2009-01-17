@@ -212,6 +212,8 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
         int global_resize = fgGetKeyModifiers() & KEYMOD_CTRL;
 
         int hit = getHitObjects(this, x, y);
+        if (hit & PUCLASS_LIST)  // ctrl-click in property browser (toggle bool)
+            return result;
         if (!global_resize && hit & (PUCLASS_BUTTON|PUCLASS_ONESHOT|PUCLASS_INPUT|PUCLASS_LARGEINPUT))
             return result;
 
@@ -752,7 +754,7 @@ FGDialog::makeObject (SGPropertyNode *props, int parentWidth, int parentHeight)
 
     } else if (type == "slider") {
         bool vertical = props->getBoolValue("vertical", false);
-        puSlider *obj = new puSlider(x, y, (vertical ? height : width));
+        puSlider *obj = new puSlider(x, y, (vertical ? height : width), vertical);
         obj->setMinValue(props->getFloatValue("min", 0.0));
         obj->setMaxValue(props->getFloatValue("max", 1.0));
         setupObject(obj, props);
@@ -776,12 +778,11 @@ FGDialog::makeObject (SGPropertyNode *props, int parentWidth, int parentHeight)
         puaLargeInput * obj = new puaLargeInput(x, y,
                 x + width, x + height, 2, slider_width, wrap);
 
-        if (props->hasValue("editable")) {
-            if (props->getBoolValue("editable")==false)
-                obj->disableInput();
-            else
-                obj->enableInput();
-        }
+        if (props->getBoolValue("editable"))
+            obj->enableInput();
+        else
+            obj->disableInput();
+
         if (presetSize)
             obj->setSize(width, height);
         setupObject(obj, props);
