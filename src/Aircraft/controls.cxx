@@ -205,8 +205,10 @@ FGControls::init ()
 	magnetos[engine] = 0;
 	feed_tank[engine] = -1; // set to -1 to turn off all tanks 0 feeds all engines from center body tank
 	starter[engine] = false;
+        feather[engine] = false;
         ignition[engine] = false;
         fire_switch[engine] = false;
+        fire_bottle_discharge[engine] = false;
         cutoff[engine] = true;
         augmentation[engine] = false;
         reverser[engine] = false;
@@ -214,7 +216,21 @@ FGControls::init ()
         nitrous_injection[engine] = false;
         cowl_flaps_norm[engine] = 0.0;
         condition[engine] = 1.0;
+        carb_heat[engine] = false;
+        inlet_heat[engine] = false;
+        generator_breaker[engine] = false;
+        bus_tie[engine] = false;
+        engine_bleed[engine] = false;
     }
+
+    for ( int tank = 0; tank < MAX_TANKS; tank++ ) {
+        fuel_selector[tank] = false;
+        to_engine[tank] = 0;
+        to_tank[tank] = 0;
+    }
+    
+    // controls/fuel/tank[n]/pump[p]/
+    bool boost_pump[MAX_TANKS * MAX_BOOSTPUMPS];
 
     brake_left = brake_right
         = copilot_brake_left = copilot_brake_right
