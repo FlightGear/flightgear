@@ -116,13 +116,13 @@ void FGSubmodelMgr::update(double dt)
         _impact = (*sm_list_itr)->_getImpactData();
         _hit = (*sm_list_itr)->_getCollisionData();
         int parent_subID = (*sm_list_itr)->_getSubID();
-        SG_LOG(SG_GENERAL, SG_DEBUG, "Submodel: Impact " << _impact << " hit! "
-                << _hit <<" parent_subID " << parent_subID);
+        //SG_LOG(SG_GENERAL, SG_DEBUG, "Submodel: Impact " << _impact << " hit! "
+        //        << _hit <<" parent_subID " << parent_subID);
         if ( parent_subID == 0) // this entry in the list has no associated submodel
             continue;           // so we can continue
 
         if (_impact || _hit) {
-            SG_LOG(SG_GENERAL, SG_DEBUG, "Submodel: Impact " << _impact << " hit! " << _hit );
+            //SG_LOG(SG_GENERAL, SG_DEBUG, "Submodel: Impact " << _impact << " hit! " << _hit );
 
             submodel_iterator = submodels.begin();
 
@@ -161,10 +161,10 @@ void FGSubmodelMgr::update(double dt)
         i++;
         in_range = true;
 
-        SG_LOG(SG_GENERAL, SG_DEBUG,
+        /*SG_LOG(SG_GENERAL, SG_DEBUG,
                 "Submodels:  " << (*submodel_iterator)->id
                 << " name " << (*submodel_iterator)->name
-                << " in range " << in_range);
+                << " in range " << in_range);*/
 
         if ((*submodel_iterator)->trigger_node != 0) {
             _trigger_node = (*submodel_iterator)->trigger_node;
@@ -188,8 +188,8 @@ void FGSubmodelMgr::update(double dt)
                 in_range = true;
 
                 if (id == 0) {
-                    SG_LOG(SG_GENERAL, SG_DEBUG,
-                            "Submodels: continuing: " << id << " name " << name );
+                    //SG_LOG(SG_GENERAL, SG_DEBUG,
+                    //        "Submodels: continuing: " << id << " name " << name );
                     ++sm_list_itr;
                     continue;
                 }
@@ -207,8 +207,8 @@ void FGSubmodelMgr::update(double dt)
                     //cout << "own name " << own_lat << ", " << own_lon << " range " << range_nm << endl;
 
                     if (range_nm > 15) {
-                        SG_LOG(SG_GENERAL, SG_DEBUG,
-                            "Submodels: skipping release, out of range: " << id);
+                        //SG_LOG(SG_GENERAL, SG_DEBUG,
+                        //    "Submodels: skipping release, out of range: " << id);
                         in_range = false;
                     }
                 }
@@ -216,11 +216,11 @@ void FGSubmodelMgr::update(double dt)
                 ++sm_list_itr;
             } // end while
 
-            SG_LOG(SG_GENERAL, SG_DEBUG,
+            /*SG_LOG(SG_GENERAL, SG_DEBUG,
                     "Submodels end:  " << (*submodel_iterator)->id
                     << " name " << (*submodel_iterator)->name
                     << " count " << (*submodel_iterator)->count
-                    << " in range " << in_range);
+                    << " in range " << in_range);*/
 
             if ((*submodel_iterator)->count != 0 && in_range)
                 release(*submodel_iterator, dt);
@@ -286,6 +286,7 @@ bool FGSubmodelMgr::release(submodel *sm, double dt)
     ballist->setFuseRange(sm->fuse_range);
     ballist->setSubmodel(sm->submodel.c_str());
     ballist->setSubID(sm->sub_id);
+    ballist->setForceStabilisation(sm->force_stabilised);
     ballist->setExternalForce(sm->ext_force);
     ballist->setForcePath(sm->force_path.c_str());
     ai->attach(ballist);
@@ -600,6 +601,7 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
         sm->contents_node   = fgGetNode(entry_node->getStringValue("contents", "none"), false);
         sm->speed_node      = fgGetNode(entry_node->getStringValue("speed-node", "none"), false);
         sm->submodel        = entry_node->getStringValue("submodel-path", "");
+        sm->force_stabilised= entry_node->getBoolValue("force-stabilised", false);
         sm->ext_force       = entry_node->getBoolValue("external-force", false);
         sm->force_path      = entry_node->getStringValue("force-path", "");
         //cout <<  "sm->contents_node " << sm->contents_node << endl;
@@ -613,8 +615,6 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
         } else {
             sm->trigger_node = 0;
         }
-
-        SG_LOG(SG_GENERAL, SG_DEBUG, "Submodels: trigger " << sm->trigger_node->getBoolValue() );
 
         if (sm->speed_node != 0)
             sm->speed = sm->speed_node->getDoubleValue();
@@ -630,7 +630,6 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
         sm->prop->tie("repeat", SGRawValuePointer<bool>(&(sm->repeat)));
         sm->prop->tie("id", SGRawValuePointer<int>(&(sm->id)));
         sm->prop->tie("sub-id", SGRawValuePointer<int>(&(sm->sub_id)));
-
         sm->prop->tie("serviceable", SGRawValuePointer<bool>(&(sm->serviceable)));
         string name = sm->name;
         sm->prop->setStringValue("name", name.c_str());
@@ -765,10 +764,10 @@ void FGSubmodelMgr::loadSubmodels()
         if (!submodel.empty()) {
             //int id = (*submodel_iterator)->id;
             bool serviceable = true;
-            SG_LOG(SG_GENERAL, SG_DEBUG, "found path sub sub "
-                    << submodel
-                    << " index " << index
-                    << "name " << (*submodel_iterator)->name);
+            //SG_LOG(SG_GENERAL, SG_DEBUG, "found path sub sub "
+            //        << submodel
+            //        << " index " << index
+            //        << "name " << (*submodel_iterator)->name);
 
             (*submodel_iterator)->sub_id = index;
             setSubData(index, submodel, serviceable);
@@ -788,10 +787,10 @@ void FGSubmodelMgr::loadSubmodels()
 
     while (submodel_iterator != submodels.end()) {
         int id = (*submodel_iterator)->id;
-        SG_LOG(SG_GENERAL, SG_DEBUG,"after pushback "
-                << " id " << id
-                << " name " << (*submodel_iterator)->name
-                << " sub id " << (*submodel_iterator)->sub_id);
+        //SG_LOG(SG_GENERAL, SG_DEBUG,"after pushback "
+        //        << " id " << id
+        //        << " name " << (*submodel_iterator)->name
+        //        << " sub id " << (*submodel_iterator)->sub_id);
 
         ++submodel_iterator;
     }
