@@ -232,7 +232,7 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
         };
 
         _resizing = 0;
-        if (!global_drag) {
+        if (!global_drag && _resizable) {
             int hmargin = global_resize ? _dlgW / 3 : 10;
             int vmargin = global_resize ? _dlgH / 3 : 10;
 
