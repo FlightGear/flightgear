@@ -34,10 +34,10 @@
 
 #include <Main/util.hxx>
 
+using namespace simgear;
+
 const double FGAIBallistic::slugs_to_kgs = 14.5939029372;
 const double FGAIBallistic::slugs_to_lbs = 32.1740485564;
-
-using namespace simgear;
 
 FGAIBallistic::FGAIBallistic(object_type ot) :
 FGAIBase(ot),
@@ -55,6 +55,7 @@ _gravity(32.1740485564),
     _report_impact(false),
 _wind(true),
     _impact_report_node(fgGetNode("/ai/models/model-impact", true)),
+    _force_stabilised(false),
 _external_force(false),
 _slave_to_ac(false),
 _slave_load_to_ac(false),
@@ -91,7 +92,7 @@ void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
     setCd(scFileNode->getDoubleValue("cd", 0.029));
     //setMass(scFileNode->getDoubleValue("mass", 0.007));
     setWeight(scFileNode->getDoubleValue("weight", 0.25));
-    setStabilisation(scFileNode->getBoolValue("aero_stabilized", false));
+    setStabilisation(scFileNode->getBoolValue("aero-stabilized", false));
     setNoRoll(scFileNode->getBoolValue("no-roll", false));
     setRandom(scFileNode->getBoolValue("random", false));
     setImpact(scFileNode->getBoolValue("impact", false));
@@ -102,7 +103,7 @@ void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
     setSubID(scFileNode->getIntValue("SubID", 0));
     setExternalForce(scFileNode->getBoolValue("external-force", false));
     setForcePath(scFileNode->getStringValue("force-path", ""));
-    setForceStabilisation(scFileNode->getBoolValue("force_stabilized", false));
+    setForceStabilisation(scFileNode->getBoolValue("force-stabilized", false));
     setXoffset(scFileNode->getDoubleValue("x-offset", 0.0));
     setYoffset(scFileNode->getDoubleValue("y-offset", 0.0));
     setZoffset(scFileNode->getDoubleValue("z-offset", 0.0));

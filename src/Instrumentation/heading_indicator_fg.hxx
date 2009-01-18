@@ -18,7 +18,7 @@
 
 
 /**
- * Model an electicallym-powered fluxgate compass
+ * Model an electically-powered fluxgate compass
  *
  * Input properties:
  *
@@ -61,6 +61,7 @@ private:
 	SGPropertyNode_ptr _electrical_node;
 	SGPropertyNode_ptr _error_node;
 	SGPropertyNode_ptr _nav1_error_node;
+    SGPropertyNode_ptr _off_node;
 
 
     

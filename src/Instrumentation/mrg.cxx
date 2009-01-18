@@ -43,6 +43,7 @@ MasterReferenceGyro::init ()
 	_indicated_hdg_rate = 0;
 	_indicated_roll_rate = 0;
 	_indicated_pitch_rate = 0;
+        _erect_time = 0;
 	
 	string branch;
 	branch = "/instrumentation/" + _name;
@@ -70,11 +71,13 @@ MasterReferenceGyro::init ()
 	_responsiveness_node = node->getChild("responsiveness", 0, true);
 	_error_out_node = node->getChild("heading-bug-error-deg", 0, true);
 	_hdg_input_source_node = node->getChild("heading-source", 0, true);
+        _fast_erect_node = node->getChild("fast-erect", 0, true);
 
 	_electrical_node->setDoubleValue(0);
 	_responsiveness_node->setDoubleValue(0.75);
 	_off_node->setBoolValue(false);
 	_hdg_input_source_node->setBoolValue(false);
+        _fast_erect_node->setBoolValue(false);
 }
 
 void
@@ -119,12 +122,11 @@ MasterReferenceGyro::update (double dt)
 	double spin = _gyro.get_spin_norm();
 	
 	// set the "off-flag"
-	if ( _electrical_node->getDoubleValue() == 0 ) {
-		_off_node->setBoolValue(true);
-	} else if ( spin == 1 ) {
+        if ( _electrical_node->getDoubleValue() > 0 && spin >= 0.25) {
 		_off_node->setBoolValue(false);
 	} else {
 		_off_node->setBoolValue(true);
+        return;
 	}
 
 	// Get the input values
@@ -156,7 +158,8 @@ MasterReferenceGyro::update (double dt)
 	//but we need to filter the hdg and yaw_rate as well - yuk!
 	responsiveness = 0.1 / (spin * spin * spin * spin * spin * spin);
 	yaw_rate = fgGetLowPass( _last_yaw_rate , yaw_rate, responsiveness );
-	g = fgGetLowPass( _last_g , yaw_rate, 0.15 );
+        g = fgGetLowPass( _last_g , g, 0.015 );
+
 
 	// store the new values
 	_last_roll = roll;
@@ -167,10 +170,22 @@ MasterReferenceGyro::update (double dt)
 	_last_yaw_rate = yaw_rate;
 	_last_g = g;
 
+    if (_erect_time > 0){
+
+        if ( !_fast_erect_node->getBoolValue() )
+            _erect_time -= dt;
+        else 
+            _erect_time -= 2 * dt;
+
+    }
+
+    //SG_LOG(SG_GENERAL, SG_ALERT,
+    //    "g input " << g <<" _erect_time " << _erect_time << " spin " << spin);
+
 	//the gyro only erects inside limits
 	if ( fabs ( yaw_rate ) <= 5
-			&& (_g_in_node->getDoubleValue() <= 1.5
-			|| _g_in_node->getDoubleValue() >= -0.5) ) {
+            && ( g <= 1.5 || g >= -0.5)
+            && _erect_time <=0 ) {
 		indicated_roll = _last_roll;
 		indicated_pitch = _last_pitch;
 		indicated_hdg = _last_hdg;
@@ -181,6 +196,10 @@ MasterReferenceGyro::update (double dt)
 		indicated_roll_rate = 0;
 		indicated_pitch_rate = 0;
 		indicated_hdg_rate = 0;
+        
+        if (_erect_time <= 0 )
+            _erect_time = 34;
+
 	}
 
 	// calculate the difference between the indicated heading

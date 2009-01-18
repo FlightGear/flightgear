@@ -65,6 +65,7 @@ private:
     double _last_pitch_rate;
     double _last_yaw_rate;
     double _last_g;
+    double _erect_time;
 
     Gyro _gyro;
 
@@ -94,6 +95,7 @@ private:
     SGPropertyNode_ptr _pitch_rate_node;
     SGPropertyNode_ptr _responsiveness_node;
     SGPropertyNode_ptr _hdg_input_source_node;
+    SGPropertyNode_ptr _fast_erect_node;
 };
 
 #endif // __INSTRUMENTS_MRG_HXX
