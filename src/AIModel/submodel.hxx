@@ -68,6 +68,7 @@ public:
         double             fuse_range;
         string             submodel;
         int                sub_id;
+        bool               force_stabilised;
         bool               ext_force;
         string             force_path;
     }   submodel;

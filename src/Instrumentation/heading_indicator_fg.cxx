@@ -53,12 +53,15 @@ HeadingIndicatorFG::init ()
     branch = "/instrumentation/" + name;
     
 	_heading_in_node = fgGetNode("/orientation/heading-deg", true);
+
     SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
     _offset_node = node->getChild("offset-deg", 0, true);
     _serviceable_node = node->getChild("serviceable", 0, true);
 	_error_node = node->getChild("heading-bug-error-deg", 0, true);
 	_nav1_error_node = node->getChild("nav1-course-error-deg", 0, true);
     _heading_out_node = node->getChild("indicated-heading-deg", 0, true);
+    _off_node         = node->getChild("off-flag", 0, true);
+
     _last_heading_deg = (_heading_in_node->getDoubleValue() +
                          _offset_node->getDoubleValue());
 	_electrical_node = fgGetNode("/systems/electrical/outputs/DG", true);
@@ -96,37 +99,43 @@ HeadingIndicatorFG::update (double dt)
 {
                                 // Get the spin from the gyro
 	 _gyro.set_power_norm(_electrical_node->getDoubleValue());
-
 	_gyro.update(dt);
     double spin = _gyro.get_spin_norm();
 
+    if ( _electrical_node->getDoubleValue() > 0 && spin >= 0.25) {
+        _off_node->setBoolValue(false);
+    } else {
+        _off_node->setBoolValue(true);
+        return;
+    }
+
                                 // No time-based precession	for a flux gate compass
 	                            // We just use offset to get the magvar
-
 	double offset = _offset_node->getDoubleValue();
 	   
                                 // TODO: movement-induced error
 
                                 // Next, calculate the indicated heading,
                                 // introducing errors.
-    double factor = 100 * (spin * spin * spin * spin * spin * spin);
+    double factor = 0.1 / (spin * spin * spin * spin * spin * spin);
     double heading = _heading_in_node->getDoubleValue();
 
                                 // Now, we have to get the current
                                 // heading and the last heading into
                                 // the same range.
-    while ((heading - _last_heading_deg) > 180)
+    if ((heading - _last_heading_deg) > 180)
         _last_heading_deg += 360;
-    while ((heading - _last_heading_deg) < -180)
+    if ((heading - _last_heading_deg) < -180)
         _last_heading_deg -= 360;
 
     heading = fgGetLowPass(_last_heading_deg, heading, dt * factor);
     _last_heading_deg = heading;
 
 	heading += offset;
-    while (heading < 0)
+
+    if (heading < 0)
         heading += 360;
-    while (heading > 360)
+    if (heading > 360)
         heading -= 360;
 
     _heading_out_node->setDoubleValue(heading);

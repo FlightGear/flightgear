@@ -426,6 +426,8 @@ void FGAICarrier::bind() {
     props->setBoolValue("controls/crew", false);
     props->setStringValue("navaids/tacan/channel-ID", TACAN_channel_id.c_str());
     props->setStringValue("sign", sign.c_str());
+    props->setBoolValue("controls/lighting/deck-lights", false);
+    props->setDoubleValue("controls/lighting/flood-lights-red-norm", 0);
 }
 
 
