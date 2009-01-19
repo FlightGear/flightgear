@@ -128,7 +128,7 @@ HeadingIndicatorFG::update (double dt)
     if ((heading - _last_heading_deg) < -180)
         _last_heading_deg -= 360;
 
-    heading = fgGetLowPass(_last_heading_deg, heading, dt * factor);
+    heading = fgGetLowPass(_last_heading_deg, heading, dt / factor);
     _last_heading_deg = heading;
 
 	heading += offset;
