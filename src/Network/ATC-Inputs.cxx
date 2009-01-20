@@ -420,6 +420,7 @@ bool FGATCInput::do_analog_in() {
             int min = 0;
             int max = 1023;
 	    int deadband = 0;
+	    int hysteresis = 0;
             float offset = 0.0;
             float factor = 1.0;
             if ( cname == "channel" ) {
@@ -459,6 +460,10 @@ bool FGATCInput::do_analog_in() {
                 if ( prop != NULL ) {
                     deadband = prop->getIntValue();
                 }
+                prop = child->getChild( "hysteresis" );
+                if ( prop != NULL ) {
+                    hysteresis = prop->getIntValue();
+                }
                 prop = child->getChild( "offset" );
                 if ( prop != NULL ) {
                     offset = prop->getFloatValue();
@@ -483,6 +488,22 @@ bool FGATCInput::do_analog_in() {
                     {
                         // "Cook" the raw value
                         float scaled_value = 0.0f;
+
+			if ( hysteresis > 0 ) {
+			    int last_raw_value = 0;
+			    prop = child->getChild( "last-raw-value", 0, true );
+			    last_raw_value = prop->getIntValue();
+
+			    if ( abs(raw_value - last_raw_value) < hysteresis )
+			    {
+				// not enough movement stay put
+				raw_value = last_raw_value;
+			    } else {
+				// update last raw value
+				prop->setIntValue( raw_value );
+			    }
+			}
+
                         if ( center >= 0 ) {
                             scaled_value = scale( center, deadband,
 						  min, max, raw_value );
@@ -638,9 +659,13 @@ static void update_switch_matrix(
 	unsigned char switches = switch_data[row];
 
 	for( int column = 0; column < ATC_NUM_COLS; ++column ) {
-	    switch_matrix[board][column][row] = switches & 1;
-	    switches = switches >> 1;
-	}			
+            if ( row < 8 ) {
+                switch_matrix[board][column][row] = switches & 1;
+            } else {
+                switch_matrix[board][row-8][8+column] = switches & 1;
+            }
+            switches = switches >> 1;
+        }
     }
 }                     
 
