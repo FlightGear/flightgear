@@ -2029,6 +2029,12 @@
 				RelativePath="..\..\src\Network\AV400.hxx">
 			</File>
 			<File
+				RelativePath="..\..\src\Network\AV400Sim.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Network\AV400Sim.hxx">
+			</File>
+			<File
 				RelativePath="..\..\src\Network\garmin.cxx">
 			</File>
 			<File
