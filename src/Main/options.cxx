@@ -503,7 +503,7 @@ parse_fov( const string& arg ) {
 //
 // Format is "--protocol=medium,direction,hz,medium_options,..."
 //
-//   protocol = { native, nmea, garmin, AV400, fgfs, rul, pve, etc. }
+//   protocol = { native, nmea, garmin, AV400, AV400Sim, fgfs, rul, pve, etc. }
 //   medium = { serial, socket, file, etc. }
 //   direction = { in, out, bi }
 //   hz = number of times to process channel per second (floating
@@ -1376,6 +1376,7 @@ struct OptionDesc {
     {"native-gui",                   true,  OPTION_CHANNEL, "", false, "", 0 },
     {"opengc",                       true,  OPTION_CHANNEL, "", false, "", 0 },
     {"AV400",                        true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"AV400Sim",                     true,  OPTION_CHANNEL, "", false, "", 0 },
     {"garmin",                       true,  OPTION_CHANNEL, "", false, "", 0 },
     {"nmea",                         true,  OPTION_CHANNEL, "", false, "", 0 },
     {"generic",                      true,  OPTION_CHANNEL, "", false, "", 0 },
