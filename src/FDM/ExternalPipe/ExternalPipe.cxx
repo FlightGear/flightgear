@@ -544,7 +544,7 @@ void FGExternalPipe::update_property( double dt ) {
                 // node doesn't exist so create with requested type
                 node = fgGetNode( tokens[1].c_str(), true );
                 if ( tokens[2] == "bool" ) {
-                    node->setBoolValue(true);
+                    node->setBoolValue(false);
                 } else if ( tokens[2] == "int" ) {
                     node->setIntValue(0);
                 } else if ( tokens[2] == "double" ) {
