@@ -44,6 +44,7 @@
 #include <Network/ATC-Main.hxx>
 #include <Network/atlas.hxx>
 #include <Network/AV400.hxx>
+#include <Network/AV400Sim.hxx>
 #include <Network/garmin.hxx>
 #include <Network/httpd.hxx>
 #ifdef FG_JPEG_SERVER
@@ -136,6 +137,9 @@ FGIO::parse_port_config( const string& config )
 	} else if ( protocol == "AV400" ) {
 	    FGAV400 *av400 = new FGAV400;
 	    io = av400;
+	} else if ( protocol == "AV400Sim" ) {
+	    FGAV400Sim *av400sim = new FGAV400Sim;
+	    io = av400sim;
 	} else if ( protocol == "garmin" ) {
 	    FGGarmin *garmin = new FGGarmin;
 	    io = garmin;
