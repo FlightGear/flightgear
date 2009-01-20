@@ -214,7 +214,8 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
         int hit = getHitObjects(this, x, y);
         if (hit & PUCLASS_LIST)  // ctrl-click in property browser (toggle bool)
             return result;
-        if (!global_resize && hit & (PUCLASS_BUTTON|PUCLASS_ONESHOT|PUCLASS_INPUT|PUCLASS_LARGEINPUT))
+        if (!global_resize && hit & (PUCLASS_BUTTON|PUCLASS_ONESHOT|PUCLASS_INPUT
+                |PUCLASS_LARGEINPUT|PUCLASS_SCROLLBAR))
             return result;
 
         getPosition(&_dlgX, &_dlgY);
