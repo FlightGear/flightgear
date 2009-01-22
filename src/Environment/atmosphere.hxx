@@ -27,6 +27,8 @@
 
 #include <simgear/compiler.h>
 #include <simgear/math/interpolater.hxx>
+#include "boost/tuple/tuple.hpp"
+using namespace boost;
 
 #include <cmath>
 
@@ -50,8 +52,9 @@ namespace atmodel {
     SCD(mm, .0289644);		// [kg/mole] molar mass of air (dry?)
     SCD(Rgas, 8.31432);		// [J/K/mole] gas constant
     SCD(inch, 0.0254);		// [m] definition of inch
-    SCD(foot, 12 * inch);		// [m]
+    SCD(foot, 12 * inch);	// [m]
     SCD(inHg, 101325.0 / 760 * 1000 * inch);  // [Pa] definition of inHg
+    SCD(mbar, 100.);            // [Pa] definition of millibar
     SCD(freezing, 273.15);	// [K] centigrade - kelvin offset
     SCD(nm, 1852);		// [m] nautical mile (NIST)
     SCD(sm, 5280*foot);		// [m] nautical mile (NIST)
@@ -66,19 +69,48 @@ namespace atmodel {
 
 
 
+class ISA_layer {
+public:
+  double height;
+  double temp;
+  double lapse;
+  ISA_layer(int, double h, double, double, double, double t, double,
+                    double l=-1, double=0)
+   :  height(h),        // [meters]
+      temp(t),          // [kelvin]
+      lapse(l)          // [K/m]
+  {}
+};
+
+extern const ISA_layer ISA_def[];
+
+tuple<double,double> PT_vs_hpt(
+          const double hh, 
+          const double _p0 = atmodel::ISA::P0,
+          const double _t0 = atmodel::ISA::T0);
+
+double P_layer(const double height, const double href,
+  const double Pref, const double Tref, const double lapse );
+
+double T_layer(const double height, const double href,
+  const double Pref, const double Tref,  const double lapse );
+
 // The base class is little more than a namespace.
 // It has no constructor, no destructor, and no variables.
 class FGAtmo {
 public:
-    double p_vs_a(const double height);
     double a_vs_p(const double press, const double qnh = atmodel::ISA::P0);
-    double fake_t_vs_a_us(const double h_ft);
+    double fake_T_vs_a_us(const double h_ft, 
+                const double Tsl = atmodel::ISA::T0) const;
     double fake_dp_vs_a_us(const double dpsl, const double h_ft);
-    double P_layer(const double height, const double href,
-    const double Pref, const double Tref,
-    const double lapse );
     void check_one(const double height);
-    double qnh(const double field_ft, const double press_in);
+
+// Altimeter setting _in pascals_ 
+//  ... caller gets to convert to inHg or millibars
+// Field elevation in m
+// Field pressure in pascals
+// Valid for fields within the troposphere only.
+    double QNH(const double field_elev, const double field_press);
 };
 
 

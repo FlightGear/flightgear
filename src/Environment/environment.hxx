@@ -103,11 +103,11 @@ private:
   void _recalc_ne ();
 
   void _recalc_sl_temperature ();
-  void _recalc_alt_temperature ();
   void _recalc_sl_dewpoint ();
   void _recalc_alt_dewpoint ();
   void _recalc_sl_pressure ();
-  void _recalc_alt_pressure ();
+  void _recalc_alt_pt ();
+
   void _recalc_density ();
 
   void _recalc_density_tropo_avg_kgm3 ();
