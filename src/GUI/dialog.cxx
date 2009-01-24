@@ -192,7 +192,7 @@ puObject *fgPopup::getActiveInputField(puObject *object)
  */
 int fgPopup::checkHit(int button, int updown, int x, int y)
 {
-    int result = 1;
+    int result = 0;
     if (updown != PU_DRAG && !_dragging)
         result = puPopup::checkHit(button, updown, x, y);
 
