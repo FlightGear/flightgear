@@ -47,6 +47,7 @@ Altimeter::init ()
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
     raw_PA = 0.0;
+    _kollsman = 0.0;
     _pressure_node     = fgGetNode(_static_pressure.c_str(), true);
     _serviceable_node  = node->getChild("serviceable", 0, true);
     _setting_node      = node->getChild("setting-inhg", 0, true);
