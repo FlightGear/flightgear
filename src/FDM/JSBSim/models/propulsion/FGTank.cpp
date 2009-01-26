@@ -148,6 +148,8 @@ FGTank::FGTank(FGFDMExec* exec, Element* el, int tank_number)
   if (Temperature != -9999.0)  InitialTemperature = Temperature = FahrenheitToCelsius(Temperature);
   Area = 40.0 * pow(Capacity/1975, 0.666666667);
 
+  CalculateInertias();
+
   Debug(0);
 }
 

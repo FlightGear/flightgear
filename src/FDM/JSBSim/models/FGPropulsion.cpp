@@ -184,7 +184,7 @@ bool FGPropulsion::GetSteadyState(void)
       while (!steady && j < 6000) {
         Engines[i]->Calculate();
         lastThrust = currentThrust;
-        currentThrust = Engines[i]->GetThrust();
+        currentThrust = Engines[i]->GetThruster()->GetThrust();
         if (fabs(lastThrust-currentThrust) < 0.0001) {
           steady_count++;
           if (steady_count > 120) {

@@ -106,6 +106,7 @@ FGRocket::~FGRocket(void)
 double FGRocket::Calculate(void)
 {
   double dT = State->Getdt()*Propulsion->GetRate();
+  double thrust;
 
   if (!Flameout && !Starved) ConsumeFuel();
 
@@ -135,7 +136,7 @@ double FGRocket::Calculate(void)
 
     if (Throttle < MinThrottle || Starved) { // Combustion not supported
 
-      PctPower = Thrust = 0.0; // desired thrust
+      PctPower = 0.0; // desired thrust
       Flameout = true;
       VacThrust = 0.0;
 
@@ -149,10 +150,10 @@ double FGRocket::Calculate(void)
 
   } // End thrust calculations
 
-  Thrust = Thruster->Calculate(VacThrust);
-  It += Thrust * dT;
+  thrust = Thruster->Calculate(VacThrust);
+  It += thrust * dT;
 
-  return Thrust;
+  return thrust;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

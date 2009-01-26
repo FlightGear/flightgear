@@ -572,6 +572,9 @@ void FGFDMExec::BuildPropertyCatalog(struct PropertyCatalogStructure* pcs)
     sprintf(int_buf, "[%d]", node_idx);
     if (node_idx != 0) pcsNew->base_string += string(int_buf);
     if (pcs->node->getChild(i)->nChildren() == 0) {
+      if (pcsNew->base_string.substr(0,11) == string("/fdm/jsbsim")) {
+        pcsNew->base_string = pcsNew->base_string.erase(0,12);
+      }
       PropertyCatalog.push_back(pcsNew->base_string);
     } else {
       pcsNew->node = (FGPropertyManager*)pcs->node->getChild(i);

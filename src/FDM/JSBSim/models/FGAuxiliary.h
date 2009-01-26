@@ -181,14 +181,15 @@ public:
   double GetMagBeta (int unit) const { if (unit == inDegrees) return fabs(beta)*radtodeg;
                                        else cerr << "Bad units" << endl; return 0.0;}
 
-  double Getqbar    (void) const { return qbar;       }
-  double GetqbarUW  (void) const { return qbarUW;     }
-  double GetqbarUV  (void) const { return qbarUV;     }
-  double GetVt      (void) const { return Vt;         }
-  double GetVground (void) const { return Vground;    }
-  double GetMach    (void) const { return Mach;       }
-  double GetMachU   (void) const { return MachU;      }
-  double GetNz      (void) const { return Nz;         }
+  double Getqbar          (void) const { return qbar;       }
+  double GetqbarUW        (void) const { return qbarUW;     }
+  double GetqbarUV        (void) const { return qbarUV;     }
+  double GetReynoldsNumber(void) const { return Re;         }
+  double GetVt            (void) const { return Vt;         }
+  double GetVground       (void) const { return Vground;    }
+  double GetMach          (void) const { return Mach;       }
+  double GetMachU         (void) const { return MachU;      }
+  double GetNz            (void) const { return Nz;         }
 
   double GetHOverBCG(void) const { return hoverbcg; }
   double GetHOverBMAC(void) const { return hoverbmac; }
@@ -247,6 +248,7 @@ private:
 
   double Vt, Vground, Mach, MachU;
   double qbar, qbarUW, qbarUV;
+  double Re; // Reynolds Number = V*c/mu
   double alpha, beta;
   double adot,bdot;
   double psigt, gamma;

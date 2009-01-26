@@ -257,6 +257,9 @@ public:
   /// Sets the brake value in percent (0 - 100)
   inline void SetBrake(double bp) {brakePct = bp;}
 
+  /// Sets the weight-on-wheels flag.
+  void SetWOW(bool wow) {WOW = wow;}
+
   /** Set the console touchdown reporting feature
       @param flag true turns on touchdown reporting, false turns it off */
   inline void SetReport(bool flag) { ReportEnable = flag; }

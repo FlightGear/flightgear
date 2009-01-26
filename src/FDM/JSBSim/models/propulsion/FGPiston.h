@@ -205,8 +205,7 @@ public:
   double getRPM(void) {return RPM;}
 
 protected:
-  double ThrottlePos;
-
+  double ThrottleAngle;
 
 private:
   int crank_counter;
@@ -252,6 +251,7 @@ private:
   //
   double MinManifoldPressure_inHg; // Inches Hg
   double MaxManifoldPressure_inHg; // Inches Hg
+  double MaxManifoldPressure_Percent; // MaxManifoldPressure / 29.92
   double Displacement;             // cubic inches
   double MaxHP;                    // horsepower
   double SparkFailDrop;            // drop of power due to spark failure
@@ -304,7 +304,7 @@ private:
   //
   double rho_air;
   double volumetric_efficiency;
-  double suction_loss;
+  double map_coefficient;
   double m_dot_air;
   double equivalence_ratio;
   double m_dot_fuel;

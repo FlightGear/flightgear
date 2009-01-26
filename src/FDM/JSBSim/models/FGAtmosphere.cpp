@@ -71,13 +71,13 @@ FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex)
   h = 0.0;
   psiw = 0.0;
   htab[0]=0;
-  htab[1]=36089.239;
-  htab[2]=65616.798;
-  htab[3]=104986.878;
-  htab[4]=154199.475;
-  htab[5]=170603.675;
-  htab[6]=200131.234;
-  htab[7]=259186.352; //ft.
+  htab[1]= 36089.0;
+  htab[2]= 65617.0;
+  htab[3]=104987.0;
+  htab[4]=154199.0;
+  htab[5]=167322.0;
+  htab[6]=232940.0;
+  htab[7]=278385.0; //ft.
 
   MagnitudedAccelDt = MagnitudeAccel = Magnitude = 0.0;
   SetTurbType( ttCulp );
@@ -86,6 +86,8 @@ FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex)
   Rhythmicity = 0.1;
   spike = target_time = strength = 0.0;
   wind_from_clockwise = 0.0;
+  SutherlandConstant = 198.72; // deg Rankine
+  Beta = 2.269690E-08; // slug/(sec ft R^0.5)
 
   T_dev_sl = T_dev = delta_T = 0.0;
   StandardTempOnly = false;
@@ -174,52 +176,57 @@ void FGAtmosphere::Calculate(double altitude)
   }
 
   switch(i) {
-  case 1:     // 36089 ft.
+  case 0: // Sea level
+    slope     = -0.00356616; // R/ft.
+    reftemp   = 518.67;   // in degrees Rankine, 288.15 Kelvin
+    refpress  = 2116.22;    // psf
+    //refdens   = 0.00237767;  // slugs/cubic ft.
+    break;
+  case 1:     // 36089 ft. or 11 km
     slope     = 0;
-    reftemp   = 389.97;
-    refpress  = 472.452;
+    reftemp   = 389.97; // in degrees Rankine, 216.65 Kelvin
+    refpress  = 472.763;
     //refdens   = 0.000706032;
     break;
-  case 2:     // 65616 ft.
+  case 2:     // 65616 ft. or 20 km
     slope     = 0.00054864;
-    reftemp   = 389.97;
+    reftemp   = 389.97; // in degrees Rankine, 216.65 Kelvin
     refpress  = 114.636;
     //refdens   = 0.000171306;
     break;
-  case 3:     // 104986 ft.
-    slope     = 0.00153619;
-    reftemp   = 411.57;
-    refpress  = 8.36364;
+  case 3:     // 104986 ft. or 32 km
+    slope     = 0.001536192;
+    reftemp   = 411.57; // in degrees Rankine, 228.65 Kelvin
+    refpress  = 18.128;
     //refdens   = 1.18422e-05;
     break;
-  case 4:     // 154199 ft.
+  case 4:     // 154199 ft. 47 km
     slope     = 0;
-    reftemp   = 487.17;
-    refpress  = 0.334882;
+    reftemp   = 487.17; // in degrees Rankine, 270.65 Kelvin
+    refpress  = 2.316;
     //refdens   = 4.00585e-7;
     break;
-  case 5:     // 170603 ft.
-    slope     = -0.00109728;
-    reftemp   = 487.17;
-    refpress  = 0.683084;
+  case 5:     // 167322 ft. or 51 km
+    slope     = -0.001536192;
+    reftemp   = 487.17; // in degrees Rankine, 270.65 Kelvin
+    refpress  = 1.398;
     //refdens   = 8.17102e-7;
     break;
-  case 6:     // 200131 ft.
-    slope     = -0.00219456;
-    reftemp   = 454.17;
-    refpress  = 0.00684986;
+  case 6:     // 232940 ft. or 71 km
+    slope     = -0.00109728;
+    reftemp   = 386.368; // in degrees Rankine, 214.649 Kelvin
+    refpress  = 0.0826;
     //refdens   = 8.77702e-9;
     break;
-  case 7:     // 259186 ft.
+  case 7:     // 278385 ft. or 84.8520 km
     slope     = 0;
-    reftemp   = 325.17;
-    refpress  = 0.000122276;
+    reftemp   = 336.5; // in degrees Rankine, 186.94 Kelvin
+    refpress  = 0.00831;
     //refdens   = 2.19541e-10;
     break;
-  case 0:
   default:     // sea level
     slope     = -0.00356616; // R/ft.
-    reftemp   = 518.67;    // R
+    reftemp   = 518.67;   // in degrees Rankine, 288.15 Kelvin
     refpress  = 2116.22;    // psf
     //refdens   = 0.00237767;  // slugs/cubic ft.
     break;
@@ -250,7 +257,7 @@ void FGAtmosphere::Calculate(double altitude)
     intPressure = refpress*pow(intTemperature/reftemp,-Inertial->SLgravity()/(slope*Reng));
     intDensity = intPressure/(Reng*intTemperature);
   }
-
+  
   lastIndex=i;
 }
 
@@ -263,7 +270,7 @@ void FGAtmosphere::CalculateDerived(void)
   T_dev = (*temperature) - GetTemperature(h);
   density_altitude = h + T_dev * 66.7;
 
-  if (turbType == ttStandard || ttCulp) Turbulence();
+  if (turbType != ttNone) Turbulence();
 
   vTotalWindNED = vWindNED + vGustNED + vTurbulenceNED;
 
@@ -271,6 +278,9 @@ void FGAtmosphere::CalculateDerived(void)
   if (psiw < 0) psiw += 2*M_PI;
 
   soundspeed = sqrt(SHRatio*Reng*(*temperature));
+
+  intViscosity = Beta * pow(intTemperature, 1.5) / (SutherlandConstant + intTemperature);
+  intKinematicViscosity = intViscosity / intDensity;
 }
 
 

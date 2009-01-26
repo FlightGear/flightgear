@@ -171,7 +171,7 @@ public:
 
   void SetWingArea(double S) {WingArea = S;}
 
-  double GetNlf(void);
+  double GetNlf(void) const;
 
   inline FGColumnVector3& GetNwcg(void) { return vNwcg; }
 

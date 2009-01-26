@@ -282,6 +282,10 @@ FGJSBsim::FGJSBsim( double dt )
         fgGetDouble("/fdm/jsbsim/systems/hook/tailhook-offset-y-in", 0),
         fgGetDouble("/fdm/jsbsim/systems/hook/tailhook-offset-z-in", -16));
 
+    // Untie the write-state-file property to avoid creating an initfile.xml
+    // file on each reset.
+    fgGetNode("/fdm/jsbsim/simulation/write-state-file")->untie();
+
     crashed = false;
 }
 

@@ -54,7 +54,7 @@ FGInertial::FGInertial(FGFDMExec* fgex) : FGModel(fgex)
 {
   Name = "FGInertial";
 
-  // Defaults
+  // Earth defaults
   RotationRate    = 0.00007292115;
   GM              = 14.07644180E15;     // WGS84 value
   RadiusReference = 20925650.00;        // Equatorial radius (WGS84)
@@ -63,6 +63,18 @@ FGInertial::FGInertial(FGFDMExec* fgex) : FGModel(fgex)
   a               = 20925646.3255;      // WGS84 semimajor axis length in feet 
   b               = 20855486.5951;      // WGS84 semiminor axis length in feet
   earthPosAngle   = 0.0;
+
+  // Lunar defaults
+  /*
+  RotationRate    = 0.0000026617;
+  GM              = 1.7314079E14;         // Lunar GM
+  RadiusReference = 5702559.05;           // Equatorial radius
+  C2_0            = 0;                    // value for the C2,0 coefficient
+  J2              = 2.033542482111609E-4; // value for J2
+  a               = 5702559.05;           // semimajor axis length in feet 
+  b               = 5695439.63;           // semiminor axis length in feet
+  earthPosAngle   = 0.0;
+  */
 
   gAccelReference = GM/(RadiusReference*RadiusReference);
   gAccel          = GM/(RadiusReference*RadiusReference);
