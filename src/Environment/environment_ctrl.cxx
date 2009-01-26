@@ -438,15 +438,19 @@ FGMetarEnvironmentCtrl::update_env_config ()
         // factor by the maximum wind change.
         double x = fabs(current[0] - metar[0]);
         double y = fabs(current[1] - metar[1]);
-        double dx = x / (x + y);
-        double dy = 1 - dx;
 
-        double maxdx = dx * MaxWindChangeKtsSec;
-        double maxdy = dy * MaxWindChangeKtsSec;
+        // only interpolate if we have a difference
+        if (x + y > 0) {
+            double dx = x / (x + y);
+            double dy = 1 - dx;
 
-        // Interpolate each component separately.
-        current[0] = interpolate_val(current[0], metar[0], maxdx);
-        current[1] = interpolate_val(current[1], metar[1], maxdy);
+            double maxdx = dx * MaxWindChangeKtsSec;
+            double maxdy = dy * MaxWindChangeKtsSec;
+
+            // Interpolate each component separately.
+            current[0] = interpolate_val(current[0], metar[0], maxdx);
+            current[1] = interpolate_val(current[1], metar[1], maxdy);
+        }
 
         // Now convert back to polar coordinates.
         if ((current[0] == 0.0) && (current[1] == 0.0)) {
