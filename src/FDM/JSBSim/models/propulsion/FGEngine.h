@@ -150,7 +150,6 @@ public:
   virtual double getFuelFlow_gph () const {return FuelFlow_gph;}
   virtual double getFuelFlow_pph () const {return FuelFlow_pph;}
   virtual double GetFuelFlowRate(void) const {return FuelFlowRate;}
-  virtual double GetThrust(void) const { return Thrust; }
   virtual bool   GetStarved(void) { return Starved; }
   virtual bool   GetRunning(void) const { return Running; }
   virtual bool   GetCranking(void) { return Cranking; }
@@ -216,7 +215,6 @@ protected:
   double MaxThrottle;
   double MinThrottle;
 
-  double Thrust;
   double Throttle;
   double Mixture;
   double FuelExpended;

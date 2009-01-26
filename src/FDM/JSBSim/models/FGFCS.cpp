@@ -46,7 +46,6 @@ INCLUDES
 #include <models/flight_control/FGDeadBand.h>
 #include <models/flight_control/FGGain.h>
 #include <models/flight_control/FGPID.h>
-#include <models/flight_control/FGGradient.h>
 #include <models/flight_control/FGSwitch.h>
 #include <models/flight_control/FGSummer.h>
 #include <models/flight_control/FGKinemat.h>
@@ -514,6 +513,10 @@ bool FGFCS::Load(Element* el, SystemType systype)
       return false;
     } else {
       document = LoadXMLDocument(file);
+      if (!document) {
+        cerr << "Error loading file " << file << endl;
+        return false;
+      }
       name = document->GetAttributeValue("name");
     }
   } else {
@@ -551,7 +554,7 @@ bool FGFCS::Load(Element* el, SystemType systype)
   }
 
   // After reading interface properties in a file, read properties in the local
-  // flight_control, autopiot, or system element. This allows general-purpose
+  // flight_control, autopilot, or system element. This allows general-purpose
   // systems to be defined in a file, with overrides or initial loaded constants
   // supplied in the relevant element of the aircraft configuration file.
 
@@ -967,7 +970,7 @@ void FGFCS::Debug(int from)
 
   if (debug_lvl & 1) { // Standard console startup message output
     if (from == 2) { // Loader
-      cout << endl << "  Flight Control (" << Name << ")" << endl;
+      cout << endl << "  " << Name << endl;
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification

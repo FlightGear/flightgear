@@ -99,7 +99,7 @@ public:
   virtual void SetRPM(double rpm) {};
   virtual double GetPowerRequired(void) {return 0.0;}
   virtual void SetdeltaT(double dt) {deltaT = dt;}
-  double GetThrust(void) {return Thrust;}
+  double GetThrust(void) const {return Thrust;}
   eType GetType(void) {return Type;}
   string GetName(void) {return Name;}
   void SetReverserAngle(double angle) {ReverserAngle = angle;}

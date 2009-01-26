@@ -86,7 +86,7 @@ FGThruster::FGThruster(FGFDMExec *FDMExec, Element *el, int num ): FGForce(FDMEx
   PropertyManager->Tie( property_name, (FGForce *)this, &FGForce::GetYaw, &FGForce::SetYaw);
 
   if (el->GetName() == "direct") // this is a direct thruster. At this time
-                                      // only a direct thruster can be reversed.
+                                 // only a direct thruster can be reversed.
   {
     snprintf(property_name, 80, "propulsion/engine[%d]/reverser-angle-rad", EngineNum);
     PropertyManager->Tie( property_name, (FGThruster *)this, &FGThruster::GetReverserAngle,

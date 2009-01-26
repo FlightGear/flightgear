@@ -100,6 +100,10 @@ public:
   double GetDensity(double altitude);
   /// Returns the speed of sound in ft/sec.
   double GetSoundSpeed(void) const {return soundspeed;}
+  /// Returns the absolute viscosity.
+  double GetAbsoluteViscosity(void) const {return intViscosity;}
+  /// Returns the kinematic viscosity.
+  double GetKinematicViscosity(void) const {return intKinematicViscosity;}
 
   /// Returns the sea level temperature in degrees Rankine.
   double GetTemperatureSL(void) const { return SLtemperature; }
@@ -237,6 +241,7 @@ protected:
   bool useExternal;
   double exTemperature,exDensity,exPressure;
   double intTemperature, intDensity, intPressure;
+  double SutherlandConstant, Beta, intViscosity, intKinematicViscosity;
   double T_dev_sl, T_dev, delta_T, density_altitude;
   atmType atmosphere;
   bool StandardTempOnly;

@@ -71,6 +71,7 @@ FGAuxiliary::FGAuxiliary(FGFDMExec* fdmex) : FGModel(fdmex)
   qbar = 0;
   qbarUW = 0.0;
   qbarUV = 0.0;
+  Re = 0.0;
   Mach = 0.0;
   alpha = beta = 0.0;
   adot = bdot = 0.0;
@@ -79,6 +80,7 @@ FGAuxiliary::FGAuxiliary(FGFDMExec* fdmex) : FGModel(fdmex)
   day_of_year = 1;
   seconds_in_day = 0.0;
   hoverbmac = hoverbcg = 0.0;
+  tatc = RankineToCelsius(tat);
 
   vPilotAccel.InitMatrix();
   vPilotAccelN.InitMatrix();
@@ -199,6 +201,8 @@ bool FGAuxiliary::Run()
   } else {
     alpha = beta = adot = bdot = 0;
   }
+
+  Re = Vt * Aircraft->Getcbar() / Atmosphere->GetKinematicViscosity();
 
   qbar = 0.5*Atmosphere->GetDensity()*Vt*Vt;
   qbarUW = 0.5*Atmosphere->GetDensity()*(vAeroUVW(eU)*vAeroUVW(eU) + vAeroUVW(eW)*vAeroUVW(eW));
@@ -349,6 +353,7 @@ void FGAuxiliary::bind(void)
   PropertyManager->Tie("aero/alpha-deg", this, inDegrees, (PMF)&FGAuxiliary::Getalpha);
   PropertyManager->Tie("aero/beta-deg", this, inDegrees, (PMF)&FGAuxiliary::Getbeta);
   PropertyManager->Tie("aero/mag-beta-deg", this, inDegrees, (PMF)&FGAuxiliary::GetMagBeta);
+  PropertyManager->Tie("aero/Re", this, &FGAuxiliary::GetReynoldsNumber);
   PropertyManager->Tie("aero/qbar-psf", this, &FGAuxiliary::Getqbar, &FGAuxiliary::Setqbar, true);
   PropertyManager->Tie("aero/qbarUW-psf", this, &FGAuxiliary::GetqbarUW, &FGAuxiliary::SetqbarUW, true);
   PropertyManager->Tie("aero/qbarUV-psf", this, &FGAuxiliary::GetqbarUV, &FGAuxiliary::SetqbarUV, true);
