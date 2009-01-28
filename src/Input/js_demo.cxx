@@ -52,10 +52,10 @@ int main ( int, char ** )
       printf ( "|           ~~~ Not Detected ~~~             " ) ;
     else
     {
-      printf ( "| Btns " ) ;
+      printf ( "| Buttons  " ) ;
 
       for ( j = 0 ; j < js[i]->getNumAxes () ; j++ )
-        printf ( "Ax:%1d ", j ) ;
+        printf ( " Ax:%02d ", j ) ;
 
       for ( ; j < 8 ; j++ )
         printf ( "     " ) ;
@@ -83,10 +83,10 @@ int main ( int, char ** )
 
         js[i]->read ( &b, ax[i] ) ;
 
-        printf ( "| %04x ", b ) ;
+        printf ( "| %08x ", b ) ;
 
 	for ( j = 0 ; j < js[i]->getNumAxes () ; j++ )
-	  printf ( "%+.1f ", ax[i][j] ) ;
+	  printf ( "%+.3f ", ax[i][j] ) ;
 
 	for ( ; j < 8 ; j++ )
 	  printf ( "  .  " ) ;
