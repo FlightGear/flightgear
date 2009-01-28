@@ -449,7 +449,7 @@ public:
 
    /** Sets the flaps position
       @param cmd flaps position in radians*/
-  inline void SetDfPos( int form , double pos );
+  void SetDfPos( int form , double pos );
 
   /** Sets the speedbrake position
       @param cmd speedbrake position in radians*/
