@@ -66,6 +66,10 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode_ptr gs_serviceable_node;
     SGPropertyNode_ptr tofrom_serviceable_node;
 
+// This property refers to the "DME channeling" features of this
+// nav tuner, not to the DME device itself:
+    SGPropertyNode_ptr dme_serviceable_node;
+
     // property outputs
     SGPropertyNode_ptr fmt_freq_node;     // formated frequency
     SGPropertyNode_ptr fmt_alt_freq_node; // formated alternate frequency
@@ -129,6 +133,8 @@ class FGNavRadio : public SGSubsystem
     bool is_valid;
     bool has_dme;
     double dme_range;
+    bool dme_inrange;
+    SGVec3d dme_xyz;
     double radial;
     double target_radial;
     FGRunway* loc_runway;

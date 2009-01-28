@@ -59,6 +59,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     nav_serviceable_node(NULL),
     cdi_serviceable_node(NULL),
     gs_serviceable_node(NULL),
+    dme_serviceable_node(NULL),
     tofrom_serviceable_node(NULL),
     fmt_freq_node(NULL),
     fmt_alt_freq_node(NULL),
@@ -130,11 +131,21 @@ FGNavRadio::~FGNavRadio()
     delete high_tbl;
 }
 
+// Create a "serviceable" node with a default value of "true"
+SGPropertyNode_ptr serve_up(SGPropertyNode *node, const char* svc){
+  SGPropertyNode_ptr  rslt = (node->getChild(svc, 0, true))
+	->getChild("serviceable", 0, true);
+  SGPropertyNode::Type typ = rslt->getType();
+  if (typ == SGPropertyNode::NONE 
+        || typ == SGPropertyNode::UNSPECIFIED) {
+    rslt->setBoolValue(true);
+  }
+  return rslt;  
+}
 
 void
 FGNavRadio::init ()
 {
-    morse.init();
 
     string branch = "/instrumentation/" + _name;
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
@@ -156,13 +167,11 @@ FGNavRadio::init ()
     audio_btn_node->setBoolValue( true );
     backcourse_node = node->getChild("back-course-btn", 0, true);
     backcourse_node->setBoolValue( false );
-    nav_serviceable_node = node->getChild("serviceable", 0, true);
-    cdi_serviceable_node = (node->getChild("cdi", 0, true))
-	->getChild("serviceable", 0, true);
-    gs_serviceable_node = (node->getChild("gs", 0, true))
-	->getChild("serviceable");
-    tofrom_serviceable_node = (node->getChild("to-from", 0, true))
-	->getChild("serviceable", 0, true);
+    nav_serviceable_node = serve_up(node, "nav");
+    cdi_serviceable_node = serve_up(node, "cdi");
+    gs_serviceable_node = serve_up(node, "gs");
+    dme_serviceable_node = serve_up(node, "dme");
+    tofrom_serviceable_node = serve_up(node, "to-from");
 
     // frequencies
     SGPropertyNode *subnode = node->getChild("frequencies", 0, true);
@@ -213,6 +222,10 @@ FGNavRadio::init ()
     temp << _name << "dme-ident" << _num;
     dme_fx_name = temp.str();
 
+    morse.init();
+
+//    SG_LOG( SG_COCKPIT, SG_ALERT, "navradio: init complete: "  
+//        << dme_serviceable_node );
 }
 
 void FGNavRadio::bind ()
@@ -364,7 +377,9 @@ FGNavRadio::update(double dt)
                                    alt_node->getDoubleValue());
     bool power_btn = power_btn_node->getBoolValue();
     bool nav_serviceable = nav_serviceable_node->getBoolValue();
+    bool dme_serviceable = dme_serviceable_node->getBoolValue();
     bool cdi_serviceable = cdi_serviceable_node->getBoolValue();
+    bool gs_serviceable = gs_serviceable_node->getBoolValue();
     bool tofrom_serviceable = tofrom_serviceable_node->getBoolValue();
     bool inrange = inrange_node->getBoolValue();
     bool has_gs = has_gs_node->getBoolValue();
@@ -629,13 +644,25 @@ FGNavRadio::update(double dt)
         time_to_intercept->setDoubleValue( t );
 
         //////////////////////////////////////////////////////////
+        // Basic DME stuff
+        //////////////////////////////////////////////////////////
+        if (has_dme) {
+          dme_inrange = 0;
+          double dme_distance = dist(aircraft, dme_xyz);    // in meters
+                                                // needed for range check
+          if ( dme_distance < dme_range * SG_NM_TO_METER) {
+            dme_inrange = 1;
+          }
+        }
+
+
+        //////////////////////////////////////////////////////////
         // Compute the amount of glide slope needle deflection.
         // Normalization is discussed below.
         //////////////////////////////////////////////////////////
         int gsok(0);
-	if ( !has_gs ) gs_distance = 0.0;      // no valid gs info
 
-        if ( has_gs && gs_serviceable_node->getBoolValue() ) {
+        if ( has_gs && gs_serviceable ) {
             if ( nav_slaved_to_gps_node->getBoolValue() ) {
                 //
                 // FIXME/FINISHME, what should be set here?
@@ -686,9 +713,11 @@ FGNavRadio::update(double dt)
             } else {
               // GS out of range
             } 
-        } else {
-          // didn't have working GS
+        } else {                   // didn't have working GS
+          gs_distance = 0.0;
+          gsok = 0;
         }
+
         // Here with GS angle r in degrees.
         // rnorm is normed to std glideslope thickness, so that
         // rnorm lies in the interval [-1 .. 1] nominal "full" scale
@@ -780,11 +809,11 @@ FGNavRadio::update(double dt)
         gs_inrange = false;
         to_flag_node->setBoolValue( false );
         from_flag_node->setBoolValue( false );
-	// cout << "not picking up vor. :-(" << endl;
+	// cout << "Navradio: not picking up vor. " << endl;
     }
 
     // audio effects
-    if ( is_valid && inrange && nav_serviceable ) {
+    if ( is_valid ) {
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
 	if ( power_btn
@@ -813,32 +842,36 @@ FGNavRadio::update(double dt)
             // cout << "last_time = " << last_time << " ";
             // cout << "cur_time = "
             //      << globals->get_time_params()->get_cur_time();
-	    if ( last_time <
-		 globals->get_time_params()->get_cur_time() - 30 ) {
-		last_time = globals->get_time_params()->get_cur_time();
-		play_count = 0;
-	    }
-            // cout << " play_count = " << play_count << endl;
-            // cout << "playing = "
-            //      << globals->get_soundmgr()->is_playing(nav_fx_name)
-            //      << endl;
-	    if ( play_count < 4 ) {
-		// play VOR ident
-		if ( !globals->get_soundmgr()->is_playing(nav_fx_name) ) {
-		    globals->get_soundmgr()->play_once( nav_fx_name );
-		    ++play_count;
+            const int nslots(5);
+            const time_t slot_length(5);        // in seconds
+            // There are N slots numbered 0 through (nslots-1) inclusive.
+            // Each slot is 5 seconds long.
+            // Slots 0 is for DME
+            // the rest are for azimuth.
+            time_t now = globals->get_time_params()->get_cur_time();
+	    if ( now < last_time        // time runs backwards?
+              || now > last_time + slot_length ) {
+		last_time = now;
+		play_count = ++play_count % nslots;
+// Previous ident is out of time;  if still playing, cut it off:
+                globals->get_soundmgr()->stop( nav_fx_name );
+                globals->get_soundmgr()->stop( dme_fx_name );
+              // cout << " play_count = " << play_count << endl;
+              // cout << "playing = "
+              //      << globals->get_soundmgr()->is_playing(nav_fx_name)
+              //      << endl;
+              if ( play_count == 0) {
+                if (dme_inrange && dme_serviceable) {
+                  // play DME ident
+                  globals->get_soundmgr()->play_once( dme_fx_name );
                 }
-	    } else if ( play_count < 5 && has_dme ) {
-		// play DME ident
-		if ( !globals->get_soundmgr()->is_playing(nav_fx_name) &&
-		     !globals->get_soundmgr()->is_playing(dme_fx_name) ) {
-		    globals->get_soundmgr()->play_once( dme_fx_name );
-		    ++play_count;
-		}
+              } else {
+                if (inrange && nav_serviceable) {
+                  // play VOR ident
+                  globals->get_soundmgr()->play_once( nav_fx_name );
+                }
+              }
 	    }
-	} else {
-	    globals->get_soundmgr()->stop( nav_fx_name );
-	    globals->get_soundmgr()->stop( dme_fx_name );
 	}
     }
 
@@ -915,6 +948,7 @@ void FGNavRadio::search()
 // dme_range is not used (yet).
 // It should be used!
         dme_range = dme->get_range();
+        dme_xyz = dme->cart();
     }
     if ( loc != NULL ) {
         nav_id = loc->get_ident();
