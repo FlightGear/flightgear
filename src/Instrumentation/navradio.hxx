@@ -94,15 +94,31 @@ class FGNavRadio : public SGSubsystem
                         // not to be confused with dme_inrange or gs_inrange
     SGPropertyNode_ptr signal_quality_norm_node;	// azimuth, not DME or GS
 
-    SGPropertyNode_ptr heading_needle_deflection_node;
+
+// heading-needle-deflection 
+// is normalized to [-10 .. 10] for historical reasons
+// which made sense for VOR (in degrees)
+// but not so much for LOC or RNAV.
+// To preserve compatibility we clamp it to [-10 .. 10]
+    double heading_needle_deflection;
+
+// heading-needle-deflection-norm
+// is normalized to [-1 .. 1] and is _not_ clamped.  
+// Instrument designers are welcome to clamp it in the 
+// front end, i.e. in the CDI head, however they desire.
     double heading_needle_deflection_norm;
     SGPropertyNode_ptr cdi_xtrack_error_node;
     SGPropertyNode_ptr cdi_xtrack_hdg_err_node;
     SGPropertyNode_ptr has_gs_node;
     SGPropertyNode_ptr loc_node;
     SGPropertyNode_ptr loc_dist_node;
-    SGPropertyNode_ptr gs_needle_deflection_node;
-    double             gs_needle_deflection_norm;
+// gs-needle-deflection 
+// is normalized to [-3.5 .. 3.5] for unfathomable historical reasons
+// To preserve compatibility we clamp it to [-3.5 .. 3.5]
+    double gs_needle_deflection;
+// gs-needle-deflection-norm
+// is normalized to nominal [-1 .. 1] but is _not_ clamped:
+    double gs_needle_deflection_norm;
     bool               gs_inrange;
     SGPropertyNode_ptr gs_rate_of_climb_node;
     double gs_distance;
@@ -197,10 +213,20 @@ public:
     inline double get_gs_distance() const     { return gs_distance; }
     inline void set_gs_distance( double val ) { gs_distance = val; }
 
+    inline double get_heading_needle_deflection() const { 
+       return heading_needle_deflection; }
+    inline void set_heading_needle_deflection( double val ) { 
+      heading_needle_deflection = val; }
+
     inline double get_heading_needle_deflection_norm() const { 
        return heading_needle_deflection_norm; }
     inline void set_heading_needle_deflection_norm( double val ) { 
       heading_needle_deflection_norm = val; }
+
+    inline double get_gs_needle_deflection() const { 
+      return gs_needle_deflection; }
+    inline void set_gs_needle_deflection( double val ) { 
+      gs_needle_deflection = val; }
 
     inline double get_gs_needle_deflection_norm() const { 
       return gs_needle_deflection_norm; }
