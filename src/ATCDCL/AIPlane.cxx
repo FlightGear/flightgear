@@ -105,7 +105,9 @@ void FGAIPlane::Update(double dt) {
 			if(1) {
 				// For now assume in range !!!
 				// TODO - implement range checking
-				Render(plane.callsign, false);
+		                // TODO - at the moment the volume is always set off comm1 
+			        double volume = fgGetDouble("/instrumentation/comm[0]/volume");
+				Render(plane.callsign, volume, false);
 			}
 		}
 		// Run the callback regardless of whether on same freq as user or not.
@@ -165,7 +167,9 @@ void FGAIPlane::ConditionalTransmit(double timeout, int callback_code) {
 }
 
 void FGAIPlane::ImmediateTransmit(int callback_code) {
-	Render(plane.callsign, false);
+      // TODO - at the moment the volume is always set off comm1 
+        double volume = fgGetDouble("/instrumentation/comm[0]/volume");
+	Render(plane.callsign, volume, false);
 	if(callback_code) {
 		ProcessCallback(callback_code);
 	}
@@ -179,26 +183,26 @@ void FGAIPlane::ProcessCallback(int code) {
 // Outputs the transmission either on screen or as audio depending on user preference
 // The refname is a string to identify this sample to the sound manager
 // The repeating flag indicates whether the message should be repeated continuously or played once.
-void FGAIPlane::Render(const string& refname, bool repeating) {
+void FGAIPlane::Render(const string& refname, const double volume, bool repeating) {
 	fgSetString("/sim/messages/ai-plane", pending_transmission.c_str());
 #ifdef ENABLE_AUDIO_SUPPORT
 	voice = (voiceOK && fgGetBool("/sim/sound/voice"));
 	if(voice) {
-		int len;
-		unsigned char* buf = vPtr->WriteMessage((char*)pending_transmission.c_str(), len, voice);
-		if(voice) {
-			SGSoundSample* simple = new SGSoundSample(buf, len, 8000);
-			// TODO - at the moment the volume is always set off comm1 
-			// and can't be changed after the transmission has started.
-			simple->set_volume(5.0 * fgGetDouble("/instrumentation/comm[0]/volume"));
-			globals->get_soundmgr()->add(simple, refname);
-			if(repeating) {
-				globals->get_soundmgr()->play_looped(refname);
-			} else {
-				globals->get_soundmgr()->play_once(refname);
-			}
+	    int len;
+	    string buf = vPtr->WriteMessage((char*)pending_transmission.c_str(), voice);
+	    if(voice) {
+		SGSoundSample* simple = 
+		    new SGSoundSample((unsigned char*)buf.c_str(), buf.length(), 8000,  AL_FORMAT_MONO8 );
+                // TODO - at the moment the volume can't be changed 
+		// after the transmission has started.
+		simple->set_volume(volume);
+		globals->get_soundmgr()->add(simple, refname);
+		if(repeating) {
+			globals->get_soundmgr()->play_looped(refname);
+		} else {
+			globals->get_soundmgr()->play_once(refname);
 		}
-		delete[] buf;
+	    }
 	}
 #endif	// ENABLE_AUDIO_SUPPORT
 	if(!voice) {

@@ -66,7 +66,7 @@ ATCMenuEntry::ATCMenuEntry() {
 ATCMenuEntry::~ATCMenuEntry() {
 }
 
-static void atcUppercase(string &s) {
+void atcUppercase(string &s) {
 	for(unsigned int i=0; i<s.size(); ++i) {
 		s[i] = toupper(s[i]);
 	}

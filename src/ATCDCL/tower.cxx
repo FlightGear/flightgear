@@ -2643,9 +2643,13 @@ string FGTower::GetWeather() {
 }
 
 string FGTower::GetATISID() {
-	int hours = fgGetInt("/sim/time/utc/hour");
-	int phonetic_id = current_commlist->GetCallSign(ident, hours, 0);
-	return GetPhoneticIdent(phonetic_id);
+        double tstamp = atof(fgGetString("sim/time/elapsed-sec"));
+        const int minute(60);                   // in SI units
+        int interval = ATIS ? 60*minute : 2*minute;	// AWOS updated frequently
+        int sequence = current_commlist->GetAtisSequence(ident, 
+                              tstamp, interval);
+
+	return GetPhoneticLetter(sequence);  // the sequence letter
 }
 
 ostream& operator << (ostream& os, tower_traffic_type ttt) {

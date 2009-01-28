@@ -621,7 +621,7 @@ string FGAIMgr::GenerateShortForm(const string& callsign, const string& plane_st
 		//cout << c << '\n';
 		string tmp = "";
 		tmp += c;
-		if(isalpha(c)) s += GetPhoneticIdent(c);
+		if(isalpha(c)) s += GetPhoneticLetter(c);
 		else s += ConvertNumToSpokenDigits(tmp);
 		if(i > 1) s += '-';
 	}

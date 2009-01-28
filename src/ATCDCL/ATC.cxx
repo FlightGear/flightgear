@@ -30,35 +30,34 @@
 
 #include "ATC.hxx"
 
-FGATC::FGATC() {
-	freqClear = true;
-	receiving = false;
-	respond = false;
-	runResponseCounter = false;
-	_runReleaseCounter = false;
-	responseID = "";
-	responseReqd = false;
-	_type = INVALID;
-	_display = false;
-	_displaying = false;
-	
+FGATC::FGATC() :
+	freqClear(true),
+	receiving(false),
+	respond(false),
+	responseID(""),
+	runResponseCounter(false),
+	_runReleaseCounter(false),
+	responseReqd(false),
+	_type(INVALID),
+	_display(false),
 	// Transmission timing stuff
-	pending_transmission = "";
-	_timeout = 0;
-	_pending = false;
-	_callback_code = 0;
-	_transmit = false;
-	_transmitting = false;
-	_counter = 0.0;
-	_max_count = 5.0;
-	
-	_voiceOK = false;
+	pending_transmission(""),
+	_timeout(0),
+	_pending(false),
+	_callback_code(0),
+	_transmit(false),
+	_transmitting(false),
+	_counter(0.0),
+	_max_count(5.0),
+	_voiceOK(false)
+{
 }
 
 FGATC::~FGATC() {
 }
 
-// Derived classes wishing to use the response counter should call this from their own Update(...).
+// Derived classes wishing to use the response counter should 
+// call this from their own Update(...).
 void FGATC::Update(double dt) {
 	if(runResponseCounter) {
 		//cout << responseCounter << '\t' << responseTime << '\n';
@@ -200,6 +199,7 @@ int FGATC::RemovePlane() {
 }
 
 void FGATC::SetData(ATCData* d) {
+    _type = d->type;
 	lon = d->lon;
 	lat = d->lat;
 	elev = d->elev;
@@ -216,7 +216,8 @@ void FGATC::SetData(ATCData* d) {
 // Outputs the transmission either on screen or as audio depending on user preference
 // The refname is a string to identify this sample to the sound manager
 // The repeating flag indicates whether the message should be repeated continuously or played once.
-void FGATC::Render(string& msg, const string& refname, bool repeating) {
+void FGATC::Render(string& msg, const double volume, 
+		const string& refname, const bool repeating) {
 	if (repeating)
 		fgSetString("/sim/messages/atis", msg.c_str());
 	else
@@ -225,26 +226,29 @@ void FGATC::Render(string& msg, const string& refname, bool repeating) {
 	#ifdef ENABLE_AUDIO_SUPPORT
 	_voice = (_voiceOK && fgGetBool("/sim/sound/voice"));
 	if(_voice) {
-		int len;
-		unsigned char* buf = _vPtr->WriteMessage((char*)msg.c_str(), len, _voice);
-		if(_voice) {
-			try {
-				SGSoundSample *simple
-								= new SGSoundSample(buf, len, 8000);
-				// TODO - at the moment the volume is always set off comm1 
-				// and can't be changed after the transmission has started.
-				simple->set_volume(5.0 * fgGetDouble("/instrumentation/comm[0]/volume"));
-				globals->get_soundmgr()->add(simple, refname);
-				if(repeating) {
-					globals->get_soundmgr()->play_looped(refname);
-				} else {
-					globals->get_soundmgr()->play_once(refname);
-				}
-			} catch ( sg_io_exception &e ) {
-				SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
-			}
+	    string buf = _vPtr->WriteMessage((char*)msg.c_str(), _voice);
+	    if(_voice) {
+		NoRender(refname);
+		try {
+// >>> Beware: must pass a (new) object to the (add) method,
+// >>> because the (remove) method is going to do a (delete)
+// >>> whether that's what you want or not.
+		    SGSoundSample *simple = 
+			new SGSoundSample((unsigned char*) buf.c_str(), 
+			   buf.length(), 8000, AL_FORMAT_MONO8);
+		    // TODO - at the moment the volume can't be changed 
+		    // after the transmission has started.
+		    simple->set_volume(volume);
+		    globals->get_soundmgr()->add(simple, refname);
+		    if(repeating) {
+			    globals->get_soundmgr()->play_looped(refname);
+		    } else {
+			    globals->get_soundmgr()->play_once(refname);
+		    }
+		} catch ( sg_io_exception &e ) {
+		    SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
 		}
-		delete[] buf;
+	    }
 	}
 	#endif	// ENABLE_AUDIO_SUPPORT
 	if(!_voice) {
@@ -279,13 +283,14 @@ string FGATC::GenText(const string& m, int c) {
 
 ostream& operator << (ostream& os, atc_type atc) {
 	switch(atc) {
-		case(INVALID):    return(os << "INVALID");
+		case(AWOS):       return(os << "AWOS");
 		case(ATIS):       return(os << "ATIS");
 		case(GROUND):     return(os << "GROUND");
 		case(TOWER):      return(os << "TOWER");
 		case(APPROACH):   return(os << "APPROACH");
 		case(DEPARTURE):  return(os << "DEPARTURE");
 		case(ENROUTE):    return(os << "ENROUTE");
+		case(INVALID):    return(os << "INVALID");
 	}
 	return(os << "ERROR - Unknown switch in atc_type operator << ");
 }

@@ -32,6 +32,7 @@
 #include "ATCVoice.hxx"
 
 #include <stdlib.h>
+#include <ctype.h>
 
 FGATCVoice::FGATCVoice() {
   SoundData = 0;
@@ -47,7 +48,7 @@ FGATCVoice::~FGATCVoice() {
 // Load the two voice files - one containing the raw sound data (.wav) and one containing the word positions (.vce).
 // Return true if successful.
 bool FGATCVoice::LoadVoice(const string& voice) {
-    // FIXME CLO: disabled to try to see if this is causign problemcs
+    // FIXME CLO: disabled to try to see if this is causing problemcs
     // return false;
 
 	ifstream fin;
@@ -57,10 +58,14 @@ bool FGATCVoice::LoadVoice(const string& voice) {
 
         string file = voice + ".wav";
 	
-	SoundData = new SGSoundSample();
-        rawSoundData = (char *)SoundData->load_file(path.c_str(), file.c_str());
-	rawDataSize = SoundData->get_size();
-	
+	SGSoundSample SoundData;
+        rawSoundData = (char *)SoundData.load_file(path.c_str(), file.c_str());
+	rawDataSize = SoundData.get_size();
+#ifdef VOICE_TEST
+	ALenum fmt = SoundData.get_format();
+	cout << "ATCVoice:  format: " << fmt 
+			<< "  size: " << rawDataSize << endl;
+#endif	
 	path = globals->get_fg_root();
 	string wordPath = "ATC/" + voice + ".vce";
 	path.append(wordPath);
@@ -93,6 +98,13 @@ bool FGATCVoice::LoadVoice(const string& voice) {
 		wd.offset = wrdOffset;
 		wd.length = wrdLength;
 		wordMap[wrdstr] = wd;
+                string ws2 = wrdstr;
+                for(string::iterator p = ws2.begin(); p != ws2.end(); p++){
+                  *p = tolower(*p);
+                  if (*p == '-') *p = '_';
+                }
+                if (wrdstr != ws2) wordMap[ws2] = wd;
+
 		//cout << wrd << "\t\t" << wrdOffset << "\t\t" << wrdLength << '\n';
 		//cout << i << '\n';
 	}
@@ -105,8 +117,9 @@ bool FGATCVoice::LoadVoice(const string& voice) {
 typedef list < string > tokenList_type;
 typedef tokenList_type::iterator tokenList_iterator;
 
-// Given a desired message, return a pointer to the data buffer and write the buffer length into len.
-unsigned char* FGATCVoice::WriteMessage(char* message, int& len, bool& dataOK) {
+// Given a desired message, return a string containing the
+// sound-sample data
+string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
 	
 	// What should we do here?
 	// First - parse the message into a list of tokens.
@@ -117,28 +130,36 @@ unsigned char* FGATCVoice::WriteMessage(char* message, int& len, bool& dataOK) {
 
 	// TODO - at the moment we're effectively taking 3 passes through the data.
 	// There is no need for this - 2 should be sufficient - we can probably ditch the tokenList.
+	size_t n1 = 1+strlen(message);
+	char msg[n1];
+	strncpy(msg, message, n1);	// strtok requires a non-const char*
 	char* token;
-	char mes[1000];
 	int numWords = 0;
-	strcpy(mes, message);
-	const char delimiters[] = " \t.,;:\"";
-	token = strtok(mes, delimiters);
+	const char delimiters[] = " \t.,;:\"\n";
+	char* context;
+	token = strtok_r(msg, delimiters, &context);
 	while(token != NULL) {
+                for (char *t = token; *t; t++) {
+                  *t = tolower(*t);     // canonicalize the case, to
+                  if (*t == '-') *t = '_';   // match what's in the index
+                }
 		tokenList.push_back(token);
 		++numWords;
-		//cout << "token = " << token << '\n';
-		token = strtok(NULL, delimiters);
+	        SG_LOG(SG_ATC, SG_DEBUG, "voice synth: token: '"
+                    << token << "'");
+		token = strtok_r(NULL, delimiters, &context);
 	}
 
-	WordData* wdptr = new WordData[numWords];
+	WordData wdptr[numWords];
 	int word = 0;
 	unsigned int cumLength = 0;
 
 	tokenListItr = tokenList.begin();
 	while(tokenListItr != tokenList.end()) {
 		if(wordMap.find(*tokenListItr) == wordMap.end()) {
-			// Oh dear - the token isn't in the sound file
-			//cout << "word " << *tokenListItr << " not found :-(\n";
+		// Oh dear - the token isn't in the sound file
+	  	  SG_LOG(SG_ATC, SG_ALERT, "voice synth: word '"
+                      << *tokenListItr << "' not found");
 		} else {
 			wdptr[word] = wordMap[*tokenListItr];
 			cumLength += wdptr[word].length;
@@ -151,12 +172,10 @@ unsigned char* FGATCVoice::WriteMessage(char* message, int& len, bool& dataOK) {
 	// Check for no tokens found else slScheduler can be crashed
 	if(!word) {
 		dataOK = false;
-		return(NULL);
+		return "";
 	}
 
-	unsigned char* tmpbuf = new unsigned char[cumLength];	
-	unsigned char* outbuf = new unsigned char[cumLength];
-	len = cumLength;
+	char tmpbuf[cumLength];	
 	unsigned int bufpos = 0;
 	for(int i=0; i<word; ++i) {
 		/*
@@ -169,9 +188,8 @@ unsigned char* FGATCVoice::WriteMessage(char* message, int& len, bool& dataOK) {
 			SG_LOG(SG_ATC, SG_ALERT, "ERROR - mismatch between ATC .wav and .vce file in ATCVoice.cxx\n");
 			SG_LOG(SG_ATC, SG_ALERT, "Offset + length: " << wdptr[i].offset + wdptr[i].length
 			     << " exceeds rawdata size: " << rawDataSize << endl);
-			delete[] wdptr;
 			dataOK = false;
-			return(NULL);
+			return "";
 		}
 		memcpy(tmpbuf + bufpos, rawSoundData + wdptr[i].offset, wdptr[i].length);
 		bufpos += wdptr[i].length;
@@ -180,12 +198,10 @@ unsigned char* FGATCVoice::WriteMessage(char* message, int& len, bool& dataOK) {
 	// tmpbuf now contains the message starting at the beginning - but we want it to start at a random position.
 	unsigned int offsetIn = (int)(cumLength * sg_random());
 	if(offsetIn > cumLength) offsetIn = cumLength;
-	memcpy(outbuf, tmpbuf + offsetIn, (cumLength - offsetIn));
-	memcpy(outbuf + (cumLength - offsetIn), tmpbuf, offsetIn);
-	
-	delete[] tmpbuf;
-	delete[] wdptr;
+
+	string front(tmpbuf, offsetIn);
+	string back(tmpbuf+offsetIn, cumLength - offsetIn);
 
 	dataOK = true;	
-	return(outbuf);
+	return back + front;
 }

@@ -23,7 +23,9 @@
 
 #include <simgear/compiler.h>
 
-#  include <fstream>
+#include <fstream>
+#include <iostream>
+
 #include <map>
 #include <list>
 #include <string>
@@ -34,13 +36,18 @@ using std::map;
 using std::list;
 using std::string;
 
+using std::cout;
+using std::ios;
+using std::ofstream;
+using std::ifstream;
+
 
 struct WordData {
 	unsigned int offset;	// Offset of beginning of word sample into raw sound sample
 	unsigned int length;	// Byte length of word sample
 };
 
-typedef std::map < std::string, WordData > atc_word_map_type;
+typedef map < string, WordData > atc_word_map_type;
 typedef atc_word_map_type::iterator atc_word_map_iterator;
 typedef atc_word_map_type::const_iterator atc_word_map_const_iterator;
 
@@ -53,12 +60,11 @@ public:
 
 	// Load the two voice files - one containing the raw sound data (.wav) and one containing the word positions (.vce).
 	// Return true if successful.	
-	bool LoadVoice(const std::string& voice);
+	bool LoadVoice(const string& voice);
 	
 	// Given a desired message, return a pointer to the data buffer and write the buffer length into len.
 	// Sets dataOK = true if the returned buffer is valid.
-	unsigned char* WriteMessage(char* message, int& len, bool& dataOK);
-
+	std::string WriteMessage(const char* message, bool& dataOK);
 
 private:
 

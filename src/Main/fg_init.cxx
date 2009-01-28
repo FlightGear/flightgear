@@ -128,6 +128,7 @@
 #include "renderer.hxx"
 #include "viewmgr.hxx"
 #include "main.hxx"
+#include "ATCDCL/commlist.hxx"
 
 #ifdef __APPLE__
 #  include <CoreFoundation/CoreFoundation.h>
@@ -970,7 +971,11 @@ fgInitNav ()
     SGPath p_metar( globals->get_fg_root() );
     p_metar.append( "Airports/metar.dat" );
 
-    fgAirportDBLoad( aptdb.str(), p_metar.str() );
+// Initialise the frequency search map BEFORE reading
+// the airport database:
+    current_commlist = new FGCommList;
+    current_commlist->init( globals->get_fg_root() );
+    fgAirportDBLoad( aptdb.str(), current_commlist, p_metar.str() );
 
     FGNavList *navlist = new FGNavList;
     FGNavList *loclist = new FGNavList;
