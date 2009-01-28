@@ -41,6 +41,7 @@
 #include <iostream>
 using std::cerr;
 using std::endl;
+#include <stdexcept>
 
 #include "main.hxx"
 #include "globals.hxx"
@@ -189,10 +190,17 @@ int main ( int argc, char **argv ) {
     } catch (const char *s) {
         cerr << "Fatal error: " << s << endl;
 
+    } catch (const logic_error &s) {
+        cerr << "Unanticipated std::logic_error: " << s.what() << endl;
+        throw;
+    } catch (const exception &s) {
+        cerr << "Unanticipated std::exception: " << s.what() << endl;
+        throw;
     } catch (...) {
         cerr << "Unknown exception in the main loop. Aborting..." << endl;
         if (errno)
             perror("Possible cause");
+        throw;
     }
 
     return 0;
