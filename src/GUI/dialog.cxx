@@ -758,6 +758,11 @@ FGDialog::makeObject (SGPropertyNode *props, int parentWidth, int parentHeight)
         puSlider *obj = new puSlider(x, y, (vertical ? height : width), vertical);
         obj->setMinValue(props->getFloatValue("min", 0.0));
         obj->setMaxValue(props->getFloatValue("max", 1.0));
+        obj->setStepSize(props->getFloatValue("step"));
+        obj->setSliderFraction(props->getFloatValue("fraction"));
+#if PLIB_VERSION > 185
+        obj->setPageStepSize(props->getFloatValue("pagestep"));
+#endif
         setupObject(obj, props);
         if (presetSize)
             obj->setSize(width, height);
@@ -776,8 +781,13 @@ FGDialog::makeObject (SGPropertyNode *props, int parentWidth, int parentHeight)
     } else if (type == "textbox") {
         int slider_width = props->getIntValue("slider", 20);
         int wrap = props->getBoolValue("wrap", true);
-        puaLargeInput * obj = new puaLargeInput(x, y,
+#if PLIB_VERSION > 185
+        puaLargeInput *obj = new puaLargeInput(x, y,
+                x + width, x + height, 11, slider_width, wrap);
+#else
+        puaLargeInput *obj = new puaLargeInput(x, y,
                 x + width, x + height, 2, slider_width, wrap);
+#endif
 
         if (props->getBoolValue("editable"))
             obj->enableInput();
