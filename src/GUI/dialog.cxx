@@ -798,6 +798,9 @@ FGDialog::makeObject (SGPropertyNode *props, int parentWidth, int parentHeight)
             obj->setSize(width, height);
         setupObject(obj, props);
         setColor(obj, props, FOREGROUND|LABEL);
+
+        int top = props->getIntValue("top-line", 0);
+        obj->setTopLineInWindow(top < 0 ? unsigned(-1) >> 1 : top);
         return obj;
 
     } else if (type == "select") {
