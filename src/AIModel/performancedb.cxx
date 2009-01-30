@@ -3,6 +3,9 @@
 PerformanceDB::PerformanceDB()
 {
     // these are the 6 classes originally defined in the PERFSTRUCT
+    // Plus a few more for testing
+    registerPerformanceData("heavy_jet", new PerformanceData(
+        4.0, 2.0,  3000.0, 1500.0,  150.0, 160.0,  300.0, 430.0,  300.0,  170.0, 150.0, 15.0));
     registerPerformanceData("light", new PerformanceData(
         2.0, 2.0,  450.0, 1000.0,  70.0, 70.0,  80.0, 100.0,  80.0,  70.0, 60.0, 15.0));
     registerPerformanceData("ww2_fighter", new PerformanceData(

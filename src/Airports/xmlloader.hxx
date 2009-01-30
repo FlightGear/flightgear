@@ -22,11 +22,12 @@ class FGAirportDynamics;
 class FGRunwayPreference;
 
 
+
 class XMLLoader {
 public:
   XMLLoader();
   ~XMLLoader();
-
+  static string expandICAODirs(const string in);
   static void load(FGRunwayPreference* p);
   static void load(FGAirportDynamics* d);
   

@@ -9,7 +9,7 @@ class FGAIAircraft;
 /**
 Data storage for aircraft performance data. This is used to properly simulate the flight of AIAircrafts.
  
-	@author Thomas Förster <t.foerster@biologie.hu-berlin.de>
+	@author Thomas Fï¿½rster <t.foerster@biologie.hu-berlin.de>
 */
 class PerformanceData
 {
@@ -38,10 +38,11 @@ public:
 
     bool gearExtensible(const FGAIAircraft* ac);
 
-    inline double climbRate() { return _climbRate; };
-    inline double descentRate() { return _descentRate; };
-    inline double vRotate() { return _vRotate; };
-    inline double maximumBankAngle() { return _maxbank; };
+    inline double climbRate        () { return _climbRate; };
+    inline double descentRate      () { return _descentRate; };
+    inline double vRotate          () { return _vRotate; };
+    inline double maximumBankAngle () { return _maxbank; };
+    inline double acceleration     () { return _acceleration; };
     
 private:
     double _acceleration;

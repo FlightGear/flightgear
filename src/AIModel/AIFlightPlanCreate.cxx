@@ -26,6 +26,8 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/dynamics.hxx>
+#include <AIAircraft.hxx>
+#include <performancedata.hxx>
 
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
@@ -41,7 +43,7 @@
 
 
 // Check lat/lon values during initialization;
-void FGAIFlightPlan::create(FGAirport *dep, FGAirport *arr, int legNr, 
+void FGAIFlightPlan::create(FGAIAircraft *ac, FGAirport *dep, FGAirport *arr, int legNr, 
 			    double alt, double speed, double latitude, 
 			    double longitude, bool firstFlight,double radius, 
 			    const string& fltType, const string& aircraftType, 
@@ -58,7 +60,7 @@ void FGAIFlightPlan::create(FGAirport *dep, FGAirport *arr, int legNr,
       createTakeoffTaxi(firstFlight, dep, radius, fltType, aircraftType, airline);
       break;
     case 3: 
-      createTakeOff(firstFlight, dep, speed, fltType);
+      createTakeOff(ac, firstFlight, dep, speed, fltType);
       break;
     case 4: 
       createClimb(firstFlight, dep, speed, alt, fltType);
@@ -336,43 +338,55 @@ void FGAIFlightPlan::createLandingTaxi(FGAirport *apt,
  * CreateTakeOff 
  * initialize the Aircraft at the parking location
  ******************************************************************/
-void FGAIFlightPlan::createTakeOff(bool firstFlight, FGAirport *apt, double speed, const string &fltType)
+void FGAIFlightPlan::createTakeOff(FGAIAircraft *ac, bool firstFlight, FGAirport *apt, double speed, const string &fltType)
 {
-  waypoint *wpt;
-  
-  // Get the current active runway, based on code from David Luff
-  // This should actually be unified and extended to include 
-  // Preferential runway use schema's 
-  if (firstFlight)
- {
-   string rwyClass = getRunwayClassFromTrafficType(fltType);
-   apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway);
-   rwy = apt->getRunwayByIdent(activeRunway);
- }
-  
- double airportElev = apt->getElevation();
- // Acceleration point, 105 meters into the runway,
- SGGeod accelPoint = rwy->pointOnCenterline(105.0);
- wpt = createOnGround("accel", accelPoint, airportElev, speed);
- waypoints.push_back(wpt); 
+    double accel   = ac->getPerformance()->acceleration();
+    double vRotate = ac->getPerformance()->vRotate();
+    // Acceleration = dV / dT
+    // Acceleration X dT = dV
+    // dT = dT / Acceleration
+    //d = (Vf^2 - Vo^2) / (2*a)
+    double accelTime = (vRotate - 15) / accel;
+    cerr << "Using " << accelTime << " as total acceleration time" << endl;
+    double accelDistance = (vRotate*vRotate - 15*15) / (2*accel);
+    cerr << "Using " << accelDistance << " " << accel << " " << vRotate << endl;
+    waypoint *wpt;
+    // Get the current active runway, based on code from David Luff
+    // This should actually be unified and extended to include 
+    // Preferential runway use schema's 
+    // NOTE: DT (2009-01-18: IIRC, this is currently already the case, 
+    // because the getActive runway function takes care of that.
+    if (firstFlight)
+    {
+        string rwyClass = getRunwayClassFromTrafficType(fltType);
+        apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway);
+        rwy = apt->getRunwayByIdent(activeRunway);
+    }
+
+    double airportElev = apt->getElevation();
+    // Acceleration point, 105 meters into the runway,
+    SGGeod accelPoint = rwy->pointOnCenterline(105.0);
+    wpt = createOnGround("accel", accelPoint, airportElev, speed);
+    waypoints.push_back(wpt); 
  
- //Start Climbing to 3000 ft. Let's do this 
- // at the center of the runway for now:
- wpt = cloneWithPos(wpt, "SOC", rwy->geod());
- wpt->altitude  = airportElev+1000;
- wpt->on_ground = false;
- waypoints.push_back(wpt);
+    //Start Climbing to 3000 ft. Let's do this 
+    // at the center of the runway for now:
+    SGGeod rotate = rwy->pointOnCenterline(105.0+accelDistance);
+    wpt = cloneWithPos(wpt, "SOC", rotate);
+    wpt->altitude  = airportElev+1000;
+    wpt->on_ground = false;
+    waypoints.push_back(wpt);
 
- wpt = cloneWithPos(wpt, "3000 ft", rwy->end());
- wpt->altitude  = airportElev+3000;
- waypoints.push_back(wpt);
+    wpt = cloneWithPos(wpt, "3000 ft", rwy->end());
+    wpt->altitude  = airportElev+3000;
+    waypoints.push_back(wpt);
 
-// Finally, add two more waypoints, so that aircraft will remain under
- // Tower control until they have reached the 3000 ft climb point
- SGGeod pt = rwy->pointOnCenterline(5000 + rwy->lengthM() * 0.5);
- wpt = cloneWithPos(wpt, "5000 ft", pt);
- wpt->altitude  = airportElev+5000;
-  waypoints.push_back(wpt);  
+    // Finally, add two more waypoints, so that aircraft will remain under
+    // Tower control until they have reached the 3000 ft climb point
+    SGGeod pt = rwy->pointOnCenterline(5000 + rwy->lengthM() * 0.5);
+    wpt = cloneWithPos(wpt, "5000 ft", pt);
+    wpt->altitude  = airportElev+5000;
+    waypoints.push_back(wpt);
 }
   
 /*******************************************************************

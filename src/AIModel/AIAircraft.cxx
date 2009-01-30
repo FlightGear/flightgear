@@ -353,7 +353,6 @@ bool FGAIAircraft::loadNextLeg() {
             return false;
         }
         setCallSign(trafficRef->getCallSign());
-	//props->setStringValue("callsign", callsign.c_str());
         leg = 1;
         fp->setLeg(leg);
     }
@@ -366,10 +365,11 @@ bool FGAIAircraft::loadNextLeg() {
     } else {
         double cruiseAlt = trafficRef->getCruiseAlt() * 100;
 
-        fp->create (dep,
+        fp->create (this,
+                    dep,
                     arr,
                     leg,
-                    cruiseAlt,           //(trafficRef->getCruiseAlt() * 100), // convert from FL to feet
+                    cruiseAlt,
                     trafficRef->getSpeed(),
                     _getLatitude(),
                     _getLongitude(),
