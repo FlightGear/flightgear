@@ -347,9 +347,9 @@ void FGAIFlightPlan::createTakeOff(FGAIAircraft *ac, bool firstFlight, FGAirport
     // dT = dT / Acceleration
     //d = (Vf^2 - Vo^2) / (2*a)
     double accelTime = (vRotate - 15) / accel;
-    cerr << "Using " << accelTime << " as total acceleration time" << endl;
+    //cerr << "Using " << accelTime << " as total acceleration time" << endl;
     double accelDistance = (vRotate*vRotate - 15*15) / (2*accel);
-    cerr << "Using " << accelDistance << " " << accel << " " << vRotate << endl;
+    //cerr << "Using " << accelDistance << " " << accel << " " << vRotate << endl;
     waypoint *wpt;
     // Get the current active runway, based on code from David Luff
     // This should actually be unified and extended to include 
