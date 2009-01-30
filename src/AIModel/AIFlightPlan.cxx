@@ -101,7 +101,8 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename)
 // Position computed by the traffic manager, as well
 // as setting speeds and altitude computed by the
 // traffic manager. 
-FGAIFlightPlan::FGAIFlightPlan(const std::string& p,
+FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
+                               const std::string& p,
 			       double course,
 			       time_t start,
 			       FGAirport *dep,
@@ -202,7 +203,7 @@ FGAIFlightPlan::FGAIFlightPlan(const std::string& p,
 
       SG_LOG(SG_GENERAL, SG_INFO, "Route from " << dep->getId() << " to " << arr->getId() << ". Set leg to : " << leg);
       wpt_iterator = waypoints.begin();
-      create(dep,arr, leg, alt, speed, lat, lon,
+      create(ac, dep,arr, leg, alt, speed, lat, lon,
 	     firstLeg, radius, fltType, acType, airline);
       wpt_iterator = waypoints.begin();
       //cerr << "after create: " << (*wpt_iterator)->name << endl;

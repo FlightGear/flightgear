@@ -208,9 +208,11 @@ void FGGlobals::set_fg_scenery (const string &scenery) {
         ulDir *td = ulOpenDir( pt.c_str() );
         ulDir *od = ulOpenDir( po.c_str() );
 
-        if (td == NULL && od == NULL)
+	// "Terrain" and "Airports" directory don't exist. add directory as is
+        // otherwise, automatically append either Terrain, Objects, or both
+        //if (td == NULL && od == NULL)
             fg_scenery.push_back( path_list[i] );
-        else {
+        //else {
             if (td != NULL) {
                 fg_scenery.push_back( pt.str() );
                 ulCloseDir( td );
@@ -219,7 +221,7 @@ void FGGlobals::set_fg_scenery (const string &scenery) {
                 fg_scenery.push_back( po.str() );
                 ulCloseDir( od );
             }
-        }
+        //}
         // insert a marker for FGTileEntry::load(), so that
         // FG_SCENERY=A:B becomes list ["A/Terrain", "A/Objects", "",
         // "B/Terrain", "B/Objects", ""]

@@ -23,16 +23,20 @@
 #include <vector>
 #include <string>
 
+
 #include <Airports/simple.hxx>
 #include <Navaids/awynet.hxx>
 
 #include "AIBase.hxx"
+
+
 
 using std::vector;
 using std::string;
 
 class FGTaxiRoute;
 class FGRunway;
+class FGAIAircraft;
 
 class FGAIFlightPlan {
 
@@ -56,7 +60,8 @@ public:
   } waypoint;
 
   FGAIFlightPlan(const string& filename);
-  FGAIFlightPlan(const std::string& p,
+  FGAIFlightPlan(FGAIAircraft *,
+                 const std::string& p,
 		 double course,
 		 time_t start,
 		 FGAirport *dep,
@@ -86,7 +91,7 @@ public:
    double getBearing(double lat, double lon, waypoint* next) const;
   time_t getStartTime() const { return start_time; }
 
-  void    create(FGAirport *dep, FGAirport *arr, int leg, double alt, double speed, double lat, double lon,
+  void    create(FGAIAircraft *, FGAirport *dep, FGAirport *arr, int leg, double alt, double speed, double lat, double lon,
 		 bool firstLeg, double radius, const string& fltType, const string& aircraftType, const string& airline);
 
   void setLeg(int val) { leg = val;}
@@ -126,7 +131,7 @@ private:
 
   void createPushBack(bool, FGAirport*, double, double, double, const string&, const string&, const string&);
   void createPushBackFallBack(bool, FGAirport*, double, double, double, const string&, const string&, const string&);
-  void createTakeOff(bool, FGAirport *, double, const string&);
+  void createTakeOff(FGAIAircraft *, bool, FGAirport *, double, const string&);
   void createClimb(bool, FGAirport *, double, double, const string&);
   void createCruise(bool, FGAirport*, FGAirport*, double, double, double, double, const string&);
   void createDecent(FGAirport *, const string&);

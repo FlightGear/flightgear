@@ -427,7 +427,7 @@ bool FGAISchedule::update(time_t now)
 		  aircraft->setAltitude((*i)->getCruiseAlt()*100); // convert from FL to feet
 		  aircraft->setSpeed(speed);
 		  aircraft->setBank(0);
-		  aircraft->SetFlightPlan(new FGAIFlightPlan(flightPlanName, courseToDest, deptime, 
+		  aircraft->SetFlightPlan(new FGAIFlightPlan(aircraft, flightPlanName, courseToDest, deptime, 
 							     dep, arr,true, radius, 
 							     (*i)->getCruiseAlt()*100, 
 							     lat, lon, speed, flightType, acType, 
