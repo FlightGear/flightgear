@@ -169,7 +169,7 @@ void FGGlobals::set_fg_root (const string &root) {
     tmp.append( "version" );
     if ( ulFileExists( tmp.c_str() ) ) {
         fg_root += "/data";
-        SG_LOG(SG_GENERAL, SG_WARN, "Warning: changing bad FG_ROOT/--fg-root to '"
+        SG_LOG(SG_GENERAL, SG_ALERT, "Warning: changing bad FG_ROOT/--fg-root to '"
                 << fg_root << '\'');
     }
 
