@@ -168,9 +168,11 @@ void FGGlobals::set_fg_root (const string &root) {
     tmp.append( "data" );
     tmp.append( "version" );
     if ( ulFileExists( tmp.c_str() ) ) {
+        fgGetNode("BAD_FG_ROOT", true)->setStringValue(fg_root);
         fg_root += "/data";
-        SG_LOG(SG_GENERAL, SG_ALERT, "Warning: changing bad FG_ROOT/--fg-root to '"
-                << fg_root << '\'');
+        fgGetNode("GOOD_FG_ROOT", true)->setStringValue(fg_root);
+        SG_LOG(SG_GENERAL, SG_ALERT, "***\n***\n*** Warning: changing bad FG_ROOT/--fg-root to '"
+                << fg_root << "'\n***\n***");
     }
 
     // remove /sim/fg-root before writing to prevent hijacking
