@@ -29,11 +29,11 @@ XMLLoader::XMLLoader() {}
 XMLLoader::~XMLLoader() {}
 
 string XMLLoader::expandICAODirs(const string in){
-     cerr << "Expanding " << in << endl;
+     //cerr << "Expanding " << in << endl;
      if (in.size() == 4) {
           char buffer[11];
           snprintf(buffer, 11, "%c/%c/%c", in[0], in[1], in[2]);
-          cerr << "result: " << buffer << endl;
+          //cerr << "result: " << buffer << endl;
           return string(buffer);
      } else {
            return in;
