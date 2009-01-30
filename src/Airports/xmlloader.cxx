@@ -14,7 +14,9 @@
 //
 
 #include <simgear/misc/sg_path.hxx>
+
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 
 #include "xmlloader.hxx"
 #include "dynamicloader.hxx"
@@ -67,12 +69,13 @@ void XMLLoader::load(FGAirportDynamics* d) {
                     try {
                         readXML(parkpath.str(), visitor);
                         d->init();
-                } 
-                catch (const sg_exception &e) {
+                    } 
+                    catch (const sg_exception &e) {
+                    }
+                    return;
                 }
-                return;
-             }
-         }
+            }
+        }
     }
 }
 
