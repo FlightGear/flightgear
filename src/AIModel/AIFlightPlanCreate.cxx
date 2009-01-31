@@ -26,8 +26,8 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/dynamics.hxx>
-#include <AIAircraft.hxx>
-#include <performancedata.hxx>
+#include "AIAircraft.hxx"
+#include "performancedata.hxx"
 
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
