@@ -59,7 +59,7 @@ Name: "{group}\Tools\Install & Uninstall Scenery"; Filename: "{app}\bin\Win32\fg
 Name: "{group}\Tools\TerraSync"; Filename: "{app}\bin\Win32\terrasync.exe"; Parameters: "-S -p 5505 -d ""{app}\terrasync"""; WorkingDir: "{app}";
 Name: "{group}\Tools\Uninstall FlightGear"; Filename: "{uninstallexe}"
 
-Name: "{group}\Tools\fgjs"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\fgjs.exe"""; WorkingDir: "{app}\bin\Win32";
+Name: "{group}\Tools\fgjs"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\fgjs.exe"" ""--fg-root={app}\data"""; WorkingDir: "{app}\bin\Win32";
 Name: "{group}\Tools\GPSsmooth"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\GPSsmooth.exe"" -h"; WorkingDir: "{app}\bin\Win32";
 Name: "{group}\Tools\UGsmooth"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\UGsmooth.exe"" -h"; WorkingDir: "{app}\bin\Win32";
 Name: "{group}\Tools\MIDSsmooth"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\MIDSsmooth.exe"" -h"; WorkingDir: "{app}\bin\Win32";
