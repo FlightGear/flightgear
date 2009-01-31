@@ -150,6 +150,7 @@ public:
   virtual double getFuelFlow_gph () const {return FuelFlow_gph;}
   virtual double getFuelFlow_pph () const {return FuelFlow_pph;}
   virtual double GetFuelFlowRate(void) const {return FuelFlowRate;}
+  virtual double GetThrust(void) const { return Thrust; }
   virtual bool   GetStarved(void) { return Starved; }
   virtual bool   GetRunning(void) const { return Running; }
   virtual bool   GetCranking(void) { return Cranking; }
@@ -215,10 +216,11 @@ protected:
   double MaxThrottle;
   double MinThrottle;
 
+  double Thrust;
   double Throttle;
   double Mixture;
   double FuelExpended;
-  double FuelFlowRate;
+  double FuelFlowRate;          // [lb per second]
   double PctPower;
   bool  Starter;
   bool  Starved;
@@ -227,8 +229,8 @@ protected:
   bool  TrimMode;
   bool  FuelFreeze;
 
-  double FuelFlow_gph;
-  double FuelFlow_pph;
+  double FuelFlow_gph;          // [gal per hour]
+  double FuelFlow_pph;          // [lb per hour]
 
   FGFDMExec*      FDMExec;
   FGState*        State;

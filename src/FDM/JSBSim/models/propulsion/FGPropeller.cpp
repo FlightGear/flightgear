@@ -236,7 +236,11 @@ double FGPropeller::GetPowerRequired(void)
           double dRPM = rpmReq - RPM;
           // The pitch of a variable propeller cannot be changed when the RPMs are
           // too low - the oil pump does not work.
-          if (RPM > 200) Pitch -= dRPM / 10;
+// FIXME:  This is improperly dependent on frame rate.
+// We want a two second time time constant.
+// Using 120 frames is about right at 60 fps,
+// but is too slow at slower frame rates and too fast at faster frame rates.
+          if (RPM > 200) Pitch -= dRPM / 120;
 
           if (Pitch < MinPitch)       Pitch = MinPitch;
           else if (Pitch > MaxPitch)  Pitch = MaxPitch;

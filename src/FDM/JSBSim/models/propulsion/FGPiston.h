@@ -47,7 +47,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_PISTON "$Id$";
+#define ID_PISTON "$Id: FGPiston.h,v 1.1 2009/01/21 21:43:35 jsd Exp jsd $";
 #define FG_MAX_BOOST_SPEEDS 3
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -78,7 +78,8 @@ CLASS DOCUMENTATION
   <minthrottle> {number} </minthrottle>
   <numboostspeeds> {number} </numboostspeeds>
   <bsfc unit="{LBS/HP*HR | "KG/KW*HR"}"> {number} </bsft>
-  <volumetric_efficiency> {number} </volumetric_efficiency>
+  <volumetric_efficiency_0> {number} </volumetric_efficiency_0>
+  <volumetric_efficiency_3> {number} </volumetric_efficiency_3>
   <boostoverride> {0 | 1} </boostoverride>
   <ratedboost1 unit="{INHG | PA | ATM}"> {number} </ratedboost1>
   <ratedpower1 unit="{HP | WATTS}"> {number} </ratedpower1>
@@ -169,7 +170,7 @@ CLASS DOCUMENTATION
     @author Dave Luff (engine operational code)
     @author David Megginson (initial porting and additional code)
     @author Ron Jensen (additional engine code)
-    @version $Id$
+    @version $Id: FGPiston.h,v 1.1 2009/01/21 21:43:35 jsd Exp jsd $
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -244,6 +245,7 @@ private:
 
   FGTable *Lookup_Combustion_Efficiency;
   FGTable *Power_Mixture_Correlation;
+  FGTable *Power_per_Fuel_vs_AFR;
   FGTable *Mixture_Efficiency_Correlation;
 
   //
@@ -251,7 +253,6 @@ private:
   //
   double MinManifoldPressure_inHg; // Inches Hg
   double MaxManifoldPressure_inHg; // Inches Hg
-  double MaxManifoldPressure_Percent; // MaxManifoldPressure / 29.92
   double Displacement;             // cubic inches
   double MaxHP;                    // horsepower
   double SparkFailDrop;            // drop of power due to spark failure
@@ -284,7 +285,9 @@ private:
   double minMAP;  // Pa
   double maxMAP;  // Pa
   double MAP;     // Pa
-  double BSFC;    // brake specific fuel consumption [lbs/horsepower*hour
+// nominal brake specific fuel consumption [lbs/horsepower*hour]
+// actual BSFC could be much worse, e.g. if/when the mixture is rich:
+  double nominal_BSFC;
 
   //
   // Inputs (in addition to those in FGEngine).
@@ -303,10 +306,10 @@ private:
   // Outputs (in addition to those in FGEngine).
   //
   double rho_air;
-  double volumetric_efficiency;
-  double map_coefficient;
+  double volumetric_efficiency_0;
+  double volumetric_loss_3;
   double m_dot_air;
-  double equivalence_ratio;
+  double equivalence_ratio;     // mixture relative to stoichiometry
   double m_dot_fuel;
   double Percentage_Power;
   double HP;

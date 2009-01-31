@@ -80,10 +80,14 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   MaxHP = 200;
   MinManifoldPressure_inHg = 6.5;
   MaxManifoldPressure_inHg = 28.5;
-  BSFC = -1;
+  nominal_BSFC = -1;
 
   // Initialisation
-  volumetric_efficiency = 0.8;  // Actually f(speed, load) but this will get us running
+
+  // Zeroth-order approximation to volumetric efficiency:
+  volumetric_efficiency_0 = 0.85;
+  // Additional third-order loss:
+  volumetric_loss_3 = 0.1;
 
   // These are internal program variables
 
@@ -132,6 +136,40 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   *Lookup_Combustion_Efficiency << 1.60 << 0.525;
   *Lookup_Combustion_Efficiency << 2.00 << 0.345;
 
+  Power_Mixture_Correlation = new FGTable(13);
+  *Power_Mixture_Correlation << 9.19 << 0.780;        // 14.7/1.6  (rich)
+  *Power_Mixture_Correlation << 10 <<  0.860;
+  *Power_Mixture_Correlation << 11 <<  0.935;
+  *Power_Mixture_Correlation << 12 <<  0.980;         // 14.7/1.3
+  *Power_Mixture_Correlation << 13 <<  1.000;         // 14.7/1.13
+  *Power_Mixture_Correlation << 14 <<  0.990;
+  *Power_Mixture_Correlation << 15 <<  0.964;
+  *Power_Mixture_Correlation << 16 <<  0.925;
+  *Power_Mixture_Correlation << 17 <<  0.880;
+  *Power_Mixture_Correlation << 18 <<  0.830;
+  *Power_Mixture_Correlation << 19 <<  0.785;
+  *Power_Mixture_Correlation << 20 <<  0.740;
+  *Power_Mixture_Correlation << 24.5 << 0.58;         // 14.7/0.6  (lean)
+
+// See mixture.gnumeric
+// Peaks equal to 1.0 at stoichiometry.
+  Power_per_Fuel_vs_AFR = new FGTable(15);
+  *Power_per_Fuel_vs_AFR <<	4	<<	0	;
+  *Power_per_Fuel_vs_AFR <<	7.19	<<	0.414736203652005	;
+  *Power_per_Fuel_vs_AFR <<	8	<<	0.518821139065232	;
+  *Power_per_Fuel_vs_AFR <<	9	<<	0.645276689896839	;
+  *Power_per_Fuel_vs_AFR <<	10	<<	0.758579016390118	;
+  *Power_per_Fuel_vs_AFR <<	11	<<	0.854913587425195	;
+  *Power_per_Fuel_vs_AFR <<	12	<<	0.921452629985649	;
+  *Power_per_Fuel_vs_AFR <<	13	<<	0.966863860291293	;
+  *Power_per_Fuel_vs_AFR <<	14	<<	0.990895028150458	;
+  *Power_per_Fuel_vs_AFR <<	15	<<	1	;
+  *Power_per_Fuel_vs_AFR <<	16	<<	0.994359043402075	;
+  *Power_per_Fuel_vs_AFR <<	17	<<	0.988148108901967	;
+  *Power_per_Fuel_vs_AFR <<	18	<<	0.958935665626131	;
+  *Power_per_Fuel_vs_AFR <<	22.5	<<	0.670759865554173	;
+  *Power_per_Fuel_vs_AFR <<	26	<<	0	;
+
   Mixture_Efficiency_Correlation = new FGTable(15);
   *Mixture_Efficiency_Correlation << 0.05000 << 0.00000;
   *Mixture_Efficiency_Correlation << 0.05137 << 0.00862;
@@ -149,6 +187,21 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   *Mixture_Efficiency_Correlation << 0.12435 << 0.23276;
   *Mixture_Efficiency_Correlation << 0.12500 << 0.00000;
 
+
+/*
+Manifold_Pressure_Lookup = new
+
+        0       0.2      0.4      0.6      0.8     1
+0        1.0000    1.0000    1.0000    1.0000    1.0000    1.0000
+1000    0.7778    0.8212    0.8647    0.9081    0.9516    0.9950
+2000    0.5556    0.6424    0.7293    0.8162    0.9031    0.9900
+3000    0.3333    0.4637    0.5940    0.7243    0.8547    0.9850
+4000    0.2000    0.2849    0.4587    0.6324    0.8062    0.9800
+5000    0.2000    0.2000    0.3233    0.5406    0.7578    0.9750
+6000    0.2000    0.2000    0.2000    0.4487    0.7093    0.9700
+7000    0.2000    0.2000    0.2000    0.2000    0.4570    0.7611
+8000    0.2000    0.2000    0.2000    0.2000    0.2047    0.5522
+*/
 
   // Read inputs from engine data file where present.
 
@@ -173,9 +226,9 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   if (el->FindElement("minthrottle"))
     MinThrottle = el->FindElementValueAsNumber("minthrottle");
   if (el->FindElement("bsfc"))
-    BSFC = el->FindElementValueAsNumberConvertTo("bsfc", "LBS/HP*HR");
+    nominal_BSFC = el->FindElementValueAsNumberConvertTo("bsfc", "LBS/HP*HR");
   if (el->FindElement("volumetric-efficiency"))
-    volumetric_efficiency = el->FindElementValueAsNumber("volumetric-efficiency");
+    volumetric_efficiency_0 = el->FindElementValueAsNumber("volumetric-efficiency_0");
   if (el->FindElement("numboostspeeds")) { // Turbo- and super-charging parameters
     BoostSpeeds = (int)el->FindElementValueAsNumber("numboostspeeds");
     if (el->FindElement("boostoverride"))
@@ -208,24 +261,40 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
       RatedAltitude[2] = el->FindElementValueAsNumberConvertTo("ratedaltitude3", "FT");
   }
 
+  if ( MaxManifoldPressure_inHg > 29.9 )
+    MaxManifoldPressure_inHg = 29.9;    // Don't allow boosting with a bogus number
+#ifdef UNCOMPREHENDED
+/* I don't know how this was supposed to work. */
+/* It could be adjusted to work for any one engine */
+/* but I don't see how it could work for any two different engines. */
   MaxManifoldPressure_Percent = MaxManifoldPressure_inHg / 29.92;
-  // Create a BSFC to match the engine if not provided
-  if (BSFC < 0) {
-      BSFC = ( Displacement * MaxRPM * volumetric_efficiency ) / (9411 * MaxHP);
-      BSFC *= (MaxManifoldPressure_Percent * MaxManifoldPressure_Percent * MaxManifoldPressure_Percent);
+  // Create a nominal_BSFC to match the engine if not provided
+  if (nominal_BSFC < 0) {
+      double fudge(9411);       // I have no idea where this came from
+      nominal_BSFC = Displacement * MaxRPM * volumetric_efficiency_0 * (1-volumetric_loss_3) 
+        / fudge / MaxHP;
+// Harsh (third order) penalty for engines with high maxmp:
+      nominal_BSFC *= MaxManifoldPressure_Percent;
+      nominal_BSFC *= MaxManifoldPressure_Percent;
+      nominal_BSFC *= MaxManifoldPressure_Percent;
   }
-  if ( MaxManifoldPressure_inHg > 29.9 ) {   // Don't allow boosting with a bogus number
-      MaxManifoldPressure_inHg = 29.9;
-      MaxManifoldPressure_Percent = MaxManifoldPressure_inHg / 29.92;
-  }
+#endif
+// Practically all normally-aspirated Lycomings have a 
+// BSFC of 0.42 +- 0.01 when leaned for max efficiency.
+// Other engines may differ ... in which case they should
+// say so in their engine.xml file.
+  if (nominal_BSFC < 0.) nominal_BSFC = 0.42;
+#if 0
+    cout << "Nominal (stoichiometric) BSFC: " << nominal_BSFC << endl;
+#endif
 
   char property_name[80];
   snprintf(property_name, 80, "propulsion/engine[%d]/power-hp", EngineNumber);
   PropertyManager->Tie(property_name, &HP);
   snprintf(property_name, 80, "propulsion/engine[%d]/bsfc-lbs_hphr", EngineNumber);
-  PropertyManager->Tie(property_name, &BSFC);
+  PropertyManager->Tie(property_name, &nominal_BSFC);
   snprintf(property_name, 80, "propulsion/engine[%d]/volumetric-efficiency", EngineNumber);
-  PropertyManager->Tie(property_name, &volumetric_efficiency);
+  PropertyManager->Tie(property_name, &volumetric_efficiency_0);
   minMAP = MinManifoldPressure_inHg * inhgtopa;  // inHg to Pa
   maxMAP = MaxManifoldPressure_inHg * inhgtopa;
   StarterHP = sqrt(MaxHP) * 0.4;
@@ -276,9 +345,7 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
     BoostSpeed = 0;
   }
   bBoostOverride = (BoostOverride == 1 ? true : false);
-  if (MinThrottle < 0.12) MinThrottle = 0.12;  //MinThrottle is limited to 0.12 to prevent the
-                                               // throttle area equation from going negative
-                                               // 0.12 is 1% of maximum area
+  if (MinThrottle < 0.001) MinThrottle = 0.001;  //MinThrottle is a denominator in a power equation so it can't be zero
   Debug(0); // Call Debug() routine from constructor if needed
 }
 
@@ -287,6 +354,8 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
 FGPiston::~FGPiston()
 {
   delete Lookup_Combustion_Efficiency;
+  delete Power_Mixture_Correlation;
+  delete Power_per_Fuel_vs_AFR;
   delete Mixture_Efficiency_Correlation;
   Debug(1); // Call Debug() routine from constructor if needed
 }
@@ -346,7 +415,8 @@ double FGPiston::Calculate(void)
 //    Running = false;
 
   doEnginePower();
-  if (HP < 0.1250) Running = false;
+if(HP<0.1250)
+  Running = false;
 
   doEGT();
   doCHT();
@@ -486,18 +556,42 @@ void FGPiston::doBoostControl(void)
  * from the throttle position, turbo/supercharger boost control
  * system, engine speed and local ambient air density.
  *
- * Inputs: p_amb, Throttle, MaxManifoldPressure_Percent, ThrottleAngle
- *         RPM, MaxRPM
+ * TODO: changes in MP should not be instantaneous -- introduce
+ * a lag between throttle changes and MP changes, to allow pressure
+ * to build up or disperse.
  *
- * Outputs: MAP, ManifoldPressure_inHg
+ * Inputs: maxMAP, p_amb, T_amb, RPM, MaxRPM
+ *
+ * Outputs: map_coefficient, MAP, ManifoldPressure_inHg
  */
+
+const double P0(101325.0);      // ISA std sea-level pressure
+const double T0(288.15);        // ISA std sea-level temperature
+const double hour(3600);
+const double pound(0.45359237); // 1 lb in SI units
+const double stoich(14.7);      // stoichiometry air/fuel (mass/mass)
+const double avgas_density(6.0);// Assumes 6 lbs / gallon
+
+double findMAPnorm(const double revnorm, const double Tnorm,
+         const double throttle_setting) {
+  if (throttle_setting == 0.) {
+    if (revnorm > 0.) return 1.;
+    return 0.;
+  }
+  double throttle_area = throttle_setting * throttle_setting;
+// FIXME:  should parameterize Ksquared
+  double Ksquared(10.);              // K squared (not K)
+  double J(revnorm*revnorm/Tnorm/Ksquared/throttle_area/throttle_area);  
+  if (J < 1e-5) return 1. - 0.5*J;
+  return (1./J)*(sqrt(1. + 2.*J) - 1.);           
+}
 
 void FGPiston::doMAP(void)
 {
- // estimate throttle plate area.  This maps 0.2 -> 0.1 for historical performance reasons
-    double throttle_area = ThrottleAngle * 1.125 - 0.125;
-    map_coefficient = pow ((throttle_area * MaxManifoldPressure_Percent),RPM/MaxRPM);
-    MAP = p_amb * map_coefficient;
+
+    double MAP_norm = findMAPnorm(RPM/MaxRPM, T_amb/T0, ThrottleAngle);
+
+    MAP = p_amb * MAP_norm;
 
     if(Boosted) {
       // If takeoff boost is fitted, we currently assume the following throttle map:
@@ -523,7 +617,7 @@ void FGPiston::doMAP(void)
         }
       }
       // Boost the manifold pressure.
-      double boost_factor = BoostMul[BoostSpeed] * map_coefficient * RPM/RatedRPM[BoostSpeed];
+      double boost_factor = BoostMul[BoostSpeed] * MAP_norm * RPM/RatedRPM[BoostSpeed];
       if (boost_factor < 1.0) boost_factor = 1.0;  // boost will never reduce the MAP
       MAP *= boost_factor;
       // Now clip the manifold pressure to BCV or Wastegate setting.
@@ -549,7 +643,7 @@ void FGPiston::doMAP(void)
  * (used in CHT calculation for air-cooled engines).
  *
  * Inputs: p_amb, R_air, T_amb, MAP, Displacement,
- *   RPM, volumetric_efficiency, ThrottleAngle
+ *   RPM, MaxRPM, volumetric_efficiency_0, ThrottleAngle
  *
  * TODO: Model inlet manifold air temperature.
  *
@@ -561,7 +655,13 @@ void FGPiston::doAirFlow(void)
   rho_air = p_amb / (R_air * T_amb);
   double displacement_SI = Displacement * in3tom3;
   double swept_volume = (displacement_SI * (RPM/60)) / 2;
-  double v_dot_air = swept_volume * volumetric_efficiency * map_coefficient;
+
+// Model third-order loss of volumetric efficiency at high RPM:
+  double revnorm = RPM/MaxRPM;
+  double loss3 = 1. - revnorm*revnorm*revnorm*volumetric_loss_3;
+  if (loss3 < 0 ) loss3 = 0;
+
+  double v_dot_air = swept_volume * volumetric_efficiency_0 * loss3;
 
   double rho_air_manifold = MAP / (R_air * T_amb);
   m_dot_air = v_dot_air * rho_air_manifold;
@@ -571,21 +671,19 @@ void FGPiston::doAirFlow(void)
 /**
  * Calculate the fuel flow into the engine.
  *
- * Inputs: Mixture, thi_sea_level, p_amb_sea_level, p_amb, m_dot_air
+ * Inputs: Mixture, P0, p_amb, m_dot_air
  *
  * Outputs: equivalence_ratio, m_dot_fuel
  */
 
 void FGPiston::doFuelFlow(void)
 {
-  double thi_sea_level = 1.3 * Mixture; // Allows an AFR of infinity:1 to 11.3075:1
-  equivalence_ratio = thi_sea_level * 101325.0 / p_amb;
-//  double AFR = 10+(12*(1-Mixture));// mixture 10:1 to 22:1
-//  m_dot_fuel = m_dot_air / AFR;
-  m_dot_fuel = (m_dot_air * equivalence_ratio) / 14.7;
-  FuelFlowRate =  m_dot_fuel * 2.2046;  // kg to lb
-  FuelFlow_pph = FuelFlowRate  * 3600;  // seconds to hours
-  FuelFlow_gph = FuelFlow_pph / 6.0;    // Assumes 6 lbs / gallon
+// Allow an AFR of infinity:1 to 11.3075:1
+  equivalence_ratio = 1.4 * Mixture * P0 / p_amb;
+  m_dot_fuel = (m_dot_air * equivalence_ratio) / stoich;
+  FuelFlowRate = m_dot_fuel / pound;    // kg to lb
+  FuelFlow_pph = FuelFlowRate * hour;   // seconds to hours
+  FuelFlow_gph = FuelFlow_pph / avgas_density;    
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -606,22 +704,17 @@ void FGPiston::doFuelFlow(void)
 void FGPiston::doEnginePower(void)
 {
   if (Running) {
-    double T_amb_degF = KelvinToFahrenheit(T_amb);
-    double T_amb_sea_lev_degF = KelvinToFahrenheit(288);
 
-    // FIXME: this needs to be generalized
-    double ME, friction, percent_RPM, power;  // Convienience term for use in the calculations
-    ME = Mixture_Efficiency_Correlation->GetValue(m_dot_fuel/m_dot_air);
+// FIXME: this needs to be generalized
 
-    percent_RPM = RPM/MaxRPM;
-    friction = 1 - (percent_RPM * percent_RPM * percent_RPM * percent_RPM/10);
-    if (friction < 0 ) friction = 0;
-    power = friction;
+// Pnorm is 1.0 at stoichiometry.
+// It peaks a little higher than that, at a richer AFR
+    double Pnorm = m_dot_fuel <= 0. ? 0. 
+        : Power_per_Fuel_vs_AFR->GetValue(m_dot_air/m_dot_fuel);
 
-    if ( Magnetos != 3 ) power *= SparkFailDrop;
+    if ( Magnetos != 3 ) Pnorm *= SparkFailDrop;
 
-
-    HP = (FuelFlow_gph * 6.0 / BSFC )* ME * map_coefficient * power;
+    HP = (FuelFlow_pph / nominal_BSFC ) * Pnorm;
 
   } else {
 
@@ -832,22 +925,27 @@ void FGPiston::Debug(int from)
   if (debug_lvl & 1) { // Standard console startup message output
     if (from == 0) { // Constructor
 
-      cout << "\n    Engine Name: "         << Name << endl;
+      cout << "\n    Engine Name:         " << Name << endl;
       cout << "      MinManifoldPressure: " << MinManifoldPressure_inHg << endl;
       cout << "      MaxManifoldPressure: " << MaxManifoldPressure_inHg << endl;
       cout << "      MinMaP (Pa):         " << minMAP << endl;
-      cout << "      MaxMaP (Pa): "         << maxMAP << endl;
-      cout << "      Displacement: "        << Displacement             << endl;
-      cout << "      MaxHP: "               << MaxHP                    << endl;
-      cout << "      Cycles: "              << Cycles                   << endl;
-      cout << "      IdleRPM: "             << IdleRPM                  << endl;
-      cout << "      MaxThrottle: "         << MaxThrottle              << endl;
-      cout << "      MinThrottle: "         << MinThrottle              << endl;
-      cout << "      BSFC: "                << BSFC                     << endl;
+      cout << "      MaxMaP (Pa):         " << maxMAP << endl;
+      cout << "      Displacement:        " << Displacement             << endl;
+      cout << "      MaxHP:               " << MaxHP                    << endl;
+      cout << "      Cycles:              " << Cycles                   << endl;
+      cout << "      IdleRPM:             " << IdleRPM                  << endl;
+      cout << "      MaxThrottle:         " << MaxThrottle              << endl;
+      cout << "      MinThrottle:         " << MinThrottle              << endl;
+      cout << "      nominal_BSFC:        " << nominal_BSFC             << endl;
 
       cout << endl;
       cout << "      Combustion Efficiency table:" << endl;
       Lookup_Combustion_Efficiency->Print();
+      cout << endl;
+
+      cout << endl;
+      cout << "      Power Mixture Correlation table:" << endl;
+      Power_Mixture_Correlation->Print();
       cout << endl;
 
       cout << endl;
