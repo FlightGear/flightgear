@@ -845,6 +845,22 @@ FGDialog::setupObject (puObject *object, SGPropertyNode *props)
        object->setLabelFont(*_font);
     }
 
+    string type = props->getName();
+    if (type == "input" && props->getBoolValue("live"))
+        object->setDownCallback(action_callback);
+
+    if (type == "text") {
+        const char *format = props->getStringValue("format", 0);
+        if (format) {
+            info->fmt_type = validate_format(format);
+            if (info->fmt_type != f_INVALID)
+                info->format = format;
+            else
+                SG_LOG(SG_GENERAL, SG_ALERT, "DIALOG: invalid <format> '"
+                        << format << '\'');
+        }
+    }
+
     if (props->hasValue("property")) {
         const char *name = props->getStringValue("name");
         if (name == 0)
@@ -881,22 +897,6 @@ FGDialog::setupObject (puObject *object, SGPropertyNode *props)
             info->bindings.push_back(new SGBinding(binding, globals->get_props()));
         }
         object->setCallback(action_callback);
-    }
-
-    string type = props->getName();
-    if (type == "input" && props->getBoolValue("live"))
-        object->setDownCallback(action_callback);
-
-    if (type == "text") {
-        const char *format = props->getStringValue("format", 0);
-        if (format) {
-            info->fmt_type = validate_format(format);
-            if (info->fmt_type != f_INVALID)
-                info->format = format;
-            else
-                SG_LOG(SG_GENERAL, SG_ALERT, "DIALOG: invalid <format> '"
-                        << format << '\'');
-        }
     }
 }
 
