@@ -81,6 +81,8 @@ int main( int argc, char *argv[] ) {
             cout << "Usage:" << endl;
             cout << "  --help\t\t\tShow this help" << endl;
             exit(0);
+	} else if (strncmp("--fg-root=", argv[i], 10) == 0) {
+	    // used later
         } else {
             cout << "Unknown option \"" << argv[i] << "\"" << endl;
             exit(0);
