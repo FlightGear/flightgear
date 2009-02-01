@@ -357,7 +357,7 @@ do_save (const SGPropertyNode * arg)
         file += ".sav";
 
     if (!fgValidatePath(file.c_str(), false)) {
-        SG_LOG(SG_IO, SG_ALERT, "save: reading '" << file << "' denied "
+        SG_LOG(SG_IO, SG_ALERT, "save: writing '" << file << "' denied "
                 "(unauthorized access)");
         return false;
     }
