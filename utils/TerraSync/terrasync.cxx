@@ -36,6 +36,7 @@
 
 #include <iostream>
 #include <string>
+#include <queue>
 
 #include <plib/netSocket.h>
 #include <plib/ul.h>
@@ -86,6 +87,8 @@ static void usage( const string& prog ) {
     cout << "    (defaults to rsync, using external commands)" << endl;
 #endif
 }
+
+std::queue<std::string> waitingTiles;
 
 #ifdef HAVE_SVN_CLIENT_H
 
@@ -328,18 +331,13 @@ static void sync_area( int lat, int lon ) {
         baselon = (int)(lon / 10) * 10;
         EW = 'e';
     }
-    
-    const char* terrainobjects[3] = { "Terrain", "Objects", 0 };
-    const char** tree;
+
     char dir[512];
-  
-    for (tree = &terrainobjects[0]; *tree; tree++) {
-        snprintf( dir, 512, "%s/%c%03d%c%02d/%c%03d%c%02d",
-          *tree,
-              EW, abs(baselon), NS, abs(baselat),
-              EW, abs(lon), NS, abs(lat) );
-        sync_tree(dir);
-    }
+    snprintf( dir, 512, "%c%03d%c%02d/%c%03d%c%02d",
+            EW, abs(baselon), NS, abs(baselat),
+            EW, abs(lon), NS, abs(lat) );
+
+    waitingTiles.push( dir );
 }
 
 
@@ -440,7 +438,7 @@ int main( int argc, char **argv ) {
     int last_lat = nowhere;
     int last_lon = nowhere;
     bool recv_msg = false;
-    int synced_other = 0;
+    char synced_other = 'K';
 
     while ( true ) {
         recv_msg = false;
@@ -449,11 +447,12 @@ int main( int argc, char **argv ) {
             recv_msg = true;
 
             parse_message( msg, &lat, &lon );
-            cout << "pos in msg = " << lat << "," << lon << endl;
         }
 
         if ( recv_msg ) {
             if ( lat != last_lat || lon != last_lon ) {
+		cout << "pos in msg = " << lat << "," << lon << endl;
+		waitingTiles.c.clear();
                 int lat_dir, lon_dir, dist;
                 if ( last_lat == nowhere || last_lon == nowhere ) {
                     lat_dir = lon_dir = 0;
@@ -477,18 +476,23 @@ int main( int argc, char **argv ) {
                 sync_areas( lat, lon, lat_dir, lon_dir );
             } else if ( last_lat == nowhere || last_lon == nowhere ) {
 	        cout << "Waiting for FGFS to finish startup" << endl;
-	    } else {
-	        switch (synced_other++) {
-		case 0:
-		    sync_tree((char*) "Airports/K");
-		    break;
-		case 1:
-		    sync_tree((char*) "Airports");
-		    break;
-		default:
-		    cout << "Done non-tile syncs" << endl;
-		    break;
+	    } else if ( !waitingTiles.empty() ) {
+		const char* terrainobjects[3] = { "Terrain", "Objects", 0 };
+		const char** tree;
+		char dir[512];
+              
+		for (tree = &terrainobjects[0]; *tree; tree++) {
+		    snprintf( dir, 512, "%s/%s", *tree, waitingTiles.front().c_str() );
+		    sync_tree(dir);
 		}
+		waitingTiles.pop();
+	    } else {
+		char c;
+		while ( !isdigit( c = synced_other++ ) && !isupper( c ) );
+
+		char dir[512];
+		snprintf( dir, 512, "Airports/%c", c );
+		sync_tree( dir );
 	    }
 
             last_lat = lat;
@@ -500,4 +504,3 @@ int main( int argc, char **argv ) {
         
     return 0;
 }
-
