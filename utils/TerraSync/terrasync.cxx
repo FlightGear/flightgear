@@ -243,8 +243,14 @@ static void parse_message( const string &msg, int *lat, int *lon ) {
 
     // find GGA string and advance to start of lat
     string::size_type pos = text.find( "$GPGGA" );
+    if ( pos == string::npos )
+    {
+	*lat = -9999.0;
+	*lon = -9999.0;
+	return;
+    }
     string tmp = text.substr( pos + 7 );
-    pos = text.find( "," );
+    pos = tmp.find( "," );
     tmp = tmp.substr( pos + 1 );
     // cout << "-> " << tmp << endl;
 
