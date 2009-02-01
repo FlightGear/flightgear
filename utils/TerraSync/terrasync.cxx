@@ -36,7 +36,7 @@
 
 #include <iostream>
 #include <string>
-#include <queue>
+#include <deque>
 
 #include <plib/netSocket.h>
 #include <plib/ul.h>
@@ -88,7 +88,7 @@ static void usage( const string& prog ) {
 #endif
 }
 
-std::queue<std::string> waitingTiles;
+std::deque<std::string> waitingTiles;
 
 #ifdef HAVE_SVN_CLIENT_H
 
@@ -337,7 +337,7 @@ static void sync_area( int lat, int lon ) {
             EW, abs(baselon), NS, abs(baselat),
             EW, abs(lon), NS, abs(lat) );
 
-    waitingTiles.push( dir );
+    waitingTiles.push_back( dir );
 }
 
 
@@ -452,7 +452,7 @@ int main( int argc, char **argv ) {
         if ( recv_msg ) {
             if ( lat != last_lat || lon != last_lon ) {
 		cout << "pos in msg = " << lat << "," << lon << endl;
-		waitingTiles.c.clear();
+		waitingTiles.clear();
                 int lat_dir, lon_dir, dist;
                 if ( last_lat == nowhere || last_lon == nowhere ) {
                     lat_dir = lon_dir = 0;
@@ -485,7 +485,7 @@ int main( int argc, char **argv ) {
 		    snprintf( dir, 512, "%s/%s", *tree, waitingTiles.front().c_str() );
 		    sync_tree(dir);
 		}
-		waitingTiles.pop();
+		waitingTiles.pop_front();
 	    } else {
 		char c;
 		while ( !isdigit( c = synced_other++ ) && !isupper( c ) );
