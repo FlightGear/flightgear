@@ -147,11 +147,11 @@ FGViewMgr::reinit ()
     fgSetDouble("/sim/current-view/field-of-view", fov_deg);
 
     // target offsets for lookat mode only...
-    fgSetDouble("/sim/current-view/target-x-offset-deg",
+    fgSetDouble("/sim/current-view/target-x-offset-m",
         n->getDoubleValue("config/target-x-offset-m"));
-    fgSetDouble("/sim/current-view/target-y-offset-deg",
+    fgSetDouble("/sim/current-view/target-y-offset-m",
         n->getDoubleValue("config/target-y-offset-m"));
-    fgSetDouble("/sim/current-view/target-z-offset-deg",
+    fgSetDouble("/sim/current-view/target-z-offset-m",
         n->getDoubleValue("config/target-z-offset-m"));
   }
   setView(0);
