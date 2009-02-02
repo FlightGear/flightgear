@@ -1,4 +1,4 @@
-A very special thanks is due to the following people and groups.
+
 
 Note: as hard as we've tried, it is impossible to perfectly maintain
 this file.  If you are aware of someone who you think should be
@@ -36,6 +36,8 @@ Raul Alonzo <amil@las.es>
 Michele America <nomimarketing@mail.telepac.pt>
   Contributed to the HUD code.
 
+Emmanuel Baranger <>
+  Many, many very nice aircraft models.
 
 Andrei Barbu "T"Eval" teval@myrealbox.com
   Designed and implemented the current version of the FlightGear website.
@@ -127,23 +129,21 @@ Oliver Delise <delise@mail.isis.de>
   Founder of the FlightGear MultiPilot Project :
   http://www.isis.de/members/~odelise/progs/flightgear
 
+Jean-Francois Doue
+  Vector 2D, 3D, 4D and Matrix 3D and 4D inlined C++ classes.  (Based on
+  Graphics Gems IV ed. Paul S. Heckbert)
+  http://www.animats.com/simpleppp/ftp/public_html/topics/developers.html
+
+Torsten Dreyer
+  Contributed a very nice Piper Sceneca, closely modelled after the 
+  real thing. 
+  Many other nice aircraft, buildings, etc etc.
 
 Dave Eberly <eberly@magic-software.com>
   Contributed some sphere interpolation code used by Christian Mayer's
   weather data base system.  Go to Dave's web site.  He has a ton of
   really useful looking code available there.
   http://www.magic-software.com
-
-
-Olaf Flebbe
-  Improved the build system for Windows and provided pre-built
-  dependencies.
-
-
-Jean-Francois Doue
-  Vector 2D, 3D, 4D and Matrix 3D and 4D inlined C++ classes.  (Based on
-  Graphics Gems IV ed. Paul S. Heckbert)
-  http://www.animats.com/simpleppp/ftp/public_html/topics/developers.html
 
 
 Francine Evans <evans@cs.sunysb.edu>
@@ -160,6 +160,9 @@ Oscar Everitt <bigoc@premier.net>
 Leidson Campos A. Ferreira <leidson@planetamessenger.org>
   Rewrote the Jpeg screen httpd streaming (--jpg-httpd option)
 
+Olaf Flebbe
+  Improved the build system for Windows and provided pre-built
+  dependencies.
 
 Bruce Finney <bfinney@gte.net>
   MSVC5 compatibility.
@@ -186,6 +189,9 @@ Jean-loup Gailly and Mark Adler <zlib@gzip.org>
 Thomas Gellekum <tg@ihf.rwth-aachen.de>
   Changes and updates for compiling on FreeBSD
 
+Ralf Gerlich <>
+  Technical Genius behind the Custom Scenery Project. 
+  Current maintainer of TaxiDraw
 
 Neetha Girish <neethagirish@usa.net>
   Contributed the xml configurable HUD changes.
@@ -330,7 +336,14 @@ Cameron Moore <cameron@unbeatenpath.net>
   Reigning list admin.
   Provided man pages.
   Self-proclaimed code janitor.
-  FAQ maintainer.
+   Has been maintaining FAQ for some years.
+
+
+Time Moore <>
+  Many innovations to the OpenSceneGraph based graphics system.
+  Counseling of other developers toward learning OSG
+  Maintaing a GIT repository containing a mirror of FlightGear's
+  source code, speficially for bugfix releases. 
 
 
 Anders Morken <amrken@online.no>
@@ -351,6 +364,9 @@ Phil Nelson  <phil@cs.wwu.edu>
   Author of GNU dbm.  gdbm is a set of database routines that use
   extendible hashing and works similar to the standard UNIX dbm routines.
 
+Tatsuhiro Nishioka
+  Maintainer of the Mac port. 
+  Contributed some very nice Japanese aircraft models.
 
 Alexei Novikov <anovikov@heron.itep.ru>
   Created European Scenery
@@ -403,6 +419,10 @@ Frederic Bouvier <frbouvi@wanadoo.fr>
    Added a number of animations that improves the visual system quite a lot.
    Did a nice job populating the San Francisco bay area by adding a lot
    of static scenery.
+   Builds the FlightGear binary windows distributions.
+   Author of fgrun, the defacto launcher on windows and many other platforms.
+   Author of fgsd, a standalone scenery designer. 
+
 
 
 Petter Reinholdtsen <pere@games.no>
@@ -417,6 +437,14 @@ William Riley <riley@technologist.com>
   Patch to support a first joystick with more than two axes.
   World scenery based on vmap0 data.
 
+Gijs de Rooy <>
+  Contributed some very nice building models, including a very
+  detailed layout of the Amsterdam airport terminals, and many
+  downtown buildings.
+  Redid the Boeing 747-400 3D model
+  Very active first aid responder on the official Flightgear 
+  forum.
+  
 
 Andy Ross <andy@plausible.org>
   Contributed a new configurable FDM, "YASim", based on geometry
@@ -426,7 +454,9 @@ Andy Ross <andy@plausible.org>
   Modified the UI code to allow a far more flexible grouping system.
   Added the Nasal scripting language and added FlightGear integration.
 
-
+Brian Schack <>
+  Current maintainer of Atlas, the moving map program for FlightGear
+  
 Paul Schlyter <pausch@saaf.se>  
   Mr. Schlyter provided Durk Talsma with all the information 
   he needed to write the astro code. Mr. S. is also willing 
@@ -464,7 +494,10 @@ Michael Smith <msmith99@flash.net>
 
 Martin Spott <Martin.Spott@uni-duisburg.de>
   Contributed to the installation / user guide.
+  Coordinator of the Custom Scenery Project.
 
+Jon Stockill <>
+  Maintainer of the object database.
 
 Martin Dressler <dr@musicabona.cz>
   Created some outstanding panel instrumentation textures
@@ -483,9 +516,13 @@ Durk Talsma <d.talsma@chello.nl>
   Planets are correctly positioned and have proper magnitude.
   Help with time functions, gui, and other misc stuff.
   Added the AirTraffic module for scheduled AI airliners and other aircraft.
+  Current FlightGear release manager.
   2D Cloud layers (nifty).
-  http://people.a2000.nl/dtals
 
+James Turner <>
+  Many code cleanups of the internal structure of the airport database,
+  runway parsing, route management. 
+  Is currently working on adding flightmanagement support.
 
 UIUC - Department of Aeronautical and Astronautical Engineering
   Contributed modifications to LaRCsim to allow loading of aircraft
@@ -553,7 +590,7 @@ Darrell Walisser <dwaliss1@purdue.edu>
   Provides MacOS-specific info in the docs.
 
 
-Davud Culp <davidculp2@attbi.com>
+David Culp <davidculp2@attbi.com>
   Changed the layout of the conbtrolls section and added a great number
   of extra controls which will prove to be usefull no and for the future.
   Contributed a number of aircraft configuration files, including a T-38 and
@@ -651,6 +688,7 @@ Stuart Buchanan <stuart_d_buchanan@yahoo.co.uk>
   Enhancements to the Cessna-310 3d model.
   Added a generic yoke model, a generic throttle quadrant model and a 
   generic pedal set model.
+  OSG based three 3D clouds.
 
 
 Stefan Seifert <nine@detonation.org>
@@ -708,3 +746,4 @@ Updated 2001-12-11 by David Megginson, david@megginson.com
 Updated 2003-04-17,
 Updated 2004-06-01,
 Updated 2005-04-02 by Erik Hofman, erik@ehofman.com
+Updated 2009-02-02 by Dur Talsma
