@@ -74,8 +74,12 @@ Paul Bleisch <pbleisch@acm.org>
   Also contributed a first stab at a config file/command line parsing
   system.
 
+Matthias Boerner <> 
+  Organizer of the FlightGear booth at the annual LinuxTag event in
+  Germany.
+
 Alexis Bory
-  Very nice model, including the F14-B.
+  Very nice models, including the F14-B.
 
 Jim Brennan <jj@kingmont.com>
   Provided a big chunk of online space to store USA scenery for Flight Gear.
@@ -85,6 +89,9 @@ Bernie Bright <bbright@bigpond.net.au>
   Many C++ style, usage, and implementation improvements.
   STL portability, tons o' stuff. :-)
   Threading support and threaded tile pager.
+
+Francesco Brisa <>
+  Scenery models and ground networks for Italian airports.
 
 
 Bernhard H. Buckel <buckel@mail.uni-wuerzburg.de>
@@ -158,6 +165,9 @@ Oscar Everitt <bigoc@premier.net>
   for FS98.  They are pretty cool and Oscar was happy to contribute
   them to our little project.
 
+Detlef Faber
+  Many WWII era aircraft.
+
 
 Leidson Campos A. Ferreira <leidson@planetamessenger.org>
   Rewrote the Jpeg screen httpd streaming (--jpg-httpd option)
@@ -168,6 +178,11 @@ Olaf Flebbe
 
 Bruce Finney <bfinney@gte.net>
   MSVC5 compatibility.
+
+Thomas Förster <>
+   Updates to the AI system, including the Dykstra route finding algorithm,
+   adding a performance class, and many code clean-ups.
+   Co-organizer of the annual LinuxTag booth.
 
 
 Melchior Franz <mfranz@aon.at>
@@ -195,6 +210,10 @@ Ralf Gerlich <>
   Technical Genius behind the Custom Scenery Project. 
   Current maintainer of TaxiDraw
 
+Anders Gidenstam <>
+  Support for Lighter than Air vehicles.
+  Author of the ZeppelinNT.
+
 Neetha Girish <neethagirish@usa.net>
   Contributed the xml configurable HUD changes.
 
@@ -212,6 +231,13 @@ Michael I. Gold <gold@puck.asd.sgi.com>
 
 Habibie <habibie@MailandNews.com>
   RedHat package building changes for SimGear.
+
+Csaba Halász <>
+  Many bugfixes and code checking.
+
+Ampere Hardraade <>
+  Many detailed 3D models of aircraft, including the MD11, and several
+  Airbuses.
 
 
 Dave Haskell <dave@haskell.demon.co.uk>
@@ -243,6 +269,9 @@ Bruce Jackson of NASA <e.b.jackson@larc.nasa.gov>
   Developed the LaRCsim code under funding by NASA which we use to provide
   the flight model. Bruce has patiently answered my many, many questions.
   http://dcb.larc.nasa.gov/www/DCBStaff/ebj/ebj.html
+
+Ron Jensen
+  Contributed to the piston engine code in JSBSim.
 
 
 Maik Justus <fg@mjustus.de>
@@ -341,7 +370,7 @@ Cameron Moore <cameron@unbeatenpath.net>
    Has been maintaining FAQ for some years.
 
 
-Time Moore <>
+Tim Moore <>
   Many innovations to the OpenSceneGraph based graphics system.
   Counseling of other developers toward learning OSG
   Maintaing a GIT repository containing a mirror of FlightGear's
@@ -409,6 +438,8 @@ Alex Perry <alex.perry@ieee.org>
   Contributed code to more accurately model VSI, DG, Altitude.
   Contributed to the Install and Getting Started manual.
 
+Pigeon <>
+  Developed the multiplayer network infrastructure.
 
 Friedemann Reinhard <mpt218@faupt212.physik.uni-erlangen.de>
   Contributed beginnings of a textured instrument panel.
@@ -467,6 +498,9 @@ Paul Schlyter <pausch@saaf.se>
   to answer astro-related questions whenever one needs to.
   http://welcome.to/pausch
 
+Christian Schmitt <>
+  Detailed Frankfurt airport buildings.
+  Contributions to the custom scenery project.
 
 Chris Schoeneman <crs@millpond.engr.sgi.com>
   Contributed some 3d sound playing code for Irix, Win32, and Linux
@@ -478,6 +512,11 @@ Phil Schubert <philip@zedley.com>
   Contributed various textures and engine modelling.
   http://www.zedley.com/Philip/index.htm
  
+Heiko Schulz <>
+  Contributed AI traffic for EDDF
+  EDDF Night lights
+  ground networks
+
 
 Jonathan R Shewchuk <Jonathan_R_Shewchuk@ux4.sp.cs.cmu.edu>
   Author of the Triangle program.  Triangle is used to calculate the
@@ -628,10 +667,16 @@ Jean-Claude Wippler <jcw@equi4.com>
   X/MIT-style license.  Please see the following URL for more info:
   http://www.equi4.com/metakit
 
+Holger Wirtz <>
+Author of FGCom, a voice communication program intented for FlightGear 
+multiplayer/ATC.
 
 John Wojnaroski <castle@mminternet.com>
   Open Glass Cockpit project
   3d clouds
+
+Marcus Zojer <>
+   Contributed a B1B aircraft model.
 
 
 Lee Elliot <leee@spatial.freeserve.co.uk>
@@ -693,6 +738,7 @@ Stuart Buchanan <stuart_d_buchanan@yahoo.co.uk>
   Added a generic yoke model, a generic throttle quadrant model and a 
   generic pedal set model.
   OSG based three 3D clouds.
+  Forum moderator.
 
 
 Stefan Seifert <nine@detonation.org>
