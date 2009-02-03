@@ -50,6 +50,7 @@
 #include "AIModelData.hxx"
 #include "AIManager.hxx"
 
+const char *default_model = "Models/Geometry/glider.ac";
 const double FGAIBase::e = 2.71828183;
 const double FGAIBase::lbs_to_slugs = 0.031080950172;   //conversion factor
 
@@ -108,7 +109,8 @@ void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
     if (!scFileNode)
         return;
 
-    setPath(scFileNode->getStringValue("model", "Models/Geometry/glider.ac"));
+    setPath(scFileNode->getStringValue("model",
+            fgGetString("/sim/multiplay/default-model", default_model)));
 
     setHeading(scFileNode->getDoubleValue("heading", 0.0));
     setSpeed(scFileNode->getDoubleValue("speed", 0.0));
@@ -171,7 +173,7 @@ bool FGAIBase::init(bool search_in_AI_path) {
     string f = osgDB::findDataFile(model_path, opt.get());
 
     if(f.empty())
-        f="Models/Geometry/glider.ac";
+        f = fgGetString("/sim/multiplay/default-model", default_model);
 
     model = load3DModel(f, props);
 
