@@ -31,6 +31,7 @@
 #include <Main/fg_props.hxx>
 
 #define ATC_RADIO_DISPLAY_BYTES 48
+#define ATC_ANALOG_OUT_CHANNELS 48
 #define ATC_COMPASS_CH 5
 #define ATC_STEPPER_HOME 0xC0
 
@@ -43,21 +44,26 @@ class FGATCOutput {
     SGPath config;
 
     int lock_fd;
+    int analog_out_fd;
     int lamps_fd;
     int radio_display_fd;
     int stepper_fd;
 
+    char analog_out_file[256];
     char lamps_file[256];
     char radio_display_file[256];
     char stepper_file[256];
 
+    unsigned char analog_out_data[ATC_ANALOG_OUT_CHANNELS*2];
     unsigned char radio_display_data[ATC_RADIO_DISPLAY_BYTES];
 
+    SGPropertyNode_ptr analog_out_node;
     SGPropertyNode_ptr lamps_out_node;
     SGPropertyNode_ptr radio_display_node;
     SGPropertyNode_ptr steppers_node;
 
     void init_config();
+    bool do_analog_out();
     bool do_lamps();
     bool do_radio_display();
     bool do_steppers();
