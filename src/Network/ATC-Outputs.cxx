@@ -97,12 +97,34 @@ static int ATCRelease( int fd ) {
 // specifies the location of the output config file (xml)
 FGATCOutput::FGATCOutput( const int _board, const SGPath &_config_file ) :
     is_open(false),
+    analog_out_node(NULL),
     lamps_out_node(NULL),
     radio_display_node(NULL),
     steppers_node(NULL)
 {
     board = _board;
     config = _config_file;
+}
+
+
+// Write analog out data
+static int ATCSetAnalogOut( int fd,
+			    unsigned char data[ATC_ANALOG_OUT_CHANNELS*2] )
+{
+#if defined( unix ) || defined( __CYGWIN__ )
+    // rewind
+    lseek( fd, 0, SEEK_SET );
+
+    int result = write( fd, data, ATC_ANALOG_OUT_CHANNELS*2 );
+
+    if ( result != ATC_ANALOG_OUT_CHANNELS*2 ) {
+	SG_LOG( SG_IO, SG_DEBUG, "Write failed" );
+    }
+
+    return result;
+#else
+    return -1;
+#endif
 }
 
 
@@ -232,6 +254,8 @@ bool FGATCOutput::open( int lock_fd ) {
     SG_LOG( SG_IO, SG_ALERT,
 	    "Initializing ATC output hardware, please wait ..." );
 
+    snprintf( analog_out_file, 256,
+              "/proc/atcflightsim/board%d/analog_out", board );
     snprintf( lamps_file, 256,
               "/proc/atcflightsim/board%d/lamps", board );
     snprintf( radio_display_file, 256,
@@ -244,6 +268,15 @@ bool FGATCOutput::open( int lock_fd ) {
     /////////////////////////////////////////////////////////////////////
     // Open the /proc files
     /////////////////////////////////////////////////////////////////////
+
+    analog_out_fd = ::open( analog_out_file, O_WRONLY );
+    if ( analog_out_fd == -1 ) {
+	SG_LOG( SG_IO, SG_ALERT, "errno = " << errno );
+	char msg[256];
+	snprintf( msg, 256, "Error opening %s", analog_out_file );
+	perror( msg );
+	exit( -1 );
+    }
 
     lamps_fd = ::open( lamps_file, O_WRONLY );
     if ( lamps_fd == -1 ) {
@@ -327,6 +360,23 @@ bool FGATCOutput::open( int lock_fd ) {
     compass_position = 0.0;
 #endif
 
+    // Lock the hardware, keep trying until we succeed
+    while ( ATCLock( lock_fd ) <= 0 );
+
+    /////////////////////////////////////////////////////////////////////
+    // Zero the analog outputs
+    /////////////////////////////////////////////////////////////////////
+
+    SG_LOG( SG_IO, SG_ALERT,
+	    "  - Zeroing Analog Outputs." );
+
+    for ( int channel = 0; channel < ATC_ANALOG_OUT_CHANNELS; ++channel ) {
+	analog_out_data[2*channel] = 0;
+	analog_out_data[2*channel + 1] = 0;
+    }
+    ATCSetAnalogOut( analog_out_fd, analog_out_data );
+
+
     /////////////////////////////////////////////////////////////////////
     // Blank the radio display
     /////////////////////////////////////////////////////////////////////
@@ -339,11 +389,6 @@ bool FGATCOutput::open( int lock_fd ) {
     for ( int channel = 0; channel < ATC_RADIO_DISPLAY_BYTES; ++channel ) {
 	radio_display_data[channel] = value;
     }
-
-    // Lock the hardware, keep trying until we succeed
-    while ( ATCLock( lock_fd ) <= 0 );
-
-    // Set radio display
     ATCSetRadios( radio_display_fd, radio_display_data );
 
     ATCRelease( lock_fd );
@@ -371,6 +416,9 @@ bool FGATCOutput::open( int lock_fd ) {
 
     char base_name[256];
 
+    snprintf( base_name, 256, "/output/atc-board[%d]/analog-outputs", board );
+    analog_out_node = fgGetNode( base_name );
+
     snprintf( base_name, 256, "/output/atc-board[%d]/lamps", board );
     lamps_out_node = fgGetNode( base_name );
 
@@ -379,6 +427,79 @@ bool FGATCOutput::open( int lock_fd ) {
 
     snprintf( base_name, 256, "/output/atc-board[%d]/steppers", board );
     steppers_node = fgGetNode( base_name );
+
+    return true;
+}
+
+
+/////////////////////////////////////////////////////////////////////
+// Write the lanalog outputs
+/////////////////////////////////////////////////////////////////////
+
+bool FGATCOutput::do_analog_out() {
+    if ( analog_out_node != NULL ) {
+        for ( int i = 0; i < analog_out_node->nChildren(); ++i ) {
+            // read the next config entry from the property tree
+
+            SGPropertyNode *child = analog_out_node->getChild(i);
+            string cname = child->getName();
+            int index = child->getIndex();
+            string name = "";
+            string type = "";
+            SGPropertyNode *src_prop = NULL;
+	    double x0 = 0.0, y0 = 0.0, x1 = 0.0, y1 = 0.0;
+            if ( cname == "analog-out" ) {
+                SGPropertyNode *prop;
+                prop = child->getChild( "name" );
+                if ( prop != NULL ) {
+                    name = prop->getStringValue();
+                }
+                prop = child->getChild( "type" );
+                if ( prop != NULL ) {
+                    type = prop->getStringValue();
+                }
+                prop = child->getChild( "prop" );
+                if ( prop != NULL ) {
+                    src_prop = fgGetNode( prop->getStringValue(), true );
+                }
+                prop = child->getChild( "value-lo" );
+                if ( prop != NULL ) {
+                    prop = fgGetNode( prop->getStringValue(), true );
+		    x0 = prop->getDoubleValue();
+                }
+                prop = child->getChild( "meter-lo" );
+                if ( prop != NULL ) {
+                    prop = fgGetNode( prop->getStringValue(), true );
+		    y0 = prop->getDoubleValue();
+                }
+                prop = child->getChild( "value-hi" );
+                if ( prop != NULL ) {
+                    prop = fgGetNode( prop->getStringValue(), true );
+		    x1 = prop->getDoubleValue();
+                }
+                prop = child->getChild( "meter-hi" );
+                if ( prop != NULL ) {
+                    prop = fgGetNode( prop->getStringValue(), true );
+		    y1 = prop->getDoubleValue();
+                }
+		// crunch linear interpolation formula
+		double dx = x1 - x0;
+		double dy = y1 - y0;
+		double slope = dy / dx;
+		double value = src_prop->getDoubleValue();
+		int meter = (value - x0) * slope + y0;
+		if ( meter < 0 ) { meter = 0; }
+		if ( meter > 1023 ) { meter = 1023; }
+		analog_out_data[2*index] = meter / 256;
+		analog_out_data[2*index + 1] = meter - analog_out_data[2*index] * 256;
+           } else {
+                SG_LOG( SG_IO, SG_DEBUG,
+                        "Input config error, expecting 'analog-out' but found "
+                        << cname );
+            }
+	    ATCSetAnalogOut( analog_out_fd, analog_out_data );
+        }
+    }
 
     return true;
 }
@@ -936,6 +1057,7 @@ bool FGATCOutput::process() {
 	return false;
     }
 
+    do_analog_out();
     do_lamps();
     do_radio_display();
 #ifdef ATCFLIGHTSIM_HAVE_COMPASS
