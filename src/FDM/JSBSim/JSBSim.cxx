@@ -211,7 +211,7 @@ FGJSBsim::FGJSBsim( double dt )
       if (node->getChild("level-gal_us", 0, false) != 0) {
         Propulsion->GetTank(i)->SetContents(node->getDoubleValue("level-gal_us") * 6.6);
       } else {
-        node->setDoubleValue("level-lb", Propulsion->GetTank(i)->GetContents());
+        node->setDoubleValue("level-lbs", Propulsion->GetTank(i)->GetContents());
         node->setDoubleValue("level-gal_us", Propulsion->GetTank(i)->GetContents() / 6.6);
       }
       node->setDoubleValue("capacity-gal_us",
@@ -626,7 +626,7 @@ bool FGJSBsim::copy_to_JSBsim()
       SGPropertyNode * node = fgGetNode("/consumables/fuel/tank", i, true);
       FGTank * tank = Propulsion->GetTank(i);
       tank->SetContents(node->getDoubleValue("level-gal_us") * 6.6);
-//       tank->SetContents(node->getDoubleValue("level-lb"));
+//       tank->SetContents(node->getDoubleValue("level-lbs"));
     }
 
     Propulsion->SetFuelFreeze((fgGetNode("/sim/freeze/fuel",true))->getBoolValue());
@@ -866,7 +866,7 @@ bool FGJSBsim::copy_from_JSBsim()
         double contents = tank->GetContents();
         double temp = tank->GetTemperature_degC();
         node->setDoubleValue("level-gal_us", contents/6.6);
-        node->setDoubleValue("level-lb", contents);
+        node->setDoubleValue("level-lbs", contents);
         if (temp != -9999.0) node->setDoubleValue("temperature_degC", temp);
       }
     }

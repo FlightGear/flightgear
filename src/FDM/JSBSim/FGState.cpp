@@ -58,7 +58,7 @@ FGState::FGState(FGFDMExec* fdex)
   FDMExec = fdex;
 
   sim_time = 0.0;
-  dt = 1.0/120.0;
+  //dt = 1.0/120.0;
 
   Aircraft     = FDMExec->GetAircraft();
   Propagate    = FDMExec->GetPropagate();

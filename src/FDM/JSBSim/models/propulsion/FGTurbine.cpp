@@ -396,8 +396,8 @@ double FGTurbine::Seek(double *var, double target, double accel, double decel) {
 
 bool FGTurbine::Load(FGFDMExec* exec, Element *el)
 {
-  char property_prefix[80];
-  snprintf(property_prefix, 80, "propulsion/engine[%u]/", EngineNumber);
+  string property_name, property_prefix;
+  property_prefix = CreateIndexedPropertyName("propulsion/engine", EngineNumber);
 
   if (el->FindElement("milthrust"))
     MilThrust = el->FindElementValueAsNumberConvertTo("milthrust","LBS");
@@ -492,14 +492,14 @@ string FGTurbine::GetEngineValues(string delimeter)
 
 void FGTurbine::bindmodel()
 {
-  char property_name[80];
-
-  snprintf(property_name, 80, "propulsion/engine[%u]/n1", EngineNumber);
-  PropertyManager->Tie( property_name, &N1);
-  snprintf(property_name, 80, "propulsion/engine[%u]/n2", EngineNumber);
-  PropertyManager->Tie( property_name, &N2);
-  snprintf(property_name, 80, "propulsion/engine[%u]/injection_cmd", EngineNumber);
-  PropertyManager->Tie( property_name, (FGTurbine*)this, 
+  string property_name, base_property_name;
+  base_property_name = CreateIndexedPropertyName("propulsion/engine", EngineNumber);
+  property_name = base_property_name + "/n1";
+  PropertyManager->Tie( property_name.c_str(), &N1);
+  property_name = base_property_name + "/n2";
+  PropertyManager->Tie( property_name.c_str(), &N2);
+  property_name = base_property_name + "/injection_cmd";
+  PropertyManager->Tie( property_name.c_str(), (FGTurbine*)this, 
                         &FGTurbine::GetInjection, &FGTurbine::SetInjection);
 }
 

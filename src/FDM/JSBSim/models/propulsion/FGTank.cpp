@@ -137,18 +137,17 @@ FGTank::FGTank(FGFDMExec* exec, Element* el, int tank_number)
         exit(-1);
     }
     Density = (Contents*lbtoslug)/Volume; // slugs/in^3
-
+    CalculateInertias();
   }
 
-  char property_name[80];
-  snprintf(property_name, 80, "propulsion/tank[%d]/contents-lbs", TankNumber);
-  PropertyManager->Tie( property_name, (FGTank*)this, &FGTank::GetContents,
+  string property_name, base_property_name;
+  base_property_name = CreateIndexedPropertyName("propulsion/tank", TankNumber);
+  property_name = base_property_name + "/contents-lbs";
+  PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetContents,
                                        &FGTank::SetContents );
 
   if (Temperature != -9999.0)  InitialTemperature = Temperature = FahrenheitToCelsius(Temperature);
   Area = 40.0 * pow(Capacity/1975, 0.666666667);
-
-  CalculateInertias();
 
   Debug(0);
 }
@@ -265,7 +264,13 @@ void FGTank::CalculateInertias(void)
   double Mass = Contents*lbtoslug;
   double RadSumSqr;
   double Rad2 = Radius*Radius;
-  Volume = (Contents*lbtoslug)/Density; // in^3
+
+  if (Density > 0.0) {
+    Volume = (Contents*lbtoslug)/Density; // in^3
+  } else {
+    cerr << endl << "  Solid propellant grain density is zero!" << endl << endl;
+    exit(-1);
+  }
 
   switch (grainType) {
     case gtCYLINDRICAL:

@@ -224,7 +224,6 @@ public:
   /// Destructor
   ~FGLGear();
 
-
   /// The Force vector for this gear
   FGColumnVector3& Force(void);
   /// The Moment vector for this gear
@@ -304,7 +303,6 @@ private:
   FGColumnVector3 vLocalForce;
   FGColumnVector3 vWhlVelVec;     // Velocity of this wheel (Local)
   FGColumnVector3 normal, cvel;
-  FGColumnVector3 prevOut, prevIn;
   FGLocation contact, gearLoc;
   FGTable *ForceY_Table;
   double dT;
@@ -328,8 +326,6 @@ private:
   double SideWhlVel, RollingWhlVel;
   double RollingForce, SideForce, FCoeff;
   double WheelSlip;
-  double prevSlipIn;
-  double prevSlipOut;
   double TirePressureNorm;
   double SinWheel, CosWheel;
   double GearPos;
@@ -361,6 +357,10 @@ private:
   double LongForceLagFilterCoeff; // Longitudinal Force Lag Filter Coefficient
   double LatForceLagFilterCoeff; // Lateral Force Lag Filter Coefficient
   double WheelSlipLagFilterCoeff; // Wheel slip angle lag filter coefficient
+
+  Filter LongForceFilter;
+  Filter LatForceFilter;
+  Filter WheelSlipFilter;
 
   FGFDMExec*     Exec;
   FGState*       State;
