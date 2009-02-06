@@ -72,18 +72,18 @@ public:
   // transmitter
   void SendMyPosition(const FGExternalMotionData& motionInfo);
   void SendTextMessage(const string &sMsgText);
-  void FillMsgHdr(T_MsgHdr *MsgHdr, int iMsgId, unsigned _len = 0u);
-  
   // receiver
-  void ProcessPosMsg(const char *Msg, netAddress & SenderAddress,
-                     unsigned len, long stamp);
-  void ProcessChatMsg(const char *Msg, netAddress & SenderAddress);
   void Update(void);
   
 private:
+  union MsgBuf;
   FGAIMultiplayer* addMultiplayer(const std::string& callsign,
                                   const std::string& modelName);
   FGAIMultiplayer* getMultiplayer(const std::string& callsign);
+  void FillMsgHdr(T_MsgHdr *MsgHdr, int iMsgId, unsigned _len = 0u);
+  void ProcessPosMsg(const MsgBuf& Msg, const netAddress& SenderAddress,
+                     long stamp);
+  void ProcessChatMsg(const MsgBuf& Msg, const netAddress& SenderAddress);
 
   /// maps from the callsign string to the FGAIMultiplayer
   typedef std::map<std::string, osg::ref_ptr<FGAIMultiplayer> > MultiPlayerMap;
