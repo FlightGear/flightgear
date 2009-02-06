@@ -33,6 +33,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <cstring>
 #include <osg/Math>             // isNaN
 #include <plib/netSocket.h>
 
@@ -46,7 +47,7 @@
 #include "multiplaymgr.hxx"
 #include "mpmessages.hxx"
 
-using std::cerr;
+using namespace std;
 
 #define MAX_PACKET_SIZE 1200
 #define MAX_TEXT_SIZE 128
@@ -304,19 +305,18 @@ namespace
             // to change...
             uint32_t length = XDR_decode_uint32(*xdr);
             xdr++;
-            if ((length > 0) && (length < MAX_TEXT_SIZE)) {
-              xdr += length;
-              // Now handle the padding
-              while ((length % 4) != 0)
-                {
-                  xdr++;
-                  length++;
-                  //cout << "0";
-                }
-            } else {
-              // The string appears to be invalid; bail.
-              return false;
-            }
+            // Old versions truncated the string but left the length
+            // unadjusted.
+            if (length > MAX_TEXT_SIZE)
+              length = MAX_TEXT_SIZE;
+            xdr += length;
+            // Now handle the padding
+            while ((length % 4) != 0)
+              {
+                xdr++;
+                length++;
+                //cout << "0";
+              }
           }
           break;
         default:
@@ -450,6 +450,78 @@ FGMultiplayMgr::Close (void)
 //  Description: Sends the position data for the local position.
 //
 //////////////////////////////////////////////////////////////////////
+
+/**
+ * The buffer that holds a multi-player message, suitably aligned.
+ */
+union FGMultiplayMgr::MsgBuf
+{
+    MsgBuf()
+    {
+        memset(&Msg, 0, sizeof(Msg));
+    }
+
+    T_MsgHdr* msgHdr()
+    {
+        return reinterpret_cast<T_MsgHdr*>(Msg);
+    }
+
+    const T_MsgHdr* msgHdr() const
+    {
+        return reinterpret_cast<const T_MsgHdr*>(Msg);
+    }
+
+    T_PositionMsg* posMsg()
+    {
+        return reinterpret_cast<T_PositionMsg*>(Msg + sizeof(T_MsgHdr));
+    }
+
+    const T_PositionMsg* posMsg() const
+    {
+        return reinterpret_cast<const T_PositionMsg*>(Msg + sizeof(T_MsgHdr));
+    }
+
+    xdr_data_t* properties()
+    {
+        return reinterpret_cast<xdr_data_t*>(Msg + sizeof(T_MsgHdr)
+                                             + sizeof(T_PositionMsg));
+    }
+
+    const xdr_data_t* properties() const
+    {
+        return reinterpret_cast<const xdr_data_t*>(Msg + sizeof(T_MsgHdr)
+                                                   + sizeof(T_PositionMsg));
+    }
+    /**
+     * The end of the properties buffer.
+     */
+    xdr_data_t* propsEnd()
+    {
+        return reinterpret_cast<xdr_data_t*>(Msg + MAX_PACKET_SIZE);
+    };
+
+    const xdr_data_t* propsEnd() const
+    {
+        return reinterpret_cast<const xdr_data_t*>(Msg + MAX_PACKET_SIZE);
+    };
+    /**
+     * The end of properties actually in the buffer. This assumes that
+     * the message header is valid.
+     */
+    xdr_data_t* propsRecvdEnd()
+    {
+        return reinterpret_cast<xdr_data_t*>(Msg + msgHdr()->MsgLen);
+    }
+
+    const xdr_data_t* propsRecvdEnd() const
+    {
+        return reinterpret_cast<const xdr_data_t*>(Msg + msgHdr()->MsgLen);
+    }
+    
+    xdr_data2_t double_val;
+    char Msg[MAX_PACKET_SIZE];
+};
+
 void
 FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
 {
@@ -460,59 +532,52 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
     return;
   }
 
-  T_PositionMsg PosMsg;
+  MsgBuf msgBuf;
+  T_PositionMsg* PosMsg = msgBuf.posMsg();
 
-  memset(&PosMsg, 0, sizeof(PosMsg));
-  strncpy(PosMsg.Model, fgGetString("/sim/model/path"), MAX_MODEL_NAME_LEN);
-  PosMsg.Model[MAX_MODEL_NAME_LEN - 1] = '\0';
+  strncpy(PosMsg->Model, fgGetString("/sim/model/path"), MAX_MODEL_NAME_LEN);
+  PosMsg->Model[MAX_MODEL_NAME_LEN - 1] = '\0';
   
-  PosMsg.time = XDR_encode_double (motionInfo.time);
-  PosMsg.lag = XDR_encode_double (motionInfo.lag);
+  PosMsg->time = XDR_encode_double (motionInfo.time);
+  PosMsg->lag = XDR_encode_double (motionInfo.lag);
   for (unsigned i = 0 ; i < 3; ++i)
-    PosMsg.position[i] = XDR_encode_double (motionInfo.position(i));
+    PosMsg->position[i] = XDR_encode_double (motionInfo.position(i));
   SGVec3f angleAxis;
   motionInfo.orientation.getAngleAxis(angleAxis);
   for (unsigned i = 0 ; i < 3; ++i)
-    PosMsg.orientation[i] = XDR_encode_float (angleAxis(i));
+    PosMsg->orientation[i] = XDR_encode_float (angleAxis(i));
   for (unsigned i = 0 ; i < 3; ++i)
-    PosMsg.linearVel[i] = XDR_encode_float (motionInfo.linearVel(i));
+    PosMsg->linearVel[i] = XDR_encode_float (motionInfo.linearVel(i));
   for (unsigned i = 0 ; i < 3; ++i)
-    PosMsg.angularVel[i] = XDR_encode_float (motionInfo.angularVel(i));
+    PosMsg->angularVel[i] = XDR_encode_float (motionInfo.angularVel(i));
   for (unsigned i = 0 ; i < 3; ++i)
-    PosMsg.linearAccel[i] = XDR_encode_float (motionInfo.linearAccel(i));
+    PosMsg->linearAccel[i] = XDR_encode_float (motionInfo.linearAccel(i));
   for (unsigned i = 0 ; i < 3; ++i)
-    PosMsg.angularAccel[i] = XDR_encode_float (motionInfo.angularAccel(i));
-
-  char Msg[MAX_PACKET_SIZE];
-  memcpy(Msg + sizeof(T_MsgHdr), &PosMsg, sizeof(T_PositionMsg));
+    PosMsg->angularAccel[i] = XDR_encode_float (motionInfo.angularAccel(i));
   
-  char* ptr = Msg + sizeof(T_MsgHdr) + sizeof(T_PositionMsg);
+  xdr_data_t* ptr = msgBuf.properties();
   std::vector<FGPropertyData*>::const_iterator it;
   it = motionInfo.properties.begin();
   //cout << "OUTPUT PROPERTIES\n";
-  while (it != motionInfo.properties.end()
-         && ptr + 2 * sizeof(xdr_data_t) < (Msg + MAX_PACKET_SIZE)) {
-             
-    // First elements is the ID
-    xdr_data_t xdr = XDR_encode_uint32((*it)->id);
-    memcpy(ptr, &xdr, sizeof(xdr_data_t));
-    ptr += sizeof(xdr_data_t);
+  xdr_data_t* msgEnd = msgBuf.propsEnd();
+  while (it != motionInfo.properties.end() && ptr + 2 < msgEnd) {
     
+    // First element is the ID. Write it out when we know we have room for
+    // the whole property.
+    xdr_data_t id =  XDR_encode_uint32((*it)->id);
     // The actual data representation depends on the type
     switch ((*it)->type) {
       case SGPropertyNode::INT:        
       case SGPropertyNode::BOOL:        
-      case SGPropertyNode::LONG:        
-        xdr = XDR_encode_uint32((*it)->int_value);
-        memcpy(ptr, &xdr, sizeof(xdr_data_t));
-        ptr += sizeof(xdr_data_t);
+      case SGPropertyNode::LONG:
+        *ptr++ = id;
+        *ptr++ = XDR_encode_uint32((*it)->int_value);
         //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->int_value << "\n";
         break;
       case SGPropertyNode::FLOAT:
       case SGPropertyNode::DOUBLE:
-        xdr = XDR_encode_float((*it)->float_value);;
-        memcpy(ptr, &xdr, sizeof(xdr_data_t));
-        ptr += sizeof(xdr_data_t);
+        *ptr++ = id;
+        *ptr++ = XDR_encode_float((*it)->float_value);
         //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->float_value << "\n";
         break;
       case SGPropertyNode::STRING:
@@ -529,26 +594,24 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
             // Add the length         
             ////cout << "String length: " << strlen(lcharptr) << "\n";
             uint32_t len = strlen(lcharptr);
+            if (len > MAX_TEXT_SIZE)
+              len = MAX_TEXT_SIZE;
             // XXX This should not be using 4 bytes per character!
-            if (ptr + (1 + len + (4 - len % 4)) * sizeof (xdr_data_t)
-                >= (Msg + MAX_PACKET_SIZE))
+            // If there's not enough room for this property, drop it
+            // on the floor.
+            if (ptr + 2 + ((len + 3) & ~3) > msgEnd)
                 goto escape;
             //cout << "String length unint32: " << len << "\n";
-            xdr = XDR_encode_uint32(len);
-            memcpy(ptr, &xdr, sizeof(xdr_data_t));
-            ptr += sizeof(xdr_data_t);
-            
+            *ptr++ = id;
+            *ptr++ = XDR_encode_uint32(len);
             if (len != 0)
             {
-
               // Now the text itself
               // XXX This should not be using 4 bytes per character!
               int lcount = 0;
               while ((*lcharptr != '\0') && (lcount < MAX_TEXT_SIZE)) 
               {
-                xdr = XDR_encode_int8(*lcharptr);
-                memcpy(ptr, &xdr, sizeof(xdr_data_t));
-                ptr += sizeof(xdr_data_t);
+                *ptr++ = XDR_encode_int8(*lcharptr);
                 lcharptr++;
                 lcount++;          
               }
@@ -558,9 +621,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
               // Now pad if required
               while ((lcount % 4) != 0)
               {
-                xdr = XDR_encode_int8(0);
-                memcpy(ptr, &xdr, sizeof(xdr_data_t));
-                ptr += sizeof(xdr_data_t);
+                *ptr++ = XDR_encode_int8(0);
                 lcount++;          
                 //cout << "0";
               }
@@ -571,20 +632,17 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
           else
           {
             // Nothing to encode
-            xdr = XDR_encode_uint32(0);
-            memcpy(ptr, &xdr, sizeof(xdr_data_t));
-            ptr += sizeof(xdr_data_t);
+            *ptr++ = id;
+            *ptr++ = XDR_encode_uint32(0);
             //cout << "Prop:" << (*it)->id << " " << (*it)->type << " 0\n";
           }
-           
         }
         break;
         
       default:
         //cout << " Unknown Type: " << (*it)->type << "\n";
-        xdr = XDR_encode_float((*it)->float_value);;
-        memcpy(ptr, &xdr, sizeof(xdr_data_t));
-        ptr += sizeof(xdr_data_t);
+        *ptr++ = id;
+        *ptr++ = XDR_encode_float((*it)->float_value);;
         //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->float_value << "\n";
         break;
     }
@@ -592,14 +650,12 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
     ++it;
   }
 escape:
-  
-  T_MsgHdr MsgHdr;
-  FillMsgHdr(&MsgHdr, POS_DATA_ID, ptr - Msg);
-  memcpy(Msg, &MsgHdr, sizeof(T_MsgHdr));
-
-  mSocket->sendto(Msg, ptr - Msg, 0, &mServer);
+  unsigned msgLen = reinterpret_cast<char*>(ptr) - msgBuf.Msg;
+  FillMsgHdr(msgBuf.msgHdr(), POS_DATA_ID, msgLen);
+  mSocket->sendto(msgBuf.Msg, msgLen, 0, &mServer);
   SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::SendMyPosition");
 } // FGMultiplayMgr::SendMyPosition()
+
 //////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////
@@ -665,7 +721,7 @@ FGMultiplayMgr::Update(void)
   //////////////////////////////////////////////////
   int bytes;
   do {
-    char Msg[MAX_PACKET_SIZE];
+    MsgBuf msgBuf;
     //////////////////////////////////////////////////
     //  Although the recv call asks for 
     //  MAX_PACKET_SIZE of data, the number of bytes
@@ -673,7 +729,8 @@ FGMultiplayMgr::Update(void)
     //  packet waiting to be processed.
     //////////////////////////////////////////////////
     netAddress SenderAddress;
-    bytes = mSocket->recvfrom(Msg, sizeof(Msg), 0, &SenderAddress);
+    bytes = mSocket->recvfrom(msgBuf.Msg, sizeof(msgBuf.Msg), 0,
+                              &SenderAddress);
     //////////////////////////////////////////////////
     //  no Data received
     //////////////////////////////////////////////////
@@ -690,12 +747,13 @@ FGMultiplayMgr::Update(void)
     //////////////////////////////////////////////////
     //  Read header
     //////////////////////////////////////////////////
-    T_MsgHdr* MsgHdr = (T_MsgHdr *)Msg;
+    T_MsgHdr* MsgHdr = msgBuf.msgHdr();
     MsgHdr->Magic       = XDR_decode_uint32 (MsgHdr->Magic);
     MsgHdr->Version     = XDR_decode_uint32 (MsgHdr->Version);
     MsgHdr->MsgId       = XDR_decode_uint32 (MsgHdr->MsgId);
     MsgHdr->MsgLen      = XDR_decode_uint32 (MsgHdr->MsgLen);
     MsgHdr->ReplyPort   = XDR_decode_uint32 (MsgHdr->ReplyPort);
+    MsgHdr->Callsign[MAX_CALLSIGN_LEN -1] = '\0';
     if (MsgHdr->Magic != MSG_MAGIC) {
       SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayMgr::MP_ProcessData - "
               << "message has invalid magic number!" );
@@ -707,8 +765,8 @@ FGMultiplayMgr::Update(void)
       break;
     }
     if (MsgHdr->MsgLen != bytes) {
-      SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayMgr::MP_ProcessData - "
-              << "message has invalid length!" );
+      SG_LOG(SG_NETWORK, SG_ALERT, "FGMultiplayMgr::MP_ProcessData - "
+             << "message from " << MsgHdr->Callsign << " has invalid length!");
       break;
     }
     //////////////////////////////////////////////////
@@ -716,10 +774,10 @@ FGMultiplayMgr::Update(void)
     //////////////////////////////////////////////////
     switch (MsgHdr->MsgId) {
     case CHAT_MSG_ID:
-      ProcessChatMsg(Msg, SenderAddress);
+      ProcessChatMsg(msgBuf, SenderAddress);
       break;
     case POS_DATA_ID:
-      ProcessPosMsg(Msg, SenderAddress, bytes, stamp);
+      ProcessPosMsg(msgBuf, SenderAddress, stamp);
       break;
     case UNUSABLE_POS_DATA_ID:
     case OLD_OLD_POS_DATA_ID:
@@ -753,16 +811,16 @@ FGMultiplayMgr::Update(void)
 //
 //////////////////////////////////////////////////////////////////////
 void
-FGMultiplayMgr::ProcessPosMsg(const char *Msg, netAddress & SenderAddress,
-                              unsigned len, long stamp)
+FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
+                              const netAddress& SenderAddress, long stamp)
 {
-  T_MsgHdr* MsgHdr = (T_MsgHdr *)Msg;
+  const T_MsgHdr* MsgHdr = Msg.msgHdr();
   if (MsgHdr->MsgLen < sizeof(T_MsgHdr) + sizeof(T_PositionMsg)) {
     SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayMgr::MP_ProcessData - "
             << "Position message received with insufficient data" );
     return;
   }
-  T_PositionMsg* PosMsg = (T_PositionMsg *)(Msg + sizeof(T_MsgHdr));
+  const T_PositionMsg* PosMsg = Msg.posMsg();
   FGExternalMotionData motionInfo;
   motionInfo.time = XDR_decode_double(PosMsg->time);
   motionInfo.lag = XDR_decode_double(PosMsg->lag);
@@ -783,8 +841,7 @@ FGMultiplayMgr::ProcessPosMsg(const char *Msg, netAddress & SenderAddress,
 
 
   //cout << "INPUT MESSAGE\n";
-  xdr_data_t* xdr = (xdr_data_t*) 
-                   (Msg + sizeof(T_MsgHdr) + sizeof(T_PositionMsg));
+
   // There was a bug in 1.9.0 and before: T_PositionMsg was 196 bytes
   // on 32 bit architectures and 200 bytes on 64 bit, and this
   // structure is put directly on the wire. By looking at the padding,
@@ -800,15 +857,14 @@ FGMultiplayMgr::ProcessPosMsg(const char *Msg, netAddress & SenderAddress,
   // There is a chance that we could be fooled by garbage in the
   // padding looking like a valid property, so verifyProperties() is
   // strict about the validity of the property values.
+  const xdr_data_t* xdr = Msg.properties();
   if (PosMsg->pad != 0) {
-    if (verifyProperties(&PosMsg->pad,
-                         reinterpret_cast<const xdr_data_t*>(Msg + len)))
+    if (verifyProperties(&PosMsg->pad, Msg.propsRecvdEnd()))
       xdr = &PosMsg->pad;
-    else if (!verifyProperties(xdr,
-                               reinterpret_cast<const xdr_data_t*>(Msg + len)))
+    else if (!verifyProperties(xdr, Msg.propsRecvdEnd()))
       goto noprops;
   }
-  while ((char*)xdr < Msg + len) {
+  while (xdr < Msg.propsRecvdEnd()) {
     FGPropertyData* pData = new FGPropertyData;
     SGPropertyNode::Type type = SGPropertyNode::UNSPECIFIED;
     
@@ -848,35 +904,27 @@ FGMultiplayMgr::ProcessPosMsg(const char *Msg, netAddress & SenderAddress,
             uint32_t length = XDR_decode_uint32(*xdr);
             xdr++;
             //cout << length << " ";
-
-            if ((length > 0) && (length < MAX_TEXT_SIZE))
-            {
-              pData->string_value = new char[length + 1];
-              //cout << " String: ";
-
-              for (int i = 0; i < length; i++)
+            // Old versions truncated the string but left the length unadjusted.
+            if (length > MAX_TEXT_SIZE)
+              length = MAX_TEXT_SIZE;
+            pData->string_value = new char[length + 1];
+            //cout << " String: ";
+            for (int i = 0; i < length; i++)
               {
                 pData->string_value[i] = (char) XDR_decode_int8(*xdr);
                 xdr++;
                 //cout << pData->string_value[i];
               }
 
-              pData->string_value[length] = '\0';
+            pData->string_value[length] = '\0';
 
-              // Now handle the padding
-              while ((length % 4) != 0)
+            // Now handle the padding
+            while ((length % 4) != 0)
               {
                 xdr++;
                 length++;
                 //cout << "0";
               }
-            }
-            else
-            {
-              pData->string_value = new char[1];
-              pData->string_value[0] = '\0';
-            }
-
             //cout << "\n";
           }
           break;
@@ -893,8 +941,9 @@ FGMultiplayMgr::ProcessPosMsg(const char *Msg, netAddress & SenderAddress,
     else
     {
       // We failed to find the property. We'll try the next packet immediately.
-      SG_LOG(SG_NETWORK, SG_WARN, "FGMultiplayMgr::ProcessPosMsg - "
-             << "found unknown property id" << pData->id); 
+      SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr::ProcessPosMsg - "
+             "message from " << MsgHdr->Callsign << " has unknown property id "
+             << pData->id); 
     }
   }
  noprops:
@@ -912,25 +961,29 @@ FGMultiplayMgr::ProcessPosMsg(const char *Msg, netAddress & SenderAddress,
 //
 //////////////////////////////////////////////////////////////////////
 void
-FGMultiplayMgr::ProcessChatMsg(const char *Msg, netAddress& SenderAddress)
+FGMultiplayMgr::ProcessChatMsg(const MsgBuf& Msg,
+                               const netAddress& SenderAddress)
 {
-  T_MsgHdr* MsgHdr = (T_MsgHdr *)Msg;
+  const T_MsgHdr* MsgHdr = Msg.msgHdr();
   if (MsgHdr->MsgLen < sizeof(T_MsgHdr) + 1) {
     SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayMgr::MP_ProcessData - "
             << "Chat message received with insufficient data" );
     return;
   }
   
-  char *MsgBuf = new char[MsgHdr->MsgLen - sizeof(T_MsgHdr)];
-  strncpy(MsgBuf, ((T_ChatMsg *)(Msg + sizeof(T_MsgHdr)))->Text,
+  char *chatStr = new char[MsgHdr->MsgLen - sizeof(T_MsgHdr)];
+  strncpy(chatStr,
+          (reinterpret_cast<const T_ChatMsg *>(Msg.Msg + sizeof(T_MsgHdr)))
+          ->Text,
           MsgHdr->MsgLen - sizeof(T_MsgHdr));
-  MsgBuf[MsgHdr->MsgLen - sizeof(T_MsgHdr) - 1] = '\0';
+  chatStr[MsgHdr->MsgLen - sizeof(T_MsgHdr) - 1] = '\0';
   
-  T_ChatMsg* ChatMsg = (T_ChatMsg *)(Msg + sizeof(T_MsgHdr));
+  const T_ChatMsg* ChatMsg
+      = reinterpret_cast<const T_ChatMsg *>(Msg.Msg + sizeof(T_MsgHdr));
   SG_LOG (SG_NETWORK, SG_ALERT, "Chat [" << MsgHdr->Callsign << "]"
-           << " " << MsgBuf);
+           << " " << chatStr);
 
-  delete [] MsgBuf;
+  delete [] chatStr;
 } // FGMultiplayMgr::ProcessChatMsg ()
 //////////////////////////////////////////////////////////////////////
 
