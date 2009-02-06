@@ -62,10 +62,6 @@ DEFINITIONS
 
 #define ID_TRIM "$Id$"
 
-#if defined(_WIN32) && !defined(__CYGWIN__)
-  #define snprintf _snprintf
-#endif
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/

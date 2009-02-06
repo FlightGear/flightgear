@@ -41,6 +41,7 @@ INCLUDES
 #include <float.h>
 #include <queue>
 #include <string>
+#include <sstream>
 #include <cmath>
 
 using std::fabs;
@@ -100,6 +101,27 @@ public:
     bool bVal;
     int  iVal;
     double dVal;
+  };
+
+  /// First order, (low pass / lag) filter
+  class Filter {
+    double prev_in;
+    double prev_out;
+    double ca;
+    double cb;
+    public: Filter(void) {}
+    public: Filter(double coeff, double dt) {
+      prev_in = prev_out = 0.0;
+      double denom = 2.0 + coeff*dt;
+      ca = coeff*dt/denom;
+      cb = (2.0 - coeff*dt)/denom;
+    }
+    public: double execute(double in) {
+      double out = (in + prev_in)*ca + prev_out*cb;
+      prev_in = in;
+      prev_out = out;
+      return out;
+    }
   };
 
   ///@name JSBSim console output highlighting terms.
@@ -302,6 +324,15 @@ protected:
   static const double kgtoslug;
   static const string needed_cfg_version;
   static const string JSBSim_version;
+
+  static string CreateIndexedPropertyName(string Property, int index)
+  {
+    std::stringstream str;
+    str << index;
+    string tmp;
+    str >> tmp;
+    return Property + "[" + tmp + "]";
+  }
 
 public:
 /// Moments L, M, N

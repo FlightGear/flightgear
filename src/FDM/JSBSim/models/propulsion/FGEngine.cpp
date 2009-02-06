@@ -115,13 +115,15 @@ FGEngine::FGEngine(FGFDMExec* exec, Element* engine_element, int engine_number)
     cerr << "No feed tank specified in engine definition." << endl;
   }
 
-  char property_name[80];
-  snprintf(property_name, 80, "propulsion/engine[%d]/set-running", EngineNumber);
-  PropertyManager->Tie( property_name, this, &FGEngine::GetRunning, &FGEngine::SetRunning );
-  snprintf(property_name, 80, "propulsion/engine[%u]/thrust-lbs", EngineNumber);
-  PropertyManager->Tie( property_name, Thruster, &FGThruster::GetThrust);
-  snprintf(property_name, 80, "propulsion/engine[%u]/fuel-flow-rate-pps", EngineNumber);
-  PropertyManager->Tie( property_name, this, &FGEngine::GetFuelFlowRate);
+  string property_name, base_property_name;
+  base_property_name = CreateIndexedPropertyName("propulsion/engine", EngineNumber);
+
+  property_name = base_property_name + "/set-running";
+  PropertyManager->Tie( property_name.c_str(), this, &FGEngine::GetRunning, &FGEngine::SetRunning );
+  property_name = base_property_name + "/thrust-lbs";
+  PropertyManager->Tie( property_name.c_str(), Thruster, &FGThruster::GetThrust);
+  property_name = base_property_name + "/fuel-flow-rate-pps";
+  PropertyManager->Tie( property_name.c_str(), this, &FGEngine::GetFuelFlowRate);
 
   Debug(0);
 }

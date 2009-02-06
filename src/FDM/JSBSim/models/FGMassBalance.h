@@ -50,10 +50,6 @@ DEFINITIONS
 
 #define ID_MASSBALANCE "$Id$"
 
-#if defined(WIN32) && !defined(__CYGWIN__)
-#define snprintf _snprintf
-#endif
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONSS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -177,7 +173,6 @@ private:
   FGMatrix33& CalculatePMInertias(void);
 
   struct PointMass {
-    char tmp[80];
     PointMass(double w, FGColumnVector3& vXYZ) {
       Weight = w;
       Location = vXYZ;
@@ -190,18 +185,18 @@ private:
     double GetPointMassWeight(void) const {return Weight;}
 
     void bind(FGPropertyManager* PropertyManager, int num) {
-      snprintf(tmp, 80, "inertia/pointmass-weight-lbs[%u]", num);
-      PropertyManager->Tie( tmp, this, &PointMass::GetPointMassWeight,
+      string tmp = CreateIndexedPropertyName("inertia/pointmass-weight-lbs", num);
+      PropertyManager->Tie( tmp.c_str(), this, &PointMass::GetPointMassWeight,
                                        &PointMass::SetPointMassWeight);
 
-      snprintf(tmp, 80, "inertia/pointmass-location-X-inches[%u]", num);
-      PropertyManager->Tie( tmp, this, eX, &PointMass::GetPointMassLocation,
+      tmp = CreateIndexedPropertyName("inertia/pointmass-location-X-inches", num);
+      PropertyManager->Tie( tmp.c_str(), this, eX, &PointMass::GetPointMassLocation,
                                            &PointMass::SetPointMassLocation);
-      snprintf(tmp, 80, "inertia/pointmass-location-Y-inches[%u]", num);
-      PropertyManager->Tie( tmp, this, eY, &PointMass::GetPointMassLocation,
+      tmp = CreateIndexedPropertyName("inertia/pointmass-location-Y-inches", num);
+      PropertyManager->Tie( tmp.c_str(), this, eY, &PointMass::GetPointMassLocation,
                                            &PointMass::SetPointMassLocation);
-      snprintf(tmp, 80, "inertia/pointmass-location-Z-inches[%u]", num);
-      PropertyManager->Tie( tmp, this, eZ, &PointMass::GetPointMassLocation,
+      tmp = CreateIndexedPropertyName("inertia/pointmass-location-Z-inches", num);
+      PropertyManager->Tie( tmp.c_str(), this, eZ, &PointMass::GetPointMassLocation,
                                            &PointMass::SetPointMassLocation);
     }
   };
