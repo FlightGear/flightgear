@@ -337,18 +337,21 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
 {
     string sender, receiver;
     int stationFreq = 0;
+    int taxiFreq    = 0;
+    string atisInformation;
     //double commFreqD;
     switch (msgDir) {
          case ATC_AIR_TO_GROUND:
              sender = rec->getAircraft()->getTrafficRef()->getCallSign();
              switch (rec->getLeg()) {
                  case 2:
+                 case 3:
                      stationFreq =
-                        rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getGroundFrequency();
+                        rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getGroundFrequency(rec->getLeg());
+                     taxiFreq =
+                        rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getGroundFrequency(3);
                      receiver = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getName() + "-Ground";
-                     break;
-                 case 3: 
-                     receiver = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getName() + "-Ground";
+                     atisInformation = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getAtisInformation();
                      break;
                  case 4: 
                      receiver = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getName() + "-Tower";
@@ -359,13 +362,15 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
              receiver = rec->getAircraft()->getTrafficRef()->getCallSign();
              switch (rec->getLeg()) {
                  case 2:
+                 case 3:
                  stationFreq =
-                        rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getGroundFrequency();
+                        rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getGroundFrequency(rec->getLeg());
+                     taxiFreq =
+                        rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getGroundFrequency(3);
                      sender = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getName() + "-Ground";
+                     atisInformation = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getAtisInformation();
                      break;
-                 case 3: 
-                     sender = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getName() + "-Ground";
-                     break;
+
                  case 4: 
                      sender = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getName() + "-Tower";
                      break;
@@ -373,26 +378,30 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
              break;
          }
     string text;
+    string taxiFreqStr;
+    char buffer[7];
     switch (msgId) {
           case MSG_ANNOUNCE_ENGINE_START:
                text = sender + ". Ready to Start up";
                break;
           case MSG_REQUEST_ENGINE_START:
                text = receiver + ", This is " + sender + ". Position " +getGateName(rec->getAircraft()) +
-                       ". Information YY." +
+                       ". Information " + atisInformation + ". " +
                        rec->getAircraft()->getTrafficRef()->getFlightRules() + " to " + 
                        rec->getAircraft()->getTrafficRef()->getArrivalAirport()->getName() + ". Request start-up";
                break;
           case MSG_PERMIT_ENGINE_START:
-               text = receiver + ". Start-up approved. YY correct, runway ZZ, AAA departure, squawk BBBB. " +
-                      "For push-back and taxi clearance call CCC.CCC. " + sender + " control.";
+               taxiFreqStr = formatATCFrequency3_2(taxiFreq);
+               text = receiver + ". Start-up approved. " + atisInformation + " correct, runway ZZ, AAA departure, squawk BBBB. " +
+                      "For push-back and taxi clearance call " + taxiFreqStr + ". " + sender + " control.";
                break;
           case MSG_DENY_ENGINE_START:
                text = receiver + ". Standby";
                break;
          case MSG_ACKNOWLEDGE_ENGINE_START:
-               text = receiver + ". Start-up approved. YY correct, runway ZZ, AAA departure, squawk BBBB. " +
-                      "For push-back and taxi clearance call CCC.CCC. " + sender;
+               taxiFreqStr = formatATCFrequency3_2(taxiFreq);
+               text = receiver + ". Start-up approved. " + atisInformation + " correct, runway ZZ, AAA departure, squawk BBBB. " +
+                      "For push-back and taxi clearance call " + taxiFreqStr + ". " + sender;
                break;
            default:
                break;
@@ -406,12 +415,18 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
     // Display ATC message only when one of the radios is tuned
     // the relevant frequency.
     // Note that distance attenuation is currently not yet implemented
+    //cerr << "Transmitting " << text << " at " << stationFreq;
     if ((onBoardRadioFreqI0 == stationFreq) || (onBoardRadioFreqI1 == stationFreq)) {
         fgSetString("/sim/messages/atc", text.c_str());
         //cerr << "Printing Message: " << endl;
     }
 }
 
+string FGATCController::formatATCFrequency3_2(int freq) {
+    char buffer[7];
+    snprintf(buffer, 7, "%3.2f", ( (float) freq / 100.0) );
+    return string(buffer);
+}
 
 /***************************************************************************
  * class FGTowerController

@@ -64,12 +64,7 @@ private:
   intVec freqTower;    // </TOWER>
   intVec freqApproach; // </APPROACH>
 
-  // Experimental keep a running average of wind dir and speed to prevent
-  // Erratic runway changes. 
-  // Note: I should add these to the copy constructor and assigment operator to be
-  // constistent
-  //double avWindHeading [10];
-  //double avWindSpeed   [10];
+  string atisInformation;
 
   string chooseRunwayFallback();
   bool innerGetActiveRunway(const string &trafficType, int action, string &runway);
@@ -107,13 +102,15 @@ public:
   //FGAirport *getAddress() { return this; };
   //const string &getName() const { return _name;};
   // Returns degrees
-  int getGroundFrequency() { return freqGround.size() ? freqGround[0] : 0; };
 
+
+  // ATC related functions. 
   FGStartupController *getStartupController() { return &startupController; };
   FGGroundNetwork     *getGroundNetwork()     { return &groundNetwork; };
   FGTowerController   *getTowerController()   { return &towerController; };
 
-  
+  const string& getAtisInformation() { return atisInformation; };
+  int getGroundFrequency(int leg); //{ return freqGround.size() ? freqGround[0] : 0; };
 
   void setRwyUse(const FGRunwayPreference& ref);
 };
