@@ -223,20 +223,19 @@ static naRef f_setprop(naContext c, naRef me, int argc, naRef* args)
 
     SGPropertyNode* props = globals->get_props();
     naRef val = args[argc-1];
+    bool result = false;
     try {
-        bool r;
-        if(naIsString(val)) r = props->setStringValue(buf, naStr_data(val));
+        if(naIsString(val)) result = props->setStringValue(buf, naStr_data(val));
         else {
             naRef n = naNumValue(val);
             if(naIsNil(n))
                 naRuntimeError(c, "setprop() value is not string or number");
-            r = props->setDoubleValue(buf, n.num);
+            result = props->setDoubleValue(buf, n.num);
         }
-        if(!r) naRuntimeError(c, "setprop(): property is not writable");
     } catch (const string& err) {
         naRuntimeError(c, (char *)err.c_str());
     }
-    return naNil();
+    return naNum(result);
 #undef BUFLEN
 }
 
