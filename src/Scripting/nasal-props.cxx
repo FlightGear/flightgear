@@ -59,7 +59,7 @@ naRef FGNasalSys::propNodeGhost(SGPropertyNode* handle)
 static naRef f_getType(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
-    char* t = "unknown";
+    const char* t = "unknown";
     switch((*node)->getType()) {
     case SGPropertyNode::NONE:   t = "NONE";   break;
     case SGPropertyNode::ALIAS:  t = "ALIAS";  break;
@@ -79,7 +79,7 @@ static naRef f_getAttribute(naContext c, naRef me, int argc, naRef* args)
     NODEARG();
     if(naVec_size(argv) == 0) return naNum(unsigned((*node)->getAttributes()));
     naRef val = naVec_get(argv, 0);
-    char *a = naStr_data(val);
+    const char *a = naStr_data(val);
     SGPropertyNode::Attribute attr;
     if(!a) a = "";
     if(!strcmp(a, "last")) return naNum(SGPropertyNode::LAST_USED_ATTRIBUTE);
@@ -111,7 +111,7 @@ static naRef f_setAttribute(naContext c, naRef me, int argc, naRef* args)
         return ret;
     }
     SGPropertyNode::Attribute attr;
-    char *a = naStr_data(val);
+    const char *a = naStr_data(val);
     if(!a) a = "";
     if(!strcmp(a, "readable"))         attr = SGPropertyNode::READ;
     else if(!strcmp(a, "writable"))    attr = SGPropertyNode::WRITE;
@@ -160,14 +160,15 @@ static naRef f_setValue(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
     naRef val = naVec_get(argv, 0);
-    if(naIsString(val)) (*node)->setStringValue(naStr_data(val));
+    bool result = false;
+    if(naIsString(val)) result = (*node)->setStringValue(naStr_data(val));
     else {
         naRef n = naNumValue(val);
         if(naIsNil(n))
             naRuntimeError(c, "props.setValue() with non-number");
-        (*node)->setDoubleValue(naNumValue(val).num);
+        result = (*node)->setDoubleValue(naNumValue(val).num);
     }
-    return naNil();
+    return naNum(result);
 }
 
 static naRef f_setIntValue(naContext c, naRef me, int argc, naRef* args)
@@ -184,16 +185,14 @@ static naRef f_setIntValue(naContext c, naRef me, int argc, naRef* args)
     double tmp2 = tmp1.num;
     int iv = (int)tmp2;
 
-    (*node)->setIntValue(iv);
-    return naNil();
+    return naNum((*node)->setIntValue(iv));
 }
 
 static naRef f_setBoolValue(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
     naRef val = naVec_get(argv, 0);
-    (*node)->setBoolValue(naTrue(val) ? true : false);
-    return naNil();
+    return naNum((*node)->setBoolValue(naTrue(val) ? true : false));
 }
 
 static naRef f_setDoubleValue(naContext c, naRef me, int argc, naRef* args)
@@ -202,8 +201,7 @@ static naRef f_setDoubleValue(naContext c, naRef me, int argc, naRef* args)
     naRef r = naNumValue(naVec_get(argv, 0));
     if(naIsNil(r))
         naRuntimeError(c, "props.setDoubleValue() with non-number");
-    (*node)->setDoubleValue(r.num);
-    return naNil();
+    return naNum((*node)->setDoubleValue(r.num));
 }
 
 static naRef f_getParent(naContext c, naRef me, int argc, naRef* args)
