@@ -449,17 +449,16 @@ Friedemann Reinhard <mpt218@faupt212.physik.uni-erlangen.de>
 
 
 Frederic Bouvier <fredfgfs01@free.fr>
-   Added French language support
-   Keeps FlightGear MSVC compatible.
-   Did a number of code changes to improve the animation code.
-   Added a number of animations that improves the visual system quite a lot.
-   Did a nice job populating the San Francisco bay area by adding a lot
-   of static scenery.
-   Builds the FlightGear binary windows distributions.
-   Maintainer of fgrun, the defacto launcher on windows and many other platforms.
-   Author of fgsd, a standalone scenery designer. 
-   Provides regular binary snapshots of flightgear and it's related projects for
-   the windows community.
+  Keeps FlightGear MSVC compatible.
+  Did a number of code changes to improve the animation code.
+  Added a number of animations that improves the visual system quite a lot.
+  Did a nice job populating the San Francisco bay area by adding a lot
+  of static scenery.
+  Builds the FlightGear binary windows distributions.
+  Maintainer of fgrun, the defacto launcher on windows and many other platforms.
+  Author of fgsd, a standalone scenery designer. 
+  Provides regular binary snapshots of flightgear and it's related projects for
+  the windows community.
 
 
 
