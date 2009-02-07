@@ -37,6 +37,7 @@
 #include <iostream>
 #include <string>
 #include <deque>
+#include <map>
 
 #include <plib/netSocket.h>
 #include <plib/ul.h>
@@ -89,6 +90,8 @@ static void usage( const string& prog ) {
 }
 
 std::deque<std::string> waitingTiles;
+typedef std::map<std::string,time_t> CompletedTiles;
+CompletedTiles completedTiles;
 
 #ifdef HAVE_SVN_CLIENT_H
 
@@ -172,7 +175,7 @@ int mysvn_setup(void) {
 #endif
 
 // sync one directory tree
-void sync_tree(char* dir) {
+void sync_tree(const char* dir) {
     int rc;
     char command[512];
     SGPath path( dest_base );
@@ -332,12 +335,16 @@ static void sync_area( int lat, int lon ) {
         EW = 'e';
     }
 
-    char dir[512];
-    snprintf( dir, 512, "%c%03d%c%02d/%c%03d%c%02d",
-            EW, abs(baselon), NS, abs(baselat),
-            EW, abs(lon), NS, abs(lat) );
-
-    waitingTiles.push_back( dir );
+    const char* terrainobjects[3] = { "Terrain", "Objects", 0 };
+    
+    for (const char** tree = &terrainobjects[0]; *tree; tree++) {
+	char dir[512];
+	snprintf( dir, 512, "%s/%c%03d%c%02d/%c%03d%c%02d",
+		*tree,
+		EW, abs(baselon), NS, abs(baselat),
+		EW, abs(lon), NS, abs(lat) );
+	waitingTiles.push_back( dir );
+    }
 }
 
 
@@ -369,6 +376,15 @@ static void sync_areas( int lat, int lon, int lat_dir, int lon_dir ) {
     }
 }
 
+void getWaitingTile() {
+    CompletedTiles::iterator ii = completedTiles.find( waitingTiles.front() );
+    time_t now = time(0);
+    if ( ii == completedTiles.end() || ii->second + 600 < now ) {
+	sync_tree(waitingTiles.front().c_str());
+	completedTiles[ waitingTiles.front() ] = now;
+    }
+    waitingTiles.pop_front();
+}
 
 int main( int argc, char **argv ) {
     int port = 5501;
@@ -474,29 +490,24 @@ int main( int argc, char **argv ) {
                 cout << "lat_dir = " << lat_dir << "  "
 		     << "lon_dir = " << lon_dir << endl;
                 sync_areas( lat, lon, lat_dir, lon_dir );
-            } else if ( last_lat == nowhere || last_lon == nowhere ) {
-	        cout << "Waiting for FGFS to finish startup" << endl;
 	    } else if ( !waitingTiles.empty() ) {
-		const char* terrainobjects[3] = { "Terrain", "Objects", 0 };
-		const char** tree;
-		char dir[512];
-              
-		for (tree = &terrainobjects[0]; *tree; tree++) {
-		    snprintf( dir, 512, "%s/%s", *tree, waitingTiles.front().c_str() );
-		    sync_tree(dir);
-		}
-		waitingTiles.pop_front();
+		getWaitingTile();
 	    } else {
+		if ( last_lat == nowhere || last_lon == nowhere ) {
+		    cout << "Waiting for FGFS to finish startup" << endl;
+		}
 		char c;
 		while ( !isdigit( c = synced_other++ ) && !isupper( c ) );
 
 		char dir[512];
 		snprintf( dir, 512, "Airports/%c", c );
-		sync_tree( dir );
+		waitingTiles.push_back( dir );
 	    }
 
             last_lat = lat;
             last_lon = lon;
+	} else if ( !waitingTiles.empty() ) {
+	    getWaitingTile();
         } 
 
         ulSleep( 1 );
