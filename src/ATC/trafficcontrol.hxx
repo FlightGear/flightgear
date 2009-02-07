@@ -204,6 +204,10 @@ class FGATCController
 {
 private:
   double dt_count;
+
+
+  string formatATCFrequency3_2(int );
+
 public:
   typedef enum {
       MSG_ANNOUNCE_ENGINE_START,

@@ -54,11 +54,9 @@ using std::random_shuffle;
 FGAirportDynamics::FGAirportDynamics(FGAirport* ap) :
   _ap(ap), rwyPrefs(ap) {
   lastUpdate = 0;
-  for (int i = 0; i < 10; i++)
-     {
-       //avWindHeading [i] = 0;
-       //avWindSpeed   [i] = 0;
-     }
+
+  // For testing only. This needs to be refined when we move ATIS functionality over.
+  atisInformation = "Sierra";
 }
 
 // Note that the ground network should also be copied
@@ -76,11 +74,7 @@ FGAirportDynamics::FGAirportDynamics(const FGAirportDynamics& other) :
   for (il = other.takeoff.begin(); il != other.takeoff.end(); il++)
     takeoff.push_back(*il);
   lastUpdate = other.lastUpdate;
-  for (int i = 0; i < 10; i++)
-    {
-      //avWindHeading [i] = other.avWindHeading[i];
-      //avWindSpeed   [i] = other.avWindSpeed  [i];
-    }
+  atisInformation = other.atisInformation; 
 }
 
 // Destructor
@@ -514,4 +508,32 @@ double FGAirportDynamics::getElevation() const {
 
 const string& FGAirportDynamics::getId() const {
   return _ap->getId();
+}
+
+// Experimental: Return a different ground frequency depending on the leg of the
+// Flight. Leg should always have a minimum value of two when this function is called. 
+// Note that in this scheme, the assignment of various frequencies to various ground 
+// operations is completely arbitrary. As such, is a short cut I need to take now,
+// so that at least I can start working on assigning different frequencies to different
+// operations.
+
+int FGAirportDynamics::getGroundFrequency(int leg) { 
+     //return freqGround.size() ? freqGround[0] : 0; };
+     int groundFreq;
+     if (leg < 2) {
+         SG_LOG(SG_ATC, SG_ALERT, "Leg value is smaller than two at " << SG_ORIGIN);
+     }
+     if (freqGround.size() == 0) {
+         return 0;
+     }
+     if ((freqGround.size() >= leg-1) && (leg > 1)) {
+          groundFreq =  freqGround[leg-1];
+     }
+     if ((freqGround.size() < leg-1) && (leg > 1)) {
+          groundFreq = (freqGround.size() < (leg-2)) ? freqGround[freqGround.size()-1] : freqGround[leg-2];
+     }
+     if ((freqGround.size() >= leg-1) && (leg > 1)) {
+          groundFreq = freqGround[leg-2];
+     }
+    return groundFreq;
 }
