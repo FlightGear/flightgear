@@ -89,6 +89,7 @@ Bernie Bright <bbright@bigpond.net.au>
   Many C++ style, usage, and implementation improvements.
   STL portability, tons o' stuff. :-)
   Threading support and threaded tile pager.
+  Initiate the fgrun project
 
 Francesco Brisa <>
   Scenery models and ground networks for Italian airports.
@@ -447,7 +448,7 @@ Friedemann Reinhard <mpt218@faupt212.physik.uni-erlangen.de>
   Contributed beginnings of a textured instrument panel.
 
 
-Frederic Bouvier <frbouvi@wanadoo.fr>
+Frederic Bouvier <fredfgfs01@free.fr>
    Added French language support
    Keeps FlightGear MSVC compatible.
    Did a number of code changes to improve the animation code.
@@ -455,7 +456,7 @@ Frederic Bouvier <frbouvi@wanadoo.fr>
    Did a nice job populating the San Francisco bay area by adding a lot
    of static scenery.
    Builds the FlightGear binary windows distributions.
-   Author of fgrun, the defacto launcher on windows and many other platforms.
+   Maintainer of fgrun, the defacto launcher on windows and many other platforms.
    Author of fgsd, a standalone scenery designer. 
    Provides regular binary snapshots of flightgear and it's related projects for
    the windows community.
