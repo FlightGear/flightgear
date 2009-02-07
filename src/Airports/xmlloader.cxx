@@ -48,6 +48,7 @@ void XMLLoader::load(FGAirportDynamics* d) {
        parkpath.append( "/AI/Airports/" );
        parkpath.append( d->getId() );
        parkpath.append( "parking.xml" );
+       SG_LOG(SG_GENERAL, SG_DEBUG, "running old loader:" << parkpath.c_str());
        if (parkpath.exists()) {
            try {
                readXML(parkpath.str(), visitor);
@@ -55,25 +56,27 @@ void XMLLoader::load(FGAirportDynamics* d) {
            } 
            catch (const sg_exception &e) {
            }
-       } else {
-            string_list sc = globals->get_fg_scenery();
-            char buffer[32];
-            snprintf(buffer, 32, "%s.groundnet.xml", d->getId().c_str() );
-            string airportDir = XMLLoader::expandICAODirs(d->getId());
-            for (string_list_iterator i = sc.begin(); i != sc.end(); i++) {
-                SGPath parkpath( *i );
-                parkpath.append( "Airports" );
-                parkpath.append ( airportDir );
-                parkpath.append( string (buffer) );
-                if (parkpath.exists()) {
-                    try {
-                        readXML(parkpath.str(), visitor);
-                        d->init();
-                    } 
-                    catch (const sg_exception &e) {
-                    }
-                    return;
+       }
+    } else {
+        string_list sc = globals->get_fg_scenery();
+        char buffer[32];
+        snprintf(buffer, 32, "%s.groundnet.xml", d->getId().c_str() );
+        string airportDir = XMLLoader::expandICAODirs(d->getId());
+        for (string_list_iterator i = sc.begin(); i != sc.end(); i++) {
+            SGPath parkpath( *i );
+            parkpath.append( "Airports" );
+            parkpath.append ( airportDir );
+            parkpath.append( string (buffer) );
+            SG_LOG(SG_GENERAL, SG_DEBUG, "Trying to read ground net:" << parkpath.c_str());
+            if (parkpath.exists()) {
+                SG_LOG(SG_GENERAL, SG_DEBUG, "reading ground net:" << parkpath.c_str());
+                try {
+                    readXML(parkpath.str(), visitor);
+                    d->init();
+                } 
+                catch (const sg_exception &e) {
                 }
+                return;
             }
         }
     }
