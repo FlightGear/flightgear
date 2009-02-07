@@ -75,7 +75,7 @@ Paul Bleisch <pbleisch@acm.org>
   system.
 
 Matthias Boerner <> 
-  Organizer of the FlightGear booth at the annual LinuxTag event in
+  Coorganizer of the FlightGear booth at the annual LinuxTag event in
   Germany.
 
 Alexis Bory
@@ -154,6 +154,8 @@ Dave Eberly <eberly@magic-software.com>
   really useful looking code available there.
   http://www.magic-software.com
 
+Martin Eschen <>
+ Helped enourmously toward finishing the full scale traffic demo at EHAM.
 
 Francine Evans <evans@cs.sunysb.edu>
   Wrote the @#$@#$@% GPL'd tri-striper we use and "love". :-)
@@ -455,6 +457,8 @@ Frederic Bouvier <frbouvi@wanadoo.fr>
    Builds the FlightGear binary windows distributions.
    Author of fgrun, the defacto launcher on windows and many other platforms.
    Author of fgsd, a standalone scenery designer. 
+   Provides regular binary snapshots of flightgear and it's related projects for
+   the windows community.
 
 
 
@@ -537,7 +541,9 @@ Michael Smith <msmith99@flash.net>
 
 Martin Spott <Martin.Spott@uni-duisburg.de>
   Contributed to the installation / user guide.
-  Coordinator of the Custom Scenery Project.
+  Coorganizer of the FlightGear booth at the annual LinuxTag event in
+  Germany.
+  Manages the "World Scenery" releases.
 
 Jon Stockill <>
   Maintainer of the object database.
@@ -558,9 +564,11 @@ Durk Talsma <d.talsma@chello.nl>
   Moon has correct phase and blends well into the sky.
   Planets are correctly positioned and have proper magnitude.
   Help with time functions, gui, and other misc stuff.
-  Added the AirTraffic module for scheduled AI airliners and other aircraft.
-  Current FlightGear release manager.
   2D Cloud layers (nifty).
+  Added the AirTraffic module for scheduled AI airliners and other aircraft.
+  Full scale AI traffic demo for EHAM.
+  Current FlightGear release manager.
+
 
 James Turner <>
   Many code cleanups of the internal structure of the airport database,
