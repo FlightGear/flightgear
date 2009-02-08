@@ -377,13 +377,17 @@ static void sync_areas( int lat, int lon, int lat_dir, int lon_dir ) {
 }
 
 void getWaitingTile() {
-    CompletedTiles::iterator ii = completedTiles.find( waitingTiles.front() );
-    time_t now = time(0);
-    if ( ii == completedTiles.end() || ii->second + 600 < now ) {
-	sync_tree(waitingTiles.front().c_str());
-	completedTiles[ waitingTiles.front() ] = now;
+    while ( !waitingTiles.empty() ) {
+	CompletedTiles::iterator ii = completedTiles.find( waitingTiles.front() );
+	time_t now = time(0);
+	if ( ii == completedTiles.end() || ii->second + 600 < now ) {
+	    sync_tree(waitingTiles.front().c_str());
+	    completedTiles[ waitingTiles.front() ] = now;
+	    waitingTiles.pop_front();
+	    break;
+	}
+	waitingTiles.pop_front();
     }
-    waitingTiles.pop_front();
 }
 
 int main( int argc, char **argv ) {
@@ -468,7 +472,8 @@ int main( int argc, char **argv ) {
         if ( recv_msg ) {
             if ( lat != last_lat || lon != last_lon ) {
 		cout << "pos in msg = " << lat << "," << lon << endl;
-		waitingTiles.clear();
+		std::deque<std::string> oldRequests;
+		oldRequests.swap( waitingTiles );
                 int lat_dir, lon_dir, dist;
                 if ( last_lat == nowhere || last_lon == nowhere ) {
                     lat_dir = lon_dir = 0;
@@ -490,6 +495,10 @@ int main( int argc, char **argv ) {
                 cout << "lat_dir = " << lat_dir << "  "
 		     << "lon_dir = " << lon_dir << endl;
                 sync_areas( lat, lon, lat_dir, lon_dir );
+		while ( !oldRequests.empty() ) {
+		    waitingTiles.push_back( oldRequests.front() );
+		    oldRequests.pop_front();
+		}
 	    } else if ( !waitingTiles.empty() ) {
 		getWaitingTile();
 	    } else {
