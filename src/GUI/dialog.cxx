@@ -181,7 +181,8 @@ puObject *fgPopup::getActiveInputField(puObject *object)
             if ((ret = getActiveInputField(obj)))
                 return ret;
 
-    if (object->getType() & PUCLASS_INPUT && ((puInput *)object)->isAcceptingInput())
+    if (object->getType() & (PUCLASS_INPUT|PUCLASS_LARGEINPUT)
+            && ((puInput *)object)->isAcceptingInput())
         return object;
 
     return 0;
