@@ -17,6 +17,8 @@
 
 enum format_type { f_INVALID, f_INT, f_LONG, f_FLOAT, f_DOUBLE, f_STRING };
 static const int FORMAT_BUFSIZE = 255;
+static const int RESIZE_MARGIN = 7;
+
 
 /**
  * Makes sure the format matches '%[ -+#]?\d*(\.\d*)?(l?[df]|s)', with
@@ -235,8 +237,8 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
 
         _resizing = 0;
         if (!global_drag && _resizable) {
-            int hmargin = global_resize ? _dlgW / 3 : 10;
-            int vmargin = global_resize ? _dlgH / 3 : 10;
+            int hmargin = global_resize ? _dlgW / 3 : RESIZE_MARGIN;
+            int vmargin = global_resize ? _dlgH / 3 : RESIZE_MARGIN;
 
             if (y - _dlgY < vmargin)
                 _resizing |= BOTTOM;
