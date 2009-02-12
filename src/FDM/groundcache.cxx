@@ -26,11 +26,16 @@
 
 #include <float.h>
 
+#include <utility>
+
 #include <osg/CullFace>
 #include <osg/Drawable>
 #include <osg/Geode>
 #include <osg/Geometry>
+#include <osg/PrimitiveSet>
 #include <osg/TriangleFunctor>
+
+#include <osgUtil/PolytopeIntersector>
 
 #include <simgear/sg_inlines.h>
 #include <simgear/constants.h>
@@ -38,6 +43,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/scene/material/matlib.hxx>
+#include <simgear/scene/util/PrimitiveUtils.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
 
 #include <Main/globals.hxx>
@@ -47,6 +53,93 @@
 
 #include "flight.hxx"
 #include "groundcache.hxx"
+
+using namespace osg;
+using namespace osgUtil;
+using namespace simgear;
+
+void makePolytopeShaft(Polytope& polyt, const Vec3d& refPoint,
+                       const Vec3d& direction, double radius)
+{
+    polyt.clear();
+    // Choose best principal axis to start making orthogonal axis.
+    Vec3d majorAxis;
+    if (fabs(direction.x()) <= fabs(direction.y())) {
+        if (fabs(direction.z()) <= fabs(direction.x()))
+            majorAxis = Vec3d(0.0, 0.0, 1.0);
+        else
+            majorAxis = Vec3d(1.0, 0.0, 0.0);
+    } else {
+        if (fabs(direction.z()) <= fabs(direction.y()))
+            majorAxis = Vec3d(0.0, 0.0, 1.0);
+        else
+            majorAxis = Vec3d(0.0, 1.0, 0.0);
+    }
+    Vec3d axis1 = majorAxis ^ direction;
+    axis1.normalize();
+    Vec3d axis2 = direction ^ axis1;
+
+    polyt.add(Plane(-axis1, refPoint + axis1 * radius));
+    polyt.add(Plane(axis1, refPoint - axis1 * radius));
+    polyt.add(Plane(-axis2, refPoint + axis2 * radius));
+    polyt.add(Plane(axis2 , refPoint - axis2 * radius));
+}
+
+void makePolytopeBox(Polytope& polyt, const Vec3d& center,
+                     const Vec3d& direction, double radius)
+{
+    makePolytopeShaft(polyt, center, direction, radius);
+    polyt.add(Plane(-direction, center + direction * radius));
+    polyt.add(Plane(direction, center - direction * radius));
+}
+
+// Intersector for finding catapults and wires
+
+class WireIntersector : public PolytopeIntersector
+{
+public:
+    WireIntersector(const Polytope& polytope)
+        : PolytopeIntersector(polytope), depth(0)
+    {
+        setDimensionMask(DimOne);
+    }
+
+    bool enter(const osg::Node& node)
+    {
+        if (!PolytopeIntersector::enter(node))
+            return false;
+        const Referenced* base = node.getUserData();
+        if (base) {
+            const FGAICarrierHardware *ud
+                = dynamic_cast<const FGAICarrierHardware*>(base);
+            if (ud)
+                carriers.push_back(depth);
+        }
+        depth++;
+        return true;
+    }
+
+    void leave()
+    {
+        depth--;
+        if (!carriers.empty() && depth == carriers.back())
+            carriers.pop_back();
+    }
+
+    void intersect(IntersectionVisitor& iv, Drawable* drawable)
+    {
+        if (carriers.empty())
+            return;
+        PolytopeIntersector::intersect(iv, drawable);
+    }
+
+    void reset()
+    {
+        carriers.clear();
+    }
+    std::vector<int> carriers;
+    int depth;
+};
 
 /// Ok, variant that uses a infinite line istead of the ray.
 /// also not that this only works if the ray direction is normalized.
@@ -58,383 +151,6 @@ intersectsInf(const SGRayd& ray, const SGSphered& sphere)
   double dist = dot(r, r) - projectedDistance * projectedDistance;
   return dist < sphere.getRadius2();
 }
-
-template<typename T>
-class SGExtendedTriangleFunctor : public osg::TriangleFunctor<T> {
-public:
-  // Ok, to be complete we should also implement the indexed variants
-  // For now this one appears to be enough ...
-  void drawArrays(GLenum mode, GLint first, GLsizei count)
-  {
-    if (_vertexArrayPtr==0 || count==0) return;
-
-    const osg::Vec3* vlast;
-    const osg::Vec3* vptr;
-    switch(mode) {
-    case(GL_LINES):
-      vlast = &_vertexArrayPtr[first+count];
-      for(vptr=&_vertexArrayPtr[first];vptr<vlast;vptr+=2)
-        this->operator()(*(vptr),*(vptr+1),_treatVertexDataAsTemporary);
-      break;
-    case(GL_LINE_STRIP):
-      vlast = &_vertexArrayPtr[first+count-1];
-      for(vptr=&_vertexArrayPtr[first];vptr<vlast;++vptr)
-        this->operator()(*(vptr),*(vptr+1),_treatVertexDataAsTemporary);
-      break;
-    case(GL_LINE_LOOP):
-      vlast = &_vertexArrayPtr[first+count-1];
-      for(vptr=&_vertexArrayPtr[first];vptr<vlast;++vptr)
-        this->operator()(*(vptr),*(vptr+1),_treatVertexDataAsTemporary);
-      this->operator()(_vertexArrayPtr[first+count-1],
-                       _vertexArrayPtr[first],_treatVertexDataAsTemporary);
-      break;
-    default:
-      osg::TriangleFunctor<T>::drawArrays(mode, first, count);
-      break;
-    }
-  }
-protected:
-  using osg::TriangleFunctor<T>::_vertexArrayPtr;
-  using osg::TriangleFunctor<T>::_treatVertexDataAsTemporary;
-};
-
-class GroundCacheFillVisitor : public osg::NodeVisitor {
-public:
-  
-  /// class to just redirect triangles to the GroundCacheFillVisitor
-  class GroundCacheFill {
-  public:
-    void setGroundCacheFillVisitor(GroundCacheFillVisitor* gcfv)
-    { mGroundCacheFillVisitor = gcfv; }
-    
-    void operator () (const osg::Vec3& v1, const osg::Vec3& v2,
-                      const osg::Vec3& v3, bool)
-    { mGroundCacheFillVisitor->addTriangle(v1, v2, v3); }
-
-    void operator () (const osg::Vec3& v1, const osg::Vec3& v2, bool)
-    { mGroundCacheFillVisitor->addLine(v1, v2); }
-    
-  private:
-    GroundCacheFillVisitor* mGroundCacheFillVisitor;
-  };
-
-
-  GroundCacheFillVisitor(FGGroundCache* groundCache,
-                         const SGVec3d& down, 
-                         const SGVec3d& cacheReference,
-                         double cacheRadius,
-                         double wireCacheRadius) :
-    osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ACTIVE_CHILDREN),
-    mGroundCache(groundCache)
-  {
-    setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
-    mDown = down;
-    mLocalDown = down;
-    sphIsec = true;
-    mBackfaceCulling = false;
-    mCacheReference = cacheReference;
-    mLocalCacheReference = cacheReference;
-    mCacheRadius = cacheRadius;
-    mWireCacheRadius = wireCacheRadius;
-
-    mTriangleFunctor.setGroundCacheFillVisitor(this);
-
-    mGroundProperty.wire_id = -1;
-    mGroundProperty.vel = SGVec3d(0, 0, 0);
-    mGroundProperty.rot = SGVec3d(0, 0, 0);
-    mGroundProperty.pivot = SGVec3d(0, 0, 0);
-  }
-
-  void updateCullMode(osg::StateSet* stateSet)
-  {
-    if (!stateSet)
-      return;
-
-    osg::StateAttribute* stateAttribute;
-    stateAttribute = stateSet->getAttribute(osg::StateAttribute::CULLFACE);
-    if (!stateAttribute)
-      return;
-    osg::CullFace* cullFace = static_cast<osg::CullFace*>(stateAttribute);
-    mBackfaceCulling = cullFace->getMode() == osg::CullFace::BACK;
-  }
-
-  bool enterBoundingSphere(const osg::BoundingSphere& bs)
-  {
-    if (!bs.valid())
-      return false;
-
-    SGVec3d cntr(osg::Vec3d(bs.center())*mLocalToGlobal);
-    double rc = bs.radius() + mCacheRadius;
-    // Ok, this node might intersect the cache. Visit it in depth.
-    double centerDist2 = distSqr(mCacheReference, cntr);
-    if (centerDist2 < rc*rc) {
-      sphIsec = true;
-    } else {
-      // Check if the down direction touches the bounding sphere of the node
-      // if so, do at least croase agl computations.
-      // Ther other thing is that we must check if we are in range of
-      // cats or wires
-      double rw = bs.radius() + mWireCacheRadius;
-      if (rw*rw < centerDist2 &&
-          !intersectsInf(SGRayd(mCacheReference, mDown),
-                         SGSphered(cntr, bs.radius())))
-        return false;
-      sphIsec = false;
-    }
-
-    return true;
-  }
-
-  bool enterNode(osg::Node& node)
-  {
-    if (!enterBoundingSphere(node.getBound()))
-      return false;
-
-    updateCullMode(node.getStateSet());
-
-    FGGroundCache::GroundProperty& gp = mGroundProperty;
-    // get some material information for use in the gear model
-    gp.type = FGInterface::Unknown;
-    osg::Referenced* base = node.getUserData();
-    if (!base)
-      return true;
-    FGAICarrierHardware *ud =
-      dynamic_cast<FGAICarrierHardware*>(base);
-    if (!ud)
-      return true;
-
-    switch (ud->type) {
-    case FGAICarrierHardware::Wire:
-      gp.type = FGInterface::Wire;
-      gp.wire_id = ud->id;
-      break;
-    case FGAICarrierHardware::Catapult:
-      gp.type = FGInterface::Catapult;
-      break;
-    default:
-      gp.type = FGInterface::Solid;
-      break;
-    }
-    // Copy the velocity from the carrier class.
-    ud->carrier->getVelocityWrtEarth(gp.vel, gp.rot, gp.pivot);
-  
-    return true;
-  }
-
-  void fillWith(osg::Drawable* drawable)
-  {
-    bool oldSphIsec = sphIsec;
-    if (!enterBoundingSphere(drawable->getBound()))
-      return;
-
-    bool oldBackfaceCulling = mBackfaceCulling;
-    updateCullMode(drawable->getStateSet());
-
-    FGGroundCache::GroundProperty& gp = mGroundProperty;
-    // get some material information for use in the gear model
-    gp.material = globals->get_matlib()->findMaterial(drawable->getStateSet());
-    if (gp.material)
-      gp.type = gp.material->get_solid() ? FGInterface::Solid : FGInterface::Water;
-
-    drawable->accept(mTriangleFunctor);
-
-    mBackfaceCulling = oldBackfaceCulling;
-    sphIsec = oldSphIsec;
-  }
-
-  virtual void apply(osg::Geode& geode)
-  {
-    bool oldBackfaceCulling = mBackfaceCulling;
-    bool oldSphIsec = sphIsec;
-    FGGroundCache::GroundProperty oldGp = mGroundProperty;
-    if (!enterNode(geode))
-      return;
-    unsigned int numDrawables = geode.getNumDrawables();
-    for(unsigned i = 0; i < numDrawables; ++i)
-      fillWith(geode.getDrawable(i));
-    sphIsec = oldSphIsec;
-    mGroundProperty = oldGp;
-    mBackfaceCulling = oldBackfaceCulling;
-  }
-
-  virtual void apply(osg::Group& group)
-  {
-    bool oldBackfaceCulling = mBackfaceCulling;
-    bool oldSphIsec = sphIsec;
-    FGGroundCache::GroundProperty oldGp = mGroundProperty;
-    if (!enterNode(group))
-      return;
-    traverse(group);
-    sphIsec = oldSphIsec;
-    mBackfaceCulling = oldBackfaceCulling;
-    mGroundProperty = oldGp;
-  }
-
-  virtual void apply(osg::Transform& transform)
-  {
-    if (!enterNode(transform))
-      return;
-    bool oldBackfaceCulling = mBackfaceCulling;
-    bool oldSphIsec = sphIsec;
-    FGGroundCache::GroundProperty oldGp = mGroundProperty;
-    /// transform the caches center to local coords
-    osg::Matrix oldLocalToGlobal = mLocalToGlobal;
-    osg::Matrix oldGlobalToLocal = mGlobalToLocal;
-    transform.computeLocalToWorldMatrix(mLocalToGlobal, this);
-    transform.computeWorldToLocalMatrix(mGlobalToLocal, this);
-
-    SGVec3d oldLocalCacheReference = mLocalCacheReference;
-    mLocalCacheReference.osg() = mCacheReference.osg()*mGlobalToLocal;
-    SGVec3d oldLocalDown = mLocalDown;
-    mLocalDown.osg() = osg::Matrixd::transform3x3(mDown.osg(), mGlobalToLocal);
-
-    // walk the children
-    traverse(transform);
-
-    // Restore that one
-    mLocalDown = oldLocalDown;
-    mLocalCacheReference = oldLocalCacheReference;
-    mLocalToGlobal = oldLocalToGlobal;
-    mGlobalToLocal = oldGlobalToLocal;
-    sphIsec = oldSphIsec;
-    mBackfaceCulling = oldBackfaceCulling;
-    mGroundProperty = oldGp;
-  }
-  
-  void addTriangle(const osg::Vec3& v1, const osg::Vec3& v2,
-                   const osg::Vec3& v3)
-  {
-    SGVec3d v[3] = {
-      SGVec3d(v1),
-      SGVec3d(v2),
-      SGVec3d(v3)
-    };
-    
-    // a bounding sphere in the node local system
-    SGVec3d boundCenter = (1.0/3)*(v[0] + v[1] + v[2]);
-    double boundRadius = std::max(distSqr(v[0], boundCenter),
-                                  distSqr(v[1], boundCenter));
-    boundRadius = std::max(boundRadius, distSqr(v[2], boundCenter));
-    boundRadius = sqrt(boundRadius);
-
-    SGRayd ray(mLocalCacheReference, mLocalDown);
-
-    // if we are not in the downward cylinder bail out
-    if (!intersectsInf(ray, SGSphered(boundCenter, boundRadius + mCacheRadius)))
-      return;
-
-    SGTriangled triangle(v);
-    
-    // The normal and plane in the node local coordinate system
-    SGVec3d n = cross(triangle.getEdge(0), triangle.getEdge(1));
-    if (0 < dot(mLocalDown, n)) {
-      if (mBackfaceCulling) {
-        // Surface points downwards, ignore for altitude computations.
-        return;
-      } else {
-        triangle.flip();
-      }
-    }
-    
-    // Only check if the triangle is in the cache sphere if the plane
-    // containing the triangle is near enough
-    if (sphIsec) {
-      double d = dot(n, v[0] - mLocalCacheReference);
-      if (d*d < mCacheRadius*dot(n, n)) {
-        // Check if the sphere around the vehicle intersects the sphere
-        // around that triangle. If so, put that triangle into the cache.
-        double r2 = boundRadius + mCacheRadius;
-        if (distSqr(boundCenter, mLocalCacheReference) < r2*r2) {
-          FGGroundCache::Triangle t;
-          t.triangle.setBaseVertex(SGVec3d(v[0].osg()*mLocalToGlobal));
-          t.triangle.setEdge(0, SGVec3d(osg::Matrixd::transform3x3(triangle.getEdge(0).osg(), mLocalToGlobal)));
-          t.triangle.setEdge(1, SGVec3d(osg::Matrixd::transform3x3(triangle.getEdge(1).osg(), mLocalToGlobal)));
-          
-          t.sphere.setCenter(SGVec3d(boundCenter.osg()*mLocalToGlobal));
-          t.sphere.setRadius(boundRadius);
-          
-          t.velocity = mGroundProperty.vel;
-          t.rotation = mGroundProperty.rot;
-          t.rotation_pivot = mGroundProperty.pivot;
-          t.type = mGroundProperty.type;
-          t.material = mGroundProperty.material;
-          mGroundCache->triangles.push_back(t);
-        }
-      }
-    }
-    
-    // In case the cache is empty, we still provide agl computations.
-    // But then we use the old way of having a fixed elevation value for
-    // the whole lifetime of this cache.
-    SGVec3d isectpoint;
-    if (intersects(isectpoint, triangle, ray, 1e-4)) {
-      mGroundCache->found_ground = true;
-      isectpoint.osg() = isectpoint.osg()*mLocalToGlobal;
-      double this_radius = length(isectpoint);
-      if (mGroundCache->ground_radius < this_radius) {
-        mGroundCache->ground_radius = this_radius;
-        mGroundCache->_type = mGroundProperty.type;
-        mGroundCache->_material = mGroundProperty.material;
-      }
-    }
-  }
-  
-  void addLine(const osg::Vec3& v1, const osg::Vec3& v2)
-  {
-    SGVec3d gv1(osg::Vec3d(v1)*mLocalToGlobal);
-    SGVec3d gv2(osg::Vec3d(v2)*mLocalToGlobal);
-
-    SGVec3d boundCenter = 0.5*(gv1 + gv2);
-    double boundRadius = length(gv1 - boundCenter);
-
-    if (distSqr(boundCenter, mCacheReference)
-        < (boundRadius + mWireCacheRadius)*(boundRadius + mWireCacheRadius) ) {
-      if (mGroundProperty.type == FGInterface::Wire) {
-        FGGroundCache::Wire wire;
-        wire.ends[0] = gv1;
-        wire.ends[1] = gv2;
-        wire.velocity = mGroundProperty.vel;
-        wire.rotation = mGroundProperty.rot;
-        wire.rotation_pivot = mGroundProperty.pivot;
-        wire.wire_id = mGroundProperty.wire_id;
-
-        mGroundCache->wires.push_back(wire);
-      }
-      if (mGroundProperty.type == FGInterface::Catapult) {
-        FGGroundCache::Catapult cat;
-        // Trick to get the ends in the right order.
-        // Use the x axis in the original coordinate system. Choose the
-        // most negative x-axis as the one pointing forward
-        if (v1[0] > v2[0]) {
-          cat.start = gv1;
-          cat.end = gv2;
-        } else {
-          cat.start = gv2;
-          cat.end = gv1;
-        }
-        cat.velocity = mGroundProperty.vel;
-        cat.rotation = mGroundProperty.rot;
-        cat.rotation_pivot = mGroundProperty.pivot;
-
-        mGroundCache->catapults.push_back(cat);
-      }
-    }
-  }
-
-  SGExtendedTriangleFunctor<GroundCacheFill> mTriangleFunctor;
-  FGGroundCache* mGroundCache;
-  SGVec3d mCacheReference;
-  double mCacheRadius;
-  double mWireCacheRadius;
-  osg::Matrix mLocalToGlobal;
-  osg::Matrix mGlobalToLocal;
-  SGVec3d mDown;
-  SGVec3d mLocalDown;
-  SGVec3d mLocalCacheReference;
-  bool sphIsec;
-  bool mBackfaceCulling;
-  FGGroundCache::GroundProperty mGroundProperty;
-};
 
 FGGroundCache::FGGroundCache() :
   ground_radius(0.0),
@@ -461,17 +177,225 @@ FGGroundCache::velocityTransformTriangle(double dt,
   dst = src.triangle;
   sdst = src.sphere;
 
-  if (dt*dt*dot(src.velocity, src.velocity) < SGLimitsd::epsilon())
+  if (dt*dt*dot(src.gp.vel, src.gp.vel) < SGLimitsd::epsilon())
     return;
 
   SGVec3d baseVert = dst.getBaseVertex();
-  SGVec3d pivotoff = baseVert - src.rotation_pivot;
-  baseVert += dt*(src.velocity + cross(src.rotation, pivotoff));
+  SGVec3d pivotoff = baseVert - src.gp.pivot;
+  baseVert += dt*(src.gp.vel + cross(src.gp.rot, pivotoff));
   dst.setBaseVertex(baseVert);
-  dst.setEdge(0, dst.getEdge(0) + dt*cross(src.rotation, dst.getEdge(0)));
-  dst.setEdge(1, dst.getEdge(1) + dt*cross(src.rotation, dst.getEdge(1)));
+  dst.setEdge(0, dst.getEdge(0) + dt*cross(src.gp.rot, dst.getEdge(0)));
+  dst.setEdge(1, dst.getEdge(1) + dt*cross(src.gp.rot, dst.getEdge(1)));
 }
 
+void FGGroundCache::getGroundProperty(Drawable* drawable,
+                                      const NodePath& nodePath,
+                                      FGGroundCache::GroundProperty& gp,
+                                      bool& backfaceCulling)
+{
+    gp.type = FGInterface::Unknown;
+    gp.wire_id = 0;
+    gp.vel = SGVec3d(0.0, 0.0, 0.0);
+    gp.rot = SGVec3d(0.0, 0.0, 0.0);
+    gp.pivot = SGVec3d(0.0, 0.0, 0.0);
+    gp.material = 0;
+    backfaceCulling = false;
+    // XXX state set might be higher up in scene graph
+    gp.material = globals->get_matlib()->findMaterial(drawable->getStateSet());
+    if (gp.material)
+        gp.type = (gp.material->get_solid() ? FGInterface::Solid
+                   : FGInterface::Water);
+    for (NodePath::const_iterator iter = nodePath.begin(), e = nodePath.end();
+         iter != e;
+         ++iter) {
+        Node* node = *iter;
+        StateSet* stateSet = node->getStateSet();
+        StateAttribute* stateAttribute = 0;        
+        if (stateSet && (stateAttribute
+                         = stateSet->getAttribute(StateAttribute::CULLFACE))) {
+            backfaceCulling
+                = (static_cast<osg::CullFace*>(stateAttribute)->getMode()
+                   == CullFace::BACK);
+        }
+        
+        // get some material information for use in the gear model
+        Referenced* base = node->getUserData();
+        if (!base)
+            continue;
+        FGAICarrierHardware *ud = dynamic_cast<FGAICarrierHardware*>(base);
+        if (!ud)
+            continue;
+        switch (ud->type) {
+        case FGAICarrierHardware::Wire:
+            gp.type = FGInterface::Wire;
+            gp.wire_id = ud->id;
+            break;
+        case FGAICarrierHardware::Catapult:
+            gp.type = FGInterface::Catapult;
+            break;
+        default:
+            gp.type = FGInterface::Solid;
+            break;
+        }
+        // Copy the velocity from the carrier class.
+        ud->carrier->getVelocityWrtEarth(gp.vel, gp.rot, gp.pivot);
+        break;
+    }
+}
+
+void FGGroundCache::getTriIntersectorResults(PolytopeIntersector* triInt)
+{
+    const PolytopeIntersector::Intersections& intersections
+        = triInt->getIntersections();
+    Drawable* lastDrawable = 0;
+    RefMatrix* lastMatrix = 0;
+    Matrix worldToLocal;
+    GroundProperty gp;
+    bool backfaceCulling = false;
+    for (PolytopeIntersector::Intersections::const_iterator
+             itr = intersections.begin(), e = intersections.end();
+         itr != e;
+         ++itr) {
+        const PolytopeIntersector::Intersection& intr = *itr;
+        if (intr.drawable.get() != lastDrawable) {
+            getGroundProperty(intr.drawable.get(), intr.nodePath, gp,
+                              backfaceCulling);
+            lastDrawable = intr.drawable.get();
+        }
+        Primitive triPrim = getPrimitive(intr.drawable, intr.primitiveIndex);
+        if (triPrim.numVerts != 3)
+            continue;
+        SGVec3d v[3] = { SGVec3d(triPrim.vertices[0]),
+                         SGVec3d(triPrim.vertices[1]),
+                         SGVec3d(triPrim.vertices[2])
+        };
+        RefMatrix* mat = intr.matrix.get();
+        // If the drawable is the same then the intersection model
+        // matrix should be the same, because it is only set by nodes
+        // in the scene graph. However, do an extra test in case
+        // something funny is going on with the drawable.
+        if (mat != lastMatrix) {
+            lastMatrix = mat;
+            worldToLocal = Matrix::inverse(*mat);
+        }
+        SGVec3d localCacheReference;
+        localCacheReference.osg() = reference_wgs84_point.osg() * worldToLocal;
+        SGVec3d localDown;
+        localDown.osg() = Matrixd::transform3x3(down.osg(), worldToLocal);
+        // a bounding sphere in the node local system
+        SGVec3d boundCenter = (1.0/3)*(v[0] + v[1] + v[2]);
+        double boundRadius = std::max(distSqr(v[0], boundCenter),
+                                      distSqr(v[1], boundCenter));
+        boundRadius = std::max(boundRadius, distSqr(v[2], boundCenter));
+        boundRadius = sqrt(boundRadius);
+        SGRayd ray(localCacheReference, localDown);
+        SGTriangled triangle(v);
+        // The normal and plane in the node local coordinate system
+        SGVec3d n = cross(triangle.getEdge(0), triangle.getEdge(1));
+        if (0 < dot(localDown, n)) {
+            if (backfaceCulling) {
+                // Surface points downwards, ignore for altitude computations.
+                continue;
+            } else {
+                triangle.flip();
+            }
+        }
+    
+        // Only check if the triangle is in the cache sphere if the plane
+        // containing the triangle is near enough
+        double d = dot(n, v[0] - localCacheReference);
+        if (d*d < reference_vehicle_radius*dot(n, n)) {
+            // Check if the sphere around the vehicle intersects the sphere
+            // around that triangle. If so, put that triangle into the cache.
+            double r2 = boundRadius + reference_vehicle_radius;
+            if (distSqr(boundCenter, localCacheReference) < r2*r2) {
+                FGGroundCache::Triangle t;
+                t.triangle.setBaseVertex(SGVec3d(v[0].osg() * *mat));
+                t.triangle.setEdge(0, SGVec3d(Matrixd::
+                                              transform3x3(triangle
+                                                           .getEdge(0).osg(),
+                                                           *mat)));
+                t.triangle.setEdge(1, SGVec3d(Matrixd::
+                                              transform3x3(triangle
+                                                           .getEdge(1).osg(),
+                                                           *mat)));
+                t.sphere.setCenter(SGVec3d(boundCenter.osg()* *mat));
+                t.sphere.setRadius(boundRadius);
+                t.gp = gp;
+                triangles.push_back(t);
+            }
+        }
+        // In case the cache is empty, we still provide agl computations.
+        // But then we use the old way of having a fixed elevation value for
+        // the whole lifetime of this cache.
+        SGVec3d isectpoint;
+        if (intersects(isectpoint, triangle, ray, 1e-4)) {
+            found_ground = true;
+            isectpoint.osg() = isectpoint.osg() * *mat;
+            double this_radius = length(isectpoint);
+            if (ground_radius < this_radius) {
+                ground_radius = this_radius;
+                _type = gp.type;
+                _material = gp.material;
+            }
+        }        
+    }
+}
+
+void FGGroundCache::getWireIntersectorResults(WireIntersector* wireInt,
+                                              double wireCacheRadius)
+{
+    const WireIntersector::Intersections& intersections
+        = wireInt->getIntersections();
+    Drawable* lastDrawable = 0;
+    GroundProperty gp;
+    bool backfaceCulling = false;
+    for (PolytopeIntersector::Intersections::const_iterator
+             itr = intersections.begin(), e = intersections.end();
+         itr != e;
+         ++itr) {
+        if (itr->drawable.get() != lastDrawable) {
+            getGroundProperty(itr->drawable.get(), itr->nodePath, gp,
+                              backfaceCulling);
+            lastDrawable = itr->drawable.get();
+        }
+        Primitive linePrim = getPrimitive(itr->drawable, itr->primitiveIndex);
+        if (linePrim.numVerts != 2)
+            continue;
+        RefMatrix* mat = itr->matrix.get();
+        SGVec3d gv1(osg::Vec3d(linePrim.vertices[0]) * *mat);
+        SGVec3d gv2(osg::Vec3d(linePrim.vertices[1]) * *mat);
+
+        SGVec3d boundCenter = 0.5*(gv1 + gv2);
+        double boundRadius = length(gv1 - boundCenter);
+
+        if (distSqr(boundCenter, reference_wgs84_point)
+            < (boundRadius + wireCacheRadius)*(boundRadius + wireCacheRadius)) {
+            if (gp.type == FGInterface::Wire) {
+                FGGroundCache::Wire wire;
+                wire.ends[0] = gv1;
+                wire.ends[1] = gv2;
+                wire.gp = gp;
+                wires.push_back(wire);
+            } else if (gp.type == FGInterface::Catapult) {
+                FGGroundCache::Catapult cat;
+                // Trick to get the ends in the right order.
+                // Use the x axis in the original coordinate system. Choose the
+                // most negative x-axis as the one pointing forward
+                if (linePrim.vertices[1][0] > linePrim.vertices[2][0]) {
+                    cat.start = gv1;
+                    cat.end = gv2;
+                } else {
+                    cat.start = gv2;
+                    cat.end = gv1;
+                }
+                cat.gp = gp;
+                catapults.push_back(cat);
+            }
+        }
+        
+    }
+}
 
 bool
 FGGroundCache::prepare_ground_cache(double ref_time, const SGVec3d& pt,
@@ -510,10 +434,27 @@ FGGroundCache::prepare_ground_cache(double ref_time, const SGVec3d& pt,
   const double max_wire_dist = 300.0;
   double wireCacheRadius = max_wire_dist < rad ? rad : max_wire_dist;
 
-  // Walk the scene graph and extract solid ground triangles and carrier data.
-  GroundCacheFillVisitor gcfv(this, down, pt, cacheRadius, wireCacheRadius);
-  globals->get_scenery()->get_scene_graph()->accept(gcfv);
+  Polytope triPolytope;
+  makePolytopeShaft(triPolytope, pt.osg(), down.osg(), cacheRadius);
+  ref_ptr<PolytopeIntersector> triIntersector
+      = new PolytopeIntersector(triPolytope);
+  triIntersector->setDimensionMask(PolytopeIntersector::DimTwo);
+  Polytope wirePolytope;
+  makePolytopeBox(wirePolytope, pt.osg(), down.osg(), wireCacheRadius);
+  ref_ptr<WireIntersector> wireIntersector = new WireIntersector(wirePolytope);
+  wireIntersector->setDimensionMask(PolytopeIntersector::DimOne);
+  ref_ptr<IntersectorGroup> intersectors = new IntersectorGroup;
+  intersectors->addIntersector(triIntersector.get());
+  intersectors->addIntersector(wireIntersector.get());
 
+  // Walk the scene graph and extract solid ground triangles and
+  // carrier data.
+  IntersectionVisitor iv(intersectors);
+  iv.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
+  globals->get_scenery()->get_scene_graph()->accept(iv);
+  getTriIntersectorResults(triIntersector.get());
+  getWireIntersectorResults(wireIntersector.get(), wireCacheRadius);
+  
   // some stats
   SG_LOG(SG_FLIGHT,SG_DEBUG, "prepare_ground_cache(): ac radius = " << rad
          << ", # triangles = " << triangles.size()
@@ -553,10 +494,10 @@ FGGroundCache::get_cat(double t, const SGVec3d& dpt,
   size_t sz = catapults.size();
   for (size_t i = 0; i < sz; ++i) {
     SGVec3d pivotoff, rvel[2];
-    pivotoff = catapults[i].start - catapults[i].rotation_pivot;
-    rvel[0] = catapults[i].velocity + cross(catapults[i].rotation, pivotoff);
-    pivotoff = catapults[i].end - catapults[i].rotation_pivot;
-    rvel[1] = catapults[i].velocity + cross(catapults[i].rotation, pivotoff);
+    pivotoff = catapults[i].start - catapults[i].gp.pivot;
+    rvel[0] = catapults[i].gp.vel + cross(catapults[i].gp.rot, pivotoff);
+    pivotoff = catapults[i].end - catapults[i].gp.pivot;
+    rvel[1] = catapults[i].gp.vel + cross(catapults[i].gp.rot, pivotoff);
 
     SGVec3d thisEnd[2];
     thisEnd[0] = catapults[i].start + t*rvel[0];
@@ -630,13 +571,13 @@ FGGroundCache::get_agl(double t, const SGVec3d& dpt, double max_altoff,
         // The first three values in the vector are the plane normal.
         normal = triangle.getNormal();
         // The velocity wrt earth.
-        SGVec3d pivotoff = pt - triangles[i].rotation_pivot;
-        vel = triangles[i].velocity + cross(triangles[i].rotation, pivotoff);
+        SGVec3d pivotoff = pt - triangles[i].gp.pivot;
+        vel = triangles[i].gp.vel + cross(triangles[i].gp.rot, pivotoff);
         // Save the ground type.
-        *type = triangles[i].type;
+        *type = triangles[i].gp.type;
         *agl = dot(down, contact - dpt);
         if (material)
-          *material = triangles[i].material;
+          *material = triangles[i].gp.material;
       }
     }
   }
@@ -684,8 +625,8 @@ bool FGGroundCache::caught_wire(double t, const SGVec3d pt[4])
     SGVec3d le[2];
     for (int k = 0; k < 2; ++k) {
       le[k] = wires[i].ends[k];
-      SGVec3d pivotoff = le[k] - wires[i].rotation_pivot;
-      SGVec3d vel = wires[i].velocity + cross(wires[i].rotation, pivotoff);
+      SGVec3d pivotoff = le[k] - wires[i].gp.pivot;
+      SGVec3d vel = wires[i].gp.vel + cross(wires[i].gp.rot, pivotoff);
       le[k] += t*vel;
     }
     SGLineSegmentd lineSegment(le[0], le[1]);
@@ -694,7 +635,7 @@ bool FGGroundCache::caught_wire(double t, const SGVec3d pt[4])
       if (intersects(triangle[k], lineSegment)) {
         SG_LOG(SG_FLIGHT,SG_INFO, "Caught wire");
         // Store the wire id.
-        wire_id = wires[i].wire_id;
+        wire_id = wires[i].gp.wire_id;
         return true;
       }
     }
@@ -715,10 +656,10 @@ bool FGGroundCache::get_wire_ends(double t, SGVec3d end[2], SGVec3d vel[2])
   // Search for the wire with the matching wire id.
   size_t sz = wires.size();
   for (size_t i = 0; i < sz; ++i) {
-    if (wires[i].wire_id == wire_id) {
+    if (wires[i].gp.wire_id == wire_id) {
       for (size_t k = 0; k < 2; ++k) {
-        SGVec3d pivotoff = wires[i].ends[k] - wires[i].rotation_pivot;
-        vel[k] = wires[i].velocity + cross(wires[i].rotation, pivotoff);
+        SGVec3d pivotoff = wires[i].ends[k] - wires[i].gp.pivot;
+        vel[k] = wires[i].gp.vel + cross(wires[i].gp.rot, pivotoff);
         end[k] = wires[i].ends[k] + t*vel[k];
       }
       return true;

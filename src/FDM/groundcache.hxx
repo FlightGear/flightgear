@@ -23,13 +23,20 @@
 #ifndef _GROUNDCACHE_HXX
 #define _GROUNDCACHE_HXX
 
+#include <osg/Node>
+
+namespace osgUtil
+{
+class PolytopeIntersector;
+}
+
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
 #include <simgear/math/SGMath.hxx>
 #include <simgear/math/SGGeometry.hxx>
 
 class SGMaterial;
-class GroundCacheFillVisitor;
+class WireIntersector;
 
 class FGGroundCache {
 public:
@@ -84,33 +91,34 @@ public:
 private:
     friend class GroundCacheFillVisitor;
 
-    struct Triangle {
-      Triangle() : material(0) {}
-      // The triangle we represent
-      SGTriangled triangle;
-      SGSphered sphere;
-      // The linear and angular velocity.
-      SGVec3d velocity;
-      SGVec3d rotation;
-      SGVec3d rotation_pivot;
-      // Ground type
+
+    // Helper class to hold some properties of the ground triangle.
+    struct GroundProperty {
+      GroundProperty() : type(0), wire_id(0), material(0) {}
       int type;
+      int wire_id;
+      // The linear and angular velocity.        
+      SGVec3d vel;
+      SGVec3d rot;
+      SGVec3d pivot;
       // the simgear material reference, contains friction coeficients ...
       const SGMaterial* material;
     };
+    
+    struct Triangle {
+      GroundProperty gp;
+      // The triangle we represent
+      SGTriangled triangle;
+      SGSphered sphere;
+    };
     struct Catapult {
+      GroundProperty gp;        
       SGVec3d start;
       SGVec3d end;
-      SGVec3d velocity;
-      SGVec3d rotation;
-      SGVec3d rotation_pivot;
     };
     struct Wire {
+      GroundProperty gp;        
       SGVec3d ends[2];
-      SGVec3d velocity;
-      SGVec3d rotation;
-      SGVec3d rotation_pivot;
-      int wire_id;
     };
 
 
@@ -139,20 +147,14 @@ private:
     SGVec3d down;
     bool found_ground;
 
-
-    // Helper class to hold some properties of the ground triangle.
-    struct GroundProperty {
-      GroundProperty() : type(0), material(0) {}
-      int type;
-      int wire_id;
-      SGVec3d vel;
-      SGVec3d rot;
-      SGVec3d pivot;
-      const SGMaterial* material;
-    };
-
+    void getGroundProperty(osg::Drawable* drawable,
+                           const osg::NodePath& nodePath,
+                           GroundProperty& gp, bool& backfaceCulling);
     static void velocityTransformTriangle(double dt, SGTriangled& dst,
                                           SGSphered& sdst, const Triangle& src);
+    void getTriIntersectorResults(osgUtil::PolytopeIntersector* triInt);
+    void getWireIntersectorResults(WireIntersector* wireInt,
+                                   double wireCacheRadius);
 };
 
 #endif
