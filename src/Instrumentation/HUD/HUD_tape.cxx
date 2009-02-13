@@ -64,7 +64,9 @@ HUD::Tape::Tape(HUD *hud, const SGPropertyNode *n, float x, float y) :
         _div_ratio = 0, _minor_divs = _major_divs;
 
 //    int k; //odd or even values for ticks		// FIXME odd scale
-    _odd_type = int(floorf(_input.max() + 0.5)) & 1 ? true : false;
+    _odd_type = false;
+    if (_input.max() + .5f < float(SGLimits<long>::max()))
+        _odd_type = long(floorf(_input.max() + 0.5f)) & 1 ? true : false;
 }
 
 
