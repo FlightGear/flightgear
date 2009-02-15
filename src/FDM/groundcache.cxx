@@ -382,7 +382,7 @@ void FGGroundCache::getWireIntersectorResults(WireIntersector* wireInt,
                 // Trick to get the ends in the right order.
                 // Use the x axis in the original coordinate system. Choose the
                 // most negative x-axis as the one pointing forward
-                if (linePrim.vertices[1][0] > linePrim.vertices[2][0]) {
+                if (linePrim.vertices[0][0] > linePrim.vertices[1][0]) {
                     cat.start = gv1;
                     cat.end = gv2;
                 } else {
