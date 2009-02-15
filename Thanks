@@ -242,6 +242,10 @@ Ampere Hardraade <>
   Many detailed 3D models of aircraft, including the MD11, and several
   Airbuses.
 
+Brett Harrison <>
+  Ground networks for various airports.
+  Most of the liveries for the new C172p by HHS.
+  AI Repaints for several 737's and C172's
 
 Dave Haskell <dave@haskell.demon.co.uk>
   Original exterior textures for the Cessna 310 U-3A model. Only a few
@@ -569,6 +573,10 @@ Durk Talsma <d.talsma@chello.nl>
   Full scale AI traffic demo for EHAM.
   Current FlightGear release manager.
 
+Gabor Toth <>
+  Contributed some Livery repaints for AI Aircraft
+  Contributed many ideas leading towards the Traffic Manager II format
+  Runs FGTracker, an online flight tracking service for FlightGear
 
 James Turner <>
   Many code cleanups of the internal structure of the airport database,
