@@ -63,7 +63,7 @@ syn match   nasalFunction		"\<math\.\(sin\|cos\|exp\|ln\|sqrt\|atan2\)\>"
 syn match   nasalConstant		"\<math\.\(e\|pi\)\>"
 
 " io lib
-syn match   nasalFunction		"\<io\.\(close\|read\|write\|seek\|tell\|open\|readln\|stat\)\>"
+syn match   nasalFunction		"\<io\.\(close\|read\|write\|seek\|tell\|flush\|open\|readln\|stat\)\>"
 syn match   nasalVar			"\<io\.\(SEEK_SET\|SEEK_CUR\|SEEK_END\|stdin\|stdout\|stderr\)\>"
 
 " bits lib
@@ -85,11 +85,11 @@ if !exists("nasal_no_fgfs")
 	syn keyword nasalFGFSFunction		geodtocart carttogeod geodinfo parsexml airportinfo abort
 
 	syn keyword nasalGlobalsFunction	isa fgcommand cmdarg abs interpolate setlistener defined printlog
-	syn keyword nasalGlobalsFunction	thisfunc printf
+	syn keyword nasalGlobalsFunction	thisfunc printf values
 
 	syn keyword nasalPropsFunction		getType getName getIndex getValue setValue setIntValue
 	syn keyword nasalPropsFunction		setBoolValue setDoubleValue getParent getChild getChildren
-	syn keyword nasalPropsFunction		getAttribute setAttribute alias unalias
+	syn keyword nasalPropsFunction		getAttribute setAttribute alias unalias getAliasTarget clearValue
 	syn keyword nasalPropsFunction		removeChild removeChildren getNode initNode
 	syn keyword nasalPropsFunction		getPath getBoolValue setValues getValues
 	syn match   nasalPropsFunction		"\<props\.\(_\?globals\|Node\|nodeList\|condition\)\>\.\="
