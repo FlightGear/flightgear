@@ -67,7 +67,8 @@ private:
   string atisInformation;
 
   string chooseRunwayFallback();
-  bool innerGetActiveRunway(const string &trafficType, int action, string &runway);
+  bool innerGetActiveRunway(const string &trafficType, int action, string &runway, double heading);
+  string chooseRwyByHeading(stringVec rwys, double heading);
 public:
   FGAirportDynamics(FGAirport* ap);
   FGAirportDynamics(const FGAirportDynamics &other);
@@ -88,7 +89,7 @@ public:
   double getElevation() const; 
   const string& getId() const; 
   
-  void getActiveRunway(const string& trafficType, int action, string& runway);
+  void getActiveRunway(const string& trafficType, int action, string& runway, double heading);
 
   void addParking(FGParking& park);
   bool getAvailableParking(double *lat, double *lon, 

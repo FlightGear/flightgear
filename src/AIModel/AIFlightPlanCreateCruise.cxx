@@ -26,6 +26,7 @@
 #include <fstream>
 #include <iostream>
 #include "AIFlightPlan.hxx"
+#include "AIAircraft.hxx"
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/route/waypoint.hxx>
@@ -310,21 +311,22 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
  * Note that this is the original version that does not 
  * do any dynamic route computation.
  ******************************************************************/
-void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep, 
+void FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport *dep, 
 				  FGAirport *arr, double latitude, 
 				  double longitude, double speed, 
 				  double alt, const string& fltType)
 {
   waypoint *wpt;
-  wpt = createInAir("Cruise", SGGeod::fromDeg(longitude, latitude), alt, speed);
+  wpt = createInAir(ac, "Cruise", SGGeod::fromDeg(longitude, latitude), alt, speed);
   waypoints.push_back(wpt); 
   
   string rwyClass = getRunwayClassFromTrafficType(fltType);
-  arr->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway);
+  double heading = ac->getTrafficRef()->getCourse();
+  arr->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway, heading);
   rwy = arr->getRunwayByIdent(activeRunway);
   // begin descent 110km out
   SGGeod beginDescentPoint = rwy->pointOnCenterline(-110000);
   
-  wpt = createInAir("BOD", beginDescentPoint, alt, speed);
+  wpt = createInAir(ac, "BOD", beginDescentPoint, alt, speed);
   waypoints.push_back(wpt); 
 }

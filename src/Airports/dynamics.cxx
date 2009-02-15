@@ -343,7 +343,7 @@ void FGAirportDynamics::setRwyUse(const FGRunwayPreference& ref)
   //exit(1);
 }
 
-bool FGAirportDynamics::innerGetActiveRunway(const string &trafficType, int action, string &runway)
+bool FGAirportDynamics::innerGetActiveRunway(const string &trafficType, int action, string &runway, double heading)
 {
 double windSpeed;
   double windHeading;
@@ -452,7 +452,7 @@ double windSpeed;
 	      // Note that the randomization below, is just a placeholder to choose between
 	      // multiple active runways for this action. This should be
 	      // under ATC control.
-	      runway = takeoff[(rand() %  nr)];
+	      runway = chooseRwyByHeading (takeoff, heading);
 	    }
 	  else
 	    { // Fallback
@@ -465,7 +465,7 @@ double windSpeed;
 	  int nr = landing.size();
 	  if (nr)
 	    {
-	      runway = landing[(rand() % nr)];
+	      runway = chooseRwyByHeading (landing, heading);
 	    }
 	  else
 	    {  //fallback
@@ -476,9 +476,28 @@ double windSpeed;
   return true;
 }
 
-void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, string &runway)
+string FGAirportDynamics::chooseRwyByHeading(stringVec rwys, double heading) {
+   double bestError = 360.0;
+   double rwyHeading, headingError;
+   string runway;
+   for (stringVecIterator i = rwys.begin(); i != rwys.end(); i++) {
+       FGRunway *rwy = _ap->getRunwayByIdent((*i));
+       rwyHeading = rwy->headingDeg();
+       headingError = fabs(heading - rwyHeading);
+        if (headingError > 180)
+            headingError = fabs(headingError - 360);
+        if (headingError < bestError) {
+            runway = (*i);
+            bestError = headingError;
+        }
+   }
+   //cerr << "Using active runway " << runway << " for heading " << heading << endl;
+   return runway;
+}
+
+void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, string &runway, double heading)
 {
-  bool ok = innerGetActiveRunway(trafficType, action, runway);
+  bool ok = innerGetActiveRunway(trafficType, action, runway, heading);
   if (!ok) {
     runway = chooseRunwayFallback();
   }

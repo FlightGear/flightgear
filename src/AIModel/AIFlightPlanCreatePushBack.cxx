@@ -31,7 +31,8 @@
 #include <Environment/environment.hxx>
 
 
-void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep, 
+void FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
+                                    bool firstFlight, FGAirport *dep, 
  				    double latitude,
  				    double longitude,
  				    double radius,
@@ -41,9 +42,13 @@ void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep,
 {
     double lat, lon, heading;
     FGTaxiRoute *pushBackRoute;
+    // Active runway can be conditionally set by ATC, so at the start of a new flight, this
+    // must be reset.
+    activeRunway.clear();
+
     if (!(dep->getDynamics()->getGroundNetwork()->exists())) {
 	//cerr << "Push Back fallback" << endl;
-        createPushBackFallBack(firstFlight, dep, latitude, longitude,
+        createPushBackFallBack(ac, firstFlight, dep, latitude, longitude,
                                radius, fltType, aircraftType, airline);
     } else {
         if (firstFlight) {
@@ -88,7 +93,7 @@ void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep,
             dep->getDynamics()->getParking(gateId, &lat, &lon, &heading);
         }
         if (gateId < 0) {
-             createPushBackFallBack(firstFlight, dep, latitude, longitude,
+             createPushBackFallBack(ac, firstFlight, dep, latitude, longitude,
                                     radius, fltType, aircraftType, airline);
              return;
 
@@ -223,7 +228,7 @@ void FGAIFlightPlan::createPushBack(bool firstFlight, FGAirport *dep,
  * This is the backup function for airports that don't have a 
  * network yet. 
  ******************************************************************/
-void FGAIFlightPlan::createPushBackFallBack(bool firstFlight, FGAirport *dep, 
+void FGAIFlightPlan::createPushBackFallBack(FGAIAircraft *ac, bool firstFlight, FGAirport *dep, 
  				    double latitude,
  				    double longitude,
  				    double radius,

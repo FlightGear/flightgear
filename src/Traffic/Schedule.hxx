@@ -56,7 +56,7 @@ class FGAISchedule
   int AIManagerRef;
   //int score;
   bool firstRun;
-  
+  double courseToDest;
 
 
  public:
@@ -100,6 +100,7 @@ class FGAISchedule
   const string& getRegistration   () { return registration;};
   const string& getFlightRules    () { return (*flights.begin())->getFlightRules (); };
   bool getHeavy                   () { return heavy; };
+  double getCourse                () { return courseToDest; };
   FGScheduledFlight*findAvailableFlight (const string &currentDestination, const string &req);
   // used to sort in decending order of score: I've probably found a better way to
   // decending order sorting, but still need to test that.
