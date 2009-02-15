@@ -554,23 +554,50 @@ FGProperties::unbind ()
 void
 FGProperties::update (double dt)
 {
-                                // Date and time
-    struct tm *t = globals->get_time_params()->getGmt();
+    static SGPropertyNode_ptr offset = fgGetNode("/sim/time/local-offset", true);
+    offset->setIntValue(globals->get_time_params()->get_local_offset());
 
-    fgSetInt("/sim/time/utc/year", t->tm_year + 1900);
-    fgSetInt("/sim/time/utc/month", t->tm_mon + 1);
-    fgSetInt("/sim/time/utc/day", t->tm_mday);
-    fgSetInt("/sim/time/utc/hour", t->tm_hour);
-    fgSetInt("/sim/time/utc/minute", t->tm_min);
-    fgSetInt("/sim/time/utc/second", t->tm_sec);
 
-    fgSetDouble("/sim/time/utc/day-seconds",
-                t->tm_hour * 3600 +
-                t->tm_min * 60 +
-                t->tm_sec);
+    // utc date/time
+    static SGPropertyNode_ptr uyear = fgGetNode("/sim/time/utc/year", true);
+    static SGPropertyNode_ptr umonth = fgGetNode("/sim/time/utc/month", true);
+    static SGPropertyNode_ptr uday = fgGetNode("/sim/time/utc/day", true);
+    static SGPropertyNode_ptr uhour = fgGetNode("/sim/time/utc/hour", true);
+    static SGPropertyNode_ptr umin = fgGetNode("/sim/time/utc/minute", true);
+    static SGPropertyNode_ptr usec = fgGetNode("/sim/time/utc/second", true);
+    static SGPropertyNode_ptr uwday = fgGetNode("/sim/time/utc/weekday", true);
+    static SGPropertyNode_ptr udsec = fgGetNode("/sim/time/utc/day-seconds", true);
 
-    fgSetInt("/sim/time/local-offset",
-             globals->get_time_params()->get_local_offset());
+    struct tm *u = globals->get_time_params()->getGmt();
+    uyear->setIntValue(u->tm_year + 1900);
+    umonth->setIntValue(u->tm_mon + 1);
+    uday->setIntValue(u->tm_mday);
+    uhour->setIntValue(u->tm_hour);
+    umin->setIntValue(u->tm_min);
+    usec->setIntValue(u->tm_sec);
+    uwday->setIntValue(u->tm_wday);
+
+    udsec->setIntValue(u->tm_hour * 3600 + u->tm_min * 60 + u->tm_sec);
+
+
+    // real local date/time
+    static SGPropertyNode_ptr ryear = fgGetNode("/sim/time/real/year", true);
+    static SGPropertyNode_ptr rmonth = fgGetNode("/sim/time/real/month", true);
+    static SGPropertyNode_ptr rday = fgGetNode("/sim/time/real/day", true);
+    static SGPropertyNode_ptr rhour = fgGetNode("/sim/time/real/hour", true);
+    static SGPropertyNode_ptr rmin = fgGetNode("/sim/time/real/minute", true);
+    static SGPropertyNode_ptr rsec = fgGetNode("/sim/time/real/second", true);
+    static SGPropertyNode_ptr rwday = fgGetNode("/sim/time/real/weekday", true);
+
+    time_t real = time(0);
+    struct tm *r = localtime(&real);
+    ryear->setIntValue(r->tm_year + 1900);
+    rmonth->setIntValue(r->tm_mon + 1);
+    rday->setIntValue(r->tm_mday);
+    rhour->setIntValue(r->tm_hour);
+    rmin->setIntValue(r->tm_min);
+    rsec->setIntValue(r->tm_sec);
+    rwday->setIntValue(r->tm_wday);
 }
 
 
