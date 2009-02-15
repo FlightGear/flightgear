@@ -195,7 +195,7 @@ bool FGAISchedule::update(time_t now)
   FGAIManager *aimgr;
   string airport;
   
-  double courseToUser,   courseToDest;
+  double courseToUser;
   double distanceToDest;
   double speed;
 

@@ -42,6 +42,7 @@
 #include <Environment/environment.hxx>
 
 #include "AIFlightPlan.hxx"
+#include "AIAircraft.hxx"
 
 using std::cerr;
 
@@ -201,7 +202,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
       if (timeDiff >= 2000)
           leg = 5;
 
-      SG_LOG(SG_GENERAL, SG_INFO, "Route from " << dep->getId() << " to " << arr->getId() << ". Set leg to : " << leg);
+      SG_LOG(SG_GENERAL, SG_INFO, "Route from " << dep->getId() << " to " << arr->getId() << ". Set leg to : " << leg << " " << ac->getTrafficRef()->getCallSign());
       wpt_iterator = waypoints.begin();
       create(ac, dep,arr, leg, alt, speed, lat, lon,
 	     firstLeg, radius, fltType, acType, airline);

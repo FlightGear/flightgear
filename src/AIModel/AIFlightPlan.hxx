@@ -110,6 +110,9 @@ public:
   string getRunway() { return activeRunway; }
   bool isActive(time_t time) {return time >= this->getStartTime();}
 
+  void setRunway(string rwy) { activeRunway = rwy; };
+  string getRunwayClassFromTrafficType(string fltType);
+
 private:
   FGRunway* rwy;
   typedef vector <waypoint*> wpt_vector_type;
@@ -129,30 +132,30 @@ private:
   FGAirRoute airRoute;
   FGTaxiRoute *taxiRoute;
 
-  void createPushBack(bool, FGAirport*, double, double, double, const string&, const string&, const string&);
-  void createPushBackFallBack(bool, FGAirport*, double, double, double, const string&, const string&, const string&);
+  void createPushBack(FGAIAircraft *, bool, FGAirport*, double, double, double, const string&, const string&, const string&);
+  void createPushBackFallBack(FGAIAircraft *, bool, FGAirport*, double, double, double, const string&, const string&, const string&);
   void createTakeOff(FGAIAircraft *, bool, FGAirport *, double, const string&);
-  void createClimb(bool, FGAirport *, double, double, const string&);
-  void createCruise(bool, FGAirport*, FGAirport*, double, double, double, double, const string&);
-  void createDecent(FGAirport *, const string&);
-  void createLanding(FGAirport *);
-  void createParking(FGAirport *, double radius);
+  void createClimb(FGAIAircraft *, bool, FGAirport *, double, double, const string&);
+  void createCruise(FGAIAircraft *, bool, FGAirport*, FGAirport*, double, double, double, double, const string&);
+  void createDecent(FGAIAircraft *, FGAirport *, const string&);
+  void createLanding(FGAIAircraft *, FGAirport *);
+  void createParking(FGAIAircraft *, FGAirport *, double radius);
   void deleteWaypoints(); 
   void resetWaypoints();
 
-  void createLandingTaxi(FGAirport *apt, double radius, const string& fltType, const string& acType, const string& airline);
-  void createDefaultLandingTaxi(FGAirport* aAirport);
-  void createDefaultTakeoffTaxi(FGAirport* aAirport, FGRunway* aRunway);
-  void createTakeoffTaxi(bool firstFlight, FGAirport *apt, double radius, const string& fltType, const string& acType, const string& airline);
+  void createLandingTaxi(FGAIAircraft *, FGAirport *apt, double radius, const string& fltType, const string& acType, const string& airline);
+  void createDefaultLandingTaxi(FGAIAircraft *, FGAirport* aAirport);
+  void createDefaultTakeoffTaxi(FGAIAircraft *, FGAirport* aAirport, FGRunway* aRunway);
+  void createTakeoffTaxi(FGAIAircraft *, bool firstFlight, FGAirport *apt, double radius, const string& fltType, const string& acType, const string& airline);
         
-  waypoint* createOnGround(const std::string& aName, const SGGeod& aPos, double aElev, double aSpeed);
-  waypoint* createInAir(const std::string& aName, const SGGeod& aPos, double aElev, double aSpeed);
-  waypoint* cloneWithPos(waypoint* aWpt, const std::string& aName, const SGGeod& aPos);
+  waypoint* createOnGround(FGAIAircraft *, const std::string& aName, const SGGeod& aPos, double aElev, double aSpeed);
+  waypoint* createInAir(FGAIAircraft *, const std::string& aName, const SGGeod& aPos, double aElev, double aSpeed);
+  waypoint* cloneWithPos(FGAIAircraft *, waypoint* aWpt, const std::string& aName, const SGGeod& aPos);
     
-  string getRunwayClassFromTrafficType(string fltType);
 
   //void createCruiseFallback(bool, FGAirport*, FGAirport*, double, double, double, double);
  void evaluateRoutePart(double deplat, double deplon, double arrlat, double arrlon);
+ 
 };    
 
 #endif  // _FG_AIFLIGHTPLAN_HXX

@@ -380,6 +380,10 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
     string text;
     string taxiFreqStr;
     char buffer[7];
+    double heading = 0;
+    string activeRunway;
+    string fltType;
+    string rwyClass;
     switch (msgId) {
           case MSG_ANNOUNCE_ENGINE_START:
                text = sender + ". Ready to Start up";
@@ -390,9 +394,21 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
                        rec->getAircraft()->getTrafficRef()->getFlightRules() + " to " + 
                        rec->getAircraft()->getTrafficRef()->getArrivalAirport()->getName() + ". Request start-up";
                break;
+          // Acknowledge engine startup permission
+          // Assign departure runway
+          // Assign SID, if necessery (TODO)
           case MSG_PERMIT_ENGINE_START:
                taxiFreqStr = formatATCFrequency3_2(taxiFreq);
-               text = receiver + ". Start-up approved. " + atisInformation + " correct, runway ZZ, AAA departure, squawk BBBB. " +
+               
+               heading = rec->getAircraft()->getTrafficRef()->getCourse();
+               fltType = rec->getAircraft()->getTrafficRef()->getFlightType();
+               rwyClass= rec->getAircraft()->GetFlightPlan()->getRunwayClassFromTrafficType(fltType);
+
+               rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway, heading);
+               rec->getAircraft()->GetFlightPlan()->setRunway(activeRunway);
+               //snprintf(buffer, 7, "%3.2f", heading);
+               text = receiver + ". Start-up approved. " + atisInformation + " correct, runway " + activeRunway
+                       + ", AAA departure, squawk BBBB. " +
                       "For push-back and taxi clearance call " + taxiFreqStr + ". " + sender + " control.";
                break;
           case MSG_DENY_ENGINE_START:
@@ -400,7 +416,9 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
                break;
          case MSG_ACKNOWLEDGE_ENGINE_START:
                taxiFreqStr = formatATCFrequency3_2(taxiFreq);
-               text = receiver + ". Start-up approved. " + atisInformation + " correct, runway ZZ, AAA departure, squawk BBBB. " +
+               activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
+               text = receiver + ". Start-up approved. " + atisInformation + " correct, runway " +
+                      activeRunway + ", AAA departure, squawk BBBB. " +
                       "For push-back and taxi clearance call " + taxiFreqStr + ". " + sender;
                break;
            default:
