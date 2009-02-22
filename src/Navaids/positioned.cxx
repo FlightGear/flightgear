@@ -62,10 +62,16 @@ public:
   {
     return a->type() < b;
   }
-  
+
   bool operator()(const FGPositioned::Type a, const FGPositioned* b) const
   {
     return a < b->type();
+  }
+
+  // The operator below is required by VS2005 in debug mode
+  bool operator()(const FGPositioned* a, const FGPositioned* b) const
+  {
+    return a->type() < b->type();
   }
 };
 
