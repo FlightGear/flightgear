@@ -83,7 +83,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="sg.lib ul.lib OpenThreads.lib"
-				OutputFile="$(OutDir)/yasim.exe"
+				OutputFile="bin/Release/yasim.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\install\msvc71\OpenSceneGraph\lib;..\..\..\plib"
 				GenerateDebugInformation="TRUE"
