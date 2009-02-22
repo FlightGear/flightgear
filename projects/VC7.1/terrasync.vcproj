@@ -83,7 +83,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="ul.lib sg.lib net.lib ws2_32.lib libsvn_client-1.lib libsvn_diff-1.lib libsvn_delta-1.lib libsvn_ra-1.lib libsvn_subr-1.lib libsvn_wc-1.lib libapr-1.lib OpenThreads.lib"
-				OutputFile="$(OutDir)/terrasync.exe"
+				OutputFile="bin/Release/terrasync.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\install\msvc71\OpenSceneGraph\lib;..\..\..\plib;&quot;..\..\..\svn-win32-1.5.3\lib&quot;;&quot;..\..\..\svn-win32-1.5.3\lib\apr&quot;"
 				GenerateDebugInformation="TRUE"

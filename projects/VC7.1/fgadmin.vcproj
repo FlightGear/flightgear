@@ -86,7 +86,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="fltk.lib ul.lib sg.lib comctl32.lib wsock32.lib zlib.lib"
-				OutputFile="$(OutDir)/fgadmin.exe"
+				OutputFile="bin/Release/fgadmin.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;..\..\..\fltk-1.1.7\lib&quot;;..\..\..\plib;..\..\..\3rdParty\lib"
 				GenerateDebugInformation="FALSE"

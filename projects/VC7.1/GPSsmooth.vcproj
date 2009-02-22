@@ -82,7 +82,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="sg.lib net.lib ul.lib ws2_32.lib winmm.lib zlib.lib"
-				OutputFile="$(OutDir)/GPSsmooth.exe"
+				OutputFile="bin/Release/GPSsmooth.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\plib;..\..\..\3rdParty\lib"
 				GenerateDebugInformation="TRUE"

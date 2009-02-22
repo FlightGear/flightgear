@@ -81,7 +81,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="sg.lib ul.lib net.lib ws2_32.lib"
-				OutputFile="$(OutDir)/metar.exe"
+				OutputFile="bin/Release/metar.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\plib"
 				GenerateDebugInformation="TRUE"

@@ -83,7 +83,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="sg.lib net.lib ul.lib ws2_32.lib winmm.lib"
-				OutputFile="$(OutDir)/MIDGsmooth.exe"
+				OutputFile="bin/Release/MIDGsmooth.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\plib"
 				GenerateDebugInformation="TRUE"
