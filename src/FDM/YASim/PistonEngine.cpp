@@ -36,6 +36,7 @@ PistonEngine::PistonEngine(float power, float speed)
     _mixCoeff = realFlow * 1.1f / _omega0;
 
     _turbo = 1;
+    _minthrottle = 0.1;
     _maxMP = 1e6; // No waste gate on non-turbo engines.
     _wastegate = 1;
     _charge = 1;
@@ -70,6 +71,11 @@ void PistonEngine::setDisplacement(float d)
 void PistonEngine::setCompression(float c)
 {
     _compression = c;
+}
+
+void PistonEngine::setMinThrottle(float m)
+{
+    _minthrottle = m;
 }
 
 float PistonEngine::getMaxPower()
@@ -147,7 +153,7 @@ void PistonEngine::calc(float pressure, float temp, float speed)
     // We need to adjust the minimum manifold pressure to get a
     // reasonable idle speed (a "closed" throttle doesn't suck a total
     // vacuum in real manifolds).  This is a hack.
-    float _minMP = (-0.008 * _turbo ) + 0.1;
+    float _minMP = (-0.008 * _turbo ) + _minthrottle;
 
     _mp = pressure * _charge;
 
