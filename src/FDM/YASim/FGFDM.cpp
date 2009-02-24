@@ -801,6 +801,9 @@ void FGFDM::parsePistonEngine(XMLAttributes* a)
     if(a->hasAttribute("compression"))
         eng->setCompression(attrf(a, "compression"));        
 
+    if(a->hasAttribute("min-throttle"))
+        eng->setMinThrottle(attrf(a, "min-throttle"));
+
     if(a->hasAttribute("turbo-mul")) {
         float mul = attrf(a, "turbo-mul");
         float mp = attrf(a, "wastegate-mp", 1e6) * INHG2PA;

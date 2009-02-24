@@ -14,6 +14,7 @@ public:
     void setTurboParams(float mul, float maxMP);
     void setDisplacement(float d);
     void setCompression(float c);
+    void setMinThrottle(float m);
     void setWastegate(float norm) { _wastegate = norm; }
     void setSupercharger(bool hasSuper) { _hasSuper = hasSuper; }
     void setTurboLag(float lag) { _turboLag = lag; }
@@ -47,6 +48,7 @@ private:
     float _wastegate;    // wastegate setting, [0:1]
     float _displacement; // piston stroke volume
     float _compression;  // compression ratio (>1)
+    float _minthrottle; // minimum throttle [0:1]
 
     // Runtime state/output:
     float _mp;
