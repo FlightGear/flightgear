@@ -201,7 +201,7 @@ void FGGroundCache::getGroundProperty(Drawable* drawable,
     gp.material = 0;
     backfaceCulling = false;
     // XXX state set might be higher up in scene graph
-    gp.material = globals->get_matlib()->findMaterial(drawable->getStateSet());
+    gp.material = SGMaterialLib::findMaterial(drawable->getStateSet());
     if (gp.material)
         gp.type = (gp.material->get_solid() ? FGInterface::Solid
                    : FGInterface::Water);
