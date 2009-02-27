@@ -164,7 +164,7 @@ FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
         alt = elevation;
         if (material) {
           const osg::StateSet* stateSet = hit.getDrawable()->getStateSet();
-          *material = globals->get_matlib()->findMaterial(stateSet);
+          *material = SGMaterialLib::findMaterial(stateSet);
         }
       }
     }
