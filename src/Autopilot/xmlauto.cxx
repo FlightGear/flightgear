@@ -40,6 +40,12 @@
 using std::cout;
 using std::endl;
 
+static SGCondition * getCondition( SGPropertyNode * node )
+{
+   const SGPropertyNode* conditionNode = node->getChild("condition");
+   return conditionNode ? sgReadCondition(node, conditionNode) : NULL;
+}
+
 FGPIDController::FGPIDController( SGPropertyNode *node ):
     debug( false ),
     y_n( 0.0 ),
@@ -73,17 +79,20 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
         } else if ( cname == "debug" ) {
             debug = child->getBoolValue();
         } else if ( cname == "enable" ) {
-            // cout << "parsing enable" << endl;
-            SGPropertyNode *prop = child->getChild( "prop" );
-            if ( prop != NULL ) {
-                // cout << "prop = " << prop->getStringValue() << endl;
-                enable_prop = fgGetNode( prop->getStringValue(), true );
-            } else {
-                // cout << "no prop child" << endl;
-            }
-            SGPropertyNode *val = child->getChild( "value" );
-            if ( val != NULL ) {
-                enable_value = val->getStringValue();
+            _condition = getCondition( child );
+            if( _condition == NULL ) {
+               // cout << "parsing enable" << endl;
+               SGPropertyNode *prop = child->getChild( "prop" );
+               if ( prop != NULL ) {
+                   // cout << "prop = " << prop->getStringValue() << endl;
+                   enable_prop = fgGetNode( prop->getStringValue(), true );
+               } else {
+                   // cout << "no prop child" << endl;
+               }
+               SGPropertyNode *val = child->getChild( "value" );
+               if ( val != NULL ) {
+                   enable_value = val->getStringValue();
+               }
             }
             SGPropertyNode *pass = child->getChild( "honor-passive" );
             if ( pass != NULL ) {
@@ -359,7 +368,8 @@ void FGPIDController::update( double dt ) {
     Ts = elapsedTime;
     elapsedTime = 0.0;
 
-    if (enable_prop != NULL && enable_prop->getStringValue() == enable_value) {
+    if (( _condition && _condition->test() ) ||
+        (enable_prop != NULL && enable_prop->getStringValue() == enable_value)) {
         if ( !enabled ) {
             // first time being enabled, seed u_n with current
             // property tree value
@@ -507,17 +517,20 @@ FGPISimpleController::FGPISimpleController( SGPropertyNode *node ):
         } else if ( cname == "debug" ) {
             debug = child->getBoolValue();
         } else if ( cname == "enable" ) {
-            // cout << "parsing enable" << endl;
-            SGPropertyNode *prop = child->getChild( "prop" );
-            if ( prop != NULL ) {
-                // cout << "prop = " << prop->getStringValue() << endl;
-                enable_prop = fgGetNode( prop->getStringValue(), true );
-            } else {
-                // cout << "no prop child" << endl;
-            }
-            SGPropertyNode *val = child->getChild( "value" );
-            if ( val != NULL ) {
-                enable_value = val->getStringValue();
+            _condition = getCondition( child );
+            if( _condition == NULL ) {
+               // cout << "parsing enable" << endl;
+               SGPropertyNode *prop = child->getChild( "prop" );
+               if ( prop != NULL ) {
+                   // cout << "prop = " << prop->getStringValue() << endl;
+                   enable_prop = fgGetNode( prop->getStringValue(), true );
+               } else {
+                   // cout << "no prop child" << endl;
+               }
+               SGPropertyNode *val = child->getChild( "value" );
+               if ( val != NULL ) {
+                   enable_value = val->getStringValue();
+               }
             }
         } else if ( cname == "input" ) {
             SGPropertyNode *prop = child->getChild( "prop" );
@@ -642,7 +655,8 @@ void FGPISimpleController::update( double dt ) {
     if (umax_prop != NULL)u_max = umax_prop->getDoubleValue();
     if (Kp_prop != NULL)Kp = Kp_prop->getDoubleValue();
 
-    if (enable_prop != NULL && enable_prop->getStringValue() == enable_value) {
+    if (( _condition && _condition->test() ) ||
+        (enable_prop != NULL && enable_prop->getStringValue() == enable_value)) {
         if ( !enabled ) {
             // we have just been enabled, zero out int_sum
             int_sum = 0.0;
