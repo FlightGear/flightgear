@@ -827,13 +827,16 @@ FGDigitalFilter::FGDigitalFilter(SGPropertyNode *node):
         } else if ( cname == "debug" ) {
             debug = child->getBoolValue();
         } else if ( cname == "enable" ) {
-            SGPropertyNode *prop = child->getChild( "prop" );
-            if ( prop != NULL ) {
-                enable_prop = fgGetNode( prop->getStringValue(), true );
-            }
-            SGPropertyNode *val = child->getChild( "value" );
-            if ( val != NULL ) {
-                enable_value = val->getStringValue();
+            _condition = getCondition( child );
+            if( _condition == NULL ) {
+               SGPropertyNode *prop = child->getChild( "prop" );
+               if ( prop != NULL ) {
+                   enable_prop = fgGetNode( prop->getStringValue(), true );
+               }
+               SGPropertyNode *val = child->getChild( "value" );
+               if ( val != NULL ) {
+                   enable_value = val->getStringValue();
+               }
             }
             SGPropertyNode *pass = child->getChild( "honor-passive" );
             if ( pass != NULL ) {
@@ -887,11 +890,11 @@ FGDigitalFilter::FGDigitalFilter(SGPropertyNode *node):
 
 void FGDigitalFilter::update(double dt)
 {
-    if ( (input_prop != NULL && 
-          enable_prop != NULL && 
+    if ( input_prop != NULL && (
+         ( _condition != NULL && _condition->test() ) ||
+         ( enable_prop != NULL && 
           enable_prop->getStringValue() == enable_value) ||
-         (enable_prop == NULL &&
-          input_prop != NULL) ) {
+         (enable_prop == NULL && _condition == NULL ) ) ) {
 
         input.push_front(input_prop->getDoubleValue());
         input.resize(samples + 1, 0.0);
