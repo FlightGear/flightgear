@@ -52,7 +52,7 @@ bool FGAV400Sim::gen_message() {
     // cout << "generating garmin message" << endl;
 
     char msg_a[32], msg_b[32], msg_c[32], msg_d[32], msg_e[32];
-    char msg_f[32], msg_i[32], msg_j[32], msg_k[32], msg_l[32], msg_r[32];
+    char msg_f[32], msg_h[32], msg_i[32], msg_j[32], msg_k[32], msg_l[32], msg_r[32];
     char msg_type2[256];
 
     char dir;
@@ -121,6 +121,10 @@ bool FGAV400Sim::gen_message() {
     if ( climb_fpm > 9999.0 ) { climb_fpm = 9999.0; }
     sprintf( msg_f, "f%c%04.0f\r\n", dir, climb_fpm );
 
+    // create msg_h
+    double obs = fgGetDouble( "/instrumentation/nav[0]/radials/selected-deg" );
+    sprintf( msg_h, "h%04d\r\n", (int)(obs*10) );
+
     // create msg_i
     double fuel = fgGetDouble( "/consumables/fuel/total-fuel-gals" );
     if ( fuel > 999.9 ) { fuel = 999.9; }
@@ -163,6 +167,7 @@ bool FGAV400Sim::gen_message() {
     sentence += msg_d;          // ve kts
     sentence += msg_e;          // vn kts
     sentence += msg_f;		// climb fpm
+    sentence += msg_h;		// obs heading in deg (*10)
     sentence += msg_i;		// total fuel in gal (*10)
     sentence += msg_j;		// fuel flow gph (*10)
     sentence += msg_k;		// date/time (UTC)
@@ -182,189 +187,41 @@ bool FGAV400Sim::gen_message() {
 
 // parse AV400Sim message
 bool FGAV400Sim::parse_message() {
-    SG_LOG( SG_IO, SG_INFO, "parse garmin message" );
+    SG_LOG( SG_IO, SG_INFO, "parse AV400Sim message" );
 
     string msg = buf;
     msg = msg.substr( 0, length );
     SG_LOG( SG_IO, SG_INFO, "entire message = " << msg );
 
-    string::size_type begin_line, end_line, begin, end;
-    begin_line = begin = 0;
-
-    // extract out each line
-    end_line = msg.find("\n", begin_line);
-    while ( end_line != string::npos ) {
-	string line = msg.substr(begin_line, end_line - begin_line);
-	begin_line = end_line + 1;
-	SG_LOG( SG_IO, SG_INFO, "  input line = " << line );
-
-	// leading character
-	string start = msg.substr(begin, 1);
-	++begin;
-	SG_LOG( SG_IO, SG_INFO, "  start = " << start );
-
-	// sentence
-	end = msg.find(",", begin);
-	if ( end == string::npos ) {
-	    return false;
+    string ident = msg.substr(0, 1);
+    if ( ident == "i" ) {
+	string side = msg.substr(1,1);
+	string num = msg.substr(2,3);
+	if ( side == "-" ) {
+	    fgSetDouble("/instrumentation/gps/cdi-deflection", 0.0);
+	} else {
+	    int pos = atoi(num.c_str());
+	    if ( side == "L" ) {
+		pos *= -1;
+	    }
+	    fgSetDouble("/instrumentation/gps/cdi-deflection",
+			(double)pos / 8.0);
+	    fgSetBool("/instrumentation/nav[0]/has-gs", false);
 	}
-    
-	string sentence = msg.substr(begin, end - begin);
-	begin = end + 1;
-	SG_LOG( SG_IO, SG_INFO, "  sentence = " << sentence );
-
-	double lon_deg, lon_min, lat_deg, lat_min;
-	double lon, lat, speed, heading, altitude;
-
-	if ( sentence == "GPRMC" ) {
-	    // time
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string utc = msg.substr(begin, end - begin);
-	    begin = end + 1;
-	    SG_LOG( SG_IO, SG_INFO, "  utc = " << utc );
-
-	    // junk
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string junk = msg.substr(begin, end - begin);
-	    begin = end + 1;
-	    SG_LOG( SG_IO, SG_INFO, "  junk = " << junk );
-
-	    // lat val
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string lat_str = msg.substr(begin, end - begin);
-	    begin = end + 1;
-
-	    lat_deg = atof( lat_str.substr(0, 2).c_str() );
-	    lat_min = atof( lat_str.substr(2).c_str() );
-
-	    // lat dir
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string lat_dir = msg.substr(begin, end - begin);
-	    begin = end + 1;
-
-	    lat = lat_deg + ( lat_min / 60.0 );
-	    if ( lat_dir == "S" ) {
-		lat *= -1;
-	    }
-
-	    cur_fdm_state->set_Latitude( lat * SGD_DEGREES_TO_RADIANS );
-	    SG_LOG( SG_IO, SG_INFO, "  lat = " << lat );
-
-	    // lon val
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string lon_str = msg.substr(begin, end - begin);
-	    begin = end + 1;
-
-	    lon_deg = atof( lon_str.substr(0, 3).c_str() );
-	    lon_min = atof( lon_str.substr(3).c_str() );
-
-	    // lon dir
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string lon_dir = msg.substr(begin, end - begin);
-	    begin = end + 1;
-
-	    lon = lon_deg + ( lon_min / 60.0 );
-	    if ( lon_dir == "W" ) {
-		lon *= -1;
-	    }
-
-	    cur_fdm_state->set_Longitude( lon * SGD_DEGREES_TO_RADIANS );
-	    SG_LOG( SG_IO, SG_INFO, "  lon = " << lon );
-
-#if 0
-	    double sl_radius, lat_geoc;
-	    sgGeodToGeoc( cur_fdm_state->get_Latitude(), 
-			  cur_fdm_state->get_Altitude(), 
-			  &sl_radius, &lat_geoc );
-	    cur_fdm_state->set_Geocentric_Position( lat_geoc, 
-			   cur_fdm_state->get_Longitude(), 
-	     	           sl_radius + cur_fdm_state->get_Altitude() );
-#endif
-
-	    // speed
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string speed_str = msg.substr(begin, end - begin);
-	    begin = end + 1;
-	    speed = atof( speed_str.c_str() );
-	    cur_fdm_state->set_V_calibrated_kts( speed );
-	    // cur_fdm_state->set_V_ground_speed( speed );
-	    SG_LOG( SG_IO, SG_INFO, "  speed = " << speed );
-
-	    // heading
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string hdg_str = msg.substr(begin, end - begin);
-	    begin = end + 1;
-	    heading = atof( hdg_str.c_str() );
-	    cur_fdm_state->set_Euler_Angles( cur_fdm_state->get_Phi(), 
-					     cur_fdm_state->get_Theta(), 
-					     heading * SGD_DEGREES_TO_RADIANS );
-	    SG_LOG( SG_IO, SG_INFO, "  heading = " << heading );
-	} else if ( sentence == "PGRMZ" ) {
-	    // altitude
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string alt_str = msg.substr(begin, end - begin);
-	    altitude = atof( alt_str.c_str() );
-	    begin = end + 1;
-
-	    // altitude units
-	    end = msg.find(",", begin);
-	    if ( end == string::npos ) {
-		return false;
-	    }
-    
-	    string alt_units = msg.substr(begin, end - begin);
-	    begin = end + 1;
-
-	    if ( alt_units != "F" && alt_units != "f" ) {
-		altitude *= SG_METER_TO_FEET;
-	    }
-
-	    cur_fdm_state->set_Altitude( altitude );
-    
- 	    SG_LOG( SG_IO, SG_INFO, " altitude  = " << altitude );
-
+    } else if ( ident == "k" ) {
+	string ind = msg.substr(1,1);
+	if ( ind == "T" ) {
+	    fgSetBool("/instrumentation/gps/to-flag", true);
+	    fgSetBool("/instrumentation/gps/from-flag", false);
+	} else if ( ind == "F" ) {
+	    fgSetBool("/instrumentation/gps/to-flag", false);
+	    fgSetBool("/instrumentation/gps/from-flag", true);
+	} else {
+	    fgSetBool("/instrumentation/gps/to-flag", false);
+	    fgSetBool("/instrumentation/gps/from-flag", false);
 	}
-
-	// printf("%.8f %.8f\n", lon, lat);
-
-	begin = begin_line;
-	end_line = msg.find("\n", begin_line);
+    } else {
+	// SG_LOG( SG_IO, SG_ALERT, "unknown AV400Sim message = " << msg );
     }
 
     return true;
@@ -396,34 +253,24 @@ bool FGAV400Sim::open() {
 bool FGAV400Sim::process() {
     SGIOChannel *io = get_io_channel();
 
-    if ( get_direction() == SG_IO_OUT ) {
-	gen_message();
-	if ( ! io->write( buf, length ) ) {
-	    SG_LOG( SG_IO, SG_WARN, "Error writing data." );
-	    return false;
-	}
-    } else if ( get_direction() == SG_IO_IN ) {
-	if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
-	    SG_LOG( SG_IO, SG_ALERT, "Success reading data." );
-	    if ( parse_message() ) {
-		SG_LOG( SG_IO, SG_ALERT, "Success parsing data." );
-	    } else {
-		SG_LOG( SG_IO, SG_ALERT, "Error parsing data." );
-	    }
+    // until we have parsers/generators for the reverse direction,
+    // this is hardwired to expect that the physical GPS is slaving
+    // from FlightGear.
+
+    // Send FlightGear data to the external device
+    gen_message();
+    if ( ! io->write( buf, length ) ) {
+	SG_LOG( SG_IO, SG_WARN, "Error writing data." );
+	return false;
+    }
+
+    // read the device messages back
+    while ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
+	// SG_LOG( SG_IO, SG_ALERT, "Success reading data." );
+	if ( parse_message() ) {
+	    // SG_LOG( SG_IO, SG_ALERT, "Success parsing data." );
 	} else {
-	    SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
-	    return false;
-	}
-	if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
-	    SG_LOG( SG_IO, SG_ALERT, "Success reading data." );
-	    if ( parse_message() ) {
-		SG_LOG( SG_IO, SG_ALERT, "Success parsing data." );
-	    } else {
-		SG_LOG( SG_IO, SG_ALERT, "Error parsing data." );
-	    }
-	} else {
-	    SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
-	    return false;
+	    // SG_LOG( SG_IO, SG_ALERT, "Error parsing data." );
 	}
     }
 
