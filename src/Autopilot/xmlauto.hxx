@@ -44,6 +44,7 @@ using std::deque;
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/condition.hxx>
 
 #include <Main/fg_props.hxx>
 
@@ -68,6 +69,7 @@ protected:
     SGPropertyNode_ptr r_n_prop;
     double r_n_value;
     vector <SGPropertyNode_ptr> output_list;
+    SGSharedPtr<const SGCondition> _condition;
 
 public:
 
@@ -79,7 +81,8 @@ public:
       enabled( false ),
       input_prop( NULL ),
       r_n_prop( NULL ),
-      r_n_value( 0.0 )
+      r_n_value( 0.0 ),
+      _condition( NULL )
     { }
 
     virtual ~FGXMLAutoComponent() {}
