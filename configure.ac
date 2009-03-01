@@ -606,7 +606,7 @@ dnl Check for Subversion library support
 save_LIBS=$LIBS
 save_CPPFLAGS=$CPPFLAGS
 LIBS=""
-CPPFLAGS="-I/usr/include/subversion-1 -I/usr/include/apr-1.0"
+CPPFLAGS="-I/usr/include/subversion-1 `apr-1-config --includes`"
 AC_CHECK_LIB(svn_client-1, svn_client_checkout3)
 AC_CHECK_HEADERS([svn_client.h])
 if test "x$ac_cv_header_svn_client_h" != "xyes"; then
