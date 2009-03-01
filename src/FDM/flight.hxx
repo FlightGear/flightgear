@@ -601,11 +601,11 @@ public:
     //////////////////////////////////////////////////////////////////////////
 
     enum GroundType {
+      /// I sused at least in YAsim. Deprecate this ad get it from the
+      /// Material instead
       Unknown = 0, //??
       Solid, // Whatever we will roll on with infinite load factor.
-      Water, // For the beaver ...
-      Catapult, // Carrier cats.
-      Wire // Carrier wires.
+      Water // For the beaver ...
     };
 
     // Prepare the ground cache for the wgs84 position pt_*.
