@@ -34,7 +34,6 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/math/SGMath.hxx>
 #include <simgear/math/sg_geodesy.hxx>
-#include <simgear/scene/util/SGNodeMasks.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
 #include <simgear/scene/bvh/BVHGroup.hxx>
 #include <simgear/scene/bvh/BVHLineGeometry.hxx>
@@ -270,27 +269,9 @@ void FGAICarrier::setTACANChannelID(const string& id) {
 }
 
 void FGAICarrier::update(double dt) {
-    // For computation of rotation speeds we just use finite differences here.
-    // That is perfectly valid since this thing is not driven by accelerations
-    // but by just apply discrete changes at its velocity variables.
-    // Update the velocity information stored in those nodes.
-    // Transform that one to the horizontal local coordinate system.
-    SGQuatd ec2hl = SGQuatd::fromLonLat(pos);
-    // The orientation of the carrier wrt the horizontal local frame
-    SGQuatd hl2body = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
-    // and postrotate the orientation of the AIModel wrt the horizontal
-    // local frame
-    SGQuatd ec2body = ec2hl*hl2body;
-    // The cartesian position of the carrier in the wgs84 world
-    SGVec3d cartPos = SGVec3d::fromGeod(pos);
-
-    // Compute the velocity in m/s in the body frame
-    aip.setBodyLinearVelocity(SGVec3d(0.51444444*speed, 0, 0));
-
     // Now update the position and heading. This will compute new hdg and
     // roll values required for the rotation speed computation.
     FGAIShip::update(dt);
-
 
     //automatic turn into wind with a target wind of 25 kts otd
     if(turn_to_launch_hdg){
@@ -301,28 +282,19 @@ void FGAICarrier::update(double dt) {
         TurnToBase();
     }
 
-    // Only change these values if we are able to compute them safely
-    if (SGLimits<double>::min() < dt) {
-      // Now here is the finite difference ...
-
-      // Transform that one to the horizontal local coordinate system.
-      SGQuatd ec2hlNew = SGQuatd::fromLonLat(pos);
-      // compute the new orientation
-      SGQuatd hl2bodyNew = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
-      // The rotation difference
-      SGQuatd dOr = inverse(ec2body)*ec2hlNew*hl2bodyNew;
-      SGVec3d dOrAngleAxis;
-      dOr.getAngleAxis(dOrAngleAxis);
-      // divided by the time difference provides a rotation speed vector
-      dOrAngleAxis /= dt;
-
-      aip.setBodyAngularVelocity(dOrAngleAxis);
-    }
-
     UpdateWind(dt);
     UpdateElevator(dt, transition_time);
     UpdateJBD(dt, jbd_transition_time);
-    // For the flols reuse some computations done above ...
+
+    // Transform that one to the horizontal local coordinate system.
+    SGQuatd ec2hl = SGQuatd::fromLonLat(pos);
+    // The orientation of the carrier wrt the horizontal local frame
+    SGQuatd hl2body = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
+    // and postrotate the orientation of the AIModel wrt the horizontal
+    // local frame
+    SGQuatd ec2body = ec2hl*hl2body;
+    // The cartesian position of the carrier in the wgs84 world
+    SGVec3d cartPos = SGVec3d::fromGeod(pos);
 
     // The position of the eyepoint - at least near that ...
     SGVec3d eyePos(globals->get_current_view()->get_view_pos());
@@ -405,7 +377,6 @@ void FGAICarrier::initModel(osg::Node *node)
     // mark some objects solid, mark the wires ...
     FGCarrierVisitor carrierVisitor(this, wire_objects, catapult_objects);
     model->accept(carrierVisitor);
-    model->setNodeMask(model->getNodeMask() | SG_NODEMASK_TERRAIN_BIT);
 }
 
 void FGAICarrier::bind() {

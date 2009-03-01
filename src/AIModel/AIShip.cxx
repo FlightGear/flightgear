@@ -32,6 +32,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/scene/util/SGNodeMasks.hxx>
 
 #include "AIShip.hxx"
 
@@ -115,6 +116,10 @@ bool FGAIShip::init(bool search_in_AI_path) {
     return FGAIBase::init(search_in_AI_path);
 }
 
+void FGAIShip::initModel(osg::Node *node) {
+    FGAIBase::initModel(node);
+    model->setNodeMask(model->getNodeMask() | SG_NODEMASK_TERRAIN_BIT);
+}
 
 void FGAIShip::bind() {
     FGAIBase::bind();
@@ -182,9 +187,44 @@ void FGAIShip::unbind() {
 }
 
 void FGAIShip::update(double dt) {
+    // For computation of rotation speeds we just use finite differences here.
+    // That is perfectly valid since this thing is not driven by accelerations
+    // but by just apply discrete changes at its velocity variables.
+    // Update the velocity information stored in those nodes.
+    // Transform that one to the horizontal local coordinate system.
+    SGQuatd ec2hl = SGQuatd::fromLonLat(pos);
+    // The orientation of the carrier wrt the horizontal local frame
+    SGQuatd hl2body = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
+    // and postrotate the orientation of the AIModel wrt the horizontal
+    // local frame
+    SGQuatd ec2body = ec2hl*hl2body;
+    // The cartesian position of the carrier in the wgs84 world
+    SGVec3d cartPos = SGVec3d::fromGeod(pos);
+
+    // Compute the velocity in m/s in the body frame
+    aip.setBodyLinearVelocity(SGVec3d(0.51444444*speed, 0, 0));
+
     FGAIBase::update(dt);
     Run(dt);
     Transform();
+
+    // Only change these values if we are able to compute them safely
+    if (SGLimits<double>::min() < dt) {
+        // Now here is the finite difference ...
+        
+        // Transform that one to the horizontal local coordinate system.
+        SGQuatd ec2hlNew = SGQuatd::fromLonLat(pos);
+        // compute the new orientation
+        SGQuatd hl2bodyNew = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
+        // The rotation difference
+        SGQuatd dOr = inverse(ec2body)*ec2hlNew*hl2bodyNew;
+        SGVec3d dOrAngleAxis;
+        dOr.getAngleAxis(dOrAngleAxis);
+        // divided by the time difference provides a rotation speed vector
+        dOrAngleAxis /= dt;
+        
+        aip.setBodyAngularVelocity(dOrAngleAxis);
+    }
 }
 
 void FGAIShip::Run(double dt) {
