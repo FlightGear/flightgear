@@ -107,7 +107,7 @@ void
 fgSetDefaults ()
 {
     // set a possibly independent location for scenery data
-    char *envp = ::getenv( "FG_SCENERY" );
+    const char *envp = ::getenv( "FG_SCENERY" );
 
     if ( envp != NULL ) {
 	// fg_root could be anywhere, so default to environmental
