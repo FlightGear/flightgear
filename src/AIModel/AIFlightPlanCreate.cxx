@@ -429,7 +429,7 @@ void FGAIFlightPlan::createClimb(FGAIAircraft *ac, bool firstFlight, FGAirport *
            aptpath.append( string(buffer) );
            if (aptpath.exists()) {
                planLoaded = loadSID(aptpath.str());
-               cerr << "Reading " << aptpath.str() << endl;
+               //cerr << "Reading " << aptpath.str() << endl;
            }
         }
   }
