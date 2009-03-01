@@ -23,20 +23,20 @@
 #ifndef _GROUNDCACHE_HXX
 #define _GROUNDCACHE_HXX
 
-#include <osg/Node>
-
-namespace osgUtil
-{
-class PolytopeIntersector;
-}
+#include <osg/Group>
+#include <osg/ref_ptr>
 
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
 #include <simgear/math/SGMath.hxx>
 #include <simgear/math/SGGeometry.hxx>
+#include <simgear/scene/bvh/BVHNode.hxx>
+#include <simgear/structure/SGSharedPtr.hxx>
 
 class SGMaterial;
-class WireIntersector;
+namespace simgear {
+class BVHLineGeometry;
+}
 
 class FGGroundCache {
 public:
@@ -89,42 +89,14 @@ public:
     void release_wire(void);
 
 private:
-    friend class GroundCacheFillVisitor;
-
-
-    // Helper class to hold some properties of the ground triangle.
-    struct GroundProperty {
-      GroundProperty() : type(0), wire_id(0), material(0) {}
-      int type;
-      int wire_id;
-      // The linear and angular velocity.        
-      SGVec3d vel;
-      SGVec3d rot;
-      SGVec3d pivot;
-      // the simgear material reference, contains friction coeficients ...
-      const SGMaterial* material;
-    };
-    
-    struct Triangle {
-      GroundProperty gp;
-      // The triangle we represent
-      SGTriangled triangle;
-      SGSphered sphere;
-    };
-    struct Catapult {
-      GroundProperty gp;        
-      SGVec3d start;
-      SGVec3d end;
-    };
-    struct Wire {
-      GroundProperty gp;        
-      SGVec3d ends[2];
-    };
-
+    class CacheFill;
+    class CatapultFinder;
+    class WireIntersector;
+    class WireFinder;
 
     // Approximate ground radius.
     // In case the aircraft is too high above ground.
-    double ground_radius;
+    double _altitude;
     // Ground type
     int _type;
     // the simgear material reference, contains friction coeficients ...
@@ -132,13 +104,8 @@ private:
     // The time reference for later call to intersection test routines.
     // Is required since we will have moving triangles in carriers.
     double cache_ref_time;
-    // The wire identifier to track.
-    int wire_id;
-
-    // Containers which hold all the essential information about this cache.
-    std::vector<Triangle> triangles;
-    std::vector<Catapult> catapults;
-    std::vector<Wire> wires;
+    // The wire to track.
+    const simgear::BVHLineGeometry* _wire;
 
     // The point and radius where the cache is built around.
     // That are the arguments that were given to prepare_ground_cache.
@@ -147,14 +114,7 @@ private:
     SGVec3d down;
     bool found_ground;
 
-    void getGroundProperty(osg::Drawable* drawable,
-                           const osg::NodePath& nodePath,
-                           GroundProperty& gp, bool& backfaceCulling);
-    static void velocityTransformTriangle(double dt, SGTriangled& dst,
-                                          SGSphered& sdst, const Triangle& src);
-    void getTriIntersectorResults(osgUtil::PolytopeIntersector* triInt);
-    void getWireIntersectorResults(WireIntersector* wireInt,
-                                   double wireCacheRadius);
+    SGSharedPtr<simgear::BVHNode> _localBvhTree;
 };
 
 #endif

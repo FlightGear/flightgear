@@ -40,42 +40,6 @@ using std::list;
 class FGAIManager;
 class FGAICarrier;
 
-class FGAICarrierHardware : public osg::Referenced {
-public:
-
-    enum Type { Catapult, Wire, Solid };
-
-    FGAICarrier *carrier;
-    int id;
-    Type type;
-
-    static FGAICarrierHardware* newCatapult(FGAICarrier *c) {
-        FGAICarrierHardware* ch = new FGAICarrierHardware;
-        ch->carrier = c;
-        ch->type = Catapult;
-        ch->id = unique_id++;
-        return ch;
-    }
-    static FGAICarrierHardware* newWire(FGAICarrier *c) {
-        FGAICarrierHardware* ch = new FGAICarrierHardware;
-        ch->carrier = c;
-        ch->type = Wire;
-        ch->id = unique_id++;
-        return ch;
-    }
-    static FGAICarrierHardware* newSolid(FGAICarrier *c) {
-        FGAICarrierHardware* ch = new FGAICarrierHardware;
-        ch->carrier = c;
-        ch->type = Solid;
-        ch->id = unique_id++;
-        return ch;
-    }
-
-private:
-    static int unique_id;
-};
-
-
 class FGAICarrier  : public FGAIShip {
 public:
 
@@ -87,7 +51,6 @@ public:
     void setSign(const string& );
     void setTACANChannelID(const string &);
 
-    void getVelocityWrtEarth(SGVec3d& v, SGVec3d& omega, SGVec3d& pivot);
     virtual void bind();
     virtual void unbind();
     void UpdateWind ( double dt );
@@ -133,16 +96,10 @@ private:
     double rel_wind_from_deg;
 
 
-    list<string> solid_objects;       // List of solid object names
     list<string> wire_objects;        // List of wire object names
     list<string> catapult_objects;    // List of catapult object names
     list<ParkPosition> ppositions;    // List of positions where an aircraft can start.
     string sign;                      // The sign of this carrier.
-
-    // Velocity wrt earth.
-    SGVec3d vel_wrt_earth;
-    SGVec3d rot_wrt_earth;
-    SGVec3d rot_pivot_wrt_earth;
 
     // these describe the flols
     SGVec3d flols_off;

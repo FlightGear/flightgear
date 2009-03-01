@@ -24,144 +24,226 @@
 #  include "config.h"
 #endif
 
-#include <float.h>
-
 #include <utility>
 
-#include <osg/CullFace>
 #include <osg/Drawable>
 #include <osg/Geode>
 #include <osg/Geometry>
-#include <osg/PrimitiveSet>
-#include <osg/TriangleFunctor>
-
-#include <osgUtil/PolytopeIntersector>
+#include <osg/Camera>
+#include <osg/Transform>
+#include <osg/MatrixTransform>
+#include <osg/PositionAttitudeTransform>
+#include <osg/CameraView>
 
 #include <simgear/sg_inlines.h>
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/scene/material/mat.hxx>
-#include <simgear/scene/material/matlib.hxx>
-#include <simgear/scene/util/PrimitiveUtils.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
+#include <simgear/scene/util/SGSceneUserData.hxx>
+#include <simgear/scene/model/placementtrans.hxx>
+
+#include <simgear/scene/bvh/BVHNode.hxx>
+#include <simgear/scene/bvh/BVHGroup.hxx>
+#include <simgear/scene/bvh/BVHTransform.hxx>
+#include <simgear/scene/bvh/BVHMotionTransform.hxx>
+#include <simgear/scene/bvh/BVHLineGeometry.hxx>
+#include <simgear/scene/bvh/BVHStaticGeometry.hxx>
+#include <simgear/scene/bvh/BVHStaticData.hxx>
+#include <simgear/scene/bvh/BVHStaticNode.hxx>
+#include <simgear/scene/bvh/BVHStaticLeaf.hxx>
+#include <simgear/scene/bvh/BVHStaticTriangle.hxx>
+#include <simgear/scene/bvh/BVHStaticBinary.hxx>
+#include <simgear/scene/bvh/BVHSubTreeCollector.hxx>
+#include <simgear/scene/bvh/BVHLineSegmentVisitor.hxx>
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
-#include <AIModel/AICarrier.hxx>
 
 #include "flight.hxx"
 #include "groundcache.hxx"
 
-using namespace osg;
-using namespace osgUtil;
 using namespace simgear;
 
-void makePolytopeShaft(Polytope& polyt, const Vec3d& refPoint,
-                       const Vec3d& direction, double radius)
+static FGInterface::GroundType
+materialToGroundType(const SGMaterial* material)
 {
-    polyt.clear();
-    // Choose best principal axis to start making orthogonal axis.
-    Vec3d majorAxis;
-    if (fabs(direction.x()) <= fabs(direction.y())) {
-        if (fabs(direction.z()) <= fabs(direction.x()))
-            majorAxis = Vec3d(0.0, 0.0, 1.0);
-        else
-            majorAxis = Vec3d(1.0, 0.0, 0.0);
-    } else {
-        if (fabs(direction.z()) <= fabs(direction.y()))
-            majorAxis = Vec3d(0.0, 0.0, 1.0);
-        else
-            majorAxis = Vec3d(0.0, 1.0, 0.0);
-    }
-    Vec3d axis1 = majorAxis ^ direction;
-    axis1.normalize();
-    Vec3d axis2 = direction ^ axis1;
-
-    polyt.add(Plane(-axis1, refPoint + axis1 * radius));
-    polyt.add(Plane(axis1, refPoint - axis1 * radius));
-    polyt.add(Plane(-axis2, refPoint + axis2 * radius));
-    polyt.add(Plane(axis2 , refPoint - axis2 * radius));
+    if (!material)
+        return FGInterface::Solid;
+    if (material->get_solid())
+        return FGInterface::Solid;
+    return FGInterface::Water;
 }
 
-void makePolytopeBox(Polytope& polyt, const Vec3d& center,
-                     const Vec3d& direction, double radius)
-{
-    makePolytopeShaft(polyt, center, direction, radius);
-    polyt.add(Plane(-direction, center + direction * radius));
-    polyt.add(Plane(direction, center - direction * radius));
-}
-
-// Intersector for finding catapults and wires
-
-class WireIntersector : public PolytopeIntersector
-{
+class FGGroundCache::CacheFill : public osg::NodeVisitor {
 public:
-    WireIntersector(const Polytope& polytope)
-        : PolytopeIntersector(polytope), depth(0)
+    CacheFill(const SGVec3d& center, const double& radius,
+              const double& startTime, const double& endTime) :
+        osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ACTIVE_CHILDREN),
+        _center(center),
+        _radius(radius),
+        _startTime(startTime),
+        _endTime(endTime)
     {
-        setDimensionMask(DimOne);
+        setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
     }
-
-    bool enter(const osg::Node& node)
+    virtual void apply(osg::Node& node)
     {
-        if (!PolytopeIntersector::enter(node))
-            return false;
-        const Referenced* base = node.getUserData();
-        if (base) {
-            const FGAICarrierHardware *ud
-                = dynamic_cast<const FGAICarrierHardware*>(base);
-            if (ud)
-                carriers.push_back(depth);
-        }
-        depth++;
-        return true;
-    }
-
-    void leave()
-    {
-        depth--;
-        if (!carriers.empty() && depth == carriers.back())
-            carriers.pop_back();
-    }
-
-    void intersect(IntersectionVisitor& iv, Drawable* drawable)
-    {
-        if (carriers.empty())
+        if (!testBoundingSphere(node.getBound()))
             return;
-        PolytopeIntersector::intersect(iv, drawable);
+
+        addBoundingVolume(node);
+    }
+    
+    virtual void apply(osg::Group& group)
+    {
+        if (!testBoundingSphere(group.getBound()))
+            return;
+
+        simgear::BVHSubTreeCollector::NodeList parentNodeList;
+        mSubTreeCollector.pushNodeList(parentNodeList);
+        
+        traverse(group);
+        addBoundingVolume(group);
+        
+        mSubTreeCollector.popNodeList(parentNodeList);
+    }
+    
+    virtual void apply(osg::Transform& transform)
+    { handleTransform(transform); }
+    virtual void apply(osg::Camera& camera)
+    {
+        if (camera.getRenderOrder() != osg::Camera::NESTED_RENDER)
+            return;
+        handleTransform(camera);
+    }
+    virtual void apply(osg::CameraView& transform)
+    { handleTransform(transform); }
+    virtual void apply(osg::MatrixTransform& transform)
+    { handleTransform(transform); }
+    virtual void apply(osg::PositionAttitudeTransform& transform)
+    { handleTransform(transform); }
+        
+    void handleTransform(osg::Transform& transform)
+    {
+        // Hmm, may be this needs to be refined somehow ...
+        if (transform.getReferenceFrame() != osg::Transform::RELATIVE_RF)
+            return;
+
+        if (!testBoundingSphere(transform.getBound()))
+            return;
+
+        osg::Matrix inverseMatrix;
+        if (!transform.computeWorldToLocalMatrix(inverseMatrix, this))
+            return;
+        osg::Matrix matrix;
+        if (!transform.computeLocalToWorldMatrix(matrix, this))
+            return;
+
+        // Look for a velocity note
+        const SGSceneUserData::Velocity* velocity = getVelocity(transform);
+        // ... no velocity of there is only zero velocity
+        if (velocity && velocity->linear == SGVec3d::zeros() &&
+            velocity->angular == SGVec3d::zeros())
+            velocity = 0;
+        
+        SGVec3d center = _center;
+        _center = SGVec3d(inverseMatrix.preMult(_center.osg()));
+        double radius = _radius;
+        if (velocity)
+            _radius += (_endTime - _startTime)*norm(velocity->linear);
+        
+        simgear::BVHSubTreeCollector::NodeList parentNodeList;
+        mSubTreeCollector.pushNodeList(parentNodeList);
+
+        addBoundingVolume(transform);
+        traverse(transform);
+
+        if (mSubTreeCollector.haveChildren()) {
+            if (velocity) {
+                simgear::BVHMotionTransform* bvhTransform;
+                bvhTransform = new simgear::BVHMotionTransform;
+                bvhTransform->setToWorldTransform(SGMatrixd(matrix.ptr()));
+                bvhTransform->setLinearVelocity(velocity->linear);
+                bvhTransform->setAngularVelocity(velocity->angular);
+                bvhTransform->setReferenceTime(_startTime);
+                bvhTransform->setEndTime(_endTime);
+
+                mSubTreeCollector.popNodeList(parentNodeList, bvhTransform);
+            } else {
+                simgear::BVHTransform* bvhTransform;
+                bvhTransform = new simgear::BVHTransform;
+                bvhTransform->setToWorldTransform(SGMatrixd(matrix.ptr()));
+
+                mSubTreeCollector.popNodeList(parentNodeList, bvhTransform);
+            }
+        } else {
+            mSubTreeCollector.popNodeList(parentNodeList);
+        }
+        _center = center;
+        _radius = radius;
     }
 
-    void reset()
+    const SGSceneUserData::Velocity* getVelocity(osg::Node& node)
     {
-        carriers.clear();
+        SGSceneUserData* userData = SGSceneUserData::getSceneUserData(&node);
+        if (!userData)
+            return 0;
+        return userData->getVelocity();
     }
-    std::vector<int> carriers;
-    int depth;
+    simgear::BVHNode* getNodeBoundingVolume(osg::Node& node)
+    {
+        SGSceneUserData* userData = SGSceneUserData::getSceneUserData(&node);
+        if (!userData)
+            return 0;
+        return userData->getBVHNode();
+    }
+    void addBoundingVolume(osg::Node& node)
+    {
+        simgear::BVHNode* bvNode = getNodeBoundingVolume(node);
+        if (!bvNode)
+            return;
+
+        // Get that part of the local bv tree that intersects our sphere
+        // of interrest.
+        mSubTreeCollector.setSphere(SGSphered(_center, _radius));
+        bvNode->accept(mSubTreeCollector);
+    }
+    
+    bool testBoundingSphere(const osg::BoundingSphere& bound) const
+    {
+        if (!bound.valid())
+            return false;
+
+        double maxDist = bound._radius + _radius;
+        return distSqr(SGVec3d(bound._center), _center) <= maxDist*maxDist;
+    }
+    
+    SGSharedPtr<simgear::BVHNode> getBVHNode() const
+    { return mSubTreeCollector.getNode(); }
+    
+private:
+    
+    SGVec3d _center;
+    double _radius;
+    double _startTime;
+    double _endTime;
+
+    simgear::BVHSubTreeCollector mSubTreeCollector;
 };
 
-/// Ok, variant that uses a infinite line istead of the ray.
-/// also not that this only works if the ray direction is normalized.
-static inline bool
-intersectsInf(const SGRayd& ray, const SGSphered& sphere)
-{
-  SGVec3d r = sphere.getCenter() - ray.getOrigin();
-  double projectedDistance = dot(r, ray.getDirection());
-  double dist = dot(r, r) - projectedDistance * projectedDistance;
-  return dist < sphere.getRadius2();
-}
-
 FGGroundCache::FGGroundCache() :
-  ground_radius(0.0),
-  _type(0),
-  _material(0),
-  cache_ref_time(0.0),
-  wire_id(0),
-  reference_wgs84_point(SGVec3d(0, 0, 0)),
-  reference_vehicle_radius(0.0),
-  down(0.0, 0.0, 0.0),
-  found_ground(false)
+    _altitude(0),
+    _type(0),
+    _material(0),
+    cache_ref_time(0),
+    _wire(0),
+    reference_wgs84_point(SGVec3d(0, 0, 0)),
+    reference_vehicle_radius(0),
+    down(0.0, 0.0, 0.0),
+    found_ground(false)
 {
 }
 
@@ -169,507 +251,516 @@ FGGroundCache::~FGGroundCache()
 {
 }
 
-inline void
-FGGroundCache::velocityTransformTriangle(double dt,
-                                         SGTriangled& dst, SGSphered& sdst,
-                                         const FGGroundCache::Triangle& src)
-{
-  dst = src.triangle;
-  sdst = src.sphere;
-
-  if (dt*dt*dot(src.gp.vel, src.gp.vel) < SGLimitsd::epsilon())
-    return;
-
-  SGVec3d baseVert = dst.getBaseVertex();
-  SGVec3d pivotoff = baseVert - src.gp.pivot;
-  baseVert += dt*(src.gp.vel + cross(src.gp.rot, pivotoff));
-  dst.setBaseVertex(baseVert);
-  dst.setEdge(0, dst.getEdge(0) + dt*cross(src.gp.rot, dst.getEdge(0)));
-  dst.setEdge(1, dst.getEdge(1) + dt*cross(src.gp.rot, dst.getEdge(1)));
-}
-
-void FGGroundCache::getGroundProperty(Drawable* drawable,
-                                      const NodePath& nodePath,
-                                      FGGroundCache::GroundProperty& gp,
-                                      bool& backfaceCulling)
-{
-    gp.type = FGInterface::Unknown;
-    gp.wire_id = 0;
-    gp.vel = SGVec3d(0.0, 0.0, 0.0);
-    gp.rot = SGVec3d(0.0, 0.0, 0.0);
-    gp.pivot = SGVec3d(0.0, 0.0, 0.0);
-    gp.material = 0;
-    backfaceCulling = false;
-    // XXX state set might be higher up in scene graph
-    gp.material = SGMaterialLib::findMaterial(drawable->getStateSet());
-    if (gp.material)
-        gp.type = (gp.material->get_solid() ? FGInterface::Solid
-                   : FGInterface::Water);
-    for (NodePath::const_iterator iter = nodePath.begin(), e = nodePath.end();
-         iter != e;
-         ++iter) {
-        Node* node = *iter;
-        StateSet* stateSet = node->getStateSet();
-        StateAttribute* stateAttribute = 0;        
-        if (stateSet && (stateAttribute
-                         = stateSet->getAttribute(StateAttribute::CULLFACE))) {
-            backfaceCulling
-                = (static_cast<osg::CullFace*>(stateAttribute)->getMode()
-                   == CullFace::BACK);
-        }
-        
-        // get some material information for use in the gear model
-        Referenced* base = node->getUserData();
-        if (!base)
-            continue;
-        FGAICarrierHardware *ud = dynamic_cast<FGAICarrierHardware*>(base);
-        if (!ud)
-            continue;
-        switch (ud->type) {
-        case FGAICarrierHardware::Wire:
-            gp.type = FGInterface::Wire;
-            gp.wire_id = ud->id;
-            break;
-        case FGAICarrierHardware::Catapult:
-            gp.type = FGInterface::Catapult;
-            break;
-        default:
-            gp.type = FGInterface::Solid;
-            break;
-        }
-        // Copy the velocity from the carrier class.
-        ud->carrier->getVelocityWrtEarth(gp.vel, gp.rot, gp.pivot);
-        break;
-    }
-}
-
-void FGGroundCache::getTriIntersectorResults(PolytopeIntersector* triInt)
-{
-    const PolytopeIntersector::Intersections& intersections
-        = triInt->getIntersections();
-    Drawable* lastDrawable = 0;
-    RefMatrix* lastMatrix = 0;
-    Matrix worldToLocal;
-    GroundProperty gp;
-    bool backfaceCulling = false;
-    for (PolytopeIntersector::Intersections::const_iterator
-             itr = intersections.begin(), e = intersections.end();
-         itr != e;
-         ++itr) {
-        const PolytopeIntersector::Intersection& intr = *itr;
-        if (intr.drawable.get() != lastDrawable) {
-            getGroundProperty(intr.drawable.get(), intr.nodePath, gp,
-                              backfaceCulling);
-            lastDrawable = intr.drawable.get();
-        }
-        Primitive triPrim = getPrimitive(intr.drawable, intr.primitiveIndex);
-        if (triPrim.numVerts != 3)
-            continue;
-        SGVec3d v[3] = { SGVec3d(triPrim.vertices[0]),
-                         SGVec3d(triPrim.vertices[1]),
-                         SGVec3d(triPrim.vertices[2])
-        };
-        RefMatrix* mat = intr.matrix.get();
-        // If the drawable is the same then the intersection model
-        // matrix should be the same, because it is only set by nodes
-        // in the scene graph. However, do an extra test in case
-        // something funny is going on with the drawable.
-        if (mat != lastMatrix) {
-            lastMatrix = mat;
-            worldToLocal = Matrix::inverse(*mat);
-        }
-        SGVec3d localCacheReference;
-        localCacheReference.osg() = reference_wgs84_point.osg() * worldToLocal;
-        SGVec3d localDown;
-        localDown.osg() = Matrixd::transform3x3(down.osg(), worldToLocal);
-        // a bounding sphere in the node local system
-        SGVec3d boundCenter = (1.0/3)*(v[0] + v[1] + v[2]);
-        double boundRadius = std::max(distSqr(v[0], boundCenter),
-                                      distSqr(v[1], boundCenter));
-        boundRadius = std::max(boundRadius, distSqr(v[2], boundCenter));
-        boundRadius = sqrt(boundRadius);
-        SGRayd ray(localCacheReference, localDown);
-        SGTriangled triangle(v);
-        // The normal and plane in the node local coordinate system
-        SGVec3d n = cross(triangle.getEdge(0), triangle.getEdge(1));
-        if (0 < dot(localDown, n)) {
-            if (backfaceCulling) {
-                // Surface points downwards, ignore for altitude computations.
-                continue;
-            } else {
-                triangle.flip();
-            }
-        }
-    
-        // Only check if the triangle is in the cache sphere if the plane
-        // containing the triangle is near enough
-        double d = dot(n, v[0] - localCacheReference);
-        if (d*d < reference_vehicle_radius*dot(n, n)) {
-            // Check if the sphere around the vehicle intersects the sphere
-            // around that triangle. If so, put that triangle into the cache.
-            double r2 = boundRadius + reference_vehicle_radius;
-            if (distSqr(boundCenter, localCacheReference) < r2*r2) {
-                FGGroundCache::Triangle t;
-                t.triangle.setBaseVertex(SGVec3d(v[0].osg() * *mat));
-                t.triangle.setEdge(0, SGVec3d(Matrixd::
-                                              transform3x3(triangle
-                                                           .getEdge(0).osg(),
-                                                           *mat)));
-                t.triangle.setEdge(1, SGVec3d(Matrixd::
-                                              transform3x3(triangle
-                                                           .getEdge(1).osg(),
-                                                           *mat)));
-                t.sphere.setCenter(SGVec3d(boundCenter.osg()* *mat));
-                t.sphere.setRadius(boundRadius);
-                t.gp = gp;
-                triangles.push_back(t);
-            }
-        }
-        // In case the cache is empty, we still provide agl computations.
-        // But then we use the old way of having a fixed elevation value for
-        // the whole lifetime of this cache.
-        SGVec3d isectpoint;
-        if (intersects(isectpoint, triangle, ray, 1e-4)) {
-            found_ground = true;
-            isectpoint.osg() = isectpoint.osg() * *mat;
-            double this_radius = length(isectpoint);
-            if (ground_radius < this_radius) {
-                ground_radius = this_radius;
-                _type = gp.type;
-                _material = gp.material;
-            }
-        }        
-    }
-}
-
-void FGGroundCache::getWireIntersectorResults(WireIntersector* wireInt,
-                                              double wireCacheRadius)
-{
-    const WireIntersector::Intersections& intersections
-        = wireInt->getIntersections();
-    Drawable* lastDrawable = 0;
-    GroundProperty gp;
-    bool backfaceCulling = false;
-    for (PolytopeIntersector::Intersections::const_iterator
-             itr = intersections.begin(), e = intersections.end();
-         itr != e;
-         ++itr) {
-        if (itr->drawable.get() != lastDrawable) {
-            getGroundProperty(itr->drawable.get(), itr->nodePath, gp,
-                              backfaceCulling);
-            lastDrawable = itr->drawable.get();
-        }
-        Primitive linePrim = getPrimitive(itr->drawable, itr->primitiveIndex);
-        if (linePrim.numVerts != 2)
-            continue;
-        RefMatrix* mat = itr->matrix.get();
-        SGVec3d gv1(osg::Vec3d(linePrim.vertices[0]) * *mat);
-        SGVec3d gv2(osg::Vec3d(linePrim.vertices[1]) * *mat);
-
-        SGVec3d boundCenter = 0.5*(gv1 + gv2);
-        double boundRadius = length(gv1 - boundCenter);
-
-        if (distSqr(boundCenter, reference_wgs84_point)
-            < (boundRadius + wireCacheRadius)*(boundRadius + wireCacheRadius)) {
-            if (gp.type == FGInterface::Wire) {
-                FGGroundCache::Wire wire;
-                wire.ends[0] = gv1;
-                wire.ends[1] = gv2;
-                wire.gp = gp;
-                wires.push_back(wire);
-            } else if (gp.type == FGInterface::Catapult) {
-                FGGroundCache::Catapult cat;
-                // Trick to get the ends in the right order.
-                // Use the x axis in the original coordinate system. Choose the
-                // most negative x-axis as the one pointing forward
-                if (linePrim.vertices[0][0] > linePrim.vertices[1][0]) {
-                    cat.start = gv1;
-                    cat.end = gv2;
-                } else {
-                    cat.start = gv2;
-                    cat.end = gv1;
-                }
-                cat.gp = gp;
-                catapults.push_back(cat);
-            }
-        }
-        
-    }
-}
-
 bool
 FGGroundCache::prepare_ground_cache(double ref_time, const SGVec3d& pt,
                                     double rad)
 {
-  // Empty cache.
-  found_ground = false;
-  SGGeod geodPt = SGGeod::fromCart(pt);
-  // Don't blow away the cache ground_radius and stuff if there's no
-  // scenery
-  if (!globals->get_tile_mgr()->scenery_available(geodPt.getLatitudeDeg(),
-                                                  geodPt.getLongitudeDeg(),
-                                                  rad))
-    return false;
-  ground_radius = 0.0;
-  triangles.resize(0);
-  catapults.resize(0);
-  wires.resize(0);
+    // Empty cache.
+    found_ground = false;
 
-  // Store the parameters we used to build up that cache.
-  reference_wgs84_point = pt;
-  reference_vehicle_radius = rad;
-  // Store the time reference used to compute movements of moving triangles.
-  cache_ref_time = ref_time;
+    SGGeod geodPt = SGGeod::fromCart(pt);
+    // Don't blow away the cache ground_radius and stuff if there's no
+    // scenery
+    if (!globals->get_tile_mgr()->scenery_available(geodPt.getLatitudeDeg(),
+                                                    geodPt.getLongitudeDeg(),
+                                                    rad))
+        return false;
+    _altitude = 0;
 
-  // Get a normalized down vector valid for the whole cache
-  SGQuatd hlToEc = SGQuatd::fromLonLat(geodPt);
-  down = hlToEc.rotate(SGVec3d(0, 0, 1));
+    // If we have an active wire, get some more area into the groundcache
+    if (_wire)
+        rad = SGMiscd::max(200, rad);
+    
+    // Store the parameters we used to build up that cache.
+    reference_wgs84_point = pt;
+    reference_vehicle_radius = rad;
+    // Store the time reference used to compute movements of moving triangles.
+    cache_ref_time = ref_time;
+    
+    // Get a normalized down vector valid for the whole cache
+    SGQuatd hlToEc = SGQuatd::fromLonLat(geodPt);
+    down = hlToEc.rotate(SGVec3d(0, 0, 1));
+    
+    // Get the ground cache, that is a local collision tree of the environment
+    double endTime = cache_ref_time + 1; //FIXME??
+    CacheFill subtreeCollector(pt, rad, cache_ref_time, endTime);
+    globals->get_scenery()->get_scene_graph()->accept(subtreeCollector);
+    _localBvhTree = subtreeCollector.getBVHNode();
 
-  // Prepare sphere around the aircraft.
-  double cacheRadius = rad;
+    // Try to get a croase altitude value for the ground cache
+    SGLineSegmentd line(pt, pt + 1e4*down);
+    simgear::BVHLineSegmentVisitor lineSegmentVisitor(line, ref_time);
+    if (_localBvhTree)
+        _localBvhTree->accept(lineSegmentVisitor);
 
-  // Prepare bigger sphere around the aircraft.
-  // This one is required for reliably finding wires we have caught but
-  // have already left the hopefully smaller sphere for the ground reactions.
-  const double max_wire_dist = 300.0;
-  double wireCacheRadius = max_wire_dist < rad ? rad : max_wire_dist;
+    // If this is successful, store this altitude for croase altitude values
+    if (!lineSegmentVisitor.empty()) {
+        SGGeod geodPt = SGGeod::fromCart(lineSegmentVisitor.getPoint());
+        _altitude = geodPt.getElevationM();
+        _material = lineSegmentVisitor.getMaterial();
+        _type = materialToGroundType(_material);
+        found_ground = true;
+    } else {
+        // Else do a crude scene query for the current point
+        found_ground = globals->get_scenery()->
+            get_cart_elevation_m(pt, rad, _altitude, &_material);
+        _type = materialToGroundType(_material);
+    }
+    
+    // Still not sucessful??
+    if (!found_ground)
+        SG_LOG(SG_FLIGHT, SG_WARN, "prepare_ground_cache(): trying to build "
+               "cache without any scenery below the aircraft");
 
-  Polytope triPolytope;
-  makePolytopeShaft(triPolytope, pt.osg(), down.osg(), cacheRadius);
-  ref_ptr<PolytopeIntersector> triIntersector
-      = new PolytopeIntersector(triPolytope);
-  triIntersector->setDimensionMask(PolytopeIntersector::DimTwo);
-  Polytope wirePolytope;
-  makePolytopeBox(wirePolytope, pt.osg(), down.osg(), wireCacheRadius);
-  ref_ptr<WireIntersector> wireIntersector = new WireIntersector(wirePolytope);
-  wireIntersector->setDimensionMask(PolytopeIntersector::DimOne);
-  ref_ptr<IntersectorGroup> intersectors = new IntersectorGroup;
-  intersectors->addIntersector(triIntersector.get());
-  intersectors->addIntersector(wireIntersector.get());
-
-  // Walk the scene graph and extract solid ground triangles and
-  // carrier data.
-  IntersectionVisitor iv(intersectors);
-  iv.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
-  globals->get_scenery()->get_scene_graph()->accept(iv);
-  getTriIntersectorResults(triIntersector.get());
-  getWireIntersectorResults(wireIntersector.get(), wireCacheRadius);
-  
-  // some stats
-  SG_LOG(SG_FLIGHT,SG_DEBUG, "prepare_ground_cache(): ac radius = " << rad
-         << ", # triangles = " << triangles.size()
-         << ", # wires = " << wires.size()
-         << ", # catapults = " << catapults.size()
-         << ", ground_radius = " << ground_radius );
-
-  // If the ground radius is still below 5e6 meters, then we do not yet have
-  // any scenery.
-  found_ground = found_ground && 5e6 < ground_radius;
-  if (!found_ground)
-    SG_LOG(SG_FLIGHT, SG_WARN, "prepare_ground_cache(): trying to build cache "
-           "without any scenery below the aircraft" );
-
-  return found_ground;
+    return found_ground;
 }
 
 bool
 FGGroundCache::is_valid(double& ref_time, SGVec3d& pt, double& rad)
 {
-  pt = reference_wgs84_point;
-  rad = reference_vehicle_radius;
-  ref_time = cache_ref_time;
-  return found_ground;
+    pt = reference_wgs84_point;
+    rad = reference_vehicle_radius;
+    ref_time = cache_ref_time;
+    return found_ground;
 }
 
+class FGGroundCache::CatapultFinder : public BVHVisitor {
+public:
+    CatapultFinder(const SGSphered& sphere, const double& t) :
+        _sphere(sphere),
+        _time(t),
+        _haveLineSegment(false)
+    { }
+    
+    virtual void apply(BVHGroup& leaf)
+    {
+        if (!intersects(_sphere, leaf.getBoundingSphere()))
+            return;
+        leaf.traverse(*this);
+    }
+    virtual void apply(BVHTransform& transform)
+    {
+        if (!intersects(_sphere, transform.getBoundingSphere()))
+            return;
+        
+        SGSphered sphere = _sphere;
+        _sphere = transform.sphereToLocal(sphere);
+        bool haveLineSegment = _haveLineSegment;
+        _haveLineSegment = false;
+        
+        transform.traverse(*this);
+        
+        if (_haveLineSegment) {
+            _lineSegment = transform.lineSegmentToWorld(_lineSegment);
+            _linearVelocity = transform.vecToWorld(_linearVelocity);
+            _angularVelocity = transform.vecToWorld(_angularVelocity);
+        }
+        _haveLineSegment |= haveLineSegment;
+        _sphere.setCenter(sphere.getCenter());
+    }
+    virtual void apply(BVHMotionTransform& transform)
+    {
+        if (!intersects(_sphere, transform.getBoundingSphere()))
+            return;
+        
+        SGSphered sphere = _sphere;
+        _sphere = transform.sphereToLocal(sphere, _time);
+        bool haveLineSegment = _haveLineSegment;
+        _haveLineSegment = false;
+        
+        transform.traverse(*this);
+        
+        if (_haveLineSegment) {
+            SGMatrixd toWorld = transform.getToWorldTransform(_time);
+            _linearVelocity
+                += transform.getLinearVelocityAt(_lineSegment.getStart());
+            _angularVelocity += transform.getAngularVelocity();
+            _linearVelocity = toWorld.xformVec(_linearVelocity);
+            _angularVelocity = toWorld.xformVec(_angularVelocity);
+            _lineSegment = _lineSegment.transform(toWorld);
+        }
+        _haveLineSegment |= haveLineSegment;
+        _sphere.setCenter(sphere.getCenter());
+    }
+    virtual void apply(BVHLineGeometry& node)
+    {
+        if (node.getType() != BVHLineGeometry::CarrierCatapult)
+            return;
+
+        SGLineSegmentd lineSegment(node.getLineSegment());
+        if (!intersects(_sphere, lineSegment))
+            return;
+
+        _lineSegment = lineSegment;
+        double dist = distSqr(lineSegment, getSphere().getCenter());
+        _sphere.setRadius(sqrt(dist));
+        _linearVelocity = SGVec3d::zeros();
+        _angularVelocity = SGVec3d::zeros();
+        _haveLineSegment = true;
+    }
+    virtual void apply(BVHStaticGeometry& node)
+    { }
+    
+    virtual void apply(const BVHStaticBinary&, const BVHStaticData&) { }
+    virtual void apply(const BVHStaticLeaf&, const BVHStaticData&) { }
+    virtual void apply(const BVHStaticTriangle&, const BVHStaticData&) { }
+    
+    void setSphere(const SGSphered& sphere)
+    { _sphere = sphere; }
+    const SGSphered& getSphere() const
+    { return _sphere; }
+    
+    const SGLineSegmentd& getLineSegment() const
+    { return _lineSegment; }
+    const SGVec3d& getLinearVelocity() const
+    { return _linearVelocity; }
+    const SGVec3d& getAngularVelocity() const
+    { return _angularVelocity; }
+    
+    bool getHaveLineSegment() const
+    { return _haveLineSegment; }
+    
+protected:
+    SGLineSegmentd _lineSegment;
+    SGVec3d _linearVelocity;
+    SGVec3d _angularVelocity;
+    
+    bool _haveLineSegment;
+
+    SGSphered _sphere;
+    double _time;
+};
+
 double
-FGGroundCache::get_cat(double t, const SGVec3d& dpt,
+FGGroundCache::get_cat(double t, const SGVec3d& pt,
                        SGVec3d end[2], SGVec3d vel[2])
 {
-  // start with a distance of 1e10 meters...
-  double dist = 1e10;
+    double maxDistance = 1000;
 
-  // Time difference to the reference time.
-  t -= cache_ref_time;
+    // Get the wire in question
+    CatapultFinder catapultFinder(SGSphered(pt, maxDistance), t);
+    if (_localBvhTree)
+        _localBvhTree->accept(catapultFinder);
+    
+    if (!catapultFinder.getHaveLineSegment())
+        return maxDistance;
 
-  size_t sz = catapults.size();
-  for (size_t i = 0; i < sz; ++i) {
-    SGVec3d pivotoff, rvel[2];
-    pivotoff = catapults[i].start - catapults[i].gp.pivot;
-    rvel[0] = catapults[i].gp.vel + cross(catapults[i].gp.rot, pivotoff);
-    pivotoff = catapults[i].end - catapults[i].gp.pivot;
-    rvel[1] = catapults[i].gp.vel + cross(catapults[i].gp.rot, pivotoff);
+    // prepare the returns
+    end[0] = catapultFinder.getLineSegment().getStart();
+    end[1] = catapultFinder.getLineSegment().getEnd();
 
-    SGVec3d thisEnd[2];
-    thisEnd[0] = catapults[i].start + t*rvel[0];
-    thisEnd[1] = catapults[i].end + t*rvel[1];
+    // The linear velocity is the one at the start of the line segment ...
+    vel[0] = catapultFinder.getLinearVelocity();
+    // ... so the end point has the additional cross product.
+    vel[1] = catapultFinder.getLinearVelocity();
+    vel[1] += cross(catapultFinder.getAngularVelocity(),
+                    catapultFinder.getLineSegment().getDirection());
 
-    double this_dist = distSqr(SGLineSegmentd(thisEnd[0], thisEnd[1]), dpt);
-    if (this_dist < dist) {
-      SG_LOG(SG_FLIGHT,SG_INFO, "Found catapult "
-             << this_dist << " meters away");
-      dist = this_dist;
-        
-      end[0] = thisEnd[0];
-      end[1] = thisEnd[1];
-      vel[0] = rvel[0];
-      vel[1] = rvel[1];
-    }
-  }
-
-  // At the end take the root, we only computed squared distances ...
-  return sqrt(dist);
+    // Return the distance to the cat
+    return sqrt(distSqr(catapultFinder.getLineSegment(), pt));
 }
 
 bool
-FGGroundCache::get_agl(double t, const SGVec3d& dpt, double max_altoff,
+FGGroundCache::get_agl(double t, const SGVec3d& pt, double max_altoff,
                        SGVec3d& contact, SGVec3d& normal, SGVec3d& vel,
                        int *type, const SGMaterial** material, double *agl)
 {
-  bool ret = false;
+    // Just set up a ground intersection query for the given point
+    SGLineSegmentd line(pt - max_altoff*down, pt + 1e4*down);
+    simgear::BVHLineSegmentVisitor lineSegmentVisitor(line, t);
+    if (_localBvhTree)
+        _localBvhTree->accept(lineSegmentVisitor);
 
-  *type = FGInterface::Unknown;
-//   *agl = 0.0;
-  if (material)
-    *material = 0;
-  vel = SGVec3d(0, 0, 0);
-  contact = SGVec3d(0, 0, 0);
-  normal = SGVec3d(0, 0, 0);
-
-  // Time difference to th reference time.
-  t -= cache_ref_time;
-
-  // The double valued point we start to search for intersection.
-  SGVec3d pt = dpt;
-  // shift the start of our ray by maxaltoff upwards
-  SGRayd ray(pt - max_altoff*down, down);
-
-  // Initialize to something sensible
-  double current_radius = 0.0;
-
-  size_t sz = triangles.size();
-  for (size_t i = 0; i < sz; ++i) {
-    SGSphered sphere;
-    SGTriangled triangle;
-    velocityTransformTriangle(t, triangle, sphere, triangles[i]);
-    if (!intersectsInf(ray, sphere))
-      continue;
-
-    // Check for intersection.
-    SGVec3d isecpoint;
-    if (intersects(isecpoint, triangle, ray, 1e-4)) {
-      // Compute the vector from pt to the intersection point ...
-      SGVec3d off = isecpoint - pt;
-      // ... and check if it is too high or not
-
-      // compute the radius, good enough approximation to take the geocentric radius
-      double radius = dot(isecpoint, isecpoint);
-      if (current_radius < radius) {
-        current_radius = radius;
-        ret = true;
-        // Save the new potential intersection point.
-        contact = isecpoint;
-        // The first three values in the vector are the plane normal.
-        normal = triangle.getNormal();
-        // The velocity wrt earth.
-        SGVec3d pivotoff = pt - triangles[i].gp.pivot;
-        vel = triangles[i].gp.vel + cross(triangles[i].gp.rot, pivotoff);
-        // Save the ground type.
-        *type = triangles[i].gp.type;
-        *agl = dot(down, contact - dpt);
+    if (!lineSegmentVisitor.empty()) {
+        // Have an intersection
+        contact = lineSegmentVisitor.getPoint();
+        normal = lineSegmentVisitor.getNormal();
+        if (0 < dot(normal, down))
+            normal = -normal;
+        *agl = dot(down, contact - pt);
+        vel = lineSegmentVisitor.getLinearVelocity();
+        // correct the linear velocity, since the line intersector delivers
+        // values for the start point and the get_agl function should
+        // traditionally deliver for the contact point
+        vel += cross(lineSegmentVisitor.getAngularVelocity(),
+                     contact - line.getStart());
+        *type = materialToGroundType(lineSegmentVisitor.getMaterial());
         if (material)
-          *material = triangles[i].gp.material;
-      }
+            *material = lineSegmentVisitor.getMaterial();
+
+        return true;
+    } else {
+        // Whenever we did not have a ground triangle for the requested point,
+        // take the ground level we found during the current cache build.
+        // This is as good as what we had before for agl.
+        SGGeod geodPt = SGGeod::fromCart(pt);
+        *agl = geodPt.getElevationM() - _altitude;
+        geodPt.setElevationM(_altitude);
+        contact = SGVec3d::fromGeod(geodPt);
+        normal = -down;
+        vel = SGVec3d(0, 0, 0);
+        *type = _type;
+        if (material)
+            *material = _material;
+
+        return found_ground;
     }
-  }
-
-  if (ret)
-    return true;
-
-  // Whenever we did not have a ground triangle for the requested point,
-  // take the ground level we found during the current cache build.
-  // This is as good as what we had before for agl.
-  double r = length(dpt);
-  contact = dpt;
-  contact *= ground_radius/r;
-  normal = -down;
-  vel = SGVec3d(0, 0, 0);
-  
-  // The altitude is the distance of the requested point from the
-  // contact point.
-  *agl = dot(down, contact - dpt);
-  *type = _type;
-  if (material)
-    *material = _material;
-
-  return ret;
 }
+
+class FGGroundCache::WireIntersector : public BVHVisitor {
+public:
+    WireIntersector(const SGVec3d pt[4], const double& t) :
+        _linearVelocity(SGVec3d::zeros()),
+        _angularVelocity(SGVec3d::zeros()),
+        _wire(0),
+        _time(t)
+    {
+        // Build the two triangles spanning the area where the hook has moved
+        // during the past step.
+        _triangles[0].set(pt[0], pt[1], pt[2]);
+        _triangles[1].set(pt[0], pt[2], pt[3]);
+    }
+
+    virtual void apply(BVHGroup& leaf)
+    {
+        if (!_intersects(leaf.getBoundingSphere()))
+            return;
+
+        leaf.traverse(*this);
+    }
+    virtual void apply(BVHTransform& transform)
+    {
+        if (!_intersects(transform.getBoundingSphere()))
+            return;
+        
+        SGTriangled triangles[2] = { _triangles[0], _triangles[1] };
+        _triangles[0] = triangles[0].transform(transform.getToLocalTransform());
+        _triangles[1] = triangles[1].transform(transform.getToLocalTransform());
+        
+        transform.traverse(*this);
+        
+        if (_wire) {
+            _lineSegment = transform.lineSegmentToWorld(_lineSegment);
+            _linearVelocity = transform.vecToWorld(_linearVelocity);
+            _angularVelocity = transform.vecToWorld(_angularVelocity);
+        }
+        _triangles[0] = triangles[0];
+        _triangles[1] = triangles[1];
+    }
+    virtual void apply(BVHMotionTransform& transform)
+    {
+        if (!_intersects(transform.getBoundingSphere()))
+            return;
+        
+        SGMatrixd toLocal = transform.getToLocalTransform(_time);
+
+        SGTriangled triangles[2] = { _triangles[0], _triangles[1] };
+        _triangles[0] = triangles[0].transform(toLocal);
+        _triangles[1] = triangles[1].transform(toLocal);
+        
+        transform.traverse(*this);
+        
+        if (_wire) {
+            SGMatrixd toWorld = transform.getToWorldTransform(_time);
+            _linearVelocity
+                += transform.getLinearVelocityAt(_lineSegment.getStart());
+            _angularVelocity += transform.getAngularVelocity();
+            _linearVelocity = toWorld.xformVec(_linearVelocity);
+            _angularVelocity = toWorld.xformVec(_angularVelocity);
+            _lineSegment = _lineSegment.transform(toWorld);
+        }
+        _triangles[0] = triangles[0];
+        _triangles[1] = triangles[1];
+    }
+    virtual void apply(BVHLineGeometry& node)
+    {
+        if (node.getType() != BVHLineGeometry::CarrierWire)
+            return;
+        SGLineSegmentd lineSegment(node.getLineSegment());
+        if (!_intersects(lineSegment))
+            return;
+
+        _lineSegment = lineSegment;
+        _linearVelocity = SGVec3d::zeros();
+        _angularVelocity = SGVec3d::zeros();
+        _wire = &node;
+    }
+    virtual void apply(BVHStaticGeometry& node)
+    { }
+    
+    virtual void apply(const BVHStaticBinary&, const BVHStaticData&) { }
+    virtual void apply(const BVHStaticLeaf&, const BVHStaticData&) { }
+    virtual void apply(const BVHStaticTriangle&, const BVHStaticData&) { }
+
+    bool _intersects(const SGSphered& sphere) const
+    {
+        if (_wire)
+            return false;
+        if (intersects(_triangles[0], sphere))
+            return true;
+        if (intersects(_triangles[1], sphere))
+            return true;
+        return false;
+    }
+    bool _intersects(const SGLineSegmentd& lineSegment) const
+    {
+        if (_wire)
+            return false;
+        if (intersects(_triangles[0], lineSegment))
+            return true;
+        if (intersects(_triangles[1], lineSegment))
+            return true;
+        return false;
+    }
+    
+    const SGLineSegmentd& getLineSegment() const
+    { return _lineSegment; }
+    const SGVec3d& getLinearVelocity() const
+    { return _linearVelocity; }
+    const SGVec3d& getAngularVelocity() const
+    { return _angularVelocity; }
+    
+    const BVHLineGeometry* getWire() const
+    { return _wire; }
+    
+private:
+    SGLineSegmentd _lineSegment;
+    SGVec3d _linearVelocity;
+    SGVec3d _angularVelocity;
+    const BVHLineGeometry* _wire;
+
+    SGTriangled _triangles[2];
+    double _time;
+};
 
 bool FGGroundCache::caught_wire(double t, const SGVec3d pt[4])
 {
-  size_t sz = wires.size();
-  if (sz == 0)
-    return false;
-
-  // Time difference to the reference time.
-  t -= cache_ref_time;
-
-  // Build the two triangles spanning the area where the hook has moved
-  // during the past step.
-  SGTriangled triangle[2];
-  triangle[0].set(pt[0], pt[1], pt[2]);
-  triangle[1].set(pt[0], pt[2], pt[3]);
-
-  // Intersect the wire lines with each of these triangles.
-  // You have caught a wire if they intersect.
-  for (size_t i = 0; i < sz; ++i) {
-    SGVec3d le[2];
-    for (int k = 0; k < 2; ++k) {
-      le[k] = wires[i].ends[k];
-      SGVec3d pivotoff = le[k] - wires[i].gp.pivot;
-      SGVec3d vel = wires[i].gp.vel + cross(wires[i].gp.rot, pivotoff);
-      le[k] += t*vel;
-    }
-    SGLineSegmentd lineSegment(le[0], le[1]);
+    // Get the wire in question
+    WireIntersector wireIntersector(pt, t);
+    if (_localBvhTree)
+        _localBvhTree->accept(wireIntersector);
     
-    for (int k=0; k<2; ++k) {
-      if (intersects(triangle[k], lineSegment)) {
-        SG_LOG(SG_FLIGHT,SG_INFO, "Caught wire");
-        // Store the wire id.
-        wire_id = wires[i].gp.wire_id;
-        return true;
-      }
-    }
-  }
-
-  return false;
+    _wire = wireIntersector.getWire();
+    return _wire;
 }
+
+class FGGroundCache::WireFinder : public BVHVisitor {
+public:
+    WireFinder(const BVHLineGeometry* wire, const double& t) :
+        _wire(wire),
+        _time(t),
+        _lineSegment(SGVec3d::zeros(), SGVec3d::zeros()),
+        _linearVelocity(SGVec3d::zeros()),
+        _angularVelocity(SGVec3d::zeros()),
+        _haveLineSegment(false)
+    { }
+
+    virtual void apply(BVHGroup& leaf)
+    {
+        if (_haveLineSegment)
+            return;
+        leaf.traverse(*this);
+    }
+    virtual void apply(BVHTransform& transform)
+    {
+        if (_haveLineSegment)
+            return;
+
+        transform.traverse(*this);
+        
+        if (_haveLineSegment) {
+            _linearVelocity = transform.vecToWorld(_linearVelocity);
+            _angularVelocity = transform.vecToWorld(_angularVelocity);
+            _lineSegment = transform.lineSegmentToWorld(_lineSegment);
+        }
+    }
+    virtual void apply(BVHMotionTransform& transform)
+    {
+        if (_haveLineSegment)
+            return;
+
+        transform.traverse(*this);
+        
+        if (_haveLineSegment) {
+            SGMatrixd toWorld = transform.getToWorldTransform(_time);
+            _linearVelocity
+                += transform.getLinearVelocityAt(_lineSegment.getStart());
+            _angularVelocity += transform.getAngularVelocity();
+            _linearVelocity = toWorld.xformVec(_linearVelocity);
+            _angularVelocity = toWorld.xformVec(_angularVelocity);
+            _lineSegment = _lineSegment.transform(toWorld);
+        }
+    }
+    virtual void apply(BVHLineGeometry& node)
+    {
+        if (_haveLineSegment)
+            return;
+        if (_wire != &node)
+            return;
+        if (node.getType() != BVHLineGeometry::CarrierWire)
+            return;
+        _lineSegment = SGLineSegmentd(node.getLineSegment());
+        _linearVelocity = SGVec3d::zeros();
+        _angularVelocity = SGVec3d::zeros();
+        _haveLineSegment = true;
+    }
+    virtual void apply(BVHStaticGeometry&) { }
+    
+    virtual void apply(const BVHStaticBinary&, const BVHStaticData&) { }
+    virtual void apply(const BVHStaticLeaf&, const BVHStaticData&) { }
+    virtual void apply(const BVHStaticTriangle&, const BVHStaticData&) { }
+
+    const SGLineSegmentd& getLineSegment() const
+    { return _lineSegment; }
+    
+    bool getHaveLineSegment() const
+    { return _haveLineSegment; }
+
+    const SGVec3d& getLinearVelocity() const
+    { return _linearVelocity; }
+    const SGVec3d& getAngularVelocity() const
+    { return _angularVelocity; }
+
+private:
+    const BVHLineGeometry* _wire;
+    double _time;
+
+    SGLineSegmentd _lineSegment;
+    SGVec3d _linearVelocity;
+    SGVec3d _angularVelocity;
+
+    bool _haveLineSegment;
+};
 
 bool FGGroundCache::get_wire_ends(double t, SGVec3d end[2], SGVec3d vel[2])
 {
-  // Fast return if we do not have an active wire.
-  if (wire_id < 0)
-    return false;
+    // Fast return if we do not have an active wire.
+    if (!_wire)
+        return false;
 
-  // Time difference to the reference time.
-  t -= cache_ref_time;
+    // Get the wire in question
+    WireFinder wireFinder(_wire, t);
+    if (_localBvhTree)
+        _localBvhTree->accept(wireFinder);
+    
+    if (!wireFinder.getHaveLineSegment())
+        return false;
 
-  // Search for the wire with the matching wire id.
-  size_t sz = wires.size();
-  for (size_t i = 0; i < sz; ++i) {
-    if (wires[i].gp.wire_id == wire_id) {
-      for (size_t k = 0; k < 2; ++k) {
-        SGVec3d pivotoff = wires[i].ends[k] - wires[i].gp.pivot;
-        vel[k] = wires[i].gp.vel + cross(wires[i].gp.rot, pivotoff);
-        end[k] = wires[i].ends[k] + t*vel[k];
-      }
-      return true;
-    }
-  }
+    // prepare the returns
+    end[0] = wireFinder.getLineSegment().getStart();
+    end[1] = wireFinder.getLineSegment().getEnd();
 
-  return false;
+    // The linear velocity is the one at the start of the line segment ...
+    vel[0] = wireFinder.getLinearVelocity();
+    // ... so the end point has the additional cross product.
+    vel[1] = wireFinder.getLinearVelocity();
+    vel[1] += cross(wireFinder.getAngularVelocity(),
+                    wireFinder.getLineSegment().getDirection());
+
+    return true;
 }
 
 void FGGroundCache::release_wire(void)
 {
-  wire_id = -1;
+    _wire = 0;
 }
