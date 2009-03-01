@@ -24,6 +24,9 @@
 
 #include "AIFlightPlan.hxx"
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/props/props.hxx>
+#include <simgear/props/props_io.hxx>
+
 #include <Airports/runways.hxx>
 #include <Airports/dynamics.hxx>
 #include "AIAircraft.hxx"
@@ -403,6 +406,8 @@ void FGAIFlightPlan::createTakeOff(FGAIAircraft *ac, bool firstFlight, FGAirport
 void FGAIFlightPlan::createClimb(FGAIAircraft *ac, bool firstFlight, FGAirport *apt, double speed, double alt, const string &fltType)
 {
   waypoint *wpt;
+  bool planLoaded = false;
+  string fPLName;
 
   if (firstFlight) {
     string rwyClass = getRunwayClassFromTrafficType(fltType);
@@ -410,17 +415,90 @@ void FGAIFlightPlan::createClimb(FGAIAircraft *ac, bool firstFlight, FGAirport *
     apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway, heading);
     rwy = apt->getRunwayByIdent(activeRunway);
   }
-  
-  SGGeod climb1 = rwy->pointOnCenterline(10*SG_NM_TO_METER);
-  wpt = createInAir(ac, "10000ft climb", climb1, speed, 10000);
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  waypoints.push_back(wpt); 
+  if (fgGetBool("/sim/traffic-manager/use-custom-scenery-data") == true) {
+       string_list sc = globals->get_fg_scenery();
+       char buffer[64];
+       // NOTE: Currently for testing only. A slightly more elaborate naming convention
+       // needs to be dropped here.
+       snprintf(buffer, 64, "%s.SID-%s-01.xml", apt->getId().c_str(), activeRunway.c_str() );
+       string airportDir = expandICAODirs(apt->getId());
+       for (string_list_iterator i = sc.begin(); i != sc.end(); i++) {
+           SGPath aptpath( *i );
+           aptpath.append( "Airports" );
+           aptpath.append ( airportDir );
+           aptpath.append( string(buffer) );
+           if (aptpath.exists()) {
+               planLoaded = loadSID(aptpath.str());
+               cerr << "Reading " << aptpath.str() << endl;
+           }
+        }
+  }
+  if (!planLoaded) {
+      SGGeod climb1 = rwy->pointOnCenterline(10*SG_NM_TO_METER);
+      wpt = createInAir(ac, "10000ft climb", climb1, speed, 10000);
+      wpt->gear_down = true;
+      wpt->flaps_down= true;
+      waypoints.push_back(wpt); 
 
-  SGGeod climb2 = rwy->pointOnCenterline(20*SG_NM_TO_METER);
-  wpt = cloneWithPos(ac, wpt, "18000ft climb", climb2);
-  wpt->altitude  = 18000;
-  waypoints.push_back(wpt); 
+      SGGeod climb2 = rwy->pointOnCenterline(20*SG_NM_TO_METER);
+      wpt = cloneWithPos(ac, wpt, "18000ft climb", climb2);
+      wpt->altitude  = 18000;
+      waypoints.push_back(wpt); 
+   }
+}
+
+bool FGAIFlightPlan::loadSID(const string& filename)
+{
+  SGPropertyNode root;
+  try {
+      readProperties(filename, &root);
+  } catch (const sg_exception &e) {
+      SG_LOG(SG_GENERAL, SG_ALERT,
+       "Error reading AI flight plan: " << filename);
+       // cout << path.str() << endl;
+     return false;
+  }
+
+  SGPropertyNode * node = root.getNode("flightplan");
+  for (int i = 0; i < node->nChildren(); i++) { 
+     //cout << "Reading waypoint " << i << endl;        
+     waypoint* wpt = new waypoint;
+     SGPropertyNode * wpt_node = node->getChild(i);
+     wpt->name      = wpt_node->getStringValue("name", "END");
+     wpt->latitude  = wpt_node->getDoubleValue("lat", 0);
+     wpt->longitude = wpt_node->getDoubleValue("lon", 0);
+     wpt->altitude  = wpt_node->getDoubleValue("alt", 0);
+     wpt->speed     = wpt_node->getDoubleValue("ktas", 0);
+     wpt->crossat   = wpt_node->getDoubleValue("crossat", -10000);
+     wpt->gear_down = wpt_node->getBoolValue("gear-down", false);
+     wpt->flaps_down= wpt_node->getBoolValue("flaps-down", false);
+     wpt->on_ground = wpt_node->getBoolValue("on-ground", false);
+     wpt->time_sec   = wpt_node->getDoubleValue("time-sec", 0);
+     wpt->time       = wpt_node->getStringValue("time", "");
+
+     if (wpt->name == "END") wpt->finished = true;
+     else wpt->finished = false;
+
+     waypoints.push_back( wpt );
+   }
+
+  //wpt_iterator = waypoints.begin();
+  //cout << waypoints.size() << " waypoints read." << endl;
+  return true;
+}
+
+// NOTE: This is just copied from Airports/readXML. 
+string FGAIFlightPlan::expandICAODirs(const string in){
+     //cerr << "Expanding " << in << endl;
+     if (in.size() == 4) {
+          char buffer[11];
+          snprintf(buffer, 11, "%c/%c/%c", in[0], in[1], in[2]);
+          //cerr << "result: " << buffer << endl;
+          return string(buffer);
+     } else {
+           return in;
+     }
+     //exit(1);
 }
 
 

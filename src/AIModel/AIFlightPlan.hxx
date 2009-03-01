@@ -155,7 +155,9 @@ private:
 
   //void createCruiseFallback(bool, FGAirport*, FGAirport*, double, double, double, double);
  void evaluateRoutePart(double deplat, double deplon, double arrlat, double arrlon);
- 
+
+ bool loadSID(const string& filename);
+ string expandICAODirs(const string in);
 };    
 
 #endif  // _FG_AIFLIGHTPLAN_HXX
