@@ -12,7 +12,7 @@
 
 
 struct SFG_Font {
-    char*           Name;         /* The source font name             */
+    const char*     Name;         /* The source font name             */
     int             Quantity;     /* Number of chars in font          */
     int             Height;       /* Height of the characters         */
     const GLubyte** Characters;   /* The characters mapping           */

@@ -97,7 +97,7 @@ public:
     void setAlphaoutput(int i, const char *text);
     void setCcw(int ccw);
     int getCcw() {return _ccw;};
-    void setParameter(char *parametername, float value);
+    void setParameter(const char *parametername, float value);
     void setGlobalGround(double* global_ground, float* global_vel);
     float getTorqueOfInertia();
     int getValueforFGSet(int j,char *b,float *f);
