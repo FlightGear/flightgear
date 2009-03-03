@@ -699,7 +699,7 @@ void Rotor::setGlobalGround(double *global_ground, float* global_vel)
     for(i=0; i<4; i++) _global_ground[i] = global_ground[i];
 }
 
-void Rotor::setParameter(char *parametername, float value)
+void Rotor::setParameter(const char *parametername, float value)
 {
 #define p(a,b) if (strcmp(parametername,#a)==0) _##a = (value * (b)); else
     p(translift_ve,1)
