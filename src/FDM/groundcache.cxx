@@ -52,7 +52,6 @@
 #include <simgear/scene/bvh/BVHStaticGeometry.hxx>
 #include <simgear/scene/bvh/BVHStaticData.hxx>
 #include <simgear/scene/bvh/BVHStaticNode.hxx>
-#include <simgear/scene/bvh/BVHStaticLeaf.hxx>
 #include <simgear/scene/bvh/BVHStaticTriangle.hxx>
 #include <simgear/scene/bvh/BVHStaticBinary.hxx>
 #include <simgear/scene/bvh/BVHSubTreeCollector.hxx>
@@ -402,7 +401,6 @@ public:
     { }
     
     virtual void apply(const BVHStaticBinary&, const BVHStaticData&) { }
-    virtual void apply(const BVHStaticLeaf&, const BVHStaticData&) { }
     virtual void apply(const BVHStaticTriangle&, const BVHStaticData&) { }
     
     void setSphere(const SGSphered& sphere)
@@ -589,7 +587,6 @@ public:
     { }
     
     virtual void apply(const BVHStaticBinary&, const BVHStaticData&) { }
-    virtual void apply(const BVHStaticLeaf&, const BVHStaticData&) { }
     virtual void apply(const BVHStaticTriangle&, const BVHStaticData&) { }
 
     bool _intersects(const SGSphered& sphere) const
@@ -707,7 +704,6 @@ public:
     virtual void apply(BVHStaticGeometry&) { }
     
     virtual void apply(const BVHStaticBinary&, const BVHStaticData&) { }
-    virtual void apply(const BVHStaticLeaf&, const BVHStaticData&) { }
     virtual void apply(const BVHStaticTriangle&, const BVHStaticData&) { }
 
     const SGLineSegmentd& getLineSegment() const
