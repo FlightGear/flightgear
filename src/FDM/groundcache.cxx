@@ -143,11 +143,7 @@ public:
 
         // Look for a velocity note
         const SGSceneUserData::Velocity* velocity = getVelocity(transform);
-        // ... no velocity of there is only zero velocity
-        if (velocity && velocity->linear == SGVec3d::zeros() &&
-            velocity->angular == SGVec3d::zeros())
-            velocity = 0;
-        
+
         SGVec3d center = _center;
         _center = SGVec3d(inverseMatrix.preMult(_center.osg()));
         double radius = _radius;
@@ -169,6 +165,7 @@ public:
                 bvhTransform->setAngularVelocity(velocity->angular);
                 bvhTransform->setReferenceTime(_startTime);
                 bvhTransform->setEndTime(_endTime);
+                bvhTransform->setId(velocity->id);
 
                 mSubTreeCollector.popNodeList(parentNodeList, bvhTransform);
             } else {
