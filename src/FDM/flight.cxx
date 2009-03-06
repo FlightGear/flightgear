@@ -29,7 +29,6 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/SGMath.hxx>
-#include <simgear/scene/material/mat.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 #include <Scenery/scenery.hxx>
@@ -705,108 +704,110 @@ FGInterface::get_cat_ft(double t, const double pt[3],
   return dist*SG_METER_TO_FEET;
 }
 
-// Legacy interface just kept because of JSBSim
 bool
-FGInterface::get_agl_m(double t, const double pt[3],
-                       double contact[3], double normal[3], double vel[3],
-                       int *type, double *loadCapacity,
-                       double *frictionFactor, double *agl)
+FGInterface::get_body_m(double t, simgear::BVHNode::Id id,
+                        double bodyToWorld[16], double linearVel[3],
+                        double angularVel[3])
 {
-  const SGMaterial* material;
-  SGVec3d _contact, _normal, _vel;
-  bool ret = ground_cache.get_agl(t, SGVec3d(pt), 2.0, _contact, _normal,
-                                  _vel, type, &material, agl);
-  assign(contact, _contact);
-  assign(normal, _normal);
-  assign(vel, _vel);
-  if (material) {
-    *loadCapacity = material->get_load_resistance();
-    *frictionFactor = material->get_friction_factor();
+  SGMatrixd _bodyToWorld;
+  SGVec3d _linearVel, _angularVel;
+  if (!ground_cache.get_body(t, _bodyToWorld, _linearVel, _angularVel, id))
+    return false;
 
-  } else {
-    *loadCapacity = DBL_MAX;
-    *frictionFactor = 1.0;
-  }
-  return ret;
-}
+  assign(linearVel, _linearVel);
+  assign(angularVel, _angularVel);
+  for (unsigned i = 0; i < 16; ++i)
+      bodyToWorld[i] = _bodyToWorld.data()[i];
 
-bool
-FGInterface::get_agl_m(double t, const double pt[3],
-                       double contact[3], double normal[3], double vel[3],
-                       int *type, const SGMaterial **material, double *agl)
-{
-  SGVec3d _contact, _normal, _vel;
-  bool ret = ground_cache.get_agl(t, SGVec3d(pt), 2.0, _contact, _normal,
-                                  _vel, type, material, agl);
-  assign(contact, _contact);
-  assign(normal, _normal);
-  assign(vel, _vel);
-  return ret;
-}
-
-// Legacy interface just kept because of JSBSim
-bool
-FGInterface::get_agl_ft(double t, const double pt[3],
-                        double contact[3], double normal[3], double vel[3],
-                        int *type, double *loadCapacity,
-                        double *frictionFactor, double *agl)
-{
-  // Convert units and do the real work.
-  SGVec3d pt_m = SG_FEET_TO_METER*SGVec3d(pt);
-
-  const SGMaterial* material;
-  SGVec3d _contact, _normal, _vel;
-  bool ret = ground_cache.get_agl(t, pt_m, 2.0, _contact, _normal, _vel,
-                                  type, &material, agl);
-  // Convert units back ...
-  assign( contact, SG_METER_TO_FEET*_contact );
-  assign( vel, SG_METER_TO_FEET*_vel );
-  assign( normal, _normal );
-  *agl *= SG_METER_TO_FEET;
-
-  // return material properties if available
-  if (material) {
-    // FIXME: convert units?? now pascal to lbf/ft^2
-    *loadCapacity = 0.020885434*material->get_load_resistance();
-    *frictionFactor = material->get_friction_factor();
-  } else {
-    *loadCapacity = DBL_MAX;
-    *frictionFactor = 1.0;
-  }
-  return ret;
+  return true;
 }
 
 bool
 FGInterface::get_agl_m(double t, const double pt[3], double max_altoff,
-                       double contact[3], double normal[3], double vel[3],
-                       int *type, const SGMaterial** material, double *agl)
+                       double contact[3], double normal[3],
+                       double linearVel[3], double angularVel[3],
+                       SGMaterial const*& material, simgear::BVHNode::Id& id)
 {
-  SGVec3d _contact, _normal, _vel;
-  bool found = ground_cache.get_agl(t, SGVec3d(pt), max_altoff, _contact,
-                                    _normal, _vel, type, material, agl);
+  SGVec3d pt_m = SGVec3d(pt) - max_altoff*ground_cache.get_down();
+  SGVec3d _contact, _normal, _linearVel, _angularVel;
+  material = 0;
+  if (!ground_cache.get_agl(t, pt_m, _contact, _normal, _linearVel,
+                            _angularVel, id, material))
+      return false;
+  // correct the linear velocity, since the line intersector delivers
+  // values for the start point and the get_agl function should
+  // traditionally deliver for the contact point
+  _linearVel += cross(_angularVel, _contact - pt_m);
+
   assign(contact, _contact);
   assign(normal, _normal);
-  assign(vel, _vel);
-  return found;
+  assign(linearVel, _linearVel);
+  assign(angularVel, _angularVel);
+  return true;
 }
 
 bool
 FGInterface::get_agl_ft(double t, const double pt[3], double max_altoff,
-                        double contact[3], double normal[3], double vel[3],
-                        int *type, const SGMaterial** material, double *agl)
+                        double contact[3], double normal[3],
+                        double linearVel[3], double angularVel[3],
+                        SGMaterial const*& material, simgear::BVHNode::Id& id)
 {
   // Convert units and do the real work.
-  SGVec3d pt_m = SG_FEET_TO_METER*SGVec3d(pt);
-  SGVec3d _contact, _normal, _vel;
-  bool ret = ground_cache.get_agl(t, pt_m, SG_FEET_TO_METER * max_altoff,
-                                  _contact, _normal, _vel,
-                                  type, material, agl);
+  SGVec3d pt_m = SGVec3d(pt) - max_altoff*ground_cache.get_down();
+  pt_m *= SG_FEET_TO_METER;
+  SGVec3d _contact, _normal, _linearVel, _angularVel;
+  material = 0;
+  if (!ground_cache.get_agl(t, pt_m, _contact, _normal, _linearVel,
+                            _angularVel, id, material))
+      return false;
+  // correct the linear velocity, since the line intersector delivers
+  // values for the start point and the get_agl function should
+  // traditionally deliver for the contact point
+  _linearVel += cross(_angularVel, _contact - pt_m);
+
   // Convert units back ...
   assign( contact, SG_METER_TO_FEET*_contact );
-  assign( vel, SG_METER_TO_FEET*_vel );
   assign( normal, _normal );
-  *agl *= SG_METER_TO_FEET;
-  return ret;
+  assign( linearVel, SG_METER_TO_FEET*_linearVel );
+  assign( angularVel, _angularVel );
+  return true;
+}
+
+bool
+FGInterface::get_nearest_m(double t, const double pt[3], double maxDist,
+                           double contact[3], double normal[3],
+                           double linearVel[3], double angularVel[3],
+                           SGMaterial const*& material,
+                           simgear::BVHNode::Id& id)
+{
+  SGVec3d _contact, _linearVel, _angularVel;
+  if (!ground_cache.get_nearest(t, SGVec3d(pt), maxDist, _contact, _linearVel,
+                                _angularVel, id, material))
+      return false;
+
+  assign(contact, _contact);
+  assign(linearVel, _linearVel);
+  assign(angularVel, _angularVel);
+  return true;
+}
+
+bool
+FGInterface::get_nearest_ft(double t, const double pt[3], double maxDist,
+                            double contact[3], double normal[3],
+                            double linearVel[3], double angularVel[3],
+                            SGMaterial const*& material,
+                            simgear::BVHNode::Id& id)
+{
+  SGVec3d _contact, _linearVel, _angularVel;
+  if (!ground_cache.get_nearest(t, SG_FEET_TO_METER*SGVec3d(pt),
+                                SG_FEET_TO_METER*maxDist, _contact, _linearVel,
+                                _angularVel, id, material))
+      return false;
+
+  assign(contact, SG_METER_TO_FEET*_contact);
+  assign(linearVel, SG_METER_TO_FEET*_linearVel);
+  assign(angularVel, _angularVel);
+  return true;
 }
 
 double
@@ -853,13 +854,15 @@ FGInterface::get_groundlevel_m(const SGGeod& geod)
     }
   }
   
-  double contact[3], normal[3], vel[3], agl;
-  int type;
+  double contact[3], normal[3], vel[3], angvel[3];
+  const SGMaterial* material;
+  simgear::BVHNode::Id id;
   // Ignore the return value here, since it just tells us if
   // the returns stem from the groundcache or from the coarse
   // computations below the groundcache. The contact point is still something
   // valid, the normals and the other returns just contain some defaults.
-  get_agl_m(ref_time, pos.data(), 2.0, contact, normal, vel, &type, 0, &agl);
+  get_agl_m(ref_time, pos.data(), 2.0, contact, normal, vel, angvel,
+            material, id);
   return SGGeod::fromCart(SGVec3d(contact)).getElevationM();
 }
   

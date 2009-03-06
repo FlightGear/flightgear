@@ -321,13 +321,9 @@ void Model::updateGround(State* s)
         // Ask for the ground plane in the global coordinate system
         double global_ground[4];
         float global_vel[3];
-        int type;
         const SGMaterial* material;
-        _ground_cb->getGroundPlane(pt, global_ground, global_vel,
-                              &type,&material);
-        static int h=0;
-        g->setGlobalGround(global_ground, global_vel, pt[0], pt[1],
-            type,material);
+        _ground_cb->getGroundPlane(pt, global_ground, global_vel, &material);
+        g->setGlobalGround(global_ground, global_vel, pt[0], pt[1], material);
     }
 
     for(i=0; i<_hitches.size(); i++) {

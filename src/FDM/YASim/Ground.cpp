@@ -30,8 +30,8 @@ void Ground::getGroundPlane(const double pos[3],
 }
 
 void Ground::getGroundPlane(const double pos[3],
-                              double plane[4], float vel[3],
-                              int *type, const SGMaterial **material)
+                            double plane[4], float vel[3],
+                            const SGMaterial **material)
 {
     getGroundPlane(pos,plane,vel);
 }

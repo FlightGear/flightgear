@@ -600,14 +600,6 @@ public:
     // Ground handling routines
     //////////////////////////////////////////////////////////////////////////
 
-    enum GroundType {
-      /// I sused at least in YAsim. Deprecate this ad get it from the
-      /// Material instead
-      Unknown = 0, //??
-      Solid, // Whatever we will roll on with infinite load factor.
-      Water // For the beaver ...
-    };
-
     // Prepare the ground cache for the wgs84 position pt_*.
     // That is take all vertices in the ball with radius rad around the
     // position given by the pt_* and store them in a local scene graph.
@@ -631,36 +623,40 @@ public:
                       double end[2][3], double vel[2][3]);
   
 
-    // Return the altitude above ground below the wgs84 point pt
-    // Search for the nearest triangle to pt.
-    // Return ground properties like the ground type, the maximum load
-    // this kind kind of ground can carry, the friction factor between
-    // 0 and 1 which can be used to model lower friction with wet runways
-    // and finally the altitude above ground.
-    bool get_agl_m(double t, const double pt[3],
-                   double contact[3], double normal[3], double vel[3],
-                   int *type, double *loadCapacity,
-                   double *frictionFactor, double *agl);
-    bool get_agl_m(double t, const double pt[3],
-                       double contact[3], double normal[3], double vel[3],
-                       int *type, const SGMaterial **material,double *agl);
-    bool get_agl_ft(double t, const double pt[3],
-                    double contact[3], double normal[3], double vel[3],
-                    int *type, double *loadCapacity,
-                    double *frictionFactor, double *agl);
+    // Return the orientation and position matrix and the linear and angular
+    // velocity of that local coordinate systems origin for a given time and
+    // body id. The velocities are in the wgs84 frame at the bodys origin.
+    bool get_body_m(double t, simgear::BVHNode::Id id, double bodyToWorld[16],
+                    double linearVel[3], double angularVel[3]);
+
 
     // Return the altitude above ground below the wgs84 point pt
-    // Search for the nearest triangle to pt.
-    // Return ground properties like the ground type, a pointer to the
-    // material and finally the altitude above ground.
+    // Search for the nearest triangle to pt in downward direction.
+    // Return ground properties. The velocities are in the wgs84 frame at the
+    // contact point.
     bool get_agl_m(double t, const double pt[3], double max_altoff,
-                   double contact[3], double normal[3], double vel[3],
-                   int *type, const SGMaterial** material, double *agl);
+                   double contact[3], double normal[3], double linearVel[3],
+                   double angularVel[3], SGMaterial const*& material,
+                   simgear::BVHNode::Id& id);
     bool get_agl_ft(double t, const double pt[3], double max_altoff,
-                    double contact[3], double normal[3], double vel[3],
-                    int *type, const SGMaterial** material, double *agl);
+                    double contact[3], double normal[3], double linearVel[3],
+                    double angularVel[3], SGMaterial const*& material,
+                    simgear::BVHNode::Id& id);
     double get_groundlevel_m(double lat, double lon, double alt);
     double get_groundlevel_m(const SGGeod& geod);
+
+
+    // Return the nearest point in any direction to the point pt with a maximum
+    // distance maxDist. The velocities are in the wgs84 frame at the query
+    // position pt.
+    bool get_nearest_m(double t, const double pt[3], double maxDist,
+                       double contact[3], double normal[3], double linearVel[3],
+                       double angularVel[3], SGMaterial const*& material,
+                       simgear::BVHNode::Id& id);
+    bool get_nearest_ft(double t, const double pt[3], double maxDist,
+                        double contact[3], double normal[3],double linearVel[3],
+                        double angularVel[3], SGMaterial const*& material,
+                        simgear::BVHNode::Id& id);
 
 
     // Return 1 if the hook intersects with a wire.

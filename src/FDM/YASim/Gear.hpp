@@ -50,7 +50,7 @@ public:
     void setIgnoreWhileSolving(bool c);
     void setGlobalGround(double* global_ground, float* global_vel,
         double globalX, double globalY,
-        int type, const SGMaterial *material);
+        const SGMaterial *material);
     void getPosition(float* out);
     void getCompression(float* out);
     void getGlobalGround(double* global_ground);
@@ -117,7 +117,6 @@ private:
     float _reduceFrictionByExtension;
     bool _ignoreWhileSolving;
 
-    int _ground_type;
     double _ground_frictionFactor;
     double _ground_rollingFriction;
     double _ground_loadCapacity;

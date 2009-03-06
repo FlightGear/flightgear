@@ -2,6 +2,8 @@
   #include <config.h>
 #endif
 
+#include <simgear/scene/material/mat.hxx>
+
 #include <FDM/flight.hxx>
 
 #include "Glue.hpp"
@@ -23,11 +25,10 @@ void FGGround::getGroundPlane(const double pos[3],
                               double plane[4], float vel[3])
 {
     // Return values for the callback.
-    double loadCapacity, frictionFactor, agl;
-    double cp[3], dvel[3];
-    int type;
-    _iface->get_agl_m(_toff, pos, cp, plane, dvel,
-                      &type, &loadCapacity, &frictionFactor, &agl);
+    double cp[3], dvel[3], dangvel[3];
+    const SGMaterial* material;
+    simgear::BVHNode::Id id;
+    _iface->get_agl_m(_toff, pos, 2, cp, plane, dvel, dangvel, material, id);
 
     // The plane below the actual contact point.
     plane[3] = plane[0]*cp[0] + plane[1]*cp[1] + plane[2]*cp[2];
@@ -37,14 +38,12 @@ void FGGround::getGroundPlane(const double pos[3],
 
 void FGGround::getGroundPlane(const double pos[3],
                               double plane[4], float vel[3],
-                              int *type, const SGMaterial **material
-                              )
+                              const SGMaterial **material)
 {
     // Return values for the callback.
-    double agl;
-    double cp[3], dvel[3];
-    _iface->get_agl_m(_toff, pos, cp, plane, dvel,
-                      type, material, &agl);
+    double cp[3], dvel[3], dangvel[3];
+    simgear::BVHNode::Id id;
+    _iface->get_agl_m(_toff, pos, 2, cp, plane, dvel, dangvel, *material, id);
 
     // The plane below the actual contact point.
     plane[3] = plane[0]*cp[0] + plane[1]*cp[1] + plane[2]*cp[2];
