@@ -207,6 +207,9 @@ public:
     void do_trim(void);
     void update_ic(void);
 
+    bool get_agl_ft(double t, const double pt[3], double alt_off,
+                    double contact[3], double normal[3], double vel[3],
+                    double *agl);
 private:
     JSBSim::FGFDMExec *fdmex;
     JSBSim::FGInitialCondition *fgic;

@@ -2,7 +2,7 @@
 //
 // Written by Mathias Froehlich, started Nov 2004.
 //
-// Copyright (C) 2004  Mathias Froehlich - Mathias.Froehlich@web.de
+// Copyright (C) 2004, 2009  Mathias Froehlich - Mathias.Froehlich@web.de
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -39,10 +39,8 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
-#include <simgear/scene/material/mat.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
-#include <simgear/scene/model/placementtrans.hxx>
 
 #include <simgear/scene/bvh/BVHNode.hxx>
 #include <simgear/scene/bvh/BVHGroup.hxx>
@@ -56,6 +54,7 @@
 #include <simgear/scene/bvh/BVHStaticBinary.hxx>
 #include <simgear/scene/bvh/BVHSubTreeCollector.hxx>
 #include <simgear/scene/bvh/BVHLineSegmentVisitor.hxx>
+#include <simgear/scene/bvh/BVHNearestPointVisitor.hxx>
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
@@ -65,16 +64,6 @@
 #include "groundcache.hxx"
 
 using namespace simgear;
-
-static FGInterface::GroundType
-materialToGroundType(const SGMaterial* material)
-{
-    if (!material)
-        return FGInterface::Solid;
-    if (material->get_solid())
-        return FGInterface::Solid;
-    return FGInterface::Water;
-}
 
 class FGGroundCache::CacheFill : public osg::NodeVisitor {
 public:
@@ -232,7 +221,6 @@ private:
 
 FGGroundCache::FGGroundCache() :
     _altitude(0),
-    _type(0),
     _material(0),
     cache_ref_time(0),
     _wire(0),
@@ -284,7 +272,7 @@ FGGroundCache::prepare_ground_cache(double ref_time, const SGVec3d& pt,
     _localBvhTree = subtreeCollector.getBVHNode();
 
     // Try to get a croase altitude value for the ground cache
-    SGLineSegmentd line(pt, pt + 1e4*down);
+    SGLineSegmentd line(pt, pt + 2*reference_vehicle_radius*down);
     simgear::BVHLineSegmentVisitor lineSegmentVisitor(line, ref_time);
     if (_localBvhTree)
         _localBvhTree->accept(lineSegmentVisitor);
@@ -294,13 +282,11 @@ FGGroundCache::prepare_ground_cache(double ref_time, const SGVec3d& pt,
         SGGeod geodPt = SGGeod::fromCart(lineSegmentVisitor.getPoint());
         _altitude = geodPt.getElevationM();
         _material = lineSegmentVisitor.getMaterial();
-        _type = materialToGroundType(_material);
         found_ground = true;
     } else {
         // Else do a crude scene query for the current point
         found_ground = globals->get_scenery()->
             get_cart_elevation_m(pt, rad, _altitude, &_material);
-        _type = materialToGroundType(_material);
     }
     
     // Still not sucessful??
@@ -318,6 +304,105 @@ FGGroundCache::is_valid(double& ref_time, SGVec3d& pt, double& rad)
     rad = reference_vehicle_radius;
     ref_time = cache_ref_time;
     return found_ground;
+}
+
+class FGGroundCache::BodyFinder : public BVHVisitor {
+public:
+    BodyFinder(BVHNode::Id id, const double& t) :
+        _id(id),
+        _bodyToWorld(SGMatrixd::unit()),
+        _linearVelocity(0, 0, 0),
+        _angularVelocity(0, 0, 0),
+        _time(t)
+    { }
+    
+    virtual void apply(BVHGroup& leaf)
+    {
+        if (_foundId)
+            return;
+        leaf.traverse(*this);
+    }
+    virtual void apply(BVHTransform& transform)
+    {
+        if (_foundId)
+            return;
+
+        transform.traverse(*this);
+        
+        if (_foundId) {
+            _linearVelocity = transform.vecToWorld(_linearVelocity);
+            _angularVelocity = transform.vecToWorld(_angularVelocity);
+            _bodyToWorld = transform.getToWorldTransform()*_bodyToWorld;
+        }
+    }
+    virtual void apply(BVHMotionTransform& transform)
+    {
+        if (_foundId)
+            return;
+
+        if (_id == transform.getId()) {
+            _foundId = true;
+            return;
+        }
+        
+        transform.traverse(*this);
+        
+        if (_foundId) {
+            SGMatrixd toWorld = transform.getToWorldTransform(_time);
+            SGVec3d referencePoint = _bodyToWorld.xformPt(SGVec3d::zeros());
+            _linearVelocity += transform.getLinearVelocityAt(referencePoint);
+            _angularVelocity += transform.getAngularVelocity();
+            _linearVelocity = toWorld.xformVec(_linearVelocity);
+            _angularVelocity = toWorld.xformVec(_angularVelocity);
+            _bodyToWorld = toWorld*_bodyToWorld;
+        }
+    }
+    virtual void apply(BVHLineGeometry& node) { }
+    virtual void apply(BVHStaticGeometry& node) { }
+    
+    virtual void apply(const BVHStaticBinary&, const BVHStaticData&) { }
+    virtual void apply(const BVHStaticTriangle&, const BVHStaticData&) { }
+    
+    const SGMatrixd& getBodyToWorld() const
+    { return _bodyToWorld; }
+    const SGVec3d& getLinearVelocity() const
+    { return _linearVelocity; }
+    const SGVec3d& getAngularVelocity() const
+    { return _angularVelocity; }
+    
+    bool empty() const
+    { return !_foundId; }
+    
+protected:
+    simgear::BVHNode::Id _id;
+
+    SGMatrixd _bodyToWorld;
+
+    SGVec3d _linearVelocity;
+    SGVec3d _angularVelocity;
+    
+    bool _foundId;
+
+    double _time;
+};
+
+bool
+FGGroundCache::get_body(double t, SGMatrixd& bodyToWorld, SGVec3d& linearVel,
+                        SGVec3d& angularVel, simgear::BVHNode::Id id)
+{
+    // Get the transform matrix and velocities of a moving body with id at t.
+    if (!_localBvhTree)
+        return false;
+    BodyFinder bodyFinder(id, t);
+    _localBvhTree->accept(bodyFinder);
+    if (bodyFinder.empty())
+        return false;
+
+    bodyToWorld = bodyFinder.getBodyToWorld();
+    linearVel = bodyFinder.getLinearVelocity();
+    angularVel = bodyFinder.getAngularVelocity();
+
+    return true;
 }
 
 class FGGroundCache::CatapultFinder : public BVHVisitor {
@@ -456,12 +541,12 @@ FGGroundCache::get_cat(double t, const SGVec3d& pt,
 }
 
 bool
-FGGroundCache::get_agl(double t, const SGVec3d& pt, double max_altoff,
-                       SGVec3d& contact, SGVec3d& normal, SGVec3d& vel,
-                       int *type, const SGMaterial** material, double *agl)
+FGGroundCache::get_agl(double t, const SGVec3d& pt, SGVec3d& contact,
+                       SGVec3d& normal, SGVec3d& linearVel, SGVec3d& angularVel,
+                       simgear::BVHNode::Id& id, const SGMaterial*& material)
 {
     // Just set up a ground intersection query for the given point
-    SGLineSegmentd line(pt - max_altoff*down, pt + 1e4*down);
+    SGLineSegmentd line(pt, pt + 10*reference_vehicle_radius*down);
     simgear::BVHLineSegmentVisitor lineSegmentVisitor(line, t);
     if (_localBvhTree)
         _localBvhTree->accept(lineSegmentVisitor);
@@ -472,16 +557,10 @@ FGGroundCache::get_agl(double t, const SGVec3d& pt, double max_altoff,
         normal = lineSegmentVisitor.getNormal();
         if (0 < dot(normal, down))
             normal = -normal;
-        *agl = dot(down, contact - pt);
-        vel = lineSegmentVisitor.getLinearVelocity();
-        // correct the linear velocity, since the line intersector delivers
-        // values for the start point and the get_agl function should
-        // traditionally deliver for the contact point
-        vel += cross(lineSegmentVisitor.getAngularVelocity(),
-                     contact - line.getStart());
-        *type = materialToGroundType(lineSegmentVisitor.getMaterial());
-        if (material)
-            *material = lineSegmentVisitor.getMaterial();
+        linearVel = lineSegmentVisitor.getLinearVelocity();
+        angularVel = lineSegmentVisitor.getAngularVelocity();
+        material = lineSegmentVisitor.getMaterial();
+        id = lineSegmentVisitor.getId();
 
         return true;
     } else {
@@ -489,18 +568,46 @@ FGGroundCache::get_agl(double t, const SGVec3d& pt, double max_altoff,
         // take the ground level we found during the current cache build.
         // This is as good as what we had before for agl.
         SGGeod geodPt = SGGeod::fromCart(pt);
-        *agl = geodPt.getElevationM() - _altitude;
         geodPt.setElevationM(_altitude);
         contact = SGVec3d::fromGeod(geodPt);
         normal = -down;
-        vel = SGVec3d(0, 0, 0);
-        *type = _type;
-        if (material)
-            *material = _material;
+        linearVel = SGVec3d(0, 0, 0);
+        angularVel = SGVec3d(0, 0, 0);
+        material = _material;
+        id = 0;
 
         return found_ground;
     }
 }
+
+
+bool
+FGGroundCache::get_nearest(double t, const SGVec3d& pt, double maxDist,
+                           SGVec3d& contact, SGVec3d& linearVel,
+                           SGVec3d& angularVel, simgear::BVHNode::Id& id,
+                           const SGMaterial*& material)
+{
+    if (!_localBvhTree)
+        return false;
+
+    // Just set up a ground intersection query for the given point
+    SGSphered sphere(pt, maxDist);
+    simgear::BVHNearestPointVisitor nearestPointVisitor(sphere, t);
+    _localBvhTree->accept(nearestPointVisitor);
+
+    if (nearestPointVisitor.empty())
+        return false;
+
+    // Have geometry in the range of maxDist
+    contact = nearestPointVisitor.getPoint();
+    linearVel = nearestPointVisitor.getLinearVelocity();
+    angularVel = nearestPointVisitor.getAngularVelocity();
+    material = nearestPointVisitor.getMaterial();
+    id = nearestPointVisitor.getId();
+    
+    return true;
+}
+
 
 class FGGroundCache::WireIntersector : public BVHVisitor {
 public:

@@ -25,7 +25,6 @@ Gear::Gear()
     _extension = 1;
     _castering = false;
     _frac = 0;
-    _ground_type = 0;
     _ground_frictionFactor = 1;
     _ground_rollingFriction = 0.02;
     _ground_loadCapacity = 1e30;
@@ -142,7 +141,7 @@ void Gear::setInitialLoad(float l)
 
 void Gear::setGlobalGround(double *global_ground, float* global_vel,
                            double globalX, double globalY,
-                           int type, const SGMaterial *material)
+                           const SGMaterial *material)
 {
     int i;
     double frictionFactor,rollingFriction,loadCapacity,loadResistance,bumpiness;
@@ -159,30 +158,14 @@ void Gear::setGlobalGround(double *global_ground, float* global_vel,
         bumpiness = (*material).get_bumpiness();
         isSolid = (*material).get_solid();
     } else {
-        if (type == FGInterface::Solid) {
-            loadCapacity = DBL_MAX;
-            frictionFactor = 1.0;
-            rollingFriction = 0.02;
-            loadResistance = DBL_MAX;
-            bumpiness = 0.0;
-            isSolid = true;
-        } else if (type == FGInterface::Water) {
-            loadCapacity = DBL_MAX;
-            frictionFactor = 1.0;
-            rollingFriction = 2;
-            loadResistance = DBL_MAX;
-            bumpiness = 0.8;
-            isSolid = false;
-        } else {
-            loadCapacity = DBL_MAX;
-            frictionFactor = 0.9;
-            rollingFriction = 0.1;
-            loadResistance = DBL_MAX;
-            bumpiness = 0.2;
-            isSolid = true;
-        }
+        // no material, assume solid
+        loadCapacity = DBL_MAX;
+        frictionFactor = 1.0;
+        rollingFriction = 0.02;
+        loadResistance = DBL_MAX;
+        bumpiness = 0.0;
+        isSolid = true;
     }
-    _ground_type = type;
     _ground_frictionFactor = frictionFactor;
     _ground_rollingFriction = rollingFriction;
     _ground_loadCapacity = loadCapacity;

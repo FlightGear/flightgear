@@ -58,6 +58,14 @@ public:
     // is valid for are returned.
     bool is_valid(double& ref_time, SGVec3d& pt, double& rad);
 
+    // Returns the unit down vector at the ground cache
+    const SGVec3d& get_down() const
+    { return down; }
+
+
+    bool get_body(double t, SGMatrixd& bodyToWorld, SGVec3d& linearVel,
+                  SGVec3d& angularVel, simgear::BVHNode::Id id);
+
     // Return the nearest catapult to the given point
     // pt in wgs84 coordinates.
     double get_cat(double t, const SGVec3d& pt,
@@ -66,13 +74,16 @@ public:
 
     // Return the altitude above ground below the wgs84 point pt
     // Search for highest triangle not higher than pt + max_altoff.
-    // Return ground properties like the ground type, the maximum load
+    // Return ground properties like the maximum load
     // this kind kind of ground can carry, the friction factor between
-    // 0 and 1 which can be used to model lower friction with wet runways
-    // and finally the altitude above ground.
-    bool get_agl(double t, const SGVec3d& pt, double max_altoff,
-                 SGVec3d& contact, SGVec3d& normal, SGVec3d& vel,
-                 int *type, const SGMaterial** material, double *agl);
+    // 0 and 1 which can be used to model lower friction with wet runways.
+    bool get_agl(double t, const SGVec3d& pt, SGVec3d& contact,
+                 SGVec3d& normal, SGVec3d& linearVel, SGVec3d& angularVel,
+                 simgear::BVHNode::Id& id, const SGMaterial*& material);
+
+    bool get_nearest(double t, const SGVec3d& pt, double maxDist,
+                     SGVec3d& contact, SGVec3d& linearVel, SGVec3d& angularVel,
+                     simgear::BVHNode::Id& id, const SGMaterial*& material);
 
     // Return 1 if the hook intersects with a wire.
     // That test is done by checking if the quad spanned by the points pt*
@@ -90,6 +101,7 @@ public:
 
 private:
     class CacheFill;
+    class BodyFinder;
     class CatapultFinder;
     class WireIntersector;
     class WireFinder;
@@ -97,8 +109,6 @@ private:
     // Approximate ground radius.
     // In case the aircraft is too high above ground.
     double _altitude;
-    // Ground type
-    int _type;
     // the simgear material reference, contains friction coeficients ...
     const SGMaterial* _material;
     // The time reference for later call to intersection test routines.
