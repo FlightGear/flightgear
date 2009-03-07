@@ -315,10 +315,8 @@ void FGTileMgr::update_queues()
 // disk.
 int FGTileMgr::update( double visibility_meters )
 {
-    SGLocation *location = globals->get_current_view()->getSGLocation();
-    double lon = location->getLongitude_deg();
-    double lat = location->getLatitude_deg();
-    return update(SGGeod::fromDegM(lon, lat, 0), visibility_meters);
+    SGVec3d viewPos = globals->get_current_view()->get_view_pos();
+    return update(SGGeod::fromCart(viewPos), visibility_meters);
 }
 
 int FGTileMgr::update( const SGGeod& location, double visibility_meters)
