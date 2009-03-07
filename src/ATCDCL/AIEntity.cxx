@@ -39,7 +39,9 @@
 
 #include "AIEntity.hxx"
 
-FGAIEntity::FGAIEntity() {
+FGAIEntity::FGAIEntity() :
+    _ground_elevation_m(0)
+{
 }
 
 FGAIEntity::~FGAIEntity() {
