@@ -216,15 +216,6 @@ public:
 
     // Vectors and positions...
 
-    // Get zero elev
-    const SGVec3d& get_zero_elev() {if ( _dirty ) { recalc(); } return _zero_elev; }
-    // Get world up vector
-    const SGVec3f& get_world_up() {if ( _dirty ) { recalc(); } return _world_up; }
-    // Get surface east vector
-    const SGVec3f& get_surface_east() {	if ( _dirty ) { recalc(); } return _surface_east; }
-    // Get surface south vector
-    const SGVec3f& get_surface_south() {if ( _dirty ) { recalc(); } return _surface_south; }
-
     const SGVec3d& get_view_pos() { if ( _dirty ) { recalc(); } return _absolute_view_pos; }
     const SGVec3d& getViewPosition() { if ( _dirty ) { recalc(); } return _absolute_view_pos; }
     const SGQuatd& getViewOrientation() { if ( _dirty ) { recalc(); } return mViewOrientation; }
@@ -353,20 +344,6 @@ private:
     // default = 1.0, this value is user configurable and is
     // multiplied into the aspect_ratio to get the actual vertical fov
     double _aspect_ratio_multiplier;
-
-    // cartesion coordinates of current lon/lat if at sea level
-    SGVec3d _zero_elev;
-
-    // surface vector heading south
-    SGVec3f _surface_south;
-
-    // surface vector heading east (used to unambiguously align sky
-    // with sun)
-    SGVec3f _surface_east;
-
-    // world up vector (normal to the plane tangent to the earth's
-    // surface at the spot we are directly above
-    SGVec3f _world_up;
 
     // camera group controled by this view
     osg::ref_ptr<flightgear::CameraGroup> _cameraGroup;

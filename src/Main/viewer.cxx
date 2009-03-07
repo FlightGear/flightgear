@@ -417,15 +417,6 @@ FGViewer::recalc ()
     recalcLookAt();
   }
 
-  SGGeod geodEyePoint = SGGeod::fromCart(_absolute_view_pos);
-  geodEyePoint.setElevationM(0);
-  _zero_elev = SGVec3d::fromGeod(geodEyePoint);
-  
-  SGQuatd hlOr = SGQuatd::fromLonLat(geodEyePoint);
-  _surface_south = toVec3f(hlOr.backTransform(-SGVec3d::e1()));
-  _surface_east = toVec3f(hlOr.backTransform(SGVec3d::e2()));
-  _world_up = toVec3f(hlOr.backTransform(-SGVec3d::e3()));
-
   // Update viewer's postion data for the eye location...
   _lon_deg = _location->getLongitude_deg();
   _lat_deg = _location->getLatitude_deg();
