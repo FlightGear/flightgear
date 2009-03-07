@@ -245,9 +245,7 @@ FGGroundCache::prepare_ground_cache(double ref_time, const SGVec3d& pt,
     SGGeod geodPt = SGGeod::fromCart(pt);
     // Don't blow away the cache ground_radius and stuff if there's no
     // scenery
-    if (!globals->get_tile_mgr()->scenery_available(geodPt.getLatitudeDeg(),
-                                                    geodPt.getLongitudeDeg(),
-                                                    rad))
+    if (!globals->get_tile_mgr()->scenery_available(geodPt, rad))
         return false;
     _altitude = 0;
 
