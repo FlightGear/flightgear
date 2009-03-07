@@ -251,7 +251,7 @@ FGFX::update_pos_and_orientation(SGSoundMgr *smgr, double dt)
 
     // get the location data for the primary FDM (now hardcoded to ac model)...
     // EMH: to add multiple sound sources this should be replaced
-    SGLocation *acmodel_loc = (SGLocation *)model->getSGLocation();
+    SGVec3d absolute_view_pos = SGVec3d::fromGeod(model->getPosition());
 
     // calculate speed of visitor and model
     sgVec3 listener_vel, model_vel;
@@ -271,8 +271,8 @@ FGFX::update_pos_and_orientation(SGSoundMgr *smgr, double dt)
                     ));
     sgSetVec3(listener_vel, SGV3d_help[0], SGV3d_help[1], SGV3d_help[2]);
 
-    sgdSubVec3(sgdv3_help, last_model_pos,acmodel_loc->get_absolute_view_pos());
-    sgdAddVec3(last_model_pos, sgdv3_null,acmodel_loc->get_absolute_view_pos());
+    sgdSubVec3(sgdv3_help, last_model_pos, absolute_view_pos.sg());
+    sgdAddVec3(last_model_pos, sgdv3_null, absolute_view_pos.sg());
 
     SGV3d_help = model_or.rotateBack(
                     surf_or.rotateBack(
@@ -304,7 +304,7 @@ FGFX::update_pos_and_orientation(SGSoundMgr *smgr, double dt)
     sgdVec3 dsource_pos_offset;
     sgdSubVec3( dsource_pos_offset,
                 (double*) &observer->get_view_pos(),
-                acmodel_loc->get_absolute_view_pos() );
+                absolute_view_pos.sg() );
     SGVec3d sgv_dsource_pos_offset;
     sgv_dsource_pos_offset = model_or.rotateBack(
                                 surf_or.rotateBack(
