@@ -64,6 +64,7 @@ protected:
     char* _model_path;	//Path to the 3D model
     osg::ref_ptr<osg::Node> _model;	// Pointer to the model
     SGModelPlacement _aip;
+    double _ground_elevation_m;
 
     void Transform();
 };

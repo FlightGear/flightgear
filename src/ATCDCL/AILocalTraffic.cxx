@@ -578,8 +578,8 @@ void FGAILocalTraffic::Update(double dt) {
 		if(!inAir) {
 			DoGroundElev();
 			if(!elevInitGood) {
-				if(_aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
-					_pos.setelev(_aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
+				if(_ground_elevation_m > -9990.0) {
+					_pos.setelev(_ground_elevation_m + wheelOffset);
 					//cout << "TAKEOFF_ROLL, POS = " << pos.lon() << ", " << pos.lat() << ", " << pos.elev() << '\n';
 					//Transform();
 					_aip.setVisible(true);
@@ -596,8 +596,8 @@ void FGAILocalTraffic::Update(double dt) {
 		//cout << "*" << flush;
 		if(!elevInitGood) {
 			//DoGroundElev();
-			if(_aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
-				_pos.setelev(_aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
+			if(_ground_elevation_m > -9990.0) {
+				_pos.setelev(_ground_elevation_m + wheelOffset);
 				//Transform();
 				_aip.setVisible(true);
 				//Transform();
@@ -656,8 +656,8 @@ void FGAILocalTraffic::Update(double dt) {
 		//cout << "In PARKED\n";
 		if(!elevInitGood) {
 			DoGroundElev();
-			if(_aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
-				_pos.setelev(_aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
+			if(_ground_elevation_m > -9990.0) {
+				_pos.setelev(_ground_elevation_m + wheelOffset);
 				//Transform();
 				_aip.setVisible(true);
 				//Transform();
@@ -836,8 +836,8 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			double dveldt = 5.0;
 			vel += dveldt * dt;
 		}
-		if(_aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
-			_pos.setelev(_aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
+		if(_ground_elevation_m > -9990.0) {
+			_pos.setelev(_ground_elevation_m + wheelOffset);
 		}
 		IAS = vel + (cos((_hdg - wind_from) * DCL_DEGREES_TO_RADIANS) * wind_speed);
 		if(IAS >= 70) {
@@ -1064,12 +1064,12 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 				IAS = 70.0;
 			} else {
 				if(_pos.elev() < (rwy.threshold_pos.elev()+10.0+wheelOffset)) {
-					if(_aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
-						if(_pos.elev() < (_aip.getSGLocation()->get_cur_elev_m() + wheelOffset + 1.0)) {
+					if(_ground_elevation_m > -9990.0) {
+						if(_pos.elev() < (_ground_elevation_m + wheelOffset + 1.0)) {
 							slope = -2.0;
 							_pitch = 1.0;
 							IAS = 55.0;
-						} else if(_pos.elev() < (_aip.getSGLocation()->get_cur_elev_m() + wheelOffset + 5.0)) {
+						} else if(_pos.elev() < (_ground_elevation_m + wheelOffset + 5.0)) {
 							slope = -4.0;
 							_pitch = -2.0;
 							IAS = 60.0;
@@ -1101,8 +1101,8 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		if(_pos.elev() < (rwy.threshold_pos.elev()+10.0+wheelOffset)) {
 			//slope = -1.0;
 			//_pitch = 1.0;
-			if(_aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
-				if((_aip.getSGLocation()->get_cur_elev_m() + wheelOffset) > _pos.elev()) {
+			if(_ground_elevation_m > -9990.0) {
+				if((_ground_elevation_m + wheelOffset) > _pos.elev()) {
 					slope = 0.0;
 					_pitch = 0.0;
 					leg = LANDING_ROLL;
@@ -1118,8 +1118,8 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 	case LANDING_ROLL:
 		//inAir = false;
 		descending = false;
-		if(_aip.getSGLocation()->get_cur_elev_m() > -9990.0) {
-			_pos.setelev(_aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
+		if(_ground_elevation_m > -9990.0) {
+			_pos.setelev(_ground_elevation_m + wheelOffset);
 		}
 		track = rwy.hdg;
 		dveldt = -5.0;
@@ -1505,8 +1505,8 @@ void FGAILocalTraffic::Taxi(double dt) {
 		double slope = 0.0;
 		_pos = dclUpdatePosition(_pos, track, slope, dist);
 		//cout << "Updated position...\n";
-		if(_aip.getSGLocation()->get_cur_elev_m() > -9990) {
-			_pos.setelev(_aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
+		if(_ground_elevation_m > -9990) {
+			_pos.setelev(_ground_elevation_m + wheelOffset);
 		} // else don't change the elev until we get a valid ground elev again!
 	} else if(lastNode) {
 		if(taxiState == TD_LINING_UP) {
@@ -1524,8 +1524,8 @@ void FGAILocalTraffic::Taxi(double dt) {
 				double slope = 0.0;
 				_pos = dclUpdatePosition(_pos, track, slope, dist);
 				//cout << "Updated position...\n";
-				if(_aip.getSGLocation()->get_cur_elev_m() > -9990) {
-					_pos.setelev(_aip.getSGLocation()->get_cur_elev_m() + wheelOffset);
+				if(_ground_elevation_m > -9990) {
+					_pos.setelev(_ground_elevation_m + wheelOffset);
 				} // else don't change the elev until we get a valid ground elev again!
 				if(fabs(_hdg - rwy.hdg) <= 1.0) {
 					operatingState = IN_PATTERN;
@@ -1554,32 +1554,24 @@ void FGAILocalTraffic::Taxi(double dt) {
 // Either this function or the logic of how often it is called
 // will almost certainly change.
 void FGAILocalTraffic::DoGroundElev() {
-	// It would be nice if we could set the correct tile center here in order to get a correct
-	// answer with one call to the function, but what I tried in the two commented-out lines
-	// below only intermittently worked, and I haven't quite groked why yet.
-	//SGBucket buck(pos.lon(), pos.lat());
-	//aip.getSGLocation()->set_tile_center(Point3D(buck.get_center_lon(), buck.get_center_lat(), 0.0));
-	
 	// Only do the proper hitlist stuff if we are within visible range of the viewer.
 	double visibility_meters = fgGetDouble("/environment/visibility-m");
 	FGViewer* vw = globals->get_current_view();
 	if(dclGetHorizontalSeparation(_pos, Point3D(vw->getLongitude_deg(), vw->getLatitude_deg(), 0.0)) > visibility_meters) {
-		_aip.getSGLocation()->set_cur_elev_m(aptElev);
+		_ground_elevation_m = aptElev;
 		return;
 	}
 
         // FIXME: make shure the pos.lat/pos.lon values are in degrees ...
         double range = 500.0;
-        double lat = _aip.getSGLocation()->getLatitude_deg();
-        double lon = _aip.getSGLocation()->getLongitude_deg();
-        if (!globals->get_tile_mgr()->scenery_available(lat, lon, range)) {
+        if (!globals->get_tile_mgr()->scenery_available(_aip.getPosition(), range)) {
           // Try to shedule tiles for that position.
-          globals->get_tile_mgr()->update( _aip.getSGLocation(), range );
+          globals->get_tile_mgr()->update( _aip.getPosition(), range );
         }
 
         // FIXME: make shure the pos.lat/pos.lon values are in degrees ...
         double alt;
-        if (globals->get_scenery()->get_elevation_m(lat, lon, 20000.0, alt, 0))
-          _aip.getSGLocation()->set_cur_elev_m(alt);
+        if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(_aip.getPosition(), 20000), alt, 0))
+          _ground_elevation_m = alt;
 }
 
