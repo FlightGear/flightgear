@@ -113,6 +113,7 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
     } else {
       _fov_deg = 55;
     }
+    _aspect_ratio = 1;
     _aspect_ratio_multiplier = aspect_ratio_multiplier;
     _target_offset_m.x() = target_x_offset_m;
     _target_offset_m.y() = target_y_offset_m;
