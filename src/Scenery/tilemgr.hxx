@@ -72,7 +72,6 @@ private:
     // current longitude latitude
     double longitude;
     double latitude;
-    double altitude_m;
 
     /**
      * tile cache
@@ -96,6 +95,7 @@ public:
     // read it from disk.
     int update( double visibility_meters );
     int update( SGLocation *location, double visibility_meters);
+    int update( const SGGeod& location, double visibility_meters);
 
     // Prepare the ssg nodes corresponding to each tile.  For each
     // tile, set the ssg transform and update it's range selector
@@ -109,6 +109,7 @@ public:
     /// within a range of range_m.
     /// lat and lon are expected to be in degrees.
     bool scenery_available(double lat, double lon, double range_m);
+    bool scenery_available(const SGGeod& position, double range_m);
 
     // Load a model for a tile
     osg::Node* loadTileModel(const string& modelPath, bool cacheModel);
