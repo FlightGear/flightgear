@@ -975,12 +975,12 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
         return naNil();
     }
 
-    int type = argc > 3 && naIsNum(args[3]) ? (int)args[3].num : 1;
+    int init = argc > 2 && naIsNum(args[2]) ? int(args[2].num) : 0;
+    int type = argc > 3 && naIsNum(args[3]) ? int(args[3].num) : 1;
     FGNasalListener *nl = new FGNasalListener(node, code, this,
-            gcSave(code), _listenerId, type);
+            gcSave(code), _listenerId, init, type);
 
-    bool initial = argc > 2 && naTrue(args[2]);
-    node->addChangeListener(nl, initial);
+    node->addChangeListener(nl, init);
 
     _listener[_listenerId] = nl;
     return naNum(_listenerId++);
@@ -1009,19 +1009,22 @@ naRef FGNasalSys::removeListener(naContext c, int argc, naRef* args)
 // FGNasalListener class.
 
 FGNasalListener::FGNasalListener(SGPropertyNode *node, naRef code,
-                                 FGNasalSys* nasal, int key, int id, int type) :
+                                 FGNasalSys* nasal, int key, int id,
+                                 int init, int type) :
     _node(node),
     _code(code),
     _gcKey(key),
     _id(id),
     _nas(nasal),
+    _init(init),
     _type(type),
     _active(0),
     _dead(false),
-    _first_call(true),
     _last_int(0L),
     _last_float(0.0)
 {
+    if(_type == 0 && !_init)
+        changed(node);
 }
 
 FGNasalListener::~FGNasalListener()
@@ -1047,10 +1050,10 @@ void FGNasalListener::call(SGPropertyNode* which, naRef mode)
 void FGNasalListener::valueChanged(SGPropertyNode* node)
 {
     if(_type < 2 && node != _node) return;   // skip child events
-    if(_type > 0 || changed(_node) || _first_call)
+    if(_type > 0 || changed(_node) || _init)
         call(node, naNum(0));
 
-    _first_call = false;
+    _init = 0;
 }
 
 void FGNasalListener::childAdded(SGPropertyNode*, SGPropertyNode* child)
