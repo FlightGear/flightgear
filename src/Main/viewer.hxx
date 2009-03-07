@@ -42,9 +42,7 @@ class CameraGroup;
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/scene/model/location.hxx>
-
-#include <plib/sg.h>		// plib include
+#include <simgear/math/SGMath.hxx>
 
 #define FG_FOV_MIN 0.1
 #define FG_FOV_MAX 179.9
@@ -255,10 +253,6 @@ public:
     inline void set_dirty() { _dirty = true; }
     inline void set_clean() { _dirty = false; }
     
-    // return eye location...
-    virtual SGLocation * getSGLocation () const { return _location; }
-
-
 private:
 
     //////////////////////////////////////////////////////////////////
@@ -329,9 +323,6 @@ private:
     // view is looking at a model
     bool _at_model;
     int _at_model_index;  // number of model (for multi model)
-
-    SGLocation * _location;
-    SGLocation * _target_location;
 
     // the nominal field of view (angle, in degrees)
     double _fov_deg;
