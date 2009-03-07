@@ -623,15 +623,16 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
         static SGSkyState sstate;
 
-        sstate.view_pos  = toVec3f(current__view->get_view_pos());
-        sstate.zero_elev = toVec3f(current__view->get_zero_elev());
-        sstate.view_up   = current__view->get_world_up();
-        sstate.lon       = current__view->getLongitude_deg()
-                            * SGD_DEGREES_TO_RADIANS;
-        sstate.lat       = current__view->getLatitude_deg()
-                            * SGD_DEGREES_TO_RADIANS;
-        sstate.alt       = current__view->getAltitudeASL_ft()
-                            * SG_FEET_TO_METER;
+        SGVec3d viewPos = current__view->getViewPosition();
+        sstate.view_pos  = toVec3f(viewPos);
+        SGGeod geodViewPos = SGGeod::fromCart(viewPos);
+        SGGeod geodZeroViewPos = SGGeod::fromGeodM(geodViewPos, 0);
+        sstate.zero_elev = toVec3f(SGVec3d::fromGeod(geodZeroViewPos));
+        SGQuatd hlOr = SGQuatd::fromLonLat(geodViewPos);
+        sstate.view_up   = toVec3f(hlOr.backTransform(-SGVec3d::e3()));
+        sstate.lon       = geodViewPos.getLongitudeRad();
+        sstate.lat       = geodViewPos.getLatitudeRad();
+        sstate.alt       = geodViewPos.getElevationM();
         sstate.spin      = l->get_sun_rotation();
         sstate.gst       = globals->get_time_params()->getGst();
         sstate.sun_ra    = globals->get_ephem()->getSunRightAscension();
