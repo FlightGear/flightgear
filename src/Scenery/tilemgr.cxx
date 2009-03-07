@@ -316,29 +316,29 @@ void FGTileMgr::update_queues()
 int FGTileMgr::update( double visibility_meters )
 {
     SGLocation *location = globals->get_current_view()->getSGLocation();
-    return update( location, visibility_meters );
+    double lon = location->getLongitude_deg();
+    double lat = location->getLatitude_deg();
+    return update(SGGeod::fromDegM(lon, lat, 0), visibility_meters);
 }
 
+int FGTileMgr::update( SGLocation *location, double visibility_meters)
+{
+    double lon = location->getLongitude_deg();
+    double lat = location->getLatitude_deg();
+    return update(SGGeod::fromDegM(lon, lat, 0), visibility_meters);
+}
 
-int FGTileMgr::update( SGLocation *location, double visibility_meters )
+int FGTileMgr::update( const SGGeod& location, double visibility_meters)
 {
     SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update()" );
 
-    longitude = location->getLongitude_deg();
-    latitude = location->getLatitude_deg();
-    // add 1.0m to the max altitude to give a little leeway to the
-    // ground reaction code.
-    altitude_m = location->getAltitudeASL_ft() * SG_FEET_TO_METER + 1.0;
+    longitude = location.getLongitudeDeg();
+    latitude = location.getLatitudeDeg();
 
-    // if current altitude is apparently not initialized, set max
-    // altitude to something big.
-    if ( altitude_m < -1000 ) {
-        altitude_m = 10000;
-    }
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update() for "
     //         << longitude << " " << latatitude );
 
-    current_bucket.set_bucket( longitude, latitude );
+    current_bucket.set_bucket( location );
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "Updating tile list for "
     //         << current_bucket );
     fgSetInt( "/environment/current-tile-id", current_bucket.gen_index() );
@@ -389,6 +389,12 @@ void FGTileMgr::prep_ssg_nodes(float vis) {
         }
         tile_cache.next();
     }
+}
+
+bool FGTileMgr::scenery_available(const SGGeod& position, double range_m)
+{
+    return scenery_available(position.getLatitudeDeg(),
+                             position.getLongitudeDeg(), range_m);
 }
 
 bool FGTileMgr::scenery_available(double lat, double lon, double range_m)
