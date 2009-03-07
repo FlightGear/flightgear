@@ -505,9 +505,8 @@ static void fgMainLoop( void ) {
 
     globals->get_tile_mgr()->prep_ssg_nodes( visibility_meters );
     // update tile manager for view...
-    SGLocation *view_location = globals->get_current_view()->getSGLocation();
-    SGGeod geodViewPos = SGGeod::fromDeg(view_location->getLongitude_deg(),
-                                         view_location->getLatitude_deg());
+    SGVec3d viewPos = globals->get_current_view()->get_view_pos();
+    SGGeod geodViewPos = SGGeod::fromCart(viewPos);
     globals->get_tile_mgr()->update(geodViewPos, visibility_meters);
 
     // run Nasal's settimer() loops right before the view manager

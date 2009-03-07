@@ -36,7 +36,6 @@
 #include <simgear/math/polar3d.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/scene/model/location.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
 #include <simgear/debug/logstream.hxx>

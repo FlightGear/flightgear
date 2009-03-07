@@ -29,7 +29,6 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/scene/model/location.hxx>
 #include <simgear/scene/model/placement.hxx>
 
 #include <Aircraft/aircraft.hxx>
