@@ -34,8 +34,6 @@ during descent to avoid occasionally landing short or long.
 #  include <config.h>
 #endif
 
-#include <simgear/scene/model/location.hxx>
-
 #include <Airports/runways.hxx>
 #include <Main/globals.hxx>
 #include <Main/viewer.hxx>
