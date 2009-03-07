@@ -94,7 +94,6 @@ public:
     // local chunks.  If the chunk isn't already in the cache, then
     // read it from disk.
     int update( double visibility_meters );
-    int update( SGLocation *location, double visibility_meters);
     int update( const SGGeod& location, double visibility_meters);
 
     // Prepare the ssg nodes corresponding to each tile.  For each

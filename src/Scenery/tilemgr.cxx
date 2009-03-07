@@ -321,13 +321,6 @@ int FGTileMgr::update( double visibility_meters )
     return update(SGGeod::fromDegM(lon, lat, 0), visibility_meters);
 }
 
-int FGTileMgr::update( SGLocation *location, double visibility_meters)
-{
-    double lon = location->getLongitude_deg();
-    double lat = location->getLatitude_deg();
-    return update(SGGeod::fromDegM(lon, lat, 0), visibility_meters);
-}
-
 int FGTileMgr::update( const SGGeod& location, double visibility_meters)
 {
     SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update()" );
