@@ -506,33 +506,9 @@ static void fgMainLoop( void ) {
     globals->get_tile_mgr()->prep_ssg_nodes( visibility_meters );
     // update tile manager for view...
     SGLocation *view_location = globals->get_current_view()->getSGLocation();
-    globals->get_tile_mgr()->update( view_location, visibility_meters );
-    {
-        double lon = view_location->getLongitude_deg();
-        double lat = view_location->getLatitude_deg();
-        double alt = view_location->getAltitudeASL_ft() * SG_FEET_TO_METER;
-
-        // check if we can reuse the groundcache for that purpose.
-        double ref_time, r;
-        SGVec3d pt;
-        bool valid = cur_fdm_state->is_valid_m(&ref_time, pt.sg(), &r);
-        SGVec3d viewpos(globals->get_current_view()->get_view_pos());
-        if (valid && distSqr(viewpos, pt) < r*r) {
-            // Reuse the cache ...
-            double lev
-                = cur_fdm_state->get_groundlevel_m(lat*SGD_DEGREES_TO_RADIANS,
-                                                   lon*SGD_DEGREES_TO_RADIANS,
-                                                   alt + 2.0);
-            view_location->set_cur_elev_m( lev );
-        } else {
-            // Do full intersection test.
-            double lev;
-            if (globals->get_scenery()->get_elevation_m(lat, lon, alt+2, lev, 0))
-                view_location->set_cur_elev_m( lev );
-            else
-                view_location->set_cur_elev_m( -9999.0 );
-        }
-    }
+    SGGeod geodViewPos = SGGeod::fromDeg(view_location->getLongitude_deg(),
+                                         view_location->getLatitude_deg());
+    globals->get_tile_mgr()->update(geodViewPos, visibility_meters);
 
     // run Nasal's settimer() loops right before the view manager
     globals->get_event_mgr()->update(delta_time_sec);
@@ -579,9 +555,8 @@ static void fgMainLoop( void ) {
     sgSetVec3(at, sgv_at[0], sgv_at[1], sgv_at[2]);
 
     // get the location data for the primary FDM (now hardcoded to ac model)...
-    SGLocation *acmodel_loc = NULL;
-    acmodel_loc = (SGLocation *)globals->
-        get_aircraft_model()->get3DModel()->getSGLocation();
+    SGGeod geodPos = globals->get_aircraft_model()->get3DModel()->getPosition();
+    SGVec3d model_pos = SGVec3d::fromGeod(geodPos);
 
     // Calculate speed of listener and model.  This code assumes the
     // listener is either tracking the model at the same speed or
@@ -606,8 +581,8 @@ static void fgMainLoop( void ) {
     // proper coordinate system, but also with the proper time
     // invariant magnitude.
     sgdSubVec3( sgdv3_help,
-                last_model_pos, acmodel_loc->get_absolute_view_pos());
-    sgdAddVec3( last_model_pos, sgdv3_null, acmodel_loc->get_absolute_view_pos());
+                last_model_pos, model_pos.sg());
+    sgdAddVec3( last_model_pos, sgdv3_null, model_pos.sg());
     SGV3d_help = model_or.rotateBack(
         surf_or.rotateBack(SGVec3d(sgdv3_help[0],
         sgdv3_help[1], sgdv3_help[2])));
@@ -638,7 +613,7 @@ static void fgMainLoop( void ) {
     sgdVec3 dsource_pos_offset;
     sgdSubVec3( dsource_pos_offset,
                 (double*) &current_view->get_view_pos(),
-                acmodel_loc->get_absolute_view_pos() );
+                model_pos.sg() );
     SGVec3d sgv_dsource_pos_offset = model_or.rotateBack(
         surf_or.rotateBack(SGVec3d(dsource_pos_offset[0],
         dsource_pos_offset[1], dsource_pos_offset[2])));
