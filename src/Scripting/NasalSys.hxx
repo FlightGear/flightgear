@@ -133,7 +133,7 @@ private:
 class FGNasalListener : public SGPropertyChangeListener {
 public:
     FGNasalListener(SGPropertyNode* node, naRef code, FGNasalSys* nasal,
-                    int key, int id, int type);
+                    int key, int id, int init, int type);
 
     virtual ~FGNasalListener();
     virtual void valueChanged(SGPropertyNode* node);
@@ -150,10 +150,10 @@ private:
     int _gcKey;
     int _id;
     FGNasalSys* _nas;
+    int _init;
     int _type;
     unsigned int _active;
     bool _dead;
-    bool _first_call;
     long _last_int;
     double _last_float;
     string _last_string;
