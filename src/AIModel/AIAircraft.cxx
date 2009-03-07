@@ -172,8 +172,6 @@ void FGAIAircraft::checkVisibility()
      SGWayPoint view (vw->getLongitude_deg(), vw->getLatitude_deg(), 0);
      view.CourseAndDistance(current, &course, &distance);
      if (distance > visibility_meters) {
-         //aip.getSGLocation()->set_cur_elev_m(aptElev);
-         //return;
          invisible = true;
       } else {
          invisible = false;
@@ -410,20 +408,17 @@ void FGAIAircraft::getGroundElev(double dt) {
         SGWayPoint view (vw->getLongitude_deg(), vw->getLatitude_deg(), 0);
         view.CourseAndDistance(current, &course, &distance);
         if (distance > visibility_meters) {
-            //aip.getSGLocation()->set_cur_elev_m(aptElev);
             return;
         }
 
-        // FIXME: make sure the pos.lat/pos.lon values are in degrees ...
         double range = 500.0;
-        if (!globals->get_tile_mgr()->scenery_available(pos.getLatitudeDeg(), pos.getLongitudeDeg(), range)) {
+        if (!globals->get_tile_mgr()->scenery_available(pos, range)) {
             // Try to shedule tiles for that position.
-            globals->get_tile_mgr()->update( aip.getSGLocation(), range );
+            globals->get_tile_mgr()->update( pos, range );
         }
 
-        // FIXME: make sure the pos.lat/pos.lon values are in degrees ...
         double alt;
-        if (globals->get_scenery()->get_elevation_m(pos.getLatitudeDeg(), pos.getLongitudeDeg(), 20000.0, alt, 0))
+        if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(pos, 20000), alt, 0))
             tgt_altitude_ft = alt * SG_METER_TO_FEET;
     }
 }
