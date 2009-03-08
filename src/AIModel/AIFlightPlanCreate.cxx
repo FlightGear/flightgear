@@ -148,6 +148,27 @@ FGAIFlightPlan::cloneWithPos(FGAIAircraft *ac, waypoint* aWpt, const std::string
   return wpt;
 }
 
+FGAIFlightPlan::waypoint*
+FGAIFlightPlan::clone(waypoint* aWpt)
+{
+  waypoint* wpt  = new waypoint;
+  wpt->name      = aWpt->name;
+  wpt->longitude = aWpt->longitude;
+  wpt->latitude  = aWpt->latitude;
+
+  wpt->altitude  = aWpt->altitude;
+  wpt->speed     = aWpt->speed; 
+  wpt->crossat   = aWpt->crossat;
+  wpt->gear_down = aWpt->gear_down;
+  wpt->flaps_down= aWpt->flaps_down;
+  wpt->finished  = aWpt->finished;
+  wpt->on_ground = aWpt->on_ground;
+  wpt->routeIndex = 0;
+  
+  return wpt;
+}
+
+
 void FGAIFlightPlan::createDefaultTakeoffTaxi(FGAIAircraft *ac, FGAirport* aAirport, FGRunway* aRunway)
 {
   SGGeod runwayTakeoff = aRunway->pointOnCenterline(5.0);
@@ -415,25 +436,14 @@ void FGAIFlightPlan::createClimb(FGAIAircraft *ac, bool firstFlight, FGAirport *
     apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway, heading);
     rwy = apt->getRunwayByIdent(activeRunway);
   }
-  if (fgGetBool("/sim/traffic-manager/use-custom-scenery-data") == true) {
-       string_list sc = globals->get_fg_scenery();
-       char buffer[64];
-       // NOTE: Currently for testing only. A slightly more elaborate naming convention
-       // needs to be dropped here.
-       snprintf(buffer, 64, "%s.SID-%s-01.xml", apt->getId().c_str(), activeRunway.c_str() );
-       string airportDir = expandICAODirs(apt->getId());
-       for (string_list_iterator i = sc.begin(); i != sc.end(); i++) {
-           SGPath aptpath( *i );
-           aptpath.append( "Airports" );
-           aptpath.append ( airportDir );
-           aptpath.append( string(buffer) );
-           if (aptpath.exists()) {
-               planLoaded = loadSID(aptpath.str());
-               //cerr << "Reading " << aptpath.str() << endl;
-           }
-        }
-  }
-  if (!planLoaded) {
+  if (sid) {
+    for (wpt_vector_iterator i = sid->getFirstWayPoint(); 
+         i != sid->getLastWayPoint(); 
+         i++) {
+            waypoints.push_back(clone(*(i)));
+            //cerr << " Cloning waypoint " << endl;
+    }
+  } else  {
       SGGeod climb1 = rwy->pointOnCenterline(10*SG_NM_TO_METER);
       wpt = createInAir(ac, "10000ft climb", climb1, speed, 10000);
       wpt->gear_down = true;
@@ -447,59 +457,6 @@ void FGAIFlightPlan::createClimb(FGAIAircraft *ac, bool firstFlight, FGAirport *
    }
 }
 
-bool FGAIFlightPlan::loadSID(const string& filename)
-{
-  SGPropertyNode root;
-  try {
-      readProperties(filename, &root);
-  } catch (const sg_exception &e) {
-      SG_LOG(SG_GENERAL, SG_ALERT,
-       "Error reading AI flight plan: " << filename);
-       // cout << path.str() << endl;
-     return false;
-  }
-
-  SGPropertyNode * node = root.getNode("flightplan");
-  for (int i = 0; i < node->nChildren(); i++) { 
-     //cout << "Reading waypoint " << i << endl;        
-     waypoint* wpt = new waypoint;
-     SGPropertyNode * wpt_node = node->getChild(i);
-     wpt->name      = wpt_node->getStringValue("name", "END");
-     wpt->latitude  = wpt_node->getDoubleValue("lat", 0);
-     wpt->longitude = wpt_node->getDoubleValue("lon", 0);
-     wpt->altitude  = wpt_node->getDoubleValue("alt", 0);
-     wpt->speed     = wpt_node->getDoubleValue("ktas", 0);
-     wpt->crossat   = wpt_node->getDoubleValue("crossat", -10000);
-     wpt->gear_down = wpt_node->getBoolValue("gear-down", false);
-     wpt->flaps_down= wpt_node->getBoolValue("flaps-down", false);
-     wpt->on_ground = wpt_node->getBoolValue("on-ground", false);
-     wpt->time_sec   = wpt_node->getDoubleValue("time-sec", 0);
-     wpt->time       = wpt_node->getStringValue("time", "");
-
-     if (wpt->name == "END") wpt->finished = true;
-     else wpt->finished = false;
-
-     waypoints.push_back( wpt );
-   }
-
-  //wpt_iterator = waypoints.begin();
-  //cout << waypoints.size() << " waypoints read." << endl;
-  return true;
-}
-
-// NOTE: This is just copied from Airports/readXML. 
-string FGAIFlightPlan::expandICAODirs(const string in){
-     //cerr << "Expanding " << in << endl;
-     if (in.size() == 4) {
-          char buffer[11];
-          snprintf(buffer, 11, "%c/%c/%c", in[0], in[1], in[2]);
-          //cerr << "result: " << buffer << endl;
-          return string(buffer);
-     } else {
-           return in;
-     }
-     //exit(1);
-}
 
 
 /*******************************************************************

@@ -33,6 +33,7 @@
 #include "parking.hxx"
 #include "groundnetwork.hxx"
 #include "runwayprefs.hxx"
+#include "sidstar.hxx"
 
 //typedef vector<float> DoubleVec;
 //typedef vector<float>::iterator DoubleVecIterator;
@@ -47,6 +48,7 @@ private:
 
   FGParkingVec        parkings;
   FGRunwayPreference  rwyPrefs;
+  FGSidStar           SIDs;
   FGStartupController startupController;
   FGGroundNetwork     groundNetwork;
   FGTowerController   towerController;
@@ -103,6 +105,10 @@ public:
   //FGAirport *getAddress() { return this; };
   //const string &getName() const { return _name;};
   // Returns degrees
+
+  // Departure / Arrival procedures
+  FGSidStar * getSIDs() { return &SIDs; };
+  FGAIFlightPlan * getSID(string activeRunway, double heading);
 
 
   // ATC related functions. 

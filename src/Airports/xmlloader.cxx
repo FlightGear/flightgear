@@ -118,3 +118,28 @@ void XMLLoader::load(FGRunwayPreference* p) {
     }
 }
 
+void XMLLoader::load(FGSidStar* p) {
+    //FGRunwayPreferenceXMLLoader visitor(p);
+    if (fgGetBool("/sim/traffic-manager/use-custom-scenery-data") == true) {
+       string_list sc = globals->get_fg_scenery();
+       char buffer[32];
+       snprintf(buffer, 32, "%s.SID.xml", p->getId().c_str() );
+       string airportDir = expandICAODirs(p->getId());
+       for (string_list_iterator i = sc.begin(); i != sc.end(); i++) {
+           SGPath sidpath( *i );
+           sidpath.append( "Airports" );
+           sidpath.append ( airportDir );
+           sidpath.append( string(buffer) );
+           if (sidpath.exists()) {
+               try {
+                   //readXML(rwypath.str(), visitor);
+                   //cerr << "Reading SID procedure : " << sidpath.str() << endl;
+                   p->load(sidpath);
+                } 
+                catch (const sg_exception &e) {
+                }
+                return;
+            }
+        }
+    }
+}

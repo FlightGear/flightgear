@@ -92,6 +92,9 @@ FGAirportDynamics * FGAirport::getDynamics()
         FGRunwayPreference rwyPrefs(this);
         XMLLoader::load(&rwyPrefs);
         _dynamics->setRwyUse(rwyPrefs);
+
+        //FGSidStar SIDs(this);
+        XMLLoader::load(_dynamics->getSIDs());
    }
     return _dynamics;
 }

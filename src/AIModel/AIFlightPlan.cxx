@@ -46,10 +46,15 @@
 
 using std::cerr;
 
+FGAIFlightPlan::FGAIFlightPlan() 
+{
+   sid = 0;
+}
 
 FGAIFlightPlan::FGAIFlightPlan(const string& filename)
 {
   int i;
+  sid = 0;
   start_time = 0;
   leg = 10;
   gateId = 0;
@@ -118,6 +123,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
 			       const string& acType,
 			       const string& airline)
 {
+  sid = 0;
   repeat = false;
   leg = 10;
   gateId=0;
