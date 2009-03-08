@@ -412,24 +412,22 @@ void
 FGViewer::recalcLookFrom ()
 {
   // Update location data ...
-  double lat, lon, alt, head, pitch, roll;
   if ( _from_model ) {
     SGModelPlacement* placement = globals->get_aircraft_model()->get3DModel();
-    lat = placement->getLatitudeDeg();
-    lon = placement->getLongitudeDeg();
-    alt = placement->getElevationFt();
+    _lat_deg = placement->getLatitudeDeg();
+    _lon_deg = placement->getLongitudeDeg();
+    _alt_ft = placement->getElevationFt();
 
-    head = placement->getHeadingDeg();
-    pitch = placement->getPitchDeg();
-    roll = placement->getRollDeg();
-  } else {
-    lat = _lat_deg;
-    lon = _lon_deg;
-    alt = _alt_ft;
-    head = _heading_deg;
-    pitch = _pitch_deg;
-    roll = _roll_deg;
+    _heading_deg = placement->getHeadingDeg();
+    _pitch_deg = placement->getPitchDeg();
+    _roll_deg = placement->getRollDeg();
   }
+  double lat = _lat_deg;
+  double lon = _lon_deg;
+  double alt = _alt_ft;
+  double head = _heading_deg;
+  double pitch = _pitch_deg;
+  double roll = _roll_deg;
   if ( !_from_model ) {
     // update from our own data...
     dampEyeData(roll, pitch, head);
@@ -463,55 +461,44 @@ void
 FGViewer::recalcLookAt ()
 {
   // The geodetic position of our target to look at
-  SGGeod geodTargetPos;
-  SGQuatd geodTargetOr;
   if ( _at_model ) {
     SGModelPlacement* placement = globals->get_aircraft_model()->get3DModel();
-    double lat = placement->getLatitudeDeg();
-    double lon = placement->getLongitudeDeg();
-    double alt = placement->getElevationFt();
-    geodTargetPos = SGGeod::fromDegFt(lon, lat, alt);
-
-    double head = placement->getHeadingDeg();
-    double pitch = placement->getPitchDeg();
-    double roll = placement->getRollDeg();
-    geodTargetOr = SGQuatd::fromYawPitchRollDeg(head, pitch, roll);
+    _target_lat_deg = placement->getLatitudeDeg();
+    _target_lon_deg = placement->getLongitudeDeg();
+    _target_alt_ft = placement->getElevationFt();
+    _target_heading_deg = placement->getHeadingDeg();
+    _target_pitch_deg = placement->getPitchDeg();
+    _target_roll_deg = placement->getRollDeg();
   } else {
+    // if not model then calculate our own target position...
     dampEyeData(_target_roll_deg, _target_pitch_deg, _target_heading_deg);
 
-    // if not model then calculate our own target position...
-    geodTargetPos = SGGeod::fromDegFt(_target_lon_deg,
-                                      _target_lat_deg,
-                                      _target_alt_ft);
-    geodTargetOr = SGQuatd::fromYawPitchRollDeg(_target_heading_deg,
-                                                _target_pitch_deg,
-                                                _target_roll_deg);
   }
+  SGGeod geodTargetPos = SGGeod::fromDegFt(_target_lon_deg,
+                                           _target_lat_deg,
+                                           _target_alt_ft);
+  SGQuatd geodTargetOr = SGQuatd::fromYawPitchRollDeg(_target_heading_deg,
+                                                      _target_pitch_deg,
+                                                      _target_roll_deg);
   SGQuatd geodTargetHlOr = SGQuatd::fromLonLat(geodTargetPos);
 
 
-  SGGeod geodEyePos;
-  SGQuatd geodEyeOr;
   if ( _from_model ) {
     SGModelPlacement* placement = globals->get_aircraft_model()->get3DModel();
-    double lat = placement->getLatitudeDeg();
-    double lon = placement->getLongitudeDeg();
-    double alt = placement->getElevationFt();
-    geodEyePos = SGGeod::fromDegFt(lon, lat, alt);
-
-    double head = placement->getHeadingDeg();
-    double pitch = placement->getPitchDeg();
-    double roll = placement->getRollDeg();
-    geodEyeOr = SGQuatd::fromYawPitchRollDeg(head, pitch, roll);
+    _lat_deg = placement->getLatitudeDeg();
+    _lon_deg = placement->getLongitudeDeg();
+    _alt_ft = placement->getElevationFt();
+    _heading_deg = placement->getHeadingDeg();
+    _pitch_deg = placement->getPitchDeg();
+    _roll_deg = placement->getRollDeg();
   } else {
-    dampEyeData(_roll_deg, _pitch_deg, _heading_deg);
-
     // update from our own data, just the rotation here...
-    geodEyePos = SGGeod::fromDegFt(_lon_deg, _lat_deg, _alt_ft);
-    geodEyeOr = SGQuatd::fromYawPitchRollDeg(_heading_deg,
-                                             _pitch_deg,
-                                             _roll_deg);
+    dampEyeData(_roll_deg, _pitch_deg, _heading_deg);
   }
+  SGGeod geodEyePos = SGGeod::fromDegFt(_lon_deg, _lat_deg, _alt_ft);
+  SGQuatd geodEyeOr = SGQuatd::fromYawPitchRollDeg(_heading_deg,
+                                                   _pitch_deg,
+                                                   _roll_deg);
   SGQuatd geodEyeHlOr = SGQuatd::fromLonLat(geodEyePos);
 
   // the rotation offset, don't know why heading is negative here ...
