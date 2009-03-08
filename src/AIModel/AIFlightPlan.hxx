@@ -58,7 +58,7 @@ public:
    string time;
 
   } waypoint;
-
+  FGAIFlightPlan();
   FGAIFlightPlan(const string& filename);
   FGAIFlightPlan(FGAIAircraft *,
                  const std::string& p,
@@ -113,8 +113,17 @@ public:
   void setRunway(string rwy) { activeRunway = rwy; };
   string getRunwayClassFromTrafficType(string fltType);
 
+  void addWaypoint(waypoint* wpt) { waypoints.push_back(wpt); };
+
+  void setName(string n) { name = n; };
+  string getName() { return name; };
+
+  void setSID(FGAIFlightPlan* fp) { sid = fp;};
+  FGAIFlightPlan* getSID() { return sid; };
+
 private:
   FGRunway* rwy;
+  FGAIFlightPlan *sid;
   typedef vector <waypoint*> wpt_vector_type;
   typedef wpt_vector_type::const_iterator wpt_vector_iterator;
 
@@ -131,6 +140,7 @@ private:
   string activeRunway;
   FGAirRoute airRoute;
   FGTaxiRoute *taxiRoute;
+  string name;
 
   void createPushBack(FGAIAircraft *, bool, FGAirport*, double, double, double, const string&, const string&, const string&);
   void createPushBackFallBack(FGAIAircraft *, bool, FGAirport*, double, double, double, const string&, const string&, const string&);
@@ -151,13 +161,15 @@ private:
   waypoint* createOnGround(FGAIAircraft *, const std::string& aName, const SGGeod& aPos, double aElev, double aSpeed);
   waypoint* createInAir(FGAIAircraft *, const std::string& aName, const SGGeod& aPos, double aElev, double aSpeed);
   waypoint* cloneWithPos(FGAIAircraft *, waypoint* aWpt, const std::string& aName, const SGGeod& aPos);
+  waypoint* clone(waypoint* aWpt);
     
 
   //void createCruiseFallback(bool, FGAirport*, FGAirport*, double, double, double, double);
  void evaluateRoutePart(double deplat, double deplon, double arrlat, double arrlon);
+ public:
+  wpt_vector_iterator getFirstWayPoint() { return waypoints.begin(); };
+  wpt_vector_iterator getLastWayPoint()  { return waypoints.end(); };
 
- bool loadSID(const string& filename);
- string expandICAODirs(const string in);
 };    
 
 #endif  // _FG_AIFLIGHTPLAN_HXX

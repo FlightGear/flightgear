@@ -52,7 +52,7 @@ using std::random_shuffle;
 #include "dynamics.hxx"
 
 FGAirportDynamics::FGAirportDynamics(FGAirport* ap) :
-  _ap(ap), rwyPrefs(ap) {
+  _ap(ap), rwyPrefs(ap), SIDs(ap) {
   lastUpdate = 0;
 
   // For testing only. This needs to be refined when we move ATIS functionality over.
@@ -61,7 +61,8 @@ FGAirportDynamics::FGAirportDynamics(FGAirport* ap) :
 
 // Note that the ground network should also be copied
 FGAirportDynamics::FGAirportDynamics(const FGAirportDynamics& other) :
-  rwyPrefs(other.rwyPrefs)
+  rwyPrefs(other.rwyPrefs),
+  SIDs(other.SIDs)
 {
   for (FGParkingVecConstIterator ip= other.parkings.begin(); ip != other.parkings.end(); ip++)
     parkings.push_back(*(ip));
@@ -555,4 +556,9 @@ int FGAirportDynamics::getGroundFrequency(int leg) {
           groundFreq = freqGround[leg-2];
      }
     return groundFreq;
+}
+
+FGAIFlightPlan *FGAirportDynamics::getSID(string activeRunway, double heading)
+{
+   return SIDs.getBest(activeRunway, heading);
 }

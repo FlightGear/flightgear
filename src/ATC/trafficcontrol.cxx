@@ -384,6 +384,8 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
     string activeRunway;
     string fltType;
     string rwyClass;
+    string SID;
+    FGAIFlightPlan *fp;
     switch (msgId) {
           case MSG_ANNOUNCE_ENGINE_START:
                text = sender + ". Ready to Start up";
@@ -406,19 +408,32 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
 
                rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway, heading);
                rec->getAircraft()->GetFlightPlan()->setRunway(activeRunway);
+               fp = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getSID(activeRunway, heading);
+               rec->getAircraft()->GetFlightPlan()->setSID(fp);
+               if (fp) {
+                   SID = fp->getName() + " departure";
+               } else {
+                   SID = "fly runway heading ";
+               }
                //snprintf(buffer, 7, "%3.2f", heading);
                text = receiver + ". Start-up approved. " + atisInformation + " correct, runway " + activeRunway
-                       + ", AAA departure, squawk BBBB. " +
+                       + ", " + SID + ", squawk BBBB. " +
                       "For push-back and taxi clearance call " + taxiFreqStr + ". " + sender + " control.";
                break;
           case MSG_DENY_ENGINE_START:
                text = receiver + ". Standby";
                break;
          case MSG_ACKNOWLEDGE_ENGINE_START:
+               fp = rec->getAircraft()->GetFlightPlan()->getSID();
+               if (fp) {
+                  SID = rec->getAircraft()->GetFlightPlan()->getSID()->getName() + " departure";
+               } else {
+                  SID = "fly runway heading ";
+               }
                taxiFreqStr = formatATCFrequency3_2(taxiFreq);
                activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
                text = receiver + ". Start-up approved. " + atisInformation + " correct, runway " +
-                      activeRunway + ", AAA departure, squawk BBBB. " +
+                      activeRunway + ", " + SID + ", squawk BBBB. " +
                       "For push-back and taxi clearance call " + taxiFreqStr + ". " + sender;
                break;
            default:

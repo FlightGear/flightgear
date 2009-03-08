@@ -12,6 +12,7 @@ libAirports_a_SOURCES = \
 	groundnetwork.cxx groundnetwork.hxx \
 	dynamics.cxx dynamics.hxx \
 	dynamicloader.cxx dynamicloader.hxx \
+	sidstar.cxx sidstar.hxx \
 	runwayprefloader.cxx runwayprefloader.hxx \
 	xmlloader.cxx xmlloader.hxx \
 	runwaybase.cxx runwaybase.hxx

@@ -20,6 +20,7 @@
 
 class FGAirportDynamics;
 class FGRunwayPreference;
+class FGSidStar;
 
 
 
@@ -29,7 +30,8 @@ public:
   ~XMLLoader();
   static string expandICAODirs(const string in);
   static void load(FGRunwayPreference* p);
-  static void load(FGAirportDynamics* d);
+  static void load(FGAirportDynamics*  d);
+  static void load(FGSidStar*          s);
   
 };
 
