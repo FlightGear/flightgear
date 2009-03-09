@@ -68,6 +68,9 @@ private:
     SGPropertyNode_ptr _pitch_out_node;
     SGPropertyNode_ptr _roll_out_node;
     
+    double spin_thresh;
+    double max_roll_error;
+    double max_pitch_error;
 };
 
 #endif // __INSTRUMENTS_ATTITUDE_INDICATOR_HXX

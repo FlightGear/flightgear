@@ -23,7 +23,10 @@ AttitudeIndicator::AttitudeIndicator ( SGPropertyNode *node )
     :
     _name(node->getStringValue("name", "attitude-indicator")),
     _num(node->getIntValue("number", 0)),
-    _suction(node->getStringValue("suction", "/systems/vacuum/suction-inhg"))
+    _suction(node->getStringValue("suction", "/systems/vacuum/suction-inhg")),
+    spin_thresh(0.8),
+    max_roll_error(40.0),
+    max_pitch_error(12.0)
 {
 }
 
@@ -38,6 +41,7 @@ AttitudeIndicator::init ()
     branch = "/instrumentation/" + _name;
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
+    SGPropertyNode *n;
     
     _pitch_in_node = fgGetNode("/orientation/pitch-deg", true);
     _roll_in_node = fgGetNode("/orientation/roll-deg", true);
@@ -46,6 +50,12 @@ AttitudeIndicator::init ()
     _tumble_flag_node = cnode->getChild("tumble-flag", 0, true);
     _caged_node = node->getChild("caged-flag", 0, true);
     _tumble_node = node->getChild("tumble-norm", 0, true);
+    if( ( n = cnode->getChild("spin-thresh", 0, false ) ) != NULL )
+      spin_thresh = n->getDoubleValue();
+    if( ( n = cnode->getChild("max-roll-error-deg", 0, false ) ) != NULL )
+      max_roll_error = n->getDoubleValue();
+    if( ( n = cnode->getChild("max-pitch-error-deg", 0, false ) ) != NULL )
+      max_pitch_error = n->getDoubleValue();
     _pitch_int_node = node->getChild("internal-pitch-deg", 0, true);
     _roll_int_node = node->getChild("internal-roll-deg", 0, true);
     _pitch_out_node = node->getChild("indicated-pitch-deg", 0, true);
@@ -139,9 +149,6 @@ AttitudeIndicator::update (double dt)
     _pitch_int_node->setDoubleValue(pitch);
 
     // add in a gyro underspin "error" if gyro is spinning too slowly
-    const double spin_thresh = 0.8;
-    const double max_roll_error = 40.0;
-    const double max_pitch_error = 12.0;
     double roll_error;
     double pitch_error;
     if ( spin <= spin_thresh ) {
