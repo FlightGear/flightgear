@@ -46,6 +46,7 @@ static float clamp(float f)
 
 
 HUD::HUD() :
+    _path(fgGetNode("/sim/hud/path[1]", "Huds/default.xml")),
     _current(fgGetNode("/sim/hud/current-color", true)),
     _visibility(fgGetNode("/sim/hud/visibility[1]", true)),
     _3DenabledN(fgGetNode("/sim/hud/enable3d[1]", true)),
@@ -72,10 +73,12 @@ HUD::HUD() :
     _font(0),
     _font_size(0.0),
     _style(0),
+    _listener_active(false),
     _clip_box(0)
 {
     SG_LOG(SG_COCKPIT, SG_INFO, "Initializing HUD Instrument");
 
+    _path->addChangeListener(this);
     _visibility->addChangeListener(this);
     _3DenabledN->addChangeListener(this);
     _antialiasing->addChangeListener(this);
@@ -95,6 +98,7 @@ HUD::HUD() :
 
 HUD::~HUD()
 {
+    _path->removeChangeListener(this);
     _visibility->removeChangeListener(this);
     _3DenabledN->removeChangeListener(this);
     _antialiasing->removeChangeListener(this);
@@ -134,7 +138,7 @@ void HUD::init()
     _font_renderer->setPointSize(_font_size);
     _text_list.setFont(_font_renderer);
 
-    load(fgGetString("/sim/hud/path[1]", "Huds/default.xml"));
+    _path->fireValueChanged();
 }
 
 
@@ -411,6 +415,12 @@ int HUD::load(const char *file, float x, float y, int level, const string& inden
 
 void HUD::valueChanged(SGPropertyNode *node)
 {
+    if (_listener_active)
+        return;
+    _listener_active = true;
+    if (!strcmp(node->getName(), "path"))
+        load(fgGetString("/sim/hud/path[1]", "Huds/default.xml"));
+
     if (!strcmp(node->getName(), "current-color")) {
         int i = node->getIntValue();
         if (i < 0)
@@ -450,6 +460,7 @@ void HUD::valueChanged(SGPropertyNode *node)
     _cl = clamp(_alpha_clamp->getFloatValue());
 
     _units = strcmp(_unitsN->getStringValue(), "feet") ? METER : FEET;
+    _listener_active = false;
 }
 
 
