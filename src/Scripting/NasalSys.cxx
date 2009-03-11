@@ -496,22 +496,22 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
 #undef HASHSET
 }
 
+
 class AirportInfoFilter : public FGAirport::AirportFilter
 {
 public:
-  AirportInfoFilter() :
-    type(FGPositioned::AIRPORT)
-  { }
-  
-  virtual FGPositioned::Type minType() const {
-    return type;
-  }
-  
-  virtual FGPositioned::Type maxType() const {
-    return type;
-  }
-  
- FGPositioned::Type type;
+    AirportInfoFilter() : type(FGPositioned::AIRPORT) {
+    }
+
+    virtual FGPositioned::Type minType() const {
+        return type;
+    }
+
+    virtual FGPositioned::Type maxType() const {
+        return type;
+    }
+
+    FGPositioned::Type type;
 };
 
 // Returns data hash for particular or nearest airport of a <type>, or nil
@@ -527,7 +527,7 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
     static SGConstPropertyNode_ptr lonn = fgGetNode("/position/longitude-deg", true);
     SGGeod pos;
     FGAirport* apt = NULL;
-    
+
     if(argc >= 2 && naIsNum(args[0]) && naIsNum(args[1])) {
         pos = SGGeod::fromDeg(args[1].num, args[0].num);
         args += 2;
@@ -541,17 +541,17 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
     AirportInfoFilter filter; // defaults to airports only
 
     if(argc == 0) {
-      // fine, just fall through and use AIRPORT
+        // fall through and use AIRPORT
     } else if(argc == 1 && naIsString(args[0])) {
         const char *s = naStr_data(args[0]);
-        if (!strcmp(s, "airport")) filter.type = FGPositioned::AIRPORT;
+        if(!strcmp(s, "airport")) filter.type = FGPositioned::AIRPORT;
         else if(!strcmp(s, "seaport")) filter.type = FGPositioned::SEAPORT;
         else if(!strcmp(s, "heliport")) filter.type = FGPositioned::HELIPORT;
         else {
             // user provided an <id>, hopefully
             apt = FGAirport::findByIdent(s);
             if (!apt) {
-                naRuntimeError(c, "airportinfo() couldn't find airport:%s", s);
+                naRuntimeError(c, "airportinfo() couldn't find airport: %s", s);
                 return naNil();
             }
         }
@@ -559,18 +559,18 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
         naRuntimeError(c, "airportinfo() with invalid function arguments");
         return naNil();
     }
-    
-    if (!apt) {
+
+    if(!apt) {
         apt = FGAirport::findClosest(pos, maxRange, &filter);
         if(!apt) return naNil();
     }
-    
+
     string id = apt->ident();
     string name = apt->name();
 
     // set runway hash
     naRef rwys = naNewHash(c);
-    for (unsigned int r=0; r<apt->numRunways(); ++r) {
+    for(unsigned int r=0; r<apt->numRunways(); ++r) {
         FGRunway* rwy(apt->getRunwayByIndex(r));
 
         naRef rwyid = naStr_fromdata(naNewString(c),
@@ -730,7 +730,7 @@ void FGNasalSys::loadPropertyScripts()
         if(n->hasChild("module"))
             module = n->getStringValue("module");
 
-        // allow multiple files to be specified within in a single
+        // allow multiple files to be specified within a single
         // Nasal module tag
         int j = 0;
         SGPropertyNode *fn;
@@ -743,17 +743,6 @@ void FGNasalSys::loadPropertyScripts()
             loadModule(p, module);
             j++;
         }
-
-        // Old code which only allowed a single file to be specified per module
-        /*
-        const char* file = n->getStringValue("file");
-        if(!n->hasChild("file")) file = 0; // Hrm...
-        if(file) {
-            SGPath p(globals->get_fg_root());
-            p.append(file);
-            loadModule(p, module);
-        }
-        */
 
         const char* src = n->getStringValue("script");
         if(!n->hasChild("script")) src = 0; // Hrm...
