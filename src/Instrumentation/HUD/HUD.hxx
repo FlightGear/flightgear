@@ -215,6 +215,7 @@ private:
     deque<Item *> _items;
     deque<Item *> _ladders;
 
+    SGPropertyNode_ptr _path;
     SGPropertyNode_ptr _current;
     SGPropertyNode_ptr _visibility;
     SGPropertyNode_ptr _3DenabledN;
@@ -240,6 +241,7 @@ private:
     fntTexFont *_font;
     float _font_size;
     int _style;
+    bool _listener_active;
 
     ClipBox *_clip_box;
     TextList _text_list;
