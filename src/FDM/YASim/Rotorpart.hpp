@@ -69,7 +69,7 @@ namespace yasim {
         void setAlpha0(float f);
         void setAlpha0factor(float f);
         void setLen(float value);
-        void setParameter(char *parametername, float value);
+        void setParameter(const char *parametername, float value);
         void setRotor(Rotor *rotor);
         void setTorqueOfInertia(float toi);
         void writeInfo(std::ostringstream &buffer);
