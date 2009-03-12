@@ -70,8 +70,6 @@ public:
     /// lat/lon pair. If there is no scenery for that point, the altitude
     /// value is undefined. 
     /// All values are meant to be in meters or degrees.
-    bool get_elevation_m(double lat, double lon, double max_alt,
-                         double& alt, const SGMaterial** material);
     bool get_elevation_m(const SGGeod& geod, double& alt,
                          const SGMaterial** material);
 
@@ -87,7 +85,7 @@ public:
     /// value is undefined.
     /// All values are meant to be in meters.
     bool get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
-                              double& radius, const SGMaterial** material);
+                              double& elevation, const SGMaterial** material);
 
     /// Compute the nearest intersection point of the line starting from 
     /// start going in direction dir with the terrain.
@@ -105,7 +103,7 @@ public:
     /// Returns true if scenery is avaliable for the given lat, lon position
     /// within a range of range_m.
     /// lat and lon are expected to be in degrees.
-    bool scenery_available(double lat, double lon, double range_m);
+    bool scenery_available(const SGGeod& position, double range_m);
 
     // Static because access to the pager is needed before the rest of
     // the scenery is initialized.

@@ -384,25 +384,25 @@ void FGTileMgr::prep_ssg_nodes(float vis) {
 
 bool FGTileMgr::scenery_available(const SGGeod& position, double range_m)
 {
-    return scenery_available(position.getLatitudeDeg(),
-                             position.getLongitudeDeg(), range_m);
-}
-
-bool FGTileMgr::scenery_available(double lat, double lon, double range_m)
-{
   // sanity check (unfortunately needed!)
-  if ( lon <= -180.0 || lon >= 180.0 || lat <= -90.0 || lat >= 90.0 )
+  if (position.getLongitudeDeg() < -180 || position.getLongitudeDeg() > 180 ||
+      position.getLatitudeDeg() < -90 || position.getLatitudeDeg() > 90)
     return false;
   
-  SGBucket bucket(lon, lat);
+  SGBucket bucket(position);
   TileEntry *te = tile_cache.get_tile(bucket);
   if (!te || !te->is_loaded())
     return false;
+
+  SGVec3d cartPos = SGVec3d::fromGeod(position);
 
   // Traverse all tiles required to be there for the given visibility.
   // This uses exactly the same algorithm like the tile scheduler.
   double tile_width = bucket.get_width_m();
   double tile_height = bucket.get_height_m();
+  double tile_r = 0.5*sqrt(tile_width*tile_width + tile_height*tile_height);
+  double max_dist = tile_r + range_m;
+  double max_dist2 = max_dist*max_dist;
   
   int xrange = (int)fabs(range_m / tile_width) + 1;
   int yrange = (int)fabs(range_m / tile_height) + 1;
@@ -411,7 +411,11 @@ bool FGTileMgr::scenery_available(double lat, double lon, double range_m)
     for ( int y = -yrange; y <= yrange; ++y ) {
       // We have already checked for the center tile.
       if ( x != 0 || y != 0 ) {
-        SGBucket b = sgBucketOffset( lon, lat, x, y );
+        SGBucket b = sgBucketOffset( position.getLongitudeDeg(),
+                                     position.getLatitudeDeg(), x, y );
+        // Do not ask if it is just the next tile but way out of range.
+        if (max_dist2 < distSqr(cartPos, SGVec3d::fromGeod(b.get_center())))
+          continue;
         TileEntry *te = tile_cache.get_tile(b);
         if (!te || !te->is_loaded())
           return false;

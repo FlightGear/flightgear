@@ -106,7 +106,6 @@ public:
     /// Returns true if scenery is avaliable for the given lat, lon position
     /// within a range of range_m.
     /// lat and lon are expected to be in degrees.
-    bool scenery_available(double lat, double lon, double range_m);
     bool scenery_available(const SGGeod& position, double range_m);
 
     // Load a model for a tile
