@@ -175,15 +175,14 @@ FGMarkerBeacon::update(double dt)
 
         // marker beacon blinking
         bool light_on = ( outer_blink || middle_blink || inner_blink );
-        SGTimeStamp current;
-        current.stamp();
+        SGTimeStamp current = SGTimeStamp::now();
 
-        if ( light_on && (current - blink > 400000) ) {
+        if ( light_on && blink + SGTimeStamp::fromUSec(400000) < current ) {
             light_on = false;
-            blink.stamp();
-        } else if ( !light_on && (current - blink > 100000) ) {
+            blink = current;
+        } else if ( !light_on && blink + SGTimeStamp::fromUSec(100000) < current ) {
             light_on = true;
-            blink.stamp();
+            blink = current;
         }
 
         if ( outer_marker ) {

@@ -110,7 +110,7 @@ int fgGetTimeInterval( void ) {
 	interval = 0;
     } else {
         current.stamp();
-	interval = current - last;
+	interval = (current - last).toUSecs();
 	last = current;
     }
 
