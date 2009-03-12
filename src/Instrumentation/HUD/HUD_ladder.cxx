@@ -30,16 +30,16 @@
 
 
 // FIXME
-float get__heading() { return fgGetFloat("/orientation/heading-deg") * M_PI / 180.0; }
-float get__throttleval() { return fgGetFloat("/controls/engines/engine/throttle"); }
-float get__Vx() { return fgGetFloat("/velocities/uBody-fps"); }
-float get__Vy() { return fgGetFloat("/velocities/vBody-fps"); }
-float get__Vz() { return fgGetFloat("/velocities/wBody-fps"); }
-float get__Ax() { return fgGetFloat("/accelerations/pilot/x-accel-fps_sec"); }
-float get__Ay() { return fgGetFloat("/accelerations/pilot/y-accel-fps_sec"); }
-float get__Az() { return fgGetFloat("/accelerations/pilot/z-accel-fps_sec"); }
-float get__alpha() { return fgGetFloat("/orientation/alpha-deg"); }
-float get__beta() { return fgGetFloat("/orientation/side-slip-deg"); }
+static float get__heading() { return fgGetFloat("/orientation/heading-deg") * M_PI / 180.0; }
+static float get__throttleval() { return fgGetFloat("/controls/engines/engine/throttle"); }
+static float get__Vx() { return fgGetFloat("/velocities/uBody-fps"); }
+static float get__Vy() { return fgGetFloat("/velocities/vBody-fps"); }
+static float get__Vz() { return fgGetFloat("/velocities/wBody-fps"); }
+static float get__Ax() { return fgGetFloat("/accelerations/pilot/x-accel-fps_sec"); }
+static float get__Ay() { return fgGetFloat("/accelerations/pilot/y-accel-fps_sec"); }
+static float get__Az() { return fgGetFloat("/accelerations/pilot/z-accel-fps_sec"); }
+static float get__alpha() { return fgGetFloat("/orientation/alpha-deg"); }
+static float get__beta() { return fgGetFloat("/orientation/side-slip-deg"); }
 #undef ENABLE_SP_FDM
 
 
