@@ -471,7 +471,8 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
     double lon = naNumValue(args[1]).num;
     double elev;
     const SGMaterial *mat;
-    if(!globals->get_scenery()->get_elevation_m(lat, lon, 10000.0, elev, &mat))
+    SGGeod geod = SGGeod::fromDegM(lon, lat, 10000);
+    if(!globals->get_scenery()->get_elevation_m(geod, elev, &mat))
         return naNil();
     naRef vec = naNewVector(c);
     naVec_append(vec, naNum(elev));

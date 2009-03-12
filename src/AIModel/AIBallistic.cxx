@@ -433,8 +433,8 @@ void FGAIBallistic::setForcePath(const string& p) {
 
 bool FGAIBallistic::getHtAGL(){
 
-    if (globals->get_scenery()->get_elevation_m(pos.getLatitudeDeg(), pos.getLongitudeDeg(),
-        10000.0, _elevation_m, &_material)){
+    if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(pos, 10000),
+                                                _elevation_m, &_material)){
             _ht_agl_ft = pos.getElevationFt() - _elevation_m * SG_METER_TO_FEET;
             if (_material) {
                 const vector<string>& names = _material->get_names();

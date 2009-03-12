@@ -137,7 +137,8 @@ void fgUpdateTimeDepCalcs() {
         // We require just to have 50 meter scenery availabe around
         // the aircraft.
         double range = 1000.0;
-        if (globals->get_scenery()->scenery_available(lat, lon, range)) {
+        SGGeod geod = SGGeod::fromDeg(lon, lat);
+        if (globals->get_scenery()->scenery_available(geod, range)) {
             //SG_LOG(SG_FLIGHT, SG_INFO, "Finally initializing fdm");
             cur_fdm_state->init();
             if ( cur_fdm_state->get_bound() ) {

@@ -118,13 +118,6 @@ void FGScenery::unbind() {
 }
 
 bool
-FGScenery::get_elevation_m(double lat, double lon, double max_alt,
-                           double& alt, const SGMaterial** material)
-{
-  return get_elevation_m(SGGeod::fromDegM(lon, lat, max_alt), alt, material);
-}
-
-bool
 FGScenery::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
                                 double& alt, const SGMaterial** material)
 {
@@ -212,13 +205,13 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
   return hits;
 }
 
-bool FGScenery::scenery_available(double lat, double lon, double range_m)
+bool FGScenery::scenery_available(const SGGeod& position, double range_m)
 {
-  if(globals->get_tile_mgr()->scenery_available(lat, lon, range_m))
+  if(globals->get_tile_mgr()->scenery_available(position, range_m))
   {
     double elev;
-    get_elevation_m(lat, lon, SG_MAX_ELEVATION_M, elev, 0);
-    SGVec3f p = SGVec3f::fromGeod(SGGeod::fromDegM(lon,lat,elev));
+    get_elevation_m(SGGeod::fromGeodM(position, SG_MAX_ELEVATION_M), elev, 0);
+    SGVec3f p = SGVec3f::fromGeod(SGGeod::fromGeodM(position, elev));
     simgear::CheckSceneryVisitor csnv(getPagerSingleton(), p.osg(), range_m);
     // currently the PagedLODs will not be loaded by the DatabasePager
     // while the splashscreen is there, so CheckSceneryVisitor force-loads
