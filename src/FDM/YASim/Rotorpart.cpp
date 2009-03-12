@@ -111,7 +111,7 @@ void Rotorpart::setRotor(Rotor *rotor)
     _rotor=rotor;
 }
 
-void Rotorpart::setParameter(char *parametername, float value)
+void Rotorpart::setParameter(const char *parametername, float value)
 {
 #define p(a) if (strcmp(parametername,#a)==0) _##a = value; else
 
