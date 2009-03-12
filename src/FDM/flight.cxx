@@ -731,9 +731,8 @@ FGInterface::get_agl_m(double t, const double pt[3], double max_altoff,
   SGVec3d pt_m = SGVec3d(pt) - max_altoff*ground_cache.get_down();
   SGVec3d _contact, _normal, _linearVel, _angularVel;
   material = 0;
-  if (!ground_cache.get_agl(t, pt_m, _contact, _normal, _linearVel,
-                            _angularVel, id, material))
-      return false;
+  bool ret = ground_cache.get_agl(t, pt_m, _contact, _normal, _linearVel,
+                                  _angularVel, id, material);
   // correct the linear velocity, since the line intersector delivers
   // values for the start point and the get_agl function should
   // traditionally deliver for the contact point
@@ -743,7 +742,7 @@ FGInterface::get_agl_m(double t, const double pt[3], double max_altoff,
   assign(normal, _normal);
   assign(linearVel, _linearVel);
   assign(angularVel, _angularVel);
-  return true;
+  return ret;
 }
 
 bool
@@ -757,9 +756,8 @@ FGInterface::get_agl_ft(double t, const double pt[3], double max_altoff,
   pt_m *= SG_FEET_TO_METER;
   SGVec3d _contact, _normal, _linearVel, _angularVel;
   material = 0;
-  if (!ground_cache.get_agl(t, pt_m, _contact, _normal, _linearVel,
-                            _angularVel, id, material))
-      return false;
+  bool ret = ground_cache.get_agl(t, pt_m, _contact, _normal, _linearVel,
+                                  _angularVel, id, material);
   // correct the linear velocity, since the line intersector delivers
   // values for the start point and the get_agl function should
   // traditionally deliver for the contact point
@@ -770,7 +768,7 @@ FGInterface::get_agl_ft(double t, const double pt[3], double max_altoff,
   assign( normal, _normal );
   assign( linearVel, SG_METER_TO_FEET*_linearVel );
   assign( angularVel, _angularVel );
-  return true;
+  return ret;
 }
 
 bool

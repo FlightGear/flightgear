@@ -245,9 +245,12 @@ FGGroundCache::prepare_ground_cache(double ref_time, const SGVec3d& pt,
     SGGeod geodPt = SGGeod::fromCart(pt);
     // Don't blow away the cache ground_radius and stuff if there's no
     // scenery
-    if (!globals->get_tile_mgr()->scenery_available(geodPt, rad))
+    if (!globals->get_tile_mgr()->scenery_available(geodPt, rad)) {
+        SG_LOG(SG_FLIGHT, SG_WARN, "prepare_ground_cache(): scenery_available "
+               "returns false at " << geodPt << " " << pt << " " << rad);
         return false;
-    _altitude = 0;
+    }
+    _material = 0;
 
     // If we have an active wire, get some more area into the groundcache
     if (_wire)
@@ -283,8 +286,11 @@ FGGroundCache::prepare_ground_cache(double ref_time, const SGVec3d& pt,
         found_ground = true;
     } else {
         // Else do a crude scene query for the current point
+        double alt = 0;
         found_ground = globals->get_scenery()->
-            get_cart_elevation_m(pt, rad, _altitude, &_material);
+            get_cart_elevation_m(pt, rad, alt, &_material);
+        if (found_ground)
+            _altitude = alt;
     }
     
     // Still not sucessful??
