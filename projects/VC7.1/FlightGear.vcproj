@@ -229,6 +229,12 @@
 				RelativePath="..\..\src\Airports\runways.hxx">
 			</File>
 			<File
+				RelativePath="..\..\src\Airports\sidstar.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Airports\sidstar.hxx">
+			</File>
+			<File
 				RelativePath="..\..\src\Airports\simple.cxx">
 			</File>
 			<File
