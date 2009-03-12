@@ -712,9 +712,7 @@ FGMultiplayMgr::Update(void)
     return;
 
   /// Just for expiry
-  SGTimeStamp timestamper;
-  timestamper.stamp();
-  long stamp = timestamper.get_seconds();
+  long stamp = SGTimeStamp::now().getSeconds();
 
   //////////////////////////////////////////////////
   //  Read the receive socket and process any data

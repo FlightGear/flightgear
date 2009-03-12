@@ -1112,7 +1112,7 @@ FGTextLayer::draw (osg::State& state)
     text_renderer.start3f(0, 0, 0);
 
     _now.stamp();
-    long diff = _now - _then;
+    double diff = (_now - _then).toUSecs();
 
     if (diff > 100000 || diff < 0 ) {
       // ( diff < 0 ) is a sanity check and indicates our time stamp

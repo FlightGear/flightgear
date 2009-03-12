@@ -67,9 +67,7 @@ public:
 
     bool isDone() const { return done; }
     bool isDone( long usec ) const { 
-        SGTimeStamp now;
-        now.stamp();
-        if ( (now - start) > usec ) {
+        if ( start + SGTimeStamp::fromUSec(usec) < SGTimeStamp::now() ) {
             return true;
         } else {
             return done;

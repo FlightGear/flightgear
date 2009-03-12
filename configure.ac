@@ -199,6 +199,7 @@ dnl check for some default libraries
 AC_SEARCH_LIBS(sqrt, [am ffm fm fastm m])
 AC_SEARCH_LIBS(ceil, m)
 AC_SEARCH_LIBS(dlclose, dl)
+AC_SEARCH_LIBS(clock_gettime, rt)
 
 base_LIBS="$LIBS"
 

@@ -273,7 +273,7 @@ static void fgMainLoop( void ) {
         }
         current_time_stamp.stamp();
         /* Convert to ms */
-        double elapsed_us = current_time_stamp - last_time_stamp;
+        double elapsed_us = (current_time_stamp - last_time_stamp).toUSecs();
         if ( elapsed_us < frame_us ) {
             double requested_us = frame_us - elapsed_us;
             ulMilliSecondSleep ( (int)(requested_us / 1000.0) ) ;
@@ -286,7 +286,9 @@ static void fgMainLoop( void ) {
         // ulMilliSecondSleep() call is omitted this will peg the cpu
         // (which is just fine if FG is the only app you care about.)
         current_time_stamp.stamp();
-        while ( current_time_stamp - last_time_stamp < frame_us ) {
+        SGTimeStamp next_time_stamp = last_time_stamp;
+        next_time_stamp += SGTimeStamp::fromSec(1e-6*frame_us);
+        while ( current_time_stamp < next_time_stamp ) {
             current_time_stamp.stamp();
         }
     } else {
@@ -294,8 +296,7 @@ static void fgMainLoop( void ) {
         current_time_stamp.stamp();
     }
 
-    real_delta_time_sec
-        = double(current_time_stamp - last_time_stamp) / 1000000.0;
+    real_delta_time_sec = (current_time_stamp - last_time_stamp).toSecs();
 
     // Limit the time we need to spend in simulation loops
     // That means, if the /sim/max-simtime-per-frame value is strictly positive
