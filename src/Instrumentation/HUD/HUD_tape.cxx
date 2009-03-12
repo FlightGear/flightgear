@@ -21,6 +21,8 @@
 
 #include "HUD.hxx"
 
+static const float TICK_OFFSET = 2.f;
+
 
 HUD::Tape::Tape(HUD *hud, const SGPropertyNode *n, float x, float y) :
     Scale(hud, n, x, y),
@@ -33,6 +35,7 @@ HUD::Tape::Tape(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _draw_cap_right(n->getBoolValue("cap-right", false)),
     _draw_cap_left(n->getBoolValue("cap-left", false)),
     _marker_offset(n->getFloatValue("marker-offset")),
+    _label_offset(n->getFloatValue("label-offset", 3.0)),
     _label_gap(n->getFloatValue("label-gap-width") / 2.0),
     _pointer(n->getBoolValue("enable-pointer", true)),
     _format(n->getStringValue("format", "%d"))
@@ -248,9 +251,9 @@ void HUD::Tape::draw_vertical(float value)
 
         float y = _y + (v - vmin) * factor();
 
-        if (y < _y + 0)
+        if (y < _y + TICK_OFFSET)
             continue;
-        if (y > top - 0)
+        if (y > top - TICK_OFFSET)
             break;
 
         if (_div_ratio && i % _div_ratio) { // minor div
@@ -317,9 +320,9 @@ void HUD::Tape::draw_vertical(float value)
                     draw_bullet(marker_xs + 4, y, 5.0);
 
                 if (option_left())
-                    x = marker_xs, align = RIGHT|VCENTER;
+                    x = marker_xs - _label_offset, align = RIGHT|VCENTER;
                 else
-                    x = marker_xe, align = LEFT|VCENTER;
+                    x = marker_xe + _label_offset, align = LEFT|VCENTER;
             }
 
             if (!option_notext()) {
@@ -456,9 +459,9 @@ void HUD::Tape::draw_horizontal(float value)
 
         float x = _x + (v - vmin) * factor();
 
-        if (x < _x + 0)
+        if (x < _x + TICK_OFFSET)
             continue;
-        if (x > right - 0)
+        if (x > right - TICK_OFFSET)
             break;
 
         if (_div_ratio && i % _div_ratio) { // minor div
@@ -502,9 +505,9 @@ void HUD::Tape::draw_horizontal(float value)
                 draw_line(x, marker_ys, x, marker_ye);
 
                 if (option_top())
-                    y = top, align = TOP|HCENTER;
+                    y = top - _label_offset, align = TOP|HCENTER;
                 else
-                    y = _y, align = BOTTOM|HCENTER;
+                    y = _y + _label_offset, align = BOTTOM|HCENTER;
             }
 
             if (!option_notext()) {
