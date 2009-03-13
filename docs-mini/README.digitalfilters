@@ -110,7 +110,9 @@ Parameters
 console.
 
 <enable> Encloses the <prop> and <value> tags which are used to enable or
-disable the filter.  Defaults to enabled if unspecified.
+disable the filter. Instead of the <prop> and <value> tags, a <condition>
+tag may be used to define a condition. Check README.conditions for more
+details about conditions.  Defaults to enabled if unspecified.
 
 <type> The type of filter. This can be exponential, double-exponential,
 moving-average, noise-spike, gain or reciprocal.
