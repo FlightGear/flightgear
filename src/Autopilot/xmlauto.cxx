@@ -196,7 +196,7 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
                 if ( prop != NULL ) {
                     Ti_prop = fgGetNode( prop->getStringValue(), true );
                     if ( val != NULL ) {
-                        Ti_prop->setDoubleValue(Kp);
+                        Ti_prop->setDoubleValue(Ti);
                     }
                 }
 
@@ -221,7 +221,7 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
                 if ( prop != NULL ) {
                     Td_prop = fgGetNode( prop->getStringValue(), true );
                     if ( val != NULL ) {
-                        Td_prop->setDoubleValue(Kp);
+                        Td_prop->setDoubleValue(Td);
                     }
                 }
 
