@@ -59,7 +59,9 @@ private:
     SGPropertyNode_ptr _heading_in_node;
     SGPropertyNode_ptr _suction_node;
     SGPropertyNode_ptr _heading_out_node;
-    
+    SGPropertyNode_ptr _heading_bug_error_node;
+    SGPropertyNode_ptr _heading_bug_node;
+
 };
 
 #endif // __INSTRUMENTS_HEADING_INDICATOR_HXX
