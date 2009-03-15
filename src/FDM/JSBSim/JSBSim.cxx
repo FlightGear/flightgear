@@ -442,7 +442,8 @@ void FGJSBsim::update( double dt )
       cart = FGLocation(lon, lat, alt+slr);
     }
     double cart_pos[3] = { cart(1), cart(2), cart(3) };
-    bool cache_ok = prepare_ground_cache_ft( State->Getsim_time(), cart_pos,
+    double t0 = State->Getsim_time();
+    bool cache_ok = prepare_ground_cache_ft( t0, t0 + dt, cart_pos,
                                              groundCacheRadius );
     if (!cache_ok) {
       SG_LOG(SG_FLIGHT, SG_WARN,

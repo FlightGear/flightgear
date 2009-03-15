@@ -643,18 +643,21 @@ void FGInterface::_busdump(void) {
 }
 
 bool
-FGInterface::prepare_ground_cache_m(double ref_time, const double pt[3],
-                                    double rad)
+FGInterface::prepare_ground_cache_m(double startSimTime, double endSimTime,
+                                    const double pt[3], double rad)
 {
-  return ground_cache.prepare_ground_cache(ref_time, SGVec3d(pt), rad);
+  return ground_cache.prepare_ground_cache(startSimTime, endSimTime,
+                                           SGVec3d(pt), rad);
 }
 
-bool FGInterface::prepare_ground_cache_ft(double ref_time, const double pt[3],
-                                          double rad)
+bool
+FGInterface::prepare_ground_cache_ft(double startSimTime, double endSimTime,
+                                     const double pt[3], double rad)
 {
   // Convert units and do the real work.
   SGVec3d pt_ft = SG_FEET_TO_METER*SGVec3d(pt);
-  return ground_cache.prepare_ground_cache(ref_time, pt_ft, rad*SG_FEET_TO_METER);
+  return ground_cache.prepare_ground_cache(startSimTime, endSimTime,
+                                           pt_ft, rad*SG_FEET_TO_METER);
 }
 
 bool
@@ -825,29 +828,34 @@ FGInterface::get_groundlevel_m(const SGGeod& geod)
   double ref_time, radius;
   // Prepare the ground cache for that position.
   if (!is_valid_m(&ref_time, cpos.data(), &radius)) {
-    bool ok = prepare_ground_cache_m(ref_time, pos.data(), 10);
+    double startTime = globals->get_sim_time_sec();
+    double endTime = startTime + 1;
+    bool ok = prepare_ground_cache_m(startTime, endTime, pos.data(), 10);
     /// This is most likely the case when the given altitude is
     /// too low, try with a new altitude of 10000m, that should be
     /// sufficient to find a ground level below everywhere on our planet
     if (!ok) {
-      pos = SGVec3d::fromGeod(SGGeod::fromRadM(geod.getLongitudeRad(), geod.getLatitudeRad(), 10000));
+      pos = SGVec3d::fromGeod(SGGeod::fromGeodM(geod, 10000));
       /// If there is still no ground, return sea level radius
-      if (!prepare_ground_cache_m(ref_time, pos.data(), 10))
+      if (!prepare_ground_cache_m(startTime, endTime, pos.data(), 10))
         return 0;
     }
   } else if (radius*radius <= distSqr(pos, cpos)) {
+    double startTime = globals->get_sim_time_sec();
+    double endTime = startTime + 1;
+
     /// We reuse the old radius value, but only if it is at least 10 Meters ..
     if (!(10 < radius)) // Well this strange compare is nan safe
       radius = 10;
 
-    bool ok = prepare_ground_cache_m(ref_time, pos.data(), radius);
+    bool ok = prepare_ground_cache_m(startTime, endTime, pos.data(), radius);
     /// This is most likely the case when the given altitude is
     /// too low, try with a new altitude of 10000m, that should be
     /// sufficient to find a ground level below everywhere on our planet
     if (!ok) {
-      pos = SGVec3d::fromGeod(SGGeod::fromRadM(geod.getLongitudeRad(), geod.getLatitudeRad(), 10000));
+      pos = SGVec3d::fromGeod(SGGeod::fromGeodM(geod, 10000));
       /// If there is still no ground, return sea level radius
-      if (!prepare_ground_cache_m(ref_time, pos.data(), radius))
+      if (!prepare_ground_cache_m(startTime, endTime, pos.data(), radius))
         return 0;
     }
   }
