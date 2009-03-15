@@ -4,6 +4,7 @@
 // This file is in the Public Domain and comes with no warranty.
 
 #include <simgear/compiler.h>
+#include <simgear/sg_inlines.h>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -36,6 +37,8 @@ HeadingIndicator::init ()
     _heading_in_node = fgGetNode("/orientation/heading-deg", true);
     _suction_node = fgGetNode(_suction.c_str(), true);
     _heading_out_node = node->getChild("indicated-heading-deg", 0, true);
+    _heading_bug_error_node = node->getChild("heading-bug-error-deg", 0, true);
+    _heading_bug_node = node->getChild("heading-bug-deg", 0, true);
     _last_heading_deg = (_heading_in_node->getDoubleValue() +
                          _offset_node->getDoubleValue());
 }
@@ -77,11 +80,7 @@ HeadingIndicator::update (double dt)
                                 // Next, calculate time-based precession
     double offset = _offset_node->getDoubleValue();
     offset -= dt * (0.25 / 60.0); // 360deg/day
-    while (offset < -360)
-        offset += 360;
-    while (offset > 360)
-        offset -= 360;
-    _offset_node->setDoubleValue(offset);
+    SG_NORMALIZE_RANGE(offset, -360.0, 360.0);
 
                                 // TODO: movement-induced error
 
@@ -102,12 +101,16 @@ HeadingIndicator::update (double dt)
     _last_heading_deg = heading;
 
     heading += offset;
-    while (heading < 0)
-        heading += 360;
-    while (heading > 360)
-        heading -= 360;
+    SG_NORMALIZE_RANGE(heading, 0.0, 360.0);
 
     _heading_out_node->setDoubleValue(heading);
+
+    // Calculate heading bug error normalized to +/- 180.0
+    double heading_bug = _heading_bug_node->getDoubleValue();
+    double diff = heading_bug - heading;
+
+    SG_NORMALIZE_RANGE(diff, -180.0, 180.0);
+    _heading_bug_error_node->setDoubleValue( diff );
 }
 
 // end of heading_indicator.cxx
