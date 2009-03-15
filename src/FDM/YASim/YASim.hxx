@@ -25,6 +25,7 @@ public:
 
     yasim::FGFDM* _fdm;
     float _dt;
+    double _simTime;
     enum {
         NED,
         UVW,

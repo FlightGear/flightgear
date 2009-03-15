@@ -603,10 +603,10 @@ public:
     // Prepare the ground cache for the wgs84 position pt_*.
     // That is take all vertices in the ball with radius rad around the
     // position given by the pt_* and store them in a local scene graph.
-    bool prepare_ground_cache_m(double ref_time, const double pt[3],
-                                double rad);
-    bool prepare_ground_cache_ft(double ref_time, const double pt[3],
-                                 double rad);
+    bool prepare_ground_cache_m(double startSimTime, double endSimTime,
+                                const double pt[3], double rad);
+    bool prepare_ground_cache_ft(double startSimTime, double endSimTime,
+                                 const double pt[3], double rad);
 
 
     // Returns true if the cache is valid.

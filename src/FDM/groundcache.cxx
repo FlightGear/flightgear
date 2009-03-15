@@ -134,10 +134,24 @@ public:
         const SGSceneUserData::Velocity* velocity = getVelocity(transform);
 
         SGVec3d center = _center;
-        _center = SGVec3d(inverseMatrix.preMult(_center.osg()));
         double radius = _radius;
-        if (velocity)
-            _radius += (_endTime - _startTime)*norm(velocity->linear);
+        _center = SGVec3d(inverseMatrix.preMult(_center.osg()));
+        if (velocity) {
+            SGVec3d staticCenter(_center);
+
+            double dtStart = velocity->referenceTime - _startTime;
+            SGVec3d startCenter = staticCenter + dtStart*velocity->linear;
+            SGVec3d angle = dtStart*velocity->angular;
+            startCenter = SGQuatd::fromAngleAxis(angle).transform(startCenter);
+            
+            double dtEnd = velocity->referenceTime - _endTime;
+            SGVec3d endCenter = staticCenter + dtEnd*velocity->linear;
+            angle = dtEnd*velocity->angular;
+            endCenter = SGQuatd::fromAngleAxis(angle).transform(endCenter);
+
+            _center = 0.5*(startCenter + endCenter);
+            _radius += 0.5*dist(startCenter, endCenter);
+        }
         
         simgear::BVHSubTreeCollector::NodeList parentNodeList;
         mSubTreeCollector.pushNodeList(parentNodeList);
@@ -152,7 +166,8 @@ public:
                 bvhTransform->setToWorldTransform(SGMatrixd(matrix.ptr()));
                 bvhTransform->setLinearVelocity(velocity->linear);
                 bvhTransform->setAngularVelocity(velocity->angular);
-                bvhTransform->setReferenceTime(_startTime);
+                bvhTransform->setReferenceTime(velocity->referenceTime);
+                bvhTransform->setStartTime(_startTime);
                 bvhTransform->setEndTime(_endTime);
                 bvhTransform->setId(velocity->id);
 
@@ -236,8 +251,8 @@ FGGroundCache::~FGGroundCache()
 }
 
 bool
-FGGroundCache::prepare_ground_cache(double ref_time, const SGVec3d& pt,
-                                    double rad)
+FGGroundCache::prepare_ground_cache(double startSimTime, double endSimTime,
+                                    const SGVec3d& pt, double rad)
 {
     // Empty cache.
     found_ground = false;
@@ -260,21 +275,20 @@ FGGroundCache::prepare_ground_cache(double ref_time, const SGVec3d& pt,
     reference_wgs84_point = pt;
     reference_vehicle_radius = rad;
     // Store the time reference used to compute movements of moving triangles.
-    cache_ref_time = ref_time;
+    cache_ref_time = startSimTime;
     
     // Get a normalized down vector valid for the whole cache
     SGQuatd hlToEc = SGQuatd::fromLonLat(geodPt);
     down = hlToEc.rotate(SGVec3d(0, 0, 1));
     
     // Get the ground cache, that is a local collision tree of the environment
-    double endTime = cache_ref_time + 1; //FIXME??
-    CacheFill subtreeCollector(pt, rad, cache_ref_time, endTime);
+    CacheFill subtreeCollector(pt, rad, startSimTime, endSimTime);
     globals->get_scenery()->get_scene_graph()->accept(subtreeCollector);
     _localBvhTree = subtreeCollector.getBVHNode();
 
     // Try to get a croase altitude value for the ground cache
     SGLineSegmentd line(pt, pt + 2*reference_vehicle_radius*down);
-    simgear::BVHLineSegmentVisitor lineSegmentVisitor(line, ref_time);
+    simgear::BVHLineSegmentVisitor lineSegmentVisitor(line, startSimTime);
     if (_localBvhTree)
         _localBvhTree->accept(lineSegmentVisitor);
 

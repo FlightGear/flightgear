@@ -43,7 +43,8 @@ static const float W2HP = 1.3416e-3;
 static const float INHG2PA = 3386.389;
 static const float SLUG2KG = 14.59390;
 
-YASim::YASim(double dt)
+YASim::YASim(double dt) :
+    _simTime(0)
 {
 //     set_delta_t(dt);
     _fdm = new FGFDM();
@@ -209,7 +210,7 @@ void YASim::update(double dt)
     // build the environment cache.
     float vr = _fdm->getVehicleRadius();
     vr += 2.0*FT2M*dt*Math::mag3(v);
-    prepare_ground_cache_m( 0.0, xyz, vr );
+    prepare_ground_cache_m( _simTime, _simTime + dt, xyz, vr );
 
     // Track time increments.
     FGGround* gr
@@ -217,14 +218,15 @@ void YASim::update(double dt)
 
     int i;
     for(i=0; i<iterations; i++) {
-        gr->setTimeOffset(i*_dt);
+        gr->setTimeOffset(_simTime + i*_dt);
         copyToYASim(false);
         _fdm->iterate(_dt);
         copyFromYASim();
     }
 
-    // Reset the time increment.
-    gr->setTimeOffset(0.0);
+    // Increment the local sim time
+    _simTime += dt;
+    gr->setTimeOffset(_simTime);
 }
 
 void YASim::copyToYASim(bool copyState)
