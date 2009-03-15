@@ -202,7 +202,7 @@ void FGAIShip::update(double dt) {
     SGVec3d cartPos = SGVec3d::fromGeod(pos);
 
     // The simulation time this transform is meant for
-    aip.setReferenceTime(globals->get_sim_time_sec() + dt);
+    aip.setReferenceTime(globals->get_sim_time_sec());
 
     // Compute the velocity in m/s in the body frame
     aip.setBodyLinearVelocity(SGVec3d(0.51444444*speed, 0, 0));
