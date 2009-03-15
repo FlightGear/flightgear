@@ -238,6 +238,7 @@ FGGroundCache::FGGroundCache() :
     _altitude(0),
     _material(0),
     cache_ref_time(0),
+    cache_time_offset(0),
     _wire(0),
     reference_wgs84_point(SGVec3d(0, 0, 0)),
     reference_vehicle_radius(0),
@@ -282,6 +283,8 @@ FGGroundCache::prepare_ground_cache(double startSimTime, double endSimTime,
     down = hlToEc.rotate(SGVec3d(0, 0, 1));
     
     // Get the ground cache, that is a local collision tree of the environment
+    startSimTime += cache_time_offset;
+    endSimTime += cache_time_offset;
     CacheFill subtreeCollector(pt, rad, startSimTime, endSimTime);
     globals->get_scenery()->get_scene_graph()->accept(subtreeCollector);
     _localBvhTree = subtreeCollector.getBVHNode();
@@ -411,6 +414,7 @@ FGGroundCache::get_body(double t, SGMatrixd& bodyToWorld, SGVec3d& linearVel,
     // Get the transform matrix and velocities of a moving body with id at t.
     if (!_localBvhTree)
         return false;
+    t += cache_time_offset;
     BodyFinder bodyFinder(id, t);
     _localBvhTree->accept(bodyFinder);
     if (bodyFinder.empty())
@@ -536,6 +540,7 @@ FGGroundCache::get_cat(double t, const SGVec3d& pt,
     double maxDistance = 1000;
 
     // Get the wire in question
+    t += cache_time_offset;
     CatapultFinder catapultFinder(SGSphered(pt, maxDistance), t);
     if (_localBvhTree)
         _localBvhTree->accept(catapultFinder);
@@ -565,6 +570,7 @@ FGGroundCache::get_agl(double t, const SGVec3d& pt, SGVec3d& contact,
 {
     // Just set up a ground intersection query for the given point
     SGLineSegmentd line(pt, pt + 10*reference_vehicle_radius*down);
+    t += cache_time_offset;
     simgear::BVHLineSegmentVisitor lineSegmentVisitor(line, t);
     if (_localBvhTree)
         _localBvhTree->accept(lineSegmentVisitor);
@@ -610,6 +616,7 @@ FGGroundCache::get_nearest(double t, const SGVec3d& pt, double maxDist,
 
     // Just set up a ground intersection query for the given point
     SGSphered sphere(pt, maxDist);
+    t += cache_time_offset;
     simgear::BVHNearestPointVisitor nearestPointVisitor(sphere, t);
     _localBvhTree->accept(nearestPointVisitor);
 
@@ -755,6 +762,7 @@ private:
 bool FGGroundCache::caught_wire(double t, const SGVec3d pt[4])
 {
     // Get the wire in question
+    t += cache_time_offset;
     WireIntersector wireIntersector(pt, t);
     if (_localBvhTree)
         _localBvhTree->accept(wireIntersector);
@@ -857,6 +865,7 @@ bool FGGroundCache::get_wire_ends(double t, SGVec3d end[2], SGVec3d vel[2])
         return false;
 
     // Get the wire in question
+    t += cache_time_offset;
     WireFinder wireFinder(_wire, t);
     if (_localBvhTree)
         _localBvhTree->accept(wireFinder);
