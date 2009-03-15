@@ -163,6 +163,8 @@ FGInterface::common_init ()
 
     set_inited( true );
 
+    ground_cache.set_cache_time_offset(globals->get_sim_time_sec());
+
 //     stamp();
 //     set_remainder( 0 );
 
@@ -825,10 +827,10 @@ FGInterface::get_groundlevel_m(const SGGeod& geod)
 
   // FIXME: how to handle t - ref_time differences ???
   SGVec3d cpos;
-  double ref_time, radius;
+  double ref_time = 0, radius;
   // Prepare the ground cache for that position.
   if (!is_valid_m(&ref_time, cpos.data(), &radius)) {
-    double startTime = globals->get_sim_time_sec();
+    double startTime = ref_time;
     double endTime = startTime + 1;
     bool ok = prepare_ground_cache_m(startTime, endTime, pos.data(), 10);
     /// This is most likely the case when the given altitude is
@@ -841,7 +843,7 @@ FGInterface::get_groundlevel_m(const SGGeod& geod)
         return 0;
     }
   } else if (radius*radius <= distSqr(pos, cpos)) {
-    double startTime = globals->get_sim_time_sec();
+    double startTime = ref_time;
     double endTime = startTime + 1;
 
     /// We reuse the old radius value, but only if it is at least 10 Meters ..

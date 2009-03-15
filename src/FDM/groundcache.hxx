@@ -62,6 +62,10 @@ public:
     const SGVec3d& get_down() const
     { return down; }
 
+    double get_cache_time_offset() const
+    { return cache_time_offset; }
+    void set_cache_time_offset(double time_offset)
+    { cache_time_offset = time_offset; }
 
     bool get_body(double t, SGMatrixd& bodyToWorld, SGVec3d& linearVel,
                   SGVec3d& angularVel, simgear::BVHNode::Id id);
@@ -114,6 +118,8 @@ private:
     // The time reference for later call to intersection test routines.
     // Is required since we will have moving triangles in carriers.
     double cache_ref_time;
+    // The time the cache was initialized.
+    double cache_time_offset;
     // The wire to track.
     const simgear::BVHLineGeometry* _wire;
 
