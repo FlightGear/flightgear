@@ -111,8 +111,6 @@ private:
 	bool _entering;
 	bool _turning;
 	
-	//ssgBranch* _model;
-	
 	int GetQuadrangleAltitude(int dir, int des_alt);
 	
 	Point3D GetPatternApproachPos();
