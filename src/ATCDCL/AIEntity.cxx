@@ -53,8 +53,7 @@ FGAIEntity::~FGAIEntity() {
 }
 
 void FGAIEntity::SetModel(osg::Node* model) {
-	_model = model;
-	_aip.init(_model.get());
+	_aip.init(model);
 	_aip.setVisible(false);
 	globals->get_scenery()->get_scene_graph()->addChild(_aip.getSceneGraph());
 

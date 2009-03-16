@@ -53,16 +53,6 @@ using std::string;
 #include "AIMgr.hxx"
 
 FGAILocalTraffic::FGAILocalTraffic() {
-	/*ssgBranch *model = sgLoad3DModel( globals->get_fg_root(),
-	                                  planepath.c_str(),
-	                                  globals->get_props(),
-	                                  globals->get_sim_time_sec() );
-	*//*
-	_model = model;
-	_aip.init(_model);
-	*/
-	//SetModel(model);
-	
 	ATC = globals->get_ATC_mgr();
 	
 	// TODO - unhardwire this
