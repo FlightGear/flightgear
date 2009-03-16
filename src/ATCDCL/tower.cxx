@@ -113,7 +113,7 @@ TowerPlaneRec::TowerPlaneRec(const PlaneRec& p) :
 	plane = p;
 }
 
-TowerPlaneRec::TowerPlaneRec(const Point3D& pt) :
+TowerPlaneRec::TowerPlaneRec(const SGGeod& pt) :
 	planePtr(NULL),
 	clearedToLand(false),
 	clearedToLineUp(false),
@@ -141,10 +141,10 @@ TowerPlaneRec::TowerPlaneRec(const Point3D& pt) :
 	isUser(false)
 {
 	plane.callsign = "UNKNOWN";
-	pos = pt;
+ 	pos = pt;
 }
 
-TowerPlaneRec::TowerPlaneRec(const PlaneRec& p, const Point3D& pt) :
+TowerPlaneRec::TowerPlaneRec(const PlaneRec& p, const SGGeod& pt) :
 	planePtr(NULL),
 	clearedToLand(false),
 	clearedToLineUp(false),
@@ -172,7 +172,7 @@ TowerPlaneRec::TowerPlaneRec(const PlaneRec& p, const Point3D& pt) :
 	isUser(false)
 {
 	plane = p;
-	pos = pt;
+ 	pos = pt;
 }
 
 
@@ -320,9 +320,9 @@ void FGTower::Init() {
 	DoRwyDetails();
 	
 	// TODO - this currently assumes only one active runway.
-	rwyOccupied = OnActiveRunway(Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), 0.0));
+	rwyOccupied = OnActiveRunway(SGGeod::fromDegM(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), 0.0));
 	
-	if(!OnAnyRunway(Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), 0.0), false)) {
+	if(!OnAnyRunway(SGGeod::fromDegM(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), 0.0), false)) {
 		//cout << ident << "  ADD 0\n";
 		current_atcdialog->add_entry(ident, "@AP Tower, @CS @MI miles @CD of the airport for full stop@AT",
 				"Contact tower for VFR arrival (full stop)", TOWER,
@@ -449,22 +449,6 @@ void FGTower::Update(double dt) {
 	
 	// Call the base class update for the response time handling.
 	FGATC::Update(dt);
-
-	/*
-	if(ident == "KEMT") {	
-		// For AI debugging convienience - may be removed
-		Point3D user_pos;
-		user_pos.setlon(user_lon_node->getDoubleValue());
-		user_pos.setlat(user_lat_node->getDoubleValue());
-		user_pos.setelev(user_elev_node->getDoubleValue());
-		Point3D user_ortho_pos = ortho.ConvertToLocal(user_pos);
-		fgSetDouble("/AI/user/ortho-x", user_ortho_pos.x());
-		fgSetDouble("/AI/user/ortho-y", user_ortho_pos.y());
-		fgSetDouble("/AI/user/elev", user_elev_node->getDoubleValue());
-	}
-	*/
-	
-	//cout << "Done T" << endl;
 }
 
 void FGTower::ReceiveUserCallback(int code) {
@@ -507,7 +491,7 @@ void FGTower::Respond() {
 			// Should we clear staight in or for downwind entry?
 			// For now we'll clear straight in if greater than 1km from a line drawn through the threshold perpendicular to the rwy.
 			// Later on we might check the actual heading and direct some of those to enter on downwind or base.
-			Point3D op = ortho.ConvertToLocal(t->pos);
+			SGVec3d op = ortho.ConvertToLocal(t->pos);
 			float gp = fgGetFloat("/gear/gear/position-norm");
 			if(gp < 1)
 				t->gearWasUp = true; // This will be needed on final to tell "Gear down, ready to land."
@@ -558,7 +542,7 @@ void FGTower::Respond() {
 				trns += " Cleared for take-off" + wtr;
 				t->clearedToTakeOff = true;
 			} else {
-				if(!OnAnyRunway(Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), 0.0), true)) {
+				if(!OnAnyRunway(SGGeod::fromDegM(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), 0.0), true)) {
 					// TODO: Check if any AI Planes on final and tell something like: "After the landing CALLSIGN line up runway two eight right"
 					trns += " Line up runway " + ConvertRwyNumToSpokenString(activeRwy);
 					t->clearedToTakeOff = false;
@@ -972,16 +956,16 @@ void FGTower::CheckCircuitList(double dt) {
 		TowerPlaneRec* t = *circuitListItr;
 		//cout << ident <<  ' ' << circuitList.size() << ' ' << t->plane.callsign << " " << t->leg << " eta " << t->eta << '\n';
 		if(t->isUser) {
-			t->pos.setlon(user_lon_node->getDoubleValue());
-			t->pos.setlat(user_lat_node->getDoubleValue());
-			t->pos.setelev(user_elev_node->getDoubleValue());
+			t->pos.setLongitudeDeg(user_lon_node->getDoubleValue());
+			t->pos.setLatitudeDeg(user_lat_node->getDoubleValue());
+			t->pos.setElevationM(user_elev_node->getDoubleValue());
 			//cout << ident <<  ' ' << circuitList.size() << ' ' << t->plane.callsign << " " << t->leg << " eta " << t->eta << '\n';
 		} else {
-			t->pos = t->planePtr->GetPos();		// We should probably only set the pos's on one walk through the traffic list in the update function, to save a few CPU should we end up duplicating this.
+			t->pos = t->planePtr->getPos();		// We should probably only set the pos's on one walk through the traffic list in the update function, to save a few CPU should we end up duplicating this.
 			t->landingType = t->planePtr->GetLandingOption();
 			//cout << "AI plane landing option is " << t->landingType << '\n';
 		}
-		Point3D tortho = ortho.ConvertToLocal(t->pos);
+		SGVec3d tortho = ortho.ConvertToLocal(t->pos);
 		if(t->isUser) {
 			// Need to figure out which leg he's on
 			//cout << "rwy.hdg = " << rwy.hdg << " user hdg = " << user_hdg_node->getDoubleValue();
@@ -1224,11 +1208,11 @@ void FGTower::CheckRunwayList(double dt) {
 			rwyListItr = rwyList.begin();
 			TowerPlaneRec* t = *rwyListItr;
 			if(t->isUser) {
-				t->pos.setlon(user_lon_node->getDoubleValue());
-				t->pos.setlat(user_lat_node->getDoubleValue());
-				t->pos.setelev(user_elev_node->getDoubleValue());
+				t->pos.setLongitudeDeg(user_lon_node->getDoubleValue());
+				t->pos.setLatitudeDeg(user_lat_node->getDoubleValue());
+				t->pos.setElevationM(user_elev_node->getDoubleValue());
 			} else {
-				t->pos = t->planePtr->GetPos();		// We should probably only set the pos's on one walk through the traffic list in the update function, to save a few CPU should we end up duplicating this.
+				t->pos = t->planePtr->getPos();		// We should probably only set the pos's on one walk through the traffic list in the update function, to save a few CPU should we end up duplicating this.
 			}
 			bool on_rwy = OnActiveRunway(t->pos);
 			if(!on_rwy) {
@@ -1288,15 +1272,15 @@ void FGTower::CheckApproachList(double dt) {
 		//cout << "t = " << t << endl;
 		//cout << "Checking " << t->plane.callsign << endl;
 		if(t->isUser) {
-			t->pos.setlon(user_lon_node->getDoubleValue());
-			t->pos.setlat(user_lat_node->getDoubleValue());
-			t->pos.setelev(user_elev_node->getDoubleValue());
+			t->pos.setLongitudeDeg(user_lon_node->getDoubleValue());
+			t->pos.setLatitudeDeg(user_lat_node->getDoubleValue());
+			t->pos.setElevationM(user_elev_node->getDoubleValue());
 		} else {
 			// TODO - set/update the position if it's an AI plane
 		}
 		doThresholdETACalc();	// We need this here because planes in the lists are not guaranteed to *always* have the correct ETA
 		//cout << "eta is " << t->eta << ", rwy is " << (rwyList.size() ? "occupied " : "clear ") << '\n';
-		Point3D tortho = ortho.ConvertToLocal(t->pos);
+		SGVec3d tortho = ortho.ConvertToLocal(t->pos);
 		if(t->eta < 12 && rwyList.size() && !(t->instructedToGoAround)) {
 			// TODO - need to make this more sophisticated 
 			// eg. is the plane accelerating down the runway taking off [OK],
@@ -1425,11 +1409,11 @@ void FGTower::CheckDepartureList(double dt) {
 		//cout << "Dep list, checking " << t->plane.callsign;
 		
 		double distout;	// meters
-		if(t->isUser) distout = dclGetHorizontalSeparation(Point3D(lon, lat, elev), Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), user_elev_node->getDoubleValue()));
-		else distout = dclGetHorizontalSeparation(Point3D(lon, lat, elev), t->planePtr->GetPos());
+		if(t->isUser) distout = dclGetHorizontalSeparation(SGGeod::fromDegM(lon, lat, elev), SGGeod::fromDegM(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), user_elev_node->getDoubleValue()));
+		else distout = dclGetHorizontalSeparation(SGGeod::fromDegM(lon, lat, elev), t->planePtr->getPos());
 		//cout << " distout = " << distout << '\n';
 		if(t->isUser && !(t->clearedToTakeOff)) {	// HACK - we use clearedToTakeOff to check if ATC already contacted with plane (and cleared take-off) or not
-			if(!OnAnyRunway(Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), 0.0), false)) {
+			if(!OnAnyRunway(SGGeod::fromDegM(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), 0.0), false)) {
 				current_atcdialog->remove_entry(ident, USER_REQUEST_TAKE_OFF, TOWER);
 				t->clearedToTakeOff = true;	// FIXME
 			}
@@ -1526,20 +1510,18 @@ void FGTower::DoRwyDetails() {
   }
     // move to the +l end/center of the runway
   //cout << "Runway center is at " << runway._lon << ", " << runway._lat << '\n';
-    Point3D origin = Point3D(runway->longitude(), runway->latitude(), aptElev);
-  Point3D ref = origin;
-    double tshlon, tshlat, tshr;
+  double tshlon, tshlat, tshr;
   double tolon, tolat, tor;
   rwy.length = runway->lengthM();
-    geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), other_way, 
-                        rwy.length / 2.0 - 25.0, &tshlat, &tshlon, &tshr );
-    geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), runway->headingDeg(), 
-                        rwy.length / 2.0 - 25.0, &tolat, &tolon, &tor );
-
+  geo_direct_wgs_84 ( aptElev, runway->latitude(), runway->longitude(), other_way, 
+                      rwy.length / 2.0 - 25.0, &tshlat, &tshlon, &tshr );
+  geo_direct_wgs_84 ( aptElev, runway->latitude(), runway->longitude(), runway->headingDeg(), 
+                      rwy.length / 2.0 - 25.0, &tolat, &tolon, &tor );
+  
   // Note - 25 meters in from the runway end is a bit of a hack to put the plane ahead of the user.
   // now copy what we need out of runway into rwy
-    rwy.threshold_pos = Point3D(tshlon, tshlat, aptElev);
-  Point3D takeoff_end = Point3D(tolon, tolat, aptElev);
+  rwy.threshold_pos = SGGeod::fromDegM(tshlon, tshlat, aptElev);
+  SGGeod takeoff_end = SGGeod::fromDegM(tolon, tolat, aptElev);
   //cout << "Threshold position = " << tshlon << ", " << tshlat << ", " << aptElev << '\n';
   //cout << "Takeoff position = " << tolon << ", " << tolat << ", " << aptElev << '\n';
   rwy.hdg = runway->headingDeg();
@@ -1561,10 +1543,10 @@ void FGTower::DoRwyDetails() {
 
 // Figure out if a given position lies on the active runway
 // Might have to change when we consider more than one active rwy.
-bool FGTower::OnActiveRunway(const Point3D& pt) {
+bool FGTower::OnActiveRunway(const SGGeod& pt) {
 	// TODO - check that the centre calculation below isn't confused by displaced thesholds etc.
-	Point3D xyc((rwy.end1ortho.x() + rwy.end2ortho.x())/2.0, (rwy.end1ortho.y() + rwy.end2ortho.y())/2.0, 0.0);
-	Point3D xyp = ortho.ConvertToLocal(pt);
+	SGVec3d xyc((rwy.end1ortho.x() + rwy.end2ortho.x())/2.0, (rwy.end1ortho.y() + rwy.end2ortho.y())/2.0, 0.0);
+	SGVec3d xyp = ortho.ConvertToLocal(pt);
 	
 	//cout << "Length offset = " << fabs(xyp.y() - xyc.y()) << '\n';
 	//cout << "Width offset = " << fabs(xyp.x() - xyc.x()) << '\n';
@@ -1579,7 +1561,7 @@ bool FGTower::OnActiveRunway(const Point3D& pt) {
 
 // Figure out if a given position lies on any runway or not
 // Only call this at startup - reading the runways database is expensive and needs to be fixed!
-bool FGTower::OnAnyRunway(const Point3D& pt, bool onGround) {
+bool FGTower::OnAnyRunway(const SGGeod& pt, bool onGround) {
 	ATCData ad;
 	double dist = current_commlist->FindClosest(lon, lat, elev, ad, TOWER, 7.0);
 	if(dist < 0.0) {
@@ -1832,7 +1814,7 @@ void FGTower::CalcETA(TowerPlaneRec* tpr, bool printout) {
 	// Sign convention - dist_out is -ve for approaching planes and +ve for departing planes
 	// dist_across is +ve in the pattern direction - ie a plane correctly on downwind will have a +ve dist_across
 	
-	Point3D op = ortho.ConvertToLocal(tpr->pos);
+	SGVec3d op = ortho.ConvertToLocal(tpr->pos);
 	//if(printout) {
 	//if(!tpr->isUser) cout << "Orthopos is " << op.x() << ", " << op.y() << ' ';
 	//cout << "opType is " << tpr->opType << '\n';
@@ -1952,7 +1934,7 @@ void FGTower::doThresholdETACalc() {
 	// Do the approach list first
 	for(twrItr = appList.begin(); twrItr != appList.end(); twrItr++) {
 		TowerPlaneRec* tpr = *twrItr;
-		if(!(tpr->isUser)) tpr->pos = tpr->planePtr->GetPos();
+		if(!(tpr->isUser)) tpr->pos = tpr->planePtr->getPos();
 		//cout << "APP: ";
 		CalcETA(tpr);
 	}	
@@ -1960,7 +1942,7 @@ void FGTower::doThresholdETACalc() {
 	//cout << "Circuit list size is " << circuitList.size() << '\n';
 	for(twrItr = circuitList.begin(); twrItr != circuitList.end(); twrItr++) {
 		TowerPlaneRec* tpr = *twrItr;
-		if(!(tpr->isUser)) tpr->pos = tpr->planePtr->GetPos();
+		if(!(tpr->isUser)) tpr->pos = tpr->planePtr->getPos();
 		//cout << "CIRC: ";
 		CalcETA(tpr);
 	}
@@ -2051,7 +2033,7 @@ void FGTower::ContactAtHoldShort(const PlaneRec& plane, FGAIPlane* requestee, to
 	t->clearedToLineUp = false;
 	t->clearedToTakeOff = false;
 	t->opType = operation;
-	t->pos = requestee->GetPos();
+	t->pos = requestee->getPos();
 	
 	//cout << "Hold Short reported by " << plane.callsign << '\n';
 	SG_LOG(SG_ATC, SG_BULK, "Hold Short reported by " << plane.callsign);
@@ -2083,7 +2065,7 @@ void FGTower::RegisterAIPlane(const PlaneRec& plane, FGAIPlane* ai, const tower_
 	t->planePtr = ai;
 	t->opType = op;
 	t->leg = lg;
-	t->pos = ai->GetPos();
+	t->pos = ai->getPos();
 	
 	CalcETA(t);
 	
@@ -2117,9 +2099,9 @@ void FGTower::VFRArrivalContact(const string& ID, const LandingType& opt) {
 			//cout << "NOT t\n";
 			t = new TowerPlaneRec;
 			t->isUser = true;
-			t->pos.setlon(user_lon_node->getDoubleValue());
-			t->pos.setlat(user_lat_node->getDoubleValue());
-			t->pos.setelev(user_elev_node->getDoubleValue());
+			t->pos.setLongitudeDeg(user_lon_node->getDoubleValue());
+			t->pos.setLatitudeDeg(user_lat_node->getDoubleValue());
+			t->pos.setElevationM(user_elev_node->getDoubleValue());
 		} else {
 			//cout << "IS t\n";
 			// Oops - the plane is already registered with this tower - maybe we took off and flew a giant circuit without
@@ -2163,7 +2145,7 @@ void FGTower::VFRArrivalContact(const PlaneRec& plane, FGAIPlane* requestee, con
 	t->plane = plane;
 	t->planePtr = requestee;
 	t->landingType = lt;
-	t->pos = requestee->GetPos();
+	t->pos = requestee->getPos();
 	
 	//cout << "Hold Short reported by " << plane.callsign << '\n';
 	SG_LOG(SG_ATC, SG_BULK, "VFR arrival contact made by " << plane.callsign);
@@ -2389,12 +2371,12 @@ void FGTower::ReportDownwind(const string& ID) {
 		RemoveFromAppList(ID);
 		t->leg = DOWNWIND;
 		if(t->isUser) {
-			t->pos.setlon(user_lon_node->getDoubleValue());
-			t->pos.setlat(user_lat_node->getDoubleValue());
-			t->pos.setelev(user_elev_node->getDoubleValue());
+			t->pos.setLongitudeDeg(user_lon_node->getDoubleValue());
+			t->pos.setLatitudeDeg(user_lat_node->getDoubleValue());
+			t->pos.setElevationM(user_elev_node->getDoubleValue());
 		} else {
 			// ASSERT(t->planePtr != NULL);
-			t->pos = t->planePtr->GetPos();
+			t->pos = t->planePtr->getPos();
 		}
 		CalcETA(t);
 		AddToCircuitList(t);
@@ -2418,12 +2400,12 @@ void FGTower::ReportGoingAround(const string& ID) {
 		RemoveFromAppList(ID);
 		t->leg = CLIMBOUT;
 		if(t->isUser) {
-			t->pos.setlon(user_lon_node->getDoubleValue());
-			t->pos.setlat(user_lat_node->getDoubleValue());
-			t->pos.setelev(user_elev_node->getDoubleValue());
+			t->pos.setLongitudeDeg(user_lon_node->getDoubleValue());
+			t->pos.setLatitudeDeg(user_lat_node->getDoubleValue());
+			t->pos.setElevationM(user_elev_node->getDoubleValue());
 		} else {
 			// ASSERT(t->planePtr != NULL);
-			t->pos = t->planePtr->GetPos();
+			t->pos = t->planePtr->getPos();
 		}
 		CalcETA(t);
 		AddToCircuitList(t);
@@ -2546,7 +2528,7 @@ string FGTower::GenText(const string& m, int c) {
 					if (rwyOccupied) {
 						tmp = "Ready for take-off";
 					} else {
-						if (OnAnyRunway(Point3D(user_lon_node->getDoubleValue(),
+						if (OnAnyRunway(SGGeod::fromDegM(user_lon_node->getDoubleValue(),
 								user_lat_node->getDoubleValue(), 0.0),true)) {
 							tmp = "Request take-off clearance";
 						} else {
@@ -2558,7 +2540,7 @@ string FGTower::GenText(const string& m, int c) {
 				else if ( strcmp ( tag, "@MI" ) == 0 ) {
 					char buf[10];
 					//sprintf( buf, "%3.1f", tpars.miles );
-					int dist_miles = (int)dclGetHorizontalSeparation(Point3D(lon, lat, elev), Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), user_elev_node->getDoubleValue())) / 1600;
+					int dist_miles = (int)dclGetHorizontalSeparation(SGGeod::fromDegM(lon, lat, elev), SGGeod::fromDegM(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), user_elev_node->getDoubleValue())) / 1600;
 					sprintf(buf, "%i", dist_miles);
 					strcat( &dum[0], &buf[0] );
 				}
@@ -2578,7 +2560,7 @@ string FGTower::GenText(const string& m, int c) {
 					}
 				}
 				else if(strcmp(tag, "@CD") == 0) {	// @CD = compass direction
-					double h = GetHeadingFromTo(Point3D(lon, lat, elev), Point3D(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), user_elev_node->getDoubleValue()));
+					double h = GetHeadingFromTo(SGGeod::fromDegM(lon, lat, elev), SGGeod::fromDegM(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), user_elev_node->getDoubleValue()));
 					while(h < 0.0) h += 360.0;
 					while(h > 360.0) h -= 360.0;
 					if(h < 22.5 || h > 337.5) {

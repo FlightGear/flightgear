@@ -313,7 +313,7 @@ double fgGetAirportElev( const string& id )
 
 
 // get airport position
-Point3D fgGetAirportPos( const string& id )
+SGGeod fgGetAirportPos( const string& id )
 {
     SG_LOG( SG_ATC, SG_BULK,
             "Finding position for airport: " << id );
@@ -321,8 +321,8 @@ Point3D fgGetAirportPos( const string& id )
     const FGAirport *a = fgFindAirportID( id);
 
     if (a) {
-        return Point3D(a->getLongitude(), a->getLatitude(), a->getElevation());
+        return SGGeod::fromDegM(a->getLongitude(), a->getLatitude(), a->getElevation());
     } else {
-        return Point3D(0.0, 0.0, -9999.0);
+        return SGGeod::fromDegM(0.0, 0.0, -9999.0);
     }
 }

@@ -322,8 +322,7 @@ void FGATCDialog::FreqDialog() {
 	double lon = fgGetDouble("/position/longitude-deg");
 	double lat = fgGetDouble("/position/latitude-deg");
 	double elev = fgGetDouble("/position/altitude-ft");
-	Point3D aircraft = sgGeodToCart(Point3D(lon * SGD_DEGREES_TO_RADIANS,
-		lat * SGD_DEGREES_TO_RADIANS, elev));
+	SGVec3d aircraft = SGVec3d::fromGeod(SGGeod::fromDegM(lon, lat, elev));
 
 	// search stations in range
 	int num_stat = current_commlist->FindByPos(lon, lat, elev, 50.0, &atc_stations);
@@ -332,8 +331,8 @@ void FGATCDialog::FreqDialog() {
 		// fill map (sorts by distance and removes duplicates)
 		comm_list_iterator itr = atc_stations.begin();
 		for (; itr != atc_stations.end(); ++itr) {
-			Point3D station = Point3D(itr->x, itr->y, itr->z);
-			double distance = aircraft.distance3Dsquared(station);
+			SGVec3d station(itr->x, itr->y, itr->z);
+			double distance = distSqr(aircraft, station);
 			uniq[atcdata(itr->ident, itr->name, distance)] = true;
 		}
 		// create button per map entry (modified copy of <button-template>)

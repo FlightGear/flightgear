@@ -26,7 +26,6 @@
 
 #include <simgear/compiler.h>
 
-#include <plib/sg.h>
 #include <plib/ul.h>
 
 #include <Environment/environment_mgr.hxx>

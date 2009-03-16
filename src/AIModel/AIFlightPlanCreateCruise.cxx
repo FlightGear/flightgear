@@ -27,8 +27,6 @@
 #include <iostream>
 #include "AIFlightPlan.hxx"
 #include "AIAircraft.hxx"
-#include <simgear/math/polar3d.hxx>
-#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/route/waypoint.hxx>
 
 #include <Navaids/awynet.hxx>

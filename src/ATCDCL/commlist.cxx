@@ -32,7 +32,6 @@
 #include <Airports/simple.hxx>
 
 #include "commlist.hxx"
-//#include "atislist.hxx"
 #include "ATCutils.hxx"
 
 
@@ -115,9 +114,6 @@ bool FGCommList::LoadComms(const SGPath& path) {
 bool FGCommList::FindByFreq( double lon, double lat, double elev, double freq,
 						ATCData* ad, atc_type tp )
 {
-	lon *= SGD_DEGREES_TO_RADIANS;
-	lat *= SGD_DEGREES_TO_RADIANS;
-	
 	// HACK - if freq > 1000 assume it's in KHz, otherwise assume MHz.
 	// A bit ugly but it works for now!!!!
 	comm_list_type stations;
@@ -130,20 +126,18 @@ bool FGCommList::FindByFreq( double lon, double lat, double elev, double freq,
 	comm_list_iterator last = stations.end();
 	
 	// double az1, az2, s;
-	Point3D aircraft = sgGeodToCart( Point3D(lon, lat, elev) );
-	Point3D station;
+	SGVec3d aircraft = SGVec3d::fromGeod(SGGeod::fromDegM(lon, lat, elev));
 	const double orig_max_d = 1e100; 
 	double max_d = orig_max_d;
-	double d;
 	// TODO - at the moment this loop returns the first match found in range
 	// We want to return the closest match in the event of a frequency conflict
 	for ( ; current != last ; ++current ) {
 		//cout << "testing " << current->get_ident() << endl;
-		station = Point3D(current->x, current->y, current->z);
+                SGVec3d station(current->x, current->y, current->z);
 		//cout << "aircraft = " << aircraft << endl;
 		//cout << "station = " << station << endl;
 		
-		d = aircraft.distance3Dsquared( station );
+		double d = distSqr(aircraft, station);
 		
 		//cout << "  dist = " << sqrt(d)
 		//     << "  range = " << current->range * SG_NM_TO_METER << endl;
@@ -192,17 +186,12 @@ int FGCommList::FindByPos(double lon, double lat, double elev, double range, com
 			comm_list_iterator current = Fstations.begin();
 			comm_list_iterator last = Fstations.end();
 			
-			double rlon = lon * SGD_DEGREES_TO_RADIANS;
-			double rlat = lat * SGD_DEGREES_TO_RADIANS;
-			
 			// double az1, az2, s;
-			Point3D aircraft = sgGeodToCart( Point3D(rlon, rlat, elev) );
-			Point3D station;
-			double d;
+                        SGVec3d aircraft = SGVec3d::fromGeod(SGGeod::fromDegM(lon, lat, elev));
 			for(; current != last; ++current) {
 				if((current->type == tp) || (tp == INVALID)) {
-					station = Point3D(current->x, current->y, current->z);
-					d = aircraft.distance3Dsquared( station );
+                                        SGVec3d station(current->x, current->y, current->z);
+					double d = distSqr(aircraft, station);
 					// NOTE The below is squared since we match to distance3Dsquared (above) to avoid a sqrt.
 					if ( d < (current->range * SG_NM_TO_METER
 					     * current->range * SG_NM_TO_METER ) ) {
@@ -238,11 +227,10 @@ double FGCommList::FindClosest( double lon, double lat, double elev, ATCData& ad
 			double tmp;
 			for(itr = stations.begin(); itr != stations.end(); ++itr) {	
 				ATCData ad2 = *itr;
-				//Point3D p1(*itr.lon, *itr.lat, *itr.elev);
-				Point3D p1(ad2.lon, ad2.lat, ad2.elev);
+				SGGeod p1 = SGGeod::fromDegM(ad2.lon, ad2.lat, ad2.elev);
 				const FGAirport *a = fgFindAirportID(ad2.ident);
 				if (a) {
-					Point3D p2(lon, lat, elev);
+					SGGeod p2 = SGGeod::fromDegM(lon, lat, elev);
 					tmp = dclGetHorizontalSeparation(p1, p2);
 					if(tmp <= closest) {
 						closest = tmp;

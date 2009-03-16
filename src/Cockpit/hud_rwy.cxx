@@ -30,8 +30,6 @@
 #include <Aircraft/aircraft.hxx>
 #include <Environment/environment.hxx>
 #include <Environment/environment_mgr.hxx>
-#include <simgear/math/sg_geodesy.hxx>
-#include <simgear/math/polar3d.hxx>
 #include <ATCDCL/ATCutils.hxx>
 
 #include <osg/GLU>

@@ -33,7 +33,6 @@
 #include <Airports/simple.hxx>
 
 #include <simgear/constants.h>
-#include <simgear/math/polar3d.hxx>
 #include <simgear/misc/sg_path.hxx>
 
 #include <Environment/environment_mgr.hxx>
@@ -413,9 +412,8 @@ void FGApproach::calc_wp( const int &i ) {
 	
 	int wpn = planes[i].wpn;
 	// waypoint 0: Threshold of active runway
-	calc_gc_course_dist(Point3D(lon*SGD_DEGREES_TO_RADIANS, lat*SGD_DEGREES_TO_RADIANS, 0.0),
-	                    Point3D(active_rw_lon*SGD_DEGREES_TO_RADIANS,active_rw_lat*SGD_DEGREES_TO_RADIANS, 0.0 ),
-	                    &course, &d);
+        course = SGGeoc::courseRad(SGGeoc::fromDegM(lon, lat, 6e6), SGGeoc::fromDegM(active_rw_lon, active_rw_lat, 6e6));
+        d = SGGeoc::distanceM(SGGeoc::fromDegM(lon, lat, 6e6), SGGeoc::fromDegM(active_rw_lon, active_rw_lat, 6e6));
 	double d1 = active_rw_hdg+180.0;
 	if ( d1 > 360.0 ) d1 -=360.0;
 	calc_cd_head_dist(360.0-course*SGD_RADIANS_TO_DEGREES, d/SG_NM_TO_METER, 
@@ -587,13 +585,9 @@ void FGApproach::update_plane_dat() {
     planes[i].hdg = hdg_node->getDoubleValue();
     planes[i].spd = speed_node->getDoubleValue();
 
-    /*Point3D aircraft = sgGeodToCart( Point3D(planes[i].lon*SGD_DEGREES_TO_RADIANS, 
-					     planes[i].lat*SGD_DEGREES_TO_RADIANS, 
-					     planes[i].alt*SG_FEET_TO_METER) );*/
     double course, distance;
-    calc_gc_course_dist(Point3D(lon*SGD_DEGREES_TO_RADIANS, lat*SGD_DEGREES_TO_RADIANS, 0.0),
-			Point3D(planes[i].lon*SGD_DEGREES_TO_RADIANS,planes[i].lat*SGD_DEGREES_TO_RADIANS, 0.0 ),
-			&course, &distance);
+    course = SGGeoc::courseRad(SGGeoc::fromDegM(lon, lat, 6e6), SGGeoc::fromDegM(planes[i].lon, active_rw_lat, 6e6));
+    distance = SGGeoc::distanceM(SGGeoc::fromDegM(lon, lat, 6e6), SGGeoc::fromDegM(planes[i].lon, active_rw_lat, 6e6));
     planes[i].dist = distance/SG_NM_TO_METER;
     planes[i].brg  = 360.0-course*SGD_RADIANS_TO_DEGREES;
 

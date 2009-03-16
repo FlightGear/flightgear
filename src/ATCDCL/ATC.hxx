@@ -91,9 +91,9 @@ struct ATCData {
 // perhaps we could use an FGRunway instead of this.
 // That wouldn't cache the orthopos though.
 struct RunwayDetails {
-	Point3D threshold_pos;
-	Point3D end1ortho;	// ortho projection end1 (the threshold ATM)
-	Point3D end2ortho;	// ortho projection end2 (the take off end in the current hardwired scheme)
+	SGGeod threshold_pos;
+	SGVec3d end1ortho;	// ortho projection end1 (the threshold ATM)
+	SGVec3d end2ortho;	// ortho projection end2 (the take off end in the current hardwired scheme)
 	double hdg;		// true runway heading
 	double length;	// In *METERS*
 	double width;	// ditto
@@ -297,8 +297,7 @@ operator >> ( std::istream& fin, ATCData& a )
 	// cout << a.ident << endl;
 	
 	// generate cartesian coordinates
-	Point3D geod( a.lon * SGD_DEGREES_TO_RADIANS, a.lat * SGD_DEGREES_TO_RADIANS, a.elev );
-	Point3D cart = sgGeodToCart( geod );
+        SGVec3d cart = SGVec3d::fromGeod(SGGeod::fromRadM(a.lon, a.lat, a.elev));
 	a.x = cart.x();
 	a.y = cart.y();
 	a.z = cart.z();

@@ -54,7 +54,7 @@ using std::cout;
 using namespace simgear;
 
 // extern from Airports/simple.cxx
-extern Point3D fgGetAirportPos( const std::string& id );
+extern SGGeod fgGetAirportPos( const std::string& id );
 
 FGAIMgr::FGAIMgr() {
 	ATC = globals->get_ATC_mgr();
@@ -151,24 +151,6 @@ void FGAIMgr::init() {
 	SearchByPos(15.0);
 	
 	initDone = true;
-	
-	//cout << "AIMgr::init done..." << endl;
-	
-	/*
-	// TESTING
-	FGATCAlignedProjection ortho;
-	ortho.Init(fgGetAirportPos("KEMT"), 205.0);	// Guess of rwy19 heading
-	//Point3D ip = ortho.ConvertFromLocal(Point3D(6000, 1000, 1000));	// 90 deg entry
-	//Point3D ip = ortho.ConvertFromLocal(Point3D(-7000, 3000, 1000));	// 45 deg entry
-	Point3D ip = ortho.ConvertFromLocal(Point3D(1000, -7000, 1000));	// straight-in
-	ATC->AIRegisterAirport("KEMT");
-	FGAIGAVFRTraffic* p = new FGAIGAVFRTraffic();
-	p->SetModel(_defaultModel);
-	p->Init(ip, "KEMT", GenerateShortForm(GenerateUniqueCallsign()));
-	ai_list.push_back(p);
-	traffic[ident].push_back(p);
-	activated["KEMT"] = 1;
-	*/	
 }
 
 void FGAIMgr::bind() {
@@ -185,7 +167,7 @@ void FGAIMgr::update(double dt) {
 	
 	//cout << activated.size() << '\n';
 	
-	Point3D userPos = Point3D(lon_node->getDoubleValue(), lat_node->getDoubleValue(), elev_node->getDoubleValue());
+        SGGeod userPos = SGGeod::fromDegM(lon_node->getDoubleValue(), lat_node->getDoubleValue(), elev_node->getDoubleValue());
 	
 	// TODO - make these class variables!!
 	static int i = 0;
@@ -244,7 +226,7 @@ void FGAIMgr::update(double dt) {
 				//cout << "Size of list is " << (*it).second.size() << " at " << s << '\n';
 				if((*it).second.size()) {
 					FGAIEntity* e = *((*it).second.rbegin());	// Get the last airplane currently scheduled to arrive at this airport.
-					cd = dclGetHorizontalSeparation(e->GetPos(), fgGetAirportPos(s));
+					cd = dclGetHorizontalSeparation(e->getPos(), fgGetAirportPos(s));
 					if(cd < (d < 5000 ? 10000 : d + 5000)) {
 						gen = true;
 					}
@@ -340,11 +322,11 @@ void FGAIMgr::GenerateSimpleAirportTraffic(const string& ident, double min_dist)
 	}
 	*/
 	
-	Point3D aptpos = fgGetAirportPos(ident); 	// TODO - check for elev of -9999
-	//cout << "ident = " << ident << ", elev = " << aptpos.elev() << '\n';
+	SGGeod aptpos = fgGetAirportPos(ident); 	// TODO - check for elev of -9999
+	//cout << "ident = " << ident << ", elev = " << aptpos.getElevationM() << '\n';
 	
 	// Operate from airports at 3000ft and below only to avoid the default cloud layers and since we don't degrade AI performance with altitude.
-	if(aptpos.elev() > 3000) {
+	if(aptpos.getElevationM() > 3000) {
 		//cout << "High alt airports not yet supported - returning\n";
 		return;
 	}
@@ -354,7 +336,7 @@ void FGAIMgr::GenerateSimpleAirportTraffic(const string& ident, double min_dist)
 	
 	// Get the time and only operate VFR in the (approximate) daytime.
 	struct tm *t = globals->get_time_params()->getGmt();
-	int loc_time = t->tm_hour + int(aptpos.lon() / (360.0 / 24.0));
+	int loc_time = t->tm_hour + int(aptpos.getLongitudeDeg() / (360.0 / 24.0));
 	while (loc_time < 0)
 		loc_time += 24;
 	while (loc_time >= 24)
@@ -367,7 +349,7 @@ void FGAIMgr::GenerateSimpleAirportTraffic(const string& ident, double min_dist)
 	double visibility;
 	FGEnvironment stationweather =
             ((FGEnvironmentMgr *)globals->get_subsystem("environment"))
-              ->getEnvironment(aptpos.lat(), aptpos.lon(), aptpos.elev());	// TODO - check whether this should take ft or m for elev.
+              ->getEnvironment(aptpos.getLatitudeDeg(), aptpos.getLongitudeDeg(), aptpos.getElevationM());	// TODO - check whether this should take ft or m for elev.
 	visibility = stationweather.get_visibility_m();
 	// Technically we can do VFR down to 1 mile (1600m) but that's pretty murky!
 	//cout << "vis = " << visibility << '\n';
@@ -376,7 +358,7 @@ void FGAIMgr::GenerateSimpleAirportTraffic(const string& ident, double min_dist)
 	ATC->AIRegisterAirport(ident);
 	
 	// Next - get the distance from user to the airport.
-	Point3D userpos = Point3D(lon_node->getDoubleValue(), lat_node->getDoubleValue(), elev_node->getDoubleValue());
+	SGGeod userpos = SGGeod::fromDegM(lon_node->getDoubleValue(), lat_node->getDoubleValue(), elev_node->getDoubleValue());
 	double d = dclGetHorizontalSeparation(userpos, aptpos);	// in meters
 	
 	int lev = fgGetInt("/sim/ai-traffic/level");
@@ -413,8 +395,8 @@ void FGAIMgr::GenerateSimpleAirportTraffic(const string& ident, double min_dist)
 			FGAIGAVFRTraffic* t = new FGAIGAVFRTraffic();
 			t->SetModel(cessna ? _defaultModel : _piperModel);
 			//cout << "Generating VFR traffic " << s << " inbound to " << ident << " " << ad << " meters out from " << dir << " degrees\n";
-			Point3D tpos = dclUpdatePosition(aptpos, dir, 6.0, ad);
-			if(tpos.elev() > (aptpos.elev() + 3000.0)) tpos.setelev(aptpos.elev() + 3000.0);
+			SGGeod tpos = dclUpdatePosition(aptpos, dir, 6.0, ad);
+			if(tpos.getElevationM() > (aptpos.getElevationM() + 3000.0)) tpos.setElevationM(aptpos.getElevationM() + 3000.0);
 			t->Init(tpos, ident, s);
 			ai_list.push_back(t);
 		}
@@ -473,8 +455,8 @@ void FGAIMgr::GenerateSimpleAirportTraffic(const string& ident, double min_dist)
 			FGAIGAVFRTraffic* t = new FGAIGAVFRTraffic();
 			t->SetModel(cessna ? _defaultModel.get() : (_havePiperModel ? _piperModel.get() : _defaultModel.get()));
 			//cout << "Generating VFR traffic " << s << " inbound to " << ident << " " << ad << " meters out from " << dir << " degrees\n";
-			Point3D tpos = dclUpdatePosition(aptpos, dir, 6.0, ad);
-			if(tpos.elev() > (aptpos.elev() + 3000.0)) tpos.setelev(aptpos.elev() + 3000.0);	// FEET yuk :-(
+			SGGeod tpos = dclUpdatePosition(aptpos, dir, 6.0, ad);
+			if(tpos.getElevationM() > (aptpos.getElevationM() + 3000.0)) tpos.setElevationM(aptpos.getElevationM() + 3000.0);	// FEET yuk :-(
 			t->Init(tpos, ident, s);
 			ai_list.push_back(t);
 			traffic[ident].push_back(t);
@@ -522,8 +504,6 @@ void FGAIMgr::SearchByPos(double range) {
 				
 				//double rlon = lon * SGD_DEGREES_TO_RADIANS;
 				//double rlat = lat * SGD_DEGREES_TO_RADIANS;
-				//Point3D aircraft = sgGeodToCart( Point3D(rlon, rlat, elev) );
-				//Point3D airport;
 				for(; current != last; ++current) {
 					//cout << "Found " << *current << endl;;
 					if(activated.find(*current) == activated.end()) {
@@ -557,7 +537,7 @@ void FGAIMgr::SearchByPos(double range) {
 		for(twd_itr = towered.begin(); twd_itr != towered.end(); twd_itr++) {
 			// Only activate the closest airport not already activated each time.
 			if(activated.find(twd_itr->ident) == activated.end()) {
-				double sep = dclGetHorizontalSeparation(Point3D(lon, lat, elev), fgGetAirportPos(twd_itr->ident));
+                                double sep = dclGetHorizontalSeparation(SGGeod::fromDegM(lon, lat, elev), fgGetAirportPos(twd_itr->ident));
 				if(sep < closest) {
 					closest = sep;
 					s = twd_itr->ident;

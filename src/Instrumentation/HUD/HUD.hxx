@@ -38,8 +38,6 @@ using std::vector;
 
 #include <osg/State>
 
-#include <plib/sg.h>
-
 #include <simgear/math/SGLimits.hxx>
 #include <simgear/constants.h>
 #include <simgear/structure/subsystem_mgr.hxx>

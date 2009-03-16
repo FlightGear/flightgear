@@ -32,9 +32,7 @@
 #include <osg/Node>
 #include <osgDB/FileUtils>
 
-#include <simgear/math/point3d.hxx>
-#include <simgear/math/polar3d.hxx>
-#include <simgear/math/sg_geodesy.hxx>
+#include <simgear/math/SGMath.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>

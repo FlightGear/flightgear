@@ -50,11 +50,7 @@
 #include <string>
 #include <vector>
 
-#include <plib/sg.h>
-
 #include <simgear/compiler.h>
-#include <simgear/math/polar3d.hxx>
-#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/route/waypoint.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>

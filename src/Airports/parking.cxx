@@ -26,22 +26,7 @@
 #  include <config.h>
 #endif
 
-//#include <algorithm>
-
 #include <simgear/compiler.h>
-
-//#include <plib/sg.h>
-//#include <plib/ul.h>
-
-//#include <Environment/environment_mgr.hxx>
-//#include <Environment/environment.hxx>
-//#include <simgear/misc/sg_path.hxx>
-//#include <simgear/props/props.hxx>
-//#include <simgear/structure/subsystem_mgr.hxx>
-//#include <simgear/debug/logstream.hxx>
-//#include <Main/globals.hxx>
-//#include <Main/fg_props.hxx>
-//#include <Airports/runways.hxx>
 
 #include <string>
 

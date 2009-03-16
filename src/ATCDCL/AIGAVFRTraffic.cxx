@@ -23,9 +23,9 @@
 #  include <config.h>
 #endif
 
+#include <simgear/math/SGMath.hxx>
 #include <Airports/runways.hxx>
 #include <Main/globals.hxx>
-#include <simgear/math/point3d.hxx>
 #include <string>
 #include <math.h>
 
@@ -39,7 +39,7 @@ using std::string;
 #include "tower.hxx"
 
 // extern from Airports/simple.cxx
-extern Point3D fgGetAirportPos( const std::string& id );
+extern SGGeod fgGetAirportPos( const std::string& id );
 
 FGAIGAVFRTraffic::FGAIGAVFRTraffic() {
 	ATC = globals->get_ATC_mgr();
@@ -71,7 +71,7 @@ FGAIGAVFRTraffic::~FGAIGAVFRTraffic() {
 
 // Init en-route to destID at point pt.
 // TODO - no idea what to do if pt is above planes ceiling due mountains!!
-bool FGAIGAVFRTraffic::Init(const Point3D& pt, const string& destID, const string& callsign) {
+bool FGAIGAVFRTraffic::Init(const SGGeod& pt, const string& destID, const string& callsign) {
 	FGAILocalTraffic::Init(callsign, destID, EN_ROUTE);
 	// TODO FIXME - to get up and running we're going to ignore elev and get FGAIMgr to 
 	// pass in known good values for the test location.  Need to fix this!!! (or at least canonically decide who has responsibility for setting elev).
@@ -79,8 +79,8 @@ bool FGAIGAVFRTraffic::Init(const Point3D& pt, const string& destID, const strin
 	_destID = destID;
 	_pos = pt;
 	_destPos = fgGetAirportPos(destID);	// TODO - check if we are within the tower catchment area already.
-	_cruise_alt = (_destPos.elev() + 2500.0) * SG_FEET_TO_METER;	// TODO look at terrain elevation as well
-	_pos.setelev(_cruise_alt);
+	_cruise_alt = (_destPos.getElevationM() + 2500.0) * SG_FEET_TO_METER;	// TODO look at terrain elevation as well
+	_pos.setElevationM(_cruise_alt);
 	// initially set waypoint as airport location
 	_wp = _destPos;
 	// Set the initial track
@@ -120,7 +120,7 @@ void FGAIGAVFRTraffic::Update(double dt) {
 		
 		// we shouldn't really need this since there's a LOD of 10K on the whole plane anyway I think.
 		// There are two _aip.setVisible statements set when _local = true that can be removed if the below is removed.
-		if(dclGetHorizontalSeparation(_pos, Point3D(fgGetDouble("/position/longitude-deg"), fgGetDouble("/position/latitude-deg"), 0.0)) > 8000) _aip.setVisible(false);
+		if(dclGetHorizontalSeparation(_pos, SGGeod::fromDegM(fgGetDouble("/position/longitude-deg"), fgGetDouble("/position/latitude-deg"), 0.0)) > 8000) _aip.setVisible(false);
 		else _aip.setVisible(true);
 		
 	} else if(_local) {
@@ -133,7 +133,7 @@ void FGAIGAVFRTraffic::Update(double dt) {
 void FGAIGAVFRTraffic::FlyPlane(double dt) {
 	if(_climbout) {
 		// Check whether to level off
-		if(_pos.elev() >= _cruise_alt) {
+		if(_pos.getElevationM() >= _cruise_alt) {
 			slope = 0.0;
 			_pitch = 0.0;
 			IAS = _cruise_ias;		// FIXME - use smooth transistion to new speed and attitude.
@@ -163,7 +163,7 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 		// Possibly check whether to start descent before this?
 		//cout << "." << flush;
 		//cout << "sep = " << dclGetHorizontalSeparation(_destPos, _pos) / 1600.0 << '\n';
-		if(dclGetHorizontalSeparation(_destPos, _pos) / 1600.0 < 8.0) {
+                if(dclGetHorizontalSeparation(_destPos, _pos) / 1600.0 < 8.0) {
 			//cout << "-" << flush;
 			if(!_towerContactedIncoming) {
 				//cout << "_" << flush;
@@ -214,10 +214,10 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 					_wp = GetPatternApproachPos();
 					//_hdg = GetHeadingFromTo(_pos, _wp);	// TODO - turn properly!
 					SetTrack(GetHeadingFromTo(_pos, _wp));
-					slope = atan((_wp.elev() - _pos.elev()) / dclGetHorizontalSeparation(_wp, _pos)) * DCL_RADIANS_TO_DEGREES;
+					slope = atan((_wp.getElevationM() - _pos.getElevationM()) / dclGetHorizontalSeparation(_wp, _pos)) * DCL_RADIANS_TO_DEGREES;
 					double thesh_offset = 0.0;
-					Point3D opos = ortho.ConvertToLocal(_pos);
-					double angToApt = atan((_pos.elev() - fgGetAirportElev(airportID)) / (opos.y() - thesh_offset)) * DCL_RADIANS_TO_DEGREES;
+					SGVec3d opos = ortho.ConvertToLocal(_pos);
+					double angToApt = atan((_pos.getElevationM() - fgGetAirportElev(airportID)) / (opos.y() - thesh_offset)) * DCL_RADIANS_TO_DEGREES;
 					//cout << "angToApt = " << angToApt << ' ';
 					slope = (angToApt > -5.0 ? 0.0 : angToApt);
 					//cout << "slope = " << slope << '\n';
@@ -234,7 +234,7 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 					_incoming = true;
 					_wp = GetPatternApproachPos();
 					SetTrack(GetHeadingFromTo(_pos, _wp));
-					slope = atan((_wp.elev() - _pos.elev()) / dclGetHorizontalSeparation(_wp, _pos)) * DCL_RADIANS_TO_DEGREES;
+					slope = atan((_wp.getElevationM() - _pos.getElevationM()) / dclGetHorizontalSeparation(_wp, _pos)) * DCL_RADIANS_TO_DEGREES;
 					//cout << "slope = " << slope << '\n';
 					pending_transmission = "Report ";
 					pending_transmission += (patternDirection == 1 ? "right downwind " : "left downwind ");
@@ -245,15 +245,15 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 					ConditionalTransmit(4);
 				}
 			}
-			if(_pos.elev() < (fgGetAirportElev(airportID) + (1000.0 * SG_FEET_TO_METER))) slope = 0.0;	
+			if(_pos.getElevationM() < (fgGetAirportElev(airportID) + (1000.0 * SG_FEET_TO_METER))) slope = 0.0;	
 		}
 	}
 	if(_incoming) {
 		//cout << "i" << '\n';
-		Point3D orthopos = ortho.ConvertToLocal(_pos);
+		SGVec3d orthopos = ortho.ConvertToLocal(_pos);
 		// TODO - Check whether to start descent
 		// become _local after the 3 mile report.
-		if(_pos.elev() < (fgGetAirportElev(airportID) + (1000.0 * SG_FEET_TO_METER))) slope = 0.0;	
+		if(_pos.getElevationM() < (fgGetAirportElev(airportID) + (1000.0 * SG_FEET_TO_METER))) slope = 0.0;	
 		// TODO - work out why I needed to add the above line to stop the plane going underground!!!
 		// (Although it's worth leaving it in as a robustness check anyway).
 		if(_straightIn) {
@@ -264,9 +264,9 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 				//cout << "Established at " << orthopos << '\n';
 			}
 			double thesh_offset = 30.0;
-			//cout << "orthopos.y = " << orthopos.y() << " alt = " << _pos.elev() - fgGetAirportElev(airportID) << '\n';
+			//cout << "orthopos.y = " << orthopos.y() << " alt = " << _pos.getElevationM() - fgGetAirportElev(airportID) << '\n';
 			if(_established && (orthopos.y() > -5400.0)) {
-				slope = atan((_pos.elev() - fgGetAirportElev(airportID)) / (orthopos.y() - thesh_offset)) * DCL_RADIANS_TO_DEGREES;
+				slope = atan((_pos.getElevationM() - fgGetAirportElev(airportID)) / (orthopos.y() - thesh_offset)) * DCL_RADIANS_TO_DEGREES;
 				//cout << "slope0 = " << slope << '\n';
 			}
 			//cout << "slope1 = " << slope << '\n';
@@ -310,7 +310,7 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 			} else {
 				//cout << "D" << flush;
 				//cout << '\n' << dclGetHorizontalSeparation(_wp, _pos) << '\n';
-				//cout << ortho.ConvertToLocal(_pos);
+				//cout << ortho.ConvertToLocal(GetPos());
 				//cout << ortho.ConvertToLocal(_wp);
 				if(dclGetHorizontalSeparation(_wp, _pos) < 100.0) {
 					pending_transmission = "2 miles out for ";
@@ -340,7 +340,6 @@ void FGAIGAVFRTraffic::FlyPlane(double dt) {
 		slope = 0.0;
 	}
 	// FIXME - lots of hackery in the next six lines!!!!
-	//double track = _hdg;
 	double crab = 0.0;	// This is a placeholder for when we take wind into account.	
 	_hdg = track + crab;
 	double vel = _cruise_ias;
@@ -425,31 +424,31 @@ int FGAIGAVFRTraffic::GetQuadrangleAltitude(int dir, int des_alt) {
 // 1/ A few miles out on extended centreline for straight-in.
 // 2/ At an appropriate point on circuit side of rwy for a 45deg entry to downwind.
 // 3/ At and appropriate point on non-circuit side of rwy at take-off end for perpendicular entry to circuit overflying end-of-rwy.
-Point3D FGAIGAVFRTraffic::GetPatternApproachPos() {
+SGGeod FGAIGAVFRTraffic::GetPatternApproachPos() {
 	//cout << "\n\n";
 	//cout << "Calculating pattern approach pos for " << plane.callsign << '\n';
-	Point3D orthopos = ortho.ConvertToLocal(_pos);
-	Point3D tmp;
+	SGVec3d orthopos = ortho.ConvertToLocal(_pos);
+	SGVec3d tmp;
 	//cout << "patternDirection = " << patternDirection << '\n';
 	if(orthopos.y() >= -1000.0) {	// Note that this has to be set the same as the calculation in tower.cxx - at the moment approach type is not transmitted properly between the two.
 		//cout << "orthopos.x = " << orthopos.x() << '\n';
 		if((orthopos.x() * patternDirection) > 0.0) {	// 45 deg entry
-			tmp.setx(2000 * patternDirection);
-			tmp.sety((rwy.end2ortho.y() / 2.0) + 2000);
-			tmp.setelev(fgGetAirportElev(airportID) + (1000 * SG_FEET_TO_METER));
+                        tmp.x() = 2000 * patternDirection;
+			tmp.y() = (rwy.end2ortho.y() / 2.0) + 2000;
+			tmp.z() = (fgGetAirportElev(airportID) + (1000 * SG_FEET_TO_METER));
 			_e45 = true;
 			//cout << "45 deg entry... ";
 		} else {
-			tmp.setx(1000 * patternDirection * -1);
-			tmp.sety(rwy.end2ortho.y());
-			tmp.setelev(fgGetAirportElev(airportID) + (1000 * SG_FEET_TO_METER));
+                        tmp.x() = (1000 * patternDirection * -1);
+			tmp.y() = (rwy.end2ortho.y());
+			tmp.z() = (fgGetAirportElev(airportID) + (1000 * SG_FEET_TO_METER));
 			_e45 = false;
 			//cout << "90 deg entry... ";
 		}
 	} else {
-		tmp.setx(0);
-		tmp.sety(-5400);
-		tmp.setelev((5400.0 / 6.0) + fgGetAirportElev(airportID) + 10.0);
+		tmp.x() = 0;
+		tmp.y() = -5400;
+		tmp.z() = ((5400.0 / 6.0) + fgGetAirportElev(airportID) + 10.0);
 		//cout << "Straight in... ";
 	}
 	//cout << "Waypoint is " << tmp << '\n';

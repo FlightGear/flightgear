@@ -45,26 +45,21 @@ FGAIEntity::FGAIEntity() :
 }
 
 FGAIEntity::~FGAIEntity() {
-	//cout << "FGAIEntity dtor called..." << endl;
-	//cout << "Removing model from scene graph..." << endl;
-	globals->get_scenery()->get_scene_graph()->removeChild(_aip.getSceneGraph());
-
-	//cout << "Done!" << endl;
+    globals->get_scenery()->get_scene_graph()->removeChild(_aip.getSceneGraph());
 }
 
 void FGAIEntity::SetModel(osg::Node* model) {
-	_aip.init(model);
-	_aip.setVisible(false);
-	globals->get_scenery()->get_scene_graph()->addChild(_aip.getSceneGraph());
-
+    _aip.init(model);
+    _aip.setVisible(false);
+    globals->get_scenery()->get_scene_graph()->addChild(_aip.getSceneGraph());
 }
 
 void FGAIEntity::Update(double dt) {
 }
 
 const string &FGAIEntity::GetCallsign() {
-	static string s = "";
-	return(s);
+    static string s = "";
+    return(s);
 }
 
 void FGAIEntity::RegisterTransmission(int code) {
@@ -73,7 +68,7 @@ void FGAIEntity::RegisterTransmission(int code) {
 // Run the internal calculations
 //void FGAIEntity::Update() {
 void FGAIEntity::Transform() {
-    _aip.setPosition(_pos.lon(), _pos.lat(), _pos.elev() * SG_METER_TO_FEET);
+    _aip.setPosition(_pos);
     _aip.setOrientation(_roll, _pitch, _hdg);
     _aip.update();    
 }

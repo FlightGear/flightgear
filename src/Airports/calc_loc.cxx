@@ -12,8 +12,6 @@
 #include <iostream>
 #include <string>
 
-#include <plib/sg.h>
-
 #include <simgear/math/sg_geodesy.hxx>
 
 

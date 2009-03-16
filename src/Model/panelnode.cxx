@@ -7,8 +7,6 @@
 
 #include <vector>
 
-#include <plib/sg.h>
-
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
 #include "panelnode.hxx"

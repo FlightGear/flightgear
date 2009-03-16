@@ -27,8 +27,6 @@
 
 #include <math.h>
 
-#include <plib/sg.h>
-
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/interpolater.hxx>

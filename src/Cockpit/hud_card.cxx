@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <plib/sg.h>
 #include "hud.hxx"
 
 #ifdef USE_HUD_TextList

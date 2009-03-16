@@ -25,9 +25,8 @@
 #include <vector>
 #include <list>
 
-#include <simgear/math/point3d.hxx>
+#include <simgear/math/SGMath.hxx>
 #include <simgear/misc/sgstream.hxx>
-#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/props/props.hxx>
 
 #include "ATC.hxx"
@@ -96,8 +95,8 @@ struct node : public ground_network_element {
 	~node();
 	
 	unsigned int nodeID;	//each node in an airport needs a unique ID number - this is ZERO-BASED to match array position
-	Point3D pos;
-	Point3D orthoPos;
+	SGGeod pos;
+	SGVec3d orthoPos;
 	std::string name;
 	node_type type;
 	arc_array_type arcs;
@@ -178,14 +177,13 @@ typedef shortest_path_map_type::iterator shortest_path_map_iterator;
 
 // A more specialist plane rec to include ground information
 struct GroundRec {
-	FGAIEntity* planePtr;	// This might move to the planeRec eventually
+    FGAIEntity* planePtr;	// This might move to the planeRec eventually
 	
     PlaneRec plane;
-    Point3D current_pos;
     node* destination;
     node* last_clearance;
-	bool taxiRequestOutstanding;	// Plane has requested taxi and we haven't responded yet
-	double clearanceCounter;		// Hack for communication timing - counter since clearance requested in seconds 
+    bool taxiRequestOutstanding;	// Plane has requested taxi and we haven't responded yet
+    double clearanceCounter;		// Hack for communication timing - counter since clearance requested in seconds 
 	
     bool cleared;  // set true when the plane has been cleared to somewhere
     bool incoming; //true for arrivals, false for departures
@@ -196,19 +194,6 @@ struct GroundRec {
 typedef std::list < GroundRec* > ground_rec_list;
 typedef ground_rec_list::iterator ground_rec_list_itr;
 typedef ground_rec_list::const_iterator ground_rec_list_const_itr;
-
-//////////////////////////////////////////////////////////////////////////////////////////
-
-// Hack
-// perhaps we could use an FGRunway instead of this
-struct GRunwayDetails {
-	Point3D threshold_pos;
-	Point3D end1ortho;	// ortho projection end1 (the threshold ATM)
-	Point3D end2ortho;	// ortho projection end2 (the take off end in the current hardwired scheme)
-	double hdg;		// true runway heading
-	double length;	// In *METERS*
-	std::string rwyID;
-};
 
 ///////////////////////////////////////////////////////////////////////////////
 //

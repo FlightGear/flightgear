@@ -21,9 +21,8 @@
 #ifndef _FG_AIEntity_HXX
 #define _FG_AIEntity_HXX
 
-#include <simgear/math/point3d.hxx>
+#include <simgear/math/SGMath.hxx>
 #include <simgear/scene/model/placement.hxx>
-
 
 /*****************************************************************
 *
@@ -37,33 +36,34 @@ class FGAIEntity {
 
 public:
 
-	FGAIEntity();
+    FGAIEntity();
     virtual ~FGAIEntity();
 	
-	// Set the 3D model to use (Must be called)
-  void SetModel(osg::Node* model);
+    // Set the 3D model to use (Must be called)
+    void SetModel(osg::Node* model);
 
     // Run the internal calculations
     virtual void Update(double dt)=0;
-	
+    
     // Send a transmission *TO* the AIEntity.
     // FIXME int code is a hack - eventually this will receive Alexander's coded messages.
     virtual void RegisterTransmission(int code)=0;
-	
-	inline const Point3D& GetPos() const { return(_pos); }
-	
-	virtual const string& GetCallsign()=0;
+    
+    const SGGeod& getPos() const
+    { return _pos; }
+    
+    virtual const string& GetCallsign()=0;
 	
 protected:
-
-    Point3D _pos;	// WGS84 lat & lon in degrees, elev above sea-level in meters
-    double _hdg;		//True heading in degrees
+    
+    SGGeod _pos;	// Geodetic position
+    double _hdg;        //True heading in degrees
     double _roll;	//degrees
     double _pitch;	//degrees
 
     SGModelPlacement _aip;
     double _ground_elevation_m;
-
+    
     void Transform();
 };
 

@@ -22,9 +22,8 @@
 #define _FG_TOWER_HXX
 
 #include <simgear/compiler.h>
-#include <simgear/math/point3d.hxx>
+#include <simgear/math/SGMath.hxx>
 #include <simgear/misc/sgstream.hxx>
-#include <plib/sg.h>
 
 #include <iosfwd>
 #include <string>
@@ -71,13 +70,13 @@ public:
 	
 	TowerPlaneRec();
 	TowerPlaneRec(const PlaneRec& p);
-	TowerPlaneRec(const Point3D& pt);
-	TowerPlaneRec(const PlaneRec& p, const Point3D& pt);
+	TowerPlaneRec(const SGGeod& pt);
+	TowerPlaneRec(const PlaneRec& p, const SGGeod& pt);
 	
 	FGAIPlane* planePtr;	// This might move to the planeRec eventually
 	PlaneRec plane;
 	
-	Point3D pos;
+	SGGeod pos;
 	double eta;		// seconds
 	double dist_out;	// meters from theshold
 	bool clearedToLand;
@@ -214,10 +213,10 @@ private:
 	
 	// Figure out if a given position lies on the active runway
 	// Might have to change when we consider more than one active rwy.
-	bool OnActiveRunway(const Point3D& pt);
+	bool OnActiveRunway(const SGGeod& pt);
 	
 	// Figure out if a given position lies on a runway or not
-	bool OnAnyRunway(const Point3D& pt, bool onGround);
+	bool OnAnyRunway(const SGGeod& pt, bool onGround);
 	
 	// Calculate the eta of a plane to the threshold.
 	// For ground traffic this is the fastest they can get there.

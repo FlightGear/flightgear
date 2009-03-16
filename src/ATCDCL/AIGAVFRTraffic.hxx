@@ -22,7 +22,7 @@
 #ifndef _FG_AIGAVFRTraffic_HXX
 #define _FG_AIGAVFRTraffic_HXX
 
-#include <simgear/math/point3d.hxx>
+#include <simgear/math/SGMath.hxx>
 #include <Main/fg_props.hxx>
 
 #include "AILocalTraffic.hxx"
@@ -38,7 +38,7 @@ public:
 	~FGAIGAVFRTraffic();
 	
 	// Init en-route to destID at point pt. (lat, lon, elev) (elev in meters, lat and lon in degrees).
-	bool Init(const Point3D& pt, const string& destID, const string& callsign);
+	bool Init(const SGGeod& pt, const string& destID, const string& callsign);
 	// Init at srcID to fly to destID
 	bool Init(const string& srcID, const string& destID, const string& callsign, OperatingState state = PARKED);
 	
@@ -96,14 +96,14 @@ private:
 	bool _clearedStraightIn;
 	bool _downwindEntry;
 	bool _clearedDownwindEntry;
-	Point3D _wp;	// Next waypoint (ie. the one we're currently heading for)
+	SGGeod _wp;	// Next waypoint (ie. the one we're currently heading for)
 	bool _enroute;
 	string _destID;
 	bool _climbout;
 	double _cruise_alt;
 	double _cruise_ias;
 	double _cruise_climb_ias;
-	Point3D _destPos;
+	SGGeod _destPos;
 	bool _local;
 	bool _incoming;
 	bool _established;
@@ -113,7 +113,7 @@ private:
 	
 	int GetQuadrangleAltitude(int dir, int des_alt);
 	
-	Point3D GetPatternApproachPos();
+	SGGeod GetPatternApproachPos();
 	
 	void FlyPlane(double dt);
 	
