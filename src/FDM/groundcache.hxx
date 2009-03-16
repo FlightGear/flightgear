@@ -23,15 +23,19 @@
 #ifndef _GROUNDCACHE_HXX
 #define _GROUNDCACHE_HXX
 
-#include <osg/Group>
-#include <osg/ref_ptr>
-
 #include <simgear/compiler.h>
 #include <simgear/constants.h>
 #include <simgear/math/SGMath.hxx>
 #include <simgear/math/SGGeometry.hxx>
 #include <simgear/scene/bvh/BVHNode.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
+
+// #define GROUNDCACHE_DEBUG
+#ifdef GROUNDCACHE_DEBUG
+#include <osg/Group>
+#include <osg/ref_ptr>
+#include <simgear/timing/timestamp.hxx>
+#endif
 
 class SGMaterial;
 namespace simgear {
@@ -62,6 +66,8 @@ public:
     const SGVec3d& get_down() const
     { return down; }
 
+    // The time offset that originates from a simtime different than zero
+    // at initialization time of the fdm.
     double get_cache_time_offset() const
     { return cache_time_offset; }
     void set_cache_time_offset(double time_offset)
@@ -131,6 +137,15 @@ private:
     bool found_ground;
 
     SGSharedPtr<simgear::BVHNode> _localBvhTree;
+
+#ifdef GROUNDCACHE_DEBUG
+    SGTimeStamp _lookupTime;
+    unsigned _lookupCount;
+    SGTimeStamp _buildTime;
+    unsigned _buildCount;
+
+    osg::ref_ptr<osg::Group> _group;
+#endif
 };
 
 #endif

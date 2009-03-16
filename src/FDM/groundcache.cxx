@@ -24,6 +24,8 @@
 #  include "config.h"
 #endif
 
+#include "groundcache.hxx"
+
 #include <utility>
 
 #include <osg/Drawable>
@@ -38,7 +40,7 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/sg_geodesy.hxx>
+#include <simgear/math/SGMisc.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
 
@@ -56,24 +58,33 @@
 #include <simgear/scene/bvh/BVHLineSegmentVisitor.hxx>
 #include <simgear/scene/bvh/BVHNearestPointVisitor.hxx>
 
+#ifdef GROUNDCACHE_DEBUG
+#include <simgear/scene/bvh/BVHDebugCollectVisitor.hxx>
+#include <Main/fg_props.hxx>
+#endif
+
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 
 #include "flight.hxx"
-#include "groundcache.hxx"
 
 using namespace simgear;
 
 class FGGroundCache::CacheFill : public osg::NodeVisitor {
 public:
-    CacheFill(const SGVec3d& center, const double& radius,
+    CacheFill(const SGVec3d& center, const SGVec3d& down, const double& radius,
               const double& startTime, const double& endTime) :
         osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ACTIVE_CHILDREN),
         _center(center),
+        _down(down),
         _radius(radius),
         _startTime(startTime),
-        _endTime(endTime)
+        _endTime(endTime),
+        _sceneryHit(0, 0, 0),
+        _maxDown(SGGeod::fromCart(center).getElevationM() + 9999),
+        _material(0),
+        _haveHit(false)
     {
         setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
     }
@@ -134,22 +145,29 @@ public:
         const SGSceneUserData::Velocity* velocity = getVelocity(transform);
 
         SGVec3d center = _center;
+        SGVec3d down = _down;
         double radius = _radius;
+        bool haveHit = _haveHit;
+        const SGMaterial* material = _material;
+
+        _haveHit = false;
         _center = SGVec3d(inverseMatrix.preMult(_center.osg()));
+        _down = SGVec3d(osg::Matrix::transform3x3(_down.osg(), inverseMatrix));
         if (velocity) {
             SGVec3d staticCenter(_center);
 
             double dtStart = velocity->referenceTime - _startTime;
             SGVec3d startCenter = staticCenter + dtStart*velocity->linear;
-            SGVec3d angle = dtStart*velocity->angular;
-            startCenter = SGQuatd::fromAngleAxis(angle).transform(startCenter);
+            SGQuatd startOr(SGQuatd::fromAngleAxis(dtStart*velocity->angular));
+            startCenter = startOr.transform(startCenter);
             
             double dtEnd = velocity->referenceTime - _endTime;
             SGVec3d endCenter = staticCenter + dtEnd*velocity->linear;
-            angle = dtEnd*velocity->angular;
-            endCenter = SGQuatd::fromAngleAxis(angle).transform(endCenter);
+            SGQuatd endOr(SGQuatd::fromAngleAxis(dtEnd*velocity->angular));
+            endCenter = endOr.transform(endCenter);
 
             _center = 0.5*(startCenter + endCenter);
+            _down = startOr.transform(_down);
             _radius += 0.5*dist(startCenter, endCenter);
         }
         
@@ -182,7 +200,22 @@ public:
         } else {
             mSubTreeCollector.popNodeList(parentNodeList);
         }
+
+        if (_haveHit) {
+            if (velocity) {
+                double dt = _startTime - velocity->referenceTime;
+                SGQuatd ori(SGQuatd::fromAngleAxis(dt*velocity->angular));
+                _sceneryHit = ori.transform(_sceneryHit);
+                _sceneryHit += dt*velocity->linear;
+            }
+            _sceneryHit = SGVec3d(matrix.preMult(_sceneryHit.osg()));
+        } else {
+            _material = material;
+            _haveHit = haveHit;
+        }
+
         _center = center;
+        _down = down;
         _radius = radius;
     }
 
@@ -206,6 +239,17 @@ public:
         if (!bvNode)
             return;
 
+        // Find a croase ground intersection 
+        SGLineSegmentd line(_center + _radius*_down, _center + _maxDown*_down);
+        simgear::BVHLineSegmentVisitor lineSegmentVisitor(line, _startTime);
+        bvNode->accept(lineSegmentVisitor);
+        if (!lineSegmentVisitor.empty()) {
+            _sceneryHit = lineSegmentVisitor.getPoint();
+            _material = lineSegmentVisitor.getMaterial();
+            _maxDown = SGMiscd::max(_radius, dot(_down, _sceneryHit - _center));
+            _haveHit = true;
+        }
+
         // Get that part of the local bv tree that intersects our sphere
         // of interrest.
         mSubTreeCollector.setSphere(SGSphered(_center, _radius));
@@ -217,21 +261,33 @@ public:
         if (!bound.valid())
             return false;
 
+        SGLineSegmentd downSeg(_center, _center + _maxDown*_down);
         double maxDist = bound._radius + _radius;
-        return distSqr(SGVec3d(bound._center), _center) <= maxDist*maxDist;
+        return distSqr(downSeg, SGVec3d(bound._center)) <= maxDist*maxDist;
     }
     
     SGSharedPtr<simgear::BVHNode> getBVHNode() const
     { return mSubTreeCollector.getNode(); }
+
+    bool getHaveElevationBelowCache() const
+    { return _haveHit; }
+    double getElevationBelowCache() const
+    { return SGGeod::fromCart(_sceneryHit).getElevationM(); }
+    const SGMaterial* getMaterialBelowCache() const
+    { return _material; }
     
 private:
-    
     SGVec3d _center;
+    SGVec3d _down;
     double _radius;
     double _startTime;
     double _endTime;
 
     simgear::BVHSubTreeCollector mSubTreeCollector;
+    SGVec3d _sceneryHit;
+    double _maxDown;
+    const SGMaterial* _material;
+    bool _haveHit;
 };
 
 FGGroundCache::FGGroundCache() :
@@ -245,6 +301,12 @@ FGGroundCache::FGGroundCache() :
     down(0.0, 0.0, 0.0),
     found_ground(false)
 {
+#ifdef GROUNDCACHE_DEBUG
+    _lookupTime = SGTimeStamp::fromSec(0.0);
+    _lookupCount = 0;
+    _buildTime = SGTimeStamp::fromSec(0.0);
+    _buildCount = 0;
+#endif
 }
 
 FGGroundCache::~FGGroundCache()
@@ -255,6 +317,10 @@ bool
 FGGroundCache::prepare_ground_cache(double startSimTime, double endSimTime,
                                     const SGVec3d& pt, double rad)
 {
+#ifdef GROUNDCACHE_DEBUG
+    SGTimeStamp t0 = SGTimeStamp::now();
+#endif
+
     // Empty cache.
     found_ground = false;
 
@@ -285,27 +351,36 @@ FGGroundCache::prepare_ground_cache(double startSimTime, double endSimTime,
     // Get the ground cache, that is a local collision tree of the environment
     startSimTime += cache_time_offset;
     endSimTime += cache_time_offset;
-    CacheFill subtreeCollector(pt, rad, startSimTime, endSimTime);
+    CacheFill subtreeCollector(pt, down, rad, startSimTime, endSimTime);
     globals->get_scenery()->get_scene_graph()->accept(subtreeCollector);
     _localBvhTree = subtreeCollector.getBVHNode();
 
-    // Try to get a croase altitude value for the ground cache
-    SGLineSegmentd line(pt, pt + 2*reference_vehicle_radius*down);
-    simgear::BVHLineSegmentVisitor lineSegmentVisitor(line, startSimTime);
-    if (_localBvhTree)
+    if (subtreeCollector.getHaveElevationBelowCache()) {
+        // Use the altitude value below the cache that we gathered during
+        // cache collection
+        _altitude = subtreeCollector.getElevationBelowCache();
+        _material = subtreeCollector.getMaterialBelowCache();
+        found_ground = true;
+    } else if (_localBvhTree) {
+        // We have nothing below us, so try starting with the lowest point
+        // upwards for a croase altitude value
+        SGLineSegmentd line(pt + reference_vehicle_radius*down, pt - 1e3*down);
+        simgear::BVHLineSegmentVisitor lineSegmentVisitor(line, startSimTime);
         _localBvhTree->accept(lineSegmentVisitor);
 
-    // If this is successful, store this altitude for croase altitude values
-    if (!lineSegmentVisitor.empty()) {
-        SGGeod geodPt = SGGeod::fromCart(lineSegmentVisitor.getPoint());
-        _altitude = geodPt.getElevationM();
-        _material = lineSegmentVisitor.getMaterial();
-        found_ground = true;
-    } else {
-        // Else do a crude scene query for the current point
+        if (!lineSegmentVisitor.empty()) {
+            SGGeod geodPt = SGGeod::fromCart(lineSegmentVisitor.getPoint());
+            _altitude = geodPt.getElevationM();
+            _material = lineSegmentVisitor.getMaterial();
+            found_ground = true;
+        }
+    }
+    
+    if (!found_ground) {
+        // Ok, still nothing here?? Last resort ...
         double alt = 0;
         found_ground = globals->get_scenery()->
-            get_cart_elevation_m(pt, rad, alt, &_material);
+            get_elevation_m(SGGeod::fromGeodM(geodPt, 10000), alt, &_material);
         if (found_ground)
             _altitude = alt;
     }
@@ -314,6 +389,42 @@ FGGroundCache::prepare_ground_cache(double startSimTime, double endSimTime,
     if (!found_ground)
         SG_LOG(SG_FLIGHT, SG_WARN, "prepare_ground_cache(): trying to build "
                "cache without any scenery below the aircraft");
+
+#ifdef GROUNDCACHE_DEBUG
+    t0 = SGTimeStamp::now() - t0;
+    _buildTime += t0;
+    _buildCount++;
+
+    if (_buildCount > 60) {
+        double buildTime = 0;
+        if (_buildCount)
+            buildTime = _buildTime.toSecs()/_buildCount;
+        double lookupTime = 0;
+        if (_lookupCount)
+            lookupTime = _lookupTime.toSecs()/_lookupCount;
+        _buildTime = SGTimeStamp::fromSec(0.0);
+        _buildCount = 0;
+        _lookupTime = SGTimeStamp::fromSec(0.0);
+        _lookupCount = 0;
+        SG_LOG(SG_FLIGHT, SG_ALERT, "build time = " << buildTime
+               << ", lookup Time = " << lookupTime);
+    }
+
+    if (!_group.valid()) {
+        _group = new osg::Group;
+        globals->get_scenery()->get_scene_graph()->addChild(_group);
+        fgSetInt("/fdm/groundcache-debug-level", -3);
+    }
+    _group->removeChildren(0, _group->getNumChildren());
+    if (_localBvhTree) {
+        int level = fgGetInt("/fdm/groundcache-debug-level");
+        if (-2 <= level) {
+            simgear::BVHDebugCollectVisitor debug(endSimTime, level);
+            _localBvhTree->accept(debug);
+            _group->addChild(debug.getNode());
+        }
+    }
+#endif
 
     return found_ground;
 }
@@ -568,12 +679,22 @@ FGGroundCache::get_agl(double t, const SGVec3d& pt, SGVec3d& contact,
                        SGVec3d& normal, SGVec3d& linearVel, SGVec3d& angularVel,
                        simgear::BVHNode::Id& id, const SGMaterial*& material)
 {
+#ifdef GROUNDCACHE_DEBUG
+    SGTimeStamp t0 = SGTimeStamp::now();
+#endif
+
     // Just set up a ground intersection query for the given point
     SGLineSegmentd line(pt, pt + 10*reference_vehicle_radius*down);
     t += cache_time_offset;
     simgear::BVHLineSegmentVisitor lineSegmentVisitor(line, t);
     if (_localBvhTree)
         _localBvhTree->accept(lineSegmentVisitor);
+
+#ifdef GROUNDCACHE_DEBUG
+    t0 = SGTimeStamp::now() - t0;
+    _lookupTime += t0;
+    _lookupCount++;
+#endif
 
     if (!lineSegmentVisitor.empty()) {
         // Have an intersection
@@ -614,11 +735,21 @@ FGGroundCache::get_nearest(double t, const SGVec3d& pt, double maxDist,
     if (!_localBvhTree)
         return false;
 
+#ifdef GROUNDCACHE_DEBUG
+    SGTimeStamp t0 = SGTimeStamp::now();
+#endif
+
     // Just set up a ground intersection query for the given point
     SGSphered sphere(pt, maxDist);
     t += cache_time_offset;
     simgear::BVHNearestPointVisitor nearestPointVisitor(sphere, t);
     _localBvhTree->accept(nearestPointVisitor);
+
+#ifdef GROUNDCACHE_DEBUG
+    t0 = SGTimeStamp::now() - t0;
+    _lookupTime += t0;
+    _lookupCount++;
+#endif
 
     if (nearestPointVisitor.empty())
         return false;
