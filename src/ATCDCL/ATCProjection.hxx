@@ -23,29 +23,6 @@
 
 #include <simgear/math/point3d.hxx>
 
-// FGATCProjection - a class to project an area local to an airport onto an orthogonal co-ordinate system
-class FGATCProjection {
-
-public:
-    FGATCProjection();
-    FGATCProjection(const Point3D& centre);
-    ~FGATCProjection();
-
-    void Init(const Point3D& centre);
-
-    // Convert a lat/lon co-ordinate (degrees) to the local projection (meters)
-    Point3D ConvertToLocal(const Point3D& pt);
-
-    // Convert a local projection co-ordinate (meters) to lat/lon (degrees)
-    Point3D ConvertFromLocal(const Point3D& pt);
-
-private:
-    Point3D _origin;	// lat/lon of local area origin
-    double _correction_factor;	// Reduction in surface distance per degree of longitude due to latitude.  Saves having to do a cos() every call.
-
-};
-
-
 // FGATCAlignedProjection - a class to project an area local to a runway onto an orthogonal co-ordinate system
 // with the origin at the threshold and the runway aligned with the y axis.
 class FGATCAlignedProjection {

@@ -26,45 +26,6 @@
 #include <math.h>
 #include <simgear/constants.h>
 
-FGATCProjection::FGATCProjection() {
-    _origin.setlat(0.0);
-    _origin.setlon(0.0);
-    _origin.setelev(0.0);
-    _correction_factor = cos(_origin.lat() * SG_DEGREES_TO_RADIANS);
-}
-
-FGATCProjection::FGATCProjection(const Point3D& centre) {
-    _origin = centre;
-    _correction_factor = cos(_origin.lat() * SG_DEGREES_TO_RADIANS);
-}
-
-FGATCProjection::~FGATCProjection() {
-}
-
-void FGATCProjection::Init(const Point3D& centre) {
-    _origin = centre;
-    _correction_factor = cos(_origin.lat() * SG_DEGREES_TO_RADIANS);
-}
-
-Point3D FGATCProjection::ConvertToLocal(const Point3D& pt) {
-    double delta_lat = pt.lat() - _origin.lat();
-    double delta_lon = pt.lon() - _origin.lon();
-
-    double y = sin(delta_lat * SG_DEGREES_TO_RADIANS) * SG_EQUATORIAL_RADIUS_M;
-    double x = sin(delta_lon * SG_DEGREES_TO_RADIANS) * SG_EQUATORIAL_RADIUS_M * _correction_factor;
-
-    return(Point3D(x,y,0.0));
-}
-
-Point3D FGATCProjection::ConvertFromLocal(const Point3D& pt) {
-    double delta_lat = asin(pt.y() / SG_EQUATORIAL_RADIUS_M) * SG_RADIANS_TO_DEGREES;
-    double delta_lon = (asin(pt.x() / SG_EQUATORIAL_RADIUS_M) * SG_RADIANS_TO_DEGREES) / _correction_factor;
-    
-    return(Point3D(_origin.lon()+delta_lon, _origin.lat()+delta_lat, 0.0));
-}
-
-/**********************************************************************************/
-
 FGATCAlignedProjection::FGATCAlignedProjection() {
     _origin.setlat(0.0);
     _origin.setlon(0.0);
