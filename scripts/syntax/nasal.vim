@@ -74,8 +74,8 @@ syn sync fromstart
 syn sync maxlines=100
 
 syn match   nasalParenError	"[()]"
-syn match   nasalBrackError	"[[]]"
 syn match   nasalBraceError	"[{}]"
+syn match   nasalBrackError	"[\[\]]"
 
 
 " FlightGear specific commands
