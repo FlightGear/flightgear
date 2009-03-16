@@ -27,8 +27,6 @@
 
 #include <string.h>		// strcmp
 
-#include <plib/sg.h>
-
 #include <simgear/compiler.h>
 
 #include <Model/acmodel.hxx>

@@ -22,7 +22,7 @@
 #ifndef _FG_AILocalTraffic_HXX
 #define _FG_AILocalTraffic_HXX
 
-#include <simgear/math/point3d.hxx>
+#include <simgear/math/SGMath.hxx>
 #include <Main/fg_props.hxx>
 
 #include "AIPlane.hxx"
@@ -216,7 +216,7 @@ private:
 
 	void CalculateSoD(double base_leg_pos, double downwind_leg_pos, bool pattern_direction);
 
-	void ExitRunway(const Point3D& orthopos);
+	void ExitRunway(const SGVec3d& orthopos);
 
 	void StartTaxi();
 

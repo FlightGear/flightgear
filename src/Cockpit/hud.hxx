@@ -62,8 +62,6 @@ namespace osg {
 #include <Main/globals.hxx>
 #include <Main/viewmgr.hxx>
 
-#include <plib/sg.h>
-
 class FGRunway;
 
 using std::deque;

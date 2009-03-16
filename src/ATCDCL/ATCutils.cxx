@@ -24,13 +24,10 @@
 
 #include <sstream>
 
-#include <math.h>
-#include <simgear/math/point3d.hxx>
+#include <simgear/math/SGMath.hxx>
 #include <simgear/constants.h>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
-#include <plib/sg.h>
-//#include <iomanip.h>
 
 #include <Airports/runways.hxx>
 #include <Main/globals.hxx>
@@ -187,15 +184,15 @@ string GetCompassDirection(double h) {
 //================================================================================================================
 
 // Given two positions (lat & lon in degrees), get the HORIZONTAL separation (in meters)
-double dclGetHorizontalSeparation(const Point3D& pos1, const Point3D& pos2) {
+double dclGetHorizontalSeparation(const SGGeod& pos1, const SGGeod& pos2) {
 	double x;	//East-West separation
 	double y;	//North-South separation
 	double z;	//Horizontal separation - z = sqrt(x^2 + y^2)
 	
-	double lat1 = pos1.lat() * SG_DEGREES_TO_RADIANS;
-	double lon1 = pos1.lon() * SG_DEGREES_TO_RADIANS;
-	double lat2 = pos2.lat() * SG_DEGREES_TO_RADIANS;
-	double lon2 = pos2.lon() * SG_DEGREES_TO_RADIANS;
+	double lat1 = pos1.getLatitudeRad();
+	double lon1 = pos1.getLongitudeRad();
+	double lat2 = pos2.getLatitudeRad();
+	double lon2 = pos2.getLongitudeRad();
 	
 	y = sin(fabs(lat1 - lat2)) * SG_EQUATORIAL_RADIUS_M;
 	x = sin(fabs(lon1 - lon2)) * SG_EQUATORIAL_RADIUS_M * (cos((lat1 + lat2) / 2.0));
@@ -226,13 +223,15 @@ double dclGetLinePointSeparation(double px, double py, double x1, double y1, dou
 // Given a position (lat/lon/elev), heading and vertical angle (degrees), and distance (meters), calculate the new position.
 // This function assumes the world is spherical.  If geodetic accuracy is required use the functions is sg_geodesy instead!
 // Assumes that the ground is not hit!!!  Expects heading and angle in degrees, distance in meters. 
-Point3D dclUpdatePosition(const Point3D& pos, double heading, double angle, double distance) {
+SGGeod dclUpdatePosition(const SGGeod& pos, double heading, double angle, double distance) {
+    // FIXME: use SGGeodesy instead ...
+
 	//cout << setprecision(10) << pos.lon() << ' ' << pos.lat() << '\n';
 	heading *= DCL_DEGREES_TO_RADIANS;
 	angle *= DCL_DEGREES_TO_RADIANS;
-	double lat = pos.lat() * DCL_DEGREES_TO_RADIANS;
-	double lon = pos.lon() * DCL_DEGREES_TO_RADIANS;
-	double elev = pos.elev();
+	double lat = pos.getLatitudeRad();
+	double lon = pos.getLongitudeRad();
+	double elev = pos.getElevationM();
 	//cout << setprecision(10) << lon*DCL_RADIANS_TO_DEGREES << ' ' << lat*DCL_RADIANS_TO_DEGREES << '\n';
 	
 	double horiz_dist = distance * cos(angle);
@@ -253,17 +252,17 @@ Point3D dclUpdatePosition(const Point3D& pos, double heading, double angle, doub
 	
 	//cout << setprecision(15) << DCL_DEGREES_TO_RADIANS * DCL_RADIANS_TO_DEGREES << '\n';
 	
-	return(Point3D(lon*DCL_RADIANS_TO_DEGREES, lat*DCL_RADIANS_TO_DEGREES, elev));
+	return SGGeod::fromRadM(lon, lat, elev);
 }
 
 // Get a heading in degrees from one lat/lon to another.
 // This function assumes the world is spherical.  If geodetic accuracy is required use the functions is sg_geodesy instead!
 // Warning - at the moment we are not checking for identical points - currently it returns 0 in this instance.
-double GetHeadingFromTo(const Point3D& A, const Point3D& B) {
-	double latA = A.lat() * DCL_DEGREES_TO_RADIANS;
-	double lonA = A.lon() * DCL_DEGREES_TO_RADIANS;
-	double latB = B.lat() * DCL_DEGREES_TO_RADIANS;
-	double lonB = B.lon() * DCL_DEGREES_TO_RADIANS;
+double GetHeadingFromTo(const SGGeod& A, const SGGeod& B) {
+	double latA = A.getLatitudeRad();
+	double lonA = A.getLongitudeRad();
+	double latB = B.getLatitudeRad();
+	double lonB = B.getLongitudeRad();
 	double xdist = sin(lonB - lonA) * (double)SG_EQUATORIAL_RADIUS_M * cos((latA+latB)/2.0);
 	double ydist = sin(latB - latA) * (double)SG_EQUATORIAL_RADIUS_M;
 	double heading = atan2(xdist, ydist) * DCL_RADIANS_TO_DEGREES;
@@ -292,14 +291,14 @@ double GetAngleDiff_deg( const double &a1, const double &a2) {
 }
 
 // Runway stuff
-// Given a Point3D (lon/lat/elev) and an FGRunway struct, determine if the point lies on the runway
-bool OnRunway(const Point3D& pt, const FGRunwayBase* rwy) {
+// Given (lon/lat/elev) and an FGRunway struct, determine if the point lies on the runway
+bool OnRunway(const SGGeod& pt, const FGRunwayBase* rwy) {
 	FGATCAlignedProjection ortho;
-	Point3D centre(rwy->longitude(), rwy->latitude(), 0.0);	// We don't need the elev
+	SGGeod centre = SGGeod::fromDegM(rwy->longitude(), rwy->latitude(), 0);	// We don't need the elev
 	ortho.Init(centre, rwy->headingDeg());
 	
-	Point3D xyc = ortho.ConvertToLocal(centre);
-	Point3D xyp = ortho.ConvertToLocal(pt);
+	SGVec3d xyc = ortho.ConvertToLocal(centre);
+	SGVec3d xyp = ortho.ConvertToLocal(pt);
 	
 	//cout << "Length offset = " << fabs(xyp.y() - xyc.y()) << '\n';
 	//cout << "Width offset = " << fabs(xyp.x() - xyc.x()) << '\n';

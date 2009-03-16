@@ -21,7 +21,7 @@
 #ifndef _FG_ATC_PROJECTION_HXX
 #define _FG_ATC_PROJECTION_HXX
 
-#include <simgear/math/point3d.hxx>
+#include <simgear/math/SGMath.hxx>
 
 // FGATCAlignedProjection - a class to project an area local to a runway onto an orthogonal co-ordinate system
 // with the origin at the threshold and the runway aligned with the y axis.
@@ -29,19 +29,19 @@ class FGATCAlignedProjection {
 
 public:
     FGATCAlignedProjection();
-    FGATCAlignedProjection(const Point3D& centre, double heading);
+    FGATCAlignedProjection(const SGGeod& centre, double heading);
     ~FGATCAlignedProjection();
 
-    void Init(const Point3D& centre, double heading);
+    void Init(const SGGeod& centre, double heading);
 
     // Convert a lat/lon co-ordinate (degrees) to the local projection (meters)
-    Point3D ConvertToLocal(const Point3D& pt);
+    SGVec3d ConvertToLocal(const SGGeod& pt);
 
     // Convert a local projection co-ordinate (meters) to lat/lon (degrees)
-    Point3D ConvertFromLocal(const Point3D& pt);
+    SGGeod ConvertFromLocal(const SGVec3d& pt);
 
 private:
-    Point3D _origin;	// lat/lon of local area origin (the threshold)
+    SGGeod _origin;	// lat/lon of local area origin (the threshold)
     double _theta;	// the rotation angle for alignment in radians
     double _correction_factor;	// Reduction in surface distance per degree of longitude due to latitude.  Saves having to do a cos() every call.
 

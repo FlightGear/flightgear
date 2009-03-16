@@ -26,7 +26,6 @@
 #endif
 
 #include <simgear/math/sg_geodesy.hxx>
-#include <simgear/math/polar3d.hxx>
 
 #include <Aircraft/controls.hxx>
 #include <Main/globals.hxx>

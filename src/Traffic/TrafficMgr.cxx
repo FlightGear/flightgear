@@ -50,12 +50,9 @@
 #include <vector>
 #include <algorithm>
 
-#include <plib/sg.h>
 #include <plib/ul.h>
 
 #include <simgear/compiler.h>
-#include <simgear/math/polar3d.hxx>
-#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/route/waypoint.hxx>

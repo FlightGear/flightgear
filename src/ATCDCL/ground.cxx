@@ -153,11 +153,11 @@ bool FGGround::LoadNetwork() {
 			fin >> buf;
 			np->nodeID = atoi(buf);
 			fin >> buf;
-			np->pos.setlon(atof(buf));
+			np->pos.setLongitudeDeg(atof(buf));
 			fin >> buf;
-			np->pos.setlat(atof(buf));
+			np->pos.setLatitudeDeg(atof(buf));
 			fin >> buf;
-			np->pos.setelev(atof(buf));
+			np->pos.setElevationM(atof(buf));
 			fin >> buf;		// node type
 			if(!strcmp(buf, "J")) {
 				np->type = JUNCTION;
@@ -241,11 +241,11 @@ bool FGGround::LoadNetwork() {
 			fin >> buf;
 			gp->nodeID = atoi(buf);
 			fin >> buf;
-			gp->pos.setlon(atof(buf));
+			gp->pos.setLongitudeDeg(atof(buf));
 			fin >> buf;
-			gp->pos.setlat(atof(buf));
+			gp->pos.setLatitudeDeg(atof(buf));
 			fin >> buf;
-			gp->pos.setelev(atof(buf));
+			gp->pos.setElevationM(atof(buf));
 			fin >> buf;		// gate type - ignore this for now
 			fin >> buf;		// gate heading
 			gp->heading = atoi(buf);
@@ -376,19 +376,17 @@ void FGGround::DoRwyDetails() {
   }
     // move to the +l end/center of the runway
   //cout << "Runway center is at " << runway._lon << ", " << runway._lat << '\n';
-    Point3D origin = Point3D(runway->longitude(), runway->latitude(), aptElev);
-  Point3D ref = origin;
-    double tshlon, tshlat, tshr;
+  double tshlon, tshlat, tshr;
   double tolon, tolat, tor;
   rwy.length = runway->lengthM();
-    geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), other_way, 
-                        rwy.length / 2.0 - 25.0, &tshlat, &tshlon, &tshr );
-    geo_direct_wgs_84 ( aptElev, ref.lat(), ref.lon(), runway->headingDeg(), 
-                        rwy.length / 2.0 - 25.0, &tolat, &tolon, &tor );
+  geo_direct_wgs_84 ( aptElev, runway->latitude(), runway->longitude(), other_way, 
+                      rwy.length / 2.0 - 25.0, &tshlat, &tshlon, &tshr );
+  geo_direct_wgs_84 ( aptElev, runway->latitude(), runway->longitude(), runway->headingDeg(), 
+                      rwy.length / 2.0 - 25.0, &tolat, &tolon, &tor );
   // Note - 25 meters in from the runway end is a bit of a hack to put the plane ahead of the user.
   // now copy what we need out of runway into rwy
-    rwy.threshold_pos = Point3D(tshlon, tshlat, aptElev);
-  Point3D takeoff_end = Point3D(tolon, tolat, aptElev);
+  rwy.threshold_pos = SGGeod::fromDegM(tshlon, tshlat, aptElev);
+  SGGeod takeoff_end = SGGeod::fromDegM(tolon, tolat, aptElev);
   //cout << "Threshold position = " << tshlon << ", " << tshlat << ", " << aptElev << '\n';
   //cout << "Takeoff position = " << tolon << ", " << tolat << ", " << aptElev << '\n';
   rwy.hdg = runway->headingDeg();
@@ -672,7 +670,6 @@ void FGGround::RequestDeparture(const PlaneRec& plane, FGAIEntity* requestee) {
 	g->cleared = false;
 	g->incoming = false;
 	// TODO - need to handle the next 3 as well
-    //Point3D current_pos;
     //node* destination;
     //node* last_clearance;
 	

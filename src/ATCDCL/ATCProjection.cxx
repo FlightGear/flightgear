@@ -27,33 +27,33 @@
 #include <simgear/constants.h>
 
 FGATCAlignedProjection::FGATCAlignedProjection() {
-    _origin.setlat(0.0);
-    _origin.setlon(0.0);
-    _origin.setelev(0.0);
-    _correction_factor = cos(_origin.lat() * SG_DEGREES_TO_RADIANS);
+    _origin.setLatitudeRad(0);
+    _origin.setLongitudeRad(0);
+    _origin.setElevationM(0);
+    _correction_factor = cos(_origin.getLatitudeRad());
 }
 
-FGATCAlignedProjection::FGATCAlignedProjection(const Point3D& centre, double heading) {
+FGATCAlignedProjection::FGATCAlignedProjection(const SGGeod& centre, double heading) {
     _origin = centre;
     _theta = heading * SG_DEGREES_TO_RADIANS;
-    _correction_factor = cos(_origin.lat() * SG_DEGREES_TO_RADIANS);
+    _correction_factor = cos(_origin.getLatitudeRad());
 }
 
 FGATCAlignedProjection::~FGATCAlignedProjection() {
 }
 
-void FGATCAlignedProjection::Init(const Point3D& centre, double heading) {
+void FGATCAlignedProjection::Init(const SGGeod& centre, double heading) {
     _origin = centre;
     _theta = heading * SG_DEGREES_TO_RADIANS;
-    _correction_factor = cos(_origin.lat() * SG_DEGREES_TO_RADIANS);
+    _correction_factor = cos(_origin.getLatitudeRad());
 }
 
-Point3D FGATCAlignedProjection::ConvertToLocal(const Point3D& pt) {
+SGVec3d FGATCAlignedProjection::ConvertToLocal(const SGGeod& pt) {
     // convert from lat/lon to orthogonal
-    double delta_lat = pt.lat() - _origin.lat();
-    double delta_lon = pt.lon() - _origin.lon();
-    double y = sin(delta_lat * SG_DEGREES_TO_RADIANS) * SG_EQUATORIAL_RADIUS_M;
-    double x = sin(delta_lon * SG_DEGREES_TO_RADIANS) * SG_EQUATORIAL_RADIUS_M * _correction_factor;
+    double delta_lat = pt.getLatitudeRad() - _origin.getLatitudeRad();
+    double delta_lon = pt.getLongitudeRad() - _origin.getLongitudeRad();
+    double y = sin(delta_lat) * SG_EQUATORIAL_RADIUS_M;
+    double x = sin(delta_lon) * SG_EQUATORIAL_RADIUS_M * _correction_factor;
 
     // Align
     if(_theta != 0.0) {
@@ -62,18 +62,18 @@ Point3D FGATCAlignedProjection::ConvertToLocal(const Point3D& pt) {
         y = (xbar*sin(_theta)) + (y*cos(_theta));
     }
 
-    return(Point3D(x,y,pt.elev()));
+    return SGVec3d(x, y, pt.getElevationM());
 }
 
-Point3D FGATCAlignedProjection::ConvertFromLocal(const Point3D& pt) {
+SGGeod FGATCAlignedProjection::ConvertFromLocal(const SGVec3d& pt) {
     // de-align
     double thi = _theta * -1.0;
     double x = pt.x()*cos(thi) - pt.y()*sin(thi);
     double y = (pt.x()*sin(thi)) + (pt.y()*cos(thi));
 
     // convert from orthogonal to lat/lon
-    double delta_lat = asin(y / SG_EQUATORIAL_RADIUS_M) * SG_RADIANS_TO_DEGREES;
-    double delta_lon = (asin(x / SG_EQUATORIAL_RADIUS_M) * SG_RADIANS_TO_DEGREES) / _correction_factor;
+    double delta_lat = asin(y / SG_EQUATORIAL_RADIUS_M);
+    double delta_lon = asin(x / SG_EQUATORIAL_RADIUS_M) / _correction_factor;
 
-    return(Point3D(_origin.lon()+delta_lon, _origin.lat()+delta_lat, pt.elev()));
+    return SGGeod::fromRadM(_origin.getLongitudeRad()+delta_lon, _origin.getLatitudeRad()+delta_lat, pt.z());
 }
