@@ -57,19 +57,12 @@ using std::setfill;
 #include <Main/globals.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/hud.hxx>
-#include <AIModel/AIBase.hxx>
-#include <AIModel/AIManager.hxx>
-#include <AIModel/AIBallistic.hxx>
 
 #include <Include/general.hxx>
 #include "instrument_mgr.hxx"
 #include "od_gauge.hxx"
 #include "wxradar.hxx"
 
-
-typedef list <osg::ref_ptr<FGAIBase> > radar_list_type;
-typedef radar_list_type::iterator radar_list_iterator;
-typedef radar_list_type::const_iterator radar_list_const_iterator;
 
 
 static const float UNIT = 1.0f / 8.0f;  // 8 symbols in a row/column in the texture
@@ -153,7 +146,6 @@ wxRadarBg::init ()
     _odg = (FGODGauge *)imgr->get_subsystem("od_gauge");
     _odg->setSize(512);
 
-    _ai = (FGAIManager*)globals->get_subsystem("ai_model");
     _ai_enabled_node = fgGetNode("/sim/ai/enabled", true);
 
     _user_lat_node = fgGetNode("/position/latitude-deg", true);
@@ -557,7 +549,8 @@ wxRadarBg::update_weather()
 
 
 void
-wxRadarBg::update_data(FGAIBase *ac, double radius, double bearing, bool selected)
+wxRadarBg::update_data(const SGPropertyNode *ac, double altitude, double heading,
+        double radius, double bearing, bool selected)
 {
     osgText::Text *callsign = new osgText::Text;
     callsign->setFont(_font.get());
@@ -575,11 +568,11 @@ wxRadarBg::update_data(FGAIBase *ac, double radius, double bearing, bool selecte
     callsign->setLineSpacing(_font_spacing);
 
     stringstream text;
-    text << ac->_getCallsign() << endl
+    text << ac->getStringValue("callsign") << endl
             << setprecision(0) << fixed
-            << setw(3) << setfill('0') << ac->_getHeading() << "\xB0 "
-            << setw(0) << ac->_getAltitude() << "ft" << endl
-            << ac->_getSpeed() << "kts";
+            << setw(3) << setfill('0') << heading * SG_RADIANS_TO_DEGREES << "\xB0 "
+            << setw(0) << altitude << "ft" << endl
+            << ac->getDoubleValue("velocities/true-airspeed-kt") << "kts";
 
     callsign->setText(text.str());
     _textGeode->addDrawable(callsign);
@@ -598,14 +591,6 @@ wxRadarBg::update_aircraft()
     if (!draw_echoes && !draw_symbols && !draw_data)
         return;
 
-    radar_list_type radar_list = _ai->get_ai_list();
-    //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: AI submodel list size" << radar_list.size());
-    if (radar_list.empty())
-        return;
-
-    //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: Loading AI submodels ");
-    const double echo_radii[] = {0, 1, 1.5, 1.5, 0.001, 0.1, 1.5, 2, 1.5, 1.5, 1.5};
-
     double user_lat = _user_lat_node->getDoubleValue();
     double user_lon = _user_lon_node->getDoubleValue();
     double user_alt = _user_alt_node->getDoubleValue();
@@ -617,39 +602,59 @@ wxRadarBg::update_aircraft()
         limit = 0;
     limit *= SG_DEGREES_TO_RADIANS;
 
-    radar_list_iterator it = radar_list.begin();
-    radar_list_iterator end = radar_list.end();
-    FGAIBase *selected_ac = 0;
-    double selected_radius = 0;
-    double selected_bearing = 0;
     int selected_id = fgGetInt("/instrumentation/radar/selected-id", -1);
 
-    for (; it != end; ++it) {
-        FGAIBase *ac = (*it).get();
-        int type       = ac->getType();
-        double lat     = ac->_getLatitude();
-        double lon     = ac->_getLongitude();
-        double alt     = ac->_getAltitude();
-        double heading = ac->_getHeading();
+    const SGPropertyNode *selected_ac = 0;
+    const SGPropertyNode *ai = fgGetNode("/ai/models", true);
+
+    for (int i = ai->nChildren() - 1; i >= -1; i--) {
+        const SGPropertyNode *model;
+
+        if (i < 0) { // last iteration: selected model
+            model = selected_ac;
+        } else {
+            model = ai->getChild(i);
+            if (!model->nChildren())
+                continue;
+            if (model->getIntValue("id") == selected_id) {
+                selected_ac = model;  // save selected model for last iteration
+                continue;
+            }
+        }
+        if (!model)
+            continue;
+
+        double echo_radius, sigma;
+        const string name = model->getName();
+        if (name == "aircraft" || name == "tanker")
+            echo_radius = 1, sigma = 1;
+        else if (name == "multiplayer" || name == "wingman" || name == "static")
+            echo_radius = 1.5, sigma = 1;
+        else if (name == "ship" || name == "carrier" || name == "storm")
+            echo_radius = 1.5, sigma = 100;
+        else if (name == "thermal")
+            echo_radius = 2, sigma = 100;
+        else if (name == "rocket")
+            echo_radius = 0.1, sigma = 0.1;
+        else if (name == "ballistic")
+            echo_radius = 0.001, sigma = 0.001;
+        else
+             continue;
+
+        double lat = model->getDoubleValue("position/latitude-deg");
+        double lon = model->getDoubleValue("position/longitude-deg");
+        double alt = model->getDoubleValue("position/altitude-ft");
+        double heading = model->getDoubleValue("orientation/true-heading-deg");
 
         double range, bearing;
         calcRangeBearing(user_lat, user_lon, lat, lon, range, bearing);
 
-        //SG_LOG(SG_GENERAL, SG_DEBUG,
-        /*        "Radar: ID=" << ac->getID() << "(" << radar_list.size() << ")"
-                << " type=" << type
-                << " view_heading=" << _view_heading * SG_RADIANS_TO_DEGREES
-                << " alt=" << alt
-                << " heading=" << heading
-                << " range=" << range
-                << " bearing=" << bearing);*/
-
         bool isVisible = withinRadarHorizon(user_alt, alt, range);
-        //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: visible " << isVisible);
+
         if (!isVisible)
             continue;
 
-        if (!inRadarRange(type, range))
+        if (!inRadarRange(sigma, range))
             continue;
 
         bearing *= SG_DEGREES_TO_RADIANS;
@@ -666,20 +671,13 @@ wxRadarBg::update_aircraft()
 
         // pos mode
         if (draw_echoes) {
-            float echo_radius = echo_radii[type] * 120;
-            float size = echo_radius * UNIT;
+            float size = echo_radius * 120 * UNIT;
 
             const osg::Vec2f texBase(3 * UNIT, 3 * UNIT);
             osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
                     * osg::Matrixf::translate(0.0f, radius, 0.0f)
                     * wxRotate(bearing) * _centerTrans);
             addQuad(_vertices, _texCoords, m, texBase);
-
-            //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:    drawing AI"
-                //<< " ID=" << ac->getID()
-                //<< " type=" << type
-            //        << " radius=" << radius
-            //        << " angle=" << angle * SG_RADIANS_TO_DEGREES);
         }
 
         // data mode
@@ -691,25 +689,10 @@ wxRadarBg::update_aircraft()
                     * osg::Matrixf::translate(0.0f, radius, 0.0f)
                     * wxRotate(bearing) * _centerTrans);
             addQuad(_vertices, _texCoords, m, texBase);
-
-            //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:    drawing data"
-            //        << " x=" << x <<" y="<< y
-            //        << " bearing=" << angle * SG_RADIANS_TO_DEGREES
-            //        << " radius=" << radius);
         }
 
-        if (draw_data) {
-            if (ac->getID() == selected_id) {
-                selected_ac = ac;
-                selected_radius = radius;
-                selected_bearing = bearing;
-            } else {
-                update_data(ac, radius, bearing, false);
-            }
-        }
-    }
-    if (selected_ac) {
-        update_data(selected_ac, selected_radius, selected_bearing, true);
+        if (draw_data || i < 0)  // selected one (i == -1) is always drawn
+            update_data(model, alt, heading, radius, bearing, i < 0);
     }
 }
 
@@ -812,7 +795,7 @@ wxRadarBg::withinRadarHorizon(double user_alt, double alt, double range_nm)
 
 
 bool
-wxRadarBg::inRadarRange(int type, double range_nm)
+wxRadarBg::inRadarRange(double sigma, double range_nm)
 {
     //The Radar Equation:
     //
@@ -828,13 +811,12 @@ wxRadarBg::inRadarRange(int type, double range_nm)
     //
     // TODO - make the maximum range adjustable at runtime
 
-    const double sigma[] = {0, 1, 100, 100, 0.001, 0.1, 100, 100, 1, 1, 1};
     double constant = _radar_ref_rng;
 
     if (constant <= 0)
         constant = 35;
 
-    double maxrange = constant * pow(sigma[type], 0.25);
+    double maxrange = constant * pow(sigma, 0.25);
     //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: max range " << maxrange);
     return maxrange >= range_nm;
 }

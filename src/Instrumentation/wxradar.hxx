@@ -32,14 +32,11 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/environment/visual_enviro.hxx>
 
-#include <AIModel/AIBase.hxx>
-#include <AIModel/AIManager.hxx>
 #include <vector>
 #include <string>
 using std::vector;
 using std::string;
 
-class FGAIBase;
 class FGODGauge;
 
 class wxRadarBg : public SGSubsystem, public SGPropertyChangeListener {
@@ -134,13 +131,12 @@ private:
 
     list_of_SGWxRadarEcho _radarEchoBuffer;
 
-    FGAIManager *_ai;
-
     void update_weather();
     void update_aircraft();
     void update_tacan();
     void update_heading_marker();
-    void update_data(FGAIBase* ac, double radius, double bearing, bool selected);
+    void update_data(const SGPropertyNode *ac, double alt, double heading,
+            double radius, double bearing, bool selected);
     void center_map();
     void apply_map_offset();
     void updateFont();
@@ -148,7 +144,7 @@ private:
             double &range, double &bearing) const;
 
     bool withinRadarHorizon(double user_alt, double alt, double range);
-    bool inRadarRange(int type, double range);
+    bool inRadarRange(double sigma, double range);
 
     float calcRelBearing(float bearing, float heading);
 };
