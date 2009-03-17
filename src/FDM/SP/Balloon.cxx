@@ -81,31 +81,26 @@ void FGBalloonSim::init() {
     
     //now do init specific to the Balloon
 
-    sgVec3 temp;
-
     SG_LOG( SG_FLIGHT, SG_INFO, "Starting initializing BalloonSim" );
 
     SG_LOG( SG_FLIGHT, SG_INFO, "  created a balloon" );
 
     //set position
-    sgSetVec3( temp,
-	get_Latitude(), 
-	get_Longitude(), 
-	get_Altitude() * SG_FEET_TO_METER);
+    SGVec3f temp(get_Latitude(),
+                 get_Longitude(),
+                 get_Altitude() * SG_FEET_TO_METER);
     current_balloon.setPosition( temp );
 
     //set Euler angles (?)
-    sgSetVec3( temp,
-	get_Phi(), 
-	get_Theta(), 
-	get_Psi() );
+    temp = SGVec3f(get_Phi(), 
+                   get_Theta(), 
+                   get_Psi() );
     current_balloon.setHPR( temp );
 
     //set velocities
-    sgSetVec3( temp,
-	       fgGetDouble("/sim/presets/uBody-fps"),
-	       fgGetDouble("/sim/presets/vBody-fps"),
-	       fgGetDouble("/sim/presets/wBody-fps") );
+    temp = SGVec3f(fgGetDouble("/sim/presets/uBody-fps"),
+                   fgGetDouble("/sim/presets/vBody-fps"),
+                   fgGetDouble("/sim/presets/wBody-fps") );
     current_balloon.setVelocity( temp );
 
     SG_LOG( SG_FLIGHT, SG_INFO, "Finished initializing BalloonSim" );
@@ -179,13 +174,13 @@ bool FGBalloonSim::copy_to_BalloonSim() {
 // Convert from the BalloonSim to the FGInterface struct
 bool FGBalloonSim::copy_from_BalloonSim() {
 
-    sgVec3 temp;
+    SGVec3f temp;
 
     // Velocities
     current_balloon.getVelocity( temp );
     _set_Velocities_Local( temp[0], temp[1], temp[2] );
 
-    /* ***FIXME*** */ _set_V_equiv_kts( sgLengthVec3 ( temp ) );
+    /* ***FIXME*** */ _set_V_equiv_kts( length( temp ) );
 
     _set_Omega_Body( 0.0, 0.0, 0.0 );
 

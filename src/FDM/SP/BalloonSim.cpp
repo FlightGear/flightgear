@@ -44,7 +44,6 @@ HISTORY
 #endif
 
 #include <stdio.h>
-// #include <conio.h>
 #include <math.h>
 
 #include <simgear/constants.h>
@@ -52,8 +51,6 @@ HISTORY
 #include <Aircraft/aircraft.hxx>
 
 #include "BalloonSim.h"
-
-#include <plib/sg.h>
 
 /****************************************************************************/
 /********************************** CODE ************************************/
@@ -71,10 +68,10 @@ balloon::balloon()
     dt = 0.1;
     ground_level = 3400.0;
 
-    sgSetVec3(gravity_vector, 0.0, 0.0, -9.81);
-    sgSetVec3(velocity, 0.0, 0.0, 0.0);
-    sgSetVec3(position, 0.0, 0.0, 0.0);
-    sgSetVec3(hpr,	0.0, 0.0, 0.0);
+    gravity_vector = SGVec3f(0.0, 0.0, -9.81);
+    velocity = SGVec3f(0.0, 0.0, 0.0);
+    position = SGVec3f(0.0, 0.0, 0.0);
+    hpr = SGVec3f(0.0, 0.0, 0.0);
 
     /************************************************************************/
     /* My balloon  has a  radius of  8.8 metres  as that  gives a  envelope */
@@ -202,24 +199,24 @@ void balloon::update()
     float mTotal = mEnvelope + mBasket;
 
     //calulate the forces
-    sgVec3 fTotal, fFriction, fLift;
+    SGVec3f fTotal, fFriction, fLift;
 
-    sgScaleVec3(fTotal, gravity_vector, mTotal);
+    fTotal = mTotal*gravity_vector;
    
-    //sgAddVec3(fTotal, fLift);     //FIXME: uninitialized fLift 
-    //sgAddVec3(fTotal, fFriction); //FIXME: uninitialized fFriction
+    // fTotal += fLift;     //FIXME: uninitialized fLift 
+    // fTotal += fFriction; //FIXME: uninitialized fFriction
     
     //claculate acceleration: a = F / m
-    sgVec3 aTotal, vTotal, dTotal;
+    SGVec3f aTotal, vTotal, dTotal;
 
-    sgScaleVec3(aTotal, fTotal, 1.0 / mTotal);
+    aTotal = (1.0 / mTotal)*fTotal;
 
     //integrate the displacement: d = 0.5 * a * dt**2 + v * dt + d
-    sgScaleVec3(vTotal, velocity, dt); 
-    sgScaleVec3(dTotal, aTotal, 0.5*dt*dt); sgAddVec3(dTotal, vTotal);
+    vTotal = dt*velocity; 
+    dTotal = (0.5*dt*dt)*aTotal; dTotal += vTotal;
 
     //integrate the velocity to 'velocity': v = a * dt + v
-    sgScaleVec3(vTotal, aTotal, dt); sgAddVec3(velocity, vTotal);
+    vTotal = dt*aTotal; velocity += vTotal;
 
     /************************************************************************/
     /* VERY WRONG STUFF: it's just here to get some results to start with   */	
@@ -230,7 +227,7 @@ void balloon::update()
 	position[2] = ground_level;
 
     //return results
-    sgAddVec3(position, dTotal);
+    position += dTotal;
 
     //cout << "BallonSim: T: " << (T-273.16) << " alt: " << position[2] << " ground: " << ground_level << " throttle: " << current_burner_strength << "\n";
 }
@@ -241,34 +238,34 @@ void balloon::set_burner_strength(const float bs)
     current_burner_strength = bs;
 }
 
-void balloon::getVelocity(sgVec3 v) const
+void balloon::getVelocity(SGVec3f& v) const
 {
-    sgCopyVec3(v, velocity);
+    v = velocity;
 }
 
-void balloon::setVelocity(const sgVec3 v)
+void balloon::setVelocity(const SGVec3f& v)
 {
-    sgCopyVec3(velocity, v);
+    velocity = v;
 }
 
-void balloon::getPosition(sgVec3 v) const
+void balloon::getPosition(SGVec3f& v) const
 {
-    sgCopyVec3(v, position);
+    v = position;
 }
 
-void balloon::setPosition(const sgVec3 v)
+void balloon::setPosition(const SGVec3f& v)
 {
-    sgCopyVec3(position, v);
+    position = v;
 }
 
-void balloon::getHPR(sgVec3 angles) const //the balloon isn't allways exactly vertical
+void balloon::getHPR(SGVec3f& angles) const //the balloon isn't allways exactly vertical
 {
-    sgCopyVec3(angles, hpr);
+    angles = hpr;
 }
 
-void balloon::setHPR(const sgVec3 angles)  //the balloon isn't allways exactly vertical
+void balloon::setHPR(const SGVec3f& angles)  //the balloon isn't allways exactly vertical
 {
-    sgCopyVec3(hpr, angles);
+    hpr = angles;
 }
 
 void balloon::setGroundLevel(const float altitude)
