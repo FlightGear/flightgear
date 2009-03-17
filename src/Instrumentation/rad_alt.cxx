@@ -25,6 +25,8 @@
 #  include "config.h"
 #endif
 
+#include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
 #include "rad_alt.hxx"
 
 
