@@ -188,15 +188,6 @@ void fgUpdateTimeDepCalcs() {
 }
 
 
-void fgInitTimeDepCalcs( void ) {
-    // noop for now
-}
-
-
-static const double alt_adjust_ft = 3.758099;
-static const double alt_adjust_m = alt_adjust_ft * SG_FEET_TO_METER;
-
-
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
 static void fgMainLoop( void ) {
