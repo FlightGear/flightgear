@@ -2,10 +2,7 @@
 #ifndef __FG_MAIN_HXX
 #define __FG_MAIN_HXX 1
 
-void fgLoadDCS (void);
-void fgUpdateDCS (void);
 void fgUpdateTimeDepCalcs();
-void fgInitTimeDepCalcs( void );
 
 bool fgMainInit( int argc, char **argv );
 
