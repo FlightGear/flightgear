@@ -43,7 +43,7 @@ HISTORY
 /****************************************************************************/
 /* INCLUDES								    */
 /****************************************************************************/
-#include <plib/sg.h>
+#include <simgear/math/SGMath.hxx>
 		
 /****************************************************************************/
 /* DEFINES								    */
@@ -57,10 +57,10 @@ class balloon
 private:
     float dt;				//in s
 
-    sgVec3 gravity_vector;		//in m/s*s
-    sgVec3 hpr;				//the balloon isn't allways exactly vertical (e.g. during gusts); normalized
-    sgVec3 velocity;			//current velocity; it gets iterated at each 'update'
-    sgVec3 position;			//current position in lat/lon/alt
+    SGVec3f gravity_vector;		//in m/s*s
+    SGVec3f hpr;				//the balloon isn't allways exactly vertical (e.g. during gusts); normalized
+    SGVec3f velocity;			//current velocity; it gets iterated at each 'update'
+    SGVec3f position;			//current position in lat/lon/alt
 
     float balloon_envelope_area;	//area of the envelope
     float balloon_envelope_volume;	//volume of the envelope
@@ -94,14 +94,14 @@ public:
     void update();			//dt = time in seconds since last call
     void set_burner_strength(const float bs);
 
-    void getVelocity(sgVec3 v) const;
-    void setVelocity(const sgVec3 v);
+    void getVelocity(SGVec3f& v) const;
+    void setVelocity(const SGVec3f& v);
 
-    void getPosition(sgVec3 v) const;
-    void setPosition(const sgVec3 v);
+    void getPosition(SGVec3f& v) const;
+    void setPosition(const SGVec3f& v);
 
-    void getHPR(sgVec3 angles) const;   //the balloon isn't allways exactly vertical
-    void setHPR(const sgVec3 angles);   //the balloon isn't allways exactly vertical
+    void getHPR(SGVec3f& angles) const;   //the balloon isn't allways exactly vertical
+    void setHPR(const SGVec3f& angles);   //the balloon isn't allways exactly vertical
 
     void setGroundLevel(const float altitude);
 
