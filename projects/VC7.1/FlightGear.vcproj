@@ -2224,12 +2224,6 @@
 			Name="Lib_Time"
 			Filter="">
 			<File
-				RelativePath="..\..\src\Time\fg_timer.cxx">
-			</File>
-			<File
-				RelativePath="..\..\src\Time\fg_timer.hxx">
-			</File>
-			<File
 				RelativePath="..\..\src\Time\light.cxx">
 			</File>
 			<File

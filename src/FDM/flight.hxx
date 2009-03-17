@@ -111,8 +111,6 @@ private:
     // next elapsed time.  This yields a small amount of temporal
     // jitter ( < dt ) but in practice seems to work well.
 
-    double remainder;		// remainder time from last run
-
     // CG position w.r.t. ref. point
     SGVec3d d_cg_rp_body_v;
 

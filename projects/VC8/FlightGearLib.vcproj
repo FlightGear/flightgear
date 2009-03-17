@@ -489,10 +489,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\time\fg_timer.hxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\include\fg_typedefs.h"
 				>
 			</File>
@@ -2196,10 +2192,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\main\fg_props.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\time\fg_timer.cxx"
 				>
 			</File>
 			<File

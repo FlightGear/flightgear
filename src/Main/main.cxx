@@ -67,7 +67,6 @@
 #include <ATCDCL/ATCmgr.hxx>
 #include <ATCDCL/AIMgr.hxx>
 #include <Time/tmp.hxx>
-#include <Time/fg_timer.hxx>
 #include <Environment/environment_mgr.hxx>
 #include <GUI/new_gui.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
@@ -304,15 +303,12 @@ static void fgMainLoop( void ) {
 
     // round the real time down to a multiple of 1/model-hz.
     // this way all systems are updated the _same_ amount of dt.
-    {
-        static double rem = 0.0;
-        real_delta_time_sec += rem;
-        double hz = model_hz;
-        double nit = floor(real_delta_time_sec*hz);
-        rem = real_delta_time_sec - nit/hz;
-        real_delta_time_sec = nit/hz;
-    }
-
+    static double reminder = 0.0;
+    real_delta_time_sec += reminder;
+    global_multi_loop = long(floor(real_delta_time_sec*model_hz));
+    global_multi_loop = SGMisc<long>::max(0, global_multi_loop);
+    reminder = real_delta_time_sec - double(global_multi_loop)/double(model_hz);
+    real_delta_time_sec = double(global_multi_loop)/double(model_hz);
 
     if (clock_freeze->getBoolValue() || wait_for_scenery) {
         delta_time_sec = 0;
@@ -326,8 +322,6 @@ static void fgMainLoop( void ) {
     fgSetDouble("/sim/time/delta-realtime-sec", real_delta_time_sec);
     fgSetDouble("/sim/time/delta-sec", delta_time_sec);
 
-    static long remainder = 0;
-    long elapsed;
 #ifdef FANCY_FRAME_COUNTER
     int i;
     double accum;
@@ -400,12 +394,6 @@ static void fgMainLoop( void ) {
                                 altitude->getDoubleValue() * SG_FEET_TO_METER,
                                 globals->get_time_params()->getJD() );
 
-    // Get elapsed time (in usec) for this past frame
-    elapsed = fgGetTimeInterval();
-    SG_LOG( SG_ALL, SG_DEBUG,
-            "Elapsed time interval is = " << elapsed
-            << ", previous remainder is = " << remainder );
-
     // Calculate frame rate average
 #ifdef FANCY_FRAME_COUNTER
     /* old fps calculation */
@@ -452,27 +440,10 @@ static void fgMainLoop( void ) {
         globals->get_AI_mgr()->update(delta_time_sec);
 
     // Run flight model
-
-    // Calculate model iterations needed for next frame
-    elapsed += remainder;
-
-    global_multi_loop = (long)(((double)elapsed * 0.000001) * model_hz );
-    remainder = elapsed - ( (global_multi_loop*1000000) / model_hz );
-    SG_LOG( SG_ALL, SG_DEBUG,
-            "Model iterations needed = " << global_multi_loop
-            << ", new remainder = " << remainder );
-
-    // chop max iterations to something reasonable if the sim was
-    // delayed for an excessive amount of time
-    if ( global_multi_loop > 2.0 * model_hz ) {
-        global_multi_loop = (int)(2.0 * model_hz );
-        remainder = 0;
-    }
-
-    // flight model
-    if ( global_multi_loop > 0) {
+    if (0 < global_multi_loop) {
         // first run the flight model each frame until it is initialized
-        // then continue running each frame only after initial scenery load is complete.
+        // then continue running each frame only after initial scenery
+        // load is complete.
         fgUpdateTimeDepCalcs();
     } else {
         SG_LOG( SG_ALL, SG_DEBUG,
