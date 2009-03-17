@@ -44,23 +44,15 @@ static inline void assign(double* ptr, const SGVec3d& vec)
   ptr[2] = vec[2];
 }
 
-// base_fdm_state is the internal state that is updated in integer
-// multiples of "dt".  This leads to "jitter" with respect to the real
-// world time, so we introduce cur_fdm_state which is extrapolated by
-// the difference between sim time and real world time
-
 FGInterface *cur_fdm_state = 0;
-FGInterface base_fdm_state;
 
 // Constructor
 FGInterface::FGInterface()
-  : remainder(0)
 {
     _setup();
 }
 
 FGInterface::FGInterface( double dt )
-  : remainder(0)
 {
     _setup();
 }
@@ -70,33 +62,18 @@ FGInterface::~FGInterface() {
     // unbind();                   // FIXME: should be called explicitly
 }
 
-
 int
 FGInterface::_calc_multiloop (double dt)
 {
+  // Since some time the simulation time increments we get here are
+  // already a multiple of the basic update freqency.
+  // So, there is no need to do our own multiloop rounding with all bad
+  // roundoff problems when we already have nearly accurate values.
+  // Only the speedup thing must be still handled here
   int hz = fgGetInt("/sim/model-hz");
+  int multiloop = SGMiscd::roundToInt(dt*hz);
   int speedup = fgGetInt("/sim/speed-up");
-
-  dt += remainder;
-  remainder = 0;
-  double ml = dt * hz;
-  // Avoid roundoff problems by adding the roundoff itself.
-  // ... ok, two times the roundoff to have enough room.
-  int multiloop = int(floor(ml * (1.0 + 2.0*DBL_EPSILON)));
-  remainder = (ml - multiloop) / hz;
-
-  // If we artificially inflate ml above by a tiny amount to get the
-  // closest integer, then subtract the integer from the original
-  // slightly smaller value, we can get a negative remainder.
-  // Logically this should never happen, and we definitely don't want
-  // to carry a negative remainder over to the next iteration, so
-  // never let the remainder go below zero.
-  // 
-  // Note: this fixes a problem where we run 1, 3, 1, 3, 1, 3... loops
-  // of the FDM when in fact we want to run 2, 2, 2, 2, 2...
-  if ( remainder < 0 ) { remainder = 0; }
-
-  return (multiloop * speedup);
+  return multiloop * speedup;
 }
 
 
@@ -164,9 +141,6 @@ FGInterface::common_init ()
     set_inited( true );
 
     ground_cache.set_cache_time_offset(globals->get_sim_time_sec());
-
-//     stamp();
-//     set_remainder( 0 );
 
     // Set initial position
     SG_LOG( SG_FLIGHT, SG_INFO, "...initializing position..." );
@@ -260,16 +234,6 @@ void
 FGInterface::bind ()
 {
   bound = true;
-
-                                // Time management (read-only)
-//   fgTie("/fdm/time/delta_t", this,
-//         &FGInterface::get_delta_t); // read-only
-//   fgTie("/fdm/time/elapsed", this,
-//         &FGInterface::get_elapsed); // read-only
-//   fgTie("/fdm/time/remainder", this,
-//         &FGInterface::get_remainder); // read-only
-//   fgTie("/fdm/time/multi_loop", this,
-//         &FGInterface::get_multi_loop); // read-only
 
 			// Aircraft position
   fgTie("/position/latitude-deg", this,
@@ -429,10 +393,6 @@ FGInterface::unbind ()
 {
   bound = false;
 
-  // fgUntie("/fdm/time/delta_t");
-  // fgUntie("/fdm/time/elapsed");
-  // fgUntie("/fdm/time/remainder");
-  // fgUntie("/fdm/time/multi_loop");
   fgUntie("/position/latitude-deg");
   fgUntie("/position/longitude-deg");
   fgUntie("/position/altitude-ft");
