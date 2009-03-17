@@ -621,7 +621,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
            sun_horiz_eff = moon_horiz_eff = 1.0;
         }
 
-        static SGSkyState sstate;
+        SGSkyState sstate;
 
         SGVec3d viewPos = current__view->getViewPosition();
         sstate.view_pos  = toVec3f(viewPos);
@@ -635,11 +635,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
         sstate.alt       = geodViewPos.getElevationM();
         sstate.spin      = l->get_sun_rotation();
         sstate.gst       = globals->get_time_params()->getGst();
-        sstate.sun_ra    = globals->get_ephem()->getSunRightAscension();
-        sstate.sun_dec   = globals->get_ephem()->getSunDeclination();
         sstate.sun_dist  = 50000.0 * sun_horiz_eff;
-        sstate.moon_ra   = globals->get_ephem()->getMoonRightAscension();
-        sstate.moon_dec  = globals->get_ephem()->getMoonDeclination();
         sstate.moon_dist = 40000.0 * moon_horiz_eff;
         sstate.sun_angle = l->get_sun_angle();
 
@@ -660,20 +656,16 @@ FGRenderer::update( bool refresh_camera_settings ) {
          << "    moon_angle = " << l->moon_angle );
         */
 
-        static SGSkyColor scolor;
+        SGSkyColor scolor;
 
         scolor.sky_color   = SGVec3f(l->sky_color().data());
         scolor.fog_color   = SGVec3f(l->adj_fog_color().data());
         scolor.cloud_color = SGVec3f(l->cloud_color().data());
         scolor.sun_angle   = l->get_sun_angle();
         scolor.moon_angle  = l->get_moon_angle();
-        scolor.nplanets    = globals->get_ephem()->getNumPlanets();
-        scolor.nstars      = globals->get_ephem()->getNumStars();
-        scolor.planet_data = globals->get_ephem()->getPlanets();
-        scolor.star_data   = globals->get_ephem()->getStars();
 
-        thesky->reposition( sstate, delta_time_sec );
-        thesky->repaint( scolor );
+        thesky->reposition( sstate, *globals->get_ephem(), delta_time_sec );
+        thesky->repaint( scolor, *globals->get_ephem() );
 
         /*
         SG_LOG( SG_GENERAL, SG_BULK,

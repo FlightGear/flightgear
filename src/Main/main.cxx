@@ -799,10 +799,7 @@ static void fgIdleFunction ( void ) {
         // Sun diameter: 1,390,000 kilometers
         thesky->build( 80000.0, 80000.0,
                        463.3, 361.8,
-                       globals->get_ephem()->getNumPlanets(),
-                       globals->get_ephem()->getPlanets(),
-                       globals->get_ephem()->getNumStars(),
-                       globals->get_ephem()->getStars(),
+                       *globals->get_ephem(),
                        fgGetNode("/environment", true));
 
         // Initialize MagVar model
