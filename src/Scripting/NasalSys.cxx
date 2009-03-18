@@ -466,12 +466,13 @@ static naRef f_geodtocart(naContext c, naRef me, int argc, naRef* args)
 static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
 {
 #define HASHSET(s,l,n) naHash_set(matdata, naStr_fromdata(naNewString(c),s,l),n)
-    if(argc != 2) naRuntimeError(c, "geodinfo() expects 2 arguments: lat, lon");
+    if(argc < 2 or argc > 3)
+        naRuntimeError(c, "geodinfo() expects 2 or 3 arguments: lat, lon [, maxalt]");
     double lat = naNumValue(args[0]).num;
     double lon = naNumValue(args[1]).num;
-    double elev;
+    double elev = argc == 3 ? naNumValue(args[2]).num : 10000;
     const SGMaterial *mat;
-    SGGeod geod = SGGeod::fromDegM(lon, lat, 10000);
+    SGGeod geod = SGGeod::fromDegM(lon, lat, elev);
     if(!globals->get_scenery()->get_elevation_m(geod, elev, &mat))
         return naNil();
     naRef vec = naNewVector(c);
