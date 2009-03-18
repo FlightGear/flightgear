@@ -34,7 +34,6 @@
 
 FGAircraftModel::FGAircraftModel ()
   : _aircraft(0),
-    _selector(new osg::Switch),
     _nearplane(0.10f),
     _farplane(1000.0f)
 {
@@ -42,9 +41,10 @@ FGAircraftModel::FGAircraftModel ()
 
 FGAircraftModel::~FGAircraftModel ()
 {
+  osg::Node* node = _aircraft->getSceneGraph();
+  globals->get_scenery()->get_aircraft_branch()->removeChild(node);
+
   delete _aircraft;
-				// SSG will delete it
-  globals->get_scenery()->get_aircraft_branch()->removeChild(_selector.get());
 }
 
 void 
@@ -63,10 +63,10 @@ FGAircraftModel::init ()
                                            globals->get_props());
     _aircraft->init( model );
   }
-  _selector->addChild(_aircraft->getSceneGraph(), true);
+  osg::Node* node = _aircraft->getSceneGraph();
   // Do not do altitude computations with that model
-  _selector->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
-  globals->get_scenery()->get_aircraft_branch()->addChild(_selector.get());
+  node->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
+  globals->get_scenery()->get_aircraft_branch()->addChild(node);
 }
 
 void

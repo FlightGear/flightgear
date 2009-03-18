@@ -39,12 +39,10 @@ public:
   virtual void unbind ();
   virtual void update (double dt);
   virtual SGModelPlacement * get3DModel() { return _aircraft; }
-  void select( bool s ) { _selector->setValue( 0, s ); }
 
 private:
 
   SGModelPlacement * _aircraft;
-  osg::ref_ptr<osg::Switch> _selector;
   float _nearplane;
   float _farplane;
 
