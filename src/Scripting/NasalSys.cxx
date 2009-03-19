@@ -691,7 +691,7 @@ void FGNasalSys::init()
     const char *s = "nasal-dir-initialized";
     SGPropertyNode *signal = fgGetNode("/sim/signals", true);
     signal->setBoolValue(s, true);
-    signal->removeChildren(s);
+    signal->removeChildren(s, false);
 
     // Pull scripts out of the property tree, too
     loadPropertyScripts();
