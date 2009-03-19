@@ -1,3 +1,201 @@
+COMMON SETTINGS
+==============================================================================
+
+Currently four types of digital filter implementations are supported. They all serve an 
+individual purpose or are individual implementations of a specific filter type.
+Each filter implementation uses the same set of basic configuration tags and individual
+configuration elements. These individual elements are described in the section of the
+filter. 
+
+The InputValue
+==============================================================================
+Each filter has several driving values, like the input value itself, sometimes a reference 
+value, a gain value and others. Most of these input values can bei either a constant value
+or the value of a property. They all use the same syntax and will be referred to as InputValue
+in the remaining document.
+
+The complete XML syntax for a InputValue is
+
+<some-element>
+  <property>/some/property/name</property>
+  <value>0.0</value>
+  <scale>1.0</value>
+  <offset>0.0</offset>
+</some-element>
+
+The enclosing element <some-element> is the element defined in each filter, like <input>, <u_min>, 
+<reference> etc. These elements will be described later.
+The value of the input is calculated based on the given value, scale and offset as
+value * scale + offset. 
+With the full set of given elements, the InputValue will initialize the named property to the value
+given, reduced by the given offset and reverse scaled by the given scale.
+
+Example:
+<input>
+  <property>/controls/flight/rudder</property>
+  <value>0.0</value>
+  <scale>0.5</scale>
+  <offset>0.5</offset>
+</input>
+
+Will use the property /controls/flight/rudder as the input of the filter. The property will be initialized
+at a value of zero and since the property usually is in the range [-1..+1], the the value of <input> will
+be in the range (-1)*0.5+0.5 to (+1)*0.5+0.5 which is [0..1].
+
+The default values for elements not given are:
+<value/> : 0.0
+<scale/> : 1.0
+<offset/>: 0.0
+<property/> : none
+
+Some examples:
+<input>
+  <property>/position/altitude-ft</property>
+  <scale>0.3048</scale>
+</input>
+Gives the altitude in meters. No initialization of the property is performed, no offset applied.
+
+<reference>
+  <value>0.0</value>
+</reference>
+A constant reference of zero.
+
+A abbreviated method of defining values exist for using a just constant or a property. The above
+example may be written as
+<reference>0.0</reference>
+Or if the reference is defined in a property
+<reference>/some/property/name</reference>
+No initialization, scaling or offsetting is performed here.
+The logic behind this is: If the text node in the element (the text between the opening and closing tag)
+can be converted to a double value, it will be interpreted as a double value. Otherwise the text will
+be interpreted as a property name.
+Examples:
+<reference>3.1415927</reference>             - The constant of PI (roughly)
+<reference>/position/altitude-ft</reference> - The property /position/altitude-ft
+<reference>3kings</reference>                - The constant 3. The word kings is ignored
+<reference>food4less</reference>             - The property food4less
+
+The <property> element may also be written as <prop> for backward compatibility.
+
+OutputValue           
+==============================================================================
+Each filter drives one to many output properties. No scaling of offsetting is implemented
+for the output value, these should be done in the filter itself.
+The output properties are defined in the <output/> element by adding <property/> elements
+within the <output/> element. For just a single output property, the <property/> element
+may be ommited. For backward compatibility, <property/> may be replaced by <prop/>.
+Nonexisting properties will be created with type double.
+
+Example: (Multiple output properties)
+<output>
+  <property>/some/output/property</property>
+  <property>/some/other/output/property</property>
+  <property>/and/another/output/property</property>
+</output>
+
+Example: a single output property
+<output>/just/a/single/property</output>
+
+Other Common Settings
+==============================================================================
+<name>        String      The name of the filter. Used for debug purpose.
+Example:
+<name>pressure rate filter</name>
+
+<debug>       Boolean     If true, this filter puts out debug information when updated.
+Example: 
+<debug>false</debug>
+
+<input>       InputValue  The input property driving the filter. 
+                          Refer to InputValue for details.
+
+<reference>   InputValue  The reference property for filter that need one. 
+                          Refer to InputValue for details.
+
+<output>      Complex     Each filter can drive one to many output properties. 
+                          Refer to OutputValue for details.
+
+<u_min>       InputValue  This defines the optional minimum and maximum value the output
+<u_max>                   is clamped to. If neither <u_min> nor <u_max> exists, the output
+                          is only limited by the internal limit of double precision float computation.
+                          If either <u_min> or <u_max> is given, clamping is activated. A missing
+                          min or max value defaults to 0 (zero).
+                          Note: <u_min> and <u_max> may also occour within a <config> element.
+
+Example: Limit the pilot's body temperature to a constant minimum of 36 and a maximum defined in
+         /pilots/max-body-temperature-degc, initialized to 40.0
+<u_max>
+  <prop>/pilots/max-body-temperature-degc</prop>
+  <value>40.0</
+</u_max>
+<u_min>
+  <value>36.0</value>
+</u_min
+
+Implicit definition of the minimum value of 0 (zero) and defining a maximum of 100.0
+<config>
+  <u_max>100.0</u_max>
+</config>
+
+<enable>      Complex     Define a condition to enable or disable the filter. For disabled
+                          filters, no output computations are performed. Only enabled
+                          filters fill the output properties. The default for undefined
+                          conditions is enabled.
+                          Several way exist to define a condition. The most simple case
+                          is checking a boolean property. For this, just a <prop> element
+                          naming this boolean property is needed. The boolean value of the 
+                          named property defines the enabled state of the filter.
+                          To compare the value of a property with a constant, a <prop> and
+                          a <value> element define the property name and the value to be
+                          compared. The filter is enabled, if the value of the property
+                          equals the given value. A case sensitive string compare is 
+                          performed here.
+                          To define more complex conditions, a <condition> element may be
+                          used to define any condition described in README.conditions.
+                          If a <condition> element is present and if it contains a valid 
+                          condition, this conditions has precedence over a given <prop>/
+                          <value> condition.
+                          The child element <honor-passive>, a boolean flag, may be present
+                          within the <enable> element. If this element is true, the property
+                          /autopilot/locks/passive-mode is checked and if it is true, the 
+                          filter output is computed, but the output properties are not set.
+                          The default for honor-passive is false
+Example: Check a boolean property, only compute this filter if gear-down is true and 
+         /autopilot/locks/passive-mode is false
+<enable>
+  <prop>/gear/gear-down</prop>
+  <honor-passive>true</honor-passive>
+</enable>
+
+Check a property for equality, only compute this filter if the autopilot is locked in heading mode.
+<enable>
+  <prop>/autopilot/locks/heading</prop>
+  <value>dg-heading-hold</value>
+</enable>
+
+Use a complex condition, only compute this filter if the autopilot is serviceable and the lock
+is either dg-heading-hold or nav1-heading-hold
+<enable>
+  <condition>
+    <property>/autopilo/serviceable</property>
+    <or>
+      <equals>
+        <property>/autopilot/locks/heading</property>
+        <value>dg-heading-hold</value>
+      </equals>
+      <equals>
+        <property>/autopilot/locks/heading</property>
+        <value>nav1-heading-hold</value>
+      </equals>
+    </or>
+  </condition>
+</enable>
+
+INDIVIDUAL FILTER CONFIGURATION
+==============================================================================
+
+Digital Filter                          
+
 Six different types of digital filter can be configured inside the autopilot
 configuration file. There are four low-pass filter types and two gain filter
 types.
@@ -14,7 +212,32 @@ The gain filter types are:
 * gain
 * reciprocal
 
-Example 1:
+To add a digital filter, place a <filter> element under the root element. Next to 
+the global configuration elements described above, the following elements configure
+the digital filter:
+<filter-time> InputValue  This tag is only applicable for the exponential and
+                          double-exponential filter types. It controls the bandwidth 
+                          of the filter. The bandwidth in Hz of the filter is: 
+                          1/filter-time. So a low-pass filter with a bandwidth of 
+                          10Hz would have a filter time of 1/10 = 0.1
+
+<samples>     InputValue  This tag only makes sense for the moving-average filter. 
+                          It says how many past samples to average.
+
+<max-rate-of-change> 
+              InputValue  This tag is applicable for the noise-spike filter. 
+                          It says how much the value is allowed to change per second.
+
+<gain>        InputValue  This is only applicable to the gain and reciprocal filter types. 
+                          The output for gain filter is computed as input*gain while 
+                          the reciprocal filter computes output as gain/input for input
+                          values != 0 (zero). Gain may be a constant, a property name
+                          defined by a <prop> element within the <gain> element or a 
+                          property name initialized to a value by using a <prop> and 
+                          <value> element.
+          
+Example: a pressure-rate-filter implemented as a double exponential low pass filter
+         with a bandwith of 10Hz
 
   <filter>
     <name>pressure-rate-filter</name>
