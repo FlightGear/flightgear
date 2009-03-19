@@ -49,47 +49,128 @@ using std::deque;
 #include <Main/fg_props.hxx>
 
 
+class FGXMLAutoInput {
+private:
+     SGPropertyNode_ptr property; // The name of the property containing the value
+     double             value;    // The value as a constant or initializer for the property
+     double             offset;   // A fixed offset
+     double             scale;    // A constant scaling factor
+
+public:
+    FGXMLAutoInput() :
+      property(NULL),
+      value(0.0),
+      offset(0.0),
+      scale(1.0) {}
+
+    void   parse( SGPropertyNode_ptr, double value = 0.0, double offset = 0.0, double scale = 1.0 );
+    inline double getValue() {
+      if( property != NULL ) value = property->getDoubleValue();
+      return value * scale + offset;
+    }
+};
+
 /**
  * Base class for other autopilot components
  */
 
 class FGXMLAutoComponent : public SGReferenced {
 
-protected:
+private:
+    bool clamp;
+    vector <SGPropertyNode_ptr> output_list;
+
+    SGSharedPtr<const SGCondition> _condition;
+    SGPropertyNode_ptr enable_prop;
+    string * enable_value;
+
+    SGPropertyNode_ptr passive_mode;
+    bool honor_passive;
 
     string name;
+protected:
 
-    SGPropertyNode_ptr enable_prop;
-    SGPropertyNode_ptr passive_mode;
-    string enable_value;
-    bool honor_passive;
+    FGXMLAutoInput valueInput;
+    FGXMLAutoInput referenceInput;
+    FGXMLAutoInput uminInput;
+    FGXMLAutoInput umaxInput;
+    // debug flag
+    bool debug;
     bool enabled;
-
-    SGPropertyNode_ptr input_prop;
-    SGPropertyNode_ptr r_n_prop;
-    double r_n_value;
-    vector <SGPropertyNode_ptr> output_list;
-    SGSharedPtr<const SGCondition> _condition;
 
 public:
 
-    FGXMLAutoComponent() :
-      enable_prop( NULL ),
-      passive_mode( fgGetNode("/autopilot/locks/passive-mode", true) ),
-      enable_value( "" ),
-      honor_passive( false ),
-      enabled( false ),
-      input_prop( NULL ),
-      r_n_prop( NULL ),
-      r_n_value( 0.0 ),
-      _condition( NULL )
-    { }
-
-    virtual ~FGXMLAutoComponent() {}
+    FGXMLAutoComponent( SGPropertyNode *node);
+    virtual ~FGXMLAutoComponent();
 
     virtual void update (double dt)=0;
     
     inline const string& get_name() { return name; }
+
+    inline double Clamp( double value ) {
+        if( clamp ) {
+            double d = umaxInput.getValue();
+            if( value > d ) value = d;
+            d = uminInput.getValue();
+            if( value < d ) value = d;
+        }
+        return value;
+    }
+
+    inline void setOutputValue( double value ) {
+        // passive_ignore == true means that we go through all the
+        // motions, but drive the outputs.  This is analogous to
+        // running the autopilot with the "servos" off.  This is
+        // helpful for things like flight directors which position
+        // their vbars from the autopilot computations.
+        if ( honor_passive && passive_mode->getBoolValue() ) return;
+        for ( unsigned i = 0; i < output_list.size(); ++i ) {
+            output_list[i]->setDoubleValue( Clamp(value) );
+        }
+    }
+
+    inline double getOutputValue() {
+      return output_list.size() == 0 ? 0.0 : Clamp(output_list[0]->getDoubleValue());
+    }
+
+    /* 
+       Returns true if the enable-condition is true.
+
+       If a <condition> is defined, this condition is evaluated, 
+       <prop> and <value> tags are ignored.
+
+       If a <prop> is defined and no <value> is defined, the property
+       named in the <prop></prop> tags is evaluated as boolean.
+
+       If a <prop> is defined a a <value> is defined, the property named
+       in <prop></prop> is compared (as a string) to the value defined in
+       <value></value>
+
+       Returns true, if neither <condition> nor <prop> exists
+
+       Examples:
+       Using a <condition> tag
+       <enable>
+         <condition>
+           <!-- any legal condition goes here and is evaluated -->
+         </condition>
+         <prop>This is ignored</prop>
+         <value>This is also ignored</value>
+       </enable>
+
+       Using a single boolean property
+       <enable>
+         <prop>/some/property/that/is/evaluated/as/boolean</prop>
+       </enable>
+
+       Using <prop> == <value>
+       This is the old style behaviour
+       <enable>
+         <prop>/only/true/if/this/equals/true</prop>
+         <value>true<value>
+       </enable>
+    */
+    bool isPropertyEnabled();
 };
 
 
@@ -101,20 +182,11 @@ class FGPIDController : public FGXMLAutoComponent {
 
 private:
 
-    // debug flag
-    bool debug;
-
-    // Input values
-    double y_n;                 // measured process value
-    double r_n;                 // reference (set point) value
-    double y_scale;             // scale process input from property system
-    double r_scale;             // scale reference input from property system
-    double y_offset;
-    double r_offset;
 
     // Configuration values
-    double Kp;                  // proportional gain
-    SGPropertyNode_ptr Kp_prop;
+    FGXMLAutoInput Kp;          // proportional gain
+    FGXMLAutoInput Ti;          // Integrator time (sec)
+    FGXMLAutoInput Td;          // Derivator time (sec)
 
     double alpha;               // low pass filter weighing factor (usually 0.1)
     double beta;                // process value weighing factor for
@@ -123,15 +195,6 @@ private:
     double gamma;               // process value weighing factor for
                                 // calculating derivative error
                                 // (usually 0.0)
-
-    double Ti;                  // Integrator time (sec)
-    SGPropertyNode_ptr Ti_prop;
-    double Td;                  // Derivator time (sec)
-    SGPropertyNode_ptr Td_prop;
-    double u_min;               // Minimum output clamp
-    SGPropertyNode_ptr umin_prop;
-    double u_max;               // Maximum output clamp
-    SGPropertyNode_ptr umax_prop;
 
     // Previous state tracking values
     double ep_n_1;              // ep[n-1]  (prop error)
@@ -163,35 +226,13 @@ class FGPISimpleController : public FGXMLAutoComponent {
 private:
 
     // proportional component data
-    bool proportional;
-    double Kp;
-    SGPropertyNode_ptr Kp_prop;
-    SGPropertyNode_ptr offset_prop;
-    double offset_value;
+    FGXMLAutoInput Kp;
 
     // integral component data
-    bool integral;
-    double Ki;
+    FGXMLAutoInput Ki;
     double int_sum;
 
-    // post functions for output
-    bool clamp;
 
-    // debug flag
-    bool debug;
-
-    // Input values
-    double y_n;                 // measured process value
-    double r_n;                 // reference (set point) value
-    double y_scale;             // scale process input from property system
-    double r_scale;             // scale reference input from property system
-
-    double u_min;               // Minimum output clamp
-    SGPropertyNode_ptr umin_prop;
-    double u_max;               // Maximum output clamp
-    SGPropertyNode_ptr umax_prop;
-
-    
 public:
 
     FGPISimpleController( SGPropertyNode *node );
@@ -214,9 +255,6 @@ private:
     double average;
     double seconds;
     double filter_gain;
-
-    // debug flag
-    bool debug;
 
     // Input values
     double ivalue;                 // input value
@@ -245,21 +283,16 @@ public:
 class FGDigitalFilter : public FGXMLAutoComponent
 {
 private:
-    double Tf;            // Filter time [s]
-    unsigned int samples; // Number of input samples to average
-    double rateOfChange;  // The maximum allowable rate of change [1/s]
-    double gainFactor;
-    double output_min_clamp;
-    double output_max_clamp;
-    SGPropertyNode_ptr gain_prop;
+    FGXMLAutoInput samplesInput; // Number of input samples to average
+    FGXMLAutoInput rateOfChangeInput;  // The maximum allowable rate of change [1/s]
+    FGXMLAutoInput gainInput;     // 
+    FGXMLAutoInput TfInput;            // Filter time [s]
 
     deque <double> output;
     deque <double> input;
     enum filterTypes { exponential, doubleExponential, movingAverage,
                        noiseSpike, gain, reciprocal };
     filterTypes filterType;
-
-    bool debug;
 
 public:
     FGDigitalFilter(SGPropertyNode *node);

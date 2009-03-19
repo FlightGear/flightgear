@@ -40,28 +40,186 @@
 using std::cout;
 using std::endl;
 
-static SGCondition * getCondition( SGPropertyNode * node )
+/* 
+parse element with
+  <node>
+    <value>1</value>
+    <prop>/some/property</prop>
+  </node>
+or
+  <node>123</node>
+or
+  <node>/some/property</node>
+*/
+
+void FGXMLAutoInput::parse( SGPropertyNode_ptr node, double aValue, double aOffset, double aScale )
 {
-   const SGPropertyNode* conditionNode = node->getChild("condition");
-   return conditionNode ? sgReadCondition(node, conditionNode) : NULL;
+    delete property;
+    property = NULL;
+    value = aValue;
+    offset = aOffset;
+    scale = aScale;
+
+    if( node == NULL )
+        return;
+
+    SGPropertyNode * n;
+
+    if( (n = node->getChild( "scale" )) != NULL )
+        scale = n->getDoubleValue();
+
+    if( (n = node->getChild( "offset" )) != NULL )
+        offset = n->getDoubleValue();
+
+    SGPropertyNode *valueNode = node->getChild( "value" );
+    if ( valueNode != NULL ) {
+        value = valueNode->getDoubleValue();
+    }
+
+    n = node->getChild( "property" );
+    // if no <property> element, check for <prop> element for backwards
+    // compatibility
+    if(  n == NULL )
+        n = node->getChild( "prop" );
+
+    if (  n != NULL ) {
+        property = fgGetNode(  n->getStringValue(), true );
+        if ( valueNode != NULL ) {
+            // initialize property with given value 
+            // if both <prop> and <value> exist
+            if( scale != 0 )
+              property->setDoubleValue( (value - offset)/scale );
+            else
+              property->setDoubleValue( 0 ); // if scale is zero, value*scale is zero
+        }
+    }
+
+    if ( n == NULL && valueNode == NULL ) {
+        // no <value> element and no <prop> element, use text node 
+        const char * textnode = node->getStringValue();
+        char * endp = NULL;
+        // try to convert to a double value. If the textnode does not start with a number
+        // endp will point to the beginning of the string. We assume this should be
+        // a property name
+        value = strtod( textnode, &endp );
+        if( endp == textnode ) {
+          property = fgGetNode( textnode, true );
+        }
+    }
+}
+
+FGXMLAutoComponent::FGXMLAutoComponent( SGPropertyNode * node ) :
+      debug(false),
+      name(""),
+      enable_prop( NULL ),
+      passive_mode( fgGetNode("/autopilot/locks/passive-mode", true) ),
+      enable_value( NULL ),
+      honor_passive( false ),
+      enabled( false ),
+      clamp( false ),
+      _condition( NULL )
+{
+    int i;
+    SGPropertyNode *prop; 
+
+    for ( i = 0; i < node->nChildren(); ++i ) {
+        SGPropertyNode *child = node->getChild(i);
+        string cname = child->getName();
+        string cval = child->getStringValue();
+        if ( cname == "name" ) {
+            name = cval;
+
+        } else if ( cname == "debug" ) {
+            debug = child->getBoolValue();
+
+        } else if ( cname == "enable" ) {
+            if( (prop = child->getChild("condition")) != NULL ) {
+              _condition = sgReadCondition(child, prop);
+            } else {
+               if ( (prop = child->getChild( "prop" )) != NULL ) {
+                   enable_prop = fgGetNode( prop->getStringValue(), true );
+               }
+
+               if ( (prop = child->getChild( "value" )) != NULL ) {
+                   delete enable_value;
+                   enable_value = new string(prop->getStringValue());
+               }
+            }
+            if ( (prop = child->getChild( "honor-passive" )) != NULL ) {
+                honor_passive = prop->getBoolValue();
+            }
+
+        } else if ( cname == "input" ) {
+
+              valueInput.parse( child );
+
+        } else if ( cname == "reference" ) {
+
+            referenceInput.parse( child );
+
+        } else if ( cname == "output" ) {
+            // grab all <prop> and <property> childs
+            int found = 0;
+            // backwards compatibility: allow <prop> elements
+            for( int i = 0; (prop = child->getChild("prop", i)) != NULL; i++ ) { 
+                SGPropertyNode *tmp = fgGetNode( prop->getStringValue(), true );
+                output_list.push_back( tmp );
+                found++;
+            }
+            for( int i = 0; (prop = child->getChild("property", i)) != NULL; i++ ) { 
+                SGPropertyNode *tmp = fgGetNode( prop->getStringValue(), true );
+                output_list.push_back( tmp );
+                found++;
+            }
+
+            // no <prop> elements, text node of <output> is property name
+            if( found == 0 )
+                output_list.push_back( fgGetNode(child->getStringValue(), true ) );
+
+        } else if ( cname == "config" ) {
+            if( (prop = child->getChild("u_min")) != NULL ) {
+              uminInput.parse( prop );
+              clamp = true;
+            }
+            if( (prop = child->getChild("u_max")) != NULL ) {
+              umaxInput.parse( prop );
+              clamp = true;
+            }
+        } else if ( cname == "u_min" ) {
+            uminInput.parse( child );
+            clamp = true;
+        } else if ( cname == "u_max" ) {
+            umaxInput.parse( child );
+            clamp = true;
+        } 
+    }   
+}
+
+FGXMLAutoComponent::~FGXMLAutoComponent() 
+{
+    delete enable_value;
+}
+
+bool FGXMLAutoComponent::isPropertyEnabled()
+{
+    if( _condition )
+        return _condition->test();
+
+    if( enable_prop ) {
+        if( enable_value ) {
+            return *enable_value == enable_prop->getStringValue();
+        } else {
+            return enable_prop->getBoolValue();
+        }
+    }
+    return true;
 }
 
 FGPIDController::FGPIDController( SGPropertyNode *node ):
-    debug( false ),
-    y_n( 0.0 ),
-    r_n( 0.0 ),
-    y_scale( 1.0 ),
-    r_scale( 1.0 ),
-    y_offset( 0.0 ),
-    r_offset( 0.0 ),
-    Kp( 0.0 ),
+    FGXMLAutoComponent( node ),
     alpha( 0.1 ),
     beta( 1.0 ),
     gamma( 0.0 ),
-    Ti( 0.0 ),
-    Td( 0.0 ),
-    u_min( 0.0 ),
-    u_max( 0.0 ),
     ep_n_1( 0.0 ),
     edf_n_1( 0.0 ),
     edf_n_2( 0.0 ),
@@ -74,101 +232,16 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
         SGPropertyNode *child = node->getChild(i);
         string cname = child->getName();
         string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "debug" ) {
-            debug = child->getBoolValue();
-        } else if ( cname == "enable" ) {
-            _condition = getCondition( child );
-            if( _condition == NULL ) {
-               // cout << "parsing enable" << endl;
-               SGPropertyNode *prop = child->getChild( "prop" );
-               if ( prop != NULL ) {
-                   // cout << "prop = " << prop->getStringValue() << endl;
-                   enable_prop = fgGetNode( prop->getStringValue(), true );
-               } else {
-                   // cout << "no prop child" << endl;
-               }
-               SGPropertyNode *val = child->getChild( "value" );
-               if ( val != NULL ) {
-                   enable_value = val->getStringValue();
-               }
-            }
-            SGPropertyNode *pass = child->getChild( "honor-passive" );
-            if ( pass != NULL ) {
-                honor_passive = pass->getBoolValue();
-            }
-        } else if ( cname == "input" ) {
-            SGPropertyNode *prop = child->getChild( "prop" );
-            if ( prop != NULL ) {
-                input_prop = fgGetNode( prop->getStringValue(), true );
-            }
-            prop = child->getChild( "scale" );
-            if ( prop != NULL ) {
-                y_scale = prop->getDoubleValue();
-            }
-            prop = child->getChild( "offset" );
-            if ( prop != NULL ) {
-                y_offset = prop->getDoubleValue();
-            }
-        } else if ( cname == "reference" ) {
-            SGPropertyNode *prop = child->getChild( "prop" );
-            if ( prop != NULL ) {
-                r_n_prop = fgGetNode( prop->getStringValue(), true );
-            } else {
-                prop = child->getChild( "value" );
-                if ( prop != NULL ) {
-                    r_n_value = prop->getDoubleValue();
-                }
-            }
-            prop = child->getChild( "scale" );
-            if ( prop != NULL ) {
-                r_scale = prop->getDoubleValue();
-            }
-            prop = child->getChild( "offset" );
-            if ( prop != NULL ) {
-                r_offset = prop->getDoubleValue();
-            }
-        } else if ( cname == "output" ) {
-            int i = 0;
-            SGPropertyNode *prop;
-            while ( (prop = child->getChild("prop", i)) != NULL ) {
-                SGPropertyNode *tmp = fgGetNode( prop->getStringValue(), true );
-                output_list.push_back( tmp );
-                i++;
-            }
-        } else if ( cname == "config" ) {
+        if ( cname == "config" ) {
             SGPropertyNode *config;
 
-            config = child->getChild( "Ts" );
-            if ( config != NULL ) {
+            if ( (config = child->getChild( "Ts" )) != NULL ) {
                 desiredTs = config->getDoubleValue();
             }
-            
-            config = child->getChild( "Kp" );
-            if ( config != NULL ) {
-                SGPropertyNode *val = config->getChild( "value" );
-                if ( val != NULL ) {
-                    Kp = val->getDoubleValue();
-                }
-
-                SGPropertyNode *prop = config->getChild( "prop" );
-                if ( prop != NULL ) {
-                    Kp_prop = fgGetNode( prop->getStringValue(), true );
-                    if ( val != NULL ) {
-                        Kp_prop->setDoubleValue(Kp);
-                    }
-                }
-
-                // output deprecated usage warning
-                if (val == NULL && prop == NULL) {
-                    Kp = config->getDoubleValue();
-                    SG_LOG( SG_AUTOPILOT, SG_WARN, "Deprecated Kp config. Please use <prop> and/or <value> tags." );
-                    if ( name.length() ) {
-                        SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
-                    }
-                }
-            }
+           
+            Kp.parse( child->getChild( "Kp" ) );
+            Ti.parse( child->getChild( "Ti" ) );
+            Td.parse( child->getChild( "Td" ) );
 
             config = child->getChild( "beta" );
             if ( config != NULL ) {
@@ -185,109 +258,10 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
                 gamma = config->getDoubleValue();
             }
 
-            config = child->getChild( "Ti" );
-            if ( config != NULL ) {
-                SGPropertyNode *val = config->getChild( "value" );
-                if ( val != NULL ) {
-                    Ti = val->getDoubleValue();
-                }
-
-                SGPropertyNode *prop = config->getChild( "prop" );
-                if ( prop != NULL ) {
-                    Ti_prop = fgGetNode( prop->getStringValue(), true );
-                    if ( val != NULL ) {
-                        Ti_prop->setDoubleValue(Ti);
-                    }
-                }
-
-                // output deprecated usage warning
-                if (val == NULL && prop == NULL) {
-                Ti = config->getDoubleValue();
-                    SG_LOG( SG_AUTOPILOT, SG_WARN, "Deprecated Ti config. Please use <prop> and/or <value> tags." );
-                    if ( name.length() ) {
-                        SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
-                    }
-                }
-            }
-
-            config = child->getChild( "Td" );
-            if ( config != NULL ) {
-                SGPropertyNode *val = config->getChild( "value" );
-                if ( val != NULL ) {
-                    Td = val->getDoubleValue();
-                }
-
-                SGPropertyNode *prop = config->getChild( "prop" );
-                if ( prop != NULL ) {
-                    Td_prop = fgGetNode( prop->getStringValue(), true );
-                    if ( val != NULL ) {
-                        Td_prop->setDoubleValue(Td);
-                    }
-                }
-
-                // output deprecated usage warning
-                if (val == NULL && prop == NULL) {
-                Td = config->getDoubleValue();
-                    SG_LOG( SG_AUTOPILOT, SG_WARN, "Deprecated Td config. Please use <prop> and/or <value> tags." );
-                    if ( name.length() ) {
-                        SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
-                    }
-                }
-            }
-
-            config = child->getChild( "u_min" );
-            if ( config != NULL ) {
-                SGPropertyNode *val = config->getChild( "value" );
-                if ( val != NULL ) {
-                    u_min = val->getDoubleValue();
-                }
-
-                SGPropertyNode *prop = config->getChild( "prop" );
-                if ( prop != NULL ) {
-                    umin_prop = fgGetNode( prop->getStringValue(), true );
-                    if ( val != NULL ) {
-                        umin_prop->setDoubleValue(u_min);
-                    }
-                }
-
-                // output deprecated usage warning
-                if (val == NULL && prop == NULL) {
-                u_min = config->getDoubleValue();
-                    SG_LOG( SG_AUTOPILOT, SG_WARN, "Deprecated u_min config. Please use <prop> and/or <value> tags." );
-                    if ( name.length() ) {
-                        SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
-                    }
-                }
-            }
-
-            config = child->getChild( "u_max" );
-            if ( config != NULL ) {
-                SGPropertyNode *val = config->getChild( "value" );
-                if ( val != NULL ) {
-                    u_max = val->getDoubleValue();
-                }
-
-                SGPropertyNode *prop = config->getChild( "prop" );
-                if ( prop != NULL ) {
-                    umax_prop = fgGetNode( prop->getStringValue(), true );
-                    if ( val != NULL ) {
-                        umax_prop->setDoubleValue(u_max);
-                    }
-                }
-
-                // output deprecated usage warning
-                if (val == NULL && prop == NULL) {
-                u_max = config->getDoubleValue();
-                    SG_LOG( SG_AUTOPILOT, SG_WARN, "Deprecated u_max config. Please use <prop> and/or <value> tags." );
-                    if ( name.length() ) {
-                        SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
-                    }
-                }
-            }
         } else {
             SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in autopilot config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+            if ( get_name().length() ) {
+                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << get_name() );
             }
         }
     }   
@@ -354,11 +328,10 @@ void FGPIDController::update( double dt ) {
     double delta_u_n = 0.0; // incremental output
     double u_n = 0.0;       // absolute output
     double Ts;              // sampling interval (sec)
-    if (umin_prop != NULL)u_min = umin_prop->getDoubleValue();
-    if (umax_prop != NULL)u_max = umax_prop->getDoubleValue();
-    if (Ti_prop != NULL)Ti = Ti_prop->getDoubleValue();
-    if (Td_prop != NULL)Td = Td_prop->getDoubleValue();
-    
+
+    double u_min = uminInput.getValue();
+    double u_max = umaxInput.getValue();
+
     elapsedTime += dt;
     if ( elapsedTime <= desiredTs ) {
         // do nothing if time step is not positive (i.e. no time has
@@ -368,15 +341,11 @@ void FGPIDController::update( double dt ) {
     Ts = elapsedTime;
     elapsedTime = 0.0;
 
-    if (( _condition && _condition->test() ) ||
-        (enable_prop != NULL && enable_prop->getStringValue() == enable_value)) {
+    if ( isPropertyEnabled() ) {
         if ( !enabled ) {
             // first time being enabled, seed u_n with current
             // property tree value
-            u_n = output_list[0]->getDoubleValue();
-            // and clip
-            if ( u_n < u_min ) { u_n = u_min; }
-            if ( u_n > u_max ) { u_n = u_max; }
+            u_n = getOutputValue();
             u_n_1 = u_n;
         }
         enabled = true;
@@ -385,20 +354,11 @@ void FGPIDController::update( double dt ) {
     }
 
     if ( enabled && Ts > 0.0) {
-        if ( debug ) cout << "Updating " << name
+        if ( debug ) cout << "Updating " << get_name()
                           << " Ts " << Ts << endl;
 
-        double y_n = 0.0;
-        if ( input_prop != NULL ) {
-            y_n = input_prop->getDoubleValue() * y_scale + y_offset;
-        }
-
-        double r_n = 0.0;
-        if ( r_n_prop != NULL ) {
-            r_n = r_n_prop->getDoubleValue() * r_scale + r_offset;
-        } else {
-            r_n = r_n_value;
-        }
+        double y_n = valueInput.getValue();
+        double r_n = referenceInput.getValue();
                       
         if ( debug ) cout << "  input = " << y_n << " ref = " << r_n << endl;
 
@@ -415,9 +375,10 @@ void FGPIDController::update( double dt ) {
         ed_n = gamma * r_n - y_n;
         if ( debug ) cout << " ed_n = " << ed_n;
 
-        if ( Td > 0.0 ) {
+        double td = Td.getValue();
+        if ( td > 0.0 ) {
             // Calculates filter time:
-            Tf = alpha * Td;
+            Tf = alpha * td;
             if ( debug ) cout << " Tf = " << Tf;
 
             // Filters the derivate error:
@@ -429,20 +390,18 @@ void FGPIDController::update( double dt ) {
         }
 
         // Calculates the incremental output:
-        if ( Ti > 0.0 ) {
-            if (Kp_prop != NULL) {
-                Kp = Kp_prop->getDoubleValue();
-            }
-            delta_u_n = Kp * ( (ep_n - ep_n_1)
-                               + ((Ts/Ti) * e_n)
-                               + ((Td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2)) );
+        double ti = Ti.getValue();
+        if ( ti > 0.0 ) {
+            delta_u_n = Kp.getValue() * ( (ep_n - ep_n_1)
+                               + ((Ts/ti) * e_n)
+                               + ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2)) );
         }
 
         if ( debug ) {
             cout << " delta_u_n = " << delta_u_n << endl;
-            cout << "P:" << Kp * (ep_n - ep_n_1)
-                 << " I:" << Kp * ((Ts/Ti) * e_n)
-                 << " D:" << Kp * ((Td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2))
+            cout << "P:" << Kp.getValue() * (ep_n - ep_n_1)
+                 << " I:" << Kp.getValue() * ((Ts/ti) * e_n)
+                 << " D:" << Kp.getValue() * ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2))
                  << endl;
         }
 
@@ -465,19 +424,7 @@ void FGPIDController::update( double dt ) {
         edf_n_2 = edf_n_1;
         edf_n_1 = edf_n;
 
-        // passive_ignore == true means that we go through all the
-        // motions, but drive the outputs.  This is analogous to
-        // running the autopilot with the "servos" off.  This is
-        // helpful for things like flight directors which position
-        // their vbars from the autopilot computations.
-        if ( passive_mode->getBoolValue() && honor_passive ) {
-            // skip output step
-        } else {
-            unsigned int i;
-            for ( i = 0; i < output_list.size(); ++i ) {
-                output_list[i]->setDoubleValue( u_n );
-            }
-        }
+        setOutputValue( u_n );
     } else if ( !enabled ) {
         ep_n  = 0.0;
         edf_n = 0.0;
@@ -491,159 +438,21 @@ void FGPIDController::update( double dt ) {
 
 
 FGPISimpleController::FGPISimpleController( SGPropertyNode *node ):
-    proportional( false ),
-    Kp( 0.0 ),
-    offset_prop( NULL ),
-    offset_value( 0.0 ),
-    integral( false ),
-    Ki( 0.0 ),
-    int_sum( 0.0 ),
-    clamp( false ),
-    debug( false ),
-    y_n( 0.0 ),
-    r_n( 0.0 ),
-    y_scale( 1.0 ),
-    r_scale ( 1.0 ),
-    u_min( 0.0 ),
-    u_max( 0.0 )
+    FGXMLAutoComponent( node ),
+    int_sum( 0.0 )
 {
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
         string cname = child->getName();
         string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "debug" ) {
-            debug = child->getBoolValue();
-        } else if ( cname == "enable" ) {
-            _condition = getCondition( child );
-            if( _condition == NULL ) {
-               // cout << "parsing enable" << endl;
-               SGPropertyNode *prop = child->getChild( "prop" );
-               if ( prop != NULL ) {
-                   // cout << "prop = " << prop->getStringValue() << endl;
-                   enable_prop = fgGetNode( prop->getStringValue(), true );
-               } else {
-                   // cout << "no prop child" << endl;
-               }
-               SGPropertyNode *val = child->getChild( "value" );
-               if ( val != NULL ) {
-                   enable_value = val->getStringValue();
-               }
-            }
-        } else if ( cname == "input" ) {
-            SGPropertyNode *prop = child->getChild( "prop" );
-            if ( prop != NULL ) {
-                input_prop = fgGetNode( prop->getStringValue(), true );
-            }
-            prop = child->getChild( "scale" );
-            if ( prop != NULL ) {
-                y_scale = prop->getDoubleValue();
-            }
-        } else if ( cname == "reference" ) {
-            SGPropertyNode *prop = child->getChild( "prop" );
-            if ( prop != NULL ) {
-                r_n_prop = fgGetNode( prop->getStringValue(), true );
-            } else {
-                prop = child->getChild( "value" );
-                if ( prop != NULL ) {
-                    r_n_value = prop->getDoubleValue();
-                }
-            }
-            prop = child->getChild( "scale" );
-            if ( prop != NULL ) {
-                r_scale = prop->getDoubleValue();
-            }
-        } else if ( cname == "output" ) {
-            int i = 0;
-            SGPropertyNode *prop;
-            while ( (prop = child->getChild("prop", i)) != NULL ) {
-                SGPropertyNode *tmp = fgGetNode( prop->getStringValue(), true );
-                output_list.push_back( tmp );
-                i++;
-            }
-        } else if ( cname == "config" ) {
-            SGPropertyNode *prop;
-
-            prop = child->getChild( "Kp" );
-            if ( prop != NULL ) {
-                SGPropertyNode *val = prop->getChild( "value" );
-                if ( val != NULL ) {
-                    Kp = val->getDoubleValue();
-                }
-
-                SGPropertyNode *prop1 = prop->getChild( "prop" );
-                if ( prop1 != NULL ) {
-                    Kp_prop = fgGetNode( prop1->getStringValue(), true );
-                    if ( val != NULL ) {
-                        Kp_prop->setDoubleValue(Kp);
-                    }
-                }
-
-                // output deprecated usage warning
-                if (val == NULL && prop1 == NULL) {
-                Kp = prop->getDoubleValue();
-                    SG_LOG( SG_AUTOPILOT, SG_WARN, "Deprecated Kp config. Please use <prop> and/or <value> tags." );
-                }
-                proportional = true;
-            }
-
-            prop = child->getChild( "Ki" );
-            if ( prop != NULL ) {
-                Ki = prop->getDoubleValue();
-                integral = true;
-            }
-
-            prop = child->getChild( "u_min" );
-            if ( prop != NULL ) {
-                SGPropertyNode *val = prop->getChild( "value" );
-                if ( val != NULL ) {
-                    u_min = val->getDoubleValue();
-                }
-
-                SGPropertyNode *prop1 = prop->getChild( "prop" );
-                if ( prop1 != NULL ) {
-                    umin_prop = fgGetNode( prop1->getStringValue(), true );
-                    if ( val != NULL ) {
-                        umin_prop->setDoubleValue(u_min);
-                    }
-                }
-
-                // output deprecated usage warning
-                if (val == NULL && prop1 == NULL) {
-                u_min = prop->getDoubleValue();
-                    SG_LOG( SG_AUTOPILOT, SG_WARN, "Deprecated u_min config. Please use <prop> and/or <value> tags." );
-                }
-                clamp = true;
-            }
-
-            prop = child->getChild( "u_max" );
-            if ( prop != NULL ) {
-                SGPropertyNode *val = prop->getChild( "value" );
-                if ( val != NULL ) {
-                    u_max = val->getDoubleValue();
-                }
-
-                SGPropertyNode *prop1 = prop->getChild( "prop" );
-                if ( prop1 != NULL ) {
-                    umax_prop = fgGetNode( prop1->getStringValue(), true );
-                    if ( val != NULL ) {
-                        umax_prop->setDoubleValue(u_max);
-                    }
-                }
-
-                // output deprecated usage warning
-                if (val == NULL && prop1 == NULL) {
-                u_max = prop->getDoubleValue();
-                    SG_LOG( SG_AUTOPILOT, SG_WARN, "Deprecated u_max config. Please use <prop> and/or <value> tags." );
-                }
-                clamp = true;
-            }
+        if ( cname == "config" ) {
+            Kp.parse( child->getChild( "Kp" ) );
+            Ki.parse( child->getChild( "Ki" ) );
         } else {
             SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in autopilot config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << name );
+            if ( get_name().length() ) {
+                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << get_name() );
             }
         }
     }   
@@ -651,12 +460,8 @@ FGPISimpleController::FGPISimpleController( SGPropertyNode *node ):
 
 
 void FGPISimpleController::update( double dt ) {
-    if (umin_prop != NULL)u_min = umin_prop->getDoubleValue();
-    if (umax_prop != NULL)u_max = umax_prop->getDoubleValue();
-    if (Kp_prop != NULL)Kp = Kp_prop->getDoubleValue();
 
-    if (( _condition && _condition->test() ) ||
-        (enable_prop != NULL && enable_prop->getStringValue() == enable_value)) {
+    if ( isPropertyEnabled() ) {
         if ( !enabled ) {
             // we have just been enabled, zero out int_sum
             int_sum = 0.0;
@@ -667,73 +472,36 @@ void FGPISimpleController::update( double dt ) {
     }
 
     if ( enabled ) {
-        if ( debug ) cout << "Updating " << name << endl;
-        double input = 0.0;
-        if ( input_prop != NULL ) {
-            input = input_prop->getDoubleValue() * y_scale;
-        }
-
-        double r_n = 0.0;
-        if ( r_n_prop != NULL ) {
-            r_n = r_n_prop->getDoubleValue() * r_scale;
-        } else {
-            r_n = r_n_value;
-        }
+        if ( debug ) cout << "Updating " << get_name() << endl;
+        double y_n = valueInput.getValue();
+        double r_n = referenceInput.getValue();
                       
-        double error = r_n - input;
-        if ( debug ) cout << "input = " << input
+        double error = r_n - y_n;
+        if ( debug ) cout << "input = " << y_n
                           << " reference = " << r_n
                           << " error = " << error
                           << endl;
 
-        double prop_comp = 0.0;
-        double offset = 0.0;
-        if ( offset_prop != NULL ) {
-            offset = offset_prop->getDoubleValue();
-            if ( debug ) cout << "offset = " << offset << endl;
-        } else {
-            offset = offset_value;
-        }
+        double prop_comp = error * Kp.getValue();
+        int_sum += error * Ki.getValue() * dt;
 
-        if ( proportional ) {
-            prop_comp = error * Kp + offset;
-        }
-
-        if ( integral ) {
-            int_sum += error * Ki * dt;
-        } else {
-            int_sum = 0.0;
-        }
 
         if ( debug ) cout << "prop_comp = " << prop_comp
                           << " int_sum = " << int_sum << endl;
 
         double output = prop_comp + int_sum;
-
-        if ( clamp ) {
-            if ( output < u_min ) {
-                output = u_min;
-            }
-            if ( output > u_max ) {
-                output = u_max;
-            }
-        }
+        output = Clamp( output );
+        setOutputValue( output );
         if ( debug ) cout << "output = " << output << endl;
-
-        unsigned int i;
-        for ( i = 0; i < output_list.size(); ++i ) {
-            output_list[i]->setDoubleValue( output );
-        }
     }
 }
 
 
 FGPredictor::FGPredictor ( SGPropertyNode *node ):
-    last_value ( 999999999.9 ),
+    FGXMLAutoComponent( node ),
     average ( 0.0 ),
     seconds( 0.0 ),
     filter_gain( 0.0 ),
-    debug( false ),
     ivalue( 0.0 )
 {
     int i;
@@ -741,19 +509,10 @@ FGPredictor::FGPredictor ( SGPropertyNode *node ):
         SGPropertyNode *child = node->getChild(i);
         string cname = child->getName();
         string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "debug" ) {
-            debug = child->getBoolValue();
-        } else if ( cname == "input" ) {
-            input_prop = fgGetNode( child->getStringValue(), true );
-        } else if ( cname == "seconds" ) {
+        if ( cname == "seconds" ) {
             seconds = child->getDoubleValue();
         } else if ( cname == "filter-gain" ) {
             filter_gain = child->getDoubleValue();
-        } else if ( cname == "output" ) {
-            SGPropertyNode *tmp = fgGetNode( child->getStringValue(), true );
-            output_list.push_back( tmp );
         }
     }   
 }
@@ -772,20 +531,19 @@ void FGPredictor::update( double dt ) {
 
     */
 
-    if ( input_prop != NULL ) {
-        ivalue = input_prop->getDoubleValue();
-        // no sense if there isn't an input :-)
+    ivalue = valueInput.getValue();
+
+    if ( isPropertyEnabled() ) {
+        if ( !enabled ) {
+            // first time being enabled
+            last_value = ivalue;
+        }
         enabled = true;
     } else {
         enabled = false;
     }
 
     if ( enabled ) {
-
-        // first time initialize average
-        if (last_value >= 999999999.0) {
-           last_value = ivalue;
-        }
 
         if ( dt > 0.0 ) {
             double current = (ivalue - last_value)/dt; // calculate current error change (per second)
@@ -797,11 +555,8 @@ void FGPredictor::update( double dt ) {
 
             // calculate output with filter gain adjustment
             double output = ivalue + (1.0 - filter_gain) * (average * seconds) + filter_gain * (current * seconds);
-
-            unsigned int i;
-            for ( i = 0; i < output_list.size(); ++i ) {
-                output_list[i]->setDoubleValue( output );
-            }
+            output = Clamp( output );
+            setOutputValue( output );
         }
         last_value = ivalue;
     }
@@ -809,40 +564,14 @@ void FGPredictor::update( double dt ) {
 
 
 FGDigitalFilter::FGDigitalFilter(SGPropertyNode *node):
-    Tf( 1.0 ),
-    samples( 1 ),
-    rateOfChange( 1.0 ),
-    gainFactor( 1.0 ),
-    gain_prop( NULL ),
-    output_min_clamp( -std::numeric_limits<double>::max() ),
-    output_max_clamp( std::numeric_limits<double>::max() )
+    FGXMLAutoComponent( node )
 {
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
         string cname = child->getName();
         string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "debug" ) {
-            debug = child->getBoolValue();
-        } else if ( cname == "enable" ) {
-            _condition = getCondition( child );
-            if( _condition == NULL ) {
-               SGPropertyNode *prop = child->getChild( "prop" );
-               if ( prop != NULL ) {
-                   enable_prop = fgGetNode( prop->getStringValue(), true );
-               }
-               SGPropertyNode *val = child->getChild( "value" );
-               if ( val != NULL ) {
-                   enable_value = val->getStringValue();
-               }
-            }
-            SGPropertyNode *pass = child->getChild( "honor-passive" );
-            if ( pass != NULL ) {
-                honor_passive = pass->getBoolValue();
-            }
-        } else if ( cname == "type" ) {
+        if ( cname == "type" ) {
             if ( cval == "exponential" ) {
                 filterType = exponential;
             } else if (cval == "double-exponential") {
@@ -856,53 +585,32 @@ FGDigitalFilter::FGDigitalFilter(SGPropertyNode *node):
             } else if (cval == "reciprocal") {
                 filterType = reciprocal;
             }
-        } else if ( cname == "input" ) {
-            input_prop = fgGetNode( child->getStringValue(), true );
         } else if ( cname == "filter-time" ) {
-            Tf = child->getDoubleValue();
+            TfInput.parse( child, 1.0 );
         } else if ( cname == "samples" ) {
-            samples = child->getIntValue();
+            samplesInput.parse( child, 1 );
         } else if ( cname == "max-rate-of-change" ) {
-            rateOfChange = child->getDoubleValue();
+            rateOfChangeInput.parse( child, 1.0 );
         } else if ( cname == "gain" ) {
-            SGPropertyNode *val = child->getChild( "value" );
-            if ( val != NULL ) {
-                gainFactor = val->getDoubleValue();
-            }
-            SGPropertyNode *prop = child->getChild( "prop" );
-            if ( prop != NULL ) {
-                gain_prop = fgGetNode( prop->getStringValue(), true );
-                gain_prop->setDoubleValue(gainFactor);
-            }
-        } else if ( cname == "u_min" ) {
-            output_min_clamp = child->getDoubleValue();
-        } else if ( cname == "u_max" ) {
-            output_max_clamp = child->getDoubleValue();
-        } else if ( cname == "output" ) {
-            SGPropertyNode *tmp = fgGetNode( child->getStringValue(), true );
-            output_list.push_back( tmp );
+            gainInput.parse( child );
         }
     }
 
     output.resize(2, 0.0);
-    input.resize(samples + 1, 0.0);
+    input.resize(samplesInput.getValue() + 1, 0.0);
 }
 
 void FGDigitalFilter::update(double dt)
 {
-    if ( input_prop != NULL && (
-         ( _condition != NULL && _condition->test() ) ||
-         ( enable_prop != NULL && 
-          enable_prop->getStringValue() == enable_value) ||
-         (enable_prop == NULL && _condition == NULL ) ) ) {
+    if ( isPropertyEnabled() ) {
 
-        input.push_front(input_prop->getDoubleValue());
-        input.resize(samples + 1, 0.0);
+        input.push_front(valueInput.getValue());
+        input.resize(samplesInput.getValue() + 1, 0.0);
 
         if ( !enabled ) {
             // first time being enabled, initialize output to the
             // value of the output property to avoid bumping.
-            output.push_front(output_list[0]->getDoubleValue());
+            output.push_front(getOutputValue());
         }
 
         enabled = true;
@@ -917,16 +625,18 @@ void FGDigitalFilter::update(double dt)
          * Output[n] = alpha*Input[n] + (1-alpha)*Output[n-1]
          *
          */
+         if( debug ) cout << "Updating " << get_name()
+                          << " dt " << dt << endl;
 
         if (filterType == exponential)
         {
-            double alpha = 1 / ((Tf/dt) + 1);
+            double alpha = 1 / ((TfInput.getValue()/dt) + 1);
             output.push_front(alpha * input[0] + 
                               (1 - alpha) * output[0]);
         } 
         else if (filterType == doubleExponential)
         {
-            double alpha = 1 / ((Tf/dt) + 1);
+            double alpha = 1 / ((TfInput.getValue()/dt) + 1);
             output.push_front(alpha * alpha * input[0] + 
                               2 * (1 - alpha) * output[0] -
                               (1 - alpha) * (1 - alpha) * output[1]);
@@ -934,11 +644,11 @@ void FGDigitalFilter::update(double dt)
         else if (filterType == movingAverage)
         {
             output.push_front(output[0] + 
-                              (input[0] - input.back()) / samples);
+                              (input[0] - input.back()) / samplesInput.getValue());
         }
         else if (filterType == noiseSpike)
         {
-            double maxChange = rateOfChange * dt;
+            double maxChange = rateOfChangeInput.getValue() * dt;
 
             if ((output[0] - input[0]) > maxChange)
             {
@@ -955,32 +665,18 @@ void FGDigitalFilter::update(double dt)
         }
         else if (filterType == gain)
         {
-            if (gain_prop != NULL) {
-                gainFactor = gain_prop->getDoubleValue();
-            }
-            output[0] = gainFactor * input[0];
+            output[0] = gainInput.getValue() * input[0];
         }
         else if (filterType == reciprocal)
         {
-            if (gain_prop != NULL) {
-                gainFactor = gain_prop->getDoubleValue();
-            }
             if (input[0] != 0.0) {
-                output[0] = gainFactor / input[0];
+                output[0] = gainInput.getValue() / input[0];
             }
         }
 
-        if (output[0] < output_min_clamp) {
-            output[0] = output_min_clamp;
-        }
-        else if (output[0] > output_max_clamp) {
-            output[0] = output_max_clamp;
-        }
+        output[0] = Clamp(output[0]) ;
+        setOutputValue( output[0] );
 
-        unsigned int i;
-        for ( i = 0; i < output_list.size(); ++i ) {
-            output_list[i]->setDoubleValue( output[0] );
-        }
         output.resize(2);
 
         if (debug)
