@@ -466,7 +466,7 @@ static naRef f_geodtocart(naContext c, naRef me, int argc, naRef* args)
 static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
 {
 #define HASHSET(s,l,n) naHash_set(matdata, naStr_fromdata(naNewString(c),s,l),n)
-    if(argc < 2 or argc > 3)
+    if(argc < 2 || argc > 3)
         naRuntimeError(c, "geodinfo() expects 2 or 3 arguments: lat, lon [, maxalt]");
     double lat = naNumValue(args[0]).num;
     double lon = naNumValue(args[1]).num;
