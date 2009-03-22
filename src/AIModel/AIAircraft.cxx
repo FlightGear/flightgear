@@ -113,6 +113,9 @@ void FGAIAircraft::bind() {
     props->tie("controls/gear/gear-down",
                SGRawValueMethods<FGAIAircraft,bool>(*this,
                                                     &FGAIAircraft::_getGearDown));
+    props->tie("transponder-id",
+               SGRawValueMethods<FGAIAircraft,const char*>(*this,
+                                                    &FGAIAircraft::_getTransponderCode));
 }
 
 
@@ -120,6 +123,7 @@ void FGAIAircraft::unbind() {
     FGAIBase::unbind();
 
     props->untie("controls/gear/gear-down");
+    props->untie("transponder-id");
 }
 
 
@@ -340,6 +344,11 @@ void FGAIAircraft::initializeFlightPlan() {
 
 bool FGAIAircraft::_getGearDown() const {
     return _performance->gearExtensible(this);
+}
+
+
+const char * FGAIAircraft::_getTransponderCode() const {
+  return transponderCode.c_str();
 }
 
 

@@ -75,6 +75,9 @@ public:
 
     virtual const char* getTypeString(void) const { return "aircraft"; }
 
+    string GetTransponderCode() { return transponderCode; };
+    void SetTransponderCode(string tc) { transponderCode = tc;};
+
     // included as performance data needs them, who else?
     inline PerformanceData* getPerformance() { return _performance; };
     inline bool onGround() const { return no_roll; };
@@ -133,6 +136,7 @@ private:
 
     string acType;
     string company;
+    string transponderCode;
 
     int spinCounter;
     double prevSpeed;
@@ -141,6 +145,8 @@ private:
     bool holdPos;
 
     bool _getGearDown() const;
+
+    const char * _getTransponderCode() const;
 
     bool reachedWaypoint;
     time_t timeElapsed;

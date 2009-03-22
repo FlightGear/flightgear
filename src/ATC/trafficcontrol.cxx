@@ -385,7 +385,9 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
     string fltType;
     string rwyClass;
     string SID;
+    string transponderCode;
     FGAIFlightPlan *fp;
+    string fltRules;
     switch (msgId) {
           case MSG_ANNOUNCE_ENGINE_START:
                text = sender + ". Ready to Start up";
@@ -416,8 +418,11 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
                    SID = "fly runway heading ";
                }
                //snprintf(buffer, 7, "%3.2f", heading);
+               fltRules = rec->getAircraft()->getTrafficRef()->getFlightRules();
+               transponderCode = genTransponderCode(fltRules);
+               rec->getAircraft()->SetTransponderCode(transponderCode);
                text = receiver + ". Start-up approved. " + atisInformation + " correct, runway " + activeRunway
-                       + ", " + SID + ", squawk BBBB. " +
+                       + ", " + SID + ", squawk " + transponderCode + ". " +
                       "For push-back and taxi clearance call " + taxiFreqStr + ". " + sender + " control.";
                break;
           case MSG_DENY_ENGINE_START:
@@ -432,8 +437,9 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
                }
                taxiFreqStr = formatATCFrequency3_2(taxiFreq);
                activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
+               transponderCode = rec->getAircraft()->GetTransponderCode();
                text = receiver + ". Start-up approved. " + atisInformation + " correct, runway " +
-                      activeRunway + ", " + SID + ", squawk BBBB. " +
+                      activeRunway + ", " + SID + ", squawk " + transponderCode + ". " +
                       "For push-back and taxi clearance call " + taxiFreqStr + ". " + sender;
                break;
            default:
@@ -459,6 +465,16 @@ string FGATCController::formatATCFrequency3_2(int freq) {
     char buffer[7];
     snprintf(buffer, 7, "%3.2f", ( (float) freq / 100.0) );
     return string(buffer);
+}
+
+string FGATCController::genTransponderCode(string fltRules) {
+    if (fltRules == "VFR") {
+        return string("1200");
+    } else {
+        char buffer[5];
+        snprintf(buffer, 5, "%d%d%d%d", rand() % 8, rand() % 8,rand() % 8, rand() % 8);
+        return string(buffer);
+    }
 }
 
 /***************************************************************************
