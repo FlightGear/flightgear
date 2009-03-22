@@ -567,8 +567,12 @@ wxRadarBg::update_data(const SGPropertyNode *ac, double altitude, double heading
     callsign->setAlignment(osgText::Text::LEFT_BOTTOM_BASE_LINE);
     callsign->setLineSpacing(_font_spacing);
 
+    const char *identity = ac->getStringValue("transponder-id");
+    if (!identity[0])
+        identity = ac->getStringValue("callsign");
+
     stringstream text;
-    text << ac->getStringValue("callsign") << endl
+    text << identity << endl
             << setprecision(0) << fixed
             << setw(3) << setfill('0') << heading * SG_RADIANS_TO_DEGREES << "\xB0 "
             << setw(0) << altitude << "ft" << endl
