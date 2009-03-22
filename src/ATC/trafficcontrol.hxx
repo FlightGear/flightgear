@@ -207,6 +207,7 @@ private:
 
 
   string formatATCFrequency3_2(int );
+  string genTransponderCode(string fltRules);
 
 public:
   typedef enum {
