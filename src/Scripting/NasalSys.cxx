@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fstream>
+#include <sstream>
 
 #include <plib/ul.h>
 
@@ -1099,6 +1100,8 @@ bool FGNasalListener::changed(SGPropertyNode* node)
 // destructor the <unload> script. The latter happens when the model branch
 // is removed from the scene graph.
 
+unsigned int FGNasalModelData::_module_id = 0;
+
 void FGNasalModelData::modelLoaded(const string& path, SGPropertyNode *prop,
                                    osg::Node *)
 {
@@ -1113,9 +1116,10 @@ void FGNasalModelData::modelLoaded(const string& path, SGPropertyNode *prop,
     if(!load && !_unload)
         return;
 
-    _module = path;
-    if(_props)
-        _module += ':' + _props->getPath();
+    std::stringstream m;
+    m << "__model" << _module_id++;
+    _module = m.str();
+
     const char *s = load ? load->getStringValue() : "";
 
     naRef arg[2];

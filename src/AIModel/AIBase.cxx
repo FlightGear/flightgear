@@ -41,7 +41,6 @@
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
-#include <Scripting/NasalSys.hxx>
 
 #include "AIBase.hxx"
 #include "AIModelData.hxx"

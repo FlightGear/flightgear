@@ -167,6 +167,7 @@ public:
     void modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *);
 
 private:
+    static unsigned int _module_id;
     string _module;
     SGPropertyNode_ptr _root;
     SGConstPropertyNode_ptr _unload;
