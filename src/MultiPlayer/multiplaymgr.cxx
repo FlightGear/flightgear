@@ -929,7 +929,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
 
         default:
           pData->float_value = XDR_decode_float(*xdr);
-          cerr << "Unknown Prop type " << pData->id << " " << pData->type << "\n";
+          SG_LOG(SG_NETWORK, SG_ALERT, "Unknown Prop type " << pData->id << " " << pData->type);
           xdr++;
           break;
       }            
@@ -978,7 +978,7 @@ FGMultiplayMgr::ProcessChatMsg(const MsgBuf& Msg,
   
   const T_ChatMsg* ChatMsg
       = reinterpret_cast<const T_ChatMsg *>(Msg.Msg + sizeof(T_MsgHdr));
-  SG_LOG (SG_NETWORK, SG_ALERT, "Chat [" << MsgHdr->Callsign << "]"
+  SG_LOG (SG_NETWORK, SG_WARN, "Chat [" << MsgHdr->Callsign << "]"
            << " " << chatStr);
 
   delete [] chatStr;
