@@ -109,7 +109,8 @@ FGSwitch::FGSwitch(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
       tests.push_back(current_test);
     }
 
-    if (test_element->GetName() != "output") { // this is not an output element
+    if (test_element->GetName() != "output"
+        && test_element->GetName() != "description") { // this is not an output element
       value = test_element->GetAttributeValue("value");
       if (value.empty()) {
         cerr << "No VALUE supplied for switch component: " << Name << endl;

@@ -206,7 +206,10 @@ void FGSensor::Lag(void)
 
 void FGSensor::bind(void)
 {
-  string tmp = "fcs/" + PropertyManager->mkPropertyName(Name, true);
+  string tmp = Name;
+  if (Name.find("/") == string::npos) {
+    tmp = "fcs/" + PropertyManager->mkPropertyName(Name, true);
+  }
   const string tmp_low = tmp + "/malfunction/fail_low";
   const string tmp_high = tmp + "/malfunction/fail_high";
   const string tmp_stuck = tmp + "/malfunction/fail_stuck";

@@ -218,9 +218,6 @@ public:
       @param number integer identifier for this instance of FGLGear
   */
   FGLGear(Element* el, FGFDMExec* Executive, int number);
-  /** Constructor
-      @param lgear a reference to an existing FGLGear object     */
-  FGLGear(const FGLGear& lgear);
   /// Destructor
   ~FGLGear();
 
@@ -313,6 +310,7 @@ private:
   double compressLength;
   double compressSpeed;
   double staticFCoeff, dynamicFCoeff, rollingFCoeff;
+  double Stiffness, Shape, Peak, Curvature; // Pacejka factors
   double brakePct;
   double BrakeFCoeff;
   double maxCompLen;

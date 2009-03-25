@@ -194,7 +194,10 @@ void FGActuator::Deadband(void)
 
 void FGActuator::bind(void)
 {
-  string tmp = "fcs/" + PropertyManager->mkPropertyName(Name, true);
+  string tmp = Name;
+  if (Name.find("/") == string::npos) {
+    tmp = "fcs/" + PropertyManager->mkPropertyName(Name, true);
+  }
   const string tmp_zero = tmp + "/malfunction/fail_zero";
   const string tmp_hardover = tmp + "/malfunction/fail_hardover";
   const string tmp_stuck = tmp + "/malfunction/fail_stuck";

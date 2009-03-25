@@ -82,6 +82,10 @@ FGPropagate::FGPropagate(FGFDMExec* fdmex) : FGModel(fdmex)
   last_vPQRdot.InitMatrix();
   vPQRdot.InitMatrix();
   
+  last2_vQtrndot = FGQuaternion(0,0,0);
+  last_vQtrndot = FGQuaternion(0,0,0);
+  vQtrndot = FGQuaternion(0,0,0);
+
   last2_vUVWdot.InitMatrix();
   last_vUVWdot.InitMatrix();
   vUVWdot.InitMatrix();
@@ -93,8 +97,8 @@ FGPropagate::FGPropagate(FGFDMExec* fdmex) : FGModel(fdmex)
   vOmegaLocal.InitMatrix();
 
   integrator_rotational_rate = eAdamsBashforth2;
-  integrator_translational_rate = eAdamsBashforth2;
-  integrator_rotational_position = eTrapezoidal;
+  integrator_translational_rate = eTrapezoidal;
+  integrator_rotational_position = eAdamsBashforth2;
   integrator_translational_position = eTrapezoidal;
 
   bind();
@@ -125,6 +129,10 @@ bool FGPropagate::InitModel(void)
   last_vPQRdot.InitMatrix();
   vPQRdot.InitMatrix();
   
+  last2_vQtrndot = FGQuaternion(0,0,0);
+  last_vQtrndot = FGQuaternion(0,0,0);
+  vQtrndot = FGQuaternion(0,0,0);
+
   last2_vUVWdot.InitMatrix();
   last_vUVWdot.InitMatrix();
   vUVWdot.InitMatrix();
@@ -136,8 +144,8 @@ bool FGPropagate::InitModel(void)
   vOmegaLocal.InitMatrix();
 
   integrator_rotational_rate = eAdamsBashforth2;
-  integrator_translational_rate = eAdamsBashforth2;
-  integrator_rotational_position = eTrapezoidal;
+  integrator_translational_rate = eTrapezoidal;
+  integrator_rotational_position = eAdamsBashforth2;
   integrator_translational_position = eTrapezoidal;
 
   return true;

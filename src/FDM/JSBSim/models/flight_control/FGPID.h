@@ -102,6 +102,7 @@ public:
   ~FGPID();
 
   bool Run (void);
+  void ResetPastStates(void) {Input_prev = Input_prev2 = Output = I_out_total = 0.0;}
 
 private:
   double dt;

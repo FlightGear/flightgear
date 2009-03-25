@@ -139,6 +139,46 @@ bool FGFCS::InitModel(void)
     DfPos[i] = DsbPos[i] = DspPos[i] = 0.0;
   }
 
+  for (int i=0; i<Systems.size(); i++) {
+    if (Systems[i]->GetType() == "LAG" ||
+        Systems[i]->GetType() == "LEAD_LAG" ||
+        Systems[i]->GetType() == "WASHOUT" ||
+        Systems[i]->GetType() == "SECOND_ORDER_FILTER" ||
+        Systems[i]->GetType() == "INTEGRATOR")
+    {
+      ((FGFilter*)Systems[i])->ResetPastStates();
+    } else if (Systems[i]->GetType() == "PID" ) {
+      ((FGPID*)Systems[i])->ResetPastStates();
+    }
+
+  }
+
+  for (int i=0; i<FCSComponents.size(); i++) {
+    if (FCSComponents[i]->GetType() == "LAG" ||
+        FCSComponents[i]->GetType() == "LEAD_LAG" ||
+        FCSComponents[i]->GetType() == "WASHOUT" ||
+        FCSComponents[i]->GetType() == "SECOND_ORDER_FILTER" ||
+        FCSComponents[i]->GetType() == "INTEGRATOR")
+    {
+      ((FGFilter*)FCSComponents[i])->ResetPastStates();
+    } else if (FCSComponents[i]->GetType() == "PID" ) {
+      ((FGPID*)FCSComponents[i])->ResetPastStates();
+    }
+  }
+
+  for (int i=0; i<APComponents.size(); i++) {
+    if (APComponents[i]->GetType() == "LAG" ||
+        APComponents[i]->GetType() == "LEAD_LAG" ||
+        APComponents[i]->GetType() == "WASHOUT" ||
+        APComponents[i]->GetType() == "SECOND_ORDER_FILTER" ||
+        APComponents[i]->GetType() == "INTEGRATOR")
+    {
+      ((FGFilter*)APComponents[i])->ResetPastStates();
+    } else if (APComponents[i]->GetType() == "PID" ) {
+      ((FGPID*)APComponents[i])->ResetPastStates();
+    }
+  }
+
   return true;
 }
   
@@ -541,13 +581,18 @@ bool FGFCS::Load(Element* el, SystemType systype)
   property_element = document->FindElement("property");
   if (property_element) cout << endl << "    Declared properties" << endl << endl;
   while (property_element) {
-    double value=0.0;
-    if ( ! property_element->GetAttributeValue("value").empty())
-      value = property_element->GetAttributeValueAsNumber("value");
-    interface_properties.push_back(new double(value));
     interface_property_string = property_element->GetDataLine();
-    PropertyManager->Tie(interface_property_string, interface_properties.back());
-    cout << "      " << interface_property_string << " (initial value: " << value << ")" << endl;
+    if (PropertyManager->HasNode(interface_property_string)) {
+      cout << "      Property " << interface_property_string << " is already defined." << endl;
+    } else {
+      double value=0.0;
+      if ( ! property_element->GetAttributeValue("value").empty())
+        value = property_element->GetAttributeValueAsNumber("value");
+      interface_properties.push_back(new double(value));
+      interface_property_string = property_element->GetDataLine();
+      PropertyManager->Tie(interface_property_string, interface_properties.back());
+      cout << "      " << interface_property_string << " (initial value: " << value << ")" << endl;
+    }
     property_element = document->FindNextElement("property");
   }
 
@@ -558,26 +603,24 @@ bool FGFCS::Load(Element* el, SystemType systype)
 
   if (!fname.empty()) {
     property_element = el->FindElement("property");
-    if (property_element && debug_lvl > 0) cout << endl << "    Declared properties" << endl << endl;
+    if (property_element && debug_lvl > 0) cout << endl << "    Overriding properties" << endl << endl;
     while (property_element) {
       double value=0.0;
       if ( ! property_element->GetAttributeValue("value").empty())
         value = property_element->GetAttributeValueAsNumber("value");
 
       interface_property_string = property_element->GetDataLine();
-      
-      FGPropertyManager* node = PropertyManager->GetNode(interface_property_string);
-      if (node) {
+      if (PropertyManager->HasNode(interface_property_string)) {
+        FGPropertyManager* node = PropertyManager->GetNode(interface_property_string);
         cout << "      " << "Overriding value for property " << interface_property_string
              << " (old value: " << node->getDoubleValue() << "  new value: " << value << ")" << endl;
         node->setDoubleValue(value);
       } else {
         interface_properties.push_back(new double(value));
         PropertyManager->Tie(interface_property_string, interface_properties.back());
-	if (debug_lvl > 0)
+        if (debug_lvl > 0)
           cout << "      " << interface_property_string << " (initial value: " << value << ")" << endl;
       }
-      
       
       property_element = el->FindNextElement("property");
     }

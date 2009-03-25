@@ -170,11 +170,12 @@ bool FGAuxiliary::Run()
     vAeroUVW = vUVW;
   } else if (GroundReactions->GetWOW() && vUVW(eU) < 30) {
     double factor = (vUVW(eU) - 10.0)/20.0;
-    vAeroPQR = vPQR + factor*Atmosphere->GetTurbPQR();
-    vAeroUVW = vUVW + factor*Propagate->GetTl2b()*Atmosphere->GetTotalWindNED();
+    vAeroPQR = vPQR - factor*Atmosphere->GetTurbPQR();
+    vAeroUVW = vUVW - factor*Propagate->GetTl2b()*Atmosphere->GetTotalWindNED();
   } else {
-    vAeroPQR = vPQR + Atmosphere->GetTurbPQR();
-    vAeroUVW = vUVW + Propagate->GetTl2b()*Atmosphere->GetTotalWindNED();
+    FGColumnVector3 wind = Propagate->GetTl2b()*Atmosphere->GetTotalWindNED();
+    vAeroPQR = vPQR - Atmosphere->GetTurbPQR();
+    vAeroUVW = vUVW - wind;
   }
 
   Vt = vAeroUVW.Magnitude();
@@ -289,6 +290,9 @@ bool FGAuxiliary::Run()
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+// A positive headwind is blowing with you, a negative headwind is blowing against you.
+// psi is the direction the wind is blowing *towards*.
 
 double FGAuxiliary::GetHeadWind(void) const
 {
@@ -301,6 +305,10 @@ double FGAuxiliary::GetHeadWind(void) const
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+// A positive crosswind is blowing towards the right (from teh perspective of the
+// pilot). A negative crosswind is blowing towards the -Y direction (left).
+// psi is the direction the wind is blowing *towards*.
 
 double FGAuxiliary::GetCrossWind(void) const
 {
