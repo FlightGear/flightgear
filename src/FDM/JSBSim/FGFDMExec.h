@@ -507,6 +507,7 @@ private:
   bool ReadFileHeader(Element*);
   bool ReadSlave(Element*);
   bool ReadPrologue(Element*);
+  void ResetToInitialConditions(int mode);
   bool Allocate(void);
   bool DeAllocate(void);
 

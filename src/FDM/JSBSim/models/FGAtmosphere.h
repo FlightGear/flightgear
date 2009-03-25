@@ -216,11 +216,6 @@ public:
   void   SetRhythmicity(double r) {Rhythmicity=r;}
   double GetRhythmicity() const {return Rhythmicity;}
 
-  /** Sets wind vortex, clockwise as seen from a point in front of aircraft,
-      looking aft. Units are radians/second. */
-  void   SetWindFromClockwise(double wC) { wind_from_clockwise=wC; }
-  double GetWindFromClockwise(void) const {return wind_from_clockwise;}
-
   double GetTurbPQR(int idx) const {return vTurbPQR(idx);}
   double GetTurbMagnitude(void) const {return Magnitude;}
   FGColumnVector3& GetTurbDirection(void) {return vDirection;}

@@ -172,6 +172,7 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root) : Root(root)
   typedef int (FGFDMExec::*iPMF)(void) const;
 //  instance->Tie("simulation/do_trim_analysis", this, (iPMF)0, &FGFDMExec::DoTrimAnalysis);
   instance->Tie("simulation/do_simple_trim", this, (iPMF)0, &FGFDMExec::DoTrim);
+  instance->Tie("simulation/reset", this, (iPMF)0, &FGFDMExec::ResetToInitialConditions);
   instance->Tie("simulation/terminate", (int *)&Terminate);
   Constructing = false;
 }
@@ -386,6 +387,16 @@ bool FGFDMExec::RunIC(void)
   State->ResumeIntegration();
 
   return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+// A private, internal function call for Tie-ing to a property, so it needs an
+// argument. Nothing is done with the argument, yet.
+
+void FGFDMExec::ResetToInitialConditions(int mode)
+{
+  ResetToInitialConditions();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

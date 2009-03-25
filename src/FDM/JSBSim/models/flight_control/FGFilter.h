@@ -244,7 +244,8 @@ public:
   /** When true, causes previous values to be set to current values. This
       is particularly useful for first pass. */
   bool Initialize;
-
+  void ResetPastStates(void) {Input = 0.0; Initialize = true;}
+  
   enum {eLag, eLeadLag, eOrder2, eWashout, eIntegrator, eUnknown} FilterType;
 
 private:

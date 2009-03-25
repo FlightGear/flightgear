@@ -234,6 +234,8 @@ private:
   double ThrottlePos;      ///< FCS-supplied throttle position
   double AugmentCmd;       ///< modulated afterburner command (0.0 to 1.0)
   double TAT;              ///< total air temperature (deg C)
+  double N1_spinup;        ///< N1 spin up rate from starter (per second)
+  double N2_spinup;        ///< N2 spin up rate from starter (per second)
   bool Stalled;            ///< true if engine is compressor-stalled
   bool Seized;             ///< true if inner spool is seized
   bool Overtemp;           ///< true if EGT exceeds limits

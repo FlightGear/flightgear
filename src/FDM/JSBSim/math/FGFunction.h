@@ -227,7 +227,6 @@ private:
                      eExp, eAbs, eSin, eCos, eTan, eASin, eACos, eATan, eATan2,
                      eMin, eMax, eAvg, eFrac, eInteger, eMod, eRandom} Type;
   string Name;
-  double GaussianRandomNumber(void) const;
   void bind(void);
   void Debug(int from);
 };
