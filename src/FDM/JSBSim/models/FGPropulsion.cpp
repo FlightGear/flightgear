@@ -216,7 +216,7 @@ void FGPropulsion::InitRunning(int n)
 {
   if (n > 0) { // A specific engine is supposed to be initialized
 
-    if (n >= GetNumEngines() ) {
+    if (n >= (int)GetNumEngines() ) {
       cerr << "Tried to initialize a non-existent engine!" << endl;
       throw;
     }

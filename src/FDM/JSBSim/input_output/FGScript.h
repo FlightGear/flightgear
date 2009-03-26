@@ -186,7 +186,7 @@ public:
   bool RunScript(void);
 
   void ResetEvents(void) {
-    for (int i=0; i<Events.size(); i++) Events[i].reset();
+    for (unsigned int i=0; i<Events.size(); i++) Events[i].reset();
   }
 
 private:
