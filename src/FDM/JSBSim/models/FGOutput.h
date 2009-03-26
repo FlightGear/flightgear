@@ -148,6 +148,7 @@ public:
 
 
   void SetType(string);
+  void SetStartNewFile(bool tt) {StartNewFile = tt;}
   void SetSubsystems(int tt) {SubSystems = tt;}
   inline void Enable(void) { enabled = true; }
   inline void Disable(void) { enabled = false; }
@@ -181,7 +182,9 @@ private:
   enum {otNone, otCSV, otTab, otSocket, otTerminal, otFlightGear, otUnknown} Type;
   bool sFirstPass, dFirstPass, enabled;
   int SubSystems;
-  string output_file_name, delimeter, Filename, DirectivesFile;
+  int runID_postfix;
+  bool StartNewFile;
+  string output_file_name, delimeter, BaseFilename, Filename, DirectivesFile;
   ofstream datafile;
   FGfdmSocket* socket;
   FGfdmSocket* flightGearSocket;

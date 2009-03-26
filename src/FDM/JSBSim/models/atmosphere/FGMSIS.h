@@ -161,7 +161,7 @@ private:
   /* MESO7 */
   double meso_tn1[5];
   double meso_tn2[4];
-  double meso_tn3[3];
+  double meso_tn3[5];
   double meso_tgn1[2];
   double meso_tgn2[2];
   double meso_tgn3[2];

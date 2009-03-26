@@ -392,10 +392,16 @@ bool FGFDMExec::RunIC(void)
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //
 // A private, internal function call for Tie-ing to a property, so it needs an
-// argument. Nothing is done with the argument, yet.
+// argument.
 
 void FGFDMExec::ResetToInitialConditions(int mode)
 {
+  if (mode == 1) {
+    for (unsigned int i=0; i<Outputs.size(); i++) {
+      Outputs[i]->SetStartNewFile(true); 
+    }
+  }
+  
   ResetToInitialConditions();
 }
 
