@@ -145,6 +145,16 @@ FGJSBsim::FGJSBsim( double dt )
 
     fdmex = new FGFDMExec( (FGPropertyManager*)globals->get_props() );
 
+    // begin ugly hack
+    // Untie the write-state-file property to avoid creating an initfile.xml
+    // file on each FlightGear reset.
+    fgGetNode("/fdm/jsbsim/simulation/write-state-file")->untie();
+    fgGetNode("/fdm/jsbsim/simulation")->removeChild("write-state-file", false);
+    // Prevent nuking of the state on JSBSim recreation after FlightGear reset.
+    fgGetNode("/fdm/jsbsim/simulation/reset")->untie();
+    fgGetNode("/fdm/jsbsim/simulation")->removeChild("reset", false);
+    // end ugly hack
+
     // Register ground callback.
     fdmex->SetGroundCallback( new FGFSGroundCallback(this) );
 
@@ -281,10 +291,6 @@ FGJSBsim::FGJSBsim( double dt )
         fgGetDouble("/fdm/jsbsim/systems/hook/tailhook-offset-y-in", 0),
         fgGetDouble("/fdm/jsbsim/systems/hook/tailhook-offset-z-in", -16));
 
-    // Untie the write-state-file property to avoid creating an initfile.xml
-    // file on each reset.
-    fgGetNode("/fdm/jsbsim/simulation/write-state-file")->untie();
-
     crashed = false;
 }
 
@@ -334,7 +340,7 @@ void FGJSBsim::init()
      << ", " << fdmex->GetAtmosphere()->GetDensity() );
 
     if (fgGetBool("/sim/presets/running")) {
-          for (int i=0; i < Propulsion->GetNumEngines(); i++) {
+          for (unsigned int i=0; i < Propulsion->GetNumEngines(); i++) {
             SGPropertyNode * node = fgGetNode("engines/engine", i, true);
             node->setBoolValue("running", true);
             Propulsion->GetEngine(i)->SetRunning(true);
@@ -448,14 +454,18 @@ void FGJSBsim::update( double dt )
     if (!cache_ok) {
       SG_LOG(SG_FLIGHT, SG_WARN,
              "FGInterface is being called without scenery below the aircraft!");
-      SG_LOG(SG_FLIGHT, SG_WARN,
-             "altitude         = " << alt);
-      SG_LOG(SG_FLIGHT, SG_WARN,
-            "sea level radius = " << slr);
-      SG_LOG(SG_FLIGHT, SG_WARN,
-            "latitude         = " << lat);
-      SG_LOG(SG_FLIGHT, SG_WARN,
-            "longitude        = " << lon);
+
+      alt = fgic->GetAltitudeFtIC();
+      SG_LOG(SG_FLIGHT, SG_WARN, "altitude         = " << alt);
+
+      slr = fgic->GetSeaLevelRadiusFtIC();
+      SG_LOG(SG_FLIGHT, SG_WARN, "sea level radius = " << slr);
+
+      lat = fgic->GetLatitudeDegIC() * SGD_DEGREES_TO_RADIANS;
+      SG_LOG(SG_FLIGHT, SG_WARN, "latitude         = " << lat);
+
+      lon = fgic->GetLongitudeDegIC() * SGD_DEGREES_TO_RADIANS;
+      SG_LOG(SG_FLIGHT, SG_WARN, "longitude        = " << lon);
       //return;
     }
 
@@ -589,6 +599,8 @@ bool FGJSBsim::copy_to_JSBsim()
         eng->SetCondition( globals->get_controls()->get_condition(i) );
         break;
         } // end FGTurboProp code block
+      default:
+        break;
       }
 
       { // FGEngine code block

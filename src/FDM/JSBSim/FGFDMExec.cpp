@@ -412,7 +412,7 @@ void FGFDMExec::ResetToInitialConditions(void)
   FGModel* model_iterator;
 
   model_iterator = FirstModel;
-  if (model_iterator == 0L) return;
+  if (model_iterator == 0L || Constructing) return;
 
   while (model_iterator != 0L) {
     model_iterator->InitModel();
