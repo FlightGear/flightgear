@@ -470,7 +470,8 @@ FGDialog::FGDialog (SGPropertyNode *props) :
         if (open) {
             const char *s = open->getStringValue();
             FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
-            nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s), props);
+            if (nas)
+                nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s), props);
         }
     }
     display(props);
@@ -484,11 +485,13 @@ FGDialog::~FGDialog ()
     _props->setIntValue("lasty", y);
 
     FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
-    if (_nasal_close) {
-        const char *s = _nasal_close->getStringValue();
-        nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s), _props);
+    if (nas) {
+        if (_nasal_close) {
+            const char *s = _nasal_close->getStringValue();
+            nas->createModule(_module.c_str(), _module.c_str(), s, strlen(s), _props);
+        }
+        nas->deleteModule(_module.c_str());
     }
-    nas->deleteModule(_module.c_str());
 
     puDeleteObject(_object);
 
