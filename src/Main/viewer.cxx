@@ -79,6 +79,7 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
     _damp_pitch(0),
     _damp_heading(0),
     _scaling_type(FG_SCALING_MAX),
+    _aspect_ratio(0),
     _cameraGroup(CameraGroup::getDefault())
 {
     _absolute_view_pos = SGVec3d(0, 0, 0);
