@@ -49,25 +49,65 @@ using std::deque;
 #include <Main/fg_props.hxx>
 
 
-class FGXMLAutoInput {
+class FGXMLAutoInput : public SGReferenced {
 private:
-     SGPropertyNode_ptr property; // The name of the property containing the value
      double             value;    // The value as a constant or initializer for the property
-     double             offset;   // A fixed offset
-     double             scale;    // A constant scaling factor
+     SGPropertyNode_ptr property; // The name of the property containing the value
+     SGSharedPtr<FGXMLAutoInput> offset;   // A fixed offset, defaults to zero
+     SGSharedPtr<FGXMLAutoInput> scale;    // A constant scaling factor defaults to one
+     SGSharedPtr<FGXMLAutoInput> min;      // A minimum clip defaults to no clipping
+     SGSharedPtr<FGXMLAutoInput> max;      // A maximum clip defaults to no clipping
+     SGSharedPtr<const SGCondition> _condition;
 
 public:
-    FGXMLAutoInput() :
+    FGXMLAutoInput( SGPropertyNode_ptr node = NULL, double value = 0.0, double offset = 0.0, double scale = 1.0 ) :
       property(NULL),
       value(0.0),
-      offset(0.0),
-      scale(1.0) {}
+      offset(NULL),
+      scale(NULL),
+      min(NULL),
+      max(NULL),
+      _condition(NULL) {
+       parse( node, value, offset, scale );
+     }
 
-    void   parse( SGPropertyNode_ptr, double value = 0.0, double offset = 0.0, double scale = 1.0 );
-    inline double getValue() {
-      if( property != NULL ) value = property->getDoubleValue();
-      return value * scale + offset;
+    void parse( SGPropertyNode_ptr, double value = 0.0, double offset = 0.0, double scale = 1.0 );
+
+    /* get the value of this input, apply scale and offset and clipping */
+    double get_value();
+
+    /* set the input value after applying offset and scale */
+    void set_value( double value );
+
+    inline double get_scale() {
+      return scale == NULL ? 1.0 : scale->get_value();
     }
+
+    inline double get_offset() {
+      return offset == NULL ? 0.0 : offset->get_value();
+    }
+
+    inline bool is_enabled() {
+      return _condition == NULL ? true : _condition->test();
+    }
+
+};
+
+class FGXMLAutoInputList : public vector<SGSharedPtr<FGXMLAutoInput> > {
+  public:
+    FGXMLAutoInput * get_active() {
+      for (iterator it = begin(); it != end(); ++it) {
+        if( (*it)->is_enabled() )
+          return *it;
+      }
+      return NULL;
+    }
+
+    double get_value( double def = 0.0 ) {
+      FGXMLAutoInput * input = get_active();
+      return input == NULL ? def : input->get_value();
+    }
+
 };
 
 /**
@@ -77,7 +117,6 @@ public:
 class FGXMLAutoComponent : public SGReferenced {
 
 private:
-    bool clamp;
     vector <SGPropertyNode_ptr> output_list;
 
     SGSharedPtr<const SGCondition> _condition;
@@ -88,15 +127,31 @@ private:
     bool honor_passive;
 
     string name;
+
+    /* Feed back output property to input property if
+       this filter is disabled. This is for multi-stage
+       filter where one filter sits behind a pid-controller
+       to provide changes of the overall output to the pid-
+       controller.
+       feedback is disabled by default.
+     */
+    bool feedback_if_disabled;
+    void do_feedback_if_disabled();
+
 protected:
 
-    FGXMLAutoInput valueInput;
-    FGXMLAutoInput referenceInput;
-    FGXMLAutoInput uminInput;
-    FGXMLAutoInput umaxInput;
+    FGXMLAutoInputList valueInput;
+    FGXMLAutoInputList referenceInput;
+    FGXMLAutoInputList uminInput;
+    FGXMLAutoInputList umaxInput;
     // debug flag
     bool debug;
     bool enabled;
+
+    
+    inline void do_feedback() {
+        if( feedback_if_disabled ) do_feedback_if_disabled();
+    }
 
 public:
 
@@ -107,30 +162,21 @@ public:
     
     inline const string& get_name() { return name; }
 
-    inline double Clamp( double value ) {
-        if( clamp ) {
-            double d = umaxInput.getValue();
-            if( value > d ) value = d;
-            d = uminInput.getValue();
-            if( value < d ) value = d;
-        }
-        return value;
-    }
+    double clamp( double value );
 
-    inline void setOutputValue( double value ) {
+    inline void set_output_value( double value ) {
         // passive_ignore == true means that we go through all the
         // motions, but drive the outputs.  This is analogous to
         // running the autopilot with the "servos" off.  This is
         // helpful for things like flight directors which position
         // their vbars from the autopilot computations.
         if ( honor_passive && passive_mode->getBoolValue() ) return;
-        for ( unsigned i = 0; i < output_list.size(); ++i ) {
-            output_list[i]->setDoubleValue( Clamp(value) );
-        }
+        for( vector <SGPropertyNode_ptr>::iterator it = output_list.begin(); it != output_list.end(); ++it)
+          (*it)->setDoubleValue( clamp( value ) );
     }
 
-    inline double getOutputValue() {
-      return output_list.size() == 0 ? 0.0 : Clamp(output_list[0]->getDoubleValue());
+    inline double get_output_value() {
+      return output_list.size() == 0 ? 0.0 : clamp(output_list[0]->getDoubleValue());
     }
 
     /* 
@@ -184,9 +230,9 @@ private:
 
 
     // Configuration values
-    FGXMLAutoInput Kp;          // proportional gain
-    FGXMLAutoInput Ti;          // Integrator time (sec)
-    FGXMLAutoInput Td;          // Derivator time (sec)
+    FGXMLAutoInputList Kp;          // proportional gain
+    FGXMLAutoInputList Ti;          // Integrator time (sec)
+    FGXMLAutoInputList Td;          // Derivator time (sec)
 
     double alpha;               // low pass filter weighing factor (usually 0.1)
     double beta;                // process value weighing factor for
@@ -212,7 +258,6 @@ public:
     FGPIDController( SGPropertyNode *node, bool old );
     ~FGPIDController() {}
 
-    void update_old( double dt );
     void update( double dt );
 };
 
@@ -226,10 +271,10 @@ class FGPISimpleController : public FGXMLAutoComponent {
 private:
 
     // proportional component data
-    FGXMLAutoInput Kp;
+    FGXMLAutoInputList Kp;
 
     // integral component data
-    FGXMLAutoInput Ki;
+    FGXMLAutoInputList Ki;
     double int_sum;
 
 
@@ -249,18 +294,11 @@ public:
 class FGPredictor : public FGXMLAutoComponent {
 
 private:
-
-    // proportional component data
     double last_value;
-    double average;
-    double seconds;
-    double filter_gain;
+    FGXMLAutoInputList seconds;
+    FGXMLAutoInputList filter_gain;
 
-    // Input values
-    double ivalue;                 // input value
-    
 public:
-
     FGPredictor( SGPropertyNode *node );
     ~FGPredictor() {}
 
@@ -283,15 +321,15 @@ public:
 class FGDigitalFilter : public FGXMLAutoComponent
 {
 private:
-    FGXMLAutoInput samplesInput; // Number of input samples to average
-    FGXMLAutoInput rateOfChangeInput;  // The maximum allowable rate of change [1/s]
-    FGXMLAutoInput gainInput;     // 
-    FGXMLAutoInput TfInput;            // Filter time [s]
+    FGXMLAutoInputList samplesInput; // Number of input samples to average
+    FGXMLAutoInputList rateOfChangeInput;  // The maximum allowable rate of change [1/s]
+    FGXMLAutoInputList gainInput;     // 
+    FGXMLAutoInputList TfInput;            // Filter time [s]
 
     deque <double> output;
     deque <double> input;
     enum filterTypes { exponential, doubleExponential, movingAverage,
-                       noiseSpike, gain, reciprocal };
+                       noiseSpike, gain, reciprocal, none };
     filterTypes filterType;
 
 public:
