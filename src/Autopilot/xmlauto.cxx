@@ -40,36 +40,39 @@
 using std::cout;
 using std::endl;
 
-/* 
-parse element with
-  <node>
-    <value>1</value>
-    <prop>/some/property</prop>
-  </node>
-or
-  <node>123</node>
-or
-  <node>/some/property</node>
-*/
-
 void FGXMLAutoInput::parse( SGPropertyNode_ptr node, double aValue, double aOffset, double aScale )
 {
-    delete property;
-    property = NULL;
     value = aValue;
-    offset = aOffset;
-    scale = aScale;
+    property = NULL; 
+    offset = NULL;
+    scale = NULL;
+    min = NULL;
+    max = NULL;
 
     if( node == NULL )
         return;
 
     SGPropertyNode * n;
 
-    if( (n = node->getChild( "scale" )) != NULL )
-        scale = n->getDoubleValue();
+    if( (n = node->getChild("condition")) != NULL ) {
+        _condition = sgReadCondition(node, n);
+    }
 
-    if( (n = node->getChild( "offset" )) != NULL )
-        offset = n->getDoubleValue();
+    if( (n = node->getChild( "scale" )) != NULL ) {
+        scale = new FGXMLAutoInput( n, aScale );
+    }
+
+    if( (n = node->getChild( "offset" )) != NULL ) {
+        offset = new FGXMLAutoInput( n, aOffset );
+    }
+
+    if( (n = node->getChild( "max" )) != NULL ) {
+        max = new FGXMLAutoInput( n );
+    }
+
+    if( (n = node->getChild( "min" )) != NULL ) {
+        min = new FGXMLAutoInput( n );
+    }
 
     SGPropertyNode *valueNode = node->getChild( "value" );
     if ( valueNode != NULL ) {
@@ -87,8 +90,9 @@ void FGXMLAutoInput::parse( SGPropertyNode_ptr node, double aValue, double aOffs
         if ( valueNode != NULL ) {
             // initialize property with given value 
             // if both <prop> and <value> exist
-            if( scale != 0 )
-              property->setDoubleValue( (value - offset)/scale );
+            double s = get_scale();
+            if( s != 0 )
+              property->setDoubleValue( (value - get_offset())/s );
             else
               property->setDoubleValue( 0 ); // if scale is zero, value*scale is zero
         }
@@ -108,6 +112,41 @@ void FGXMLAutoInput::parse( SGPropertyNode_ptr node, double aValue, double aOffs
     }
 }
 
+void FGXMLAutoInput::set_value( double aValue ) 
+{
+    double s = get_scale();
+    if( s != 0 )
+        property->setDoubleValue( (aValue - get_offset())/s );
+    else
+        property->setDoubleValue( 0 ); // if scale is zero, value*scale is zero
+}
+
+double FGXMLAutoInput::get_value() 
+{
+    if( property != NULL ) 
+        value = property->getDoubleValue();
+
+    if( scale ) 
+        value *= scale->get_value();
+
+    if( offset ) 
+        value += offset->get_value();
+
+    if( min ) {
+        double m = min->get_value();
+        if( value < m )
+            value = m;
+    }
+
+    if( max ) {
+        double m = max->get_value();
+        if( value > m )
+            value = m;
+    }
+    
+    return value;
+}
+
 FGXMLAutoComponent::FGXMLAutoComponent( SGPropertyNode * node ) :
       debug(false),
       name(""),
@@ -116,8 +155,8 @@ FGXMLAutoComponent::FGXMLAutoComponent( SGPropertyNode * node ) :
       enable_value( NULL ),
       honor_passive( false ),
       enabled( false ),
-      clamp( false ),
-      _condition( NULL )
+      _condition( NULL ),
+      feedback_if_disabled( false )
 {
     int i;
     SGPropertyNode *prop; 
@@ -128,6 +167,9 @@ FGXMLAutoComponent::FGXMLAutoComponent( SGPropertyNode * node ) :
         string cval = child->getStringValue();
         if ( cname == "name" ) {
             name = cval;
+
+        } else if ( cname == "feedback-if-disabled" ) {
+            feedback_if_disabled = child->getBoolValue();
 
         } else if ( cname == "debug" ) {
             debug = child->getBoolValue();
@@ -151,11 +193,11 @@ FGXMLAutoComponent::FGXMLAutoComponent( SGPropertyNode * node ) :
 
         } else if ( cname == "input" ) {
 
-              valueInput.parse( child );
+              valueInput.push_back( new FGXMLAutoInput( child ) );
 
         } else if ( cname == "reference" ) {
 
-            referenceInput.parse( child );
+              referenceInput.push_back( new FGXMLAutoInput( child ) );
 
         } else if ( cname == "output" ) {
             // grab all <prop> and <property> childs
@@ -177,20 +219,26 @@ FGXMLAutoComponent::FGXMLAutoComponent( SGPropertyNode * node ) :
                 output_list.push_back( fgGetNode(child->getStringValue(), true ) );
 
         } else if ( cname == "config" ) {
+            if( (prop = child->getChild("min")) != NULL ) {
+              uminInput.push_back( new FGXMLAutoInput( prop ) );
+            }
             if( (prop = child->getChild("u_min")) != NULL ) {
-              uminInput.parse( prop );
-              clamp = true;
+              uminInput.push_back( new FGXMLAutoInput( prop ) );
+            }
+            if( (prop = child->getChild("max")) != NULL ) {
+              umaxInput.push_back( new FGXMLAutoInput( prop ) );
             }
             if( (prop = child->getChild("u_max")) != NULL ) {
-              umaxInput.parse( prop );
-              clamp = true;
+              umaxInput.push_back( new FGXMLAutoInput( prop ) );
             }
+        } else if ( cname == "min" ) {
+            uminInput.push_back( new FGXMLAutoInput( child ) );
         } else if ( cname == "u_min" ) {
-            uminInput.parse( child );
-            clamp = true;
+            uminInput.push_back( new FGXMLAutoInput( child ) );
+        } else if ( cname == "max" ) {
+            umaxInput.push_back( new FGXMLAutoInput( child ) );
         } else if ( cname == "u_max" ) {
-            umaxInput.parse( child );
-            clamp = true;
+            umaxInput.push_back( new FGXMLAutoInput( child ) );
         } 
     }   
 }
@@ -213,6 +261,27 @@ bool FGXMLAutoComponent::isPropertyEnabled()
         }
     }
     return true;
+}
+
+void FGXMLAutoComponent::do_feedback_if_disabled()
+{
+    if( output_list.size() > 0 ) {    
+        FGXMLAutoInput * input = valueInput.get_active();
+        if( input != NULL )
+            input->set_value( output_list[0]->getDoubleValue() );
+    }
+}
+
+double FGXMLAutoComponent::clamp( double value )
+{
+    // clamp, if either min or max is defined
+    if( uminInput.size() + umaxInput.size() > 0 ) {
+        double d = umaxInput.get_value( 0.0 );
+        if( value > d ) value = d;
+        d = uminInput.get_value( 0.0 );
+        if( value < d ) value = d;
+    }
+    return value;
 }
 
 FGPIDController::FGPIDController( SGPropertyNode *node ):
@@ -239,9 +308,9 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
                 desiredTs = config->getDoubleValue();
             }
            
-            Kp.parse( child->getChild( "Kp" ) );
-            Ti.parse( child->getChild( "Ti" ) );
-            Td.parse( child->getChild( "Td" ) );
+            Kp.push_back( new FGXMLAutoInput( child->getChild( "Kp" ) ) );
+            Ti.push_back( new FGXMLAutoInput( child->getChild( "Ti" ) ) );
+            Td.push_back( new FGXMLAutoInput( child->getChild( "Td" ) ) );
 
             config = child->getChild( "beta" );
             if ( config != NULL ) {
@@ -329,8 +398,8 @@ void FGPIDController::update( double dt ) {
     double u_n = 0.0;       // absolute output
     double Ts;              // sampling interval (sec)
 
-    double u_min = uminInput.getValue();
-    double u_max = umaxInput.getValue();
+    double u_min = uminInput.get_value();
+    double u_max = umaxInput.get_value();
 
     elapsedTime += dt;
     if ( elapsedTime <= desiredTs ) {
@@ -345,20 +414,21 @@ void FGPIDController::update( double dt ) {
         if ( !enabled ) {
             // first time being enabled, seed u_n with current
             // property tree value
-            u_n = getOutputValue();
+            u_n = get_output_value();
             u_n_1 = u_n;
         }
         enabled = true;
     } else {
         enabled = false;
+        do_feedback();
     }
 
     if ( enabled && Ts > 0.0) {
         if ( debug ) cout << "Updating " << get_name()
                           << " Ts " << Ts << endl;
 
-        double y_n = valueInput.getValue();
-        double r_n = referenceInput.getValue();
+        double y_n = valueInput.get_value();
+        double r_n = referenceInput.get_value();
                       
         if ( debug ) cout << "  input = " << y_n << " ref = " << r_n << endl;
 
@@ -375,7 +445,7 @@ void FGPIDController::update( double dt ) {
         ed_n = gamma * r_n - y_n;
         if ( debug ) cout << " ed_n = " << ed_n;
 
-        double td = Td.getValue();
+        double td = Td.get_value();
         if ( td > 0.0 ) {
             // Calculates filter time:
             Tf = alpha * td;
@@ -390,18 +460,18 @@ void FGPIDController::update( double dt ) {
         }
 
         // Calculates the incremental output:
-        double ti = Ti.getValue();
+        double ti = Ti.get_value();
         if ( ti > 0.0 ) {
-            delta_u_n = Kp.getValue() * ( (ep_n - ep_n_1)
+            delta_u_n = Kp.get_value() * ( (ep_n - ep_n_1)
                                + ((Ts/ti) * e_n)
                                + ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2)) );
         }
 
         if ( debug ) {
             cout << " delta_u_n = " << delta_u_n << endl;
-            cout << "P:" << Kp.getValue() * (ep_n - ep_n_1)
-                 << " I:" << Kp.getValue() * ((Ts/ti) * e_n)
-                 << " D:" << Kp.getValue() * ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2))
+            cout << "P:" << Kp.get_value() * (ep_n - ep_n_1)
+                 << " I:" << Kp.get_value() * ((Ts/ti) * e_n)
+                 << " D:" << Kp.get_value() * ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2))
                  << endl;
         }
 
@@ -424,7 +494,7 @@ void FGPIDController::update( double dt ) {
         edf_n_2 = edf_n_1;
         edf_n_1 = edf_n;
 
-        setOutputValue( u_n );
+        set_output_value( u_n );
     } else if ( !enabled ) {
         ep_n  = 0.0;
         edf_n = 0.0;
@@ -447,8 +517,8 @@ FGPISimpleController::FGPISimpleController( SGPropertyNode *node ):
         string cname = child->getName();
         string cval = child->getStringValue();
         if ( cname == "config" ) {
-            Kp.parse( child->getChild( "Kp" ) );
-            Ki.parse( child->getChild( "Ki" ) );
+            Kp.push_back( new FGXMLAutoInput( child->getChild( "Kp" ) ) );
+            Ki.push_back( new FGXMLAutoInput( child->getChild( "Ki" ) ) );
         } else {
             SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in autopilot config logic" );
             if ( get_name().length() ) {
@@ -469,12 +539,13 @@ void FGPISimpleController::update( double dt ) {
         enabled = true;
     } else {
         enabled = false;
+        do_feedback();
     }
 
     if ( enabled ) {
         if ( debug ) cout << "Updating " << get_name() << endl;
-        double y_n = valueInput.getValue();
-        double r_n = referenceInput.getValue();
+        double y_n = valueInput.get_value();
+        double r_n = referenceInput.get_value();
                       
         double error = r_n - y_n;
         if ( debug ) cout << "input = " << y_n
@@ -482,37 +553,32 @@ void FGPISimpleController::update( double dt ) {
                           << " error = " << error
                           << endl;
 
-        double prop_comp = error * Kp.getValue();
-        int_sum += error * Ki.getValue() * dt;
+        double prop_comp = error * Kp.get_value();
+        int_sum += error * Ki.get_value() * dt;
 
 
         if ( debug ) cout << "prop_comp = " << prop_comp
                           << " int_sum = " << int_sum << endl;
 
         double output = prop_comp + int_sum;
-        output = Clamp( output );
-        setOutputValue( output );
+        output = clamp( output );
+        set_output_value( output );
         if ( debug ) cout << "output = " << output << endl;
     }
 }
 
 
 FGPredictor::FGPredictor ( SGPropertyNode *node ):
-    FGXMLAutoComponent( node ),
-    average ( 0.0 ),
-    seconds( 0.0 ),
-    filter_gain( 0.0 ),
-    ivalue( 0.0 )
+    FGXMLAutoComponent( node )
 {
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
         string cname = child->getName();
-        string cval = child->getStringValue();
         if ( cname == "seconds" ) {
-            seconds = child->getDoubleValue();
+            seconds.push_back( new FGXMLAutoInput( child, 0 ) );
         } else if ( cname == "filter-gain" ) {
-            filter_gain = child->getDoubleValue();
+            filter_gain.push_back( new FGXMLAutoInput( child, 0 ) );
         }
     }   
 }
@@ -531,7 +597,7 @@ void FGPredictor::update( double dt ) {
 
     */
 
-    ivalue = valueInput.getValue();
+    double ivalue = valueInput.get_value();
 
     if ( isPropertyEnabled() ) {
         if ( !enabled ) {
@@ -541,22 +607,21 @@ void FGPredictor::update( double dt ) {
         enabled = true;
     } else {
         enabled = false;
+        do_feedback();
     }
 
     if ( enabled ) {
 
         if ( dt > 0.0 ) {
             double current = (ivalue - last_value)/dt; // calculate current error change (per second)
-            if ( dt < 1.0 ) {
-                average = (1.0 - dt) * average + current * dt;
-            } else {
-                average = current;
-            }
+            double average = dt < 1.0 ? ((1.0 - dt) * average + current * dt) : current;
 
             // calculate output with filter gain adjustment
-            double output = ivalue + (1.0 - filter_gain) * (average * seconds) + filter_gain * (current * seconds);
-            output = Clamp( output );
-            setOutputValue( output );
+            double output = ivalue + 
+               (1.0 - filter_gain.get_value()) * (average * seconds.get_value()) + 
+                       filter_gain.get_value() * (current * seconds.get_value());
+            output = clamp( output );
+            set_output_value( output );
         }
         last_value = ivalue;
     }
@@ -564,7 +629,8 @@ void FGPredictor::update( double dt ) {
 
 
 FGDigitalFilter::FGDigitalFilter(SGPropertyNode *node):
-    FGXMLAutoComponent( node )
+    FGXMLAutoComponent( node ),
+    filterType(none)
 {
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
@@ -586,36 +652,41 @@ FGDigitalFilter::FGDigitalFilter(SGPropertyNode *node):
                 filterType = reciprocal;
             }
         } else if ( cname == "filter-time" ) {
-            TfInput.parse( child, 1.0 );
+            TfInput.push_back( new FGXMLAutoInput( child, 1.0 ) );
+            if( filterType == none ) filterType = exponential;
         } else if ( cname == "samples" ) {
-            samplesInput.parse( child, 1 );
+            samplesInput.push_back( new FGXMLAutoInput( child, 1 ) );
+            if( filterType == none ) filterType = movingAverage;
         } else if ( cname == "max-rate-of-change" ) {
-            rateOfChangeInput.parse( child, 1.0 );
+            rateOfChangeInput.push_back( new FGXMLAutoInput( child, 1 ) );
+            if( filterType == none ) filterType = noiseSpike;
         } else if ( cname == "gain" ) {
-            gainInput.parse( child );
+            gainInput.push_back( new FGXMLAutoInput( child, 1 ) );
+            if( filterType == none ) filterType = gain;
         }
     }
 
     output.resize(2, 0.0);
-    input.resize(samplesInput.getValue() + 1, 0.0);
+    input.resize(samplesInput.get_value() + 1, 0.0);
 }
 
 void FGDigitalFilter::update(double dt)
 {
     if ( isPropertyEnabled() ) {
 
-        input.push_front(valueInput.getValue());
-        input.resize(samplesInput.getValue() + 1, 0.0);
+        input.push_front(valueInput.get_value());
+        input.resize(samplesInput.get_value() + 1, 0.0);
 
         if ( !enabled ) {
             // first time being enabled, initialize output to the
             // value of the output property to avoid bumping.
-            output.push_front(getOutputValue());
+            output.push_front(get_output_value());
         }
 
         enabled = true;
     } else {
         enabled = false;
+        do_feedback();
     }
 
     if ( enabled && dt > 0.0 ) {
@@ -630,13 +701,13 @@ void FGDigitalFilter::update(double dt)
 
         if (filterType == exponential)
         {
-            double alpha = 1 / ((TfInput.getValue()/dt) + 1);
+            double alpha = 1 / ((TfInput.get_value()/dt) + 1);
             output.push_front(alpha * input[0] + 
                               (1 - alpha) * output[0]);
         } 
         else if (filterType == doubleExponential)
         {
-            double alpha = 1 / ((TfInput.getValue()/dt) + 1);
+            double alpha = 1 / ((TfInput.get_value()/dt) + 1);
             output.push_front(alpha * alpha * input[0] + 
                               2 * (1 - alpha) * output[0] -
                               (1 - alpha) * (1 - alpha) * output[1]);
@@ -644,11 +715,11 @@ void FGDigitalFilter::update(double dt)
         else if (filterType == movingAverage)
         {
             output.push_front(output[0] + 
-                              (input[0] - input.back()) / samplesInput.getValue());
+                              (input[0] - input.back()) / samplesInput.get_value());
         }
         else if (filterType == noiseSpike)
         {
-            double maxChange = rateOfChangeInput.getValue() * dt;
+            double maxChange = rateOfChangeInput.get_value() * dt;
 
             if ((output[0] - input[0]) > maxChange)
             {
@@ -665,17 +736,17 @@ void FGDigitalFilter::update(double dt)
         }
         else if (filterType == gain)
         {
-            output[0] = gainInput.getValue() * input[0];
+            output[0] = gainInput.get_value() * input[0];
         }
         else if (filterType == reciprocal)
         {
             if (input[0] != 0.0) {
-                output[0] = gainInput.getValue() / input[0];
+                output[0] = gainInput.get_value() / input[0];
             }
         }
 
-        output[0] = Clamp(output[0]) ;
-        setOutputValue( output[0] );
+        output[0] = clamp(output[0]) ;
+        set_output_value( output[0] );
 
         output.resize(2);
 
