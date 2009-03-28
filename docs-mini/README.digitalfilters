@@ -17,16 +17,22 @@ in the remaining document.
 The complete XML syntax for a InputValue is
 
 <some-element>
+  <condition>
+    <!-- any condition as defined in README.conditions -->
+  </condition>
   <property>/some/property/name</property>
   <value>0.0</value>
   <scale>1.0</value>
   <offset>0.0</offset>
+  <max>infinity</max>
+  <min>-infinity<min>
 </some-element>
 
 The enclosing element <some-element> is the element defined in each filter, like <input>, <u_min>, 
 <reference> etc. These elements will be described later.
 The value of the input is calculated based on the given value, scale and offset as
-value * scale + offset. 
+value * scale + offset 
+and the result is clipped to min/max, if given.
 With the full set of given elements, the InputValue will initialize the named property to the value
 given, reduced by the given offset and reverse scaled by the given scale.
 
@@ -47,6 +53,8 @@ The default values for elements not given are:
 <scale/> : 1.0
 <offset/>: 0.0
 <property/> : none
+<min/>   : unclipped
+<max/>   : unclipped
 
 Some examples:
 <input>
@@ -77,6 +85,37 @@ Examples:
 
 The <property> element may also be written as <prop> for backward compatibility.
 
+There may be one or more InputValues for the same input of a filter which may be bound to conditions.
+Each InputValue will have its condition checked in the order of InputValues given in the configuration
+file. The first InputValue that returns true for its condition will be evaluated. Chaining a number
+of InputValues with conditions and an unconditioned InputValue works like the C language equivalent
+if( condition ) {
+  // compute value of first element
+} else if( condition2 ) {
+  // compute value of second element
+} else if( condition3 ) {
+  // compute value of third element
+} else {
+  // compute value of last element
+}
+
+Example: Set the gain to 3.0 if /autopilot/locks/heading equals dg-heading-hold or 2.0 otherwise.
+<digital-filter>
+  <gain>
+    <condition>
+      <equals>
+        <property>/autopilot/locks/heading</property>
+        <value>dg-heading-hold</value>
+      </equals>
+    </condition>
+    <value>3.0</value>
+  <gain>
+  <!-- Hint: omit a condition here as a fallthru else condition -->
+  </gain>
+    <value>2.0</value>
+  <gain>
+<digital-filter>
+    
 OutputValue           
 ==============================================================================
 Each filter drives one to many output properties. No scaling of offsetting is implemented
@@ -121,6 +160,7 @@ Example:
                           If either <u_min> or <u_max> is given, clamping is activated. A missing
                           min or max value defaults to 0 (zero).
                           Note: <u_min> and <u_max> may also occour within a <config> element.
+                          <min> and <max> may be used as a substitude for the corresponding u_xxx element.
 
 Example: Limit the pilot's body temperature to a constant minimum of 36 and a maximum defined in
          /pilots/max-body-temperature-degc, initialized to 40.0
@@ -128,9 +168,9 @@ Example: Limit the pilot's body temperature to a constant minimum of 36 and a ma
   <prop>/pilots/max-body-temperature-degc</prop>
   <value>40.0</
 </u_max>
-<u_min>
+<min>
   <value>36.0</value>
-</u_min
+</min
 
 Implicit definition of the minimum value of 0 (zero) and defining a maximum of 100.0
 <config>
