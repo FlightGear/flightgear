@@ -234,10 +234,13 @@ void FGLight::update_sky_color () {
     gamma_correct_rgb( _cloud_color.data() );
 
     SGVec4f sun_color = thesky->get_sun_color();
+    float av = thesky->get_visibility();
+    if (av > 45000) av = 45000;
+    float avf = ambient+1.0 - log(av)/11.0;
 
-    _scene_ambient[0] = ((sun_color[0]*0.25 + _cloud_color[0]*0.75) + ambient) / 2;
-    _scene_ambient[1] = ((sun_color[1]*0.25 + _cloud_color[1]*0.75) + ambient) / 2;
-    _scene_ambient[2] = ((sun_color[2]*0.25 + _cloud_color[2]*0.75) + ambient) / 2;
+    _scene_ambient[0] = sun_color[0] * avf;
+    _scene_ambient[1] = sun_color[1] * avf;
+    _scene_ambient[2] = sun_color[2] * avf;
     _scene_ambient[3] = 1.0;
 
     _scene_diffuse[0] = (sun_color[0]*0.25 + _fog_color[0]*0.75) * diffuse;
