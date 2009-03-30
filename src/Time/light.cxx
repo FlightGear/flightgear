@@ -191,13 +191,17 @@ void FGLight::update_sky_color () {
 
     // calculate lighting parameters based on sun's relative angle to
     // local up
+    float av = thesky->get_visibility();
+    if (av > 45000.0) av = 45000.0;
+    float visibility_norm = av/45000.0;
+    float visibility_inv = 1.0 - visibility_norm;
 
     float deg = _sun_angle * SGD_RADIANS_TO_DEGREES;
     SG_LOG( SG_EVENT, SG_DEBUG, "  Sun angle = " << deg );
 
-    float ambient = _ambient_tbl->interpolate( deg );
+    float ambient = _ambient_tbl->interpolate( deg ) + visibility_inv/2;
     float diffuse = _diffuse_tbl->interpolate( deg );
-    float specular = _specular_tbl->interpolate( deg );
+    float specular = _specular_tbl->interpolate( deg ) * visibility_norm;
     float sky_brightness = _sky_tbl->interpolate( deg );
 
     SG_LOG( SG_EVENT, SG_DEBUG,
@@ -205,10 +209,6 @@ void FGLight::update_sky_color () {
 	    << "  specular = " << specular << "  sky = " << sky_brightness );
 
     // sky_brightness = 0.15;  // used to force a dark sky (when testing)
-
-    // if ( ambient < 0.02 ) { ambient = 0.02; }
-    // if ( diffuse < 0.0 ) { diffuse = 0.0; }
-    // if ( sky_brightness < 0.1 ) { sky_brightness = 0.1; }
 
     // set sky color
     _sky_color[0] = base_sky_color[0] * sky_brightness;
@@ -234,18 +234,14 @@ void FGLight::update_sky_color () {
     gamma_correct_rgb( _cloud_color.data() );
 
     SGVec4f sun_color = thesky->get_sun_color();
-    float av = thesky->get_visibility();
-    if (av > 45000) av = 45000;
-    float avf = ambient+1.0 - log(av)/11.0;
-
-    _scene_ambient[0] = sun_color[0] * avf;
-    _scene_ambient[1] = sun_color[1] * avf;
-    _scene_ambient[2] = sun_color[2] * avf;
+    _scene_ambient[0] = _fog_color[0] * ambient;
+    _scene_ambient[1] = _fog_color[1] * ambient;
+    _scene_ambient[2] = _fog_color[2] * ambient;
     _scene_ambient[3] = 1.0;
 
-    _scene_diffuse[0] = (sun_color[0]*0.25 + _fog_color[0]*0.75) * diffuse;
-    _scene_diffuse[1] = (sun_color[1]*0.25 + _fog_color[1]*0.75) * diffuse;
-    _scene_diffuse[2] = (sun_color[2]*0.25 + _fog_color[2]*0.75) * diffuse;
+    _scene_diffuse[0] = (sun_color[0]*0.4 + _fog_color[0]*0.6) * diffuse;
+    _scene_diffuse[1] = (sun_color[1]*0.4 + _fog_color[1]*0.6) * diffuse;
+    _scene_diffuse[2] = (sun_color[2]*0.4 + _fog_color[2]*0.6) * diffuse;
     _scene_diffuse[3] = 1.0;
 
     _scene_specular[0] = sun_color[0] * specular;
