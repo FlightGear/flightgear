@@ -545,11 +545,11 @@ int FGAirportDynamics::getGroundFrequency(int leg) {
      if (freqGround.size() == 0) {
          return 0;
      }
-     if ((freqGround.size() >= leg-1) && (leg > 1)) {
+     if ((freqGround.size() > leg-1) && (leg > 1)) {
           groundFreq =  freqGround[leg-1];
      }
      if ((freqGround.size() < leg-1) && (leg > 1)) {
-          groundFreq = (freqGround.size() < (leg-2)) ? freqGround[freqGround.size()-1] : freqGround[leg-2];
+          groundFreq = (freqGround.size() < (leg-1)) ? freqGround[freqGround.size()-1] : freqGround[leg-2];
      }
      if ((freqGround.size() >= leg-1) && (leg > 1)) {
           groundFreq = freqGround[leg-2];
