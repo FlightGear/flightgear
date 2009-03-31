@@ -131,7 +131,7 @@ xmlClose(void *id)
         assert(xid->name == 0);
 
         munmap(xid->start, xid->len);
-        close((int)xid->node.len);
+        close(xid->node.fd);
         free(id);
         id = 0;
     }
