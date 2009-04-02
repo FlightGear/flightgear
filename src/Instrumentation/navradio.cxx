@@ -607,10 +607,10 @@ FGNavRadio::update(double dt)
                 // FIXME/FINISHME, what should be set here?
             } else if ( inrange ) {
                 double x = gs_dist_node->getDoubleValue();
-                double y = (fgGetDouble("/position/altitude-ft") - nav_elev)
+                double y = (alt_node->getDoubleValue() - nav_elev)
                     * SG_FEET_TO_METER;
                 // cout << "dist = " << x << " height = " << y << endl;
-                double angle = asin( y / x ) * SGD_RADIANS_TO_DEGREES;
+                double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
                 r = (target_gs - angle) * 5.0;
                 r *= signal_quality_norm;
             }
