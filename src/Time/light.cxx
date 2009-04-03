@@ -193,15 +193,15 @@ void FGLight::update_sky_color () {
     // local up
     float av = thesky->get_visibility();
     if (av > 45000.0) av = 45000.0;
-    float visibility_norm = av/45000.0;
-    float visibility_inv = 1.0 - visibility_norm;
+    float visibility_log = log(av)/11.0;
+    float visibility_inv = (45000.0 - av)/45000.0;
 
     float deg = _sun_angle * SGD_RADIANS_TO_DEGREES;
     SG_LOG( SG_EVENT, SG_DEBUG, "  Sun angle = " << deg );
 
-    float ambient = _ambient_tbl->interpolate( deg ) + visibility_inv/2;
+    float ambient = _ambient_tbl->interpolate( deg ) + visibility_inv/10;
     float diffuse = _diffuse_tbl->interpolate( deg );
-    float specular = _specular_tbl->interpolate( deg ) * visibility_norm;
+    float specular = _specular_tbl->interpolate( deg ) * visibility_log;
     float sky_brightness = _sky_tbl->interpolate( deg );
 
     SG_LOG( SG_EVENT, SG_DEBUG,
@@ -233,12 +233,12 @@ void FGLight::update_sky_color () {
     }
     gamma_correct_rgb( _cloud_color.data() );
 
-    SGVec4f sun_color = thesky->get_sun_color();
-    _scene_ambient[0] = _fog_color[0] * ambient;
-    _scene_ambient[1] = _fog_color[1] * ambient;
-    _scene_ambient[2] = _fog_color[2] * ambient;
+    _scene_ambient[0] = _fog_color[0] * _cloud_color[0] * ambient;
+    _scene_ambient[1] = _fog_color[1] * _cloud_color[1] * ambient;
+    _scene_ambient[2] = _fog_color[2] * _cloud_color[2] * ambient;
     _scene_ambient[3] = 1.0;
 
+    SGVec4f sun_color = thesky->get_sun_color();
     _scene_diffuse[0] = (sun_color[0]*0.4 + _fog_color[0]*0.6) * diffuse;
     _scene_diffuse[1] = (sun_color[1]*0.4 + _fog_color[1]*0.6) * diffuse;
     _scene_diffuse[2] = (sun_color[2]*0.4 + _fog_color[2]*0.6) * diffuse;
