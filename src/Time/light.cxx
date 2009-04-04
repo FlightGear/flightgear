@@ -217,12 +217,17 @@ void FGLight::update_sky_color () {
     _sky_color[3] = base_sky_color[3];
     gamma_correct_rgb( _sky_color.data() );
 
-    // set cloud and fog color
-    _cloud_color[0] = _fog_color[0] = base_fog_color[0] * sky_brightness;
-    _cloud_color[1] = _fog_color[1] = base_fog_color[1] * sky_brightness;
-    _cloud_color[2] = _fog_color[2] = base_fog_color[2] * sky_brightness;
-    _cloud_color[3] = _fog_color[3] = base_fog_color[3];
+    // set fog and cloud color
+    _fog_color[0] = base_fog_color[0] * sky_brightness;
+    _fog_color[1] = base_fog_color[1] * sky_brightness;
+    _fog_color[2] = base_fog_color[2] * sky_brightness;
+    _fog_color[3] = base_fog_color[3];
     gamma_correct_rgb( _fog_color.data() );
+
+    _cloud_color[0] = base_fog_color[0] * sky_brightness;
+    _cloud_color[1] = base_fog_color[1] * sky_brightness;
+    _cloud_color[2] = base_fog_color[2] * sky_brightness;
+    _cloud_color[3] = base_fog_color[3];
 
     // adjust the cloud colors for sunrise/sunset effects (darken them)
     if (_sun_angle > 1.0) {
@@ -233,21 +238,24 @@ void FGLight::update_sky_color () {
     }
     gamma_correct_rgb( _cloud_color.data() );
 
-    _scene_ambient[0] = _fog_color[0] * _cloud_color[0] * ambient;
-    _scene_ambient[1] = _fog_color[1] * _cloud_color[1] * ambient;
-    _scene_ambient[2] = _fog_color[2] * _cloud_color[2] * ambient;
+    _scene_ambient[0] = _fog_color[0] * ambient;
+    _scene_ambient[1] = _fog_color[1] * ambient;
+    _scene_ambient[2] = _fog_color[2] * ambient;
     _scene_ambient[3] = 1.0;
+    gamma_correct_rgb( _scene_ambient.data() );
 
     SGVec4f sun_color = thesky->get_sun_color();
     _scene_diffuse[0] = (sun_color[0]*0.4 + _fog_color[0]*0.6) * diffuse;
     _scene_diffuse[1] = (sun_color[1]*0.4 + _fog_color[1]*0.6) * diffuse;
     _scene_diffuse[2] = (sun_color[2]*0.4 + _fog_color[2]*0.6) * diffuse;
     _scene_diffuse[3] = 1.0;
+    gamma_correct_rgb( _scene_diffuse.data() );
 
     _scene_specular[0] = sun_color[0] * specular;
     _scene_specular[1] = sun_color[1] * specular;
     _scene_specular[2] = sun_color[2] * specular;
     _scene_specular[3] = 1.0;
+    gamma_correct_rgb( _scene_specular.data() );
 }
 
 
