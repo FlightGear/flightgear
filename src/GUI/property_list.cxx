@@ -195,7 +195,9 @@ void PropertyList::handle_select(puObject *list_box)
 
         if (prop_list->_dot_files && (selected < 2)) {
             if (src[0] == '.' && (src[1] == '\0' || src[1] == ' ')) {
-                if (mod_ctrl)
+                if (mod_ctrl && mod_shift)
+                    prop_list->_curr->fireValueChanged();
+                else if (mod_ctrl)
                     prop_list->toggleVerbosity();
                 else if (mod_shift)
                     dumpProperties(prop_list->_curr);
