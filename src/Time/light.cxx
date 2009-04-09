@@ -245,9 +245,11 @@ void FGLight::update_sky_color () {
     gamma_correct_rgb( _scene_ambient.data() );
 
     SGVec4f sun_color = thesky->get_sun_color();
-    _scene_diffuse[0] = (sun_color[0]*0.4 + _fog_color[0]*0.6) * diffuse;
-    _scene_diffuse[1] = (sun_color[1]*0.4 + _fog_color[1]*0.6) * diffuse;
-    _scene_diffuse[2] = (sun_color[2]*0.4 + _fog_color[2]*0.6) * diffuse;
+    float ndiff = (ambient + specular) / 2;
+    float idiff = 1.0 - ndiff;
+    _scene_diffuse[0] = (sun_color[0]*ndiff + _fog_color[0]*idiff) * diffuse;
+    _scene_diffuse[1] = (sun_color[1]*ndiff + _fog_color[1]*idiff) * diffuse;
+    _scene_diffuse[2] = (sun_color[2]*ndiff + _fog_color[2]*idiff) * diffuse;
     _scene_diffuse[3] = 1.0;
     gamma_correct_rgb( _scene_diffuse.data() );
 
