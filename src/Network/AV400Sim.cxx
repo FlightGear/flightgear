@@ -206,7 +206,7 @@ bool FGAV400Sim::parse_message() {
 	    }
 	    fgSetDouble("/instrumentation/gps/cdi-deflection",
 			(double)pos / 8.0);
-	    fgSetBool("/instrumentation/nav[0]/has-gs", false);
+	    fgSetBool("/instrumentation/gps/has-gs", false);
 	}
     } else if ( ident == "k" ) {
 	string ind = msg.substr(1,1);

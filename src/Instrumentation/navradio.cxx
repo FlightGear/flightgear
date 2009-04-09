@@ -89,6 +89,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     gps_cdi_deflection_node(NULL),
     gps_to_flag_node(NULL),
     gps_from_flag_node(NULL),
+    gps_has_gs_node(NULL),
     last_nav_id(""),
     last_nav_vor(false),
     play_count(0),
@@ -201,6 +202,7 @@ FGNavRadio::init ()
     gps_cdi_deflection_node = fgGetNode("/instrumentation/gps/cdi-deflection", true);
     gps_to_flag_node = fgGetNode("/instrumentation/gps/to-flag", true);
     gps_from_flag_node = fgGetNode("/instrumentation/gps/from-flag", true);
+    gps_has_gs_node = fgGetNode("/instrumentation/gps/has-gs", true);
     
     std::ostringstream temp;
     temp << _name << "nav-ident" << _num;
@@ -314,8 +316,16 @@ FGNavRadio::update(double dt)
     bool nav_serviceable = nav_serviceable_node->getBoolValue();
     bool cdi_serviceable = cdi_serviceable_node->getBoolValue();
     bool tofrom_serviceable = tofrom_serviceable_node->getBoolValue();
-    bool inrange = inrange_node->getBoolValue();
-    bool has_gs = has_gs_node->getBoolValue();
+    bool inrange = false;
+    bool has_gs = false;
+    if ( nav_slaved_to_gps_node->getBoolValue() ) {
+	has_gs = gps_has_gs_node->getBoolValue();
+	inrange = gps_to_flag_node->getBoolValue()
+	    || gps_from_flag_node->getBoolValue();
+    } else {
+	has_gs = has_gs_node->getBoolValue();
+	inrange = inrange_node->getBoolValue();
+    }
     bool is_loc = loc_node->getBoolValue();
     double loc_dist = loc_dist_node->getDoubleValue();
     double effective_range_m;

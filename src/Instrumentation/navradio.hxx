@@ -106,6 +106,7 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode_ptr gps_cdi_deflection_node;
     SGPropertyNode_ptr gps_to_flag_node;
     SGPropertyNode_ptr gps_from_flag_node;
+    SGPropertyNode_ptr gps_has_gs_node;
 
     // internal (private) values
 
