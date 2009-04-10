@@ -460,7 +460,10 @@ FGNavRadio::update(double dt)
                    signal_quality_norm, dt );
         }
         signal_quality_norm_node->setDoubleValue( signal_quality_norm );
-        inrange = signal_quality_norm > 0.2;
+        if ( ! nav_slaved_to_gps_node->getBoolValue() ) {
+	    /* not slaved to gps */
+            inrange = signal_quality_norm > 0.2;
+        }
         inrange_node->setBoolValue( inrange );
 
 	if ( !is_loc ) {
