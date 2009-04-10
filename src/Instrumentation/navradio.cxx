@@ -320,6 +320,7 @@ FGNavRadio::update(double dt)
     bool has_gs = false;
     if ( nav_slaved_to_gps_node->getBoolValue() ) {
 	has_gs = gps_has_gs_node->getBoolValue();
+	has_gs_node->setBoolValue( has_gs );
 	inrange = gps_to_flag_node->getBoolValue()
 	    || gps_from_flag_node->getBoolValue();
     } else {
