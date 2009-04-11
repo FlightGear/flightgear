@@ -210,19 +210,20 @@ void FGLight::update_sky_color () {
 
     // sky_brightness = 0.15;  // used to force a dark sky (when testing)
 
+    // set fog and cloud color
+    float sqrt_sky_brightness = 1.0 - sqrt(1.0 - sky_brightness);
+    _fog_color[0] = base_fog_color[0] * sqrt_sky_brightness;
+    _fog_color[1] = base_fog_color[1] * sqrt_sky_brightness;
+    _fog_color[2] = base_fog_color[2] * sqrt_sky_brightness;
+    _fog_color[3] = base_fog_color[3];
+    gamma_correct_rgb( _fog_color.data() );
+
     // set sky color
     _sky_color[0] = base_sky_color[0] * sky_brightness;
     _sky_color[1] = base_sky_color[1] * sky_brightness;
     _sky_color[2] = base_sky_color[2] * sky_brightness;
     _sky_color[3] = base_sky_color[3];
     gamma_correct_rgb( _sky_color.data() );
-
-    // set fog and cloud color
-    _fog_color[0] = base_fog_color[0] * sky_brightness;
-    _fog_color[1] = base_fog_color[1] * sky_brightness;
-    _fog_color[2] = base_fog_color[2] * sky_brightness;
-    _fog_color[3] = base_fog_color[3];
-    gamma_correct_rgb( _fog_color.data() );
 
     _cloud_color[0] = base_fog_color[0] * sky_brightness;
     _cloud_color[1] = base_fog_color[1] * sky_brightness;
@@ -264,6 +265,10 @@ void FGLight::update_sky_color () {
 // calculate fog color adjusted for sunrise/sunset effects
 void FGLight::update_adj_fog_color () {
 
+    double pitch = globals->get_current_view()->getPitch_deg()
+                     * SGD_DEGREES_TO_RADIANS;
+    double pitch_offset = globals->get_current_view()-> getPitchOffset_deg()
+                     * SGD_DEGREES_TO_RADIANS;
     double heading = globals->get_current_view()->getHeading_deg()
                      * SGD_DEGREES_TO_RADIANS;
     double heading_offset = globals->get_current_view()->getHeadingOffset_deg()
@@ -290,23 +295,23 @@ void FGLight::update_adj_fog_color () {
 	return;
     }
 
-    double rotation;
+    double hor_rotation, vert_rotation;
 
     // first determine the difference between our view angle and local
     // direction to the sun
-    rotation = -(_sun_rotation + SGD_PI) - heading + heading_offset;
-    while ( rotation < 0 ) {
-	rotation += SGD_2PI;
-    }
-    while ( rotation > SGD_2PI ) {
-	rotation -= SGD_2PI;
-    }
+    vert_rotation = pitch + pitch_offset;
+    hor_rotation = -(_sun_rotation + SGD_PI) - heading + heading_offset;
+    if (hor_rotation < 0 )
+       hor_rotation = fmod(hor_rotation, SGD_2PI) + SGD_2PI;
+    else
+       hor_rotation = fmod(hor_rotation, SGD_2PI);
 
     // revert to unmodified values before usign them.
     //
     SGVec4f sun_color = thesky->get_sun_color();
 
     gamma_restore_rgb( _fog_color.data() );
+    gamma_restore_rgb( _sky_color.data() );
 
     // Calculate the fog color in the direction of the sun for
     // sunrise/sunset effects.
@@ -329,18 +334,26 @@ void FGLight::update_adj_fog_color () {
     if (sif < 1e-4)
        sif = 1e-4;
 
-    float rf1 = fabs((rotation - SGD_PI) / SGD_PI);             // 0.0 .. 1.0
-    float rf2 = avf * pow(rf1 * rf1, 1/sif);
-    float rf3 = 0.94 - rf2;
+    float rf1 = fabs((hor_rotation - SGD_PI) / SGD_PI);		// 0.0 .. 1.0
+    float rf2 = avf * pow(rf1 * rf1, 1/sif) * 1.0639;
+    float rf3 = 1.0 - rf2;
 
     _adj_fog_color[0] = rf3 * _fog_color[0] + rf2 * s_red;
     _adj_fog_color[1] = rf3 * _fog_color[1] + rf2 * s_green;
     _adj_fog_color[2] = rf3 * _fog_color[2] + rf2 * s_blue;
     gamma_correct_rgb( _adj_fog_color.data() );
 
+     float hf2, hf1 = vert_rotation / SGD_PI_2;
+     hf2 = 1.0 - hf1;
+    _adj_sky_color[0] = hf1 * _sky_color[0] + hf2*rf2 * s_red;
+    _adj_sky_color[1] = hf1 * _sky_color[1] + hf2*rf2 * s_green;
+    _adj_sky_color[2] = hf1 * _sky_color[2] + hf2*rf2 * s_blue;
+    gamma_correct_rgb( _adj_sky_color.data() );
+
     // make sure the colors have their original value before they are being
     // used by the rest of the program.
     //
     gamma_correct_rgb( _fog_color.data() );
+    gamma_correct_rgb( _sky_color.data() );
 }
 

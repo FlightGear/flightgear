@@ -659,6 +659,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
         SGSkyColor scolor;
 
         scolor.sky_color   = SGVec3f(l->sky_color().data());
+        scolor.adj_sky_color = SGVec3f(l->adj_sky_color().data());
         scolor.fog_color   = SGVec3f(l->adj_fog_color().data());
         scolor.cloud_color = SGVec3f(l->cloud_color().data());
         scolor.sun_angle   = l->get_sun_angle();
