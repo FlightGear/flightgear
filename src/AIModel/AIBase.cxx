@@ -174,7 +174,6 @@ bool FGAIBase::init(bool search_in_AI_path) {
     model = load3DModel(f, props);
 
     if (model.valid() && _initialized == false) {
-        model->setNodeMask(model->getNodeMask() & ~SG_NODEMASK_TERRAIN_BIT);
         aip.init( model.get() );
         aip.setVisible(true);
         invisible = false;
@@ -192,6 +191,9 @@ bool FGAIBase::init(bool search_in_AI_path) {
 void FGAIBase::initModel(osg::Node *node)
 {
     if (model.valid()) {
+        // Disable altitude computations for general AI models.
+        model->setNodeMask(model->getNodeMask() & ~SG_NODEMASK_TERRAIN_BIT);
+
         fgSetString("/ai/models/model-added", props->getPath());
 
     } else if (!model_path.empty()) {
