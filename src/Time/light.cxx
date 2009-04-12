@@ -343,13 +343,6 @@ void FGLight::update_adj_fog_color () {
     _adj_fog_color[2] = rf3 * _fog_color[2] + rf2 * s_blue;
     gamma_correct_rgb( _adj_fog_color.data() );
 
-     float hf2, hf1 = vert_rotation / SGD_PI_2;
-     hf2 = 1.0 - hf1;
-    _adj_sky_color[0] = hf1 * _sky_color[0] + hf2*rf2 * s_red;
-    _adj_sky_color[1] = hf1 * _sky_color[1] + hf2*rf2 * s_green;
-    _adj_sky_color[2] = hf1 * _sky_color[2] + hf2*rf2 * s_blue;
-    gamma_correct_rgb( _adj_sky_color.data() );
-
     // make sure the colors have their original value before they are being
     // used by the rest of the program.
     //
