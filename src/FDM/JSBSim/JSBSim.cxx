@@ -150,9 +150,6 @@ FGJSBsim::FGJSBsim( double dt )
     // file on each FlightGear reset.
     fgGetNode("/fdm/jsbsim/simulation/write-state-file")->untie();
     fgGetNode("/fdm/jsbsim/simulation")->removeChild("write-state-file", false);
-    // Prevent nuking of the state on JSBSim recreation after FlightGear reset.
-    fgGetNode("/fdm/jsbsim/simulation/reset")->untie();
-    fgGetNode("/fdm/jsbsim/simulation")->removeChild("reset", false);
     // end ugly hack
 
     // Register ground callback.
@@ -328,9 +325,9 @@ void FGJSBsim::init()
       Atmosphere->UseInternal();
     }
 
-    fgic->SetVNorthFpsIC( wind_from_north->getDoubleValue() );
-    fgic->SetVEastFpsIC( wind_from_east->getDoubleValue() );
-    fgic->SetVDownFpsIC( wind_from_down->getDoubleValue() );
+    fgic->SetVNorthFpsIC( -wind_from_north->getDoubleValue() );
+    fgic->SetVEastFpsIC( -wind_from_east->getDoubleValue() );
+    fgic->SetVDownFpsIC( -wind_from_down->getDoubleValue() );
 
     //Atmosphere->SetExTemperature(get_Static_temperature());
     //Atmosphere->SetExPressure(get_Static_pressure());
@@ -625,9 +622,9 @@ bool FGJSBsim::copy_to_JSBsim()
     tmp = turbulence_rate->getDoubleValue();
     //Atmosphere->SetTurbRate(tmp);
 
-    Atmosphere->SetWindNED( wind_from_north->getDoubleValue(),
-                            wind_from_east->getDoubleValue(),
-                            wind_from_down->getDoubleValue() );
+    Atmosphere->SetWindNED( -wind_from_north->getDoubleValue(),
+                            -wind_from_east->getDoubleValue(),
+                            -wind_from_down->getDoubleValue() );
 //    SG_LOG(SG_FLIGHT,SG_INFO, "Wind NED: "
 //                  << get_V_north_airmass() << ", "
 //                  << get_V_east_airmass()  << ", "
@@ -1100,6 +1097,7 @@ void FGJSBsim::init_gear(void )
       node->setDoubleValue("yoffset-in", gear->GetBodyLocation()(2));
       node->setDoubleValue("zoffset-in", gear->GetBodyLocation()(3));
       node->setBoolValue("wow", gear->GetWOW());
+      node->setDoubleValue("rollspeed-ms", gear->GetWheelRollVel()*0.3043);
       node->setBoolValue("has-brake", gear->GetBrakeGroup() > 0);
       node->setDoubleValue("position-norm", gear->GetGearUnitPos());
       node->setDoubleValue("tire-pressure-norm", gear->GetTirePressure());
@@ -1118,6 +1116,7 @@ void FGJSBsim::update_gear(void)
       FGLGear *gear = gr->GetGearUnit(i);
       SGPropertyNode * node = fgGetNode("gear/gear", i, true);
       node->getChild("wow", 0, true)->setBoolValue( gear->GetWOW());
+      node->getChild("rollspeed-ms", 0, true)->setDoubleValue(gear->GetWheelRollVel()*0.3043);
       node->getChild("position-norm", 0, true)->setDoubleValue(gear->GetGearUnitPos());
       gear->SetTirePressure(node->getDoubleValue("tire-pressure-norm"));
       node->setDoubleValue("compression-norm", gear->GetCompLen());

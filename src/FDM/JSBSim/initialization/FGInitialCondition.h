@@ -644,6 +644,7 @@ private:
   FGFDMExec *fdmex;
   FGPropertyManager *PropertyManager;
 
+  bool Constructing;
   bool getAlpha(void);
   bool getTheta(void);
   bool getMachFromVcas(double *Mach,double vcas);

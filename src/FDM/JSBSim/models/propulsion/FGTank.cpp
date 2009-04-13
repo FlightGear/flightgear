@@ -37,6 +37,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGTank.h"
+#include <models/FGAuxiliary.h>
 
 using std::cerr;
 using std::endl;
@@ -52,7 +53,7 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 FGTank::FGTank(FGFDMExec* exec, Element* el, int tank_number)
-                  : TankNumber(tank_number)
+                  : TankNumber(tank_number), Exec(exec)
 {
   string token;
   Element* element;
@@ -60,9 +61,8 @@ FGTank::FGTank(FGFDMExec* exec, Element* el, int tank_number)
   Area = 1.0;
   Temperature = -9999.0;
   Ixx = Iyy = Izz = 0.0;
-  Auxiliary = exec->GetAuxiliary();
   Radius = Capacity = Contents = Standpipe = Length = InnerRadius = 0.0;
-  PropertyManager = exec->GetPropertyManager();
+  PropertyManager = Exec->GetPropertyManager();
   vXYZ.InitMatrix();
   vXYZ_drain.InitMatrix();
 
@@ -245,7 +245,7 @@ double FGTank::Calculate(double dt)
   if (Temperature == -9999.0) return 0.0;
   double HeatCapacity = 900.0;        // Joules/lbm/C
   double TempFlowFactor = 1.115;      // Watts/sqft/C
-  double TAT = Auxiliary->GetTAT_C();
+  double TAT = Exec->GetAuxiliary()->GetTAT_C();
   double Tdiff = TAT - Temperature;
   double dTemp = 0.0;                 // Temp change due to one surface
   if (fabs(Tdiff) > 0.1) {

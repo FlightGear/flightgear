@@ -44,10 +44,10 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include "FGFDMExec.h"
 #include <FGJSBBase.h>
 #include <input_output/FGXMLElement.h>
 #include <math/FGColumnVector3.h>
-#include <models/FGAuxiliary.h>
 #include <string>
 
 using std::string;
@@ -281,7 +281,7 @@ private:
   double Temperature, InitialTemperature;
   double Standpipe, InitialStandpipe;
   bool  Selected;
-  FGAuxiliary* Auxiliary;
+  FGFDMExec* Exec;
   FGPropertyManager* PropertyManager;
   void CalculateInertias(void);
   void Debug(int from);
