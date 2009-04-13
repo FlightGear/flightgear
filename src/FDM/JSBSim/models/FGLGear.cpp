@@ -340,6 +340,9 @@ FGColumnVector3& FGLGear::Force(void)
       WOW = false;
       compressLength = 0.0;
 
+      // No wheel conditons
+      RollingWhlVel = SideWhlVel = WheelSlip = 0.0;
+
       // Return to neutral position between 1.0 and 0.8 gear pos.
       SteerAngle *= max(GetGearUnitPos()-0.8, 0.0)/0.2;
 
