@@ -151,7 +151,7 @@ sub quick_plot_vs_time {
 
     # create the gnuplot command file
     open( CMD, ">$tmpcmd" );
-    print CMD "set terminal png color\n";
+    print CMD "set terminal png\n";
     print "png_image = $png_image\n";
     print CMD "set output \"$png_image\"\n";
     print CMD "set xlabel \"Time (sec)\"\n";
