@@ -147,7 +147,7 @@ sub quick_plot_vs_time {
     my( $png_image ) = "$plot_file.png";
 
     # strip the leading header off the file so gnuplot doesn't squawk
-    system( "tail +2 $data_file | sed -e \"s/,/ /g\" > $tmpdata" );
+    system( "tail -n +2 $data_file | sed -e \"s/,/ /g\" > $tmpdata" );
 
     # create the gnuplot command file
     open( CMD, ">$tmpcmd" );
@@ -184,11 +184,11 @@ sub quick_plot {
     my( $png_image ) = "$plot_file.png";
 
     # strip the leading header off the file so gnuplot doesn't squawk
-    system( "tail +2 $data_file | sed -e \"s/,/ /g\" > $tmpdata" );
+    system( "tail -n +2 $data_file | sed -e \"s/,/ /g\" > $tmpdata" );
 
     # create the gnuplot command file
     open( CMD, ">$tmpcmd" );
-    print CMD "set terminal png color\n";
+    print CMD "set terminal png\n";
     print "png_image = $png_image\n";
     print CMD "set output \"$png_image\"\n";
     print CMD "set xlabel \"$xtitle\"\n";
