@@ -80,7 +80,7 @@ CLASS DOCUMENTATION
   <maxrpm> {number} </maxrpm>
   <maxthrottle> {number} </maxthrottle>
   <minthrottle> {number} </minthrottle>
-  <bsfc unit="{LBS/HP*HR | "KG/KW*HR"}"> {number} </bsft>
+  <bsfc unit="{LBS/HP*HR | "KG/KW*HR"}"> {number} </bsfc>
   <volumetric_efficiency> {number} </volumetric_efficiency>
   <numboostspeeds> {number} </numboostspeeds>
   <boostoverride> {0 | 1} </boostoverride>
@@ -295,6 +295,7 @@ private:
   double minMAP;  // Pa
   double maxMAP;  // Pa
   double MAP;     // Pa
+  double TMAP;    // Pa - throttle manifold pressure e.g. before the supercharger boost
   double ISFC;    // Indicated specific fuel consumption [lbs/horsepower*hour
 
   //
