@@ -40,8 +40,8 @@ static SIMPLE_UNMMAP un;
 /*
  * map 'filename' and return a pointer to it.
  */
-void *simple_mmap(int, unsigned int, SIMPLE_UNMMAP *);
-void simple_unmmap(SIMPLE_UNMMAP *);
+static void *simple_mmap(int, size_t, SIMPLE_UNMMAP *);
+static void simple_unmmap(SIMPLE_UNMMAP *);
 
 #define mmap(a,b,c,d,e,f)	simple_mmap((e), (b), &un)
 #define munmap(a,b)		simple_unmmap(&un)
@@ -58,28 +58,28 @@ void simple_unmmap(SIMPLE_UNMMAP *);
 #include <ctype.h>
 #include <string.h>
 #include <strings.h>	/* strncasecmp */
+#ifndef NDEBUG
 #include <stdio.h>
-#include <stdlib.h>
+#endif
 
 
 struct _xml_id
 {
-    char *name;
-    char *start;
     size_t len;
+    char *start;
+    char *name;
     union {
+       size_t name_len;
        int fd;
-       size_t len;
     } node;
 };
 
-static char *__xmlCopyNode(const char *, size_t, const char *);
-static char *__xmlGetNodePath(const char *, size_t *, char **, size_t *);
-static char *__xmlGetNode(const char *, size_t *, char **, size_t *, size_t *);
-static char *__xmlSkipComment(const char *, size_t);
-static char *__xmlSkipInfo(const char *, size_t);
+static char *__xmlNodeCopy(const char *, size_t, const char *);
+static char *__xmlNodeGetPath(const char *, size_t *, char **, size_t *);
+static char *__xmlNodeGet(const char *, size_t *, char **, size_t *, size_t *);
+static char *__xmlCommentSkip(const char *, size_t);
+static char *__xmlInfoSkip(const char *, size_t);
 
-static void *__xml_memmem(const char *, size_t, const char *, size_t);
 static void *__xml_memncasecmp(const char *, size_t *, char **, size_t *);
 
 #define PRINT(a, b, c) { \
@@ -138,7 +138,7 @@ xmlClose(void *id)
 }
 
 void *
-xmlGetNode(const void *id, const char *path)
+xmlNodeGet(const void *id, const char *path)
 {
    struct _xml_id *xsid = 0;
 
@@ -151,7 +151,7 @@ xmlGetNode(const void *id, const char *path)
       node = (char *)path;
       len = xid->len;
       slen = strlen(path);
-      ptr = __xmlGetNodePath(xid->start, &len, &node, &slen);
+      ptr = __xmlNodeGetPath(xid->start, &len, &node, &slen);
       if (ptr)
       {
          xsid = malloc(sizeof(struct _xml_id));
@@ -159,7 +159,7 @@ xmlGetNode(const void *id, const char *path)
          {
              xsid->len = len;
              xsid->start = ptr;
-             xsid->node.len = slen;
+             xsid->node.name_len = slen;
              xsid->name = node;
          }
       }
@@ -169,7 +169,7 @@ xmlGetNode(const void *id, const char *path)
 }
 
 void *
-xmlCopyNode(const void *id, const char *path)
+xmlNodeCopy(const void *id, const char *path)
 {
     struct _xml_id *xsid = 0;
 
@@ -182,7 +182,7 @@ xmlCopyNode(const void *id, const char *path)
         node = (char *)path;
         len = xid->len;
         slen = strlen(path);
-        ptr = __xmlGetNodePath(xid->start, &len, &node, &slen);
+        ptr = __xmlNodeGetPath(xid->start, &len, &node, &slen);
         if (ptr)
         {
             xsid = malloc(sizeof(struct _xml_id) + len);
@@ -192,7 +192,7 @@ xmlCopyNode(const void *id, const char *path)
 
                 xsid->len = len;
                 xsid->start = p;
-                xsid->node.len = slen;
+                xsid->node.name_len = slen;
                 xsid->name = node;
 
                 memcpy(xsid->start, ptr, len);
@@ -204,13 +204,13 @@ xmlCopyNode(const void *id, const char *path)
 }
 
 char *
-xmlGetNodeName(const void *id)
+xmlNodeGetName(const void *id)
 {
     struct _xml_id *xid = (struct _xml_id *)id;
     size_t len;
     char *ret;
 
-    len = xid->node.len;
+    len = xid->node.name_len;
     ret = malloc(len+1);
     if (ret)
     {
@@ -222,7 +222,7 @@ xmlGetNodeName(const void *id)
 }
 
 size_t
-xmlCopyNodeName(const void *id, char *buf, size_t len)
+xmlNodeCopyName(const void *id, char *buf, size_t len)
 {
     struct _xml_id *xid = (struct _xml_id *)id;
     size_t slen = 0;
@@ -230,7 +230,7 @@ xmlCopyNodeName(const void *id, char *buf, size_t len)
     if (buf)
     {
         slen = len-1;
-        if (slen > xid->node.len) slen = xid->node.len;
+        if (slen > xid->node.name_len) slen = xid->node.name_len;
         memcpy(buf, xid->name, slen);
         *(buf + slen) = 0;
     }
@@ -239,7 +239,7 @@ xmlCopyNodeName(const void *id, char *buf, size_t len)
 }
 
 unsigned int
-xmlGetNumNodes(const void *id, const char *path)
+xmlNodeGetNum(const void *id, const char *path)
 {
     struct _xml_id *xid = (struct _xml_id *)id;
     size_t num = 0;
@@ -263,7 +263,7 @@ xmlGetNumNodes(const void *id, const char *path)
            pathname++;
            slen -= pathname-nodename;
            node = pathname;
-           p = __xmlGetNodePath(xid->start, &len, &node, &slen);
+           p = __xmlNodeGetPath(xid->start, &len, &node, &slen);
         }
         else
         {
@@ -274,7 +274,7 @@ xmlGetNumNodes(const void *id, const char *path)
         if (p)
         {
             char *node = nodename;
-            __xmlGetNode(p, &len, &node, &slen, &num);
+            __xmlNodeGet(p, &len, &node, &slen, &num);
         }
     }
 
@@ -282,7 +282,7 @@ xmlGetNumNodes(const void *id, const char *path)
 }
 
 void *
-xmlGetNodeNum(const void *pid, void *id, const char *element, size_t num)
+xmlNodeGetPos(const void *pid, void *id, const char *element, size_t num)
 {
     void *ret = 0;
 
@@ -296,13 +296,13 @@ xmlGetNodeNum(const void *pid, void *id, const char *element, size_t num)
         len = xpid->len;
         slen = strlen(element);
         node = (char *)element;
-        ptr = __xmlGetNode(xpid->start, &len, &node, &slen, &num);
+        ptr = __xmlNodeGet(xpid->start, &len, &node, &slen, &num);
         if (ptr)
         {
              xid->len = len;
              xid->start = ptr;
              xid->name = node;
-             xid->node.len = slen;
+             xid->node.name_len = slen;
              ret = xid;
         }
     }
@@ -344,17 +344,18 @@ xmlGetString(const void *id)
 }
 
 size_t
-xmlCopyString(const void *id, char *buf, size_t len)
+xmlCopyString(const void *id, char *buffer, size_t buflen)
 {
     struct _xml_id *xid = (struct _xml_id *)id;
-    size_t nlen = 0;
+    size_t ret = 0;
 
-    if (xid && xid->len && buf && len)
+    if (xid && xid->len && buffer && buflen)
     {
         char *ps, *pe, *pend;
-        int slen;
+        size_t slen, nlen;
 
-        nlen = len-1;
+        *buffer = '\0';
+        nlen = buflen-1;
         ps = xid->start;
         slen = xid->len;
         pend = ps+slen;
@@ -367,12 +368,14 @@ xmlCopyString(const void *id, char *buf, size_t len)
 
         if (nlen)
         {
-            memcpy(buf, ps, nlen);
-            *(buf+nlen) = 0;
+            if (nlen >= buflen) nlen = buflen-1;
+            memcpy(buffer, ps, nlen);
+            *(buffer+nlen) = 0;
+            ret = nlen;
         }
     }
 
-    return nlen;
+    return ret;
 }
 
 int
@@ -400,14 +403,14 @@ xmlCompareString(const void *id, const char *s)
 }
 
 char *
-xmlGetNodeString(const void *id, const char *path)
+xmlNodeGetString(const void *id, const char *path)
 {
     struct _xml_id *xid = (struct _xml_id *)id;
     char *str = 0;
 
     if (xid && xid->len && path)
     {
-        str = __xmlCopyNode(xid->start, xid->len, path);
+        str = __xmlNodeCopy(xid->start, xid->len, path);
         if (str)
         {
             char *ps, *pe, *pend;
@@ -432,45 +435,45 @@ xmlGetNodeString(const void *id, const char *path)
 }
 
 size_t
-xmlCopyNodeString(const void *id, const char *path, char *buffer, size_t buflen)
+xmlNodeCopyString(const void *id, const char *path, char *buffer, size_t buflen)
 {
     struct _xml_id *xid = (struct _xml_id *)id;
-    size_t len = 0;
+    size_t ret = 0;
 
     if (xid && xid->len && path && buffer && buflen)
     {
         char *str, *node;
-        size_t slen;
+        size_t slen, nlen;
 
         *buffer = '\0';
-        len = xid->len;
+        nlen = xid->len;
         slen = strlen(path);
         node = (char *)path;
-        str = __xmlGetNodePath(xid->start, &len, &node, &slen);
+        str = __xmlNodeGetPath(xid->start, &nlen, &node, &slen);
         if (str)
         {
             char *ps, *pe;
 
             ps = str;
-            pe = ps+len-1;
+            pe = ps+nlen-1;
 
             while ((ps<pe) && isspace(*ps)) ps++;
             while ((pe>ps) && isspace(*pe)) pe--;
 
-            len = (pe-ps)+1;
-            if (len >= buflen) len = buflen-1;
+            nlen = (pe-ps)+1;
+            if (nlen >= buflen) nlen = buflen-1;
 
-            memcpy(buffer, ps, len);
-            str = buffer + len;
-            *str = '\0';
+            memcpy(buffer, ps, nlen);
+            *(buffer + nlen) = '\0';
+            ret = nlen;
         }
     }
 
-    return len;
+    return ret;
 }
 
 int
-xmlCompareNodeString(const void *id, const char *path, const char *s)
+xmlNodeCompareString(const void *id, const char *path, const char *s)
 {
     struct _xml_id *xid = (struct _xml_id *)id;
     int ret = -1;
@@ -478,12 +481,12 @@ xmlCompareNodeString(const void *id, const char *path, const char *s)
     if (xid && xid->len && path && s && (strlen(s) > 0))
     {
         char *node, *str, *ps, *pe;
-        size_t len, slen, i;
+        size_t len, slen;
 
         len = xid->len;
         slen = strlen(path);
         node = (char *)path;
-        str = __xmlGetNodePath(xid->start, &len, &node, &slen);
+        str = __xmlNodeGetPath(xid->start, &len, &node, &slen);
         if (str)
         {
             ps = str;
@@ -517,7 +520,7 @@ xmlGetInt(const void *id)
 }
 
 long int
-xmlGetNodeInt(const void *id, const char *path)
+xmlNodeGetInt(const void *id, const char *path)
 {
     struct _xml_id *xid = (struct _xml_id *)id;
     long int li = 0;
@@ -530,7 +533,7 @@ xmlGetNodeInt(const void *id, const char *path)
         len = xid->len;
         slen = strlen(path);
         node = (char *)path;
-        str = __xmlGetNodePath(xid->start, &len, &node, &slen);
+        str = __xmlNodeGetPath(xid->start, &len, &node, &slen);
         if (str)
         {
             char *end = str+len;
@@ -557,7 +560,7 @@ xmlGetDouble(const void *id)
 }
 
 double
-xmlGetNodeDouble(const void *id, const char *path)
+xmlNodeGetDouble(const void *id, const char *path)
 {
     struct _xml_id *xid = (struct _xml_id *)id;
     double d = 0.0;
@@ -570,7 +573,7 @@ xmlGetNodeDouble(const void *id, const char *path)
         len = xid->len;
         slen = strlen(path);
         node = (char *)path;
-        str = __xmlGetNodePath(xid->start, &len, &node, &slen);
+        str = __xmlNodeGetPath(xid->start, &len, &node, &slen);
         if (str)
         {
             char *end = str+len;
@@ -598,10 +601,265 @@ xmlMarkId(const void *id)
    return (void *)xmid;
 }
 
+double
+xmlAttributeGetDouble(const void *id, const char *name)
+{
+   struct _xml_id *xid = (struct _xml_id *)id;
+   double ret = 0.0;
+
+   if (xid && xid->start && xid->len && xid->node.name_len)
+   {
+       char *p, *end, *new = 0;
+
+       assert(xid->start > xid->name);
+
+       p = xid->name + xid->node.name_len;
+       end = xid->start-1;
+
+       while ((p<end) && isspace(*p)) p++;
+       while (p<end)
+       {
+          size_t elementlen = strlen(name);
+          size_t restlen = end-p;
+          char *element = (char *)name;
+
+          new = __xml_memncasecmp(p, &restlen, &element, &elementlen);
+          if (new)
+          {
+             restlen = end-p;
+             new = memchr(p, '=', restlen);
+             if (new)
+             {
+                new++;
+                if (*new == '"') new++;
+                restlen -= (new-p);
+                end = new+restlen;
+                ret = strtod(new, &end);
+             }
+             break;
+          }
+
+          while ((p<end) && !isspace(*p)) p++;
+          if (p<end)
+             while ((p<end) && isspace(*p)) p++;
+       }
+   }
+
+   return ret;
+}
+
+long int
+xmlAttributeGetInt(const void *id, const char *name)
+{
+   struct _xml_id *xid = (struct _xml_id *)id;
+   long int ret = 0;
+
+   if (xid && xid->start && xid->len && xid->node.name_len)
+   {
+       char *p, *end, *new = 0;
+
+       assert(xid->start > xid->name);
+
+       p = xid->name + xid->node.name_len;
+       end = xid->start-1;
+
+       while ((p<end) && isspace(*p)) p++;
+       while (p<end)
+       {
+          size_t elementlen = strlen(name);
+          size_t restlen = end-p;
+          char *element = (char *)name;
+
+          new = __xml_memncasecmp(p, &restlen, &element, &elementlen);
+          if (new)
+          {
+             restlen = end-p;
+             new = memchr(p, '=', restlen);
+             if (new)
+             {
+                new++;
+                if (*new == '"') new++;
+                restlen -= (new-p);
+                end = new+restlen;
+                ret = strtol(new, &end, 10);
+             }
+             break;
+          }
+
+          while ((p<end) && !isspace(*p)) p++;
+          if (p<end)
+             while ((p<end) && isspace(*p)) p++;
+       }
+   }
+
+   return ret;
+}
+
+char *
+xmlAttributeGetString(const void *id, const char *name)
+{
+   struct _xml_id *xid = (struct _xml_id *)id;
+   char *ret = 0;
+
+   if (xid && xid->start && xid->len && xid->node.name_len)
+   {
+       char *p, *end, *new = 0;
+
+       assert(xid->start > xid->name);
+
+       p = xid->name + xid->node.name_len;
+       end = xid->start-1;
+
+       while ((p<end) && isspace(*p)) p++;
+       while (p<end)
+       {
+          size_t elementlen = strlen(name);
+          size_t restlen = end-p;
+          char *element = (char *)name;
+
+          new = __xml_memncasecmp(p, &restlen, &element, &elementlen);
+          if (new)
+          {
+             restlen = end-p;
+             new = memchr(p, '=', restlen);
+             if (new)
+             {
+                new++;
+                if (*new == '"') new++;
+                p = new;
+                while ((p<end) && (*p != '"') && (*p != ' ')) p++;
+                if (p<end)
+                {
+                   ret = calloc(1, p-new);
+                   memcpy(ret, new, (p-new));
+                }
+             }
+             break;
+          }
+
+          while ((p<end) && !isspace(*p)) p++;
+          if (p<end)
+             while ((p<end) && isspace(*p)) p++;
+       }
+   }
+
+   return ret;
+}
+
+size_t
+xmlAttributeCopyString(const void *id, const char *name,
+                                       char *buffer, size_t buflen)
+{
+   struct _xml_id *xid = (struct _xml_id *)id;
+   size_t ret = 0;
+
+   if (xid && xid->start && xid->len && xid->node.name_len
+       && buffer && buflen)
+   {
+       char *ps, *pe;
+
+       *buffer = '\0';
+       ps = xid->name + xid->node.name_len + 1;
+       pe = xid->start - 1;
+
+       assert((int)(pe-ps) > 0);
+
+       while ((ps<pe) && isspace(*ps)) ps++;
+       while (ps<pe)
+       {
+          size_t slen = strlen(name);
+          size_t restlen = pe-ps;
+
+          if ((restlen >= slen) && (strncasecmp(ps, name, slen) == 0))
+          {
+             char *new;
+
+             restlen = pe-ps;
+             new = memchr(ps, '=', restlen);
+             if (new)
+             {
+                new++;
+                if (*new == '"') new++;
+                ps = new;
+                while ((ps<pe) && (*ps != '"') && (*ps != ' ')) ps++;
+                if (ps<pe)
+                {
+                   restlen = ps-new;
+                   if (restlen >= buflen) restlen = buflen-1;
+                   memcpy(buffer, new, restlen);
+                   *(buffer+restlen) = 0;
+                   ret = restlen;
+                }
+             }
+             break;
+          }
+
+          while ((ps<pe) && !isspace(*ps)) ps++;
+          if (ps<pe)
+             while ((ps<pe) && isspace(*ps)) ps++;
+       }
+   }
+
+   return ret;
+}
+
+int
+xmlAttributeCompareString(const void *id, const char *name, const char *s)
+{
+   struct _xml_id *xid = (struct _xml_id *)id;
+   int ret = -1;
+
+   if (xid && xid->start && xid->len && xid->node.name_len
+       && s && strlen(s))
+   {
+      char *ps, *pe;
+
+       ps = xid->name + xid->node.name_len + 1;
+       pe = xid->start - 1;
+
+       assert((int)(pe-ps) > 0);
+
+       while ((ps<pe) && isspace(*ps)) ps++;
+       while (ps<pe)
+       {
+          size_t slen = strlen(name);
+          size_t restlen = pe-ps;
+
+          if ((restlen >= slen) && (strncasecmp(ps, name, slen) == 0))
+          {
+             char *new;
+
+             restlen = pe-ps;
+             new = memchr(ps, '=', restlen);
+             if (new)
+             {
+                new++;
+                if (*new == '"') new++;
+                ps = new;
+                while ((ps<pe) && (*ps != '"') && (*ps != ' ')) ps++;
+                if (ps<pe)
+                {
+                   int alen = ps-new;
+                   ret = strncasecmp(new, s, alen);
+                }
+             }
+             break;
+          }
+
+          while ((ps<pe) && !isspace(*ps)) ps++;
+          if (ps<pe)
+             while ((ps<pe) && isspace(*ps)) ps++;
+       }
+   }
+
+   return ret;
+}
+
+
 /* -------------------------------------------------------------------------- */
 
 static char *
-__xmlCopyNode(const char *start, size_t len, const char *path)
+__xmlNodeCopy(const char *start, size_t len, const char *path)
 {
    char *node, *p, *ret = 0;
    size_t rlen, slen;
@@ -609,7 +867,7 @@ __xmlCopyNode(const char *start, size_t len, const char *path)
    rlen = len;
    slen = strlen(path);
    node = (char *)path;
-   p = __xmlGetNodePath(start, &rlen, &node, &slen);
+   p = __xmlNodeGetPath(start, &rlen, &node, &slen);
    if (p && rlen)
    {
       ret = calloc(1, rlen+1);
@@ -620,7 +878,7 @@ __xmlCopyNode(const char *start, size_t len, const char *path)
 }
 
 char *
-__xmlGetNodePath(const char *start, size_t *len, char **name, size_t *plen)
+__xmlNodeGetPath(const char *start, size_t *len, char **name, size_t *plen)
 {
     char *node;
     char *ret = 0;
@@ -649,11 +907,11 @@ __xmlGetNodePath(const char *start, size_t *len, char **name, size_t *plen)
         else plen = path++ - node;
 
         num = 0;
-        ret = __xmlGetNode(start, len, &node, &plen, &num);
+        ret = __xmlNodeGet(start, len, &node, &plen, &num);
         if (ret && path)
         {
            plen = slen - (path - *name);
-           ret = __xmlGetNodePath(ret, len, &path, &plen);
+           ret = __xmlNodeGetPath(ret, len, &path, &plen);
         }
 
         *name = path;
@@ -663,13 +921,13 @@ __xmlGetNodePath(const char *start, size_t *len, char **name, size_t *plen)
 }
 
 char *
-__xmlGetNode(const char *start, size_t *len, char **name, size_t *rlen, size_t *nodenum)
+__xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *nodenum)
 {
     char *new, *cur, *ne, *ret = 0;
+    char *element, *start_tag=0;
     size_t restlen, elementlen;
     size_t retlen = 0;
     int found, num;
-    char *element;
 
     assert (start != 0);
     assert (len != 0);
@@ -701,7 +959,7 @@ __xmlGetNode(const char *start, size_t *len, char **name, size_t *rlen, size_t *
 
         if (*cur == '!')
         {
-            new = __xmlSkipComment(cur, restlen);
+            new = __xmlCommentSkip(cur, restlen);
             if (!new) return 0;
             restlen -= new-cur;
             cur = new;
@@ -709,7 +967,7 @@ __xmlGetNode(const char *start, size_t *len, char **name, size_t *rlen, size_t *
         }
         else if (*cur == '?')
         {
-            new = __xmlSkipInfo(cur, restlen);
+            new = __xmlInfoSkip(cur, restlen);
             if (!new) return 0;
 
             restlen -= new-cur;
@@ -723,7 +981,12 @@ __xmlGetNode(const char *start, size_t *len, char **name, size_t *rlen, size_t *
         if (new)
         {
             retlen = elementlen;
-            if (found == num ) ret = new+1;
+            if (found == num )
+            {
+              ret = new+1;
+              start_tag = element;
+            }
+            else start_tag = 0;
         }
         else
         {
@@ -746,7 +1009,7 @@ __xmlGetNode(const char *start, size_t *len, char **name, size_t *rlen, size_t *
             size_t nlen = 1;
             size_t pos = -1;
 
-            new = __xmlGetNode(cur, &slen, &node, &nlen, &pos);
+            new = __xmlNodeGet(cur, &slen, &node, &nlen, &pos);
             if (!new)
             {
                 if (slen == restlen) return 0;
@@ -767,8 +1030,12 @@ __xmlGetNode(const char *start, size_t *len, char **name, size_t *rlen, size_t *
         {
             if (!strncasecmp(new+2, element, elementlen))
             {
-                if (found == num) *len = new-ret;
-                *name = element;
+                if (found == num) 
+                {
+                   assert(start_tag != 0);
+                   *len = new-ret;
+                   *name = start_tag;
+                }
                 found++;
             }
 
@@ -788,7 +1055,7 @@ __xmlGetNode(const char *start, size_t *len, char **name, size_t *rlen, size_t *
 }
 
 char *
-__xmlSkipComment(const char *start, size_t len)
+__xmlCommentSkip(const char *start, size_t len)
 {
     char *cur, *new;
 
@@ -825,7 +1092,7 @@ __xmlSkipComment(const char *start, size_t len)
 }
 
 char *
-__xmlSkipInfo(const char *start, size_t len)
+__xmlInfoSkip(const char *start, size_t len)
 {
     char *cur, *new;
 
@@ -845,43 +1112,6 @@ __xmlSkipInfo(const char *start, size_t len)
     }
 
     return new;
-}
-
-
-void *
-__xml_memmem(const char *haystack, size_t haystacklen,
-             const char *needle, size_t needlelen)
-{
-    void *rptr = 0;
-
-    if (haystack && needle && (needlelen > 0) && (haystacklen >= needlelen))
-    {
-        char *ns, *hs, *ptr;
-
-        hs = (char *)haystack;
-        ns = (char *)needle;
-        do
-        {
-            ptr = memchr(hs, *ns, haystacklen);
-            if (ptr)
-            {
-                haystacklen -= (ptr - hs);
-
-                if (haystacklen < needlelen) break;
-                if (memcmp(ptr, needle, needlelen) == 0)
-                {
-                   rptr = ptr;
-                   break;
-                }
-
-                hs = ptr+1;
-            }
-            else break;
-        }
-        while (haystacklen > needlelen);
-    }
-
-    return rptr;
 }
 
 
@@ -952,7 +1182,7 @@ __xml_memncasecmp(const char *haystack, size_t *haystacklen,
  */
 
 void *
-simple_mmap(int fd, unsigned int length, SIMPLE_UNMMAP *un)
+simple_mmap(int fd, size_t length, SIMPLE_UNMMAP *un)
 {
     HANDLE f;
     HANDLE m;
@@ -970,8 +1200,6 @@ simple_mmap(int fd, unsigned int length, SIMPLE_UNMMAP *un)
         CloseHandle(m);
         return NULL;
     }
-
-    if (n) *n = GetFileSize(f, NULL);
 
     if (un)
     {
