@@ -7,7 +7,7 @@ the memory footprint can be kept low and the library can be kept simple.
 
 To achieve these goals the mmap function is used to map the configuration file
 to a memory region. The only places where memory is allocated is when creating
-a new XML-id, when requesting a string from a node, when requesting the node
+a new XML-id, when requesting a string from a node, when requestiong the node
 name or when a request is made to copy a node into a new memory region.
 
 Using this library should be pretty simple for most tasks; just open a file,
@@ -16,14 +16,14 @@ read every parameter one by one and close the id again.
    void *xid;
 
    xid = xmlOpen("/tmp/file.xml");
-   xpos = xmlGetNodeDouble(xid, "/configuration/x-pos");
-   ypos = xmlGetNodeDouble(xid, "/configuration/y-pos");
-   zpos = xmlGetNodeDouble(xid, "/configuration/z-pos");
+   xpos = xmlNodeGetDouble(xid, "/configuration/x-pos");
+   ypos = xmlNodeGetDouble(xid, "/configuration/y-pos");
+   zpos = xmlNodeGetDouble(xid, "/configuration/z-pos");
    xmlClose(xid);
 }
 
 While it is certainly possible to access every node directly by calling the
-xmlGetNode(Int/Double/String) functions, when more than one node need to be
+xmlNodeGet(Int/Double/String) functions, when more than one node need to be
 gathered from a parent node it is advised to get the id of the parent node
 and work from there since the XML-id holds the boundaries of the (parent)node
 which limits the searching area resulting in improved searching speed.
@@ -31,9 +31,9 @@ which limits the searching area resulting in improved searching speed.
    void *xnid;
    char *s;
 
-   xnid = xmlGetNode(id, "/configuration/setup/");
-   version = xmlGetNodeDouble(xnid, "version");
-   s = xmlGetNodeString(xnid, "author");
+   xnid = xmlNodeGet(id, "/configuration/setup/");
+   version = xmlNodeGetDouble(xnid, "version");
+   s = xmlNodeGetString(xnid, "author");
    if (s) author = s;
    free(s);
    free(xnid);
@@ -53,18 +53,18 @@ void xmlClose(const void *);
 #
 # Get the Id of a node at the specified path
 # e.g.
-#    xnid = xmlGetNode(id, "/path/to/specified/node");
+#    xnid = xmlNodeGet(id, "/path/to/specified/node");
 #
-void *xmlGetNode(const void *, const char *);
-void *xmlCopyNode(void *, const char *);
+void *xmlNodeGet(const void *, const char *);
+void *xmlNodeCopy(void *, const char *);
 
 #
 # Functions to walk the node tree and process them one by one.
 # e.g.
 #   xmid = xmlMarkId(id);
-#   num = xmlGetNumNodes(xmid);
+#   num = xmlNodeGetNum(xmid);
 #   for (i=0; i<num; i++) {
-#      if (xmlGetNodeNum(id, xmid, "element", i) != 0) {
+#      if (xmlNodeGetPos(id, xmid, "element", i) != 0) {
 #         if ((s = xmlGetString(xmid)) != 0) {
 #            printf("%s\n", s);
 #            free(s);
@@ -74,22 +74,22 @@ void *xmlCopyNode(void *, const char *);
 #   free(xmid);
 #
 void *xmlMarkId(void *);
-unsigned int xmlGetNumNodes(void *, const char *);
-void *xmlGetNodeNum(const void *, void *, const char *, int);
+unsigned int xmlNodeGetNum(void *, const char *);
+void *xmlNodeGetPos(const void *, void *, const char *, int);
 
 #
 # Get the name of the current node
 #
-char *xmlGetNodeName(void *);
-size_t xmlCopyNodeName(void *, const char *, size_t);
+char *xmlNodeGetName(void *);
+size_t xmlNodeCopyName(void *, const char *, size_t);
 
 #
 # These functions work on the current node.
 # e.g.
-#    xnid = xmlGetNode(id, "/path/to/last/node");
+#    xnid = xmlNodeGet(id, "/path/to/last/node");
 #    i = xmlGetInt(xnid);
 # or
-#    xnid = xmlGetNode(id, "/path/to/specified/node");
+#    xnid = xmlNodeGet(id, "/path/to/specified/node");
 #    if (xmlCompareString(xnid, "value") == 0) printf("We have a match!\n");
 #
 long int xmlGetInt(void *);
@@ -101,13 +101,29 @@ int xmlCompareString(const void *, const char *);
 #
 # These functions work on a specified node path
 # e.g.
-#    d = xmlGetNodeDouble(id, "/path/to/node");
+#    d = xmlNodeGetDouble(id, "/path/to/node");
 # or
-#    xnid = xmlGetNode(id, "/path/to");
-#    i = xmlGetNodeInt(xnid, "node");
+#    xnid = xmlNodeGet(id, "/path/to");
+#    i = xmlNodeGetInt(xnid, "node");
 #
-long int xmlGetNodeInt(void *, const char *);
-double xmlGetNodeDouble(void *, const char *);
-char *xmlGetNodeString(void *, const char *);
-size_t xmlCopyNodeString(void *, const char *, char *, const size_t);
-int xmlCompareNodeString(const void *, const char *, const char *);
+long int xmlNodeGetInt(void *, const char *);
+double xmlNodeGetDouble(void *, const char *);
+char *xmlNodeGetString(void *, const char *);
+size_t xmlNodeCopyString(void *, const char *, char *, const size_t);
+int xmlNodeCompareString(const void *, const char *, const char *);
+
+#
+# These functions work on a specified atribute
+# e.g.
+#    i = xmlAttributeGetInt(id, "n");
+#
+# or
+#    s = xmlNodeGetString(id, "type");
+#    if (s) printf("node is of type '%s'\n", s);
+#    free(s);
+#
+long int xmlAttributeGetInt(const void *, const char *);
+double xmlAttributeGetDouble(const void *, const char *);
+char *xmlAttributeGetString(const void *, const char *);
+size_t xmlAttributeCopyString(const void *, const char *, const char *, size_t);
+int xmlAttributeCompareString(const void *, const char *, const char *);

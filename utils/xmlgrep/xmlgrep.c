@@ -1,7 +1,9 @@
 #include <stdio.h>
-#include <strings.h>
-#include <stdlib.h>
+
+#define _GNU_SOURCE
 #include <string.h>
+#include <strings.h>
+#include <assert.h>
 
 #include "xml.h"
 
@@ -13,6 +15,7 @@ static char *_element = 0;
 static char *_value = 0;
 static char *_root = 0;
 static char *_print = 0;
+static char *_attribute = 0;
 static int print_filenames = 0;
 
 static void free_and_exit(int i);
@@ -29,30 +32,35 @@ show_help ()
     printf("usage: xmlgrep [options] [file ...]\n\n");
     printf("Options:\n");
     printf("\t-h\t\tshow this help message\n");
+    printf("\t-a <string>\tprint this attribute as the output\n");
     printf("\t-e <id>\t\tshow sections that contain this element\n");
     printf("\t-p <id>\t\tprint this element as the output\n");
     printf("\t-r <path>\tspecify the XML search root\n");
-    printf("\t-v <string>\tshow sections where one of the elements has this ");
-    printf("value\n\n");
+    printf("\t-v <string>\tfilter sections that contain this vale\n\n");
     printf(" To print the contents of the 'type' element of the XML section ");
-    printf("that begins\n at '/printer/output' one would use the following ");
-    printf("syntax:\n\n\txmlgrep -r /printer/output -p type sample.xml\n\n");
+    printf("that begins\n at '/printer/output' use the following command:\n\n");
+    printf("\txmlgrep -r /printer/output -p type sample.xml\n\n");
+    printf(" To filter 'output' elements under '/printer' that have attribute");
+    printf(" 'n' set to '1'\n use the following command:\n\n");
+    printf("\txmlgrep -r /printer -p output -a n -v 1 sample.xml\n\n");
     printf(" To filter out sections that contain the 'driver' element with ");
-    printf("'generic' as\n it's value one would issue the following command:");
+    printf("'generic' as\n it's value use the following command:");
     printf("\n\n\txmlgrep -r /printer/output -e driver -v generic sample.xml");
     printf("\n\n");
     free_and_exit(0);
 }
 
 void
-free_and_exit(int i)
+free_and_exit(int ret)
 {
     if (_root && _root != _static_root) free(_root);
     if (_element && _element != _static_element) free(_element);
     if (_value) free(_value);
     if (_print) free(_print);
+    if (_attribute) free(_attribute);
     if (_filenames)
     {
+        unsigned int i;
         for (i=0; i < _fcount; i++)
         {
             if (_filenames[i])
@@ -64,17 +72,18 @@ free_and_exit(int i)
         free(_filenames);
     }
  
-    exit(i);
+    exit(ret);
 }
 
 int
 parse_option(char **args, int n, int max)
 {
     char *opt, *arg = 0;
-    int sz;
+    unsigned int alen = 0;
+    unsigned int olen;
 
     opt = args[n];
-    if (opt[0] == '-' && opt[1] == '-')
+    if (strncmp(opt, "--", 2) == 0)
         opt++;
 
     if ((arg = strchr(opt, '=')) != NULL)
@@ -90,36 +99,52 @@ parse_option(char **args, int n, int max)
 #endif
     }
 
-    sz = strlen(opt);
-    if (strncmp(opt, "-help", sz) == 0)
+    olen = strlen(opt);
+    if (strncmp(opt, "-help", olen) == 0)
     {
         show_help();
     }
-    else if (strncmp(opt, "-root", sz) == 0)
+    else if (strncmp(opt, "-root", olen) == 0)
     {
         if (arg == 0) SHOW_NOVAL(opt);
-        _root = strdup(arg);
+        alen = strlen(arg)+1;
+        _root = malloc(alen);
+        memcpy(_root, arg, alen);
         return 2;
     }
-    else if (strncmp(opt, "-element", sz) == 0)
+    else if (strncmp(opt, "-element", olen) == 0)
     {
         if (arg == 0) SHOW_NOVAL(opt);
-        _element = strdup(arg);
+        alen = strlen(arg)+1;
+        _element = malloc(alen);
+        memcpy(_element, arg, alen);
         return 2;
     }
-    else if (strncmp(opt, "-value", sz) == 0)
+    else if (strncmp(opt, "-value", olen) == 0)
     {
         if (arg == 0) SHOW_NOVAL(opt);
-        _value = strdup(arg);
+        alen = strlen(arg)+1;
+        _value = malloc(alen);
+        memcpy(_value, arg, alen);
         return 2;
     }
-    else if (strncmp(opt, "-print", sz) == 0)
+    else if (strncmp(opt, "-print", olen) == 0)
     {
         if (arg == 0) SHOW_NOVAL(opt);
-        _print = strdup(arg);
+        alen = strlen(arg)+1;
+        _print = malloc(alen);
+        memcpy(_print, arg, alen);
         return 2;
     }
-    else if (strncmp(opt, "-list-filenames", sz) == 0)
+    else if (strncmp(opt, "-attribute", olen) == 0)
+    {
+        if (arg == 0) SHOW_NOVAL(opt);
+        alen = strlen(arg)+1;
+        _attribute = malloc(alen);
+        memcpy(_attribute, arg, alen);
+        return 2;
+    }
+    else if (strncmp(opt, "-list-filenames", olen) == 0)
     { /* undocumented test argument */
         print_filenames = 1;
         return 1;
@@ -147,7 +172,9 @@ parse_option(char **args, int n, int max)
            _filenames = ptr;
         }
 
-        _filenames[pos] = strdup(opt);
+        alen = strlen(opt)+1;
+        _filenames[pos] = malloc(alen);
+        memcpy(_filenames[pos], opt, alen);
     }
 
     return 1;
@@ -162,30 +189,42 @@ void walk_the_tree(size_t num, void *xid, char *tree)
         void *xmid = xmlMarkId(xid);
         if (xmid && _print)
         {
-            no_elements = xmlGetNumNodes(xid, _print);
+            no_elements = xmlNodeGetNum(xid, _print);
             for (i=0; i<no_elements; i++)
             {
-                if (xmlGetNodeNum(xid, xmid, _print, i) != 0)
+                if (xmlNodeGetPos(xid, xmid, _print, i) != 0)
                 {
-                    char value[64];
+                    char value[1024];
 
-                    xmlCopyString(xmid, (char *)&value, 64);
-                    printf("%s: <%s>%s</%s>\n",
-                           _filenames[num], _print, value, _print);
+                    xmlCopyString(xmid, (char *)&value, 1024);
+                    if (_value && _attribute)
+                    {
+                       if (!xmlAttributeCompareString(xmid, _attribute, _value))
+                       {
+                          printf("%s: <%s %s=\"%s\">%s</%s>\n",
+                                 _filenames[num], _print, _attribute, _value,
+                                                  value, _print);
+                       }
+                    }
+                    else
+                    {
+                       printf("%s: <%s>%s</%s>\n",
+                              _filenames[num], _print, value, _print);
+                    }
                 }
             }
             free(xmid);
         }
         else if (xmid && _value)
         {
-            no_elements = xmlGetNumNodes(xmid, _element);
+            no_elements = xmlNodeGetNum(xmid, _element);
             for (i=0; i<no_elements; i++)
             {
-                if (xmlGetNodeNum(xid, xmid, _element, i) != 0)
+                if (xmlNodeGetPos(xid, xmid, _element, i) != 0)
                 {
                     char nodename[64];
 
-                    xmlCopyNodeName(xmid, (char *)&nodename, 64);
+                    xmlNodeCopyName(xmid, (char *)&nodename, 64);
                     if (xmlCompareString(xmid, _value) == 0)
                     {
                         printf("%s: <%s>%s</%s>\n",
@@ -199,16 +238,16 @@ void walk_the_tree(size_t num, void *xid, char *tree)
         {
             char parentname[64];
 
-            xmlCopyNodeName(xid, (char *)&parentname, 64);
+            xmlNodeCopyName(xid, (char *)&parentname, 64);
 
-            no_elements = xmlGetNumNodes(xmid, _element);
+            no_elements = xmlNodeGetNum(xmid, _element);
             for (i=0; i<no_elements; i++)
             {
-                if (xmlGetNodeNum(xid, xmid, _element, i) != 0)
+                if (xmlNodeGetPos(xid, xmid, _element, i) != 0)
                 {
                     char nodename[64];
 
-                    xmlCopyNodeName(xmid, (char *)&nodename, 64);
+                    xmlNodeCopyName(xmid, (char *)&nodename, 64);
                     if (strncasecmp((char *)&nodename, _element, 64) == 0)
                     {
                         char value[64];
@@ -235,16 +274,22 @@ void walk_the_tree(size_t num, void *xid, char *tree)
         xmid = xmlMarkId(xid);
         if (xmid)
         {
-            if (next) *next++ = 0;
+            if (next)
+            {
+               *next++ = 0;
+            }
 
-            no_elements = xmlGetNumNodes(xid, elem);
+            no_elements = xmlNodeGetNum(xid, elem);
             for (i=0; i<no_elements; i++)
             {
-                if (xmlGetNodeNum(xid, xmid, elem, i) != 0)
+                if (xmlNodeGetPos(xid, xmid, elem, i) != 0)
                     walk_the_tree(num, xmid, next);
             }
 
-            if (next) *--next = '/';
+            if (next)
+            {
+               *--next = '/';
+            }
 
             free(xmid);
         }
@@ -275,7 +320,7 @@ void grep_file(unsigned num)
 int
 main (int argc, char **argv)
 {
-    int i;
+    unsigned int i;
 
     if (argc == 1)
         show_help();

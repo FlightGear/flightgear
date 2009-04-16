@@ -29,7 +29,7 @@
 #define __XML_CONFIG 1
 
 /**
- * Open an XML file for processing
+ * Open an XML file for processing.
  *
  * @param fname path to the file 
  * @return XML-id which is used for further processing
@@ -37,7 +37,7 @@
 void *xmlOpen(const char *);
 
 /**
- * Close the XML file after which no further processing is possible
+ * Close the XML file after which no further processing is possible.
  *
  * @param xid XML-id
  */
@@ -47,22 +47,7 @@ void xmlClose(void *);
 /**
  * Locate a subsection of the xml tree for further processing.
  * This adds processing speed since the reuired nodes will only be searched
- * in the subsection
- *
- * The memory allocated for the XML-subsection-id has to be freed by the
- * calling process
- *
- * @param xid XML-id
- * @param node path to the node containing the subsection
- * @return XML-subsection-id for further processing
- */
-void *xmlGetNode(const void *, const char *);
-
-/**
- * Copy a subsection of the xml tree for further processing.
- * This is useful when it's required to process a section of the XML code
- * after the file has been closed. The drawback is the added memory
- * requirements
+ * in the subsection.
  *
  * The memory allocated for the XML-subsection-id has to be freed by the
  * calling process.
@@ -71,41 +56,71 @@ void *xmlGetNode(const void *, const char *);
  * @param node path to the node containing the subsection
  * @return XML-subsection-id for further processing
  */
-void *xmlCopyNode(const void *, const char *);
+void *xmlNodeGet(const void *, const char *);
+
+/**
+ * Copy a subsection of the xml tree for further processing.
+ * This is useful when it's required to process a section of the XML code
+ * after the file has been closed. The drawback is the added memory
+ * requirements.
+ *
+ * The memory allocated for the XML-subsection-id has to be freed by the
+ * calling process.
+ *
+ * @param xid XML-id
+ * @param node path to the node containing the subsection
+ * @return XML-subsection-id for further processing
+ */
+void *xmlNodeCopy(const void *, const char *);
 
 
 /**
  * Return the name of this node.
- * The returned string has to be freed by the calling process
+ * The returned string has to be freed by the calling process.
  *
  * @param xid XML-id
  * @return a newly alocated string containing the node name
  */
-char *xmlGetNodeName(const void *);
+char *xmlNodeGetName(const void *);
 
 /**
- * Copy the name of this node in a pre-allocated buffer
+ * Copy the name of this node in a pre-allocated buffer.
  *
  * @param xid XML-id
  * @param buffer the buffer to copy the string to
  * @param buflen length of the destination buffer
  * @return the length of the node name
  */
-size_t xmlCopyNodeName(const void *, char *, size_t);
+size_t xmlNodeCopyName(const void *, char *, size_t);
 
 
 /**
- * Get the number of nodes with the same name from a specified xml path
+ * Create a marker XML-id that starts out with the same settings as the
+ * refference XML-id.
+ *
+ * Marker id's are required when xmlNodeGetNum() and xmlNodeGetPos() are used
+ * to walk a number of nodes. The xmlNodeGetPos function adjusts the contents
+ * of the provided XML-id to keep track of it's position within the xml section.
+ * The returned XML-id is limited to the boundaries of the requested XML tag
+ * and has to be freed by the calling process.
+ *
+ * @param xid reference XML-id
+ * @return a copy of the reference XML-id
+ */
+void *xmlMarkId(const void *);
+
+/**
+ * Get the number of nodes with the same name from a specified xml path.
  *
  * @param xid XML-id
  * @param path path to the xml node
  * @return the number count of the nodename
  */
-unsigned int xmlGetNumNodes(const void *, const char *);
+unsigned int xmlNodeGetNum(const void *, const char *);
 
 /**
  * Get the nth occurrence of node in the parent node.
- * The return value should neevr be altered or freed by the caller
+ * The return value should never be altered or freed by the caller.
  *
  * @param pid XML-id of the parent node of this node
  * @param xid XML-id
@@ -113,12 +128,12 @@ unsigned int xmlGetNumNodes(const void *, const char *);
  * @param num specify which occurence to return
  * @return XML-subsection-id for further processing or NULL if unsuccessful
  */
-void *xmlGetNodeNum(const void *, void *, const char *, int);
+void *xmlNodeGetPos(const void *, void *, const char *, int);
 
 
 /**
  * Get a string of characters from the current node.
- * The returned string has to be freed by the calling process
+ * The returned string has to be freed by the calling process.
  *
  * @param xid XML-id
  * @return a newly alocated string containing the contents of the node
@@ -129,7 +144,7 @@ char *xmlGetString(const void *);
  * Get a string of characters from the current node.
  * This function has the advantage of not allocating its own return buffer,
  * keeping the memory management to an absolute minimum but the disadvantage
- * is that it's unreliable in multithread environments
+ * is that it's unreliable in multithread environments.
  *
  * @param xid XML-id
  * @param buffer the buffer to copy the string to
@@ -140,7 +155,7 @@ size_t xmlCopyString(const void *, char *, size_t);
 
 /**
  * Compare the value of this node to a reference string.
- * Comparing is done in a case insensitive way
+ * Comparing is done in a case insensitive way.
  *
  * @param xid XML-id
  * @param str the string to compare to
@@ -152,19 +167,19 @@ int xmlCompareString(const void *, const char *);
 
 /**
  * Get a string of characters from a specified xml path.
- * The returned string has to be freed by the calling process
+ * The returned string has to be freed by the calling process.
  *
  * @param xid XML-id
  * @param path path to the xml node
  * @return a newly alocated string containing the contents of the node
  */
-char *xmlGetNodeString(const void *, const char *);
+char *xmlNodeGetString(const void *, const char *);
 
 /**
  * Get a string of characters from a specified xml path.
  * This function has the advantage of not allocating its own return buffer,
  * keeping the memory management to an absolute minimum but the disadvantage
- * is that it's unreliable in multithread environments
+ * is that it's unreliable in multithread environments.
  *
  * @param xid XML-id
  * @param path path to the xml node
@@ -172,11 +187,11 @@ char *xmlGetNodeString(const void *, const char *);
  * @param buflen length of the destination buffer
  * @return the length of the string
  */
-size_t xmlCopyNodeString(const void *, const char *, char *, size_t);
+size_t xmlNodeCopyString(const void *, const char *, char *, size_t);
 
 /**
  * Compare the value of a node to a reference string.
- * Comparing is done in a case insensitive way
+ * Comparing is done in a case insensitive way.
  *
  * @param xid XML-id
  * @param path path to the xml node to compare to
@@ -185,11 +200,46 @@ size_t xmlCopyNodeString(const void *, const char *, char *, size_t);
  * of the node is found, respectively, to be less than, to match, or be greater
  * than str
  */
-int xmlCompareNodeString(const void *, const char *, const char *);
+int xmlNodeCompareString(const void *, const char *, const char *);
+
+/**
+ * Get a string of characters from a named attribute.
+ * The returned string has to be freed by the calling process.
+ *
+ * @param xid XML-id
+ * @param name name of the attribute to acquire
+ * @return the contents of the node converted to an integer value
+ */
+char *xmlAttributeGetString(const void *, const char *);
+
+/**
+ * Get a string of characters from a named attribute.
+ * This function has the advantage of not allocating its own return buffer,
+ * keeping the memory management to an absolute minimum but the disadvantage
+ * is that it's unreliable in multithread environments.
+ *
+ * @param xid XML-id
+ * @param name name of the attribute to acquire.
+ * @param buffer the buffer to copy the string to
+ * @param buflen length of the destination buffer
+ * @return the length of the string
+size_t xmlAttributeCopyString(const void *, const char *, const char *, size_t);
+
+/**
+ * Compare the value of an attribute to a reference string.
+ * Comparing is done in a case insensitive way.
+ *
+ * @param xid XML-id
+ * @param name name of the attribute to acquire.
+ * @param str the string to compare to
+ * @return an integer less than, equal to, ro greater than zero if the value
+ * of the node is found, respectively, to be less than, to match, or be greater
+ * than str
+int xmlAttributeCompareString(const void *, const char *, const char *);
 
 
 /**
- * Get the integer value from the current node
+ * Get the integer value from the current node/
  *
  * @param xid XML-id
  * @return the contents of the node converted to an integer value
@@ -197,17 +247,26 @@ int xmlCompareNodeString(const void *, const char *, const char *);
 long int xmlGetInt(const void *);
 
 /**
- * Get an integer value from a specified xml path
+ * Get an integer value from a specified xml path.
  *
  * @param xid XML-id
  * @param path path to the xml node
  * @return the contents of the node converted to an integer value
  */
-long int xmlGetNodeInt(const void *, const char *);
+long int xmlNodeGetInt(const void *, const char *);
+
+/**
+ * Get the integer value from the named attribute.
+ *
+ * @param xid XML-id
+ * @param name name of the attribute to acquire
+ * @return the contents of the node converted to an integer value
+ */
+long int xmlAttributeGetInt(const void *, const char *);
 
 
 /**
- * Get the double value from the curent node
+ * Get the double value from the curent node/
  *
  * @param xid XML-id
  * @return the contents of the node converted to a double value
@@ -215,24 +274,23 @@ long int xmlGetNodeInt(const void *, const char *);
 double xmlGetDouble(const void *);
 
 /**
- * Get a double value from a specified xml path
+ * Get a double value from a specified xml path/
  *
  * @param xid XML-id
  * @param path path to the xml node
  * @return the contents of the node converted to a double value
  */
-double xmlGetNodeDouble(const void *, const char *);
+double xmlNodeGetDouble(const void *, const char *);
 
 
 /**
- * Create a marker XML-id that starts out with the same settings as the
- * refference XML-id.
- * The returned XML-id has to be freed by the calling process
+ * Get the double value from the named attribute.
  *
- * @param xid reference XML-id
- * @return a copy of the reference XML-id
+ * @param xid XML-id
+ * @param name name of the attribute to acquire
+ * @return the contents of the node converted to an integer value
  */
-void *xmlMarkId(const void *);
+double xmlAttributeGetDouble(const void *, const char *);
 
 #endif /* __XML_CONFIG */
 
