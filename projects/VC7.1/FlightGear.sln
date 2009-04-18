@@ -54,6 +54,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "terrasync", "terrasync.vcpr
 		{22540CD3-D3CA-4C86-A773-80AEEE3ACDED} = {22540CD3-D3CA-4C86-A773-80AEEE3ACDED}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xmlgrep", "xmlgrep.vcproj", "{1F40CF41-9836-4488-BAAF-560623665C12}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -100,6 +104,10 @@ Global
 		{874D3F55-6048-4068-A7C2-7FA6AF1F30EA}.Debug.Build.0 = Debug|Win32
 		{874D3F55-6048-4068-A7C2-7FA6AF1F30EA}.Release.ActiveCfg = Release|Win32
 		{874D3F55-6048-4068-A7C2-7FA6AF1F30EA}.Release.Build.0 = Release|Win32
+		{1F40CF41-9836-4488-BAAF-560623665C12}.Debug.ActiveCfg = Debug|Win32
+		{1F40CF41-9836-4488-BAAF-560623665C12}.Debug.Build.0 = Debug|Win32
+		{1F40CF41-9836-4488-BAAF-560623665C12}.Release.ActiveCfg = Release|Win32
+		{1F40CF41-9836-4488-BAAF-560623665C12}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
