@@ -223,6 +223,7 @@ char *xmlAttributeGetString(const void *, const char *);
  * @param buffer the buffer to copy the string to
  * @param buflen length of the destination buffer
  * @return the length of the string
+ */
 size_t xmlAttributeCopyString(const void *, const char *, const char *, size_t);
 
 /**
@@ -235,7 +236,6 @@ size_t xmlAttributeCopyString(const void *, const char *, const char *, size_t);
  * @return an integer less than, equal to, ro greater than zero if the value
  * of the node is found, respectively, to be less than, to match, or be greater
  * than str
- */
 int xmlAttributeCompareString(const void *, const char *, const char *);
 
 
@@ -283,7 +283,6 @@ double xmlGetDouble(const void *);
  */
 double xmlNodeGetDouble(const void *, const char *);
 
-
 /**
  * Get the double value from the named attribute.
  *
@@ -292,6 +291,33 @@ double xmlNodeGetDouble(const void *, const char *);
  * @return the contents of the node converted to an integer value
  */
 double xmlAttributeGetDouble(const void *, const char *);
+
+
+#ifndef XML_NONVALIDATING
+/**
+ * Get the error number of the last error and clear it.
+ *
+ * @param xid XML-id
+ * @return the numer of the last error, 0 means no error detected.
+ */
+int xmlErrorGetNo(const void *);
+
+/**
+ * Get the line number of the last detected syntax error in the xml file.
+ *
+ * @param xid XML-id
+ * @return the line number of the detected syntax error.
+ */
+size_t xmlErrorGetLineNo(const void *);
+
+/**
+ * Get a string that explains the last error.
+ *
+ * @param xid XML-id
+ * @return a string that explains the last error.
+ */
+const char *xmlErrorGetString(const void *);
+#endif
 
 #endif /* __XML_CONFIG */
 

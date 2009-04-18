@@ -1,3 +1,10 @@
+18-04-2009
+  * Make the code compiler correctly under windows
+  * Introduce a root-node that can hold extra information which is necessary
+    for thread safety under windows
+  * Add xmlErrorGetString, xmlErrorGetLineNo for syntax error detetction
+  * Add xmlErrGetNo for detection of, and clearing the last error
+
 16-04-2008
   * Rename xmlGetNode functions to xmlNodeGet for better consistancy
   * likewise for xmlCopyNode en xmlCompareNode

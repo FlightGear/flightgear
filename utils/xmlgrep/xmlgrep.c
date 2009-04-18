@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #define _GNU_SOURCE
+#include <stdlib.h>
 #include <string.h>
 #ifndef _MSC_VER
 # include <strings.h>
@@ -311,7 +312,16 @@ void grep_file(unsigned num)
     if (xid)
     {
        void *xrid = xmlMarkId(xid);
+       size_t n = 0;
+       char *s = 0;
+       int r = 0;
        walk_the_tree(num, xrid, _root);
+
+       s = xmlErrorGetString(xrid);
+       n = xmlErrorGetLineNo(xrid);
+       r = xmlErrorGetNo(xrid);
+       if (r) printf("Error #%i at line #%u: '%s'\n", r, n, s);
+
        free(xrid);
     }
     else
