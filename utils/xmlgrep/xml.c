@@ -75,7 +75,7 @@ static const char *__xml_error_str[XML_MAX_ERROR];
 struct _xml_error
 {
     char *pos;
-    int errno;
+    int err_no;
 };
 
 static void __xmlErrorSet(const void *, const char *, unsigned int);
@@ -1094,8 +1094,8 @@ xmlErrorGetNo(const void *id)
         {
             struct _xml_error *err = rid->info;
 
-            ret = err->errno;
-            err->errno = 0;
+            ret = err->err_no;
+            err->err_no = 0;
         }
     }
 
@@ -1158,8 +1158,8 @@ xmlErrorGetString(const void *id)
         if (rid->info)
         {
             struct _xml_error *err = rid->info;
-            if (XML_NO_ERROR <= err->errno && err->errno < XML_MAX_ERROR)
-               ret = (char *)__xml_error_str[err->errno];
+            if (XML_NO_ERROR <= err->err_no && err->err_no < XML_MAX_ERROR)
+               ret = (char *)__xml_error_str[err->err_no];
             else
                ret = "incorrect error number.";
         }
@@ -1509,7 +1509,7 @@ __xml_memncasecmp(const char *haystack, size_t *haystacklen,
 
 #ifndef XML_NONVALIDATING
 void
-__xmlErrorSet(const void *id, const char *pos, unsigned int errno)
+__xmlErrorSet(const void *id, const char *pos, unsigned int err_no)
 {
    struct _xml_id *xid = (struct _xml_id *)id;
    struct _root_id *rid;
@@ -1529,7 +1529,7 @@ __xmlErrorSet(const void *id, const char *pos, unsigned int errno)
       struct _xml_error *err = rid->info;
 
       err->pos = (char *)pos;
-      err->errno = errno;
+      err->err_no = err_no;
    }
 }
 #endif
