@@ -1,3 +1,4 @@
+bin
 Debug
 Release
 fgadmin_Debug
@@ -20,3 +21,5 @@ metar_Debug
 metar_Release
 Terrasync_Release
 Terrasync_Debug
+xmlgrep_Release
+xmlgrep_Debug
