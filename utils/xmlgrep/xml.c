@@ -43,21 +43,28 @@ static SIMPLE_UNMMAP un;
 static void *simple_mmap(int, size_t, SIMPLE_UNMMAP *);
 static void simple_unmmap(SIMPLE_UNMMAP *);
 
-#define mmap(a,b,c,d,e,f)	simple_mmap((e), (b), &un)
-#define munmap(a,b)		simple_unmmap(&un)
+# define mmap(a,b,c,d,e,f)	simple_mmap((e), (b), &un)
+# define munmap(a,b)		simple_unmmap(&un)
+
+# include <io.h>
+# include <stdlib.h>
 
 #else	/* !WIN32 */
 # include <sys/mman.h>
-# include <fcntl.h>
+# include <unistd.h>
 #endif
 
+# include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <assert.h>
-#include <unistd.h>
 #include <ctype.h>
 #include <string.h>
-#include <strings.h>	/* strncasecmp */
+#ifndef _MSC_VER
+# include <strings.h>	/* strncasecmp */
+#else
+# define strncasecmp strnicmp
+#endif
 #ifndef NDEBUG
 #include <stdio.h>
 #endif
