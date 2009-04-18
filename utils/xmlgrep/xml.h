@@ -236,6 +236,7 @@ size_t xmlAttributeCopyString(const void *, const char *, const char *, size_t);
  * @return an integer less than, equal to, ro greater than zero if the value
  * of the node is found, respectively, to be less than, to match, or be greater
  * than str
+ */
 int xmlAttributeCompareString(const void *, const char *, const char *);
 
 
