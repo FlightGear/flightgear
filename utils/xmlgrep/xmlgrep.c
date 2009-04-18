@@ -2,7 +2,12 @@
 
 #define _GNU_SOURCE
 #include <string.h>
-#include <strings.h>
+#ifndef _MSC_VER
+# include <strings.h>
+#else
+# define strncasecmp strnicmp
+# include <stdlib.h>
+#endif
 #include <assert.h>
 
 #include "xml.h"
