@@ -1,3 +1,10 @@
+20-04-2008
+  * fix a problem where attributes or elements starting with the same letter
+    sequence could give a false negative result
+  * Add a 'clear' attribute to the xmlErrorGet functions that indicates whether
+    the error should be cleared or not
+  * detect more xml syntax errors
+
 18-04-2009
   * Make the code compiler correctly under windows
   * Introduce a root-node that can hold extra information which is necessary

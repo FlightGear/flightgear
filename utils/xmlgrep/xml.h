@@ -28,6 +28,23 @@
 #ifndef __XML_CONFIG
 #define __XML_CONFIG 1
 
+enum
+{
+    XML_NO_ERROR = 0,
+    XML_OUT_OF_MEMORY,
+    XML_FILE_NOT_FOUND,
+    XML_TRUNCATE_RESULT,
+    XML_INVALID_COMMENT,
+    XML_INVALID_INFO_BLOCK,
+    XML_UNEXPECTED_EOF,
+    XML_ELEMENT_NOT_FOUND,
+    XML_ELEMENT_NO_OPENING_TAG,
+    XML_ELEMENT_NO_CLOSING_TAG,
+    XML_ATTRIB_NO_OPENING_QUOTE,
+    XML_ATTRIB_NO_CLOSING_QUOTE,
+    XML_MAX_ERROR
+};
+
 /**
  * Open an XML file for processing.
  *
@@ -128,7 +145,7 @@ unsigned int xmlNodeGetNum(const void *, const char *);
  * @param num specify which occurence to return
  * @return XML-subsection-id for further processing or NULL if unsuccessful
  */
-void *xmlNodeGetPos(const void *, void *, const char *, int);
+void *xmlNodeGetPos(const void *, void *, const char *, size_t);
 
 
 /**
@@ -224,7 +241,7 @@ char *xmlAttributeGetString(const void *, const char *);
  * @param buflen length of the destination buffer
  * @return the length of the string
  */
-size_t xmlAttributeCopyString(const void *, const char *, const char *, size_t);
+size_t xmlAttributeCopyString(const void *, const char *, char *, size_t);
 
 /**
  * Compare the value of an attribute to a reference string.
@@ -299,25 +316,28 @@ double xmlAttributeGetDouble(const void *, const char *);
  * Get the error number of the last error and clear it.
  *
  * @param xid XML-id
+ * @param clear clear the error state if non zero
  * @return the numer of the last error, 0 means no error detected.
  */
-int xmlErrorGetNo(const void *);
+int xmlErrorGetNo(const void *, int);
 
 /**
  * Get the line number of the last detected syntax error in the xml file.
  *
  * @param xid XML-id
+ * @param clear clear the error state if non zero
  * @return the line number of the detected syntax error.
  */
-size_t xmlErrorGetLineNo(const void *);
+size_t xmlErrorGetLineNo(const void *, int);
 
 /**
  * Get a string that explains the last error.
  *
  * @param xid XML-id
+ * @param clear clear the error state if non zero
  * @return a string that explains the last error.
  */
-const char *xmlErrorGetString(const void *);
+const char *xmlErrorGetString(const void *, int);
 #endif
 
 #endif /* __XML_CONFIG */
