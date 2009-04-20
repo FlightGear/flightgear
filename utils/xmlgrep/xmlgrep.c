@@ -312,15 +312,21 @@ void grep_file(unsigned num)
     if (xid)
     {
        void *xrid = xmlMarkId(xid);
-       size_t n = 0;
-       char *s = 0;
        int r = 0;
+
        walk_the_tree(num, xrid, _root);
 
-       s = xmlErrorGetString(xrid);
-       n = xmlErrorGetLineNo(xrid);
-       r = xmlErrorGetNo(xrid);
-       if (r) printf("Error #%i at line #%u: '%s'\n", r, n, s);
+       r = xmlErrorGetNo(xrid, 0);
+       if (r)
+       {
+            if (r == XML_ELEMENT_NOT_FOUND)
+            {
+                size_t n = xmlErrorGetLineNo(xrid, 0);
+                char *s = xmlErrorGetString(xrid, 1); /* clear the error */
+                printf("Error #%i at line %u: '%s'\n", r, n, s);
+            }
+            else printf("requested element was not found.\n");
+       }
 
        free(xrid);
     }
@@ -335,7 +341,7 @@ void grep_file(unsigned num)
 int
 main (int argc, char **argv)
 {
-    unsigned int i;
+    int i;
 
     if (argc == 1)
         show_help();

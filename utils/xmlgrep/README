@@ -131,11 +131,11 @@ int xmlAttributeCompareString(const void *, const char *, const char *);
 #
 # Error detection and reporting functions
 #
-# char *err_str = xmlErrorGetString(id);
-# size_t err_lineno = xmlErrorGetLineNo(id);
-# int err = xmlErrorGetNo(id); /* clear last error */
-# if (err) printf("Error #%i at line #%u: '%s'\n", err, err_lineno, err_str);
+# char *err_str = xmlErrorGetString(id, 0);
+# size_t err_lineno = xmlErrorGetLineNo(id, 0);
+# int err = xmlErrorGetNo(id, 1); /* clear last error */
+# if (err) printf("Error #%i at line %u: '%s'\n", err, err_lineno, err_str);
 #
-int xmlErrorGetNo(const void *);
-size_t xmlErrorGetLineNo(const void *);
-const char *xmlErrorGetString(const void *);
+int xmlErrorGetNo(const void *, int);
+size_t xmlErrorGetLineNo(const void *, int);
+const char *xmlErrorGetString(const void *, int);
