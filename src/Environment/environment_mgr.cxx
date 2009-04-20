@@ -145,6 +145,16 @@ FGEnvironmentMgr::bind ()
 	&FGEnvironment::get_wind_from_down_fps,
 	&FGEnvironment::set_wind_from_down_fps);
   fgSetArchivable("/environment/wind-from-down-fps");
+
+  fgTie("/environment/thermal-lift-fps", _environment,
+	&FGEnvironment::get_thermal_lift_fps,
+	&FGEnvironment::set_thermal_lift_fps);
+  fgSetArchivable("/environment/thermal-lift-fps");
+  fgTie("/environment/ridge-lift-fps", _environment,
+	&FGEnvironment::get_ridge_lift_fps,
+	&FGEnvironment::set_ridge_lift_fps);
+  fgSetArchivable("/environment/ridge-lift-fps");
+
   fgTie("/environment/turbulence/magnitude-norm", _environment,
         &FGEnvironment::get_turbulence_magnitude_norm,
         &FGEnvironment::set_turbulence_magnitude_norm);
@@ -227,6 +237,10 @@ FGEnvironmentMgr::unbind ()
   fgUntie("/environment/wind-from-north-fps");
   fgUntie("/environment/wind-from-east-fps");
   fgUntie("/environment/wind-from-down-fps");
+
+  fgUntie("/environment/thermal-lift-fps");
+  fgUntie("/environment/ridge-lift-fps");
+
   fgUntie("/environment/atmosphere/altitude-half-to-sun");
   fgUntie("/environment/atmosphere/altitude-troposphere-top");
   for (int i = 0; i < MAX_CLOUD_LAYERS; i++) {

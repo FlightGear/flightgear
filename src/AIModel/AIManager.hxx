@@ -100,7 +100,7 @@ private:
     double calcRange(double lat, double lon, double lat2, double lon2)const;
 
     SGPropertyNode_ptr root;
-    SGPropertyNode_ptr wind_from_down_node;
+    SGPropertyNode_ptr thermal_lift_node;
     SGPropertyNode_ptr user_latitude_node;
     SGPropertyNode_ptr user_longitude_node;
     SGPropertyNode_ptr user_altitude_node;

@@ -70,6 +70,8 @@ public:
   virtual double get_wind_from_north_fps () const;
   virtual double get_wind_from_east_fps () const;
   virtual double get_wind_from_down_fps () const;
+  virtual double get_thermal_lift_fps () const;
+  virtual double get_ridge_lift_fps () const;  
 
   virtual double get_turbulence_magnitude_norm () const;
   virtual double get_turbulence_rate_hz () const;
@@ -88,6 +90,8 @@ public:
   virtual void set_wind_from_north_fps (double n);
   virtual void set_wind_from_east_fps (double e);
   virtual void set_wind_from_down_fps (double d);
+  virtual void set_thermal_lift_fps (double th);
+  virtual void set_ridge_lift_fps (double ri);
 
   virtual void set_turbulence_magnitude_norm (double t);
   virtual void set_turbulence_rate_hz (double t);
@@ -101,6 +105,7 @@ private:
   void _init();
   void _recalc_hdgspd ();
   void _recalc_ne ();
+  void _recalc_updraft ();
 
   void _recalc_sl_temperature ();
   void _recalc_alt_temperature ();
@@ -139,6 +144,8 @@ private:
   double wind_from_north_fps;
   double wind_from_east_fps;
   double wind_from_down_fps;
+  double thermal_lift_fps;
+  double ridge_lift_fps;
 
 };
 

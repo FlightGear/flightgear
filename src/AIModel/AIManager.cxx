@@ -65,7 +65,7 @@ FGAIManager::init() {
     if (!enabled)
         return;
 
-    wind_from_down_node = fgGetNode("/environment/wind-from-down-fps", true);
+    thermal_lift_node = fgGetNode("/environment/thermal-lift-fps", true);
     wind_from_east_node  = fgGetNode("/environment/wind-from-east-fps",true);
     wind_from_north_node = fgGetNode("/environment/wind-from-north-fps",true);
 
@@ -172,7 +172,7 @@ FGAIManager::update(double dt) {
         }
     }
 
-    wind_from_down_node->setDoubleValue( strength ); // for thermals
+    thermal_lift_node->setDoubleValue( strength );  // for thermals
 }
 
 void
@@ -257,6 +257,8 @@ FGAIManager::processThermal( FGAIThermal* thermal ) {
     }
 
 }
+
+
 
 void
 FGAIManager::processScenario( const string &filename ) {
@@ -397,7 +399,7 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
         tgt_ht[type] += fuse_range;
 
         if (fabs(tgt_alt - alt) > tgt_ht[type] || type == FGAIBase::otBallistic
-                || type == FGAIBase::otStorm || type == FGAIBase::otThermal) {
+                || type == FGAIBase::otStorm || type == FGAIBase::otThermal ) {
             SG_LOG(SG_GENERAL, SG_DEBUG, "AIManager: skipping "
                 << fabs(tgt_alt - alt)
                 << " "
