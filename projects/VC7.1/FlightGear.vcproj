@@ -2318,6 +2318,12 @@
 			<File
 				RelativePath="..\..\src\Environment\precipitation_mgr.hxx">
 			</File>
+			<File
+				RelativePath="..\..\src\Environment\ridge_lift.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Environment\ridge_lift.hxx">
+			</File>
 		</Filter>
 		<Filter
 			Name="Lib_Model"
