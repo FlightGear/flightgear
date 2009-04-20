@@ -1,6 +1,6 @@
 // FGAIThermal - FGAIBase-derived class creates an AI thermal
 //
-// Original by Written by David Culp
+// Copyright (C) 2004  David P. Culp - davidculp2@comcast.net
 //
 // An attempt to refine the thermal shape and behaviour by WooT 2009
 //
