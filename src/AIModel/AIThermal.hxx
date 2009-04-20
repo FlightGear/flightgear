@@ -1,8 +1,10 @@
-// FGAIThermal - AIBase derived class creates an AI thunderstorm
+// FGAIThermal - FGAIBase-derived class creates an AI thermal
 //
-// Written by David Culp, started Feb 2004.
+// Original by Written by David Culp
 //
-// Copyright (C) 2004  David P. Culp - davidculp2@comcast.net
+// An attempt to refine the thermal shape and behaviour by WooT 2009
+//
+// Copyright (C) 2009 Patrice Poly ( WooT )
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -42,22 +44,54 @@ public:
         virtual void unbind();
 	virtual void update(double dt);
 
-        inline void setMaxStrength( double s ) { max_strength = s; };
+	inline void setMaxStrength( double s ) { max_strength = s; };
         inline void setDiameter( double d ) { diameter = d; };
         inline void setHeight( double h ) { height = h; };
-        inline double getStrength() const { return strength; };
+        inline void setMaxUpdraft( double lift ) { v_up_max = lift; };
+	inline void setMinUpdraft( double sink ) { v_up_min = sink; };
+	inline void setR_up_frac( double r ) { r_up_frac = r; };
+	
+	inline double getStrength() const { return strength; };
         inline double getDiameter() const { return diameter; };
         inline double getHeight() const { return height; };
+        inline double getV_up_max() const { return v_up_max; };
+	inline double getV_up_min() const { return v_up_min; };
+	inline double getR_up_frac() const { return r_up_frac; };
 
         virtual const char* getTypeString(void) const { return "thermal"; }
+	void getGroundElev(double dt);
+	
+
 private:
 
 	void Run(double dt);
-        double max_strength;
+	double get_strength_fac(double alt_frac);
+	double max_strength;
         double strength;
         double diameter;
         double height;
         double factor;
+	double alt_rel;
+	double alt;
+	double v_up_max;
+	double v_up_min;
+        double r_up_frac;
+	double cycle_timer;
+	double dt_count;
+	double time;
+	double xx;
+	double ground_elev_ft; // ground level in ft
+	double altitude_agl_ft; // altitude above ground in feet
+	bool do_agl_calc;
+	bool is_forming;
+	bool is_formed;
+	bool is_dying;
+	bool is_dead;
+	SGPropertyNode_ptr _surface_wind_from_deg_node;
+	SGPropertyNode_ptr _surface_wind_speed_node;
+	SGPropertyNode_ptr _aloft_wind_from_deg_node;
+	SGPropertyNode_ptr _aloft_wind_speed_node;
+
 };
 
 

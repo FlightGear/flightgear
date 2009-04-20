@@ -133,6 +133,8 @@ void FGEnvironment::_init()
     wind_from_north_fps = 0;
     wind_from_east_fps = 0;
     wind_from_down_fps = 0;
+    thermal_lift_fps = 0;
+    ridge_lift_fps= 0;
     altitude_half_to_sun_m = 1000;
     altitude_tropo_top_m = 10000;
     _setup_tables();
@@ -171,6 +173,8 @@ FGEnvironment::copy (const FGEnvironment &env)
     wind_from_north_fps = env.wind_from_north_fps;
     wind_from_east_fps = env.wind_from_east_fps;
     wind_from_down_fps = env.wind_from_down_fps;
+    thermal_lift_fps = env.thermal_lift_fps;
+    ridge_lift_fps= env.ridge_lift_fps;
     turbulence_magnitude_norm = env.turbulence_magnitude_norm;
     turbulence_rate_hz = env.turbulence_rate_hz;
 }
@@ -338,6 +342,18 @@ FGEnvironment::get_wind_from_down_fps () const
 }
 
 double
+FGEnvironment::get_thermal_lift_fps () const
+{
+  return thermal_lift_fps;
+}
+
+double
+FGEnvironment::get_ridge_lift_fps () const
+{
+  return ridge_lift_fps;
+}
+
+double
 FGEnvironment::get_turbulence_magnitude_norm () const
 {
   if( sgEnviro.get_turbulence_enable_state() )
@@ -454,6 +470,20 @@ FGEnvironment::set_wind_from_down_fps (double d)
 }
 
 void
+FGEnvironment::set_thermal_lift_fps (double th)
+{
+  thermal_lift_fps = th;
+  _recalc_updraft();
+}
+
+void
+FGEnvironment::set_ridge_lift_fps (double ri)
+{
+  ridge_lift_fps = ri;
+  _recalc_updraft();
+}
+
+void
 FGEnvironment::set_turbulence_magnitude_norm (double t)
 {
   turbulence_magnitude_norm = t;
@@ -534,6 +564,12 @@ FGEnvironment::_recalc_ne ()
     cos(wind_from_heading_deg * SGD_DEGREES_TO_RADIANS);
   wind_from_east_fps = speed_fps *
     sin(wind_from_heading_deg * SGD_DEGREES_TO_RADIANS);
+}
+
+void
+FGEnvironment::_recalc_updraft ()
+{
+  wind_from_down_fps = thermal_lift_fps + ridge_lift_fps ;
 }
 
 void

@@ -115,6 +115,7 @@
 #include <MultiPlayer/multiplaymgr.hxx>
 
 #include <Environment/environment_mgr.hxx>
+#include <Environment/ridge_lift.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -1507,6 +1508,13 @@ bool fgInitSubsystems() {
 
     // Initialize the weather modeling subsystem
     globals->add_subsystem("environment", new FGEnvironmentMgr);
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the ridge lift simulation.
+    ////////////////////////////////////////////////////////////////////
+
+    // Initialize the ridgelift subsystem
+    globals->add_subsystem("ridgelift", new FGRidgeLift);
 
 
     ////////////////////////////////////////////////////////////////////
