@@ -232,9 +232,9 @@ void FGRidgeLift::Run(double dt) {
 		for (int i = 0; i <= 4; i++)
 		{
 			if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(
-			    SGGeod::fromRad(probe_lon_rad[i],probe_lat_rad[i]), 20000), alt, 0));
+			    SGGeod::fromRad(probe_lon_rad[i],probe_lat_rad[i]), 20000), alt, 0))
 			{
-			probe_elev_m[i] =  alt;
+				probe_elev_m[i] =  alt;
 			}
 		}
 		timer = 0.0;
