@@ -26,6 +26,9 @@ static int print_filenames = 0;
 
 static void free_and_exit(int i);
 
+#define NODE_NAME_LEN		256
+#define STRING_LEN		2048
+
 #define SHOW_NOVAL(opt) \
 { \
     printf("option '%s' requires a value\n\n", (opt)); \
@@ -200,9 +203,9 @@ void walk_the_tree(size_t num, void *xid, char *tree)
             {
                 if (xmlNodeGetPos(xid, xmid, _print, i) != 0)
                 {
-                    char value[1024];
+                    char value[STRING_LEN];
 
-                    xmlCopyString(xmid, (char *)&value, 1024);
+                    xmlCopyString(xmid, (char *)&value, STRING_LEN);
                     if (_value && _attribute)
                     {
                        if (!xmlAttributeCompareString(xmid, _attribute, _value))
@@ -228,9 +231,9 @@ void walk_the_tree(size_t num, void *xid, char *tree)
             {
                 if (xmlNodeGetPos(xid, xmid, _element, i) != 0)
                 {
-                    char nodename[64];
+                    char nodename[NODE_NAME_LEN];
 
-                    xmlNodeCopyName(xmid, (char *)&nodename, 64);
+                    xmlNodeCopyName(xmid, (char *)&nodename, NODE_NAME_LEN);
                     if (xmlCompareString(xmid, _value) == 0)
                     {
                         printf("%s: <%s>%s</%s>\n",
@@ -242,22 +245,22 @@ void walk_the_tree(size_t num, void *xid, char *tree)
         }
         else if (xmid && _element)
         {
-            char parentname[64];
+            char parentname[NODE_NAME_LEN];
 
-            xmlNodeCopyName(xid, (char *)&parentname, 64);
+            xmlNodeCopyName(xid, (char *)&parentname, NODE_NAME_LEN);
 
             no_elements = xmlNodeGetNum(xmid, _element);
             for (i=0; i<no_elements; i++)
             {
                 if (xmlNodeGetPos(xid, xmid, _element, i) != 0)
                 {
-                    char nodename[64];
+                    char nodename[NODE_NAME_LEN];
 
-                    xmlNodeCopyName(xmid, (char *)&nodename, 64);
-                    if (strncasecmp((char *)&nodename, _element, 64) == 0)
+                    xmlNodeCopyName(xmid, (char *)&nodename, NODE_NAME_LEN);
+                    if (!strncasecmp((char*)&nodename, _element, NODE_NAME_LEN))
                     {
-                        char value[64];
-                        xmlCopyString(xmid, (char *)&value, 64);
+                        char value[NODE_NAME_LEN];
+                        xmlCopyString(xmid, (char *)&value, NODE_NAME_LEN);
                         printf("%s: <%s> <%s>%s</%s> </%s>\n",
                                 _filenames[num], parentname, nodename, value,
                                                  nodename, parentname);
@@ -319,7 +322,7 @@ void grep_file(unsigned num)
        r = xmlErrorGetNo(xrid, 0);
        if (r)
        {
-            if (r == XML_ELEMENT_NOT_FOUND)
+            if (r)
             {
                 size_t n = xmlErrorGetLineNo(xrid, 0);
                 char *s = xmlErrorGetString(xrid, 1); /* clear the error */

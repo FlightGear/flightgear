@@ -310,6 +310,9 @@ xmlNodeCopyName(const void *id, char *buf, size_t buflen)
     if (slen > xid->name_len)
     {
         slen = xid->name_len;
+    }
+    else
+    {
         xmlErrorSet(xid, 0, XML_TRUNCATE_RESULT);
     }
     memcpy(buf, xid->name, slen);
@@ -1238,11 +1241,10 @@ static const char *__xml_error_str[XML_MAX_ERROR] =
     "no error.",
     "unable to allocate enough memory.",
     "unable to open file for reading.",
-    "buffer us too small to hold the result, truncating.",
+    "buffer too small to hold all data, truncating.",
     "incorrect comment section.",
     "bad information block.",
-    "unexpected end of xml section (maybe a missing end tag?)",
-    "element not found.",
+    "unexpected end of section.",
     "incompatible opening tag for element.",
     "missing or invalid closing tag for element.",
     "missing or invalid opening quote for attribute.",
@@ -1551,7 +1553,7 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
         ret = 0;
         *rlen = 0;
         *name = start_tag;
-        *len = XML_ELEMENT_NOT_FOUND;
+        *len = XML_NO_ERROR;	/* element not found */
     }
     else
     {
