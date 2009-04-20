@@ -1,4 +1,6 @@
 20-04-2008
+  * fix a case where a single-element root path (e.g. "/printer") would not
+    pass xmlNodeGetPath
   * fix a problem where attributes or elements starting with the same letter
     sequence could give a false negative result
   * Add a 'clear' attribute to the xmlErrorGet functions that indicates whether

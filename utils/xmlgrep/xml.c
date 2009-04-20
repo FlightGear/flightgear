@@ -44,9 +44,9 @@ typedef struct
 #ifndef NDEBUG
 # include <stdio.h>
 #endif
-#include <fcntl.h>
-#include <stdlib.h>	/* free, malloc */
+#include <stdlib.h>     /* free, malloc */
 #include <string.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <assert.h>
@@ -306,13 +306,10 @@ xmlNodeCopyName(const void *id, char *buf, size_t buflen)
     assert(buf != 0);
     assert(buflen > 0);
 
-    slen = buflen-1;
-    if (slen > xid->name_len)
+    slen = xid->name_len;
+    if (slen >= buflen)
     {
-        slen = xid->name_len;
-    }
-    else
-    {
+        slen = buflen-1;
         xmlErrorSet(xid, 0, XML_TRUNCATE_RESULT);
     }
     memcpy(buf, xid->name, slen);
@@ -1292,13 +1289,13 @@ __xmlNodeGetPath(const char *start, size_t *len, char **name, size_t *plen)
 
     assert(start != 0);
     assert(len != 0);
+    assert(*len != 0);
     assert(name != 0);
     assert(*name != 0);
     assert(plen != 0);
     assert(*plen != 0);
 
-    if ((*len == 0) || (*plen == 0) || (*plen > *len))
-        return 0;
+    if (*plen > *len) return 0;
 
     node = *name;
     if (*node == '/') node++;
@@ -1314,20 +1311,17 @@ __xmlNodeGetPath(const char *start, size_t *len, char **name, size_t *plen)
         if (!path) plen = slen;
         else plen = path++ - node;
 
-        if (path)
+        num = 0;
+        ret = __xmlNodeGet(start, len, &node, &plen, &num);
+        if (ret && path)
         {
-            num = 0;
-            ret = __xmlNodeGet(start, len, &node, &plen, &num);
-            if (ret)
-            {
-                plen = slen - (path - *name);
-                ret = __xmlNodeGetPath(ret, len, &path, &plen);
-                *name = path;
-            }
-            else if (plen == 0)
-            {
-               *name = node;
-            }
+            plen = slen - (path - *name);
+            ret = __xmlNodeGetPath(ret, len, &path, &plen);
+            *name = path;
+        }
+        else if (plen == 0)
+        {
+           *name = node;
         }
     }
 
@@ -1355,7 +1349,7 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
     if (*rlen > *len)
     {
         *rlen = 0;
-        *name = start;
+        *name = (char *)start;
         *len = XML_UNEXPECTED_EOF;
         return 0;
     }
