@@ -60,6 +60,8 @@ FGRidgeLift::FGRidgeLift ()
 	scanned = false;
 
 	earth_rad_ft=20899773.07;
+        for( int i = 0; i < sizeof(probe_elev_m)/sizeof(probe_elev_m[0]); i++ )
+          probe_elev_m[i] = 0.0;
 }
 
 //destructor
@@ -202,8 +204,9 @@ void FGRidgeLift::Run(double dt) {
 	//double ground_wind_speed_mps = ground_wind_speed_kts / SG_METER_TO_FEET;
 	double ground_wind_speed_mps = ground_wind_speed_kts / 3.2808399;
 
-	double ground_wind_from_rad = (user_longitude_deg < 0.0)  ? 
-		PI*( ground_wind_from_deg/180.0) +PI : PI*( ground_wind_from_deg/180.0);
+	//double ground_wind_from_rad = (user_longitude_deg < 0.0)  ? 
+	//	PI*( ground_wind_from_deg/180.0) +PI : PI*( ground_wind_from_deg/180.0);
+	double ground_wind_from_rad = PI*( ground_wind_from_deg/180.0);
 
 	// Placing the probes
 	
@@ -216,7 +219,7 @@ void FGRidgeLift::Run(double dt) {
 		}
 		else {
 			probe_lon_rad[i] = fmod((deg2rad*user_longitude_deg+asin(sin(ground_wind_from_rad)
-						*sin(dist_probe_m[i]/earth_rad_m)/cos(probe_lon_rad[i]))+PI)
+						*sin(dist_probe_m[i]/earth_rad_m)/cos(probe_lat_rad[i]))+PI)
 					,(2.0*PI))-PI;
 		}
 		probe_lat_deg[i]= rad2deg*probe_lat_rad[i];
@@ -226,21 +229,21 @@ void FGRidgeLift::Run(double dt) {
 	// ground elevations
 	// every second
 	
-	timer += dt;
-	if (timer >= 1.0 ) {
-		scanned = true;
+	timer -= dt;
+	if (timer <= 0.0 ) {
 		for (int i = 0; i <= 4; i++)
 		{
 			if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(
 			    SGGeod::fromRad(probe_lon_rad[i],probe_lat_rad[i]), 20000), alt, 0))
 			{
-				probe_elev_m[i] =  alt;
+				if ( alt > 0.1 ) { probe_elev_m[i] =  alt; } else { probe_elev_m[i] = 0.1 ;};
 			}
+			else { probe_elev_m[i] = 0.1;};
 		}
-		timer = 0.0;
+		timer = 1.0;
 		
 	}
-	
+
 	// slopes
 	
 	double adj_slope[5];
@@ -252,7 +255,7 @@ void FGRidgeLift::Run(double dt) {
 	
 	for (int i = 0; i <= 4; i++)
 	{	
-		adj_slope[i] = sin(atan(5.0 * pow ( (abs(slope[i])),1.7) ) ) *sign(slope[i]);
+		adj_slope[i] = sin(atan(5.0 * pow ( (fabs(slope[i])),1.7) ) ) *sign(slope[i]);
 	}
 	
 	//adjustment
@@ -286,7 +289,18 @@ void FGRidgeLift::Run(double dt) {
 	
 	//boundaries
 	double agl_factor;
-	
+
+	if (lift_factor < 0.0) // in the sink
+	{
+		double highest_probe_temp= max ( probe_elev_m[1], probe_elev_m[2] );
+		double highest_probe_downwind_m= max ( highest_probe_temp, probe_elev_m[3] );
+		BOUNDARY2_m = highest_probe_downwind_m - probe_elev_m[0];
+	}
+	else // in the lift
+	{
+		BOUNDARY2_m = 130.0;
+	}
+
 	if ( user_altitude_agl_m < BOUNDARY1_m )
 	{
 		agl_factor = 0.5+0.5*user_altitude_agl_m /BOUNDARY1_m ;
@@ -305,9 +319,8 @@ void FGRidgeLift::Run(double dt) {
 	
 	//the updraft, finally, in ft per second
 	strength = lift_mps * SG_METER_TO_FEET ;
-	
-	_ridge_lift_fps_node->setDoubleValue( strength );
-	
+//  	if(isnan(strength)) strength=0; 
+ 	 _ridge_lift_fps_node->setDoubleValue( strength );
 }
 
 
