@@ -50,41 +50,15 @@ public:
 
 	inline double getStrength() const { return strength; };
 
- 	inline double get_probe_elev_m_0() const { return probe_elev_m[0]; };
- 	inline double get_probe_elev_m_1() const { return probe_elev_m[1]; };
- 	inline double get_probe_elev_m_2() const { return probe_elev_m[2]; };
- 	inline double get_probe_elev_m_3() const { return probe_elev_m[3]; };
- 	inline double get_probe_elev_m_4() const { return probe_elev_m[4]; };
-
- 	inline double get_probe_lat_0() const { return probe_lat_deg[0]; };
- 	inline double get_probe_lat_1() const { return probe_lat_deg[1]; };
- 	inline double get_probe_lat_2() const { return probe_lat_deg[2]; };
- 	inline double get_probe_lat_3() const { return probe_lat_deg[3]; };
- 	inline double get_probe_lat_4() const { return probe_lat_deg[4]; };
-
-	inline double get_probe_lon_0() const { return probe_lon_deg[0]; };
- 	inline double get_probe_lon_1() const { return probe_lon_deg[1]; };
- 	inline double get_probe_lon_2() const { return probe_lon_deg[2]; };
- 	inline double get_probe_lon_3() const { return probe_lon_deg[3]; };
- 	inline double get_probe_lon_4() const { return probe_lon_deg[4]; };
-
- 	inline double get_slope_0() const { return slope[0]; };
- 	inline double get_slope_1() const { return slope[1]; };
- 	inline double get_slope_2() const { return slope[2]; };
- 	inline double get_slope_3() const { return slope[3]; };
+ 	inline double get_probe_elev_m( int index ) const { return probe_elev_m[index]; };
+ 	inline double get_probe_lat_deg( int index ) const { return probe_lat_deg[index]; };
+	inline double get_probe_lon_deg( int index ) const { return probe_lon_deg[index]; };
+ 	inline double get_slope( int index ) const { return slope[index]; };
 
 private:
 	//void init();
-	void Run(double dt);
 
 	double dist_probe_m[5];
-	double BOUNDARY1_m;
-	double BOUNDARY2_m;
-	double PI; // pi
-	double deg2rad;
-	double rad2deg;
-
-	bool scanned;
 
 	double strength;
 	double timer;
@@ -99,15 +73,13 @@ private:
 	double probe_elev_m[5];
 
 	double slope[4];
-	double earth_rad_ft;
-	double earth_rad_m;
-	double user_latitude_deg;
-	double user_longitude_deg;
-	//double user_altitude;
-	double user_altitude_agl_ft;
-	double user_altitude_agl_m;
 
-	double sign(double x);
+	double lift_factor;
+
+	inline double sign(double x) const {
+		if( x == 0 ) return 0;
+		return x > 0 ? 1.0 : -1.0;
+	}
 
 	SGPropertyNode_ptr _ridge_lift_fps_node;
 
