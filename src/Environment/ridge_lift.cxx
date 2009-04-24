@@ -51,6 +51,10 @@ static string CreateIndexedPropertyName(string Property, int index)
 	return Property + "[" + tmp + "]";
 }
 
+static inline double sign(double x) {
+	return x == 0 ? 0 : x > 0 ? 1.0 : -1.0;
+}
+
 static const	double BOUNDARY1_m = 40.0;
 
 //constructor
@@ -166,10 +170,11 @@ void FGRidgeLift::update(double dt) {
 		}
 	
 		for (int i = 0; i < sizeof(probe_elev_m)/sizeof(probe_elev_m[0]); i++) {
+			double elevation = 0;
 			if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(
-				SGGeod::fromRad(probe_lon_rad[i],probe_lat_rad[i]), 20000), alt, 0)) {
-				if ( alt > 0.1 ) { 
-					probe_elev_m[i] = alt; 
+				SGGeod::fromRad(probe_lon_rad[i],probe_lat_rad[i]), 20000), elevation, 0)) {
+				if ( elevation > 0.1 ) { 
+					probe_elev_m[i] = elevation; 
 				} else { 
 					probe_elev_m[i] = 0.1 ;
 				}
@@ -212,7 +217,7 @@ void FGRidgeLift::update(double dt) {
 	double user_altitude_agl_m = _user_altitude_agl_ft_node->getDoubleValue() * SG_FEET_TO_METER;
 	
 	//boundaries
-  double boundary2_m = 130.0; // in the lift
+	double boundary2_m = 130.0; // in the lift
 	if (lift_factor < 0.0) { // in the sink
 		double highest_probe_temp= max ( probe_elev_m[1], probe_elev_m[2] );
 		double highest_probe_downwind_m= max ( highest_probe_temp, probe_elev_m[3] );

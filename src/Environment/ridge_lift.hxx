@@ -56,8 +56,6 @@ public:
  	inline double get_slope( int index ) const { return slope[index]; };
 
 private:
-	//void init();
-
 	double dist_probe_m[5];
 
 	double strength;
@@ -69,17 +67,11 @@ private:
 	double probe_lat_deg[5];
 	double probe_lon_deg[5];
 
-	double alt;	
 	double probe_elev_m[5];
 
 	double slope[4];
 
 	double lift_factor;
-
-	inline double sign(double x) const {
-		if( x == 0 ) return 0;
-		return x > 0 ? 1.0 : -1.0;
-	}
 
 	SGPropertyNode_ptr _ridge_lift_fps_node;
 
