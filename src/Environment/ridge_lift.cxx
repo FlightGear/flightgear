@@ -246,14 +246,14 @@ void FGRidgeLift::Run(double dt) {
 
 	// slopes
 	
-	double adj_slope[5];
+	double adj_slope[4];
 	
 	slope[0] = (probe_elev_m[0] - probe_elev_m[1]) / dist_probe_m[1];
 	slope[1] = (probe_elev_m[1] - probe_elev_m[2]) / dist_probe_m[2];
 	slope[2] = (probe_elev_m[2] - probe_elev_m[3]) / dist_probe_m[3];
 	slope[3] = (probe_elev_m[4] - probe_elev_m[0]) / -dist_probe_m[4];
 	
-	for (int i = 0; i <= 4; i++)
+	for (int i = 0; i < 4; i++)
 	{	
 		adj_slope[i] = sin(atan(5.0 * pow ( (fabs(slope[i])),1.7) ) ) *sign(slope[i]);
 	}
