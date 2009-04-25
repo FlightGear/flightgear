@@ -322,13 +322,9 @@ void grep_file(unsigned num)
        r = xmlErrorGetNo(xrid, 0);
        if (r)
        {
-            if (r)
-            {
-                size_t n = xmlErrorGetLineNo(xrid, 0);
-                char *s = xmlErrorGetString(xrid, 1); /* clear the error */
-                printf("Error #%i at line %u: '%s'\n", r, n, s);
-            }
-            else printf("requested element was not found.\n");
+            size_t n = xmlErrorGetLineNo(xrid, 0);
+            char *s = xmlErrorGetString(xrid, 1); /* clear the error */
+            printf("Error #%i at line %u: '%s'\n", r, n, s);
        }
 
        free(xrid);

@@ -1,4 +1,10 @@
-20-04-2008
+25-04-2009
+  * add support for self-contained tags like <test/>
+  * fix a problem if a file could not be mmaped
+  * add a few comments which hopefully makes the code easier to understand
+  * code cleanups
+
+20-04-2009
   * fix a case where a single-element root path (e.g. "/printer") would not
     pass xmlNodeGetPath
   * fix a problem where attributes or elements starting with the same letter
@@ -14,7 +20,7 @@
   * Add xmlErrorGetString, xmlErrorGetLineNo for syntax error detetction
   * Add xmlErrGetNo for detection of, and clearing the last error
 
-16-04-2008
+16-04-2009
   * Rename xmlGetNode functions to xmlNodeGet for better consistancy
   * likewise for xmlCopyNode en xmlCompareNode
   * add xmlAttributeGetDouble, xmlAttributeGetInt, xmlAttributeGetString
