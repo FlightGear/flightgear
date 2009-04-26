@@ -1469,19 +1469,49 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
             return 0;
         }       
 
+        new++;
         restlen -= new-cur;
         cur = new;
-        if (*(cur+1) != '/')			/* cascading tag found */
+        if (*cur == '!')				/* comment */
+        {
+            new = __xmlCommentSkip(cur, restlen);
+            if (!new)
+            {
+                *rlen = 0;
+                *name = cur;
+                *len = XML_INVALID_COMMENT;
+                return 0;
+            }
+            restlen -= new-cur;
+            cur = new;
+
+            /*
+             * look for the closing tag of the cascading block
+             */
+            new = memchr(cur, '<', restlen);
+            if (!new)
+            {
+                *rlen = 0;
+                *name = cur;
+                *len = XML_ELEMENT_NO_CLOSING_TAG;
+                return 0;
+            }
+            new++;
+            restlen -= new-cur;
+            cur = new;
+        }
+
+        if (*cur != '/')			/* cascading tag found */
         {
             char *node = "*";
-            size_t slen = restlen;
+            size_t slen = restlen+1;
             size_t nlen = 1;
             size_t pos = -1;
 
             /*
              * recursively walk the xml tree from here
              */
-            new = __xmlNodeGet(cur, &slen, &node, &nlen, &pos);
+            new = __xmlNodeGet(cur-1, &slen, &node, &nlen, &pos);
             if (!new)
             {
                 if (slen == restlen)
@@ -1508,20 +1538,20 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
                 *len = XML_ELEMENT_NO_CLOSING_TAG;
                 return 0;
             }
-
+            new++;
             restlen -= new-cur;
             cur = new;
         }
 
-        if (*(cur+1) == '/')				/* closing tag found */
+        if (*cur == '/')				/* closing tag found */
         {
-            if (!strncasecmp(new+2, element, elementlen))
+            if (!strncasecmp(new+1, element, elementlen))
             {
                 if (found == num)
                 {
                    if (start_tag)
                    {
-                       *len = new-ret;
+                       *len = new-ret-1;
                        *name = start_tag;
                    }
                    else /* report error */
@@ -1553,6 +1583,7 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
             *rlen = 0;
             *name = cur;
             *len = XML_ELEMENT_NO_CLOSING_TAG;
+printf("4\n");
             return 0;
         }
     }
@@ -1652,7 +1683,7 @@ __xml_memncasecmp(const char *haystack, size_t *haystacklen,
         /* search for everything */
         if ((*ns == '*') && (*needlelen == 1))
         {
-           char *he = hs + *haystacklen;
+           char *p, *he = hs + *haystacklen;
 
            while ((hs < he) && !isspace(*hs) && (*hs != '>')) hs++;
            if (*(hs-1) == '/') hs--;
@@ -1660,6 +1691,7 @@ __xml_memncasecmp(const char *haystack, size_t *haystacklen,
            *needle = (char *)haystack;
            *needlelen = hs - haystack;
 
+           p = hs;
            while ((hs < he) && (*hs != '>')) hs++;
            hs++;
      
