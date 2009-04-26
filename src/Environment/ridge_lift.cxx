@@ -68,6 +68,11 @@ FGRidgeLift::FGRidgeLift ()
 
 	strength = 0.0;
 	timer = 0.0;
+	for( int i = 0; i < 5; i++ )
+		probe_elev_m[i] = probe_lat_deg[i] = probe_lon_deg[i] = 0.0;
+
+	for( int i = 0; i < 4; i++ )
+		slope[i] = 0.0;
 }
 
 //destructor
@@ -78,6 +83,8 @@ FGRidgeLift::~FGRidgeLift()
 
 void FGRidgeLift::init(void)
 {
+	_enabled_node = fgGetNode( "/environment/ridge-lift/enabled", false );
+
 	_ridge_lift_fps_node = fgGetNode("/environment/ridge-lift-fps", true);
 	_surface_wind_from_deg_node =
 			fgGetNode("/environment/config/boundary/entry[0]/wind-from-heading-deg"
@@ -135,8 +142,15 @@ void FGRidgeLift::unbind() {
 
 void FGRidgeLift::update(double dt) {
 
-	//get the windspeed at ground level
+	if( _enabled_node && false == _enabled_node->getBoolValue() ) {
+		if( strength != 0.0 ) {
+			strength = 0.0;
+			_ridge_lift_fps_node->setDoubleValue( 0 );
+		}
+		return;
+	}
 
+	//get the windspeed at ground level
 	double ground_wind_from_rad = _surface_wind_from_deg_node->getDoubleValue() * SG_DEGREES_TO_RADIANS;
 	double ground_wind_speed_mps = _surface_wind_speed_node->getDoubleValue() * SG_NM_TO_METER / 3600;
 
@@ -155,14 +169,15 @@ void FGRidgeLift::update(double dt) {
 	
 		for (int i = 0; i < sizeof(probe_lat_rad)/sizeof(probe_lat_rad[0]); i++) {
 			double probe_radius_ratio = dist_probe_m[i]/earth_rad_m;
+			double sin_probe_radius_ratio = sin(probe_radius_ratio);
 
 			probe_lat_rad[i] = asin(sin(user_latitude_rad)*cos(probe_radius_ratio)
-					+cos(user_latitude_rad)*sin(probe_radius_ratio)*cos(ground_wind_from_rad));
+					+cos(user_latitude_rad)*sin_probe_radius_ratio*cos(ground_wind_from_rad));
 			if (probe_lat_rad[i] < SG_EPSILON ) {
 				probe_lon_rad[i] = user_latitude_rad; // probe on a pole	
 			} else {
 				probe_lon_rad[i] = fmod((user_longitude_rad+asin(sin(ground_wind_from_rad)
-							*sin(probe_radius_ratio)/cos(probe_lat_rad[i]))+SG_PI)
+							*sin_probe_radius_ratio/cos(probe_lat_rad[i]))+SG_PI)
 						,SGD_2PI)-SG_PI;
 			}
 			probe_lat_deg[i]= probe_lat_rad[i] * SG_RADIANS_TO_DEGREES;
@@ -194,10 +209,10 @@ void FGRidgeLift::update(double dt) {
 			adj_slope[i] = sin(atan(5.0 * pow ( (fabs(slope[i])),1.7) ) ) *sign(slope[i]);
 	
 		//adjustment
-		adj_slope[0] = 0.2 * adj_slope[0];
-		adj_slope[1] = 0.2 * adj_slope[1];
+		adj_slope[0] *= 0.2;
+		adj_slope[1] *= 0.2;
 		if ( adj_slope [2] < 0.0 ) {
-			adj_slope[2] = 0.5 * adj_slope[2];
+			adj_slope[2] *= 0.5;
 		} else {
 			adj_slope[2] = 0.0 ;
 		}
@@ -205,7 +220,7 @@ void FGRidgeLift::update(double dt) {
 		if ( ( adj_slope [0] >= 0.0 ) && ( adj_slope [3] < 0.0 ) ) {
 			adj_slope[3] = 0.0;
 		} else {
-			adj_slope[3] = 0.2 * adj_slope[3];
+			adj_slope[3] *= 0.2;
 		}
 		lift_factor = adj_slope[0]+adj_slope[1]+adj_slope[2]+adj_slope[3];
 	
@@ -238,6 +253,5 @@ void FGRidgeLift::update(double dt) {
 	
 	//the updraft, finally, in ft per second
 	strength = fgGetLowPass( strength, lift_mps * SG_METER_TO_FEET, dt );
-//  	if(isnan(strength)) strength=0; 
- 	 _ridge_lift_fps_node->setDoubleValue( strength );
+	_ridge_lift_fps_node->setDoubleValue( strength );
 }

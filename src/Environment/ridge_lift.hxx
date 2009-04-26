@@ -73,6 +73,7 @@ private:
 
 	double lift_factor;
 
+	SGPropertyNode_ptr _enabled_node;
 	SGPropertyNode_ptr _ridge_lift_fps_node;
 
 	SGPropertyNode_ptr _surface_wind_from_deg_node;
