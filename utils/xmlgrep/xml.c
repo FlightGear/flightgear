@@ -177,15 +177,19 @@ xmlInitBuffer(const char *buffer, size_t size)
 {
     struct _root_id *rid = 0;
 
-    if (buffer && (size>0))
+    if (buffer && (size > 0))
     {
-        rid->fd = -1;
-        rid->start = (char *)buffer;
-        rid->len = size;
-        rid->name = 0;
+        rid = malloc(sizeof(struct _root_id));
+        if (rid)
+        {
+            rid->fd = -1;
+            rid->start = (char *)buffer;
+            rid->len = size;
+            rid->name = 0;
 #ifndef XML_NONVALIDATING
-        rid->info = 0;
+            rid->info = 0;
 #endif
+        }
     }
 
     return (void *)rid;
@@ -199,7 +203,7 @@ xmlClose(void *id)
      assert(rid != 0);
      assert(rid->name == 0);
 
-     if (rid->fd == -1)
+     if (rid->fd != -1)
      {
          munmap(rid->start, rid->len);
          close(rid->fd);
