@@ -47,22 +47,23 @@ Overview of the available functions:
 #   id = xmlOpen("/tmp/file.xml");
 #   xmlClose(id);
 #
-void *xmlOpen(const char *);
-void xmlClose(const void *);
+void *xmlOpen(const char *filename);
+void *xmlInitBuffer(const char *buffer, size_t size);
+void xmlClose(void *xid);
 
 #
 # Get the Id of a node at the specified path
 # e.g.
 #    xnid = xmlNodeGet(id, "/path/to/specified/node");
 #
-void *xmlNodeGet(const void *, const char *);
-void *xmlNodeCopy(void *, const char *);
+void *xmlNodeGet(const void *xid, const char *path);
+void *xmlNodeCopy(const void *xid, const char *path);
 
 #
 # Functions to walk the node tree and process them one by one.
 # e.g.
 #   xmid = xmlMarkId(id);
-#   num = xmlNodeGetNum(xmid);
+#   num = xmlNodeGetNum(xmid, "node");
 #   for (i=0; i<num; i++) {
 #      if (xmlNodeGetPos(id, xmid, "element", i) != 0) {
 #         if ((s = xmlGetString(xmid)) != 0) {
@@ -73,15 +74,15 @@ void *xmlNodeCopy(void *, const char *);
 #   }
 #   free(xmid);
 #
-void *xmlMarkId(void *);
-unsigned int xmlNodeGetNum(void *, const char *);
-void *xmlNodeGetPos(const void *, void *, const char *, int);
+void *xmlMarkId(const void *xid);
+unsigned int xmlNodeGetNum(const void *xid, const char *path);
+void *xmlNodeGetPos(const void *pid, void *xid, const char *element, int pos);
 
 #
 # Get the name of the current node
 #
-char *xmlNodeGetName(void *);
-size_t xmlNodeCopyName(void *, const char *, size_t);
+char *xmlNodeGetName(const void *xid);
+size_t xmlNodeCopyName(const void *xid, const char *buffer, size_t size);
 
 #
 # These functions work on the current node.
@@ -92,11 +93,11 @@ size_t xmlNodeCopyName(void *, const char *, size_t);
 #    xnid = xmlNodeGet(id, "/path/to/specified/node");
 #    if (xmlCompareString(xnid, "value") == 0) printf("We have a match!\n");
 #
-long int xmlGetInt(void *);
-double xmlGetDouble(void *);
-char *xmlGetString(void *);
-size_t xmlCopyString(void *, char *, const size_t);
-int xmlCompareString(const void *, const char *);
+long int xmlGetInt(const void *xid);
+double xmlGetDouble(const void *xid);
+char *xmlGetString(const void *xid);
+size_t xmlCopyString(const void *xid, char *buffer, const size_t size);
+int xmlCompareString(const void *xid, const char *str);
 
 #
 # These functions work on a specified node path
@@ -106,11 +107,12 @@ int xmlCompareString(const void *, const char *);
 #    xnid = xmlNodeGet(id, "/path/to");
 #    i = xmlNodeGetInt(xnid, "node");
 #
-long int xmlNodeGetInt(void *, const char *);
-double xmlNodeGetDouble(void *, const char *);
-char *xmlNodeGetString(void *, const char *);
-size_t xmlNodeCopyString(void *, const char *, char *, const size_t);
-int xmlNodeCompareString(const void *, const char *, const char *);
+long int xmlNodeGetInt(const void *xid, const char *path);
+double xmlNodeGetDouble(const void *xid, const char *path);
+char *xmlNodeGetString(const void *xid, const char *path);
+size_t xmlNodeCopyString(const void *xid, const char *path,
+                            char *buffer, const size_t size);
+int xmlNodeCompareString(const void *xid, const char *path, const char *str);
 
 #
 # These functions work on a specified atribute
@@ -118,15 +120,17 @@ int xmlNodeCompareString(const void *, const char *, const char *);
 #    i = xmlAttributeGetInt(id, "n");
 #
 # or
-#    s = xmlNodeGetString(id, "type");
+#    s = xmlAttributeGetString(id, "type");
 #    if (s) printf("node is of type '%s'\n", s);
 #    free(s);
 #
-long int xmlAttributeGetInt(const void *, const char *);
-double xmlAttributeGetDouble(const void *, const char *);
-char *xmlAttributeGetString(const void *, const char *);
-size_t xmlAttributeCopyString(const void *, const char *, const char *, size_t);
-int xmlAttributeCompareString(const void *, const char *, const char *);
+long int xmlAttributeGetInt(const void *xid, const char *attr);
+double xmlAttributeGetDouble(const void *xid, const char *attr);
+char *xmlAttributeGetString(const void *xid, const char *attr);
+size_t xmlAttributeCopyString(const void *xid, const char *attr,
+                                 const char *buffer, size_t size);
+int xmlAttributeCompareString(const void *xid, const char *attr,
+                                 const char *str);
 
 #
 # Error detection and reporting functions
@@ -136,6 +140,7 @@ int xmlAttributeCompareString(const void *, const char *, const char *);
 # int err = xmlErrorGetNo(id, 1); /* clear last error */
 # if (err) printf("Error #%i at line %u: '%s'\n", err, err_lineno, err_str);
 #
-int xmlErrorGetNo(const void *, int);
-size_t xmlErrorGetLineNo(const void *, int);
-const char *xmlErrorGetString(const void *, int);
+int xmlErrorGetNo(const void *xid, int clear);
+size_t xmlErrorGetLineNo(const void *xid, int clear);
+size_t xmlErrorGetColumnNo(const void *xid, int clear);
+const char *xmlErrorGetString(const void *xid, int clear);

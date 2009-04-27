@@ -46,16 +46,16 @@ typedef struct
 #endif
 #include <stdlib.h>     /* free, malloc */
 #include <string.h>
+#ifndef _MSC_VER
+#include <strings.h>	/* strncasecmp */
+#else
+# define strncasecmp strnicmp
+#endif
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <assert.h>
 #include <ctype.h>
-#ifndef _MSC_VER
-# include <strings.h>  /* strncasecmp */
-#else
-# define strncasecmp strnicmp
-#endif
 
 #ifndef XML_NONVALIDATING
 #include "xml.h"
@@ -172,6 +172,25 @@ xmlOpen(const char *filename)
     return (void *)rid;
 }
 
+void *
+xmlInitBuffer(const char *buffer, size_t size)
+{
+    struct _root_id *rid = 0;
+
+    if (buffer && (size>0))
+    {
+        rid->fd = 0;
+        rid->start = (char *)buffer;
+        rid->len = size;
+        rid->name = 0;
+#ifndef XML_NONVALIDATING
+        rid->info = 0;
+#endif
+    }
+
+    return (void *)rid;
+}
+
 void
 xmlClose(void *id)
 {
@@ -180,8 +199,11 @@ xmlClose(void *id)
      assert(rid != 0);
      assert(rid->name == 0);
 
-     munmap(rid->start, rid->len);
-     close(rid->fd);
+     if (rid->fd)
+     {
+         munmap(rid->start, rid->len);
+         close(rid->fd);
+     }
 
      if (rid->info) free(rid->info);
      free(rid);
@@ -1183,13 +1205,49 @@ xmlErrorGetLineNo(const void *id, int clear)
             while (ps<pe)
             {
                new = memchr(ps, '\n', pe-ps);
-               if (new)
-               {
-                  ps = new;
-                  ret++;
-               }
-               ps++;
+               if (new) ret++;
+               else break;
+               ps = new+1;
             }       
+
+            if (clear) err->err_no = 0;
+        }
+    }
+
+    return ret;
+}
+
+size_t
+xmlErrorGetColumnNo(const void *id, int clear)
+{
+    size_t ret = 0;
+
+    if (id)
+    {
+        struct _xml_id *xid = (struct _xml_id *)id;
+        struct _root_id *rid;
+
+        if (xid->name) rid = xid->root;
+        else rid = (struct _root_id *)xid;
+
+        assert(rid != 0);
+
+        if (rid->info)
+        {
+            struct _xml_error *err = rid->info;
+            char *ps = rid->start;
+            char *pe = err->pos;
+            char *new;
+
+            while (ps<pe)
+            {
+               new = memchr(ps, '\n', pe-ps);
+               new = memchr(ps, '\n', pe-ps);
+               if (new) ret++;
+               else break;
+               ps = new+1;
+            }
+            ret = pe-ps;
 
             if (clear) err->err_no = 0;
         }
@@ -1334,8 +1392,8 @@ __xmlNodeGetPath(const char *start, size_t *len, char **name, size_t *plen)
 char *
 __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *nodenum)
 {
+    char *element, *open, *start_tag=0;
     char *new, *cur, *ne, *ret = 0;
-    char *element, *start_tag=0;
     size_t restlen, elementlen;
     size_t return_len = 0;
     int found, num;
@@ -1412,6 +1470,7 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
         /*
          * get element name and a pointer to after the opening tag
          */
+        open = cur;
         element = *name;
         elementlen = *rlen;
         len_remaining = restlen;
@@ -1514,6 +1573,14 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
             new = __xmlNodeGet(cur-1, &slen, &node, &nlen, &pos);
             if (!new)
             {
+                if (nlen == 0)		/* error upstream */
+                {
+                    *rlen = nlen;
+                    *name = node;
+                    *len = slen;
+                    return 0;
+                }
+
                 if (slen == restlen)
                 {
                     *rlen = 0;
@@ -1557,24 +1624,31 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
 
                 if (found == num)
                 {
-                   if (start_tag)
-                   {
-                       *len = new-ret-1;
-                       *name = start_tag;
-                   }
-                   else /* report error */
-                   {
-                       *rlen = 0;
-                       *name = new;
-                       *len = XML_ELEMENT_NO_OPENING_TAG;
-                       return 0;
-                   }
+                    if (start_tag)
+                    {
+                        *len = new-ret-1;
+                        *name = start_tag;
+                    }
+                    else /* report error */
+                    {
+                        *rlen = 0;
+                        *name = new;
+                        *len = XML_ELEMENT_NO_OPENING_TAG;
+                        return 0;
+                    }
                 }
                 found++;
             }
-            /* else proper closing tag not yet found, continue.     */
-            /* TODO: could be a bad match to the opening tag though */
-            /*       like: <test></teft>                            */
+#ifndef XML_NONVALIDATING
+            /* strcmp is a heavy operation when not required */
+            else if (strncmp(open, new+1, elementlen))
+            {
+                *rlen = 0;
+                *name = new+1;
+                *len = XML_ELEMENT_NO_CLOSING_TAG;
+                return 0;
+            }
+#endif
 
             new = memchr(cur, '>', restlen);
             if (!new)
