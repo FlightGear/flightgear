@@ -191,8 +191,8 @@ void FGLight::update_sky_color () {
 
     // calculate lighting parameters based on sun's relative angle to
     // local up
-    float av = thesky->get_visibility();
-    if (av > 45000.0) av = 45000.0;
+    static SGConstPropertyNode_ptr humidity = fgGetNode("/environment/relative-humidity");
+    float av = humidity->getFloatValue() * 45;
     float visibility_log = log(av)/11.0;
     float visibility_inv = (45000.0 - av)/45000.0;
 
@@ -316,17 +316,16 @@ void FGLight::update_adj_fog_color () {
     // Calculate the fog color in the direction of the sun for
     // sunrise/sunset effects.
     //
-    float s_red =   (_fog_color[0] + 2 * sun_color[0]*sun_color[0]) / 3;
-    float s_green = (_fog_color[1] + 2 * sun_color[1]*sun_color[1]) / 3;
-    float s_blue =  (_fog_color[2] + 2 * sun_color[2]) / 3;
+    float s_red =   sun_color[0]*sun_color[0];
+    float s_green = sun_color[1]*sun_color[1];
+    float s_blue =  sun_color[2];
 
     // interpolate beween the sunrise/sunset color and the color
     // at the opposite direction of this effect. Take in account
     // the current visibility.
     //
     float av = thesky->get_visibility();
-    if (av > 45000)
-       av = 45000;
+    if (av > 45000) av = 45000;
 
     float avf = 0.87 - (45000 - av) / 83333.33;
     float sif = 0.5 - cos(_sun_angle*2)/2;
@@ -335,7 +334,7 @@ void FGLight::update_adj_fog_color () {
        sif = 1e-4;
 
     float rf1 = fabs((hor_rotation - SGD_PI) / SGD_PI);		// 0.0 .. 1.0
-    float rf2 = avf * pow(rf1 * rf1, 1/sif) * 1.0639;
+    float rf2 = avf * pow(rf1*rf1, 1/sif) * 1.0639;
     float rf3 = 1.0 - rf2;
 
     _adj_fog_color[0] = rf3 * _fog_color[0] + rf2 * s_red;
