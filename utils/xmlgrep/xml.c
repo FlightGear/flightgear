@@ -179,7 +179,7 @@ xmlInitBuffer(const char *buffer, size_t size)
 
     if (buffer && (size>0))
     {
-        rid->fd = 0;
+        rid->fd = -1;
         rid->start = (char *)buffer;
         rid->len = size;
         rid->name = 0;
@@ -199,7 +199,7 @@ xmlClose(void *id)
      assert(rid != 0);
      assert(rid->name == 0);
 
-     if (rid->fd)
+     if (rid->fd == -1)
      {
          munmap(rid->start, rid->len);
          close(rid->fd);
@@ -1392,7 +1392,7 @@ __xmlNodeGetPath(const char *start, size_t *len, char **name, size_t *plen)
 char *
 __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *nodenum)
 {
-    char *element, *open, *start_tag=0;
+    char *element, *open_element, *start_tag=0;
     char *new, *cur, *ne, *ret = 0;
     size_t restlen, elementlen;
     size_t return_len = 0;
@@ -1470,7 +1470,7 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
         /*
          * get element name and a pointer to after the opening tag
          */
-        open = cur;
+        open_element = cur;
         element = *name;
         elementlen = *rlen;
         len_remaining = restlen;
@@ -1641,7 +1641,7 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
             }
 #ifndef XML_NONVALIDATING
             /* strcmp is a heavy operation when not required */
-            else if (strncmp(open, new+1, elementlen))
+            else if (strncmp(open_element, new+1, elementlen))
             {
                 *rlen = 0;
                 *name = new+1;
