@@ -10,6 +10,9 @@
 # include <stdlib.h>
 #endif
 #include <assert.h>
+#include <unistd.h>	/* read */
+#include <sys/stat.h>	/* fstat */
+#include <fcntl.h>	/* open */
 
 #include "xml.h"
 
@@ -26,6 +29,7 @@ static int print_filenames = 0;
 
 static void free_and_exit(int i);
 
+#define USE_BUFFER		0
 #define NODE_NAME_LEN		256
 #define STRING_LEN		2048
 
@@ -306,7 +310,6 @@ void walk_the_tree(size_t num, void *xid, char *tree)
     }
 }
 
-
 void grep_file(unsigned num)
 {
     void *xid;
@@ -324,7 +327,7 @@ void grep_file(unsigned num)
        {
             size_t n = xmlErrorGetLineNo(xrid, 0);
             size_t c = xmlErrorGetColumnNo(xrid, 0);
-            char *s = xmlErrorGetString(xrid, 1); /* clear the error */
+            const char *s = xmlErrorGetString(xrid, 1); /* clear the error */
             printf("%s: at line %u, column %u: '%s'\n",_filenames[num], n,c, s);
        }
 
@@ -338,9 +341,68 @@ void grep_file(unsigned num)
     xmlClose(xid);
 }
 
+
+void grep_file_buffer(unsigned num)
+{
+    struct stat st;
+    void *xid, *buf;
+    int fd, res;
+
+    fd = open(_filenames[num], O_RDONLY);
+    if (fd == -1)
+    {
+        printf("read error opening file '%s'\n", _filenames[num]);
+        return;
+    }
+    
+    fstat(fd, &st);
+    buf = malloc(st.st_size);
+    if (!buf)
+    {
+        printf("unable to allocate enough memory for reading.\n");
+        return;
+    }
+
+    res = read(fd, buf, st.st_size);
+    if (res == -1)
+    {
+        printf("unable to read from file '%s'.\n", _filenames[num]);
+        return;
+    }
+    close(fd);
+
+    xid = xmlInitBuffer(buf, st.st_size);
+    if (xid)
+    {
+       void *xrid = xmlMarkId(xid);
+       int r = 0;
+
+       walk_the_tree(num, xrid, _root);
+
+       r = xmlErrorGetNo(xrid, 0);
+       if (r)
+       {
+            size_t n = xmlErrorGetLineNo(xrid, 0);
+            size_t c = xmlErrorGetColumnNo(xrid, 0);
+            const char *s = xmlErrorGetString(xrid, 1); /* clear the error */
+            printf("%s: at line %u, column %u: '%s'\n",_filenames[num], n,c, s);
+       }
+
+       free(xrid);
+    }
+    else
+    {
+        fprintf(stderr, "Error reading file '%s'\n", _filenames[num]);
+    }
+
+    xmlClose(xid);
+    free(buf);
+}
+
 int
 main (int argc, char **argv)
 {
+    unsigned int u;
     int i;
 
     if (argc == 1)
@@ -355,8 +417,12 @@ main (int argc, char **argv)
     if (_root == 0) _root = (char *)_static_root;
     if (_element == 0) _element = (char *)_static_element;
 
-    for (i=0; i<_fcount; i++)
-        grep_file(i);
+    for (u=0; u<_fcount; u++)
+#if USE_BUFFER
+        grep_file_buffer(u);
+#else
+        grep_file(u);
+#endif
 
     free_and_exit(0);
 
