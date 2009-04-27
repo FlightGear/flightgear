@@ -53,6 +53,16 @@ enum
 void *xmlOpen(const char *);
 
 /**
+ * Process a section of XML code in a preallocated buffer.
+ * The buffer may not be free'd until xmlClose has been called.
+ *
+ * @param buffer pointer to the buffer
+ * @param size size of the buffer
+ * @return XML-id which is used for further processing
+ */
+void *xmlInitBuffer(const char *, size_t);
+
+/**
  * Close the XML file after which no further processing is possible.
  *
  * @param xid XML-id
@@ -328,6 +338,15 @@ int xmlErrorGetNo(const void *, int);
  * @return the line number of the detected syntax error.
  */
 size_t xmlErrorGetLineNo(const void *, int);
+
+/**
+ * Get the column number of the last detected syntax error in the xml file.
+ *
+ * @param xid XML-id
+ * @param clear clear the error state if non zero
+ * @return the line number of the detected syntax error.
+ */
+size_t xmlErrorGetColumnNo(const void *, int);
 
 /**
  * Get a string that explains the last error.

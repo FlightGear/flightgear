@@ -1,3 +1,10 @@
+27-04-2009
+  * add xmlInitBuffer() for processing of a preallocated buffer
+  * add xmlErrorGetColumnNo to get the column number of the syntax error
+  * pass an error at a higher level to lower levels
+  * detect a number of extra syntax errors
+  * fix a buffer overflow
+
 26-04-2009
   * add support for comments inside xml-tags, e.g.: <test><!-- --></test>
 

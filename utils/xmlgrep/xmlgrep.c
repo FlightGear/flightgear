@@ -323,8 +323,9 @@ void grep_file(unsigned num)
        if (r)
        {
             size_t n = xmlErrorGetLineNo(xrid, 0);
+            size_t c = xmlErrorGetColumnNo(xrid, 0);
             char *s = xmlErrorGetString(xrid, 1); /* clear the error */
-            printf("%s: at line %u: '%s'\n",_filenames[num], n, s);
+            printf("%s: at line %u, column %u: '%s'\n",_filenames[num], n,c, s);
        }
 
        free(xrid);
