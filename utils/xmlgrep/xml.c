@@ -1547,6 +1547,14 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
         {
             if (!strncasecmp(new+1, element, elementlen))
             {
+                if (*(new+elementlen+1) != '>')
+                {
+                    *rlen = 0;
+                    *name = new+1;
+                    *len = XML_ELEMENT_NO_CLOSING_TAG;
+                    return 0;
+                }
+
                 if (found == num)
                 {
                    if (start_tag)
@@ -1564,7 +1572,9 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
                 }
                 found++;
             }
-            /* else proper closing tag not yet found, continue */
+            /* else proper closing tag not yet found, continue.     */
+            /* TODO: could be a bad match to the opening tag though */
+            /*       like: <test></teft>                            */
 
             new = memchr(cur, '>', restlen);
             if (!new)
@@ -1583,7 +1593,6 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
             *rlen = 0;
             *name = cur;
             *len = XML_ELEMENT_NO_CLOSING_TAG;
-printf("4\n");
             return 0;
         }
     }
