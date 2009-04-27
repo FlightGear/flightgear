@@ -1268,7 +1268,7 @@ __xmlNodeCopy(const char *start, size_t *len, const char **path)
         if (ret)
         {
             memcpy(ret, p, rlen);
-            *(ret+rlen+1) = '\0';
+            *(ret+rlen) = '\0';
         }
         else
         {
