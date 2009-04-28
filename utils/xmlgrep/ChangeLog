@@ -1,5 +1,7 @@
 28-04-2009
   * changes to the code to allow walking the xml-tree using "*" as a node name
+  * add printxml, an example utility that walks an xml-tree and prints it
+    contenst
 
 27-04-2009
   * add xmlInitBuffer() for processing of a preallocated buffer
