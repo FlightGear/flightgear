@@ -1396,9 +1396,11 @@ __xmlNodeGetPath(const char *start, size_t *len, char **name, size_t *plen)
 char *
 __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *nodenum)
 {
-    char *element, *open_element, *start_tag=0;
+    char *open_element = *name;
+    char *element, *start_tag=0;
     char *new, *cur, *ne, *ret = 0;
     size_t restlen, elementlen;
+    size_t open_len = *rlen;
     size_t return_len = 0;
     int found, num;
 
@@ -1474,7 +1476,6 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
         /*
          * get element name and a pointer to after the opening tag
          */
-        open_element = cur;
         element = *name;
         elementlen = *rlen;
         len_remaining = restlen;
@@ -1485,8 +1486,8 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
             if (found == num)
             {
                 ret = new;
+                open_len = elementlen;
                 start_tag = element;
-                *rlen = elementlen;
             }
             else start_tag = 0;
         }
@@ -1510,7 +1511,7 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
             {
                 if (found == num)
                 {
-                    *name = start_tag;
+                    open_element = start_tag;
                     *len = 0;
                 }
                 found++;
@@ -1631,7 +1632,7 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
                     if (start_tag)
                     {
                         *len = new-ret-1;
-                        *name = start_tag;
+                        open_element = start_tag;
                     }
                     else /* report error */
                     {
@@ -1643,16 +1644,6 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
                 }
                 found++;
             }
-#ifndef XML_NONVALIDATING
-            /* strcmp is a heavy operation when not required */
-            else if (strncmp(open_element, new+1, elementlen))
-            {
-                *rlen = 0;
-                *name = new+1;
-                *len = XML_ELEMENT_NO_CLOSING_TAG;
-                return 0;
-            }
-#endif
 
             new = memchr(cur, '>', restlen);
             if (!new)
@@ -1684,7 +1675,8 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
     }
     else
     {
-        *rlen = return_len;
+        *rlen = open_len;
+        *name = open_element;
         *nodenum = found;
     }
 
