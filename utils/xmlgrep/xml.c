@@ -1762,7 +1762,7 @@ __xml_memncasecmp(const char *haystack, size_t *haystacklen,
         /* search for everything */
         if ((*ns == '*') && (*needlelen == 1))
         {
-           char *p, *he = hs + *haystacklen;
+           char *he = hs + *haystacklen;
 
            while ((hs < he) && !isspace(*hs) && (*hs != '>')) hs++;
            if (*(hs-1) == '/') hs--;
@@ -1770,9 +1770,9 @@ __xml_memncasecmp(const char *haystack, size_t *haystacklen,
            *needle = (char *)haystack;
            *needlelen = hs - haystack;
 
-           p = hs;
-           while ((hs < he) && (*hs != '>')) hs++;
-           hs++;
+           ns = memchr(hs, '>', he-hs);
+           if (ns) hs = ns+1;
+           else hs = he;
      
            rptr = hs;
         }
@@ -1794,8 +1794,9 @@ __xml_memncasecmp(const char *haystack, size_t *haystacklen,
                 *needle = (char *)haystack;
                 *needlelen = hs - haystack;
 
-                while ((hs < he) && (*hs != '>')) hs++;
-                hs++;
+                ns = memchr(hs, '>', he-hs);
+                if (ns) hs = ns+1;
+                else hs = he;
 
                 rptr = hs;
             }
@@ -1807,8 +1808,9 @@ __xml_memncasecmp(const char *haystack, size_t *haystacklen,
                 *needle = (char *)haystack;
                 *needlelen = hs - haystack;
 
-                while ((hs < he) && (*hs != '>')) hs++;
-                hs++;
+                ns = memchr(hs, '>', he-hs);
+                if (ns) hs = ns+1;
+                else hs = he;
             }
         }
 
@@ -1859,16 +1861,16 @@ simple_mmap(int fd, size_t length, SIMPLE_UNMMAP *un)
     void *p;
 
     f = (HANDLE)_get_osfhandle(fd);
-    if (!f) return NULL;
+    if (!f) return (void *)-1;
 
     m = CreateFileMapping(f, NULL, PAGE_READONLY, 0, 0, NULL);
-    if (!m) return NULL;
+    if (!m) return (void *)-1;
 
     p = MapViewOfFile(m, FILE_MAP_READ, 0,0,0);
     if (!p)
     {
         CloseHandle(m);
-        return NULL;
+        return (void *)-1;
     }
 
     if (un)
