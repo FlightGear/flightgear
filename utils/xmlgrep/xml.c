@@ -57,6 +57,7 @@ typedef struct
 #include <assert.h>
 #include <ctype.h>
 
+
 #ifndef XML_NONVALIDATING
 #include "xml.h"
 
@@ -107,6 +108,7 @@ struct _xml_id
 static char *__xmlNodeCopy(const char *, size_t *, const char **);
 static char *__xmlNodeGetPath(const char *, size_t *, char **, size_t *);
 static char *__xmlNodeGet(const char *, size_t *, char **, size_t *, size_t *);
+static char *__xmlProcessCDATA(char **, size_t *);
 static char *__xmlCommentSkip(const char *, size_t);
 static char *__xmlInfoProcess(const char *, size_t);
 
@@ -1402,7 +1404,7 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
     size_t restlen, elementlen;
     size_t open_len = *rlen;
     size_t return_len = 0;
-    int found, num;
+    int found, cdata, num;
 
     assert(start != 0);
     assert(len != 0);
@@ -1413,6 +1415,7 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
     assert(*rlen != 0);
     assert(nodenum != 0);
 
+    cdata = 0;
     if (*rlen > *len)
     {
         *rlen = 0;
@@ -1443,10 +1446,17 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
         restlen -= new-cur;
         cur = new;
 
-        if (*cur == '!') /* comment */
+        if (*cur == '!') /* comment, or CDATA */
         {
-            new = __xmlCommentSkip(cur, restlen);
-            if (!new)
+            size_t blocklen = restlen;
+            char *start = cur;
+            new = __xmlProcessCDATA(&start, &blocklen);
+            if (new && start && ret)			/* CDATA */
+            {
+                ret += 9;
+                cdata = 1;
+            }
+            else if (!new)
             {
                 *rlen = 0;
                 *name = cur;
@@ -1536,10 +1546,17 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
         new++;
         restlen -= new-cur;
         cur = new;
-        if (*cur == '!')				/* comment */
+        if (*cur == '!')				/* comment, CDATA */
         {
-            new = __xmlCommentSkip(cur, restlen);
-            if (!new)
+            size_t blocklen = restlen;
+            char *start = cur;
+            new = __xmlProcessCDATA(&start, &blocklen);
+            if (new && start && ret)			/* CDATA */
+            {
+                ret += 9;
+                cdata = 1;
+            }
+            else if (!new)
             {
                 *rlen = 0;
                 *name = cur;
@@ -1633,6 +1650,7 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
                     if (start_tag)
                     {
                         *len = new-ret-1;
+                        if (cdata) *len -= 3;
                         open_element = start_tag;
                     }
                     else /* report error */
@@ -1685,17 +1703,63 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
 }
 
 char *
+__xmlProcessCDATA(char **start, size_t *len)
+{
+    char *cur, *new;
+    size_t restlen = *len;
+
+    cur = *start;
+    if ((restlen > 6) && (*(cur+1) == '-'))		/* comment */
+    {
+        new = __xmlCommentSkip(cur, restlen);
+        if (new) *len = new-cur;
+        else *len = 0;
+        *start = 0;
+        return new;
+    }
+
+    if (restlen < 12) return 0; 			/* ![CDATA[ ]]> */
+
+    cur = *start;
+    new = 0;
+
+    if (memcmp(cur, "![CDATA[", 8) == 0)
+    {
+        cur += 8;
+        restlen -= 8;
+        do
+        {
+            new = memchr(cur, ']', restlen);
+            if (new)
+            {
+                if ((restlen > 3) && (memcmp(new, "]]>", 3) == 0))
+                {
+                    new += 3;
+                    restlen -= 3;
+                    break;
+                }
+                cur = new+1;
+            }
+            else break;
+        }
+        while (new && (restlen > 2));
+    }
+
+    return new;
+}
+
+char *
 __xmlCommentSkip(const char *start, size_t len)
 {
     char *cur, *new;
+
+    if (len < 7) return 0;				 /* !-- --> */
 
     cur = (char *)start;
     new = 0;
 
     if (memcmp(cur, "!--", 3) == 0)
     {
-        if (len < 6) return 0;				/* <!-- --> */
-
         cur += 3;
         len -= 3;
         do
