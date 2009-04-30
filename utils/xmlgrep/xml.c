@@ -1564,11 +1564,10 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
             restlen -= new-cur;
             cur = new;
         }
-
         if (*cur != '/')			/* cascading tag found */
         {
             char *node = "*";
-            size_t slen = restlen+1;
+            size_t slen = restlen+1; /* due to cur-1 below*/
             size_t nlen = 1;
             size_t pos = -1;
 
@@ -1593,15 +1592,17 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
                     *len = XML_UNEXPECTED_EOF;
                     return 0;
                 }
-                else new = cur + slen;
-            }
 
-            restlen -= slen;
-            cur = new;
+                slen--;
+                new = cur + slen;
+                restlen -= slen;
+            }
+            else restlen -= slen;
 
             /* 
              * look for the closing tag of the cascading block
              */
+            cur = new;
             new = memchr(cur, '<', restlen);
             if (!new)
             {
@@ -1664,7 +1665,7 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
             *len = XML_ELEMENT_NO_CLOSING_TAG;
             return 0;
         }
-    }
+    } /* while */
 
     if (found == 0)
     {

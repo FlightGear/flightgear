@@ -1,3 +1,6 @@
+30-04-2009
+  * Fix an off by one problem.
+
 28-04-2009
   * changes to the code to allow walking the xml-tree using "*" as a node name
   * add printxml, an example utility that walks an xml-tree and prints it
