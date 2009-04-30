@@ -1,4 +1,5 @@
 30-04-2009
+  * Add support for CDATA
   * Fix an off by one problem.
 
 28-04-2009
