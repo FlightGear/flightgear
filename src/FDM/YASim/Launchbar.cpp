@@ -2,7 +2,6 @@
 #include "BodyEnvironment.hpp"
 #include "Ground.hpp"
 #include "RigidBody.hpp"
-
 #include "Launchbar.hpp"
 
 namespace yasim {
@@ -32,6 +31,7 @@ Launchbar::Launchbar()
     _pos_on_cat = 0.0;
     _state = Unmounted;
     _strop = false;
+    _acceleration = 0.25;
 }
 
 void Launchbar::setLaunchbarMount(float* position)
@@ -74,6 +74,11 @@ void Launchbar::setExtension(float extension)
 void Launchbar::setLaunchCmd(bool cmd)
 {
     _launch_cmd = cmd;
+}
+
+void Launchbar::setAcceleration(float acceleration)
+{
+    _acceleration = acceleration;
 }
 
 void Launchbar::setGlobalGround(double *global_ground)
@@ -473,7 +478,9 @@ void Launchbar::calcForce(Ground *g_cb, RigidBody* body, State* s, float* lv, fl
 
     if (_state == Launch) {
         // Now apply a constant tension from the catapult over the launchbar.
-      Math::mul3(25.0, llbdir, _launchbar_force);
+        // We modify the max accleration 100 m/s^2 by the normalised input
+        //SG_LOG(SG_FLIGHT, SG_ALERT, "acceleration " << 100 * _acceleration );
+        Math::mul3(100 * _acceleration, llbdir, _launchbar_force);
 
       if (1.0 < dist) {
         _state = Completed;
