@@ -28,6 +28,10 @@
 #ifndef __XML_CONFIG
 #define __XML_CONFIG 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum
 {
     XML_NO_ERROR = 0,
@@ -357,6 +361,10 @@ size_t xmlErrorGetColumnNo(const void *, int);
  * @return a string that explains the last error.
  */
 const char *xmlErrorGetString(const void *, int);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* __XML_CONFIG */
