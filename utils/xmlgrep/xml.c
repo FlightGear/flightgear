@@ -57,7 +57,6 @@ typedef struct
 #include <assert.h>
 #include <ctype.h>
 
-
 #ifndef XML_NONVALIDATING
 #include "xml.h"
 
@@ -1305,10 +1304,11 @@ static const char *__xml_error_str[XML_MAX_ERROR] =
     "no error.",
     "unable to allocate enough memory.",
     "unable to open file for reading.",
+    "requested node name is invalid.",
+    "unexpected end of section.",
     "buffer too small to hold all data, truncating.",
     "incorrect comment section.",
     "bad information block.",
-    "unexpected end of section.",
     "incompatible opening tag for element.",
     "missing or invalid closing tag for element.",
     "missing or invalid opening quote for attribute.",
@@ -1398,24 +1398,29 @@ __xmlNodeGetPath(const char *start, size_t *len, char **name, size_t *plen)
 char *
 __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *nodenum)
 {
-    char *open_element = *name;
+    char *cdata, *open_element = *name;
     char *element, *start_tag=0;
     char *new, *cur, *ne, *ret = 0;
     size_t restlen, elementlen;
     size_t open_len = *rlen;
     size_t return_len = 0;
-    int found, cdata, num;
+    int found, num;
 
     assert(start != 0);
     assert(len != 0);
-    assert(*len != 0);
     assert(name != 0);
-    assert(*name != 0);
     assert(rlen != 0);
-    assert(*rlen != 0);
     assert(nodenum != 0);
 
-    cdata = 0;
+    if (open_len == 0 || *name == 0)
+    {
+        *rlen = 0;
+        *name = (char *)start;
+        *len = XML_INVALID_NODE_NAME;
+        return 0;
+    }
+
+    cdata = (char *)start;
     if (*rlen > *len)
     {
         *rlen = 0;
@@ -1446,17 +1451,12 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
         restlen -= new-cur;
         cur = new;
 
-        if (*cur == '!') /* comment, or CDATA */
+        if (*cur == '!') /* comment */
         {
             size_t blocklen = restlen;
             char *start = cur;
-            new = __xmlProcessCDATA(&start, &blocklen);
-            if (new && start && ret)			/* CDATA */
-            {
-                ret += 9;
-                cdata = 1;
-            }
-            else if (!new)
+            new = __xmlCommentSkip(cur, restlen);
+            if (!new)
             {
                 *rlen = 0;
                 *name = cur;
@@ -1551,10 +1551,9 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
             size_t blocklen = restlen;
             char *start = cur;
             new = __xmlProcessCDATA(&start, &blocklen);
-            if (new && start && ret)			/* CDATA */
+            if (new && start && open_len)			/* CDATA */
             {
-                ret += 9;
-                cdata = 1;
+                cdata = ret;
             }
             else if (!new)
             {
@@ -1650,8 +1649,14 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
                     if (start_tag)
                     {
                         *len = new-ret-1;
-                        if (cdata) *len -= 3;
+                        if (cdata == ret)
+                        {
+                            ret += 9;		/* ![CDATA[[     */
+                            *len -= 12;		/* ![CDATA[[ ]]> */
+                        }
                         open_element = start_tag;
+                        cdata = (char *)start;
+                        start_tag = 0;
                     }
                     else /* report error */
                     {
@@ -1734,13 +1739,19 @@ __xmlProcessCDATA(char **start, size_t *len)
             {
                 if ((restlen > 3) && (memcmp(new, "]]>", 3) == 0))
                 {
-                    new += 3;
+                    *start = cur;
+                    *len = new-cur;
                     restlen -= 3;
+                    new += 3;
                     break;
                 }
                 cur = new+1;
             }
-            else break;
+            else
+            {
+                *len = 0;
+                break;
+            }
         }
         while (new && (restlen > 2));
     }
