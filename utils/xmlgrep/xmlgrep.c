@@ -121,6 +121,7 @@ parse_option(char **args, int n, int max)
     {
         if (arg == 0) SHOW_NOVAL(opt);
         alen = strlen(arg)+1;
+        if (_root) free(_root);
         _root = malloc(alen);
         memcpy(_root, arg, alen);
         return 2;
@@ -129,6 +130,7 @@ parse_option(char **args, int n, int max)
     {
         if (arg == 0) SHOW_NOVAL(opt);
         alen = strlen(arg)+1;
+        if (_element) free(_element);
         _element = malloc(alen);
         memcpy(_element, arg, alen);
         return 2;
@@ -137,6 +139,7 @@ parse_option(char **args, int n, int max)
     {
         if (arg == 0) SHOW_NOVAL(opt);
         alen = strlen(arg)+1;
+        if (_value) free(_value);
         _value = malloc(alen);
         memcpy(_value, arg, alen);
         return 2;
@@ -145,6 +148,7 @@ parse_option(char **args, int n, int max)
     {
         if (arg == 0) SHOW_NOVAL(opt);
         alen = strlen(arg)+1;
+        if (_print) free(_print);
         _print = malloc(alen);
         memcpy(_print, arg, alen);
         return 2;
@@ -153,6 +157,7 @@ parse_option(char **args, int n, int max)
     {
         if (arg == 0) SHOW_NOVAL(opt);
         alen = strlen(arg)+1;
+        if (_attribute) free(_attribute);
         _attribute = malloc(alen);
         memcpy(_attribute, arg, alen);
         return 2;
