@@ -28,6 +28,7 @@ public:
     void setExtension(float extension);
     void setLaunchCmd(bool cmd);
     void setGlobalGround(double *global_ground);
+    void setAcceleration(float acceleration);
 
     void getLaunchbarMount(float* out);
     void getHoldbackMount(float* out);
@@ -85,6 +86,7 @@ private:
     bool _strop;
     double _global_ground[4];
     LBState _state;
+    float _acceleration;
 };
 
 }; // namespace yasim

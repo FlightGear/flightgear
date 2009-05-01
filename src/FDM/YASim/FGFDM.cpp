@@ -949,6 +949,7 @@ int FGFDM::parseOutput(const char* name)
     if(eq(name, "EXTEND"))    return ControlMap::EXTEND;
     if(eq(name, "HEXTEND"))   return ControlMap::HEXTEND;
     if(eq(name, "LEXTEND"))   return ControlMap::LEXTEND;
+        if(eq(name, "LACCEL"))    return ControlMap::LACCEL;
     if(eq(name, "INCIDENCE")) return ControlMap::INCIDENCE;
     if(eq(name, "FLAP0"))     return ControlMap::FLAP0;
     if(eq(name, "FLAP0EFFECTIVENESS"))   return ControlMap::FLAP0EFFECTIVENESS;
