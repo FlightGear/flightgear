@@ -60,7 +60,9 @@ public:
     void setMinLat( double deg );
     void setMaxLong( double deg );
     void setMinLong( double deg );
+    void setMPControl( bool c );
     void TurnToLaunch();
+    void TurnToRecover();
     void TurnToBase();
     void ReturnToBox();
     bool OutsideBox();
@@ -96,6 +98,7 @@ private:
     double rel_wind_from_deg;
 
 
+
     list<string> wire_objects;        // List of wire object names
     list<string> catapult_objects;    // List of catapult object names
     list<ParkPosition> ppositions;    // List of positions where an aircraft can start.
@@ -108,6 +111,7 @@ private:
     double angle;
     int source;             // the flols light which is visible at the moment
     bool wave_off_lights;
+    bool in_to_wind;
 
     // these are for maneuvering the carrier
     SGGeod mOpBoxPos;
@@ -121,8 +125,11 @@ private:
     double base_course, base_speed;
 
     bool turn_to_launch_hdg;
+    bool turn_to_recovery_hdg;
+    bool turn_to_base_course;
     bool returning;      // set if the carrier is returning to an operating box
     bool InToWind();     // set if the carrier is in to wind
+    bool MPControl;
 
 
     SGPropertyNode_ptr _longitude_node;

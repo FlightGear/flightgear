@@ -29,6 +29,8 @@
 #endif
 
 #include <math.h>
+
+#include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/math/sg_random.h>
@@ -162,6 +164,8 @@ void FGAIShip::bind() {
         SGRawValuePointer<bool>(&_waiting));
     props->tie("submodels/serviceable",
         SGRawValuePointer<bool>(&_serviceable));
+    props->tie("controls/turn-radius-ft",
+        SGRawValuePointer<double>(&turn_radius_ft));
 }
 
 void FGAIShip::unbind() {
@@ -184,6 +188,7 @@ void FGAIShip::unbind() {
     props->untie("position/waypoint-wait-count");
     props->untie("position/waypoint-waiting");
     props->untie("submodels/serviceable");
+    props->untie("controls/turn-radius-ft");
 }
 
 void FGAIShip::update(double dt) {
@@ -269,9 +274,6 @@ void FGAIShip::Run(double dt) {
     pos.setLongitudeDeg(pos.getLongitudeDeg() + speed_east_deg_sec * dt);
 
     // adjust heading based on current _rudder angle
-
-    //cout << "turn_radius_ft " << turn_radius_ft ;
-
     if (turn_radius_ft <= 0)
         turn_radius_ft = 0; // don't allow nonsense values
 
@@ -289,8 +291,6 @@ void FGAIShip::Run(double dt) {
         // we need to allow for negative speeds
         _sp_turn_radius_ft = 10 * pow ((fabs(speed) - 15), 2) + turn_radius_ft;
 
-    //cout << " speed turn radius " << _sp_turn_radius_ft ;
-
     if (_rudder <= -0.25 || _rudder >= 0.25) {
         // adjust turn radius for _rudder angle. The equation is even more approximate.
         float a = 19;
@@ -299,19 +299,13 @@ void FGAIShip::Run(double dt) {
 
         _rd_turn_radius_ft = (a * exp(b * fabs(_rudder)) + c) * _sp_turn_radius_ft;
 
-        //cout <<" _rudder turn radius " << _rd_turn_radius_ft << endl;
-
         // calculate the angle, alpha, subtended by the arc traversed in time dt
         alpha = ((speed * 1.686 * dt) / _rd_turn_radius_ft) * SG_RADIANS_TO_DEGREES;
 
         // make sure that alpha is applied in the right direction
         hdg += alpha * sign(_rudder);
 
-        if (hdg > 360.0)
-            hdg -= 360.0;
-
-        if (hdg < 0.0)
-            hdg += 360.0;
+        SG_NORMALIZE_RANGE(hdg, 0.0, 360.0);
 
         //adjust roll for rudder angle and speed. Another bit of voodoo
         raw_roll = _roll_factor * speed * _rudder;
