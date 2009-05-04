@@ -194,6 +194,7 @@ void FGAICarrier::readFromScenario(SGPropertyNode* scFileNode) {
   setMinLat(scFileNode->getDoubleValue("min-lat", 0));
   setMaxLong(scFileNode->getDoubleValue("max-long", 0));
   setMinLong(scFileNode->getDoubleValue("min-long", 0));
+  setMPControl(scFileNode->getBoolValue("mp-control", false));
 
   SGPropertyNode* flols = scFileNode->getChild("flols-pos");
   if (flols) {
@@ -268,18 +269,32 @@ void FGAICarrier::setTACANChannelID(const string& id) {
     TACAN_channel_id = id;
 }
 
+void FGAICarrier::setMPControl(bool c) {
+    MPControl = c;
+}
+
 void FGAICarrier::update(double dt) {
     // Now update the position and heading. This will compute new hdg and
     // roll values required for the rotation speed computation.
     FGAIShip::update(dt);
 
     //automatic turn into wind with a target wind of 25 kts otd
-    if(turn_to_launch_hdg){
-        TurnToLaunch();
-    } else if(OutsideBox() || returning) {// check that the carrier is inside the operating box
-        ReturnToBox();
+    //SG_LOG(SG_GENERAL, SG_ALERT, "AICarrier: MPControl " << MPControl );
+    if (!MPControl){
+
+        if(turn_to_launch_hdg){
+            TurnToLaunch();
+        } else if(turn_to_recovery_hdg ){
+            TurnToRecover();
+        } else if(OutsideBox() || returning ) {// check that the carrier is inside 
+            ReturnToBox();                     // the operating box,  
+        } else {
+            TurnToBase();
+        }
+
     } else {
-        TurnToBase();
+        FGAIShip::TurnTo(tgt_heading);
+        FGAIShip::AccelTo(tgt_speed);
     }
 
     UpdateWind(dt);
@@ -352,7 +367,10 @@ bool FGAICarrier::init(bool search_in_AI_path) {
 
 
     turn_to_launch_hdg = false;
+    turn_to_recovery_hdg = false;
+    turn_to_base_course = true;
     returning = false;
+    in_to_wind = false;
 
     mOpBoxPos = pos;
     base_course = hdg;
@@ -402,6 +420,8 @@ void FGAICarrier::bind() {
                SGRawValueMethods<SGGeod,double>(pos, &SGGeod::getLatitudeDeg));
     props->tie("controls/start-pos-long-deg",
                SGRawValueMethods<SGGeod,double>(pos, &SGGeod::getLongitudeDeg));
+    props->tie("controls/mp-control",
+        SGRawValuePointer<bool>(&MPControl));
     props->tie("velocities/speed-kts",
                 SGRawValuePointer<double>(&speed));
     props->tie("environment/surface-wind-speed-true-kts",
@@ -414,24 +434,31 @@ void FGAICarrier::bind() {
                 SGRawValuePointer<double>(&rel_wind));
     props->tie("environment/rel-wind-speed-kts",
                 SGRawValuePointer<double>(&rel_wind_speed_kts));
+    props->tie("environment/in-to-wind",
+        SGRawValuePointer<bool>(&in_to_wind));
     props->tie("controls/flols/wave-off-lights",
                 SGRawValuePointer<bool>(&wave_off_lights));
     props->tie("controls/elevators",
                 SGRawValuePointer<bool>(&elevators));
     props->tie("surface-positions/elevators-pos-norm",
                 SGRawValuePointer<double>(&pos_norm));
-    props->tie("controls/elevators-trans-time-s",
+    props->tie("controls/constants/elevators/trans-time-s",
                 SGRawValuePointer<double>(&transition_time));
-    props->tie("controls/elevators-time-constant",
+    props->tie("controls/constants/elevators/time-constant",
                 SGRawValuePointer<double>(&time_constant));
     props->tie("controls/jbd",
         SGRawValuePointer<bool>(&jbd));
     props->tie("surface-positions/jbd-pos-norm",
         SGRawValuePointer<double>(&jbd_pos_norm));
-    props->tie("controls/jbd-trans-time-s",
+    props->tie("controls/constants/jbd/trans-time-s",
         SGRawValuePointer<double>(&jbd_transition_time));
-    props->tie("controls/jbd-time-constant",
+    props->tie("controls/constants/jbd/time-constant",
         SGRawValuePointer<double>(&jbd_time_constant));
+    props->tie("controls/turn-to-recovery-hdg",
+        SGRawValuePointer<bool>(&turn_to_recovery_hdg));
+    props->tie("controls/turn-to-base-course",
+        SGRawValuePointer<bool>(&turn_to_base_course));
+
 
     props->setBoolValue("controls/flols/cut-lights", false);
     props->setBoolValue("controls/flols/wave-off-lights", false);
@@ -457,16 +484,19 @@ void FGAICarrier::unbind() {
     props->untie("environment/wind-from-true-degs");
     props->untie("environment/rel-wind-from-degs");
     props->untie("environment/rel-wind-speed-kts");
+    props->untie("environment/in-to-wind");
     props->untie("controls/flols/wave-off-lights");
     props->untie("controls/elevators");
     props->untie("surface-positions/elevators-pos-norm");
-    props->untie("controls/elevators-trans-time-secs");
-    props->untie("controls/elevators-time-constant");
+    props->untie("controls/constants/elevators/trans-time-secs");
+    props->untie("controls/constants/elevators/time-constant");
     props->untie("controls/jbd");
-    props->untie("surface-positions/jbd-pos-norm");
-    props->untie("controls/jbd-trans-time-s");
+    props->untie("surface-positions/jbd/pos-norm");
+    props->untie("controls/constants/jbd/trans-time-s");
     props->untie("controls/jbd-time-constant");
-
+    props->untie("controls/mp-control");
+    props->untie("controls/turn-to-recovery-hdg");
+    props->untie("controls/turn-to-base-course");
 }
 
 
@@ -539,18 +569,52 @@ void FGAICarrier::UpdateWind( double dt) {
 
 void FGAICarrier::TurnToLaunch(){
 
+    // calculate tgt heading
+    if (wind_speed_kts < 3){
+        tgt_heading = base_course;
+    } else {
+        tgt_heading = wind_from_deg;
+    }
+
     //calculate tgt speed
     double tgt_speed = 25 - wind_speed_kts;
     if (tgt_speed < 10)
         tgt_speed = 10;
 
     //turn the carrier
-    FGAIShip::TurnTo(wind_from_deg);
+    FGAIShip::TurnTo(tgt_heading);
     FGAIShip::AccelTo(tgt_speed);
 
 }
 
+void FGAICarrier::TurnToRecover(){
 
+    //these are the rules for adjusting heading to provide a relative wind
+    //down the angled flightdeck
+
+    if (wind_speed_kts < 3){
+        tgt_heading = base_course + 60;
+    } else if (rel_wind < -9 && rel_wind >= -180){
+        tgt_heading = wind_from_deg; 
+    } else if (rel_wind > -7 && rel_wind < 45){
+        tgt_heading = wind_from_deg + 60;
+    } else if (rel_wind >=45 && rel_wind < 180){
+        tgt_heading = wind_from_deg + 45;
+    } else 
+        tgt_heading = hdg;
+
+    SG_NORMALIZE_RANGE(tgt_heading, 0.0, 360.0);
+
+    //calculate tgt speed
+    double tgt_speed = 26 - wind_speed_kts;
+    if (tgt_speed < 10)
+        tgt_speed = 10;
+
+    //turn the carrier
+    FGAIShip::TurnTo(tgt_heading);
+    FGAIShip::AccelTo(tgt_speed);
+
+}
 void FGAICarrier::TurnToBase(){
 
     //turn the carrier
@@ -625,9 +689,12 @@ bool FGAICarrier::OutsideBox() { //returns true if the carrier is outside operat
 
 
 bool FGAICarrier::InToWind() {
-    if ( fabs(rel_wind) < 5 )
-        return true;
+    in_to_wind = false;
 
+    if ( fabs(rel_wind) < 10 ){
+        in_to_wind = true;
+        return true;
+    }
     return false;
 }
 
