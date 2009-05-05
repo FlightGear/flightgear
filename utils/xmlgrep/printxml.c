@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <malloc.h>
+
 #include "xml.h"
 
 void print_xml(void *);
@@ -16,7 +17,11 @@ int main(int argc, char **argv)
     void *rid;
 
     rid = xmlOpen(argv[1]);
-    if (rid)
+    if (xmlErrorGetNo(rid, 0) != XML_NO_ERROR)
+    {
+       printf("%s\n", xmlErrorGetString(rid, 1));
+    }
+    else if (rid)
     {
       unsigned int i, num;
       void *xid;
@@ -54,11 +59,13 @@ void print_xml(void *id)
   num = xmlNodeGetNum(xid, "*");
   if (num == 0)
   {
-    char value[256];
-    int q;
-
-    q = xmlCopyString(xid, (char *)&value, 256);
-    if (q) printf("%s", value);
+    char *s;
+    s = xmlGetString(xid);
+    if (s)
+    {
+      printf("%s", s);
+      free(s);
+    }
   }
   else
   {
@@ -68,6 +75,7 @@ void print_xml(void *id)
       if (xmlNodeGetPos(id, xid, "*", i) != 0)
       {
         char name[256];
+        int r;
 
         xmlNodeCopyName(xid, (char *)&name, 256);
 
