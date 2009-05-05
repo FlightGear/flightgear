@@ -45,7 +45,7 @@ typedef struct
 # include <stdio.h>
 #endif
 #include <stdlib.h>     /* free, malloc */
-#include <string.h>
+#include <string.h>	/* memcmp */
 #ifndef _MSC_VER
 #include <strings.h>	/* strncasecmp */
 #else
@@ -70,8 +70,21 @@ struct _xml_error
 
 static void __xmlErrorSet(const void *, const char *, unsigned int);
 # define xmlErrorSet(a, b, c)	__xmlErrorSet(a, b, c)
+
+# ifndef NDEBUG
+# define PRINT_INFO(a) \
+	assert((a) < XML_MAX_ERROR); \
+	printf("at line %i: %s\n", __LINE__, __xml_error_str[(a)])
+# else
+# define PRINT_INFO(a)
+# endif
+
+# define SET_ERROR_AND_RETURN(a, b) \
+       { *rlen = 0; *name = (a); *len = (b); PRINT_INFO(b); return 0; }
+
 #else /* !XML_NONVALIDATING */
 # define xmlErrorSet(a, b, c)
+# define SET_ERROR_AND_RETURN(a, b)	return 0;
 #endif
 
 /*
@@ -112,6 +125,7 @@ static char *__xmlCommentSkip(const char *, size_t);
 static char *__xmlInfoProcess(const char *, size_t);
 
 static void *__xml_memncasecmp(const char *, size_t *, char **, size_t *);
+static void __xmlPrepareData(char **, size_t *);
 
 #ifdef WIN32
 /*
@@ -146,17 +160,17 @@ xmlOpen(const char *filename)
     if (filename)
     {
         int fd = open(filename, O_RDONLY);
-        if (fd > 0)
+        if (fd >= 0)
         {
-            rid = malloc(sizeof(struct _root_id));
-            if (rid)
-            {
-                struct stat statbuf;
-                void *mm;
+            struct stat statbuf;
+            void *mm;
 
-                fstat(fd, &statbuf);
-                mm = mmap(0, statbuf.st_size, PROT_READ, MAP_PRIVATE, fd, 0L);
-                if (mm != (void *)-1)
+            fstat(fd, &statbuf);
+            mm = mmap(0, statbuf.st_size, PROT_READ, MAP_PRIVATE, fd, 0L);
+            if (mm != (void *)-1)
+            {
+                rid = malloc(sizeof(struct _root_id));
+                if (rid)
                 {
                     rid->fd = fd;
                     rid->start = mm;
@@ -447,24 +461,20 @@ xmlGetString(const void *id)
 
     if (xid->len)
     {
-        char *ps, *pe, *pend;
-        int nlen;
+        size_t len;
+        char *ps;
 
         ps = xid->start;
-        nlen = xid->len;
-        pend = ps+nlen;
-        pe = pend;
+        len = xid->len;
+        __xmlPrepareData(&ps, &len);
 
-        while ((ps<pe) && isspace(*ps)) ps++;
-        while ((pe>ps) && isspace(*pe)) pe--;
-        nlen = (pe-ps);
-        if (nlen)
+        if (len)
         {
-            str = malloc(nlen+1);
+            str = malloc(len+1);
             if (str)
             {
-                memcpy(str, ps, nlen);
-                *(str+nlen) = 0;
+                memcpy(str, ps, len);
+                *(str+len) = 0;
             }
             else
             {
@@ -488,31 +498,24 @@ xmlCopyString(const void *id, char *buffer, size_t buflen)
 
     if (xid->len)
     {
-        char *ps, *pe, *pend;
-        size_t slen, nlen;
+        size_t len;
+        char *ps,
 
         *buffer = '\0';
-        nlen = buflen-1;
         ps = xid->start;
-        slen = xid->len;
-        pend = ps+slen;
-        pe = pend;
+        len = xid->len;
+        __xmlPrepareData(&ps, &len);
 
-        while ((ps<pe) && isspace(*ps)) ps++;
-        while ((pe>ps) && isspace(*pe)) pe--;
-        nlen = (pe-ps);
-        if (nlen > slen) nlen = slen;
-
-        if (nlen)
+        if (len)
         {
-            if (nlen >= buflen)
+            if (len >= buflen)
             {
-                nlen = buflen-1;
+                len = buflen-1;
                 xmlErrorSet(xid, 0, XML_TRUNCATE_RESULT);
             }
-            memcpy(buffer, ps, nlen);
-            *(buffer+nlen) = 0;
-            ret = nlen;
+            memcpy(buffer, ps, len);
+            *(buffer+len) = 0;
+            ret = len;
         }
     }
 
@@ -530,17 +533,13 @@ xmlCompareString(const void *id, const char *s)
 
     if (xid->len && (strlen(s) > 0))
     {
-        char *ps, *pe;
+        size_t len;
+        char *ps;
 
         ps = xid->start;
-        pe = ps + xid->len;
-        pe--;
-
-        while ((ps<pe) && isspace(*ps)) ps++;
-        while ((pe>ps) && isspace(*pe)) pe--;
-        pe++;
-
-        ret = strncasecmp(ps, s, pe-ps);
+        len = xid->len-1;
+        __xmlPrepareData(&ps, &len);
+        ret = strncasecmp(ps, s, len);
     }
 
     return ret;
@@ -563,21 +562,17 @@ xmlNodeGetString(const void *id, const char *path)
         str = __xmlNodeCopy(xid->start, &len, &path);
         if (str)
         {
-            char *ps, *pe, *pend;
-            int slen;
+            size_t len;
+            char *ps, *pe;
 
             ps = str;
-            slen = strlen(str);
-            pend = ps+slen;
-            pe = pend-1;
-
-            while ((ps<pe) && isspace(*ps)) ps++;
-            while ((pe>ps) && isspace(*pe)) pe--;
+            len = strlen(str);
+            __xmlPrepareData(&ps, &len);
+            pe = ps + len;
 
             *++pe = 0;
-            slen = (pe-ps);
-            if (slen && (ps>str)) memmove(str, ps, slen);
-            else if (!slen) *str = 0;
+            if (len && (ps>str)) memmove(str, ps, len);
+            else if (!len) *str = 0;
         }
         else
         {
@@ -602,37 +597,31 @@ xmlNodeCopyString(const void *id, const char *path, char *buffer, size_t buflen)
     if (xid->len)
     {
         char *str, *node;
-        size_t slen, nlen;
+        size_t slen, len;
 
         *buffer = '\0';
-        nlen = xid->len;
+        len = xid->len;
         slen = strlen(path);
         node = (char *)path;
-        str = __xmlNodeGetPath(xid->start, &nlen, &node, &slen);
+        str = __xmlNodeGetPath(xid->start, &len, &node, &slen);
         if (str)
         {
-            char *ps, *pe;
+            char *ps = str;
+            __xmlPrepareData(&ps, &len);
 
-            ps = str;
-            pe = ps+nlen-1;
-
-            while ((ps<pe) && isspace(*ps)) ps++;
-            while ((pe>ps) && isspace(*pe)) pe--;
-
-            nlen = (pe-ps)+1;
-            if (nlen >= buflen)
+            if (len >= buflen)
             {
-                nlen = buflen-1;
+                len = buflen-1;
                 xmlErrorSet(xid, 0, XML_TRUNCATE_RESULT);
             }
 
-            memcpy(buffer, ps, nlen);
-            *(buffer + nlen) = '\0';
-            ret = nlen;
+            memcpy(buffer, ps, len);
+            *(buffer + len) = '\0';
+            ret = len;
         }
         else if (slen == 0)
         {
-            xmlErrorSet(xid, node, nlen);
+            xmlErrorSet(xid, node, len);
         }
     }
 
@@ -661,14 +650,8 @@ xmlNodeCompareString(const void *id, const char *path, const char *s)
         if (str)
         {
             ps = str;
-            pe = ps + len;
-            pe--;
-
-            while ((ps<pe) && isspace(*ps)) ps++;
-            while ((pe>ps) && isspace(*pe)) pe--;
-            pe++;
-
-            ret = strncasecmp(ps, s, pe-ps);
+            __xmlPrepareData(&ps, &len);
+            ret = strncasecmp(ps, s, len);
         }
         else if (slen == 0)
         {
@@ -1349,7 +1332,7 @@ __xmlNodeCopy(const char *start, size_t *len, const char **path)
 }
 
 char *
-__xmlNodeGetPath(const char *start, size_t *len, char **name, size_t *plen)
+__xmlNodeGetPath(const char *start, size_t *len, char **name, size_t *nlen)
 {
     char *node;
     char *ret = 0;
@@ -1359,16 +1342,16 @@ __xmlNodeGetPath(const char *start, size_t *len, char **name, size_t *plen)
     assert(*len != 0);
     assert(name != 0);
     assert(*name != 0);
-    assert(plen != 0);
-    assert(*plen != 0);
+    assert(nlen != 0);
+    assert(*nlen != 0);
 
-    if (*plen > *len) return 0;
+    if (*nlen > *len) return 0;
 
     node = *name;
     if (*node == '/') node++;
     if (*node != 0)
     {
-        size_t plen, slen;
+        size_t blen, plen, slen;
         char *path;
         size_t num;
 
@@ -1379,16 +1362,27 @@ __xmlNodeGetPath(const char *start, size_t *len, char **name, size_t *plen)
         else plen = path++ - node;
 
         num = 0;
-        ret = __xmlNodeGet(start, len, &node, &plen, &num);
-        if (ret && path)
+        blen = *len;
+        ret = __xmlNodeGet(start, &blen, &node, &plen, &num);
+        if (ret)
         {
-            plen = slen - (path - *name);
-            ret = __xmlNodeGetPath(ret, len, &path, &plen);
-            *name = path;
+            if (path)
+            {
+                plen = slen - (path - *name);
+                ret = __xmlNodeGetPath(ret, &blen, &path, &plen);
+                *name = path;
+            }
+            else
+            {
+               *name = node;
+               *nlen = plen;
+               *len = blen;
+            }
         }
-        else if (plen == 0)
+        else
         {
-           *name = node;
+            *len = 0;
+            *nlen = 0;
         }
     }
 
@@ -1413,21 +1407,11 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
     assert(nodenum != 0);
 
     if (open_len == 0 || *name == 0)
-    {
-        *rlen = 0;
-        *name = (char *)start;
-        *len = XML_INVALID_NODE_NAME;
-        return 0;
-    }
+        SET_ERROR_AND_RETURN((char *)start, XML_INVALID_NODE_NAME);
 
     cdata = (char *)start;
     if (*rlen > *len)
-    {
-        *rlen = 0;
-        *name = (char *)start;
-        *len = XML_UNEXPECTED_EOF;
-        return 0;
-    }
+        SET_ERROR_AND_RETURN((char *)start, XML_UNEXPECTED_EOF);
 
     found = 0;
     num = *nodenum;
@@ -1443,7 +1427,7 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
 
         if (*(new+1) == '/')		/* end of section */
         {
-            *len -= restlen-1;
+            *len -= restlen;
              break;
         }
 
@@ -1453,16 +1437,12 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
 
         if (*cur == '!') /* comment */
         {
-            size_t blocklen = restlen;
             char *start = cur;
-            new = __xmlCommentSkip(cur, restlen);
-            if (!new)
-            {
-                *rlen = 0;
-                *name = cur;
-                *len = XML_INVALID_COMMENT;
-                return 0;
-            }
+            size_t blocklen = restlen;
+            new = __xmlProcessCDATA(&start, &blocklen);
+            if (!new && start && open_len)                       /* CDATA */
+                SET_ERROR_AND_RETURN(cur, XML_INVALID_COMMENT);
+
             restlen -= new-cur;
             cur = new;
             continue;
@@ -1471,12 +1451,7 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
         {
             new = __xmlInfoProcess(cur, restlen);
             if (!new)
-            {
-                *rlen = 0;
-                *name = cur;
-                *len = XML_INVALID_INFO_BLOCK;
-                return 0;
-            }
+                SET_ERROR_AND_RETURN(cur, XML_INVALID_INFO_BLOCK);
 
             restlen -= new-cur;
             cur = new;
@@ -1505,12 +1480,8 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
         {
             new = cur + (len_remaining - restlen);
             if (new >= ne)
-            {
-                *rlen = 0;
-                *name = cur;
-                *len = XML_UNEXPECTED_EOF;
-                return 0;
-            }
+                SET_ERROR_AND_RETURN(cur, XML_UNEXPECTED_EOF);
+
             element = *name;
         }
 
@@ -1536,32 +1507,23 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
         cur = new;
         new = memchr(cur, '<', restlen);
         if (!new)
-        {
-            *rlen = 0;
-            *name = cur;
-            *len = XML_ELEMENT_NO_CLOSING_TAG;
-            return 0;
-        }       
+            SET_ERROR_AND_RETURN(cur, XML_ELEMENT_NO_CLOSING_TAG);
 
         new++;
         restlen -= new-cur;
         cur = new;
         if (*cur == '!')				/* comment, CDATA */
         {
-            size_t blocklen = restlen;
             char *start = cur;
+            size_t blocklen = restlen;
             new = __xmlProcessCDATA(&start, &blocklen);
             if (new && start && open_len)			/* CDATA */
             {
                 cdata = ret;
             }
             else if (!new)
-            {
-                *rlen = 0;
-                *name = cur;
-                *len = XML_INVALID_COMMENT;
-                return 0;
-            }
+                SET_ERROR_AND_RETURN(cur, XML_INVALID_COMMENT);
+
             restlen -= new-cur;
             cur = new;
 
@@ -1570,16 +1532,13 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
              */
             new = memchr(cur, '<', restlen);
             if (!new)
-            {
-                *rlen = 0;
-                *name = cur;
-                *len = XML_ELEMENT_NO_CLOSING_TAG;
-                return 0;
-            }
+                SET_ERROR_AND_RETURN(cur, XML_ELEMENT_NO_CLOSING_TAG);
+
             new++;
             restlen -= new-cur;
             cur = new;
         }
+
         if (*cur != '/')			/* cascading tag found */
         {
             char *node = "*";
@@ -1602,12 +1561,7 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
                 }
 
                 if (slen == restlen)
-                {
-                    *rlen = 0;
-                    *name = cur;
-                    *len = XML_UNEXPECTED_EOF;
-                    return 0;
-                }
+                    SET_ERROR_AND_RETURN(cur, XML_UNEXPECTED_EOF);
 
                 slen--;
                 new = cur + slen;
@@ -1621,12 +1575,8 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
             cur = new;
             new = memchr(cur, '<', restlen);
             if (!new)
-            {
-                *rlen = 0;
-                *name = cur;
-                *len = XML_ELEMENT_NO_CLOSING_TAG;
-                return 0;
-            }
+                SET_ERROR_AND_RETURN(cur, XML_ELEMENT_NO_CLOSING_TAG);
+
             new++;
             restlen -= new-cur;
             cur = new;
@@ -1637,57 +1587,40 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
             if (!strncasecmp(new+1, element, elementlen))
             {
                 if (*(new+elementlen+1) != '>')
-                {
-                    *rlen = 0;
-                    *name = new+1;
-                    *len = XML_ELEMENT_NO_CLOSING_TAG;
-                    return 0;
-                }
+                    SET_ERROR_AND_RETURN(new+1, XML_ELEMENT_NO_CLOSING_TAG);
 
                 if (found == num)
                 {
                     if (start_tag)
                     {
                         *len = new-ret-1;
+#if 0
                         if (cdata == ret)
                         {
                             ret += 9;		/* ![CDATA[[     */
                             *len -= 12;		/* ![CDATA[[ ]]> */
                         }
+#endif
                         open_element = start_tag;
                         cdata = (char *)start;
                         start_tag = 0;
                     }
                     else /* report error */
-                    {
-                        *rlen = 0;
-                        *name = new;
-                        *len = XML_ELEMENT_NO_OPENING_TAG;
-                        return 0;
-                    }
+                        SET_ERROR_AND_RETURN(new, XML_ELEMENT_NO_OPENING_TAG);
                 }
                 found++;
             }
 
             new = memchr(cur, '>', restlen);
             if (!new)
-            {
-                *rlen = 0;
-                *name = cur;
-                *len = XML_ELEMENT_NO_CLOSING_TAG;
-                return 0;
-            }
+                SET_ERROR_AND_RETURN(cur, XML_ELEMENT_NO_CLOSING_TAG);
 
             restlen -= new-cur;
             cur = new;
         }
         else
-        {
-            *rlen = 0;
-            *name = cur;
-            *len = XML_ELEMENT_NO_CLOSING_TAG;
-            return 0;
-        }
+            SET_ERROR_AND_RETURN(cur, XML_ELEMENT_NO_CLOSING_TAG);
+
     } /* while */
 
     if (found == 0)
@@ -1714,22 +1647,25 @@ __xmlProcessCDATA(char **start, size_t *len)
     size_t restlen = *len;
 
     cur = *start;
-    if ((restlen > 6) && (*(cur+1) == '-'))		/* comment */
+    if ((restlen > 6) && (*(cur+1) == '-'))             /* comment */
     {
         new = __xmlCommentSkip(cur, restlen);
-        if (new) *len = new-cur;
-        else *len = 0;
-        *start = 0;
+        if (new)
+        {
+            *start += 3;				/* !-- */
+            *len = (*start-cur)-3;			/* --> */
+        }
         return new;
     }
 
-    if (restlen < 12) return 0; 			/* ![CDATA[ ]]> */
+    if (restlen < 12) return 0;                         /* ![CDATA[ ]]> */
 
     cur = *start;
     new = 0;
 
     if (memcmp(cur, "![CDATA[", 8) == 0)
     {
+        *start = cur+8;
         cur += 8;
         restlen -= 8;
         do
@@ -1739,8 +1675,7 @@ __xmlProcessCDATA(char **start, size_t *len)
             {
                 if ((restlen > 3) && (memcmp(new, "]]>", 3) == 0))
                 {
-                    *start = cur;
-                    *len = new-cur;
+                    *len = new-*start;
                     restlen -= 3;
                     new += 3;
                     break;
@@ -1779,7 +1714,7 @@ __xmlCommentSkip(const char *start, size_t len)
             if (new)
             {
                 len -= new - cur;
-                if ((len > 3) && (memcmp(new, "-->", 3) == 0))
+                if ((len >= 3) && (memcmp(new, "-->", 3) == 0))
                 {
                     new += 3;
                     len -= 3;
@@ -1818,6 +1753,41 @@ __xmlInfoProcess(const char *start, size_t len)
     return new;
 }
 
+
+static void __xmlPrepareData(char **start, size_t *blocklen)
+{
+    size_t len = *blocklen;
+    char *pe, *ps = *start;
+
+    pe = ps + len;
+    while ((ps<pe) && isspace(*ps)) ps++;
+    while ((pe>ps) && isspace(*pe)) pe--;
+    len = (pe-ps);
+
+    /* CDATA or comment */
+    if ((len >= 2) && !strncmp(ps, "<!", 2))
+    {
+        char *start = ps+1;
+        size_t blocklen = len-1;
+        if (blocklen >= 6)                  /* !-- --> */
+        {
+            char *new = __xmlProcessCDATA(&start, &blocklen);
+            if (new)
+            {
+                ps = start;
+                len = blocklen;
+                pe = ps + len;
+
+                while ((ps<pe) && isspace(*ps)) ps++;
+                while ((pe>ps) && isspace(*pe)) pe--;
+                len = (pe-ps);
+            }
+        }
+    }
+
+    *start = ps;
+    *blocklen = len;
+}
 
 #define NOCASECMP(a,b)  ( ((a)^(b)) & 0xdf )
 void *

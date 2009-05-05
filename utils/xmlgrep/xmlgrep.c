@@ -212,10 +212,10 @@ void walk_the_tree(size_t num, void *xid, char *tree)
             {
                 if (xmlNodeGetPos(xid, xmid, _print, i) != 0)
                 {
-                    char value[STRING_LEN];
+                    char *value;
 
-                    xmlCopyString(xmid, (char *)&value, STRING_LEN);
-                    if (_value && _attribute)
+                    value = xmlGetString(xmid);
+                    if (_value && _attribute && value)
                     {
                        if (!xmlAttributeCompareString(xmid, _attribute, _value))
                        {
@@ -223,6 +223,7 @@ void walk_the_tree(size_t num, void *xid, char *tree)
                                  _filenames[num], _print, _attribute, _value,
                                                   value, _print);
                        }
+                       if (value) free(value);
                     }
                     else
                     {
