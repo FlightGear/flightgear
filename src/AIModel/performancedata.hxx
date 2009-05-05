@@ -43,6 +43,13 @@ public:
     inline double vRotate          () { return _vRotate; };
     inline double maximumBankAngle () { return _maxbank; };
     inline double acceleration     () { return _acceleration; };
+    inline double vTaxi            () { return _vTaxi; };
+    inline double vTakeoff         () { return _vTakeOff; };
+    inline double vClimb           () { return _vClimb; };
+    inline double vDescent         () { return _vDescent; };
+    inline double vApproach        () { return _vApproach; };
+    inline double vTouchdown       () { return _vTouchdown; };
+    inline double vCruise          () { return _vCruise; };
     
 private:
     double _acceleration;

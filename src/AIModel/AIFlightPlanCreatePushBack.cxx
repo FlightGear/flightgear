@@ -22,7 +22,6 @@
 #  include <config.h>
 #endif
 
-#include "AIFlightPlan.hxx"
 #include <simgear/math/sg_geodesy.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/dynamics.hxx>
@@ -30,7 +29,12 @@
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
 
+#include "AIFlightPlan.hxx"
+#include "AIAircraft.hxx"
+#include "performancedata.hxx"
 
+
+// TODO: Use James Turner's createOnGround functions.
 void FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
                                     bool firstFlight, FGAirport *dep, 
  				    double latitude,
@@ -41,6 +45,9 @@ void FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
  				    const string& airline)
 {
     double lat, lon, heading;
+    double vTaxi = ac->getPerformance()->vTaxi();
+    double vTaxiBackward = vTaxi * (-2.0/3.0);
+    double vTaxiReduced  = vTaxi * (2.0/3.0);
     FGTaxiRoute *pushBackRoute;
     // Active runway can be conditionally set by ATC, so at the start of a new flight, this
     // must be reset.
@@ -73,7 +80,7 @@ void FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
                     // Elevation is currently disregarded when on_ground is true
                     // because the AIModel obtains a periodic ground elevation estimate.
                    wpt->altitude  = dep->getElevation();
-                   wpt->speed = -10;
+                   wpt->speed = vTaxiBackward;
                    wpt->crossat   = -10000;
                    wpt->gear_down = true;
                    wpt->flaps_down= true;
@@ -139,7 +146,7 @@ void FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
 		// Elevation is currently disregarded when on_ground is true
 		// because the AIModel obtains a periodic ground elevation estimate.
 		wpt->altitude  = dep->getElevation();
-		wpt->speed = -10;
+		wpt->speed = vTaxiBackward;
 		wpt->crossat   = -10000;
 		wpt->gear_down = true;
 		wpt->flaps_down= true;
@@ -150,7 +157,7 @@ void FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
 	      }
               // some special considerations for the last point:
               wpt->name = string("PushBackPoint");
-              wpt->speed = 15;
+              wpt->speed = vTaxi;
               //for (wpt_vector_iterator i = waypoints.begin(); i != waypoints.end(); i++) {
               //    cerr << "Waypoint Name: " << (*i)->name << endl;
               //}
@@ -165,7 +172,7 @@ void FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
            wpt->latitude  = lat2;
            wpt->longitude = lon2;
            wpt->altitude  = dep->getElevation();
-           wpt->speed     = 10; 
+           wpt->speed     = vTaxiReduced; 
            wpt->crossat   = -10000;
            wpt->gear_down = true;
            wpt->flaps_down= true;
@@ -181,7 +188,7 @@ void FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
            wpt->latitude  = lat2;
            wpt->longitude = lon2;
            wpt->altitude  = dep->getElevation();
-           wpt->speed     = 10; 
+           wpt->speed     = vTaxiReduced; 
            wpt->crossat   = -10000;
            wpt->gear_down = true;
            wpt->flaps_down= true;
@@ -209,7 +216,7 @@ void FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
            wpt->latitude  = tn->getLatitude();
            wpt->longitude = tn->getLongitude();
            wpt->altitude  = dep->getElevation();
-           wpt->speed     = 10; 
+           wpt->speed     = vTaxiReduced; 
            wpt->crossat   = -10000;
            wpt->gear_down = true;
            wpt->flaps_down= true;
@@ -243,6 +250,10 @@ void FGAIFlightPlan::createPushBackFallBack(FGAIAircraft *ac, bool firstFlight, 
   double lon2;
   double az2;
 
+  double vTaxi = ac->getPerformance()->vTaxi();
+  double vTaxiBackward = vTaxi * (-2.0/3.0);
+  double vTaxiReduced  = vTaxi * (2.0/3.0);
+
 
 
   dep->getDynamics()->getParking(-1, &lat, &lon, &heading);
@@ -255,7 +266,7 @@ void FGAIFlightPlan::createPushBackFallBack(FGAIAircraft *ac, bool firstFlight, 
   wpt->latitude  = lat;
   wpt->longitude = lon;
   wpt->altitude  = dep->getElevation();
-  wpt->speed     = -10; 
+  wpt->speed     = vTaxiBackward; 
   wpt->crossat   = -10000;
   wpt->gear_down = true;
   wpt->flaps_down= true;
@@ -272,7 +283,7 @@ void FGAIFlightPlan::createPushBackFallBack(FGAIAircraft *ac, bool firstFlight, 
   wpt->latitude  = lat2;
   wpt->longitude = lon2;
   wpt->altitude  = dep->getElevation();
-  wpt->speed     = -10; 
+  wpt->speed     = vTaxiBackward; 
   wpt->crossat   = -10000;
   wpt->gear_down = true;
   wpt->flaps_down= true;
@@ -288,7 +299,7 @@ void FGAIFlightPlan::createPushBackFallBack(FGAIAircraft *ac, bool firstFlight, 
   wpt->latitude  = lat2;
   wpt->longitude = lon2;
   wpt->altitude  = dep->getElevation();
-  wpt->speed     = 10; 
+  wpt->speed     = vTaxiReduced; 
   wpt->crossat   = -10000;
   wpt->gear_down = true;
   wpt->flaps_down= true;

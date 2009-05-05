@@ -1,24 +1,25 @@
+#include <simgear/misc/sg_path.hxx>
+#include <simgear/props/props.hxx>
+#include <simgear/props/props_io.hxx>
+#include <simgear/xml/easyxml.hxx>
+
+#include <Main/globals.hxx>
+#include <iostream>
+#include <fstream>
+
 #include "performancedb.hxx"
+
+using std::string;
+using std::cerr;
 
 PerformanceDB::PerformanceDB()
 {
-    // these are the 6 classes originally defined in the PERFSTRUCT
-    // Plus a few more for testing
-    registerPerformanceData("heavy_jet", new PerformanceData(
-        4.0, 2.0,  3000.0, 1500.0,  150.0, 160.0,  300.0, 430.0,  300.0,  170.0, 150.0, 15.0));
-    registerPerformanceData("light", new PerformanceData(
-        2.0, 2.0,  450.0, 1000.0,  70.0, 70.0,  80.0, 100.0,  80.0,  70.0, 60.0, 15.0));
-    registerPerformanceData("ww2_fighter", new PerformanceData(
-        4.0, 2.0,  3000.0, 1500.0,  110.0, 110.0,  180.0, 250.0,  200.0,  130.0, 100.0, 15.0));
-    registerPerformanceData("jet_fighter", new PerformanceData(
-        7.0, 3.0,  4000.0, 2000.0,  120.0, 150.0,  350.0, 500.0,  350.0,  170.0, 150.0, 15.0));
-    registerPerformanceData("jet_transport", new PerformanceData(
-        5.0, 2.0,  3000.0, 1500.0,  100.0, 140.0,  300.0, 430.0,  300.0,  170.0, 130.0, 15.0));
-    registerPerformanceData("tanker", new PerformanceData(
-        5.0, 2.0,  3000.0, 1500.0,  100.0, 140.0,  300.0, 430.0,  300.0,  170.0, 130.0, 15.0));
-    registerPerformanceData("ufo", new PerformanceData(
-        30.0, 30.0, 6000.0, 6000.0, 150.0, 150.0, 300.0, 430.0, 300.0, 170.0, 130.0, 15.0));
+    SGPath dbpath( globals->get_fg_root() );
+    
 
+    dbpath.append( "/AI/Aircraft/" );
+    dbpath.append( "performancedb.xml"); 
+    load(dbpath);
 }
 
 
@@ -41,3 +42,49 @@ PerformanceData* PerformanceDB::getDataFor(const std::string& id) {
 
     return _db[id];
 }
+
+void PerformanceDB::load(SGPath filename) {
+    string name;
+    double acceleration;
+    double deceleration;
+    double climbRate;
+    double descentRate;
+    double vRotate;
+    double vTakeOff;
+    double vClimb;
+    double vCruise;
+    double vDescent;
+    double vApproach;
+    double vTouchdown;
+    double vTaxi;
+    SGPropertyNode root;
+    try {
+        readProperties(filename.str(), &root);
+    } catch (const sg_exception &e) {
+        SG_LOG(SG_GENERAL, SG_ALERT,
+            "Error reading AI aircraft performance database: " << filename.str());
+        return;
+    }
+
+    SGPropertyNode * node = root.getNode("performancedb");
+    for (int i = 0; i < node->nChildren(); i++) { 
+        SGPropertyNode * db_node = node->getChild(i);
+            name         = db_node->getStringValue("type", "heavy_jet");
+            acceleration = db_node->getDoubleValue("acceleration-kts-hour", 4.0);
+            deceleration = db_node->getDoubleValue("deceleration-kts-hour", 2.0);
+            climbRate    = db_node->getDoubleValue("climbrate-fpm", 3000.0);
+            descentRate  = db_node->getDoubleValue("decentrate-fpm", 1500.0);
+            vRotate      = db_node->getDoubleValue("rotate-speed-kts", 150.0);
+            vTakeOff     = db_node->getDoubleValue("takeoff-speed-kts", 160.0);
+            vClimb       = db_node->getDoubleValue("climb-speed-kts", 300.0);
+            vCruise      = db_node->getDoubleValue("cruise-speed-kts", 430.0);
+            vDescent     = db_node->getDoubleValue("decent-speed-kts", 300.0);
+            vApproach    = db_node->getDoubleValue("approach-speed-kts", 170.0);
+            vTouchdown   = db_node->getDoubleValue("touchdown-speed-kts", 150.0);
+            vTaxi        = db_node->getDoubleValue("taxi-speed-kts", 15.0);
+
+            registerPerformanceData(name, new PerformanceData(
+                acceleration, deceleration, climbRate, descentRate, vRotate, vTakeOff, vClimb, vCruise, vDescent, vApproach, vTouchdown, vTaxi));
+    }
+}
+
