@@ -25,8 +25,6 @@
 
 #include <fstream>
 #include <iostream>
-#include "AIFlightPlan.hxx"
-#include "AIAircraft.hxx"
 #include <simgear/route/waypoint.hxx>
 
 #include <Navaids/awynet.hxx>
@@ -35,6 +33,11 @@
 
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
+
+#include "AIFlightPlan.hxx"
+#include "AIAircraft.hxx"
+#include "performancedata.hxx"
+
 
 using std::iostream;
 
@@ -314,8 +317,9 @@ void FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport 
 				  double longitude, double speed, 
 				  double alt, const string& fltType)
 {
+  double vCruise = ac->getPerformance()->vCruise();
   waypoint *wpt;
-  wpt = createInAir(ac, "Cruise", SGGeod::fromDeg(longitude, latitude), alt, speed);
+  wpt = createInAir(ac, "Cruise", SGGeod::fromDeg(longitude, latitude), alt, vCruise);
   waypoints.push_back(wpt); 
   
   string rwyClass = getRunwayClassFromTrafficType(fltType);
@@ -325,6 +329,6 @@ void FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport 
   // begin descent 110km out
   SGGeod beginDescentPoint = rwy->pointOnCenterline(-110000);
   
-  wpt = createInAir(ac, "BOD", beginDescentPoint, alt, speed);
+  wpt = createInAir(ac, "BOD", beginDescentPoint, alt, vCruise);
   waypoints.push_back(wpt); 
 }

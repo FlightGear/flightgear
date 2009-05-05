@@ -7,17 +7,17 @@
 #include "AIAircraft.hxx"
 
 PerformanceData::PerformanceData(double acceleration,
-                                 double deceleration,
-                                 double climbRate,
-                                 double descentRate,
-                                 double vRotate,
-                                 double vTakeOff,
-                                 double vClimb,
-                                 double vCruise,
-                                 double vDescent,
-                                 double vApproach,
-                                 double vTouchdown,
-                                 double vTaxi) :
+                                double deceleration,
+                                double climbRate,
+                                double descentRate,
+                                double vRotate,
+                                double vTakeOff,
+                                double vClimb,
+                                double vCruise,
+                                double vDescent,
+                                double vApproach,
+                                double vTouchdown,
+                                double vTaxi) :
     _acceleration(acceleration),
     _deceleration(deceleration),
     _climbRate(climbRate),
@@ -46,7 +46,7 @@ double PerformanceData::actualSpeed(FGAIAircraft* ac, double tgt_speed, double d
     // if (tgt_speed > _vTaxi & ac->onGround()) // maximum taxi speed on ground
     //    tgt_speed = _vTaxi;
     // bad idea for a take off roll :-)
-    
+
     double speed = ac->getSpeed();
     double speed_diff = tgt_speed - speed;
 
@@ -76,10 +76,10 @@ double PerformanceData::actualBankAngle(FGAIAircraft* ac, double tgt_roll, doubl
     // check maximum bank angle
     if (fabs(tgt_roll) > _maxbank)
         tgt_roll = _maxbank * tgt_roll/fabs(tgt_roll);
-    
+
     double roll = ac->getRoll();
     double bank_diff = tgt_roll - roll;
-    
+
     if (fabs(bank_diff) > 0.2) {
         if (bank_diff > 0.0) {
             roll += _rollrate * dt;
@@ -108,7 +108,6 @@ double PerformanceData::actualPitch(FGAIAircraft* ac, double tgt_pitch, double d
 
         if (pitch > tgt_pitch)
             pitch = tgt_pitch;
-            
     } else if (pdiff < 0.0) { // nose down
         pitch -= 0.002*_descentRate * dt / 3.0;
 
@@ -129,14 +128,13 @@ double PerformanceData::actualAltitude(FGAIAircraft* ac, double tgt_altitude, do
 double PerformanceData::actualVerticalSpeed(FGAIAircraft* ac, double tgt_vs, double dt) {
     double vs = ac->getVerticalSpeed();
     double vs_diff = tgt_vs - vs;
-    
+
     if (fabs(vs_diff) > 10.0) {
         if (vs_diff > 0.0) {
             vs += _climbRate * dt / 3.0; //TODO avoid hardcoded 3 secs to attain climb rate from level flight
 
             if (vs > tgt_vs)
                 vs = tgt_vs;
-            
         } else if (vs_diff < 0.0) {
             vs -= _descentRate * dt / 3.0;
 
