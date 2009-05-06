@@ -38,7 +38,7 @@ class FGODGauge : public SGSubsystem {
 public:
     FGODGauge ( SGPropertyNode *node );
     FGODGauge();
-    ~FGODGauge();
+    virtual ~FGODGauge();
     virtual void init ();
     virtual void update (double dt);
 

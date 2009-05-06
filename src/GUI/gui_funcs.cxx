@@ -246,6 +246,7 @@ void fgHiResDump()
     /* allocate buffer large enough to store one tile */
     GLubyte *tile = (GLubyte *)malloc(width * height * 3 * sizeof(GLubyte));
     if (!tile) {
+        delete [] filename;
         printf("Malloc of tile buffer failed!\n");
         return;
     }
@@ -257,6 +258,7 @@ void fgHiResDump()
     GLubyte *buffer
         = (GLubyte *)malloc(imageWidth * height * 3 * sizeof(GLubyte));
     if (!buffer) {
+        delete [] filename;
         free(tile);
         printf("Malloc of tile row buffer failed!\n");
         return;
@@ -283,6 +285,7 @@ void fgHiResDump()
     f = fopen(filename, "wb");
     if (!f) {
         printf("Couldn't open image file: %s\n", filename);
+        delete [] filename;
         free(buffer);
         free(tile);
         return;
