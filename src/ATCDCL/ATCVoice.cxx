@@ -151,6 +151,7 @@ unsigned char* FGATCVoice::WriteMessage(char* message, int& len, bool& dataOK) {
 	// Check for no tokens found else slScheduler can be crashed
 	if(!word) {
 		dataOK = false;
+		delete[] wdptr;
 		return(NULL);
 	}
 
@@ -170,6 +171,8 @@ unsigned char* FGATCVoice::WriteMessage(char* message, int& len, bool& dataOK) {
 			SG_LOG(SG_ATC, SG_ALERT, "Offset + length: " << wdptr[i].offset + wdptr[i].length
 			     << " exceeds rawdata size: " << rawDataSize << endl);
 			delete[] wdptr;
+			delete[] tmpbuf;
+			delete[] outbuf;
 			dataOK = false;
 			return(NULL);
 		}

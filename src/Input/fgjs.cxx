@@ -211,6 +211,7 @@ int main( int argc, char *argv[] ) {
     delete jsi;
     delete[] xfs;
     delete jss;
+    delete[] jstree;
 
     return 1;
 }
