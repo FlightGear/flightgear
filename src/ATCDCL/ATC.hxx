@@ -297,7 +297,7 @@ operator >> ( std::istream& fin, ATCData& a )
 	// cout << a.ident << endl;
 	
 	// generate cartesian coordinates
-        SGVec3d cart = SGVec3d::fromGeod(SGGeod::fromRadM(a.lon, a.lat, a.elev));
+        SGVec3d cart = SGVec3d::fromGeod(SGGeod::fromDegM(a.lon, a.lat, a.elev));
 	a.x = cart.x();
 	a.y = cart.y();
 	a.z = cart.z();
