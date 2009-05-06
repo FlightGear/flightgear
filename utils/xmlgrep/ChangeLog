@@ -1,3 +1,7 @@
+05-05-2009
+  * Various bugfixes, required to get fgrun working
+  * add testxml as sort of a stress test application
+
 30-04-2009
   * Add support for CDATA
   * Fix an off by one problem.

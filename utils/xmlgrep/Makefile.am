@@ -1,5 +1,5 @@
-noinst_PROGRAMS = xmlgrep printxml
+noinst_PROGRAMS = testxml printxml xmlgrep
 
-xmlgrep_SOURCES = xmlgrep.c xml.c xml.h
-
+testxml_SOURCES = testxml.c xml.c
 printxml_SOURCES = printxml.c xml.c
+xmlgrep_SOURCES = xmlgrep.c xml.c xml.h
