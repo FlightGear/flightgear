@@ -13,7 +13,7 @@
   <test n="2"/>
 
   <menu><name>* Traffic, # taxiing to runway (.</name></menu>
-  <menu><name>* Traffic, # holding short runway (.</name></menu>
+  <sample><test>  	* Traffic, # taxiing to runway (.    </test></sample>
 
   <!--
     - x is positive to the right
