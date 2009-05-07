@@ -133,6 +133,7 @@ void uiuc_2DdataFileReader( string file_name,
           counter_x++;
         }
     }
+  delete matrix;
   return;
 }
 

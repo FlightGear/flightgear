@@ -114,6 +114,7 @@ uiuc_1DdataFileReader( string file_name,
       //};
       data = 1;
     }
+  delete matrix;
   return data;
 }
 
@@ -153,6 +154,7 @@ uiuc_1DdataFileReader( string file_name,
       counter++;
       data = 1;
     }
+  delete matrix;
   return data;
 }
 

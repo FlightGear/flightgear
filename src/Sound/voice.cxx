@@ -52,6 +52,7 @@ FGVoiceMgr::~FGVoiceMgr()
 		return;
 	_thread->cancel();
 	_thread->join();
+	delete _thread;
 #endif
 }
 

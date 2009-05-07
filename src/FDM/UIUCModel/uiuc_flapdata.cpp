@@ -115,10 +115,10 @@ FlapData::~FlapData(){
   delete[] thrustTable;
   delete[] momentTable;
   delete[] inertiaTable;
-  delete alphaArray;
-  delete speedArray;
-  delete freqArray;
-  delete phiArray;
+  delete[] alphaArray;
+  delete[] speedArray;
+  delete[] freqArray;
+  delete[] phiArray;
 }
 
 //An initialization function that does the same thing

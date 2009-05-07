@@ -67,6 +67,7 @@ FGRouteMgr::FGRouteMgr() :
 
 FGRouteMgr::~FGRouteMgr() {
     input->removeChangeListener(listener);
+    delete listener;
     delete route;
 }
 

@@ -178,6 +178,7 @@ KLN89::~KLN89() {
 	}
 	
 	delete _dir_page;
+	delete _nrst_page;
 	
 	for(unsigned int i=0; i<_maxFlightPlans; ++i) {
 		ClearFlightPlan(i);
