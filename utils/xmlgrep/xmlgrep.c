@@ -5,12 +5,13 @@
 #include <string.h>
 #ifndef _MSC_VER
 # include <strings.h>
+# include <unistd.h>	/* read */
 #else
 # define strncasecmp strnicmp
 # include <stdlib.h>
+# include <io.h>
 #endif
 #include <assert.h>
-#include <unistd.h>	/* read */
 #include <sys/stat.h>	/* fstat */
 #include <fcntl.h>	/* open */
 
