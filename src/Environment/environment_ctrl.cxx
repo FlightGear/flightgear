@@ -368,10 +368,10 @@ FGMetarEnvironmentCtrl::~FGMetarEnvironmentCtrl ()
 {
 #if defined(ENABLE_THREADS)
    thread_stop();
+   delete thread;
 #endif // ENABLE_THREADS
 
    delete env;
-   env = NULL;
 }
 
 

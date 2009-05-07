@@ -994,8 +994,8 @@ fgInitNav ()
     SG_LOG(SG_GENERAL, SG_INFO, "  Fixes");
     SGPath p_fix( globals->get_fg_root() );
     p_fix.append( "Navaids/fix.dat" );
-    FGFixList *fixlist = new FGFixList;
-    fixlist->init( p_fix );
+    FGFixList fixlist;
+    fixlist.init( p_fix );  // adds fixes to the DB in positioned.cxx
 
     SG_LOG(SG_GENERAL, SG_INFO, "  Airways");
     SGPath p_awy( globals->get_fg_root() );

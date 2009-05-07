@@ -58,12 +58,14 @@ FGClouds::FGClouds(FGEnvironmentCtrl * controller) :
 {
 	update_event = 0;
 }
+
 FGClouds::~FGClouds() {
 }
 
 int FGClouds::get_update_event(void) const {
 	return update_event;
 }
+
 void FGClouds::set_update_event(int count) {
 	update_event = count;
 	buildCloudLayers();

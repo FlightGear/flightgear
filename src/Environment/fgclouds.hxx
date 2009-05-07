@@ -64,7 +64,7 @@ void buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_def_root, co
         bool clouds_3d_enabled;
         string last_scenario;
         string scenario;
-        SGPropertyNode *last_env_config, *last_env_clouds;
+        SGPropertyNode_ptr last_env_config, last_env_clouds;
 
 public:
 	FGClouds(FGEnvironmentCtrl * controller);

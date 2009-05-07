@@ -48,7 +48,6 @@
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Navaids/navlist.hxx>
-#include <Navaids/fixlist.hxx>
 
 #include "globals.hxx"
 #include "renderer.hxx"

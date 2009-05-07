@@ -159,12 +159,15 @@ static struct {
 #define anzg sixdof_to_visuals.anzg
 
 
-FGADA::FGADA( double dt ) {
+FGADA::FGADA( double dt ) :
+    fdmsock(0)
+{
 //     set_delta_t( dt );
 }
 
 
 FGADA::~FGADA() {
+    delete fdmsock;
 }
 
 
