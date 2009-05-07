@@ -465,11 +465,12 @@ xmlGetString(const void *id)
         char *ps;
 
         ps = xid->start;
-        len = xid->len;
+        len = xid->len-1;
         __xmlPrepareData(&ps, &len);
 
         if (len)
         {
+            len++;
             str = malloc(len+1);
             if (str)
             {
@@ -503,10 +504,11 @@ xmlCopyString(const void *id, char *buffer, size_t buflen)
         char *p;
 
         p = xid->start;
-        len = xid->len;
+        len = xid->len-1;
         __xmlPrepareData(&p, &len);
         if (len)
         {
+            len++;
             if (len >= buflen)
             {
                 len = buflen-1;
@@ -538,7 +540,7 @@ xmlCompareString(const void *id, const char *s)
         ps = xid->start;
         len = xid->len-1;
         __xmlPrepareData(&ps, &len);
-        ret = strncasecmp(ps, s, len);
+        ret = strncasecmp(ps, s, len+1);
     }
 
     return ret;
@@ -1638,7 +1640,7 @@ __xmlProcessCDATA(char **start, size_t *len)
             {
                 if ((restlen > 3) && (memcmp(new, "]]>", 3) == 0))
                 {
-                    *len = new-*start;
+                    *len = new - *start;
                     restlen -= 3;
                     new += 3;
                     break;
@@ -1717,7 +1719,8 @@ __xmlInfoProcess(const char *start, size_t len)
 }
 
 
-static void __xmlPrepareData(char **start, size_t *blocklen)
+static void
+__xmlPrepareData(char **start, size_t *blocklen)
 {
     size_t len = *blocklen;
     char *pe, *ps = *start;

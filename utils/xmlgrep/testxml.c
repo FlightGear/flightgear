@@ -110,6 +110,38 @@ int main()
 
          free(node_id);
          free(path_id);
+
+         path_id = xmlNodeGet(root_id, "Configuration/output/sample/test");
+         if (path_id)
+         {
+            xmlNodeCopyString(root_id ,"Configuration/output/menu/name", buf, BUFLEN);
+            printf("Testing xmlCompareString against a fixed string: \t\t\t");
+            if (xmlCompareString(path_id, buf)) 	/* no match */
+               printf("failed.\n\t'%s' differs\n", buf);
+            else
+               printf("succes.\n");
+
+            s = xmlGetString(path_id);
+            if (s)
+            {
+               printf("Testing xmlGetString  against a fixed string: \t\t\t\t");
+               if (strcmp(s, buf))			/* mismatch */
+                  printf("failed.\n\t'%s' differs from\n\t'%s'\n", s, buf);
+               else
+                  printf("succes.\n");
+
+               printf("Testing xmlCopyString gainst a fixed string: \t\t\t\t");
+               xmlCopyString(path_id, buf, BUFLEN);
+               if (strcmp(s, buf))      		/* mismatch */
+                  printf("failed.\n\t'%s' differs from\n\t'%s'\n", s, buf);
+               else
+                  printf("succes.\n"); 
+
+               free(s);
+            }
+
+            free(path_id);
+         }
       }
       else
       {
