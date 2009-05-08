@@ -14,6 +14,31 @@ int main()
    if (root_id)
    {
       void *path_id, *node_id;
+      char *s;
+
+      printf("\nTesting xmlNodeGetString for /Configuration/output/test:\t\t");
+      s = xmlNodeGetString(root_id , "/Configuration/output/test");
+      if (s)
+      {
+         printf("failed.\n\t'%s' should be empty\n", s);
+         free(s);
+      }
+      else
+         printf("succes.\n");
+
+      printf("Testing xmlGetString for Configuration/output/test:\t\t\t");
+      path_id = xmlNodeGet(root_id, "*/*/test");
+      if (path_id)
+      {
+         s = xmlGetString(path_id);
+         if (s)
+         {
+            printf("failed.\n\t'%s' should be empty\n", s);
+            free(s);
+         }
+         else
+            printf("succes.\n");
+      }
 
       path_id = xmlNodeGet(root_id, PATH);
       node_id = xmlNodeGet(root_id, ROOTNODE);
@@ -22,20 +47,8 @@ int main()
       {
          char buf[BUFLEN];
          size_t len;
-         char *s;
-     
-         len = xmlNodeCopyString(root_id, PATH, buf, BUFLEN);
-         printf("%s = '%s'\n", PATH, buf);
-
-         printf("Testing value of /Configuration/output/test:\t\t\t\t");
-         s = xmlNodeGetString(root_id , "/Configuration/output/test");
-         if (s)
-         {
-            printf("failed.\n\t'%s' shoudl be empty\n", s);
-            free(s);
-         }
-         else
-            printf("succes.\n");
+        
+         xmlCopyString(path_id, buf, BUFLEN);
 
          printf("Testing xmlNodeCopyString against xmlGetString:\t\t\t\t");
          if ((s = xmlGetString(path_id)) != 0)
@@ -150,6 +163,7 @@ int main()
 
       xmlClose(root_id);
    }
+   printf("\n");
 
    return 0;
 }

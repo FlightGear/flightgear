@@ -1511,6 +1511,38 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
             cur = new;
         }
 
+        if (*cur == '/')		/* closing tag of leaf node found */
+        {
+            if (!strncasecmp(new+1, element, elementlen))
+            {
+                if (*(new+elementlen+1) != '>')
+                    SET_ERROR_AND_RETURN(new+1, XML_ELEMENT_NO_CLOSING_TAG);
+
+                if (found == num)
+                {
+                    if (start_tag)
+                    {
+                        *len = new-ret-1;
+                        open_element = start_tag;
+                        cdata = (char *)start;
+                        start_tag = 0;
+                    }
+                    else /* report error */
+                        SET_ERROR_AND_RETURN(new, XML_ELEMENT_NO_OPENING_TAG);
+                }
+                found++;
+            }
+
+            new = memchr(cur, '>', restlen);
+            if (!new)
+                SET_ERROR_AND_RETURN(cur, XML_ELEMENT_NO_CLOSING_TAG);
+
+            restlen -= new-cur;
+            cur = new;
+            continue;
+        }
+
+        /* no leaf node, continue */
         if (*cur != '/')			/* cascading tag found */
         {
             char *node = "*";
@@ -1617,8 +1649,8 @@ __xmlProcessCDATA(char **start, size_t *len)
         new = __xmlCommentSkip(cur, restlen);
         if (new)
         {
-            *start += 3;				/* !-- */
-            *len = (*start-cur)-3;			/* --> */
+            *start = new;
+            *len = 0;
         }
         return new;
     }
@@ -1640,7 +1672,7 @@ __xmlProcessCDATA(char **start, size_t *len)
             {
                 if ((restlen > 3) && (memcmp(new, "]]>", 3) == 0))
                 {
-                    *len = new - *start;
+                    *len = new-1 - *start;
                     restlen -= 3;
                     new += 3;
                     break;
@@ -1678,14 +1710,15 @@ __xmlCommentSkip(const char *start, size_t len)
             new = memchr(cur, '-', len);
             if (new)
             {
-                len -= new - cur;
+                len -= new-cur;
                 if ((len >= 3) && (memcmp(new, "-->", 3) == 0))
                 {
                     new += 3;
-                    len -= 3;
+                    /* len -= 3; */
                     break;
                 }
                 cur = new+1;
+                len -= cur-new;
             }
             else break;
         }
@@ -1737,11 +1770,10 @@ __xmlPrepareData(char **start, size_t *blocklen)
         size_t blocklen = len-1;
         if (blocklen >= 6)                  /* !-- --> */
         {
-            char *new = __xmlProcessCDATA(&start, &blocklen);
+            char *new = __xmlProcessCDATA(&start, &len);
             if (new)
             {
                 ps = start;
-                len = blocklen;
                 pe = ps + len;
 
                 while ((ps<pe) && isspace(*ps)) ps++;

@@ -60,7 +60,7 @@
   <YF23>
    <script><![CDATA[
     # If the ground-roll-heading-hold has been reset (<-999) set:
-    if(agl > 50) {
+    if(agl > 50) {};
    ]]></script>
   </YF23>
  </nasal>
