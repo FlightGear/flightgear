@@ -73,7 +73,7 @@ WindowBuilder::makeDefaultTraits(bool stencil)
     traits->windowName = "FlightGear";
     // XXX should check per window too.
     traits->sampleBuffers = fgGetBool("/sim/rendering/multi-sample-buffers", traits->sampleBuffers);
-    traits->samples = fgGetBool("/sim/rendering/multi-samples", traits->samples);
+    traits->samples = fgGetInt("/sim/rendering/multi-samples", traits->samples);
     traits->vsync = fgGetBool("/sim/rendering/vsync-enable", traits->vsync);
     if (fullscreen) {
         unsigned width = 0;
