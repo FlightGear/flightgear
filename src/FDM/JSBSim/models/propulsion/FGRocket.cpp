@@ -98,6 +98,7 @@ FGRocket::FGRocket(FGFDMExec* exec, Element *el, int engine_number)
 
 FGRocket::~FGRocket(void)
 {
+  delete ThrustTable;
   Debug(1);
 }
 

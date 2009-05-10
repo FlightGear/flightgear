@@ -57,7 +57,8 @@ CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 FGTurboProp::FGTurboProp(FGFDMExec* exec, Element *el, int engine_number)
-  : FGEngine(exec, el, engine_number)
+  : FGEngine(exec, el, engine_number),
+    ITT_N1(NULL), EnginePowerRPM_N1(NULL), EnginePowerVC(NULL)
 {
   SetDefaults();
 
@@ -69,6 +70,9 @@ FGTurboProp::FGTurboProp(FGFDMExec* exec, Element *el, int engine_number)
 
 FGTurboProp::~FGTurboProp()
 {
+  delete ITT_N1;
+  delete EnginePowerRPM_N1;
+  delete EnginePowerVC;
   Debug(1);
 }
 

@@ -57,8 +57,8 @@ INCLUDES
 #include <iomanip>
 
 #include "FGPropagate.h"
-#include <FGState.h>
 #include <FGFDMExec.h>
+#include <FGState.h>
 #include "FGAircraft.h"
 #include "FGMassBalance.h"
 #include "FGInertial.h"
@@ -510,6 +510,10 @@ void FGPropagate::bind(void)
   PropertyManager->Tie("velocities/p-rad_sec", this, eP, (PMF)&FGPropagate::GetPQR);
   PropertyManager->Tie("velocities/q-rad_sec", this, eQ, (PMF)&FGPropagate::GetPQR);
   PropertyManager->Tie("velocities/r-rad_sec", this, eR, (PMF)&FGPropagate::GetPQR);
+
+  PropertyManager->Tie("velocities/pi-rad_sec", this, eP, (PMF)&FGPropagate::GetPQRi);
+  PropertyManager->Tie("velocities/qi-rad_sec", this, eQ, (PMF)&FGPropagate::GetPQRi);
+  PropertyManager->Tie("velocities/ri-rad_sec", this, eR, (PMF)&FGPropagate::GetPQRi);
 
   PropertyManager->Tie("velocities/eci-velocity-mag-fps", this, &FGPropagate::GetInertialVelocityMagnitude);
 

@@ -110,6 +110,7 @@ public:
   virtual bool InitModel(void);
   virtual void SetRate(int tt) {rate = tt;}
   virtual int  GetRate(void)   {return rate;}
+  FGFDMExec* GetExec(void)     {return FDMExec;}
 
   void SetPropertyManager(FGPropertyManager *fgpm) { PropertyManager=fgpm;}
 
