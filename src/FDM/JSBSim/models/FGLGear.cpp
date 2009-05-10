@@ -260,6 +260,7 @@ FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number) :
 
 FGLGear::~FGLGear()
 {
+  delete ForceY_Table;
   Debug(1);
 }
 

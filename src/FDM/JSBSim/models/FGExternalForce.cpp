@@ -150,7 +150,7 @@ FGExternalForce::FGExternalForce(const FGExternalForce& extForce) : FGForce(extF
 FGExternalForce::~FGExternalForce()
 {
   unbind( PropertyManager->GetNode("external_reactions"));
-
+  delete Magnitude_Function;
   Debug(1);
 }
 

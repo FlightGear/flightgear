@@ -54,6 +54,7 @@ INCLUDES
 #include <models/flight_control/FGFCSFunction.h>
 #include <models/flight_control/FGSensor.h>
 #include <models/flight_control/FGActuator.h>
+#include <models/flight_control/FGAccelerometer.h>
 
 namespace JSBSim {
 
@@ -453,7 +454,7 @@ void FGFCS::SetMixturePos(int engineNum, double setting)
 
   if (engineNum < (int)ThrottlePos.size()) {
     if (engineNum < 0) {
-      for (ctr=0;ctr<=MixtureCmd.size();ctr++) MixturePos[ctr] = MixtureCmd[ctr];
+      for (ctr=0;ctr<MixtureCmd.size();ctr++) MixturePos[ctr] = MixtureCmd[ctr];
     } else {
       MixturePos[engineNum] = setting;
     }
@@ -483,7 +484,7 @@ void FGFCS::SetPropAdvance(int engineNum, double setting)
 
   if (engineNum < (int)ThrottlePos.size()) {
     if (engineNum < 0) {
-      for (ctr=0;ctr<=PropAdvanceCmd.size();ctr++) PropAdvance[ctr] = PropAdvanceCmd[ctr];
+      for (ctr=0;ctr<PropAdvanceCmd.size();ctr++) PropAdvance[ctr] = PropAdvanceCmd[ctr];
     } else {
       PropAdvance[engineNum] = setting;
     }
@@ -513,7 +514,7 @@ void FGFCS::SetPropFeather(int engineNum, bool setting)
 
   if (engineNum < (int)ThrottlePos.size()) {
     if (engineNum < 0) {
-      for (ctr=0;ctr<=PropFeatherCmd.size();ctr++) PropFeather[ctr] = PropFeatherCmd[ctr];
+      for (ctr=0;ctr<PropFeatherCmd.size();ctr++) PropFeather[ctr] = PropFeatherCmd[ctr];
     } else {
       PropFeather[engineNum] = setting;
     }
@@ -578,11 +579,11 @@ bool FGFCS::Load(Element* el, SystemType systype)
   // all stored in the interface properties array.
 
   property_element = document->FindElement("property");
-  if (property_element) cout << endl << "    Declared properties" << endl << endl;
+  if (property_element && debug_lvl > 0) cout << endl << "    Declared properties" << endl << endl;
   while (property_element) {
     interface_property_string = property_element->GetDataLine();
     if (PropertyManager->HasNode(interface_property_string)) {
-      cout << "      Property " << interface_property_string << " is already defined." << endl;
+      cerr << "      Property " << interface_property_string << " is already defined." << endl;
     } else {
       double value=0.0;
       if ( ! property_element->GetAttributeValue("value").empty())
@@ -590,7 +591,8 @@ bool FGFCS::Load(Element* el, SystemType systype)
       interface_properties.push_back(new double(value));
       interface_property_string = property_element->GetDataLine();
       PropertyManager->Tie(interface_property_string, interface_properties.back());
-      cout << "      " << interface_property_string << " (initial value: " << value << ")" << endl;
+      if (debug_lvl > 0)
+        cout << "      " << interface_property_string << " (initial value: " << value << ")" << endl;
     }
     property_element = document->FindNextElement("property");
   }
@@ -611,8 +613,9 @@ bool FGFCS::Load(Element* el, SystemType systype)
       interface_property_string = property_element->GetDataLine();
       if (PropertyManager->HasNode(interface_property_string)) {
         FGPropertyManager* node = PropertyManager->GetNode(interface_property_string);
-        cout << "      " << "Overriding value for property " << interface_property_string
-             << " (old value: " << node->getDoubleValue() << "  new value: " << value << ")" << endl;
+        if (debug_lvl > 0)
+          cout << "      " << "Overriding value for property " << interface_property_string
+               << " (old value: " << node->getDoubleValue() << "  new value: " << value << ")" << endl;
         node->setDoubleValue(value);
       } else {
         interface_properties.push_back(new double(value));
@@ -679,6 +682,8 @@ bool FGFCS::Load(Element* el, SystemType systype)
           Components->push_back(new FGActuator(this, component_element));
         } else if (component_element->GetName() == string("sensor")) {
           Components->push_back(new FGSensor(this, component_element));
+        } else if (component_element->GetName() == string("accelerometer")) {
+          Components->push_back(new FGAccelerometer(this, component_element));
         } else {
           cerr << "Unknown FCS component: " << component_element->GetName() << endl;
         }
