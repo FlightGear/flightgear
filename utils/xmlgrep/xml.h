@@ -325,7 +325,6 @@ double xmlNodeGetDouble(const void *, const char *);
 double xmlAttributeGetDouble(const void *, const char *);
 
 
-#ifndef XML_NONVALIDATING
 /**
  * Get the error number of the last error and clear it.
  *
@@ -361,7 +360,6 @@ size_t xmlErrorGetColumnNo(const void *, int);
  * @return a string that explains the last error.
  */
 const char *xmlErrorGetString(const void *, int);
-#endif
 
 #ifdef __cplusplus
 }
