@@ -58,9 +58,9 @@ typedef struct
 #include <assert.h>
 #include <ctype.h>
 
-#ifndef XML_NONVALIDATING
 #include "xml.h"
 
+#ifndef XML_NONVALIDATING
 static const char *__xml_error_str[XML_MAX_ERROR];
 
 struct _xml_error
@@ -224,7 +224,9 @@ xmlClose(void *id)
          close(rid->fd);
      }
 
+#ifndef XML_NONVALIDATING
      if (rid->info) free(rid->info);
+#endif
      free(rid);
      id = 0;
 }
@@ -1280,6 +1282,33 @@ xmlErrorGetString(const void *id, int clear)
 
     return ret;
 }
+
+#else
+
+int
+xmlErrorGetNo(const void *id, int clear)
+{
+    return XML_NO_ERROR;
+}
+
+size_t
+xmlErrorGetLineNo(const void *id, int clear)
+{
+    return 0;
+}
+
+size_t
+xmlErrorGetColumnNo(const void *id, int clear)
+{
+    return 0;
+}
+
+const char *
+xmlErrorGetString(const void *id, int clear)
+{
+   return "error detection was not enabled at compile time: no error.";
+}
+
 #endif
 
 /* -------------------------------------------------------------------------- */
