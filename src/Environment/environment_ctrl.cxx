@@ -861,14 +861,12 @@ void
 FGMetarEnvironmentCtrl::update_metar_properties( const FGMetar *m )
 {
     int i;
-    double d;
-    char s[128];
 
     fgSetString("/environment/metar/real-metar", m->getData());
-	// don't update with real weather when we use a custom weather scenario
-	const char *current_scenario = fgGetString("/environment/weather-scenario", "METAR");
-	if( strcmp(current_scenario, "METAR") && strcmp(current_scenario, "none"))
-		return;
+    // don't update with real weather when we use a custom weather scenario
+    const char *current_scenario = fgGetString("/environment/weather-scenario", "METAR");
+    if (strcmp(current_scenario, "METAR") && strcmp(current_scenario, "none"))
+        return;
     fgSetString("/environment/metar/last-metar", m->getData());
     fgSetString("/environment/metar/station-id", m->getId());
     fgSetDouble("/environment/metar/min-visibility-m",
@@ -876,17 +874,15 @@ FGMetarEnvironmentCtrl::update_metar_properties( const FGMetar *m )
     fgSetDouble("/environment/metar/max-visibility-m",
                 m->getMaxVisibility().getVisibility_m() );
 
+    SGPropertyNode *metar = fgGetNode("/environment/metar", true);
     const SGMetarVisibility *dirvis = m->getDirVisibility();
+
     for (i = 0; i < 8; i++, dirvis++) {
-        const char *min = "/environment/metar/visibility[%d]/min-m";
-        const char *max = "/environment/metar/visibility[%d]/max-m";
+        SGPropertyNode *vis = metar->getChild("visibility", i, true);
+        double v = dirvis->getVisibility_m();
 
-        d = dirvis->getVisibility_m();
-
-        snprintf(s, 128, min, i);
-        fgSetDouble(s, d);
-        snprintf(s, 128, max, i);
-        fgSetDouble(s, d);
+        vis->setDoubleValue("min-m", v);
+        vis->setDoubleValue("max-m", v);
     }
 
     fgSetInt("/environment/metar/base-wind-range-from",
@@ -907,51 +903,34 @@ FGMetarEnvironmentCtrl::update_metar_properties( const FGMetar *m )
                 m->getPressure_inHg() );
 
     vector<SGMetarCloud> cv = m->getClouds();
-    vector<SGMetarCloud>::const_iterator cloud;
+    vector<SGMetarCloud>::const_iterator cloud, cloud_end = cv.end();
 
-    const char *cl = "/environment/metar/clouds/layer[%i]";
-    for (i = 0, cloud = cv.begin(); cloud != cv.end(); cloud++, i++) {
-        const char *coverage_string[5] = 
-            { "clear", "few", "scattered", "broken", "overcast" };
-        const double thickness[5] = { 0, 65, 600,750, 1000};
-        int q;
+    SGPropertyNode *metar_clouds = fgGetNode("/environment/metar/clouds", true);
 
-        snprintf(s, 128, cl, i);
-        strncat(s, "/coverage", 128);
-        q = cloud->getCoverage();
-        fgSetString(s, coverage_string[q] );
+    for (i = 0, cloud = cv.begin(); i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
+        const char *coverage_string[5] = { "clear", "few", "scattered", "broken", "overcast" };
+        const double thickness_value[5] = { 0, 65, 600, 750, 1000 };
 
-        snprintf(s, 128, cl, i);
-        strncat(s, "/elevation-ft", 128);
-        fgSetDouble(s, cloud->getAltitude_ft() + station_elevation_ft);
+        const char *coverage = "clear";
+        double elevation = -9999.0;
+        double thickness = 0.0;
+        const double span = 40000.0;
 
-        snprintf(s, 128, cl, i);
-        strncat(s, "/thickness-ft", 128);
-        fgSetDouble(s, thickness[q]);
+        if (cloud != cloud_end) {
+            int c = cloud->getCoverage();
+            coverage = coverage_string[c];
+            elevation = cloud->getAltitude_ft() + station_elevation_ft;
+            thickness = thickness_value[c];
+            ++cloud;
+        }
 
-        snprintf(s, 128, cl, i);
-        strncat(s, "/span-m", 128);
-        fgSetDouble(s, 40000.0);
+        SGPropertyNode *layer;
+        layer = metar_clouds->getChild("layer", i, true);
+        layer->setStringValue("coverage", coverage);
+        layer->setDoubleValue("elevation-ft", elevation);
+        layer->setDoubleValue("thickness-ft", thickness);
+        layer->setDoubleValue("span-m", span);
     }
-
-    for (; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
-        snprintf(s, 128, cl, i);
-        strncat(s, "/coverage", 128);
-        fgSetString(s, "clear");
-
-        snprintf(s, 128, cl, i);
-        strncat(s, "/elevation-ft", 128);
-        fgSetDouble(s, -9999);
-
-        snprintf(s, 128, cl, i);
-        strncat(s, "/thickness-ft", 128);
-        fgSetDouble(s, 0);
-
-        snprintf(s, 128, cl, i);
-        strncat(s, "/span-m", 128);
-        fgSetDouble(s, 40000.0);
-    }
-
     fgSetDouble("/environment/metar/rain-norm", m->getRain());
     fgSetDouble("/environment/metar/hail-norm", m->getHail());
     fgSetDouble("/environment/metar/snow-norm", m->getSnow());
