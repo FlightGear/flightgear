@@ -28,7 +28,7 @@
 
 #include <simgear/math/sg_geodesy.hxx>
 
-#include "Navaids/positioned.hxx"
+#include <Navaids/positioned.hxx>
 
 #include <string>
 

@@ -34,8 +34,8 @@
 #include <queue>
 #include <vector>
 
-#include "Navaids/positioned.hxx"
-#include "Environment/environment.hxx"
+#include <Navaids/positioned.hxx>
+#include <Environment/environment.hxx>
 
 // forward decls
 class SGPropertyNode;

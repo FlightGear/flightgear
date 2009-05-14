@@ -38,9 +38,9 @@
 #include "navrecord.hxx"
 #include "navlist.hxx"
 #include "navdb.hxx"
-#include "Main/globals.hxx"
-#include "Navaids/markerbeacon.hxx"
-#include "Airports/simple.hxx"
+#include <Main/globals.hxx>
+#include <Navaids/markerbeacon.hxx>
+#include <Airports/simple.hxx>
 
 using std::string;
 

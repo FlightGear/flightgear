@@ -11,9 +11,9 @@
 
 #include <simgear/compiler.h>
 #include <Aircraft/aircraft.hxx>
-#include "Main/fg_props.hxx"
-#include "Main/util.hxx" // for fgLowPass
-#include "Navaids/positioned.hxx"
+#include <Main/fg_props.hxx>
+#include <Main/util.hxx> // for fgLowPass
+#include <Navaids/positioned.hxx>
 
 #include <simgear/math/sg_random.h>
 #include <simgear/sg_inlines.h>

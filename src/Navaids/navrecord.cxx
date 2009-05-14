@@ -30,10 +30,10 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
 
-#include "Navaids/navrecord.hxx"
-#include "Navaids/navdb.hxx"
-#include "Airports/runways.hxx"
-#include "Main/fg_props.hxx"
+#include <Navaids/navrecord.hxx>
+#include <Navaids/navdb.hxx>
+#include <Airports/runways.hxx>
+#include <Main/fg_props.hxx>
 
 FGNavRecord::FGNavRecord(Type aTy, const std::string& aIdent, 
   const std::string& aName, const SGGeod& aPos,

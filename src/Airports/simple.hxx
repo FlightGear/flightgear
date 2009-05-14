@@ -32,7 +32,7 @@
 #include <string>
 #include <vector>
 
-#include "Navaids/positioned.hxx"
+#include <Navaids/positioned.hxx>
 
 // forward decls
 class FGAirportDynamics;

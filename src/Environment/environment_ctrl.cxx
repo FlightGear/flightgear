@@ -34,7 +34,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 
-#include "Environment/fgmetar.hxx"
+#include "fgmetar.hxx"
 #include "environment_mgr.hxx"
 #include "environment_ctrl.hxx"
 

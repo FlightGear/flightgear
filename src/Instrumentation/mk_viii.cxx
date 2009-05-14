@@ -74,13 +74,13 @@
 
 using std::string;
 
-#include "Airports/runways.hxx"
-#include "Airports/simple.hxx"
+#include <Airports/runways.hxx>
+#include <Airports/simple.hxx>
 #ifndef _MSC_VER
-#  include "Include/version.h"
+#  include <Include/version.h>
 #endif
-#include "Main/fg_props.hxx"
-#include "Main/globals.hxx"
+#include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
 #include "instrument_mgr.hxx"
 #include "mk_viii.hxx"
 

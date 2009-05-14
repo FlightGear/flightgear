@@ -33,8 +33,8 @@
 #include <simgear/math/sg_geodesy.hxx>
 
 #include "fixlist.hxx"
-#include "Navaids/fix.hxx"
-#include "Airports/simple.hxx"
+#include <Navaids/fix.hxx>
+#include <Airports/simple.hxx>
 
 FGFix::FGFix(const std::string& aIdent, const SGGeod& aPos) :
   FGPositioned(FIX, aIdent, aPos)
