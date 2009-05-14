@@ -399,6 +399,10 @@ static void set_dewpoint_at_altitude( float dewpoint_degc, float altitude_ft ) {
 void
 FGMetarEnvironmentCtrl::update_env_config ()
 {
+    // If we aren't in the METAR scenario, don't attempt to interpolate.
+    if (strcmp(fgGetString("/environment/weather-scenario", "METAR"), "METAR"))
+        return;
+
     double dir_from;
     double dir_to;
     double speed;
@@ -407,9 +411,9 @@ FGMetarEnvironmentCtrl::update_env_config ()
     double pressure;
     double temp;
     double dewpoint;
-    
-    // If we aren't in the METAR scenario, don't attempt to interpolate.
-    if (strcmp(fgGetString("/environment/weather-scenario", "METAR"), "METAR")) return;
+
+    const SGPropertyNode *metar_clouds = fgGetNode("/environment/metar/clouds", true);
+    SGPropertyNode *clouds = fgGetNode("/environment/clouds",  true);
 
     if (metar_loaded) {
         // Generate interpolated values between the METAR and the current
@@ -420,8 +424,8 @@ FGMetarEnvironmentCtrl::update_env_config ()
         double metar_speed = fgGetDouble("/environment/metar/base-wind-speed-kt");
         double metar_heading = fgGetDouble("/environment/metar/base-wind-range-from");
 
-        metar[0] = metar_speed * sin((metar_heading / 180.0) * M_PI);
-        metar[1] = metar_speed * cos((metar_heading / 180.0) * M_PI);
+        metar[0] = metar_speed * sin(metar_heading * M_PI / 180.0);
+        metar[1] = metar_speed * cos(metar_heading * M_PI / 180.0);
 
         // Convert the current wind values and convert them into a vector
         double current[2];
@@ -430,8 +434,8 @@ FGMetarEnvironmentCtrl::update_env_config ()
         double current_heading = fgGetDouble(
                 "/environment/config/boundary/entry/wind-from-heading-deg");
 
-        current[0] = current_speed * sin((current_heading / 180.0) * M_PI);
-        current[1] = current_speed * cos((current_heading / 180.0) * M_PI);
+        current[0] = current_speed * sin(current_heading * M_PI / 180.0);
+        current[1] = current_speed * cos(current_heading * M_PI / 180.0);
 
         // Determine the maximum component-wise value that the wind can change.
         // First we determine the fraction in the X and Y component, then
@@ -498,20 +502,15 @@ FGMetarEnvironmentCtrl::update_env_config ()
         dewpoint = fgGetDouble("/environment/metar/dewpoint-degc");
 
         // Set the cloud layers by interpolating over the METAR versions.
-        SGPropertyNode * clouds = fgGetNode("/environment/metar/clouds");
-
-        vector<SGPropertyNode_ptr> layers = clouds->getChildren("layer");
+        vector<SGPropertyNode_ptr> layers = metar_clouds->getChildren("layer");
         vector<SGPropertyNode_ptr>::const_iterator layer;
         vector<SGPropertyNode_ptr>::const_iterator layers_end = layers.end();
 
-        const char *cl = "/environment/clouds/layer[%i]";
         double aircraft_alt = fgGetDouble("/position/altitude-ft");
-        char s[128];
         int i;
 
         for (i = 0, layer = layers.begin(); layer != layers_end; ++layer, i++) {
-            double currentval;
-            double requiredval;
+            SGPropertyNode *target = clouds->getChild("layer", i, true);
 
             // In the case of clouds, we want to avoid writing if nothing has
             // changed, as these properties are tied to the renderer and will
@@ -520,16 +519,15 @@ FGMetarEnvironmentCtrl::update_env_config ()
             // We don't interpolate the coverage values as no-matter how we
             // do it, it will be quite a sudden change of texture. Better to
             // have a single change than four or five.
-            snprintf(s, 128, cl, i);
-            strncat(s, "/coverage", 128);
-            const char* coverage = (*layer)->getStringValue("coverage", "clear");
-            if (strncmp(fgGetString(s), coverage, 128) != 0)
-                fgSetString(s, coverage);
+            const char *coverage = (*layer)->getStringValue("coverage", "clear");
+            SGPropertyNode *cov = target->getNode("coverage", true);
+            if (strcmp(cov->getStringValue(), coverage) != 0)
+                cov->setStringValue(coverage);
 
-            snprintf(s, 128, cl, i);
-            strncat(s, "/elevation-ft", 128);
-            double current_alt = fgGetDouble(s);
             double required_alt = (*layer)->getDoubleValue("elevation-ft");
+            double current_alt = target->getDoubleValue("elevation-ft");
+            double required_thickness = (*layer)->getDoubleValue("thickness-ft");
+            SGPropertyNode *thickness = target->getNode("thickness-ft", true);
 
             if (current_alt < -9000 || required_alt < -9000 ||
                 fabs(aircraft_alt - required_alt) > MaxCloudInterpolationHeightFt ||
@@ -540,15 +538,11 @@ FGMetarEnvironmentCtrl::update_env_config ()
                 //  - with too large a difference to make interpolation sensible
                 //  - to or from -9999 (used as a placeholder)
                 //  - any values that are too high above us,
-                snprintf(s, 128, cl, i);
-                strncat(s, "/elevation-ft", 128);
                 if (current_alt != required_alt)
-                    fgSetDouble(s, required_alt);
+                    target->setDoubleValue("elevation-ft", required_alt);
 
-                snprintf(s, 128, cl, i);
-                strncat(s, "/thickness-ft", 128);
-                if (fgGetDouble(s) != (*layer)->getDoubleValue("thickness-ft"))
-                    fgSetDouble(s, (*layer)->getDoubleValue("thickness-ft"));
+                if (thickness->getDoubleValue() != required_thickness)
+                    thickness->setDoubleValue(required_thickness);
 
             } else {
                 // Interpolate the other values in the usual way
@@ -556,19 +550,16 @@ FGMetarEnvironmentCtrl::update_env_config ()
                     current_alt = interpolate_val(current_alt,
                                                   required_alt,
                                                   MaxCloudAltitudeChangeFtSec);
-                    fgSetDouble(s, current_alt);
+                    target->setDoubleValue("elevation-ft", current_alt);
                 }
 
-                snprintf(s, 128, cl, i);
-                strncat(s, "/thickness-ft", 128);
-                currentval = fgGetDouble(s);
-                requiredval = (*layer)->getDoubleValue("thickness-ft");
+                double current_thickness = thickness->getDoubleValue();
 
-                if (currentval != requiredval) {
-                    currentval = interpolate_val(currentval,
-                                                 requiredval,
+                if (current_thickness != required_thickness) {
+                    current_thickness = interpolate_val(current_thickness,
+                                                 required_thickness,
                                                  MaxCloudThicknessChangeFtSec);
-                    fgSetDouble(s, currentval);
+                    thickness->setDoubleValue(current_thickness);
                 }
             }
         }
@@ -584,33 +575,21 @@ FGMetarEnvironmentCtrl::update_env_config ()
         temp     = fgGetDouble("/environment/metar/temperature-degc");
         dewpoint = fgGetDouble("/environment/metar/dewpoint-degc");
 
-        // Set the cloud layers by copying over the METAR versions.
-        SGPropertyNode * clouds = fgGetNode("/environment/metar/clouds", true);
-
-        vector<SGPropertyNode_ptr> layers = clouds->getChildren("layer");
+        vector<SGPropertyNode_ptr> layers = metar_clouds->getChildren("layer");
         vector<SGPropertyNode_ptr>::const_iterator layer;
         vector<SGPropertyNode_ptr>::const_iterator layers_end = layers.end();
 
-        const char *cl = "/environment/clouds/layer[%i]";
-        char s[128];
         int i;
-
         for (i = 0, layer = layers.begin(); layer != layers_end; ++layer, i++) {
-            snprintf(s, 128, cl, i);
-            strncat(s, "/coverage", 128);
-            fgSetString(s, (*layer)->getStringValue("coverage", "clear"));
+            SGPropertyNode *target = clouds->getChild("layer", i, true);
 
-            snprintf(s, 128, cl, i);
-            strncat(s, "/elevation-ft", 128);
-            fgSetDouble(s, (*layer)->getDoubleValue("elevation-ft"));
-
-            snprintf(s, 128, cl, i);
-            strncat(s, "/thickness-ft", 128);
-            fgSetDouble(s, (*layer)->getDoubleValue("thickness-ft"));
-
-            snprintf(s, 128, cl, i);
-            strncat(s, "/span-m", 128);
-            fgSetDouble(s, 40000.0);
+            target->setStringValue("coverage",
+                    (*layer)->getStringValue("coverage", "clear"));
+            target->setDoubleValue("elevation-ft",
+                    (*layer)->getDoubleValue("elevation-ft"));
+            target->setDoubleValue("thickness-ft",
+                    (*layer)->getDoubleValue("thickness-ft"));
+            target->setDoubleValue("span-m", 40000.0);
         }
 
         // Force an update of the 3D clouds
