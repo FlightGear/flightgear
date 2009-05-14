@@ -27,9 +27,9 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
 
-#include "Navaids/markerbeacon.hxx"
-#include "Airports/runways.hxx"
-#include "Navaids/navdb.hxx"
+#include <Navaids/markerbeacon.hxx>
+#include <Airports/runways.hxx>
+#include <Navaids/navdb.hxx>
 
 using std::string;
 

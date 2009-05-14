@@ -46,7 +46,7 @@
 #include <ATCDCL/ATCProjection.hxx>
 #include <Main/fg_props.hxx>
 #include <simgear/math/SGMath.hxx>
-#include "Airports/simple.hxx"
+#include <Airports/simple.hxx>
 
 using std::cout;
 

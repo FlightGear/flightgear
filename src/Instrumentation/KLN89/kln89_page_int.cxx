@@ -26,8 +26,8 @@
 #endif
 
 #include "kln89_page_int.hxx"
-#include "Navaids/fix.hxx"
-#include "Navaids/navrecord.hxx"
+#include <Navaids/fix.hxx>
+#include <Navaids/navrecord.hxx>
 
 KLN89IntPage::KLN89IntPage(KLN89* parent) 
 : KLN89Page(parent) {

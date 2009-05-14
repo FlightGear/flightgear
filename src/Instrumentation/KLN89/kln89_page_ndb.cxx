@@ -26,7 +26,7 @@
 #endif
 
 #include "kln89_page_ndb.hxx"
-#include "Navaids/navrecord.hxx"
+#include <Navaids/navrecord.hxx>
 
 KLN89NDBPage::KLN89NDBPage(KLN89* parent) 
 : KLN89Page(parent) {

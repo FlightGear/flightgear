@@ -36,9 +36,9 @@ using std::vector;
 using std::deque;
 using std::map;
 
-#include "Airports/runways.hxx"
-#include "Airports/simple.hxx"
-#include "Main/globals.hxx"
+#include <Airports/runways.hxx>
+#include <Airports/simple.hxx>
+#include <Main/globals.hxx>
 
 ///////////////////////////////////////////////////////////////////////////////
 // MK_VIII ////////////////////////////////////////////////////////////////////

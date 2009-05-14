@@ -26,7 +26,7 @@
 
 #include <simgear/compiler.h>
 
-#include "Airports/runwaybase.hxx"
+#include <Airports/runwaybase.hxx>
 
 // forward decls
 class FGAirport;
