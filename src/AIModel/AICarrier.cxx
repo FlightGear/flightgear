@@ -394,7 +394,7 @@ void FGAICarrier::initModel(osg::Node *node)
     // process the 3d model here
     // mark some objects solid, mark the wires ...
     FGCarrierVisitor carrierVisitor(this, wire_objects, catapult_objects);
-    model->accept(carrierVisitor);
+    node->accept(carrierVisitor);
 }
 
 void FGAICarrier::bind() {
