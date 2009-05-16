@@ -680,6 +680,12 @@
 					Name="flight_control"
 					Filter="">
 					<File
+						RelativePath="..\..\src\Fdm\JSBSim\models\flight_control\FGAccelerometer.cpp">
+					</File>
+					<File
+						RelativePath="..\..\src\Fdm\JSBSim\models\flight_control\FGAccelerometer.h">
+					</File>
+					<File
 						RelativePath="..\..\src\Fdm\JSBSim\models\flight_control\FGActuator.cpp">
 					</File>
 					<File
