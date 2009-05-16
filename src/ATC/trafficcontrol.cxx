@@ -379,7 +379,6 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
          }
     string text;
     string taxiFreqStr;
-    char buffer[7];
     double heading = 0;
     string activeRunway;
     string fltType;

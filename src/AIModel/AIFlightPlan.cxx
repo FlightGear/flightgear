@@ -66,7 +66,7 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename)
 
   try {
       readProperties(path.str(), &root);
-  } catch (const sg_exception &e) {
+  } catch (const sg_exception &) {
       SG_LOG(SG_GENERAL, SG_ALERT,
        "Error reading AI flight plan: " << path.str());
        // cout << path.str() << endl;
@@ -177,7 +177,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
 	    waypoints.push_back(wpt);
 	  }
 	}
-      catch (const sg_exception &e) {
+      catch (const sg_exception &) {
 	SG_LOG(SG_GENERAL, SG_WARN,
 	       "Error reading AI flight plan: ");
 	cerr << "Errno = " << errno << endl;
@@ -468,7 +468,7 @@ void FGAIFlightPlan::deleteTaxiRoute()
 
 
 int FGAIFlightPlan::getRouteIndex(int i) {
-  if ((i > 0) && (i < waypoints.size())) {
+  if ((i > 0) && (i < (int)waypoints.size())) {
     return waypoints[i]->routeIndex;
   }
   else
