@@ -120,27 +120,23 @@ void FGAIThermal::update(double dt) {
 double FGAIThermal::get_strength_fac(double alt_frac) {
 
 double PI = 4.0 * atan(1.0);
-double fac;
+double fac = 0.0;
 if ( alt_frac <=0.0 ) { // do submarines get thermals ?
 	fac = 0.0;
-	return fac;
 	}
 else if ( ( alt_frac>0.0 ) && (alt_frac<=0.1) ) { // ground layer
 	fac = ( 0.1*( pow( (10.0*alt_frac),10.0) ) );
-	return fac;
 	}
 else if ( ( alt_frac>0.1 ) && (alt_frac<=1.0) ) {   // main body of the thermal
 	fac = 0.4175 - 0.5825* ( cos ( PI*  (1.0-sqrt(alt_frac) ) +PI) ) ;
-	return fac;
 	}
 else if ( ( alt_frac >1.0 ) && (alt_frac < 1.1 ) ) {  //above the ceiling, but not above the cloud
 	fac = (0.5 * ( 1.0 + cos ( PI*( (-2.0*alt_frac)*5.0 ) ) ) );
-	return fac;
 	}
 else if ( alt_frac >= 1.1 ) {  //above the cloud
 	fac = 0.0;
-	return fac;
 	}
+return fac;
 }
 
 
@@ -255,12 +251,7 @@ double Vup;
 // environment variables
 // *********************
 
-// the  windspeed at the user alt in KT
-double windspeed;
-
 // the  wind heading at the user alt
-double wind_heading;
-double wind_heading_deg;
 double wind_heading_rad;
 
 // the "ambient" sink outside thermals
