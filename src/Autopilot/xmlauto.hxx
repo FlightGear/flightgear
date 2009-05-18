@@ -52,6 +52,7 @@ using std::deque;
 class FGXMLAutoInput : public SGReferenced {
 private:
      double             value;    // The value as a constant or initializer for the property
+     bool               abs;      // return absolute value
      SGPropertyNode_ptr property; // The name of the property containing the value
      SGSharedPtr<FGXMLAutoInput> offset;   // A fixed offset, defaults to zero
      SGSharedPtr<FGXMLAutoInput> scale;    // A constant scaling factor defaults to one
@@ -63,6 +64,7 @@ public:
     FGXMLAutoInput( SGPropertyNode_ptr node = NULL, double value = 0.0, double offset = 0.0, double scale = 1.0 ) :
       property(NULL),
       value(0.0),
+      abs(false),
       offset(NULL),
       scale(NULL),
       min(NULL),
