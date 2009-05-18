@@ -19,6 +19,7 @@
 // $Id$
 
 #ifndef FLIGHTGEAR_SCENERYPAGERHXX
+#define FLIGHTGEAR_SCENERYPAGERHXX 1
 #include <string>
 #include <vector>
 
@@ -27,11 +28,6 @@
 #include <osgDB/DatabasePager>
 
 #include <simgear/structure/OSGVersion.hxx>
-
-// Pager request change in OpenSceneGraph 2.5.1
-#if SG_OSG_VERSION >= 25001
-#define FGOSGPAGER25
-#endif
 
 namespace flightgear
 {
@@ -45,17 +41,17 @@ public:
     // reimplement to add readerWriterOptions from SGPagedLOD
     virtual void requestNodeFile(const std::string& fileName, osg::Group* group,
                                  float priority,
-                                 const osg::FrameStamp* framestamp
-#ifdef FGOSGPAGER25
-                                 , osg::ref_ptr<osg::Referenced>&
-                                 databaseRequest
+                                 const osg::FrameStamp* framestamp,
+                                 osg::ref_ptr<osg::Referenced>& databaseRequest,
+#if SG_OSG_MIN_VERSION_REQUIRED(2,9,5)
+                                 const osg::Referenced* options
+#else
+                                 osgDB::ReaderWriter::Options* options
 #endif
-        );
+                                 );
     void queueRequest(const std::string& fileName, osg::Group* node,
                       float priority, osg::FrameStamp* frameStamp,
-#ifdef FGOSGPAGER25
                       osg::ref_ptr<osg::Referenced>& databaseRequest,
-#endif
                       osgDB::ReaderWriter::Options* options);
     // This is passed a ref_ptr so that it can "take ownership" of the
     // node to delete and decrement its refcount while holding the
@@ -74,17 +70,11 @@ protected:
 
         PagerRequest(const std::string& fileName, osg::Group* group,
                      float priority, osg::FrameStamp* frameStamp,
-#ifdef FGOSGPAGER25
                      osg::ref_ptr<Referenced>& databaseRequest,
-#endif
                      osgDB::ReaderWriter::Options* options):
             _fileName(fileName), _group(group), _priority(priority),
             _frameStamp(frameStamp), _options(options),
-#ifdef FGOSGPAGER25
             _databaseRequest(&databaseRequest)
-#else
-            _databaseRequest(0)
-#endif
         {}
 
         void doRequest(SceneryPager* pager)
@@ -92,9 +82,7 @@ protected:
             if (_group->getNumChildren() == 0)
                 pager->requestNodeFile(_fileName, _group.get(), _priority,
                                        _frameStamp.get(),
-#ifdef FGOSGPAGER25
                                        *_databaseRequest,
-#endif
                                        _options.get());
         }
 
@@ -112,5 +100,4 @@ protected:
     virtual ~SceneryPager();
 };
 }
-#define FLIGHTGEAR_SCENERYPAGERHXX 1
 #endif

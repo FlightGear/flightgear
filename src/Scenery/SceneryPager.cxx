@@ -41,40 +41,34 @@ SceneryPager::~SceneryPager()
 }
 
 void SceneryPager::requestNodeFile(const std::string& fileName, Group* group,
-                                   float priority,
-                                   const FrameStamp* framestamp
-#ifdef FGOSGPAGER25
-                                   , ref_ptr<Referenced>& databaseRequest
+                                   float priority, const FrameStamp* framestamp,
+                                   ref_ptr<Referenced>& databaseRequest,
+#if SG_OSG_MIN_VERSION_REQUIRED(2,9,5)
+                                   const osg::Referenced* options
+#else
+                                   osgDB::ReaderWriter::Options* options
 #endif
-    )
+                                   )
 {
     simgear::SGPagedLOD *sgplod = dynamic_cast<simgear::SGPagedLOD*>(group);
     if(sgplod)
         DatabasePager::requestNodeFile(fileName, group, priority, framestamp,
-#ifdef FGOSGPAGER25
                                        databaseRequest,
-#endif
                                        sgplod->getReaderWriterOptions());
     else
-        DatabasePager::requestNodeFile(fileName, group, priority, framestamp
-#ifdef FGOSGPAGER25
-                                       , databaseRequest
-#endif
-            );
+        DatabasePager::requestNodeFile(fileName, group, priority, framestamp,
+                                       databaseRequest,
+                                       options);
 }
 
 void SceneryPager::queueRequest(const std::string& fileName, Group* group,
                                 float priority, FrameStamp* frameStamp,
-#ifdef FGOSGPAGER25
                                 ref_ptr<Referenced>& databaseRequest,
-#endif
                                 osgDB::ReaderWriter::Options* options)
 {
     _pagerRequests.push_back(PagerRequest(fileName, group, priority,
                                           frameStamp,
-#ifdef FGOSGPAGER25
                                           databaseRequest,
-#endif
                                           options));
 }
 
@@ -90,15 +84,9 @@ void SceneryPager::signalEndFrame()
     bool arePagerRequests = false;
     if (!_deleteRequests.empty()) {
         areDeleteRequests = true;
-#ifdef FGOSGPAGER25
         OpenThreads::ScopedLock<OpenThreads::Mutex>
             lock(_fileRequestQueue->_childrenToDeleteListMutex);
         ObjectList& deleteList = _fileRequestQueue->_childrenToDeleteList;
-#else
-        OpenThreads::ScopedLock<OpenThreads::Mutex>
-            lock(_childrenToDeleteListMutex);
-        ObjectList& deleteList = _childrenToDeleteList;
-#endif
         deleteList.insert(deleteList.end(),
                           _deleteRequests.begin(),
                           _deleteRequests.end());
@@ -111,11 +99,7 @@ void SceneryPager::signalEndFrame()
         _pagerRequests.clear();
     }
     if (areDeleteRequests && !arePagerRequests) {
-#ifdef FGOSGPAGER25
         _fileRequestQueue->updateBlock();
-#else
-        updateDatabasePagerThreadBlock();
-#endif        
     }
     DatabasePager::signalEndFrame();
 }
