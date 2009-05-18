@@ -26,6 +26,7 @@ The complete XML syntax for a InputValue is
   <offset>0.0</offset>
   <max>infinity</max>
   <min>-infinity<min>
+  <abs>false</abs>
 </some-element>
 
 The enclosing element <some-element> is the element defined in each filter, like <input>, <u_min>, 
@@ -55,6 +56,7 @@ The default values for elements not given are:
 <property/> : none
 <min/>   : unclipped
 <max/>   : unclipped
+<abs/>   : false
 
 Some examples:
 <input>
@@ -115,6 +117,10 @@ Example: Set the gain to 3.0 if /autopilot/locks/heading equals dg-heading-hold 
     <value>2.0</value>
   <gain>
 <digital-filter>
+
+If the element <abs> is used and set to the value "true", only the absolute value of the input
+(the positive part) is used for further computations. The abs function is applied after all 
+other computations are completed.
     
 OutputValue           
 ==============================================================================
