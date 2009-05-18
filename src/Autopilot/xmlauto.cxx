@@ -74,6 +74,10 @@ void FGXMLAutoInput::parse( SGPropertyNode_ptr node, double aValue, double aOffs
         min = new FGXMLAutoInput( n );
     }
 
+    if( (n = node->getChild( "abs" )) != NULL ) {
+      abs = n->getBoolValue();
+    }
+
     SGPropertyNode *valueNode = node->getChild( "value" );
     if ( valueNode != NULL ) {
         value = valueNode->getDoubleValue();
@@ -144,7 +148,7 @@ double FGXMLAutoInput::get_value()
             value = m;
     }
     
-    return value;
+    return abs ? fabs(value) : value;
 }
 
 FGXMLAutoComponent::FGXMLAutoComponent( SGPropertyNode * node ) :
