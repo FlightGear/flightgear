@@ -593,16 +593,18 @@ FGNavRadio::update(double dt)
         // compute the time to intercept selected radial (based on
         // current and last cross track errors and dt
         //////////////////////////////////////////////////////////
-        double t = 0.0;
-        if ( inrange && cdi_serviceable ) {
-            double xrate_ms = (last_xtrack_error - xtrack_error) / dt;
-            if ( fabs(xrate_ms) > 0.00001 ) {
-                t = xtrack_error / xrate_ms;
-            } else {
-                t = 9999.9;
+        if (dt > 0) { // Are we paused?
+            double t = 0.0;
+            if ( inrange && cdi_serviceable ) {
+                double xrate_ms = (last_xtrack_error - xtrack_error) / dt;
+                if ( fabs(xrate_ms) > 0.00001 ) {
+                    t = xtrack_error / xrate_ms;
+                } else {
+                    t = 9999.9;
+                }
             }
+            time_to_intercept->setDoubleValue( t );
         }
-        time_to_intercept->setDoubleValue( t );
 
         //////////////////////////////////////////////////////////
         // compute the amount of glide slope needle deflection

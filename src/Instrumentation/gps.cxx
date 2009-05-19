@@ -479,9 +479,8 @@ GPS::updateTTWNode(UpdateContext& ctx, double distance_m, SGPropertyNode_ptr nod
     if (ctx.speed_kt > 0.0 && distance_m > 0.0) {
         TTW = (distance_m * SG_METER_TO_NM) / (ctx.speed_kt / 3600);
     }
-   
-    unsigned int TTW_seconds = (int) (TTW + 0.5);
-    if (TTW_seconds < 356400) { // That's 99 hours
+    if (TTW < 356400.5) { // That's 99 hours
+      unsigned int TTW_seconds = (int) (TTW + 0.5);
       unsigned int TTW_minutes = 0;
       unsigned int TTW_hours   = 0;
       char TTW_str[9];
