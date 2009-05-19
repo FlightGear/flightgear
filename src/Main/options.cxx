@@ -1209,6 +1209,12 @@ fgOptVersion( const char *arg )
     return FG_OPTIONS_EXIT;
 }
 
+static int
+fgOptFpe(const char* arg)
+{
+    // Actually handled in bootstrap.cxx
+}
+
 static map<string,size_t> fgOptionMap;
 
 /*
@@ -1417,6 +1423,7 @@ struct OptionDesc {
     {"ai-scenario",                  true,  OPTION_FUNC,   "", false, "", fgOptScenario },
     {"parking-id",                   true,  OPTION_FUNC,   "", false, "", fgOptParking  },
     {"version",                      false, OPTION_FUNC,   "", false, "", fgOptVersion },
+    {"enable-fpe", 		     false, OPTION_FUNC,   "", false, "", fgOptFpe},
     {0}
 };
 

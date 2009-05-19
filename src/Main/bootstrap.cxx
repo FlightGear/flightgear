@@ -25,7 +25,12 @@
 #  include <config.h>
 #endif
 
-#if defined(__linux__) && defined(__i386__)
+#if defined(HAVE_FEENABLEEXCEPT)
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#include <fenv.h>
+#elif defined(__linux__) && defined(__i386__)
 #  include <fpu_control.h>
 #endif
 
@@ -38,6 +43,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
 
+#include <cstring>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -55,9 +61,28 @@ bool free_hostname = false;
 // foreward declaration.
 void fgExitCleanup();
 
-#if defined(__linux__) && defined(__i386__)
+static bool fpeAbort = false;
+static void handleFPE(int);
+static void initFPE();
 
-static void handleFPE (int);
+#if defined(HAVE_FEENABLEEXCEPT)
+static void
+initFPE ()
+{
+    if (fpeAbort) {
+        int except = fegetexcept();
+        feenableexcept(except | FE_DIVBYZERO | FE_INVALID);
+    } else {
+        signal(SIGFPE, handleFPE);
+    }
+}
+
+static void handleFPE(int)
+{
+    feclearexcept(FE_ALL_EXCEPT);
+    signal(SIGFPE, handleFPE);
+}
+#elif defined(__linux__) && defined(__i386__)
 
 static void
 initFPE ()
@@ -79,6 +104,14 @@ handleFPE (int num)
 {
   initFPE();
   SG_LOG(SG_GENERAL, SG_ALERT, "Floating point interrupt (SIGFPE)");
+}
+#else
+static void handleFPE(int)
+{
+}
+
+static void initFPE()
+{
 }
 #endif
 
@@ -134,12 +167,18 @@ int main ( int argc, char **argv ) {
 #endif
     _bootstrap_OSInit = 0;
 
-#if defined(__linux__) && defined(__i386__)
-    // Enable floating-point exceptions for Linux/x86
-    initFPE();
-#elif defined(__FreeBSD__)
+#if defined(__FreeBSD__)
     // Ignore floating-point exceptions on FreeBSD
-    signal(SIGFPE, SIG_IGN);
+    signal(SIGFPE, SIG_IGN); 
+#else
+    // Maybe Enable floating-point exceptions on Linux
+    for (int i = 0; i < argc; ++i) {
+        if (!strcmp("--enable-fpe", argv[i])) {
+            fpeAbort = true;
+            break;
+        }
+    }
+    initFPE();
 #endif
 #if !defined( _MSC_VER ) && !defined( __MINGW32__ )
     signal(SIGPIPE, SIG_IGN);

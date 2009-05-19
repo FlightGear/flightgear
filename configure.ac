@@ -625,6 +625,13 @@ fi
 LIBS=$save_LIBS
 CPPFLAGS=$save_CPPFLAGS
 
+AC_MSG_CHECKING([for feenableexcept])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#define _GNU_SOURCE
+#include <fenv.h>]], [[feenableexcept(FE_DIVBYZERO)]])],
+[AC_DEFINE([HAVE_FEENABLEEXCEPT], 1, [define if system has fenableexcept])],
+AC_MSG_RESULT([yes]),
+AC_MSG_RESULT([no]))
+
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS( \
