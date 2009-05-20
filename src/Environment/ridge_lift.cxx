@@ -142,6 +142,9 @@ void FGRidgeLift::unbind() {
 
 void FGRidgeLift::update(double dt) {
 
+	if( dt <= 0 ) // paused, do nothing but keep current lift
+		return;
+
 	if( _enabled_node && false == _enabled_node->getBoolValue() ) {
 		if( strength != 0.0 ) {
 			strength = 0.0;
