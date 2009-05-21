@@ -1213,6 +1213,7 @@ static int
 fgOptFpe(const char* arg)
 {
     // Actually handled in bootstrap.cxx
+    return FG_OPTIONS_OK;
 }
 
 static map<string,size_t> fgOptionMap;
