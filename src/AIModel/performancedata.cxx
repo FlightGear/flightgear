@@ -120,7 +120,8 @@ double PerformanceData::actualPitch(FGAIAircraft* ac, double tgt_pitch, double d
 
 double PerformanceData::actualAltitude(FGAIAircraft* ac, double tgt_altitude, double dt) {
     if (ac->onGround()) {
-        //FIXME: return a value here
+        //FIXME: a return sensible value here
+        return 0.0; // 0 for now to avoid compiler errors
     } else
         return ac->getAltitude() + ac->getVerticalSpeed()*dt/60.0;
 }
