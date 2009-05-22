@@ -442,7 +442,7 @@ void FGClouds::buildScenario( const string& scenario ) {
         
 	// fetch station elevation if exists
         if( station == "XXXX" )
-            station_elevation_ft = fgGetDouble("/position/ground-elev-m", 0.0);
+            station_elevation_ft = fgGetDouble("/position/ground-elev-m", 0.0) * SG_METER_TO_FEET;
         else {
             const FGAirport* a = FGAirport::findByIdent(station);
             station_elevation_ft = (a ? a->getElevation() : 0.0);
