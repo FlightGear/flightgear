@@ -493,6 +493,8 @@ void FGClouds::set_scenario(const char * sc) {
         }
                 
         if( scenario == "METAR" ) {
+            // needed here to compute station_elevation_ft
+            buildScenario( scenario );
             string realMetar = fgGetString("/environment/metar/real-metar", "");
 
             if( realMetar != "" ) {

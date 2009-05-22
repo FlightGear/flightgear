@@ -266,11 +266,25 @@ FGEnvironmentMgr::unbind ()
   fgUntie("/environment/turbulence/use-cloud-turbulence");
 }
 
+/* probably this should be a class member? */
+static bool scenery_loaded = false;
+
 void
 FGEnvironmentMgr::update (double dt)
 {
   SGSubsystemGroup::update(dt);
 
+  {
+    /*
+      re set the scenario after the scenery has been loaded
+      (raising edge of sim/sceneryloaded)
+      so that ground elevation can be computed.
+    */
+    bool b = fgGetBool( "sim/sceneryloaded" );
+    if( !scenery_loaded && b )
+      fgClouds->set_scenario( fgClouds->get_scenario() );
+    scenery_loaded = b;
+  }
 				// FIXME: the FDMs should update themselves
   current_aircraft.fdm_state
     ->set_Velocities_Local_Airmass(_environment->get_wind_from_north_fps(),
