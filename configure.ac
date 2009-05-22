@@ -729,6 +729,7 @@ AC_CONFIG_FILES([ \
 	utils/propmerge/Makefile \
 	utils/TerraSync/Makefile \
 	utils/xmlgrep/Makefile \
+	utils/fgviewer/Makefile \
 ])
 AC_OUTPUT
 
