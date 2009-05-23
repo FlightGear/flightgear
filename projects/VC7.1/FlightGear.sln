@@ -58,6 +58,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xmlgrep", "xmlgrep.vcproj",
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fgviewer", "fgviewer.vcproj", "{0F13A557-EC52-481D-ADFB-9209C068FCEB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{22540CD3-D3CA-4C86-A773-80AEEE3ACDED} = {22540CD3-D3CA-4C86-A773-80AEEE3ACDED}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -108,6 +113,10 @@ Global
 		{1F40CF41-9836-4488-BAAF-560623665C12}.Debug.Build.0 = Debug|Win32
 		{1F40CF41-9836-4488-BAAF-560623665C12}.Release.ActiveCfg = Release|Win32
 		{1F40CF41-9836-4488-BAAF-560623665C12}.Release.Build.0 = Release|Win32
+		{0F13A557-EC52-481D-ADFB-9209C068FCEB}.Debug.ActiveCfg = Debug|Win32
+		{0F13A557-EC52-481D-ADFB-9209C068FCEB}.Debug.Build.0 = Debug|Win32
+		{0F13A557-EC52-481D-ADFB-9209C068FCEB}.Release.ActiveCfg = Release|Win32
+		{0F13A557-EC52-481D-ADFB-9209C068FCEB}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection
