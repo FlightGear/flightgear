@@ -207,7 +207,7 @@ void FGClouds::buildLayer(int iLayer, const string& name, double alt, double cov
 			char variety_name[50];
 			do {
 				variety++;
-				snprintf(variety_name, sizeof(variety_name), cloud_name.c_str(), variety);
+				snprintf(variety_name, sizeof(variety_name) - 1, cloud_name.c_str(), variety);
 			} while( box_def_root->getChild(variety_name, 0, false) );
 
 			totalCount += count;
