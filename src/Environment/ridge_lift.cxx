@@ -176,7 +176,7 @@ void FGRidgeLift::update(double dt) {
 
 			probe_lat_rad[i] = asin(sin(user_latitude_rad)*cos(probe_radius_ratio)
 					+cos(user_latitude_rad)*sin_probe_radius_ratio*cos(ground_wind_from_rad));
-			if (probe_lat_rad[i] < SG_EPSILON ) {
+			if (fabs(fabs(probe_lat_rad[i])-SG_PI/2.0) < SG_EPSILON ) {
 				probe_lon_rad[i] = user_latitude_rad; // probe on a pole	
 			} else {
 				probe_lon_rad[i] = fmod((user_longitude_rad+asin(sin(ground_wind_from_rad)
@@ -188,15 +188,8 @@ void FGRidgeLift::update(double dt) {
 		}
 	
 		for (int i = 0; i < sizeof(probe_elev_m)/sizeof(probe_elev_m[0]); i++) {
-			double elevation = 0;
-			if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(
-				SGGeod::fromRad(probe_lon_rad[i],probe_lat_rad[i]), 20000), elevation, 0)) {
-				if ( elevation > 0.1 ) { 
-					probe_elev_m[i] = elevation; 
-				} else { 
-					probe_elev_m[i] = 0.1 ;
-				}
-			} else { 
+			if (!globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(
+				SGGeod::fromRad(probe_lon_rad[i],probe_lat_rad[i]), 20000), probe_elev_m[i], 0)) {
 				probe_elev_m[i] = 0.1;
 			}
 		}
