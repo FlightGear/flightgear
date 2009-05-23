@@ -20,6 +20,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
+#include <limits>
 #include <simgear/math/interpolater.hxx>
 
 #include "inst_vertical_speed_indicator.hxx"
@@ -191,7 +192,7 @@ void InstVerticalSpeedIndicator::update (double dt)
     if (_serviceable_node->getBoolValue())
     {
 	// avoids hang, when freeze
-        if( !_freeze_node->getBoolValue() )
+        if( !_freeze_node->getBoolValue() && std::numeric_limits<double>::min() < fabs(dt))
 	{
 	    double pressure_inhg = _pressure_node->getDoubleValue();
 	    double sea_inhg = _sea_node->getDoubleValue();
