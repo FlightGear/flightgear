@@ -4,6 +4,7 @@
 #include <osg/ArgumentParser>
 #include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
+#include <osgViewer/ViewerEventHandlers>
 
 #include <simgear/props/props.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -47,6 +48,14 @@ main(int argc, char** argv)
     // ... for some reason, get rid of that FIXME!
     viewer.setThreadingModel(osgViewer::Viewer::SingleThreaded);
     
+    // Usefull stats
+    viewer.addEventHandler(new osgViewer::HelpHandler);
+    viewer.addEventHandler(new osgViewer::StatsHandler);
+    // Same FIXME ...
+    // viewer.addEventHandler(new osgViewer::ThreadingHandler);
+    viewer.addEventHandler(new osgViewer::LODScaleHandler);
+    viewer.addEventHandler(new osgViewer::ScreenCaptureHandler);
+
     const char *fg_root_env = std::getenv("FG_ROOT");
     std::string fg_root;
     if (fg_root_env)
