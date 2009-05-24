@@ -1,11 +1,22 @@
 #include <stdio.h>
 #include <malloc.h>
+#include <assert.h>
 #include "xml.h"
 
 #define ROOTNODE	"/Configuration/output/menu"
 #define	LEAFNODE	"name"
 #define PATH		ROOTNODE"/"LEAFNODE
 #define BUFLEN		4096
+
+#define PRINT_ERROR_AND_EXIT(id) \
+    if (xmlErrorGetNo(id, 0) != XML_NO_ERROR) { \
+         const char *errstr = xmlErrorGetString(id, 0); \
+         size_t column = xmlErrorGetColumnNo(id, 0); \
+         size_t lineno = xmlErrorGetLineNo(id, 1); \
+         printf("Error at line %i, column %i: %s\n", lineno, column, errstr); \
+         exit(-1); \
+      }
+
 int main()
 {
    void *root_id;
@@ -16,8 +27,8 @@ int main()
       void *path_id, *node_id;
       char *s;
 
-      printf("\nTesting xmlNodeGetString for /Configuration/output/test:\t\t");
-      s = xmlNodeGetString(root_id , "/Configuration/output/test");
+      printf("\nTesting xmlNodeGetString for /*/*/test:\t\t\t\t\t");
+      s = xmlNodeGetString(root_id , "/*/*/test");
       if (s)
       {
          printf("failed.\n\t'%s' should be empty\n", s);
@@ -26,8 +37,8 @@ int main()
       else
          printf("succes.\n");
 
-      printf("Testing xmlGetString for Configuration/output/test:\t\t\t");
-      path_id = xmlNodeGet(root_id, "*/*/test");
+      printf("Testing xmlGetString for /Configuration/output/test:\t\t\t");
+      path_id = xmlNodeGet(root_id, "/Configuration/output/test");
       if (path_id)
       {
          s = xmlGetString(path_id);
@@ -39,6 +50,8 @@ int main()
          else
             printf("succes.\n");
       }
+      else
+         PRINT_ERROR_AND_EXIT(root_id);
 
       path_id = xmlNodeGet(root_id, PATH);
       node_id = xmlNodeGet(root_id, ROOTNODE);
@@ -49,7 +62,6 @@ int main()
          size_t len;
         
          xmlCopyString(path_id, buf, BUFLEN);
-
          printf("Testing xmlNodeCopyString against xmlGetString:\t\t\t\t");
          if ((s = xmlGetString(path_id)) != 0)
          {
@@ -61,45 +73,45 @@ int main()
             printf("Testing xmlCopyString against xmlGetString:\t\t\t\t");
             xmlCopyString(path_id, buf, BUFLEN);
             if (strcmp(s, buf)) /* not the same */
-               printf("failed.\n\t'%s' differs from '%s'\n", s, buf);
+               printf("failed.\n\t'%s' differs from\n\t'%s'\n", s, buf);
             else
                printf("succes.\n");
-            free(s);
          }
          else
-            printf("Error while fetching node's value.\n");
+            PRINT_ERROR_AND_EXIT(path_id);
 
          printf("Testing xmlCopyString against xmlCompareString:\t\t\t\t");
          if (xmlCompareString(path_id, buf)) /* not the same */
-            printf ("failed.\n\t'%s' differs\n", buf);
+            printf ("failed.\n\t'%s' differs from\n\t'%s'\n", s, buf);
          else
             printf("succes.\n");
 
          printf("Testing xmlCopyString against xmlNodeCompareString:\t\t\t");
          if (xmlNodeCompareString(node_id, LEAFNODE, buf)) /* not the same */
-            printf ("failed.\n\t'%s' differs\n", buf);
+            printf("failed.\n\t'%s' differs from\n\t'%s'\n", s, buf);
          else
             printf("succes.\n");
+
+         if (s) free(s);
  
          printf("Testing xmlCopyString against xmlNodeGetString:\t\t\t\t");
          if ((s = xmlNodeGetString(node_id, LEAFNODE)) != 0)
          {
             if (strcmp(s, buf)) /* not the same */
-               printf("failed.\n\t'%s' differs from '%s'\n", s, buf);
+               printf("failed.\n\t'%s' differs from\n\t'%s'\n", s, buf);
             else
                printf("succes.\n");
             free(s);
          }
          else
-            printf("Error while fetching value from node.\n");
+            PRINT_ERROR_AND_EXIT(node_id);
 
          free(path_id);
          path_id = xmlNodeGet(root_id, "/Configuration/backend/name");
          if (path_id)
          {
-            xmlAttributeCopyString(path_id, "type", buf, BUFLEN);
-            
             printf("Testing xmlAttributeCopyString against xmlAttributeCompareString:\t");
+            xmlAttributeCopyString(path_id, "type", buf, BUFLEN);
             if (xmlAttributeCompareString(path_id, "type", buf)) /* no match */
                printf("failed.\n\t'%s' differs\n", buf);
             else
@@ -115,11 +127,11 @@ int main()
                 free(s);
             }
             else
-            printf("Error while fetching value from attribute.\n");
+                PRINT_ERROR_AND_EXIT(path_id);
 
          }
          else
-            printf("Error while fetching node's attribute.\n");
+            PRINT_ERROR_AND_EXIT(root_id);
 
          free(node_id);
          free(path_id);
@@ -152,13 +164,20 @@ int main()
 
                free(s);
             }
+            else
+               PRINT_ERROR_AND_EXIT(path_id);
 
             free(path_id);
          }
       }
-      else
+
+      if (xmlErrorGetNo(root_id, 0) != XML_NO_ERROR)
       {
-         printf("Error: %s\n", xmlErrorGetString(root_id, 1));
+         const char *errstr = xmlErrorGetString(root_id, 0);
+         size_t column = xmlErrorGetColumnNo(root_id, 0);
+         size_t lineno = xmlErrorGetLineNo(root_id, 1);
+
+         printf("Error at line %i, column %i: %s\n", lineno, column, errstr);
       }
 
       xmlClose(root_id);

@@ -1,3 +1,8 @@
+24-05-2009
+  * Add a node cache that can be enabled at compile time.
+    the node cache prevents recursively walking the xml tree over and over
+    again to find the specified nodes.
+
 05-05-2009
   * Various bugfixes, required to get fgrun working
   * add testxml as sort of a stress test application

@@ -1,5 +1,5 @@
-/* Copyright (c) 2007, 2008 by Adalin B.V.
- * Copyright (c) 2007, 2008 by Erik Hofman
+/* Copyright (c) 2007-2009 by Adalin B.V.
+ * Copyright (c) 2007-2009 by Erik Hofman
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,14 @@
 extern "C" {
 #endif
 
+#undef XML_NONVALIDATING
+
+#ifdef XML_USE_NODECACHE
+#include "xml_cache.h"
+#else
+void *cacheGet(void *);
+#endif
+
 enum
 {
     XML_NO_ERROR = 0,
@@ -48,6 +56,63 @@ enum
     XML_ATTRIB_NO_CLOSING_QUOTE,
     XML_MAX_ERROR
 };
+
+#ifdef WIN32
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
+
+typedef struct
+{
+    HANDLE m;
+    void *p;
+} SIMPLE_UNMMAP;
+#endif
+
+#ifndef XML_NONVALIDATING
+struct _xml_error
+{
+    char *pos;
+    int err_no;
+};
+#endif
+
+/*
+ * It is required for both the rood node and the normal xml nodes to both
+ * have 'char *name' defined as the first entry. The code tests whether
+ * name == 0 to detect the root node.
+ */
+struct _root_id
+{
+    char *name;
+    char *start;
+    size_t len;
+    int fd;
+#ifdef XML_USE_NODECACHE
+    void *node;
+#endif
+#ifndef XML_NONVALIDATING
+    struct _xml_error *info;
+#endif
+#ifdef WIN32
+    SIMPLE_UNMMAP un;
+#endif
+};
+
+struct _xml_id
+{
+    char *name;
+    char *start;
+    size_t len;
+    size_t name_len;
+#ifndef XML_NONVALIDATING
+    struct _root_id *root;
+#endif
+#ifdef XML_USE_NODECACHE
+    void *node;
+#endif
+};
+
+
 
 /**
  * Open an XML file for processing.
