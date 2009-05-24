@@ -218,7 +218,12 @@ void walk_the_tree(size_t num, void *xid, char *tree)
                     value = xmlGetString(xmid);
                     if (_value && _attribute && value)
                     {
+#if 1
+                       char *a = xmlAttributeGetString(xmid, _attribute);
+                       if (a && !strcmp(a, _value))
+#else
                        if (!xmlAttributeCompareString(xmid, _attribute, _value))
+#endif
                        {
                           printf("%s: <%s %s=\"%s\">%s</%s>\n",
                                  _filenames[num], _print, _attribute, _value,

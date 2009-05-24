@@ -82,11 +82,9 @@ void print_xml(void *id)
         printf("\n");
         for(q=0; q<level; q++) printf(" ");
         printf("<%s>", name);
-
         level++;
         print_xml(xid);
         level--;
-
         printf("</%s>", name);
       }
       else printf("error\n");

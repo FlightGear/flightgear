@@ -26,15 +26,7 @@
  */
 
 #ifdef WIN32
-# define WIN32_LEAN_AND_MEAN
-# include <windows.h>
 # include <io.h>
-
-typedef struct
-{
-    HANDLE m;
-    void *p;
-} SIMPLE_UNMMAP;
 
 #else	/* !WIN32 */
 # include <sys/mman.h>
@@ -63,12 +55,6 @@ typedef struct
 #ifndef XML_NONVALIDATING
 static const char *__xml_error_str[XML_MAX_ERROR];
 
-struct _xml_error
-{
-    char *pos;
-    int err_no;
-};
-
 static void __xmlErrorSet(const void *, const char *, unsigned int);
 # define xmlErrorSet(a, b, c)	__xmlErrorSet(a, b, c)
 
@@ -88,38 +74,8 @@ static void __xmlErrorSet(const void *, const char *, unsigned int);
 # define SET_ERROR_AND_RETURN(a, b)	return 0;
 #endif
 
-/*
- * It is required for both the rood node and the normal xml nodes to both
- * have 'char *name' defined as the first entry. The code tests whether
- * name == 0 to detect the root node.
- */
-struct _root_id
-{
-    char *name;
-    char *start;
-    size_t len;
-    int fd;
-#ifndef XML_NONVALIDATING
-    struct _xml_error *info;
-#endif
-# ifdef WIN32
-    SIMPLE_UNMMAP un;
-# endif
-};
-
-struct _xml_id
-{
-    char *name;
-    char *start;
-    size_t len;
-    size_t name_len;
-#ifndef XML_NONVALIDATING
-    struct _root_id *root;
-#endif
-};
-
-static char *__xmlNodeGetPath(const char *, size_t *, char **, size_t *);
-static char *__xmlNodeGet(const char *, size_t *, char **, size_t *, size_t *);
+static char *__xmlNodeGetPath(void **, const char *, size_t *, char **, size_t *);
+static char *__xmlNodeGet(void *, const char *, size_t *, char **, size_t *, size_t *);
 static char *__xmlProcessCDATA(char **, size_t *);
 static char *__xmlCommentSkip(const char *, size_t);
 static char *__xmlInfoProcess(const char *, size_t);
@@ -140,12 +96,14 @@ static void simple_unmmap(SIMPLE_UNMMAP *);
 
 #ifndef NDEBUG
 # define PRINT(a, b, c) { \
-   if (a) { \
-      size_t q, len = c; \
-      if (b < c) len = b; \
+   size_t l1 = (b), l2 = (c); \
+   char *s = (a); \
+   if (s) { \
+      size_t q, len = l2; \
+      if (l1 < l2) len = l1; \
       if (len < 50000) { \
          printf("(%i) '", len); \
-         for (q=0; q<len; q++) printf("%c", ((char *)(a))[q]); \
+         for (q=0; q<len; q++) printf("%c", s[q]); \
          printf("'\n"); \
       } else printf("Length (%u) seems too large at line %i\n",len, __LINE__); \
    } else printf("NULL pointer at line %i\n", __LINE__); \
@@ -169,16 +127,20 @@ xmlOpen(const char *filename)
             mm = mmap(0, statbuf.st_size, PROT_READ, MAP_PRIVATE, fd, 0L);
             if (mm != (void *)-1)
             {
-                rid = malloc(sizeof(struct _root_id));
+                rid = calloc(1, sizeof(struct _root_id));
                 if (rid)
                 {
+                    size_t blen = statbuf.st_size;
+#ifdef XML_USE_NODECACHE
+                    size_t num = 0, nlen = 1;
+                    char *n = "*";
+
+                    rid->node = cacheInit();
+                    __xmlNodeGet(rid->node, mm, &blen, &n, &nlen, &num);
+#endif
                     rid->fd = fd;
                     rid->start = mm;
-                    rid->len = statbuf.st_size;
-                    rid->name = 0;
-#ifndef XML_NONVALIDATING
-                    rid->info = 0;
-#endif
+                    rid->len = blen;
                 }
             }
         }
@@ -194,16 +156,20 @@ xmlInitBuffer(const char *buffer, size_t size)
 
     if (buffer && (size > 0))
     {
-        rid = malloc(sizeof(struct _root_id));
+        rid = calloc(1, sizeof(struct _root_id));
         if (rid)
         {
-            rid->fd = -1;
+#ifdef XML_USE_NODECACHE
+            size_t num = 0, nlen = 1;
+            size_t blen = size;
+            char *n = "*";
+
+            rid->node = cacheInit();
+            __xmlNodeGet(rid->node, buffer, &blen, &n, &nlen, &num);
+#endif
+           rid->fd = -1;
             rid->start = (char *)buffer;
             rid->len = size;
-            rid->name = 0;
-#ifndef XML_NONVALIDATING
-            rid->info = 0;
-#endif
         }
     }
 
@@ -224,6 +190,9 @@ xmlClose(void *id)
          close(rid->fd);
      }
 
+#ifdef XML_USE_NODECACHE
+     if (rid->node) cacheFree(rid->node);
+#endif
 #ifndef XML_NONVALIDATING
      if (rid->info) free(rid->info);
 #endif
@@ -238,6 +207,7 @@ xmlNodeGet(const void *id, const char *path)
     struct _xml_id *xsid = 0;
     size_t len, slen;
     char *ptr, *node;
+    void *nc, *nnc;
 
     assert(id != 0);
     assert(path != 0);
@@ -245,16 +215,21 @@ xmlNodeGet(const void *id, const char *path)
     node = (char *)path;
     len = xid->len;
     slen = strlen(path);
-    ptr = __xmlNodeGetPath(xid->start, &len, &node, &slen);
+
+    nnc = nc = cacheNodeGet(xid);
+    ptr = __xmlNodeGetPath(&nnc, xid->start, &len, &node, &slen);
     if (ptr)
     {
         xsid = malloc(sizeof(struct _xml_id));
         if (xsid)
         {
-             xsid->len = len;
-             xsid->start = ptr;
-             xsid->name_len = slen;
              xsid->name = node;
+             xsid->name_len = slen;
+             xsid->start = ptr;
+             xsid->len = len;
+#ifdef XML_USE_NODECACHE
+             xsid->node = nnc;
+#endif
 #ifndef XML_NONVALIDATING
              if (xid->name)
                 xsid->root = xid->root;
@@ -282,11 +257,14 @@ xmlNodeCopy(const void *id, const char *path)
     struct _xml_id *xsid = 0;
     char *ptr, *node, *p;
     size_t slen, len;
+    void *nc, *nnc;
 
     node = (char *)path;
     len = xid->len;
     slen = strlen(path);
-    ptr = __xmlNodeGetPath(xid->start, &len, &node, &slen);
+
+    nnc = nc = cacheNodeGet(xid);
+    ptr = __xmlNodeGetPath(&nnc, xid->start, &len, &node, &slen);
     if (ptr)
     {
         xsid = malloc(sizeof(struct _xml_id) + len);
@@ -298,6 +276,9 @@ xmlNodeCopy(const void *id, const char *path)
             xsid->start = p;
             xsid->name_len = slen;
             xsid->name = node;
+#ifdef XML_USE_NODECACHE
+                 xsid->node = nc;
+#endif
 #ifndef XML_NONVALIDATING
             if (xid->name)
                 xsid->root = xid->root;
@@ -378,12 +359,14 @@ xmlNodeGetNum(const void *id, const char *path)
     {
         char *nodename, *pathname;
         size_t len, slen;
+        void *nc;
         char *p;
 
         nodename = (char *)path;
         if (*path == '/') nodename++;
         slen = strlen(nodename);
 
+        nc = cacheNodeGet(xid);
         pathname = strchr(nodename, '/');
         if (pathname)
         {
@@ -393,7 +376,7 @@ xmlNodeGetNum(const void *id, const char *path)
            pathname++;
            slen -= pathname-nodename;
            node = pathname;
-           p = __xmlNodeGetPath(xid->start, &len, &node, &slen);
+           p = __xmlNodeGetPath(&nc, xid->start, &len, &node, &slen);
            if (p == 0 && slen == 0)
            {
                xmlErrorSet(xid, node, len);
@@ -408,7 +391,11 @@ xmlNodeGetNum(const void *id, const char *path)
         if (p)
         {
             char *ret, *node = nodename;
-            ret = __xmlNodeGet(p, &len, &node, &slen, &num);
+#ifndef XML_USE_NODECACHE
+            ret = __xmlNodeGet(nc, p, &len, &node, &slen, &num);
+#else
+            ret = __xmlNodeGetFromCache(&nc, p, &len, &node, &slen, &num);
+#endif
             if (ret == 0 && slen == 0)
             {
                 xmlErrorSet(xid, node, len);
@@ -428,6 +415,7 @@ xmlNodeGetPos(const void *pid, void *id, const char *element, size_t num)
     size_t len, slen;
     char *ptr, *node;
     void *ret = 0;
+    void *nc;
 
     assert(xpid != 0);
     assert(xid != 0);
@@ -436,13 +424,23 @@ xmlNodeGetPos(const void *pid, void *id, const char *element, size_t num)
     len = xpid->len;
     slen = strlen(element);
     node = (char *)element;
-    ptr = __xmlNodeGet(xpid->start, &len, &node, &slen, &num);
+    nc = cacheNodeGet(xpid);
+#ifndef XML_USE_NODECACHE
+    ptr = __xmlNodeGet(nc, xpid->start, &len, &node, &slen, &num);
+#else
+    ptr = __xmlNodeGetFromCache(&nc, xpid->start, &len, &node, &slen, &num);
+#endif
     if (ptr)
     {
          xid->len = len;
          xid->start = ptr;
          xid->name = node;
          xid->name_len = slen;
+#ifdef XML_USE_NODECACHE
+         /* unused for the cache but tested at the start of this function */
+         if (len == 0) xid->len = 1;
+         xid->node = nc;
+#endif
          ret = xid;
     }
     else if (slen == 0)
@@ -467,12 +465,10 @@ xmlGetString(const void *id)
         char *ps;
 
         ps = xid->start;
-        len = xid->len-1;
+        len = xid->len;
         __xmlPrepareData(&ps, &len);
-
         if (len)
         {
-            len++;
             str = malloc(len+1);
             if (str)
             {
@@ -503,20 +499,19 @@ xmlCopyString(const void *id, char *buffer, size_t buflen)
     if (xid->len)
     {
         size_t len;
-        char *p;
+        char *ps;
 
-        p = xid->start;
-        len = xid->len-1;
-        __xmlPrepareData(&p, &len);
+        ps = xid->start;
+        len = xid->len;
+        __xmlPrepareData(&ps, &len);
         if (len)
         {
-            len++;
             if (len >= buflen)
             {
                 len = buflen-1;
                 xmlErrorSet(xid, 0, XML_TRUNCATE_RESULT);
             }
-            memcpy(buffer, p, len);
+            memcpy(buffer, ps, len);
             *(buffer+len) = 0;
         }
         ret = len;
@@ -540,9 +535,9 @@ xmlCompareString(const void *id, const char *s)
         char *ps;
 
         ps = xid->start;
-        len = xid->len-1;
+        len = xid->len;
         __xmlPrepareData(&ps, &len);
-        ret = strncasecmp(ps, s, len+1);
+        ret = strncasecmp(ps, s, len);
     }
 
     return ret;
@@ -559,20 +554,20 @@ xmlNodeGetString(const void *id, const char *path)
 
     if (xid->len)
     {
-        char *p, *node = (char *)path;
+        char *ptr, *node = (char *)path;
         size_t slen = strlen(node);
         size_t len = xid->len;
+        void *nc;
 
-        slen = strlen(node);
-        p = __xmlNodeGetPath(xid->start, &len, &node, &slen);
-        if (p && len)
+        nc = cacheNodeGet(xid);
+        ptr = __xmlNodeGetPath(&nc, xid->start, &len, &node, &slen);
+        if (ptr && len)
         {
-            __xmlPrepareData(&p, &len);
-
+            __xmlPrepareData(&ptr, &len);
             str = malloc(len+1);
             if (str)
             {
-               memcpy(str, p, len);
+               memcpy(str, ptr, len);
                *(str+len) = '\0';
             }
             else
@@ -606,8 +601,10 @@ xmlNodeCopyString(const void *id, const char *path, char *buffer, size_t buflen)
         char *p, *node = (char *)path;
         size_t slen = strlen(node);
         size_t len = xid->len;
+        void *nc;
 
-        p = __xmlNodeGetPath(xid->start, &len, &node, &slen);
+        nc = cacheNodeGet(xid);
+        p = __xmlNodeGetPath(&nc, xid->start, &len, &node, &slen);
         if (p)
         {
             __xmlPrepareData(&p, &len);
@@ -647,11 +644,13 @@ xmlNodeCompareString(const void *id, const char *path, const char *s)
     {
         char *node, *str, *ps, *pe;
         size_t len, slen;
+        void *nc;
 
         len = xid->len;
         slen = strlen(path);
         node = (char *)path;
-        str = __xmlNodeGetPath(xid->start, &len, &node, &slen);
+        nc = cacheNodeGet(xid);
+        str = __xmlNodeGetPath(&nc, xid->start, &len, &node, &slen);
         if (str)
         {
             ps = str;
@@ -697,11 +696,13 @@ xmlNodeGetInt(const void *id, const char *path)
     {
         size_t len, slen;
         char *str, *node;
+        void *nc;
 
         len = xid->len;
         slen = strlen(path);
         node = (char *)path;
-        str = __xmlNodeGetPath(xid->start, &len, &node, &slen);
+        nc = cacheNodeGet(xid);
+        str = __xmlNodeGetPath(&nc, xid->start, &len, &node, &slen);
         if (str)
         {
             char *end = str+len;
@@ -746,11 +747,13 @@ xmlNodeGetDouble(const void *id, const char *path)
     {
         size_t len, slen;
         char *str, *node;
+        void *nc;
 
         len = xid->len;
         slen = strlen(path);
         node = (char *)path;
-        str = __xmlNodeGetPath(xid->start, &len, &node, &slen);
+        nc = cacheNodeGet(xid);
+        str = __xmlNodeGetPath(&nc, xid->start, &len, &node, &slen);
         if (str)
         {
             char *end = str+len;
@@ -779,9 +782,12 @@ xmlMarkId(const void *id)
         if (xrid->name == 0)
         {
             xmid->name = "";
+            xmid->name_len = 0;
             xmid->start = xrid->start;
             xmid->len = xrid->len;
-            xmid->name_len = 0;
+#ifdef XML_USE_NODECACHE
+            xmid->node = xrid->node;
+#endif
 #ifndef XML_NONVALIDATING
             xmid->root = xrid;
 #endif
@@ -1332,7 +1338,7 @@ static const char *__xml_error_str[XML_MAX_ERROR] =
 #endif
 
 char *
-__xmlNodeGetPath(const char *start, size_t *len, char **name, size_t *nlen)
+__xmlNodeGetPath(void **nc, const char *start, size_t *len, char **name, size_t *nlen)
 {
     char *path;
     char *ret = 0;
@@ -1363,12 +1369,17 @@ __xmlNodeGetPath(const char *start, size_t *len, char **name, size_t *nlen)
 
         num = 0;
         blocklen = *len;
-        ret = __xmlNodeGet(start, &blocklen, &node, &nodelen, &num);
+
+#ifndef XML_USE_NODECACHE
+        ret = __xmlNodeGet(nc, start, &blocklen, &node, &nodelen, &num);
+#else
+        ret = __xmlNodeGetFromCache(nc, start, &blocklen, &node, &nodelen, &num);
+#endif
         if (ret)
         {
             if (path)
             {
-                ret = __xmlNodeGetPath(ret, &blocklen, &path, &pathlen);
+                ret = __xmlNodeGetPath(nc, ret, &blocklen, &path, &pathlen);
                 *name = path;
                 *len = blocklen;
                 *nlen = pathlen;
@@ -1391,7 +1402,7 @@ __xmlNodeGetPath(const char *start, size_t *len, char **name, size_t *nlen)
 }
 
 char *
-__xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *nodenum)
+__xmlNodeGet(void *nc, const char *start, size_t *len, char **name, size_t *rlen, size_t *nodenum)
 {
     char *cdata, *open_element = *name;
     char *element, *start_tag=0;
@@ -1400,6 +1411,7 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
     size_t open_len = *rlen;
     size_t return_len = 0;
     int found, num;
+    void *nnc = 0;
 
     assert(start != 0);
     assert(len != 0);
@@ -1419,6 +1431,10 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
     restlen = *len;
     cur = (char *)start;
     ne = cur + restlen;
+
+#ifdef XML_USE_NODECACHE
+    cacheInitLevel(nc);
+#endif
 
     /* search for an opening tag */
     while ((new = memchr(cur, '<', restlen)) != 0)
@@ -1465,9 +1481,10 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
         element = *name;
         elementlen = *rlen;
         len_remaining = restlen;
-        new = rptr = __xml_memncasecmp(cur, &restlen, &element, &elementlen);
+        rptr = __xml_memncasecmp(cur, &restlen, &element, &elementlen);
         if (rptr) 			/* requested element was found */
         {
+            new = rptr;
             return_len = elementlen;
             if (found == num)
             {
@@ -1486,11 +1503,18 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
             element = *name;
         }
 
+#ifdef XML_USE_NODECACHE
+        nnc = cacheNodeNew(nc);
+#endif
+
         if (*(new-2) == '/')				/* e.g. <test/> */
         {
             cur = new;
             if (rptr)
             {
+#ifdef XML_USE_NODECACHE
+                cacheDataSet(nnc, element, elementlen, rptr, 0);
+#endif
                 if (found == num)
                 {
                     open_element = start_tag;
@@ -1544,6 +1568,9 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
         {
             if (!strncasecmp(new+1, element, elementlen))
             {
+#ifdef XML_USE_NODECACHE
+                cacheDataSet(nnc, element, elementlen, rptr, new-rptr-1);
+#endif
                 if (*(new+elementlen+1) != '>')
                     SET_ERROR_AND_RETURN(new+1, XML_ELEMENT_NO_CLOSING_TAG);
 
@@ -1582,7 +1609,7 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
             /*
              * recursively walk the xml tree from here
              */
-            new = __xmlNodeGet(cur-1, &slen, &node, &nlen, &pos);
+            new = __xmlNodeGet(nnc, cur-1, &slen, &node, &nlen, &pos);
             if (!new)
             {
                 if (nlen == 0)		/* error upstream */
@@ -1622,6 +1649,9 @@ __xmlNodeGet(const char *start, size_t *len, char **name, size_t *rlen, size_t *
                 if (*(new+elementlen+1) != '>')
                     SET_ERROR_AND_RETURN(new+1, XML_ELEMENT_NO_CLOSING_TAG);
 
+#ifdef XML_USE_NODECACHE
+                cacheDataSet(nnc, element, elementlen, rptr, new-rptr-1);
+#endif
                 if (found == num)
                 {
                     if (start_tag)
@@ -1787,10 +1817,14 @@ __xmlPrepareData(char **start, size_t *blocklen)
     size_t len = *blocklen;
     char *pe, *ps = *start;
 
-    pe = ps + len;
-    while ((ps<pe) && isspace(*ps)) ps++;
-    while ((pe>ps) && isspace(*pe)) pe--;
-    len = (pe-ps);
+    if (len > 1)
+    {
+        pe = ps + len-1;
+        while ((ps<pe) && isspace(*ps)) ps++;
+        while ((pe>ps) && isspace(*pe)) pe--;
+        len = (pe-ps)+1;
+    }
+    else if (isspace(*(ps+1))) len--;
 
     /* CDATA or comment */
     if ((len >= 2) && !strncmp(ps, "<!", 2))
