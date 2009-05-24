@@ -159,19 +159,19 @@ void
 cacheFree(void *nc)
 {
     struct _xml_node *cache = (struct _xml_node *)nc;
-    struct _xml_node *ptr, **node;
+    struct _xml_node **node;
     size_t i = 0;
 
     assert(nc != 0);
 
     node = (struct _xml_node **)cache->node;
-    while((i < cache->no_nodes) && (ptr = node[i++]) != 0)
+    while(i < cache->first_free)
     {
-        cacheFree(ptr);
+        cacheFree(node[i++]);
     }
 
     free(node);
-    free(cache);
+    /* free(cache); */
 }
 
 void *
