@@ -1,4 +1,5 @@
 #include <cstring>
+#include <cstdio>
 
 #include "UGear_command.hxx"
 
