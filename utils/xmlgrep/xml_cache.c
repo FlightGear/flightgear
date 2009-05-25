@@ -117,7 +117,7 @@ __xmlNodeGetFromCache(void **nc, const char *start, size_t *len,
             assert(node);
 
             if ((node->name_len == namelen) &&
-                (!memcmp(node->name, name, namelen)))
+                (!strncasecmp(node->name, name, namelen)))
             {
                  if (pos == num)
                  {
@@ -159,19 +159,22 @@ void
 cacheFree(void *nc)
 {
     struct _xml_node *cache = (struct _xml_node *)nc;
-    struct _xml_node **node;
-    size_t i = 0;
 
     assert(nc != 0);
 
-    node = (struct _xml_node **)cache->node;
-    while(i < cache->first_free)
+    if (cache->first_free)
     {
-        cacheFree(node[i++]);
-    }
+        struct _xml_node **node = (struct _xml_node **)cache->node;
+        size_t i = 0;
 
-    free(node);
-    /* free(cache); */
+        while(i < cache->first_free)
+        {
+            cacheFree(node[i++]);
+        }
+
+        free(node);
+    }
+    free(cache);
 }
 
 void *
@@ -231,8 +234,6 @@ void
 cacheDataSet(void *n, char *name, size_t namelen, char *data, size_t datalen)
 {
    struct _xml_node *node = (struct _xml_node *)n;
-   size_t len = datalen;
-   char *ptr = data;
 
    assert(node != 0);
    assert(name != 0);
