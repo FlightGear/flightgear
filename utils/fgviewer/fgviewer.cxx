@@ -87,7 +87,12 @@ main(int argc, char** argv)
     SGMaterialLib* ml = new SGMaterialLib;
     SGPath mpath(fg_root);
     mpath.append("materials.xml");
-    ml->load(fg_root, mpath.str(), props);
+    try {
+        ml->load(fg_root, mpath.str(), props);
+    } catch (...) {
+        std::cerr << "Problems loading FlightGear materials.\n"
+                  << "Probably FG_ROOT is not properly set." << std::endl;
+    }
     
     SGReaderWriterBTGOptions* btgOptions = new SGReaderWriterBTGOptions;
     btgOptions->getDatabasePathList() = filePathList;
@@ -99,7 +104,7 @@ main(int argc, char** argv)
 
     // if no model has been successfully loaded report failure.
     if (!loadedModel.valid()) {
-        std::cout << arguments.getApplicationName()
+        std::cerr << arguments.getApplicationName()
                   << ": No data loaded" << std::endl;
         return EXIT_FAILURE;
     }
