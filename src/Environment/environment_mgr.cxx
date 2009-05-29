@@ -36,8 +36,8 @@
 #include <FDM/flight.hxx>
 
 #include "environment.hxx"
-#include "environment_ctrl.hxx"
 #include "environment_mgr.hxx"
+#include "environment_ctrl.hxx"
 #include "fgclouds.hxx"
 #include "precipitation_mgr.hxx"
 
@@ -50,26 +50,39 @@ FGEnvironmentMgr::FGEnvironmentMgr ()
   : _environment(new FGEnvironment)
 {
 
-   if (fgGetBool("/environment/params/real-world-weather-fetch") == true)
-       _controller = new FGMetarEnvironmentCtrl;
-   else
-       _controller = new FGInterpolateEnvironmentCtrl;
-
+  _controller = new FGInterpolateEnvironmentCtrl;
   _controller->setEnvironment(_environment);
   set_subsystem("controller", _controller, 0.5);
-  fgClouds = new FGClouds( _controller );
+
+  fgClouds = new FGClouds();
+
+  _metarcontroller = new FGMetarCtrl(_controller);
+  set_subsystem("metarcontroller", _metarcontroller, 0.25 );
+
+  _metarfetcher = new FGMetarFetcher();
+  set_subsystem("metarfetcher", _metarfetcher, 1.0 );
+
   _precipitationManager = new FGPrecipitationMgr;
   set_subsystem("precipitation", _precipitationManager);
 }
 
 FGEnvironmentMgr::~FGEnvironmentMgr ()
 {
-  delete _environment;
-  remove_subsystem("controller");
   remove_subsystem("precipitation");
-  delete _controller;
-  delete fgClouds;
   delete _precipitationManager;
+
+  remove_subsystem("metarcontroller");
+  delete _metarfetcher;
+
+  remove_subsystem("metarfetcher");
+  delete _metarcontroller;
+
+  delete fgClouds;
+
+  remove_subsystem("controller");
+  delete _controller;
+
+  delete _environment;
 }
 
 void
@@ -91,6 +104,7 @@ FGEnvironmentMgr::reinit ()
 void
 FGEnvironmentMgr::bind ()
 {
+  SGSubsystemGroup::bind();
   fgTie("/environment/visibility-m", _environment,
 	&FGEnvironment::get_visibility_m, &FGEnvironment::set_visibility_m);
   fgSetArchivable("/environment/visibility-m");
@@ -192,6 +206,10 @@ FGEnvironmentMgr::bind ()
 	  &FGEnvironmentMgr::set_cloud_layer_coverage);
     fgSetArchivable(buf);
   }
+
+  fgTie("/environment/metar/data", _metarcontroller,
+          &FGMetarCtrl::get_metar, &FGMetarCtrl::set_metar );
+
   fgTie("/sim/rendering/clouds3d-enable", fgClouds,
 	  &FGClouds::get_3dClouds,
 	  &FGClouds::set_3dClouds);
@@ -208,9 +226,6 @@ FGEnvironmentMgr::bind ()
   fgTie("/environment/rebuild-layers", fgClouds,
       &FGClouds::get_update_event,
       &FGClouds::set_update_event);
-  fgTie("/environment/weather-scenario", fgClouds,
-        &FGClouds::get_scenario,
-        &FGClouds::set_scenario);
   fgTie("/sim/rendering/lightning-enable", &sgEnviro,
       &SGEnviro::get_lightning_enable_state,
       &SGEnviro::set_lightning_enable_state);
@@ -264,27 +279,14 @@ FGEnvironmentMgr::unbind ()
   fgUntie("/environment/weather-scenario");
   fgUntie("/sim/rendering/lightning-enable");
   fgUntie("/environment/turbulence/use-cloud-turbulence");
+  SGSubsystemGroup::unbind();
 }
-
-/* probably this should be a class member? */
-static bool scenery_loaded = false;
 
 void
 FGEnvironmentMgr::update (double dt)
 {
   SGSubsystemGroup::update(dt);
 
-  {
-    /*
-      re set the scenario after the scenery has been loaded
-      (raising edge of sim/sceneryloaded)
-      so that ground elevation can be computed.
-    */
-    bool b = fgGetBool( "sim/sceneryloaded" );
-    if( !scenery_loaded && b )
-      fgClouds->set_scenario( fgClouds->get_scenario() );
-    scenery_loaded = b;
-  }
 				// FIXME: the FDMs should update themselves
   current_aircraft.fdm_state
     ->set_Velocities_Local_Airmass(_environment->get_wind_from_north_fps(),

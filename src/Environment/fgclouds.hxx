@@ -47,33 +47,15 @@ void buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_def_root, co
 
 	void buildCloudLayers(void);
 
-	void buildScenario( const string& scenario );
-
-	void setLayer( int iLayer, float alt_m, const string& coverage, const string& layer_type );
-
-	void update_metar_properties( const FGMetar *m );
-
-	void update_env_config ();
-
-        void build(void);
-
 	int update_event;
 	SGSoundSample *snd_lightning;
-	FGEnvironmentCtrl * _controller;
-	float station_elevation_ft;
         bool clouds_3d_enabled;
-        string last_scenario;
-        string scenario;
-        SGPropertyNode_ptr last_env_config, last_env_clouds;
 
 public:
-	FGClouds(FGEnvironmentCtrl * controller);
+	FGClouds();
 	~FGClouds();
 
 	void init(void);
-
-        void set_scenario(const char * sc);
-        const char * get_scenario(void) const;
 
 	int get_update_event(void) const;
 	void set_update_event(int count);

@@ -35,6 +35,8 @@
 
 class FGEnvironment;
 class FGEnvironmentCtrl;
+class FGMetarCtrl;
+class FGMetarFetcher;
 class FGClouds;
 class FGPrecipitationMgr;
 
@@ -89,6 +91,8 @@ private:
 
   FGEnvironment * _environment;	// always the same, for now
   FGEnvironmentCtrl * _controller; // always the same, for now
+  FGMetarCtrl * _metarcontroller; 
+  FGMetarFetcher * _metarfetcher;
   FGPrecipitationMgr* _precipitationManager;
 
   FGClouds *fgClouds;
