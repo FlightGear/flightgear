@@ -35,29 +35,28 @@
 #include <Main/util.hxx>
 
 #include "fgmetar.hxx"
-#include "environment_mgr.hxx"
 #include "environment_ctrl.hxx"
 
 using std::sort;
 
-class AirportWithMetar : public FGAirport::AirportFilter
-{
+class AirportWithMetar : public FGAirport::AirportFilter {
 public:
-  virtual bool passAirport(FGAirport* aApt) const
-  {
-    return aApt->getMetar();
-  }
+	virtual bool passAirport(FGAirport* aApt) const {
+		return aApt->getMetar();
+	}
 };
+
+static AirportWithMetar airportWithMetarFilter;
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGEnvironmentCtrl abstract base class.
 ////////////////////////////////////////////////////////////////////////
 
 FGEnvironmentCtrl::FGEnvironmentCtrl ()
-  : _environment(0),
-    _lon_deg(0),
-    _lat_deg(0),
-    _elev_ft(0)
+	: _environment(0),
+	_lon_deg(0),
+	_lat_deg(0),
+	_elev_ft(0)
 {
 }
 
@@ -68,112 +67,33 @@ FGEnvironmentCtrl::~FGEnvironmentCtrl ()
 void
 FGEnvironmentCtrl::setEnvironment (FGEnvironment * environment)
 {
-  _environment = environment;
+	_environment = environment;
 }
 
 void
 FGEnvironmentCtrl::setLongitudeDeg (double lon_deg)
 {
-  _lon_deg = lon_deg;
+	_lon_deg = lon_deg;
 }
 
 void
 FGEnvironmentCtrl::setLatitudeDeg (double lat_deg)
 {
-  _lat_deg = lat_deg;
+	_lat_deg = lat_deg;
 }
 
 void
 FGEnvironmentCtrl::setElevationFt (double elev_ft)
 {
-  _elev_ft = elev_ft;
+	_elev_ft = elev_ft;
 }
 
 void
 FGEnvironmentCtrl::setPosition (double lon_deg, double lat_deg, double elev_ft)
 {
-  _lon_deg = lon_deg;
-  _lat_deg = lat_deg;
-  _elev_ft = elev_ft;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////
-// Implementation of FGUserDefEnvironmentCtrl.
-////////////////////////////////////////////////////////////////////////
-
-FGUserDefEnvironmentCtrl::FGUserDefEnvironmentCtrl ()
-  : _base_wind_speed_node(0),
-    _gust_wind_speed_node(0),
-    _current_wind_speed_kt(0),
-    _delta_wind_speed_kt(0)
-{
-}
-
-FGUserDefEnvironmentCtrl::~FGUserDefEnvironmentCtrl ()
-{
-}
-
-void
-FGUserDefEnvironmentCtrl::init ()
-{
-				// Fill in some defaults.
-  if (!fgHasNode("/environment/params/base-wind-speed-kt"))
-    fgSetDouble("/environment/params/base-wind-speed-kt",
-		fgGetDouble("/environment/wind-speed-kt"));
-  if (!fgHasNode("/environment/params/gust-wind-speed-kt"))
-    fgSetDouble("/environment/params/gust-wind-speed-kt",
-		fgGetDouble("/environment/params/base-wind-speed-kt"));
-
-  _base_wind_speed_node =
-    fgGetNode("/environment/params/base-wind-speed-kt", true);
-  _gust_wind_speed_node =
-    fgGetNode("/environment/params/gust-wind-speed-kt", true);
-
-  _current_wind_speed_kt = _base_wind_speed_node->getDoubleValue();
-  _delta_wind_speed_kt = 0.1;
-}
-
-void
-FGUserDefEnvironmentCtrl::update (double dt)
-{
-  double base_wind_speed = _base_wind_speed_node->getDoubleValue();
-  double gust_wind_speed = _gust_wind_speed_node->getDoubleValue();
-
-  if (gust_wind_speed < base_wind_speed) {
-      gust_wind_speed = base_wind_speed;
-      _gust_wind_speed_node->setDoubleValue(gust_wind_speed);
-  }
-
-  if (base_wind_speed == gust_wind_speed) {
-    _current_wind_speed_kt = base_wind_speed;
-  } else {
-    int rn = rand() % 128;
-    int sign = (_delta_wind_speed_kt < 0 ? -1 : 1);
-    double gust = _current_wind_speed_kt - base_wind_speed;
-    double incr = gust / 50;
-
-    if (rn == 0)
-      _delta_wind_speed_kt = - _delta_wind_speed_kt;
-    else if (rn < 4)
-      _delta_wind_speed_kt -= incr * sign;
-    else if (rn < 16)
-      _delta_wind_speed_kt += incr * sign;
-
-    _current_wind_speed_kt += _delta_wind_speed_kt;
-
-    if (_current_wind_speed_kt < base_wind_speed) {
-      _current_wind_speed_kt = base_wind_speed;
-      _delta_wind_speed_kt = 0.01;
-    } else if (_current_wind_speed_kt > gust_wind_speed) {
-      _current_wind_speed_kt = gust_wind_speed;
-      _delta_wind_speed_kt = -0.01;
-    }
-  }
-  
-  if (_environment != 0)
-    _environment->set_wind_speed_kt(_current_wind_speed_kt);
+	_lon_deg = lon_deg;
+	_lat_deg = lat_deg;
+	_elev_ft = elev_ft;
 }
 
 
@@ -182,17 +102,23 @@ FGUserDefEnvironmentCtrl::update (double dt)
 // Implementation of FGInterpolateEnvironmentCtrl.
 ////////////////////////////////////////////////////////////////////////
 
+
 FGInterpolateEnvironmentCtrl::FGInterpolateEnvironmentCtrl ()
 {
+	altitude_n = fgGetNode("/position/altitude-ft", true);
+	altitude_agl_n = fgGetNode("/position/altitude-agl-ft", true);
+	boundary_transition_n = fgGetNode("/environment/config/boundary-transition-ft", false );
+	boundary_n = fgGetNode("/environment/config/boundary", true );
+	aloft_n = fgGetNode("/environment/config/aloft", true );
 }
 
 FGInterpolateEnvironmentCtrl::~FGInterpolateEnvironmentCtrl ()
 {
-    unsigned int i;
-    for (i = 0; i < _boundary_table.size(); i++)
-        delete _boundary_table[i];
-    for (i = 0; i < _aloft_table.size(); i++)
-        delete _aloft_table[i];
+	unsigned int i;
+	for (i = 0; i < _boundary_table.size(); i++)
+		delete _boundary_table[i];
+	for (i = 0; i < _aloft_table.size(); i++)
+		delete _aloft_table[i];
 }
 
 
@@ -200,745 +126,770 @@ FGInterpolateEnvironmentCtrl::~FGInterpolateEnvironmentCtrl ()
 void
 FGInterpolateEnvironmentCtrl::init ()
 {
-    read_table(fgGetNode("/environment/config/boundary", true),
-               _boundary_table);
-    read_table(fgGetNode("/environment/config/aloft", true),
-               _aloft_table);
+	read_table( boundary_n, _boundary_table);
+	read_table( aloft_n, _aloft_table);
 }
 
 void
 FGInterpolateEnvironmentCtrl::reinit ()
 {
-    unsigned int i;
-    for (i = 0; i < _boundary_table.size(); i++)
-        delete _boundary_table[i];
-    for (i = 0; i < _aloft_table.size(); i++)
-        delete _aloft_table[i];
-    _boundary_table.clear();
-    _aloft_table.clear();
-    init();
+// TODO: do we really need to throw away the old tables on reinit? Better recycle
+	unsigned int i;
+	for (i = 0; i < _boundary_table.size(); i++)
+		delete _boundary_table[i];
+	for (i = 0; i < _aloft_table.size(); i++)
+		delete _aloft_table[i];
+	_boundary_table.clear();
+	_aloft_table.clear();
+	init();
 }
 
 void
-FGInterpolateEnvironmentCtrl::read_table (const SGPropertyNode * node,
-                                          vector<bucket *> &table)
+FGInterpolateEnvironmentCtrl::read_table (const SGPropertyNode * node, vector<bucket *> &table)
 {
-    for (int i = 0; i < node->nChildren(); i++) {
-        const SGPropertyNode * child = node->getChild(i);
-        if ( strcmp(child->getName(), "entry") == 0
-	     && child->getStringValue("elevation-ft", "")[0] != '\0'
-	     && ( child->getDoubleValue("elevation-ft") > 0.1 || i == 0 ) )
+	for (int i = 0; i < node->nChildren(); i++) {
+		const SGPropertyNode * child = node->getChild(i);
+		if ( strcmp(child->getName(), "entry") == 0
+		 && child->getStringValue("elevation-ft", "")[0] != '\0'
+		 && ( child->getDoubleValue("elevation-ft") > 0.1 || i == 0 ) )
 	{
-            bucket * b = new bucket;
-            if (i > 0)
-                b->environment.copy(table[i-1]->environment);
-            b->environment.read(child);
-            b->altitude_ft = b->environment.get_elevation_ft();
-            table.push_back(b);
-        }
-    }
-    sort(table.begin(), table.end(), bucket::lessThan);
+			bucket * b = new bucket;
+			if (i > 0)
+				b->environment.copy(table[i-1]->environment);
+			b->environment.read(child);
+			b->altitude_ft = b->environment.get_elevation_ft();
+			table.push_back(b);
+		}
+	}
+	sort(table.begin(), table.end(), bucket::lessThan);
 }
 
 void
 FGInterpolateEnvironmentCtrl::update (double delta_time_sec)
 {
-                                // FIXME
-    double altitude_ft = fgGetDouble("/position/altitude-ft");
-    double altitude_agl_ft = fgGetDouble("/position/altitude-agl-ft");
-    double boundary_transition =
-        fgGetDouble("/environment/config/boundary-transition-ft", 500);
+	double altitude_ft = altitude_n->getDoubleValue();
+	double altitude_agl_ft = altitude_agl_n->getDoubleValue();
+	double boundary_transition = 
+		boundary_transition_n == NULL ? 500 : boundary_transition_n->getDoubleValue();
 
-    // double ground_elevation_ft = altitude_ft - altitude_agl_ft;
+	int length = _boundary_table.size();
 
-    int length = _boundary_table.size();
-
-    if (length > 0) {
-                                // boundary table
-        double boundary_limit = _boundary_table[length-1]->altitude_ft;
-        if (boundary_limit >= altitude_agl_ft) {
-            do_interpolate(_boundary_table, altitude_agl_ft,
-                           _environment);
-            return;
-        } else if ((boundary_limit + boundary_transition) >= altitude_agl_ft) {
-                                // both tables
-            do_interpolate(_boundary_table, altitude_agl_ft, &env1);
-            do_interpolate(_aloft_table, altitude_ft, &env2);
-            double fraction =
-                (altitude_agl_ft - boundary_limit) / boundary_transition;
-            interpolate(&env1, &env2, fraction, _environment);
-            return;
-        }
-    }
-
-                                // aloft table
-    do_interpolate(_aloft_table, altitude_ft, _environment);
+	if (length > 0) {
+								// boundary table
+		double boundary_limit = _boundary_table[length-1]->altitude_ft;
+		if (boundary_limit >= altitude_agl_ft) {
+			do_interpolate(_boundary_table, altitude_agl_ft, _environment);
+			return;
+		} else if ((boundary_limit + boundary_transition) >= altitude_agl_ft) {
+								// both tables
+			do_interpolate(_boundary_table, altitude_agl_ft, &env1);
+			do_interpolate(_aloft_table, altitude_ft, &env2);
+			double fraction =
+				(altitude_agl_ft - boundary_limit) / boundary_transition;
+			interpolate(&env1, &env2, fraction, _environment);
+			return;
+		}
+	}
+								// aloft table
+	do_interpolate(_aloft_table, altitude_ft, _environment);
 }
 
 void
-FGInterpolateEnvironmentCtrl::do_interpolate (vector<bucket *> &table,
-                                              double altitude_ft,
-                                              FGEnvironment * environment)
+FGInterpolateEnvironmentCtrl::do_interpolate (vector<bucket *> &table, double altitude_ft, FGEnvironment * environment)
 {
-    int length = table.size();
-    if (length == 0)
-        return;
+	int length = table.size();
+	if (length == 0)
+		return;
 
-                                // Boundary conditions
-    if ((length == 1) || (table[0]->altitude_ft >= altitude_ft)) {
-        environment->copy(table[0]->environment);
-        return;
-    } else if (table[length-1]->altitude_ft <= altitude_ft) {
-        environment->copy(table[length-1]->environment);
-        return;
-    }
-        
-                                // Search the interpolation table
-    for (int i = 0; i < length - 1; i++) {
-        if ((i == length - 1) || (table[i]->altitude_ft <= altitude_ft)) {
-                FGEnvironment * env1 = &(table[i]->environment);
-                FGEnvironment * env2 = &(table[i+1]->environment);
-                double fraction;
-                if (table[i]->altitude_ft == table[i+1]->altitude_ft)
-                    fraction = 1.0;
-                else
-                    fraction =
-                        ((altitude_ft - table[i]->altitude_ft) /
-                         (table[i+1]->altitude_ft - table[i]->altitude_ft));
-                interpolate(env1, env2, fraction, environment);
+								// Boundary conditions
+	if ((length == 1) || (table[0]->altitude_ft >= altitude_ft)) {
+		environment->copy(table[0]->environment);
+		return;
+	} else if (table[length-1]->altitude_ft <= altitude_ft) {
+		environment->copy(table[length-1]->environment);
+		return;
+	}
+								// Search the interpolation table
+	for (int i = 0; i < length - 1; i++) {
+		if ((i == length - 1) || (table[i]->altitude_ft <= altitude_ft)) {
+				FGEnvironment * env1 = &(table[i]->environment);
+				FGEnvironment * env2 = &(table[i+1]->environment);
+				double fraction;
+				if (table[i]->altitude_ft == table[i+1]->altitude_ft)
+					fraction = 1.0;
+				else 
+					fraction =
+						((altitude_ft - table[i]->altitude_ft) /
+						 (table[i+1]->altitude_ft - table[i]->altitude_ft));
+				interpolate(env1, env2, fraction, environment);
 
-                return;
-        }
-    }
+				return;
+		}
+	}
 }
 
 bool
 FGInterpolateEnvironmentCtrl::bucket::operator< (const bucket &b) const
 {
-    return (altitude_ft < b.altitude_ft);
+	return (altitude_ft < b.altitude_ft);
 }
 
 bool
 FGInterpolateEnvironmentCtrl::bucket::lessThan(bucket *a, bucket *b)
 {
-    return (a->altitude_ft) < (b->altitude_ft);
+	return (a->altitude_ft) < (b->altitude_ft);
 }
 
 
 ////////////////////////////////////////////////////////////////////////
-// Implementation of FGMetarEnvironmentCtrl.
+// Implementation of FGMetarCtrl.
 ////////////////////////////////////////////////////////////////////////
 
-FGMetarEnvironmentCtrl::FGMetarEnvironmentCtrl ()
-    : env( new FGInterpolateEnvironmentCtrl ),
-      metar_loaded( false ),
-      search_interval_sec( 60.0 ),        // 1 minute
-      same_station_interval_sec( 900.0 ), // 15 minutes
-      search_elapsed( 9999.0 ),
-      fetch_elapsed( 9999.0 ),
-      last_apt( 0 ),
-      proxy_host( fgGetNode("/sim/presets/proxy/host", true) ),
-      proxy_port( fgGetNode("/sim/presets/proxy/port", true) ),
-      proxy_auth( fgGetNode("/sim/presets/proxy/authentication", true) ),
-      metar_max_age( fgGetNode("/environment/params/metar-max-age-min", true) ),
-
-      // Interpolation constant definitions.
-      EnvironmentUpdatePeriodSec( 0.2 ),
-      MaxWindChangeKtsSec( 0.2 ),
-      MaxVisChangePercentSec( 0.05 ),
-      MaxPressureChangeInHgSec( 0.0033 ),
-      MaxCloudAltitudeChangeFtSec( 20.0 ),
-      MaxCloudThicknessChangeFtSec( 50.0 ),
-      MaxCloudInterpolationHeightFt( 5000.0 ),
-      MaxCloudInterpolationDeltaFt( 4000.0 ),
-
-      _error_count( 0 ),
-      _stale_count( 0 ),
-      _dt( 0.0 ),
-      _error_dt( 0.0 )
+FGMetarCtrl::FGMetarCtrl( SGSubsystem * environmentCtrl )
+	: _environmentCtrl(environmentCtrl),
+	station_elevation_ft(0.0),
+	metar_valid(false),
+	setup_winds_aloft(true),
+	// Interpolation constant definitions.
+	EnvironmentUpdatePeriodSec( 0.2 ),
+	MaxWindChangeKtsSec( 0.2 ),
+	MaxVisChangePercentSec( 0.05 ),
+	MaxPressureChangeInHgSec( 0.0033 ),
+	MaxCloudAltitudeChangeFtSec( 20.0 ),
+	MaxCloudThicknessChangeFtSec( 50.0 ),
+	MaxCloudInterpolationHeightFt( 5000.0 ),
+	MaxCloudInterpolationDeltaFt( 4000.0 )
 {
-#if defined(ENABLE_THREADS)
-    thread = new MetarThread(this);
-    thread->setProcessorAffinity(1);
-    thread->start();
-#endif // ENABLE_THREADS
+	metar_base_n = fgGetNode( "/environment/metar", true );
+	station_id_n = metar_base_n->getNode("station-id", true );
+	station_elevation_n = metar_base_n->getNode("station-elevation-ft", true );
+	min_visibility_n = metar_base_n->getNode("min-visibility-m", true );
+	max_visibility_n = metar_base_n->getNode("max-visibility-m", true );
+	base_wind_range_from_n = metar_base_n->getNode("base-wind-range-from", true );
+	base_wind_range_to_n = metar_base_n->getNode("base-wind-range-to", true );
+	base_wind_speed_n = metar_base_n->getNode("base-wind-speed-kt", true );
+	base_wind_dir_n   = metar_base_n->getNode("base-wind-dir-deg", true );
+	gust_wind_speed_n = metar_base_n->getNode("gust-wind-speed-kt", true );
+	temperature_n = metar_base_n->getNode("temperature-degc", true );
+	dewpoint_n = metar_base_n->getNode("dewpoint-degc", true );
+	humidity_n = metar_base_n->getNode("rel-humidity-norm", true );
+	pressure_n = metar_base_n->getNode("pressure-inhg", true );
+	clouds_n = metar_base_n->getNode("clouds", true );
+	rain_n = metar_base_n->getNode("rain-norm", true );
+	hail_n = metar_base_n->getNode("hail-norm", true );
+	snow_n = metar_base_n->getNode("snow-norm", true );
+	snow_cover_n = metar_base_n->getNode("snow-cover", true );
+	ground_elevation_n = fgGetNode( "/position/ground-elev-m", true );
+	longitude_n = fgGetNode( "/position/longitude-deg", true );
+	latitude_n = fgGetNode( "/position/latitude-deg", true );
+	environment_clouds_n = fgGetNode("/environment/clouds");
+
+	boundary_wind_speed_n = fgGetNode("/environment/config/boundary/entry/wind-speed-kt");
+	boundary_wind_from_heading_n = fgGetNode("/environment/config/boundary/entry/wind-from-heading-deg");
+	boundary_visibility_n = fgGetNode("/environment/config/boundary/entry/visibility-m");
+	boundary_sea_level_pressure_n = fgGetNode("/environment/config/boundary/entry/pressure-sea-level-inhg");
 }
 
-FGMetarEnvironmentCtrl::~FGMetarEnvironmentCtrl ()
+FGMetarCtrl::~FGMetarCtrl ()
 {
-#if defined(ENABLE_THREADS)
-   thread_stop();
-   delete thread;
-#endif // ENABLE_THREADS
-
-   delete env;
 }
 
+void FGMetarCtrl::bind ()
+{
+  fgTie("/environment/metar/valid", this, &FGMetarCtrl::get_valid );
+  fgTie("/environment/params/metar-updates-environment", this, &FGMetarCtrl::get_enabled, &FGMetarCtrl::set_enabled );
+  fgTie("/environment/params/metar-updates-winds-aloft", this, &FGMetarCtrl::get_setup_winds_aloft, &FGMetarCtrl::set_setup_winds_aloft );
+}
+
+void FGMetarCtrl::unbind ()
+{
+  fgUntie("/environment/metar/valid");
+  fgUntie("/environment/params/metar-updates-environment");
+  fgUntie("/environment/params/metar-updates-winds-aloft");
+}
 
 // use a "command" to set station temp at station elevation
 static void set_temp_at_altitude( float temp_degc, float altitude_ft ) {
-    SGPropertyNode args;
-    SGPropertyNode *node = args.getNode("temp-degc", 0, true);
-    node->setFloatValue( temp_degc );
-    node = args.getNode("altitude-ft", 0, true);
-    node->setFloatValue( altitude_ft );
-    globals->get_commands()->execute("set-outside-air-temp-degc", &args);
+	SGPropertyNode args;
+	SGPropertyNode *node = args.getNode("temp-degc", 0, true);
+	node->setFloatValue( temp_degc );
+	node = args.getNode("altitude-ft", 0, true);
+	node->setFloatValue( altitude_ft );
+	globals->get_commands()->execute("set-outside-air-temp-degc", &args);
 }
-
 
 static void set_dewpoint_at_altitude( float dewpoint_degc, float altitude_ft ) {
-    SGPropertyNode args;
-    SGPropertyNode *node = args.getNode("dewpoint-degc", 0, true);
-    node->setFloatValue( dewpoint_degc );
-    node = args.getNode("altitude-ft", 0, true);
-    node->setFloatValue( altitude_ft );
-    globals->get_commands()->execute("set-dewpoint-temp-degc", &args);
+	SGPropertyNode args;
+	SGPropertyNode *node = args.getNode("dewpoint-degc", 0, true);
+	node->setFloatValue( dewpoint_degc );
+	node = args.getNode("altitude-ft", 0, true);
+	node->setFloatValue( altitude_ft );
+	globals->get_commands()->execute("set-dewpoint-temp-degc", &args);
 }
 
+/*
+ Setup the wind nodes for a branch in the /environment/config/<branchName>/entry nodes
 
-void
-FGMetarEnvironmentCtrl::update_env_config ()
+ Output properties:
+ wind-from-heading-deg
+ wind-speed-kt
+ turbulence/magnitude-norm
+
+ Input properties:
+ wind-heading-change-deg       how many degrees does the wind direction change at this level
+ wind-speed-change-rel         relative change of wind speed at this level 
+ turbulence/factor             factor for the calculated turbulence magnitude at this level
+ */
+static void setupWindBranch( string branchName, double dir, double speed, double gust )
 {
-    // If we aren't in the METAR scenario, don't attempt to interpolate.
-    if (strcmp(fgGetString("/environment/weather-scenario", "METAR"), "METAR"))
-        return;
+	SGPropertyNode_ptr branch = fgGetNode("/environment/config", true)->getNode(branchName,true);
+	vector<SGPropertyNode_ptr> entries = branch->getChildren("entry");
+	for ( vector<SGPropertyNode_ptr>::iterator it = entries.begin(); it != entries.end(); it++) {
 
-    double dir_from;
-    double dir_to;
-    double speed;
-    double gust;
-    double vis;
-    double pressure;
-    double temp;
-    double dewpoint;
+		// change wind direction as configured
+		double layer_dir = dir + (*it)->getDoubleValue("wind-heading-change-deg", 0.0 );
+		if( layer_dir >= 360.0 ) layer_dir -= 360.0;
+		if( layer_dir < 0.0 ) layer_dir += 360.0;
+		(*it)->setDoubleValue("wind-from-heading-deg", layer_dir);
 
-    const SGPropertyNode *metar_clouds = fgGetNode("/environment/metar/clouds", true);
-    SGPropertyNode *clouds = fgGetNode("/environment/clouds",  true);
+		double layer_speed = speed*(1 + (*it)->getDoubleValue("wind-speed-change-rel", 0.0 ));
+		(*it)->setDoubleValue("wind-speed-kt", layer_speed );
 
-    if (metar_loaded) {
-        // Generate interpolated values between the METAR and the current
-        // configuration.
+		// add some turbulence
+		SGPropertyNode_ptr turbulence = (*it)->getNode("turbulence",true);
 
-        // Pick up the METAR wind values and convert them into a vector.
-        double metar[2];
-        double metar_speed = fgGetDouble("/environment/metar/base-wind-speed-kt");
-        double metar_heading = fgGetDouble("/environment/metar/base-wind-range-from");
+		double turbulence_norm = speed/50;
+		if( gust > speed ) {
+			turbulence_norm += (gust-speed)/25;
+		}
+		if( turbulence_norm > 1.0 ) turbulence_norm = 1.0;
 
-        metar[0] = metar_speed * sin(metar_heading * M_PI / 180.0);
-        metar[1] = metar_speed * cos(metar_heading * M_PI / 180.0);
-
-        // Convert the current wind values and convert them into a vector
-        double current[2];
-        double current_speed =
-                fgGetDouble("/environment/config/boundary/entry/wind-speed-kt");
-        double current_heading = fgGetDouble(
-                "/environment/config/boundary/entry/wind-from-heading-deg");
-
-        current[0] = current_speed * sin(current_heading * M_PI / 180.0);
-        current[1] = current_speed * cos(current_heading * M_PI / 180.0);
-
-        // Determine the maximum component-wise value that the wind can change.
-        // First we determine the fraction in the X and Y component, then
-        // factor by the maximum wind change.
-        double x = fabs(current[0] - metar[0]);
-        double y = fabs(current[1] - metar[1]);
-
-        // only interpolate if we have a difference
-        if (x + y > 0) {
-            double dx = x / (x + y);
-            double dy = 1 - dx;
-
-            double maxdx = dx * MaxWindChangeKtsSec;
-            double maxdy = dy * MaxWindChangeKtsSec;
-
-            // Interpolate each component separately.
-            current[0] = interpolate_val(current[0], metar[0], maxdx);
-            current[1] = interpolate_val(current[1], metar[1], maxdy);
-        }
-
-        // Now convert back to polar coordinates.
-        if ((current[0] == 0.0) && (current[1] == 0.0)) {
-            // Special case where there is no wind (otherwise atan2 barfs)
-            speed = 0.0;
-            dir_from = current_heading;
-
-        } else {
-            // Some real wind to convert back from. Work out the speed
-            // and direction value in degrees.
-            speed = sqrt((current[0] * current[0]) + (current[1] * current[1]));
-            dir_from = (atan2(current[0], current[1]) * 180.0 / M_PI);
-
-            // Normalize the direction.
-            if (dir_from < 0.0)
-                dir_from += 360.0;
-
-            SG_LOG( SG_GENERAL, SG_DEBUG, "Wind : " << dir_from << "@" << speed);
-        }
-
-        // Now handle the visibility. We convert both visibility values
-        // to X-values, then interpolate from there, then back to real values.
-        // The length_scale is fixed to 1000m, so the visibility changes by
-        // by MaxVisChangePercentSec or 1000m X MaxVisChangePercentSec,
-        // whichever is more.
-        double currentvis =
-                fgGetDouble("/environment/config/boundary/entry/visibility-m");
-        double metarvis = fgGetDouble("/environment/metar/min-visibility-m");
-        double currentxval = log(1000.0 + currentvis);
-        double metarxval = log(1000.0 + metarvis);
-
-        currentxval = interpolate_val(currentxval, metarxval, MaxVisChangePercentSec);
-
-        // Now convert back from an X-value to a straightforward visibility.
-        vis = exp(currentxval) - 1000.0;
-
-        pressure = interpolate_prop(
-                "/environment/config/boundary/entry/pressure-sea-level-inhg",
-                "/environment/metar/pressure-inhg",
-                MaxPressureChangeInHgSec);
-
-        dir_to   = fgGetDouble("/environment/metar/base-wind-range-to");
-        gust     = fgGetDouble("/environment/metar/gust-wind-speed-kt");
-        temp     = fgGetDouble("/environment/metar/temperature-degc");
-        dewpoint = fgGetDouble("/environment/metar/dewpoint-degc");
-
-        // Set the cloud layers by interpolating over the METAR versions.
-        vector<SGPropertyNode_ptr> layers = metar_clouds->getChildren("layer");
-        vector<SGPropertyNode_ptr>::const_iterator layer;
-        vector<SGPropertyNode_ptr>::const_iterator layers_end = layers.end();
-
-        double aircraft_alt = fgGetDouble("/position/altitude-ft");
-        int i;
-
-        for (i = 0, layer = layers.begin(); layer != layers_end; ++layer, i++) {
-            SGPropertyNode *target = clouds->getChild("layer", i, true);
-
-            // In the case of clouds, we want to avoid writing if nothing has
-            // changed, as these properties are tied to the renderer and will
-            // cause the clouds to be updated, reseting the texture locations.
-
-            // We don't interpolate the coverage values as no-matter how we
-            // do it, it will be quite a sudden change of texture. Better to
-            // have a single change than four or five.
-            const char *coverage = (*layer)->getStringValue("coverage", "clear");
-            SGPropertyNode *cov = target->getNode("coverage", true);
-            if (strcmp(cov->getStringValue(), coverage) != 0)
-                cov->setStringValue(coverage);
-
-            double required_alt = (*layer)->getDoubleValue("elevation-ft");
-            double current_alt = target->getDoubleValue("elevation-ft");
-            double required_thickness = (*layer)->getDoubleValue("thickness-ft");
-            SGPropertyNode *thickness = target->getNode("thickness-ft", true);
-
-            if (current_alt < -9000 || required_alt < -9000 ||
-                fabs(aircraft_alt - required_alt) > MaxCloudInterpolationHeightFt ||
-                fabs(current_alt - required_alt) > MaxCloudInterpolationDeltaFt) {
-                // We don't interpolate any layers that are
-                //  - too far above us to be visible
-                //  - too far below us to be visible
-                //  - with too large a difference to make interpolation sensible
-                //  - to or from -9999 (used as a placeholder)
-                //  - any values that are too high above us,
-                if (current_alt != required_alt)
-                    target->setDoubleValue("elevation-ft", required_alt);
-
-                if (thickness->getDoubleValue() != required_thickness)
-                    thickness->setDoubleValue(required_thickness);
-
-            } else {
-                // Interpolate the other values in the usual way
-                if (current_alt != required_alt) {
-                    current_alt = interpolate_val(current_alt,
-                                                  required_alt,
-                                                  MaxCloudAltitudeChangeFtSec);
-                    target->setDoubleValue("elevation-ft", current_alt);
-                }
-
-                double current_thickness = thickness->getDoubleValue();
-
-                if (current_thickness != required_thickness) {
-                    current_thickness = interpolate_val(current_thickness,
-                                                 required_thickness,
-                                                 MaxCloudThicknessChangeFtSec);
-                    thickness->setDoubleValue(current_thickness);
-                }
-            }
-        }
-
-    } else {
-        // We haven't already loaded a METAR, so apply it immediately.
-        dir_from = fgGetDouble("/environment/metar/base-wind-range-from");
-        dir_to   = fgGetDouble("/environment/metar/base-wind-range-to");
-        speed    = fgGetDouble("/environment/metar/base-wind-speed-kt");
-        gust     = fgGetDouble("/environment/metar/gust-wind-speed-kt");
-        vis      = fgGetDouble("/environment/metar/min-visibility-m");
-        pressure = fgGetDouble("/environment/metar/pressure-inhg");
-        temp     = fgGetDouble("/environment/metar/temperature-degc");
-        dewpoint = fgGetDouble("/environment/metar/dewpoint-degc");
-
-        vector<SGPropertyNode_ptr> layers = metar_clouds->getChildren("layer");
-        vector<SGPropertyNode_ptr>::const_iterator layer;
-        vector<SGPropertyNode_ptr>::const_iterator layers_end = layers.end();
-
-        int i;
-        for (i = 0, layer = layers.begin(); layer != layers_end; ++layer, i++) {
-            SGPropertyNode *target = clouds->getChild("layer", i, true);
-
-            target->setStringValue("coverage",
-                    (*layer)->getStringValue("coverage", "clear"));
-            target->setDoubleValue("elevation-ft",
-                    (*layer)->getDoubleValue("elevation-ft"));
-            target->setDoubleValue("thickness-ft",
-                    (*layer)->getDoubleValue("thickness-ft"));
-            target->setDoubleValue("span-m", 40000.0);
-        }
-
-        // Force an update of the 3D clouds
-        fgSetDouble("/environment/rebuild-layers", 1.0);
-    }
-
-    fgSetupWind(dir_from, dir_to, speed, gust);
-    fgDefaultWeatherValue("visibility-m", vis);
-    set_temp_at_altitude(temp, station_elevation_ft);
-    set_dewpoint_at_altitude(dewpoint, station_elevation_ft);
-    fgDefaultWeatherValue("pressure-sea-level-inhg", pressure);
-
-    // We've now successfully loaded a METAR into the configuration
-    metar_loaded = true;
+		turbulence_norm *= turbulence->getDoubleValue("factor", 0.0 );
+		turbulence->setDoubleValue( "magnitude-norm", turbulence_norm );
+	}
 }
 
-double FGMetarEnvironmentCtrl::interpolate_prop(const char * currentname,
-                                                const char * requiredname,
-                                                double dt)
+static void setupWind( bool setup_aloft, double dir, double speed, double gust )
 {
-    double currentval = fgGetDouble(currentname);
-    double requiredval = fgGetDouble(requiredname);
-    return interpolate_val(currentval, requiredval, dt);
+	setupWindBranch( "boundary", dir, speed, gust );
+	if( setup_aloft )
+		setupWindBranch( "aloft", dir, speed, gust );
 }
 
-double FGMetarEnvironmentCtrl::interpolate_val(double currentval,
-                                               double requiredval,
-                                               double dt)
+double FGMetarCtrl::interpolate_val(double currentval, double requiredval, double dt)
 {
-    double dval = EnvironmentUpdatePeriodSec * dt;
+	double dval = EnvironmentUpdatePeriodSec * dt;
 
-    if (fabs(currentval - requiredval) < dval) return requiredval;
-    if (currentval < requiredval) return (currentval + dval);
-    if (currentval > requiredval) return (currentval - dval);
-    return requiredval;
+	if (fabs(currentval - requiredval) < dval) return requiredval;
+	if (currentval < requiredval) return (currentval + dval);
+	if (currentval > requiredval) return (currentval - dval);
+	return requiredval;
 }
 
 void
-FGMetarEnvironmentCtrl::init ()
+FGMetarCtrl::init ()
 {
-    SGGeod pos = SGGeod::fromDeg(
-      fgGetDouble("/position/longitude-deg", true), 
-      fgGetDouble( "/position/latitude-deg", true));
-
-    metar_loaded = false;
-    bool found_metar = false;
-    long max_age = metar_max_age->getLongValue();
-    // Don't check max age during init so that we don't loop over a lot
-    // of airports metar if there is a problem.
-    // The update() calls will find a correct metar if things went wrong here
-    metar_max_age->setLongValue(0);
-
-    while ( !found_metar && (_error_count < 3) ) {
-        AirportWithMetar filter;
-        FGAirport* a = FGAirport::findClosest(pos, 10000.0, &filter);
-        if (!a) {
-          break;
-        }
-        
-        FGMetarResult result = fetch_data(a);
-        if ( result.m != NULL ) {
-            SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = "
-                    << a->ident());
-            last_apt = a;
-            search_elapsed = 0.0;
-            fetch_elapsed = 0.0;
-            update_metar_properties( result.m );
-            update_env_config();
-            env->init();
-            found_metar = true;
-        } else {
-            // mark as no metar so it doesn't show up in subsequent
-            // searches.
-            SG_LOG( SG_GENERAL, SG_INFO, "no metar at metar = " << a->ident() );
-            a->setMetar(false);
-        }
-    } // of airprot-with-metar search iteration
-    
-    metar_max_age->setLongValue(max_age);
+	first_update = true;
 }
 
 void
-FGMetarEnvironmentCtrl::reinit ()
+FGMetarCtrl::reinit ()
 {
-    _error_count = 0;
-    _error_dt = 0.0;
-    metar_loaded = false;
-
-    env->reinit();
+	init();
 }
 
 void
-FGMetarEnvironmentCtrl::update(double delta_time_sec)
+FGMetarCtrl::update(double dt)
 {
-    _dt += delta_time_sec;
-    if (_error_count >= 3)
-       return;
+	if( dt <= 0 || !metar_valid ||!enabled)
+		return;
 
-    FGMetarResult result;
+	// Interpolate the current configuration closer to the actual METAR
 
-    static const SGPropertyNode *longitude
-        = fgGetNode( "/position/longitude-deg", true );
-    static const SGPropertyNode *latitude
-        = fgGetNode( "/position/latitude-deg", true );
-    SGGeod pos = SGGeod::fromDeg(longitude->getDoubleValue(), 
-      latitude->getDoubleValue());
-        
-    search_elapsed += delta_time_sec;
-    fetch_elapsed += delta_time_sec;
-    interpolate_elapsed += delta_time_sec;
+	bool reinit_required = false;
+	bool layer_rebuild_required = false;
 
-    // if time for a new search request, push it onto the request
-    // queue
-    if ( search_elapsed > search_interval_sec ) {
-        AirportWithMetar filter;
-        FGAirport* a = FGAirport::findClosest(pos, 10000.0, &filter);
-        if (a) {
-          if ( !last_apt || last_apt->ident() != a->ident()
-                 || fetch_elapsed > same_station_interval_sec )
-            {
-                SG_LOG( SG_GENERAL, SG_INFO, "closest station w/ metar = "
-                        << a->ident());
-                request_queue.push(a);
-                last_apt = a;
-                search_elapsed = 0.0;
-                fetch_elapsed = 0.0;
-            } else {
-                search_elapsed = 0.0;
-                SG_LOG( SG_GENERAL, SG_INFO, "same station, waiting = "
-                        << same_station_interval_sec - fetch_elapsed );
-            }
+	if (first_update) {
+		double dir = base_wind_dir_n->getDoubleValue();
+		double speed = base_wind_speed_n->getDoubleValue();
+		double gust = gust_wind_speed_n->getDoubleValue();
+		setupWind(setup_winds_aloft, dir, speed, gust);
 
-        } else {
-          SG_LOG( SG_GENERAL, SG_WARN,
-                    "Unable to find any airports with metar" );
-        }
-    } else if ( interpolate_elapsed > EnvironmentUpdatePeriodSec ) {
-        // Interpolate the current configuration closer to the actual METAR
-        update_env_config();
-        env->reinit();
-        interpolate_elapsed = 0.0;
-    }
+		double metarvis = min_visibility_n->getDoubleValue();
+		fgDefaultWeatherValue("visibility-m", metarvis);
 
-#if !defined(ENABLE_THREADS)
-    // No loader thread running so manually fetch the data
-    FGAirport* apt = NULL;
-    while ( !request_queue.empty() ) {
-        apt = request_queue.front();
-        request_queue.pop();
-    }
+		double metarpressure = pressure_n->getDoubleValue();
+		fgDefaultWeatherValue("pressure-sea-level-inhg", metarpressure);
 
-    if (apt) {
-        SG_LOG( SG_GENERAL, SG_INFO, "inline fetching = " << apt->ident() );
-        result = fetch_data( apt );
-        result_queue.push( result );
-    }
-#endif // ENABLE_THREADS
+		// We haven't already loaded a METAR, so apply it immediately.
+		vector<SGPropertyNode_ptr> layers = clouds_n->getChildren("layer");
+		vector<SGPropertyNode_ptr>::const_iterator layer;
+		vector<SGPropertyNode_ptr>::const_iterator layers_end = layers.end();
 
-    // process any results from the loader.
-    while ( !result_queue.empty() ) {
-        result = result_queue.front();
-        result_queue.pop();
-        if ( result.m != NULL ) {
-            update_metar_properties( result.m );
-            delete result.m;
-            update_env_config();
-            env->reinit();
-        } else {
-            // mark as no metar so it doesn't show up in subsequent
-            // searches, and signal an immediate re-search.
-            SG_LOG( SG_GENERAL, SG_WARN,
-                    "no metar at station = " << result.airport->ident() );
-            result.airport->setMetar(false);
-            search_elapsed = 9999.0;
-        }
-    }
+		int i;
+		for (i = 0, layer = layers.begin(); layer != layers_end; ++layer, i++) {
+			SGPropertyNode *target = environment_clouds_n->getChild("layer", i, true);
 
-    env->update(delta_time_sec);
+			target->setStringValue("coverage",
+					(*layer)->getStringValue("coverage", "clear"));
+			target->setDoubleValue("elevation-ft",
+					(*layer)->getDoubleValue("elevation-ft"));
+			target->setDoubleValue("thickness-ft",
+					(*layer)->getDoubleValue("thickness-ft"));
+			target->setDoubleValue("span-m", 40000.0);
+		}
+
+		first_update = false;
+		reinit_required = true;
+		layer_rebuild_required = true;
+
+	} else {
+		// Generate interpolated values between the METAR and the current
+		// configuration.
+
+		// Pick up the METAR wind values and convert them into a vector.
+		double metar[2];
+		double metar_speed = base_wind_speed_n->getDoubleValue();
+		double metar_heading = base_wind_dir_n->getDoubleValue();
+
+		metar[0] = metar_speed * sin(metar_heading * SG_DEGREES_TO_RADIANS );
+		metar[1] = metar_speed * cos(metar_heading * SG_DEGREES_TO_RADIANS);
+
+		// Convert the current wind values and convert them into a vector
+		double current[2];
+		double speed = boundary_wind_speed_n->getDoubleValue();
+		double dir_from = boundary_wind_from_heading_n->getDoubleValue();;
+
+		current[0] = speed * sin(dir_from * SG_DEGREES_TO_RADIANS );
+		current[1] = speed * cos(dir_from * SG_DEGREES_TO_RADIANS );
+
+		// Determine the maximum component-wise value that the wind can change.
+		// First we determine the fraction in the X and Y component, then
+		// factor by the maximum wind change.
+		double x = fabs(current[0] - metar[0]);
+		double y = fabs(current[1] - metar[1]);
+
+		// only interpolate if we have a difference
+		if (x + y > 0) {
+			double dx = x / (x + y);
+			double dy = 1 - dx;
+
+			double maxdx = dx * MaxWindChangeKtsSec;
+			double maxdy = dy * MaxWindChangeKtsSec;
+
+			// Interpolate each component separately.
+			current[0] = interpolate_val(current[0], metar[0], maxdx);
+			current[1] = interpolate_val(current[1], metar[1], maxdy);
+
+			// Now convert back to polar coordinates.
+			if ((current[0] == 0.0) && (current[1] == 0.0)) {
+				// Special case where there is no wind (otherwise atan2 barfs)
+				speed = 0.0;
+			} else {
+				// Some real wind to convert back from. Work out the speed
+				// and direction value in degrees.
+				speed = sqrt((current[0] * current[0]) + (current[1] * current[1]));
+				dir_from = (atan2(current[0], current[1]) * SG_RADIANS_TO_DEGREES );
+
+				// Normalize the direction.
+				if (dir_from < 0.0)
+					dir_from += 360.0;
+
+				SG_LOG( SG_GENERAL, SG_DEBUG, "Wind : " << dir_from << "@" << speed);
+			}
+			double gust = gust_wind_speed_n->getDoubleValue();
+			setupWind(setup_winds_aloft, dir_from, speed, gust);
+			reinit_required = true;
+		}
+
+		// Now handle the visibility. We convert both visibility values
+		// to X-values, then interpolate from there, then back to real values.
+		// The length_scale is fixed to 1000m, so the visibility changes by
+		// by MaxVisChangePercentSec or 1000m X MaxVisChangePercentSec,
+		// whichever is more.
+		double vis = boundary_visibility_n->getDoubleValue();;
+		double metarvis = min_visibility_n->getDoubleValue();
+		if( vis != metarvis ) {
+			double currentxval = log(1000.0 + vis);
+			double metarxval = log(1000.0 + metarvis);
+
+			currentxval = interpolate_val(currentxval, metarxval, MaxVisChangePercentSec);
+
+			// Now convert back from an X-value to a straightforward visibility.
+			vis = exp(currentxval) - 1000.0;
+			fgDefaultWeatherValue("visibility-m", vis);
+			reinit_required = true;
+		}
+
+		double pressure = boundary_sea_level_pressure_n->getDoubleValue();
+		double metarpressure = pressure_n->getDoubleValue();
+		if( pressure != metarpressure ) {
+			pressure = interpolate_val( pressure, metarpressure, MaxPressureChangeInHgSec );
+			fgDefaultWeatherValue("pressure-sea-level-inhg", pressure);
+			reinit_required = true;
+		}
+
+		// Set the cloud layers by interpolating over the METAR versions.
+		vector<SGPropertyNode_ptr> layers = clouds_n->getChildren("layer");
+		vector<SGPropertyNode_ptr>::const_iterator layer;
+		vector<SGPropertyNode_ptr>::const_iterator layers_end = layers.end();
+
+		double aircraft_alt = fgGetDouble("/position/altitude-ft");
+		int i;
+
+		for (i = 0, layer = layers.begin(); layer != layers_end; ++layer, i++) {
+			SGPropertyNode *target = environment_clouds_n->getChild("layer", i, true);
+
+			// In the case of clouds, we want to avoid writing if nothing has
+			// changed, as these properties are tied to the renderer and will
+			// cause the clouds to be updated, reseting the texture locations.
+
+			// We don't interpolate the coverage values as no-matter how we
+			// do it, it will be quite a sudden change of texture. Better to
+			// have a single change than four or five.
+			const char *coverage = (*layer)->getStringValue("coverage", "clear");
+			SGPropertyNode *cov = target->getNode("coverage", true);
+			if (strcmp(cov->getStringValue(), coverage) != 0) {
+				cov->setStringValue(coverage);
+				layer_rebuild_required = true;
+			}
+
+			double required_alt = (*layer)->getDoubleValue("elevation-ft");
+			double current_alt = target->getDoubleValue("elevation-ft");
+			double required_thickness = (*layer)->getDoubleValue("thickness-ft");
+			SGPropertyNode *thickness = target->getNode("thickness-ft", true);
+
+			if (current_alt < -9000 || required_alt < -9000 ||
+				fabs(aircraft_alt - required_alt) > MaxCloudInterpolationHeightFt ||
+				fabs(current_alt - required_alt) > MaxCloudInterpolationDeltaFt) {
+				// We don't interpolate any layers that are
+				//  - too far above us to be visible
+				//  - too far below us to be visible
+				//  - with too large a difference to make interpolation sensible
+				//  - to or from -9999 (used as a placeholder)
+				//  - any values that are too high above us,
+				if (current_alt != required_alt)
+					target->setDoubleValue("elevation-ft", required_alt);
+
+				if (thickness->getDoubleValue() != required_thickness)
+					thickness->setDoubleValue(required_thickness);
+
+			} else {
+				// Interpolate the other values in the usual way
+				if (current_alt != required_alt) {
+					current_alt = interpolate_val(current_alt, required_alt, MaxCloudAltitudeChangeFtSec);
+					target->setDoubleValue("elevation-ft", current_alt);
+				}
+
+				double current_thickness = thickness->getDoubleValue();
+
+				if (current_thickness != required_thickness) {
+					current_thickness = interpolate_val(current_thickness,
+												 required_thickness,
+												 MaxCloudThicknessChangeFtSec);
+					thickness->setDoubleValue(current_thickness);
+				}
+			}
+		}
+	}
+
+	set_temp_at_altitude(temperature_n->getDoubleValue(), station_elevation_ft);
+	set_dewpoint_at_altitude(dewpoint_n->getDoubleValue(), station_elevation_ft);
+
+	// Force an update of the 3D clouds
+	if( layer_rebuild_required )
+		fgSetInt("/environment/rebuild-layers", 1 );
+
+	// Reinitializing of the environment controller required
+	if( reinit_required )
+		_environmentCtrl->reinit();
 }
 
-
-void
-FGMetarEnvironmentCtrl::setEnvironment (FGEnvironment * environment)
+const char * FGMetarCtrl::get_metar(void) const
 {
-    env->setEnvironment(environment);
+	return metar.c_str();
 }
 
-FGMetarResult
-FGMetarEnvironmentCtrl::fetch_data(FGAirport* apt)
+static const char *coverage_string[] = { "clear", "few", "scattered", "broken", "overcast" };
+static const double thickness_value[] = { 0, 65, 600, 750, 1000 };
+
+void FGMetarCtrl::set_metar( const char * metar_string )
 {
-    FGMetarResult result;
-    result.airport = apt;
+	int i;
 
-    // if the last error was more than three seconds ago,
-    // then pretent nothing happened.
-    if (_error_dt < 3) {
-        _error_dt += _dt;
+	metar = metar_string;
 
-    } else {
-        _error_dt = 0.0;
-        _error_count = 0;
-    }
+	SGSharedPtr<FGMetar> m;
+	try {
+		m = new FGMetar( metar_string );
+	}
+	catch( sg_io_exception ) {
+		fprintf( stderr, "can't get metar: %s\n", metar_string );
+		metar_valid = false;
+		return;
+	}
 
-    station_elevation_ft = apt->getElevation();
+	min_visibility_n->setDoubleValue( m->getMinVisibility().getVisibility_m() );
+	max_visibility_n->setDoubleValue( m->getMaxVisibility().getVisibility_m() );
 
-    // fetch current metar data
-    try {
-        string host = proxy_host->getStringValue();
-        string auth = proxy_auth->getStringValue();
-        string port = proxy_port->getStringValue();
-        result.m = new FGMetar( apt->ident(), host, port, auth);
+	const SGMetarVisibility *dirvis = m->getDirVisibility();
+	for (i = 0; i < 8; i++, dirvis++) {
+		SGPropertyNode *vis = metar_base_n->getChild("visibility", i, true);
+		double v = dirvis->getVisibility_m();
 
-        long max_age = metar_max_age->getLongValue();
-        long age = result.m->getAge_min();
-        if (max_age &&  age > max_age) {
-            SG_LOG( SG_GENERAL, SG_WARN, "METAR data too old (" << age << " min).");
-            delete result.m;
-            result.m = NULL;
+		vis->setDoubleValue("min-m", v);
+		vis->setDoubleValue("max-m", v);
+	}
 
-            if (++_stale_count > 10) {
-                _error_count = 1000;
-                throw sg_io_exception("More than 10 stale METAR messages in a row."
-                        " Check your system time!");
-            }
-        } else
-            _stale_count = 0;
+	base_wind_dir_n->setIntValue( m->getWindDir() );
+	base_wind_range_from_n->setIntValue( m->getWindRangeFrom() );
+	base_wind_range_to_n->setIntValue( m->getWindRangeTo() );
+	base_wind_speed_n->setDoubleValue( m->getWindSpeed_kt() );
+	gust_wind_speed_n->setDoubleValue( m->getGustSpeed_kt() );
+	temperature_n->setDoubleValue( m->getTemperature_C() );
+	dewpoint_n->setDoubleValue( m->getDewpoint_C() );
+	humidity_n->setDoubleValue( m->getRelHumidity() );
+	pressure_n->setDoubleValue( m->getPressure_inHg() );
 
-    } catch (const sg_io_exception& e) {
-        SG_LOG( SG_GENERAL, SG_WARN, "Error fetching live weather data: "
-                << e.getFormattedMessage().c_str() );
+
+	// get station elevation to compute cloud base
+	double station_elevation_ft = 0;
+	{
+		// 1. check the id given in the metar
+		FGAirport* a = FGAirport::findByIdent(m->getId());
+
+		// 2. if unknown, find closest airport with metar to current position
+		if( a == NULL ) {
+			SGGeod pos = SGGeod::fromDeg(longitude_n->getDoubleValue(), latitude_n->getDoubleValue());
+			a = FGAirport::findClosest(pos, 10000.0, &airportWithMetarFilter);
+		}
+
+		// 3. otherwise use ground elevation
+		if( a != NULL ) {
+			station_elevation_ft = a->getElevation();
+			station_id_n->setStringValue( a->ident());
+		} else {
+			station_elevation_ft = ground_elevation_n->getDoubleValue() * SG_METER_TO_FEET;
+			station_id_n->setStringValue( m->getId());
+		}
+	}
+
+	station_elevation_n->setDoubleValue( station_elevation_ft );
+
+	vector<SGMetarCloud> cv = m->getClouds();
+	vector<SGMetarCloud>::const_iterator cloud, cloud_end = cv.end();
+
+	int layer_cnt = environment_clouds_n->getChildren("layer").size();
+	for (i = 0, cloud = cv.begin(); i < layer_cnt; i++) {
+
+
+		const char *coverage = "clear";
+		double elevation = -9999.0;
+		double thickness = 0.0;
+		const double span = 40000.0;
+
+		if (cloud != cloud_end) {
+			int c = cloud->getCoverage();
+			coverage = coverage_string[c];
+			elevation = cloud->getAltitude_ft() + station_elevation_ft;
+			thickness = thickness_value[c];
+			++cloud;
+		}
+
+		SGPropertyNode *layer = clouds_n->getChild("layer", i, true );
+
+		// if the coverage has changed, a rebuild of the layer is needed
+		if( strcmp(layer->getStringValue("coverage"), coverage ) ) {
+			layer->setStringValue("coverage", coverage);
+		}
+		layer->setDoubleValue("elevation-ft", elevation);
+		layer->setDoubleValue("thickness-ft", thickness);
+		layer->setDoubleValue("span-m", span);
+	}
+
+	rain_n->setDoubleValue(m->getRain());
+	hail_n->setDoubleValue(m->getHail());
+	snow_n->setDoubleValue(m->getSnow());
+	snow_cover_n->setBoolValue(m->getSnowCover());
+	metar_valid = true;
+}
+
 #if defined(ENABLE_THREADS)
-        if (_error_count++ >= 3) {
-           SG_LOG( SG_GENERAL, SG_WARN, "Stop fetching data permanently.");
-           thread_stop();
-        }
+/**
+ * This class represents the thread of execution responsible for
+ * fetching the metar data.
+ */
+class MetarThread : public OpenThreads::Thread {
+public:
+	MetarThread( FGMetarFetcher * f ) : metar_fetcher(f) {}
+	~MetarThread() {}
+
+	/**
+	 * Fetche the metar data from the NOAA.
+	 */
+	void run();
+
+private:
+	FGMetarFetcher * metar_fetcher;
+};
+
+void MetarThread::run()
+{
+	for( ;; ) {
+		string airport_id = metar_fetcher->request_queue.pop();
+
+		if( airport_id.size() == 0 )
+			break;
+
+		if( metar_fetcher->_error_count > 3 ) {
+			SG_LOG( SG_GENERAL, SG_WARN, "Too many erros fetching METAR, thread stopped permanently.");
+			break;
+		}
+
+			metar_fetcher->fetch( airport_id );
+	}
+}
 #endif
 
-        result.m = NULL;
-    }
-
-    _dt = 0;
-
-    return result;
-}
-
-
-void
-FGMetarEnvironmentCtrl::update_metar_properties( const FGMetar *m )
-{
-    int i;
-
-    fgSetString("/environment/metar/real-metar", m->getData());
-    // don't update with real weather when we use a custom weather scenario
-    const char *current_scenario = fgGetString("/environment/weather-scenario", "METAR");
-    if (strcmp(current_scenario, "METAR") && strcmp(current_scenario, "none"))
-        return;
-    fgSetString("/environment/metar/last-metar", m->getData());
-    fgSetString("/environment/metar/station-id", m->getId());
-    fgSetDouble("/environment/metar/min-visibility-m",
-                m->getMinVisibility().getVisibility_m() );
-    fgSetDouble("/environment/metar/max-visibility-m",
-                m->getMaxVisibility().getVisibility_m() );
-
-    SGPropertyNode *metar = fgGetNode("/environment/metar", true);
-    const SGMetarVisibility *dirvis = m->getDirVisibility();
-
-    for (i = 0; i < 8; i++, dirvis++) {
-        SGPropertyNode *vis = metar->getChild("visibility", i, true);
-        double v = dirvis->getVisibility_m();
-
-        vis->setDoubleValue("min-m", v);
-        vis->setDoubleValue("max-m", v);
-    }
-
-    fgSetInt("/environment/metar/base-wind-range-from",
-             m->getWindRangeFrom() );
-    fgSetInt("/environment/metar/base-wind-range-to",
-             m->getWindRangeTo() );
-    fgSetDouble("/environment/metar/base-wind-speed-kt",
-                m->getWindSpeed_kt() );
-    fgSetDouble("/environment/metar/gust-wind-speed-kt",
-                m->getGustSpeed_kt() );
-    fgSetDouble("/environment/metar/temperature-degc",
-                m->getTemperature_C() );
-    fgSetDouble("/environment/metar/dewpoint-degc",
-                m->getDewpoint_C() );
-    fgSetDouble("/environment/metar/rel-humidity-norm",
-                m->getRelHumidity() );
-    fgSetDouble("/environment/metar/pressure-inhg",
-                m->getPressure_inHg() );
-
-    vector<SGMetarCloud> cv = m->getClouds();
-    vector<SGMetarCloud>::const_iterator cloud, cloud_end = cv.end();
-
-    SGPropertyNode *metar_clouds = fgGetNode("/environment/metar/clouds", true);
-
-    for (i = 0, cloud = cv.begin(); i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
-        const char *coverage_string[5] = { "clear", "few", "scattered", "broken", "overcast" };
-        const double thickness_value[5] = { 0, 65, 600, 750, 1000 };
-
-        const char *coverage = "clear";
-        double elevation = -9999.0;
-        double thickness = 0.0;
-        const double span = 40000.0;
-
-        if (cloud != cloud_end) {
-            int c = cloud->getCoverage();
-            coverage = coverage_string[c];
-            elevation = cloud->getAltitude_ft() + station_elevation_ft;
-            thickness = thickness_value[c];
-            ++cloud;
-        }
-
-        SGPropertyNode *layer;
-        layer = metar_clouds->getChild("layer", i, true);
-        layer->setStringValue("coverage", coverage);
-        layer->setDoubleValue("elevation-ft", elevation);
-        layer->setDoubleValue("thickness-ft", thickness);
-        layer->setDoubleValue("span-m", span);
-    }
-    fgSetDouble("/environment/metar/rain-norm", m->getRain());
-    fgSetDouble("/environment/metar/hail-norm", m->getHail());
-    fgSetDouble("/environment/metar/snow-norm", m->getSnow());
-    fgSetBool("/environment/metar/snow-cover", m->getSnowCover());
-}
-
-
+FGMetarFetcher::FGMetarFetcher()
+  : 
 #if defined(ENABLE_THREADS)
-void
-FGMetarEnvironmentCtrl::thread_stop()
+	metar_thread(NULL),
+#endif
+	fetch_timer(0.0),
+	search_timer(0.0),
+	error_timer(0.0),
+	_stale_count(0),
+	_error_count(0)
 {
-    request_queue.push(NULL);	// ask thread to terminate
-    thread->join();
-}
+	longitude_n = fgGetNode( "/position/longitude-deg", true );
+	latitude_n  = fgGetNode( "/position/latitude-deg", true );
+	enable_n = fgGetNode( "/environment/params/real-world-weather-fetch", true );
 
-void
-FGMetarEnvironmentCtrl::MetarThread::run()
-{
-    while ( true )
-    {
-        FGAirport* apt = fetcher->request_queue.pop();
-        if (!apt)
-            return;
-        SG_LOG( SG_GENERAL, SG_INFO, "Thread: fetch metar data = " << apt->ident() );
-        FGMetarResult result = fetcher->fetch_data( apt );
-        fetcher->result_queue.push( result );
-    }
-}
+	proxy_host_n = fgGetNode("/sim/presets/proxy/host", true);
+	proxy_port_n = fgGetNode("/sim/presets/proxy/port", true);
+	proxy_auth_n = fgGetNode("/sim/presets/proxy/authentication", true);
+	max_age_n	= fgGetNode("/environment/params/metar-max-age-min", true);
+
+	output_n	 = fgGetNode("/environment/metar/data", true );
+#if defined(ENABLE_THREADS)
+	metar_thread = new MetarThread(this);
+// FIXME: do we really need setProcessorAffinity()?
+//	metar_thread->setProcessorAffinity(1);
+	metar_thread->start();
 #endif // ENABLE_THREADS
+}
 
+
+FGMetarFetcher::~FGMetarFetcher()
+{
+#if defined(ENABLE_THREADS)
+	request_queue.push("");
+	metar_thread->join();
+	delete metar_thread;
+#endif // ENABLE_THREADS
+}
+
+void FGMetarFetcher::init ()
+{
+	fetch_timer = 0.0;
+	search_timer = 0.0;
+	error_timer = 0.0;
+	_stale_count = 0;
+	_error_count = 0;
+	current_airport_id.clear();
+}
+
+void FGMetarFetcher::reinit ()
+{
+	init();
+}
+
+/* search for closest airport with metar every xx seconds */
+static const int search_interval_sec = 60;
+
+/* fetch metar for airport, even if airport has not changed every xx seconds */
+static const int fetch_interval_sec = 900;
+
+/* reset error counter after xxx seconds */
+static const int error_timer_sec = 3;
+
+void FGMetarFetcher::update (double delta_time_sec)
+{
+	fetch_timer -= delta_time_sec;
+	search_timer -= delta_time_sec;
+	error_timer -= delta_time_sec;
+
+	if( error_timer <= 0.0 ) {
+		error_timer = error_timer_sec;
+		_error_count = 0;
+	}
+
+	if( enable_n->getBoolValue() == false ) 
+		return;
+
+	FGAirport * a = NULL;
+
+	if( search_timer <= 0.0 ) {
+		// search timer expired, search closest airport with metar
+		SGGeod pos = SGGeod::fromDeg(longitude_n->getDoubleValue(), latitude_n->getDoubleValue());
+		a = FGAirport::findClosest(pos, 10000.0, &airportWithMetarFilter);
+		search_timer = search_interval_sec;
+	}
+
+	if( a == NULL )
+		return;
+
+
+	if( a->ident() != current_airport_id || fetch_timer <= 0 ) {
+		// fetch timer expired or airport has changed, schedule a fetch
+		current_airport_id = a->ident();
+		fetch_timer = fetch_interval_sec;
+#if defined(ENABLE_THREADS)
+		// push this airport id into the queue for the worker thread
+		request_queue.push( current_airport_id );
+#else
+		// if there is no worker thread, immediately fetch the data
+		fetch( current_airport_id );
+#endif
+	}
+}
+
+void FGMetarFetcher::fetch( const string & id )
+{
+	SGSharedPtr<FGMetar> result = NULL;
+
+	// fetch current metar data
+	try {
+		string host = proxy_host_n->getStringValue();
+		string auth = proxy_auth_n->getStringValue();
+		string port = proxy_port_n->getStringValue();
+
+		result = new FGMetar( id, host, port, auth);
+
+		long max_age = max_age_n->getLongValue();
+		long age = result->getAge_min();
+
+		if (max_age && age > max_age) {
+			SG_LOG( SG_GENERAL, SG_WARN, "METAR data too old (" << age << " min).");
+			if (++_stale_count > 10) {
+				_error_count = 1000;
+				throw sg_io_exception("More than 10 stale METAR messages in a row." " Check your system time!");
+			}
+		} else {
+			_stale_count = 0;
+			}
+
+	} catch (const sg_io_exception& e) {
+		SG_LOG( SG_GENERAL, SG_WARN, "Error fetching live weather data: " << e.getFormattedMessage().c_str() );
+		result = NULL;
+	}
+
+	// write the metar to the property node, the rest is done by the methods tied to this property
+	// don't write the metar data, if real-weather-fetch has been disabled in the meantime
+	if( result != NULL && enable_n->getBoolValue() == true ) 
+		output_n->setStringValue( result->getData() );
+}
 
 // end of environment_ctrl.cxx
+

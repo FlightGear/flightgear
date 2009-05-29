@@ -35,7 +35,7 @@ using std::map;
 using std::string;
 
 
-class FGMetar : public SGMetar {
+class FGMetar : public SGMetar, public SGReferenced {
 public:
 	FGMetar(const string& icao, const string& proxy = "", const string& port = "",
 			const string &auth = "");

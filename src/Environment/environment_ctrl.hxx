@@ -39,7 +39,6 @@
 
 // forward decls
 class SGPropertyNode;
-class FGAirport;
 class FGMetar;
 
 /**
@@ -78,30 +77,6 @@ protected:
 
 
 /**
- * Environment controller using user-supplied parameters.
- */
-class FGUserDefEnvironmentCtrl : public FGEnvironmentCtrl
-{
-public:
-  FGUserDefEnvironmentCtrl ();
-  virtual ~FGUserDefEnvironmentCtrl ();
-
-  virtual void init ();
-  virtual void update (double dt);
-
-private:
-
-  SGPropertyNode_ptr _base_wind_speed_node;
-  SGPropertyNode_ptr _gust_wind_speed_node;
-
-  double _current_wind_speed_kt;
-  double _delta_wind_speed_kt;
-
-};
-
-
-
-/**
  * Interplation controller using user-supplied parameters.
  */
 class FGInterpolateEnvironmentCtrl : public FGEnvironmentCtrl
@@ -132,13 +107,12 @@ private:
 
     std::vector<bucket *> _boundary_table;
     std::vector<bucket *> _aloft_table;
-};
 
-
-// A convenience wrapper around FGMetar
-struct FGMetarResult {
-    FGAirport* airport;
-    FGMetar *m;
+	SGPropertyNode_ptr altitude_n;
+	SGPropertyNode_ptr altitude_agl_n;
+	SGPropertyNode_ptr boundary_transition_n;
+	SGPropertyNode_ptr boundary_n;
+	SGPropertyNode_ptr aloft_n;
 };
 
 
@@ -146,36 +120,34 @@ struct FGMetarResult {
 /**
  * Interplation controller using the FGMetar class
  */
-class FGMetarEnvironmentCtrl : public FGEnvironmentCtrl
+
+class FGMetarCtrl : public SGSubsystem
 {
 public:
-    FGMetarEnvironmentCtrl ();
-    virtual ~FGMetarEnvironmentCtrl ();
+    FGMetarCtrl (SGSubsystem * environmentCtrl);
+    virtual ~FGMetarCtrl ();
 
     virtual void init ();
     virtual void reinit ();
     virtual void update (double delta_time_sec);
-    virtual void setEnvironment (FGEnvironment * environment);
+
+    void set_metar( const char * metar );
+    const char * get_metar(void) const;
+	bool get_valid(void) const { return metar_valid; }
+	void set_enabled(bool _enabled) { enabled = _enabled; }
+	bool get_enabled(void) const { return enabled; }
+	void set_setup_winds_aloft(bool _setup_winds_aloft) { setup_winds_aloft = _setup_winds_aloft; }
+	bool get_setup_winds_aloft(void) const { return setup_winds_aloft; }
 
 private:
-    FGInterpolateEnvironmentCtrl *env;
-
-    bool metar_loaded;
-    float station_elevation_ft;
-    float search_interval_sec;
-    float same_station_interval_sec;
-    float search_elapsed;
-    float fetch_elapsed;
-    float interpolate_elapsed;
-    FGPositionedRef last_apt;
-    SGPropertyNode_ptr proxy_host;
-    SGPropertyNode_ptr proxy_port;
-    SGPropertyNode_ptr proxy_auth;
-    SGPropertyNode_ptr metar_max_age;
-
-    FGMetarResult fetch_data(FGAirport* apt);
-    virtual void update_metar_properties( const FGMetar *m );
-    void update_env_config();
+	void bind();
+	void unbind();
+    bool metar_valid;
+    bool enabled;
+	bool setup_winds_aloft;
+    bool first_update;
+    double station_elevation_ft;
+    string metar;
     double interpolate_prop(const char * currentname, const char * requiredname, double dvalue);
     double interpolate_val(double currentval, double requiredval, double dvalue);
     const double EnvironmentUpdatePeriodSec;    // Seconds between interpolations
@@ -193,70 +165,86 @@ private:
                                                 // by more than this value is not 
                                                 // interpolated
 
+    SGSubsystem * _environmentCtrl;
+
+    SGPropertyNode_ptr metar_base_n;
+    SGPropertyNode_ptr station_id_n;
+    SGPropertyNode_ptr station_elevation_n;
+    SGPropertyNode_ptr min_visibility_n;
+    SGPropertyNode_ptr max_visibility_n;
+    SGPropertyNode_ptr base_wind_range_from_n;
+    SGPropertyNode_ptr base_wind_range_to_n;
+    SGPropertyNode_ptr base_wind_dir_n;
+    SGPropertyNode_ptr base_wind_speed_n;
+    SGPropertyNode_ptr gust_wind_speed_n;
+    SGPropertyNode_ptr temperature_n;
+    SGPropertyNode_ptr dewpoint_n;
+    SGPropertyNode_ptr humidity_n;
+    SGPropertyNode_ptr pressure_n;
+    SGPropertyNode_ptr clouds_n;
+    SGPropertyNode_ptr environment_clouds_n;
+    SGPropertyNode_ptr rain_n;
+    SGPropertyNode_ptr hail_n;
+    SGPropertyNode_ptr snow_n;
+    SGPropertyNode_ptr snow_cover_n;
+    SGPropertyNode_ptr ground_elevation_n;
+    SGPropertyNode_ptr longitude_n;
+    SGPropertyNode_ptr latitude_n;
+
+    SGPropertyNode_ptr boundary_wind_speed_n;
+    SGPropertyNode_ptr boundary_wind_from_heading_n;
+    SGPropertyNode_ptr boundary_visibility_n;
+    SGPropertyNode_ptr boundary_sea_level_pressure_n;
 private:
 
+};
+
+/*
+ * The subsyste to load real world weather
+ */
+class FGMetarFetcher : public SGSubsystem
+{
+public:
+    FGMetarFetcher();
+    virtual ~FGMetarFetcher();
+
+    virtual void init ();
+    virtual void reinit ();
+    virtual void update (double delta_time_sec);
+
+private:
+    friend class MetarThread;
 #if defined(ENABLE_THREADS)
     /**
-     * FIFO queue which holds a pointer to the fetched metar data.
+     * FIFO queue which holds a pointer to the metar requests.
      */
-    SGBlockingQueue <FGAirport*> request_queue;
+    SGBlockingQueue <string> request_queue;
 
-    /**
-     * FIFO queue which holds a pointer to the fetched metar data.
-     */
-    SGLockedQueue < FGMetarResult > result_queue;
-#else
-    /**
-     * FIFO queue which holds a pointer to the fetched metar data.
-     */
-    std::queue <FGAirport*> request_queue;
-
-    /**
-     * FIFO queue which holds a pointer to the fetched metar data.
-     */
-    std::queue < FGMetarResult > result_queue;
+    OpenThreads::Thread * metar_thread;
 #endif
 
-#if defined(ENABLE_THREADS)
-    /**
-     * This class represents the thread of execution responsible for
-     * fetching the metar data.
-     */
-    class MetarThread : public OpenThreads::Thread
-    {
-    public:
-        MetarThread( FGMetarEnvironmentCtrl* f ) : fetcher(f) {}
-        ~MetarThread() {}
+    void fetch( const string & id );
 
-        /**
-         * Fetche the metar data from the NOAA.
-         */
-        void run();
+    SGPropertyNode_ptr enable_n;
 
-    private:
-        FGMetarEnvironmentCtrl *fetcher;
+    SGPropertyNode_ptr longitude_n;
+    SGPropertyNode_ptr latitude_n;
 
-    private:
-        // not implemented.
-        MetarThread();
-        MetarThread( const MetarThread& );
-        MetarThread& operator=( const MetarThread& );
-    };
+    SGPropertyNode_ptr proxy_host_n;
+    SGPropertyNode_ptr proxy_port_n;
+    SGPropertyNode_ptr proxy_auth_n;
+    SGPropertyNode_ptr max_age_n;
 
-    friend class MetarThread;
+    SGPropertyNode_ptr output_n;
 
-    /**
-     * Metar data fetching thread.
-     */
-    MetarThread* thread;
+    string current_airport_id;
+    double fetch_timer;
+    double search_timer;
+    double error_timer;
 
-    void thread_stop();
-#endif // ENABLE_THREADS
-
-    int _error_count;
-    int _stale_count;
-    double _dt;
-    double _error_dt;
+    long _stale_count;
+    long _error_count;
 };
+
 
 #endif // _ENVIRONMENT_CTRL_HXX
