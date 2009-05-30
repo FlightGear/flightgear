@@ -33,7 +33,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib osgd.lib osgDBd.lib osgViewerd.lib openthreadsd.lib osgParticled.lib osgUtild.lib ul_d.lib sg_d.lib zlibd.lib"
+				AdditionalDependencies="opengl32.lib osgd.lib osgDBd.lib osgViewerd.lib osgGAd.lib openthreadsd.lib osgParticled.lib osgUtild.lib ul_d.lib sg_d.lib zlibd.lib"
 				OutputFile="$(OutDir)/fgviewer.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\install\msvc71\OpenSceneGraph\lib;..\..\..\plib;..\..\..\3rdParty\lib"
@@ -82,7 +82,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib osg.lib osgDB.lib osgViewer.lib openthreads.lib osgParticle.lib osgUtil.lib ul.lib sg.lib zlib.lib"
+				AdditionalDependencies="opengl32.lib osg.lib osgDB.lib osgViewer.lib osgGA.lib openthreads.lib osgParticle.lib osgUtil.lib ul.lib sg.lib zlib.lib"
 				OutputFile="bin/Release/fgviewer.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\install\msvc71\OpenSceneGraph\lib;..\..\..\plib;..\..\..\3rdParty\lib"
