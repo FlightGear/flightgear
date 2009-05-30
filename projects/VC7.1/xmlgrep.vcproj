@@ -116,6 +116,9 @@
 				RelativePath="..\..\utils\xmlgrep\xml.c">
 			</File>
 			<File
+				RelativePath="..\..\utils\xmlgrep\xml_cache.c">
+			</File>
+			<File
 				RelativePath="..\..\utils\xmlgrep\xmlgrep.c">
 			</File>
 		</Filter>
@@ -125,6 +128,9 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
 				RelativePath="..\..\utils\xmlgrep\xml.h">
+			</File>
+			<File
+				RelativePath="..\..\utils\xmlgrep\xml_cache.h">
 			</File>
 		</Filter>
 		<Filter
