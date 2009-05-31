@@ -101,22 +101,24 @@ public:
   virtual void set_altitude_half_to_sun_m (double alt);
   virtual void set_altitude_tropo_top_m (double alt);
 
+  virtual bool set_live_update(bool live_update);
+
+  void _recalc_ne ();
+  void _recalc_alt_temperature ();
+  void _recalc_alt_dewpoint ();
+  void _recalc_alt_pressure ();
+  void _recalc_density ();
+  void _recalc_relative_humidity ();
 private:
   void _init();
   void _recalc_hdgspd ();
-  void _recalc_ne ();
   void _recalc_updraft ();
 
   void _recalc_sl_temperature ();
-  void _recalc_alt_temperature ();
   void _recalc_sl_dewpoint ();
-  void _recalc_alt_dewpoint ();
   void _recalc_sl_pressure ();
-  void _recalc_alt_pressure ();
-  void _recalc_density ();
 
   void _recalc_density_tropo_avg_kgm3 ();
-  void _recalc_relative_humidity ();
 
   double elevation_ft;
   double visibility_m;
@@ -146,6 +148,8 @@ private:
   double wind_from_down_fps;
   double thermal_lift_fps;
   double ridge_lift_fps;
+
+  bool     live_update;
 
 };
 

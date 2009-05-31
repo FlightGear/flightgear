@@ -140,7 +140,7 @@ void FGEnvironment::_init()
     _setup_tables();
     _recalc_density();
     _recalc_relative_humidity();
-    
+    live_update = true;
 }
 
 FGEnvironment::FGEnvironment()
@@ -386,17 +386,21 @@ FGEnvironment::set_temperature_sea_level_degc (double t)
   temperature_sea_level_degc = t;
   if (dewpoint_sea_level_degc > t)
       dewpoint_sea_level_degc = t;
-  _recalc_alt_temperature();
-  _recalc_density();
+  if( live_update ) {
+    _recalc_alt_temperature();
+    _recalc_density();
+  }
 }
 
 void
 FGEnvironment::set_temperature_degc (double t)
 {
   temperature_degc = t;
-  _recalc_sl_temperature();
-  _recalc_density();
-  _recalc_relative_humidity();
+  if( live_update ) {
+    _recalc_sl_temperature();
+    _recalc_density();
+    _recalc_relative_humidity();
+  }
 }
 
 void
@@ -405,82 +409,104 @@ FGEnvironment::set_dewpoint_sea_level_degc (double t)
   dewpoint_sea_level_degc = t;
   if (temperature_sea_level_degc < t)
       temperature_sea_level_degc = t;
-  _recalc_alt_dewpoint();
-  _recalc_density();
+  if( live_update ) {
+    _recalc_alt_dewpoint();
+    _recalc_density();
+  }
 }
 
 void
 FGEnvironment::set_dewpoint_degc (double t)
 {
   dewpoint_degc = t;
-  _recalc_sl_dewpoint();
-  _recalc_density();
-  _recalc_relative_humidity();
+  if( live_update ) {
+    _recalc_sl_dewpoint();
+    _recalc_density();
+    _recalc_relative_humidity();
+  }
 }
 
 void
 FGEnvironment::set_pressure_sea_level_inhg (double p)
 {
   pressure_sea_level_inhg = p;
-  _recalc_alt_pressure();
-  _recalc_density();
+  if( live_update ) {
+    _recalc_alt_pressure();
+    _recalc_density();
+  }
 }
 
 void
 FGEnvironment::set_pressure_inhg (double p)
 {
   pressure_inhg = p;
-  _recalc_sl_pressure();
-  _recalc_density();
+  if( live_update ) {
+    _recalc_sl_pressure();
+    _recalc_density();
+  }
 }
 
 void
 FGEnvironment::set_wind_from_heading_deg (double h)
 {
   wind_from_heading_deg = h;
-  _recalc_ne();
+  if( live_update ) {
+    _recalc_ne();
+  }
 }
 
 void
 FGEnvironment::set_wind_speed_kt (double s)
 {
   wind_speed_kt = s;
-  _recalc_ne();
+  if( live_update ) {
+    _recalc_ne();
+  }
 }
 
 void
 FGEnvironment::set_wind_from_north_fps (double n)
 {
   wind_from_north_fps = n;
-  _recalc_hdgspd();
+  if( live_update ) {
+    _recalc_hdgspd();
+  }
 }
 
 void
 FGEnvironment::set_wind_from_east_fps (double e)
 {
   wind_from_east_fps = e;
-  _recalc_hdgspd();
+  if( live_update ) {
+    _recalc_hdgspd();
+  }
 }
 
 void
 FGEnvironment::set_wind_from_down_fps (double d)
 {
   wind_from_down_fps = d;
-  _recalc_hdgspd();
+  if( live_update ) {
+    _recalc_hdgspd();
+  }
 }
 
 void
 FGEnvironment::set_thermal_lift_fps (double th)
 {
   thermal_lift_fps = th;
-  _recalc_updraft();
+  if( live_update ) {
+    _recalc_updraft();
+  }
 }
 
 void
 FGEnvironment::set_ridge_lift_fps (double ri)
 {
   ridge_lift_fps = ri;
-  _recalc_updraft();
+  if( live_update ) {
+    _recalc_updraft();
+}
 }
 
 void
@@ -499,25 +525,31 @@ void
 FGEnvironment::set_elevation_ft (double e)
 {
   elevation_ft = e;
-  _recalc_alt_temperature();
-  _recalc_alt_dewpoint();
-  _recalc_alt_pressure();
-  _recalc_density();
-  _recalc_relative_humidity();
+  if( live_update ) {
+    _recalc_alt_temperature();
+    _recalc_alt_dewpoint();
+    _recalc_alt_pressure();
+    _recalc_density();
+    _recalc_relative_humidity();
+  }
 }
 
 void
 FGEnvironment::set_altitude_half_to_sun_m (double alt)
 {
- altitude_half_to_sun_m = alt;
- _recalc_density_tropo_avg_kgm3();
+  altitude_half_to_sun_m = alt;
+  if( live_update ) {
+    _recalc_density_tropo_avg_kgm3();
+  }
 }
 
 void
 FGEnvironment::set_altitude_tropo_top_m (double alt)
 {
- altitude_tropo_top_m = alt;
- _recalc_density_tropo_avg_kgm3();
+  altitude_tropo_top_m = alt;
+  if( live_update ) {
+    _recalc_density_tropo_avg_kgm3();
+  }
 }
 
 
@@ -670,12 +702,26 @@ FGEnvironment::_recalc_density_tropo_avg_kgm3 ()
 void
 FGEnvironment::_recalc_relative_humidity ()
 {
+/*
   double vaporpressure = 6.11 * pow(10.0, ((7.5 * dewpoint_degc) / ( 237.7 + dewpoint_degc)));
   double sat_vaporpressure = 6.11 * pow(10.0, ((7.5 * temperature_degc)
       / ( 237.7 + temperature_degc)) );
   relative_humidity = 100 * vaporpressure / sat_vaporpressure ;
+
+  with a little algebra, this gets the same result and spares two multiplications and one pow()
+*/
+  double a = (7.5 * dewpoint_degc)    / ( 237.7 + dewpoint_degc);
+  double b = (7.5 * temperature_degc) / ( 237.7 + temperature_degc);
+  relative_humidity = 100 * pow(10,a-b); 
 }
 
+bool
+FGEnvironment::set_live_update( bool _live_update )
+{
+  bool b = live_update;
+  live_update = _live_update;
+  return b;
+}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -707,6 +753,10 @@ void
 interpolate (const FGEnvironment * env1, const FGEnvironment * env2,
              double fraction, FGEnvironment * result)
 {
+    // don't calculate each internal property every time we set a single value
+    // we trigger that at the end of the interpolation process
+    bool live_update = result->set_live_update( false );
+
     result->set_visibility_m
         (do_interp(env1->get_visibility_m(),
                    env2->get_visibility_m(),
@@ -751,6 +801,16 @@ interpolate (const FGEnvironment * env1, const FGEnvironment * env2,
         (do_interp(env1->get_turbulence_rate_hz(),
                    env2->get_turbulence_rate_hz(),
                    fraction));
+
+    // calculate derived properties here to avoid duplicate expensive computations
+    result->_recalc_ne();
+    result->_recalc_alt_temperature();
+    result->_recalc_alt_dewpoint();
+    result->_recalc_alt_pressure();
+    result->_recalc_density();
+    result->_recalc_relative_humidity();
+
+    result->set_live_update(live_update);
 }
 
 // end of environment.cxx
