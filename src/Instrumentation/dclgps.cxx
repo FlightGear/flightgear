@@ -257,9 +257,8 @@ void GPSPage::OBSPressed() {}
 void GPSPage::MsgPressed() {}
 
 string GPSPage::GPSitoa(int n) {
-	char buf[4];
-	// TODO - sanity check n!
-	sprintf(buf, "%i", n);
+	char buf[6];
+	snprintf(buf, 6, "%i", n);
 	string s = buf;
 	return(s);
 }
