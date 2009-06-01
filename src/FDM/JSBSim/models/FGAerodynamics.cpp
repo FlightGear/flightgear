@@ -36,6 +36,7 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <FGFDMExec.h>
 #include "FGAerodynamics.h"
 #include "FGPropagate.h"
 #include "FGAircraft.h"

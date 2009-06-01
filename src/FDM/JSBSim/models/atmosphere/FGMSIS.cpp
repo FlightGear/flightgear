@@ -168,7 +168,7 @@ bool MSIS::Run(void)
     // get at-altitude values
     Calculate(Auxiliary->GetDayOfYear(),
               Auxiliary->GetSecondsInDay(),
-              Propagate->Geth(),
+              Propagate->GetAltitudeASL(),
               Propagate->GetLocation().GetLatitudeDeg(),
               Propagate->GetLocation().GetLongitudeDeg());
     intTemperature = output.t[1] * 1.8;

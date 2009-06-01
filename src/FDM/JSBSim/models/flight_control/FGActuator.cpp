@@ -106,7 +106,7 @@ bool FGActuator::Run(void )
   Input = InputNodes[0]->getDoubleValue() * InputSigns[0];
 
   if (fail_zero) Input = 0;
-  if (fail_hardover) Input =  clipmax*fabs(Input)/Input;
+  if (fail_hardover) Input =  clipmax*sign(Input);
 
   Output = Input; // Perfect actuator. At this point, if no failures are present
                   // and no subsequent lag, limiting, etc. is done, the output

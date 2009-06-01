@@ -224,6 +224,7 @@ private:
   double IdleN2;           ///< Idle N2
   double N1;               ///< N1
   double N2;               ///< N2
+  double N2norm;           ///< N2 normalized (0=idle, 1=max)
   double MaxN1;            ///< N1 at 100% throttle
   double MaxN2;            ///< N2 at 100% throttle
   double IdleFF;           ///< Idle Fuel Flow (lbm/hr)

@@ -136,7 +136,7 @@ bool FGAtmosphere::Run(void)
   if (FDMExec->Holding()) return false;
 
   T_dev = 0.0;
-  h = Propagate->Geth();
+  h = Propagate->GetAltitudeASL();
 
   if (!useExternal) {
     Calculate(h);
