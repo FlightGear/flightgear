@@ -156,7 +156,7 @@ public:
   /** Places a Message structure on the Message queue.
       @param msg pointer to a Message structure
       @return pointer to a Message structure */
-void PutMessage(const Message& msg);
+  void PutMessage(const Message& msg);
   /** Creates a message with the given text and places it on the queue.
       @param text message text
       @return pointer to a Message structure */
@@ -165,17 +165,17 @@ void PutMessage(const Message& msg);
       @param text message text
       @param bVal boolean value associated with the message
       @return pointer to a Message structure */
-void PutMessage(const string& text, bool bVal);
+  void PutMessage(const string& text, bool bVal);
   /** Creates a message with the given text and integer value and places it on the queue.
       @param text message text
       @param iVal integer value associated with the message
       @return pointer to a Message structure */
-void PutMessage(const string& text, int iVal);
+  void PutMessage(const string& text, int iVal);
   /** Creates a message with the given text and double value and places it on the queue.
       @param text message text
       @param dVal double value associated with the message
       @return pointer to a Message structure */
-void PutMessage(const string& text, double dVal);
+  void PutMessage(const string& text, double dVal);
   /** Reads the message on the queue (but does not delete it).
       @return 1 if some messages */
   int SomeMessages(void);
@@ -295,6 +295,8 @@ void PutMessage(const string& text, double dVal);
   static double Constrain(double min, double value, double max) {
     return value<min?(min):(value>max?(max):(value));
   }
+  
+  static double sign(double num) {return num>=0.0?1.0:-1.0;}
 
 protected:
   static Message localMsg;
@@ -341,6 +343,8 @@ protected:
     static int phase = 0;
     double X;
 
+    V1 = V2 = S = X = 0.0;
+
     if (phase == 0) {
       do {
         double U1 = (double)rand() / RAND_MAX;
@@ -351,7 +355,7 @@ protected:
         S = V1 * V1 + V2 * V2;
       } while(S >= 1 || S == 0);
 
-        X = V1 * sqrt(-2 * log(S) / S);
+      X = V1 * sqrt(-2 * log(S) / S);
     } else
       X = V2 * sqrt(-2 * log(S) / S);
 

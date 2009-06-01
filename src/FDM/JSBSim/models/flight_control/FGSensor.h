@@ -39,6 +39,7 @@ INCLUDES
 
 #include "FGFCSComponent.h"
 #include <input_output/FGXMLElement.h>
+#include <vector>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -52,6 +53,7 @@ FORWARD DECLARATIONS
 
 namespace JSBSim {
 
+using std::vector;
 class FGFCS;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -74,6 +76,7 @@ Syntax:
   </quantization>
   <drift_rate> number </drift_rate>
   <bias> number </bias>
+  <delay> number < /delay>
 </sensor>
 @endcode
 
@@ -101,7 +104,8 @@ percentage variance. That is, if the number given is 0.05, the the variance is
 understood to be +/-0.05 percent maximum variance. So, the actual value for the sensor
 will be *anywhere* from 0.95 to 1.05 of the actual "perfect" value at any time -
 even varying all the way from 0.95 to 1.05 in adjacent frames - whatever the delta
-time.
+time. The delay element can specify a frame delay. The integer number provided is
+the number of frames to delay the output signal.
 
 @author Jon S. Berndt
 @version $Revision$
@@ -130,6 +134,7 @@ public:
 
 protected:
   enum eNoiseType {ePercent=0, eAbsolute} NoiseType;
+  enum eDistributionType {eUniform=0, eGaussian} DistributionType;
   double dt;
   double min, max;
   double span;
@@ -147,16 +152,20 @@ protected:
   int bits;
   int quantized;
   int divisions;
+  int delay;
+  int index;
   bool fail_low;
   bool fail_high;
   bool fail_stuck;
   string quant_property;
+  vector <double> output_array;
 
   void Noise(void);
   void Bias(void);
   void Drift(void);
   void Quantize(void);
   void Lag(void);
+  void Delay(void);
 
   void bind(void);
 

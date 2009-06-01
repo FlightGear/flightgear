@@ -51,6 +51,7 @@ INCLUDES
 #include <input_output/FGGroundCallback.h>
 #include <input_output/FGXMLFileRead.h>
 #include <models/FGPropagate.h>
+#include <math/FGColumnVector3.h>
 
 #include <vector>
 #include <string>
@@ -177,6 +178,32 @@ CLASS DECLARATION
 
 class FGFDMExec : public FGJSBBase, public FGXMLFileRead
 {
+  struct childData {
+    FGFDMExec* exec;
+    string info;
+    FGColumnVector3 Loc;
+    FGColumnVector3 Orient;
+    bool mated;
+    bool internal;
+
+    childData(void) {
+      info = "";
+      Loc = FGColumnVector3(0,0,0);
+      Orient = FGColumnVector3(0,0,0);
+      mated = true;
+      internal = false;
+    }
+    
+    void Run(void) {exec->Run();}
+    void AssignState(FGPropagate* source_prop) {
+      exec->GetPropagate()->SetVState(source_prop->GetVState());
+    }
+
+    ~childData(void) {
+      delete exec;
+    }
+  };
+
 public:
 
   /// Default constructor
@@ -335,8 +362,12 @@ public:
   FGPropertyManager* GetPropertyManager(void);
   /// Returns a vector of strings representing the names of all loaded models (future)
   vector <string> EnumerateFDMs(void);
-  /// Marks this instance of the Exec object as a "slave" object.
-  void SetSlave(bool s) {IsSlave = s;}
+  /// Gets the number of child FDMs.
+  int GetFDMCount(void) {return ChildFDMList.size();}
+  /// Gets a particular child FDM.
+  childData* GetChildFDM(int i) {return ChildFDMList[i];}
+  /// Marks this instance of the Exec object as a "child" object.
+  void SetChild(bool ch) {IsChild = ch;}
 
   /** Sets the output (logging) mechanism for this run.
       Calling this function passes the name of an output directives file to
@@ -443,7 +474,7 @@ private:
   bool holding;
   bool Constructing;
   bool modelLoaded;
-  bool IsSlave;
+  bool IsChild;
   string modelName;
   string AircraftPath;
   string FullAircraftPath;
@@ -454,26 +485,6 @@ private:
 
   bool trim_status;
   int ta_mode;
-
-
-  struct slaveData {
-    FGFDMExec* exec;
-    string info;
-    double x, y, z;
-    double roll, pitch, yaw;
-    bool mated;
-
-    slaveData(void) {
-      info = "";
-      x = y = z = 0.0;
-      roll = pitch = yaw = 0.0;
-      mated = true;
-    }
-
-    ~slaveData(void) {
-      delete exec;
-    }
-  };
 
   static FGPropertyManager *master;
 
@@ -502,10 +513,10 @@ private:
 
   vector <string> PropertyCatalog;
   vector <FGOutput*> Outputs;
-  vector <slaveData*> SlaveFDMList;
+  vector <childData*> ChildFDMList;
 
   bool ReadFileHeader(Element*);
-  bool ReadSlave(Element*);
+  bool ReadChild(Element*);
   bool ReadPrologue(Element*);
   void ResetToInitialConditions(int mode);
   bool Allocate(void);
