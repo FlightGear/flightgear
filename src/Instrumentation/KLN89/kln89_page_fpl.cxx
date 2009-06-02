@@ -71,12 +71,10 @@ void KLN89FplPage::Update(double dt) {
 		// Copy every waypoint for now.
         // This is inefficient, but allows us to insert dummy waypoints to represent the header and fence 
 		// in our *local copy* of the flightplan, if an approach is loaded.  There must be a better way to do this!!!!
-		//cout << "AA" << endl;
 		vector<GPSWaypoint> waylist;
 		for(unsigned int i=0; i<_kln89->_flightPlans[_subPage]->waypoints.size(); ++i) {
 			waylist.push_back(*_kln89->_flightPlans[_subPage]->waypoints[i]);
 		}
-		//cout << "BB" << endl;
 		_hdrPos = -1;
 		_fencePos = -1;
 		if(_kln89->_approachLoaded) {
@@ -84,18 +82,21 @@ void KLN89FplPage::Update(double dt) {
 			wp.id = "HHHH";
 			wp.type = GPS_WP_VIRT;
 			wp.appType = GPS_HDR;
-			//cout << "CC" << endl;
 			for(unsigned int i=0; i<waylist.size(); ++i) {
 				// Insert the hdr immediately before the IAF
 				if(waylist[i].appType == GPS_IAF) {
 					waylist.insert(waylist.begin()+i, wp);
 					// Need to insert empty string into the params to keep them in sync
-					_params.insert(_params.begin()+i-1, "");
+					// Guard against empty params list.
+					// This shouldn't happen, but currently it can until ETE and UTC params are implemeted
+					// (and better the ugly params list ripped out and replaced with something more maintainable!).
+					if(!_params.empty()) {
+						_params.insert(_params.begin()+i-1, "");
+					}
 					_hdrPos = i;
 					break;
 				}
 			}
-			//cout << "DD" << endl;
 			wp.id = "FFFF";
 			wp.type = GPS_WP_VIRT;
 			wp.appType = GPS_FENCE;
@@ -104,7 +105,10 @@ void KLN89FplPage::Update(double dt) {
 				if(waylist[i].appType == GPS_MAHP) {
 					waylist.insert(waylist.begin()+i, wp);
 					// Need to insert empty string into the params to keep them in sync
-					_params.insert(_params.begin()+i-1, "");
+					// Guard against empty params list. See comments a few lines above.
+					if(!_params.empty()) {
+						_params.insert(_params.begin()+i-1, "");
+					}
 					_fencePos = i;
 					break;
 				}
@@ -219,7 +223,6 @@ void KLN89FplPage::Update(double dt) {
 			}
 		}
 		// ----------------------------------
-		//cout << "A1" << endl;
 			
 		// Sanity check the top position - remember that we can have an extra blank one at the bottom even if CRSR is off if crsr is switched on then off
 		if((int)_fplPos > ((int)waylist.size()) - 3) _fplPos = (((int)waylist.size()) - 3 < 0 ? 0 : waylist.size() - 3);
@@ -230,42 +233,58 @@ void KLN89FplPage::Update(double dt) {
 			last_pos = ((int)_fplPos == ((int)waylist.size()) - 3 ? waylist.size() : waylist.size() - 1);
 		}
 		//cout << "Initialising last_pos, last_pos = " << last_pos << '\n';
-		//cout << "B1" << endl;
 		if(waylist.size() < 4) last_pos = waylist.size();
 		
 		// Don't draw the cyclic field header if the top waypoint is the approach header
 		// Not sure if this also applies to the fence - don't think so but TODO - check!
-		if(waylist[_fplPos].appType != GPS_HDR) {
-			_kln89->DrawChar('>', 2, 12, 3);
-			if(!(_kln89->_mode == KLN89_MODE_CRSR && _uLinePos == 3 && _kln89->_blink)) {
-				DrawFpMode(3);
+		if(!waylist.empty() && _fplPos < waylist.size()) {
+			if(waylist[_fplPos].appType != GPS_HDR) {
+				_kln89->DrawChar('>', 2, 12, 3);
+				if(!(_kln89->_mode == KLN89_MODE_CRSR && _uLinePos == 3 && _kln89->_blink)) {
+					DrawFpMode(3);
+				}
 			}
 		}
 		
-		// ACTIVE
+		//
+		// NOTE: this is the drawing routine for the ACTIVE flightplan, due to the number
+		// of differences there is a seperate routine for the stored flightplans.
+		//
+		// There are 4 rows to display flightplan data on the KLN89.  Draw each row.
 		for(unsigned int i=0; i<4; ++i) {
-			//cout << "F1... " << i << endl;
-			// Don't draw the waypoint number for the header or fence
-			//cout << "_fplPos0 = " << _fplPos0 << ", waylist size is " << waylist.size() << '\n';
-			//cout << "F1, i = " << i << ", way id = " << waylist[_fplPos0+i].id << '\n'; 
-			if((waylist[_fplPos+i].appType == GPS_HDR || waylist[_fplPos+i].appType == GPS_FENCE) 
-			    && i != 3) {	// By definition, the header and fence lines can't be displayed on the last line hence the unconditional !i==3 is safe.
-				// no-op
-				//cout << "NOOP\n";
+			// Sanity check - we should no longer tickle this.
+			if((_fplPos+i) > waylist.size()) {
+				break;
+			}
+
+			// Draw the number and (optional) colon for each row.
+			bool drawNum = true;
+			int n = (i < 3 ? _fplPos + i + 1 : last_pos + 1);
+			if(_kln89->_approachLoaded) {
+				if(n > _hdrPos) --n;
+				if(n > _fencePos) --n;
+			}
+			string s = GPSitoa(n);
+			if(_fplPos+i < waylist.size()) {
+				// Don't draw the waypoint number for the header or fence
+				if((waylist[_fplPos+i].appType == GPS_HDR || waylist[_fplPos+i].appType == GPS_FENCE) 
+					&& i != 3) {	// By definition, the header and fence lines can't be displayed on the last line hence the unconditional !i==3 is safe.
+					drawNum = false;
+				} else {
+					// Don't draw the colon for waypoints that are part of the published approach
+					if(waylist[_fplPos+i].appType == GPS_APP_NONE) {
+						s += ':';
+					}
+				}
 			} else {
-				int n = (i < 3 ? _fplPos + i + 1 : last_pos + 1);
-				if(_kln89->_approachLoaded) {
-					if(n > _hdrPos) --n;
-					if(n > _fencePos) --n;
-				}
-				string s = GPSitoa(n);
-				// Don't draw the colon for waypoints that are part of the published approach
-				if(waylist[_fplPos+i].appType == GPS_APP_NONE) {
-					s += ':';
-				}
+				// We must be drawing the next entry field at the end of the list - this has a colon
+				s += ':';
+			}
+			if(drawNum) {
 				if(!(_delWp && _uLinePos == i+4)) _kln89->DrawText(s, 2, 4 - (s[s.size()-1] == ':' ? s.size() : s.size()+1), 3 - i);
 			}
-			//cout << "F1 done!\n";
+			// Done drawing numbers and colons.
+				
 			bool drawID = true;
 			if(_delWp && _uLinePos == i+4) {
 				if(!_kln89->_blink) {
@@ -287,21 +306,15 @@ void KLN89FplPage::Update(double dt) {
 				}
 				drawID = false;
 			}
-			//cout << "F2" << endl;
 			if(drawID) {
-				//cout << "F2a" << endl;
 				if(i == 3 || _fplPos + i == waylist.size()) {
-					//cout << "F2a1" << endl;
 					//cout << "_uLinePos = " << _uLinePos << ", i = " << i << ", waylist.size() = " << waylist.size() << endl;
 					if(!(_kln89->_mode == KLN89_MODE_CRSR && _uLinePos == (i + 4) && _kln89->_blink)) {
-						//cout << "Drawing underline..." << endl;
+						// Draw the underline symbol at the end of the flightplan
 						_kln89->DrawText(last_pos < waylist.size() ? waylist[last_pos].GetAprId() : "_____", 2, 4, 3-i);
-						//cout << "2" << endl;
 					}
-					//cout << "3" << endl;
 					//cout << "last_pos = " << last_pos << endl;
 					if(last_pos > 0 && last_pos < waylist.size() && i > 0) {
-						//cout << "4" << endl; 
 						// Draw the param
 						if(_actFpMode == 0) {
 							string s = _params[last_pos - 1];
@@ -311,12 +324,9 @@ void KLN89FplPage::Update(double dt) {
 							_kln89->DrawText(s, 2, 15-s.size(), 3-i);
 							_kln89->DrawSpecialChar(0, 2, 15, 3-i);
 						}
-						//cout << "5" << endl;
 					}
-					//cout << "6" << endl;
 					break;
 				} else {
-					//cout << "F2a2" << endl;
 					if(!(_kln89->_mode == KLN89_MODE_CRSR && _uLinePos == (i + 4) && _kln89->_blink)) {
 						if(waylist[_fplPos+i].appType == GPS_HDR) {
 							if(_delAppr) {
@@ -335,7 +345,6 @@ void KLN89FplPage::Update(double dt) {
 						}
 					}
 				}
-				//cout << "F2b" << endl;
 				if(i > 0) {
 					// Draw the param
 					//cout << "i > 0 param draw...\n";
@@ -348,11 +357,8 @@ void KLN89FplPage::Update(double dt) {
 						_kln89->DrawSpecialChar(0, 2, 15, 3-i);
 					}
 				}
-				//cout << "F2c" << endl;
 			}
-			//cout << "F3" << endl;
 		}
-		//cout << "GGGGGG" << endl;
 	} else {  // Not active flightplan
 		//cout << "Top pos is " << _fplPos << ' ';
 		// For synatical convienience
@@ -493,11 +499,17 @@ void KLN89FplPage::DrawFpMode(int ypos) {
 	_kln89->DrawText(s, 2, 13, ypos);
 }
 
-// Bit of an ipsy-dipsy function this one - calc the required parameters for the displayed flightplan.
+// Calculate the displayable parameters for the currently displayed flightplan.
+// These are Distance, ETE, ETA (UTC) and DTK for the active flight plan, and Distance and DTK for the stored flightplans.
+// These are then converted into strings and pushed onto a string list (_params) which matches the flightplan,
+// which is a really really really ugly and potentially bug-prone and hard to maintain way of doing this.
+// TODO: When the unit is fully working rip out _params and replace with a better solution.
 void KLN89FplPage::Calc() {
 	_params.clear();
 	GPSFlightPlan* fp = _kln89->_flightPlans[_subPage];
 	vector<GPSWaypoint*> wv = fp->waypoints;
+	// Some parameters are calculated differently for the active and the stored flightplans, so
+	// do the two cases seperately.
 	if(0 == _subPage) {
 		// Active FP - parameters are only displayed for the active waypoint onwards for the active plan,
 		// and distance is cumulative from the user position.
@@ -505,20 +517,20 @@ void KLN89FplPage::Calc() {
 			// Dis
 			double cum_tot = 0.0;
 			if(wv.size() > 0) {
-				//cum_tot += _kln89->GetHorizontalSeparation(_kln89->_gpsLat, _kln89->_gpsLon, wv[0]->lat, wv[0]->lon) * SG_METER_TO_NM;
 				cum_tot += _kln89->GetGreatCircleDistance(_kln89->_gpsLat, _kln89->_gpsLon, wv[0]->lat, wv[0]->lon);
 			}
 			for(unsigned int i=1; i<wv.size(); ++i) {
-				//cum_tot += _kln89->GetHorizontalSeparation(wv[i-1]->lat, wv[i-1]->lon, wv[i]->lat, wv[i]->lon) * SG_METER_TO_NM;	// TODO - add units switch!
 				cum_tot += _kln89->GetGreatCircleDistance(wv[i-1]->lat, wv[i-1]->lon, wv[i]->lat, wv[i]->lon);	// TODO - add units switch!
 				int n = (int)(cum_tot + 0.5);
 				_params.push_back(GPSitoa(n));
 			}
 		} else if(1 == _actFpMode) {
+			// TODO
 		} else if(2 == _actFpMode) {
+			// TODO
 		} else {
 			// Dtk
-			for(int i=1; i<wv.size(); ++i) {
+			for(unsigned int i=1; i<wv.size(); ++i) {
 				double dtk = _kln89->GetMagHeadingFromTo(wv[i-1]->lat, wv[i-1]->lon, wv[i]->lat, wv[i]->lon);
 				int n = (int)(dtk + 0.5);
 				_params.push_back(GPSitoa(n));
@@ -529,20 +541,25 @@ void KLN89FplPage::Calc() {
 		// other FPs
 		if(0 == _fpMode) {
 			double cum_tot = 0.0;
-			for(int i=1; i<wv.size(); ++i) {
-				//cum_tot += _kln89->GetHorizontalSeparation(wv[i-1]->lat, wv[i-1]->lon, wv[i]->lat, wv[i]->lon) * SG_METER_TO_NM;	// TODO - add units switch!
+			for(unsigned int i=1; i<wv.size(); ++i) {
 				cum_tot += _kln89->GetGreatCircleDistance(wv[i-1]->lat, wv[i-1]->lon, wv[i]->lat, wv[i]->lon);	// TODO - add units switch!
 				int n = (int)(cum_tot + 0.5);
 				_params.push_back(GPSitoa(n));
 			}
 		} else {
+			// Dtk
+			for(unsigned int i=1; i<wv.size(); ++i) {
+				double dtk = _kln89->GetMagHeadingFromTo(wv[i-1]->lat, wv[i-1]->lon, wv[i]->lat, wv[i]->lon);
+				int n = (int)(dtk + 0.5);
+				_params.push_back(GPSitoa(n));
+			}
 		}
 	}
 }
 
 void KLN89FplPage::CrsrPressed() {
-	if(_delFP) {
-		_delFP = false;
+	if(_delFP || _delAppr) {
+		_delFP = _delAppr = false;
 		_kln89->_mode = KLN89_MODE_DISP;
 		return;
 	}
@@ -575,12 +592,9 @@ void KLN89FplPage::CrsrPressed() {
 }
 
 void KLN89FplPage::ClrPressed() {
-	if(_delFP) {
+	if(_delFP || _delAppr) {
+		_delFP = _delAppr = false;
 		_kln89->_mode = KLN89_MODE_DISP;
-		_delFP = false;
-	} else if(_delAppr) {
-		_kln89->_mode = KLN89_MODE_DISP;
-		_delAppr = false;
 	} else {
 		if(KLN89_MODE_CRSR == _kln89->_mode) {
 			// TODO - see if we need to delete a waypoint
