@@ -133,35 +133,49 @@ FGInterpolateEnvironmentCtrl::init ()
 void
 FGInterpolateEnvironmentCtrl::reinit ()
 {
-// TODO: do we really need to throw away the old tables on reinit? Better recycle
-	unsigned int i;
-	for (i = 0; i < _boundary_table.size(); i++)
-		delete _boundary_table[i];
-	for (i = 0; i < _aloft_table.size(); i++)
-		delete _aloft_table[i];
-	_boundary_table.clear();
-	_aloft_table.clear();
 	init();
 }
 
 void
 FGInterpolateEnvironmentCtrl::read_table (const SGPropertyNode * node, vector<bucket *> &table)
 {
-	for (int i = 0; i < node->nChildren(); i++) {
+	double last_altitude_ft = 0.0;
+	double sort_required = false;
+	int i;
+
+	for (i = 0; i < node->nChildren(); i++) {
 		const SGPropertyNode * child = node->getChild(i);
 		if ( strcmp(child->getName(), "entry") == 0
 		 && child->getStringValue("elevation-ft", "")[0] != '\0'
 		 && ( child->getDoubleValue("elevation-ft") > 0.1 || i == 0 ) )
 	{
-			bucket * b = new bucket;
+			bucket * b;
+			if( i < table.size() ) {
+				// recycle existing bucket
+				b = table[i];
+			} else {
+				// more nodes than buckets in table, add a new one
+				b = new bucket;
+				table.push_back(b);
+			}
 			if (i > 0)
 				b->environment.copy(table[i-1]->environment);
 			b->environment.read(child);
 			b->altitude_ft = b->environment.get_elevation_ft();
-			table.push_back(b);
+
+			// check, if altitudes are in ascending order
+			if( b->altitude_ft < last_altitude_ft )
+				sort_required = true;
+			last_altitude_ft = b->altitude_ft;
 		}
 	}
-	sort(table.begin(), table.end(), bucket::lessThan);
+	// remove leftover buckets
+	vector<bucket*>::iterator it = table.begin() + i;
+	while( it != table.end() )
+		table.erase( it );
+
+	if( sort_required )
+		sort(table.begin(), table.end(), bucket::lessThan);
 }
 
 void
@@ -181,6 +195,8 @@ FGInterpolateEnvironmentCtrl::update (double delta_time_sec)
 			do_interpolate(_boundary_table, altitude_agl_ft, _environment);
 			return;
 		} else if ((boundary_limit + boundary_transition) >= altitude_agl_ft) {
+			//TODO: this is 500ft above the top altitude of boundary layer
+			//shouldn't this be +/-250 ft off of the top altitude?
 								// both tables
 			do_interpolate(_boundary_table, altitude_agl_ft, &env1);
 			do_interpolate(_aloft_table, altitude_ft, &env2);
@@ -250,6 +266,7 @@ FGMetarCtrl::FGMetarCtrl( SGSubsystem * environmentCtrl )
 	station_elevation_ft(0.0),
 	metar_valid(false),
 	setup_winds_aloft(true),
+	wind_interpolation_required(true),
 	// Interpolation constant definitions.
 	EnvironmentUpdatePeriodSec( 0.2 ),
 	MaxWindChangeKtsSec( 0.2 ),
@@ -260,6 +277,8 @@ FGMetarCtrl::FGMetarCtrl( SGSubsystem * environmentCtrl )
 	MaxCloudInterpolationHeightFt( 5000.0 ),
 	MaxCloudInterpolationDeltaFt( 4000.0 )
 {
+	windModulator = new FGBasicWindModulator();
+
 	metar_base_n = fgGetNode( "/environment/metar", true );
 	station_id_n = metar_base_n->getNode("station-id", true );
 	station_elevation_n = metar_base_n->getNode("station-elevation-ft", true );
@@ -268,7 +287,7 @@ FGMetarCtrl::FGMetarCtrl( SGSubsystem * environmentCtrl )
 	base_wind_range_from_n = metar_base_n->getNode("base-wind-range-from", true );
 	base_wind_range_to_n = metar_base_n->getNode("base-wind-range-to", true );
 	base_wind_speed_n = metar_base_n->getNode("base-wind-speed-kt", true );
-	base_wind_dir_n   = metar_base_n->getNode("base-wind-dir-deg", true );
+	base_wind_dir_n = metar_base_n->getNode("base-wind-dir-deg", true );
 	gust_wind_speed_n = metar_base_n->getNode("gust-wind-speed-kt", true );
 	temperature_n = metar_base_n->getNode("temperature-degc", true );
 	dewpoint_n = metar_base_n->getNode("dewpoint-degc", true );
@@ -296,16 +315,16 @@ FGMetarCtrl::~FGMetarCtrl ()
 
 void FGMetarCtrl::bind ()
 {
-  fgTie("/environment/metar/valid", this, &FGMetarCtrl::get_valid );
-  fgTie("/environment/params/metar-updates-environment", this, &FGMetarCtrl::get_enabled, &FGMetarCtrl::set_enabled );
-  fgTie("/environment/params/metar-updates-winds-aloft", this, &FGMetarCtrl::get_setup_winds_aloft, &FGMetarCtrl::set_setup_winds_aloft );
+	fgTie("/environment/metar/valid", this, &FGMetarCtrl::get_valid );
+	fgTie("/environment/params/metar-updates-environment", this, &FGMetarCtrl::get_enabled, &FGMetarCtrl::set_enabled );
+	fgTie("/environment/params/metar-updates-winds-aloft", this, &FGMetarCtrl::get_setup_winds_aloft, &FGMetarCtrl::set_setup_winds_aloft );
 }
 
 void FGMetarCtrl::unbind ()
 {
-  fgUntie("/environment/metar/valid");
-  fgUntie("/environment/params/metar-updates-environment");
-  fgUntie("/environment/params/metar-updates-winds-aloft");
+	fgUntie("/environment/metar/valid");
+	fgUntie("/environment/params/metar-updates-environment");
+	fgUntie("/environment/params/metar-updates-winds-aloft");
 }
 
 // use a "command" to set station temp at station elevation
@@ -369,9 +388,11 @@ static void setupWindBranch( string branchName, double dir, double speed, double
 	}
 }
 
-static void setupWind( bool setup_aloft, double dir, double speed, double gust )
+static void setupWind( bool setup_boundary, bool setup_aloft, double dir, double speed, double gust )
 {
-	setupWindBranch( "boundary", dir, speed, gust );
+	if( setup_boundary )
+		setupWindBranch( "boundary", dir, speed, gust );
+
 	if( setup_aloft )
 		setupWindBranch( "aloft", dir, speed, gust );
 }
@@ -390,6 +411,7 @@ void
 FGMetarCtrl::init ()
 {
 	first_update = true;
+	wind_interpolation_required = true;
 }
 
 void
@@ -398,12 +420,25 @@ FGMetarCtrl::reinit ()
 	init();
 }
 
+static inline double convert_to_360( double d )
+{
+	if( d < 0.0 ) return d + 360.0;
+	if( d >= 360.0 ) return d - 360.0;
+	return d;
+}
+
+static inline double convert_to_180( double d )
+{
+	return d > 180.0 ? d - 360.0 : d;
+}
+
 void
 FGMetarCtrl::update(double dt)
 {
 	if( dt <= 0 || !metar_valid ||!enabled)
 		return;
 
+	windModulator->update(dt);
 	// Interpolate the current configuration closer to the actual METAR
 
 	bool reinit_required = false;
@@ -413,7 +448,7 @@ FGMetarCtrl::update(double dt)
 		double dir = base_wind_dir_n->getDoubleValue();
 		double speed = base_wind_speed_n->getDoubleValue();
 		double gust = gust_wind_speed_n->getDoubleValue();
-		setupWind(setup_winds_aloft, dir, speed, gust);
+		setupWind(true, setup_winds_aloft, dir, speed, gust);
 
 		double metarvis = min_visibility_n->getDoubleValue();
 		fgDefaultWeatherValue("visibility-m", metarvis);
@@ -444,61 +479,92 @@ FGMetarCtrl::update(double dt)
 		layer_rebuild_required = true;
 
 	} else {
-		// Generate interpolated values between the METAR and the current
-		// configuration.
+		if( wind_interpolation_required ) {
+			// Generate interpolated values between the METAR and the current
+			// configuration.
 
-		// Pick up the METAR wind values and convert them into a vector.
-		double metar[2];
-		double metar_speed = base_wind_speed_n->getDoubleValue();
-		double metar_heading = base_wind_dir_n->getDoubleValue();
+			// Pick up the METAR wind values and convert them into a vector.
+			double metar[2];
+			double metar_speed = base_wind_speed_n->getDoubleValue();
+			double metar_heading = base_wind_dir_n->getDoubleValue();
 
-		metar[0] = metar_speed * sin(metar_heading * SG_DEGREES_TO_RADIANS );
-		metar[1] = metar_speed * cos(metar_heading * SG_DEGREES_TO_RADIANS);
+			metar[0] = metar_speed * sin(metar_heading * SG_DEGREES_TO_RADIANS );
+			metar[1] = metar_speed * cos(metar_heading * SG_DEGREES_TO_RADIANS);
 
-		// Convert the current wind values and convert them into a vector
-		double current[2];
-		double speed = boundary_wind_speed_n->getDoubleValue();
-		double dir_from = boundary_wind_from_heading_n->getDoubleValue();;
+			// Convert the current wind values and convert them into a vector
+			double current[2];
+			double speed = boundary_wind_speed_n->getDoubleValue();
+			double dir_from = boundary_wind_from_heading_n->getDoubleValue();;
 
-		current[0] = speed * sin(dir_from * SG_DEGREES_TO_RADIANS );
-		current[1] = speed * cos(dir_from * SG_DEGREES_TO_RADIANS );
+			current[0] = speed * sin(dir_from * SG_DEGREES_TO_RADIANS );
+			current[1] = speed * cos(dir_from * SG_DEGREES_TO_RADIANS );
 
-		// Determine the maximum component-wise value that the wind can change.
-		// First we determine the fraction in the X and Y component, then
-		// factor by the maximum wind change.
-		double x = fabs(current[0] - metar[0]);
-		double y = fabs(current[1] - metar[1]);
+			// Determine the maximum component-wise value that the wind can change.
+			// First we determine the fraction in the X and Y component, then
+			// factor by the maximum wind change.
+			double x = fabs(current[0] - metar[0]);
+			double y = fabs(current[1] - metar[1]);
 
-		// only interpolate if we have a difference
-		if (x + y > 0) {
-			double dx = x / (x + y);
-			double dy = 1 - dx;
+			// only interpolate if we have a difference
+			if (x + y > 0.01 ) {
+				double dx = x / (x + y);
+				double dy = 1 - dx;
 
-			double maxdx = dx * MaxWindChangeKtsSec;
-			double maxdy = dy * MaxWindChangeKtsSec;
+				double maxdx = dx * MaxWindChangeKtsSec;
+				double maxdy = dy * MaxWindChangeKtsSec;
 
-			// Interpolate each component separately.
-			current[0] = interpolate_val(current[0], metar[0], maxdx);
-			current[1] = interpolate_val(current[1], metar[1], maxdy);
+				// Interpolate each component separately.
+				current[0] = interpolate_val(current[0], metar[0], maxdx);
+				current[1] = interpolate_val(current[1], metar[1], maxdy);
 
-			// Now convert back to polar coordinates.
-			if ((current[0] == 0.0) && (current[1] == 0.0)) {
-				// Special case where there is no wind (otherwise atan2 barfs)
-				speed = 0.0;
-			} else {
-				// Some real wind to convert back from. Work out the speed
-				// and direction value in degrees.
-				speed = sqrt((current[0] * current[0]) + (current[1] * current[1]));
-				dir_from = (atan2(current[0], current[1]) * SG_RADIANS_TO_DEGREES );
+				// Now convert back to polar coordinates.
+				if ((current[0] == 0.0) && (current[1] == 0.0)) {
+					// Special case where there is no wind (otherwise atan2 barfs)
+					speed = 0.0;
+				} else {
+					// Some real wind to convert back from. Work out the speed
+					// and direction value in degrees.
+					speed = sqrt((current[0] * current[0]) + (current[1] * current[1]));
+					dir_from = (atan2(current[0], current[1]) * SG_RADIANS_TO_DEGREES );
 
-				// Normalize the direction.
-				if (dir_from < 0.0)
-					dir_from += 360.0;
+					// Normalize the direction.
+					if (dir_from < 0.0)
+						dir_from += 360.0;
 
-				SG_LOG( SG_GENERAL, SG_DEBUG, "Wind : " << dir_from << "@" << speed);
+					SG_LOG( SG_GENERAL, SG_DEBUG, "Wind : " << dir_from << "@" << speed);
+				}
+				double gust = gust_wind_speed_n->getDoubleValue();
+				setupWind(true, setup_winds_aloft, dir_from, speed, gust);
+				reinit_required = true;
+			} else { 
+				wind_interpolation_required = false;
 			}
-			double gust = gust_wind_speed_n->getDoubleValue();
-			setupWind(setup_winds_aloft, dir_from, speed, gust);
+		} else { // if(wind_interpolation_required)
+			// interpolation of wind vector is finished, apply wind
+			// variations and gusts for the boundary layer only
+
+			// start with the main wind direction
+			double wind_dir = base_wind_dir_n->getDoubleValue();
+			double min = convert_to_180(base_wind_range_from_n->getDoubleValue());
+			double max = convert_to_180(base_wind_range_to_n->getDoubleValue());
+			if( max > min ) {
+				// if variable winds configured, modulate the wind direction
+				double f = windModulator->get_direction_offset_norm();
+				wind_dir = min+(max-min)*f;
+				double old = convert_to_180(boundary_wind_from_heading_n->getDoubleValue());
+				wind_dir = convert_to_360(fgGetLowPass(old, wind_dir, dt ));
+			}
+			
+			// start with main wind speed
+			double wind_speed = base_wind_speed_n->getDoubleValue();
+			max = gust_wind_speed_n->getDoubleValue();
+			if( max > wind_speed ) {
+				// if gusts are configured, modulate wind magnitude
+				double f = windModulator->get_magnitude_factor_norm();
+				wind_speed = wind_speed+(max-wind_speed)*f;
+				wind_speed = fgGetLowPass(boundary_wind_speed_n->getDoubleValue(), wind_speed, dt );
+			}
+			setupWind(true, false, wind_dir, wind_speed, max);
 			reinit_required = true;
 		}
 
@@ -595,6 +661,7 @@ FGMetarCtrl::update(double dt)
 
 	set_temp_at_altitude(temperature_n->getDoubleValue(), station_elevation_ft);
 	set_dewpoint_at_altitude(dewpoint_n->getDoubleValue(), station_elevation_ft);
+	//TODO: check if temperature/dewpoint have changed. This requires reinit.
 
 	// Force an update of the 3D clouds
 	if( layer_rebuild_required )
@@ -628,6 +695,8 @@ void FGMetarCtrl::set_metar( const char * metar_string )
 		metar_valid = false;
 		return;
 	}
+
+	wind_interpolation_required = true;
 
 	min_visibility_n->setDoubleValue( m->getMinVisibility().getVisibility_m() );
 	max_visibility_n->setDoubleValue( m->getMaxVisibility().getVisibility_m() );
@@ -751,8 +820,7 @@ void MetarThread::run()
 }
 #endif
 
-FGMetarFetcher::FGMetarFetcher()
-  : 
+FGMetarFetcher::FGMetarFetcher() : 
 #if defined(ENABLE_THREADS)
 	metar_thread(NULL),
 #endif
@@ -764,12 +832,12 @@ FGMetarFetcher::FGMetarFetcher()
 {
 	longitude_n = fgGetNode( "/position/longitude-deg", true );
 	latitude_n  = fgGetNode( "/position/latitude-deg", true );
-	enable_n = fgGetNode( "/environment/params/real-world-weather-fetch", true );
+	enable_n    = fgGetNode( "/environment/params/real-world-weather-fetch", true );
 
 	proxy_host_n = fgGetNode("/sim/presets/proxy/host", true);
 	proxy_port_n = fgGetNode("/sim/presets/proxy/port", true);
 	proxy_auth_n = fgGetNode("/sim/presets/proxy/authentication", true);
-	max_age_n	= fgGetNode("/environment/params/metar-max-age-min", true);
+	max_age_n    = fgGetNode("/environment/params/metar-max-age-min", true);
 
 	output_n	 = fgGetNode("/environment/metar/data", true );
 #if defined(ENABLE_THREADS)

@@ -52,12 +52,12 @@ FGEnvironmentMgr::FGEnvironmentMgr ()
 
   _controller = new FGInterpolateEnvironmentCtrl;
   _controller->setEnvironment(_environment);
-  set_subsystem("controller", _controller, 0.5);
+  set_subsystem("controller", _controller, 0.1 );
 
   fgClouds = new FGClouds();
 
-  _metarcontroller = new FGMetarCtrl(_controller);
-  set_subsystem("metarcontroller", _metarcontroller, 0.25 );
+  _metarcontroller = new FGMetarCtrl(_controller );
+  set_subsystem("metarcontroller", _metarcontroller, 0.1 );
 
   _metarfetcher = new FGMetarFetcher();
   set_subsystem("metarfetcher", _metarfetcher, 1.0 );
