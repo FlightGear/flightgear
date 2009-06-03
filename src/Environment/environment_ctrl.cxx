@@ -170,9 +170,8 @@ FGInterpolateEnvironmentCtrl::read_table (const SGPropertyNode * node, vector<bu
 		}
 	}
 	// remove leftover buckets
-	vector<bucket*>::iterator it = table.begin() + i;
-	while( it != table.end() )
-		table.erase( it );
+	while( table.size() > i )
+		table.pop_back();
 
 	if( sort_required )
 		sort(table.begin(), table.end(), bucket::lessThan);
