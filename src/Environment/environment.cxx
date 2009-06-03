@@ -198,6 +198,7 @@ maybe_copy_value (FGEnvironment * env, const SGPropertyNode * node,
 void
 FGEnvironment::read (const SGPropertyNode * node)
 {
+    bool live_update = set_live_update( false );
     maybe_copy_value(this, node, "visibility-m",
                      &FGEnvironment::set_visibility_m);
 
@@ -230,6 +231,15 @@ FGEnvironment::read (const SGPropertyNode * node)
 
     maybe_copy_value(this, node, "turbulence/rate-hz",
                      &FGEnvironment::set_turbulence_rate_hz);
+    // calculate derived properties here to avoid duplicate expensive computations
+    _recalc_ne();
+    _recalc_alt_temperature();
+    _recalc_alt_dewpoint();
+    _recalc_alt_pressure();
+    _recalc_density();
+    _recalc_relative_humidity();
+
+    set_live_update(live_update);
 }
 
 
