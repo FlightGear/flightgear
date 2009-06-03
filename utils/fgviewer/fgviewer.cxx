@@ -5,6 +5,11 @@
 #include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
+#include <osgGA/KeySwitchMatrixManipulator>
+#include <osgGA/TrackballManipulator>
+#include <osgGA/FlightManipulator>
+#include <osgGA/DriveManipulator>
+#include <osgGA/TerrainManipulator>
 
 #include <simgear/props/props.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -48,6 +53,21 @@ main(int argc, char** argv)
     // ... for some reason, get rid of that FIXME!
     viewer.setThreadingModel(osgViewer::Viewer::SingleThreaded);
     
+    // set up the camera manipulators.
+    osgGA::KeySwitchMatrixManipulator* keyswitchManipulator;
+    keyswitchManipulator = new osgGA::KeySwitchMatrixManipulator;
+    
+    osgGA::MatrixManipulator* mm = new osgGA::TrackballManipulator;
+    keyswitchManipulator->addMatrixManipulator('1', "Trackball", mm);
+    mm = new osgGA::FlightManipulator;
+    keyswitchManipulator->addMatrixManipulator('2', "Flight", mm);
+    mm = new osgGA::DriveManipulator;
+    keyswitchManipulator->addMatrixManipulator('3', "Drive", mm);
+    mm = new osgGA::TerrainManipulator;
+    keyswitchManipulator->addMatrixManipulator('4', "Terrain", mm);
+    
+    viewer.setCameraManipulator(keyswitchManipulator);
+
     // Usefull stats
     viewer.addEventHandler(new osgViewer::HelpHandler);
     viewer.addEventHandler(new osgViewer::StatsHandler);
@@ -63,6 +83,9 @@ main(int argc, char** argv)
     else
         fg_root = ".";
 
+    osgDB::FilePathList filePathList;
+    filePathList.push_back(fg_root);
+
     const char *fg_scenery_env = std::getenv("FG_SCENERY");
     string_list path_list;
     if (fg_scenery_env) {
@@ -72,7 +95,6 @@ main(int argc, char** argv)
         path.append("Scenery");
         path_list.push_back(path.str());
     }
-    osgDB::FilePathList filePathList;
     for (unsigned i = 0; i < path_list.size(); ++i) {
         SGPath pt(path_list[i]), po(path_list[i]);
         pt.append("Terrain");
@@ -93,6 +115,9 @@ main(int argc, char** argv)
         std::cerr << "Problems loading FlightGear materials.\n"
                   << "Probably FG_ROOT is not properly set." << std::endl;
     }
+
+    // The file path list must be set in the registry.
+    osgDB::Registry::instance()->getDataFilePathList() = filePathList;
     
     SGReaderWriterBTGOptions* btgOptions = new SGReaderWriterBTGOptions;
     btgOptions->getDatabasePathList() = filePathList;
