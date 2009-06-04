@@ -619,7 +619,7 @@ xmlNodeCopyString(const void *id, const char *path, char *buffer, size_t buflen)
                 memcpy(buffer, p, len);
                 *(buffer+len) = '\0';
             }
-            ret = 0;
+            ret = len;
         }
         else if (slen == 0)
         {
@@ -1345,13 +1345,9 @@ __xmlNodeGetPath(void **nc, const char *start, size_t *len, char **name, size_t 
 
     assert(start != 0);
     assert(len != 0);
-    assert(*len != 0);
     assert(name != 0);
     assert(*name != 0);
     assert(nlen != 0);
-    assert(*nlen != 0);
-
-    if (*nlen > *len) return 0;
 
     path = *name;
     if (*path == '/') path++;
