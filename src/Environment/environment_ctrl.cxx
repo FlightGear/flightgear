@@ -170,8 +170,11 @@ FGInterpolateEnvironmentCtrl::read_table (const SGPropertyNode * node, vector<bu
 		}
 	}
 	// remove leftover buckets
-	while( table.size() > i )
+	while( table.size() > i ) {
+		bucket * b = *(table.end() - 1);
+		delete b;
 		table.pop_back();
+	}
 
 	if( sort_required )
 		sort(table.begin(), table.end(), bucket::lessThan);
@@ -297,6 +300,7 @@ FGMetarCtrl::FGMetarCtrl( SGSubsystem * environmentCtrl )
 	hail_n = metar_base_n->getNode("hail-norm", true );
 	snow_n = metar_base_n->getNode("snow-norm", true );
 	snow_cover_n = metar_base_n->getNode("snow-cover", true );
+	magnetic_variation_n = fgGetNode( "/environment/magnetic-variation-deg", true );
 	ground_elevation_n = fgGetNode( "/position/ground-elev-m", true );
 	longitude_n = fgGetNode( "/position/longitude-deg", true );
 	latitude_n = fgGetNode( "/position/latitude-deg", true );
@@ -444,7 +448,7 @@ FGMetarCtrl::update(double dt)
 	bool layer_rebuild_required = false;
 
 	if (first_update) {
-		double dir = base_wind_dir_n->getDoubleValue();
+		double dir = base_wind_dir_n->getDoubleValue()+magnetic_variation_n->getDoubleValue();
 		double speed = base_wind_speed_n->getDoubleValue();
 		double gust = gust_wind_speed_n->getDoubleValue();
 		setupWind(true, setup_winds_aloft, dir, speed, gust);
@@ -485,7 +489,7 @@ FGMetarCtrl::update(double dt)
 			// Pick up the METAR wind values and convert them into a vector.
 			double metar[2];
 			double metar_speed = base_wind_speed_n->getDoubleValue();
-			double metar_heading = base_wind_dir_n->getDoubleValue();
+			double metar_heading = base_wind_dir_n->getDoubleValue()+magnetic_variation_n->getDoubleValue();
 
 			metar[0] = metar_speed * sin(metar_heading * SG_DEGREES_TO_RADIANS );
 			metar[1] = metar_speed * cos(metar_heading * SG_DEGREES_TO_RADIANS);
@@ -543,9 +547,9 @@ FGMetarCtrl::update(double dt)
 			// variations and gusts for the boundary layer only
 
 			// start with the main wind direction
-			double wind_dir = base_wind_dir_n->getDoubleValue();
-			double min = convert_to_180(base_wind_range_from_n->getDoubleValue());
-			double max = convert_to_180(base_wind_range_to_n->getDoubleValue());
+			double wind_dir = base_wind_dir_n->getDoubleValue()+magnetic_variation_n->getDoubleValue();
+			double min = convert_to_180(base_wind_range_from_n->getDoubleValue()+magnetic_variation_n->getDoubleValue());
+			double max = convert_to_180(base_wind_range_to_n->getDoubleValue()+magnetic_variation_n->getDoubleValue());
 			if( max > min ) {
 				// if variable winds configured, modulate the wind direction
 				double f = windModulator->get_direction_offset_norm();

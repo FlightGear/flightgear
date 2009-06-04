@@ -194,6 +194,7 @@ private:
 	SGPropertyNode_ptr ground_elevation_n;
 	SGPropertyNode_ptr longitude_n;
 	SGPropertyNode_ptr latitude_n;
+	SGPropertyNode_ptr magnetic_variation_n;
 
 	SGPropertyNode_ptr boundary_wind_speed_n;
 	SGPropertyNode_ptr boundary_wind_from_heading_n;
