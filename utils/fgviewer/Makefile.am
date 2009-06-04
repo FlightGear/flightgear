@@ -1,3 +1,6 @@
+
+AM_CXXFLAGS = -DPKGDATADIR=\"$(pkgdatadir)\"
+
 bin_PROGRAMS = fgviewer
 
 fgviewer_SOURCES = fgviewer.cxx
