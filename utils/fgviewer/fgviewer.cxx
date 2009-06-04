@@ -81,7 +81,11 @@ main(int argc, char** argv)
     if (fg_root_env)
         fg_root = fg_root_env;
     else
+#if defined(PKGDATADIR)
+        fg_root = PKGDATADIR;
+#else
         fg_root = ".";
+#endif
 
     osgDB::FilePathList filePathList;
     filePathList.push_back(fg_root);
