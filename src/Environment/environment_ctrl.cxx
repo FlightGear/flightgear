@@ -391,11 +391,9 @@ static void setupWindBranch( string branchName, double dir, double speed, double
 	}
 }
 
-static void setupWind( bool setup_boundary, bool setup_aloft, double dir, double speed, double gust )
+static void setupWind( bool setup_aloft, double dir, double speed, double gust )
 {
-	if( setup_boundary )
-		setupWindBranch( "boundary", dir, speed, gust );
-
+	setupWindBranch( "boundary", dir, speed, gust );
 	if( setup_aloft )
 		setupWindBranch( "aloft", dir, speed, gust );
 }
@@ -451,7 +449,7 @@ FGMetarCtrl::update(double dt)
 		double dir = base_wind_dir_n->getDoubleValue()+magnetic_variation_n->getDoubleValue();
 		double speed = base_wind_speed_n->getDoubleValue();
 		double gust = gust_wind_speed_n->getDoubleValue();
-		setupWind(true, setup_winds_aloft, dir, speed, gust);
+		setupWind(setup_winds_aloft, dir, speed, gust);
 
 		double metarvis = min_visibility_n->getDoubleValue();
 		fgDefaultWeatherValue("visibility-m", metarvis);
@@ -521,10 +519,7 @@ FGMetarCtrl::update(double dt)
 				current[1] = interpolate_val(current[1], metar[1], maxdy);
 
 				// Now convert back to polar coordinates.
-				if ((current[0] == 0.0) && (current[1] == 0.0)) {
-					// Special case where there is no wind (otherwise atan2 barfs)
-					speed = 0.0;
-				} else {
+				if ((fabs(current[0]) > 0.1) || (fabs(current[1]) > 0.1)) {
 					// Some real wind to convert back from. Work out the speed
 					// and direction value in degrees.
 					speed = sqrt((current[0] * current[0]) + (current[1] * current[1]));
@@ -535,9 +530,12 @@ FGMetarCtrl::update(double dt)
 						dir_from += 360.0;
 
 					SG_LOG( SG_GENERAL, SG_DEBUG, "Wind : " << dir_from << "@" << speed);
+				} else {
+					// Special case where there is no wind (otherwise atan2 barfs)
+					speed = 0.0;
 				}
 				double gust = gust_wind_speed_n->getDoubleValue();
-				setupWind(true, setup_winds_aloft, dir_from, speed, gust);
+				setupWind(setup_winds_aloft, dir_from, speed, gust);
 				reinit_required = true;
 			} else { 
 				wind_interpolation_required = false;
@@ -545,6 +543,9 @@ FGMetarCtrl::update(double dt)
 		} else { // if(wind_interpolation_required)
 			// interpolation of wind vector is finished, apply wind
 			// variations and gusts for the boundary layer only
+
+
+			bool wind_modulated = false;
 
 			// start with the main wind direction
 			double wind_dir = base_wind_dir_n->getDoubleValue()+magnetic_variation_n->getDoubleValue();
@@ -556,6 +557,7 @@ FGMetarCtrl::update(double dt)
 				wind_dir = min+(max-min)*f;
 				double old = convert_to_180(boundary_wind_from_heading_n->getDoubleValue());
 				wind_dir = convert_to_360(fgGetLowPass(old, wind_dir, dt ));
+				wind_modulated = true;
 			}
 			
 			// start with main wind speed
@@ -566,9 +568,12 @@ FGMetarCtrl::update(double dt)
 				double f = windModulator->get_magnitude_factor_norm();
 				wind_speed = wind_speed+(max-wind_speed)*f;
 				wind_speed = fgGetLowPass(boundary_wind_speed_n->getDoubleValue(), wind_speed, dt );
+				wind_modulated = true;
 			}
-			setupWind(true, false, wind_dir, wind_speed, max);
-			reinit_required = true;
+			if( wind_modulated ) {
+				setupWind(false, wind_dir, wind_speed, max);
+				reinit_required = true;
+			}
 		}
 
 		// Now handle the visibility. We convert both visibility values
