@@ -549,6 +549,7 @@ FGPositioned::findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm
   return spatialGetClosest(aPos, aN, aCutoffNm, aFilter);
 }
 
+/*
 FGPositionedRef
 FGPositioned::findNextWithPartialId(FGPositionedRef aCur, const std::string& aId, Filter* aFilter)
 {
@@ -576,5 +577,47 @@ FGPositioned::findNextWithPartialId(FGPositionedRef aCur, const std::string& aId
   }
   
   return NULL; // fell out, no match in range
+}*/
+
+FGPositionedRef
+FGPositioned::findNextWithPartialId(FGPositionedRef aCur, const std::string& aId, Filter* aFilter)
+{
+  // It is essential to bound our search, to avoid iterating all the way to the end of the database.
+  // Do this by generating a second ID with the final character incremented by 1.
+  // e.g., if the partial ID is "KI", we wish to search "KIxxx" but not "KJ".
+  std::string upperBoundId = aId;
+  upperBoundId[upperBoundId.size()-1]++;
+  NamedPositionedIndex::const_iterator upperBound = global_namedIndex.lower_bound(upperBoundId);
+
+  NamedIndexRange range = global_namedIndex.equal_range(aId);
+  while (range.first != upperBound) {
+    for (; range.first != range.second; ++range.first) {
+      FGPositionedRef candidate = range.first->second;
+      if (aCur == candidate) {
+        aCur = NULL; // found our start point, next match will pass
+        continue;
+      }
+
+      if (aFilter) {
+        if (aFilter->hasTypeRange() && !aFilter->passType(candidate->type())) {
+          continue;
+        }
+
+        if (!aFilter->pass(candidate)) {
+          continue;
+        }
+      }
+
+      if (!aCur) {
+        return candidate;
+      }
+    }
+
+    // Unable to match the filter with this range - try the next range.
+    range = global_namedIndex.equal_range(range.second->first);
+  }
+
+  return NULL; // Reached the end of the valid sequence with no match.  
 }
+  
 
