@@ -33,8 +33,6 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
-#include <simgear/math/sg_geodesy.hxx>
-#include <simgear/scene/model/placementtrans.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
