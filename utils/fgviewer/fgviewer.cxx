@@ -12,6 +12,7 @@
 #include <osgGA/TerrainManipulator>
 
 #include <simgear/props/props.hxx>
+#include <simgear/props/props_io.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/tgdb/SGReaderWriterBTGOptions.hxx>
@@ -109,7 +110,17 @@ main(int argc, char** argv)
     }
 
     SGSharedPtr<SGPropertyNode> props = new SGPropertyNode;
-    props->getNode("sim/startup/season", true)->setStringValue("summer");
+    try {
+        SGPath preferencesFile = fg_root;
+        preferencesFile.append("preferences.xml");
+        readProperties(preferencesFile.str(), props);
+    } catch (...) {
+        // In case of an error, at least make summer :)
+        props->getNode("sim/startup/season", true)->setStringValue("summer");
+
+        std::cerr << "Problems loading FlightGear preferences.\n"
+                  << "Probably FG_ROOT is not properly set." << std::endl;
+    }
     SGMaterialLib* ml = new SGMaterialLib;
     SGPath mpath(fg_root);
     mpath.append("materials.xml");
