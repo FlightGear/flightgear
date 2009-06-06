@@ -2319,6 +2319,12 @@
 				RelativePath="..\..\src\Environment\fgmetar.hxx">
 			</File>
 			<File
+				RelativePath="..\..\src\Environment\fgwind.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Environment\fgwind.hxx">
+			</File>
+			<File
 				RelativePath="..\..\src\Environment\precipitation_mgr.cxx">
 			</File>
 			<File
