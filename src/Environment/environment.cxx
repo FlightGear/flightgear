@@ -722,7 +722,7 @@ FGEnvironment::_recalc_relative_humidity ()
 */
   double a = (7.5 * dewpoint_degc)    / ( 237.7 + dewpoint_degc);
   double b = (7.5 * temperature_degc) / ( 237.7 + temperature_degc);
-  relative_humidity = 100 * pow(10,a-b); 
+  relative_humidity = 100 * pow(10.0,a-b); 
 }
 
 bool
