@@ -474,10 +474,9 @@ public:
 
         if (_id == transform.getId()) {
             _foundId = true;
-            return;
+        } else {
+            transform.traverse(*this);
         }
-        
-        transform.traverse(*this);
         
         if (_foundId) {
             SGMatrixd toWorld = transform.getToWorldTransform(_time);
