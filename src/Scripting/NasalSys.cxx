@@ -1127,7 +1127,6 @@ void FGNasalModelData::modelLoaded(const string& path, SGPropertyNode *prop,
     arg[1] = nasalSys->propNodeGhost(prop);
     nasalSys->createModule(_module.c_str(), path.c_str(), s, strlen(s),
                            _root, 2, arg);
-    _props = 0;
 }
 
 FGNasalModelData::~FGNasalModelData()
