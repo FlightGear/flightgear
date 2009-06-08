@@ -836,7 +836,8 @@ FGMetarFetcher::FGMetarFetcher() :
 	search_timer(0.0),
 	error_timer(0.0),
 	_stale_count(0),
-	_error_count(0)
+	_error_count(0),
+	enabled(false)
 {
 	longitude_n = fgGetNode( "/position/longitude-deg", true );
 	latitude_n  = fgGetNode( "/position/latitude-deg", true );
@@ -901,8 +902,19 @@ void FGMetarFetcher::update (double delta_time_sec)
 		_error_count = 0;
 	}
 
-	if( enable_n->getBoolValue() == false ) 
+	if( enable_n->getBoolValue() == false ) {
+		enabled = false;
 		return;
+	}
+
+	// we were just enabled, reset all timers to 
+	// trigger immediate metar fetch
+	if( !enabled ) {
+		search_timer = 0.0;
+		fetch_timer = 0.0;
+		error_timer = error_timer_sec;
+		enabled = true;
+	}
 
 	FGAirport * a = NULL;
 
