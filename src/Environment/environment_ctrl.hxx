@@ -249,6 +249,7 @@ private:
 
 	long _stale_count;
 	long _error_count;
+	bool enabled;
 };
 
 
