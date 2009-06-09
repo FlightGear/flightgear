@@ -79,14 +79,7 @@ void FGTaxiSegment::setEnd(FGTaxiNodeVector *nodes)
 // doing this.
 void FGTaxiSegment::setTrackDistance()
 {
-  //double course;
-  SGWayPoint first  (start->getLongitude(),
-		     start->getLatitude(),
-		     0);
-  SGWayPoint second (end->getLongitude(),
-		     end->getLatitude(),
-		     0);
-  first.CourseAndDistance(second, &course, &length);
+  length = SGGeodesy::distanceM(start->getGeod(), end->getGeod());
 }
 
 
@@ -301,35 +294,26 @@ void FGGroundNetwork::init()
 
 int FGGroundNetwork::findNearestNode(const SGGeod& aGeod)
 {
-  return findNearestNode(aGeod.getLatitudeDeg(), aGeod.getLongitudeDeg());
+  double minDist = HUGE_VAL;
+  int index = -1;
+  
+  for (FGTaxiNodeVectorIterator itr = nodes.begin(); itr != nodes.end(); itr++)
+  {
+    double d = SGGeodesy::distanceM(aGeod, (*itr)->getGeod());
+    if (d < minDist)
+    {
+      minDist = d;
+      index = (*itr)->getIndex();
+      //cerr << "Minimum distance of " << minDist << " for index " << index << endl;
+    }
+  }
+  
+  return index;
 }
 
 int FGGroundNetwork::findNearestNode(double lat, double lon)
 {
-  double minDist = HUGE_VAL;
-  double dist;
-  int index;
-  SGWayPoint first  (lon,
-		     lat,
-		     0);
-  
-  for (FGTaxiNodeVectorIterator 
-	 itr = nodes.begin();
-       itr != nodes.end(); itr++)
-    {
-      double course;
-      SGWayPoint second ((*itr)->getLongitude(),
-			 (*itr)->getLatitude(),
-			 0);
-      first.CourseAndDistance(second, &course, &dist);
-      if (dist < minDist)
-	{
-	  minDist = dist;
-	  index = (*itr)->getIndex();
-	  //cerr << "Minimum distance of " << minDist << " for index " << index << endl;
-	}
-    }
-  return index;
+  return findNearestNode(SGGeod::fromDeg(lon, lat));
 }
 
 FGTaxiNode *FGGroundNetwork::findNode(int idx)
@@ -609,24 +593,21 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
   double mindist = HUGE_VAL;
   if (activeTraffic.size()) 
     {
-      double course, dist, bearing, minbearing;
-      SGWayPoint curr  (lon,
-			lat,
-			alt);
+      double course, dist, bearing, minbearing, az2;
+      SGGeod curr(SGGeod::fromDegM(lon, lat, alt));
       //TrafficVector iterator closest;
       closest = current;
       for (TrafficVectorIterator i = activeTraffic.begin(); 
    	   i != activeTraffic.end(); i++)
    	{
-   	  if (i != current) {
-   	    //SGWayPoint curr  (lon,
-  	    //	      lat,
-  	    //	      alt);
-   	    SGWayPoint other    (i->getLongitude  (),
-   				 i->getLatitude (),
-   				 i->getAltitude  ());
-   	    other.CourseAndDistance(curr, &course, &dist);
-   	    bearing = fabs(heading-course);
+   	  if (i == current) {
+        continue;
+      }
+      
+        SGGeod other(SGGeod::fromDegM(i->getLongitude(),
+          i->getLatitude(), i->getAltitude()));
+        SGGeodesy::inverse(other, curr, course, az2, dist);
+        bearing = fabs(heading-course);
    	    if (bearing > 180)
    	      bearing = 360-bearing;
    	    if ((dist < mindist) && (bearing < 60.0))
@@ -635,7 +616,6 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
    		closest = i;
    		minbearing = bearing;
    	      }
-   	  }
    	}
       //Check traffic at the tower controller
       if (towerController->hasActiveTraffic())
@@ -644,16 +624,12 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
 	       i != towerController->getActiveTraffic().end(); i++)
 	    {
 	      //cerr << "Comparing " << current->getId() << " and " << i->getId() << endl;
-	      //SGWayPoint curr  (lon,
-	      //		  lat,
-	      //		  alt);
-	      SGWayPoint other    (i->getLongitude  (),
-				   i->getLatitude (),
-				   i->getAltitude  ());
-	      other.CourseAndDistance(curr, &course, &dist);
-	      bearing = fabs(heading-course);
+	      SGGeod other(SGGeod::fromDegM(i->getLongitude(),
+          i->getLatitude(), i->getAltitude()));
+        SGGeodesy::inverse(other, curr, course, az2, dist);
+        bearing = fabs(heading-course);
 	      if (bearing > 180)
-		bearing = 360-bearing;
+          bearing = 360-bearing;
 	      if ((dist < mindist) && (bearing < 60.0))
 		{
 		  mindist = dist;
@@ -666,10 +642,9 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
       // Finally, check UserPosition
       double userLatitude  = fgGetDouble("/position/latitude-deg");
       double userLongitude = fgGetDouble("/position/longitude-deg");
-      SGWayPoint user    (userLongitude,
-			  userLatitude,
-			  alt); // Alt is not really important here. 
-      user.CourseAndDistance(curr, &course, &dist);
+      SGGeod user(SGGeod::fromDeg(userLatitude,userLongitude));
+      SGGeodesy::inverse(user, curr, course, az2, dist);
+      
       bearing = fabs(heading-course);
       if (bearing > 180)
 	bearing = 360-bearing;
@@ -750,10 +725,8 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
   }
   current = i;
   current->setHoldPosition(false);
-  SGWayPoint curr  (lon,
-		    lat,
-		    alt);
-  double course, dist, bearing, minbearing;
+  SGGeod curr(SGGeod::fromDegM(lon, lat, alt));
+  
   for (i = activeTraffic.begin(); 
        i != activeTraffic.end(); i++)
     {
@@ -762,20 +735,16 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
   	  int node = current->crosses(this, *i);
   	  if (node != -1)
   	    {
+          FGTaxiNode* taxiNode = findNode(node);
+          
   	      // Determine whether it's save to continue or not. 
   	      // If we have a crossing route, there are two possibilities:
   	      // 1) This is an interestion
   	      // 2) This is oncoming two-way traffic, using the same taxiway.
   	      //cerr << "Hold check 1 : " << id << " has common node " << node << endl;
-  	      SGWayPoint nodePos(findNode(node)->getLongitude  (),
-  				 findNode(node)->getLatitude   (),
-  				 alt);
-
-  	      SGWayPoint other    (i->getLongitude  (),
-  				   i->getLatitude (),
-  				   i->getAltitude  ());
-  	      //other.CourseAndDistance(curr, &course, &dist);
-  	      bool needsToWait;
+  	     
+        SGGeod other(SGGeod::fromDegM(i->getLongitude(), i->getLatitude(), i->getAltitude()));
+        bool needsToWait;
 	      bool opposing;
   	      if (current->isOpposing(this, *i, node))
   		{
@@ -793,8 +762,7 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
   	      else 
   		{
 		  opposing = false;
-  		  other.CourseAndDistance(nodePos, &course, &dist);
-  		  if (dist > 200) // 2.0*i->getRadius())
+  		  if (SGGeodesy::distanceM(other, taxiNode->getGeod()) > 200) // 2.0*i->getRadius())
   		    {
   		      needsToWait = false; 
   		      //cerr << "Hold check 3 : " << id <<"  Other aircraft approaching node is still far away. (" << dist << " nm). Can safely continue " 
@@ -806,8 +774,9 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
   		      //cerr << "Hold check 4: " << id << "  Would need to wait for other aircraft : distance = " << dist << " meters" << endl;
   		    }
   		}
-  	      curr.CourseAndDistance(nodePos, &course, &dist);
-  	      if (!(i->hasHoldPosition()))
+      
+      double dist = SGGeodesy::distanceM(curr, taxiNode->getGeod());
+      if (!(i->hasHoldPosition()))
   		{
 		  
   		  if ((dist < 200) && //2.5*current->getRadius()) && 

@@ -47,11 +47,18 @@ FGNode::FGNode()
 {
 }
 
+FGNode::FGNode(double lt, double ln, int idx, std::string id) :
+  ident(id),
+  geod(SGGeod::fromDeg(ln, lt)),
+  index(idx)
+{
+}
+
 bool FGNode::matches(string id, double lt, double ln)
 {
   if ((ident == id) &&
-      (fabs(lt - lat) < 1.0) &&
-      (fabs(ln - lon) < 1.0))
+      (fabs(lt - geod.getLatitudeDeg()) < 1.0) &&
+      (fabs(ln - geod.getLongitudeDeg()) < 1.0))
     return true;
   else
     return false;
@@ -92,15 +99,7 @@ void FGAirway::setEnd(node_map *nodes)
 // doing this.
 void FGAirway::setTrackDistance()
 {
-  double course;
-  SGWayPoint first  (start->getLongitude(),
-		     start->getLatitude(),
-		     0);
-  SGWayPoint second (end->getLongitude(),
-		     end->getLatitude(),
-		     0);
-  first.CourseAndDistance(second, &course, &length);
-
+  length = SGGeodesy::distanceM(start->getPosition(), end->getPosition());
 }
 
 /***************************************************************************

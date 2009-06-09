@@ -286,7 +286,7 @@ void FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft *ac, bool firstFlight,
 		char buffer[10];
 		snprintf (buffer, 10, "%d", node);
 		FGTaxiNode *tn = apt->getDynamics()->getGroundNetwork()->findNode(node);
-    waypoint* wpt = createOnGround(ac, buffer, tn->geod(), apt->getElevation(), ac->getPerformance()->vTaxi());
+    waypoint* wpt = createOnGround(ac, buffer, tn->getGeod(), apt->getElevation(), ac->getPerformance()->vTaxi());
     wpt->routeIndex = route;
 		waypoints.push_back(wpt);
   }
@@ -358,7 +358,7 @@ void FGAIFlightPlan::createLandingTaxi(FGAIAircraft *ac, FGAirport *apt,
     char buffer[10];
     snprintf (buffer, 10, "%d", node);
     FGTaxiNode *tn = gn->findNode(node);
-    waypoint* wpt = createOnGround(ac, buffer, tn->geod(), apt->getElevation(), ac->getPerformance()->vTaxi());
+    waypoint* wpt = createOnGround(ac, buffer, tn->getGeod(), apt->getElevation(), ac->getPerformance()->vTaxi());
     wpt->routeIndex = route;
     waypoints.push_back(wpt);
   }

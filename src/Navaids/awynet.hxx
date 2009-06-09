@@ -50,24 +50,21 @@ class FGNode
 {
 private:
   std::string ident;
-  double lat;
-  double lon;
+  SGGeod geod;
   int index;
   FGAirwayPointerVector next; // a vector to all the segments leaving from this node
 
 public:
   FGNode();
-  FGNode(double lt, double ln, int idx, std::string id) { lat = lt; lon = ln; index = idx; ident = id;};
+  FGNode(double lt, double ln, int idx, std::string id);
 
   void setIndex(int idx)                  { index = idx;};
-  void setLatitude (double val)           { lat = val;};
-  void setLongitude(double val)           { lon = val;};
-  //void setLatitude (const std::string& val)           { lat = processPosition(val);  };
-  //void setLongitude(const std::string& val)           { lon = processPosition(val);  };
   void addAirway(FGAirway *segment) { next.push_back(segment); };
 
-  double getLatitude() { return lat;};
-  double getLongitude(){ return lon;};
+  double getLatitude() { return geod.getLatitudeDeg();};
+  double getLongitude(){ return geod.getLongitudeDeg();};
+
+  const SGGeod& getPosition() {return geod;}
 
   int getIndex() { return index; };
   std::string getIdent() { return ident; };
