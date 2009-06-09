@@ -1539,21 +1539,21 @@ void FGAILocalTraffic::DoGroundElev() {
 	// Only do the proper hitlist stuff if we are within visible range of the viewer.
 	double visibility_meters = fgGetDouble("/environment/visibility-m");
 	FGViewer* vw = globals->get_current_view();
-	if(dclGetHorizontalSeparation(_pos, SGGeod::fromDegM(vw->getLongitude_deg(), vw->getLatitude_deg(), 0.0)) > visibility_meters) {
+	if(dclGetHorizontalSeparation(_pos, SGGeod::fromGeodM(vw->getPosition(), 0.0)) > visibility_meters) {
 		_ground_elevation_m = aptElev;
 		return;
 	}
 
-        // FIXME: make shure the pos.lat/pos.lon values are in degrees ...
-        double range = 500.0;
-        if (!globals->get_tile_mgr()->scenery_available(_aip.getPosition(), range)) {
-          // Try to shedule tiles for that position.
-          globals->get_tile_mgr()->update( _aip.getPosition(), range );
-        }
+  // FIXME: make shure the pos.lat/pos.lon values are in degrees ...
+  double range = 500.0;
+  if (!globals->get_tile_mgr()->scenery_available(_aip.getPosition(), range)) {
+    // Try to shedule tiles for that position.
+    globals->get_tile_mgr()->update( _aip.getPosition(), range );
+  }
 
-        // FIXME: make shure the pos.lat/pos.lon values are in degrees ...
-        double alt;
-        if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(_aip.getPosition(), 20000), alt, 0))
-          _ground_elevation_m = alt;
+  // FIXME: make shure the pos.lat/pos.lon values are in degrees ...
+  double alt;
+  if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(_aip.getPosition(), 20000), alt, 0))
+    _ground_elevation_m = alt;
 }
 

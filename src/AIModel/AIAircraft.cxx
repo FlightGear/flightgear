@@ -167,19 +167,9 @@ void FGAIAircraft::setPerformance(const std::string& acclass) {
 
 void FGAIAircraft::checkVisibility() 
 {
-     double visibility_meters = fgGetDouble("/environment/visibility-m");
-
-     FGViewer* vw = globals->get_current_view();
-     double course, distance;
-
-     SGWayPoint current(pos.getLongitudeDeg(), pos.getLatitudeDeg(), 0);
-     SGWayPoint view (vw->getLongitude_deg(), vw->getLatitude_deg(), 0);
-     view.CourseAndDistance(current, &course, &distance);
-     if (distance > visibility_meters) {
-         invisible = true;
-      } else {
-         invisible = false;
-      }
+  double visibility_meters = fgGetDouble("/environment/visibility-m");
+  FGViewer* vw = globals->get_current_view();
+  invisible = (SGGeodesy::distanceM(vw->getPosition(), pos) > visibility_meters);
 }
 
 
@@ -409,14 +399,9 @@ void FGAIAircraft::getGroundElev(double dt) {
     // Only do the proper hitlist stuff if we are within visible range of the viewer.
     if (!invisible) {
         double visibility_meters = fgGetDouble("/environment/visibility-m");
-
         FGViewer* vw = globals->get_current_view();
-        double course, distance;
-
-        SGWayPoint current(pos.getLongitudeDeg(), pos.getLatitudeDeg(), 0);
-        SGWayPoint view (vw->getLongitude_deg(), vw->getLatitude_deg(), 0);
-        view.CourseAndDistance(current, &course, &distance);
-        if (distance > visibility_meters) {
+        
+        if (SGGeodesy::distanceM(vw->getPosition(), pos) > visibility_meters) {
             return;
         }
 
