@@ -51,37 +51,30 @@ void FGAIFlightPlan::evaluateRoutePart(double deplat,
   intVec nodes;
   int tmpNode, prevNode;
 
-
-  SGWayPoint first (deplon,
-		    deplat,
-		    100);
-  SGWayPoint sec (arrlon,
-		  arrlat,
-		  100);
-  double course, distance;
-  first.CourseAndDistance(sec, &course, &distance);
-  distance *= SG_METER_TO_NM;
-
-  SGVec3d a = SGVec3d::fromGeoc(SGGeoc::fromDegM(deplon, deplat, 1));
-  SGVec3d b = SGVec3d::fromGeoc(SGGeoc::fromDegM(arrlon, arrlat, 1));
+  SGGeoc dep(SGGeoc::fromDegM(deplon, deplat, 100.0));
+  SGGeoc arr(SGGeoc::fromDegM(arrlon, arrlat, 100.0));
+  
+  SGVec3d a = SGVec3d::fromGeoc(dep);
+  SGVec3d b = SGVec3d::fromGeoc(arr);
   SGVec3d _cross = cross(b, a);
 
   double angle = sgACos(dot(a, b));
   tmpNode = 0;
   for (double ang = 0.0; ang < angle; ang += 0.05)
-    {
+  {
       sgdVec3 newPos;
       sgdMat4 matrix;
       //cerr << "Angle = " << ang << endl;
       sgdMakeRotMat4(matrix, ang, _cross.sg());
       for(int j = 0; j < 3; j++)
-	{
-	  newPos[j] =0.0;
-	  for (int k = 0; k<3; k++)
-	    {
-	      newPos[j] += matrix[j][k]*a[k];
-	    }
-	}
+      {
+        newPos[j] =0.0;
+        for (int k = 0; k<3; k++)
+        {
+          newPos[j] += matrix[j][k]*a[k];
+        }
+      }
+      
       //cerr << "1"<< endl;
       SGGeoc geoc = SGGeoc::fromCart(SGVec3d(newPos[0], newPos[1], newPos[2]));
 
@@ -91,17 +84,12 @@ void FGAIFlightPlan::evaluateRoutePart(double deplat,
       prevNode = tmpNode;
       tmpNode = globals->get_airwaynet()->findNearestNode(midlat, midlon);
 
-      double nodelat = globals->get_airwaynet()->findNode(tmpNode)->getLatitude  ();
-      double nodelon = globals->get_airwaynet()->findNode(tmpNode)->getLongitude ();
-      SGWayPoint curr(midlat,
-      	              midlon,
-      	              100);
-      SGWayPoint node(nodelat,
-      	              nodelon,
-      	              100);
-      curr.CourseAndDistance(node, &course, &distance);
-      if ((distance < 25000) && (tmpNode != prevNode))
-      	nodes.push_back(tmpNode);
+      FGNode* node = globals->get_airwaynet()->findNode(tmpNode);
+      SGGeoc nodePos(SGGeoc::fromGeod(node->getPosition()));
+    
+      if ((tmpNode != prevNode) && (SGGeodesy::distanceM(geoc, nodePos) < 25000)) {
+        nodes.push_back(tmpNode);
+      }
     }
 
     intVecIterator i = nodes.begin();

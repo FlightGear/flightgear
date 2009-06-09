@@ -44,6 +44,26 @@ bool sortByLength(FGTaxiSegment *a, FGTaxiSegment *b) {
  *************************************************************************/
 
 
+void FGTaxiNode::setLatitude (double val)
+{
+  geod.setLatitudeDeg(val);
+}
+
+void FGTaxiNode::setLongitude(double val)
+{
+  geod.setLongitudeDeg(val);
+}
+
+void FGTaxiNode::setLatitude (const string& val)
+{
+  geod.setLatitudeDeg(processPosition(val));
+}
+
+void FGTaxiNode::setLongitude(const string& val)
+{
+  geod.setLongitudeDeg(processPosition(val));
+}
+  
 void FGTaxiNode::sortEndSegments(bool byLength)
 {
   if (byLength)

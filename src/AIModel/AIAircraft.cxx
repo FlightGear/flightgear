@@ -644,16 +644,10 @@ bool FGAIAircraft::leadPointReached(FGAIFlightPlan::waypoint* curr) {
 
 
 bool FGAIAircraft::aiTrafficVisible() {
-    double userLatitude  = fgGetDouble("/position/latitude-deg");
-    double userLongitude = fgGetDouble("/position/longitude-deg");
-    double course, distance;
-
-    SGWayPoint current(pos.getLongitudeDeg(), pos.getLatitudeDeg(), 0);
-    SGWayPoint user (userLongitude, userLatitude, 0);
-
-    user.CourseAndDistance(current, &course, &distance);
-
-    return ((distance * SG_METER_TO_NM) <= TRAFFICTOAIDISTTODIE);
+  SGGeod userPos(SGGeod::fromDeg(fgGetDouble("/position/longitude-deg"), 
+    fgGetDouble("/position/latitude-deg")));
+  
+  return (SGGeodesy::distanceNm(userPos, pos) <= TRAFFICTOAIDISTTODIE);
 }
 
 

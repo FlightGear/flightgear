@@ -22,22 +22,17 @@
 #include <simgear/compiler.h>
 #include <simgear/math/sg_geodesy.hxx>
 
-using std::string;
-using std::vector;
-
 class FGTaxiSegment;
-typedef vector<FGTaxiSegment*>  FGTaxiSegmentVector;
+typedef std::vector<FGTaxiSegment*>  FGTaxiSegmentVector;
 typedef FGTaxiSegmentVector::iterator FGTaxiSegmentVectorIterator;
 
 bool sortByHeadingDiff(FGTaxiSegment *a, FGTaxiSegment *b);
 bool sortByLength     (FGTaxiSegment *a, FGTaxiSegment *b);
-double processPosition(const string& pos);
 
 class FGTaxiNode 
 {
 private:
-  double lat;
-  double lon;
+  SGGeod geod;
   int index;
 
   bool isOnRunway;
@@ -51,8 +46,6 @@ private:
 
 public:
   FGTaxiNode() :
-      lat (0.0),
-      lon (0.0),
       index(0),
       isOnRunway(false),
       holdType(0),
@@ -63,8 +56,7 @@ public:
 };
 
   FGTaxiNode(const FGTaxiNode &other) :
-      lat(other.lat),
-      lon(other.lon),
+      geod(other.geod),
       index(other.index),
       isOnRunway(other.isOnRunway),
       holdType(other.holdType),
@@ -77,8 +69,7 @@ public:
 
 FGTaxiNode &operator =(const FGTaxiNode &other)
 {
-   lat          = other.lat;
-   lon          = other.lon;
+   geod          = other.geod;
    index        = other.index;
    isOnRunway   = other.isOnRunway;
    holdType     = other.holdType;
@@ -90,10 +81,10 @@ FGTaxiNode &operator =(const FGTaxiNode &other)
 };
 
   void setIndex(int idx)                  { index = idx;                 };
-  void setLatitude (double val)           { lat = val;                   };
-  void setLongitude(double val)           { lon = val;                   };
-  void setLatitude (const string& val)    { lat = processPosition(val);  };
-  void setLongitude(const string& val)    { lon = processPosition(val);  };
+  void setLatitude (double val);
+  void setLongitude(double val);
+  void setLatitude (const std::string& val);
+  void setLongitude(const std::string& val);
   void addSegment(FGTaxiSegment *segment) { next.push_back(segment);     };
   void setHoldPointType(int val)          { holdType = val;              };
   void setOnRunway(bool val)              { isOnRunway = val;            };
@@ -106,10 +97,10 @@ FGTaxiNode &operator =(const FGTaxiNode &other)
   FGTaxiSegment *getPreviousSegment() { return previousSeg;  };
 
   double getPathScore() { return pathScore; };
-  double getLatitude() { return lat;};
-  double getLongitude(){ return lon;};
+  double getLatitude() { return geod.getLatitudeDeg();};
+  double getLongitude(){ return geod.getLongitudeDeg();};
 
-  SGGeod geod() const { return SGGeod::fromDeg(lon, lat); }
+  const SGGeod& getGeod() const { return geod; }
 
   int getIndex() { return index; };
   int getHoldPointType() { return holdType; };
@@ -124,7 +115,7 @@ FGTaxiNode &operator =(const FGTaxiNode &other)
 
 };
 
-typedef vector<FGTaxiNode*> FGTaxiNodeVector;
+typedef std::vector<FGTaxiNode*> FGTaxiNodeVector;
 typedef FGTaxiNodeVector::iterator FGTaxiNodeVectorIterator;
 
 #endif
