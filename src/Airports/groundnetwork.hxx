@@ -227,7 +227,6 @@ private:
   TaxiRouteVector routes;
   TrafficVector activeTraffic;
   TrafficVectorIterator currTraffic;
-  SGWayPoint destination;
 
   bool foundRoute;
   double totalDistance, maxDistance;

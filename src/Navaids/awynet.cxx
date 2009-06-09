@@ -315,22 +315,11 @@ void FGAirwayNetwork::load(SGPath path)
   double minDist = HUGE_VAL;
   double distsqrt, lat2, lon2;
   int index;
-  SGWayPoint first  (lon,
-		     lat,
-		     0);
   //cerr << "Lat " << lat << " lon " << lon << endl;
   for (FGNodeVectorIterator
 	 itr = nodes.begin();
        itr != nodes.end(); itr++)
     {
-      //double course;
-      //if ((fabs(lat - ((*itr)->getLatitude())) < 0.001) &&
-      //  (fabs(lon - ((*itr)->getLongitude()) < 0.001)))
-      //cerr << "Warning: nodes are near" << endl;
-      //SGWayPoint second ((*itr)->getLongitude(),
-      //		 (*itr)->getLatitude(),
-      //		 0);
-      //first.CourseAndDistance(second, &course, &dist);
       lat2 = (*itr)->getLatitude();
       lon2 = (*itr)->getLongitude();
       // Note: This equation should adjust for decreasing distance per longitude
