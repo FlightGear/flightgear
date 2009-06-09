@@ -496,8 +496,7 @@ static void fgMainLoop( void ) {
 
     // get the orientation
     const SGQuatd view_or = current_view->getViewOrientation();
-    SGQuatd surf_or = SGQuatd::fromLonLatDeg(
-        current_view->getLongitude_deg(), current_view->getLatitude_deg());
+    SGQuatd surf_or = SGQuatd::fromLonLat(current_view->getPosition());
     SGQuatd model_or = SGQuatd::fromYawPitchRollDeg(
         globals->get_aircraft_model()->get3DModel()->getHeadingDeg(),
         globals->get_aircraft_model()->get3DModel()->getPitchDeg(),

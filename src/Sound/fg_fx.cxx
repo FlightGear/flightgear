@@ -226,9 +226,8 @@ FGFX::update_pos_and_orientation(SGSoundMgr *smgr, double dt)
 
     // get the orientation
     const SGQuatd view_or = observer->getViewOrientation();
-    SGQuatd surf_or = SGQuatd::fromLonLatDeg(
-                                observer->getLongitude_deg(),
-                                observer->getLatitude_deg());
+    SGQuatd surf_or = SGQuatd::fromLonLat(observer->getPosition());
+    
     SGQuatd model_or = SGQuatd::fromYawPitchRollDeg(
                                 model->getHeadingDeg(),
                                 model->getPitchDeg(),

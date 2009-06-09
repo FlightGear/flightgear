@@ -103,12 +103,8 @@ public:
     //   pilot view, model in model view).
     //   FIXME: the model view position (ie target positions) 
     //   should be in the model class.
-    virtual double getLongitude_deg () const { return _position.getLongitudeDeg(); }
-    virtual double getLatitude_deg () const { return _position.getLatitudeDeg(); }
- 
     virtual void setPosition (double lon_deg, double lat_deg, double alt_ft);
     const SGGeod& getPosition() const { return _position; }
-
 
     // Reference geodetic target position...
     virtual void setTargetPosition (double lon_deg, double lat_deg, double alt_ft);
