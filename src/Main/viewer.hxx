@@ -103,23 +103,16 @@ public:
     //   pilot view, model in model view).
     //   FIXME: the model view position (ie target positions) 
     //   should be in the model class.
-    virtual double getLongitude_deg () const { return _lon_deg; }
-    virtual double getLatitude_deg () const { return _lat_deg; }
-    virtual double getAltitudeASL_ft () const { return _alt_ft; }
-    virtual void setLongitude_deg (double lon_deg);
-    virtual void setLatitude_deg (double lat_deg);
-    virtual void setAltitude_ft (double alt_ft);
+    virtual double getLongitude_deg () const { return _position.getLongitudeDeg(); }
+    virtual double getLatitude_deg () const { return _position.getLatitudeDeg(); }
+ 
     virtual void setPosition (double lon_deg, double lat_deg, double alt_ft);
+    const SGGeod& getPosition() const { return _position; }
+
 
     // Reference geodetic target position...
-    virtual double getTargetLongitude_deg () const { return _target_lon_deg; }
-    virtual double getTargetLatitude_deg () const { return _target_lat_deg; }
-    virtual double getTargetAltitudeASL_ft () const { return _target_alt_ft; }
-    virtual void setTargetLongitude_deg (double lon_deg);
-    virtual void setTargetLatitude_deg (double lat_deg);
-    virtual void setTargetAltitude_ft (double alt_ft);
     virtual void setTargetPosition (double lon_deg, double lat_deg, double alt_ft);
-
+    const SGGeod& getTargetPosition() const { return _target; }
 
 
 
@@ -265,12 +258,8 @@ private:
     SGQuatd mViewOrientation;
     SGVec3d _absolute_view_pos;
 
-    double _lon_deg;
-    double _lat_deg;
-    double _alt_ft;
-    double _target_lon_deg;
-    double _target_lat_deg;
-    double _target_alt_ft;
+    SGGeod _position;
+    SGGeod _target;
 
     double _roll_deg;
     double _pitch_deg;

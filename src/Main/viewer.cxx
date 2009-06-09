@@ -31,10 +31,6 @@
 
 #include "fg_props.hxx"
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <simgear/debug/logstream.hxx>
 #include <simgear/constants.h>
 #include <simgear/scene/model/placement.hxx>
@@ -65,12 +61,6 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
                     double target_x_offset_m, double target_y_offset_m,
                     double target_z_offset_m, double near_m, bool internal ):
     _dirty(true),
-    _lon_deg(0),
-    _lat_deg(0),
-    _alt_ft(0),
-    _target_lon_deg(0),
-    _target_lat_deg(0),
-    _target_alt_ft(0),
     _roll_deg(0),
     _pitch_deg(0),
     _heading_deg(0),
@@ -157,63 +147,17 @@ FGViewer::setInternal ( bool internal )
 }
 
 void
-FGViewer::setLongitude_deg (double lon_deg)
-{
-  _dirty = true;
-  _lon_deg = lon_deg;
-}
-
-void
-FGViewer::setLatitude_deg (double lat_deg)
-{
-  _dirty = true;
-  _lat_deg = lat_deg;
-}
-
-void
-FGViewer::setAltitude_ft (double alt_ft)
-{
-  _dirty = true;
-  _alt_ft = alt_ft;
-}
-
-void
 FGViewer::setPosition (double lon_deg, double lat_deg, double alt_ft)
 {
   _dirty = true;
-  _lon_deg = lon_deg;
-  _lat_deg = lat_deg;
-  _alt_ft = alt_ft;
-}
-
-void
-FGViewer::setTargetLongitude_deg (double lon_deg)
-{
-  _dirty = true;
-  _target_lon_deg = lon_deg;
-}
-
-void
-FGViewer::setTargetLatitude_deg (double lat_deg)
-{
-  _dirty = true;
-  _target_lat_deg = lat_deg;
-}
-
-void
-FGViewer::setTargetAltitude_ft (double alt_ft)
-{
-  _dirty = true;
-  _target_alt_ft = alt_ft;
+  _position = SGGeod::fromDegFt(lon_deg, lat_deg, alt_ft);
 }
 
 void
 FGViewer::setTargetPosition (double lon_deg, double lat_deg, double alt_ft)
 {
   _dirty = true;
-  _target_lon_deg = lon_deg;
-  _target_lat_deg = lat_deg;
-  _target_alt_ft = alt_ft;
+  _target = SGGeod::fromDegFt(lon_deg, lat_deg, alt_ft);
 }
 
 void
@@ -413,17 +357,13 @@ FGViewer::recalcLookFrom ()
   // Update location data ...
   if ( _from_model ) {
     SGModelPlacement* placement = globals->get_aircraft_model()->get3DModel();
-    _lat_deg = placement->getLatitudeDeg();
-    _lon_deg = placement->getLongitudeDeg();
-    _alt_ft = placement->getElevationFt();
-
+    _position = placement->getPosition();
+  
     _heading_deg = placement->getHeadingDeg();
     _pitch_deg = placement->getPitchDeg();
     _roll_deg = placement->getRollDeg();
   }
-  double lat = _lat_deg;
-  double lon = _lon_deg;
-  double alt = _alt_ft;
+
   double head = _heading_deg;
   double pitch = _pitch_deg;
   double roll = _roll_deg;
@@ -432,18 +372,16 @@ FGViewer::recalcLookFrom ()
     dampEyeData(roll, pitch, head);
   }
 
-  // The geodetic position of our base view position
-  SGGeod geodPos = SGGeod::fromDegFt(lon, lat, alt);
   // The rotation rotating from the earth centerd frame to
   // the horizontal local OpenGL frame
-  SGQuatd hlOr = SGQuatd::viewHL(geodPos);
+  SGQuatd hlOr = SGQuatd::viewHL(_position);
 
   // the rotation from the horizontal local frame to the basic view orientation
   SGQuatd hlToBody = SGQuatd::fromYawPitchRollDeg(head, pitch, roll);
   hlToBody = SGQuatd::simToView(hlToBody);
 
   // The cartesian position of the basic view coordinate
-  SGVec3d position = SGVec3d::fromGeod(geodPos);
+  SGVec3d position = SGVec3d::fromGeod(_position);
   // the rotation offset, don't know why heading is negative here ...
   SGQuatd viewOffsetOr = SGQuatd::simToView(
     SGQuatd::fromYawPitchRollDeg(-_heading_offset_deg, _pitch_offset_deg,
@@ -462,9 +400,7 @@ FGViewer::recalcLookAt ()
   // The geodetic position of our target to look at
   if ( _at_model ) {
     SGModelPlacement* placement = globals->get_aircraft_model()->get3DModel();
-    _target_lat_deg = placement->getLatitudeDeg();
-    _target_lon_deg = placement->getLongitudeDeg();
-    _target_alt_ft = placement->getElevationFt();
+    _target = placement->getPosition();
     _target_heading_deg = placement->getHeadingDeg();
     _target_pitch_deg = placement->getPitchDeg();
     _target_roll_deg = placement->getRollDeg();
@@ -473,20 +409,16 @@ FGViewer::recalcLookAt ()
     dampEyeData(_target_roll_deg, _target_pitch_deg, _target_heading_deg);
 
   }
-  SGGeod geodTargetPos = SGGeod::fromDegFt(_target_lon_deg,
-                                           _target_lat_deg,
-                                           _target_alt_ft);
+
   SGQuatd geodTargetOr = SGQuatd::fromYawPitchRollDeg(_target_heading_deg,
                                                       _target_pitch_deg,
                                                       _target_roll_deg);
-  SGQuatd geodTargetHlOr = SGQuatd::fromLonLat(geodTargetPos);
+  SGQuatd geodTargetHlOr = SGQuatd::fromLonLat(_target);
 
 
   if ( _from_model ) {
     SGModelPlacement* placement = globals->get_aircraft_model()->get3DModel();
-    _lat_deg = placement->getLatitudeDeg();
-    _lon_deg = placement->getLongitudeDeg();
-    _alt_ft = placement->getElevationFt();
+    _position = placement->getPosition();
     _heading_deg = placement->getHeadingDeg();
     _pitch_deg = placement->getPitchDeg();
     _roll_deg = placement->getRollDeg();
@@ -494,11 +426,10 @@ FGViewer::recalcLookAt ()
     // update from our own data, just the rotation here...
     dampEyeData(_roll_deg, _pitch_deg, _heading_deg);
   }
-  SGGeod geodEyePos = SGGeod::fromDegFt(_lon_deg, _lat_deg, _alt_ft);
   SGQuatd geodEyeOr = SGQuatd::fromYawPitchRollDeg(_heading_deg,
                                                    _pitch_deg,
                                                    _roll_deg);
-  SGQuatd geodEyeHlOr = SGQuatd::fromLonLat(geodEyePos);
+  SGQuatd geodEyeHlOr = SGQuatd::fromLonLat(_position);
 
   // the rotation offset, don't know why heading is negative here ...
   SGQuatd eyeOffsetOr =
@@ -508,10 +439,10 @@ FGViewer::recalcLookAt ()
   // Offsets to the eye position
   SGVec3d eyeOff(-_offset_m.z(), _offset_m.x(), -_offset_m.y());
   SGQuatd ec2eye = geodEyeHlOr*geodEyeOr;
-  SGVec3d eyeCart = SGVec3d::fromGeod(geodEyePos);
+  SGVec3d eyeCart = SGVec3d::fromGeod(_position);
   eyeCart += (ec2eye*eyeOffsetOr).backTransform(eyeOff);
 
-  SGVec3d atCart = SGVec3d::fromGeod(geodTargetPos);
+  SGVec3d atCart = SGVec3d::fromGeod(_target);
 
   // add target offsets to at_position...
   SGVec3d target_pos_off(-_target_offset_m.z(), _target_offset_m.x(),
