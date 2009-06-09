@@ -194,9 +194,7 @@ bool FGAISchedule::update(time_t now)
 
   FGAIManager *aimgr;
   string airport;
-  
-  double courseToUser;
-  double distanceToDest;
+
   double speed;
 
   time_t 
@@ -351,38 +349,21 @@ bool FGAISchedule::update(time_t now)
 		}
 	    }
 	  
+    SGGeod current;
 	  if (now > (*i)->getDepartureTime())
 	    {
-              SGGeoc geoc = SGGeoc::fromCart(newPos);
-	      lat = geoc.getLatitudeDeg();
-	      lon = geoc.getLongitudeDeg(); 
+        current = SGGeod::fromCart(newPos);
 	    }
 	  else
 	    {
-	      lat = dep->getLatitude();
-	      lon = dep->getLongitude();
-	    }
+	      current = dep->geod();
+      }
 	  
-	  
-	  SGWayPoint current  (lon,
-			       lat,
-			       (*i)->getCruiseAlt(), 
-			       SGWayPoint::SPHERICAL);
-	  SGWayPoint user (   userLongitude,
-			      userLatitude,
-			      (*i)->getCruiseAlt(), 
-			      SGWayPoint::SPHERICAL);
-	  SGWayPoint dest (   arr->getLongitude(),
-			      arr->getLatitude(),
-			      (*i)->getCruiseAlt(), 
-			      SGWayPoint::SPHERICAL);
-	  // We really only need distance to user
-	  // and course to destination 
-	  user.CourseAndDistance(current, &courseToUser, &distanceToUser);
-	  dest.CourseAndDistance(current, &courseToDest, &distanceToDest);
-	  speed =  (distanceToDest*SG_METER_TO_NM) / 
+    SGGeod user = SGGeod::fromDegM(userLongitude, userLatitude, (*i)->getCruiseAlt());
+    speed = SGGeodesy::distanceNm(current, arr->geod()) / 
 	    ((double) remainingTimeEnroute/3600.0);
-	  
+    
+    distanceToUser = SGGeodesy::distanceNm(current, user);
 
 	  // If distance between user and simulated aircaft is less
 	  // then 500nm, create this flight. At jet speeds 500 nm is roughly
@@ -390,8 +371,8 @@ bool FGAISchedule::update(time_t now)
 	  // to start a more detailed simulation of this aircraft.
 	  SG_LOG (SG_GENERAL, SG_DEBUG, "Traffic manager: " << registration << " is scheduled for a flight from " 
 	     << dep->getId() << " to " << arr->getId() << ". Current distance to user: " 
-             << distanceToUser*SG_METER_TO_NM);
-	  if ((distanceToUser*SG_METER_TO_NM) < TRAFFICTOAIDISTTOSTART)
+             << distanceToUser);
+	  if (distanceToUser < TRAFFICTOAIDISTTOSTART)
 	    {
 	      string flightPlanName = dep->getId() + string("-") + arr->getId() + 
 		string(".xml");
@@ -427,6 +408,8 @@ bool FGAISchedule::update(time_t now)
 		  aircraft->setAltitude((*i)->getCruiseAlt()*100); // convert from FL to feet
 		  aircraft->setSpeed(speed);
 		  aircraft->setBank(0);
+      
+      courseToDest = SGGeodesy::courseDeg(current, arr->geod());
 		  aircraft->SetFlightPlan(new FGAIFlightPlan(aircraft, flightPlanName, courseToDest, deptime, 
 							     dep, arr,true, radius, 
 							     (*i)->getCruiseAlt()*100, 
