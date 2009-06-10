@@ -56,17 +56,13 @@ public:
  	inline double get_slope( int index ) const { return slope[index]; };
 
 private:
-	double dist_probe_m[5];
+	static const double dist_probe_m[5];
 
 	double strength;
 	double timer;
 
-	double probe_lat_rad[5];
-	double probe_lon_rad[5];
-
 	double probe_lat_deg[5];
 	double probe_lon_deg[5];
-
 	double probe_elev_m[5];
 
 	double slope[4];
@@ -79,11 +75,10 @@ private:
 	SGPropertyNode_ptr _surface_wind_from_deg_node;
 	SGPropertyNode_ptr _surface_wind_speed_node;
 
-	SGPropertyNode_ptr _user_altitude_ft_node;
 	SGPropertyNode_ptr _user_altitude_agl_ft_node;
-	SGPropertyNode_ptr _earth_radius_node;
 	SGPropertyNode_ptr _user_longitude_node;
 	SGPropertyNode_ptr _user_latitude_node;
+	SGPropertyNode_ptr _ground_elev_node;
 
 };
 
