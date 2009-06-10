@@ -55,17 +55,19 @@ static inline double sign(double x) {
 	return x == 0 ? 0 : x > 0 ? 1.0 : -1.0;
 }
 
-static const	double BOUNDARY1_m = 40.0;
+static const double BOUNDARY1_m = 40.0;
+
+const double FGRidgeLift::dist_probe_m[] = { // in meters
+     0.0, 
+   250.0,
+   750.0,
+  2000.0,
+  -100.0
+};
 
 //constructor
 FGRidgeLift::FGRidgeLift ()
 {	
-	dist_probe_m[0] = 0.0; // in meters
-	dist_probe_m[1] = 250.0;
-	dist_probe_m[2] = 750.0;
-	dist_probe_m[3] = 2000.0;
-	dist_probe_m[4] = -100.0;
-
 	strength = 0.0;
 	timer = 0.0;
 	for( int i = 0; i < 5; i++ )
@@ -92,11 +94,10 @@ void FGRidgeLift::init(void)
 	_surface_wind_speed_node =
 			fgGetNode("/environment/config/boundary/entry[0]/wind-speed-kt"
 			, true);
-	_earth_radius_node = fgGetNode("/position/sea-level-radius-ft", true);
 	_user_longitude_node = fgGetNode("/position/longitude-deg", true);
 	_user_latitude_node = fgGetNode("/position/latitude-deg", true);
-	_user_altitude_ft_node = fgGetNode("/position/altitude-ft", true);
 	_user_altitude_agl_ft_node = fgGetNode("/position/altitude-agl-ft", true);
+	_ground_elev_node = fgGetNode("/position/ground-elev-ft", true );
 }
 
 void FGRidgeLift::bind() {
@@ -142,60 +143,48 @@ void FGRidgeLift::unbind() {
 
 void FGRidgeLift::update(double dt) {
 
-	if( dt <= 0 ) // paused, do nothing but keep current lift
+	if( dt <= SGLimitsd::min() ) // paused, do nothing but keep current lift
 		return;
 
 	if( _enabled_node && false == _enabled_node->getBoolValue() ) {
+		// do nothing if lift has been zeroed
 		if( strength != 0.0 ) {
-			strength = 0.0;
-			_ridge_lift_fps_node->setDoubleValue( 0 );
+			if( strength > 0.1 ) {
+				// slowly fade out strong lifts
+				strength = fgGetLowPass( strength, 0, dt );
+			} else {
+				strength = 0.0;
+			}
+			_ridge_lift_fps_node->setDoubleValue( strength );
 		}
 		return;
 	}
 
-	//get the windspeed at ground level
-	double ground_wind_from_rad = _surface_wind_from_deg_node->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-	double ground_wind_speed_mps = _surface_wind_speed_node->getDoubleValue() * SG_NM_TO_METER / 3600;
-
 	timer -= dt;
 	if (timer <= 0.0 ) {
-		// copy values 
 
-		double user_latitude_rad = _user_latitude_node->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-		double user_longitude_rad = _user_longitude_node->getDoubleValue() * SG_DEGREES_TO_RADIANS;
-	
-		double earth_rad_m = _earth_radius_node->getDoubleValue() * SG_FEET_TO_METER;
-		if( earth_rad_m < SG_EPSILON )
-				earth_rad_m = SG_EARTH_RAD * 1000;
+		SGGeoc myPosition = SGGeoc::fromDegM( probe_lon_deg[0], probe_lat_deg[0], 20000.0 );
+		double ground_wind_from_rad = _surface_wind_from_deg_node->getDoubleValue() * SG_DEGREES_TO_RADIANS + SG_PI;
 
-		// Placing the probes
-	
-		for (int i = 0; i < sizeof(probe_lat_rad)/sizeof(probe_lat_rad[0]); i++) {
-			double probe_radius_ratio = dist_probe_m[i]/earth_rad_m;
-			double sin_probe_radius_ratio = sin(probe_radius_ratio);
+		// probe0 is current position
+		probe_lat_deg[0] = _user_latitude_node->getDoubleValue();
+		probe_lon_deg[0] = _user_longitude_node->getDoubleValue();
+		probe_elev_m[0]  = _ground_elev_node->getDoubleValue() * SG_FEET_TO_METER;
 
-			probe_lat_rad[i] = asin(sin(user_latitude_rad)*cos(probe_radius_ratio)
-					+cos(user_latitude_rad)*sin_probe_radius_ratio*cos(ground_wind_from_rad));
-			if (fabs(fabs(probe_lat_rad[i])-SG_PI/2.0) < SG_EPSILON ) {
-				probe_lon_rad[i] = user_latitude_rad; // probe on a pole	
-			} else {
-				probe_lon_rad[i] = fmod((user_longitude_rad+asin(sin(ground_wind_from_rad)
-							*sin_probe_radius_ratio/cos(probe_lat_rad[i]))+SG_PI)
-						,SGD_2PI)-SG_PI;
-			}
-			probe_lat_deg[i]= probe_lat_rad[i] * SG_RADIANS_TO_DEGREES;
-			probe_lon_deg[i]= probe_lon_rad[i] * SG_RADIANS_TO_DEGREES;
-		}
-	
-		for (int i = 0; i < sizeof(probe_elev_m)/sizeof(probe_elev_m[0]); i++) {
-			if (!globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(
-				SGGeod::fromRad(probe_lon_rad[i],probe_lat_rad[i]), 20000), probe_elev_m[i], 0)) {
-				probe_elev_m[i] = 0.1;
+		// compute the remaining probes
+		for (int i = 1; i < sizeof(probe_lat_deg)/sizeof(probe_lat_deg[0]); i++) {
+			SGGeoc probe = myPosition.advanceRadM( ground_wind_from_rad, dist_probe_m[i] );
+			probe_lat_deg[i] = probe.getLatitudeDeg();
+			probe_lon_deg[i] = probe.getLongitudeDeg();
+			if (!globals->get_scenery()->get_elevation_m(
+				SGGeod::fromDegM(probe_lon_deg[i],probe_lat_deg[i], 20000), probe_elev_m[i], NULL )) {
+				// no ground found? use elevation of previous probe :-(
+				probe_elev_m[i] = probe_elev_m[i-1];
 			}
 		}
 
 		// slopes
-		double adj_slope[4];
+		double adj_slope[sizeof(slope)];
 		slope[0] = (probe_elev_m[0] - probe_elev_m[1]) / dist_probe_m[1];
 		slope[1] = (probe_elev_m[1] - probe_elev_m[2]) / dist_probe_m[2];
 		slope[2] = (probe_elev_m[2] - probe_elev_m[3]) / dist_probe_m[3];
@@ -245,6 +234,7 @@ void FGRidgeLift::update(double dt) {
 				(user_altitude_agl_m - boundary2_m) / max(probe_elev_m[0],200.0));
 	}
 	
+	double ground_wind_speed_mps = _surface_wind_speed_node->getDoubleValue() * SG_NM_TO_METER / 3600;
 	double lift_mps = lift_factor* ground_wind_speed_mps * agl_factor;
 	
 	//the updraft, finally, in ft per second
