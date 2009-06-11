@@ -51,8 +51,8 @@ mapRobinTypeToFGPType(int aTy)
  // case 1:
   case 2: return FGPositioned::NDB;
   case 3: return FGPositioned::VOR;
-  case 4: return FGPositioned::LOC;
-  case 5: return FGPositioned::ILS;
+  case 4: return FGPositioned::ILS;
+  case 5: return FGPositioned::LOC;
   case 6: return FGPositioned::GS;
   case 12:
   case 13: return FGPositioned::DME;
