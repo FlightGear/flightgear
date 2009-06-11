@@ -1,4 +1,4 @@
-#// model.hxx - manage a 3D aircraft model.
+// model.hxx - manage a 3D aircraft model.
 // Written by David Megginson, started 2002.
 //
 // This file is in the Public Domain, and comes with no warranty.
@@ -43,9 +43,6 @@ public:
 private:
 
   SGModelPlacement * _aircraft;
-  float _nearplane;
-  float _farplane;
-
 };
 
 #endif // __ACMODEL_HXX
