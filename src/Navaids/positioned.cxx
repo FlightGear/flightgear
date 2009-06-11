@@ -266,22 +266,22 @@ namedFindClosest(const std::string& aIdent, const SGGeod& aOrigin, FGPositioned:
   SGVec3d cartOrigin(SGVec3d::fromGeod(aOrigin));
   
   for (; it != range.second; ++it) {
-    FGPositioned::Type ty = range.first->second->type();
+    FGPositioned* r = it->second;
     if (aFilter) {
-      if (aFilter->hasTypeRange() && !aFilter->passType(ty)) {
+      if (aFilter->hasTypeRange() && !aFilter->passType(r->type())) {
         continue;
       }
       
-      if (!aFilter->pass(range.first->second)) {
+      if (!aFilter->pass(r)) {
         continue;
       }
     }
     
   // find distance
-    double d2 = distSqr(cartOrigin, it->second->cart());
+    double d2 = distSqr(cartOrigin, r->cart());
     if (d2 < minDist) {
       minDist = d2;
-      result = it->second;
+      result = r;
     }
   }
   
