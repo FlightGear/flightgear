@@ -71,7 +71,8 @@ FGRunway::FGRunway(FGAirport* aAirport, const string& aIdent,
   _airport(aAirport),
   _reciprocal(reciprocal),
   _displ_thresh(displ_thresh),
-  _stopway(stopway)
+  _stopway(stopway),
+  _ils(NULL)
 {
 }
 

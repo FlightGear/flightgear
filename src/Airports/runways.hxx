@@ -30,6 +30,7 @@
 
 // forward decls
 class FGAirport;
+class FGNavRecord;
 
 class FGRunway : public FGRunwayBase
 {
@@ -37,6 +38,7 @@ class FGRunway : public FGRunwayBase
   bool _reciprocal;
   double _displ_thresh;
   double _stopway;
+  FGNavRecord* _ils;
 public:
   
   FGRunway(FGAirport* aAirport, const std::string& rwy_no,
@@ -90,7 +92,7 @@ public:
   double stopwayM() const
   { return _stopway * SG_FEET_TO_METER; }
   
-    /**
+  /**
    * Airport this runway is located at
    */
   FGAirport* airport() const
@@ -99,6 +101,9 @@ public:
   // FIXME - should die once airport / runway creation is cleaned up
   void setAirport(FGAirport* aAirport)
   { _airport = aAirport; }
+  
+  FGNavRecord* ILS() const { return _ils; }
+  void setILS(FGNavRecord* nav) { _ils = nav; }
 };
 
 #endif // _FG_RUNWAYS_HXX

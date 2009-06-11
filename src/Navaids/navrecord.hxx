@@ -54,7 +54,7 @@ class FGNavRecord : public FGPositioned
                                 // (degrees) or dme bias (nm)
 
     std::string _name;                // verbose name in nav database
-    FGRunway* runway;
+    FGRunway* mRunway;        // associated runway, if there is one
 
     bool serviceable;		// for failure modeling
     std::string trans_ident;         // for failure modeling
@@ -64,7 +64,7 @@ class FGNavRecord : public FGPositioned
    */
   void initAirportRelation();
   
-  void alignLocaliserWithRunway(FGRunway* aRunway, double aThreshold);
+  void alignLocaliserWithRunway(double aThreshold);
 public:
   inline ~FGNavRecord(void) {}
 
@@ -87,6 +87,11 @@ public:
 
   virtual const std::string& name() const
   { return _name; }
+  
+  /**
+   * Retrieve the runway this navaid is associated with (for ILS/LOC/GS)
+   */
+  FGRunway* runway() const { return mRunway; }
 };
 
 class FGTACANRecord : public SGReferenced {

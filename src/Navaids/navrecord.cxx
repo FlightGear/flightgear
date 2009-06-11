@@ -29,6 +29,7 @@
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/sg_inlines.h>
 
 #include <Navaids/navrecord.hxx>
 #include <Navaids/navdb.hxx>
@@ -43,6 +44,7 @@ FGNavRecord::FGNavRecord(Type aTy, const std::string& aIdent,
   range(aRange),
   multiuse(aMultiuse),
   _name(aName),
+  mRunway(NULL),
   serviceable(true),
   trans_ident(aIdent)
 { 
@@ -82,10 +84,14 @@ void FGNavRecord::initAirportRelation()
     return; // not airport-located
   }
   
-  FGRunway* runway = getRunwayFromName(_name);    
+  mRunway = getRunwayFromName(_name);    
   // fudge elevation to the runway elevation if it's not specified
   if (fabs(elevation()) < 0.01) {
-    mPosition.setElevationFt(runway->elevation());
+    mPosition.setElevationFt(mRunway->elevation());
+  }
+  
+  if (type() == ILS) {
+    mRunway->setILS(this);
   }
   
   // align localizers with their runway
@@ -96,35 +102,29 @@ void FGNavRecord::initAirportRelation()
     
    double threshold 
      = fgGetDouble( "/sim/navdb/localizers/auto-align-threshold-deg", 5.0 );
-    alignLocaliserWithRunway(runway, threshold);
+    alignLocaliserWithRunway(threshold);
   }
 }
 
-void FGNavRecord::alignLocaliserWithRunway(FGRunway* aRunway, double aThreshold)
+void FGNavRecord::alignLocaliserWithRunway(double aThreshold)
 {
 // find the distance from the threshold to the localizer
-  SGGeod runwayThreshold(aRunway->threshold());
+  SGGeod runwayThreshold(mRunway->threshold());
   double dist, az1, az2;
   SGGeodesy::inverse(mPosition, runwayThreshold, az1, az2, dist);
 
 // back project that distance along the runway center line
-  SGGeod newPos = aRunway->pointOnCenterline(dist);
+  SGGeod newPos = mRunway->pointOnCenterline(dist);
 
-  double hdg_diff = get_multiuse() - aRunway->headingDeg();
-
-  // clamp to [-180.0 ... 180.0]
-  if ( hdg_diff < -180.0 ) {
-      hdg_diff += 360.0;
-  } else if ( hdg_diff > 180.0 ) {
-      hdg_diff -= 360.0;
-  }
+  double hdg_diff = get_multiuse() - mRunway->headingDeg();
+  SG_NORMALIZE_RANGE(hdg_diff, -180.0, 180.0);
 
   if ( fabs(hdg_diff) <= aThreshold ) {
     mPosition = newPos;
-    set_multiuse( aRunway->headingDeg() );
+    set_multiuse( mRunway->headingDeg() );
   } else {
     SG_LOG(SG_GENERAL, SG_WARN, "localizer:" << ident() << ", aligning with runway " 
-      << aRunway->ident() << " exceeded heading threshold");
+      << mRunway->ident() << " exceeded heading threshold");
   }
 }
 
