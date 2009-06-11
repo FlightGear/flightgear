@@ -99,11 +99,6 @@
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"
 
-// XXX Make this go away when OSG 2.2 is released.
-#if (FG_OSG_VERSION >= 21004)
-#define UPDATE_VISITOR_IN_VIEWER 1
-#endif
-
 using namespace osg;
 using namespace simgear;
 using namespace flightgear;
@@ -398,12 +393,7 @@ FGRenderer::splashinit( void ) {
     // Scene doesn't seem to pass the frame stamp to the update
     // visitor automatically.
     mUpdateVisitor->setFrameStamp(mFrameStamp.get());
-#ifdef UPDATE_VISITOR_IN_VIEWER
     viewer->setUpdateVisitor(mUpdateVisitor.get());
-#else
-    osgViewer::Scene* scene = viewer->getScene();
-    scene->setUpdateVisitor(mUpdateVisitor.get());
-#endif
 }
 
 void
