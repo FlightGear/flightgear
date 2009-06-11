@@ -33,9 +33,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 FGAircraftModel::FGAircraftModel ()
-  : _aircraft(0),
-    _nearplane(0.10f),
-    _farplane(1000.0f)
+  : _aircraft(0)
 {
 }
 
