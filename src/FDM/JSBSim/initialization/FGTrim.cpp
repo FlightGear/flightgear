@@ -184,7 +184,7 @@ bool FGTrim::RemoveState( State state ) {
       ta=*iAxes;
       if( ta->GetStateType() == state ) {
         delete ta;
-        TrimAxes.erase(iAxes);
+        iAxes = TrimAxes.erase(iAxes);
         result=true;
         continue;
       }

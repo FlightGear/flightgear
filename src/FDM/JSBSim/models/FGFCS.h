@@ -568,8 +568,6 @@ private:
   FCSCompVec Systems;
   FCSCompVec FCSComponents;
   FCSCompVec APComponents;
-  FCSCompVec sensors;
-  vector <double*> interface_properties;
   void bind(void);
   void bindModel(void);
   void bindThrottle(unsigned int);

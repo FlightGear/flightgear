@@ -1,10 +1,10 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
- Header:       FGDeadBand.h
- Author:       Jon Berndt
- Date started: 2001
+ Header:       string_utilities.h
+ Author:       Jon S. Berndt
+ Date started: 06/01/09
 
- ------------- Copyright (C) 2001 Jon S. Berndt -------------
+ ------------- Copyright (C) 2009  Jon S. Berndt (jsb@hal-pc.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU Lesser General Public License as published by the Free Software
@@ -25,84 +25,120 @@
 
 HISTORY
 --------------------------------------------------------------------------------
+06/01/09  JSB  Created
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifndef FGDEADBAND_H
-#define FGDEADBAND_H
+#ifndef STRINGUTILS_H
+#define STRINGUTILS_H
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGFCSComponent.h"
-#include <input_output/FGXMLElement.h>
+#include <vector>
+#include <ctype.h>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_DEADBAND "$Id$"
+#define ID_STRINGUTILS "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-namespace JSBSim {
-
-class FGFCS;
+using namespace std;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-/** Models a deadband object.
-    This is a component that allows for some "play" in a control path, in the
-    form of a dead zone, or deadband. The form of the deadband component
-    specification is:
-
-    @code
-    <deadband name="Windup Trigger">
-      <input> [-]property </input>
-      <width> number </width>
-      [<clipto>
-        <min> {[-]property name | value} </min>
-        <max> {[-]property name | value} </max>
-      </clipto>]
-      [<output> {property} </output>]
-    </deadband>
-    @endcode
-
-    The width value is the total deadband region within which an input will
-    produce no output. For example, say that the width value is 2.0. If the
-    input is between -1.0 and +1.0, the output will be zero.
-    @author Jon S. Berndt
-    @version $Id$
-*/
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGDeadBand  : public FGFCSComponent
-{
-public:
-  FGDeadBand(FGFCS* fcs, Element* element);
-  ~FGDeadBand();
+#if !defined(BASE)
+  extern string& trim_left(string& str);
+  extern string& trim_right(string& str);
+  extern string& trim(string& str);
+  extern string& to_upper(string& str);
+  extern string& to_lower(string& str);
+  extern bool is_number(string& str);
+  vector <string> split(string str, char d);
+#else
 
-  bool Run(void);
+  string& trim_left(string& str)
+  {
+    while ( !isgraph(str[0]) ) {
+      str = str.erase(0,1);
+      if (str.size() == 0) break;
+    }
+    return str;
+  }
 
-private:
-  double width;
-  double gain;
-  FGPropertyManager* WidthPropertyNode;
-  double WidthPropertySign;
+  string& trim_right(string& str)
+  {
+    while (!isgraph(str[str.size()-1])) {
+      str = str.erase(str.size()-1,1);
+      if (str.size() == 0) break;
+    }
+    return str;
+  }
 
-  void Debug(int from);
-};
-}
+  string& trim(string& str)
+  {
+    if (str.size() == 0) return str;
+    string temp_str = trim_right(str);
+    return str = trim_left(temp_str);
+  }
+
+  string& to_upper(string& str)
+  {
+    for (int i=0; i<str.size(); i++) str[i] = toupper(str[i]);
+    return str;
+  }
+
+  string& to_lower(string& str)
+  {
+    for (int i=0; i<str.size(); i++) str[i] = tolower(str[i]);
+    return str;
+  }
+
+  bool is_number(string& str)
+  {
+    return (str.find_first_not_of("+-.0123456789Ee") == string::npos);
+  }
+
+  vector <string> split(string str, char d)
+  {
+    vector <string> str_array;
+    int index=0;
+    string temp = "";
+
+    trim(str);
+    index = str.find(d);
+    while (index != string::npos) {
+      temp = str.substr(0,index);
+      trim(temp);
+      if (temp.size() > 0) str_array.push_back(temp);
+      str = str.erase(0,index+1);
+      index = str.find(d);
+    }
+    if (str.size() > 0) {
+      temp = trim(str);
+      if (temp.size() > 0) str_array.push_back(temp);
+    }
+
+    return str_array;
+  }
+
+#endif
+
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 #endif

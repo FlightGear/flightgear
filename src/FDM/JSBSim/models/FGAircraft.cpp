@@ -152,6 +152,8 @@ bool FGAircraft::Load(Element* el)
   string element_name;
   Element* element;
 
+  FGModel::Load(el);
+
   if (el->FindElement("wingarea"))
     WingArea = el->FindElementValueAsNumberConvertTo("wingarea", "FT2");
   if (el->FindElement("wingspan"))

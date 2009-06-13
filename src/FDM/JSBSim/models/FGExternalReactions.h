@@ -158,7 +158,6 @@ private:
   unsigned int numForces;
   FGColumnVector3 vTotalForces;
   FGColumnVector3 vTotalMoments;
-  vector <double*> interface_properties;
 
   bool NoneDefined;
 

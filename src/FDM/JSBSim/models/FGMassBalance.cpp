@@ -96,6 +96,8 @@ bool FGMassBalance::Load(Element* el)
   string element_name = "";
   double bixx, biyy, bizz, bixy, bixz, biyz;
 
+  FGModel::Load(el); // Perform base class Load.
+
   bixx = biyy = bizz = bixy = bixz = biyz = 0.0;
   if (el->FindElement("ixx"))
     bixx = el->FindElementValueAsNumberConvertTo("ixx", "SLUG*FT2");

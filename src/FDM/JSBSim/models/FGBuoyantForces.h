@@ -169,8 +169,6 @@ private:
   FGColumnVector3 vGasCellXYZ;
   FGColumnVector3 vXYZgasCell_arm;
 
-  vector <double*> interface_properties;
-
   bool NoneDefined;
 
   void bind(void);

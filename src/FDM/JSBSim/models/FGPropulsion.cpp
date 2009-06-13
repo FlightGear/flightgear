@@ -253,6 +253,8 @@ bool FGPropulsion::Load(Element* el)
 
   Debug(2);
 
+  FGModel::Load(el); // Perform base class Load.
+
   Element* engine_element = el->FindElement("engine");
   while (engine_element) {
     engine_filename = engine_element->GetAttributeValue("file");
