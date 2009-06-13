@@ -63,7 +63,7 @@ FGfdmSocket::FGfdmSocket(string address, int port, int protocol)
     else cout << "Winsock DLL not initialized ..." << endl;
   #endif
 
-  if (address.find_first_not_of("0123456789.",0) != address.npos) {
+  if (!is_number(address)) {
     if ((host = gethostbyname(address.c_str())) == NULL) {
       cout << "Could not get host net address by name..." << endl;
     }
@@ -121,7 +121,7 @@ FGfdmSocket::FGfdmSocket(string address, int port)
   cout << "Host name...   " << address << ",  Port...  " << port << "." << endl;
   cout << "Host name... (char)  " << address.c_str() << "." << endl;
 
-  if (address.find_first_not_of("0123456789.",0) != address.npos) {
+  if (!is_number(address)) {
     if ((host = gethostbyname(address.c_str())) == NULL) {
       cout << "Could not get host net address by name..." << endl;
     }

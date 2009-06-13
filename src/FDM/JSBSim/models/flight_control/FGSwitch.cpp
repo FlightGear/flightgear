@@ -97,7 +97,17 @@ FGSwitch::FGSwitch(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
         cerr << "Unrecognized LOGIC token " << logic << " in switch component: " << Name << endl;
       }
       for (unsigned int i=0; i<test_element->GetNumDataLines(); i++) {
-        current_test->conditions.push_back(new FGCondition(test_element->GetDataLine(i), PropertyManager));
+        string input_data = test_element->GetDataLine(i);
+        while (input_data[0] <= 32) {
+          input_data = input_data.erase(0,1);
+          if (input_data.size() <= 1) break;
+        }
+        if (input_data.size() <= 1) {
+          // Make sure there are no bad data lines that consist solely of whitespace
+          cerr << fgred << "  Bad data line in switch component: " << Name << reset << endl;
+          continue;
+        }
+        current_test->conditions.push_back(new FGCondition(input_data, PropertyManager));
       }
 
       condition_element = test_element->GetElement(); // retrieve condition groups
@@ -115,8 +125,7 @@ FGSwitch::FGSwitch(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
       if (value.empty()) {
         cerr << "No VALUE supplied for switch component: " << Name << endl;
       } else {
-        if (value.find_first_not_of("-.0123456789eE") == string::npos) {
-          // if true (and execution falls into this block), "value" is a number.
+        if (is_number(value)) {
           current_test->OutputVal = atof(value.c_str());
         } else {
           // "value" must be a property if execution passes to here.

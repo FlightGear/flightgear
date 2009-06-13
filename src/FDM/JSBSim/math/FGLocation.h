@@ -233,6 +233,12 @@ public:
       @param radius distance from center of earth to vehicle in feet*/
   void SetPosition(double lon, double lat, double radius);
 
+  /** Sets the longitude, latitude and the distance above the reference ellipsoid.
+      @param lon longitude in radians
+      @param lat GEODETIC latitude in radians
+      @param height distance above the reference ellipsoid to vehicle in feet*/
+  void SetPositionGeodetic(double lon, double lat, double height);
+
   /** Sets the semimajor and semiminor axis lengths for this planet.
       The eccentricity and flattening are calculated from the semimajor
       and semiminor axis lengths */

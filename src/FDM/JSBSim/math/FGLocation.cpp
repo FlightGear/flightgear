@@ -168,6 +168,26 @@ void FGLocation::SetPosition(double lon, double lat, double radius)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+void FGLocation::SetPositionGeodetic(double lon, double lat, double height)
+{
+  mCacheValid = false;
+  
+  mGeodLat = lat;
+  mLon = lon;
+  GeodeticAltitude = height;
+
+  initial_longitude = mLon;
+
+  double RN = a / sqrt(1.0 - e2*sin(mGeodLat)*sin(mGeodLat));
+
+  mECLoc(eX) = (RN + GeodeticAltitude)*cos(mGeodLat)*cos(mLon);
+  mECLoc(eY) = (RN + GeodeticAltitude)*cos(mGeodLat)*sin(mLon);
+  mECLoc(eZ) = ((1 - e2)*RN + GeodeticAltitude)*sin(mGeodLat);
+
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 void FGLocation::SetEllipse(double semimajor, double semiminor)
 {
   mCacheValid = false;

@@ -133,7 +133,7 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
   clip_el = element->FindElement("clipto");
   if (clip_el) {
     clip_string = clip_el->FindElementValue("min");
-    if (clip_string.find_first_not_of("+-.0123456789") != string::npos) { // it's a property
+    if (!is_number(clip_string)) { // it's a property
       if (clip_string[0] == '-') {
         clipMinSign = -1.0;
         clip_string.erase(0,1);
@@ -143,7 +143,7 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
       clipmin = clip_el->FindElementValueAsNumber("min");
     }
     clip_string = clip_el->FindElementValue("max");
-    if (clip_string.find_first_not_of("+-.0123456789") != string::npos) { // it's a property
+    if (!is_number(clip_string)) { // it's a property
       if (clip_string[0] == '-') {
         clipMaxSign = -1.0;
         clip_string.erase(0,1);

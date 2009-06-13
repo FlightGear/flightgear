@@ -130,6 +130,8 @@ bool FGGroundReactions::Load(Element* el)
     FCS->AddGear(); // make the FCS aware of the landing gear
     contact_element = el->FindNextElement("contact");
   }
+  
+  FGModel::Load(el); // Perform base class Load
 
   for (unsigned int i=0; i<lGear.size();i++) lGear[i]->bind();
 

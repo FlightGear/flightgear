@@ -105,7 +105,7 @@ void FGFilter::ReadFilterCoefficients(Element* element, int index)
 
   if ( element->FindElement(coefficient) ) {
     property_string = element->FindElementValue(coefficient);
-    if (property_string.find_first_not_of("+-.0123456789Ee") != string::npos) { // property
+    if (!is_number(property_string)) { // property
       if (property_string[0] == '-') {
        PropertySign[index] = -1.0;
        property_string.erase(0,1);

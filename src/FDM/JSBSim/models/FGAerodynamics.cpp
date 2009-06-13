@@ -318,6 +318,8 @@ bool FGAerodynamics::Load(Element *element)
     document = element;
   }
 
+  FGModel::Load(element); // Perform base class Load
+
   DetermineAxisSystem(); // Detemine if Lift/Side/Drag, etc. is used.
 
   Debug(2);

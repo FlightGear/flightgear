@@ -44,6 +44,7 @@ INCLUDES
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -93,12 +94,12 @@ public:
   /// Constructor
   FGModel(FGFDMExec*);
   /// Destructor
-  virtual ~FGModel();
+  ~FGModel();
 
   /** Loads this model.
       @param el a pointer to the element
       @return true if model is successfully loaded*/
-  virtual bool Load(Element* el) {return true;}
+  virtual bool Load(Element* el);
 
   FGModel* NextModel;
   string Name;
@@ -135,6 +136,8 @@ protected:
   FGPropagate*       Propagate;
   FGAuxiliary*       Auxiliary;
   FGPropertyManager* PropertyManager;
+
+  vector <double*> interface_properties;
 };
 }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -119,7 +119,7 @@ class FGSensor  : public FGFCSComponent
 {
 public:
   FGSensor(FGFCS* fcs, Element* element);
-  ~FGSensor();
+  virtual ~FGSensor();
 
   void SetFailLow(double val) {if (val > 0.0) fail_low = true; else fail_low = false;}
   void SetFailHigh(double val) {if (val > 0.0) fail_high = true; else fail_high = false;}

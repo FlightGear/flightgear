@@ -70,7 +70,7 @@ FGGain::FGGain(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
 
   if ( element->FindElement("gain") ) {
     gain_string = element->FindElementValue("gain");
-    if (gain_string.find_first_not_of("+-.0123456789Ee") != string::npos) { // property
+    if (!is_number(gain_string)) { // property
       if (gain_string[0] == '-') {
        GainPropertySign = -1.0;
        gain_string.erase(0,1);
@@ -207,7 +207,11 @@ void FGGain::Debug(int from)
       else
         cout << "      INPUT: " << InputNodes[0]->getName() << endl;
 
-      cout << "      GAIN: " << Gain << endl;
+      if (GainPropertyNode != 0) {
+        cout << "      GAIN: " << GainPropertyNode->GetName() << endl;
+      } else {
+        cout << "      GAIN: " << Gain << endl;
+      }
       if (IsOutput) cout << "      OUTPUT: " << OutputNode->getName() << endl;
       if (Type == "AEROSURFACE_SCALE") {
         cout << "      In/Out Mapping:" << endl;

@@ -35,6 +35,8 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#define BASE
+
 #include "FGJSBBase.h"
 
 namespace JSBSim {

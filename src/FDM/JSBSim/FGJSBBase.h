@@ -45,6 +45,8 @@ INCLUDES
 #include <cmath>
 #include <cstdlib>
 
+#include "input_output/string_utilities.h"
+
 using std::fabs;
 using std::string;
 
