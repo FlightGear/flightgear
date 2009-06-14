@@ -25,7 +25,7 @@
 #include "pavement.hxx"
 
 FGPavement::FGPavement(const std::string& aIdent, const SGGeod& aPos) :
-  FGPositioned(TAXIWAY, aIdent, aPos, false)
+  FGPositioned(PAVEMENT, aIdent, aPos, false)
 {
 }
 

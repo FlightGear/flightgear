@@ -447,7 +447,7 @@ FGPositioned::FGPositioned(Type ty, const std::string& aIdent, const SGGeod& aPo
   SGReferenced::get(this); // hold an owning ref, for the moment
   
   if (aIndexed) {
-    assert(ty != TAXIWAY);
+    assert(ty != TAXIWAY && ty != PAVEMENT);
     addToIndices(this);
   }
 }
@@ -475,6 +475,7 @@ const char* FGPositioned::nameForType(Type aTy)
  switch (aTy) {
  case RUNWAY: return "runway";
  case TAXIWAY: return "taxiway";
+ case PAVEMENT: return "pavement";
  case PARK_STAND: return "parking stand";
  case FIX: return "fix";
  case VOR: return "VOR";
