@@ -56,8 +56,7 @@ void FGODGauge::allocRT () {
     camera = new osg::Camera;
     // Only the far camera should trigger this texture to be rendered.
     camera->setNodeMask(simgear::BACKGROUND_BIT);
-    camera->setProjectionMatrix(osg::Matrix::ortho2D(-256.0, 256.0, -256.0,
-            256.0));
+    camera->setProjectionMatrix(osg::Matrix::ortho2D(-textureWH/2.0, textureWH/2.0, -textureWH/2.0, textureWH/2.0));
     camera->setViewport(0, 0, textureWH, textureWH);
     camera->setReferenceFrame(osg::Transform::ABSOLUTE_RF);
     camera->setRenderOrder(osg::Camera::PRE_RENDER);
