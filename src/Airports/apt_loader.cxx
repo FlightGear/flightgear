@@ -143,7 +143,7 @@ public:
           // frequency entries (ignore)
       } else if ( line_id == 110 ) {
         pavement = true;
-        parsePavementLine850(simgear::strutils::split(line));
+        parsePavementLine850(simgear::strutils::split(line, 0, 4));
       } else if ( line_id >= 111 && line_id <= 114 ) {
         if ( pavement )
           parsePavementNodeLine850(line_id, simgear::strutils::split(line));
@@ -403,6 +403,8 @@ private:
   {
     if ( token.size() >= 5 ) {
       pavement_ident = token[4];
+      if ( !pavement_ident.empty() && pavement_ident[pavement_ident.size()-1] == '\r' )
+        pavement_ident.erase( pavement_ident.size()-1 );
     } else {
       pavement_ident = "xx";
     }
