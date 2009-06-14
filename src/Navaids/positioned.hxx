@@ -41,6 +41,7 @@ public:
     SEAPORT,
     RUNWAY,
     TAXIWAY,
+    PAVEMENT,
     PARK_STAND,
     FIX,
     VOR,
