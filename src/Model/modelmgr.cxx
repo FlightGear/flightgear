@@ -3,6 +3,10 @@
 //
 // This file is in the Public Domain, and comes with no warranty.
 
+#ifdef _MSC_VER
+#  pragma warning( disable: 4355 )
+#endif
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -172,7 +176,7 @@ struct UpdateFunctor : public std::unary_function<FGModelMgr::Instance*, void>
                 pitch = testNan(instance->pitch_deg_node->getDoubleValue());
             if (instance->heading_deg_node != 0)
                 heading = testNan(instance->heading_deg_node->getDoubleValue());
-        } catch (const sg_range_exception& e) {
+        } catch (const sg_range_exception&) {
             const char *path = instance->node->getStringValue("path",
                                                               "unknown");
             SG_LOG(SG_GENERAL, SG_INFO, "Instance of model " << path

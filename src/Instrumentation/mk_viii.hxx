@@ -40,6 +40,11 @@ using std::map;
 #include <Airports/simple.hxx>
 #include <Main/globals.hxx>
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable: 4355 )
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 // MK_VIII ////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -1645,5 +1650,9 @@ public:
   virtual void unbind ();
   virtual void update (double dt);
 };
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 #endif // __INSTRUMENTS_MK_VIII_HXX

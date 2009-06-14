@@ -1250,7 +1250,7 @@ do_play_audio_sample (const SGPropertyNode * arg)
         fx->play_message( path, file, volume );
         return true;
 
-    } catch (const sg_io_exception& e) {
+    } catch (const sg_io_exception&) {
         SG_LOG(SG_GENERAL, SG_ALERT, "play-audio-sample: "
                 "failed to load" << path << '/' << file);
         return false;
