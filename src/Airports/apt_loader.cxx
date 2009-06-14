@@ -42,6 +42,7 @@
 
 #include "simple.hxx"
 #include "runways.hxx"
+#include "pavement.hxx"
 
 #include "apt_loader.hxx"
 
@@ -105,12 +106,18 @@ public:
               *p = 0;
         }
         SG_LOG( SG_GENERAL, SG_INFO, "Data file version = " << tmp );
-	    } else if ( line_id == 1 /* Airport */ ||
+      } else if ( line_id == 1 /* Airport */ ||
                     line_id == 16 /* Seaplane base */ ||
                     line_id == 17 /* Heliport */ ) {
         parseAirportLine(simgear::strutils::split(line));
-      } else if ( line_id == 10 ) {
-        parseRunwayLine(simgear::strutils::split(line));
+      } else if ( line_id == 10 ) { // Runway v810
+        parseRunwayLine810(simgear::strutils::split(line));
+      } else if ( line_id == 100 ) { // Runway v850
+        parseRunwayLine850(simgear::strutils::split(line));
+      } else if ( line_id == 101 ) { // Water Runway v850
+        parseWaterRunwayLine850(simgear::strutils::split(line));
+      } else if ( line_id == 102 ) { // Helipad v850
+        parseHelipadLine850(simgear::strutils::split(line));
       } else if ( line_id == 18 ) {
             // beacon entry (ignore)
       } else if ( line_id == 14 ) {
@@ -124,18 +131,34 @@ public:
         got_tower = true;
       } else if ( line_id == 19 ) {
           // windsock entry (ignore)
+      } else if ( line_id == 20 ) {
+          // Taxiway sign (ignore)
+      } else if ( line_id == 21 ) {
+          // lighting objects (ignore)
       } else if ( line_id == 15 ) {
           // custom startup locations (ignore)
       } else if ( line_id == 0 ) {
           // ??
       } else if ( line_id >= 50 && line_id <= 56 ) {
           // frequency entries (ignore)
+      } else if ( line_id == 110 ) {
+        pavement = true;
+        parsePavementLine850(simgear::strutils::split(line));
+      } else if ( line_id >= 111 && line_id <= 114 ) {
+        if ( pavement )
+          parsePavementNodeLine850(line_id, simgear::strutils::split(line));
+      } else if ( line_id >= 115 && line_id <= 116 ) {
+          // other pavement nodes (ignore)
+      } else if ( line_id == 120 ) {
+        pavement = false;
+      } else if ( line_id == 130 ) {
+        pavement = false;
       } else if ( line_id == 99 ) {
           SG_LOG( SG_GENERAL, SG_DEBUG, "End of file reached" );
       } else {
           SG_LOG( SG_GENERAL, SG_ALERT, 
                   "Unknown line(#" << line_num << ") in file: " << line );
-          exit(-1);
+          exit( -1 );
       }
     }
 
@@ -153,9 +176,12 @@ private:
   double last_apt_elev;
   SGGeod tower;
   int last_apt_type;
+  string pavement_ident;
+  bool pavement;
   
   vector<FGRunwayPtr> runways;
   vector<FGTaxiwayPtr> taxiways;
+  vector<FGPavementPtr> pavements;
   
   void addAirport()
   {  
@@ -185,7 +211,7 @@ private:
     FGAirport* apt = new FGAirport(last_apt_id, pos, tower, last_apt_name, false,
         fptypeFromRobinType(last_apt_type));
         
-    apt->setRunwaysAndTaxiways(runways, taxiways);
+    apt->setRunwaysAndTaxiways(runways, taxiways, pavements);
   }
   
   void parseAirportLine(const vector<string>& token)
@@ -214,7 +240,7 @@ private:
     rwy_count = 0;
   }
   
-  void parseRunwayLine(const vector<string>& token)
+  void parseRunwayLine810(const vector<string>& token)
   {
     double lat = atof( token[1].c_str() );
     double lon = atof( token[2].c_str() );
@@ -254,12 +280,155 @@ private:
       FGRunway* rwy = new FGRunway(NULL, rwy_no, pos, heading, length,
                             width, displ_thresh1, stopway1, surface_code, false);
       runways.push_back(rwy);
-      
+
       FGRunway* reciprocal = new FGRunway(NULL, FGRunway::reverseIdent(rwy_no), 
                 pos, heading + 180.0, length, width, 
                 displ_thresh2, stopway2, surface_code, true);
-              
+
       runways.push_back(reciprocal);
+    }
+  }
+
+  void parseRunwayLine850(const vector<string>& token)
+  {
+    double width = atof( token[1].c_str() ) * SG_METER_TO_FEET;
+    int surface_code = atoi( token[2].c_str() );
+
+    double lat_1 = atof( token[9].c_str() );
+    double lon_1 = atof( token[10].c_str() );
+    SGGeod pos_1(SGGeod::fromDegFt(lon_1, lat_1, 0.0));
+    rwy_lat_accum += lat_1;
+    rwy_lon_accum += lon_1;
+    rwy_count++;
+
+    double lat_2 = atof( token[18].c_str() );
+    double lon_2 = atof( token[19].c_str() );
+    SGGeod pos_2(SGGeod::fromDegFt(lon_2, lat_2, 0.0));
+    rwy_lat_accum += lat_2;
+    rwy_lon_accum += lon_2;
+    rwy_count++;
+
+    double length, heading_1, heading_2, dummy;
+    SGGeodesy::inverse( pos_1, pos_2, heading_1, heading_2, length );
+    SGGeod pos;
+    SGGeodesy::direct( pos_1, heading_1, length / 2.0, pos, dummy );
+    length *= SG_METER_TO_FEET;
+
+    last_rwy_heading = heading_1;
+
+    const string& rwy_no_1(token[8]);
+    const string& rwy_no_2(token[17]);
+    if ( rwy_no_1.size() == 0 || rwy_no_2.size() == 0 )
+        return;
+
+    double displ_thresh1 = atof( token[11].c_str() );
+    double displ_thresh2 = atof( token[20].c_str() );
+
+    double stopway1 = atof( token[12].c_str() );
+    double stopway2 = atof( token[21].c_str() );
+
+    FGRunway* rwy = new FGRunway(NULL, rwy_no_1, pos, heading_1, length,
+                          width, displ_thresh1, stopway1, surface_code, false);
+    runways.push_back(rwy);
+
+    FGRunway* reciprocal = new FGRunway(NULL, rwy_no_2, 
+              pos, heading_2, length, width, 
+              displ_thresh2, stopway2, surface_code, true);
+    runways.push_back(reciprocal);
+  }
+
+  void parseWaterRunwayLine850(const vector<string>& token)
+  {
+    double width = atof( token[1].c_str() ) * SG_METER_TO_FEET;
+
+    double lat_1 = atof( token[4].c_str() );
+    double lon_1 = atof( token[5].c_str() );
+    SGGeod pos_1(SGGeod::fromDegFt(lon_1, lat_1, 0.0));
+    rwy_lat_accum += lat_1;
+    rwy_lon_accum += lon_1;
+    rwy_count++;
+
+    double lat_2 = atof( token[7].c_str() );
+    double lon_2 = atof( token[8].c_str() );
+    SGGeod pos_2(SGGeod::fromDegFt(lon_2, lat_2, 0.0));
+    rwy_lat_accum += lat_2;
+    rwy_lon_accum += lon_2;
+    rwy_count++;
+
+    double length, heading_1, heading_2, dummy;
+    SGGeodesy::inverse( pos_1, pos_2, heading_1, heading_2, length );
+    SGGeod pos;
+    SGGeodesy::direct( pos_1, heading_1, length / 2.0, pos, dummy );
+
+    last_rwy_heading = heading_1;
+
+    const string& rwy_no_1(token[3]);
+    const string& rwy_no_2(token[6]);
+
+    FGRunway* rwy = new FGRunway(NULL, rwy_no_1, pos, heading_1, length,
+                          width, 0.0, 0.0, 13, false);
+    runways.push_back(rwy);
+
+    FGRunway* reciprocal = new FGRunway(NULL, rwy_no_2, 
+              pos, heading_2, length, width, 
+              0.0, 0.0, 13, true);
+    runways.push_back(reciprocal);
+  }
+
+  void parseHelipadLine850(const vector<string>& token)
+  {
+    double length = atof( token[5].c_str() ) * SG_METER_TO_FEET;
+    double width = atof( token[6].c_str() ) * SG_METER_TO_FEET;
+
+    double lat = atof( token[2].c_str() );
+    double lon = atof( token[3].c_str() );
+    SGGeod pos(SGGeod::fromDegFt(lon, lat, 0.0));
+    rwy_lat_accum += lat;
+    rwy_lon_accum += lon;
+    rwy_count++;
+
+    double heading = atof( token[4].c_str() );
+
+    last_rwy_heading = heading;
+
+    const string& rwy_no(token[1]);
+    int surface_code = atoi( token[7].c_str() );
+
+    FGRunway* rwy = new FGRunway(NULL, rwy_no, pos, heading, length,
+                          width, 0.0, 0.0, surface_code, false);
+    runways.push_back(rwy);
+  }
+
+  void parsePavementLine850(const vector<string>& token)
+  {
+    if ( token.size() >= 5 ) {
+      pavement_ident = token[4];
+    } else {
+      pavement_ident = "xx";
+    }
+  }
+
+  void parsePavementNodeLine850(int num, const vector<string>& token)
+  {
+    double lat = atof( token[1].c_str() );
+    double lon = atof( token[2].c_str() );
+    SGGeod pos(SGGeod::fromDegFt(lon, lat, 0.0));
+
+    FGPavement* pvt = 0;
+    if ( !pavement_ident.empty() ) {
+      pvt = new FGPavement( pavement_ident, pos );
+      pavements.push_back( pvt );
+      pavement_ident = "";
+    } else {
+      pvt = pavements.back();
+    }
+    if ( num == 112 || num == 114 ) {
+      double lat_b = atof( token[3].c_str() );
+      double lon_b = atof( token[4].c_str() );
+      SGGeod pos_b(SGGeod::fromDegFt(lon_b, lat_b, 0.0));
+      pvt->addBezierNode(pos, pos_b, num == 114);
+    } else {
+      pvt->addNode(pos, num == 113);
     }
   }
 };

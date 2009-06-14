@@ -39,6 +39,7 @@
 #include <Environment/environment.hxx>
 #include <Main/fg_props.hxx>
 #include <Airports/runways.hxx>
+#include <Airports/pavement.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/xmlloader.hxx>
 
@@ -201,16 +202,29 @@ FGTaxiway* FGAirport::getTaxiwayByIndex(unsigned int aIndex) const
   return mTaxiways[aIndex];
 }
 
+unsigned int FGAirport::numPavements() const
+{
+  return mPavements.size();
+}
+
+FGPavement* FGAirport::getPavementByIndex(unsigned int aIndex) const
+{
+  assert(aIndex >= 0 && aIndex < mPavements.size());
+  return mPavements[aIndex];
+}
+
 void FGAirport::setRunwaysAndTaxiways(vector<FGRunwayPtr>& rwys,
-       vector<FGTaxiwayPtr>& txwys)
+       vector<FGTaxiwayPtr>& txwys,
+       vector<FGPavementPtr>& pvts)
 {
   mRunways.swap(rwys);
   Runway_iterator it = mRunways.begin();
   for (; it != mRunways.end(); ++it) {
     (*it)->setAirport(this);
   }
-  
+
   mTaxiways.swap(txwys);
+  mPavements.swap(pvts);
 }
 
 FGRunway* FGAirport::getActiveRunwayForUsage() const

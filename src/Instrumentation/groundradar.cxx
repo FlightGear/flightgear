@@ -30,6 +30,7 @@
 #include <osgText/Text>
 #include <osgDB/Registry>
 #include <osgDB/ReaderWriter>
+#include <osgUtil/Tessellator>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -37,7 +38,9 @@
 #include <Cockpit/panel.hxx>
 #include <Airports/simple.hxx>
 #include <Airports/runways.hxx>
+#include <Airports/pavement.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/math/beziercurve.hxx>
 
 #include "groundradar.hxx"
 
@@ -84,27 +87,39 @@ inline static osg::Vec3 fromPolar(double fi, double r)
 
 void GroundRadar::createTexture(const char* texture_name)
 {
-    setSize(512);
+    setSize(TextureHalfSize + TextureHalfSize);
     allocRT();
 
-    osg::Vec4Array* colors = new osg::Vec4Array;
-    colors->push_back(osg::Vec4(0.0f, 0.5f, 0.0f, 1.0f));
-    colors->push_back(osg::Vec4(0.0f, 0.5f, 0.5f, 1.0f));
-
-    _geom = new osg::Geometry();
-    _geom->setColorArray(colors);
-    _geom->setColorBinding(osg::Geometry::BIND_PER_PRIMITIVE_SET);
-    _geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 0));
-    _geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 0));
-
-    osg::Geode* geode = new osg::Geode();
-    osg::StateSet* stateset = geode->getOrCreateStateSet();
+    _geode = new osg::Geode();
+    osg::StateSet* stateset = _geode->getOrCreateStateSet();
     stateset->setMode(GL_BLEND, osg::StateAttribute::OFF);
-    geode->addDrawable(_geom.get());
+
+    osg::Vec4Array* taxi_color = new osg::Vec4Array;
+    taxi_color->push_back(osg::Vec4(0.0f, 0.5f, 0.0f, 1.0f));
+    osg::Vec4Array* rwy_color = new osg::Vec4Array;
+    rwy_color->push_back(osg::Vec4(0.0f, 0.5f, 0.5f, 1.0f));
+
+    osg::Geometry *taxi_geom = new osg::Geometry();
+    taxi_geom->setColorArray(taxi_color);
+    taxi_geom->setColorBinding(osg::Geometry::BIND_OVERALL);
+    taxi_geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 0)); // Taxiways
+    _geode->addDrawable(taxi_geom);
+
+    osg::Geometry *pvt_geom = new osg::Geometry();
+    pvt_geom->setColorArray(taxi_color);
+    pvt_geom->setColorBinding(osg::Geometry::BIND_OVERALL);
+    // no primitive set for the moment. It needs tessellation
+    _geode->addDrawable(pvt_geom);
+
+    osg::Geometry *rwy_geom = new osg::Geometry();
+    rwy_geom->setColorArray(rwy_color);
+    rwy_geom->setColorBinding(osg::Geometry::BIND_OVERALL);
+    rwy_geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS, 0, 0)); // Runways
+    _geode->addDrawable(rwy_geom);
 
     osg::Camera* camera = getCamera();
     camera->setPostDrawCallback(new SingleFrameCallback());
-    camera->addChild(geode);
+    camera->addChild(_geode.get());
     camera->setNodeMask(0);
     camera->setProjectionMatrixAsOrtho2D(0, getTexture()->getTextureWidth(), 0, getTexture()->getTextureHeight());
 
@@ -117,7 +132,7 @@ void GroundRadar::addRunwayVertices(const FGRunwayBase* aRunway, double aTowerLa
   double az1, az2, dist_m;
   geo_inverse_wgs_84(aTowerLat, aTowerLon, aRunway->latitude(), aRunway->longitude(), &az1, &az2, &dist_m);
 
-  osg::Vec3 center = fromPolar(az1, dist_m * aScale) + osg::Vec3(256, 256, 0);
+  osg::Vec3 center = fromPolar(az1, dist_m * aScale) + osg::Vec3(TextureHalfSize, TextureHalfSize, 0);
   osg::Vec3 leftcenter = fromPolar(aRunway->headingDeg(), aRunway->lengthM() * aScale / 2) + center;
   osg::Vec3 lefttop = fromPolar(aRunway->headingDeg() - 90, aRunway->widthM() * aScale / 2) + leftcenter;
   osg::Vec3 leftbottom = leftcenter * 2 - lefttop;
@@ -130,10 +145,74 @@ void GroundRadar::addRunwayVertices(const FGRunwayBase* aRunway, double aTowerLa
   aVertices->push_back(righttop);
 }
 
+osg::Geometry *GroundRadar::addPavementGeometry(const FGPavement* aPavement, double aTowerLat, double aTowerLon, double aScale)
+{
+
+  osg::ref_ptr<osgUtil::Tessellator> tess = new osgUtil::Tessellator;
+  osg::ref_ptr<osg::Geometry> polygon = new osg::Geometry;
+  osg::ref_ptr<osg::Vec3Array> pts = new osg::Vec3Array;
+
+  double az1, az2, dist_m;
+  const FGPavement::NodeList &nodeLst = aPavement->getNodeList();
+  FGPavement::NodeList::const_iterator it = nodeLst.begin(),
+                                        loopBegin = it;
+  while ( it != nodeLst.end() )
+  {
+    bool close = (*it)->mClose;
+    geo_inverse_wgs_84(aTowerLat, aTowerLon, (*it)->mPos.getLatitudeDeg(), (*it)->mPos.getLongitudeDeg(), &az1, &az2, &dist_m);
+    osg::Vec3 p1 = fromPolar(az1, dist_m * aScale) + osg::Vec3(TextureHalfSize, TextureHalfSize, 0);
+    const FGPavement::BezierNode *bn = dynamic_cast<const FGPavement::BezierNode *>( it->ptr() );
+    if ( bn != 0 )
+    {
+      geo_inverse_wgs_84(aTowerLat, aTowerLon, bn->mControl.getLatitudeDeg(), bn->mControl.getLongitudeDeg(), &az1, &az2, &dist_m);
+      osg::Vec3 p2 = fromPolar(az1, dist_m * aScale) + osg::Vec3(TextureHalfSize, TextureHalfSize, 0),
+                p3;
+      ++it;
+      if ( it == nodeLst.end() || close )
+      {
+        geo_inverse_wgs_84(aTowerLat, aTowerLon, (*loopBegin)->mPos.getLatitudeDeg(), (*loopBegin)->mPos.getLongitudeDeg(), &az1, &az2, &dist_m);
+      }
+      else
+      {
+        geo_inverse_wgs_84(aTowerLat, aTowerLon, (*it)->mPos.getLatitudeDeg(), (*it)->mPos.getLongitudeDeg(), &az1, &az2, &dist_m);
+      }
+      p3 = fromPolar(az1, dist_m * aScale) + osg::Vec3(TextureHalfSize, TextureHalfSize, 0);
+      simgear::BezierCurve<osg::Vec3> bCurv( p1, p2, p3 );
+      simgear::BezierCurve<osg::Vec3>::PointList &ptList = bCurv.pointList();
+      for ( simgear::BezierCurve<osg::Vec3>::PointList::iterator ii = ptList.begin(); ii != ptList.end(); ++ii )
+      {
+        pts->push_back( *ii );
+      }
+      pts->pop_back(); // Last point belongs to next segment
+    }
+    else
+    {
+      pts->push_back( p1 );
+      ++it;
+    }
+
+    if ( close ) // One loop for the moment
+      break;
+  }
+  geo_inverse_wgs_84(aTowerLat, aTowerLon, (*loopBegin)->mPos.getLatitudeDeg(), (*loopBegin)->mPos.getLongitudeDeg(), &az1, &az2, &dist_m);
+  osg::Vec3 p1 = fromPolar(az1, dist_m * aScale) + osg::Vec3(TextureHalfSize, TextureHalfSize, 0);
+  pts->push_back( p1 );
+  polygon->setVertexArray( pts );
+
+  polygon->addPrimitiveSet( new osg::DrawArrays( osg::PrimitiveSet::POLYGON, 0, pts->size() ) );
+
+  tess->setTessellationType( osgUtil::Tessellator::TESS_TYPE_GEOMETRY );
+  tess->setBoundaryOnly( false );
+  tess->setWindingType( osgUtil::Tessellator::TESS_WINDING_ODD );
+  tess->retessellatePolygons( *polygon );
+  return polygon.release();
+}
+
 void GroundRadar::updateTexture()
 {
     osg::ref_ptr<osg::Vec3Array> rwy_vertices = new osg::Vec3Array;
     osg::ref_ptr<osg::Vec3Array> taxi_vertices = new osg::Vec3Array;
+    osg::ref_ptr<osg::Vec3Array> pvt_vertices = new osg::Vec3Array;
 
     const string airport_name = _airport_node->getStringValue();
 
@@ -149,6 +228,107 @@ void GroundRadar::updateTexture()
     const FGAirport* apt = fgFindAirportID(airport_name);
     assert(apt);
 
+    for (unsigned int i=0; i<apt->numTaxiways(); ++i)
+    {
+      FGTaxiway* txwy(apt->getTaxiwayByIndex(i));
+      addRunwayVertices(txwy, tower_lat, tower_lon, scale, taxi_vertices.get());
+    }
+    osg::Geometry *taxi_geom = dynamic_cast<osg::Geometry *>(_geode->getDrawable(0));
+    taxi_geom->setVertexArray(taxi_vertices.get());
+    osg::DrawArrays* taxi = dynamic_cast<osg::DrawArrays*>(taxi_geom->getPrimitiveSet(0));
+    taxi->setCount(taxi_vertices->size());
+
+    osg::Geometry *pvt_geom = dynamic_cast<osg::Geometry *>(_geode->getDrawable(1));
+    osg::Geometry::PrimitiveSetList &pvt_prim_list = pvt_geom->getPrimitiveSetList();
+    pvt_prim_list.clear();
+    for (unsigned int i=0; i<apt->numPavements(); ++i)
+    {
+      FGPavement* pvt(apt->getPavementByIndex(i));
+      osg::ref_ptr<osg::Geometry> geom = addPavementGeometry(pvt, tower_lat, tower_lon, scale);
+      osg::Geometry::PrimitiveSetList &prim_list = geom->getPrimitiveSetList();
+      osg::Vec3Array *vertices = dynamic_cast<osg::Vec3Array *>(geom->getVertexArray());
+      size_t before = pvt_vertices->size(),
+            count = vertices->size();
+      for (size_t i = 0; i < count; ++i )
+      {
+        pvt_vertices->push_back( (*vertices)[i] );
+      }
+      for (osg::Geometry::PrimitiveSetList::iterator ii = prim_list.begin(); ii != prim_list.end(); ++ii )
+      {
+        osg::DrawArrays *da;
+        osg::DrawElementsUByte *de1;
+        osg::DrawElementsUShort *de2;
+        osg::DrawElementsUInt *de3;
+        if ((da = dynamic_cast<osg::DrawArrays *>(ii->get())) != 0)
+        {
+          osg::DrawArrays *ps = new osg::DrawArrays(*da);
+          ps->setFirst(da->getFirst() + before);
+          pvt_prim_list.push_back(ps);
+        }
+        else if ((de1 = dynamic_cast<osg::DrawElementsUByte *>(ii->get())) != 0)
+        {
+          if (before + count <= 255)
+          {
+            osg::DrawElementsUByte *ps = new osg::DrawElementsUByte(*de1);
+            for (size_t j = 0; j < ps->size(); ++j)
+            {
+              (*ps)[j] += before;
+            }
+            pvt_prim_list.push_back(ps);
+          }
+          else if (before + count <= 65535)
+          {
+            osg::DrawElementsUShort *ps = new osg::DrawElementsUShort(de1->getMode(), de1->begin(), de1->end());
+            for (size_t j = 0; j < ps->size(); ++j)
+            {
+              (*ps)[j] += before;
+            }
+            pvt_prim_list.push_back(ps);
+          }
+          else
+          {
+            osg::DrawElementsUInt *ps = new osg::DrawElementsUInt(de1->getMode(), de1->begin(), de1->end());
+            for (size_t j = 0; j < ps->size(); ++j)
+            {
+              (*ps)[j] += before;
+            }
+            pvt_prim_list.push_back(ps);
+          }
+        }
+        else if ((de2 = dynamic_cast<osg::DrawElementsUShort *>(ii->get())) != 0)
+        {
+          if (before + count <= 65535)
+          {
+            osg::DrawElementsUShort *ps = new osg::DrawElementsUShort(*de2);
+            for (size_t j = 0; j < ps->size(); ++j)
+            {
+              (*ps)[j] += before;
+            }
+            pvt_prim_list.push_back(ps);
+          }
+          else
+          {
+            osg::DrawElementsUInt *ps = new osg::DrawElementsUInt(de2->getMode(), de2->begin(), de2->end());
+            for (size_t j = 0; j < ps->size(); ++j)
+            {
+              (*ps)[j] += before;
+            }
+            pvt_prim_list.push_back(ps);
+          }
+        }
+        else if ((de3 = dynamic_cast<osg::DrawElementsUInt *>(ii->get())) != 0)
+        {
+          osg::DrawElementsUInt *ps = new osg::DrawElementsUInt(*de3);
+          for (size_t j = 0; j < ps->size(); ++j)
+          {
+            (*ps)[j] += before;
+          }
+          pvt_prim_list.push_back(ps);
+        }
+      }
+    }
+    pvt_geom->setVertexArray(pvt_vertices.get());
+
     for (unsigned int i=0; i<apt->numRunways(); ++i)
     {
       FGRunway* runway(apt->getRunwayByIndex(i));
@@ -156,20 +336,9 @@ void GroundRadar::updateTexture()
       
       addRunwayVertices(runway, tower_lat, tower_lon, scale, rwy_vertices.get());
     }
-    
-    for (unsigned int i=0; i<apt->numTaxiways(); ++i)
-    {
-      FGTaxiway* txwy(apt->getTaxiwayByIndex(i));
-      addRunwayVertices(txwy, tower_lat, tower_lon, scale, taxi_vertices.get());
-    }
-    
-    osg::Vec3Array* vertices = new osg::Vec3Array(*taxi_vertices.get());
-    vertices->insert(vertices->end(), rwy_vertices->begin(), rwy_vertices->end());
-    _geom->setVertexArray(vertices);
-    osg::DrawArrays* taxi = dynamic_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(0));
-    osg::DrawArrays* rwy = dynamic_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(1));
-    taxi->setCount(taxi_vertices->size());
-    rwy->setFirst(taxi_vertices->size());
+    osg::Geometry *rwy_geom = dynamic_cast<osg::Geometry *>(_geode->getDrawable(2));
+    rwy_geom->setVertexArray(rwy_vertices.get());
+    osg::DrawArrays* rwy = dynamic_cast<osg::DrawArrays*>(rwy_geom->getPrimitiveSet(0));
     rwy->setCount(rwy_vertices->size());
 
     getCamera()->setNodeMask(0xffffffff);
