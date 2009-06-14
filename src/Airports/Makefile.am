@@ -15,7 +15,8 @@ libAirports_a_SOURCES = \
 	sidstar.cxx sidstar.hxx \
 	runwayprefloader.cxx runwayprefloader.hxx \
 	xmlloader.cxx xmlloader.hxx \
-	runwaybase.cxx runwaybase.hxx
+	runwaybase.cxx runwaybase.hxx \
+	pavement.cxx pavement.hxx
 	
 calc_loc_SOURCES = calc_loc.cxx
 calc_loc_LDADD = -lsgmath -lsgdebug -lsgmisc -lsgstructure -lz $(base_LIBS)

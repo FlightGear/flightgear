@@ -205,6 +205,12 @@
 				RelativePath="..\..\src\Airports\parking.hxx">
 			</File>
 			<File
+				RelativePath="..\..\src\Airports\pavement.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Airports\pavement.hxx">
+			</File>
+			<File
 				RelativePath="..\..\src\Airports\runwaybase.cxx">
 			</File>
 			<File

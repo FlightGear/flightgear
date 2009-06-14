@@ -35,6 +35,7 @@ class FGRunwayBase;
 class GroundRadar : public SGPropertyChangeListener, public FGODGauge
 {
 public:
+    static const int TextureHalfSize = 256;
     GroundRadar(SGPropertyNode* node);
     virtual ~GroundRadar();
     void updateTexture();
@@ -44,8 +45,9 @@ protected:
     void createTexture(const char* texture_name);
     
     void addRunwayVertices(const FGRunwayBase* aRunway, double aTowerLat, double aTowerLon, double aScale, osg::Vec3Array* aVertices);
+    osg::Geometry *addPavementGeometry(const FGPavement* aPavement, double aTowerLat, double aTowerLon, double aScale);
     
-    osg::ref_ptr<osg::Geometry> _geom;
+    osg::ref_ptr<osg::Geode> _geode;
     SGPropertyNode_ptr _airport_node;
     SGPropertyNode_ptr _range_node;
 };
