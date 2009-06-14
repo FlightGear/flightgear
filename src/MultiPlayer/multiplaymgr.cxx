@@ -907,7 +907,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
               length = MAX_TEXT_SIZE;
             pData->string_value = new char[length + 1];
             //cout << " String: ";
-            for (int i = 0; i < length; i++)
+            for (unsigned i = 0; i < length; i++)
               {
                 pData->string_value[i] = (char) XDR_decode_int8(*xdr);
                 xdr++;

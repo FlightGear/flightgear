@@ -277,8 +277,8 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         }
 
         //TODO let the fp handle this (loading of next leg)
-        fp->IncrementWaypoint((bool) trafficRef);
-        if (!(fp->getNextWaypoint()) && trafficRef)
+        fp->IncrementWaypoint( trafficRef != 0 );
+        if (!(fp->getNextWaypoint()) && trafficRef != 0)
             if (!loadNextLeg()) {
                 setDie(true);
                 return;
