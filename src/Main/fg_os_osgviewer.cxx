@@ -170,6 +170,8 @@ void fgOSMainLoop()
     ref_ptr<FGEventHandler> manipulator
         = globals->get_renderer()->getEventHandler();
     viewer->setReleaseContextAtEndOfFrameHint(false);
+    if (!viewer->isRealized())
+        viewer->realize();
     while (!viewer->done()) {
         fgIdleHandler idleFunc = manipulator->getIdleHandler();
         fgDrawHandler drawFunc = manipulator->getDrawHandler();
