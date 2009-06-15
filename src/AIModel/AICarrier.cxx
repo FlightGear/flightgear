@@ -376,7 +376,7 @@ bool FGAICarrier::init(bool search_in_AI_path) {
     base_course = hdg;
     base_speed = speed;
 
-    pos_norm = 0;
+    pos_norm = raw_pos_norm = 0;
     elevators = false;
     transition_time = 150;
     time_constant = 0.005;
