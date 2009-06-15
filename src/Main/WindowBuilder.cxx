@@ -196,7 +196,6 @@ GraphicsWindow* WindowBuilder::buildWindow(const SGPropertyNode* winNode)
     if (traitsSet) {
         GraphicsContext* gc = GraphicsContext::createGraphicsContext(traits);
         if (gc) {
-            gc->realize();
             GraphicsWindow* window = WindowSystemAdapter::getWSA()
                 ->registerWindow(gc, traits->windowName);
             if (drawGUI)
@@ -223,7 +222,6 @@ GraphicsWindow* WindowBuilder::getDefaultWindow()
     traits->windowName = "FlightGear";
     GraphicsContext* gc = GraphicsContext::createGraphicsContext(traits);
     if (gc) {
-        gc->realize();
         defaultWindow = WindowSystemAdapter::getWSA()
             ->registerWindow(gc, defaultWindowName);
         return defaultWindow;
