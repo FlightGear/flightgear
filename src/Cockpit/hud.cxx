@@ -261,9 +261,11 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
     }
 
     FGFontCache *fc = globals->get_fontcache();
-    HUD_Font = fc->getTexFont(fgGetString("/sim/hud/font/name", "Helvetica.txf"));
+    const char* fileName = fgGetString("/sim/hud/font/name", "Helvetica.txf");
+    HUD_Font = fc->getTexFont(fileName);
     if (!HUD_Font)
-        throw sg_throwable(string("/sim/hud/font/name is not a texture font"));
+        throw sg_io_exception("/sim/hud/font/name is not a texture font",
+                              sg_location(fileName));
 
     HUD_TextSize = fgGetFloat("/sim/hud/font/size", 10);
 

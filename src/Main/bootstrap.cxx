@@ -219,7 +219,7 @@ int main ( int argc, char **argv ) {
                             // logging, since logging may be
                             // disabled.
         cerr << "Fatal error: " << t.getFormattedMessage() << endl;
-        if (!t.getOrigin().empty())
+        if (std::strlen(t.getOrigin()) != 0)
             cerr << " (received from " << t.getOrigin() << ')' << endl;
 
     } catch (const string &s) {

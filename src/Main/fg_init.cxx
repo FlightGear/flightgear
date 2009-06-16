@@ -1279,7 +1279,7 @@ void fgInitFDM() {
     } else if ( model == "yasim" ) {
         cur_fdm_state = new YASim( dt );
     } else {
-        throw sg_throwable(string("Unrecognized flight model '") + model
+        throw sg_exception(string("Unrecognized flight model '") + model
                + "', cannot init flight dynamics model.");
     }
 }
