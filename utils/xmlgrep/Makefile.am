@@ -12,6 +12,9 @@ testxml_LDADD = libxmlconf.a
 printxml_SOURCES = $(xml_SOURCE) printxml.c
 printxml_LDADD = libxmlconf.a
 
+printtree_SOURCES = $(xml_SOURCE) printtree.c
+printtree_LDADD = libxmlconf.a
+
 xmlgrep_SOURCES = $(xml_SOURCE) xmlgrep.c xml.c xml.h
 xmlgrep_LDADD = libxmlconf.a
 
