@@ -51,7 +51,7 @@ int main(int argc, char** argv)
         readXML(argv[1], fdm);
     } catch (const sg_exception &e) {
         printf("XML parse error: %s (%s)\n",
-               e.getFormattedMessage().c_str(), e.getOrigin().c_str());
+               e.getFormattedMessage().c_str(), e.getOrigin());
     }
 
     Airplane* airplane = fdm.getAirplane();

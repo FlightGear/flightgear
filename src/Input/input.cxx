@@ -512,8 +512,8 @@ FGInput::_init_joystick ()
             << "\"\nUsing default: \"" << source << '"');
 
       } else {
-        throw sg_throwable(string("No joystick configuration file with "
-            "<name>default</name> entry found!"));
+        throw sg_exception(string("No joystick configuration file with <name>")
+                           + name + "</name> entry found!");
       }
 
       js_node = js_nodes->getChild("js", i, true);

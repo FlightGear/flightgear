@@ -127,11 +127,15 @@ HUD::~HUD()
 
 void HUD::init()
 {
+    const char* fontName = 0;
     _font_cache = globals->get_fontcache();
+    if (!_font) {
+        fontName = fgGetString("/sim/hud/font/name", "Helvetica.txf");
+        _font = _font_cache->getTexFont(fontName);
+    }
     if (!_font)
-        _font = _font_cache->getTexFont(fgGetString("/sim/hud/font/name", "Helvetica.txf"));
-    if (!_font)
-        throw sg_throwable(string("/sim/hud/font/name is not a texture font"));
+        throw sg_io_exception("/sim/hud/font/name is not a texture font",
+                              sg_location(fontName));
 
     _font_size = fgGetFloat("/sim/hud/font/size", 8);
     _font_renderer->setFont(_font);
