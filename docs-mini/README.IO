@@ -29,7 +29,7 @@ Generic Communication:
     params can be:
     serial port communication:    serial,dir,hz,device,baud,protocol
     socket communication:         socket,dir,hz,machine,port,style,protocol
-    output to a file:             file,dir,hz,filename,protocol
+    i/o to a file:                file,dir,hz,filename,protocol
 
     See README.protocol for how to define a generic protocol.
 
@@ -84,6 +84,14 @@ File I/O:
     example to replay your flight
 
     --native=file,in,10,flight1.fgfs --fdm=external
+
+    You can make the replay from a file loop back to the beginning
+    when it reaches the end of the file with the "repeat" flag:
+
+    --generic=file,in,20,flight.out,playback,repeat
+
+    With a numeric argument, FlightGear will exit after that number of repeats.
+    --generic=file,in,20,flight.out,playback,repeat,5
 
 
 Moving Map Example:
