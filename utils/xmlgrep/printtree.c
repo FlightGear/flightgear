@@ -59,6 +59,7 @@ void print_xml(void *id, char *name, unsigned int len)
     s = xmlGetString(xid);
     if (s)
     {
+      name[len] = 0;
       printf("%s = %s\n", name, s);
       free(s);
     }
