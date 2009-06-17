@@ -4,7 +4,7 @@
 
 #include "xml.h"
 
-void print_xml(void *, char *, int);
+void print_xml(void *, char *, unsigned int);
 
 int main(int argc, char **argv)
 {
@@ -47,7 +47,7 @@ int main(int argc, char **argv)
   }
 }
 
-void print_xml(void *id, char *name, int len)
+void print_xml(void *id, char *name, unsigned int len)
 {
   void *xid = xmlMarkId(id);
   unsigned int i, num;
@@ -72,8 +72,21 @@ void print_xml(void *id, char *name, int len)
     {
       if (xmlNodeGetPos(id, xid, "*", i) != 0)
       {
-        int res, i = 4096 - len;
+        unsigned int res, i = 4096 - len;
         res = xmlNodeCopyName(xid, (char *)&name[len], i);
+        if (res)
+        {
+          unsigned int index = xmlAttributeGetInt(xid, "n");
+          if (index)
+          {
+            unsigned int pos = len+res;
+
+            name[pos++] = '[';
+            i = snprintf((char *)&name[pos], 4096-pos, "%i", index);
+            name[pos+i] = ']';
+            res += i+2;
+          }
+        }
         print_xml(xid, name, len+res);
       }
       else printf("error\n");

@@ -465,10 +465,11 @@ xmlGetString(const void *id)
         char *ps;
 
         ps = xid->start;
-        len = xid->len;
+        len = xid->len-1;
         __xmlPrepareData(&ps, &len);
         if (len)
         {
+            len++;
             str = malloc(len+1);
             if (str)
             {
