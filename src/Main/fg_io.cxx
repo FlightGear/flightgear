@@ -102,6 +102,7 @@ FGIO::parse_port_config( const string& config )
 	return 0;
     }
 
+    unsigned num_tokens = tokens.size();
     string protocol = tokens[0];
     SG_LOG( SG_IO, SG_INFO, "  protocol = " << protocol );
 
@@ -194,8 +195,16 @@ FGIO::parse_port_config( const string& config )
                 configToken = 5;
             else
                 configToken = 6;
-            FGGeneric *generic = new FGGeneric( tokens[configToken] );
-            io = generic;
+            if (configToken < num_tokens)
+            {
+               FGGeneric *generic = new FGGeneric( tokens[configToken] );
+               io = generic;
+            }
+            else
+            {
+               SG_LOG( SG_IO, SG_ALERT, "Not enough tokens passed for the generic protocol.");
+               return NULL;
+            }
 	} else if ( protocol == "multiplay" ) {
 	    if ( tokens.size() != 5 ) {
 		SG_LOG( SG_IO, SG_ALERT, "Ignoring invalid --multiplay option "
