@@ -57,7 +57,7 @@ public:
     bool getExitOnError() { return exitOnError; }
 protected:
 
-    enum e_type { FG_BOOL=0, FG_INT, FG_DOUBLE, FG_STRING };
+    enum e_type { FG_BOOL=0, FG_INT, FG_DOUBLE, FG_STRING, FG_FIXED };
 
     typedef struct {
      // string name;
@@ -85,6 +85,8 @@ private:
     bool binary_mode;
     enum {FOOTER_NONE, FOOTER_LENGTH, FOOTER_MAGIC} binary_footer_type;
     int binary_footer_value;
+    int binary_record_length;
+    enum {NETWORK_BYTE_ORDER, HOST_BYTE_ORDER} binary_byte_order;
 
     void read_config(SGPropertyNode *root, vector<_serial_prot> &msg);
     bool exitOnError;
