@@ -38,7 +38,7 @@ class FGGeneric : public FGProtocol {
 
 public:
 
-    FGGeneric(string&);
+    FGGeneric(vector<string>);
     ~FGGeneric();
 
     bool gen_message();
@@ -57,7 +57,7 @@ public:
     bool getExitOnError() { return exitOnError; }
 protected:
 
-    enum e_type { FG_BOOL=0, FG_INT, FG_DOUBLE, FG_STRING, FG_FIXED };
+    enum e_type { FG_BOOL=0, FG_INT, FG_FLOAT, FG_DOUBLE, FG_STRING, FG_FIXED };
 
     typedef struct {
      // string name;
@@ -86,7 +86,7 @@ private:
     enum {FOOTER_NONE, FOOTER_LENGTH, FOOTER_MAGIC} binary_footer_type;
     int binary_footer_value;
     int binary_record_length;
-    enum {NETWORK_BYTE_ORDER, HOST_BYTE_ORDER} binary_byte_order;
+    enum {BYTE_ORDER_NEEDS_CONVERSION, BYTE_ORDER_MATCHES_NETWORK_ORDER} binary_byte_order;
 
     void read_config(SGPropertyNode *root, vector<_serial_prot> &msg);
     bool exitOnError;
