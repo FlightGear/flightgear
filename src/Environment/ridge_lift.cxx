@@ -163,25 +163,24 @@ void FGRidgeLift::update(double dt) {
 	timer -= dt;
 	if (timer <= 0.0 ) {
 
-		// NOTE: this mixes geocentric and geodetic calculations which give mathematically incorrect results
-		//       probably this is acceptable for calculating the ridge lift, converting from 
-		//       geodetic to geocentric coordinates is somewhat expensive
-
 		// probe0 is current position
 		probe_lat_deg[0] = _user_latitude_node->getDoubleValue();
 		probe_lon_deg[0] = _user_longitude_node->getDoubleValue();
 		probe_elev_m[0]  = _ground_elev_node->getDoubleValue() * SG_FEET_TO_METER;
 
-		SGGeoc myPosition = SGGeoc::fromDegM( probe_lon_deg[0], probe_lat_deg[0], 20000.0 );
+		// position is geodetic, need geocentric for advanceRadM
+		SGGeod myGeodPos = SGGeod::fromDegM( probe_lon_deg[0], probe_lat_deg[0], 20000.0 );
+		SGGeoc myGeocPos = SGGeoc::fromGeod( myGeodPos );
 		double ground_wind_from_rad = _surface_wind_from_deg_node->getDoubleValue() * SG_DEGREES_TO_RADIANS + SG_PI;
 
 		// compute the remaining probes
-		for (int i = 1; i < sizeof(probe_lat_deg)/sizeof(probe_lat_deg[0]); i++) {
-			SGGeoc probe = myPosition.advanceRadM( ground_wind_from_rad, dist_probe_m[i] );
-			probe_lat_deg[i] = probe.getLatitudeDeg();
-			probe_lon_deg[i] = probe.getLongitudeDeg();
-			if (!globals->get_scenery()->get_elevation_m(
-				SGGeod::fromDegM(probe_lon_deg[i],probe_lat_deg[i], 20000), probe_elev_m[i], NULL )) {
+		for (int i = 1; i < sizeof(probe_elev_m)/sizeof(probe_elev_m[0]); i++) {
+			SGGeoc probe = myGeocPos.advanceRadM( ground_wind_from_rad, dist_probe_m[i] );
+			// convert to geodetic position for ground level computation
+			SGGeod probeGeod = SGGeod::fromGeoc( probe );
+			probe_lat_deg[i] = probeGeod.getLatitudeDeg();
+			probe_lon_deg[i] = probeGeod.getLongitudeDeg();
+			if (!globals->get_scenery()->get_elevation_m( probeGeod, probe_elev_m[i], NULL )) {
 				// no ground found? use elevation of previous probe :-(
 				probe_elev_m[i] = probe_elev_m[i-1];
 			}
