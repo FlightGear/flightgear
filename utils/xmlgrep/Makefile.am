@@ -9,7 +9,7 @@ noinst_PROGRAMS = \
 	printxml \
 	xmlgrep \
 	printtree \
-	generic_config_analyse
+	generic_protocol_analyse
 
 testxml_SOURCES = testxml.c
 testxml_LDADD = libxmlconf.a
@@ -23,7 +23,7 @@ printtree_LDADD = libxmlconf.a
 xmlgrep_SOURCES = xmlgrep.c
 xmlgrep_LDADD = libxmlconf.a
 
-generic_config_analyse_SOURCES = generic-config-analyse.c
-generic_config_analyse_LDADD = libxmlconf.a
+generic_protocol_analyse_SOURCES = generic-protocol-analyse.c
+generic_protocol_analyse_LDADD = libxmlconf.a
 
 INCLUDES = -DSRC_DIR=\"$(top_srcdir)/utils/xmlgrep\" -DXML_USE_NODECACHE
