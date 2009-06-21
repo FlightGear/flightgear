@@ -99,14 +99,19 @@ void print_binary_protocol(void *id, char *filename, char *dir)
             size = 4;
          } else if (!strcasecmp(type, "double")) {
             size = 8;
-         } else {		/* defaults to integer */
+         } else if (!strcasecmp(type, "int")) {
             size = 4;
+         } else {
+           printf("Unsupported type sepcified: '%s'\n\n", type);
+           free(type);
+           free(xid);
+           return;
          }
 
-         xmlNodeCopyString(xid, "factor", (char *)factor, 10);
+         xmlNodeCopyString(xid, "factor", (char *)&factor, 10);
          name = xmlNodeGetString(xid, "name");
 
-         printf("%4i | %4i | %6s | %10s | %s\n", pos, size, type, factor?factor:"", name);
+         printf("%4i | %4i | %6s | %10s | %s\n", pos, size, type, factor, name);
          pos += size;
 
          free(type);
