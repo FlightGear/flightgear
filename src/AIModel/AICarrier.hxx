@@ -68,7 +68,6 @@ public:
     bool OutsideBox();
 
     bool init(bool search_in_AI_path=false);
-    void initModel(osg::Node *node);
 
     virtual const char* getTypeString(void) const { return "carrier"; }
 
@@ -99,8 +98,6 @@ private:
 
 
 
-    list<string> wire_objects;        // List of wire object names
-    list<string> catapult_objects;    // List of catapult object names
     list<ParkPosition> ppositions;    // List of positions where an aircraft can start.
     string sign;                      // The sign of this carrier.
 
