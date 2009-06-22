@@ -24,9 +24,6 @@
 #include <string>
 #include <list>
 
-#include <osg/Referenced>
-#include <osg/Node>
-
 #include <simgear/compiler.h>
 
 using std::string;

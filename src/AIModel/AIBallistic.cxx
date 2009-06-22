@@ -29,7 +29,6 @@
 
 #include <Scenery/scenery.hxx>
 
-#include "AIModelData.hxx"
 #include "AIBallistic.hxx"
 
 #include <Main/util.hxx>
@@ -116,12 +115,6 @@ void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
     setSlavedLoad(scFileNode->getBoolValue("slaved-load", false));
     setContentsNode(scFileNode->getStringValue("contents"));
     setRandom(scFileNode->getBoolValue("random", false));
-}
-
-osg::Node* FGAIBallistic::load3DModel(const string &path, SGPropertyNode *prop_root)
-{
-  model = SGModelLib::loadModel(path, prop_root, new FGAIModelData(this, prop_root));
-  return model.get();
 }
 
 bool FGAIBallistic::init(bool search_in_AI_path) {
