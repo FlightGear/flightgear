@@ -25,153 +25,15 @@
 #include <string>
 #include <vector>
 
-#include <osg/Geode>
-#include <osg/Drawable>
-#include <osg/Transform>
-#include <osg/NodeVisitor>
-#include <osg/TemplatePrimitiveFunctor>
-
 #include <simgear/sg_inlines.h>
 #include <simgear/math/SGMath.hxx>
 #include <simgear/math/sg_geodesy.hxx>
-#include <simgear/scene/util/SGSceneUserData.hxx>
-#include <simgear/scene/bvh/BVHGroup.hxx>
-#include <simgear/scene/bvh/BVHLineGeometry.hxx>
 
 #include <math.h>
 #include <Main/util.hxx>
 #include <Main/viewer.hxx>
 
 #include "AICarrier.hxx"
-
-/// Hmm: move that kind of configuration into the model file???
-class LineCollector : public osg::NodeVisitor {
-    struct LinePrimitiveFunctor {
-        LinePrimitiveFunctor() : _lineCollector(0)
-        { }
-        void operator() (const osg::Vec3&, bool)
-        { }
-        void operator() (const osg::Vec3& v1, const osg::Vec3& v2, bool)
-        { if (_lineCollector) _lineCollector->addLine(v1, v2); }
-        void operator() (const osg::Vec3&, const osg::Vec3&, const osg::Vec3&,
-                         bool)
-        { }
-        void operator() (const osg::Vec3&, const osg::Vec3&, const osg::Vec3&,
-                         const osg::Vec3&, bool)
-        { }
-        LineCollector* _lineCollector;
-    };
-    
-public:
-    LineCollector() :
-        osg::NodeVisitor(osg::NodeVisitor::NODE_VISITOR,
-                         osg::NodeVisitor::TRAVERSE_ALL_CHILDREN)
-    { }
-    virtual void apply(osg::Geode& geode)
-    {
-        osg::TemplatePrimitiveFunctor<LinePrimitiveFunctor> pf;
-        pf._lineCollector = this;
-        for (unsigned i = 0; i < geode.getNumDrawables(); ++i) {
-            geode.getDrawable(i)->accept(pf);
-        }
-    }
-    virtual void apply(osg::Node& node)
-    {
-        traverse(node);
-    }
-    virtual void apply(osg::Transform& transform)
-    {
-        osg::Matrix matrix = _matrix;
-        if (transform.computeLocalToWorldMatrix(_matrix, this))
-            traverse(transform);
-        _matrix = matrix;
-    }
-    
-    const std::vector<SGLineSegmentf>& getLineSegments() const
-    { return _lineSegments; }
-    
-    void addLine(const osg::Vec3& v1, const osg::Vec3& v2)
-    {
-        // Trick to get the ends in the right order.
-        // Use the x axis in the original coordinate system. Choose the
-        // most negative x-axis as the one pointing forward
-        SGVec3f tv1(_matrix.preMult(v1));
-        SGVec3f tv2(_matrix.preMult(v2));
-        if (tv1[0] > tv2[0])
-            _lineSegments.push_back(SGLineSegmentf(tv1, tv2));
-        else
-            _lineSegments.push_back(SGLineSegmentf(tv2, tv1));
-    }
-
-    void addBVHElements(osg::Node& node, simgear::BVHLineGeometry::Type type)
-    {
-        if (_lineSegments.empty())
-            return;
-
-        SGSceneUserData* userData;
-        userData = SGSceneUserData::getOrCreateSceneUserData(&node);
-
-        simgear::BVHNode* bvNode = userData->getBVHNode();
-        if (!bvNode && _lineSegments.size() == 1) {
-            simgear::BVHLineGeometry* bvLine;
-            bvLine = new simgear::BVHLineGeometry(_lineSegments.front(), type);
-            userData->setBVHNode(bvLine);
-            return;
-        }
-
-        simgear::BVHGroup* group = new simgear::BVHGroup;
-        if (bvNode)
-            group->addChild(bvNode);
-
-        for (unsigned i = 0; i < _lineSegments.size(); ++i) {
-            simgear::BVHLineGeometry* bvLine;
-            bvLine = new simgear::BVHLineGeometry(_lineSegments[i], type);
-            group->addChild(bvLine);
-        }
-        userData->setBVHNode(group);
-    }
-    
-private:
-    osg::Matrix _matrix;
-    std::vector<SGLineSegmentf> _lineSegments;
-};
-
-class FGCarrierVisitor : public osg::NodeVisitor {
-public:
-    FGCarrierVisitor(FGAICarrier* carrier,
-                     const std::list<std::string>& wireObjects,
-                     const std::list<std::string>& catapultObjects) :
-        osg::NodeVisitor(osg::NodeVisitor::NODE_VISITOR,
-                         osg::NodeVisitor::TRAVERSE_ALL_CHILDREN),
-        mWireObjects(wireObjects),
-        mCatapultObjects(catapultObjects)
-    { }
-    virtual void apply(osg::Node& node)
-    {
-        if (std::find(mWireObjects.begin(), mWireObjects.end(), node.getName())
-            != mWireObjects.end()) {
-            LineCollector lineCollector;
-            node.accept(lineCollector);
-            simgear::BVHLineGeometry::Type type;
-            type = simgear::BVHLineGeometry::CarrierWire;
-            lineCollector.addBVHElements(node, type);
-        }
-        if (std::find(mCatapultObjects.begin(), mCatapultObjects.end(),
-                      node.getName()) != mCatapultObjects.end()) {
-            LineCollector lineCollector;
-            node.accept(lineCollector);
-            simgear::BVHLineGeometry::Type type;
-            type = simgear::BVHLineGeometry::CarrierCatapult;
-            lineCollector.addBVHElements(node, type);
-        }
-        
-        traverse(node);
-    }
-    
-private:
-    std::list<std::string> mWireObjects;
-    std::list<std::string> mCatapultObjects;
-};
 
 FGAICarrier::FGAICarrier() : FGAIShip(otCarrier) {
 }
@@ -207,22 +69,8 @@ void FGAICarrier::readFromScenario(SGPropertyNode* scFileNode) {
   } else
     flols_off = SGVec3d::zeros();
 
-  std::vector<SGPropertyNode_ptr> props = scFileNode->getChildren("wire");
+  std::vector<SGPropertyNode_ptr> props = scFileNode->getChildren("parking-pos");
   std::vector<SGPropertyNode_ptr>::const_iterator it;
-  for (it = props.begin(); it != props.end(); ++it) {
-    std::string s = (*it)->getStringValue();
-    if (!s.empty())
-      wire_objects.push_back(s);
-  }
-
-  props = scFileNode->getChildren("catapult");
-  for (it = props.begin(); it != props.end(); ++it) {
-    std::string s = (*it)->getStringValue();
-    if (!s.empty())
-      catapult_objects.push_back(s);
-  }
-
-  props = scFileNode->getChildren("parking-pos");
   for (it = props.begin(); it != props.end(); ++it) {
     string name = (*it)->getStringValue("name", "unnamed");
     // Transform to the right coordinate frame, configuration is done in
@@ -385,16 +233,6 @@ bool FGAICarrier::init(bool search_in_AI_path) {
     jbd_transition_time = 3;
     jbd_time_constant = 0.1;
     return true;
-}
-
-void FGAICarrier::initModel(osg::Node *node)
-{
-    // SG_LOG(SG_GENERAL, SG_BULK, "AICarrier::initModel()" );
-    FGAIShip::initModel(node);
-    // process the 3d model here
-    // mark some objects solid, mark the wires ...
-    FGCarrierVisitor carrierVisitor(this, wire_objects, catapult_objects);
-    node->accept(carrierVisitor);
 }
 
 void FGAICarrier::bind() {
