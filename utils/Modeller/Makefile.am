@@ -7,7 +7,7 @@ noinst_PROGRAMS = animassist normalmap photomodel
 animassist_SOURCES = animassist.c
 animassist_LDADD = $(base_LIBS)
 
-normalmap_SOURCES = normalmap.cxx
+normalmap_SOURCES = normalmap.cxx texture.cxx texture.hxx colours.h
 normalmap_LDADD = -lsgscreen $(opengl_LIBS) $(base_LIBS) -lz
 
 photomodel_SOURCES = photomodel.cxx
