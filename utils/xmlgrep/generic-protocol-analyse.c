@@ -79,7 +79,7 @@ void print_binary_protocol(void *id, char *filename, char *dir)
    void *xid;
 
    printf("\n%s\n", filename);
-   printf("Generic binary %s protocol packet descriptopn:\n\n", dir);
+   printf("Generic binary %s protocol packet description:\n\n", dir);
    printf(" pos | size |  type  | factor     | description\n");
    printf("-----|------|--------|------------|------------------------\n");
    xid = xmlMarkId(id);
