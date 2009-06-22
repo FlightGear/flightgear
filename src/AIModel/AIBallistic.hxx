@@ -43,8 +43,6 @@ public:
 
     void readFromScenario(SGPropertyNode* scFileNode);
 
-    virtual osg::Node* load3DModel(const string &path,
-                           SGPropertyNode *prop_root);
     bool init(bool search_in_AI_path=false);
     virtual void bind();
     virtual void unbind();

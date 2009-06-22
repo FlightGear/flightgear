@@ -41,9 +41,9 @@
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
+#include <Scripting/NasalSys.hxx>
 
 #include "AIBase.hxx"
-#include "AIModelData.hxx"
 #include "AIManager.hxx"
 
 const char *default_model = "Models/Geometry/glider.ac";
@@ -207,7 +207,8 @@ void FGAIBase::initModel(osg::Node *node)
 
 osg::Node* FGAIBase::load3DModel(const string &path, SGPropertyNode *prop_root)
 {
-  model = SGModelLib::loadPagedModel(path, prop_root, new FGAIModelData(this, prop_root));
+  model = SGModelLib::loadPagedModel(path, prop_root, new FGNasalModelData(prop_root));
+  initModel(model.get());
   return model.get();
 }
 
