@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <osg/GL>
 
-#include <simgear/screen/texture.hxx>
+#include "texture.hxx"
 
 
 static float contrast = 1.0;
