@@ -875,6 +875,17 @@ void FGMetarFetcher::init ()
 	_stale_count = 0;
 	_error_count = 0;
 	current_airport_id.clear();
+	/* Torsten Dreyer:
+	   hack to stop startup.nas complaining if metar arrives after nasal-dir-initialized
+	   is fired. Immediately fetch and wait for the METAR before continuing. This gets the
+	   /environment/metar/xxx properties filled before nasal-dir is initialized.
+	   Maybe the runway selection should happen here to make startup.nas obsolete?
+	*/
+	const char * startup_airport = fgGetString("/sim/startup/options/airport");
+	if( *startup_airport ) {
+		current_airport_id = startup_airport;
+		fetch( current_airport_id );
+	}
 }
 
 void FGMetarFetcher::reinit ()
@@ -945,6 +956,9 @@ void FGMetarFetcher::update (double delta_time_sec)
 
 void FGMetarFetcher::fetch( const string & id )
 {
+	if( enable_n->getBoolValue() == false ) 
+		return;
+
 	SGSharedPtr<FGMetar> result = NULL;
 
 	// fetch current metar data
@@ -966,7 +980,7 @@ void FGMetarFetcher::fetch( const string & id )
 			}
 		} else {
 			_stale_count = 0;
-			}
+		}
 
 	} catch (const sg_io_exception& e) {
 		SG_LOG( SG_GENERAL, SG_WARN, "Error fetching live weather data: " << e.getFormattedMessage().c_str() );
