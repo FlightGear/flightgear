@@ -2750,12 +2750,6 @@
 				RelativePath="..\..\src\AIModel\AIManager.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\AIModel\AIModelData.cxx">
-			</File>
-			<File
-				RelativePath="..\..\src\AIModel\AIModelData.hxx">
-			</File>
-			<File
 				RelativePath="..\..\src\AIModel\AIMultiplayer.cxx">
 			</File>
 			<File
