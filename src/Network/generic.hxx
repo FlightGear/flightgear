@@ -88,6 +88,10 @@ private:
     int binary_record_length;
     enum {BYTE_ORDER_NEEDS_CONVERSION, BYTE_ORDER_MATCHES_NETWORK_ORDER} binary_byte_order;
 
+    bool gen_message_ascii();
+    bool gen_message_binary();
+    bool parse_message_ascii();
+    bool parse_message_binary();
     void read_config(SGPropertyNode *root, vector<_serial_prot> &msg);
     bool exitOnError;
 };
