@@ -54,6 +54,12 @@ FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false)
         configToken = 6; 
     }
 
+    if (configToken >= tokens.size()) {
+       SG_LOG(SG_GENERAL, SG_ALERT,
+              "Not enough tokens passed for generic protocol");
+       return;
+    }
+
     string config = tokens[ configToken ];
     string file = config+".xml";
 
@@ -93,7 +99,7 @@ FGGeneric::~FGGeneric() {
 
 
 // generate the message
-bool FGGeneric::gen_message() {
+bool FGGeneric::gen_message_binary() {
     string generic_sentence;
     char tmp[255];
     length = 0;
@@ -101,256 +107,305 @@ bool FGGeneric::gen_message() {
     double val;
     for (unsigned int i = 0; i < _out_message.size(); i++) {
 
-        if (i > 0 && !binary_mode)
-            generic_sentence += var_separator;
-
         switch (_out_message[i].type) {
         case FG_INT:
             val = _out_message[i].offset +
                   _out_message[i].prop->getIntValue() * _out_message[i].factor;
-            if (binary_mode) {
-                if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
-                    *((int32_t*)&buf[length]) = (int32_t)val;
-                } else {
-                    *((uint32_t*)&buf[length]) = sg_bswap_32((uint32_t)val);
-                }
-                length += sizeof(int32_t);
+
+            if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
+                *((int32_t*)&buf[length]) = (int32_t)val;
             } else {
-                snprintf(tmp, 255, _out_message[i].format.c_str(), (int)val);
+                *((uint32_t*)&buf[length]) = sg_bswap_32((uint32_t)val);
             }
+            length += sizeof(int32_t);
             break;
 
         case FG_BOOL:
-            if (binary_mode) {
-                *((int8_t*)&buf[length])
-                          = _out_message[i].prop->getBoolValue() ? true : false;
-                length += 1;
-            } else {
-                snprintf(tmp, 255, _out_message[i].format.c_str(),
-                                   _out_message[i].prop->getBoolValue());
-            }
+            *((int8_t*)&buf[length])
+                      = _out_message[i].prop->getBoolValue() ? true : false;
+            length += 1;
             break;
 
         case FG_FIXED:
+        {
             val = _out_message[i].offset +
-                _out_message[i].prop->getFloatValue() * _out_message[i].factor;
-            if (binary_mode) {
-                int fixed = (int)(val * 65536.0f); 
-                if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
-                    *((int32_t*)&buf[length]) = (int32_t)fixed;
-                } else {
-                    *((uint32_t*)&buf[length]) = sg_bswap_32((uint32_t)val);
-                } 
-                length += sizeof(int32_t);
-            } else {
-                snprintf(tmp, 255, _out_message[i].format.c_str(), (float)val);
-            }
-            break;
+                 _out_message[i].prop->getFloatValue() * _out_message[i].factor;
 
+            int fixed = (int)(val * 65536.0f); 
+            if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
+                *((int32_t*)&buf[length]) = (int32_t)fixed;
+            } else {
+                *((uint32_t*)&buf[length]) = sg_bswap_32((uint32_t)val);
+            } 
+            length += sizeof(int32_t);
+            break;
+        }
         case FG_FLOAT:
             val = _out_message[i].offset +
-                _out_message[i].prop->getFloatValue() * _out_message[i].factor;
-            if (binary_mode) {
-                if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
-                    *((float*)&buf[length]) = val;
-                } else {
-                    *((float*)&buf[length]) = sg_bswap_32(*(uint32_t*)&val);
-                }
-                length += sizeof(int32_t);
+                 _out_message[i].prop->getFloatValue() * _out_message[i].factor;
+
+            if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
+                *((float*)&buf[length]) = val;
             } else {
-                snprintf(tmp, 255, _out_message[i].format.c_str(), (float)val);
+                *((float*)&buf[length]) = sg_bswap_32(*(uint32_t*)&val);
             }
+            length += sizeof(int32_t);
             break;
 
         case FG_DOUBLE:
             val = _out_message[i].offset +
-                _out_message[i].prop->getFloatValue() * _out_message[i].factor;
-            if (binary_mode) {
-                if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
-                    *((double*)&buf[length]) = val;
-                } else {
-                    *((double*)&buf[length]) = sg_bswap_64(*(uint64_t*)&val);
-                }
-                length += sizeof(int64_t);
+                 _out_message[i].prop->getFloatValue() * _out_message[i].factor;
+
+            if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
+                *((double*)&buf[length]) = val;
             } else {
-                snprintf(tmp, 255, _out_message[i].format.c_str(), (float)val);
+                *((double*)&buf[length]) = sg_bswap_64(*(uint64_t*)&val);
             }
+            length += sizeof(int64_t);
             break;
 
         default: // SG_STRING
-            if (binary_mode) {
-                const char *strdata = _out_message[i].prop->getStringValue();
-                int strlength = strlen(strdata);
+            const char *strdata = _out_message[i].prop->getStringValue();
+            int strlength = strlen(strdata);
 
-                if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
-                    SG_LOG( SG_IO, SG_ALERT, "Generic protocol: "
-                            "FG_STRING will be written in host byte order.");
-                }
-                /* Format for strings is 
-                 * [length as int, 4 bytes][ASCII data, length bytes]
-                 */
-                if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
-                    *((int32_t*)&buf[length]) = strlength;
-                } else {
-                    *((int32_t*)&buf[length]) = sg_bswap_32(strlength);
-                }
-                length += sizeof(int32_t);
-                strncpy(&buf[length], strdata, strlength);
-                length += strlength; 
-                /* FIXME padding for alignment? Something like: 
-                 * length += (strlength % 4 > 0 ? sizeof(int32_t) - strlength % 4 : 0;
-                 */
-            } else {
-                snprintf(tmp, 255, _out_message[i].format.c_str(),
-                                   _out_message[i].prop->getStringValue());
+            if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
+                SG_LOG( SG_IO, SG_ALERT, "Generic protocol: "
+                        "FG_STRING will be written in host byte order.");
             }
-        }
-
-        if (!binary_mode) {
-            generic_sentence += tmp;
+            /* Format for strings is 
+             * [length as int, 4 bytes][ASCII data, length bytes]
+             */
+            if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
+                *((int32_t*)&buf[length]) = strlength;
+            } else {
+                *((int32_t*)&buf[length]) = sg_bswap_32(strlength);
+            }
+            length += sizeof(int32_t);
+            strncpy(&buf[length], strdata, strlength);
+            length += strlength; 
+            /* FIXME padding for alignment? Something like: 
+             * length += (strlength % 4 > 0 ? sizeof(int32_t) - strlength % 4 : 0;
+             */
         }
     }
 
-    if (!binary_mode) {
-        /* After each lot of variables has been added, put the line separator
-         * char/string
-         */
-        generic_sentence += line_separator;
+    // add the footer to the packet ("line")
+    switch (binary_footer_type) {
+        case FOOTER_LENGTH:
+            binary_footer_value = length;
+            break;
 
-        length =  generic_sentence.length();
-        strncpy( buf, generic_sentence.c_str(), length );
-    } else {
-        // add the footer to the packet ("line")
-        switch (binary_footer_type) {
-            case FOOTER_LENGTH:
-                binary_footer_value = length;
-                break;
+        case FOOTER_MAGIC:
+            break;
+    }
 
-            case FOOTER_MAGIC:
-                break;
+    if (binary_footer_type != FOOTER_NONE) {
+        if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
+            *((int32_t*)&buf[length]) = binary_footer_value;
+        } else {
+            *((int32_t*)&buf[length]) = sg_bswap_32(binary_footer_value);
         }
-        if (binary_footer_type != FOOTER_NONE) {
-            if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
-                *((int32_t*)&buf[length]) = binary_footer_value;
-            } else {
-                *((int32_t*)&buf[length]) = sg_bswap_32(binary_footer_value);
-            }
-            length += sizeof(int32_t);
-        }
+        length += sizeof(int32_t);
     }
 
     return true;
 }
 
-bool FGGeneric::parse_message() {
+bool FGGeneric::gen_message_ascii() {
+    string generic_sentence;
+    char tmp[255];
+    length = 0;
+
+    double val;
+    for (unsigned int i = 0; i < _out_message.size(); i++) {
+
+        if (i > 0) {
+            generic_sentence += var_separator;
+        }
+
+        switch (_out_message[i].type) {
+        case FG_INT:
+            val = _out_message[i].offset +
+                  _out_message[i].prop->getIntValue() * _out_message[i].factor;
+            snprintf(tmp, 255, _out_message[i].format.c_str(), (int)val);
+            break;
+
+        case FG_BOOL:
+            snprintf(tmp, 255, _out_message[i].format.c_str(),
+                               _out_message[i].prop->getBoolValue());
+            break;
+
+        case FG_FIXED:
+            val = _out_message[i].offset +
+                _out_message[i].prop->getFloatValue() * _out_message[i].factor;
+            snprintf(tmp, 255, _out_message[i].format.c_str(), (float)val);
+            break;
+
+        case FG_FLOAT:
+            val = _out_message[i].offset +
+                _out_message[i].prop->getFloatValue() * _out_message[i].factor;
+            snprintf(tmp, 255, _out_message[i].format.c_str(), (float)val);
+            break;
+
+        case FG_DOUBLE:
+            val = _out_message[i].offset +
+                _out_message[i].prop->getFloatValue() * _out_message[i].factor;
+            snprintf(tmp, 255, _out_message[i].format.c_str(), (float)val);
+            break;
+
+        default: // SG_STRING
+            snprintf(tmp, 255, _out_message[i].format.c_str(),
+                                   _out_message[i].prop->getStringValue());
+        }
+
+        generic_sentence += tmp;
+    }
+
+    /* After each lot of variables has been added, put the line separator
+     * char/string
+     */
+    generic_sentence += line_separator;
+
+    length =  generic_sentence.length();
+    strncpy( buf, generic_sentence.c_str(), length );
+
+    return true;
+}
+
+bool FGGeneric::gen_message() {
+    if (binary_mode) {
+        return gen_message_binary();
+    } else {
+        return gen_message_ascii();
+    }
+}
+
+bool FGGeneric::parse_message_binary() {
     char *p2, *p1 = buf;
+    int64_t tmp;
     double val;
     int i = -1;
 
-    if (!binary_mode) {
-        while ((++i < (int)_in_message.size()) &&
-               p1 && strcmp(p1, line_separator.c_str())) {
+    p2 = p1 + FG_MAX_MSG_SIZE;
+    while ((++i < (int)_in_message.size()) && (p1  < p2)) {
 
-            p2 = strstr(p1, var_separator.c_str());
-            if (p2) {
-                *p2 = 0;
-                p2 += var_separator.length();
+        switch (_in_message[i].type) {
+        case FG_INT:
+            if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
+                tmp = sg_bswap_32(*(int32_t *)p1);
+            } else {
+                tmp = *(int32_t *)p1;
             }
 
-            switch (_in_message[i].type) {
-            case FG_INT:
-                val = _in_message[i].offset + atoi(p1) * _in_message[i].factor;
-                _in_message[i].prop->setIntValue((int)val);
-                break;
+            val = _in_message[i].offset + (double)tmp * _in_message[i].factor;
 
-            case FG_BOOL:
-                _in_message[i].prop->setBoolValue( atof(p1) != 0.0 );
-                break;
+            _in_message[i].prop->setIntValue((int)val);
+            p1 += sizeof(int32_t);
+            break;
 
-            case FG_FIXED:
-            case FG_DOUBLE:
-                val = _in_message[i].offset + strtod(p1, 0) * _in_message[i].factor;
-                _in_message[i].prop->setFloatValue((float)val);
-                break;
+        case FG_BOOL:
+            _in_message[i].prop->setBoolValue( p1[0] != 0 );
+            p1 += 1;
+            break;
 
-            default: // SG_STRING
-                _in_message[i].prop->setStringValue(p1);
+        case FG_FIXED:
+            if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
+                tmp = sg_bswap_32(*(int32_t *)p1);
+            } else {
+                tmp = *(int32_t *)p1;
             }
 
-            p1 = p2;
-        }
-    } else {
-        /* Binary mode */
-        int64_t tmp;
-
-        while ((++i < (int)_in_message.size()) &&
-               (p1 - buf < FG_MAX_MSG_SIZE)) {
-
-            switch (_in_message[i].type) {
-            case FG_INT:
-                if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
-                    tmp = sg_bswap_32(*(int32_t *)p1);
-                } else {
-                    tmp = *(int32_t *)p1;
-                }
-                val = _in_message[i].offset +
-                  (double)tmp *
-                  _in_message[i].factor;
-                _in_message[i].prop->setIntValue((int)val);
-                p1 += sizeof(int32_t);
-                break;
-
-            case FG_BOOL:
-                _in_message[i].prop->setBoolValue( p1[0] != 0 );
-                p1 += 1;
-                break;
-
-            case FG_FIXED:
-                if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
-                    tmp = sg_bswap_32(*(int32_t *)p1);
-                } else {
-                    tmp = *(int32_t *)p1;
-                }
-                val = _in_message[i].offset +
+            val = _in_message[i].offset +
                   ((double)tmp / 65536.0f) * _in_message[i].factor;
-                _in_message[i].prop->setFloatValue(val);
-                p1 += sizeof(int32_t);
-                break;
 
-            case FG_FLOAT:
-                if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
-                    tmp = sg_bswap_32(*(int32_t *)p1);
-                } else {
-                    tmp = *(int32_t *)p1;
-                }
-                val = _in_message[i].offset +
-                  *(float *)&tmp * _in_message[i].factor;
-                _in_message[i].prop->setFloatValue(val);
-                p1 += sizeof(int32_t);
-                break;
+            _in_message[i].prop->setFloatValue(val);
+            p1 += sizeof(int32_t);
+            break;
 
-            case FG_DOUBLE:
-                if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
-                    tmp = sg_bswap_64(*(int64_t *)p1);
-                } else {
-                    tmp = *(int64_t *)p1;
-                }
-                val = _in_message[i].offset +
-                  *(double *)&tmp * _in_message[i].factor;
-                _in_message[i].prop->setDoubleValue(val);
-                p1 += sizeof(int64_t);
-                break;
-
-            default: // SG_STRING
-                SG_LOG( SG_IO, SG_ALERT, "Generic protocol: "
-                        "Ignoring unsupported binary input chunk type.");
+        case FG_FLOAT:
+            if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
+                tmp = sg_bswap_32(*(int32_t *)p1);
+            } else {
+                tmp = *(int32_t *)p1;
             }
+
+            val = _in_message[i].offset +
+                  *(float *)&tmp * _in_message[i].factor;
+
+            _in_message[i].prop->setFloatValue(val);
+            p1 += sizeof(int32_t);
+            break;
+
+        case FG_DOUBLE:
+            if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
+                tmp = sg_bswap_64(*(int64_t *)p1);
+            } else {
+                tmp = *(int64_t *)p1;
+            }
+
+            val = _in_message[i].offset +
+                   *(double *)&tmp * _in_message[i].factor;
+
+            _in_message[i].prop->setDoubleValue(val);
+            p1 += sizeof(int64_t);
+            break;
+
+        default: // SG_STRING
+            SG_LOG( SG_IO, SG_ALERT, "Generic protocol: "
+                    "Ignoring unsupported binary input chunk type.");
         }
     }
     
     return true;
 }
 
+bool FGGeneric::parse_message_ascii() {
+    char *p2, *p1 = buf;
+    double val;
+    int i = -1;
+
+    while ((++i < (int)_in_message.size()) &&
+           p1 && strcmp(p1, line_separator.c_str())) {
+
+        p2 = strstr(p1, var_separator.c_str());
+        if (p2) {
+            *p2 = 0;
+            p2 += var_separator.length();
+        }
+
+        switch (_in_message[i].type) {
+        case FG_INT:
+            val = _in_message[i].offset + atoi(p1) * _in_message[i].factor;
+            _in_message[i].prop->setIntValue((int)val);
+            break;
+
+        case FG_BOOL:
+            _in_message[i].prop->setBoolValue( atof(p1) != 0.0 );
+            break;
+
+        case FG_FIXED:
+        case FG_DOUBLE:
+            val = _in_message[i].offset + strtod(p1, 0) * _in_message[i].factor;
+            _in_message[i].prop->setFloatValue((float)val);
+            break;
+
+        default: // SG_STRING
+            _in_message[i].prop->setStringValue(p1);
+        }
+
+        p1 = p2;
+    }
+
+    return true;
+}
+
+bool FGGeneric::parse_message() {
+    if (binary_mode) {
+        return parse_message_binary(); 
+    } else {
+        return parse_message_ascii();
+    }
+}
 
 
 // open hailing frequencies
@@ -468,38 +523,41 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
         var_sep_string = fgUnescape(root->getStringValue("var_separator"));
         line_sep_string = fgUnescape(root->getStringValue("line_separator"));
 
-        if ( var_sep_string == "newline" )
-                var_separator = '\n';
-        else if ( var_sep_string == "tab" )
-                var_separator = '\t';
-        else if ( var_sep_string == "space" )
-                var_separator = ' ';
-        else if ( var_sep_string == "formfeed" )
-                var_separator = '\f';
-        else if ( var_sep_string == "carriagereturn" )
-                var_sep_string = '\r';
-        else if ( var_sep_string == "verticaltab" )
-                var_separator = '\v';
-        else
-                var_separator = var_sep_string;
+        if ( var_sep_string == "newline" ) {
+            var_separator = '\n';
+        } else if ( var_sep_string == "tab" ) {
+            var_separator = '\t';
+        } else if ( var_sep_string == "space" ) {
+            var_separator = ' ';
+        } else if ( var_sep_string == "formfeed" ) {
+            var_separator = '\f';
+        } else if ( var_sep_string == "carriagereturn" ) {
+            var_sep_string = '\r';
+        } else if ( var_sep_string == "verticaltab" ) {
+            var_separator = '\v';
+        } else {
+            var_separator = var_sep_string;
+        }
 
-        if ( line_sep_string == "newline" )
-                line_separator = '\n';
-        else if ( line_sep_string == "tab" )
-                line_separator = '\t';
-        else if ( line_sep_string == "space" )
-                line_separator = ' ';
-        else if ( line_sep_string == "formfeed" )
-                line_separator = '\f';
-        else if ( line_sep_string == "carriagereturn" )
-                line_separator = '\r';
-        else if ( line_sep_string == "verticaltab" )
-                line_separator = '\v';
-        else
-                line_separator = line_sep_string;
+        if ( line_sep_string == "newline" ) {
+            line_separator = '\n';
+        } else if ( line_sep_string == "tab" ) {
+            line_separator = '\t';
+        } else if ( line_sep_string == "space" ) {
+            line_separator = ' ';
+        } else if ( line_sep_string == "formfeed" ) {
+            line_separator = '\f';
+        } else if ( line_sep_string == "carriagereturn" ) {
+            line_separator = '\r';
+        } else if ( line_sep_string == "verticaltab" ) {
+            line_separator = '\v';
+        } else {
+            line_separator = line_sep_string;
+        }
     } else {
-        binary_footer_type = FOOTER_NONE; // default choice
-        binary_record_length = -1;           // default choice = sizeof(representation)
+        // default values: no footer and record_length = sizeof(representation)
+        binary_footer_type = FOOTER_NONE;
+        binary_record_length = -1;
 
         // default choice is network byte order (big endian)
         if (sgIsLittleEndian()) {
@@ -510,20 +568,23 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
 
         if ( root->hasValue("binary_footer") ) {
             string footer_type = root->getStringValue("binary_footer");
-            if ( footer_type == "length" )
+            if ( footer_type == "length" ) {
                 binary_footer_type = FOOTER_LENGTH;
-            else if ( footer_type.substr(0, 5) == "magic" ) {
+            } else if ( footer_type.substr(0, 5) == "magic" ) {
                 binary_footer_type = FOOTER_MAGIC;
                 binary_footer_value = strtol(footer_type.substr(6, 
                             footer_type.length() - 6).c_str(), (char**)0, 0);
-            } else if ( footer_type != "none" )
+            } else if ( footer_type != "none" ) {
                 SG_LOG(SG_IO, SG_ALERT,
-                       "generic protocol: Undefined generic binary protocol"
-                                           "footer, using no footer.");
+                       "generic protocol: Unknown generic binary protocol "
+                       "footer '" << footer_type << "', using no footer.");
+            }
         }
+
         if ( root->hasValue("record_length") ) {
             binary_record_length = root->getIntValue("record_length");
         }
+
         if ( root->hasValue("byte_order") ) {
             string byte_order = root->getStringValue("byte_order");
             if (byte_order == "network" ) {
@@ -583,7 +644,7 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
         binary_record_length = record_length;
     } else if (binary_record_length < record_length) {
         SG_LOG(SG_IO, SG_ALERT,
-               "generic protocol: Requested binary record length shorter than"
+               "generic protocol: Requested binary record length shorter than "
                " requested record representation.");
         binary_record_length = record_length;
     }
