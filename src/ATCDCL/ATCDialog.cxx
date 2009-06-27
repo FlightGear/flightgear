@@ -266,7 +266,7 @@ void FGATCDialog::PopupCallback(int num) {
 		//cout << "TOWER " << endl;
 		//cout << "ident is " << atcptr->get_ident() << endl;
 		atcmentry_vec_type atcmlist = (available_dialog[TOWER])[atcptr->get_ident()];
-		unsigned int size = atcmlist.size();
+		int size = atcmlist.size();
 		if(size && num < size) {
 			//cout << "Doing callback...\n";
 			ATCMenuEntry a = atcmlist[num];

@@ -256,12 +256,12 @@ FGInput::doKey (int k, int modifiers, int x, int y)
   _key_code = k;
   _key_modifiers = modifiers >> 1;
   _key_pressed = (modifiers & KEYMOD_RELEASED) == 0;
-  _key_shift = (modifiers & KEYMOD_SHIFT) != 0;
-  _key_ctrl = (modifiers & KEYMOD_CTRL) != 0;
-  _key_alt = (modifiers & KEYMOD_ALT) != 0;
-  _key_meta = (modifiers & KEYMOD_META) != 0;
-  _key_super = (modifiers & KEYMOD_SUPER) != 0;
-  _key_hyper = (modifiers & KEYMOD_HYPER) != 0;
+  _key_shift = getModShift();
+  _key_ctrl = getModCtrl();
+  _key_alt = getModAlt();
+  _key_meta = getModMeta();
+  _key_super = getModSuper();
+  _key_hyper = getModHyper();
   _key_event->fireValueChanged();
   if (_key_code < 0)
     return;

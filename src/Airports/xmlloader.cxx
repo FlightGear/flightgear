@@ -54,7 +54,7 @@ void XMLLoader::load(FGAirportDynamics* d) {
                readXML(parkpath.str(), visitor);
                d->init();
            } 
-           catch (const sg_exception &e) {
+           catch (const sg_exception &) {
            }
        }
     } else {
@@ -74,7 +74,7 @@ void XMLLoader::load(FGAirportDynamics* d) {
                     readXML(parkpath.str(), visitor);
                     d->init();
                 } 
-                catch (const sg_exception &e) {
+                catch (const sg_exception &) {
                 }
                 return;
             }
@@ -93,7 +93,7 @@ void XMLLoader::load(FGRunwayPreference* p) {
             try {
                 readXML(rwyPrefPath.str(), visitor);
             } 
-            catch (const sg_exception &e) {
+            catch (const sg_exception &) {
             }
          }
       }  else {
@@ -110,7 +110,7 @@ void XMLLoader::load(FGRunwayPreference* p) {
                try {
                    readXML(rwypath.str(), visitor);
                 } 
-                catch (const sg_exception &e) {
+                catch (const sg_exception &) {
                 }
                 return;
             }
@@ -136,7 +136,7 @@ void XMLLoader::load(FGSidStar* p) {
                    //cerr << "Reading SID procedure : " << sidpath.str() << endl;
                    p->load(sidpath);
                 } 
-                catch (const sg_exception &e) {
+                catch (const sg_exception &) {
                 }
                 return;
             }

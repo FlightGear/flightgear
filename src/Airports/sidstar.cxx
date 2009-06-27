@@ -55,7 +55,7 @@ void FGSidStar::load(SGPath filename) {
   string name;
   try {
       readProperties(filename.str(), &root);
-  } catch (const sg_exception &e) {
+  } catch (const sg_exception &) {
       SG_LOG(SG_GENERAL, SG_ALERT,
        "Error reading AI flight plan: " << filename.str());
        // cout << path.str() << endl;

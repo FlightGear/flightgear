@@ -392,7 +392,7 @@ void FGElectricalSystem::init () {
                         "details.");
                 exit(-1);
             }        
-        } catch (const sg_exception& exc) {
+        } catch (const sg_exception&) {
             SG_LOG( SG_ALL, SG_ALERT,
                     "Failed to load electrical system model: "
                     << config.str() );

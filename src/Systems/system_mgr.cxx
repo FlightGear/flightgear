@@ -53,7 +53,7 @@ FGSystemMgr::FGSystemMgr ()
                         " details.");
                 exit(-1);
             }        
-        } catch (const sg_exception& exc) {
+        } catch (const sg_exception&) {
             SG_LOG( SG_ALL, SG_ALERT, "Failed to load systems system model: "
                     << config.str() );
         }

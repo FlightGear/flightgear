@@ -178,9 +178,6 @@ void uiuc_menu( string aircraft_name )
 {
   string aircraft_directory;
   stack command_list;
-  double token_value;
-  int token_value_recordRate;
-  int token_value_convert1, token_value_convert2, token_value_convert3;
   
   string linetoken1;
   string linetoken2;
