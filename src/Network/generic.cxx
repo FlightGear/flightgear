@@ -45,7 +45,7 @@
 
 FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false)
 {
-    int configToken;
+    size_t configToken;
     if (tokens[1] == "socket") {
         configToken = 7;
     } else if (tokens[1] == "file") {
@@ -72,7 +72,7 @@ FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false)
     SGPropertyNode root;
     try {
         readProperties(path.str(), &root);
-    } catch (const sg_exception &e) {
+    } catch (const sg_exception &) {
         SG_LOG(SG_GENERAL, SG_ALERT,
          "Unable to load the protocol configuration file");
          return;
@@ -101,7 +101,6 @@ FGGeneric::~FGGeneric() {
 // generate the message
 bool FGGeneric::gen_message_binary() {
     string generic_sentence;
-    char tmp[255];
     length = 0;
 
     double val;
@@ -477,9 +476,10 @@ bool FGGeneric::process() {
     }
     return true;
 error_out:
-    if (exitOnError)
+    if (exitOnError) {
         fgExit(1);
-    else
+        return true; // should not get there, but please the compiler
+    } else
         return false;
 }
 
