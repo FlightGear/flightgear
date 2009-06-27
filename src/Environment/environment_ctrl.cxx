@@ -141,9 +141,9 @@ FGInterpolateEnvironmentCtrl::read_table (const SGPropertyNode * node, vector<bu
 {
 	double last_altitude_ft = 0.0;
 	double sort_required = false;
-	int i;
+	size_t i;
 
-	for (i = 0; i < node->nChildren(); i++) {
+	for (i = 0; i < (size_t)node->nChildren(); i++) {
 		const SGPropertyNode * child = node->getChild(i);
 		if ( strcmp(child->getName(), "entry") == 0
 		 && child->getStringValue("elevation-ft", "")[0] != '\0'

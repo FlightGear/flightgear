@@ -794,7 +794,6 @@ void Rotor::setCyclicail(float lval,float rval)
 void Rotor::setRotorBalance(float lval)
 {
     lval = Math::clamp(lval, -1, 1);
-    int i;
     _balance2 = lval;
 }
 

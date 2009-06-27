@@ -1053,8 +1053,9 @@ FGDialog::getKeyCode(const char *str)
             key = toupper(key);
         if (mod & CTRL)
             key = toupper(key) - '@';
-        if (mod & ALT)
+        /* if (mod & ALT)
             ;   // Alt not propagated to the gui
+        */
     } else {
         for (char *t = s; *t; t++)
             *t = tolower(*t);
