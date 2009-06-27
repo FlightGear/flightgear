@@ -297,6 +297,7 @@ class FGPredictor : public FGXMLAutoComponent {
 
 private:
     double last_value;
+    double average;
     FGXMLAutoInputList seconds;
     FGXMLAutoInputList filter_gain;
 

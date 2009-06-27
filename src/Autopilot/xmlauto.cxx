@@ -573,7 +573,8 @@ void FGPISimpleController::update( double dt ) {
 
 
 FGPredictor::FGPredictor ( SGPropertyNode *node ):
-    FGXMLAutoComponent( node )
+    FGXMLAutoComponent( node ),
+    average(0.0)
 {
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
@@ -618,7 +619,7 @@ void FGPredictor::update( double dt ) {
 
         if ( dt > 0.0 ) {
             double current = (ivalue - last_value)/dt; // calculate current error change (per second)
-            double average = dt < 1.0 ? ((1.0 - dt) * average + current * dt) : current;
+            average = dt < 1.0 ? ((1.0 - dt) * average + current * dt) : current;
 
             // calculate output with filter gain adjustment
             double output = ivalue + 
