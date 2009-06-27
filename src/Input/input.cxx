@@ -89,37 +89,37 @@ getModifiers ()
 static bool
 getModShift ()
 {
-  return bool(fgGetKeyModifiers() & KEYMOD_SHIFT);
+  return (fgGetKeyModifiers() & KEYMOD_SHIFT) != 0;
 }
 
 static bool
 getModCtrl ()
 {
-  return bool(fgGetKeyModifiers() & KEYMOD_CTRL);
+  return (fgGetKeyModifiers() & KEYMOD_CTRL) != 0;
 }
 
 static bool
 getModAlt ()
 {
-  return bool(fgGetKeyModifiers() & KEYMOD_ALT);
+  return (fgGetKeyModifiers() & KEYMOD_ALT) != 0;
 }
 
 static bool
 getModMeta ()
 {
-  return bool(fgGetKeyModifiers() & KEYMOD_META);
+  return (fgGetKeyModifiers() & KEYMOD_META) != 0;
 }
 
 static bool
 getModSuper ()
 {
-  return bool(fgGetKeyModifiers() & KEYMOD_SUPER);
+  return (fgGetKeyModifiers() & KEYMOD_SUPER) != 0;
 }
 
 static bool
 getModHyper ()
 {
-  return bool(fgGetKeyModifiers() & KEYMOD_HYPER);
+  return (fgGetKeyModifiers() & KEYMOD_HYPER) != 0;
 }
 
 
@@ -255,13 +255,13 @@ FGInput::doKey (int k, int modifiers, int x, int y)
 
   _key_code = k;
   _key_modifiers = modifiers >> 1;
-  _key_pressed = !bool(modifiers & KEYMOD_RELEASED);
-  _key_shift = bool(modifiers & KEYMOD_SHIFT);
-  _key_ctrl = bool(modifiers & KEYMOD_CTRL);
-  _key_alt = bool(modifiers & KEYMOD_ALT);
-  _key_meta = bool(modifiers & KEYMOD_META);
-  _key_super = bool(modifiers & KEYMOD_SUPER);
-  _key_hyper = bool(modifiers & KEYMOD_HYPER);
+  _key_pressed = (modifiers & KEYMOD_RELEASED) == 0;
+  _key_shift = (modifiers & KEYMOD_SHIFT) != 0;
+  _key_ctrl = (modifiers & KEYMOD_CTRL) != 0;
+  _key_alt = (modifiers & KEYMOD_ALT) != 0;
+  _key_meta = (modifiers & KEYMOD_META) != 0;
+  _key_super = (modifiers & KEYMOD_SUPER) != 0;
+  _key_hyper = (modifiers & KEYMOD_HYPER) != 0;
   _key_event->fireValueChanged();
   if (_key_code < 0)
     return;
