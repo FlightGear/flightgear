@@ -1946,12 +1946,6 @@
 				RelativePath="..\..\src\Main\viewmgr.hxx">
 			</File>
 			<File
-				RelativePath="..\..\src\Main\ViewPartitionNode.cxx">
-			</File>
-			<File
-				RelativePath="..\..\src\Main\ViewPartitionNode.hxx">
-			</File>
-			<File
 				RelativePath="..\..\src\Main\WindowBuilder.cxx">
 			</File>
 			<File

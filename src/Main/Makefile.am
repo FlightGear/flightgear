@@ -53,7 +53,6 @@ libMain_a_SOURCES = \
 	viewmgr.cxx viewmgr.hxx \
 	CameraGroup.cxx CameraGroup.hxx \
 	FGEventHandler.cxx FGEventHandler.hxx \
-	ViewPartitionNode.cxx ViewPartitionNode.hxx \
 	WindowSystemAdapter.hxx WindowSystemAdapter.cxx \
 	WindowBuilder.hxx WindowBuilder.cxx \
 	$(GFX_CODE)
