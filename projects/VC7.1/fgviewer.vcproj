@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\SimGear;..\..\..\install\msvc71\OpenSceneGraph\include;..\..\..\boost_1_36_0"
+				AdditionalIncludeDirectories="..\..\..\SimGear;..\..\..\install\msvc71\OpenSceneGraph\include;..\..\..\boost_1_36_0;..\..\..\3rdParty\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;NOMINMAX"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -70,7 +70,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\SimGear;..\..\..\install\msvc71\OpenSceneGraph\include;..\..\..\boost_1_36_0"
+				AdditionalIncludeDirectories="..\..\..\SimGear;..\..\..\install\msvc71\OpenSceneGraph\include;..\..\..\boost_1_36_0;..\..\..\3rdParty\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;NOMINMAX"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="TRUE"
