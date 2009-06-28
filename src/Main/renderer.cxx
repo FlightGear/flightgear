@@ -761,16 +761,6 @@ FGRenderer::resize( int width, int height ) {
     }
 }
 
-void FGRenderer::setCameraParameters(float vfov, float aspectRatio,
-                                     float zNear, float zFar)
-{
-    zNear = .1;
-    osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
-    viewer->getCamera()->setProjectionMatrixAsPerspective(vfov,
-                                                          1.0f / aspectRatio,
-                                                          zNear, zFar);
-    
-}
 bool
 FGRenderer::pick(std::vector<SGSceneryPick>& pickList,
                  const osgGA::GUIEventAdapter* ea)
