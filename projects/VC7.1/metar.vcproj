@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\SimGear;..\..\.."
+				AdditionalIncludeDirectories="..\..\..\SimGear;..\..\..\3rdParty\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -35,7 +35,7 @@
 				AdditionalDependencies="sg_d.lib ul_d.lib net_d.lib ws2_32.lib"
 				OutputFile="$(OutDir)/metar.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\..\..\plib"
+				AdditionalLibraryDirectories="..\..\..\3rdParty\lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/metar.pdb"
 				SubSystem="1"
@@ -69,7 +69,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\SimGear;..\..\.."
+				AdditionalIncludeDirectories="..\..\..\SimGear;..\..\..\3rdParty\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -83,7 +83,7 @@
 				AdditionalDependencies="sg.lib ul.lib net.lib ws2_32.lib"
 				OutputFile="bin/Release/metar.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\..\..\plib"
+				AdditionalLibraryDirectories="..\..\..\3rdParty\lib"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"

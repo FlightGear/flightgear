@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..;..\..\..\SimGear;..\..\..\install\msvc71\OpenSceneGraph\include;..\..\..\boost_1_36_0"
+				AdditionalIncludeDirectories="..\..\..\SimGear;..\..\..\install\msvc71\OpenSceneGraph\include;..\..\..\boost_1_36_0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;NOMINMAX"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -36,7 +36,7 @@
 				AdditionalDependencies="opengl32.lib osgd.lib osgDBd.lib osgViewerd.lib osgGAd.lib openthreadsd.lib osgParticled.lib osgUtild.lib ul_d.lib sg_d.lib zlibd.lib"
 				OutputFile="$(OutDir)/fgviewer.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\..\..\install\msvc71\OpenSceneGraph\lib;..\..\..\plib;..\..\..\3rdParty\lib"
+				AdditionalLibraryDirectories="..\..\..\install\msvc71\OpenSceneGraph\lib;..\..\..\3rdParty\lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/fgviewer.pdb"
 				SubSystem="1"
@@ -70,7 +70,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\..;..\..\..\SimGear;..\..\..\install\msvc71\OpenSceneGraph\include;..\..\..\boost_1_36_0"
+				AdditionalIncludeDirectories="..\..\..\SimGear;..\..\..\install\msvc71\OpenSceneGraph\include;..\..\..\boost_1_36_0"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;NOMINMAX"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="TRUE"
@@ -85,7 +85,7 @@
 				AdditionalDependencies="opengl32.lib osg.lib osgDB.lib osgViewer.lib osgGA.lib openthreads.lib osgParticle.lib osgUtil.lib ul.lib sg.lib zlib.lib"
 				OutputFile="bin/Release/fgviewer.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\..\..\install\msvc71\OpenSceneGraph\lib;..\..\..\plib;..\..\..\3rdParty\lib"
+				AdditionalLibraryDirectories="..\..\..\install\msvc71\OpenSceneGraph\lib;..\..\..\3rdParty\lib"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				OptimizeReferences="2"
