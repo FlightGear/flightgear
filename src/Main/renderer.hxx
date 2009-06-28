@@ -38,12 +38,6 @@ class FGEventHandler;
 class SGSky;
 extern SGSky *thesky;
 
-extern glPointParameterfProc glPointParameterfPtr;
-extern glPointParameterfvProc glPointParameterfvPtr;
-extern bool glPointParameterIsSupported;
-extern bool glPointSpriteIsSupported;
-
-
 class FGRenderer {
 
 public:
@@ -62,10 +56,6 @@ public:
     static void update( bool refresh_camera_settings );
     inline static void update() { update( true ); }
 
-    /** Set all the camera parameters at once. aspectRatio is height / width.
-     */
-    static void setCameraParameters(float vfov, float aspectRatio,
-                                    float zNear, float zFar);
     /** Just pick into the scene and return the pick callbacks on the way ...
      */
     static bool pick( std::vector<SGSceneryPick>& pickList,
