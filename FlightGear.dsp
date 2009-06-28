@@ -9485,36 +9485,6 @@ SOURCE=.\src\Main\FGManipulator.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=.\src\Main\ViewPartitionNode.cxx
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_Main"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_Main"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\src\Main\ViewPartitionNode.hxx
-
-!IF  "$(CFG)" == "FlightGear - Win32 Release"
-
-# PROP Intermediate_Dir "Release\Lib_Main"
-
-!ELSEIF  "$(CFG)" == "FlightGear - Win32 Debug"
-
-# PROP Intermediate_Dir "Debug\Lib_Main"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\src\Main\WindowSystemAdapter.hxx
 
 !IF  "$(CFG)" == "FlightGear - Win32 Release"
