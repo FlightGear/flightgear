@@ -213,7 +213,7 @@ bool FGAISchedule::update(time_t now)
     //cerr << "About to find a flight " << endl;
     if (flights.empty()) {
         //execute this loop at least once. 
-        SG_LOG(SG_GENERAL, SG_INFO, "Scheduling for : " << modelPath << " " <<  registration << " " << homePort);
+        SG_LOG(SG_GENERAL, SG_BULK, "Scheduling for : " << modelPath << " " <<  registration << " " << homePort);
         FGScheduledFlight *flight = 0;
          do {
             flight = findAvailableFlight(currentDestination, flightIdentifier);
@@ -227,7 +227,7 @@ bool FGAISchedule::update(time_t now)
 
                 depT = depT.substr(0,24);
                 arrT = arrT.substr(0,24);
-                SG_LOG(SG_GENERAL, SG_INFO, "  " << flight->getCallSign() << ":" 
+                SG_LOG(SG_GENERAL, SG_BULK, "  " << flight->getCallSign() << ":" 
                                          << "  " << flight->getDepartureAirport()->getId() << ":"
                                          << "  " << depT << ":"
                                          << " \"" << flight->getArrivalAirport()->getId() << "\"" << ":"
@@ -235,7 +235,7 @@ bool FGAISchedule::update(time_t now)
             flights.push_back(flight);
             }
         } while ((currentDestination != homePort) && (flight != 0));
-        SG_LOG(SG_GENERAL, SG_INFO, cerr << " Done " << endl);
+        SG_LOG(SG_GENERAL, SG_BULK, cerr << " Done " << endl);
     }
     //cerr << " Done " << endl;
    // No flights available for this aircraft
