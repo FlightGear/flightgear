@@ -446,32 +446,41 @@ bool FGGeneric::process() {
             goto error_out;
         }
     } else if ( get_direction() == SG_IO_IN ) {
-        if (!binary_mode) {
-            if ( (length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
-                parse_message();
+        if ( io->get_type() == sgFileType ) {
+            if (!binary_mode) {
+                length = io->readline( buf, FG_MAX_MSG_SIZE );
+                if ( length > 0 ) {
+                    parse_message();
+                } else {
+                    SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
+                    return false;
+                }
             } else {
-                SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
-                return false;
-            }
-        } else {
-            if ( (length = io->read( buf, binary_record_length )) > 0 ) {
-                if (length != binary_record_length) {
+                length = io->read( buf, binary_record_length );
+                if ( length == binary_record_length ) {
+                    parse_message();
+                } else {
                     SG_LOG( SG_IO, SG_ALERT,
                             "Generic protocol: Received binary "
                             "record of unexpected size, expected: "
-                            << binary_record_length << "received: "
+                            << binary_record_length << " but received: "
                             << length);
-                } else {
-                    SG_LOG( SG_IO, SG_DEBUG,
-                           "Generic protocol: received record of " << length <<
-                           " bytes.");
-                    parse_message();
                 }
-            } else {
-                SG_LOG( SG_IO, SG_INFO,
-                        "Generic protocol: Error reading data." );
-                return false;
             }
+        } else {
+            do {
+                if (!binary_mode) {
+                    length = io->readline( buf, FG_MAX_MSG_SIZE );
+                    if ( length > 0 ) {
+                        parse_message();
+                    }
+                } else {
+                    length = io->read( buf, binary_record_length );
+                    if ( length == binary_record_length ) {
+                        parse_message();
+                    }
+                }
+            } while ( length == binary_record_length );
         }
     }
     return true;
