@@ -478,6 +478,12 @@ bool FGGeneric::process() {
                     length = io->read( buf, binary_record_length );
                     if ( length == binary_record_length ) {
                         parse_message();
+                    } else if ( length > 0 ) {
+                        SG_LOG( SG_IO, SG_ALERT,
+                            "Generic protocol: Received binary "
+                            "record of unexpected size, expected: "
+                            << binary_record_length << " but received: "
+                            << length);
                     }
                 }
             } while ( length == binary_record_length );
