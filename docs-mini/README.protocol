@@ -56,12 +56,14 @@ and data sets, as well as a list of <chunk>s. Each <chunk> defines
 a property that should be written (and how), or a variable and which
 property it should be written to.
 
+--- ASCII protocol parameters ---
+
 output only:
-  <binary_mode>     BOOL    default: false (= ASCII mode)
   <preamble>        STRING  default: ""    file header put on top of the file
   <postamble>       STRING  default: ""    file footer put at the end of the file
 
 input & output:
+  <binary_mode>	    BOOL    default: false (= ASCII mode)
   <var_separator>   STRING  default: ""    field separator
   <line_separator>  STRING  default: ""    separator between data sets
 
@@ -90,6 +92,7 @@ or
   <line_separator>\r\n</line_separator>
 
 
+--- Binary protocol parameters ---
 
 To enable binary mode, simply include a <binary_mode>true</binary_mode> tag in
 your XML file. The format of the binary output is tightly packed, with 1 byte
@@ -115,23 +118,22 @@ each of which describes the properties of on variable to write/read.
   <node>        the property tree node which provides the data
   <type>        the value type (needed for formatting)
                 one of string, float, bool, int (default: int)
-  <format>      defines the actual piece of text which should be sent.
+  <format>      (ASCII protocol only, not used or needed in binary mode)
+                defines the actual piece of text which should be sent.
                 it can include "printf" style formatting options like:
                                 <type>
                         %s      string
                         %d      integer (default)
                         %f      float
-                        (not used or needed in binary mode)
 
   <factor>      an optional multiplication factor which can be used for
                 unit conversion. (for example, radians to degrees).
   <offset>      an optional offset which can be used for unit conversion.
-                (for example, degrees to radians).
+                (for example, degrees Celcius to degrees Fahrenheit).
 
 
 Chunks can also consist of a single constant <format>, like in:
-
-
+  <format>Data Section</format>
 
 
 == examples ===================================================================
@@ -224,4 +226,25 @@ used as   $ fgfs --generic=file,out,1,/tmp/data.xml,xmltest
   </generic>
 </PropertyList>
 
+
+-- Analyzing the resulting binary packet format -------------------------------
+
+A utility called generic-protocol-analyse can be found under
+FlightGear/utils/xmlgrep which can be used to analyze the resulting
+data packet for the binary protocol.
+
+The output would be something like:
+
+bintest.xml
+Generic binary output protocol packet description:
+
+ pos | size |  type  | factor     | description
+-----|------|--------|------------|------------------------
+   0 |    4 |    int |            | indicated speed (kt)
+   4 |    4 |  float |            | pitch att (deg)
+   8 |    4 |  float |            | magnetic heading (deg)
+  12 |    4 |    int |            | outside air temperarure (degF)
+  16 |    1 |   bool |            | autocoord
+
+total package size: 17 bytes
 
