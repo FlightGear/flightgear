@@ -633,7 +633,10 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
         chunk.prop = fgGetNode(node.c_str(), true);
 
         string type = chunks[i]->getStringValue("type");
-        if (type == "bool") {
+
+        // Note: officially the type is called 'bool' but for backward
+        //       compatibility 'boolean' will also be supported.
+        if (type == "bool" || type == "boolean") {
             chunk.type = FG_BOOL;
             record_length += 1;
         } else if (type == "float") {
