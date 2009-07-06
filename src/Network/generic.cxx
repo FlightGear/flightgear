@@ -281,7 +281,8 @@ bool FGGeneric::gen_message() {
 
 bool FGGeneric::parse_message_binary() {
     char *p2, *p1 = buf;
-    int64_t tmp;
+    int32_t tmp32;
+    int64_t tmp64;
     double val;
     int i = -1;
 
@@ -291,12 +292,12 @@ bool FGGeneric::parse_message_binary() {
         switch (_in_message[i].type) {
         case FG_INT:
             if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
-                tmp = sg_bswap_32(*(int32_t *)p1);
+                tmp32 = sg_bswap_32(*(int32_t *)p1);
             } else {
-                tmp = *(int32_t *)p1;
+                tmp32 = *(int32_t *)p1;
             }
 
-            val = _in_message[i].offset + (double)tmp * _in_message[i].factor;
+            val = _in_message[i].offset + (double)tmp32 * _in_message[i].factor;
 
             _in_message[i].prop->setIntValue((int)val);
             p1 += sizeof(int32_t);
@@ -309,13 +310,13 @@ bool FGGeneric::parse_message_binary() {
 
         case FG_FIXED:
             if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
-                tmp = sg_bswap_32(*(int32_t *)p1);
+                tmp32 = sg_bswap_32(*(int32_t *)p1);
             } else {
-                tmp = *(int32_t *)p1;
+                tmp32 = *(int32_t *)p1;
             }
 
             val = _in_message[i].offset +
-                  ((double)tmp / 65536.0f) * _in_message[i].factor;
+                  ((double)tmp32 / 65536.0f) * _in_message[i].factor;
 
             _in_message[i].prop->setFloatValue(val);
             p1 += sizeof(int32_t);
@@ -323,13 +324,13 @@ bool FGGeneric::parse_message_binary() {
 
         case FG_FLOAT:
             if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
-                tmp = sg_bswap_32(*(int32_t *)p1);
+                tmp32 = sg_bswap_32(*(int32_t *)p1);
             } else {
-                tmp = *(int32_t *)p1;
+                tmp32 = *(int32_t *)p1;
             }
 
             val = _in_message[i].offset +
-                  *(float *)&tmp * _in_message[i].factor;
+                  *(float *)&tmp32 * _in_message[i].factor;
 
             _in_message[i].prop->setFloatValue(val);
             p1 += sizeof(int32_t);
@@ -337,13 +338,13 @@ bool FGGeneric::parse_message_binary() {
 
         case FG_DOUBLE:
             if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
-                tmp = sg_bswap_64(*(int64_t *)p1);
+                tmp64 = sg_bswap_64(*(int64_t *)p1);
             } else {
-                tmp = *(int64_t *)p1;
+                tmp64 = *(int64_t *)p1;
             }
 
             val = _in_message[i].offset +
-                   *(double *)&tmp * _in_message[i].factor;
+                   *(double *)&tmp64 * _in_message[i].factor;
 
             _in_message[i].prop->setDoubleValue(val);
             p1 += sizeof(int64_t);
