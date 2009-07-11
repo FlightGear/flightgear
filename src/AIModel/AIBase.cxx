@@ -318,9 +318,16 @@ void FGAIBase::unbind() {
     props->untie("radar/ht-diff-ft");
 
     props->untie("controls/lighting/nav-lights");
+
+    props->setBoolValue("/sim/controls/radar/", true);
+
 }
 
 double FGAIBase::UpdateRadar(FGAIManager* manager) {
+    bool control = fgGetBool("/sim/controls/radar", true);
+
+    if(!control) return 0;
+
     double radar_range_ft2 = fgGetDouble("/instrumentation/radar/range");
     bool force_on = fgGetBool("/instrumentation/radar/debug-mode", false);
     radar_range_ft2 *= SG_NM_TO_METER * SG_METER_TO_FEET * 1.1; // + 10%
