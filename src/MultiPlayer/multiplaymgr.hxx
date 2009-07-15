@@ -58,7 +58,7 @@ public:
   struct IdPropertyList {
     unsigned id;
     const char* name;
-    SGPropertyNode::Type type;
+    simgear::props::Type type;
   };
   static const IdPropertyList sIdPropertyList[];
   static const unsigned numProperties;

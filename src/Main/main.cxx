@@ -894,16 +894,17 @@ static void fgIdleFunction ( void ) {
 
 static void upper_case_property(const char *name)
 {
+    using namespace simgear::props;
     SGPropertyNode *p = fgGetNode(name, false);
     if (!p) {
         p = fgGetNode(name, true);
         p->setStringValue("");
     } else {
-        SGPropertyNode::Type t = p->getType();
-        if (t == SGPropertyNode::NONE || t == SGPropertyNode::UNSPECIFIED)
+        Type t = p->getType();
+        if (t == NONE || t == UNSPECIFIED)
             p->setStringValue("");
         else
-            assert(t == SGPropertyNode::STRING);
+            assert(t == STRING);
     }
     p->addChangeListener(new FGMakeUpperCase);
 }

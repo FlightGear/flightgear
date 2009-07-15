@@ -390,6 +390,7 @@ action_callback (puObject *object)
 static void
 copy_to_pui (SGPropertyNode *node, puObject *object)
 {
+    using namespace simgear::props;
     GUIInfo *info = (GUIInfo *)object->getUserData();
     if (!info) {
         SG_LOG(SG_GENERAL, SG_ALERT, "dialog: widget without GUIInfo!");
@@ -409,13 +410,13 @@ copy_to_pui (SGPropertyNode *node, puObject *object)
     }
 
     switch (node->getType()) {
-    case SGPropertyNode::BOOL:
-    case SGPropertyNode::INT:
-    case SGPropertyNode::LONG:
+    case BOOL:
+    case INT:
+    case LONG:
         object->setValue(node->getIntValue());
         break;
-    case SGPropertyNode::FLOAT:
-    case SGPropertyNode::DOUBLE:
+    case FLOAT:
+    case DOUBLE:
         object->setValue(node->getFloatValue());
         break;
     default:
@@ -429,18 +430,19 @@ copy_to_pui (SGPropertyNode *node, puObject *object)
 static void
 copy_from_pui (puObject *object, SGPropertyNode *node)
 {
+    using namespace simgear::props;
     // puText objects are immutable, so should not be copied out
     if (object->getType() & PUCLASS_TEXT)
         return;
 
     switch (node->getType()) {
-    case SGPropertyNode::BOOL:
-    case SGPropertyNode::INT:
-    case SGPropertyNode::LONG:
+    case BOOL:
+    case INT:
+    case LONG:
         node->setIntValue(object->getIntegerValue());
         break;
-    case SGPropertyNode::FLOAT:
-    case SGPropertyNode::DOUBLE:
+    case FLOAT:
+    case DOUBLE:
         node->setFloatValue(object->getFloatValue());
         break;
     default:

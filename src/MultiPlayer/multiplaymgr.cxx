@@ -60,171 +60,169 @@ const char sMULTIPLAYMGR_HID[] = MULTIPLAYTXMGR_HID;
 // A static map of protocol property id values to property paths,
 // This should be extendable dynamically for every specific aircraft ...
 // For now only that static list
-FGMultiplayMgr::IdPropertyList
-const FGMultiplayMgr::sIdPropertyList[] = {
-  {100, "surface-positions/left-aileron-pos-norm",  SGPropertyNode::FLOAT},
-  {101, "surface-positions/right-aileron-pos-norm", SGPropertyNode::FLOAT},
-  {102, "surface-positions/elevator-pos-norm",      SGPropertyNode::FLOAT},
-  {103, "surface-positions/rudder-pos-norm",        SGPropertyNode::FLOAT},
-  {104, "surface-positions/flap-pos-norm",          SGPropertyNode::FLOAT},
-  {105, "surface-positions/speedbrake-pos-norm",    SGPropertyNode::FLOAT},
-  {106, "gear/tailhook/position-norm",              SGPropertyNode::FLOAT},
-  {107, "gear/launchbar/position-norm",             SGPropertyNode::FLOAT},
-  {108, "gear/launchbar/state",                     SGPropertyNode::STRING},
-  {109, "gear/launchbar/holdback-position-norm",    SGPropertyNode::FLOAT},
-  {110, "canopy/position-norm",                     SGPropertyNode::FLOAT},
-  {111, "surface-positions/wing-pos-norm",          SGPropertyNode::FLOAT},
-  {112, "surface-positions/wing-fold-pos-norm",     SGPropertyNode::FLOAT},
+const FGMultiplayMgr::IdPropertyList
+FGMultiplayMgr::sIdPropertyList[] = {
+  {100, "surface-positions/left-aileron-pos-norm",  simgear::props::FLOAT},
+  {101, "surface-positions/right-aileron-pos-norm", simgear::props::FLOAT},
+  {102, "surface-positions/elevator-pos-norm",      simgear::props::FLOAT},
+  {103, "surface-positions/rudder-pos-norm",        simgear::props::FLOAT},
+  {104, "surface-positions/flap-pos-norm",          simgear::props::FLOAT},
+  {105, "surface-positions/speedbrake-pos-norm",    simgear::props::FLOAT},
+  {106, "gear/tailhook/position-norm",              simgear::props::FLOAT},
+  {107, "gear/launchbar/position-norm",             simgear::props::FLOAT},
+  {108, "gear/launchbar/state",                     simgear::props::STRING},
+  {109, "gear/launchbar/holdback-position-norm",    simgear::props::FLOAT},
+  {110, "canopy/position-norm",                     simgear::props::FLOAT},
+  {111, "surface-positions/wing-pos-norm",          simgear::props::FLOAT},
+  {112, "surface-positions/wing-fold-pos-norm",     simgear::props::FLOAT},
 
-  {200, "gear/gear[0]/compression-norm",           SGPropertyNode::FLOAT},
-  {201, "gear/gear[0]/position-norm",              SGPropertyNode::FLOAT},
-  {210, "gear/gear[1]/compression-norm",           SGPropertyNode::FLOAT},
-  {211, "gear/gear[1]/position-norm",              SGPropertyNode::FLOAT},
-  {220, "gear/gear[2]/compression-norm",           SGPropertyNode::FLOAT},
-  {221, "gear/gear[2]/position-norm",              SGPropertyNode::FLOAT},
-  {230, "gear/gear[3]/compression-norm",           SGPropertyNode::FLOAT},
-  {231, "gear/gear[3]/position-norm",              SGPropertyNode::FLOAT},
-  {240, "gear/gear[4]/compression-norm",           SGPropertyNode::FLOAT},
-  {241, "gear/gear[4]/position-norm",              SGPropertyNode::FLOAT},
+  {200, "gear/gear[0]/compression-norm",           simgear::props::FLOAT},
+  {201, "gear/gear[0]/position-norm",              simgear::props::FLOAT},
+  {210, "gear/gear[1]/compression-norm",           simgear::props::FLOAT},
+  {211, "gear/gear[1]/position-norm",              simgear::props::FLOAT},
+  {220, "gear/gear[2]/compression-norm",           simgear::props::FLOAT},
+  {221, "gear/gear[2]/position-norm",              simgear::props::FLOAT},
+  {230, "gear/gear[3]/compression-norm",           simgear::props::FLOAT},
+  {231, "gear/gear[3]/position-norm",              simgear::props::FLOAT},
+  {240, "gear/gear[4]/compression-norm",           simgear::props::FLOAT},
+  {241, "gear/gear[4]/position-norm",              simgear::props::FLOAT},
 
-  {300, "engines/engine[0]/n1",  SGPropertyNode::FLOAT},
-  {301, "engines/engine[0]/n2",  SGPropertyNode::FLOAT},
-  {302, "engines/engine[0]/rpm", SGPropertyNode::FLOAT},
-  {310, "engines/engine[1]/n1",  SGPropertyNode::FLOAT},
-  {311, "engines/engine[1]/n2",  SGPropertyNode::FLOAT},
-  {312, "engines/engine[1]/rpm", SGPropertyNode::FLOAT},
-  {320, "engines/engine[2]/n1",  SGPropertyNode::FLOAT},
-  {321, "engines/engine[2]/n2",  SGPropertyNode::FLOAT},
-  {322, "engines/engine[2]/rpm", SGPropertyNode::FLOAT},
-  {330, "engines/engine[3]/n1",  SGPropertyNode::FLOAT},
-  {331, "engines/engine[3]/n2",  SGPropertyNode::FLOAT},
-  {332, "engines/engine[3]/rpm", SGPropertyNode::FLOAT},
-  {340, "engines/engine[4]/n1",  SGPropertyNode::FLOAT},
-  {341, "engines/engine[4]/n2",  SGPropertyNode::FLOAT},
-  {342, "engines/engine[4]/rpm", SGPropertyNode::FLOAT},
-  {350, "engines/engine[5]/n1",  SGPropertyNode::FLOAT},
-  {351, "engines/engine[5]/n2",  SGPropertyNode::FLOAT},
-  {352, "engines/engine[5]/rpm", SGPropertyNode::FLOAT},
-  {360, "engines/engine[6]/n1",  SGPropertyNode::FLOAT},
-  {361, "engines/engine[6]/n2",  SGPropertyNode::FLOAT},
-  {362, "engines/engine[6]/rpm", SGPropertyNode::FLOAT},
-  {370, "engines/engine[7]/n1",  SGPropertyNode::FLOAT},
-  {371, "engines/engine[7]/n2",  SGPropertyNode::FLOAT},
-  {372, "engines/engine[7]/rpm", SGPropertyNode::FLOAT},
-  {380, "engines/engine[8]/n1",  SGPropertyNode::FLOAT},
-  {381, "engines/engine[8]/n2",  SGPropertyNode::FLOAT},
-  {382, "engines/engine[8]/rpm", SGPropertyNode::FLOAT},
-  {390, "engines/engine[9]/n1",  SGPropertyNode::FLOAT},
-  {391, "engines/engine[9]/n2",  SGPropertyNode::FLOAT},
-  {392, "engines/engine[9]/rpm", SGPropertyNode::FLOAT},
+  {300, "engines/engine[0]/n1",  simgear::props::FLOAT},
+  {301, "engines/engine[0]/n2",  simgear::props::FLOAT},
+  {302, "engines/engine[0]/rpm", simgear::props::FLOAT},
+  {310, "engines/engine[1]/n1",  simgear::props::FLOAT},
+  {311, "engines/engine[1]/n2",  simgear::props::FLOAT},
+  {312, "engines/engine[1]/rpm", simgear::props::FLOAT},
+  {320, "engines/engine[2]/n1",  simgear::props::FLOAT},
+  {321, "engines/engine[2]/n2",  simgear::props::FLOAT},
+  {322, "engines/engine[2]/rpm", simgear::props::FLOAT},
+  {330, "engines/engine[3]/n1",  simgear::props::FLOAT},
+  {331, "engines/engine[3]/n2",  simgear::props::FLOAT},
+  {332, "engines/engine[3]/rpm", simgear::props::FLOAT},
+  {340, "engines/engine[4]/n1",  simgear::props::FLOAT},
+  {341, "engines/engine[4]/n2",  simgear::props::FLOAT},
+  {342, "engines/engine[4]/rpm", simgear::props::FLOAT},
+  {350, "engines/engine[5]/n1",  simgear::props::FLOAT},
+  {351, "engines/engine[5]/n2",  simgear::props::FLOAT},
+  {352, "engines/engine[5]/rpm", simgear::props::FLOAT},
+  {360, "engines/engine[6]/n1",  simgear::props::FLOAT},
+  {361, "engines/engine[6]/n2",  simgear::props::FLOAT},
+  {362, "engines/engine[6]/rpm", simgear::props::FLOAT},
+  {370, "engines/engine[7]/n1",  simgear::props::FLOAT},
+  {371, "engines/engine[7]/n2",  simgear::props::FLOAT},
+  {372, "engines/engine[7]/rpm", simgear::props::FLOAT},
+  {380, "engines/engine[8]/n1",  simgear::props::FLOAT},
+  {381, "engines/engine[8]/n2",  simgear::props::FLOAT},
+  {382, "engines/engine[8]/rpm", simgear::props::FLOAT},
+  {390, "engines/engine[9]/n1",  simgear::props::FLOAT},
+  {391, "engines/engine[9]/n2",  simgear::props::FLOAT},
+  {392, "engines/engine[9]/rpm", simgear::props::FLOAT},
 
-  {800, "rotors/main/rpm", SGPropertyNode::FLOAT},
-  {801, "rotors/tail/rpm", SGPropertyNode::FLOAT},
-  {810, "rotors/main/blade[0]/position-deg",  SGPropertyNode::FLOAT},
-  {811, "rotors/main/blade[1]/position-deg",  SGPropertyNode::FLOAT},
-  {812, "rotors/main/blade[2]/position-deg",  SGPropertyNode::FLOAT},
-  {813, "rotors/main/blade[3]/position-deg",  SGPropertyNode::FLOAT},
-  {820, "rotors/main/blade[0]/flap-deg",  SGPropertyNode::FLOAT},
-  {821, "rotors/main/blade[1]/flap-deg",  SGPropertyNode::FLOAT},
-  {822, "rotors/main/blade[2]/flap-deg",  SGPropertyNode::FLOAT},
-  {823, "rotors/main/blade[3]/flap-deg",  SGPropertyNode::FLOAT},
-  {830, "rotors/tail/blade[0]/position-deg",  SGPropertyNode::FLOAT},
-  {831, "rotors/tail/blade[1]/position-deg",  SGPropertyNode::FLOAT},
+  {800, "rotors/main/rpm", simgear::props::FLOAT},
+  {801, "rotors/tail/rpm", simgear::props::FLOAT},
+  {810, "rotors/main/blade[0]/position-deg",  simgear::props::FLOAT},
+  {811, "rotors/main/blade[1]/position-deg",  simgear::props::FLOAT},
+  {812, "rotors/main/blade[2]/position-deg",  simgear::props::FLOAT},
+  {813, "rotors/main/blade[3]/position-deg",  simgear::props::FLOAT},
+  {820, "rotors/main/blade[0]/flap-deg",  simgear::props::FLOAT},
+  {821, "rotors/main/blade[1]/flap-deg",  simgear::props::FLOAT},
+  {822, "rotors/main/blade[2]/flap-deg",  simgear::props::FLOAT},
+  {823, "rotors/main/blade[3]/flap-deg",  simgear::props::FLOAT},
+  {830, "rotors/tail/blade[0]/position-deg",  simgear::props::FLOAT},
+  {831, "rotors/tail/blade[1]/position-deg",  simgear::props::FLOAT},
 
-  {900, "sim/hitches/aerotow/tow/length",                       SGPropertyNode::FLOAT},
-  {901, "sim/hitches/aerotow/tow/elastic-constant",             SGPropertyNode::FLOAT},
-  {902, "sim/hitches/aerotow/tow/weight-per-m-kg-m",            SGPropertyNode::FLOAT},
-  {903, "sim/hitches/aerotow/tow/dist",                         SGPropertyNode::FLOAT},
-  {904, "sim/hitches/aerotow/tow/connected-to-property-node",   SGPropertyNode::BOOL},
-  {905, "sim/hitches/aerotow/tow/connected-to-ai-or-mp-callsign",   SGPropertyNode::STRING},
-  {906, "sim/hitches/aerotow/tow/brake-force",                  SGPropertyNode::FLOAT},
-  {907, "sim/hitches/aerotow/tow/end-force-x",                  SGPropertyNode::FLOAT},
-  {908, "sim/hitches/aerotow/tow/end-force-y",                  SGPropertyNode::FLOAT},
-  {909, "sim/hitches/aerotow/tow/end-force-z",                  SGPropertyNode::FLOAT},
-  {930, "sim/hitches/aerotow/is-slave",                         SGPropertyNode::BOOL},
-  {931, "sim/hitches/aerotow/speed-in-tow-direction",           SGPropertyNode::FLOAT},
-  {932, "sim/hitches/aerotow/open",                             SGPropertyNode::BOOL},
-  {933, "sim/hitches/aerotow/local-pos-x",                      SGPropertyNode::FLOAT},
-  {934, "sim/hitches/aerotow/local-pos-y",                      SGPropertyNode::FLOAT},
-  {935, "sim/hitches/aerotow/local-pos-z",                      SGPropertyNode::FLOAT},
+  {900, "sim/hitches/aerotow/tow/length",                       simgear::props::FLOAT},
+  {901, "sim/hitches/aerotow/tow/elastic-constant",             simgear::props::FLOAT},
+  {902, "sim/hitches/aerotow/tow/weight-per-m-kg-m",            simgear::props::FLOAT},
+  {903, "sim/hitches/aerotow/tow/dist",                         simgear::props::FLOAT},
+  {904, "sim/hitches/aerotow/tow/connected-to-property-node",   simgear::props::BOOL},
+  {905, "sim/hitches/aerotow/tow/connected-to-ai-or-mp-callsign",   simgear::props::STRING},
+  {906, "sim/hitches/aerotow/tow/brake-force",                  simgear::props::FLOAT},
+  {907, "sim/hitches/aerotow/tow/end-force-x",                  simgear::props::FLOAT},
+  {908, "sim/hitches/aerotow/tow/end-force-y",                  simgear::props::FLOAT},
+  {909, "sim/hitches/aerotow/tow/end-force-z",                  simgear::props::FLOAT},
+  {930, "sim/hitches/aerotow/is-slave",                         simgear::props::BOOL},
+  {931, "sim/hitches/aerotow/speed-in-tow-direction",           simgear::props::FLOAT},
+  {932, "sim/hitches/aerotow/open",                             simgear::props::BOOL},
+  {933, "sim/hitches/aerotow/local-pos-x",                      simgear::props::FLOAT},
+  {934, "sim/hitches/aerotow/local-pos-y",                      simgear::props::FLOAT},
+  {935, "sim/hitches/aerotow/local-pos-z",                      simgear::props::FLOAT},
 
-  {1001, "controls/flight/slats",  SGPropertyNode::FLOAT},
-  {1002, "controls/flight/speedbrake",  SGPropertyNode::FLOAT},
-  {1003, "controls/flight/spoilers",  SGPropertyNode::FLOAT},
-  {1004, "controls/gear/gear-down",  SGPropertyNode::FLOAT},
-  {1005, "controls/lighting/nav-lights",  SGPropertyNode::FLOAT},
-  {1006, "controls/armament/station[0]/jettison-all",  SGPropertyNode::BOOL},
+  {1001, "controls/flight/slats",  simgear::props::FLOAT},
+  {1002, "controls/flight/speedbrake",  simgear::props::FLOAT},
+  {1003, "controls/flight/spoilers",  simgear::props::FLOAT},
+  {1004, "controls/gear/gear-down",  simgear::props::FLOAT},
+  {1005, "controls/lighting/nav-lights",  simgear::props::FLOAT},
+  {1006, "controls/armament/station[0]/jettison-all",  simgear::props::BOOL},
 
-  {1100, "sim/model/variant", SGPropertyNode::INT},
-  {1101, "sim/model/livery/file", SGPropertyNode::STRING},
+  {1100, "sim/model/variant", simgear::props::INT},
+  {1101, "sim/model/livery/file", simgear::props::STRING},
 
-  {1200, "environment/wildfire/data", SGPropertyNode::STRING},
+  {10001, "sim/multiplay/transmission-freq-hz",  simgear::props::STRING},
+  {10002, "sim/multiplay/chat",  simgear::props::STRING},
 
-  {10001, "sim/multiplay/transmission-freq-hz",  SGPropertyNode::STRING},
-  {10002, "sim/multiplay/chat",  SGPropertyNode::STRING},
+  {10100, "sim/multiplay/generic/string[0]", simgear::props::STRING},
+  {10101, "sim/multiplay/generic/string[1]", simgear::props::STRING},
+  {10102, "sim/multiplay/generic/string[2]", simgear::props::STRING},
+  {10103, "sim/multiplay/generic/string[3]", simgear::props::STRING},
+  {10104, "sim/multiplay/generic/string[4]", simgear::props::STRING},
+  {10105, "sim/multiplay/generic/string[5]", simgear::props::STRING},
+  {10106, "sim/multiplay/generic/string[6]", simgear::props::STRING},
+  {10107, "sim/multiplay/generic/string[7]", simgear::props::STRING},
+  {10108, "sim/multiplay/generic/string[8]", simgear::props::STRING},
+  {10109, "sim/multiplay/generic/string[9]", simgear::props::STRING},
+  {10110, "sim/multiplay/generic/string[10]", simgear::props::STRING},
+  {10111, "sim/multiplay/generic/string[11]", simgear::props::STRING},
+  {10112, "sim/multiplay/generic/string[12]", simgear::props::STRING},
+  {10113, "sim/multiplay/generic/string[13]", simgear::props::STRING},
+  {10114, "sim/multiplay/generic/string[14]", simgear::props::STRING},
+  {10115, "sim/multiplay/generic/string[15]", simgear::props::STRING},
+  {10116, "sim/multiplay/generic/string[16]", simgear::props::STRING},
+  {10117, "sim/multiplay/generic/string[17]", simgear::props::STRING},
+  {10118, "sim/multiplay/generic/string[18]", simgear::props::STRING},
+  {10119, "sim/multiplay/generic/string[19]", simgear::props::STRING},
 
-  {10100, "sim/multiplay/generic/string[0]", SGPropertyNode::STRING},
-  {10101, "sim/multiplay/generic/string[1]", SGPropertyNode::STRING},
-  {10102, "sim/multiplay/generic/string[2]", SGPropertyNode::STRING},
-  {10103, "sim/multiplay/generic/string[3]", SGPropertyNode::STRING},
-  {10104, "sim/multiplay/generic/string[4]", SGPropertyNode::STRING},
-  {10105, "sim/multiplay/generic/string[5]", SGPropertyNode::STRING},
-  {10106, "sim/multiplay/generic/string[6]", SGPropertyNode::STRING},
-  {10107, "sim/multiplay/generic/string[7]", SGPropertyNode::STRING},
-  {10108, "sim/multiplay/generic/string[8]", SGPropertyNode::STRING},
-  {10109, "sim/multiplay/generic/string[9]", SGPropertyNode::STRING},
-  {10110, "sim/multiplay/generic/string[10]", SGPropertyNode::STRING},
-  {10111, "sim/multiplay/generic/string[11]", SGPropertyNode::STRING},
-  {10112, "sim/multiplay/generic/string[12]", SGPropertyNode::STRING},
-  {10113, "sim/multiplay/generic/string[13]", SGPropertyNode::STRING},
-  {10114, "sim/multiplay/generic/string[14]", SGPropertyNode::STRING},
-  {10115, "sim/multiplay/generic/string[15]", SGPropertyNode::STRING},
-  {10116, "sim/multiplay/generic/string[16]", SGPropertyNode::STRING},
-  {10117, "sim/multiplay/generic/string[17]", SGPropertyNode::STRING},
-  {10118, "sim/multiplay/generic/string[18]", SGPropertyNode::STRING},
-  {10119, "sim/multiplay/generic/string[19]", SGPropertyNode::STRING},
+  {10200, "sim/multiplay/generic/float[0]", simgear::props::FLOAT},
+  {10201, "sim/multiplay/generic/float[1]", simgear::props::FLOAT},
+  {10202, "sim/multiplay/generic/float[2]", simgear::props::FLOAT},
+  {10203, "sim/multiplay/generic/float[3]", simgear::props::FLOAT},
+  {10204, "sim/multiplay/generic/float[4]", simgear::props::FLOAT},
+  {10205, "sim/multiplay/generic/float[5]", simgear::props::FLOAT},
+  {10206, "sim/multiplay/generic/float[6]", simgear::props::FLOAT},
+  {10207, "sim/multiplay/generic/float[7]", simgear::props::FLOAT},
+  {10208, "sim/multiplay/generic/float[8]", simgear::props::FLOAT},
+  {10209, "sim/multiplay/generic/float[9]", simgear::props::FLOAT},
+  {10210, "sim/multiplay/generic/float[10]", simgear::props::FLOAT},
+  {10211, "sim/multiplay/generic/float[11]", simgear::props::FLOAT},
+  {10212, "sim/multiplay/generic/float[12]", simgear::props::FLOAT},
+  {10213, "sim/multiplay/generic/float[13]", simgear::props::FLOAT},
+  {10214, "sim/multiplay/generic/float[14]", simgear::props::FLOAT},
+  {10215, "sim/multiplay/generic/float[15]", simgear::props::FLOAT},
+  {10216, "sim/multiplay/generic/float[16]", simgear::props::FLOAT},
+  {10217, "sim/multiplay/generic/float[17]", simgear::props::FLOAT},
+  {10218, "sim/multiplay/generic/float[18]", simgear::props::FLOAT},
+  {10219, "sim/multiplay/generic/float[19]", simgear::props::FLOAT},
 
-  {10200, "sim/multiplay/generic/float[0]", SGPropertyNode::FLOAT},
-  {10201, "sim/multiplay/generic/float[1]", SGPropertyNode::FLOAT},
-  {10202, "sim/multiplay/generic/float[2]", SGPropertyNode::FLOAT},
-  {10203, "sim/multiplay/generic/float[3]", SGPropertyNode::FLOAT},
-  {10204, "sim/multiplay/generic/float[4]", SGPropertyNode::FLOAT},
-  {10205, "sim/multiplay/generic/float[5]", SGPropertyNode::FLOAT},
-  {10206, "sim/multiplay/generic/float[6]", SGPropertyNode::FLOAT},
-  {10207, "sim/multiplay/generic/float[7]", SGPropertyNode::FLOAT},
-  {10208, "sim/multiplay/generic/float[8]", SGPropertyNode::FLOAT},
-  {10209, "sim/multiplay/generic/float[9]", SGPropertyNode::FLOAT},
-  {10210, "sim/multiplay/generic/float[10]", SGPropertyNode::FLOAT},
-  {10211, "sim/multiplay/generic/float[11]", SGPropertyNode::FLOAT},
-  {10212, "sim/multiplay/generic/float[12]", SGPropertyNode::FLOAT},
-  {10213, "sim/multiplay/generic/float[13]", SGPropertyNode::FLOAT},
-  {10214, "sim/multiplay/generic/float[14]", SGPropertyNode::FLOAT},
-  {10215, "sim/multiplay/generic/float[15]", SGPropertyNode::FLOAT},
-  {10216, "sim/multiplay/generic/float[16]", SGPropertyNode::FLOAT},
-  {10217, "sim/multiplay/generic/float[17]", SGPropertyNode::FLOAT},
-  {10218, "sim/multiplay/generic/float[18]", SGPropertyNode::FLOAT},
-  {10219, "sim/multiplay/generic/float[19]", SGPropertyNode::FLOAT},
-
-  {10300, "sim/multiplay/generic/int[0]", SGPropertyNode::INT},
-  {10301, "sim/multiplay/generic/int[1]", SGPropertyNode::INT},
-  {10302, "sim/multiplay/generic/int[2]", SGPropertyNode::INT},
-  {10303, "sim/multiplay/generic/int[3]", SGPropertyNode::INT},
-  {10304, "sim/multiplay/generic/int[4]", SGPropertyNode::INT},
-  {10305, "sim/multiplay/generic/int[5]", SGPropertyNode::INT},
-  {10306, "sim/multiplay/generic/int[6]", SGPropertyNode::INT},
-  {10307, "sim/multiplay/generic/int[7]", SGPropertyNode::INT},
-  {10308, "sim/multiplay/generic/int[8]", SGPropertyNode::INT},
-  {10309, "sim/multiplay/generic/int[9]", SGPropertyNode::INT},
-  {10310, "sim/multiplay/generic/int[10]", SGPropertyNode::INT},
-  {10311, "sim/multiplay/generic/int[11]", SGPropertyNode::INT},
-  {10312, "sim/multiplay/generic/int[12]", SGPropertyNode::INT},
-  {10313, "sim/multiplay/generic/int[13]", SGPropertyNode::INT},
-  {10314, "sim/multiplay/generic/int[14]", SGPropertyNode::INT},
-  {10315, "sim/multiplay/generic/int[15]", SGPropertyNode::INT},
-  {10316, "sim/multiplay/generic/int[16]", SGPropertyNode::INT},
-  {10317, "sim/multiplay/generic/int[17]", SGPropertyNode::INT},
-  {10318, "sim/multiplay/generic/int[18]", SGPropertyNode::INT},
-  {10319, "sim/multiplay/generic/int[19]", SGPropertyNode::INT},
+  {10300, "sim/multiplay/generic/int[0]", simgear::props::INT},
+  {10301, "sim/multiplay/generic/int[1]", simgear::props::INT},
+  {10302, "sim/multiplay/generic/int[2]", simgear::props::INT},
+  {10303, "sim/multiplay/generic/int[3]", simgear::props::INT},
+  {10304, "sim/multiplay/generic/int[4]", simgear::props::INT},
+  {10305, "sim/multiplay/generic/int[5]", simgear::props::INT},
+  {10306, "sim/multiplay/generic/int[6]", simgear::props::INT},
+  {10307, "sim/multiplay/generic/int[7]", simgear::props::INT},
+  {10308, "sim/multiplay/generic/int[8]", simgear::props::INT},
+  {10309, "sim/multiplay/generic/int[9]", simgear::props::INT},
+  {10310, "sim/multiplay/generic/int[10]", simgear::props::INT},
+  {10311, "sim/multiplay/generic/int[11]", simgear::props::INT},
+  {10312, "sim/multiplay/generic/int[12]", simgear::props::INT},
+  {10313, "sim/multiplay/generic/int[13]", simgear::props::INT},
+  {10314, "sim/multiplay/generic/int[14]", simgear::props::INT},
+  {10315, "sim/multiplay/generic/int[15]", simgear::props::INT},
+  {10316, "sim/multiplay/generic/int[16]", simgear::props::INT},
+  {10317, "sim/multiplay/generic/int[17]", simgear::props::INT},
+  {10318, "sim/multiplay/generic/int[18]", simgear::props::INT},
+  {10319, "sim/multiplay/generic/int[19]", simgear::props::INT}
 };
 
 const unsigned
@@ -270,6 +268,7 @@ namespace
 {
   bool verifyProperties(const xdr_data_t* data, const xdr_data_t* end)
   {
+    using namespace simgear::props;
     const xdr_data_t* xdr = data;
     while (xdr < end) {
       unsigned id = XDR_decode_uint32(*xdr);
@@ -280,13 +279,13 @@ namespace
         xdr++;
         // How we decode the remainder of the property depends on the type
         switch (plist->type) {
-        case SGPropertyNode::INT:        
-        case SGPropertyNode::BOOL:
-        case SGPropertyNode::LONG:
+        case INT:
+        case BOOL:
+        case LONG:
           xdr++;
           break;
-        case SGPropertyNode::FLOAT:
-        case SGPropertyNode::DOUBLE:
+        case FLOAT:
+        case DOUBLE:
           {
             float val = XDR_decode_float(*xdr);
             if (osg::isNaN(val))
@@ -294,8 +293,8 @@ namespace
             xdr++;
             break;
           }
-        case SGPropertyNode::STRING:
-        case SGPropertyNode::UNSPECIFIED:
+        case STRING:
+        case UNSPECIFIED:
           {
             // String is complicated. It consists of
             // The length of the string
@@ -567,21 +566,21 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
     xdr_data_t id =  XDR_encode_uint32((*it)->id);
     // The actual data representation depends on the type
     switch ((*it)->type) {
-      case SGPropertyNode::INT:        
-      case SGPropertyNode::BOOL:        
-      case SGPropertyNode::LONG:
+      case simgear::props::INT:
+      case simgear::props::BOOL:
+      case simgear::props::LONG:
         *ptr++ = id;
         *ptr++ = XDR_encode_uint32((*it)->int_value);
         //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->int_value << "\n";
         break;
-      case SGPropertyNode::FLOAT:
-      case SGPropertyNode::DOUBLE:
+      case simgear::props::FLOAT:
+      case simgear::props::DOUBLE:
         *ptr++ = id;
         *ptr++ = XDR_encode_float((*it)->float_value);
         //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->float_value << "\n";
         break;
-      case SGPropertyNode::STRING:
-      case SGPropertyNode::UNSPECIFIED:
+      case simgear::props::STRING:
+      case simgear::props::UNSPECIFIED:
         {
           // String is complicated. It consists of
           // The length of the string
@@ -864,7 +863,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
   }
   while (xdr < Msg.propsRecvdEnd()) {
     FGPropertyData* pData = new FGPropertyData;
-    SGPropertyNode::Type type = SGPropertyNode::UNSPECIFIED;
+    simgear::props::Type type = simgear::props::UNSPECIFIED;
     
     // First element is always the ID
     pData->id = XDR_decode_uint32(*xdr);
@@ -879,21 +878,21 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
       pData->type = plist->type;
       // How we decode the remainder of the property depends on the type
       switch (pData->type) {
-        case SGPropertyNode::INT:        
-        case SGPropertyNode::BOOL:
-        case SGPropertyNode::LONG:        
+        case simgear::props::INT:
+        case simgear::props::BOOL:
+        case simgear::props::LONG:
           pData->int_value = XDR_decode_uint32(*xdr);
           xdr++;
           //cout << pData->int_value << "\n";
           break;
-        case SGPropertyNode::FLOAT:
-        case SGPropertyNode::DOUBLE:
+        case simgear::props::FLOAT:
+        case simgear::props::DOUBLE:
           pData->float_value = XDR_decode_float(*xdr);
           xdr++;
           //cout << pData->float_value << "\n";
           break;
-        case SGPropertyNode::STRING:
-        case SGPropertyNode::UNSPECIFIED:
+        case simgear::props::STRING:
+        case simgear::props::UNSPECIFIED:
           {
             // String is complicated. It consists of
             // The length of the string

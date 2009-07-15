@@ -177,24 +177,25 @@ static SGPropertyNode* findnode(naContext c, naRef* vec, int len)
 // nil if it doesn't exist.
 static naRef f_getprop(naContext c, naRef me, int argc, naRef* args)
 {
+    using namespace simgear::props;
     const SGPropertyNode* p = findnode(c, args, argc);
     if(!p) return naNil();
 
     switch(p->getType()) {
-    case SGPropertyNode::BOOL:   case SGPropertyNode::INT:
-    case SGPropertyNode::LONG:   case SGPropertyNode::FLOAT:
-    case SGPropertyNode::DOUBLE:
+    case BOOL:   case INT:
+    case LONG:   case FLOAT:
+    case DOUBLE:
         return naNum(p->getDoubleValue());
 
-    case SGPropertyNode::STRING:
-    case SGPropertyNode::UNSPECIFIED:
+    case STRING:
+    case UNSPECIFIED:
         {
             naRef nastr = naNewString(c);
             const char* val = p->getStringValue();
             naStr_fromdata(nastr, (char*)val, strlen(val));
             return nastr;
         }
-    case SGPropertyNode::ALIAS: // <--- FIXME, recurse?
+    case ALIAS: // <--- FIXME, recurse?
     default:
         return naNil();
     }
@@ -1060,23 +1061,24 @@ void FGNasalListener::childRemoved(SGPropertyNode*, SGPropertyNode* child)
 
 bool FGNasalListener::changed(SGPropertyNode* node)
 {
-    SGPropertyNode::Type type = node->getType();
-    if(type == SGPropertyNode::NONE) return false;
-    if(type == SGPropertyNode::UNSPECIFIED) return true;
+    using namespace simgear::props;
+    Type type = node->getType();
+    if(type == NONE) return false;
+    if(type == UNSPECIFIED) return true;
 
     bool result;
     switch(type) {
-    case SGPropertyNode::BOOL:
-    case SGPropertyNode::INT:
-    case SGPropertyNode::LONG:
+    case BOOL:
+    case INT:
+    case LONG:
         {
             long l = node->getLongValue();
             result = l != _last_int;
             _last_int = l;
             return result;
         }
-    case SGPropertyNode::FLOAT:
-    case SGPropertyNode::DOUBLE:
+    case FLOAT:
+    case DOUBLE:
         {
             double d = node->getDoubleValue();
             result = d != _last_float;

@@ -533,7 +533,7 @@ fgTie (const char * name, T * obj, int index,
 class FGMakeUpperCase : public SGPropertyChangeListener {
 public:
     void valueChanged(SGPropertyNode *node) {
-        if (node->getType() != SGPropertyNode::STRING)
+        if (node->getType() != simgear::props::STRING)
             return;
 
         char *s = const_cast<char *>(node->getStringValue());

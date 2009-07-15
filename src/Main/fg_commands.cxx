@@ -133,15 +133,15 @@ static bool
 compare_values (SGPropertyNode * value1, SGPropertyNode * value2)
 {
     switch (value1->getType()) {
-    case SGPropertyNode::BOOL:
+    case simgear::props::BOOL:
         return (value1->getBoolValue() == value2->getBoolValue());
-    case SGPropertyNode::INT:
+    case simgear::props::INT:
         return (value1->getIntValue() == value2->getIntValue());
-    case SGPropertyNode::LONG:
+    case simgear::props::LONG:
         return (value1->getLongValue() == value2->getLongValue());
-    case SGPropertyNode::FLOAT:
+    case simgear::props::FLOAT:
         return (value1->getFloatValue() == value2->getFloatValue());
-    case SGPropertyNode::DOUBLE:
+    case simgear::props::DOUBLE:
         return (value1->getDoubleValue() == value2->getDoubleValue());
     default:
         return !strcmp(value1->getStringValue(), value2->getStringValue());
@@ -1224,7 +1224,7 @@ do_set_cursor (const SGPropertyNode * arg)
     }
 
     SGPropertyNode *cursor = const_cast<SGPropertyNode *>(arg)->getNode("cursor", true);
-    if (cursor->getType() != SGPropertyNode::NONE)
+    if (cursor->getType() != simgear::props::NONE)
         fgSetMouseCursor(cursor->getIntValue());
 
     cursor->setIntValue(fgGetMouseCursor());
