@@ -64,6 +64,10 @@ static string getValueTypeString(const SGPropertyNode *node)
         result = "double";
     else if (type == STRING)
         result = "string";
+    else if (type == VEC3D)
+        result = "vec3d";
+    else if (type == VEC4D)
+        result = "vec4d";
 
     return result;
 }
@@ -88,14 +92,18 @@ static void dumpProperties(const SGPropertyNode *node)
         switch (c->getType()) {
         case DOUBLE:
         case FLOAT:
-            cout << std::setprecision(15) << c->getDoubleValue();
+        case VEC3D:
+        case VEC4D:
+        {
+            streamsize precision = cout.precision(15);
+            c->printOn(cout);
+            cout.precision(precision);
+        }
             break;
         case LONG:
         case INT:
-            cout << c->getLongValue();
-            break;
         case BOOL:
-            cout << (c->getBoolValue() ? "true" : "false");
+            c->printOn(cout);
             break;
         case STRING:
             cout << '"' << c->getStringValue() << '"';
