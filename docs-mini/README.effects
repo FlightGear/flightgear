@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8">
+<!--
+   An effect consists of parameters and techniques. The "parameters"
+   section of an effect is a tree of values that describe, abstractly,
+   the graphical appearence of objects that use the effect. Techniques
+   refer to these parameters and use them to set OpenGL state or to
+   set parameters for shader programs. Parameters can be declared to
+   have a dynamic variance, which means that if their value is changed
+   the corresponding value in the technique will be changed too.
+
+   A technique can contain a predicate that describes the OpenGL
+   functionality required to support the technique. The first
+   technique with a valid predicate in the list of techniques is used
+   to set up the graphics state of the effect. A technique with no
+   predicate is always assumed to be valid.
+
+   A technique can consist of several passes, which are run in
+   sequence.
+
+   One feature not fully illustrated in the sample below is that
+   effects can inherit from each other. The parent effect is listed in
+   the "inherits-from" form. The child effect's property tree is
+   overlaid over that of the parent. This means that effects that
+   inherit from the example "default effect" below could be very
+   short, listing just new parameters and adding nothing to the
+   techniques section; alternatively, a technique could be altered or
+   customized in a child, listing (for example) a different shader
+   program. Terrain materials work in this way: for each material type
+   in materials.xml an effect is created that inherits from a single
+   default terrain effect. The parameters section of the effect is
+   filled in using the ambient, diffuse, etc. fields of the material.
+
+   Material animations will be implemented by creating a new effect
+   that inherits from one in a model, overriding the parameters that
+   will be animated.  
+   
+   Ultimately all OpenGL state will be setable in a technique. These
+   attributes and modes are currently implemented:
+   lighting - true, false
+   shade-model - flat, smooth
+   cull-face - front, back, front-back
+   rendering-hint - (OSG) opaque, transparent
+   render-bin - children: bin-number, bin-name
+   material - children: ambient, ambient-front, ambient-back, diffuse,
+   diffuse-front, diffuse-back, specular, specular-front,
+   specular-back, emissive, emissive-front, emissive-back, shininess,
+   shininess-front, shininess-back, color-mode
+   blend - true, false
+   alpha-test - true, false
+   texture-unit - 
+   	unit
+   	texture2d
+   		image (file name)
+		filter
+		mag-filter
+		wrap-s
+		wrap-t
+		wrap-r
+	environment
+		mode
+		color
+   program
+   	vertex-shader
+	fragment-shader
+   uniform
+	name
+	type - float, float-vec3, float-vec4, sampler-1d, sampler-2d,
+	       sampler-3d
+   polygon-mode
+   	front - fill, line, point
+	back - fill, line, point
+  -->
+<PropertyList>
+  <effect>
+    <name>city</name>
+    <!-- <inherits-from>another-effect</inherits-from> -->
+    <parameters>
+      <material>
+        <ambient type="vec4d">
+          0.0 0.0 0.0 1.0
+        </ambient>
+        <diffuse type="vec4d">
+          .5 .5 .5 1.0
+        </diffuse>
+        <specular type="vec4d">
+          0.3 0.3 0.3 1.0
+        </specular>
+        <emissive type="vec4d" variance="dynamic">
+          0.0 0.0 0.0 1.0
+        </emissive>
+        <shininess>1.2</shininess>
+      </material>
+      <texture n="0">
+        <texture2d>
+          <image>city.png</image>
+          <filter>linear-mipmap-linear</filter>
+          <!-- also repeat -->
+          <wrap-s>clamp</wrap-s>
+          <wrap-t>clamp-to-edge</wrap-t>
+          <!--
+             <wrap-r>clamp-to-border</wrap-r>
+             -->
+          <!-- float, signed-integer, integer -->
+          <internal-format>normalized</internal-format>
+        </texture2d>
+      </texture>
+      <texture n="1">
+        <texture2d>
+          <image>detail.png</image>
+          <filter>linear-mipmap-linear</filter>
+          <!-- also repeat -->
+          <wrap-s>clamp</wrap-s>
+          <wrap-t>clamp-to-edge</wrap-t>
+          <!--
+             <wrap-r>clamp-to-border</wrap-r>
+             -->
+          <!-- float, signed-integer, integer -->
+          <internal-format>normalized</internal-format>
+        </texture2d>
+      </texture>
+      <bump-height type="double">.05</bump-height>
+      <pattern-rotation type="vec4d">0 0 1 1.5708</pattern-rotation>
+    </parameters>
+    <technique>
+      <predicate>
+        <!-- This is the general way to test for shader support -->
+        <or>
+          <less-equal>
+            <value type="float">2.0</value>
+            <glversion/>
+          </less-equal>
+          <and>
+            <extension-supported>GL_ARB_shader_objects</extension-supported>
+            <extension-supported>GL_ARB_shading_language_100</extension-supported>
+            <extension-supported>GL_ARB_vertex_shader</extension-supported>
+            <extension-supported>GL_ARB_fragment_shader</extension-supported>
+          </and>
+        </or>
+      </predicate>
+      <pass>
+        <lighting>true</lighting>
+        <material>
+          <ambient><use>material/ambient</use></ambient>
+          <diffuse><use>material/diffuse</use></diffuse>
+          <specular><use>material/specular</use></specular>
+          <shininess><use>material/shininess</use></shininess>
+        </material>
+        <texture-unit>
+          <texture2d><use>texture[0]/texture2d</use></texture2d>
+        </texture-unit>
+        <texture-unit>
+          <texture2d><use>texture[1]/texture2d</use></texture2d>
+        </texture-unit>
+          <uniform>
+            <name>bumpHeight</name>
+            <type>float</type>
+            <use>bump-height</use>
+          </uniform>
+          <uniform>
+            <name>patternRotation</name>
+            <type>float-vec4</type>
+            <use>pattern-rotation</use>
+          </uniform>
+          <uniform>
+            <name>baseTexture</name>
+            <type>sampler-2d</type>
+            <value>0</value>
+          </uniform>
+          <uniform>
+            <name>detailTexture</name>
+            <type>sampler-2d</type>
+            <value>1</value>
+          </uniform>
+        <shader-program>
+          <!-- These two vertex shaders are linked together -->
+          <vertex-shader>
+            "Shaders/util.vert"
+          </vertex-shader>
+          <vertex-shader>
+            "Shaders/foo.vert"
+          </vertex-shader>
+          <fragment-shader>
+            "Shaders/foo.frag"
+          </fragment-shader>
+        </shader-program>
+      </pass>
+    </technique>
+    <!-- This  technique is always valid -->
+    <technique>
+      <pass>
+        <lighting>true</lighting>
+        <material>
+          <ambient><use>material/ambient</use></ambient>
+          <diffuse><use>material/diffuse</use></diffuse>
+          <specular><use>material/specular</use></specular>
+        </material>
+        <texture-unit>
+          <texture2d><use>texture[0]/texture2d</use></texture2d>
+        </texture-unit>
+      </pass>
+    </technique>
+  </effect>
+</PropertyList>
