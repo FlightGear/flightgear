@@ -224,12 +224,12 @@ void Hitch::setForceIsCalculatedByOther(bool b)
     _forceIsCalculatedByMaster=b;
 }
 
-const char *Hitch::getConnectedPropertyNode() const
+std::string Hitch::getConnectedPropertyNode() const
 {
     if (_towEndNode)
         return _towEndNode->getDisplayName();
     else
-        return 0;
+        return std::string("");
 }
 
 void Hitch::setConnectedPropertyNode(const char *nodename)
