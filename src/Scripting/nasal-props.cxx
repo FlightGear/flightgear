@@ -71,6 +71,8 @@ static naRef f_getType(naContext c, naRef me, int argc, naRef* args)
     case DOUBLE: t = "DOUBLE"; break;
     case STRING: t = "STRING"; break;
     case UNSPECIFIED: t = "UNSPECIFIED"; break;
+    case VEC3D:  t = "VEC3D";  break;
+    case VEC4D:  t = "VEC4D";  break;
     }
     return NASTR(t);
 }
@@ -141,6 +143,18 @@ static naRef f_getIndex(naContext c, naRef me, int argc, naRef* args)
     return naNum((*node)->getIndex());
 }
 
+template<typename T>
+naRef makeVectorFromVec(naContext c, const T& vec)
+{
+    const unsigned num_components
+        = sizeof(vec.data()) / sizeof(typename T::value_type);
+    naRef vector = naNewVector(c);
+    naVec_setsize(vector, num_components);
+    for (int i = 0; i < num_components; ++i)
+        naVec_set(vector, i, naNum(vec[i]));
+    return vector;
+}
+
 static naRef f_getValue(naContext c, naRef me, int argc, naRef* args)
 {
     using namespace simgear::props;
@@ -153,9 +167,30 @@ static naRef f_getValue(naContext c, naRef me, int argc, naRef* args)
     case STRING:
     case UNSPECIFIED:
         return NASTR((*node)->getStringValue());
+    case VEC3D:
+        return makeVectorFromVec(c, (*node)->getValue<SGVec3d>());
+    case VEC4D:
+        return makeVectorFromVec(c, (*node)->getValue<SGVec4d>());
     default:
         return naNil();
     }
+}
+
+template<typename T>
+T makeVecFromVector(naRef vector)
+{
+    T vec;
+    const unsigned num_components
+        = sizeof(vec.data()) / sizeof(typename T::value_type);
+    int size = naVec_size(vector);
+
+    for (int i = 0; i < num_components && i < size; ++i) {
+        naRef element = naVec_get(vector, i);
+        naRef n = naNumValue(element);
+        if (!naIsNil(n))
+            vec[i] = n.num;
+    }
+    return vec;
 }
 
 static naRef f_setValue(naContext c, naRef me, int argc, naRef* args)
@@ -163,8 +198,16 @@ static naRef f_setValue(naContext c, naRef me, int argc, naRef* args)
     NODEARG();
     naRef val = naVec_get(argv, 0);
     bool result = false;
-    if(naIsString(val)) result = (*node)->setStringValue(naStr_data(val));
-    else {
+    if(naIsString(val)) {
+        result = (*node)->setStringValue(naStr_data(val));
+    } else if(naIsVector(val)) {
+        if(naVec_size(val) == 3)
+            result = (*node)->setValue(makeVecFromVector<SGVec3d>(val));
+        else if(naVec_size(val) == 4)
+            result = (*node)->setValue(makeVecFromVector<SGVec4d>(val));
+        else
+            naRuntimeError(c, "props.setValue() vector value has wrong size");
+    } else {
         naRef n = naNumValue(val);
         if(naIsNil(n))
             naRuntimeError(c, "props.setValue() with non-number");
