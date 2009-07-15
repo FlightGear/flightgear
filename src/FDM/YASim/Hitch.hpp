@@ -1,6 +1,8 @@
 #ifndef _HITCH_HPP
 #define _HITCH_HPP
 
+#include <string>
+
 #include <Main/fg_props.hxx>
 
 namespace yasim {
@@ -48,7 +50,7 @@ public:
 
     void integrate (float dt);
 
-    const char *getConnectedPropertyNode() const;
+    std::string getConnectedPropertyNode() const;
     void setConnectedPropertyNode(const char *nodename);
 
 private:
