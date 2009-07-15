@@ -23,6 +23,7 @@
 #include "WindowSystemAdapter.hxx"
 #include <simgear/props/props.hxx>
 #include <simgear/structure/OSGUtils.hxx>
+#include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>
 
 #include <algorithm>
@@ -40,6 +41,7 @@
 #include <osgUtil/IntersectionVisitor>
 
 #include <osgViewer/GraphicsWindow>
+#include <osgViewer/Renderer>
 
 namespace flightgear
 {
@@ -100,14 +102,12 @@ void makeNewProjMat(Matrixd& oldProj, double znear,
 
 void installCullVisitor(Camera* camera)
 {
-#if 0 // Not yet
     osgViewer::Renderer* renderer
         = static_cast<osgViewer::Renderer*>(camera->getRenderer());
     for (int i = 0; i < 2; ++i) {
         osgUtil::SceneView* sceneView = renderer->getSceneView(i);
         sceneView->setCullVisitor(new simgear::EffectCullVisitor);
     }
-#endif
 }
 }
 
