@@ -33,6 +33,8 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
+#include <simgear/scene/material/Effect.hxx>
+#include <simgear/scene/material/EffectGeode.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
@@ -44,6 +46,7 @@
 #include "scenery.hxx"
 
 using namespace flightgear;
+using namespace simgear;
 
 class FGGroundPickCallback : public SGPickCallback {
 public:
@@ -154,8 +157,11 @@ FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
       if (alt < elevation) {
         alt = elevation;
         if (material) {
-          const osg::StateSet* stateSet = hit.getDrawable()->getStateSet();
-          *material = SGMaterialLib::findMaterial(stateSet);
+          *material = 0;
+          const EffectGeode* eg
+            = dynamic_cast<const EffectGeode*>(hit.getGeode());
+          if (eg)
+            *material = SGMaterialLib::findMaterial(eg->getEffect());
         }
       }
     }
