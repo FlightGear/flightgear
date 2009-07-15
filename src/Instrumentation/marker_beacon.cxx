@@ -109,11 +109,11 @@ FGMarkerBeacon::init ()
     audio_vol = node->getChild("volume", 0, true);
     serviceable = node->getChild("serviceable", 0, true);
 
-    if (power_btn->getType() == SGPropertyNode::NONE)
+    if (power_btn->getType() == simgear::props::NONE)
         power_btn->setBoolValue( true );
-    if (audio_btn->getType() == SGPropertyNode::NONE)
+    if (audio_btn->getType() == simgear::props::NONE)
         audio_btn->setBoolValue( true );
-    if (serviceable->getType() == SGPropertyNode::NONE)
+    if (serviceable->getType() == simgear::props::NONE)
         serviceable->setBoolValue( true );
 
     morse.init();

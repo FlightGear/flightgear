@@ -119,7 +119,7 @@ struct FGPropertyData {
   unsigned id;
   
   // While the type isn't transmitted, it is needed for the destructor
-  SGPropertyNode::Type type;
+  simgear::props::Type type;
   union { 
     int int_value;
     float float_value;
@@ -127,7 +127,7 @@ struct FGPropertyData {
   }; 
   
   ~FGPropertyData() {
-    if ((type == SGPropertyNode::STRING) || (type == SGPropertyNode::UNSPECIFIED))
+    if ((type == simgear::props::STRING) || (type == simgear::props::UNSPECIFIED))
     {
       delete [] string_value;
     }

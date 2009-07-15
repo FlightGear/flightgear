@@ -44,24 +44,25 @@ typedef string stdString;      // puObject has a "string" member
 
 static string getValueTypeString(const SGPropertyNode *node)
 {
+    using namespace simgear::props;
     string result;
 
-    SGPropertyNode::Type type = node->getType();
-    if (type == SGPropertyNode::UNSPECIFIED)
+    Type type = node->getType();
+    if (type == UNSPECIFIED)
         result = "unspecified";
-    else if (type == SGPropertyNode::NONE)
+    else if (type == NONE)
         result = "none";
-    else if (type == SGPropertyNode::BOOL)
+    else if (type == BOOL)
         result = "bool";
-    else if (type == SGPropertyNode::INT)
+    else if (type == INT)
         result = "int";
-    else if (type == SGPropertyNode::LONG)
+    else if (type == LONG)
         result = "long";
-    else if (type == SGPropertyNode::FLOAT)
+    else if (type == FLOAT)
         result = "float";
-    else if (type == SGPropertyNode::DOUBLE)
+    else if (type == DOUBLE)
         result = "double";
-    else if (type == SGPropertyNode::STRING)
+    else if (type == STRING)
         result = "string";
 
     return result;
@@ -70,11 +71,12 @@ static string getValueTypeString(const SGPropertyNode *node)
 
 static void dumpProperties(const SGPropertyNode *node)
 {
+    using namespace simgear::props;
     cout << node->getPath() << '/' << endl;
     for (int i = 0; i < node->nChildren(); i++) {
         const SGPropertyNode *c = node->getChild(i);
-        SGPropertyNode::Type type = c->getType();
-        if (type == SGPropertyNode::ALIAS || c->nChildren())
+        Type type = c->getType();
+        if (type == ALIAS || c->nChildren())
             continue;
 
         int index = c->getIndex();
@@ -84,21 +86,21 @@ static void dumpProperties(const SGPropertyNode *node)
         cout << " = ";
 
         switch (c->getType()) {
-        case SGPropertyNode::DOUBLE:
-        case SGPropertyNode::FLOAT:
+        case DOUBLE:
+        case FLOAT:
             cout << std::setprecision(15) << c->getDoubleValue();
             break;
-        case SGPropertyNode::LONG:
-        case SGPropertyNode::INT:
+        case LONG:
+        case INT:
             cout << c->getLongValue();
             break;
-        case SGPropertyNode::BOOL:
+        case BOOL:
             cout << (c->getBoolValue() ? "true" : "false");
             break;
-        case SGPropertyNode::STRING:
+        case STRING:
             cout << '"' << c->getStringValue() << '"';
             break;
-        case SGPropertyNode::NONE:
+        case NONE:
             break;
         default:
             cout << '\'' << c->getStringValue() << '\'';
@@ -232,7 +234,7 @@ void PropertyList::handle_select(puObject *list_box)
         }
 
         // it is a regular property
-        if (child->getType() == SGPropertyNode::BOOL && mod_ctrl) {
+        if (child->getType() == simgear::props::BOOL && mod_ctrl) {
             child->setBoolValue(!child->getBoolValue());
             prop_list->update(true);
         } else
@@ -299,6 +301,7 @@ void PropertyList::update(bool restore_pos)
 
 void PropertyList::updateTextForEntry(NodeData& data)
 {
+    using namespace simgear::props;
     SGPropertyNode *node = data.node;
     stdString name = node->getDisplayName(true);
     stdString type = getValueTypeString(node);
@@ -312,8 +315,8 @@ void PropertyList::updateTextForEntry(NodeData& data)
         line << '/';
 
     if (!children || (_verbose && node->hasValue())) {
-        if (node->getType() == SGPropertyNode::STRING
-                || node->getType() == SGPropertyNode::UNSPECIFIED)
+        if (node->getType() == STRING
+                || node->getType() == UNSPECIFIED)
             sanitize(value);
 
         line << " = '" << value << "' (" << type;

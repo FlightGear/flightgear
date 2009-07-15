@@ -58,18 +58,19 @@ naRef FGNasalSys::propNodeGhost(SGPropertyNode* handle)
 
 static naRef f_getType(naContext c, naRef me, int argc, naRef* args)
 {
+    using namespace simgear::props;
     NODEARG();
     const char* t = "unknown";
     switch((*node)->getType()) {
-    case SGPropertyNode::NONE:   t = "NONE";   break;
-    case SGPropertyNode::ALIAS:  t = "ALIAS";  break;
-    case SGPropertyNode::BOOL:   t = "BOOL";   break;
-    case SGPropertyNode::INT:    t = "INT";    break;
-    case SGPropertyNode::LONG:   t = "LONG";   break;
-    case SGPropertyNode::FLOAT:  t = "FLOAT";  break;
-    case SGPropertyNode::DOUBLE: t = "DOUBLE"; break;
-    case SGPropertyNode::STRING: t = "STRING"; break;
-    case SGPropertyNode::UNSPECIFIED: t = "UNSPECIFIED"; break;
+    case NONE:   t = "NONE";   break;
+    case ALIAS:  t = "ALIAS";  break;
+    case BOOL:   t = "BOOL";   break;
+    case INT:    t = "INT";    break;
+    case LONG:   t = "LONG";   break;
+    case FLOAT:  t = "FLOAT";  break;
+    case DOUBLE: t = "DOUBLE"; break;
+    case STRING: t = "STRING"; break;
+    case UNSPECIFIED: t = "UNSPECIFIED"; break;
     }
     return NASTR(t);
 }
@@ -142,14 +143,15 @@ static naRef f_getIndex(naContext c, naRef me, int argc, naRef* args)
 
 static naRef f_getValue(naContext c, naRef me, int argc, naRef* args)
 {
+    using namespace simgear::props;
     NODEARG();
     switch((*node)->getType()) {
-    case SGPropertyNode::BOOL:   case SGPropertyNode::INT:
-    case SGPropertyNode::LONG:   case SGPropertyNode::FLOAT:
-    case SGPropertyNode::DOUBLE:
+    case BOOL:   case INT:
+    case LONG:   case FLOAT:
+    case DOUBLE:
         return naNum((*node)->getDoubleValue());
-    case SGPropertyNode::STRING:
-    case SGPropertyNode::UNSPECIFIED:
+    case STRING:
+    case UNSPECIFIED:
         return NASTR((*node)->getStringValue());
     default:
         return naNil();

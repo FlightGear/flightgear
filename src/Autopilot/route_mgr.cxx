@@ -353,7 +353,7 @@ void FGRouteMgr::update_mirror() {
 
 bool FGRouteMgr::near_ground() {
     SGPropertyNode *gear = fgGetNode( "/gear/gear/wow", false );
-    if ( !gear || gear->getType() == SGPropertyNode::NONE )
+    if ( !gear || gear->getType() == simgear::props::NONE )
         return fgGetBool( "/sim/presets/onground", true );
 
     if ( fgGetDouble("/position/altitude-agl-ft", 300.0)

@@ -118,6 +118,8 @@ PropsChannel::collectIncomingData( const char* s, int n )
 static string
 getValueTypeString( const SGPropertyNode *node )
 {
+    using namespace simgear::props;
+
     string result;
 
     if ( node == NULL )
@@ -125,22 +127,22 @@ getValueTypeString( const SGPropertyNode *node )
         return "unknown";
     }
 
-    SGPropertyNode::Type type = node->getType();
-    if ( type == SGPropertyNode::UNSPECIFIED ) {
+    Type type = node->getType();
+    if ( type == UNSPECIFIED ) {
         result = "unspecified";
-    } else if ( type == SGPropertyNode::NONE ) {
+    } else if ( type == NONE ) {
         result = "none";
-    } else if ( type == SGPropertyNode::BOOL ) {
+    } else if ( type == BOOL ) {
         result = "bool";
-    } else if ( type == SGPropertyNode::INT ) {
+    } else if ( type == INT ) {
         result = "int";
-    } else if ( type == SGPropertyNode::LONG ) {
+    } else if ( type == LONG ) {
         result = "long";
-    } else if ( type == SGPropertyNode::FLOAT ) {
+    } else if ( type == FLOAT ) {
         result = "float";
-    } else if ( type == SGPropertyNode::DOUBLE ) {
+    } else if ( type == DOUBLE ) {
         result = "double";
-    } else if ( type == SGPropertyNode::STRING ) {
+    } else if ( type == STRING ) {
         result = "string";
     }
 
