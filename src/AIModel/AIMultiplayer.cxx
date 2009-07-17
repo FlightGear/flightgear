@@ -97,7 +97,7 @@ void FGAIMultiplayer::unbind() {
 
 void FGAIMultiplayer::update(double dt)
 {
-  using namespace simgear::props;
+  using namespace simgear;
 
   if (dt <= 0)
     return;
@@ -202,19 +202,19 @@ void FGAIMultiplayer::update(double dt)
         {
           //cout << "Found " << pIt->second->getPath() << ":";
           switch ((*firstPropIt)->type) {
-            case INT:
-            case BOOL:
-            case LONG:
+            case props::INT:
+            case props::BOOL:
+            case props::LONG:
               pIt->second->setIntValue((*firstPropIt)->int_value);
               //cout << "Int: " << (*firstPropIt)->int_value << "\n";
               break;
-            case FLOAT:
-            case DOUBLE:
+            case props::FLOAT:
+            case props::DOUBLE:
               pIt->second->setFloatValue((*firstPropIt)->float_value);
               //cout << "Flo: " << (*firstPropIt)->float_value << "\n";
               break;
-            case STRING:
-            case UNSPECIFIED:
+            case props::STRING:
+            case props::UNSPECIFIED:
               pIt->second->setStringValue((*firstPropIt)->string_value);
               //cout << "Str: " << (*firstPropIt)->string_value << "\n";    
               break;
@@ -276,23 +276,23 @@ void FGAIMultiplayer::update(double dt)
             int ival;
             float val;
             switch ((*prevPropIt)->type) {
-              case INT:
-              case BOOL:
-              case LONG:
+              case props::INT:
+              case props::BOOL:
+              case props::LONG:
                 ival = (int) (0.5+(1-tau)*((double) (*prevPropIt)->int_value) +
                   tau*((double) (*nextPropIt)->int_value));
                 pIt->second->setIntValue(ival);
                 //cout << "Int: " << ival << "\n";
                 break;
-              case FLOAT:
-              case DOUBLE:
+              case props::FLOAT:
+              case props::DOUBLE:
                 val = (1-tau)*(*prevPropIt)->float_value +
                   tau*(*nextPropIt)->float_value;
                 //cout << "Flo: " << val << "\n";
                 pIt->second->setFloatValue(val);
                 break;
-              case STRING:
-              case UNSPECIFIED:
+              case props::STRING:
+              case props::UNSPECIFIED:
                 //cout << "Str: " << (*nextPropIt)->string_value << "\n";
                 pIt->second->setStringValue((*nextPropIt)->string_value);
                 break;
@@ -389,19 +389,19 @@ void FGAIMultiplayer::update(double dt)
       if (pIt != mPropertyMap.end())
       {
         switch ((*firstPropIt)->type) {
-          case INT:
-          case BOOL:
-          case LONG:
+          case props::INT:
+          case props::BOOL:
+          case props::LONG:
             pIt->second->setIntValue((*firstPropIt)->int_value);
             //cout << "Int: " << (*firstPropIt)->int_value << "\n";
             break;
-          case FLOAT:
-          case DOUBLE:
+          case props::FLOAT:
+          case props::DOUBLE:
             pIt->second->setFloatValue((*firstPropIt)->float_value);
             //cout << "Flo: " << (*firstPropIt)->float_value << "\n";
             break;
-          case STRING:
-          case UNSPECIFIED:
+          case props::STRING:
+          case props::UNSPECIFIED:
             pIt->second->setStringValue((*firstPropIt)->string_value);
             //cout << "Str: " << (*firstPropIt)->string_value << "\n";
             break;
