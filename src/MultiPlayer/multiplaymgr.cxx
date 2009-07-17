@@ -268,7 +268,7 @@ namespace
 {
   bool verifyProperties(const xdr_data_t* data, const xdr_data_t* end)
   {
-    using namespace simgear::props;
+    using namespace simgear;
     const xdr_data_t* xdr = data;
     while (xdr < end) {
       unsigned id = XDR_decode_uint32(*xdr);
@@ -279,13 +279,13 @@ namespace
         xdr++;
         // How we decode the remainder of the property depends on the type
         switch (plist->type) {
-        case INT:
-        case BOOL:
-        case LONG:
+        case props::INT:
+        case props::BOOL:
+        case props::LONG:
           xdr++;
           break;
-        case FLOAT:
-        case DOUBLE:
+        case props::FLOAT:
+        case props::DOUBLE:
           {
             float val = XDR_decode_float(*xdr);
             if (osg::isNaN(val))
@@ -293,8 +293,8 @@ namespace
             xdr++;
             break;
           }
-        case STRING:
-        case UNSPECIFIED:
+        case props::STRING:
+        case props::UNSPECIFIED:
           {
             // String is complicated. It consists of
             // The length of the string

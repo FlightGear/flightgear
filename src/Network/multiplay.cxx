@@ -119,7 +119,7 @@ bool FGMultiplay::open() {
 * or receive data over the network
 ******************************************************************/
 bool FGMultiplay::process() {
-  using namespace simgear::props;
+  using namespace simgear;
   if (get_direction() == SG_IO_OUT) {
 
     // check if we have left initialization phase. That will not provide
@@ -202,17 +202,17 @@ bool FGMultiplay::process() {
       pData->type = it->second->getType();
       
       switch (pData->type) {
-        case INT:
-        case LONG:
-        case BOOL:
+        case props::INT:
+        case props::LONG:
+        case props::BOOL:
           pData->int_value = it->second->getIntValue();
           break;
-        case FLOAT:
-        case DOUBLE:
+        case props::FLOAT:
+        case props::DOUBLE:
           pData->float_value = it->second->getFloatValue();
           break;
-        case STRING:
-        case UNSPECIFIED:
+        case props::STRING:
+        case props::UNSPECIFIED:
           {
             // FIXME: We assume unspecified are strings for the moment.
 

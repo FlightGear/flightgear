@@ -58,21 +58,21 @@ naRef FGNasalSys::propNodeGhost(SGPropertyNode* handle)
 
 static naRef f_getType(naContext c, naRef me, int argc, naRef* args)
 {
-    using namespace simgear::props;
+    using namespace simgear;
     NODEARG();
     const char* t = "unknown";
     switch((*node)->getType()) {
-    case NONE:   t = "NONE";   break;
-    case ALIAS:  t = "ALIAS";  break;
-    case BOOL:   t = "BOOL";   break;
-    case INT:    t = "INT";    break;
-    case LONG:   t = "LONG";   break;
-    case FLOAT:  t = "FLOAT";  break;
-    case DOUBLE: t = "DOUBLE"; break;
-    case STRING: t = "STRING"; break;
-    case UNSPECIFIED: t = "UNSPECIFIED"; break;
-    case VEC3D:  t = "VEC3D";  break;
-    case VEC4D:  t = "VEC4D";  break;
+    case props::NONE:   t = "NONE";   break;
+    case props::ALIAS:  t = "ALIAS";  break;
+    case props::BOOL:   t = "BOOL";   break;
+    case props::INT:    t = "INT";    break;
+    case props::LONG:   t = "LONG";   break;
+    case props::FLOAT:  t = "FLOAT";  break;
+    case props::DOUBLE: t = "DOUBLE"; break;
+    case props::STRING: t = "STRING"; break;
+    case props::UNSPECIFIED: t = "UNSPECIFIED"; break;
+    case props::VEC3D:  t = "VEC3D";  break;
+    case props::VEC4D:  t = "VEC4D";  break;
     }
     return NASTR(t);
 }
@@ -157,19 +157,19 @@ naRef makeVectorFromVec(naContext c, const T& vec)
 
 static naRef f_getValue(naContext c, naRef me, int argc, naRef* args)
 {
-    using namespace simgear::props;
+    using namespace simgear;
     NODEARG();
     switch((*node)->getType()) {
-    case BOOL:   case INT:
-    case LONG:   case FLOAT:
-    case DOUBLE:
+    case props::BOOL:   case props::INT:
+    case props::LONG:   case props::FLOAT:
+    case props::DOUBLE:
         return naNum((*node)->getDoubleValue());
-    case STRING:
-    case UNSPECIFIED:
+    case props::STRING:
+    case props::UNSPECIFIED:
         return NASTR((*node)->getStringValue());
-    case VEC3D:
+    case props::VEC3D:
         return makeVectorFromVec(c, (*node)->getValue<SGVec3d>());
-    case VEC4D:
+    case props::VEC4D:
         return makeVectorFromVec(c, (*node)->getValue<SGVec4d>());
     default:
         return naNil();

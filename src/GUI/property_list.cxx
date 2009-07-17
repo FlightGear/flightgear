@@ -44,29 +44,29 @@ typedef string stdString;      // puObject has a "string" member
 
 static string getValueTypeString(const SGPropertyNode *node)
 {
-    using namespace simgear::props;
+    using namespace simgear;
     string result;
 
-    Type type = node->getType();
-    if (type == UNSPECIFIED)
+    props::Type type = node->getType();
+    if (type == props::UNSPECIFIED)
         result = "unspecified";
-    else if (type == NONE)
+    else if (type == props::NONE)
         result = "none";
-    else if (type == BOOL)
+    else if (type == props::BOOL)
         result = "bool";
-    else if (type == INT)
+    else if (type == props::INT)
         result = "int";
-    else if (type == LONG)
+    else if (type == props::LONG)
         result = "long";
-    else if (type == FLOAT)
+    else if (type == props::FLOAT)
         result = "float";
-    else if (type == DOUBLE)
+    else if (type == props::DOUBLE)
         result = "double";
-    else if (type == STRING)
+    else if (type == props::STRING)
         result = "string";
-    else if (type == VEC3D)
+    else if (type == props::VEC3D)
         result = "vec3d";
-    else if (type == VEC4D)
+    else if (type == props::VEC4D)
         result = "vec4d";
 
     return result;
@@ -75,12 +75,12 @@ static string getValueTypeString(const SGPropertyNode *node)
 
 static void dumpProperties(const SGPropertyNode *node)
 {
-    using namespace simgear::props;
+    using namespace simgear;
     cout << node->getPath() << '/' << endl;
     for (int i = 0; i < node->nChildren(); i++) {
         const SGPropertyNode *c = node->getChild(i);
-        Type type = c->getType();
-        if (type == ALIAS || c->nChildren())
+        props::Type type = c->getType();
+        if (type == props::ALIAS || c->nChildren())
             continue;
 
         int index = c->getIndex();
@@ -90,25 +90,25 @@ static void dumpProperties(const SGPropertyNode *node)
         cout << " = ";
 
         switch (c->getType()) {
-        case DOUBLE:
-        case FLOAT:
-        case VEC3D:
-        case VEC4D:
+        case props::DOUBLE:
+        case props::FLOAT:
+        case props::VEC3D:
+        case props::VEC4D:
         {
             streamsize precision = cout.precision(15);
             c->printOn(cout);
             cout.precision(precision);
         }
             break;
-        case LONG:
-        case INT:
-        case BOOL:
+        case props::LONG:
+        case props::INT:
+        case props::BOOL:
             c->printOn(cout);
             break;
-        case STRING:
+        case props::STRING:
             cout << '"' << c->getStringValue() << '"';
             break;
-        case NONE:
+        case props::NONE:
             break;
         default:
             cout << '\'' << c->getStringValue() << '\'';
@@ -309,7 +309,7 @@ void PropertyList::update(bool restore_pos)
 
 void PropertyList::updateTextForEntry(NodeData& data)
 {
-    using namespace simgear::props;
+    using namespace simgear;
     SGPropertyNode *node = data.node;
     stdString name = node->getDisplayName(true);
     stdString type = getValueTypeString(node);
@@ -323,8 +323,8 @@ void PropertyList::updateTextForEntry(NodeData& data)
         line << '/';
 
     if (!children || (_verbose && node->hasValue())) {
-        if (node->getType() == STRING
-                || node->getType() == UNSPECIFIED)
+        if (node->getType() == props::STRING
+                || node->getType() == props::UNSPECIFIED)
             sanitize(value);
 
         line << " = '" << value << "' (" << type;

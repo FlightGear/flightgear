@@ -177,25 +177,25 @@ static SGPropertyNode* findnode(naContext c, naRef* vec, int len)
 // nil if it doesn't exist.
 static naRef f_getprop(naContext c, naRef me, int argc, naRef* args)
 {
-    using namespace simgear::props;
+    using namespace simgear;
     const SGPropertyNode* p = findnode(c, args, argc);
     if(!p) return naNil();
 
     switch(p->getType()) {
-    case BOOL:   case INT:
-    case LONG:   case FLOAT:
-    case DOUBLE:
+    case props::BOOL:   case props::INT:
+    case props::LONG:   case props::FLOAT:
+    case props::DOUBLE:
         return naNum(p->getDoubleValue());
 
-    case STRING:
-    case UNSPECIFIED:
+    case props::STRING:
+    case props::UNSPECIFIED:
         {
             naRef nastr = naNewString(c);
             const char* val = p->getStringValue();
             naStr_fromdata(nastr, (char*)val, strlen(val));
             return nastr;
         }
-    case ALIAS: // <--- FIXME, recurse?
+    case props::ALIAS: // <--- FIXME, recurse?
     default:
         return naNil();
     }
@@ -1061,24 +1061,24 @@ void FGNasalListener::childRemoved(SGPropertyNode*, SGPropertyNode* child)
 
 bool FGNasalListener::changed(SGPropertyNode* node)
 {
-    using namespace simgear::props;
-    Type type = node->getType();
-    if(type == NONE) return false;
-    if(type == UNSPECIFIED) return true;
+    using namespace simgear;
+    props::Type type = node->getType();
+    if(type == props::NONE) return false;
+    if(type == props::UNSPECIFIED) return true;
 
     bool result;
     switch(type) {
-    case BOOL:
-    case INT:
-    case LONG:
+    case props::BOOL:
+    case props::INT:
+    case props::LONG:
         {
             long l = node->getLongValue();
             result = l != _last_int;
             _last_int = l;
             return result;
         }
-    case FLOAT:
-    case DOUBLE:
+    case props::FLOAT:
+    case props::DOUBLE:
         {
             double d = node->getDoubleValue();
             result = d != _last_float;
