@@ -73,7 +73,7 @@ class MK_VIII : public SGSubsystem
       if (_getter)
 	return (_obj.*_getter)(_data);
       else
-	return SGRawValue<VT>::DefaultValue;
+	return SGRawValue<VT>::DefaultValue();
     }
     virtual bool setValue (VT value)
     {
