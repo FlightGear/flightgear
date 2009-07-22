@@ -28,6 +28,10 @@
 #  include <config.h>
 #endif
 
+#include <osg/ref_ptr>
+#include <osg/State>
+#include <osg/StateSet>
+
 #include <plib/sg.h>
 #include <simgear/compiler.h>
 
@@ -56,7 +60,7 @@ public:
 	RenderArea2D(int logx, int logy, int sizex, int sizey, int posx, int posy);
 	~RenderArea2D();
 	
-	void draw();
+	void draw(osg::State& state);
 	
 	void SetPixelColor(const float* rgba);
 	void SetBackgroundColor(const float* rgba);

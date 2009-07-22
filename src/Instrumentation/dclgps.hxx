@@ -251,7 +251,7 @@ public:
 	DCLGPS(RenderArea2D* instrument);
 	virtual ~DCLGPS() = 0;
 	
-	virtual void draw();
+	virtual void draw(osg::State& state);
 	
 	virtual void init();
 	virtual void bind();
