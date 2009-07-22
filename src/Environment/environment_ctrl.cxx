@@ -823,7 +823,7 @@ void MetarThread::run()
 			break;
 		}
 
-			metar_fetcher->fetch( airport_id );
+		metar_fetcher->fetch( airport_id );
 	}
 }
 #endif
@@ -883,8 +883,13 @@ void FGMetarFetcher::init ()
 	*/
 	const char * startup_airport = fgGetString("/sim/startup/options/airport");
 	if( *startup_airport ) {
-		current_airport_id = startup_airport;
-		fetch( current_airport_id );
+		FGAirport * a = FGAirport::getByIdent( startup_airport );
+		if( a ) {
+			SGGeod pos = SGGeod::fromDeg(a->getLongitude(), a->getLatitude());
+			a = FGAirport::findClosest(pos, 10000.0, &airportWithMetarFilter);
+			current_airport_id = a->getId();
+			fetch( current_airport_id );
+		}
 	}
 }
 
@@ -985,6 +990,11 @@ void FGMetarFetcher::fetch( const string & id )
 	} catch (const sg_io_exception& e) {
 		SG_LOG( SG_GENERAL, SG_WARN, "Error fetching live weather data: " << e.getFormattedMessage().c_str() );
 		result = NULL;
+		// remove METAR flag from the airport
+		FGAirport * a = FGAirport::findByIdent( id );
+		if( a ) a->setMetar( false );
+		// immediately schedule a new search
+		search_timer = 0.0;
 	}
 
 	// write the metar to the property node, the rest is done by the methods tied to this property
