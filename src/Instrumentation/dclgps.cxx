@@ -356,9 +356,8 @@ DCLGPS::~DCLGPS() {
 	// TODO - may need to delete the approach database!!
 }
 
-void DCLGPS::draw() {
-	//cout << "draw called!\n";
-	_instrument->draw();
+void DCLGPS::draw(osg::State& state) {
+	_instrument->draw(state);
 }
 
 void DCLGPS::init() {

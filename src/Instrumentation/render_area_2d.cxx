@@ -62,24 +62,31 @@ RenderArea2D::RenderArea2D(int logx, int logy, int sizex, int sizey, int posx, i
 	_ra2d_debug = false;
 }
 
-void RenderArea2D::draw() {
-#if 0
-    glDisable(GL_TEXTURE_2D);
-	/*
-    glColor3f(1, 1, 0);
+void RenderArea2D::draw(osg::State& state) {
 	
-	float x1 = _posx;
-	float x2 = _posx + _sizex;
-	float y1 = _posy;
-	float y2 = _posy + _sizey;
+	static osg::ref_ptr<osg::StateSet> renderArea2DStateSet;
+	if(!renderArea2DStateSet.valid()) {
+		renderArea2DStateSet = new osg::StateSet;
+		renderArea2DStateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::OFF);
+		renderArea2DStateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+	}
 	
-	glBegin(GL_LINE_LOOP);
-    glVertex2f(x1, y1);
-    glVertex2f(x1, y2);
-    glVertex2f(x2, y2);
-    glVertex2f(x2, y1);
-    glEnd();
-	*/
+	state.pushStateSet(renderArea2DStateSet.get());
+	state.apply();
+	state.setActiveTextureUnit(0);
+	state.setClientActiveTextureUnit(0);
+	
+	// DCL - the 2 lines below are copied verbatim from the hotspot drawing code.
+	// I am not sure if they are needed here or not.
+	glPushAttrib(GL_ENABLE_BIT);
+	glDisable(GL_COLOR_MATERIAL);
+	
+	// FIXME - disabling all clip planes causes bleed-through through the splash screen.
+	glDisable(GL_CLIP_PLANE0);
+	glDisable(GL_CLIP_PLANE1);
+	glDisable(GL_CLIP_PLANE2);
+	glDisable(GL_CLIP_PLANE3);
+
 	oldDrawBackground();
 	
 	for(unsigned int i = 0; i < drawing_list.size(); ++i) {
@@ -101,8 +108,12 @@ void RenderArea2D::draw() {
 		}
 	}
 	
-	glEnable(GL_TEXTURE_2D);
-#endif
+	glPopAttrib();
+	
+	state.popStateSet();
+	state.apply();
+	state.setActiveTextureUnit(0);
+	state.setClientActiveTextureUnit(0);
 }
 
 // Set clipping region in logical units
@@ -336,34 +347,24 @@ void RenderArea2D::Flush() {
 // -----------------------------------------
 
 void RenderArea2D::doSetColor( const float *rgba ) {
-  //OSGFIXME
-#if 0
   glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, rgba);
   glColor4fv( rgba );
-#endif
 }
 
 void RenderArea2D::doDrawQuad( const sgVec2 *p, const sgVec3 *normals ) {
-	//cout << "doDrawQuad: " << *p[0] << ", " << *(p[0]+1) << ", " << *p[1] << ", " << *(p[1]+1) << ", " << *p[2] << ", " << *p([2]+1) << ", " << *p[3] << ", " << *p([3]+1) <<'\n';
-  //OSGFIXME
-#if 0
   glBegin(GL_QUADS);
   glNormal3fv( normals[0] ); glVertex2fv( p[0] );
   glNormal3fv( normals[1] ); glVertex2fv( p[1] );
   glNormal3fv( normals[2] ); glVertex2fv( p[2] );
   glNormal3fv( normals[3] ); glVertex2fv( p[3] );
   glEnd();
-#endif
 }
 
 void RenderArea2D::doDrawQuad( const sgVec2 *p, const sgVec3 *normals, const sgVec4 *color ) {
-  //OSGFIXME
-#if 0
   glBegin(GL_QUADS);
     glColor4fv( color[0] );glNormal3fv( normals[0] ); glVertex2fv( p[0] );
     glColor4fv( color[1] );glNormal3fv( normals[1] ); glVertex2fv( p[1] );
     glColor4fv( color[2] );glNormal3fv( normals[2] ); glVertex2fv( p[2] );
     glColor4fv( color[3] );glNormal3fv( normals[3] ); glVertex2fv( p[3] );
   glEnd();
-#endif
 }

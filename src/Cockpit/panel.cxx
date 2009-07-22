@@ -914,7 +914,7 @@ FGSpecialInstrument::~FGSpecialInstrument ()
 void
 FGSpecialInstrument::draw (osg::State& state)
 {
-  complex->draw();
+  complex->draw(state);
 }
 
 
