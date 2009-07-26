@@ -4,6 +4,7 @@
 
 #include <plib/pu.h>
 #include <simgear/props/props.hxx>
+#include <simgear/Math/SGMath.hxx>
 
 #include "layout.hxx"
 
