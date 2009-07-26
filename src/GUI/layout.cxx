@@ -1,4 +1,11 @@
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include "layout.hxx"
+
+#include <simgear/Math/SGMath.hxx>
 
 // This file contains the actual layout engine.  It has no dependence
 // on outside libraries; see layout-props.cxx for the glue code.

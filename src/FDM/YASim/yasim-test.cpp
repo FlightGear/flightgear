@@ -10,6 +10,8 @@
 #include "Atmosphere.hpp"
 #include "Airplane.hpp"
 
+#include <simgear/Math/SGMath.hxx>
+
 using namespace yasim;
 
 // Stubs.  Not needed by a batch program, but required to link.

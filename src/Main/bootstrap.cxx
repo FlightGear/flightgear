@@ -42,6 +42,7 @@
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/Math/SGMath.hxx>
 
 #include <cstring>
 #include <iostream>
