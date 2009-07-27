@@ -25,7 +25,7 @@
 
 #include <simgear/structure/commands.hxx>
 #include <simgear/misc/strutils.hxx>
-#include <simgear/Math/SGMath.hxx>
+#include <simgear/math/SGMath.hxx>
 
 #include <sstream>
 

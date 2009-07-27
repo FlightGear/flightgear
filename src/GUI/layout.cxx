@@ -5,7 +5,7 @@
 
 #include "layout.hxx"
 
-#include <simgear/Math/SGMath.hxx>
+#include <simgear/math/SGMath.hxx>
 
 // This file contains the actual layout engine.  It has no dependence
 // on outside libraries; see layout-props.cxx for the glue code.

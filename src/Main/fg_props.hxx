@@ -9,7 +9,7 @@
 #include <iosfwd>
 
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/Math/SGMath.hxx>
+#include <simgear/math/SGMath.hxx>
 
 #include <Main/globals.hxx>
 
