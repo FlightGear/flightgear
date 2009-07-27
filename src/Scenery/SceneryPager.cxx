@@ -21,7 +21,7 @@
 #endif
 
 #include <simgear/scene/model/SGPagedLOD.hxx>
-#include <simgear/Math/SGMath.hxx>
+#include <simgear/math/SGMath.hxx>
 #include "SceneryPager.hxx"
 #include <algorithm>
 #include <functional>

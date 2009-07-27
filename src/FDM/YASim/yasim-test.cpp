@@ -10,7 +10,7 @@
 #include "Atmosphere.hpp"
 #include "Airplane.hpp"
 
-#include <simgear/Math/SGMath.hxx>
+#include <simgear/math/SGMath.hxx>
 
 using namespace yasim;
 
