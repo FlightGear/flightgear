@@ -199,6 +199,8 @@ double FGPropeller::Calculate(double PowerAvailable)
   vH(eY) = 0.0;
   vH(eZ) = 0.0;
 
+  vH = Transform()*vH; // Transform rotational momentum to rotated frame (if any)
+
   if (omega > 0.0) ExcessTorque = GearRatio * PowerAvailable / omega;
   else             ExcessTorque = GearRatio * PowerAvailable / 1.0;
 
@@ -206,7 +208,9 @@ double FGPropeller::Calculate(double PowerAvailable)
 
   if (RPM < 1.0) RPM = 0; // Engine friction stops rotation arbitrarily at 1 RPM.
 
-  vMn = fdmex->GetPropagate()->GetPQR()*vH + vTorque;
+  // Transform Torque and momentum prior to this equation, as PQR is used in this
+  // equation and cannot be transformed itself.
+  vMn = fdmex->GetPropagate()->GetPQR()*vH + Transform()*vTorque;
 
   return Thrust; // return thrust in pounds
 }

@@ -310,6 +310,19 @@ FGColumnVector3& FGLGear::Force(void)
       RollingForce = ((1.0 - TirePressureNorm) * 30 + vLocalForce(eZ) * BrakeFCoeff) * sign;
       SideForce    = vLocalForce(eZ) * FCoeff;
 
+      // Lag and attenuate the XY-plane forces dependent on velocity. This code
+      // uses a lag filter, C/(s + C) where "C" is the filter coefficient. When
+      // "C" is chosen at the frame rate (in Hz), the jittering is significantly
+      // reduced. This is because the jitter is present *at* the execution rate.
+      // If a coefficient is set to something equal to or less than zero, the
+      // filter is bypassed.
+
+      if (LongForceLagFilterCoeff > 0) RollingForce = LongForceFilter.execute(RollingForce);
+      if (LatForceLagFilterCoeff > 0)  SideForce = LatForceFilter.execute(SideForce);
+
+      if ((fabs(RollingWhlVel) <= RFRV) && RFRV > 0) RollingForce *= fabs(RollingWhlVel)/RFRV;
+      if ((fabs(SideWhlVel) <= SFRV) && SFRV > 0) SideForce *= fabs(SideWhlVel)/SFRV;
+
       // Transform these forces back to the local reference frame.
 
       vLocalForce(eX) = RollingForce*CosWheel - SideForce*SinWheel;
@@ -319,19 +332,6 @@ FGColumnVector3& FGLGear::Force(void)
 
       vForce  = Propagate->GetTl2b() * vLocalForce;
 
-      // Lag and attenuate the XY-plane forces dependent on velocity. This code
-      // uses a lag filter, C/(s + C) where "C" is the filter coefficient. When
-      // "C" is chosen at the frame rate (in Hz), the jittering is significantly
-      // reduced. This is because the jitter is present *at* the execution rate.
-      // If a coefficient is set to something equal to or less than zero, the
-      // filter is bypassed.
-
-      if (LongForceLagFilterCoeff > 0) vForce(eX) = LongForceFilter.execute(vForce(eX));
-      if (LatForceLagFilterCoeff > 0)  vForce(eY) = LatForceFilter.execute(vForce(eY));
-
-      if ((fabs(RollingWhlVel) <= RFRV) && RFRV > 0) vForce(eX) *= fabs(RollingWhlVel)/RFRV;
-      if ((fabs(SideWhlVel) <= SFRV) && SFRV > 0) vForce(eY) *= fabs(SideWhlVel)/SFRV;
-
       // End section for attentuating gear jitter
 
       vMoment = vWhlBodyVec * vForce;
@@ -340,9 +340,14 @@ FGColumnVector3& FGLGear::Force(void)
 
       WOW = false;
       compressLength = 0.0;
+      compressSpeed = 0.0;
 
-      // No wheel conditons
-      RollingWhlVel = SideWhlVel = WheelSlip = 0.0;
+      // No wheel conditions
+      SideWhlVel = WheelSlip = 0.0;
+
+      // Let wheel spin down slowly
+      RollingWhlVel -= 13.0*dT;
+      if (RollingWhlVel < 0.0) RollingWhlVel = 0.0;
 
       // Return to neutral position between 1.0 and 0.8 gear pos.
       SteerAngle *= max(GetGearUnitPos()-0.8, 0.0)/0.2;
@@ -371,6 +376,7 @@ void FGLGear::ComputeRetractionState(void)
     GearUp   = true;
     WOW      = false;
     GearDown = false;
+    RollingWhlVel = 0.0;
   } else if (gearPos > 0.99) {
     GearDown = true;
     GearUp   = false;
