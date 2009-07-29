@@ -94,14 +94,24 @@ double FGElectric::Calculate(void)
 
 string FGElectric::GetEngineLabels(string delimeter)
 {
-  return ""; // currently no labels are returned for this engine
+  std::ostringstream buf;
+
+  buf << Name << " HP (engine " << EngineNumber << ")" << delimeter
+      << Thruster->GetThrusterLabels(EngineNumber, delimeter);
+
+  return buf.str();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 string FGElectric::GetEngineValues(string delimeter)
 {
-  return ""; // currently no values are returned for this engine
+  std::ostringstream buf;
+
+  buf << HP << delimeter
+     << Thruster->GetThrusterValues(EngineNumber, delimeter);
+
+  return buf.str();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

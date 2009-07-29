@@ -58,7 +58,8 @@ FGState::FGState(FGFDMExec* fdex)
   FDMExec = fdex;
 
   sim_time = 0.0;
-  //dt = 1.0/120.0;
+  dt = 1.0/120.0; // a default timestep size. This is needed for when JSBSim is
+                  // run in standalone mode with no initialization file.
 
   Aircraft     = FDMExec->GetAircraft();
   Propagate    = FDMExec->GetPropagate();

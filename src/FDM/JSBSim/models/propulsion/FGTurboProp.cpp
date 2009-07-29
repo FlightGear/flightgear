@@ -91,7 +91,7 @@ bool FGTurboProp::Load(FGFDMExec* exec, Element *el)
   if (el->FindElement("idlen1"))
     IdleN1 = el->FindElementValueAsNumber("idlen1");
   if (el->FindElement("idlen2"))
-    IdleN2 = el->FindElementValueAsNumber("idlen1");
+    IdleN2 = el->FindElementValueAsNumber("idlen2");
   if (el->FindElement("maxn1"))
     MaxN1 = el->FindElementValueAsNumber("maxn1");
   if (el->FindElement("maxn2"))
