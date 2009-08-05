@@ -6,8 +6,8 @@
 #include <iostream>
 #include <plib/pu.h>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/structure/SGBinding.hxx>
 
-#include <Input/input.hxx>
 #include <Main/globals.hxx>
 
 #include "new_gui.hxx"

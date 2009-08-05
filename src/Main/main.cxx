@@ -79,6 +79,7 @@
 #include "main.hxx"
 #include "util.hxx"
 #include "fg_init.hxx"
+#include "fg_os.hxx"
 #include "WindowSystemAdapter.hxx"
 
 
