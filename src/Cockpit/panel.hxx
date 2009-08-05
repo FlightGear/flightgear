@@ -39,6 +39,7 @@
 #include <simgear/compiler.h>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/structure/SGBinding.hxx>
 #include <simgear/math/interpolater.hxx>
 #include <simgear/timing/timestamp.hxx>
 
@@ -47,7 +48,6 @@
 #include <map>
 
 #include <Main/fg_props.hxx>
-#include <Input/input.hxx>
 #include <Instrumentation/dclgps.hxx>
 
 using std::vector;
