@@ -63,6 +63,7 @@
 #include <simgear/scene/sky/sky.hxx>
 #include <simgear/scene/util/SGUpdateVisitor.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>
+#include <simgear/scene/util/SGSceneUserData.hxx>
 #include <simgear/scene/tgdb/GroundLightManager.hxx>
 #include <simgear/scene/tgdb/pt_lights.hxx>
 #include <simgear/props/props.hxx>

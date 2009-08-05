@@ -4,7 +4,7 @@
 #  include "config.h"
 #endif
 
-#include <Input/input.hxx>
+#include <simgear/structure/SGBinding.hxx>
 #include <Scripting/NasalSys.hxx>
 #include <Main/fg_os.hxx>
 

@@ -38,6 +38,7 @@
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
+#include "fg_os.hxx"
 #include "fg_commands.hxx"
 #include "fg_props.hxx"
 #include "globals.hxx"

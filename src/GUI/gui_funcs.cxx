@@ -46,6 +46,7 @@
 #include <Cockpit/panel.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/fg_os.hxx>
 #include <Main/renderer.hxx>
 #include <Main/viewmgr.hxx>
 #include <GUI/new_gui.hxx>
