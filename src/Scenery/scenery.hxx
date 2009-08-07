@@ -71,7 +71,8 @@ public:
     /// value is undefined. 
     /// All values are meant to be in meters or degrees.
     bool get_elevation_m(const SGGeod& geod, double& alt,
-                         const SGMaterial** material);
+                         const SGMaterial** material,
+                         const osg::Node* butNotFrom = 0);
 
     /// Compute the elevation of the scenery beow the cartesian point pos.
     /// you the returned scenery altitude is not higher than the position
@@ -85,7 +86,8 @@ public:
     /// value is undefined.
     /// All values are meant to be in meters.
     bool get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
-                              double& elevation, const SGMaterial** material);
+                              double& elevation, const SGMaterial** material,
+                              const osg::Node* butNotFrom = 0);
 
     /// Compute the nearest intersection point of the line starting from 
     /// start going in direction dir with the terrain.
@@ -93,7 +95,8 @@ public:
     /// usual earth centered wgs84 coordiante system. Units are meters.
     /// On success, true is returned.
     bool get_cart_ground_intersection(const SGVec3d& start, const SGVec3d& dir,
-                                      SGVec3d& nearestHit);
+                                      SGVec3d& nearestHit,
+                                      const osg::Node* butNotFrom = 0);
 
     osg::Group *get_scene_graph () const { return scene_graph.get(); }
     osg::Group *get_terrain_branch () const { return terrain_branch.get(); }

@@ -121,16 +121,18 @@ void FGScenery::unbind() {
 
 bool
 FGScenery::get_cart_elevation_m(const SGVec3d& pos, double max_altoff,
-                                double& alt, const SGMaterial** material)
+                                double& alt, const SGMaterial** material,
+                                const osg::Node* butNotFrom)
 {
   SGGeod geod = SGGeod::fromCart(pos);
   geod.setElevationM(geod.getElevationM() + max_altoff);
-  return get_elevation_m(geod, alt, material);
+  return get_elevation_m(geod, alt, material, butNotFrom);
 }
 
 bool
 FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
-                           const SGMaterial** material)
+                           const SGMaterial** material,
+                           const osg::Node* butNotFrom)
 {
   SGVec3d start = SGVec3d::fromGeod(geod);
 
@@ -151,6 +153,10 @@ FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
     for (int i = 0; i < nHits; ++i) {
       const osgUtil::Hit& hit
         = intersectVisitor.getHitList(lineSegment.get())[i];
+      if (butNotFrom &&
+          std::find(hit.getNodePath().begin(), hit.getNodePath().end(),
+                    butNotFrom) != hit.getNodePath().end())
+          continue;
       SGVec3d point;
       point.osg() = hit.getWorldIntersectPoint();
       SGGeod geod = SGGeod::fromCart(point);
@@ -173,7 +179,8 @@ FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
 
 bool
 FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
-                                        SGVec3d& nearestHit)
+                                        SGVec3d& nearestHit,
+                                        const osg::Node* butNotFrom)
 {
   // We assume that starting positions in the center of the earth are invalid
   if ( norm1(pos) < 1 )
@@ -197,6 +204,10 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
     for (int i = 0; i < nHits; ++i) {
       const osgUtil::Hit& hit
         = intersectVisitor.getHitList(lineSegment.get())[i];
+      if (butNotFrom &&
+          std::find(hit.getNodePath().begin(), hit.getNodePath().end(),
+                    butNotFrom) != hit.getNodePath().end())
+          continue;
       SGVec3d point;
       point.osg() = hit.getWorldIntersectPoint();
       double newdist = length(start - point);
