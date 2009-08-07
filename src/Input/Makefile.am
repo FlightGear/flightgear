@@ -2,7 +2,12 @@ AM_CXXFLAGS = -DPKGLIBDIR=\"$(pkgdatadir)\"
 
 noinst_LIBRARIES = libInput.a
 
-libInput_a_SOURCES = input.cxx input.hxx
+libInput_a_SOURCES = input.cxx input.hxx FGCommonInput.cxx FGCommonInput.hxx \
+	FGDeviceConfigurationMap.cxx FGDeviceConfigurationMap.hxx \
+	FGButton.cxx FGButton.hxx \
+	FGMouseInput.cxx FGMouseInput.hxx \
+	FGKeyboardInput.cxx FGKeyboardInput.hxx \
+	FGJoystickInput.cxx FGJoystickInput.hxx 
 
 bin_PROGRAMS = js_demo fgjs
 
