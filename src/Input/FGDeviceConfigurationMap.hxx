@@ -1,10 +1,10 @@
-// input.hxx -- handle user input from various sources.
+// FGDeviceConfigurationMap.hxx -- a map to access xml device configuration
 //
-// Written by David Megginson, started May 2001.
-// Major redesign by Torsten Dreyer, started August 2009
+// Written by Torsten Dreyer, started August 2009
+// Based on work from David Megginson, started May 2001.
 //
-// Copyright (C) 2001 David Megginson, david@megginson.com
 // Copyright (C) 2009 Torsten Dreyer, Torsten (at) t3r _dot_ de
+// Copyright (C) 2001 David Megginson, david@megginson.com
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -22,45 +22,27 @@
 //
 // $Id$
 
-
-#ifndef _INPUT_HXX
-#define _INPUT_HXX
+#ifndef _FGDEVICECONFIGURATIONMAP_HXX
+#define _FGDEVICECONFIGURATIONMAP_HXX
 
 #ifndef __cplusplus                                                          
 # error This library requires C++
 #endif
 
-#include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/props.hxx>
+#include <simgear/misc/sg_path.hxx>
 
-
+#include <map>
+using std::map;
 
-
-
-////////////////////////////////////////////////////////////////////////
-// General input mapping support.
-////////////////////////////////////////////////////////////////////////
-
-
-/**
- * Generic input module.
- *
- * <p>This module is designed to handle input from multiple sources --
- * keyboard, joystick, mouse, or even panel switches -- in a consistent
- * way, and to allow users to rebind any of the actions at runtime.</p>
- */
-class FGInput : public SGSubsystemGroup
-{
+class FGDeviceConfigurationMap : public map<string,SGPropertyNode_ptr> {
 public:
-  /**
-   * Default constructor.
-   */
-  FGInput ();
-
-  /**
-   * Destructor.
-   */
-  virtual ~FGInput();
-
+  FGDeviceConfigurationMap ( const char * relative_path, SGPropertyNode_ptr base, const char * childname );
+  virtual ~FGDeviceConfigurationMap();
+private:
+  void scan_dir( SGPath & path, int *index);
+  SGPropertyNode_ptr base;
+  const char * childname;
 };
 
-#endif // _INPUT_HXX
+#endif
