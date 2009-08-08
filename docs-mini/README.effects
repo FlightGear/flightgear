@@ -1,75 +1,101 @@
-<?xml version="1.0" encoding="utf-8">
-<!--
-   An effect consists of parameters and techniques. The "parameters"
-   section of an effect is a tree of values that describe, abstractly,
-   the graphical appearence of objects that use the effect. Techniques
-   refer to these parameters and use them to set OpenGL state or to
-   set parameters for shader programs. Parameters can be declared to
-   have a dynamic variance, which means that if their value is changed
-   the corresponding value in the technique will be changed too.
+Effects describe the graphical appearance of 3d objects and scenery in
+FlightGear. The main motivation for effects is to support OpenGL
+shaders and to provide different implementations for graphics hardware
+of varying capabilities. Effects are similar to DirectX effects files
+and Ogre3D material scripts.
 
-   A technique can contain a predicate that describes the OpenGL
-   functionality required to support the technique. The first
-   technique with a valid predicate in the list of techniques is used
-   to set up the graphics state of the effect. A technique with no
-   predicate is always assumed to be valid.
+An effect is a property list. The property list syntax is extended
+with new "vec3d" and "vec4d" types to support common computer graphics
+values. Effects are read from files with a ".eff" extension or can be
+created on-the-fly by FlightGear at runtime.  An effect consists of a
+"parameters" section followed by "technique" descriptions.  The
+"parameters" section is a tree of values that describe, abstractly,
+the graphical appearence of objects that use the effect. Techniques
+refer to these parameters and use them to set OpenGL state or to set
+parameters for shader programs.
 
-   A technique can consist of several passes, which are run in
-   sequence.
+Parameters can be declared to have a dynamic variance, which means
+that if their value is changed the corresponding value in the
+technique will be changed too. [TO BE IMPLEMENTED]
 
-   One feature not fully illustrated in the sample below is that
-   effects can inherit from each other. The parent effect is listed in
-   the "inherits-from" form. The child effect's property tree is
-   overlaid over that of the parent. This means that effects that
-   inherit from the example "default effect" below could be very
-   short, listing just new parameters and adding nothing to the
-   techniques section; alternatively, a technique could be altered or
-   customized in a child, listing (for example) a different shader
-   program. Terrain materials work in this way: for each material type
-   in materials.xml an effect is created that inherits from a single
-   default terrain effect. The parameters section of the effect is
-   filled in using the ambient, diffuse, etc. fields of the material.
+A technique can contain a predicate that describes the OpenGL
+functionality required to support the technique. The first
+technique with a valid predicate in the list of techniques is used
+to set up the graphics state of the effect. A technique with no
+predicate is always assumed to be valid. The predicate is written in a
+little expression language that supports the following primitives:
 
-   Material animations will be implemented by creating a new effect
-   that inherits from one in a model, overriding the parameters that
-   will be animated.  
-   
-   Ultimately all OpenGL state will be setable in a technique. These
-   attributes and modes are currently implemented:
-   lighting - true, false
-   shade-model - flat, smooth
-   cull-face - front, back, front-back
-   rendering-hint - (OSG) opaque, transparent
-   render-bin - children: bin-number, bin-name
-   material - children: ambient, ambient-front, ambient-back, diffuse,
-   diffuse-front, diffuse-back, specular, specular-front,
-   specular-back, emissive, emissive-front, emissive-back, shininess,
-   shininess-front, shininess-back, color-mode
-   blend - true, false
-   alpha-test - true, false
-   texture-unit - 
-   	unit
-   	texture2d
-   		image (file name)
-		filter
-		mag-filter
-		wrap-s
-		wrap-t
-		wrap-r
-	environment
-		mode
-		color
-   program
-   	vertex-shader
-	fragment-shader
-   uniform
-	name
-	type - float, float-vec3, float-vec4, sampler-1d, sampler-2d,
-	       sampler-3d
-   polygon-mode
-   	front - fill, line, point
-	back - fill, line, point
-  -->
+and, or, equal, less, less-equal
+glversion - returns the version number of OpenGL
+extension-supported - returns true if an OpenGL extension is supported
+property - returns the boolean value of a property
+
+A technique can consist of several passes. A pass is basically an Open
+Scene Graph StateSet. Ultimately all OpenGL and OSG modes and state
+attributes  will be setable in a technique. The following are
+are currently implemented:
+lighting - true, false
+shade-model - flat, smooth
+cull-face - front, back, front-back
+rendering-hint - (OSG) opaque, transparent
+render-bin - children: bin-number, bin-name
+material - children: ambient, ambient-front, ambient-back, diffuse,
+diffuse-front, diffuse-back, specular, specular-front,
+specular-back, emissive, emissive-front, emissive-back, shininess,
+shininess-front, shininess-back, color-mode
+blend - true, false
+alpha-test - true, false
+texture-unit - has several child properties:
+	unit - The number of an OpenGL texture unit
+        type - This is either an OpenGL texture type or the name of a
+        builtin texture. Currently supported OpenGL types are 1d, 2d,
+        3d which have the following common parameters:
+		image (file name)
+                filter
+                mag-filter
+                wrap-s
+                wrap-t
+                wrap-r
+        The following builtin types are supported:
+                white - 1 pixel white texture
+                noise - a 3d noise texture
+        environment
+                mode
+                color
+program
+        vertex-shader
+        fragment-shader
+uniform
+        name
+        type - float, float-vec3, float-vec4, sampler-1d, sampler-2d,
+        sampler-3d
+polygon-mode
+front - fill, line, point
+back - fill, line, point
+
+One feature not fully illustrated in the sample below is that
+effects can inherit from each other. The parent effect is listed in
+the "inherits-from" form. The child effect's property tree is
+overlaid over that of the parent. Nodes that have the same name and
+property index -- set by the "n=" attribute in the property tag --
+are recursively merged. Leaf property nodes from the child have
+precedence.  This means that effects that inherit from the example
+effect below could be very short, listing just new
+parameters and adding nothing to the techniques section;
+alternatively, a technique could be altered or customized in a
+child, listing (for example) a different shader program. Terrain
+materials work in this way: for each material type in materials.xml
+an effect is created that inherits from a single default terrain
+effect. The parameters section of the effect is filled in using the
+ambient, diffuse, specular, emissive, shininess, and transparent
+fields of the material. Seperate effects are created for each texture
+variant of a material.
+
+Material animations will be implemented by creating a new effect
+that inherits from one in a model, overriding the parameters that
+will be animated.
+
+
 <PropertyList>
   <effect>
     <name>city</name>
@@ -91,32 +117,28 @@
         <shininess>1.2</shininess>
       </material>
       <texture n="0">
-        <texture2d>
-          <image>city.png</image>
-          <filter>linear-mipmap-linear</filter>
-          <!-- also repeat -->
-          <wrap-s>clamp</wrap-s>
-          <wrap-t>clamp-to-edge</wrap-t>
-          <!--
-             <wrap-r>clamp-to-border</wrap-r>
-             -->
-          <!-- float, signed-integer, integer -->
-          <internal-format>normalized</internal-format>
-        </texture2d>
+        <image>city.png</image>
+        <filter>linear-mipmap-linear</filter>
+        <!-- also repeat -->
+        <wrap-s>clamp</wrap-s>
+        <wrap-t>clamp-to-edge</wrap-t>
+        <!--
+           <wrap-r>clamp-to-border</wrap-r>
+           -->
+        <!-- float, signed-integer, integer -->
+        <internal-format>normalized</internal-format>
       </texture>
       <texture n="1">
-        <texture2d>
-          <image>detail.png</image>
-          <filter>linear-mipmap-linear</filter>
-          <!-- also repeat -->
-          <wrap-s>clamp</wrap-s>
-          <wrap-t>clamp-to-edge</wrap-t>
-          <!--
-             <wrap-r>clamp-to-border</wrap-r>
-             -->
-          <!-- float, signed-integer, integer -->
-          <internal-format>normalized</internal-format>
-        </texture2d>
+        <image>detail.png</image>
+        <filter>linear-mipmap-linear</filter>
+        <!-- also repeat -->
+        <wrap-s>clamp</wrap-s>
+        <wrap-t>clamp-to-edge</wrap-t>
+        <!--
+          <wrap-r>clamp-to-border</wrap-r>
+           -->
+        <!-- float, signed-integer, integer -->
+        <internal-format>normalized</internal-format>
       </texture>
       <bump-height type="double">.05</bump-height>
       <pattern-rotation type="vec4d">0 0 1 1.5708</pattern-rotation>
@@ -146,10 +168,24 @@
           <shininess><use>material/shininess</use></shininess>
         </material>
         <texture-unit>
-          <texture2d><use>texture[0]/texture2d</use></texture2d>
+          <unit>0</unit>
+          <image><use>texture[0]/image</use></image>
+          <filter><use>texture[0]/filter</use></filter>
+          <wrap-s><use>texture[0]/wrap-s</use></wrap-s>
+          <wrap-t><use>texture[0]/wrap-t</use></wrap-t>
+          <internal-format>
+            <use>texture[0]/internal-format</use>
+          </internal-format>
         </texture-unit>
         <texture-unit>
-          <texture2d><use>texture[1]/texture2d</use></texture2d>
+          <unit>1</unit>
+          <image><use>texture[1]/image</use></image>
+          <filter><use>texture[1]/filter</use></filter>
+          <wrap-s><use>texture[1]/wrap-s</use></wrap-s>
+          <wrap-t><use>texture[1]/wrap-t</use></wrap-t>
+          <internal-format>
+            <use>texture[1]/internal-format</use>
+          </internal-format>
         </texture-unit>
           <uniform>
             <name>bumpHeight</name>
@@ -195,7 +231,14 @@
           <specular><use>material/specular</use></specular>
         </material>
         <texture-unit>
-          <texture2d><use>texture[0]/texture2d</use></texture2d>
+          <unit>0</unit>
+          <image><use>texture[0]/image</use></image>
+          <filter><use>texture[0]/filter</use></filter>
+          <wrap-s><use>texture[0]/wrap-s</use></wrap-s>
+          <wrap-t><use>texture[0]/wrap-t</use></wrap-t>
+          <internal-format>
+            <use>texture[0]/internal-format</use>
+          </internal-format>
         </texture-unit>
       </pass>
     </technique>

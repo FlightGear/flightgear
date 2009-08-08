@@ -15,6 +15,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/scene/material/mat.hxx>
+#include <simgear/scene/material/matlib.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/props/props.hxx>
@@ -495,6 +496,13 @@ static bool
 do_screen_capture (const SGPropertyNode * arg)
 {
   return fgDumpSnapShot();
+}
+
+static bool
+do_reload_shaders (const SGPropertyNode*)
+{
+    simgear::reload_shaders();
+    return true;
 }
 
 static bool
@@ -1564,6 +1572,7 @@ static struct {
     { "release-cockpit-button", do_release_cockpit_button },
     { "dump-scenegraph", do_dump_scene_graph },
     { "dump-terrainbranch", do_dump_terrain_branch },
+    { "reload-shaders", do_reload_shaders },
     { 0, 0 }			// zero-terminated
 };
 
