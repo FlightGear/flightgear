@@ -22,7 +22,13 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include "FGButton.hxx"
+
+#include <simgear/math/SGMath.hxx>
 
 FGButton::FGButton ()
   : is_repeatable(false),

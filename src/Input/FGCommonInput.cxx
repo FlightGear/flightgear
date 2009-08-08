@@ -22,9 +22,15 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include "FGCommonInput.hxx"
 #include <Main/globals.hxx>
 #include <Main/fg_os.hxx>
+
+#include <simgear/math/SGMath.hxx>
 
 void FGCommonInput::read_bindings (const SGPropertyNode * node, binding_list_t * binding_list, int modifiers, string & module )
 {
