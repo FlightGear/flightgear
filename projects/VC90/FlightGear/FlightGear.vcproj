@@ -2622,6 +2622,54 @@
 			Name="Lib_Input"
 			>
 			<File
+				RelativePath="..\..\..\src\Input\FGButton.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Input\FGButton.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Input\FGCommonInput.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Input\FGCommonInput.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Input\FGDeviceConfigurationMap.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Input\FGDeviceConfigurationMap.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Input\FGJoystickInput.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Input\FGJoystickInput.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Input\FGKeyboardInput.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Input\FGKeyboardInput.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Input\FGMouseInput.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Input\FGMouseInput.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Input\input.cxx"
 				>
 			</File>
