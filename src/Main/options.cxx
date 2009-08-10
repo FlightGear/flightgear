@@ -1207,6 +1207,15 @@ fgOptFpe(const char* arg)
     return FG_OPTIONS_OK;
 }
 
+static int
+fgOptFgviewer(const char* arg)
+{
+    // Actually handled in bootstrap.cxx
+    return FG_OPTIONS_OK;
+}
+
+
+
 static map<string,size_t> fgOptionMap;
 
 /*
@@ -1417,6 +1426,7 @@ struct OptionDesc {
     {"parking-id",                   true,  OPTION_FUNC,   "", false, "", fgOptParking  },
     {"version",                      false, OPTION_FUNC,   "", false, "", fgOptVersion },
     {"enable-fpe", 		     false, OPTION_FUNC,   "", false, "", fgOptFpe},
+    {"fgviewer", 		     false, OPTION_FUNC,   "", false, "", fgOptFgviewer},
     {0}
 };
 

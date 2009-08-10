@@ -1877,6 +1877,13 @@
 				RelativePath="..\..\src\Main\fg_props.hxx">
 			</File>
 			<File
+				RelativePath="..\..\src\Main\fgviewer.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Main\fgviewer.hxx">
+			</File>
+
+			<File
 				RelativePath="..\..\src\Main\FGEventHandler.cxx">
 			</File>
 			<File
