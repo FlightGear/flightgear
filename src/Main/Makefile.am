@@ -40,6 +40,7 @@ noinst_LIBRARIES = libMain.a
 libMain_a_SOURCES = \
 	main.cxx main.hxx \
 	renderer.cxx renderer.hxx \
+	fgviewer.cxx fgviewer.hxx \
 	fg_commands.cxx fg_commands.hxx \
 	fg_init.cxx fg_init.hxx \
 	fg_io.cxx fg_io.hxx \

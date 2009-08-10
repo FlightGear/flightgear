@@ -51,6 +51,7 @@ using std::endl;
 
 #include "main.hxx"
 #include "globals.hxx"
+#include "fgviewer.hxx"
 
 
 #include "fg_os.hxx"
@@ -208,13 +209,23 @@ int main ( int argc, char **argv ) {
 #if defined( HAVE_BC5PLUS )
     _control87(MCW_EM, MCW_EM);  /* defined in float.h */
 #endif
+    bool fgviewer = false;
+    for (int i = 0; i < argc; ++i) {
+        if (!strcmp("--fgviewer", argv[i])) {
+            fgviewer = true;
+            break;
+        }
+    }
 
     // FIXME: add other, more specific
     // exceptions.
     try {
         std::set_terminate(fg_terminate);
         atexit(fgExitCleanup);
-        fgMainInit(argc, argv);
+        if (fgviewer)
+            fgviewerMain(argc, argv);
+        else
+            fgMainInit(argc, argv);
     } catch (const sg_throwable &t) {
                             // We must use cerr rather than
                             // logging, since logging may be
