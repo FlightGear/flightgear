@@ -191,8 +191,6 @@ bool FGAIBase::init(bool search_in_AI_path) {
 void FGAIBase::initModel(osg::Node *node)
 {
     if (model.valid()) {
-        // Disable altitude computations for general AI models.
-        model->setNodeMask(model->getNodeMask() & ~SG_NODEMASK_TERRAIN_BIT);
 
         fgSetString("/ai/models/model-added", props->getPath());
 
@@ -450,6 +448,12 @@ SGVec3d FGAIBase::getCartPosAt(const SGVec3d& _off) const {
 SGVec3d FGAIBase::getCartPos() const {
     SGVec3d cartPos = SGVec3d::fromGeod(pos);
     return cartPos;
+}
+
+bool FGAIBase::getGroundElevationM(const SGGeod& pos, double& elev,
+                                   const SGMaterial** material) const {
+    return globals->get_scenery()->get_elevation_m(pos, elev, material,
+                                                   model.get());
 }
 
 double FGAIBase::_getCartPosX() const {

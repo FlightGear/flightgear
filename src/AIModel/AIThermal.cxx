@@ -229,7 +229,7 @@ double user_altitude  = manager->get_user_altitude(); // MSL
 dt_count += dt;
 if (dt_count >= 10.0 ) {
 	//double alt;
-	if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(pos, 20000), alt, 0)){	
+	if (getGroundElevationM(SGGeod::fromGeodM(pos, 20000), alt, 0)) {
 	ground_elev_ft =  alt * SG_METER_TO_FEET;
 	do_agl_calc = 0;
 	altitude_agl_ft = height - ground_elev_ft ;

@@ -412,7 +412,7 @@ void FGAIAircraft::getGroundElev(double dt) {
         }
 
         double alt;
-        if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(pos, 20000), alt, 0))
+        if (getGroundElevationM(SGGeod::fromGeodM(pos, 20000), alt, 0))
             tgt_altitude_ft = alt * SG_METER_TO_FEET;
     }
 }
