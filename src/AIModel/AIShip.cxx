@@ -34,7 +34,6 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/math/sg_random.h>
-#include <simgear/scene/util/SGNodeMasks.hxx>
 
 #include "AIShip.hxx"
 
@@ -116,11 +115,6 @@ bool FGAIShip::init(bool search_in_AI_path) {
         _fp_init = initFlightPlan();
 
     return FGAIBase::init(search_in_AI_path);
-}
-
-void FGAIShip::initModel(osg::Node *node) {
-    FGAIBase::initModel(node);
-    model->setNodeMask(model->getNodeMask() | SG_NODEMASK_TERRAIN_BIT);
 }
 
 void FGAIShip::bind() {

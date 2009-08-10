@@ -36,6 +36,7 @@
 using std::string;
 using std::list;
 
+class SGMaterial;
 class FGAIManager;
 class FGAIFlightPlan;
 
@@ -92,6 +93,9 @@ public:
 
     SGVec3d getCartPosAt(const SGVec3d& off) const;
     SGVec3d getCartPos() const;
+
+    bool getGroundElevationM(const SGGeod& pos, double& elev,
+                             const SGMaterial** material) const;
 
     double _getCartPosX() const;
     double _getCartPosY() const;
