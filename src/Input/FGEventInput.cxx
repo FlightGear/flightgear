@@ -20,44 +20,101 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include "FGEventInput.hxx"
 #include <Main/fg_props.hxx>
 #include <simgear/io/sg_file.hxx>
 #include <poll.h>
 #include <linux/input.h>
 
+FGEventSetting::FGEventSetting( SGPropertyNode_ptr base ) :
+  value(0.0)
+{
+  SGPropertyNode_ptr n;
+
+  if( (n = base->getNode( "value" )) != NULL ) {  
+    valueNode = NULL;
+    value = n->getDoubleValue();
+  } else {
+    n = base->getNode( "property" );
+    if( n == NULL ) {
+      SG_LOG( SG_INPUT, SG_WARN, "Neither <value> nor <property> defined for event setting." );
+    } else {
+      valueNode = fgGetNode( n->getStringValue(), true );
+    }
+  }
+
+  if( (n = base->getChild("condition")) != NULL )
+    condition = sgReadCondition(base, n);
+  else
+    SG_LOG( SG_INPUT, SG_ALERT, "No condition for event setting." );
+}
+
+double FGEventSetting::GetValue()
+{
+  return valueNode == NULL ? value : valueNode->getDoubleValue();
+}
+
+bool FGEventSetting::Test()
+{
+  return condition == NULL ? true : condition->test();
+}
+
 static inline bool StartsWith( string & s, const char * cp )
 {
   return s.compare( 0, strlen(cp), cp ) == 0;
 }
 
-FGInputEvent * FGInputEvent::NewObject( SGPropertyNode_ptr node )
+FGInputEvent * FGInputEvent::NewObject( FGInputDevice * device, SGPropertyNode_ptr node )
 {
-  string name = node->getStringValue( "name" );
+  string name = node->getStringValue( "name", "" );
   if( StartsWith( name, "button-" ) )
-    return new FGButtonEvent( node );
+    return new FGButtonEvent( device, node );
 
   if( StartsWith( name, "rel-" ) )
-    return new FGAxisEvent( node );
+    return new FGAxisEvent( device, node );
 
   if( StartsWith( name, "abs-" ) )
-    return new FGAxisEvent( node );
+    return new FGAxisEvent( device, node );
 
-  return NULL;
+  return new FGInputEvent( device, node );
 }
 
-FGInputEvent::FGInputEvent( SGPropertyNode_ptr node ) :
-  lastDt(0.0)
+FGInputEvent::FGInputEvent( FGInputDevice * aDevice, SGPropertyNode_ptr node ) :
+  device( aDevice ),
+  lastDt(0.0), 
+  lastSettingValue(std::numeric_limits<float>::quiet_NaN())
 {
-  name = node->getStringValue( "name" );
-  desc = node->getStringValue( "desc" );
+  name = node->getStringValue( "name", "" );
+  desc = node->getStringValue( "desc", "" );
   intervalSec = node->getDoubleValue("interval-sec",0.0);
   string module = "event";
+  
   read_bindings( node, bindings, KEYMOD_NONE, module );
+
+  vector<SGPropertyNode_ptr> settingNodes = node->getChildren("setting");
+  for( vector<SGPropertyNode_ptr>::iterator it = settingNodes.begin(); it != settingNodes.end(); it++ )
+    settings.push_back( new FGEventSetting( *it ) );
 }
 
 FGInputEvent::~FGInputEvent()
 {
+}
+
+void FGInputEvent::update( double dt )
+{
+  for( setting_list_t::iterator it = settings.begin(); it != settings.end(); it++ ) {
+    if( (*it)->Test() ) {
+      double value = (*it)->GetValue();
+      if( value != lastSettingValue ) {
+        device->Send( GetName(), (*it)->GetValue() );
+        lastSettingValue = value;
+      }
+    }
+  }
 }
 
 void FGInputEvent::fire( FGEventData & eventData )
@@ -65,15 +122,15 @@ void FGInputEvent::fire( FGEventData & eventData )
   lastDt += eventData.dt;
   if( lastDt >= intervalSec ) {
 
-    for( binding_list_t::iterator it = bindings[KEYMOD_NONE].begin(); it != bindings[KEYMOD_NONE].end(); it++ )
+    for( binding_list_t::iterator it = bindings[eventData.modifiers].begin(); it != bindings[eventData.modifiers].end(); it++ )
       (*it)->fire( eventData.value, 1.0 );
 
     lastDt -= intervalSec;
   }
 }
 
-FGAxisEvent::FGAxisEvent( SGPropertyNode_ptr node ) :
-  FGInputEvent( node )
+FGAxisEvent::FGAxisEvent( FGInputDevice * device, SGPropertyNode_ptr node ) :
+  FGInputEvent( device, node )
 {
   tolerance = node->getDoubleValue("tolerance", 0.002);
   minRange = node->getDoubleValue("min-range", -1024.0);
@@ -93,24 +150,49 @@ void FGAxisEvent::fire( FGEventData & eventData )
   FGInputEvent::fire( eventData );
 }
 
-FGButtonEvent::FGButtonEvent( SGPropertyNode_ptr node ) :
-  FGInputEvent( node )
+FGButtonEvent::FGButtonEvent( FGInputDevice * device, SGPropertyNode_ptr node ) :
+  FGInputEvent( device, node ),
+  lastState(false),
+  repeatable(false)
 {
+  repeatable = node->getBoolValue("repeatable", repeatable);
 }
 
 void FGButtonEvent::fire( FGEventData & eventData )
 {
-  FGInputEvent::fire( eventData );
+  bool pressed = eventData.value > 0.0;
+  if (pressed) {
+    // The press event may be repeated.
+    if (!lastState || repeatable) {
+      SG_LOG( SG_INPUT, SG_DEBUG, "Button has been pressed" );
+      FGInputEvent::fire( eventData );
+    }
+  } else {
+    // The release event is never repeated.
+    if (lastState) {
+      SG_LOG( SG_INPUT, SG_DEBUG, "Button has been released" );
+      eventData.modifiers|=KEYMOD_RELEASED;
+      FGInputEvent::fire( eventData );
+    }
+  }
+          
+  lastState = pressed;
 }
 
 FGInputDevice::~FGInputDevice()
 {
 } 
 
+void FGInputDevice::update( double dt )
+{
+  for( map<string,FGInputEvent_ptr>::iterator it = handledEvents.begin(); it != handledEvents.end(); it++ )
+    (*it).second->update( dt );
+}
+
 void FGInputDevice::HandleEvent( FGEventData & eventData )
 {
   string eventName = TranslateEventName( eventData );  
-  cout << GetName() << " has event " << eventName << endl;
+//  cout << GetName() << " has event " << eventName << " modifiers=" << eventData.modifiers << " value=" << eventData.value << endl;
   if( handledEvents.count( eventName ) > 0 ) {
     handledEvents[ eventName ]->fire( eventData );
   }
@@ -146,6 +228,13 @@ void FGEventInput::postinit ()
 {
 }
 
+void FGEventInput::update( double dt )
+{
+  // call each associated device's update() method
+  for( map<int,FGInputDevice*>::iterator it =  input_devices.begin(); it != input_devices.end(); it++ )
+    (*it).second->update( dt );
+}
+
 void FGEventInput::AddDevice( FGInputDevice * inputDevice )
 {
   SGPropertyNode_ptr baseNode = fgGetNode( PROPERTY_ROOT, true );
@@ -174,19 +263,14 @@ void FGEventInput::AddDevice( FGInputDevice * inputDevice )
   }
 
   if( deviceNode == NULL ) {
-    SG_LOG(SG_INPUT, SG_WARN, "No configuration found for device " << inputDevice->GetName() );
+    SG_LOG(SG_INPUT, SG_DEBUG, "No configuration found for device " << inputDevice->GetName() );
+    delete  inputDevice;
     return;
   }
 
   vector<SGPropertyNode_ptr> eventNodes = deviceNode->getChildren( "event" );
-  for( vector<SGPropertyNode_ptr>::iterator it = eventNodes.begin(); it != eventNodes.end(); it++ ) {
-    FGInputEvent * p = FGInputEvent::NewObject( *it );
-    if( p == NULL ) {
-      SG_LOG(SG_INPUT, SG_WARN, "Unhandled event/name in " << inputDevice->GetName()  );
-      continue;
-    }
-    inputDevice->AddHandledEvent( p );
-  }
+  for( vector<SGPropertyNode_ptr>::iterator it = eventNodes.begin(); it != eventNodes.end(); it++ )
+    inputDevice->AddHandledEvent( FGInputEvent::NewObject( inputDevice, *it ) );
 
   // TODO:
   // add nodes for the last event:
@@ -198,6 +282,9 @@ void FGEventInput::AddDevice( FGInputDevice * inputDevice )
     input_devices[ deviceNode->getIndex() ] = inputDevice;
   }
   catch( ... ) {
-    SG_LOG(SG_INPUT, SG_WARN, "can't open InputDevice " << inputDevice->GetName()  );
+    delete  inputDevice;
+    SG_LOG(SG_INPUT, SG_ALERT, "can't open InputDevice " << inputDevice->GetName()  );
   }
+
+  SG_LOG(SG_INPUT, SG_DEBUG, "using InputDevice " << inputDevice->GetName()  );
 }
