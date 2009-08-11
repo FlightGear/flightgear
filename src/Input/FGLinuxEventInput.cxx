@@ -174,9 +174,15 @@ static struct EventTypes {
   { { EV_SW, SW_LID },               "switch-lid" },
   { { EV_SW, SW_TABLET_MODE },       "switch-tablet-mode" },
   { { EV_SW, SW_HEADPHONE_INSERT },  "switch-headphone-insert" },
+#ifdef SW_RFKILL_ALL 
   { { EV_SW, SW_RFKILL_ALL },        "switch-rfkill" },
+#endif
+#ifdef SW_MICROPHONE_INSERT 
   { { EV_SW, SW_MICROPHONE_INSERT }, "switch-microphone-insert" },
+#endif
+#ifdef SW_DOCK
   { { EV_SW, SW_DOCK },              "swtich-dock" },
+#endif
 
   { { EV_LED, LED_NUML},     "led-numlock" },
   { { EV_LED, LED_CAPSL},    "led-capslock" },
