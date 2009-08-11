@@ -29,13 +29,35 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 
 /*
- * A base class for event data. 
+ * A base structure for event data. 
+ * To be extended for O/S specific implementation data
  */
 struct FGEventData {
-  FGEventData( double aValue, double aDt ) : value(aValue), dt(aDt) {}
+  FGEventData( double aValue, double aDt, int aModifiers ) : value(aValue), dt(aDt), modifiers(aModifiers) {}
+  int modifiers;
   double value;
   double dt;
 };
+
+class FGEventSetting : public SGReferenced {
+public:
+  FGEventSetting( SGPropertyNode_ptr base );
+
+  bool Test();
+
+  /* 
+   * access for the value property
+   */
+  double GetValue();
+
+protected:
+  double value;
+  SGPropertyNode_ptr valueNode;
+  SGSharedPtr<const SGCondition> condition;
+};
+
+typedef SGSharedPtr<FGEventSetting> FGEventSetting_ptr;
+typedef vector<FGEventSetting_ptr> setting_list_t;
 
 /*
  * A wrapper class for a configured event. 
@@ -51,15 +73,21 @@ struct FGEventData {
  *     <max type="double">90.0</max>
  *     <wrap type="bool">false</wrap>
  *   </binding>
+ *   <mod-xyz>
+ *    <binding>
+ *      ...
+ *    </binding>
+ *   </mod-xyz>
  * </event>
  */
+class FGInputDevice;
 class FGInputEvent : public SGReferenced,FGCommonInput {
 public:
   /*
    * Constructor for the class. The arg node shall point
    * to the property corresponding to the <event>  node
    */
-  FGInputEvent( SGPropertyNode_ptr node );
+  FGInputEvent( FGInputDevice * device, SGPropertyNode_ptr node );
   virtual ~FGInputEvent();
 
   /*
@@ -77,7 +105,9 @@ public:
    */
   string GetDescription() const { return desc; }
 
-  static FGInputEvent * NewObject( SGPropertyNode_ptr node );
+  virtual void update( double dt );
+
+  static FGInputEvent * NewObject( FGInputDevice * device, SGPropertyNode_ptr node );
 
 protected:
   /* A more or less meaningfull description of the event */
@@ -89,19 +119,30 @@ protected:
   /* A list of SGBinding objects */
   binding_list_t bindings[KEYMOD_MAX];
 
+  /* A list of FGEventSetting objects */
+  setting_list_t settings;
+
+  /* A pointer to the associated device */
+  FGInputDevice * device;
+
   double lastDt;
   double intervalSec;
+  double lastSettingValue;
 };
 
 class FGButtonEvent : public FGInputEvent {
 public:
-  FGButtonEvent( SGPropertyNode_ptr node );
+  FGButtonEvent( FGInputDevice * device, SGPropertyNode_ptr node );
   virtual void fire( FGEventData & eventData );
+
+protected:
+  bool repeatable;
+  bool lastState;
 };
 
 class FGAxisEvent : public FGInputEvent {
 public:
-  FGAxisEvent( SGPropertyNode_ptr node );
+  FGAxisEvent( FGInputDevice * device, SGPropertyNode_ptr node );
 protected:
   virtual void fire( FGEventData & eventData );
   double tolerance;
@@ -130,6 +171,13 @@ public:
 
   virtual void Open() = 0;
   virtual void Close() = 0;
+
+  virtual void Send( const char * eventName, double value ) = 0;
+
+  inline void Send( const string & eventName, double value ) {
+    Send( eventName.c_str(), value );
+  }
+
   virtual const char * TranslateEventName( FGEventData & eventData ) = 0;
 
 
@@ -137,13 +185,19 @@ public:
   string & GetName() { return name; }
 
   void HandleEvent( FGEventData & eventData );
+
   void AddHandledEvent( FGInputEvent_ptr handledEvent ) {
     if( handledEvents.count( handledEvent->GetName() ) == 0 )
       handledEvents[handledEvent->GetName()] = handledEvent;
   }
 
+  virtual void update( double dt );
+
 private:
+  // A map of events, this device handles
   map<string,FGInputEvent_ptr> handledEvents;
+
+  // the device has a name to be recognized
   string name;
 };
 
@@ -159,6 +213,7 @@ public:
   virtual ~FGEventInput();
   virtual void init();
   virtual void postinit();
+  virtual void update( double dt );
 
 protected:
   static const char * PROPERTY_ROOT;

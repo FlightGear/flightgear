@@ -15,6 +15,12 @@ else
 THREAD_LIBS =
 endif
 
+if WITH_EVENTINPUT
+EVENT_LIBS = -ldbus-1 -lhal
+else
+EVENT_LIBS =
+endif
+
 GFX_CODE = fg_os_osgviewer.cxx fg_os_common.cxx fg_os.hxx
 
 JSBSIM_LIBS = \
@@ -105,7 +111,8 @@ fgfs_LDADD = \
 	$(network_LIBS) \
 	-lz \
 	$(opengl_LIBS) \
-	$(openal_LIBS)
+	$(openal_LIBS) \
+	$(EVENT_LIBS)
 
 metar_SOURCES = metar_main.cxx
 

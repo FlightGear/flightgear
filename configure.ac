@@ -112,6 +112,14 @@ fi
 AM_CONDITIONAL(ENABLE_SP_FDM, test "x$enable_sp_fdms" != "xno")
 
 
+dnl EXPERIMENTAL generic event driven input device
+# defaults to no
+AC_ARG_WITH(eventinput, [  --with-eventinput       Include event driven input (EXPERIMENTAL) [default=no]], [], [with_eventinput=no])
+if test "x$with_eventinput" = "xyes"; then
+    AC_DEFINE([WITH_EVENTINPUT], 1, [Define to enable generic event driven input device])
+fi
+AM_CONDITIONAL(WITH_EVENTINPUT, test "x$with_eventinput" = "xyes")
+
 dnl Thread related checks
 # defaults to yes
 AC_ARG_WITH(threads, [  --with-threads          Include tile loading threads [default=yes]], [], [with_threads=yes])
@@ -758,6 +766,12 @@ if test "x$with_threads" = "xyes"; then
     echo "threads: yes"
 else
     echo "threads: no"
+fi
+
+if test "x$with_eventinput" = "xyes"; then
+    echo "event input: yes"
+else
+    echo "event input: no"
 fi
 
 if test "x$enable_sp_fdms" != "xno"; then

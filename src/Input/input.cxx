@@ -32,7 +32,20 @@
 #include "FGJoystickInput.hxx"
 
 #ifdef WITH_EVENTINPUT
+#if defined( UL_WIN32 )
+//to be developed
+//#include "FGDirectXEventInput.hxx"
+//#define INPUTEVENT_CLASS FGDirectXEventInput
+#elif defined ( UL_MAC_OSX )
+/*
+ Currently not supported :-(
+ */
+#undef INPUTEVENT_CLASS
+#else
 #include "FGLinuxEventInput.hxx"
+#define INPUTEVENT_CLASS FGLinuxEventInput
+#endif
+
 #endif
 
 ////////////////////////////////////////////////////////////////////////
@@ -45,6 +58,9 @@ FGInput::FGInput ()
   set_subsystem( "input-mouse", new FGMouseInput() );
   set_subsystem( "input-keyboard", new FGKeyboardInput() );
   set_subsystem( "input-joystick", new FGJoystickInput() );
+#ifdef INPUTEVENT_CLASS
+  set_subsystem( "input-event", new INPUTEVENT_CLASS() );
+#endif
 }
 
 FGInput::~FGInput ()
