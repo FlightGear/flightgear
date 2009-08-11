@@ -181,7 +181,7 @@ static struct EventTypes {
   { { EV_SW, SW_MICROPHONE_INSERT }, "switch-microphone-insert" },
 #endif
 #ifdef SW_DOCK
-  { { EV_SW, SW_DOCK },              "swtich-dock" },
+  { { EV_SW, SW_DOCK },              "switch-dock" },
 #endif
 
   { { EV_LED, LED_NUML},     "led-numlock" },
