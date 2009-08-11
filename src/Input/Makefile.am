@@ -4,7 +4,7 @@ noinst_LIBRARIES = libInput.a
 
 if WITH_EVENTINPUT
 libInput_Event_SOURCES = FGEventInput.cxx FGEventInput.hxx FGLinuxEventInput.cxx FGLinuxEventInput.hxx
-libInput_Event_INCLUDES = -I/usr/include/dbus-1.0 -I/usr/lib64/dbus-1.0/include 
+libInput_Event_INCLUDES = -I/usr/include/dbus-1.0 -I/usr/lib64/dbus-1.0/include -I/usr/lib/dbus-1.0/include 
 else
 libInput_Event_SOURCES = 
 libInput_Event_INCLUDES = 
