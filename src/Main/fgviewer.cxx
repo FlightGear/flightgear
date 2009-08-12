@@ -40,7 +40,8 @@ public:
     {
         try {
             SGSharedPtr<SGPropertyNode> prop = new SGPropertyNode;
-            return simgear::SGModelLib::loadModel(modelPath, prop);
+            return simgear::SGModelLib::loadModel(modelPath,
+                                                  globals->get_props());
         } catch (...) {
             std::cerr << "Error loading \"" << modelPath << "\"" << std::endl;
             return 0;
@@ -223,6 +224,8 @@ fgviewerMain(int argc, char** argv)
     SGReaderWriterBTGOptions* btgOptions = new SGReaderWriterBTGOptions;
     btgOptions->getDatabasePathList() = filePathList;
     btgOptions->setMatlib(globals->get_matlib());
+    btgOptions->setUseRandomObjects(fgGetBool("/sim/rendering/random-objects", false));
+    btgOptions->setUseRandomVegetation(fgGetBool("/sim/rendering/random-vegetation", false));
 
     // read the scene from the list of file specified command line args.
     osg::ref_ptr<osg::Node> loadedModel;
