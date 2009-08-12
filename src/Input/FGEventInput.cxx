@@ -192,7 +192,10 @@ void FGInputDevice::update( double dt )
 void FGInputDevice::HandleEvent( FGEventData & eventData )
 {
   string eventName = TranslateEventName( eventData );  
-//  cout << GetName() << " has event " << eventName << " modifiers=" << eventData.modifiers << " value=" << eventData.value << endl;
+  if( debugEvents )
+    cout << GetName() << " has event " << 
+    eventName << " modifiers=" << eventData.modifiers << " value=" << eventData.value << endl;
+
   if( handledEvents.count( eventName ) > 0 ) {
     handledEvents[ eventName ]->fire( eventData );
   }
@@ -271,6 +274,8 @@ void FGEventInput::AddDevice( FGInputDevice * inputDevice )
   vector<SGPropertyNode_ptr> eventNodes = deviceNode->getChildren( "event" );
   for( vector<SGPropertyNode_ptr>::iterator it = eventNodes.begin(); it != eventNodes.end(); it++ )
     inputDevice->AddHandledEvent( FGInputEvent::NewObject( inputDevice, *it ) );
+
+  inputDevice->SetDebugEvents( deviceNode->getBoolValue("debug-events", inputDevice->GetDebugEvents() ));
 
   // TODO:
   // add nodes for the last event:

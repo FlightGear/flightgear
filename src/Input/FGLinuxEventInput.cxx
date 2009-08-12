@@ -252,15 +252,6 @@ void FGLinuxInputDevice::Open()
   if( (fd = ::open( devname.c_str(), O_RDWR )) == -1 ) { 
     throw exception();
   }
-/*
-  input_event evt;
-  evt.type=EV_LED;
-  evt.code = 8;
-  evt.value = 1;
-  evt.time.tv_sec = 0;
-  evt.time.tv_usec = 0;
-  write( fd, &evt, sizeof(evt) );
-*/
 }
 
 void FGLinuxInputDevice::Close()
