@@ -464,22 +464,18 @@ bool FGATCOutput::do_analog_out() {
                 }
                 prop = child->getChild( "value-lo" );
                 if ( prop != NULL ) {
-                    prop = fgGetNode( prop->getStringValue(), true );
 		    x0 = prop->getDoubleValue();
                 }
                 prop = child->getChild( "meter-lo" );
                 if ( prop != NULL ) {
-                    prop = fgGetNode( prop->getStringValue(), true );
 		    y0 = prop->getDoubleValue();
                 }
                 prop = child->getChild( "value-hi" );
                 if ( prop != NULL ) {
-                    prop = fgGetNode( prop->getStringValue(), true );
 		    x1 = prop->getDoubleValue();
                 }
                 prop = child->getChild( "meter-hi" );
                 if ( prop != NULL ) {
-                    prop = fgGetNode( prop->getStringValue(), true );
 		    y1 = prop->getDoubleValue();
                 }
 		// crunch linear interpolation formula
