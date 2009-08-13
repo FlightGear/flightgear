@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <iostream>
 #include <cstdlib>
 
@@ -102,6 +106,7 @@ bool GraphDumpHandler::handle(const osgGA::GUIEventAdapter& ea,
     default:
         return false;
     }
+    return false;
 }
 
 void GraphDumpHandler::getUsage(osg::ApplicationUsage& usage) const
