@@ -2746,6 +2746,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\Main\fgviewer.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Main\fgviewer.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Main\globals.cxx"
 				>
 			</File>
