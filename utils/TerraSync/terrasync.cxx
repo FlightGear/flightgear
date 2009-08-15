@@ -458,7 +458,7 @@ int main( int argc, char **argv ) {
     int last_lat = nowhere;
     int last_lon = nowhere;
     bool recv_msg = false;
-    char synced_other = 'K';
+    char synced_other = 'J';
 
     while ( true ) {
         recv_msg = false;
@@ -506,7 +506,7 @@ int main( int argc, char **argv ) {
 		    cout << "Waiting for FGFS to finish startup" << endl;
 		}
 		char c;
-		while ( !isdigit( c = synced_other++ ) && !isupper( c ) );
+		while ( !isdigit( c = ++synced_other ) && !isupper( c ) );
 
 		char dir[512];
 		snprintf( dir, 512, "Airports/%c", c );
