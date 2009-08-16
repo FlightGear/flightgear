@@ -652,6 +652,10 @@ void FGLGear::bind(void)
     Exec->GetPropertyManager()->Tie( property_name.c_str(), &compressLength );
     property_name = base_property_name + "/side_friction_coeff";
     Exec->GetPropertyManager()->Tie( property_name.c_str(), &FCoeff );
+
+    property_name = base_property_name + "/static_friction_coeff";
+    Exec->GetPropertyManager()->Tie( property_name.c_str(), &staticFCoeff );
+
   }
 
   if( isRetractable ) {

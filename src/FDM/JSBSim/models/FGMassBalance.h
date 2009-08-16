@@ -107,10 +107,12 @@ public:
   bool InitModel(void);
   bool Run(void);
 
-  inline double GetMass(void) const {return Mass;}
-  inline double GetWeight(void) const {return Weight;}
-  inline FGColumnVector3& GetXYZcg(void) {return vXYZcg;}
-  inline double GetXYZcg(int axis) const  {return vXYZcg(axis);}
+  double GetMass(void) const {return Mass;}
+  double GetWeight(void) const {return Weight;}
+  FGColumnVector3& GetXYZcg(void) {return vXYZcg;}
+  double GetXYZcg(int axis) const  {return vXYZcg(axis);}
+  FGColumnVector3& GetDeltaXYZcg(void) {return vDeltaXYZcg;}
+  double GetDeltaXYZcg(int axis) const  {return vDeltaXYZcg(axis);}
 
   /** Computes the inertia contribution of a pointmass.
       Computes and returns the inertia matrix of a pointmass of mass
@@ -166,6 +168,9 @@ private:
   FGMatrix33 pmJ;
   FGMatrix33 baseJ;
   FGColumnVector3 vXYZcg;
+  FGColumnVector3 vLastXYZcg;
+  FGColumnVector3 vDeltaXYZcg;
+  FGColumnVector3 vDeltaXYZcgBody;
   FGColumnVector3 vXYZtank;
   FGColumnVector3 vbaseXYZcg;
   FGColumnVector3 vPMxyz;

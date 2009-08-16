@@ -35,14 +35,9 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <string>
 #include <iostream>
 #include <simgear/props/props.hxx>
-#include <simgear/math/SGMath.hxx>
 
 #include "FGJSBBase.h"
 

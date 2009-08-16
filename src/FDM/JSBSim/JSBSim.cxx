@@ -489,8 +489,8 @@ void FGJSBsim::update( double dt )
     }
 
     FGJSBBase::Message* msg;
-    while (fdmex->SomeMessages()) {
-      msg = fdmex->ProcessMessage();
+    while (msg = fdmex->ProcessNextMessage()) {
+//      msg = fdmex->ProcessNextMessage();
       switch (msg->type) {
       case FGJSBBase::Message::eText:
         if (msg->text == "Crash Detected: Simulation FREEZE.")

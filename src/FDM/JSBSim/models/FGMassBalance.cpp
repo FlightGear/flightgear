@@ -59,6 +59,9 @@ FGMassBalance::FGMassBalance(FGFDMExec* fdmex) : FGModel(fdmex)
   Weight = EmptyWeight = Mass = 0.0;
 
   vbaseXYZcg.InitMatrix(0.0);
+  vXYZcg.InitMatrix(0.0);
+  vLastXYZcg.InitMatrix(0.0);
+  vDeltaXYZcg.InitMatrix(0.0);
   baseJ.InitMatrix();
   mJ.InitMatrix();
   mJinv.InitMatrix();
@@ -84,6 +87,9 @@ FGMassBalance::~FGMassBalance()
 bool FGMassBalance::InitModel(void)
 {
   if (!FGModel::InitModel()) return false;
+
+  vLastXYZcg.InitMatrix(0.0);
+  vDeltaXYZcg.InitMatrix(0.0);
 
   return true;
 }
@@ -171,6 +177,14 @@ bool FGMassBalance::Run(void)
   vXYZcg = (Propulsion->GetTanksMoment() + EmptyWeight*vbaseXYZcg
             + GetPointMassMoment()
             + BuoyantForces->GetGasMassMoment()) / Weight;
+
+  // Track frame-by-frame delta CG, and move the EOM-tracked location
+  // by this amount.
+  if (vLastXYZcg.Magnitude() == 0.0) vLastXYZcg = vXYZcg;
+  vDeltaXYZcg = vXYZcg - vLastXYZcg;
+  vDeltaXYZcgBody = StructuralToBody(vLastXYZcg) - StructuralToBody(vXYZcg);
+  vLastXYZcg = vXYZcg;
+  Propagate->NudgeBodyLocation(vDeltaXYZcgBody);
 
 // Calculate new total moments of inertia
 
