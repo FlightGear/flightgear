@@ -150,12 +150,13 @@ public:
   void SetType(string);
   void SetStartNewFile(bool tt) {StartNewFile = tt;}
   void SetSubsystems(int tt) {SubSystems = tt;}
-  inline void Enable(void) { enabled = true; }
-  inline void Disable(void) { enabled = false; }
-  inline bool Toggle(void) {enabled = !enabled; return enabled;}
+  void Enable(void) { enabled = true; }
+  void Disable(void) { enabled = false; }
+  bool Toggle(void) {enabled = !enabled; return enabled;}
   bool Load(Element* el);
   void SetOutputFileName(string fname) {Filename = fname;}
   void SetDirectivesFile(string fname) {DirectivesFile = fname;}
+  void SetRate(int rt);
   string GetOutputFileName(void) const {return Filename;}
 
   /// Subsystem types for specifying which will be output in the FDM data logging

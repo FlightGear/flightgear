@@ -865,8 +865,14 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
     SetLongitudeDegIC(document->FindElementValueAsNumberConvertTo("longitude", "DEG"));
   if (document->FindElement("elevation"))
     SetTerrainElevationFtIC(document->FindElementValueAsNumberConvertTo("elevation", "FT"));
+
   if (document->FindElement("altitude")) // This is feet above ground level
     SetAltitudeAGLFtIC(document->FindElementValueAsNumberConvertTo("altitude", "FT"));
+  else if (document->FindElement("altitudeAGL")) // This is feet above ground level
+    SetAltitudeAGLFtIC(document->FindElementValueAsNumberConvertTo("altitudeAGL", "FT"));
+  else if (document->FindElement("altitudeMSL")) // This is feet above sea level
+    SetAltitudeASLFtIC(document->FindElementValueAsNumberConvertTo("altitudeMSL", "FT"));
+
   if (document->FindElement("ubody"))
     SetUBodyFpsIC(document->FindElementValueAsNumberConvertTo("ubody", "FT/SEC"));
   if (document->FindElement("vbody"))

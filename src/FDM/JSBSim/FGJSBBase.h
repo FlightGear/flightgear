@@ -182,8 +182,12 @@ public:
       @return 1 if some messages */
   int SomeMessages(void);
   /** Reads the message on the queue and removes it from the queue.
-      @return pointer to a Message structure (or NULL if no mesage) */
-  Message* ProcessMessage(void);
+      This function also prints out the message.*/
+  void ProcessMessage(void);
+  /** Reads the next message on the queue and removes it from the queue.
+      This function also prints out the message.
+      @return a pointer to the message, or NULL if there are no messages.*/
+  Message* ProcessNextMessage(void);
   //@}
 
   /** Returns the version number of JSBSim.

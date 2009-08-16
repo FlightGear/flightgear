@@ -38,6 +38,7 @@ INCLUDES
 #define BASE
 
 #include "FGJSBBase.h"
+#include <iostream>
 
 namespace JSBSim {
 
@@ -109,6 +110,10 @@ unsigned int FGJSBBase::messageId = 0;
 
 short FGJSBBase::debug_lvl  = 1;
 
+using std::cerr;
+using std::cout;
+using std::endl;
+
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGJSBBase::PutMessage(const Message& msg)
@@ -176,10 +181,43 @@ int FGJSBBase::SomeMessages(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGJSBBase::Message* FGJSBBase::ProcessMessage(void)
+void FGJSBBase::ProcessMessage(void)
+{
+  if (Messages.empty()) return;
+  localMsg = Messages.front();
+
+  while (Messages.size() > 0) {
+      switch (localMsg.type) {
+      case JSBSim::FGJSBBase::Message::eText:
+        cout << localMsg.messageId << ": " << localMsg.text << endl;
+        break;
+      case JSBSim::FGJSBBase::Message::eBool:
+        cout << localMsg.messageId << ": " << localMsg.text << " " << localMsg.bVal << endl;
+        break;
+      case JSBSim::FGJSBBase::Message::eInteger:
+        cout << localMsg.messageId << ": " << localMsg.text << " " << localMsg.iVal << endl;
+        break;
+      case JSBSim::FGJSBBase::Message::eDouble:
+        cout << localMsg.messageId << ": " << localMsg.text << " " << localMsg.dVal << endl;
+        break;
+      default:
+        cerr << "Unrecognized message type." << endl;
+        break;
+      }
+      Messages.pop();
+      if (Messages.size() > 0) localMsg = Messages.front();
+      else break;
+  }
+
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+FGJSBBase::Message* FGJSBBase::ProcessNextMessage(void)
 {
   if (Messages.empty()) return NULL;
   localMsg = Messages.front();
+
   Messages.pop();
   return &localMsg;
 }

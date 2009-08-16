@@ -519,7 +519,7 @@ bool FGFCS::Load(Element* el, SystemType systype)
 {
   string name, file, fname="", interface_property_string, parent_name;
   vector <FGFCSComponent*> *Components;
-  Element *component_element, *sensor_element;
+  Element *component_element;
   Element *channel_element;
 
   Components=0;

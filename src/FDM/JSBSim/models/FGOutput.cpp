@@ -465,9 +465,11 @@ void FGOutput::DelimitedOutput(string fname)
     outstream << Propulsion->GetPropulsionValues(delimeter);
   }
 
+  outstream.precision(18);
   for (unsigned int i=0;i<OutputProperties.size();i++) {
     outstream << delimeter << OutputProperties[i]->getDoubleValue();
   }
+  outstream.precision(10);
 
   outstream << endl;
   outstream.flush();
@@ -1016,12 +1018,25 @@ bool FGOutput::Load(Element* element)
     property_element = document->FindNextElement("property");
   }
 
-  OutRate = OutRate>1000?1000:(OutRate<0?0:OutRate);
-  rate = (int)(0.5 + 1.0/(State->Getdt()*OutRate));
+  SetRate(OutRate);
 
   Debug(2);
 
   return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGOutput::SetRate(int rtHz)
+{
+  rtHz = rtHz>1000?1000:(rtHz<0?0:rtHz);
+  if (rtHz > 0) {
+    rate = (int)(0.5 + 1.0/(State->Getdt()*rtHz));
+    Enable();
+  } else {
+    rate = 1;
+    Disable();
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
