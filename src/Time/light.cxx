@@ -156,7 +156,7 @@ void FGLight::bind () {
     prop->tie("/rendering/dome/sky/blue",SGRawValuePointer<float>(&_sky_color[2]));
     prop->tie("/rendering/dome/fog/red",SGRawValuePointer<float>(&_fog_color[0]));
     prop->tie("/rendering/dome/fog/green",SGRawValuePointer<float>(&_fog_color[1]));
-    prop->tie("/rendering/dome/fog/blue",SGRawValuePointer<float>(&_fog_color[1]));
+    prop->tie("/rendering/dome/fog/blue",SGRawValuePointer<float>(&_fog_color[2]));
 }
 
 void FGLight::unbind () {
@@ -177,6 +177,9 @@ void FGLight::unbind () {
     prop->untie("/rendering/dome/skyred");
     prop->untie("/rendering/dome/sky/green");
     prop->untie("/rendering/dome/sky/blue");
+    prop->untie("/rendering/dome/fogred");
+    prop->untie("/rendering/dome/fog/green");
+    prop->untie("/rendering/dome/fog/blue");
 }
 
 
