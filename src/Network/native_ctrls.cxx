@@ -436,7 +436,7 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
     node->setDoubleValue( "wind-speed-kt", net->wind_speed_kt );
     node->setDoubleValue( "wind-from-heading-deg", net->wind_dir_deg );
     node->setDoubleValue( "turbulence/magnitude-norm", net->turbulence_norm );
-    node->setBoolValue( "magnetic-variation-deg", net->magvar );
+    node->setDoubleValue( "magnetic-variation-deg", net->magvar );
 
     node->setDoubleValue( "/environment/temperature-degc",
 			  net->temp_c );
