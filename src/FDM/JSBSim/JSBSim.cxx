@@ -103,8 +103,8 @@ public:
     double contact[3], normal[3], vel[3], agl = 0;
     mInterface->get_agl_ft(t, loc_cart, SG_METER_TO_FEET*2, contact, normal,
                            vel, &agl);
-    n = l.GetTec2l()*FGColumnVector3( normal[0], normal[1], normal[2] );
-    v = l.GetTec2l()*FGColumnVector3( vel[0], vel[1], vel[2] );
+    n = FGColumnVector3( -normal[0], -normal[1], -normal[2] );
+    v = FGColumnVector3( vel[0], vel[1], vel[2] );
     cont = FGColumnVector3( contact[0], contact[1], contact[2] );
     return agl;
   }
