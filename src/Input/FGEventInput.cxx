@@ -152,8 +152,8 @@ void FGAxisEvent::fire( FGEventData & eventData )
 
 FGButtonEvent::FGButtonEvent( FGInputDevice * device, SGPropertyNode_ptr node ) :
   FGInputEvent( device, node ),
-  lastState(false),
-  repeatable(false)
+  repeatable(false),
+  lastState(false)
 {
   repeatable = node->getBoolValue("repeatable", repeatable);
 }
@@ -223,7 +223,7 @@ FGEventInput::~FGEventInput()
 void FGEventInput::init( )
 {
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing event bindings");
-  SGPropertyNode * base = fgGetNode("/input/event", true);
+//  SGPropertyNode * base = fgGetNode("/input/event", true);
 
 }
 
