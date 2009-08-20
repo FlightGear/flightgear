@@ -152,15 +152,15 @@ double FGXMLAutoInput::get_value()
 }
 
 FGXMLAutoComponent::FGXMLAutoComponent( SGPropertyNode * node ) :
-      debug(false),
-      name(""),
-      enable_prop( NULL ),
-      passive_mode( fgGetNode("/autopilot/locks/passive-mode", true) ),
-      enable_value( NULL ),
-      honor_passive( false ),
-      enabled( false ),
       _condition( NULL ),
-      feedback_if_disabled( false )
+      enable_prop( NULL ),
+      enable_value( NULL ),
+      passive_mode( fgGetNode("/autopilot/locks/passive-mode", true) ),
+      honor_passive( false ),
+      name(""),
+      feedback_if_disabled( false ),
+      debug(false),
+      enabled( false )
 {
     int i;
     SGPropertyNode *prop; 

@@ -62,9 +62,9 @@ private:
 
 public:
     FGXMLAutoInput( SGPropertyNode_ptr node = NULL, double value = 0.0, double offset = 0.0, double scale = 1.0 ) :
-      property(NULL),
       value(0.0),
       abs(false),
+      property(NULL),
       offset(NULL),
       scale(NULL),
       min(NULL),
