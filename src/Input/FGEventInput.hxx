@@ -33,7 +33,7 @@
  * To be extended for O/S specific implementation data
  */
 struct FGEventData {
-  FGEventData( double aValue, double aDt, int aModifiers ) : value(aValue), dt(aDt), modifiers(aModifiers) {}
+  FGEventData( double aValue, double aDt, int aModifiers ) : modifiers(aModifiers), value(aValue), dt(aDt) {}
   int modifiers;
   double value;
   double dt;

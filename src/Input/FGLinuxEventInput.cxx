@@ -201,7 +201,7 @@ static struct EventTypes {
 class EventNameByType : public map<TypeCode,const char*> {
 public:
   EventNameByType() {
-    for( int i = 0; i < sizeof(EVENT_TYPES)/sizeof(EVENT_TYPES[0]); i++ )
+    for( unsigned i = 0; i < sizeof(EVENT_TYPES)/sizeof(EVENT_TYPES[0]); i++ )
       (*this)[EVENT_TYPES[i].typeCode] = EVENT_TYPES[i].name;
   }
 };
@@ -217,7 +217,7 @@ struct ltstr {
 class EventTypeByName : public map<const char *,TypeCode,ltstr> {
 public:
   EventTypeByName() {
-    for( int i = 0; i < sizeof(EVENT_TYPES)/sizeof(EVENT_TYPES[0]); i++ )
+    for( unsigned i = 0; i < sizeof(EVENT_TYPES)/sizeof(EVENT_TYPES[0]); i++ )
       (*this)[EVENT_TYPES[i].name] = EVENT_TYPES[i].typeCode;
   }
 };
@@ -226,9 +226,8 @@ static EventTypeByName EVENT_TYPE_BY_NAME;
 
 FGLinuxInputDevice::FGLinuxInputDevice( string aName, string aDevname ) :
   FGInputDevice(aName),
-  fd(-1),
-  devname( aDevname )
-
+  devname( aDevname ),
+  fd(-1)
 {
 }
 
@@ -415,7 +414,7 @@ void FGLinuxEventInput::update( double dt )
   // do no more than maxpolls in a single loop to prevent locking
   int maxpolls = 100;
   while( maxpolls-- > 0 && ::poll( fds, i, 0 ) > 0 ) {
-    for( int i = 0; i < sizeof(fds)/sizeof(fds[0]); i++ ) {
+    for( unsigned i = 0; i < sizeof(fds)/sizeof(fds[0]); i++ ) {
       if( fds[i].revents & POLLIN ) {
 
         // if this device reports data ready, it should be a input_event struct

@@ -234,7 +234,7 @@ void FGJoystickInput::postinit()
           continue;
       }
 
-      sprintf(buf, "%d", n_but);
+      sprintf(buf, "%u", (unsigned)n_but);
       SG_LOG(SG_INPUT, SG_DEBUG, "Initializing button " << n_but);
       bindings[i].buttons[n_but].init(button_node, buf, module );
 
