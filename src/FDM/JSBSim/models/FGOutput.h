@@ -83,7 +83,7 @@ CLASS DOCUMENTATION
       FLIGHTGEAR  A socket is created for sending binary data packets to
                   an external instance of FlightGear for visuals.  Parameters
                   defining the socket are given on the \<output> line.
-      TABULAR     Columnar data. NOT IMPLEMENTED YET!
+      TABULAR     Columnar data.
       TERMINAL    Output to terminal. NOT IMPLEMENTED YET!
       NONE        Specifies to do nothing. This setting makes it easy to turn on and
                   off the data output without having to mess with anything else.
@@ -91,7 +91,7 @@ CLASS DOCUMENTATION
       Examples:
 </pre>
 @code
-	<output name="localhost" type="FLIGHTGEAR" port="5500" protocol="tcp" rate="10"></output>
+	<output name="localhost" type="FLIGHTGEAR" port="5500" protocol="tcp" rate="10"/>
 @endcode
 @code
 	<output name="B737_datalog.csv" type="CSV" rate="20">
