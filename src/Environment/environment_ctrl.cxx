@@ -264,11 +264,11 @@ FGInterpolateEnvironmentCtrl::bucket::lessThan(bucket *a, bucket *b)
 ////////////////////////////////////////////////////////////////////////
 
 FGMetarCtrl::FGMetarCtrl( SGSubsystem * environmentCtrl )
-	: _environmentCtrl(environmentCtrl),
-	station_elevation_ft(0.0),
+	:
 	metar_valid(false),
 	setup_winds_aloft(true),
 	wind_interpolation_required(true),
+	station_elevation_ft(0.0),
 	// Interpolation constant definitions.
 	EnvironmentUpdatePeriodSec( 0.2 ),
 	MaxWindChangeKtsSec( 0.2 ),
@@ -277,7 +277,8 @@ FGMetarCtrl::FGMetarCtrl( SGSubsystem * environmentCtrl )
 	MaxCloudAltitudeChangeFtSec( 20.0 ),
 	MaxCloudThicknessChangeFtSec( 50.0 ),
 	MaxCloudInterpolationHeightFt( 5000.0 ),
-	MaxCloudInterpolationDeltaFt( 4000.0 )
+	MaxCloudInterpolationDeltaFt( 4000.0 ),
+	_environmentCtrl(environmentCtrl)
 {
 	windModulator = new FGBasicWindModulator();
 

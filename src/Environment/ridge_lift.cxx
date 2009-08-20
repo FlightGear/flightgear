@@ -174,7 +174,7 @@ void FGRidgeLift::update(double dt) {
 		double ground_wind_from_rad = _surface_wind_from_deg_node->getDoubleValue() * SG_DEGREES_TO_RADIANS + SG_PI;
 
 		// compute the remaining probes
-		for (int i = 1; i < sizeof(probe_elev_m)/sizeof(probe_elev_m[0]); i++) {
+		for (unsigned i = 1; i < sizeof(probe_elev_m)/sizeof(probe_elev_m[0]); i++) {
 			SGGeoc probe = myGeocPos.advanceRadM( ground_wind_from_rad, dist_probe_m[i] );
 			// convert to geodetic position for ground level computation
 			SGGeod probeGeod = SGGeod::fromGeoc( probe );
@@ -193,7 +193,7 @@ void FGRidgeLift::update(double dt) {
 		slope[2] = (probe_elev_m[2] - probe_elev_m[3]) / dist_probe_m[3];
 		slope[3] = (probe_elev_m[4] - probe_elev_m[0]) / -dist_probe_m[4];
 	
-		for (int i = 0; i < sizeof(slope)/sizeof(slope[0]); i++)
+		for (unsigned i = 0; i < sizeof(slope)/sizeof(slope[0]); i++)
 			adj_slope[i] = sin(atan(5.0 * pow ( (fabs(slope[i])),1.7) ) ) *sign(slope[i]);
 	
 		//adjustment
