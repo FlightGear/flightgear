@@ -163,7 +163,7 @@ void FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
               //}
         } else {
            //cerr << "Creating direct forward departure route fragment" << endl;
-           double lat2, lon2, az2;
+           double lat2 = 0.0, lon2 = 0.0, az2 = 0.0;
            waypoint *wpt;
            geo_direct_wgs_84 ( 0, lat, lon, heading, 
                                2, &lat2, &lon2, &az2 );
