@@ -187,7 +187,7 @@ void runway_instr::get_rwy_points(sgdVec3 *points3d)
     double alt = current_aircraft.fdm_state->get_Runway_altitude() * SG_FEET_TO_METER;
     double length = runway->lengthM() * 0.5;
     double width = runway->widthM() * 0.5;
-    double frontLat, frontLon, backLat, backLon,az, tempLat, tempLon;
+    double frontLat = 0.0, frontLon = 0.0, backLat = 0.0, backLon = 0.0, az = 0.0, tempLat = 0.0, tempLon = 0.0;
     double runwayLon = runway->geod().getLongitudeDeg(),
       runwayLat = runway->geod().getLatitudeDeg();
     double heading = runway->headingDeg();
