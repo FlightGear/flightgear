@@ -39,7 +39,6 @@
 class FGOpenGC : public FGProtocol, public FGInterface {
 
     ogcFGData buf;
-    int length;
     
     // Environment
     SGPropertyNode_ptr press_node;
