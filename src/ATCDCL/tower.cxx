@@ -71,13 +71,13 @@ TowerPlaneRec::TowerPlaneRec() :
 	instructedToGoAround(false),
 	onRwy(false),
 	nextOnRwy(false),
+	gearWasUp(false),
+	gearUpReported(false),
 	vfrArrivalReported(false),
 	vfrArrivalAcknowledged(false),
 	opType(TTT_UNKNOWN),
 	leg(LEG_UNKNOWN),
 	landingType(AIP_LT_UNKNOWN),
-	gearWasUp(false),
-	gearUpReported(false),
 	isUser(false)
 {
 	plane.callsign = "UNKNOWN";
@@ -101,13 +101,13 @@ TowerPlaneRec::TowerPlaneRec(const PlaneRec& p) :
 	instructedToGoAround(false),
 	onRwy(false),
 	nextOnRwy(false),
+	gearWasUp(false),
+	gearUpReported(false),
 	vfrArrivalReported(false),
 	vfrArrivalAcknowledged(false),
 	opType(TTT_UNKNOWN),
 	leg(LEG_UNKNOWN),
 	landingType(AIP_LT_UNKNOWN),
-	gearWasUp(false),
-	gearUpReported(false),
 	isUser(false)
 {
 	plane = p;
@@ -131,13 +131,13 @@ TowerPlaneRec::TowerPlaneRec(const SGGeod& pt) :
 	instructedToGoAround(false),
 	onRwy(false),
 	nextOnRwy(false),
+	gearWasUp(false),
+	gearUpReported(false),
 	vfrArrivalReported(false),
 	vfrArrivalAcknowledged(false),
 	opType(TTT_UNKNOWN),
 	leg(LEG_UNKNOWN),
 	landingType(AIP_LT_UNKNOWN),
-	gearWasUp(false),
-	gearUpReported(false),
 	isUser(false)
 {
 	plane.callsign = "UNKNOWN";
@@ -162,13 +162,13 @@ TowerPlaneRec::TowerPlaneRec(const PlaneRec& p, const SGGeod& pt) :
 	instructedToGoAround(false),
 	onRwy(false),
 	nextOnRwy(false),
+	gearWasUp(false),
+	gearUpReported(false),
 	vfrArrivalReported(false),
 	vfrArrivalAcknowledged(false),
 	opType(TTT_UNKNOWN),
 	leg(LEG_UNKNOWN),
 	landingType(AIP_LT_UNKNOWN),
-	gearWasUp(false),
-	gearUpReported(false),
 	isUser(false)
 {
 	plane = p;
@@ -1510,8 +1510,8 @@ void FGTower::DoRwyDetails() {
   }
     // move to the +l end/center of the runway
   //cout << "Runway center is at " << runway._lon << ", " << runway._lat << '\n';
-  double tshlon, tshlat, tshr;
-  double tolon, tolat, tor;
+  double tshlon = 0.0, tshlat = 0.0, tshr = 0.0;
+  double tolon = 0.0, tolat = 0.0, tor = 0.0;
   rwy.length = runway->lengthM();
   geo_direct_wgs_84 ( aptElev, runway->latitude(), runway->longitude(), other_way, 
                       rwy.length / 2.0 - 25.0, &tshlat, &tshlon, &tshr );
