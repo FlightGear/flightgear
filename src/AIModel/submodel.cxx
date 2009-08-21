@@ -783,17 +783,17 @@ void FGSubmodelMgr::loadSubmodels()
         ++subsubmodel_iterator;
     }
 
-    submodel_iterator = submodels.begin();
+    //submodel_iterator = submodels.begin();
 
-    while (submodel_iterator != submodels.end()) {
-        int id = (*submodel_iterator)->id;
+    //while (submodel_iterator != submodels.end()) {
+        //int id = (*submodel_iterator)->id;
         //SG_LOG(SG_GENERAL, SG_DEBUG,"after pushback "
         //        << " id " << id
         //        << " name " << (*submodel_iterator)->name
         //        << " sub id " << (*submodel_iterator)->sub_id);
 
-        ++submodel_iterator;
-    }
+        //++submodel_iterator;
+    //}
 }
 
 // end of submodel.cxx

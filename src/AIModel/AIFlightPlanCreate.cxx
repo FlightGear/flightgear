@@ -373,13 +373,13 @@ void FGAIFlightPlan::createTakeOff(FGAIAircraft *ac, bool firstFlight, FGAirport
     double accel    = ac->getPerformance()->acceleration();
     double vTaxi    = ac->getPerformance()->vTaxi();
     double vRotate  = ac->getPerformance()->vRotate();
-    double vTakeoff = ac->getPerformance()->vTakeoff();
+//    double vTakeoff = ac->getPerformance()->vTakeoff();
     double vClimb   = ac->getPerformance()->vClimb();
     // Acceleration = dV / dT
     // Acceleration X dT = dV
     // dT = dT / Acceleration
     //d = (Vf^2 - Vo^2) / (2*a)
-    double accelTime = (vRotate - vTaxi) / accel;
+//    double accelTime = (vRotate - vTaxi) / accel;
     //cerr << "Using " << accelTime << " as total acceleration time" << endl;
     double accelDistance = (vRotate*vRotate - vTaxi*vTaxi) / (2*accel);
     //cerr << "Using " << accelDistance << " " << accel << " " << vRotate << endl;
@@ -430,7 +430,7 @@ void FGAIFlightPlan::createTakeOff(FGAIAircraft *ac, bool firstFlight, FGAirport
 void FGAIFlightPlan::createClimb(FGAIAircraft *ac, bool firstFlight, FGAirport *apt, double speed, double alt, const string &fltType)
 {
   waypoint *wpt;
-  bool planLoaded = false;
+//  bool planLoaded = false;
   string fPLName;
   double vClimb   = ac->getPerformance()->vClimb();
 

@@ -39,30 +39,32 @@ const double FGAIBallistic::slugs_to_kgs = 14.5939029372;
 const double FGAIBallistic::slugs_to_lbs = 32.1740485564;
 
 FGAIBallistic::FGAIBallistic(object_type ot) :
-FGAIBase(ot),
-    _elevation(0),
+    FGAIBase(ot),
+    _height(0.0),
+    _ht_agl_ft(0.0),
+    _azimuth(0.0),
+    _elevation(0.0),
+    _rotation(0.0),
+    _formate_to_ac(false),
     _aero_stabilised(false),
     _drag_area(0.007),
     _life_timer(0.0),
-_gravity(32.1740485564),
+    _gravity(32.1740485564),
     _buoyancy(0),
+    _wind(true),
+    _mass(0),
     _random(false),
-    _ht_agl_ft(0),
     _load_resistance(0),
     _solid(false),
+    _force_stabilised(false),
+    _slave_to_ac(false),
+    _slave_load_to_ac(false),
+    _contents_lb(0),
     _report_collision(false),
     _report_impact(false),
-_wind(true),
+    _external_force(false),
     _impact_report_node(fgGetNode("/ai/models/model-impact", true)),
-    _force_stabilised(false),
-_external_force(false),
-_slave_to_ac(false),
-_slave_load_to_ac(false),
-_formate_to_ac(false),
-_contents_lb(0),
-_mass(0),
-_height(0),
-_old_height(0)
+    _old_height(0)
 
 {
     no_roll = false;
@@ -599,7 +601,7 @@ void FGAIBallistic::Run(double dt) {
     //calculate velocity due to external force
     double force_speed_north_deg_sec = 0;
     double force_speed_east_deg_sec = 0;
-    double vs_force_fps = 0;
+//    double vs_force_fps = 0;
     double hs_force_fps = 0;
     double v_force_acc_fpss = 0;
     double force_speed_north_fps = 0;

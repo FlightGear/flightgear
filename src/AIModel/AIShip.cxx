@@ -541,7 +541,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
     _old_range = _wp_range;
     setWPNames();
 
-    if ((_wp_range < sp_turn_radius_nm) || _missed || _waiting && !_new_waypoint) {
+    if ((_wp_range < sp_turn_radius_nm) || _missed || (_waiting && !_new_waypoint)) {
 
         if (_next_name == "END") {
 
