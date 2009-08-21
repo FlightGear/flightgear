@@ -274,7 +274,7 @@ public:
 
     void Draw(fntRenderer *fnt) {
         if (digit) {
-            int c=0,i=0;
+            int c=0;
             
             int p=4;
 
