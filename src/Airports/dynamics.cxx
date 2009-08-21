@@ -536,9 +536,9 @@ const string& FGAirportDynamics::getId() const {
 // so that at least I can start working on assigning different frequencies to different
 // operations.
 
-int FGAirportDynamics::getGroundFrequency(int leg) { 
+int FGAirportDynamics::getGroundFrequency(unsigned leg) { 
      //return freqGround.size() ? freqGround[0] : 0; };
-     int groundFreq;
+     int groundFreq = 0;
      if (leg < 2) {
          SG_LOG(SG_ATC, SG_ALERT, "Leg value is smaller than two at " << SG_ORIGIN);
      }

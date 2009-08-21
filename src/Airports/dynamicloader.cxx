@@ -117,6 +117,8 @@ void  FGAirportDynamicsXMLLoader::startElement (const char * name, const XMLAttr
                  holdPointType=3;
             } else if (attval==string("PushBack")) {
                  holdPointType=3;
+            } else {
+                 holdPointType=0;
             }
             //cerr << "Setting Holding point to " << holdPointType << endl;
             taxiNode.setHoldPointType(holdPointType);

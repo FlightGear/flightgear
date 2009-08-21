@@ -42,7 +42,7 @@ int main( int argc, char **argv ) {
     }
 
     // calculate runway threshold point
-    double thresh_lat, thresh_lon, return_az;
+    double thresh_lat = 0.0, thresh_lon = 0.0, return_az = 0.0;
     geo_direct_wgs_84 ( 0.0, rwy_lat, rwy_lon, rwy_hdg, 
                         rwy_len / 2.0, &thresh_lat, &thresh_lon, &return_az );
     cout << "Threshold = " << thresh_lat << "," << thresh_lon << endl;
@@ -54,7 +54,7 @@ int main( int argc, char **argv ) {
     cout << "Distance = " << dist_m << endl;
 
     // back project that distance along the runway center line
-    double nloc_lat, nloc_lon;
+    double nloc_lat = 0.0, nloc_lon = 0.0;
     geo_direct_wgs_84 ( 0.0, thresh_lat, thresh_lon, rwy_hdg + 180.0, 
                         dist_m, &nloc_lat, &nloc_lon, &return_az );
     printf("New localizer = %.6f %.6f\n", nloc_lat, nloc_lon );

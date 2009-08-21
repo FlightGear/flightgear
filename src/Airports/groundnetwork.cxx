@@ -267,11 +267,11 @@ void FGGroundNetwork::init()
       {
 	if ((*j)->getEnd()->getIndex() == (*i)->getStart()->getIndex())
 	  {
-	    int start1 = (*i)->getStart()->getIndex();
-	    int end1   = (*i)->getEnd()  ->getIndex();
-	    int start2 = (*j)->getStart()->getIndex();
-	    int end2   = (*j)->getEnd()->getIndex();
-	    int oppIndex = (*j)->getIndex();
+//	    int start1 = (*i)->getStart()->getIndex();
+//	    int end1   = (*i)->getEnd()  ->getIndex();
+//	    int start2 = (*j)->getStart()->getIndex();
+//	    int end2   = (*j)->getEnd()->getIndex();
+//	    int oppIndex = (*j)->getIndex();
 	    //cerr << "Opposite of  " << (*i)->getIndex() << " (" << start1 << "," << end1 << ") "
 	    //	 << "happens to be " << oppIndex      << " (" << start2 << "," << end2 << ") " << endl;
 	    (*i)->setOpposite(*j);
@@ -316,7 +316,7 @@ int FGGroundNetwork::findNearestNode(double lat, double lon)
   return findNearestNode(SGGeod::fromDeg(lon, lat));
 }
 
-FGTaxiNode *FGGroundNetwork::findNode(int idx)
+FGTaxiNode *FGGroundNetwork::findNode(unsigned idx)
 { /*
     for (FGTaxiNodeVectorIterator 
     itr = nodes.begin();
@@ -332,7 +332,7 @@ FGTaxiNode *FGGroundNetwork::findNode(int idx)
     return 0;
 }
 
-FGTaxiSegment *FGGroundNetwork::findSegment(int idx)
+FGTaxiSegment *FGGroundNetwork::findSegment(unsigned idx)
 {/*
   for (FGTaxiSegmentVectorIterator 
 	 itr = segments.begin();

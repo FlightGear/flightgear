@@ -117,7 +117,7 @@ public:
   FGTowerController   *getTowerController()   { return &towerController; };
 
   const string& getAtisInformation() { return atisInformation; };
-  int getGroundFrequency(int leg); //{ return freqGround.size() ? freqGround[0] : 0; };
+  int getGroundFrequency(unsigned leg); //{ return freqGround.size() ? freqGround[0] : 0; };
 
   void setRwyUse(const FGRunwayPreference& ref);
 };

@@ -256,8 +256,8 @@ public:
   int findNearestNode(double lat, double lon);
   int findNearestNode(const SGGeod& aGeod);
   
-  FGTaxiNode *findNode(int idx);
-  FGTaxiSegment *findSegment(int idx);
+  FGTaxiNode *findNode(unsigned idx);
+  FGTaxiSegment *findSegment(unsigned idx);
   FGTaxiRoute findShortestRoute(int start, int end, bool fullSearch=true);
   //void trace(FGTaxiNode *, int, int, double dist);
 
