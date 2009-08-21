@@ -173,6 +173,7 @@ static int ATCSetStepper( int fd, unsigned char channel,
 }
 
 
+#ifdef ATCFLIGHTSIM_HAVE_COMPASS
 // Read status of last stepper written to
 static unsigned char ATCReadStepper( int fd ) {
 #if defined( unix ) || defined( __CYGWIN__ )
@@ -195,6 +196,7 @@ static unsigned char ATCReadStepper( int fd ) {
     return 0;
 #endif
 }
+#endif
 
 
 // Turn a lamp on or off

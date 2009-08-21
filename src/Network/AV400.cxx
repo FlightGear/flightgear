@@ -43,6 +43,7 @@ FGAV400::~FGAV400() {
 }
 
 
+#if 0
 // calculate the garmin check sum
 static char calc_nmea_cksum(char *sentence) {
     unsigned char sum = 0;
@@ -61,6 +62,7 @@ static char calc_nmea_cksum(char *sentence) {
     // printf("sum = %02x\n", sum);
     return sum;
 }
+#endif
 
 
 // generate AV400 message

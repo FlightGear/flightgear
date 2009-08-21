@@ -267,7 +267,7 @@ void HttpdChannel::foundTerminator (void) {
         
         SG_LOG( SG_IO, SG_INFO, "size = " << response.length() );
         char ctmp[256];
-        sprintf(ctmp, "Content-Length: %d", response.length());
+        sprintf(ctmp, "Content-Length: %u", (unsigned)response.length());
         push( ctmp );
         push( getTerminator() );
 
