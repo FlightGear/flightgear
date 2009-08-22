@@ -164,7 +164,7 @@ typedef class SGSharedPtr<FGInputEvent> FGInputEvent_ptr;
  */
 class FGInputDevice : public SGReferenced {
 public:
-  FGInputDevice() : debugEvents(false) {}
+  FGInputDevice() : debugEvents(false), grab(false) {}
   FGInputDevice( string aName ) : name(aName) {}
     
   virtual ~FGInputDevice();
@@ -196,6 +196,9 @@ public:
   bool GetDebugEvents () const { return debugEvents; }
   void SetDebugEvents( bool value ) { debugEvents = value; }
 
+  bool GetGrab() const { return grab; }
+  void SetGrab( bool value ) { grab = value; }
+
 private:
   // A map of events, this device handles
   map<string,FGInputEvent_ptr> handledEvents;
@@ -206,6 +209,10 @@ private:
   // print out events comming in from the device
   // if true
   bool   debugEvents;
+
+  // grab the device exclusively, if O/S supports this
+  // so events are not sent to other applications
+  bool   grab;
 };
 
 typedef SGSharedPtr<FGInputDevice> FGInputDevice_ptr;

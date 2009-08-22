@@ -251,11 +251,20 @@ void FGLinuxInputDevice::Open()
   if( (fd = ::open( devname.c_str(), O_RDWR )) == -1 ) { 
     throw exception();
   }
+
+  if( GetGrab() && ioctl( fd, EVIOCGRAB, 2 ) != 0 ) {
+    SG_LOG( SG_INPUT, SG_WARN, "Can't grab " << devname << " for exclusive access" );
+  }
 }
 
 void FGLinuxInputDevice::Close()
 {
-  if( fd != -1 ) ::close(fd);
+  if( fd != -1 ) {
+    if( GetGrab() && ioctl( fd, EVIOCGRAB, 0 ) != 0 ) {
+      SG_LOG( SG_INPUT, SG_WARN, "Can't ungrab " << devname );
+    }
+    ::close(fd);
+  }
   fd = -1;
 }
 
