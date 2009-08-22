@@ -392,6 +392,13 @@ FGColumnVector3& FGLGear::Force(void)
 
 void FGLGear::ComputeGroundCoordSys(void)
 {
+  if( fabs(vGroundNormal(eZ)) < 1e-3 ) {
+    cout << "BOMB: ";
+    cout << vGroundNormal(eX) << "/" << vGroundNormal(eY) << "/" << 
+         vGroundNormal(eZ) << " - " << SteerAngle << endl;
+    return;
+  }
+
   // Compute the rolling direction projected on the ground
   // It consists in finding a vector 'r' such that 'r' lies in the plane (w,z) and r.n = 0 (scalar
   // product) where:
