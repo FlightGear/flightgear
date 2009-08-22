@@ -276,6 +276,7 @@ void FGEventInput::AddDevice( FGInputDevice * inputDevice )
     inputDevice->AddHandledEvent( FGInputEvent::NewObject( inputDevice, *it ) );
 
   inputDevice->SetDebugEvents( deviceNode->getBoolValue("debug-events", inputDevice->GetDebugEvents() ));
+  inputDevice->SetGrab( deviceNode->getBoolValue("grab", inputDevice->GetGrab() ));
 
   // TODO:
   // add nodes for the last event:
