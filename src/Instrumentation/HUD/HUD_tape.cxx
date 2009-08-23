@@ -243,11 +243,12 @@ void HUD::Tape::draw_vertical(float value)
     for (int i = 0; ; i++) {
         float v = vstart + i * _minor_divs;
 
-        if (!_modulo)
+        if (!_modulo) {
             if (v < _input.min())
                 continue;
             else if (v > _input.max())
                 break;
+        }
 
         float y = _y + (v - vmin) * factor();
 
@@ -335,8 +336,8 @@ void HUD::Tape::draw_vertical(float value)
                     continue;
 
                 if (_label_gap == 0.0
-                        || b < _center_y - _label_gap && t < _center_y - _label_gap
-                        || b > _center_y + _label_gap && t > _center_y + _label_gap) {
+                        || (b < _center_y - _label_gap && t < _center_y - _label_gap)
+                        || (b > _center_y + _label_gap && t > _center_y + _label_gap)) {
                     draw_text(x, y, s);
                 }
             }
@@ -451,11 +452,12 @@ void HUD::Tape::draw_horizontal(float value)
     for (int i = 0; ; i++) {
         float v = vstart + i * _minor_divs;
 
-        if (!_modulo)
+        if (!_modulo) {
             if (v < _input.min())
                 continue;
             else if (v > _input.max())
                 break;
+        }
 
         float x = _x + (v - vmin) * factor();
 
@@ -520,8 +522,8 @@ void HUD::Tape::draw_horizontal(float value)
                     continue;
 
                 if (_label_gap == 0.0
-                        || l < _center_x - _label_gap && r < _center_x - _label_gap
-                        || l > _center_x + _label_gap && r > _center_x + _label_gap) {
+                        || (l < _center_x - _label_gap && r < _center_x - _label_gap)
+                        || (l > _center_x + _label_gap && r > _center_x + _label_gap)) {
                     draw_text(x, y, s);
                 }
             }

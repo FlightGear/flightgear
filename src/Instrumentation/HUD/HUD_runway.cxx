@@ -183,7 +183,7 @@ void HUD::Runway::get_rwy_points(sgdVec3 *_points3d)
     double alt = current_aircraft.fdm_state->get_Runway_altitude() * SG_FEET_TO_METER;
     double length = _runway->lengthM() * 0.5;
     double width = _runway->widthM() * 0.5;
-    double frontLat, frontLon, backLat, backLon,az, tempLat, tempLon;
+    double frontLat = 0.0, frontLon = 0.0, backLat = 0.0, backLon = 0.0, az = 0.0, tempLat = 0.0, tempLon = 0.0;
 
     geo_direct_wgs_84(alt, _runway->latitude(), _runway->longitude(), _runway->headingDeg(), length, &backLat, &backLon, &az);
     sgGeodToCart(backLat * SG_DEGREES_TO_RADIANS, backLon * SG_DEGREES_TO_RADIANS, alt, _points3d[4]);

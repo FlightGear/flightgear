@@ -478,9 +478,9 @@ void HUD::Ladder::draw(void)
             else if (i == -90 && _nadir)
                 draw_nadir(0.0, y);
 
-            if (_zenith && i > 85 || i > 90)
+            if ((_zenith && i > 85) || i > 90)
                 continue;
-            if (_nadir && i < -85 || i < -90)
+            if ((_nadir && i < -85) || i < -90)
                 continue;
 
             lo.x = -half_span;
