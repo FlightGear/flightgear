@@ -463,7 +463,7 @@ wxRadarBg::update_weather()
 
     // pretend we have a scan angle bigger then the FOV
     // TODO:check real fov, enlarge if < nn, and do clipping if > mm
-    const float fovFactor = 1.45f;
+//    const float fovFactor = 1.45f;
     _Instrument->setStringValue("status", modeButton.c_str());
 
     list_of_SGWxRadarEcho *radarEcho = &_radarEchoBuffer;

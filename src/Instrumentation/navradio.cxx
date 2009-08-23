@@ -830,7 +830,7 @@ void FGNavRadio::search()
 
                 // derive GS baseline (perpendicular to the runay
                 // along the ground)
-                double tlon, tlat, taz;
+                double tlon = 0.0, tlat = 0.0, taz = 0.0;
                 geo_direct_wgs_84 ( 0.0, gs_lat, gs_lon,
                                     target_radial + 90,
                                     100.0, &tlat, &tlon, &taz );

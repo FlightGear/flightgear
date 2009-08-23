@@ -1027,6 +1027,9 @@ void DCLGPS::CreateFlightPlan(GPSFlightPlan* fp, vector<string> ids, vector<GPSW
 		case GPS_WP_USR:
 			// TODO
 			break;
+		case GPS_WP_VIRT:
+			// TODO
+			break;
 		}
 	}
 }
