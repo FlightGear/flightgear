@@ -136,8 +136,8 @@ radAlt::getDistanceAntennaToHit(SGVec3d nearestHit) const
 void
 radAlt::update_altitude()
 {
-    int mode           = _radar_mode_control_node->getIntValue();
-    double tilt        = _Instrument->getDoubleValue("tilt", -85);
+//    int mode           = _radar_mode_control_node->getIntValue();
+//    double tilt        = _Instrument->getDoubleValue("tilt", -85);
     double el_limit    = _Instrument->getDoubleValue("elev-limit", 15);
     double el_step     = _Instrument->getDoubleValue("elev-step-deg", 15);
     double az_limit    = _Instrument->getDoubleValue("az-limit-deg", 15);
