@@ -26,11 +26,10 @@
 
 int main()
 {
-   ALCint i,j;
    ALCint data[MAX_DATA];
    ALCdevice *device = NULL;
    ALCcontext *context = NULL;
-   const unsigned char *s;
+   const ALchar *s;
    ALCenum error;
 
    device = alcOpenDevice(NULL);
@@ -62,7 +61,7 @@ int main()
    alcGetError(device);
 
    printf("\n");
-   if (alcIsExtensionPresent(NULL, (unsigned char *)"ALC_ENUMERATION_EXT") == AL_TRUE)
+   if (alcIsExtensionPresent(NULL, (const ALchar *)"ALC_ENUMERATION_EXT") == AL_TRUE)
    {
       s = alcGetString(NULL, ALC_DEVICE_SPECIFIER);
       printf("ALC_DEVICE_SPECIFIER = \"%s\"\n", s);
