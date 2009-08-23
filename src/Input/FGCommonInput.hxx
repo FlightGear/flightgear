@@ -27,6 +27,7 @@
 
 #include <vector>
 #include <simgear/structure/SGBinding.hxx>
+#include <plib/ul.h>
 
 #if defined( UL_WIN32 )
 #define TGT_PLATFORM	"windows"
