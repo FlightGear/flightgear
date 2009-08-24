@@ -128,8 +128,7 @@ void FGTrafficManager::init()
       }
       ulCloseDir(d);
     }
-    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
-
+    
     currAircraft = scheduledAircraft.begin();
     currAircraftClosest = scheduledAircraft.begin();
 }

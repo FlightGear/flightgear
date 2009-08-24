@@ -246,9 +246,9 @@ void FGAIFlightPlan::createPushBackFallBack(FGAIAircraft *ac, bool firstFlight, 
   double heading;
   double lat;
   double lon;
-  double lat2;
-  double lon2;
-  double az2;
+  double lat2 = 0.0;
+  double lon2 = 0.0;
+  double az2 = 0.0;
 
   double vTaxi = ac->getPerformance()->vTaxi();
   double vTaxiBackward = vTaxi * (-2.0/3.0);

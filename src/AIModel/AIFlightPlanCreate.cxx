@@ -529,10 +529,10 @@ void FGAIFlightPlan::createParking(FGAIAircraft *ac, FGAirport *apt, double radi
 {
   waypoint* wpt;
   double aptElev = apt->getElevation();
-  double lat, lat2;
-  double lon, lon2;
-  double az2;
-  double heading;
+  double lat = 0.0, lat2 = 0.0;
+  double lon = 0.0, lon2 = 0.0;
+  double az2 = 0.0;
+  double heading = 0.0;
 
   double vTaxi        = ac->getPerformance()->vTaxi();
   double vTaxiReduced = vTaxi * (2.0/3.0);
