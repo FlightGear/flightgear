@@ -642,7 +642,7 @@ void KLN89::DrawMap(bool draw_avs) {
 		vector<int> xvec, yvec, qvec;	// qvec stores the quadrant that each waypoint label should
 										// be drawn in (relative to the waypoint). 
 										// 1 = NE, 2 = SE, 3 = SW, 4 = NW.
-		double save_h;	// Each pass, save a heading from the previous one for label quadrant determination.
+		double save_h = 0.0; // Each pass, save a heading from the previous one for label quadrant determination.
 		bool drawTrack = true;
 		for(unsigned int i=1; i<_activeFP->waypoints.size(); ++i) {
 			GPSWaypoint* wp0 = _activeFP->waypoints[i-1];

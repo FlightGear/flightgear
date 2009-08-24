@@ -626,7 +626,7 @@ void KLN89FplPage::ClrPressed() {
 					} else if(fencePos) {
 						//cout << "FENP\n";
 						// no-op
-					} else if(n >= _kln89->_flightPlans[_subPage]->waypoints.size()) {
+					} else if(n >= static_cast<int>(_kln89->_flightPlans[_subPage]->waypoints.size())) {
 						// no-op - off the end of the list on the entry field
 					} else if(_kln89->_flightPlans[_subPage]->waypoints[n]->appType == GPS_APP_NONE) {
 						//cout << "DELFP\n";
@@ -684,7 +684,7 @@ void KLN89FplPage::EntPressed() {
 	} else if(_delWp) {
 		int pos = _uLinePos - 4 + _fplPos;
 		// Sanity check - the calculated wp position should never be off the end of the waypoint list.
-		if(pos > _kln89->_flightPlans[_subPage]->waypoints.size() - 1) {
+		if(pos > static_cast<int>(_kln89->_flightPlans[_subPage]->waypoints.size()) - 1) {
 			cout << "ERROR - _uLinePos too big in KLN89FplPage::EntPressed!\n";
 			return;
 		}
@@ -816,7 +816,7 @@ void KLN89FplPage::Knob1Left1() {
 				int ix = _fplPos + (_uLinePos - 4);
 				if(_fencePos >= 0 && ix >= _fencePos) ix--;
 				if(_hdrPos >= 0 && ix >= _hdrPos) ix--;
-				if(ix >= _kln89->_activeFP->waypoints.size()) {
+				if(ix >= static_cast<int>(_kln89->_activeFP->waypoints.size())) {
 					_fp0SelWpId.clear();
 				} else {
 					_fp0SelWpId = _kln89->_activeFP->waypoints[ix]->id;
@@ -877,7 +877,7 @@ void KLN89FplPage::Knob1Right1() {
 				_uLinePos++;
 			} else {
 				// Must be the last line - either _uLinePos 6 or 7 depending on _subPage
-				int thresh = (_subPage == 0 ? 3 : 2);
+				const unsigned thresh = (_subPage == 0 ? 3 : 2);
 				if(_kln89->_flightPlans[_subPage]->waypoints.size() == thresh || _fplPos == _kln89->_flightPlans[_subPage]->waypoints.size() - thresh) {
 					// Don't move
 				} else {
@@ -889,7 +889,7 @@ void KLN89FplPage::Knob1Right1() {
 				int ix = _fplPos + (_uLinePos - 4);
 				if(_fencePos >= 0 && ix >= _fencePos) ix--;
 				if(_hdrPos >= 0 && ix >= _hdrPos) ix--;
-				if(ix >= _kln89->_activeFP->waypoints.size()) {
+				if(ix >= static_cast<int>(_kln89->_activeFP->waypoints.size())) {
 					_fp0SelWpId.clear();
 				} else {
 					_fp0SelWpId = _kln89->_activeFP->waypoints[ix]->id;
@@ -932,7 +932,7 @@ void KLN89FplPage::Knob2Left1() {
 			if(_fencePos >= 0 && n >= _fencePos) --n;	// This one needs to be >= since n is already decremented by 1 in the line above!
 			//cout << "New n = " << n << '\n';
 			
-			if(n < _kln89->_flightPlans[_subPage]->waypoints.size()) {
+			if(n < static_cast<int>(_kln89->_flightPlans[_subPage]->waypoints.size())) {
 				if(_kln89->_flightPlans[_subPage]->waypoints[n]->appType != GPS_APP_NONE) {
 					appWp = true;
 				}
@@ -1005,7 +1005,7 @@ void KLN89FplPage::Knob2Right1() {
 			if(_fencePos >= 0 && n >= _fencePos) --n;	// This one needs to be >= since n is already decremented by 1 in the line above!
 			//cout << "New n = " << n << '\n';
 			
-			if(n < _kln89->_flightPlans[_subPage]->waypoints.size()) {
+			if(n < static_cast<int>(_kln89->_flightPlans[_subPage]->waypoints.size())) {
 				if(_kln89->_flightPlans[_subPage]->waypoints[n]->appType != GPS_APP_NONE) {
 					appWp = true;
 				}
