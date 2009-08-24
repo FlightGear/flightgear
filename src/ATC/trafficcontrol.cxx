@@ -248,7 +248,7 @@ bool FGTrafficRecord::isOpposing (FGGroundNetwork *net, FGTrafficRecord &other, 
       
        for (intVecIterator i = intentions.begin(); i != intentions.end(); i++)
  	{
-	  if (opp = net->findSegment(other.currentPos)->opposite())
+         if ((opp = net->findSegment(other.currentPos)->opposite()))
 	    {
 	      if ((*i) > 0)
 		if (opp->getIndex() == net->findSegment(*i)->getIndex())
@@ -267,7 +267,7 @@ bool FGTrafficRecord::isOpposing (FGGroundNetwork *net, FGTrafficRecord &other, 
 		{  
 		  // cerr << "Current segment 1 " << (*i) << endl;
 		  if ((*i) > 0) {
-		    if (opp = net->findSegment(*i)->opposite())
+		    if ((opp = net->findSegment(*i)->opposite()))
 		      {
 			if (opp->getIndex() == 
 			    net->findSegment(*j)->getIndex())
@@ -318,9 +318,9 @@ FGATCInstruction::FGATCInstruction()
   changeAltitude = false;
   resolveCircularWait = false;
 
-  double speed   = 0;
-  double heading = 0;
-  double alt     = 0;
+  speed   = 0;
+  heading = 0;
+  alt     = 0;
 }
 
 bool FGATCInstruction::hasInstruction()
