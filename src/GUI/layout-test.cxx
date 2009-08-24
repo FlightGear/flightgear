@@ -42,7 +42,7 @@ int main(int argc, char** argv)
     }
     fclose(tmp);
 
-    pwInit(0, 0, 600, 400, 0, "Layout Test", true, 0);
+    pwInit(0, 0, 600, 400, 0, const_cast<char*>("Layout Test"), true, 0);
     pwSetCallbacks(keyboardCB, mouseButtonCB, mouseMotionCB,
                    resizeCB, exitCB);
 

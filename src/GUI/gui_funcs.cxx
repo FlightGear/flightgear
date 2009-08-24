@@ -299,6 +299,8 @@ void fgHiResDump()
     /* just to be safe... */
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
+    // OSGFIXME
+#if 0
     /* Because the HUD and Panel change the ViewPort we will
      * need to handle some lowlevel stuff ourselves */
     int ncols = trGet(tr, TR_COLUMNS);
@@ -311,7 +313,7 @@ void fgHiResDump()
     bool do_panel = fgPanelVisible();
     GLfloat panel_col_step = globals->get_current_panel()->getWidth() / ncols;
     GLfloat panel_row_step = globals->get_current_panel()->getHeight() / nrows;
-
+#endif
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
@@ -323,7 +325,7 @@ void fgHiResDump()
     while (more) {
         trBeginTile(tr);
         int curColumn = trGet(tr, TR_CURRENT_COLUMN);
-        int curRow =  trGet(tr, TR_CURRENT_ROW);
+        // int curRow =  trGet(tr, TR_CURRENT_ROW);
 
         renderer->update( false );
         // OSGFIXME
@@ -536,8 +538,6 @@ void fgDumpSceneGraph()
     string message;
     static int count = 1;
 
-    FGRenderer *renderer = globals->get_renderer();
-
     static const SGPropertyNode *master_freeze
 	= fgGetNode("/sim/freeze/master");
 
@@ -580,8 +580,6 @@ void fgDumpTerrainBranch()
     char *filename = new char [24];
     string message;
     static int count = 1;
-
-    FGRenderer *renderer = globals->get_renderer();
 
     static const SGPropertyNode *master_freeze
 	= fgGetNode("/sim/freeze/master");
