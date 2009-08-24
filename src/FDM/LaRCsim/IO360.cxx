@@ -376,8 +376,8 @@ float FGNewEngine::Power_Mixture_Correlation(float thi_actual)
 	}
 	if((i == 0) && (AFR_actual < AFR[i])) {
 	    // Assume linear extrapolation of the slope between the first two points for points before the first point
-	    dydx = (mixPerPow[i] - mixPerPow[i-1]) / (AFR[i] - AFR[i-1]);
-	    mixPerPow_actual = mixPerPow[i] + dydx * (AFR_actual - AFR[i]);
+	    dydx = (mixPerPow[1] - mixPerPow[0]) / (AFR[1] - AFR[0]);
+	    mixPerPow_actual = mixPerPow[0] + dydx * (AFR_actual - AFR[0]);
 	    return mixPerPow_actual;
 	}
 	if(AFR_actual == AFR[i]) {
