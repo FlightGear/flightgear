@@ -105,11 +105,11 @@ void uiuc_recorder( double dt )
 {
   stack command_list;
   string linetoken;
-  static int init = 0;
+  // static int init = 0;
   static int recordStep = 0;
   string record_variables = "# ";
 
-  int modulus = recordStep % recordRate;
+  // int modulus = recordStep % recordRate;
 
   //static double lat1;
   //static double long1;

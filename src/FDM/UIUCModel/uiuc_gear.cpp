@@ -275,12 +275,14 @@ void uiuc_gear()
 	  
 	  clear3(f_wheel_local_v);
 	  reaction_normal_force=0;
+#if 0
 	  static const SGPropertyNode * gear_wow
 	    = fgGetNode("/gear/gear[0]/wow", false);
 	  static const SGPropertyNode * gear_wow1
 	    = fgGetNode("/gear/gear[1]/wow", false);
 	  static const SGPropertyNode * gear_wow2
-	    = fgGetNode("/gear/gear[2]/wow", false); 
+	    = fgGetNode("/gear/gear[2]/wow", false);
+#endif
 	  fgSetBool("/gear/gear[0]/wow", false);
 	  fgSetBool("/gear/gear[1]/wow", false);
 	  fgSetBool("/gear/gear[2]/wow", false);
@@ -375,7 +377,7 @@ void uiuc_gear()
 	      cross3( d_wheel_cg_body_v, tempF, tempM );
 	      
 	      /* Sum forces and moments across all wheels */
-	      if (tempF) {
+	      if (tempF[0] != 0.0 || tempF[1] != 0.0 || tempF[2] != 0.0) {
 		fgSetBool("/gear/gear[1]/wow", true);
 	      }
 	      
