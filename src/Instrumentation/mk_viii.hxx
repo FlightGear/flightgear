@@ -52,7 +52,7 @@ using std::map;
 class MK_VIII : public SGSubsystem
 {
   // keep in sync with Mode6Handler::altitude_callout_definitions[]
-  static const int n_altitude_callouts = 11;
+  static const unsigned n_altitude_callouts = 11;
 
   /////////////////////////////////////////////////////////////////////////////
   // MK_VIII::RawValueMethodsData /////////////////////////////////////////////
@@ -782,7 +782,7 @@ public:
       Element *element;
 
       inline Voice (VoicePlayer *_player)
-	: player(_player), volume(1.0), element(NULL) {}
+        : element(NULL), player(_player), volume(1.0) {}
 
       ~Voice ();
 
@@ -852,7 +852,7 @@ public:
     } voices;
 
     inline VoicePlayer (MK_VIII *device)
-      : mk(device), speaker(this), voice(NULL), next_voice(NULL) {}
+      : voice(NULL), next_voice(NULL),  mk(device), speaker(this) {}
 
     ~VoicePlayer ();
 
@@ -917,13 +917,13 @@ public:
 
       inline Speaker (VoicePlayer *_player)
 	: player(_player),
-	  volume(1),
 	  pitch(1),
 	  inner_cone(360),
 	  outer_cone(360),
 	  outer_gain(0),
 	  reference_dist(3),
-	  max_dist(10)
+	  max_dist(10),
+	  volume(1)
       {
 	position[0] = 0; position[1] = 0; position[2] = 0;
 	orientation[0] = 0; orientation[1] = 0; orientation[2] = 0;
@@ -1031,7 +1031,7 @@ private:
     State state;
 
     inline SelfTestHandler (MK_VIII *device)
-      : mk(device), state(STATE_NONE), button_pressed(false) {}
+      : mk(device), button_pressed(false), state(STATE_NONE) {}
 
     inline void power_off () { stop(); }
     inline void set_inop () { stop(); }

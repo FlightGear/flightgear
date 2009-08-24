@@ -189,7 +189,6 @@ agRadar::setUserVec(double az, double el)
     float yaw   = _user_hdg_deg_node->getDoubleValue();
     float pitch = _user_pitch_deg_node->getDoubleValue();
     float roll  = _user_roll_deg_node->getDoubleValue();
-    int mode    = _radar_mode_control_node->getIntValue();
     double tilt = _Instrument->getDoubleValue("tilt");
     double trk  = _Instrument->getDoubleValue("trk");
     bool roll_stab   = _Instrument->getBoolValue("stabilisation/roll");

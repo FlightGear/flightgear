@@ -182,7 +182,6 @@ void KLN89AptPage::Update(double dt) {
 			                         2, 0, 0, _to_flag, (_kln89->_mode == KLN89_MODE_CRSR && _uLinePos == 5 ? true : false));
 		} else if(_subPage == 2) {
 			// Try and calculate a realistic difference from UTC based on longitude
-			float degLonPerHr = 360.0 / 24.0;	// 15 degrees per hour difference.
 			// Since 0 longitude is the middle of UTC, the boundaries will be at 7.5, 22.5, 37.5 etc.
 			int hrDiff = ((int)((fabs(ap->getLongitude())) + 7.5)) / 15;
 			_kln89->DrawText("UTC", 2, 0, 2);
@@ -358,7 +357,7 @@ void KLN89AptPage::Update(double dt) {
 					_kln89->DrawText(_iaps[_curIap]->_rwyStr, 2, 7, 3);
 					_kln89->DrawText(_iaps[_curIap]->_id, 2, 12, 3);
 					_kln89->DrawText("IAF", 2, 2, 2);
-					int line = 0;
+					unsigned int line = 0;
 					for(unsigned int i=_iafStart; i<_IAF.size(); ++i) {
 						if(line == 2) {
 							i = _IAF.size() - 1;

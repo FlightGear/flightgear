@@ -38,7 +38,7 @@ KLN89UsrPage::~KLN89UsrPage() {
 }
 
 void KLN89UsrPage::Update(double dt) {
-	bool actPage = (_kln89->_activePage->GetName() == "ACT" ? true : false);
+        // bool actPage = (_kln89->_activePage->GetName() == "ACT" ? true : false);
 	bool crsr = (_kln89->_mode == KLN89_MODE_CRSR);
 	bool blink = _kln89->_blink;
 	

@@ -549,7 +549,7 @@ MK_VIII::ConfigurationModule::read_aircraft_mode_type_select (int value)
     { 255,	&m1_t1, &m2_t1, &m3_t1, &m4_t1, m6_t2, &f_fast, 2000 }
   };
 
-  for (int i = 0; i < n_elements(aircraft_types); i++)
+  for (size_t i = 0; i < n_elements(aircraft_types); i++)
     if (aircraft_types[i].type == value)
       {
 	mk->mode1_handler.conf.envelopes = aircraft_types[i].m1;
@@ -625,7 +625,7 @@ MK_VIII::ConfigurationModule::read_altitude_callouts (int value)
     { 101, { FIELD_500_ABOVE, 0 } }
   };
 
-  int i;
+  unsigned i;
 
   mk->mode6_handler.conf.minimums_enabled = false;
   mk->mode6_handler.conf.smart_500_enabled = false;
@@ -656,7 +656,7 @@ MK_VIII::ConfigurationModule::read_altitude_callouts (int value)
 	      break;
 
 	    default:
-	      for (int k = 0; k < n_altitude_callouts; k++)
+	      for (unsigned k = 0; k < n_altitude_callouts; k++)
 		if (mk->mode6_handler.altitude_callout_definitions[k] == values[i].callouts[j])
 		  mk->mode6_handler.conf.altitude_callouts_enabled[k] = true;
 	      break;
@@ -773,7 +773,7 @@ MK_VIII::ConfigurationModule::read_input_output_discrete_type_select (int value)
     { 255,	{ false, false }, true, false, true }
   };
 
-  for (int i = 0; i < n_elements(io_types); i++)
+  for (size_t i = 0; i < n_elements(io_types); i++)
     if (io_types[i].type == value)
       {
 	mk->io_handler.conf.lamp = &io_types[i].lamp_conf;
@@ -801,7 +801,7 @@ MK_VIII::ConfigurationModule::read_audio_output_level (int value)
     { 4, -24 }
   };
 
-  for (int i = 0; i < n_elements(values); i++)
+  for (size_t i = 0; i < n_elements(values); i++)
     if (values[i].id == value)
       {
 	mk->voice_player.set_volume(mk->voice_player.conf.volume = modify_amplitude(1.0, values[i].relative_dB));
@@ -1550,7 +1550,7 @@ MK_VIII::IOHandler::update_egpws_alert_discrete_1 ()
 	{ 19, mk_voice(minimums_minimums) }
       };
 
-      for (int i = 0; i < n_elements(voices); i++)
+      for (size_t i = 0; i < n_elements(voices); i++)
 	if (voices[i].voice == mk->voice_player.voice)
 	  {
 	    mk_aoutput(egpws_alert_discrete_1) = 1 << voices[i].bit;
@@ -1584,7 +1584,7 @@ MK_VIII::IOHandler::update_egpwc_logic_discretes ()
     { 25, mk_alert(MODE5_SOFT) | mk_alert(MODE5_HARD) }
   };
 
-  for (int i = 0; i < n_elements(logic); i++)
+  for (size_t i = 0; i < n_elements(logic); i++)
     if (mk_test_alerts(logic[i].alerts))
       mk_aoutput(egpwc_logic_discretes) |= 1 << logic[i].bit;
 }
@@ -1610,7 +1610,7 @@ MK_VIII::IOHandler::update_mode6_callouts_discrete_1 ()
 	{ 25, mk_altitude_voice(Mode6Handler::ALTITUDE_CALLOUT_300) }
       };
 
-      for (int i = 0; i < n_elements(voices); i++)
+      for (size_t i = 0; i < n_elements(voices); i++)
 	if (voices[i].voice == mk->voice_player.voice)
 	  {
 	    mk_aoutput(mode6_callouts_discrete_1) = 1 << voices[i].bit;
@@ -1639,7 +1639,7 @@ MK_VIII::IOHandler::update_mode6_callouts_discrete_2 ()
 	{ 23, mk_voice(five_hundred_above) }
       };
 
-      for (int i = 0; i < n_elements(voices); i++)
+      for (size_t i = 0; i < n_elements(voices); i++)
 	if (voices[i].voice == mk->voice_player.voice)
 	  {
 	    mk_aoutput(mode6_callouts_discrete_2) = 1 << voices[i].bit;
@@ -2049,7 +2049,7 @@ MK_VIII::IOHandler::present_status ()
 	    "TCF INPUTS INVALID"
 	  };
 
-	  for (int i = 0; i < n_elements(fault_names); i++)
+	  for (size_t i = 0; i < n_elements(fault_names); i++)
 	    if (mk->fault_handler.faults[i])
 	      present_status_subitem(fault_names[i]);
 	}
@@ -2075,7 +2075,7 @@ MK_VIII::IOHandler::present_status ()
     "VOLUME SELECT"
   };
 
-  for (int i = 0; i < n_elements(category_names); i++)
+  for (size_t i = 0; i < n_elements(category_names); i++)
     {
       std::ostringstream value;
       value << "= " << mk->configuration_module.effective_categories[i];
@@ -2254,7 +2254,7 @@ MK_VIII::VoicePlayer::init ()
   make_voice(&voices.too_low_gear, "too-low-gear");
   make_voice(&voices.too_low_terrain, "too-low-terrain");
 
-  for (int i = 0; i < n_altitude_callouts; i++)
+  for (unsigned i = 0; i < n_altitude_callouts; i++)
     {
       std::ostringstream name;
       name << "altitude-" << mk->mode6_handler.altitude_callout_definitions[i];
@@ -2587,7 +2587,7 @@ MK_VIII::SelfTestHandler::run ()
       if (mk->mode6_handler.conf.above_field_voice)
 	return play(mk->mode6_handler.conf.above_field_voice);
     }
-  for (int i = 0; i < n_altitude_callouts; i++)
+  for (unsigned i = 0; i < n_altitude_callouts; i++)
     if (! was_here_offset(i))
       {
 	if (mk->mode6_handler.conf.altitude_callouts_enabled[i])
@@ -4011,14 +4011,14 @@ MK_VIII::Mode6Handler::reset_minimums ()
 void
 MK_VIII::Mode6Handler::reset_altitude_callouts ()
 {
-  for (int i = 0; i < n_altitude_callouts; i++)
+  for (unsigned i = 0; i < n_altitude_callouts; i++)
     altitude_callouts_issued[i] = false;
 }
 
 bool
 MK_VIII::Mode6Handler::is_playing_altitude_callout ()
 {
-  for (int i = 0; i < n_altitude_callouts; i++)
+  for (unsigned i = 0; i < n_altitude_callouts; i++)
     if (mk->voice_player.voice == mk_altitude_voice(i)
 	|| mk->voice_player.next_voice == mk_altitude_voice(i))
       return true;
@@ -4092,7 +4092,7 @@ MK_VIII::Mode6Handler::boot ()
   last_radio_altitude.set(&mk_data(radio_altitude));
 
   // [SPEC] 6.4.2
-  for (int i = 0; i < n_altitude_callouts; i++)
+  for (unsigned i = 0; i < n_altitude_callouts; i++)
     altitude_callouts_issued[i] = ! mk_data(radio_altitude).ncd
       && mk_data(radio_altitude).get() <= altitude_callout_definitions[i];
 
@@ -4134,7 +4134,7 @@ MK_VIII::Mode6Handler::set_volume (double volume)
 {
   mk_voice(minimums_minimums)->set_volume(volume);
   mk_voice(five_hundred_above)->set_volume(volume);
-  for (int i = 0; i < n_altitude_callouts; i++)
+  for (unsigned i = 0; i < n_altitude_callouts; i++)
     mk_altitude_voice(i)->set_volume(volume);
 }
 
@@ -4144,7 +4144,7 @@ MK_VIII::Mode6Handler::altitude_callouts_enabled ()
   if (conf.minimums_enabled || conf.smart_500_enabled || conf.above_field_voice)
     return true;
 
-  for (int i = 0; i < n_altitude_callouts; i++)
+  for (unsigned i = 0; i < n_altitude_callouts; i++)
     if (conf.altitude_callouts_enabled[i])
       return true;
 
@@ -4197,7 +4197,7 @@ MK_VIII::Mode6Handler::update_altitude_callouts ()
   if (! mk->io_handler.gpws_inhibit()
       && ! mk->state_handler.ground // [1]
       && ! mk_data(radio_altitude).ncd)
-    for (int i = 0; i < n_altitude_callouts && mk_data(radio_altitude).get() <= altitude_callout_definitions[i]; i++)
+    for (unsigned i = 0; i < n_altitude_callouts && mk_data(radio_altitude).get() <= altitude_callout_definitions[i]; i++)
       if ((conf.altitude_callouts_enabled[i]
 	   || (altitude_callout_definitions[i] == 500
 	       && conf.smart_500_enabled))
@@ -4206,7 +4206,7 @@ MK_VIII::Mode6Handler::update_altitude_callouts ()
 	      || last_radio_altitude.get() > altitude_callout_definitions[i]))
 	{
 	  // lock out all callouts superior or equal to this one
-	  for (int j = 0; j <= i; j++)
+	  for (unsigned j = 0; j <= i; j++)
 	    altitude_callouts_issued[j] = true;
 
 	  altitude_callouts_issued[i] = true;
@@ -4587,7 +4587,7 @@ MK_VIII::TCFHandler::get_bias_area_edges (Position *edge,
 					  Position *bias_edge2)
 {
   double half_bias_width_m = k * SG_NM_TO_METER + half_width_m;
-  double tmp_latitude, tmp_longitude, az;
+  double tmp_latitude = 0.0, tmp_longitude = 0.0, az = 0.0;
 
   geo_direct_wgs_84(0,
 		    edge->latitude,
@@ -4840,10 +4840,9 @@ MK_VIII::TCFHandler::update ()
 ///////////////////////////////////////////////////////////////////////////////
 
 MK_VIII::MK_VIII (SGPropertyNode *node)
-  : name("mk-viii"),
+  : properties_handler(this),
+    name("mk-viii"),
     num(0),
-
-    properties_handler(this),
     power_handler(this),
     system_handler(this),
     configuration_module(this),

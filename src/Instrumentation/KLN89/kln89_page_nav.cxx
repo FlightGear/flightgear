@@ -41,6 +41,7 @@ KLN89NavPage::KLN89NavPage(KLN89* parent)
 	_menuPos = 0;
 	_suspendAVS = false;
 	_scanWpSet = false;
+        _scanWpIndex = -1;
 }
 
 KLN89NavPage::~KLN89NavPage() {
@@ -546,7 +547,7 @@ void KLN89NavPage::Knob2Right1() {
 				_scanWpSet = true;
 			} else {
 				_scanWpIndex++;
-				if(_scanWpIndex > _kln89->_activeFP->waypoints.size() - 1) {
+				if(_scanWpIndex > static_cast<int>(_kln89->_activeFP->waypoints.size()) - 1) {
 					_scanWpIndex = 0;
 				}
 			}
