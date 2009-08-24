@@ -716,7 +716,7 @@ FGMultiplayMgr::Update(void)
   //////////////////////////////////////////////////
   //  Read the receive socket and process any data
   //////////////////////////////////////////////////
-  int bytes;
+  size_t bytes;
   do {
     MsgBuf msgBuf;
     //////////////////////////////////////////////////
@@ -863,7 +863,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
   }
   while (xdr < Msg.propsRecvdEnd()) {
     FGPropertyData* pData = new FGPropertyData;
-    simgear::props::Type type = simgear::props::UNSPECIFIED;
+    // simgear::props::Type type = simgear::props::UNSPECIFIED;
     
     // First element is always the ID
     pData->id = XDR_decode_uint32(*xdr);
@@ -969,14 +969,12 @@ FGMultiplayMgr::ProcessChatMsg(const MsgBuf& Msg,
   }
   
   char *chatStr = new char[MsgHdr->MsgLen - sizeof(T_MsgHdr)];
-  strncpy(chatStr,
-          (reinterpret_cast<const T_ChatMsg *>(Msg.Msg + sizeof(T_MsgHdr)))
-          ->Text,
+  const T_ChatMsg* ChatMsg
+      = reinterpret_cast<const T_ChatMsg *>(Msg.Msg + sizeof(T_MsgHdr));
+  strncpy(chatStr, ChatMsg->Text,
           MsgHdr->MsgLen - sizeof(T_MsgHdr));
   chatStr[MsgHdr->MsgLen - sizeof(T_MsgHdr) - 1] = '\0';
   
-  const T_ChatMsg* ChatMsg
-      = reinterpret_cast<const T_ChatMsg *>(Msg.Msg + sizeof(T_MsgHdr));
   SG_LOG (SG_NETWORK, SG_WARN, "Chat [" << MsgHdr->Callsign << "]"
            << " " << chatStr);
 

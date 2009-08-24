@@ -57,7 +57,7 @@ void fgSunPositionGST(double gst, double *lon, double *lat) {
     double tmp;
 
     double beta = globals->get_ephem()->get_sun()->getLat();
-    double r = globals->get_ephem()->get_sun()->getDistance();
+    // double r = globals->get_ephem()->get_sun()->getDistance();
     double xs = globals->get_ephem()->get_sun()->getxs();
     double ys = globals->get_ephem()->get_sun()->getys();
     double ye = globals->get_ephem()->get_sun()->getye();

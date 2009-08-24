@@ -261,8 +261,6 @@ void FGLight::update_sky_color () {
     gamma_correct_rgb( _scene_ambient.data() );
 
     SGVec4f color = thesky->get_scene_color();
-    float ndiff = (ambient + specular) / 2;
-    float idiff = 1.0 - ndiff;
     _scene_diffuse[0] = color[0] * diffuse;
     _scene_diffuse[1] = color[1] * diffuse;
     _scene_diffuse[2] = color[2] * diffuse;

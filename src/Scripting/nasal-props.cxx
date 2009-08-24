@@ -73,6 +73,7 @@ static naRef f_getType(naContext c, naRef me, int argc, naRef* args)
     case props::UNSPECIFIED: t = "UNSPECIFIED"; break;
     case props::VEC3D:  t = "VEC3D";  break;
     case props::VEC4D:  t = "VEC4D";  break;
+    case props::EXTENDED: t = "EXTENDED";  break; // shouldn't happen
     }
     return NASTR(t);
 }
@@ -146,7 +147,7 @@ static naRef f_getIndex(naContext c, naRef me, int argc, naRef* args)
 template<typename T>
 naRef makeVectorFromVec(naContext c, const T& vec)
 {
-    const unsigned num_components
+    const int num_components
         = sizeof(vec.data()) / sizeof(typename T::value_type);
     naRef vector = naNewVector(c);
     naVec_setsize(vector, num_components);
@@ -180,7 +181,7 @@ template<typename T>
 T makeVecFromVector(naRef vector)
 {
     T vec;
-    const unsigned num_components
+    const int num_components
         = sizeof(vec.data()) / sizeof(typename T::value_type);
     int size = naVec_size(vector);
 
