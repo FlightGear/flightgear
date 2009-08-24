@@ -79,9 +79,6 @@ static osg::ref_ptr<osg::Camera> mainCamera;
 
 void fgOSOpenWindow(bool stencil)
 {
-    osg::GraphicsContext::WindowingSystemInterface* wsi
-        = osg::GraphicsContext::getWindowingSystemInterface();
-
     viewer = new osgViewer::Viewer;
     viewer->setDatabasePager(FGScenery::getPagerSingleton());
     CameraGroup* cameraGroup = 0;

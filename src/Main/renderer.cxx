@@ -542,9 +542,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
     SGConfigureDirectionalLights( use_point_sprites, enhanced_lighting,
                                   distance_attenuation );
 
-    static const SGPropertyNode *groundlevel_nearplane
-        = fgGetNode("/sim/current-view/ground-level-nearplane-m");
-
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
 
     // update fog params
@@ -766,7 +763,6 @@ bool
 FGRenderer::pick(std::vector<SGSceneryPick>& pickList,
                  const osgGA::GUIEventAdapter* ea)
 {
-    osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
     // wipe out the return ...
     pickList.clear();
     typedef osgUtil::LineSegmentIntersector::Intersections Intersections;

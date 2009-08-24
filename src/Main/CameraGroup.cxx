@@ -298,7 +298,6 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     WindowBuilder *wBuild = WindowBuilder::getWindowBuilder();
     const SGPropertyNode* windowNode = cameraNode->getNode("window");
     GraphicsWindow* window = 0;
-    static int cameraNum = 0;
     int cameraFlags = DO_INTERSECTION_TEST;
     if (windowNode) {
         // New style window declaration / definition
@@ -400,7 +399,6 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
     const SGPropertyNode* windowNode = (cameraNode
                                         ? cameraNode->getNode("window")
                                         : 0);
-    static int cameraNum = 0;
     if (!window) {
         if (windowNode) {
             // New style window declaration / definition
