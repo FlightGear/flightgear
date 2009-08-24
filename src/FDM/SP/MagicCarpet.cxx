@@ -85,7 +85,7 @@ void FGMagicCarpet::update( double dt ) {
     _set_Euler_Rates(0,0,0);
 
     // update (lon/lat) position
-    double lat2, lon2, az2;
+    double lat2 = 0.0, lon2 = 0.0, az2 = 0.0;
     if ( fabs( speed ) > SG_EPSILON ) {
 	geo_direct_wgs_84 ( get_Altitude(),
 			    get_Latitude() * SGD_RADIANS_TO_DEGREES,
