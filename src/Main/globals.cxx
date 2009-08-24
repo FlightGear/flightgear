@@ -67,6 +67,9 @@ FGGlobals *globals;
 
 // Constructor
 FGGlobals::FGGlobals() :
+    props( new SGPropertyNode ),
+    initial_state( NULL ),
+    locale( NULL ),
     renderer( new FGRenderer ),
     subsystem_mgr( new SGSubsystemMgr ),
     event_mgr( new SGEventMgr ),
@@ -85,9 +88,6 @@ FGGlobals::FGGlobals() :
     AI_mgr( NULL ),
     controls( NULL ),
     viewmgr( NULL ),
-    props( new SGPropertyNode ),
-    initial_state( NULL ),
-    locale( NULL ),
     commands( SGCommandMgr::instance() ),
     acmodel( NULL ),
     model_mgr( NULL ),

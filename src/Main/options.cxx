@@ -996,7 +996,7 @@ fgOptRandomWind( const char *arg )
 static int
 fgOptWind( const char *arg )
 {
-    double min_hdg, max_hdg, speed, gust;
+    double min_hdg = 0.0, max_hdg = 0.0, speed = 0.0, gust = 0.0;
     if (!parse_wind( arg, &min_hdg, &max_hdg, &speed, &gust)) {
 	SG_LOG( SG_GENERAL, SG_ALERT, "bad wind value " << arg );
 	return FG_OPTIONS_ERROR;
@@ -1815,9 +1815,9 @@ unsigned int getNumMaturity(const char * str)
 {
   // changes should also be reflected in $FG_ROOT/data/options.xml & 
   // $FG_ROOT/data/Translations/string-default.xml
-  const char levels[][20]= {"alpha","beta","early-production","production",0}; 
+  const char* levels[] = {"alpha","beta","early-production","production"}; 
 
-  for (unsigned int i=0; i<(sizeof(levels)/sizeof(levels[0])-1);i++) 
+  for (size_t i=0; i<(sizeof(levels)/sizeof(levels[0]));i++) 
     if (strcmp(str,levels[i])==0)
       return i;
 

@@ -187,7 +187,7 @@ FGIO::parse_port_config( const string& config )
 	    FGRUL *rul = new FGRUL;
 	    io = rul;
         } else if ( protocol == "generic" ) {
-            int configToken;
+            size_t configToken;
             if (tokens[1] == "socket") {
                 configToken = 7;
             } else if (tokens[1] == "file") {

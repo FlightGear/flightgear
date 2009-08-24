@@ -72,8 +72,6 @@ static void dumpOut(osg::Node* node)
     char filename[24];
     static int count = 1;
 
-    FGRenderer *renderer = globals->get_renderer();
-
     while (count < 1000) {
         FILE *fp;
         snprintf(filename, 24, "fgviewer-%03d.osg", count++);
