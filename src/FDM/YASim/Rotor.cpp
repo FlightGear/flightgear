@@ -818,7 +818,7 @@ void Rotor::calcLiftFactor(float* v, float rho, State *s)
     _f_ge=1+_diameter/_ground_effect_altitude*_ground_effect_constant;
 
     // Now calculate translational lift
-    float v_vert = Math::dot3(v,_normal);
+    // float v_vert = Math::dot3(v,_normal);
     float help[3];
     Math::cross3(v,_normal,help);
     float v_horiz = Math::mag3(help);
@@ -1181,7 +1181,7 @@ void Rotor::compile()
         * _diameter * _rel_blade_center * _rel_blade_center /(0.5*0.5);
     float speed=_rotor_rpm/60*_diameter*_rel_blade_center*pi;
     float lentocenter=_diameter*_rel_blade_center*0.5;
-    float lentoforceattac=_diameter*_rel_len_hinge*0.5;
+    // float lentoforceattac=_diameter*_rel_len_hinge*0.5;
     float zentforce=rotorpartmass*speed*speed/lentocenter;
     float pitchaforce=_force_at_pitch_a/_number_of_parts*.453*9.81;
     // was pounds of force, now N, devided by _number_of_parts
@@ -1196,8 +1196,8 @@ void Rotor::compile()
 
     float relamp=(omega*omega/(2*_delta*Math::sqrt(sqr(omega0*omega0-omega*omega)
         +4*_delta*_delta*omega*omega)))*_cyclic_factor;
-    float relamp_theoretical=(omega*omega/(2*delta_theoretical*Math::sqrt(sqr(omega0*omega0-omega*omega)
-        +4*delta_theoretical*delta_theoretical*omega*omega)))*_cyclic_factor;
+    //float relamp_theoretical=(omega*omega/(2*delta_theoretical*Math::sqrt(sqr(omega0*omega0-omega*omega)
+    //    +4*delta_theoretical*delta_theoretical*omega*omega)))*_cyclic_factor;
     _phi=Math::acos(_rel_len_hinge);
     _phi-=Math::atan(_delta3);
     if (!_no_torque)
@@ -1528,7 +1528,7 @@ void Rotorgear::calcForces(float* torqueOut)
             total_torque+=r->getTorque()*omegan;
         }
         float max_torque_of_engine=0;
-        SGPropertyNode * node=fgGetNode("/rotors/gear", true);
+        // SGPropertyNode * node=fgGetNode("/rotors/gear", true);
         if (_engineon)
         {
             max_torque_of_engine=_max_power_engine*_max_rel_torque;
@@ -1599,7 +1599,7 @@ void Rotorgear::calcForces(float* torqueOut)
             for(j=0; j<_rotors.size(); j++) {
                 Rotor* r = (Rotor*)_rotors.get(j);
                 for(i=0; i<r->_rotorparts.size(); i++) {
-                    float torque_scalar=0;
+                    // float torque_scalar=0;
                     Rotorpart* rp = (Rotorpart*)r->_rotorparts.get(i);
                     float torque[3];
                     rp->getAccelTorque(_ddt_omegarel,torque);
@@ -1619,7 +1619,7 @@ void Rotorgear::addRotor(Rotor* rotor)
 
 void Rotorgear::compile()
 {
-    float wgt = 0;
+    // float wgt = 0;
     for(int j=0; j<_rotors.size(); j++) {
         Rotor* r = (Rotor*)_rotors.get(j);
         r->compile();

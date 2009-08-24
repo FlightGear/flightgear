@@ -35,11 +35,11 @@ static const float KTS2MPS = 0.514444444444;
 // numbers: "aoa lift drag LD" (aoa in degrees, lift and drag in
 // G's).  You can use this in gnuplot like so (assuming the output is
 // in a file named "dat":
-//
-// plot "dat" using 1:2 with lines title 'lift', \ 
-//      "dat" using 1:3 with lines title 'drag', \ 
-//      "dat" using 1:4 with lines title 'LD'
-//
+/*
+ plot "dat" using 1:2 with lines title 'lift', \ 
+      "dat" using 1:3 with lines title 'drag', \ 
+      "dat" using 1:4 with lines title 'LD'
+*/
 void yasim_graph(Airplane* a, float alt, float kts)
 {
     Model* m = a->getModel();
