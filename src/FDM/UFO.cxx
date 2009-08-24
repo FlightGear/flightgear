@@ -154,7 +154,7 @@ void FGUFO::update( double dt ) {
     double yaw = fabs(rudder) < .2 ? 0.0 : rudder / (25 + fabs(speed) * .1);
 
     // update (lon/lat) position
-    double lat2, lon2, az2;
+    double lat2 = 0.0, lon2 = 0.0, az2 = 0.0;
     if ( fabs(speed) > SG_EPSILON ) {
         geo_direct_wgs_84 ( get_Altitude(),
                             get_Latitude() * SGD_RADIANS_TO_DEGREES,
