@@ -97,6 +97,15 @@ FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false)
 FGGeneric::~FGGeneric() {
 }
 
+union u32 {
+    uint32_t intVal;
+    float floatVal;
+};
+
+union u64 {
+    uint64_t longVal;
+    double doubleVal;
+};
 
 // generate the message
 bool FGGeneric::gen_message_binary() {
@@ -146,9 +155,11 @@ bool FGGeneric::gen_message_binary() {
             if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
                 *((float*)&buf[length]) = val;
             } else {
-                *((float*)&buf[length]) = sg_bswap_32(*(uint32_t*)&val);
+                u32 tmpun32;
+                tmpun32.floatVal = static_cast<float>(val);
+                *((uint32_t*)&buf[length]) = sg_bswap_32(tmpun32.intVal);
             }
-            length += sizeof(int32_t);
+            length += sizeof(uint32_t);
             break;
 
         case FG_DOUBLE:
@@ -158,7 +169,9 @@ bool FGGeneric::gen_message_binary() {
             if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
                 *((double*)&buf[length]) = val;
             } else {
-                *((double*)&buf[length]) = sg_bswap_64(*(uint64_t*)&val);
+                u64 tmpun64;
+                tmpun64.doubleVal = val;
+                *((uint64_t*)&buf[length]) = sg_bswap_64(tmpun64.longVal);
             }
             length += sizeof(int64_t);
             break;
@@ -195,6 +208,7 @@ bool FGGeneric::gen_message_binary() {
             break;
 
         case FOOTER_MAGIC:
+        case FOOTER_NONE:
             break;
     }
 
@@ -282,7 +296,6 @@ bool FGGeneric::gen_message() {
 bool FGGeneric::parse_message_binary() {
     char *p2, *p1 = buf;
     int32_t tmp32;
-    int64_t tmp64;
     double val;
     int i = -1;
 
@@ -323,28 +336,30 @@ bool FGGeneric::parse_message_binary() {
             break;
 
         case FG_FLOAT:
+            u32 tmpun32;
             if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
-                tmp32 = sg_bswap_32(*(int32_t *)p1);
+                tmpun32.intVal = sg_bswap_32(*(uint32_t *)p1);
             } else {
-                tmp32 = *(int32_t *)p1;
+                tmpun32.floatVal = *(float *)p1;
             }
 
             val = _in_message[i].offset +
-                  *(float *)&tmp32 * _in_message[i].factor;
+                  tmpun32.floatVal * _in_message[i].factor;
 
             _in_message[i].prop->setFloatValue(val);
             p1 += sizeof(int32_t);
             break;
 
         case FG_DOUBLE:
+            u64 tmpun64;
             if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
-                tmp64 = sg_bswap_64(*(int64_t *)p1);
+                tmpun64.longVal = sg_bswap_64(*(uint64_t *)p1);
             } else {
-                tmp64 = *(int64_t *)p1;
+                tmpun64.doubleVal = *(double *)p1;
             }
 
             val = _in_message[i].offset +
-                   *(double *)&tmp64 * _in_message[i].factor;
+                   tmpun64.doubleVal * _in_message[i].factor;
 
             _in_message[i].prop->setDoubleValue(val);
             p1 += sizeof(int64_t);
