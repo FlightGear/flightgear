@@ -540,9 +540,9 @@ FGGroundCache::get_body(double t, SGMatrixd& bodyToWorld, SGVec3d& linearVel,
 class FGGroundCache::CatapultFinder : public BVHVisitor {
 public:
     CatapultFinder(const SGSphered& sphere, const double& t) :
+        _haveLineSegment(false),
         _sphere(sphere),
-        _time(t),
-        _haveLineSegment(false)
+        _time(t)
     { }
     
     virtual void apply(BVHGroup& leaf)
