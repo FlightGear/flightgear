@@ -38,6 +38,7 @@
 #include "AIMultiplayer.hxx"
 #include "AITanker.hxx"
 #include "AIWingman.hxx"
+#include "AIGroundVehicle.hxx"
 
 FGAIManager::FGAIManager() {
     _dt = 0.0;
@@ -97,7 +98,7 @@ FGAIManager::postinit() {
             continue;
         }
 
-        SG_LOG(SG_GENERAL, SG_INFO, "loading scenario '" << name << '\'');
+        SG_LOG(SG_GENERAL, SG_ALERT, "loading scenario '" << name << '\'');
         processScenario(name);
         scenarios[name] = true;
     }
@@ -305,6 +306,11 @@ FGAIManager::processScenario( const string &filename ) {
             carrier->readFromScenario(scEntry);
             attach(carrier);
 
+        } else if (type == "groundvehicle") {
+            FGAIGroundVehicle* groundvehicle = new FGAIGroundVehicle;
+            groundvehicle->readFromScenario(scEntry);
+            attach(groundvehicle);
+
         } else if (type == "thunderstorm") {
             FGAIStorm* storm = new FGAIStorm;
             storm->readFromScenario(scEntry);
@@ -324,9 +330,10 @@ FGAIManager::processScenario( const string &filename ) {
             FGAIStatic* aistatic = new FGAIStatic;
             aistatic->readFromScenario(scEntry);
             attach(aistatic);
-
         }
+
     }
+
 }
 
 SGPropertyNode_ptr

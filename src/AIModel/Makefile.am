@@ -17,6 +17,7 @@ libAIModel_a_SOURCES = submodel.cxx submodel.hxx 	\
 			AIStatic.hxx AIStatic.cxx \
 			AITanker.cxx AITanker.hxx \
 			AIWingman.cxx AIWingman.hxx\
+			AIGroundVehicle.cxx AIGroundVehicle.hxx \
 			performancedata.cxx performancedata.hxx \
 			performancedb.cxx performancedb.hxx
 

@@ -274,8 +274,8 @@ void FGAICarrier::bind() {
                 SGRawValuePointer<double>(&rel_wind_speed_kts));
     props->tie("environment/in-to-wind",
         SGRawValuePointer<bool>(&in_to_wind));
-    props->tie("controls/flols/wave-off-lights",
-                SGRawValuePointer<bool>(&wave_off_lights));
+    //props->tie("controls/flols/wave-off-lights",
+    //            SGRawValuePointer<bool>(&wave_off_lights));
     props->tie("controls/elevators",
                 SGRawValuePointer<bool>(&elevators));
     props->tie("surface-positions/elevators-pos-norm",
@@ -323,7 +323,7 @@ void FGAICarrier::unbind() {
     props->untie("environment/rel-wind-from-degs");
     props->untie("environment/rel-wind-speed-kts");
     props->untie("environment/in-to-wind");
-    props->untie("controls/flols/wave-off-lights");
+    //props->untie("controls/flols/wave-off-lights");
     props->untie("controls/elevators");
     props->untie("surface-positions/elevators-pos-norm");
     props->untie("controls/constants/elevators/trans-time-secs");
@@ -394,11 +394,14 @@ void FGAICarrier::UpdateWind( double dt) {
     rel_wind = rel_wind_from_deg - hdg;
     SG_NORMALIZE_RANGE(rel_wind, -180.0, 180.0);
 
+    //set in to wind property
+    InToWind();
+
     //switch the wave-off lights
-    if (InToWind())
-       wave_off_lights = false;
-    else
-       wave_off_lights = true;
+    //if (InToWind())
+    //   wave_off_lights = false;
+    //else
+    //   wave_off_lights = true;
 
     // cout << "rel wind: " << rel_wind << endl;
 

@@ -366,6 +366,26 @@ void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
 
 }
 
+void FGAIFlightPlan::DecrementWaypoint(bool eraseWaypoints )
+{
+    if (eraseWaypoints)
+    {
+        if (wpt_iterator == waypoints.end())
+            wpt_iterator--;
+        else
+        {
+            delete *(waypoints.end());
+            waypoints.erase(waypoints.end());
+            wpt_iterator = waypoints.end();
+            wpt_iterator--;
+        }
+    }
+    else
+        wpt_iterator--;
+
+}
+
+
 // gives distance in feet from a position to a waypoint
 double FGAIFlightPlan::getDistanceToGo(double lat, double lon, waypoint* wp) const{
   return SGGeodesy::distanceM(SGGeod::fromDeg(lon, lat), 
