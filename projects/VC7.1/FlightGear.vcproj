@@ -2793,6 +2793,12 @@
 				RelativePath="..\..\src\AIModel\AIWingman.hxx">
 			</File>
 			<File
+				RelativePath="..\..\src\AIModel\AIGroundVehicle.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\AIModel\AIGroundVehicle.hxx">
+			</File>
+			<File
 				RelativePath="..\..\src\AIModel\performancedata.cxx">
 			</File>
 			<File
