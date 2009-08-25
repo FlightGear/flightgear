@@ -81,6 +81,7 @@ public:
    waypoint* const getCurrentWaypoint( void ) const;
    waypoint* const getNextWaypoint( void ) const;
    void IncrementWaypoint( bool erase );
+   void DecrementWaypoint( bool erase );
 
    double getDistanceToGo(double lat, double lon, waypoint* wp) const;
    int getLeg () const { return leg;};

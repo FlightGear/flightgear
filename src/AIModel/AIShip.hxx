@@ -24,6 +24,7 @@
 
 #include "AIBase.hxx"
 #include "AIFlightPlan.hxx"
+#include <simgear/scene/material/mat.hxx>
 
 class FGAIManager;
 
@@ -54,11 +55,28 @@ public:
     void setCurrName(const string&);
     void setNextName(const string&);
     void setPrevName(const string&);
+    void setLeadAngleGain(double g);
+    void setLeadAngleLimit(double l);
+    void setLeadAngleProp(double p);
+    void setRudderConstant(double rc);
+    void setSpeedConstant(double sc);
+    void setFixedTurnRadius(double ft);
+    void setWPNames();
+    double sign(double x);
 
     bool _hdg_lock;
     bool _serviceable;
+    bool _waiting;
+    bool _new_waypoint;
 
     virtual const char* getTypeString(void) const { return "ship"; }
+    double _rudder_constant, _speed_constant, _hdg_constant, _limit ;
+    double _elevation_m, _elevation_ft;
+    double _missed_range, _tow_angle, _wait_count;
+
+    FGAIFlightPlan::waypoint* prev; // the one behind you
+    FGAIFlightPlan::waypoint* curr; // the one ahead
+    FGAIFlightPlan::waypoint* next; // the next plus 1
 
 protected:
 
@@ -66,24 +84,27 @@ protected:
 
 private:
 
-    FGAIFlightPlan::waypoint* prev; // the one behind you
-    FGAIFlightPlan::waypoint* curr; // the one ahead
-    FGAIFlightPlan::waypoint* next; // the next plus 1
+
 
     virtual void reinit() { init(); }
 
     void setRepeat(bool r);
     void setMissed(bool m);
-    void setWPNames();
+
     void setServiceable(bool s);
     void Run(double dt);
     void setStartTime(const string&);
     void setUntilTime(const string&);
+    void setWPPos();
+    void setWPAlt();
+    void setXTrackError();
 
+    SGGeod wppos;
+
+    const SGMaterial* _material;
 
     double getRange(double lat, double lon, double lat2, double lon2) const;
     double getCourse(double lat, double lon, double lat2, double lon2) const;
-    double sign(double x);
     double getDaySeconds();
     double processTimeString(const string& time);
 
@@ -92,14 +113,18 @@ private:
 
     float _rudder, _tgt_rudder;
 
-    double _rudder_constant, _roll_constant, _speed_constant, _hdg_constant, _roll_factor;
-    double _sp_turn_radius_ft, _rd_turn_radius_ft;
+    double _roll_constant, _roll_factor;
+    double _sp_turn_radius_ft, _rd_turn_radius_ft, _fixed_turn_radius;
     double _wp_range, _old_range, _range_rate;
-    double _dt_count, _missed_count, _wait_count;
+    double _dt_count, _missed_count;
     double _next_run;
     double _missed_time_sec;
     double _start_sec;
     double _day;
+    double _lead_angle;
+    double _lead_angle_gain, _lead_angle_limit, _proportion;
+    double _course;
+    double _xtrack_error;
 
     string _prev_name, _curr_name, _next_name;
     string _path;
@@ -107,8 +132,7 @@ private:
 
     bool _repeat;
     bool _fp_init;
-    bool _new_waypoint;
-    bool _missed, _waiting;
+    bool _missed;
 
 };
 
