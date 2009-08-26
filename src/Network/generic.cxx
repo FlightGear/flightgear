@@ -143,7 +143,7 @@ bool FGGeneric::gen_message_binary() {
             if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
                 *((int32_t*)&buf[length]) = (int32_t)fixed;
             } else {
-                *((uint32_t*)&buf[length]) = sg_bswap_32((uint32_t)val);
+                *((uint32_t*)&buf[length]) = sg_bswap_32((uint32_t)fixed);
             } 
             length += sizeof(int32_t);
             break;
@@ -399,6 +399,7 @@ bool FGGeneric::parse_message_ascii() {
             break;
 
         case FG_FIXED:
+        case FG_FLOAT:
         case FG_DOUBLE:
             val = _in_message[i].offset + strtod(p1, 0) * _in_message[i].factor;
             _in_message[i].prop->setFloatValue((float)val);

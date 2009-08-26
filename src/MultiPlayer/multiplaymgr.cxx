@@ -716,7 +716,7 @@ FGMultiplayMgr::Update(void)
   //////////////////////////////////////////////////
   //  Read the receive socket and process any data
   //////////////////////////////////////////////////
-  size_t bytes;
+  ssize_t bytes;
   do {
     MsgBuf msgBuf;
     //////////////////////////////////////////////////
@@ -736,7 +736,7 @@ FGMultiplayMgr::Update(void)
         perror("FGMultiplayMgr::MP_ProcessData");
       break;
     }
-    if (bytes <= sizeof(T_MsgHdr)) {
+    if (bytes <= static_cast<ssize_t>(sizeof(T_MsgHdr))) {
       SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayMgr::MP_ProcessData - "
               << "received message with insufficient data" );
       break;
