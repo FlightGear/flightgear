@@ -66,7 +66,7 @@ public:
   FGLinuxEventInput();
   virtual ~ FGLinuxEventInput();
   virtual void update (double dt);
-  virtual void init();
+  virtual void postinit();
 
   void AddHalDevice( const char * udi );
 protected:

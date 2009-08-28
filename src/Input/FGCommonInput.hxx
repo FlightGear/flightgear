@@ -46,7 +46,7 @@ public:
    vector of SGBinding supplied in binding_list. Reads all the mod-xxx bindings and 
    add the corresponding SGBindings.
    */
-  static void read_bindings (const SGPropertyNode * base, binding_list_t * binding_list, int modifiers, string & module );
+  static void read_bindings (const SGPropertyNode * base, binding_list_t * binding_list, int modifiers, const string & module );
 };
 
 #endif

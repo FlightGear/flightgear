@@ -191,13 +191,15 @@ public:
       handledEvents[handledEvent->GetName()] = handledEvent;
   }
 
+  virtual void Configure( SGPropertyNode_ptr deviceNode );
+
   virtual void update( double dt );
 
   bool GetDebugEvents () const { return debugEvents; }
-  void SetDebugEvents( bool value ) { debugEvents = value; }
 
   bool GetGrab() const { return grab; }
-  void SetGrab( bool value ) { grab = value; }
+
+  const string & GetNasalModule() const { return nasalModule; }
 
 private:
   // A map of events, this device handles
@@ -213,6 +215,9 @@ private:
   // grab the device exclusively, if O/S supports this
   // so events are not sent to other applications
   bool   grab;
+
+  SGPropertyNode_ptr deviceNode;
+  string nasalModule;
 };
 
 typedef SGSharedPtr<FGInputDevice> FGInputDevice_ptr;
@@ -229,12 +234,18 @@ public:
   virtual void postinit();
   virtual void update( double dt );
 
+  const static unsigned MAX_DEVICES = 1000;
+  const static unsigned INVALID_DEVICE_INDEX = MAX_DEVICES + 1;
 protected:
   static const char * PROPERTY_ROOT;
 
-  void AddDevice( FGInputDevice * inputDevice );
+  unsigned AddDevice( FGInputDevice * inputDevice );
+  void RemoveDevice( unsigned index );
+
   map<int,FGInputDevice*> input_devices;
   FGDeviceConfigurationMap configMap;
+
+  SGPropertyNode_ptr nasalClose;
 };
 
 #endif

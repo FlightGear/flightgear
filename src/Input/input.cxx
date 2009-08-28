@@ -37,10 +37,8 @@
 //#include "FGDirectXEventInput.hxx"
 //#define INPUTEVENT_CLASS FGDirectXEventInput
 #elif defined ( UL_MAC_OSX )
-/*
- Currently not supported :-(
- */
-#undef INPUTEVENT_CLASS
+#include "FGMacOSXEventInput.hxx"
+#define INPUTEVENT_CLASS FGMacOSXEventInput
 #else
 #include "FGLinuxEventInput.hxx"
 #define INPUTEVENT_CLASS FGLinuxEventInput
