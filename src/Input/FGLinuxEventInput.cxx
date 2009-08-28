@@ -198,6 +198,34 @@ static struct EventTypes {
 
 };
 
+static struct enbet {
+  unsigned type;
+  const char * name;
+} EVENT_NAMES_BY_EVENT_TYPE[] = {
+  { EV_SYN, "syn" },
+  { EV_KEY, "button" },
+  { EV_REL, "rel" },
+  { EV_ABS, "abs" },
+  { EV_MSC, "msc" },
+  { EV_SW, "button" },
+  { EV_LED, "led" },
+  { EV_SND, "snd" },
+  { EV_REP, "rep" },
+  { EV_FF, "ff" },
+  { EV_PWR, "pwr" },
+  { EV_FF_STATUS, "ff-status" }
+};
+
+
+class EventNameByEventType : public map<unsigned,const char*> {
+public:
+  EventNameByEventType() {
+    for( unsigned i = 0; i < sizeof(EVENT_NAMES_BY_EVENT_TYPE)/sizeof(EVENT_NAMES_BY_EVENT_TYPE[0]); i++ )
+      (*this)[EVENT_NAMES_BY_EVENT_TYPE[i].type] = EVENT_NAMES_BY_EVENT_TYPE[i].name;
+  }
+};
+static EventNameByEventType EVENT_NAME_BY_EVENT_TYPE;
+
 class EventNameByType : public map<TypeCode,const char*> {
 public:
   EventNameByType() {
@@ -299,7 +327,13 @@ const char * FGLinuxInputDevice::TranslateEventName( FGEventData & eventData )
   typeCode.type = linuxEventData.type;
   typeCode.code = linuxEventData.code;
   if( EVENT_NAME_BY_TYPE.count(typeCode) == 0 ) {
-    sprintf( ugly_buffer, "unknown-%u-%u", (unsigned)linuxEventData.type, (unsigned)linuxEventData.code );
+    // event not known in translation tables
+    if( EVENT_NAME_BY_EVENT_TYPE.count(linuxEventData.type) == 0 ) {
+      // event type not known in translation tables
+      sprintf( ugly_buffer, "unknown-%u-%u", (unsigned)linuxEventData.type, (unsigned)linuxEventData.code );
+      return ugly_buffer;
+    }
+    sprintf( ugly_buffer, "%s-%u", EVENT_NAME_BY_EVENT_TYPE[linuxEventData.type], (unsigned)linuxEventData.code );
     return ugly_buffer;
   }
 
@@ -338,9 +372,9 @@ static void DeviceRemovedCallback (LibHalContext *ctx, const char *udi)
 }
 #endif
 
-void FGLinuxEventInput::init()
+void FGLinuxEventInput::postinit()
 {
-  FGEventInput::init();
+  FGEventInput::postinit();
 
   DBusConnection * connection;
   DBusError dbus_error;

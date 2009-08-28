@@ -27,8 +27,7 @@
 #include "FGEventInput.hxx"
 #include <Main/fg_props.hxx>
 #include <simgear/io/sg_file.hxx>
-#include <poll.h>
-#include <linux/input.h>
+#include <Scripting/NasalSys.hxx>
 
 FGEventSetting::FGEventSetting( SGPropertyNode_ptr base ) :
   value(0.0)
@@ -91,9 +90,8 @@ FGInputEvent::FGInputEvent( FGInputDevice * aDevice, SGPropertyNode_ptr node ) :
   name = node->getStringValue( "name", "" );
   desc = node->getStringValue( "desc", "" );
   intervalSec = node->getDoubleValue("interval-sec",0.0);
-  string module = "event";
   
-  read_bindings( node, bindings, KEYMOD_NONE, module );
+  read_bindings( node, bindings, KEYMOD_NONE, device->GetNasalModule() );
 
   vector<SGPropertyNode_ptr> settingNodes = node->getChildren("setting");
   for( vector<SGPropertyNode_ptr>::iterator it = settingNodes.begin(); it != settingNodes.end(); it++ )
@@ -181,7 +179,50 @@ void FGButtonEvent::fire( FGEventData & eventData )
 
 FGInputDevice::~FGInputDevice()
 {
+  FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
+  if (nas && deviceNode ) {
+    SGPropertyNode_ptr nasal = deviceNode->getNode("nasal");
+    if( nasal ) {
+      SGPropertyNode_ptr nasalClose = nasal->getNode("close");
+      if (nasalClose) {
+        const char *s = nasalClose->getStringValue();
+        nas->createModule(nasalModule.c_str(), nasalModule.c_str(), s, strlen(s), deviceNode );
+      }
+    }
+    nas->deleteModule(nasalModule.c_str());
+  }
 } 
+
+void FGInputDevice::Configure( SGPropertyNode_ptr aDeviceNode )
+{
+  deviceNode = aDeviceNode;
+
+  nasalModule = string("__event:") + GetName();
+
+  vector<SGPropertyNode_ptr> eventNodes = deviceNode->getChildren( "event" );
+  for( vector<SGPropertyNode_ptr>::iterator it = eventNodes.begin(); it != eventNodes.end(); it++ )
+    AddHandledEvent( FGInputEvent::NewObject( this, *it ) );
+
+  debugEvents = deviceNode->getBoolValue("debug-events", debugEvents );
+  grab = deviceNode->getBoolValue("grab", grab );
+
+  // TODO:
+  // add nodes for the last event:
+  // last-event/name [string]
+  // last-event/value [double]
+
+  SGPropertyNode_ptr nasal = deviceNode->getNode("nasal");
+  if (nasal) {
+    SGPropertyNode_ptr open = nasal->getNode("open");
+    if (open) {
+      const char *s = open->getStringValue();
+      FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
+      if (nas)
+        nas->createModule(nasalModule.c_str(), nasalModule.c_str(), s, strlen(s), deviceNode );
+    }
+  }
+
+}
 
 void FGInputDevice::update( double dt )
 {
@@ -238,7 +279,7 @@ void FGEventInput::update( double dt )
     (*it).second->update( dt );
 }
 
-void FGEventInput::AddDevice( FGInputDevice * inputDevice )
+unsigned FGEventInput::AddDevice( FGInputDevice * inputDevice )
 {
   SGPropertyNode_ptr baseNode = fgGetNode( PROPERTY_ROOT, true );
   SGPropertyNode_ptr deviceNode = NULL;
@@ -249,13 +290,13 @@ void FGEventInput::AddDevice( FGInputDevice * inputDevice )
 
     // find a free index
     unsigned index;
-    for( index = 0; index < 1000; index++ )
+    for( index = 0; index < MAX_DEVICES; index++ )
       if( (deviceNode = baseNode->getNode( "device", index, false ) ) == NULL )
         break;
 
-    if( index == 1000 ) {
+    if( index == MAX_DEVICES ) {
       SG_LOG(SG_INPUT, SG_WARN, "To many event devices - ignoring " << inputDevice->GetName() );
-      return;
+      return INVALID_DEVICE_INDEX;
     }
 
     // create this node 
@@ -263,26 +304,17 @@ void FGEventInput::AddDevice( FGInputDevice * inputDevice )
 
     // and copy the properties from the configuration tree
     copyProperties( configMap[ inputDevice->GetName() ], deviceNode );
+
   }
 
   if( deviceNode == NULL ) {
     SG_LOG(SG_INPUT, SG_DEBUG, "No configuration found for device " << inputDevice->GetName() );
     delete  inputDevice;
-    return;
+    return INVALID_DEVICE_INDEX;
   }
 
-  vector<SGPropertyNode_ptr> eventNodes = deviceNode->getChildren( "event" );
-  for( vector<SGPropertyNode_ptr>::iterator it = eventNodes.begin(); it != eventNodes.end(); it++ )
-    inputDevice->AddHandledEvent( FGInputEvent::NewObject( inputDevice, *it ) );
+  inputDevice->Configure( deviceNode );
 
-  inputDevice->SetDebugEvents( deviceNode->getBoolValue("debug-events", inputDevice->GetDebugEvents() ));
-  inputDevice->SetGrab( deviceNode->getBoolValue("grab", inputDevice->GetGrab() ));
-
-  // TODO:
-  // add nodes for the last event:
-  // last-event/name [string]
-  // last-event/value [double]
-  
   try {	
     inputDevice->Open();
     input_devices[ deviceNode->getIndex() ] = inputDevice;
@@ -290,7 +322,25 @@ void FGEventInput::AddDevice( FGInputDevice * inputDevice )
   catch( ... ) {
     delete  inputDevice;
     SG_LOG(SG_INPUT, SG_ALERT, "can't open InputDevice " << inputDevice->GetName()  );
+    return INVALID_DEVICE_INDEX;
   }
 
   SG_LOG(SG_INPUT, SG_DEBUG, "using InputDevice " << inputDevice->GetName()  );
+  return deviceNode->getIndex();
 }
+
+void FGEventInput::RemoveDevice( unsigned index )
+{
+  // not fully implemented yet
+  SGPropertyNode_ptr baseNode = fgGetNode( PROPERTY_ROOT, true );
+  SGPropertyNode_ptr deviceNode = NULL;
+
+  FGInputDevice *inputDevice = input_devices[index];
+  if (inputDevice) {
+    input_devices.erase(index);
+    delete inputDevice;
+    
+  }
+  deviceNode = baseNode->removeChild("device", index, false);
+}
+

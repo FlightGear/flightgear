@@ -32,11 +32,11 @@
 
 #include <simgear/math/SGMath.hxx>
 
-void FGCommonInput::read_bindings (const SGPropertyNode * node, binding_list_t * binding_list, int modifiers, string & module )
+void FGCommonInput::read_bindings (const SGPropertyNode * node, binding_list_t * binding_list, int modifiers, const string & module )
 {
   SG_LOG(SG_INPUT, SG_DEBUG, "Reading all bindings");
   vector<SGPropertyNode_ptr> bindings = node->getChildren("binding");
-  string nasal = "nasal";
+  static string nasal = "nasal";
   for (unsigned int i = 0; i < bindings.size(); i++) {
     const char *cmd = bindings[i]->getStringValue("command");
     SG_LOG(SG_INPUT, SG_DEBUG, "Reading binding " << cmd);
