@@ -32,120 +32,51 @@ using std::string;
 XMLLoader::XMLLoader() {}
 XMLLoader::~XMLLoader() {}
 
-string XMLLoader::expandICAODirs(const string& in){
-     //cerr << "Expanding " << in << endl;
-     if (in.size() == 4) {
-          char buffer[11];
-          snprintf(buffer, 11, "%c/%c/%c", in[0], in[1], in[2]);
-          //cerr << "result: " << buffer << endl;
-          return string(buffer);
-     } else {
-           return in;
-     }
-     //exit(1);
-}
-
 void XMLLoader::load(FGAirportDynamics* d) {
-    FGAirportDynamicsXMLLoader visitor(d);
-    if (fgGetBool("/sim/traffic-manager/use-custom-scenery-data") == false) {
-       SGPath parkpath( globals->get_fg_root() );
-       parkpath.append( "/AI/Airports/" );
-       parkpath.append( d->getId() );
-       parkpath.append( "parking.xml" );
-       SG_LOG(SG_GENERAL, SG_DEBUG, "running old loader:" << parkpath.c_str());
-       if (parkpath.exists()) {
-           try {
-               readXML(parkpath.str(), visitor);
-               d->init();
-           } 
-           catch (const sg_exception &) {
-           }
+  FGAirportDynamicsXMLLoader visitor(d);
+  if (fgGetBool("/sim/traffic-manager/use-custom-scenery-data") == false) {
+   SGPath parkpath( globals->get_fg_root() );
+   parkpath.append( "/AI/Airports/" );
+   parkpath.append( d->getId() );
+   parkpath.append( "parking.xml" );
+   SG_LOG(SG_GENERAL, SG_DEBUG, "running old loader:" << parkpath.c_str());
+   if (parkpath.exists()) {
+       try {
+           readXML(parkpath.str(), visitor);
+           d->init();
+       } 
+       catch (const sg_exception &) {
        }
-    } else {
-        string_list sc = globals->get_fg_scenery();
-        char buffer[32];
-        snprintf(buffer, 32, "%s.groundnet.xml", d->getId().c_str() );
-        string airportDir = XMLLoader::expandICAODirs(d->getId());
-        for (string_list_iterator i = sc.begin(); i != sc.end(); i++) {
-            SGPath parkpath( *i );
-            parkpath.append( "Airports" );
-            parkpath.append ( airportDir );
-            parkpath.append( string (buffer) );
-            SG_LOG(SG_GENERAL, SG_DEBUG, "Trying to read ground net:" << parkpath.c_str());
-            if (parkpath.exists()) {
-                SG_LOG(SG_GENERAL, SG_DEBUG, "reading ground net:" << parkpath.c_str());
-                try {
-                    readXML(parkpath.str(), visitor);
-                    d->init();
-                } 
-                catch (const sg_exception &) {
-                }
-                return;
-            }
-        }
-    }
+   }
+  } else {
+    loadAirportXMLDataIntoVisitor(d->getId(), "groundnet", visitor);
+  }
 }
 
 void XMLLoader::load(FGRunwayPreference* p) {
-    FGRunwayPreferenceXMLLoader visitor(p);
-    if (fgGetBool("/sim/traffic-manager/use-custom-scenery-data") == false) {
-        SGPath rwyPrefPath( globals->get_fg_root() );
-        rwyPrefPath.append( "AI/Airports/" );
-        rwyPrefPath.append( p->getId() );
-        rwyPrefPath.append( "rwyuse.xml" );
-        if (rwyPrefPath.exists()) {
-            try {
-                readXML(rwyPrefPath.str(), visitor);
-            } 
-            catch (const sg_exception &) {
-            }
-         }
-      }  else {
-       string_list sc = globals->get_fg_scenery();
-       char buffer[32];
-       snprintf(buffer, 32, "%s.rwyuse.xml", p->getId().c_str() );
-       string airportDir = expandICAODirs(p->getId());
-       for (string_list_iterator i = sc.begin(); i != sc.end(); i++) {
-           SGPath rwypath( *i );
-           rwypath.append( "Airports" );
-           rwypath.append ( airportDir );
-           rwypath.append( string(buffer) );
-           if (rwypath.exists()) {
-               try {
-                   readXML(rwypath.str(), visitor);
-                } 
-                catch (const sg_exception &) {
-                }
-                return;
-            }
+  FGRunwayPreferenceXMLLoader visitor(p);
+  if (fgGetBool("/sim/traffic-manager/use-custom-scenery-data") == false) {
+    SGPath rwyPrefPath( globals->get_fg_root() );
+    rwyPrefPath.append( "AI/Airports/" );
+    rwyPrefPath.append( p->getId() );
+    rwyPrefPath.append( "rwyuse.xml" );
+    if (rwyPrefPath.exists()) {
+        try {
+            readXML(rwyPrefPath.str(), visitor);
+        } 
+        catch (const sg_exception &) {
         }
-    }
+     }
+  } else {
+    loadAirportXMLDataIntoVisitor(p->getId(), "rwyuse", visitor);
+  }
 }
 
 void XMLLoader::load(FGSidStar* p) {
-    //FGRunwayPreferenceXMLLoader visitor(p);
-    if (fgGetBool("/sim/traffic-manager/use-custom-scenery-data") == true) {
-       string_list sc = globals->get_fg_scenery();
-       char buffer[32];
-       snprintf(buffer, 32, "%s.SID.xml", p->getId().c_str() );
-       string airportDir = expandICAODirs(p->getId());
-       for (string_list_iterator i = sc.begin(); i != sc.end(); i++) {
-           SGPath sidpath( *i );
-           sidpath.append( "Airports" );
-           sidpath.append ( airportDir );
-           sidpath.append( string(buffer) );
-           if (sidpath.exists()) {
-               try {
-                   //readXML(rwypath.str(), visitor);
-                   //cerr << "Reading SID procedure : " << sidpath.str() << endl;
-                   p->load(sidpath);
-                } 
-                catch (const sg_exception &) {
-                }
-                return;
-            }
-        }
-    }
+  SGPath path;
+  if (findAirportData(p->getId(), "SID", path)) {
+    p->load(path);
+  }
 }
 
 bool XMLLoader::findAirportData(const std::string& aICAO, 
@@ -167,7 +98,6 @@ bool XMLLoader::findAirportData(const std::string& aICAO,
     } // of path exists
   } // of scenery path iteration
 
-
   return false;
 }
 
@@ -176,9 +106,11 @@ bool XMLLoader::loadAirportXMLDataIntoVisitor(const string& aICAO,
 {
   SGPath path;
   if (!findAirportData(aICAO, aFileName, path)) {
+    SG_LOG(SG_GENERAL, SG_DEBUG, "loadAirportXMLDataIntoVisitor: failed to find data for " << aICAO << "/" << aFileName);
     return false;
   }
 
+  SG_LOG(SG_GENERAL, SG_DEBUG, "loadAirportXMLDataIntoVisitor: loading from " << path.str());
   readXML(path.str(), aVisitor);
   return true;
 }

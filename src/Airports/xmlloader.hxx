@@ -26,7 +26,6 @@ class XMLLoader {
 public:
   XMLLoader();
   ~XMLLoader();
-  static string expandICAODirs(const std::string& in);
   
   static void load(FGRunwayPreference* p);
   static void load(FGAirportDynamics*  d);
