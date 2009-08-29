@@ -448,6 +448,11 @@ static void process_set_command( const string_list &tokens ) {
         double thetadot = atof( tokens[3].c_str() );
         double psidot   = atof( tokens[4].c_str() );
         cur_fdm_state->_set_Euler_Rates( phidot, thetadot, psidot );
+    } else if ( tokens[1] == "ned" ) {
+	double north_fps = atof( tokens[2].c_str() );
+	double east_fps = atof( tokens[3].c_str() );
+	double down_fps = atof( tokens[4].c_str() );
+	cur_fdm_state->_set_Velocities_Local( north_fps, east_fps, down_fps );
     } else if ( tokens[1] == "alpha" ) {
         cur_fdm_state->_set_Alpha( atof(tokens[2].c_str()) );
     } else if ( tokens[1] == "beta" ) {
