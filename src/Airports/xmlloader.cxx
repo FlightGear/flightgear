@@ -97,7 +97,6 @@ bool XMLLoader::findAirportData(const std::string& aICAO,
       return true;
     } // of path exists
   } // of scenery path iteration
-
   return false;
 }
 
