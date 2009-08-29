@@ -31,6 +31,7 @@
 // forward decls
 class FGAirport;
 class FGNavRecord;
+class SGPropertyNode;
 
 class FGRunway : public FGRunwayBase
 {
@@ -104,6 +105,11 @@ public:
   
   FGNavRecord* ILS() const { return _ils; }
   void setILS(FGNavRecord* nav) { _ils = nav; }
+  
+  /**
+   * Helper to process property data loaded from an ICAO.threshold.xml file
+   */
+  void processThreshold(SGPropertyNode* aThreshold);
 };
 
 #endif // _FG_RUNWAYS_HXX

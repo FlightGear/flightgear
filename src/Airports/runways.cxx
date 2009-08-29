@@ -136,3 +136,7 @@ SGGeod FGRunway::threshold() const
   return pointOnCenterline(_displ_thresh * SG_FEET_TO_METER);
 }
 
+void FGRunway::processThreshold(SGPropertyNode* aThreshold)
+{
+  assert(ident() == aThreshold->getStringValue("rwy"));
+}

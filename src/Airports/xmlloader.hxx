@@ -16,23 +16,40 @@
 #ifndef _XML_LOADER_HXX_
 #define _XML_LOADER_HXX_
 
-#include <simgear/xml/easyxml.hxx>
-
 class FGAirportDynamics;
 class FGRunwayPreference;
 class FGSidStar;
 
-
+class XMLVisitor; // ffrom easyxml.hxx
 
 class XMLLoader {
 public:
   XMLLoader();
   ~XMLLoader();
-  static string expandICAODirs(const string in);
+  static string expandICAODirs(const std::string& in);
+  
   static void load(FGRunwayPreference* p);
   static void load(FGAirportDynamics*  d);
   static void load(FGSidStar*          s);
   
+  /**
+   * Search the scenery for a file name of the form:
+   *   I/C/A/ICAO.filename.xml
+   * and parse it as an XML property list, passing the data to the supplied
+   * visitor. If no such file could be found, returns false, otherwise returns
+   * true. Other failures (malformed XML, etc) with throw an exception.
+   */
+  static bool loadAirportXMLDataIntoVisitor(const std::string& aICAO, 
+    const std::string& aFileName, XMLVisitor& aVisitor);
+  
+  /**
+   * Search the scenery for a file name of the form:
+   *   I/C/A/ICAO.filename.xml
+   * and return the corresponding SGPath if found (and true),
+   * or false and invalid path if no matching data could be found
+   */
+  static bool findAirportData(const std::string& aICAO, 
+    const std::string& aFileName, SGPath& aPath);
 };
 
 #endif
