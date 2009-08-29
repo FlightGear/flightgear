@@ -58,7 +58,8 @@ FGAirport::FGAirport(const string &id, const SGGeod& location, const SGGeod& tow
     _name(name),
     _has_metar(has_metar),
     _dynamics(0),
-    mLoadedXML(false)
+    mRunwaysLoaded(false),
+    mTaxiwaysLoaded(true)
 {
 }
 
@@ -104,11 +105,14 @@ FGAirportDynamics * FGAirport::getDynamics()
 
 unsigned int FGAirport::numRunways() const
 {
+  loadRunways();
   return mRunways.size();
 }
 
 FGRunway* FGAirport::getRunwayByIndex(unsigned int aIndex) const
 {
+  loadRunways();
+  
   assert(aIndex >= 0 && aIndex < mRunways.size());
   return mRunways[aIndex];
 }
@@ -131,7 +135,9 @@ FGRunway* FGAirport::getRunwayByIdent(const string& aIdent) const
 
 FGAirport::Runway_iterator
 FGAirport::getIteratorForRunwayIdent(const string& aIdent) const
-{
+{ 
+  loadRunways();
+  
   string ident(aIdent);
   if ((aIdent.size() == 1) || !isdigit(aIdent[1])) {
     ident = "0" + aIdent;
@@ -149,6 +155,8 @@ FGAirport::getIteratorForRunwayIdent(const string& aIdent) const
 
 FGRunway* FGAirport::findBestRunwayForHeading(double aHeading) const
 {
+  loadRunways();
+  
   Runway_iterator it = mRunways.begin();
   FGRunway* result = NULL;
   double currentBestQuality = 0.0;
@@ -178,6 +186,8 @@ FGRunway* FGAirport::findBestRunwayForHeading(double aHeading) const
 
 bool FGAirport::hasHardRunwayOfLengthFt(double aLengthFt) const
 {
+  loadRunways();
+  
   unsigned int numRunways(mRunways.size());
   for (unsigned int r=0; r<numRunways; ++r) {
     FGRunway* rwy = mRunways[r];
@@ -195,22 +205,26 @@ bool FGAirport::hasHardRunwayOfLengthFt(double aLengthFt) const
 
 unsigned int FGAirport::numTaxiways() const
 {
+  loadTaxiways();
   return mTaxiways.size();
 }
 
 FGTaxiway* FGAirport::getTaxiwayByIndex(unsigned int aIndex) const
 {
+  loadTaxiways();
   assert(aIndex >= 0 && aIndex < mTaxiways.size());
   return mTaxiways[aIndex];
 }
 
 unsigned int FGAirport::numPavements() const
 {
+  loadTaxiways();
   return mPavements.size();
 }
 
 FGPavement* FGAirport::getPavementByIndex(unsigned int aIndex) const
 {
+  loadTaxiways();
   assert(aIndex >= 0 && aIndex < mPavements.size());
   return mPavements[aIndex];
 }
@@ -312,14 +326,28 @@ const FGAirport *fgFindAirportID( const string& id)
     return FGAirport::findByIdent(id);
 }
 
+void FGAirport::loadRunways() const
+{
+  if (mRunwaysLoaded) {
+    return; // already loaded, great
+  }
+  
+  mRunwaysLoaded = true;
+  loadSceneryDefintions();
+}
+
+void FGAirport::loadTaxiways() const
+{
+  if (mTaxiwaysLoaded) {
+    return; // already loaded, great
+  }
+}
 
 void FGAirport::loadSceneryDefintions() const
-{
-  mLoadedXML = true;
-  
+{  
   // allow users to disable the scenery data in the short-term
   // longer term, this option can probably disappear
-  if (fgGetBool("/sim/use-scenery-airport-data") == false) {
+  if (!fgGetBool("/sim/use-scenery-airport-data")) {
     return; 
   }
   
@@ -369,7 +397,7 @@ void FGAirport::processThreshold(SGPropertyNode* aThreshold)
 
 void FGAirport::readTowerData(SGPropertyNode* aRoot)
 {
-  SGPropertyNode* twrNode = aRoot->getChild("twr");
+  SGPropertyNode* twrNode = aRoot->getChild("tower")->getChild("twr");
   double lat = twrNode->getDoubleValue("lat"), 
     lon = twrNode->getDoubleValue("lon"), 
     elevM = twrNode->getDoubleValue("elev-m");
