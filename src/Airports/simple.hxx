@@ -193,11 +193,11 @@ private:
     bool _has_metar;
     FGAirportDynamics *_dynamics;
 
-    /**
-     * This flag indicates if we have attempted to load data from the scenery
-     * storage to supplement the Apt.Dat information.
-     */
-    mutable bool mLoadedXML;
+    void loadRunways() const;
+    void loadTaxiways() const;
+    
+    mutable bool mRunwaysLoaded;
+    mutable bool mTaxiwaysLoaded;
     
     std::vector<FGRunwayPtr> mRunways;
     std::vector<FGTaxiwayPtr> mTaxiways;
