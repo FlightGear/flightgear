@@ -31,6 +31,7 @@
 #include <simgear/compiler.h>
 
 #include <simgear/props/props.hxx>
+
 #include <string>
 
 #include "runways.hxx"
@@ -140,4 +141,20 @@ SGGeod FGRunway::threshold() const
 void FGRunway::processThreshold(SGPropertyNode* aThreshold)
 {
   assert(ident() == aThreshold->getStringValue("rwy"));
-}
+  
+  double lon = aThreshold->getDoubleValue("lon"),
+    lat = aThreshold->getDoubleValue("lat");
+  SGGeod newThreshold(SGGeod::fromDegM(lon, lat, mPosition.getElevationM()));
+  
+  _heading = aThreshold->getDoubleValue("hdg-deg");
+  _displ_thresh = aThreshold->getDoubleValue("displ-m") * SG_METER_TO_FEET;
+  _stopway = aThreshold->getDoubleValue("stopw-m") * SG_METER_TO_FEET;
+  
+  // compute the new runway center, based on the threshold lat/lon, length,
+  // and any displaced threshold.
+  double offsetFt = (0.5 * _length) - _displ_thresh;
+  SGGeod newCenter;
+  double dummy;
+  SGGeodesy::direct(newThreshold, _heading, offsetFt * SG_FEET_TO_METER, newCenter, dummy);
+  mPosition = newCenter;
+} 
