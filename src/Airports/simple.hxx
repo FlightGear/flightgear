@@ -39,6 +39,7 @@ class FGAirportDynamics;
 class FGRunway;
 class FGTaxiway;
 class FGPavement;
+class SGPropertyNode;
 
 typedef SGSharedPtr<FGRunway> FGRunwayPtr;
 typedef SGSharedPtr<FGTaxiway> FGTaxiwayPtr;
@@ -49,12 +50,6 @@ typedef SGSharedPtr<FGPavement> FGPavementPtr;
  **************************************************************************************/
 class FGAirport : public FGPositioned
 {
-private:
-    SGGeod _tower_location;
-    std::string _name;
-    bool _has_metar;
-    FGAirportDynamics *_dynamics;
-
 public:
     FGAirport(const std::string& id, const SGGeod& location, const SGGeod& tower, 
             const std::string& name, bool has_metar, Type aType);
@@ -173,8 +168,36 @@ private:
      */
     Runway_iterator getIteratorForRunwayIdent(const std::string& aIdent) const;
 
+    // disable these
     FGAirport operator=(FGAirport &other);
     FGAirport(const FGAirport&);
+  
+    /**
+     * helper to read airport data from the scenery XML files.
+     */
+    void loadSceneryDefintions() const;
+    
+    /**
+     * Helpers to process property data loaded from an ICAO.threshold.xml file
+     */
+    void readThresholdData(SGPropertyNode* aRoot);
+    void processThreshold(SGPropertyNode* aThreshold);
+    
+    /**
+     * Helper to parse property data loaded from an ICAO.twr.xml filke
+     */
+    void readTowerData(SGPropertyNode* aRoot);
+    
+    SGGeod _tower_location;
+    std::string _name;
+    bool _has_metar;
+    FGAirportDynamics *_dynamics;
+
+    /**
+     * This flag indicates if we have attempted to load data from the scenery
+     * storage to supplement the Apt.Dat information.
+     */
+    mutable bool mLoadedXML;
     
     std::vector<FGRunwayPtr> mRunways;
     std::vector<FGTaxiwayPtr> mTaxiways;

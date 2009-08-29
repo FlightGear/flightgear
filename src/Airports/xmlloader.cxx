@@ -15,6 +15,8 @@
 
 #include <simgear/misc/sg_path.hxx>
 
+#include <simgear/xml/easyxml.hxx>
+
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 
@@ -25,10 +27,12 @@
 #include "dynamics.hxx"
 #include "runwayprefs.hxx"
 
+using std::string;
+
 XMLLoader::XMLLoader() {}
 XMLLoader::~XMLLoader() {}
 
-string XMLLoader::expandICAODirs(const string in){
+string XMLLoader::expandICAODirs(const string& in){
      //cerr << "Expanding " << in << endl;
      if (in.size() == 4) {
           char buffer[11];
@@ -143,3 +147,39 @@ void XMLLoader::load(FGSidStar* p) {
         }
     }
 }
+
+bool XMLLoader::findAirportData(const std::string& aICAO, 
+    const std::string& aFileName, SGPath& aPath)
+{
+  string_list sc = globals->get_fg_scenery();
+  char buffer[128];
+  ::snprintf(buffer, 128, "%c/%c/%c/%s.%s.xml", 
+    aICAO[0], aICAO[1], aICAO[2], 
+    aICAO.c_str(), aFileName.c_str());
+
+  for (string_list_iterator it = sc.begin(); it != sc.end(); ++it) {
+    SGPath path(*it);
+    path.append("Airports");
+    path.append(string(buffer));
+    if (path.exists()) {
+      aPath = path;
+      return true;
+    } // of path exists
+  } // of scenery path iteration
+
+
+  return false;
+}
+
+bool XMLLoader::loadAirportXMLDataIntoVisitor(const string& aICAO, 
+    const string& aFileName, XMLVisitor& aVisitor)
+{
+  SGPath path;
+  if (!findAirportData(aICAO, aFileName, path)) {
+    return false;
+  }
+
+  readXML(path.str(), aVisitor);
+  return true;
+}
+

@@ -32,6 +32,7 @@
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/props/props_io.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/sg_inlines.h>
 
@@ -56,7 +57,8 @@ FGAirport::FGAirport(const string &id, const SGGeod& location, const SGGeod& tow
     _tower_location(tower_location),
     _name(name),
     _has_metar(has_metar),
-    _dynamics(0)
+    _dynamics(0),
+    mLoadedXML(false)
 {
 }
 
@@ -311,12 +313,73 @@ const FGAirport *fgFindAirportID( const string& id)
 }
 
 
+void FGAirport::loadSceneryDefintions() const
+{
+  mLoadedXML = true;
+  
+  // allow users to disable the scenery data in the short-term
+  // longer term, this option can probably disappear
+  if (fgGetBool("/sim/use-scenery-airport-data") == false) {
+    return; 
+  }
+  
+  SGPath path;
+  SGPropertyNode_ptr rootNode = new SGPropertyNode;
+  if (XMLLoader::findAirportData(ident(), "threshold", path)) {
+    readProperties(path.str(), rootNode);
+    const_cast<FGAirport*>(this)->readThresholdData(rootNode);
+  }
+  
+  // repeat for the tower data
+  rootNode = new SGPropertyNode;
+  if (XMLLoader::findAirportData(ident(), "twr", path)) {
+    readProperties(path.str(), rootNode);
+    const_cast<FGAirport*>(this)->readTowerData(rootNode);
+  }
+}
+
+void FGAirport::readThresholdData(SGPropertyNode* aRoot)
+{
+  SGPropertyNode* runway;
+  int runwayIndex = 0;
+  for (; (runway = aRoot->getChild("runway", runwayIndex)) != NULL; ++runwayIndex) {
+    SGPropertyNode* t0 = runway->getChild("threshold", 0),
+      *t1 = runway->getChild("threshold", 1);
+    assert(t0);
+    assert(t1); // too strict? mayeb we should finally allow single-ended runways
+    
+    processThreshold(t0);
+    processThreshold(t1);
+  } // of runways iteration
+}
+
+void FGAirport::processThreshold(SGPropertyNode* aThreshold)
+{
+  // first, let's identify the current runway
+  string id(aThreshold->getStringValue("rwy"));
+  if (!hasRunwayWithIdent(id)) {
+    SG_LOG(SG_GENERAL, SG_WARN, "FGAirport::processThreshold: "
+      "found runway not defined in the global data:" << ident() << "/" << id);
+    return;
+  }
+  
+  FGRunway* rwy = getRunwayByIdent(id);
+  rwy->processThreshold(aThreshold);
+}
+
+void FGAirport::readTowerData(SGPropertyNode* aRoot)
+{
+  SGPropertyNode* twrNode = aRoot->getChild("twr");
+  double lat = twrNode->getDoubleValue("lat"), 
+    lon = twrNode->getDoubleValue("lon"), 
+    elevM = twrNode->getDoubleValue("elev-m");
+    
+  _tower_location = SGGeod::fromDegM(lon, lat, elevM);
+}
+
 // get airport elevation
 double fgGetAirportElev( const string& id )
 {
-    SG_LOG( SG_GENERAL, SG_BULK,
-            "Finding elevation for airport: " << id );
-
     const FGAirport *a=fgFindAirportID( id);
     if (a) {
         return a->getElevation();
@@ -329,9 +392,6 @@ double fgGetAirportElev( const string& id )
 // get airport position
 SGGeod fgGetAirportPos( const string& id )
 {
-    SG_LOG( SG_ATC, SG_BULK,
-            "Finding position for airport: " << id );
-
     const FGAirport *a = fgFindAirportID( id);
 
     if (a) {
