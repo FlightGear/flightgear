@@ -30,6 +30,7 @@
 
 #include <simgear/compiler.h>
 
+#include <simgear/props/props.hxx>
 #include <string>
 
 #include "runways.hxx"
