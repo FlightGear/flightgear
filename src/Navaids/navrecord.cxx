@@ -27,13 +27,19 @@
 #include <istream>
 
 #include <simgear/misc/sgstream.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/sg_inlines.h>
+#include <simgear/props/props.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <Navaids/navrecord.hxx>
 #include <Navaids/navdb.hxx>
 #include <Airports/runways.hxx>
+#include <Airports/simple.hxx>
+#include <Airports/xmlloader.hxx>
+
 #include <Main/fg_props.hxx>
 
 FGNavRecord::FGNavRecord(Type aTy, const std::string& aIdent, 
@@ -84,7 +90,12 @@ void FGNavRecord::initAirportRelation()
     return; // not airport-located
   }
   
-  mRunway = getRunwayFromName(_name);    
+  mRunway = getRunwayFromName(_name);  
+  
+  if (type() != GS) {
+    readAirportSceneryData();
+  }
+        
   // fudge elevation to the runway elevation if it's not specified
   if (fabs(elevation()) < 0.01) {
     mPosition.setElevationFt(mRunway->elevation());
@@ -104,6 +115,44 @@ void FGNavRecord::initAirportRelation()
      = fgGetDouble( "/sim/navdb/localizers/auto-align-threshold-deg", 5.0 );
     alignLocaliserWithRunway(threshold);
   }
+}
+
+void FGNavRecord::readAirportSceneryData()
+{
+  // allow users to disable the scenery data in the short-term
+  // longer term, this option can probably disappear
+  if (!fgGetBool("/sim/use-scenery-airport-data")) {
+    return; 
+  }
+  
+  SGPath path;
+  SGPropertyNode_ptr rootNode = new SGPropertyNode;
+  if (!XMLLoader::findAirportData(mRunway->airport()->ident(), "ils", path)) {
+    return;
+  }
+  
+  readProperties(path.str(), rootNode);
+  SGPropertyNode* runwayNode, *ilsNode;
+  for (int i=0; (runwayNode = rootNode->getChild("runway", i)) != NULL; ++i) {
+    for (int j=0; (ilsNode = runwayNode->getChild("ils", j)) != NULL; ++j) {
+      if (ilsNode->getStringValue("nav-id") == ident()) {
+        processSceneryILS(ilsNode);
+        return;
+      }
+    } // of ILS iteration
+  } // of runway iteration
+}
+
+void FGNavRecord::processSceneryILS(SGPropertyNode* aILSNode)
+{
+  assert(aILSNode->getStringValue("rwy") == mRunway->ident());
+  double hdgDeg = aILSNode->getDoubleValue("hdg-deg"),
+    lon = aILSNode->getDoubleValue("lon"),
+    lat = aILSNode->getDoubleValue("lat"),
+    elevM = aILSNode->getDoubleValue("elev-m");
+    
+  mPosition = SGGeod::fromDegM(lon, lat, elevM);
+  multiuse = hdgDeg;
 }
 
 void FGNavRecord::alignLocaliserWithRunway(double aThreshold)

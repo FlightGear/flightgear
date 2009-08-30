@@ -43,6 +43,7 @@ typedef FGPositioned::Type fg_nav_types;
 
 // forward decls
 class FGRunway;
+class SGPropertyNode;
 
 class FGNavRecord : public FGPositioned 
 {
@@ -65,6 +66,9 @@ class FGNavRecord : public FGPositioned
   void initAirportRelation();
   
   void alignLocaliserWithRunway(double aThreshold);
+  
+  void readAirportSceneryData();
+  void processSceneryILS(SGPropertyNode* aILSNode);
 public:
   inline ~FGNavRecord(void) {}
 
