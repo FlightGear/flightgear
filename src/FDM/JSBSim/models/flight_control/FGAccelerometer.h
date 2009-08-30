@@ -41,6 +41,7 @@ INCLUDES
 #include <input_output/FGXMLElement.h>
 #include "models/FGPropagate.h"
 #include "models/FGMassBalance.h"
+#include "models/FGInertial.h"
 #include "math/FGColumnVector3.h"
 #include "math/FGMatrix33.h"
 
@@ -126,6 +127,7 @@ public:
 private:
   FGPropagate* Propagate;
   FGMassBalance* MassBalance;
+  FGInertial* Inertial;
   FGColumnVector3 vLocation;
   FGColumnVector3 vOrient;
   FGColumnVector3 vRadius;

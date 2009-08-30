@@ -139,6 +139,7 @@ protected:
   double min, max;
   double span;
   double bias;
+  double gain;
   double drift_rate;
   double drift;
   double noise_variance;
@@ -166,6 +167,7 @@ protected:
   void Quantize(void);
   void Lag(void);
   void Delay(void);
+  void Gain(void);
 
   void bind(void);
 

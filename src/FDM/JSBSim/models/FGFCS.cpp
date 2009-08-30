@@ -6,7 +6,7 @@
  Purpose:      Model the flight controls
  Called by:    FDMExec
 
- ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
+ ------------- Copyright (C) 1999  Jon S. Berndt (jon@jsbsim.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU Lesser General Public License as published by the Free Software
@@ -55,6 +55,7 @@ INCLUDES
 #include <models/flight_control/FGSensor.h>
 #include <models/flight_control/FGActuator.h>
 #include <models/flight_control/FGAccelerometer.h>
+#include <models/flight_control/FGGyro.h>
 
 namespace JSBSim {
 
@@ -642,6 +643,8 @@ bool FGFCS::Load(Element* el, SystemType systype)
           Components->push_back(new FGSensor(this, component_element));
         } else if (component_element->GetName() == string("accelerometer")) {
           Components->push_back(new FGAccelerometer(this, component_element));
+        } else if (component_element->GetName() == string("gyro")) {
+          Components->push_back(new FGGyro(this, component_element));
         } else {
           cerr << "Unknown FCS component: " << component_element->GetName() << endl;
         }

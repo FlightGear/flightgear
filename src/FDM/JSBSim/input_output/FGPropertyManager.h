@@ -35,17 +35,18 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+// This is needed by MSVC9 when included in FlightGear because of
+// the new Vec4d class in props.hxx
+#if defined( HAVE_CONFIG_H )
+# include <config.h>
+#endif
+
 #include <string>
 #include <iostream>
+#include <simgear/props/props.hxx>
 #if !PROPS_STANDALONE
-  // This is needed by MSVC9 when included in FlightGear because of
-  // the new Vec4d class in props.hxx
-# if defined( HAVE_CONFIG_H )
-#  include <config.h>
-# endif
 # include <simgear/math/SGMath.hxx>
 #endif
-#include <simgear/props/props.hxx>
 
 #include "FGJSBBase.h"
 

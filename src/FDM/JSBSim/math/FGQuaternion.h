@@ -4,7 +4,7 @@
  Author:       Jon Berndt, Mathis Froehlich
  Date started: 12/02/98
 
- ------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) ------------------
+ ------- Copyright (C) 1999  Jon S. Berndt (jon@jsbsim.org) ------------------
  -------           (C) 2004  Mathias Froehlich (Mathias.Froehlich@web.de) ----
 
  This program is free software; you can redistribute it and/or modify it under

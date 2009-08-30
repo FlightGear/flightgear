@@ -5,7 +5,7 @@
  Date started: 09/12/2000
  Purpose:      This module models a rocket engine
 
- ------------- Copyright (C) 2000  Jon S. Berndt (jsb@hal-pc.org) --------------
+ ------------- Copyright (C) 2000  Jon S. Berndt (jon@jsbsim.org) --------------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU Lesser General Public License as published by the Free Software

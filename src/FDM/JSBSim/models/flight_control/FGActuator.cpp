@@ -4,7 +4,7 @@
  Author:       Jon Berndt
  Date started: 21 February 2006
 
- ------------- Copyright (C) 2007 Jon S. Berndt (jsb@hal-pc.org) -------------
+ ------------- Copyright (C) 2007 Jon S. Berndt (jon@jsbsim.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU Lesser General Public License as published by the Free Software

@@ -5,7 +5,7 @@ Author: Jon Berndt
 Date started: 8/25/2004
 Purpose: Stores various parameter types for functions
 
- ------------- Copyright (C) 2004  Jon S. Berndt (jsb@hal-pc.org) -------------
+ ------------- Copyright (C) 2004  Jon S. Berndt (jon@jsbsim.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU Lesser General Public License as published by the Free Software
