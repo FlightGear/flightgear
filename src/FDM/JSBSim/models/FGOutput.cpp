@@ -6,7 +6,7 @@
  Purpose:      Manage output of sim parameters to file or stdout
  Called by:    FGSimExec
 
- ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
+ ------------- Copyright (C) 1999  Jon S. Berndt (jon@jsbsim.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU Lesser General Public License as published by the Free Software
@@ -333,7 +333,7 @@ void FGOutput::DelimitedOutput(string fname)
       outstream << "ECEF X (ft)" + delimeter + "ECEF Y (ft)" + delimeter + "ECEF Z (ft)" + delimeter;
       outstream << "EPA (deg)" + delimeter;
       outstream << "Distance AGL (ft)" + delimeter;
-      outstream << "Terrain Radius (ft)";
+      outstream << "Terrain Elevation (ft)";
     }
     if (SubSystems & ssCoefficients) {
       scratch = Aerodynamics->GetCoefficientStrings(delimeter);
@@ -445,7 +445,7 @@ void FGOutput::DelimitedOutput(string fname)
     outstream.precision(14);
     outstream << Inertial->GetEarthPositionAngleDeg() << delimeter;
     outstream << Propagate->GetDistanceAGL() << delimeter;
-    outstream << Propagate->GetLocalTerrainRadius();
+    outstream << Propagate->GetTerrainElevation();
     outstream.precision(10);
   }
   if (SubSystems & ssCoefficients) {

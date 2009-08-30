@@ -8,7 +8,7 @@
  Purpose:      Encapsulates the landing gear elements
  Called by:    FGAircraft
 
- ------------- Copyright (C) 1999  Jon S. Berndt (jsb@hal-pc.org) -------------
+ ------------- Copyright (C) 1999  Jon S. Berndt (jon@jsbsim.org) -------------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU Lesser General Public License as published by the Free Software
@@ -280,7 +280,7 @@ FGColumnVector3& FGLGear::Force(void)
     vLocalGear = Propagate->GetTb2l() * vWhlBodyVec; // Get local frame wheel location
 
     gearLoc = Propagate->GetLocation().LocalToLocation(vLocalGear);
-    // Compute the height of the theoritical location of the wheel (if struct was not compressed) with
+    // Compute the height of the theoretical location of the wheel (if strut is not compressed) with
     // respect to the ground level
     double height = Exec->GetGroundCallback()->GetAGLevel(t, gearLoc, contact, normal, cvel);
     vGroundNormal = -1. * Propagate->GetTec2b() * normal;
@@ -392,13 +392,6 @@ FGColumnVector3& FGLGear::Force(void)
 
 void FGLGear::ComputeGroundCoordSys(void)
 {
-  if( fabs(vGroundNormal(eZ)) < 1e-3 ) {
-    cout << "BOMB: ";
-    cout << vGroundNormal(eX) << "/" << vGroundNormal(eY) << "/" << 
-         vGroundNormal(eZ) << " - " << SteerAngle << endl;
-    return;
-  }
-
   // Compute the rolling direction projected on the ground
   // It consists in finding a vector 'r' such that 'r' lies in the plane (w,z) and r.n = 0 (scalar
   // product) where:

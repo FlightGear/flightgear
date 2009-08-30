@@ -48,11 +48,11 @@ static const char *IdHdr = ID_ACCELEROMETER;
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-
 FGAccelerometer::FGAccelerometer(FGFCS* fcs, Element* element) : FGSensor(fcs, element)
 {
   Propagate = fcs->GetExec()->GetPropagate();
   MassBalance = fcs->GetExec()->GetMassBalance();
+  Inertial = fcs->GetExec()->GetInertial();
   
   Element* location_element = element->FindElement("location");
   if (location_element) vLocation = location_element->FindElementTripletConvertTo("IN");
@@ -98,11 +98,18 @@ bool FGAccelerometer::Run(void )
   // There is no input assumed. This is a dedicated acceleration sensor.
   
   vRadius = MassBalance->StructuralToBody(vLocation);
+    
+  //gravitational forces
+  vAccel = Propagate->GetTl2b() * FGColumnVector3(0, 0, Inertial->gravity());
 
-  vAccel = mT * (Propagate->GetUVWdot()
-                 + Propagate->GetPQRdot() * vRadius
-                 + Propagate->GetPQR() * (Propagate->GetPQR() * vRadius));
-  
+  //aircraft forces
+  vAccel += (Propagate->GetUVWdot()
+              + Propagate->GetPQRdot() * vRadius
+              + Propagate->GetPQR() * (Propagate->GetPQR() * vRadius));
+
+  // transform to the specified orientation
+  vAccel = mT * vAccel;
+
   Input = vAccel(axis);
 
   Output = Input; // perfect accelerometer
@@ -118,6 +125,7 @@ bool FGAccelerometer::Run(void )
   if (noise_variance != 0.0) Noise();     // models noise
   if (drift_rate != 0.0)     Drift();     // models drift over time
   if (bias != 0.0)           Bias();      // models a finite bias
+  if (gain != 0.0)           Gain();      // models a gain
 
   if (fail_low)  Output = -HUGE_VAL;
   if (fail_high) Output =  HUGE_VAL;
@@ -150,7 +158,7 @@ void FGAccelerometer::CalculateTransformMatrix(void)
   mT(3,1) = cr*sp*cy + sr*sy;
   mT(3,2) = cr*sp*sy - sr*cy;
   mT(3,3) = cr*cp;
-  
+
   // This transform is different than for FGForce, where we want a native nozzle
   // force in body frame. Here we calculate the body frame accel and want it in
   // the transformed accelerometer frame. So, the next line is commented out.

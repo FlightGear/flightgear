@@ -4,7 +4,7 @@ Header: FGColumnVector3.h
 Author: Originally by Tony Peden [formatted and adapted here by Jon Berndt]
 Date started: Unknown
 
- ------------- Copyright (C) 2001 by Tony Peden and Jon S. Berndt (jsb@hal-pc.org)
+ ------------- Copyright (C) 2001 by Tony Peden and Jon S. Berndt (jon@jsbsim.org)
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU Lesser General Public License as published by the Free Software

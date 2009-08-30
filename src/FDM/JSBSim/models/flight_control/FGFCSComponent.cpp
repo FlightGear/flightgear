@@ -91,6 +91,8 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
     Type = "SENSOR";
   } else if (element->GetName() == string("accelerometer")) {
     Type = "ACCELEROMETER";
+  } else if (element->GetName() == string("gyro")) {
+    Type = "GYRO";
   } else if (element->GetName() == string("actuator")) {
     Type = "ACTUATOR";
   } else { // illegal component in this channel

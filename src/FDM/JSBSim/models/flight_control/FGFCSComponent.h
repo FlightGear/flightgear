@@ -78,6 +78,9 @@ CLASS DOCUMENTATION
     - FGSensor
     - FGFCSFunction
     - FGPID
+    - FGAccelerometer
+    - FGGyro
+    - FGActuator
 
     @author Jon S. Berndt
     @version $Id$
