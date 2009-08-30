@@ -49,7 +49,9 @@ void XMLLoader::load(FGAirportDynamics* d) {
        }
    }
   } else {
-    loadAirportXMLDataIntoVisitor(d->getId(), "groundnet", visitor);
+    if(loadAirportXMLDataIntoVisitor(d->getId(), "groundnet", visitor)) {
+        d->init();
+    }
   }
 }
 
