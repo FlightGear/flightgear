@@ -606,7 +606,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
       
         SGGeod other(SGGeod::fromDegM(i->getLongitude(),
           i->getLatitude(), i->getAltitude()));
-        SGGeodesy::inverse(other, curr, course, az2, dist);
+        SGGeodesy::inverse(curr, other, course, az2, dist);
         bearing = fabs(heading-course);
    	    if (bearing > 180)
    	      bearing = 360-bearing;
@@ -626,7 +626,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
 	      //cerr << "Comparing " << current->getId() << " and " << i->getId() << endl;
 	      SGGeod other(SGGeod::fromDegM(i->getLongitude(),
           i->getLatitude(), i->getAltitude()));
-        SGGeodesy::inverse(other, curr, course, az2, dist);
+        SGGeodesy::inverse(curr, other, course, az2, dist);
         bearing = fabs(heading-course);
 	      if (bearing > 180)
           bearing = 360-bearing;

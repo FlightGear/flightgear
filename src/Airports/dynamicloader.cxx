@@ -25,7 +25,7 @@ FGAirportDynamicsXMLLoader::FGAirportDynamicsXMLLoader(FGAirportDynamics* dyn):
     XMLVisitor(), _dynamics(dyn) {}
 
 void  FGAirportDynamicsXMLLoader::startXML () {
-  //cout << "Start XML" << endl;
+  //cout << "FGAirportDynamicsLoader::Start XML" << endl;
 }
 
 void  FGAirportDynamicsXMLLoader::endXML () {
