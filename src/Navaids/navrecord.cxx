@@ -135,7 +135,11 @@ void FGNavRecord::readAirportSceneryData()
   SGPropertyNode* runwayNode, *ilsNode;
   for (int i=0; (runwayNode = rootNode->getChild("runway", i)) != NULL; ++i) {
     for (int j=0; (ilsNode = runwayNode->getChild("ils", j)) != NULL; ++j) {
-      if (ilsNode->getStringValue("nav-id") == ident()) {
+      // must match on both nav-ident and runway ident, to support the following:
+      // - runways with multiple distinct ILS installations (KEWD, for example)
+      // - runways where both ends share the same nav ident (LFAT, for example)
+      if ((ilsNode->getStringValue("nav-id") == ident()) &&
+          (ilsNode->getStringValue("rwy") == mRunway->ident())) {
         processSceneryILS(ilsNode);
         return;
       }
@@ -145,7 +149,6 @@ void FGNavRecord::readAirportSceneryData()
 
 void FGNavRecord::processSceneryILS(SGPropertyNode* aILSNode)
 {
-  assert(aILSNode->getStringValue("rwy") == mRunway->ident());
   double hdgDeg = aILSNode->getDoubleValue("hdg-deg"),
     lon = aILSNode->getDoubleValue("lon"),
     lat = aILSNode->getDoubleValue("lat"),
