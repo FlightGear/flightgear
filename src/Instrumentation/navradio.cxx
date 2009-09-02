@@ -34,7 +34,9 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/math/interpolater.hxx>
 
+#include "Navaids/navrecord.hxx"
 #include <Navaids/navlist.hxx>
 #include <Main/util.hxx>
 #include "navradio.hxx"
@@ -90,11 +92,8 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     gps_to_flag_node(NULL),
     gps_from_flag_node(NULL),
     gps_has_gs_node(NULL),
-    last_nav_id(""),
-    last_nav_vor(false),
     play_count(0),
     last_time(0),
-    radial(0.0),
     target_radial(0.0),
     horiz_vel(0.0),
     last_x(0.0),
@@ -300,660 +299,532 @@ double FGNavRadio::adjustILSRange( double stationElev, double aircraftElev,
 void 
 FGNavRadio::update(double dt) 
 {
-    // Do a nav station search only once a second to reduce
-    // unnecessary work. (Also, make sure to do this before caching
-    // any values!)
-    _time_before_search_sec -= dt;
-    if ( _time_before_search_sec < 0 ) {
-	search();
-    }
+  // Do a nav station search only once a second to reduce
+  // unnecessary work. (Also, make sure to do this before caching
+  // any values!)
+  _time_before_search_sec -= dt;
+  if ( _time_before_search_sec < 0 ) {
+   search();
+  }
 
-    // cache a few strategic values locally for speed
-    SGGeod pos = SGGeod::fromDegFt(lon_node->getDoubleValue(),
-                                   lat_node->getDoubleValue(),
-                                   alt_node->getDoubleValue());
-    bool power_btn = power_btn_node->getBoolValue();
-    bool nav_serviceable = nav_serviceable_node->getBoolValue();
-    bool cdi_serviceable = cdi_serviceable_node->getBoolValue();
-    bool tofrom_serviceable = tofrom_serviceable_node->getBoolValue();
-    bool inrange = false;
-    bool has_gs = false;
-    if ( nav_slaved_to_gps_node->getBoolValue() ) {
-	has_gs = gps_has_gs_node->getBoolValue();
-	has_gs_node->setBoolValue( has_gs );
-	inrange = gps_to_flag_node->getBoolValue()
-	    || gps_from_flag_node->getBoolValue();
-    } else {
-	has_gs = has_gs_node->getBoolValue();
-	inrange = inrange_node->getBoolValue();
-    }
-    bool is_loc = loc_node->getBoolValue();
-    double loc_dist = loc_dist_node->getDoubleValue();
-    double effective_range_m;
-    double signal_quality_norm = signal_quality_norm_node->getDoubleValue();
+  bool inrange = false;
+  
+  // Create "formatted" versions of the nav frequencies for
+  // instrument displays.
+  char tmp[16];
+  sprintf( tmp, "%.2f", freq_node->getDoubleValue() );
+  fmt_freq_node->setStringValue(tmp);
+  sprintf( tmp, "%.2f", alt_freq_node->getDoubleValue() );
+  fmt_alt_freq_node->setStringValue(tmp);
 
-    double az1, az2, s;
+  if (_navaid
+      && power_btn_node->getBoolValue() 
+      && (bus_power_node->getDoubleValue() > 1.0)
+      && nav_serviceable_node->getBoolValue() )
+  {   
+    inrange = updateWithPower(dt);
+  } else {
+    inrange_node->setBoolValue( false );
+    cdi_deflection_node->setDoubleValue( 0.0 );
+    cdi_xtrack_error_node->setDoubleValue( 0.0 );
+    cdi_xtrack_hdg_err_node->setDoubleValue( 0.0 );
+    time_to_intercept->setDoubleValue( 0.0 );
+    gs_deflection_node->setDoubleValue( 0.0 );
+    to_flag_node->setBoolValue( false );
+    from_flag_node->setBoolValue( false );
+  }
 
-    // Create "formatted" versions of the nav frequencies for
-    // instrument displays.
-    char tmp[16];
-    sprintf( tmp, "%.2f", freq_node->getDoubleValue() );
-    fmt_freq_node->setStringValue(tmp);
-    sprintf( tmp, "%.2f", alt_freq_node->getDoubleValue() );
-    fmt_alt_freq_node->setStringValue(tmp);
+  updateAudio(inrange);
+}
 
-    // cout << "is_valid = " << is_valid
-    //      << " power_btn = " << power_btn
-    //      << " bus_power = " << bus_power_node->getDoubleValue()
-    //      << " nav_serviceable = " << nav_serviceable
+bool FGNavRadio::updateWithPower(double dt)
+{
+  bool nav_serviceable = nav_serviceable_node->getBoolValue();
+  bool cdi_serviceable = cdi_serviceable_node->getBoolValue();
+  bool tofrom_serviceable = tofrom_serviceable_node->getBoolValue();
+    
+  double az1, az2, s;
+  
+  SGGeod pos = SGGeod::fromDegFt(lon_node->getDoubleValue(),
+                               lat_node->getDoubleValue(),
+                               alt_node->getDoubleValue());
+  
+  bool inrange = false;
+  if ( nav_slaved_to_gps_node->getBoolValue() ) {
+    // FIXME - GPS-slaved GS support in unfinished
+    has_gs_node->setBoolValue(gps_has_gs_node->getBoolValue());
+    inrange = gps_to_flag_node->getBoolValue() || gps_from_flag_node->getBoolValue();
+  } else {
+    inrange = inrange_node->getBoolValue();
+  }
+
+  double nav_elev = _navaid->get_elev_ft();
+  SGVec3d aircraft = SGVec3d::fromGeod(pos);
+  double loc_dist = dist(aircraft, _navaid->cart());
+  loc_dist_node->setDoubleValue( loc_dist );
+  bool is_loc = loc_node->getBoolValue();
+  double signal_quality_norm = signal_quality_norm_node->getDoubleValue();
+    
+  if (_gs) {
+    // find closest distance to the gs base line
+    double dist = sgdClosestPointToLineDistSquared(aircraft.sg(), _gs->cart().sg(),
+                                                   gs_base_vec.sg());
+    gs_dist_node->setDoubleValue( sqrt( dist ) );
+    // cout << "gs_dist = " << gs_dist_node->getDoubleValue()
     //      << endl;
 
-    if ( is_valid && power_btn && (bus_power_node->getDoubleValue() > 1.0)
-         && nav_serviceable )
-    {
-        SGVec3d aircraft = SGVec3d::fromGeod(pos);
-        loc_dist = dist(aircraft, nav_xyz);
-	loc_dist_node->setDoubleValue( loc_dist );
-        // cout << "dt = " << dt << " dist = " << loc_dist << endl;
-
-	if ( has_gs ) {
-            // find closest distance to the gs base line
-            SGVec3d p = aircraft;
-            double dist = sgdClosestPointToLineDistSquared(p.sg(), gs_xyz.sg(),
-                                                           gs_base_vec.sg());
-            gs_dist_node->setDoubleValue( sqrt( dist ) );
-            // cout << "gs_dist = " << gs_dist_node->getDoubleValue()
-            //      << endl;
-
-            // wgs84 heading to glide slope (to determine sign of distance)
-            geo_inverse_wgs_84( pos, SGGeod::fromDeg(gs_lon, gs_lat),
-                                &az1, &az2, &s );
-            double r = az1 - target_radial;
-            while ( r >  180.0 ) { r -= 360.0;}
-            while ( r < -180.0 ) { r += 360.0;}
-            if ( r >= -90.0 && r <= 90.0 ) {
-                gs_dist_signed = gs_dist_node->getDoubleValue();
-            } else {
-                gs_dist_signed = -gs_dist_node->getDoubleValue();
-            }
-            /* cout << "Target Radial = " << target_radial 
-                 << "  Bearing = " << az1
-                 << "  dist (signed) = " << gs_dist_signed
-                 << endl; */
-            
-	} else {
-	    gs_dist_node->setDoubleValue( 0.0 );
-	}
+    // wgs84 heading to glide slope (to determine sign of distance)
+    SGGeodesy::inverse(pos, _gs->geod(), az1, az2, s);
+    double r = az1 - target_radial;
+    SG_NORMALIZE_RANGE(r, -180.0, 180.0);
+    if (fabs(r) <= 90.0) {
+        gs_dist_signed = gs_dist_node->getDoubleValue();
+    } else {
+        gs_dist_signed = -gs_dist_node->getDoubleValue();
+    }            
+  } else {
+    gs_dist_node->setDoubleValue( 0.0 );
+  }
 	
-        //////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////
 	// compute forward and reverse wgs84 headings to localizer
-        //////////////////////////////////////////////////////////
-        double hdg;
-	geo_inverse_wgs_84( pos, SGGeod::fromDeg(loc_lon, loc_lat),
-			    &hdg, &az2, &s );
-	// cout << "az1 = " << az1 << " magvar = " << nav_magvar << endl;
-        heading_node->setDoubleValue( hdg );
-        radial = az2 - twist;
-        double recip = radial + 180.0;
-        if ( recip >= 360.0 ) { recip -= 360.0; }
-	radial_node->setDoubleValue( radial );
-	recip_radial_node->setDoubleValue( recip );
-	// cout << " heading = " << heading_node->getDoubleValue()
-	//      << " dist = " << nav_dist << endl;
+  //////////////////////////////////////////////////////////
+  double hdg;
+  SGGeodesy::inverse(pos, _navaid->geod(), hdg, az2, s);
+  heading_node->setDoubleValue( hdg );
+  double radial = az2 - twist;
+  double recip = radial + 180.0;
+  SG_NORMALIZE_RANGE(recip, 0.0, 360.0);
+  radial_node->setDoubleValue( radial );
+  recip_radial_node->setDoubleValue( recip );
 
-        //////////////////////////////////////////////////////////
-        // compute the target/selected radial in "true" heading
-        //////////////////////////////////////////////////////////
-        double trtrue = 0.0;
-        if ( is_loc ) {
-            // ILS localizers radials are already "true" in our
-            // database
-            trtrue = target_radial;
-        } else {
-            // VOR radials need to have that vor's offset added in
-            trtrue = target_radial + twist;
-        }
+  //////////////////////////////////////////////////////////
+  // compute the target/selected radial in "true" heading
+  //////////////////////////////////////////////////////////
+  if (!is_loc) {
+    target_radial = sel_radial_node->getDoubleValue();
+  }
+  
+  // VORs need twist (mag-var) added; ILS/LOCs don't but we set twist to 0.0
+  double trtrue = target_radial + twist;
+  SG_NORMALIZE_RANGE(trtrue, 0.0, 360.0);
+  target_radial_true_node->setDoubleValue( trtrue );
 
-        while ( trtrue < 0.0 ) { trtrue += 360.0; }
-        while ( trtrue > 360.0 ) { trtrue -= 360.0; }
-        target_radial_true_node->setDoubleValue( trtrue );
-
-        //////////////////////////////////////////////////////////
-	// adjust reception range for altitude
-        // FIXME: make sure we are using the navdata range now that
-        //        it is valid in the data file
-        //////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////
+  // adjust reception range for altitude
+  // FIXME: make sure we are using the navdata range now that
+  //        it is valid in the data file
+  //////////////////////////////////////////////////////////
 	if ( is_loc ) {
 	    double offset = radial - target_radial;
-	    while ( offset < -180.0 ) { offset += 360.0; }
-	    while ( offset > 180.0 ) { offset -= 360.0; }
-	    // cout << "ils offset = " << offset << endl;
+      SG_NORMALIZE_RANGE(offset, -180.0, 180.0);
 	    effective_range
                 = adjustILSRange( nav_elev, pos.getElevationM(), offset,
                                   loc_dist * SG_METER_TO_NM );
 	} else {
 	    effective_range
-                = adjustNavRange( nav_elev, pos.getElevationM(), range );
+                = adjustNavRange( nav_elev, pos.getElevationM(), _navaid->get_range() );
 	}
 
-        effective_range_m = effective_range * SG_NM_TO_METER;
+  double effective_range_m = effective_range * SG_NM_TO_METER;
 
-	// cout << "nav range = " << effective_range
-	//      << " (" << range << ")" << endl;
+  //////////////////////////////////////////////////////////
+  // compute signal quality
+  // 100% within effective_range
+  // decreases 1/x^2 further out
+  //////////////////////////////////////////////////////////  
+  double last_signal_quality_norm = signal_quality_norm;
 
-        //////////////////////////////////////////////////////////
-        // compute signal quality
-        // 100% within effective_range
-        // decreases 1/x^2 further out
-        //////////////////////////////////////////////////////////
-        {
-            double last_signal_quality_norm = signal_quality_norm;
+  if ( loc_dist < effective_range_m ) {
+    signal_quality_norm = 1.0;
+  } else {
+    double range_exceed_norm = loc_dist/effective_range_m;
+    signal_quality_norm = 1/(range_exceed_norm*range_exceed_norm);
+  }
 
-	    if ( loc_dist < effective_range_m ) {
-              signal_quality_norm = 1.0;
-            } else {
-              double range_exceed_norm = loc_dist/effective_range_m;
-              signal_quality_norm = 1/(range_exceed_norm*range_exceed_norm);
-            }
+  signal_quality_norm = fgGetLowPass( last_signal_quality_norm, 
+           signal_quality_norm, dt );
+  
+  signal_quality_norm_node->setDoubleValue( signal_quality_norm );
+  if ( ! nav_slaved_to_gps_node->getBoolValue() ) {
+    /* not slaved to gps */
+    inrange = signal_quality_norm > 0.2;
+  }
+  inrange_node->setBoolValue( inrange );
 
-            signal_quality_norm = fgGetLowPass( last_signal_quality_norm, 
-                   signal_quality_norm, dt );
-        }
-        signal_quality_norm_node->setDoubleValue( signal_quality_norm );
-        if ( ! nav_slaved_to_gps_node->getBoolValue() ) {
-	    /* not slaved to gps */
-            inrange = signal_quality_norm > 0.2;
-        }
-        inrange_node->setBoolValue( inrange );
-
-	if ( !is_loc ) {
-	    target_radial = sel_radial_node->getDoubleValue();
-	}
-
-        //////////////////////////////////////////////////////////
-        // compute to/from flag status
-        //////////////////////////////////////////////////////////
-        bool value = false;
+  //////////////////////////////////////////////////////////
+  // compute to/from flag status
+  //////////////////////////////////////////////////////////
+  if (tofrom_serviceable) {
+    if (nav_slaved_to_gps_node->getBoolValue()) {
+      to_flag_node->setBoolValue(gps_to_flag_node->getBoolValue());
+      from_flag_node->setBoolValue(gps_from_flag_node->getBoolValue());
+    } else if (inrange) {
+      bool toFlag = false;
+      if (is_loc) {
+        toFlag = true;
+      } else {
         double offset = fabs(radial - target_radial);
-        if ( tofrom_serviceable ) {
-            if ( nav_slaved_to_gps_node->getBoolValue() ) {
-                value = gps_to_flag_node->getBoolValue();
-            } else if ( inrange ) {
-                if ( is_loc ) {
-                    value = true;
-                } else {
-                    value = !(offset <= 90.0 || offset >= 270.0);
-                }
-            }
-        } else {
-            value = false;
-        }
-        to_flag_node->setBoolValue( value );
-
-        value = false;
-        if ( tofrom_serviceable ) {
-            if ( nav_slaved_to_gps_node->getBoolValue() ) {
-                value = gps_from_flag_node->getBoolValue();
-            } else if ( inrange ) {
-                if ( is_loc ) {
-                    value = false;
-                } else {
-                    value = !(offset > 90.0 && offset < 270.0);
-                }
-            }
-        } else {
-            value = false;
-        }
-        from_flag_node->setBoolValue( value );
-
-        //////////////////////////////////////////////////////////
-        // compute the deflection of the CDI needle, clamped to the range
-        // of ( -10 , 10 )
-        //////////////////////////////////////////////////////////
-        double r = 0.0;
-        bool loc_backside = false; // an in-code flag indicating that we are
-                                   // on a localizer backcourse.
-        if ( cdi_serviceable ) {
-            if ( nav_slaved_to_gps_node->getBoolValue() ) {
-                r = gps_cdi_deflection_node->getDoubleValue();
-                // We want +- 5 dots deflection for the gps, so clamp
-                // to -12.5/12.5
-                SG_CLAMP_RANGE( r, -12.5, 12.5 );
-            } else if ( inrange ) {
-                r = radial - target_radial;
-                // cout << "Target radial = " << target_radial 
-                //      << "  Actual radial = " << radial << endl;
-                
-                while ( r >  180.0 ) { r -= 360.0;}
-                while ( r < -180.0 ) { r += 360.0;}
-                if ( fabs(r) > 90.0 ) {
-                    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
-                } else {
-                    if ( is_loc ) {
-                        loc_backside = true;
-                    }
-                }
-
-                r = -r;         // reverse, since radial is outbound
-                if ( is_loc ) {
-                    // According to Robin Peel, the ILS is 4x more
-                    // sensitive than a vor
-                    r *= 4.0;
-                }
-                SG_CLAMP_RANGE( r, -10.0, 10.0 );
-                r *= signal_quality_norm;
-            }
-        }
-        cdi_deflection_node->setDoubleValue( r );
-
-        //////////////////////////////////////////////////////////
-        // compute the amount of cross track distance error in meters
-        //////////////////////////////////////////////////////////
-        double xtrack_error = 0.0;
-        if ( inrange && nav_serviceable && cdi_serviceable ) {
-            r = radial - target_radial;
-            // cout << "Target radial = " << target_radial 
-            //     << "  Actual radial = " << radial
-            //     << "  r = " << r << endl;
-    
-            while ( r >  180.0 ) { r -= 360.0;}
-            while ( r < -180.0 ) { r += 360.0;}
-            if ( fabs(r) > 90.0 ) {
-                r = ( r<0.0 ? -r-180.0 : -r+180.0 );
-            }
-
-            r = -r;             // reverse, since radial is outbound
-
-            xtrack_error = loc_dist * sin(r * SGD_DEGREES_TO_RADIANS);
-        } else {
-            xtrack_error = 0.0;
-        }
-        cdi_xtrack_error_node->setDoubleValue( xtrack_error );
-
-        //////////////////////////////////////////////////////////
-        // compute an approximate ground track heading error
-        //////////////////////////////////////////////////////////
-        double hdg_error = 0.0;
-        if ( inrange && cdi_serviceable ) {
-            double vn = fgGetDouble( "/velocities/speed-north-fps" );
-            double ve = fgGetDouble( "/velocities/speed-east-fps" );
-            double gnd_trk_true = atan2( ve, vn ) * SGD_RADIANS_TO_DEGREES;
-            if ( gnd_trk_true < 0.0 ) { gnd_trk_true += 360.0; }
-
-            SGPropertyNode *true_hdg
-                = fgGetNode("/orientation/heading-deg", true);
-            hdg_error = gnd_trk_true - true_hdg->getDoubleValue();
-
-            // cout << "ground track = " << gnd_trk_true
-            //      << " orientation = " << true_hdg->getDoubleValue() << endl;
-        }
-        cdi_xtrack_hdg_err_node->setDoubleValue( hdg_error );
-
-        //////////////////////////////////////////////////////////
-        // compute the time to intercept selected radial (based on
-        // current and last cross track errors and dt
-        //////////////////////////////////////////////////////////
-        if (dt > 0) { // Are we paused?
-            double t = 0.0;
-            if ( inrange && cdi_serviceable ) {
-                double xrate_ms = (last_xtrack_error - xtrack_error) / dt;
-                if ( fabs(xrate_ms) > 0.00001 ) {
-                    t = xtrack_error / xrate_ms;
-                } else {
-                    t = 9999.9;
-                }
-            }
-            time_to_intercept->setDoubleValue( t );
-        }
-
-        //////////////////////////////////////////////////////////
-        // compute the amount of glide slope needle deflection
-        // (.i.e. the number of degrees we are off the glide slope * 5.0
-        //
-        // CLO - 13 Mar 2006: The glide slope needle should peg at
-        // +/-0.7 degrees off the ideal glideslope.  I'm not sure why
-        // we compute the factor the way we do (5*gs_error), but we
-        // need to compensate for our 'odd' number in the glideslope
-        // needle animation.  This means that the needle should peg
-        // when this values is +/-3.5.
-        //////////////////////////////////////////////////////////
-        r = 0.0;
-        if ( has_gs && gs_serviceable_node->getBoolValue() ) {
-            if ( nav_slaved_to_gps_node->getBoolValue() ) {
-                // FIXME/FINISHME, what should be set here?
-            } else if ( inrange ) {
-                double x = gs_dist_node->getDoubleValue();
-                double y = (alt_node->getDoubleValue() - nav_elev)
-                    * SG_FEET_TO_METER;
-                // cout << "dist = " << x << " height = " << y << endl;
-                double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
-                r = (target_gs - angle) * 5.0;
-                r *= signal_quality_norm;
-            }
-        }
-        gs_deflection_node->setDoubleValue( r );
-
-        //////////////////////////////////////////////////////////
-        // Calculate desired rate of climb for intercepting the GS
-        //////////////////////////////////////////////////////////
-        double x = gs_dist_node->getDoubleValue();
-        double y = (alt_node->getDoubleValue() - nav_elev)
-            * SG_FEET_TO_METER;
-        double current_angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
-
-        double target_angle = target_gs;
-        double gs_diff = target_angle - current_angle;
-
-        // convert desired vertical path angle into a climb rate
-        double des_angle = current_angle - 10 * gs_diff;
-
-        // estimate horizontal speed towards ILS in meters per minute
-        double dist = last_x - x;
-        last_x = x;
-        if ( dt > 0.0 ) {
-            // avoid nan
-            double new_vel = ( dist / dt );
- 
-            horiz_vel = 0.75 * horiz_vel + 0.25 * new_vel;
-            // double horiz_vel = cur_fdm_state->get_V_ground_speed()
-            //    * SG_FEET_TO_METER * 60.0;
-            // double horiz_vel = airspeed_node->getFloatValue()
-            //    * SG_FEET_TO_METER * 60.0;
-
-            gs_rate_of_climb_node
-                ->setDoubleValue( -sin( des_angle * SGD_DEGREES_TO_RADIANS )
-                                  * horiz_vel * SG_METER_TO_FEET );
-        }
-
-        //////////////////////////////////////////////////////////
-        // Calculate a suggested target heading to smoothly intercept
-        // a nav/ils radial.
-        //////////////////////////////////////////////////////////
-
-        // Now that we have cross track heading adjustment built in,
-        // we shouldn't need to overdrive the heading angle within 8km
-        // of the station.
-        //
-        // The cdi deflection should be +/-10 for a full range of deflection
-        // so multiplying this by 3 gives us +/- 30 degrees heading
-        // compensation.
-        double adjustment = cdi_deflection_node->getDoubleValue() * 3.0;
-        SG_CLAMP_RANGE( adjustment, -30.0, 30.0 );
-
-        // determine the target heading to fly to intercept the
-        // tgt_radial = target radial (true) + cdi offset adjustmest -
-        // xtrack heading error adjustment
-        double nta_hdg;
-        if ( is_loc && backcourse_node->getBoolValue() ) {
-            // tuned to a localizer and backcourse mode activated
-            trtrue += 180.0;   // reverse the target localizer heading
-            while ( trtrue > 360.0 ) { trtrue -= 360.0; }
-            nta_hdg = trtrue - adjustment - hdg_error;
-        } else {
-            nta_hdg = trtrue + adjustment - hdg_error;
-        }
-
-        while ( nta_hdg <   0.0 ) { nta_hdg += 360.0; }
-        while ( nta_hdg >= 360.0 ) { nta_hdg -= 360.0; }
-        target_auto_hdg_node->setDoubleValue( nta_hdg );
-
-        last_xtrack_error = xtrack_error;
-   } else {
-	inrange_node->setBoolValue( false );
-        cdi_deflection_node->setDoubleValue( 0.0 );
-        cdi_xtrack_error_node->setDoubleValue( 0.0 );
-        cdi_xtrack_hdg_err_node->setDoubleValue( 0.0 );
-        time_to_intercept->setDoubleValue( 0.0 );
-        gs_deflection_node->setDoubleValue( 0.0 );
-        to_flag_node->setBoolValue( false );
-        from_flag_node->setBoolValue( false );
-	// cout << "not picking up vor. :-(" << endl;
+        toFlag = (offset > 90.0 && offset < 270.0);
+      }
+      
+      to_flag_node->setBoolValue(toFlag);
+      from_flag_node->setBoolValue(!toFlag);
+    } else { // out-of-range
+      to_flag_node->setBoolValue(false);
+      from_flag_node->setBoolValue(false);
     }
+  } else {
+    to_flag_node->setBoolValue(false);
+    from_flag_node->setBoolValue(false);
+  }
+  
+  //////////////////////////////////////////////////////////
+  // compute the deflection of the CDI needle, clamped to the range
+  // of ( -10 , 10 )
+  //////////////////////////////////////////////////////////
+  double r = 0.0;
+  bool loc_backside = false; // an in-code flag indicating that we are
+                             // on a localizer backcourse.
+  if ( cdi_serviceable ) {
+    if ( nav_slaved_to_gps_node->getBoolValue() ) {
+      r = gps_cdi_deflection_node->getDoubleValue();
+      // We want +- 5 dots deflection for the gps, so clamp
+      // to -12.5/12.5
+      SG_CLAMP_RANGE( r, -12.5, 12.5 );
+    } else if ( inrange ) {
+      r = radial - target_radial;
+      // cout << "Target radial = " << target_radial 
+      //      << "  Actual radial = " << radial << endl;
+      
+      SG_NORMALIZE_RANGE(r, -180.0, 180.0);
+      if ( fabs(r) > 90.0 ) {
+          r = ( r<0.0 ? -r-180.0 : -r+180.0 );
+      } else {
+        if (is_loc) {
+          loc_backside = true;
+        }
+      }
 
-    // audio effects
-    if ( is_valid && inrange && nav_serviceable ) {
+      r = -r;         // reverse, since radial is outbound
+      if ( is_loc ) {
+          // According to Robin Peel, the ILS is 4x more
+          // sensitive than a vor
+          r *= 4.0;
+      }
+      SG_CLAMP_RANGE( r, -10.0, 10.0 );
+      r *= signal_quality_norm;
+    }
+  }
+  cdi_deflection_node->setDoubleValue( r );
+
+  //////////////////////////////////////////////////////////
+  // compute the amount of cross track distance error in meters
+  //////////////////////////////////////////////////////////
+  double xtrack_error = 0.0;
+  if ( inrange && nav_serviceable && cdi_serviceable ) {
+      r = radial - target_radial;
+      SG_NORMALIZE_RANGE(r, -180.0, 180.0);
+      if ( fabs(r) > 90.0 ) {
+          r = ( r<0.0 ? -r-180.0 : -r+180.0 );
+      }
+
+      r = -r;             // reverse, since radial is outbound
+
+      xtrack_error = loc_dist * sin(r * SGD_DEGREES_TO_RADIANS);
+  } else {
+      xtrack_error = 0.0;
+  }
+  cdi_xtrack_error_node->setDoubleValue( xtrack_error );
+
+  //////////////////////////////////////////////////////////
+  // compute an approximate ground track heading error
+  //////////////////////////////////////////////////////////
+  double hdg_error = 0.0;
+  if ( inrange && cdi_serviceable ) {
+      double vn = fgGetDouble( "/velocities/speed-north-fps" );
+      double ve = fgGetDouble( "/velocities/speed-east-fps" );
+      double gnd_trk_true = atan2( ve, vn ) * SGD_RADIANS_TO_DEGREES;
+      if ( gnd_trk_true < 0.0 ) { gnd_trk_true += 360.0; }
+
+      SGPropertyNode *true_hdg
+          = fgGetNode("/orientation/heading-deg", true);
+      hdg_error = gnd_trk_true - true_hdg->getDoubleValue();
+
+      // cout << "ground track = " << gnd_trk_true
+      //      << " orientation = " << true_hdg->getDoubleValue() << endl;
+  }
+  cdi_xtrack_hdg_err_node->setDoubleValue( hdg_error );
+
+  //////////////////////////////////////////////////////////
+  // compute the time to intercept selected radial (based on
+  // current and last cross track errors and dt
+  //////////////////////////////////////////////////////////
+  if (dt > 0) { // Are we paused?
+      double t = 0.0;
+      if ( inrange && cdi_serviceable ) {
+          double xrate_ms = (last_xtrack_error - xtrack_error) / dt;
+          if ( fabs(xrate_ms) > 0.00001 ) {
+              t = xtrack_error / xrate_ms;
+          } else {
+              t = 9999.9;
+          }
+      }
+      time_to_intercept->setDoubleValue( t );
+  }
+
+  //////////////////////////////////////////////////////////
+  // compute the amount of glide slope needle deflection
+  // (.i.e. the number of degrees we are off the glide slope * 5.0
+  //
+  // CLO - 13 Mar 2006: The glide slope needle should peg at
+  // +/-0.7 degrees off the ideal glideslope.  I'm not sure why
+  // we compute the factor the way we do (5*gs_error), but we
+  // need to compensate for our 'odd' number in the glideslope
+  // needle animation.  This means that the needle should peg
+  // when this values is +/-3.5.
+  //////////////////////////////////////////////////////////
+  r = 0.0;
+  if (_gs && gs_serviceable_node->getBoolValue() ) {
+      if ( nav_slaved_to_gps_node->getBoolValue() ) {
+          // FIXME what should be set here?
+      } else if ( inrange ) {
+          double x = gs_dist_node->getDoubleValue();
+          double y = (alt_node->getDoubleValue() - nav_elev)
+              * SG_FEET_TO_METER;
+          // cout << "dist = " << x << " height = " << y << endl;
+          double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
+          r = (target_gs - angle) * 5.0;
+          r *= signal_quality_norm;
+      }
+  }
+  gs_deflection_node->setDoubleValue( r );
+
+  //////////////////////////////////////////////////////////
+  // Calculate desired rate of climb for intercepting the GS
+  //////////////////////////////////////////////////////////
+  double x = gs_dist_node->getDoubleValue();
+  double y = (alt_node->getDoubleValue() - nav_elev)
+      * SG_FEET_TO_METER;
+  double current_angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
+
+  double target_angle = target_gs;
+  double gs_diff = target_angle - current_angle;
+
+  // convert desired vertical path angle into a climb rate
+  double des_angle = current_angle - 10 * gs_diff;
+
+  // estimate horizontal speed towards ILS in meters per minute
+  double dist = last_x - x;
+  last_x = x;
+  if ( dt > 0.0 ) {
+      // avoid nan
+      double new_vel = ( dist / dt );
+
+      horiz_vel = 0.75 * horiz_vel + 0.25 * new_vel;
+      // double horiz_vel = cur_fdm_state->get_V_ground_speed()
+      //    * SG_FEET_TO_METER * 60.0;
+      // double horiz_vel = airspeed_node->getFloatValue()
+      //    * SG_FEET_TO_METER * 60.0;
+
+      gs_rate_of_climb_node
+          ->setDoubleValue( -sin( des_angle * SGD_DEGREES_TO_RADIANS )
+                            * horiz_vel * SG_METER_TO_FEET );
+  }
+
+  //////////////////////////////////////////////////////////
+  // Calculate a suggested target heading to smoothly intercept
+  // a nav/ils radial.
+  //////////////////////////////////////////////////////////
+
+  // Now that we have cross track heading adjustment built in,
+  // we shouldn't need to overdrive the heading angle within 8km
+  // of the station.
+  //
+  // The cdi deflection should be +/-10 for a full range of deflection
+  // so multiplying this by 3 gives us +/- 30 degrees heading
+  // compensation.
+  double adjustment = cdi_deflection_node->getDoubleValue() * 3.0;
+  SG_CLAMP_RANGE( adjustment, -30.0, 30.0 );
+
+  // determine the target heading to fly to intercept the
+  // tgt_radial = target radial (true) + cdi offset adjustmest -
+  // xtrack heading error adjustment
+  double nta_hdg;
+  if ( is_loc && backcourse_node->getBoolValue() ) {
+      // tuned to a localizer and backcourse mode activated
+      trtrue += 180.0;   // reverse the target localizer heading
+      while ( trtrue > 360.0 ) { trtrue -= 360.0; }
+      nta_hdg = trtrue - adjustment - hdg_error;
+  } else {
+      nta_hdg = trtrue + adjustment - hdg_error;
+  }
+
+  while ( nta_hdg <   0.0 ) { nta_hdg += 360.0; }
+  while ( nta_hdg >= 360.0 ) { nta_hdg -= 360.0; }
+  target_auto_hdg_node->setDoubleValue( nta_hdg );
+
+  last_xtrack_error = xtrack_error;
+  last_loc_dist = loc_dist;
+  return inrange;
+}
+
+void FGNavRadio::updateAudio(bool aInRange)
+{
+  if (!_navaid || !aInRange || !nav_serviceable_node->getBoolValue()) {
+    return;
+  }
+  
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
-	if ( power_btn
-             && (bus_power_node->getDoubleValue() > 1.0)
-             && ident_btn_node->getBoolValue()
-             && audio_btn_node->getBoolValue() )
-        {
-	    SGSoundSample *sound;
-	    sound = globals->get_soundmgr()->find( nav_fx_name );
-            double vol = vol_btn_node->getDoubleValue();
-            if ( vol < 0.0 ) { vol = 0.0; }
-            if ( vol > 1.0 ) { vol = 1.0; }
-            if ( sound != NULL ) {
-                sound->set_volume( vol );
-            } else {
-                SG_LOG( SG_COCKPIT, SG_ALERT,
-                        "Can't find nav-vor-ident sound" );
-            }
-	    sound = globals->get_soundmgr()->find( dme_fx_name );
-            if ( sound != NULL ) {
-                sound->set_volume( vol );
-            } else {
-                SG_LOG( SG_COCKPIT, SG_ALERT,
-                        "Can't find nav-dme-ident sound" );
-            }
-            // cout << "last_time = " << last_time << " ";
-            // cout << "cur_time = "
-            //      << globals->get_time_params()->get_cur_time();
-	    if ( last_time <
-		 globals->get_time_params()->get_cur_time() - 30 ) {
+	if (!power_btn_node->getBoolValue()
+      || !(bus_power_node->getDoubleValue() > 1.0)
+      || !ident_btn_node->getBoolValue()
+      || !audio_btn_node->getBoolValue() ) {
+    globals->get_soundmgr()->stop( nav_fx_name );
+    globals->get_soundmgr()->stop( dme_fx_name );
+    return;
+  }
+
+  SGSoundSample *sound = globals->get_soundmgr()->find( nav_fx_name );
+  double vol = vol_btn_node->getDoubleValue();
+  SG_CLAMP_RANGE(vol, 0.0, 1.0);
+  
+  if ( sound != NULL ) {
+    sound->set_volume( vol );
+  } else {
+    SG_LOG( SG_COCKPIT, SG_ALERT, "Can't find nav-vor-ident sound" );
+  }
+  
+  sound = globals->get_soundmgr()->find( dme_fx_name );
+  if ( sound != NULL ) {
+    sound->set_volume( vol );
+  } else {
+    SG_LOG( SG_COCKPIT, SG_ALERT, "Can't find nav-dme-ident sound" );
+  }
+
+  if ( last_time < globals->get_time_params()->get_cur_time() - 30 ) {
 		last_time = globals->get_time_params()->get_cur_time();
 		play_count = 0;
-	    }
-            // cout << " play_count = " << play_count << endl;
-            // cout << "playing = "
-            //      << globals->get_soundmgr()->is_playing(nav_fx_name)
-            //      << endl;
-	    if ( play_count < 4 ) {
+  }
+  
+  if ( play_count < 4 ) {
 		// play VOR ident
 		if ( !globals->get_soundmgr()->is_playing(nav_fx_name) ) {
 		    globals->get_soundmgr()->play_once( nav_fx_name );
 		    ++play_count;
-                }
-	    } else if ( play_count < 5 && has_dme ) {
+    }
+  } else if ( play_count < 5 &&  has_dme) {
 		// play DME ident
 		if ( !globals->get_soundmgr()->is_playing(nav_fx_name) &&
 		     !globals->get_soundmgr()->is_playing(dme_fx_name) ) {
 		    globals->get_soundmgr()->play_once( dme_fx_name );
 		    ++play_count;
 		}
-	    }
-	} else {
-	    globals->get_soundmgr()->stop( nav_fx_name );
-	    globals->get_soundmgr()->stop( dme_fx_name );
-	}
-    }
-
-    last_loc_dist = loc_dist;
+  }
 }
 
+FGNavRecord* FGNavRadio::findPrimaryNavaid(const SGGeod& aPos, double aFreqMHz)
+{
+  FGNavRecord* nav = globals->get_navlist()->findByFreq(aFreqMHz, aPos);
+  if (nav) {
+    return nav;
+  }
+  
+  return globals->get_loclist()->findByFreq(aFreqMHz, aPos);
+}
 
 // Update current nav/adf radio stations based on current postition
 void FGNavRadio::search() 
 {
+  _time_before_search_sec = 1.0;
+  SGGeod pos = SGGeod::fromDegFt(lon_node->getDoubleValue(),
+    lat_node->getDoubleValue(), alt_node->getDoubleValue());
+  double freq = freq_node->getDoubleValue();
+  
+  FGNavRecord* nav = findPrimaryNavaid(pos, freq);
+  if (nav == _navaid) {
+    return; // found the same as last search, we're done
+  }
+  
+  _navaid = nav;
+  char identBuffer[5] = "    ";
+  if (nav) {
+    FGNavRecord* dme = globals->get_dmelist()->findByFreq(freq, pos);
+    has_dme = (dme != NULL);
+    
+    nav_id_node->setStringValue(nav->get_ident());
+    strncpy(identBuffer, nav->ident().c_str(), 5);
+    
+    effective_range = adjustNavRange(nav->get_elev_ft(), pos.getElevationM(), nav->get_range());
+    loc_node->setBoolValue(nav->type() != FGPositioned::VOR);
+    twist = nav->get_multiuse();
 
-    // reset search time
-    _time_before_search_sec = 1.0;
+    if (nav->type() == FGPositioned::VOR) {
+      target_radial = sel_radial_node->getDoubleValue();
+      _gs = NULL;
+    } else { // ILS or LOC
+      _gs = globals->get_gslist()->findByFreq(freq, pos);
+      has_gs_node->setBoolValue(_gs != NULL);
+      twist = 0.0;
+	    effective_range = FG_LOC_DEFAULT_RANGE;
+      
+      target_radial = nav->get_multiuse();
+      SG_NORMALIZE_RANGE(target_radial, 0.0, 360.0);
+      
+      if (_gs) {
+        int tmp = (int)(_gs->get_multiuse() / 1000.0);
+        target_gs = (double)tmp / 100.0;
+        
+        SGGeod baseLine; 
+        double dummy;
+        SGGeodesy::direct(_gs->geod(), target_radial + 90.0, 100.0, baseLine, dummy);
+        gs_base_vec = SGVec3d::fromGeod(baseLine) - _gs->cart();
+      } // of have glideslope
+    } // of found LOC or ILS
+    
+    audioNavidChanged();
+  } else { // found nothing
+    _gs = NULL;
+    nav_id_node->setStringValue("");
+    has_dme = false;
+    globals->get_soundmgr()->remove( nav_fx_name );
+    globals->get_soundmgr()->remove( dme_fx_name );
+  }
 
-    // cache values locally for speed
-    SGGeod pos = SGGeod::fromDegFt(lon_node->getDoubleValue(),
-      lat_node->getDoubleValue(), alt_node->getDoubleValue());
-    FGNavRecord *nav = NULL;
-    FGNavRecord *loc = NULL;
-    FGNavRecord *dme = NULL;
-    FGNavRecord *gs = NULL;
+  is_valid_node->setBoolValue(nav != NULL);
+  id_c1_node->setIntValue( (int)identBuffer[0] );
+  id_c2_node->setIntValue( (int)identBuffer[1] );
+  id_c3_node->setIntValue( (int)identBuffer[2] );
+  id_c4_node->setIntValue( (int)identBuffer[3] );
+}
 
-    ////////////////////////////////////////////////////////////////////////
-    // Nav.
-    ////////////////////////////////////////////////////////////////////////
-
-    double freq = freq_node->getDoubleValue();
-    nav = globals->get_navlist()->findByFreq(freq, pos);
-    dme = globals->get_dmelist()->findByFreq(freq, pos);
-    if ( nav == NULL ) {
-        loc = globals->get_loclist()->findByFreq(freq, pos);
-        gs = globals->get_gslist()->findByFreq(freq, pos);
+void FGNavRadio::audioNavidChanged()
+{
+  if ( globals->get_soundmgr()->exists(nav_fx_name)) {
+		globals->get_soundmgr()->remove(nav_fx_name);
+  }
+  
+  try {
+    string trans_ident(_navaid->get_trans_ident());
+    SGSoundSample* sound = morse.make_ident(trans_ident, LO_FREQUENCY);
+    sound->set_volume( 0.3 );
+    if (!globals->get_soundmgr()->add( sound, nav_fx_name )) {
+      SG_LOG(SG_COCKPIT, SG_WARN, "Failed to add v1-vor-ident sound");
     }
 
-    string nav_id = "";
-
-    if ( loc != NULL ) {
-        nav_id = loc->get_ident();
-	nav_id_node->setStringValue( nav_id.c_str() );
-        // cout << "localizer = " << nav_id_node->getStringValue() << endl;
-	is_valid = true;
-	if ( last_nav_id != nav_id || last_nav_vor ) {
-	    trans_ident = loc->get_trans_ident();
-	    target_radial = loc->get_multiuse();
-	    while ( target_radial <   0.0 ) { target_radial += 360.0; }
-	    while ( target_radial > 360.0 ) { target_radial -= 360.0; }
-	    loc_lon = loc->get_lon();
-	    loc_lat = loc->get_lat();
-	    nav_xyz = loc->cart();
-	    last_nav_id = nav_id;
-	    last_nav_vor = false;
-	    loc_node->setBoolValue( true );
-	    has_dme = (dme != NULL);
-            if ( gs != NULL ) {
-                has_gs_node->setBoolValue( true );
-                gs_lon = gs->get_lon();
-                gs_lat = gs->get_lat();
-                nav_elev = gs->get_elev_ft();
-                int tmp = (int)(gs->get_multiuse() / 1000.0);
-                target_gs = (double)tmp / 100.0;
-                gs_xyz = gs->cart();
-
-                // derive GS baseline (perpendicular to the runay
-                // along the ground)
-                double tlon = 0.0, tlat = 0.0, taz = 0.0;
-                geo_direct_wgs_84 ( 0.0, gs_lat, gs_lon,
-                                    target_radial + 90,
-                                    100.0, &tlat, &tlon, &taz );
-                // cout << "target_radial = " << target_radial << endl;
-                // cout << "nav_loc = " << loc_node->getBoolValue() << endl;
-                // cout << gs_lon << "," << gs_lat << "  "
-                //      << tlon << "," << tlat << "  (" << nav_elev << ")"
-                //      << endl;
-                SGGeod tpos = SGGeod::fromDegFt(tlon, tlat, nav_elev);
-                SGVec3d p1 = SGVec3d::fromGeod(tpos);
-
-                // cout << gs_xyz << endl;
-                // cout << p1 << endl;
-                gs_base_vec = p1 - gs_xyz;
-                // cout << gs_base_vec << endl;
-            } else {
-                has_gs_node->setBoolValue( false );
-                nav_elev = loc->get_elev_ft();
-            }
-	    twist = 0;
-	    range = FG_LOC_DEFAULT_RANGE;
-	    effective_range = range;
-
-	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
-		globals->get_soundmgr()->remove( nav_fx_name );
-	    }
-	    SGSoundSample *sound;
-	    sound = morse.make_ident( trans_ident, LO_FREQUENCY );
-	    sound->set_volume( 0.3 );
-	    globals->get_soundmgr()->add( sound, nav_fx_name );
-
-	    if ( globals->get_soundmgr()->exists( dme_fx_name ) ) {
-		globals->get_soundmgr()->remove( dme_fx_name );
-	    }
-	    sound = morse.make_ident( trans_ident, HI_FREQUENCY );
-	    sound->set_volume( 0.3 );
-	    globals->get_soundmgr()->add( sound, dme_fx_name );
-
-	    int offset = (int)(sg_random() * 30.0);
-	    play_count = offset / 4;
-	    last_time = globals->get_time_params()->get_cur_time() -
-		offset;
-	    // cout << "offset = " << offset << " play_count = "
-	    //      << play_count
-	    //      << " last_time = " << last_time
-	    //      << " current time = "
-	    //      << globals->get_time_params()->get_cur_time() << endl;
-
-	    // cout << "Found an loc station in range" << endl;
-	    // cout << " id = " << loc->get_locident() << endl;
-	}
-    } else if ( nav != NULL ) {
-        nav_id = nav->get_ident();
-	nav_id_node->setStringValue( nav_id.c_str() );
-        // cout << "nav = " << nav_id << endl;
-	is_valid = true;
-	if ( last_nav_id != nav_id || !last_nav_vor ) {
-	    last_nav_id = nav_id;
-	    last_nav_vor = true;
-	    trans_ident = nav->get_trans_ident();
-	    loc_node->setBoolValue( false );
-	    has_dme = (dme != NULL);
-	    has_gs_node->setBoolValue( false );
-	    loc_lon = nav->get_lon();
-	    loc_lat = nav->get_lat();
-	    nav_elev = nav->get_elev_ft();
-	    twist = nav->get_multiuse();
-	    range = nav->get_range();
-	    effective_range = adjustNavRange(nav_elev, pos.getElevationM(), range);
-	    target_gs = 0.0;
-	    target_radial = sel_radial_node->getDoubleValue();
-	    nav_xyz = nav->cart();
-
-	    if ( globals->get_soundmgr()->exists( nav_fx_name ) ) {
-		globals->get_soundmgr()->remove( nav_fx_name );
-	    }
-            try {
-	        SGSoundSample *sound;
-	        sound = morse.make_ident( trans_ident, LO_FREQUENCY );
-	        sound->set_volume( 0.3 );
-	        if ( globals->get_soundmgr()->add( sound, nav_fx_name ) ) {
-                    // cout << "Added nav-vor-ident sound" << endl;
-                } else {
-                    SG_LOG(SG_COCKPIT, SG_WARN, "Failed to add v1-vor-ident sound");
-                }
-
-	        if ( globals->get_soundmgr()->exists( dme_fx_name ) ) {
-		    globals->get_soundmgr()->remove( dme_fx_name );
-	        }
-	        sound = morse.make_ident( trans_ident, HI_FREQUENCY );
-	        sound->set_volume( 0.3 );
-	        globals->get_soundmgr()->add( sound, dme_fx_name );
-
-	        int offset = (int)(sg_random() * 30.0);
-	        play_count = offset / 4;
-	        last_time = globals->get_time_params()->get_cur_time() - offset;
-	        // cout << "offset = " << offset << " play_count = "
-	        //      << play_count << " last_time = "
-	        //      << last_time << " current time = "
-	        //      << globals->get_time_params()->get_cur_time() << endl;
-
-	        // cout << "Found a vor station in range" << endl;
-	        // cout << " id = " << nav->get_ident() << endl;
-            } catch ( sg_io_exception &e ) {
-                SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
-            }
-	}
-    } else {
-	is_valid = false;
-	nav_id_node->setStringValue( "" );
-	target_radial = 0;
-	trans_ident = "";
-	last_nav_id = "";
-	globals->get_soundmgr()->remove( nav_fx_name );
-	globals->get_soundmgr()->remove( dme_fx_name );
+	  if ( globals->get_soundmgr()->exists( dme_fx_name ) ) {
+      globals->get_soundmgr()->remove( dme_fx_name );
     }
+     
+    sound = morse.make_ident( trans_ident, HI_FREQUENCY );
+    sound->set_volume( 0.3 );
+    globals->get_soundmgr()->add( sound, dme_fx_name );
 
-    is_valid_node->setBoolValue( is_valid );
-
-    char tmpid[5];
-    strncpy( tmpid, nav_id.c_str(), 5 );
-    id_c1_node->setIntValue( (int)tmpid[0] );
-    id_c2_node->setIntValue( (int)tmpid[1] );
-    id_c3_node->setIntValue( (int)tmpid[2] );
-    id_c4_node->setIntValue( (int)tmpid[3] );
+	  int offset = (int)(sg_random() * 30.0);
+	  play_count = offset / 4;
+    last_time = globals->get_time_params()->get_cur_time() - offset;
+  } catch (sg_io_exception& e) {
+    SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
+  }
 }

@@ -26,14 +26,17 @@
 
 
 #include <Main/fg_props.hxx>
+#include "Sound/morse.hxx"
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/math/interpolater.hxx>
 #include <simgear/timing/timestamp.hxx>
 
-#include <Navaids/navlist.hxx>
-#include <Sound/morse.hxx>
+// forward decls
+class SGInterpTable;
+
+class FGNavRecord;
+typedef SGSharedPtr<FGNavRecord> FGNavRecordPtr;
 
 class FGNavRadio : public SGSubsystem
 {
@@ -110,32 +113,20 @@ class FGNavRadio : public SGSubsystem
 
     // internal (private) values
 
-    string last_nav_id;
-    bool last_nav_vor;
     int play_count;
     time_t last_time;
-
-    int index;                  // used for property binding
+    FGNavRecordPtr _navaid;
+    FGNavRecordPtr _gs;
+    
     string nav_fx_name;
     string dme_fx_name;
 
-    string trans_ident;
-    bool is_valid;
     bool has_dme;
-    double radial;
     double target_radial;
-    double loc_lon;
-    double loc_lat;
-    SGVec3d nav_xyz;
-    double gs_lon;
-    double gs_lat;
-    double nav_elev;            // use gs elev if available
-    SGVec3d gs_xyz;
     SGVec3d gs_base_vec;
     double gs_dist_signed;
     SGTimeStamp prev_time;
     SGTimeStamp curr_time;
-    double range;
     double effective_range;
     double target_gs;
     double twist;
@@ -150,6 +141,8 @@ class FGNavRadio : public SGSubsystem
     // internal periodic station search timer
     double _time_before_search_sec;
 
+    bool updateWithPower(double aDt);
+
     // model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
     double adjustNavRange( double stationElev, double aircraftElev,
 			   double nominalRange );
@@ -158,6 +151,10 @@ class FGNavRadio : public SGSubsystem
     double adjustILSRange( double stationElev, double aircraftElev,
 			   double offsetDegrees, double distance );
 
+    void updateAudio(bool aInRange);
+    void audioNavidChanged();
+
+    FGNavRecord* findPrimaryNavaid(const SGGeod& aPos, double aFreqMHz);
 public:
 
     FGNavRadio(SGPropertyNode *node);
