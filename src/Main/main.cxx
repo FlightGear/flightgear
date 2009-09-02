@@ -482,7 +482,7 @@ static void fgMainLoop( void ) {
     globals->get_model_mgr()->update(delta_time_sec);
 
     // update the view angle as late as possible, but before sound calculations
-    globals->get_viewmgr()->update(delta_time_sec);
+    globals->get_viewmgr()->update(real_delta_time_sec);
 
     // Do any I/O channel work that might need to be done (must come after viewmgr)
     globals->get_io()->update(real_delta_time_sec);
