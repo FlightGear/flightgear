@@ -339,7 +339,7 @@ bool FGAISchedule::update(time_t now)
 	  //cout << "a = " << a[0] << " " << a[1] << " " << a[2] 
 	  //     << "b = " << b[0] << " " << b[1] << " " << b[2] << endl;  
           sgdMat4 matrix;
-	  sgdMakeRotMat4(matrix, angle, _cross.sg()); 
+	  sgdMakeRotMat4(matrix, angle, _cross.data()); 
           SGVec3d newPos(0, 0, 0);
 	  for(int j = 0; j < 3; j++)
 	    {

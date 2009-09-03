@@ -544,8 +544,8 @@ static void fgMainLoop( void ) {
     // proper coordinate system, but also with the proper time
     // invariant magnitude.
     sgdSubVec3( sgdv3_help,
-                last_model_pos, model_pos.sg());
-    sgdAddVec3( last_model_pos, sgdv3_null, model_pos.sg());
+                last_model_pos, model_pos.data());
+    sgdAddVec3( last_model_pos, sgdv3_null, model_pos.data());
     SGV3d_help = model_or.rotateBack(
         surf_or.rotateBack(SGVec3d(sgdv3_help[0],
         sgdv3_help[1], sgdv3_help[2])));
@@ -560,9 +560,9 @@ static void fgMainLoop( void ) {
 
     // check for moving or stationary listener (view position)
     sgdSubVec3( sgdv3_help,
-                last_listener_pos, current_view->get_view_pos().sg());
+                last_listener_pos, current_view->get_view_pos().data());
     sgdAddVec3( last_listener_pos,
-		sgdv3_null, current_view->get_view_pos().sg());
+		sgdv3_null, current_view->get_view_pos().data());
 
     if ( sgdLengthVec3(sgdv3_help) > 0.2 ) {
 	sgCopyVec3( listener_vel, model_vel );
@@ -575,8 +575,8 @@ static void fgMainLoop( void ) {
     // set positional offset for sources
     sgdVec3 dsource_pos_offset;
     sgdSubVec3( dsource_pos_offset,
-                current_view->get_view_pos().sg(),
-                model_pos.sg() );
+                current_view->get_view_pos().data(),
+                model_pos.data() );
     SGVec3d sgv_dsource_pos_offset = model_or.rotateBack(
         surf_or.rotateBack(SGVec3d(dsource_pos_offset[0],
         dsource_pos_offset[1], dsource_pos_offset[2])));

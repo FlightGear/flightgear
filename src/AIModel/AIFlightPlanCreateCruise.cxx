@@ -65,7 +65,7 @@ void FGAIFlightPlan::evaluateRoutePart(double deplat,
       sgdVec3 newPos;
       sgdMat4 matrix;
       //cerr << "Angle = " << ang << endl;
-      sgdMakeRotMat4(matrix, ang, _cross.sg());
+      sgdMakeRotMat4(matrix, ang, _cross.data());
       for(int j = 0; j < 3; j++)
       {
         newPos[j] =0.0;
