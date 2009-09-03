@@ -93,6 +93,10 @@ struct HIDTypes HID_PAGE_TABLE[] = {
 #define CON_USAGE(USAGE) USAGE_KEY(kHIDPage_Consumer, USAGE)
 
 // HID Element Usage <-> FGEventData convertion data
+// See http://www.usb.org/developers/devclass_docs/Hut1_12.pdf for detail on HID pages and usages
+// Note 
+// kHIDUsageAxis is FG specific type of DV since it is needed to be normalized into -1.0 to 1.0
+// kHIDUsageHat also is FG specific type of DV. it's value is converted into two axis events
 struct HIDTypes HID_USAGE_TABLE[] = {
   // Generic Desktop Page
   {GD_USAGE(kHIDUsage_GD_X), kHIDUsageAxis, "x-translate"},
@@ -306,7 +310,7 @@ HIDElement::HIDElement(CFDictionaryRef element, long page, long usage) :
   name = hidUsageByID.getName(USAGE_KEY(page, usage));
 }
 
-float HIDElement::readStatus(IOHIDDeviceInterface **interface)
+long HIDElement::read(IOHIDDeviceInterface **interface)
 {
   IOHIDEventStruct event;
   lastValue = value;
@@ -314,10 +318,10 @@ float HIDElement::readStatus(IOHIDDeviceInterface **interface)
   if (ret == kIOReturnSuccess) {
     value = event.value;
 //    SG_LOG(SG_INPUT, SG_BULK, "Element: " << name << "; value = " << value);
-    return (float)event.value;
+    return event.value;
   } else {
-    SG_LOG(SG_INPUT, SG_ALERT, "Failed reading value for HID Element: " << name);
-    return 0.0;
+    SG_LOG(SG_INPUT, SG_WARN, "Failed reading value for HID Element: " << name);
+    return 0;
   }
 }
 
@@ -329,45 +333,49 @@ bool HIDElement::isUpdated()
 void HIDElement::generateEvent(FGMacOSXInputDevice *device, double dt, int modifiers)
 {
   SG_LOG(SG_INPUT, SG_DEBUG, "Generating Input Event: " << name << "=" << value);
-  FGMacOSXEventData eventData(name, value, dt, modifiers);
+  FGMacOSXEventData eventData(name, (float)value, dt, modifiers);
   device->HandleEvent(eventData);
 }
 
 AxisElement::AxisElement(CFDictionaryRef element, long page, long usage) : 
   HIDElement(element, page, usage), dead_band(0.00), saturate(1.0)
 {
-  //  long scaledmin, scaledmax;
   min = GetHIDElementLongValue(element, kIOHIDElementMinKey); 
   max = GetHIDElementLongValue(element, kIOHIDElementMaxKey);
   isRelative = GetHIDElementBooleanValue(element, kIOHIDElementIsRelativeKey);
   isWrapping = GetHIDElementBooleanValue(element, kIOHIDElementIsWrappingKey);
   isNonLinear = GetHIDElementBooleanValue(element, kIOHIDElementIsNonLinearKey);
-  cout << "isRelative=" << isRelative << ", isWrapping=" << isWrapping << ", isNonLinear=" << isNonLinear << endl;
 
   name = ((isRelative == true) ? "rel-" : "abs-") + name;
 
-  center = min + (max - min) / 2;
+  center = min + (max - abs(min)) * 0.5;
   SG_LOG(SG_INPUT, SG_DEBUG, "HID Axis Element; " << name << " min: " << min << " max:" << max << " center: " << center);
+  SG_LOG(SG_INPUT, SG_DEBUG, "isRelative=" << isRelative << ", isWrapping=" << isWrapping << ", isNonLinear=" << isNonLinear);
 }
 
-float AxisElement::readStatus(IOHIDDeviceInterface **interface)
+long AxisElement::read(IOHIDDeviceInterface **interface)
 {
   lastValue = value;
-  value = HIDElement::readStatus(interface);
-  return value;
-/*
-  if (!isRelative) {
-    value = (value - (float)center) / (float)(max - center);
-    if (fabs(value) < dead_band)
-      value = 0.0;
-  }
-*/
-  
+  return HIDElement::read(interface);
 }
 
+// FIXME: This can be removed when AxisInputEvent can normalize its value
+void AxisElement::generateEvent(FGMacOSXInputDevice *device, double dt, int modifiers)
+{
+  float normalizedValue = (float)value;
+  if (!isRelative) {
+    normalizedValue = (value - (float)center) / (float)(max - center);
+    if (fabs(normalizedValue) < dead_band)
+      normalizedValue = 0.0;
+  }
+
+  SG_LOG(SG_INPUT, SG_DEBUG, "Generating Input Event: " << name << "=" << normalizedValue);
+  FGMacOSXEventData eventData(name, normalizedValue, dt, modifiers);
+  device->HandleEvent(eventData);
+}
 
 ButtonElement::ButtonElement(CFDictionaryRef element, long page, long usage) :
-  HIDElement(element, page, usage) 
+  HIDElement(element, page, usage)
 {
   if (name == "") {
     stringstream ss;
@@ -386,20 +394,18 @@ HatElement::HatElement(CFDictionaryRef element, long page, long usage, int id) :
 
 void HatElement::generateEvent(FGMacOSXInputDevice *device, double dt, int modifiers)
 {
-  // Hat Value is from 0 to 8, representing:
-  // 0:N, 1:NE, 2:E, 3:SE, 4:S, 5:SW, 6:W, 7:NW, 8:N
+  // Hat value is from 0 to 8, representing:
+  // 0:N, 1:NE, 2:E, 3:SE, 4:S, 5:SW, 6:W, 7:NW, 8:Neutral
+  // FG can't bind hat directly, so need to convert its value to two axis events
   static float xvalues[] = {0, 1, 1,  1,  0, -1, -1, -1, 0};
   static float yvalues[] = {1, 1, 0, -1, -1, -1,  0,  1, 0};
-  stringstream ss;
-  string eventName;
-  ss << "abs-hat" << id << "-x";
-  ss >> eventName;
-  SG_LOG(SG_INPUT, SG_BULK, "Generating Input Event: " << eventName << "=" << xvalues[(int)value]);
-  FGMacOSXEventData eventDataX(eventName, xvalues[(int)value], dt, modifiers);
-  ss << "abs-hat" << id << "-y";
-  ss >> eventName;
-  SG_LOG(SG_INPUT, SG_BULK, "Generating Input Event: " << eventName << "=" << yvalues[(int)value]);
-  FGMacOSXEventData eventDataY(eventName, yvalues[(int)value], dt, modifiers);
+  stringstream ss1, ss2;
+  ss1 << "abs-hat" << id << "-x";
+  SG_LOG(SG_INPUT, SG_BULK, "Generating Input Event: " << ss1.str() << "=" << xvalues[(int)value]);
+  FGMacOSXEventData eventDataX(ss1.str(), xvalues[(int)value], dt, modifiers);
+  ss2 << "abs-hat" << id << "-y";
+  SG_LOG(SG_INPUT, SG_BULK, "Generating Input Event: " << ss2.str() << "=" << yvalues[(int)value]);
+  FGMacOSXEventData eventDataY(ss2.str(), yvalues[(int)value], dt, modifiers);
   device->HandleEvent((FGEventData &)eventDataX);
   device->HandleEvent((FGEventData &)eventDataY);
 }
@@ -436,17 +442,16 @@ FeatureElement::FeatureElement(CFDictionaryRef element, long page, long usage, i
   }
 }
 
-float FeatureElement::readStatus(IOHIDDeviceInterface **interface) {
+long FeatureElement::read(IOHIDDeviceInterface **interface) {
   IOHIDEventStruct event;
   IOReturn ret = (*interface)->queryElementValue(interface, cookie, &event, 0, NULL, NULL, NULL);
   if (ret != kIOReturnSuccess) {
     ret = (*interface)->getElementValue(interface, cookie, &event);
     if (ret != kIOReturnSuccess) {
-      SG_LOG(SG_INPUT, SG_ALERT, "Can't get element value for feature element: " << getName());
-      return 0.0;
+      SG_LOG(SG_INPUT, SG_WARN, "Can't get element value for feature element: " << getName());
+      return 0;
     }
   }
-  cout << getName() << "=" << event.value << endl;
   return event.value;
 }
 
@@ -481,9 +486,9 @@ void HIDElementFactory::parseElement(CFDictionaryRef element, FGMacOSXInputDevic
 
   if (type == kIOHIDElementTypeCollection) {
     id = 0;
-    cout << "Collection: " << hidTypeByID.getName(type) << "(" << type << ")" 
-              <<":" << hidPageByID.getName(page) << "(" << page << ")" 
-              << ":" << hidUsageByID.getName(USAGE_KEY(page, usage)) << "(" << usage << ")" << endl;
+    SG_LOG(SG_INPUT, SG_DEBUG, "Collection: " << hidTypeByID.getName(type) << "(" << type << ")" 
+                                              << ":" << hidPageByID.getName(page) << "(" << page << ")" 
+                                              << ":" << hidUsageByID.getName(USAGE_KEY(page, usage)) << "(" << usage << ")");
     HIDElementFactory::create(CFDictionaryGetValue(element, CFSTR(kIOHIDElementKey)), inputDevice);
   } else {
     HIDUsageType usageType = hidUsageByID.getType(USAGE_KEY(page, usage));
@@ -516,14 +521,15 @@ void HIDElementFactory::parseElement(CFDictionaryRef element, FGMacOSXInputDevic
 	  inputDevice->addElement(new ButtonElement(element, page, usage));
         } else if (page == kHIDPage_LEDs && usage > 0) {
 	  inputDevice->addElement(new LEDElement(element, page, usage));
-/*
+/* Feature elements are not fully tested yet
         } else if (type == kIOHIDElementTypeFeature) {
           // just for testing feature elements
           inputDevice->addElement(new FeatureElement(element, page, usage, elementCount[inputDevice][USAGE_KEY(page, usage)]));
 */
         } else {
-          cout << "HID Element Page/Usage is not supported: type=" << hidTypeByID.getName(type) << "(" << type << ")"
-                    << ", page=" << hidPageByID.getName(page) << "(" << page << ")" << ", usage=" << usage << endl;
+          SG_LOG(SG_INPUT, SG_INFO, "HID Element Page/Usage is not supported: type=" << hidTypeByID.getName(type) 
+                    << "(" << type << ")" << ", page=" << hidPageByID.getName(page) << "(" << page << ")" 
+                    << ", usage=" << usage);
         }
     }
   }
@@ -552,13 +558,16 @@ const char *FGMacOSXInputDevice::TranslateEventName(FGEventData &eventData)
 }
 
 
+//
+// Outputs value to an writable element (like LEDElement)
+//
 void FGMacOSXInputDevice::Send(const char *eventName, double value)
 {
   HIDElement *element = elements[eventName];
   if (element) {
     element->write(devInterface, value);
   } else {
-    cout << "No element to handle event: " << eventName << endl;
+    SG_LOG(SG_INPUT, SG_WARN, "No element to handle event: " << eventName);
   }
 }
 
@@ -577,7 +586,11 @@ CFDictionaryRef FGMacOSXInputDevice::getProperties(io_object_t device)
   return properties;
 }
 
-
+//
+// Adds HID element to FGMacOSXInputDevice.
+// On Mac OS X, update() will read value of each HID element.
+// Thus, FGMacOSXInputDevice needs all supported elements when a device is opened
+//
 void FGMacOSXInputDevice::addElement(HIDElement *element)
 {
   elements[element->getName()] = element;
@@ -608,7 +621,7 @@ void FGMacOSXInputDevice::Open() {
 					     (LPVOID*)&devInterface );
 	
   if (result != S_OK)
-    SG_LOG(SG_INPUT, SG_ALERT, "Failed Querying HID plugin interface: " << GetName());
+    SG_LOG(SG_INPUT, SG_WARN, "Failed Querying HID plugin interface: " << GetName());
 
   (*plugin)->Release(plugin); // don't leak a ref
   if (devInterface == NULL) {
@@ -625,9 +638,8 @@ void FGMacOSXInputDevice::Open() {
   }
   CFDictionaryRef props = getProperties();
 		
-  // recursively enumerate all the bits (buttons, axes, hats, ...)
-  CFTypeRef topLevelElement = 
-    CFDictionaryGetValue (props, CFSTR(kIOHIDElementKey));
+  // recursively adds all supported HID elements to FGMacOSXInputDevice
+  CFTypeRef topLevelElement = CFDictionaryGetValue (props, CFSTR(kIOHIDElementKey));
   HIDElementFactory::create(topLevelElement, this);
   CFRelease(props);
 }
@@ -646,12 +658,15 @@ void FGMacOSXInputDevice::Close() {
   elements.clear();
 }
 
+//
+// Reads values of assigned HIDElement and generates events
+//
 void FGMacOSXInputDevice::update(double dt)
 {
   map<string, HIDElement *>::iterator it;
   for (it = elements.begin(); it != elements.end(); it++) {
-    (*it).second->readStatus(devInterface);
-    if ((*it).second->isUpdated()) {
+    (*it).second->read(devInterface);
+    if ((*it).second->isUpdated()) { // Is this needed?
       int modifiers = fgGetKeyModifiers();
       (*it).second->generateEvent(this, dt, modifiers);
     }
@@ -661,25 +676,7 @@ void FGMacOSXInputDevice::update(double dt)
 //
 // FGMacOSXEventInput implementation
 //
-FGMacOSXEventInput *FGMacOSXEventInput::_instance=NULL;
-FGMacOSXEventInput &FGMacOSXEventInput::instance()
-{
-  if (!FGMacOSXEventInput::_instance) {
-    SG_LOG(SG_INPUT, SG_ALERT, "FGMacOSXEventInput is not created but its instance is referred.");
-  }
-  return *FGMacOSXEventInput::_instance;
-}
-
 FGMacOSXEventInput::~FGMacOSXEventInput() {
-  /*
-  // inputDevice will be deleted in FGEventInput
-  map<io_object_t, FGMacOSXInputDevice *>::iterator deviceIterator;
-  for (deviceIterator = inputDevices.begin(); deviceIterator != inputDevices.end(); deviceIterator++) {
-  FGMacOSXInputDevice *inputDevice = (*deviceIterator).second;
-  //    inputDevice->Close();
-  //    delete inputDevice;
-  }
-  */
   deviceIndices.clear();
 }
 
@@ -695,17 +692,18 @@ void FGMacOSXEventInput::init()
   matchingDictionary = (CFMutableDictionaryRef) CFRetain(matchingDictionary);
   matchingDictionary = (CFMutableDictionaryRef) CFRetain(matchingDictionary);
 
+  // Registers Hotplug notification for plug and play.
   notifyPort = IONotificationPortCreate(kIOMasterPortDefault); 
   runLoopSource = IONotificationPortGetRunLoopSource(notifyPort);
   CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, kCFRunLoopDefaultMode);
   ret = IOServiceAddMatchingNotification(notifyPort, kIOFirstMatchNotification, 
-                                         matchingDictionary, FGMacOSXEventInput::deviceAttached, this, &addedIterator);
+                                         matchingDictionary, FGMacOSXEventInput::deviceAttached, (void *)this, &addedIterator);
   ret = IOServiceAddMatchingNotification(notifyPort, kIOTerminatedNotification, 
-                                         matchingDictionary, FGMacOSXEventInput::deviceDetached, this, &removedIterator);
+                                         matchingDictionary, FGMacOSXEventInput::deviceDetached, (void *)this, &removedIterator);
 
   // prepare for notification by calling these callback funcs to remove existing HID device iterators
-  FGMacOSXEventInput::deviceAttached(NULL, addedIterator);
-  FGMacOSXEventInput::deviceDetached(NULL, removedIterator);
+  FGMacOSXEventInput::deviceAttached((void *)this, addedIterator);
+  FGMacOSXEventInput::deviceDetached((void *)this, removedIterator);
 }
 
 
@@ -718,8 +716,10 @@ void FGMacOSXEventInput::attachDevice(io_iterator_t iterator)
     if (inputDevice) {
       SG_LOG(SG_INPUT, SG_INFO, "HID Device Atached: " << inputDevice->GetName());
       unsigned index = AddDevice(inputDevice);
-      // Needs to check if AddDevice closed the device due to lack to config file
+      // Needs to check if AddDevice closed the device due to lack of config file
       if (index != FGEventInput::INVALID_DEVICE_INDEX) {
+        // maps device with FG device index. 
+        // This map is needed in detachDevice to tell FGEventInput which deivce ID is to be removed
         deviceIndices[device] = index;
       }
     }
@@ -735,10 +735,14 @@ void FGMacOSXEventInput::detachDevice(io_iterator_t iterator)
   while ((device = IOIteratorNext(iterator))) {
     unsigned index = deviceIndices[device];
     if (index != FGEventInput::INVALID_DEVICE_INDEX) {
-      FGMacOSXInputDevice *inputDevice = (FGMacOSXInputDevice *)input_devices[index];
-      SG_LOG(SG_INPUT, SG_INFO, "HID Device Detached: " << inputDevice->GetName());
-      RemoveDevice(index);
-      deviceIndices.erase(device); 
+      FGMacOSXInputDevice *inputDevice = dynamic_cast<FGMacOSXInputDevice *>(input_devices[index]);
+      if (inputDevice) {
+        SG_LOG(SG_INPUT, SG_INFO, "HID Device Detached: " << inputDevice->GetName());
+        RemoveDevice(index);
+        deviceIndices.erase(device); 
+      } else {
+        SG_LOG(SG_INPUT, SG_WARN, "Invalid device index:" << index << ". Detach failed.");
+      }
     } else {
       SG_LOG(SG_INPUT, SG_INFO, "Device ID unmatched: " << (int)device << " No HID deivce is detached since it is not supported by FG.");
     }
@@ -746,6 +750,9 @@ void FGMacOSXEventInput::detachDevice(io_iterator_t iterator)
   }
 }
 
+//
+// read all elements in each input device
+//
 void FGMacOSXEventInput::update(double dt)
 {
   FGEventInput::update(dt);
@@ -753,8 +760,12 @@ void FGMacOSXEventInput::update(double dt)
   map<int, FGInputDevice*>::const_iterator it;
   for (it = input_devices.begin(); it != input_devices.end(); it++) {
     if ((*it).second) {
-      FGMacOSXInputDevice *inputDevice = (FGMacOSXInputDevice *)((*it).second);
-      inputDevice->update(dt);
+      FGMacOSXInputDevice *inputDevice = dynamic_cast<FGMacOSXInputDevice *>((*it).second);
+      if (inputDevice) {
+        inputDevice->update(dt);
+      } else {
+        SG_LOG(SG_INPUT, SG_WARN, "Invalid device. Update failed.");
+      }
     }
   }
 }
