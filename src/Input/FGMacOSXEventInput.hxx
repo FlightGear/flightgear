@@ -41,6 +41,12 @@
 #include "FGEventInput.hxx"
 #endif
 
+//
+// HID Usage type
+// HIDElementFactory will create a proper HIDElement subclass 
+// depending on the usage type of a detected HID element
+// See http://www.usb.org/developers/devclass_docs/Hut1_12.pdf for detail
+//
 typedef enum {
   kHIDUsageNotSupported = -1, // Debug use
   kHIDElementType = 0, // Debug use
@@ -62,12 +68,14 @@ typedef enum {
 
 class HIDElement;
 struct FGMacOSXEventData : public FGEventData {
-  FGMacOSXEventData(std::string name, double value, double dt, int modifiers) : 
+  FGMacOSXEventData(string name, double value, double dt, int modifiers) : 
     FGEventData(value, dt, modifiers), name(name) {}
-  std::string name;
+  string name;
 };
 
-
+//
+// For mapping HID element page/usage, usage type, and event names
+//
 struct HIDTypes {
   long key;
   HIDUsageType type;
@@ -77,18 +85,18 @@ struct HIDTypes {
 class FGMacOSXInputDevice;
 
 //
-// Generic HIDElement that might work for DV, DF types
+// Generic HIDElement for DV, DF types
 // 
 class HIDElement {
 public:
   HIDElement(CFDictionaryRef element, long page, long usage);
   virtual ~HIDElement() {}
-  virtual float readStatus(IOHIDDeviceInterface **interface);
   bool isUpdated();
+  string getName() { return name; }
   virtual void generateEvent(FGMacOSXInputDevice *device, double dt, int modifiers);
-  std::string getName() { return name; }
+  virtual long read(IOHIDDeviceInterface **interface);
   virtual void write(IOHIDDeviceInterface **interface, double value) { 
-    std::cout << "writing is not implemented on this device: " << name << std::endl; 
+    SG_LOG(SG_INPUT, SG_WARN, "writing is not implemented on this device: " << name);
   }
 protected:
   IOHIDElementCookie cookie;
@@ -98,14 +106,15 @@ protected:
   float value;
   float lastValue;
 
-  std::string name;
+  string name;
 };
 
 class AxisElement : public HIDElement {
 public:
   AxisElement(CFDictionaryRef element, long page, long usage);
   virtual ~AxisElement() {}
-  virtual float readStatus(IOHIDDeviceInterface **interface);
+  virtual long read(IOHIDDeviceInterface **interface);
+  virtual void generateEvent(FGMacOSXInputDevice *device, double dt, int modifiers);
 private:
   long min;
   long max;
@@ -121,6 +130,7 @@ class ButtonElement : public HIDElement {
 public:
   ButtonElement(CFDictionaryRef element, long page, long usage);
   virtual ~ButtonElement() {}
+private:
 };
 
 class HatElement : public HIDElement {
@@ -145,11 +155,12 @@ class FeatureElement : public HIDElement {
 public:
   FeatureElement(CFDictionaryRef element, long page, long usage, int count);
   virtual ~FeatureElement() {}
-  virtual float readStatus(IOHIDDeviceInterface **inerface);
+  virtual long read(IOHIDDeviceInterface **inerface);
 };
 
 //
 // FGMacOSXInputDevice
+// Mac OS X specific FGInputDevice
 //
 class FGMacOSXInputDevice : public FGInputDevice {
 public:
@@ -157,25 +168,26 @@ public:
   virtual ~FGMacOSXInputDevice() { Close(); }
   void Open();
   void Close();
-  void readStatus();
   virtual void update(double dt);
   virtual const char *TranslateEventName(FGEventData &eventData);
+  void Send( const char *eventName, double value);
 
+  // Mac OS X specific methods
   CFDictionaryRef getProperties() {
     return FGMacOSXInputDevice::getProperties(device); 
   }
   static CFDictionaryRef getProperties(io_object_t device); 
   void addElement(HIDElement *element);
-  void Send( const char *eventName, double value);
 
 private:
   io_object_t device;
   IOHIDDeviceInterface **devInterface;
-  std::map<std::string, HIDElement *> elements;
+  map<string, HIDElement *> elements; // maps eventName and its relevant element for Send()
 };
 
 //
-// HID element parser
+// HID element factory that iteratively parses and creates 
+// HIDElement instances and add these to FGMacOSXDeviceInput
 //
 class HIDElementFactory {
 public:
@@ -185,57 +197,59 @@ public:
 };
 
 //
-//
+// Mac OS X specific FGEventInput
 //
 class FGMacOSXEventInput : public FGEventInput {
 public:
-  FGMacOSXEventInput() : FGEventInput() { FGMacOSXEventInput::_instance = this; SG_LOG(SG_INPUT, SG_ALERT, "FGMacOSXEventInput created"); }
+  FGMacOSXEventInput() : FGEventInput() { SG_LOG(SG_INPUT, SG_DEBUG, "FGMacOSXEventInput created"); }
   virtual ~FGMacOSXEventInput();
-  static void deviceAttached(void *ref, io_iterator_t iterator) {
-     FGMacOSXEventInput::instance().attachDevice(iterator); 
+  virtual void update(double dt);
+  virtual void init();
+
+  // Mac OS X specific methods
+  static void deviceAttached(void *device, io_iterator_t iterator) {
+    static_cast<FGMacOSXEventInput *>(device)->attachDevice(iterator); 
   }
-  static void deviceDetached(void *ref, io_iterator_t iterator) { 
-    FGMacOSXEventInput::instance().detachDevice(iterator); 
+
+  static void deviceDetached(void *device, io_iterator_t iterator) { 
+    static_cast<FGMacOSXEventInput *>(device)->detachDevice(iterator); 
   }
-  static FGMacOSXEventInput &instance();
 
   void attachDevice(io_iterator_t iterator);
   void detachDevice(io_iterator_t iterator);
-  virtual void update(double dt);
 
-  virtual void init();
-
-  static FGMacOSXEventInput *_instance;
 private:
   IONotificationPortRef notifyPort;
   CFRunLoopSourceRef runLoopSource;
   io_iterator_t addedIterator; 
   io_iterator_t removedIterator;
 
-  std::map<io_object_t, unsigned> deviceIndices;
+  // maps FG device property ID (i.e. /input/events/device[ID]) with io_object for detaching devices
+  map<io_object_t, unsigned> deviceIndices; 
 };
 
 
 //
-// For debug and warnings
+// For obtaining event name and type from both HID element page and usage
 // 
-class HIDTypeByID : public std::map<long, std::pair<HIDUsageType, const char *>*> {
+class HIDTypeByID : public map<long, pair<HIDUsageType, const char *>*> {
 public:
   HIDTypeByID(struct HIDTypes *table) {
     for( int i = 0; table[i].key!= -1; i++ )
-      (*this)[table[i].key] = new std::pair<HIDUsageType, const char *>(table[i].type, table[i].eventName);
+      (*this)[table[i].key] = new pair<HIDUsageType, const char *>(table[i].type, table[i].eventName);
   }
 
   ~HIDTypeByID() {
-    std::map<long, std::pair<HIDUsageType, const char *>*>::iterator it;
+    map<long, pair<HIDUsageType, const char *>*>::iterator it;
     for (it = this->begin(); it != this->end(); it++) {
       delete (*it).second;
     }
     clear();
   }
 
+  // key = (HID_element_page) << 16 | HID_element_usage)
   const char *getName(long key) {
-    std::pair<HIDUsageType, const char *> *usageType = (*this)[key];
+    pair<HIDUsageType, const char *> *usageType = (*this)[key];
     if (usageType == NULL) {
       return "";
     } else {
@@ -244,7 +258,7 @@ public:
   }
 
   const HIDUsageType getType(long key) {
-    std::pair<HIDUsageType, const char *> *usageType = (*this)[key];
+    pair<HIDUsageType, const char *> *usageType = (*this)[key];
     if (usageType == NULL) {
       return kHIDUsageNotSupported;
     } else {
