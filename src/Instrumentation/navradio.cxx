@@ -367,8 +367,8 @@ bool FGNavRadio::updateWithPower(double dt)
     
   if (_gs) {
     // find closest distance to the gs base line
-    double dist = sgdClosestPointToLineDistSquared(aircraft.sg(), _gs->cart().sg(),
-                                                   gs_base_vec.sg());
+    double dist = sgdClosestPointToLineDistSquared(aircraft.data(), _gs->cart().data(),
+                                                   gs_base_vec.data());
     gs_dist_node->setDoubleValue( sqrt( dist ) );
     // cout << "gs_dist = " << gs_dist_node->getDoubleValue()
     //      << endl;
