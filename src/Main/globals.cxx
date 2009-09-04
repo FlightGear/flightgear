@@ -121,6 +121,13 @@ FGGlobals::~FGGlobals()
     // shut down all subsystems, make sure we take down the 
     // AIModels system first.
     subsystem_mgr->get_group(SGSubsystemMgr::GENERAL)->remove_subsystem("ai_model");
+    // FGInput (FGInputEvent) and FGDialog calls get_subsystem() in their destructors, 
+    // which is not safe since some subsystem are already deleted but can be referred.
+    // So these subsystems must be deleted prior to deleting subsystem_mgr unless
+    // ~SGSubsystemGroup and SGSubsystemMgr::get_subsystem are changed not to refer to
+    // deleted subsystems.
+    subsystem_mgr->get_group(SGSubsystemMgr::GENERAL)->remove_subsystem("input");
+    subsystem_mgr->get_group(SGSubsystemMgr::GENERAL)->remove_subsystem("gui");
     delete subsystem_mgr;
     delete event_mgr;
     delete time_params;
