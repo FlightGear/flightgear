@@ -82,6 +82,40 @@ FGAIBase::FGAIBase(object_type ot) :
     _impact_reported = false;
     _collision_reported = false;
     _subID = 0;
+
+    _x_offset = 0;
+    _y_offset = 0;
+    _z_offset = 0;
+
+    _pitch_offset = 0;
+    _roll_offset = 0;
+    _yaw_offset = 0;
+
+    userpos = SGGeod::fromDeg(0, 0);
+
+    pos = SGGeod::fromDeg(0, 0);
+    speed = 0;
+    altitude_ft = 0;
+    speed_north_deg_sec = 0;
+    speed_east_deg_sec = 0;
+    turn_radius_ft = 0;
+
+    ft_per_deg_lon = 0;
+    ft_per_deg_lat = 0;
+
+    horiz_offset = 0;
+    vert_offset = 0;
+    ht_diff = 0;
+
+    serviceable = false;
+
+    fp = 0;
+
+    rho = 1;
+    T = 280;
+    p = 1e5;
+    a = 340;
+    Mach = 0;
 }
 
 FGAIBase::~FGAIBase() {
