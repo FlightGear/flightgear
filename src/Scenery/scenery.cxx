@@ -146,8 +146,8 @@ FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
   lineSegment = new osg::LineSegment(start.osg(), end.osg());
   intersectVisitor.addLineSegment(lineSegment.get());
   get_scene_graph()->accept(intersectVisitor);
-  bool hits = intersectVisitor.hits();
-  if (hits) {
+  bool hits = false;
+  if (intersectVisitor.hits()) {
     int nHits = intersectVisitor.getNumHits(lineSegment.get());
     alt = -SGLimitsd::max();
     for (int i = 0; i < nHits; ++i) {
@@ -163,6 +163,7 @@ FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
       double elevation = geod.getElevationM();
       if (alt < elevation) {
         alt = elevation;
+        hits = true;
         if (material) {
           *material = 0;
           const EffectGeode* eg
@@ -197,8 +198,8 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
   lineSegment = new osg::LineSegment(start.osg(), end.osg());
   intersectVisitor.addLineSegment(lineSegment.get());
   get_scene_graph()->accept(intersectVisitor);
-  bool hits = intersectVisitor.hits();
-  if (hits) {
+  bool hits = false;
+  if (intersectVisitor.hits()) {
     int nHits = intersectVisitor.getNumHits(lineSegment.get());
     double dist = SGLimitsd::max();
     for (int i = 0; i < nHits; ++i) {
@@ -214,6 +215,7 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
       if (newdist < dist) {
         dist = newdist;
         nearestHit = point;
+        hits = true;
       }
     }
   }
