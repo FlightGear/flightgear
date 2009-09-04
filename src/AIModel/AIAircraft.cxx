@@ -79,11 +79,12 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) : FGAIBase(otAircraft) {
     alt_lock = false;
     roll = 0;
     headingChangeRate = 0.0;
+    headingError = 0;
 
     holdPos = false;
 
     _performance = 0; //TODO initialize to JET_TRANSPORT from PerformanceDB
-    
+    dt = 0;
 }
 
 
