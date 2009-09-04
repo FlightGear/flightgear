@@ -146,7 +146,8 @@ DME::update (double delta_time_sec)
         }
         _distance_node->setDoubleValue( tmp_dist );
         _speed_node->setDoubleValue(speed_kt);
-        _time_node->setDoubleValue(distance_nm/speed_kt*60.0);
+        if (SGLimitsd::min() < fabs(speed_kt))
+          _time_node->setDoubleValue(distance_nm/speed_kt*60.0);
         
     } else {
         _last_distance_nm = 0;
