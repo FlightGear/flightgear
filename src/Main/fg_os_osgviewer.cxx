@@ -59,10 +59,6 @@
 #include "WindowBuilder.hxx"
 #include "WindowSystemAdapter.hxx"
 
-#if (FG_OSG_VERSION >= 19008)
-#define OSG_HAS_MOUSE_CURSOR_PATCH
-#endif
-
 // fg_os implementation using OpenSceneGraph's osgViewer::Viewer class
 // to create the graphics window and run the event/update/render loop.
 
@@ -201,7 +197,6 @@ void fgOSFullScreen()
 {
 }
 
-#ifdef OSG_HAS_MOUSE_CURSOR_PATCH
 static void setMouseCursor(osg::Camera* camera, int cursor)
 {
     if (!camera)
@@ -245,18 +240,15 @@ static void setMouseCursor(osg::Camera* camera, int cursor)
 
     gw->setCursor(mouseCursor);
 }
-#endif
 
 static int _cursor = -1;
 
 void fgSetMouseCursor(int cursor)
 {
     _cursor = cursor;
-#ifdef OSG_HAS_MOUSE_CURSOR_PATCH
     setMouseCursor(viewer->getCamera(), cursor);
     for (unsigned i = 0; i < viewer->getNumSlaves(); ++i)
         setMouseCursor(viewer->getSlave(i)._camera.get(), cursor);
-#endif
 }
 
 int fgGetMouseCursor()
