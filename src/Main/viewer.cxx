@@ -373,25 +373,30 @@ FGViewer::recalcLookFrom ()
   }
 
   // The rotation rotating from the earth centerd frame to
-  // the horizontal local OpenGL frame
-  SGQuatd hlOr = SGQuatd::viewHL(_position);
+  // the horizontal local frame
+  SGQuatd hlOr = SGQuatd::fromLonLat(_position);
 
-  // the rotation from the horizontal local frame to the basic view orientation
+  // The rotation from the horizontal local frame to the basic view orientation
   SGQuatd hlToBody = SGQuatd::fromYawPitchRollDeg(head, pitch, roll);
-  hlToBody = SGQuatd::simToView(hlToBody);
 
-  // The cartesian position of the basic view coordinate
-  SGVec3d position = SGVec3d::fromGeod(_position);
-  // the rotation offset, don't know why heading is negative here ...
-  SGQuatd viewOffsetOr = SGQuatd::simToView(
-    SGQuatd::fromYawPitchRollDeg(-_heading_offset_deg, _pitch_offset_deg,
-                                 _roll_offset_deg));
+  // The rotation offset, don't know why heading is negative here ...
+  SGQuatd viewOffsetOr
+      = SGQuatd::fromYawPitchRollDeg(-_heading_offset_deg, _pitch_offset_deg,
+                                     _roll_offset_deg);
 
   // Compute the eyepoints orientation and position
   // wrt the earth centered frame - that is global coorinates
   SGQuatd ec2body = hlOr*hlToBody;
-  _absolute_view_pos = position + ec2body.backTransform(_offset_m);
-  mViewOrientation = ec2body*viewOffsetOr;
+
+  // The cartesian position of the basic view coordinate
+  SGVec3d position = SGVec3d::fromGeod(_position);
+
+  // This is rotates the x-forward, y-right, z-down coordinate system the where
+  // simulation runs into the OpenGL camera system with x-right, y-up, z-back.
+  SGQuatd q(-0.5, -0.5, 0.5, 0.5);
+
+  _absolute_view_pos = position + (ec2body*q).backTransform(_offset_m);
+  mViewOrientation = ec2body*viewOffsetOr*q;
 }
 
 void
@@ -459,8 +464,10 @@ FGViewer::recalcLookAt ()
   SGVec3d dir = normalize(atCart - eyeCart);
   // the up directon
   SGVec3d up = ec2eye.backTransform(SGVec3d(0, 0, -1));
-  // rotate dir to the 0-th unit vector
-  // rotate up to 2-th unit vector
+  // rotate -dir to the 2-th unit vector
+  // rotate up to 1-th unit vector
+  // Note that this matches the OpenGL camera coordinate system
+  // with x-right, y-up, z-back.
   mViewOrientation = SGQuatd::fromRotateTo(-dir, 2, up, 1);
 }
 
