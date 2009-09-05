@@ -185,7 +185,7 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
     Bore = el->FindElementValueAsNumberConvertTo("bore","IN");
   if (el->FindElement("stroke"))
     Stroke = el->FindElementValueAsNumberConvertTo("stroke","IN");
-  if (el->FindElement("stroke"))
+  if (el->FindElement("cylinders"))
     Cylinders = el->FindElementValueAsNumber("cylinders");
   if (el->FindElement("numboostspeeds")) { // Turbo- and super-charging parameters
     BoostSpeeds = (int)el->FindElementValueAsNumber("numboostspeeds");

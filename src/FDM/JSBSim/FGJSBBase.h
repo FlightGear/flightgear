@@ -349,9 +349,9 @@ protected:
     static int phase = 0;
     double X;
 
-    V1 = V2 = S = X = 0.0;
-
     if (phase == 0) {
+      V1 = V2 = S = X = 0.0;
+
       do {
         double U1 = (double)rand() / RAND_MAX;
         double U2 = (double)rand() / RAND_MAX;
