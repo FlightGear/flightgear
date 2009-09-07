@@ -95,7 +95,6 @@ FGGlobals::FGGlobals() :
     initial_waypoints( NULL ),
     scenery( NULL ),
     tile_mgr( NULL ),
-    io( new FGIO ),
     fontcache ( new FGFontCache ),
     navlist( NULL ),
     loclist( NULL ),
@@ -150,7 +149,6 @@ FGGlobals::~FGGlobals()
     delete initial_waypoints;
     delete tile_mgr;
     delete scenery;
-    delete io;
     delete fontcache;
 
     delete navlist;

@@ -59,7 +59,6 @@ class FGATCMgr;
 class FGAircraftModel;
 class FGControls;
 class FGFlightPlanDispatcher;
-class FGIO;
 class FGNavList;
 class FGAirwayNetwork;
 class FGTACANList;
@@ -168,9 +167,6 @@ private:
 
     // Tile manager
     FGTileMgr *tile_mgr;
-
-    // Input/Ouput subsystem
-    FGIO *io;
 
     FGFontCache *fontcache;
 
@@ -308,7 +304,6 @@ public:
     inline FGTileMgr * get_tile_mgr () const { return tile_mgr; }
     inline void set_tile_mgr ( FGTileMgr *t ) { tile_mgr = t; }
 
-    inline FGIO* get_io() const { return io; }
     inline FGFontCache *get_fontcache() const { return fontcache; }
     
     inline FGNavList *get_navlist() const { return navlist; }
