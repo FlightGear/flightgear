@@ -238,13 +238,13 @@ public:
     osg::Light* light = lightSource->getLight();
     
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
-    light->setAmbient(l->scene_ambient().osg());
-    light->setDiffuse(l->scene_diffuse().osg());
-    light->setSpecular(l->scene_specular().osg());
-    SGVec4f position(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2], 0);
-    light->setPosition(position.osg());
-    SGVec3f direction(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2]);
-    light->setDirection(direction.osg());
+    light->setAmbient(toOsg(l->scene_ambient()));
+    light->setDiffuse(toOsg(l->scene_diffuse()));
+    light->setSpecular(toOsg(l->scene_specular()));
+    osg::Vec4f position(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2], 0);
+    light->setPosition(position);
+    osg::Vec3f direction(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2]);
+    light->setDirection(direction);
     light->setSpotExponent(0);
     light->setSpotCutoff(180);
     light->setConstantAttenuation(1);
@@ -292,7 +292,7 @@ public:
 
 #if 0
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
-    lightModel->setAmbientIntensity(l->scene_ambient().osg());
+    lightModel->setAmbientIntensity(toOsg(l->scene_ambient());
 #else
     lightModel->setAmbientIntensity(osg::Vec4(0, 0, 0, 1));
 #endif
@@ -335,7 +335,7 @@ public:
     SGUpdateVisitor* updateVisitor = static_cast<SGUpdateVisitor*>(nv);
     osg::Fog* fog = static_cast<osg::Fog*>(sa);
     fog->setMode(osg::Fog::EXP2);
-    fog->setColor(updateVisitor->getFogColor().osg());
+    fog->setColor(toOsg(updateVisitor->getFogColor()));
     fog->setDensity(updateVisitor->getFogExp2Density());
   }
 };
@@ -571,11 +571,11 @@ FGRenderer::update( bool refresh_camera_settings ) {
 	
         if ( fgGetBool("/sim/rendering/textures") ) {
             SGVec4f clearColor(l->adj_fog_color());
-            camera->setClearColor(clearColor.osg());
+            camera->setClearColor(toOsg(clearColor));
         }
     } else {
         SGVec4f clearColor(l->sky_color());
-        camera->setClearColor(clearColor.osg());
+        camera->setClearColor(toOsg(clearColor));
     }
 
     // update fog params if visibility has changed
@@ -785,8 +785,8 @@ FGRenderer::pick(std::vector<SGSceneryPick>& pickList,
                 if (!pickCallback)
                     continue;
                 SGSceneryPick sceneryPick;
-                sceneryPick.info.local = SGVec3d(hit->getLocalIntersectPoint());
-                sceneryPick.info.wgs84 = SGVec3d(hit->getWorldIntersectPoint());
+                sceneryPick.info.local = toSG(hit->getLocalIntersectPoint());
+                sceneryPick.info.wgs84 = toSG(hit->getWorldIntersectPoint());
                 sceneryPick.callback = pickCallback;
                 pickList.push_back(sceneryPick);
             }

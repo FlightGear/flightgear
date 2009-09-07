@@ -143,7 +143,7 @@ FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
   osgUtil::IntersectVisitor intersectVisitor;
   intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
   osg::ref_ptr<osg::LineSegment> lineSegment;
-  lineSegment = new osg::LineSegment(start.osg(), end.osg());
+  lineSegment = new osg::LineSegment(toOsg(start), toOsg(end));
   intersectVisitor.addLineSegment(lineSegment.get());
   get_scene_graph()->accept(intersectVisitor);
   bool hits = false;
@@ -195,7 +195,7 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
   osgUtil::IntersectVisitor intersectVisitor;
   intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
   osg::ref_ptr<osg::LineSegment> lineSegment;
-  lineSegment = new osg::LineSegment(start.osg(), end.osg());
+  lineSegment = new osg::LineSegment(toOsg(start), toOsg(end));
   intersectVisitor.addLineSegment(lineSegment.get());
   get_scene_graph()->accept(intersectVisitor);
   bool hits = false;
@@ -235,7 +235,7 @@ bool FGScenery::scenery_available(const SGGeod& position, double range_m)
     if (!get_elevation_m(SGGeod::fromGeodM(position, SG_MAX_ELEVATION_M), elev, 0, 0))
       return false;
     SGVec3f p = SGVec3f::fromGeod(SGGeod::fromGeodM(position, elev));
-    simgear::CheckSceneryVisitor csnv(getPagerSingleton(), p.osg(), range_m);
+    simgear::CheckSceneryVisitor csnv(getPagerSingleton(), toOsg(p), range_m);
     // currently the PagedLODs will not be loaded by the DatabasePager
     // while the splashscreen is there, so CheckSceneryVisitor force-loads
     // missing objects in the main thread
