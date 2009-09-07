@@ -169,13 +169,8 @@ FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
       if (alt < elevation) {
         alt = elevation;
         hits = true;
-        if (material) {
-          *material = 0;
-          const EffectGeode* eg
-            = dynamic_cast<const EffectGeode*>(hit.getGeode());
-          if (eg)
-            *material = SGMaterialLib::findMaterial(eg->getEffect());
-        }
+        if (material)
+          *material = SGMaterialLib::findMaterial(hit.getGeode());
       }
     }
   }
