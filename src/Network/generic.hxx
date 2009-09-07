@@ -73,6 +73,7 @@ protected:
 private:
 
     string file_name;
+    string direction;
 
     int length;
     char buf[ FG_MAX_MSG_SIZE ];
