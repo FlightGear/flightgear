@@ -535,11 +535,13 @@ FGGeneric::reinit()
 
     SGPropertyNode *output = root.getNode("generic/output");
     if (output) {
+        _out_message.clear();
         read_config(output, _out_message);
     }
 
     SGPropertyNode *input = root.getNode("generic/input");
     if (input) {
+        _in_message.clear();
         read_config(input, _in_message);
     }
 }
