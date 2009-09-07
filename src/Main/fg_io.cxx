@@ -334,6 +334,11 @@ FGIO::init()
     }
 }
 
+void
+FGIO::reinit()
+{
+}
+
 
 // process any IO channel work
 void

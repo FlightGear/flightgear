@@ -61,37 +61,14 @@ FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false)
     }
 
     string config = tokens[ configToken ];
-    string file = config+".xml";
+    file_name = config+".xml";
 
-    SGPath path( globals->get_fg_root() );
-    path.append("Protocol");
-    path.append(file.c_str());
-    SG_LOG(SG_GENERAL, SG_INFO, "Reading communication protocol from "
-                                << path.str());
-
-    SGPropertyNode root;
-    try {
-        readProperties(path.str(), &root);
-    } catch (const sg_exception &) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
-         "Unable to load the protocol configuration file");
-         return;
-    }
-
-    if (tokens[2] == "out") {
-        SGPropertyNode *output = root.getNode("generic/output");
-        if (output) {
-            read_config(output, _out_message);
-        }
-    } else if (tokens[2] == "in") {
-        SGPropertyNode *input = root.getNode("generic/input");
-        if (input) {
-            read_config(input, _in_message);
-        }
-    } else {
+    if (tokens[2] != "in" && tokens[2] != "out") {
         SG_LOG(SG_GENERAL, SG_ALERT, "Unsuported protocol direction: "
                << tokens[2]);
     }
+
+    reinit();
 }
 
 FGGeneric::~FGGeneric() {
@@ -534,6 +511,37 @@ bool FGGeneric::close() {
     }
 
     return true;
+}
+
+
+void
+FGGeneric::reinit()
+{
+    SGPath path( globals->get_fg_root() );
+    path.append("Protocol");
+    path.append(file_name.c_str());
+
+    SG_LOG(SG_GENERAL, SG_INFO, "Reading communication protocol from "
+                                << path.str());
+
+    SGPropertyNode root;
+    try {
+        readProperties(path.str(), &root);
+    } catch (const sg_exception &) {
+        SG_LOG(SG_GENERAL, SG_ALERT,
+         "Unable to load the protocol configuration file");
+         return;
+    }
+
+    SGPropertyNode *output = root.getNode("generic/output");
+    if (output) {
+        read_config(output, _out_message);
+    }
+
+    SGPropertyNode *input = root.getNode("generic/input");
+    if (input) {
+        read_config(input, _in_message);
+    }
 }
 
 

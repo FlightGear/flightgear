@@ -47,6 +47,8 @@ public:
     // open hailing frequencies
     bool open();
 
+    void reinit();
+
     // process work for this port
     bool process();
 
@@ -69,6 +71,8 @@ protected:
     } _serial_prot;
 
 private:
+
+    string file_name;
 
     int length;
     char buf[ FG_MAX_MSG_SIZE ];

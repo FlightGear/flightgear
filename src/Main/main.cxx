@@ -484,9 +484,6 @@ static void fgMainLoop( void ) {
     // update the view angle as late as possible, but before sound calculations
     globals->get_viewmgr()->update(real_delta_time_sec);
 
-    // Do any I/O channel work that might need to be done (must come after viewmgr)
-    globals->get_io()->update(real_delta_time_sec);
-
 #ifdef ENABLE_AUDIO_SUPPORT
     // Right now we make a simplifying assumption that the primary
     // aircraft is the source of all sounds and that all sounds are
