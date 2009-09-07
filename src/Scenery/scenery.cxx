@@ -157,9 +157,14 @@ FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
           std::find(hit.getNodePath().begin(), hit.getNodePath().end(),
                     butNotFrom) != hit.getNodePath().end())
           continue;
-      SGVec3d point;
-      point.osg() = hit.getWorldIntersectPoint();
-      SGGeod geod = SGGeod::fromCart(point);
+
+      // We might need the double variant of the intersection point.
+      // Thus we cannot use the float variant delivered by
+      // hit.getWorldIntersectPoint() but we have to redo that with osg::Vec3d.
+      osg::Vec3d point = hit.getLocalIntersectPoint();
+      if (hit.getMatrix())
+        point = point*(*hit.getMatrix());
+      SGGeod geod = SGGeod::fromCart(toSG(point));
       double elevation = geod.getElevationM();
       if (alt < elevation) {
         alt = elevation;
@@ -209,12 +214,16 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
           std::find(hit.getNodePath().begin(), hit.getNodePath().end(),
                     butNotFrom) != hit.getNodePath().end())
           continue;
-      SGVec3d point;
-      point.osg() = hit.getWorldIntersectPoint();
-      double newdist = length(start - point);
+      // We might need the double variant of the intersection point.
+      // Thus we cannot use the float variant delivered by
+      // hit.getWorldIntersectPoint() but we have to redo that with osg::Vec3d.
+      osg::Vec3d point = hit.getLocalIntersectPoint();
+      if (hit.getMatrix())
+        point = point*(*hit.getMatrix());
+      double newdist = length(start - toSG(point));
       if (newdist < dist) {
         dist = newdist;
-        nearestHit = point;
+        nearestHit = toSG(point);
         hits = true;
       }
     }
@@ -228,7 +237,8 @@ bool FGScenery::scenery_available(const SGGeod& position, double range_m)
   if(globals->get_tile_mgr()->scenery_available(position, range_m))
   {
     double elev;
-    get_elevation_m(SGGeod::fromGeodM(position, SG_MAX_ELEVATION_M), elev, 0);
+    if (!get_elevation_m(SGGeod::fromGeodM(position, SG_MAX_ELEVATION_M), elev, 0, 0))
+      return false;
     SGVec3f p = SGVec3f::fromGeod(SGGeod::fromGeodM(position, elev));
     simgear::CheckSceneryVisitor csnv(getPagerSingleton(), p.osg(), range_m);
     // currently the PagedLODs will not be loaded by the DatabasePager
