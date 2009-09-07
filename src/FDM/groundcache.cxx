@@ -151,8 +151,8 @@ public:
         const SGMaterial* material = _material;
 
         _haveHit = false;
-        _center = SGVec3d(inverseMatrix.preMult(_center.osg()));
-        _down = SGVec3d(osg::Matrix::transform3x3(_down.osg(), inverseMatrix));
+        _center = toSG(inverseMatrix.preMult(toOsg(_center)));
+        _down = toSG(osg::Matrix::transform3x3(toOsg(_down), inverseMatrix));
         if (velocity) {
             SGVec3d staticCenter(_center);
 
@@ -208,7 +208,7 @@ public:
                 _sceneryHit = ori.transform(_sceneryHit);
                 _sceneryHit += dt*velocity->linear;
             }
-            _sceneryHit = SGVec3d(matrix.preMult(_sceneryHit.osg()));
+            _sceneryHit = toSG(matrix.preMult(toOsg(_sceneryHit)));
         } else {
             _material = material;
             _haveHit = haveHit;
@@ -263,7 +263,8 @@ public:
 
         SGLineSegmentd downSeg(_center, _center + _maxDown*_down);
         double maxDist = bound._radius + _radius;
-        return distSqr(downSeg, SGVec3d(bound._center)) <= maxDist*maxDist;
+        SGVec3d boundCenter(toVec3d(toSG(bound._center)));
+        return distSqr(downSeg, boundCenter) <= maxDist*maxDist;
     }
     
     SGSharedPtr<simgear::BVHNode> getBVHNode() const

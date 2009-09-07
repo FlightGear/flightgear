@@ -659,6 +659,6 @@ FGViewer::update (double dt)
     }
   }
   recalc();
-  _cameraGroup->update(_absolute_view_pos.osg(), mViewOrientation.osg());
+  _cameraGroup->update(toOsg(_absolute_view_pos), toOsg(mViewOrientation));
   _cameraGroup->setCameraParameters(get_v_fov(), get_aspect_ratio());
 }
