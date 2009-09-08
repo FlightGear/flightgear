@@ -299,16 +299,10 @@ double FGNavRadio::adjustILSRange( double stationElev, double aircraftElev,
 void 
 FGNavRadio::update(double dt) 
 {
-  // Do a nav station search only once a second to reduce
-  // unnecessary work. (Also, make sure to do this before caching
-  // any values!)
-  _time_before_search_sec -= dt;
-  if ( _time_before_search_sec < 0 ) {
-   search();
+  if (dt <= 0.0) {
+    return; // paused
   }
-
-  bool inrange = false;
-  
+    
   // Create "formatted" versions of the nav frequencies for
   // instrument displays.
   char tmp[16];
@@ -317,87 +311,79 @@ FGNavRadio::update(double dt)
   sprintf( tmp, "%.2f", alt_freq_node->getDoubleValue() );
   fmt_alt_freq_node->setStringValue(tmp);
 
-  if (_navaid
-      && power_btn_node->getBoolValue() 
+  if (power_btn_node->getBoolValue() 
       && (bus_power_node->getDoubleValue() > 1.0)
       && nav_serviceable_node->getBoolValue() )
   {   
-    inrange = updateWithPower(dt);
+    if (nav_slaved_to_gps_node->getBoolValue()) {
+      updateGPSSlaved();
+    } else {
+      updateReceiver(dt);
+    }
+    
+    updateCDI(dt);
   } else {
-    inrange_node->setBoolValue( false );
-    cdi_deflection_node->setDoubleValue( 0.0 );
-    cdi_xtrack_error_node->setDoubleValue( 0.0 );
-    cdi_xtrack_hdg_err_node->setDoubleValue( 0.0 );
-    time_to_intercept->setDoubleValue( 0.0 );
-    gs_deflection_node->setDoubleValue( 0.0 );
-    to_flag_node->setBoolValue( false );
-    from_flag_node->setBoolValue( false );
+    clearOutputs();
   }
-
-  updateAudio(inrange);
+  
+  updateAudio();
 }
 
-bool FGNavRadio::updateWithPower(double dt)
+void FGNavRadio::clearOutputs()
 {
-  bool nav_serviceable = nav_serviceable_node->getBoolValue();
-  bool cdi_serviceable = cdi_serviceable_node->getBoolValue();
-  bool tofrom_serviceable = tofrom_serviceable_node->getBoolValue();
-    
-  double az1, az2, s;
-  
+  inrange_node->setBoolValue( false );
+  cdi_deflection_node->setDoubleValue( 0.0 );
+  cdi_xtrack_error_node->setDoubleValue( 0.0 );
+  cdi_xtrack_hdg_err_node->setDoubleValue( 0.0 );
+  time_to_intercept->setDoubleValue( 0.0 );
+  gs_deflection_node->setDoubleValue( 0.0 );
+  to_flag_node->setBoolValue( false );
+  from_flag_node->setBoolValue( false );
+}
+
+void FGNavRadio::updateReceiver(double dt)
+{
+  // Do a nav station search only once a second to reduce
+  // unnecessary work. (Also, make sure to do this before caching
+  // any values!)
+  _time_before_search_sec -= dt;
+  if ( _time_before_search_sec < 0 ) {
+   search();
+  }
+
+  if (!_navaid) {
+    _cdiDeflection = 0.0;
+    _cdiCrossTrackErrorM = 0.0;
+    _toFlag = _fromFlag = false;
+    _gsNeedleDeflection = 0.0;
+    inrange_node->setBoolValue(false);
+    return;
+  }
+
   SGGeod pos = SGGeod::fromDegFt(lon_node->getDoubleValue(),
                                lat_node->getDoubleValue(),
                                alt_node->getDoubleValue());
-  
-  bool inrange = false;
-  if ( nav_slaved_to_gps_node->getBoolValue() ) {
-    // FIXME - GPS-slaved GS support in unfinished
-    has_gs_node->setBoolValue(gps_has_gs_node->getBoolValue());
-    inrange = gps_to_flag_node->getBoolValue() || gps_from_flag_node->getBoolValue();
-  } else {
-    inrange = inrange_node->getBoolValue();
-  }
-
+                               
   double nav_elev = _navaid->get_elev_ft();
   SGVec3d aircraft = SGVec3d::fromGeod(pos);
   double loc_dist = dist(aircraft, _navaid->cart());
   loc_dist_node->setDoubleValue( loc_dist );
   bool is_loc = loc_node->getBoolValue();
   double signal_quality_norm = signal_quality_norm_node->getDoubleValue();
-    
-  if (_gs) {
-    // find closest distance to the gs base line
-    double dist = sgdClosestPointToLineDistSquared(aircraft.data(), _gs->cart().data(),
-                                                   gs_base_vec.data());
-    gs_dist_node->setDoubleValue( sqrt( dist ) );
-    // cout << "gs_dist = " << gs_dist_node->getDoubleValue()
-    //      << endl;
-
-    // wgs84 heading to glide slope (to determine sign of distance)
-    SGGeodesy::inverse(pos, _gs->geod(), az1, az2, s);
-    double r = az1 - target_radial;
-    SG_NORMALIZE_RANGE(r, -180.0, 180.0);
-    if (fabs(r) <= 90.0) {
-        gs_dist_signed = gs_dist_node->getDoubleValue();
-    } else {
-        gs_dist_signed = -gs_dist_node->getDoubleValue();
-    }            
-  } else {
-    gs_dist_node->setDoubleValue( 0.0 );
-  }
-	
+  
+  double az2, s;
   //////////////////////////////////////////////////////////
 	// compute forward and reverse wgs84 headings to localizer
   //////////////////////////////////////////////////////////
   double hdg;
   SGGeodesy::inverse(pos, _navaid->geod(), hdg, az2, s);
-  heading_node->setDoubleValue( hdg );
+  heading_node->setDoubleValue(hdg);
   double radial = az2 - twist;
   double recip = radial + 180.0;
   SG_NORMALIZE_RANGE(recip, 0.0, 360.0);
   radial_node->setDoubleValue( radial );
   recip_radial_node->setDoubleValue( recip );
-
+  
   //////////////////////////////////////////////////////////
   // compute the target/selected radial in "true" heading
   //////////////////////////////////////////////////////////
@@ -446,133 +432,66 @@ bool FGNavRadio::updateWithPower(double dt)
            signal_quality_norm, dt );
   
   signal_quality_norm_node->setDoubleValue( signal_quality_norm );
-  if ( ! nav_slaved_to_gps_node->getBoolValue() ) {
-    /* not slaved to gps */
-    inrange = signal_quality_norm > 0.2;
-  }
+  bool inrange = signal_quality_norm > 0.2;
   inrange_node->setBoolValue( inrange );
-
+  
   //////////////////////////////////////////////////////////
   // compute to/from flag status
   //////////////////////////////////////////////////////////
-  if (tofrom_serviceable) {
-    if (nav_slaved_to_gps_node->getBoolValue()) {
-      to_flag_node->setBoolValue(gps_to_flag_node->getBoolValue());
-      from_flag_node->setBoolValue(gps_from_flag_node->getBoolValue());
-    } else if (inrange) {
-      bool toFlag = false;
-      if (is_loc) {
-        toFlag = true;
-      } else {
-        double offset = fabs(radial - target_radial);
-        toFlag = (offset > 90.0 && offset < 270.0);
-      }
-      
-      to_flag_node->setBoolValue(toFlag);
-      from_flag_node->setBoolValue(!toFlag);
-    } else { // out-of-range
-      to_flag_node->setBoolValue(false);
-      from_flag_node->setBoolValue(false);
+  if (inrange) {
+    if (is_loc) {
+      _toFlag = true;
+    } else {
+      double offset = fabs(radial - target_radial);
+      _toFlag = (offset > 90.0 && offset < 270.0);
     }
+    _fromFlag = !_toFlag;
   } else {
-    to_flag_node->setBoolValue(false);
-    from_flag_node->setBoolValue(false);
+    _toFlag = _fromFlag = false;
   }
   
-  //////////////////////////////////////////////////////////
-  // compute the deflection of the CDI needle, clamped to the range
-  // of ( -10 , 10 )
-  //////////////////////////////////////////////////////////
-  double r = 0.0;
-  bool loc_backside = false; // an in-code flag indicating that we are
-                             // on a localizer backcourse.
-  if ( cdi_serviceable ) {
-    if ( nav_slaved_to_gps_node->getBoolValue() ) {
-      r = gps_cdi_deflection_node->getDoubleValue();
-      // We want +- 5 dots deflection for the gps, so clamp
-      // to -12.5/12.5
-      SG_CLAMP_RANGE( r, -12.5, 12.5 );
-    } else if ( inrange ) {
-      r = radial - target_radial;
-      // cout << "Target radial = " << target_radial 
-      //      << "  Actual radial = " << radial << endl;
-      
-      SG_NORMALIZE_RANGE(r, -180.0, 180.0);
-      if ( fabs(r) > 90.0 ) {
-          r = ( r<0.0 ? -r-180.0 : -r+180.0 );
-      } else {
-        if (is_loc) {
-          loc_backside = true;
-        }
-      }
-
-      r = -r;         // reverse, since radial is outbound
-      if ( is_loc ) {
-          // According to Robin Peel, the ILS is 4x more
-          // sensitive than a vor
-          r *= 4.0;
-      }
-      SG_CLAMP_RANGE( r, -10.0, 10.0 );
-      r *= signal_quality_norm;
-    }
+  // CDI deflection
+  double r = radial - target_radial;
+  SG_NORMALIZE_RANGE(r, -180.0, 180.0);
+  if ( fabs(r) > 90.0 ) {
+    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
   }
-  cdi_deflection_node->setDoubleValue( r );
-
-  //////////////////////////////////////////////////////////
-  // compute the amount of cross track distance error in meters
-  //////////////////////////////////////////////////////////
-  double xtrack_error = 0.0;
-  if ( inrange && nav_serviceable && cdi_serviceable ) {
-      r = radial - target_radial;
-      SG_NORMALIZE_RANGE(r, -180.0, 180.0);
-      if ( fabs(r) > 90.0 ) {
-          r = ( r<0.0 ? -r-180.0 : -r+180.0 );
-      }
-
-      r = -r;             // reverse, since radial is outbound
-
-      xtrack_error = loc_dist * sin(r * SGD_DEGREES_TO_RADIANS);
-  } else {
-      xtrack_error = 0.0;
+  
+  r = -r; // reverse, since radial is outbound
+  _cdiDeflection = r;
+  if ( is_loc ) {
+    // According to Robin Peel, the ILS is 4x more
+    // sensitive than a vor
+    // http://www.allstar.fiu.edu/aero/ILS.htm confirms both the 4x sensitvity
+    // increase, and also the 'full-deflection is 10-degrees for a VOR' clamp
+    _cdiDeflection *= 4.0;
   }
-  cdi_xtrack_error_node->setDoubleValue( xtrack_error );
+  SG_CLAMP_RANGE(_cdiDeflection, -10.0, 10.0 );
+  _cdiDeflection *= signal_quality_norm;
+  
+  // cross-track error (in metres)
+  _cdiCrossTrackErrorM = loc_dist * sin(r * SGD_DEGREES_TO_RADIANS);
+  
+  updateGlideSlope(dt, aircraft, signal_quality_norm);
+  
+  last_loc_dist = loc_dist;
+}
 
-  //////////////////////////////////////////////////////////
-  // compute an approximate ground track heading error
-  //////////////////////////////////////////////////////////
-  double hdg_error = 0.0;
-  if ( inrange && cdi_serviceable ) {
-      double vn = fgGetDouble( "/velocities/speed-north-fps" );
-      double ve = fgGetDouble( "/velocities/speed-east-fps" );
-      double gnd_trk_true = atan2( ve, vn ) * SGD_RADIANS_TO_DEGREES;
-      if ( gnd_trk_true < 0.0 ) { gnd_trk_true += 360.0; }
-
-      SGPropertyNode *true_hdg
-          = fgGetNode("/orientation/heading-deg", true);
-      hdg_error = gnd_trk_true - true_hdg->getDoubleValue();
-
-      // cout << "ground track = " << gnd_trk_true
-      //      << " orientation = " << true_hdg->getDoubleValue() << endl;
+void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double signal_quality_norm)
+{
+  if (!_gs || !inrange_node->getBoolValue()) {
+    gs_dist_node->setDoubleValue( 0.0 );
+    return;
   }
-  cdi_xtrack_hdg_err_node->setDoubleValue( hdg_error );
-
-  //////////////////////////////////////////////////////////
-  // compute the time to intercept selected radial (based on
-  // current and last cross track errors and dt
-  //////////////////////////////////////////////////////////
-  if (dt > 0) { // Are we paused?
-      double t = 0.0;
-      if ( inrange && cdi_serviceable ) {
-          double xrate_ms = (last_xtrack_error - xtrack_error) / dt;
-          if ( fabs(xrate_ms) > 0.00001 ) {
-              t = xtrack_error / xrate_ms;
-          } else {
-              t = 9999.9;
-          }
-      }
-      time_to_intercept->setDoubleValue( t );
-  }
-
+  
+  // find closest distance to the gs base line
+  double dist = sgdClosestPointToLineDistSquared(aircraft.data(), _gs->cart().data(),
+                                                 gs_base_vec.data());
+  dist = sqrt(dist);
+  gs_dist_node->setDoubleValue(dist);
+  double heightAboveStationM = 
+    (alt_node->getDoubleValue() - _gs->elevation()) * SG_FEET_TO_METER;
+  
   //////////////////////////////////////////////////////////
   // compute the amount of glide slope needle deflection
   // (.i.e. the number of degrees we are off the glide slope * 5.0
@@ -584,53 +503,87 @@ bool FGNavRadio::updateWithPower(double dt)
   // needle animation.  This means that the needle should peg
   // when this values is +/-3.5.
   //////////////////////////////////////////////////////////
-  r = 0.0;
-  if (_gs && gs_serviceable_node->getBoolValue() ) {
-      if ( nav_slaved_to_gps_node->getBoolValue() ) {
-          // FIXME what should be set here?
-      } else if ( inrange ) {
-          double x = gs_dist_node->getDoubleValue();
-          double y = (alt_node->getDoubleValue() - nav_elev)
-              * SG_FEET_TO_METER;
-          // cout << "dist = " << x << " height = " << y << endl;
-          double angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
-          r = (target_gs - angle) * 5.0;
-          r *= signal_quality_norm;
-      }
-  }
-  gs_deflection_node->setDoubleValue( r );
-
+  double angle = atan2(heightAboveStationM, dist) * SGD_RADIANS_TO_DEGREES;
+  double deflectionAngle = target_gs - angle;
+  //SG_CLAMP_RANGE(deflectionAngle, -0.7, 0.7);
+  _gsNeedleDeflection = deflectionAngle * 5.0;
+  _gsNeedleDeflection *= signal_quality_norm;
+  
   //////////////////////////////////////////////////////////
   // Calculate desired rate of climb for intercepting the GS
   //////////////////////////////////////////////////////////
-  double x = gs_dist_node->getDoubleValue();
-  double y = (alt_node->getDoubleValue() - nav_elev)
-      * SG_FEET_TO_METER;
-  double current_angle = atan2( y, x ) * SGD_RADIANS_TO_DEGREES;
-
-  double target_angle = target_gs;
-  double gs_diff = target_angle - current_angle;
-
+  double gs_diff = target_gs - angle;
   // convert desired vertical path angle into a climb rate
-  double des_angle = current_angle - 10 * gs_diff;
+  double des_angle = angle - 10 * gs_diff;
 
   // estimate horizontal speed towards ILS in meters per minute
-  double dist = last_x - x;
-  last_x = x;
-  if ( dt > 0.0 ) {
-      // avoid nan
-      double new_vel = ( dist / dt );
+  double elapsedDistance = last_x - dist;
+  last_x = dist;
+      
+  double new_vel = ( elapsedDistance / dt );
+  horiz_vel = 0.75 * horiz_vel + 0.25 * new_vel;
 
-      horiz_vel = 0.75 * horiz_vel + 0.25 * new_vel;
-      // double horiz_vel = cur_fdm_state->get_V_ground_speed()
-      //    * SG_FEET_TO_METER * 60.0;
-      // double horiz_vel = airspeed_node->getFloatValue()
-      //    * SG_FEET_TO_METER * 60.0;
+  gs_rate_of_climb_node
+      ->setDoubleValue( -sin( des_angle * SGD_DEGREES_TO_RADIANS )
+                        * horiz_vel * SG_METER_TO_FEET );
+}
 
-      gs_rate_of_climb_node
-          ->setDoubleValue( -sin( des_angle * SGD_DEGREES_TO_RADIANS )
-                            * horiz_vel * SG_METER_TO_FEET );
+void FGNavRadio::updateGPSSlaved()
+{
+  has_gs_node->setBoolValue(gps_has_gs_node->getBoolValue());
+ 
+  _toFlag = gps_to_flag_node->getBoolValue();
+  _fromFlag = gps_from_flag_node->getBoolValue();
+
+  inrange_node->setBoolValue(_toFlag | _fromFlag);
+  
+  _cdiDeflection =  gps_cdi_deflection_node->getDoubleValue();
+  // clmap to some range (+/- 10 degrees) as the regular deflection
+  SG_CLAMP_RANGE(_cdiDeflection, -10.0, 10.0 );
+  
+  _cdiCrossTrackErrorM = 0.0; // FIXME, supply this
+  _gsNeedleDeflection = 0.0; // FIXME, supply this
+}
+
+void FGNavRadio::updateCDI(double dt)
+{
+  bool cdi_serviceable = cdi_serviceable_node->getBoolValue();
+  bool inrange = inrange_node->getBoolValue();
+                               
+  if (tofrom_serviceable_node->getBoolValue()) {
+    to_flag_node->setBoolValue(_toFlag);
+    from_flag_node->setBoolValue(_fromFlag);
+  } else {
+    to_flag_node->setBoolValue(false);
+    from_flag_node->setBoolValue(false);
   }
+  
+  if (!cdi_serviceable) {
+    _cdiDeflection = 0.0;
+    _cdiCrossTrackErrorM = 0.0;
+  }
+  
+  cdi_deflection_node->setDoubleValue(_cdiDeflection);
+  cdi_xtrack_error_node->setDoubleValue(_cdiCrossTrackErrorM);
+
+  //////////////////////////////////////////////////////////
+  // compute an approximate ground track heading error
+  //////////////////////////////////////////////////////////
+  double hdg_error = 0.0;
+  if ( inrange && cdi_serviceable ) {
+    double vn = fgGetDouble( "/velocities/speed-north-fps" );
+    double ve = fgGetDouble( "/velocities/speed-east-fps" );
+    double gnd_trk_true = atan2( ve, vn ) * SGD_RADIANS_TO_DEGREES;
+    if ( gnd_trk_true < 0.0 ) { gnd_trk_true += 360.0; }
+
+    SGPropertyNode *true_hdg
+        = fgGetNode("/orientation/heading-deg", true);
+    hdg_error = gnd_trk_true - true_hdg->getDoubleValue();
+
+    // cout << "ground track = " << gnd_trk_true
+    //      << " orientation = " << true_hdg->getDoubleValue() << endl;
+  }
+  cdi_xtrack_hdg_err_node->setDoubleValue( hdg_error );
 
   //////////////////////////////////////////////////////////
   // Calculate a suggested target heading to smoothly intercept
@@ -644,34 +597,52 @@ bool FGNavRadio::updateWithPower(double dt)
   // The cdi deflection should be +/-10 for a full range of deflection
   // so multiplying this by 3 gives us +/- 30 degrees heading
   // compensation.
-  double adjustment = cdi_deflection_node->getDoubleValue() * 3.0;
+  double adjustment = _cdiDeflection * 3.0;
   SG_CLAMP_RANGE( adjustment, -30.0, 30.0 );
 
   // determine the target heading to fly to intercept the
   // tgt_radial = target radial (true) + cdi offset adjustmest -
   // xtrack heading error adjustment
   double nta_hdg;
-  if ( is_loc && backcourse_node->getBoolValue() ) {
+  double trtrue = target_radial_true_node->getDoubleValue();
+  if ( loc_node->getBoolValue() && backcourse_node->getBoolValue() ) {
       // tuned to a localizer and backcourse mode activated
       trtrue += 180.0;   // reverse the target localizer heading
-      while ( trtrue > 360.0 ) { trtrue -= 360.0; }
+      SG_NORMALIZE_RANGE(trtrue, 0.0, 360.0);
       nta_hdg = trtrue - adjustment - hdg_error;
   } else {
       nta_hdg = trtrue + adjustment - hdg_error;
   }
 
-  while ( nta_hdg <   0.0 ) { nta_hdg += 360.0; }
-  while ( nta_hdg >= 360.0 ) { nta_hdg -= 360.0; }
+  SG_NORMALIZE_RANGE(nta_hdg, 0.0, 360.0);
   target_auto_hdg_node->setDoubleValue( nta_hdg );
 
-  last_xtrack_error = xtrack_error;
-  last_loc_dist = loc_dist;
-  return inrange;
+  //////////////////////////////////////////////////////////
+  // compute the time to intercept selected radial (based on
+  // current and last cross track errors and dt
+  //////////////////////////////////////////////////////////
+  double t = 0.0;
+  if ( inrange && cdi_serviceable ) {
+    double xrate_ms = (last_xtrack_error - _cdiCrossTrackErrorM) / dt;
+    if ( fabs(xrate_ms) > 0.00001 ) {
+        t = _cdiCrossTrackErrorM / xrate_ms;
+    } else {
+        t = 9999.9;
+    }
+  }
+  time_to_intercept->setDoubleValue( t );
+
+  if (!gs_serviceable_node->getBoolValue() ) {
+    _gsNeedleDeflection = 0.0;
+  }
+  gs_deflection_node->setDoubleValue(_gsNeedleDeflection);
+
+  last_xtrack_error = _cdiCrossTrackErrorM;
 }
 
-void FGNavRadio::updateAudio(bool aInRange)
+void FGNavRadio::updateAudio()
 {
-  if (!_navaid || !aInRange || !nav_serviceable_node->getBoolValue()) {
+  if (!_navaid || !inrange_node->getBoolValue() || !nav_serviceable_node->getBoolValue()) {
     return;
   }
   

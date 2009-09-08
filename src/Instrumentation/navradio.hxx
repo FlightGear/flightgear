@@ -124,7 +124,6 @@ class FGNavRadio : public SGSubsystem
     bool has_dme;
     double target_radial;
     SGVec3d gs_base_vec;
-    double gs_dist_signed;
     SGTimeStamp prev_time;
     SGTimeStamp curr_time;
     double effective_range;
@@ -141,6 +140,12 @@ class FGNavRadio : public SGSubsystem
     // internal periodic station search timer
     double _time_before_search_sec;
 
+    // CDI properties
+    bool _toFlag, _fromFlag;
+    double _cdiDeflection;
+    double _cdiCrossTrackErrorM;
+    double _gsNeedleDeflection;
+    
     bool updateWithPower(double aDt);
 
     // model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
@@ -151,8 +156,15 @@ class FGNavRadio : public SGSubsystem
     double adjustILSRange( double stationElev, double aircraftElev,
 			   double offsetDegrees, double distance );
 
-    void updateAudio(bool aInRange);
+    void updateAudio();
     void audioNavidChanged();
+
+    void updateReceiver(double dt);
+    void updateGlideSlope(double dt, const SGVec3d& aircraft, double signal_quality_norm);
+    void updateGPSSlaved();
+    void updateCDI(double dt);
+    
+    void clearOutputs();
 
     FGNavRecord* findPrimaryNavaid(const SGGeod& aPos, double aFreqMHz);
 public:
