@@ -161,9 +161,7 @@ void FGNavRecord::processSceneryILS(SGPropertyNode* aILSNode)
 void FGNavRecord::alignLocaliserWithRunway(double aThreshold)
 {
 // find the distance from the threshold to the localizer
-  SGGeod runwayThreshold(mRunway->threshold());
-  double dist, az1, az2;
-  SGGeodesy::inverse(mPosition, runwayThreshold, az1, az2, dist);
+  double dist = SGGeodesy::distanceM(mPosition, mRunway->threshold());
 
 // back project that distance along the runway center line
   SGGeod newPos = mRunway->pointOnCenterline(dist);
@@ -172,7 +170,7 @@ void FGNavRecord::alignLocaliserWithRunway(double aThreshold)
   SG_NORMALIZE_RANGE(hdg_diff, -180.0, 180.0);
 
   if ( fabs(hdg_diff) <= aThreshold ) {
-    mPosition = newPos;
+    mPosition = SGGeod::fromGeodFt(newPos, mPosition.getElevationFt());
     set_multiuse( mRunway->headingDeg() );
   } else {
     SG_LOG(SG_GENERAL, SG_WARN, "localizer:" << ident() << ", aligning with runway " 
