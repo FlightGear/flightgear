@@ -257,7 +257,7 @@ private:
     last_rwy_heading = heading;
 
     int surface_code = atoi( token[10].c_str() );
-    SGGeod pos(SGGeod::fromDegFt(lon, lat, 0.0));
+    SGGeod pos(SGGeod::fromDegFt(lon, lat, last_apt_elev));
     
     if (rwy_no[0] == 'x') {
       // taxiway
