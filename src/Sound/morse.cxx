@@ -167,6 +167,11 @@ bool FGMorse::cust_init(const int freq ) {
 
 // make a SGSoundSample morse code transmission for the specified string
 SGSoundSample *FGMorse::make_ident( const string& id, const int freq ) {
+
+    if (globals->get_soundmgr()->is_working() == false) {
+       return 0;
+    }
+
     char *idptr = (char *)id.c_str();
 
     int length = 0;

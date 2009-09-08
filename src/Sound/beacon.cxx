@@ -41,6 +41,10 @@ bool FGBeacon::init() {
     int len;
     unsigned char *ptr;
 
+    if (globals->get_soundmgr()->is_working() == false) {
+       return false;
+    }
+
     unsigned char inner_buf[ INNER_SIZE ] ;
     unsigned char middle_buf[ MIDDLE_SIZE ] ;
     unsigned char outer_buf[ OUTER_SIZE ] ;
