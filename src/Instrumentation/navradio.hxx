@@ -96,6 +96,7 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode_ptr loc_node;
     SGPropertyNode_ptr loc_dist_node;
     SGPropertyNode_ptr gs_deflection_node;
+    SGPropertyNode_ptr gs_deflection_norm_node;
     SGPropertyNode_ptr gs_rate_of_climb_node;
     SGPropertyNode_ptr gs_dist_node;
     SGPropertyNode_ptr nav_id_node;
@@ -145,6 +146,7 @@ class FGNavRadio : public SGSubsystem
     double _cdiDeflection;
     double _cdiCrossTrackErrorM;
     double _gsNeedleDeflection;
+    double _gsNeedleDeflectionNorm;
     
     bool updateWithPower(double aDt);
 
