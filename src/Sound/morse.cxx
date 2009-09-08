@@ -23,6 +23,7 @@
 
 #include <simgear/constants.h>
 
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
 #include "morse.hxx"
