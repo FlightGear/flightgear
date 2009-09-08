@@ -271,9 +271,14 @@ void FGEventHandler::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
     std::map<int, int>::iterator numPadIter = numlockKeyMap.find(key);
 
     if (numPadIter != numlockKeyMap.end()) {
+#ifdef __APPLE__
+        // Num Lock is always true on Mac
+        key = numPadIter->second;
+#else
         if (ea.getModKeyMask() & osgGA::GUIEventAdapter::MODKEY_NUM_LOCK) {
             key = numPadIter->second;
         }
+#endif
     }
 
     modifiers = osgToFGModifiers(ea.getModKeyMask());
