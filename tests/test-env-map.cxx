@@ -16,13 +16,15 @@
 # include <GLUT/glut.h>
 #else
 # include <GL/gl.h>
-# include <GL/glut.h>
+# ifdef HAVE_GLUT_H
+#  include <GL/glut.h>
+# endif
 #endif
 
 #define TEXRES_X 256
 #define TEXRES_Y 256
 
-
+#ifdef HAVE_GLUT_H
 unsigned char env_map[TEXRES_X][TEXRES_Y][4];
 GLuint texName;
 int window_x = 640, window_y = 480;
@@ -248,9 +250,11 @@ void keyboard (unsigned char key, int x, int y)
     break;
   }
 }
+#endif /* HAVE_GLUT_H */
 
 int main(int argc, char** argv)
 {
+#ifdef HAVE_GLUT_H
   glutInitWindowSize(window_x, window_y);
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
@@ -261,6 +265,10 @@ int main(int argc, char** argv)
   glutKeyboardFunc(keyboard);
 
   glutMainLoop();
+#else
+
+  printf("GL Utility Toolkit (glut) was not found on this system.\n");
+#endif
 
   return 0;
 }
