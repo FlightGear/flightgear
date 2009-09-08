@@ -24,6 +24,7 @@
 #include "beacon.hxx"
 
 #include <simgear/structure/exception.hxx>
+#include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
 // constructor
