@@ -24,7 +24,9 @@ Date: Fri, 24 Apr 1998 07:33:51 -0800
 # include <GLUT/glut.h>
 #else
 # include <GL/gl.h>
-# include <GL/glut.h>
+# ifdef HAVE_GLUT_H
+#  include <GL/glut.h>
+# endif
 #endif
 
 
@@ -63,6 +65,7 @@ void getPrinti ( GLenum token, char *string )
 
 int main ( int argc, char **argv )
 {
+#ifdef HAVE_GLUT_H
   glutInit            ( &argc, argv ) ;
   glutInitDisplayMode ( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH ) ;
   glutCreateWindow    ( "You should never see this window!"  ) ;
@@ -111,6 +114,10 @@ int main ( int argc, char **argv )
   getPrinti( GL_UNPACK_SKIP_ROWS  , "GL_UNPACK_SKIP_ROWS"   ) ;
   getPrinti( GL_BLEND_SRC  , "GL_BLEND_SRC"   ) ;
   getPrinti( GL_BLEND_DST  , "GL_BLEND_DST"   ) ;
+#else
+
+  printf("GL Utility Toolkit (glut) was not found on this system.\n");
+#endif
 
   return 0 ;
 }
