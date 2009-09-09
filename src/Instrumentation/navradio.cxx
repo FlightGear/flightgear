@@ -74,6 +74,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     inrange_node(NULL),
     signal_quality_norm_node(NULL),
     cdi_deflection_node(NULL),
+    cdi_deflection_norm_node(NULL),
     cdi_xtrack_error_node(NULL),
     cdi_xtrack_hdg_err_node(NULL),
     has_gs_node(NULL),
@@ -182,6 +183,7 @@ FGNavRadio::init ()
     inrange_node = node->getChild("in-range", 0, true);
     signal_quality_norm_node = node->getChild("signal-quality-norm", 0, true);
     cdi_deflection_node = node->getChild("heading-needle-deflection", 0, true);
+    cdi_deflection_norm_node = node->getChild("heading-needle-deflection-norm", 0, true);
     cdi_xtrack_error_node = node->getChild("crosstrack-error-m", 0, true);
     cdi_xtrack_hdg_err_node
         = node->getChild("crosstrack-heading-error-deg", 0, true);
@@ -335,6 +337,7 @@ void FGNavRadio::clearOutputs()
 {
   inrange_node->setBoolValue( false );
   cdi_deflection_node->setDoubleValue( 0.0 );
+  cdi_deflection_norm_node->setDoubleValue( 0.0 );
   cdi_xtrack_error_node->setDoubleValue( 0.0 );
   cdi_xtrack_hdg_err_node->setDoubleValue( 0.0 );
   time_to_intercept->setDoubleValue( 0.0 );
@@ -571,6 +574,7 @@ void FGNavRadio::updateCDI(double dt)
   }
   
   cdi_deflection_node->setDoubleValue(_cdiDeflection);
+  cdi_deflection_norm_node->setDoubleValue(_cdiDeflection * 0.1);
   cdi_xtrack_error_node->setDoubleValue(_cdiCrossTrackErrorM);
 
   //////////////////////////////////////////////////////////
