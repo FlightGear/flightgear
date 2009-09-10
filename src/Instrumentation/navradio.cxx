@@ -81,6 +81,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     loc_node(NULL),
     loc_dist_node(NULL),
     gs_deflection_node(NULL),
+    gs_deflection_deg_node(NULL),
     gs_deflection_norm_node(NULL),
     gs_rate_of_climb_node(NULL),
     gs_dist_node(NULL),
@@ -191,6 +192,7 @@ FGNavRadio::init ()
     loc_node = node->getChild("nav-loc", 0, true);
     loc_dist_node = node->getChild("nav-distance", 0, true);
     gs_deflection_node = node->getChild("gs-needle-deflection", 0, true);
+    gs_deflection_deg_node = node->getChild("gs-needle-deflection-deg", 0, true);
     gs_deflection_norm_node = node->getChild("gs-needle-deflection-norm", 0, true);
     gs_rate_of_climb_node = node->getChild("gs-rate-of-climb", 0, true);
     gs_dist_node = node->getChild("gs-distance", 0, true);
@@ -342,6 +344,7 @@ void FGNavRadio::clearOutputs()
   cdi_xtrack_hdg_err_node->setDoubleValue( 0.0 );
   time_to_intercept->setDoubleValue( 0.0 );
   gs_deflection_node->setDoubleValue( 0.0 );
+  gs_deflection_deg_node->setDoubleValue(0.0);
   gs_deflection_norm_node->setDoubleValue(0.0);
   
   to_flag_node->setBoolValue( false );
@@ -648,6 +651,7 @@ void FGNavRadio::updateCDI(double dt)
     _gsNeedleDeflectionNorm = 0.0;
   }
   gs_deflection_node->setDoubleValue(_gsNeedleDeflection);
+  gs_deflection_deg_node->setDoubleValue(_gsNeedleDeflectionNorm * 0.7);
   gs_deflection_norm_node->setDoubleValue(_gsNeedleDeflectionNorm);
   
   last_xtrack_error = _cdiCrossTrackErrorM;

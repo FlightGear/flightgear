@@ -97,6 +97,7 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode_ptr loc_node;
     SGPropertyNode_ptr loc_dist_node;
     SGPropertyNode_ptr gs_deflection_node;
+    SGPropertyNode_ptr gs_deflection_deg_node;
     SGPropertyNode_ptr gs_deflection_norm_node;
     SGPropertyNode_ptr gs_rate_of_climb_node;
     SGPropertyNode_ptr gs_dist_node;
