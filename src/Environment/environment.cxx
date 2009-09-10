@@ -633,7 +633,7 @@ FGEnvironment::_recalc_alt_pt ()
   }
 #endif
   double press, temp;
-  Unpack<double>(press,temp) = PT_vs_hpt(elevation_ft * foot, 
+  make_tuple(ref(press), ref(temp)) = PT_vs_hpt(elevation_ft * foot, 
         pressure_sea_level_inhg * inHg, temperature_sea_level_degc + freezing);
   temperature_degc = temp - freezing;
   pressure_inhg = press / inHg;

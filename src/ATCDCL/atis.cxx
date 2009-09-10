@@ -373,7 +373,7 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   {
     double press, temp;
     
-    Unpack<double>(press, temp) = PT_vs_hpt(elev*foot, Psl*inHg, Tsl + freezing);
+    make_tuple(ref(press), ref(temp)) = PT_vs_hpt(elev*foot, Psl*inHg, Tsl + freezing);
 #if 0
     SG_LOG(SG_ATC, SG_ALERT, "Field P: " << press << "  T: " << temp);
     SG_LOG(SG_ATC, SG_ALERT, "based on elev " << elev 

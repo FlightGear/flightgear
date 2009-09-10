@@ -112,12 +112,13 @@ double T_layer (
 //  from the table: the reference height in that layer, 
 //  the lapse in that layer, and the cap (if any) for that layer 
 // (which we take from the /next/ row of the table, if any).
-Pair<double> PT_vs_hpt(
+tuple<double,double> PT_vs_hpt(
       const double hh, 
       const double _p0,
       const double _t0
 ) {
   
+  const double d0(0);
   double hgt = ISA_def[0].height;
   double p0 =  _p0;
   double t0 =  _t0;
@@ -144,7 +145,7 @@ Pair<double> PT_vs_hpt(
       xhgt = (pp+1)->height;      
     }
     if (hh <= xhgt) {
-      return Pair<double>(P_layer(hh, hgt, p0, t0, lapse),
+      return make_tuple(P_layer(hh, hgt, p0, t0, lapse),
                  T_layer(hh, hgt, p0, t0, lapse));
     }
     p0 = P_layer(xhgt, hgt, p0, t0, lapse);
@@ -154,7 +155,7 @@ Pair<double> PT_vs_hpt(
   
 // Should never get here.
   SG_LOG(SG_GENERAL, SG_ALERT, "PT_vs_hpt: ran out of layers");
-  return Pair<double>(0,0);
+  return make_tuple(d0,d0);
 }
 
 
@@ -205,7 +206,7 @@ void FGAtmoCache::tabulate() {
 
     for (double hgt = -1000; hgt <= 32000;) {
         double press,temp;
-        Unpack<double>(press,temp) = PT_vs_hpt(hgt);
+        make_tuple(ref(press), ref(temp)) = PT_vs_hpt(hgt);
         a_tvs_p->addEntry(press / inHg, hgt / foot);
 
 #ifdef DEBUG_EXPORT_P_H
@@ -257,7 +258,7 @@ void FGAtmoCache::check_model() {
         using namespace atmodel;
         cache();
         double press,temp;
-        Unpack<double>(press,temp) = PT_vs_hpt(height);
+        make_tuple(ref(press), ref(temp)) = PT_vs_hpt(height);
         cout << "Height: " << height
              << " \tpressure: " << press << endl;
         cout << "Check:  "
