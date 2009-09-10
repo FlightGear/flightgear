@@ -378,9 +378,13 @@ bool FGGeneric::parse_message_ascii() {
 
         case FG_FIXED:
         case FG_FLOAT:
+            val = _in_message[i].offset + strtof(p1, 0) * _in_message[i].factor;
+            _in_message[i].prop->setFloatValue((float)val);
+            break;
+
         case FG_DOUBLE:
             val = _in_message[i].offset + strtod(p1, 0) * _in_message[i].factor;
-            _in_message[i].prop->setFloatValue((float)val);
+            _in_message[i].prop->setDoubleValue(val);
             break;
 
         default: // SG_STRING
