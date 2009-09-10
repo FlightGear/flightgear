@@ -718,7 +718,6 @@ struct GeneralInitOperation : public GraphicsContextOperation
 
 static void fgIdleFunction ( void ) {
     static osg::ref_ptr<GeneralInitOperation> genOp;
-    ////////cerr << "Idle state: " << idle_state << endl;
     if ( idle_state == 0 ) {
         idle_state++;
         // Pick some window on which to do queries.

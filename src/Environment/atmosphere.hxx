@@ -27,10 +27,9 @@
 
 #include <simgear/compiler.h>
 #include <simgear/math/interpolater.hxx>
-#include "boost/tuple/tuple.hpp"
-using namespace boost;
 
 #include <cmath>
+#include <utility>
 
 using namespace std;
 
@@ -84,7 +83,7 @@ public:
 
 extern const ISA_layer ISA_def[];
 
-tuple<double,double> PT_vs_hpt(
+std::pair<double,double> PT_vs_hpt(
           const double hh, 
           const double _p0 = atmodel::ISA::P0,
           const double _t0 = atmodel::ISA::T0);

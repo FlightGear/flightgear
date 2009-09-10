@@ -1,3 +1,5 @@
+#include <boost/tuple/tuple.hpp>
+
 #include <simgear/math/SGMath.hxx>
 #include <simgear/debug/logstream.hxx>
 
@@ -20,54 +22,6 @@ ISA_layer(7,  80000,  262467,  0.88628, 0.000261718, 196.65, -76.50),
 };
 
 const int ISA_def_size(sizeof(ISA_def) / sizeof(ISA_layer));
-
-#if 0
-// Pressure within a layer, as a function of height
-// and of layer parameters.
-// Physics model:  standard or nonstandard atmosphere,
-//  depending on what parameters you pass in.
-// Heights in meters, pressures in Pa.
-// As always, $lambda is positive in the troposphere,
-//  and zero in the first part of the stratosphere.
-// 
-double Ph_layer(
-  const double hh, 
-  const double hb, 
-  const double Pb, 
-  const double Tb, 
-  const double lambda) {
-using namespace atmodel;  
-  if (lambda) {
-//  (1/N) &:=& {g\,m_M \over \lambda\,R}
-    double N = lambda * Rgas / mm / g;
-    return Pb * pow((Tb - lambda*(hh - hb)) / Tb, 1/N);
-  } else {
-    return Pb * exp(-g * mm / Rgas / Tb * (hh - hb));
-  }
-}
-
-// Pressure as a function of height.
-// Valid below 32000 meters,
-//   i.e. troposphere and first two layers of stratosphere.
-// Does not depend on any caching; can be used to
-// *construct* caches and interpolation tables.
-//
-// Height in meters, pressure in pascals.
-
-double old_p_vs_a(const double height) {
-    using namespace atmodel;
-    if (height <= 11000.) {
-        return P_layer(height, 0.0, ISA::P0, ISA::T0, ISA::lam0);
-    } else if (height <= 20000.) {
-        return P_layer(height, 11000., 22632.06, 216.65, 0.0);
-    } else if (height <= 32000.) {
-        return P_layer(height, 20000.,  5474.89, 216.65, -0.001);
-    }
-    return 0;
-}
-
-
-#endif
 
 // Pressure within a layer, as a function of height.
 // Physics model:  standard or nonstandard atmosphere,
@@ -112,7 +66,7 @@ double T_layer (
 //  from the table: the reference height in that layer, 
 //  the lapse in that layer, and the cap (if any) for that layer 
 // (which we take from the /next/ row of the table, if any).
-tuple<double,double> PT_vs_hpt(
+pair<double,double> PT_vs_hpt(
       const double hh, 
       const double _p0,
       const double _t0
@@ -145,7 +99,7 @@ tuple<double,double> PT_vs_hpt(
       xhgt = (pp+1)->height;      
     }
     if (hh <= xhgt) {
-      return make_tuple(P_layer(hh, hgt, p0, t0, lapse),
+      return make_pair(P_layer(hh, hgt, p0, t0, lapse),
                  T_layer(hh, hgt, p0, t0, lapse));
     }
     p0 = P_layer(xhgt, hgt, p0, t0, lapse);
@@ -155,7 +109,7 @@ tuple<double,double> PT_vs_hpt(
   
 // Should never get here.
   SG_LOG(SG_GENERAL, SG_ALERT, "PT_vs_hpt: ran out of layers");
-  return make_tuple(d0,d0);
+  return make_pair(d0, d0);
 }
 
 
@@ -206,7 +160,7 @@ void FGAtmoCache::tabulate() {
 
     for (double hgt = -1000; hgt <= 32000;) {
         double press,temp;
-        make_tuple(ref(press), ref(temp)) = PT_vs_hpt(hgt);
+        boost::tie(press, temp) = PT_vs_hpt(hgt);
         a_tvs_p->addEntry(press / inHg, hgt / foot);
 
 #ifdef DEBUG_EXPORT_P_H
@@ -258,7 +212,7 @@ void FGAtmoCache::check_model() {
         using namespace atmodel;
         cache();
         double press,temp;
-        make_tuple(ref(press), ref(temp)) = PT_vs_hpt(height);
+        boost::tie(press, temp) = PT_vs_hpt(height);
         cout << "Height: " << height
              << " \tpressure: " << press << endl;
         cout << "Check:  "

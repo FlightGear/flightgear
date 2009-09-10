@@ -18,7 +18,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-// $Id: environment.cxx,v 1.1 2009/01/30 15:07:04 jsd Exp $
+// $Id$
 
 
 #ifdef HAVE_CONFIG_H
@@ -26,6 +26,8 @@
 #endif
 
 #include <math.h>
+
+#include <boost/tuple/tuple.hpp>
 
 #include <plib/sg.h>
 
@@ -205,12 +207,12 @@ FGEnvironment::read (const SGPropertyNode * node)
                      &FGEnvironment::set_visibility_m);
 
     if (!maybe_copy_value(this, node, "temperature-sea-level-degc",
-             &FGEnvironment::set_temperature_sea_level_degc))
+                          &FGEnvironment::set_temperature_sea_level_degc))
         maybe_copy_value(this, node, "temperature-degc",
                          &FGEnvironment::set_temperature_degc);
 
     if (!maybe_copy_value(this, node, "dewpoint-sea-level-degc",
-             &FGEnvironment::set_dewpoint_sea_level_degc))
+                          &FGEnvironment::set_dewpoint_sea_level_degc))
         maybe_copy_value(this, node, "dewpoint-degc",
                          &FGEnvironment::set_dewpoint_degc);
 
@@ -634,7 +636,7 @@ FGEnvironment::_recalc_alt_pt ()
   }
 #endif
   double press, temp;
-  make_tuple(ref(press), ref(temp)) = PT_vs_hpt(elevation_ft * foot, 
+  boost::tie(press, temp) = PT_vs_hpt(elevation_ft * foot, 
         pressure_sea_level_inhg * inHg, temperature_sea_level_degc + freezing);
   temperature_degc = temp - freezing;
   pressure_inhg = press / inHg;
