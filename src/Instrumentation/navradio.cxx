@@ -25,6 +25,8 @@
 #  include <config.h>
 #endif
 
+#include "navradio.hxx"
+
 #include <sstream>
 
 #include <simgear/sg_inlines.h>
@@ -36,12 +38,45 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/math/interpolater.hxx>
 
-#include "Navaids/navrecord.hxx"
+#include <Navaids/navrecord.hxx>
+
+#include <Airports/runways.hxx>
 #include <Navaids/navlist.hxx>
 #include <Main/util.hxx>
-#include "navradio.hxx"
+
 
 using std::string;
+
+// General-purpose sawtooth function.  Graph looks like this:
+//         /\                                    .
+//       \/
+// Odd symmetry, inversion symmetry about the origin.
+// Unit slope at the origin.
+// Max 1, min -1, period 4.
+// Two zero-crossings per period, one with + slope, one with - slope.
+// Useful for false localizer courses.
+static double sawtooth(double xx)
+{
+  return 4.0 * fabs(xx/4.0 + 0.25 - floor(xx/4.0 + 0.75)) - 1.0;
+}
+
+// Calculate a unit vector in the horizontal tangent plane
+// starting at the given "tail" of the vector and going off 
+// with the given heading.
+static SGVec3d tangentVector(const SGGeod& tail, const SGVec3d& tail_xyz, 
+          const double heading)
+{
+// The fudge factor here is presumably intended to improve
+// numerical stability.  I don't know if it is necessary.
+// It gets divided out later.
+  double fudge(100.0);
+  SGGeod head;
+  double az2; // ignored
+  SGGeodesy::direct(tail, heading, fudge, head, az2);
+  head.setElevationM(tail.getElevationM());
+  SGVec3d head_xyz = SGVec3d::fromGeod(head);
+  return (head_xyz - tail_xyz) * (1.0/fudge);
+}
 
 // Constructor
 FGNavRadio::FGNavRadio(SGPropertyNode *node) :
@@ -102,6 +137,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     last_x(0.0),
     last_loc_dist(0.0),
     last_xtrack_error(0.0),
+    _localizerWidth(5.0),
     _name(node->getStringValue("name", "nav")),
     _num(node->getIntValue("number", 0)),
     _time_before_search_sec(-1.0)
@@ -462,21 +498,24 @@ void FGNavRadio::updateReceiver(double dt)
   }
   
   // CDI deflection
-  double r = radial - target_radial;
+  double r = target_radial - radial;
   SG_NORMALIZE_RANGE(r, -180.0, 180.0);
-  if ( fabs(r) > 90.0 ) {
-    r = ( r<0.0 ? -r-180.0 : -r+180.0 );
-  }
   
-  r = -r; // reverse, since radial is outbound
-  _cdiDeflection = r;
   if ( is_loc ) {
-    // According to Robin Peel, the ILS is 4x more
-    // sensitive than a vor
-    // http://www.allstar.fiu.edu/aero/ILS.htm confirms both the 4x sensitvity
-    // increase, and also the 'full-deflection is 10-degrees for a VOR' clamp
-    _cdiDeflection *= 4.0;
-  }
+    // The factor of 30.0 gives a period of 120 which gives us 3 cycles and six 
+    // zeros i.e. six courses: one front course, one back course, and four 
+    // false courses. Three of the six are reverse sensing.
+    _cdiDeflection = 30.0 * sawtooth(r / 30.0);
+    const double VOR_FULL_ARC = 20.0; // VOR is -10 .. 10 degree swing
+    _cdiDeflection *= VOR_FULL_ARC / _localizerWidth; // increased localiser sensitivity
+  } else {
+    // handle the TO side of the VOR
+    if (fabs(r) > 90.0) {
+      r = ( r<0.0 ? -r-180.0 : -r+180.0 );
+    }
+    _cdiDeflection = r;
+  } // of non-localiser case
+  
   SG_CLAMP_RANGE(_cdiDeflection, -10.0, 10.0 );
   _cdiDeflection *= signal_quality_norm;
   
@@ -490,37 +529,47 @@ void FGNavRadio::updateReceiver(double dt)
 
 void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double signal_quality_norm)
 {
+  _gsNeedleDeflection = 0.0;
   if (!_gs || !inrange_node->getBoolValue()) {
     gs_dist_node->setDoubleValue( 0.0 );
     return;
   }
   
-  // find closest distance to the gs base line
-  double dist = sgdClosestPointToLineDistSquared(aircraft.data(), _gs->cart().data(),
-                                                 gs_base_vec.data());
-  dist = sqrt(dist);
-  gs_dist_node->setDoubleValue(dist);
-  double heightAboveStationM = 
-    (alt_node->getDoubleValue() - _gs->elevation()) * SG_FEET_TO_METER;
+  double gsDist = dist(aircraft, _gsCart);
+  gs_dist_node->setDoubleValue(gsDist);
+  if (gsDist > (_gs->get_range() * SG_NM_TO_METER)) {
+    return;
+  }
   
-  //////////////////////////////////////////////////////////
-  // compute the amount of glide slope needle deflection
-  // (.i.e. the number of degrees we are off the glide slope * 5.0
-  //
-  // CLO - 13 Mar 2006: The glide slope needle should peg at
-  // +/-0.7 degrees off the ideal glideslope.  I'm not sure why
-  // we compute the factor the way we do (5*gs_error), but we
-  // need to compensate for our 'odd' number in the glideslope
-  // needle animation.  This means that the needle should peg
-  // when this values is +/-3.5.
-  //////////////////////////////////////////////////////////
-  double angle = atan2(heightAboveStationM, dist) * SGD_RADIANS_TO_DEGREES;
+  SGVec3d pos = aircraft - _gsCart; // relative vector from gs antenna to aircraft
+  // The positive GS axis points along the runway in the landing direction,
+  // toward the far end, not toward the approach area, so we need a - sign here:
+  double dot_h = -dot(pos, _gsAxis);
+  double dot_v = dot(pos, _gsVertical);
+  double angle = atan2(dot_v, dot_h) * SGD_RADIANS_TO_DEGREES;
   double deflectionAngle = target_gs - angle;
-  //SG_CLAMP_RANGE(deflectionAngle, -0.7, 0.7);
+    
+  // Construct false glideslopes.  The scale factor of 1.5 
+  // in the sawtooth gives a period of 6 degrees.
+  // There will be zeros at 3, 6r, 9, 12r et cetera
+  // where "r" indicates reverse sensing.
+  // This is is consistent with conventional pilot lore
+  // e.g. http://www.allstar.fiu.edu/aerojava/ILS.htm
+  // but inconsistent with
+  // http://www.freepatentsonline.com/3757338.html
+  //
+  // It may be that some of each exist.
+  if (deflectionAngle < 0) {
+    deflectionAngle = 1.5 * sawtooth(deflectionAngle / 1.5);
+  } else {
+    // no false GS below the true GS
+  }
+  
   _gsNeedleDeflection = deflectionAngle * 5.0;
   _gsNeedleDeflection *= signal_quality_norm;
+  
+  SG_CLAMP_RANGE(deflectionAngle, -0.7, 0.7);
   _gsNeedleDeflectionNorm = (deflectionAngle / 0.7) * signal_quality_norm;
-  SG_CLAMP_RANGE(_gsNeedleDeflectionNorm, -1.0, 1.0);
   
   //////////////////////////////////////////////////////////
   // Calculate desired rate of climb for intercepting the GS
@@ -530,8 +579,8 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
   double des_angle = angle - 10 * gs_diff;
 
   // estimate horizontal speed towards ILS in meters per minute
-  double elapsedDistance = last_x - dist;
-  last_x = dist;
+  double elapsedDistance = last_x - gsDist;
+  last_x = gsDist;
       
   double new_vel = ( elapsedDistance / dt );
   horiz_vel = 0.75 * horiz_vel + 0.25 * new_vel;
@@ -753,9 +802,10 @@ void FGNavRadio::search()
       _gs = NULL;
     } else { // ILS or LOC
       _gs = globals->get_gslist()->findByFreq(freq, pos);
+      _localizerWidth = localizerWidth(nav);
       has_gs_node->setBoolValue(_gs != NULL);
       twist = 0.0;
-	    effective_range = FG_LOC_DEFAULT_RANGE;
+	    effective_range = nav->get_range();
       
       target_radial = nav->get_multiuse();
       SG_NORMALIZE_RANGE(target_radial, 0.0, 360.0);
@@ -764,10 +814,15 @@ void FGNavRadio::search()
         int tmp = (int)(_gs->get_multiuse() / 1000.0);
         target_gs = (double)tmp / 100.0;
         
-        SGGeod baseLine; 
-        double dummy;
-        SGGeodesy::direct(_gs->geod(), target_radial + 90.0, 100.0, baseLine, dummy);
-        gs_base_vec = SGVec3d::fromGeod(baseLine) - _gs->cart();
+        // GS axis unit tangent vector
+        // (along the runway)
+        _gsCart = _gs->cart();
+        _gsAxis = tangentVector(_gs->geod(), _gsCart, target_radial);
+
+        // GS baseline unit tangent vector
+        // (perpendicular to the runay along the ground)
+        SGVec3d baseline = tangentVector(_gs->geod(), _gsCart, target_radial + 90.0);
+        _gsVertical = cross(baseline, _gsAxis);
       } // of have glideslope
     } // of found LOC or ILS
     
@@ -785,6 +840,36 @@ void FGNavRadio::search()
   id_c2_node->setIntValue( (int)identBuffer[1] );
   id_c3_node->setIntValue( (int)identBuffer[2] );
   id_c4_node->setIntValue( (int)identBuffer[3] );
+}
+
+double FGNavRadio::localizerWidth(FGNavRecord* aLOC)
+{
+  FGRunway* rwy = aLOC->runway();
+  assert(rwy);
+  
+  SGVec3d thresholdCart(SGVec3d::fromGeod(rwy->threshold()));
+  double axisLength = dist(aLOC->cart(), thresholdCart);
+  double landingLength = dist(thresholdCart, SGVec3d::fromGeod(rwy->end()));
+  
+// Reference: http://dcaa.slv.dk:8000/icaodocs/
+// ICAO standard width at threshold is 210 m = 689 feet = approx 700 feet.
+// ICAO 3.1.1 half course = DDM = 0.0775
+// ICAO 3.1.3.7.1 Sensitivity 0.00145 DDM/m at threshold
+//  implies peg-to-peg of 214 m ... we will stick with 210.
+// ICAO 3.1.3.7.1 "Course sector angle shall not exceed 6 degrees."
+              
+// Very short runway:  less than 1200 m (4000 ft) landing length:
+  if (landingLength < 1200.0) {
+// ICAO fudges localizer sensitivity for very short runways.
+// This produces a non-monotonic sensitivity-versus length relation.
+    axisLength += 1050.0;
+  }
+
+// Example: very short: San Diego   KMYF (Montgomery Field) ILS RWY 28R
+// Example: short:      Tom's River KMJX (Robert J. Miller) ILS RWY 6
+// Example: very long:  Denver      KDEN (Denver)           ILS RWY 16R
+  double raw_width = 210.0 / axisLength * SGD_RADIANS_TO_DEGREES;
+  return raw_width < 6.0? raw_width : 6.0;
 }
 
 void FGNavRadio::audioNavidChanged()
