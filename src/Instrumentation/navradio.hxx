@@ -126,7 +126,6 @@ class FGNavRadio : public SGSubsystem
 
     bool has_dme;
     double target_radial;
-    SGVec3d gs_base_vec;
     SGTimeStamp prev_time;
     SGTimeStamp curr_time;
     double effective_range;
@@ -136,12 +135,15 @@ class FGNavRadio : public SGSubsystem
     double last_x;
     double last_loc_dist;
     double last_xtrack_error;
-
+    double _localizerWidth; // cached localizer width in degrees
+    
     string _name;
     int _num;
 
     // internal periodic station search timer
     double _time_before_search_sec;
+
+    SGVec3d _gsCart, _gsAxis, _gsVertical;
 
     // CDI properties
     bool _toFlag, _fromFlag;
@@ -170,6 +172,11 @@ class FGNavRadio : public SGSubsystem
     
     void clearOutputs();
 
+    /**
+     * Compute the localizer width in degrees - see implementation for 
+     * more information on the relevant standards and formulae.
+     */
+    double localizerWidth(FGNavRecord* aLOC);
     FGNavRecord* findPrimaryNavaid(const SGGeod& aPos, double aFreqMHz);
 public:
 
