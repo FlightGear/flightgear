@@ -27,6 +27,10 @@
 
 #include <math.h>
 
+#include <boost/tuple/tuple.hpp>
+
+#include <plib/sg.h>
+
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/interpolater.hxx>
@@ -34,14 +38,17 @@
 #include <simgear/environment/visual_enviro.hxx>
 
 #include <Main/fg_props.hxx>
+#include <signal.h>
 
 #include "environment.hxx"
-
+#include "atmosphere.hxx"
 
 
 ////////////////////////////////////////////////////////////////////////
 // Atmosphere model.
 ////////////////////////////////////////////////////////////////////////
+
+#ifdef USING_TABLES
 
 // Calculated based on the ISA standard day, as found at e.g.
 // http://www.av8n.com/physics/altimetry.htm
@@ -109,7 +116,7 @@ _setup_tables ()
 				   atmosphere_data[i][2]);
   }
 }
-
+#endif
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -137,7 +144,9 @@ void FGEnvironment::_init()
     ridge_lift_fps= 0;
     altitude_half_to_sun_m = 1000;
     altitude_tropo_top_m = 10000;
+#ifdef USING_TABLES
     _setup_tables();
+#endif
     _recalc_density();
     _recalc_relative_humidity();
     live_update = true;
@@ -233,9 +242,8 @@ FGEnvironment::read (const SGPropertyNode * node)
                      &FGEnvironment::set_turbulence_rate_hz);
     // calculate derived properties here to avoid duplicate expensive computations
     _recalc_ne();
-    _recalc_alt_temperature();
+    _recalc_alt_pt();
     _recalc_alt_dewpoint();
-    _recalc_alt_pressure();
     _recalc_density();
     _recalc_relative_humidity();
 
@@ -397,7 +405,7 @@ FGEnvironment::set_temperature_sea_level_degc (double t)
   if (dewpoint_sea_level_degc > t)
       dewpoint_sea_level_degc = t;
   if( live_update ) {
-    _recalc_alt_temperature();
+    _recalc_alt_pt();
     _recalc_density();
   }
 }
@@ -408,6 +416,8 @@ FGEnvironment::set_temperature_degc (double t)
   temperature_degc = t;
   if( live_update ) {
     _recalc_sl_temperature();
+    _recalc_sl_pressure();
+    _recalc_alt_pt();
     _recalc_density();
     _recalc_relative_humidity();
   }
@@ -441,7 +451,7 @@ FGEnvironment::set_pressure_sea_level_inhg (double p)
 {
   pressure_sea_level_inhg = p;
   if( live_update ) {
-    _recalc_alt_pressure();
+    _recalc_alt_pt();
     _recalc_density();
   }
 }
@@ -536,9 +546,8 @@ FGEnvironment::set_elevation_ft (double e)
 {
   elevation_ft = e;
   if( live_update ) {
-    _recalc_alt_temperature();
     _recalc_alt_dewpoint();
-    _recalc_alt_pressure();
+    _recalc_alt_pt();
     _recalc_density();
     _recalc_relative_humidity();
   }
@@ -614,26 +623,34 @@ FGEnvironment::_recalc_updraft ()
   wind_from_down_fps = thermal_lift_fps + ridge_lift_fps ;
 }
 
+// Intended to help with the interpretation of METAR data,
+// not for random in-flight outside-air temperatures.
 void
 FGEnvironment::_recalc_sl_temperature ()
 {
-  // If we're in the stratosphere, leave sea-level temp alone
-  if (elevation_ft < 38000) {
-    temperature_sea_level_degc = (temperature_degc + 273.15)
-        / _temperature_degc_table->interpolate(elevation_ft)
-      - 273.15;
-  }
-}
 
-void
-FGEnvironment::_recalc_alt_temperature ()
-{
-  if (elevation_ft < 38000) {
-    temperature_degc = (temperature_sea_level_degc + 273.15) *
-        _temperature_degc_table->interpolate(elevation_ft) - 273.15;
-  } else {
-    temperature_degc = -56.49;	// Stratosphere is constant
+#if 0
+  {
+    SG_LOG(SG_GENERAL, SG_DEBUG, "recalc_sl_temperature: using "
+      << temperature_degc << " @ " << elevation_ft << " :: " << this);
   }
+#endif
+
+  if (elevation_ft >= ISA_def[1].height) {
+    SG_LOG(SG_GENERAL, SG_ALERT, "recalc_sl_temperature: "
+        << "valid only in troposphere, not " << elevation_ft);
+    return;
+  }
+
+// Clamp: temperature of the stratosphere, in degrees C:
+  double t_strato = ISA_def[1].temp - atmodel::freezing;
+  if (temperature_degc < t_strato) temperature_sea_level_degc = t_strato;
+  else temperature_sea_level_degc = 
+      temperature_degc - elevation_ft * ISA_def[0].lapse;
+
+// Alternative implemenation:
+//  else temperature_sea_level_inhg = T_layer(0., elevation_ft * foot,
+//      pressure_inhg * inHg, temperature_degc + freezing, ISA_def[0].lapse) - freezing;
 }
 
 void
@@ -661,15 +678,45 @@ FGEnvironment::_recalc_alt_dewpoint ()
 void
 FGEnvironment::_recalc_sl_pressure ()
 {
-  pressure_sea_level_inhg =
-    pressure_inhg / _pressure_inhg_table->interpolate(elevation_ft);
+  using namespace atmodel;
+#if 0
+  {
+    SG_LOG(SG_GENERAL, SG_ALERT, "recalc_sl_pressure: using "
+      << pressure_inhg << " and "
+      << temperature_degc << " @ " << elevation_ft << " :: " << this);
+  }
+#endif
+  pressure_sea_level_inhg = P_layer(0., elevation_ft * foot,
+      pressure_inhg * inHg, temperature_degc + freezing, ISA_def[0].lapse) / inHg;
 }
 
+// This gets called at frame rate, to account for the aircraft's
+// changing altitude. 
+// Called by set_elevation_ft() which is called by FGEnvironmentMgr::update
+
 void
-FGEnvironment::_recalc_alt_pressure ()
+FGEnvironment::_recalc_alt_pt ()
 {
-  pressure_inhg =
-    pressure_sea_level_inhg * _pressure_inhg_table->interpolate(elevation_ft);
+  using namespace atmodel;
+#if 0
+  {
+    static int count(0);
+    if (++count % 1000 == 0) {
+      SG_LOG(SG_GENERAL, SG_ALERT, 
+           "recalc_alt_pt for: " << elevation_ft
+        << "  using "  << pressure_sea_level_inhg 
+        << "  and "  << temperature_sea_level_degc
+        << " :: " << this
+        << "  # " << count);
+        ///////////////////////////////////raise(SIGUSR1);
+    }
+  }
+#endif
+  double press, temp;
+  boost::tie(press, temp) = PT_vs_hpt(elevation_ft * foot, 
+        pressure_sea_level_inhg * inHg, temperature_sea_level_degc + freezing);
+  temperature_degc = temp - freezing;
+  pressure_inhg = press / inHg;
 }
 
 void
@@ -814,9 +861,8 @@ interpolate (const FGEnvironment * env1, const FGEnvironment * env2,
 
     // calculate derived properties here to avoid duplicate expensive computations
     result->_recalc_ne();
-    result->_recalc_alt_temperature();
+    result->_recalc_alt_pt();
     result->_recalc_alt_dewpoint();
-    result->_recalc_alt_pressure();
     result->_recalc_density();
     result->_recalc_relative_humidity();
 
