@@ -1,0 +1,27 @@
+
+Building SL for SGI.
+~~~~~~~~~~~~~~~~~~~~~~
+
+There are two options, depending on whether you want to use GCC or
+the standard SGI C++ compiler.
+
+GNU G++:
+
+   % make sgigcc
+   % su root
+   % make install
+
+SGI C++:
+
+   % make sgi
+   % su root
+   % make install
+
+...that's all folks.
+
+Header  files   go into /usr/include/SL (analogous to /usr/include/GL for graphics)
+Library file(s) go into /usr/lib
+
+When you link, be sure to include to -laudio
+
+
