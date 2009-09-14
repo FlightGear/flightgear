@@ -173,7 +173,7 @@ void FGNavRecord::alignLocaliserWithRunway(double aThreshold)
     mPosition = SGGeod::fromGeodFt(newPos, mPosition.getElevationFt());
     set_multiuse( mRunway->headingDeg() );
   } else {
-    SG_LOG(SG_GENERAL, SG_WARN, "localizer:" << ident() << ", aligning with runway " 
+    SG_LOG(SG_GENERAL, SG_DEBUG, "localizer:" << ident() << ", aligning with runway " 
       << mRunway->ident() << " exceeded heading threshold");
   }
 }
