@@ -271,6 +271,10 @@ FGNavRadio::unbind ()
 double FGNavRadio::adjustNavRange( double stationElev, double aircraftElev,
                                  double nominalRange )
 {
+    if (nominalRange < 0.0) {
+      nominalRange = FG_NAV_DEFAULT_RANGE;
+    }
+    
     // extend out actual usable range to be 1.3x the published safe range
     const double usability_factor = 1.3;
 
@@ -454,7 +458,7 @@ void FGNavRadio::updateReceiver(double dt)
 	    effective_range
                 = adjustNavRange( nav_elev, pos.getElevationM(), _navaid->get_range() );
 	}
-
+  
   double effective_range_m = effective_range * SG_NM_TO_METER;
 
   //////////////////////////////////////////////////////////
