@@ -1,0 +1,253 @@
+// joystick.cxx -- joystick support
+//
+// Written by Curtis Olson, started October 1998.
+//
+// Copyright (C) 1998  Curtis L. Olson - curt@me.umn.edu
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+// (Log is kept at end of this file)
+
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>                     
+#endif
+
+#include <Aircraft/aircraft.hxx>
+#include <Debug/logstream.hxx>
+
+#if defined( ENABLE_LINUX_JOYSTICK )
+#  include <js.h>
+#elif defined( ENABLE_GLUT_JOYSTICK )
+#  include <GL/glut.h>
+#  include <XGL/xgl.h>
+#endif
+
+
+#include "joystick.hxx"
+
+
+#if defined( ENABLE_LINUX_JOYSTICK )
+
+// joystick classes
+static jsJoystick *js0;
+static jsJoystick *js1;
+
+// these will hold the values of the axes
+static float *js_ax0, *js_ax1;
+
+#elif defined( ENABLE_GLUT_JOYSTICK )
+
+// Do we want these user settable ??
+static float joy_scale = 1./1000;
+
+// play with following to get your desired sensitivity
+static int x_dead_zone = 50;
+static int y_dead_zone = 2*x_dead_zone;
+
+// Joystick support using glut -- William Riley -- riley@technologist.com
+
+// Joystick fixed values for calibration and scaling
+static float joy_x_max = joy_scale;
+static float joy_y_max = joy_scale;
+
+static int joy_z_min = 1000, /* joy_z_ctr=0, */ joy_z_max = -1000;
+static int joy_z_dead_min = 100, joy_z_dead_max = -100;
+
+#else
+#  error port me: no joystick support
+#endif
+
+
+
+#if defined( ENABLE_GLUT_JOYSTICK )
+
+// Function called by glutJoystickFunc(), adjusts read values and
+// passes them to the necessary aircraft control functions
+void joystick(unsigned int buttonMask, int js_x, int js_y, int js_z)
+{
+    float joy_x, joy_y, joy_z;
+    // adjust the values to fgfs's scale and allow a 'dead zone' to
+    // reduce jitter code adapted from joystick.c by Michele
+    // F. America - nomimarketing@mail.telepac.pt
+
+    if( js_x > -x_dead_zone && js_x < x_dead_zone) {
+	joy_x = 0.0;
+    } else {
+	joy_x = js_x * joy_scale;
+    }
+
+    if( js_y > -y_dead_zone && js_y < y_dead_zone) {
+	joy_y = 0.0;
+    } else {
+	joy_y = js_y * joy_scale;
+    }
+
+    if( js_z >= joy_z_dead_min && js_z <= joy_z_dead_max ) {
+	joy_z = 0.0;
+    }
+    joy_z = (float)js_z / (float)(joy_z_max - joy_z_min);
+    joy_z = (((joy_z*2.0)+1.0)/2);
+
+    // Pass the values to the control routines
+    controls.set_elevator( -joy_y );
+    controls.set_aileron( joy_x );
+    controls.set_throttle( FGControls::ALL_ENGINES, joy_z );
+}
+
+#endif // ENABLE_GLUT_JOYSTICK
+
+
+// Initialize the joystick(s)
+int fgJoystickInit( void ) {
+
+    FG_LOG( FG_INPUT, FG_INFO, "Initializing joystick" );
+
+#if defined( ENABLE_LINUX_JOYSTICK )
+
+    js0 = new jsJoystick ( 0 );
+    js1 = new jsJoystick ( 1 );
+
+    if ( js0->notWorking () ) {
+	// not working
+    } else {
+	// allocate storage for axes values
+	js_ax0 = new float [ js0->getNumAxes() ];
+
+	// configure
+	js0->setDeadBand( 0, 0.1 );
+	js0->setDeadBand( 1, 0.1 );
+
+	FG_LOG ( FG_INPUT, FG_INFO, 
+		 "  Joystick 0 detected with " << js0->getNumAxes() 
+		 << " axes" );
+    }
+
+    if ( js1->notWorking () ) {
+	// not working
+    } else {
+	// allocate storage for axes values
+	js_ax1 = new float [ js1->getNumAxes() ];
+
+	// configure
+	js1->setDeadBand( 0, 0.1 );
+	js1->setDeadBand( 1, 0.1 );
+
+	FG_LOG ( FG_INPUT, FG_INFO,
+		 "  Joystick 1 detected with " << js1->getNumAxes() 
+		 << " axes" );
+    }
+
+    if ( js0->notWorking() && js1->notWorking() ) {
+	FG_LOG ( FG_INPUT, FG_INFO, "  No joysticks detected" );
+	return 0;
+    }
+
+#elif defined( ENABLE_GLUT_JOYSTICK )
+
+    glutJoystickFunc(joystick, 100);
+
+#else
+#  error port me: no joystick support
+#endif
+
+    return 1;
+}
+
+
+#if defined( ENABLE_LINUX_JOYSTICK )
+
+// update the control parameters based on joystick intput
+int fgJoystickRead( void ) {
+    int b;
+
+    if ( ! js0->notWorking() ) {
+	js0->read( &b, js_ax0 ) ;
+	controls.set_aileron( js_ax0[0] );
+	controls.set_elevator( -js_ax0[1] );
+    }
+
+    if ( ! js1->notWorking() ) {
+	js1->read( &b, js_ax1 ) ;
+	controls.set_rudder( js_ax1[0] );
+	controls.set_throttle( FGControls::ALL_ENGINES, -js_ax1[1] * 1.05 );
+    }
+
+    return 1;
+}
+
+#endif // ENABLE_LINUX_JOYSTICK
+
+
+// $Log$
+// Revision 1.8  1999/04/03 04:20:33  curt
+// Integration of Steve's plib conglomeration.
+//
+// Revision 1.7  1999/01/19 17:52:30  curt
+// Some joystick tweaks by Norman Vine.
+//
+// Revision 1.6  1998/12/05 16:13:16  curt
+// Renamed class fgCONTROLS to class FGControls.
+//
+// Revision 1.5  1998/11/06 21:18:04  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
+// Revision 1.4  1998/10/27 02:14:32  curt
+// Changes to support GLUT joystick routines as fall back.
+//
+// Revision 1.3  1998/10/25 14:08:44  curt
+// Turned "struct fgCONTROLS" into a class, with inlined accessor functions.
+//
+// Revision 1.2  1998/10/25 10:56:25  curt
+// Completely rewritten to use Steve Baker's joystick interface class.
+//
+// Revision 1.1  1998/10/24 22:28:16  curt
+// Renamed joystick.[ch] to joystick.[ch]xx
+// Added js.hxx which is Steve's joystick interface class.
+//
+// Revision 1.7  1998/04/25 22:06:29  curt
+// Edited cvs log messages in source files ... bad bad bad!
+//
+// Revision 1.6  1998/04/18 04:14:05  curt
+// Moved fg_debug.c to it's own library.
+//
+// Revision 1.5  1998/02/12 21:59:44  curt
+// Incorporated code changes contributed by Charlie Hotchkiss
+// <chotchkiss@namg.us.anritsu.com>
+//
+// Revision 1.4  1998/02/03 23:20:20  curt
+// Lots of little tweaks to fix various consistency problems discovered by
+// Solaris' CC.  Fixed a bug in fg_debug.c with how the fgPrintf() wrapper
+// passed arguments along to the real printf().  Also incorporated HUD changes
+// by Michele America.
+//
+// Revision 1.3  1998/01/27 00:47:54  curt
+// Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
+// system and commandline/config file processing code.
+//
+// Revision 1.2  1997/12/30 20:47:40  curt
+// Integrated new event manager with subsystem initializations.
+//
+// Revision 1.1  1997/08/29 18:06:54  curt
+// Initial revision.
+//
+

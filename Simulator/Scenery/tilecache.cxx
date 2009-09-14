@@ -1,0 +1,343 @@
+// tilecache.cxx -- routines to handle scenery tile caching
+//
+// Written by Curtis Olson, started January 1998.
+//
+// Copyright (C) 1997  Curtis L. Olson  - curt@infoplane.com
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+//
+// $Id$
+// (Log is kept at end of this file)
+
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#endif
+
+#include <GL/glut.h>
+#include <XGL/xgl.h>
+
+#include <Debug/logstream.hxx>
+#include <Airports/genapt.hxx>
+// #include <Bucket/bucketutils.hxx>
+#include <Main/options.hxx>
+#include <Main/views.hxx>
+#include <Objects/obj.hxx>
+
+#include "tile.hxx"
+#include "tilecache.hxx"
+
+
+// the tile cache
+fgTILECACHE global_tile_cache;
+
+
+// Constructor
+fgTILECACHE::fgTILECACHE( void ) {
+}
+
+
+// Initialize the tile cache subsystem
+void
+fgTILECACHE::init( void )
+{
+    int i;
+
+    FG_LOG( FG_TERRAIN, FG_INFO, "Initializing the tile cache." );
+
+    for ( i = 0; i < FG_TILE_CACHE_SIZE; i++ ) {
+	tile_cache[i].used = 0;
+    }
+}
+
+
+// Search for the specified "bucket" in the cache
+int
+fgTILECACHE::exists( const FGBucket& p )
+{
+    int i;
+
+    for ( i = 0; i < FG_TILE_CACHE_SIZE; i++ ) {
+	if ( tile_cache[i].tile_bucket == p ) {
+	    FG_LOG( FG_TERRAIN, FG_DEBUG, 
+		    "TILE EXISTS in cache ... index = " << i );
+	    return( i );
+	}
+    }
+    
+    return( -1 );
+}
+
+
+// Fill in a tile cache entry with real data for the specified bucket
+void
+fgTILECACHE::fill_in( int index, FGBucket& p )
+{
+    // Load the appropriate data file and build tile fragment list
+    string tile_path = current_options.get_fg_root() +
+	"/Scenery/" + p.gen_base_path() + "/" + p.gen_index_str();
+
+    tile_cache[index].used = true;
+    tile_cache[index].tile_bucket = p;
+    fgObjLoad( tile_path, &tile_cache[index] );
+//     tile_cache[ index ].ObjLoad( tile_path, p );
+
+    // cout << " ncount before = " << tile_cache[index].ncount << "\n";
+    // cout << " fragments before = " << tile_cache[index].fragment_list.size()
+    //      << "\n";
+
+    string apt_path = tile_path + ".apt";
+    fgAptGenerate( apt_path, &tile_cache[index] );
+
+    // cout << " ncount after = " << tile_cache[index].ncount << "\n";
+    // cout << " fragments after = " << tile_cache[index].fragment_list.size()
+    //      << "\n";
+}
+
+
+// Free a tile cache entry
+void
+fgTILECACHE::entry_free( int index )
+{
+    tile_cache[index].release_fragments();
+}
+
+
+// Return index of next available slot in tile cache
+int
+fgTILECACHE::next_avail( void )
+{
+    Point3D delta, abs_view_pos;
+    int i;
+    float max, med, min, tmp;
+    float dist, max_dist;
+    int max_index;
+    
+    max_dist = 0.0;
+    max_index = 0;
+
+    for ( i = 0; i < FG_TILE_CACHE_SIZE; i++ ) {
+	if ( ! tile_cache[i].used ) {
+	    return(i);
+	} else {
+	    // calculate approximate distance from view point
+	    abs_view_pos = current_view.get_abs_view_pos();
+
+	    FG_LOG( FG_TERRAIN, FG_DEBUG,
+		    "DIST Abs view pos = " << abs_view_pos );
+	    FG_LOG( FG_TERRAIN, FG_DEBUG,
+		    "    ref point = " << tile_cache[i].center );
+
+	    delta.setx( fabs(tile_cache[i].center.x() - abs_view_pos.x() ) );
+	    delta.sety( fabs(tile_cache[i].center.y() - abs_view_pos.y() ) );
+	    delta.setz( fabs(tile_cache[i].center.z() - abs_view_pos.z() ) );
+
+	    max = delta.x(); med = delta.y(); min = delta.z();
+	    if ( max < med ) {
+		tmp = max; max = med; med = tmp;
+	    }
+	    if ( max < min ) {
+		tmp = max; max = min; min = tmp;
+	    }
+	    dist = max + (med + min) / 4;
+
+	    FG_LOG( FG_TERRAIN, FG_DEBUG, "    distance = " << dist );
+
+	    if ( dist > max_dist ) {
+		max_dist = dist;
+		max_index = i;
+	    }
+	}
+    }
+
+    // If we made it this far, then there were no open cache entries.
+    // We will instead free the furthest cache entry and return it's
+    // index.
+    
+    entry_free( max_index );
+    return( max_index );
+}
+
+
+// Destructor
+fgTILECACHE::~fgTILECACHE( void ) {
+}
+
+
+// $Log$
+// Revision 1.23  1999/03/25 19:03:26  curt
+// Converted to use new bucket routines.
+//
+// Revision 1.22  1999/02/26 22:10:04  curt
+// Added initial support for native SGI compilers.
+//
+// Revision 1.21  1998/12/09 18:50:32  curt
+// Converted "class fgVIEW" to "class FGView" and updated to make data
+// members private and make required accessor functions.
+//
+// Revision 1.20  1998/11/09 23:40:49  curt
+// Bernie Bright <bbright@c031.aone.net.au> writes:
+// I've made some changes to the Scenery handling.  Basically just tidy ups.
+// The main difference is in tile.[ch]xx where I've changed list<fgFRAGMENT> to
+// vector<fgFRAGMENT>.  Studying our usage patterns this seems reasonable.
+// Lists are good if you need to insert/delete elements randomly but we
+// don't do that.  All access seems to be sequential.  Two additional
+// benefits are smaller memory usage - each list element requires pointers
+// to the next and previous elements, and faster access - vector iterators
+// are smaller and faster than list iterators.  This should also help
+// Charlie Hotchkiss' problem when compiling with Borland and STLport.
+//
+// ./Lib/Bucket/bucketutils.hxx
+//   Convenience functions for fgBUCKET.
+//
+// ./Simulator/Scenery/tile.cxx
+// ./Simulator/Scenery/tile.hxx
+//   Changed fragment list to a vector.
+//   Added some convenience member functions.
+//
+// ./Simulator/Scenery/tilecache.cxx
+// ./Simulator/Scenery/tilecache.hxx
+//   use const fgBUCKET& instead of fgBUCKET* where appropriate.
+//
+// ./Simulator/Scenery/tilemgr.cxx
+// ./Simulator/Scenery/tilemgr.hxx
+//   uses all the new convenience functions.
+//
+// Revision 1.19  1998/11/06 21:18:21  curt
+// Converted to new logstream debugging facility.  This allows release
+// builds with no messages at all (and no performance impact) by using
+// the -DFG_NDEBUG flag.
+//
+// Revision 1.18  1998/10/16 18:12:28  curt
+// Fixed a bug in the conversion to Point3D.
+//
+// Revision 1.17  1998/10/16 00:55:48  curt
+// Converted to Point3D class.
+//
+// Revision 1.16  1998/09/14 12:45:23  curt
+// minor tweaks.
+//
+// Revision 1.15  1998/08/27 17:02:10  curt
+// Contributions from Bernie Bright <bbright@c031.aone.net.au>
+// - use strings for fg_root and airport_id and added methods to return
+//   them as strings,
+// - inlined all access methods,
+// - made the parsing functions private methods,
+// - deleted some unused functions.
+// - propogated some of these changes out a bit further.
+//
+// Revision 1.14  1998/08/25 16:52:43  curt
+// material.cxx material.hxx obj.cxx obj.hxx texload.c texload.h moved to
+//   ../Objects
+//
+// Revision 1.13  1998/07/13 21:02:00  curt
+// Wrote access functions for current fgOPTIONS.
+//
+// Revision 1.12  1998/07/12 03:18:29  curt
+// Added ground collision detection.  This involved:
+// - saving the entire vertex list for each tile with the tile records.
+// - saving the face list for each fragment with the fragment records.
+// - code to intersect the current vertical line with the proper face in
+//   an efficient manner as possible.
+// Fixed a bug where the tiles weren't being shifted to "near" (0,0,0)
+//
+// Revision 1.11  1998/07/04 00:54:30  curt
+// Added automatic mipmap generation.
+//
+// When rendering fragments, use saved model view matrix from associated tile
+// rather than recalculating it with push() translate() pop().
+//
+// Revision 1.10  1998/05/23 14:09:22  curt
+// Added tile.cxx and tile.hxx.
+// Working on rewriting the tile management system so a tile is just a list
+// fragments, and the fragment record contains the display list for that fragment.
+//
+// Revision 1.9  1998/05/20 20:53:54  curt
+// Moved global ref point and radius (bounding sphere info, and offset) to
+// data file rather than calculating it on the fly.
+// Fixed polygon winding problem in scenery generation stage rather than
+// compensating for it on the fly.
+// Made a fgTILECACHE class.
+//
+// Revision 1.8  1998/05/16 13:09:57  curt
+// Beginning to add support for view frustum culling.
+// Added some temporary code to calculate bouding radius, until the
+//   scenery generation tools and scenery can be updated.
+//
+// Revision 1.7  1998/05/13 18:26:41  curt
+// Root path info moved to fgOPTIONS.
+//
+// Revision 1.6  1998/05/02 01:52:17  curt
+// Playing around with texture coordinates.
+//
+// Revision 1.5  1998/04/30 12:35:31  curt
+// Added a command line rendering option specify smooth/flat shading.
+//
+// Revision 1.4  1998/04/28 01:21:43  curt
+// Tweaked texture parameter calculations to keep the number smaller.  This
+// avoids the "swimming" problem.
+// Type-ified fgTIME and fgVIEW.
+//
+// Revision 1.3  1998/04/25 22:06:32  curt
+// Edited cvs log messages in source files ... bad bad bad!
+//
+// Revision 1.2  1998/04/24 00:51:08  curt
+// Wrapped "#include <config.h>" in "#ifdef HAVE_CONFIG_H"
+// Tweaked the scenery file extentions to be "file.obj" (uncompressed)
+// or "file.obz" (compressed.)
+//
+// Revision 1.1  1998/04/22 13:22:46  curt
+// C++ - ifing the code a bit.
+//
+// Revision 1.11  1998/04/18 04:14:07  curt
+// Moved fg_debug.c to it's own library.
+//
+// Revision 1.10  1998/04/14 02:23:17  curt
+// Code reorganizations.  Added a Lib/ directory for more general libraries.
+//
+// Revision 1.9  1998/04/08 23:30:07  curt
+// Adopted Gnu automake/autoconf system.
+//
+// Revision 1.8  1998/04/03 22:11:38  curt
+// Converting to Gnu autoconf system.
+//
+// Revision 1.7  1998/02/01 03:39:55  curt
+// Minor tweaks.
+//
+// Revision 1.6  1998/01/31 00:43:26  curt
+// Added MetroWorks patches from Carmen Volpe.
+//
+// Revision 1.5  1998/01/29 00:51:39  curt
+// First pass at tile cache, dynamic tile loading and tile unloading now works.
+//
+// Revision 1.4  1998/01/27 03:26:43  curt
+// Playing with new fgPrintf command.
+//
+// Revision 1.3  1998/01/27 00:48:03  curt
+// Incorporated Paul Bleisch's <pbleisch@acm.org> new debug message
+// system and commandline/config file processing code.
+//
+// Revision 1.2  1998/01/26 15:55:24  curt
+// Progressing on building dynamic scenery system.
+//
+// Revision 1.1  1998/01/24 00:03:29  curt
+// Initial revision.
+
+
+

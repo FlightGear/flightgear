@@ -1,0 +1,28 @@
+REM @ECHO OFF
+
+REM Skip ahead to RUN1 if %FG_ROOT%\BIN\FGFS.EXE exists
+IF EXIST %FG_ROOT%\BIN\FGFS.EXE GOTO RUN1
+
+REM %FG_ROOT% wasn't set right so let's try "."
+SET FG_ROOT=.
+IF EXIST %FG_ROOT%\BIN\FGFS.EXE GOTO RUN1
+
+REM %FG_ROOT% wasn't set right so let's try ".."
+SET FG_ROOT=..
+IF EXIST %FG_ROOT%\BIN\FGFS.EXE GOTO RUN1
+
+REM %FG_ROOT% wasn't set right so let's try "@prefix@"
+SET FG_ROOT=@prefix@
+IF EXIST %FG_ROOT%\BIN\FGFS.EXE GOTO RUN1
+
+ECHO Cannot find %FG_ROOT%\BIN\FGFS.EXE
+GOTO END
+
+:RUN1
+REM Now that FG_ROOT has been set, run the program
+ECHO FG_ROOT = %FG_ROOT%
+%FG_ROOT%\BIN\FGFS.EXE %1 %2 %3 %4 %5 %6 %7 %8 %9
+
+GOTO END
+
+:END
