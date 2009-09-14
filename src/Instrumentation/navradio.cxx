@@ -120,6 +120,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     gs_deflection_norm_node(NULL),
     gs_rate_of_climb_node(NULL),
     gs_dist_node(NULL),
+    gs_inrange_node(NULL),
     nav_id_node(NULL),
     id_c1_node(NULL),
     id_c2_node(NULL),
@@ -232,6 +233,8 @@ FGNavRadio::init ()
     gs_deflection_norm_node = node->getChild("gs-needle-deflection-norm", 0, true);
     gs_rate_of_climb_node = node->getChild("gs-rate-of-climb", 0, true);
     gs_dist_node = node->getChild("gs-distance", 0, true);
+    gs_inrange_node = node->getChild("gs-in-range", 0, true);
+    
     nav_id_node = node->getChild("nav-id", 0, true);
     id_c1_node = node->getChild("nav-id_asc1", 0, true);
     id_c2_node = node->getChild("nav-id_asc2", 0, true);
@@ -255,20 +258,12 @@ FGNavRadio::init ()
 void
 FGNavRadio::bind ()
 {
-    std::ostringstream temp;
-    string branch;
-    temp << _num;
-    branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 }
 
 
 void
 FGNavRadio::unbind ()
 {
-    std::ostringstream temp;
-    string branch;
-    temp << _num;
-    branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 }
 
 
@@ -382,6 +377,7 @@ void FGNavRadio::clearOutputs()
   gs_deflection_node->setDoubleValue( 0.0 );
   gs_deflection_deg_node->setDoubleValue(0.0);
   gs_deflection_norm_node->setDoubleValue(0.0);
+  gs_inrange_node->setBoolValue( false );
   
   to_flag_node->setBoolValue( false );
   from_flag_node->setBoolValue( false );
@@ -532,12 +528,16 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
   _gsNeedleDeflection = 0.0;
   if (!_gs || !inrange_node->getBoolValue()) {
     gs_dist_node->setDoubleValue( 0.0 );
+    gs_inrange_node->setBoolValue(false);
     return;
   }
   
   double gsDist = dist(aircraft, _gsCart);
   gs_dist_node->setDoubleValue(gsDist);
-  if (gsDist > (_gs->get_range() * SG_NM_TO_METER)) {
+  bool gsInRange = (gsDist < (_gs->get_range() * SG_NM_TO_METER));
+  gs_inrange_node->setBoolValue(gsInRange);
+        
+  if (!gsInRange) {
     return;
   }
   
@@ -800,10 +800,11 @@ void FGNavRadio::search()
     if (nav->type() == FGPositioned::VOR) {
       target_radial = sel_radial_node->getDoubleValue();
       _gs = NULL;
+      has_gs_node->setBoolValue(false);
     } else { // ILS or LOC
       _gs = globals->get_gslist()->findByFreq(freq, pos);
-      _localizerWidth = localizerWidth(nav);
       has_gs_node->setBoolValue(_gs != NULL);
+      _localizerWidth = localizerWidth(nav);
       twist = 0.0;
 	    effective_range = nav->get_range();
       
