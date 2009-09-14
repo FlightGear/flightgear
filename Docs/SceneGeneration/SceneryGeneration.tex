@@ -1,0 +1,563 @@
+%
+% `SceneryGeneration.tex' -- describes the scenery generation tool pipeline
+%
+%  Written by Curtis Olson.  Started February, 1999.  curt@flightgear.org
+%
+% $Id$
+%------------------------------------------------------------------------
+
+
+\documentclass[12pt]{article}
+
+\usepackage{anysize}
+\papersize{11in}{8.5in}
+\marginsize{1in}{1in}{1in}{1in}
+
+\usepackage{amsmath}
+
+\usepackage{epsfig}
+
+\usepackage{setspace}
+\onehalfspacing
+
+\usepackage{url}
+
+
+\begin{document}
+
+
+\title{
+  Flight Gear Scenery Generation Tools.
+}
+
+
+\author{
+    Curtis L. Olson\\ 
+    (\texttt{curt@flightgear.org})
+}
+
+
+\maketitle
+
+
+\section{Introduction}
+
+This document gives a brief overview of the Flight Gear scenery
+generation tools and how they fit together in a pipeline to produce
+the runtime scenery from the raw data.
+
+The first sections describe how the Flight Gear Earth is subdivided
+and the coordinate systems that Flight Gear uses internally.  The
+remaining sections describe the tools that take diverse data sources
+and produce the actual scenery.
+
+
+\section{Internal Scenery Representation}
+
+This section describes how FG represents, manipulates, and
+transforms scenery internally.
+
+Internal, all FG scenery is defined using a cartesian coordinate
+system centered at the center of the earth.  Please refer to the
+Flight Gear CoordinateSystem document for more information.  This
+means that one of the scenery tools processing steps will be to
+convert from the source data coordinate system to the internal Flight
+Gear coordinate system.
+
+
+\subsection{Scenery Partitioning}
+
+Flight Gear splits the world up into tiles.  This splits up the
+immense scenery data base into chunks that are managable by the run
+time simulator.
+
+Tile edges are parallel to longitude and latitude lines.  Tiles are
+gauranteed to be at least 8 miles long in both width and height.  As
+we move towards the poles, the tiles get narrower, so at certain
+predefined latitudes, the tile with is doubled.  Figure \ref{fig:lats}
+shows latitudes vs.  tile widths.  The southern hemisphere is a mirror
+image of the northern hemisphere.
+
+\begin{figure}[hbt]
+ \begin{center}
+  \begin{tabular}{||l|l||} \hline
+    Latitude Range & Tile Width \\ \hline
+    $[0, 22)$  & $\frac{1}{8}$ degree \\ \hline
+    $[22, 62)$ & $\frac{1}{4}$ degree \\ \hline
+    $[62, 76)$ & $\frac{1}{2}$ degree \\ \hline
+    $[76, 83)$ & $1$ degree \\ \hline
+    $[83, 86)$ & $2$ degrees \\ \hline
+    $[86, 88)$ & $4$ degrees \\ \hline
+    $[88, 89)$ & $8$ degrees \\ \hline
+    $[89, 90]$ & polar cap \\ \hline
+   \hline
+  \end{tabular}
+ \end{center}
+
+ \caption{Latitude vs. Tile Widths.}
+ \label{fig:lats}
+\end{figure}
+
+
+Since Flight Gear tiles are partitioned parallel to longitude and
+latitude lines, they have a trapezium shape.  Figure \ref{fig:trap}
+shows an exaggerated scenery area.
+
+\begin{figure}[hbt]
+  \centerline{                   
+      \psfig{file=trap.eps}
+  }
+  \caption{Basic Tile Shape}
+  \label{fig:trap}
+\end{figure}
+
+\subsection{Reference Points}
+
+Each scenery area will have a reference point at the center of its
+area.  This reference point (for purposes of avoiding floating point
+precision problems) defines the origin of a local coordinate system
+which.  The local coordinate system is simply translated from the
+global coordinate system by the distance of the tile's center
+reference point from the center of the earth.  Figure
+\ref{fig:reference} demonstrates this better than I can explain it.
+
+\begin{figure}[hbt]
+  \centerline{                   
+      \psfig{file=ref.eps}
+  }
+  \caption{Reference Points and Translations}
+  \label{fig:reference}
+\end{figure}
+
+All the objects for a specific scenery area will be defined based on
+this local coordinate system.  For each scenery area we define a
+vector $\vec{\mathbf{a}}$ which represents the distance from the
+center of the earth to the local coordinate system.
+
+
+\subsection{Putting the pieces of scenery together}
+
+To render a scene, the scenery manager will need to load all the
+visible tiles.  Before rendering each tile we translate it by
+$\vec{\mathbf{a}}_{current} - \vec{\mathbf{a}}_{n}$.  This moves all
+the rendered tiles near to the origin, while maintaining the relative
+positions and orientations.  The of moving all the tiles near the
+origin before rendering them is to try to reduce floating point round
+off problems.
+
+When rendering, it is straightforward to calculate the proper view
+point and up vector so that the scenery will appear right side up when
+it is rendered.
+
+\subsection{Scenery file format}
+
+Here is a very brief overview of the flight gear scenery file format.
+Some of this format will have to change in the future, so I won't put
+a lot of effort here right now.  This description will be most
+understandable if you reference an actual scenery tile file.  If you
+have questions, please ask!
+
+\begin{itemize}
+  
+\item Coordinates are in (X, Y, Z) with (0, 0, 0) being the center of
+  the earth.  Units are in meters.
+  
+\item ``gbs'' is the ``global bounding sphere'' specified by the
+  center reference point and a radius.
+  
+\item This is followed by a list of vertices prefaced by ``v''
+  specifying the offsets of the vertices from the gbs reference point.
+  
+\item Then follows the list of vertex normals ``vn''.
+  
+\item Then the sets of triangle strips are specifed:
+  
+\item ``usemtl'' points to a material property record in the materials
+  file and specifies the texture/color/etc. for this triangle strip.
+  
+\item ``bs'' specifies the bounding sphere for this particular tri
+  strip (for view frustum culling)
+  
+\item ``t'' is the start of a tri strip and the integer numbers are
+  just indices back into the vertex and vertex normal lists.
+
+\item ``q'' is simply a continuation of the triangle strip.
+\end{itemize}
+
+I will eventually need to add texture coordinate support to this file
+format, as well as a way to reference and position objects from an
+external library.
+
+
+\section{Scenery Generation}
+
+This section is very fluid right now.  I have implemented a first pass
+at generating scenery.  This was a good learning experience, but it
+exposed several flaws and limitations in my original approach.  I am
+in the midst of a complete overhaul of these tools which is intended
+to address all the short comings of my first attempt.  At this point I
+am simply outlining the plan.  Much of this could change as my plan
+continues to smack up against reality.
+
+With that in mind, the scenery generation tools can be subdivided into
+four major categories.
+
+\begin{itemize}
+
+\item Libraries which provide basic functionality used by the terrain
+  tools.
+
+\item Preprocessing tools which convert data from it's original format
+  (as downloaded from the net) to something that is easier for the
+  scenery tools to process.
+
+\item Scenery generation tools which assemble and massage the
+  resulting input data into the Flight Gear scenery format.
+
+\item Miscellaneous utilities
+
+\end{itemize}
+
+\subsection{Libraries}
+
+
+\subsubsection{GPC}
+
+GPC is the ``Generic Polygon Clipper'' library.  It is available from
+
+\url{http://www.cs.man.ac.uk/aig/staff/alan/software}
+
+Please be aware that the licensing terms for the gpc library clash
+with the GPL and prevent the source code from being redistributed with
+any GPL program.  Therefore any developers interested in building the
+scenery tools will have to fetch and install this library individually
+on their own systems.
+
+\subsubsection{GFC}
+ 
+GFC is the ``Geographic Foundation Classes'' library.  It is available
+from:
+
+\url{http://www.geog.psu.edu/~qian/gfc/index.html}
+
+This library allows programs to process GIS shapefiles and extract out
+the lon/lat coordinates of the GIS structures.
+
+\subsubsection{DEM}
+
+This library has routines to parse the 3 arcsec DEM file format, and
+output a square section corresponding to a specified tile.
+
+\subsubsection{Polygon}
+
+This lib contains routines to assign a unique id number to each
+polygon before it is clipped against tial boundaries.  We can use this
+unique id later on to match up the edges of polygons across tile
+boundaries.
+
+This lib also contains routines to track and assign names (types) to
+each polygon so we can color it with the correct texture at run time.
+
+\subsubsection{Triangle}
+
+Triangle can be built as a standalone binary, or as a library.  For
+our uses I am choosing to build it as a library.  This library
+impliments the delauney triangulation algorithm.  It takes a set of
+unorder points and finds the optimal triangulation of these points.
+
+For our use we feed in a set of unordered height values and the
+triangle library will output a set of triangles that can be rendered
+as terrain.
+
+The triangle library does a few more things that are useful.  It will
+subdivide triangles to ensure that they never get too long and
+skinny.  It will also let you set up boundaries and holes within the
+triangulation area.
+
+\subsection{Scenery Work Space}
+
+The scenery is constructed in a directory structure that parallels the
+final structure.  The structure looks something like the following:
+
+\begin{verbatim}
+  Scenery/ ->
+    w140n50/ ->
+    w140n60/ ->
+    w150n50/ ->
+      w141n59/ ->
+      w142n59/ ->
+      w148n59/ ->
+        533872.gz
+        533873.gz
+        533874.gz
+\end{verbatim}
+
+Beneath the scenery subdirectory is a series of subdirectories
+representing 10x10 degree chunks.  Each directory is named after the
+lower left hand corner of the area it contains.
+
+Beneath each of the 10x10 degree subdirectories is a subdirectory for
+each 1x1 degree area.  Within each of these 1x1 degree subdirectories,
+is a file for each tile.  The file name is the tile's unique numeric
+index number.  There can be multiple files per tile.  When this is
+needed, all files relating to a tile will have the same numeric root
+for the file name.
+
+\subsection{Preprocessing tools}
+
+The preprocessing tools are responsible for inputing raw world data,
+clipping it to the appropriate scenery tiles, and outputing it into
+the workspace directory tree.
+
+The scenery assembly and creation tools work on each tile
+individually, so they expect all the relevant information for a tile
+to already be there.
+
+\subsubsection{DemChop}
+
+This utility inputs 3 arcsec dem files, chops the data up along tile
+boundaries and outputs the result into the scenery workspace.
+
+\subsubsection{DemInfo}
+
+Reads the ``A'' record from a 3 arcsec DEM file and dumps some
+pertinent information.
+
+\subsubsection{DemRaw2ascii}
+
+This tool will input the 30 arcsec raw DEM format, split it up into 1
+x 1 degree sections, and output the result into the 3 arcsec format so
+it can be fed through the scenery pipeline.  (Note to self, at some
+point, this could be updated to work like DemChop and output the tile
+chunks directly.)
+
+\subsubsection{GenAirports}
+
+This tools inputs an ascii specification of the airports of the world
+that looks like the following:
+
+\begin{verbatim}
+A KORD  41.979595 -087.904464   668 CCY Chicago O Hare International 
+R 04L  41.989606 -087.905138 039.39   7500 150 AHYN NNNL 0 0 NNNO 0 0
+R 04R  41.961618 -087.889594 041.40   8071 150 AHYN YNNO 0 0 YNNO 0 0
+R 09L  41.983954 -087.903705 089.70   7967 150 AHYN YNNO 0 0 YNNO 0 0
+R 09R  41.969040 -087.902380 089.88  10141 150 AHYN YNNO 0 0 YNNO 0 0
+R 14L  41.991918 -087.903546 140.10  10003 150 AHYN YNNC 0 0 YNNO 0 0
+R 14R  41.976778 -087.917774 140.08  13000 200 AHYN YNNC 0 0 YNNO 0 0
+R 18   41.990086 -087.900410 180.00   5341 150 AMNN NNNN 0 0 NNNN 0 0
+\end{verbatim}
+
+For each airport, a bounding polygon is generated, and written as a
+clipping record for each intersecting tile in the scenery construction
+area.  The actual airport will belong to the tile containing it's
+center point, but the airport will need to be clipped out of the base
+terrain from any tiles it might spill over into.
+
+Robin Peel (robin@cpwd.com) maintains this data base, primarily for
+use with X-Plane, but lets us use it too.  His distribution contians a
+much more detailed description of the fields and formats.
+
+\subsubsection{ShapeFile}
+
+The ShapeFile tool will take the polygons from shapefiles (via GFC),
+clip them to the appropriate tile boundares (via GPC) and write the
+resulting polygons to the appropriate tile in the scenery work space.
+
+The file naming scheme is tile\_index.polygon\_id where tile\_index is
+the unique numeric index number for the tile and polygon\_id is a
+unique id for the corresponding polygon.  Each polygon is assigned a
+unique id before it is clipped against tile boundaries.  Later we will
+need to match up the edges of polygons with the pieces from the
+neighboring tiles and this unique polygon id will enable us to do
+this.  Each polygon that is written out (no matter what the source or
+type) should have a unique id number assigned to it.
+
+\subsection{Scenery generation tools}
+
+Issues:
+
+\begin{itemize}
+\item Combining height data, polygon data.
+
+\item Triangulating / tri-stripping / tri-fanning.
+
+\item Matching vertices and normals along edges and at corners.
+
+\item Resolving conflicts in data:
+  overlapping polygon areas.
+  conflicting height data between airports and DEM data
+\end{itemize}
+
+Here's the basic process to create scenery:
+
+Dump the raw data into the appropriate tile areas in the work space.
+This includes height data (DEM, airport) and polygon data (airport,
+hydro-data, land use data, etc.)
+
+For each tile create a fitted set of ``important height'' points from
+the original regular grid of data.
+
+For each tile, run the generic clipper on each polygon in order from
+highest to lowest incrementally building an accumulation ``super''
+polygon that comprises a union of all polygons we've processed so far
+for this tile.  For each polygon first clip against this
+super-accumlation-polygon.  What's left after the clip is the new
+shape of the polygon.  This is the scheme for eliminating overlapping
+features on a priority basis.
+
+For each polygon on a tile we must determine a point inside.  We need
+this for the triangulation step so we can assign a regional attribute
+to all triangles inside a polygon.
+
+Run the delauney triangulator for the tile.  The triangulator code is
+very powerful and feature rich, but also very obfuscated to use.  It
+is very robust and fast, but suffers a bit on the usability continuum.
+
+In preparation for the triangulation step we need to create the
+following items:
+
+\begin{itemize}
+\item A list of all unique vertices (nodes) in this tile, including
+  the corners
+
+\item A list of all the unique segments (edges of the polygons) in no
+  particular order.  The triangulator doesn't really care how the
+  polygons connect together, it just cares about boundary edges.
+
+\item A list of ``holes'' (if any) to cut out of the tile.  If an
+  airport overlaps multiple tiles we assign it one tile and leave a
+  hole in remaining tiles.  A hole is specified by a single point.
+  When the triangulation step is finished, the triangulator will start
+  at each hole point and recursively eat away all neighboring
+  triangles until it encounters an edge.
+
+\item A list of regions with region attributes.  These are specified
+  much the same way as holes.  After the triangulation step is
+  finished, regional attributes are assigned.  The procedure is
+  identical to cutting out a hole except that instead of removing a
+  triangle it is simply assigned the attribute for that region.
+\end{itemize}
+
+The result of the triangulation step is a list of triangles for the
+tile with each triangle assigned an attribute representing the polygon
+it lives inside.
+
+Now we have a pile of triangles.  We are heading in the right
+direction!  However, no we need to go through and assign the proper
+height to each of the verticies of the triangles.  We must be aware of
+certain constraints.  Airport elevations should have the highest
+priority, followed by the DEM elevations.  We will also want to impose
+additional constraints such as ensuring lakes are level and rivers
+don't run up hill.  Anyways, with a flurry of handwaving, we have now
+adjusted all the heights. :-)
+
+The next thing we have to worry about is making sure each tile meshes
+exactly with all it's neighbors.  We do this by spliting the tile up
+into it's 4 edges, 4 corners, and the remaining vertices.  We write
+these parts out as individual files if a neighboring tile hasn't been
+processed first.  In other words, the first tile to be process gets to
+define the shared edge or corner.  The neighbor must use this data if
+it exists.  Then we have to reassemble the tile using any pre-existing
+edges from a neighbor tiles that were processed before us and
+retriangulate since our node list has changed. <whew>
+
+Unfortunately it's not quite this simple!
+
+We need to be careful, because we have to make sure we also preserve
+the polygon connections since lakes, rivers, and even airports often
+span multiple tiles.
+
+To do this I propose a scheme of assigning a unique integer id to each
+polygon.  When writing out the shared edge/corner pieces I also
+associate this idea.  So rather than disassembling, sharing, and
+reassembling whole tiles, we need to do this on a per-polygon basis.
+More handwaving and we are off to the next step.
+
+Now, we need to take our 3d, triangulated polygons and tri-fan or
+tri-strip them for rendering efficiency.  We have been using a
+freeware tool called ``stripe'' but it's a typical CSci hack job where
+the author was more interested in demonstrating the theory, rather
+than demonstrating bug free, robust, well written code.  Oh well.  I
+think I will try to write a utility to combine triangles into fans.
+This will help culling (smaller, centralized objects == better
+culling) but will happen at the expense of more vertex
+transformations.  I'm hoping this will result in a net gain.  Finger
+crossed. :-)
+
+Finally, we need to take our 3d, fan-ified polygons and convert them
+to the FGFS scenery format and copy them from the work space directory
+tree into the final scenery directory tree.
+
+\subsubsection{Array}
+
+This library reads in the regular grid data written by the DemChop
+preprocessing tool.  It has a fit routine which approximates the
+regular grid of height data with an irregular grid, and interpolate
+the elevation of any arbitrary point inside this grid.
+
+An irregular grid can often represent the same level detail as a
+regular grid with 4-6x fewer polygons.  This is very desirable in a
+flight sim where both detail and rendering speed is very important.
+
+Another feature of an irregular grid is that it carries fewer
+artifacts that could provide negative training value to pilots.  For
+instance a regular grid could give a pilot non-realistic cues for
+determining north/south/east/west.
+
+\subsubsection{Clipper}
+
+This library makes heavy use of ``the generic polygon clipper''.  The
+polygons of each tile are clipped against the tile boundaries as well
+as any higher priority polygons for that tile.  To do this the library
+processes the polygons from highest priority to lowest and
+incrimentally builds up an accumulation ``super-polygon''.  This
+super-polygon is the union of all the polygons processed so far.  As
+each polygon is processed, it is first clipped against this
+super-accumlation-polygon.  What's left after the clip is the new
+shape of the polygon.  This is the scheme for eliminating overlapping
+features on a priority basis.  In the end we can create a base-terrain
+polygon out the remaining open areas of the tile that weren't covered
+by any other polygons.  This way we end up with a set of ``puzzle''
+pieces that together form the complete tile with no overlaps and no
+gaps.
+
+
+% \subsubsection{Dem2node}
+% 
+% This tool takes the raw DEM files and calls routines from libDEM.a to
+% create the irregular grid approximation of the original data.  The
+% elevation data is writen to the to the appropriate tile in the scenery
+% work space.
+
+% \subsubsection{Areas}
+% \subsubsection{AssemTris}
+% \subsubsection{FixNode}
+% \subsubsection{FixObj}
+% \subsubsection{SplitTris}
+% \subsubsection{Stripe\_w}
+% \subsubsection{Tri2obj}
+
+\subsection{Miscellaneous Utilities}
+
+\subsubsection{tile-sizes.pl}
+
+Generates the width of a 1/8 x 1/8 degree tile at various latitudes.
+
+
+\end{document}
+
+
+%------------------------------------------------------------------------
+% $Log$
+% Revision 1.4  1999/03/21 15:12:51  curt
+% Updated to reflect current scenery progress.
+%
+% Revision 1.3  1999/03/13 21:42:37  curt
+% Updated to match current scenery generation tools progress.
+%
+% Revision 1.2  1999/03/08 21:59:52  curt
+% Updated based on current efforts.
+%
+% Revision 1.1  1999/02/15 00:38:46  curt
+% Initial revision.
+%

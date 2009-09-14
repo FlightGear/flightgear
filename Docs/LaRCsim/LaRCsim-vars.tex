@@ -1,0 +1,375 @@
+\documentclass[10pt]{article}
+
+\usepackage{anysize}
+\papersize{11in}{8.5in}
+\marginsize{0.5in}{0.5in}{0.5in}{0.5in}
+
+
+\begin{document}
+
+\section{Constants}
+
+\begin{tabular}{|l|p{2.0in}|p{1.0in}|p{1.0in}|l|} \hline
+\textbf{Variable Name} & \textbf{Variable Description} & \textbf{Data
+type} & \textbf{Sign convention} & \textbf{Units of Measure} \\ \hline 
+PI & Ratio of circumference to diameter of a circle & Macro definition
+& always positive & 3.141593 \\
+EQUATORIAL\_RADIUS & Radius of the Earth at the equator & Macro definition & always positive & ft \\
+RESQ & Square of radius of the Earth at the equator & Macro definition & always positive & $ft^2$ \\
+FP & Flattening parameter of oblate Earth & Macro definition & always positive & 0.003353 \\
+INVG & Inverse of sea level acceleration due to gravity & Macro definition & always positive & $sec^2/ft$ \\
+OMEGA\_EARTH & Angular rotation velocity of the Earth & Macro definition & always positive & rad/sec \\
+DEG\_TO\_RAD & "Conversion factor, degrees to radians" & Macro definition & always positive & deg/rad \\
+RAD\_TO\_DEG & "Conversion factor, radians to degrees" & Macro definition & always positive & rad/deg \\
+SEA\_LEVEL\_DENSITY & Atmospheric density at sea level at equator &
+Macro definition & always positive & $slug/ft^3$ \\
+\hline
+\end{tabular}
+
+\section{Variables}
+
+\subsection{Time}
+
+\begin{tabular}{|l|p{2.0in}|p{1.0in}|p{1.0in}|l|} \hline
+\textbf{Variable Name} & \textbf{Variable Description} & \textbf{Data
+type} & \textbf{Sign convention} & \textbf{Units of Measure} \\ \hline 
+Simtime & Simulated time since beginning of current run &  &  & sec \\
+\hline
+\end{tabular}
+
+\subsection{Mass properties and geometry values}
+
+\begin{tabular}{|l|p{2.0in}|p{1.0in}|p{1.0in}|l|} \hline
+\textbf{Variable Name} & \textbf{Variable Description} & \textbf{Data
+type} & \textbf{Sign convention} & \textbf{Units of Measure} \\ \hline 
+Mass & Mass of simulated vehicle & Scalar & always positive & slugs \\
+I\_xx & Moment of inertia about X-body axis & Scalar & always positive & $slug-ft^2$ \\
+I\_yy & Moment of inertia about Y-body axis & Scalar & always positive & $slug-ft^2$ \\
+I\_zz & Moment of inertia about Y-body axis & Scalar & always positive & $slug-ft^2$ \\
+I\_xz & Second moment of inertia in X-Z plane & Scalar & +Integral(x z dm) & $slug-ft^2$ \\
+\hline
+D\_pilot\_rp\_body\_v[3] & Pilot offset from ref pt in body axis & 3-element array &          - - & ft \\
+Dx\_pilot & Pilot offset from ref pt in X body axis & Scalar & forward & ft \\
+Dy\_pilot & Pilot offset from ref pt in X body axis & Scalar & right & ft \\
+Dz\_pilot & Pilot offset from ref pt in X body axis & Scalar & down & ft \\
+\hline
+D\_cg\_rp\_body\_v[3] & Center of Gravity offset from ref pt in body axis & 3-element array &          - - & ft \\
+Dx\_cg & C.G. offset from ref pt in X body axis & Scalar & forward & ft \\
+Dy\_cg & C.G. offset from ref pt in Y body axis & Scalar & right & ft \\
+Dz\_cg & C.G. offset from ref pt in Z body axis & Scalar & down & ft \\
+\hline
+\end{tabular}
+
+\subsection{Forces}
+
+\begin{tabular}{|l|p{2.0in}|p{1.0in}|p{1.0in}|l|} \hline
+\textbf{Variable Name} & \textbf{Variable Description} & \textbf{Data
+type} & \textbf{Sign convention} & \textbf{Units of Measure} \\ \hline 
+F\_body\_total\_v[3] & Total forces on body at ref pt in body axis & 3-element array &          - - & ft \\
+F\_X & Force along X-body axis at ref pt & Scalar & forward & ft \\
+F\_Y & Force along Y-body axis at ref pt & Scalar & right & ft \\
+F\_z & Force along Z-body axis at ref pt & Scalar & down & ft \\
+\hline
+F\_local\_total\_v[3] & Total forces on body at ref pt in local axis & 3-element array &          - - & lbf \\
+F\_north & Northward force at ref pt & Scalar & north & lbf \\
+F\_east & Eastward force at ref pt & Scalar & east & lbf \\
+F\_down & Southward force at ref pt & Scalar & down & lbf \\
+\hline
+F\_aero\_v[3] & Aerodynamic forces on body at ref pt in body axis & 3-element array &          - - & lbf \\
+F\_X\_aero & Aero force along X-body axis at ref pt & Scalar & forward & lbf \\
+F\_Y\_aero & Aero force along Y-body axis at ref pt & Scalar & right & lbf \\
+F\_Z\_aero & Aero force along Z-body axis at ref pt & Scalar & down & lbf \\
+\hline
+F\_engine\_v[3] & Engine forces on body at ref pt in body axis & 3-element array &          - - & lbf \\
+F\_X\_engine & Engine force along X-body axis at ref pt & Scalar & forward & lbf \\
+F\_Y\_engine & Engine force along Y-body axis at ref pt & Scalar & right & lbf \\
+F\_Z\_engine & Engine force along Z-body axis at ref pt & Scalar & down & lbf \\
+\hline
+F\_gear\_v[3] & Landing gear forces on body at ref pt in body axis & 3-element array &          - - & lbf \\
+F\_X\_gear & Gear force along X-body axis at ref pt & Scalar & forward & lbf \\
+F\_Y\_gear & Gear force along Y-body axis at ref pt & Scalar & right & lbf \\
+F\_Z\_gear & Gear force along Z-body axis at ref pt & Scalar & down & lbf \\
+\hline
+\end{tabular}
+
+\subsection{Moments}
+
+\begin{tabular}{|l|p{2.0in}|p{1.0in}|p{1.0in}|l|} \hline
+\textbf{Variable Name} & \textbf{Variable Description} & \textbf{Data
+type} & \textbf{Sign convention} & \textbf{Units of Measure} \\ \hline 
+M\_total\_rp\_v[3] & Total moments on body at ref pt measured around body axes & 3-element array &          - - & ft-lb \\
+M\_l\_rp & Total moments on body at ref pt about X-body axis & Scalar & right wing down & ft-lb \\
+M\_m\_rp & Total moments on body at ref pt about Y-body axis & Scalar & Nose up & ft-lb \\
+M\_n\_rp & Total moments on body at ref pt about Z-body axis & Scalar & Nose left & ft-lb \\
+\hline
+M\_total\_cg\_v[3] & Total moments on body at ref pt measured around body axes & 3-element array &          - - & ft-lb \\
+M\_l\_cg & Total moments on body at ref pt about X-body axis & Scalar & right wing down & ft-lb \\
+M\_m\_cg & Total moments on body at ref pt about Y-body axis & Scalar & Nose up & ft-lb \\
+M\_n\_cg & Total moments on body at ref pt about Z-body axis & Scalar & Nose left & ft-lb \\
+\hline
+M\_aero\_v[3] & Aerodynamic moments on body at ref pt measured around body axes & 3-element array &          - - & ft-lb \\
+M\_l\_aero & Aerodynamic moments on body at ref pt about X-body axis & Scalar & right wing down & ft-lb \\
+M\_m\_aero & Aerodynamic moments on body at ref pt about Y-body axis & Scalar & Nose up & ft-lb \\
+M\_n\_aero & Aerodynamic moments on body at ref pt about Z-body axis & Scalar & Nose left & ft-lb \\
+\hline
+M\_engine\_v[3] & Propulsion system moments on body at ref pt measured around body axes & 3-element array &          - - & ft-lb \\
+M\_l\_engine & Propulsion system moments on body at ref pt about X-body axis & Scalar & right wing down & ft-lb \\
+M\_m\_engine & Propulsion system moments on body at ref pt about Y-body axis & Scalar & Nose up & ft-lb \\
+M\_n\_engine & Propulsion system moments on body at ref pt about Z-body axis & Scalar & Nose left & ft-lb \\
+\hline
+M\_gear\_v[3] & Landing gear moments on body at ref pt measured around body axes & 3-element array &          - - & ft-lb \\
+M\_l\_gear & Landing gear moments on body at ref pt about X-body axis & Scalar & right wing down & ft-lb \\
+M\_m\_gear & Landing gear moments on body at ref pt about Y-body axis & Scalar & Nose up & ft-lb \\
+M\_n\_gear & Landing gear moments on body at ref pt about Z-body axis & Scalar & Nose left & ft-lb \\
+\hline
+\end{tabular}
+
+\subsection{Accelerations}
+
+\begin{tabular}{|l|p{2.0in}|p{1.0in}|p{1.0in}|l|} \hline
+\textbf{Variable Name} & \textbf{Variable Description} & \textbf{Data
+type} & \textbf{Sign convention} & \textbf{Units of Measure} \\ \hline 
+V\_dot\_local\_v[3] & Inertial acceleration of center of gravity measured in local axes & 3-element array &          - - & $ft/sec^2$ \\
+V\_dot\_north & Inertial acceleration of center of gravity measured in local North axis & Scalar & north & $ft/sec^2$ \\
+V\_dot\_east & Inertial acceleration of center of gravity measured in local East axis & Scalar & east & $ft/sec^2$ \\
+V\_dot\_down & Inertial acceleration of center of gravity measured in local down axis & Scalar & down & $ft/sec^2$ \\
+\hline
+V\_dot\_body\_v[3] & Inertial acceleration of ?? measured in body axes & 3-element array &          - - & $ft/sec^2$ \\
+U\_dot\_body & Inertial acceleration of ?? measured in body X axis & Scalar & forward & $ft/sec^2$ \\
+V\_dot\_body & Inertial acceleration of ?? measured in body Y axis & Scalar & right & $ft/sec^2$ \\
+W\_dot\_body & Inertial acceleration of ?? measured in body Z axis & Scalar & down & $ft/sec^2$ \\
+\hline
+A\_cg\_body\_v[3] & Inertial acceleration of center of gravity measured in body axes & 3-element array &          - - & $ft/sec^2$ \\
+A\_X\_cg & Inertial acceleration of center of gravity measured in body X axis & Scalar & forward & $ft/sec^2$ \\
+A\_Y\_cg & Inertial acceleration of center of gravity measured in body Y axis & Scalar & right & $ft/sec^2$ \\
+A\_Z\_cg & Inertial acceleration of center of gravity measured in body Z axis & Scalar & down & $ft/sec^2$ \\
+\hline
+A\_pilot\_body\_v[3] & Inertial acceleration of pilot station measured in body axes & 3-element array &          - - & $ft/sec^2$ \\
+A\_X\_pilot & Inertial acceleration of pilot station measured in body X axis & Scalar & forward & $ft/sec^2$ \\
+A\_Y\_pilot & Inertial acceleration of pilot station measured in body Y axis & Scalar & right & $ft/sec^2$ \\
+A\_Z\_pilot & Inertial acceleration of pilot station measured in body Z axis & Scalar & down & $ft/sec^2$ \\
+\hline
+N\_cg\_body\_v[3] & Inertial acceleration of center of gravity measured in body axes & 3-element array &          - - & g units \\
+N\_X\_cg & Inertial acceleration of center of gravity measured in body X axis & Scalar & forward & g units \\
+N\_Y\_cg & Inertial acceleration of center of gravity measured in body Y axis & Scalar & right & g units \\
+N\_Z\_cg & Inertial acceleration of center of gravity measured in body Z axis & Scalar & down & g units \\
+\hline
+N\_pilot\_body\_v[3] & Inertial acceleration of pilot station measured in body axes & 3-element array &          - - & g units \\
+N\_X\_pilot & Inertial acceleration of pilot station measured in body X axis & Scalar & forward & g units \\
+N\_Y\_pilot & Inertial acceleration of pilot station measured in body Y axis & Scalar & right & g units \\
+N\_Z\_pilot & Inertial acceleration of pilot station measured in body Z axis & Scalar & down & g units \\
+\hline
+\end{tabular}
+
+\subsection{Accelerations (Cont.)}
+
+\begin{tabular}{|l|p{2.0in}|p{1.0in}|p{1.0in}|l|} \hline
+\textbf{Variable Name} & \textbf{Variable Description} & \textbf{Data
+type} & \textbf{Sign convention} & \textbf{Units of Measure} \\ \hline 
+Omega\_dot\_body\_v[3] & Angular acceleration of vehicle relative to local frame about center of gravity in body axes & 3-element array &          - - & $rad/s^2$ \\
+P\_dot\_body & Angular acceleration of vehicle relative to local frame about center of gravity in X body axis & Scalar & rt wing down & $rad/s^2$ \\
+Q\_dot\_body & Angular acceleration of vehicle relative to local frame about center of gravity in Y body axis & Scalar & nose up & $rad/s^2$ \\
+R\_dot\_body & Angular acceleration of vehicle relative to local frame about center of gravity in Z body axis & Scalar & nose right & $rad/s^2$ \\
+\hline
+\end{tabular}
+
+\subsection{Velocities}
+
+\begin{tabular}{|l|p{2.0in}|p{1.0in}|p{1.0in}|l|} \hline
+\textbf{Variable Name} & \textbf{Variable Description} & \textbf{Data
+type} & \textbf{Sign convention} & \textbf{Units of Measure} \\ \hline 
+V\_local\_v[3] & Inertial velocity of center of gravity in local axes & 3-element array &          - - & ft/s \\
+V\_north & Inertial velocity of center of gravity in local North axis & Scalar & north & ft/s \\
+V\_east & Inertial velocity of center of gravity in local East axis & Scalar & east & ft/s \\
+V\_down & Inertial velocity of center of gravity in local down axis & Scalar & down & ft/s \\
+\hline
+V\_local\_rel\_ground\_v[3] & Velocity of center of gravity relative to earth surface in local axes & 3-element array &          - - & ft/s \\
+V\_north\_rel\_ground & Velocity of center of gravity relative to earth surface in local North axis & Scalar & north & ft/s \\
+V\_east\_rel\_ground & Velocity of center of gravity relative to earth surface in local east axis & Scalar & east & ft/s \\
+V\_down\_rel\_ground & Velocity of center of gravity relative to earth surface in local down axis & Scalar & down & ft/s \\
+\hline
+V\_local\_airmass\_v[3] & Inertial steady-state velocity of airmass in local axes & 3-element array &          - - & ft/s \\
+V\_north\_airmass & Inertial steady-state velocity of airmass in local North axis & Scalar & north & ft/s \\
+V\_east\_airmass & Inertial steady-state velocity of airmass in local East axis & Scalar & east & ft/s \\
+V\_down\_airmass & Inertial steady-state velocity of airmass in local down axis & Scalar & down & ft/s \\
+\hline
+V\_local\_rel\_airmass\_v[3] & Velocity of center of gravity relative to local airmass in local axes & 3-element array &          - - & ft/s \\
+V\_north\_rel\_airmass & Velocity of center of gravity relative to local airmass in local North axis & Scalar & north & ft/s \\
+V\_east\_rel\_airmass & Velocity of center of gravity relative to local airmass in local East axis & Scalar & east & ft/s \\
+V\_down\_rel\_airmass & Velocity of center of gravity relative to local airmass in local down axis & Scalar & down & ft/s \\
+\hline
+V\_body\_gust\_v[3] & Gust velocity in body axes & 3-element array &          - - & ft/s \\
+U\_gust & Gust velocity in X-body axes & Scalar & forward & ft/s \\
+V\_gust & Gust velocity in Y-body axes & Scalar & right & ft/s \\
+W\_gust & Gust velocity in Z-body axes & Scalar & down & ft/s \\
+\hline
+\end{tabular}
+
+\subsection{Velocities (Cont.)}
+
+\begin{tabular}{|l|p{2.0in}|p{1.0in}|p{1.0in}|l|} \hline
+\textbf{Variable Name} & \textbf{Variable Description} & \textbf{Data
+type} & \textbf{Sign convention} & \textbf{Units of Measure} \\ \hline 
+V\_wind\_body\_v[3] & Velocity of center of gravity relative to local airmass in body axes & 3-element array &          - - & ft/s \\
+U\_body & Velocity of center of gravity relative to local airmass in X-body axis & Scalar & forward & ft/s \\
+V\_body & Velocity of center of gravity relative to local airmass in Y-body axis & Scalar & right & ft/s \\
+W\_body & Velocity of center of gravity relative to local airmass in Z-body axis & Scalar & down & ft/s \\
+\hline
+V\_rel\_wind & Velocity relative to airmass & Scalar & always positive & ft/s \\
+V\_true\_knots & True airspeed in knots & Scalar & always positive & nm/hr \\
+V\_rel\_ground & Velocity relative to earth's surface & Scalar & always positive & ft/s \\
+V\_inertial & Inertial velocity & Scalar & always positive & ft/s \\
+V\_ground\_speed & Velocity at right angles to local vertical & Scalar & always positive & ft/s \\
+V\_equiv & Equivalent airspeed & Scalar & always positive & ft/s \\
+V\_equiv\_kts & "Equivalent airspeed, knots" & Scalar & always positive & nm/hr \\
+V\_calibrated & Calibrated airspeed & Scalar & always positive & ft/s \\
+V\_calibrated\_kts & "Calibrated airspeed, knots" & Scalar & always positive & nm/hr \\
+\hline
+Omega\_body\_v[3] & Inertial rotational rate of the body axis frame & 3-element array &          - - & rad/s \\
+P\_body & Inertial rotational rate of the body X-axis & Scalar & rt wing down & rad/s \\
+Q\_body & Inertial rotational rate of the body Y-axis & Scalar & nose up & rad/s \\
+R\_body & Inertial rotational rate of the body Z-axis & Scalar & nose right & rad/s \\
+\hline
+Omega\_local\_v[3] & Inertial rotational rate of the local axis frame & 3-element array &          - - & rad/s \\
+P\_local & Inertial rotational rate of the local axis frame about the body X-axis & Scalar & rt wing down & rad/s \\
+Q\_local & Inertial rotational rate of the local axis frame about the body Y-axis & Scalar & nose up & rad/s \\
+R\_local & Inertial rotational rate of the local axis frame about the body Z-axis & Scalar & nose right & rad/s \\
+\hline
+\end{tabular}
+
+\subsection{Velocities (Cont.)}
+
+\begin{tabular}{|l|p{2.0in}|p{1.0in}|p{1.0in}|l|} \hline
+\textbf{Variable Name} & \textbf{Variable Description} & \textbf{Data
+type} & \textbf{Sign convention} & \textbf{Units of Measure} \\ \hline 
+Omega\_total\_v[3] & Rotational rate of the body axis frame relative to the local axis frame & 3-element array &          - - & rad/s \\
+P\_total & Rotational rate of the body axis frame relative to the local axis frame about the body X-axis & Scalar & rt wing down & rad/s \\
+Q\_total & Rotational rate of the body axis frame relative to the local axis frame about the body Y-axis & Scalar & nose up & rad/s \\
+R\_total & Rotational rate of the body axis frame relative to the local axis frame about the body Z-axis & Scalar & nose right & rad/s \\
+\hline
+Euler\_rates\_v[3] & "Rotational rate of the body axis frame relative to the local axis frame, in Euler angles" & 3-element array &          - - & rad/s \\
+Phi\_dot & Rotational rate of the body axis frame about the local X-axis & Scalar & rt wing down & rad/s \\
+Theta\_dot & Rotational rate of the body axis frame about the local Y-axis & Scalar & nose up & rad/s \\
+Psi\_dot & Rotational rate of the body axis frame about the local Z-axis & Scalar & nose right & rad/s \\
+\hline
+Geocentric\_rates\_v[3] & Rotational rate of the body axis frame relative to the inertial frame & 3-element array &          - - & - - \\
+Latitude\_dot & Rate of change of geocentric latitude angle & Scalar & westward & rad/s \\
+Longitude\_dot & Rate of change of geocentric longitude angle & Scalar & northward & rad/s \\
+Radius\_dot & Rate of change of radius from center of inertial frame & Scalar & outward & ft/s \\
+\hline
+\end{tabular}
+
+\subsection{Positions}
+
+\begin{tabular}{|l|p{2.0in}|p{1.0in}|p{1.0in}|l|} \hline
+\textbf{Variable Name} & \textbf{Variable Description} & \textbf{Data
+type} & \textbf{Sign convention} & \textbf{Units of Measure} \\ \hline 
+Geocentric\_position\_v[3] & Geocentric position of vehicle's center of gravity & 3-element array &          - - & - - \\
+Lat\_geocentric  & Geocentric latitude of vehicle's center of gravity & Scalar & westward & rad \\
+Lon\_geocentric  & Geocentric longitude of vehicle's center of gravity & Scalar & northward & rad \\
+Radius\_to\_vehicle & Radius to vehicle's center of gravity from inertial frame & Scalar & outward & ft \\
+\hline
+Geodetic\_position\_v[3] & Geodetic position of vehicle's center of gravity & 3-element array &          - - & - - \\
+Latitude & Geodetic latitude of vehicle's center of gravity & Scalar & westward & rad \\
+Longitude & Geodetic longitude of vehicle's center of gravity & Scalar & northward & rad \\
+Altitude & Height of vehicle's center of gravity above reference ellipsoid & Scalar & outward & ft \\
+\hline
+Euler\_angles\_v[3] & Vehicle's angular attitude relative to local frame & 3-element array &          - - & rad \\
+Phi & Roll angle & Scalar & rt wing down & rad \\
+Theta & Pitch angle & Scalar & nose up & rad \\
+Psi & Heading angle & Scalar & nose right & rad \\
+\hline
+\end{tabular}
+
+\subsection{Miscellaneous Quantities}
+
+\begin{tabular}{|l|p{2.0in}|p{1.0in}|p{1.0in}|l|} \hline
+\textbf{Variable Name} & \textbf{Variable Description} & \textbf{Data
+type} & \textbf{Sign convention} & \textbf{Units of Measure} \\ \hline 
+T\_local\_to\_body\_m[3][3] & Transformation matrix L to B & 3 by 3 matrix &          - - & - - \\
+T\_local\_to\_body\_11 & Transformation matrix element & Scalar &          - - & - - \\
+T\_local\_to\_body\_12 & Transformation matrix element & Scalar &          - - & - - \\
+T\_local\_to\_body\_13 & Transformation matrix element & Scalar &          - - & - - \\
+T\_local\_to\_body\_21 & Transformation matrix element & Scalar &          - - & - - \\
+T\_local\_to\_body\_22 & Transformation matrix element & Scalar &          - - & - - \\
+T\_local\_to\_body\_23 & Transformation matrix element & Scalar &          - - & - - \\
+T\_local\_to\_body\_31 & Transformation matrix element & Scalar &          - - & - - \\
+T\_local\_to\_body\_32 & Transformation matrix element & Scalar &          - - & - - \\
+T\_local\_to\_body\_33 & Transformation matrix element & Scalar &          - - & - - \\
+\hline
+Gravity & Acceleration due to earth's gravity & Scalar & down & $ft/s^2$ \\
+Centrifugal\_relief & Centrifugal acceleration due to near-orbital speed & Scalar & up & $ft/s^2$ \\
+\hline
+Alpha & Free-stream angle of attack & Scalar & nose up & rad \\
+Beta & Free-stream angle of sideslip & Scalar & nose left & rad \\
+Alpha\_dot & Time rate of change of free-stream angle of attack & Scalar & nose up & rad/s \\
+Beta\_dot & Time rate of change of free-stream angle of sideslip & Scalar & nose left & rad/s \\
+Cos\_alpha & Cosine of free-stream angle of attack & Scalar & nose up & - - \\
+Sin\_alpha & Sine of free-stream angle of attack & Scalar & nose up & - - \\
+Cos\_beta & Cosine of free-stream angle of sideslip & Scalar & nose left & - - \\
+Sin\_beta & Sine of free-stream angle of sideslip & Scalar & nose left & - - \\
+\hline
+Cos\_phi & Cosine of bank angle & Scalar & rt wing down & - - \\
+Sin\_phi & Sine of bank angle & Scalar & rt wing down & - - \\
+Cos\_theta & Cosine of pitch angle & Scalar & nose up & - - \\
+Sin\_theta & Sine of pitch angle & Scalar & nose up & - - \\
+Cos\_psi & Cosine of heading angle & Scalar & nose right & - - \\
+Sin\_psi & Sine of heading angle & Scalar & nose right & - - \\
+\hline
+Gamma\_vert\_rad & Vertical flight path angle in local frame & Scalar & climb & rad \\
+Gamma\_horiz\_rad & "Horizontal flight path, or track, angle in local frame" & Scalar & clockwise from north & rad \\
+\hline
+Sigma & Ratio of free-stream density to sea-level reference density & Scalar & always positive & - - \\
+Density & Atmospheric density (free-stream flight conditions) & Scalar & always positive & $slug/ft^3$ \\
+V\_sound & Speed of sound (free-stream flight conditions) & Scalar & always positive & ft/s \\
+Mach\_number & Free-stream mach number & Scalar & always positive & - - \\
+\hline
+Static\_pressure & Static pressure & Scalar & always positive & $lb/ft^2$ \\
+Total\_pressure & Total pressure & Scalar & always positive & $lb/ft^2$ \\
+Impact\_pressure & Impact pressure & Scalar & always positive & $lb/ft^2$ \\
+Dynamic\_pressure & Dynamic pressure & Scalar & always positive & $lb/ft^2$ \\
+\hline
+Static\_temperature & Static temperature & Scalar & always positive &
+$^{\circ}$R \\
+Total\_temperature & Total temperature & Scalar & always positive &
+$^{\circ}$R \\
+\hline
+\end{tabular}
+
+\subsection{Miscellaneous Quantities (Cont.)}
+
+\begin{tabular}{|l|p{2.0in}|p{1.0in}|p{1.0in}|l|} \hline
+\textbf{Variable Name} & \textbf{Variable Description} & \textbf{Data
+type} & \textbf{Sign convention} & \textbf{Units of Measure} \\ \hline 
+Sea\_level\_radius & Radius from earth center to local plumb sea level & Scalar & outward & ft \\
+Earth\_position\_angle & Amount of rotation of the earth since reference time & Scalar & from ref time & rad \\
+\hline
+Runway\_altitude & Height of runway threshold above local plumb sea level (geodetic) & Scalar & up & ft \\
+Runway\_latitude & Geodetic latitude of runway threshold & Scalar & northward & rad \\
+Runway\_longitude & Geodetic longitude of runway threshold & Scalar & westward & rad \\
+Runway\_heading & Runway heading & Scalar & clockwise from north & rad \\
+Radius\_to\_rwy & Radius from earth center to runway threshold point & Scalar & outward & ft \\
+\hline
+D\_cg\_rwy\_local\_v[3]; & Location of center of gravity relative to runway threshold in local frame & 3-element array &          - - & ft \\
+D\_cg\_north\_of\_rwy & Distance of center of gravity northward from runway threshold & Scalar & northward & ft \\
+D\_cg\_east\_of\_rwy & Distance of center of gravity eastward from runway threshold & Scalar & eastward & ft \\
+D\_cg\_above\_rwy & Height of center of gravity above runway threshold & Scalar & up & ft \\
+\hline
+D\_cg\_rwy\_rwy\_v[3] & Location of center of gravity relative to runway threshold in runway frame & 3-element array &          - - & ft \\
+X\_cg\_rwy & Distance of center of gravity along runway centerline & Scalar & beyond threshold & ft \\
+Y\_cg\_rwy & Distance of center of gravity right of runway centerline & Scalar & right of CL & ft \\
+H\_cg\_rwy & Height of center of gravity above runway threshold & Scalar & up & ft \\
+\hline
+D\_pilot\_rwy\_local\_v[3] & Location of pilot's eyepoint relative to runway threshold in local frame & 3-element array &          - - & ft \\
+D\_pilot\_north\_of\_rwy & Distance of pilot's eyepoint northward form runway threshold & Scalar & northward & ft \\
+D\_pilot\_east\_of\_rwy & Distance of pilot's eyepoint eastward from runway threshold & Scalar & eastward & ft \\
+D\_pilot\_above\_rwy & Height of pilot's eyepoint above runway threshold & Scalar & up & ft \\
+\hline
+D\_pilot\_rwy\_rwy\_v[3] & Location of pilot's eyepoint relative to runway threshold in runway frame & 3-element array &          - - & ft \\
+X\_pilot\_rwy & Distance of pilot's eyepoint along runway centerline & Scalar & beyond threshold & ft \\
+Y\_pilot\_rwy & Distance of pilot's eyepoint right of runway centerline & Scalar & right of CL & ft \\
+Z\_pilot\_rwy & Height of pilot's eyepoint above runway threshold & Scalar & up & ft \\
+\hline
+\end{tabular}
+
+\end{document}

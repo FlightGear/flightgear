@@ -1,0 +1,285 @@
+%%
+%% getstart.tex -- Flight Gear documentation: Installation and Getting Started
+%% Chapter file
+%%
+%% Written by Michael Basler % Bernhard Buckel, starting September 1998.
+%%
+%% Copyright (C) 1999 Michael Basler (pmb@knUUt.de)
+%%                  & Bernhard Buckel (buckel@wmad95.mathematik.uni-wuerzburg.de)
+%%
+%% This program is free software; you can redistribute it and/or
+%% modify it under the terms of the GNU General Public License as
+%% published by the Free Software Foundation; either version 2 of the
+%% License, or (at your option) any later version.
+%%
+%% This program is distributed in the hope that it will be useful, but
+%% WITHOUT ANY WARRANTY; without even the implied warranty of
+%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+%% General Public License for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with this program; if not, write to the Free Software
+%% Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+%%
+%% $Id: getstart.tex,v 0.12 1999/03/07 michael
+%% (Log is kept at end of this file)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Building the plane: Compiling\index{compiling} the program\label{building}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\markboth{\thechapter.\hspace*{1mm} BUILDING THE
+PLANE}{\thesection\hspace*{1mm} COMPILING UNDER LINUX}
+
+This major chapter describes how to build \FlightGear on several systems. In case you are
+on a Win32 (i.\,e. Windows 98 or Windows NT) platform you may not want to go though that
+potentially troublesome process but instead skip that chapter and straightly go to the
+next one. (Not everyone wants to build his or her plane himself or herself, right?)
+However, there may be good reason at least to try building the simulator:
+
+\begin{itemize}
+\item In case you are on a \Index{UNIX}/\Index{Linux} platform there may be no
+pre-compiled binaries\index{binaries, pre-compiled} available for your system. We do not
+see any reason why the distribution of pre-compiled binaries (with statically linked
+libraries) should not be possible for \Index{UNIX} systems in principle as well, but in
+practice it is common to install programs like this one on \Index{UNIX} systems by
+recompiling them.
+
+\item There are several options you can set only during
+compile time. One such option is the decision to compile with
+hardware or software \Index{OpenGL} rendering enabled. A more
+complete list goes beyond this \textit{Installation and Getting
+Started} and should be included in a future
+\textit{\Index{\FlightGear Programmer's Guide}}.
+
+\item You may be proud you did.
+\end{itemize}
+
+As you will note, this chapter is far from being complete. Basically, we describe
+compiling for two operating systems only, \Index{Windows 98/NT} and \Index{Linux}. There
+is a simple explanation for this: These are just the systems we are working on. We hope
+to be able to provide descriptions for more systems based on contributions written by
+others.
+
+\section{Compiling\index{compiling!Linux} under \Index{Linux}}
+
+If you are running Linux you probably have to build your own
+\Index{binaries}. The following is one way to do so.
+
+\begin{enumerate}
+
+\item Get the file \texttt{FlightGear-x.xx.tar.gz} from the
+\texttt{source} subdirectory under
+
+ \web{http://www.flightgear.org/Downloads/}
+
+ \noindent
+
+\item Unpack it using :
+
+        \texttt{tar xvfz FlightGear-x.xx.tar.gz}.
+
+\item \texttt{cd} into \texttt{FlightGear-x.xx}. Run:
+
+        \texttt{./configure}
+
+ \noindent
+and wait a few minutes. \Index{configure} knows about a lot of
+options. Have a look at the file \texttt{INSTALL} in the
+\FlightGear source directory to learn about them. If run without
+options, configure assumes that you will install the data files
+under \texttt{/usr/local/lib/FlightGear}.
+
+
+\item Assuming configure finished successfully, simply run
+
+        \texttt{make}
+
+ \noindent
+and wait for the make process to finish.
+
+
+\item Now become root (for example by using the su command) and
+type
+
+        \texttt{make install}.
+
+ \noindent
+This will install the \Index{binaries} in \texttt{/usr/local/bin}.
+
+There is a problem concerning permissions under Linux/Glide. All
+programs accessing the accelerator board need root permissions.
+The solution is either to play as root or make the
+\texttt{/usr/local/bin/fgfs} binary \texttt{setuid root}, i.e.
+when this binary is run root privileges are given. Do this by
+issuing (as root)
+
+   \texttt{chmod +s /usr/local/bin/fgfs}.
+
+ \noindent
+A solution for this problem is upcoming, keep an eye on the 3Dfx
+website if you run a 3Dfx board.
+
+\end{enumerate}
+
+\section{Compiling\index{compiling!Windows 98/NT} under \Index{Windows 98/NT}}
+
+\begin{enumerate}
+\item Contrary to Linux which brings its own compiler Windows comes
+not equipped with developmental tools. Several compilers have been shown to work for
+compiling {\FlightGear}, including the \Index{Cygnus Win32 port of GNU C}++ and the
+\Index{MS Visual C5} compiler. Given that the project will be a free one we prefer the
+Cygnus Compiler as it provides a free development environment. However, we will be happy
+to include a proper description in case those who worked out how to compile with MSVC or
+other Compilers provide one to us.
+
+\item  Install and configure the \Index{Cygnus} Gnu-Win32 development
+    environment. The latest version is Beta 20. The main
+    Cygnus Gnu-Win32 page is at:
+
+        \web{http://www.cygnus.com/misc/gnu-win32/}.
+
+ \noindent
+    You can download the Cygnus Gnu-Win32 compiler from:
+
+        \web{ftp://ftp.cygnus.com/pub/gnu-win32/latest/cdk.exe}.
+
+ \noindent
+    To install it, just run the file \texttt{cdk.exe} by double-clicking in
+    Windows explorer. Be sure to read this package's README :
+
+        \web{http://www.cygnus.com/misc/gnu-win32/readme\_toc.html}.
+
+ \noindent
+    Next, you need several UNIX developmental tools, being compiled for
+    Windows 98/NT. These are bundled in the package \texttt{usertools}. Get it
+    from
+
+    \web{ftp://ftp.cygnus.com/pub/gnu-win32/latest/usertools.exe}
+
+ \noindent
+    and install it by double-clicking as well. After doing so you should
+    find a program group called \texttt{Cygnus Solutions} in your start menu.
+
+\item  Compiling \FlightGear requires you to install the \Index{EGCS}
+upgrade to the \Index{Cygnus} environment being available from:
+
+\href{http://www.xraylith.wisc.edu/~khan/software/gnu-win32/egcs.html}{http://www.xraylith.wisc.edu/\~{}khan/software/gnu-win32/egcs.html}
+
+
+ \noindent
+    Again, make sure you follow the directions. It is recommended that you unroll the
+    \Index{EGCS} stuff over top of your Cygwin32 installation.  It will replace many of
+    the files.
+
+\item  Open the Cygnus bash via its entry in the Start menu.
+    Mount the drive as follows (assuming your \FlightGear drive is \texttt{d:}):
+
+         \texttt{mkdir /mnt}\\
+         \texttt{mount d: /mnt}
+
+ \noindent
+    You only have to do this once. The drive stays mounted (until you
+    umount it) even through reboots and switching off the machine.
+
+
+\item  Fetch the Flight Gear code and special \Index{Win32 libraries}.  These
+can  be found at:
+
+
+ \web{http://www.flightgear.org/Downloads/Source}
+
+ \noindent
+    Grab the latest \texttt{FlightGear-X.XX.zip} and
+    \texttt{win32-libs-X.XX.zip} files.
+
+\item Unpack the \FlightGear source code via
+
+        \texttt{pkunzip -d FlightGear-X.XX.zip}.
+
+ \noindent
+    (Be sure to use the -d option.  This will create all the needed
+    subdirectories.  Otherwise you will have one big mess!)
+
+\item  Change to the newly created \texttt{FlightGear-X.XX directory} with e.\,g.
+
+\texttt{cd //D/FlightGear-X.XX}
+
+ and unpack the Win32 libraries:
+
+     \texttt{pkunzip -d win32-libs-X.XX.zip}.
+
+
+\item  You will find a file called \texttt{install.exe} in the Win32
+directory after unzipping \texttt{win32-libs-X.XX.zip}. This
+version of \texttt{install.exe} should replace the one in your
+$\backslash$\texttt{H-i386-cygwin32$\backslash$bin} directory --
+it's sole claim to fame is that it understands that when many
+calls to it say \texttt{install foo} they mean \texttt{install
+foo.exe}. If you skip this step and attempt an install with the
+older version present \texttt{make install} will fail.
+
+Side Note: We need to make a distinction between the
+\texttt{\Index{build tree}} and the \texttt{\Index{install tree}}.
+The \texttt{build tree} is what we've been talking about up until
+this point.  This is where the source code lives and all the
+compiling takes place.  Once the executables are built, they need
+to be installed someplace.  We shall call this install location
+the \texttt{install tree}.  This is where the executables, the
+scenery, the textures, and any other run-time files will be
+located.
+
+\item Configure the make system for your environment and your
+\texttt{install tree}. Tell the configure script where you would like to install the
+\Index{binaries} and all the \Index{scenery} and \Index{textures} by using the
+\texttt{-$\!$-prefix} option. In the following example the base of the \texttt{install
+tree} is \texttt{FlightGear}. Make your you are within \FlightGear's root directory or
+change to it.
+
+\item Run:\index{configure}
+
+        \texttt{./configure -$\!$-prefix=/mnt/FlightGear}.
+
+ \noindent
+Side note: The make procedure is designed to link against opengl32.dll, glu32.dll, and
+glut32.dll which most accelerated boards require. If this does not apply to yours or if
+you installed SGI's \Index{software rendering} as mentioned in subsection \ref{softrend}
+you may have to change these to opengl.dll, glu.dll, and glut.dll. (In case you're in
+doubt check your \texttt{$\backslash$windows$\backslash$system} directory what you've
+got.)
+
+ If this is the case for your \Index{video card}, you can edit
+ \texttt{.../Simulator/Main/ Makefile} and rename these three libraries to
+    their "non-32" counterparts.  There is only one place in this
+    \texttt{Makefile} where these files are listed.
+
+\item Build the executable.  Run:
+
+        \texttt{make}.
+
+\item Assuming you have installed the updated version of
+\texttt{install.exe} (see earlier instructions) you can now create
+and populate the install tree.  Run:
+
+        \texttt{make install}.
+
+    You can save a significant amount of space by stripping all the
+    debugging symbols off of the executable.  To do this, change to the
+    directory in the \texttt{install tree} where your binary lives and run:
+
+        \texttt{strip fgfs.exe} resp. \texttt{strip fgfs-sgi.exe}.
+
+\end{enumerate}
+
+
+%% Revision 0.00  1998/09/08  michael
+%% Initial revision for version 0.53.
+%% employing redame.win32/readame.linux
+%% by c. olson , b. buckel
+%% Revision 0.01  1998/09/20  michael
+%% several extensions and corrections
+%% revision 0.10  1998/10/01  michael
+%% final proofreading for release
+%% revision 0.11  1998/11/01  michael
+%% deleted some obsolete stuff from the Linux section
+%% revision 0.12  1999/03/07  michael
+%% changed Windows to Cygnus b20
