@@ -1,4 +1,0 @@
-SUBDIRS = \
-	DEM \
-	Polygon \
-	Triangle
