@@ -1,0 +1,75 @@
+FG Scenery Tools README
+=======================
+
+Contained here-in are the FG scenery creation tools.  These can be
+used to convert 3 arcsec ASCII format DEM files and 30 arcsec binary
+format DEM files into Flight Gear scenery.
+
+Eventually these tools will expand to support insertion of airports,
+roads, rivers, lakes, etc.
+
+
+Building the Tools
+==================
+
+These tools are compiled and tested under Linux.  I'm all for
+portability, but I just haven't been as motivated to port these tools,
+since scenery creation is less of a general need ... especially at
+this stage.  However, if anyone wants to work on porting to other
+platforms, I will be happy to incorporate patches.
+
+The process for building these tools is very similar to building the
+main FG source code.
+
+1.  Set the FG_ROOT, FG_ROOT_SRC, and FG_ROOT_LIB environment
+    variables.
+
+2.  Run ``make depend''
+
+3.  Run ``make clean''
+
+4.  Run ``make''
+
+
+3 Arcsec ASCII DEM files
+========================
+
+Data files for the USA are available in this format from:
+
+    http://edcwww.cr.usgs.gov/doc/edchome/ndcdb/ndcdb.html
+
+To generate FG scenery from one of these dem files, run:
+
+    ./process-dem.pl <error-tolerance-squared> dem-file-1 [ dem-file-2 ...]
+
+You can vary the error tolerance to control the level of detail (and
+size) of the resulting scenery.  Note, you must specify the error
+tolerance squared.  So, if you wish to allow up to a 10 meter error
+margin (very high level of detail) you would specify a value of 100.
+If you desire an error tolerance of 200 meters (medium detail level)
+you would specify a value of 40000.
+
+The process-dem.pl script will automatically dump the resulting .obj
+files in the proper directory tree.
+
+
+30 Arcsec Binary DEM files
+==========================
+
+These data files have world wide coverage and are available from:
+
+    http://edcwww.cr.usgs.gov/landdaac/gtopo30/gtopo30.html
+
+To process these data files, you must first run:
+
+    DemRaw2Ascii/raw2ascii <input_file_basename> <output_dir>
+
+For example:
+
+    DemRaw2Ascii/raw2ascii /tmp/W020N90 asciidems/ 
+
+This will create ASCII DEM files for each 1 degree x 1 degree area in
+the specified output dir.
+
+Then, you can take these ascii dem files and feed them through the
+same procedure you use with the 3 arcsec dem files.
