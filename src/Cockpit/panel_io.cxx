@@ -194,7 +194,7 @@ readAction (const SGPropertyNode * node, float w_scale, float h_scale)
   SGPropertyNode * dest = fgGetNode("/sim/bindings/panel", true);
 
   for (i = 0; i < bindings.size(); i++) {
-    SG_LOG(SG_INPUT, SG_INFO, "Reading binding "
+    SG_LOG(SG_INPUT, SG_BULK, "Reading binding "
       << bindings[i]->getStringValue("command"));
 
     j = 0;
