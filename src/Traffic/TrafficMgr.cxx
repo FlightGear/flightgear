@@ -119,7 +119,7 @@ void FGTrafficManager::init()
 		{
 		  SGPath currFile = currACDir;
 		  currFile.append(dent2->d_name);
-		  SG_LOG(SG_GENERAL, SG_INFO, "Scanning " << currFile.str() << " for traffic");
+		  SG_LOG(SG_GENERAL, SG_DEBUG, "Scanning " << currFile.str() << " for traffic");
 		  readXML(currFile.str(),*this);
 		}
 	    }
