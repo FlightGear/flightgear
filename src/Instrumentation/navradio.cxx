@@ -271,7 +271,7 @@ FGNavRadio::unbind ()
 double FGNavRadio::adjustNavRange( double stationElev, double aircraftElev,
                                  double nominalRange )
 {
-    if (nominalRange < 0.0) {
+    if (nominalRange <= 0.0) {
       nominalRange = FG_NAV_DEFAULT_RANGE;
     }
     
