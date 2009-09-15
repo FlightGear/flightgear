@@ -552,7 +552,7 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
   double dot_v = dot(pos, _gsVertical);
   double angle = atan2(dot_v, dot_h) * SGD_RADIANS_TO_DEGREES;
   double deflectionAngle = target_gs - angle;
-    
+        
   // Construct false glideslopes.  The scale factor of 1.5 
   // in the sawtooth gives a period of 6 degrees.
   // There will be zeros at 3, 6r, 9, 12r et cetera
@@ -819,14 +819,22 @@ void FGNavRadio::search()
         int tmp = (int)(_gs->get_multiuse() / 1000.0);
         target_gs = (double)tmp / 100.0;
         
+        // until penaltyForNav goes away, we cannot assume we always pick
+        // paired LOC/GS trasmsitters. As we pass over a runway threshold, we
+        // often end up picking the 'wrong' LOC, but the correct GS. To avoid
+        // breaking the basis computation, ensure we use the GS radial and not
+        // the (potentially reversed) LOC radial.
+        double gs_radial = fmod(_gs->get_multiuse(), 1000.0);
+        SG_NORMALIZE_RANGE(gs_radial, 0.0, 360.0);
+                
         // GS axis unit tangent vector
         // (along the runway)
         _gsCart = _gs->cart();
-        _gsAxis = tangentVector(_gs->geod(), _gsCart, target_radial);
+        _gsAxis = tangentVector(_gs->geod(), _gsCart, gs_radial);
 
         // GS baseline unit tangent vector
         // (perpendicular to the runay along the ground)
-        SGVec3d baseline = tangentVector(_gs->geod(), _gsCart, target_radial + 90.0);
+        SGVec3d baseline = tangentVector(_gs->geod(), _gsCart, gs_radial + 90.0);
         _gsVertical = cross(baseline, _gsAxis);
       } // of have glideslope
     } // of found LOC or ILS
