@@ -3,11 +3,31 @@ AM_CXXFLAGS = -DPKGLIBDIR=\"$(pkgdatadir)\"
 noinst_LIBRARIES = libInput.a
 
 if WITH_EVENTINPUT
-libInput_Event_SOURCES = FGEventInput.cxx FGEventInput.hxx FGLinuxEventInput.cxx FGLinuxEventInput.hxx
-libInput_Event_INCLUDES = -I/usr/include/dbus-1.0 -I/usr/lib64/dbus-1.0/include -I/usr/lib/dbus-1.0/include 
+EXTRA_libInput_a_SOURCES = FGLinuxEventInput.cxx FGLinuxEventInput.hxx \
+	FGMacOSXEventInput.cxx FGMacOSXEventInput.hxx
+libInput_Event_SOURCES = FGEventInput.cxx FGEventInput.hxx 
+libInput_Event_INCLUDES = $(eventinput_INCLUDES)
+libInput_a_LIBADD = $(eventinput_EXTRA_OBJS)
+libInput_a_DEPENDENCIES = $(eventinput_EXTRA_OBJS)
 else
 libInput_Event_SOURCES = 
 libInput_Event_INCLUDES = 
+endif
+
+if HAVE_FRAMEWORK_PLIB
+js_demo_LDFLAGS = $(plib_FRAMEWORK)
+fgjs_LDFLAGS = $(plib_FRAMEWORK) 
+else
+js_demo_PLIB_LIBS = -lplibjs -lplibul
+fgjs_PLIB_LIBS = -lplibjs -lplibul
+js_demo_LDFLAGS =
+fgjs_LDFLAGS=
+endif
+
+if HAVE_FRAMEWORK_OSG
+fgjs_LDFLAGS = $(openthreads_FRAMEWORK)
+else
+fgjs_LDFLAGS = $(openthreads_LIBS)
 endif
 
 libInput_a_SOURCES = input.cxx input.hxx FGCommonInput.cxx FGCommonInput.hxx \
@@ -22,11 +42,11 @@ bin_PROGRAMS = js_demo fgjs
 
 js_demo_SOURCES = js_demo.cxx
 
-js_demo_LDADD = -lplibjs $(base_LIBS) $(joystick_LIBS) -lplibul
+js_demo_LDADD = $(js_demo_PLIB_LIBS) $(base_LIBS) $(joystick_LIBS)
 
 fgjs_SOURCES = fgjs.cxx jsinput.cxx jsinput.h jssuper.cxx jssuper.h
 
-fgjs_LDADD = -lplibjs -lplibul $(base_LIBS) $(joystick_LIBS) \
+fgjs_LDADD = $(js_demo_PLIB_LIBS) $(base_LIBS) $(joystick_LIBS) \
 	-lsgprops -lsgmisc -lsgio -lsgdebug -lsgstructure -lsgxml -lz
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src -I$(top_srcdir)/src/Main \

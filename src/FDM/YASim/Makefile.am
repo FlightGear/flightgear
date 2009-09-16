@@ -46,9 +46,17 @@ noinst_PROGRAMS = proptest
 
 yasim_SOURCES = yasim-test.cpp $(SHARED_SOURCE_FILES)
 
-yasim_LDADD = -lsgxml -lsgprops -lsgdebug -lsgmisc -lsgstructure $(base_LIBS)
+yasim_LDADD = -lsgxml -lsgprops -lsgdebug -lsgmisc -lsgstructure -lsgtiming $(base_LIBS)
 
 proptest_SOURCES = proptest.cpp $(SHARED_SOURCE_FILES)
-proptest_LDADD = -lsgxml -lsgprops -lsgdebug -lsgmisc -lsgstructure $(base_LIBS)
+proptest_LDADD = -lsgxml -lsgprops -lsgdebug -lsgmisc -lsgstructure -lsgtiming $(base_LIBS)
+
+if HAVE_FRAMEWORK_OSG
+yasim_LDFLAGS = $(openthreads_FRAMEWORKS)
+proptest_LDFLAGS = $(openthreads_FRAMEWORKS)
+else
+yasim_LDFLAGS = $(openthreads_LIBS)
+proptest_LDFLAGS = $(openthreads_LIBS)
+endif
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

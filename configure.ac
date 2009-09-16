@@ -1,4 +1,4 @@
-dnl Process this file with autoget.sh to produce a working configure
+dnl Process this file with autogen.sh to produce a working configure
 dnl script.
 
 AC_INIT
@@ -50,6 +50,53 @@ if test "x$with_osg" != "x" ; then
     echo "osg prefix is $with_osg"
     EXTRA_DIRS="${EXTRA_DIRS} $with_osg"
 fi
+
+# specify framework related locations for Mac OS X
+case "${host}" in
+*-apple-darwin*)
+
+    dnl Thank you Christian Bauer from SheepSaver
+    dnl Modified by Tatsuhiro Nishioka for accepting a given framework path
+    dnl AC_CHECK_FRAMEWORK($1=NAME, $2=INCLUDES, $3=FRAMEWORK_PATH) ; $3 is optional
+    AC_DEFUN([AC_CHECK_FRAMEWORK], [
+    AS_VAR_PUSHDEF([ac_Framework], [ac_cv_framework_$1])dnl
+    AC_CACHE_CHECK([whether compiler supports framework $1],
+        ac_Framework, [
+        saved_LIBS="$LIBS"
+        FRAMEWORKS="$FRAMEWORKS -framework $1"
+        if test "$3" = ""; then
+            FRAMEWORKS="$FRAMEWORKS $ADD2LD"
+        elif test "`echo $FRAMEWORKS | grep -- -F$3`" = ""; then
+            FRAMEWORKS="$FRAMEWORKS -F$3"
+            CXXFLAGS="$CXXFLAGS -F$3"
+            CCFLAGS="$CCFLAGS -F$3"
+            dnl This is needed for AC_TRY_LINK when a framework path is specified
+            export DYLD_FRAMEWORK_PATH="${DYLD_FRAMEWORK_PATH}:$3"
+        fi
+        AC_TRY_LINK(
+        [$2], [],
+        [AS_VAR_SET(ac_Framework, yes)], [AS_VAR_SET(ac_Framework, no); LIBS="$saved_LIBS"]
+        )
+    ])
+    AS_IF([test AS_VAR_GET(ac_Framework) = yes],
+        [AC_DEFINE(AS_TR_CPP(HAVE_FRAMEWORK_$1), 1, [Define if framework $1 is available.])]
+    )
+    AS_VAR_POPDEF([ac_Framework])dnl
+    ])
+
+    # Mac OS X specific configure options
+    AC_ARG_WITH(osg_framework, [  --with-osg-framework=PREFIX       Specify the prefix path to osg frameworks [default=standard framework paths]])
+
+    if test "x$with_plib_framework" != "x" ; then
+        echo "plib prefix is $with_plib_framework"
+    fi
+
+    AC_ARG_WITH(plib_framework, [  --with-plib-framework=PREFIX       Specify the prefix path to PLIB framework [default=standard framework paths]])
+    if test "x$with_osg_framework" != "x" ; then
+        echo "osg prefix is $with_osg_framework"
+    fi
+    ;;
+esac
 
 dnl Determine an extra directories to add to include/lib search paths
 case "${host}" in
@@ -117,6 +164,30 @@ dnl EXPERIMENTAL generic event driven input device
 AC_ARG_WITH(eventinput, [  --with-eventinput       Include event driven input (EXPERIMENTAL) [default=no]], [], [with_eventinput=no])
 if test "x$with_eventinput" = "xyes"; then
     AC_DEFINE([WITH_EVENTINPUT], 1, [Define to enable generic event driven input device])
+    case "${host}" in
+    dnl OS specific sources for event driven input
+    dnl Linux and Mac OS X are supported at this moment
+    *-apple-darwin*)
+        eventinput_EXTRA_OBJS="FGMacOSXEventInput.o"
+        eventinput_INCUDES=""
+        eventinput_LIBS=""
+        ;;
+    *linux*)
+        dnl
+        dnl FIXME: include paths for dbus are hard-coded at this moment.
+        dnl FIXME: these must be found in configure
+        dnl
+        eventinput_EXTRA_OBJS="FGLinuxEventInput.o"
+        eventinput_INCLUDES="-I/usr/include/dbus-1.0 -I/usr/lib64/dbus-1.0/include -I/usr/lib/dbus-1.0/include"
+        eventinput_LIBS="-ldbus-1 -lhal"
+        ;;
+    *)
+        echo "Event driven input is not supported on ${host}."
+        ;;
+    esac
+    AC_SUBST(eventinput_EXTRA_OBJS)
+    AC_SUBST(eventinput_INCLUDES)
+    AC_SUBST(eventinput_LIBS)
 fi
 AM_CONDITIONAL(WITH_EVENTINPUT, test "x$with_eventinput" = "xyes")
 
@@ -468,6 +539,18 @@ fi
 AM_CONDITIONAL(ENABLE_JPEG_SERVER, test "x$ac_cv_header_simgear_screen_jpgfactory_hxx" = "xyes")
 
 # Check for "plib" without which we cannot go on
+case "${host}" in
+*-apple-darwin*)
+    if test "x$with_plib_framework" != "x"; then
+        AC_CHECK_FRAMEWORK(PLIB, [#include <plib/ul.h>], $with_plib_framework, no)
+        plib_FRAMEWORK="$FRAMEWORKS"
+        AC_SUBST(plib_FRAMEWORK)
+        FRAMEWORKS=""
+    fi
+    ;;
+esac
+AM_CONDITIONAL(HAVE_FRAMEWORK_PLIB, test "x$ac_cv_framework_PLIB" != "x")
+
 AC_CHECK_HEADER(plib/ul.h)
 if test "x$ac_cv_header_plib_ul_h" != "xyes"; then
     echo
@@ -480,6 +563,7 @@ if test "x$ac_cv_header_plib_ul_h" != "xyes"; then
     exit
 fi
 
+echo "$DYLD_FRAMEWORK_PATH"
 AC_MSG_CHECKING([for plib 1.8.5 or newer])
 AC_TRY_RUN([
 #include <plib/ul.h>
@@ -520,48 +604,58 @@ fi
 # Find the OSG libraries.  Note special handling for OS X frameworks
 case "${host}" in
 *-apple-darwin*)
-
-    dnl Thank you Christian Bauer from SheepSaver
-    dnl AC_CHECK_FRAMEWORK($1=NAME, $2=INCLUDES)
-    AC_DEFUN([AC_CHECK_FRAMEWORK], [
-    AS_VAR_PUSHDEF([ac_Framework], [ac_cv_framework_$1])dnl
-    AC_CACHE_CHECK([whether compiler supports framework $1],
-        ac_Framework, [
-        saved_LIBS="$LIBS"
-        LIBS="$LIBS -framework $1"
-        AC_TRY_LINK(
-        [$2], [],
-        [AS_VAR_SET(ac_Framework, yes)], [AS_VAR_SET(ac_Framework, no); LIBS="$saved_LIBS"]
-        )
-    ])
-    AS_IF([test AS_VAR_GET(ac_Framework) = yes],
-        [AC_DEFINE(AS_TR_CPP(HAVE_FRAMEWORK_$1), 1, [Define if framework $1 is available.])]
-    )
-    AS_VAR_POPDEF([ac_Framework])dnl
-    ])
-
-    if test "x$enable_osgdebug" = "xyes"; then
-        AC_CHECK_LIB(osgViewerd,osgViewerGetVersion)
-        AC_CHECK_LIB(osgGAd,osgGAGetVersion)
-        AC_CHECK_LIB(osgTextd,osgTextGetVersion)
-        LIBS="$LIBS -losgFXd"
-        AC_CHECK_LIB(osgUtild,osgUtilGetVersion)
-        AC_CHECK_LIB(osgDBd,osgDBGetVersion)
-        AC_CHECK_LIB(osgSimd,osgSimGetVersion)
-        AC_CHECK_LIB(osgParticled,osgParticleGetVersion)
-        AC_CHECK_LIB(osgd,osgGetVersion)
-        AC_CHECK_LIB(OpenThreadsd,OpenThreadsGetVersion)
+    if test "x$with_osg_framework" = "x"; then
+        if test "x$enable_osgdebug" = "xyes"; then
+            # debug version of osg libs
+            AC_CHECK_LIB(OpenThreadsd,OpenThreadsGetVersion)
+            openthreads_LIBS="$LIBS"
+            LIBS=""
+            AC_CHECK_LIB(osgd,osgGetVersion)
+            AC_CHECK_LIB(osgUtild,osgUtilGetVersion)
+            AC_CHECK_LIB(osgDBd,osgDBGetVersion)
+            AC_CHECK_LIB(osgTextd,osgTextGetVersion)
+            AC_CHECK_LIB(osgGAd,osgGAGetVersion)
+            AC_CHECK_LIB(osgViewerd,osgViewerGetVersion)
+            AC_CHECK_LIB(osgSimd,osgSimGetVersion)
+            AC_CHECK_LIB(osgParticled,osgParticleGetVersion)
+            OSG_LIBS="$LIBS -losgFXd $openthreads_LIBS"
+            LIBS=""
+        else
+            # release version of osg libs
+            AC_CHECK_LIB(OpenThreads,OpenThreadsGetVersion)
+            openthreads_LIBS="$LIBS"
+            LIBS=""
+            AC_CHECK_LIB(osg,osgGetVersion)
+            AC_CHECK_LIB(osgUtil,osgUtilGetVersion)
+            AC_CHECK_LIB(osgDB,osgDBGetVersion)
+            AC_CHECK_LIB(osgText,osgTextGetVersion)
+            AC_CHECK_LIB(osgGA,osgGAGetVersion)
+            AC_CHECK_LIB(osgViewer,osgViewerGetVersion)
+            AC_CHECK_LIB(osgSim,osgSimGetVersion)
+            AC_CHECK_LIB(osgParticle,osgParticleGetVersion)
+            OSG_LIBS="$LIBS -losgFX $openthreads_LIBS"
+            LIBS=""
+            # echo $LIBS
+        fi
+        AC_SUBST(openthreads_LIBS)
+        AC_SUBST(OSG_LIBS)
     else
-        AC_CHECK_FRAMEWORK(osgViewer, [#include <osgViewer/Version>])
-        AC_CHECK_FRAMEWORK(osgGA, [#include <osgGA/Version>])
-        AC_CHECK_FRAMEWORK(osgText, [#include <osgText/Version>])
-        AC_CHECK_FRAMEWORK(osgFX, [#include <osgFX/AnisotropicLighting>])
-        AC_CHECK_FRAMEWORK(osgUtil, [#include <osgUtil/Version>])
-        AC_CHECK_FRAMEWORK(osgDB, [#include <osgDB/Version>])
-        AC_CHECK_FRAMEWORK(osgSim, [#include <osgSim/Version>])
-        AC_CHECK_FRAMEWORK(osgParticle, [#include <osgParticle/Version>])
-        AC_CHECK_FRAMEWORK(osg, [#include <osg/Version>])
-        AC_CHECK_FRAMEWORK(OpenThreads, [#include <OpenThreads/Version>])
+        # Checking osg frameworks.
+        AC_CHECK_FRAMEWORK(osgViewer, [#include <osgViewer/Version>], $with_osg_framework)
+        AC_CHECK_FRAMEWORK(osgGA, [#include <osgGA/Version>], $with_osg_framework)
+        AC_CHECK_FRAMEWORK(osgText, [#include <osgText/Version>], $with_osg_framework)
+        AC_CHECK_FRAMEWORK(osgFX, [#include <osgFX/AnisotropicLighting>], $with_osg_framework)
+        AC_CHECK_FRAMEWORK(osgUtil, [#include <osgUtil/Version>], $with_osg_framework)
+        AC_CHECK_FRAMEWORK(osgDB, [#include <osgDB/Version>], $with_osg_framework)
+        AC_CHECK_FRAMEWORK(osgSim, [#include <osgSim/Version>], $with_osg_framework)
+        AC_CHECK_FRAMEWORK(osgParticle, [#include <osgParticle/Version>], $with_osg_framework)
+        AC_CHECK_FRAMEWORK(osg, [#include <osg/Version>], $with_osg_framework)
+        osg_FRAMEWORKS="$FRAMEWORKS"
+        FRAMEWORKS=""
+        AC_CHECK_FRAMEWORK(OpenThreads, [#include <OpenThreads/Version>], $with_osg_framework)
+        openthreads_FRAMEWORK="$FRAMEWORKS"
+        AC_SUBST(osg_FRAMEWORKS)
+        AC_SUBST(openthreads_FRAMEWORK)
     fi
     ;;
 *)
@@ -590,6 +684,7 @@ case "${host}" in
     fi
     ;;
 esac
+AM_CONDITIONAL(HAVE_FRAMEWORK_OSG, test "x$ac_cv_framework_osg" != "x")
 
 AC_LANG_POP
 
@@ -736,6 +831,7 @@ AC_CONFIG_FILES([ \
 	utils/TerraSync/Makefile \
 	utils/xmlgrep/Makefile \
 	utils/fgviewer/Makefile \
+	utils/fgpanel/Makefile \
 ])
 AC_OUTPUT
 
