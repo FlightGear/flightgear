@@ -71,7 +71,8 @@ FGRunway::FGRunway(FGAirport* aAirport, const string& aIdent,
                         bool reciprocal) :
   FGRunwayBase(RUNWAY, cleanRunwayNo(aIdent), aGeod, heading, length, width, surface_code, true),
   _airport(aAirport),
-  _reciprocal(reciprocal),
+  _isReciprocal(reciprocal),
+  _reciprocal(NULL),
   _displ_thresh(displ_thresh),
   _stopway(stopway),
   _ils(NULL)
@@ -158,3 +159,12 @@ void FGRunway::processThreshold(SGPropertyNode* aThreshold)
   SGGeodesy::direct(newThreshold, _heading, offsetFt * SG_FEET_TO_METER, newCenter, dummy);
   mPosition = newCenter;
 } 
+
+void FGRunway::setReciprocalRunway(FGRunway* other)
+{
+  assert(_reciprocal==NULL);
+  assert((other->_reciprocal == NULL) || (other->_reciprocal == this));
+  
+  _reciprocal = other;
+}
+
