@@ -31,6 +31,8 @@
 
 #include "navlist.hxx"
 
+#include <Airports/runways.hxx>
+
 using std::string;
 
 // FGNavList ------------------------------------------------------------------
@@ -108,49 +110,38 @@ FGNavRecord *FGNavList::findByIdentAndFreq(const string& ident, const double fre
   return NULL;
 }
 
-// LOC, ILS, GS, and DME antenna's could potentially be
-// installed at the opposite end of the runway.  So it's not
-// enough to simply find the closest antenna with the right
-// frequency.  We need the closest antenna with the right
-// frequency that is most oriented towards us.  (We penalize
-// stations that are facing away from us by adding 5000 meters
-// which is further than matching stations would ever be
-// placed from each other.  (Do the expensive check only for
-// directional atennas and only when there is a chance it is
-// the closest station.)
-
-static bool penaltyForNav(FGNavRecord* aNav, const SGGeod &aGeod)
+// discount navids if they conflict with another on the same frequency
+// this only applies to navids associated with opposite ends of a runway,
+// with matching frequencies.
+static bool navidUsable(FGNavRecord* aNav, const SGGeod &aircraft)
 {
-  switch (aNav->type()) {
-  case FGPositioned::ILS:
-  case FGPositioned::LOC:
-  case FGPositioned::GS:
-// FIXME
-//  case FGPositioned::DME: we can't get the heading for a DME transmitter, oops
-    break;
-  default:
-    return false;
+  FGRunway* r(aNav->runway());
+  if (!r || !r->reciprocalRunway()) {
+    return true;
   }
   
-  double hdg_deg = 0.0;
-  if (aNav->type() == FGPositioned::GS) {
-    int tmp = (int)(aNav->get_multiuse() / 1000.0);
-    hdg_deg = aNav->get_multiuse() - (tmp * 1000);
-  } else {    
-    hdg_deg = aNav->get_multiuse();
+// check if the runway frequency is paired
+  FGNavRecord* locA = r->ILS();
+  FGNavRecord* locB = r->reciprocalRunway()->ILS();
+  
+  if (!locA || !locB || (locA->get_freq() != locB->get_freq())) {
+    return true; // not paired, ok
   }
   
-  double az1, az2, s;
-  SGGeodesy::inverse(aGeod, aNav->geod(), az1, az2, s);
-  az1 = az1 - hdg_deg;
-  SG_NORMALIZE_RANGE(az1, -180.0, 180.0);
-  return fabs(az1) > 90.0;
+// okay, both ends have an ILS, and they're paired. We need to select based on
+// aircraft position. What we're going to use is *runway* (not navid) position,
+// ie whichever runway end we are closer too. This makes back-course / missed
+// approach behaviour incorrect, but that's the price we accept.
+  double crs = SGGeodesy::courseDeg(aircraft, r->geod());
+  double hdgDiff = crs - r->headingDeg();
+  SG_NORMALIZE_RANGE(hdgDiff, -180.0, 180.0);  
+  return (fabs(hdgDiff) < 90.0);
 }
 
-// Given a point and a list of stations, return the closest one to the
-// specified point.
-FGNavRecord *FGNavList::findNavFromList( const SGGeod &aircraft,
-                                         const nav_list_type &stations )
+// Given a point and a list of stations, return the closest one to
+// the specified point.
+FGNavRecord* FGNavList::findNavFromList( const SGGeod &aircraft,
+                                  const nav_list_type &stations )
 {
     FGNavRecord *nav = NULL;
     double d2;                  // in meters squared
@@ -163,18 +154,13 @@ FGNavRecord *FGNavList::findNavFromList( const SGGeod &aircraft,
     // find the closest station within a sensible range (FG_NAV_MAX_RANGE)
     for ( it = stations.begin(); it != end; ++it ) {
         FGNavRecord *station = *it;
-        // cout << "testing " << current->get_ident() << endl;
         d2 = distSqr(station->cart(), aircraftCart);
-        if ( d2 < min_dist && penaltyForNav(station, aircraft))
-        {
-          double dist = sqrt(d2);
-          d2 = (dist + 5000) * (dist + 5000);
+        if ( d2 > min_dist || !navidUsable(station, aircraft)) {
+          continue;
         }
         
-        if ( d2 < min_dist ) {
-            min_dist = d2;
-            nav = station;
-        }
+        min_dist = d2;
+        nav = station;
     }
 
     return nav;
