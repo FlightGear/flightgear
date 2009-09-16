@@ -286,6 +286,9 @@ private:
                 displ_thresh2, stopway2, surface_code, true);
 
       runways.push_back(reciprocal);
+      
+      rwy->setReciprocalRunway(reciprocal);
+      reciprocal->setReciprocalRunway(rwy);
     }
   }
 
@@ -335,6 +338,9 @@ private:
               pos, heading_2, length, width, 
               displ_thresh2, stopway2, surface_code, true);
     runways.push_back(reciprocal);
+    
+    rwy->setReciprocalRunway(reciprocal);
+    reciprocal->setReciprocalRunway(rwy);
   }
 
   void parseWaterRunwayLine850(const vector<string>& token)
@@ -373,6 +379,9 @@ private:
               pos, heading_2, length, width, 
               0.0, 0.0, 13, true);
     runways.push_back(reciprocal);
+    
+    rwy->setReciprocalRunway(reciprocal);
+    reciprocal->setReciprocalRunway(rwy);
   }
 
   void parseHelipadLine850(const vector<string>& token)
