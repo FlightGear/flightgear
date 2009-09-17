@@ -16,9 +16,22 @@ THREAD_LIBS =
 endif
 
 if WITH_EVENTINPUT
-EVENT_LIBS = -ldbus-1 -lhal
+EVENT_LIBS = $(eventinput_LIBS)
 else
 EVENT_LIBS =
+endif
+
+if HAVE_FRAMEWORK_PLIB
+fgfs_PLIB_FW = $(plib_FRAMEWORK)
+metar_PLIB_FW = $(plib_FRAMEWORK)
+else
+fgfs_PLIB_LIBS = -lplibpuaux -lplibpu -lplibfnt -lplibjs -lplibnet \
+	-lplibsg -lplibul 
+metar_PLIB_LIBS = -lplibnet -lplibul 
+endif
+
+if HAVE_FRAMEWORK_OSG
+fgfs_OSG_FW = $(osg_FRAMEWORKS) $(openthreads_FRAMEWORK)
 endif
 
 GFX_CODE = fg_os_osgviewer.cxx fg_os_common.cxx fg_os.hxx
@@ -104,8 +117,7 @@ fgfs_LDADD = \
 	-lsgmaterial -lsgutil -lsgtiming -lsgio -lsgscreen -lsgmath -lsgbucket \
 	-lsgprops -lsgdebug -lsgmagvar -lsgmisc -lsgnasal -lsgxml -lsgsound \
 	-lsgserial -lsgstructure -lsgenvironment \
-	-lplibpuaux -lplibpu -lplibfnt -lplibjs -lplibnet \
-	-lplibsg -lplibul \
+        $(fgfs_PLIB_LIBS) \
 	$(OSG_LIBS) \
 	$(THREAD_LIBS) \
 	$(network_LIBS) \
@@ -114,11 +126,15 @@ fgfs_LDADD = \
 	$(openal_LIBS) \
 	$(EVENT_LIBS)
 
+fgfs_LDFLAGS = $(fgfs_PLIB_FW) $(fgfs_OSG_FW)
+
 metar_SOURCES = metar_main.cxx
 
 metar_LDADD = \
         -lsgenvironment -lsgio -lsgbucket -lsgmisc -lsgstructure -lsgdebug \
-        -lplibnet -lplibul $(network_LIBS) \
+        $(metar_PLIB_LIBS) $(network_LIBS) \
         -lz $(base_LIBS)
+
+metar_LDFLAGS = $(metar_PLIB_FW)
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src -I$(top_srcdir)/src/FDM/JSBSim
