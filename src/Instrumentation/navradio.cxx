@@ -153,7 +153,8 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     _localizerWidth(5.0),
     _name(node->getStringValue("name", "nav")),
     _num(node->getIntValue("number", 0)),
-    _time_before_search_sec(-1.0)
+    _time_before_search_sec(-1.0),
+    _falseCoursesEnabled(true)
 {
     SGPath path( globals->get_fg_root() );
     SGPath term = path;
@@ -208,6 +209,9 @@ FGNavRadio::init ()
     gs_serviceable_node = createServiceableProp(node, "gs");
     tofrom_serviceable_node = createServiceableProp(node, "to-from");
     dme_serviceable_node = createServiceableProp(node, "dme");
+    
+    globals->get_props()->tie("sim/realism/false-radio-courses-enabled", 
+      SGRawValuePointer<bool>(&_falseCoursesEnabled));
     
     // frequencies
     SGPropertyNode *subnode = node->getChild("frequencies", 0, true);
@@ -518,12 +522,28 @@ void FGNavRadio::updateReceiver(double dt)
   SG_NORMALIZE_RANGE(r, -180.0, 180.0);
   
   if ( is_loc ) {
-    // The factor of 30.0 gives a period of 120 which gives us 3 cycles and six 
-    // zeros i.e. six courses: one front course, one back course, and four 
-    // false courses. Three of the six are reverse sensing.
-    _cdiDeflection = 30.0 * sawtooth(r / 30.0);
+    if (_falseCoursesEnabled) {
+      // The factor of 30.0 gives a period of 120 which gives us 3 cycles and six 
+      // zeros i.e. six courses: one front course, one back course, and four 
+      // false courses. Three of the six are reverse sensing.
+      _cdiDeflection = 30.0 * sawtooth(r / 30.0);
+    } else {
+      // no false courses, but we do need to create a back course
+      if (fabs(r) > 90.0) { // front course
+        _cdiDeflection = r - copysign(180.0, r);
+      } else {
+        _cdiDeflection = r; // back course
+      }
+      
+      _cdiDeflection = -_cdiDeflection; // reverse for outbound radial
+    } // of false courses disabled
+    
     const double VOR_FULL_ARC = 20.0; // VOR is -10 .. 10 degree swing
     _cdiDeflection *= VOR_FULL_ARC / _localizerWidth; // increased localiser sensitivity
+    
+    if (backcourse_node->getBoolValue()) {
+      _cdiDeflection = -_cdiDeflection;
+    }
   } else {
     // handle the TO side of the VOR
     if (fabs(r) > 90.0) {
@@ -569,21 +589,23 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
   double dot_v = dot(pos, _gsVertical);
   double angle = atan2(dot_v, dot_h) * SGD_RADIANS_TO_DEGREES;
   double deflectionAngle = target_gs - angle;
-        
-  // Construct false glideslopes.  The scale factor of 1.5 
-  // in the sawtooth gives a period of 6 degrees.
-  // There will be zeros at 3, 6r, 9, 12r et cetera
-  // where "r" indicates reverse sensing.
-  // This is is consistent with conventional pilot lore
-  // e.g. http://www.allstar.fiu.edu/aerojava/ILS.htm
-  // but inconsistent with
-  // http://www.freepatentsonline.com/3757338.html
-  //
-  // It may be that some of each exist.
-  if (deflectionAngle < 0) {
-    deflectionAngle = 1.5 * sawtooth(deflectionAngle / 1.5);
-  } else {
-    // no false GS below the true GS
+  
+  if (_falseCoursesEnabled) {
+    // Construct false glideslopes.  The scale factor of 1.5 
+    // in the sawtooth gives a period of 6 degrees.
+    // There will be zeros at 3, 6r, 9, 12r et cetera
+    // where "r" indicates reverse sensing.
+    // This is is consistent with conventional pilot lore
+    // e.g. http://www.allstar.fiu.edu/aerojava/ILS.htm
+    // but inconsistent with
+    // http://www.freepatentsonline.com/3757338.html
+    //
+    // It may be that some of each exist.
+    if (deflectionAngle < 0) {
+      deflectionAngle = 1.5 * sawtooth(deflectionAngle / 1.5);
+    } else {
+      // no false GS below the true GS
+    }
   }
   
   _gsNeedleDeflection = deflectionAngle * 5.0;
