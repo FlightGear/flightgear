@@ -120,6 +120,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     gs_deflection_norm_node(NULL),
     gs_rate_of_climb_node(NULL),
     gs_dist_node(NULL),
+    gs_inrange_node(NULL),
     nav_id_node(NULL),
     id_c1_node(NULL),
     id_c2_node(NULL),
@@ -232,6 +233,8 @@ FGNavRadio::init ()
     gs_deflection_norm_node = node->getChild("gs-needle-deflection-norm", 0, true);
     gs_rate_of_climb_node = node->getChild("gs-rate-of-climb", 0, true);
     gs_dist_node = node->getChild("gs-distance", 0, true);
+    gs_inrange_node = node->getChild("gs-in-range", 0, true);
+    
     nav_id_node = node->getChild("nav-id", 0, true);
     id_c1_node = node->getChild("nav-id_asc1", 0, true);
     id_c2_node = node->getChild("nav-id_asc2", 0, true);
@@ -255,20 +258,12 @@ FGNavRadio::init ()
 void
 FGNavRadio::bind ()
 {
-    std::ostringstream temp;
-    string branch;
-    temp << _num;
-    branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 }
 
 
 void
 FGNavRadio::unbind ()
 {
-    std::ostringstream temp;
-    string branch;
-    temp << _num;
-    branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 }
 
 
@@ -276,6 +271,10 @@ FGNavRadio::unbind ()
 double FGNavRadio::adjustNavRange( double stationElev, double aircraftElev,
                                  double nominalRange )
 {
+    if (nominalRange <= 0.0) {
+      nominalRange = FG_NAV_DEFAULT_RANGE;
+    }
+    
     // extend out actual usable range to be 1.3x the published safe range
     const double usability_factor = 1.3;
 
@@ -382,6 +381,7 @@ void FGNavRadio::clearOutputs()
   gs_deflection_node->setDoubleValue( 0.0 );
   gs_deflection_deg_node->setDoubleValue(0.0);
   gs_deflection_norm_node->setDoubleValue(0.0);
+  gs_inrange_node->setBoolValue( false );
   
   to_flag_node->setBoolValue( false );
   from_flag_node->setBoolValue( false );
@@ -458,7 +458,7 @@ void FGNavRadio::updateReceiver(double dt)
 	    effective_range
                 = adjustNavRange( nav_elev, pos.getElevationM(), _navaid->get_range() );
 	}
-
+  
   double effective_range_m = effective_range * SG_NM_TO_METER;
 
   //////////////////////////////////////////////////////////
@@ -532,12 +532,16 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
   _gsNeedleDeflection = 0.0;
   if (!_gs || !inrange_node->getBoolValue()) {
     gs_dist_node->setDoubleValue( 0.0 );
+    gs_inrange_node->setBoolValue(false);
     return;
   }
   
   double gsDist = dist(aircraft, _gsCart);
   gs_dist_node->setDoubleValue(gsDist);
-  if (gsDist > (_gs->get_range() * SG_NM_TO_METER)) {
+  bool gsInRange = (gsDist < (_gs->get_range() * SG_NM_TO_METER));
+  gs_inrange_node->setBoolValue(gsInRange);
+        
+  if (!gsInRange) {
     return;
   }
   
@@ -548,7 +552,7 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
   double dot_v = dot(pos, _gsVertical);
   double angle = atan2(dot_v, dot_h) * SGD_RADIANS_TO_DEGREES;
   double deflectionAngle = target_gs - angle;
-    
+        
   // Construct false glideslopes.  The scale factor of 1.5 
   // in the sawtooth gives a period of 6 degrees.
   // There will be zeros at 3, 6r, 9, 12r et cetera
@@ -800,10 +804,11 @@ void FGNavRadio::search()
     if (nav->type() == FGPositioned::VOR) {
       target_radial = sel_radial_node->getDoubleValue();
       _gs = NULL;
+      has_gs_node->setBoolValue(false);
     } else { // ILS or LOC
       _gs = globals->get_gslist()->findByFreq(freq, pos);
-      _localizerWidth = localizerWidth(nav);
       has_gs_node->setBoolValue(_gs != NULL);
+      _localizerWidth = localizerWidth(nav);
       twist = 0.0;
 	    effective_range = nav->get_range();
       
@@ -814,14 +819,22 @@ void FGNavRadio::search()
         int tmp = (int)(_gs->get_multiuse() / 1000.0);
         target_gs = (double)tmp / 100.0;
         
+        // until penaltyForNav goes away, we cannot assume we always pick
+        // paired LOC/GS trasmsitters. As we pass over a runway threshold, we
+        // often end up picking the 'wrong' LOC, but the correct GS. To avoid
+        // breaking the basis computation, ensure we use the GS radial and not
+        // the (potentially reversed) LOC radial.
+        double gs_radial = fmod(_gs->get_multiuse(), 1000.0);
+        SG_NORMALIZE_RANGE(gs_radial, 0.0, 360.0);
+                
         // GS axis unit tangent vector
         // (along the runway)
         _gsCart = _gs->cart();
-        _gsAxis = tangentVector(_gs->geod(), _gsCart, target_radial);
+        _gsAxis = tangentVector(_gs->geod(), _gsCart, gs_radial);
 
         // GS baseline unit tangent vector
         // (perpendicular to the runay along the ground)
-        SGVec3d baseline = tangentVector(_gs->geod(), _gsCart, target_radial + 90.0);
+        SGVec3d baseline = tangentVector(_gs->geod(), _gsCart, gs_radial + 90.0);
         _gsVertical = cross(baseline, _gsAxis);
       } // of have glideslope
     } // of found LOC or ILS
