@@ -156,6 +156,9 @@ class FGNavRadio : public SGSubsystem
     double _gsNeedleDeflection;
     double _gsNeedleDeflectionNorm;
     
+    // realism setting, are false courses and GS lobes enabled?
+    bool _falseCoursesEnabled;
+    
     bool updateWithPower(double aDt);
 
     // model standard VOR/DME/TACAN service volumes as per AIM 1-1-8
