@@ -692,12 +692,14 @@ FGGeneric::read_config(SGPropertyNode *root, vector<_serial_prot> &msg)
 
     }
 
-    if (binary_record_length == -1) {
-        binary_record_length = record_length;
-    } else if (binary_record_length < record_length) {
-        SG_LOG(SG_IO, SG_ALERT,
-               "generic protocol: Requested binary record length shorter than "
-               " requested record representation.");
-        binary_record_length = record_length;
+    if( binary_mode ) {
+        if (binary_record_length == -1) {
+            binary_record_length = record_length;
+        } else if (binary_record_length < record_length) {
+            SG_LOG(SG_IO, SG_ALERT,
+                   "generic protocol: Requested binary record length shorter than "
+                   " requested record representation.");
+            binary_record_length = record_length;
+        }
     }
 }
