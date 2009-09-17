@@ -1,11 +1,22 @@
 noinst_PROGRAMS = GPSsmooth MIDGsmooth UGsmooth
 
+if HAVE_FRAMEWORK_PLIB
+GPSsmooth_LDFLAGS = $(plib_FRAMEWORK)
+MIDGsmooth_LDFLAGS = $(plib_FRAMEWORK)
+UGsmooth_LDFLAGS = $(plib_FRAMEWORK)
+else
+GPSsmooth_PLIB_LIBS = -lplibnet -lplibul
+MIDGsmooth_PLIB_LIBS = -lplibnet -lplibul
+UGsmooth_PLIB_LIBS = -lplibnet -lplibul
+endif
+
+
 GPSsmooth_SOURCES = \
 	gps.cxx gps.hxx \
 	gps_main.cxx
 
 GPSsmooth_LDADD = \
-	-lsgtiming -lsgmisc -lsgdebug -lplibnet -lplibul \
+        $(GPSsmooth_PLIB_LIBS) -lsgtiming -lsgmisc -lsgdebug \
 	$(joystick_LIBS) $(network_LIBS) $(base_LIBS) -lz
 
 MIDGsmooth_SOURCES = \
@@ -13,9 +24,8 @@ MIDGsmooth_SOURCES = \
 	MIDG_main.cxx
 
 MIDGsmooth_LDADD = \
-	-lsgio -lsgserial -lsgtiming -lsgmath -lsgbucket -lsgmisc -lsgdebug \
-        -lsgstructure \
-	-lplibnet -lplibul \
+        $(MIDGsmooth_PLIB_LIBS) -lsgio -lsgserial -lsgtiming \
+        -lsgmath -lsgbucket -lsgmisc -lsgdebug -lsgstructure \
 	$(joystick_LIBS) $(network_LIBS) $(base_LIBS) -lz
 
 UGsmooth_SOURCES = \
@@ -26,9 +36,8 @@ UGsmooth_SOURCES = \
 	UGear_telnet.cxx UGear_telnet.hxx
 
 UGsmooth_LDADD = \
-        -lsgio -lsgserial -lsgtiming -lsgmath -lsgbucket -lsgmisc -lsgdebug \
-        -lplibnet -lplibul \
+        $(UGsmooth_PLIB_LIBS) -lsgio -lsgserial -lsgtiming \
+        -lsgmath -lsgbucket -lsgmisc -lsgdebug \
         $(joystick_LIBS) $(network_LIBS) $(base_LIBS) -lz
-
 
 INCLUDES = -I$(top_srcdir)/src

@@ -6,4 +6,10 @@ terrasync_SOURCES = terrasync.cxx
 
 AM_CPPFLAGS = $(svn_CPPFLAGS)
 
-terrasync_LDADD = -lplibnet -lplibul -lsgmisc -lsgdebug $(network_LIBS) $(svn_LIBS)
+if HAVE_FRAMEWORK_PLIB
+terrasync_LDFLAGS = $(plib_FRAMEWORK)
+else
+terrasync_PLIB_LIBS = -lplibnet -lplibul  
+endif
+
+terrasync_LDADD = $(terrasync_PLIB_LIBS) -lsgmisc -lsgdebug $(network_LIBS) $(svn_LIBS)
