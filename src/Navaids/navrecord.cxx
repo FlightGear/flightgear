@@ -101,7 +101,7 @@ void FGNavRecord::initAirportRelation()
     mPosition.setElevationFt(mRunway->elevation());
   }
   
-  if (type() == ILS) {
+  if (type() == ILS || type() == LOC) {
     mRunway->setILS(this);
   }
   
