@@ -30,6 +30,8 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/SGMath.hxx>
 
+#include <Main/viewer.hxx> // FIXME - remove inlines here.
+
 // forward decls
 class FGViewer;
 typedef SGSharedPtr<FGViewer> FGViewerPtr;
