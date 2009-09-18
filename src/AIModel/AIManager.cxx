@@ -281,8 +281,8 @@ FGAIManager::processScenario( const string &filename ) {
             continue;
         std::string type = scEntry->getStringValue("type", "aircraft");
 
-         if (type == "tanker") { // refueling scenarios
-	    FGAITanker* tanker = new FGAITanker;
+        if (type == "tanker") { // refueling scenarios
+            FGAITanker* tanker = new FGAITanker;
             tanker->readFromScenario(scEntry);
             attach(tanker);
 
@@ -291,7 +291,7 @@ FGAIManager::processScenario( const string &filename ) {
             wingman->readFromScenario(scEntry);
             attach(wingman);
 
-    } else if (type == "aircraft") {
+        } else if (type == "aircraft") {
             FGAIAircraft* aircraft = new FGAIAircraft;
             aircraft->readFromScenario(scEntry);
             attach(aircraft);
@@ -406,14 +406,14 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
         tgt_ht[type] += fuse_range;
 
         if (fabs(tgt_alt - alt) > tgt_ht[type] || type == FGAIBase::otBallistic
-                || type == FGAIBase::otStorm || type == FGAIBase::otThermal ) {
-            SG_LOG(SG_GENERAL, SG_DEBUG, "AIManager: skipping "
-                << fabs(tgt_alt - alt)
-                << " "
-                << type
-                );
-            ++ai_list_itr;
-            continue;
+            || type == FGAIBase::otStorm || type == FGAIBase::otThermal ) {
+                SG_LOG(SG_GENERAL, SG_DEBUG, "AIManager: skipping "
+                    << fabs(tgt_alt - alt)
+                    << " "
+                    << type
+                    );
+                ++ai_list_itr;
+                continue;
         }
 
         double tgt_lat = (*ai_list_itr)->_getLatitude();
