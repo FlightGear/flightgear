@@ -52,6 +52,7 @@ private:
     void setContactX1offset(double x1);
     void setContactX2offset(double x2);
     void setXOffset(double x);
+    void setYOffset(double y);
 
     void setPitchCoeff(double pc);
     void setElevCoeff(double ec);
@@ -65,6 +66,7 @@ private:
     void setParent();
     void AdvanceFP();
     void setTowSpeed();
+    void RunGroundVehicle(double dt);
 
     bool getGroundElev(SGGeod inpos);
     bool getPitch();
@@ -86,10 +88,11 @@ private:
     double _contact_x1_offset, _contact_x2_offset, _contact_z_offset;
     double _pitch, _pitch_coeff, _pitch_deg;
     double _speed_coeff, _speed_kt;
-    double _x_offset;
+    double _x_offset, _y_offset;
     double _range_ft;
     double _relbrg;
-    double _parent_speed, _parent_x_offset;
+    double _parent_speed, _parent_x_offset, _parent_y_offset;
+    double _dt_count, _next_run;
 
     const SGMaterial* _material;
     const SGPropertyNode *_selected_ac;

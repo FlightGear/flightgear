@@ -62,17 +62,20 @@ public:
     void setSpeedConstant(double sc);
     void setFixedTurnRadius(double ft);
     void setWPNames();
+    void setWPPos();
     double sign(double x);
 
     bool _hdg_lock;
     bool _serviceable;
     bool _waiting;
     bool _new_waypoint;
+    bool _tunnel;
+
 
     virtual const char* getTypeString(void) const { return "ship"; }
     double _rudder_constant, _speed_constant, _hdg_constant, _limit ;
     double _elevation_m, _elevation_ft;
-    double _missed_range, _tow_angle, _wait_count;
+    double _missed_range, _tow_angle, _wait_count, _wp_range;
 
     FGAIFlightPlan::waypoint* prev; // the one behind you
     FGAIFlightPlan::waypoint* curr; // the one ahead
@@ -95,7 +98,7 @@ private:
     void Run(double dt);
     void setStartTime(const string&);
     void setUntilTime(const string&);
-    void setWPPos();
+    //void setWPPos();
     void setWPAlt();
     void setXTrackError();
 
@@ -115,7 +118,7 @@ private:
 
     double _roll_constant, _roll_factor;
     double _sp_turn_radius_ft, _rd_turn_radius_ft, _fixed_turn_radius;
-    double _wp_range, _old_range, _range_rate;
+    double _old_range, _range_rate;
     double _dt_count, _missed_count;
     double _next_run;
     double _missed_time_sec;
@@ -125,6 +128,7 @@ private:
     double _lead_angle_gain, _lead_angle_limit, _proportion;
     double _course;
     double _xtrack_error;
+    double _curr_alt, _prev_alt;
 
     string _prev_name, _curr_name, _next_name;
     string _path;
