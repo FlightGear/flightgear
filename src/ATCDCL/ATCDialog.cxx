@@ -66,7 +66,7 @@ ATCMenuEntry::ATCMenuEntry() {
 ATCMenuEntry::~ATCMenuEntry() {
 }
 
-static void atcUppercase(string &s) {
+void atcUppercase(string &s) {
 	for(unsigned int i=0; i<s.size(); ++i) {
 		s[i] = toupper(s[i]);
 	}
@@ -318,21 +318,19 @@ void FGATCDialog::FreqDialog() {
 	// Find the ATC stations within a reasonable range
 	comm_list_type atc_stations;
 	comm_list_iterator atc_stat_itr;
-	
-	double lon = fgGetDouble("/position/longitude-deg");
-	double lat = fgGetDouble("/position/latitude-deg");
-	double elev = fgGetDouble("/position/altitude-ft");
-	SGVec3d aircraft = SGVec3d::fromGeod(SGGeod::fromDegM(lon, lat, elev));
+
+  SGGeod geod(SGGeod::fromDegFt(fgGetDouble("/position/longitude-deg"),
+    fgGetDouble("/position/latitude-deg"), fgGetDouble("/position/altitude-ft")));
+	SGVec3d aircraft = SGVec3d::fromGeod(geod);
 
 	// search stations in range
-	int num_stat = current_commlist->FindByPos(lon, lat, elev, 50.0, &atc_stations);
+	int num_stat = current_commlist->FindByPos(geod, 50.0, &atc_stations);
 	if (num_stat != 0) {
 		map<atcdata, bool> uniq;
 		// fill map (sorts by distance and removes duplicates)
 		comm_list_iterator itr = atc_stations.begin();
 		for (; itr != atc_stations.end(); ++itr) {
-			SGVec3d station(itr->x, itr->y, itr->z);
-			double distance = distSqr(aircraft, station);
+			double distance = distSqr(aircraft, itr->cart);
 			uniq[atcdata(itr->ident, itr->name, distance)] = true;
 		}
 		// create button per map entry (modified copy of <button-template>)
@@ -382,7 +380,7 @@ void FGATCDialog::FreqDisplay(string& ident) {
 	int n = 0;	// Number of ATC frequencies at this airport
 
 	comm_list_type stations;
-	int found = current_commlist->FindByPos(a->getLongitude(), a->getLatitude(), a->getElevation(), 20.0, &stations);
+	int found = current_commlist->FindByPos(a->geod(), 20.0, &stations);
 	if(found) {
 		ostringstream ostr;
 		comm_list_iterator itr = stations.begin();

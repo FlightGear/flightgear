@@ -1409,8 +1409,9 @@ void FGTower::CheckDepartureList(double dt) {
 		//cout << "Dep list, checking " << t->plane.callsign;
 		
 		double distout;	// meters
-		if(t->isUser) distout = dclGetHorizontalSeparation(SGGeod::fromDegM(lon, lat, elev), SGGeod::fromDegM(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), user_elev_node->getDoubleValue()));
-		else distout = dclGetHorizontalSeparation(SGGeod::fromDegM(lon, lat, elev), t->planePtr->getPos());
+		if(t->isUser) distout = dclGetHorizontalSeparation(_geod, 
+      SGGeod::fromDegM(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), user_elev_node->getDoubleValue()));
+		else distout = dclGetHorizontalSeparation(_geod, t->planePtr->getPos());
 		//cout << " distout = " << distout << '\n';
 		if(t->isUser && !(t->clearedToTakeOff)) {	// HACK - we use clearedToTakeOff to check if ATC already contacted with plane (and cleared take-off) or not
 			if(!OnAnyRunway(SGGeod::fromDegM(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), 0.0), false)) {
@@ -1563,7 +1564,7 @@ bool FGTower::OnActiveRunway(const SGGeod& pt) {
 // Only call this at startup - reading the runways database is expensive and needs to be fixed!
 bool FGTower::OnAnyRunway(const SGGeod& pt, bool onGround) {
 	ATCData ad;
-	double dist = current_commlist->FindClosest(lon, lat, elev, ad, TOWER, 7.0);
+	double dist = current_commlist->FindClosest(_geod, ad, TOWER, 7.0);
 	if(dist < 0.0) {
 		return(false);
 	}
@@ -2540,7 +2541,7 @@ string FGTower::GenText(const string& m, int c) {
 				else if ( strcmp ( tag, "@MI" ) == 0 ) {
 					char buf[10];
 					//sprintf( buf, "%3.1f", tpars.miles );
-					int dist_miles = (int)dclGetHorizontalSeparation(SGGeod::fromDegM(lon, lat, elev), SGGeod::fromDegM(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), user_elev_node->getDoubleValue())) / 1600;
+					int dist_miles = (int)dclGetHorizontalSeparation(_geod, SGGeod::fromDegM(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), user_elev_node->getDoubleValue())) / 1600;
 					sprintf(buf, "%i", dist_miles);
 					strcat( &dum[0], &buf[0] );
 				}
@@ -2560,7 +2561,7 @@ string FGTower::GenText(const string& m, int c) {
 					}
 				}
 				else if(strcmp(tag, "@CD") == 0) {	// @CD = compass direction
-					double h = GetHeadingFromTo(SGGeod::fromDegM(lon, lat, elev), SGGeod::fromDegM(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), user_elev_node->getDoubleValue()));
+					double h = GetHeadingFromTo(_geod, SGGeod::fromDegM(user_lon_node->getDoubleValue(), user_lat_node->getDoubleValue(), user_elev_node->getDoubleValue()));
 					while(h < 0.0) h += 360.0;
 					while(h > 360.0) h -= 360.0;
 					if(h < 22.5 || h > 337.5) {
@@ -2625,9 +2626,13 @@ string FGTower::GetWeather() {
 }
 
 string FGTower::GetATISID() {
-	int hours = fgGetInt("/sim/time/utc/hour");
-	int phonetic_id = current_commlist->GetCallSign(ident, hours, 0);
-	return GetPhoneticIdent(phonetic_id);
+        double tstamp = atof(fgGetString("sim/time/elapsed-sec"));
+        const int minute(60);                   // in SI units
+        int interval = ATIS ? 60*minute : 2*minute;	// AWOS updated frequently
+        int sequence = current_commlist->GetAtisSequence(ident, 
+                              tstamp, interval);
+
+	return GetPhoneticLetter(sequence);  // the sequence letter
 }
 
 ostream& operator << (ostream& os, tower_traffic_type ttt) {

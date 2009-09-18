@@ -81,15 +81,12 @@ private:
 	typedef ai_callsigns_map_type::iterator ai_callsigns_map_iterator;
 	ai_callsigns_map_type ai_callsigns_used;
 
-    // Position of the Users Aircraft
-    double lon;
-    double lat;
-    double elev;
-    // Pointers to current users position
-    SGPropertyNode_ptr lon_node;
-    SGPropertyNode_ptr lat_node;
-    SGPropertyNode_ptr elev_node;
+  SGGeod _userAircraftPos;
 
+  // Pointers to current users position
+  SGPropertyNode_ptr lon_node;
+  SGPropertyNode_ptr lat_node;
+  SGPropertyNode_ptr elev_node;
 public:
 
     FGAIMgr();

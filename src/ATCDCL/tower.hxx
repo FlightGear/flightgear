@@ -27,6 +27,7 @@
 
 #include <iosfwd>
 #include <string>
+#include <list>
 
 #include "ATC.hxx"
 #include "ATCProjection.hxx"

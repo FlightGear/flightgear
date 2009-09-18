@@ -35,7 +35,16 @@
 #include "ATCutils.hxx"
 #include "ATCProjection.hxx"
 
-static const string nums[10] = {"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "niner"};
+static const string nums[10] = {"zero", "one", "two", "three", "four",
+				"five", "six", "seven", "eight", "niner"}; 
+
+static const string letters[LTRS] = {
+    "alpha",    "bravo",    "charlie",   "delta",     "echo",
+    "foxtrot",  "golf",     "hotel",     "india",     "juliet",
+    "kilo",     "lima",     "mike",      "november",  "oscar",
+    "papa",     "quebec",   "romeo",     "sierra",    "tango",
+    "uniform",  "victor",   "whiskey",   "xray",      "yankee",    "zulu"
+};
 
 // Convert any number to spoken digits
 string ConvertNumToSpokenDigits(const string &n) {
@@ -59,101 +68,50 @@ string ConvertNumToSpokenDigits(const string &n) {
 	return(str);
 }
 
-
-// Convert an integer to spoken digits
-string ConvertNumToSpokenDigits(int n) {
+// Convert an integer to a decimal numeral string
+string decimalNumeral(const int& n) {
 	std::ostringstream buf;
 	buf << n;
-	return(ConvertNumToSpokenDigits(buf.str()));
+	return buf.str();
+}
+
+// Convert an integer to spoken digits
+string ConvertNumToSpokenDigits(const int& n) {
+	return ConvertNumToSpokenDigits(decimalNumeral(n));
 }
 
 
-// Convert a 2 digit rwy number to a spoken-style string
-string ConvertRwyNumToSpokenString(int n) {
-	// Basic error/sanity checking
-	while(n < 0) {
-		n += 36;
-	}
-	while(n > 36) {
-		n -= 36;
-	}
-	if(n == 0) {
-		n = 36;	// Is this right?
-	}
-	
-	string str = "";
-	int index = n/10;
-	str += nums[index];
-	n -= (index * 10);
-	//str += "-";
-	str += " ";		//Changed this for the benefit of the voice token parser - prefer the "-" in the visual output though.
-	str += nums[n];
-	return(str);
-}
-
-// Assumes we get a two-digit string optionally appended with L, R or C
-// eg 01 07L 29R 36
+// Assumes we get a string of digits optionally appended with L, R or C
+// eg 1 7L 29R 36
 // Anything else is not guaranteed to be handled correctly!
-string ConvertRwyNumToSpokenString(const string &s) {
-	if(s.size() < 3) {
-		return(ConvertRwyNumToSpokenString(atoi(s.c_str())));
-	} else {
-		string r = ConvertRwyNumToSpokenString(atoi(s.substr(0,2).c_str()));
-		if(s.substr(2,1) == "L") {
-			r += " left";
-		} else if(s.substr(2,1) == "R") {
-			r += " right";
-		} else if(s.substr(2,1) == "C") {
-			r += " center";
-		} else {
-			SG_LOG(SG_ATC, SG_WARN, "WARNING: Unknown suffix " << s.substr(2,1) << " from runway ID " << s << " in ConvertRwyNumToSpokenString(...)");
-		}
-		return(r);
-	}
+string ConvertRwyNumToSpokenString(const string &rwy) {
+  string rslt;
+  for (int ii = 0; ii < rwy.length(); ii++){
+    if (rslt.length()) rslt += " ";
+    string ch = rwy.substr(ii,1);
+    if (isdigit(ch[0])) rslt += ConvertNumToSpokenDigits(atoi(ch.c_str()));
+    else if (ch == "R") rslt += "right";
+    else if (ch == "C") rslt += "center";
+    else if (ch == "L") rslt += "left";
+    else {
+      rslt += GetPhoneticLetter(ch[0]);
+      SG_LOG(SG_ATC, SG_WARN, "WARNING: Unknown suffix '" << ch 
+	  << "' in runway " << rwy << " in ConvertRwyNumToSpokenString(...)");
+    }
+  }
+  return rslt;
 }
 	
 
 // Return the phonetic letter of a letter represented as an integer 1->26
-string GetPhoneticIdent(int i) {
-	// TODO - Check i is between 1 and 26 and wrap if necessary
-	return(GetPhoneticIdent(char('a' + (i-1))));
+string GetPhoneticLetter(const int i) {
+	return(letters[i % LTRS]);
 }
 
 // Return the phonetic letter of a character in the range a-z or A-Z.
 // Currently always returns prefixed by lowercase.
-string GetPhoneticIdent(char c) {
-	c = tolower(c);
-	// TODO - Check c is between a and z and wrap if necessary
-	switch(c) {
-	case 'a' : return("alpha");
-	case 'b' : return("bravo");
-	case 'c' : return("charlie");
-	case 'd' : return("delta");
-	case 'e' : return("echo");
-	case 'f' : return("foxtrot");
-	case 'g' : return("golf");
-	case 'h' : return("hotel");
-	case 'i' : return("india");
-	case 'j' : return("juliet");
-	case 'k' : return("kilo");
-	case 'l' : return("lima");
-	case 'm' : return("mike");
-	case 'n' : return("november");
-	case 'o' : return("oscar");
-	case 'p' : return("papa");
-	case 'q' : return("quebec");
-	case 'r' : return("romeo");
-	case 's' : return("sierra");
-	case 't' : return("tango");
-	case 'u' : return("uniform");
-	case 'v' : return("victor");
-	case 'w' : return("whiskey");
-	case 'x' : return("x-ray");
-	case 'y' : return("yankee");
-	case 'z' : return("zulu");
-	}
-	// We shouldn't get here
-	return("Error");
+string GetPhoneticLetter(const char c) {
+	return GetPhoneticLetter(int(tolower(c) - 'a'));
 }
 
 // Get the compass direction associated with a heading in degrees
