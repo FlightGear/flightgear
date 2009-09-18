@@ -41,24 +41,22 @@ using std::string;
 string ConvertNumToSpokenDigits(const string &n);
 
 // Convert an integer to spoken digits
-string ConvertNumToSpokenDigits(int n);
-
-// Convert a 2 digit rwy number to a spoken-style string
-string ConvertRwyNumToSpokenString(int n);
+string ConvertNumToSpokenDigits(const int& n);
+string decimalNumeral(const int& n);
 
 // Convert rwy number string to a spoken-style string
-// eg "05L" to "zero five left"
-// Assumes we get a two-digit string optionally appended with R, L, or C
-// eg 01 07L 29R 36
-// Anything else is not guaranteed to be handled correctly!
+// eg "15L" to "one five left"
+// Assumes we get a string of digits optionally appended with R, L, or C
+// eg 1 7L 29R 36
 string ConvertRwyNumToSpokenString(const string &s);
 
-// Return the phonetic letter of a letter represented as an integer 1->26
-string GetPhoneticIdent(int i);
+const int LTRS(26);
+// Return the phonetic letter of a letter represented as an integer 0..25
+string GetPhoneticLetter(const int i);
 
 // Return the phonetic letter of a character in the range a-z or A-Z.
 // Currently always returns prefixed by lowercase.
-string GetPhoneticIdent(char c);
+string GetPhoneticLetter(char c);
 
 // Get the compass direction associated with a heading in degrees
 // Currently returns 8 direction resolution (N, NE, E etc...)

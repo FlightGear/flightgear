@@ -79,10 +79,6 @@ void FGAIMgr::init() {
 	lon_node = fgGetNode("/position/longitude-deg", true);
 	lat_node = fgGetNode("/position/latitude-deg", true);
 	elev_node = fgGetNode("/position/altitude-ft", true);
-
-	lon = lon_node->getDoubleValue();
-	lat = lat_node->getDoubleValue();
-	elev = elev_node->getDoubleValue();
 	
 	// Load up models at the start to avoid pausing later
 	// Hack alert - Hardwired paths!!
@@ -167,7 +163,7 @@ void FGAIMgr::update(double dt) {
 	
 	//cout << activated.size() << '\n';
 	
-        SGGeod userPos = SGGeod::fromDegM(lon_node->getDoubleValue(), lat_node->getDoubleValue(), elev_node->getDoubleValue());
+  SGGeod userPos = SGGeod::fromDegM(lon_node->getDoubleValue(), lat_node->getDoubleValue(), elev_node->getDoubleValue());
 	
 	// TODO - make these class variables!!
 	static int i = 0;
@@ -475,10 +471,9 @@ void FGAIMgr::SearchByPos(double range) {
 	//cout << "In SearchByPos(...)" << endl;
 	
 	// get bucket number for plane position
-	lon = lon_node->getDoubleValue();
-	lat = lat_node->getDoubleValue();
-	elev = elev_node->getDoubleValue() * SG_FEET_TO_METER;
-	SGBucket buck(lon, lat);
+  _userAircraftPos = SGGeod::fromDegFt(lon_node->getDoubleValue(),
+      lat_node->getDoubleValue(), elev_node->getDoubleValue());
+	SGBucket buck(_userAircraftPos);
 
 	// get neigboring buckets
 	int bx = (int)( range*SG_NM_TO_METER / buck.get_width_m() / 2);
@@ -492,7 +487,7 @@ void FGAIMgr::SearchByPos(double range) {
 		//cout << "i loop\n";
 		for ( int j=-by; j<=by; j++) {
 			//cout << "j loop\n";
-			buck = sgBucketOffset(lon, lat, i, j);
+			buck = sgBucketOffset(_userAircraftPos.getLongitudeDeg(), _userAircraftPos.getLatitudeDeg(), i, j);
 			long int bucket = buck.gen_index();
 			//cout << "bucket is " << bucket << endl;
 			if(facilities.find(bucket) != facilities.end()) {
@@ -530,14 +525,14 @@ void FGAIMgr::SearchByPos(double range) {
 	comm_list_type towered;
 	comm_list_iterator twd_itr;
 	
-	int num_twd = current_commlist->FindByPos(lon, lat, elev, range, &towered, TOWER);
+	int num_twd = current_commlist->FindByPos(_userAircraftPos, range, &towered, TOWER);
 	if (num_twd != 0) {
 		double closest = 1000000;
 		string s = "";
 		for(twd_itr = towered.begin(); twd_itr != towered.end(); twd_itr++) {
 			// Only activate the closest airport not already activated each time.
 			if(activated.find(twd_itr->ident) == activated.end()) {
-                                double sep = dclGetHorizontalSeparation(SGGeod::fromDegM(lon, lat, elev), fgGetAirportPos(twd_itr->ident));
+                                double sep = dclGetHorizontalSeparation(_userAircraftPos, fgGetAirportPos(twd_itr->ident));
 				if(sep < closest) {
 					closest = sep;
 					s = twd_itr->ident;
@@ -601,7 +596,7 @@ string FGAIMgr::GenerateShortForm(const string& callsign, const string& plane_st
 		//cout << c << '\n';
 		string tmp = "";
 		tmp += c;
-		if(isalpha(c)) s += GetPhoneticIdent(c);
+		if(isalpha(c)) s += GetPhoneticLetter(c);
 		else s += ConvertNumToSpokenDigits(tmp);
 		if(i > 1) s += '-';
 	}

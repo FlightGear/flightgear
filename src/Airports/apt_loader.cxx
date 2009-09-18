@@ -26,6 +26,8 @@
 #  include <config.h>
 #endif
 
+#include "apt_loader.hxx"
+
 #include <simgear/compiler.h>
 
 #include <stdlib.h> // atof(), atoi()
@@ -43,8 +45,11 @@
 #include "simple.hxx"
 #include "runways.hxx"
 #include "pavement.hxx"
+#include <ATCDCL/commlist.hxx>
 
-#include "apt_loader.hxx"
+#include <iostream>
+
+using namespace std;
 
 static FGPositioned::Type fptypeFromRobinType(int aType)
 {
@@ -61,9 +66,19 @@ static FGPositioned::Type fptypeFromRobinType(int aType)
 class APTLoader
 {
 public:
-  void parseAPT(const string &aptdb_file)
+
+  APTLoader()
+  :  last_apt_id(""),
+     last_apt_name(""),
+     last_apt_elev(0.0),
+     last_apt_info(""),
+     last_apt_type("")
+  {}
+
+  void parseAPT(const string &aptdb_file, FGCommList *comm_list)
   {
     sg_gzifstream in( aptdb_file );
+
     if ( !in.is_open() ) {
         SG_LOG( SG_GENERAL, SG_ALERT, "Cannot open file: " << aptdb_file );
         exit(-1);
@@ -139,8 +154,10 @@ public:
           // custom startup locations (ignore)
       } else if ( line_id == 0 ) {
           // ??
-      } else if ( line_id >= 50 && line_id <= 56 ) {
-          // frequency entries (ignore)
+      } else if ( line_id == 50 ) {
+        parseATISLine(comm_list, simgear::strutils::split(line));
+      } else if ( line_id >= 51 && line_id <= 56 ) {
+        // other frequency entries (ignore)
       } else if ( line_id == 110 ) {
         pavement = true;
         parsePavementLine850(simgear::strutils::split(line, 0, 4));
@@ -166,6 +183,7 @@ public:
   }
   
 private:
+  vector<string> token;
   double rwy_lat_accum;
   double rwy_lon_accum;
   double last_rwy_heading;
@@ -175,7 +193,8 @@ private:
   string last_apt_name;
   double last_apt_elev;
   SGGeod tower;
-  int last_apt_type;
+  string last_apt_info;
+  string last_apt_type;
   string pavement_ident;
   bool pavement;
   
@@ -209,7 +228,7 @@ private:
 
     SGGeod pos(SGGeod::fromDegFt(lon, lat, last_apt_elev));
     FGAirport* apt = new FGAirport(last_apt_id, pos, tower, last_apt_name, false,
-        fptypeFromRobinType(last_apt_type));
+        fptypeFromRobinType(atoi(last_apt_type.c_str())));
         
     apt->setRunwaysAndTaxiways(runways, taxiways, pavements);
   }
@@ -232,7 +251,7 @@ private:
         last_apt_name += " ";
     }
     last_apt_name += token[token.size() - 1];
-    last_apt_type = atoi( token[0].c_str() );
+    last_apt_type = token[0];
 
     // clear runway list for start of next airport
     rwy_lon_accum = 0.0;
@@ -433,15 +452,62 @@ private:
       pvt->addNode(pos, num == 113);
     }
   }
+  
+  void parseATISLine(FGCommList *comm_list, const vector<string>& token) 
+  {
+    if ( rwy_count <= 0 ) {
+      SG_LOG( SG_GENERAL, SG_ALERT, 
+        "No runways; skipping AWOS for " + last_apt_id);
+    }
+     
+// This assumes/requires that any code-50 line (ATIS or AWOS)
+ // applies to the preceding code-1 line (airport ID and name)
+ // and that a full set of code-10 lines (runway descriptors)
+ // has come between the code-1 and code-50 lines.
+ 	    // typical code-50 lines:
+ 	    // 50 11770 ATIS
+ 	    // 50 11770 AWOS 3
+ // This code parallels code found in "operator>>" in ATC.hxx;
+ // FIXME: unify the code.      
+    ATCData a;
+    a.geod = SGGeod::fromDegFt(rwy_lon_accum / (double)rwy_count, 
+      rwy_lat_accum / (double)rwy_count, last_apt_elev);
+    a.range = 50;	// give all ATISs small range
+    a.ident = last_apt_id;
+    a.name = last_apt_name;
+    // short int representing tens of kHz:
+    a.freq = atoi(token[1].c_str());
+    if (token[2] == "ATIS") a.type = ATIS;
+    else a.type = AWOS;		// ASOS same as AWOS
+
+    // generate cartesian coordinates
+    a.cart = SGVec3d::fromGeod(a.geod);
+    comm_list->commlist_freq[a.freq].push_back(a);
+
+    SGBucket bucket(a.geod);
+    int bucknum = bucket.gen_index();
+    comm_list->commlist_bck[bucknum].push_back(a);
+#if 0
+   SG_LOG( SG_GENERAL, SG_ALERT, 
+     "Loaded ATIS/AWOS for airport: " << a.ident
+    << "  lat: "  << a.geod.getLatitudeDeg()
+    << "  lon: "  << a.geod.getLongitudeDeg()
+    << "  freq: " << a.freq
+    << "  type: " << a.type );
+#endif
+  }
 };
 
 // Load the airport data base from the specified aptdb file.  The
 // metar file is used to mark the airports as having metar available
 // or not.
-bool fgAirportDBLoad( const string &aptdb_file, const string &metar_file )
+bool fgAirportDBLoad( const string &aptdb_file, 
+        FGCommList *comm_list, const std::string &metar_file )
 {
+
    APTLoader ld;
-   ld.parseAPT(aptdb_file);
+
+   ld.parseAPT(aptdb_file, comm_list);
 
     //
     // Load the metar.dat file and update apt db with stations that
