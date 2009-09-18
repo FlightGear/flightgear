@@ -19,209 +19,433 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+/////
+///// TODO:  _Cumulative_ sky coverage.
+///// TODO:  wind _gust_
+///// TODO:  more-sensible encoding of voice samples
+/////       u-law?  outright synthesis?
+/////
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
 
+#include "atis.hxx"
+
 #include <simgear/compiler.h>
 
-#include <stdlib.h>	// atoi()
-#include <stdio.h>	// sprintf
+#include <stdlib.h> // atoi()
+#include <stdio.h>  // sprintf
 #include <string>
-using std::string;
-
 #include <iostream>
-using std::cout;
+
+
+#include <boost/tuple/tuple.hpp>
 
 #include <simgear/misc/sg_path.hxx>
 
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
+#include <Environment/atmosphere.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Airports/runways.hxx>
 
-#include "atis.hxx"
+
 #include "commlist.hxx"
 #include "ATCutils.hxx"
 #include "ATCmgr.hxx"
 
+using std::cout;
+using std::cout;
+using boost::ref;
+using boost::make_tuple;
+
 FGATIS::FGATIS() :
-	transmission(""),
-	trans_ident(""),
-	atis_failed(false),
-	refname("atis")
-	//type(ATIS)
+  transmission(""),
+  trans_ident(""),
+  old_volume(0),
+  atis_failed(false),
+  attention(0),
+  _prev_display(0),
+  refname("atis")
 {
-	_vPtr = globals->get_ATC_mgr()->GetVoicePointer(ATIS);
-	_voiceOK = (_vPtr == NULL ? false : true);
-	_type = ATIS;
+  _vPtr = globals->get_ATC_mgr()->GetVoicePointer(ATIS);
+  _voiceOK = (_vPtr == NULL ? false : true);
+  if (!(_type != ATIS || _type == AWOS)) {
+       SG_LOG(SG_ATC, SG_ALERT, "ERROR - _type not ATIS or AWOS in atis.cxx");
+  }
+  fgTie("/environment/attention", this, (int_getter)0, &FGATIS::attend);
 }
 
+// Hint:
+// http://localhost:5400/environment/attention?value=1&submit=update
+
 FGATIS::~FGATIS() {
+  fgUntie("/environment/attention");
 }
+
+void FGATIS::Init() {
+// Nothing to see here.  Move along.
+}
+
+void
+FGATIS::attend (int attn)
+{
+  attention = attn;
+#ifdef ATMO_TEST
+  int flag = fgGetInt("/sim/logging/atmo");
+  if (flag) {
+    FGAltimeter().check_model();
+	FGAltimeter().dump_stack();
+  }
+#endif
+}
+
 
 // Main update function - checks whether we are displaying or not the correct message.
 void FGATIS::Update(double dt) {
-	if(_display) {
-		if(_displaying) {
-			// Check if we need to update the message
-			// - basically every hour and if the weather changes significantly at the station
-		} else {
-			// We need to get and display the message
-			UpdateTransmission();
-			//cout << "ATIS.CXX - calling ATCMgr to render transmission..." << endl;
-			Render(transmission, refname, true);
-			_displaying = true;
-		}
-	} else {
-		// We shouldn't be displaying
-		if(_displaying) {
-			//cout << "ATIS.CXX - calling NoRender()..." << endl;
-			NoRender(refname);
-			_displaying = false;
-		}
-	}
+  cur_time = globals->get_time_params()->get_cur_time();
+  msg_OK = (msg_time < cur_time);
+#if 0
+  if (msg_OK || _display != _prev_display) {
+    cout << "ATIS Update: " << _display << "  " << _prev_display
+      << "  len: " << transmission.length()
+      << "  oldvol: " << old_volume
+      << "  dt: " << dt << endl;
+    msg_time = cur_time;
+  }
+#endif
+  if(_display) {
+    double volume(0);
+    for (map<string,int>::iterator act = active_on.begin();
+    act != active_on.end(); act++) {
+      string prop = "/instrumentation/" + act->first + "/volume";
+      volume += globals->get_props()->getDoubleValue(prop.c_str());
+    }
+
+// Check if we need to update the message
+// - basically every hour and if the weather changes significantly at the station
+// If !_prev_display, the radio had been detuned for a while and our
+// "transmission" variable was lost when we were de-instantiated.
+    int rslt = GenTransmission(!_prev_display, attention);
+    if (rslt || volume != old_volume) {
+      //cout << "ATIS calling ATC::render  volume: " << volume << endl;
+      Render(transmission, volume, refname, true);
+      old_volume = volume;
+    }
+  } else {
+// We shouldn't be displaying
+    //cout << "ATIS.CXX - calling NoRender()..." << endl;
+    NoRender(refname);
+  }
+  _prev_display = _display;
+  attention = 0;
 }
 
-// Sets the actual broadcast ATIS transmission.
-void FGATIS::UpdateTransmission() {
-	double visibility;
-	char buf[10];
-	int phonetic_id;
-	string phonetic_id_string;
-	string time_str = fgGetString("sim/time/gmt-string");
-	int hours;
-	// int minutes;
-	
-	FGEnvironment stationweather =
-            ((FGEnvironmentMgr *)globals->get_subsystem("environment"))
-              ->getEnvironment(lat, lon, 0.0);
-	
-	transmission = "";
-	
-	// UK CAA radiotelephony manual indicated ATIS transmissions start with "This is"
-	// Not sure about rest of the world though.
-	transmission += "This_is ";
-	// transmitted station name.
-	transmission += name;
-	// Add "Information"
-	transmission += " information";
-	
-	//cout << "In atis.cxx, time_str = " << time_str << '\n';
-	// Add the recording identifier
-	// For now we will assume we only transmit every hour
-	hours = atoi((time_str.substr(1,2)).c_str());	//Warning - this is fragile if the 
-	//time string format changes
-	//cout << "In atis.cxx, hours = " << hours << endl;
-	phonetic_id = current_commlist->GetCallSign(ident, hours, 0);
-	phonetic_id_string = GetPhoneticIdent(phonetic_id);
-	transmission += " ";
-	transmission += phonetic_id_string;
-	
-	// Output the recording time. - we'll just output the last whole hour for now.
-	// FIXME - this only gets GMT time but that appears to be all the clock outputs for now
-	//cout << "in atis.cxx, time = " << time_str << endl;
-	transmission = transmission + " / Weather " + ConvertNumToSpokenDigits((time_str.substr(0,3) + "00")) + " hours zulu";
-	
-	// Get the temperature
-	int temp;
-	temp = (int)stationweather.get_temperature_degc();
-	
-	// HACK ALERT - at the moment the new environment subsystem returns bogus temperatures
-	// FIXME - take out this hack when this gets fixed upstream
-	if((temp < -50) || (temp > 60)) {
-		temp = 15;
-	}
+string uppercase(const string &s) {
+  string rslt(s);
+  for(string::iterator p = rslt.begin(); p != rslt.end(); p++){
+    *p = toupper(*p);
+  }
+  return rslt;
+}
 
-	sprintf(buf, "%i", abs(temp));
-	transmission += " / Temperature ";
-	if(temp < 0) {
-		transmission += "minus ";
-	}
-	string tempstr1 = buf;
-	string tempstr2;
-	transmission += ConvertNumToSpokenDigits(tempstr1);
-	transmission += " degrees_Celsius";
-	
-	// Get the visibility
-	visibility = stationweather.get_visibility_m();
-	sprintf(buf, "%i", int(visibility/1600));
-	transmission += " / Visibility ";
-	tempstr1 = buf;
-	transmission += ConvertNumToSpokenDigits(tempstr1);
-	transmission += " miles";
-	
-	// Get the cloudbase
-	// FIXME: kludge for now
-	if (strcmp(fgGetString("/environment/clouds/layer[0]/type"), "clear")) {
-		double cloudbase =
-		fgGetDouble("/environment/clouds/layer[0]/elevation-ft");
-		// For some reason the altitude returned doesn't seem to correspond to the actual cloud altitude.
-		char buf3[10];
-		char buf4[10];
-		// cout << "cloudbase = " << cloudbase << endl;
-		sprintf(buf3, "%i", int(cloudbase)/1000);
-		sprintf(buf4, "%i", ((int)cloudbase % 1000)/100);
-		transmission += " / Cloudbase";
-		if(int(cloudbase)/1000) {
-			tempstr1 = buf3;
-			transmission = transmission + " " + ConvertNumToSpokenDigits(tempstr1) + " thousand";
-		}
-		if(((int)cloudbase % 1000)/100) {
-			tempstr1 = buf4;
-			transmission = transmission + " " + ConvertNumToSpokenDigits(tempstr1) + " hundred";
-		}			
-		transmission += " feet";
-	}
-	
-	// Get the pressure / altimeter
-	double P = fgGetDouble("/environment/pressure-sea-level-inhg");
-	if(ident.substr(0,2) == "EG" && fgGetBool("/sim/atc/use-millibars") == true) {
-		// Convert to millibars for the UK!
-		P *= 33.864;
-		sprintf(buf, "%.0f", P);
-	} else {
-		sprintf(buf, "%.2f", P);
-	}		
-	transmission += " / Altimeter ";
-	tempstr1 = buf;
-	transmission += ConvertNumToSpokenDigits(tempstr1);
-	
-	// Based on the airport-id and wind get the active runway
-	//FGRunway *r;
-	double speed = stationweather.get_wind_speed_kt();
-	double hdg = stationweather.get_wind_from_heading_deg();
-	if (speed == 0) {
-		hdg = 270;	// This forces West-facing rwys to be used in no-wind situations
-		          	// which is consistent with Flightgear's initial setup.
-		transmission += " / Winds_light_and_variable";
-	} else {
-		// FIXME: get gust factor in somehow
-		char buf5[10];
-		char buf6[10];
-		sprintf(buf5, "%i", int(speed));
-		sprintf(buf6, "%i", int(hdg));
-		tempstr1 = buf5;
-		tempstr2 = buf6;
-		transmission = transmission + " / Winds " + ConvertNumToSpokenDigits(tempstr1) + " knots from "
-		                            + ConvertNumToSpokenDigits(tempstr2) + " degrees";
-	}
-	
-  const FGAirport* apt = fgFindAirportID(ident);
-  assert(apt);
-	string rwy_no = apt->getActiveRunwayForUsage()->ident();
-  if(rwy_no != "NN") {
-		transmission += " / Landing_and_departing_runway ";
-		transmission += ConvertRwyNumToSpokenString(atoi(rwy_no.c_str()));
-		//cout << "in atis.cxx, r.rwy_no = " << rwy_no << " r.id = " << r->id << " r.heading = " << r->heading << endl;
-	}
-	
-	// Anything else?
-	
-	transmission += " / Advise_controller_on_initial_contact_you_have ";
-	transmission += phonetic_id_string;
-	transmission += " /// ";
+// Replace all occurrences of a given word.
+// Words in the original string must be separated by hyphens (not spaces).
+// We check for the word as given, and for the all-caps version thereof.
+string replace_word(const string _orig, const string _www, const string _nnn){
+// The following are so we can match words at the beginning
+// and end of the string.
+  string orig = "-" + _orig + "-";
+  string www = "-" + _www + "-";
+  string nnn = "-" + _nnn + "-";
+
+  size_t where(0);
+  for ( ; (where = orig.find(www, where)) != string::npos ; ) {
+    orig.replace(where, www.length(), nnn);
+    where += nnn.length();
+  }
+  
+  www = uppercase(www);
+  for ( ; (where = orig.find(www, where)) != string::npos ; ) {
+    orig.replace(where, www.length(), nnn);
+    where += nnn.length();
+  }
+  where = orig.length();
+  return orig.substr(1, where-2);
+}
+
+// Normally the interval is 1 hour, 
+// but you can shorten it for testing.
+const int minute(60);		// measured in seconds
+#ifdef ATIS_TEST
+  const int ATIS_interval(2*minute);
+#else
+  const int ATIS_interval(60*minute);
+#endif
+
+// Generate the actual broadcast ATIS transmission.
+// Regen means regenerate the /current/ transmission.
+// Special means generate a new transmission, with a new sequence.
+// Returns 1 if we actually generated something.
+int FGATIS::GenTransmission(const int regen, const int special) {
+  using namespace atmodel;
+
+  string BRK = ".\n";
+
+  double tstamp = atof(fgGetString("sim/time/elapsed-sec"));
+  int interval = ATIS ? ATIS_interval : 2*minute;	// AWOS updated frequently
+  int sequence = current_commlist->GetAtisSequence(ident, 
+  			tstamp, interval, special);
+  if (!regen && sequence > LTRS) {
+//xx      if (msg_OK) cout << "ATIS:  no change: " << sequence << endl;
+//xx      msg_time = cur_time;
+    return 0;   // no change since last time
+  }
+
+  const int bs(100);
+  char buf[bs];
+  string time_str = fgGetString("sim/time/gmt-string");
+  string hours, mins;
+  string phonetic_seq_string;
+
+  transmission = "";
+
+// UK CAA radiotelephony manual indicated ATIS transmissions start
+// with "This is ..." 
+// In the US they just start with the airport name.
+// transmission += "This_is ";
+
+  // SG_LOG(SG_ATC, SG_ALERT, "ATIS: facility name: " << name);
+
+// Note that at this point, multi-word facility names
+// will sometimes contain hyphens, not spaces.
+// Force the issue, just to be safe:
+
+  string name2 = name;
+  for(string::iterator p = name2.begin(); p != name2.end(); p++){
+    if (*p == ' ') *p = '-';
+  }
+
+///////////////
+// FIXME:  This would be more flexible and more extensible
+// if the mappings were taken from an XML file, not hard-coded.
+///////////////
+
+// Remap some abbreviations that occur in apt.dat, to
+// make things nicer for the text-to-speech system:
+  name2 = replace_word(name2, "Intl",  "International");
+  name2 = replace_word(name2, "Rgnl",  "Regional");
+  name2 = replace_word(name2, "Co",    "County");
+  name2 = replace_word(name2, "Muni",  "Municipal");
+  name2 = replace_word(name2, "Mem",   "Memorial");
+  name2 = replace_word(name2, "Fld",   "Field");
+  name2 = replace_word(name2, "AFB",   "Air-Force-Base");
+  name2 = replace_word(name2, "AAF",   "Army-Air-Field");
+  name2 = replace_word(name2, "MCAS",  "Marine-Corps-Air-Station");
+  transmission += name2 + " ";
+  if (_type == ATIS /* as opposed to AWOS */) {
+    transmission += "airport_information ";
+    phonetic_seq_string = GetPhoneticLetter(sequence);  // Add the sequence letter
+    transmission += phonetic_seq_string + BRK;
+  }
+  transmission += "Automated_weather_observation ";
+// Warning - this is fragile if the time string format changes
+  hours = time_str.substr(0,2).c_str();
+  mins  = time_str.substr(3,2).c_str();
+// speak each digit separately:
+  transmission += ConvertNumToSpokenDigits(hours + mins);
+  transmission += " zulu weather" + BRK;
+
+  transmission += "Wind: ";
+
+  double wind_speed = fgGetDouble("/environment/config/boundary/entry[0]/wind-speed-kt");
+  double wind_dir = fgGetDouble("/environment/config/boundary/entry[0]/wind-from-heading-deg");
+  while (wind_dir <= 0) wind_dir += 360;
+// The following isn't as bad a kludge as it might seem.
+// It combines the magvar at the /aircraft/ location with
+// the wind direction in the environment/config array.
+// But if the aircraft is close enough to the station to
+// be receiving the ATIS signal, this should be a good-enough
+// approximation.  For more-distant aircraft, the wind_dir
+// shouldn't be corrected anyway.
+// The less-kludgy approach would be to use the magvar associated
+// with the station, but that is not tabulated in the stationweather
+// structure as it stands, and computing it would be expensive.
+// Also note that as it stands, there is only one environment in
+// the entire FG universe, so the aircraft environment is the same
+// as the station environment anyway.
+  wind_dir -= fgGetDouble("/environment/magnetic-variation-deg");       // wind_dir now magnetic
+  if (wind_speed == 0) {
+// Force west-facing rwys to be used in no-wind situations
+// which is consistent with Flightgear's initial setup:
+      wind_dir = 270;
+      transmission += " light_and_variable";
+  } else {
+      // FIXME: get gust factor in somehow
+      snprintf(buf, bs, "%03.0f", 5*round(wind_dir/5));
+      transmission += ConvertNumToSpokenDigits(buf);
+
+      snprintf(buf, bs, "%1.0f", wind_speed);
+      transmission += " at " + ConvertNumToSpokenDigits(buf) + BRK;
+  }
+
+  int did_some(0);
+  int did_ceiling(0);
+
+  for (int layer = 0; layer <= 4; layer++) {
+    snprintf(buf, bs, "/environment/clouds/layer[%i]/coverage", layer);
+    string coverage = fgGetString(buf);
+    if (coverage == "clear") continue;
+    snprintf(buf, bs, "/environment/clouds/layer[%i]/thickness-ft", layer);
+    if (fgGetDouble(buf) == 0) continue;
+    snprintf(buf, bs, "/environment/clouds/layer[%i]/elevation-ft", layer);
+    double ceiling = int(fgGetDouble(buf) - _geod.getElevationFt());
+    if (ceiling > 12000) continue;
+    if (coverage == "scattered") {
+      if (!did_some) transmission += "   Sky_condition: ";
+      did_some++;
+    } else /* must be a ceiling */  if (!did_ceiling) {
+      transmission += "   Ceiling: ";
+      did_ceiling++;
+      did_some++;
+    } else {
+      transmission += "   ";
+    }
+    int cig00  = int(round(ceiling/100));  // hundreds of feet
+    if (cig00) {
+      int cig000 = cig00/10;
+      cig00 -= cig000*10;       // just the hundreds digit
+      if (cig000) {
+    snprintf(buf, bs, "%i", cig000);
+    transmission += ConvertNumToSpokenDigits(buf);
+    transmission += " thousand ";
+      }
+      if (cig00) {
+    snprintf(buf, bs, "%i", cig00);
+    transmission += ConvertNumToSpokenDigits(buf);
+    transmission += " hundred ";
+      }
+    } else {
+      // Should this be "sky obscured?"
+      transmission += " zero ";     // not "zero hundred"
+    }
+    transmission += coverage + BRK;
+  }
+
+  transmission += "Temperature: ";
+  double Tsl = fgGetDouble("/environment/temperature-sea-level-degc");
+  int temp = int(round(FGAtmo().fake_T_vs_a_us(_geod.getElevationFt(), Tsl)));
+  if(temp < 0) {
+      transmission += "minus ";
+  }
+  snprintf(buf, bs, "%i", abs(temp));
+  transmission += ConvertNumToSpokenDigits(buf);
+  transmission += " dewpoint ";
+  double dpsl = fgGetDouble("/environment/dewpoint-sea-level-degc");
+  temp = int(round(FGAtmo().fake_dp_vs_a_us(dpsl, _geod.getElevationFt())));
+  if(temp < 0) {
+      transmission += "minus ";
+  }
+  snprintf(buf, bs, "%i", abs(temp));
+  transmission += ConvertNumToSpokenDigits(buf) + BRK;
+
+
+  transmission += "Visibility: ";
+  double visibility = fgGetDouble("/environment/config/boundary/entry[0]/visibility-m");
+  visibility /= atmodel::sm;    // convert to statute miles
+  if (visibility < 0.25) {
+    transmission += "less than one quarter";
+  } else if (visibility < 0.5) {
+    transmission += "one quarter";
+  } else if (visibility < 0.75) {
+    transmission += "one half";
+  } else if (visibility < 1.0) {
+    transmission += "three quarters";
+  } else if (visibility >= 1.5 && visibility < 2.0) {
+    transmission += "one and one half";
+  } else {
+    // integer miles
+    if (visibility > 10) visibility = 10;
+    sprintf(buf, "%i", int(.5 + visibility));
+    transmission += ConvertNumToSpokenDigits(buf);
+  }
+  transmission += BRK;
+
+  transmission += "Altimeter: ";
+  double myQNH;
+  double Psl = fgGetDouble("/environment/pressure-sea-level-inhg");
+  {
+    double press, temp;
+    
+    make_tuple(ref(press), ref(temp)) = PT_vs_hpt(_geod.getElevationM(), Psl*inHg, Tsl + freezing);
+#if 0
+    SG_LOG(SG_ATC, SG_ALERT, "Field P: " << press << "  T: " << temp);
+    SG_LOG(SG_ATC, SG_ALERT, "based on elev " << elev 
+                                << "  Psl: " << Psl
+                                << "  Tsl: " << Tsl);
+#endif
+    myQNH = FGAtmo().QNH(_geod.getElevationM(), press);
+  }
+  if(ident.substr(0,2) == "EG" && fgGetBool("/sim/atc/use-millibars")) {
+    // Convert to millibars for the UK!
+    myQNH /= mbar;
+    if  (myQNH > 1000) myQNH -= 1000;       // drop high digit
+    snprintf(buf, bs, "%03.0f", myQNH);
+  } else {
+    myQNH /= inHg;
+    myQNH *= 100.;                        // shift two decimal places
+    snprintf(buf, bs, "%04.0f", myQNH);
+  }
+  transmission += ConvertNumToSpokenDigits(buf) + BRK;
+
+  if (_type == ATIS /* as opposed to AWOS */) {
+      const FGAirport* apt = fgFindAirportID(ident);
+      assert(apt);
+        string rwy_no = apt->getActiveRunwayForUsage()->ident();
+      if(rwy_no != "NN") {
+        transmission += "Landing_and_departing_runway ";
+        transmission += ConvertRwyNumToSpokenString(rwy_no) + BRK;
+        if (msg_OK) {
+          msg_time = cur_time;
+          //cout << "In atis.cxx, r.rwy_no: " << rwy_no
+          //   << " wind_dir: " << wind_dir << endl;
+        }
+    }
+    transmission += "On_initial_contact_advise_you_have_information ";
+    transmission += phonetic_seq_string;
+    transmission += "... " + BRK;
+  }
+#ifdef ATIS_TEST
+  cout << "**** ATIS active on:";
+#endif
+  for (map<string,int>::iterator act = active_on.begin(); act != active_on.end(); act++){
+    string prop = "/instrumentation/" + act->first + "/atis";
+    globals->get_props()->setStringValue(prop.c_str(),
+      ("<pre>\n" + transmission + "</pre>\n").c_str());
+#ifdef ATIS_TEST
+    cout << "  " << prop;
+#endif
+  }
+#ifdef ATIS_TEST
+  cout << " ****" << endl;
+  cout << transmission << endl;
+// Note that even if we aren't outputting the transmission
+// on stdout, you can still see it by pointing a web browser
+// at the property tree.  The second comm radio is:
+// http://localhost:5400/instrumentation/comm[1]
+#endif
+
+// Take the previous English-looking string and munge it to
+// be relatively-more acceptable to the primitive tts system.
+// Note that : ; and . are among the token-delimeters recognized
+// by the tts system.
+  for (unsigned int where;;) {
+    where = transmission.find_first_of(":.");
+    if (where == string::npos) break;
+    transmission.replace(where, 1, " /_ ");
+  }
+  return 1;
 }

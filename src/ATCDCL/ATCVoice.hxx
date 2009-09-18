@@ -23,17 +23,10 @@
 
 #include <simgear/compiler.h>
 
-#  include <fstream>
 #include <map>
-#include <list>
 #include <string>
 
-#include <simgear/sound/sample_openal.hxx>
-
-using std::map;
-using std::list;
-using std::string;
-
+class SGSoundSample;
 
 struct WordData {
 	unsigned int offset;	// Offset of beginning of word sample into raw sound sample
@@ -57,8 +50,7 @@ public:
 	
 	// Given a desired message, return a pointer to the data buffer and write the buffer length into len.
 	// Sets dataOK = true if the returned buffer is valid.
-	unsigned char* WriteMessage(char* message, int& len, bool& dataOK);
-
+	std::string WriteMessage(const char* message, bool& dataOK);
 
 private:
 

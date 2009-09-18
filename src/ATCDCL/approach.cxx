@@ -408,18 +408,19 @@ double FGApproach::angle_diff_deg( const double &a1, const double &a2) {
 void FGApproach::calc_wp( const int &i ) {
 	
 	int j;
-	double course, d, cd, a1;
+	double course, d, cd, a1, az2;
 	
 	int wpn = planes[i].wpn;
 	// waypoint 0: Threshold of active runway
-        course = SGGeoc::courseRad(SGGeoc::fromDegM(lon, lat, 6e6), SGGeoc::fromDegM(active_rw_lon, active_rw_lat, 6e6));
-        d = SGGeoc::distanceM(SGGeoc::fromDegM(lon, lat, 6e6), SGGeoc::fromDegM(active_rw_lon, active_rw_lat, 6e6));
+  SGGeod activeRunway(SGGeod::fromDeg(active_rw_lon, active_rw_lat));
+  SGGeodesy::inverse(_geod, activeRunway, course, az2, d);
+  
 	double d1 = active_rw_hdg+180.0;
 	if ( d1 > 360.0 ) d1 -=360.0;
-	calc_cd_head_dist(360.0-course*SGD_RADIANS_TO_DEGREES, d/SG_NM_TO_METER, 
+	calc_cd_head_dist(360.0-course, d/SG_NM_TO_METER, 
 	                  d1, active_rw_len/SG_NM_TO_METER/2.0, 
 	                  &planes[i].wpts[wpn][0], &planes[i].wpts[wpn][1]);
-	planes[i].wpts[wpn][2] = elev;
+	planes[i].wpts[wpn][2] = _geod.getElevationM();
 	planes[i].wpts[wpn][4] = 0.0;
 	planes[i].wpts[wpn][5] = 0.0;
 	wpn += 1;
@@ -506,7 +507,7 @@ void FGApproach::calc_wp( const int &i ) {
 	// ====================
 	// vertical navigation
 	// ====================
-	double alt = elev+3000.0;
+	double alt = _geod.getElevationM()+3000.0;
 	planes[i].wpts[1][2] = round_alt( true, alt );
 	for ( j=2; j<wpn-1; ++j ) {
 		double dalt = planes[i].alt - planes[i].wpts[j-1][2];
@@ -585,11 +586,11 @@ void FGApproach::update_plane_dat() {
     planes[i].hdg = hdg_node->getDoubleValue();
     planes[i].spd = speed_node->getDoubleValue();
 
-    double course, distance;
-    course = SGGeoc::courseRad(SGGeoc::fromDegM(lon, lat, 6e6), SGGeoc::fromDegM(planes[i].lon, active_rw_lat, 6e6));
-    distance = SGGeoc::distanceM(SGGeoc::fromDegM(lon, lat, 6e6), SGGeoc::fromDegM(planes[i].lon, active_rw_lat, 6e6));
-    planes[i].dist = distance/SG_NM_TO_METER;
-    planes[i].brg  = 360.0-course*SGD_RADIANS_TO_DEGREES;
+    double course, distance, az2;
+    SGGeod plane(SGGeod::fromDeg(planes[1].lon, active_rw_lat));
+    SGGeodesy::inverse(_geod, plane, course, az2, distance);
+    planes[i].dist = distance * SG_METER_TO_NM;
+    planes[i].brg  = 360.0-course;
 
     //cout << "Plane Id: " << planes[i].ident << "  Distance to " << ident 
     // << " is " << planes[i].dist << " miles   " << "Bearing " << planes[i].brg << endl;

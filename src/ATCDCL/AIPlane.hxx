@@ -140,7 +140,7 @@ private:
 	// Outputs the transmission either on screen or as audio depending on user preference
 	// The refname is a string to identify this sample to the sound manager
 	// The repeating flag indicates whether the message should be repeated continuously or played once.
-	void Render(const string& refname, bool repeating);
+        void Render(const string& refname, const double volume, bool repeating);
 
 	// Cease rendering a transmission.
 	// Requires the sound manager refname if audio, else "".

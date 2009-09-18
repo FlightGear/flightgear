@@ -546,6 +546,7 @@ void FGAILocalTraffic::Update(double dt) {
 		// And to avoid compiler warnings...
 		case APPROACH:  break;
 		case ATIS:      break;
+    case AWOS:      break;
 		case ENROUTE:   break;
 		case DEPARTURE: break;
 		case INVALID:   break;
