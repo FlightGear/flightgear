@@ -28,16 +28,11 @@
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/math/SGMath.hxx>
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
-#include "fg_props.hxx"
-#include "viewer.hxx"
-
-using std::vector;
-
+// forward decls
+class FGViewer;
+typedef SGSharedPtr<FGViewer> FGViewerPtr;
 
 // Define a structure containing view information
 class FGViewMgr : public SGSubsystem
@@ -98,10 +93,8 @@ public:
     // setters
     inline void clear() { views.clear(); }
     inline void set_view( const int v ) { current = v; }
-    inline void add_view( FGViewer * v ) {
-	views.push_back(v);
-        v->init();
-    }
+    void add_view( FGViewer * v );
+    
     // copies current offset settings to current-view path...
     void copyToCurrent ();
 
@@ -150,7 +143,7 @@ private:
 
     SGPropertyNode_ptr view_number;
     vector<SGPropertyNode_ptr> config_list;
-    typedef vector<SGSharedPtr<FGViewer> > viewer_list;
+    typedef std::vector<FGViewerPtr> viewer_list;
     viewer_list views;
     SGVec3d abs_viewer_position;
 

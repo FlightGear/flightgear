@@ -25,12 +25,7 @@
 
 
 #ifndef _VIEWER_HXX
-#define _VIEWER_HXX
-
-
-#ifndef __cplusplus                                                          
-# error This library requires C++
-#endif                                   
+#define _VIEWER_HXX                                
 
 namespace flightgear
 {
