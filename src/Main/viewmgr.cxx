@@ -25,14 +25,14 @@
 #  include "config.h"
 #endif
 
+#include "viewmgr.hxx"
+
 #include <string.h>		// strcmp
 
 #include <simgear/compiler.h>
-
 #include <Model/acmodel.hxx>
-
-#include "viewmgr.hxx"
-
+#include <Main/viewer.hxx>
+#include <Main/fg_props.hxx>
 
 // Constructor
 FGViewMgr::FGViewMgr( void ) :
@@ -341,7 +341,13 @@ FGViewMgr::copyToCurrent()
                 get_current_view()->getInternal());
 }
 
-
+void
+FGViewMgr::add_view( FGViewer * v )
+{
+  views.push_back(v);
+  v->init();
+}
+    
 double
 FGViewMgr::getViewHeadingOffset_deg () const
 {
