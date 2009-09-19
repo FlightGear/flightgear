@@ -442,7 +442,7 @@ int FGATIS::GenTransmission(const int regen, const int special) {
 // be relatively-more acceptable to the primitive tts system.
 // Note that : ; and . are among the token-delimeters recognized
 // by the tts system.
-  for (unsigned int where;;) {
+  for (size_t where;;) {
     where = transmission.find_first_of(":.");
     if (where == string::npos) break;
     transmission.replace(where, 1, " /_ ");
