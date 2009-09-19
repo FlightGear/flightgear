@@ -81,7 +81,7 @@
 #include "fg_init.hxx"
 #include "fg_os.hxx"
 #include "WindowSystemAdapter.hxx"
-
+#include <Main/viewer.hxx>
 
 static double real_delta_time_sec = 0.0;
 double delta_time_sec = 0.0;

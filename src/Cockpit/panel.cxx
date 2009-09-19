@@ -55,6 +55,7 @@
 #include <Main/viewmgr.hxx>
 #include <Time/light.hxx>
 #include <GUI/new_gui.hxx>	// FGFontCache
+#include <Main/viewer.hxx>
 
 #include "hud.hxx"
 #include "panel.hxx"

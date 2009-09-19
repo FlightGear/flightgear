@@ -47,6 +47,7 @@
 #include "util.hxx"
 #include "viewmgr.hxx"
 #include "main.hxx"
+#include <Main/viewer.hxx>
 
 using std::string;
 using std::ifstream;

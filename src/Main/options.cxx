@@ -60,7 +60,7 @@
 #include "options.hxx"
 #include "util.hxx"
 #include "viewmgr.hxx"
-
+#include <Main/viewer.hxx>
 
 using std::string;
 using std::sort;
