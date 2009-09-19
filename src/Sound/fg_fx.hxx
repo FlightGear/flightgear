@@ -29,13 +29,12 @@
 #include <queue>
 #include <vector>
 
-#include <simgear/sound/sample_openal.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-
-using std::queue;
-using std::vector;
+#include <simgear/math/SGMath.hxx>
 
 class SGXmlSound;
+class SGSoundSample;
+class SGSoundMgr;
 
 /**
  * Generator for FlightGear sound effects.
@@ -72,16 +71,16 @@ public:
      * in order.
      */
     void play_message( SGSoundSample *_sample );
-    void play_message( const string path, const string fname, double volume );
+    void play_message( const std::string& path, const std::string& fname, double volume );
 
 private:
 
     void update_pos_and_orientation(SGSoundMgr *smgr, double dt);
-    sgdVec3 last_visitor_pos;
-    sgdVec3 last_model_pos;
+    SGVec3d last_visitor_pos;
+    SGVec3d last_model_pos;
 
-    vector<SGXmlSound *> _sound;
-    queue<SGSoundSample *> _samplequeue;
+    std::vector<SGXmlSound *> _sound;
+    std::queue<SGSoundSample *> _samplequeue;
 
     bool last_pause;
     double last_volume;
