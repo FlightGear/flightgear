@@ -60,7 +60,7 @@
 using std::cout;
 using std::cout;
 using boost::ref;
-using boost::make_tuple;
+using boost::tie;
 
 FGATIS::FGATIS() :
   transmission(""),
@@ -285,7 +285,7 @@ int FGATIS::GenTransmission(const int regen, const int special) {
       transmission += " light_and_variable";
   } else {
       // FIXME: get gust factor in somehow
-      snprintf(buf, bs, "%03.0f", 5*round(wind_dir/5));
+      snprintf(buf, bs, "%03.0f", 5*SGMiscd::round(wind_dir/5));
       transmission += ConvertNumToSpokenDigits(buf);
 
       snprintf(buf, bs, "%1.0f", wind_speed);
@@ -314,7 +314,7 @@ int FGATIS::GenTransmission(const int regen, const int special) {
     } else {
       transmission += "   ";
     }
-    int cig00  = int(round(ceiling/100));  // hundreds of feet
+    int cig00  = int(SGMiscd::round(ceiling/100));  // hundreds of feet
     if (cig00) {
       int cig000 = cig00/10;
       cig00 -= cig000*10;       // just the hundreds digit
@@ -337,7 +337,7 @@ int FGATIS::GenTransmission(const int regen, const int special) {
 
   transmission += "Temperature: ";
   double Tsl = fgGetDouble("/environment/temperature-sea-level-degc");
-  int temp = int(round(FGAtmo().fake_T_vs_a_us(_geod.getElevationFt(), Tsl)));
+  int temp = int(SGMiscd::round(FGAtmo().fake_T_vs_a_us(_geod.getElevationFt(), Tsl)));
   if(temp < 0) {
       transmission += "minus ";
   }
@@ -345,7 +345,7 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   transmission += ConvertNumToSpokenDigits(buf);
   transmission += " dewpoint ";
   double dpsl = fgGetDouble("/environment/dewpoint-sea-level-degc");
-  temp = int(round(FGAtmo().fake_dp_vs_a_us(dpsl, _geod.getElevationFt())));
+  temp = int(SGMiscd::round(FGAtmo().fake_dp_vs_a_us(dpsl, _geod.getElevationFt())));
   if(temp < 0) {
       transmission += "minus ";
   }
@@ -380,7 +380,7 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   {
     double press, temp;
     
-    make_tuple(ref(press), ref(temp)) = PT_vs_hpt(_geod.getElevationM(), Psl*inHg, Tsl + freezing);
+    tie(press, temp) = PT_vs_hpt(_geod.getElevationM(), Psl*inHg, Tsl + freezing);
 #if 0
     SG_LOG(SG_ATC, SG_ALERT, "Field P: " << press << "  T: " << temp);
     SG_LOG(SG_ATC, SG_ALERT, "based on elev " << elev 
@@ -442,7 +442,7 @@ int FGATIS::GenTransmission(const int regen, const int special) {
 // be relatively-more acceptable to the primitive tts system.
 // Note that : ; and . are among the token-delimeters recognized
 // by the tts system.
-  for (unsigned int where;;) {
+  for (size_t where;;) {
     where = transmission.find_first_of(":.");
     if (where == string::npos) break;
     transmission.replace(where, 1, " /_ ");

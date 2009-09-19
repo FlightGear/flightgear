@@ -29,6 +29,9 @@
 #include <ctype.h>
 #include <fstream>
 #include <list>
+#include <vector>
+
+#include <boost/shared_array.hpp>
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
@@ -37,6 +40,14 @@
 #include <simgear/sound/sample_openal.hxx>
 
 #include <Main/globals.hxx>
+
+#include <stdio.h>
+
+#ifdef _MSC_VER
+#define strtok_r strtok_s
+#endif
+
+using namespace std;
 
 FGATCVoice::FGATCVoice() {
   SoundData = 0;
@@ -135,13 +146,13 @@ string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
 	// TODO - at the moment we're effectively taking 3 passes through the data.
 	// There is no need for this - 2 should be sufficient - we can probably ditch the tokenList.
 	size_t n1 = 1+strlen(message);
-	char msg[n1];
-	strncpy(msg, message, n1);	// strtok requires a non-const char*
+        boost::shared_array<char> msg(new char[n1]);
+	strncpy(msg.get(), message, n1); // strtok requires a non-const char*
 	char* token;
 	int numWords = 0;
 	const char delimiters[] = " \t.,;:\"\n";
 	char* context;
-	token = strtok_r(msg, delimiters, &context);
+	token = strtok_r(msg.get(), delimiters, &context);
 	while(token != NULL) {
                 for (char *t = token; *t; t++) {
                   *t = tolower(*t);     // canonicalize the case, to
@@ -154,8 +165,8 @@ string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
 		token = strtok_r(NULL, delimiters, &context);
 	}
 
-	WordData wdptr[numWords];
-	int word = 0;
+	vector<WordData> wdptr;
+        wdptr.reserve(numWords);
 	unsigned int cumLength = 0;
 
 	tokenListItr = tokenList.begin();
@@ -165,21 +176,19 @@ string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
 	  	  SG_LOG(SG_ATC, SG_ALERT, "voice synth: word '"
                       << *tokenListItr << "' not found");
 		} else {
-			wdptr[word] = wordMap[*tokenListItr];
-			cumLength += wdptr[word].length;
-			//cout << *tokenListItr << " found at offset " << wdptr[word].offset << " with length " << wdptr[word].length << endl;  
-			word++;
+                    wdptr.push_back(wordMap[*tokenListItr]);
+                    cumLength += wdptr.back().length;
 		}
 		++tokenListItr;
 	}
-
+	const size_t word = wdptr.size();
+        
 	// Check for no tokens found else slScheduler can be crashed
 	if(!word) {
 		dataOK = false;
 		return "";
 	}
-
-	char tmpbuf[cumLength]; 	
+        boost::shared_array<char> tmpbuf(new char[cumLength]);
 	unsigned int bufpos = 0;
 	for(int i=0; i<word; ++i) {
 		/*
@@ -196,7 +205,7 @@ string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
 			dataOK = false;
 			return "";
 		}
-		memcpy(tmpbuf + bufpos, rawSoundData + wdptr[i].offset, wdptr[i].length);
+		memcpy(tmpbuf.get() + bufpos, rawSoundData + wdptr[i].offset, wdptr[i].length);
 		bufpos += wdptr[i].length;
 	}
 	
@@ -204,8 +213,8 @@ string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
 	unsigned int offsetIn = (int)(cumLength * sg_random());
 	if(offsetIn > cumLength) offsetIn = cumLength;
 
-	string front(tmpbuf, offsetIn);
-	string back(tmpbuf+offsetIn, cumLength - offsetIn);
+	string front(tmpbuf.get(), offsetIn);
+	string back(tmpbuf.get() + offsetIn, cumLength - offsetIn);
 
 	dataOK = true;	
 	return back + front;
