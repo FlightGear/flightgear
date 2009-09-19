@@ -63,6 +63,7 @@
 #include <Scenery/tilemgr.hxx>
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
+#include <Sound/fg_fx.hxx>
 #include <FDM/flight.hxx>
 #include <ATCDCL/ATCmgr.hxx>
 #include <ATCDCL/AIMgr.hxx>
@@ -451,13 +452,6 @@ static void fgMainLoop( void ) {
             "Elapsed time is zero ... we're zinging" );
     }
 
-    // Run audio scheduler
-#ifdef ENABLE_AUDIO_SUPPORT
-    if ( globals->get_soundmgr()->is_working() ) {
-        globals->get_soundmgr()->update( delta_time_sec );
-    }
-#endif
-
     globals->get_subsystem_mgr()->update(delta_time_sec);
 
     //
@@ -466,7 +460,6 @@ static void fgMainLoop( void ) {
     //   we may want to move this to its own class at some point
     //
     double visibility_meters = fgGetDouble("/environment/visibility-m");
-    FGViewer *current_view = globals->get_current_view();
 
     globals->get_tile_mgr()->prep_ssg_nodes( visibility_meters );
     // update tile manager for view...
@@ -484,123 +477,10 @@ static void fgMainLoop( void ) {
     // update the view angle as late as possible, but before sound calculations
     globals->get_viewmgr()->update(real_delta_time_sec);
 
+    // Run audio scheduler
 #ifdef ENABLE_AUDIO_SUPPORT
-    if ( globals->get_soundmgr()->is_working() ) {
-        // Right now we make a simplifying assumption that the primary
-        // aircraft is the source of all sounds and that all sounds are
-        // positioned in the aircraft base
-
-        static sgdVec3 last_listener_pos = {0, 0, 0};
-        static sgdVec3 last_model_pos = {0, 0, 0};
-
-        // get the orientation
-        const SGQuatd view_or = current_view->getViewOrientation();
-        SGQuatd surf_or = SGQuatd::fromLonLat(current_view->getPosition());
-        SGQuatd model_or = SGQuatd::fromYawPitchRollDeg(
-            globals->get_aircraft_model()->get3DModel()->getHeadingDeg(),
-            globals->get_aircraft_model()->get3DModel()->getPitchDeg(),
-            globals->get_aircraft_model()->get3DModel()->getRollDeg());
-
-        // get the up and at vector in the aircraft base
-        // (ok, the up vector is a down vector, but the coordinates
-        // are finally calculated in a left hand system and openal
-        // lives in a right hand system. Therefore we need to pass
-        // the down vector to get correct stereo sound.)
-        SGVec3d sgv_up = model_or.rotateBack(
-            surf_or.rotateBack(view_or.rotate(SGVec3d(0, 1, 0))));
-        sgVec3 up;
-        sgSetVec3(up, sgv_up[0], sgv_up[1], sgv_up[2]);
-        SGVec3d sgv_at = model_or.rotateBack(
-        surf_or.rotateBack(view_or.rotate(SGVec3d(0, 0, 1))));
-        sgVec3 at;
-        sgSetVec3(at, sgv_at[0], sgv_at[1], sgv_at[2]);
-
-        // get the location data for the primary FDM (now hardcoded to ac model)...
-        SGGeod geodPos = globals->get_aircraft_model()->get3DModel()->getPosition();
-        SGVec3d model_pos = SGVec3d::fromGeod(geodPos);
-
-        // Calculate speed of listener and model.  This code assumes the
-        // listener is either tracking the model at the same speed or
-        // stationary.
-
-        sgVec3 listener_vel, model_vel;
-        SGVec3d SGV3d_help;
-        sgdVec3 sgdv3_help;
-        sgdVec3 sgdv3_null = {0, 0, 0};
-
-        // the aircraft velocity as reported by the fdm (this will not
-        // vary or be affected by frame rates or timing jitter.)
-        sgVec3 fdm_vel_vec;
-        sgSetVec3( fdm_vel_vec,
-                   vn_fps->getDoubleValue() * SG_FEET_TO_METER,
-                   ve_fps->getDoubleValue() * SG_FEET_TO_METER,
-                   vd_fps->getDoubleValue() * SG_FEET_TO_METER );
-        double fdm_vel = sgLengthVec3(fdm_vel_vec);
-
-        // compute the aircraft velocity vector and scale it to the length
-        // of the fdm velocity vector.  This gives us a vector in the
-        // proper coordinate system, but also with the proper time
-        // invariant magnitude.
-        sgdSubVec3( sgdv3_help,
-                last_model_pos, model_pos.data());
-        sgdAddVec3( last_model_pos, sgdv3_null, model_pos.data());
-        SGV3d_help = model_or.rotateBack(
-        surf_or.rotateBack(SGVec3d(sgdv3_help[0],
-        sgdv3_help[1], sgdv3_help[2])));
-        sgSetVec3( model_vel, SGV3d_help[0], SGV3d_help[1], SGV3d_help[2]);
-
-        float vel = sgLengthVec3(model_vel);
-        if ( fabs(vel) > 0.0001 ) {
-            if ( fabs(fdm_vel / vel) > 0.0001 ) {
-                sgScaleVec3( model_vel, fdm_vel / vel );
-            }
-        }
-
-        // check for moving or stationary listener (view position)
-        sgdSubVec3( sgdv3_help,
-                    last_listener_pos, current_view->get_view_pos().data());
-        sgdAddVec3( last_listener_pos,
-                    sgdv3_null, current_view->get_view_pos().data());
-
-        if ( sgdLengthVec3(sgdv3_help) > 0.2 ) {
-            sgCopyVec3( listener_vel, model_vel );
-        } else {
-            sgSetVec3( listener_vel, 0.0, 0.0, 0.0 );
-        }
-
-        globals->get_soundmgr()->set_listener_vel( listener_vel );
-
-        // set positional offset for sources
-        sgdVec3 dsource_pos_offset;
-        sgdSubVec3( dsource_pos_offset,
-                    current_view->get_view_pos().data(),
-                    model_pos.data() );
-        SGVec3d sgv_dsource_pos_offset = model_or.rotateBack(
-        surf_or.rotateBack(SGVec3d(dsource_pos_offset[0],
-        dsource_pos_offset[1], dsource_pos_offset[2])));
-
-        sgVec3 source_pos_offset;
-        sgSetVec3(source_pos_offset, sgv_dsource_pos_offset[0],
-        sgv_dsource_pos_offset[1], sgv_dsource_pos_offset[2]);
-
-        globals->get_soundmgr()->set_source_pos_all( source_pos_offset );
-
-        float orient[6];
-        for (int i = 0; i < 3; i++) {
-            orient[i] = sgv_at[i];
-            orient[i + 3] = sgv_up[i];
-        }
-        globals->get_soundmgr()->set_listener_orientation( orient );
-
-        // set the velocity
-        // all sources are defined to be in the model
-        globals->get_soundmgr()->set_source_vel_all( model_vel );
-
-        // The listener is always positioned at the origin.
-        sgVec3 listener_pos;
-        sgSetVec3( listener_pos, 0.0, 0.0, 0.0 );
-        globals->get_soundmgr()->set_listener_pos( listener_pos );
-    }
+    FGFX* fx = (FGFX*) globals->get_subsystem("fx");
+    fx->update_fx_late(delta_time_sec);
 #endif
 
     // END Tile Manager udpates
