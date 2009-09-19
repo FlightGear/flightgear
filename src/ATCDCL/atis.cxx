@@ -60,7 +60,7 @@
 using std::cout;
 using std::cout;
 using boost::ref;
-using boost::make_tuple;
+using boost::tie;
 
 FGATIS::FGATIS() :
   transmission(""),
@@ -380,7 +380,7 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   {
     double press, temp;
     
-    make_tuple(ref(press), ref(temp)) = PT_vs_hpt(_geod.getElevationM(), Psl*inHg, Tsl + freezing);
+    tie(press, temp) = PT_vs_hpt(_geod.getElevationM(), Psl*inHg, Tsl + freezing);
 #if 0
     SG_LOG(SG_ATC, SG_ALERT, "Field P: " << press << "  T: " << temp);
     SG_LOG(SG_ATC, SG_ALERT, "based on elev " << elev 
