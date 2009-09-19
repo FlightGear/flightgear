@@ -30,8 +30,6 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/SGMath.hxx>
 
-#include <Main/viewer.hxx> // FIXME - remove inlines here.
-
 // forward decls
 class FGViewer;
 typedef SGSharedPtr<FGViewer> FGViewerPtr;
@@ -57,43 +55,18 @@ public:
     // getters
     inline int size() const { return views.size(); }
     inline int get_current() const { return current; }
-    inline FGViewer *get_current_view() {
-	if ( current < (int)views.size() ) {
-	    return views[current];
-	} else {
-	    return NULL;
-	}
-    }
-    inline const FGViewer *get_current_view() const {
-	if ( current < (int)views.size() ) {
-	    return views[current];
-	} else {
-	    return NULL;
-	}
-    }
-    inline FGViewer *get_view( int i ) {
-	if ( i < 0 ) { i = 0; }
-	if ( i >= (int)views.size() ) { i = views.size() - 1; }
-	return views[i];
-    }
-    inline const FGViewer *get_view( int i ) const {
-	if ( i < 0 ) { i = 0; }
-	if ( i >= (int)views.size() ) { i = views.size() - 1; }
-	return views[i];
-    }
-    inline FGViewer *next_view() {
-	setView((current+1 < (int)views.size()) ? (current + 1) : 0);
-	view_number->fireValueChanged();
-	return views[current];
-    }
-    inline FGViewer *prev_view() {
-	setView((0 < current) ? (current - 1) : (views.size() - 1));
-	view_number->fireValueChanged();
-	return views[current];
-    }
-
+    
+    FGViewer *get_current_view();
+    const FGViewer *get_current_view() const;
+    
+    FGViewer *get_view( int i ); 
+    const FGViewer *get_view( int i ) const;
+      
+    FGViewer *next_view();
+    FGViewer *prev_view();
+      
     // setters
-    inline void clear() { views.clear(); }
+    void clear();
     inline void set_view( const int v ) { current = v; }
     void add_view( FGViewer * v );
     

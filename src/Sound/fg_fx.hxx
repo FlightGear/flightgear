@@ -73,6 +73,12 @@ public:
     void play_message( SGSoundSample *_sample );
     void play_message( const std::string& path, const std::string& fname, double volume );
 
+    /**
+     * Explicit late update hook, to avoid problems which occur if done during
+     * normal SGSubsytem updating.
+     */
+    void update_fx_late(double dt);
+
 private:
 
     void update_pos_and_orientation(SGSoundMgr *smgr, double dt);

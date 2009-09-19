@@ -99,6 +99,7 @@
 #include "main.hxx"
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"
+#include <Main/viewer.hxx>
 
 using namespace osg;
 using namespace simgear;

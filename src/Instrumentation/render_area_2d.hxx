@@ -32,8 +32,8 @@
 #include <osg/State>
 #include <osg/StateSet>
 
-#include <plib/sg.h>
 #include <simgear/compiler.h>
+#include <simgear/math/SGMath.hxx>
 
 #include <vector>
 
@@ -106,8 +106,8 @@ private:
 	
 	// Actual drawing routines copied from Atlas
 	void doSetColor( const float *rgb );
-	void doDrawQuad( const sgVec2 *p, const sgVec3 *normals );
-	void doDrawQuad( const sgVec2 *p, const sgVec3 *normals, const sgVec4 *color );
+	void doDrawQuad( const SGVec2f *p);
+	void doDrawQuad( const SGVec2f *p, const SGVec4f *color );
 	
 	vector<RA2DPrimitive> drawing_list;
 	

@@ -137,12 +137,6 @@ FGFX::update (double dt)
         return;
     }
 
-#if 0
-    // moved back to the mainloop to prevent audio problems
-    smgr->update(dt);
-    update_pos_and_orientation(smgr, dt);
-#endif
-
     // command sound manger
     bool pause = _pause->getBoolValue();
     if ( pause != last_pause ) {
@@ -188,6 +182,18 @@ FGFX::update (double dt)
             _sound[i]->update(dt);
         }
     }
+}
+
+void
+FGFX::update_fx_late(double dt)
+{
+  SGSoundMgr *smgr = globals->get_soundmgr();
+  if (!smgr->is_working()) {
+    return;
+  }
+
+  smgr->update(dt);
+  update_pos_and_orientation(smgr, dt);
 }
 
 /**

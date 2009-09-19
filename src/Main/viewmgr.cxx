@@ -341,6 +341,64 @@ FGViewMgr::copyToCurrent()
                 get_current_view()->getInternal());
 }
 
+void FGViewMgr::clear()
+{
+  views.clear();
+}
+
+FGViewer*
+FGViewMgr::get_current_view()
+{
+	if ( current < (int)views.size() ) {
+	    return views[current];
+	} else {
+	    return NULL;
+	}
+}
+
+const FGViewer*
+FGViewMgr::get_current_view() const
+{
+	if ( current < (int)views.size() ) {
+	    return views[current];
+	} else {
+	    return NULL;
+	}
+}
+
+
+FGViewer*
+FGViewMgr::get_view( int i )
+{
+	if ( i < 0 ) { i = 0; }
+	if ( i >= (int)views.size() ) { i = views.size() - 1; }
+	return views[i];
+}
+
+const FGViewer*
+FGViewMgr::get_view( int i ) const
+{
+	if ( i < 0 ) { i = 0; }
+	if ( i >= (int)views.size() ) { i = views.size() - 1; }
+	return views[i];
+}
+
+FGViewer*
+FGViewMgr::next_view()
+{
+	setView((current+1 < (int)views.size()) ? (current + 1) : 0);
+	view_number->fireValueChanged();
+	return views[current];
+}
+
+FGViewer*
+FGViewMgr::prev_view()
+{
+	setView((0 < current) ? (current - 1) : (views.size() - 1));
+	view_number->fireValueChanged();
+	return views[current];
+}
+
 void
 FGViewMgr::add_view( FGViewer * v )
 {

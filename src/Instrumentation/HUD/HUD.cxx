@@ -35,6 +35,7 @@
 
 #include <Main/globals.hxx>
 #include <Main/viewmgr.hxx>
+#include <Main/viewer.hxx>
 
 #include "HUD.hxx"
 
