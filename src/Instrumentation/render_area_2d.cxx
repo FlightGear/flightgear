@@ -28,11 +28,6 @@
 
 #include "render_area_2d.hxx"
 
-static const float dummy_normals[][3] = {{0.0f, 0.0f, 0.0f},
-                                         {0.0f, 0.0f, 0.0f},
-                                         {0.0f, 0.0f, 0.0f},
-                                         {0.0f, 0.0f, 0.0f}};
-
 RA2DPrimitive::RA2DPrimitive() {
 	invert = false;
 	debug = false;
@@ -184,13 +179,13 @@ void RenderArea2D::oldDrawPixel(int x, int y, bool invert) {
 	//cout << "DP: " << fx1 << ", " << fy1 << " ... " << fx2 << ", " << fy2 << '\n';
 	
 	doSetColor(invert ? _backgroundColor : _pixelColor);
-	sgVec2 corners[4];
-	sgSetVec2(corners[0], fx1, fy1);
-	sgSetVec2(corners[1], fx2, fy1);
-	sgSetVec2(corners[2], fx2, fy2);
-	sgSetVec2(corners[3], fx1, fy2);
-	//cout << "Drawing pixel, x,y is " << x << ", " << y << ", fx is [x1,x2,y1,y2] " << fx1 << ", " << fx2 << ", " << fy1 << ", " << fy2 << '\n';
-	doDrawQuad(&corners[0], dummy_normals);
+	SGVec2f corners[4] = {
+    SGVec2f(fx1, fy1),
+    SGVec2f(fx2, fy1),
+    SGVec2f(fx2, fy2),
+    SGVec2f(fx1, fy2)
+  };
+	doDrawQuad(corners);
 }
 
 void RenderArea2D::DrawLine(int x1, int y1, int x2, int y2) {
@@ -314,12 +309,13 @@ void RenderArea2D::oldDrawQuad(int x1, int y1, int x2, int y2, bool invert) {
 	//cout << "DP: " << fx1 << ", " << fy1 << " ... " << fx2 << ", " << fy2 << '\n';
 	
 	doSetColor(invert ? _backgroundColor : _pixelColor);
-	sgVec2 corners[4];
-	sgSetVec2(corners[0], fx1, fy1);
-	sgSetVec2(corners[1], fx2, fy1);
-	sgSetVec2(corners[2], fx2, fy2);
-	sgSetVec2(corners[3], fx1, fy2);
-	doDrawQuad(&corners[0], dummy_normals);
+	SGVec2f corners[4] = {
+    SGVec2f(fx1, fy1),
+    SGVec2f(fx2, fy1),
+    SGVec2f(fx2, fy2),
+    SGVec2f(fx1, fy2)
+  };
+	doDrawQuad(corners);
 }
 
 void RenderArea2D::DrawBackground() {
@@ -328,12 +324,14 @@ void RenderArea2D::DrawBackground() {
 
 void RenderArea2D::oldDrawBackground() {
 	doSetColor(_backgroundColor);
-	sgVec2 corners[4];
-	sgSetVec2(corners[0], (float)_posx, (float)_posy);
-	sgSetVec2(corners[1], (float)(_posx + _sizex), (float)_posy);
-	sgSetVec2(corners[2], (float)(_posx + _sizex), (float)(_posy + _sizey));
-	sgSetVec2(corners[3], (float)_posx, (float)(_posy + _sizey));
-	doDrawQuad(&corners[0], dummy_normals);
+	SGVec2f corners[4] = {
+    SGVec2f(_posx, _posy),
+    SGVec2f(_posx + _sizex, _posy),
+    SGVec2f(_posx + _sizex, _posy + _sizey),
+    SGVec2f(_posx, _posy + _sizey)
+  };
+  
+	doDrawQuad(corners);
 }
 
 void RenderArea2D::Flush() {
@@ -351,20 +349,23 @@ void RenderArea2D::doSetColor( const float *rgba ) {
   glColor4fv( rgba );
 }
 
-void RenderArea2D::doDrawQuad( const sgVec2 *p, const sgVec3 *normals ) {
+void RenderArea2D::doDrawQuad( const SGVec2f *p) {
   glBegin(GL_QUADS);
-  glNormal3fv( normals[0] ); glVertex2fv( p[0] );
-  glNormal3fv( normals[1] ); glVertex2fv( p[1] );
-  glNormal3fv( normals[2] ); glVertex2fv( p[2] );
-  glNormal3fv( normals[3] ); glVertex2fv( p[3] );
+    glNormal3f(0.0f, 0.0f, 0.0f);
+    glVertex2fv( p[0].data() );
+    glVertex2fv( p[1].data() );
+    glVertex2fv( p[2].data() );
+    glVertex2fv( p[3].data() );
   glEnd();
 }
 
-void RenderArea2D::doDrawQuad( const sgVec2 *p, const sgVec3 *normals, const sgVec4 *color ) {
+void RenderArea2D::doDrawQuad( const SGVec2f *p, const SGVec4f *color ) {
+  
   glBegin(GL_QUADS);
-    glColor4fv( color[0] );glNormal3fv( normals[0] ); glVertex2fv( p[0] );
-    glColor4fv( color[1] );glNormal3fv( normals[1] ); glVertex2fv( p[1] );
-    glColor4fv( color[2] );glNormal3fv( normals[2] ); glVertex2fv( p[2] );
-    glColor4fv( color[3] );glNormal3fv( normals[3] ); glVertex2fv( p[3] );
+    glNormal3f(0.0f, 0.0f, 0.0f);
+    glColor4fv( color[0].data() ); glVertex2fv( p[0].data() );
+    glColor4fv( color[1].data() ); glVertex2fv( p[1].data() );
+    glColor4fv( color[2].data() ); glVertex2fv( p[2].data() );
+    glColor4fv( color[3].data() ); glVertex2fv( p[3].data() );
   glEnd();
 }
