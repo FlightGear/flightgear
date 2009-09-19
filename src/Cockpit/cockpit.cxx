@@ -44,6 +44,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/viewmgr.hxx>
+#include <Main/viewer.hxx>
 #include <Scenery/scenery.hxx>
 #include <GUI/gui.h>
 
