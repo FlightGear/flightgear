@@ -268,7 +268,6 @@ FGMetarCtrl::FGMetarCtrl( SGSubsystem * environmentCtrl )
 	metar_valid(false),
 	setup_winds_aloft(true),
 	wind_interpolation_required(true),
-	station_elevation_ft(0.0),
 	// Interpolation constant definitions.
 	EnvironmentUpdatePeriodSec( 0.2 ),
 	MaxWindChangeKtsSec( 0.2 ),
@@ -667,9 +666,11 @@ FGMetarCtrl::update(double dt)
 			}
 		}
 	}
-
-	set_temp_at_altitude(temperature_n->getDoubleValue(), station_elevation_ft);
-	set_dewpoint_at_altitude(dewpoint_n->getDoubleValue(), station_elevation_ft);
+	{
+		double station_elevation_ft = station_elevation_n->getDoubleValue();
+		set_temp_at_altitude(temperature_n->getDoubleValue(), station_elevation_ft);
+		set_dewpoint_at_altitude(dewpoint_n->getDoubleValue(), station_elevation_ft);
+	}
 	//TODO: check if temperature/dewpoint have changed. This requires reinit.
 
 	// Force an update of the 3D clouds
