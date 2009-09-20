@@ -646,7 +646,7 @@ FGEnvironment::_recalc_sl_temperature ()
   double t_strato = ISA_def[1].temp - atmodel::freezing;
   if (temperature_degc < t_strato) temperature_sea_level_degc = t_strato;
   else temperature_sea_level_degc = 
-      temperature_degc - elevation_ft * ISA_def[0].lapse;
+      temperature_degc + elevation_ft * atmodel::foot * ISA_def[0].lapse;
 
 // Alternative implemenation:
 //  else temperature_sea_level_inhg = T_layer(0., elevation_ft * foot,
