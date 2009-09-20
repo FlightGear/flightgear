@@ -10,7 +10,6 @@
 #  include <config.h>
 #endif
 
-#include <plib/sg.h>
 #include <simgear/sg_inlines.h>
 
 #include "mag_compass.hxx"
