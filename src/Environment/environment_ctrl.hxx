@@ -150,7 +150,6 @@ private:
 	bool setup_winds_aloft;
 	bool first_update;
 	bool wind_interpolation_required;
-	double station_elevation_ft;
 	string metar;
 	double interpolate_prop(const char * currentname, const char * requiredname, double dvalue);
 	double interpolate_val(double currentval, double requiredval, double dvalue);
