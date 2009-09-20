@@ -30,8 +30,6 @@
 INCLUDES
 *******************************************************************************/
 
-#include <plib/sg.h>
-
 #include "ls_constants.h"
 #include "ls_types.h"
 
