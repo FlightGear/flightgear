@@ -107,6 +107,20 @@ void FGAutoBrake::unbind()
 
 void FGAutoBrake::update(double dt)
 {
+  _leftBrakeInput = SGMiscd::max(_brakeInputs[0]->getDoubleValue(), 
+      _brakeInputs[2]->getDoubleValue());
+  _rightBrakeInput = SGMiscd::max(_brakeInputs[1]->getDoubleValue(), 
+      _brakeInputs[3]->getDoubleValue());
+
+  // various FDMs don't supply sufficent information for us to work,
+  // so just be passive in those cases.
+  if (!_weightOnWheelsNode || !_groundspeedNode || !_engineControlsNode) {
+    // pass the values straight through
+    _leftBrakeOutput = _leftBrakeInput; 
+    _rightBrakeOutput = _rightBrakeInput; 
+    return;
+  }
+
   if (dt <= 0.0) {
     return; // paused
   }
@@ -114,11 +128,6 @@ void FGAutoBrake::update(double dt)
   double gs = _groundspeedNode->getDoubleValue();
   _actualDecel = (_lastGroundspeedKts - gs) / dt;
   _lastGroundspeedKts = gs;
-  
-  _leftBrakeInput = SGMiscd::max(_brakeInputs[0]->getDoubleValue(), 
-      _brakeInputs[2]->getDoubleValue());
-  _rightBrakeInput = SGMiscd::max(_brakeInputs[1]->getDoubleValue(), 
-      _brakeInputs[3]->getDoubleValue());
   
   if (!_armed || (_step == 0)) {
     // even if we're off or disarmed, the physical valve system must pass
