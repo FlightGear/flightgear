@@ -73,6 +73,8 @@
 #include <ATCDCL/AIMgr.hxx>
 #include <Autopilot/route_mgr.hxx>
 #include <Autopilot/xmlauto.hxx>
+#include <Autopilot/autobrake.hxx>
+
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
@@ -1530,7 +1532,8 @@ bool fgInitSubsystems() {
 
     globals->add_subsystem( "xml-autopilot", new FGXMLAutopilot );
     globals->add_subsystem( "route-manager", new FGRouteMgr );
-
+    globals->add_subsystem( "autobrake", new FGAutoBrake );
+    
     ////////////////////////////////////////////////////////////////////
     // Initialize the view manager subsystem.
     ////////////////////////////////////////////////////////////////////
