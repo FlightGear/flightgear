@@ -62,7 +62,6 @@ void FGAutoBrake::init()
     (*this, &FGAutoBrake::getRTO, &FGAutoBrake::setRTO));
       
   _engineControlsNode = fgGetNode("/controls/engines");
-  _groundspeedNode = fgGetNode("/velocities/groundspeed-kt");
   
   // brake position nodes
   _brakeInputs[0] = fgGetNode("/controls/gear/brake-left");
@@ -93,6 +92,7 @@ void FGAutoBrake::init()
 void FGAutoBrake::postinit()
 {  
   _weightOnWheelsNode = fgGetNode("/gear/gear/wow");
+  _groundspeedNode = fgGetNode("/velocities/groundspeed-kt");
   _lastWoW = _weightOnWheelsNode->getBoolValue();
 }
 
