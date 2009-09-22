@@ -476,8 +476,9 @@ GPS::updateTTWNode(UpdateContext& ctx, double distance_m, SGPropertyNode_ptr nod
     // increase. Makes most sense when travelling directly towards
     // the waypoint.
     double TTW = 0.0;
-    if (ctx.speed_kt > 0.0 && distance_m > 0.0) {
-        TTW = (distance_m * SG_METER_TO_NM) / (ctx.speed_kt / 3600);
+    double speed_nm_per_second = ctx.speed_kt / 3600;
+    if (speed_nm_per_second > SGLimitsd::min() && distance_m > 0.0) {
+        TTW = (distance_m * SG_METER_TO_NM) / speed_nm_per_second;
     }
     if (TTW < 356400.5) { // That's 99 hours
       unsigned int TTW_seconds = (int) (TTW + 0.5);
