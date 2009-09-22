@@ -54,7 +54,12 @@ private:
    * Helper to determine if all throttles are at idle
    * (or have reverse thrust engaged)
    */
-  bool throttlesAtIdle();
+  bool throttlesAtIdle() const;
+  
+  /**
+   * Helper to determine if we're airbone, i.e weight off all wheels
+   */
+  bool airborne() const;
   
 // accessors, mostly for SGRawValueMethods use
   void setArmed(bool aArmed);
@@ -94,6 +99,7 @@ private:
   
   int _configNumSteps;
   int _configRTOStep;
+  int _configDisengageStep;
   double _configMaxDecel; ///< deceleration (in ft-sec^2) corresponding to step=numSteps
   double _configRTODecel; ///< deceleration (in ft-sec^2) to use in RTO mode
   double _configRTOSpeed; ///< speed (in kts) for RTO mode to arm

@@ -39,6 +39,7 @@ FGAutoBrake::FGAutoBrake() :
   // default config, close to Boeing 747-400 / 777 values
   _configNumSteps = 4;
   _configRTOStep = -1;
+  _configDisengageStep = 0;
   _configMaxDecel = 11; // ft-sec-sec
   _configRTODecel = 11; // ft-sec-sec
   _configRTOSpeed = 85; // kts
@@ -73,9 +74,11 @@ void FGAutoBrake::init()
   SGPropertyNode_ptr config = _root->getChild("config", 0, true);
   config->tie("num-steps", SGRawValuePointer<int>(&_configNumSteps));
   config->tie("rto-step", SGRawValuePointer<int>(&_configRTOStep));
+  config->tie("disengage-step", SGRawValuePointer<int>(&_configDisengageStep));
   config->tie("rto-decel-fts-sec", SGRawValuePointer<double>(&_configRTODecel));
   config->tie("max-decel-fts-sec", SGRawValuePointer<double>(&_configMaxDecel));
   config->tie("rto-engage-kts", SGRawValuePointer<double>(&_configRTOSpeed));
+  
   
   // outputs
   _root->tie("target-decel-fts-sec", 
@@ -170,6 +173,12 @@ void FGAutoBrake::updateEngaged(double dt)
     return;
   }
 
+  if (!throttlesAtIdle()) {
+    SG_LOG(SG_AUTOPILOT, SG_INFO, "auto-brake, throttles not at idle, disengaing");
+    disengage();
+    return;
+  }
+
   // update the target deceleration; note step can be changed while engaged
   if (_rto) {
     _targetDecel = _configRTODecel;
@@ -189,6 +198,11 @@ bool FGAutoBrake::shouldEngage()
     return false;
   }
 
+
+  if (!throttlesAtIdle()) {
+    return false;
+  }
+  
   SG_LOG(SG_AUTOPILOT, SG_INFO, "Autobrake, should enage");
   return true;
 }
@@ -205,10 +219,22 @@ bool FGAutoBrake::shouldEngageRTO()
     }
     
     if (!_weightOnWheelsNode->getBoolValue()) {
+      if (airborne()) {
+        SG_LOG(SG_AUTOPILOT, SG_INFO, "FGAutoBrake: RTO, airbone, disengaging");
+        _rtoArmed = false;
+        _armed = false;
+        _step = _configDisengageStep;
+      }
+            
       return false;
     }
     
-    return throttlesAtIdle();
+    if (throttlesAtIdle()) {
+      SG_LOG(SG_AUTOPILOT, SG_INFO, "FGAutoBrake: RTO, throttles at idle, will engage");
+      return true;
+    } else {
+      return false;
+    }
   } else {
     // RTO arming case
     if (speed > _configRTOSpeed) {
@@ -228,12 +254,19 @@ void FGAutoBrake::disengage()
   
   SG_LOG(SG_AUTOPILOT, SG_INFO, "FGAutoBrake: disengage");
   _engaged = false;
+  _fcsBrakeControl = 0.0;
   _armed = false;
   _rtoArmed = false;
   _targetDecel = 0.0;
+  _step = _configDisengageStep;
 }
 
-bool FGAutoBrake::throttlesAtIdle()
+bool FGAutoBrake::airborne() const
+{
+  return !_weightOnWheelsNode->getBoolValue();
+}
+
+bool FGAutoBrake::throttlesAtIdle() const
 {
   SGPropertyNode_ptr e;
   const double IDLE_THROTTLE = 0.05; // 5% margin for idle setting
@@ -244,7 +277,6 @@ bool FGAutoBrake::throttlesAtIdle()
     }
   } // of engines iteration
   
-  SG_LOG(SG_AUTOPILOT, SG_INFO, "FGAutoBrake: throttles at idle");
   return true;
 }
 
@@ -263,7 +295,16 @@ void FGAutoBrake::setRTO(bool aRTO)
   if (aRTO) {
     // ensure we meet RTO selection criteria: 
     if (!_weightOnWheelsNode->getBoolValue()) {
-      SG_LOG(SG_AUTOPILOT, SG_WARN, "auto-brake: cannot select RTO mode, no weight on wheels");
+      // some systems combine RTO with a standard step, selecting RTO if on
+      // the ground. Handle that case by setting _rto = false, and letting
+      // setStep() do the rest of the work as normal.
+      if ((_configRTOStep > 0) && (_configRTOStep <= _configNumSteps)) {
+        // RTO is combined with a normal step, select that
+      } else {
+        SG_LOG(SG_AUTOPILOT, SG_WARN, "auto-brake: cannot select RTO mode, no weight on wheels");
+      }
+      
+      _rto = false;
       return;
     }
     
