@@ -544,8 +544,8 @@ FGEnvironment::set_elevation_ft (double e)
 {
   elevation_ft = e;
   if( live_update ) {
-    _recalc_alt_dewpoint();
     _recalc_alt_pt();
+    _recalc_alt_dewpoint();
     _recalc_density();
     _recalc_relative_humidity();
   }
@@ -821,7 +821,7 @@ interpolate (const FGEnvironment * env1, const FGEnvironment * env2,
                    env2->get_temperature_sea_level_degc(),
                    fraction));
 
-    result->set_dewpoint_degc
+    result->set_dewpoint_sea_level_degc
         (do_interp(env1->get_dewpoint_sea_level_degc(),
                    env2->get_dewpoint_sea_level_degc(),
                    fraction));
