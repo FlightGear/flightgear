@@ -36,7 +36,8 @@ class SGPropertyNode;
 class FGRunway : public FGRunwayBase
 {
   FGAirport* _airport;
-  bool _reciprocal;
+  bool _isReciprocal;
+  FGRunway* _reciprocal;
   double _displ_thresh;
   double _stopway;
   FGNavRecord* _ils;
@@ -68,7 +69,7 @@ public:
    * over runways to avoid counting runways twice, if desired.
    */
   bool isReciprocal() const
-  { return _reciprocal; }
+  { return _isReciprocal; }
 
   /**
    * Get the runway begining point - this is syntatic sugar, equivalent to
@@ -105,6 +106,10 @@ public:
   
   FGNavRecord* ILS() const { return _ils; }
   void setILS(FGNavRecord* nav) { _ils = nav; }
+  
+  FGRunway* reciprocalRunway() const
+  { return _reciprocal; }
+  void setReciprocalRunway(FGRunway* other);
   
   /**
    * Helper to process property data loaded from an ICAO.threshold.xml file
