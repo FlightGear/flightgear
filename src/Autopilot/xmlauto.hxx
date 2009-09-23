@@ -24,29 +24,15 @@
 #ifndef _XMLAUTO_HXX
 #define _XMLAUTO_HXX 1
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <simgear/compiler.h>
 
 #include <string>
 #include <vector>
 #include <deque>
 
-using std::string;
-using std::vector;
-using std::deque;
-
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/condition.hxx>
-
-#include <Main/fg_props.hxx>
 
 
 class FGXMLAutoInput : public SGReferenced {
@@ -61,18 +47,8 @@ private:
      SGSharedPtr<const SGCondition> _condition;
 
 public:
-    FGXMLAutoInput( SGPropertyNode_ptr node = NULL, double value = 0.0, double offset = 0.0, double scale = 1.0 ) :
-      value(0.0),
-      abs(false),
-      property(NULL),
-      offset(NULL),
-      scale(NULL),
-      min(NULL),
-      max(NULL),
-      _condition(NULL) {
-       parse( node, value, offset, scale );
-     }
-
+    FGXMLAutoInput( SGPropertyNode_ptr node = NULL, double value = 0.0, double offset = 0.0, double scale = 1.0 );
+    
     void parse( SGPropertyNode_ptr, double value = 0.0, double offset = 0.0, double scale = 1.0 );
 
     /* get the value of this input, apply scale and offset and clipping */
@@ -95,7 +71,7 @@ public:
 
 };
 
-class FGXMLAutoInputList : public vector<SGSharedPtr<FGXMLAutoInput> > {
+class FGXMLAutoInputList : public std::vector<SGSharedPtr<FGXMLAutoInput> > {
   public:
     FGXMLAutoInput * get_active() {
       for (iterator it = begin(); it != end(); ++it) {
@@ -119,16 +95,16 @@ class FGXMLAutoInputList : public vector<SGSharedPtr<FGXMLAutoInput> > {
 class FGXMLAutoComponent : public SGReferenced {
 
 private:
-    vector <SGPropertyNode_ptr> output_list;
+    std::vector <SGPropertyNode_ptr> output_list;
 
     SGSharedPtr<const SGCondition> _condition;
     SGPropertyNode_ptr enable_prop;
-    string * enable_value;
+    std::string * enable_value;
 
     SGPropertyNode_ptr passive_mode;
     bool honor_passive;
 
-    string name;
+    std::string name;
 
     /* Feed back output property to input property if
        this filter is disabled. This is for multi-stage
@@ -141,6 +117,31 @@ private:
     void do_feedback_if_disabled();
 
 protected:
+    FGXMLAutoComponent();
+    
+    /*
+     * Parse a component specification read from a property-list.
+     * Calls the hook methods below to allow derived classes to
+     * specialise parsing bevaiour.
+     */
+    void parseNode(SGPropertyNode* aNode);
+
+    /**
+     * Helper to parse the config section
+     */
+    void parseConfig(SGPropertyNode* aConfig);
+
+    /*
+     * Over-rideable hook method to allow derived classes to refine top-level
+     * node parsing. Return true if the node was handled, false otherwise.
+     */
+    virtual bool parseNodeHook(const std::string& aName, SGPropertyNode* aNode);
+    
+    /**
+     * Over-rideable hook method to allow derived classes to refine config
+     * node parsing. Return true if the node was handled, false otherwise.
+     */
+    virtual bool parseConfigHook(const std::string& aName, SGPropertyNode* aNode);
 
     FGXMLAutoInputList valueInput;
     FGXMLAutoInputList referenceInput;
@@ -156,13 +157,12 @@ protected:
     }
 
 public:
-
-    FGXMLAutoComponent( SGPropertyNode *node);
+    
     virtual ~FGXMLAutoComponent();
 
     virtual void update (double dt)=0;
     
-    inline const string& get_name() { return name; }
+    inline const std::string& get_name() { return name; }
 
     double clamp( double value );
 
@@ -173,7 +173,7 @@ public:
         // helpful for things like flight directors which position
         // their vbars from the autopilot computations.
         if ( honor_passive && passive_mode->getBoolValue() ) return;
-        for( vector <SGPropertyNode_ptr>::iterator it = output_list.begin(); it != output_list.end(); ++it)
+        for( std::vector <SGPropertyNode_ptr>::iterator it = output_list.begin(); it != output_list.end(); ++it)
           (*it)->setDoubleValue( clamp( value ) );
     }
 
@@ -252,7 +252,9 @@ private:
     double desiredTs;            // desired sampling interval (sec)
     double elapsedTime;          // elapsed time (sec)
     
-    
+
+protected:
+  bool parseConfigHook(const std::string& aName, SGPropertyNode* aNode);
     
 public:
 
@@ -279,6 +281,8 @@ private:
     FGXMLAutoInputList Ki;
     double int_sum;
 
+protected:
+  bool parseConfigHook(const std::string& aName, SGPropertyNode* aNode);
 
 public:
 
@@ -300,6 +304,9 @@ private:
     double average;
     FGXMLAutoInputList seconds;
     FGXMLAutoInputList filter_gain;
+
+protected:
+  bool parseNodeHook(const std::string& aName, SGPropertyNode* aNode);
 
 public:
     FGPredictor( SGPropertyNode *node );
@@ -329,12 +336,15 @@ private:
     FGXMLAutoInputList gainInput;     // 
     FGXMLAutoInputList TfInput;            // Filter time [s]
 
-    deque <double> output;
-    deque <double> input;
+    std::deque <double> output;
+    std::deque <double> input;
     enum filterTypes { exponential, doubleExponential, movingAverage,
                        noiseSpike, gain, reciprocal, none };
     filterTypes filterType;
 
+protected:
+  bool parseNodeHook(const std::string& aName, SGPropertyNode* aNode);
+  
 public:
     FGDigitalFilter(SGPropertyNode *node);
     ~FGDigitalFilter() {}
@@ -365,7 +375,7 @@ public:
 
 protected:
 
-    typedef vector<SGSharedPtr<FGXMLAutoComponent> > comp_list;
+    typedef std::vector<SGSharedPtr<FGXMLAutoComponent> > comp_list;
 
 private:
 

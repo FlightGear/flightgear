@@ -40,6 +40,20 @@
 using std::cout;
 using std::endl;
 
+FGXMLAutoInput::FGXMLAutoInput( SGPropertyNode_ptr node, double value, double offset, double scale) :
+  value(0.0),
+  abs(false),
+  property(NULL),
+  offset(NULL),
+  scale(NULL),
+  min(NULL),
+  max(NULL),
+  _condition(NULL) 
+{
+  parse( node, value, offset, scale );
+}
+
+
 void FGXMLAutoInput::parse( SGPropertyNode_ptr node, double aValue, double aOffset, double aScale )
 {
     value = aValue;
@@ -151,7 +165,7 @@ double FGXMLAutoInput::get_value()
     return abs ? fabs(value) : value;
 }
 
-FGXMLAutoComponent::FGXMLAutoComponent( SGPropertyNode * node ) :
+FGXMLAutoComponent::FGXMLAutoComponent() :
       _condition( NULL ),
       enable_prop( NULL ),
       enable_value( NULL ),
@@ -162,94 +176,116 @@ FGXMLAutoComponent::FGXMLAutoComponent( SGPropertyNode * node ) :
       debug(false),
       enabled( false )
 {
-    int i;
-    SGPropertyNode *prop; 
-
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-
-        } else if ( cname == "feedback-if-disabled" ) {
-            feedback_if_disabled = child->getBoolValue();
-
-        } else if ( cname == "debug" ) {
-            debug = child->getBoolValue();
-
-        } else if ( cname == "enable" ) {
-            if( (prop = child->getChild("condition")) != NULL ) {
-              _condition = sgReadCondition(child, prop);
-            } else {
-               if ( (prop = child->getChild( "prop" )) != NULL ) {
-                   enable_prop = fgGetNode( prop->getStringValue(), true );
-               }
-
-               if ( (prop = child->getChild( "value" )) != NULL ) {
-                   delete enable_value;
-                   enable_value = new string(prop->getStringValue());
-               }
-            }
-            if ( (prop = child->getChild( "honor-passive" )) != NULL ) {
-                honor_passive = prop->getBoolValue();
-            }
-
-        } else if ( cname == "input" ) {
-
-              valueInput.push_back( new FGXMLAutoInput( child ) );
-
-        } else if ( cname == "reference" ) {
-
-              referenceInput.push_back( new FGXMLAutoInput( child ) );
-
-        } else if ( cname == "output" ) {
-            // grab all <prop> and <property> childs
-            int found = 0;
-            // backwards compatibility: allow <prop> elements
-            for( int i = 0; (prop = child->getChild("prop", i)) != NULL; i++ ) { 
-                SGPropertyNode *tmp = fgGetNode( prop->getStringValue(), true );
-                output_list.push_back( tmp );
-                found++;
-            }
-            for( int i = 0; (prop = child->getChild("property", i)) != NULL; i++ ) { 
-                SGPropertyNode *tmp = fgGetNode( prop->getStringValue(), true );
-                output_list.push_back( tmp );
-                found++;
-            }
-
-            // no <prop> elements, text node of <output> is property name
-            if( found == 0 )
-                output_list.push_back( fgGetNode(child->getStringValue(), true ) );
-
-        } else if ( cname == "config" ) {
-            if( (prop = child->getChild("min")) != NULL ) {
-              uminInput.push_back( new FGXMLAutoInput( prop ) );
-            }
-            if( (prop = child->getChild("u_min")) != NULL ) {
-              uminInput.push_back( new FGXMLAutoInput( prop ) );
-            }
-            if( (prop = child->getChild("max")) != NULL ) {
-              umaxInput.push_back( new FGXMLAutoInput( prop ) );
-            }
-            if( (prop = child->getChild("u_max")) != NULL ) {
-              umaxInput.push_back( new FGXMLAutoInput( prop ) );
-            }
-        } else if ( cname == "min" ) {
-            uminInput.push_back( new FGXMLAutoInput( child ) );
-        } else if ( cname == "u_min" ) {
-            uminInput.push_back( new FGXMLAutoInput( child ) );
-        } else if ( cname == "max" ) {
-            umaxInput.push_back( new FGXMLAutoInput( child ) );
-        } else if ( cname == "u_max" ) {
-            umaxInput.push_back( new FGXMLAutoInput( child ) );
-        } 
-    }   
 }
 
 FGXMLAutoComponent::~FGXMLAutoComponent() 
 {
     delete enable_value;
+}
+
+void FGXMLAutoComponent::parseNode(SGPropertyNode* aNode)
+{
+  SGPropertyNode *prop; 
+  for (int i = 0; i < aNode->nChildren(); ++i ) {
+    SGPropertyNode *child = aNode->getChild(i);
+    string cname(child->getName());
+    
+    if (parseNodeHook(cname, child)) {
+      // derived class handled it, fine
+    } else if ( cname == "name" ) {
+      name = child->getStringValue();
+    } else if ( cname == "feedback-if-disabled" ) {
+      feedback_if_disabled = child->getBoolValue();
+    } else if ( cname == "debug" ) {
+      debug = child->getBoolValue();
+    } else if ( cname == "enable" ) {
+      if( (prop = child->getChild("condition")) != NULL ) {
+        _condition = sgReadCondition(child, prop);
+      } else {
+         if ( (prop = child->getChild( "prop" )) != NULL ) {
+             enable_prop = fgGetNode( prop->getStringValue(), true );
+         }
+
+         if ( (prop = child->getChild( "value" )) != NULL ) {
+             delete enable_value;
+             enable_value = new string(prop->getStringValue());
+         }
+      }
+      if ( (prop = child->getChild( "honor-passive" )) != NULL ) {
+          honor_passive = prop->getBoolValue();
+      }
+    } else if ( cname == "input" ) {
+      valueInput.push_back( new FGXMLAutoInput( child ) );
+    } else if ( cname == "reference" ) {
+      referenceInput.push_back( new FGXMLAutoInput( child ) );
+    } else if ( cname == "output" ) {
+      // grab all <prop> and <property> childs
+      int found = 0;
+      // backwards compatibility: allow <prop> elements
+      for( int i = 0; (prop = child->getChild("prop", i)) != NULL; i++ ) { 
+          SGPropertyNode *tmp = fgGetNode( prop->getStringValue(), true );
+          output_list.push_back( tmp );
+          found++;
+      }
+      for( int i = 0; (prop = child->getChild("property", i)) != NULL; i++ ) { 
+          SGPropertyNode *tmp = fgGetNode( prop->getStringValue(), true );
+          output_list.push_back( tmp );
+          found++;
+      }
+
+      // no <prop> elements, text node of <output> is property name
+      if( found == 0 )
+          output_list.push_back( fgGetNode(child->getStringValue(), true ) );
+    } else if ( cname == "config" ) {
+      parseConfig(child);
+    } else if ( cname == "min" ) {
+        uminInput.push_back( new FGXMLAutoInput( child ) );
+    } else if ( cname == "u_min" ) {
+        uminInput.push_back( new FGXMLAutoInput( child ) );
+    } else if ( cname == "max" ) {
+        umaxInput.push_back( new FGXMLAutoInput( child ) );
+    } else if ( cname == "u_max" ) {
+        umaxInput.push_back( new FGXMLAutoInput( child ) );
+    } else {
+      SG_LOG(SG_AUTOPILOT, SG_ALERT, "malformed autopilot definition - unrecognized node:" 
+        << cname << " in section " << name);
+      throw sg_io_exception("XMLAuto: unrecognized component node:" + cname, "Section=" + name);
+    }
+  } // of top-level iteration
+}
+
+void FGXMLAutoComponent::parseConfig(SGPropertyNode* aConfig)
+{
+  for (int i = 0; i < aConfig->nChildren(); ++i ) {
+    SGPropertyNode *child = aConfig->getChild(i);
+    string cname(child->getName());
+    
+    if (parseConfigHook(cname, child)) {
+      // derived class handled it, fine
+    } else if ( cname == "min" ) {
+        uminInput.push_back( new FGXMLAutoInput( child ) );
+    } else if ( cname == "u_min" ) {
+        uminInput.push_back( new FGXMLAutoInput( child ) );
+    } else if ( cname == "max" ) {
+        umaxInput.push_back( new FGXMLAutoInput( child ) );
+    } else if ( cname == "u_max" ) {
+        umaxInput.push_back( new FGXMLAutoInput( child ) );
+    } else {
+      SG_LOG(SG_AUTOPILOT, SG_ALERT, "malformed autopilot definition - unrecognized config node:" 
+        << cname << " in section " << name);
+      throw sg_io_exception("XMLAuto: unrecognized config node:" + cname, "Section=" + name);
+    }
+  } // of config iteration
+}
+
+bool FGXMLAutoComponent::parseNodeHook(const string& aName, SGPropertyNode* aNode)
+{
+  return false;
+}
+
+bool FGXMLAutoComponent::parseConfigHook(const string& aName, SGPropertyNode* aNode)
+{
+  return false;
 }
 
 bool FGXMLAutoComponent::isPropertyEnabled()
@@ -289,7 +325,7 @@ double FGXMLAutoComponent::clamp( double value )
 }
 
 FGPIDController::FGPIDController( SGPropertyNode *node ):
-    FGXMLAutoComponent( node ),
+    FGXMLAutoComponent(),
     alpha( 0.1 ),
     beta( 1.0 ),
     gamma( 0.0 ),
@@ -300,46 +336,32 @@ FGPIDController::FGPIDController( SGPropertyNode *node ):
     desiredTs( 0.0 ),
     elapsedTime( 0.0 )
 {
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "config" ) {
-            SGPropertyNode *config;
-
-            if ( (config = child->getChild( "Ts" )) != NULL ) {
-                desiredTs = config->getDoubleValue();
-            }
-           
-            Kp.push_back( new FGXMLAutoInput( child->getChild( "Kp" ) ) );
-            Ti.push_back( new FGXMLAutoInput( child->getChild( "Ti" ) ) );
-            Td.push_back( new FGXMLAutoInput( child->getChild( "Td" ) ) );
-
-            config = child->getChild( "beta" );
-            if ( config != NULL ) {
-                beta = config->getDoubleValue();
-            }
-
-            config = child->getChild( "alpha" );
-            if ( config != NULL ) {
-                alpha = config->getDoubleValue();
-            }
-
-            config = child->getChild( "gamma" );
-            if ( config != NULL ) {
-                gamma = config->getDoubleValue();
-            }
-
-        } else {
-            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in autopilot config logic" );
-            if ( get_name().length() ) {
-                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << get_name() );
-            }
-        }
-    }   
+  parseNode(node);
 }
 
+bool FGPIDController::parseConfigHook(const string& aName, SGPropertyNode* aNode)
+{
+  if (aName == "Ts") {
+    desiredTs = aNode->getDoubleValue();
+  } else if (aName == "Kp") {
+    Kp.push_back( new FGXMLAutoInput(aNode) );
+  } else if (aName == "Ti") {
+    Ti.push_back( new FGXMLAutoInput(aNode) );
+  } else if (aName == "Td") {
+    Td.push_back( new FGXMLAutoInput(aNode) );
+  } else if (aName == "beta") {
+    beta = aNode->getDoubleValue();
+  } else if (aName == "alpha") {
+    alpha = aNode->getDoubleValue();
+  } else if (aName == "gamma") {
+    gamma = aNode->getDoubleValue();
+  } else {
+    // unhandled by us, let the base class try it
+    return false;
+  }
+
+  return true;
+}
 
 /*
  * Roy Vegard Ovesen:
@@ -512,26 +534,25 @@ void FGPIDController::update( double dt ) {
 
 
 FGPISimpleController::FGPISimpleController( SGPropertyNode *node ):
-    FGXMLAutoComponent( node ),
+    FGXMLAutoComponent(),
     int_sum( 0.0 )
 {
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "config" ) {
-            Kp.push_back( new FGXMLAutoInput( child->getChild( "Kp" ) ) );
-            Ki.push_back( new FGXMLAutoInput( child->getChild( "Ki" ) ) );
-        } else {
-            SG_LOG( SG_AUTOPILOT, SG_WARN, "Error in autopilot config logic" );
-            if ( get_name().length() ) {
-                SG_LOG( SG_AUTOPILOT, SG_WARN, "Section = " << get_name() );
-            }
-        }
-    }   
+  parseNode(node);
 }
 
+bool FGPISimpleController::parseConfigHook(const string& aName, SGPropertyNode* aNode)
+{
+  if (aName == "Kp") {
+    Kp.push_back( new FGXMLAutoInput(aNode) );
+  } else if (aName == "Ki") {
+    Ki.push_back( new FGXMLAutoInput(aNode) );
+  } else {
+    // unhandled by us, let the base class try it
+    return false;
+  }
+
+  return true;
+}
 
 void FGPISimpleController::update( double dt ) {
 
@@ -573,19 +594,23 @@ void FGPISimpleController::update( double dt ) {
 
 
 FGPredictor::FGPredictor ( SGPropertyNode *node ):
-    FGXMLAutoComponent( node ),
+    FGXMLAutoComponent(),
     average(0.0)
 {
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        if ( cname == "seconds" ) {
-            seconds.push_back( new FGXMLAutoInput( child, 0 ) );
-        } else if ( cname == "filter-gain" ) {
-            filter_gain.push_back( new FGXMLAutoInput( child, 0 ) );
-        }
-    }   
+  parseNode(node);
+}
+
+bool FGPredictor::parseNodeHook(const string& aName, SGPropertyNode* aNode)
+{
+  if (aName == "seconds") {
+    seconds.push_back( new FGXMLAutoInput( aNode, 0 ) );
+  } else if (aName == "filter-gain") {
+    filter_gain.push_back( new FGXMLAutoInput( aNode, 0 ) );
+  } else {
+    return false;
+  }
+  
+  return true;
 }
 
 void FGPredictor::update( double dt ) {
@@ -634,45 +659,50 @@ void FGPredictor::update( double dt ) {
 
 
 FGDigitalFilter::FGDigitalFilter(SGPropertyNode *node):
-    FGXMLAutoComponent( node ),
+    FGXMLAutoComponent(),
     filterType(none)
 {
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
-        if ( cname == "type" ) {
-            if ( cval == "exponential" ) {
-                filterType = exponential;
-            } else if (cval == "double-exponential") {
-                filterType = doubleExponential;
-            } else if (cval == "moving-average") {
-                filterType = movingAverage;
-            } else if (cval == "noise-spike") {
-                filterType = noiseSpike;
-            } else if (cval == "gain") {
-                filterType = gain;
-            } else if (cval == "reciprocal") {
-                filterType = reciprocal;
-            }
-        } else if ( cname == "filter-time" ) {
-            TfInput.push_back( new FGXMLAutoInput( child, 1.0 ) );
-            if( filterType == none ) filterType = exponential;
-        } else if ( cname == "samples" ) {
-            samplesInput.push_back( new FGXMLAutoInput( child, 1 ) );
-            if( filterType == none ) filterType = movingAverage;
-        } else if ( cname == "max-rate-of-change" ) {
-            rateOfChangeInput.push_back( new FGXMLAutoInput( child, 1 ) );
-            if( filterType == none ) filterType = noiseSpike;
-        } else if ( cname == "gain" ) {
-            gainInput.push_back( new FGXMLAutoInput( child, 1 ) );
-            if( filterType == none ) filterType = gain;
-        }
-    }
+    parseNode(node);
 
     output.resize(2, 0.0);
     input.resize(samplesInput.get_value() + 1, 0.0);
+}
+
+
+bool FGDigitalFilter::parseNodeHook(const string& aName, SGPropertyNode* aNode)
+{
+  if (aName == "type" ) {
+    string val(aNode->getStringValue());
+    if ( val == "exponential" ) {
+      filterType = exponential;
+    } else if (val == "double-exponential") {
+      filterType = doubleExponential;
+    } else if (val == "moving-average") {
+      filterType = movingAverage;
+    } else if (val == "noise-spike") {
+      filterType = noiseSpike;
+    } else if (val == "gain") {
+      filterType = gain;
+    } else if (val == "reciprocal") {
+      filterType = reciprocal;
+    }
+  } else if (aName == "filter-time" ) {
+    TfInput.push_back( new FGXMLAutoInput( aNode, 1.0 ) );
+    if( filterType == none ) filterType = exponential;
+  } else if (aName == "samples" ) {
+    samplesInput.push_back( new FGXMLAutoInput( aNode, 1 ) );
+    if( filterType == none ) filterType = movingAverage;
+  } else if (aName == "max-rate-of-change" ) {
+    rateOfChangeInput.push_back( new FGXMLAutoInput( aNode, 1 ) );
+    if( filterType == none ) filterType = noiseSpike;
+  } else if (aName == "gain" ) {
+    gainInput.push_back( new FGXMLAutoInput( aNode, 1 ) );
+    if( filterType == none ) filterType = gain;
+  } else {
+    return false; // not handled by us, let the base class try
+  }
+  
+  return true;
 }
 
 void FGDigitalFilter::update(double dt)
@@ -795,9 +825,9 @@ void FGXMLAutopilot::init() {
                         " details.");
                 exit(-1);
             }        
-        } catch (const sg_exception&) {
+        } catch (const sg_exception& e) {
             SG_LOG( SG_ALL, SG_ALERT, "Failed to load autopilot configuration: "
-                    << config.str() );
+                    << config.str() << ":" << e.getMessage() );
         }
 
     } else {
