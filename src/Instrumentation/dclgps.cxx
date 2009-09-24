@@ -26,7 +26,6 @@
 #include "dclgps.hxx"
 
 #include <simgear/sg_inlines.h>
-#include <simgear/structure/commands.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/magvar/magvar.hxx>
 
@@ -38,85 +37,6 @@
 #include <iostream>
 
 using namespace std;
-
-// Command callbacks for FlightGear
-
-static bool do_kln89_msg_pressed(const SGPropertyNode* arg) {
-	//cout << "do_kln89_msg_pressed called!\n";
-	DCLGPS* gps = (DCLGPS*)globals->get_subsystem("kln89");
-	gps->MsgPressed();
-	return(true);
-}
-
-static bool do_kln89_obs_pressed(const SGPropertyNode* arg) {
-	//cout << "do_kln89_obs_pressed called!\n";
-	DCLGPS* gps = (DCLGPS*)globals->get_subsystem("kln89");
-	gps->OBSPressed();
-	return(true);
-}
-
-static bool do_kln89_alt_pressed(const SGPropertyNode* arg) {
-	//cout << "do_kln89_alt_pressed called!\n";
-	DCLGPS* gps = (DCLGPS*)globals->get_subsystem("kln89");
-	gps->AltPressed();
-	return(true);
-}
-
-static bool do_kln89_nrst_pressed(const SGPropertyNode* arg) {
-	DCLGPS* gps = (DCLGPS*)globals->get_subsystem("kln89");
-	gps->NrstPressed();
-	return(true);
-}
-
-static bool do_kln89_dto_pressed(const SGPropertyNode* arg) {
-	DCLGPS* gps = (DCLGPS*)globals->get_subsystem("kln89");
-	gps->DtoPressed();
-	return(true);
-}
-
-static bool do_kln89_clr_pressed(const SGPropertyNode* arg) {
-	DCLGPS* gps = (DCLGPS*)globals->get_subsystem("kln89");
-	gps->ClrPressed();
-	return(true);
-}
-
-static bool do_kln89_ent_pressed(const SGPropertyNode* arg) {
-	DCLGPS* gps = (DCLGPS*)globals->get_subsystem("kln89");
-	gps->EntPressed();
-	return(true);
-}
-
-static bool do_kln89_crsr_pressed(const SGPropertyNode* arg) {
-	DCLGPS* gps = (DCLGPS*)globals->get_subsystem("kln89");
-	gps->CrsrPressed();
-	return(true);
-}
-
-static bool do_kln89_knob1left1(const SGPropertyNode* arg) {
-	DCLGPS* gps = (DCLGPS*)globals->get_subsystem("kln89");
-	gps->Knob1Left1();
-	return(true);
-}
-
-static bool do_kln89_knob1right1(const SGPropertyNode* arg) {
-	DCLGPS* gps = (DCLGPS*)globals->get_subsystem("kln89");
-	gps->Knob1Right1();
-	return(true);
-}
-
-static bool do_kln89_knob2left1(const SGPropertyNode* arg) {
-	DCLGPS* gps = (DCLGPS*)globals->get_subsystem("kln89");
-	gps->Knob2Left1();
-	return(true);
-}
-
-static bool do_kln89_knob2right1(const SGPropertyNode* arg) {
-	DCLGPS* gps = (DCLGPS*)globals->get_subsystem("kln89");
-	gps->Knob2Right1();
-	return(true);
-}
-
-// End command callbacks
 
 GPSWaypoint::GPSWaypoint() {
     appType = GPS_APP_NONE;
@@ -222,58 +142,12 @@ ClockTime::ClockTime(int hr, int min) {
 ClockTime::~ClockTime() {
 }
 
-GPSPage::GPSPage(DCLGPS* parent) {
-	_parent = parent;
-	_subPage = 0;
-}
-
-GPSPage::~GPSPage() {
-}
-
-void GPSPage::Update(double dt) {}
-
-void GPSPage::Knob1Left1() {}
-void GPSPage::Knob1Right1() {}
-
-void GPSPage::Knob2Left1() {
-	_parent->_activePage->LooseFocus();
-	_subPage--;
-	if(_subPage < 0) _subPage = _nSubPages - 1;
-}
-
-void GPSPage::Knob2Right1() {
-	_parent->_activePage->LooseFocus();
-	_subPage++;
-	if(_subPage >= _nSubPages) _subPage = 0;
-}
-
-void GPSPage::CrsrPressed() {}
-void GPSPage::EntPressed() {}
-void GPSPage::ClrPressed() {}
-void GPSPage::DtoPressed() {}
-void GPSPage::NrstPressed() {}
-void GPSPage::AltPressed() {}
-void GPSPage::OBSPressed() {}
-void GPSPage::MsgPressed() {}
-
-string GPSPage::GPSitoa(int n) {
-	char buf[6];
-	snprintf(buf, 6, "%i", n);
-	string s = buf;
-	return(s);
-}
-
-void GPSPage::CleanUp() {}
-void GPSPage::LooseFocus() {}
-void GPSPage::SetId(const string& s) {}
-
 // ------------------------------------------------------------------------------------- //
 
 DCLGPS::DCLGPS(RenderArea2D* instrument) {
 	_instrument = instrument;
 	_nFields = 1;
 	_maxFields = 2;
-	_pages.clear();
 	
 	// Units - lets default to US units - FG can set them to other units from config during startup if desired.
 	_altUnits = GPS_ALT_UNITS_FT;
@@ -361,18 +235,6 @@ void DCLGPS::draw(osg::State& state) {
 }
 
 void DCLGPS::init() {
-	globals->get_commands()->addCommand("kln89_msg_pressed", do_kln89_msg_pressed);
-	globals->get_commands()->addCommand("kln89_obs_pressed", do_kln89_obs_pressed);
-	globals->get_commands()->addCommand("kln89_alt_pressed", do_kln89_alt_pressed);
-	globals->get_commands()->addCommand("kln89_nrst_pressed", do_kln89_nrst_pressed);
-	globals->get_commands()->addCommand("kln89_dto_pressed", do_kln89_dto_pressed);
-	globals->get_commands()->addCommand("kln89_clr_pressed", do_kln89_clr_pressed);
-	globals->get_commands()->addCommand("kln89_ent_pressed", do_kln89_ent_pressed);
-	globals->get_commands()->addCommand("kln89_crsr_pressed", do_kln89_crsr_pressed);
-	globals->get_commands()->addCommand("kln89_knob1left1", do_kln89_knob1left1);
-	globals->get_commands()->addCommand("kln89_knob1right1", do_kln89_knob1right1);
-	globals->get_commands()->addCommand("kln89_knob2left1", do_kln89_knob2left1);
-	globals->get_commands()->addCommand("kln89_knob2right1", do_kln89_knob2right1);
 		
 	// Not sure if this should be here, but OK for now.
 	CreateDefaultFlightPlans();
@@ -659,6 +521,15 @@ void DCLGPS::update(double dt) {
 	}
 }
 
+GPSWaypoint* DCLGPS::GetActiveWaypoint() { 
+	return &_activeWaypoint; 
+}
+	
+// Returns meters
+float DCLGPS::GetDistToActiveWaypoint() { 
+	return _dist2Act;
+}
+
 // I don't yet fully understand all the gotchas about where to source time from.
 // This function sets the initial timer before the clock exports properties
 // and the one below uses the clock to be consistent with the rest of the code.
@@ -709,18 +580,7 @@ void DCLGPS::DtoCancel() {
 	_dto = false;
 }
 
-void DCLGPS::Knob1Left1() {}
-void DCLGPS::Knob1Right1() {}
-void DCLGPS::Knob2Left1() {}
-void DCLGPS::Knob2Right1() {}
-void DCLGPS::CrsrPressed() { _activePage->CrsrPressed(); }
-void DCLGPS::EntPressed() { _activePage->EntPressed(); }
-void DCLGPS::ClrPressed() { _activePage->ClrPressed(); }
-void DCLGPS::DtoPressed() {}
-void DCLGPS::NrstPressed() {}
-void DCLGPS::AltPressed() {}
-
-void DCLGPS::OBSPressed() { 
+void DCLGPS::ToggleOBSMode() {
 	_obsMode = !_obsMode;
 	if(_obsMode) {
 		if(!_activeWaypoint.id.empty()) {
@@ -741,8 +601,6 @@ void DCLGPS::SetOBSFromWaypoint() {
 	_fromWaypoint = GetPositionOnMagRadial(_activeWaypoint, 10, _obsHeading + 180.0);
 	_fromWaypoint.id = "OBSWP";
 }
-
-void DCLGPS::MsgPressed() {}
 
 void DCLGPS::CDIFSDIncrease() {
 	if(_currentCdiScaleIndex == 0) {

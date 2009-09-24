@@ -186,66 +186,8 @@ private:
 
 // ------------------------------------------------------------------------------
 
-class DCLGPS;
-
-class GPSPage {
-	
-public:
-	GPSPage(DCLGPS* parent);
-	virtual ~GPSPage() = 0;
-	virtual void Update(double dt);
-	virtual void Knob1Left1();
-	virtual void Knob1Right1();	
-	virtual void Knob2Left1();
-	virtual void Knob2Right1();	
-	virtual void CrsrPressed();
-	virtual void EntPressed();
-	virtual void ClrPressed();
-	virtual void DtoPressed();
-	virtual void NrstPressed();
-	virtual void AltPressed();
-	virtual void OBSPressed();
-	virtual void MsgPressed();
-	
-	// Sometimes a page needs to maintain state for some return paths,
-	// but change it for others.  The CleanUp function can be used for
-	// changing state for non-ENT return  paths in conjunction with
-	// GPS::_cleanUpPage
-	virtual void CleanUp();
-	
-	// The LooseFocus function is called when a page or subpage looses focus
-	// and allows pages to clean up state that is maintained whilst focus is
-	// retained, but lost on return.
-	virtual void LooseFocus();
-	
-	// Allows pages that display info for a given ID to have it set/get if they implement these functions.
-	virtual void SetId(const string& s);
-	virtual const string& GetId()=0;
-	
-	inline int GetSubPage() { return(_subPage); }
-	
-	inline int GetNSubPages() { return(_nSubPages); }
-	
-	inline const string& GetName() { return(_name); }
-	
-protected:
-	DCLGPS* _parent;
-	string _name;	// eg. "APT", "NAV" etc
-	int _nSubPages;
-	// _subpage is zero based
-	int _subPage;	// The subpage gets remembered when other pages are displayed
-	string GPSitoa(int n);
-};
-
-/*-----------------------------------------------------------------------*/
-
-typedef vector<GPSPage*> gps_page_list_type;
-typedef gps_page_list_type::iterator gps_page_list_itr;
-
 // TODO - merge generic GPS functions instead and split out KLN specific stuff.
 class DCLGPS : public SGSubsystem {
-	
-	friend class GPSPage;
 	
 public:
 	DCLGPS(RenderArea2D* instrument);
@@ -266,18 +208,7 @@ public:
 	// Render a char at a given position as above
 	virtual void DrawChar(char c, int field, int px, int py, bool bold = false);
 	
-	virtual void Knob1Right1();
-	virtual void Knob1Left1();
-	virtual void Knob2Right1();
-	virtual void Knob2Left1();
-	virtual void CrsrPressed();
-	virtual void EntPressed();
-	virtual void ClrPressed();
-	virtual void DtoPressed();
-	virtual void NrstPressed();
-	virtual void AltPressed();
-	virtual void OBSPressed();
-	virtual void MsgPressed();
+	virtual void ToggleOBSMode();
 	
 	// Set the number of fields
 	inline void SetNumFields(int n) { _nFields = (n > _maxFields ? _maxFields : (n < 1 ? 1 : n)); }
@@ -309,7 +240,7 @@ public:
 	
 	void SetOBSFromWaypoint();
 	
-	inline GPSWaypoint* GetActiveWaypoint() { return &_activeWaypoint; }
+	GPSWaypoint* GetActiveWaypoint();
 	// Get the (zero-based) position of the active waypoint in the active flightplan
 	// Returns -1 if no active waypoint.
 	int GetActiveWaypointIndex();
@@ -317,7 +248,7 @@ public:
 	int GetWaypointIndex(const string& id);
 	
 	// Returns meters
-	inline float GetDistToActiveWaypoint() { return _dist2Act; }
+	float GetDistToActiveWaypoint();
 	// Returns degrees (magnetic)
 	float GetHeadingToActiveWaypoint();
 	// Returns degrees (magnetic)
@@ -382,14 +313,6 @@ protected:
 	
 	// 2D rendering area
 	RenderArea2D* _instrument;
-	
-	// The actual pages
-	gps_page_list_type _pages;
-	
-	// The currently active page
-	GPSPage* _activePage;
-	// And a facility to save the immediately preceeding active page
-	GPSPage* _lastActivePage;
 	
 	// Units
 	GPSSpeedUnits _velUnits;

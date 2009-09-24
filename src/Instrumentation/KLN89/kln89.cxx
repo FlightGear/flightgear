@@ -46,9 +46,89 @@
 #include <ATCDCL/ATCProjection.hxx>
 #include <Main/fg_props.hxx>
 #include <simgear/math/SGMath.hxx>
+#include <simgear/structure/commands.hxx>
 #include <Airports/simple.hxx>
 
 using std::cout;
+
+// Command callbacks for FlightGear
+
+static bool do_kln89_msg_pressed(const SGPropertyNode* arg) {
+	//cout << "do_kln89_msg_pressed called!\n";
+	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
+	gps->MsgPressed();
+	return(true);
+}
+
+static bool do_kln89_obs_pressed(const SGPropertyNode* arg) {
+	//cout << "do_kln89_obs_pressed called!\n";
+	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
+	gps->OBSPressed();
+	return(true);
+}
+
+static bool do_kln89_alt_pressed(const SGPropertyNode* arg) {
+	//cout << "do_kln89_alt_pressed called!\n";
+	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
+	gps->AltPressed();
+	return(true);
+}
+
+static bool do_kln89_nrst_pressed(const SGPropertyNode* arg) {
+	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
+	gps->NrstPressed();
+	return(true);
+}
+
+static bool do_kln89_dto_pressed(const SGPropertyNode* arg) {
+	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
+	gps->DtoPressed();
+	return(true);
+}
+
+static bool do_kln89_clr_pressed(const SGPropertyNode* arg) {
+	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
+	gps->ClrPressed();
+	return(true);
+}
+
+static bool do_kln89_ent_pressed(const SGPropertyNode* arg) {
+	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
+	gps->EntPressed();
+	return(true);
+}
+
+static bool do_kln89_crsr_pressed(const SGPropertyNode* arg) {
+	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
+	gps->CrsrPressed();
+	return(true);
+}
+
+static bool do_kln89_knob1left1(const SGPropertyNode* arg) {
+	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
+	gps->Knob1Left1();
+	return(true);
+}
+
+static bool do_kln89_knob1right1(const SGPropertyNode* arg) {
+	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
+	gps->Knob1Right1();
+	return(true);
+}
+
+static bool do_kln89_knob2left1(const SGPropertyNode* arg) {
+	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
+	gps->Knob2Left1();
+	return(true);
+}
+
+static bool do_kln89_knob2right1(const SGPropertyNode* arg) {
+	KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
+	gps->Knob2Right1();
+	return(true);
+}
+
+// End command callbacks
 
 KLN89::KLN89(RenderArea2D* instrument) 
 : DCLGPS(instrument) {
@@ -77,27 +157,28 @@ KLN89::KLN89(RenderArea2D* instrument)
 	_pixelated = false;
 
 	// Cyclic pages
-	GPSPage* apt_page = new KLN89AptPage(this);
+	_pages.clear();
+	KLN89Page* apt_page = new KLN89AptPage(this);
 	_pages.push_back(apt_page);
-	GPSPage* vor_page = new KLN89VorPage(this);
+	KLN89Page* vor_page = new KLN89VorPage(this);
 	_pages.push_back(vor_page);
-	GPSPage* ndb_page = new KLN89NDBPage(this);
+	KLN89Page* ndb_page = new KLN89NDBPage(this);
 	_pages.push_back(ndb_page);
-	GPSPage* int_page = new KLN89IntPage(this);
+	KLN89Page* int_page = new KLN89IntPage(this);
 	_pages.push_back(int_page);
-	GPSPage* usr_page = new KLN89UsrPage(this);
+	KLN89Page* usr_page = new KLN89UsrPage(this);
 	_pages.push_back(usr_page);
-	GPSPage* act_page = new KLN89ActPage(this);
+	KLN89Page* act_page = new KLN89ActPage(this);
 	_pages.push_back(act_page);
-	GPSPage* nav_page = new KLN89NavPage(this);
+	KLN89Page* nav_page = new KLN89NavPage(this);
 	_pages.push_back(nav_page);
-	GPSPage* fpl_page = new KLN89FplPage(this);
+	KLN89Page* fpl_page = new KLN89FplPage(this);
 	_pages.push_back(fpl_page);
-	GPSPage* cal_page = new KLN89CalPage(this);
+	KLN89Page* cal_page = new KLN89CalPage(this);
 	_pages.push_back(cal_page);
-	GPSPage* set_page = new KLN89SetPage(this);
+	KLN89Page* set_page = new KLN89SetPage(this);
 	_pages.push_back(set_page);
-	GPSPage* oth_page = new KLN89OthPage(this);
+	KLN89Page* oth_page = new KLN89OthPage(this);
 	_pages.push_back(oth_page);
 	_nPages = _pages.size();
 	_curPage = 0;
@@ -194,6 +275,23 @@ void KLN89::bind() {
 void KLN89::unbind() {
 	fgUntie("/instrumentation/gps/message-alert");
 	DCLGPS::unbind();
+}
+
+void KLN89::init() {
+	globals->get_commands()->addCommand("kln89_msg_pressed", do_kln89_msg_pressed);
+	globals->get_commands()->addCommand("kln89_obs_pressed", do_kln89_obs_pressed);
+	globals->get_commands()->addCommand("kln89_alt_pressed", do_kln89_alt_pressed);
+	globals->get_commands()->addCommand("kln89_nrst_pressed", do_kln89_nrst_pressed);
+	globals->get_commands()->addCommand("kln89_dto_pressed", do_kln89_dto_pressed);
+	globals->get_commands()->addCommand("kln89_clr_pressed", do_kln89_clr_pressed);
+	globals->get_commands()->addCommand("kln89_ent_pressed", do_kln89_ent_pressed);
+	globals->get_commands()->addCommand("kln89_crsr_pressed", do_kln89_crsr_pressed);
+	globals->get_commands()->addCommand("kln89_knob1left1", do_kln89_knob1left1);
+	globals->get_commands()->addCommand("kln89_knob1right1", do_kln89_knob1right1);
+	globals->get_commands()->addCommand("kln89_knob2left1", do_kln89_knob2left1);
+	globals->get_commands()->addCommand("kln89_knob2right1", do_kln89_knob2right1);
+	
+	DCLGPS::init();
 }
 
 void KLN89::update(double dt) {
@@ -476,7 +574,7 @@ void KLN89::NrstPressed() {
 void KLN89::AltPressed() {}
 
 void KLN89::OBSPressed() {
-	DCLGPS::OBSPressed();
+	ToggleOBSMode();
 	if(_obsMode) {
 		// if(ORS 02)
 		_mode = KLN89_MODE_CRSR;
@@ -492,6 +590,10 @@ void KLN89::MsgPressed() {
 		_messageStack.pop_front();
 	}
 	_dispMsg = !_dispMsg;
+}
+
+void KLN89::ToggleOBSMode() {
+	DCLGPS::ToggleOBSMode();
 }
 
 void KLN89::DrawBar(int page) {
