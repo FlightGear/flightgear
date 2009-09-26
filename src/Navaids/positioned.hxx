@@ -188,10 +188,14 @@ public:
    */
   static List findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm, Filter* aFilter = NULL);
   
-  
+  /**
+   * Map a candidate type string to a real type. Returns INVALID if the string
+   * does not correspond to a defined type.
+   */
+  static Type typeFromName(const std::string& aName);
   
   /**
-   * Debug helper, map a type to a human-readable string
+   * Map a type to a human-readable string
    */
   static const char* nameForType(Type aTy);
 protected:
