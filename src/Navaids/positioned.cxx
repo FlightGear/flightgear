@@ -31,6 +31,8 @@
 
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/timing/timestamp.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/misc/strutils.hxx>
 
 #include "positioned.hxx"
 
@@ -468,6 +470,39 @@ SGVec3d
 FGPositioned::cart() const
 {
   return SGVec3d::fromGeod(mPosition);
+}
+
+FGPositioned::Type FGPositioned::typeFromName(const std::string& aName)
+{
+  typedef struct {
+    const char* _name;
+    Type _ty;
+  } NameTypeEntry;
+  
+  const NameTypeEntry names[] = {
+    {"airport", AIRPORT},
+    {"vor", VOR},
+    {"ndb", NDB},
+    {"wpt", WAYPOINT},
+    {"fix", FIX},
+    {"tacan", TACAN},
+    {"dme", DME},
+  // aliases
+    {"waypoint", WAYPOINT},
+  
+    {NULL, INVALID}
+  };
+  
+  std::string lowerName(simgear::strutils::convertToLowerCase(aName));
+  
+  for (const NameTypeEntry* n = names; (n->_name != NULL); ++n) {
+    if (::strcmp(n->_name, lowerName.c_str()) == 0) {
+      return n->_ty;
+    }
+  }
+  
+  SG_LOG(SG_GENERAL, SG_WARN, "FGPositioned::typeFromName: couldn't match:" << aName);
+  return INVALID;
 }
 
 const char* FGPositioned::nameForType(Type aTy)
