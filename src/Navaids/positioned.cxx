@@ -474,6 +474,10 @@ FGPositioned::cart() const
 
 FGPositioned::Type FGPositioned::typeFromName(const std::string& aName)
 {
+  if (aName.empty() || (aName == "")) {
+    return INVALID;
+  }
+
   typedef struct {
     const char* _name;
     Type _ty;
@@ -489,7 +493,8 @@ FGPositioned::Type FGPositioned::typeFromName(const std::string& aName)
     {"dme", DME},
   // aliases
     {"waypoint", WAYPOINT},
-  
+    {"apt", AIRPORT},
+    
     {NULL, INVALID}
   };
   
@@ -585,36 +590,6 @@ FGPositioned::findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm
   return spatialGetClosest(aPos, aN, aCutoffNm, aFilter);
 }
 
-/*
-FGPositionedRef
-FGPositioned::findNextWithPartialId(FGPositionedRef aCur, const std::string& aId, Filter* aFilter)
-{
-  NamedIndexRange range = global_namedIndex.equal_range(aId);
-  for (; range.first != range.second; ++range.first) {
-    FGPositionedRef candidate = range.first->second;
-    if (aCur == candidate) {
-      aCur = NULL; // found our start point, next match will pass
-      continue;
-    }
-    
-    if (aFilter) {
-      if (aFilter->hasTypeRange() && !aFilter->passType(candidate->type())) {
-        continue;
-      }
-
-      if(!aFilter->pass(candidate)) {
-        continue;
-      }
-    }
-  
-    if (!aCur) {
-      return candidate;
-    }
-  }
-  
-  return NULL; // fell out, no match in range
-}*/
-
 FGPositionedRef
 FGPositioned::findNextWithPartialId(FGPositionedRef aCur, const std::string& aId, Filter* aFilter)
 {
@@ -656,4 +631,86 @@ FGPositioned::findNextWithPartialId(FGPositionedRef aCur, const std::string& aId
   return NULL; // Reached the end of the valid sequence with no match.  
 }
   
+FGPositionedRef
+FGPositioned::findWithPartialId(const std::string& aId, Filter* aFilter, int aOffset)
+{
+  // see comment in findNextWithPartialId concerning upperBoundId
+  std::string upperBoundId = aId;
+  upperBoundId[upperBoundId.size()-1]++;
+  NamedPositionedIndex::const_iterator upperBound = global_namedIndex.lower_bound(upperBoundId);
+
+  NamedIndexRange range = global_namedIndex.equal_range(aId);
+  
+  while (range.first != upperBound) {
+    for (; range.first != range.second; ++range.first) {
+      FGPositionedRef candidate = range.first->second;
+      if (aFilter) {
+        if (aFilter->hasTypeRange() && !aFilter->passType(candidate->type())) {
+          continue;
+        }
+
+        if (!aFilter->pass(candidate)) {
+          continue;
+        }
+      }
+
+      if (aOffset == 0) {
+        return candidate;
+      } else {
+        --aOffset; // seen one more valid result, decrement the count
+      }
+    }
+
+    // Unable to match the filter with this range - try the next range.
+    range = global_namedIndex.equal_range(range.second->first);
+  }
+
+  return NULL; // Reached the end of the valid sequence with no match.  
+}
+
+/**
+ * Wrapper filter which proxies to an inner filter, but also ensures the
+ * ident starts with supplied partial ident.
+ */
+class PartialIdentFilter : public FGPositioned::Filter
+{
+public:
+  PartialIdentFilter(const std::string& ident, FGPositioned::Filter* filter) :
+    _ident(ident),
+    _inner(filter)
+  { ; }
+  
+  virtual bool pass(FGPositioned* aPos) const
+  {
+    if (!_inner->pass(aPos)) {
+      return false;
+    }
+    
+    return (::strncmp(aPos->ident().c_str(), _ident.c_str(), _ident.size()) == 0);
+  }
+    
+  virtual FGPositioned::Type minType() const
+  { return _inner->minType(); }
+    
+  virtual FGPositioned::Type maxType() const
+  { return _inner->maxType(); }
+    
+private:
+  std::string _ident;
+  FGPositioned::Filter* _inner;
+};
+
+FGPositionedRef
+FGPositioned::findClosestWithPartialId(const SGGeod& aPos, const std::string& aId, Filter* aFilter, int aOffset)
+{
+  PartialIdentFilter pf(aId, aFilter);
+  List matches = spatialGetClosest(aPos, aOffset + 1, 1000.0, &pf);
+  
+  if ((int) matches.size() <= aOffset) {
+    SG_LOG(SG_GENERAL, SG_INFO, "FGPositioned::findClosestWithPartialId, couldn't match enough with prefix:" << aId);
+    return NULL; // couldn't find a match within the cutoff distance
+  }
+  
+  return matches[aOffset];
+}
 
