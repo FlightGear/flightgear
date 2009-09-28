@@ -460,6 +460,12 @@ FGPositioned::~FGPositioned()
   removeFromIndices(this);
 }
 
+FGPositioned*
+FGPositioned::createUserWaypoint(const std::string& aIdent, const SGGeod& aPos)
+{
+  return new FGPositioned(WAYPOINT, aIdent, aPos, true);
+}
+
 SGBucket
 FGPositioned::bucket() const
 {
