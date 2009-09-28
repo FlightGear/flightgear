@@ -209,6 +209,8 @@ public:
    * Map a type to a human-readable string
    */
   static const char* nameForType(Type aTy);
+  
+  static FGPositioned* createUserWaypoint(const std::string& aIdent, const SGGeod& aPos);
 protected:
   
   FGPositioned(Type ty, const std::string& aIdent, const SGGeod& aPos, bool aIndex = true);
