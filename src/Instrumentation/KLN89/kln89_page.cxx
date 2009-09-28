@@ -24,11 +24,11 @@
 #include "kln89_page.hxx"
 #include <Main/fg_props.hxx>
 
-KLN89Page::KLN89Page(KLN89* parent) 
-: GPSPage(parent) {
-	_kln89 = (KLN89*)parent;
+KLN89Page::KLN89Page(KLN89* parent) {
+	_kln89 = parent;
 	_entInvert = false;
 	_to_flag = true;
+	_subPage = 0;
 }
 
 KLN89Page::~KLN89Page() {
@@ -74,14 +74,14 @@ void KLN89Page::Update(double dt) {
 		}
 	}
 	_kln89->DrawText((_kln89->GetDistVelUnitsSI() ? "km" : "nm"), 1, 4, 3);
-	GPSWaypoint* awp = _parent->GetActiveWaypoint();
+	GPSWaypoint* awp = _kln89->GetActiveWaypoint();
 	if(_kln89->_navFlagged) {
 		_kln89->DrawText("--.-", 1, 0 ,3);
 		// Only nav1 still gets speed drawn if nav is flagged - not ACT
 		if(!nav1) _kln89->DrawText("------", 1, 0, 2);
 	} else {
 		char buf[8];
-		float f = _parent->GetDistToActiveWaypoint() * (_kln89->GetDistVelUnitsSI() ? 0.001 : SG_METER_TO_NM);
+		float f = _kln89->GetDistToActiveWaypoint() * (_kln89->GetDistVelUnitsSI() ? 0.001 : SG_METER_TO_NM);
 		snprintf(buf, 5, (f >= 100.0 ? "%4.0f" : "%4.1f"), f);
 		string s = buf;
 		_kln89->DrawText(s, 1, 4 - s.size(), 3, true);
@@ -132,7 +132,9 @@ void KLN89Page::Knob1Right1() {
 
 void KLN89Page::Knob2Left1() {
 	if(_kln89->_mode != KLN89_MODE_CRSR && !fgGetBool("/instrumentation/kln89/scan-pull")) {
-		GPSPage::Knob2Left1(); 
+		_kln89->_activePage->LooseFocus();
+		_subPage--;
+		if(_subPage < 0) _subPage = _nSubPages - 1;
 	} else {
 		if(_uLinePos == 0 && _kln89->_obsMode) {
 			_kln89->_obsHeading--;
@@ -146,7 +148,9 @@ void KLN89Page::Knob2Left1() {
 
 void KLN89Page::Knob2Right1() {
 	if(_kln89->_mode != KLN89_MODE_CRSR && !fgGetBool("/instrumentation/kln89/scan-pull")) {
-		GPSPage::Knob2Right1(); 
+		_kln89->_activePage->LooseFocus();
+		_subPage++;
+		if(_subPage >= _nSubPages) _subPage = 0;
 	} else {
 		if(_uLinePos == 0 && _kln89->_obsMode) {
 			_kln89->_obsHeading++;
@@ -202,4 +206,13 @@ void KLN89Page::SetId(const string& s) {
 
 const string& KLN89Page::GetId() {
 	return(_id);
+}
+
+// TODO - this function probably shouldn't be here - FG almost certainly has better handling
+// of this somewhere already.
+string KLN89Page::GPSitoa(int n) {
+	char buf[6];
+	snprintf(buf, 6, "%i", n);
+	string s = buf;
+	return(s);
 }

@@ -41,15 +41,15 @@ KLN89NavPage::KLN89NavPage(KLN89* parent)
 	_menuPos = 0;
 	_suspendAVS = false;
 	_scanWpSet = false;
-        _scanWpIndex = -1;
+	_scanWpIndex = -1;
 }
 
 KLN89NavPage::~KLN89NavPage() {
 }
 
 void KLN89NavPage::Update(double dt) {
-	GPSFlightPlan* fp = ((KLN89*)_parent)->_activeFP;
-	GPSWaypoint* awp = _parent->GetActiveWaypoint();
+	GPSFlightPlan* fp = _kln89->_activeFP;
+	GPSWaypoint* awp = _kln89->GetActiveWaypoint();
 	// Scan-pull out on nav4 page switches off the cursor
 	if(3 == _subPage && fgGetBool("/instrumentation/kln89/scan-pull")) { _kln89->_mode = KLN89_MODE_DISP; }
 	bool crsr = (_kln89->_mode == KLN89_MODE_CRSR);
