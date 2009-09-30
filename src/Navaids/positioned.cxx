@@ -29,10 +29,11 @@
 
 #include <iostream>
 
+#include <boost/algorithm/string/case_conv.hpp>
+
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/timing/timestamp.hxx>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/misc/strutils.hxx>
 
 #include "positioned.hxx"
 
@@ -504,7 +505,7 @@ FGPositioned::Type FGPositioned::typeFromName(const std::string& aName)
     {NULL, INVALID}
   };
   
-  std::string lowerName(simgear::strutils::convertToLowerCase(aName));
+  std::string lowerName(boost::to_lower_copy(aName));
   
   for (const NameTypeEntry* n = names; (n->_name != NULL); ++n) {
     if (::strcmp(n->_name, lowerName.c_str()) == 0) {
