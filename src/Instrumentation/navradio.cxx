@@ -150,6 +150,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     last_x(0.0),
     last_loc_dist(0.0),
     last_xtrack_error(0.0),
+    xrate_ms(0.0),
     _localizerWidth(5.0),
     _name(node->getStringValue("name", "nav")),
     _num(node->getIntValue("number", 0)),
@@ -740,7 +741,8 @@ void FGNavRadio::updateCDI(double dt)
   //////////////////////////////////////////////////////////
   double t = 0.0;
   if ( inrange && cdi_serviceable ) {
-    double xrate_ms = (last_xtrack_error - _cdiCrossTrackErrorM) / dt;
+    double cur_rate = (last_xtrack_error - _cdiCrossTrackErrorM) / dt;
+    xrate_ms = 0.99 * xrate_ms + 0.01 * cur_rate;
     if ( fabs(xrate_ms) > 0.00001 ) {
         t = _cdiCrossTrackErrorM / xrate_ms;
     } else {
