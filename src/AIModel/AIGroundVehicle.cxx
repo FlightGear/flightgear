@@ -210,7 +210,7 @@ bool FGAIGroundVehicle::getGroundElev(SGGeod inpos) {
 
     double height_m ;
 
-    if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(inpos, 10000), height_m, &_material,0)){
+    if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(inpos, 3000), height_m, &_material,0)){
             _ht_agl_ft = inpos.getElevationFt() - height_m * SG_METER_TO_FEET;
 
             if (_material) {
@@ -261,14 +261,14 @@ bool FGAIGroundVehicle::getPitch() {
         double elev_rear = 0;
         double max_alt = 10000;
 
-        if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(geodFront, 10000), elev_front,
+        if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(geodFront, 3000), elev_front,
              &_material, 0)){
                 front_elev_m = elev_front;
         } else
             return false;
 
-        if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(geodRear, 10000),
-            elev_rear, &_material,0)){
+        if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(geodRear, 3000),
+            elev_rear, &_material, 0)){
                 rear_elev_m = elev_rear;
         } else
             return false;
@@ -296,6 +296,7 @@ bool FGAIGroundVehicle::getPitch() {
         static double prev_alt;
 
         if (_new_waypoint){
+            cout << "new waypoint, calculating pitch " << endl;
             curr_alt = curr->altitude * SG_METER_TO_FEET;
             prev_alt = prev->altitude * SG_METER_TO_FEET;
             d_alt = curr_alt - prev_alt;
@@ -304,13 +305,15 @@ bool FGAIGroundVehicle::getPitch() {
             SGGeod::fromDeg(curr->longitude, curr->latitude));
 
             _pitch = atan2(d_alt, distance * SG_METER_TO_FEET) * SG_RADIANS_TO_DEGREES;
+//            cout << "new waypoint, calculating pitch " <<  _pitch << endl;
         }
 
 
         double distance_to_go = SGGeodesy::distanceM(SGGeod::fromDeg(pos.getLongitudeDeg(), pos.getLatitudeDeg()),
             SGGeod::fromDeg(curr->longitude, curr->latitude));
 
-        //cout << "distance curr & prev " << prev->name << " " << curr->name << " " << distance * SG_METER_TO_FEET
+        //cout << "tunnel " << _tunnel
+        //     << " distance curr & prev " << prev->name << " " << curr->name << " " << distance * SG_METER_TO_FEET
         //     << " distance to go " << distance_to_go * SG_METER_TO_FEET
         //     << " d_alt ft " << d_alt
         //     << endl;
@@ -524,13 +527,14 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
     // Check execution time (currently once every 0.05 sec or 20 fps)
     // Add a bit of randomization to prevent the execution of all flight plans
     // in synchrony, which can add significant periodic framerate flutter.
+    // Randomization removed to get better appearance
     ///////////////////////////////////////////////////////////////////////////
 
     //cout << "_start_sec " << _start_sec << " time_sec " << time_sec << endl;
     if (_dt_count < _next_run)
         return;
 
-    _next_run = 0.055 + (0.015 * sg_random());
+    _next_run = 0.055 /*+ (0.015 * sg_random())*/;
 
     if (getPitch()){
         setElevation(_elevation, _dt_count, _elevation_coeff);
