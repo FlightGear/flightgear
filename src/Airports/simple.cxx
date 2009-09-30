@@ -250,13 +250,17 @@ FGRunway* FGAirport::getActiveRunwayForUsage() const
     envMgr = (FGEnvironmentMgr *) globals->get_subsystem("environment");
   }
   
-  FGEnvironment stationWeather(envMgr->getEnvironment(mPosition));
+  // This forces West-facing rwys to be used in no-wind situations
+  // which is consistent with Flightgear's initial setup.
+  double hdg = 270;
   
-  double windSpeed = stationWeather.get_wind_speed_kt();
-  double hdg = stationWeather.get_wind_from_heading_deg();
-  if (windSpeed <= 0.0) {
-    hdg = 270;	// This forces West-facing rwys to be used in no-wind situations
-    // which is consistent with Flightgear's initial setup.
+  if (envMgr) {
+    FGEnvironment stationWeather(envMgr->getEnvironment(mPosition));
+  
+    double windSpeed = stationWeather.get_wind_speed_kt();
+    if (windSpeed > 0.0) {
+      hdg = stationWeather.get_wind_from_heading_deg();
+    }
   }
   
   return findBestRunwayForHeading(hdg);
