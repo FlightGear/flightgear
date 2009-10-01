@@ -66,7 +66,8 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode_ptr cdi_serviceable_node;
     SGPropertyNode_ptr gs_serviceable_node;
     SGPropertyNode_ptr tofrom_serviceable_node;
-
+    SGPropertyNode_ptr dme_serviceable_node;
+    
     // property outputs
     SGPropertyNode_ptr fmt_freq_node;     // formated frequency
     SGPropertyNode_ptr fmt_alt_freq_node; // formated alternate frequency
@@ -101,6 +102,7 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode_ptr gs_deflection_norm_node;
     SGPropertyNode_ptr gs_rate_of_climb_node;
     SGPropertyNode_ptr gs_dist_node;
+    SGPropertyNode_ptr gs_inrange_node;
     SGPropertyNode_ptr nav_id_node;
     SGPropertyNode_ptr id_c1_node;
     SGPropertyNode_ptr id_c2_node;
@@ -124,7 +126,6 @@ class FGNavRadio : public SGSubsystem
     string nav_fx_name;
     string dme_fx_name;
 
-    bool has_dme;
     double target_radial;
     SGTimeStamp prev_time;
     SGTimeStamp curr_time;
@@ -145,12 +146,18 @@ class FGNavRadio : public SGSubsystem
 
     SGVec3d _gsCart, _gsAxis, _gsVertical;
 
+    FGNavRecordPtr _dme;
+    bool _dmeInRange;
+    
     // CDI properties
     bool _toFlag, _fromFlag;
     double _cdiDeflection;
     double _cdiCrossTrackErrorM;
     double _gsNeedleDeflection;
     double _gsNeedleDeflectionNorm;
+    
+    // realism setting, are false courses and GS lobes enabled?
+    bool _falseCoursesEnabled;
     
     bool updateWithPower(double aDt);
 
@@ -166,6 +173,7 @@ class FGNavRadio : public SGSubsystem
     void audioNavidChanged();
 
     void updateReceiver(double dt);
+    void updateDME(const SGVec3d& aircraft);
     void updateGlideSlope(double dt, const SGVec3d& aircraft, double signal_quality_norm);
     void updateGPSSlaved();
     void updateCDI(double dt);
