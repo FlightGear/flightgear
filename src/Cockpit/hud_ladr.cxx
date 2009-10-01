@@ -6,7 +6,7 @@
 
 #include "hud.hxx"
 #include "panel.hxx"
-
+#include <Main/viewer.hxx>
 
 // FIXME
 extern float get_roll(void);

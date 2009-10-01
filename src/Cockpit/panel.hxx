@@ -21,20 +21,9 @@
 #ifndef __PANEL_HXX
 #define __PANEL_HXX
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <osg/ref_ptr>
 #include <osg/StateSet>
 #include <osg/Texture2D>
-
-#include <plib/fnt.h>
 
 #include <simgear/compiler.h>
 #include <simgear/props/props.hxx>
@@ -48,16 +37,11 @@
 #include <map>
 
 #include <Main/fg_props.hxx>
-#include <Instrumentation/dclgps.hxx>
-
-using std::vector;
-using std::map;
-
 
 class FGPanelInstrument;
+class fntFont;
+class DCLGPS;
 
-
-
 ////////////////////////////////////////////////////////////////////////
 // Texture management.
 ////////////////////////////////////////////////////////////////////////
@@ -71,11 +55,11 @@ class FGPanelInstrument;
 class FGTextureManager
 {
 public:
-  static osg::Texture2D* createTexture(const string &relativePath,
+  static osg::Texture2D* createTexture(const std::string &relativePath,
                                        bool staticTexture = true);
-  static void addTexture(const string &relativePath, osg::Texture2D* texture);
+  static void addTexture(const std::string &relativePath, osg::Texture2D* texture);
 private:
-  static map<string,osg::ref_ptr<osg::Texture2D> > _textureMap;
+  static std::map<std::string,osg::ref_ptr<osg::Texture2D> > _textureMap;
 };
 
 
@@ -89,14 +73,14 @@ class FGCroppedTexture
 public:
 
   FGCroppedTexture ();
-  FGCroppedTexture (const string &path,
+  FGCroppedTexture (const std::string &path,
 		  float _minX = 0.0, float _minY = 0.0,
 		  float _maxX = 1.0, float _maxY = 1.0);
   virtual ~FGCroppedTexture ();
 
-  virtual void setPath (const string &path) { _path = path; }
+  virtual void setPath (const std::string &path) { _path = path; }
 
-  virtual const string &getPath () const { return _path; }
+  virtual const std::string &getPath () const { return _path; }
 
   virtual osg::StateSet* getTexture ();
 
@@ -111,7 +95,7 @@ public:
 
 
 private:
-  string _path;
+  std::string _path;
   osg::ref_ptr<osg::StateSet> _texture;
   float _minX, _minY, _maxX, _maxY;
 };
@@ -199,7 +183,7 @@ private:
   mutable int _mouseButton, _mouseX, _mouseY;
   mutable int _mouseDelay;
   mutable FGPanelInstrument * _mouseInstrument;
-  typedef vector<FGPanelInstrument *> instrument_list_type;
+  typedef std::vector<FGPanelInstrument *> instrument_list_type;
   int _width;
   int _height;
   int _view_height;
@@ -273,7 +257,7 @@ public:
   virtual bool doAction (int updown);
 
 private:
-  typedef vector<SGBinding *> binding_list_t;
+  typedef std::vector<SGBinding *> binding_list_t;
 
   int _button;
   int _x;
@@ -356,7 +340,7 @@ public:
 protected:
   int _w, _h;
 
-  typedef vector<FGPanelTransformation *> transformation_list;
+  typedef std::vector<FGPanelTransformation *> transformation_list;
   transformation_list _transformations;
 };
 
@@ -403,7 +387,7 @@ public:
 
 protected:
   int _x, _y, _w, _h;
-  typedef vector<FGPanelAction *> action_list_type;
+  typedef std::vector<FGPanelAction *> action_list_type;
   action_list_type _actions;
 };
 
@@ -430,7 +414,7 @@ public:
   virtual void addTransformation (FGPanelTransformation * transformation);
 
 protected:
-  typedef vector<FGInstrumentLayer *> layer_list;
+  typedef std::vector<FGInstrumentLayer *> layer_list;
   layer_list _layers;
 };
 
@@ -473,7 +457,7 @@ public:
 				// transfer pointer ownership
   virtual void addLayer (FGInstrumentLayer * layer);
 protected:
-  vector<FGInstrumentLayer *> _layers;
+  std::vector<FGInstrumentLayer *> _layers;
 };
 
 
@@ -526,17 +510,17 @@ public:
   class Chunk : public SGConditional
   {
   public:
-    Chunk (const string &text, const string &fmt = "%s");
+    Chunk (const std::string &text, const std::string &fmt = "%s");
     Chunk (ChunkType type, const SGPropertyNode * node,
-	   const string &fmt = "", float mult = 1.0, float offs = 0.0,
+	   const std::string &fmt = "", float mult = 1.0, float offs = 0.0,
            bool truncation = false);
 
     const char * getValue () const;
   private:
     ChunkType _type;
-    string _text;
+    std::string _text;
     SGConstPropertyNode_ptr _node;
-    string _fmt;
+    std::string _fmt;
     float _mult;
     float _offs;
     bool _trunc;
@@ -552,20 +536,20 @@ public:
   virtual void addChunk (Chunk * chunk);
   virtual void setColor (float r, float g, float b);
   virtual void setPointSize (float size);
-  virtual void setFontName ( const string &name );
+  virtual void setFontName ( const std::string &name );
   virtual void setFont (fntFont * font);
 
 private:
 
   void recalc_value () const;
 
-  typedef vector<Chunk *> chunk_list;
+  typedef std::vector<Chunk *> chunk_list;
   chunk_list _chunks;
   float _color[4];
 
   float _pointSize;
-  mutable string _font_name;
-  mutable string _value;
+  mutable std::string _font_name;
+  mutable std::string _value;
   mutable SGTimeStamp _then;
   mutable SGTimeStamp _now;
 };

@@ -31,6 +31,8 @@
 #  include <config.h>
 #endif
 
+#include "panel.hxx"
+
 #include <stdio.h>	// sprintf
 #include <string.h>
 #include <iostream>
@@ -55,9 +57,11 @@
 #include <Main/viewmgr.hxx>
 #include <Time/light.hxx>
 #include <GUI/new_gui.hxx>	// FGFontCache
+#include <Main/viewer.hxx>
+#include <Instrumentation/dclgps.hxx>
 
 #include "hud.hxx"
-#include "panel.hxx"
+
 
 #define WIN_X 0
 #define WIN_Y 0

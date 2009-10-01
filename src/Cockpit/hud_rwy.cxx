@@ -31,6 +31,7 @@
 #include <Environment/environment.hxx>
 #include <Environment/environment_mgr.hxx>
 #include <ATCDCL/ATCutils.hxx>
+#include <Main/viewer.hxx>
 
 #include <osg/GLU>
 

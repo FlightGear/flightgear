@@ -29,11 +29,14 @@
 #  include <config.h>
 #endif
 
+#include "fg_fx.hxx"
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/sound/xmlsound.hxx>
+#include <simgear/sound/soundmgr_openal.hxx>
 
 #include <Main/fg_props.hxx>
 
@@ -41,17 +44,14 @@
 #include <Model/acmodel.hxx>
 #include <Main/viewer.hxx>
 
-#include "fg_fx.hxx"
-
-
 FGFX::FGFX () :
+    last_visitor_pos(SGVec3d::zeros()),
+    last_model_pos(SGVec3d::zeros()),
     last_pause( true ),
     last_volume( 0.0 ),
     _pause( fgGetNode("/sim/sound/pause") ),
     _volume( fgGetNode("/sim/sound/volume") )
 {
-    sgdSetVec3(last_visitor_pos, 0, 0, 0);
-    sgdSetVec3(last_model_pos, 0, 0, 0);
 }
 
 FGFX::~FGFX ()
@@ -137,12 +137,6 @@ FGFX::update (double dt)
         return;
     }
 
-#if 0
-    // moved back to the mainloop to prevent audio problems
-    smgr->update(dt);
-    update_pos_and_orientation(smgr, dt);
-#endif
-
     // command sound manger
     bool pause = _pause->getBoolValue();
     if ( pause != last_pause ) {
@@ -190,6 +184,18 @@ FGFX::update (double dt)
     }
 }
 
+void
+FGFX::update_fx_late(double dt)
+{
+  SGSoundMgr *smgr = globals->get_soundmgr();
+  if (!smgr->is_working()) {
+    return;
+  }
+
+  smgr->update(dt);
+  update_pos_and_orientation(smgr, dt);
+}
+
 /**
  * add a sound sample to the message queue which is played sequentially
  * in order.
@@ -200,7 +206,7 @@ FGFX::play_message( SGSoundSample *_sample )
     _samplequeue.push( _sample );
 }
 void
-FGFX::play_message( const string path, const string fname, double volume )
+FGFX::play_message( const std::string& path, const std::string& fname, double volume )
 {
     if (globals->get_soundmgr()->is_working() == true) {
         SGSoundSample *sample;
@@ -237,87 +243,50 @@ FGFX::update_pos_and_orientation(SGSoundMgr *smgr, double dt)
     // are finally calculated in a left hand system and openal
     // lives in a right hand system. Therefore we need to pass
     // the down vector to get correct stereo sound.)
-    SGVec3d sgv_up, sgv_at;
-    sgVec3 up, at;
-
-    sgv_up
+    SGVec3d sgv_up
       = model_or.rotateBack(surf_or.rotateBack(view_or.rotate(SGVec3d(0,1,0))));
-    sgSetVec3(up, sgv_up[0], sgv_up[1], sgv_up[2]);
-    sgv_at
+    SGVec3d sgv_at
       = model_or.rotateBack(surf_or.rotateBack(view_or.rotate(SGVec3d(0,0,1))));
-    sgSetVec3(at, sgv_at[0], sgv_at[1], sgv_at[2]);
 
     // get the location data for the primary FDM (now hardcoded to ac model)...
     // EMH: to add multiple sound sources this should be replaced
     SGVec3d absolute_view_pos = SGVec3d::fromGeod(model->getPosition());
 
     // calculate speed of visitor and model
-    sgVec3 listener_vel, model_vel;
-    SGVec3d SGV3d_help;
-    sgdVec3 sgdv3_help;
-    sgdVec3 sgdv3_null = {0, 0, 0};
+    SGVec3d moved = last_visitor_pos - observer->get_view_pos();
+    last_visitor_pos = observer->get_view_pos();
+    SGVec3f listener_vel(model_or.rotateBack(surf_or.rotateBack(moved)));
+
+    moved = last_model_pos - absolute_view_pos;
+    last_model_pos = absolute_view_pos;
+    SGVec3f model_vel(model_or.rotateBack(surf_or.rotateBack(moved)));
     
-
-    sgdSubVec3(sgdv3_help,
-                last_visitor_pos, (double *)&observer->get_view_pos());
-    sgdAddVec3(last_visitor_pos,
-                sgdv3_null, (double *)&observer->get_view_pos());
-
-    SGV3d_help = model_or.rotateBack(
-                    surf_or.rotateBack(
-                       SGVec3d(sgdv3_help[0], sgdv3_help[1], sgdv3_help[2])
-                    ));
-    sgSetVec3(listener_vel, SGV3d_help[0], SGV3d_help[1], SGV3d_help[2]);
-
-    sgdSubVec3(sgdv3_help, last_model_pos, absolute_view_pos.data());
-    sgdAddVec3(last_model_pos, sgdv3_null, absolute_view_pos.data());
-
-    SGV3d_help = model_or.rotateBack(
-                    surf_or.rotateBack(
-                       SGVec3d(sgdv3_help[0], sgdv3_help[1], sgdv3_help[2])
-                    ));
-    sgSetVec3( model_vel, SGV3d_help[0], SGV3d_help[1], SGV3d_help[2]);
-
     if (dt > 0) {
-        sgScaleVec3( model_vel, 1 / dt );
-        sgScaleVec3( listener_vel, 1 / dt );
+      model_vel /= dt;
+      listener_vel /= dt;
     }
 
     // checking, if the listener pos has moved suddenly
-    if (sgLengthVec3(listener_vel) > 1000)
-    {
+    if (length(listener_vel) > 1000) {
         // check if the relative speed model vs listener has moved suddenly, too
-        sgVec3 delta_vel;
-        sgSubVec3(delta_vel, listener_vel, model_vel);
-        if (sgLengthVec3(delta_vel) > 1000)
+        SGVec3f delta_vel = listener_vel - model_vel;
+        if (length(delta_vel) > 1000)
             // a sane value
-            sgSetVec3(listener_vel, model_vel[0], model_vel[1], model_vel[2]);
+            smgr->set_listener_vel(model_vel.data());
         else
-            smgr->set_listener_vel(listener_vel);
+            smgr->set_listener_vel(listener_vel.data());
+    } else {
+      smgr->set_listener_vel( listener_vel.data());
     }
-    else
-        smgr->set_listener_vel( listener_vel );
-
+    
     // set positional offset for sources
-    sgdVec3 dsource_pos_offset;
-    sgdSubVec3( dsource_pos_offset,
-                (double*) &observer->get_view_pos(),
-                absolute_view_pos.data() );
-    SGVec3d sgv_dsource_pos_offset;
-    sgv_dsource_pos_offset = model_or.rotateBack(
-                                surf_or.rotateBack(
-                                   SGVec3d(dsource_pos_offset[0],
-                                          dsource_pos_offset[1],
-                                          dsource_pos_offset[2])
+    SGVec3d dsource_pos_offset = observer->get_view_pos() - absolute_view_pos;
+    dsource_pos_offset = model_or.rotateBack(surf_or.rotateBack(
+                                   dsource_pos_offset
                                 ));
-    sgVec3 source_pos_offset;
-    sgSetVec3(source_pos_offset,
-                 sgv_dsource_pos_offset[0],
-                 sgv_dsource_pos_offset[1],
-                 sgv_dsource_pos_offset[2]);
 
-    smgr->set_source_pos_all( source_pos_offset );
-    smgr->set_source_vel_all( model_vel );
+    smgr->set_source_pos_all( SGVec3f(dsource_pos_offset).data() );
+    smgr->set_source_vel_all(model_vel.data() );
 
     float orient[6];
     for (int i = 0; i < 3; i++) {
@@ -327,9 +296,7 @@ FGFX::update_pos_and_orientation(SGSoundMgr *smgr, double dt)
     smgr->set_listener_orientation( orient );
 
     // The listener is always positioned at the origin.
-    sgVec3 listener_pos;
-    sgSetVec3( listener_pos, 0.0, 0.0, 0.0 );
-    smgr->set_listener_pos( listener_pos );
+    smgr->set_listener_pos( SGVec3f::zeros().data() );
 }
 
 // end of fg_fx.cxx
