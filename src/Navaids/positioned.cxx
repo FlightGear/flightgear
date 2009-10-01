@@ -568,8 +568,15 @@ FGPositioned::findAllWithIdentSortedByRange(const std::string& aIdent, const SGG
   List result;
   NamedIndexRange range = global_namedIndex.equal_range(aIdent);
   for (; range.first != range.second; ++range.first) {
-    if (aFilter && !aFilter->pass(range.first->second)) {
-      continue;
+    FGPositioned* candidate = range.first->second;
+    if (aFilter) {
+      if (aFilter->hasTypeRange() && !aFilter->passType(candidate->type())) {
+        continue;
+      }
+
+      if (!aFilter->pass(candidate)) {
+        continue;
+      }
     }
     
     result.push_back(range.first->second);
