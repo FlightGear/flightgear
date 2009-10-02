@@ -42,7 +42,7 @@ class FGEnvironmentCtrl;
 class FGClouds {
 
 private:
-void buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_def_root, const string& name, sgVec3 pos, SGCloudField *layer);
+	double buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_def_root, const string& name, double grid_z_rand, SGCloudField *layer);
 	void buildLayer(int iLayer, const string& name, double alt, double coverage);
 
 	void buildCloudLayers(void);
