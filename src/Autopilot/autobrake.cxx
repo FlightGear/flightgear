@@ -96,6 +96,10 @@ void FGAutoBrake::postinit()
 {  
   _weightOnWheelsNode = fgGetNode("/gear/gear/wow");
   _groundspeedNode = fgGetNode("/velocities/groundspeed-kt");
+  if (!_weightOnWheelsNode) {
+    return; // don't crash if we're using an acft (UFO, ATC, with no WoW flag)
+  }
+  
   _lastWoW = _weightOnWheelsNode->getBoolValue();
 }
 
