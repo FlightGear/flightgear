@@ -236,13 +236,27 @@ void FGTileMgr::initialize_queue()
 osg::Node*
 FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
 {
+    SGPath fullPath;
+    if (fgGetBool("/sim/paths/use-custom-scenery-data") == true) {
+        string_list sc = globals->get_fg_scenery();
+
+        for (string_list_iterator it = sc.begin(); it != sc.end(); ++it) {
+            SGPath tmpPath(*it);
+            tmpPath.append(modelPath);
+            if (tmpPath.exists()) {
+                fullPath = tmpPath;
+                break;
+            } 
+        }
+    } else {
+         fullPath.append(modelPath);
+    }
     osg::Node* result = 0;
     try {
         if(cacheModel)
             result =
-                SGModelLib::loadModel(modelPath, globals->get_props(),
+                SGModelLib::loadModel(fullPath.str(), globals->get_props(),
                                       new FGNasalModelData);
-
         else
             result=
                 SGModelLib::loadPagedModel(modelPath, globals->get_props(),
