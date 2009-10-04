@@ -355,8 +355,41 @@ void fgPopup::applySize(puObject *object)
     object->setSize(w, h);
 }
 
-
 ////////////////////////////////////////////////////////////////////////
+
+void FGDialog::ConditionalObject::update(FGDialog* aDlg)
+{
+  if (_name == "visible") {
+    bool wasVis = _pu->isVisible();
+    bool newVis = test();
+    
+    if (newVis == wasVis) {
+      return;
+    }
+    
+    if (newVis) { // puObject needs a setVisible. Oh well.
+    _pu->reveal();
+    } else {
+      _pu->hide();
+    }
+  } else if (_name == "enable") {
+    bool wasEnabled = _pu->isActive();
+    bool newEnable = test();
+    
+    if (wasEnabled == newEnable) {
+      return;
+    }
+    
+    if (newEnable) {
+      _pu->activate();
+    } else {
+      _pu->greyOut();
+    }
+  }
+  
+  aDlg->setNeedsLayout();
+}
+////////////////////////////////////////////////////////////////////////
 // Callbacks.
 ////////////////////////////////////////////////////////////////////////
 
@@ -462,9 +495,11 @@ copy_from_pui (puObject *object, SGPropertyNode *node)
 FGDialog::FGDialog (SGPropertyNode *props) :
     _object(0),
     _gui((NewGUI *)globals->get_subsystem("gui")),
-    _props(props)
+    _props(props),
+    _needsRelayout(false)
 {
     _module = string("__dlg:") + props->getStringValue("name", "[unnamed]");
+        
     SGPropertyNode *nasal = props->getNode("nasal");
     if (nasal) {
         _nasal_close = nasal->getNode("close");
@@ -558,6 +593,14 @@ FGDialog::update ()
 
         copy_to_pui(_liveObjects[i]->node, obj);
     }
+    
+  for (unsigned int j=0; j < _conditionalObjects.size(); ++j) {
+    _conditionalObjects[j]->update(this);
+  }
+  
+  if (_needsRelayout) {
+    relayout();
+  }
 }
 
 void
@@ -853,6 +896,18 @@ FGDialog::setupObject (puObject *object, SGPropertyNode *props)
        object->setLabelFont(*_font);
     }
 
+    if (props->hasChild("visible")) {
+      ConditionalObject* cnd = new ConditionalObject("visible", object);
+      cnd->setCondition(sgReadCondition(globals->get_props(), props->getChild("visible")));
+      _conditionalObjects.push_back(cnd);
+    }
+
+    if (props->hasChild("enable")) {
+      ConditionalObject* cnd = new ConditionalObject("enable", object);
+      cnd->setCondition(sgReadCondition(globals->get_props(), props->getChild("enable")));
+      _conditionalObjects.push_back(cnd);
+    }
+
     string type = props->getName();
     if (type == "input" && props->getBoolValue("live"))
         object->setDownCallback(action_callback);
@@ -1072,8 +1127,97 @@ FGDialog::getKeyCode(const char *str)
     return key;
 }
 
+voidFGDialog::relayout()
+{
+  _needsRelayout = false;
+  
+  int screenw = globals->get_props()->getIntValue("/sim/startup/xsize");
+  int screenh = globals->get_props()->getIntValue("/sim/startup/ysize");
 
-
+  bool userx = _props->hasValue("x");
+  bool usery = _props->hasValue("y");
+  bool userw = _props->hasValue("width");
+  bool userh = _props->hasValue("height");
+
+  // Let the layout widget work in the same property subtree.
+  LayoutWidget wid(_props);
+  wid.setDefaultFont(_font, int(_font->getPointSize()));
+
+  int pw = 0, ph = 0;
+  int px, py, savex, savey;
+  if (!userw || !userh) {
+    wid.calcPrefSize(&pw, &ph);
+  }
+  
+  pw = _props->getIntValue("width", pw);
+  ph = _props->getIntValue("height", ph);
+  px = savex = _props->getIntValue("x", (screenw - pw) / 2);
+  py = savey = _props->getIntValue("y", (screenh - ph) / 2);
+
+  // Negative x/y coordinates are interpreted as distance from the top/right
+  // corner rather than bottom/left.
+  if (userx && px < 0)
+    px = screenw - pw + px;
+  if (usery && py < 0)
+    py = screenh - ph + py;
+
+  // Define "x", "y", "width" and/or "height" in the property tree if they
+  // are not specified in the configuration file.
+  wid.layout(px, py, pw, ph);
+
+  applySize(_object);
+  
+  // Remove automatically generated properties, so the layout looks
+  // the same next time around, or restore x and y to preserve negative coords.
+  if (userx)
+      _props->setIntValue("x", savex);
+  else
+      _props->removeChild("x");
+
+  if (usery)
+      _props->setIntValue("y", savey);
+  else
+      _props->removeChild("y");
+
+  if (!userw) _props->removeChild("width");
+  if (!userh) _props->removeChild("height");
+}
+
+void
+FGDialog::applySize(puObject *object)
+{
+  // compound plib widgets use setUserData() for internal purposes, so refuse
+  // to descend into anything that has other bits set than the following
+  const int validUserData = PUCLASS_VALUE|PUCLASS_OBJECT|PUCLASS_GROUP|PUCLASS_INTERFACE
+          |PUCLASS_FRAME|PUCLASS_TEXT|PUCLASS_BUTTON|PUCLASS_ONESHOT|PUCLASS_INPUT
+          |PUCLASS_ARROW|PUCLASS_DIAL|PUCLASS_POPUP;
+
+  int type = object->getType();
+  if ((type & PUCLASS_GROUP) && !(type & ~validUserData)) {
+    puObject* c = ((puGroup *)object)->getFirstChild();
+    for (; c != NULL; c = c->getNextObject()) {
+      applySize(c);
+    } // of child iteration
+  } // of group object case
+  
+  GUIInfo *info = (GUIInfo *)object->getUserData();
+  if (!info)
+    return;
+
+  SGPropertyNode *n = info->node;
+  if (!n) {
+    SG_LOG(SG_GENERAL, SG_ALERT, "FGDialog::applySize: no props");
+    return;
+  }
+  
+  int x = n->getIntValue("x");
+  int y = n->getIntValue("y");
+  int w = n->getIntValue("width", 4);
+  int h = n->getIntValue("height", 4);
+  object->setPosition(x, y);
+  object->setSize(w, h);
+}
+
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGDialog::PropertyObject.
 ////////////////////////////////////////////////////////////////////////
