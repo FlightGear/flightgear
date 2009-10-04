@@ -61,6 +61,7 @@
 #include <Model/acmodel.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
+#include <Sound/fg_fx.hxx>
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 #include <Sound/fg_fx.hxx>
@@ -477,19 +478,14 @@ static void fgMainLoop( void ) {
     // update the view angle as late as possible, but before sound calculations
     globals->get_viewmgr()->update(real_delta_time_sec);
 
-    // Run audio scheduler
-#ifdef ENABLE_AUDIO_SUPPORT
-    FGFX* fx = (FGFX*) globals->get_subsystem("fx");
-    fx->update_fx_late(delta_time_sec);
-#endif
-
     // END Tile Manager udpates
 
     if (!scenery_loaded && globals->get_tile_mgr()->isSceneryLoaded()
         && cur_fdm_state->get_inited()) {
         fgSetBool("sim/sceneryloaded",true);
         fgSetFloat("/sim/sound/volume", init_volume);
-        globals->get_soundmgr()->set_volume(init_volume);
+        SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+        smgr->set_volume(init_volume);
     }
 
     fgRequestRedraw();
@@ -723,13 +719,13 @@ static void fgIdleFunction ( void ) {
             SG_LOG( SG_GENERAL, SG_INFO,
                 "Starting intro music: " << mp3file.str() );
 
-#if defined( __CYGWIN__ )
+# if defined( __CYGWIN__ )
             string command = "start /m `cygpath -w " + mp3file.str() + "`";
-#elif defined( WIN32 )
+# elif defined( WIN32 )
             string command = "start /m " + mp3file.str();
-#else
+# else
             string command = "mpg123 " + mp3file.str() + "> /dev/null 2>&1";
-#endif
+# endif
 
             system ( command.c_str() );
         }

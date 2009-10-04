@@ -20,6 +20,7 @@
 #include <simgear/structure/commands.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/event_mgr.hxx>
+#include <simgear/sound/soundmgr_openal.hxx>
 
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
@@ -1251,13 +1252,17 @@ do_set_cursor (const SGPropertyNode * arg)
 static bool
 do_play_audio_sample (const SGPropertyNode * arg)
 {
-    FGFX *fx = (FGFX *)globals->get_subsystem("fx");
     string path = arg->getStringValue("path");
     string file = arg->getStringValue("file");
     double volume = arg->getDoubleValue("volume");
     // cout << "playing " << path << " / " << file << endl;
     try {
-        fx->play_message( path, file, volume );
+        static FGFX *fx = 0;
+        if ( !fx ) {
+           SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+           fx = (FGFX *)smgr->find("fx");
+        }
+        if (fx) fx->play_message( path, file, volume );
         return true;
 
     } catch (const sg_io_exception&) {

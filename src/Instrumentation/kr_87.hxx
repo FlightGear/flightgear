@@ -34,6 +34,7 @@
 #include <Navaids/navlist.hxx>
 #include <Sound/morse.hxx>
 
+class SGSampleGroup;
 
 class FGKR_87 : public SGSubsystem
 {
@@ -103,6 +104,8 @@ class FGKR_87 : public SGSubsystem
 
     // internal periodic station search timer
     double _time_before_search_sec;
+
+    SGSampleGroup *_sgr;
 
 public:
 

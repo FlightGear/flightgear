@@ -24,7 +24,6 @@
 #  include <config.h>
 #endif
 
-#include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/timing/sg_time.hxx>
@@ -83,7 +82,6 @@ FGGlobals::FGGlobals() :
     matlib( NULL ),
     route_mgr( NULL ),
     current_panel( NULL ),
-    soundmgr( NULL ),
     ATC_mgr( NULL ),
     AI_mgr( NULL ),
     controls( NULL ),
@@ -135,7 +133,6 @@ FGGlobals::~FGGlobals()
     delete matlib;
     delete route_mgr;
     delete current_panel;
-    delete soundmgr;
 
     delete ATC_mgr;
     delete AI_mgr;

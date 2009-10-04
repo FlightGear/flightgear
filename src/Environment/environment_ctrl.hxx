@@ -40,6 +40,7 @@
 
 // forward decls
 class SGPropertyNode;
+class SGSampleGroup;
 class FGMetar;
 
 /**
