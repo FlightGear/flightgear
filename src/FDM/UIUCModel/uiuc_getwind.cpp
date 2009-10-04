@@ -100,9 +100,12 @@ void uiuc_getwind()
 	/* Get wind vector */
 	double windmag = 0; //Wind magnitude
 	double a = 0; //Parabola: Altitude = a*windmag^2 + zoff
+        double x = pow(uref,2.);
 	
-	a = zref/pow(uref,2.);
-	if (Altitude >= zoff)
+        if (x) {
+	    a = zref/x;
+        }
+	if ((Altitude >= zoff) && (a > 0))
 		windmag = sqrt(Altitude/a);
 	else
 		windmag = 0.;
