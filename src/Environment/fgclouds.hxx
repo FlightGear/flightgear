@@ -34,10 +34,11 @@
 
 using std::string;
 
-class SGNewCloud;
+class SGSampleGroup;
 class SGCloudField;
+class SGNewCloud;
 class FGMetar;
-class FGEnvironmentCtrl;
+//class FGEnvironmentCtrl;
 
 class FGClouds {
 

@@ -49,7 +49,6 @@ class SGMagVar;
 class SGMaterialLib;
 class SGPropertyNode;
 class SGTime;
-class SGSoundMgr;
 class SGEventMgr;
 class SGSubsystemMgr;
 class SGSubsystem;
@@ -131,9 +130,6 @@ private:
 
     // 2D panel
     FGPanel *current_panel;
-
-    // sound manager
-    SGSoundMgr *soundmgr;
 
     // ATC manager
     FGATCMgr *ATC_mgr;
@@ -244,9 +240,6 @@ public:
     inline FGPanel *get_current_panel() const { return current_panel; }
     inline void set_current_panel( FGPanel *cp ) { current_panel = cp; }
 
-    inline SGSoundMgr *get_soundmgr() const { return soundmgr; }
-    inline void set_soundmgr( SGSoundMgr *sm ) { soundmgr = sm; }
-
     inline FGControls *get_controls() const { return controls; }
     inline void set_controls( FGControls *c ) { controls = c; }
 
@@ -305,7 +298,7 @@ public:
     inline void set_tile_mgr ( FGTileMgr *t ) { tile_mgr = t; }
 
     inline FGFontCache *get_fontcache() const { return fontcache; }
-    
+
     inline FGNavList *get_navlist() const { return navlist; }
     inline void set_navlist( FGNavList *n ) { navlist = n; }
     inline FGNavList *get_loclist() const { return loclist; }

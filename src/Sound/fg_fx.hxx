@@ -30,16 +30,15 @@
 #include <vector>
 
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/sound/sample_group.hxx>
 #include <simgear/math/SGMath.hxx>
 
 class SGXmlSound;
-class SGSoundSample;
-class SGSoundMgr;
 
 /**
  * Generator for FlightGear sound effects.
  *
- * This module uses FGSoundMgr to generate sound effects based
+ * This module uses a FGSampleGroup class to generate sound effects based
  * on current flight conditions.  The sound manager must be initialized
  * before this object is.
  *
@@ -52,18 +51,16 @@ class SGSoundMgr;
  *    This second mechanims is useful for things like tutorial messages or
  *    background atc chatter.
  */
-class FGFX : public SGSubsystem
+class FGFX : public SGSampleGroup
 {
 
 public:
 
-    FGFX ();
+    FGFX ( SGSoundMgr *smgr, const string &refname );
     virtual ~FGFX ();
 
     virtual void init ();
     virtual void reinit ();
-    virtual void bind ();
-    virtual void unbind ();
     virtual void update (double dt);
 
     /**
@@ -73,15 +70,10 @@ public:
     void play_message( SGSoundSample *_sample );
     void play_message( const std::string& path, const std::string& fname, double volume );
 
-    /**
-     * Explicit late update hook, to avoid problems which occur if done during
-     * normal SGSubsytem updating.
-     */
-    void update_fx_late(double dt);
-
 private:
 
-    void update_pos_and_orientation(SGSoundMgr *smgr, double dt);
+    void update_pos_and_orientation(double dt);
+
     SGVec3d last_visitor_pos;
     SGVec3d last_model_pos;
 

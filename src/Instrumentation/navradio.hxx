@@ -35,6 +35,7 @@
 // forward decls
 class SGInterpTable;
 
+class SGSampleGroup;
 class FGNavRecord;
 typedef SGSharedPtr<FGNavRecord> FGNavRecordPtr;
 
@@ -159,6 +160,8 @@ class FGNavRadio : public SGSubsystem
     
     // realism setting, are false courses and GS lobes enabled?
     bool _falseCoursesEnabled;
+
+    SGSampleGroup *_sgr;
     
     bool updateWithPower(double aDt);
 

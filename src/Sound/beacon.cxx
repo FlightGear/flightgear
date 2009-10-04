@@ -24,8 +24,6 @@
 #include "beacon.hxx"
 
 #include <simgear/structure/exception.hxx>
-#include <Main/fg_props.hxx>
-#include <Main/globals.hxx>
 
 // constructor
 FGBeacon::FGBeacon()
@@ -43,13 +41,9 @@ bool FGBeacon::init() {
     int len;
     unsigned char *ptr;
 
-    if (globals->get_soundmgr()->is_working() == false) {
-       return false;
-    }
-
-    unsigned char inner_buf[ INNER_SIZE ] ;
-    unsigned char middle_buf[ MIDDLE_SIZE ] ;
-    unsigned char outer_buf[ OUTER_SIZE ] ;
+    unsigned char *inner_buf = new unsigned char[ INNER_SIZE ] ;
+    unsigned char *middle_buf = new unsigned char[ MIDDLE_SIZE ] ;
+    unsigned char *outer_buf = new unsigned char[ OUTER_SIZE ] ;
 
     // Make inner marker beacon sound
     len= (int)(INNER_DIT_LEN / 2.0 );
@@ -99,7 +93,7 @@ bool FGBeacon::init() {
         ptr += OUTER_DAH_LEN;
         memcpy( ptr, outer_dah, OUTER_DAH_LEN );
 
-        outer = new SGSoundSample( outer_buf, OUTER_SIZE, BYTES_PER_SECOND);
+        outer = new SGSoundSample( outer_buf, OUTER_SIZE, BYTES_PER_SECOND );
         outer->set_reference_dist( 10.0 );
         outer->set_max_dist( 20.0 );
     } catch ( sg_io_exception &e ) {

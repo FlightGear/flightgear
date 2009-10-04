@@ -138,6 +138,7 @@
 using std::string;
 
 class Sound;
+class SGSoundMgr;
 extern const char *default_root;
 float init_volume;
 
@@ -1522,7 +1523,6 @@ bool fgInitSubsystems() {
     // Initialize the ridgelift subsystem
     globals->add_subsystem("ridgelift", new FGRidgeLift);
 
-
     ////////////////////////////////////////////////////////////////////
     // Initialize the aircraft systems and instrumentation (before the
     // autopilot.)
@@ -1586,21 +1586,8 @@ bool fgInitSubsystems() {
 
 #ifdef ENABLE_AUDIO_SUPPORT
     ////////////////////////////////////////////////////////////////////
-    // Initialize the sound subsystem.
-    ////////////////////////////////////////////////////////////////////
-
-    init_volume = fgGetFloat("/sim/sound/volume");
-    fgSetFloat("/sim/sound/volume", 0.0f);
-    globals->set_soundmgr(new SGSoundMgr);
-    globals->get_soundmgr()->init();
-    globals->get_soundmgr()->bind();
-
-
-    ////////////////////////////////////////////////////////////////////
     // Initialize the sound-effects subsystem.
     ////////////////////////////////////////////////////////////////////
-
-    globals->add_subsystem("fx", new FGFX);
     globals->add_subsystem("voice", new FGVoiceMgr);
 #endif
 
@@ -1682,6 +1669,19 @@ bool fgInitSubsystems() {
     // Initialize the replay subsystem
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("replay", new FGReplay);
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Add Sound Manager.
+    // Put the sound manager last so it can use the CPU while the GPU
+    // is processing the scenery (doubled the frame-rate for me) -EMH-
+    ////////////////////////////////////////////////////////////////////
+#ifdef ENABLE_AUDIO_SUPPORT
+    init_volume = fgGetFloat("/sim/sound/volume");
+    fgSetFloat("/sim/sound/volume", 0.0f);
+
+    globals->add_subsystem("soundmgr", new SGSoundMgr);
+#endif
 
     ////////////////////////////////////////////////////////////////////
     // Bind and initialize subsystems.

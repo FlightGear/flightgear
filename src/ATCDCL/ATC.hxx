@@ -33,6 +33,8 @@
 
 #include "ATCVoice.hxx"
 
+class SGSampleGroup;
+
 // Convert a frequency in MHz to tens of kHz
 // so we can use it e.g. as an index into commlist_freq
 //
@@ -76,7 +78,7 @@ enum atc_type {
 	APPROACH,
 	DEPARTURE,
 	ENROUTE,
-  INVALID     /* must be last element;  see ATC_NUM_TYPES */
+  INVALID	 /* must be last element;  see ATC_NUM_TYPES */
 };
 
 const int ATC_NUM_TYPES = 1 + INVALID;
@@ -84,8 +86,8 @@ const int ATC_NUM_TYPES = 1 + INVALID;
 // DCL - new experimental ATC data store
 struct ATCData {
 	atc_type type;
-  SGGeod geod;
-  SGVec3d cart;
+	SGGeod geod;
+	SGVec3d cart;
 	unsigned short int freq;
 	unsigned short int range;
 	std::string ident;
@@ -114,7 +116,7 @@ public:
 	FGATC();
 	virtual ~FGATC();
 	
-  virtual void Init()=0;
+	virtual void Init()=0;
   
 	// Run the internal calculations
 	// Derived classes should call this method from their own Update methods if they 
@@ -176,15 +178,15 @@ protected:
 	// Outputs the transmission either on screen or as audio depending on user preference
 	// The refname is a string to identify this sample to the sound manager
 	// The repeating flag indicates whether the message should be repeated continuously or played once.
-	void Render(std::string& msg, const double volume = 1.0, 
-    const std::string& refname = "", bool repeating = false);
+	void Render(std::string& msg, const float volume = 1.0, 
+	const std::string& refname = "", bool repeating = false);
 	
 	// Cease rendering all transmission from this station.
 	// Requires the sound manager refname if audio, else "".
 	void NoRender(const std::string& refname);
 	
 	// Transmit a message when channel becomes free of other dialog
-    void Transmit(int callback_code = 0);
+	void Transmit(int callback_code = 0);
 	
 	// Transmit a message if channel becomes free within timeout (seconds). timeout of zero implies no limit
 	void ConditionalTransmit(double timeout, int callback_code = 0);
@@ -197,44 +199,46 @@ protected:
 	SGGeod _geod;
 	SGVec3d _cart;
 	int freq;
-  std::map<std::string,int> active_on;
+	std::map<std::string,int> active_on;
   
 	int range;
-	std::string ident;		// Code of the airport its at.
-	std::string name;		// Name transmitted in the broadcast.
+	std::string ident;	// Code of the airport its at.
+	std::string name;	// Name transmitted in the broadcast.
 
 	
 	// Rendering related stuff
-	bool _voice;			// Flag - true if we are using voice
-	bool _playing;		// Indicates a message in progress	
-	bool _voiceOK;		// Flag - true if at least one voice has loaded OK
+	bool _voice;	// Flag - true if we are using voice
+	bool _playing;	// Indicates a message in progress	
+	bool _voiceOK;	// Flag - true if at least one voice has loaded OK
 	FGATCVoice* _vPtr;
 
+	SGSampleGroup *_sgr; // default sample group;
+
 	
-	bool freqClear;		// Flag to indicate if the frequency is clear of ongoing dialog
-	bool receiving;		// Flag to indicate we are receiving a transmission
+	bool freqClear;	// Flag to indicate if the frequency is clear of ongoing dialog
+	bool receiving;	// Flag to indicate we are receiving a transmission
 	
 	
-	double responseTime;	// Time to take from end of request transmission to beginning of response
-							// The idea is that this will be slightly random.
+	double responseTime; // Time to take from end of request transmission to beginning of response
+						 // The idea is that this will be slightly random.
 	
-  bool respond;	// Flag to indicate now is the time to respond - ie set following the count down of the response timer.
+	bool respond;	// Flag to indicate now is the time to respond - ie set following the count down of the response timer.
 	std::string responseID;	// ID of the plane to respond to
-  bool runResponseCounter;	// Flag to indicate the response counter should be run
-  double responseCounter;		// counter to implement the above
+	bool runResponseCounter;	// Flag to indicate the response counter should be run
+	double responseCounter;	// counter to implement the above
 	// Derived classes only need monitor this flag, and use the response ID, as long as they call FGATC::Update(...)
 	bool _runReleaseCounter;	// A timer for releasing the frequency after giving the message enough time to display
-  bool responseReqd;	// Flag to indicate we should be responding to a request/report 
+	bool responseReqd;	// Flag to indicate we should be responding to a request/report 
 	double _releaseTime;
 	double _releaseCounter;
   atc_type _type;
-	bool _display;		// Flag to indicate whether we should be outputting to the ATC display.
-  std::string pending_transmission;	// derived classes set this string before calling Transmit(...)	
+	bool _display;	// Flag to indicate whether we should be outputting to the ATC display.
+	std::string pending_transmission; // derived classes set this string before calling Transmit(...)	
 	
 private:
 	// Transmission timing stuff.
 	double _timeout;
-  bool _pending;
+	bool _pending;
 	
 	int _callback_code;	// A callback code to be notified and processed by the derived classes
 						// A value of zero indicates no callback required

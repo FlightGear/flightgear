@@ -34,6 +34,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/sound/soundmgr_openal.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_init.hxx>
@@ -226,12 +227,9 @@ fgLoadAircraft (const SGPropertyNode * arg)
     t = fgInitTime();
     globals->set_time_params( t );
 
-    // Reinitialize some subsystems
-    //
     globals->get_viewmgr()->reinit();
     globals->get_controls()->reset_all();
     globals->get_aircraft_model()->reinit();
-    globals->get_subsystem("fx")->reinit();
     globals->get_subsystem("xml-autopilot")->reinit();
 
     fgReInitSubsystems();
