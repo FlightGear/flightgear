@@ -74,10 +74,10 @@ FGInputEvent * FGInputEvent::NewObject( FGInputDevice * device, SGPropertyNode_p
     return new FGButtonEvent( device, node );
 
   if( StartsWith( name, "rel-" ) )
-    return new FGAxisEvent( device, node );
+    return new FGRelAxisEvent( device, node );
 
   if( StartsWith( name, "abs-" ) )
-    return new FGAxisEvent( device, node );
+    return new FGAbsAxisEvent( device, node );
 
   return new FGInputEvent( device, node );
 }
@@ -121,18 +121,25 @@ void FGInputEvent::fire( FGEventData & eventData )
   if( lastDt >= intervalSec ) {
 
     for( binding_list_t::iterator it = bindings[eventData.modifiers].begin(); it != bindings[eventData.modifiers].end(); it++ )
-      (*it)->fire( eventData.value, 1.0 );
+      fire( *it, eventData );
 
     lastDt -= intervalSec;
   }
 }
 
+void FGInputEvent::fire( SGBinding * binding, FGEventData & eventData )
+{
+  binding->fire();
+}
+
+
+
 FGAxisEvent::FGAxisEvent( FGInputDevice * device, SGPropertyNode_ptr node ) :
   FGInputEvent( device, node )
 {
   tolerance = node->getDoubleValue("tolerance", 0.002);
-  minRange = node->getDoubleValue("min-range", -1024.0);
-  maxRange = node->getDoubleValue("max-range", 1024.0);
+  minRange = node->getDoubleValue("min-range", 0.0 );
+  maxRange = node->getDoubleValue("max-range", 0.0 );
   center = node->getDoubleValue("center", 0.0);
   deadband = node->getDoubleValue("dead-band", 0.0);
   lowThreshold = node->getDoubleValue("low-threshold", -0.9);
@@ -145,7 +152,36 @@ void FGAxisEvent::fire( FGEventData & eventData )
   if (fabs( eventData.value - lastValue) < tolerance)
     return;
   lastValue = eventData.value;
-  FGInputEvent::fire( eventData );
+
+  // We need a copy of the  FGEventData struct to set the new value and to avoid side effects
+  FGEventData ed = eventData;
+
+  if( fabs(ed.value) < deadband )
+    ed.value = 0.0;
+
+  if( minRange != maxRange )
+    ed.value = 2.0*(eventData.value-minRange)/(maxRange-minRange)-1.0;
+
+  FGInputEvent::fire( ed );
+}
+
+void FGAbsAxisEvent::fire( SGBinding * binding, FGEventData & eventData )
+{
+  // sets the "setting" node
+  binding->fire( eventData.value );
+}
+
+FGRelAxisEvent::FGRelAxisEvent( FGInputDevice * device, SGPropertyNode_ptr node ) : 
+  FGAxisEvent( device, node ) 
+{
+  // relative axes can't use tolerance
+  tolerance = 0.0;
+}
+
+void FGRelAxisEvent::fire( SGBinding * binding, FGEventData & eventData )
+{
+  // sets the "offset" node
+  binding->fire( eventData.value, 1.0 );
 }
 
 FGButtonEvent::FGButtonEvent( FGInputDevice * device, SGPropertyNode_ptr node ) :

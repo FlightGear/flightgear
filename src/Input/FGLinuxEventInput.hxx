@@ -56,9 +56,12 @@ public:
 
   int GetFd() { return fd; }
 
+  double Normalize( struct input_event & event );
 private:
   string devname;
   int fd;
+
+  map<unsigned int,input_absinfo> absinfo;
 };
 
 class FGLinuxEventInput : public FGEventInput {
@@ -71,6 +74,7 @@ public:
   void AddHalDevice( const char * udi );
 protected:
   LibHalContext *halcontext;
+
 };
 
 #endif
