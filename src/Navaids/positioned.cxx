@@ -646,7 +646,7 @@ FGPositioned::findNextWithPartialId(FGPositionedRef aCur, const std::string& aId
 }
   
 FGPositionedRef
-FGPositioned::findWithPartialId(const std::string& aId, Filter* aFilter, int aOffset)
+FGPositioned::findWithPartialId(const std::string& aId, Filter* aFilter, int aOffset, bool& aNext)
 {
   // see comment in findNextWithPartialId concerning upperBoundId
   std::string upperBoundId = aId;
@@ -654,6 +654,7 @@ FGPositioned::findWithPartialId(const std::string& aId, Filter* aFilter, int aOf
   NamedPositionedIndex::const_iterator upperBound = global_namedIndex.lower_bound(upperBoundId);
 
   NamedIndexRange range = global_namedIndex.equal_range(aId);
+  FGPositionedRef result;
   
   while (range.first != upperBound) {
     for (; range.first != range.second; ++range.first) {
@@ -668,8 +669,12 @@ FGPositioned::findWithPartialId(const std::string& aId, Filter* aFilter, int aOf
         }
       }
 
-      if (aOffset == 0) {
-        return candidate;
+      if (result) {
+        aNext = true;
+        return result;
+      } else if (aOffset == 0) {
+        // okay, found our result. we need to go around once more to set aNext
+        result = candidate;
       } else {
         --aOffset; // seen one more valid result, decrement the count
       }
@@ -679,7 +684,10 @@ FGPositioned::findWithPartialId(const std::string& aId, Filter* aFilter, int aOf
     range = global_namedIndex.equal_range(range.second->first);
   }
 
-  return NULL; // Reached the end of the valid sequence with no match.  
+  // if we fell out, we reached the end of the valid range. We might have a
+  // valid result, but we definitiely don't have a next result.
+  aNext = false;
+  return result;  
 }
 
 /**
@@ -715,16 +723,20 @@ private:
 };
 
 FGPositionedRef
-FGPositioned::findClosestWithPartialId(const SGGeod& aPos, const std::string& aId, Filter* aFilter, int aOffset)
+FGPositioned::findClosestWithPartialId(const SGGeod& aPos, const std::string& aId, Filter* aFilter, int aOffset, bool& aNext)
 {
   PartialIdentFilter pf(aId, aFilter);
-  List matches = spatialGetClosest(aPos, aOffset + 1, 1000.0, &pf);
+  // why aOffset +2 ? at offset=3, we want the fourth search result, but also
+  // to know if the fifth result exists (to set aNext flag for iterative APIs)
+  List matches = spatialGetClosest(aPos, aOffset + 2, 1000.0, &pf);
   
   if ((int) matches.size() <= aOffset) {
     SG_LOG(SG_GENERAL, SG_INFO, "FGPositioned::findClosestWithPartialId, couldn't match enough with prefix:" << aId);
+    aNext = false;
     return NULL; // couldn't find a match within the cutoff distance
   }
   
+  aNext = ((int) matches.size() >= (aOffset + 2));
   return matches[aOffset];
 }
 
