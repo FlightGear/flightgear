@@ -113,7 +113,8 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode_ptr gps_to_flag_node;
     SGPropertyNode_ptr gps_from_flag_node;
     SGPropertyNode_ptr gps_has_gs_node;
-
+    SGPropertyNode_ptr gps_course_node;
+    
     // internal (private) values
 
     int play_count;

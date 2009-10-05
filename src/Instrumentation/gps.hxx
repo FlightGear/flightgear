@@ -11,8 +11,13 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/SGMath.hxx>
 
+#include "Navaids/positioned.hxx"
+
 // forward decls
 class SGRoute;
+class FGRouteMgr;
+class FGAirport;
+class GPSListener;
 
 class SGGeodProperty
 {
@@ -42,15 +47,6 @@ private:
  * /systems/electrical/outputs/gps
  * /instrumentation/gps/serviceable
  * 
- * /instrumentation/gps/wp-longitude-deg
- * /instrumentation/gps/wp-latitude-deg
- * /instrumentation/gps/wp-altitude-ft
- * /instrumentation/gps/wp-ID
- * /instrumentation/gps/wp-name
- * /instrumentation/gps/desired-course-deg
- * /instrumentation/gps/get-nearest-airport
- * /instrumentation/gps/waypoint-type
- * /instrumentation/gps/tracking-bug
  *
  * Output properties:
  *
@@ -73,8 +69,7 @@ private:
  * /instrumentation/gps/trip-odometer
  * /instrumentation/gps/true-bug-error-deg
  * /instrumentation/gps/magnetic-bug-error-deg
- * /instrumentation/gps/true-bearing-error-deg
- * /instrumentation/gps/magnetic-bearing-error-deg
+
  */
 class GPS : public SGSubsystem
 {
@@ -89,117 +84,294 @@ public:
     virtual void update (double delta_time_sec);
 
 private:
-    typedef struct {
-        double dt;
-        SGGeod pos;
-        SGGeod wp0_pos;
-        SGGeod wp1_pos;
-        bool waypoint_changed;
-        double speed_kt;
-        double track1_deg;
-        double track2_deg;
-        double magvar_deg;
-        double wp0_distance;
-        double wp0_course_deg;
-        double wp0_bearing_deg;
-        double wp1_distance;
-        double wp1_course_deg;
-        double wp1_bearing_deg;
-    } UpdateContext;
+    friend class GPSListener;
+    friend class SearchFilter;
     
-    void search (double frequency, const SGGeod& pos);
-
+    /**
+     * Configuration manager, track data relating to aircraft installation
+     */
+    class Config
+    {
+    public:
+      Config();
+      
+      void init(SGPropertyNode*);
+      
+      bool turnAnticipationEnabled() const
+      { return _enableTurnAnticipation; }
+      
+      /**
+       * Desired turn rate in degrees/second. From this we derive the turn
+       * radius and hence how early we need to anticipate it.
+       */
+      double turnRateDegSec() const
+      { return _turnRate; }
+      
+      /**
+       * Distance at which we arm overflight sequencing. Once inside this
+       * distance, a change of the wp1 'TO' flag to false will be considered
+       * overlight of the wp.
+       */
+      double overflightArmDistanceNm() const
+      { return _overflightArmDistance; }
+      
+      /**
+       * Time before the next WP to activate an external annunciator
+       */
+      double waypointAlertTime() const
+      { return _waypointAlertTime; }
+            
+      bool tuneNavRadioToRefVor() const
+      { return _tuneRadio1ToRefVor; }
+      
+      bool requireHardSurface() const
+      { return _requireHardSurface; }
+      
+      double minRunwayLengthFt() const
+      { return _minRunwayLengthFt; }
+      
+      double getOBSCourse() const;
+      
+      bool cdiDeflectionIsAngular() const
+      { return (_cdiMaxDeflectionNm <= 0.0); }
+      
+      double cdiDeflectionLinearPeg() const
+      {
+        assert(_cdiMaxDeflectionNm > 0.0);
+        return _cdiMaxDeflectionNm;
+      }
+    private:
+      bool _enableTurnAnticipation;
+      
+      // desired turn rate in degrees per second
+      double _turnRate;
+      
+      // distance from waypoint to arm overflight sequencing (in nm)
+      double _overflightArmDistance;
+      
+      // time before reaching a waypoint to trigger annunicator light/sound 
+      // (in seconds)
+      double _waypointAlertTime;
+      
+      // should GPS automatically tune NAV1 to the reference VOR?
+      bool _tuneRadio1ToRefVor;
+      
+      // minimum runway length to require when filtering
+      double _minRunwayLengthFt;
+      
+      // should we require a hard-surfaced runway when filtering?
+      bool _requireHardSurface;
+      
+      // helpers to tie obs-course-source property
+      const char* getOBSCourseSource() const;
+      void setOBSCourseSource(const char* aPropPath);
+      
+      // property to retrieve the OBS course from
+      SGPropertyNode_ptr _obsCourseSource;
+      
+      double _cdiMaxDeflectionNm;
+    };
+    
+    class SearchFilter : public FGPositioned::Filter
+    {
+    public:      
+      virtual bool pass(FGPositioned* aPos) const;
+          
+      virtual FGPositioned::Type minType() const;
+      virtual FGPositioned::Type maxType() const;
+    };
+    
     /**
      * reset all output properties to default / non-service values
      */
     void clearOutput();
 
-    void updateWithValid(UpdateContext& ctx);
+    void updateWithValid(double dt);
+    void updateBasicData(double dt);
+    void updateWaypoints();
+
+    void updateTrackingBug();
+    void updateReferenceNavaid(double dt);
+    void referenceNavaidSet(const std::string& aNavaid);
+    void tuneNavRadios();
+    void updateRouteData();
     
-    void updateNearestAirport(UpdateContext& ctx);
-    void updateWaypoint0(UpdateContext& ctx);
-    void updateWaypoint1(UpdateContext& ctx);
-
-    void updateLegCourse(UpdateContext& ctx);
-    void updateWaypoint0Course(UpdateContext& ctx);
-    void updateWaypoint1Course(UpdateContext& ctx);
-
-    void waypointChanged(UpdateContext& ctx);
-    void updateTTWNode(UpdateContext& ctx, double distance_m, SGPropertyNode_ptr node);
-    void updateTrackingBug(UpdateContext& ctx);
+    void routeActivated();
+    void routeManagerSequenced();
     
-    SGPropertyNode_ptr _magvar_node;
-    SGPropertyNode_ptr _serviceable_node;
-    SGPropertyNode_ptr _electrical_node;
-    SGPropertyNode_ptr _wp0_ID_node;
-    SGPropertyNode_ptr _wp0_name_node;
-    SGPropertyNode_ptr _wp0_course_node;
-    SGPropertyNode_ptr _get_nearest_airport_node;
-    SGPropertyNode_ptr _wp1_ID_node;
-    SGPropertyNode_ptr _wp1_name_node;
-    SGPropertyNode_ptr _wp1_course_node;
-    SGPropertyNode_ptr _tracking_bug_node;
+    void updateTurn();  
+    void updateOverflight();    
+    void beginTurn();
+    void endTurn();
+    
+    double computeTurnProgress(double aBearing) const;
+    void computeTurnData();
+    void updateTurnData();
+    double computeTurnRadiusNm(double aGroundSpeedKts) const;
+    
 
-    SGPropertyNode_ptr _raim_node;
-    SGPropertyNode_ptr _indicated_vertical_speed_node;
-    SGPropertyNode_ptr _true_track_node;
-    SGPropertyNode_ptr _magnetic_track_node;
-    SGPropertyNode_ptr _speed_node;
-    SGPropertyNode_ptr _wp0_distance_node;
-    SGPropertyNode_ptr _wp0_ttw_node;
-    SGPropertyNode_ptr _wp0_bearing_node;
-    SGPropertyNode_ptr _wp0_mag_bearing_node;
-    SGPropertyNode_ptr _wp0_course_deviation_node;
-    SGPropertyNode_ptr _wp0_course_error_nm_node;
-    SGPropertyNode_ptr _wp0_to_flag_node;
-    SGPropertyNode_ptr _wp1_distance_node;
-    SGPropertyNode_ptr _wp1_ttw_node;
-    SGPropertyNode_ptr _wp1_bearing_node;
-    SGPropertyNode_ptr _wp1_mag_bearing_node;
-    SGPropertyNode_ptr _wp1_course_deviation_node;
-    SGPropertyNode_ptr _wp1_course_error_nm_node;
-    SGPropertyNode_ptr _wp1_to_flag_node;
-    SGPropertyNode_ptr _odometer_node;
+// scratch maintenence utilities
+  void setScratchFromPositioned(FGPositioned* aPos, int aIndex);
+  void setScratchFromCachedSearchResult();
+  void setScratchFromRouteWaypoint(int aIndex);
+  
+  /**
+   * Add airport-specific information to a scratch result
+   */
+  void addAirportToScratch(FGAirport* aAirport);
+  
+  void clearScratch();
+  
+  /**
+   * Predicate, determine if the lon/lat position in the scratch is 
+   * valid or not.
+   */
+  bool isScratchPositionValid() const;
+  
+  FGPositioned::Filter* createFilter(FGPositioned::Type aTy);
+  
+  /**
+   * Search kernel - called each time we step through a result
+   */
+  void performSearch();
+  
+// command handlers
+  void selectLegMode();
+  void selectOBSMode();
+  void directTo();
+  void loadRouteWaypoint();
+  void loadNearest();
+  void search();
+  void nextResult();
+  void previousResult();
+  void defineWaypoint();
+  
+// tied-property getter/setters
+  void setCommand(const char* aCmd);
+  const char* getCommand() const { return ""; }
+  
+  const char* getMode() const { return _mode.c_str(); }
+  
+  bool getScratchValid() const { return _scratchValid; }
+  double getScratchDistance() const;
+  double getScratchMagBearing() const;
+  double getScratchTrueBearing() const;
+  bool getScratchHasNext() const { return _searchHasNext; }
+  
+  double getSelectedCourse() const { return _selectedCourse; }
+  double getCDIDeflection() const;
+  
+  double getLegDistance() const;
+  double getLegCourse() const;
+  double getLegMagCourse() const;
+  double getAltDistanceRatio() const;
+  
+  double getTrueTrack() const { return _last_true_track; }
+  double getMagTrack() const;
+  double getGroundspeedKts() const { return _last_speed_kts; }
+  double getVerticalSpeed() const { return _last_vertical_speed; }
+  
+  //bool getLegMode() const { return _mode == "leg"; }
+  //bool getObsMode() const { return _mode == "obs"; }
+  
+  const char* getWP0Ident() const;
+  const char* getWP0Name() const;
+  
+  const char* getWP1Ident() const;
+  const char* getWP1Name() const;
+  
+  double getWP1Distance() const;
+  double getWP1TTW() const;
+  const char* getWP1TTWString() const;
+  double getWP1Bearing() const;
+  double getWP1MagBearing() const;
+  double getWP1CourseDeviation() const;
+  double getWP1CourseErrorNm() const;
+  bool getWP1ToFlag() const;
+  // true-bearing-error and mag-bearing-error
+  
+  
+  
+// members
+  SGPropertyNode_ptr _magvar_node;
+  SGPropertyNode_ptr _serviceable_node;
+  SGPropertyNode_ptr _electrical_node;
+  SGPropertyNode_ptr _tracking_bug_node;
+  SGPropertyNode_ptr _raim_node;
+
+      SGPropertyNode_ptr _odometer_node;
     SGPropertyNode_ptr _trip_odometer_node;
     SGPropertyNode_ptr _true_bug_error_node;
     SGPropertyNode_ptr _magnetic_bug_error_node;
-    SGPropertyNode_ptr _true_wp0_bearing_error_node;
-    SGPropertyNode_ptr _magnetic_wp0_bearing_error_node;
-    SGPropertyNode_ptr _true_wp1_bearing_error_node;
-    SGPropertyNode_ptr _magnetic_wp1_bearing_error_node;
-    SGPropertyNode_ptr _leg_distance_node;
-    SGPropertyNode_ptr _leg_course_node;
-    SGPropertyNode_ptr _leg_magnetic_course_node;
-    SGPropertyNode_ptr _alt_dist_ratio_node;
-    SGPropertyNode_ptr _leg_course_deviation_node;
-    SGPropertyNode_ptr _leg_course_error_nm_node;
-    SGPropertyNode_ptr _leg_to_flag_node;
-    SGPropertyNode_ptr _alt_deviation_node;
-
+    
+    SGPropertyNode_ptr _ref_navaid_id_node;
+    SGPropertyNode_ptr _ref_navaid_bearing_node;
+    SGPropertyNode_ptr _ref_navaid_distance_node;
+    SGPropertyNode_ptr _ref_navaid_mag_bearing_node;
+    SGPropertyNode_ptr _ref_navaid_frequency_node;
+    SGPropertyNode_ptr _ref_navaid_name_node;
+    
+    SGPropertyNode_ptr _route_active_node;
+    SGPropertyNode_ptr _route_current_wp_node;
+    SGPropertyNode_ptr _routeDistanceNm;
+    SGPropertyNode_ptr _routeETE;
+    
+    SGPropertyNode_ptr _fromFlagNode;
+    
+    double _selectedCourse;
+    
     bool _last_valid;
     SGGeod _last_pos;
     double _last_speed_kts;
-
-    std::string _last_wp0_ID;
-    std::string _last_wp1_ID;
-
-    double _alt_dist_ratio;
-    double _distance_m;
-    double _course_deg;
-
-    double _bias_length;
-    double _bias_angle;
-    double _azimuth_error;
-    double _range_error;
-    double _elapsed_time;
-
+    double _last_true_track;
+    double _last_vertical_speed;
+    
+    std::string _mode;
+    GPSListener* _listener;
+    Config _config;
+    FGRouteMgr* _routeMgr;
+    
+    bool _ref_navaid_set;
+    double _ref_navaid_elapsed;
+    FGPositionedRef _ref_navaid;
+    
     std::string _name;
     int _num;
-
-    SGGeodProperty _position;
-    SGGeodProperty _wp0_position;
-    SGGeodProperty _wp1_position;
-    SGGeodProperty _indicated_pos;
+  
+  SGGeodProperty _position;
+  SGGeod _wp0_position;
+  SGGeod _wp1_position;
+  SGGeod _indicated_pos;
+  std::string _wp0Ident, _wp0Name, _wp1Ident, _wp1Name;
+  double _wp1DistanceM, _wp1TrueBearing;
+  
+// scratch data
+  SGGeod _scratchPos;
+  SGPropertyNode_ptr _scratchNode;
+  bool _scratchValid;
+  
+// search data
+  int _searchResultIndex;
+  std::string _searchQuery;
+  FGPositioned::Type _searchType;
+  bool _searchExact;
+  bool _searchOrderByRange;
+  bool _searchResultsCached;
+  FGPositioned::List _searchResults;
+  bool _searchIsRoute; ///< set if 'search' is actually the current route
+  bool _searchHasNext; ///< is there a result after this one?
+  bool _searchNames; ///< set if we're searching names instead of idents
+  
+  // turn data
+    bool _computeTurnData; ///< do we need to update the turn data?
+    bool _anticipateTurn; ///< are we anticipating the next turn or not?
+    bool _inTurn; // is a turn in progress?
+    bool _turnSequenced; // have we sequenced the new leg?
+    double _turnAngle; // angle to turn through, in degrees
+    double _turnStartBearing; // bearing of inbound leg
+    double _turnRadius; // radius of turn in nm
+    SGGeod _turnPt;
+    SGGeod _turnCentre;
 };
 
 
