@@ -128,7 +128,7 @@ bool FGInstrumentMgr::build ()
             set_subsystem( id, new Altimeter( node ) );
 
         } else if ( name == "gps" ) {
-            set_subsystem( id, new GPS( node ), 0.45 );
+            set_subsystem( id, new GPS( node ) );
 
         } else if ( name == "gsdi" ) {
             set_subsystem( id, new GSDI( node ) );

@@ -269,6 +269,7 @@ FGNavRadio::init ()
     gps_to_flag_node = fgGetNode("/instrumentation/gps/to-flag", true);
     gps_from_flag_node = fgGetNode("/instrumentation/gps/from-flag", true);
     gps_has_gs_node = fgGetNode("/instrumentation/gps/has-gs", true);
+    gps_course_node = fgGetNode("/instrumentation/gps/selected-course-deg", true);
     
     std::ostringstream temp;
     temp << _name << "nav-ident" << _num;
@@ -664,6 +665,8 @@ void FGNavRadio::updateGPSSlaved()
   
   _cdiCrossTrackErrorM = 0.0; // FIXME, supply this
   _gsNeedleDeflection = 0.0; // FIXME, supply this
+  
+  //sel_radial_node->setDoubleValue(gps_course_node->getDoubleValue());
 }
 
 void FGNavRadio::updateCDI(double dt)

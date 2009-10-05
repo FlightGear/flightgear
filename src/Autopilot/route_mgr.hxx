@@ -25,9 +25,12 @@
 #define _ROUTE_MGR_HXX 1
 
 #include <simgear/props/props.hxx>
-#include <simgear/route/route.hxx>
+#include <simgear/route/waypoint.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
+// forward decls
+class SGRoute;
+class SGPath;
 
 /**
  * Top level route manager class
@@ -38,61 +41,84 @@ class FGRouteMgr : public SGSubsystem
 {
 
 private:
-
-    SGRoute *route;
-
+    SGRoute* _route;
+    time_t _takeoffTime;
+    time_t _touchdownTime;
+    bool _autoSequence; // true if we are doing internal sequencing
+      // false if other code (FMS/GPS) is managing sequencing
+    
     // automatic inputs
     SGPropertyNode_ptr lon;
     SGPropertyNode_ptr lat;
     SGPropertyNode_ptr alt;
-
+    SGPropertyNode_ptr magvar;
+    
     // automatic outputs
-    SGPropertyNode_ptr true_hdg_deg;
     SGPropertyNode_ptr target_altitude_ft;
     SGPropertyNode_ptr altitude_lock;
 
-    SGPropertyNode_ptr wp0_id;
-    SGPropertyNode_ptr wp0_dist;
-    SGPropertyNode_ptr wp0_eta;
-
-    SGPropertyNode_ptr wp1_id;
-    SGPropertyNode_ptr wp1_dist;
-    SGPropertyNode_ptr wp1_eta;
-
-    SGPropertyNode_ptr wpn_id;
-    SGPropertyNode_ptr wpn_dist;
-    SGPropertyNode_ptr wpn_eta;
-
-
-    class Listener : public SGPropertyChangeListener {
+    SGPropertyNode_ptr departure; ///< departure airport information
+    SGPropertyNode_ptr destination; ///< destination airport information
+    SGPropertyNode_ptr alternate; ///< alternate airport information
+    SGPropertyNode_ptr cruise; ///< cruise information
+    
+    SGPropertyNode_ptr totalDistance;
+    SGPropertyNode_ptr ete;
+    SGPropertyNode_ptr elapsedFlightTime;
+    
+    SGPropertyNode_ptr active;
+    SGPropertyNode_ptr airborne;
+    SGPropertyNode_ptr currentWp;
+    
+    SGPropertyNode_ptr wp0;
+    SGPropertyNode_ptr wp1;
+    SGPropertyNode_ptr wpn;
+    
+    
+    SGPropertyNode_ptr _pathNode;
+    
+    void setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDistance);
+    
+    class InputListener : public SGPropertyChangeListener {
     public:
-        Listener(FGRouteMgr *m) : mgr(m) {}
+        InputListener(FGRouteMgr *m) : mgr(m) {}
         virtual void valueChanged (SGPropertyNode * prop);
     private:
         FGRouteMgr *mgr;
     };
 
     SGPropertyNode_ptr input;
-    Listener *listener;
+    SGPropertyNode_ptr weightOnWheels;
+    
+    InputListener *listener;
     SGPropertyNode_ptr mirror;
     bool altitude_set;
 
+    /**
+     * Create a SGWayPoint from a string in the following format:
+     *  - simple identifier
+     *  - decimal-lon,decimal-lat
+     *  - airport-id/runway-id
+     *  - navaid/radial-deg/offset-nm
+     */
     SGWayPoint* make_waypoint(const string& target);
+    
+    
     void update_mirror();
     bool near_ground();
-
-    /**
-     * Helper to set a string property to the estimated arrival time (ETA),
-     * formatted as either hours:minutes or minutes:seconds, based on a distance
-     * and the current groundspeed.
-     */
-    void setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDistance);
+    
+    void currentWaypointChanged();
     
     /**
      * Helper to update the target_altitude_ft and altitude_set flag when wp0
      * changes
      */
     void updateTargetAltitude();
+    
+    /**
+     * Parse a route/wp node (from a saved, property-lsit formatted route)
+     */
+    void parseRouteWaypoint(SGPropertyNode* aWP);
 public:
 
     FGRouteMgr();
@@ -110,14 +136,41 @@ public:
     void add_waypoint( const SGWayPoint& wp, int n = -1 );
     SGWayPoint pop_waypoint( int i = 0 );
 
-    SGWayPoint get_waypoint( int i ) const {
-        return route->get_waypoint(i);
-    }
+    SGWayPoint get_waypoint( int i ) const;
+    int size() const;
+        
+    bool isRouteActive() const;
+        
+    int currentWaypoint() const;
+       
+    /**
+     * Find a waypoint in the route, by position, and return its index, or
+     * -1 if no matching waypoint was found in the route.
+     */
+    int findWaypoint(const SGGeod& aPos) const;
+          
+    /**
+     * Activate a built route. This checks for various mandatory pieces of
+     * data, such as departure and destination airports, and creates waypoints
+     * for them on the route structure.
+     *
+     * returns true if the route was activated successfully, or false if the
+     * route could not be activated for some reason
+     */
+    bool activate();
 
-    int size() const {
-        return route->size();
-    }
-
+    /**
+     * Step to the next waypoint on the active route
+     */
+    void sequence();
+    
+    /**
+     *
+     */
+    void jumpToIndex(int index);
+    
+    void saveRoute();
+    void loadRoute();
 };
 
 
