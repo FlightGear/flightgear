@@ -160,7 +160,7 @@ private:
 	double _tgtRoll;
 	bool _rollSuspended;	// Set true when a derived class has suspended AIPlane's roll control
 
-        SGSampleGroup *_sgr;
+        static SGSampleGroup *_sgr;
 };
 
 #endif  // _FG_AI_PLANE_HXX
