@@ -136,7 +136,6 @@
 using std::string;
 
 extern const char *default_root;
-float init_volume;
 
 
 // Scan the command line options for the specified option and return

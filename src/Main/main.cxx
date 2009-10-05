@@ -87,7 +87,6 @@
 
 static double real_delta_time_sec = 0.0;
 double delta_time_sec = 0.0;
-extern float init_volume;
 
 using namespace flightgear;
 
@@ -492,9 +491,11 @@ static void fgMainLoop( void ) {
     if (!scenery_loaded && globals->get_tile_mgr()->isSceneryLoaded()
         && cur_fdm_state->get_inited()) {
         fgSetBool("sim/sceneryloaded",true);
-        fgSetFloat("/sim/sound/volume", init_volume);
 #ifdef ENABLE_AUDIO_SUPPORT
-        smgr->set_volume(init_volume);
+        if (fgGetBool("/sim/sound/enabled") == false)
+            smgr->stop();
+        else 
+            smgr->set_volume(fgGetFloat("/sim/sound/volume"));
 #endif
     }
 
@@ -638,8 +639,6 @@ static void fgIdleFunction ( void ) {
         // Add the Sound Manager before any other subsystem that uses it.
         // This makes sure the SoundMgr is available at construction time.
         ////////////////////////////////////////////////////////////////////
-        init_volume = fgGetFloat("/sim/sound/volume");
-        fgSetFloat("/sim/sound/volume", 0.0f);
         globals->add_subsystem("soundmgr", new SGSoundMgr);
 #endif
 
