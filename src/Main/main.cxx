@@ -478,14 +478,24 @@ static void fgMainLoop( void ) {
     // update the view angle as late as possible, but before sound calculations
     globals->get_viewmgr()->update(real_delta_time_sec);
 
+    ////////////////////////////////////////////////////////////////////
+    // Update the sound manager last so it can use the CPU while the GPU
+    // is processing the scenery (doubled the frame-rate for me) -EMH-
+    ////////////////////////////////////////////////////////////////////
+#ifdef ENABLE_AUDIO_SUPPORT
+    static SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+    smgr->update_late(delta_time_sec);
+#endif
+
     // END Tile Manager udpates
 
     if (!scenery_loaded && globals->get_tile_mgr()->isSceneryLoaded()
         && cur_fdm_state->get_inited()) {
         fgSetBool("sim/sceneryloaded",true);
         fgSetFloat("/sim/sound/volume", init_volume);
-        SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+#ifdef ENABLE_AUDIO_SUPPORT
         smgr->set_volume(init_volume);
+#endif
     }
 
     fgRequestRedraw();
@@ -623,6 +633,16 @@ static void fgIdleFunction ( void ) {
 
     } else if ( idle_state == 5 ) {
         idle_state++;
+#ifdef ENABLE_AUDIO_SUPPORT
+        ////////////////////////////////////////////////////////////////////
+        // Add the Sound Manager before any other subsystem that uses it.
+        // This makes sure the SoundMgr is available at construction time.
+        ////////////////////////////////////////////////////////////////////
+        init_volume = fgGetFloat("/sim/sound/volume");
+        fgSetFloat("/sim/sound/volume", 0.0f);
+        globals->add_subsystem("soundmgr", new SGSoundMgr);
+#endif
+
         ////////////////////////////////////////////////////////////////////
         // Initialize the 3D aircraft model subsystem (has a dependency on
         // the scenery subsystem.)

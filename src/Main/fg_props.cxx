@@ -221,7 +221,6 @@ setFreeze (bool f)
 {
     frozen = f;
 
-#if 0
     // Stop sound on a pause
     SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
     if ( smgr != NULL ) {
@@ -231,7 +230,6 @@ setFreeze (bool f)
             smgr->resume();
         }
     }
-#endif
 }
 
 

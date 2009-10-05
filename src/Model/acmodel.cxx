@@ -47,6 +47,10 @@ FGAircraftModel::FGAircraftModel ()
     _speed_east(0),
     _speed_up(0)
 {
+    SGSoundMgr *smgr;
+    smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+    _fx = new FGFX(smgr, "fx");
+    _fx->init();
 }
 
 FGAircraftModel::~FGAircraftModel ()
@@ -119,33 +123,24 @@ FGAircraftModel::update (double dt)
 			    _heading->getDoubleValue());
   _aircraft->update();
 
-  if ( !_fx) {
-    SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
-    if (smgr) {
-        _fx = new FGFX(smgr, "fx");
-        _fx->init();
-    }
-  }
+  // update model's sample group values
+  // Get the Cartesian coordinates in meters
+  SGVec3d pos = SGVec3d::fromGeod(_aircraft->getPosition());
+  _fx->set_position( pos );
 
-  if (_fx) {
-    // Get the Cartesian coordinates in meters
-    SGVec3d pos = SGVec3d::fromGeod(_aircraft->getPosition());
-    _fx->set_position( pos );
-
-    SGQuatd orient_m = SGQuatd::fromLonLat(_aircraft->getPosition());
-    orient_m *= SGQuatd::fromYawPitchRollDeg(_heading->getDoubleValue(),
-                                             _pitch->getDoubleValue(),
-                                             _roll->getDoubleValue());
-    SGVec3d orient = orient_m.rotateBack(SGVec3d::e1());
-    _fx->set_orientation( toVec3f(orient) );
+  SGQuatd orient_m = SGQuatd::fromLonLat(_aircraft->getPosition());
+  orient_m *= SGQuatd::fromYawPitchRollDeg(_heading->getDoubleValue(),
+                                           _pitch->getDoubleValue(),
+                                           _roll->getDoubleValue());
+  SGVec3d orient = orient_m.rotateBack(SGVec3d::e1());
+  _fx->set_orientation( toVec3f(orient) );
  
-    SGVec3f vel = SGVec3f( _speed_north->getFloatValue(),
-                           _speed_east->getFloatValue(),
-                           _speed_up->getFloatValue());
+  SGVec3f vel = SGVec3f( _speed_north->getFloatValue(),
+                         _speed_east->getFloatValue(),
+                         _speed_up->getFloatValue());
 // TODO: rotate to properly align with the model orientation
 
-    _fx->set_velocity( vel*SG_FEET_TO_METER );
-  }
+  _fx->set_velocity( vel*SG_FEET_TO_METER );
 }
 
 

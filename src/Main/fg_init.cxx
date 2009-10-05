@@ -57,6 +57,7 @@
 #include <simgear/misc/interpolator.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/particles.hxx>
+#include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/timing/lowleveltime.h>
 
@@ -103,9 +104,6 @@
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
-#include <Sound/fg_fx.hxx>
-#include <Sound/beacon.hxx>
-#include <Sound/morse.hxx>
 #include <Sound/voice.hxx>
 #include <Systems/system_mgr.hxx>
 #include <Time/light.hxx>
@@ -135,8 +133,6 @@
 
 using std::string;
 
-class Sound;
-class SGSoundMgr;
 extern const char *default_root;
 float init_volume;
 
@@ -1667,18 +1663,6 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("replay", new FGReplay);
 
-
-    ////////////////////////////////////////////////////////////////////
-    // Add Sound Manager.
-    // Put the sound manager last so it can use the CPU while the GPU
-    // is processing the scenery (doubled the frame-rate for me) -EMH-
-    ////////////////////////////////////////////////////////////////////
-#ifdef ENABLE_AUDIO_SUPPORT
-    init_volume = fgGetFloat("/sim/sound/volume");
-    fgSetFloat("/sim/sound/volume", 0.0f);
-
-    globals->add_subsystem("soundmgr", new SGSoundMgr);
-#endif
 
     ////////////////////////////////////////////////////////////////////
     // Bind and initialize subsystems.

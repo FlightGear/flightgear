@@ -29,6 +29,8 @@ using std::string;
 
 #include "AIPlane.hxx"
 
+SGSampleGroup *FGAIPlane::_sgr = 0;
+
 FGAIPlane::FGAIPlane() {
 	leg = LEG_UNKNOWN;
 	tuned_station = NULL;
@@ -47,18 +49,18 @@ FGAIPlane::FGAIPlane() {
 	_trackSet = false;
 	_tgtRoll = 0.0;
 	_rollSuspended = false;
-        _sgr = 0;
+
+	if ( !_sgr ) {
+		SGSoundMgr *smgr;
+		smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+		_sgr = smgr->find("atc", true);
+	}
 }
 
 FGAIPlane::~FGAIPlane() {
 }
 
 void FGAIPlane::Update(double dt) {
-	if (!_sgr) {
-		SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
-	        if (smgr) _sgr = smgr->find("atc", true);
-	}
-
 	if(_pending) {
 		if(tuned_station) {
 			if(tuned_station->GetFreqClear()) {

@@ -56,6 +56,9 @@ FGATC::FGATC() :
 	_counter(0.0),
 	_max_count(5.0)
 {
+	SGSoundMgr *smgr;
+	smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+	_sgr = smgr->find("atc", true);
 }
 
 FGATC::~FGATC() {
@@ -238,11 +241,6 @@ void FGATC::Render(string& msg, const float volume,
 				new SGSoundSample((unsigned char*) buf.c_str(),  buf.length(), 8000);
 				// TODO - at the moment the volume can't be changed 
 				// after the transmission has started.
-				if (!_sgr) {
-					SGSoundMgr *smgr;
-					smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
-					_sgr = smgr->find("atc", true);
-				}
 				simple->set_volume(volume);
 				_sgr->add(simple, refname);
 				_sgr->play(refname, repeating);
