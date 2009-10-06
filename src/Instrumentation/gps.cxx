@@ -557,7 +557,7 @@ GPS::updateBasicData(double dt)
   
   speed_kt = fgGetLowPass(_last_speed_kts, speed_kt, dt/20.0);
   _last_speed_kts = speed_kt;
-
+  
   double odometer = _odometer_node->getDoubleValue();
   _odometer_node->setDoubleValue(odometer + distance_m * SG_METER_TO_NM);
   odometer = _trip_odometer_node->getDoubleValue();
@@ -918,8 +918,10 @@ void GPS::updateRouteData()
   }
   
   _routeDistanceNm->setDoubleValue(totalDistance * SG_METER_TO_NM);
-  double TTW = ((totalDistance * SG_METER_TO_NM) / _last_speed_kts) * 3600.0;
-  _routeETE->setStringValue(makeTTWString(TTW));
+  if (_last_speed_kts > 1.0) {
+    double TTW = ((totalDistance * SG_METER_TO_NM) / _last_speed_kts) * 3600.0;
+    _routeETE->setStringValue(makeTTWString(TTW));    
+  }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -927,7 +929,7 @@ void GPS::updateRouteData()
 
 double GPS::getLegDistance() const
 {
-  if (_mode == "obs") {
+  if (!_last_valid || (_mode == "obs")) {
     return -1;
   }
   
@@ -936,7 +938,7 @@ double GPS::getLegDistance() const
 
 double GPS::getLegCourse() const
 {
-  if (_mode == "obs") {
+  if (!_last_valid || (_mode == "obs")) {
     return -9999.0;
   }
   
@@ -1002,7 +1004,7 @@ double GPS::getCDIDeflection() const
 
 const char* GPS::getWP0Ident() const
 {
-  if (_mode != "leg") {
+  if (!_last_valid || (_mode != "leg")) {
     return "";
   }
   
@@ -1011,7 +1013,7 @@ const char* GPS::getWP0Ident() const
 
 const char* GPS::getWP0Name() const
 {
-  if (_mode != "leg") {
+  if (!_last_valid || (_mode != "leg")) {
     return "";
   }
   
@@ -1020,11 +1022,19 @@ const char* GPS::getWP0Name() const
 
 const char* GPS::getWP1Ident() const
 {
+  if (!_last_valid) {
+    return "";
+  }
+  
   return _wp1Ident.c_str();
 }
 
 const char* GPS::getWP1Name() const
 {
+  if (!_last_valid) {
+    return "";
+  }
+
   return _wp1Name.c_str();
 }
 
@@ -1043,7 +1053,7 @@ double GPS::getWP1TTW() const
     return -1.0;
   }
   
-  if (_last_speed_kts <= 0.0) {
+  if (_last_speed_kts < 1.0) {
     return -1.0;
   }
   
@@ -1052,6 +1062,10 @@ double GPS::getWP1TTW() const
 
 const char* GPS::getWP1TTWString() const
 {
+  if (!_last_valid) {
+    return "";
+  }
+  
   return makeTTWString(getWP1TTW());
 }
 
