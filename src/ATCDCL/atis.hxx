@@ -23,22 +23,18 @@
 #ifndef _FG_ATIS_HXX
 #define _FG_ATIS_HXX
 
-#include <stdio.h>
 #include <string>
+#include <iosfwd>
 
 #include <simgear/compiler.h>
-#include <simgear/math/sg_geodesy.hxx>
-#include <simgear/misc/sgstream.hxx>
-#include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx>
-
-#  include <iosfwd>
 
 #include "ATC.hxx"
 
 //DCL - a complete guess for now.
 #define FG_ATIS_DEFAULT_RANGE 30
 	
+
 class FGATIS : public FGATC {
 	
 	//atc_type type;
@@ -48,8 +44,15 @@ class FGATIS : public FGATC {
 	
 	// for failure modeling
 	std::string trans_ident;		// transmitted ident
+	double old_volume;
 	bool atis_failed;		// atis failed?
+	time_t msg_time;		// for moderating error messages
+	time_t cur_time;
+	int msg_OK;
+	int attention;
 	
+	bool _prev_display;		// Previous value of _display flag
+
 	// Aircraft position
 	// ATIS is actually a special case in that unlike other ATC eg.tower it doesn't actually know about
 	// or the whereabouts of the aircraft it is transmitting to.  However, to ensure consistancy of
@@ -63,7 +66,9 @@ class FGATIS : public FGATC {
 	
 	FGATIS(void);
 	~FGATIS(void);
-	
+	virtual void Init();
+	void attend (int);
+
 	//run the ATIS instance
 	void Update(double dt);
 	
@@ -75,10 +80,12 @@ class FGATIS : public FGATC {
 	
 	std::string refname;		// Holds the refname of a transmission in progress
 	
-	//Update the transmission string
-	void UpdateTransmission(void);
+	int GenTransmission(const int regen, 
+		const int special);		// Generate the transmission string
 	
 	friend std::istream& operator>> ( std::istream&, FGATIS& );
 };
+
+typedef int (FGATIS::*int_getter)() const;
 
 #endif // _FG_ATIS_HXX

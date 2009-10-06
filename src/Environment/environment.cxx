@@ -706,7 +706,6 @@ FGEnvironment::_recalc_alt_pt ()
         << "  and "  << temperature_sea_level_degc
         << " :: " << this
         << "  # " << count);
-        ///////////////////////////////////raise(SIGUSR1);
     }
   }
 #endif

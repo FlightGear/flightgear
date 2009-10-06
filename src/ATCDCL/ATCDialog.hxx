@@ -55,8 +55,9 @@ typedef atcmentry_vec_type::iterator atcmentry_vec_iterator;
 typedef map < string, atcmentry_vec_type > atcmentry_map_type;
 typedef atcmentry_map_type::iterator atcmentry_map_iterator;
 
-//void ATCDialogInit();
+void atcUppercase(string &s);
 
+//void ATCDialogInit();
 //void ATCDoDialog(atc_type type);
 
 class FGATCDialog {

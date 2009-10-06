@@ -28,17 +28,25 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/debug/logstream.hxx>
 
-#include <istream>
-#include <ostream>
-
+#include <iosfwd>
 #include <string>
 
 #include "ATCVoice.hxx"
 
-using std::ostream;
-using std::string;
-using std::ios;
-
+// Convert a frequency in MHz to tens of kHz
+// so we can use it e.g. as an index into commlist_freq
+//
+// If freq > 1000 assume it's already in tens of KHz;
+// otherwise assume MHz.
+//
+// Note:  122.375 must be rounded DOWN to 12237 
+// in order to be consistent with apt.dat et cetera.
+inline int kHz10(double freq)
+{
+ if (freq > 1000.) return int(freq);
+ return int(freq*100.0 + 0.25);
+}
+ 
 enum plane_type {
 	UNKNOWN,
 	GA_SINGLE,
@@ -61,28 +69,24 @@ struct PlaneRec {
 // Possible types of ATC type that the radios may be tuned to.
 // INVALID implies not tuned in to anything.
 enum atc_type {
-	INVALID,
+	AWOS,
 	ATIS,
 	GROUND,
 	TOWER,
 	APPROACH,
 	DEPARTURE,
-	ENROUTE
+	ENROUTE,
+  INVALID     /* must be last element;  see ATC_NUM_TYPES */
 };
 
-const int ATC_NUM_TYPES = 7;
+const int ATC_NUM_TYPES = 1 + INVALID;
 
 // DCL - new experimental ATC data store
 struct ATCData {
 	atc_type type;
-	// I've deliberately used float instead of double here to keep the size down - we'll be storing thousands of these in memory.
-	// In fact, we could probably ditch x, y and z and generate on the fly as needed.
-	// On the other hand, we'll probably end up reading this data directly from the DAFIF eventually anyway!!
-	float lon, lat, elev;
-	float x, y, z;
-	//int freq;
+  SGGeod geod;
+  SGVec3d cart;
 	unsigned short int freq;
-	//int range;
 	unsigned short int range;
 	std::string ident;
 	std::string name;
@@ -104,12 +108,14 @@ struct RunwayDetails {
 std::ostream& operator << (std::ostream& os, atc_type atc);
 
 class FGATC {
-	
+  friend class FGATCMgr;
 public:
 	
 	FGATC();
 	virtual ~FGATC();
 	
+  virtual void Init()=0;
+  
 	// Run the internal calculations
 	// Derived classes should call this method from their own Update methods if they 
 	// wish to use the response timer functionality.
@@ -154,19 +160,7 @@ public:
 	
 	// Set the core ATC data
 	void SetData(ATCData* d);
-	
-	inline double get_lon() const { return lon; }
-	inline void set_lon(const double ln) {lon = ln;}
-	inline double get_lat() const { return lat; }
-	inline void set_lat(const double lt) {lat = lt;}
-	inline double get_elev() const { return elev; }
-	inline void set_elev(const double ev) {elev = ev;}
-	inline double get_x() const { return x; }
-	inline void set_x(const double ecs) {x = ecs;}
-	inline double get_y() const { return y; }
-	inline void set_y(const double why) {y = why;}
-	inline double get_z() const { return z; }
-	inline void set_z(const double zed) {z = zed;}
+
 	inline int get_freq() const { return freq; }
 	inline void set_freq(const int fq) {freq = fq;}
 	inline int get_range() const { return range; }
@@ -182,7 +176,8 @@ protected:
 	// Outputs the transmission either on screen or as audio depending on user preference
 	// The refname is a string to identify this sample to the sound manager
 	// The repeating flag indicates whether the message should be repeated continuously or played once.
-	void Render(std::string& msg, const std::string& refname = "", bool repeating = false);
+	void Render(std::string& msg, const double volume = 1.0, 
+    const std::string& refname = "", bool repeating = false);
 	
 	// Cease rendering all transmission from this station.
 	// Requires the sound manager refname if audio, else "".
@@ -199,13 +194,15 @@ protected:
 	
 	virtual void ProcessCallback(int code);
 	
-	double lon, lat, elev;
-	double x, y, z;
+	SGGeod _geod;
+	SGVec3d _cart;
 	int freq;
+  std::map<std::string,int> active_on;
+  
 	int range;
 	std::string ident;		// Code of the airport its at.
 	std::string name;		// Name transmitted in the broadcast.
-	atc_type _type;
+
 	
 	// Rendering related stuff
 	bool _voice;			// Flag - true if we are using voice
@@ -213,28 +210,32 @@ protected:
 	bool _voiceOK;		// Flag - true if at least one voice has loaded OK
 	FGATCVoice* _vPtr;
 
-	std::string pending_transmission;	// derived classes set this string before calling Transmit(...)	
+	
 	bool freqClear;		// Flag to indicate if the frequency is clear of ongoing dialog
 	bool receiving;		// Flag to indicate we are receiving a transmission
-	bool responseReqd;	// Flag to indicate we should be responding to a request/report 
-	bool runResponseCounter;	// Flag to indicate the response counter should be run
+	
+	
 	double responseTime;	// Time to take from end of request transmission to beginning of response
 							// The idea is that this will be slightly random.
-	double responseCounter;		// counter to implement the above
+	
+  bool respond;	// Flag to indicate now is the time to respond - ie set following the count down of the response timer.
 	std::string responseID;	// ID of the plane to respond to
-	bool respond;	// Flag to indicate now is the time to respond - ie set following the count down of the response timer.
+  bool runResponseCounter;	// Flag to indicate the response counter should be run
+  double responseCounter;		// counter to implement the above
 	// Derived classes only need monitor this flag, and use the response ID, as long as they call FGATC::Update(...)
 	bool _runReleaseCounter;	// A timer for releasing the frequency after giving the message enough time to display
+  bool responseReqd;	// Flag to indicate we should be responding to a request/report 
 	double _releaseTime;
 	double _releaseCounter;
-	
+  atc_type _type;
 	bool _display;		// Flag to indicate whether we should be outputting to the ATC display.
-	bool _displaying;		// Flag to indicate whether we are outputting to the ATC display.
+  std::string pending_transmission;	// derived classes set this string before calling Transmit(...)	
 	
 private:
 	// Transmission timing stuff.
-	bool _pending;
 	double _timeout;
+  bool _pending;
+	
 	int _callback_code;	// A callback code to be notified and processed by the derived classes
 						// A value of zero indicates no callback required
 	bool _transmit;		// we are to transmit
@@ -243,67 +244,6 @@ private:
 	double _max_count;
 };
 
-inline std::istream&
-operator >> ( std::istream& fin, ATCData& a )
-{
-	double f;
-	char ch;
-	char tp;
-	
-	fin >> tp;
-	
-	switch(tp) {
-	case 'I':
-		a.type = ATIS;
-		break;
-	case 'T':
-		a.type = TOWER;
-		break;
-	case 'G':
-		a.type = GROUND;
-		break;
-	case 'A':
-		a.type = APPROACH;
-		break;
-	case '[':
-		a.type = INVALID;
-		return fin >> skipeol;
-	default:
-		SG_LOG(SG_GENERAL, SG_ALERT, "Warning - unknown type \'" << tp << "\' found whilst reading ATC frequency data!\n");
-		a.type = INVALID;
-		return fin >> skipeol;
-	}
-	
-	fin >> a.lat >> a.lon >> a.elev >> f >> a.range 
-	>> a.ident;
-	
-	a.name = "";
-	fin >> ch;
-	if(ch != '"') a.name += ch;
-	while(1) {
-		//in >> noskipws
-		fin.unsetf(std::ios::skipws);
-		fin >> ch;
-		if((ch == '"') || (ch == 0x0A)) {
-			break;
-		}   // we shouldn't need the 0x0A but it makes a nice safely in case someone leaves off the "
-		a.name += ch;
-	}
-	fin.setf(std::ios::skipws);
-	//cout << "Comm name = " << a.name << '\n';
-	
-	a.freq = (int)(f*100.0 + 0.5);
-	
-	// cout << a.ident << endl;
-	
-	// generate cartesian coordinates
-        SGVec3d cart = SGVec3d::fromGeod(SGGeod::fromDegM(a.lon, a.lat, a.elev));
-	a.x = cart.x();
-	a.y = cart.y();
-	a.z = cart.z();
-	
-	return fin >> skipeol;
-}
-
+std::istream& operator>> ( std::istream& fin, ATCData& a );
 
 #endif  // _FG_ATC_HXX
