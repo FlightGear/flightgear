@@ -9,6 +9,7 @@
 
 #include "gps.hxx"
 
+#include <memory>
 #include <set>
 
 #include "Main/fg_props.hxx"
@@ -24,6 +25,7 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
 
+using std::auto_ptr;
 using std::string;
 
 ///////////////////////////////////////////////////////////////////
