@@ -82,7 +82,8 @@ public:
 typedef std::set<FGPositioned*, OrderByType> BucketEntry;
 typedef std::map<long int, BucketEntry> SpatialPositionedIndex;
 
-static NamedPositionedIndex global_namedIndex;
+static NamedPositionedIndex global_identIndex;
+static NamedPositionedIndex global_nameIndex;
 static SpatialPositionedIndex global_spatialIndex;
 
 SpatialPositionedIndex::iterator
@@ -103,10 +104,16 @@ addToIndices(FGPositioned* aPos)
 {
   assert(aPos);
   if (!aPos->ident().empty()) {
-    global_namedIndex.insert(global_namedIndex.begin(), 
+    global_identIndex.insert(global_identIndex.begin(), 
       std::make_pair(aPos->ident(), aPos));
   }
-    
+  
+  if (!aPos->name().empty()) {
+    global_nameIndex.insert(global_nameIndex.begin(), 
+                             std::make_pair(aPos->name(), aPos));
+  }
+
+  
   SpatialPositionedIndex::iterator it = bucketEntryForPositioned(aPos);
   it->second.insert(aPos);
 }
@@ -117,10 +124,10 @@ removeFromIndices(FGPositioned* aPos)
   assert(aPos);
   
   if (!aPos->ident().empty()) {
-    NamedPositionedIndex::iterator it = global_namedIndex.find(aPos->ident());
-    while (it != global_namedIndex.end() && (it->first == aPos->ident())) {
+    NamedPositionedIndex::iterator it = global_identIndex.find(aPos->ident());
+    while (it != global_identIndex.end() && (it->first == aPos->ident())) {
       if (it->second == aPos) {
-        global_namedIndex.erase(it);
+        global_identIndex.erase(it);
         break;
       }
       
@@ -128,6 +135,18 @@ removeFromIndices(FGPositioned* aPos)
     } // of multimap walk
   }
   
+  if (!aPos->name().empty()) {
+    NamedPositionedIndex::iterator it = global_nameIndex.find(aPos->name());
+    while (it != global_nameIndex.end() && (it->first == aPos->name())) {
+      if (it->second == aPos) {
+        global_nameIndex.erase(it);
+        break;
+      }
+      
+      ++it;
+    } // of multimap walk
+  }
+
   SpatialPositionedIndex::iterator sit = bucketEntryForPositioned(aPos);
   sit->second.erase(aPos);
 }
@@ -236,9 +255,10 @@ sortByDistance(const SGGeod& aPos, FGPositioned::List& aResult)
 }
 
 static FGPositionedRef
-namedFindClosest(const std::string& aIdent, const SGGeod& aOrigin, FGPositioned::Filter* aFilter)
+namedFindClosest(const NamedPositionedIndex& aIndex, const std::string& aName, 
+                 const SGGeod& aOrigin, FGPositioned::Filter* aFilter)
 {
-  NamedIndexRange range = global_namedIndex.equal_range(aIdent);
+  NamedIndexRange range = aIndex.equal_range(aName);
   if (range.first == range.second) {
     return NULL;
   }
@@ -361,8 +381,8 @@ char** searchAirportNamesAndIdents(const std::string& aFilter)
     ct.toupper((char *)filter.data(), (char *)filter.data() + filter.size());
   }
   
-  NamedPositionedIndex::const_iterator it = global_namedIndex.begin();
-  NamedPositionedIndex::const_iterator end = global_namedIndex.end();
+  NamedPositionedIndex::const_iterator it = global_identIndex.begin();
+  NamedPositionedIndex::const_iterator end = global_identIndex.end();
   
   // note this is a vector of raw pointers, not smart pointers, because it
   // may get very large and smart-pointer-atomicity-locking then becomes a
@@ -440,6 +460,77 @@ FGPositioned::Filter::passType(Type aTy) const
   return (minType() <= aTy) && (maxType() >= aTy);
 }
 
+static FGPositioned::List
+findAllSortedByRange(const NamedPositionedIndex& aIndex, 
+                             const std::string& aName, const SGGeod& aPos, FGPositioned::Filter* aFilter)
+{
+  FGPositioned::List result;
+  NamedIndexRange range = aIndex.equal_range(aName);
+  for (; range.first != range.second; ++range.first) {
+    FGPositioned* candidate = range.first->second;
+    if (aFilter) {
+      if (aFilter->hasTypeRange() && !aFilter->passType(candidate->type())) {
+        continue;
+      }
+      
+      if (!aFilter->pass(candidate)) {
+        continue;
+      }
+    }
+    
+    result.push_back(range.first->second);
+  }
+  
+  sortByDistance(aPos, result);
+  return result;
+}
+
+static FGPositionedRef
+findWithPartial(const NamedPositionedIndex& aIndex, const std::string& aName, 
+                    FGPositioned::Filter* aFilter, int aOffset, bool& aNext)
+{
+  // see comment in findNextWithPartialId concerning upperBoundId
+  std::string upperBoundId = aName;
+  upperBoundId[upperBoundId.size()-1]++;
+  NamedPositionedIndex::const_iterator upperBound = aIndex.lower_bound(upperBoundId);
+  
+  NamedIndexRange range = aIndex.equal_range(aName);
+  FGPositionedRef result;
+  
+  while (range.first != upperBound) {
+    for (; range.first != range.second; ++range.first) {
+      FGPositionedRef candidate = range.first->second;
+      if (aFilter) {
+        if (aFilter->hasTypeRange() && !aFilter->passType(candidate->type())) {
+          continue;
+        }
+        
+        if (!aFilter->pass(candidate)) {
+          continue;
+        }
+      }
+      
+      if (result) {
+        aNext = true;
+        return result;
+      } else if (aOffset == 0) {
+        // okay, found our result. we need to go around once more to set aNext
+        result = candidate;
+      } else {
+        --aOffset; // seen one more valid result, decrement the count
+      }
+    }
+    
+    // Unable to match the filter with this range - try the next range.
+    range = aIndex.equal_range(range.second->first);
+  }
+  
+  // if we fell out, we reached the end of the valid range. We might have a
+  // valid result, but we definitiely don't have a next result.
+  aNext = false;
+  return result;  
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 FGPositioned::FGPositioned(Type ty, const std::string& aIdent, const SGGeod& aPos, bool aIndexed) :
@@ -501,6 +592,8 @@ FGPositioned::Type FGPositioned::typeFromName(const std::string& aName)
   // aliases
     {"waypoint", WAYPOINT},
     {"apt", AIRPORT},
+    {"any", INVALID},
+    {"all", INVALID},
     
     {NULL, INVALID}
   };
@@ -550,7 +643,7 @@ const char* FGPositioned::nameForType(Type aTy)
 FGPositionedRef
 FGPositioned::findClosestWithIdent(const std::string& aIdent, const SGGeod& aPos, Filter* aFilter)
 {
-  return namedFindClosest(aIdent, aPos, aFilter);
+  return namedFindClosest(global_identIndex, aIdent, aPos, aFilter);
 }
 
 FGPositioned::List
@@ -565,25 +658,13 @@ FGPositioned::findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilt
 FGPositioned::List
 FGPositioned::findAllWithIdentSortedByRange(const std::string& aIdent, const SGGeod& aPos, Filter* aFilter)
 {
-  List result;
-  NamedIndexRange range = global_namedIndex.equal_range(aIdent);
-  for (; range.first != range.second; ++range.first) {
-    FGPositioned* candidate = range.first->second;
-    if (aFilter) {
-      if (aFilter->hasTypeRange() && !aFilter->passType(candidate->type())) {
-        continue;
-      }
+  return findAllSortedByRange(global_identIndex, aIdent, aPos, aFilter);
+}
 
-      if (!aFilter->pass(candidate)) {
-        continue;
-      }
-    }
-    
-    result.push_back(range.first->second);
-  }
-  
-  sortByDistance(aPos, result);
-  return result;
+FGPositioned::List
+FGPositioned::findAllWithNameSortedByRange(const std::string& aName, const SGGeod& aPos, Filter* aFilter)
+{
+  return findAllSortedByRange(global_nameIndex, aName, aPos, aFilter);
 }
 
 FGPositionedRef
@@ -612,9 +693,9 @@ FGPositioned::findNextWithPartialId(FGPositionedRef aCur, const std::string& aId
   // e.g., if the partial ID is "KI", we wish to search "KIxxx" but not "KJ".
   std::string upperBoundId = aId;
   upperBoundId[upperBoundId.size()-1]++;
-  NamedPositionedIndex::const_iterator upperBound = global_namedIndex.lower_bound(upperBoundId);
+  NamedPositionedIndex::const_iterator upperBound = global_identIndex.lower_bound(upperBoundId);
 
-  NamedIndexRange range = global_namedIndex.equal_range(aId);
+  NamedIndexRange range = global_identIndex.equal_range(aId);
   while (range.first != upperBound) {
     for (; range.first != range.second; ++range.first) {
       FGPositionedRef candidate = range.first->second;
@@ -639,47 +720,23 @@ FGPositioned::findNextWithPartialId(FGPositionedRef aCur, const std::string& aId
     }
 
     // Unable to match the filter with this range - try the next range.
-    range = global_namedIndex.equal_range(range.second->first);
+    range = global_identIndex.equal_range(range.second->first);
   }
 
   return NULL; // Reached the end of the valid sequence with no match.  
 }
   
 FGPositionedRef
-FGPositioned::findWithPartialId(const std::string& aId, Filter* aFilter, int aOffset)
+FGPositioned::findWithPartialId(const std::string& aId, Filter* aFilter, int aOffset, bool& aNext)
 {
-  // see comment in findNextWithPartialId concerning upperBoundId
-  std::string upperBoundId = aId;
-  upperBoundId[upperBoundId.size()-1]++;
-  NamedPositionedIndex::const_iterator upperBound = global_namedIndex.lower_bound(upperBoundId);
+  return findWithPartial(global_identIndex, aId, aFilter, aOffset, aNext);
+}
 
-  NamedIndexRange range = global_namedIndex.equal_range(aId);
-  
-  while (range.first != upperBound) {
-    for (; range.first != range.second; ++range.first) {
-      FGPositionedRef candidate = range.first->second;
-      if (aFilter) {
-        if (aFilter->hasTypeRange() && !aFilter->passType(candidate->type())) {
-          continue;
-        }
 
-        if (!aFilter->pass(candidate)) {
-          continue;
-        }
-      }
-
-      if (aOffset == 0) {
-        return candidate;
-      } else {
-        --aOffset; // seen one more valid result, decrement the count
-      }
-    }
-
-    // Unable to match the filter with this range - try the next range.
-    range = global_namedIndex.equal_range(range.second->first);
-  }
-
-  return NULL; // Reached the end of the valid sequence with no match.  
+FGPositionedRef
+FGPositioned::findWithPartialName(const std::string& aName, Filter* aFilter, int aOffset, bool& aNext)
+{
+  return findWithPartial(global_nameIndex, aName, aFilter, aOffset, aNext);
 }
 
 /**
@@ -690,9 +747,10 @@ class PartialIdentFilter : public FGPositioned::Filter
 {
 public:
   PartialIdentFilter(const std::string& ident, FGPositioned::Filter* filter) :
-    _ident(ident),
     _inner(filter)
-  { ; }
+  {
+    _ident = boost::to_upper_copy(ident);
+  }
   
   virtual bool pass(FGPositioned* aPos) const
   {
@@ -714,17 +772,69 @@ private:
   FGPositioned::Filter* _inner;
 };
 
-FGPositionedRef
-FGPositioned::findClosestWithPartialId(const SGGeod& aPos, const std::string& aId, Filter* aFilter, int aOffset)
+static FGPositionedRef
+findClosestWithPartial(const SGGeod& aPos, FGPositioned::Filter* aFilter, int aOffset, bool& aNext)
 {
-  PartialIdentFilter pf(aId, aFilter);
-  List matches = spatialGetClosest(aPos, aOffset + 1, 1000.0, &pf);
+  // why aOffset +2 ? at offset=3, we want the fourth search result, but also
+  // to know if the fifth result exists (to set aNext flag for iterative APIs)
+  FGPositioned::List matches = 
+    spatialGetClosest(aPos, aOffset + 2, 1000.0, aFilter);
   
   if ((int) matches.size() <= aOffset) {
-    SG_LOG(SG_GENERAL, SG_INFO, "FGPositioned::findClosestWithPartialId, couldn't match enough with prefix:" << aId);
+    SG_LOG(SG_GENERAL, SG_INFO, "findClosestWithPartial, couldn't match enough with prefix");
+    aNext = false;
     return NULL; // couldn't find a match within the cutoff distance
   }
   
+  aNext = ((int) matches.size() >= (aOffset + 2));
   return matches[aOffset];
+
+}
+
+FGPositionedRef
+FGPositioned::findClosestWithPartialId(const SGGeod& aPos, const std::string& aId, Filter* aFilter, int aOffset, bool& aNext)
+{
+  PartialIdentFilter pf(aId, aFilter);
+  return findClosestWithPartial(aPos, &pf, aOffset, aNext);
+}
+
+/**
+ * Wrapper filter which proxies to an inner filter, but also ensures the
+ * name starts with supplied partial name.
+ */
+class PartialNameFilter : public FGPositioned::Filter
+{
+public:
+  PartialNameFilter(const std::string& nm, FGPositioned::Filter* filter) :
+  _inner(filter)
+  {
+    _name = nm;
+  }
+  
+  virtual bool pass(FGPositioned* aPos) const
+  {
+    if (!_inner->pass(aPos)) {
+      return false;
+    }
+    
+    return (::strncasecmp(aPos->name().c_str(), _name.c_str(), _name.size()) == 0);
+  }
+  
+  virtual FGPositioned::Type minType() const
+  { return _inner->minType(); }
+  
+  virtual FGPositioned::Type maxType() const
+  { return _inner->maxType(); }
+  
+private:
+  std::string _name;
+  FGPositioned::Filter* _inner;
+};
+
+FGPositionedRef
+FGPositioned::findClosestWithPartialName(const SGGeod& aPos, const std::string& aName, Filter* aFilter, int aOffset, bool& aNext)
+{
+  PartialNameFilter pf(aName, aFilter);
+  return findClosestWithPartial(aPos, &pf, aOffset, aNext);
 }
 
