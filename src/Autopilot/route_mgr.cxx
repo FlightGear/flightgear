@@ -67,10 +67,10 @@ FGRouteMgr::FGRouteMgr() :
     target_altitude_ft( NULL ),
     altitude_lock( NULL ),
     input(fgGetNode( RM "input", true )),
-    listener(new InputListener(this)),
     mirror(fgGetNode( RM "route", true )),
     altitude_set( false )
 {
+    listener = new InputListener(this);
     input->setStringValue("");
     input->addChangeListener(listener);
 }
