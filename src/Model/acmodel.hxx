@@ -39,10 +39,12 @@ public:
   virtual void unbind ();
   virtual void update (double dt);
   virtual SGModelPlacement * get3DModel() { return _aircraft; }
+  virtual SGVec3f getVelocity() { return _velocity; }
 
 private:
 
   SGModelPlacement * _aircraft;
+  SGVec3f _velocity;
   FGFX * _fx;
 
   SGPropertyNode * _lon;
@@ -51,8 +53,7 @@ private:
   SGPropertyNode * _pitch;
   SGPropertyNode * _roll;
   SGPropertyNode * _heading;
-  SGPropertyNode * _speed_north;
-  SGPropertyNode * _speed_east;
+  SGPropertyNode * _speed;
   SGPropertyNode * _speed_up;
 
 };
