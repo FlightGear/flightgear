@@ -248,6 +248,7 @@ FGViewMgr::update (double dt)
   FGViewer *loop_view = (FGViewer *)get_view(current);
   SGPropertyNode *n = config_list[current];
   double lon_deg, lat_deg, alt_ft, roll_deg, pitch_deg, heading_deg;
+  SGVec3f velocity = SGVec3f(0,0,0);
 
   // Set up view location and orientation
 
@@ -264,6 +265,10 @@ FGViewMgr::update (double dt)
   } else {
     // force recalc in viewer
     loop_view->set_dirty();
+
+    // get the model velocity for the in-cockpit view
+    FGAircraftModel *aircraft = globals->get_aircraft_model();
+    velocity = aircraft->getVelocity();
   }
 
   // if lookat (type 1) then get target data...
@@ -300,7 +305,7 @@ FGViewMgr::update (double dt)
   // set the viewer posotion in Cartesian coordinates in meters
   smgr->set_position(abs_viewer_position);
   smgr->set_orientation(loop_view->getViewOrientation());
-  smgr->set_velocity(SGVec3f(0,0,0)); // TODO: in meters per second
+  smgr->set_velocity(velocity);
 }
 
 void
