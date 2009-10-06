@@ -68,9 +68,10 @@ void FGClouds::init(void) {
 		snd_lightning = new SGSoundSample(globals->get_fg_root().c_str(), "Sounds/thunder.wav");
 		snd_lightning->set_max_dist(7000.0f);
 		snd_lightning->set_reference_dist(3000.0f);
-		SGSoundMgr *soundMgr = globals->get_soundmgr();
-		soundMgr->add( snd_lightning, "thunder" );
-		sgEnviro.set_soundMgr( soundMgr );
+		SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+		SGSampleGroup *sgr = smgr->find("weather", true);
+		sgr->add( snd_lightning, "thunder" );
+		sgEnviro.set_sampleGroup( sgr );
 	}
 }
 

@@ -61,6 +61,7 @@
 #include <Model/acmodel.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
+#include <Sound/fg_fx.hxx>
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 #include <Sound/fg_fx.hxx>
@@ -86,7 +87,6 @@
 
 static double real_delta_time_sec = 0.0;
 double delta_time_sec = 0.0;
-extern float init_volume;
 
 using namespace flightgear;
 
@@ -477,10 +477,13 @@ static void fgMainLoop( void ) {
     // update the view angle as late as possible, but before sound calculations
     globals->get_viewmgr()->update(real_delta_time_sec);
 
-    // Run audio scheduler
+    ////////////////////////////////////////////////////////////////////
+    // Update the sound manager last so it can use the CPU while the GPU
+    // is processing the scenery (doubled the frame-rate for me) -EMH-
+    ////////////////////////////////////////////////////////////////////
 #ifdef ENABLE_AUDIO_SUPPORT
-    FGFX* fx = (FGFX*) globals->get_subsystem("fx");
-    fx->update_fx_late(delta_time_sec);
+    static SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+    smgr->update_late(delta_time_sec);
 #endif
 
     // END Tile Manager udpates
@@ -488,8 +491,12 @@ static void fgMainLoop( void ) {
     if (!scenery_loaded && globals->get_tile_mgr()->isSceneryLoaded()
         && cur_fdm_state->get_inited()) {
         fgSetBool("sim/sceneryloaded",true);
-        fgSetFloat("/sim/sound/volume", init_volume);
-        globals->get_soundmgr()->set_volume(init_volume);
+#ifdef ENABLE_AUDIO_SUPPORT
+        if (fgGetBool("/sim/sound/enabled") == false)
+            smgr->stop();
+        else 
+            smgr->set_volume(fgGetFloat("/sim/sound/volume"));
+#endif
     }
 
     fgRequestRedraw();
@@ -627,6 +634,14 @@ static void fgIdleFunction ( void ) {
 
     } else if ( idle_state == 5 ) {
         idle_state++;
+#ifdef ENABLE_AUDIO_SUPPORT
+        ////////////////////////////////////////////////////////////////////
+        // Add the Sound Manager before any other subsystem that uses it.
+        // This makes sure the SoundMgr is available at construction time.
+        ////////////////////////////////////////////////////////////////////
+        globals->add_subsystem("soundmgr", new SGSoundMgr);
+#endif
+
         ////////////////////////////////////////////////////////////////////
         // Initialize the 3D aircraft model subsystem (has a dependency on
         // the scenery subsystem.)
@@ -723,13 +738,13 @@ static void fgIdleFunction ( void ) {
             SG_LOG( SG_GENERAL, SG_INFO,
                 "Starting intro music: " << mp3file.str() );
 
-#if defined( __CYGWIN__ )
+# if defined( __CYGWIN__ )
             string command = "start /m `cygpath -w " + mp3file.str() + "`";
-#elif defined( WIN32 )
+# elif defined( WIN32 )
             string command = "start /m " + mp3file.str();
-#else
+# else
             string command = "mpg123 " + mp3file.str() + "> /dev/null 2>&1";
-#endif
+# endif
 
             system ( command.c_str() );
         }

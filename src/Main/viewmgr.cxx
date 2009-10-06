@@ -30,6 +30,7 @@
 #include <string.h>		// strcmp
 
 #include <simgear/compiler.h>
+#include <simgear/sound/soundmgr_openal.hxx>
 #include <Model/acmodel.hxx>
 #include <Main/viewer.hxx>
 #include <Main/fg_props.hxx>
@@ -42,6 +43,7 @@ FGViewMgr::FGViewMgr( void ) :
   config_list(fgGetNode("/sim", true)->getChildren("view")),
   current(0)
 {
+    smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
 }
 
 // Destructor
@@ -293,6 +295,12 @@ FGViewMgr::update (double dt)
   do_axes();
   view->update(dt);
   abs_viewer_position = loop_view->getViewPosition();
+
+  // update audio listener values
+  // set the viewer posotion in Cartesian coordinates in meters
+  smgr->set_position(abs_viewer_position);
+  smgr->set_orientation(loop_view->getViewOrientation());
+  smgr->set_velocity(SGVec3f(0,0,0)); // TODO: in meters per second
 }
 
 void

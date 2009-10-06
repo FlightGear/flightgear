@@ -69,7 +69,8 @@ ADF::ADF (SGPropertyNode *node )
     _transmitter_range_nm(0),
     _ident_count(0),
     _last_ident_time(0),
-    _last_volume(-1)
+    _last_volume(-1),
+    _sgr(0)
 {
 }
 
@@ -100,6 +101,9 @@ ADF::init ()
     _bearing_node = node->getChild("indicated-bearing-deg", 0, true);
     _ident_node = node->getChild("ident", 0, true);
     _ident_audible_node = node->getChild("ident-audible", 0, true);
+
+    SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+    _sgr = smgr->find("avionics", true);
 
     morse.init();
 
@@ -156,6 +160,7 @@ ADF::update (double delta_time_sec)
     double range_nm = adjust_range(_transmitter_pos.getElevationFt(),
                                    altitude_m * SG_METER_TO_FEET,
                                    _transmitter_range_nm);
+
     if (distance_nm <= range_nm) {
 
         double bearing, az2, s;
@@ -171,9 +176,9 @@ ADF::update (double delta_time_sec)
         set_bearing(delta_time_sec, bearing);
 
         // adf ident sound
-        double volume;
+        float volume;
         if ( _ident_audible_node->getBoolValue() )
-            volume = _volume_node->getDoubleValue();
+            volume = _volume_node->getFloatValue();
         else
             volume = 0.0;
 
@@ -181,7 +186,7 @@ ADF::update (double delta_time_sec)
             _last_volume = volume;
 
             SGSoundSample *sound;
-            sound = globals->get_soundmgr()->find( _adf_ident );
+            sound = _sgr->find( _adf_ident );
             if ( sound != NULL )
                 sound->set_volume( volume );
             else
@@ -195,8 +200,8 @@ ADF::update (double delta_time_sec)
         }
 
         if ( _ident_count < 4 ) {
-            if ( !globals->get_soundmgr()->is_playing(_adf_ident) ) {
-                globals->get_soundmgr()->play_once( _adf_ident );
+            if ( !_sgr->is_playing(_adf_ident) && (volume > 0.05) ) {
+                _sgr->play_once( _adf_ident );
                 ++_ident_count;
             }
         }
@@ -204,7 +209,7 @@ ADF::update (double delta_time_sec)
         _in_range_node->setBoolValue(false);
         set_bearing(delta_time_sec, 90);
         _ident_node->setStringValue("");
-        globals->get_soundmgr()->stop( _adf_ident );
+        _sgr->stop( _adf_ident );
     }
 }
 
@@ -234,16 +239,16 @@ ADF::search (double frequency_khz, double longitude_rad,
         _last_ident = ident;
         _ident_node->setStringValue(ident.c_str());
 
-        if ( globals->get_soundmgr()->exists( _adf_ident ) ) {
+        if ( _sgr->exists( _adf_ident ) ) {
 	    // stop is required! -- remove alone wouldn't stop immediately
-            globals->get_soundmgr()->stop( _adf_ident );
-            globals->get_soundmgr()->remove( _adf_ident );
+            _sgr->stop( _adf_ident );
+            _sgr->remove( _adf_ident );
         }
 
         SGSoundSample *sound;
         sound = morse.make_ident( ident, LO_FREQUENCY );
         sound->set_volume(_last_volume = 0);
-        globals->get_soundmgr()->add( sound, _adf_ident );
+        _sgr->add( sound, _adf_ident );
 
         int offset = (int)(sg_random() * 30.0);
         _ident_count = offset / 4;

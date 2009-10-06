@@ -22,10 +22,12 @@
 #include <Main/viewmgr.hxx>
 #include <Main/viewer.hxx>
 #include <Scenery/scenery.hxx>
+#include <Sound/fg_fx.hxx>
 
 #include "model_panel.hxx"
 
 #include "acmodel.hxx"
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -33,8 +35,22 @@
 ////////////////////////////////////////////////////////////////////////
 
 FGAircraftModel::FGAircraftModel ()
-  : _aircraft(0)
+  : _aircraft(0),
+    _fx(0),
+    _lon(0),
+    _lat(0),
+    _alt(0),
+    _pitch(0),
+    _roll(0),
+    _heading(0),
+    _speed_north(0),
+    _speed_east(0),
+    _speed_up(0)
 {
+    SGSoundMgr *smgr;
+    smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+    _fx = new FGFX(smgr, "fx");
+    _fx->init();
 }
 
 FGAircraftModel::~FGAircraftModel ()
@@ -70,7 +86,15 @@ FGAircraftModel::init ()
 void
 FGAircraftModel::bind ()
 {
-  // No-op
+   _lon = fgGetNode("position/longitude-deg", true);
+   _lat = fgGetNode("position/latitude-deg", true);
+   _alt = fgGetNode("position/altitude-ft", true);
+   _pitch = fgGetNode("orientation/pitch-deg", true);
+   _roll = fgGetNode("orientation/roll-deg", true);
+   _heading = fgGetNode("orientation/heading-deg", true);
+   _speed_north = fgGetNode("/velocities/speed-north-fps", true);
+   _speed_east = fgGetNode("/velocities/speed-east-fps", true);
+   _speed_up = fgGetNode("/velocities/vertical-speed-fps", true);
 }
 
 void
@@ -91,13 +115,32 @@ FGAircraftModel::update (double dt)
     _aircraft->setVisible(true);
   }
 
-  _aircraft->setPosition(fgGetDouble("/position/longitude-deg"),
-			 fgGetDouble("/position/latitude-deg"),
-			 fgGetDouble("/position/altitude-ft"));
-  _aircraft->setOrientation(fgGetDouble("/orientation/roll-deg"),
-			    fgGetDouble("/orientation/pitch-deg"),
-			    fgGetDouble("/orientation/heading-deg"));
+  _aircraft->setPosition(_lon->getDoubleValue(),
+			 _lat->getDoubleValue(),
+			 _alt->getDoubleValue());
+  _aircraft->setOrientation(_roll->getDoubleValue(),
+			    _pitch->getDoubleValue(),
+			    _heading->getDoubleValue());
   _aircraft->update();
+
+  // update model's sample group values
+  // Get the Cartesian coordinates in meters
+  SGVec3d pos = SGVec3d::fromGeod(_aircraft->getPosition());
+  _fx->set_position( pos );
+
+  SGQuatd orient_m = SGQuatd::fromLonLat(_aircraft->getPosition());
+  orient_m *= SGQuatd::fromYawPitchRollDeg(_heading->getDoubleValue(),
+                                           _pitch->getDoubleValue(),
+                                           _roll->getDoubleValue());
+  SGVec3d orient = orient_m.rotateBack(SGVec3d::e1());
+  _fx->set_orientation( toVec3f(orient) );
+ 
+  SGVec3f vel = SGVec3f( _speed_north->getFloatValue(),
+                         _speed_east->getFloatValue(),
+                         _speed_up->getFloatValue());
+// TODO: rotate to properly align with the model orientation
+
+  _fx->set_velocity( vel*SG_FEET_TO_METER );
 }
 
 

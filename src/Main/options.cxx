@@ -186,6 +186,7 @@ fgSetDefaults ()
     fgSetBool("/sim/hud/enable3d", true);
     fgSetBool("/sim/hud/visibility", false);
     fgSetBool("/sim/panel/visibility", true);
+    fgSetBool("/sim/sound/enabled", true);
     fgSetBool("/sim/sound/pause", false);
 
 				// Flight Model options
@@ -1290,8 +1291,8 @@ struct OptionDesc {
     {"enable-hud",                   false, OPTION_BOOL,   "/sim/hud/visibility", true, "", 0 },
     {"disable-panel",                false, OPTION_BOOL,   "/sim/panel/visibility", false, "", 0 },
     {"enable-panel",                 false, OPTION_BOOL,   "/sim/panel/visibility", true, "", 0 },
-    {"disable-sound",                false, OPTION_BOOL,   "/sim/sound/pause", true, "", 0 },
-    {"enable-sound",                 false, OPTION_BOOL,   "/sim/sound/pause", false, "", 0 },
+    {"disable-sound",                false, OPTION_BOOL,   "/sim/sound/enabled", true, "", 0 },
+    {"enable-sound",                 false, OPTION_BOOL,   "/sim/sound/enabled", false, "", 0 },
     {"airport",                      true,  OPTION_STRING, "/sim/presets/airport-id", false, "", 0 },
     {"runway",                       true,  OPTION_FUNC,   "", false, "", fgOptRunway },
     {"vor",                          true,  OPTION_FUNC,   "", false, "", fgOptVOR },

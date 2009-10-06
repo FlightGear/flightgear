@@ -33,11 +33,11 @@
 
 #include <boost/shared_array.hpp>
 
+#include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/math/sg_random.h>
-#include <simgear/sound/sample_openal.hxx>
 
 #include <Main/globals.hxx>
 
@@ -56,29 +56,28 @@ FGATCVoice::FGATCVoice() {
 
 FGATCVoice::~FGATCVoice() {
     if (rawSoundData)
-        free( rawSoundData );
+	free( rawSoundData );
     delete SoundData;
 }
 
 // Load the two voice files - one containing the raw sound data (.wav) and one containing the word positions (.vce).
 // Return true if successful.
 bool FGATCVoice::LoadVoice(const string& voice) {
-    // FIXME CLO: disabled to try to see if this is causing problemcs
-    // return false;
-
 	std::ifstream fin;
 
 	SGPath path = globals->get_fg_root();
+	string file = voice + ".wav";
 	path.append( "ATC" );
-
-        string file = voice + ".wav";
+	path.append( file );
 	
-	SGSoundSample SoundData;
-        rawSoundData = (char *)SoundData.load_file(path.c_str(), file.c_str());
-	rawDataSize = SoundData.get_size();
+	string full_path = path.str();
+	int format, freq;
+        SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+	void *data;
+	smgr->load(full_path, &data, &format, &rawDataSize, &freq);
+	rawSoundData = (char*)data;
 #ifdef VOICE_TEST
-	ALenum fmt = SoundData.get_format();
-	cout << "ATCVoice:  format: " << fmt 
+	cout << "ATCVoice:  format: " << format
 			<< "  size: " << rawDataSize << endl;
 #endif	
 	path = globals->get_fg_root();
@@ -113,12 +112,12 @@ bool FGATCVoice::LoadVoice(const string& voice) {
 		wd.offset = wrdOffset;
 		wd.length = wrdLength;
 		wordMap[wrdstr] = wd;
-                string ws2 = wrdstr;
-                for(string::iterator p = ws2.begin(); p != ws2.end(); p++){
-                  *p = tolower(*p);
-                  if (*p == '-') *p = '_';
-                }
-                if (wrdstr != ws2) wordMap[ws2] = wd;
+	        string ws2 = wrdstr;
+	        for(string::iterator p = ws2.begin(); p != ws2.end(); p++){
+	          *p = tolower(*p);
+	          if (*p == '-') *p = '_';
+	        }
+	        if (wrdstr != ws2) wordMap[ws2] = wd;
 
 		//cout << wrd << "\t\t" << wrdOffset << "\t\t" << wrdLength << '\n';
 		//cout << i << '\n';
@@ -146,7 +145,7 @@ string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
 	// TODO - at the moment we're effectively taking 3 passes through the data.
 	// There is no need for this - 2 should be sufficient - we can probably ditch the tokenList.
 	size_t n1 = 1+strlen(message);
-        boost::shared_array<char> msg(new char[n1]);
+	boost::shared_array<char> msg(new char[n1]);
 	strncpy(msg.get(), message, n1); // strtok requires a non-const char*
 	char* token;
 	int numWords = 0;
@@ -154,19 +153,19 @@ string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
 	char* context;
 	token = strtok_r(msg.get(), delimiters, &context);
 	while(token != NULL) {
-                for (char *t = token; *t; t++) {
-                  *t = tolower(*t);     // canonicalize the case, to
-                  if (*t == '-') *t = '_';   // match what's in the index
-                }
+	        for (char *t = token; *t; t++) {
+	          *t = tolower(*t);     // canonicalize the case, to
+	          if (*t == '-') *t = '_';   // match what's in the index
+	        }
 		tokenList.push_back(token);
 		++numWords;
 	        SG_LOG(SG_ATC, SG_DEBUG, "voice synth: token: '"
-                    << token << "'");
+	            << token << "'");
 		token = strtok_r(NULL, delimiters, &context);
 	}
 
 	vector<WordData> wdptr;
-        wdptr.reserve(numWords);
+	wdptr.reserve(numWords);
 	unsigned int cumLength = 0;
 
 	tokenListItr = tokenList.begin();
@@ -174,21 +173,21 @@ string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
 		if(wordMap.find(*tokenListItr) == wordMap.end()) {
 		// Oh dear - the token isn't in the sound file
 	  	  SG_LOG(SG_ATC, SG_ALERT, "voice synth: word '"
-                      << *tokenListItr << "' not found");
+	              << *tokenListItr << "' not found");
 		} else {
-                    wdptr.push_back(wordMap[*tokenListItr]);
-                    cumLength += wdptr.back().length;
+	            wdptr.push_back(wordMap[*tokenListItr]);
+	            cumLength += wdptr.back().length;
 		}
 		++tokenListItr;
 	}
 	const size_t word = wdptr.size();
-        
+	
 	// Check for no tokens found else slScheduler can be crashed
 	if(!word) {
 		dataOK = false;
 		return "";
 	}
-        boost::shared_array<char> tmpbuf(new char[cumLength]);
+	boost::shared_array<char> tmpbuf(new char[cumLength]);
 	unsigned int bufpos = 0;
 	for(int i=0; i<word; ++i) {
 		/*

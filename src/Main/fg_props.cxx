@@ -222,12 +222,12 @@ setFreeze (bool f)
     frozen = f;
 
     // Stop sound on a pause
-    SGSoundMgr *s = globals->get_soundmgr();
-    if ( s != NULL ) {
+    SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+    if ( smgr != NULL ) {
         if ( f ) {
-            s->pause();
+            smgr->suspend();
         } else if (!fgGetBool("/sim/sound/pause")) {
-            s->resume();
+            smgr->resume();
         }
     }
 }

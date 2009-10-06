@@ -32,6 +32,7 @@
 
 // forward decls
 class FGViewer;
+class SGSoundMgr;
 typedef SGSharedPtr<FGViewer> FGViewerPtr;
 
 // Define a structure containing view information
@@ -123,6 +124,8 @@ private:
     SGVec3d abs_viewer_position;
 
     int current;
+
+    SGSoundMgr *smgr;
 
 };
 

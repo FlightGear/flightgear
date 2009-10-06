@@ -35,7 +35,8 @@
 
 
 FGATC::FGATC() :
-  _voiceOK(false),
+	_voiceOK(false),
+	_sgr(NULL),
 	freqClear(true),
 	receiving(false),
 	respond(false),
@@ -55,6 +56,9 @@ FGATC::FGATC() :
 	_counter(0.0),
 	_max_count(5.0)
 {
+	SGSoundMgr *smgr;
+	smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+	_sgr = smgr->find("atc", true);
 }
 
 FGATC::~FGATC() {
@@ -203,7 +207,7 @@ int FGATC::RemovePlane() {
 }
 
 void FGATC::SetData(ATCData* d) {
-  _type = d->type;
+	_type = d->type;
 	_geod = d->geod;
 	_cart = d->cart;
 	range = d->range;
@@ -216,41 +220,36 @@ void FGATC::SetData(ATCData* d) {
 // Outputs the transmission either on screen or as audio depending on user preference
 // The refname is a string to identify this sample to the sound manager
 // The repeating flag indicates whether the message should be repeated continuously or played once.
-void FGATC::Render(string& msg, const double volume, 
-		const string& refname, const bool repeating) {
+void FGATC::Render(string& msg, const float volume, 
+				   const string& refname, const bool repeating) {
 	if (repeating)
 		fgSetString("/sim/messages/atis", msg.c_str());
 	else
 		fgSetString("/sim/messages/atc", msg.c_str());
 
-	#ifdef ENABLE_AUDIO_SUPPORT
+#ifdef ENABLE_AUDIO_SUPPORT
 	_voice = (_voiceOK && fgGetBool("/sim/sound/voice"));
 	if(_voice) {
-	    string buf = _vPtr->WriteMessage((char*)msg.c_str(), _voice);
-	    if(_voice) {
-		NoRender(refname);
-		try {
+		string buf = _vPtr->WriteMessage((char*)msg.c_str(), _voice);
+		if(_voice && (volume > 0.05)) {
+			NoRender(refname);
+			try {
 // >>> Beware: must pass a (new) object to the (add) method,
 // >>> because the (remove) method is going to do a (delete)
 // >>> whether that's what you want or not.
-		    SGSoundSample *simple = 
-			new SGSoundSample((unsigned char*) buf.c_str(), 
-			   buf.length(), 8000, AL_FORMAT_MONO8);
-		    // TODO - at the moment the volume can't be changed 
-		    // after the transmission has started.
-		    simple->set_volume(volume);
-		    globals->get_soundmgr()->add(simple, refname);
-		    if(repeating) {
-			    globals->get_soundmgr()->play_looped(refname);
-		    } else {
-			    globals->get_soundmgr()->play_once(refname);
-		    }
-		} catch ( sg_io_exception &e ) {
-		    SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
+				SGSoundSample *simple = 
+				new SGSoundSample((unsigned char*) buf.c_str(),  buf.length(), 8000);
+				// TODO - at the moment the volume can't be changed 
+				// after the transmission has started.
+				simple->set_volume(volume);
+				_sgr->add(simple, refname);
+				_sgr->play(refname, repeating);
+			} catch ( sg_io_exception &e ) {
+				SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
+			}
 		}
-	    }
 	}
-	#endif	// ENABLE_AUDIO_SUPPORT
+#endif	// ENABLE_AUDIO_SUPPORT
 	if(!_voice) {
 		// first rip the underscores and the pause hints out of the string - these are for the convienience of the voice parser
 		for(unsigned int i = 0; i < msg.length(); ++i) {
@@ -268,8 +267,8 @@ void FGATC::NoRender(const string& refname) {
 	if(_playing) {
 		if(_voice) {
 #ifdef ENABLE_AUDIO_SUPPORT		
-			globals->get_soundmgr()->stop(refname);
-			globals->get_soundmgr()->remove(refname);
+			_sgr->stop(refname);
+			_sgr->remove(refname);
 #endif
 		}
 		_playing = false;
@@ -283,14 +282,14 @@ string FGATC::GenText(const string& m, int c) {
 
 ostream& operator << (ostream& os, atc_type atc) {
 	switch(atc) {
-		case(AWOS):       return(os << "AWOS");
-		case(ATIS):       return(os << "ATIS");
-		case(GROUND):     return(os << "GROUND");
-		case(TOWER):      return(os << "TOWER");
+		case(AWOS):	   return(os << "AWOS");
+		case(ATIS):	   return(os << "ATIS");
+		case(GROUND):	 return(os << "GROUND");
+		case(TOWER):	  return(os << "TOWER");
 		case(APPROACH):   return(os << "APPROACH");
 		case(DEPARTURE):  return(os << "DEPARTURE");
-		case(ENROUTE):    return(os << "ENROUTE");
-		case(INVALID):    return(os << "INVALID");
+		case(ENROUTE):	return(os << "ENROUTE");
+		case(INVALID):	return(os << "INVALID");
 	}
 	return(os << "ERROR - Unknown switch in atc_type operator << ");
 }
@@ -325,7 +324,7 @@ std::istream& operator >> ( std::istream& fin, ATCData& a )
 		return fin >> skipeol;
 	}
 	
-  double lat, lon, elev;
+	double lat, lon, elev;
   
 	fin >> lat >> lon >> elev >> f >> a.range >> a.ident;
 	a.geod = SGGeod::fromDegM(lon, lat, elev);
@@ -349,7 +348,7 @@ std::istream& operator >> ( std::istream& fin, ATCData& a )
 	// cout << a.ident << endl;
 	
 	// generate cartesian coordinates
-  a.cart = SGVec3d::fromGeod(a.geod);	
+	a.cart = SGVec3d::fromGeod(a.geod);	
 	return fin >> skipeol;
 }
 
