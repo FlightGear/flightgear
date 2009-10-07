@@ -34,7 +34,7 @@
 #include <Scenery/tilemgr.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scripting/NasalSys.hxx>
-#include <Sound/fg_fx.hxx>
+#include <Sound/sample_queue.hxx>
 #include <Time/sunsolver.hxx>
 #include <Time/tmp.hxx>
 
@@ -1254,15 +1254,20 @@ do_play_audio_sample (const SGPropertyNode * arg)
 {
     string path = arg->getStringValue("path");
     string file = arg->getStringValue("file");
-    double volume = arg->getDoubleValue("volume");
+    float volume = arg->getFloatValue("volume");
     // cout << "playing " << path << " / " << file << endl;
     try {
-        static FGFX *fx = 0;
-        if ( !fx ) {
+        static FGSampleQueue *queue = 0;
+        if ( !queue ) {
            SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
-           fx = (FGFX *)smgr->find("fx");
+           queue = new FGSampleQueue(smgr, "queue");
+           queue->tie_to_listener();
         }
-        if (fx) fx->play_message( path, file, volume );
+
+        SGSoundSample *msg = new SGSoundSample(path.c_str(), file.c_str());
+        msg->set_volume( volume );
+        queue->add( msg );
+
         return true;
 
     } catch (const sg_io_exception&) {
