@@ -76,18 +76,14 @@ void FGAIFlightPlan::evaluateRoutePart(double deplat,
       }
       
       //cerr << "1"<< endl;
-      SGGeoc geoc = SGGeoc::fromCart(SGVec3d(newPos[0], newPos[1], newPos[2]));
-
-      double midlat = geoc.getLatitudeDeg();
-      double midlon = geoc.getLongitudeDeg();
+      SGGeod geod = SGGeod::fromCart(SGVec3d(newPos[0], newPos[1], newPos[2]));
 
       prevNode = tmpNode;
-      tmpNode = globals->get_airwaynet()->findNearestNode(midlat, midlon);
+      tmpNode = globals->get_airwaynet()->findNearestNode(geod);
 
       FGNode* node = globals->get_airwaynet()->findNode(tmpNode);
-      SGGeoc nodePos(SGGeoc::fromGeod(node->getPosition()));
     
-      if ((tmpNode != prevNode) && (SGGeodesy::distanceM(geoc, nodePos) < 25000)) {
+      if ((tmpNode != prevNode) && (SGGeodesy::distanceM(geod, node->getPosition()) < 25000)) {
         nodes.push_back(tmpNode);
       }
     }

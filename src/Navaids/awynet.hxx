@@ -30,13 +30,14 @@
 #include <map>
 #include <vector>
 
-#include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sgstream.hxx>
 
 
 //#include "parking.hxx"
 
 class FGAirway; // forward reference
+class SGPath;
+class SGGeod;
 
 typedef std::vector<FGAirway>  FGAirwayVector;
 typedef std::vector<FGAirway *> FGAirwayPointerVector;
@@ -51,28 +52,26 @@ class FGNode
 private:
   std::string ident;
   SGGeod geod;
+  SGVec3d cart; // cached cartesian position
   int index;
   FGAirwayPointerVector next; // a vector to all the segments leaving from this node
 
 public:
   FGNode();
-  FGNode(double lt, double ln, int idx, std::string id);
+  FGNode(const SGGeod& aPos, int idx, std::string id);
 
   void setIndex(int idx)                  { index = idx;};
   void addAirway(FGAirway *segment) { next.push_back(segment); };
 
-  double getLatitude() { return geod.getLatitudeDeg();};
-  double getLongitude(){ return geod.getLongitudeDeg();};
-
   const SGGeod& getPosition() {return geod;}
-
+  const SGVec3d& getCart() { return cart; }
   int getIndex() { return index; };
   std::string getIdent() { return ident; };
   FGNode *getAddress() { return this;};
   FGAirwayPointerVectorIterator getBeginRoute() { return next.begin(); };
   FGAirwayPointerVectorIterator getEndRoute()   { return next.end();   };
 
-  bool matches(std::string ident, double lat, double lon);
+  bool matches(std::string ident, const SGGeod& aPos);
 };
 
 typedef std::vector<FGNode *> FGNodeVector;
@@ -191,12 +190,12 @@ public:
 
   void init();
   bool exists() { return hasNetwork; };
-  int findNearestNode(double lat, double lon);
+  int findNearestNode(const SGGeod& aPos);
   FGNode *findNode(int idx);
   FGAirRoute findShortestRoute(int start, int end);
   void trace(FGNode *, int, int, double dist);
 
-  void load(SGPath path);
+  void load(const SGPath& path);
 };
 
 #endif
