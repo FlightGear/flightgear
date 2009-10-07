@@ -506,7 +506,7 @@ bool fgDumpSnapShot () {
     char filename[24];
     static int count = 1;
     while (count < 1000) {
-        snprintf(filename, 24, "fgfs-screen-%03d.ppm", count++);
+        snprintf(filename, 24, "fgfs-screen-%03d.png", count++);
 
         SGPath p(dir);
         p.append(filename);
