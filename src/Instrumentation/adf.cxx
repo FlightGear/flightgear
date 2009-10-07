@@ -104,6 +104,7 @@ ADF::init ()
 
     SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
     _sgr = smgr->find("avionics", true);
+    _sgr->tie_to_listener();
 
     morse.init();
 

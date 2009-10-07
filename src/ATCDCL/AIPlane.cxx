@@ -54,6 +54,7 @@ FGAIPlane::FGAIPlane() {
 		SGSoundMgr *smgr;
 		smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
 		_sgr = smgr->find("atc", true);
+                _sgr->tie_to_listener();
 	}
 }
 
