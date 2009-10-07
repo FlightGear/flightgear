@@ -30,6 +30,7 @@
 #include <iostream>
 
 #include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/timing/timestamp.hxx>
@@ -758,7 +759,7 @@ public:
       return false;
     }
     
-    return (::strncmp(aPos->ident().c_str(), _ident.c_str(), _ident.size()) == 0);
+    return (boost::algorithm::starts_with(aPos->ident(), _ident));
   }
     
   virtual FGPositioned::Type minType() const
@@ -817,7 +818,7 @@ public:
       return false;
     }
     
-    return (::strncasecmp(aPos->name().c_str(), _name.c_str(), _name.size()) == 0);
+    return (boost::algorithm::istarts_with(aPos->name(), _name));
   }
   
   virtual FGPositioned::Type minType() const
