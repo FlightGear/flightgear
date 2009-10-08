@@ -31,22 +31,14 @@
 
 #include "fg_fx.hxx"
 
-#include <simgear/debug/logstream.hxx>
-#include <simgear/structure/exception.hxx>
-#include <simgear/misc/sg_path.hxx>
+#include <Main/fg_props.hxx>
+
 #include <simgear/props/props.hxx>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/sound/xmlsound.hxx>
 
-#include <Main/fg_props.hxx>
-
-#include <simgear/scene/model/placement.hxx>
-#include <Model/acmodel.hxx>
-#include <Main/viewer.hxx>
-
 FGFX::FGFX ( SGSoundMgr *smgr, const string &refname ) :
-    last_visitor_pos(SGVec3d::zeros()),
-    last_model_pos(SGVec3d::zeros()),
     last_pause( true ),
     last_volume( 0.0 ),
     _pause( fgGetNode("/sim/sound/pause") ),
@@ -60,16 +52,10 @@ FGFX::FGFX ( SGSoundMgr *smgr, const string &refname ) :
 
 FGFX::~FGFX ()
 {
-    unsigned int i;
-    for ( i = 0; i < _sound.size(); i++ ) {
+    for (unsigned int i = 0; i < _sound.size(); i++ ) {
         delete _sound[i];
     }
     _sound.clear();
-
-    while ( _samplequeue.size() > 0 ) {
-        delete _samplequeue.front();
-        _samplequeue.pop();
-    }
 }
 
 
@@ -139,28 +125,6 @@ FGFX::update (double dt)
         last_pause = new_pause;
     }
 
-    // process mesage queue
-    const string msgid = "Sequential Audio Message";
-    bool now_playing = false;
-    if ( exists( msgid ) ) {
-        if ( is_playing( msgid ) ) {
-            // still playing, do nothing
-            now_playing = true;
-        } else {
-            // current message finished, stop and remove
-            stop( msgid );   // removes source
-            remove( msgid ); // removes buffer
-        }
-    }
-    if ( !now_playing ) {
-        // message queue idle, add next sound if we have one
-        if ( _samplequeue.size() > 0 ) {
-            add( _samplequeue.front(), msgid );
-            _samplequeue.pop();
-            play_once( msgid );
-        }
-    }
-
     double volume = _volume->getDoubleValue();
     if ( volume != last_volume ) {
         set_volume( volume );        
@@ -175,23 +139,6 @@ FGFX::update (double dt)
     }
 
     SGSampleGroup::update(dt);
-}
-
-/**
- * add a sound sample to the message queue which is played sequentially
- * in order.
- */
-void
-FGFX::play_message( SGSoundSample *_sample )
-{
-     _samplequeue.push( _sample );
-}
-void
-FGFX::play_message( const std::string& path, const std::string& fname, double volume )
-{
-    SGSoundSample *sample = new SGSoundSample( path.c_str(), fname.c_str() );
-    sample->set_volume( volume );
-    play_message( sample );
 }
 
 // end of fg_fx.cxx

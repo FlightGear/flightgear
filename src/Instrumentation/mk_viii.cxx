@@ -2217,6 +2217,7 @@ MK_VIII::VoicePlayer::init ()
 
   SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
   _sgr = smgr->find("avionics", true);
+  _sgr->tie_to_listener();
 
   make_voice(&voices.application_data_base_failed, "application-data-base-failed");
   make_voice(&voices.bank_angle, "bank-angle");
