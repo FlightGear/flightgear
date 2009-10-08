@@ -27,6 +27,10 @@
 #  include <config.h>
 #endif
 
+#ifdef HAVE_WINDOWS_H
+#include <time.h>
+#endif
+
 #include <simgear/compiler.h>
 
 #include "route_mgr.hxx"
@@ -215,12 +219,20 @@ bool FGRouteMgr::isRouteActive() const
 }
 
 void FGRouteMgr::update( double dt ) {
+    if (dt <= 0.0) {
+      // paused, nothing to do here
+      return;
+    }
+  
     if (!active->getBoolValue()) {
       return;
     }
     
     double groundSpeed = get_ground_speed();
-    if (!airborne->getBoolValue()) {
+    if (airborne->getBoolValue()) {
+      time_t now = time(NULL);
+      elapsedFlightTime->setDoubleValue(difftime(now, _takeoffTime));
+    } else { // not airborne
       if (weightOnWheels->getBoolValue() || (groundSpeed < 40)) {
         return;
       }
@@ -230,9 +242,7 @@ void FGRouteMgr::update( double dt ) {
       departure->setIntValue("takeoff-time", _takeoffTime);
     }
     
-    time_t now = time(NULL);
-    elapsedFlightTime->setDoubleValue(difftime(now, _takeoffTime));
-    
+  // basic course/distance information
     double inboundCourse, dummy, wp_course, wp_distance;
     SGWayPoint wp = _route->get_current();
   
@@ -251,6 +261,7 @@ void FGRouteMgr::update( double dt ) {
       }
     }
 
+  // update wp0 / wp1 / wp-last for legacy users
     wp0->setDoubleValue("dist", wp_distance * SG_METER_TO_NM);
     wp_course -= magvar->getDoubleValue(); // expose magnetic bearing
     wp0->setDoubleValue("bearing-deg", wp_course);
@@ -283,6 +294,12 @@ void FGRouteMgr::update( double dt ) {
 
 
 void FGRouteMgr::setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDistance) {
+    double speed = get_ground_speed();
+    if (speed < 1.0) {
+      aProp->setStringValue("--:--");
+      return;
+    }
+  
     char eta_str[64];
     double eta = aDistance * SG_METER_TO_NM / get_ground_speed();
     if ( eta >= 100.0 ) { 
