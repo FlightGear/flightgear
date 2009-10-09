@@ -2,10 +2,14 @@
 
 #include <deque>
 #include <map>
-#include <pair.h>
-#include <stdio.h>
+#include <iostream>
 #include <string>
 
+using std::deque;
+using std::map;
+using std::string;
+using std::less;
+using std::cout;
 
 main() {
     deque < int > mylist;
@@ -46,16 +50,18 @@ main() {
     mymap["dan"] = 24;
 
     printf("curt age = %d\n", mymap["curt"]);
-    printf("doug age = %d\n", mymap["doug"]);
+    printf("dan age = %d\n", mymap["dan"]);
 
 
-    map < string, int, less<string> > :: iterator test = mymap.find("dan");
+    map < string, int, less<string> > :: iterator test = mymap.find("doug");
     if ( test == mymap.end() ) {
-	printf("dan age = not found\n");
+	printf("doug age = not found\n");
     } else {
-	printf("dan age = %d\n",  (*test).second);
+	printf("doug age = %d\n",  (*test).second);
+        mymap.erase( "doug" );
     }
 
+    printf("\n");
     map < string, int, less<string> > :: iterator mapcurrent = mymap.begin();
     map < string, int, less<string> > :: iterator maplast = mymap.end();
     while ( mapcurrent != maplast ) {
