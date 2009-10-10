@@ -99,6 +99,7 @@ CompletedTiles completedTiles;
 apr_pool_t *mysvn_pool = NULL;
 svn_client_ctx_t *mysvn_ctx = NULL;
 svn_opt_revision_t *mysvn_rev = NULL;
+svn_opt_revision_t *mysvn_rev_peg = NULL;
 
 static const svn_version_checklist_t mysvn_checklist[] = {
     { "svn_subr",   svn_subr_version },
@@ -162,11 +163,17 @@ int mysvn_setup(void) {
     mysvn_ctx->auth_baton = ab;
     mysvn_ctx->conflict_func = NULL;
     mysvn_ctx->conflict_baton = NULL;
+    // Now our magic revisions
     mysvn_rev = (svn_opt_revision_t*) apr_palloc(pool, 
         sizeof(svn_opt_revision_t));
     if (!mysvn_rev)
         return EXIT_FAILURE;
+    mysvn_rev_peg = (svn_opt_revision_t*) apr_palloc(pool, 
+        sizeof(svn_opt_revision_t));
+    if (!mysvn_rev_peg)
+        return EXIT_FAILURE;
     mysvn_rev->kind = svn_opt_revision_head;
+    mysvn_rev_peg->kind = svn_opt_revision_unspecified;
     // Success if we got this far
     mysvn_pool = pool;
     return EXIT_SUCCESS;
@@ -200,11 +207,14 @@ void sync_tree(const char* dir) {
 	if (mysvn_setup() != EXIT_SUCCESS)
 	    exit(1);
 	apr_pool_t *subpool = svn_pool_create(mysvn_pool);
-	err = svn_client_checkout(NULL,
+	err = svn_client_checkout3(NULL,
 	    command,
 	    dest_base_dir,
+	    mysvn_rev_peg,
 	    mysvn_rev,
-	    1,
+	    svn_depth_infinity,
+	    0,
+	    0,
 	    mysvn_ctx,
 	    subpool);
 	if (err) {
@@ -428,12 +438,6 @@ int main( int argc, char **argv ) {
 	    source_base = rsync_base;
     }
     
-    // We just want one grid square, no FGFS communications
-    if (testing) {
-          sync_areas( 37, -123, 0, 0 );
-	  exit(0);
-    }
-
     // Must call this before any other net stuff
     netInit( &argc,argv );
 
@@ -458,10 +462,30 @@ int main( int argc, char **argv ) {
     int last_lat = nowhere;
     int last_lon = nowhere;
     bool recv_msg = false;
-    char synced_other = 'J';
+
+    char synced_other;
+    for ( synced_other = 'K'; synced_other <= 'Z'; synced_other++ ) {
+	char dir[512];
+	snprintf( dir, 512, "Airports/%c", synced_other );
+	waitingTiles.push_back( dir );
+    }
+    for ( synced_other = 'A'; synced_other <= 'J'; synced_other++ ) {
+	char dir[512];
+	snprintf( dir, 512, "Airports/%c", synced_other );
+	waitingTiles.push_back( dir );
+    }
+    if ( use_svn ) {
+	waitingTiles.push_back( "Models" );
+    }
 
     while ( true ) {
         recv_msg = false;
+        if ( testing ) {
+            // No FGFS communications
+            lat = 37;
+            lon = -123;
+            recv_msg = (lat != last_lat) || (lon != last_lon);
+        }
         while ( (len = s.recv(msg, maxlen, 0)) >= 0 ) {
             msg[len] = '\0';
             recv_msg = true;
@@ -470,7 +494,8 @@ int main( int argc, char **argv ) {
         }
 
         if ( recv_msg ) {
-            if ( lat != last_lat || lon != last_lon ) {
+             // Ignore messages where the location does not change
+             if ( lat != last_lat || lon != last_lon ) {
 		cout << "pos in msg = " << lat << "," << lon << endl;
 		std::deque<std::string> oldRequests;
 		oldRequests.swap( waitingTiles );
@@ -499,25 +524,24 @@ int main( int argc, char **argv ) {
 		    waitingTiles.push_back( oldRequests.front() );
 		    oldRequests.pop_front();
 		}
-	    } else if ( !waitingTiles.empty() ) {
-		getWaitingTile();
-	    } else {
-		if ( last_lat == nowhere || last_lon == nowhere ) {
-		    cout << "Waiting for FGFS to finish startup" << endl;
-		}
-		char c;
-		while ( !isdigit( c = ++synced_other ) && !isupper( c ) );
+                last_lat = lat;
+                last_lon = lon;
+            }
+	} else
 
-		char dir[512];
-		snprintf( dir, 512, "Airports/%c", c );
-		waitingTiles.push_back( dir );
-	    }
-
-            last_lat = lat;
-            last_lon = lon;
-	} else if ( !waitingTiles.empty() ) {
+        // No messages inbound, so process some pending work
+        if ( !waitingTiles.empty() ) {
 	    getWaitingTile();
-        } 
+        } else
+
+	if ( testing ) {
+	    exit( 0 );
+	} else
+
+	if ( last_lat == nowhere || last_lon == nowhere ) {
+	    cout << "FlightGear is not running, exiting." << endl;
+	    exit( 1 );
+	} else
 
         ulSleep( 1 );
     } // while true
