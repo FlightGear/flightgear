@@ -54,9 +54,11 @@ private:
     SGPropertyNode_ptr magvar;
     
     // automatic outputs
-    SGPropertyNode_ptr target_altitude_ft;
-    SGPropertyNode_ptr altitude_lock;
-
+    bool _driveAutopilot;
+    SGPropertyNode_ptr _apTargetAltitudeFt;
+    SGPropertyNode_ptr _apAltitudeLock;
+    SGPropertyNode_ptr _apTrueHeading;
+    
     SGPropertyNode_ptr departure; ///< departure airport information
     SGPropertyNode_ptr destination; ///< destination airport information
     SGPropertyNode_ptr alternate; ///< alternate airport information
