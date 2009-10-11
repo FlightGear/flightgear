@@ -44,8 +44,7 @@ FGAircraftModel::FGAircraftModel ()
     _pitch(0),
     _roll(0),
     _heading(0),
-    _speed(0),
-    _speed_up(0)
+    _speed(0)
 {
     SGSoundMgr *smgr;
     smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
@@ -92,8 +91,7 @@ FGAircraftModel::bind ()
    _pitch = fgGetNode("orientation/pitch-deg", true);
    _roll = fgGetNode("orientation/roll-deg", true);
    _heading = fgGetNode("orientation/heading-deg", true);
-   _speed = fgGetNode("velocities/true-airspeed-kt", true);
-   _speed_up = fgGetNode("velocities/vertical-speed-fps", true);
+   _speed = fgGetNode("velocities/groundspeed-kt", true);
 }
 
 void
@@ -125,21 +123,19 @@ FGAircraftModel::update (double dt)
   // update model's audio sample values
   // Get the Cartesian coordinates in meters
   SGVec3d pos = SGVec3d::fromGeod(_aircraft->getPosition());
-  _fx->set_position( pos );
+  _fx->set_position( -pos );
 
   SGQuatd orient_m = SGQuatd::fromLonLat(_aircraft->getPosition());
   orient_m *= SGQuatd::fromYawPitchRollDeg(_heading->getDoubleValue(),
                                            _pitch->getDoubleValue(),
                                            _roll->getDoubleValue());
   SGVec3d orient = -orient_m.rotate(SGVec3d::e1());
-  _fx->set_orientation( toVec3f(orient) );
+  _fx->set_orientation( toVec3f( orient ) );
  
   // For now assume the aircraft speed is always along the longitudinal
   // axis, so sideslipping is not taken into account. This should be fine
   // for audio.
-  _velocity = toVec3f(orient * _speed->getDoubleValue() * SG_KT_TO_FPS);
-  // _velocity[2] = _speed_up->getFloatValue();
-  _velocity *= SG_FEET_TO_METER;
+  _velocity = toVec3f(orient * _speed->getDoubleValue() * SG_KT_TO_MPS);
   _fx->set_velocity( _velocity );
 }
 

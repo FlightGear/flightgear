@@ -116,6 +116,7 @@ private:
     void setViewAxisLat (double axis);
     int getView () const;
     void setView (int newview);
+    bool stationary () const;
 
     SGPropertyNode_ptr view_number;
     vector<SGPropertyNode_ptr> config_list;
