@@ -25,6 +25,7 @@
 #include <Airports/simple.hxx>
 #include <Airports/runways.hxx>
 #include <Main/fg_os.hxx>      // fgGetKeyModifiers()
+#include <Navaids/routePath.hxx>
 
 const char* RULER_LEGEND_KEY = "ruler-legend";
   
@@ -657,77 +658,73 @@ void MapWidget::paintAircraftLocation(const SGGeod& aircraftPos)
 
 void MapWidget::paintRoute()
 {
-  if (_route->size() < 2) {
+  if (_route->numWaypts() < 2) {
     return;
   }
   
-// first pass, draw the actual line
+  RoutePath path(_route->waypts());
+  
+// first pass, draw the actual lines
   glLineWidth(2.0);
-  glBegin(GL_LINE_STRIP);
   
-  SGVec2d prev = project(_route->get_waypoint(0).get_target());
-  glVertex2d(prev.x(), prev.y());
-  
-  for (int w=1; w < _route->size(); ++w) {
+  for (int w=0; w<_route->numWaypts(); ++w) {
+    SGGeodVec gv(path.pathForIndex(w));
+    if (gv.empty()) {
+      continue;
+    }
     
-    SGVec2d p = project(_route->get_waypoint(w).get_target());
-    
-    if (w < _route->currentWaypoint()) {
+    if (w < _route->currentIndex()) {
       glColor4f(0.5, 0.5, 0.5, 0.7);
     } else {
       glColor4f(1.0, 0.0, 1.0, 1.0);
     }
     
-    glVertex2d(p.x(), p.y());
+    flightgear::WayptRef wpt(_route->wayptAtIndex(w));
+    if (wpt->flag(flightgear::WPT_MISS)) {
+      glEnable(GL_LINE_STIPPLE);
+      glLineStipple(1, 0x00FF);
+    }
     
+    glBegin(GL_LINE_STRIP);
+    for (unsigned int i=0; i<gv.size(); ++i) {
+      SGVec2d p = project(gv[i]);
+      glVertex2d(p.x(), p.y());
+    }
+    
+    glEnd();
+    glDisable(GL_LINE_STIPPLE);
   }
-  glEnd();
   
   glLineWidth(1.0);
 // second pass, draw waypoint symbols and data
-  for (int w=0; w < _route->size(); ++w) {
-    const SGWayPoint& wpt(_route->get_waypoint(w));
-    SGVec2d p = project(wpt.get_target());
+  for (int w=0; w < _route->numWaypts(); ++w) {
+    flightgear::WayptRef wpt(_route->wayptAtIndex(w));
+    SGGeod g = path.positionForIndex(w);
+    if (g == SGGeod()) {
+      continue; // Vectors or similar
+    }
+    
+    SGVec2d p = project(g);
     glColor4f(1.0, 0.0, 1.0, 1.0);
     circleAtAlt(p, 8, 12, 5);
     
     std::ostringstream legend;
-    legend << wpt.get_id();
-    if (wpt.get_target_alt() > -9990.0) {
-      legend << '\n' << SGMiscd::roundToInt(wpt.get_target_alt()) << '\'';
+    legend << wpt->ident();
+    if (wpt->altitudeRestriction() != flightgear::RESTRICT_NONE) {
+      legend << '\n' << SGMiscd::roundToInt(wpt->altitudeFt()) << '\'';
     }
     
-    if (wpt.get_speed() > 0.0) {
-      legend << '\n' << SGMiscd::roundToInt(wpt.get_speed()) << "Kts";
+    if (wpt->speedRestriction() != flightgear::RESTRICT_NONE) {
+      legend << '\n' << SGMiscd::roundToInt(wpt->speedKts()) << "Kts";
     }
 	
     MapData* d = getOrCreateDataForKey(reinterpret_cast<void*>(w * 2));
     d->setText(legend.str());
-    d->setLabel(wpt.get_id());
+    d->setLabel(wpt->ident());
     d->setAnchor(p);
     d->setOffset(MapData::VALIGN_TOP | MapData::HALIGN_CENTER, 15);
-    d->setPriority(w < _route->currentWaypoint() ? 9000 : 12000);
+    d->setPriority(w < _route->currentIndex() ? 9000 : 12000);
         
-    if (w > 0) {
-      SGVec2d legMid = (prev + p) * 0.5;
-      std::ostringstream legLegend;
-      
-      double track = wpt.get_track();
-      if (_magneticHeadings) {
-        track -= _magVar->get_magvar(); // show magnetic track for leg
-      }
-      
-      legLegend << SGMiscd::roundToInt(track) << " " 
-        << SGMiscd::roundToInt(wpt.get_distance() * SG_METER_TO_NM) << "Nm";
-        
-      MapData* ld = getOrCreateDataForKey(reinterpret_cast<void*>(w * 2 + 1));
-      ld->setText(legLegend.str());
-      ld->setAnchor(legMid);
-      ld->setOffset(MapData::VALIGN_TOP | MapData::HALIGN_CENTER, 15);
-      ld->setPriority(w < _route->currentWaypoint() ? 8000 : 11000);
-    } // of draw leg data
-    
-    prev = p;
   } // of second waypoint iteration
 }
 

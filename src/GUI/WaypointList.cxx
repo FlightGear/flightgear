@@ -7,6 +7,8 @@
 #include "WaypointList.hxx"
 
 #include <algorithm>
+#include <boost/tuple/tuple.hpp>
+
 #include <plib/puAux.h>
 
 #include <simgear/route/waypoint.hxx>
@@ -16,7 +18,10 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 
+#include <Navaids/positioned.hxx>
 #include <Autopilot/route_mgr.hxx>
+
+using namespace flightgear;
 
 enum {
   SCROLL_NO = 0,
@@ -24,6 +29,7 @@ enum {
   SCROLL_DOWN
 };
   
+static const double BLINK_TIME = 0.3;
 static const int DRAG_START_DISTANCE_PX = 5;
   
 class RouteManagerWaypointModel : 
@@ -48,37 +54,38 @@ public:
 // implement WaypointList::Model
   virtual unsigned int numWaypoints() const
   {
-    return _rm->size();
+    return _rm->numWaypts();
   }
   
   virtual int currentWaypoint() const
   {
-    return _rm->currentWaypoint();
+    return _rm->currentIndex();
   }
   
-  virtual SGWayPoint waypointAt(unsigned int index) const
+  virtual flightgear::Waypt* waypointAt(unsigned int index) const
   {
-    return _rm->get_waypoint(index);
+    if (index >= numWaypoints()) {
+      return NULL;
+    }
+    
+    return _rm->wayptAtIndex(index);
   }
 
   virtual void deleteAt(unsigned int index)
   {
-    _rm->pop_waypoint(index);
-  }
-  
-  virtual void setWaypointTargetAltitudeFt(unsigned int index, int altFt)
-  {
-    _rm->setWaypointTargetAltitudeFt(index, altFt);
+    _rm->removeWayptAtIndex(index);
   }
   
   virtual void moveWaypointToIndex(unsigned int srcIndex, unsigned int destIndex)
   {
+    SG_LOG(SG_GENERAL, SG_INFO, "moveWaypoint: from " << srcIndex << " to " << destIndex);
     if (destIndex > srcIndex) {
       --destIndex;
     }
     
-    SGWayPoint wp = _rm->pop_waypoint(srcIndex);
-    _rm->add_waypoint(wp, destIndex);
+    WayptRef w(_rm->removeWayptAtIndex(srcIndex));
+    SG_LOG(SG_GENERAL, SG_INFO, "wpt:" << w->ident());
+    _rm->insertWayptAtIndex(w, destIndex);
   }
   
   virtual void setUpdateCallback(SGCallback* cb)
@@ -129,13 +136,16 @@ WaypointList::WaypointList(int x, int y, int width, int height) :
   _showLatLon(false),
   _model(NULL),
   _updateCallback(NULL),
-  _scrollCallback(NULL)
+  _scrollCallback(NULL),
+  _blink(false)
 {
   // pretend to be a list, so fgPopup doesn't mess with our mouse events
   type |= PUCLASS_LIST;  
   setModel(new RouteManagerWaypointModel());
   setSize(width, height);
   setValue(-1);
+  
+  _blinkTimer.stamp();
 }
 
 WaypointList::~WaypointList()
@@ -230,6 +240,11 @@ void WaypointList::handleDrag(int x, int y)
     }
     
     _dragSourceRow = rowForY(y - abox.min[1]);
+    Waypt* wp = _model->waypointAt(_dragSourceRow);
+    if (!wp || wp->flag(WPT_GENERATED)) {
+      return; // don't allow generated points to be dragged
+    }
+    
     _dragging = true;
     _dragScroll = SCROLL_NO;
   }
@@ -255,20 +270,26 @@ void WaypointList::doDrop(int x, int y)
   _dragging = false;
   puDeactivateWidget();
   
+  SG_LOG(SG_GENERAL, SG_INFO, "doDrop");
+  
   if ((y < abox.min[1]) || (y >= abox.max[1])) {
+    SG_LOG(SG_GENERAL, SG_INFO, "y out of bounds:" << y);
     return;
   }
   
-  if (_dragSourceRow != _dragTargetRow) {
-    _model->moveWaypointToIndex(_dragSourceRow, _dragTargetRow);
-    
-    // keep row indexes linged up when moving an item down the list
-    if (_dragSourceRow < _dragTargetRow) {
-      --_dragTargetRow;
-    }
-    
-    setSelected(_dragTargetRow);
+  if (_dragSourceRow == _dragTargetRow) {
+    SG_LOG(SG_GENERAL, SG_INFO, "source and target row match");
+    return;
   }
+  
+  _model->moveWaypointToIndex(_dragSourceRow, _dragTargetRow);
+  
+  // keep row indexes linged up when moving an item down the list
+  if (_dragSourceRow < _dragTargetRow) {
+    --_dragTargetRow;
+  }
+  
+  setSelected(_dragTargetRow);
 }
 
 void WaypointList::invokeDownCallback(void)
@@ -302,6 +323,12 @@ void WaypointList::draw( int dx, int dy )
     doDragScroll();
   }
   
+  double dt = (SGTimeStamp::now() - _blinkTimer).toSecs();
+  if (dt > BLINK_TIME) {
+    _blinkTimer.stamp();
+    _blink = !_blink;
+  }
+  
   glEnable(GL_SCISSOR_TEST);
   GLint sx = (int) abox.min[0],
     sy = abox.min[1];
@@ -321,6 +348,7 @@ void WaypointList::draw( int dx, int dy )
   
   y -= (_scrollPx % rowHeight); // partially draw the first row
   
+  _arrowWidth = legendFont.getStringWidth(">");
   for ( ; row <= final; ++row, y += rowHeight) {
     drawRow(dx, dy, row, y);
   } // of row drawing iteration
@@ -343,6 +371,8 @@ void WaypointList::draw( int dx, int dy )
 
 void WaypointList::drawRow(int dx, int dy, int rowIndex, int y)
 {
+  flightgear::Waypt* wp(_model->waypointAt(rowIndex));
+    
   bool isSelected = (rowIndex == getSelected());
   bool isCurrent = (rowIndex == _model->currentWaypoint());
   bool isDragSource = (_dragging && (rowIndex == _dragSourceRow));
@@ -351,62 +381,100 @@ void WaypointList::drawRow(int dx, int dy, int rowIndex, int y)
   bkgBox.min[1] = abox.max[1] - y;
   bkgBox.max[1] = bkgBox.min[1] + rowHeightPx();
   
-  puColour currentColor;
-  puSetColor(currentColor, 1.0, 1.0, 0.0, 0.5);
+  puColour col;
+  puFont* f = &legendFont;
+  bool drawBox = false;
+  
+  if (wp->flag(WPT_MISS)) {
+    drawBox = true;
+    puSetColor(col, 1.0, 0.0, 0.0, 0.3);  // red
+  } else if (wp->flag(WPT_ARRIVAL)) {
+    drawBox = true;
+    puSetColor(col, 0.0, 0.0, 0.0, 0.3);
+  } else if (wp->flag(WPT_DEPARTURE)) {
+    drawBox = true;
+    puSetColor(col, 0.0, 0.0, 0.0, 0.3);
+  }
   
   if (isDragSource) {
     // draw later, on *top* of text string
-  } else  if (isCurrent) {
-    bkgBox.draw(dx, dy, PUSTYLE_PLAIN, &currentColor, false, 0);
   } else if (isSelected) { // -PLAIN means selected, apparently
     bkgBox.draw(dx, dy, -PUSTYLE_PLAIN, colour, false, 0);
+  } else if (drawBox) {
+    bkgBox.draw(dx, dy, PUSTYLE_PLAIN, &col, false, 0);
+  }
+  
+  if (isCurrent) {
+    glColor4f (1.0, 0.5, 0.0, 1.0) ;
+  } else {
+    glColor4fv ( colour [ PUCOL_LEGEND ] ) ;
   }
   
   int xx = dx + abox.min[0] + PUSTR_LGAP;
   int yy = dy + abox.max[1] - y ;
   yy += 4; // center text in row height
   
-  // row textual data
-  const SGWayPoint wp(_model->waypointAt(rowIndex));
-  char buffer[128];
-  int count = ::snprintf(buffer, 128, "%03d   %-5s", rowIndex, wp.get_id().c_str());
-  
-  if (wp.get_name().size() > 0 && (wp.get_name() != wp.get_id())) { 
-    // append name if present, and different to id
-    ::snprintf(buffer + count, 128 - count, " (%s)", wp.get_name().c_str());
+  if (isCurrent) {
+    f->drawString(">", xx, yy);
   }
   
-  glColor4fv ( colour [ PUCOL_LEGEND ] ) ;
-  drawClippedString(legendFont, buffer, xx, yy, 300);
+  int x = xx;
+  x += _arrowWidth + PUSTR_LGAP;
   
-  if (_showLatLon) {
-    char ns = (wp.get_target_lat() > 0.0) ? 'N' : 'S';
-    char ew = (wp.get_target_lon() > 0.0) ? 'E' : 'W';
-    
-    ::snprintf(buffer, 128 - count, "%4.2f%c %4.2f%c",
-      fabs(wp.get_target_lon()), ew, fabs(wp.get_target_lat()), ns);
-  } else {
-    ::snprintf(buffer, 128 - count, "%03.0f %5.1fnm",
-      wp.get_track(), wp.get_distance() * SG_METER_TO_NM);
+  // row textual data
+
+  char buffer[128];
+  int count = ::snprintf(buffer, 128, "%03d   %-5s", rowIndex, wp->ident().c_str());
+ 
+  FGPositioned* src = wp->source(); 
+  if (src && !src->name().empty() && (src->name() != wp->ident())) { 
+    // append name if present, and different to id
+    ::snprintf(buffer + count, 128 - count, " (%s)", src->name().c_str());
   }
 
-  legendFont.drawString(buffer, xx + 300 + PUSTR_LGAP, yy);
+  drawClippedString(legendFont, buffer, x, yy, 300);
+  x += 300 + PUSTR_LGAP;
   
-  int altFt = (int) wp.get_target_alt() * SG_METER_TO_FEET;
-  if (altFt > -9990) {
-    int altHundredFt = (altFt + 50) / 100; // round to nearest 100ft
+  if (_showLatLon) {
+    SGGeod p(wp->position());
+    char ns = (p.getLatitudeDeg() > 0.0) ? 'N' : 'S';
+    char ew = (p.getLongitudeDeg() > 0.0) ? 'E' : 'W';
+    
+    ::snprintf(buffer, 128 - count, "%4.2f%c %4.2f%c",
+      fabs(p.getLongitudeDeg()), ew, fabs(p.getLatitudeDeg()), ns);
+  } else if (rowIndex > 0) {
+    double courseDeg;
+    double distanceM;
+    Waypt* prev = _model->waypointAt(rowIndex - 1);
+    boost::tie(courseDeg, distanceM) = wp->courseAndDistanceFrom(prev->position());
+  
+    ::snprintf(buffer, 128 - count, "%03.0f %5.1fnm",
+      courseDeg, distanceM * SG_METER_TO_NM);
+  }
+
+  f->drawString(buffer, x, yy);
+  x += 100 + PUSTR_LGAP;
+  
+  if (wp->altitudeRestriction() != RESTRICT_NONE) {
+    int altHundredFt = (wp->altitudeFt() + 50) / 100; // round to nearest 100ft
     if (altHundredFt < 100) {
       count = ::snprintf(buffer, 128, "%d'", altHundredFt * 100);
     } else { // display as a flight-level
       count = ::snprintf(buffer, 128, "FL%d", altHundredFt);
     }
     
-    legendFont.drawString(buffer, xx + 400 + PUSTR_LGAP, yy);
+    f->drawString(buffer, x, yy);
   } // of valid wp altitude
+  x += 60 + PUSTR_LGAP;
+  
+  if (wp->speedRestriction() != RESTRICT_NONE) {
+    count = ::snprintf(buffer, 126, "%dKts", (int) wp->speedKts());
+    f->drawString(buffer, x, yy);
+  }
   
   if (isDragSource) {
-    puSetColor(currentColor, 1.0, 0.5, 0.0, 0.5);
-    bkgBox.draw(dx, dy, PUSTYLE_PLAIN, &currentColor, false, 0);
+    puSetColor(col, 1.0, 0.5, 0.0, 0.5);
+    bkgBox.draw(dx, dy, PUSTYLE_PLAIN, &col, false, 0);
   }
 }
 
@@ -613,22 +681,34 @@ int WaypointList::checkKey (int key, int updown )
   
   case '-':
     if (getSelected() >= 0) {
-      int newAlt = wayptAltFtHundreds(getSelected()) - 10;
-      if (newAlt < 0) {
-        _model->setWaypointTargetAltitudeFt(getSelected(), -9999);
-      } else {
-        _model->setWaypointTargetAltitudeFt(getSelected(), newAlt * 100);
+      Waypt* wp = _model->waypointAt(getSelected());
+      if (wp->flag(WPT_GENERATED)) {
+        break;
+      }
+      
+      if (wp->altitudeRestriction() != RESTRICT_NONE) {
+        int curAlt = (static_cast<int>(wp->altitudeFt()) + 50) / 100;
+        if (curAlt <= 0) {
+          wp->setAltitude(0, RESTRICT_NONE);
+        } else {
+          wp->setAltitude((curAlt - 10) * 100, wp->altitudeRestriction());
+        }
       }
     }
     break;
     
   case '=':
     if (getSelected() >= 0) {
-      int newAlt = wayptAltFtHundreds(getSelected()) + 10;
-      if (newAlt < 0) {
-        _model->setWaypointTargetAltitudeFt(getSelected(), 0);
+      flightgear::Waypt* wp = _model->waypointAt(getSelected());
+      if (wp->flag(WPT_GENERATED)) {
+        break;
+      }
+        
+      if (wp->altitudeRestriction() == RESTRICT_NONE) {
+        wp->setAltitude(1000, RESTRICT_AT);
       } else {
-        _model->setWaypointTargetAltitudeFt(getSelected(), newAlt * 100);
+        int curAlt = (static_cast<int>(wp->altitudeFt()) + 50) / 100;
+        wp->setAltitude((curAlt + 10) * 100, wp->altitudeRestriction());
       }
     }
     break;
@@ -636,6 +716,11 @@ int WaypointList::checkKey (int key, int updown )
   case 0x7f: // delete
     if (getSelected() >= 0) {
       int index = getSelected();
+      Waypt* wp = _model->waypointAt(getSelected());
+      if (wp->flag(WPT_GENERATED)) {
+        break;
+      }
+      
       _model->deleteAt(index);
       setSelected(index - 1);
     }
@@ -646,17 +731,6 @@ int WaypointList::checkKey (int key, int updown )
   }
 
   return TRUE ;
-}
-
-int WaypointList::wayptAltFtHundreds(int index) const
-{
-  double alt = _model->waypointAt(index).get_target_alt();
-  if (alt < -9990.0) {
-    return -9999;
-  }
-  
-  int altFt = (int) alt * SG_METER_TO_FEET;
-  return (altFt + 50) / 100; // round to nearest 100ft
 }
 
 void WaypointList::modelUpdateCallback()

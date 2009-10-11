@@ -97,6 +97,7 @@
 #include <Navaids/navlist.hxx>
 #include <Navaids/fix.hxx>
 #include <Navaids/fixlist.hxx>
+#include <Navaids/airways.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
@@ -1071,7 +1072,8 @@ fgInitNav ()
     fixlist.init( p_fix );  // adds fixes to the DB in positioned.cxx
 
     SG_LOG(SG_GENERAL, SG_INFO, "  Airways");
-    SGPath p_awy( globals->get_fg_root() );
+ #if 0 
+      SGPath p_awy( globals->get_fg_root() );
     p_awy.append( "Navaids/awy.dat" );
     FGAirwayNetwork *awyNet = new FGAirwayNetwork;
     //cerr << "Loading Airways" << endl;
@@ -1079,7 +1081,9 @@ fgInitNav ()
     awyNet->init();
     //cerr << "initializing airways" << endl;
     globals->set_airwaynet( awyNet );
-
+#endif
+    flightgear::Airway::load();
+    
     return true;
 }
 

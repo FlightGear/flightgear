@@ -14,8 +14,11 @@
 
 // forward decls
 class puaScrollBar;
-class SGWayPoint;
 class SGCallback;
+
+namespace flightgear {
+  class Waypt;
+}
 
 class WaypointList : public puFrame, public GUI_ID
 {
@@ -71,14 +74,13 @@ public:
     
     virtual unsigned int numWaypoints() const = 0;
     virtual int currentWaypoint() const = 0;
-    virtual SGWayPoint waypointAt(unsigned int index) const = 0;
+    virtual flightgear::Waypt* waypointAt(unsigned int index) const = 0;
   
   // update notifications
     virtual void setUpdateCallback(SGCallback* cb) = 0;
   
   // editing operations
     virtual void deleteAt(unsigned int index) = 0;
-    virtual void setWaypointTargetAltitudeFt(unsigned int index, int altFt) = 0;
     virtual void moveWaypointToIndex(unsigned int srcIndex, unsigned int dstIndex) = 0;
   };
   
@@ -121,9 +123,7 @@ private:
   int numFullyVisibleRows() const;
   int firstFullyVisibleRow() const;
   int lastFullyVisibleRow() const;
-  
-  int wayptAltFtHundreds(int index) const;
-  
+    
   void modelUpdateCallback();
   
   int _scrollPx; // scroll ammount (in pixels)
@@ -141,6 +141,10 @@ private:
   Model* _model;
   SGCallback* _updateCallback;
   SGCallback* _scrollCallback;
+ 
+  SGTimeStamp _blinkTimer;
+  bool _blink;
+  int _arrowWidth;
 };
 
 class ScrolledWaypointList : public puGroup

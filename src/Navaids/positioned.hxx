@@ -43,6 +43,7 @@ public:
     TAXIWAY,
     PAVEMENT,
     PARK_STAND,
+    WAYPOINT,
     FIX,
     VOR,
     NDB,
@@ -55,7 +56,6 @@ public:
     DME,
     TACAN,
     OBSTACLE,
-    WAYPOINT, // user-defined waypoint
     FREQ_GND,
     FREQ_TWR,
     FREQ_ATIS,
@@ -160,12 +160,12 @@ public:
    * Find all items with the specified ident
    * @param aFilter - optional filter on items
    */
-  static List findAllWithIdent(const std::string& aIdent, Filter* aFilter = NULL);
+  static List findAllWithIdent(const std::string& aIdent, Filter* aFilter = NULL, bool aExact = true);
   
   /**
    * As above, but searches names instead of idents
    */
-  static List findAllWithName(const std::string& aName, Filter* aFilter = NULL);
+  static List findAllWithName(const std::string& aName, Filter* aFilter = NULL, bool aExact = true);
   
   /**
    * Sort an FGPositionedList by distance from a position

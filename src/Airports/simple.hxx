@@ -45,6 +45,19 @@ typedef SGSharedPtr<FGRunway> FGRunwayPtr;
 typedef SGSharedPtr<FGTaxiway> FGTaxiwayPtr;
 typedef SGSharedPtr<FGPavement> FGPavementPtr;
 
+namespace flightgear {
+  class SID;
+  class STAR;
+  class Approach;
+  class Waypt;
+
+
+  typedef SGSharedPtr<Waypt> WayptRef;
+  typedef std::vector<WayptRef> WayptVec;
+}
+
+
+
 /***************************************************************************************
  *
  **************************************************************************************/
@@ -84,6 +97,15 @@ public:
     bool hasRunwayWithIdent(const std::string& aIdent) const;
     FGRunway* getRunwayByIdent(const std::string& aIdent) const;
     FGRunway* findBestRunwayForHeading(double aHeading) const;
+    
+    /**
+     * return the most likely target runway based on a position.
+     * Specifically, return the runway for which the course from aPos
+     * to the runway end, mostly closely matches the runway heading.
+     * This is a good approximation of which runway the position is on or
+     * aiming towards.
+     */
+    FGRunway* findBestRunwayForPos(const SGGeod& aPos) const;
     
      /**
      * Useful predicate for FMS/GPS/NAV displays and similar - check if this
@@ -143,6 +165,26 @@ public:
        double mMinLengthFt;
      };
      
+     
+     void setProcedures(const std::vector<flightgear::SID*>& aSids,
+      const std::vector<flightgear::STAR*>& aStars,
+      const std::vector<flightgear::Approach*>& aApproaches);
+     
+     void addSID(flightgear::SID* aSid);
+      void addSTAR(flightgear::STAR* aStar);
+      void addApproach(flightgear::Approach* aApp);
+
+      unsigned int numSIDs() const;
+      flightgear::SID* getSIDByIndex(unsigned int aIndex) const;
+      flightgear::SID* findSIDWithIdent(const std::string& aIdent) const;
+      
+      unsigned int numSTARs() const;
+      flightgear::STAR* getSTARByIndex(unsigned int aIndex) const;
+      flightgear::STAR* findSTARWithIdent(const std::string& aIdent) const;
+      
+      unsigned int numApproaches() const;
+      flightgear::Approach* getApproachByIndex(unsigned int aIndex) const;
+
      /**
       * Syntactic wrapper around FGPositioned::findClosest - find the closest
       * match for filter, and return it cast to FGAirport. The default filter
@@ -169,6 +211,23 @@ public:
       * matches in a format suitable for use by a puaList. 
       */
      static char** searchNamesAndIdents(const std::string& aFilter);
+     
+     bool buildApproach(flightgear::Waypt* aEnroute, flightgear::STAR* aSTAR, 
+      FGRunway* aRwy, flightgear::WayptVec& aRoute);
+    
+    /**
+     * Given a destiation point, select the best SID and transition waypt from 
+     * this airport. Returns (NULL,NULL) is no SIDs are defined, otherwise the
+     * best SID/transition is that which is closest to the destination point.
+     */
+    std::pair<flightgear::SID*, flightgear::WayptRef> selectSID(const SGGeod& aDest, FGRunway* aRwy);
+    
+    /**
+     * Select a STAR and enroute transition waypt, given an origin (departure) position.
+     * returns (NULL, NULL) is no suitable STAR is exists
+     */
+    std::pair<flightgear::STAR*, flightgear::WayptRef> selectSTAR(const SGGeod& aOrigin, FGRunway* aRwy);
+    
 private:
     typedef std::vector<FGRunwayPtr>::const_iterator Runway_iterator;
     /**
@@ -203,13 +262,19 @@ private:
 
     void loadRunways() const;
     void loadTaxiways() const;
+    void loadProcedures() const;
     
     mutable bool mRunwaysLoaded;
     mutable bool mTaxiwaysLoaded;
+    mutable bool mProceduresLoaded;
     
     std::vector<FGRunwayPtr> mRunways;
     std::vector<FGTaxiwayPtr> mTaxiways;
     std::vector<FGPavementPtr> mPavements;
+    
+    std::vector<flightgear::SID*> mSIDs;
+    std::vector<flightgear::STAR*> mSTARs;
+    std::vector<flightgear::Approach*> mApproaches;
 };
 
 // find basic airport location info from airport database

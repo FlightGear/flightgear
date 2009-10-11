@@ -5,11 +5,15 @@ noinst_LIBRARIES = libNavaids.a
 libNavaids_a_SOURCES = \
 	navdb.hxx navdb.cxx \
 	fix.hxx fixlist.hxx fixlist.cxx \
-	awynet.hxx awynet.cxx \
 	navrecord.hxx navrecord.cxx \
 	navlist.hxx navlist.cxx \
 	positioned.hxx positioned.cxx \
-	markerbeacon.hxx markerbeacon.cxx
+	markerbeacon.hxx markerbeacon.cxx \
+	routePath.hxx routePath.cxx \
+	airways.hxx airways.cxx \
+	route.hxx route.cxx \
+	waypoint.hxx waypoint.cxx \
+	procedure.hxx procedure.cxx \
 
 #
 # testnavs_SOURCES = testnavs.cxx

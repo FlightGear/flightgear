@@ -518,7 +518,9 @@ FGPositioned::Filter::passType(Type aTy) const
 
 static FGPositioned::List 
 findAll(const NamedPositionedIndex& aIndex, 
-                             const std::string& aName, FGPositioned::Filter* aFilter)
+                             const std::string& aName,
+                             FGPositioned::Filter* aFilter,
+                             bool aExact)
 {
   FGPositioned::List result;
   if (aName.empty()) {
@@ -526,9 +528,16 @@ findAll(const NamedPositionedIndex& aIndex,
   }
   
   std::string name = boost::to_upper_copy(aName);
-  std::string upperBoundId = name;
-  upperBoundId[upperBoundId.size()-1]++;
-  NamedPositionedIndex::const_iterator upperBound = aIndex.lower_bound(upperBoundId);
+  NamedPositionedIndex::const_iterator upperBound;
+  
+  if (aExact) {
+    upperBound = aIndex.upper_bound(name);
+  } else {
+    std::string upperBoundId = name;
+    upperBoundId[upperBoundId.size()-1]++;
+    upperBound = aIndex.lower_bound(upperBoundId);
+  }
+  
   NamedPositionedIndex::const_iterator it = aIndex.lower_bound(name);
   
   for (; it != upperBound; ++it) {
@@ -663,7 +672,7 @@ const char* FGPositioned::nameForType(Type aTy)
 FGPositionedRef
 FGPositioned::findClosestWithIdent(const std::string& aIdent, const SGGeod& aPos, Filter* aFilter)
 {
-  FGPositioned::List r(findAll(global_identIndex, aIdent, aFilter));
+  FGPositioned::List r(findAll(global_identIndex, aIdent, aFilter, true));
   if (r.empty()) {
     return FGPositionedRef();
   }
@@ -682,15 +691,15 @@ FGPositioned::findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilt
 }
 
 FGPositioned::List
-FGPositioned::findAllWithIdent(const std::string& aIdent, Filter* aFilter)
+FGPositioned::findAllWithIdent(const std::string& aIdent, Filter* aFilter, bool aExact)
 {
-  return findAll(global_identIndex, aIdent, aFilter);
+  return findAll(global_identIndex, aIdent, aFilter, aExact);
 }
 
 FGPositioned::List
-FGPositioned::findAllWithName(const std::string& aName, Filter* aFilter)
+FGPositioned::findAllWithName(const std::string& aName, Filter* aFilter, bool aExact)
 {
-  return findAll(global_nameIndex, aName, aFilter);
+  return findAll(global_nameIndex, aName, aFilter, aExact);
 }
 
 FGPositionedRef
