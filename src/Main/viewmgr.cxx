@@ -248,7 +248,6 @@ FGViewMgr::update (double dt)
   FGViewer *loop_view = (FGViewer *)get_view(current);
   SGPropertyNode *n = config_list[current];
   double lon_deg, lat_deg, alt_ft, roll_deg, pitch_deg, heading_deg;
-  SGVec3f velocity = SGVec3f(0,0,0);
 
   // Set up view location and orientation
 
@@ -265,10 +264,6 @@ FGViewMgr::update (double dt)
   } else {
     // force recalc in viewer
     loop_view->set_dirty();
-
-    // get the model velocity for the in-cockpit view
-    FGAircraftModel *aircraft = globals->get_aircraft_model();
-    velocity = aircraft->getVelocity();
   }
 
   // if lookat (type 1) then get target data...
@@ -303,8 +298,15 @@ FGViewMgr::update (double dt)
 
   // update audio listener values
   // set the viewer posotion in Cartesian coordinates in meters
-  smgr->set_position(abs_viewer_position);
+  smgr->set_position(-abs_viewer_position);
   smgr->set_orientation(loop_view->getViewOrientation());
+
+  // get the model velocity for the in-cockpit view
+  SGVec3f velocity = SGVec3f(0,0,0);
+  if ( !stationary() ) {
+    FGAircraftModel *aircraft = globals->get_aircraft_model();
+    velocity = aircraft->getVelocity();
+  }
   smgr->set_velocity(velocity);
 }
 
@@ -573,6 +575,20 @@ FGViewMgr::setViewZOffset_m (double z)
   if (view != 0) {
     view->setZOffset_m(z);
   }
+}
+
+bool
+FGViewMgr::stationary () const
+{
+  const FGViewer * view = get_current_view();
+  if (view != 0) {
+    if (((FGViewer *)view)->getXOffset_m() == 0.0 &&
+        ((FGViewer *)view)->getYOffset_m() == 0.0 &&
+        ((FGViewer *)view)->getZOffset_m() == 0.0)
+      return true;
+  }
+
+  return false;
 }
 
 double

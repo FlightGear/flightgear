@@ -54,7 +54,6 @@ private:
   SGPropertyNode * _roll;
   SGPropertyNode * _heading;
   SGPropertyNode * _speed;
-  SGPropertyNode * _speed_up;
 
 };
 
