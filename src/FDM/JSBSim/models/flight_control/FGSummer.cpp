@@ -119,7 +119,10 @@ void FGSummer::Debug(int from)
           cout << "       " << InputNodes[i]->getName() << endl;
       }
       if (Bias != 0.0) cout << "       Bias: " << Bias << endl;
-      if (IsOutput) cout << "      OUTPUT: " <<OutputNode->getName() <<  endl;
+      if (IsOutput) {
+        for (unsigned int i=0; i<OutputNodes.size(); i++)
+          cout << "      OUTPUT: " << OutputNodes[i]->getName() << endl;
+      }
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification

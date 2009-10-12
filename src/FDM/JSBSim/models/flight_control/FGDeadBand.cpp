@@ -144,7 +144,10 @@ void FGDeadBand::Debug(int from)
         cout << "      DEADBAND WIDTH: " << width << endl;
       }
       cout << "      GAIN: " << gain << endl;
-      if (IsOutput) cout << "      OUTPUT: " << OutputNode->getName() << endl;
+      if (IsOutput) {
+        for (unsigned int i=0; i<OutputNodes.size(); i++)
+          cout << "      OUTPUT: " << OutputNodes[i]->getName() << endl;
+      }
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification

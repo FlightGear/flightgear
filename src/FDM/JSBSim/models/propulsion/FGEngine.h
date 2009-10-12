@@ -43,10 +43,10 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <FGJSBBase.h>
+#include "FGJSBBase.h"
 #include "FGThruster.h"
-#include <input_output/FGPropertyManager.h>
-#include <input_output/FGXMLFileRead.h>
+#include "input_output/FGPropertyManager.h"
+#include "input_output/FGXMLFileRead.h"
 #include <vector>
 #include <string>
 
@@ -159,7 +159,7 @@ public:
 
   virtual void SetRunning(bool bb) { Running=bb; }
   virtual void SetName(string name) { Name = name; }
-  virtual void AddFeedTank(int tkID);
+  virtual void AddFeedTank(int tkID, int priority);
   virtual void SetFuelFreeze(bool f) { FuelFreeze = f; }
 
   virtual void SetStarter(bool s) { Starter = s; }
@@ -244,16 +244,16 @@ protected:
   void Debug(int from);
 };
 }
-#include <FGState.h>
-#include <FGFDMExec.h>
-#include <models/FGAtmosphere.h>
-#include <models/FGFCS.h>
-#include <models/FGAircraft.h>
-#include <models/FGPropagate.h>
-#include <models/FGPropulsion.h>
-#include <models/FGAuxiliary.h>
-#include <models/propulsion/FGThruster.h>
-#include <input_output/FGXMLElement.h>
+#include "FGState.h"
+#include "FGFDMExec.h"
+#include "models/FGAtmosphere.h"
+#include "models/FGFCS.h"
+#include "models/FGAircraft.h"
+#include "models/FGPropagate.h"
+#include "models/FGPropulsion.h"
+#include "models/FGAuxiliary.h"
+#include "models/propulsion/FGThruster.h"
+#include "input_output/FGXMLElement.h"
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif

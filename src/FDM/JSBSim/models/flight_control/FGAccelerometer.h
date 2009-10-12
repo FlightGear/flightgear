@@ -38,12 +38,13 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGSensor.h"
-#include <input_output/FGXMLElement.h>
+#include "input_output/FGXMLElement.h"
 #include "models/FGPropagate.h"
 #include "models/FGMassBalance.h"
 #include "models/FGInertial.h"
 #include "math/FGColumnVector3.h"
 #include "math/FGMatrix33.h"
+#include "FGSensorOrientation.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -116,7 +117,7 @@ time.
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGAccelerometer  : public FGSensor
+class FGAccelerometer  : public FGSensor, public FGSensorOrientation
 {
 public:
   FGAccelerometer(FGFCS* fcs, Element* element);
@@ -129,12 +130,8 @@ private:
   FGMassBalance* MassBalance;
   FGInertial* Inertial;
   FGColumnVector3 vLocation;
-  FGColumnVector3 vOrient;
   FGColumnVector3 vRadius;
   FGColumnVector3 vAccel;
-  FGMatrix33 mT;
-  void CalculateTransformMatrix(void);
-  int axis;
   
   void Debug(int from);
 };

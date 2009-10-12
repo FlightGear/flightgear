@@ -38,9 +38,9 @@ INCLUDES
 #include <sstream>
 
 #include "FGPropeller.h"
-#include <models/FGPropagate.h>
-#include <models/FGAtmosphere.h>
-#include <models/FGAuxiliary.h>
+#include "models/FGPropagate.h"
+#include "models/FGAtmosphere.h"
+#include "models/FGAuxiliary.h"
 
 namespace JSBSim {
 

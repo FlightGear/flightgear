@@ -40,9 +40,9 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGModel.h"
-#include <FGFDMExec.h>
-#include <math/FGColumnVector3.h>
-#include <math/FGLocation.h>
+#include "FGFDMExec.h"
+#include "math/FGColumnVector3.h"
+#include "math/FGLocation.h"
 #include "FGPropagate.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

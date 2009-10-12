@@ -40,7 +40,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGElectric.h"
-#include <models/FGPropulsion.h>
+#include "models/FGPropulsion.h"
 
 namespace JSBSim {
 

@@ -488,7 +488,7 @@ void FGTable::operator<<(stringstream& in_stream)
 FGTable& FGTable::operator<<(const double n)
 {
   Data[rowCounter][colCounter] = n;
-  if (colCounter == nCols) {
+  if (colCounter == (int)nCols) {
     colCounter = 0;
     rowCounter++;
   } else {

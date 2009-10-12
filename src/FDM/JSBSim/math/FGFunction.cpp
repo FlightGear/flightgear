@@ -49,7 +49,6 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, string prefix)
 {
   Element* element;
   string operation, property_name;
-  int size = el->GetNumElements();
   cached = false;
   cachedValue = -HUGE_VAL;
 

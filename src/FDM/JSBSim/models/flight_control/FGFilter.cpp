@@ -50,7 +50,6 @@ CLASS IMPLEMENTATION
 
 FGFilter::FGFilter(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
 {
-  dt = fcs->GetState()->Getdt();
   Trigger = 0;
   DynamicFilter = false;
 
@@ -323,8 +322,13 @@ void FGFilter::Debug(int from)
           if (PropertyNode[1] == 0L) cout << "      C[1]: " << C[1] << endl;
           else cout << "      C[1] is the value of property: " << sgn << PropertyNode[1]->GetName() << endl;
           break;
+        case eUnknown:
+          break;
        } 
-      if (IsOutput) cout << "      OUTPUT: " << OutputNode->getName() << endl;
+      if (IsOutput) {
+        for (unsigned int i=0; i<OutputNodes.size(); i++)
+          cout << "      OUTPUT: " << OutputNodes[i]->getName() << endl;
+      }
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification

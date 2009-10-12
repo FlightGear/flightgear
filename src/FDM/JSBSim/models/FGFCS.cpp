@@ -38,24 +38,25 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGFCS.h"
-#include <FGFDMExec.h>
-#include <input_output/FGPropertyManager.h>
+#include "FGFDMExec.h"
+#include "input_output/FGPropertyManager.h"
 #include <fstream>
 #include <sstream>
 #include <iomanip>
 
-#include <models/flight_control/FGFilter.h>
-#include <models/flight_control/FGDeadBand.h>
-#include <models/flight_control/FGGain.h>
-#include <models/flight_control/FGPID.h>
-#include <models/flight_control/FGSwitch.h>
-#include <models/flight_control/FGSummer.h>
-#include <models/flight_control/FGKinemat.h>
-#include <models/flight_control/FGFCSFunction.h>
-#include <models/flight_control/FGSensor.h>
-#include <models/flight_control/FGActuator.h>
-#include <models/flight_control/FGAccelerometer.h>
-#include <models/flight_control/FGGyro.h>
+#include "models/flight_control/FGFilter.h"
+#include "models/flight_control/FGDeadBand.h"
+#include "models/flight_control/FGGain.h"
+#include "models/flight_control/FGPID.h"
+#include "models/flight_control/FGSwitch.h"
+#include "models/flight_control/FGSummer.h"
+#include "models/flight_control/FGKinemat.h"
+#include "models/flight_control/FGFCSFunction.h"
+#include "models/flight_control/FGSensor.h"
+#include "models/flight_control/FGActuator.h"
+#include "models/flight_control/FGAccelerometer.h"
+#include "models/flight_control/FGMagnetometer.h"
+#include "models/flight_control/FGGyro.h"
 
 namespace JSBSim {
 
@@ -643,6 +644,8 @@ bool FGFCS::Load(Element* el, SystemType systype)
           Components->push_back(new FGSensor(this, component_element));
         } else if (component_element->GetName() == string("accelerometer")) {
           Components->push_back(new FGAccelerometer(this, component_element));
+        } else if (component_element->GetName() == string("magnetometer")) {
+          Components->push_back(new FGMagnetometer(this, component_element));
         } else if (component_element->GetName() == string("gyro")) {
           Components->push_back(new FGGyro(this, component_element));
         } else {

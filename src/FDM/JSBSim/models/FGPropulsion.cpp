@@ -45,14 +45,14 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGPropulsion.h"
-#include <models/propulsion/FGRocket.h>
-#include <models/propulsion/FGTurbine.h>
-#include <models/propulsion/FGPiston.h>
-#include <models/propulsion/FGElectric.h>
-#include <models/propulsion/FGTurboProp.h>
-#include <input_output/FGPropertyManager.h>
-#include <input_output/FGXMLParse.h>
-#include <math/FGColumnVector3.h>
+#include "models/propulsion/FGRocket.h"
+#include "models/propulsion/FGTurbine.h"
+#include "models/propulsion/FGPiston.h"
+#include "models/propulsion/FGElectric.h"
+#include "models/propulsion/FGTurboProp.h"
+#include "input_output/FGPropertyManager.h"
+#include "input_output/FGXMLParse.h"
+#include "math/FGColumnVector3.h"
 #include <sstream>
 
 namespace JSBSim {
@@ -255,6 +255,20 @@ bool FGPropulsion::Load(Element* el)
 
   FGModel::Load(el); // Perform base class Load.
 
+  // Process tank definitions first to establish the number of fuel tanks
+
+  Element* tank_element = el->FindElement("tank");
+  while (tank_element) {
+    Tanks.push_back(new FGTank(FDMExec, tank_element, numTanks));
+    if (Tanks.back()->GetType() == FGTank::ttFUEL) numFuelTanks++;
+    else if (Tanks.back()->GetType() == FGTank::ttOXIDIZER) numOxiTanks++;
+    else {cerr << "Unknown tank type specified." << endl; return false;}
+    numTanks++;
+    tank_element = el->FindNextElement("tank");
+  }
+  numSelectedFuelTanks = numFuelTanks;
+  numSelectedOxiTanks  = numOxiTanks;
+
   Element* engine_element = el->FindElement("engine");
   while (engine_element) {
     engine_filename = engine_element->GetAttributeValue("file");
@@ -302,20 +316,6 @@ bool FGPropulsion::Load(Element* el)
     engine_element = el->FindNextElement("engine");
     ResetParser();
   }
-
-  // Process tank definitions
-
-  Element* tank_element = el->FindElement("tank");
-  while (tank_element) {
-    Tanks.push_back(new FGTank(FDMExec, tank_element, numTanks));
-    if (Tanks.back()->GetType() == FGTank::ttFUEL) numFuelTanks++;
-    else if (Tanks.back()->GetType() == FGTank::ttOXIDIZER) numOxiTanks++;
-    else {cerr << "Unknown tank type specified." << endl; return false;}
-    numTanks++;
-    tank_element = el->FindNextElement("tank");
-  }
-  numSelectedFuelTanks = numFuelTanks;
-  numSelectedOxiTanks  = numOxiTanks;
 
   CalculateTankInertias();
   if (!ThrottleAdded) FCS->AddThrottle(); // need to have at least one throttle

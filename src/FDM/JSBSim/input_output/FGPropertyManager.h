@@ -43,9 +43,9 @@ INCLUDES
 
 #include <string>
 #include <iostream>
-#include <simgear/props/props.hxx>
+#include "simgear/props/props.hxx"
 #if !PROPS_STANDALONE
-# include <simgear/math/SGMath.hxx>
+# include "simgear/math/SGMath.hxx"
 #endif
 
 #include "FGJSBBase.h"

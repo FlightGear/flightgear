@@ -41,8 +41,8 @@ INCLUDES
 #include <vector>
 
 #include "FGModel.h"
-#include <input_output/FGXMLElement.h>
-#include <math/FGColumnVector3.h>
+#include "input_output/FGXMLElement.h"
+#include "math/FGColumnVector3.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS

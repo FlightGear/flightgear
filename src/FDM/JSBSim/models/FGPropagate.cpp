@@ -57,12 +57,12 @@ INCLUDES
 #include <iomanip>
 
 #include "FGPropagate.h"
-#include <FGFDMExec.h>
-#include <FGState.h>
+#include "FGFDMExec.h"
+#include "FGState.h"
 #include "FGAircraft.h"
 #include "FGMassBalance.h"
 #include "FGInertial.h"
-#include <input_output/FGPropertyManager.h>
+#include "input_output/FGPropertyManager.h"
 
 namespace JSBSim {
 

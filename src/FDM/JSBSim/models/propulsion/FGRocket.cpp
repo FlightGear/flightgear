@@ -125,8 +125,12 @@ double FGRocket::Calculate(void)
     if ((Throttle == 1 || BurnTime > 0.0 ) && !Starved) {
       BurnTime += State->Getdt();
       double TotalEngineFuelAvailable=0.0;
-      for (int i=0; i<(int)SourceTanks.size(); i++)
-        TotalEngineFuelAvailable += Propulsion->GetTank(SourceTanks[i])->GetContents();
+      for (int i=0; i<(int)SourceTanks.size(); i++) {
+        FGTank* tank = Propulsion->GetTank(i);
+        if (SourceTanks[i] == 1) {
+          TotalEngineFuelAvailable += tank->GetContents();
+        }
+      }
 
       VacThrust = ThrustTable->GetValue(TotalEngineFuelAvailable);
     } else {

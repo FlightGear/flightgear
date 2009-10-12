@@ -41,10 +41,10 @@ INCLUDES
 #include <vector>
 
 #include <string>
-#include <models/flight_control/FGFCSComponent.h>
-#include <models/FGModel.h>
-#include <models/FGLGear.h>
-#include <input_output/FGXMLFileRead.h>
+#include "models/flight_control/FGFCSComponent.h"
+#include "models/FGModel.h"
+#include "models/FGLGear.h"
+#include "input_output/FGXMLFileRead.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
