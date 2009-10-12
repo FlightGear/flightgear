@@ -52,13 +52,13 @@ private:
 	GPSWaypoint* _actWp;
 	
 	// The actual ACT page that gets displayed...
-	GPSPage* _actPage;
+	KLN89Page* _actPage;
 	// ...which points to one of the below.
-	GPSPage* _aptPage;
-	GPSPage* _vorPage;
-	GPSPage* _ndbPage;
-	GPSPage* _intPage;
-	GPSPage* _usrPage;
+	KLN89Page* _aptPage;
+	KLN89Page* _vorPage;
+	KLN89Page* _ndbPage;
+	KLN89Page* _intPage;
+	KLN89Page* _usrPage;
 };
 
 #endif	// _KLN89_PAGE_ACT_HXX

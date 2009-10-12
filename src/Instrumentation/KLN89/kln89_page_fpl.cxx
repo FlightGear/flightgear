@@ -144,7 +144,7 @@ void KLN89FplPage::Update(double dt) {
 		//----------------------------------------- end active FP copy ------------------------------------------------
 		
 		// Recalculate which waypoint is displayed at the top of the list if required (generally if this page has lost focus).
-		int idx = _parent->GetActiveWaypointIndex();
+		int idx = _kln89->GetActiveWaypointIndex();
 		if(_resetFplPos0) {
 			if(waylist.size() <= 1) {
 				_fplPos = 0;
@@ -679,7 +679,7 @@ void KLN89FplPage::LooseFocus() {
 
 void KLN89FplPage::EntPressed() {
 	if(_delFP) {
-		_parent->ClearFlightPlan(_subPage);
+		_kln89->ClearFlightPlan(_subPage);
 		CrsrPressed();
 	} else if(_delWp) {
 		int pos = _uLinePos - 4 + _fplPos;
@@ -750,7 +750,7 @@ void KLN89FplPage::EntPressed() {
 			}
 		} else {
 			// Use
-			_parent->ClearFlightPlan(0);
+			_kln89->ClearFlightPlan(0);
 			for(unsigned int i=0; i<_kln89->_flightPlans[_subPage]->waypoints.size(); ++i) {
 				GPSWaypoint* wp = new GPSWaypoint;
 				*wp = *(_kln89->_flightPlans[_subPage]->waypoints[i]);
@@ -759,13 +759,13 @@ void KLN89FplPage::EntPressed() {
 			_kln89->OrientateToActiveFlightPlan();
 			_subPage = 0;
 		}
-		_parent->CrsrPressed();
+		_kln89->CrsrPressed();
 	} else if(_uLinePos == 2) {
 		if(_kln89->_flightPlans[_subPage]->IsEmpty()) {
 			// ERROR !!!
 		} else {
 			// Use Invert
-			_parent->ClearFlightPlan(0);
+			_kln89->ClearFlightPlan(0);
 			for(unsigned int i=0; i<_kln89->_flightPlans[_subPage]->waypoints.size(); ++i) {
 				GPSWaypoint* wp = new GPSWaypoint;
 				*wp = *(_kln89->_flightPlans[_subPage]->waypoints[i]);
@@ -774,7 +774,7 @@ void KLN89FplPage::EntPressed() {
 			}
 			_kln89->OrientateToActiveFlightPlan();
 		}
-		_parent->CrsrPressed();
+		_kln89->CrsrPressed();
 		_subPage = 0;
 	}
 }

@@ -31,6 +31,8 @@
 #include <Instrumentation/dclgps.hxx>
 #include "kln89_page.hxx"
 
+class KLN89Page;
+
 const int KLN89MapScales[2][21] = {{1, 2, 3, 5, 7, 10, 12, 15, 17, 20, 25, 30, 40, 60, 80, 100, 120, 160, 240, 320, 500},
 	                               {2, 4, 6, 9, 13, 18, 22, 28, 32, 37, 46, 55, 75, 110, 150, 185, 220, 300, 440, 600, 925}};
 
@@ -47,6 +49,9 @@ const char* KLN89TimeCodes[20] = { "UTC", "GST", "GDT", "ATS", "ATD", "EST", "ED
 // Used for storing airport town and county mapped by ID, since currently FG does not store this
 typedef map<string, string> airport_id_str_map_type;
 typedef airport_id_str_map_type::iterator airport_id_str_map_iterator;
+
+typedef vector<KLN89Page*> kln89_page_list_type;
+typedef kln89_page_list_type::iterator kln89_page_list_itr;
 
 class KLN89 : public DCLGPS {
 	
@@ -71,6 +76,7 @@ public:
 	
 	void bind();
 	void unbind();
+	void init();
 	void update(double dt);
 	
 	inline void SetTurnAnticipation(bool b) { _turnAnticipationEnabled = b; }
@@ -100,6 +106,8 @@ public:
 	void CreateDefaultFlightPlans();
 
 private:
+	void ToggleOBSMode();
+
 	//----------------------- Drawing functions which take CHARACTER units -------------------------
 	// Render string s in display field field at position x, y
 	// WHERE POSITION IS IN CHARACTER UNITS!
@@ -192,16 +200,26 @@ private:
 	// Set gap to true to get a space between A and 9 when wrapping, set wrap to false to disable wrap.
 	char IncChar(char c, bool gap = false, bool wrap = true);
 	char DecChar(char c, bool gap = false, bool wrap = true);
+
+	// ==================== Page organisation stuff =============
+	// The list of cyclical pages that the user can cycle through
+	kln89_page_list_type _pages;
+	
+	// The currently active page
+	KLN89Page* _activePage;
+	// And a facility to save the immediately preceeding active page
+	KLN89Page* _lastActivePage;
 	
 	// Hackish
 	int _entJump;	// The page to jump back to if ent is pressed.  -1 indicates no jump
 	bool _entRestoreCrsr;	// Indicates that pressing ENT at this point should restore cursor mode
 	
-	// Misc pages
+	// Misc pages that aren't in the cyclic list.
 	// Direct To
-	GPSPage* _dir_page;
+	KLN89Page* _dir_page;
 	// Nearest
-	GPSPage* _nrst_page;
+	KLN89Page* _nrst_page;
+	// ====================== end of page stuff ===================
 	
 	// Moving-map display stuff
 	int _mapOrientation;	// 0 => North (true) up, 1 => DTK up, 2 => TK up, 3 => heading up (only when connected to external heading source).

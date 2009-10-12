@@ -29,7 +29,7 @@
 
 class KLN89;
 
-class KLN89Page : public GPSPage {
+class KLN89Page {
 
 public:
 	KLN89Page(KLN89* parent);
@@ -51,10 +51,15 @@ public:
 	virtual void OBSPressed();
 	virtual void MsgPressed();
 	
-	// See base class comments for this.
+	// Sometimes a page needs to maintain state for some return paths,
+	// but change it for others.  The CleanUp function can be used for
+	// changing state for non-ENT return  paths in conjunction with
+	// GPS::_cleanUpPage
 	virtual void CleanUp();
 	
-	// ditto
+	// The LooseFocus function is called when a page or subpage looses focus
+	// and allows pages to clean up state that is maintained whilst focus is
+	// retained, but lost on return.
 	virtual void LooseFocus();
 	
 	inline void SetEntInvert(bool b) { _entInvert = b; }
@@ -63,8 +68,20 @@ public:
 	virtual void SetId(const string& s);
 	virtual const string& GetId();
 	
+	inline int GetSubPage() { return(_subPage); }
+	
+	inline int GetNSubPages() { return(_nSubPages); }
+	
+	inline const string& GetName() { return(_name); }
+	
 protected:
+
 	KLN89* _kln89;
+	
+	string _name;	// eg. "APT", "NAV" etc
+	int _nSubPages;
+	// _subpage is zero based
+	int _subPage;	// The subpage gets remembered when other pages are displayed
 	
 	// Underline position in cursor mode is not persistant when subpage is changed - hence we only need one variable per page for it.
 	// Note that pos 0 is special - this is the leg pos in field 1, so pos will normally be set to 1 when crsr is pressed.
@@ -88,6 +105,9 @@ protected:
 	double _scratchpadTimer;	// Used for displaying the scratchpad messages for the right amount of time.
 	string _scratchpadLine1;
 	string _scratchpadLine2;
+	
+	// TODO - remove this function from this class and use a built in method instead.
+	string GPSitoa(int n);
 };
 
 #endif	// _KLN89_PAGE_HXX
