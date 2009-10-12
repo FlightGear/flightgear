@@ -83,6 +83,7 @@ typedef vector<FGEventSetting_ptr> setting_list_t;
 class FGInputDevice;
 class FGInputEvent : public SGReferenced,FGCommonInput {
 public:
+
   /*
    * Constructor for the class. The arg node shall point
    * to the property corresponding to the <event>  node
@@ -110,6 +111,7 @@ public:
   static FGInputEvent * NewObject( FGInputDevice * device, SGPropertyNode_ptr node );
 
 protected:
+  virtual void fire( SGBinding * binding, FGEventData & eventData );
   /* A more or less meaningfull description of the event */
   string desc;
 
@@ -143,6 +145,9 @@ protected:
 class FGAxisEvent : public FGInputEvent {
 public:
   FGAxisEvent( FGInputDevice * device, SGPropertyNode_ptr node );
+  void SetMaxRange( double value ) { maxRange = value; }
+  void SetMinRange( double value ) { minRange = value; }
+  void SetRange( double min, double max ) { minRange = min; maxRange = max; }
 protected:
   virtual void fire( FGEventData & eventData );
   double tolerance;
@@ -153,6 +158,20 @@ protected:
   double lowThreshold;
   double highThreshold;
   double lastValue;
+};
+
+class FGRelAxisEvent : public FGAxisEvent {
+public:
+  FGRelAxisEvent( FGInputDevice * device, SGPropertyNode_ptr node );
+protected:
+  virtual void fire( SGBinding * binding, FGEventData & eventData );
+};
+
+class FGAbsAxisEvent : public FGAxisEvent {
+public:
+  FGAbsAxisEvent( FGInputDevice * device, SGPropertyNode_ptr node ) : FGAxisEvent( device, node ) {}
+protected:
+  virtual void fire( SGBinding * binding, FGEventData & eventData );
 };
 
 typedef class SGSharedPtr<FGInputEvent> FGInputEvent_ptr;

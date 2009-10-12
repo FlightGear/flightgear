@@ -273,6 +273,11 @@ FGLinuxInputDevice::FGLinuxInputDevice() :
 {
 }
 
+static inline bool bitSet( unsigned char * buf, unsigned char bit )
+{
+  return (buf[bit/sizeof(bit)/8] >> (bit%(sizeof(bit)*8))) & 1;
+}
+
 void FGLinuxInputDevice::Open()
 {
   if( fd != -1 ) return;
@@ -280,8 +285,37 @@ void FGLinuxInputDevice::Open()
     throw exception();
   }
 
-  if( GetGrab() && ioctl( fd, EVIOCGRAB, 2 ) != 0 ) {
+  if( GetGrab() && ioctl( fd, EVIOCGRAB, 2 ) == -1 ) {
     SG_LOG( SG_INPUT, SG_WARN, "Can't grab " << devname << " for exclusive access" );
+  }
+
+  unsigned char buf[ABS_CNT/sizeof(unsigned char)/8];
+  // get axes maximums
+  if( ioctl( fd, EVIOCGBIT(EV_ABS,ABS_MAX), buf ) == -1 ) {
+    SG_LOG( SG_INPUT, SG_WARN, "Can't get abs-axes for " << devname );
+  } else {
+    for( unsigned i = 0; i < ABS_MAX; i++ ) {
+      if( bitSet( buf, i ) ) {
+        struct input_absinfo ai;
+        if( ioctl(fd, EVIOCGABS(i), &ai) == -1 ) {
+          SG_LOG( SG_INPUT, SG_WARN, "Can't get abs-axes maximums for " << devname );
+          continue;
+        }
+        absinfo[i] = ai;
+      }
+    }
+  }
+}
+
+double FGLinuxInputDevice::Normalize( struct input_event & event ) 
+{
+  if( absinfo.count(event.code) > 0 ) {
+     const struct input_absinfo & ai = absinfo[(unsigned int)event.code];
+     if( ai.maximum == ai.minimum )
+       return 0.0;
+     return ((double)event.value-(double)ai.minimum)/((double)ai.maximum-(double)ai.minimum);
+  } else {
+    return (double)event.value;
   }
 }
 
@@ -437,7 +471,6 @@ void FGLinuxEventInput::AddHalDevice( const char * udi )
 void FGLinuxEventInput::update( double dt )
 {
   FGEventInput::update( dt );
-
   // index the input devices by the associated fd and prepare
   // the pollfd array by filling in the file descriptor
   struct pollfd fds[input_devices.size()];
@@ -467,6 +500,9 @@ void FGLinuxEventInput::update( double dt )
           continue;
 
         FGLinuxEventData eventData( event, dt, modifiers );
+
+        if( event.type == EV_ABS )
+          eventData.value = devicesByFd[fds[i].fd]->Normalize( event );
 
         // let the FGInputDevice handle the data
         devicesByFd[fds[i].fd]->HandleEvent( eventData );
