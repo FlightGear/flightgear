@@ -375,6 +375,12 @@
 			Name="Lib_Autopilot"
 			Filter="">
 			<File
+				RelativePath="..\..\src\Autopilot\autobrake.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\Autopilot\autobrake.hxx">
+			</File>
+			<File
 				RelativePath="..\..\src\Autopilot\route_mgr.cxx">
 			</File>
 			<File
