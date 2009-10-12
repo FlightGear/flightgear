@@ -468,7 +468,9 @@ void drawHUD(osg::State* state)
                   fgGetDouble("/autopilot/settings/true-heading-deg") );
         HUD_TextList.add( fgText( 40, apY, hud_hdg_text ) );
         apY -= 15;
-
+    }
+  
+    if (fgGetBool("/autopilot/route-manager/active", false)) {
         string wp0_id = fgGetString( "/autopilot/route-manager/wp[0]/id" );
         if ( wp0_id.length() > 0 ) {
             snprintf( hud_wp0_text, 256, "%5s %6.1fnm %s", wp0_id.c_str(),

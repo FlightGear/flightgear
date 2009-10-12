@@ -27,6 +27,10 @@
 #  include <config.h>
 #endif
 
+#ifdef HAVE_WINDOWS_H
+#include <time.h>
+#endif
+
 #include <simgear/compiler.h>
 
 #include "route_mgr.hxx"
@@ -61,11 +65,7 @@ static double get_ground_speed() {
 FGRouteMgr::FGRouteMgr() :
     _route( new SGRoute ),
     _autoSequence(true),
-    lon( NULL ),
-    lat( NULL ),
-    alt( NULL ),
-    target_altitude_ft( NULL ),
-    altitude_lock( NULL ),
+    _driveAutopilot(true),
     input(fgGetNode( RM "input", true )),
     mirror(fgGetNode( RM "route", true )),
     altitude_set( false )
@@ -92,9 +92,12 @@ void FGRouteMgr::init() {
   alt = fgGetNode( "/position/altitude-ft", true );
   magvar = fgGetNode("/environment/magnetic-variation-deg", true);
   
-  target_altitude_ft = fgGetNode( "/autopilot/settings/target-altitude-ft", true );
-  altitude_lock = fgGetNode( "/autopilot/locks/altitude", true );
-
+// autopilot drive properties
+  _apTargetAltitudeFt = fgGetNode( "/autopilot/settings/target-altitude-ft", true );
+  _apAltitudeLock = fgGetNode( "/autopilot/locks/altitude", true );
+  _apTrueHeading = fgGetNode( "/autopilot/settings/true-heading-deg", true );
+  rm->tie("drive-autopilot", SGRawValuePointer<bool>(&_driveAutopilot));
+  
   departure = fgGetNode(RM "departure", true);
 // init departure information from current location
   SGGeod pos = SGGeod::fromDegFt(lon->getDoubleValue(), lat->getDoubleValue(), alt->getDoubleValue());
@@ -199,13 +202,15 @@ void FGRouteMgr::updateTargetAltitude() {
     }
     
     altitude_set = true;
-    target_altitude_ft->setDoubleValue(wp.get_target().getElevationFt());
+    
+    if (!_driveAutopilot) {
+      return;
+    }
+    
+    _apTargetAltitudeFt->setDoubleValue(wp.get_target().getElevationFt());
             
     if ( !near_ground() ) {
-        // James Turner [zakalawe]: there's no explanation for this logic,
-        // it feels like the autopilot should pull the target altitude out of
-        // wp0 instead of us pushing it through here. Hmmm.
-        altitude_lock->setStringValue( "altitude-hold" );
+        _apAltitudeLock->setStringValue( "altitude-hold" );
     }
 }
 
@@ -215,12 +220,20 @@ bool FGRouteMgr::isRouteActive() const
 }
 
 void FGRouteMgr::update( double dt ) {
+    if (dt <= 0.0) {
+      // paused, nothing to do here
+      return;
+    }
+  
     if (!active->getBoolValue()) {
       return;
     }
     
     double groundSpeed = get_ground_speed();
-    if (!airborne->getBoolValue()) {
+    if (airborne->getBoolValue()) {
+      time_t now = time(NULL);
+      elapsedFlightTime->setDoubleValue(difftime(now, _takeoffTime));
+    } else { // not airborne
       if (weightOnWheels->getBoolValue() || (groundSpeed < 40)) {
         return;
       }
@@ -230,9 +243,7 @@ void FGRouteMgr::update( double dt ) {
       departure->setIntValue("takeoff-time", _takeoffTime);
     }
     
-    time_t now = time(NULL);
-    elapsedFlightTime->setDoubleValue(difftime(now, _takeoffTime));
-    
+  // basic course/distance information
     double inboundCourse, dummy, wp_course, wp_distance;
     SGWayPoint wp = _route->get_current();
   
@@ -251,6 +262,11 @@ void FGRouteMgr::update( double dt ) {
       }
     }
 
+    if (_driveAutopilot) {
+      _apTrueHeading->setDoubleValue(wp_course);
+    }
+    
+  // update wp0 / wp1 / wp-last for legacy users
     wp0->setDoubleValue("dist", wp_distance * SG_METER_TO_NM);
     wp_course -= magvar->getDoubleValue(); // expose magnetic bearing
     wp0->setDoubleValue("bearing-deg", wp_course);
@@ -283,6 +299,12 @@ void FGRouteMgr::update( double dt ) {
 
 
 void FGRouteMgr::setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDistance) {
+    double speed = get_ground_speed();
+    if (speed < 1.0) {
+      aProp->setStringValue("--:--");
+      return;
+    }
+  
     char eta_str[64];
     double eta = aDistance * SG_METER_TO_NM / get_ground_speed();
     if ( eta >= 100.0 ) { 
@@ -622,6 +644,7 @@ void FGRouteMgr::currentWaypointChanged()
   }
   
   currentWp->setIntValue(_route->current_index());
+  updateTargetAltitude();
   SG_LOG(SG_AUTOPILOT, SG_INFO, "route manager, current-wp is now " << _route->current_index());
 }
 
