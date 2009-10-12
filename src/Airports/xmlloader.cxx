@@ -34,7 +34,7 @@ XMLLoader::~XMLLoader() {}
 
 void XMLLoader::load(FGAirportDynamics* d) {
   FGAirportDynamicsXMLLoader visitor(d);
-  if (fgGetBool("/sim/traffic-manager/use-custom-scenery-data") == false) {
+  if (fgGetBool("/sim/paths/use-custom-scenery-data") == false) {
    SGPath parkpath( globals->get_fg_root() );
    parkpath.append( "/AI/Airports/" );
    parkpath.append( d->getId() );
@@ -57,7 +57,7 @@ void XMLLoader::load(FGAirportDynamics* d) {
 
 void XMLLoader::load(FGRunwayPreference* p) {
   FGRunwayPreferenceXMLLoader visitor(p);
-  if (fgGetBool("/sim/traffic-manager/use-custom-scenery-data") == false) {
+  if (fgGetBool("/sim/paths/use-custom-scenery-data") == false) {
     SGPath rwyPrefPath( globals->get_fg_root() );
     rwyPrefPath.append( "AI/Airports/" );
     rwyPrefPath.append( p->getId() );

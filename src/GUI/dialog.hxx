@@ -12,6 +12,7 @@
 #include <simgear/compiler.h>	// for SG_USING_STD
 #include <simgear/props/props.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/props/condition.hxx>
 
 #include <vector>
 using std::vector;
@@ -91,6 +92,15 @@ public:
      */
     virtual void update ();
 
+    /**
+     * Recompute the dialog's layout
+     */
+    void relayout();
+    
+    
+    void setNeedsLayout() {
+      _needsRelayout = true;
+    }
 private:
 
     enum {
@@ -127,6 +137,11 @@ private:
     // return key code number for keystring
     int getKeyCode(const char *keystring);
 
+    /**
+     * Apply layout sizes to a tree of puObjects
+     */
+    void applySize(puObject *object);
+
     // The top-level PUI object.
     puObject * _object;
 
@@ -140,6 +155,8 @@ private:
     // The source xml tree, so that we can pass data back, such as the
     // last position.
     SGPropertyNode_ptr _props;
+
+    bool _needsRelayout;
 
     // Nasal module.
     string _module;
@@ -160,6 +177,24 @@ private:
     };
     vector<PropertyObject *> _propertyObjects;
     vector<PropertyObject *> _liveObjects;
+    
+    class ConditionalObject : public SGConditional
+    {
+    public:
+      ConditionalObject(const std::string& aName, puObject* aPu) :
+        _name(aName),
+        _pu(aPu)
+      { ; }
+    
+      void update(FGDialog* aDlg);
+    
+    private:
+      const std::string _name;
+      puObject* _pu;      
+    };
+    
+    typedef SGSharedPtr<ConditionalObject> ConditionalObjectRef;
+    vector<ConditionalObjectRef> _conditionalObjects;
 };
 
 //
