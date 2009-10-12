@@ -395,8 +395,8 @@ const FGAIBase *
 FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range)
 {
     // we specify tgt extent (ft) according to the AIObject type
-    double tgt_ht[]     = {0, 50 ,100, 250, 0, 100, 0, 0, 50, 50, 50};
-    double tgt_length[] = {0, 100, 200, 750, 0, 50, 0, 0, 200, 100, 100};
+    double tgt_ht[]     = {0,  50, 100, 250, 0, 100, 0, 0,  50, 50,  20,  50};
+    double tgt_length[] = {0, 100, 200, 750, 0,  50, 0, 0, 200, 100, 40, 100};
     ai_list_iterator ai_list_itr = ai_list.begin();
     ai_list_iterator end = ai_list.end();
 
@@ -407,11 +407,11 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
 
         if (fabs(tgt_alt - alt) > tgt_ht[type] || type == FGAIBase::otBallistic
             || type == FGAIBase::otStorm || type == FGAIBase::otThermal ) {
-                SG_LOG(SG_GENERAL, SG_DEBUG, "AIManager: skipping "
-                    << fabs(tgt_alt - alt)
-                    << " "
-                    << type
-                    );
+                //SG_LOG(SG_GENERAL, SG_DEBUG, "AIManager: skipping "
+                //    << fabs(tgt_alt - alt)
+                //    << " "
+                //    << type
+                //    );
                 ++ai_list_itr;
                 continue;
         }
@@ -422,14 +422,14 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
 
         double range = calcRange(lat, lon, tgt_lat, tgt_lon);
 
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AIManager:  AI list size "
-            << ai_list.size()
-            << " type " << type
-            << " ID " << id
-            << " range " << range
-            //<< " bearing " << bearing
-            << " alt " << tgt_alt
-            );
+        //SG_LOG(SG_GENERAL, SG_DEBUG, "AIManager:  AI list size "
+        //    << ai_list.size()
+        //    << " type " << type
+        //    << " ID " << id
+        //    << " range " << range
+        //    //<< " bearing " << bearing
+        //    << " alt " << tgt_alt
+        //    );
 
         tgt_length[type] += fuse_range;
 
