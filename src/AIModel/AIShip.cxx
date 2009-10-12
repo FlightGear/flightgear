@@ -42,17 +42,36 @@
 
 
 FGAIShip::FGAIShip(object_type ot) :
-    FGAIBase(ot),
-    _limit(40),
-    _elevation_m(0),
-    _elevation_ft(0),
-    _tow_angle(0),
-    _dt_count(0),
-    _next_run(0),
-    _lead_angle(0),
-    _xtrack_error(0)
+FGAIBase(ot),
+_limit(40),
+_elevation_m(0),
+_elevation_ft(0),
+_tow_angle(0),
+_dt_count(0),
+_next_run(0),
+_lead_angle(0),
+_xtrack_error(0),
+_tunnel(false),
+_curr_alt(0),
+_prev_alt(0),
+_until_time(""),
+_fp_init(false),
+_missed(false),
+_waiting(false),
+_new_waypoint(true),
+_missed_count(0),
+_wait_count(0),
+_missed_time_sec(30),
+_day(86400),
+_wp_range(0),
+_old_range(0),
+_range_rate(0),
+_roll_constant(0.001),
+_hdg_constant(0.01),
+_roll_factor(-0.0083335)
 
 {
+        invisible = false;
 }
 
 FGAIShip::~FGAIShip() {
@@ -79,7 +98,7 @@ void FGAIShip::readFromScenario(SGPropertyNode* scFileNode) {
     setSpeedConstant(scFileNode->getDoubleValue("speed-constant", 0.5));
 
     if (!flightplan.empty()) {
-            SG_LOG(SG_GENERAL, SG_ALERT, "getting flightplan: " << _name );
+        SG_LOG(SG_GENERAL, SG_ALERT, "getting flightplan: " << _name );
 
         FGAIFlightPlan* fp = new FGAIFlightPlan(flightplan);
         setFlightPlan(fp);
@@ -91,8 +110,6 @@ bool FGAIShip::init(bool search_in_AI_path) {
     prev = 0; // the one behind you
     curr = 0; // the one ahead
     next = 0; // the next plus 1
-
-    _until_time = "";
 
     props->setStringValue("name", _name.c_str());
     props->setStringValue("waypoint/name-prev", _prev_name.c_str());
@@ -106,26 +123,7 @@ bool FGAIShip::init(bool search_in_AI_path) {
     _rudder = 0.0;
     no_roll = false;
 
-    _roll_constant = 0.001;
-    _hdg_constant = 0.01;
-    _roll_factor = -0.0083335;
-
     _rd_turn_radius_ft = _sp_turn_radius_ft = turn_radius_ft;
-
-    _fp_init = false;
-    _missed = false;
-    _waiting = false;
-    _new_waypoint = true;
-
-    _missed_count = 0;
-    _wait_count = 0;
-    _missed_time_sec = 30;
-
-    _day = 86400;
-
-
-    _wp_range = _old_range = 0;
-    _range_rate = 0;
 
     if (fp)
         _fp_init = initFlightPlan();
@@ -178,6 +176,12 @@ void FGAIShip::bind() {
         SGRawValuePointer<bool>(&_waiting));
     props->tie("waypoint/lead-angle-deg",
         SGRawValuePointer<double>(&_lead_angle));
+    props->tie("waypoint/tunnel",
+        SGRawValuePointer<bool>(&_tunnel));
+    props->tie("waypoint/alt-curr-m",
+        SGRawValuePointer<double>(&_curr_alt));
+    props->tie("waypoint/alt-prev-m",
+        SGRawValuePointer<double>(&_prev_alt));
     props->tie("submodels/serviceable",
         SGRawValuePointer<bool>(&_serviceable));
     props->tie("controls/turn-radius-ft",
@@ -216,6 +220,9 @@ void FGAIShip::unbind() {
     props->untie("waypoint/lead-angle-deg");
     props->untie("waypoint/xtrack-error-ft");
     props->untie("waypoint/waiting");
+    props->untie("waypoint/tunnel");
+    props->untie("waypoint/alt-curr-m");
+    props->untie("waypoint/alt-prev-m");
     props->untie("submodels/serviceable");
     props->untie("controls/turn-radius-ft");
     props->untie("controls/turn-radius-corrected-ft");
@@ -257,7 +264,7 @@ void FGAIShip::update(double dt) {
     // Only change these values if we are able to compute them safely
     if (SGLimits<double>::min() < dt) {
         // Now here is the finite difference ...
-        
+
         // Transform that one to the horizontal local coordinate system.
         SGQuatd ec2hlNew = SGQuatd::fromLonLat(pos);
         // compute the new orientation
@@ -268,7 +275,7 @@ void FGAIShip::update(double dt) {
         dOr.getAngleAxis(dOrAngleAxis);
         // divided by the time difference provides a rotation speed vector
         dOrAngleAxis /= dt;
-        
+
         aip.setBodyAngularVelocity(dOrAngleAxis);
     }
 }
@@ -331,7 +338,7 @@ void FGAIShip::Run(double dt) {
         // adjust turn radius for speed. The equation is very approximate.
         // we need to allow for negative speeds
         if (type == "ship")
-        _sp_turn_radius_ft = 10 * pow ((fabs(speed) - 15), 2) + turn_radius_ft;
+            _sp_turn_radius_ft = 10 * pow ((fabs(speed) - 15), 2) + turn_radius_ft;
         else
             _sp_turn_radius_ft = turn_radius_ft;
 
@@ -399,10 +406,10 @@ void FGAIShip::Run(double dt) {
     // set the _rudder limit by speed
     if (type == "ship"){
 
-    if (speed <= 40)
-        rudder_limit = (-0.825 * speed) + 35;
-    else
-        rudder_limit = 2;
+        if (speed <= 40)
+            rudder_limit = (-0.825 * speed) + 35;
+        else
+            rudder_limit = 2;
 
     } else
         rudder_limit = 20;
@@ -549,7 +556,7 @@ void FGAIShip::setWPNames() {
         setPrevName("");
 
     if (curr != 0)
-    setCurrName(curr->name);
+        setCurrName(curr->name);
     else{
         setCurrName("");
         SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: current wp name error" );
@@ -594,9 +601,7 @@ double FGAIShip::getCourse(double lat, double lon, double lat2, double lon2) con
 void FGAIShip::ProcessFlightPlan(double dt) {
 
     double time_sec = getDaySeconds();
-    double until_time_sec = 0;
 
-    _missed = false;
     _dt_count += dt;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -610,6 +615,9 @@ void FGAIShip::ProcessFlightPlan(double dt) {
         return;
 
     _next_run = 1.0 + (0.5 * sg_random());
+
+    double until_time_sec = 0;
+    _missed = false;
 
     // check to see if we've reached the point for our next turn
     // if the range to the waypoint is less than the calculated turn
@@ -646,7 +654,24 @@ void FGAIShip::ProcessFlightPlan(double dt) {
 
     if ((_wp_range < (sp_turn_radius_nm * 1.25)) || _missed || (_waiting && !_new_waypoint)) {
 
-        if (_next_name == "END" || fp->getNextWaypoint() == 0) {
+        if (_next_name == "TUNNEL"){
+            _tunnel = !_tunnel;
+
+            //SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: " << _name << " TUNNEL ");
+
+            fp->IncrementWaypoint(false);
+            next = fp->getNextWaypoint();
+
+            if (next->name == "WAITUNTIL" || next->name == "WAIT"
+                || next->name == "END" || next->name == "TUNNEL")
+                return;
+
+            prev = curr;
+            fp->IncrementWaypoint(false);
+            curr = fp->getCurrentWaypoint();
+            next = fp->getNextWaypoint();
+
+        }else if(_next_name == "END" || fp->getNextWaypoint() == 0) {
 
             if (_repeat) {
                 SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: "<< _name << "Flightplan restarting ");
@@ -688,7 +713,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
                 next = fp->getNextWaypoint();
 
                 if (next->name == "WAITUNTIL" || next->name == "WAIT"
-                        || next->name == "END")
+                    || next->name == "END" || next->name == "TUNNEL")
                     return;
 
                 prev = curr;
@@ -703,7 +728,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
             _until_time = next->time;
             setUntilTime(next->time);
             if (until_time_sec > time_sec) {
-                SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: " << _name << " "
+                SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: " << _name << " "
                     << curr->name << " waiting until: "
                     << _until_time << " " << until_time_sec << " now " << time_sec );
                 setSpeed(0);
@@ -748,7 +773,13 @@ void FGAIShip::ProcessFlightPlan(double dt) {
         _wp_range = getRange(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr->latitude, curr->longitude);
         _old_range = _wp_range;
         setWPPos();
-        AccelTo(prev->speed);
+        object_type type = getType();
+
+        if (type != 10)
+            AccelTo(prev->speed);
+
+        _curr_alt = curr->altitude;
+        _prev_alt = prev->altitude;
 
     } else {
         _new_waypoint = false;
@@ -762,7 +793,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
     else
         SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: Bearing or Range is not a finite number");
 
-     _dt_count = 0;
+    _dt_count = 0;
 } // end Processing FlightPlan
 
 bool FGAIShip::initFlightPlan() {
@@ -770,7 +801,6 @@ bool FGAIShip::initFlightPlan() {
     SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: " << _name << " initializing waypoints ");
 
     bool init = false;
-
     _start_sec = 0;
 
     fp->restart();
@@ -785,7 +815,7 @@ bool FGAIShip::initFlightPlan() {
         fp->IncrementWaypoint(false);
         curr = fp->getCurrentWaypoint();
         next = fp->getNextWaypoint();
-    }
+    } // end while loop
 
     if (!_start_time.empty()){
         _start_sec = processTimeString(_start_time);
@@ -814,9 +844,9 @@ bool FGAIShip::initFlightPlan() {
         }
 
     } else {
-    setLatitude(prev->latitude);
-    setLongitude(prev->longitude);
-    setSpeed(prev->speed);
+        setLatitude(prev->latitude);
+        setLongitude(prev->longitude);
+        setSpeed(prev->speed);
     }
 
     setWPNames();
@@ -907,11 +937,11 @@ bool FGAIShip::advanceFlightPlan (double start_sec, double day_sec) {
             next = fp->getNextWaypoint();
 
             if (next->name != "WAITUNTIL" && next->name != "WAIT"
-                    && next->name != "END") {
-                prev = curr;
-                fp->IncrementWaypoint(false);
-                curr = fp->getCurrentWaypoint();
-                next = fp->getNextWaypoint();
+                && next->name != "END") {
+                    prev = curr;
+                    fp->IncrementWaypoint(false);
+                    curr = fp->getCurrentWaypoint();
+                    next = fp->getNextWaypoint();
             }
 
         } else if (next->name == "WAITUNTIL") {
@@ -958,8 +988,8 @@ bool FGAIShip::advanceFlightPlan (double start_sec, double day_sec) {
     // so we will calculate the distance back up the track from the current waypoint
     // then calculate the lat and lon.
 
-    /*cout << "advancing flight plan done elapsed_sec: " << elapsed_sec
-        << " " << day_sec << endl;*/
+    //cout << "advancing flight plan done elapsed_sec: " << elapsed_sec
+    //    << " " << day_sec << endl;
 
     double time_diff = elapsed_sec - day_sec;
     double lat, lon, recip;
@@ -1002,26 +1032,32 @@ bool FGAIShip::advanceFlightPlan (double start_sec, double day_sec) {
 
 void FGAIShip::setWPPos() {
 
-    if (curr->name == "END" || curr->name == "WAIT" || curr->name == "WAITUNTIL"){
-        cout<< curr->name << endl;
-        return;
+    if (curr->name == "END" || curr->name == "WAIT"
+        || curr->name == "WAITUNTIL" || curr->name == "TUNNEL"){
+            //cout << curr->name << " returning" << endl;
+            return;
     }
 
     double elevation_m = 0;
     wppos.setLatitudeDeg(curr->latitude);
     wppos.setLongitudeDeg(curr->longitude);
-    wppos.setElevationFt(0);
+    wppos.setElevationM(0);
 
     if (curr->on_ground){
 
-        if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(wppos, 10000),
-            elevation_m, &_material)){
+        if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(wppos, 3000),
+            elevation_m, &_material, 0)){
                 wppos.setElevationM(elevation_m);
         }
 
+        //cout << curr->name << " setting measured  elev " << elevation_m << endl;
+
     } else {
-        wppos.setElevationFt(curr->altitude);
+        wppos.setElevationM(curr->altitude);
+        //cout << curr->name << " setting FP elev " << elevation_m << endl;
     }
+
+    curr->altitude = wppos.getElevationM();
 
 }
 
@@ -1033,7 +1069,6 @@ void FGAIShip::setXTrackError() {
         curr->latitude, curr->longitude);
     double xtrack_error_nm = sin((course - brg)* SG_DEGREES_TO_RADIANS) * _wp_range;
 
-    //if (_wp_range > _sp_turn_radius_ft / (2 * 6076.1155)){
     if (_wp_range > 0){
         _lead_angle = atan2(xtrack_error_nm,(_wp_range * _proportion)) * SG_RADIANS_TO_DEGREES;
     } else
@@ -1042,9 +1077,6 @@ void FGAIShip::setXTrackError() {
     _lead_angle *= _lead_angle_gain;
     _xtrack_error = xtrack_error_nm * 6076.1155;
 
-    if (_lead_angle<= -_lead_angle_limit)
-        _lead_angle = -_lead_angle_limit;
-    else if (_lead_angle >= _lead_angle_limit)
-        _lead_angle = _lead_angle_limit;
+    SG_CLAMP_RANGE(_lead_angle, -_lead_angle_limit, _lead_angle_limit);
 
 }
