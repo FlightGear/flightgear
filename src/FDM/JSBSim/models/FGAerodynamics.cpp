@@ -42,7 +42,7 @@ INCLUDES
 #include "FGAircraft.h"
 #include "FGAuxiliary.h"
 #include "FGMassBalance.h"
-#include <input_output/FGPropertyManager.h>
+#include "input_output/FGPropertyManager.h"
 
 namespace JSBSim {
 
@@ -324,21 +324,21 @@ bool FGAerodynamics::Load(Element *element)
 
   Debug(2);
 
-  if (temp_element = document->FindElement("alphalimits")) {
+  if ((temp_element = document->FindElement("alphalimits"))) {
     scratch_unit = temp_element->GetAttributeValue("unit");
     if (scratch_unit.empty()) scratch_unit = "RAD";
     alphaclmin = temp_element->FindElementValueAsNumberConvertFromTo("min", scratch_unit, "RAD");
     alphaclmax = temp_element->FindElementValueAsNumberConvertFromTo("max", scratch_unit, "RAD");
   }
 
-  if (temp_element = document->FindElement("hysteresis_limits")) {
+  if ((temp_element = document->FindElement("hysteresis_limits"))) {
     scratch_unit = temp_element->GetAttributeValue("unit");
     if (scratch_unit.empty()) scratch_unit = "RAD";
     alphahystmin = temp_element->FindElementValueAsNumberConvertFromTo("min", scratch_unit, "RAD");
     alphahystmax = temp_element->FindElementValueAsNumberConvertFromTo("max", scratch_unit, "RAD");
   }
 
-  if (temp_element = document->FindElement("aero_ref_pt_shift_x")) {
+  if ((temp_element = document->FindElement("aero_ref_pt_shift_x"))) {
     function_element = temp_element->FindElement("function");
     AeroRPShift = new FGFunction(PropertyManager, function_element);
   }
@@ -557,6 +557,9 @@ void FGAerodynamics::Debug(int from)
           break;
         case (atBodyXYZ):
           cout << endl << "  Aerodynamics (X|Y|Z axes):" << endl << endl;
+          break;
+      case (atNone):
+          cout << endl << "  Aerodynamics (undefined axes):" << endl << endl;
           break;
       }
     }

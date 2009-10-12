@@ -42,8 +42,8 @@ INCLUDES
 
 #include <vector>
 #include "FGEngine.h"
-#include <input_output/FGXMLElement.h>
-#include <math/FGFunction.h>
+#include "input_output/FGXMLElement.h"
+#include "math/FGFunction.h"
 
 #define ID_TURBINE "$Id$"
 

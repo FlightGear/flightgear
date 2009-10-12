@@ -1,10 +1,10 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
- Header:       FGCondition.h
- Author:       Jon S. Berndt
- Date started: 1/02/2003
+ Header:       FGSensorOrientation.h
+ Author:       Jon Berndt
+ Date started: September 2009
 
- ------------- Copyright (C)  -------------
+ ------------- Copyright (C) 2009 -------------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU Lesser General Public License as published by the Free Software
@@ -30,23 +30,23 @@ HISTORY
 SENTRY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifndef FGCONDITION_H
-#define FGCONDITION_H
+#ifndef FGSENSORORIENTATION_H
+#define FGSENSORORIENTATION_H
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <map>
-#include "FGJSBBase.h"
+#include "FGSensor.h"
 #include "input_output/FGXMLElement.h"
-#include "input_output/FGPropertyManager.h"
+#include "math/FGColumnVector3.h"
+#include "math/FGMatrix33.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_CONDITION "$Id$"
+#define ID_SensorOrientation "$Id$"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -58,42 +58,79 @@ namespace JSBSim {
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-/** Encapsulates a condition, which is used in parts of JSBSim including switches
+/** Encapsulates a SensorOrientation capability for a sensor.
+
+Syntax:
+
+@author Jon S. Berndt
+@version $Revision$
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGCondition : public FGJSBBase
+class FGSensorOrientation  : public FGJSBBase
 {
 public:
-  FGCondition(Element* element, FGPropertyManager* PropertyManager);
-  FGCondition(string test, FGPropertyManager* PropertyManager);
-  ~FGCondition(void);
+  FGSensorOrientation(Element* element)
+  {
+    Element* orient_element = element->FindElement("orientation");
+    if (orient_element) vOrient = orient_element->FindElementTripletConvertTo("RAD");
+    else {cerr << "No orientation given for this sensor. " << endl;}
 
-  bool Evaluate(void);
-  void PrintCondition(void);
+    Element* axis_element = element->FindElement("axis");
+    if (axis_element) {
+      string sAxis = element->FindElementValue("axis");
+      if (sAxis == "X" || sAxis == "x") {
+        axis = 1;
+      } else if (sAxis == "Y" || sAxis == "y") {
+        axis = 2;
+      } else if (sAxis == "Z" || sAxis == "z") {
+        axis = 3;
+      } else {
+        cerr << "  Incorrect/no axis specified for this sensor; assuming X axis" << endl;
+        axis = 1;
+      }
+    }
+
+    CalculateTransformMatrix();
+  }
+
+//  ~FGSensorOrientation();
+
+protected:
+  FGColumnVector3 vOrient;
+  FGMatrix33 mT;
+  int axis;
+  void CalculateTransformMatrix(void)
+  {
+    double cp,sp,cr,sr,cy,sy;
+
+    cp=cos(vOrient(ePitch)); sp=sin(vOrient(ePitch));
+    cr=cos(vOrient(eRoll));  sr=sin(vOrient(eRoll));
+    cy=cos(vOrient(eYaw));   sy=sin(vOrient(eYaw));
+
+    mT(1,1) =  cp*cy;
+    mT(1,2) =  cp*sy;
+    mT(1,3) = -sp;
+
+    mT(2,1) = sr*sp*cy - cr*sy;
+    mT(2,2) = sr*sp*sy + cr*cy;
+    mT(2,3) = sr*cp;
+
+    mT(3,1) = cr*sp*cy + sr*sy;
+    mT(3,2) = cr*sp*sy - sr*cy;
+    mT(3,3) = cr*cp;
+
+    // This transform is different than for FGForce, where we want a native nozzle
+    // force in body frame. Here we calculate the body frame accel and want it in
+    // the transformed accelerometer frame. So, the next line is commented out.
+    // mT = mT.Inverse();
+  }
 
 private:
-  enum eComparison {ecUndef=0, eEQ, eNE, eGT, eGE, eLT, eLE};
-  enum eLogic {elUndef=0, eAND, eOR};
-  map <string, eComparison> mComparison;
-  eLogic Logic;
-
-  FGPropertyManager *TestParam1, *TestParam2, *PropertyManager;
-  double TestValue;
-  eComparison Comparison;
-  bool isGroup;
-  string conditional;
-
-  static string indent;
-
-  vector <FGCondition*> conditions;
-  void InitializeConditionals(void);
-
   void Debug(int from);
 };
 }
 #endif
-

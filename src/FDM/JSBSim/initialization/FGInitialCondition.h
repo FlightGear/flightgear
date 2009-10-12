@@ -47,10 +47,10 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <FGFDMExec.h>
-#include <FGJSBBase.h>
-#include <math/FGColumnVector3.h>
-#include <input_output/FGXMLFileRead.h>
+#include "FGFDMExec.h"
+#include "FGJSBBase.h"
+#include "math/FGColumnVector3.h"
+#include "input_output/FGXMLFileRead.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS

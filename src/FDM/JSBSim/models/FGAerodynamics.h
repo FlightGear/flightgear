@@ -42,10 +42,10 @@ INCLUDES
 #include <map>
 
 #include "FGModel.h"
-#include <math/FGFunction.h>
-#include <math/FGColumnVector3.h>
-#include <math/FGMatrix33.h>
-#include <input_output/FGXMLFileRead.h>
+#include "math/FGFunction.h"
+#include "math/FGColumnVector3.h"
+#include "math/FGMatrix33.h"
+#include "input_output/FGXMLFileRead.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS

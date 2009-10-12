@@ -49,7 +49,6 @@ CLASS IMPLEMENTATION
 FGPID::FGPID(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
 {
   string kp_string, ki_string, kd_string;
-  dt = fcs->GetState()->Getdt();
 
   Kp = Ki = Kd = 0.0;
   KpPropertyNode = 0;
@@ -189,7 +188,10 @@ void FGPID::Debug(int from)
       else
         cout << "      INPUT: " << InputNodes[0]->getName() << endl;
 
-      if (IsOutput) cout << "      OUTPUT: " << OutputNode->getName() << endl;
+      if (IsOutput) {
+        for (unsigned int i=0; i<OutputNodes.size(); i++)
+          cout << "      OUTPUT: " << OutputNodes[i]->getName() << endl;
+      }
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification

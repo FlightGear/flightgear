@@ -43,8 +43,8 @@ INCLUDES
 
 #include <vector>
 #include "FGEngine.h"
-#include <input_output/FGXMLElement.h>
-#include <math/FGTable.h>
+#include "input_output/FGXMLElement.h"
+#include "math/FGTable.h"
 
 #define ID_TURBOPROP "$Id$"
 

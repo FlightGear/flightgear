@@ -37,8 +37,8 @@ INCLUDES
 #include <vector>
 #include <string>
 #include "FGParameter.h"
-#include <input_output/FGXMLElement.h>
-#include <input_output/FGPropertyManager.h>
+#include "input_output/FGXMLElement.h"
+#include "input_output/FGPropertyManager.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS

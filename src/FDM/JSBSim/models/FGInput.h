@@ -43,8 +43,8 @@ INCLUDES
 #include <iostream>
 #include <fstream>
 
-#include <input_output/FGfdmSocket.h>
-#include <input_output/FGXMLElement.h>
+#include "input_output/FGfdmSocket.h"
+#include "input_output/FGXMLElement.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS

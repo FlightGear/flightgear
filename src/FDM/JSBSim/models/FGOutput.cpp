@@ -162,8 +162,8 @@ bool FGOutput::InitModel(void)
   if (!FGModel::InitModel()) return false;
 
   if (Filename.size() > 0 && StartNewFile) {
-    int idx = BaseFilename.find_last_of(".");
-    int len = BaseFilename.length();
+    size_t idx = BaseFilename.find_last_of(".");
+    size_t len = BaseFilename.length();
     string extension = "";
     if (idx != string::npos) {
       extension = BaseFilename.substr(idx, len-idx);
@@ -1084,6 +1084,7 @@ void FGOutput::Debug(int from)
         cout << scratch << " in CSV format output at rate " << 1/(State->Getdt()*rate) << " Hz" << endl;
         break;
       case otNone:
+      default:
         cout << "  No log output" << endl;
         break;
       }

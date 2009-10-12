@@ -45,7 +45,7 @@ using std::vector;
 using std::cout;
 using std::endl;
 
-#include <math/FGColumnVector3.h>
+#include "math/FGColumnVector3.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -335,7 +335,8 @@ private:
   Element *parent;
   unsigned int element_index;
   typedef map <string, map <string, double> > tMapConvert;
-  tMapConvert convert;
+  static tMapConvert convert;
+  static bool converterIsInitialized;
 };
 
 } // namespace JSBSim

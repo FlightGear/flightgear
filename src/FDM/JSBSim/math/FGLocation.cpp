@@ -41,7 +41,7 @@ INCLUDES
 #include <cmath>
 
 #include "FGLocation.h"
-#include <input_output/FGPropertyManager.h>
+#include "input_output/FGPropertyManager.h"
 
 namespace JSBSim {
 

@@ -9,6 +9,7 @@ libFlightControl_a_SOURCES = \
 noinst_HEADERS = \
 	FGPID.h FGDeadBand.h FGFCSComponent.h FGFilter.h \
 	FGGain.h FGGradient.h FGKinemat.h FGSummer.h FGSwitch.h FGFCSFunction.h\
-	FGSensor.h FGActuator.h FGAccelerometer.h FGGyro.h FGMagnetometer.h
+	FGSensor.h FGActuator.h FGAccelerometer.h FGGyro.h FGMagnetometer.h \
+	FGSensorOrientation.h
 
 INCLUDES = -I$(top_srcdir)/src/FDM/JSBSim

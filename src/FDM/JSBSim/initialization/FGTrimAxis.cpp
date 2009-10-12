@@ -38,13 +38,13 @@ INCLUDES
 
 #include <string>
 #include <cstdlib>
-#include <FGFDMExec.h>
-#include <models/FGAtmosphere.h>
+#include "FGFDMExec.h"
+#include "models/FGAtmosphere.h"
 #include "FGInitialCondition.h"
 #include "FGTrimAxis.h"
-#include <models/FGAircraft.h>
-#include <models/FGPropulsion.h>
-#include <models/FGAerodynamics.h>
+#include "models/FGAircraft.h"
+#include "models/FGPropulsion.h"
+#include "models/FGAerodynamics.h"
 
 namespace JSBSim {
 

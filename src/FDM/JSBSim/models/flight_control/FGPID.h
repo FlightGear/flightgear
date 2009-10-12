@@ -39,7 +39,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGFCSComponent.h"
-#include <input_output/FGXMLElement.h>
+#include "input_output/FGXMLElement.h"
 #include <string>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -105,7 +105,6 @@ public:
   void ResetPastStates(void) {Input_prev = Input_prev2 = Output = I_out_total = 0.0;}
 
 private:
-  double dt;
   FGPropertyManager *Trigger;
   double Kp, Ki, Kd;
   double I_out_total;

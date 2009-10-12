@@ -39,11 +39,11 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <FGJSBBase.h>
-#include <input_output/FGXMLElement.h>
-#include <math/FGColumnVector3.h>
-#include <models/propulsion/FGForce.h>
-#include <math/FGFunction.h>
+#include "FGJSBBase.h"
+#include "input_output/FGXMLElement.h"
+#include "math/FGColumnVector3.h"
+#include "models/propulsion/FGForce.h"
+#include "math/FGFunction.h"
 
 #include <string>
 using std::string;

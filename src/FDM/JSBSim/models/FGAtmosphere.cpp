@@ -48,12 +48,12 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGAtmosphere.h"
-#include <FGState.h>
-#include <FGFDMExec.h>
+#include "FGState.h"
+#include "FGFDMExec.h"
 #include "FGAircraft.h"
 #include "FGPropagate.h"
 #include "FGInertial.h"
-#include <input_output/FGPropertyManager.h>
+#include "input_output/FGPropertyManager.h"
 
 namespace JSBSim {
 
@@ -454,10 +454,12 @@ void FGAtmosphere::Turbulence(void)
     vDirectiondAccelDt(eX) = GaussianRandomNumber();
     vDirectiondAccelDt(eY) = GaussianRandomNumber();
     vDirectiondAccelDt(eZ) = GaussianRandomNumber();
-
+/*
     MagnitudedAccelDt = GaussianRandomNumber();
     MagnitudeAccel    += MagnitudedAccelDt * DeltaT;
     Magnitude         += MagnitudeAccel * DeltaT;
+*/
+    Magnitude         += GaussianRandomNumber() * DeltaT;
 
     vDirectiondAccelDt.Normalize();
     vDirectionAccel += TurbRate * vDirectiondAccelDt * DeltaT;

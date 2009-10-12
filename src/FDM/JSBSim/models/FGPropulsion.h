@@ -42,10 +42,10 @@ INCLUDES
 #include <fstream>
 
 #include "FGModel.h"
-#include <models/propulsion/FGEngine.h>
-#include <models/propulsion/FGTank.h>
-#include <math/FGMatrix33.h>
-#include <input_output/FGXMLFileRead.h>
+#include "models/propulsion/FGEngine.h"
+#include "models/propulsion/FGTank.h"
+#include "math/FGMatrix33.h"
+#include "input_output/FGXMLFileRead.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS

@@ -99,8 +99,9 @@ void FGTurbine::ResetToIC(void)
   Stalled = Seized = Overtemp = Fire = Augmentation = Injection = Reversed = false;
   Cutoff = true;
   phase = tpOff;
-  EGT_degC = 0.0;
-  OilTemp_degK = (Auxiliary->GetTotalTemperature() - 491.69) * 0.5555556 + 273.0;
+  TAT = (Auxiliary->GetTotalTemperature() - 491.69) * 0.5555556;
+  EGT_degC = TAT;
+  OilTemp_degK = TAT + 273.0;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -313,8 +314,10 @@ double FGTurbine::Stall(void)
   N1 = Seek(&N1, qbar/10.0, 0, N1/10.0);
   N2 = Seek(&N2, qbar/15.0, 0, N2/10.0);
   ConsumeFuel();
-  if (ThrottlePos < 0.01) phase = tpRun;        // clear the stall with throttle
-
+  if (ThrottlePos < 0.01) {
+    phase = tpRun;               // clear the stall with throttle to idle
+    Stalled = false;
+    }
   return 0.0;
 }
 
@@ -325,7 +328,7 @@ double FGTurbine::Seize(void)
     double qbar = Auxiliary->Getqbar();
     N2 = 0.0;
     N1 = Seek(&N1, qbar/20.0, 0, N1/15.0);
-    FuelFlow_pph = IdleFF;
+    FuelFlow_pph = Cutoff ? 0.0 : IdleFF;
     ConsumeFuel();
     OilPressure_psi = 0.0;
     OilTemp_degK = Seek(&OilTemp_degK, TAT + 273.0, 0, 0.2);
@@ -514,6 +517,10 @@ void FGTurbine::bindmodel()
   property_name = base_property_name + "/injection_cmd";
   PropertyManager->Tie( property_name.c_str(), (FGTurbine*)this, 
                         &FGTurbine::GetInjection, &FGTurbine::SetInjection);
+  property_name = base_property_name + "/seized";
+  PropertyManager->Tie( property_name.c_str(), &Seized);
+  property_name = base_property_name + "/stalled";
+  PropertyManager->Tie( property_name.c_str(), &Stalled);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -522,7 +529,7 @@ int FGTurbine::InitRunning(void) {
   State->SuspendIntegration();
   Cutoff=false;
   Running=true;  
-  N2=16.0;
+  N2=IdleN2;
   Calculate();
   State->ResumeIntegration();
   return phase==tpRun;

@@ -50,9 +50,9 @@ INCLUDES
 #include "FGExternalReactions.h"
 #include "FGBuoyantForces.h"
 #include "FGAerodynamics.h"
-#include <FGFDMExec.h>
+#include "FGFDMExec.h"
 #include "FGPropagate.h"
-#include <input_output/FGPropertyManager.h>
+#include "input_output/FGPropertyManager.h"
 
 namespace JSBSim {
 

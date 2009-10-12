@@ -38,12 +38,13 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGSensor.h"
-#include <input_output/FGXMLElement.h>
+#include "input_output/FGXMLElement.h"
 #include "models/FGPropagate.h"
 #include "models/FGMassBalance.h"
 #include "models/FGInertial.h"
 #include "math/FGColumnVector3.h"
 #include "math/FGMatrix33.h"
+#include "FGSensorOrientation.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -118,7 +119,7 @@ time.
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGMagnetometer  : public FGSensor
+class FGMagnetometer  : public FGSensor, public FGSensorOrientation
 {
 public:
   FGMagnetometer(FGFCS* fcs, Element* element);
@@ -131,13 +132,9 @@ private:
   FGMassBalance* MassBalance;
   FGInertial* Inertial;
   FGColumnVector3 vLocation;
-  FGColumnVector3 vOrient;
   FGColumnVector3 vRadius;
   FGColumnVector3 vMag;
-  FGMatrix33 mT;
-  void CalculateTransformMatrix(void);
   void updateInertialMag(void);
-  int axis;
   double field[6];
   double usedLat;
   double usedLon;
