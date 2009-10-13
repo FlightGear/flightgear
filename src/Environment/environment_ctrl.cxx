@@ -44,6 +44,10 @@ public:
 	virtual bool passAirport(FGAirport* aApt) const {
 		return aApt->getMetar();
 	}
+  
+  // permit heliports and seaports too
+  virtual FGPositioned::Type maxType() const
+  { return FGPositioned::SEAPORT; }
 };
 
 static AirportWithMetar airportWithMetarFilter;
