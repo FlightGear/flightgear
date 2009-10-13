@@ -167,8 +167,8 @@ int FGCommList::FindByPos(const SGGeod& aPos, double range, comm_list_type* stat
      SGBucket buck(aPos);
  
      // get neigboring buckets
-     int bx = (int)( range*SG_NM_TO_METER / buck.get_width_m() / 2);
-     int by = (int)( range*SG_NM_TO_METER / buck.get_height_m() / 2 );
+     int bx = (int)( range*SG_NM_TO_METER / buck.get_width_m() / 2) + 1;
+     int by = (int)( range*SG_NM_TO_METER / buck.get_height_m() / 2 ) + 1;
      
      // loop over bucket range 
      for ( int i=-bx; i<=bx; i++) {
