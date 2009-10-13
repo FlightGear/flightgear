@@ -175,9 +175,10 @@ int FGCommList::FindByPos(const SGGeod& aPos, double range, comm_list_type* stat
          for ( int j=-by; j<=by; j++) {
              buck = sgBucketOffset(aPos.getLongitudeDeg(), aPos.getLatitudeDeg(), i, j);
              long int bucket = buck.gen_index();
-             comm_list_type Fstations = commlist_bck[bucket];
-             comm_list_iterator current = Fstations.begin();
-             comm_list_iterator last = Fstations.end();
+             comm_map_const_iterator Fstations = commlist_bck.find(bucket);
+             if (Fstations == commlist_bck.end()) continue;
+             comm_list_const_iterator current = Fstations->second.begin();
+             comm_list_const_iterator last = Fstations->second.end();
              
              
              // double az1, az2, s;
