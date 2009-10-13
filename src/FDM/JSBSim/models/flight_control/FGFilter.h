@@ -38,7 +38,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGFCSComponent.h"
-#include <input_output/FGXMLElement.h>
+#include "input_output/FGXMLElement.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -249,7 +249,6 @@ public:
   enum {eLag, eLeadLag, eOrder2, eWashout, eIntegrator, eUnknown} FilterType;
 
 private:
-  double dt;
   double ca;
   double cb;
   double cc;

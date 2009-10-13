@@ -36,7 +36,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGInertial.h"
-#include <FGFDMExec.h>
+#include "FGFDMExec.h"
 #include "FGPropagate.h"
 #include "FGState.h"
 #include "FGMassBalance.h"

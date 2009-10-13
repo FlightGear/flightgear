@@ -41,17 +41,17 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <models/FGModel.h>
-#include <models/FGOutput.h>
-#include <models/FGInput.h>
-#include <initialization/FGTrim.h>
-#include <initialization/FGInitialCondition.h>
-#include <FGJSBBase.h>
-#include <input_output/FGPropertyManager.h>
-#include <input_output/FGGroundCallback.h>
-#include <input_output/FGXMLFileRead.h>
-#include <models/FGPropagate.h>
-#include <math/FGColumnVector3.h>
+#include "models/FGModel.h"
+#include "models/FGOutput.h"
+#include "models/FGInput.h"
+#include "initialization/FGTrim.h"
+#include "initialization/FGInitialCondition.h"
+#include "FGJSBBase.h"
+#include "input_output/FGPropertyManager.h"
+#include "input_output/FGGroundCallback.h"
+#include "input_output/FGXMLFileRead.h"
+#include "models/FGPropagate.h"
+#include "math/FGColumnVector3.h"
 
 #include <vector>
 #include <string>

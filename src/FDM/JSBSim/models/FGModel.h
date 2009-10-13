@@ -38,9 +38,9 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <FGJSBBase.h>
-#include <input_output/FGPropertyManager.h>
-#include <input_output/FGXMLElement.h>
+#include "FGJSBBase.h"
+#include "input_output/FGPropertyManager.h"
+#include "input_output/FGXMLElement.h"
 
 #include <iostream>
 #include <string>

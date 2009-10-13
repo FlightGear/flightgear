@@ -39,13 +39,13 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <FGFDMExec.h>
-#include <FGJSBBase.h>
-#include <models/propulsion/FGForce.h>
+#include "FGFDMExec.h"
+#include "FGJSBBase.h"
+#include "models/propulsion/FGForce.h"
 #include <string>
-#include <input_output/FGPropertyManager.h>
-#include <math/FGColumnVector3.h>
-#include <math/FGFunction.h>
+#include "input_output/FGPropertyManager.h"
+#include "math/FGColumnVector3.h"
+#include "math/FGFunction.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS

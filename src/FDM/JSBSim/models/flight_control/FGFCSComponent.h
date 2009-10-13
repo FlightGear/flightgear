@@ -37,9 +37,9 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <FGJSBBase.h>
-#include <input_output/FGPropertyManager.h>
-#include <input_output/FGXMLElement.h>
+#include "FGJSBBase.h"
+#include "input_output/FGPropertyManager.h"
+#include "input_output/FGXMLElement.h"
 #include <string>
 #include <vector>
 
@@ -101,30 +101,34 @@ public:
 
   virtual bool Run(void);
   virtual void SetOutput(void);
-  inline double GetOutput (void) const {return Output;}
-  inline FGPropertyManager* GetOutputNode(void) { return OutputNode; }
-  inline string GetName(void) const {return Name;}
-  inline string GetType(void) const { return Type; }
+  double GetOutput (void) const {return Output;}
+  string GetName(void) const {return Name;}
+  string GetType(void) const { return Type; }
   virtual double GetOutputPct(void) const { return 0; }
 
 protected:
   FGFCS* fcs;
   FGPropertyManager* PropertyManager;
   FGPropertyManager* treenode;
-  FGPropertyManager* OutputNode;
+  vector <FGPropertyManager*> OutputNodes;
   FGPropertyManager* ClipMinPropertyNode;
   FGPropertyManager* ClipMaxPropertyNode;
   vector <FGPropertyManager*> InputNodes;
   vector <float> InputSigns;
+  vector <double> output_array;
   string Type;
   string Name;
   double Input;
   double Output;
   double clipmax, clipmin;
+  int delay;
+  int index;
   float clipMinSign, clipMaxSign;
+  double dt;
   bool IsOutput;
   bool clip;
 
+  void Delay(void);
   void Clip(void);
   virtual void bind();
   virtual void Debug(int from);

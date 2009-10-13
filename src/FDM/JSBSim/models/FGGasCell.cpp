@@ -35,11 +35,11 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <FGFDMExec.h>
-#include <models/FGAuxiliary.h>
-#include <models/FGAtmosphere.h>
-#include <models/FGInertial.h>
-#include <models/FGMassBalance.h>
+#include "FGFDMExec.h"
+#include "models/FGAuxiliary.h"
+#include "models/FGAtmosphere.h"
+#include "models/FGInertial.h"
+#include "models/FGMassBalance.h"
 #include "FGGasCell.h"
 
 using std::cerr;

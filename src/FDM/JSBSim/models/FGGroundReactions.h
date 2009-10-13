@@ -42,8 +42,8 @@ INCLUDES
 
 #include "FGModel.h"
 #include "FGLGear.h"
-#include <math/FGColumnVector3.h>
-#include <input_output/FGXMLElement.h>
+#include "math/FGColumnVector3.h"
+#include "input_output/FGXMLElement.h"
 
 #define ID_GROUNDREACTIONS "$Id$"
 

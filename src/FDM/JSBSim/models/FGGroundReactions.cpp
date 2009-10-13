@@ -39,7 +39,7 @@ INCLUDES
 #include <iomanip>
 
 #include "FGGroundReactions.h"
-#include <input_output/FGPropertyManager.h>
+#include "input_output/FGPropertyManager.h"
 
 namespace JSBSim {
 
@@ -95,8 +95,8 @@ bool FGGroundReactions::Run(void)
   // Perhaps there is some commonality for things which only need to be
   // calculated once.
   for (unsigned int i=0; i<lGear.size(); i++) {
-    vForces  += lGear[i]->Force();
-    vMoments += lGear[i]->Moment();
+    vForces  += lGear[i]->GetBodyForces();
+    vMoments += lGear[i]->GetMoments();
   }
 
   return false;

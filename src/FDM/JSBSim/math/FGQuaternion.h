@@ -40,10 +40,10 @@ SENTRY
   INCLUDES
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <FGJSBBase.h>
+#include "FGJSBBase.h"
 #include "FGMatrix33.h"
 #include "FGColumnVector3.h"
-#include <input_output/FGPropertyManager.h>
+#include "input_output/FGPropertyManager.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   DEFINITIONS

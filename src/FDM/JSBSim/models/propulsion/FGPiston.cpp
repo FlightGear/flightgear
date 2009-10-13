@@ -43,7 +43,7 @@ INCLUDES
 #include <sstream>
 
 #include "FGPiston.h"
-#include <models/FGPropulsion.h>
+#include "models/FGPropulsion.h"
 #include "FGPropeller.h"
 
 namespace JSBSim {
@@ -61,7 +61,8 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   rho_fuel(800),                 // estimate
   calorific_value_fuel(47.3e6),
   Cp_air(1005),                  // Specific heat (constant pressure) J/Kg/K
-  Cp_fuel(1700)
+  Cp_fuel(1700),
+  standard_pressure(101320.73)
 {
   string token;
 
@@ -87,6 +88,9 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   Stroke = 4.375;
   Cylinders = 4;
   CompressionRatio = 8.5;
+  Z_airbox = -999;
+  Ram_Air_Factor = 1;
+  PeakMeanPistonSpeed_fps = 100;
 
   // These are internal program variables
 
@@ -102,6 +106,7 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   BoostSpeed = 0;
   Boosted = false;
   BoostOverride = 0;
+  BoostManual = 0;
   bBoostOverride = false;
   bTakeoffBoost = false;
   TakeoffBoost = 0.0;   // Default to no extra takeoff-boost
@@ -187,10 +192,18 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
     Stroke = el->FindElementValueAsNumberConvertTo("stroke","IN");
   if (el->FindElement("cylinders"))
     Cylinders = el->FindElementValueAsNumber("cylinders");
+  if (el->FindElement("air-intake-impedance-factor"))
+    Z_airbox = el->FindElementValueAsNumber("air-intake-impedance-factor");
+  if (el->FindElement("ram-air-factor"))
+    Ram_Air_Factor  = el->FindElementValueAsNumber("ram-air-factor");
+  if (el->FindElement("peak-piston-speed"))
+    PeakMeanPistonSpeed_fps  = el->FindElementValueAsNumber("peak-piston-speed");
   if (el->FindElement("numboostspeeds")) { // Turbo- and super-charging parameters
     BoostSpeeds = (int)el->FindElementValueAsNumber("numboostspeeds");
     if (el->FindElement("boostoverride"))
       BoostOverride = (int)el->FindElementValueAsNumber("boostoverride");
+    if (el->FindElement("boostmanual"))
+      BoostManual = (int)el->FindElementValueAsNumber("boostmanual");
     if (el->FindElement("takeoffboost"))
       TakeoffBoost = el->FindElementValueAsNumberConvertTo("takeoffboost", "PSI");
     if (el->FindElement("ratedboost1"))
@@ -243,6 +256,14 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   minMAP = MinManifoldPressure_inHg * inhgtopa;  // inHg to Pa
   maxMAP = MaxManifoldPressure_inHg * inhgtopa;
 
+// For throttle
+  RatedMeanPistonSpeed_fps =  ( MaxRPM * Stroke) / (360); // AKA 2 * (RPM/60) * ( Stroke / 12) or 2NS
+  if(Z_airbox < 998){
+    double Ze=RatedMeanPistonSpeed_fps/PeakMeanPistonSpeed_fps; // engine impedence
+    Z_airbox = (standard_pressure *Ze / maxMAP) - Ze; // impedence of airbox
+  }
+  Z_throttle=(((MaxRPM * Stroke) / 360)/((IdleRPM * Stroke) / 360))*(standard_pressure/minMAP - 1) - Z_airbox; // Constant for Throttle impedence
+
   string property_name, base_property_name;
   base_property_name = CreateIndexedPropertyName("propulsion/engine", EngineNumber);
   property_name = base_property_name + "/power-hp";
@@ -255,6 +276,12 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   PropertyManager->Tie(property_name, &MAP);
   property_name = base_property_name + "/map-inhg";
   PropertyManager->Tie(property_name, &ManifoldPressure_inHg);
+  property_name = base_property_name + "/air-intake-impedance-factor";
+  PropertyManager->Tie(property_name, &Z_airbox);
+  property_name = base_property_name + "/ram-air-factor";
+  PropertyManager->Tie(property_name, &Ram_Air_Factor);
+  property_name = base_property_name + "/boost-speed";
+  PropertyManager->Tie(property_name, &BoostSpeed);
 
   // Set up and sanity-check the turbo/supercharging configuration based on the input values.
   if (TakeoffBoost > RatedBoost[0]) bTakeoffBoost = true;
@@ -302,6 +329,7 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
     BoostSpeed = 0;
   }
   bBoostOverride = (BoostOverride == 1 ? true : false);
+  bBoostManual   = (BoostManual   == 1 ? true : false);
   Debug(0); // Call Debug() routine from constructor if needed
 }
 
@@ -349,6 +377,8 @@ double FGPiston::Calculate(void)
   //
 
   p_amb = Atmosphere->GetPressure() * psftopa;
+  double p = Auxiliary->GetTotalPressure() * psftopa;
+  p_ram = (p - p_amb) * Ram_Air_Factor + p_amb;
   T_amb = RankineToKelvin(Atmosphere->GetTemperature());
 
   RPM = Thruster->GetRPM() * Thruster->GetGearRatio();
@@ -488,15 +518,20 @@ void FGPiston::doEngineStartup(void)
 
 void FGPiston::doBoostControl(void)
 {
-  if(BoostSpeed < BoostSpeeds - 1) {
-    // Check if we need to change to a higher boost speed
-    if(p_amb < BoostSwitchPressure[BoostSpeed] - BoostSwitchHysteresis) {
-      BoostSpeed++;
-    }
-  } else if(BoostSpeed > 0) {
-    // Check if we need to change to a lower boost speed
-    if(p_amb > BoostSwitchPressure[BoostSpeed - 1] + BoostSwitchHysteresis) {
-      BoostSpeed--;
+  if(BoostManual) {
+    if(BoostSpeed > BoostSpeeds-1) BoostSpeed = BoostSpeeds-1;
+    if(BoostSpeed < 0) BoostSpeed = 0;
+  } else {
+    if(BoostSpeed < BoostSpeeds - 1) {
+      // Check if we need to change to a higher boost speed
+      if(p_amb < BoostSwitchPressure[BoostSpeed] - BoostSwitchHysteresis) {
+        BoostSpeed++;
+      }
+    } else if(BoostSpeed > 0) {
+      // Check if we need to change to a lower boost speed
+      if(p_amb > BoostSwitchPressure[BoostSpeed - 1] + BoostSwitchHysteresis) {
+        BoostSpeed--;
+      }
     }
   }
 }
@@ -518,15 +553,13 @@ void FGPiston::doBoostControl(void)
 
 void FGPiston::doMAP(void)
 {
- // estimate throttle plate area.
-  double throttle_area = ThrottleAngle*ThrottleAngle;
- // Internal Combustion Engine in Theory and Practice, Volume 2.  Charles Fayette Taylor.  Revised Edition, 1985 fig 6-13
-  double map_coefficient = 1-((MeanPistonSpeed_fps*MeanPistonSpeed_fps)/(24978*throttle_area));
+  double Zt =(1-Throttle)*(1-Throttle)*Z_throttle; // throttle impedence
+  double Ze= MeanPistonSpeed_fps > 0 ? PeakMeanPistonSpeed_fps/MeanPistonSpeed_fps : 999999; // engine impedence
 
-  if ( map_coefficient < 0.1 ) map_coefficient = 0.1;
+  double map_coefficient = Ze/(Ze+Z_airbox+Zt);
 
   // Add a one second lag to manifold pressure changes
-  double dMAP = (TMAP - p_amb * map_coefficient) * dt;
+  double dMAP = (TMAP - p_ram * map_coefficient) * dt;
   TMAP -=dMAP;
 
   // Find the mean effective pressure required to achieve this manifold pressure
@@ -548,8 +581,7 @@ void FGPiston::doMAP(void)
       }
     }
     // Boost the manifold pressure.
-    double boost_factor = BoostMul[BoostSpeed] * RPM/RatedRPM[BoostSpeed];
-    if (boost_factor < 1.0) boost_factor = 1.0;  // boost will never reduce the MAP
+    double boost_factor = (( BoostMul[BoostSpeed] - 1 ) / RatedRPM[BoostSpeed] ) * RPM + 1;
     MAP = TMAP * boost_factor;
     // Now clip the manifold pressure to BCV or Wastegate setting.
     if (bTakeoffPos) {
@@ -581,7 +613,7 @@ void FGPiston::doMAP(void)
 
 void FGPiston::doAirFlow(void)
 {
-  double gamma = 1.4; // specific heat constants
+  double gamma = 1.1; // specific heat constants
 // loss of volumentric efficiency due to difference between MAP and exhaust pressure
   double ve =((gamma-1)/gamma)+( CompressionRatio -(p_amb/MAP))/(gamma*( CompressionRatio - 1));
 
@@ -872,6 +904,7 @@ void FGPiston::Debug(int from)
       cout << "      MaxHP: "               << MaxHP                    << endl;
       cout << "      Cycles: "              << Cycles                   << endl;
       cout << "      IdleRPM: "             << IdleRPM                  << endl;
+      cout << "      MaxRPM: "              << MaxRPM                   << endl;
       cout << "      MaxThrottle: "         << MaxThrottle              << endl;
       cout << "      MinThrottle: "         << MinThrottle              << endl;
       cout << "      ISFC: "                << ISFC                     << endl;

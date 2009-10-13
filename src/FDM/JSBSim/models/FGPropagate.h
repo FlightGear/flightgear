@@ -38,11 +38,11 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <models/FGModel.h>
-#include <math/FGColumnVector3.h>
-#include <math/FGLocation.h>
-#include <math/FGQuaternion.h>
-#include <math/FGMatrix33.h>
+#include "models/FGModel.h"
+#include "math/FGColumnVector3.h"
+#include "math/FGLocation.h"
+#include "math/FGQuaternion.h"
+#include "math/FGMatrix33.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -538,6 +538,6 @@ private:
 }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-#include <initialization/FGInitialCondition.h>
+#include "initialization/FGInitialCondition.h"
 
 #endif

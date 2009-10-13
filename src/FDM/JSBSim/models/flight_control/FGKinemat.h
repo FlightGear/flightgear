@@ -38,7 +38,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGFCSComponent.h"
-#include <input_output/FGXMLElement.h>
+#include "input_output/FGXMLElement.h"
 #include <vector>
 #include <string>
 

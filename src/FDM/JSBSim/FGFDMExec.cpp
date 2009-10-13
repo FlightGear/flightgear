@@ -43,26 +43,26 @@ INCLUDES
 
 #include "FGFDMExec.h"
 #include "FGState.h"
-#include <models/FGAtmosphere.h>
-#include <models/atmosphere/FGMSIS.h>
-#include <models/atmosphere/FGMars.h>
-#include <models/FGFCS.h>
-#include <models/FGPropulsion.h>
-#include <models/FGMassBalance.h>
-#include <models/FGGroundReactions.h>
-#include <models/FGExternalReactions.h>
-#include <models/FGBuoyantForces.h>
-#include <models/FGAerodynamics.h>
-#include <models/FGInertial.h>
-#include <models/FGAircraft.h>
-#include <models/FGPropagate.h>
-#include <models/FGAuxiliary.h>
-#include <models/FGInput.h>
-#include <models/FGOutput.h>
-#include <initialization/FGInitialCondition.h>
-//#include <initialization/FGTrimAnalysis.h> // Remove until later
-#include <input_output/FGPropertyManager.h>
-#include <input_output/FGScript.h>
+#include "models/FGAtmosphere.h"
+#include "models/atmosphere/FGMSIS.h"
+#include "models/atmosphere/FGMars.h"
+#include "models/FGFCS.h"
+#include "models/FGPropulsion.h"
+#include "models/FGMassBalance.h"
+#include "models/FGGroundReactions.h"
+#include "models/FGExternalReactions.h"
+#include "models/FGBuoyantForces.h"
+#include "models/FGAerodynamics.h"
+#include "models/FGInertial.h"
+#include "models/FGAircraft.h"
+#include "models/FGPropagate.h"
+#include "models/FGAuxiliary.h"
+#include "models/FGInput.h"
+#include "models/FGOutput.h"
+#include "initialization/FGInitialCondition.h"
+//#include "initialization/FGTrimAnalysis.h" // Remove until later
+#include "input_output/FGPropertyManager.h"
+#include "input_output/FGScript.h"
 
 #include <iostream>
 #include <iterator>
@@ -715,7 +715,7 @@ void FGFDMExec::BuildPropertyCatalog(struct PropertyCatalogStructure* pcs)
   int node_idx = 0;
   char int_buf[10];
 
-  for (unsigned int i=0; i<pcs->node->nChildren(); i++) {
+  for (int i=0; i<pcs->node->nChildren(); i++) {
     pcsNew->base_string = pcs->base_string + "/" + pcs->node->getChild(i)->getName();
     node_idx = pcs->node->getChild(i)->getIndex();
     sprintf(int_buf, "[%d]", node_idx);

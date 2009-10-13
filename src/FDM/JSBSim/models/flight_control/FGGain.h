@@ -39,8 +39,8 @@ INCLUDES
 
 #include "FGFCSComponent.h"
 #include <string>
-#include <input_output/FGXMLElement.h>
-#include <math/FGTable.h>
+#include "input_output/FGXMLElement.h"
+#include "math/FGTable.h"
 
 using std::string;
 

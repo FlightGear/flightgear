@@ -44,8 +44,8 @@ INCLUDES
 
 #include "FGModel.h"
 #include "FGGasCell.h"
-#include <math/FGColumnVector3.h>
-#include <input_output/FGXMLFileRead.h>
+#include "math/FGColumnVector3.h"
+#include "input_output/FGXMLFileRead.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS

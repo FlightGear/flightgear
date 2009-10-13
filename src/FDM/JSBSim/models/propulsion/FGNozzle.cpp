@@ -38,7 +38,7 @@ INCLUDES
 #include <sstream>
 
 #include "FGNozzle.h"
-#include <models/FGAtmosphere.h>
+#include "models/FGAtmosphere.h"
 
 namespace JSBSim {
 
