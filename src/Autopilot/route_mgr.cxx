@@ -97,11 +97,12 @@ void FGRouteMgr::init() {
   _apAltitudeLock = fgGetNode( "/autopilot/locks/altitude", true );
   _apTrueHeading = fgGetNode( "/autopilot/settings/true-heading-deg", true );
   rm->tie("drive-autopilot", SGRawValuePointer<bool>(&_driveAutopilot));
+  _driveAutopilot = false;
   
   departure = fgGetNode(RM "departure", true);
 // init departure information from current location
   SGGeod pos = SGGeod::fromDegFt(lon->getDoubleValue(), lat->getDoubleValue(), alt->getDoubleValue());
-  FGAirport* apt = FGAirport::findClosest(pos, 10.0);
+  FGAirport* apt = FGAirport::findClosest(pos, 20.0);
   if (apt) {
     departure->setStringValue("airport", apt->ident().c_str());
     FGRunway* active = apt->getActiveRunwayForUsage();

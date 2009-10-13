@@ -130,7 +130,9 @@ private:
       double minRunwayLengthFt() const
       { return _minRunwayLengthFt; }
       
-      double getOBSCourse() const;
+      double getExternalCourse() const;
+      
+      void setExternalCourse(double aCourseDeg);
       
       bool cdiDeflectionIsAngular() const
       { return (_cdiMaxDeflectionNm <= 0.0); }
@@ -140,6 +142,9 @@ private:
         assert(_cdiMaxDeflectionNm > 0.0);
         return _cdiMaxDeflectionNm;
       }
+      
+      bool driveAutopilot() const
+      { return _driveAutopilot; }
     private:
       bool _enableTurnAnticipation;
       
@@ -162,14 +167,16 @@ private:
       // should we require a hard-surfaced runway when filtering?
       bool _requireHardSurface;
       
-      // helpers to tie obs-course-source property
-      const char* getOBSCourseSource() const;
-      void setOBSCourseSource(const char* aPropPath);
+      // helpers to tie course-source property
+      const char* getCourseSource() const;
+      void setCourseSource(const char* aPropPath);
       
-      // property to retrieve the OBS course from
-      SGPropertyNode_ptr _obsCourseSource;
+      // property to retrieve the external course from
+      SGPropertyNode_ptr _extCourseSource;
       
       double _cdiMaxDeflectionNm;
+      
+      bool _driveAutopilot;
     };
     
     class SearchFilter : public FGPositioned::Filter
@@ -195,6 +202,7 @@ private:
     void referenceNavaidSet(const std::string& aNavaid);
     void tuneNavRadios();
     void updateRouteData();
+    void driveAutopilot();
     
     void routeActivated();
     void routeManagerSequenced();
@@ -208,8 +216,12 @@ private:
     void computeTurnData();
     void updateTurnData();
     double computeTurnRadiusNm(double aGroundSpeedKts) const;
-    
-
+  
+  /**
+   * Update one-shot things when WP1 / leg data change
+   */
+  void wp1Changed();
+  
 // scratch maintenence utilities
   void setScratchFromPositioned(FGPositioned* aPos, int aIndex);
   void setScratchFromCachedSearchResult();
@@ -288,6 +300,8 @@ private:
   double getWP1CourseDeviation() const;
   double getWP1CourseErrorNm() const;
   bool getWP1ToFlag() const;
+  bool getWP1FromFlag() const;
+  
   // true-bearing-error and mag-bearing-error
   
   
@@ -315,9 +329,7 @@ private:
     SGPropertyNode_ptr _route_current_wp_node;
     SGPropertyNode_ptr _routeDistanceNm;
     SGPropertyNode_ptr _routeETE;
-    
-    SGPropertyNode_ptr _fromFlagNode;
-    
+        
     double _selectedCourse;
     
     bool _last_valid;
@@ -372,6 +384,13 @@ private:
     double _turnRadius; // radius of turn in nm
     SGGeod _turnPt;
     SGGeod _turnCentre;
+  
+  SGPropertyNode_ptr _realismSimpleGps; ///< should the GPS be simple or realistic?
+  
+// autopilot drive properties
+  SGPropertyNode_ptr _apTrueHeading;
+  SGPropertyNode_ptr _apTargetAltitudeFt;
+  SGPropertyNode_ptr _apAltitudeLock;
 };
 
 
