@@ -35,6 +35,7 @@ public:
 
 private:
     SGPropertyNode *config_props;
+    bool _explicitGps;
 };
 
 #endif // __INSTRUMENT_MGR_HXX
