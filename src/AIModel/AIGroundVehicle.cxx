@@ -296,7 +296,7 @@ bool FGAIGroundVehicle::getPitch() {
         static double prev_alt;
 
         if (_new_waypoint){
-            cout << "new waypoint, calculating pitch " << endl;
+            //cout << "new waypoint, calculating pitch " << endl;
             curr_alt = curr->altitude * SG_METER_TO_FEET;
             prev_alt = prev->altitude * SG_METER_TO_FEET;
             d_alt = curr_alt - prev_alt;
