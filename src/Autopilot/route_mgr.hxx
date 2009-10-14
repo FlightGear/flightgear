@@ -44,21 +44,14 @@ private:
     SGRoute* _route;
     time_t _takeoffTime;
     time_t _touchdownTime;
-    bool _autoSequence; // true if we are doing internal sequencing
-      // false if other code (FMS/GPS) is managing sequencing
-    
+ 
     // automatic inputs
     SGPropertyNode_ptr lon;
     SGPropertyNode_ptr lat;
     SGPropertyNode_ptr alt;
     SGPropertyNode_ptr magvar;
     
-    // automatic outputs
-    bool _driveAutopilot;
-    SGPropertyNode_ptr _apTargetAltitudeFt;
-    SGPropertyNode_ptr _apAltitudeLock;
-    SGPropertyNode_ptr _apTrueHeading;
-    
+    // automatic outputs    
     SGPropertyNode_ptr departure; ///< departure airport information
     SGPropertyNode_ptr destination; ///< destination airport information
     SGPropertyNode_ptr alternate; ///< alternate airport information
@@ -94,7 +87,6 @@ private:
     
     InputListener *listener;
     SGPropertyNode_ptr mirror;
-    bool altitude_set;
 
     /**
      * Create a SGWayPoint from a string in the following format:
@@ -110,12 +102,6 @@ private:
     bool near_ground();
     
     void currentWaypointChanged();
-    
-    /**
-     * Helper to update the target_altitude_ft and altitude_set flag when wp0
-     * changes
-     */
-    void updateTargetAltitude();
     
     /**
      * Parse a route/wp node (from a saved, property-lsit formatted route)
