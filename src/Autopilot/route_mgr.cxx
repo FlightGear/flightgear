@@ -35,6 +35,8 @@
 
 #include "route_mgr.hxx"
 
+#include <boost/algorithm/string/case_conv.hpp>
+
 #include <simgear/misc/strutils.hxx>
 #include <simgear/structure/exception.hxx>
 
@@ -64,11 +66,8 @@ static double get_ground_speed() {
 
 FGRouteMgr::FGRouteMgr() :
     _route( new SGRoute ),
-    _autoSequence(true),
-    _driveAutopilot(true),
     input(fgGetNode( RM "input", true )),
-    mirror(fgGetNode( RM "route", true )),
-    altitude_set( false )
+    mirror(fgGetNode( RM "route", true ))
 {
     listener = new InputListener(this);
     input->setStringValue("");
@@ -91,14 +90,7 @@ void FGRouteMgr::init() {
   lat = fgGetNode( "/position/latitude-deg", true );
   alt = fgGetNode( "/position/altitude-ft", true );
   magvar = fgGetNode("/environment/magnetic-variation-deg", true);
-  
-// autopilot drive properties
-  _apTargetAltitudeFt = fgGetNode( "/autopilot/settings/target-altitude-ft", true );
-  _apAltitudeLock = fgGetNode( "/autopilot/locks/altitude", true );
-  _apTrueHeading = fgGetNode( "/autopilot/settings/true-heading-deg", true );
-  rm->tie("drive-autopilot", SGRawValuePointer<bool>(&_driveAutopilot));
-  _driveAutopilot = false;
-  
+     
   departure = fgGetNode(RM "departure", true);
 // init departure information from current location
   SGGeod pos = SGGeod::fromDegFt(lon->getDoubleValue(), lat->getDoubleValue(), alt->getDoubleValue());
@@ -126,10 +118,12 @@ void FGRouteMgr::init() {
   alternate->getChild("runway", 0, true);
   
   cruise = fgGetNode(RM "cruise", true);
-  cruise->getChild("altitude", 0, true);
+  cruise->getChild("altitude-ft", 0, true);
+  cruise->setDoubleValue("altitude-ft", 10000.0);
   cruise->getChild("flight-level", 0, true);
-  cruise->getChild("speed", 0, true);
-      
+  cruise->getChild("speed-kts", 0, true);
+  cruise->setDoubleValue("speed-kts", 160.0);
+  
   totalDistance = fgGetNode(RM "total-distance", true);
   totalDistance->setDoubleValue(0.0);
   
@@ -144,9 +138,7 @@ void FGRouteMgr::init() {
   
   airborne = fgGetNode(RM "airborne", true);
   airborne->setBoolValue(false);
-  
-  rm->tie("auto-sequence", SGRawValuePointer<bool>(&_autoSequence));
-  
+    
   currentWp = fgGetNode(RM "current-wp", true);
   currentWp->setIntValue(_route->current_index());
       
@@ -190,31 +182,6 @@ void FGRouteMgr::postinit() {
 void FGRouteMgr::bind() { }
 void FGRouteMgr::unbind() { }
 
-void FGRouteMgr::updateTargetAltitude() {
-    if (_route->current_index() == _route->size()) {
-        altitude_set = false;
-        return;
-    }
-    
-    SGWayPoint wp = _route->get_current();
-    if (wp.get_target().getElevationM() < -9990.0) {
-        altitude_set = false;
-        return;
-    }
-    
-    altitude_set = true;
-    
-    if (!_driveAutopilot) {
-      return;
-    }
-    
-    _apTargetAltitudeFt->setDoubleValue(wp.get_target().getElevationFt());
-            
-    if ( !near_ground() ) {
-        _apAltitudeLock->setStringValue( "altitude-hold" );
-    }
-}
-
 bool FGRouteMgr::isRouteActive() const
 {
   return active->getBoolValue();
@@ -254,19 +221,6 @@ void FGRouteMgr::update( double dt ) {
     wp.CourseAndDistance( lon->getDoubleValue(), lat->getDoubleValue(),
                           alt->getDoubleValue(), &wp_course, &wp_distance );
 
-    if (_autoSequence && (wp_distance < 2000.0)) {
-      double courseDeviation = inboundCourse - wp_course;
-      SG_NORMALIZE_RANGE(courseDeviation, -180.0, 180.0);
-      if (fabs(courseDeviation) < 90.0) {
-        SG_LOG( SG_AUTOPILOT, SG_INFO, "route manager doing sequencing");
-        sequence();
-      }
-    }
-
-    if (_driveAutopilot) {
-      _apTrueHeading->setDoubleValue(wp_course);
-    }
-    
   // update wp0 / wp1 / wp-last for legacy users
     wp0->setDoubleValue("dist", wp_distance * SG_METER_TO_NM);
     wp_course -= magvar->getDoubleValue(); // expose magnetic bearing
@@ -325,9 +279,6 @@ void FGRouteMgr::setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDi
 void FGRouteMgr::add_waypoint( const SGWayPoint& wp, int n ) {
     _route->add_waypoint( wp, n );
     update_mirror();
-    if ((n==0) || (_route->size() == 1)) {
-        updateTargetAltitude();
-    }
 }
 
 
@@ -341,7 +292,6 @@ SGWayPoint FGRouteMgr::pop_waypoint( int n ) {
         _route->delete_waypoint(n);
     }
 
-    updateTargetAltitude();
     update_mirror();
     return wp;
 }
@@ -368,15 +318,11 @@ void FGRouteMgr::new_waypoint( const string& target, int n ) {
 
 
 SGWayPoint* FGRouteMgr::make_waypoint(const string& tgt ) {
-    string target = tgt;
+    string target(boost::to_upper_copy(tgt));
     
-    // make upper case
-    for (unsigned int i = 0; i < target.size(); i++) {
-      target[i] = toupper(target[i]);
-    }
-
     // extract altitude
-    double alt = -9999.0;
+    double alt = cruise->getDoubleValue("altitude-ft") * SG_FEET_TO_METER;
+    
     size_t pos = target.find( '@' );
     if ( pos != string::npos ) {
         alt = atof( target.c_str() + pos + 1 );
@@ -413,9 +359,10 @@ SGWayPoint* FGRouteMgr::make_waypoint(const string& tgt ) {
       return NULL;
     }
     
+    SGGeod geod = SGGeod::fromGeodM(p->geod(), alt);
     if (pieces.size() == 1) {
       // simple case
-      return new SGWayPoint(p->geod(), target, p->name());
+      return new SGWayPoint(geod, target, p->name());
     }
         
     if (pieces.size() == 3) {
@@ -425,13 +372,10 @@ SGWayPoint* FGRouteMgr::make_waypoint(const string& tgt ) {
         az2;
       radial += magvar->getDoubleValue(); // convert to true bearing
       SGGeod offsetPos;
-      SGGeodesy::direct(p->geod(), radial, distanceNm * SG_NM_TO_METER, offsetPos, az2);
+      SGGeodesy::direct(geod, radial, distanceNm * SG_NM_TO_METER, offsetPos, az2);
+      offsetPos.setElevationM(alt);
       
       SG_LOG(SG_AUTOPILOT, SG_INFO, "final offset radial is " << radial);
-      
-      if (alt > -9990) {
-        offsetPos.setElevationM(alt);
-      } // otherwise use the elevation of navid
       return new SGWayPoint(offsetPos, p->ident() + pieces[2], target);
     }
     
@@ -645,7 +589,6 @@ void FGRouteMgr::currentWaypointChanged()
   }
   
   currentWp->setIntValue(_route->current_index());
-  updateTargetAltitude();
   SG_LOG(SG_AUTOPILOT, SG_INFO, "route manager, current-wp is now " << _route->current_index());
 }
 
