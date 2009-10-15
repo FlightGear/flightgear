@@ -219,7 +219,7 @@ void FGEngine::ConsumeFuel(void)
     }
 
     // check if we were not able to burn all the fuel we needed to at this priority level
-    if (FuelToBurn > 0.001) {
+    if (FuelToBurn > 0.0) {
       CurrentPriority++;
       TanksWithFuel = 0;
       FeedList.clear();
