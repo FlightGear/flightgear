@@ -139,8 +139,11 @@ void FGRouteMgr::init() {
   airborne = fgGetNode(RM "airborne", true);
   airborne->setBoolValue(false);
     
-  currentWp = fgGetNode(RM "current-wp", true);
-  currentWp->setIntValue(_route->current_index());
+  _edited = fgGetNode(RM "signals/edited", true);
+  _finished = fgGetNode(RM "signals/finished", true);
+  
+  rm->tie("current-wp", SGRawValueMethods<FGRouteMgr, int>
+    (*this, &FGRouteMgr::currentWaypoint, &FGRouteMgr::jumpToIndex));
       
   // temporary distance / eta calculations, for backward-compatability
   wp0 = fgGetNode(RM "wp", 0, true);
@@ -277,23 +280,38 @@ void FGRouteMgr::setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDi
 }
 
 void FGRouteMgr::add_waypoint( const SGWayPoint& wp, int n ) {
-    _route->add_waypoint( wp, n );
-    update_mirror();
+  _route->add_waypoint( wp, n );
+    
+  if (_route->current_index() > n) {
+    _route->set_current(_route->current_index() + 1);
+  }
+  
+  update_mirror();
+  _edited->fireValueChanged();
 }
 
 
 SGWayPoint FGRouteMgr::pop_waypoint( int n ) {
-    SGWayPoint wp;
+  if ( _route->size() <= 0 ) {
+    return SGWayPoint();
+  }
+  
+  if ( n < 0 ) {
+    n = _route->size() - 1;
+  }
+  
+  if (_route->current_index() > n) {
+    _route->set_current(_route->current_index() - 1);
+  }
 
-    if ( _route->size() > 0 ) {
-        if ( n < 0 )
-            n = _route->size() - 1;
-        wp = _route->get_waypoint(n);
-        _route->delete_waypoint(n);
-    }
-
-    update_mirror();
-    return wp;
+  SGWayPoint wp = _route->get_waypoint(n);
+  _route->delete_waypoint(n);
+    
+  update_mirror();
+  _edited->fireValueChanged();
+  checkFinished();
+  
+  return wp;
 }
 
 
@@ -310,10 +328,6 @@ void FGRouteMgr::new_waypoint( const string& target, int n ) {
     
     add_waypoint( *wp, n );
     delete wp;
-
-    if ( !near_ground() ) {
-        fgSetString( "/autopilot/locks/heading", "true-heading-hold" );
-    }
 }
 
 
@@ -419,20 +433,6 @@ void FGRouteMgr::update_mirror() {
     // set number as listener attachment point
     mirror->setIntValue("num", _route->size());
 }
-
-
-bool FGRouteMgr::near_ground() {
-    SGPropertyNode *gear = fgGetNode( "/gear/gear/wow", false );
-    if ( !gear || gear->getType() == simgear::props::NONE )
-        return fgGetBool( "/sim/presets/onground", true );
-
-    if ( fgGetDouble("/position/altitude-agl-ft", 300.0)
-            < fgGetDouble("/autopilot/route-manager/min-lock-altitude-agl-ft") )
-        return true;
-
-    return gear->getBoolValue();
-}
-
 
 // command interface /autopilot/route-manager/input:
 //
@@ -544,15 +544,25 @@ void FGRouteMgr::sequence()
     return;
   }
   
-  if (_route->current_index() == _route->size()) {
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "reached end of active route");
-    // what now?
-    active->setBoolValue(false);
+  if (checkFinished()) {
     return;
   }
   
   _route->increment_current();
   currentWaypointChanged();
+}
+
+bool FGRouteMgr::checkFinished()
+{
+  int lastWayptIndex = _route->size() - 1;
+  if (_route->current_index() < lastWayptIndex) {
+    return false;
+  }
+  
+  SG_LOG(SG_AUTOPILOT, SG_INFO, "reached end of active route");
+  _finished->fireValueChanged();
+  active->setBoolValue(false);
+  return true;
 }
 
 void FGRouteMgr::jumpToIndex(int index)
@@ -588,7 +598,6 @@ void FGRouteMgr::currentWaypointChanged()
     wp1->getChild("id")->setStringValue("");
   }
   
-  currentWp->setIntValue(_route->current_index());
   SG_LOG(SG_AUTOPILOT, SG_INFO, "route manager, current-wp is now " << _route->current_index());
 }
 
@@ -706,7 +715,7 @@ void FGRouteMgr::parseRouteWaypoint(SGPropertyNode* aWP)
   }
 
   SGPropertyNode_ptr altProp = aWP->getChild("altitude-ft");
-  double alt = -9999.0;
+  double alt = cruise->getDoubleValue("altitude-ft") * SG_FEET_TO_METER;
   if (altProp) {
     alt = altProp->getDoubleValue();
   }
@@ -714,10 +723,6 @@ void FGRouteMgr::parseRouteWaypoint(SGPropertyNode* aWP)
   string ident(aWP->getStringValue("ident"));
   if (aWP->hasChild("longitude-deg")) {
     // explicit longitude/latitude
-    if (alt < -9990.0) {
-      alt = 0.0; // don't export wyapoints with invalid altitude
-    }
-    
     SGWayPoint swp(aWP->getDoubleValue("longitude-deg"),
       aWP->getDoubleValue("latitude-deg"), alt, 
       SGWayPoint::WGS84, ident, aWP->getStringValue("name"));
@@ -740,10 +745,6 @@ void FGRouteMgr::parseRouteWaypoint(SGPropertyNode* aWP)
       SGGeodesy::direct(p->geod(), radialDeg, offsetNm * SG_NM_TO_METER, pos, az2);
     }
     
-    if (alt < -9990.0) {
-      alt = p->elevation();
-    }
-    
     SGWayPoint swp(pos.getLongitudeDeg(), pos.getLatitudeDeg(), alt, 
       SGWayPoint::WGS84, ident, "");
     add_waypoint(swp);
@@ -752,10 +753,6 @@ void FGRouteMgr::parseRouteWaypoint(SGPropertyNode* aWP)
     FGPositionedRef p = FGPositioned::findClosestWithIdent(ident, lastPos);
     if (!p) {
       throw sg_io_exception("bad route file, unknown waypoint:" + ident);
-    }
-    
-    if (alt < -9990.0) {
-      alt = p->elevation();
     }
     
     SGWayPoint swp(p->longitude(), p->latitude(), alt, 
