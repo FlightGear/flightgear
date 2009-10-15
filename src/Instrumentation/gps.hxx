@@ -206,6 +206,8 @@ private:
     
     void routeActivated();
     void routeManagerSequenced();
+    void routeEdited();
+    void routeFinished();
     
     void updateTurn();  
     void updateOverflight();    
@@ -329,7 +331,9 @@ private:
     SGPropertyNode_ptr _route_current_wp_node;
     SGPropertyNode_ptr _routeDistanceNm;
     SGPropertyNode_ptr _routeETE;
-        
+  SGPropertyNode_ptr _routeEditedSignal;
+  SGPropertyNode_ptr _routeFinishedSignal;
+
     double _selectedCourse;
     
     bool _last_valid;

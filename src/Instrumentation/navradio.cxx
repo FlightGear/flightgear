@@ -247,7 +247,8 @@ FGNavRadio::init ()
     gps_has_gs_node = fgGetNode("/instrumentation/gps/has-gs", true);
     gps_course_node = fgGetNode("/instrumentation/gps/selected-course-deg", true);
     gps_xtrack_error_nm_node = fgGetNode("/instrumentation/gps/wp/wp[1]/course-error-nm", true);
-  
+    _magvarNode = fgGetNode("/environment/magnetic-variation-deg", true);
+    
     std::ostringstream temp;
     temp << _name << "nav-ident" << _num;
     nav_fx_name = temp.str();
@@ -621,7 +622,9 @@ void FGNavRadio::updateGPSSlaved()
   _cdiCrossTrackErrorM = gps_xtrack_error_nm_node->getDoubleValue() * SG_NM_TO_METER;
   _gsNeedleDeflection = 0.0; // FIXME, supply this
   
-  //sel_radial_node->setDoubleValue(gps_course_node->getDoubleValue());
+  double trtrue = gps_course_node->getDoubleValue() + _magvarNode->getDoubleValue();
+  SG_NORMALIZE_RANGE(trtrue, 0.0, 360.0);
+  target_radial_true_node->setDoubleValue( trtrue );
 }
 
 void FGNavRadio::updateCDI(double dt)
