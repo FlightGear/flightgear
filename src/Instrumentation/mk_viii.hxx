@@ -889,13 +889,6 @@ public:
       VoicePlayer *player;
 
       double	pitch;
-      SGVec3d	position;
-      SGVec3f	orientation;
-      float	inner_cone;
-      float	outer_cone;
-      float	outer_gain;
-      float	reference_dist;
-      float	max_dist;
 
       template <class T>
       inline void tie (SGPropertyNode *node, const char *name, T *ptr)
@@ -920,15 +913,8 @@ public:
       inline Speaker (VoicePlayer *_player)
 	: player(_player),
 	  pitch(1),
-	  inner_cone(360),
-	  outer_cone(360),
-	  outer_gain(0),
-	  reference_dist(3),
-	  max_dist(10),
 	  volume(1)
       {
-	position[0] = 0; position[1] = 0; position[2] = 0;
-	orientation[0] = 0; orientation[1] = 0; orientation[2] = 0;
       }
 
       void bind (SGPropertyNode *node);

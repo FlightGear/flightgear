@@ -2106,16 +2106,6 @@ MK_VIII::VoicePlayer::Speaker::bind (SGPropertyNode *node)
   // uses xmlsound property names
   tie(node, "volume", &volume);
   tie(node, "pitch", &pitch);
-  tie(node, "position/x", &position[0]);
-  tie(node, "position/y", &position[1]);
-  tie(node, "position/z", &position[2]);
-  tie(node, "orientation/x", &orientation[0]);
-  tie(node, "orientation/y", &orientation[1]);
-  tie(node, "orientation/z", &orientation[2]);
-  tie(node, "orientation/inner-cone", &inner_cone);
-  tie(node, "orientation/outer-cone", &outer_cone);
-  tie(node, "reference-dist", &reference_dist);
-  tie(node, "max-dist", &max_dist);
 }
 
 void
@@ -2127,11 +2117,6 @@ MK_VIII::VoicePlayer::Speaker::update_configuration ()
       SGSoundSample *sample = (*iter).second;
 
       sample->set_pitch(pitch);
-      sample->set_base_position(position); // TODO: tie to listener pos
-      sample->set_orientation(orientation);
-      sample->set_audio_cone(inner_cone, outer_cone, outer_gain);
-      sample->set_reference_dist(reference_dist);
-      sample->set_max_dist(max_dist);
     }
 
   if (player->voice)
