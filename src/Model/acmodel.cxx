@@ -36,7 +36,7 @@
 
 FGAircraftModel::FGAircraftModel ()
   : _aircraft(0),
-    _velocity(SGVec3f::zeros()),
+    _velocity(SGVec3d::zeros()),
     _fx(0),
     _lon(0),
     _lat(0),
@@ -44,7 +44,9 @@ FGAircraftModel::FGAircraftModel ()
     _pitch(0),
     _roll(0),
     _heading(0),
-    _speed(0)
+    _speed_n(0),
+    _speed_e(0),
+    _speed_d(0)
 {
     SGSoundMgr *smgr;
     smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
@@ -91,7 +93,9 @@ FGAircraftModel::bind ()
    _pitch = fgGetNode("orientation/pitch-deg", true);
    _roll = fgGetNode("orientation/roll-deg", true);
    _heading = fgGetNode("orientation/heading-deg", true);
-   _speed = fgGetNode("velocities/groundspeed-kt", true);
+   _speed_n = fgGetNode("velocities/speed-north-fps", true);
+   _speed_e = fgGetNode("velocities/speed-east-fps", true);
+   _speed_d = fgGetNode("velocities/speed-down-fps", true);
 }
 
 void
@@ -121,21 +125,16 @@ FGAircraftModel::update (double dt)
   _aircraft->update();
 
   // update model's audio sample values
-  // Get the Cartesian coordinates in meters
-  SGVec3d pos = SGVec3d::fromGeod(_aircraft->getPosition());
-  _fx->set_position( -pos );
+  _fx->set_position( _aircraft->getPosition() );
 
-  SGQuatd orient_m = SGQuatd::fromLonLat(_aircraft->getPosition());
-  orient_m *= SGQuatd::fromYawPitchRollDeg(_heading->getDoubleValue(),
-                                           _pitch->getDoubleValue(),
-                                           _roll->getDoubleValue());
-  SGVec3d orient = -orient_m.rotate(SGVec3d::e1());
-  _fx->set_orientation( toVec3f( orient ) );
+  SGQuatd orient = SGQuatd::fromYawPitchRollDeg(_heading->getDoubleValue(),
+                                                  _pitch->getDoubleValue(),
+                                                  _roll->getDoubleValue());
+  _fx->set_orientation( orient );
  
-  // For now assume the aircraft speed is always along the longitudinal
-  // axis, so sideslipping is not taken into account. This should be fine
-  // for audio.
-  _velocity = toVec3f(orient * _speed->getDoubleValue() * SG_KT_TO_MPS);
+  _velocity = SGVec3d( -_speed_n->getDoubleValue(),
+                       -_speed_e->getDoubleValue(),
+                       -_speed_d->getDoubleValue());
   _fx->set_velocity( _velocity );
 }
 
