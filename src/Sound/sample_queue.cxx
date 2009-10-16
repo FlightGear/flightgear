@@ -44,7 +44,6 @@ FGSampleQueue::FGSampleQueue ( SGSoundMgr *smgr, const string &refname ) :
 {
     SGSampleGroup::_smgr = smgr;
     SGSampleGroup::_smgr->add(this, refname);
-    SGSampleGroup::_active = _smgr->is_working();
 }
 
 
