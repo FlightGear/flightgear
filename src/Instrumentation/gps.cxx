@@ -135,6 +135,10 @@ public:
       _gps->routeActivated();
     } else if (prop == _gps->_ref_navaid_id_node) {
       _gps->referenceNavaidSet(prop->getStringValue(""));
+    } else if (prop == _gps->_routeEditedSignal) {
+      _gps->routeEdited();
+    } else if (prop == _gps->_routeFinishedSignal) {
+      _gps->routeFinished();
     }
         
     _guard = false;
@@ -412,12 +416,9 @@ GPS::init ()
   // should these move to the route manager?
   _routeDistanceNm = node->getChild("route-distance-nm", 0, true);
   _routeETE = node->getChild("ETE", 0, true);
-
-  // disable auto-sequencing in the route manager; we'll deal with it
-  // ourselves using turn anticipation
-  SGPropertyNode_ptr autoSeq = fgGetNode("/autopilot/route-manager/auto-sequence", true);
-  autoSeq->setBoolValue(false);
-
+  _routeEditedSignal = fgGetNode("/autopilot/route-manager/signals/edited", true);
+  _routeFinishedSignal = fgGetNode("/autopilot/route-manager/signals/finished", true);
+  
 // add listener to various things
   _listener = new GPSListener(this);
   _route_current_wp_node = fgGetNode("/autopilot/route-manager/current-wp", true);
@@ -425,14 +426,20 @@ GPS::init ()
   _route_active_node = fgGetNode("/autopilot/route-manager/active", true);
   _route_active_node->addChangeListener(_listener);
   _ref_navaid_id_node->addChangeListener(_listener);
-
+  _routeEditedSignal->addChangeListener(_listener);
+  _routeFinishedSignal->addChangeListener(_listener);
+  
 // navradio slaving properties  
   node->tie("cdi-deflection", SGRawValueMethods<GPS,double>
     (*this, &GPS::getCDIDeflection));
 
   SGPropertyNode* toFlag = node->getChild("to-flag", 0, true);
   toFlag->alias(wp1_node->getChild("to-flag"));
+  
+  SGPropertyNode* fromFlag = node->getChild("from-flag", 0, true);
+  fromFlag->alias(wp1_node->getChild("from-flag"));
     
+        
 // autopilot drive properties
   _apTrueHeading = fgGetNode("/autopilot/settings/true-heading-deg",true);
   _apTargetAltitudeFt = fgGetNode("/autopilot/settings/target-altitude-ft", true);
@@ -747,6 +754,28 @@ void GPS::routeManagerSequenced()
   wp1Changed();
 }
 
+void GPS::routeEdited()
+{
+  if (_mode != "leg") {
+    return;
+  }
+  
+  SG_LOG(SG_INSTR, SG_INFO, "GPS route edited while in LEG mode, updating waypoints");
+  routeManagerSequenced();
+}
+
+void GPS::routeFinished()
+{
+  if (_mode != "leg") {
+    return;
+  }
+  
+  SG_LOG(SG_INSTR, SG_INFO, "GPS route finished, reverting to OBS");
+  _mode = "obs";
+  _wp0_position = _indicated_pos;
+  wp1Changed();
+}
+
 void GPS::updateTurn()
 {
   bool printProgress = false;
@@ -977,10 +1006,8 @@ void GPS::wp1Changed()
   double altFt = _wp1_position.getElevationFt();
   if (altFt < -9990.0) {
     _apTargetAltitudeFt->setDoubleValue(0.0);
-    _apAltitudeLock->setBoolValue(false);
   } else {
     _apTargetAltitudeFt->setDoubleValue(altFt);
-    _apAltitudeLock->setBoolValue(true);
   }
 }
 

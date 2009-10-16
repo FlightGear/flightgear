@@ -63,7 +63,6 @@ private:
     
     SGPropertyNode_ptr active;
     SGPropertyNode_ptr airborne;
-    SGPropertyNode_ptr currentWp;
     
     SGPropertyNode_ptr wp0;
     SGPropertyNode_ptr wp1;
@@ -71,6 +70,16 @@ private:
     
     
     SGPropertyNode_ptr _pathNode;
+    
+    /** 
+     * Signal property to notify people that the route was edited
+     */
+    SGPropertyNode_ptr _edited;
+    
+    /**
+     * Signal property to notify when the last waypoint is reached
+     */
+    SGPropertyNode_ptr _finished;
     
     void setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDistance);
     
@@ -99,7 +108,6 @@ private:
     
     
     void update_mirror();
-    bool near_ground();
     
     void currentWaypointChanged();
     
@@ -107,6 +115,12 @@ private:
      * Parse a route/wp node (from a saved, property-lsit formatted route)
      */
     void parseRouteWaypoint(SGPropertyNode* aWP);
+    
+    /**
+     * Check if we've reached the final waypoint. 
+     * Returns true if we have.
+     */
+    bool checkFinished();
 public:
 
     FGRouteMgr();

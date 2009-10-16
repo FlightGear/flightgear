@@ -118,7 +118,8 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode_ptr gps_has_gs_node;
     SGPropertyNode_ptr gps_course_node;
     SGPropertyNode_ptr gps_xtrack_error_nm_node;
-  
+    SGPropertyNode_ptr _magvarNode;
+    
     // internal (private) values
 
     int play_count;
