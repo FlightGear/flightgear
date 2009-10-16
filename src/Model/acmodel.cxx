@@ -128,8 +128,8 @@ FGAircraftModel::update (double dt)
   _fx->set_position( _aircraft->getPosition() );
 
   SGQuatd orient = SGQuatd::fromYawPitchRollDeg(_heading->getDoubleValue(),
-                                                  _pitch->getDoubleValue(),
-                                                  _roll->getDoubleValue());
+                                                _pitch->getDoubleValue(),
+                                                _roll->getDoubleValue());
   _fx->set_orientation( orient );
  
   _velocity = SGVec3d( -_speed_n->getDoubleValue(),
