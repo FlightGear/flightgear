@@ -365,11 +365,7 @@ void KLN89::CreateDefaultFlightPlans() {
 	wps.clear();
 	ids.push_back("KCCR");
 	wps.push_back(GPS_WP_APT);
-	ids.push_back("SUZYE");
-	wps.push_back(GPS_WP_INT);
-	ids.push_back("ALTAM");
-	wps.push_back(GPS_WP_INT);
-	ids.push_back("C83");
+	ids.push_back("KHAF");
 	wps.push_back(GPS_WP_APT);
 	CreateFlightPlan(_flightPlans[4], ids, wps);
 	
