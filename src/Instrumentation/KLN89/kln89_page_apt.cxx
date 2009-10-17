@@ -731,6 +731,30 @@ void KLN89AptPage::EntPressed() {
 				_iafDialog = true;
 				_maxULinePos = _IAF.size();
 			} else {
+				// There is only 1 IAF, so load the waypoints into the approach flightplan here.
+				// TODO - there is nasty code duplication loading the approach FP between the case here where we have only one
+				// IAF and the case where we must choose the IAF from a list.  Try to tidy this after it is all working properly.
+				_kln89->_approachFP->waypoints.clear();
+				GPSWaypoint* wp = new GPSWaypoint;
+				*wp = *_IAF[0];	// Need to make copies here since we're going to alter ID and type sometimes
+				string iafid = wp->id;
+				_kln89->_approachFP->waypoints.push_back(wp);
+				for(unsigned int i=0; i<_IAP.size(); ++i) {
+					if(_IAP[i]->id != iafid) {	// Don't duplicate waypoints that are part of the initial fix list and the approach procedure list.
+						// FIXME - allow the same waypoint to be both the IAF and the FAF in some
+						// approaches that have a procedure turn eg. KDLL
+						// Also allow MAF to be the same as IAF!
+						wp = new GPSWaypoint;
+						*wp = *_IAP[i];
+						_kln89->_approachFP->waypoints.push_back(wp);
+					}
+				}
+				// Only add 1 missed approach procedure waypoint for now.  I think this might be standard always anyway.
+				wp = new GPSWaypoint;
+				*wp = *_MAP[0];
+				//wp->id += 'h';
+				_kln89->_approachFP->waypoints.push_back(wp);
+				
 				_addDialog = true;
 				_maxULinePos = 1;
 			}
