@@ -140,7 +140,8 @@ public:
 	~FGNPIAP();
 //private:
 public:
-	vector<GPSWaypoint*> _IAF;	// The initial approach fix(es)
+	vector<GPSFlightPlan*> _approachRoutes;	// The approach route(s) from the IAF(s) to the IF.
+											// NOTE: It is an assumption in the code that uses this that there is a unique IAF per approach route.
 	vector<GPSWaypoint*> _IAP;	// The compulsory waypoints of the approach procedure (may duplicate one of the above).
 								// _IAP includes the FAF and MAF.
 	vector<GPSWaypoint*> _MAP;	// The missed approach procedure (doesn't include the MAF).
