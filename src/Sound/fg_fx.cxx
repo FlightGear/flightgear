@@ -47,7 +47,6 @@ FGFX::FGFX ( SGSoundMgr *smgr, const string &refname ) :
     SGSampleGroup::_smgr = smgr;
     SGSampleGroup::_refname = refname;
     SGSampleGroup::_smgr->add(this, refname);
-    SGSampleGroup::_active = _smgr->is_working();
 }
 
 
