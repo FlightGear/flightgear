@@ -358,14 +358,14 @@ void KLN89AptPage::Update(double dt) {
 					_kln89->DrawText(_iaps[_curIap]->_id, 2, 12, 3);
 					_kln89->DrawText("IAF", 2, 2, 2);
 					unsigned int line = 0;
-					for(unsigned int i=_iafStart; i<_IAF.size(); ++i) {
+					for(unsigned int i=_iafStart; i<_approachRoutes.size(); ++i) {
 						if(line == 2) {
-							i = _IAF.size() - 1;
+							i = _approachRoutes.size() - 1;
 						}
 						// Assume that the IAF number is always single digit!
 						_kln89->DrawText(GPSitoa(i+1), 2, 6, 2-line);
 						if(!(_kln89->_mode == KLN89_MODE_CRSR && _kln89->_blink && _uLinePos == (line + 1))) {
-							_kln89->DrawText(_IAF[i]->id, 2, 8, 2-line);
+							_kln89->DrawText(_approachRoutes[i]->waypoints[0]->id, 2, 8, 2-line);
 						}
 						if(_kln89->_mode == KLN89_MODE_CRSR && _uLinePos == (line + 1) && !(_kln89->_blink )) {
 							_kln89->Underline(2, 8, 2-line, 5);
@@ -571,7 +571,7 @@ void KLN89AptPage::CrsrPressed() {
 	} else if(_subPage == 7) {
 		// Don't *think* we need some of this since some of it we can only get to by pressing ENT, not CRSR.
 		if(_iafDialog) {
-			_maxULinePos = _IAF.size();
+			_maxULinePos = _approachRoutes.size();
 			_uLinePos = 1;
 		} else if(_addDialog) {
 			_maxULinePos = 1;
@@ -607,7 +607,7 @@ void KLN89AptPage::ClrPressed() {
 			}
 		} else if(_addDialog) {
 			_addDialog = false;
-			if(_IAF.size() > 1) {
+			if(_approachRoutes.size() > 1) {
 				_iafDialog = true;
 				_maxULinePos = 1;
 				// Don't reset _curIaf since it is remembed.
@@ -640,7 +640,7 @@ void KLN89AptPage::EntPressed() {
 			if(_uLinePos > 0) {
 				// Record the IAF that was picked
 				if(_uLinePos == 3) {
-					_curIaf = _IAF.size() - 1;
+					_curIaf = _approachRoutes.size() - 1;
 				} else {
 					_curIaf = _uLinePos - 1 + _iafStart;
 				}
@@ -648,7 +648,7 @@ void KLN89AptPage::EntPressed() {
 				// TODO - delete the waypoints inside _approachFP before clearing them!!!!!!!
 				_kln89->_approachFP->waypoints.clear();
 				GPSWaypoint* wp = new GPSWaypoint;
-				*wp = *_IAF[_curIaf];	// Need to make copies here since we're going to alter ID and type sometimes
+				*wp = *(_approachRoutes[_curIaf]->waypoints[0]);	// Need to make copies here since we're going to alter ID and type sometimes
 				string iafid = wp->id;
 				//wp->id += 'i';
 				_kln89->_approachFP->waypoints.push_back(wp);
@@ -717,26 +717,26 @@ void KLN89AptPage::EntPressed() {
 		} else if(_replaceDialog) {
 			// TODO - load the approach!
 		} else if(_uLinePos > 4) {
-			_IAF.clear();
+			_approachRoutes.clear();
 			_IAP.clear();
 			_MAP.clear();
 			_curIaf = 0;
-			_IAF = ((FGNPIAP*)(_iaps[_uLinePos-5]))->_IAF;
+			_approachRoutes = ((FGNPIAP*)(_iaps[_uLinePos-5]))->_approachRoutes;
 			_IAP = ((FGNPIAP*)(_iaps[_uLinePos-5]))->_IAP;
 			_MAP = ((FGNPIAP*)(_iaps[_uLinePos-5]))->_MAP;
 			_curIap = _uLinePos - 5;	// TODO - handle the start of list ! no. 1, and the end of list not sequential!
 			_uLinePos = 1;
-			if(_IAF.size() > 1) {
+			if(_approachRoutes.size() > 1) {
 				// More than 1 IAF - display the selection dialog
 				_iafDialog = true;
-				_maxULinePos = _IAF.size();
+				_maxULinePos = _approachRoutes.size();
 			} else {
 				// There is only 1 IAF, so load the waypoints into the approach flightplan here.
 				// TODO - there is nasty code duplication loading the approach FP between the case here where we have only one
 				// IAF and the case where we must choose the IAF from a list.  Try to tidy this after it is all working properly.
 				_kln89->_approachFP->waypoints.clear();
 				GPSWaypoint* wp = new GPSWaypoint;
-				*wp = *_IAF[0];	// Need to make copies here since we're going to alter ID and type sometimes
+				*wp = *(_approachRoutes[0]->waypoints[0]);	// Need to make copies here since we're going to alter ID and type sometimes
 				string iafid = wp->id;
 				_kln89->_approachFP->waypoints.push_back(wp);
 				for(unsigned int i=0; i<_IAP.size(); ++i) {
