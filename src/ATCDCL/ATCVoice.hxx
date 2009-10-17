@@ -56,7 +56,7 @@ private:
 
 	// the sound and word position data
 	char* rawSoundData;
-	unsigned int rawDataSize;
+	size_t rawDataSize;
         SGSoundSample *SoundData;
 
 	// A map of words vs. byte position and length in rawSoundData
