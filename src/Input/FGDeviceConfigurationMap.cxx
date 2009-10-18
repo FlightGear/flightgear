@@ -27,6 +27,9 @@
 #endif
 
 #include "FGDeviceConfigurationMap.hxx"
+
+#include <plib/ul.h>
+
 #include <simgear/props/props_io.hxx>
 #include <Main/globals.hxx>
 
