@@ -508,7 +508,7 @@ bool FGRouteMgr::activate()
 
   runwayId = (destination->getStringValue("runway"));
   if (destApt->hasRunwayWithIdent(runwayId)) {
-    FGRunway* runway = depApt->getRunwayByIdent(runwayId);
+    FGRunway* runway = destApt->getRunwayByIdent(runwayId);
     SGWayPoint swp(runway->end(), 
       destApt->ident() + "-" + runway->ident(), runway->name());
     add_waypoint(swp);
