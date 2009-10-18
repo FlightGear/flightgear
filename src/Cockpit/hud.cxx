@@ -489,10 +489,16 @@ void drawHUD(osg::State* state)
       apY -= 15;
       
       double courseError = curWp->getDoubleValue("course-error-nm");
-      // generate an arrow indicatinng if the pilot should turn left or right
-      char dir = (courseError < 0.0) ? '<' : '>';
-      snprintf(hud_gps_text1, 256, "GPS TRK:%03.0f XTRK:%c%4.2fnm",
-        gps->getDoubleValue("indicated-track-magnetic-deg"), dir, fabs(courseError));
+      if (fabs(courseError) >= 0.01) {
+        // generate an arrow indicatinng if the pilot should turn left or right
+        char dir = (courseError < 0.0) ? '<' : '>';
+        snprintf(hud_gps_text1, 256, "GPS TRK:%03.0f XTRK:%c%4.2fnm",
+          gps->getDoubleValue("indicated-track-magnetic-deg"), dir, fabs(courseError));
+      } else { // on course, don't bother showing the XTRK error
+        snprintf(hud_gps_text1, 256, "GPS TRK:%03.0f",
+          gps->getDoubleValue("indicated-track-magnetic-deg"));
+      }
+      
       HUD_TextList.add( fgText( 40, apY, hud_gps_text1) );
       apY -= 15;
     } // of valid GPS output
