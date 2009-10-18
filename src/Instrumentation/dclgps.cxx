@@ -33,6 +33,7 @@
 #include <Navaids/fix.hxx>
 #include <Navaids/navrecord.hxx>
 #include <Airports/simple.hxx>
+#include <Airports/runways.hxx>
 
 #include <iostream>
 
@@ -238,6 +239,97 @@ void DCLGPS::init() {
 		
 	// Not sure if this should be here, but OK for now.
 	CreateDefaultFlightPlans();
+
+	// Hack - hardwire some instrument approaches for development.
+	// These will shortly be replaced by a routine to read ARINC data from file instead.
+	FGNPIAP* iap;
+	GPSWaypoint* wp;
+	GPSFlightPlan* fp;
+	const GPSWaypoint* cwp;
+	
+	iap = new FGNPIAP;
+	iap->_id = "KHAF";
+	iap->_name = "RNAV (GPS) Y RWY 12";
+	iap->_abbrev = "R12-Y";
+	iap->_rwyStr = "12";
+	iap->_approachRoutes.clear();
+	iap->_IAP.clear();
+	iap->_MAP.clear();
+	// -------
+	wp = new GPSWaypoint;
+	wp->id = "GOBBS";
+	// Nasty using the find any function here, but it saves converting data from FGFix etc. 
+	cwp = FindFirstByExactId(wp->id);
+	if(cwp) {
+		*wp = *cwp;
+		wp->appType = GPS_IAF;
+		fp = new GPSFlightPlan;
+		fp->waypoints.push_back(wp);
+	} else {
+		//cout << "Unable to find waypoint " << wp->id << '\n';
+	}
+	// -------
+	wp = new GPSWaypoint;
+	wp->id = "FUJCE";
+	cwp = FindFirstByExactId(wp->id);
+	if(cwp) {
+		*wp = *cwp;
+		wp->appType = GPS_IAP;
+		fp->waypoints.push_back(wp);
+		iap->_approachRoutes.push_back(fp);
+		iap->_IAP.push_back(wp);
+	} else {
+		//cout << "Unable to find waypoint " << wp->id << '\n';
+	}
+	// -------
+	wp = new GPSWaypoint;
+	wp->id = "JEVXY";
+	cwp = FindFirstByExactId(wp->id);
+	if(cwp) {
+		*wp = *cwp;
+		wp->appType = GPS_FAF;
+		iap->_IAP.push_back(wp);
+	} else {
+		//cout << "Unable to find waypoint " << wp->id << '\n';
+	}
+	// -------
+	wp = new GPSWaypoint;
+	wp->id = "RW12";
+	wp->appType = GPS_MAP;
+	if(wp->id.substr(0, 2) == "RW" && wp->appType == GPS_MAP) {
+		// Assume that this is a missed-approach point based on the runway number, which appears to be standard for most approaches.
+		const FGAirport* apt = fgFindAirportID(iap->_id);
+		if(apt) {
+			// TODO - sanity check the waypoint ID to ensure we have a double digit number
+			FGRunway* rwy = apt->getRunwayByIdent(wp->id.substr(2, 2));
+			if(rwy) {
+				wp->lat = rwy->begin().getLatitudeRad();
+				wp->lon = rwy->begin().getLongitudeRad();
+			}
+		}
+	} else {
+		cwp = FindFirstByExactId(wp->id);
+		if(cwp) {
+			*wp = *cwp;
+			wp->appType = GPS_MAP;
+		} else {
+			//cout << "Unable to find waypoint " << wp->id << '\n';
+		}
+	}
+	iap->_IAP.push_back(wp);
+	// -------
+	wp = new GPSWaypoint;
+	wp->id = "SEEMS";
+	cwp = FindFirstByExactId(wp->id);
+	if(cwp) {
+		*wp = *cwp;
+		wp->appType = GPS_MAHP;
+		iap->_MAP.push_back(wp);
+	} else {
+		//cout << "Unable to find waypoint " << wp->id << '\n';
+	}
+	// -------
+	_np_iap[iap->_id].push_back(iap);
 }
 
 void DCLGPS::bind() {
