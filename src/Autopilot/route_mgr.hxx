@@ -70,6 +70,8 @@ private:
     
     
     SGPropertyNode_ptr _pathNode;
+    SGPropertyNode_ptr _currentWpt;
+    
     
     /** 
      * Signal property to notify people that the route was edited

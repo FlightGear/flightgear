@@ -142,7 +142,8 @@ void FGRouteMgr::init() {
   _edited = fgGetNode(RM "signals/edited", true);
   _finished = fgGetNode(RM "signals/finished", true);
   
-  rm->tie("current-wp", SGRawValueMethods<FGRouteMgr, int>
+  _currentWpt = fgGetNode(RM "current-wp", true);
+  _currentWpt->tie(SGRawValueMethods<FGRouteMgr, int>
     (*this, &FGRouteMgr::currentWaypoint, &FGRouteMgr::jumpToIndex));
       
   // temporary distance / eta calculations, for backward-compatability
@@ -519,7 +520,7 @@ bool FGRouteMgr::activate()
     add_waypoint(SGWayPoint(destApt->geod(), destApt->ident(), destApt->name()));
   }
   
-  _route->set_current(0);
+  _route->set_current(1);
   
   double routeDistanceNm = _route->total_distance() * SG_METER_TO_NM;
   totalDistance->setDoubleValue(routeDistanceNm);
@@ -531,7 +532,6 @@ bool FGRouteMgr::activate()
   }
   
   active->setBoolValue(true);
-  sequence(); // sequence will sync up wp0, wp1 and current-wp
   SG_LOG(SG_AUTOPILOT, SG_INFO, "route-manager, activate route ok");
   return true;
 }
@@ -550,6 +550,7 @@ void FGRouteMgr::sequence()
   
   _route->increment_current();
   currentWaypointChanged();
+  _currentWpt->fireValueChanged();
 }
 
 bool FGRouteMgr::checkFinished()
