@@ -3,12 +3,17 @@
 #  include "config.h"
 #endif
 
+#include <cstring>
+
+#include <simgear/math/SGMath.hxx>
 #include <simgear/nasal/nasal.h>
 #include <simgear/props/props.hxx>
 
 #include <Main/globals.hxx>
 
 #include "NasalSys.hxx"
+
+using namespace std;
 
 // Implementation of a Nasal wrapper for the SGPropertyNode class,
 // using the Nasal "ghost" (er... Garbage collection Handle for
