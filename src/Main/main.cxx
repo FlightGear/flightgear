@@ -492,10 +492,12 @@ static void fgMainLoop( void ) {
         && cur_fdm_state->get_inited()) {
         fgSetBool("sim/sceneryloaded",true);
 #ifdef ENABLE_AUDIO_SUPPORT
-        if (fgGetBool("/sim/sound/enabled") == false)
-            smgr->stop();
-        else 
+        if (fgGetBool("/sim/sound/enabled") == true)  {
             smgr->set_volume(fgGetFloat("/sim/sound/volume"));
+            smgr->activate();
+        }
+        else
+            smgr->stop();
 #endif
     }
 
