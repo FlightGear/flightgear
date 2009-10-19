@@ -41,9 +41,9 @@ bool FGBeacon::init() {
     int len;
     unsigned char *ptr;
 
-    unsigned char *inner_buf = new unsigned char[ INNER_SIZE ] ;
-    unsigned char *middle_buf = new unsigned char[ MIDDLE_SIZE ] ;
-    unsigned char *outer_buf = new unsigned char[ OUTER_SIZE ] ;
+    std::auto_ptr<unsigned char>inner_buf( new unsigned char[ INNER_SIZE ] );
+    std::auto_ptr<unsigned char>middle_buf( new unsigned char[ MIDDLE_SIZE ] );
+    std::auto_ptr<unsigned char>outer_buf( new unsigned char[ OUTER_SIZE ] );
 
     // Make inner marker beacon sound
     len= (int)(INNER_DIT_LEN / 2.0 );
@@ -51,7 +51,7 @@ bool FGBeacon::init() {
     make_tone( inner_dit, INNER_FREQ, len, INNER_DIT_LEN,
 	       TRANSITION_BYTES );
 
-    ptr = inner_buf;
+    ptr = inner_buf.get();
     for ( i = 0; i < 6; ++i ) {
 	memcpy( ptr, inner_dit, INNER_DIT_LEN );
 	ptr += INNER_DIT_LEN;
@@ -73,7 +73,7 @@ bool FGBeacon::init() {
         make_tone( middle_dah, MIDDLE_FREQ, len, MIDDLE_DAH_LEN,
 	            TRANSITION_BYTES );
 
-        ptr = middle_buf;
+        ptr = middle_buf.get();
         memcpy( ptr, middle_dit, MIDDLE_DIT_LEN );
         ptr += MIDDLE_DIT_LEN;
         memcpy( ptr, middle_dah, MIDDLE_DAH_LEN );
@@ -88,7 +88,7 @@ bool FGBeacon::init() {
         make_tone( outer_dah, OUTER_FREQ, len, OUTER_DAH_LEN,
 	            TRANSITION_BYTES );
            
-        ptr = outer_buf;
+        ptr = outer_buf.get();
         memcpy( ptr, outer_dah, OUTER_DAH_LEN );
         ptr += OUTER_DAH_LEN;
         memcpy( ptr, outer_dah, OUTER_DAH_LEN );

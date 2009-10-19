@@ -237,8 +237,10 @@ void FGATC::Render(string& msg, const float volume,
 // >>> Beware: must pass a (new) object to the (add) method,
 // >>> because the (remove) method is going to do a (delete)
 // >>> whether that's what you want or not.
+				std::auto_ptr<unsigned char> ptr;
+                                ptr.reset((unsigned char*) buf.c_str());
 				SGSoundSample *simple = 
-				new SGSoundSample((unsigned char*) buf.c_str(),  buf.length(), 8000);
+				    new SGSoundSample(ptr,  buf.length(), 8000);
 				// TODO - at the moment the volume can't be changed 
 				// after the transmission has started.
 				simple->set_volume(volume);
