@@ -74,7 +74,8 @@ bool FGATCVoice::LoadVoice(const string& voice) {
 	int format, freq;
         SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
 	void *data;
-	smgr->load(full_path, &data, &format, &rawDataSize, &freq);
+        if (!smgr->load(full_path, &data, &format, &rawDataSize, &freq))
+            return false;
 	rawSoundData = (char*)data;
 #ifdef VOICE_TEST
 	cout << "ATCVoice:  format: " << format

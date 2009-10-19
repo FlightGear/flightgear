@@ -39,7 +39,7 @@
 #include <simgear/sound/xmlsound.hxx>
 
 FGFX::FGFX ( SGSoundMgr *smgr, const string &refname ) :
-    last_pause( true ),
+    last_pause( false ),
     last_volume( 0.0 ),
     _pause( fgGetNode("/sim/sound/pause") ),
     _volume( fgGetNode("/sim/sound/volume") )
@@ -114,7 +114,6 @@ FGFX::reinit()
 void
 FGFX::update (double dt)
 {
-    // command sound manger
     bool new_pause = _pause->getBoolValue();
     if ( new_pause != last_pause ) {
         if ( new_pause ) {
@@ -125,20 +124,20 @@ FGFX::update (double dt)
         last_pause = new_pause;
     }
 
-    double volume = _volume->getDoubleValue();
-    if ( volume != last_volume ) {
-        set_volume( volume );        
-        last_volume = volume;
-    }
-
     if ( !new_pause ) {
+        double volume = _volume->getDoubleValue();
+        if ( volume != last_volume ) {
+            set_volume( volume );        
+            last_volume = volume;
+        }
+
         // update sound effects if not paused
         for ( unsigned int i = 0; i < _sound.size(); i++ ) {
             _sound[i]->update(dt);
         }
-    }
 
-    SGSampleGroup::update(dt);
+        SGSampleGroup::update(dt);
+    }
 }
 
 // end of fg_fx.cxx
