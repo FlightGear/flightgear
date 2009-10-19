@@ -59,7 +59,6 @@ FGSampleQueue::~FGSampleQueue ()
 void
 FGSampleQueue::update (double dt)
 {
-return;
     // command sound manger
     bool new_pause = _pause->getBoolValue();
     if ( new_pause != last_pause ) {
