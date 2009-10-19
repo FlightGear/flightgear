@@ -125,6 +125,7 @@ FGGlobals::~FGGlobals()
     // deleted subsystems.
     subsystem_mgr->get_group(SGSubsystemMgr::GENERAL)->remove_subsystem("input");
     subsystem_mgr->get_group(SGSubsystemMgr::GENERAL)->remove_subsystem("gui");
+    subsystem_mgr->unbind();
     delete subsystem_mgr;
     delete event_mgr;
     delete time_params;
