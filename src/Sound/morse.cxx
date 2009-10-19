@@ -219,10 +219,10 @@ SGSoundSample *FGMorse::make_ident( const string& id, const int freq ) {
     length += 2 * SPACE_SIZE;
 
     // 2. Allocate space for the message
-    unsigned char *buffer = new unsigned char[length];
+    std::auto_ptr<unsigned char>buffer( new unsigned char[length] );
 
     // 3. Assemble the message;
-    unsigned char *buf_ptr = buffer;
+    unsigned char *buf_ptr = buffer.get();
 
     for ( i = 0; i < (int)id.length(); ++i ) {
 	if ( idptr[i] >= 'A' && idptr[i] <= 'Z' ) {

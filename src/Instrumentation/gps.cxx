@@ -280,7 +280,9 @@ GPS::Config::setExternalCourse(double aCourseDeg)
 ////////////////////////////////////////////////////////////////////////////
 
 GPS::GPS ( SGPropertyNode *node) : 
-  _last_valid(false),
+  _dataValid(false),
+  _lastPosValid(false),
+  _mode("init"),
   _name(node->getStringValue("name", "gps")),
   _num(node->getIntValue("number", 0)),
   _computeTurnData(false),
@@ -334,7 +336,6 @@ GPS::init ()
   _magnetic_bug_error_node = node->getChild("magnetic-bug-error-deg", 0, true);
 
 // command system    
-  _mode = "obs";
   node->tie("mode", SGRawValueMethods<GPS, const char*>(*this, &GPS::getMode, NULL));
   node->tie("command", SGRawValueMethods<GPS, const char*>(*this, &GPS::getCommand, &GPS::setCommand));
     
@@ -454,23 +455,16 @@ GPS::init ()
   // last thing, add the deprecated prop watcher
   new DeprecatedPropListener(node);
   
-  // initialise in OBS mode, with waypt set to the nearest airport.
-  // keep in mind at this point, _last_valid is not set
-  
-  auto_ptr<FGPositioned::Filter> f(createFilter(FGPositioned::AIRPORT));
-  FGPositionedRef apt = FGPositioned::findClosest(_position.get(), 20.0, f.get());
-  if (apt) {
-    setScratchFromPositioned(apt, 0);
-    selectOBSMode();
-  }
+  clearOutput();
 }
 
 void
 GPS::clearOutput()
 {
-  _last_valid = false;
+  _dataValid = false;
   _last_speed_kts = 0.0;
   _last_pos = SGGeod();
+  _lastPosValid = false;
   _indicated_pos = SGGeod();
   _last_vertical_speed = 0.0;
   _last_true_track = 0.0;
@@ -543,50 +537,55 @@ GPS::update (double delta_time_sec)
     printf("%f %f \n", error_length, error_angle);
 
 */
-    _raim_node->setDoubleValue(1.0);
-    _indicated_pos = _position.get();
+  _raim_node->setDoubleValue(1.0);
+  _indicated_pos = _position.get();
+  updateBasicData(delta_time_sec);
 
-    if (_last_valid) {
-      updateWithValid(delta_time_sec);
+  if (_dataValid) {
+    if (_mode == "obs") {
+      _selectedCourse = _config.getExternalCourse();
     } else {
-      _last_valid = true;
-        
-      if (_route_active_node->getBoolValue()) {
-        // GPS init with active route
-        SG_LOG(SG_INSTR, SG_INFO, "GPS init with active route");
-        _listener->setGuard(true);
-        routeActivated();
-        routeManagerSequenced();
-        _listener->setGuard(false);
+      updateTurn();
+    }
+      
+    updateWaypoints();
+    updateTrackingBug();
+    updateReferenceNavaid(delta_time_sec);
+    updateRouteData();
+    driveAutopilot();
+  }
+  
+  if (_dataValid && (_mode == "init")) {
+    // allow a realistic delay in the future, here
+    SG_LOG(SG_INSTR, SG_INFO, "GPS initialisation complete");
+    if (_route_active_node->getBoolValue()) {
+      // GPS init with active route
+      SG_LOG(SG_INSTR, SG_INFO, "GPS init with active route");
+      selectLegMode();
+    } else {
+      // initialise in OBS mode, with waypt set to the nearest airport.
+      // keep in mind at this point, _dataValid is not set
+    
+      auto_ptr<FGPositioned::Filter> f(createFilter(FGPositioned::AIRPORT));
+      FGPositionedRef apt = FGPositioned::findClosest(_position.get(), 20.0, f.get());
+      if (apt) {
+        setScratchFromPositioned(apt, 0);
+        selectOBSMode();
       }
     }
-
-    _last_pos = _indicated_pos;
-}
-
-void
-GPS::updateWithValid(double dt)
-{
-  assert(_last_valid);
-    
-  updateBasicData(dt);
+  } // of init mode check
   
-  if (_mode == "obs") {
-    _selectedCourse = _config.getExternalCourse();
-  } else {
-    updateTurn();
-  }
-    
-  updateWaypoints();
-  updateTrackingBug();
-  updateReferenceNavaid(dt);
-  updateRouteData();
-  driveAutopilot();
+  _last_pos = _indicated_pos;
+  _lastPosValid = true;
 }
 
 void
 GPS::updateBasicData(double dt)
 {
+  if (!_lastPosValid) {
+    return;
+  }
+  
   double distance_m;
   double track2_deg;
   SGGeodesy::inverse(_last_pos, _indicated_pos, _last_true_track, track2_deg, distance_m );
@@ -602,6 +601,11 @@ GPS::updateBasicData(double dt)
   _odometer_node->setDoubleValue(odometer + distance_m * SG_METER_TO_NM);
   odometer = _trip_odometer_node->getDoubleValue();
   _trip_odometer_node->setDoubleValue(odometer + distance_m * SG_METER_TO_NM);
+  
+  if (!_dataValid) {
+    SG_LOG(SG_INSTR, SG_INFO, "GPS setting data valid");
+    _dataValid = true;
+  }
 }
 
 void
@@ -1016,7 +1020,7 @@ void GPS::wp1Changed()
 
 double GPS::getLegDistance() const
 {
-  if (!_last_valid || (_mode == "obs")) {
+  if (!_dataValid || (_mode == "obs")) {
     return -1;
   }
   
@@ -1025,7 +1029,7 @@ double GPS::getLegDistance() const
 
 double GPS::getLegCourse() const
 {
-  if (!_last_valid || (_mode == "obs")) {
+  if (!_dataValid || (_mode == "obs")) {
     return -9999.0;
   }
   
@@ -1034,7 +1038,7 @@ double GPS::getLegCourse() const
 
 double GPS::getLegMagCourse() const
 {
-  if (!_last_valid || (_mode == "obs")) {
+  if (!_dataValid || (_mode == "obs")) {
     return 0.0;
   }
   
@@ -1045,7 +1049,7 @@ double GPS::getLegMagCourse() const
 
 double GPS::getAltDistanceRatio() const
 {
-  if (!_last_valid || (_mode == "obs")) {
+  if (!_dataValid || (_mode == "obs")) {
     return 0.0;
   }
   
@@ -1060,7 +1064,7 @@ double GPS::getAltDistanceRatio() const
 
 double GPS::getMagTrack() const
 {
-  if (!_last_valid) {
+  if (!_dataValid) {
     return 0.0;
   }
   
@@ -1071,7 +1075,7 @@ double GPS::getMagTrack() const
 
 double GPS::getCDIDeflection() const
 {
-  if (!_last_valid) {
+  if (!_dataValid) {
     return 0.0;
   }
   
@@ -1091,7 +1095,7 @@ double GPS::getCDIDeflection() const
 
 const char* GPS::getWP0Ident() const
 {
-  if (!_last_valid || (_mode != "leg")) {
+  if (!_dataValid || (_mode != "leg")) {
     return "";
   }
   
@@ -1100,7 +1104,7 @@ const char* GPS::getWP0Ident() const
 
 const char* GPS::getWP0Name() const
 {
-  if (!_last_valid || (_mode != "leg")) {
+  if (!_dataValid || (_mode != "leg")) {
     return "";
   }
   
@@ -1109,7 +1113,7 @@ const char* GPS::getWP0Name() const
 
 const char* GPS::getWP1Ident() const
 {
-  if (!_last_valid) {
+  if (!_dataValid) {
     return "";
   }
   
@@ -1118,7 +1122,7 @@ const char* GPS::getWP1Ident() const
 
 const char* GPS::getWP1Name() const
 {
-  if (!_last_valid) {
+  if (!_dataValid) {
     return "";
   }
 
@@ -1127,7 +1131,7 @@ const char* GPS::getWP1Name() const
 
 double GPS::getWP1Distance() const
 {
-  if (!_last_valid) {
+  if (!_dataValid) {
     return -1.0;
   }
   
@@ -1136,7 +1140,7 @@ double GPS::getWP1Distance() const
 
 double GPS::getWP1TTW() const
 {
-  if (!_last_valid) {
+  if (!_dataValid) {
     return -1.0;
   }
   
@@ -1149,7 +1153,7 @@ double GPS::getWP1TTW() const
 
 const char* GPS::getWP1TTWString() const
 {
-  if (!_last_valid) {
+  if (!_dataValid) {
     return "";
   }
   
@@ -1158,7 +1162,7 @@ const char* GPS::getWP1TTWString() const
 
 double GPS::getWP1Bearing() const
 {
-  if (!_last_valid) {
+  if (!_dataValid) {
     return -9999.0;
   }
   
@@ -1167,7 +1171,7 @@ double GPS::getWP1Bearing() const
 
 double GPS::getWP1MagBearing() const
 {
-  if (!_last_valid) {
+  if (!_dataValid) {
     return -9999.0;
   }
 
@@ -1176,7 +1180,7 @@ double GPS::getWP1MagBearing() const
 
 double GPS::getWP1CourseDeviation() const
 {
-  if (!_last_valid) {
+  if (!_dataValid) {
     return 0.0;
   }
   
@@ -1195,7 +1199,7 @@ double GPS::getWP1CourseDeviation() const
 
 double GPS::getWP1CourseErrorNm() const
 {
-  if (!_last_valid) {
+  if (!_dataValid) {
     return 0.0;
   }
   
@@ -1206,7 +1210,7 @@ double GPS::getWP1CourseErrorNm() const
 
 bool GPS::getWP1ToFlag() const
 {
-  if (!_last_valid) {
+  if (!_dataValid) {
     return false;
   }
   
@@ -1218,7 +1222,7 @@ bool GPS::getWP1ToFlag() const
 
 bool GPS::getWP1FromFlag() const
 {
-  if (!_last_valid) {
+  if (!_dataValid) {
     return false;
   }
   

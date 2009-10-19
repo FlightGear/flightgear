@@ -193,7 +193,6 @@ private:
      */
     void clearOutput();
 
-    void updateWithValid(double dt);
     void updateBasicData(double dt);
     void updateWaypoints();
 
@@ -336,8 +335,9 @@ private:
 
     double _selectedCourse;
     
-    bool _last_valid;
+    bool _dataValid;
     SGGeod _last_pos;
+    bool _lastPosValid;
     double _last_speed_kts;
     double _last_true_track;
     double _last_vertical_speed;

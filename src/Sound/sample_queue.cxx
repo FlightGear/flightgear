@@ -37,7 +37,7 @@
 #include <simgear/sound/sample_openal.hxx>
 
 FGSampleQueue::FGSampleQueue ( SGSoundMgr *smgr, const string &refname ) :
-    last_pause( true ),
+    last_pause( false ),
     last_volume( 0.0 ),
     _pause( fgGetNode("/sim/sound/pause") ),
     _volume( fgGetNode("/sim/sound/volume") )
@@ -70,34 +70,36 @@ FGSampleQueue::update (double dt)
         last_pause = new_pause;
     }
 
-    double volume = _volume->getDoubleValue();
-    if ( volume != last_volume ) {
-        set_volume( volume );
-        last_volume = volume;
-    }
+    if ( !new_pause ) {
+        double volume = _volume->getDoubleValue();
+        if ( volume != last_volume ) {
+            set_volume( volume );
+            last_volume = volume;
+        }
 
-    // process mesage queue
-    const string msgid = "Sequential Audio Message";
-    bool now_playing = false;
-    if ( exists( msgid ) ) {
-        now_playing = is_playing( msgid );
+        // process mesage queue
+        const string msgid = "Sequential Audio Message";
+        bool now_playing = false;
+        if ( exists( msgid ) ) {
+            now_playing = is_playing( msgid );
+            if ( !now_playing ) {
+                // current message finished, stop and remove
+                stop( msgid );   // removes source
+                remove( msgid ); // removes buffer
+            }
+        }
+
         if ( !now_playing ) {
-            // current message finished, stop and remove
-            stop( msgid );   // removes source
-            remove( msgid ); // removes buffer
+            // message queue idle, add next sound if we have one
+            if ( _messages.size() > 0 ) {
+                SGSampleGroup::add( _messages.front(), msgid );
+                _messages.pop();
+                play_once( msgid );
+            }
         }
-    }
 
-    if ( !now_playing ) {
-        // message queue idle, add next sound if we have one
-        if ( _messages.size() > 0 ) {
-            SGSampleGroup::add( _messages.front(), msgid );
-            _messages.pop();
-            play_once( msgid );
-        }
+        SGSampleGroup::update(dt);
     }
-
-    SGSampleGroup::update(dt);
 }
 
 // end of _samplequeue.cxx
