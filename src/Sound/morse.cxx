@@ -21,6 +21,8 @@
 // $Id$
 
 
+#include <memory>
+
 #include <simgear/constants.h>
 
 #include "morse.hxx"
