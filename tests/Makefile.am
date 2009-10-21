@@ -2,6 +2,12 @@ bin_PROGRAMS = est-epsilon gl-info al-info
 
 noinst_PROGRAMS = test-gethostname test-mktime test-text test-up test-env-map
 
+if HAVE_FRAMEWORK_PLIB
+test_up_LDFLAGS = $(plib_FRAMEWORK)
+else
+test_up_PLIB_LIBS = -lplibsg -lplibul
+endif
+
 est_epsilon_SOURCES = est-epsilon.c
 est_epsilon_LDADD =  $(opengl_LIBS)
 
@@ -21,4 +27,4 @@ test_mktime_SOURCES = test-mktime.cxx
 test_text_SOURCES = test-text.cxx
 
 test_up_SOURCES = test-up.cxx
-test_up_LDADD = -lsgmath -lsgxml -lsgmisc -lsgdebug -lsgstructure -lsgtiming -lplibsg -lplibul -lz $(base_LIBS)
+test_up_LDADD = $(test_up_PLIB_LIBS) -lsgmath -lsgxml -lsgmisc -lsgdebug -lsgstructure -lsgtiming -lz $(base_LIBS)
