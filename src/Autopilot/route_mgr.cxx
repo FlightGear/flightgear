@@ -216,12 +216,8 @@ void FGRouteMgr::update( double dt ) {
     }
     
   // basic course/distance information
-    double inboundCourse, dummy, wp_course, wp_distance;
+    double wp_course, wp_distance;
     SGWayPoint wp = _route->get_current();
-  
-    wp.CourseAndDistance(_route->get_waypoint(_route->current_index() - 1), 
-      &inboundCourse, &dummy);
-    
     wp.CourseAndDistance( lon->getDoubleValue(), lat->getDoubleValue(),
                           alt->getDoubleValue(), &wp_course, &wp_distance );
 
@@ -478,49 +474,39 @@ void FGRouteMgr::InputListener::valueChanged(SGPropertyNode *prop)
 bool FGRouteMgr::activate()
 {
   const FGAirport* depApt = fgFindAirportID(departure->getStringValue("airport"));
-  if (!depApt) {
-    SG_LOG(SG_AUTOPILOT, SG_ALERT, 
-      "unable to activate route: departure airport is invalid:" 
-        << departure->getStringValue("airport") );
-    return false;
+  if (depApt) {
+    string runwayId(departure->getStringValue("runway"));
+    FGRunway* runway = NULL;
+    if (depApt->hasRunwayWithIdent(runwayId)) {
+      runway = depApt->getRunwayByIdent(runwayId);
+    } else {
+      SG_LOG(SG_AUTOPILOT, SG_INFO, 
+        "route-manager, departure runway not found:" << runwayId);
+      runway = depApt->getActiveRunwayForUsage();
+    }
+    
+    SGWayPoint swp(runway->threshold(), 
+      depApt->ident() + "-" + runway->ident(), runway->name());
+    add_waypoint(swp, 0);
   }
-  
-  string runwayId(departure->getStringValue("runway"));
-  FGRunway* runway = NULL;
-  if (depApt->hasRunwayWithIdent(runwayId)) {
-    runway = depApt->getRunwayByIdent(runwayId);
-  } else {
-    SG_LOG(SG_AUTOPILOT, SG_INFO, 
-      "route-manager, departure runway not found:" << runwayId);
-    runway = depApt->getActiveRunwayForUsage();
-  }
-  
-  SGWayPoint swp(runway->threshold(), 
-    depApt->ident() + "-" + runway->ident(), runway->name());
-  add_waypoint(swp, 0);
   
   const FGAirport* destApt = fgFindAirportID(destination->getStringValue("airport"));
-  if (!destApt) {
-    SG_LOG(SG_AUTOPILOT, SG_ALERT, 
-      "unable to activate route: destination airport is invalid:" 
-        << destination->getStringValue("airport") );
-    return false;
+  if (destApt) {
+    string runwayId = (destination->getStringValue("runway"));
+    if (destApt->hasRunwayWithIdent(runwayId)) {
+      FGRunway* runway = destApt->getRunwayByIdent(runwayId);
+      SGWayPoint swp(runway->end(), 
+        destApt->ident() + "-" + runway->ident(), runway->name());
+      add_waypoint(swp);
+    } else {
+      // quite likely, since destination runway may not be known until enroute
+      // probably want a listener on the 'destination' node to allow an enroute
+      // update
+      add_waypoint(SGWayPoint(destApt->geod(), destApt->ident(), destApt->name()));
+    }
   }
 
-  runwayId = (destination->getStringValue("runway"));
-  if (destApt->hasRunwayWithIdent(runwayId)) {
-    FGRunway* runway = destApt->getRunwayByIdent(runwayId);
-    SGWayPoint swp(runway->end(), 
-      destApt->ident() + "-" + runway->ident(), runway->name());
-    add_waypoint(swp);
-  } else {
-    // quite likely, since destination runway may not be known until enroute
-    // probably want a listener on the 'destination' node to allow an enroute
-    // update
-    add_waypoint(SGWayPoint(destApt->geod(), destApt->ident(), destApt->name()));
-  }
-  
-  _route->set_current(1);
+  _route->set_current(0);
   
   double routeDistanceNm = _route->total_distance() * SG_METER_TO_NM;
   totalDistance->setDoubleValue(routeDistanceNm);
