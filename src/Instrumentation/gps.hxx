@@ -258,6 +258,8 @@ private:
   void nextResult();
   void previousResult();
   void defineWaypoint();
+  void insertWaypointAtIndex(int aIndex);
+  void removeWaypointAtIndex(int aIndex);
   
 // tied-property getter/setters
   void setCommand(const char* aCmd);
