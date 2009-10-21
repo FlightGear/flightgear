@@ -1290,7 +1290,7 @@ void GPS::setCommand(const char* aCmd)
     defineWaypoint();
   } else if (!strcmp(aCmd, "route-insert-before")) {
     int index = _scratchNode->getIntValue("index");
-    if (index < 0) {
+    if (index < 0 || (_routeMgr->size() == 0)) {
       index = _routeMgr->size();
     } else if (index >= _routeMgr->size()) {
       SG_LOG(SG_INSTR, SG_WARN, "GPS:route-insert-before, bad index:" << index);
@@ -1300,7 +1300,7 @@ void GPS::setCommand(const char* aCmd)
     insertWaypointAtIndex(index);
   } else if (!strcmp(aCmd, "route-insert-after")) {
     int index = _scratchNode->getIntValue("index");
-    if (index < 0) {
+    if (index < 0 || (_routeMgr->size() == 0)) {
       index = _routeMgr->size();
     } else if (index >= _routeMgr->size()) {
       SG_LOG(SG_INSTR, SG_WARN, "GPS:route-insert-after, bad index:" << index);
