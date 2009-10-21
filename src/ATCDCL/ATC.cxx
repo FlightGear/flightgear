@@ -25,6 +25,7 @@
 #include "ATC.hxx"
 
 #include <iostream>
+#include <memory>
 
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/structure/exception.hxx>
@@ -237,8 +238,7 @@ void FGATC::Render(string& msg, const float volume,
 // >>> Beware: must pass a (new) object to the (add) method,
 // >>> because the (remove) method is going to do a (delete)
 // >>> whether that's what you want or not.
-				std::auto_ptr<unsigned char> ptr;
-                                ptr.reset((unsigned char*) buf.c_str());
+				std::auto_ptr<unsigned char> ptr( (unsigned char*)buf.c_str() );
 				SGSoundSample *simple = 
 				    new SGSoundSample(ptr,  buf.length(), 8000);
 				// TODO - at the moment the volume can't be changed 

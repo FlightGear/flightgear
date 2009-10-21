@@ -21,6 +21,8 @@
 // $Id$
 
 
+#include <memory>
+
 #include "beacon.hxx"
 
 #include <simgear/structure/exception.hxx>

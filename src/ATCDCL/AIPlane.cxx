@@ -24,6 +24,7 @@
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <math.h>
 #include <string>
+#include <memory>
 using std::string;
 
 
@@ -200,8 +201,9 @@ void FGAIPlane::Render(const string& refname, const float volume, bool repeating
 	if(voice) {
 	    string buf = vPtr->WriteMessage((char*)pending_transmission.c_str(), voice);
 	    if(voice && (volume > 0.05)) {
+                std::auto_ptr<unsigned char> ptr( buf.c_str() );
 		SGSoundSample* simple = 
-		    new SGSoundSample((unsigned char*)buf.c_str(), buf.length(), 8000 );
+		    new SGSoundSample(ptr, buf.length(), 8000 );
                 // TODO - at the moment the volume can't be changed 
 		// after the transmission has started.
 		simple->set_volume(volume);
