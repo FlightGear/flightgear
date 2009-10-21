@@ -723,6 +723,12 @@ void GPS::routeActivated()
   if (_route_active_node->getBoolValue()) {
     SG_LOG(SG_INSTR, SG_INFO, "GPS::route activated, switching to LEG mode");
     selectLegMode();
+    
+    // if we've already passed the current waypoint, sequence.
+    if (_dataValid && getWP1FromFlag()) {
+      SG_LOG(SG_INSTR, SG_INFO, "GPS::route activated, FROM wp1, sequencing");
+      _routeMgr->sequence();
+    }
   } else if (_mode == "leg") {
     SG_LOG(SG_INSTR, SG_INFO, "GPS::route deactivated, switching to OBS mode");
     selectOBSMode();
@@ -738,19 +744,22 @@ void GPS::routeManagerSequenced()
   
   int index = _routeMgr->currentWaypoint(),
     count = _routeMgr->size();
-  if ((index < 1) || (index >= count)) {
+  if ((index < 0) || (index >= count)) {
     SG_LOG(SG_INSTR, SG_ALERT, "GPS: malformed route, index=" << index);
     return;
   }
   
   SG_LOG(SG_INSTR, SG_INFO, "GPS waypoint index is now " << index);
-  SGWayPoint wp0(_routeMgr->get_waypoint(index - 1));
-  SGWayPoint wp1(_routeMgr->get_waypoint(index));
-    
-  _wp0Ident = wp0.get_id();
-  _wp0Name = wp0.get_name();
-  _wp0_position = wp0.get_target();
+  
+  if (index > 0) {
+    SGWayPoint wp0(_routeMgr->get_waypoint(index - 1));
+    _wp0Ident = wp0.get_id();
+    _wp0Name = wp0.get_name();
+    _wp0_position = wp0.get_target();
 
+  }
+  
+  SGWayPoint wp1(_routeMgr->get_waypoint(index));
   _wp1Ident = wp1.get_id();
   _wp1Name = wp1.get_name();
   _wp1_position = wp1.get_target();
@@ -1030,7 +1039,7 @@ double GPS::getLegDistance() const
 
 double GPS::getLegCourse() const
 {
-  if (!_dataValid || (_mode == "obs")) {
+  if (!_dataValid) {
     return -9999.0;
   }
   
@@ -1039,7 +1048,7 @@ double GPS::getLegCourse() const
 
 double GPS::getLegMagCourse() const
 {
-  if (!_dataValid || (_mode == "obs")) {
+  if (!_dataValid) {
     return 0.0;
   }
   
@@ -1646,6 +1655,11 @@ void GPS::selectLegMode()
   SG_LOG(SG_INSTR, SG_INFO, "GPS switching to LEG mode");
   _mode = "leg";
   
+  // depending on the situation, this will either get over-written 
+  // in routeManagerSequenced or not; either way it does no harm to
+  // set it here.
+  _wp0_position = _indicated_pos;
+
   // not really sequenced, but does all the work of updating wp0/1
   routeManagerSequenced();
 }
