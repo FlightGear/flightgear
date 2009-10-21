@@ -24,6 +24,7 @@
 #include <simgear/math/sg_random.h>
 #include <simgear/sg_inlines.h>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/structure/exception.hxx>
 
 using std::auto_ptr;
 using std::string;
@@ -1287,8 +1288,40 @@ void GPS::setCommand(const char* aCmd)
     previousResult();
   } else if (!strcmp(aCmd, "define-user-wpt")) {
     defineWaypoint();
+  } else if (!strcmp(aCmd, "route-insert-before")) {
+    int index = _scratchNode->getIntValue("index");
+    if (index < 0) {
+      index = _routeMgr->size();
+    } else if (index >= _routeMgr->size()) {
+      SG_LOG(SG_INSTR, SG_WARN, "GPS:route-insert-before, bad index:" << index);
+      return;
+    }
+    
+    insertWaypointAtIndex(index);
+  } else if (!strcmp(aCmd, "route-insert-after")) {
+    int index = _scratchNode->getIntValue("index");
+    if (index < 0) {
+      index = _routeMgr->size();
+    } else if (index >= _routeMgr->size()) {
+      SG_LOG(SG_INSTR, SG_WARN, "GPS:route-insert-after, bad index:" << index);
+      return;
+    } else {
+      ++index; 
+    }
+  
+    insertWaypointAtIndex(index);
+  } else if (!strcmp(aCmd, "route-delete")) {
+    int index = _scratchNode->getIntValue("index");
+    if (index < 0) {
+      index = _routeMgr->size();
+    } else if (index >= _routeMgr->size()) {
+      SG_LOG(SG_INSTR, SG_WARN, "GPS:route-delete, bad index:" << index);
+      return;
+    }
+    
+    removeWaypointAtIndex(index);
   } else {
-    SG_LOG(SG_INSTR, SG_WARN, "GPS:unrecognzied command:" << aCmd);
+    SG_LOG(SG_INSTR, SG_WARN, "GPS:unrecognized command:" << aCmd);
   }
 }
 
@@ -1677,6 +1710,33 @@ void GPS::defineWaypoint()
   FGPositionedRef wpt = FGPositioned::createUserWaypoint(ident, _scratchPos);
   _searchResultsCached = false;
   setScratchFromPositioned(wpt.get(), -1);
+}
+
+void GPS::insertWaypointAtIndex(int aIndex)
+{
+  // note we do allow index = routeMgr->size(), that's an append
+  if ((aIndex < 0) || (aIndex > _routeMgr->size())) {
+    throw sg_range_exception("GPS::insertWaypointAtIndex: index out of bounds");
+  }
+  
+  if (!isScratchPositionValid()) {
+    SG_LOG(SG_INSTR, SG_WARN, "GPS:insertWaypointAtIndex: invalid lat/lon");
+    return;
+  }
+  
+  string ident = _scratchNode->getStringValue("ident");
+  string name = _scratchNode->getStringValue("name");
+  
+  _routeMgr->add_waypoint(SGWayPoint(_scratchPos, ident, name), aIndex);
+}
+
+void GPS::removeWaypointAtIndex(int aIndex)
+{
+  if ((aIndex < 0) || (aIndex >= _routeMgr->size())) {
+    throw sg_range_exception("GPS::removeWaypointAtIndex: index out of bounds");
+  }
+  
+  _routeMgr->pop_waypoint(aIndex);
 }
 
 // end of gps.cxx
