@@ -281,6 +281,7 @@ GPS::Config::setExternalCourse(double aCourseDeg)
 ////////////////////////////////////////////////////////////////////////////
 
 GPS::GPS ( SGPropertyNode *node) : 
+  _selectedCourse(0.0),
   _dataValid(false),
   _lastPosValid(false),
   _mode("init"),
@@ -559,6 +560,9 @@ GPS::update (double delta_time_sec)
   if (_dataValid && (_mode == "init")) {
     // allow a realistic delay in the future, here
     SG_LOG(SG_INSTR, SG_INFO, "GPS initialisation complete");
+    
+    _selectedCourse = _config.getExternalCourse();
+    
     if (_route_active_node->getBoolValue()) {
       // GPS init with active route
       SG_LOG(SG_INSTR, SG_INFO, "GPS init with active route");
