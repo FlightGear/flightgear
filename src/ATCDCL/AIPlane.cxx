@@ -201,7 +201,7 @@ void FGAIPlane::Render(const string& refname, const float volume, bool repeating
 	if(voice) {
 	    string buf = vPtr->WriteMessage((char*)pending_transmission.c_str(), voice);
 	    if(voice && (volume > 0.05)) {
-                std::auto_ptr<unsigned char> ptr( buf.c_str() );
+                std::auto_ptr<unsigned char> ptr( (unsigned char*)buf.c_str() );
 		SGSoundSample* simple = 
 		    new SGSoundSample(ptr, buf.length(), 8000 );
                 // TODO - at the moment the volume can't be changed 
