@@ -102,7 +102,7 @@ ADF::init ()
     _ident_node = node->getChild("ident", 0, true);
     _ident_audible_node = node->getChild("ident-audible", 0, true);
 
-    SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+    SGSoundMgr *smgr = globals->get_soundmgr();
     _sgr = smgr->find("avionics", true);
     _sgr->tie_to_listener();
 

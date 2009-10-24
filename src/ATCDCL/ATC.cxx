@@ -25,7 +25,6 @@
 #include "ATC.hxx"
 
 #include <iostream>
-#include <memory>
 
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/structure/exception.hxx>
@@ -57,8 +56,7 @@ FGATC::FGATC() :
 	_counter(0.0),
 	_max_count(5.0)
 {
-	SGSoundMgr *smgr;
-	smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+	SGSoundMgr *smgr = globals->get_soundmgr();
 	_sgr = smgr->find("atc", true);
 }
 
@@ -231,18 +229,15 @@ void FGATC::Render(string& msg, const float volume,
 #ifdef ENABLE_AUDIO_SUPPORT
 	_voice = (_voiceOK && fgGetBool("/sim/sound/voice"));
 	if(_voice) {
-		string buf = _vPtr->WriteMessage((char*)msg.c_str(), _voice);
-		if(_voice && (volume > 0.05)) {
+                size_t len;
+		void* buf = _vPtr->WriteMessage((char*)msg.c_str(), &len);
+		if(buf && (volume > 0.05)) {
 			NoRender(refname);
 			try {
 // >>> Beware: must pass a (new) object to the (add) method,
 // >>> because the (remove) method is going to do a (delete)
 // >>> whether that's what you want or not.
-				std::auto_ptr<unsigned char> ptr( (unsigned char*)buf.c_str() );
-				SGSoundSample *simple = 
-				    new SGSoundSample(ptr,  buf.length(), 8000);
-				// TODO - at the moment the volume can't be changed 
-				// after the transmission has started.
+				SGSoundSample *simple = new SGSoundSample(&buf, len, 8000);
 				simple->set_volume(volume);
 				_sgr->add(simple, refname);
 				_sgr->play(refname, repeating);

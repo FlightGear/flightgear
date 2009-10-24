@@ -15,8 +15,8 @@
 // General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+// along with this program; if not, write to the Free Software Foundation,
+// Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 // $Id$
 
@@ -32,6 +32,7 @@
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/event_mgr.hxx>
+#include <simgear/sound/soundmgr_openal.hxx>
 
 #include <Aircraft/controls.hxx>
 #include <Airports/runways.hxx>
@@ -72,6 +73,7 @@ FGGlobals::FGGlobals() :
     renderer( new FGRenderer ),
     subsystem_mgr( new SGSubsystemMgr ),
     event_mgr( new SGEventMgr ),
+    soundmgr( new SGSoundMgr ),
     sim_time_sec( 0.0 ),
     fg_root( "" ),
     warp( 0 ),
@@ -158,6 +160,9 @@ FGGlobals::~FGGlobals()
     delete channellist;
     delete airwaynet;
     delete multiplayer_mgr;
+
+    soundmgr->unbind();
+    delete soundmgr;
 }
 
 
@@ -259,6 +264,11 @@ FGGlobals::add_subsystem (const char * name,
     subsystem_mgr->add(name, subsystem, type, min_time_sec);
 }
 
+SGSoundMgr *
+FGGlobals::get_soundmgr () const
+{
+    return soundmgr;
+}
 
 SGEventMgr *
 FGGlobals::get_event_mgr () const

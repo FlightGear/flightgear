@@ -52,6 +52,7 @@ class SGTime;
 class SGEventMgr;
 class SGSubsystemMgr;
 class SGSubsystem;
+class SGSoundMgr;
 
 class FGAIMgr;
 class FGATCMgr;
@@ -93,6 +94,7 @@ private:
     FGRenderer *renderer;
     SGSubsystemMgr *subsystem_mgr;
     SGEventMgr *event_mgr;
+    SGSoundMgr *soundmgr;
 
     // Number of milliseconds elapsed since the start of the program.
     double sim_time_sec;
@@ -197,6 +199,8 @@ public:
                                 double min_time_sec = 0);
 
     virtual SGEventMgr *get_event_mgr () const;
+
+    virtual SGSoundMgr *get_soundmgr () const;
 
     inline double get_sim_time_sec () const { return sim_time_sec; }
     inline void inc_sim_time_sec (double dt) { sim_time_sec += dt; }
