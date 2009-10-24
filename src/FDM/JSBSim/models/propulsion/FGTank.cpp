@@ -59,7 +59,8 @@ FGTank::FGTank(FGFDMExec* exec, Element* el, int tank_number)
   Element* element;
   Element* element_Grain;
   Area = 1.0;
-  Temperature = -9999.0;
+  Density = 6.6;
+  InitialTemperature = Temperature = -9999.0;
   Ixx = Iyy = Izz = 0.0;
   Radius = Contents = Standpipe = Length = InnerRadius = 0.0;
   Capacity = 0.00001;
@@ -96,6 +97,8 @@ FGTank::FGTank(FGFDMExec* exec, Element* el, int tank_number)
     InitialStandpipe = Standpipe = el->FindElementValueAsNumberConvertTo("standpipe", "LBS");
   if (el->FindElement("priority"))
     InitialPriority = Priority = el->FindElementValueAsNumber("priority");
+  if (el->FindElement("density"))
+    Density = el->FindElementValueAsNumberConvertTo("density", "LBS/GAL");
 
   SetPriority( InitialPriority );     // this will also set the Selected flag
 
@@ -206,7 +209,6 @@ double FGTank::Drain(double used)
 
     Contents = 0.0;
     PctFull = 0.0;
-    SetPriority(0);
   }
 
   if (grainType != gtUNKNOWN) CalculateInertias();
@@ -244,6 +246,14 @@ void FGTank::SetContents(double amount)
     PctFull = Contents/Capacity*100.0;
   }
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGTank::SetContentsGallons(double gallons)
+{
+  SetContents(gallons * Density);
+}
+
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
