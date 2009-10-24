@@ -1451,6 +1451,13 @@ bool fgInitSubsystems() {
     globals->get_event_mgr()->setRealtimeProperty(fgGetNode("/sim/time/delta-realtime-sec", true));
 
     ////////////////////////////////////////////////////////////////////
+    // Initialize the sound manager subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+    globals->get_soundmgr()->bind();
+    globals->get_soundmgr()->init();
+
+    ////////////////////////////////////////////////////////////////////
     // Initialize the property interpolator subsystem. Put into the INIT
     // group because the "nasal" subsystem may need it at GENERAL take-down.
     ////////////////////////////////////////////////////////////////////

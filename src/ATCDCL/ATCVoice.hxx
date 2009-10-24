@@ -49,8 +49,8 @@ public:
 	bool LoadVoice(const std::string& voice);
 	
 	// Given a desired message, return a pointer to the data buffer and write the buffer length into len.
-	// Sets dataOK = true if the returned buffer is valid.
-	std::string WriteMessage(const char* message, bool& dataOK);
+	// Sets len to something other than 0 if the returned buffer is valid.
+	void* WriteMessage(const char* message, size_t *len);
 
 private:
 

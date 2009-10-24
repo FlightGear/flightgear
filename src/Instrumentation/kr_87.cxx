@@ -117,7 +117,7 @@ FGKR_87::~FGKR_87() {
 
 
 void FGKR_87::init () {
-    SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+    SGSoundMgr *smgr = globals->get_soundmgr();
     _sgr = smgr->find("avionics", true);
     _sgr->tie_to_listener();
     morse.init();

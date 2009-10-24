@@ -24,7 +24,6 @@
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <math.h>
 #include <string>
-#include <memory>
 using std::string;
 
 
@@ -52,8 +51,7 @@ FGAIPlane::FGAIPlane() {
 	_rollSuspended = false;
 
 	if ( !_sgr ) {
-		SGSoundMgr *smgr;
-		smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+		SGSoundMgr *smgr = globals->get_soundmgr();
 		_sgr = smgr->find("atc", true);
                 _sgr->tie_to_listener();
 	}
@@ -199,13 +197,10 @@ void FGAIPlane::Render(const string& refname, const float volume, bool repeating
 #ifdef ENABLE_AUDIO_SUPPORT
 	voice = (voiceOK && fgGetBool("/sim/sound/voice"));
 	if(voice) {
-	    string buf = vPtr->WriteMessage((char*)pending_transmission.c_str(), voice);
+            sizte_t len;
+	    void* buf = vPtr->WriteMessage((char*)pending_transmission.c_str(), voice, &len);
 	    if(voice && (volume > 0.05)) {
-                std::auto_ptr<unsigned char> ptr( (unsigned char*)buf.c_str() );
-		SGSoundSample* simple = 
-		    new SGSoundSample(ptr, buf.length(), 8000 );
-                // TODO - at the moment the volume can't be changed 
-		// after the transmission has started.
+		SGSoundSample* simple = new SGSoundSample(buf, len, 8000 );
 		simple->set_volume(volume);
 		_sgr->add(simple, refname);
 		_sgr->play(refname, repeating);

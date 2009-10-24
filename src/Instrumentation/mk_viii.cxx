@@ -2200,7 +2200,7 @@ MK_VIII::VoicePlayer::init ()
 {
 #define STDPAUSE 0.75	// [SPEC] 6.4.4: "the standard 0.75 second delay"
 
-  SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+  SGSoundMgr *smgr = globals->get_soundmgr();
   _sgr = smgr->find("avionics", true);
   _sgr->tie_to_listener();
 

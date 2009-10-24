@@ -48,8 +48,7 @@ FGAircraftModel::FGAircraftModel ()
     _speed_e(0),
     _speed_d(0)
 {
-    SGSoundMgr *smgr;
-    smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+    SGSoundMgr *smgr = globals->get_soundmgr();
     _fx = new FGFX(smgr, "fx");
     _fx->init();
 }

@@ -185,7 +185,7 @@ FGNavRadio::~FGNavRadio()
 void
 FGNavRadio::init ()
 {
-    SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+    SGSoundMgr *smgr = globals->get_soundmgr();
     _sgr = smgr->find("avionics", true);
     _sgr->tie_to_listener();
 

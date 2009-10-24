@@ -72,7 +72,7 @@ bool FGATCVoice::LoadVoice(const string& voice) {
 	
 	string full_path = path.str();
 	int format, freq;
-        SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+        SGSoundMgr *smgr = globals->get_soundmgr();
 	void *data;
         if (!smgr->load(full_path, &data, &format, &rawDataSize, &freq))
             return false;
@@ -134,7 +134,7 @@ typedef tokenList_type::iterator tokenList_iterator;
 
 // Given a desired message, return a string containing the
 // sound-sample data
-string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
+void* FGATCVoice::WriteMessage(const char* message, size_t* len) {
 	
 	// What should we do here?
 	// First - parse the message into a list of tokens.
@@ -185,8 +185,8 @@ string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
 	
 	// Check for no tokens found else slScheduler can be crashed
 	if(!word) {
-		dataOK = false;
-		return "";
+		*len = 0;
+		return NULL;
 	}
 	boost::shared_array<char> tmpbuf(new char[cumLength]);
 	unsigned int bufpos = 0;
@@ -202,8 +202,8 @@ string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
 			SG_LOG(SG_ATC, SG_ALERT, "Offset + length: " << wdptr[i].offset + wdptr[i].length
 			     << " exceeds rawdata size: " << rawDataSize << endl);
 
-			dataOK = false;
-			return "";
+			*len = 0;
+			return NULL;
 		}
 		memcpy(tmpbuf.get() + bufpos, rawSoundData + wdptr[i].offset, wdptr[i].length);
 		bufpos += wdptr[i].length;
@@ -213,9 +213,11 @@ string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
 	unsigned int offsetIn = (int)(cumLength * sg_random());
 	if(offsetIn > cumLength) offsetIn = cumLength;
 
-	string front(tmpbuf.get(), offsetIn);
-	string back(tmpbuf.get() + offsetIn, cumLength - offsetIn);
+	void *data = malloc(cumLength);
+	memcpy(data, tmpbuf.get(), cumLength);
+	*len = cumLength;
+	// string front(tmpbuf.get(), offsetIn);
+	// string back(tmpbuf.get() + offsetIn, cumLength - offsetIn);
 
-	dataOK = true;	
-	return back + front;
+	return data;
 }

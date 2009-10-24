@@ -43,7 +43,7 @@ FGViewMgr::FGViewMgr( void ) :
   config_list(fgGetNode("/sim", true)->getChildren("view")),
   current(0)
 {
-    smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+    smgr = globals->get_soundmgr();
 }
 
 // Destructor

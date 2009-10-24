@@ -1259,7 +1259,7 @@ do_play_audio_sample (const SGPropertyNode * arg)
     try {
         static FGSampleQueue *queue = 0;
         if ( !queue ) {
-           SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+           SGSoundMgr *smgr = globals->get_soundmgr();
            queue = new FGSampleQueue(smgr, "queue");
            queue->tie_to_listener();
         }
