@@ -2111,7 +2111,7 @@ MK_VIII::VoicePlayer::Speaker::bind (SGPropertyNode *node)
 void
 MK_VIII::VoicePlayer::Speaker::update_configuration ()
 {
-  map<string, SGSoundSample *>::iterator iter;
+  map< string, SGSharedPtr<SGSoundSample> >::iterator iter;
   for (iter = player->samples.begin(); iter != player->samples.end(); iter++)
     {
       SGSoundSample *sample = (*iter).second;
@@ -2200,7 +2200,7 @@ MK_VIII::VoicePlayer::init ()
 {
 #define STDPAUSE 0.75	// [SPEC] 6.4.4: "the standard 0.75 second delay"
 
-  SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+  SGSoundMgr *smgr = globals->get_soundmgr();
   _sgr = smgr->find("avionics", true);
   _sgr->tie_to_listener();
 

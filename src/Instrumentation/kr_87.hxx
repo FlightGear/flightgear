@@ -105,7 +105,7 @@ class FGKR_87 : public SGSubsystem
     // internal periodic station search timer
     double _time_before_search_sec;
 
-    SGSampleGroup *_sgr;
+    SGSharedPtr<SGSampleGroup> _sgr;
 
 public:
 

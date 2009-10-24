@@ -164,7 +164,7 @@ class FGNavRadio : public SGSubsystem
     // realism setting, are false courses and GS lobes enabled?
     bool _falseCoursesEnabled;
 
-    SGSampleGroup *_sgr;
+    SGSharedPtr<SGSampleGroup> _sgr;
     
     bool updateWithPower(double aDt);
 

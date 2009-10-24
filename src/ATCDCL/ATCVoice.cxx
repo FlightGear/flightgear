@@ -72,10 +72,10 @@ bool FGATCVoice::LoadVoice(const string& voice) {
 	
 	string full_path = path.str();
 	int format, freq;
-        SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+	SGSoundMgr *smgr = globals->get_soundmgr();
 	void *data;
-        if (!smgr->load(full_path, &data, &format, &rawDataSize, &freq))
-            return false;
+	if (!smgr->load(full_path, &data, &format, &rawDataSize, &freq))
+	    return false;
 	rawSoundData = (char*)data;
 #ifdef VOICE_TEST
 	cout << "ATCVoice:  format: " << format
@@ -118,7 +118,7 @@ bool FGATCVoice::LoadVoice(const string& voice) {
 	          *p = tolower(*p);
 	          if (*p == '-') *p = '_';
 	        }
-	        if (wrdstr != ws2) wordMap[ws2] = wd;
+	        if (wrdstr != ws2)  wordMap[ws2] = wd;
 
 		//cout << wrd << "\t\t" << wrdOffset << "\t\t" << wrdLength << '\n';
 		//cout << i << '\n';
@@ -134,7 +134,7 @@ typedef tokenList_type::iterator tokenList_iterator;
 
 // Given a desired message, return a string containing the
 // sound-sample data
-string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
+void* FGATCVoice::WriteMessage(const string& message, size_t* len) {
 	
 	// What should we do here?
 	// First - parse the message into a list of tokens.
@@ -145,14 +145,12 @@ string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
 
 	// TODO - at the moment we're effectively taking 3 passes through the data.
 	// There is no need for this - 2 should be sufficient - we can probably ditch the tokenList.
-	size_t n1 = 1+strlen(message);
-	boost::shared_array<char> msg(new char[n1]);
-	strncpy(msg.get(), message, n1); // strtok requires a non-const char*
+        char* msg = (char *)message.c_str();
 	char* token;
 	int numWords = 0;
 	const char delimiters[] = " \t.,;:\"\n";
 	char* context;
-	token = strtok_r(msg.get(), delimiters, &context);
+	token = strtok_r(msg, delimiters, &context);
 	while(token != NULL) {
 	        for (char *t = token; *t; t++) {
 	          *t = tolower(*t);     // canonicalize the case, to
@@ -173,7 +171,7 @@ string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
 	while(tokenListItr != tokenList.end()) {
 		if(wordMap.find(*tokenListItr) == wordMap.end()) {
 		// Oh dear - the token isn't in the sound file
-	  	  SG_LOG(SG_ATC, SG_ALERT, "voice synth: word '"
+	  	  SG_LOG(SG_ATC, SG_DEBUG, "voice synth: word '"
 	              << *tokenListItr << "' not found");
 		} else {
 	            wdptr.push_back(wordMap[*tokenListItr]);
@@ -185,8 +183,8 @@ string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
 	
 	// Check for no tokens found else slScheduler can be crashed
 	if(!word) {
-		dataOK = false;
-		return "";
+		*len = 0;
+		return NULL;
 	}
 	boost::shared_array<char> tmpbuf(new char[cumLength]);
 	unsigned int bufpos = 0;
@@ -202,8 +200,8 @@ string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
 			SG_LOG(SG_ATC, SG_ALERT, "Offset + length: " << wdptr[i].offset + wdptr[i].length
 			     << " exceeds rawdata size: " << rawDataSize << endl);
 
-			dataOK = false;
-			return "";
+			*len = 0;
+			return NULL;
 		}
 		memcpy(tmpbuf.get() + bufpos, rawSoundData + wdptr[i].offset, wdptr[i].length);
 		bufpos += wdptr[i].length;
@@ -213,9 +211,12 @@ string FGATCVoice::WriteMessage(const char* message, bool& dataOK) {
 	unsigned int offsetIn = (int)(cumLength * sg_random());
 	if(offsetIn > cumLength) offsetIn = cumLength;
 
-	string front(tmpbuf.get(), offsetIn);
-	string back(tmpbuf.get() + offsetIn, cumLength - offsetIn);
+	unsigned char *data = (unsigned char *)calloc(1, cumLength);
+	*len = cumLength;
+#if 0
+memcpy(data, tmpbuf.get() + offsetIn, cumLength - offsetIn);
+	memcpy(data + cumLength - offsetIn, tmpbuf.get(), offsetIn);
+#endif
 
-	dataOK = true;	
-	return back + front;
+	return data;
 }

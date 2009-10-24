@@ -98,7 +98,7 @@ private:
     float _last_volume;
     string _adf_ident;
 
-    SGSampleGroup *_sgr;
+    SGSharedPtr<SGSampleGroup> _sgr;
 };
 
 

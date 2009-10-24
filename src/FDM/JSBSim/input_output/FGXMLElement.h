@@ -92,6 +92,7 @@ CLASS DOCUMENTATION
     - convert["KG/MIN"]["LBS/MIN"] = convert["KG"]["LBS"];
     - convert["LBS/HP*HR"]["KG/KW*HR"] = 0.6083;
     - convert["KG/KW*HR"]["LBS/HP*HR"] = 1/convert["LBS/HP*HR"]["KG/KW*HR"];
+    - convert["KG/L"]["LBS/GAL"] = 8.3454045;
 
     - convert["M"]["M"] = 1.00;
     - convert["FT"]["FT"] = 1.00;
@@ -119,6 +120,8 @@ CLASS DOCUMENTATION
     - convert["LBS/MIN"]["LBS/MIN"] = 1.0;
     - convert["LBS/HP*HR"]["LBS/HP*HR"] = 1.0;
     - convert["KG/KW*HR"]["KG/KW*HR"] = 1.0;
+    - convert["KG/L"]["KG/L"] = 1.0;
+    - convert["LBS/GAL"]["LBS/GAL"] = 1.0;
 
     Where:
     - N = newtons
@@ -136,6 +139,8 @@ CLASS DOCUMENTATION
     - WATTS = watts
     - HP = horsepower
     - HR = hour
+    - L = liter
+    - GAL = gallon (U.S. liquid) 
 
     @author Jon S. Berndt
     @version $Id$

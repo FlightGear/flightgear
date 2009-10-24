@@ -27,6 +27,7 @@
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/structure/SGSharedPtr.hxx>
 
 #include <iosfwd>
 #include <string>
@@ -212,7 +213,7 @@ protected:
 	bool _voiceOK;	// Flag - true if at least one voice has loaded OK
 	FGATCVoice* _vPtr;
 
-	SGSampleGroup *_sgr; // default sample group;
+	SGSharedPtr<SGSampleGroup> _sgr; // default sample group;
 
 	
 	bool freqClear;	// Flag to indicate if the frequency is clear of ongoing dialog

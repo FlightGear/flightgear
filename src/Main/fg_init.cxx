@@ -1440,6 +1440,7 @@ bool fgInitSubsystems() {
     //     = fgGetNode("/sim/presets/latitude-deg");
     // static const SGPropertyNode *altitude
     //     = fgGetNode("/sim/presets/altitude-ft");
+
     SG_LOG( SG_GENERAL, SG_INFO, "Initialize Subsystems");
     SG_LOG( SG_GENERAL, SG_INFO, "========== ==========");
 
@@ -1449,6 +1450,13 @@ bool fgInitSubsystems() {
 
     globals->get_event_mgr()->init();
     globals->get_event_mgr()->setRealtimeProperty(fgGetNode("/sim/time/delta-realtime-sec", true));
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the sound manager subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+    globals->get_soundmgr()->bind();
+    globals->get_soundmgr()->init();
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the property interpolator subsystem. Put into the INIT

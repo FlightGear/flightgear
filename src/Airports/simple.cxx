@@ -351,7 +351,7 @@ void FGAirport::loadSceneryDefintions() const
 {  
   // allow users to disable the scenery data in the short-term
   // longer term, this option can probably disappear
-  if (!fgGetBool("/sim/use-scenery-airport-data")) {
+  if (!fgGetBool("/sim/paths/use-custom-scenery-data")) {
     return; 
   }
   

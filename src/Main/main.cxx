@@ -482,7 +482,7 @@ static void fgMainLoop( void ) {
     // is processing the scenery (doubled the frame-rate for me) -EMH-
     ////////////////////////////////////////////////////////////////////
 #ifdef ENABLE_AUDIO_SUPPORT
-    static SGSoundMgr *smgr = (SGSoundMgr *)globals->get_subsystem("soundmgr");
+    static SGSoundMgr *smgr = globals->get_soundmgr();
     smgr->update_late(delta_time_sec);
 #endif
 
@@ -636,13 +636,6 @@ static void fgIdleFunction ( void ) {
 
     } else if ( idle_state == 5 ) {
         idle_state++;
-#ifdef ENABLE_AUDIO_SUPPORT
-        ////////////////////////////////////////////////////////////////////
-        // Add the Sound Manager before any other subsystem that uses it.
-        // This makes sure the SoundMgr is available at construction time.
-        ////////////////////////////////////////////////////////////////////
-        globals->add_subsystem("soundmgr", new SGSoundMgr);
-#endif
 
         ////////////////////////////////////////////////////////////////////
         // Initialize the 3D aircraft model subsystem (has a dependency on
@@ -777,7 +770,9 @@ static void fgIdleFunction ( void ) {
                                          fgGetInt("/sim/startup/ysize") );
 
         fgSplashProgress("loading scenery objects");
-
+        int session = fgGetInt("/sim/session",0);
+        session++;
+        fgSetInt("/sim/session",session);
     }
 
     if ( idle_state == 1000 ) {
