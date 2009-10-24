@@ -353,9 +353,9 @@ void KLN89AptPage::Update(double dt) {
 				_kln89->DrawText("For This Airport", 2, 0, 0);
 			} else {
 				if(_iafDialog) {
-					_kln89->DrawText(_iaps[_curIap]->_abbrev, 2, 1, 3);
+					_kln89->DrawText(_iaps[_curIap]->_ident, 2, 1, 3);
 					_kln89->DrawText(_iaps[_curIap]->_rwyStr, 2, 7, 3);
-					_kln89->DrawText(_iaps[_curIap]->_id, 2, 12, 3);
+					_kln89->DrawText(_iaps[_curIap]->_aptIdent, 2, 12, 3);
 					_kln89->DrawText("IAF", 2, 2, 2);
 					unsigned int line = 0;
 					for(unsigned int i=_iafStart; i<_approachRoutes.size(); ++i) {
@@ -376,9 +376,9 @@ void KLN89AptPage::Update(double dt) {
 						_kln89->DrawEnt();
 					}
 				} else if(_addDialog) {
-					_kln89->DrawText(_iaps[_curIap]->_abbrev, 2, 1, 3);
+					_kln89->DrawText(_iaps[_curIap]->_ident, 2, 1, 3);
 					_kln89->DrawText(_iaps[_curIap]->_rwyStr, 2, 7, 3);
-					_kln89->DrawText(_iaps[_curIap]->_id, 2, 12, 3);
+					_kln89->DrawText(_iaps[_curIap]->_aptIdent, 2, 12, 3);
 					string s = GPSitoa(_fStart + 1);
 					_kln89->DrawText(s, 2, 2-s.size(), 2);
 					s = GPSitoa(_kln89->_approachFP->waypoints.size());
@@ -399,9 +399,9 @@ void KLN89AptPage::Update(double dt) {
 						}
 					}
 				} else if(_replaceDialog) {
-					_kln89->DrawText(_iaps[_curIap]->_abbrev, 2, 1, 3);
+					_kln89->DrawText(_iaps[_curIap]->_ident, 2, 1, 3);
 					_kln89->DrawText(_iaps[_curIap]->_rwyStr, 2, 7, 3);
-					_kln89->DrawText(_iaps[_curIap]->_id, 2, 12, 3);
+					_kln89->DrawText(_iaps[_curIap]->_aptIdent, 2, 12, 3);
 					_kln89->DrawText("Replace Existing", 2, 0, 2);
 					_kln89->DrawText("Approach", 2, 4, 1);
 					if(_uLinePos > 0 && !(_kln89->_blink)) {
@@ -421,7 +421,7 @@ void KLN89AptPage::Update(double dt) {
 						string s = GPSitoa(i+1);
 						_kln89->DrawText(s, 2, 2 - s.size(), 2-i);
 						if(!(selApp && _uLinePos == 5+i && _kln89->_blink)) {
-							_kln89->DrawText(_iaps[i]->_abbrev, 2, 3, 2-i);
+							_kln89->DrawText(_iaps[i]->_ident, 2, 3, 2-i);
 							_kln89->DrawText(_iaps[i]->_rwyStr, 2, 9, 2-i);
 						}
 						if(selApp && _uLinePos == 5+i && !_kln89->_blink) {
@@ -702,7 +702,7 @@ void KLN89AptPage::EntPressed() {
                         _kln89->_activeFP->waypoints.insert(_kln89->_activeFP->waypoints.end(), _kln89->_approachFP->waypoints.begin(), _kln89->_approachFP->waypoints.end());
                     }
 					_kln89->_approachID = _apt_id;
-					_kln89->_approachAbbrev = _iaps[_curIap]->_abbrev;
+					_kln89->_approachAbbrev = _iaps[_curIap]->_ident;
 					_kln89->_approachRwyStr = _iaps[_curIap]->_rwyStr;
 					_kln89->_approachLoaded = true;
 					//_kln89->_messageStack.push_back("*Press ALT To Set Baro");

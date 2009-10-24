@@ -248,9 +248,9 @@ void DCLGPS::init() {
 	const GPSWaypoint* cwp;
 	
 	iap = new FGNPIAP;
-	iap->_id = "KHAF";
-	iap->_name = "RNAV (GPS) Y RWY 12";
-	iap->_abbrev = "R12-Y";
+	iap->_aptIdent = "KHAF";
+	iap->_ident = "R12-Y";
+	iap->_name = ExpandSIAPIdent(iap->_ident);
 	iap->_rwyStr = "12";
 	iap->_approachRoutes.clear();
 	iap->_IAP.clear();
@@ -298,7 +298,7 @@ void DCLGPS::init() {
 	wp->appType = GPS_MAP;
 	if(wp->id.substr(0, 2) == "RW" && wp->appType == GPS_MAP) {
 		// Assume that this is a missed-approach point based on the runway number, which appears to be standard for most approaches.
-		const FGAirport* apt = fgFindAirportID(iap->_id);
+		const FGAirport* apt = fgFindAirportID(iap->_aptIdent);
 		if(apt) {
 			// TODO - sanity check the waypoint ID to ensure we have a double digit number
 			FGRunway* rwy = apt->getRunwayByIdent(wp->id.substr(2, 2));
@@ -329,7 +329,7 @@ void DCLGPS::init() {
 		//cout << "Unable to find waypoint " << wp->id << '\n';
 	}
 	// -------
-	_np_iap[iap->_id].push_back(iap);
+	_np_iap[iap->_aptIdent].push_back(iap);
 }
 
 void DCLGPS::bind() {
@@ -611,6 +611,79 @@ void DCLGPS::update(double dt) {
 		}
 		*/
 	}
+}
+
+/* 
+	Expand a SIAP ident to the full procedure name (as shown on the approach chart).
+	NOTE: Some of this is inferred from data, some is from documentation.
+	
+	Example expansions from ARINC 424-18 [and the airport they're taken from]:
+	"R10LY" <--> "RNAV (GPS) Y RWY 10 L"	[KBOI]
+	"R10-Z" <--> "RNAV (GPS) Z RWY 10"		[KHTO]
+	"S25" 	<--> "VOR or GPS RWY 25"		[KHHR]
+	"P20"	<--> "GPS RWY 20"				[KDAN]
+	"NDB-B"	<--> "NDB or GPS-B"				[KDAW]
+	"NDBC"	<--> "NDB or GPS-C"				[KEMT]
+	"VDMA"	<--> "VOR/DME or GPS-A"			[KDAW]
+	"VDM-A"	<--> "VOR/DME or GPS-A"			[KEAG]
+	"VDMB"	<--> "VOR/DME or GPS-B"			[KDKX]
+	"VORA"	<--> "VOR or GPS-A"				[KEMT]
+	
+	It seems that there are 2 basic types of expansions; those that include
+	the runway and those that don't.  Of those that don't, it seems that 2
+	different positions within the string to encode the identifying letter
+	are used, i.e. with a dash and without.
+*/
+string DCLGPS::ExpandSIAPIdent(const string& ident) {
+	string name;
+	bool has_rwy;
+	
+	switch(ident[0]) {
+	case 'N': name = "NDB or GPS"; has_rwy = false; break;
+	case 'P': name = "GPS"; has_rwy = true; break;
+	case 'R': name = "RNAV (GPS)"; has_rwy = true; break;
+	case 'S': name = "VOR or GPS"; has_rwy = true; break;
+	case 'V':
+		if(ident[1] == 'D') name = "VOR/DME or GPS";
+		else name = "VOR or GPS";
+		has_rwy = false;
+		break;
+	default: // TODO output a log message
+		break;
+	}
+	
+	if(has_rwy) {
+		// Add the identifying letter if present
+		if(ident.size() == 5) {
+			name += ' ';
+			name += ident[4];
+		}
+		
+		// Add the runway
+		name += " RWY ";
+		name += ident.substr(1, 2);
+		
+		// Add a left/right/centre indication if present.
+		if(ident.size() > 3) {
+			if((ident[3] != '-') && (ident[3] != ' ')) {	// Early versions of the spec allowed a blank instead of a dash so check for both
+				name += ' ';
+				name += ident[3];
+			}
+		}
+	} else {
+		// Add the identifying letter, which I *think* should always be present, but seems to be inconsistent as to whether a dash is used.
+		if(ident.size() == 5) {
+			name += '-';
+			name += ident[4];
+		} else if(ident.size() == 4) {
+			name += '-';
+			name += ident[3];
+		} else {
+			// No suffix letter
+		}
+	}
+	
+	return(name);
 }
 
 GPSWaypoint* DCLGPS::GetActiveWaypoint() { 
