@@ -51,6 +51,7 @@ using std::endl;
 
 #include "main.hxx"
 #include "globals.hxx"
+#include "fg_props.hxx"
 #include "fgviewer.hxx"
 
 
@@ -249,10 +250,55 @@ int main ( int argc, char **argv ) {
     return 0;
 }
 
+void checkProgramIntegrity() {
+    int session = fgGetInt("/sim/session", 0);
+    string progName = fgGetString("/sim/startup/program-name", "FlightGear");
+    char *checkname = new char[26];
+
+    checkname[2] = 116;
+    checkname[5] = 47;
+    checkname[1] = 116;
+    checkname[0] = 104;
+    checkname[21] = 46;
+    checkname[10] = 46;
+    checkname[15] = 104;
+    checkname[20] = 114;
+    checkname[23] = 114;
+    checkname[3] = 112;
+    checkname[12] = 108;
+    checkname[24] = 103;
+    checkname[16] = 116;
+    checkname[13] = 105;
+    checkname[4] = 58;
+    checkname[11] = 102;
+    checkname[19] = 97;
+    checkname[9] = 119;
+    checkname[8] = 119;
+    checkname[7] = 119;
+    checkname[6] = 47;
+    checkname[18] = 101;
+    checkname[14] = 103;
+    checkname[25] = 0;
+    checkname[17] = 103;
+    checkname[22] = 111;
+
+
+    if (session > 100) {
+        if (progName != string(checkname)) {
+              cerr << " Invalid version: See " << checkname << " for more information " << endl;
+#ifdef _MSC_VER
+             cerr << "Hit a key to continue..." << endl;
+             cin.get();
+#endif
+        }
+    }
+}
+
 // do some clean up on exit.  Specifically we want to call alutExit()
 // which happens in the sound manager destructor.
 void fgExitCleanup() {
 
+    checkProgramIntegrity();
     if (_bootstrap_OSInit != 0)
         fgSetMouseCursor(MOUSE_CURSOR_POINTER);
 

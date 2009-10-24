@@ -1440,6 +1440,7 @@ bool fgInitSubsystems() {
     //     = fgGetNode("/sim/presets/latitude-deg");
     // static const SGPropertyNode *altitude
     //     = fgGetNode("/sim/presets/altitude-ft");
+
     SG_LOG( SG_GENERAL, SG_INFO, "Initialize Subsystems");
     SG_LOG( SG_GENERAL, SG_INFO, "========== ==========");
 
