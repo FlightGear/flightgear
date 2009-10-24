@@ -2111,7 +2111,7 @@ MK_VIII::VoicePlayer::Speaker::bind (SGPropertyNode *node)
 void
 MK_VIII::VoicePlayer::Speaker::update_configuration ()
 {
-  map<string, SGSoundSample *>::iterator iter;
+  map< string, SGSharedPtr<SGSoundSample> >::iterator iter;
   for (iter = player->samples.begin(); iter != player->samples.end(); iter++)
     {
       SGSoundSample *sample = (*iter).second;

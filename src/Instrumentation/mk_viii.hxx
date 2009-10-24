@@ -747,11 +747,11 @@ public:
 
       class SampleElement : public Element
       {
-	SGSoundSample	*_sample;
-	float		_volume;
+	SGSharedPtr<SGSoundSample>	_sample;
+	float				_volume;
 
       public:
-	inline SampleElement (SGSoundSample *sample, float volume = 1.0)
+	inline SampleElement (SGSharedPtr<SGSoundSample> sample, float volume = 1.0)
 	  : _sample(sample), _volume(volume) { silence = false; }
 
         virtual inline void play (float volume) { if (_sample && (volume > 0.05)) { set_volume(volume); _sample->play_once(); } }
@@ -928,10 +928,10 @@ public:
 
     MK_VIII *mk;
 
-    SGSampleGroup *_sgr;
+    SGSharedPtr<SGSampleGroup> _sgr;
     Speaker speaker;
 
-    map<string, SGSoundSample *>	samples;
+    map< string, SGSharedPtr<SGSoundSample> >	samples;
     vector<Voice *>			_voices;
 
     bool looped;
