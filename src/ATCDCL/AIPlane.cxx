@@ -195,7 +195,7 @@ void FGAIPlane::Render(const string& refname, const float volume, bool repeating
 #ifdef ENABLE_AUDIO_SUPPORT
 	voice = (voiceOK && fgGetBool("/sim/sound/voice"));
 	if(voice) {
-            sizte_t len;
+            size_t len;
 	    void* buf = vPtr->WriteMessage(pending_transmission, &len);
 	    if(voice && (volume > 0.05)) {
 		SGSoundSample* simple = new SGSoundSample(buf, len, 8000 );
