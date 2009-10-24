@@ -45,17 +45,17 @@ private:
 
   SGModelPlacement * _aircraft;
   SGVec3d _velocity;
-  FGFX * _fx;
+  SGSharedPtr<FGFX>  _fx;
 
-  SGPropertyNode * _lon;
-  SGPropertyNode * _lat;
-  SGPropertyNode * _alt;
-  SGPropertyNode * _pitch;
-  SGPropertyNode * _roll;
-  SGPropertyNode * _heading;
-  SGPropertyNode * _speed_n;
-  SGPropertyNode * _speed_e;
-  SGPropertyNode * _speed_d;
+  SGPropertyNode_ptr _lon;
+  SGPropertyNode_ptr _lat;
+  SGPropertyNode_ptr _alt;
+  SGPropertyNode_ptr _pitch;
+  SGPropertyNode_ptr _roll;
+  SGPropertyNode_ptr _heading;
+  SGPropertyNode_ptr _speed_n;
+  SGPropertyNode_ptr _speed_e;
+  SGPropertyNode_ptr _speed_d;
 };
 
 #endif // __ACMODEL_HXX

@@ -51,11 +51,11 @@ public:
 
     virtual void update (double dt);
 
-    inline void add (SGSoundSample *msg) { _messages.push(msg); }
+    inline void add (SGSharedPtr<SGSoundSample> msg) { _messages.push(msg); }
 
 private:
 
-    std::queue<SGSoundSample *> _messages;
+    std::queue< SGSharedPtr<SGSoundSample> > _messages;
 
     bool last_pause;
     double last_volume;

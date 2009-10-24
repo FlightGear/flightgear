@@ -29,8 +29,6 @@ using std::string;
 
 #include "AIPlane.hxx"
 
-SGSampleGroup *FGAIPlane::_sgr = 0;
-
 FGAIPlane::FGAIPlane() {
 	leg = LEG_UNKNOWN;
 	tuned_station = NULL;
@@ -198,7 +196,7 @@ void FGAIPlane::Render(const string& refname, const float volume, bool repeating
 	voice = (voiceOK && fgGetBool("/sim/sound/voice"));
 	if(voice) {
             sizte_t len;
-	    void* buf = vPtr->WriteMessage((char*)pending_transmission.c_str(), voice, &len);
+	    void* buf = vPtr->WriteMessage(pending_transmission, &len);
 	    if(voice && (volume > 0.05)) {
 		SGSoundSample* simple = new SGSoundSample(buf, len, 8000 );
 		simple->set_volume(volume);
