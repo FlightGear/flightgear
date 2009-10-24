@@ -185,6 +185,7 @@ static osg::Node* fgCreateSplashCamera()
 
   char *namestring = genNameString();
   fgSetString("/sim/startup/program-name", namestring);
+  delete[] namestring;
 
   SGPath tpath( globals->get_fg_root() );
   if (splash_texture == NULL || !strcmp(splash_texture, "")) {
@@ -303,7 +304,6 @@ static osg::Node* fgCreateSplashCamera()
   text->setPosition(osg::Vec3(0, 0.92, 0));
   text->setAlignment(osgText::Text::CENTER_CENTER);
   prop = fgGetNode("/sim/startup/program-name", "FlightGear");
-  delete namestring;
   text->setUpdateCallback(new FGSplashTextUpdateCallback(prop));
   geode->addDrawable(text);
 
