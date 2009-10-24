@@ -65,7 +65,8 @@ CLASS IMPLEMENTATION
 
 FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number) :
   FGForce(fdmex),
-  GearNumber(number)
+  GearNumber(number),
+  SteerAngle(0.0)
 {
   Element *force_table=0;
   Element *dampCoeff=0;
@@ -397,6 +398,8 @@ FGColumnVector3& FGLGear::GetBodyForces(void)
       WOW = false;
       compressLength = 0.0;
       compressSpeed = 0.0;
+      WheelSlip = 0.0;
+      StrutForce = 0.0;
 
       // Let wheel spin down slowly
       vWhlVelVec(eX) -= 13.0*dT;

@@ -184,42 +184,38 @@ void FGEngine::ConsumeFuel(void)
   FuelToBurn = CalcFuelNeed();
   if (FuelToBurn == 0.0) return;
 
-  while (FuelToBurn > 0.0) {
-
-    // Count how many fuel tanks with the current priority level have fuel.
-    // If none, then try next lower priority.  Build the feed list.
-    while ((TanksWithFuel == 0) && (CurrentPriority <= Propulsion->GetNumTanks())) {
-      for (i=0; i<Propulsion->GetNumTanks(); i++) {
-        if (SourceTanks[i] != 0) {
-          Tank = Propulsion->GetTank(i);
-          if (Tank->GetType() == FGTank::ttFUEL) {
-            if ((Tank->GetContents() > 0.0) && ((unsigned int)Tank->GetPriority() == CurrentPriority)) {
-               ++TanksWithFuel;
-               FeedList.push_back(i);
-             } 
-          } else {
-             cerr << "No oxidizer tanks should be used for this engine type." << endl;
-          }
+  // Count how many fuel tanks with the current priority level have fuel.
+  // If none, then try next lower priority.  Build the feed list.
+  while ((TanksWithFuel == 0) && (CurrentPriority <= Propulsion->GetNumTanks())) {
+    for (i=0; i<Propulsion->GetNumTanks(); i++) {
+      if (SourceTanks[i] != 0) {
+        Tank = Propulsion->GetTank(i);
+        if (Tank->GetType() == FGTank::ttFUEL) {
+          if ((Tank->GetContents() > 0.0) && ((unsigned int)Tank->GetPriority() == CurrentPriority)) {
+             ++TanksWithFuel;
+             FeedList.push_back(i);
+           } 
+        } else {
+           cerr << "No oxidizer tanks should be used for this engine type." << endl;
         }
       }
-      if (TanksWithFuel == 0) CurrentPriority++;
     }
+    if (TanksWithFuel == 0) CurrentPriority++;
+  }
 
-    // No fuel found at any priority!
-    if (TanksWithFuel == 0) {
-      Starved = true;
-      return;
-    }
+  // No fuel found at any priority!
+  if (TanksWithFuel == 0) {
+    Starved = true;
+    return;
+  }
 
-    // Remove equal amount of fuel from each feed tank.  
-    FuelNeeded = FuelToBurn/TanksWithFuel;
-    for (i=0; i<FeedList.size(); i++) {
-      Tank = Propulsion->GetTank(FeedList[i]);
-      Tank->Drain(FuelNeeded); 
-      FuelToBurn -= FuelNeeded;
-    }
- 
-  }  // while
+  // Remove equal amount of fuel from each feed tank.  
+  FuelNeeded = FuelToBurn/TanksWithFuel;
+  for (i=0; i<FeedList.size(); i++) {
+    Tank = Propulsion->GetTank(FeedList[i]);
+    Tank->Drain(FuelNeeded); 
+  }
+
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
