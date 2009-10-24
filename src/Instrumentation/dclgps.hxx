@@ -126,9 +126,9 @@ public:
 	virtual ~FGIAP() = 0;
 //protected:
 
-	string _id;		// The ID of the airport this approach is for
-	string _name;	// The approach name, eg "VOR/DME OR GPS-B"
-	string _abbrev;	// The abbreviation the GPS unit uses - eg "VOR/D" in this instance.  Possibly GPS model specific.
+	string _aptIdent;	// The ident of the airport this approach is for
+	string _ident;	// The approach ident.
+	string _name;	// The full approach name.
 	string _rwyStr;	// The string used to specify the rwy - eg "B" in this instance.
 	bool _precision;	// True for precision approach, false for non-precision.
 };
@@ -200,6 +200,9 @@ public:
 	virtual void bind();
 	virtual void unbind();
 	virtual void update(double dt);
+	
+	// Expand a SIAP ident to the full procedure name.
+	string ExpandSIAPIdent(const string& ident);
 
 	// Render string s in display field field at position x, y
 	// WHERE POSITION IS IN CHARACTER UNITS!
