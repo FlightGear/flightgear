@@ -760,7 +760,9 @@ static void fgIdleFunction ( void ) {
                                          fgGetInt("/sim/startup/ysize") );
 
         fgSplashProgress("loading scenery objects");
-
+        int session = fgGetInt("/sim/session",0);
+        session++;
+        fgSetInt("/sim/session",session);
     }
 
     if ( idle_state == 1000 ) {
