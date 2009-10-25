@@ -231,13 +231,15 @@ void FGKT_70::update( double dt ) {
 
         if ( func_knob == 1 ) {
             sby_ann = true;
-        } else if ( func_knob == 2 ) {
+        } else if ( func_knob == 2 ) { // selftest
             fl_ann = true;
             alt_ann = true;
             gnd_ann = true;
             on_ann = true;
             sby_ann = true;
             reply_ann = true;
+            id_code = 8888;
+            flight_level = 888;
         } else if ( func_knob == 3 ) {
             fl_ann = true;
             gnd_ann = true;
