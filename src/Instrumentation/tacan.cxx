@@ -127,6 +127,9 @@ TACAN::init ()
 void
 TACAN::update (double delta_time_sec)
 {
+    // don't do anything when paused
+    if (delta_time_sec == 0) return;
+
     if (!_serviceable_node->getBoolValue() || !_electrical_node->getBoolValue()) {
         _last_distance_nm = 0;
         _in_range_node->setBoolValue(false);
@@ -237,7 +240,7 @@ TACAN::update (double delta_time_sec)
         }
         _distance_node->setDoubleValue( tmp_dist );
         _speed_node->setDoubleValue(speed_kt);
-        _time_node->setDoubleValue(distance_nm/speed_kt*60.0);
+        _time_node->setDoubleValue(speed_kt > 0 ? (distance_nm/speed_kt*60.0) : 0);
         _bearing_node->setDoubleValue(bearing);
         _x_shift_node->setDoubleValue(x_shift);
         _y_shift_node->setDoubleValue(y_shift);
