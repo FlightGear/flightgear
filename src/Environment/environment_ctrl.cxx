@@ -34,6 +34,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 
+#include "atmosphere.hxx"
 #include "fgmetar.hxx"
 #include "environment_ctrl.hxx"
 
@@ -437,6 +438,25 @@ static inline double convert_to_180( double d )
 	return d > 180.0 ? d - 360.0 : d;
 }
 
+// Return the sea level pressure for a metar observation, in inHg.
+// This is different from QNH because it accounts for the current
+// temperature at the observation point.
+// metarPressure in inHg
+// fieldHt in ft
+// fieldTemp in C
+
+static double reducePressureSl(double metarPressure, double fieldHt,
+                               double fieldTemp)
+{
+    double elev = fieldHt * SG_FEET_TO_METER;
+    double fieldPressure
+        = FGAtmo::fieldPressure(elev, metarPressure * atmodel::inHg);
+    double slPressure = P_layer(0, elev, fieldPressure,
+                                fieldTemp + atmodel::freezing,
+                                atmodel::ISA::lam0);
+    return slPressure / atmodel::inHg;
+}
+
 void
 FGMetarCtrl::update(double dt)
 {
@@ -448,6 +468,7 @@ FGMetarCtrl::update(double dt)
 
 	bool reinit_required = false;
 	bool layer_rebuild_required = false;
+        double station_elevation_ft = station_elevation_n->getDoubleValue();
 
 	if (first_update) {
 		double dir = base_wind_dir_n->getDoubleValue()+magnetic_variation_n->getDoubleValue();
@@ -459,7 +480,10 @@ FGMetarCtrl::update(double dt)
 		fgDefaultWeatherValue("visibility-m", metarvis);
 
 		double metarpressure = pressure_n->getDoubleValue();
-		fgDefaultWeatherValue("pressure-sea-level-inhg", metarpressure);
+		fgDefaultWeatherValue("pressure-sea-level-inhg",
+                                      reducePressureSl(metarpressure,
+                                                       station_elevation_ft,
+                                                       temperature_n->getDoubleValue()));
 
 		// We haven't already loaded a METAR, so apply it immediately.
 		vector<SGPropertyNode_ptr> layers = clouds_n->getChildren("layer");
@@ -601,8 +625,11 @@ FGMetarCtrl::update(double dt)
 
 		double pressure = boundary_sea_level_pressure_n->getDoubleValue();
 		double metarpressure = pressure_n->getDoubleValue();
-		if( pressure != metarpressure ) {
-			pressure = interpolate_val( pressure, metarpressure, MaxPressureChangeInHgSec );
+                double newpressure = reducePressureSl(metarpressure,
+                                                      station_elevation_ft,
+                                                      temperature_n->getDoubleValue());
+		if( pressure != newpressure ) {
+			pressure = interpolate_val( pressure, newpressure, MaxPressureChangeInHgSec );
 			fgDefaultWeatherValue("pressure-sea-level-inhg", pressure);
 			reinit_required = true;
 		}
@@ -670,11 +697,8 @@ FGMetarCtrl::update(double dt)
 			}
 		}
 	}
-	{
-		double station_elevation_ft = station_elevation_n->getDoubleValue();
-		set_temp_at_altitude(temperature_n->getDoubleValue(), station_elevation_ft);
-		set_dewpoint_at_altitude(dewpoint_n->getDoubleValue(), station_elevation_ft);
-	}
+        set_temp_at_altitude(temperature_n->getDoubleValue(), station_elevation_ft);
+        set_dewpoint_at_altitude(dewpoint_n->getDoubleValue(), station_elevation_ft);
 	//TODO: check if temperature/dewpoint have changed. This requires reinit.
 
 	// Force an update of the 3D clouds
