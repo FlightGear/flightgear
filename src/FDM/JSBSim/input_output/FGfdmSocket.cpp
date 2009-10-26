@@ -41,6 +41,7 @@ INCLUDES
 #include <iostream>
 #include <iomanip>
 #include <cstring>
+#include <cstdio>
 #include "FGfdmSocket.h"
 #include "string_utilities.h"
 

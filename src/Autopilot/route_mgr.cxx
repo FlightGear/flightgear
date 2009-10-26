@@ -347,7 +347,11 @@ SGWayPoint* FGRouteMgr::make_waypoint(const string& tgt ) {
     if ( pos != string::npos ) {
         double lon = atof( target.substr(0, pos).c_str());
         double lat = atof( target.c_str() + pos + 1);
-        return new SGWayPoint( lon, lat, alt, SGWayPoint::WGS84, target );
+        char buf[32];
+        char ew = (lon < 0.0) ? 'W' : 'E';
+        char ns = (lat < 0.0) ? 'S' : 'N';
+        snprintf(buf, 32, "%c%03d%c%03d", ew, (int) fabs(lon), ns, (int)fabs(lat));
+        return new SGWayPoint( lon, lat, alt, SGWayPoint::WGS84, buf);
     }    
 
     SGGeod basePosition;
