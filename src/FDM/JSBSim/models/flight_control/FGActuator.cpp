@@ -39,6 +39,8 @@ INCLUDES
 
 #include "FGActuator.h"
 
+using namespace std;
+
 namespace JSBSim {
 
 static const char *IdSrc = "$Id$";

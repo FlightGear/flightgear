@@ -38,6 +38,9 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGGyro.h"
+#include <iostream>
+
+using namespace std;
 
 namespace JSBSim {
 

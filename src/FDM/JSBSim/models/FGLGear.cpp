@@ -41,6 +41,16 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGLGear.h"
+#include "FGState.h"
+#include "FGGroundReactions.h"
+#include "FGFCS.h"
+#include "FGAuxiliary.h"
+#include "FGAtmosphere.h"
+#include "FGMassBalance.h"
+#include "math/FGTable.h"
+#include <cstdlib>
+
+using namespace std;
 
 namespace JSBSim {
 

@@ -40,6 +40,9 @@ INCLUDES
 #include "FGPropagate.h"
 #include "FGState.h"
 #include "FGMassBalance.h"
+#include <iostream>
+
+using namespace std;
 
 namespace JSBSim {
 

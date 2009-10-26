@@ -83,8 +83,8 @@ public:
   double Calculate(void);
   double GetPowerAvailable(void) {return PowerAvailable;}
   double getRPM(void) {return RPM;}
-  string GetEngineLabels(string delimeter);
-  string GetEngineValues(string delimeter);
+  std::string GetEngineLabels(const std::string& delimiter);
+  std::string GetEngineValues(const std::string& delimiter);
 
 private:
 

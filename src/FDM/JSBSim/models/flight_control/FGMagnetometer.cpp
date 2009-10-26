@@ -40,6 +40,10 @@ INCLUDES
 #include "FGMagnetometer.h"
 #include "simgear/magvar/coremag.hxx"
 #include <ctime>
+#include <cstdlib>
+#include <iostream>
+
+using namespace std;
 
 namespace JSBSim {
 

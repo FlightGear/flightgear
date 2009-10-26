@@ -44,9 +44,8 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGJSBBase.h"
-#include "FGThruster.h"
-#include "input_output/FGPropertyManager.h"
 #include "input_output/FGXMLFileRead.h"
+#include "math/FGColumnVector3.h"
 #include <vector>
 #include <string>
 
@@ -55,9 +54,6 @@ DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #define ID_ENGINE "$Id$"
-
-using std::string;
-using std::vector;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -75,6 +71,7 @@ class FGPropulsion;
 class FGAuxiliary;
 class FGThruster;
 class Element;
+class FGPropertyManager;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -187,8 +184,8 @@ public:
   bool LoadThruster(Element *el);
   FGThruster* GetThruster(void) {return Thruster;}
 
-  virtual string GetEngineLabels(string delimeter) = 0;
-  virtual string GetEngineValues(string delimeter) = 0;
+  virtual std::string GetEngineLabels(const std::string& delimiter) = 0;
+  virtual std::string GetEngineValues(const std::string& delimiter) = 0;
 
 protected:
   /** Reduces the fuel in the active tanks by the amount required.
@@ -205,7 +202,7 @@ protected:
   virtual double CalcFuelNeed(void);
 
   FGPropertyManager* PropertyManager;
-  string Name;
+  std::string Name;
   const int   EngineNumber;
   EngineType Type;
   double X, Y, Z;
@@ -240,20 +237,10 @@ protected:
   FGAuxiliary*    Auxiliary;
   FGThruster*     Thruster;
 
-  vector <int> SourceTanks;
+  std::vector <int> SourceTanks;
   void Debug(int from);
 };
 }
-#include "FGState.h"
-#include "FGFDMExec.h"
-#include "models/FGAtmosphere.h"
-#include "models/FGFCS.h"
-#include "models/FGAircraft.h"
-#include "models/FGPropagate.h"
-#include "models/FGPropulsion.h"
-#include "models/FGAuxiliary.h"
-#include "models/propulsion/FGThruster.h"
-#include "input_output/FGXMLElement.h"
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #endif

@@ -41,13 +41,10 @@ INCLUDES
 
 #include "FGModel.h"
 
-#include <iostream>
 #include <fstream>
 
-#include "input_output/FGfdmSocket.h"
 #include "input_output/FGXMLFileRead.h"
 #include "input_output/net_fdm.hxx"
-
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -60,6 +57,8 @@ FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 namespace JSBSim {
+
+class FGfdmSocket;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -140,22 +139,22 @@ public:
   bool InitModel(void);
   bool Run(void);
 
-  void DelimitedOutput(string);
+  void DelimitedOutput(const std::string&);
   void SocketOutput(void);
   void FlightGearSocketOutput(void);
-  void SocketStatusOutput(string);
+  void SocketStatusOutput(const std::string&);
   void SocketDataFill(FGNetFDM* net);
 
 
-  void SetType(string);
+  void SetType(const std::string& type);
   void SetStartNewFile(bool tt) {StartNewFile = tt;}
   void SetSubsystems(int tt) {SubSystems = tt;}
   void Enable(void) { enabled = true; }
   void Disable(void) { enabled = false; }
   bool Toggle(void) {enabled = !enabled; return enabled;}
   bool Load(Element* el);
-  void SetOutputFileName(string fname) {Filename = fname;}
-  void SetDirectivesFile(string fname) {DirectivesFile = fname;}
+  void SetOutputFileName(const std::string& fname) {Filename = fname;}
+  void SetDirectivesFile(const std::string& fname) {DirectivesFile = fname;}
   void SetRate(int rt);
   string GetOutputFileName(void) const {return Filename;}
 
@@ -185,11 +184,11 @@ private:
   int SubSystems;
   int runID_postfix;
   bool StartNewFile;
-  string output_file_name, delimeter, BaseFilename, Filename, DirectivesFile;
-  ofstream datafile;
+  std::string output_file_name, delimeter, BaseFilename, Filename, DirectivesFile;
+  std::ofstream datafile;
   FGfdmSocket* socket;
   FGfdmSocket* flightGearSocket;
-  vector <FGPropertyManager*> OutputProperties;
+  std::vector <FGPropertyManager*> OutputProperties;
 
   void Debug(int from);
 };

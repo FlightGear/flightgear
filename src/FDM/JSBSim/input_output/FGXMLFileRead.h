@@ -36,6 +36,8 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "input_output/FGXMLParse.h"
+#include <iostream>
+#include <fstream>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -56,19 +58,19 @@ public:
 
 protected:
   Element* document;
-  Element* LoadXMLDocument(string XML_filename)
+  Element* LoadXMLDocument(std::string XML_filename)
   {
-    ifstream infile;
+    std::ifstream infile;
 
     if ( !XML_filename.empty() ) {
-      if (XML_filename.find(".xml") == string::npos) XML_filename += ".xml";
+      if (XML_filename.find(".xml") == std::string::npos) XML_filename += ".xml";
       infile.open(XML_filename.c_str());
       if ( !infile.is_open()) {
-        cerr << "Could not open file: " << XML_filename << endl;
+        std::cerr << "Could not open file: " << XML_filename << std::endl;
         return 0L;
       }
     } else {
-      cerr << "No filename given." << endl;
+      std::cerr << "No filename given." << std::endl;
       return 0L;
     }
 

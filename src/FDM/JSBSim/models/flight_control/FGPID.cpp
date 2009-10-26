@@ -36,6 +36,11 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGPID.h"
+#include "input_output/FGXMLElement.h"
+#include <string>
+#include <iostream>
+
+using namespace std;
 
 namespace JSBSim {
 

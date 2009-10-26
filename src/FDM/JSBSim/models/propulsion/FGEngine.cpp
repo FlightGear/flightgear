@@ -41,9 +41,16 @@ INCLUDES
 #include "FGTank.h"
 #include "FGPropeller.h"
 #include "FGNozzle.h"
+#include "FGState.h"
+#include "models/FGPropulsion.h"
 #include "input_output/FGXMLParse.h"
 #include "math/FGColumnVector3.h"
+
+#include <iostream>
 #include <fstream>
+#include <cstdlib>
+
+using namespace std;
 
 namespace JSBSim {
 

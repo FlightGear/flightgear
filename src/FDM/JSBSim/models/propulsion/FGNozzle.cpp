@@ -35,10 +35,15 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <iostream>
 #include <sstream>
+#include <cstdlib>
 
 #include "FGNozzle.h"
 #include "models/FGAtmosphere.h"
+#include "input_output/FGXMLElement.h"
+
+using namespace std;
 
 namespace JSBSim {
 
@@ -59,14 +64,14 @@ FGNozzle::FGNozzle(FGFDMExec* FDMExec, Element* nozzle_element, int num)
     cerr << "Fatal Error: Nozzle exit area must be given in nozzle config file." << endl;
     exit(-1);
   }
-
+/*
   if (nozzle_element->FindElement("pe"))
     PE = nozzle_element->FindElementValueAsNumberConvertTo("pe", "PSF");
   else {
     cerr << "Fatal Error: Nozzle exit pressure must be given in nozzle config file." << endl;
     exit(-1);
   }
-
+*/
   Thrust = 0;
   Type = ttNozzle;
   
