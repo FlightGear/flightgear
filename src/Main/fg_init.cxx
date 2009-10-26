@@ -37,6 +37,7 @@
 #  define getcwd _getcwd
 #  include <io.h>               // isatty()
 #  define isatty _isatty
+#  include "Winsock2.h"		// for gethostname()
 #endif
 
 // work around a stdc++ lib bug in some versions of linux, but doesn't
