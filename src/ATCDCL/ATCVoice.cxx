@@ -28,10 +28,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <fstream>
-#include <list>
 #include <vector>
-
-#include <boost/shared_array.hpp>
+#include <algorithm>
 
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -40,12 +38,6 @@
 #include <simgear/math/sg_random.h>
 
 #include <Main/globals.hxx>
-
-#include <stdio.h>
-
-#ifdef _MSC_VER
-#define strtok_r strtok_s
-#endif
 
 using namespace std;
 
@@ -129,9 +121,6 @@ bool FGATCVoice::LoadVoice(const string& voice) {
 }
 
 
-typedef list < string > tokenList_type;
-typedef tokenList_type::iterator tokenList_iterator;
-
 // Given a desired message, return a string containing the
 // sound-sample data
 void* FGATCVoice::WriteMessage(const string& message, size_t* len) {
@@ -140,83 +129,74 @@ void* FGATCVoice::WriteMessage(const string& message, size_t* len) {
 	// First - parse the message into a list of tokens.
 	// Sort the tokens into those we understand and those we don't.
 	// Add all the raw lengths of the token sound data, allocate enough space, and fill it with the rqd data.
-	tokenList_type tokenList;
-	tokenList_iterator tokenListItr;
 
-	// TODO - at the moment we're effectively taking 3 passes through the data.
-	// There is no need for this - 2 should be sufficient - we can probably ditch the tokenList.
-        char* msg = (char *)message.c_str();
-	char* token;
-	int numWords = 0;
+	vector<char> sound;
 	const char delimiters[] = " \t.,;:\"\n";
-	char* context;
-	token = strtok_r(msg, delimiters, &context);
-	while(token != NULL) {
-	        for (char *t = token; *t; t++) {
-	          *t = tolower(*t);     // canonicalize the case, to
-	          if (*t == '-') *t = '_';   // match what's in the index
-	        }
-		tokenList.push_back(token);
-		++numWords;
-	        SG_LOG(SG_ATC, SG_DEBUG, "voice synth: token: '"
-	            << token << "'");
-		token = strtok_r(NULL, delimiters, &context);
-	}
-
-	vector<WordData> wdptr;
-	wdptr.reserve(numWords);
-	unsigned int cumLength = 0;
-
-	tokenListItr = tokenList.begin();
-	while(tokenListItr != tokenList.end()) {
-		if(wordMap.find(*tokenListItr) == wordMap.end()) {
-		// Oh dear - the token isn't in the sound file
-	  	  SG_LOG(SG_ATC, SG_DEBUG, "voice synth: word '"
-	              << *tokenListItr << "' not found");
+	string::size_type token_start = message.find_first_not_of(delimiters);
+	while(token_start != string::npos) {
+		string::size_type token_end = message.find_first_of(delimiters, token_start);
+		string token;
+		if (token_end == string::npos) {
+			token = message.substr(token_start);
+			token_start = string::npos;
 		} else {
-	            wdptr.push_back(wordMap[*tokenListItr]);
-	            cumLength += wdptr.back().length;
+			token = message.substr(token_start, token_end - token_start);
+			token_start = message.find_first_not_of(delimiters, token_end);
 		}
-		++tokenListItr;
+
+		for(string::iterator t = token.begin(); t != token.end(); t++) {
+			// canonicalize the token, to match what's in the index
+			*t = (*t == '-') ? '_' : tolower(*t);
+		}
+		SG_LOG(SG_ATC, SG_DEBUG, "voice synth: token: '"
+                    << token << "'");
+
+		atc_word_map_const_iterator wordIt = wordMap.find(token);
+		if(wordIt == wordMap.end()) {
+			// Oh dear - the token isn't in the sound file
+			SG_LOG(SG_ATC, SG_ALERT, "voice synth: word '"
+				<< token << "' not found");
+		} else {
+			const WordData& word = wordIt->second;
+			/*
+			*  Sanity check for corrupt/mismatched sound data input - avoids a seg fault
+			*  (As long as the calling function checks the return value!!)
+			*  This check should be left in even when the default Flightgear files are known
+			*  to be OK since it checks for mis-indexing of voice files by 3rd party developers.
+			*/
+			if((word.offset + word.length) > rawDataSize) {
+				SG_LOG(SG_ATC, SG_ALERT, "ERROR - mismatch between ATC .wav and .vce file in ATCVoice.cxx\n");
+				SG_LOG(SG_ATC, SG_ALERT, "Offset + length: " << word.offset + word.length
+					<< " exceeds rawdata size: " << rawDataSize << endl);
+
+				*len = 0;
+				return 0;
+			}
+			sound.insert(sound.end(), rawSoundData + word.offset, rawSoundData + word.offset + word.length);
+		}
 	}
-	const size_t word = wdptr.size();
-	
+
 	// Check for no tokens found else slScheduler can be crashed
-	if(!word) {
+	*len = sound.size();
+	if (*len == 0) {
+		return 0;
+	}
+
+	char* data = (char*)malloc(*len);
+	if (data == 0) {
+		SG_LOG(SG_ATC, SG_ALERT, "ERROR - could not allocate " << *len << " bytes of memory for ATIS sound\n");
 		*len = 0;
-		return NULL;
+		return 0;
 	}
-	boost::shared_array<char> tmpbuf(new char[cumLength]);
-	unsigned int bufpos = 0;
-	for(int i=0; i<word; ++i) {
-		/*
-		*  Sanity check for corrupt/mismatched sound data input - avoids a seg fault
-		*  (As long as the calling function checks the return value!!)
-		*  This check should be left in even when the default Flightgear files are known
-		*  to be OK since it checks for mis-indexing of voice files by 3rd party developers.
-		*/
-		if((wdptr[i].offset + wdptr[i].length) > rawDataSize) {
-			SG_LOG(SG_ATC, SG_ALERT, "ERROR - mismatch between ATC .wav and .vce file in ATCVoice.cxx\n");
-			SG_LOG(SG_ATC, SG_ALERT, "Offset + length: " << wdptr[i].offset + wdptr[i].length
-			     << " exceeds rawdata size: " << rawDataSize << endl);
 
-			*len = 0;
-			return NULL;
-		}
-		memcpy(tmpbuf.get() + bufpos, rawSoundData + wdptr[i].offset, wdptr[i].length);
-		bufpos += wdptr[i].length;
+	// randomize start position
+	unsigned int offsetIn = (unsigned int)(*len * sg_random());
+	if (offsetIn > 0 && offsetIn < *len) {
+		copy(sound.begin() + offsetIn, sound.end(), data);
+		copy(sound.begin(), sound.begin() + offsetIn, data + *len - offsetIn);
+	} else {
+		copy(sound.begin(), sound.end(), data);
 	}
-	
-	// tmpbuf now contains the message starting at the beginning - but we want it to start at a random position.
-	unsigned int offsetIn = (int)(cumLength * sg_random());
-	if(offsetIn > cumLength) offsetIn = cumLength;
-
-	unsigned char *data = (unsigned char *)calloc(1, cumLength);
-	*len = cumLength;
-#if 0
-memcpy(data, tmpbuf.get() + offsetIn, cumLength - offsetIn);
-	memcpy(data + cumLength - offsetIn, tmpbuf.get(), offsetIn);
-#endif
 
 	return data;
 }
