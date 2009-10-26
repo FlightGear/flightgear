@@ -20,7 +20,7 @@ typedef unsigned long uint32_t;
 typedef long int32_t;
 #endif
 
-//--->>>#include <simgear/misc/stdint.hxx> //not required for JSBSim
+#include <simgear/misc/stdint.hxx> //not required for JSBSim
 
 
 // NOTE: this file defines an external interface structure.  Due to
