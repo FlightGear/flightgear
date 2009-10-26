@@ -198,7 +198,7 @@ void FGAIPlane::Render(const string& refname, const float volume, bool repeating
             size_t len;
 	    void* buf = vPtr->WriteMessage(pending_transmission, &len);
 	    if(voice && (volume > 0.05)) {
-		SGSoundSample* simple = new SGSoundSample(buf, len, 8000 );
+		SGSoundSample* simple = new SGSoundSample(&buf, len, 8000 );
 		simple->set_volume(volume);
 		_sgr->add(simple, refname);
 		_sgr->play(refname, repeating);
