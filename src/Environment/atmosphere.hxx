@@ -110,6 +110,15 @@ public:
 // Field pressure in pascals
 // Valid for fields within the troposphere only.
     double QNH(const double field_elev, const double field_press);
+/**
+ * Invert the QNH calculation to get the field pressure from a metar
+ * report. Valid for fields within the troposphere only.
+ * @param field_elev field elevation in m
+ * @param qnh altimeter setting in pascals
+ * @return field pressure _in pascals_. Caller gets to convert to inHg
+ * or millibars 
+ */
+    static double fieldPressure(const double field_elev, const double qnh);
 };
 
 

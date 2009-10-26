@@ -260,6 +260,21 @@ double FGAtmo::QNH(const double field_elev, const double field_press) {
     return rslt;
 }
 
+// Invert the QNH calculation to get the field pressure from a metar
+// report.
+// field pressure _in pascals_ 
+//  ... caller gets to convert to inHg or millibars
+// Field elevation in m
+// Altimeter setting (QNH) in pascals
+// Valid for fields within the troposphere only.
+double FGAtmo::fieldPressure(const double field_elev, const double qnh)
+{
+    using namespace atmodel;
+    static const double nn = ISA::lam0 * Rgas / g / mm;
+    const double pratio = pow(qnh / ISA::P0, nn);
+    return ISA::P0 * pow(pratio - field_elev * ISA::lam0 / ISA::T0, 1.0 / nn);
+}
+
 void FGAltimeter::dump_stack1(const double Tref) {
     using namespace atmodel;
     const int bs(200);
