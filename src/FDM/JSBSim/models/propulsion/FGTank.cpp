@@ -37,11 +37,14 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGTank.h"
+#include "FGFDMExec.h"
 #include "models/FGAuxiliary.h"
+#include "input_output/FGXMLElement.h"
+#include "input_output/FGPropertyManager.h"
+#include <iostream>
+#include <cstdlib>
 
-using std::cerr;
-using std::endl;
-using std::cout;
+using namespace std;
 
 namespace JSBSim {
 

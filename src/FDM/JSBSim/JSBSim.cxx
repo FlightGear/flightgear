@@ -755,9 +755,7 @@ bool FGJSBsim::copy_from_JSBsim()
     // Copy the engine values from JSBSim.
     for ( i=0; i < Propulsion->GetNumEngines(); i++ ) {
       SGPropertyNode * node = fgGetNode("engines/engine", i, true);
-      char buf[30];
-      sprintf(buf, "engines/engine[%d]/thruster", i);
-      SGPropertyNode * tnode = fgGetNode(buf, true);
+      SGPropertyNode * tnode = node->getChild("thruster", 0, true);
       FGThruster * thruster = Propulsion->GetEngine(i)->GetThruster();
 
       switch (Propulsion->GetEngine(i)->GetType()) {

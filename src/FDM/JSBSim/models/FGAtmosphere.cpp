@@ -54,6 +54,10 @@ INCLUDES
 #include "FGPropagate.h"
 #include "FGInertial.h"
 #include "input_output/FGPropertyManager.h"
+#include <iostream>
+#include <cstdlib>
+
+using namespace std;
 
 namespace JSBSim {
 

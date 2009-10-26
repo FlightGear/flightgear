@@ -38,6 +38,12 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGGain.h"
+#include "input_output/FGXMLElement.h"
+#include <iostream>
+#include <string>
+#include <cstdlib>
+
+using namespace std;
 
 namespace JSBSim {
 

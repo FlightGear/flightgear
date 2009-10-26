@@ -38,6 +38,9 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGGradient.h"
+#include <iostream>
+
+using namespace std;
 
 namespace JSBSim {
 

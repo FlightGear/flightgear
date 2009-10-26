@@ -66,6 +66,9 @@ INCLUDES
 
 #include <iostream>
 #include <iterator>
+#include <cstdlib>
+
+using namespace std;
 
 namespace JSBSim {
 
@@ -713,13 +716,13 @@ void FGFDMExec::BuildPropertyCatalog(struct PropertyCatalogStructure* pcs)
 {
   struct PropertyCatalogStructure* pcsNew = new struct PropertyCatalogStructure;
   int node_idx = 0;
-  char int_buf[10];
 
   for (int i=0; i<pcs->node->nChildren(); i++) {
     pcsNew->base_string = pcs->base_string + "/" + pcs->node->getChild(i)->getName();
     node_idx = pcs->node->getChild(i)->getIndex();
-    sprintf(int_buf, "[%d]", node_idx);
-    if (node_idx != 0) pcsNew->base_string += string(int_buf);
+    if (node_idx != 0) {
+      pcsNew->base_string = CreateIndexedPropertyName(pcsNew->base_string, node_idx);
+    }
     if (pcs->node->getChild(i)->nChildren() == 0) {
       if (pcsNew->base_string.substr(0,11) == string("/fdm/jsbsim")) {
         pcsNew->base_string = pcsNew->base_string.erase(0,12);

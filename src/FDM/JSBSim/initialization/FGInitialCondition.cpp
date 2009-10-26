@@ -49,10 +49,15 @@ INCLUDES
 #include "models/FGAerodynamics.h"
 #include "models/FGPropagate.h"
 #include "input_output/FGPropertyManager.h"
+#include "input_output/FGXMLElement.h"
 #include "models/FGPropulsion.h"
 #include "input_output/FGXMLParse.h"
 #include "math/FGQuaternion.h"
+#include <iostream>
 #include <fstream>
+#include <cstdlib>
+
+using namespace std;
 
 namespace JSBSim {
 

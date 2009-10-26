@@ -37,8 +37,11 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include <cmath>
+#include <iostream>
 
 #include "FGState.h"
+
+using namespace std;
 
 namespace JSBSim {
 

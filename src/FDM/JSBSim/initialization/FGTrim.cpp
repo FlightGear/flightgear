@@ -57,6 +57,8 @@ INCLUDES
 #pragma warning (disable : 4786 4788)
 #endif
 
+using namespace std;
+
 namespace JSBSim {
 
 static const char *IdSrc = "$Id$";

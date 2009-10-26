@@ -44,16 +44,9 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGFDMExec.h"
 #include "FGJSBBase.h"
-#include "input_output/FGXMLElement.h"
 #include "math/FGColumnVector3.h"
 #include <string>
-
-using std::string;
-using std::cerr;
-using std::endl;
-using std::cout;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -66,6 +59,10 @@ FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 namespace JSBSim {
+
+class Element;
+class FGPropertyManager;
+class FGFDMExec;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -281,8 +278,8 @@ private:
   TankType Type;
   GrainType grainType;
   int TankNumber;
-  string type;
-  string strGType;
+  std::string type;
+  std::string strGType;
   FGColumnVector3 vXYZ;
   FGColumnVector3 vXYZ_drain;
   double Capacity;

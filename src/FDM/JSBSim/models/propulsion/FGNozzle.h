@@ -95,7 +95,7 @@ public:
   string GetThrusterValues(int id, string delimeter);
 
 private:
-  double PE;
+//  double PE;
   double Area;
   void Debug(int from);
 };

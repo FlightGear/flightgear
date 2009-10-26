@@ -36,6 +36,9 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGRotor.h"
+#include <iostream>
+
+using namespace std;
 
 namespace JSBSim {
 

@@ -38,11 +38,8 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGFDMExec.h"
 #include "models/propulsion/FGForce.h"
-#include "input_output/FGXMLElement.h"
 #include "math/FGColumnVector3.h"
-#include "math/FGTable.h"
 #include <string>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -63,6 +60,8 @@ class FGFCS;
 class FGState;
 class FGMassBalance;
 class FGAuxiliary;
+class FGTable;
+class Element;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -333,11 +332,11 @@ private:
   bool isRetractable;
   bool GearUp, GearDown;
   bool Servicable;
-  string name;
-  string sSteerType;
-  string sBrakeGroup;
-  string sRetractable;
-  string sContactType;
+  std::string name;
+  std::string sSteerType;
+  std::string sBrakeGroup;
+  std::string sRetractable;
+  std::string sContactType;
 
   BrakeGroup  eBrakeGrp;
   ContactType eContactType;
@@ -377,12 +376,6 @@ private:
   void Debug(int from);
 };
 }
-#include "FGAircraft.h"
-#include "FGPropagate.h"
-#include "FGAuxiliary.h"
-#include "FGFCS.h"
-#include "FGMassBalance.h"
-#include "FGState.h"
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

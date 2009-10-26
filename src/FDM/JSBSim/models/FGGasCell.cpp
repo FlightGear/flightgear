@@ -41,10 +41,15 @@ INCLUDES
 #include "models/FGInertial.h"
 #include "models/FGMassBalance.h"
 #include "FGGasCell.h"
+#include "input_output/FGXMLElement.h"
+#include <iostream>
+#include <cstdlib>
 
 using std::cerr;
 using std::endl;
 using std::cout;
+using std::string;
+using std::max;
 
 namespace JSBSim {
 

@@ -46,6 +46,10 @@ and the cg.
 #include "models/FGPropagate.h"
 #include "models/FGMassBalance.h"
 #include "models/FGAerodynamics.h"
+#include <iostream>
+#include <cstdlib>
+
+using namespace std;
 
 namespace JSBSim {
 
