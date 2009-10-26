@@ -42,6 +42,8 @@ INCLUDES
 #include "math/FGColumnVector3.h"
 #include "math/FGMatrix33.h"
 
+#include <iostream>
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -77,7 +79,7 @@ public:
   {
     Element* orient_element = element->FindElement("orientation");
     if (orient_element) vOrient = orient_element->FindElementTripletConvertTo("RAD");
-    else {cerr << "No orientation given for this sensor. " << endl;}
+    else { std::cerr << "No orientation given for this sensor. " << std::endl;}
 
     Element* axis_element = element->FindElement("axis");
     if (axis_element) {
@@ -89,7 +91,7 @@ public:
       } else if (sAxis == "Z" || sAxis == "z") {
         axis = 3;
       } else {
-        cerr << "  Incorrect/no axis specified for this sensor; assuming X axis" << endl;
+        std::cerr << "  Incorrect/no axis specified for this sensor; assuming X axis" << std::endl;
         axis = 1;
       }
     }

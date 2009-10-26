@@ -35,12 +35,16 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <iostream>
 #include <sstream>
 
 #include "FGPropeller.h"
 #include "models/FGPropagate.h"
 #include "models/FGAtmosphere.h"
 #include "models/FGAuxiliary.h"
+#include "input_output/FGXMLElement.h"
+
+using namespace std;
 
 namespace JSBSim {
 

@@ -46,6 +46,9 @@ INCLUDES
 #include "initialization/FGTrim.h"
 
 #include <iostream>
+#include <cstdlib>
+
+using namespace std;
 
 namespace JSBSim {
 

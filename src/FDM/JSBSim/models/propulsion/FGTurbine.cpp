@@ -39,10 +39,14 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <vector>
+#include <iostream>
 #include <sstream>
-
 #include "FGTurbine.h"
+#include "FGState.h"
+#include "models/FGPropulsion.h"
+#include "FGThruster.h"
+
+using namespace std;
 
 namespace JSBSim {
 
@@ -489,26 +493,26 @@ bool FGTurbine::Load(FGFDMExec* exec, Element *el)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGTurbine::GetEngineLabels(string delimeter)
+string FGTurbine::GetEngineLabels(const string& delimiter)
 {
   std::ostringstream buf;
 
-  buf << Name << "_N1[" << EngineNumber << "]" << delimeter
-      << Name << "_N2[" << EngineNumber << "]" << delimeter
-      << Thruster->GetThrusterLabels(EngineNumber, delimeter);
+  buf << Name << "_N1[" << EngineNumber << "]" << delimiter
+      << Name << "_N2[" << EngineNumber << "]" << delimiter
+      << Thruster->GetThrusterLabels(EngineNumber, delimiter);
 
   return buf.str();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGTurbine::GetEngineValues(string delimeter)
+string FGTurbine::GetEngineValues(const string& delimiter)
 {
   std::ostringstream buf;
 
-  buf << N1 << delimeter
-      << N2 << delimeter
-      << Thruster->GetThrusterValues(EngineNumber, delimeter);
+  buf << N1 << delimiter
+      << N2 << delimiter
+      << Thruster->GetThrusterValues(EngineNumber, delimiter);
 
   return buf.str();
 }

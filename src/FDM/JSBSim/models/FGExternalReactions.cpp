@@ -37,7 +37,11 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGExternalReactions.h"
+#include "input_output/FGXMLElement.h"
+#include <iostream>
 #include <string>
+
+using namespace std;
 
 namespace JSBSim {
 

@@ -41,11 +41,15 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <vector>
+#include <iostream>
 #include <sstream>
 #include "FGTurboProp.h"
 
 #include "FGPropeller.h"
+#include "FGState.h"
+#include "models/FGAuxiliary.h"
+
+using namespace std;
 
 namespace JSBSim {
 
@@ -245,7 +249,10 @@ double FGTurboProp::Calculate(void)
   }
 
   //printf ("EngHP: %lf / Requi: %lf\n",Eng_HP,Prop_Required_Power);
-  return Thruster->Calculate((Eng_HP * hptoftlbssec)-Thruster->GetPowerRequired());
+  PowerAvailable = (Eng_HP * hptoftlbssec) - Thruster->GetPowerRequired();
+
+  return Thruster->Calculate(PowerAvailable);
+
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -438,7 +445,7 @@ double FGTurboProp::ExpSeek(double *var, double target, double accel_tau, double
 
 void FGTurboProp::SetDefaults(void)
 {
-  Name = "Not defined";
+//  Name = "Not defined";
   N1 = N2 = 0.0;
   Type = etTurboprop;
   MilThrust = 10000.0;
@@ -468,27 +475,28 @@ void FGTurboProp::SetDefaults(void)
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-string FGTurboProp::GetEngineLabels(string delimeter)
+string FGTurboProp::GetEngineLabels(const string& delimiter)
 {
   std::ostringstream buf;
 
-  buf << Name << "_N1[" << EngineNumber << "]" << delimeter
-      << Name << "_N2[" << EngineNumber << "]" << delimeter
-      << Name << "__PwrAvailJVK[" << EngineNumber << "]" << delimeter
-      << Thruster->GetThrusterLabels(EngineNumber, delimeter);
+  buf << Name << "_N1[" << EngineNumber << "]" << delimiter
+      << Name << "_N2[" << EngineNumber << "]" << delimiter
+      << Name << "_PwrAvail[" << EngineNumber << "]" << delimiter
+      << Thruster->GetThrusterLabels(EngineNumber, delimiter);
 
   return buf.str();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGTurboProp::GetEngineValues(string delimeter)
+string FGTurboProp::GetEngineValues(const string& delimiter)
 {
   std::ostringstream buf;
 
-  buf << N1 << delimeter
-      << N2 << delimeter
-      << Thruster->GetThrusterValues(EngineNumber,delimeter);
+  buf << PowerAvailable << delimiter
+      << N1 << delimiter
+      << N2 << delimiter
+      << Thruster->GetThrusterValues(EngineNumber,delimiter);
 
   return buf.str();
 }

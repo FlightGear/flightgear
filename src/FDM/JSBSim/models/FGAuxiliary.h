@@ -40,7 +40,6 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGModel.h"
-#include "FGFDMExec.h"
 #include "math/FGColumnVector3.h"
 #include "math/FGLocation.h"
 #include "FGPropagate.h"
@@ -172,15 +171,15 @@ public:
   double GetMagBeta (void) const { return fabs(beta); }
 
   double Getalpha   (int unit) const { if (unit == inDegrees) return alpha*radtodeg;
-                                       else cerr << "Bad units" << endl; return 0.0;}
+                                       else return BadUnits(); }
   double Getbeta    (int unit) const { if (unit == inDegrees) return beta*radtodeg;
-                                       else cerr << "Bad units" << endl; return 0.0;}
+                                       else return BadUnits(); }
   double Getadot    (int unit) const { if (unit == inDegrees) return adot*radtodeg;
-                                       else cerr << "Bad units" << endl; return 0.0;}
+                                       else return BadUnits(); }
   double Getbdot    (int unit) const { if (unit == inDegrees) return bdot*radtodeg;
-                                       else cerr << "Bad units" << endl; return 0.0;}
+                                       else return BadUnits(); }
   double GetMagBeta (int unit) const { if (unit == inDegrees) return fabs(beta)*radtodeg;
-                                       else cerr << "Bad units" << endl; return 0.0;}
+                                       else return BadUnits(); }
 
   double Getqbar          (void) const { return qbar;       }
   double GetqbarUW        (void) const { return qbarUW;     }
@@ -281,6 +280,7 @@ private:
   void CalculateRelativePosition(void);
 
   void bind(void);
+  double BadUnits(void) const;
   void Debug(int from);
 };
 

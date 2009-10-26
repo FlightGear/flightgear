@@ -54,7 +54,8 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include <cmath>
-#include <iomanip>
+#include <cstdlib>
+#include <iostream>
 
 #include "FGPropagate.h"
 #include "FGFDMExec.h"
@@ -63,6 +64,8 @@ INCLUDES
 #include "FGMassBalance.h"
 #include "FGInertial.h"
 #include "input_output/FGPropertyManager.h"
+
+using namespace std;
 
 namespace JSBSim {
 

@@ -38,11 +38,10 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "input_output/FGXMLElement.h"
 #include "FGParameter.h"
-#include "input_output/FGPropertyManager.h"
-#include <sstream>
+#include <iosfwd>
 #include <vector>
+#include <string>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -54,10 +53,10 @@ DEFINITIONS
 FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-using std::vector;
-using std::stringstream;
-
 namespace JSBSim {
+
+class FGPropertyManager;
+class Element;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -280,7 +279,7 @@ public:
        </pre>
        */
 
-  void operator<<(stringstream&);
+  void operator<<(std::istream&);
   FGTable& operator<<(const double n);
   FGTable& operator<<(const int n);
 
@@ -298,16 +297,16 @@ private:
   bool internal;
   FGPropertyManager *lookupProperty[3];
   double** Data;
-  vector <FGTable*> Tables;
-  unsigned int FindNumColumns(string);
+  std::vector <FGTable*> Tables;
   unsigned int nRows, nCols, nTables, dimension;
   int colCounter, rowCounter, tableCounter;
   mutable int lastRowIndex, lastColumnIndex, lastTableIndex;
   double** Allocate(void);
   FGPropertyManager* const PropertyManager;
-  string Name;
+  std::string Name;
   void bind(void);
 
+  unsigned int FindNumColumns(const std::string&);
   void Debug(int from);
 };
 }

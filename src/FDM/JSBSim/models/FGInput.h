@@ -40,11 +40,7 @@ INCLUDES
 
 #include "FGModel.h"
 
-#include <iostream>
-#include <fstream>
-
-#include "input_output/FGfdmSocket.h"
-#include "input_output/FGXMLElement.h"
+#include <string>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -57,6 +53,10 @@ FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 namespace JSBSim {
+
+class FGFDMExec;
+class Element;
+class FGfdmSocket;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -78,7 +78,6 @@ public:
   bool InitModel(void);
   bool Run(void);
 
-  void SetType(string);
   inline void Enable(void) { enabled = true; }
   inline void Disable(void) { enabled = false; }
   inline bool Toggle(void) {enabled = !enabled; return enabled;}
@@ -88,7 +87,7 @@ private:
   bool sFirstPass, dFirstPass, enabled;
   unsigned int port;
   FGfdmSocket* socket;
-  string data;
+  std::string data;
   void Debug(int from);
 };
 }

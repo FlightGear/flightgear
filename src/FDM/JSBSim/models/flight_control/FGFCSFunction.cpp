@@ -38,6 +38,10 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGFCSFunction.h"
+#include <cstdlib>
+#include <iostream>
+
+using namespace std;
 
 namespace JSBSim {
 

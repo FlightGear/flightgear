@@ -39,7 +39,10 @@ INCLUDES
 #include <iomanip>
 
 #include "FGGroundReactions.h"
+#include "FGFCS.h"
 #include "input_output/FGPropertyManager.h"
+
+using namespace std;
 
 namespace JSBSim {
 
