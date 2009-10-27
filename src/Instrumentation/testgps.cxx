@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
   gps->update(0.05);
   gps->update(0.05);
   
-  scratch->setStringValue("ident", "TL");
+  scratch->setStringValue("query", "TL");
   scratch->setStringValue("type", "Vor");
   scratch->setBoolValue("exact", false);
   nd->setStringValue("command", "search");
@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
   nd->setDoubleValue("config/min-runway-length-ft", 5000.0);
   scratch->setBoolValue("exact", false);
   scratch->setBoolValue("order-by-distance", false);
-  scratch->setStringValue("ident", "KS");
+  scratch->setStringValue("query", "KS");
   scratch->setStringValue("type", "apt");
   
   nd->setStringValue("command", "search");
@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
   scratch->setBoolValue("exact", true);
   scratch->setBoolValue("order-by-distance", true);
   scratch->setStringValue("type", "vor");
-  scratch->setStringValue("ident", "DCS");
+  scratch->setStringValue("query", "DCS");
   
   nd->setStringValue("command", "search");
   printScratch(scratch);
@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
 // search on totally missing
   scratch->setBoolValue("exact", true);
   scratch->setBoolValue("order-by-distance", true);
-  scratch->setStringValue("ident", "FOFOFOFOF");
+  scratch->setStringValue("query", "FOFOFOFOF");
   nd->setStringValue("command", "search");
   printScratch(scratch);
   
@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
     << " " << wp1->getDoubleValue("latitude-deg"));
 
 // OBS mode
-  scratch->setStringValue("ident", "UW");
+  scratch->setStringValue("query", "UW");
   scratch->setBoolValue("order-by-distance", true);
   nd->setStringValue("command", "search");
   printScratch(scratch);

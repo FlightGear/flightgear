@@ -1492,6 +1492,12 @@ void GPS::search()
   string sty(_scratchNode->getStringValue("type"));
   _searchType = FGPositioned::typeFromName(sty);
   _searchQuery = _scratchNode->getStringValue("query");
+  if (_searchQuery.empty()) {
+    SG_LOG(SG_INSTR, SG_WARN, "empty GPS search query");
+    clearScratch();
+    return;
+  }
+  
   _searchExact = _scratchNode->getBoolValue("exact", true);
   _searchOrderByRange = _scratchNode->getBoolValue("order-by-distance", true);
   _searchResultIndex = 0;
