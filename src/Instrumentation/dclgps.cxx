@@ -254,7 +254,6 @@ void DCLGPS::init() {
 	iap->_rwyStr = "12";
 	iap->_approachRoutes.clear();
 	iap->_IAP.clear();
-	iap->_MAP.clear();
 	// -------
 	wp = new GPSWaypoint;
 	wp->id = "GOBBS";
@@ -324,7 +323,7 @@ void DCLGPS::init() {
 	if(cwp) {
 		*wp = *cwp;
 		wp->appType = GPS_MAHP;
-		iap->_MAP.push_back(wp);
+		iap->_IAP.push_back(wp);
 	} else {
 		//cout << "Unable to find waypoint " << wp->id << '\n';
 	}

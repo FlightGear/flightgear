@@ -650,7 +650,6 @@ void KLN89AptPage::EntPressed() {
 				GPSWaypoint* wp = new GPSWaypoint;
 				*wp = *(_approachRoutes[_curIaf]->waypoints[0]);	// Need to make copies here since we're going to alter ID and type sometimes
 				string iafid = wp->id;
-				//wp->id += 'i';
 				_kln89->_approachFP->waypoints.push_back(wp);
 				for(unsigned int i=0; i<_IAP.size(); ++i) {
 					if(_IAP[i]->id != iafid) {	// Don't duplicate waypoints that are part of the initial fix list and the approach procedure list.
@@ -666,11 +665,6 @@ void KLN89AptPage::EntPressed() {
 						_kln89->_approachFP->waypoints.push_back(wp);
 					}
 				}
-				// Only add 1 missed approach procedure waypoint for now.  I think this might be standard always anyway.
-				wp = new GPSWaypoint;
-				*wp = *_MAP[0];
-				//wp->id += 'h';
-				_kln89->_approachFP->waypoints.push_back(wp);
 				_iafDialog = false;
 				_addDialog = true;
 				_maxULinePos = _kln89->_approachFP->waypoints.size() + 1;
@@ -719,11 +713,9 @@ void KLN89AptPage::EntPressed() {
 		} else if(_uLinePos > 4) {
 			_approachRoutes.clear();
 			_IAP.clear();
-			_MAP.clear();
 			_curIaf = 0;
 			_approachRoutes = ((FGNPIAP*)(_iaps[_uLinePos-5]))->_approachRoutes;
 			_IAP = ((FGNPIAP*)(_iaps[_uLinePos-5]))->_IAP;
-			_MAP = ((FGNPIAP*)(_iaps[_uLinePos-5]))->_MAP;
 			_curIap = _uLinePos - 5;	// TODO - handle the start of list ! no. 1, and the end of list not sequential!
 			_uLinePos = 1;
 			if(_approachRoutes.size() > 1) {
@@ -749,12 +741,6 @@ void KLN89AptPage::EntPressed() {
 						_kln89->_approachFP->waypoints.push_back(wp);
 					}
 				}
-				// Only add 1 missed approach procedure waypoint for now.  I think this might be standard always anyway.
-				wp = new GPSWaypoint;
-				*wp = *_MAP[0];
-				//wp->id += 'h';
-				_kln89->_approachFP->waypoints.push_back(wp);
-				
 				_addDialog = true;
 				_maxULinePos = 1;
 			}
