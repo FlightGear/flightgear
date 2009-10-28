@@ -460,8 +460,8 @@ static void fgMainLoop( void ) {
     //   we may want to move this to its own class at some point
     //
     double visibility_meters = fgGetDouble("/environment/visibility-m");
-
     globals->get_tile_mgr()->prep_ssg_nodes( visibility_meters );
+
     // update tile manager for view...
     SGVec3d viewPos = globals->get_current_view()->get_view_pos();
     SGGeod geodViewPos = SGGeod::fromCart(viewPos);
@@ -477,13 +477,10 @@ static void fgMainLoop( void ) {
     // update the view angle as late as possible, but before sound calculations
     globals->get_viewmgr()->update(real_delta_time_sec);
 
-    ////////////////////////////////////////////////////////////////////
     // Update the sound manager last so it can use the CPU while the GPU
     // is processing the scenery (doubled the frame-rate for me) -EMH-
-    ////////////////////////////////////////////////////////////////////
 #ifdef ENABLE_AUDIO_SUPPORT
-    static SGSoundMgr *smgr = globals->get_soundmgr();
-    smgr->update_late(delta_time_sec);
+    globals->get_soundmgr()->update(delta_time_sec);
 #endif
 
     // END Tile Manager udpates
@@ -493,11 +490,12 @@ static void fgMainLoop( void ) {
         fgSetBool("sim/sceneryloaded",true);
 #ifdef ENABLE_AUDIO_SUPPORT
         if (fgGetBool("/sim/sound/enabled") == true)  {
-            smgr->set_volume(fgGetFloat("/sim/sound/volume"));
-            smgr->activate();
+            float volume = fgGetFloat("/sim/sound/volume");
+            globals->get_soundmgr()->set_volume(volume);
+            globals->get_soundmgr()->activate();
         }
         else
-            smgr->stop();
+            globals->get_soundmgr()->stop();
 #endif
     }
 
