@@ -121,6 +121,17 @@ public:
        }
      };
      
+     /**
+      * Filter which passes heliports and seaports in addition to airports
+      */
+     class PortsFilter : public AirportFilter
+     {
+     public:
+       virtual Type maxType() const {
+         return SEAPORT;
+       }
+     };
+     
      class HardSurfaceFilter : public AirportFilter
      {
      public:

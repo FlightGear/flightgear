@@ -151,7 +151,12 @@ double FGRocket::Calculate(void)
 
     } else { // Calculate thrust
 
-      PctPower = Throttle / MaxThrottle; // Min and MaxThrottle range from 0.0 to 1.0, normally.
+      // This is nonsensical. Max throttle should be assumed to be 1.0. One might
+      // conceivably have a throttle setting > 1.0 for some rocket engines. But, 1.0
+      // should always be the default.
+      // PctPower = Throttle / MaxThrottle; // Min and MaxThrottle range from 0.0 to 1.0, normally.
+      
+      PctPower = Throttle;
       Flameout = false;
       VacThrust = Isp * PropellantFlowRate;
 
