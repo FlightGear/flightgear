@@ -131,9 +131,10 @@ FGAircraftModel::update (double dt)
                                                 _roll->getDoubleValue());
   _fx->set_orientation( orient );
  
-  _velocity = SGVec3d( -_speed_n->getDoubleValue(),
-                       _speed_e->getDoubleValue(),
-                       _speed_d->getDoubleValue());
+   SGQuatd q(-0.5, -0.5, 0.5, 0.5);
+  _velocity = q.backTransform( SGVec3d( _speed_n->getDoubleValue(),
+                                        _speed_e->getDoubleValue(),
+                                        _speed_d->getDoubleValue()) );
   _fx->set_velocity( _velocity );
 }
 
