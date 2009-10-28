@@ -294,7 +294,7 @@ bool FGAirport::HardSurfaceFilter::passAirport(FGAirport* aApt) const
 FGAirport* FGAirport::findByIdent(const std::string& aIdent)
 {
   FGPositionedRef r;
-  AirportFilter filter;
+  PortsFilter filter;
   r = FGPositioned::findNextWithPartialId(r, aIdent, &filter);
   if (!r) {
     return NULL; // we don't warn here, let the caller do that
@@ -305,7 +305,7 @@ FGAirport* FGAirport::findByIdent(const std::string& aIdent)
 FGAirport* FGAirport::getByIdent(const std::string& aIdent)
 {
   FGPositionedRef r;
-  AirportFilter filter;
+  PortsFilter filter;
   r = FGPositioned::findNextWithPartialId(r, aIdent, &filter);
   if (!r) {
     throw sg_range_exception("No such airport with ident: " + aIdent);
