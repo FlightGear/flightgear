@@ -302,11 +302,10 @@ FGViewMgr::update (double dt)
   smgr->set_orientation(loop_view->getViewOrientation(), 
                         loop_view->getViewOrientationOffset());
 
-  // get the model velocity for the in-cockpit view
-  SGVec3d velocity = SGVec3d(0,0,0);
+  // get the model velocity
+  SGVec3f velocity = SGVec3f::zeros();
   if ( !stationary() ) {
-    FGAircraftModel *aircraft = globals->get_aircraft_model();
-    velocity = aircraft->getVelocity();
+    velocity = globals->get_aircraft_model()->getVelocity();
   }
   smgr->set_velocity(velocity);
 }
