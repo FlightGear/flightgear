@@ -39,12 +39,12 @@ public:
   virtual void unbind ();
   virtual void update (double dt);
   virtual SGModelPlacement * get3DModel() { return _aircraft; }
-  virtual SGVec3d getVelocity() { return _velocity; }
+  virtual SGVec3f& getVelocity() { return _velocity; }
 
 private:
 
   SGModelPlacement * _aircraft;
-  SGVec3d _velocity;
+  SGVec3f _velocity;
   SGSharedPtr<FGFX>  _fx;
 
   SGPropertyNode_ptr _lon;
