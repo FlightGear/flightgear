@@ -147,6 +147,7 @@ void fgOSOpenWindow(bool stencil)
     viewer->setSceneData(new osg::Group);
     globals->get_renderer()->setViewer(viewer.get());
     CameraGroup::setDefault(cameraGroup);
+    viewer->setLightingMode(View::NO_LIGHT);
 }
 
 static int status = 0;
