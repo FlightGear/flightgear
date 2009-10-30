@@ -66,6 +66,7 @@
 #include <simgear/scene/util/SGSceneUserData.hxx>
 #include <simgear/scene/tgdb/GroundLightManager.hxx>
 #include <simgear/scene/tgdb/pt_lights.hxx>
+#include <simgear/structure/OSGUtils.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/ephemeris/ephemeris.hxx>
@@ -232,6 +233,18 @@ private:
 
 class FGLightSourceUpdateCallback : public osg::NodeCallback {
 public:
+  
+  /**
+   * @param isSun true if the light is the actual sun i.e., for
+   * illuminating the moon.
+   */
+  FGLightSourceUpdateCallback(bool isSun = false) : _isSun(isSun) {}
+  FGLightSourceUpdateCallback(const FGLightSourceUpdateCallback& nc,
+                              const CopyOp& op)
+    : NodeCallback(nc, op), _isSun(nc._isSun)
+  {}
+  META_Object(flightgear,FGLightSourceUpdateCallback);
+  
   virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
   {
     assert(dynamic_cast<osg::LightSource*>(node));
@@ -239,21 +252,22 @@ public:
     osg::Light* light = lightSource->getLight();
     
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
-    light->setAmbient(toOsg(l->scene_ambient()));
-    light->setDiffuse(toOsg(l->scene_diffuse()));
-    light->setSpecular(toOsg(l->scene_specular()));
+    if (_isSun) {
+      light->setAmbient(Vec4(0.0f, 0.0f, 0.0f, 0.0f));
+      light->setDiffuse(Vec4(1.0f, 1.0f, 1.0f, 1.0f));
+      light->setSpecular(Vec4(0.0f, 0.0f, 0.0f, 0.0f));
+    } else {
+      light->setAmbient(toOsg(l->scene_ambient()));
+      light->setDiffuse(toOsg(l->scene_diffuse()));
+      light->setSpecular(toOsg(l->scene_specular()));
+    }
     osg::Vec4f position(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2], 0);
     light->setPosition(position);
-    osg::Vec3f direction(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2]);
-    light->setDirection(direction);
-    light->setSpotExponent(0);
-    light->setSpotCutoff(180);
-    light->setConstantAttenuation(1);
-    light->setLinearAttenuation(0);
-    light->setQuadraticAttenuation(0);
 
     traverse(node, nv);
   }
+private:
+  const bool _isSun;
 };
 
 class FGWireFrameModeUpdateCallback : public osg::StateAttribute::Callback {
@@ -466,16 +480,39 @@ FGRenderer::init( void )
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
 
     // need to update the light on every frame
-    osg::LightSource* lightSource = new osg::LightSource;
-    lightSource->setUpdateCallback(new FGLightSourceUpdateCallback);
+    // OSG LightSource objects are rather confusing. OSG only supports
+    // the 10 lights specified by OpenGL itself; if more than one
+    // LightSource in the scene graph have the same light number, it's
+    // indeterminate which values will be used to render geometry that
+    // has that light number enabled. Also, adding children to a
+    // LightSource is just a shortcut for setting up a state set that
+    // has the corresponding OpenGL light enabled: a LightSource will
+    // affect geometry anywhere in the scene graph that has its light
+    // number enabled in a state set. 
+    LightSource* lightSource = new LightSource;
+    lightSource->getLight()->setDataVariance(Object::DYNAMIC);
     // relative because of CameraView being just a clever transform node
     lightSource->setReferenceFrame(osg::LightSource::RELATIVE_RF);
     lightSource->setLocalStateSetModes(osg::StateAttribute::ON);
-    
-    lightSource->addChild(sceneGroup);
-    lightSource->addChild(thesky->getPreRoot());
-    mRoot->addChild(lightSource);
-
+    lightSource->setUpdateCallback(new FGLightSourceUpdateCallback);
+    mRealRoot->addChild(lightSource);
+    // we need a white diffuse light for the phase of the moon
+    osg::LightSource* sunLight = new osg::LightSource;
+    sunLight->getLight()->setDataVariance(Object::DYNAMIC);
+    sunLight->getLight()->setLightNum(1);
+    sunLight->setUpdateCallback(new FGLightSourceUpdateCallback(true));
+    sunLight->setReferenceFrame(osg::LightSource::RELATIVE_RF);
+    sunLight->setLocalStateSetModes(osg::StateAttribute::ON);
+    // Hang a StateSet above the sky subgraph in order to turn off
+    // light 0
+    Group* skyGroup = new Group;
+    StateSet* skySS = skyGroup->getOrCreateStateSet();
+    skySS->setMode(GL_LIGHT0, StateAttribute::OFF);
+    skyGroup->addChild(thesky->getPreRoot());
+    sunLight->addChild(skyGroup);
+    mRoot->addChild(sceneGroup);
+    mRoot->addChild(sunLight);
+    // Clouds are added to the scene graph later
     stateSet = globals->get_scenery()->get_scene_graph()->getOrCreateStateSet();
     stateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::ON);
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::ON);
@@ -510,6 +547,9 @@ FGRenderer::init( void )
     sw->setUpdateCallback(new FGScenerySwitchCallback);
     sw->addChild(mRoot.get());
     mRealRoot->addChild(sw);
+    // The clouds are attached directly to the scene graph root
+    // because, in theory, they don't want the same default state set
+    // as the rest of the scene. This may not be true in practice.
     mRealRoot->addChild(thesky->getCloudRoot());
     mRealRoot->addChild(FGCreateRedoutNode());
 }
