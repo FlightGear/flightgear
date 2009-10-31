@@ -53,6 +53,7 @@ private:
     void setContactX2offset(double x2);
     void setXOffset(double x);
     void setYOffset(double y);
+    void setZOffset(double z);
 
     void setPitchCoeff(double pc);
     void setElevCoeff(double ec);
@@ -91,8 +92,8 @@ private:
     double _x_offset, _y_offset;
     double _range_ft;
     double _relbrg;
-    double _parent_speed, _parent_x_offset, _parent_y_offset;
-    double _dt_count, _next_run;
+    double _parent_speed, _parent_x_offset, _parent_y_offset, _parent_z_offset;
+    double _dt_count, _next_run, _break_count;
 
     const SGMaterial* _material;
     const SGPropertyNode *_selected_ac;
