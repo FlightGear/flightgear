@@ -304,10 +304,8 @@ FGViewMgr::update (double dt)
   smgr->set_position_offset( offs );
   smgr->set_position_geod( loop_view->getPosition() );
 
-  SGQuatd orient = SGQuatd::fromYawPitchRollDeg( loop_view->getHeading_deg(),
-                                                 loop_view->getPitch_deg(),
-                                                 loop_view->getRoll_deg() );
-  smgr->set_orientation( orient, loop_view->getViewOrientationOffset() );
+  smgr->set_orientation( loop_view->getViewOrientation(),
+                         loop_view->getViewOrientationOffset() );
 
   // get the model velocity
   SGVec3f velocity = SGVec3f::zeros();
