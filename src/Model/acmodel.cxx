@@ -124,24 +124,23 @@ FGAircraftModel::update (double dt)
   _aircraft->update();
 
   // update model's audio sample values
-  _fx->set_position_geod( _aircraft->getPosition() );
+  SGGeod position = _aircraft->getPosition();
+  _fx->set_position_geod( position );
 
   SGQuatd orient = SGQuatd::fromYawPitchRollDeg(_heading->getDoubleValue(),
                                                 _pitch->getDoubleValue(),
                                                 _roll->getDoubleValue());
   _fx->set_orientation( orient );
  
-#if 0
   SGVec3d vel = SGVec3d( _speed_n->getFloatValue(),
                          _speed_e->getFloatValue(),
                          _speed_d->getFloatValue() );
   if ( vel[0] || vel[1] || vel[2] ) {
-    SGQuatd q(-0.5, -0.5, 0.5, 0.5);
-    _velocity = toVec3f( q.backTransform( vel ) );
+    SGQuatd hlOr = SGQuatd::fromLonLat(position);
+    _velocity = toVec3f( hlOr.backTransform( vel * SG_FEET_TO_METER ) );
   }
   else
       _velocity = SGVec3f::zeros();
-#endif
   _fx->set_velocity( _velocity );
 }
 

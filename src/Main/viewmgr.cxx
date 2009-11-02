@@ -241,11 +241,10 @@ FGViewMgr::unbind ()
 void
 FGViewMgr::update (double dt)
 {
-  FGViewer * view = get_current_view();
-  if (view == 0)
-    return;
 
-  FGViewer *loop_view = (FGViewer *)get_view(current);
+  FGViewer *loop_view = (FGViewer *)get_current_view();
+  if (loop_view == 0) return;
+
   SGPropertyNode *n = config_list[current];
   double lon_deg, lat_deg, alt_ft, roll_deg, pitch_deg, heading_deg;
 
@@ -293,19 +292,13 @@ FGViewMgr::update (double dt)
 
   // Update the current view
   do_axes();
-  view->update(dt);
+  loop_view->update(dt);
   abs_viewer_position = loop_view->getViewPosition();
 
   // update audio listener values
   // set the viewer posotion in Cartesian coordinates in meters
-  SGVec3d offs = SGVec3d( loop_view->getXOffset_m(),
-                          loop_view->getYOffset_m(),
-                          loop_view->getZOffset_m());
-  smgr->set_position_offset( offs );
   smgr->set_position_geod( loop_view->getPosition() );
-
-  smgr->set_orientation( loop_view->getViewOrientation(),
-                         loop_view->getViewOrientationOffset() );
+  smgr->set_orientation( loop_view->getViewOrientation() );
 
   // get the model velocity
   SGVec3f velocity = SGVec3f::zeros();
