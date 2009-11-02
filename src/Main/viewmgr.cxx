@@ -241,11 +241,10 @@ FGViewMgr::unbind ()
 void
 FGViewMgr::update (double dt)
 {
-  FGViewer * view = get_current_view();
-  if (view == 0)
-    return;
 
   FGViewer *loop_view = (FGViewer *)get_view(current);
+  if (loop_view == 0) return;
+
   SGPropertyNode *n = config_list[current];
   double lon_deg, lat_deg, alt_ft, roll_deg, pitch_deg, heading_deg;
 
@@ -293,7 +292,7 @@ FGViewMgr::update (double dt)
 
   // Update the current view
   do_axes();
-  view->update(dt);
+  loop_view->update(dt);
   abs_viewer_position = loop_view->getViewPosition();
 
   // update audio listener values
