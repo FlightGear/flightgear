@@ -298,14 +298,8 @@ FGViewMgr::update (double dt)
 
   // update audio listener values
   // set the viewer posotion in Cartesian coordinates in meters
-  SGVec3d offs = SGVec3d( loop_view->getXOffset_m(),
-                          loop_view->getYOffset_m(),
-                          loop_view->getZOffset_m());
-  smgr->set_position_offset( offs );
   smgr->set_position_geod( loop_view->getPosition() );
-
-  smgr->set_orientation( loop_view->getViewOrientation(),
-                         loop_view->getViewOrientationOffset() );
+  smgr->set_orientation( loop_view->getViewOrientation() );
 
   // get the model velocity
   SGVec3f velocity = SGVec3f::zeros();
