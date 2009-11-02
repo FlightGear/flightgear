@@ -200,6 +200,7 @@ private:
   double OxidizerFlowRate;
   double PropellantFlowRate;
   bool Flameout;
+  double BuildupTime;
   FGTable* ThrustTable;
 
   void Debug(int from);
