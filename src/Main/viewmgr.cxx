@@ -242,7 +242,7 @@ void
 FGViewMgr::update (double dt)
 {
 
-  FGViewer *loop_view = (FGViewer *)get_view(current);
+  FGViewer *loop_view = (FGViewer *)get_current_view();
   if (loop_view == 0) return;
 
   SGPropertyNode *n = config_list[current];
