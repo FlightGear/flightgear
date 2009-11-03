@@ -105,3 +105,37 @@ void KLN89DirPage::EntPressed() {
 		_kln89->DtoInitiate(_id);
 	}
 }
+
+void KLN89DirPage::Knob2Left1() {
+	if(_kln89->_mode == KLN89_MODE_CRSR) {
+		if(_DToWpDispMode == 0) {
+			_DToWpDispMode = 1;
+		} else if(_DToWpDispMode == 1) {
+			// TODO
+		} else {
+			// TODO
+		}
+	} else {
+		// If the cursor is not displayed, then we return to the page that was displayed prior to DTO being pressed,
+		// and pass the knob turn to that page, whether pulled out or not.
+		_kln89->_activePage = _kln89->_pages[_kln89->_curPage];
+		_kln89->_activePage->Knob2Left1();
+	}
+}
+
+void KLN89DirPage::Knob2Right1() {
+	if(_kln89->_mode == KLN89_MODE_CRSR) {
+		if(_DToWpDispMode == 0) {
+			_DToWpDispMode = 1;
+		} else if(_DToWpDispMode == 1) {
+			// TODO
+		} else {
+			// TODO
+		}
+	} else {
+		// If the cursor is not displayed, then we return to the page that was displayed prior to DTO being pressed,
+		// and pass the knob turn to that page, whether pulled out or not.
+		_kln89->_activePage = _kln89->_pages[_kln89->_curPage];
+		_kln89->_activePage->Knob2Right1();
+	}
+}
