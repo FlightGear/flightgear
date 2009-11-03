@@ -36,6 +36,7 @@
 
 #include <simgear/compiler.h>
 
+#include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/interpolater.hxx>
 
@@ -88,6 +89,7 @@ private:
     SGVec4f _scene_ambient;
     SGVec4f _scene_diffuse;
     SGVec4f _scene_specular;
+    SGVec4f _scene_chrome;
 
     // clear sky, fog and cloud color
     SGVec4f _sky_color;
@@ -103,6 +105,9 @@ private:
     void update_sky_color ();
     void update_adj_fog_color ();
 
+    // properties for chrome light; not a tie because I want to fire
+    // property listeners when the values change.
+    SGPropertyNode_ptr _chromeProps[4];
 public:
 
     FGLight ();
@@ -120,6 +125,7 @@ public:
     inline const SGVec4f& scene_ambient () const { return _scene_ambient; }
     inline const SGVec4f& scene_diffuse () const { return _scene_diffuse; }
     inline const SGVec4f& scene_specular () const { return _scene_specular; }
+    inline const SGVec4f& scene_chrome () const { return _scene_chrome; }
 
     inline const SGVec4f& sky_color () const { return _sky_color; }
     inline const SGVec4f& cloud_color () const { return _cloud_color; }
