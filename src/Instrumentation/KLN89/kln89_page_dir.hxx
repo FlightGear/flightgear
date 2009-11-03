@@ -38,6 +38,8 @@ public:
 	
 	void ClrPressed();
 	void EntPressed();
+	void Knob2Left1();
+	void Knob2Right1();
 	
 private:
 	// Waypoint display mode.
