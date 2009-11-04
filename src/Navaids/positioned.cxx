@@ -35,6 +35,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/timing/timestamp.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include "positioned.hxx"
 
@@ -240,6 +241,10 @@ public:
   
   bool operator()(const FGPositionedRef& a, const FGPositionedRef& b) const
   {
+    if (!a || !b) {
+      throw sg_exception("empty reference passed to DistanceOrdering");
+    }
+  
     double dA = distSqr(a->cart(), mPos),
       dB = distSqr(b->cart(), mPos);
     return dA < dB;
