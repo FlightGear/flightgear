@@ -137,7 +137,7 @@ FGAircraftModel::update (double dt)
                          _speed_d->getFloatValue() );
   if ( vel[0] || vel[1] || vel[2] ) {
     SGQuatd hlOr = SGQuatd::fromLonLat(position);
-    _velocity = toVec3f( hlOr.backTransform( vel * SG_FEET_TO_METER ) );
+    _velocity = 100.0 * toVec3f( hlOr.rotateBack( vel * SG_FEET_TO_METER ) );
   }
   else
       _velocity = SGVec3f::zeros();

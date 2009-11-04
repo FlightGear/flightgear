@@ -297,7 +297,7 @@ FGViewMgr::update (double dt)
 
   // update audio listener values
   // set the viewer posotion in Cartesian coordinates in meters
-  smgr->set_position_geod( loop_view->getPosition() );
+  smgr->set_position( abs_viewer_position );
   smgr->set_orientation( loop_view->getViewOrientation() );
 
   // get the model velocity
