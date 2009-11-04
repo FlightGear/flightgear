@@ -553,18 +553,24 @@ FGDialog::updateValues (const char *objectName)
     if (objectName && !objectName[0])
         objectName = 0;
 
-    for (unsigned int i = 0; i < _propertyObjects.size(); i++) {
-        const string &name = _propertyObjects[i]->name;
-        if (objectName && name != objectName)
-            continue;
-
-        puObject *obj = _propertyObjects[i]->object;
-        if ((obj->getType() & PUCLASS_LIST) && (dynamic_cast<GUI_ID *>(obj)->id & FGCLASS_LIST)) {
-            fgList *pl = static_cast<fgList *>(obj);
-            pl->update();
-        } else
-            copy_to_pui(_propertyObjects[i]->node, obj);
+  for (unsigned int i = 0; i < _propertyObjects.size(); i++) {
+    const string &name = _propertyObjects[i]->name;
+    if (objectName && name != objectName) {
+      continue;
     }
+    
+    puObject *widget = _propertyObjects[i]->object;
+    int widgetType = widget->getType();
+    if ((widgetType & PUCLASS_LIST) && (dynamic_cast<GUI_ID *>(widget)->id & FGCLASS_LIST)) {
+      fgList *pl = static_cast<fgList*>(widget);
+      pl->update();
+    } else if (widgetType & PUCLASS_COMBOBOX) {
+      fgComboBox* combo = static_cast<fgComboBox*>(widget);
+      combo->update();
+    } else {
+      copy_to_pui(_propertyObjects[i]->node, widget);
+    }
+  } // of property objects iteration
 }
 
 void
@@ -1259,12 +1265,26 @@ fgValueList::~fgValueList()
 void
 fgValueList::make_list()
 {
-    vector<SGPropertyNode_ptr> value_nodes = _props->getChildren("value");
-    _list = new char *[value_nodes.size() + 1];
-    unsigned int i;
-    for (i = 0; i < value_nodes.size(); i++)
-        _list[i] = strdup((char *)value_nodes[i]->getStringValue());
-    _list[i] = 0;
+  SGPropertyNode_ptr values = _props;
+  const char* vname = "value";
+  
+  if (_props->hasChild("properties")) {
+    // dynamic values, read from a property's children
+    const char* path = _props->getStringValue("properties");
+    values = fgGetNode(path, true);
+  }
+  
+  if (_props->hasChild("property-name")) {
+    vname = _props->getStringValue("property-name");
+  }
+  
+  vector<SGPropertyNode_ptr> value_nodes = values->getChildren(vname);
+  _list = new char *[value_nodes.size() + 1];
+  unsigned int i;
+  for (i = 0; i < value_nodes.size(); i++) {
+    _list[i] = strdup((char *)value_nodes[i]->getStringValue());
+  }
+  _list[i] = 0;
 }
 
 void
@@ -1285,6 +1305,12 @@ fgList::update()
     int top = getTopItem();
     newList(_list);
     setTopItem(top);
+}
+
+void fgComboBox::update()
+{
+  fgValueList::update();
+  newList(_list);
 }
 
 // end of dialog.cxx
