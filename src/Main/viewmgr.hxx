@@ -25,6 +25,7 @@
 #define _VIEWMGR_HXX
 
 #include <vector>
+#include <list>
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -76,6 +77,8 @@ public:
 
 private:
 
+    list<const char*> tied_props;
+
     double axis_long;
     double axis_lat;
 
@@ -116,6 +119,11 @@ private:
     void setViewAxisLat (double axis);
     int getView () const;
     void setView (int newview);
+// quaternion accessors:
+    const char* getCurrentViewOrientation() const;
+    const char* getCurrentViewOrOffset() const;
+    const char* getCurrentView1200() const;
+
     bool stationary () const;
 
     SGPropertyNode_ptr view_number;
@@ -125,6 +133,7 @@ private:
     SGVec3d abs_viewer_position;
 
     int current;
+    SGQuatd current_view_orientation, current_view_or_offset;
 
     SGSoundMgr *smgr;
 
