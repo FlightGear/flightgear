@@ -411,24 +411,35 @@ void KLN89AptPage::Update(double dt) {
 					}
 				} else {
 					_kln89->DrawText("IAP", 2, 11, 3);
-					int check = 0;
 					bool selApp = false;
 					if(_kln89->_mode == KLN89_MODE_CRSR && _uLinePos > 4) {
 						selApp = true;
 						if(!_kln89->_blink) _kln89->DrawEnt();
 					}
-					for(unsigned int i=0; i<_iaps.size(); ++i) {	// TODO - do this properly when > 3 IAPs
-						string s = GPSitoa(i+1);
-						_kln89->DrawText(s, 2, 2 - s.size(), 2-i);
-						if(!(selApp && _uLinePos == 5+i && _kln89->_blink)) {
-							_kln89->DrawText(_iaps[i]->_ident, 2, 3, 2-i);
-							_kln89->DrawText(_iaps[i]->_rwyStr, 2, 9, 2-i);
+					// _maxULine pos should be 4 + iaps.size() at this point.
+					// Draw a maximum of 3 IAPs.
+					// If there are more than 3 IAPs for this airport, then we need to offset the start
+					// of the list if _uLinePos is pointing at the 4th or later IAP.
+					unsigned int offset = 0;
+					unsigned int index;
+					if(_uLinePos > 7) {
+						offset = _uLinePos - 7;
+					}
+					for(unsigned int i=0; i<3; ++i) {
+						index = offset + i;
+						if(index < _iaps.size()) {
+							string s = GPSitoa(index+1);
+							_kln89->DrawText(s, 2, 2 - s.size(), 2-i);
+							if(!(selApp && _uLinePos == index+5 && _kln89->_blink)) {
+								_kln89->DrawText(_iaps[index]->_ident, 2, 3, 2-i);
+								_kln89->DrawText(_iaps[index]->_rwyStr, 2, 9, 2-i);
+							}
+							if(selApp && _uLinePos == index+5 && !_kln89->_blink) {
+								_kln89->Underline(2, 3, 2-i, 9);
+							}
+						} else {
+							break;
 						}
-						if(selApp && _uLinePos == 5+i && !_kln89->_blink) {
-							_kln89->Underline(2, 3, 2-i, 9);
-						}
-						check++;
-						if(check > 2) break;
 					}
 				}
 			}
@@ -812,6 +823,15 @@ void KLN89AptPage::Knob2Left1() {
 			} else {
 				_curRwyPage--;
 			}
+		} else if(_subPage == 0) {
+			_subPage = 7;
+			// We have to set _uLinePos here even though the cursor isn't pressed, to
+			// ensure that the list displays properly.
+			if(_iaps.empty()) {
+				_uLinePos = 1;
+			} else {
+				_uLinePos = 5;
+			}
 		} else {
 			KLN89Page::Knob2Left1();
 		}
@@ -854,6 +874,15 @@ void KLN89AptPage::Knob2Right1() {
 				_subPage = 5;
 			} else {
 				_curFreqPage++;
+			}
+		} else if(_subPage == 6) {
+			_subPage = 7;
+			// We have to set _uLinePos here even though the cursor isn't pressed, to
+			// ensure that the list displays properly.
+			if(_iaps.empty()) {
+				_uLinePos = 1;
+			} else {
+				_uLinePos = 5;
 			}
 		} else {
 			KLN89Page::Knob2Right1();
