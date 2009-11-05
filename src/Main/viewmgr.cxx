@@ -28,6 +28,7 @@
 #include "viewmgr.hxx"
 
 #include <string.h>		// strcmp
+#include <boost/format.hpp>
 
 #include <simgear/compiler.h>
 #include <simgear/sound/soundmgr_openal.hxx>
@@ -162,6 +163,9 @@ typedef double (FGViewMgr::*double_getter)() const;
 void
 FGViewMgr::bind ()
 {
+// for automatic untying:
+#define x(str) ((void)tied_props.push_back(str), str)
+
   // these are bound to the current view properties
   fgTie("/sim/current-view/heading-offset-deg", this,
 	&FGViewMgr::getViewHeadingOffset_deg,
@@ -212,10 +216,20 @@ FGViewMgr::bind ()
 	&FGViewMgr::getNear_m, &FGViewMgr::setNear_m);
   fgSetArchivable("/sim/current-view/ground-level-nearplane-m");
 
+  fgTie(x("/sim/current-view/view_orientation"), this,
+	&FGViewMgr::getCurrentViewOrientation);
+  fgTie(x("/sim/current-view/view_or_offset"), this,
+	&FGViewMgr::getCurrentViewOrOffset);
+
+  fgTie(x("/sim/current-view/view1200"), this,
+	&FGViewMgr::getCurrentView1200);
+
   SGPropertyNode *n = fgGetNode("/sim/current-view", true);
   n->tie("viewer-x-m", SGRawValuePointer<double>(&abs_viewer_position[0]));
   n->tie("viewer-y-m", SGRawValuePointer<double>(&abs_viewer_position[1]));
   n->tie("viewer-z-m", SGRawValuePointer<double>(&abs_viewer_position[2]));
+
+#undef x
 }
 
 void
@@ -236,6 +250,12 @@ FGViewMgr::unbind ()
   fgUntie("/sim/current-view/viewer-x-m");
   fgUntie("/sim/current-view/viewer-y-m");
   fgUntie("/sim/current-view/viewer-z-m");
+
+  list<const char*>::const_iterator it;
+  for (it = tied_props.begin(); it != tied_props.end(); it++){
+    fgUntie(*it);
+  }
+
 }
 
 void
@@ -290,6 +310,9 @@ FGViewMgr::update (double dt)
   setViewTargetYOffset_m(fgGetDouble("/sim/current-view/target-y-offset-m"));
   setViewTargetZOffset_m(fgGetDouble("/sim/current-view/target-z-offset-m"));
 
+  current_view_orientation = loop_view->getViewOrientation();
+  current_view_or_offset = loop_view->getViewOrientationOffset();
+
   // Update the current view
   do_axes();
   loop_view->update(dt);
@@ -298,7 +321,7 @@ FGViewMgr::update (double dt)
   // update audio listener values
   // set the viewer posotion in Cartesian coordinates in meters
   smgr->set_position( abs_viewer_position );
-  smgr->set_orientation( loop_view->getViewOrientation() );
+  smgr->set_orientation( current_view_orientation );
 
   // get the model velocity
   SGVec3f velocity = SGVec3f::zeros();
@@ -745,6 +768,54 @@ void
 FGViewMgr::setViewAxisLat (double axis)
 {
   axis_lat = axis;
+}
+
+static const char* fmt("%6.3f ; %6.3f %6.3f %6.3f");
+
+// current view orientation
+// This is a rotation relative to the earth-centered (ec)
+// refrence frame.
+// However, the components of this quaternion are expressed 
+// in the OpenGL camera system i.e. x-right, y-up, z-back.
+const char* FGViewMgr::getCurrentViewOrientation() const{
+  return str(boost::format(fmt)
+   % current_view_orientation.w()
+   % current_view_orientation.x()
+   % current_view_orientation.y()
+   % current_view_orientation.z() ).c_str();
+}
+
+// This rotation takes you from the 12:00 direction 
+// i.e. body attitude
+// to whatever the current view direction is.  
+// The components of this quaternion are expressed in 
+// the XYZ body frame.
+const char* FGViewMgr::getCurrentViewOrOffset() const{
+  return str(boost::format(fmt)
+   % current_view_or_offset.w()
+   % current_view_or_offset.x()
+   % current_view_or_offset.y()
+   % current_view_or_offset.z() ).c_str();
+}
+
+// This rotates the conventional aviation XYZ body system 
+// i.e.  x-forward, y-starboard, z-bottom
+// to the OpenGL camera system 
+// i.e. x-right, y-up, z-back.
+const SGQuatd q(-0.5, -0.5, 0.5, 0.5);
+
+// The current attitude of the aircraft, 
+// i.e. the 12:00 direction.
+// The components of this quaternion are expressed in 
+// the GL camera frame.
+const char* FGViewMgr::getCurrentView1200() const{
+  SGQuatd view1200 = current_view_orientation
+        * conj(q) * conj(current_view_or_offset) * q; 
+  return str(boost::format(fmt)
+   % view1200.w()
+   % view1200.x()
+   % view1200.y()
+   % view1200.z() ).c_str();
 }
 
 void
