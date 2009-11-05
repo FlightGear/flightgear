@@ -611,42 +611,15 @@ FGRenderer::update( bool refresh_camera_settings ) {
         }
 
         SGSkyState sstate;
-
-        SGVec3d viewPos = current__view->getViewPosition();
-        sstate.view_pos  = toVec3f(viewPos);
-        SGGeod geodViewPos = SGGeod::fromCart(viewPos);
-        SGGeod geodZeroViewPos = SGGeod::fromGeodM(geodViewPos, 0);
-        sstate.zero_elev = toVec3f(SGVec3d::fromGeod(geodZeroViewPos));
-        SGQuatd hlOr = SGQuatd::fromLonLat(geodViewPos);
-        sstate.view_up   = toVec3f(hlOr.backTransform(-SGVec3d::e3()));
-        sstate.lon       = geodViewPos.getLongitudeRad();
-        sstate.lat       = geodViewPos.getLatitudeRad();
-        sstate.alt       = geodViewPos.getElevationM();
+        sstate.pos       = current__view->getPosition();
+        sstate.ori       = current__view->getViewOrientation();
         sstate.spin      = l->get_sun_rotation();
         sstate.gst       = globals->get_time_params()->getGst();
         sstate.sun_dist  = 50000.0 * sun_horiz_eff;
         sstate.moon_dist = 40000.0 * moon_horiz_eff;
         sstate.sun_angle = l->get_sun_angle();
 
-
-        /*
-         SG_LOG( SG_GENERAL, SG_BULK, "thesky->repaint() sky_color = "
-         << l->sky_color()[0] << " "
-         << l->sky_color()[1] << " "
-         << l->sky_color()[2] << " "
-         << l->sky_color()[3] );
-        SG_LOG( SG_GENERAL, SG_BULK, "    fog = "
-         << l->fog_color()[0] << " "
-         << l->fog_color()[1] << " "
-         << l->fog_color()[2] << " "
-         << l->fog_color()[3] );
-        SG_LOG( SG_GENERAL, SG_BULK,
-                "    sun_angle = " << l->sun_angle
-         << "    moon_angle = " << l->moon_angle );
-        */
-
         SGSkyColor scolor;
-
         scolor.sky_color   = SGVec3f(l->sky_color().data());
         scolor.adj_sky_color = SGVec3f(l->adj_sky_color().data());
         scolor.fog_color   = SGVec3f(l->adj_fog_color().data());
