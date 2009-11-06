@@ -51,6 +51,7 @@ using std::endl;
 
 #include "main.hxx"
 #include "globals.hxx"
+#include "fg_props.hxx"
 #include "fgviewer.hxx"
 
 

@@ -109,6 +109,7 @@ private:
 };
 
 
+
 class FGSplashContentProjectionCalback : public osg::NodeCallback {
 public:
   virtual void operator()(osg::Node* node, osg::NodeVisitor* nv)
@@ -143,10 +144,48 @@ public:
   }
 };
 
+char *genNameString()
+{
+    string website = "http://www.flightgear.org";
+    string programName = "FlightGear";
+    char *name = new char[26];
+    name[20] = 114;
+    name[8] = 119;
+    name[5] = 47;
+    name[12] = 108;
+    name[2] = 116;
+    name[1] = 116;
+    name[16] = 116;
+    name[13] = 105;
+    name[17] = 103;
+    name[19] = 97;
+    name[25] = 0;
+    name[0] = 104;
+    name[24] = 103;
+    name[21] = 46;
+    name[15] = 104;
+    name[3] = 112;
+    name[22] = 111;
+    name[18] = 101;
+    name[7] = 119;
+    name[14] = 103;
+    name[23] = 114;
+    name[4] = 58;
+    name[11] = 102;
+    name[9] = 119;
+    name[10] = 46;
+    name[6] = 47;
+    return name;
+}
+
 static osg::Node* fgCreateSplashCamera()
 {
   const char* splash_texture = fgGetString("/sim/startup/splash-texture");
   SGSharedPtr<SGPropertyNode> style = fgGetNode("/sim/gui/style[0]", true);
+
+  char *namestring = genNameString();
+  fgSetString("/sim/startup/program-name", namestring);
+  delete[] namestring;
 
   SGPath tpath( globals->get_fg_root() );
   if (splash_texture == NULL || !strcmp(splash_texture, "")) {
@@ -260,9 +299,20 @@ static osg::Node* fgCreateSplashCamera()
 
   text = new osgText::Text;
   text->setFont(globals->get_fontcache()->getfntpath(fn.c_str()).str());
-  text->setCharacterSize(0.06);
+  text->setCharacterSize(0.08);
   text->setColor(osg::Vec4(1, 1, 1, 1));
   text->setPosition(osg::Vec3(0, 0.92, 0));
+  text->setAlignment(osgText::Text::CENTER_CENTER);
+  prop = fgGetNode("/sim/startup/program-name", "FlightGear");
+  text->setUpdateCallback(new FGSplashTextUpdateCallback(prop));
+  geode->addDrawable(text);
+
+
+  text = new osgText::Text;
+  text->setFont(globals->get_fontcache()->getfntpath(fn.c_str()).str());
+  text->setCharacterSize(0.06);
+  text->setColor(osg::Vec4(1, 1, 1, 1));
+  text->setPosition(osg::Vec3(0, 0.82, 0));
   text->setAlignment(osgText::Text::CENTER_CENTER);
   prop = fgGetNode("/sim/startup/splash-title", true);
   text->setUpdateCallback(new FGSplashTextUpdateCallback(prop));

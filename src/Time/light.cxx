@@ -170,10 +170,10 @@ void FGLight::unbind () {
     prop->untie("/rendering/dome/sun/red");
     prop->untie("/rendering/dome/sun/green");
     prop->untie("/rendering/dome/sun/blue");
-    prop->untie("/rendering/dome/skyred");
+    prop->untie("/rendering/dome/sky/red");
     prop->untie("/rendering/dome/sky/green");
     prop->untie("/rendering/dome/sky/blue");
-    prop->untie("/rendering/dome/fogred");
+    prop->untie("/rendering/dome/fog/red");
     prop->untie("/rendering/dome/fog/green");
     prop->untie("/rendering/dome/fog/blue");
 }
@@ -200,7 +200,7 @@ void FGLight::update_sky_color () {
     // if the 4th field is 0.0, this specifies a direction ...
     // const GLfloat white[4]          = { 1.0,  1.0,  1.0,  1.0 };
     const GLfloat base_sky_color[4] = { 0.31, 0.43, 0.69, 1.0 };
-    const GLfloat base_fog_color[4] = { 0.84, 0.87, 1.0,  1.0 };
+    const GLfloat base_fog_color[4] = { 0.60, 0.70, 0.9,  1.0 };
 
     SG_LOG( SG_EVENT, SG_DEBUG, "Updating light parameters." );
 
@@ -330,9 +330,9 @@ void FGLight::update_adj_fog_color () {
     // Calculate the fog color in the direction of the sun for
     // sunrise/sunset effects.
     //
-    float s_red =   color[0]*color[0];
-    float s_green = color[1]*color[1];
-    float s_blue =  color[2];
+    float s_red =   color[0]*color[0]*color[0];
+    float s_green = color[1]*color[1]*color[1];
+    float s_blue =  color[2]*color[2];
 
     // interpolate beween the sunrise/sunset color and the color
     // at the opposite direction of this effect. Take in account
