@@ -555,7 +555,9 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
             // user provided an <id>, hopefully
             apt = FGAirport::findByIdent(s);
             if (!apt) {
-                naRuntimeError(c, "airportinfo() couldn't find airport: %s", s);
+                // return nil here, but don't raise a runtime error; this is a
+                // legitamate way to validate an ICAO code, for example in a
+                // dialog box or similar.
                 return naNil();
             }
         }
