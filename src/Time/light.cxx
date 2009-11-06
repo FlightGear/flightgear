@@ -57,8 +57,6 @@ FGLight::FGLight ()
       _sun_lat(0),
       _moon_lon(0),
       _moon_gc_lat(0),
-      _sunpos(0, 0, 0),
-      _moonpos(0, 0, 0),
       _sun_vec(0, 0, 0, 0),
       _moon_vec(0, 0, 0, 0),
       _sun_vec_inv(0, 0, 0, 0),
