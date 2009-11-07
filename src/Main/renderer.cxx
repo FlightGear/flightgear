@@ -651,7 +651,8 @@ FGRenderer::update( bool refresh_camera_settings ) {
         }
 
         SGSkyState sstate;
-        sstate.pos       = current__view->getPosition();
+        sstate.pos       = current__view->getViewPosition();
+        sstate.pos_geod  = current__view->getPosition();
         sstate.ori       = current__view->getViewOrientation();
         sstate.spin      = l->get_sun_rotation();
         sstate.gst       = globals->get_time_params()->getGst();
