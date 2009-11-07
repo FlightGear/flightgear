@@ -287,7 +287,7 @@ public:
 	inline bool GetToFlag() const { return(_headingBugTo); }
 	
 	// Initiate Direct To operation to the supplied ID.
-	void DtoInitiate(const string& id);
+	virtual void DtoInitiate(const string& id);
 	// Cancel Direct To operation
 	void DtoCancel();
 	
@@ -343,8 +343,8 @@ protected:
 
 protected:
 	// Find first of any type of waypoint by id.  (TODO - Possibly we should return multiple waypoints here).
-  GPSWaypoint* FindFirstById(const string& id) const;
-  GPSWaypoint* FindFirstByExactId(const string& id) const;
+	GPSWaypoint* FindFirstById(const string& id) const;
+	GPSWaypoint* FindFirstByExactId(const string& id) const;
    
 	FGNavRecord* FindFirstVorById(const string& id, bool &multi, bool exact = false);
 	FGNavRecord* FindFirstNDBById(const string& id, bool &multi, bool exact = false);
@@ -353,8 +353,8 @@ protected:
 	// Find the closest VOR to a position in RADIANS.
 	FGNavRecord* FindClosestVor(double lat_rad, double lon_rad);
 
-  // helper to implement the above FindFirstXXX methods
-  FGPositioned* FindTypedFirstById(const std::string& id, FGPositioned::Type ty, bool &multi, bool exact);
+	// helper to implement the above FindFirstXXX methods
+	FGPositioned* FindTypedFirstById(const std::string& id, FGPositioned::Type ty, bool &multi, bool exact);
 
 	// Position, orientation and velocity.
 	// These should be read from FG's built-in GPS logic if possible.

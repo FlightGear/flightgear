@@ -170,8 +170,13 @@ void KLN89VorPage::ClrPressed() {
 void KLN89VorPage::EntPressed() {
 	if(_entInvert) {
 		_entInvert = false;
-		_last_vor_id = _vor_id;
-		_vor_id = _save_vor_id;
+		_entInvert = false;
+		if(_kln89->_dtoReview) {
+			_kln89->DtoInitiate(_vor_id);
+		} else {
+			_last_vor_id = _vor_id;
+			_vor_id = _save_vor_id;
+		}
 	}
 }
 
