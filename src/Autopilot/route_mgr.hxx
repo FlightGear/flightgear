@@ -32,6 +32,9 @@
 class SGRoute;
 class SGPath;
 
+class FGAirport;
+typedef SGSharedPtr<FGAirport> FGAirportRef;
+
 /**
  * Top level route manager class
  * 
@@ -44,7 +47,9 @@ private:
     SGRoute* _route;
     time_t _takeoffTime;
     time_t _touchdownTime;
- 
+    FGAirportRef _departure;
+    FGAirportRef _destination;
+    
     // automatic inputs
     SGPropertyNode_ptr lon;
     SGPropertyNode_ptr lat;
@@ -123,6 +128,16 @@ private:
      * Returns true if we have.
      */
     bool checkFinished();
+    
+// tied getters and setters
+    const char* getDepartureICAO() const;
+    const char* getDepartureName() const;
+    void setDepartureICAO(const char* aIdent);
+    
+    const char* getDestinationICAO() const;
+    const char* getDestinationName() const;
+    void setDestinationICAO(const char* aIdent);
+    
 public:
 
     FGRouteMgr();

@@ -92,15 +92,18 @@ void FGRouteMgr::init() {
   magvar = fgGetNode("/environment/magnetic-variation-deg", true);
      
   departure = fgGetNode(RM "departure", true);
+  departure->tie("airport", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
+    &FGRouteMgr::getDepartureICAO, &FGRouteMgr::setDepartureICAO));
+  departure->tie("name", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
+    &FGRouteMgr::getDepartureName, NULL));
+    
 // init departure information from current location
   SGGeod pos = SGGeod::fromDegFt(lon->getDoubleValue(), lat->getDoubleValue(), alt->getDoubleValue());
-  FGAirport* apt = FGAirport::findClosest(pos, 20.0);
-  if (apt) {
-    departure->setStringValue("airport", apt->ident().c_str());
-    FGRunway* active = apt->getActiveRunwayForUsage();
+  _departure = FGAirport::findClosest(pos, 20.0);
+  if (_departure) {
+    FGRunway* active = _departure->getActiveRunwayForUsage();
     departure->setStringValue("runway", active->ident().c_str());
   } else {
-    departure->setStringValue("airport", "");
     departure->setStringValue("runway", "");
   }
   
@@ -109,6 +112,12 @@ void FGRouteMgr::init() {
 
   destination = fgGetNode(RM "destination", true);
   destination->getChild("airport", 0, true);
+  
+  destination->tie("airport", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
+    &FGRouteMgr::getDestinationICAO, &FGRouteMgr::setDestinationICAO));
+  destination->tie("name", SGRawValueMethods<FGRouteMgr, const char*>(*this, 
+    &FGRouteMgr::getDestinationName, NULL));
+    
   destination->getChild("runway", 0, true);
   destination->getChild("eta", 0, true);
   destination->getChild("touchdown-time", 0, true);
@@ -477,36 +486,34 @@ void FGRouteMgr::InputListener::valueChanged(SGPropertyNode *prop)
 
 bool FGRouteMgr::activate()
 {
-  const FGAirport* depApt = fgFindAirportID(departure->getStringValue("airport"));
-  if (depApt) {
+  if (_departure) {
     string runwayId(departure->getStringValue("runway"));
     FGRunway* runway = NULL;
-    if (depApt->hasRunwayWithIdent(runwayId)) {
-      runway = depApt->getRunwayByIdent(runwayId);
+    if (_departure->hasRunwayWithIdent(runwayId)) {
+      runway = _departure->getRunwayByIdent(runwayId);
     } else {
       SG_LOG(SG_AUTOPILOT, SG_INFO, 
         "route-manager, departure runway not found:" << runwayId);
-      runway = depApt->getActiveRunwayForUsage();
+      runway = _departure->getActiveRunwayForUsage();
     }
     
     SGWayPoint swp(runway->threshold(), 
-      depApt->ident() + "-" + runway->ident(), runway->name());
+      _departure->ident() + "-" + runway->ident(), runway->name());
     add_waypoint(swp, 0);
   }
   
-  const FGAirport* destApt = fgFindAirportID(destination->getStringValue("airport"));
-  if (destApt) {
+  if (_destination) {
     string runwayId = (destination->getStringValue("runway"));
-    if (destApt->hasRunwayWithIdent(runwayId)) {
-      FGRunway* runway = destApt->getRunwayByIdent(runwayId);
+    if (_destination->hasRunwayWithIdent(runwayId)) {
+      FGRunway* runway = _destination->getRunwayByIdent(runwayId);
       SGWayPoint swp(runway->end(), 
-        destApt->ident() + "-" + runway->ident(), runway->name());
+        _destination->ident() + "-" + runway->ident(), runway->name());
       add_waypoint(swp);
     } else {
       // quite likely, since destination runway may not be known until enroute
       // probably want a listener on the 'destination' node to allow an enroute
       // update
-      add_waypoint(SGWayPoint(destApt->geod(), destApt->ident(), destApt->name()));
+      add_waypoint(SGWayPoint(_destination->geod(), _destination->ident(), _destination->name()));
     }
   }
 
@@ -650,21 +657,17 @@ void FGRouteMgr::loadRoute()
     }
     
     string depIdent = dep->getStringValue("airport");
-    const FGAirport* depApt = fgFindAirportID(depIdent);
-    if (!depApt) {
-      throw sg_io_exception("bad route file, unknown airport:" + depIdent);
-    }
-    
-    departure->setStringValue("runway", dep->getStringValue("runway"));
-    
+    _departure = (FGAirport*) fgFindAirportID(depIdent);
+
+        
   // destination
     SGPropertyNode* dst = routeData->getChild("destination");
     if (!dst) {
       throw sg_io_exception("malformed route file, no destination node");
     }
     
-    destination->setStringValue("airport", dst->getStringValue("airport"));
-    destination->setStringValue("runay", dst->getStringValue("runway"));
+    _destination = (FGAirport*) fgFindAirportID(dst->getStringValue("airport"));
+    destination->setStringValue("runway", dst->getStringValue("runway"));
 
   // alternate
     SGPropertyNode* alt = routeData->getChild("alternate");
@@ -681,7 +684,7 @@ void FGRouteMgr::loadRoute()
   // route nodes
     _route->clear();
     SGPropertyNode_ptr _route = routeData->getChild("route", 0);
-    SGGeod lastPos(depApt->geod());
+    SGGeod lastPos = (_departure ? _departure->geod() : SGGeod());
     
     for (int i=0; i<_route->nChildren(); ++i) {
       SGPropertyNode_ptr wp = _route->getChild("wp", i);
@@ -751,3 +754,50 @@ void FGRouteMgr::parseRouteWaypoint(SGPropertyNode* aWP)
     add_waypoint(swp);
   }
 }
+
+const char* FGRouteMgr::getDepartureICAO() const
+{
+  if (!_departure) {
+    return "";
+  }
+  
+  return _departure->ident().c_str();
+}
+
+const char* FGRouteMgr::getDepartureName() const
+{
+  if (!_departure) {
+    return "";
+  }
+  
+  return _departure->name().c_str();
+}
+
+void FGRouteMgr::setDepartureICAO(const char* aIdent)
+{
+  _departure = FGAirport::findByIdent(aIdent);
+}
+
+const char* FGRouteMgr::getDestinationICAO() const
+{
+  if (!_destination) {
+    return "";
+  }
+  
+  return _destination->ident().c_str();
+}
+
+const char* FGRouteMgr::getDestinationName() const
+{
+  if (!_destination) {
+    return "";
+  }
+  
+  return _destination->name().c_str();
+}
+
+void FGRouteMgr::setDestinationICAO(const char* aIdent)
+{
+  _destination = FGAirport::findByIdent(aIdent);
+}
+    
