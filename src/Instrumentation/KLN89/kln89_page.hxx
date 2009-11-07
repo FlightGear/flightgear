@@ -69,6 +69,7 @@ public:
 	virtual const string& GetId();
 	
 	inline int GetSubPage() { return(_subPage); }
+	void SetSubPage(int n);
 	
 	inline int GetNSubPages() { return(_nSubPages); }
 	

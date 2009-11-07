@@ -643,8 +643,12 @@ void KLN89AptPage::ClrPressed() {
 void KLN89AptPage::EntPressed() {
 	if(_entInvert) {
 		_entInvert = false;
-		_last_apt_id = _apt_id;
-		_apt_id = _save_apt_id;
+		if(_kln89->_dtoReview) {
+			_kln89->DtoInitiate(_apt_id);
+		} else {
+			_last_apt_id = _apt_id;
+			_apt_id = _save_apt_id;
+		}
 	} else if(_subPage == 7 && _kln89->_mode == KLN89_MODE_CRSR && _uLinePos > 0) {
 		// We are selecting an approach
 		if(_iafDialog) {

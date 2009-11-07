@@ -717,21 +717,25 @@ double DCLGPS::GetCDIDeflection() const {
 }
 
 void DCLGPS::DtoInitiate(const string& s) {
-	//cout << "DtoInitiate, s = " << s << '\n';
 	const GPSWaypoint* wp = FindFirstByExactId(s);
 	if(wp) {
-		//cout << "Waypoint found, starting dto operation!\n";
+		// TODO - Currently we start DTO operation unconditionally, regardless of which mode we are in.
+		// In fact, the following rules apply:
+		// In LEG mode, start DTO as we currently do.
+		// In OBS mode, set the active waypoint to the requested waypoint, and then:
+		// If the KLN89 is not connected to an external HSI or CDI, set the OBS course to go direct to the waypoint.
+		// If the KLN89 *is* connected to an external HSI or CDI, it cannot set the course itself, and will display
+		// a scratchpad message with the course to set manually on the HSI/CDI.
+		// In both OBS cases, leave _dto false, since we don't need the virtual waypoint created.
 		_dto = true;
 		_activeWaypoint = *wp;
 		_fromWaypoint.lat = _gpsLat;
 		_fromWaypoint.lon = _gpsLon;
 		_fromWaypoint.type = GPS_WP_VIRT;
 		_fromWaypoint.id = "DTOWP";
-    delete wp;
+		delete wp;
 	} else {
-		//cout << "Waypoint not found, ignoring dto request\n";
-		// Should bring up the user waypoint page, but we're not implementing that yet.
-		_dto = false;	// TODO - implement this some day.
+		_dto = false;
 	}
 }
 

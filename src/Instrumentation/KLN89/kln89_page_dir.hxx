@@ -36,6 +36,7 @@ public:
 	
 	void SetId(const string& s);
 	
+	void CrsrPressed();
 	void ClrPressed();
 	void EntPressed();
 	void Knob2Left1();
@@ -48,6 +49,10 @@ private:
 	// 1 => Waypoint being entered, with a corresponding cursor position, and only the cursor position inverted.
 	// 2 => Blanks.  These can be displayed flashing when the cursor is active (eg. when CLR is pressed) and are always displayed if the cursor is turned off.
 	int _DToWpDispMode;
+	
+	// Position of the list in the mode that scans through the active flight plan.
+	// This should be initialised to point at the final waypoint of the active flight plan when we enter mode zero above.
+	int _DToWpDispIndex;
 	
 	// We need to save the mode when DTO gets pressed, since potentially this class handles page exit via. the CLR event handler
 	KLN89Mode _saveMasterMode;
