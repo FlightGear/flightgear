@@ -107,6 +107,9 @@ public:
 
 private:
 	void ToggleOBSMode();
+	
+	// Initiate Direct To operation to the supplied ID.
+	void DtoInitiate(const string& id);
 
 	//----------------------- Drawing functions which take CHARACTER units -------------------------
 	// Render string s in display field field at position x, y
@@ -282,6 +285,10 @@ private:
 	// since button events get directed to the page that was active before the
 	// message was displayed, not the message page itself.
 	bool _dispMsg;	// Set true while the message page is being displayed
+	
+	// Sometimes the datapages can be used to review a waypoint whilst the user makes a decision,
+	// and we need to remember why.
+	bool _dtoReview;	// Set true when we a reviewing a waypoint for DTO operation.
 };
 
 #endif  // _KLN89_HXX

@@ -206,6 +206,8 @@ KLN89::KLN89(RenderArea2D* instrument)
 	_entRestoreCrsr = false;
 	
 	_dispMsg = false;
+	
+	_dtoReview = false;
 
 	// Moving map stuff
 	_mapOrientation = 0;
@@ -595,6 +597,17 @@ void KLN89::MsgPressed() {
 
 void KLN89::ToggleOBSMode() {
 	DCLGPS::ToggleOBSMode();
+}
+
+void KLN89::DtoInitiate(const string& id) {
+	_dtoReview = false;
+	// Set the current page to NAV1
+	_curPage = 6;
+	_activePage = _pages[_curPage];
+	_activePage->SetSubPage(0);
+	// TODO - need to output a scratchpad message with the new course, but we don't know it yet!
+	// Call the base class to actually initiate the DTO.
+	DCLGPS::DtoInitiate(id);
 }
 
 void KLN89::DrawBar(int page) {

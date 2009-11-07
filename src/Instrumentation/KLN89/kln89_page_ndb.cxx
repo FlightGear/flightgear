@@ -158,8 +158,12 @@ void KLN89NDBPage::ClrPressed() {
 void KLN89NDBPage::EntPressed() {
 	if(_entInvert) {
 		_entInvert = false;
-		_last_ndb_id = _ndb_id;
-		_ndb_id = _save_ndb_id;
+		if(_kln89->_dtoReview) {
+			_kln89->DtoInitiate(_ndb_id);
+		} else {
+			_last_ndb_id = _ndb_id;
+			_ndb_id = _save_ndb_id;
+		}
 	}
 }
 
