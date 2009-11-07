@@ -694,14 +694,16 @@ FGPositioned::findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm
 FGPositionedRef
 FGPositioned::findNextWithPartialId(FGPositionedRef aCur, const std::string& aId, Filter* aFilter)
 {
+  std::string id(boost::to_upper_copy(aId));
+
   // It is essential to bound our search, to avoid iterating all the way to the end of the database.
   // Do this by generating a second ID with the final character incremented by 1.
   // e.g., if the partial ID is "KI", we wish to search "KIxxx" but not "KJ".
-  std::string upperBoundId = aId;
+  std::string upperBoundId = id;
   upperBoundId[upperBoundId.size()-1]++;
   NamedPositionedIndex::const_iterator upperBound = global_identIndex.lower_bound(upperBoundId);
 
-  NamedIndexRange range = global_identIndex.equal_range(aId);
+  NamedIndexRange range = global_identIndex.equal_range(id);
   while (range.first != upperBound) {
     for (; range.first != range.second; ++range.first) {
       FGPositionedRef candidate = range.first->second;
