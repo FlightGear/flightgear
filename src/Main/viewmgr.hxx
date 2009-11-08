@@ -122,7 +122,7 @@ private:
 // quaternion accessors:
     const char* getCurrentViewOrientation() const;
     const char* getCurrentViewOrOffset() const;
-    const char* getCurrentView1200() const;
+    const char* getCurrentViewFrame() const;
 
     bool stationary () const;
 
@@ -139,5 +139,11 @@ private:
 
 };
 
+// This takes the conventional aviation XYZ body system 
+// i.e.  x=forward, y=starboard, z=bottom
+// which is widely used in FGFS
+// and rotates it into the OpenGL camera system 
+// i.e. Xprime=starboard, Yprime=top, Zprime=aft.
+const SGQuatd fsb2sta(-0.5, -0.5, 0.5, 0.5);
 
 #endif // _VIEWMGR_HXX
