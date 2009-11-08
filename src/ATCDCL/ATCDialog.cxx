@@ -382,7 +382,6 @@ void FGATCDialog::FreqDisplay(string& ident) {
 	comm_list_type stations;
 	int found = current_commlist->FindByPos(a->geod(), 20.0, &stations);
 	if(found) {
-		ostringstream ostr;
 		comm_list_iterator itr = stations.begin();
 		for (n = 0; itr != stations.end(); ++itr) {
 			if(itr->ident != ident)
@@ -396,8 +395,9 @@ void FGATCDialog::FreqDisplay(string& ident) {
 			copyProperties(freq_group->getNode("group-template", true), entry);
 			entry->removeChildren("enabled", true);
 
+			ostringstream ostr;
 			ostr << itr->type;
-			entry->setStringValue("text[0]/label", ostr.str().c_str());
+			entry->setStringValue("text[0]/label", ostr.str());
 
 			char buf[8];
 			snprintf(buf, 8, "%.2f", (itr->freq / 100.0));	// Convert from KHz to MHz
@@ -406,8 +406,6 @@ void FGATCDialog::FreqDisplay(string& ident) {
 			buf[7] = '\0';
 
 			entry->setStringValue("text[1]/label", buf);
-
-			ostr.seekp(0);
 			n++;
 		}
 	}
