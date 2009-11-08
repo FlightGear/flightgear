@@ -221,8 +221,8 @@ FGViewMgr::bind ()
   fgTie(x("/sim/current-view/view_or_offset"), this,
 	&FGViewMgr::getCurrentViewOrOffset);
 
-  fgTie(x("/sim/current-view/view1200"), this,
-	&FGViewMgr::getCurrentView1200);
+  fgTie(x("/sim/current-view/view_frame"), this,
+	&FGViewMgr::getCurrentViewFrame);
 
   SGPropertyNode *n = fgGetNode("/sim/current-view", true);
   n->tie("viewer-x-m", SGRawValuePointer<double>(&abs_viewer_position[0]));
@@ -770,52 +770,88 @@ FGViewMgr::setViewAxisLat (double axis)
   axis_lat = axis;
 }
 
-static const char* fmt("%6.3f ; %6.3f %6.3f %6.3f");
-
-// current view orientation
-// This is a rotation relative to the earth-centered (ec)
-// refrence frame.
-// However, the components of this quaternion are expressed 
-// in the OpenGL camera system i.e. x-right, y-up, z-back.
-const char* FGViewMgr::getCurrentViewOrientation() const{
-  return str(boost::format(fmt)
-   % current_view_orientation.w()
-   % current_view_orientation.x()
-   % current_view_orientation.y()
-   % current_view_orientation.z() ).c_str();
+// Convert a quat to a string.
+// We assume the quat is being used as a rotor, so we
+// coerce it to standard rotor form, making the scalar
+// part non-negative, to eliminate double coverage of
+// the rotation group.
+// The format is "w ; x y z" with a semicolon separating
+// the scalar part from the bivector components.
+const char* format_rotor(const SGQuatd _quat){
+  SGQuatd quat(_quat);
+  if (quat.w() < 0.) quat  *= -1.;  // remove double coverage
+  return str(boost::format("%6.3f ; %6.3f %6.3f %6.3f")
+   % quat.w()
+   % quat.x()
+   % quat.y()
+   % quat.z() ).c_str();
 }
 
-// This rotation takes you from the 12:00 direction 
-// i.e. body attitude
-// to whatever the current view direction is.  
+// reference frame orientation.
+// This is the view orientation you get when you have no
+// view offset, i.e. the offset operator is the identity.
+// 
+// For example, in the familiar "cockpit lookfrom" view,
+// the reference frame is equal to the aircraft attitude,
+// i.e. it is the view looking towards 12:00 straight ahead.
+//
+// FIXME:  Somebody needs to figure out what is the reference
+// frame view for the other view modes.
+// 
+// Conceptually, this quat represents a rotation relative
+// to the ECEF reference orientation, as described at
+//    http://www.av8n.com/physics/coords.htm#sec-orientation
+//
+// See the NOTE concerning reference orientations, below.
+//
+// The components of this quat are expressed in 
+// the conventional aviation basis set,
+// i.e.  x=forward, y=starboard, z=bottom
+const char* FGViewMgr::getCurrentViewFrame() const{
+  return format_rotor(current_view_orientation * conj(fsb2sta) 
+     * conj(current_view_or_offset) );
+}
+
+// view offset.
+// This rotation takes you from the aforementioned
+// reference frame view orientation to whatever
+// actual current view orientation is.
+//
 // The components of this quaternion are expressed in 
-// the XYZ body frame.
+// the conventional aviation basis set,
+// i.e.  x=forward, y=starboard, z=bottom
 const char* FGViewMgr::getCurrentViewOrOffset() const{
-  return str(boost::format(fmt)
-   % current_view_or_offset.w()
-   % current_view_or_offset.x()
-   % current_view_or_offset.y()
-   % current_view_or_offset.z() ).c_str();
+   return format_rotor(current_view_or_offset);
 }
 
-// This rotates the conventional aviation XYZ body system 
-// i.e.  x-forward, y-starboard, z-bottom
-// to the OpenGL camera system 
-// i.e. x-right, y-up, z-back.
-const SGQuatd q(-0.5, -0.5, 0.5, 0.5);
-
-// The current attitude of the aircraft, 
-// i.e. the 12:00 direction.
-// The components of this quaternion are expressed in 
-// the GL camera frame.
-const char* FGViewMgr::getCurrentView1200() const{
-  SGQuatd view1200 = current_view_orientation
-        * conj(q) * conj(current_view_or_offset) * q; 
-  return str(boost::format(fmt)
-   % view1200.w()
-   % view1200.x()
-   % view1200.y()
-   % view1200.z() ).c_str();
+// current view orientation.
+// This is a rotation relative to the earth-centered (ec)
+// reference frame.
+// 
+// NOTE: Here we remove a factor of fsb2sta so that 
+// the components of this quat are displayed using the 
+// conventional ECEF basis set.  This is *not* the way
+// the view orientation is stored in the views[] array,
+// but is easier for most people to understand.
+// If we did not remove this factor of fsb2sta here and
+// in getCurrentViewFrame, that would be equivalent to
+// the following peculiar reference orientation:
+// Suppose you are over the Gulf of Guinea, at (lat,lon) = (0,0).
+// Then the reference frame orientation can be achieved via:
+//    -- The aircraft X-axis (nose) headed south.
+//    -- The aircraft Y-axis (starboard wingtip) pointing up.
+//    -- The aircraft Z-axis (belly) pointing west.
+// To say the same thing in other words, and perhaps more to the
+// point:  If we use the OpenGL camera orientation conventions, 
+// i.e. Xprime=starboard, Yprime=top, Zprime=aft, then the
+// aforementioned peculiar reference orientation at (lat,lon)
+//  = (0,0) can be described as:
+//    -- aircraft Xprime axis (starboard) pointed up
+//    -- aircraft Yprime axis (top) pointed east
+//    -- aircraft Zprime axis (aft) pointed north
+// meaning the OpenGL axes are aligned with the ECEF axes.
+const char* FGViewMgr::getCurrentViewOrientation() const{
+  return format_rotor(current_view_orientation * conj(fsb2sta));
 }
 
 void
