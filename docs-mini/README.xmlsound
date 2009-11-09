@@ -128,6 +128,17 @@ Configuration description:
 
         in-transit:     the sample plays continuously,
                         while the property is changing its value.
+
+  <type>
+        This defines the type os this sample:
+
+        fx:             this is the default type and doesn't need to be defined.
+
+        avionics:       sounds set to this time don't have a position and
+                        orientation but are treated as if it's mounted to
+                        the aircraft panel. it's up to the user to define
+                        if it can always be heard or only when in cockpit
+                        view.
    
    <volume> / <pitch>
         Volume or Pitch definition. Currently there may be up to 5
