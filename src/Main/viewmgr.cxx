@@ -808,7 +808,7 @@ const char* format_rotor(const SGQuatd _quat){
 // the conventional aviation basis set,
 // i.e.  x=forward, y=starboard, z=bottom
 const char* FGViewMgr::getCurrentViewFrame() const{
-  return format_rotor(current_view_orientation * conj(fsb2sta) 
+  return format_rotor(current_view_orientation * conj(fsb2sta()) 
      * conj(current_view_or_offset) );
 }
 
@@ -832,7 +832,7 @@ const char* FGViewMgr::getCurrentViewOrOffset() const{
 // the components of this quat are displayed using the 
 // conventional ECEF basis set.  This is *not* the way
 // the view orientation is stored in the views[] array,
-// but is easier for most people to understand.
+// but is easier for non-graphics hackers to understand.
 // If we did not remove this factor of fsb2sta here and
 // in getCurrentViewFrame, that would be equivalent to
 // the following peculiar reference orientation:
@@ -851,7 +851,7 @@ const char* FGViewMgr::getCurrentViewOrOffset() const{
 //    -- aircraft Zprime axis (aft) pointed north
 // meaning the OpenGL axes are aligned with the ECEF axes.
 const char* FGViewMgr::getCurrentViewOrientation() const{
-  return format_rotor(current_view_orientation * conj(fsb2sta));
+  return format_rotor(current_view_orientation * conj(fsb2sta()));
 }
 
 void

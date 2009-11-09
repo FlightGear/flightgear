@@ -144,6 +144,9 @@ private:
 // which is widely used in FGFS
 // and rotates it into the OpenGL camera system 
 // i.e. Xprime=starboard, Yprime=top, Zprime=aft.
-const SGQuatd fsb2sta(-0.5, -0.5, 0.5, 0.5);
+inline const SGQuatd fsb2sta()
+{
+    return SGQuatd(-0.5, -0.5, 0.5, 0.5);
+}
 
 #endif // _VIEWMGR_HXX
