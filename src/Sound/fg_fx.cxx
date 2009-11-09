@@ -47,6 +47,7 @@ FGFX::FGFX ( SGSoundMgr *smgr, const string &refname ) :
     SGSampleGroup::_smgr = smgr;
     SGSampleGroup::_refname = refname;
     SGSampleGroup::_smgr->add(this, refname);
+    _avionics = _smgr->find("avionics", true);
 }
 
 
@@ -91,7 +92,7 @@ FGFX::init()
   
             try {
                 sound->init(globals->get_props(), node->getChild(i), this,
-                            globals->get_fg_root());
+                            _avionics, globals->get_fg_root());
   
                 _sound.push_back(sound);
             } catch ( sg_exception &e ) {
