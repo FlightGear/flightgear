@@ -57,6 +57,7 @@ public:
 
 private:
 
+    SGSharedPtr<SGSampleGroup> _avionics;
     std::vector<SGXmlSound *> _sound;
 
     bool last_pause;
