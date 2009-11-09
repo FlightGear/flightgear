@@ -134,7 +134,7 @@ Configuration description:
 
         fx:             this is the default type and doesn't need to be defined.
 
-        avionics:       sounds set to this time don't have a position and
+        avionics:       sounds set to this type don't have a position and
                         orientation but are treated as if it's mounted to
                         the aircraft panel. it's up to the user to define
                         if it can always be heard or only when in cockpit
