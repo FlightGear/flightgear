@@ -132,16 +132,10 @@ FGAircraftModel::update (double dt)
                                                 _roll->getDoubleValue());
   _fx->set_orientation( orient );
  
-  SGVec3d vel = SGVec3d( _speed_n->getFloatValue(),
-                         _speed_e->getFloatValue(),
-                         _speed_d->getFloatValue() );
-  if ( vel[0] || vel[1] || vel[2] ) {
-    SGQuatd hlOr = SGQuatd::fromLonLat(position);
-    _velocity = 100.0 * toVec3f( hlOr.rotateBack( vel * SG_FEET_TO_METER ) );
-  }
-  else
-      _velocity = SGVec3f::zeros();
-  _fx->set_velocity( _velocity );
+  SGVec3d vel = SGVec3d( _speed_n->getDoubleValue(),
+                         _speed_e->getDoubleValue(),
+                         _speed_d->getDoubleValue() );
+  _fx->set_velocity( vel );
 }
 
 
