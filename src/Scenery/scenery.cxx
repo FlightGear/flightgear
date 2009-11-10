@@ -33,9 +33,6 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
-#include <simgear/scene/material/Effect.hxx>
-#include <simgear/scene/material/EffectGeode.hxx>
-#include <simgear/scene/material/Technique.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
@@ -252,48 +249,4 @@ SceneryPager* FGScenery::getPagerSingleton()
     static osg::ref_ptr<SceneryPager> pager = new SceneryPager;
     return pager.get();
 }
-
-// Effect initialization stuff
-
-class PropertyExpression : public SGExpression<bool>
-{
-public:
-    PropertyExpression(SGPropertyNode* pnode) : _pnode(pnode) {}
-    
-    void eval(bool& value, const expression::Binding*) const
-    {
-        value = _pnode->getValue<bool>();
-    }
-protected:
-    SGPropertyNode_ptr _pnode;
-};
-
-class EffectPropertyListener : public SGPropertyChangeListener
-{
-public:
-    EffectPropertyListener(Technique* tniq) : _tniq(tniq) {}
-    
-    void valueChanged(SGPropertyNode* node)
-    {
-        _tniq->refreshValidity();
-    }
-protected:
-    osg::ref_ptr<Technique> _tniq;
-};
-
-Expression* propertyExpressionParser(const SGPropertyNode* exp,
-                                     expression::Parser* parser)
-{
-    SGPropertyNode_ptr pnode = fgGetNode(exp->getStringValue(), true);
-    PropertyExpression* pexp = new PropertyExpression(pnode);
-    TechniquePredParser* predParser
-        = dynamic_cast<TechniquePredParser*>(parser);
-    if (predParser)
-        pnode->addChangeListener(new EffectPropertyListener(predParser
-                                                            ->getTechnique()));
-    return pexp;
-}
-
-expression::ExpParserRegistrar propertyRegistrar("property",
-                                                 propertyExpressionParser);
 
