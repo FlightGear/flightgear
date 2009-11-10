@@ -42,6 +42,7 @@
 
 #include <stdlib.h>
 #include <time.h>
+#include <cstring>
 #include <iostream>
 #include <fstream>
 
@@ -70,6 +71,7 @@
 #include "TrafficMgr.hxx"
 
 using std::sort;
+using std::strcmp;
  
 /******************************************************************************
  * TrafficManager
@@ -376,62 +378,60 @@ void  FGTrafficManager::startElement (const char * name, const XMLAttributes &at
 
 void  FGTrafficManager::endElement (const char * name) {
   //cout << "End element " << name << endl;
-  string element(name);
-  string value = elementValueStack.back();
-  elementValueStack.pop_back();
+  const string& value = elementValueStack.back();
 
-  if (element == string("model"))
+  if (!strcmp(name, "model"))
     mdl = value;
-  else if (element == string("livery"))
+  else if (!strcmp(name, "livery"))
     livery = value;
-  else if (element == string("home-port"))
+  else if (!strcmp(name, "home-port"))
     homePort = value;
-  else if (element == string("registration"))
+  else if (!strcmp(name, "registration"))
     registration = value;
-  else if (element == string("airline"))
+  else if (!strcmp(name, "airline"))
     airline = value;
-  else if (element == string("actype"))
+  else if (!strcmp(name, "actype"))
     acType = value;
-  else if (element == string("required-aircraft"))
+  else if (!strcmp(name, "required-aircraft"))
     requiredAircraft = value;
-  else if (element == string("flighttype"))
+  else if (!strcmp(name, "flighttype"))
     flighttype = value;
-  else if (element == string("radius"))
+  else if (!strcmp(name, "radius"))
     radius = atoi(value.c_str());
-  else if (element == string("offset"))
+  else if (!strcmp(name, "offset"))
     offset = atoi(value.c_str());
-  else if (element == string("performance-class"))
+  else if (!strcmp(name, "performance-class"))
     m_class = value;
-  else if (element == string("heavy"))
+  else if (!strcmp(name, "heavy"))
     {
       if(value == string("true"))
 	heavy = true;
       else
 	heavy = false;
     }
-  else if (element == string("callsign"))
+  else if (!strcmp(name, "callsign"))
     callsign = value;
-  else if (element == string("fltrules"))
+  else if (!strcmp(name, "fltrules"))
     fltrules = value;
-  else if (element == string("port"))
+  else if (!strcmp(name, "port"))
     port = value;
-  else if (element == string("time"))
+  else if (!strcmp(name, "time"))
     timeString = value;
-  else if (element == string("departure"))
+  else if (!strcmp(name, "departure"))
     {
       departurePort = port;
       departureTime = timeString;
     }
-  else if (element == string("cruise-alt"))
+  else if (!strcmp(name, "cruise-alt"))
     cruiseAlt = atoi(value.c_str());
-  else if (element == string("arrival"))
+  else if (!strcmp(name, "arrival"))
     {
       arrivalPort = port;
       arrivalTime = timeString;
     }
-  else if (element == string("repeat"))
+  else if (!strcmp(name, "repeat"))
     repeat = value;
-  else if (element == string("flight"))
+  else if (!strcmp(name, "flight"))
     {
       // We have loaded and parsed all the information belonging to this flight
       // so we temporarily store it. 
@@ -477,7 +477,7 @@ void  FGTrafficManager::endElement (const char * name) {
                                                                  requiredAircraft));
       requiredAircraft = "";
   }
-  else if (element == string("aircraft"))
+  else if (!strcmp(name, "aircraft"))
     {
       int proportion = (int) (fgGetDouble("/sim/traffic-manager/proportion") * 100);
       int randval = rand() & 100;
@@ -533,6 +533,7 @@ void  FGTrafficManager::endElement (const char * name) {
 	      << score);
       score = 0;
     }
+  elementValueStack.pop_back();
 }
 
 void  FGTrafficManager::data (const char * s, int len) {
