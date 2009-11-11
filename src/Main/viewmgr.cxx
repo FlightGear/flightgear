@@ -28,7 +28,6 @@
 #include "viewmgr.hxx"
 
 #include <string.h>		// strcmp
-#include <boost/format.hpp>
 
 #include <simgear/compiler.h>
 #include <simgear/sound/soundmgr_openal.hxx>
@@ -163,9 +162,6 @@ typedef double (FGViewMgr::*double_getter)() const;
 void
 FGViewMgr::bind ()
 {
-// for automatic untying:
-#define x(str) ((void)tied_props.push_back(str), str)
-
   // these are bound to the current view properties
   fgTie("/sim/current-view/heading-offset-deg", this,
 	&FGViewMgr::getViewHeadingOffset_deg,
@@ -216,18 +212,40 @@ FGViewMgr::bind ()
 	&FGViewMgr::getNear_m, &FGViewMgr::setNear_m);
   fgSetArchivable("/sim/current-view/ground-level-nearplane-m");
 
-  fgTie(x("/sim/current-view/view_orientation"), this,
-	&FGViewMgr::getCurrentViewOrientation);
-  fgTie(x("/sim/current-view/view_or_offset"), this,
-	&FGViewMgr::getCurrentViewOrOffset);
-
-  fgTie(x("/sim/current-view/view_frame"), this,
-	&FGViewMgr::getCurrentViewFrame);
-
   SGPropertyNode *n = fgGetNode("/sim/current-view", true);
   n->tie("viewer-x-m", SGRawValuePointer<double>(&abs_viewer_position[0]));
   n->tie("viewer-y-m", SGRawValuePointer<double>(&abs_viewer_position[1]));
   n->tie("viewer-z-m", SGRawValuePointer<double>(&abs_viewer_position[2]));
+
+// for automatic untying:
+#define x(str) ((void)tied_props.push_back(str), str)
+
+  fgTie(x("/sim/current-view/debug/orientation-w"), this,
+	&FGViewMgr::getCurrentViewOrientation_w);
+  fgTie(x("/sim/current-view/debug/orientation-x"), this,
+        &FGViewMgr::getCurrentViewOrientation_x);
+  fgTie(x("/sim/current-view/debug/orientation-y"), this,
+        &FGViewMgr::getCurrentViewOrientation_y);
+  fgTie(x("/sim/current-view/debug/orientation-z"), this,
+        &FGViewMgr::getCurrentViewOrientation_z);
+
+  fgTie(x("/sim/current-view/debug/orientation_offset-w"), this,
+	&FGViewMgr::getCurrentViewOrOffset_w);
+  fgTie(x("/sim/current-view/debug/orientation_offset-x"), this,
+        &FGViewMgr::getCurrentViewOrOffset_x);
+  fgTie(x("/sim/current-view/debug/orientation_offset-y"), this,
+        &FGViewMgr::getCurrentViewOrOffset_y);
+  fgTie(x("/sim/current-view/debug/orientation_offset-z"), this,
+        &FGViewMgr::getCurrentViewOrOffset_z);
+
+  fgTie(x("/sim/current-view/debug/frame-w"), this,
+	&FGViewMgr::getCurrentViewFrame_w);
+  fgTie(x("/sim/current-view/debug/frame-x"), this,
+        &FGViewMgr::getCurrentViewFrame_x);
+  fgTie(x("/sim/current-view/debug/frame-y"), this,
+        &FGViewMgr::getCurrentViewFrame_y);
+  fgTie(x("/sim/current-view/debug/frame-z"), this,
+        &FGViewMgr::getCurrentViewFrame_z);
 
 #undef x
 }
@@ -770,23 +788,6 @@ FGViewMgr::setViewAxisLat (double axis)
   axis_lat = axis;
 }
 
-// Convert a quat to a string.
-// We assume the quat is being used as a rotor, so we
-// coerce it to standard rotor form, making the scalar
-// part non-negative, to eliminate double coverage of
-// the rotation group.
-// The format is "w ; x y z" with a semicolon separating
-// the scalar part from the bivector components.
-const char* format_rotor(const SGQuatd _quat){
-  SGQuatd quat(_quat);
-  if (quat.w() < 0.) quat  *= -1.;  // remove double coverage
-  return str(boost::format("%6.3f ; %6.3f %6.3f %6.3f")
-   % quat.w()
-   % quat.x()
-   % quat.y()
-   % quat.z() ).c_str();
-}
-
 // reference frame orientation.
 // This is the view orientation you get when you have no
 // view offset, i.e. the offset operator is the identity.
@@ -807,10 +808,19 @@ const char* format_rotor(const SGQuatd _quat){
 // The components of this quat are expressed in 
 // the conventional aviation basis set,
 // i.e.  x=forward, y=starboard, z=bottom
-const char* FGViewMgr::getCurrentViewFrame() const{
-  return format_rotor(current_view_orientation * conj(fsb2sta()) 
-     * conj(current_view_or_offset) );
+double FGViewMgr::getCurrentViewFrame_w() const{
+  return ((current_view_orientation*conj(fsb2sta())*conj(current_view_or_offset))).w();
 }
+double FGViewMgr::getCurrentViewFrame_x() const{
+  return ((current_view_orientation*conj(fsb2sta())*conj(current_view_or_offset))).x();
+}
+double FGViewMgr::getCurrentViewFrame_y() const{
+  return ((current_view_orientation*conj(fsb2sta())*conj(current_view_or_offset))).y();
+}
+double FGViewMgr::getCurrentViewFrame_z() const{
+  return ((current_view_orientation*conj(fsb2sta())*conj(current_view_or_offset))).z();
+}
+
 
 // view offset.
 // This rotation takes you from the aforementioned
@@ -820,9 +830,19 @@ const char* FGViewMgr::getCurrentViewFrame() const{
 // The components of this quaternion are expressed in 
 // the conventional aviation basis set,
 // i.e.  x=forward, y=starboard, z=bottom
-const char* FGViewMgr::getCurrentViewOrOffset() const{
-   return format_rotor(current_view_or_offset);
+double FGViewMgr::getCurrentViewOrOffset_w() const{
+   return current_view_or_offset.w();
 }
+double FGViewMgr::getCurrentViewOrOffset_x() const{
+   return current_view_or_offset.x();
+}
+double FGViewMgr::getCurrentViewOrOffset_y() const{
+   return current_view_or_offset.y();
+}
+double FGViewMgr::getCurrentViewOrOffset_z() const{
+   return current_view_or_offset.z();
+}
+
 
 // current view orientation.
 // This is a rotation relative to the earth-centered (ec)
@@ -850,8 +870,17 @@ const char* FGViewMgr::getCurrentViewOrOffset() const{
 //    -- aircraft Yprime axis (top) pointed east
 //    -- aircraft Zprime axis (aft) pointed north
 // meaning the OpenGL axes are aligned with the ECEF axes.
-const char* FGViewMgr::getCurrentViewOrientation() const{
-  return format_rotor(current_view_orientation * conj(fsb2sta()));
+double FGViewMgr::getCurrentViewOrientation_w() const{
+  return (current_view_orientation * conj(fsb2sta())).w();
+}
+double FGViewMgr::getCurrentViewOrientation_x() const{
+  return (current_view_orientation * conj(fsb2sta())).x();
+}
+double FGViewMgr::getCurrentViewOrientation_y() const{
+  return (current_view_orientation * conj(fsb2sta())).y();
+}
+double FGViewMgr::getCurrentViewOrientation_z() const{
+  return (current_view_orientation * conj(fsb2sta())).z();
 }
 
 void
