@@ -119,10 +119,20 @@ private:
     void setViewAxisLat (double axis);
     int getView () const;
     void setView (int newview);
-// quaternion accessors:
-    const char* getCurrentViewOrientation() const;
-    const char* getCurrentViewOrOffset() const;
-    const char* getCurrentViewFrame() const;
+
+// quaternion accessors, for debugging:
+    double getCurrentViewOrientation_w() const;
+    double getCurrentViewOrientation_x() const;
+    double getCurrentViewOrientation_y() const;
+    double getCurrentViewOrientation_z() const;
+    double getCurrentViewOrOffset_w() const;
+    double getCurrentViewOrOffset_x() const;
+    double getCurrentViewOrOffset_y() const;
+    double getCurrentViewOrOffset_z() const;
+    double getCurrentViewFrame_w() const;
+    double getCurrentViewFrame_x() const;
+    double getCurrentViewFrame_y() const;
+    double getCurrentViewFrame_z() const;
 
     bool stationary () const;
 
