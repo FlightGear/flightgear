@@ -119,6 +119,7 @@ public:
     //   orientation rotations listed below.  This has the effect of the 
     //   eye moving around and "looking at" the object (model) from 
     //   different angles.
+    virtual SGVec3d getOffset_m () const { return _offset_m; }
     virtual double getXOffset_m () const { return _offset_m.x(); }
     virtual double getYOffset_m () const { return _offset_m.y(); }
     virtual double getZOffset_m () const { return _offset_m.z(); }
