@@ -580,6 +580,8 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
   if (!_gs || !inrange_node->getBoolValue()) {
     gs_dist_node->setDoubleValue( 0.0 );
     gs_inrange_node->setBoolValue(false);
+    _gsNeedleDeflection = 0.0;
+    _gsNeedleDeflectionNorm = 0.0;
     return;
   }
   
@@ -589,6 +591,8 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
   gs_inrange_node->setBoolValue(gsInRange);
         
   if (!gsInRange) {
+    _gsNeedleDeflection = 0.0;
+    _gsNeedleDeflectionNorm = 0.0;
     return;
   }
   
