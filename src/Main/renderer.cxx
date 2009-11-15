@@ -47,6 +47,7 @@
 #include <osg/Notify>
 #include <osg/PolygonMode>
 #include <osg/PolygonOffset>
+#include <osg/Program>
 #include <osg/Version>
 #include <osg/TexEnv>
 
@@ -552,6 +553,10 @@ FGRenderer::init( void )
     // as the rest of the scene. This may not be true in practice.
     mRealRoot->addChild(thesky->getCloudRoot());
     mRealRoot->addChild(FGCreateRedoutNode());
+    // Attach empty program to the scene root so that shader programs
+    // don't leak into state sets (effects) that shouldn't have one.
+    stateSet = mRealRoot->getOrCreateStateSet();
+    stateSet->setAttributeAndModes(new osg::Program, osg::StateAttribute::ON);
 }
 
 
