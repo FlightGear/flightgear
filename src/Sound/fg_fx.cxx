@@ -48,6 +48,7 @@ FGFX::FGFX ( SGSoundMgr *smgr, const string &refname ) :
     SGSampleGroup::_refname = refname;
     SGSampleGroup::_smgr->add(this, refname);
     _avionics = _smgr->find("avionics", true);
+    _avionics->tie_to_listener();
 }
 
 
