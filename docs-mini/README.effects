@@ -1,3 +1,6 @@
+Effects
+-------
+
 Effects describe the graphical appearance of 3d objects and scenery in
 FlightGear. The main motivation for effects is to support OpenGL
 shaders and to provide different implementations for graphics hardware
@@ -10,13 +13,16 @@ values. Effects are read from files with a ".eff" extension or can be
 created on-the-fly by FlightGear at runtime.  An effect consists of a
 "parameters" section followed by "technique" descriptions.  The
 "parameters" section is a tree of values that describe, abstractly,
-the graphical appearence of objects that use the effect. Techniques
+the graphical characteristics of objects that use the effect. Techniques
 refer to these parameters and use them to set OpenGL state or to set
-parameters for shader programs.
+parameters for shader programs. The names of properties in the
+parameter section can be whatever the effects author chooses, although
+some standard parameters  are set by FlightGear itself. On the other
+hand, the properties in the techniques section are all defined by the
+FlightGear. 
 
-Parameters can be declared to have a dynamic variance, which means
-that if their value is changed the corresponding value in the
-technique will be changed too. [TO BE IMPLEMENTED]
+Techniques
+----------
 
 A technique can contain a predicate that describes the OpenGL
 functionality required to support the technique. The first
@@ -29,22 +35,131 @@ and, or, equal, less, less-equal
 glversion - returns the version number of OpenGL
 extension-supported - returns true if an OpenGL extension is supported
 property - returns the boolean value of a property
+shader-language - returns the version of GLSL supported, or 0 if there is none.
+
+The proper way to test whether to enable a shader-based technique is:
+    <predicate>
+      <and>
+        <property>/sim/rendering/shader-effects</property>
+        <less-equal>
+          <value type="float">1.0</value>
+          <shader-language/>
+        </less-equal>
+      </and>
+    </predicate>
+
 
 A technique can consist of several passes. A pass is basically an Open
 Scene Graph StateSet. Ultimately all OpenGL and OSG modes and state
-attributes  will be setable in a technique. The following are
-are currently implemented:
-lighting - true, false
-shade-model - flat, smooth
+attributes  will be accessable in techniques. State attributes -- that
+is, technique properties that have children and are not just boolean
+modes -- have an <active> parameter which enables or disables the
+attribute. In this way a technique can declare parameters it needs,
+but not enable the attribute at all if it is not needed; the decision
+can be based on a parameter in the parameters section of the
+effect. For example, effects that support transparent and opaque
+geometry could have as part of a technique:
+
+      <blend>
+        <active><use>blend/active</use></active>
+        <source>src-alpha</source>
+        <destination>one-minus-src-alpha</destination>
+      </blend>
+
+So if the blend/active parameter is true blending will be activated
+using the usual blending equation; otherwise blending is disabled.
+
+Values of Technique Attributes
+------------------------------
+
+Values are assigned to technique properties in several ways:
+
+	* They can appear directly in the techniques section as a
+        constant. For example:
+      <uniform>
+        <name>ColorsTex</name>
+        <type>sampler-1d</type>
+        <value type="int">2</value>
+      </uniform>
+        * The name of a property in the parameters section can be
+        referenced using a "use" clause. For example, in the technique
+        section: 
+      <material>
+        <ambient><use>material/ambient</use></ambient>
+      </material>
+        Then, in the parameters section of the effect:
+  <parameters>
+    <material>
+      <ambient type="vec4d">
+        0.2 .2 0.2 1.0
+      </ambient>
+    </material>
+  </parameters>
+
+        It's worth pointing out that the "material" property in a
+        technique specifies part of OpenGL's state, whereas "material"
+        in the parameters section is just a name, part of a
+        hierarchical namespace.
+
+        * A property in the parameters section doesn't need to contain
+        a constant value; it can also contain a "use" property. Here
+        the value of the use clause is the name of a node in an
+        external property tree which will be used as the source of a
+        value. If the name begins with '/', the node is in
+        FlightGear's global property tree; otherwise, it is in a local
+        property tree, usually belonging to a model [NOT IMPLEMENTED
+        YET]. For example:
+  <parameters>
+    <chrome-light><use>/rendering/scene/chrome-light</use></chrome-light>
+  </parameters>
+        The type is determined by what is expected by the technique
+        attribute that will ultimately receive the value. [There is
+        no way to get vector values out of the main property system
+        yet; this will be fixed shortly.] Values that are declared
+        this way are dynamically updated if the property node
+        changes.
+
+OpenGL Attributes
+-----------------
+
+The following attributes are currently implemented in techiques:
+alpha-test - children: active, comparison, reference
+         Valid values for comparision:
+             never, less, equal, lequal, greater, notequal, gequal,
+             always 
+
+blend - children: active, source, destination, source-rgb,
+         source-alpha, destination-rgb, destination-alpha
+         Each operand can have the following values:
+             dst-alpha, dst-color, one, one-minus-dst-alpha,
+             one-minus-dst-color, one-minus-src-alpha,
+             one-minus-src-color, src-alpha, src-alpha-saturate,
+             src-color, constant-color, one-minus-constant-color,
+             constant-alpha, one-minus-constant-alpha, zero
+
 cull-face - front, back, front-back
+
+lighting - true, false
+
+material - children: active, ambient, ambient-front, ambient-back, diffuse,
+         diffuse-front, diffuse-back, specular, specular-front,
+         specular-back, emissive, emissive-front, emissive-back, shininess,
+         shininess-front, shininess-back, color-mode
+
+polygon-mode - children: front, back
+        Valid values:
+              fill, line, point
+
+program
+        vertex-shader
+        fragment-shader
+
+render-bin - (OSG) children: bin-number, bin-name
+
 rendering-hint - (OSG) opaque, transparent
-render-bin - children: bin-number, bin-name
-material - children: ambient, ambient-front, ambient-back, diffuse,
-diffuse-front, diffuse-back, specular, specular-front,
-specular-back, emissive, emissive-front, emissive-back, shininess,
-shininess-front, shininess-back, color-mode
-blend - true, false
-alpha-test - true, false
+
+shade-model - flat, smooth
+
 texture-unit - has several child properties:
 	unit - The number of an OpenGL texture unit
         type - This is either an OpenGL texture type or the name of a
@@ -62,16 +177,17 @@ texture-unit - has several child properties:
         environment
                 mode
                 color
-program
-        vertex-shader
-        fragment-shader
 uniform
         name
         type - float, float-vec3, float-vec4, sampler-1d, sampler-2d,
         sampler-3d
-polygon-mode
-front - fill, line, point
-back - fill, line, point
+
+vertex-program-two-side - true, false
+
+vertex-program-point-size - true, false
+
+Inheritance
+-----------
 
 One feature not fully illustrated in the sample below is that
 effects can inherit from each other. The parent effect is listed in
@@ -83,164 +199,64 @@ precedence.  This means that effects that inherit from the example
 effect below could be very short, listing just new
 parameters and adding nothing to the techniques section;
 alternatively, a technique could be altered or customized in a
-child, listing (for example) a different shader program. Terrain
-materials work in this way: for each material type in materials.xml
-an effect is created that inherits from a single default terrain
-effect. The parameters section of the effect is filled in using the
-ambient, diffuse, specular, emissive, shininess, and transparent
-fields of the material. Seperate effects are created for each texture
+child, listing (for example) a different shader program. An example
+showing inheritance Effects/crop.eff, which inherits some if its
+values from Effects/terrain-default.eff.
+
+FlightGear directly uses effects inheritance to assign effects to 3D
+models and terrain. As described below, at runtime small effects are
+created that contain material and texture values in a "parameters"
+section. These effects inherit from another effect which references
+those parameters in its "techniques" section. The derived effect
+overrides any default values that might be in the base effect's
+parameters section.
+
+Default Effects in Terrain Materials and Models
+---------------------------------------
+
+Effects for terrain work in this way: for each material type in
+materials.xml an effect is created that inherits from a single default
+terrain effect, Effects/terrain-default.eff. The parameters section of
+the effect is filled in using the ambient, diffuse, specular,
+emissive, shininess, and transparent fields of the material. The
+parameters image, filter, wrap-s, and wrap-t are also initialized from
+the material xml. Seperate effects are created for each texture
 variant of a material.
+
+Model effects are created by walking the OpenSceneGraph scene graph
+for a model and replacing nodes (osg::Geode) that have state sets with
+node that uses an effect instead. Again, a small effect is created
+with parameters extracted from OSG objects; this effect inherits, by
+default, from Effects/model-default.eff. A larger set of parameters is
+created for model effects than for terrain because there is more
+variation possible from the OSG model loaders than from the terrain
+system. The parameters created are: 
+
+	* material active, ambient, diffuse, specular, emissive,
+        shininess, color mode
+        * blend active, source, destination
+        * shade-model
+        * cull-face
+        * rendering-hint
+        * texture type, image, filter, wrap-s, wrap-t
+
+Specifying Custom Effects
+-------------------------
+
+You can specify the effects that will be used by FlightGear as the
+base effect when it creates terrain and model effects.
+
+In the terrain materials.xml, an "effect" property specifies the name
+of the model to use.
+
+In model .xml files, A richer syntax is supported. [TO BE DETERMINED]
 
 Material animations will be implemented by creating a new effect
 that inherits from one in a model, overriding the parameters that
 will be animated.
 
+Examples
+--------
 
-<PropertyList>
-  <effect>
-    <name>city</name>
-    <!-- <inherits-from>another-effect</inherits-from> -->
-    <parameters>
-      <material>
-        <ambient type="vec4d">
-          0.0 0.0 0.0 1.0
-        </ambient>
-        <diffuse type="vec4d">
-          .5 .5 .5 1.0
-        </diffuse>
-        <specular type="vec4d">
-          0.3 0.3 0.3 1.0
-        </specular>
-        <emissive type="vec4d" variance="dynamic">
-          0.0 0.0 0.0 1.0
-        </emissive>
-        <shininess>1.2</shininess>
-      </material>
-      <texture n="0">
-        <image>city.png</image>
-        <filter>linear-mipmap-linear</filter>
-        <!-- also repeat -->
-        <wrap-s>clamp</wrap-s>
-        <wrap-t>clamp-to-edge</wrap-t>
-        <!--
-           <wrap-r>clamp-to-border</wrap-r>
-           -->
-        <!-- float, signed-integer, integer -->
-        <internal-format>normalized</internal-format>
-      </texture>
-      <texture n="1">
-        <image>detail.png</image>
-        <filter>linear-mipmap-linear</filter>
-        <!-- also repeat -->
-        <wrap-s>clamp</wrap-s>
-        <wrap-t>clamp-to-edge</wrap-t>
-        <!--
-          <wrap-r>clamp-to-border</wrap-r>
-           -->
-        <!-- float, signed-integer, integer -->
-        <internal-format>normalized</internal-format>
-      </texture>
-      <bump-height type="double">.05</bump-height>
-      <pattern-rotation type="vec4d">0 0 1 1.5708</pattern-rotation>
-    </parameters>
-    <technique>
-      <predicate>
-        <!-- This is the general way to test for shader support -->
-        <or>
-          <less-equal>
-            <value type="float">2.0</value>
-            <glversion/>
-          </less-equal>
-          <and>
-            <extension-supported>GL_ARB_shader_objects</extension-supported>
-            <extension-supported>GL_ARB_shading_language_100</extension-supported>
-            <extension-supported>GL_ARB_vertex_shader</extension-supported>
-            <extension-supported>GL_ARB_fragment_shader</extension-supported>
-          </and>
-        </or>
-      </predicate>
-      <pass>
-        <lighting>true</lighting>
-        <material>
-          <ambient><use>material/ambient</use></ambient>
-          <diffuse><use>material/diffuse</use></diffuse>
-          <specular><use>material/specular</use></specular>
-          <shininess><use>material/shininess</use></shininess>
-        </material>
-        <texture-unit>
-          <unit>0</unit>
-          <image><use>texture[0]/image</use></image>
-          <filter><use>texture[0]/filter</use></filter>
-          <wrap-s><use>texture[0]/wrap-s</use></wrap-s>
-          <wrap-t><use>texture[0]/wrap-t</use></wrap-t>
-          <internal-format>
-            <use>texture[0]/internal-format</use>
-          </internal-format>
-        </texture-unit>
-        <texture-unit>
-          <unit>1</unit>
-          <image><use>texture[1]/image</use></image>
-          <filter><use>texture[1]/filter</use></filter>
-          <wrap-s><use>texture[1]/wrap-s</use></wrap-s>
-          <wrap-t><use>texture[1]/wrap-t</use></wrap-t>
-          <internal-format>
-            <use>texture[1]/internal-format</use>
-          </internal-format>
-        </texture-unit>
-          <uniform>
-            <name>bumpHeight</name>
-            <type>float</type>
-            <use>bump-height</use>
-          </uniform>
-          <uniform>
-            <name>patternRotation</name>
-            <type>float-vec4</type>
-            <use>pattern-rotation</use>
-          </uniform>
-          <uniform>
-            <name>baseTexture</name>
-            <type>sampler-2d</type>
-            <value>0</value>
-          </uniform>
-          <uniform>
-            <name>detailTexture</name>
-            <type>sampler-2d</type>
-            <value>1</value>
-          </uniform>
-        <shader-program>
-          <!-- These two vertex shaders are linked together -->
-          <vertex-shader>
-            "Shaders/util.vert"
-          </vertex-shader>
-          <vertex-shader>
-            "Shaders/foo.vert"
-          </vertex-shader>
-          <fragment-shader>
-            "Shaders/foo.frag"
-          </fragment-shader>
-        </shader-program>
-      </pass>
-    </technique>
-    <!-- This  technique is always valid -->
-    <technique>
-      <pass>
-        <lighting>true</lighting>
-        <material>
-          <ambient><use>material/ambient</use></ambient>
-          <diffuse><use>material/diffuse</use></diffuse>
-          <specular><use>material/specular</use></specular>
-        </material>
-        <texture-unit>
-          <unit>0</unit>
-          <image><use>texture[0]/image</use></image>
-          <filter><use>texture[0]/filter</use></filter>
-          <wrap-s><use>texture[0]/wrap-s</use></wrap-s>
-          <wrap-t><use>texture[0]/wrap-t</use></wrap-t>
-          <internal-format>
-            <use>texture[0]/internal-format</use>
-          </internal-format>
-        </texture-unit>
-      </pass>
-    </technique>
-  </effect>
-</PropertyList>
+The Effects directory contains the effects definitions; look there for
+examples. Effects/crop.eff is a good example of a complex effect.
