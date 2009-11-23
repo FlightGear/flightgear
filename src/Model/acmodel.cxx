@@ -132,10 +132,10 @@ FGAircraftModel::update (double dt)
                                                 _roll->getDoubleValue());
   _fx->set_orientation( orient );
  
-  SGVec3d vel = SGVec3d( _speed_n->getDoubleValue(),
-                         _speed_e->getDoubleValue(),
-                         _speed_d->getDoubleValue() );
-  _fx->set_velocity( vel );
+  _velocity = SGVec3d( _speed_n->getDoubleValue(),
+                       _speed_e->getDoubleValue(),
+                       _speed_d->getDoubleValue() );
+  _fx->set_velocity( _velocity );
 }
 
 
