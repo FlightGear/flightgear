@@ -338,15 +338,15 @@ FGViewMgr::update (double dt)
 
   // update audio listener values
   // set the viewer posotion in Cartesian coordinates in meters
-  smgr->set_position( abs_viewer_position );
+  smgr->set_position( abs_viewer_position, loop_view->getPosition() );
   smgr->set_orientation( current_view_orientation );
 
   // get the model velocity
-  SGVec3f velocity = SGVec3f::zeros();
+  SGVec3d velocity = SGVec3d::zeros();
   if ( !stationary() ) {
     velocity = globals->get_aircraft_model()->getVelocity();
   }
-  smgr->set_velocity(velocity);
+  smgr->set_velocity( velocity );
 }
 
 void
