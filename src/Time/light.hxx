@@ -60,9 +60,6 @@ private:
     double _sun_lon, _sun_lat;
     double _moon_lon, _moon_gc_lat;
 
-    // in cartesian coordiantes
-    SGVec3d _sunpos, _moonpos;
-
     // (in view coordinates)
     SGVec4f _sun_vec, _moon_vec;
 
@@ -141,9 +138,6 @@ public:
     inline double get_sun_lat () const { return _sun_lat; }
     inline void set_sun_lat (double l) { _sun_lat = l; }
 
-    inline const SGVec3d& get_sunpos () const { return _sunpos; }
-    inline void set_sunpos (const SGVec3d& p) { _sunpos = p; }
-
     inline SGVec4f& sun_vec () { return _sun_vec; }
     inline SGVec4f& sun_vec_inv () { return _sun_vec_inv; }
 
@@ -161,9 +155,6 @@ public:
 
     inline double get_moon_gc_lat () const { return _moon_gc_lat; }
     inline void set_moon_gc_lat (double l) { _moon_gc_lat = l; }
-
-    inline const SGVec3d& get_moonpos () const { return _moonpos; }
-    inline void set_moonpos (const SGVec3d& p) { _moonpos = p; }
 
     inline const SGVec4f& moon_vec () const { return _moon_vec; }
     inline const SGVec4f& moon_vec_inv () const { return _moon_vec_inv; }

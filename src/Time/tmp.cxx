@@ -65,6 +65,49 @@ void fgUpdateLocalTime() {
 
 // update the cur_time_params structure with the current sun position
 void fgUpdateSunPos( void ) {
+#if 0
+    // This only works at lat,lon = 0,0
+    // need to find a way to get it working at other locations
+
+    FGLight *light = (FGLight *)(globals->get_subsystem("lighting"));
+    FGViewer *viewer = globals->get_current_view();
+    SGTime *time_now = globals->get_time_params();
+
+    SG_LOG( SG_EVENT, SG_DEBUG, "  Updating Sun position" );
+    SG_LOG( SG_EVENT, SG_DEBUG, "  Gst = " << time_now->getGst() );
+
+    double sun_lon, sun_lat;
+    fgSunPositionGST(time_now->getGst(), &sun_lon, &sun_lat);
+    light->set_sun_lon(sun_lon);
+    light->set_sun_lat(sun_lat);
+
+    // update the sun light vector
+    // calculations are in the horizontal normal plane: x-north, y-east, z-down
+    static SGQuatd q = SGQuatd::fromLonLat(SGGeod::fromRad(0,0));
+
+    // sun orientation
+    SGGeod geodSunPos = SGGeod::fromRad(sun_lon, sun_lat);
+    SGQuatd sunOr = SGQuatd::fromLonLat(geodSunPos);
+
+    // scenery orientation
+    SGGeod geodViewPos = SGGeod::fromCart(viewer->getViewPosition());
+    SGQuatd hlOr = SGQuatd::fromLonLat(geodViewPos);
+    SGVec3d localAt = hlOr.backTransform(SGVec3d::e3());
+
+    // transpose the sun direction from (lat,lon) to (0,0)
+    SGVec3d transSunDir = (q*sunOr).transform(-localAt);
+    SGQuatd sunDirOr = SGQuatd::fromRealImag(0, transSunDir);
+
+    // transpose the calculated sun vector back to (lat,lon)
+    SGVec3d sunDirection = sunDirOr.transform(localAt);
+    light->set_sun_rotation( acos(sunDirection[1])-SGD_PI_2 );
+    light->set_sun_angle( acos(-sunDirection[2]) );
+
+    SGVec3d sunPos = SGVec3d::fromGeod(geodSunPos);
+    light->sun_vec() = SGVec4f(toVec3f(normalize(sunPos)), 0);
+    light->sun_vec_inv() = -light->sun_vec();
+
+#else
     FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
     SGTime *t = globals->get_time_params();
     FGViewer *v = globals->get_current_view();
@@ -77,34 +120,33 @@ void fgUpdateSunPos( void ) {
     fgSunPositionGST(t->getGst(), &sun_l, &sun_gd_lat);
     l->set_sun_lon(sun_l);
     l->set_sun_lat(sun_gd_lat);
-    l->set_sunpos(SGVec3d::fromGeod(SGGeod::fromRad(sun_l, sun_gd_lat)));
+    SGVec3d sunpos(SGVec3d::fromGeod(SGGeod::fromRad(sun_l, sun_gd_lat)));
 
     SG_LOG( SG_EVENT, SG_DEBUG, "    t->cur_time = " << t->get_cur_time() );
     SG_LOG( SG_EVENT, SG_DEBUG,
-	    "    Sun Geodetic lat = " << sun_gd_lat
-	    << " Geodetic lat = " << sun_gd_lat );
+            "    Sun Geodetic lat = " << sun_gd_lat
+            << " Geodetic lat = " << sun_gd_lat );
 
     // update the sun light vector
-    l->sun_vec() = SGVec4f(toVec3f(normalize(l->get_sunpos())), 0);
+    l->sun_vec() = SGVec4f(toVec3f(normalize(sunpos)), 0);
     l->sun_vec_inv() = - l->sun_vec();
 
     // calculate the sun's relative angle to local up
     SGVec3d viewPos = v->get_view_pos();
     SGQuatd hlOr = SGQuatd::fromLonLat(SGGeod::fromCart(viewPos));
-    SGVec3f nup(toVec3f(hlOr.backTransform(-SGVec3d::e3())));
-
-    SGVec3f nsun(toVec3f(normalize(l->get_sunpos())));
-    // cout << "nup = " << nup[0] << "," << nup[1] << "," 
+    SGVec3f world_up = toVec3f(hlOr.backTransform(-SGVec3d::e3()));
+    SGVec3f nsun = toVec3f(normalize(sunpos));
+    // cout << "nup = " << nup[0] << "," << nup[1] << ","
     //      << nup[2] << endl;
-    // cout << "nsun = " << nsun[0] << "," << nsun[1] << "," 
+    // cout << "nsun = " << nsun[0] << "," << nsun[1] << ","
     //      << nsun[2] << endl;
 
-    l->set_sun_angle( acos( dot ( nup, nsun ) ) );
+    l->set_sun_angle( acos( dot ( world_up, nsun ) ) );
     SG_LOG( SG_EVENT, SG_DEBUG, "sun angle relative to current location = "
-	    << l->get_sun_angle() );
-    
+            << l->get_sun_angle() );
+
     // calculate vector to sun's position on the earth's surface
-    SGVec3d rel_sunpos = l->get_sunpos() - v->get_view_pos();
+    SGVec3d rel_sunpos = sunpos - v->get_view_pos();
     // vector in cartesian coordinates from current position to the
     // postion on the earth's surface the sun is directly over
     SGVec3f to_sun = toVec3f(rel_sunpos);
@@ -115,18 +157,17 @@ void fgUpdateSunPos( void ) {
     // earth's surface the sun is directly over, map into onto the
     // local plane representing "horizontal".
 
-    SGVec3f world_up = toVec3f(hlOr.backTransform(-SGVec3d::e3()));
-    SGVec3f view_pos = toVec3f(v->get_view_pos());
     // surface direction to go to head towards sun
     SGVec3f surface_to_sun;
+    SGVec3f view_pos = toVec3f(v->get_view_pos());
     sgmap_vec_onto_cur_surface_plane( world_up.data(), view_pos.data(),
-				      to_sun.data(), surface_to_sun.data() );
+                                      to_sun.data(), surface_to_sun.data() );
     surface_to_sun = normalize(surface_to_sun);
     // cout << "(sg) Surface direction to sun is "
-    //   << surface_to_sun[0] << "," 
+    //   << surface_to_sun[0] << ","
     //   << surface_to_sun[1] << ","
     //   << surface_to_sun[2] << endl;
-    // cout << "Should be close to zero = " 
+    // cout << "Should be close to zero = "
     //   << sgScalarProductVec3(nup, surface_to_sun) << endl;
 
     // calculate the angle between surface_to_sun and
@@ -156,11 +197,13 @@ void fgUpdateSunPos( void ) {
      }
 
     if ( east_dot >= 0 ) {
-	l->set_sun_rotation( acos(dot_) );
+        l->set_sun_rotation( acos(dot_) );
     } else {
-	l->set_sun_rotation( -acos(dot_) );
+        l->set_sun_rotation( -acos(dot_) );
     }
     // cout << "  Sky needs to rotate = " << angle << " rads = "
     //      << angle * SGD_RADIANS_TO_DEGREES << " degrees." << endl;
+
+#endif
 }
 
