@@ -258,6 +258,8 @@ class fgComboBox : public fgValueList, public puaComboBox {
 public:
     fgComboBox(int x1, int y1, int x2, int y2, SGPropertyNode *p, bool editable) :
         fgValueList(p), puaComboBox(x1, y1, x2, y2, _list, editable) {}
+        
+    void update();
 };
 
 class fgSelectBox : public fgValueList, public puaSelectBox {
