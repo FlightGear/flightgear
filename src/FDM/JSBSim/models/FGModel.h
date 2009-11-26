@@ -38,11 +38,8 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <FGJSBBase.h>
-#include <input_output/FGPropertyManager.h>
-#include <input_output/FGXMLElement.h>
+#include "FGJSBBase.h"
 
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -51,8 +48,6 @@ DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #define ID_MODEL "$Id$"
-
-using namespace std;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -74,6 +69,8 @@ class FGBuoyantForces;
 class FGAircraft;
 class FGPropagate;
 class FGAuxiliary;
+class Element;
+class FGPropertyManager;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -102,7 +99,7 @@ public:
   virtual bool Load(Element* el);
 
   FGModel* NextModel;
-  string Name;
+  std::string Name;
 
   /** Runs the model; called by the Executive
       @see JSBSim.cpp documentation
@@ -137,7 +134,7 @@ protected:
   FGAuxiliary*       Auxiliary;
   FGPropertyManager* PropertyManager;
 
-  vector <double*> interface_properties;
+  std::vector <double*> interface_properties;
 };
 }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

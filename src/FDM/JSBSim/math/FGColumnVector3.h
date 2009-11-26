@@ -39,20 +39,8 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <cstdlib>
+#include <iosfwd>
 #include <string>
-#include <fstream>
-#include <iostream>
-#include <cmath>
-
-using std::ostream;
-using std::istream;
-using std::cerr;
-using std::cout;
-using std::endl;
-using std::sqrt;
-using std::string;
-
 #include "FGJSBBase.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -149,7 +137,7 @@ public:
   /** Prints the contents of the vector
       @param delimeter the item separator (tab or comma)
       @return a string with the delimeter-separated contents of the vector  */
-  string Dump(string delimeter) const;
+  std::string Dump(const std::string& delimeter) const;
 
   /** Assignment operator.
       @param b source vector.
@@ -291,7 +279,7 @@ inline FGColumnVector3 operator*(double scalar, const FGColumnVector3& A) {
     @param os Stream to write to.
     @param M Matrix to write.
     Write the matrix to a stream.*/
-ostream& operator<<(ostream& os, const FGColumnVector3& col);
+std::ostream& operator<<(std::ostream& os, const FGColumnVector3& col);
 
 } // namespace JSBSim
 

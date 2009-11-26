@@ -39,8 +39,8 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGEngine.h"
-#include <math/FGTable.h>
-#include <input_output/FGXMLElement.h>
+#include "math/FGTable.h"
+#include "input_output/FGXMLElement.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -159,8 +159,8 @@ public:
 
   double GetOxiFlowRate(void) const {return OxidizerFlowRate;}
 
-  string GetEngineLabels(string delimeter);
-  string GetEngineValues(string delimeter);
+  std::string GetEngineLabels(const std::string& delimiter);
+  std::string GetEngineValues(const std::string& delimiter);
 
 private:
   /** Reduces the fuel in the active tanks by the amount required.
@@ -200,6 +200,7 @@ private:
   double OxidizerFlowRate;
   double PropellantFlowRate;
   bool Flameout;
+  double BuildupTime;
   FGTable* ThrustTable;
 
   void Debug(int from);

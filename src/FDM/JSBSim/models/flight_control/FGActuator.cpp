@@ -39,6 +39,8 @@ INCLUDES
 
 #include "FGActuator.h"
 
+using namespace std;
+
 namespace JSBSim {
 
 static const char *IdSrc = "$Id$";
@@ -52,7 +54,6 @@ CLASS IMPLEMENTATION
 FGActuator::FGActuator(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
 {
   double denom;
-  dt = fcs->GetDt();
 
   // inputs are read from the base class constructor
 
@@ -101,8 +102,6 @@ FGActuator::~FGActuator()
 
 bool FGActuator::Run(void )
 {
-  dt = fcs->GetDt();
-
   Input = InputNodes[0]->getDoubleValue() * InputSigns[0];
 
   if (fail_zero) Input = 0;
@@ -237,7 +236,10 @@ void FGActuator::Debug(int from)
       else
         cout << "      INPUT: " << InputNodes[0]->getName() << endl;
 
-      if (IsOutput) cout << "      OUTPUT: " << OutputNode->getName() << endl;
+      if (IsOutput) {
+        for (unsigned int i=0; i<OutputNodes.size(); i++)
+          cout << "      OUTPUT: " << OutputNodes[i]->getName() << endl;
+      }
       if (bias != 0.0) cout << "      Bias: " << bias << endl;
       if (rate_limit != 0) cout << "      Rate limit: " << rate_limit << endl;
       if (lag != 0) cout << "      Actuator lag: " << lag << endl;

@@ -40,6 +40,10 @@ INCLUDES
 #include "FGMatrix33.h"
 #include "FGColumnVector3.h"
 
+#include <iostream>
+
+using namespace std;
+
 namespace JSBSim {
 
 static const char *IdSrc = "$Id$";

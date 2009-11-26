@@ -43,8 +43,8 @@ INCLUDES
 
 #include <vector>
 #include "FGEngine.h"
-#include <input_output/FGXMLElement.h>
-#include <math/FGTable.h>
+#include "input_output/FGXMLElement.h"
+#include "math/FGTable.h"
 
 #define ID_TURBOPROP "$Id$"
 
@@ -147,8 +147,8 @@ public:
   inline void SetGeneratorPower(bool gp) { GeneratorPower=gp; }
   inline void SetCondition(bool c) { Condition=c; }
   int InitRunning(void);
-  string GetEngineLabels(string delimeter);  // added from Turbine 0.9.6
-  string GetEngineValues(string delimeter);  // added from Turbine 0.9.6
+  std::string GetEngineLabels(const std::string& delimiter);
+  std::string GetEngineValues(const std::string& delimiter);
 
 private:
 
@@ -167,6 +167,7 @@ private:
   double N2_factor;        ///< factor to tie N2 and throttle
   double ThrottleCmd;      ///< FCS-supplied throttle position
   double TAT;              ///< total air temperature (deg C)
+  double PowerAvailable;
   bool Stalled;            ///< true if engine is compressor-stalled
   bool Seized;             ///< true if inner spool is seized
   bool Overtemp;           ///< true if EGT exceeds limits

@@ -38,7 +38,10 @@ INCLUDES
 
 #include "FGBuoyantForces.h"
 #include "FGMassBalance.h"
-#include <input_output/FGPropertyManager.h>  // Need?
+#include "input_output/FGPropertyManager.h"  // Need?
+#include <iostream>
+
+using namespace std;
 
 namespace JSBSim {
 

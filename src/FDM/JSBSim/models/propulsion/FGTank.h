@@ -44,16 +44,9 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGFDMExec.h"
-#include <FGJSBBase.h>
-#include <input_output/FGXMLElement.h>
-#include <math/FGColumnVector3.h>
+#include "FGJSBBase.h"
+#include "math/FGColumnVector3.h"
 #include <string>
-
-using std::string;
-using std::cerr;
-using std::endl;
-using std::cout;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -66,6 +59,10 @@ FORWARD DECLARATIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 namespace JSBSim {
+
+class Element;
+class FGPropertyManager;
+class FGFDMExec;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -127,6 +124,8 @@ CLASS DOCUMENTATION
   <contents unit="{LBS | KG}"> {number} </contents>
   <temperature> {number} </temperature> <!-- must be degrees fahrenheit -->
   <standpipe unit="{LBS | KG"}> {number} </standpipe>
+  <priority> {integer} </priority>
+  <density unit="{KG/L | LBS/GAL}"> {number} </density>
 </tank>
 @endcode
 
@@ -140,6 +139,8 @@ CLASS DOCUMENTATION
 - \b contents - Initial contents, defaults to pounds.
 - \b temperature - Initial temperature, defaults to degrees Fahrenheit.
 - \b standpipe - Minimum contents to which tank can dump, defaults to pounds.
+- \b priority - Establishes feed sequence of tank. "1" is the highest priority.
+- \b density - Density of liquid tank contents.
 
 location:
 - \b x - Location of tank on aircraft's x-axis, defaults to inches.
@@ -160,10 +161,12 @@ be printed to the console if the location is not given
 - \b y - 0.0  (both full and drained CG locations)
 - \b z - 0.0  (both full and drained CG locations)
 - \b radius - 0.0
-- \b capacity - 0.0
+- \b capacity - 0.00001 (tank capacity must not be zero)
 - \b contents - 0.0
-- \b temperature - -9999.0
-- \b standpipe - 0.0
+- \b temperature - -9999.0 (flag which indicates no temperature is set)
+- \b standpipe - 0.0 (all contents may be dumped)
+- \b priority - 1 (highest feed sequence priority)
+- \b density - 6.6
 
     @author Jon Berndt, Dave Culp
     @see Akbar, Raza et al. "A Simple Analysis of Fuel Addition to the CWT of
@@ -211,8 +214,8 @@ public:
   /** Resets the tank parameters to the initial conditions */
   void ResetToIC(void);
 
-  /** If the tank is supplying fuel, this function returns true.
-      @return true if this tank is feeding an engine.*/
+  /** If the tank is set to supply fuel, this function returns true.
+      @return true if this tank is set to a non-zero priority.*/
   bool GetSelected(void) {return Selected;}
 
   /** Gets the tank fill level.
@@ -223,9 +226,17 @@ public:
       @return the capacity of the tank in pounds. */
   double GetCapacity(void) {return Capacity;}
 
+  /** Gets the capacity of the tank.
+      @return the capacity of the tank in gallons. */
+  double GetCapacityGallons(void) {return Capacity/Density;}
+
   /** Gets the contents of the tank.
       @return the contents of the tank in pounds. */
   double GetContents(void) const {return Contents;}
+
+  /** Gets the contents of the tank.
+      @return the contents of the tank in gallons. */
+  double GetContentsGallons(void) const {return Contents/Density;}
 
   /** Gets the temperature of the fuel.
       The temperature of the fuel is calculated if an initial tempearture is
@@ -247,13 +258,18 @@ public:
 
   double GetStandpipe(void) {return Standpipe;}
 
+  int  GetPriority(void) const {return Priority;}
+  void SetPriority(int p) { Priority = p; Selected = p>0 ? true:false; } 
+
   const FGColumnVector3 GetXYZ(void);
   const double GetXYZ(int idx);
 
   double Fill(double amount);
   void SetContents(double amount);
+  void SetContentsGallons(double gallons);
   void SetTemperature(double temp) { Temperature = temp; }
   void SetStandpipe(double amount) { Standpipe = amount; }
+  void SetSelected(bool sel) { sel==true ? SetPriority(1):SetPriority(0); }
 
   enum TankType {ttUNKNOWN, ttFUEL, ttOXIDIZER};
   enum GrainType {gtUNKNOWN, gtCYLINDRICAL, gtENDBURNING};
@@ -262,8 +278,8 @@ private:
   TankType Type;
   GrainType grainType;
   int TankNumber;
-  string type;
-  string strGType;
+  std::string type;
+  std::string strGType;
   FGColumnVector3 vXYZ;
   FGColumnVector3 vXYZ_drain;
   double Capacity;
@@ -281,6 +297,7 @@ private:
   double Temperature, InitialTemperature;
   double Standpipe, InitialStandpipe;
   bool  Selected;
+  int Priority, InitialPriority;
   FGFDMExec* Exec;
   FGPropertyManager* PropertyManager;
   void CalculateInertias(void);

@@ -38,8 +38,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGFCSComponent.h"
-#include <input_output/FGXMLElement.h>
-#include <vector>
+#include <string>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -53,8 +52,8 @@ FORWARD DECLARATIONS
 
 namespace JSBSim {
 
-using std::vector;
 class FGFCS;
+class Element;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -135,7 +134,6 @@ public:
 protected:
   enum eNoiseType {ePercent=0, eAbsolute} NoiseType;
   enum eDistributionType {eUniform=0, eGaussian} DistributionType;
-  double dt;
   double min, max;
   double span;
   double bias;
@@ -153,20 +151,17 @@ protected:
   int bits;
   int quantized;
   int divisions;
-  int delay;
-  int index;
   bool fail_low;
   bool fail_high;
   bool fail_stuck;
-  string quant_property;
-  vector <double> output_array;
+  std::string quant_property;
 
+  void ProcessSensorSignal(void);
   void Noise(void);
   void Bias(void);
   void Drift(void);
   void Quantize(void);
   void Lag(void);
-  void Delay(void);
   void Gain(void);
 
   void bind(void);

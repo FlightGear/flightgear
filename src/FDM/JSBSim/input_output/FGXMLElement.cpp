@@ -32,6 +32,9 @@ INCLUDES
 
 #include <cmath>
 #include <cstdlib>
+#include <iostream>
+
+using namespace std;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -42,159 +45,171 @@ namespace JSBSim {
 static const char *IdSrc = "$Id$";
 static const char *IdHdr = ID_XMLELEMENT;
 
+bool Element::converterIsInitialized = false;
+map <string, map <string, double> > Element::convert;
+
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-Element::Element(string nm)
+Element::Element(const string& nm)
 {
   name   = nm;
   parent = 0L;
   element_index = 0;
 
-  // convert ["from"]["to"] = factor, so: from * factor = to
-  // Length
-  convert["M"]["FT"] = 3.2808399;
-  convert["FT"]["M"] = 1.0/convert["M"]["FT"];
-  convert["FT"]["IN"] = 12.0;
-  convert["IN"]["FT"] = 1.0/convert["FT"]["IN"];
-  convert["IN"]["M"] = convert["IN"]["FT"] * convert["FT"]["M"];
-  convert["M"]["IN"] = convert["M"]["FT"] * convert["FT"]["IN"];
-  // Area
-  convert["M2"]["FT2"] = convert["M"]["FT"]*convert["M"]["FT"];
-  convert["FT2"]["M2"] = 1.0/convert["M2"]["FT2"];
-  convert["M2"]["IN2"] = convert["M"]["IN"]*convert["M"]["IN"];
-  convert["IN2"]["M2"] = 1.0/convert["M2"]["IN2"];
-  convert["FT2"]["IN2"] = 144.0;
-  convert["IN2"]["FT2"] = 1.0/convert["FT2"]["IN2"];
-  // Volume
-  convert["IN3"]["CC"] = 16.387064;
-  convert["CC"]["IN3"] = 1.0/convert["IN3"]["CC"];
-  convert["FT3"]["IN3"] = 1728.0;
-  convert["IN3"]["FT3"] = 1.0/convert["FT3"]["IN3"];
-  convert["M3"]["FT3"] = 35.3146667;
-  convert["FT3"]["M3"] = 1.0/convert["M3"]["FT3"];
-  convert["LTR"]["IN3"] = 61.0237441;
-  convert["IN3"]["LTR"] = 1.0/convert["LTR"]["IN3"];
-  // Mass & Weight
-  convert["LBS"]["KG"] = 0.45359237;
-  convert["KG"]["LBS"] = 1.0/convert["LBS"]["KG"];
-  convert["SLUG"]["KG"] = 14.59390;
-  convert["KG"]["SLUG"] = 1.0/convert["SLUG"]["KG"];
-  // Moments of Inertia
-  convert["SLUG*FT2"]["KG*M2"] = 1.35594;
-  convert["KG*M2"]["SLUG*FT2"] = 1.0/convert["SLUG*FT2"]["KG*M2"];
-  // Angles
-  convert["RAD"]["DEG"] = 360.0/(2.0*3.1415926);
-  convert["DEG"]["RAD"] = 1.0/convert["RAD"]["DEG"];
-  // Spring force
-  convert["LBS/FT"]["N/M"] = 14.5939;
-  convert["N/M"]["LBS/FT"] = 1.0/convert["LBS/FT"]["N/M"];
-  // Damping force
-  convert["LBS/FT/SEC"]["N/M/SEC"] = 14.5939;
-  convert["N/M/SEC"]["LBS/FT/SEC"] = 1.0/convert["LBS/FT/SEC"]["N/M/SEC"];
-  // Damping force (Square Law)
-  convert["LBS/FT2/SEC2"]["N/M2/SEC2"] = 47.880259;
-  convert["N/M2/SEC2"]["LBS/FT2/SEC2"] = 1.0/convert["LBS/FT2/SEC2"]["N/M2/SEC2"];
-  // Power
-  convert["WATTS"]["HP"] = 0.001341022;
-  convert["HP"]["WATTS"] = 1.0/convert["WATTS"]["HP"];
-  // Force
-  convert["N"]["LBS"] = 0.22482;
-  convert["LBS"]["N"] = 1.0/convert["N"]["LBS"];
-  // Velocity
-  convert["KTS"]["FT/SEC"] = 1.68781;
-  convert["FT/SEC"]["KTS"] = 1.0/convert["KTS"]["FT/SEC"];
-  convert["M/S"]["FT/S"] = 3.2808399;
-  convert["FT/S"]["M/S"] = 1.0/convert["M/S"]["FT/S"];
-  // Torque
-  convert["FT*LBS"]["N*M"] = 1.35581795;
-  convert["N*M"]["FT*LBS"] = 1/convert["FT*LBS"]["N*M"];
-  // Valve
-  convert["M4*SEC/KG"]["FT4*SEC/SLUG"] = convert["M"]["FT"]*convert["M"]["FT"]*
-    convert["M"]["FT"]*convert["M"]["FT"]/convert["KG"]["SLUG"];
-  convert["FT4*SEC/SLUG"]["M4*SEC/KG"] =
-    1.0/convert["M4*SEC/KG"]["FT4*SEC/SLUG"];
-  // Pressure
-  convert["INHG"]["PSF"] = 70.7180803;
-  convert["PSF"]["INHG"] = 1.0/convert["INHG"]["PSF"];
-  convert["ATM"]["INHG"] = 29.9246899;
-  convert["INHG"]["ATM"] = 1.0/convert["ATM"]["INHG"];
-  convert["PSI"]["INHG"] = 2.03625437;
-  convert["INHG"]["PSI"] = 1.0/convert["PSI"]["INHG"];
-  convert["INHG"]["PA"] = 3386.0; // inches Mercury to pascals
-  convert["PA"]["INHG"] = 1.0/convert["INHG"]["PA"];
-  convert["LBS/FT2"]["N/M2"] = 14.5939/convert["FT"]["M"];
-  convert["N/M2"]["LBS/FT2"] = 1.0/convert["LBS/FT2"]["N/M2"];
-  convert["LBS/FT2"]["PA"] = convert["LBS/FT2"]["N/M2"];
-  convert["PA"]["LBS/FT2"] = 1.0/convert["LBS/FT2"]["PA"];
-  // Mass flow
-  convert["KG/MIN"]["LBS/MIN"] = convert["KG"]["LBS"];
-  // Fuel Consumption
-  convert["LBS/HP*HR"]["KG/KW*HR"] = 0.6083;
-  convert["KG/KW*HR"]["LBS/HP*HR"] = 1.0/convert["LBS/HP*HR"]["KG/KW*HR"];
+  if (!converterIsInitialized) {
+    converterIsInitialized = true;
+    // convert ["from"]["to"] = factor, so: from * factor = to
+    // Length
+    convert["M"]["FT"] = 3.2808399;
+    convert["FT"]["M"] = 1.0/convert["M"]["FT"];
+    convert["FT"]["IN"] = 12.0;
+    convert["IN"]["FT"] = 1.0/convert["FT"]["IN"];
+    convert["IN"]["M"] = convert["IN"]["FT"] * convert["FT"]["M"];
+    convert["M"]["IN"] = convert["M"]["FT"] * convert["FT"]["IN"];
+    // Area
+    convert["M2"]["FT2"] = convert["M"]["FT"]*convert["M"]["FT"];
+    convert["FT2"]["M2"] = 1.0/convert["M2"]["FT2"];
+    convert["M2"]["IN2"] = convert["M"]["IN"]*convert["M"]["IN"];
+    convert["IN2"]["M2"] = 1.0/convert["M2"]["IN2"];
+    convert["FT2"]["IN2"] = 144.0;
+    convert["IN2"]["FT2"] = 1.0/convert["FT2"]["IN2"];
+    // Volume
+    convert["IN3"]["CC"] = 16.387064;
+    convert["CC"]["IN3"] = 1.0/convert["IN3"]["CC"];
+    convert["FT3"]["IN3"] = 1728.0;
+    convert["IN3"]["FT3"] = 1.0/convert["FT3"]["IN3"];
+    convert["M3"]["FT3"] = 35.3146667;
+    convert["FT3"]["M3"] = 1.0/convert["M3"]["FT3"];
+    convert["LTR"]["IN3"] = 61.0237441;
+    convert["IN3"]["LTR"] = 1.0/convert["LTR"]["IN3"];
+    // Mass & Weight
+    convert["LBS"]["KG"] = 0.45359237;
+    convert["KG"]["LBS"] = 1.0/convert["LBS"]["KG"];
+    convert["SLUG"]["KG"] = 14.59390;
+    convert["KG"]["SLUG"] = 1.0/convert["SLUG"]["KG"];
+    // Moments of Inertia
+    convert["SLUG*FT2"]["KG*M2"] = 1.35594;
+    convert["KG*M2"]["SLUG*FT2"] = 1.0/convert["SLUG*FT2"]["KG*M2"];
+    // Angles
+    convert["RAD"]["DEG"] = 360.0/(2.0*3.1415926);
+    convert["DEG"]["RAD"] = 1.0/convert["RAD"]["DEG"];
+    // Spring force
+    convert["LBS/FT"]["N/M"] = 14.5939;
+    convert["N/M"]["LBS/FT"] = 1.0/convert["LBS/FT"]["N/M"];
+    // Damping force
+    convert["LBS/FT/SEC"]["N/M/SEC"] = 14.5939;
+    convert["N/M/SEC"]["LBS/FT/SEC"] = 1.0/convert["LBS/FT/SEC"]["N/M/SEC"];
+    // Damping force (Square Law)
+    convert["LBS/FT2/SEC2"]["N/M2/SEC2"] = 47.880259;
+    convert["N/M2/SEC2"]["LBS/FT2/SEC2"] = 1.0/convert["LBS/FT2/SEC2"]["N/M2/SEC2"];
+    // Power
+    convert["WATTS"]["HP"] = 0.001341022;
+    convert["HP"]["WATTS"] = 1.0/convert["WATTS"]["HP"];
+    // Force
+    convert["N"]["LBS"] = 0.22482;
+    convert["LBS"]["N"] = 1.0/convert["N"]["LBS"];
+    // Velocity
+    convert["KTS"]["FT/SEC"] = 1.68781;
+    convert["FT/SEC"]["KTS"] = 1.0/convert["KTS"]["FT/SEC"];
+    convert["M/S"]["FT/S"] = 3.2808399;
+    convert["FT/S"]["M/S"] = 1.0/convert["M/S"]["FT/S"];
+    // Torque
+    convert["FT*LBS"]["N*M"] = 1.35581795;
+    convert["N*M"]["FT*LBS"] = 1/convert["FT*LBS"]["N*M"];
+    // Valve
+    convert["M4*SEC/KG"]["FT4*SEC/SLUG"] = convert["M"]["FT"]*convert["M"]["FT"]*
+      convert["M"]["FT"]*convert["M"]["FT"]/convert["KG"]["SLUG"];
+    convert["FT4*SEC/SLUG"]["M4*SEC/KG"] =
+      1.0/convert["M4*SEC/KG"]["FT4*SEC/SLUG"];
+    // Pressure
+    convert["INHG"]["PSF"] = 70.7180803;
+    convert["PSF"]["INHG"] = 1.0/convert["INHG"]["PSF"];
+    convert["ATM"]["INHG"] = 29.9246899;
+    convert["INHG"]["ATM"] = 1.0/convert["ATM"]["INHG"];
+    convert["PSI"]["INHG"] = 2.03625437;
+    convert["INHG"]["PSI"] = 1.0/convert["PSI"]["INHG"];
+    convert["INHG"]["PA"] = 3386.0; // inches Mercury to pascals
+    convert["PA"]["INHG"] = 1.0/convert["INHG"]["PA"];
+    convert["LBS/FT2"]["N/M2"] = 14.5939/convert["FT"]["M"];
+    convert["N/M2"]["LBS/FT2"] = 1.0/convert["LBS/FT2"]["N/M2"];
+    convert["LBS/FT2"]["PA"] = convert["LBS/FT2"]["N/M2"];
+    convert["PA"]["LBS/FT2"] = 1.0/convert["LBS/FT2"]["PA"];
+    // Mass flow
+    convert["KG/MIN"]["LBS/MIN"] = convert["KG"]["LBS"];
+    // Fuel Consumption
+    convert["LBS/HP*HR"]["KG/KW*HR"] = 0.6083;
+    convert["KG/KW*HR"]["LBS/HP*HR"] = 1.0/convert["LBS/HP*HR"]["KG/KW*HR"];
+    // Density
+    convert["KG/L"]["LBS/GAL"] = 8.3454045;
+    convert["LBS/GAL"]["KG/L"] = 1.0/convert["KG/L"]["LBS/GAL"];
 
-  // Length
-  convert["M"]["M"] = 1.00;
-  convert["FT"]["FT"] = 1.00;
-  convert["IN"]["IN"] = 1.00;
-  // Area
-  convert["M2"]["M2"] = 1.00;
-  convert["FT2"]["FT2"] = 1.00;
-  // Volume
-  convert["IN3"]["IN3"] = 1.00;
-  convert["CC"]["CC"] = 1.0;
-  convert["M3"]["M3"] = 1.0;
-  convert["FT3"]["FT3"] = 1.0;
-  convert["LTR"]["LTR"] = 1.0;
-  // Mass & Weight
-  convert["KG"]["KG"] = 1.00;
-  convert["LBS"]["LBS"] = 1.00;
-  // Moments of Inertia
-  convert["KG*M2"]["KG*M2"] = 1.00;
-  convert["SLUG*FT2"]["SLUG*FT2"] = 1.00;
-  // Angles
-  convert["DEG"]["DEG"] = 1.00;
-  convert["RAD"]["RAD"] = 1.00;
-  // Spring force
-  convert["LBS/FT"]["LBS/FT"] = 1.00;
-  convert["N/M"]["N/M"] = 1.00;
-  // Damping force
-  convert["LBS/FT/SEC"]["LBS/FT/SEC"] = 1.00;
-  convert["N/M/SEC"]["N/M/SEC"] = 1.00;
-  // Damping force (Square law)
-  convert["LBS/FT2/SEC2"]["LBS/FT2/SEC2"] = 1.00;
-  convert["N/M2/SEC2"]["N/M2/SEC2"] = 1.00;
-  // Power
-  convert["HP"]["HP"] = 1.00;
-  convert["WATTS"]["WATTS"] = 1.00;
-  // Force
-  convert["N"]["N"] = 1.00;
-  // Velocity
-  convert["FT/SEC"]["FT/SEC"] = 1.00;
-  convert["KTS"]["KTS"] = 1.00;
-  convert["M/S"]["M/S"] = 1.0;
-  // Torque
-  convert["FT*LBS"]["FT*LBS"] = 1.00;
-  convert["N*M"]["N*M"] = 1.00;
-  // Valve
-  convert["M4*SEC/KG"]["M4*SEC/KG"] = 1.0;
-  convert["FT4*SEC/SLUG"]["FT4*SEC/SLUG"] = 1.0;
-  // Pressure
-  convert["PSI"]["PSI"] = 1.00;
-  convert["PSF"]["PSF"] = 1.00;
-  convert["INHG"]["INHG"] = 1.00;
-  convert["ATM"]["ATM"] = 1.0;
-  convert["PA"]["PA"] = 1.0;
-  convert["N/M2"]["N/M2"] = 1.00;
-  convert["LBS/FT2"]["LBS/FT2"] = 1.00;
-  // Mass flow
-  convert["LBS/SEC"]["LBS/SEC"] = 1.00;
-  convert["KG/MIN"]["KG/MIN"] = 1.0;
-  convert["LBS/MIN"]["LBS/MIN"] = 1.0;
-  // Fuel Consumption
-  convert["LBS/HP*HR"]["LBS/HP*HR"] = 1.0;
-  convert["KG/KW*HR"]["KG/KW*HR"] = 1.0;
+    // Length
+    convert["M"]["M"] = 1.00;
+    convert["FT"]["FT"] = 1.00;
+    convert["IN"]["IN"] = 1.00;
+    // Area
+    convert["M2"]["M2"] = 1.00;
+    convert["FT2"]["FT2"] = 1.00;
+    // Volume
+    convert["IN3"]["IN3"] = 1.00;
+    convert["CC"]["CC"] = 1.0;
+    convert["M3"]["M3"] = 1.0;
+    convert["FT3"]["FT3"] = 1.0;
+    convert["LTR"]["LTR"] = 1.0;
+    // Mass & Weight
+    convert["KG"]["KG"] = 1.00;
+    convert["LBS"]["LBS"] = 1.00;
+    // Moments of Inertia
+    convert["KG*M2"]["KG*M2"] = 1.00;
+    convert["SLUG*FT2"]["SLUG*FT2"] = 1.00;
+    // Angles
+    convert["DEG"]["DEG"] = 1.00;
+    convert["RAD"]["RAD"] = 1.00;
+    // Spring force
+    convert["LBS/FT"]["LBS/FT"] = 1.00;
+    convert["N/M"]["N/M"] = 1.00;
+    // Damping force
+    convert["LBS/FT/SEC"]["LBS/FT/SEC"] = 1.00;
+    convert["N/M/SEC"]["N/M/SEC"] = 1.00;
+    // Damping force (Square law)
+    convert["LBS/FT2/SEC2"]["LBS/FT2/SEC2"] = 1.00;
+    convert["N/M2/SEC2"]["N/M2/SEC2"] = 1.00;
+    // Power
+    convert["HP"]["HP"] = 1.00;
+    convert["WATTS"]["WATTS"] = 1.00;
+    // Force
+    convert["N"]["N"] = 1.00;
+    // Velocity
+    convert["FT/SEC"]["FT/SEC"] = 1.00;
+    convert["KTS"]["KTS"] = 1.00;
+    convert["M/S"]["M/S"] = 1.0;
+    // Torque
+    convert["FT*LBS"]["FT*LBS"] = 1.00;
+    convert["N*M"]["N*M"] = 1.00;
+    // Valve
+    convert["M4*SEC/KG"]["M4*SEC/KG"] = 1.0;
+    convert["FT4*SEC/SLUG"]["FT4*SEC/SLUG"] = 1.0;
+    // Pressure
+    convert["PSI"]["PSI"] = 1.00;
+    convert["PSF"]["PSF"] = 1.00;
+    convert["INHG"]["INHG"] = 1.00;
+    convert["ATM"]["ATM"] = 1.0;
+    convert["PA"]["PA"] = 1.0;
+    convert["N/M2"]["N/M2"] = 1.00;
+    convert["LBS/FT2"]["LBS/FT2"] = 1.00;
+    // Mass flow
+    convert["LBS/SEC"]["LBS/SEC"] = 1.00;
+    convert["KG/MIN"]["KG/MIN"] = 1.0;
+    convert["LBS/MIN"]["LBS/MIN"] = 1.0;
+    // Fuel Consumption
+    convert["LBS/HP*HR"]["LBS/HP*HR"] = 1.0;
+    convert["KG/KW*HR"]["KG/KW*HR"] = 1.0;
+    // Density
+    convert["KG/L"]["KG/L"] = 1.0;
+    convert["LBS/GAL"]["LBS/GAL"] = 1.0;
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -209,7 +224,7 @@ Element::~Element(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string Element::GetAttributeValue(string attr)
+string Element::GetAttributeValue(const string& attr)
 {
   int select=-1;
   for (unsigned int i=0; i<attribute_key.size(); i++) {
@@ -221,7 +236,7 @@ string Element::GetAttributeValue(string attr)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-double Element::GetAttributeValueAsNumber(string attr)
+double Element::GetAttributeValueAsNumber(const string& attr)
 {
   string attribute = GetAttributeValue(attr);
 
@@ -280,7 +295,7 @@ double Element::GetDataAsNumber(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-unsigned int Element::GetNumElements(string element_name)
+unsigned int Element::GetNumElements(const string& element_name)
 {
   unsigned int number_of_elements=0;
   Element* el=FindElement(element_name);
@@ -293,7 +308,7 @@ unsigned int Element::GetNumElements(string element_name)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Element* Element::FindElement(string el)
+Element* Element::FindElement(const string& el)
 {
   if (el.empty() && children.size() >= 1) {
     element_index = 1;
@@ -311,7 +326,7 @@ Element* Element::FindElement(string el)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Element* Element::FindNextElement(string el)
+Element* Element::FindNextElement(const string& el)
 {
   if (el.empty()) {
     if (element_index < children.size()) {
@@ -333,7 +348,7 @@ Element* Element::FindNextElement(string el)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-double Element::FindElementValueAsNumber(string el)
+double Element::FindElementValueAsNumber(const string& el)
 {
   Element* element = FindElement(el);
   if (element) {
@@ -346,7 +361,7 @@ double Element::FindElementValueAsNumber(string el)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string Element::FindElementValue(string el)
+string Element::FindElementValue(const string& el)
 {
   Element* element = FindElement(el);
   if (element) {
@@ -358,7 +373,7 @@ string Element::FindElementValue(string el)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-double Element::FindElementValueAsNumberConvertTo(string el, string target_units)
+double Element::FindElementValueAsNumberConvertTo(const string& el, const string& target_units)
 {
   Element* element = FindElement(el);
 
@@ -392,9 +407,9 @@ double Element::FindElementValueAsNumberConvertTo(string el, string target_units
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-double Element::FindElementValueAsNumberConvertFromTo( string el,
-                                                       string supplied_units,
-                                                       string target_units)
+double Element::FindElementValueAsNumberConvertFromTo( const string& el,
+                                                       const string& supplied_units,
+                                                       const string& target_units)
 {
   Element* element = FindElement(el);
 
@@ -426,7 +441,7 @@ double Element::FindElementValueAsNumberConvertFromTo( string el,
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FGColumnVector3 Element::FindElementTripletConvertTo( string target_units)
+FGColumnVector3 Element::FindElementTripletConvertTo( const string& target_units)
 {
   FGColumnVector3 triplet;
   Element* item;
@@ -506,7 +521,7 @@ void Element::Print(unsigned int level)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void Element::AddAttribute(string name, string value)
+void Element::AddAttribute(const string& name, const string& value)
 {
   attribute_key.push_back(name);
   attributes[name] = value;
@@ -516,8 +531,8 @@ void Element::AddAttribute(string name, string value)
 
 void Element::AddData(string d)
 {
-  unsigned int string_start = (unsigned int)d.find_first_not_of(" \t");
-  if (string_start > 0) {
+  string::size_type string_start = d.find_first_not_of(" \t");
+  if (string_start != string::npos && string_start > 0) {
     d.erase(0,string_start);
   }
   data_lines.push_back(d);

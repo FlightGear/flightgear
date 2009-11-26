@@ -43,6 +43,9 @@ INCLUDES
 
 #include "FGMars.h"
 #include "FGState.h"
+#include <iostream>
+
+using namespace std;
 
 namespace JSBSim {
 

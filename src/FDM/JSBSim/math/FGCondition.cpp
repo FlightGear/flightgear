@@ -35,7 +35,12 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGCondition.h"
-#include <vector>
+#include "input_output/FGXMLElement.h"
+#include "input_output/FGPropertyManager.h"
+#include <iostream>
+#include <cstdlib>
+
+using namespace std;
 
 namespace JSBSim {
 
@@ -91,7 +96,7 @@ FGCondition::FGCondition(Element* element, FGPropertyManager* PropertyManager) :
 // This constructor is called when there are no nested test groups inside the
 // condition
 
-FGCondition::FGCondition(string test, FGPropertyManager* PropertyManager) :
+FGCondition::FGCondition(const string& test, FGPropertyManager* PropertyManager) :
   PropertyManager(PropertyManager), isGroup(false)
 {
   string property1, property2, compare_string;

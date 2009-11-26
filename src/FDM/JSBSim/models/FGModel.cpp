@@ -52,6 +52,9 @@ INCLUDES
 #include "FGAircraft.h"
 #include "FGPropagate.h"
 #include "FGAuxiliary.h"
+#include <iostream>
+
+using namespace std;
 
 namespace JSBSim {
 

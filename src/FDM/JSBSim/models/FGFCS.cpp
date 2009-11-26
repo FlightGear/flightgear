@@ -38,24 +38,28 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGFCS.h"
-#include <FGFDMExec.h>
-#include <input_output/FGPropertyManager.h>
+#include "FGFDMExec.h"
+#include "FGGroundReactions.h"
+#include "input_output/FGPropertyManager.h"
 #include <fstream>
 #include <sstream>
 #include <iomanip>
 
-#include <models/flight_control/FGFilter.h>
-#include <models/flight_control/FGDeadBand.h>
-#include <models/flight_control/FGGain.h>
-#include <models/flight_control/FGPID.h>
-#include <models/flight_control/FGSwitch.h>
-#include <models/flight_control/FGSummer.h>
-#include <models/flight_control/FGKinemat.h>
-#include <models/flight_control/FGFCSFunction.h>
-#include <models/flight_control/FGSensor.h>
-#include <models/flight_control/FGActuator.h>
-#include <models/flight_control/FGAccelerometer.h>
-#include <models/flight_control/FGGyro.h>
+#include "models/flight_control/FGFilter.h"
+#include "models/flight_control/FGDeadBand.h"
+#include "models/flight_control/FGGain.h"
+#include "models/flight_control/FGPID.h"
+#include "models/flight_control/FGSwitch.h"
+#include "models/flight_control/FGSummer.h"
+#include "models/flight_control/FGKinemat.h"
+#include "models/flight_control/FGFCSFunction.h"
+#include "models/flight_control/FGSensor.h"
+#include "models/flight_control/FGActuator.h"
+#include "models/flight_control/FGAccelerometer.h"
+#include "models/flight_control/FGMagnetometer.h"
+#include "models/flight_control/FGGyro.h"
+
+using namespace std;
 
 namespace JSBSim {
 
@@ -643,6 +647,8 @@ bool FGFCS::Load(Element* el, SystemType systype)
           Components->push_back(new FGSensor(this, component_element));
         } else if (component_element->GetName() == string("accelerometer")) {
           Components->push_back(new FGAccelerometer(this, component_element));
+        } else if (component_element->GetName() == string("magnetometer")) {
+          Components->push_back(new FGMagnetometer(this, component_element));
         } else if (component_element->GetName() == string("gyro")) {
           Components->push_back(new FGGyro(this, component_element));
         } else {
@@ -682,7 +688,7 @@ double FGFCS::GetBrake(FGLGear::BrakeGroup bg)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGFCS::FindSystemFullPathname(string system_filename)
+string FGFCS::FindSystemFullPathname(const string& system_filename)
 {
   string fullpath, localpath;
   string systemPath = FDMExec->GetSystemsPath();
@@ -710,7 +716,7 @@ string FGFCS::FindSystemFullPathname(string system_filename)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-ifstream* FGFCS::FindSystemFile(string system_filename)
+ifstream* FGFCS::FindSystemFile(const string& system_filename)
 {
   string fullpath, localpath;
   string systemPath = FDMExec->GetSystemsPath();
@@ -735,7 +741,7 @@ ifstream* FGFCS::FindSystemFile(string system_filename)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGFCS::GetComponentStrings(string delimeter)
+string FGFCS::GetComponentStrings(const string& delimiter)
 {
   unsigned int comp;
   string CompStrings = "";
@@ -744,7 +750,7 @@ string FGFCS::GetComponentStrings(string delimeter)
 
   for (unsigned int i=0; i<Systems.size(); i++) {
     if (firstime) firstime = false;
-    else          CompStrings += delimeter;
+    else          CompStrings += delimiter;
 
     CompStrings += Systems[i]->GetName();
     total_count++;
@@ -753,7 +759,7 @@ string FGFCS::GetComponentStrings(string delimeter)
   for (comp = 0; comp < APComponents.size(); comp++)
   {
     if (firstime) firstime = false;
-    else          CompStrings += delimeter;
+    else          CompStrings += delimiter;
 
     CompStrings += APComponents[comp]->GetName();
     total_count++;
@@ -761,7 +767,7 @@ string FGFCS::GetComponentStrings(string delimeter)
 
   for (comp = 0; comp < FCSComponents.size(); comp++) {
     if (firstime) firstime = false;
-    else          CompStrings += delimeter;
+    else          CompStrings += delimiter;
 
     CompStrings += FCSComponents[comp]->GetName();
     total_count++;
@@ -772,7 +778,7 @@ string FGFCS::GetComponentStrings(string delimeter)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGFCS::GetComponentValues(string delimeter)
+string FGFCS::GetComponentValues(const string& delimiter)
 {
   std::ostringstream buf;
 
@@ -782,7 +788,7 @@ string FGFCS::GetComponentValues(string delimeter)
 
   for (unsigned int i=0; i<Systems.size(); i++) {
     if (firstime) firstime = false;
-    else          buf << delimeter;
+    else          buf << delimiter;
 
     buf << setprecision(9) << Systems[i]->GetOutput();
     total_count++;
@@ -790,7 +796,7 @@ string FGFCS::GetComponentValues(string delimeter)
 
   for (comp = 0; comp < APComponents.size(); comp++) {
     if (firstime) firstime = false;
-    else          buf << delimeter;
+    else          buf << delimiter;
 
     buf << setprecision(9) << APComponents[comp]->GetOutput();
     total_count++;
@@ -798,7 +804,7 @@ string FGFCS::GetComponentValues(string delimeter)
 
   for (comp = 0; comp < FCSComponents.size(); comp++) {
     if (firstime) firstime = false;
-    else          buf << delimeter;
+    else          buf << delimiter;
 
     buf << setprecision(9) << FCSComponents[comp]->GetOutput();
     total_count++;

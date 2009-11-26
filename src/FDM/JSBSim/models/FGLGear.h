@@ -38,11 +38,8 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <FGJSBBase.h>
-#include <FGFDMExec.h>
-#include <input_output/FGXMLElement.h>
-#include <math/FGColumnVector3.h>
-#include <math/FGTable.h>
+#include "models/propulsion/FGForce.h"
+#include "math/FGColumnVector3.h"
 #include <string>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -63,6 +60,8 @@ class FGFCS;
 class FGState;
 class FGMassBalance;
 class FGAuxiliary;
+class FGTable;
+class Element;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -199,7 +198,7 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGLGear : public FGJSBBase
+class FGLGear : public FGForce
 {
 public:
   /// Brake grouping enumerators
@@ -207,7 +206,7 @@ public:
   /// Steering group membership enumerators
   enum SteerType {stSteer, stFixed, stCaster};
   /// Contact point type
-  enum ContactType {ctBOGEY, ctSTRUCTURE, ctUNKNOWN};
+  enum ContactType {ctBOGEY, ctSTRUCTURE};
   /// Report type enumerators
   enum ReportType {erNone=0, erTakeoff, erLand};
   /// Damping types
@@ -222,9 +221,7 @@ public:
   ~FGLGear();
 
   /// The Force vector for this gear
-  FGColumnVector3& Force(void);
-  /// The Moment vector for this gear
-  FGColumnVector3& Moment(void) {return vMoment;}
+  FGColumnVector3& GetBodyForces(void);
 
   /// Gets the location of the gear in Body axes
   FGColumnVector3& GetBodyLocation(void) { return vWhlBodyVec; }
@@ -269,35 +266,34 @@ public:
   int GetBrakeGroup(void) const { return (int)eBrakeGrp; }
   int GetSteerType(void) const  { return (int)eSteerType; }
 
-  double GetZPosition(void) const { return vXYZ(3); }
-  void SetZPosition(double z) { vXYZ(3) = z; }
-
-  bool GetSteerable(void) const { return eSteerType != stFixed; }
+  bool GetSteerable(void) const        { return eSteerType != stFixed; }
   bool GetRetractable(void) const      { return isRetractable;   }
   bool GetGearUnitUp(void) const       { return GearUp;          }
   bool GetGearUnitDown(void) const     { return GearDown;        }
-  double GetWheelSideForce(void) const { return vLocalForce(eY); }
-  double GetWheelRollForce(void) const { return vLocalForce(eX); }
-  double GetWheelSideVel(void) const   { return vWhlVelVec(eY);  }
-  double GetWheelRollVel(void) const   { return vWhlVelVec(eX);  }
-  double GetBodyXForce(void) const     { return vForce(eX);      }
-  double GetBodyYForce(void) const     { return vForce(eY);      }
+  double GetWheelRollForce(void) {
+    FGColumnVector3 vForce = mTGear.Transposed() * FGForce::GetBodyForces();
+    return vForce(eX)*cos(SteerAngle) + vForce(eY)*sin(SteerAngle); }
+  double GetWheelSideForce(void) {
+    FGColumnVector3 vForce = mTGear.Transposed() * FGForce::GetBodyForces();
+    return vForce(eY)*cos(SteerAngle) - vForce(eX)*sin(SteerAngle); }
+  double GetWheelRollVel(void) const   { return vWhlVelVec(eX)*cos(SteerAngle)
+                                              + vWhlVelVec(eY)*sin(SteerAngle);  }
+  double GetWheelSideVel(void) const   { return vWhlVelVec(eY)*cos(SteerAngle)
+                                              - vWhlVelVec(eX)*sin(SteerAngle);  }
   double GetWheelSlipAngle(void) const { return WheelSlip;       }
-  double GetWheelVel(int axis) const          { return vWhlVelVec(axis);}
-  bool IsBogey(void) const                    { return (eContactType == ctBOGEY);}
+  double GetWheelVel(int axis) const   { return vWhlVelVec(axis);}
+  bool IsBogey(void) const             { return (eContactType == ctBOGEY);}
   double GetGearUnitPos(void);
 
   void bind(void);
 
 private:
   int GearNumber;
-  FGMatrix33 Tg2b, Tb2g;
-  FGColumnVector3 vXYZ;
-  FGColumnVector3 vMoment;
+  static const FGMatrix33 Tb2s;
+  FGMatrix33 mTGear;
+  FGColumnVector3 vGearOrient;
   FGColumnVector3 vWhlBodyVec;
   FGColumnVector3 vLocalGear;
-  FGColumnVector3 vForce;
-  FGColumnVector3 vLocalForce;
   FGColumnVector3 vWhlVelVec, vLocalWhlVel;     // Velocity of this wheel
   FGColumnVector3 normal, cvel, vGroundNormal;
   FGLocation contact, gearLoc;
@@ -336,11 +332,11 @@ private:
   bool isRetractable;
   bool GearUp, GearDown;
   bool Servicable;
-  string name;
-  string sSteerType;
-  string sBrakeGroup;
-  string sRetractable;
-  string sContactType;
+  std::string name;
+  std::string sSteerType;
+  std::string sBrakeGroup;
+  std::string sRetractable;
+  std::string sContactType;
 
   BrakeGroup  eBrakeGrp;
   ContactType eContactType;
@@ -358,7 +354,6 @@ private:
   Filter LatForceFilter;
   Filter WheelSlipFilter;
 
-  FGFDMExec*     Exec;
   FGState*       State;
   FGAircraft*    Aircraft;
   FGPropagate*   Propagate;
@@ -381,12 +376,6 @@ private:
   void Debug(int from);
 };
 }
-#include "FGAircraft.h"
-#include "FGPropagate.h"
-#include "FGAuxiliary.h"
-#include "FGFCS.h"
-#include "FGMassBalance.h"
-#include "FGState.h"
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

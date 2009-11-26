@@ -36,13 +36,19 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <cstdlib>
 #include <FGFDMExec.h>
 #include "FGAerodynamics.h"
 #include "FGPropagate.h"
 #include "FGAircraft.h"
 #include "FGAuxiliary.h"
 #include "FGMassBalance.h"
-#include <input_output/FGPropertyManager.h>
+#include "input_output/FGPropertyManager.h"
+
+using namespace std;
 
 namespace JSBSim {
 
@@ -324,21 +330,21 @@ bool FGAerodynamics::Load(Element *element)
 
   Debug(2);
 
-  if (temp_element = document->FindElement("alphalimits")) {
+  if ((temp_element = document->FindElement("alphalimits"))) {
     scratch_unit = temp_element->GetAttributeValue("unit");
     if (scratch_unit.empty()) scratch_unit = "RAD";
     alphaclmin = temp_element->FindElementValueAsNumberConvertFromTo("min", scratch_unit, "RAD");
     alphaclmax = temp_element->FindElementValueAsNumberConvertFromTo("max", scratch_unit, "RAD");
   }
 
-  if (temp_element = document->FindElement("hysteresis_limits")) {
+  if ((temp_element = document->FindElement("hysteresis_limits"))) {
     scratch_unit = temp_element->GetAttributeValue("unit");
     if (scratch_unit.empty()) scratch_unit = "RAD";
     alphahystmin = temp_element->FindElementValueAsNumberConvertFromTo("min", scratch_unit, "RAD");
     alphahystmax = temp_element->FindElementValueAsNumberConvertFromTo("max", scratch_unit, "RAD");
   }
 
-  if (temp_element = document->FindElement("aero_ref_pt_shift_x")) {
+  if ((temp_element = document->FindElement("aero_ref_pt_shift_x"))) {
     function_element = temp_element->FindElement("function");
     AeroRPShift = new FGFunction(PropertyManager, function_element);
   }
@@ -415,7 +421,7 @@ void FGAerodynamics::DetermineAxisSystem()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGAerodynamics::GetCoefficientStrings(string delimeter)
+string FGAerodynamics::GetCoefficientStrings(const string& delimeter) const
 {
   string CoeffStrings = "";
   bool firstime = true;
@@ -445,33 +451,24 @@ string FGAerodynamics::GetCoefficientStrings(string delimeter)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGAerodynamics::GetCoefficientValues(string delimeter)
+string FGAerodynamics::GetCoefficientValues(const string& delimeter) const
 {
-  string SDValues = "";
-  bool firstime = true;
-  unsigned int sd;
+  ostringstream buf;
 
-  for (sd = 0; sd < variables.size(); sd++) {
-    if (firstime) {
-      firstime = false;
-    } else {
-      SDValues += delimeter;
-    }
-    SDValues += variables[sd]->GetValueAsString();
+  buf.precision(6);
+  for (unsigned int sd = 0; sd < variables.size(); sd++) {
+    if (buf.tellp() > 0) buf << delimeter;
+    buf << setw(9) << variables[sd]->GetValue();
   }
 
   for (unsigned int axis = 0; axis < 6; axis++) {
     for (unsigned int sd = 0; sd < Coeff[axis].size(); sd++) {
-      if (firstime) {
-        firstime = false;
-      } else {
-        SDValues += delimeter;
-      }
-      SDValues += Coeff[axis][sd]->GetValueAsString();
+      if (buf.tellp() > 0) buf << delimeter;
+      buf << setw(9) << Coeff[axis][sd]->GetValue();
     }
   }
 
-  return SDValues;
+  return buf.str();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -557,6 +554,9 @@ void FGAerodynamics::Debug(int from)
           break;
         case (atBodyXYZ):
           cout << endl << "  Aerodynamics (X|Y|Z axes):" << endl << endl;
+          break;
+      case (atNone):
+          cout << endl << "  Aerodynamics (undefined axes):" << endl << endl;
           break;
       }
     }

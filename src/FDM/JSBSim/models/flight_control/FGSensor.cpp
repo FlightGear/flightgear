@@ -38,6 +38,11 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGSensor.h"
+#include "input_output/FGXMLElement.h"
+#include <iostream>
+#include <cstdlib>
+
+using namespace std;
 
 namespace JSBSim {
 
@@ -52,11 +57,10 @@ CLASS IMPLEMENTATION
 FGSensor::FGSensor(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
 {
   double denom;
-  dt = fcs->GetDt();
 
   // inputs are read from the base class constructor
 
-  bits = quantized = divisions = index = delay = 0;
+  bits = quantized = divisions = 0;
   PreviousInput = PreviousOutput = 0.0;
   min = max = bias = gain = noise_variance = lag = drift_rate = drift = span = 0.0;
   granularity = 0.0;
@@ -117,11 +121,6 @@ FGSensor::FGSensor(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
       cerr << "  defaulting to UNIFORM." << endl;
     }
   }
-  if ( element->FindElement("delay") ) {
-    delay = (unsigned int)element->FindElementValueAsNumber("delay");
-    output_array.resize(delay);
-    for (unsigned int i=0; i<delay; i++) output_array[i] = 0.0;
-  }
 
   FGFCSComponent::bind();
   bind();
@@ -138,34 +137,41 @@ FGSensor::~FGSensor()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGSensor::Run(void )
+bool FGSensor::Run(void)
 {
   Input = InputNodes[0]->getDoubleValue() * InputSigns[0];
 
+  ProcessSensorSignal();
+
+  return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGSensor::ProcessSensorSignal(void)
+{
   Output = Input; // perfect sensor
 
   // Degrade signal as specified
 
   if (fail_stuck) {
     Output = PreviousOutput;
-    return true;
+  } else {
+    if (lag != 0.0)            Lag();       // models sensor lag and filter
+    if (noise_variance != 0.0) Noise();     // models noise
+    if (drift_rate != 0.0)     Drift();     // models drift over time
+    if (gain != 0.0)           Gain();      // models a finite gain
+    if (bias != 0.0)           Bias();      // models a finite bias
+
+    if (delay != 0)            Delay();     // models system signal transport latencies
+
+    if (fail_low)  Output = -HUGE_VAL;
+    if (fail_high) Output =  HUGE_VAL;
+
+    if (bits != 0)             Quantize();  // models quantization degradation
+
+    Clip();
   }
-
-  if (lag != 0.0)            Lag();       // models sensor lag and filter
-  if (noise_variance != 0.0) Noise();     // models noise
-  if (drift_rate != 0.0)     Drift();     // models drift over time
-  if (bias != 0.0)           Bias();      // models a finite bias
-  if (gain != 0.0)           Gain();      // models a finite gain
-
-  if (delay != 0.0)          Delay();     // models system signal transport latencies
-
-  if (fail_low)  Output = -HUGE_VAL;
-  if (fail_high) Output =  HUGE_VAL;
-
-  if (bits != 0)             Quantize();  // models quantization degradation
-
-  Clip(); // Is it right to clip a sensor?
-  return true;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -237,16 +243,6 @@ void FGSensor::Lag(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGSensor::Delay(void)
-{
-  output_array[index] = Output;
-  if (index == delay-1) index = 0;
-  else index++;
-  Output = output_array[index];
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 void FGSensor::bind(void)
 {
   string tmp = Name;
@@ -301,8 +297,6 @@ void FGSensor::Debug(int from)
         else
           cout << "      INPUT: " << InputNodes[0]->getName() << endl;
       }
-      if (delay > 0) cout <<"      Frame delay: " << delay
-                                   << " frames (" << delay*dt << " sec)" << endl;
       if (bits != 0) {
         if (quant_property.empty())
           cout << "      Quantized output" << endl;
@@ -332,7 +326,10 @@ void FGSensor::Debug(int from)
           cout << "      Random noise is gaussian distributed." << endl;
         }
       }
-      if (IsOutput) cout << "      OUTPUT: " << OutputNode->getName() << endl;
+      if (IsOutput) {
+        for (unsigned int i=0; i<OutputNodes.size(); i++)
+          cout << "      OUTPUT: " << OutputNodes[i]->getName() << endl;
+      }
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification

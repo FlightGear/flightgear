@@ -38,6 +38,13 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGFilter.h"
+#include "input_output/FGXMLElement.h"
+#include "input_output/FGPropertyManager.h"
+
+#include <iostream>
+#include <string>
+
+using namespace std;
 
 namespace JSBSim {
 
@@ -50,14 +57,14 @@ CLASS IMPLEMENTATION
 
 FGFilter::FGFilter(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
 {
-  dt = fcs->GetState()->Getdt();
   Trigger = 0;
   DynamicFilter = false;
 
   C[1] = C[2] = C[3] = C[4] = C[5] = C[6] = 0.0;
-  for (int i=0; i<7; i++) {
+  for (int i=1; i<7; i++) {
     PropertySign[i] = 1.0;
     PropertyNode[i] = 0L;
+    ReadFilterCoefficients(element, i);
   }
 
   if      (Type == "LAG_FILTER")          FilterType = eLag        ;
@@ -66,13 +73,6 @@ FGFilter::FGFilter(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
   else if (Type == "WASHOUT_FILTER")      FilterType = eWashout    ;
   else if (Type == "INTEGRATOR")          FilterType = eIntegrator ;
   else                                    FilterType = eUnknown    ;
-
-  ReadFilterCoefficients(element, 1);
-  ReadFilterCoefficients(element, 2);
-  ReadFilterCoefficients(element, 3);
-  ReadFilterCoefficients(element, 4);
-  ReadFilterCoefficients(element, 5);
-  ReadFilterCoefficients(element, 6);
 
   if (element->FindElement("trigger")) {
     Trigger =  PropertyManager->GetNode(element->FindElementValue("trigger"));
@@ -98,13 +98,13 @@ FGFilter::~FGFilter()
 
 void FGFilter::ReadFilterCoefficients(Element* element, int index)
 {
-  char buf[3];
-  sprintf(buf, "c%d", index);
-  string coefficient = string(buf);
-  string property_string="";
-
+  // index is known to be 1-7. 
+  // A stringstream would be overkill, but also trying to avoid sprintf
+  string coefficient = "c0";
+  coefficient[1] += index;
+  
   if ( element->FindElement(coefficient) ) {
-    property_string = element->FindElementValue(coefficient);
+    string property_string = element->FindElementValue(coefficient);
     if (!is_number(property_string)) { // property
       if (property_string[0] == '-') {
        PropertySign[index] = -1.0;
@@ -323,8 +323,13 @@ void FGFilter::Debug(int from)
           if (PropertyNode[1] == 0L) cout << "      C[1]: " << C[1] << endl;
           else cout << "      C[1] is the value of property: " << sgn << PropertyNode[1]->GetName() << endl;
           break;
+        case eUnknown:
+          break;
        } 
-      if (IsOutput) cout << "      OUTPUT: " << OutputNode->getName() << endl;
+      if (IsOutput) {
+        for (unsigned int i=0; i<OutputNodes.size(); i++)
+          cout << "      OUTPUT: " << OutputNodes[i]->getName() << endl;
+      }
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification

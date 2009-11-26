@@ -39,17 +39,12 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <FGJSBBase.h>
-#include <input_output/FGXMLElement.h>
-#include <math/FGColumnVector3.h>
-#include <models/propulsion/FGForce.h>
-#include <math/FGFunction.h>
+#include "FGJSBBase.h"
+#include "math/FGColumnVector3.h"
+#include "models/propulsion/FGForce.h"
+#include "math/FGFunction.h"
 
 #include <string>
-using std::string;
-using std::cerr;
-using std::endl;
-using std::cout;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -64,6 +59,7 @@ FORWARD DECLARATIONS
 namespace JSBSim {
 
 class FGBallonet;
+class Element;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -230,7 +226,7 @@ private:
   enum GasType {ttUNKNOWN, ttHYDROGEN, ttHELIUM, ttAIR};
 
   GasType Type;
-  string type;
+  std::string type;
   int CellNum;
   // Structural constants
   double MaxVolume;                 // [ft�]

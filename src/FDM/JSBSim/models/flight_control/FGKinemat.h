@@ -38,12 +38,7 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGFCSComponent.h"
-#include <input_output/FGXMLElement.h>
 #include <vector>
-#include <string>
-
-using std::vector;
-using std::string;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -134,8 +129,8 @@ public:
   bool Run (void);
 
 private:
-  vector<double> Detents;
-  vector<double> TransitionTimes;
+  std::vector<double> Detents;
+  std::vector<double> TransitionTimes;
   int NumDetents;
   double OutputPct;
   bool  DoScale;

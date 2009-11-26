@@ -258,6 +258,10 @@ FGJSBsim::FGJSBsim( double dt )
     speedbrake_pos_pct->setDoubleValue(0);
     spoilers_pos_pct->setDoubleValue(0);
 
+    ab_brake_engaged = fgGetNode("/autopilot/autobrake/engaged", true);
+    ab_brake_left_pct = fgGetNode("/autopilot/autobrake/brake-left-output", true);
+    ab_brake_right_pct = fgGetNode("/autopilot/autobrake/brake-right-output", true);
+    
     temperature = fgGetNode("/environment/temperature-degc",true);
     pressure = fgGetNode("/environment/pressure-inhg",true);
     density = fgGetNode("/environment/density-slugft3",true);
@@ -542,8 +546,18 @@ bool FGJSBsim::copy_to_JSBsim()
         // Parking brake sets minimum braking
         // level for mains.
     double parking_brake = globals->get_controls()->get_brake_parking();
-    FCS->SetLBrake(FMAX(globals->get_controls()->get_brake_left(), parking_brake));
-    FCS->SetRBrake(FMAX(globals->get_controls()->get_brake_right(), parking_brake));
+    double left_brake = globals->get_controls()->get_brake_left();
+    double right_brake = globals->get_controls()->get_brake_right();
+    
+    if (ab_brake_engaged->getBoolValue()) {
+      left_brake = ab_brake_left_pct->getDoubleValue();
+      right_brake = ab_brake_right_pct->getDoubleValue(); 
+    }
+    
+    FCS->SetLBrake(FMAX(left_brake, parking_brake));
+    FCS->SetRBrake(FMAX(right_brake, parking_brake));
+    
+    
     FCS->SetCBrake( 0.0 );
     // FCS->SetCBrake( globals->get_controls()->get_brake(2) );
 
@@ -741,9 +755,7 @@ bool FGJSBsim::copy_from_JSBsim()
     // Copy the engine values from JSBSim.
     for ( i=0; i < Propulsion->GetNumEngines(); i++ ) {
       SGPropertyNode * node = fgGetNode("engines/engine", i, true);
-      char buf[30];
-      sprintf(buf, "engines/engine[%d]/thruster", i);
-      SGPropertyNode * tnode = fgGetNode(buf, true);
+      SGPropertyNode * tnode = node->getChild("thruster", 0, true);
       FGThruster * thruster = Propulsion->GetEngine(i)->GetThruster();
 
       switch (Propulsion->GetEngine(i)->GetType()) {

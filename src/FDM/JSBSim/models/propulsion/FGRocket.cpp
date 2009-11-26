@@ -38,9 +38,15 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <iostream>
 #include <sstream>
-
 #include "FGRocket.h"
+#include "FGState.h"
+#include "models/FGPropulsion.h"
+#include "FGThruster.h"
+#include "FGTank.h"
+
+using namespace std;
 
 namespace JSBSim {
 
@@ -63,6 +69,7 @@ FGRocket::FGRocket(FGFDMExec* exec, Element *el, int engine_number)
   FuelFlowRate = 0.0;
   OxidizerFlowRate = 0.0;
   SLOxiFlowMax = 0.0;
+  BuildupTime = 0.0;
   It = 0.0;
 
   // Defaults
@@ -71,6 +78,8 @@ FGRocket::FGRocket(FGFDMExec* exec, Element *el, int engine_number)
 
   if (el->FindElement("isp"))
     Isp = el->FindElementValueAsNumber("isp");
+  if (el->FindElement("builduptime"))
+    BuildupTime = el->FindElementValueAsNumber("builduptime");
   if (el->FindElement("maxthrottle"))
     MaxThrottle = el->FindElementValueAsNumber("maxthrottle");
   if (el->FindElement("minthrottle"))
@@ -114,21 +123,27 @@ double FGRocket::Calculate(void)
   PropellantFlowRate = (FuelExpended + OxidizerExpended)/dT;
   Throttle = FCS->GetThrottlePos(EngineNumber);
 
-  // If there is a thrust table, it is a function of propellant remaining. The
+  // If there is a thrust table, it is a function of propellant burned. The
   // engine is started when the throttle is advanced to 1.0. After that, it
-  // burns without regard to throttle setting. The table returns a value between
-  // zero and one, representing the percentage of maximum vacuum thrust being
-  // applied.
+  // burns without regard to throttle setting.
 
   if (ThrustTable != 0L) { // Thrust table given -> Solid fuel used
 
     if ((Throttle == 1 || BurnTime > 0.0 ) && !Starved) {
-      BurnTime += State->Getdt();
-      double TotalEngineFuelAvailable=0.0;
-      for (int i=0; i<(int)SourceTanks.size(); i++)
-        TotalEngineFuelAvailable += Propulsion->GetTank(SourceTanks[i])->GetContents();
+      double TotalEngineFuelBurned=0.0;
+      for (int i=0; i<(int)SourceTanks.size(); i++) {
+        FGTank* tank = Propulsion->GetTank(i);
+        if (SourceTanks[i] == 1) {
+          TotalEngineFuelBurned += tank->GetCapacity() - tank->GetContents();
+        }
+      }
 
-      VacThrust = ThrustTable->GetValue(TotalEngineFuelAvailable);
+      VacThrust = ThrustTable->GetValue(TotalEngineFuelBurned);
+      if (BurnTime <= BuildupTime && BuildupTime > 0.0) {
+        VacThrust *= sin((BurnTime/BuildupTime)*M_PI/2.0);
+        // VacThrust *= (1-cos((BurnTime/BuildupTime)*M_PI))/2.0; // 1 - cos approach
+      }
+      BurnTime += State->Getdt(); // Increment burn time
     } else {
       VacThrust = 0.0;
     }
@@ -143,7 +158,12 @@ double FGRocket::Calculate(void)
 
     } else { // Calculate thrust
 
-      PctPower = Throttle / MaxThrottle; // Min and MaxThrottle range from 0.0 to 1.0, normally.
+      // This is nonsensical. Max throttle should be assumed to be 1.0. One might
+      // conceivably have a throttle setting > 1.0 for some rocket engines. But, 1.0
+      // should always be the default.
+      // PctPower = Throttle / MaxThrottle; // Min and MaxThrottle range from 0.0 to 1.0, normally.
+      
+      PctPower = Throttle;
       Flameout = false;
       VacThrust = Isp * PropellantFlowRate;
 
@@ -248,23 +268,23 @@ double FGRocket::CalcOxidizerNeed(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGRocket::GetEngineLabels(string delimeter)
+string FGRocket::GetEngineLabels(const string& delimiter)
 {
   std::ostringstream buf;
 
-  buf << Name << " Total Impulse (engine " << EngineNumber << " in psf)" << delimeter
-      << Thruster->GetThrusterLabels(EngineNumber, delimeter);
+  buf << Name << " Total Impulse (engine " << EngineNumber << " in psf)" << delimiter
+      << Thruster->GetThrusterLabels(EngineNumber, delimiter);
 
   return buf.str();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGRocket::GetEngineValues(string delimeter)
+string FGRocket::GetEngineValues(const string& delimiter)
 {
   std::ostringstream buf;
 
-  buf << It << delimeter << Thruster->GetThrusterValues(EngineNumber, delimeter);
+  buf << It << delimiter << Thruster->GetThrusterValues(EngineNumber, delimiter);
 
   return buf.str();
 }

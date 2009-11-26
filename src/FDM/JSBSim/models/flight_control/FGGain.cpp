@@ -38,6 +38,12 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGGain.h"
+#include "input_output/FGXMLElement.h"
+#include <iostream>
+#include <string>
+#include <cstdlib>
+
+using namespace std;
 
 namespace JSBSim {
 
@@ -212,7 +218,10 @@ void FGGain::Debug(int from)
       } else {
         cout << "      GAIN: " << Gain << endl;
       }
-      if (IsOutput) cout << "      OUTPUT: " << OutputNode->getName() << endl;
+      if (IsOutput) {
+        for (unsigned int i=0; i<OutputNodes.size(); i++)
+          cout << "      OUTPUT: " << OutputNodes[i]->getName() << endl;
+      }
       if (Type == "AEROSURFACE_SCALE") {
         cout << "      In/Out Mapping:" << endl;
         cout << "        Input MIN: " << InMin << endl;

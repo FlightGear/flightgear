@@ -38,6 +38,12 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGFCSComponent.h"
+#include "input_output/FGPropertyManager.h"
+#include "input_output/FGXMLElement.h"
+#include <iostream>
+#include <cstdlib>
+
+using namespace std;
 
 namespace JSBSim {
 
@@ -52,11 +58,13 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
 {
   Element *input_element, *clip_el;
   Input = Output = clipmin = clipmax = 0.0;
-  OutputNode = treenode = 0;
+  treenode = 0;
+  delay = index = 0;
   ClipMinPropertyNode = ClipMaxPropertyNode = 0;
   clipMinSign = clipMaxSign = 1.0;
   IsOutput   = clip = false;
   string input, clip_string;
+  dt = fcs->GetDt();
 
   PropertyManager = fcs->GetPropertyManager();
   if        (element->GetName() == string("lag_filter")) {
@@ -91,6 +99,8 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
     Type = "SENSOR";
   } else if (element->GetName() == string("accelerometer")) {
     Type = "ACCELEROMETER";
+  } else if (element->GetName() == string("magnetometer")) {
+    Type = "MAGNETOMETER";
   } else if (element->GetName() == string("gyro")) {
     Type = "GYRO";
   } else if (element->GetName() == string("actuator")) {
@@ -123,13 +133,36 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
     input_element = element->FindNextElement("input");
   }
 
-  if (element->FindElement("output")) {
+  Element *out_elem = element->FindElement("output");
+  while (out_elem) {
     IsOutput = true;
-    OutputNode = PropertyManager->GetNode( element->FindElementValue("output"), true );
+    string output_node_name = out_elem->GetDataLine();
+    FGPropertyManager* OutputNode = PropertyManager->GetNode( output_node_name, true );
+    OutputNodes.push_back(OutputNode);
     if (!OutputNode) {
-      cerr << endl << "  Unable to process property: " << element->FindElementValue("output") << endl;
+      cerr << endl << "  Unable to process property: " << output_node_name << endl;
       throw(string("Invalid output property name in flight control definition"));
     }
+    out_elem = element->FindNextElement("output");
+  }
+
+  Element* delay_elem = element->FindElement("delay");
+  if ( delay_elem ) {
+    delay = (unsigned int)delay_elem->GetDataAsNumber();
+    string delayType = delay_elem->GetAttributeValue("type");
+    if (delayType.length() > 0) {
+      if (delayType == "time") {
+        delay = (int)(delay / dt);
+      } else if (delayType == "frames") {
+        // no op. the delay type of "frames" is assumed and is the default.
+      } else {
+        cerr << "Unallowed delay type" << endl;
+      }
+    } else {
+      delay = (int)(delay / dt);
+    }
+    output_array.resize(delay);
+    for (int i=0; i<delay; i++) output_array[i] = 0.0;
   }
 
   clip_el = element->FindElement("clipto");
@@ -171,7 +204,7 @@ FGFCSComponent::~FGFCSComponent()
 
 void FGFCSComponent::SetOutput(void)
 {
-  OutputNode->setDoubleValue(Output);
+  for (unsigned int i=0; i<OutputNodes.size(); i++) OutputNodes[i]->setDoubleValue(Output);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -179,6 +212,16 @@ void FGFCSComponent::SetOutput(void)
 bool FGFCSComponent::Run(void)
 {
   return true;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFCSComponent::Delay(void)
+{
+  output_array[index] = Output;
+  if (index == delay-1) index = 0;
+  else index++;
+  Output = output_array[index];
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -258,6 +301,8 @@ void FGFCSComponent::Debug(int from)
           cout << "      Maximum limit: " << clipmax << endl;
         }
       }  
+      if (delay > 0) cout <<"      Frame delay: " << delay
+                                   << " frames (" << delay*dt << " sec)" << endl;
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification

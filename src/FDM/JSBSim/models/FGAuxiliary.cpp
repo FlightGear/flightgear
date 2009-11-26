@@ -44,14 +44,18 @@ INCLUDES
 #include "FGAerodynamics.h"
 #include "FGPropagate.h"
 #include "FGAtmosphere.h"
-#include <FGFDMExec.h>
+#include "FGFDMExec.h"
 #include "FGAircraft.h"
 #include "FGInertial.h"
 #include "FGExternalReactions.h"
 #include "FGBuoyantForces.h"
 #include "FGGroundReactions.h"
 #include "FGPropulsion.h"
-#include <input_output/FGPropertyManager.h>
+#include "FGMassBalance.h"
+#include "input_output/FGPropertyManager.h"
+#include <iostream>
+
+using namespace std;
 
 namespace JSBSim {
 
@@ -391,6 +395,13 @@ void FGAuxiliary::CalculateRelativePosition(void)
   lon_relative_position=(FDMExec->GetPropagate()->GetLongitude() - FDMExec->GetIC()->GetLongitudeDegIC()*degtorad)*earth_radius_mt;
   relative_position = sqrt(lat_relative_position*lat_relative_position + lon_relative_position*lon_relative_position);
 };
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGAuxiliary::BadUnits(void) const
+{
+  cerr << "Bad units" << endl; return 0.0;
+}
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 //    The bitmasked value choices are as follows:

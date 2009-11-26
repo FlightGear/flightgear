@@ -54,15 +54,18 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include <cmath>
-#include <iomanip>
+#include <cstdlib>
+#include <iostream>
 
 #include "FGPropagate.h"
-#include <FGFDMExec.h>
-#include <FGState.h>
+#include "FGFDMExec.h"
+#include "FGState.h"
 #include "FGAircraft.h"
 #include "FGMassBalance.h"
 #include "FGInertial.h"
-#include <input_output/FGPropertyManager.h>
+#include "input_output/FGPropertyManager.h"
+
+using namespace std;
 
 namespace JSBSim {
 

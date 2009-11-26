@@ -39,8 +39,8 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <FGJSBBase.h>
-#include <input_output/FGPropertyManager.h>
+#include "FGJSBBase.h"
+#include "input_output/FGPropertyManager.h"
 #include "FGColumnVector3.h"
 #include "FGMatrix33.h"
 

@@ -42,10 +42,13 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGScript.h"
-#include <input_output/FGXMLParse.h>
-#include <initialization/FGTrim.h>
+#include "input_output/FGXMLParse.h"
+#include "initialization/FGTrim.h"
 
 #include <iostream>
+#include <cstdlib>
+
+using namespace std;
 
 namespace JSBSim {
 

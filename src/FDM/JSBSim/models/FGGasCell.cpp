@@ -35,16 +35,21 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include <FGFDMExec.h>
-#include <models/FGAuxiliary.h>
-#include <models/FGAtmosphere.h>
-#include <models/FGInertial.h>
-#include <models/FGMassBalance.h>
+#include "FGFDMExec.h"
+#include "models/FGAuxiliary.h"
+#include "models/FGAtmosphere.h"
+#include "models/FGInertial.h"
+#include "models/FGMassBalance.h"
 #include "FGGasCell.h"
+#include "input_output/FGXMLElement.h"
+#include <iostream>
+#include <cstdlib>
 
 using std::cerr;
 using std::endl;
 using std::cout;
+using std::string;
+using std::max;
 
 namespace JSBSim {
 

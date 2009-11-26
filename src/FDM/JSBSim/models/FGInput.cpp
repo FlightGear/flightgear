@@ -42,8 +42,14 @@ INCLUDES
 #include "FGState.h"
 #include "FGFDMExec.h"
 
-#include <fstream>
+#include "input_output/FGfdmSocket.h"
+#include "input_output/FGXMLElement.h"
+
+#include <sstream>
 #include <iomanip>
+#include <cstdlib>
+
+using namespace std;
 
 namespace JSBSim {
 
@@ -89,10 +95,8 @@ bool FGInput::InitModel(void)
 
 bool FGInput::Run(void)
 {
-  string line, token, info_string;
-  int start=0, string_start=0, string_end=0;
-  int token_start=0, token_end=0;
-  char buf[100];
+  string line, token;
+  size_t start=0, string_start=0, string_end=0;
   double value=0;
   FGPropertyManager* node=0;
 
@@ -158,8 +162,9 @@ bool FGInput::Run(void)
             socket->Reply("Must be in HOLD to search properties\n");
           }
         } else if (node > 0) {
-          sprintf(buf, "%s = %12.6f\n", argument.c_str(), node->getDoubleValue());
-          socket->Reply(buf);
+          ostringstream buf;
+          buf << argument << " = " << setw(12) << setprecision(6) << node->getDoubleValue() << endl;
+          socket->Reply(buf.str());
         }
 
       } else if (command == "hold") {                  // PAUSE
@@ -181,12 +186,12 @@ bool FGInput::Run(void)
       } else if (command == "info") {                   // INFO
 
         // get info about the sim run and/or aircraft, etc.
-        sprintf(buf, "%8.3f\0", State->Getsim_time());
-        info_string  = "JSBSim version: " + JSBSim_version + "\n";
-        info_string += "Config File version: " + needed_cfg_version + "\n";
-        info_string += "Aircraft simulated: " + Aircraft->GetAircraftName() + "\n";
-        info_string += "Simulation time: " + string(buf) + "\n";
-        socket->Reply(info_string);
+        ostringstream info;
+        info << "JSBSim version: " << JSBSim_version << endl;
+        info << "Config File version: " << needed_cfg_version << endl;
+        info << "Aircraft simulated: " << Aircraft->GetAircraftName() << endl;
+        info << "Simulation time: " << setw(8) << setprecision(3) << State->Getsim_time() << endl;
+        socket->Reply(info.str());
 
       } else if (command == "help") {                   // HELP
 

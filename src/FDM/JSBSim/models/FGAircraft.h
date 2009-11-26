@@ -38,11 +38,12 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <string>
 #include <vector>
 
 #include "FGModel.h"
-#include <input_output/FGXMLElement.h>
-#include <math/FGColumnVector3.h>
+#include "input_output/FGXMLElement.h"
+#include "math/FGColumnVector3.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -131,7 +132,7 @@ public:
 
   /** Gets the aircraft name
       @return the name of the aircraft as a string type */
-  inline string GetAircraftName(void) { return AircraftName; }
+  const std::string& GetAircraftName(void) const { return AircraftName; }
 
   /// Gets the wing area
   double GetWingArea(void) const { return WingArea; }
@@ -163,7 +164,7 @@ public:
   inline double GetXYZrp(int idx) const { return vXYZrp(idx); }
   inline double GetXYZvrp(int idx) const { return vXYZvrp(idx); }
   inline double GetXYZep(int idx) const { return vXYZep(idx); }
-  inline void SetAircraftName(string name) {AircraftName = name;}
+  inline void SetAircraftName(const std::string& name) {AircraftName = name;}
   inline void SetHoldDown(int hd) {HoldDown = hd;}
   inline int GetHoldDown(void) const {return HoldDown;}
 
@@ -193,7 +194,7 @@ private:
   double HTailArea, VTailArea, HTailArm, VTailArm;
   double lbarh,lbarv,vbarh,vbarv;
   int HoldDown;
-  string AircraftName;
+  std::string AircraftName;
 
   void Debug(int from);
 };

@@ -37,7 +37,11 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGTable.h"
-#include <iomanip>
+#include "input_output/FGXMLElement.h"
+#include "input_output/FGPropertyManager.h"
+#include <iostream>
+#include <sstream>
+#include <cstdlib>
 
 using namespace std;
 
@@ -307,7 +311,7 @@ FGTable::~FGTable()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-unsigned int FGTable::FindNumColumns(string test_line)
+unsigned int FGTable::FindNumColumns(const string& test_line)
 {
   // determine number of data columns in table (first column is row lookup - don't count)
   size_t position=0;
@@ -466,7 +470,7 @@ double FGTable::GetValue(double rowKey, double colKey, double tableKey) const
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGTable::operator<<(stringstream& in_stream)
+void FGTable::operator<<(istream& in_stream)
 {
   int startRow=0;
   int startCol=0;
@@ -488,7 +492,7 @@ void FGTable::operator<<(stringstream& in_stream)
 FGTable& FGTable::operator<<(const double n)
 {
   Data[rowCounter][colCounter] = n;
-  if (colCounter == nCols) {
+  if (colCounter == (int)nCols) {
     colCounter = 0;
     rowCounter++;
   } else {

@@ -53,6 +53,10 @@
 */
 
 #include "FGExternalForce.h"
+#include "input_output/FGXMLElement.h"
+#include <iostream>
+
+using namespace std;
 
 namespace JSBSim {
 

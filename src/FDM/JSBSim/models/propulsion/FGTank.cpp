@@ -37,11 +37,14 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGTank.h"
-#include <models/FGAuxiliary.h>
+#include "FGFDMExec.h"
+#include "models/FGAuxiliary.h"
+#include "input_output/FGXMLElement.h"
+#include "input_output/FGPropertyManager.h"
+#include <iostream>
+#include <cstdlib>
 
-using std::cerr;
-using std::endl;
-using std::cout;
+using namespace std;
 
 namespace JSBSim {
 
@@ -59,9 +62,12 @@ FGTank::FGTank(FGFDMExec* exec, Element* el, int tank_number)
   Element* element;
   Element* element_Grain;
   Area = 1.0;
-  Temperature = -9999.0;
+  Density = 6.6;
+  InitialTemperature = Temperature = -9999.0;
   Ixx = Iyy = Izz = 0.0;
-  Radius = Capacity = Contents = Standpipe = Length = InnerRadius = 0.0;
+  Radius = Contents = Standpipe = Length = InnerRadius = 0.0;
+  Capacity = 0.00001;
+  Priority = InitialPriority = 1;
   PropertyManager = Exec->GetPropertyManager();
   vXYZ.InitMatrix();
   vXYZ_drain.InitMatrix();
@@ -92,15 +98,19 @@ FGTank::FGTank(FGFDMExec* exec, Element* el, int tank_number)
     InitialTemperature = Temperature = el->FindElementValueAsNumber("temperature");
   if (el->FindElement("standpipe"))
     InitialStandpipe = Standpipe = el->FindElementValueAsNumberConvertTo("standpipe", "LBS");
+  if (el->FindElement("priority"))
+    InitialPriority = Priority = el->FindElementValueAsNumber("priority");
+  if (el->FindElement("density"))
+    Density = el->FindElementValueAsNumberConvertTo("density", "LBS/GAL");
 
-  Selected = true;
+  SetPriority( InitialPriority );     // this will also set the Selected flag
 
-  if (Capacity != 0) {
-    PctFull = 100.0*Contents/Capacity;            // percent full; 0 to 100.0
-  } else {
-    Contents = 0;
-    PctFull  = 0;
+  if (Capacity == 0) {
+    cerr << "Tank capacity must not be zero. Reset to 0.00001 lbs!" << endl;
+    Capacity = 0.00001;
+    Contents = 0.0;
   }
+  PctFull = 100.0*Contents/Capacity;            // percent full; 0 to 100.0
 
   // Check whether this is a solid propellant "tank". Initialize it if true.
 
@@ -145,6 +155,9 @@ FGTank::FGTank(FGFDMExec* exec, Element* el, int tank_number)
   property_name = base_property_name + "/contents-lbs";
   PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetContents,
                                        &FGTank::SetContents );
+  property_name = base_property_name + "/priority";
+  PropertyManager->Tie( property_name.c_str(), (FGTank*)this, &FGTank::GetPriority,
+                                       &FGTank::SetPriority );
 
   if (Temperature != -9999.0)  InitialTemperature = Temperature = FahrenheitToCelsius(Temperature);
   Area = 40.0 * pow(Capacity/1975, 0.666666667);
@@ -163,11 +176,11 @@ FGTank::~FGTank()
 
 void FGTank::ResetToIC(void)
 {
-  Temperature = InitialTemperature;
-  Standpipe = InitialStandpipe;
-  Contents = InitialContents;
+  SetTemperature( InitialTemperature );
+  SetStandpipe ( InitialStandpipe );
+  SetContents ( InitialContents );
   PctFull = 100.0*Contents/Capacity;
-  Selected = true;
+  SetPriority( InitialPriority );
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -199,7 +212,6 @@ double FGTank::Drain(double used)
 
     Contents = 0.0;
     PctFull = 0.0;
-    Selected = false;
   }
 
   if (grainType != gtUNKNOWN) CalculateInertias();
@@ -237,6 +249,14 @@ void FGTank::SetContents(double amount)
     PctFull = Contents/Capacity*100.0;
   }
 }
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGTank::SetContentsGallons(double gallons)
+{
+  SetContents(gallons * Density);
+}
+
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -284,6 +304,10 @@ void FGTank::CalculateInertias(void)
       Ixx = 0.5*Mass*Rad2/144.0;
       Iyy = Mass*(3.0*Rad2 + Length*Length)/(144.0*12.0);
       break;
+    case gtUNKNOWN:
+      cerr << "Unknown grain type found." << endl;
+      exit(-1);
+      break;
   }
   Izz  = Iyy;
 
@@ -319,6 +343,7 @@ void FGTank::Debug(int from)
       cout << "      Tank location (X, Y, Z): " << vXYZ(eX) << ", " << vXYZ(eY) << ", " << vXYZ(eZ) << endl;
       cout << "      Effective radius: " << Radius << " inches" << endl;
       cout << "      Initial temperature: " << Temperature << " Fahrenheit" << endl;
+      cout << "      Priority: " << Priority << endl;
     }
   }
   if (debug_lvl & 2 ) { // Instantiation/Destruction notification

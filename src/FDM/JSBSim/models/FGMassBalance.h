@@ -39,9 +39,9 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGModel.h"
-#include <math/FGColumnVector3.h>
-#include <math/FGMatrix33.h>
-#include <input_output/FGXMLElement.h>
+#include "math/FGColumnVector3.h"
+#include "math/FGMatrix33.h"
+#include "input_output/FGXMLElement.h"
 #include <vector>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -189,24 +189,10 @@ private:
     void SetPointMassWeight(double wt) {Weight = wt;}
     double GetPointMassWeight(void) const {return Weight;}
 
-    void bind(FGPropertyManager* PropertyManager, int num) {
-      string tmp = CreateIndexedPropertyName("inertia/pointmass-weight-lbs", num);
-      PropertyManager->Tie( tmp.c_str(), this, &PointMass::GetPointMassWeight,
-                                       &PointMass::SetPointMassWeight);
-
-      tmp = CreateIndexedPropertyName("inertia/pointmass-location-X-inches", num);
-      PropertyManager->Tie( tmp.c_str(), this, eX, &PointMass::GetPointMassLocation,
-                                           &PointMass::SetPointMassLocation);
-      tmp = CreateIndexedPropertyName("inertia/pointmass-location-Y-inches", num);
-      PropertyManager->Tie( tmp.c_str(), this, eY, &PointMass::GetPointMassLocation,
-                                           &PointMass::SetPointMassLocation);
-      tmp = CreateIndexedPropertyName("inertia/pointmass-location-Z-inches", num);
-      PropertyManager->Tie( tmp.c_str(), this, eZ, &PointMass::GetPointMassLocation,
-                                           &PointMass::SetPointMassLocation);
-    }
+    void bind(FGPropertyManager* PropertyManager, int num);
   };
 
-  vector <struct PointMass*> PointMasses;
+  std::vector <struct PointMass*> PointMasses;
 
   void bind(void);
   void Debug(int from);

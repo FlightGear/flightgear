@@ -40,10 +40,10 @@ INCLUDES
 #include "FGJSBBase.h"
 #include "FGState.h"
 #include "FGFDMExec.h"
-#include <math/FGFunction.h>
-#include <math/FGCondition.h>
+#include "math/FGFunction.h"
+#include "math/FGCondition.h"
 #include <vector>
-#include <input_output/FGXMLFileRead.h>
+#include "input_output/FGXMLFileRead.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS

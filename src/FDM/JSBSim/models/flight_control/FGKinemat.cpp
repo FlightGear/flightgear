@@ -38,8 +38,11 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGKinemat.h"
-#include <math.h>
-#include <float.h>
+#include "input_output/FGXMLElement.h"
+#include <iostream>
+#include <cstdlib>
+
+using namespace std;
 
 namespace JSBSim {
 
@@ -98,13 +101,13 @@ FGKinemat::~FGKinemat()
 
 bool FGKinemat::Run(void )
 {
-  double dt = fcs->GetState()->Getdt();
+  double dt0 = dt;
 
   Input = InputNodes[0]->getDoubleValue() * InputSigns[0];
 
   if (DoScale) Input *= Detents[NumDetents-1];
 
-  if (IsOutput) Output = OutputNode->getDoubleValue();
+  if (IsOutput) Output = OutputNodes[0]->getDoubleValue();
 
   if (Input < Detents[0])
     Input = Detents[0];
@@ -113,7 +116,7 @@ bool FGKinemat::Run(void )
 
   // Process all detent intervals the movement traverses until either the
   // final value is reached or the time interval has finished.
-  while ( 0.0 < dt && !EqualToRoundoff(Input, Output) ) {
+  while ( dt0 > 0.0 && !EqualToRoundoff(Input, Output) ) {
 
     // Find the area where Output is in
     int ind;
@@ -137,8 +140,8 @@ bool FGKinemat::Run(void )
       double ThisDt = fabs((ThisInput-Output)/Rate);
 
       // and clip to the timestep size
-      if (dt < ThisDt) {
-        ThisDt = dt;
+      if (dt0 < ThisDt) {
+        ThisDt = dt0;
         if (Output < Input)
           Output += ThisDt*Rate;
         else
@@ -148,7 +151,7 @@ bool FGKinemat::Run(void )
         // is met even in inexact arithmetics ...
         Output = ThisInput;
 
-      dt -= ThisDt;
+      dt0 -= ThisDt;
     }
   }
 
@@ -190,7 +193,10 @@ void FGKinemat::Debug(int from)
       for (int i=0;i<NumDetents;i++) {
         cout << "        " << Detents[i] << " " << TransitionTimes[i] << endl;
       }
-      if (IsOutput) cout << "      OUTPUT: " << OutputNode->getName() << endl;
+      if (IsOutput) {
+        for (unsigned int i=0; i<OutputNodes.size(); i++)
+          cout << "      OUTPUT: " << OutputNodes[i]->getName() << endl;
+      }
       if (!DoScale) cout << "      NOSCALE" << endl;
     }
   }
