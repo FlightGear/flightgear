@@ -204,6 +204,12 @@ void KLN89Page::SetId(const string& s) {
 	_id = s;
 }
 
+void KLN89Page::SetSubPage(int n) {
+	if(n < 0) n = 0;
+	if(n >= _nSubPages) n = _nSubPages-1;
+	_subPage = n;
+}
+
 const string& KLN89Page::GetId() {
 	return(_id);
 }

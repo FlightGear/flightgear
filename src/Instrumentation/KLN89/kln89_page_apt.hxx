@@ -65,11 +65,11 @@ private:
 	
 	iap_list_type _iaps;
 	unsigned int _curIap;	// The index into _iaps of the IAP we are currently selecting
-	vector<GPSWaypoint*> _IAF;	// The initial approach fix(es)
+	vector<GPSFlightPlan*> _approachRoutes;	// The approach route(s) from the IAF(s) to the IF.
 	vector<GPSWaypoint*> _IAP;	// The compulsory waypoints of the approach procedure (may duplicate one of the above).
 								// _IAP includes the FAF and MAF.
 	vector<GPSWaypoint*> _MAP;	// The missed approach procedure (doesn't include the MAF).
-	unsigned int _curIaf;	// The index into _IAF of the IAF we are currently selecting, and then remembered as the one we selected
+	unsigned int _curIaf;	// The index into _approachRoutes of the IAF we are currently selecting, and then remembered as the one we selected
 	
 	// Position in rwy pages
 	unsigned int _curRwyPage;

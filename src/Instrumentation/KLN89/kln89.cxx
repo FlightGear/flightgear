@@ -206,6 +206,8 @@ KLN89::KLN89(RenderArea2D* instrument)
 	_entRestoreCrsr = false;
 	
 	_dispMsg = false;
+	
+	_dtoReview = false;
 
 	// Moving map stuff
 	_mapOrientation = 0;
@@ -365,11 +367,7 @@ void KLN89::CreateDefaultFlightPlans() {
 	wps.clear();
 	ids.push_back("KCCR");
 	wps.push_back(GPS_WP_APT);
-	ids.push_back("SUZYE");
-	wps.push_back(GPS_WP_INT);
-	ids.push_back("ALTAM");
-	wps.push_back(GPS_WP_INT);
-	ids.push_back("C83");
+	ids.push_back("KHAF");
 	wps.push_back(GPS_WP_APT);
 	CreateFlightPlan(_flightPlans[4], ids, wps);
 	
@@ -527,9 +525,15 @@ void KLN89::ClrPressed() {
 
 void KLN89::DtoPressed() {
 	if(_activePage != _dir_page) {
-		// Figure out which waypoint the dir page should display
+		// Figure out which waypoint the dir page should display, according to the following rules:
+		// 1. If the FPL 0 page is displayed AND the cursor is over one of the waypoints, display that waypoint.
+		// 2. If the NAV 4 page is displayed with the inner knob pulled out, display the waypoint highlighted in the lower RH corner of the nav page.
+		// 3. If any of APT, VOR, NDB, INT, USR or ACT pages is displayed then display the waypoint being viewed.
+		// 4. If none of the above, display the active waypoint, unless the active waypoint is the MAP of an approach and it has been flown past 
+		// (no waypoint sequence past the MAP), in which case display the first waypoint of the missed approach procedure.
+		// 5. If none of the above (i.e. no active waypoint) then display blanks.
 		if(_curPage <= 5) {
-			// Apt, Vor, Ndb, Int, Usr or Act
+			// APT, VOR, NDB, INT, USR or ACT
 			if(!_activePage->GetId().empty()) {	// Guard against no user waypoints defined
 				_dir_page->SetId(_activePage->GetId());
 			} else {
@@ -539,7 +543,6 @@ void KLN89::DtoPressed() {
 			// NAV 4
 			_dir_page->SetId(((KLN89NavPage*)_activePage)->GetNav4WpId());
 		} else if(_curPage == 7 && _activePage->GetSubPage() == 0 && _mode == KLN89_MODE_CRSR) {
-			//cout << "Checking the fpl page!\n";
 			// FPL 0
 			if(!_activePage->GetId().empty()) {
 				//cout << "Not empty!!!\n";
@@ -594,6 +597,17 @@ void KLN89::MsgPressed() {
 
 void KLN89::ToggleOBSMode() {
 	DCLGPS::ToggleOBSMode();
+}
+
+void KLN89::DtoInitiate(const string& id) {
+	_dtoReview = false;
+	// Set the current page to NAV1
+	_curPage = 6;
+	_activePage = _pages[_curPage];
+	_activePage->SetSubPage(0);
+	// TODO - need to output a scratchpad message with the new course, but we don't know it yet!
+	// Call the base class to actually initiate the DTO.
+	DCLGPS::DtoInitiate(id);
 }
 
 void KLN89::DrawBar(int page) {

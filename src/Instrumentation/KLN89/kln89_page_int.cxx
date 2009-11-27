@@ -195,8 +195,13 @@ void KLN89IntPage::ClrPressed() {
 void KLN89IntPage::EntPressed() {
 	if(_entInvert) {
 		_entInvert = false;
-		_last_int_id = _int_id;
-		_int_id = _save_int_id;
+		_entInvert = false;
+		if(_kln89->_dtoReview) {
+			_kln89->DtoInitiate(_int_id);
+		} else {
+			_last_int_id = _int_id;
+			_int_id = _save_int_id;
+		}
 	}
 }
 

@@ -353,19 +353,19 @@ void KLN89AptPage::Update(double dt) {
 				_kln89->DrawText("For This Airport", 2, 0, 0);
 			} else {
 				if(_iafDialog) {
-					_kln89->DrawText(_iaps[_curIap]->_abbrev, 2, 1, 3);
+					_kln89->DrawText(_iaps[_curIap]->_ident, 2, 1, 3);
 					_kln89->DrawText(_iaps[_curIap]->_rwyStr, 2, 7, 3);
-					_kln89->DrawText(_iaps[_curIap]->_id, 2, 12, 3);
+					_kln89->DrawText(_iaps[_curIap]->_aptIdent, 2, 12, 3);
 					_kln89->DrawText("IAF", 2, 2, 2);
 					unsigned int line = 0;
-					for(unsigned int i=_iafStart; i<_IAF.size(); ++i) {
+					for(unsigned int i=_iafStart; i<_approachRoutes.size(); ++i) {
 						if(line == 2) {
-							i = _IAF.size() - 1;
+							i = _approachRoutes.size() - 1;
 						}
 						// Assume that the IAF number is always single digit!
 						_kln89->DrawText(GPSitoa(i+1), 2, 6, 2-line);
 						if(!(_kln89->_mode == KLN89_MODE_CRSR && _kln89->_blink && _uLinePos == (line + 1))) {
-							_kln89->DrawText(_IAF[i]->id, 2, 8, 2-line);
+							_kln89->DrawText(_approachRoutes[i]->waypoints[0]->id, 2, 8, 2-line);
 						}
 						if(_kln89->_mode == KLN89_MODE_CRSR && _uLinePos == (line + 1) && !(_kln89->_blink )) {
 							_kln89->Underline(2, 8, 2-line, 5);
@@ -376,9 +376,9 @@ void KLN89AptPage::Update(double dt) {
 						_kln89->DrawEnt();
 					}
 				} else if(_addDialog) {
-					_kln89->DrawText(_iaps[_curIap]->_abbrev, 2, 1, 3);
+					_kln89->DrawText(_iaps[_curIap]->_ident, 2, 1, 3);
 					_kln89->DrawText(_iaps[_curIap]->_rwyStr, 2, 7, 3);
-					_kln89->DrawText(_iaps[_curIap]->_id, 2, 12, 3);
+					_kln89->DrawText(_iaps[_curIap]->_aptIdent, 2, 12, 3);
 					string s = GPSitoa(_fStart + 1);
 					_kln89->DrawText(s, 2, 2-s.size(), 2);
 					s = GPSitoa(_kln89->_approachFP->waypoints.size());
@@ -399,9 +399,9 @@ void KLN89AptPage::Update(double dt) {
 						}
 					}
 				} else if(_replaceDialog) {
-					_kln89->DrawText(_iaps[_curIap]->_abbrev, 2, 1, 3);
+					_kln89->DrawText(_iaps[_curIap]->_ident, 2, 1, 3);
 					_kln89->DrawText(_iaps[_curIap]->_rwyStr, 2, 7, 3);
-					_kln89->DrawText(_iaps[_curIap]->_id, 2, 12, 3);
+					_kln89->DrawText(_iaps[_curIap]->_aptIdent, 2, 12, 3);
 					_kln89->DrawText("Replace Existing", 2, 0, 2);
 					_kln89->DrawText("Approach", 2, 4, 1);
 					if(_uLinePos > 0 && !(_kln89->_blink)) {
@@ -411,24 +411,35 @@ void KLN89AptPage::Update(double dt) {
 					}
 				} else {
 					_kln89->DrawText("IAP", 2, 11, 3);
-					int check = 0;
 					bool selApp = false;
 					if(_kln89->_mode == KLN89_MODE_CRSR && _uLinePos > 4) {
 						selApp = true;
 						if(!_kln89->_blink) _kln89->DrawEnt();
 					}
-					for(unsigned int i=0; i<_iaps.size(); ++i) {	// TODO - do this properly when > 3 IAPs
-						string s = GPSitoa(i+1);
-						_kln89->DrawText(s, 2, 2 - s.size(), 2-i);
-						if(!(selApp && _uLinePos == 5+i && _kln89->_blink)) {
-							_kln89->DrawText(_iaps[i]->_abbrev, 2, 3, 2-i);
-							_kln89->DrawText(_iaps[i]->_rwyStr, 2, 9, 2-i);
+					// _maxULine pos should be 4 + iaps.size() at this point.
+					// Draw a maximum of 3 IAPs.
+					// If there are more than 3 IAPs for this airport, then we need to offset the start
+					// of the list if _uLinePos is pointing at the 4th or later IAP.
+					unsigned int offset = 0;
+					unsigned int index;
+					if(_uLinePos > 7) {
+						offset = _uLinePos - 7;
+					}
+					for(unsigned int i=0; i<3; ++i) {
+						index = offset + i;
+						if(index < _iaps.size()) {
+							string s = GPSitoa(index+1);
+							_kln89->DrawText(s, 2, 2 - s.size(), 2-i);
+							if(!(selApp && _uLinePos == index+5 && _kln89->_blink)) {
+								_kln89->DrawText(_iaps[index]->_ident, 2, 3, 2-i);
+								_kln89->DrawText(_iaps[index]->_rwyStr, 2, 9, 2-i);
+							}
+							if(selApp && _uLinePos == index+5 && !_kln89->_blink) {
+								_kln89->Underline(2, 3, 2-i, 9);
+							}
+						} else {
+							break;
 						}
-						if(selApp && _uLinePos == 5+i && !_kln89->_blink) {
-							_kln89->Underline(2, 3, 2-i, 9);
-						}
-						check++;
-						if(check > 2) break;
 					}
 				}
 			}
@@ -571,7 +582,7 @@ void KLN89AptPage::CrsrPressed() {
 	} else if(_subPage == 7) {
 		// Don't *think* we need some of this since some of it we can only get to by pressing ENT, not CRSR.
 		if(_iafDialog) {
-			_maxULinePos = _IAF.size();
+			_maxULinePos = _approachRoutes.size();
 			_uLinePos = 1;
 		} else if(_addDialog) {
 			_maxULinePos = 1;
@@ -607,7 +618,7 @@ void KLN89AptPage::ClrPressed() {
 			}
 		} else if(_addDialog) {
 			_addDialog = false;
-			if(_IAF.size() > 1) {
+			if(_approachRoutes.size() > 1) {
 				_iafDialog = true;
 				_maxULinePos = 1;
 				// Don't reset _curIaf since it is remembed.
@@ -632,15 +643,19 @@ void KLN89AptPage::ClrPressed() {
 void KLN89AptPage::EntPressed() {
 	if(_entInvert) {
 		_entInvert = false;
-		_last_apt_id = _apt_id;
-		_apt_id = _save_apt_id;
+		if(_kln89->_dtoReview) {
+			_kln89->DtoInitiate(_apt_id);
+		} else {
+			_last_apt_id = _apt_id;
+			_apt_id = _save_apt_id;
+		}
 	} else if(_subPage == 7 && _kln89->_mode == KLN89_MODE_CRSR && _uLinePos > 0) {
 		// We are selecting an approach
 		if(_iafDialog) {
 			if(_uLinePos > 0) {
 				// Record the IAF that was picked
 				if(_uLinePos == 3) {
-					_curIaf = _IAF.size() - 1;
+					_curIaf = _approachRoutes.size() - 1;
 				} else {
 					_curIaf = _uLinePos - 1 + _iafStart;
 				}
@@ -648,9 +663,8 @@ void KLN89AptPage::EntPressed() {
 				// TODO - delete the waypoints inside _approachFP before clearing them!!!!!!!
 				_kln89->_approachFP->waypoints.clear();
 				GPSWaypoint* wp = new GPSWaypoint;
-				*wp = *_IAF[_curIaf];	// Need to make copies here since we're going to alter ID and type sometimes
+				*wp = *(_approachRoutes[_curIaf]->waypoints[0]);	// Need to make copies here since we're going to alter ID and type sometimes
 				string iafid = wp->id;
-				//wp->id += 'i';
 				_kln89->_approachFP->waypoints.push_back(wp);
 				for(unsigned int i=0; i<_IAP.size(); ++i) {
 					if(_IAP[i]->id != iafid) {	// Don't duplicate waypoints that are part of the initial fix list and the approach procedure list.
@@ -666,11 +680,6 @@ void KLN89AptPage::EntPressed() {
 						_kln89->_approachFP->waypoints.push_back(wp);
 					}
 				}
-				// Only add 1 missed approach procedure waypoint for now.  I think this might be standard always anyway.
-				wp = new GPSWaypoint;
-				*wp = *_MAP[0];
-				//wp->id += 'h';
-				_kln89->_approachFP->waypoints.push_back(wp);
 				_iafDialog = false;
 				_addDialog = true;
 				_maxULinePos = _kln89->_approachFP->waypoints.size() + 1;
@@ -702,7 +711,7 @@ void KLN89AptPage::EntPressed() {
                         _kln89->_activeFP->waypoints.insert(_kln89->_activeFP->waypoints.end(), _kln89->_approachFP->waypoints.begin(), _kln89->_approachFP->waypoints.end());
                     }
 					_kln89->_approachID = _apt_id;
-					_kln89->_approachAbbrev = _iaps[_curIap]->_abbrev;
+					_kln89->_approachAbbrev = _iaps[_curIap]->_ident;
 					_kln89->_approachRwyStr = _iaps[_curIap]->_rwyStr;
 					_kln89->_approachLoaded = true;
 					//_kln89->_messageStack.push_back("*Press ALT To Set Baro");
@@ -717,20 +726,36 @@ void KLN89AptPage::EntPressed() {
 		} else if(_replaceDialog) {
 			// TODO - load the approach!
 		} else if(_uLinePos > 4) {
-			_IAF.clear();
+			_approachRoutes.clear();
 			_IAP.clear();
-			_MAP.clear();
 			_curIaf = 0;
-			_IAF = ((FGNPIAP*)(_iaps[_uLinePos-5]))->_IAF;
+			_approachRoutes = ((FGNPIAP*)(_iaps[_uLinePos-5]))->_approachRoutes;
 			_IAP = ((FGNPIAP*)(_iaps[_uLinePos-5]))->_IAP;
-			_MAP = ((FGNPIAP*)(_iaps[_uLinePos-5]))->_MAP;
 			_curIap = _uLinePos - 5;	// TODO - handle the start of list ! no. 1, and the end of list not sequential!
 			_uLinePos = 1;
-			if(_IAF.size() > 1) {
+			if(_approachRoutes.size() > 1) {
 				// More than 1 IAF - display the selection dialog
 				_iafDialog = true;
-				_maxULinePos = _IAF.size();
+				_maxULinePos = _approachRoutes.size();
 			} else {
+				// There is only 1 IAF, so load the waypoints into the approach flightplan here.
+				// TODO - there is nasty code duplication loading the approach FP between the case here where we have only one
+				// IAF and the case where we must choose the IAF from a list.  Try to tidy this after it is all working properly.
+				_kln89->_approachFP->waypoints.clear();
+				GPSWaypoint* wp = new GPSWaypoint;
+				*wp = *(_approachRoutes[0]->waypoints[0]);	// Need to make copies here since we're going to alter ID and type sometimes
+				string iafid = wp->id;
+				_kln89->_approachFP->waypoints.push_back(wp);
+				for(unsigned int i=0; i<_IAP.size(); ++i) {
+					if(_IAP[i]->id != iafid) {	// Don't duplicate waypoints that are part of the initial fix list and the approach procedure list.
+						// FIXME - allow the same waypoint to be both the IAF and the FAF in some
+						// approaches that have a procedure turn eg. KDLL
+						// Also allow MAF to be the same as IAF!
+						wp = new GPSWaypoint;
+						*wp = *_IAP[i];
+						_kln89->_approachFP->waypoints.push_back(wp);
+					}
+				}
 				_addDialog = true;
 				_maxULinePos = 1;
 			}
@@ -802,6 +827,15 @@ void KLN89AptPage::Knob2Left1() {
 			} else {
 				_curRwyPage--;
 			}
+		} else if(_subPage == 0) {
+			_subPage = 7;
+			// We have to set _uLinePos here even though the cursor isn't pressed, to
+			// ensure that the list displays properly.
+			if(_iaps.empty()) {
+				_uLinePos = 1;
+			} else {
+				_uLinePos = 5;
+			}
 		} else {
 			KLN89Page::Knob2Left1();
 		}
@@ -844,6 +878,15 @@ void KLN89AptPage::Knob2Right1() {
 				_subPage = 5;
 			} else {
 				_curFreqPage++;
+			}
+		} else if(_subPage == 6) {
+			_subPage = 7;
+			// We have to set _uLinePos here even though the cursor isn't pressed, to
+			// ensure that the list displays properly.
+			if(_iaps.empty()) {
+				_uLinePos = 1;
+			} else {
+				_uLinePos = 5;
 			}
 		} else {
 			KLN89Page::Knob2Right1();

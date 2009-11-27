@@ -33,6 +33,7 @@
 #include <Navaids/fix.hxx>
 #include <Navaids/navrecord.hxx>
 #include <Airports/simple.hxx>
+#include <Airports/runways.hxx>
 
 #include <iostream>
 
@@ -238,6 +239,96 @@ void DCLGPS::init() {
 		
 	// Not sure if this should be here, but OK for now.
 	CreateDefaultFlightPlans();
+
+	// Hack - hardwire some instrument approaches for development.
+	// These will shortly be replaced by a routine to read ARINC data from file instead.
+	FGNPIAP* iap;
+	GPSWaypoint* wp;
+	GPSFlightPlan* fp;
+	const GPSWaypoint* cwp;
+	
+	iap = new FGNPIAP;
+	iap->_aptIdent = "KHAF";
+	iap->_ident = "R12-Y";
+	iap->_name = ExpandSIAPIdent(iap->_ident);
+	iap->_rwyStr = "12";
+	iap->_approachRoutes.clear();
+	iap->_IAP.clear();
+	// -------
+	wp = new GPSWaypoint;
+	wp->id = "GOBBS";
+	// Nasty using the find any function here, but it saves converting data from FGFix etc. 
+	cwp = FindFirstByExactId(wp->id);
+	if(cwp) {
+		*wp = *cwp;
+		wp->appType = GPS_IAF;
+		fp = new GPSFlightPlan;
+		fp->waypoints.push_back(wp);
+	} else {
+		//cout << "Unable to find waypoint " << wp->id << '\n';
+	}
+	// -------
+	wp = new GPSWaypoint;
+	wp->id = "FUJCE";
+	cwp = FindFirstByExactId(wp->id);
+	if(cwp) {
+		*wp = *cwp;
+		wp->appType = GPS_IAP;
+		fp->waypoints.push_back(wp);
+		iap->_approachRoutes.push_back(fp);
+		iap->_IAP.push_back(wp);
+	} else {
+		//cout << "Unable to find waypoint " << wp->id << '\n';
+	}
+	// -------
+	wp = new GPSWaypoint;
+	wp->id = "JEVXY";
+	cwp = FindFirstByExactId(wp->id);
+	if(cwp) {
+		*wp = *cwp;
+		wp->appType = GPS_FAF;
+		iap->_IAP.push_back(wp);
+	} else {
+		//cout << "Unable to find waypoint " << wp->id << '\n';
+	}
+	// -------
+	wp = new GPSWaypoint;
+	wp->id = "RW12";
+	wp->appType = GPS_MAP;
+	if(wp->id.substr(0, 2) == "RW" && wp->appType == GPS_MAP) {
+		// Assume that this is a missed-approach point based on the runway number, which appears to be standard for most approaches.
+		const FGAirport* apt = fgFindAirportID(iap->_aptIdent);
+		if(apt) {
+			// TODO - sanity check the waypoint ID to ensure we have a double digit number
+			FGRunway* rwy = apt->getRunwayByIdent(wp->id.substr(2, 2));
+			if(rwy) {
+				wp->lat = rwy->begin().getLatitudeRad();
+				wp->lon = rwy->begin().getLongitudeRad();
+			}
+		}
+	} else {
+		cwp = FindFirstByExactId(wp->id);
+		if(cwp) {
+			*wp = *cwp;
+			wp->appType = GPS_MAP;
+		} else {
+			//cout << "Unable to find waypoint " << wp->id << '\n';
+		}
+	}
+	iap->_IAP.push_back(wp);
+	// -------
+	wp = new GPSWaypoint;
+	wp->id = "SEEMS";
+	cwp = FindFirstByExactId(wp->id);
+	if(cwp) {
+		*wp = *cwp;
+		wp->appType = GPS_MAHP;
+		iap->_IAP.push_back(wp);
+	} else {
+		//cout << "Unable to find waypoint " << wp->id << '\n';
+	}
+	// -------
+	_np_iap[iap->_aptIdent].push_back(iap);
 }
 
 void DCLGPS::bind() {
@@ -521,6 +612,79 @@ void DCLGPS::update(double dt) {
 	}
 }
 
+/* 
+	Expand a SIAP ident to the full procedure name (as shown on the approach chart).
+	NOTE: Some of this is inferred from data, some is from documentation.
+	
+	Example expansions from ARINC 424-18 [and the airport they're taken from]:
+	"R10LY" <--> "RNAV (GPS) Y RWY 10 L"	[KBOI]
+	"R10-Z" <--> "RNAV (GPS) Z RWY 10"		[KHTO]
+	"S25" 	<--> "VOR or GPS RWY 25"		[KHHR]
+	"P20"	<--> "GPS RWY 20"				[KDAN]
+	"NDB-B"	<--> "NDB or GPS-B"				[KDAW]
+	"NDBC"	<--> "NDB or GPS-C"				[KEMT]
+	"VDMA"	<--> "VOR/DME or GPS-A"			[KDAW]
+	"VDM-A"	<--> "VOR/DME or GPS-A"			[KEAG]
+	"VDMB"	<--> "VOR/DME or GPS-B"			[KDKX]
+	"VORA"	<--> "VOR or GPS-A"				[KEMT]
+	
+	It seems that there are 2 basic types of expansions; those that include
+	the runway and those that don't.  Of those that don't, it seems that 2
+	different positions within the string to encode the identifying letter
+	are used, i.e. with a dash and without.
+*/
+string DCLGPS::ExpandSIAPIdent(const string& ident) {
+	string name;
+	bool has_rwy;
+	
+	switch(ident[0]) {
+	case 'N': name = "NDB or GPS"; has_rwy = false; break;
+	case 'P': name = "GPS"; has_rwy = true; break;
+	case 'R': name = "RNAV (GPS)"; has_rwy = true; break;
+	case 'S': name = "VOR or GPS"; has_rwy = true; break;
+	case 'V':
+		if(ident[1] == 'D') name = "VOR/DME or GPS";
+		else name = "VOR or GPS";
+		has_rwy = false;
+		break;
+	default: // TODO output a log message
+		break;
+	}
+	
+	if(has_rwy) {
+		// Add the identifying letter if present
+		if(ident.size() == 5) {
+			name += ' ';
+			name += ident[4];
+		}
+		
+		// Add the runway
+		name += " RWY ";
+		name += ident.substr(1, 2);
+		
+		// Add a left/right/centre indication if present.
+		if(ident.size() > 3) {
+			if((ident[3] != '-') && (ident[3] != ' ')) {	// Early versions of the spec allowed a blank instead of a dash so check for both
+				name += ' ';
+				name += ident[3];
+			}
+		}
+	} else {
+		// Add the identifying letter, which I *think* should always be present, but seems to be inconsistent as to whether a dash is used.
+		if(ident.size() == 5) {
+			name += '-';
+			name += ident[4];
+		} else if(ident.size() == 4) {
+			name += '-';
+			name += ident[3];
+		} else {
+			// No suffix letter
+		}
+	}
+	
+	return(name);
+}
+
 GPSWaypoint* DCLGPS::GetActiveWaypoint() { 
 	return &_activeWaypoint; 
 }
@@ -553,21 +717,25 @@ double DCLGPS::GetCDIDeflection() const {
 }
 
 void DCLGPS::DtoInitiate(const string& s) {
-	//cout << "DtoInitiate, s = " << s << '\n';
 	const GPSWaypoint* wp = FindFirstByExactId(s);
 	if(wp) {
-		//cout << "Waypoint found, starting dto operation!\n";
+		// TODO - Currently we start DTO operation unconditionally, regardless of which mode we are in.
+		// In fact, the following rules apply:
+		// In LEG mode, start DTO as we currently do.
+		// In OBS mode, set the active waypoint to the requested waypoint, and then:
+		// If the KLN89 is not connected to an external HSI or CDI, set the OBS course to go direct to the waypoint.
+		// If the KLN89 *is* connected to an external HSI or CDI, it cannot set the course itself, and will display
+		// a scratchpad message with the course to set manually on the HSI/CDI.
+		// In both OBS cases, leave _dto false, since we don't need the virtual waypoint created.
 		_dto = true;
 		_activeWaypoint = *wp;
 		_fromWaypoint.lat = _gpsLat;
 		_fromWaypoint.lon = _gpsLon;
 		_fromWaypoint.type = GPS_WP_VIRT;
 		_fromWaypoint.id = "DTOWP";
-    delete wp;
+		delete wp;
 	} else {
-		//cout << "Waypoint not found, ignoring dto request\n";
-		// Should bring up the user waypoint page, but we're not implementing that yet.
-		_dto = false;	// TODO - implement this some day.
+		_dto = false;
 	}
 }
 

@@ -126,9 +126,9 @@ public:
 	virtual ~FGIAP() = 0;
 //protected:
 
-	string _id;		// The ID of the airport this approach is for
-	string _name;	// The approach name, eg "VOR/DME OR GPS-B"
-	string _abbrev;	// The abbreviation the GPS unit uses - eg "VOR/D" in this instance.  Possibly GPS model specific.
+	string _aptIdent;	// The ident of the airport this approach is for
+	string _ident;	// The approach ident.
+	string _name;	// The full approach name.
 	string _rwyStr;	// The string used to specify the rwy - eg "B" in this instance.
 	bool _precision;	// True for precision approach, false for non-precision.
 };
@@ -140,10 +140,10 @@ public:
 	~FGNPIAP();
 //private:
 public:
-	vector<GPSWaypoint*> _IAF;	// The initial approach fix(es)
+	vector<GPSFlightPlan*> _approachRoutes;	// The approach route(s) from the IAF(s) to the IF.
+											// NOTE: It is an assumption in the code that uses this that there is a unique IAF per approach route.
 	vector<GPSWaypoint*> _IAP;	// The compulsory waypoints of the approach procedure (may duplicate one of the above).
-								// _IAP includes the FAF and MAF.
-	vector<GPSWaypoint*> _MAP;	// The missed approach procedure (doesn't include the MAF).
+								// _IAP includes the FAF and MAF, and the missed approach waypoints.
 };
 
 typedef vector < FGIAP* > iap_list_type;
@@ -199,6 +199,9 @@ public:
 	virtual void bind();
 	virtual void unbind();
 	virtual void update(double dt);
+	
+	// Expand a SIAP ident to the full procedure name.
+	string ExpandSIAPIdent(const string& ident);
 
 	// Render string s in display field field at position x, y
 	// WHERE POSITION IS IN CHARACTER UNITS!
@@ -284,7 +287,7 @@ public:
 	inline bool GetToFlag() const { return(_headingBugTo); }
 	
 	// Initiate Direct To operation to the supplied ID.
-	void DtoInitiate(const string& id);
+	virtual void DtoInitiate(const string& id);
 	// Cancel Direct To operation
 	void DtoCancel();
 	
@@ -340,8 +343,8 @@ protected:
 
 protected:
 	// Find first of any type of waypoint by id.  (TODO - Possibly we should return multiple waypoints here).
-  GPSWaypoint* FindFirstById(const string& id) const;
-  GPSWaypoint* FindFirstByExactId(const string& id) const;
+	GPSWaypoint* FindFirstById(const string& id) const;
+	GPSWaypoint* FindFirstByExactId(const string& id) const;
    
 	FGNavRecord* FindFirstVorById(const string& id, bool &multi, bool exact = false);
 	FGNavRecord* FindFirstNDBById(const string& id, bool &multi, bool exact = false);
@@ -350,8 +353,8 @@ protected:
 	// Find the closest VOR to a position in RADIANS.
 	FGNavRecord* FindClosestVor(double lat_rad, double lon_rad);
 
-  // helper to implement the above FindFirstXXX methods
-  FGPositioned* FindTypedFirstById(const std::string& id, FGPositioned::Type ty, bool &multi, bool exact);
+	// helper to implement the above FindFirstXXX methods
+	FGPositioned* FindTypedFirstById(const std::string& id, FGPositioned::Type ty, bool &multi, bool exact);
 
 	// Position, orientation and velocity.
 	// These should be read from FG's built-in GPS logic if possible.
