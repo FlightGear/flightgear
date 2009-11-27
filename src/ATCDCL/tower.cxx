@@ -55,6 +55,8 @@ using std::cout;
 
 TowerPlaneRec::TowerPlaneRec() :
 	planePtr(NULL),
+	eta(0),
+	dist_out(0),
 	clearedToLand(false),
 	clearedToLineUp(false),
 	clearedToTakeOff(false),
@@ -85,6 +87,8 @@ TowerPlaneRec::TowerPlaneRec() :
 
 TowerPlaneRec::TowerPlaneRec(const PlaneRec& p) :
 	planePtr(NULL),
+	eta(0),
+	dist_out(0),
 	clearedToLand(false),
 	clearedToLineUp(false),
 	clearedToTakeOff(false),
@@ -115,6 +119,8 @@ TowerPlaneRec::TowerPlaneRec(const PlaneRec& p) :
 
 TowerPlaneRec::TowerPlaneRec(const SGGeod& pt) :
 	planePtr(NULL),
+	eta(0),
+	dist_out(0),
 	clearedToLand(false),
 	clearedToLineUp(false),
 	clearedToTakeOff(false),
@@ -146,6 +152,8 @@ TowerPlaneRec::TowerPlaneRec(const SGGeod& pt) :
 
 TowerPlaneRec::TowerPlaneRec(const PlaneRec& p, const SGGeod& pt) :
 	planePtr(NULL),
+	eta(0),
+	dist_out(0),
 	clearedToLand(false),
 	clearedToLineUp(false),
 	clearedToTakeOff(false),
@@ -2125,6 +2133,7 @@ void FGTower::VFRArrivalContact(const string& ID, const LandingType& opt) {
 	
 	t->plane.type = GA_SINGLE;	// FIXME - Another assumption!
 	t->plane.callsign = usercall;
+	CalcETA(t);
 	
 	t->vfrArrivalReported = true;
 	responseReqd = true;
