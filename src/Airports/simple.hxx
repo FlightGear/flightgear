@@ -113,11 +113,22 @@ public:
        }
        
        virtual Type maxType() const {
-         return SEAPORT;
+         return AIRPORT;
        }
        
        virtual bool passAirport(FGAirport* aApt) const {
          return true;
+       }
+     };
+     
+     /**
+      * Filter which passes heliports and seaports in addition to airports
+      */
+     class PortsFilter : public AirportFilter
+     {
+     public:
+       virtual Type maxType() const {
+         return SEAPORT;
        }
      };
      
@@ -128,9 +139,6 @@ public:
        
        virtual bool passAirport(FGAirport* aApt) const;
        
-       virtual Type maxType() const {
-         return AIRPORT;
-       }
      private:
        double mMinLengthFt;
      };
@@ -138,7 +146,7 @@ public:
      /**
       * Syntactic wrapper around FGPositioned::findClosest - find the closest
       * match for filter, and return it cast to FGAirport. The default filter
-      * passes all airports, including seaports and heliports.
+      * passes airports, but not seaports or heliports
       */
      static FGAirport* findClosest(const SGGeod& aPos, double aCuttofNm, Filter* filter = NULL);
      

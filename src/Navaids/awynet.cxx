@@ -32,6 +32,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/route/waypoint.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include "awynet.hxx"
 
@@ -47,18 +48,19 @@ FGNode::FGNode()
 {
 }
 
-FGNode::FGNode(double lt, double ln, int idx, std::string id) :
+FGNode::FGNode(const SGGeod& aPos, int idx, std::string id) :
   ident(id),
-  geod(SGGeod::fromDeg(ln, lt)),
+  geod(aPos),
   index(idx)
 {
+  cart = SGVec3d::fromGeod(geod);
 }
 
-bool FGNode::matches(string id, double lt, double ln)
+bool FGNode::matches(std::string id, const SGGeod& aPos)
 {
   if ((ident == id) &&
-      (fabs(lt - geod.getLatitudeDeg()) < 1.0) &&
-      (fabs(ln - geod.getLongitudeDeg()) < 1.0))
+      (fabs(aPos.getLatitudeDeg() - geod.getLatitudeDeg()) < 1.0) &&
+      (fabs(aPos.getLongitudeDeg() - geod.getLongitudeDeg()) < 1.0))
     return true;
   else
     return false;
@@ -195,9 +197,9 @@ void FGAirwayNetwork::init()
 }
 
 
-void FGAirwayNetwork::load(SGPath path)
+void FGAirwayNetwork::load(const SGPath& path)
 {
-  string identStart, identEnd, token, name;
+  std::string identStart, identEnd, token, name;
   double latStart, lonStart, latEnd, lonEnd;
   int type, base, top;
   int airwayIndex = 0;
@@ -272,7 +274,8 @@ void FGAirwayNetwork::load(SGPath path)
       node_map_iterator itr = nodesMap.find(string(buffer));
       if (itr == nodesMap.end()) {
 	startIndex = nodes.size();
-	n = new FGNode(latStart, lonStart, startIndex, identStart);
+  SGGeod startPos(SGGeod::fromDeg(lonStart, latStart));
+	n = new FGNode(startPos, startIndex, identStart);
 	nodesMap[string(buffer)] = n;
 	nodes.push_back(n);
 	//cout << "Adding node: " << identStart << endl;
@@ -287,7 +290,8 @@ void FGAirwayNetwork::load(SGPath path)
       itr = nodesMap.find(string(buffer));
       if (itr == nodesMap.end()) {
 	endIndex = nodes.size();
-	n = new FGNode(latEnd, lonEnd, endIndex, identEnd);
+  SGGeod endPos(SGGeod::fromDeg(lonEnd, latEnd));
+	n = new FGNode(endPos, endIndex, identEnd);
 	nodesMap[string(buffer)] = n;
 	nodes.push_back(n);
 	//cout << "Adding node: " << identEnd << endl;
@@ -310,32 +314,23 @@ void FGAirwayNetwork::load(SGPath path)
     }
   }
 
-  int FGAirwayNetwork::findNearestNode(double lat, double lon)
+int FGAirwayNetwork::findNearestNode(const SGGeod& aPos)
 {
   double minDist = HUGE_VAL;
-  double distsqrt, lat2, lon2;
   int index;
+  SGVec3d cart = SGVec3d::fromGeod(aPos);
+  
   //cerr << "Lat " << lat << " lon " << lon << endl;
   for (FGNodeVectorIterator
 	 itr = nodes.begin();
        itr != nodes.end(); itr++)
     {
-      lat2 = (*itr)->getLatitude();
-      lon2 = (*itr)->getLongitude();
-      // Note: This equation should adjust for decreasing distance per longitude
-      // with increasing lat.
-      distsqrt =
-	(lat-lat2)*(lat-lat2) +
-	(lon-lon2)*(lon-lon2);
-
-      if (distsqrt < minDist)
-	{
-	  minDist = distsqrt;
-	  //cerr << "Test" << endl;
-	  index = (*itr)->getIndex();
-	  //cerr << "Minimum distance of " << minDist << " for index " << index << endl;
-	  //cerr << (*itr)->getLatitude() << " " << (*itr)->getLongitude() << endl;
-	}
+      double d2 = distSqr(cart, (*itr)->getCart());
+      if (d2 < minDist)
+      {
+        minDist = d2;
+	  	  index = (*itr)->getIndex();
+      }
       //cerr << (*itr)->getIndex() << endl;
     }
   //cerr << " returning  " << index << endl;

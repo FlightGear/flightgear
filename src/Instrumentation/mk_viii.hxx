@@ -1594,10 +1594,6 @@ private:
         : mk(device) {}
         
       virtual bool passAirport(FGAirport *a) const;
-      
-      virtual FGPositioned::Type maxType() const {
-        return FGPositioned::AIRPORT;
-      }
     private:
       MK_VIII* mk;
     };

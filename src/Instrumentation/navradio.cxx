@@ -143,6 +143,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     gps_to_flag_node(NULL),
     gps_from_flag_node(NULL),
     gps_has_gs_node(NULL),
+    gps_xtrack_error_nm_node(NULL),
     play_count(0),
     last_time(0),
     target_radial(0.0),
@@ -265,6 +266,9 @@ FGNavRadio::init ()
     gps_to_flag_node = fgGetNode("/instrumentation/gps/to-flag", true);
     gps_from_flag_node = fgGetNode("/instrumentation/gps/from-flag", true);
     gps_has_gs_node = fgGetNode("/instrumentation/gps/has-gs", true);
+    gps_course_node = fgGetNode("/instrumentation/gps/selected-course-deg", true);
+    gps_xtrack_error_nm_node = fgGetNode("/instrumentation/gps/wp/wp[1]/course-error-nm", true);
+    _magvarNode = fgGetNode("/environment/magnetic-variation-deg", true);
     
     std::ostringstream temp;
     temp << _name << "nav-ident" << _num;
@@ -652,14 +656,30 @@ void FGNavRadio::updateGPSSlaved()
   _toFlag = gps_to_flag_node->getBoolValue();
   _fromFlag = gps_from_flag_node->getBoolValue();
 
-  inrange_node->setBoolValue(_toFlag | _fromFlag);
+  bool gpsValid = (_toFlag | _fromFlag);
+  inrange_node->setBoolValue(gpsValid);
+  if (!gpsValid) {
+    signal_quality_norm_node->setDoubleValue(0.0);
+    _cdiDeflection = 0.0;
+    _cdiCrossTrackErrorM = 0.0;
+    _gsNeedleDeflection = 0.0;
+    return;
+  }
+  
+  // this is unfortunate, but panel instruments use this value to decide
+  // if the navradio output is valid.
+  signal_quality_norm_node->setDoubleValue(1.0);
   
   _cdiDeflection =  gps_cdi_deflection_node->getDoubleValue();
   // clmap to some range (+/- 10 degrees) as the regular deflection
   SG_CLAMP_RANGE(_cdiDeflection, -10.0, 10.0 );
   
-  _cdiCrossTrackErrorM = 0.0; // FIXME, supply this
+  _cdiCrossTrackErrorM = gps_xtrack_error_nm_node->getDoubleValue() * SG_NM_TO_METER;
   _gsNeedleDeflection = 0.0; // FIXME, supply this
+  
+  double trtrue = gps_course_node->getDoubleValue() + _magvarNode->getDoubleValue();
+  SG_NORMALIZE_RANGE(trtrue, 0.0, 360.0);
+  target_radial_true_node->setDoubleValue( trtrue );
 }
 
 void FGNavRadio::updateCDI(double dt)

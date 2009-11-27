@@ -30,10 +30,12 @@
 #include <iostream>
 
 #include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/timing/timestamp.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include "positioned.hxx"
 
@@ -239,6 +241,10 @@ public:
   
   bool operator()(const FGPositionedRef& a, const FGPositionedRef& b) const
   {
+    if (!a || !b) {
+      throw sg_exception("empty reference passed to DistanceOrdering");
+    }
+  
     double dA = distSqr(a->cart(), mPos),
       dB = distSqr(b->cart(), mPos);
     return dA < dB;
@@ -688,14 +694,16 @@ FGPositioned::findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm
 FGPositionedRef
 FGPositioned::findNextWithPartialId(FGPositionedRef aCur, const std::string& aId, Filter* aFilter)
 {
+  std::string id(boost::to_upper_copy(aId));
+
   // It is essential to bound our search, to avoid iterating all the way to the end of the database.
   // Do this by generating a second ID with the final character incremented by 1.
   // e.g., if the partial ID is "KI", we wish to search "KIxxx" but not "KJ".
-  std::string upperBoundId = aId;
+  std::string upperBoundId = id;
   upperBoundId[upperBoundId.size()-1]++;
   NamedPositionedIndex::const_iterator upperBound = global_identIndex.lower_bound(upperBoundId);
 
-  NamedIndexRange range = global_identIndex.equal_range(aId);
+  NamedIndexRange range = global_identIndex.equal_range(id);
   while (range.first != upperBound) {
     for (; range.first != range.second; ++range.first) {
       FGPositionedRef candidate = range.first->second;
@@ -758,7 +766,7 @@ public:
       return false;
     }
     
-    return (::strncmp(aPos->ident().c_str(), _ident.c_str(), _ident.size()) == 0);
+    return (boost::algorithm::starts_with(aPos->ident(), _ident));
   }
     
   virtual FGPositioned::Type minType() const
@@ -817,7 +825,7 @@ public:
       return false;
     }
     
-    return (::strncasecmp(aPos->name().c_str(), _name.c_str(), _name.size()) == 0);
+    return (boost::algorithm::istarts_with(aPos->name(), _name));
   }
   
   virtual FGPositioned::Type minType() const

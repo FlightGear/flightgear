@@ -429,9 +429,9 @@ void drawHUD(osg::State* state)
         = fgGetNode("/autopilot/locks/altitude", true);
 
     static char hud_hdg_text[256];
-    static char hud_wp0_text[256];
-    static char hud_wp1_text[256];
-    static char hud_wp2_text[256];
+    static char hud_gps_text0[256];
+    static char hud_gps_text1[256];
+    static char hud_gps_text2[256];
     static char hud_alt_text[256];
 
     glEnable(GL_BLEND);
@@ -468,32 +468,42 @@ void drawHUD(osg::State* state)
                   fgGetDouble("/autopilot/settings/true-heading-deg") );
         HUD_TextList.add( fgText( 40, apY, hud_hdg_text ) );
         apY -= 15;
-
-        string wp0_id = fgGetString( "/autopilot/route-manager/wp[0]/id" );
-        if ( wp0_id.length() > 0 ) {
-            snprintf( hud_wp0_text, 256, "%5s %6.1fnm %s", wp0_id.c_str(),
-                      fgGetDouble( "/autopilot/route-manager/wp[0]/dist" ),
-                      fgGetString( "/autopilot/route-manager/wp[0]/eta" ) );
-            HUD_TextList.add( fgText( 40, apY, hud_wp0_text ) );
-            apY -= 15;
-        }
-        string wp1_id = fgGetString( "/autopilot/route-manager/wp[1]/id" );
-        if ( wp1_id.length() > 0 ) {
-            snprintf( hud_wp1_text, 256, "%5s %6.1fnm %s", wp1_id.c_str(),
-                      fgGetDouble( "/autopilot/route-manager/wp[1]/dist" ),
-                      fgGetString( "/autopilot/route-manager/wp[1]/eta" ) );
-            HUD_TextList.add( fgText( 40, apY, hud_wp1_text ) );
-            apY -= 15;
-        }
-        string wp2_id = fgGetString( "/autopilot/route-manager/wp-last/id" );
-        if ( wp2_id.length() > 0 ) {
-            snprintf( hud_wp2_text, 256, "%5s %6.1fnm %s", wp2_id.c_str(),
-                      fgGetDouble( "/autopilot/route-manager/wp-last/dist" ),
-                      fgGetString( "/autopilot/route-manager/wp-last/eta" ) );
-            HUD_TextList.add( fgText( 40, apY, hud_wp2_text ) );
-            apY -= 15;
-        }
     }
+  
+  // GPS current waypoint information
+    SGPropertyNode_ptr gps = fgGetNode("/instrumentation/gps", true);
+    SGPropertyNode_ptr curWp = gps->getChild("wp")->getChild("wp",1);
+    
+    if ((gps->getDoubleValue("raim") > 0.5) && curWp) {
+      // GPS is receiving a valid signal
+      snprintf(hud_gps_text0, 256, "WPT:%5s BRG:%03.0f %5.1fnm",
+        curWp->getStringValue("ID"),
+        curWp->getDoubleValue("bearing-mag-deg"),
+        curWp->getDoubleValue("distance-nm"));
+      HUD_TextList.add( fgText( 40, apY, hud_gps_text0 ) );
+      apY -= 15;
+       
+       // curWp->getStringValue("TTW")
+      snprintf(hud_gps_text2, 256, "ETA %s", curWp->getStringValue("TTW"));
+      HUD_TextList.add( fgText( 40, apY, hud_gps_text2 ) );
+      apY -= 15;
+      
+      double courseError = curWp->getDoubleValue("course-error-nm");
+      if (fabs(courseError) >= 0.01) {
+        // generate an arrow indicatinng if the pilot should turn left or right
+        char dir = (courseError < 0.0) ? '<' : '>';
+        snprintf(hud_gps_text1, 256, "GPS TRK:%03.0f XTRK:%c%4.2fnm",
+          gps->getDoubleValue("indicated-track-magnetic-deg"), dir, fabs(courseError));
+      } else { // on course, don't bother showing the XTRK error
+        snprintf(hud_gps_text1, 256, "GPS TRK:%03.0f",
+          gps->getDoubleValue("indicated-track-magnetic-deg"));
+      }
+      
+      HUD_TextList.add( fgText( 40, apY, hud_gps_text1) );
+      apY -= 15;
+    } // of valid GPS output
+    
+  ////////////////////
 
     if ( strcmp( altitude_enabled->getStringValue(), "altitude-hold" ) == 0 ) {
         snprintf( hud_alt_text, 256, "alt = %.0f\n",

@@ -260,7 +260,7 @@ readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
   SGPropertyNode * target = 0;
 
   if (type.empty()) {
-    SG_LOG( SG_COCKPIT, SG_INFO,
+    SG_LOG( SG_COCKPIT, SG_BULK,
             "No type supplied for transformation " << name
             << " assuming \"rotation\"" );
     type = "rotation";
@@ -282,7 +282,7 @@ readTransformation (const SGPropertyNode * node, float w_scale, float h_scale)
 				// Check for an interpolation table
   const SGPropertyNode * trans_table = node->getNode("interpolation");
   if (trans_table != 0) {
-    SG_LOG( SG_COCKPIT, SG_INFO, "Found interpolation table with "
+    SG_LOG( SG_COCKPIT, SG_DEBUG, "Found interpolation table with "
             << trans_table->nChildren() << " children" );
     t->table = new SGInterpTable(trans_table);
   } else {
@@ -430,7 +430,7 @@ readLayer (const SGPropertyNode * node, float w_scale, float h_scale)
 
 
   if (type.empty()) {
-    SG_LOG( SG_COCKPIT, SG_INFO,
+    SG_LOG( SG_COCKPIT, SG_BULK,
             "No type supplied for layer " << name
             << " assuming \"texture\"" );
     type = "texture";
@@ -641,7 +641,6 @@ readInstrument (const SGPropertyNode * node)
   }
 
   readConditions(instrument, node);
-  SG_LOG( SG_COCKPIT, SG_DEBUG, "Done reading instrument " << name );
   return instrument;
 }
 
@@ -784,7 +783,7 @@ readPanel (const SGPropertyNode * root)
             h = real_h;
           }
           
-          SG_LOG( SG_COCKPIT, SG_DEBUG, "Reading instrument " << name );
+          SG_LOG( SG_COCKPIT, SG_BULK, "Reading instrument " << name );
           
           // Warning - hardwired size!!!
           RenderArea2D* instrument = new RenderArea2D(158, 40, 158, 40, x, y);

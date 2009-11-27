@@ -51,7 +51,8 @@
 #include "agradar.hxx"
 #include "rad_alt.hxx"
 
-FGInstrumentMgr::FGInstrumentMgr ()
+FGInstrumentMgr::FGInstrumentMgr () :
+  _explicitGps(false)
 {
     set_subsystem("od_gauge", new FGODGauge);
     set_subsystem("hud", new HUD);
@@ -85,6 +86,14 @@ FGInstrumentMgr::FGInstrumentMgr ()
     }
 
     delete config_props;
+    
+    if (!_explicitGps) {
+      SG_LOG(SG_INSTR, SG_INFO, "creating default GPS instrument");
+      SGPropertyNode_ptr nd(new SGPropertyNode);
+      nd->setStringValue("name", "gps");
+      nd->setIntValue("number", 0);
+      set_subsystem("gps[0]", new GPS(nd));
+    }
 }
 
 FGInstrumentMgr::~FGInstrumentMgr ()
@@ -128,8 +137,8 @@ bool FGInstrumentMgr::build ()
             set_subsystem( id, new Altimeter( node ) );
 
         } else if ( name == "gps" ) {
-            set_subsystem( id, new GPS( node ), 0.45 );
-
+            set_subsystem( id, new GPS( node ) );
+            _explicitGps = true;
         } else if ( name == "gsdi" ) {
             set_subsystem( id, new GSDI( node ) );
 
