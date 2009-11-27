@@ -198,6 +198,8 @@ bool FGFCS::Run(void)
   if (FGModel::Run()) return true; // fast exit if nothing to do
   if (FDMExec->Holding()) return false;
 
+  RunPreFunctions();
+
   for (i=0; i<ThrottlePos.size(); i++) ThrottlePos[i] = ThrottleCmd[i];
   for (i=0; i<MixturePos.size(); i++) MixturePos[i] = MixtureCmd[i];
   for (i=0; i<PropAdvance.size(); i++) PropAdvance[i] = PropAdvanceCmd[i];
@@ -217,6 +219,8 @@ bool FGFCS::Run(void)
 
   // Execute Flight Control System
   for (i=0; i<FCSComponents.size(); i++) FCSComponents[i]->Run();
+
+  RunPostFunctions();
 
   return false;
 }

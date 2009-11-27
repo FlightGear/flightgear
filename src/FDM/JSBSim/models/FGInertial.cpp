@@ -114,10 +114,14 @@ bool FGInertial::Run(void)
   if (FGModel::Run()) return true;
   if (FDMExec->Holding()) return false;
 
+  RunPreFunctions();
+
   // Gravitation accel
   double r = Propagate->GetRadius();
   gAccel = GetGAccel(r);
   earthPosAngle += State->Getdt()*RotationRate;
+
+  RunPostFunctions();
 
   return false;
 }

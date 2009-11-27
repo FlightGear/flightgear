@@ -222,7 +222,7 @@ public:
       @param model A pointer to the model being scheduled.
       @param rate The rate at which to execute the model as described above.
       @return Currently returns 0 always. */
-  int  Schedule(FGModel* model, int rate);
+  void Schedule(FGModel* model, int rate);
 
   /** This function executes each scheduled model in succession.
       @return true if successful, false if sim should be ended  */
@@ -488,7 +488,6 @@ private:
 
   static FGPropertyManager *master;
 
-  FGModel*            FirstModel;
   FGGroundCallback*   GroundCallback;
   FGState*            State;
   FGAtmosphere*       Atmosphere;
@@ -514,6 +513,7 @@ private:
   vector <string> PropertyCatalog;
   vector <FGOutput*> Outputs;
   vector <childData*> ChildFDMList;
+  vector <FGModel*> Models;
 
   bool ReadFileHeader(Element*);
   bool ReadChild(Element*);

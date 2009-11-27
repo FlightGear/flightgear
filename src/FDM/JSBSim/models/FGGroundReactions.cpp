@@ -89,6 +89,8 @@ bool FGGroundReactions::Run(void)
   if (FGModel::Run()) return true;
   if (FDMExec->Holding()) return false;
 
+  RunPreFunctions();
+
   vForces.InitMatrix();
   vMoments.InitMatrix();
 
@@ -101,6 +103,8 @@ bool FGGroundReactions::Run(void)
     vForces  += lGear[i]->GetBodyForces();
     vMoments += lGear[i]->GetMoments();
   }
+
+  RunPostFunctions();
 
   return false;
 }
@@ -137,6 +141,8 @@ bool FGGroundReactions::Load(Element* el)
   FGModel::Load(el); // Perform base class Load
 
   for (unsigned int i=0; i<lGear.size();i++) lGear[i]->bind();
+
+  FGModel::PostLoad(el);
 
   return true;
 }
@@ -185,7 +191,7 @@ string FGGroundReactions::GetGroundReactionValues(string delimeter)
   for (unsigned int i=0;i<lGear.size();i++) {
     if (lGear[i]->IsBogey()) {
       FGLGear *gear = lGear[i];
-      buf << (gear->GetWOW() ? "1, " : "0, ")
+      buf << (gear->GetWOW() ? "1" : "0") << delimeter
           << setprecision(5) << gear->GetCompLen() << delimeter
           << setprecision(6) << gear->GetCompVel() << delimeter
           << setprecision(10) << gear->GetCompForce() << delimeter
