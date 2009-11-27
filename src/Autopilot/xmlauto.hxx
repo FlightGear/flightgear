@@ -357,6 +357,16 @@ public:
  * 
  */
 
+class FGXMLAutopilotGroup : public SGSubsystemGroup
+{
+public:
+    FGXMLAutopilotGroup();
+    void init();
+    void reinit();
+private:
+    std::vector<std::string> _autopilotNames;
+};
+
 class FGXMLAutopilot : public SGSubsystem
 {
 
@@ -371,16 +381,14 @@ public:
     void unbind();
     void update( double dt );
 
-    bool build();
 
+    bool build( SGPropertyNode_ptr );
 protected:
-
     typedef std::vector<SGSharedPtr<FGXMLAutoComponent> > comp_list;
 
 private:
 
     bool serviceable;
-    SGPropertyNode_ptr config_props;
     comp_list components;
 };
 
