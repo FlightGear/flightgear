@@ -95,6 +95,8 @@ bool FGBuoyantForces::Run(void)
   if (FDMExec->Holding()) return false; // if paused don't execute
   if (NoneDefined) return true;
 
+  RunPreFunctions();
+
   vTotalForces.InitMatrix();
   vTotalMoments.InitMatrix();
 
@@ -103,6 +105,8 @@ bool FGBuoyantForces::Run(void)
     vTotalForces  += Cells[i]->GetBodyForces();
     vTotalMoments += Cells[i]->GetMoments();
   }
+
+  RunPostFunctions();
 
   return false;
 }
@@ -135,6 +139,8 @@ bool FGBuoyantForces::Load(Element *element)
     gas_cell_element = document->FindNextElement("gas_cell");
   }
   
+  FGModel::PostLoad(element);
+
   return true;
 }
 

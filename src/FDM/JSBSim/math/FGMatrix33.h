@@ -158,6 +158,11 @@ public:
    */
   ~FGMatrix33(void) { Debug(1); }
 
+  /** Prints the contents of the matrix.
+      @param delimeter the item separator (tab or comma)
+      @return a string with the delimeter-separated contents of the matrix  */
+  std::string Dump(const std::string& delimeter) const;
+
   /** Read access the entries of the matrix.
       @param row Row index.
       @param col Column index.

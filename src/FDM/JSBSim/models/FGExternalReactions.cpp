@@ -85,6 +85,8 @@ bool FGExternalReactions::Load(Element* el)
     force_element = el->FindNextElement("force");
   }
 
+  FGModel::PostLoad(el);
+
   return true;
 }
 
@@ -115,6 +117,8 @@ bool FGExternalReactions::Run()
   if (FDMExec->Holding()) return false; // if paused don't execute
   if (NoneDefined) return true;
 
+  RunPreFunctions();
+
   vTotalForces.InitMatrix();
   vTotalMoments.InitMatrix();
 
@@ -122,6 +126,8 @@ bool FGExternalReactions::Run()
     vTotalForces  += Forces[i]->GetBodyForces();
     vTotalMoments += Forces[i]->GetMoments();
   }
+
+  RunPostFunctions();
 
   return false;
 }

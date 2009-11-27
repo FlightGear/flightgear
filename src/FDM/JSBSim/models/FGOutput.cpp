@@ -188,6 +188,7 @@ bool FGOutput::Run(void)
   if (FGModel::Run()) return true;
 
   if (enabled && !State->IntegrationSuspended()&& !FDMExec->Holding()) {
+    RunPreFunctions();
     if (Type == otSocket) {
       SocketOutput();
     } else if (Type == otFlightGear) {
@@ -201,6 +202,7 @@ bool FGOutput::Run(void)
     } else {
       // Not a valid type of output
     }
+    RunPostFunctions();
   }
   return false;
 }
@@ -396,22 +398,22 @@ void FGOutput::DelimitedOutput(const string& fname)
   }
   if (SubSystems & ssForces) {
     outstream << delimeter;
-    outstream << Aerodynamics->GetvFw() << delimeter;
+    outstream << Aerodynamics->GetvFw().Dump(delimeter) << delimeter;
     outstream << Aerodynamics->GetLoD() << delimeter;
-    outstream << Aerodynamics->GetForces() << delimeter;
-    outstream << Propulsion->GetForces() << delimeter;
-    outstream << GroundReactions->GetForces() << delimeter;
-    outstream << ExternalReactions->GetForces() << delimeter;
-    outstream << BuoyantForces->GetForces() << delimeter;
+    outstream << Aerodynamics->GetForces().Dump(delimeter) << delimeter;
+    outstream << Propulsion->GetForces().Dump(delimeter) << delimeter;
+    outstream << GroundReactions->GetForces().Dump(delimeter) << delimeter;
+    outstream << ExternalReactions->GetForces().Dump(delimeter) << delimeter;
+    outstream << BuoyantForces->GetForces().Dump(delimeter) << delimeter;
     outstream << Aircraft->GetForces().Dump(delimeter);
   }
   if (SubSystems & ssMoments) {
     outstream << delimeter;
-    outstream << Aerodynamics->GetMoments() << delimeter;
-    outstream << Propulsion->GetMoments() << delimeter;
-    outstream << GroundReactions->GetMoments() << delimeter;
-    outstream << ExternalReactions->GetMoments() << delimeter;
-    outstream << BuoyantForces->GetMoments() << delimeter;
+    outstream << Aerodynamics->GetMoments().Dump(delimeter) << delimeter;
+    outstream << Propulsion->GetMoments().Dump(delimeter) << delimeter;
+    outstream << GroundReactions->GetMoments().Dump(delimeter) << delimeter;
+    outstream << ExternalReactions->GetMoments().Dump(delimeter) << delimeter;
+    outstream << BuoyantForces->GetMoments().Dump(delimeter) << delimeter;
     outstream << Aircraft->GetMoments().Dump(delimeter);
   }
   if (SubSystems & ssAtmosphere) {
@@ -428,9 +430,9 @@ void FGOutput::DelimitedOutput(const string& fname)
   }
   if (SubSystems & ssMassProps) {
     outstream << delimeter;
-    outstream << MassBalance->GetJ() << delimeter;
+    outstream << MassBalance->GetJ().Dump(delimeter) << delimeter;
     outstream << MassBalance->GetMass() << delimeter;
-    outstream << MassBalance->GetXYZcg();
+    outstream << MassBalance->GetXYZcg().Dump(delimeter);
   }
   if (SubSystems & ssPropagate) {
     outstream.precision(14);

@@ -142,6 +142,8 @@ bool FGAuxiliary::Run()
   if (FGModel::Run()) return true; // return true if error returned from base class
   if (FDMExec->Holding()) return false;
 
+  RunPreFunctions();
+
   const FGColumnVector3& vPQR = Propagate->GetPQR();
   const FGColumnVector3& vUVW = Propagate->GetUVW();
   const FGColumnVector3& vUVWdot = Propagate->GetUVWdot();
@@ -289,6 +291,8 @@ bool FGAuxiliary::Run()
   // please calculate the distance from the initial point
 
   CalculateRelativePosition();
+
+  RunPostFunctions();
 
   return false;
 }

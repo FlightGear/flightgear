@@ -147,6 +147,8 @@ bool FGPropulsion::Run(void)
   if (FGModel::Run()) return true;
   if (FDMExec->Holding()) return false;
 
+  RunPreFunctions();
+
   double dt = State->Getdt();
 
   vForces.InitMatrix();
@@ -168,6 +170,8 @@ bool FGPropulsion::Run(void)
 
   if (refuel) DoRefuel( dt * rate );
   if (dump) DumpFuel( dt * rate );
+
+  RunPostFunctions();
 
   return false;
 }
@@ -333,6 +337,7 @@ bool FGPropulsion::Load(Element* el)
   if (el->FindElement("dump-rate"))
     DumpRate = el->FindElementValueAsNumberConvertTo("dump-rate", "LBS/MIN");
 
+  FGModel::PostLoad(el);
 
   return true;
 }
