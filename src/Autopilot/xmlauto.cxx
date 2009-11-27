@@ -69,7 +69,7 @@ void FGXMLAutoInput::parse( SGPropertyNode_ptr node, double aValue, double aOffs
     SGPropertyNode * n;
 
     if( (n = node->getChild("condition")) != NULL ) {
-        _condition = sgReadCondition(node, n);
+        _condition = sgReadCondition(fgGetNode("/"), n);
     }
 
     if( (n = node->getChild( "scale" )) != NULL ) {
@@ -200,7 +200,7 @@ void FGXMLAutoComponent::parseNode(SGPropertyNode* aNode)
       debug = child->getBoolValue();
     } else if ( cname == "enable" ) {
       if( (prop = child->getChild("condition")) != NULL ) {
-        _condition = sgReadCondition(child, prop);
+        _condition = sgReadCondition(fgGetNode("/"), prop);
       } else {
          if ( (prop = child->getChild( "prop" )) != NULL ) {
              enable_prop = fgGetNode( prop->getStringValue(), true );
@@ -793,6 +793,83 @@ void FGDigitalFilter::update(double dt)
     }
 }
 
+FGXMLAutopilotGroup::FGXMLAutopilotGroup()
+{
+}
+
+void FGXMLAutopilotGroup::reinit()
+{
+    for( vector<string>::size_type i = 0; i < _autopilotNames.size(); i++ ) {
+      FGXMLAutopilot * ap = (FGXMLAutopilot*)get_subsystem( _autopilotNames[i] );
+      if( ap == NULL ) continue; // ?
+      remove_subsystem( _autopilotNames[i] );
+      delete ap;
+    }
+    _autopilotNames.clear();
+    init();
+}
+
+void FGXMLAutopilotGroup::init()
+{
+    vector<SGPropertyNode_ptr> autopilotNodes = fgGetNode( "/sim/systems", true )->getChildren("autopilot");
+    if( autopilotNodes.size() == 0 ) {
+        SG_LOG( SG_ALL, SG_WARN, "No autopilot configuration specified for this model!");
+        return;
+    }
+
+    for( vector<SGPropertyNode_ptr>::size_type i = 0; i < autopilotNodes.size(); i++ ) {
+        SGPropertyNode_ptr pathNode = autopilotNodes[i]->getNode( "path" );
+        if( pathNode == NULL ) {
+            SG_LOG( SG_ALL, SG_WARN, "No autopilot configuration file specified for this autopilot!");
+            continue;
+        }
+
+        string apName;
+        SGPropertyNode_ptr nameNode = autopilotNodes[i]->getNode( "name" );
+        if( nameNode != NULL ) {
+            apName = nameNode->getStringValue();
+        } else {
+          std::ostringstream buf;
+          buf <<  "unnamed_autopilot_" << i;
+          apName = buf.str();
+        }
+
+        if( get_subsystem( apName.c_str() ) != NULL ) {
+            SG_LOG( SG_ALL, SG_ALERT, "Duplicate autopilot configuration name " << apName << " ignored" );
+            continue;
+        }
+
+        SGPath config( globals->get_fg_root() );
+        config.append( pathNode->getStringValue() );
+
+        SG_LOG( SG_ALL, SG_INFO, "Reading autopilot configuration from " << config.str() );
+        // FGXMLAutopilot
+        FGXMLAutopilot * ap = new FGXMLAutopilot;
+        try {
+            SGPropertyNode_ptr root = new SGPropertyNode();
+            readProperties( config.str(), root );
+
+
+            if ( ! ap->build( root ) ) {
+                SG_LOG( SG_ALL, SG_ALERT,
+                  "Detected an internal inconsistency in the autopilot configuration." << endl << " See earlier errors for details." );
+                delete ap;
+                continue;
+            }        
+        } catch (const sg_exception& e) {
+            SG_LOG( SG_ALL, SG_ALERT, "Failed to load autopilot configuration: "
+                    << config.str() << ":" << e.getMessage() );
+            delete ap;
+            continue;
+        }
+
+        SG_LOG( SG_ALL, SG_INFO, "adding  autopilot subsystem " << apName );
+        set_subsystem( apName, ap );
+        _autopilotNames.push_back( apName );
+    }
+
+    SGSubsystemGroup::init();
+}
 
 FGXMLAutopilot::FGXMLAutopilot() {
 }
@@ -802,38 +879,11 @@ FGXMLAutopilot::~FGXMLAutopilot() {
 }
 
  
-void FGXMLAutopilot::init() {
-    config_props = fgGetNode( "/autopilot/new-config", true );
-
-    SGPropertyNode *path_n = fgGetNode("/sim/systems/autopilot/path");
-
-    if ( path_n ) {
-        SGPath config( globals->get_fg_root() );
-        config.append( path_n->getStringValue() );
-
-        SG_LOG( SG_ALL, SG_INFO, "Reading autopilot configuration from "
-                << config.str() );
-        try {
-            readProperties( config.str(), config_props );
-
-            if ( ! build() ) {
-                SG_LOG( SG_ALL, SG_ALERT,
-                        "Detected an internal inconsistency in the autopilot");
-                SG_LOG( SG_ALL, SG_ALERT,
-                        " configuration.  See earlier errors for" );
-                SG_LOG( SG_ALL, SG_ALERT,
-                        " details.");
-                exit(-1);
-            }        
-        } catch (const sg_exception& e) {
-            SG_LOG( SG_ALL, SG_ALERT, "Failed to load autopilot configuration: "
-                    << config.str() << ":" << e.getMessage() );
-        }
-
-    } else {
-        SG_LOG( SG_ALL, SG_WARN,
-                "No autopilot configuration specified for this model!");
-    }
+/* read all /sim/systems/autopilot[n]/path properties, try to read the file specified therein
+ * and configure/add the digital filters specified in that file
+ */
+void FGXMLAutopilot::init() 
+{
 }
 
 
@@ -849,7 +899,7 @@ void FGXMLAutopilot::bind() {
 void FGXMLAutopilot::unbind() {
 }
 
-bool FGXMLAutopilot::build() {
+bool FGXMLAutopilot::build( SGPropertyNode_ptr config_props ) {
     SGPropertyNode *node;
     int i;
 
@@ -858,6 +908,7 @@ bool FGXMLAutopilot::build() {
         node = config_props->getChild(i);
         string name = node->getName();
         // cout << name << endl;
+        SG_LOG( SG_ALL, SG_INFO, "adding  autopilot component " << name );
         if ( name == "pid-controller" ) {
             components.push_back( new FGPIDController( node ) );
         } else if ( name == "pi-simple-controller" ) {
