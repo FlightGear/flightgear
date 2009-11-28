@@ -318,7 +318,7 @@ bool FGAerodynamics::Load(Element *element)
     document = element;
   }
 
-  FGModel::Load(element); // Perform base class Pre-Load
+  FGModel::Load(document); // Perform base class Pre-Load
 
   DetermineAxisSystem(); // Detemine if Lift/Side/Drag, etc. is used.
 
@@ -356,7 +356,7 @@ bool FGAerodynamics::Load(Element *element)
     axis_element = document->FindNextElement("axis");
   }
 
-  FGModel::PostLoad(element); // Perform base class Post-Load
+  FGModel::PostLoad(document); // Perform base class Post-Load
 
   return true;
 }
