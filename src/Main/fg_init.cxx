@@ -1453,7 +1453,7 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
 
     globals->get_soundmgr()->bind();
-    globals->get_soundmgr()->init();
+    globals->get_soundmgr()->init(fgGetString("/sim/sound/device-name", NULL));
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the property interpolator subsystem. Put into the INIT
