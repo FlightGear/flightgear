@@ -74,7 +74,7 @@ protected:
       return 0L;
     }
 
-    readXML(infile, file_parser);
+    readXML(infile, file_parser, XML_filename);
     document = file_parser.GetDocument();
     infile.close();
     
