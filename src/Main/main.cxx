@@ -481,7 +481,23 @@ static void fgMainLoop( void ) {
     // Update the sound manager last so it can use the CPU while the GPU
     // is processing the scenery (doubled the frame-rate for me) -EMH-
 #ifdef ENABLE_AUDIO_SUPPORT
-    globals->get_soundmgr()->update(delta_time_sec);
+    static SGPropertyNode *sound_pause = fgGetNode("/sim/sound/pause");
+    static SGSoundMgr *smgr = globals->get_soundmgr();
+    static bool smgr_suspend = false;
+    if (smgr_suspend != sound_pause->getBoolValue()) {
+        if (smgr_suspend == false) { // request to suspend
+            smgr->suspend();
+        } else {
+            smgr->resume();
+        }
+        smgr_suspend = sound_pause->getBoolValue();
+    }
+
+    if (smgr_suspend == false) {
+        static SGPropertyNode *volume = fgGetNode("/sim/sound/volume");
+        smgr->set_volume(volume->getFloatValue());
+        smgr->update(delta_time_sec);
+    }
 #endif
 
     // END Tile Manager udpates
@@ -489,15 +505,11 @@ static void fgMainLoop( void ) {
     if (!scenery_loaded && globals->get_tile_mgr()->isSceneryLoaded()
         && cur_fdm_state->get_inited()) {
         fgSetBool("sim/sceneryloaded",true);
-#ifdef ENABLE_AUDIO_SUPPORT
-        if (fgGetBool("/sim/sound/enabled") == true)  {
-            float volume = fgGetFloat("/sim/sound/volume");
-            globals->get_soundmgr()->set_volume(volume);
-            globals->get_soundmgr()->activate();
+        if (fgGetBool("/sim/sound/enabled")) {
+            smgr->activate();
+        } else {
+            smgr->stop();
         }
-        else
-            globals->get_soundmgr()->stop();
-#endif
     }
     simgear::AtomicChangeListener::fireChangeListeners();
     fgRequestRedraw();
