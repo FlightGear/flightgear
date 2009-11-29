@@ -114,6 +114,8 @@ bool FGAircraft::Run(void)
   if (FGModel::Run()) return true;
   if (FDMExec->Holding()) return false;
 
+  RunPreFunctions();
+
   vForces.InitMatrix();
   if (!HoldDown) {
     vForces += Aerodynamics->GetForces();
@@ -138,6 +140,8 @@ bool FGAircraft::Run(void)
 
   vNwcg = Aerodynamics->GetTb2w() * vNcg;
   vNwcg(3) = -1*vNwcg(3) + 1;
+
+  RunPostFunctions();
 
   return false;
 }
@@ -198,6 +202,8 @@ bool FGAircraft::Load(Element* el)
       vbarv = VTailArm*VTailArea / (WingSpan*WingArea);
     }
   }
+
+  FGModel::PostLoad(el);
 
   Debug(2);
 

@@ -139,6 +139,8 @@ bool FGAtmosphere::Run(void)
   if (FGModel::Run()) return true;
   if (FDMExec->Holding()) return false;
 
+  RunPreFunctions();
+
   T_dev = 0.0;
   h = Propagate->GetAltitudeASL();
 
@@ -148,6 +150,8 @@ bool FGAtmosphere::Run(void)
   } else {
     CalculateDerived();
   }
+
+  RunPostFunctions();
 
   Debug(2);
   return false;

@@ -148,6 +148,8 @@ bool MSIS::Run(void)
   if (FGModel::Run()) return true;
   if (FDMExec->Holding()) return false;
 
+  RunPreFunctions();
+
   //do temp, pressure, and density first
   if (!useExternal) {
     // get sea-level values
@@ -179,6 +181,8 @@ bool MSIS::Run(void)
   }
 
   CalculateDerived();
+
+  RunPostFunctions();
 
   Debug(2);
 

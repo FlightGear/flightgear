@@ -31,6 +31,7 @@ INCLUDES
 #include <sstream>
 #include <iomanip>
 #include <cstdlib>
+#include <cmath>
 #include "FGFunction.h"
 #include "FGTable.h"
 #include "FGPropertyValue.h"
@@ -56,6 +57,7 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
   string operation, property_name;
   cached = false;
   cachedValue = -HUGE_VAL;
+  invlog2val = 1.0/log10(2.0);
 
   property_string = "property";
   value_string = "value";
@@ -72,6 +74,9 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
   quotient_string = "quotient";
   pow_string = "pow";
   exp_string = "exp";
+  log2_string = "log2";
+  ln_string = "ln";
+  log10_string = "log10";
   abs_string = "abs";
   sin_string = "sin";
   cos_string = "cos";
@@ -103,6 +108,12 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
     Type = eQuotient;
   } else if (operation == pow_string) {
     Type = ePow;
+  } else if (operation == log2_string) {
+    Type = eLog2;
+  } else if (operation == ln_string) {
+    Type = eLn;
+  } else if (operation == log10_string) {
+    Type = eLog10;
   } else if (operation == abs_string) {
     Type = eAbs;
   } else if (operation == sin_string) {
@@ -174,6 +185,9 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
                operation == quotient_string ||
                operation == pow_string ||
                operation == exp_string ||
+               operation == log2_string ||
+               operation == ln_string ||
+               operation == log10_string ||
                operation == abs_string ||
                operation == sin_string ||
                operation == cos_string ||
@@ -259,6 +273,18 @@ double FGFunction::GetValue(void) const
   case eExp:
     temp = exp(temp);
     break;
+  case eLog2:
+    if (temp > 0.00) temp = log10(temp)*invlog2val;
+    else temp = -HUGE_VAL;
+    break;
+  case eLn:
+    if (temp > 0.00) temp = log(temp);
+    else temp = -HUGE_VAL;
+    break;
+  case eLog10:
+    if (temp > 0.00) temp = log10(temp);
+    else temp = -HUGE_VAL;
+    break;
   case eAbs:
     temp = fabs(temp);
     break;
@@ -335,7 +361,12 @@ string FGFunction::GetValueAsString(void) const
 void FGFunction::bind(void)
 {
   if ( !Name.empty() ) {
-    string tmp = PropertyManager->mkPropertyName(Prefix + Name, false); // Allow upper case
+    string tmp;
+    if (Prefix.empty())
+      tmp  = PropertyManager->mkPropertyName(Name, false); // Allow upper case
+    else
+      tmp  = PropertyManager->mkPropertyName(Prefix + "/" + Name, false); // Allow upper case
+
     PropertyManager->Tie( tmp, this, &FGFunction::GetValue);
   }
 }

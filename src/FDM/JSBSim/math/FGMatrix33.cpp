@@ -39,6 +39,8 @@ INCLUDES
 
 #include "FGMatrix33.h"
 #include "FGColumnVector3.h"
+#include <sstream>
+#include <iomanip>
 
 #include <iostream>
 
@@ -61,6 +63,23 @@ FGMatrix33::FGMatrix33(void)
     data[6] = data[7] = data[8] = 0.0;
 
   // Debug(0);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+string FGMatrix33::Dump(const string& delimiter) const
+{
+  ostringstream buffer;
+  buffer << std::setw(18) << std::setprecision(16) << Entry(1,1) << delimiter;
+  buffer << std::setw(18) << std::setprecision(16) << Entry(1,2) << delimiter;
+  buffer << std::setw(18) << std::setprecision(16) << Entry(1,3) << delimiter;
+  buffer << std::setw(18) << std::setprecision(16) << Entry(2,1) << delimiter;
+  buffer << std::setw(18) << std::setprecision(16) << Entry(2,2) << delimiter;
+  buffer << std::setw(18) << std::setprecision(16) << Entry(2,3) << delimiter;
+  buffer << std::setw(18) << std::setprecision(16) << Entry(3,1) << delimiter;
+  buffer << std::setw(18) << std::setprecision(16) << Entry(3,2) << delimiter;
+  buffer << std::setw(18) << std::setprecision(16) << Entry(3,3);
+  return buffer.str();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
