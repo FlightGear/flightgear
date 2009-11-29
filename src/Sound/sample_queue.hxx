@@ -57,10 +57,10 @@ private:
 
     std::queue< SGSharedPtr<SGSoundSample> > _messages;
 
-    bool last_pause;
+    bool last_enabled;
     double last_volume;
 
-    SGPropertyNode_ptr _pause;
+    SGPropertyNode_ptr _enabled;
     SGPropertyNode_ptr _volume;
 };
 

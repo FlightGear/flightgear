@@ -37,14 +37,16 @@
 #include <simgear/sound/sample_openal.hxx>
 
 FGSampleQueue::FGSampleQueue ( SGSoundMgr *smgr, const string &refname ) :
-    last_pause( false ),
+    last_enabled( true ),
     last_volume( 0.0 ),
-    _pause( fgGetNode("/sim/sound/pause") ),
-    _volume( fgGetNode("/sim/sound/volume") )
+    _enabled( fgGetNode("/sim/sound/chatter/enabled", true) ),
+    _volume( fgGetNode("/sim/sound/chatter/volume", true) )
 {
     SGSampleGroup::_smgr = smgr;
     SGSampleGroup::_smgr->add(this, refname);
     SGSampleGroup::_refname = refname;
+    _enabled->setBoolValue(true);
+    _volume->setFloatValue(1.0);
 }
 
 
@@ -61,17 +63,17 @@ void
 FGSampleQueue::update (double dt)
 {
     // command sound manger
-    bool new_pause = _pause->getBoolValue();
-    if ( new_pause != last_pause ) {
-        if ( new_pause ) {
-            suspend();
-        } else {
+    bool new_enabled = _enabled->getBoolValue();
+    if ( new_enabled != last_enabled ) {
+        if ( new_enabled ) {
             resume();
+        } else {
+            suspend();
         }
-        last_pause = new_pause;
+        last_enabled = new_enabled;
     }
 
-    if ( !new_pause ) {
+    if ( new_enabled ) {
         double volume = _volume->getDoubleValue();
         if ( volume != last_volume ) {
             set_volume( volume );
