@@ -1457,7 +1457,15 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
 
     globals->get_soundmgr()->bind();
-    globals->get_soundmgr()->init();
+    globals->get_soundmgr()->init(fgGetString("/sim/sound/device-name", NULL));
+
+    vector <const char*>devices =
+                        globals->get_soundmgr()->get_available_devices();
+    for (int i=0; i<devices.size(); i++) {
+        SGPropertyNode *p = fgGetNode("/sim/sound/devices/device", i, true);
+        p->setStringValue(devices[i]);
+    }
+    devices.clear();
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the property interpolator subsystem. Put into the INIT

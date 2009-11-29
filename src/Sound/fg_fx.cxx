@@ -39,16 +39,18 @@
 #include <simgear/sound/xmlsound.hxx>
 
 FGFX::FGFX ( SGSoundMgr *smgr, const string &refname ) :
-    last_pause( false ),
+    last_enabled( true ),
     last_volume( 0.0 ),
-    _pause( fgGetNode("/sim/sound/pause") ),
-    _volume( fgGetNode("/sim/sound/volume") )
+    _enabled( fgGetNode("/sim/sound/effects/enabled", true) ),
+    _volume( fgGetNode("/sim/sound/effects/volume", true) )
 {
     SGSampleGroup::_smgr = smgr;
     SGSampleGroup::_refname = refname;
     SGSampleGroup::_smgr->add(this, refname);
     _avionics = _smgr->find("avionics", true);
     _avionics->tie_to_listener();
+    _enabled->setBoolValue(true);
+    _volume->setFloatValue(1.0);
 }
 
 
@@ -116,17 +118,17 @@ FGFX::reinit()
 void
 FGFX::update (double dt)
 {
-    bool new_pause = _pause->getBoolValue();
-    if ( new_pause != last_pause ) {
-        if ( new_pause ) {
-            suspend();
-        } else {
+    bool new_enabled = _enabled->getBoolValue();
+    if ( new_enabled != last_enabled ) {
+        if ( new_enabled ) {
             resume();
+        } else {
+            suspend();
         }
-        last_pause = new_pause;
+        last_enabled = new_enabled;
     }
 
-    if ( !new_pause ) {
+    if ( new_enabled ) {
         double volume = _volume->getDoubleValue();
         if ( volume != last_volume ) {
             set_volume( volume );        
