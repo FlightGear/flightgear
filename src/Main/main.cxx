@@ -105,6 +105,8 @@ long global_multi_loop;
 SGTimeStamp last_time_stamp;
 SGTimeStamp current_time_stamp;
 
+void fgSetNewSoundDevice(const char *);
+
 // The atexit() function handler should know when the graphical subsystem
 // is initialized.
 extern int _bootstrap_OSInit;
@@ -481,19 +483,19 @@ static void fgMainLoop( void ) {
     // Update the sound manager last so it can use the CPU while the GPU
     // is processing the scenery (doubled the frame-rate for me) -EMH-
 #ifdef ENABLE_AUDIO_SUPPORT
-    static SGPropertyNode *sound_pause = fgGetNode("/sim/sound/pause");
+    static SGPropertyNode *sound_enabled = fgGetNode("/sim/sound/enabled");
     static SGSoundMgr *smgr = globals->get_soundmgr();
-    static bool smgr_suspend = false;
-    if (smgr_suspend != sound_pause->getBoolValue()) {
-        if (smgr_suspend == false) { // request to suspend
+    static bool smgr_enabled = true;
+    if (smgr_enabled != sound_enabled->getBoolValue()) {
+        if (smgr_enabled == true) { // request to suspend
             smgr->suspend();
         } else {
             smgr->resume();
         }
-        smgr_suspend = sound_pause->getBoolValue();
+        smgr_enabled = sound_enabled->getBoolValue();
     }
 
-    if (smgr_suspend == false) {
+    if (smgr_enabled == true) {
         static SGPropertyNode *volume = fgGetNode("/sim/sound/volume");
         smgr->set_volume(volume->getFloatValue());
         smgr->update(delta_time_sec);
@@ -505,16 +507,25 @@ static void fgMainLoop( void ) {
     if (!scenery_loaded && globals->get_tile_mgr()->isSceneryLoaded()
         && cur_fdm_state->get_inited()) {
         fgSetBool("sim/sceneryloaded",true);
-        if (fgGetBool("/sim/sound/enabled")) {
+        if (fgGetBool("/sim/sound/working")) {
             smgr->activate();
         } else {
             smgr->stop();
         }
+        globals->get_props()->tie("/sim/sound/device", SGRawValueFunctions<const char *>(0, fgSetNewSoundDevice), false);
     }
     simgear::AtomicChangeListener::fireChangeListeners();
     fgRequestRedraw();
 
     SG_LOG( SG_ALL, SG_DEBUG, "" );
+}
+
+void fgSetNewSoundDevice(const char *device)
+{
+    globals->get_soundmgr()->suspend();
+    globals->get_soundmgr()->stop();
+    globals->get_soundmgr()->init(device);
+    globals->get_soundmgr()->resume();
 }
 
 // Operation for querying OpenGL parameters. This must be done in a

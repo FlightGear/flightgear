@@ -100,7 +100,7 @@ FGMarkerBeacon::init ()
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
     // Inputs
-    sound_pause = fgGetNode("/sim/sound/pause", false);
+    sound_working = fgGetNode("/sim/sound/working", true);
     lon_node = fgGetNode("/position/longitude-deg", true);
     lat_node = fgGetNode("/position/latitude-deg", true);
     alt_node = fgGetNode("/position/altitude-ft", true);
@@ -176,7 +176,7 @@ FGMarkerBeacon::update(double dt)
     }
 
     if ( has_power() && serviceable->getBoolValue()
-            && !sound_pause->getBoolValue()) {
+            && sound_working->getBoolValue()) {
 
         // marker beacon blinking
         bool light_on = ( outer_blink || middle_blink || inner_blink );

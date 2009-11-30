@@ -226,7 +226,7 @@ setFreeze (bool f)
     if ( smgr != NULL ) {
         if ( f ) {
             smgr->suspend();
-        } else if (!fgGetBool("/sim/sound/pause")) {
+        } else if (fgGetBool("/sim/sound/working")) {
             smgr->resume();
         }
     }

@@ -45,6 +45,7 @@
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/material/mat.hxx>
+#include <simgear/sound/soundmgr_openal.hxx>
 
 // #include <Include/general.hxx>
 // #include <Airports/simple.hxx>
@@ -81,7 +82,8 @@ enum
     FG_OPTIONS_ERROR = 2,
     FG_OPTIONS_EXIT = 3,
     FG_OPTIONS_VERBOSE_HELP = 4,
-    FG_OPTIONS_SHOW_AIRCRAFT = 5
+    FG_OPTIONS_SHOW_AIRCRAFT = 5,
+    FG_OPTIONS_SHOW_SOUND_DEVICES = 6
 };
 
 static double
@@ -187,7 +189,7 @@ fgSetDefaults ()
     fgSetBool("/sim/hud/visibility", false);
     fgSetBool("/sim/panel/visibility", true);
     fgSetBool("/sim/sound/enabled", true);
-    fgSetBool("/sim/sound/pause", false);
+    fgSetBool("/sim/sound/working", true);
 
 				// Flight Model options
     fgSetString("/sim/flight-model", "jsb");
@@ -202,7 +204,7 @@ fgSetDefaults ()
     fgSetBool("/sim/rendering/shading", true);
     fgSetBool("/sim/rendering/skyblend", true);
     fgSetBool("/sim/rendering/textures", true);
-	fgTie( "/sim/rendering/filtering", SGGetTextureFilter, SGSetTextureFilter, false);
+    fgTie( "/sim/rendering/filtering", SGGetTextureFilter, SGSetTextureFilter, false);
     fgSetInt("/sim/rendering/filtering", 1);
     fgSetBool("/sim/rendering/wireframe", false);
     fgSetBool("/sim/rendering/horizon-effect", false);
@@ -1291,8 +1293,8 @@ struct OptionDesc {
     {"enable-hud",                   false, OPTION_BOOL,   "/sim/hud/visibility", true, "", 0 },
     {"disable-panel",                false, OPTION_BOOL,   "/sim/panel/visibility", false, "", 0 },
     {"enable-panel",                 false, OPTION_BOOL,   "/sim/panel/visibility", true, "", 0 },
-    {"disable-sound",                false, OPTION_BOOL,   "/sim/sound/enabled", false, "", 0 },
-    {"enable-sound",                 false, OPTION_BOOL,   "/sim/sound/enabled", true, "", 0 },
+    {"disable-sound",                false, OPTION_BOOL,   "/sim/sound/working", false, "", 0 },
+    {"enable-sound",                 false, OPTION_BOOL,   "/sim/sound/working", true, "", 0 },
     {"sound-device",                 true,  OPTION_STRING, "/sim/sound/device-name", false, "", 0 },
     {"airport",                      true,  OPTION_STRING, "/sim/presets/airport-id", false, "", 0 },
     {"runway",                       true,  OPTION_FUNC,   "", false, "", fgOptRunway },
@@ -1503,6 +1505,8 @@ parse_option (const string& arg)
         return(FG_OPTIONS_VERBOSE_HELP);
     } else if ( arg.find( "--show-aircraft") == 0) {
         return(FG_OPTIONS_SHOW_AIRCRAFT);
+    } else if ( arg.find( "--show-sound-devices") == 0) {
+        return(FG_OPTIONS_SHOW_SOUND_DEVICES);
     } else if ( arg.find( "--prop:" ) == 0 ) {
         if (!set_property(arg.substr(7))) {
             SG_LOG( SG_GENERAL, SG_ALERT, "Bad property assignment: " << arg );
@@ -1618,11 +1622,20 @@ fgParseArgs (int argc, char **argv)
               verbose = true;
 
             else if (result == FG_OPTIONS_SHOW_AIRCRAFT) {
-               fgOptLogLevel( "alert" );
-               SGPath path( globals->get_fg_root() );
-               path.append("Aircraft");
-               fgShowAircraft(path, true);
-               exit(0);
+              fgOptLogLevel( "alert" );
+              SGPath path( globals->get_fg_root() );
+              path.append("Aircraft");
+              fgShowAircraft(path, true);
+              exit(0);
+
+            } else if (result == FG_OPTIONS_SHOW_SOUND_DEVICES) {
+              SGSoundMgr smgr;
+              vector <const char*>devices = smgr.get_available_devices();
+              for (int i=0; i<devices.size(); i++) {
+                printf("%i. \"%s\"\n", i, devices[i]);
+              }
+              devices.clear();
+              exit(0);
             }
 
             else if (result == FG_OPTIONS_EXIT)
