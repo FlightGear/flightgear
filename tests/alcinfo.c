@@ -33,8 +33,13 @@
 # endif
 #endif
 
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+#ifndef ALC_ALL_DEVICES_SPECIFIER
+# define ALC_ALL_DEVICES_SPECIFIER      0x1013
+#endif
 
 #define MAX_DATA	16
 static const int indentation = 4;
