@@ -35,7 +35,7 @@ FGVoiceMgr::FGVoiceMgr() :
 	_host(fgGetString(VOICE "/host", "localhost")),
 	_port(fgGetString(VOICE "/port", "1314")),
 	_enabled(fgGetBool(VOICE "/enabled", false)),
-	_pausedNode(fgGetNode("/sim/sound/pause", true))
+	_pausedNode(fgGetNode("/sim/sound/working", true))
 {
 #if defined(ENABLE_THREADS)
 	if (!_enabled)
@@ -83,7 +83,7 @@ void FGVoiceMgr::update(double)
 	if (!_enabled)
 		return;
 
-	_paused = _pausedNode->getBoolValue();
+	_paused = !_pausedNode->getBoolValue();
 	for (unsigned int i = 0; i < _voices.size(); i++) {
 		_voices[i]->update();
 #if !defined(ENABLE_THREADS)
