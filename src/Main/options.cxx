@@ -189,7 +189,7 @@ fgSetDefaults ()
     fgSetBool("/sim/hud/visibility", false);
     fgSetBool("/sim/panel/visibility", true);
     fgSetBool("/sim/sound/enabled", true);
-    fgSetBool("/sim/sound/pause", false);
+    fgSetBool("/sim/sound/working", true);
 
 				// Flight Model options
     fgSetString("/sim/flight-model", "jsb");
@@ -1293,8 +1293,8 @@ struct OptionDesc {
     {"enable-hud",                   false, OPTION_BOOL,   "/sim/hud/visibility", true, "", 0 },
     {"disable-panel",                false, OPTION_BOOL,   "/sim/panel/visibility", false, "", 0 },
     {"enable-panel",                 false, OPTION_BOOL,   "/sim/panel/visibility", true, "", 0 },
-    {"disable-sound",                false, OPTION_BOOL,   "/sim/sound/enabled", false, "", 0 },
-    {"enable-sound",                 false, OPTION_BOOL,   "/sim/sound/enabled", true, "", 0 },
+    {"disable-sound",                false, OPTION_BOOL,   "/sim/sound/working", false, "", 0 },
+    {"enable-sound",                 false, OPTION_BOOL,   "/sim/sound/working", true, "", 0 },
     {"sound-device",                 true,  OPTION_STRING, "/sim/sound/device-name", false, "", 0 },
     {"airport",                      true,  OPTION_STRING, "/sim/presets/airport-id", false, "", 0 },
     {"runway",                       true,  OPTION_FUNC,   "", false, "", fgOptRunway },
