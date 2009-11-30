@@ -14,6 +14,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include "CameraGroup.hxx"
 
 #include "globals.hxx"
@@ -318,7 +322,10 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     camera->setInheritanceMask(CullSettings::ALL_VARIABLES
                                & ~(CullSettings::CULL_MASK
                                    | CullSettings::CULLING_MODE
-                                   | CullSettings::CLEAR_MASK));
+#if defined(HAVE_CULLSETTINGS_CLEAR_MASK)
+                                   | CullSettings::CLEAR_MASK
+#endif
+                                   ));
 
     osg::Matrix pOff;
     osg::Matrix vOff;
@@ -420,7 +427,10 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
     camera->setInheritanceMask(CullSettings::ALL_VARIABLES
                                & ~(CullSettings::COMPUTE_NEAR_FAR_MODE
                                    | CullSettings::CULLING_MODE
-                                   | CullSettings::CLEAR_MASK));
+#if defined(HAVE_CULLSETTINGS_CLEAR_MASK)
+                                   | CullSettings::CLEAR_MASK
+#endif
+                                   ));
     camera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     camera->setCullingMode(osg::CullSettings::NO_CULLING);
     camera->setProjectionResizePolicy(Camera::FIXED);
