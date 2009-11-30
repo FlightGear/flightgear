@@ -686,6 +686,14 @@ case "${host}" in
 esac
 AM_CONDITIONAL(HAVE_FRAMEWORK_OSG, test "x$ac_cv_framework_osg" != "x")
 
+AC_MSG_CHECKING([checking for osg::CullSettings::CLEAR_MASK])
+AC_COMPILE_IFELSE(
+  [AC_LANG_PROGRAM([[#include <osg/CullSettings>]],
+    [[osg::CullSettings::VariablesMask mask = osg::CullSettings::CLEAR_MASK;]])],
+  [AC_DEFINE([HAVE_CULLSETTINGS_CLEAR_MASK],1,[define if OSG has CullSettings::CLEAR_MASK])
+   AC_MSG_RESULT([yes])],
+  [AC_DEFINE([HAVE_CULLSETTINGS_CLEAR_MASK],0,[define if OSG has CullSettings::CLEAR_MASK])
+   AC_MSG_RESULT([no])])
 AC_LANG_POP
 
 dnl Check for system installed zlib
