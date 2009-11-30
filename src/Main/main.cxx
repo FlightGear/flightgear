@@ -105,6 +105,8 @@ long global_multi_loop;
 SGTimeStamp last_time_stamp;
 SGTimeStamp current_time_stamp;
 
+void fgSetNewSoundDevice(const char *);
+
 // The atexit() function handler should know when the graphical subsystem
 // is initialized.
 extern int _bootstrap_OSInit;
@@ -510,11 +512,20 @@ static void fgMainLoop( void ) {
         } else {
             smgr->stop();
         }
+        globals->get_props()->tie("/sim/sound/device", SGRawValueFunctions<const char *>(0, fgSetNewSoundDevice), false);
     }
     simgear::AtomicChangeListener::fireChangeListeners();
     fgRequestRedraw();
 
     SG_LOG( SG_ALL, SG_DEBUG, "" );
+}
+
+void fgSetNewSoundDevice(const char *device)
+{
+    globals->get_soundmgr()->suspend();
+    globals->get_soundmgr()->stop();
+    globals->get_soundmgr()->init(device);
+    globals->get_soundmgr()->resume();
 }
 
 // Operation for querying OpenGL parameters. This must be done in a
