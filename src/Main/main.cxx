@@ -511,7 +511,8 @@ static void fgMainLoop( void ) {
         } else {
             smgr->stop();
         }
-        globals->get_props()->tie("/sim/sound/device", SGRawValueFunctions<const char *>(0, fgSetNewSoundDevice), false);
+        globals->get_props()->tie("/sim/sound/devices/name",
+              SGRawValueFunctions<const char *>(0, fgSetNewSoundDevice), false);
     }
 
     fgRequestRedraw();
