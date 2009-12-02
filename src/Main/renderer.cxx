@@ -139,6 +139,7 @@ public:
   {
     // Dynamic stuff, do not store geometry
     setUseDisplayList(false);
+    setDataVariance(Object::DYNAMIC);
 
     osg::StateSet* stateSet = getOrCreateStateSet();
     stateSet->setRenderBinDetails(1001, "RenderBin");
@@ -184,6 +185,7 @@ public:
   {
     // Dynamic stuff, do not store geometry
     setUseDisplayList(false);
+    setDataVariance(Object::DYNAMIC);
 
     osg::StateSet* stateSet = getOrCreateStateSet();
     stateSet->setRenderBinDetails(1000, "RenderBin");
