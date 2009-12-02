@@ -1260,7 +1260,7 @@ do_play_audio_sample (const SGPropertyNode * arg)
         static FGSampleQueue *queue = 0;
         if ( !queue ) {
            SGSoundMgr *smgr = globals->get_soundmgr();
-           queue = new FGSampleQueue(smgr, "queue");
+           queue = new FGSampleQueue(smgr, "chatter");
            queue->tie_to_listener();
         }
 
