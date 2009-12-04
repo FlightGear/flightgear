@@ -39,18 +39,16 @@
 #include <simgear/sound/xmlsound.hxx>
 
 FGFX::FGFX ( SGSoundMgr *smgr, const string &refname ) :
-    last_enabled( true ),
-    last_volume( 0.0 ),
     _enabled( fgGetNode("/sim/sound/effects/enabled", true) ),
-    _volume( fgGetNode("/sim/sound/effects/volume", true) )
+    _volume( fgGetNode("/sim/sound/effects/volume", true) ),
+    _avionics_enabled( fgGetNode("/sim/sound/avionics/enabled", true) ),
+    _avionics_volume( fgGetNode("/sim/sound/avionics/volume", true) )
 {
     SGSampleGroup::_smgr = smgr;
     SGSampleGroup::_refname = refname;
     SGSampleGroup::_smgr->add(this, refname);
     _avionics = _smgr->find("avionics", true);
     _avionics->tie_to_listener();
-    _enabled->setBoolValue(true);
-    _volume->setFloatValue(1.0);
 }
 
 
@@ -118,22 +116,16 @@ FGFX::reinit()
 void
 FGFX::update (double dt)
 {
-    bool new_enabled = _enabled->getBoolValue();
-    if ( new_enabled != last_enabled ) {
-        if ( new_enabled ) {
-            resume();
-        } else {
-            suspend();
-        }
-        last_enabled = new_enabled;
-    }
+    if ( _avionics_enabled->getBoolValue() )
+        _avionics->resume(); // no-op if already in resumed state
+    else
+        _avionics->suspend();
+    _avionics->set_volume( _avionics_volume->getDoubleValue() );
 
-    if ( new_enabled ) {
-        double volume = _volume->getDoubleValue();
-        if ( volume != last_volume ) {
-            set_volume( volume );        
-            last_volume = volume;
-        }
+
+    if ( _enabled->getBoolValue() ) {
+        set_volume( _volume->getDoubleValue() );
+        resume();
 
         // update sound effects if not paused
         for ( unsigned int i = 0; i < _sound.size(); i++ ) {
@@ -142,6 +134,8 @@ FGFX::update (double dt)
 
         SGSampleGroup::update(dt);
     }
+    else
+        suspend();
 }
 
 // end of fg_fx.cxx

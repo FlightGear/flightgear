@@ -60,11 +60,10 @@ private:
     SGSharedPtr<SGSampleGroup> _avionics;
     std::vector<SGXmlSound *> _sound;
 
-    bool last_enabled;
-    double last_volume;
-
     SGPropertyNode_ptr _enabled;
     SGPropertyNode_ptr _volume;
+    SGPropertyNode_ptr _avionics_enabled;
+    SGPropertyNode_ptr _avionics_volume;
 };
 
 
