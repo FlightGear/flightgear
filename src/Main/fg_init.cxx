@@ -49,6 +49,8 @@
 #include <simgear/compiler.h>
 
 #include <string>
+#include <boost/algorithm/string/compare.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
@@ -135,6 +137,7 @@
 #endif
 
 using std::string;
+using namespace boost::algorithm;
 
 extern const char *default_root;
 
@@ -553,7 +556,7 @@ static string fgFindAircraftPath( const SGPath &path, const string &aircraft,
             n->setStringValue(path.str().c_str());
             n->setAttribute(SGPropertyNode::USERARCHIVE, true);
 
-            if ( !strcmp(dire->d_name, aircraft.c_str()) ) {
+            if ( boost::equals(dire->d_name, aircraft.c_str(), is_iequal()) ) {
                 result = path.str();
                 break;
             }
@@ -636,7 +639,7 @@ bool fgInitConfig ( int argc, char **argv ) {
             vector<SGPropertyNode_ptr> cache = cache_root->getChildren("aircraft");
             for (unsigned int i = 0; i < cache.size(); i++) {
                 const char *name = cache[i]->getStringValue("file", "");
-                if (aircraft_set == name) {
+                if (boost::equals(aircraft_set, name, is_iequal())) {
                     const char *path = cache[i]->getStringValue("path", "");
                     SGPath xml(path);
                     xml.append(name);
@@ -1461,7 +1464,7 @@ bool fgInitSubsystems() {
 
     vector <const char*>devices =
                         globals->get_soundmgr()->get_available_devices();
-    for (int i=0; i<devices.size(); i++) {
+    for (unsigned int i=0; i<devices.size(); i++) {
         SGPropertyNode *p = fgGetNode("/sim/sound/devices/device", i, true);
         p->setStringValue(devices[i]);
     }
