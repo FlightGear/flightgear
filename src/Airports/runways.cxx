@@ -151,9 +151,8 @@ void FGRunway::processThreshold(SGPropertyNode* aThreshold)
   _displ_thresh = aThreshold->getDoubleValue("displ-m") * SG_METER_TO_FEET;
   _stopway = aThreshold->getDoubleValue("stopw-m") * SG_METER_TO_FEET;
   
-  // compute the new runway center, based on the threshold lat/lon, length,
-  // and any displaced threshold.
-  double offsetFt = (0.5 * _length) - _displ_thresh;
+  // compute the new runway center, based on the threshold lat/lon and length,
+  double offsetFt = (0.5 * _length);
   SGGeod newCenter;
   double dummy;
   SGGeodesy::direct(newThreshold, _heading, offsetFt * SG_FEET_TO_METER, newCenter, dummy);
