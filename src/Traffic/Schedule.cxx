@@ -205,6 +205,9 @@ bool FGAISchedule::update(time_t now)
     userLatitude,
     userLongitude;
 
+  SGVec3d newPos(0, 0, 0);
+
+
   if (fgGetBool("/sim/traffic-manager/enabled") == false)
     return true;
   
@@ -302,68 +305,60 @@ bool FGAISchedule::update(time_t now)
 	  if (!(dep && arr))
 	    return false;
 	  
-          SGVec3d a = SGVec3d::fromGeoc(SGGeoc::fromDegM(dep->getLongitude(),
-                                                dep->getLatitude(), 1));
-          SGVec3d b = SGVec3d::fromGeoc(SGGeoc::fromDegM(arr->getLongitude(),
-                                                arr->getLatitude(), 1));
-          SGVec3d _cross = cross(b, a);
+          if (dep != arr) {
+               SGVec3d a = SGVec3d::fromGeoc(SGGeoc::fromDegM(dep->getLongitude(),
+                                                     dep->getLatitude(), 1));
+               SGVec3d b = SGVec3d::fromGeoc(SGGeoc::fromDegM(arr->getLongitude(),
+                                                     arr->getLatitude(), 1));
+               SGVec3d _cross = cross(b, a);
 	  
-	  angle = sgACos(dot(a, b));
+	       angle = sgACos(dot(a, b));
 	  
-	  // Okay, at this point we have the angle between departure and 
-	  // arrival airport, in degrees. From here we can interpolate the
-	  // position of the aircraft by calculating the ratio between 
-	  // total time enroute and elapsed time enroute. 
+	       // Okay, at this point we have the angle between departure and 
+	       // arrival airport, in degrees. From here we can interpolate the
+	       // position of the aircraft by calculating the ratio between 
+	       // total time enroute and elapsed time enroute. 
  
-	  totalTimeEnroute     = (*i)->getArrivalTime() - (*i)->getDepartureTime();
-	  if (now > (*i)->getDepartureTime())
-	    {
-	      //err << "Lat = " << lat << ", lon = " << lon << endl;
-	      //cerr << "Time diff: " << now-i->getDepartureTime() << endl;
-	      elapsedTimeEnroute   = now - (*i)->getDepartureTime();
-	      remainingTimeEnroute = (*i)->getArrivalTime()   - now;  
-              SG_LOG (SG_GENERAL, SG_DEBUG, "Traffic Manager:      Flight is in progress.");
-	    }
-	  else
-	    {
-	      lat = dep->getLatitude();
-	      lon = dep->getLongitude();
-	      elapsedTimeEnroute = 0;
-	      remainingTimeEnroute = totalTimeEnroute;
-              SG_LOG (SG_GENERAL, SG_DEBUG, "Traffic Manager:      Flight is pending.");
-	    }
-	  	  
-	  angle *= ( (double) elapsedTimeEnroute/ (double) totalTimeEnroute);
-	  
-	  
-	  //cout << "a = " << a[0] << " " << a[1] << " " << a[2] 
-	  //     << "b = " << b[0] << " " << b[1] << " " << b[2] << endl;  
-          sgdMat4 matrix;
-	  sgdMakeRotMat4(matrix, angle, _cross.data()); 
-          SGVec3d newPos(0, 0, 0);
-	  for(int j = 0; j < 3; j++)
-	    {
-	      for (int k = 0; k<3; k++)
-		{
-		  newPos[j] += matrix[j][k]*a[k];
-		}
-	    }
-	  
-    SGGeod current;
-	  if (now > (*i)->getDepartureTime())
-	    {
-        current = SGGeod::fromCart(newPos);
-	    }
-	  else
-	    {
-	      current = dep->geod();
-      }
-	  
-    SGGeod user = SGGeod::fromDegM(userLongitude, userLatitude, (*i)->getCruiseAlt());
-    speed = SGGeodesy::distanceNm(current, arr->geod()) / 
-	    ((double) remainingTimeEnroute/3600.0);
-    
-    distanceToUser = SGGeodesy::distanceNm(current, user);
+	       totalTimeEnroute     = (*i)->getArrivalTime() - (*i)->getDepartureTime();
+	       if (now > (*i)->getDepartureTime())
+	       {
+	           //err << "Lat = " << lat << ", lon = " << lon << endl;
+	           //cerr << "Time diff: " << now-i->getDepartureTime() << endl;
+	           elapsedTimeEnroute   = now - (*i)->getDepartureTime();
+	           remainingTimeEnroute = (*i)->getArrivalTime()   - now;  
+                   SG_LOG (SG_GENERAL, SG_DEBUG, "Traffic Manager:      Flight is in progress.");
+	       }
+	       else
+	       {
+	           lat = dep->getLatitude();
+	           lon = dep->getLongitude();
+	           elapsedTimeEnroute = 0;
+	           remainingTimeEnroute = totalTimeEnroute;
+                   SG_LOG (SG_GENERAL, SG_DEBUG, "Traffic Manager:      Flight is pending.");
+	        }
+	        angle *= ( (double) elapsedTimeEnroute/ (double) totalTimeEnroute);
+	        //cout << "a = " << a[0] << " " << a[1] << " " << a[2] 
+	        //     << "b = " << b[0] << " " << b[1] << " " << b[2] << endl;  
+                sgdMat4 matrix;
+	        sgdMakeRotMat4(matrix, angle, _cross.data()); 
+	        for(int j = 0; j < 3; j++) {
+	            for (int k = 0; k<3; k++) {
+		        newPos[j] += matrix[j][k]*a[k];
+		    }
+	        }
+           }
+           SGGeod current;
+	   if ((now > (*i)->getDepartureTime() && (dep != arr))) {
+                current = SGGeod::fromCart(newPos);
+                speed = SGGeodesy::distanceNm(current, arr->geod()) / 
+	                           ((double) remainingTimeEnroute/3600.0);
+	   } else {
+	        current = dep->geod();
+		speed = 450;
+           }
+           SGGeod user = SGGeod::fromDegM(userLongitude, userLatitude, (*i)->getCruiseAlt());
+           
+           distanceToUser = SGGeodesy::distanceNm(current, user);
 
 	  // If distance between user and simulated aircaft is less
 	  // then 500nm, create this flight. At jet speeds 500 nm is roughly
