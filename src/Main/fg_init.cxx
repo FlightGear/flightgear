@@ -1461,7 +1461,7 @@ bool fgInitSubsystems() {
 
     vector <const char*>devices =
                         globals->get_soundmgr()->get_available_devices();
-    for (int i=0; i<devices.size(); i++) {
+    for (unsigned int i=0; i<devices.size(); i++) {
         SGPropertyNode *p = fgGetNode("/sim/sound/devices/device", i, true);
         p->setStringValue(devices[i]);
     }
