@@ -222,6 +222,8 @@ void FGATC::SetData(ATCData* d) {
 // The repeating flag indicates whether the message should be repeated continuously or played once.
 void FGATC::Render(string& msg, const float volume, 
 				   const string& refname, const bool repeating) {
+	if (volume < 0.05) return;
+
 	if (repeating)
 		fgSetString("/sim/messages/atis", msg.c_str());
 	else
@@ -232,7 +234,7 @@ void FGATC::Render(string& msg, const float volume,
 	if(_voice) {
                 size_t len;
 		void* buf = _vPtr->WriteMessage((char*)msg.c_str(), &len);
-		if(buf && (volume > 0.05)) {
+		if(buf) {
 			NoRender(refname);
 			try {
 // >>> Beware: must pass a (new) object to the (add) method,
