@@ -64,6 +64,8 @@ private:
     SGPropertyNode_ptr _volume;
     SGPropertyNode_ptr _avionics_enabled;
     SGPropertyNode_ptr _avionics_volume;
+    SGPropertyNode_ptr _avionics_external;
+    SGPropertyNode_ptr _internal;
 };
 
 
