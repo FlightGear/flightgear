@@ -36,6 +36,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <string>
+
+using std::string;
 
 #ifndef ALC_ALL_DEVICES_SPECIFIER
 # define ALC_ALL_DEVICES_SPECIFIER      0x1013
@@ -48,7 +51,7 @@ static const int maxmimumWidth = 79;
 void printExtensions (const char *, char, const char *);
 void displayDevices(const char *, const char *);
 char *getDeviceName(int, char **);
-void testForError(void *, char *);
+void testForError(void *, const string&);
 void testForALCError(ALCdevice *);
 
 int main(int argc, char **argv)
@@ -96,21 +99,23 @@ int main(int argc, char **argv)
 
    alcGetIntegerv(device, ALC_FREQUENCY, 1, data);
    printf("mixer frequency: %u hz\n", data[0]);
-   testForError(device, "invalid context");
+   testForALCError(device);
 
    alcGetIntegerv(device, ALC_REFRESH, 1, data+1);
    printf("refresh rate : %u hz\n", data[0]/data[1]);
-   testForError(device, "invalid context");
+   testForALCError(device);
 
    data[0] = 0;
    alcGetIntegerv(device, ALC_MONO_SOURCES, 1, data);
-   printf("supported sources; mono: %u, ", data[0]);
-   testForError(device, "invalid context");
+   error = alcGetError(device);
+   if (error == AL_NONE) {
+      printf("supported sources; mono: %u, ", data[0]);
 
-   data[0] = 0;
-   alcGetIntegerv(device, ALC_STEREO_SOURCES, 1, data);
-   printf("stereo: %u\n", data[0]);
-   testForError(device, "invalid context");
+      data[0] = 0;
+      alcGetIntegerv(device, ALC_STEREO_SOURCES, 1, data);
+      printf("stereo: %u\n", data[0]);
+      testForALCError(device);
+   }
 
    printf("ALC version: ");
    alcGetIntegerv(device, ALC_MAJOR_VERSION, 1, data);
@@ -248,15 +253,15 @@ printExtensions (const char *header, char separator, const char *extensions)
 }
 
 char *
-getCommandLineOption(int argc, char **argv, char *option)
+getCommandLineOption(int argc, char **argv, const string& option)
 {
-   int slen = strlen(option);
+   int slen = option.size();
    char *rv = 0;
    int i;
 
    for (i=0; i<argc; i++)
    {
-      if (strncmp(argv[i], option, slen) == 0)
+      if (strncmp(argv[i], option.c_str(), slen) == 0)
       {
          i++;
          if (i<argc) rv = argv[i];
@@ -317,11 +322,11 @@ displayDevices(const char *type, const char *list)
 } 
 
 void
-testForError(void *p, char *s)
+testForError(void *p, const string& s)
 {
    if (p == NULL)
    {
-      printf("\nError: %s\n\n", s);
+      printf("\nError: %s\n\n", s.c_str());
       exit(-1);
    }
 }
