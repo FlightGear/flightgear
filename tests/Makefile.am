@@ -8,10 +8,10 @@ else
 test_up_PLIB_LIBS = -lplibsg -lplibul
 endif
 
-est_epsilon_SOURCES = est-epsilon.c
+est_epsilon_SOURCES = est-epsilon.cxx
 est_epsilon_LDADD =  $(opengl_LIBS)
 
-gl_info_SOURCES = gl-info.c
+gl_info_SOURCES = gl-info.cxx
 gl_info_LDADD = $(opengl_LIBS)
 
 al_info_SOURCES = al-info.c
