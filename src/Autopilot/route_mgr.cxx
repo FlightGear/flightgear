@@ -775,7 +775,11 @@ const char* FGRouteMgr::getDepartureName() const
 
 void FGRouteMgr::setDepartureICAO(const char* aIdent)
 {
-  _departure = FGAirport::findByIdent(aIdent);
+  if ((aIdent == NULL) || (strlen(aIdent) < 4)) {
+    _departure = NULL;
+  } else {
+    _departure = FGAirport::findByIdent(aIdent);
+  }
 }
 
 const char* FGRouteMgr::getDestinationICAO() const
@@ -798,6 +802,10 @@ const char* FGRouteMgr::getDestinationName() const
 
 void FGRouteMgr::setDestinationICAO(const char* aIdent)
 {
-  _destination = FGAirport::findByIdent(aIdent);
+  if ((aIdent == NULL) || (strlen(aIdent) < 4)) {
+    _destination = NULL;
+  } else {
+    _destination = FGAirport::findByIdent(aIdent);
+  }
 }
     
