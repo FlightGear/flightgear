@@ -73,16 +73,16 @@ static const char *DEFAULT_FONT = "typewriter.txf";
 
 
 wxRadarBg::wxRadarBg(SGPropertyNode *node) :
-_name(node->getStringValue("name", "radar")),
-_num(node->getIntValue("number", 0)),
-_interval(node->getDoubleValue("update-interval-sec", 1.0)),
-_time(0.0),
-_sim_init_done(false),
-_odg(0),
-_last_switchKnob("off"),
-_resultTexture(0),
-_wxEcho(0),
-_antenna_ht(node->getDoubleValue("antenna-ht-ft", 0.0))
+    _name(node->getStringValue("name", "radar")),
+    _num(node->getIntValue("number", 0)),
+    _interval(node->getDoubleValue("update-interval-sec", 1.0)),
+    _time(0.0),
+    _sim_init_done(false),
+    _odg(0),
+    _last_switchKnob("off"),
+    _resultTexture(0),
+    _wxEcho(0),
+    _antenna_ht(node->getDoubleValue("antenna-ht-ft", 0.0))
 {
     string branch;
     branch = "/instrumentation/" + _name;

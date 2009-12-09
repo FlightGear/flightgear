@@ -26,9 +26,6 @@
 
 #include <simgear/compiler.h>
 
-using std::string;
-using std::list;
-
 #include "AIBase.hxx"
 
 #include "AIShip.hxx"
@@ -53,7 +50,7 @@ private:
     virtual void reinit() { init(); }
     virtual void update (double dt);
 
-    void setParentName(const string& p);
+    void setParentName(const std::string& p);
     void setParent();
     void setStnRange(double r);
     void setStnBrg(double y);
@@ -102,7 +99,7 @@ private:
 
     bool _MPControl, _patrol, _stn_deg_true;
 
-    string _parent;
+    std::string _parent;
 
 };
 

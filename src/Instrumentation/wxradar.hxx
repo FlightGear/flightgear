@@ -33,11 +33,9 @@
 #include <simgear/environment/visual_enviro.hxx>
 
 #include <vector>
-#include <queue>
 #include <string>
 
 using std::vector;
-using std::queue;
 using std::string;
 
 class FGODGauge;
