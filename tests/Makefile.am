@@ -14,7 +14,7 @@ est_epsilon_LDADD =  $(opengl_LIBS)
 gl_info_SOURCES = gl-info.cxx
 gl_info_LDADD = $(opengl_LIBS)
 
-alcinfo_SOURCES = alcinfo.c
+alcinfo_SOURCES = alcinfo.cxx
 alcinfo_LDADD = $(openal_LIBS)
 
 test_env_map_SOURCES = test-env-map.cxx
