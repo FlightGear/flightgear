@@ -42,7 +42,9 @@ FGFX::FGFX ( SGSoundMgr *smgr, const string &refname ) :
     _enabled( fgGetNode("/sim/sound/effects/enabled", true) ),
     _volume( fgGetNode("/sim/sound/effects/volume", true) ),
     _avionics_enabled( fgGetNode("/sim/sound/avionics/enabled", true) ),
-    _avionics_volume( fgGetNode("/sim/sound/avionics/volume", true) )
+    _avionics_volume( fgGetNode("/sim/sound/avionics/volume", true) ),
+    _avionics_external( fgGetNode("/sim/sound/avionics/external-view", true) ),
+    _internal( fgGetNode("/sim/current-view/internal", true) )
 {
     SGSampleGroup::_smgr = smgr;
     SGSampleGroup::_refname = refname;
@@ -116,12 +118,14 @@ FGFX::reinit()
 void
 FGFX::update (double dt)
 {
-    if ( _avionics_enabled->getBoolValue() )
+    bool active = _avionics_external->getBoolValue() ||
+                  _internal->getBoolValue();
+
+    if ( active && _avionics_enabled->getBoolValue() )
         _avionics->resume(); // no-op if already in resumed state
     else
         _avionics->suspend();
-    _avionics->set_volume( _avionics_volume->getDoubleValue() );
-
+    _avionics->set_volume( _avionics_volume->getFloatValue() );
 
     if ( _enabled->getBoolValue() ) {
         set_volume( _volume->getDoubleValue() );
