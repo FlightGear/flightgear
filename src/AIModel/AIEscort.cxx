@@ -39,6 +39,8 @@
 
 #include "AIEscort.hxx"
 
+using std::string;
+
 FGAIEscort::FGAIEscort() :
 FGAIShip(otEscort),
 
