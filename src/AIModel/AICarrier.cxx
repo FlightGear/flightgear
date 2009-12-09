@@ -127,8 +127,8 @@ void FGAICarrier::update(double dt) {
     FGAIShip::update(dt);
 
     //automatic turn into wind with a target wind of 25 kts otd
-    //SG_LOG(SG_GENERAL, SG_ALERT, "AICarrier: MPControl " << MPControl );
-    if (!MPControl){
+    //SG_LOG(SG_GENERAL, SG_ALERT, "AICarrier: MPControl " << MPControl << " AIControl " << AIControl);
+    if (!MPControl && AIControl){
 
         if(turn_to_launch_hdg){
             TurnToLaunch();
@@ -259,9 +259,9 @@ void FGAICarrier::bind() {
     props->tie("controls/start-pos-long-deg",
                SGRawValueMethods<SGGeod,double>(pos, &SGGeod::getLongitudeDeg));
     props->tie("controls/mp-control",
-        SGRawValuePointer<bool>(&MPControl));
-    props->tie("velocities/speed-kts",
-                SGRawValuePointer<double>(&speed));
+                SGRawValuePointer<bool>(&MPControl));
+    props->tie("controls/ai-control",
+                SGRawValuePointer<bool>(&AIControl));
     props->tie("environment/surface-wind-speed-true-kts",
                 SGRawValuePointer<double>(&wind_speed_kts));
     props->tie("environment/surface-wind-from-true-degs",
@@ -317,7 +317,6 @@ void FGAICarrier::unbind() {
     props->untie("controls/flols/distance-m");
     props->untie("controls/flols/angle-degs");
     props->untie("controls/turn-to-launch-hdg");
-    props->untie("velocities/speed-kts");
     props->untie("environment/wind-speed-true-kts");
     props->untie("environment/wind-from-true-degs");
     props->untie("environment/rel-wind-from-degs");
@@ -333,6 +332,7 @@ void FGAICarrier::unbind() {
     props->untie("controls/constants/jbd/trans-time-s");
     props->untie("controls/jbd-time-constant");
     props->untie("controls/mp-control");
+    props->untie("controls/ai-control");
     props->untie("controls/turn-to-recovery-hdg");
     props->untie("controls/turn-to-base-course");
 }

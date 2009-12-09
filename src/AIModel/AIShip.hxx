@@ -79,6 +79,7 @@ public:
     double _rudder_constant, _speed_constant, _hdg_constant, _limit ;
     double _elevation_m, _elevation_ft;
     double _missed_range, _tow_angle, _wait_count, _missed_count,_wp_range;
+    double _dt_count, _next_run;
 
     FGAIFlightPlan::waypoint* prev; // the one behind you
     FGAIFlightPlan::waypoint* curr; // the one ahead
@@ -123,8 +124,6 @@ private:
     double _roll_constant, _roll_factor;
     double _sp_turn_radius_ft, _rd_turn_radius_ft, _fixed_turn_radius;
     double _old_range, _range_rate;
-    double _dt_count;
-    double _next_run;
     double _missed_time_sec;
     double _start_sec;
     double _day;

@@ -43,7 +43,7 @@
 
 FGAIShip::FGAIShip(object_type ot) :
 FGAIBase(ot),
-_limit(40),
+_limit(100),
 _elevation_m(0),
 _elevation_ft(0),
 _tow_angle(0),
@@ -200,6 +200,8 @@ void FGAIShip::bind() {
         SGRawValuePointer<double>(&_fixed_turn_radius));
     props->tie("controls/restart",
         SGRawValuePointer<bool>(&_restart));
+    props->tie("velocities/speed-kts",
+                SGRawValuePointer<double>(&speed));
 }
 
 void FGAIShip::unbind() {
@@ -236,6 +238,7 @@ void FGAIShip::unbind() {
     props->untie("controls/fixed-turn-radius-ft");
     props->untie("controls/constants/speed");
     props->untie("controls/restart");
+    props->untie("velocities/speed-kts");
 
 }
 void FGAIShip::update(double dt) {
@@ -309,8 +312,7 @@ void FGAIShip::Run(double dt) {
     }
 
     // do not allow unreasonable speeds
-    if (speed > _limit)
-        speed = _limit;
+    SG_CLAMP_RANGE(speed, -_limit * 0.75, _limit);
 
     // convert speed to degrees per second
     speed_north_deg_sec = cos(hdg / SGD_RADIANS_TO_DEGREES)
@@ -337,7 +339,7 @@ void FGAIShip::Run(double dt) {
 
 
     //we assume that at slow speed ships will manoeuvre using engines/bow thruster
-	if(type == "ship" || type == "carrier"){
+	if(type == "ship" || type == "carrier" || type == "escort"){
 
 		if (fabs(speed)<=5)
 			_sp_turn_radius_ft = _fixed_turn_radius;
@@ -418,7 +420,7 @@ void FGAIShip::Run(double dt) {
     }
 
     // set the _rudder limit by speed
-    if (type == "ship" || type == "carrier"){
+    if (type == "ship" || type == "carrier" || type == "escort"){
 
         if (speed <= 40)
             rudder_limit = (-0.825 * speed) + 35;
