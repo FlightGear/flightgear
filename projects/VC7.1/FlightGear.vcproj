@@ -2736,6 +2736,13 @@
 				RelativePath="..\..\src\AIModel\AICarrier.hxx">
 			</File>
 			<File
+				RelativePath="..\..\src\AIModel\AIEscort.cxx">
+			</File>
+			<File
+				RelativePath="..\..\src\AIModel\AIEscort.hxx">
+			</File>
+
+			<File
 				RelativePath="..\..\src\AIModel\AIFlightPlan.cxx">
 			</File>
 			<File

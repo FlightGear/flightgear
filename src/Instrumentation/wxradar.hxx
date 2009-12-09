@@ -34,6 +34,7 @@
 
 #include <vector>
 #include <string>
+
 using std::vector;
 using std::string;
 
@@ -53,8 +54,10 @@ public:
 protected:
     string _name;
     int _num;
-    double _interval;
     double _time;
+    double _interval;
+    double _elapsed_time;
+    double _persistance;
     bool _sim_init_done;
 
     SGPropertyNode_ptr _serviceable_node;
@@ -68,6 +71,20 @@ protected:
 
     FGODGauge *_odg;
 
+    typedef struct {
+        double bearing;
+        double range;
+        double elevation;
+        double bumpiness;
+        double elapsed_time;
+    }ground_echo;
+
+    typedef vector <ground_echo*> ground_echo_vector_type;
+    typedef ground_echo_vector_type::iterator ground_echo_vector_iterator;
+
+    ground_echo_vector_type       ground_echoes;
+    ground_echo_vector_iterator   ground_echoes_iterator;
+
     // Convenience function for creating a property node with a
     // default value
     template<typename DefaultType>
@@ -76,7 +93,7 @@ protected:
 private:
     string _texture_path;
 
-    typedef enum { ARC, MAP, PLAN, ROSE } DisplayMode;
+    typedef enum { ARC, MAP, PLAN, ROSE, BSCAN} DisplayMode;
     DisplayMode _display_mode;
 
     string _last_switchKnob;
@@ -89,6 +106,7 @@ private:
 
     double _radar_ref_rng;
     double _lat, _lon;
+    double _antenna_ht;
 
     SGPropertyNode_ptr _Tacan;
     SGPropertyNode_ptr _Radar_controls;
@@ -136,17 +154,18 @@ private:
     void update_tacan();
     void update_heading_marker();
     void update_data(const SGPropertyNode *ac, double alt, double heading,
-            double radius, double bearing, bool selected);
+        double radius, double bearing, bool selected);
     void center_map();
     void apply_map_offset();
     void updateFont();
     void calcRangeBearing(double lat, double lon, double lat2, double lon2,
-            double &range, double &bearing) const;
+        double &range, double &bearing) const;
 
     bool withinRadarHorizon(double user_alt, double alt, double range);
     bool inRadarRange(double sigma, double range);
 
     float calcRelBearing(float bearing, float heading);
+    float calcRelBearingDeg(float bearing, float heading);
 };
 
 

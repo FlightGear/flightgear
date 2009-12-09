@@ -63,7 +63,10 @@ using std::setfill;
 #include "od_gauge.hxx"
 #include "wxradar.hxx"
 
+#include <iostream>             // for cout, endl
 
+using std::cout;
+using std::endl;
 
 static const float UNIT = 1.0f / 8.0f;  // 8 symbols in a row/column in the texture
 static const char *DEFAULT_FONT = "typewriter.txf";
@@ -78,7 +81,8 @@ wxRadarBg::wxRadarBg(SGPropertyNode *node) :
     _odg(0),
     _last_switchKnob("off"),
     _resultTexture(0),
-    _wxEcho(0)
+    _wxEcho(0),
+    _antenna_ht(node->getDoubleValue("antenna-ht-ft", 0.0))
 {
     string branch;
     branch = "/instrumentation/" + _name;
@@ -116,12 +120,12 @@ wxRadarBg::init ()
 
     // texture name to use in 2D and 3D instruments
     _texture_path = _Instrument->getStringValue("radar-texture-path",
-            "Aircraft/Instruments/Textures/od_wxradar.rgb");
+        "Aircraft/Instruments/Textures/od_wxradar.rgb");
     _resultTexture = FGTextureManager::createTexture(_texture_path.c_str(), false);
 
     SGPath tpath(globals->get_fg_root());
     string path = _Instrument->getStringValue("echo-texture-path",
-            "Aircraft/Instruments/Textures/wxecho.rgb");
+        "Aircraft/Instruments/Textures/wxecho.rgb");
     tpath.append(path);
 
     // no mipmap or else alpha will mix with pixels on the border of shapes, ruining the effect
@@ -219,7 +223,7 @@ wxRadarBg::init ()
     pset->setDataVariance(osg::Object::DYNAMIC);
     _geom->addPrimitiveSet(pset);
     _geom->setInitialBound(osg::BoundingBox(osg::Vec3f(-256.0f, -256.0f, 0.0f),
-            osg::Vec3f(256.0f, 256.0f, 0.0f)));
+        osg::Vec3f(256.0f, 256.0f, 0.0f)));
     _radarGeode->addDrawable(_geom);
     _odg->allocRT();
     // Texture in the 2D panel system
@@ -281,8 +285,11 @@ wxRadarBg::update (double delta_time_sec)
         return;
     }
     _time += delta_time_sec;
-    if (_time < _interval)
+    if (_time < _interval){
+//        cout << "WXradar update too soon " << _time << endl;
         return;
+    }
+//        cout << "WXradar updating" << _time<< endl;
 
     _time = 0.0;
 
@@ -293,7 +300,9 @@ wxRadarBg::update (double delta_time_sec)
             center_map();
         }
     } else if (mode == "plan") {
-        _display_mode = PLAN;
+        _display_mode = PLAN;}
+    else if (mode == "bscan") {
+        _display_mode = BSCAN;
     } else {
         _display_mode = ARC;
     }
@@ -358,6 +367,8 @@ wxRadarBg::update (double delta_time_sec)
             if (_radar_rotate_node->getBoolValue()) {
                 _angle_offset = -_view_heading;
             }
+        } else if (_display_mode == BSCAN) {
+            _angle_offset = -_view_heading;
         } else {
             // rose
         }
@@ -371,25 +382,25 @@ wxRadarBg::update (double delta_time_sec)
 
 
         osg::DrawArrays *quadPSet
-                = static_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(0));
+            = static_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(0));
         quadPSet->set(osg::PrimitiveSet::QUADS, 0, _vertices->size());
         quadPSet->dirty();
 
         // erase what is out of sight of antenna
         /*
-            |\     /|
-            | \   / |
-            |  \ /  |
-            ---------
-            |       |
-            |       |
-            ---------
+        |\     /|
+        | \   / |
+        |  \ /  |
+        ---------
+        |       |
+        |       |
+        ---------
         */
 
         osg::DrawArrays *maskPSet
-                = static_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(1));
+            = static_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(1));
         osg::DrawArrays *trimaskPSet
-                = static_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(2));
+            = static_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(2));
 
         if (_display_mode == ARC) {
             float xOffset = 256.0f;
@@ -458,7 +469,7 @@ wxRadarBg::update (double delta_time_sec)
 void
 wxRadarBg::update_weather()
 {
-    string modeButton = _Instrument->getStringValue("mode", "wx");
+    string modeButton = _Instrument->getStringValue("mode", "WX");
     _radarEchoBuffer = *sgEnviro.get_radar_echo();
 
     // pretend we have a scan angle bigger then the FOV
@@ -498,7 +509,7 @@ wxRadarBg::update_weather()
                     continue;
 
                 float angle = (iradarEcho->heading - _angle_offset) //* fovFactor
-                        + 0.5 * SG_PI;
+                    + 0.5 * SG_PI;
 
                 // Rotate echo into position, and rotate echo to have
                 // a constant orientation towards the
@@ -508,8 +519,8 @@ wxRadarBg::update_weather()
                 const osg::Vec2f texBase(col, (UNIT * (float) (4 + (cloudId & 3))));
 
                 osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
-                        * osg::Matrixf::translate(0.0f, radius, 0.0f)
-                        * wxRotate(angle) * _centerTrans);
+                    * osg::Matrixf::translate(0.0f, radius, 0.0f)
+                    * wxRotate(angle) * _centerTrans);
                 addQuad(_vertices, _texCoords, m, texBase);
 
                 //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: drawing clouds"
@@ -536,12 +547,12 @@ wxRadarBg::update_weather()
             float size = UNIT * 0.5f;
             float radius = iradarEcho->dist * _scale;
             float angle = iradarEcho->heading * SG_DEGREES_TO_RADIANS
-                    - _angle_offset;
+                - _angle_offset;
 
             osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
-                    * wxRotate(-angle)
-                    * osg::Matrixf::translate(0.0f, radius, 0.0f)
-                    * wxRotate(angle) * _centerTrans);
+                * wxRotate(-angle)
+                * osg::Matrixf::translate(0.0f, radius, 0.0f)
+                * wxRotate(angle) * _centerTrans);
             addQuad(_vertices, _texCoords, m, texBase);
         }
     }
@@ -550,7 +561,7 @@ wxRadarBg::update_weather()
 
 void
 wxRadarBg::update_data(const SGPropertyNode *ac, double altitude, double heading,
-        double radius, double bearing, bool selected)
+                       double radius, double bearing, bool selected)
 {
     osgText::Text *callsign = new osgText::Text;
     callsign->setFont(_font.get());
@@ -558,8 +569,8 @@ wxRadarBg::update_data(const SGPropertyNode *ac, double altitude, double heading
     callsign->setCharacterSize(_font_size);
     callsign->setColor(selected ? osg::Vec4(1, 1, 1, 1) : _font_color);
     osg::Matrixf m(wxRotate(-bearing)
-            * osg::Matrixf::translate(0.0f, radius, 0.0f)
-            * wxRotate(bearing) * _centerTrans);
+        * osg::Matrixf::translate(0.0f, radius, 0.0f)
+        * wxRotate(bearing) * _centerTrans);
 
     osg::Vec3 pos = m.preMult(osg::Vec3(16, 16, 0));
     // cast to int's, otherwise text comes out ugly
@@ -573,10 +584,10 @@ wxRadarBg::update_data(const SGPropertyNode *ac, double altitude, double heading
 
     stringstream text;
     text << identity << endl
-            << setprecision(0) << fixed
-            << setw(3) << setfill('0') << heading * SG_RADIANS_TO_DEGREES << "\xB0 "
-            << setw(0) << altitude << "ft" << endl
-            << ac->getDoubleValue("velocities/true-airspeed-kt") << "kts";
+        << setprecision(0) << fixed
+        << setw(3) << setfill('0') << heading * SG_RADIANS_TO_DEGREES << "\xB0 "
+        << setw(0) << altitude << "ft" << endl
+        << ac->getDoubleValue("velocities/true-airspeed-kt") << "kts";
 
     callsign->setText(text.str());
     _textGeode->addDrawable(callsign);
@@ -586,6 +597,75 @@ wxRadarBg::update_data(const SGPropertyNode *ac, double altitude, double heading
 void
 wxRadarBg::update_aircraft()
 {
+    double diff;
+    double age_factor;
+    double test_rng;
+    double test_brg;
+    double range;
+    double bearing;
+    float echo_radius;
+    double angle;
+
+    if (!ground_echoes.empty()){
+        ground_echoes_iterator = ground_echoes.begin();
+
+        while(ground_echoes_iterator != ground_echoes.end()) {
+            diff = _elapsed_time - (*ground_echoes_iterator)->elapsed_time;
+
+            if( diff > _persistance) {
+                ground_echoes.erase(ground_echoes_iterator);
+            } else {
+//                double test_brg = (*ground_echoes_iterator)->bearing;
+//                double bearing = test_brg * SG_DEGREES_TO_RADIANS;
+//                float angle = calcRelBearing(bearing, _view_heading);
+                double bumpinessFactor  = (*ground_echoes_iterator)->bumpiness;
+                float heading = get_heading();
+                if ( _display_mode == BSCAN ){
+                    test_rng = (*ground_echoes_iterator)->elevation * 6;
+                    test_brg = (*ground_echoes_iterator)->bearing;
+                    angle = calcRelBearingDeg(test_brg, heading) * 6;
+                    range = sqrt(test_rng * test_rng + angle * angle);
+                    bearing = atan2(angle, test_rng);
+                    //cout << "angle " << angle <<" bearing "
+                    //    << bearing / SG_DEGREES_TO_RADIANS <<  endl;
+                    echo_radius = (0.1 + (1.9 * bumpinessFactor)) * 240 * age_factor;
+                } else {
+                    test_rng = (*ground_echoes_iterator)->range;
+                    range = test_rng * SG_METER_TO_NM;
+                    test_brg = (*ground_echoes_iterator)->bearing;
+                    bearing = test_brg * SG_DEGREES_TO_RADIANS;
+                    echo_radius = (0.1 + (1.9 * bumpinessFactor)) * 120 * age_factor;
+                    bearing += _angle_offset;
+                }
+
+                float radius = range * _scale;
+                //double heading = 90 * SG_DEGREES_TO_RADIANS;
+                //heading += _angle_offset;
+
+                age_factor = 1;
+
+                if (diff != 0)
+                    age_factor = 1 - (0.5 * diff/_persistance);
+
+                float size = echo_radius * UNIT;
+
+                const osg::Vec2f texBase(3 * UNIT, 3 * UNIT);
+                osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
+                    * osg::Matrixf::translate(0.0f, radius, 0.0f)
+                    * wxRotate(bearing) * _centerTrans);
+                addQuad(_vertices, _texCoords, m, texBase);
+
+                ++ground_echoes_iterator;
+
+                //cout << "test bearing " << test_brg 
+                //<< " test_rng " << test_rng * SG_METER_TO_NM
+                //<< " persistance " << _persistance
+                //<< endl;
+            }
+
+        }
+
+    }
     if (!_ai_enabled_node->getBoolValue())
         return;
 
@@ -630,11 +710,13 @@ wxRadarBg::update_aircraft()
 
         double echo_radius, sigma;
         const string name = model->getName();
+
+        //cout << "name "<<name << endl;
         if (name == "aircraft" || name == "tanker")
             echo_radius = 1, sigma = 1;
         else if (name == "multiplayer" || name == "wingman" || name == "static")
             echo_radius = 1.5, sigma = 1;
-        else if (name == "ship" || name == "carrier" || name == "storm")
+        else if (name == "ship" || name == "carrier" || name == "escort" ||name == "storm")
             echo_radius = 1.5, sigma = 100;
         else if (name == "thermal")
             echo_radius = 2, sigma = 100;
@@ -643,7 +725,7 @@ wxRadarBg::update_aircraft()
         else if (name == "ballistic")
             echo_radius = 0.001, sigma = 0.001;
         else
-             continue;
+            continue;
 
         double lat = model->getDoubleValue("position/latitude-deg");
         double lon = model->getDoubleValue("position/longitude-deg");
@@ -652,7 +734,7 @@ wxRadarBg::update_aircraft()
 
         double range, bearing;
         calcRangeBearing(user_lat, user_lon, lat, lon, range, bearing);
-
+        //cout << _antenna_ht << _interval<< endl;
         bool isVisible = withinRadarHorizon(user_alt, alt, range);
 
         if (!isVisible)
@@ -679,8 +761,8 @@ wxRadarBg::update_aircraft()
 
             const osg::Vec2f texBase(3 * UNIT, 3 * UNIT);
             osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
-                    * osg::Matrixf::translate(0.0f, radius, 0.0f)
-                    * wxRotate(bearing) * _centerTrans);
+                * osg::Matrixf::translate(0.0f, radius, 0.0f)
+                * wxRotate(bearing) * _centerTrans);
             addQuad(_vertices, _texCoords, m, texBase);
         }
 
@@ -689,9 +771,9 @@ wxRadarBg::update_aircraft()
             const osg::Vec2f texBase(0, 3 * UNIT);
             float size = 600 * UNIT;
             osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
-                    * wxRotate(heading - bearing)
-                    * osg::Matrixf::translate(0.0f, radius, 0.0f)
-                    * wxRotate(bearing) * _centerTrans);
+                * wxRotate(heading - bearing)
+                * osg::Matrixf::translate(0.0f, radius, 0.0f)
+                * wxRotate(bearing) * _centerTrans);
             addQuad(_vertices, _texCoords, m, texBase);
         }
 
@@ -714,13 +796,13 @@ wxRadarBg::update_tacan()
     float size = 600 * UNIT;
     float radius = _tacan_distance_node->getFloatValue() * _scale;
     float angle = _tacan_bearing_node->getFloatValue() * SG_DEGREES_TO_RADIANS
-            + _angle_offset;
+        + _angle_offset;
 
     const osg::Vec2f texBase(1 * UNIT, 3 * UNIT);
     osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
-            * wxRotate(-angle)
-            * osg::Matrixf::translate(0.0f, radius, 0.0f)
-            * wxRotate(angle) * _centerTrans);
+        * wxRotate(-angle)
+        * osg::Matrixf::translate(0.0f, radius, 0.0f)
+        * wxRotate(angle) * _centerTrans);
     addQuad(_vertices, _texCoords, m, texBase);
 
     //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:     drawing TACAN"
@@ -741,7 +823,7 @@ wxRadarBg::update_heading_marker()
     const osg::Vec2f texBase(2 * UNIT, 3 * UNIT);
     float size = 600 * UNIT;
     osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
-            * wxRotate(_view_heading + _angle_offset));
+        * wxRotate(_view_heading + _angle_offset));
 
     m *= _centerTrans;
     addQuad(_vertices, _texCoords, m, texBase);
@@ -785,15 +867,17 @@ wxRadarBg::withinRadarHorizon(double user_alt, double alt, double range_nm)
 {
     // Radar Horizon  = 1.23(ht^1/2 + hr^1/2),
     //don't allow negative altitudes (an approximation - yes altitudes can be negative)
+    // Allow antenna ht to be set, but only on ground
+    _antenna_ht = _Instrument->getDoubleValue("antenna-ht-ft");
 
-    if (user_alt < 0)
-        user_alt = 0;
+    if (user_alt <= 0)
+        user_alt = _antenna_ht;
 
-    if (alt < 0)
-        alt = 0;
+    if (alt <= 0)
+        alt = 0; // to allow some vertical extent of target
 
     double radarhorizon = 1.23 * (sqrt(alt) + sqrt(user_alt));
-    //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: horizon " << radarhorizon);
+//    SG_LOG(SG_GENERAL, SG_ALERT, "Radar: radar horizon " << radarhorizon);
     return radarhorizon >= range_nm;
 }
 
@@ -828,7 +912,7 @@ wxRadarBg::inRadarRange(double sigma, double range_nm)
 
 void
 wxRadarBg::calcRangeBearing(double lat, double lon, double lat2, double lon2,
-        double &range, double &bearing) const
+                            double &range, double &bearing) const
 {
     // calculate the bearing and range of the second pos from the first
     double az2, distance;
@@ -847,6 +931,20 @@ wxRadarBg::calcRelBearing(float bearing, float heading)
 
     if (angle < -SG_PI)
         angle += 2.0 * SG_PI;
+
+    return angle;
+}
+
+float
+wxRadarBg::calcRelBearingDeg(float bearing, float heading)
+{
+    float angle = bearing - heading;
+
+    if (angle >= 180)
+        return angle -= 360;
+
+    if (angle < -180)
+        return angle += 360;
 
     return angle;
 }
