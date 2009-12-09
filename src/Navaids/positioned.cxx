@@ -694,6 +694,10 @@ FGPositioned::findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm
 FGPositionedRef
 FGPositioned::findNextWithPartialId(FGPositionedRef aCur, const std::string& aId, Filter* aFilter)
 {
+  if (aId.empty()) {
+    return NULL;
+  }
+  
   std::string id(boost::to_upper_copy(aId));
 
   // It is essential to bound our search, to avoid iterating all the way to the end of the database.
