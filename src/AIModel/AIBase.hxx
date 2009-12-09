@@ -45,7 +45,7 @@ class FGAIBase : public osg::Referenced {
 public:
     enum object_type { otNull = 0, otAircraft, otShip, otCarrier, otBallistic,
                        otRocket, otStorm, otThermal, otStatic, otWingman, otGroundVehicle,
-                       otMultiplayer,
+                       otEscort, otMultiplayer,
                        MAX_OBJECTS };	// Needs to be last!!!
 
     FGAIBase(object_type ot);

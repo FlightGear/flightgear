@@ -123,7 +123,7 @@ private:
     bool turn_to_base_course;
     bool returning;      // set if the carrier is returning to an operating box
     bool InToWind();     // set if the carrier is in to wind
-    bool MPControl;
+    bool MPControl, AIControl;
 
 
     SGPropertyNode_ptr _longitude_node;

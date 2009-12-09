@@ -39,6 +39,7 @@
 #include "AITanker.hxx"
 #include "AIWingman.hxx"
 #include "AIGroundVehicle.hxx"
+#include "AIEscort.hxx"
 
 FGAIManager::FGAIManager() {
     _dt = 0.0;
@@ -311,6 +312,11 @@ FGAIManager::processScenario( const string &filename ) {
             groundvehicle->readFromScenario(scEntry);
             attach(groundvehicle);
 
+        } else if (type == "escort") {
+            FGAIEscort* escort = new FGAIEscort;
+            escort->readFromScenario(scEntry);
+            attach(escort);
+
         } else if (type == "thunderstorm") {
             FGAIStorm* storm = new FGAIStorm;
             storm->readFromScenario(scEntry);
@@ -395,8 +401,8 @@ const FGAIBase *
 FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range)
 {
     // we specify tgt extent (ft) according to the AIObject type
-    double tgt_ht[]     = {0,  50, 100, 250, 0, 100, 0, 0,  50, 50,  20,  50};
-    double tgt_length[] = {0, 100, 200, 750, 0,  50, 0, 0, 200, 100, 40, 100};
+    double tgt_ht[]     = {0,  50, 100, 250, 0, 100, 0, 0,  50,  50, 20, 100,  50};
+    double tgt_length[] = {0, 100, 200, 750, 0,  50, 0, 0, 200, 100, 40, 200, 100};
     ai_list_iterator ai_list_itr = ai_list.begin();
     ai_list_iterator end = ai_list.end();
 
