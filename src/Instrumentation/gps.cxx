@@ -1428,10 +1428,15 @@ void GPS::loadNearest()
   int limitCount = _scratchNode->getIntValue("max-results", 1);
   double cutoffDistance = _scratchNode->getDoubleValue("cutoff-nm", 400.0);
   
-  clearScratch(); // clear now, regardless of whether we find a match or not
+  SGGeod searchPos = _indicated_pos;
+  if (isScratchPositionValid()) {
+    searchPos = _scratchPos;
+  }
   
+  clearScratch(); // clear now, regardless of whether we find a match or not
+    
   _searchResults = 
-    FGPositioned::findClosestN(_indicated_pos, limitCount, cutoffDistance, f.get());
+    FGPositioned::findClosestN(searchPos, limitCount, cutoffDistance, f.get());
   _searchResultsCached = true;
   _searchResultIndex = 0;
   _searchIsRoute = false;
