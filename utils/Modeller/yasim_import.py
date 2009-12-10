@@ -16,6 +16,7 @@ yasim_import.py loads and visualizes a YASim FDM geometry
 
 It is recommended to load the model superimposed over a greyed out and immutable copy of the aircraft model:
 
+  (0) put this script into ~/.blender/scripts/
   (1) load or import aircraft model (menu -> "File" -> "Import" -> "AC3D (.ac) ...")
   (2) create new *empty* scene (menu -> arrow button left of "SCE:scene1" combobox -> "ADD NEW" -> "empty")
   (3) rename scene to yasim (not required)
@@ -25,7 +26,7 @@ It is recommended to load the model superimposed over a greyed out and immutable
 This is good enough for simple checks. But if you are working on the YASim configuration, then you need a
 quick and convenient way to reload the file. In that case continue after (4):
 
-  (5) switch the button area on the bottom of the blender screen to "Scripts Window" mode (green python snake icon)
+  (5) switch the button area at the bottom of the blender screen to "Scripts Window" mode (green python snake icon)
   (6) load the YASim config file (menu -> "Scripts" -> "Import" -> "YASim (.xml) ...")
   (7) make the "Scripts Window" area as small as possible by dragging the area separator down
   (8) optionally split the "3D View" area and switch the right part to the "Outliner"
@@ -36,7 +37,15 @@ If the 3D model is displaced with respect to the FDM model, then the <offsets> v
 model animation XML file should be added as comment to the YASim config file, as a line all by
 itself, with no spaces surrounding the equal signs. Spaces elsewhere are allowed. For example:
 
-  <!-- offsets: x=3.45 y=0.4 p=5 -->
+  <offsets>
+      <x-m>3.45</x-m>
+      <z-m>-0.4</z-m>
+      <pitch-deg>5</pitch-deg>
+  </offsets>
+
+becomes:
+
+  <!-- offsets: x=3.45 z=-0.4 p=5 -->
 
 Possible variables are:
 
@@ -58,14 +67,14 @@ It's an unavoidable consequence of how Blender deals with meshes.
 Elements are displayed as follows:
 
   cockpit                             -> monkey head
-  fuselage                            -> blue "tube" (with only 12 sides for less clutter)
+  fuselage                            -> blue "tube" (with only 12 sides for less clutter); center at "a"
   vstab                               -> red with yellow flaps
   wing/mstab/hstab                    -> green with yellow flaps/spoilers/slats (always 20 cm deep);
                                          symmetric surfaces are only displayed on the left side
   thrusters (jet/propeller/thruster)  -> dashed line from center to actionpt;
                                          arrow from actionpt along thrust vector (always 1 m long);
                                          propeller circle
-  rotor                               -> radius and rel_len_blade_start circly, direction arrow,
+  rotor                               -> radius and rel_len_blade_start circle, direction arrow,
                                          normal and forward vector, one blade at phi0
   gear                                -> contact point and compression vector (no arrow head)
   tank                                -> cube (10 cm side length)
@@ -75,9 +84,6 @@ Elements are displayed as follows:
   hook                                -> dashed line for up angle, T-line for down angle
   launchbar                           -> dashed line for up angles, T-line for down angles
 
-
-Cursor coordinates displayed in GUI and terminal are in YASim coordinates and consider an
-XML embedded displacement matrix as described above.
 """
 
 
@@ -132,7 +138,7 @@ def log(msg):
 
 
 def error(msg):
-	print("\033[31;1mError: %s\033[m" % msg)
+	print(("\033[31;1mError: %s\033[m" % msg))
 	Blender.Draw.PupMenu("Error%t|" + msg)
 
 
@@ -294,9 +300,6 @@ class Propeller(Thrust, Item):
 
 	def __del__(self):
 		a = self.actionpt - self.center
-		cross = -X.cross(self.thrustvector)
-		angle = AngleBetweenVecs(-X, self.thrustvector)
-		matrix = RotationMatrix(angle, 4, "r", cross) * TranslationMatrix(a)
 		matrix = self.thrustvector.toTrackQuat('z', 'x').toMatrix().resize4x4() * TranslationMatrix(a)
 
 		mesh = Blender.Mesh.New()
@@ -382,7 +385,7 @@ class Wing(Item):
 		#  <1--0--2
 		#   \  |  /
 		#    4-3-5
-
+		is_vstab = name.startswith("YASim_vstab")
 		mesh = Blender.Mesh.New()
 		mesh.verts.extend([ORIGIN, ORIGIN + 0.5 * chord * X, ORIGIN - 0.5 * chord * X])
 		tip = ORIGIN + math.cos(sweep * DEG2RAD) * length * Y - math.sin(sweep * DEG2RAD) * length * X
@@ -391,7 +394,7 @@ class Wing(Item):
 		mesh.verts.extend([tip, tipfore, tipaft])
 		mesh.faces.extend([[0, 1, 4, 3], [2, 0, 3, 5]])
 
-		self.set_color(mesh, name + "mat", [[0, 0.5, 0, 0.5], [0.5, 0, 0, 0.5]][name.startswith("YASim_vstab")])
+		self.set_color(mesh, name + "mat", [[0, 0.5, 0, 0.5], [0.5, 0, 0, 0.5]][is_vstab])
 		self.make_twosided(mesh)
 
 		obj = self.scene.objects.new(mesh, name)
@@ -434,7 +437,7 @@ class import_yasim(handler.ContentHandler):
 		raise Abort(str(exception))
 
 	def warning(self, exception):
-		print "WARNING: " + str(exception)
+		print(("WARNING: " + str(exception)))
 
 	# doc_handler
 	def setDocumentLocator(self, whatever):
@@ -518,7 +521,7 @@ class import_yasim(handler.ContentHandler):
 
 		elif tag == "actionpt":
 			if not isinstance(parent, Thrust):
-				raise Abort("%s is not part of a propeller or jet" % path)
+				raise Abort("%s is not part of a thruster/propeller/jet" % path)
 
 			c = Vector(float(attrs["x"]), float(attrs["y"]), float(attrs["z"]))
 			log("\t\033[36mactionpt x=%f y=%f z=%f\033[m" % (c[0], c[1], c[2]))
@@ -526,7 +529,7 @@ class import_yasim(handler.ContentHandler):
 
 		elif tag == "dir":
 			if not isinstance(parent, Thrust):
-				raise Abort("%s is not part of a propeller or jet" % path)
+				raise Abort("%s is not part of a thruster/propeller/jet" % path)
 
 			c = Vector(float(attrs["x"]), float(attrs["y"]), float(attrs["z"]))
 			log("\t\033[36mdir x=%f y=%f z=%f\033[m" % (c[0], c[1], c[2]))
@@ -627,7 +630,7 @@ class import_yasim(handler.ContentHandler):
 
 def extract_matrix(path, tag):
 	v = { 'x': 0.0, 'y': 0.0, 'z': 0.0, 'h': 0.0, 'p': 0.0, 'r': 0.0 }
-	hasmatrix = False
+	has_offsets = False
 	f = open(path)
 	for line in f.readlines():
 		line = string.strip(line)
@@ -636,14 +639,15 @@ def extract_matrix(path, tag):
 		line = string.strip(line[4:-3])
 		if not string.lower(line).startswith("%s:" % tag):
 			continue
-		line = string.strip(line[8:])
+		line = string.strip(line[len(tag) + 1:])
 		for assignment in string.split(line):
 			(key, value) = string.split(assignment, '=', 2)
 			v[string.strip(key)] = float(string.strip(value))
-			hasmatrix = True
+			has_offsets = True
 	f.close()
 	matrix = None
-	if hasmatrix:
+	if has_offsets:
+		print(("using offsets: x=%f y=%f z=%f h=%f p=%f r=%f" % (v['x'], v['y'], v['z'], v['h'], v['p'], v['r'])))
 		matrix = Euler(v['r'], v['p'], v['h']).toMatrix().resize4x4()
 		matrix *= TranslationMatrix(Vector(v['x'], v['y'], v['z']))
 	return matrix
@@ -658,12 +662,11 @@ def run_parser(path):
 		Blender.Window.EditMode(0)
 	Blender.Window.WaitCursor(1)
 
+	print(("loading '%s'" % path))
 	try:
 		for o in Item.scene.objects:
 			if o.name.startswith("YASim_"):
 				Item.scene.objects.unlink(o)
-
-		print("\033[1mloading '%s'\033[m" % path)
 
 		Global.matrix = YASIM_MATRIX
 		matrix = extract_matrix(path, "offsets")
@@ -721,8 +724,8 @@ def button(n):
 		Global.last_cursor = Global.cursor
 		Global.cursor = Vector(Blender.Window.GetCursorPos()) * Global.matrix.invert()
 		d = Global.cursor - Global.last_cursor
-		print("cursor:   x=\"%f\" y=\"%f\" z=\"%f\"   dx=%f dy=%f dz=%f   length=%f" \
-				% (Global.cursor[0], Global.cursor[1], Global.cursor[2], d[0], d[1], d[2], d.length))
+		print(("cursor:   x=\"%f\" y=\"%f\" z=\"%f\"   dx=%f dy=%f dz=%f   length=%f" \
+				% (Global.cursor[0], Global.cursor[1], Global.cursor[2], d[0], d[1], d[2], d.length)))
 	Blender.Draw.Redraw(1)
 
 
