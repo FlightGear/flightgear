@@ -36,7 +36,7 @@
 
 FGATC::FGATC() :
 	_voiceOK(false),
-        _playing(false),
+	_playing(false),
 	_sgr(NULL),
 	freqClear(true),
 	receiving(false),
@@ -59,6 +59,11 @@ FGATC::FGATC() :
 {
 	SGSoundMgr *smgr = globals->get_soundmgr();
 	_sgr = smgr->find("atc", true);
+
+	_volume = fgGetNode("/sim/sound/atc/volume", true);
+	_enabled = fgGetNode("/sim/sound/atc/enabled", true);
+	_atc_external = fgGetNode("/sim/sound/atc/external-view", true);
+	_internal = fgGetNode("/sim/current-view/internal", true);
 }
 
 FGATC::~FGATC() {
@@ -106,6 +111,18 @@ void FGATC::Update(double dt) {
 			}
 		}
 	}
+
+#ifdef ENABLE_AUDIO_SUPPORT
+	bool active = _atc_external->getBoolValue() ||
+		      _internal->getBoolValue();
+
+	if ( active && _enabled->getBoolValue() ) {
+		_sgr->set_volume( _volume->getFloatValue() );
+		_sgr->resume(); // no-op if already in resumed state
+	} else {
+		_sgr->suspend();
+	}
+#endif
 
 	if(_transmit) {
 		_counter = 0.0;
@@ -232,7 +249,7 @@ void FGATC::Render(string& msg, const float volume,
 #ifdef ENABLE_AUDIO_SUPPORT
 	_voice = (_voiceOK && fgGetBool("/sim/sound/voice"));
 	if(_voice) {
-                size_t len;
+		size_t len;
 		void* buf = _vPtr->WriteMessage((char*)msg.c_str(), &len);
 		if(buf) {
 			NoRender(refname);
@@ -325,7 +342,7 @@ std::istream& operator >> ( std::istream& fin, ATCData& a )
 	}
 	
 	double lat, lon, elev;
-  
+
 	fin >> lat >> lon >> elev >> f >> a.range >> a.ident;
 	a.geod = SGGeod::fromDegM(lon, lat, elev);
 	a.name = "";
