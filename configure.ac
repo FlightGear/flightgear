@@ -692,8 +692,7 @@ AC_COMPILE_IFELSE(
     [[osg::CullSettings::VariablesMask mask = osg::CullSettings::CLEAR_MASK;]])],
   [AC_DEFINE([HAVE_CULLSETTINGS_CLEAR_MASK],1,[define if OSG has CullSettings::CLEAR_MASK])
    AC_MSG_RESULT([yes])],
-  [AC_DEFINE([DONT_HAVE_CULLSETTINGS_CLEAR_MASK],1,[define if OSG doesn't have CullSettings::CLEAR_MASK])
-   AC_MSG_RESULT([no])])
+  [AC_MSG_RESULT([no])])
 AC_LANG_POP
 
 dnl Check for system installed zlib
