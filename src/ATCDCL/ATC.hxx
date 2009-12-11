@@ -24,6 +24,7 @@
 
 #include <simgear/constants.h>
 #include <simgear/compiler.h>
+#include <simgear/props/props.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/debug/logstream.hxx>
@@ -247,6 +248,11 @@ private:
 	bool _transmitting;	// we are transmitting
 	double _counter;
 	double _max_count;
+
+	SGPropertyNode_ptr _volume;
+	SGPropertyNode_ptr _enabled;
+	SGPropertyNode_ptr _atc_external;
+	SGPropertyNode_ptr _internal;
 };
 
 std::istream& operator>> ( std::istream& fin, ATCData& a );
