@@ -1209,7 +1209,7 @@ fgOptVersion( const char *arg )
         cerr << *it;
     }
     cerr << endl;
-    cerr << "SimGear version: " << SIMGEAR_VERSION << endl;
+    cerr << "SimGear version: " << SG_STRINGIZE(SIMGEAR_VERSION) << endl;
     cerr << "PLIB version: " << PLIB_VERSION << endl;
     return FG_OPTIONS_EXIT;
 }
