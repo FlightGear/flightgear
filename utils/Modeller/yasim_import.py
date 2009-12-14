@@ -58,9 +58,9 @@ Possible variables are:
 
 Of course, absolute FDM coordinates can then no longer directly be read from Blender's 3D view.
 The cursor coordinates display in the script area, however, shows the coordinates in YASim space.
-Note that object names don't contain XML indices but element numbers. YASim_hstab#2 is the third
-hstab in the whole file, not necessarily in its parent XML group. A floating point part in the
-object name (e.g. YASim_hstab#2.004) only means that the geometry has been reloaded that often.
+Note that object names don't contain XML indices but element numbers. YASim_flap0#2 is the third
+flap0 in the whole file, not necessarily in its parent XML group. A floating point part in the
+object name (e.g. YASim_flap0#2.004) only means that the geometry has been reloaded that often.
 It's an unavoidable consequence of how Blender deals with meshes.
 
 
@@ -68,14 +68,14 @@ Elements are displayed as follows:
 
   cockpit                             -> monkey head
   fuselage                            -> blue "tube" (with only 12 sides for less clutter); center at "a"
-  vstab                               -> red with yellow flaps
-  wing/mstab/hstab                    -> green with yellow flaps/spoilers/slats (always 20 cm deep);
+  vstab                               -> red with yellow controls surfaces (flap0, flap1, slat, spoiler)
+  wing/mstab/hstab                    -> green with yellow control surfaces (which are always 20 cm deep);
                                          symmetric surfaces are only displayed on the left side
   thrusters (jet/propeller/thruster)  -> dashed line from center to actionpt;
                                          arrow from actionpt along thrust vector (always 1 m long);
                                          propeller circle
-  rotor                               -> radius and rel_len_blade_start circle, direction arrow,
-                                         normal and forward vector, one blade at phi0
+  rotor                               -> radius and rel_len_blade_start circle, normal and forward vector,
+                                         one blade at phi0 with direction arrow near blade tip
   gear                                -> contact point and compression vector (no arrow head)
   tank                                -> cube (10 cm side length)
   weight                              -> inverted cone
@@ -84,6 +84,11 @@ Elements are displayed as follows:
   hook                                -> dashed line for up angle, T-line for down angle
   launchbar                           -> dashed line for up angles, T-line for down angles
 
+
+The Mirror button complements symmetrical surfaces (wing/hstab/mstab) and control surfaces
+(flap0/flap1/slat/spoiler). This is useful for asymmetrical aircraft, but has the disadvantage
+that it moves the surfaces' object centers from their usual place, yasim's [x, y, z] value,
+to [0, 0, 0]. Turning mirroring off restores the object center.
 """
 
 
@@ -106,11 +111,12 @@ Elements are displayed as follows:
 #--------------------------------------------------------------------------------
 
 
-import Blender, BPyMessages, string, math
+import Blender, BPyMessages, string, math, os
 from Blender.Mathutils import *
 from xml.sax import handler, make_parser
 
 
+CONFIG = string.split(os.getenv("BLENDER_YASIM_IMPORT") or "")
 YASIM_MATRIX = Matrix([-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1])
 ORIGIN = Vector(0, 0, 0)
 X = Vector(1, 0, 0)
@@ -119,12 +125,21 @@ Z = Vector(0, 0, 1)
 DEG2RAD = math.pi / 180
 RAD2DEG = 180 / math.pi
 
+NO_EVENT = 0
+RELOAD_BUTTON = 1
+CURSOR_BUTTON = 2
+MIRROR_BUTTON = 3
+
+
 
 class Global:
+	verbose = "verbose" in CONFIG
 	path = ""
 	matrix = None
 	cursor = ORIGIN
 	last_cursor = Vector(Blender.Window.GetCursorPos())
+	mirror = Blender.Draw.Create(0)
+
 
 
 class Abort(Exception):
@@ -132,9 +147,11 @@ class Abort(Exception):
 		self.msg = msg
 
 
+
 def log(msg):
-	#print(msg)	# uncomment to get verbose log messages
-	pass
+	if Global.verbose:
+		print(msg)
+
 
 
 def error(msg):
@@ -142,10 +159,12 @@ def error(msg):
 	Blender.Draw.PupMenu("Error%t|" + msg)
 
 
+
 def getfloat(attrs, key, default):
 	if attrs.has_key(key):
 		return float(attrs[key])
 	return default
+
 
 
 def draw_dashed_line(mesh, start, end):
@@ -161,6 +180,7 @@ def draw_dashed_line(mesh, start, end):
 		mesh.edges.extend([n + 2 * i, n + 2 * i + 1])
 
 
+
 def draw_arrow(mesh, start, end):
 	v = end - start
 	m = v.toTrackQuat('x', 'z').toMatrix().resize4x4() * TranslationMatrix(start)
@@ -169,6 +189,7 @@ def draw_arrow(mesh, start, end):
 	mesh.verts.extend([ORIGIN * m , v * m, (v - 0.05 * X + 0.05 * Y) * m, (v - 0.05 * X - 0.05 * Y) * m]) # head
 	mesh.verts.extend([(ORIGIN + 0.05 * Y) * m, (ORIGIN - 0.05 * Y) * m]) # base
 	mesh.edges.extend([[n, n + 1], [n + 1, n + 2], [n + 1, n + 3], [n + 4, n + 5]])
+
 
 
 def draw_circle(mesh, numpoints, radius, matrix):
@@ -182,6 +203,7 @@ def draw_circle(mesh, numpoints, radius, matrix):
 		mesh.edges.extend([[n + i, n + i1]])
 
 
+
 class Item:
 	scene = Blender.Scene.GetCurrent()
 
@@ -190,12 +212,20 @@ class Item:
 		for f in mesh.faces:
 			f.mode |= Blender.Mesh.FaceModes.TWOSIDE | Blender.Mesh.FaceModes.OBCOL
 
-	def set_color(self, mesh, name, color):
+	def set_color(self, obj, name, color):
 		mat = Blender.Material.New(name)
 		mat.setRGBCol(color[0], color[1], color[2])
 		mat.setAlpha(color[3])
 		mat.mode |= Blender.Material.Modes.ZTRANSP | Blender.Material.Modes.TRANSPSHADOW
+		obj.transp = True
+
+		mesh = obj.getData(mesh = True)
 		mesh.materials += [mat]
+
+		for f in mesh.faces:
+			f.smooth = True
+		mesh.calcNormals()
+
 
 
 class Cockpit(Item):
@@ -206,12 +236,14 @@ class Cockpit(Item):
 		obj.setMatrix(TranslationMatrix(center) * Global.matrix)
 
 
+
 class Tank(Item):
 	def __init__(self, name, center):
 		mesh = Blender.Mesh.Primitives.Cube()
 		mesh.transform(ScaleMatrix(0.05, 4))
 		obj = self.scene.objects.new(mesh, name)
 		obj.setMatrix(TranslationMatrix(center) * Global.matrix)
+
 
 
 class Ballast(Item):
@@ -222,12 +254,14 @@ class Ballast(Item):
 		obj.setMatrix(TranslationMatrix(center) * Global.matrix)
 
 
+
 class Weight(Item):
 	def __init__(self, name, center):
 		mesh = Blender.Mesh.Primitives.Cone()
 		mesh.transform(ScaleMatrix(0.05, 4))
 		obj = self.scene.objects.new(mesh, name)
 		obj.setMatrix(TranslationMatrix(center) * Global.matrix)
+
 
 
 class Gear(Item):
@@ -237,6 +271,7 @@ class Gear(Item):
 		mesh.edges.extend([0, 1])
 		obj = self.scene.objects.new(mesh, name)
 		obj.setMatrix(TranslationMatrix(center) * Global.matrix)
+
 
 
 class Hook(Item):
@@ -250,6 +285,7 @@ class Hook(Item):
 		draw_dashed_line(mesh, ORIGIN, dn)
 		obj = self.scene.objects.new(mesh, name)
 		obj.setMatrix(TranslationMatrix(center) * Global.matrix)
+
 
 
 class Launchbar(Item):
@@ -266,11 +302,13 @@ class Launchbar(Item):
 		obj.setMatrix(TranslationMatrix(lb) * Global.matrix)
 
 
+
 class Hitch(Item):
 	def __init__(self, name, center):
 		mesh = Blender.Mesh.Primitives.Circle(8, 0.1)
 		obj = self.scene.objects.new(mesh, name)
 		obj.setMatrix(RotationMatrix(90, 4, "x") * TranslationMatrix(center) * Global.matrix)
+
 
 
 class Thrust:
@@ -279,6 +317,7 @@ class Thrust:
 
 	def set_dir(self, d):
 		self.thrustvector = d
+
 
 
 class Thruster(Thrust, Item):
@@ -292,6 +331,7 @@ class Thruster(Thrust, Item):
 		draw_arrow(mesh, a, a + self.thrustvector.normalize())
 		obj = self.scene.objects.new(mesh, self.name)
 		obj.setMatrix(TranslationMatrix(self.center) * Global.matrix)
+
 
 
 class Propeller(Thrust, Item):
@@ -313,6 +353,7 @@ class Propeller(Thrust, Item):
 		obj.setMatrix(TranslationMatrix(self.center) * Global.matrix)
 
 
+
 class Jet(Thrust, Item):
 	def __init__(self, name, center, rotate):
 		(self.name, self.center, self.actionpt) = (name, center, center)
@@ -325,6 +366,7 @@ class Jet(Thrust, Item):
 		draw_arrow(mesh, a, a + self.thrustvector.normalize())
 		obj = self.scene.objects.new(mesh, self.name)
 		obj.setMatrix(TranslationMatrix(self.center) * Global.matrix)
+
 
 
 class Fuselage(Item):
@@ -351,10 +393,10 @@ class Fuselage(Item):
 			mesh.faces.extend([[i + numvert, i1 + numvert, i1 + 2 * numvert, i + 2 * numvert]])
 
 		mesh.verts.extend([ORIGIN, length * X])
-		self.set_color(mesh, name + "mat", [0, 0, 0.5, 0.4])
 		obj = self.scene.objects.new(mesh, name)
-		obj.transp = True
 		obj.setMatrix(axis.toTrackQuat('x', 'y').toMatrix().resize4x4() * TranslationMatrix(a) * Global.matrix)
+		self.set_color(obj, name + "mat", [0, 0, 0.5, 0.4])
+
 
 
 class Rotor(Item):
@@ -380,12 +422,13 @@ class Rotor(Item):
 		obj.setMatrix(matrix * TranslationMatrix(center) * Global.matrix)
 
 
+
 class Wing(Item):
 	def __init__(self, name, root, length, chord, incidence, twist, taper, sweep, dihedral):
 		#  <1--0--2
 		#   \  |  /
 		#    4-3-5
-		is_vstab = name.startswith("YASim_vstab")
+		self.is_symmetric = not name.startswith("YASim_vstab#")
 		mesh = Blender.Mesh.New()
 		mesh.verts.extend([ORIGIN, ORIGIN + 0.5 * chord * X, ORIGIN - 0.5 * chord * X])
 		tip = ORIGIN + math.cos(sweep * DEG2RAD) * length * Y - math.sin(sweep * DEG2RAD) * length * X
@@ -394,15 +437,22 @@ class Wing(Item):
 		mesh.verts.extend([tip, tipfore, tipaft])
 		mesh.faces.extend([[0, 1, 4, 3], [2, 0, 3, 5]])
 
-		self.set_color(mesh, name + "mat", [[0, 0.5, 0, 0.5], [0.5, 0, 0, 0.5]][is_vstab])
 		self.make_twosided(mesh)
 
 		obj = self.scene.objects.new(mesh, name)
-		obj.transp = True
-		m = Euler(dihedral, -incidence, 0).toMatrix().resize4x4()
-		m *= TranslationMatrix(root)
-		obj.setMatrix(m * Global.matrix)
+		mesh.transform(Euler(dihedral, -incidence, 0).toMatrix().resize4x4())
+		self.set_color(obj, name + "mat", [[0.5, 0.0, 0, 0.5], [0.0, 0.5, 0, 0.5]][self.is_symmetric])
 		(self.obj, self.mesh) = (obj, mesh)
+
+		if self.is_symmetric and Global.mirror.val:
+			mod = obj.modifiers.append(Blender.Modifier.Type.MIRROR)
+			mod[Blender.Modifier.Settings.AXIS_X] = False
+			mod[Blender.Modifier.Settings.AXIS_Y] = True
+			mod[Blender.Modifier.Settings.AXIS_Z] = False
+			mesh.transform(TranslationMatrix(root)) # must move object center to x axis
+			obj.setMatrix(Global.matrix)
+		else:
+			obj.setMatrix(TranslationMatrix(root) * Global.matrix)
 
 	def add_flap(self, name, start, end):
 		a = Vector(self.mesh.verts[2].co)
@@ -416,12 +466,18 @@ class Wing(Item):
 		mesh.verts.extend([i0, i1, i0 + c, i1 + c])
 		mesh.faces.extend([[0, 1, 3, 2]])
 
-		self.set_color(mesh, name + "mat", [0.8, 0.8, 0, 0.9])
 		self.make_twosided(mesh)
 
 		obj = self.scene.objects.new(mesh, name)
-		obj.transp = True
 		obj.setMatrix(m)
+		self.set_color(obj, name + "mat", [0.8, 0.8, 0, 0.9])
+
+		if self.is_symmetric and Global.mirror.val:
+			mod = obj.modifiers.append(Blender.Modifier.Type.MIRROR)
+			mod[Blender.Modifier.Settings.AXIS_X] = False
+			mod[Blender.Modifier.Settings.AXIS_Y] = True
+			mod[Blender.Modifier.Settings.AXIS_Z] = False
+
 
 
 class import_yasim(handler.ContentHandler):
@@ -628,6 +684,7 @@ class import_yasim(handler.ContentHandler):
 		self.items.pop()
 
 
+
 def extract_matrix(path, tag):
 	v = { 'x': 0.0, 'y': 0.0, 'z': 0.0, 'h': 0.0, 'p': 0.0, 'r': 0.0 }
 	has_offsets = False
@@ -653,14 +710,13 @@ def extract_matrix(path, tag):
 	return matrix
 
 
-def run_parser(path):
+
+def load_yasim_config(path):
 	if BPyMessages.Error_NoFile(path):
 		return
 
-	editmode = Blender.Window.EditMode()
-	if editmode:
-		Blender.Window.EditMode(0)
 	Blender.Window.WaitCursor(1)
+	Blender.Window.EditMode(0)
 
 	print(("loading '%s'" % path))
 	try:
@@ -687,61 +743,74 @@ def run_parser(path):
 
 	Blender.Window.RedrawAll()
 	Blender.Window.WaitCursor(0)
-	if editmode:
-		Blender.Window.EditMode(1)
 
 
-def draw():
+
+def gui_draw():
 	from Blender import BGL, Draw
 	(width, height) = Blender.Window.GetAreaSize()
 
 	BGL.glClearColor(0.4, 0.4, 0.45, 1)
 	BGL.glClear(BGL.GL_COLOR_BUFFER_BIT)
-	Draw.PushButton("Reload YASim", 0, 5, 5, 100, 28)
-	Draw.PushButton("Update Cursor", 1, width - 650, 5, 100, 28)
+
 	BGL.glColor3f(1, 1, 1)
+	BGL.glRasterPos2f(5, 55)
+	Draw.Text("FlightGear YASim Import:   '%s'" % Global.path)
 
-	BGL.glRasterPos2f(120, 15)
-	Draw.Text(Global.path)
+	Draw.PushButton("Reload", RELOAD_BUTTON, 5, 5, 80, 32, "reload YASim config file")
+	Global.mirror = Draw.Toggle("Mirror", MIRROR_BUTTON, 100, 5, 50, 16, Global.mirror.val, \
+			"show symmetric surfaces on both sides (reloads config)")
+	Draw.PushButton("Update Cursor", CURSOR_BUTTON, width - 650, 5, 100, 32, "update cursor display")
 
-	BGL.glRasterPos2f(width - 530 + Blender.Draw.GetStringWidth("Distance from last") - Blender.Draw.GetStringWidth("Current"), 24)
+	BGL.glRasterPos2f(width - 530 + Blender.Draw.GetStringWidth("Vector from last") - Blender.Draw.GetStringWidth("Current"), 24)
 	Draw.Text("Current cursor pos:    x = %+.3f    y = %+.3f    z = %+.3f" % tuple(Global.cursor))
 
 	c = Global.cursor - Global.last_cursor
 	BGL.glRasterPos2f(width - 530, 7)
-	Draw.Text("Distance from last cursor pos:    x = %+.3f    y = %+.3f    z = %+.3f    length = %.3f" % (c[0], c[1], c[2], c.length))
+	Draw.Text("Vector from last cursor pos:    x = %+.3f    y = %+.3f    z = %+.3f    length = %.3f" % (c[0], c[1], c[2], c.length))
 
 
-def event(ev, value):
+
+def gui_event(ev, value):
 	if ev == Blender.Draw.ESCKEY:
 		Blender.Draw.Exit()
 
 
-def button(n):
-	if n == 0:
-		run_parser(Global.path)
-	elif n == 1:
+
+def gui_button(n):
+	if n == NO_EVENT:
+		return
+
+	elif n == RELOAD_BUTTON:
+		load_yasim_config(Global.path)
+
+	elif n == CURSOR_BUTTON:
 		Global.last_cursor = Global.cursor
 		Global.cursor = Vector(Blender.Window.GetCursorPos()) * Global.matrix.invert()
 		d = Global.cursor - Global.last_cursor
 		print(("cursor:   x=\"%f\" y=\"%f\" z=\"%f\"   dx=%f dy=%f dz=%f   length=%f" \
 				% (Global.cursor[0], Global.cursor[1], Global.cursor[2], d[0], d[1], d[2], d.length)))
+
+	elif n == MIRROR_BUTTON:
+		load_yasim_config(Global.path)
+
 	Blender.Draw.Redraw(1)
 
 
+
 def main():
+	log(6 * "\n")
 	registry = Blender.Registry.GetKey("FGYASimImportExport", False)
 	if registry and "path" in registry and Blender.sys.exists(Blender.sys.expandpath(registry["path"])):
 		path = registry["path"]
 	else:
 		path = ""
 
-
-	log(6 * "\n")
 	if Blender.Window.GetScreenInfo(Blender.Window.Types.SCRIPT):
-		Blender.Draw.Register(draw, event, button)
+		Blender.Draw.Register(gui_draw, gui_event, gui_button)
 
-	Blender.Window.FileSelector(run_parser, "Import YASim Configuration File", path)
+	Blender.Window.FileSelector(load_yasim_config, "Import YASim Configuration File", path)
+
 
 
 main()
