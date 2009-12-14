@@ -61,6 +61,7 @@
 #include "util.hxx"
 #include "viewmgr.hxx"
 #include <Main/viewer.hxx>
+#include <simgear/version.h>
 
 using std::string;
 using std::sort;
@@ -1194,9 +1195,22 @@ fgOptParking( const char *arg )
 static int
 fgOptVersion( const char *arg )
 {
-    cerr << VERSION << endl;
+    cerr << "FlightGear version: " << VERSION << endl;
     cerr << "FG_ROOT=" << globals->get_fg_root() << endl;
     cerr << "FG_HOME=" << fgGetString("/sim/fg-home") << endl;
+    cerr << "FG_SCENERY=";
+
+    int didsome = 0;
+    string_list scn = globals->get_fg_scenery();
+    for (string_list::const_iterator it = scn.begin(); it != scn.end(); it++)
+    {
+        if (didsome) cerr << ":";
+        didsome++;
+        cerr << *it;
+    }
+    cerr << endl;
+    cerr << "SimGear version: " << SIMGEAR_VERSION << endl;
+    cerr << "PLIB version: " << PLIB_VERSION << endl;
     return FG_OPTIONS_EXIT;
 }
 
