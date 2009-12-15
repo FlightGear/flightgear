@@ -40,14 +40,42 @@
 using std::cout;
 using std::endl;
 
+FGPeriodicalValue::FGPeriodicalValue( SGPropertyNode_ptr root )
+{
+  SGPropertyNode_ptr minNode = root->getChild( "min" );
+  SGPropertyNode_ptr maxNode = root->getChild( "max" );
+  if( minNode == NULL || maxNode == NULL ) {
+    SG_LOG(SG_AUTOPILOT, SG_ALERT, "periodical defined, but no <min> and/or <max> tag. Period ignored." );
+  } else {
+    minPeriod = new FGXMLAutoInput( minNode );
+    maxPeriod = new FGXMLAutoInput( maxNode );
+  }
+}
+
+double FGPeriodicalValue::normalize( double value )
+{
+  if( !(minPeriod && maxPeriod )) return value;
+
+  double p1 = minPeriod->get_value();
+  double p2 = maxPeriod->get_value();
+
+  double min = std::min<double>(p1,p2);
+  double max = std::max<double>(p1,p2);
+  double phase = fabs(max - min);
+
+  if( phase > SGLimitsd::min() ) {
+    while( value < min ) value += phase;
+    while( value > max ) value -= phase;
+  } else {
+    value = min; // phase is zero
+  }
+
+  return value;
+}
+
 FGXMLAutoInput::FGXMLAutoInput( SGPropertyNode_ptr node, double value, double offset, double scale) :
   value(0.0),
   abs(false),
-  property(NULL),
-  offset(NULL),
-  scale(NULL),
-  min(NULL),
-  max(NULL),
   _condition(NULL) 
 {
   parse( node, value, offset, scale );
@@ -62,6 +90,7 @@ void FGXMLAutoInput::parse( SGPropertyNode_ptr node, double aValue, double aOffs
     scale = NULL;
     min = NULL;
     max = NULL;
+    periodical = NULL;
 
     if( node == NULL )
         return;
@@ -90,6 +119,10 @@ void FGXMLAutoInput::parse( SGPropertyNode_ptr node, double aValue, double aOffs
 
     if( (n = node->getChild( "abs" )) != NULL ) {
       abs = n->getBoolValue();
+    }
+
+    if( (n = node->getChild( "period" )) != NULL ) {
+      periodical = new FGPeriodicalValue( n );
     }
 
     SGPropertyNode *valueNode = node->getChild( "value" );
@@ -160,6 +193,10 @@ double FGXMLAutoInput::get_value()
         double m = max->get_value();
         if( value > m )
             value = m;
+    }
+
+    if( periodical ) {
+      value = periodical->normalize( value );
     }
     
     return abs ? fabs(value) : value;
@@ -246,6 +283,8 @@ void FGXMLAutoComponent::parseNode(SGPropertyNode* aNode)
         umaxInput.push_back( new FGXMLAutoInput( child ) );
     } else if ( cname == "u_max" ) {
         umaxInput.push_back( new FGXMLAutoInput( child ) );
+    } else if ( cname == "period" ) {
+      periodical = new FGPeriodicalValue( child );
     } else {
       SG_LOG(SG_AUTOPILOT, SG_ALERT, "malformed autopilot definition - unrecognized node:" 
         << cname << " in section " << name);
@@ -314,6 +353,11 @@ void FGXMLAutoComponent::do_feedback_if_disabled()
 
 double FGXMLAutoComponent::clamp( double value )
 {
+    //If this is a periodical value, normalize it into our domain 
+    // before clamping
+    if( periodical )
+      value = periodical->normalize( value );
+
     // clamp, if either min or max is defined
     if( uminInput.size() + umaxInput.size() > 0 ) {
         double d = umaxInput.get_value( 0.0 );
