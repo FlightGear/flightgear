@@ -34,16 +34,28 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/condition.hxx>
 
+typedef SGSharedPtr<class FGXMLAutoInput> FGXMLAutoInput_ptr;
+typedef SGSharedPtr<class FGPeriodicalValue> FGPeriodicalValue_ptr;
+
+class FGPeriodicalValue : public SGReferenced {
+private:
+     FGXMLAutoInput_ptr minPeriod; // The minimum value of the period
+     FGXMLAutoInput_ptr maxPeriod; // The maximum value of the period
+public:
+     FGPeriodicalValue( SGPropertyNode_ptr node );
+     double normalize( double value );
+};
 
 class FGXMLAutoInput : public SGReferenced {
 private:
      double             value;    // The value as a constant or initializer for the property
      bool               abs;      // return absolute value
      SGPropertyNode_ptr property; // The name of the property containing the value
-     SGSharedPtr<FGXMLAutoInput> offset;   // A fixed offset, defaults to zero
-     SGSharedPtr<FGXMLAutoInput> scale;    // A constant scaling factor defaults to one
-     SGSharedPtr<FGXMLAutoInput> min;      // A minimum clip defaults to no clipping
-     SGSharedPtr<FGXMLAutoInput> max;      // A maximum clip defaults to no clipping
+     FGXMLAutoInput_ptr offset;   // A fixed offset, defaults to zero
+     FGXMLAutoInput_ptr scale;    // A constant scaling factor defaults to one
+     FGXMLAutoInput_ptr min;      // A minimum clip defaults to no clipping
+     FGXMLAutoInput_ptr max;      // A maximum clip defaults to no clipping
+     FGPeriodicalValue_ptr  periodical; //
      SGSharedPtr<const SGCondition> _condition;
 
 public:
@@ -71,9 +83,9 @@ public:
 
 };
 
-class FGXMLAutoInputList : public std::vector<SGSharedPtr<FGXMLAutoInput> > {
+class FGXMLAutoInputList : public std::vector<FGXMLAutoInput_ptr> {
   public:
-    FGXMLAutoInput * get_active() {
+    FGXMLAutoInput_ptr get_active() {
       for (iterator it = begin(); it != end(); ++it) {
         if( (*it)->is_enabled() )
           return *it;
@@ -82,7 +94,7 @@ class FGXMLAutoInputList : public std::vector<SGSharedPtr<FGXMLAutoInput> > {
     }
 
     double get_value( double def = 0.0 ) {
-      FGXMLAutoInput * input = get_active();
+      FGXMLAutoInput_ptr input = get_active();
       return input == NULL ? def : input->get_value();
     }
 
@@ -147,6 +159,7 @@ protected:
     FGXMLAutoInputList referenceInput;
     FGXMLAutoInputList uminInput;
     FGXMLAutoInputList umaxInput;
+    FGPeriodicalValue_ptr periodical;
     // debug flag
     bool debug;
     bool enabled;
@@ -220,6 +233,8 @@ public:
     */
     bool isPropertyEnabled();
 };
+
+typedef SGSharedPtr<FGXMLAutoComponent> FGXMLAutoComponent_ptr;
 
 
 /**
@@ -384,7 +399,7 @@ public:
 
     bool build( SGPropertyNode_ptr );
 protected:
-    typedef std::vector<SGSharedPtr<FGXMLAutoComponent> > comp_list;
+    typedef std::vector<FGXMLAutoComponent_ptr> comp_list;
 
 private:
 
