@@ -210,7 +210,9 @@ public:
       FGPositioned::Filter* aFilter, 
       FindNearestResults& aResults, FindNearestPQueue&)
     {
-        std::vector<Ordered<FGPositioned*> > results;
+        int previousResultsSize = aResults.size();
+        int addedCount = 0;
+        
         for (unsigned int i=0; i<_members.size(); ++i) {
             FGPositioned* p = _members[i];
             double d2 = distSqr(aPos, p->cart());
@@ -228,8 +230,21 @@ public:
               }
             } // of have a filter
 
+            ++addedCount;
             aResults.push_back(OrderedPositioned(p, d2));
         }
+        
+        if (addedCount == 0) {
+          return;
+        }
+        
+      // keep aResults sorted
+        // sort the new items, usually just one or two items
+        std::sort(aResults.begin() + previousResultsSize, aResults.end());
+        
+        // merge the two sorted ranges together - in linear time
+        std::inplace_merge(aResults.begin(), 
+          aResults.begin() + previousResultsSize, aResults.end());
       }
 private:
     FGPositioned::List _members;
@@ -321,9 +336,14 @@ void findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPosit
     pq.push(Ordered<Node*>(global_spatialOctree, 0));
     double cut = aCutoffM * aCutoffM;
     
-    while (aResults.size() < aN) {
-        if (pq.empty()) {
+    while (!pq.empty()) {
+        if (!results.empty()) {
+          // terminate the search if we have sufficent results, and we are
+          // sure no node still on the queue contains a closer match
+          double furthestResultOrder = results.back().order();
+          if ((results.size() >= aN) && (furthestResultOrder < pq.top().order())) {
             break;
+          }
         }
         
         Node* nd = pq.top().get();
@@ -332,12 +352,9 @@ void findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPosit
         nd->visit(aPos, cut, aFilter, results, pq);
     } // of queue iteration
     
-  // sort by distance
-    std::sort(results.begin(), results.end());
     // depending on leaf population, we may have (slighty) more results
     // than requested
     unsigned int numResults = std::min((unsigned int) results.size(), aN);
-
   // copy results out
     aResults.resize(numResults);
     for (unsigned int r=0; r<numResults; ++r) {
@@ -360,10 +377,7 @@ void findAllWithinRange(const SGVec3d& aPos, double aRangeM, FGPositioned::Filte
         nd->visit(aPos, rng, aFilter, results, pq);
     } // of queue iteration
     
-  // sort by distance
-    std::sort(results.begin(), results.end());
     unsigned int numResults = results.size();
-
   // copy results out
     aResults.resize(numResults);
     for (unsigned int r=0; r<numResults; ++r) {
