@@ -961,10 +961,10 @@ bool FGXMLAutopilot::build( SGPropertyNode_ptr config_props ) {
             components.push_back( new FGPredictor( node ) );
         } else if ( name == "filter" ) {
             components.push_back( new FGDigitalFilter( node ) );
-        } else {
-            SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: " 
-                    << name );
-            return false;
+//        } else {
+//            SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: " 
+//                    << name );
+//            return false;
         }
     }
 
