@@ -759,7 +759,7 @@ void FGNasalSys::loadPropertyScripts()
         const char* src = n->getStringValue("script");
         if(!n->hasChild("script")) src = 0; // Hrm...
         if(src)
-            createModule(module, n->getPath(), src, strlen(src));
+            createModule(module, n->getPath().c_str(), src, strlen(src));
 
         if(!file_specified && !src)
             SG_LOG(SG_NASAL, SG_ALERT, "Nasal error: " <<
@@ -856,7 +856,7 @@ bool FGNasalSys::handleCommand(const SGPropertyNode* arg)
 {
     const char* nasal = arg->getStringValue("script");
     const char* moduleName = arg->getStringValue("module");
-    naRef code = parse(arg->getPath(true), nasal, strlen(nasal));
+    naRef code = parse(arg->getPath(true).c_str(), nasal, strlen(nasal));
     if(naIsNil(code)) return false;
 
     // Commands can be run "in" a module.  Make sure that module
