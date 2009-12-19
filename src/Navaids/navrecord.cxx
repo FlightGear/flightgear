@@ -91,6 +91,9 @@ void FGNavRecord::initAirportRelation()
   }
   
   mRunway = getRunwayFromName(_name);  
+  if (!mRunway) {
+    return;
+  }
   
   if (type() != GS) {
     readAirportSceneryData();
