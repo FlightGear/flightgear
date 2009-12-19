@@ -596,7 +596,7 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
         HASHSET("stopway", 7, naNum(rwy->stopwayM()));
         
         if (rwy->ILS()) {
-          HASHSET("ils-frequency-mhz", 3, naNum(rwy->ILS()->get_freq() / 100.0));
+          HASHSET("ils-frequency-mhz", 17, naNum(rwy->ILS()->get_freq() / 100.0));
         }
         
 #undef HASHSET
