@@ -120,6 +120,9 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode_ptr gps_xtrack_error_nm_node;
     SGPropertyNode_ptr _magvarNode;
     
+    // realism setting, are false courses and GS lobes enabled?
+    SGPropertyNode_ptr falseCoursesEnabledNode;
+
     // internal (private) values
 
     int play_count;
@@ -161,9 +164,6 @@ class FGNavRadio : public SGSubsystem
     double _gsNeedleDeflection;
     double _gsNeedleDeflectionNorm;
     
-    // realism setting, are false courses and GS lobes enabled?
-    bool _falseCoursesEnabled;
-
     SGSharedPtr<SGSampleGroup> _sgr;
     
     bool updateWithPower(double aDt);
