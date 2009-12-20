@@ -32,6 +32,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 #include <Scenery/scenery.hxx>
+#include <Navaids/navrecord.hxx>
 
 #include "NasalSys.hxx"
 
@@ -593,6 +594,11 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
         HASHSET("width", 5, naNum(rwy->widthM()));
         HASHSET("threshold", 9, naNum(rwy->displacedThresholdM()));
         HASHSET("stopway", 7, naNum(rwy->stopwayM()));
+        
+        if (rwy->ILS()) {
+          HASHSET("ils-frequency-mhz", 17, naNum(rwy->ILS()->get_freq() / 100.0));
+        }
+        
 #undef HASHSET
         naHash_set(rwys, rwyid, rwydata);
     }
