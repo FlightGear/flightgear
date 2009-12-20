@@ -47,6 +47,7 @@
 #include <simgear/scene/model/animation.hxx>
 #include <simgear/scene/sky/sky.hxx>
 #include <simgear/structure/event_mgr.hxx>
+#include <simgear/props/AtomicChangeListener.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/math/sg_random.h>
@@ -166,7 +167,7 @@ void fgUpdateTimeDepCalcs() {
                 // normal playback
                 replay_time->setDoubleValue( replay_time->getDoubleValue()
                                              + ( delta_time_sec
-                                               * fgGetInt("/sim/speed-up") ) );
+                                                 * fgGetInt("/sim/speed-up") ) );
             } else if ( replay_state->getIntValue() == 2 ) {
                 // paused playback (don't advance replay time)
             }
@@ -343,14 +344,14 @@ static void fgMainLoop( void ) {
     // probably move eventually
 
     /* printf("Before - ground = %.2f  runway = %.2f  alt = %.2f\n",
-           scenery.get_cur_elev(),
-           cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
-           cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
+       scenery.get_cur_elev(),
+       cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
+       cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
 
     /* printf("Adjustment - ground = %.2f  runway = %.2f  alt = %.2f\n",
-           scenery.get_cur_elev(),
-           cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
-           cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
+       scenery.get_cur_elev(),
+       cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
+       cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
 
     // cout << "Warp = " << globals->get_warp() << endl;
 
@@ -422,7 +423,7 @@ static void fgMainLoop( void ) {
         general.set_frame_rate( frames );
         fgSetInt("/sim/frame-rate", frames);
         SG_LOG( SG_ALL, SG_DEBUG,
-            "--> Frame rate is = " << general.get_frame_rate() );
+                "--> Frame rate is = " << general.get_frame_rate() );
         frames = 0;
     }
     last_time = t->get_cur_time();
@@ -451,7 +452,7 @@ static void fgMainLoop( void ) {
         fgUpdateTimeDepCalcs();
     } else {
         SG_LOG( SG_ALL, SG_DEBUG,
-            "Elapsed time is zero ... we're zinging" );
+                "Elapsed time is zero ... we're zinging" );
     }
 
     globals->get_subsystem_mgr()->update(delta_time_sec);
@@ -514,7 +515,7 @@ static void fgMainLoop( void ) {
         globals->get_props()->tie("/sim/sound/devices/name",
               SGRawValueFunctions<const char *>(0, fgSetNewSoundDevice), false);
     }
-
+    simgear::AtomicChangeListener::fireChangeListeners();
     fgRequestRedraw();
 
     SG_LOG( SG_ALL, SG_DEBUG, "" );

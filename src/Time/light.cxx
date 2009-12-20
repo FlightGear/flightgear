@@ -69,6 +69,7 @@ FGLight::FGLight ()
       _scene_ambient(0, 0, 0, 0),
       _scene_diffuse(0, 0, 0, 0),
       _scene_specular(0, 0, 0, 0),
+      _scene_chrome(0, 0, 0, 0),
       _sky_color(0, 0, 0, 0),
       _fog_color(0, 0, 0, 0),
       _cloud_color(0, 0, 0, 0),
@@ -151,6 +152,15 @@ void FGLight::bind () {
     prop->tie("/rendering/dome/fog/red",SGRawValuePointer<float>(&_fog_color[0]));
     prop->tie("/rendering/dome/fog/green",SGRawValuePointer<float>(&_fog_color[1]));
     prop->tie("/rendering/dome/fog/blue",SGRawValuePointer<float>(&_fog_color[2]));
+    // Properties used directly by effects
+    _chromeProps[0] = prop->getNode("/rendering/scene/chrome-light/red", true);
+    _chromeProps[1] = prop->getNode("/rendering/scene/chrome-light/green",
+                                    true);
+    _chromeProps[2] = prop->getNode("/rendering/scene/chrome-light/blue", true);
+    _chromeProps[3] = prop->getNode("/rendering/scene/chrome-light/alpha",
+                                    true);
+    for (int i = 0; i < 4; ++i)
+        _chromeProps[i]->setValue(0.0);
 }
 
 void FGLight::unbind () {
@@ -264,6 +274,14 @@ void FGLight::update_sky_color () {
     _scene_diffuse[2] = color[2] * diffuse;
     _scene_diffuse[3] = 1.0;
     gamma_correct_rgb( _scene_diffuse.data() );
+
+    SGVec4f chrome = _scene_ambient * .4f + _scene_diffuse;
+    chrome[3] = 1.0f;
+    if (chrome != _scene_chrome) {
+        _scene_chrome = chrome;
+        for (int i = 0; i < 4; ++i)
+            _chromeProps[i]->setValue(static_cast<double>(_scene_chrome[i]));
+    }
 
     color = thesky->get_sun_color();
     _scene_specular[0] = color[0] * specular;
