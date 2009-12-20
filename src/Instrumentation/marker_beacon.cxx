@@ -49,7 +49,8 @@ FGMarkerBeacon::FGMarkerBeacon(SGPropertyNode *node) :
     inner_blink(false),
     name("marker-beacon"),
     num(0),
-    _time_before_search_sec(0.0)
+    _time_before_search_sec(0.0),
+    _sgr(NULL)
 {
     SGPath path( globals->get_fg_root() );
     SGPath term = path;
@@ -99,7 +100,7 @@ FGMarkerBeacon::init ()
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
     // Inputs
-    sound_pause = fgGetNode("/sim/sound/pause", false);
+    sound_working = fgGetNode("/sim/sound/working", true);
     lon_node = fgGetNode("/position/longitude-deg", true);
     lat_node = fgGetNode("/position/latitude-deg", true);
     alt_node = fgGetNode("/position/altitude-ft", true);
@@ -115,6 +116,10 @@ FGMarkerBeacon::init ()
         audio_btn->setBoolValue( true );
     if (serviceable->getType() == simgear::props::NONE)
         serviceable->setBoolValue( true );
+
+    SGSoundMgr *smgr = globals->get_soundmgr();
+    _sgr = smgr->find("avionics", true);
+    _sgr->tie_to_listener();
 
     morse.init();
     beacon.init();
@@ -171,7 +176,7 @@ FGMarkerBeacon::update(double dt)
     }
 
     if ( has_power() && serviceable->getBoolValue()
-            && !sound_pause->getBoolValue()) {
+            && sound_working->getBoolValue()) {
 
         // marker beacon blinking
         bool light_on = ( outer_blink || middle_blink || inner_blink );
@@ -300,9 +305,9 @@ void FGMarkerBeacon::search()
     if ( b == NULL || !inrange || !has_power() || !serviceable->getBoolValue() )
     {
         // cout << "no marker" << endl;
-        globals->get_soundmgr()->stop( "outer-marker" );
-        globals->get_soundmgr()->stop( "middle-marker" );
-        globals->get_soundmgr()->stop( "inner-marker" );
+        _sgr->stop( "outer-marker" );
+        _sgr->stop( "middle-marker" );
+        _sgr->stop( "inner-marker" );
     } else {
 
         string current_sound_name;
@@ -312,63 +317,63 @@ void FGMarkerBeacon::search()
             current_sound_name = "outer-marker";
             // cout << "OUTER MARKER" << endl;
             if ( last_beacon != OUTER ) {
-                if ( ! globals->get_soundmgr()->exists( current_sound_name ) ) {
+                if ( ! _sgr->exists( current_sound_name ) ) {
                     SGSoundSample *sound = beacon.get_outer();
                     if ( sound ) {
-                        globals->get_soundmgr()->add( sound, current_sound_name );
+                        _sgr->add( sound, current_sound_name );
                     }
                 }
             }
             if ( audio_btn->getBoolValue() ) {
-                if ( !globals->get_soundmgr()->is_playing(current_sound_name) ) {
-                    globals->get_soundmgr()->play_looped( current_sound_name );
+                if ( !_sgr->is_playing(current_sound_name) ) {
+                    _sgr->play_looped( current_sound_name );
                 }
             } else {
-                globals->get_soundmgr()->stop( current_sound_name );
+                _sgr->stop( current_sound_name );
             }
         } else if ( beacon_type == MIDDLE ) {
             middle_marker = true;
             current_sound_name = "middle-marker";
             // cout << "MIDDLE MARKER" << endl;
             if ( last_beacon != MIDDLE ) {
-                if ( ! globals->get_soundmgr()->exists( current_sound_name ) ) {
+                if ( ! _sgr->exists( current_sound_name ) ) {
                     SGSoundSample *sound = beacon.get_middle();
                     if ( sound ) {
-                        globals->get_soundmgr()->add( sound, current_sound_name );
+                        _sgr->add( sound, current_sound_name );
                     }
                 }
             }
             if ( audio_btn->getBoolValue() ) {
-                if ( !globals->get_soundmgr()->is_playing(current_sound_name) ) {
-                    globals->get_soundmgr()->play_looped( current_sound_name );
+                if ( !_sgr->is_playing(current_sound_name) ) {
+                    _sgr->play_looped( current_sound_name );
                 }
             } else {
-                globals->get_soundmgr()->stop( current_sound_name );
+                _sgr->stop( current_sound_name );
             }
         } else if ( beacon_type == INNER ) {
             inner_marker = true;
             current_sound_name = "inner-marker";
             // cout << "INNER MARKER" << endl;
             if ( last_beacon != INNER ) {
-                if ( ! globals->get_soundmgr()->exists( current_sound_name ) ) {
+                if ( ! _sgr->exists( current_sound_name ) ) {
                     SGSoundSample *sound = beacon.get_inner();
                     if ( sound ) {
-                        globals->get_soundmgr()->add( sound, current_sound_name );
+                        _sgr->add( sound, current_sound_name );
                     }
                 }
             }
             if ( audio_btn->getBoolValue() ) {
-                if ( !globals->get_soundmgr()->is_playing(current_sound_name) ) {
-                    globals->get_soundmgr()->play_looped( current_sound_name );
+                if ( !_sgr->is_playing(current_sound_name) ) {
+                    _sgr->play_looped( current_sound_name );
                 }
             } else {
-                globals->get_soundmgr()->stop( current_sound_name );
+                _sgr->stop( current_sound_name );
             }
         }
         // cout << "VOLUME " << audio_vol->getDoubleValue() << endl;
-        SGSoundSample * mkr = globals->get_soundmgr()->find( current_sound_name );
+        SGSoundSample * mkr = _sgr->find( current_sound_name );
         if (mkr)
-            mkr->set_volume( audio_vol->getDoubleValue() );
+            mkr->set_volume( audio_vol->getFloatValue() );
     }
 
     if ( inrange ) {

@@ -35,6 +35,7 @@
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 
+class SGSampleGroup;
 
 class FGMarkerBeacon : public SGSubsystem
 {
@@ -54,7 +55,7 @@ class FGMarkerBeacon : public SGSubsystem
     SGPropertyNode_ptr audio_btn;
     SGPropertyNode_ptr audio_vol;
     SGPropertyNode_ptr serviceable;
-    SGPropertyNode_ptr sound_pause;
+    SGPropertyNode_ptr sound_working;
 
     bool need_update;
 
@@ -72,6 +73,8 @@ class FGMarkerBeacon : public SGSubsystem
 
     // internal periodic station search timer
     double _time_before_search_sec;
+
+    SGSharedPtr<SGSampleGroup> _sgr;
 
 public:
 

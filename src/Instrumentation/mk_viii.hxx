@@ -36,6 +36,8 @@ using std::vector;
 using std::deque;
 using std::map;
 
+class SGSampleGroup;
+
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
 #include <Main/globals.hxx>
@@ -733,10 +735,10 @@ public:
       public:
 	bool silence;
 
-	virtual inline void play (double volume) {}
+	virtual inline void play (float volume) {}
 	virtual inline void stop () {}
 	virtual bool is_playing () = 0;
-	virtual inline void set_volume (double volume) {}
+	virtual inline void set_volume (float volume) {}
       };
 
       /////////////////////////////////////////////////////////////////////////
@@ -745,17 +747,17 @@ public:
 
       class SampleElement : public Element
       {
-	SGSoundSample	*_sample;
-	double		_volume;
+	SGSharedPtr<SGSoundSample>	_sample;
+	float				_volume;
 
       public:
-	inline SampleElement (SGSoundSample *sample, double volume = 1.0)
+	inline SampleElement (SGSharedPtr<SGSoundSample> sample, float volume = 1.0)
 	  : _sample(sample), _volume(volume) { silence = false; }
 
-        virtual inline void play (double volume) { if (_sample) { set_volume(volume); _sample->play_once(); } }
+        virtual inline void play (float volume) { if (_sample && (volume > 0.05)) { set_volume(volume); _sample->play_once(); } }
 	virtual inline void stop () { if (_sample) _sample->stop(); }
         virtual inline bool is_playing () { return _sample ? _sample->is_playing() : false; }
-	virtual inline void set_volume (double volume) { if (_sample) _sample->set_volume(volume * _volume); }
+	virtual inline void set_volume (float volume) { if (_sample) _sample->set_volume(volume * _volume); }
       };
 
       /////////////////////////////////////////////////////////////////////////
@@ -771,7 +773,7 @@ public:
 	inline SilenceElement (double duration)
 	  : _duration(duration) { silence = true; }
 
-	virtual inline void play (double volume) { start_time = globals->get_sim_time_sec(); }
+	virtual inline void play (float volume) { start_time = globals->get_sim_time_sec(); }
 	virtual inline bool is_playing () { return globals->get_sim_time_sec() - start_time < _duration; }
       };
 
@@ -790,19 +792,19 @@ public:
 
       void play ();
       void stop (bool now);
-      void set_volume (double _volume);
+      void set_volume (float _volume);
       void volume_changed ();
       void update ();
 
     private:
       VoicePlayer *player;
 
-      double volume;
+      float volume;
 
       vector<Element *>			elements;
       vector<Element *>::iterator	iter;
 
-      inline double get_volume () const { return player->volume * player->speaker.volume * volume; }
+      inline float get_volume () const { return player->volume * player->speaker.volume * volume; }
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -811,10 +813,10 @@ public:
 
     struct
     {
-      double volume;
+      float volume;
     } conf;
 
-    double volume;
+    float volume;
 
     Voice *voice;
     Voice *next_voice;
@@ -871,7 +873,7 @@ public:
     };
     void stop (unsigned int flags = 0);
 
-    void set_volume (double _volume);
+    void set_volume (float _volume);
     void update ();
 
     inline void bind (SGPropertyNode *node) { speaker.bind(node); }
@@ -887,13 +889,6 @@ public:
       VoicePlayer *player;
 
       double	pitch;
-      float	position[3];
-      float	orientation[3];
-      float	inner_cone;
-      float	outer_cone;
-      float	outer_gain;
-      float	reference_dist;
-      float	max_dist;
 
       template <class T>
       inline void tie (SGPropertyNode *node, const char *name, T *ptr)
@@ -913,20 +908,13 @@ public:
       template <class T>
       inline T get_property (T *ptr) const { return *ptr; }
 
-      double volume;
+      float volume;
 
       inline Speaker (VoicePlayer *_player)
 	: player(_player),
 	  pitch(1),
-	  inner_cone(360),
-	  outer_cone(360),
-	  outer_gain(0),
-	  reference_dist(3),
-	  max_dist(10),
 	  volume(1)
       {
-	position[0] = 0; position[1] = 0; position[2] = 0;
-	orientation[0] = 0; orientation[1] = 0; orientation[2] = 0;
       }
 
       void bind (SGPropertyNode *node);
@@ -940,9 +928,10 @@ public:
 
     MK_VIII *mk;
 
+    SGSharedPtr<SGSampleGroup> _sgr;
     Speaker speaker;
 
-    map<string, SGSoundSample *>	samples;
+    map< string, SGSharedPtr<SGSoundSample> >	samples;
     vector<Voice *>			_voices;
 
     bool looped;
@@ -1465,7 +1454,7 @@ private:
     void power_off ();
     void enter_takeoff ();
     void leave_takeoff ();
-    void set_volume (double volume);
+    void set_volume (float volume);
     bool altitude_callouts_enabled ();
     void update ();
 

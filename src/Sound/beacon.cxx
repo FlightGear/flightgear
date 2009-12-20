@@ -21,11 +21,11 @@
 // $Id$
 
 
+#include <stdlib.h>
+
 #include "beacon.hxx"
 
 #include <simgear/structure/exception.hxx>
-#include <Main/fg_props.hxx>
-#include <Main/globals.hxx>
 
 // constructor
 FGBeacon::FGBeacon()
@@ -39,17 +39,12 @@ FGBeacon::~FGBeacon() {
 
 // allocate and initialize sound samples
 bool FGBeacon::init() {
-    int i;
-    int len;
     unsigned char *ptr;
+    size_t i, len;
 
-    if (globals->get_soundmgr()->is_working() == false) {
-       return false;
-    }
-
-    unsigned char inner_buf[ INNER_SIZE ] ;
-    unsigned char middle_buf[ MIDDLE_SIZE ] ;
-    unsigned char outer_buf[ OUTER_SIZE ] ;
+    const unsigned char* inner_buf = (const unsigned char*)malloc( INNER_SIZE );
+    const unsigned char* middle_buf = (const unsigned char*)malloc(MIDDLE_SIZE);
+    const unsigned char* outer_buf = (const unsigned char*)malloc( OUTER_SIZE );
 
     // Make inner marker beacon sound
     len= (int)(INNER_DIT_LEN / 2.0 );
@@ -57,14 +52,14 @@ bool FGBeacon::init() {
     make_tone( inner_dit, INNER_FREQ, len, INNER_DIT_LEN,
 	       TRANSITION_BYTES );
 
-    ptr = inner_buf;
+    ptr = (unsigned char*)inner_buf;
     for ( i = 0; i < 6; ++i ) {
 	memcpy( ptr, inner_dit, INNER_DIT_LEN );
 	ptr += INNER_DIT_LEN;
     }
 
     try {
-        inner = new SGSoundSample( inner_buf, INNER_SIZE, BYTES_PER_SECOND );
+        inner = new SGSoundSample( &inner_buf, INNER_SIZE, BYTES_PER_SECOND );
         inner->set_reference_dist( 10.0 );
         inner->set_max_dist( 20.0 );
 
@@ -79,12 +74,12 @@ bool FGBeacon::init() {
         make_tone( middle_dah, MIDDLE_FREQ, len, MIDDLE_DAH_LEN,
 	            TRANSITION_BYTES );
 
-        ptr = middle_buf;
+        ptr = (unsigned char*)middle_buf;
         memcpy( ptr, middle_dit, MIDDLE_DIT_LEN );
         ptr += MIDDLE_DIT_LEN;
         memcpy( ptr, middle_dah, MIDDLE_DAH_LEN );
 
-        middle = new SGSoundSample( middle_buf, MIDDLE_SIZE, BYTES_PER_SECOND );
+        middle = new SGSoundSample( &middle_buf, MIDDLE_SIZE, BYTES_PER_SECOND);
         middle->set_reference_dist( 10.0 );
         middle->set_max_dist( 20.0 );
 
@@ -94,12 +89,12 @@ bool FGBeacon::init() {
         make_tone( outer_dah, OUTER_FREQ, len, OUTER_DAH_LEN,
 	            TRANSITION_BYTES );
            
-        ptr = outer_buf;
+        ptr = (unsigned char*)outer_buf;
         memcpy( ptr, outer_dah, OUTER_DAH_LEN );
         ptr += OUTER_DAH_LEN;
         memcpy( ptr, outer_dah, OUTER_DAH_LEN );
 
-        outer = new SGSoundSample( outer_buf, OUTER_SIZE, BYTES_PER_SECOND);
+        outer = new SGSoundSample( &outer_buf, OUTER_SIZE, BYTES_PER_SECOND );
         outer->set_reference_dist( 10.0 );
         outer->set_max_dist( 20.0 );
     } catch ( sg_io_exception &e ) {

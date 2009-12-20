@@ -119,6 +119,7 @@ public:
     //   orientation rotations listed below.  This has the effect of the 
     //   eye moving around and "looking at" the object (model) from 
     //   different angles.
+    virtual SGVec3d getOffset_m () const { return _offset_m; }
     virtual double getXOffset_m () const { return _offset_m.x(); }
     virtual double getYOffset_m () const { return _offset_m.y(); }
     virtual double getZOffset_m () const { return _offset_m.z(); }
@@ -201,6 +202,7 @@ public:
     const SGVec3d& get_view_pos() { if ( _dirty ) { recalc(); } return _absolute_view_pos; }
     const SGVec3d& getViewPosition() { if ( _dirty ) { recalc(); } return _absolute_view_pos; }
     const SGQuatd& getViewOrientation() { if ( _dirty ) { recalc(); } return mViewOrientation; }
+    const SGQuatd& getViewOrientationOffset() { if ( _dirty ) { recalc(); } return mViewOffsetOr; }
 
     //////////////////////////////////////////////////////////////////////
     // Part 4: View and frustrum data setters and getters
@@ -247,6 +249,7 @@ private:
     bool _dirty;
 
     SGQuatd mViewOrientation;
+    SGQuatd mViewOffsetOr;
     SGVec3d _absolute_view_pos;
 
     SGGeod _position;

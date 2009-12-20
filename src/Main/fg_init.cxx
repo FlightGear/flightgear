@@ -58,6 +58,7 @@
 #include <simgear/misc/interpolator.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/particles.hxx>
+#include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/timing/lowleveltime.h>
 
@@ -106,9 +107,6 @@
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
-#include <Sound/fg_fx.hxx>
-#include <Sound/beacon.hxx>
-#include <Sound/morse.hxx>
 #include <Sound/voice.hxx>
 #include <Systems/system_mgr.hxx>
 #include <Time/light.hxx>
@@ -138,9 +136,7 @@
 
 using std::string;
 
-class Sound;
 extern const char *default_root;
-float init_volume;
 
 
 // Scan the command line options for the specified option and return
@@ -1457,6 +1453,21 @@ bool fgInitSubsystems() {
     globals->get_event_mgr()->setRealtimeProperty(fgGetNode("/sim/time/delta-realtime-sec", true));
 
     ////////////////////////////////////////////////////////////////////
+    // Initialize the sound manager subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+    globals->get_soundmgr()->bind();
+    globals->get_soundmgr()->init(fgGetString("/sim/sound/device-name", NULL));
+
+    vector <const char*>devices =
+                        globals->get_soundmgr()->get_available_devices();
+    for (unsigned int i=0; i<devices.size(); i++) {
+        SGPropertyNode *p = fgGetNode("/sim/sound/devices/device", i, true);
+        p->setStringValue(devices[i]);
+    }
+    devices.clear();
+
+    ////////////////////////////////////////////////////////////////////
     // Initialize the property interpolator subsystem. Put into the INIT
     // group because the "nasal" subsystem may need it at GENERAL take-down.
     ////////////////////////////////////////////////////////////////////
@@ -1524,7 +1535,6 @@ bool fgInitSubsystems() {
     // Initialize the ridgelift subsystem
     globals->add_subsystem("ridgelift", new FGRidgeLift);
 
-
     ////////////////////////////////////////////////////////////////////
     // Initialize the aircraft systems and instrumentation (before the
     // autopilot.)
@@ -1588,21 +1598,8 @@ bool fgInitSubsystems() {
 
 #ifdef ENABLE_AUDIO_SUPPORT
     ////////////////////////////////////////////////////////////////////
-    // Initialize the sound subsystem.
-    ////////////////////////////////////////////////////////////////////
-
-    init_volume = fgGetFloat("/sim/sound/volume");
-    fgSetFloat("/sim/sound/volume", 0.0f);
-    globals->set_soundmgr(new SGSoundMgr);
-    globals->get_soundmgr()->init();
-    globals->get_soundmgr()->bind();
-
-
-    ////////////////////////////////////////////////////////////////////
     // Initialize the sound-effects subsystem.
     ////////////////////////////////////////////////////////////////////
-
-    globals->add_subsystem("fx", new FGFX);
     globals->add_subsystem("voice", new FGVoiceMgr);
 #endif
 
@@ -1684,6 +1681,7 @@ bool fgInitSubsystems() {
     // Initialize the replay subsystem
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("replay", new FGReplay);
+
 
     ////////////////////////////////////////////////////////////////////
     // Bind and initialize subsystems.

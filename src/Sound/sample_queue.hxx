@@ -1,4 +1,4 @@
-// fg_fx.hxx -- Sound effect management class
+// sample_queue.hxx -- sample queue management class
 //
 // Started by David Megginson, October 2001
 // (Reuses some code from main.cxx, probably by Curtis Olson)
@@ -21,51 +21,47 @@
 //
 // $Id$
 
-#ifndef __FGFX_HXX
-#define __FGFX_HXX 1
+#ifndef __FGSAMPLE_QUEUE_HXX
+#define __FGSAMPLE_QUEUE_HXX 1
 
 #include <simgear/compiler.h>
 
-#include <vector>
+#include <queue>
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/sound/sample_group.hxx>
 
-class SGXmlSound;
+class SGSoundSample;
 
 /**
- * Generator for FlightGear sound effects.
+ * FlightGear sample queue class
  *
- * This module uses a FGSampleGroup class to generate sound effects based
- * on current flight conditions. The sound manager must be initialized
- * before this object is.
- *
- *    This module will load and play a set of sound effects defined in an
- *    xml file and tie them to various property states.
+ *    This modules maintains a queue of 'message' audio files.  These
+ *    are played sequentially with no overlap until the queue is finished.
+ *    This second mechanims is useful for things like tutorial messages or
+ *    background atc chatter.
  */
-class FGFX : public SGSampleGroup
+class FGSampleQueue : public SGSampleGroup
 {
 
 public:
 
-    FGFX ( SGSoundMgr *smgr, const string &refname );
-    virtual ~FGFX ();
+    FGSampleQueue ( SGSoundMgr *smgr, const string &refname );
+    virtual ~FGSampleQueue ();
 
-    virtual void init ();
-    virtual void reinit ();
     virtual void update (double dt);
+
+    inline void add (SGSharedPtr<SGSoundSample> msg) { _messages.push(msg); }
 
 private:
 
-    SGSharedPtr<SGSampleGroup> _avionics;
-    std::vector<SGXmlSound *> _sound;
+    std::queue< SGSharedPtr<SGSoundSample> > _messages;
+
+    bool last_enabled;
+    double last_volume;
 
     SGPropertyNode_ptr _enabled;
     SGPropertyNode_ptr _volume;
-    SGPropertyNode_ptr _avionics_enabled;
-    SGPropertyNode_ptr _avionics_volume;
-    SGPropertyNode_ptr _avionics_external;
-    SGPropertyNode_ptr _internal;
 };
 
 

@@ -23,9 +23,6 @@
 
 #include <simgear/constants.h>
 
-#include <Main/fg_props.hxx>
-#include <Main/globals.hxx>
-
 #include "morse.hxx"
 
 
@@ -171,10 +168,6 @@ bool FGMorse::cust_init(const int freq ) {
 // make a SGSoundSample morse code transmission for the specified string
 SGSoundSample *FGMorse::make_ident( const string& id, const int freq ) {
 
-    if (globals->get_soundmgr()->is_working() == false) {
-       return 0;
-    }
-
     char *idptr = (char *)id.c_str();
 
     int length = 0;
@@ -226,10 +219,10 @@ SGSoundSample *FGMorse::make_ident( const string& id, const int freq ) {
     length += 2 * SPACE_SIZE;
 
     // 2. Allocate space for the message
-    unsigned char *buffer = new unsigned char[length];
+    const unsigned char* buffer = (const unsigned char *)malloc(length);
 
     // 3. Assemble the message;
-    unsigned char *buf_ptr = buffer;
+    unsigned char *buf_ptr = (unsigned char*)buffer;
 
     for ( i = 0; i < (int)id.length(); ++i ) {
 	if ( idptr[i] >= 'A' && idptr[i] <= 'Z' ) {
@@ -268,11 +261,8 @@ SGSoundSample *FGMorse::make_ident( const string& id, const int freq ) {
     buf_ptr += SPACE_SIZE;
 
     // 4. create the simple sound and return
-    SGSoundSample *sample = new SGSoundSample( buffer, length,
+    SGSoundSample *sample = new SGSoundSample( &buffer, length,
                                                BYTES_PER_SECOND );
-
-    // clean up the buffer
-    delete [] buffer;
 
     sample->set_reference_dist( 10.0 );
     sample->set_max_dist( 20.0 );

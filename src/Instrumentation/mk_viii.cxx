@@ -2106,34 +2106,17 @@ MK_VIII::VoicePlayer::Speaker::bind (SGPropertyNode *node)
   // uses xmlsound property names
   tie(node, "volume", &volume);
   tie(node, "pitch", &pitch);
-  tie(node, "position/x", &position[0]);
-  tie(node, "position/y", &position[1]);
-  tie(node, "position/z", &position[2]);
-  tie(node, "orientation/x", &orientation[0]);
-  tie(node, "orientation/y", &orientation[1]);
-  tie(node, "orientation/z", &orientation[2]);
-  tie(node, "orientation/inner-cone", &inner_cone);
-  tie(node, "orientation/outer-cone", &outer_cone);
-  tie(node, "reference-dist", &reference_dist);
-  tie(node, "max-dist", &max_dist);
 }
 
 void
 MK_VIII::VoicePlayer::Speaker::update_configuration ()
 {
-  map<string, SGSoundSample *>::iterator iter;
+  map< string, SGSharedPtr<SGSoundSample> >::iterator iter;
   for (iter = player->samples.begin(); iter != player->samples.end(); iter++)
     {
       SGSoundSample *sample = (*iter).second;
 
       sample->set_pitch(pitch);
-      sample->set_offset_pos(position);
-      sample->set_orientation(orientation,
-			      inner_cone,
-			      outer_cone,
-			      outer_gain);
-      sample->set_reference_dist(reference_dist);
-      sample->set_max_dist(max_dist);
     }
 
   if (player->voice)
@@ -2172,7 +2155,7 @@ MK_VIII::VoicePlayer::Voice::stop (bool now)
 }
 
 void
-MK_VIII::VoicePlayer::Voice::set_volume (double _volume)
+MK_VIII::VoicePlayer::Voice::set_volume (float _volume)
 {
   volume = _volume;
   volume_changed();
@@ -2209,15 +2192,6 @@ MK_VIII::VoicePlayer::~VoicePlayer ()
   for (iter1 = _voices.begin(); iter1 != _voices.end(); iter1++)
     delete *iter1;
   _voices.clear();
-
-/* sound mgr already destroyed - samples already deleted
-  map<string, SGSoundSample *>::iterator iter2;
-  for (iter2 = samples.begin(); iter2 != samples.end(); iter2++)
-    {
-      bool status = globals->get_soundmgr()->remove((*iter2).first);
-      assert(status);
-    }
-*/
   samples.clear();
 }
 
@@ -2225,6 +2199,10 @@ void
 MK_VIII::VoicePlayer::init ()
 {
 #define STDPAUSE 0.75	// [SPEC] 6.4.4: "the standard 0.75 second delay"
+
+  SGSoundMgr *smgr = globals->get_soundmgr();
+  _sgr = smgr->find("avionics", true);
+  _sgr->tie_to_listener();
 
   make_voice(&voices.application_data_base_failed, "application-data-base-failed");
   make_voice(&voices.bank_angle, "bank-angle");
@@ -2270,13 +2248,7 @@ MK_VIII::VoicePlayer::get_sample (const char *name)
   std::ostringstream refname;
   refname << mk->name << "[" << mk->num << "]" << "/" << name;
 
-  SGSoundMgr *soundmgr = globals->get_soundmgr();
-  if (soundmgr->is_working() == false)
-    {
-      return NULL;
-    }
-
-  SGSoundSample *sample = soundmgr->find(refname.str());
+  SGSoundSample *sample = _sgr->find(refname.str());
   if (! sample)
     {
       SGPath sample_path(globals->get_fg_root());
@@ -2293,7 +2265,7 @@ MK_VIII::VoicePlayer::get_sample (const char *name)
 	  exit(1);
 	}
 
-      soundmgr->add(sample, refname.str());
+      _sgr->add(sample, refname.str());
       samples[refname.str()] = sample;
     }
 
@@ -2338,7 +2310,7 @@ MK_VIII::VoicePlayer::stop (unsigned int flags)
 }
 
 void
-MK_VIII::VoicePlayer::set_volume (double _volume)
+MK_VIII::VoicePlayer::set_volume (float _volume)
 {
   volume = _volume;
   if (voice)
@@ -4130,7 +4102,7 @@ MK_VIII::Mode6Handler::leave_takeoff ()
 }
 
 void
-MK_VIII::Mode6Handler::set_volume (double volume)
+MK_VIII::Mode6Handler::set_volume (float volume)
 {
   mk_voice(minimums_minimums)->set_volume(volume);
   mk_voice(five_hundred_above)->set_volume(volume);

@@ -105,7 +105,8 @@ FGKR_87::FGKR_87( SGPropertyNode *node ) :
     flight_timer(0.0),
     elapsed_timer(0.0),
     tmp_timer(0.0),
-    _time_before_search_sec(0)
+    _time_before_search_sec(0),
+    _sgr(NULL)
 {
 }
 
@@ -116,6 +117,9 @@ FGKR_87::~FGKR_87() {
 
 
 void FGKR_87::init () {
+    SGSoundMgr *smgr = globals->get_soundmgr();
+    _sgr = smgr->find("avionics", true);
+    _sgr->tie_to_listener();
     morse.init();
 }
 
@@ -463,7 +467,7 @@ void FGKR_87::update( double dt_sec ) {
 	// otherwise turn it off
 	if ( vol_btn >= 0.01 && audio_btn ) {
 	    SGSoundSample *sound;
-	    sound = globals->get_soundmgr()->find( "adf-ident" );
+	    sound = _sgr->find( "adf-ident" );
             if ( sound != NULL ) {
                 if ( !adf_btn ) {
                     sound->set_volume( vol_btn );
@@ -480,13 +484,13 @@ void FGKR_87::update( double dt_sec ) {
 	    }
 	    if ( play_count < 4 ) {
 		// play ADF ident
-		if ( !globals->get_soundmgr()->is_playing("adf-ident") ) {
-		    globals->get_soundmgr()->play_once( "adf-ident" );
+		if ( !_sgr->is_playing("adf-ident") && (vol_btn > 0.05) ) {
+		    _sgr->play_once( "adf-ident" );
 		    ++play_count;
 		}
 	    }
 	} else {
-	    globals->get_soundmgr()->stop( "adf-ident" );
+	    _sgr->stop( "adf-ident" );
 	}
     }
 }
@@ -527,13 +531,13 @@ void FGKR_87::search() {
 	    effective_range = kludgeRange(stn_elev, pos.getElevationM(), range);
 	    xyz = adf->cart();
 
-	    if ( globals->get_soundmgr()->exists( "adf-ident" ) ) {
-		globals->get_soundmgr()->remove( "adf-ident" );
+	    if ( _sgr->exists( "adf-ident" ) ) {
+		_sgr->remove( "adf-ident" );
 	    }
 	    SGSoundSample *sound;
 	    sound = morse.make_ident( trans_ident, LO_FREQUENCY );
 	    sound->set_volume( 0.3 );
-	    globals->get_soundmgr()->add( sound, "adf-ident" );
+	    _sgr->add( sound, "adf-ident" );
 
 	    int offset = (int)(sg_random() * 30.0);
 	    play_count = offset / 4;
@@ -551,7 +555,7 @@ void FGKR_87::search() {
 	valid = false;
 	ident = "";
 	trans_ident = "";
-	globals->get_soundmgr()->remove( "adf-ident" );
+	_sgr->remove( "adf-ident" );
 	last_ident = "";
 	// cout << "not picking up adf. :-(" << endl;
     }

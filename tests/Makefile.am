@@ -1,4 +1,4 @@
-bin_PROGRAMS = est-epsilon gl-info al-info
+bin_PROGRAMS = est-epsilon gl-info alcinfo
 
 noinst_PROGRAMS = test-gethostname test-mktime test-text test-up test-env-map
 
@@ -14,8 +14,8 @@ est_epsilon_LDADD =  $(opengl_LIBS)
 gl_info_SOURCES = gl-info.c
 gl_info_LDADD = $(opengl_LIBS)
 
-al_info_SOURCES = al-info.c
-al_info_LDADD = $(openal_LIBS)
+alcinfo_SOURCES = alcinfo.cxx
+alcinfo_LDADD = $(openal_LIBS)
 
 test_env_map_SOURCES = test-env-map.cxx
 test_env_map_LDADD = $(opengl_LIBS)

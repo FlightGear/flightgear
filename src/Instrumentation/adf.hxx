@@ -21,6 +21,8 @@
 using std::string;
 
 
+class SGSampleGroup;
+
 /**
  * Model an ADF radio.
  *
@@ -93,8 +95,10 @@ private:
     FGMorse morse;
     int _ident_count;
     time_t _last_ident_time;
-    double _last_volume;
+    float _last_volume;
     string _adf_ident;
+
+    SGSharedPtr<SGSampleGroup> _sgr;
 };
 
 

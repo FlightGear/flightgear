@@ -22,6 +22,7 @@
 #define _FG_ATC_VOICE
 
 #include <simgear/compiler.h>
+#include <simgear/structure/SGSharedPtr.hxx>
 
 #include <map>
 #include <string>
@@ -49,15 +50,15 @@ public:
 	bool LoadVoice(const std::string& voice);
 	
 	// Given a desired message, return a pointer to the data buffer and write the buffer length into len.
-	// Sets dataOK = true if the returned buffer is valid.
-	std::string WriteMessage(const char* message, bool& dataOK);
+	// Sets len to something other than 0 if the returned buffer is valid.
+	void* WriteMessage(const std::string& message, size_t *len);
 
 private:
 
 	// the sound and word position data
 	char* rawSoundData;
-	unsigned int rawDataSize;
-        SGSoundSample *SoundData;
+	size_t rawDataSize;
+        SGSharedPtr<SGSoundSample> SoundData;
 
 	// A map of words vs. byte position and length in rawSoundData
 	atc_word_map_type wordMap;

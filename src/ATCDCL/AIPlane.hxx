@@ -24,6 +24,8 @@
 #include "AIEntity.hxx"
 #include "ATC.hxx"
 
+class SGSampleGroup;
+
 enum PatternLeg {
 	TAKEOFF_ROLL,
 	CLIMBOUT,
@@ -140,7 +142,7 @@ private:
 	// Outputs the transmission either on screen or as audio depending on user preference
 	// The refname is a string to identify this sample to the sound manager
 	// The repeating flag indicates whether the message should be repeated continuously or played once.
-        void Render(const string& refname, const double volume, bool repeating);
+        void Render(const string& refname, const float volume, bool repeating);
 
 	// Cease rendering a transmission.
 	// Requires the sound manager refname if audio, else "".
@@ -157,6 +159,8 @@ private:
 	bool _trackSet;		// Set true if tgtTrack is to be followed
 	double _tgtRoll;
 	bool _rollSuspended;	// Set true when a derived class has suspended AIPlane's roll control
+
+        SGSharedPtr<SGSampleGroup> _sgr;
 };
 
 #endif  // _FG_AI_PLANE_HXX

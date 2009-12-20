@@ -25,6 +25,7 @@
 #define _VIEWMGR_HXX
 
 #include <vector>
+#include <list>
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -32,6 +33,7 @@
 
 // forward decls
 class FGViewer;
+class SGSoundMgr;
 typedef SGSharedPtr<FGViewer> FGViewerPtr;
 
 // Define a structure containing view information
@@ -75,6 +77,8 @@ public:
 
 private:
 
+    list<const char*> tied_props;
+
     double axis_long;
     double axis_lat;
 
@@ -116,6 +120,22 @@ private:
     int getView () const;
     void setView (int newview);
 
+// quaternion accessors, for debugging:
+    double getCurrentViewOrientation_w() const;
+    double getCurrentViewOrientation_x() const;
+    double getCurrentViewOrientation_y() const;
+    double getCurrentViewOrientation_z() const;
+    double getCurrentViewOrOffset_w() const;
+    double getCurrentViewOrOffset_x() const;
+    double getCurrentViewOrOffset_y() const;
+    double getCurrentViewOrOffset_z() const;
+    double getCurrentViewFrame_w() const;
+    double getCurrentViewFrame_x() const;
+    double getCurrentViewFrame_y() const;
+    double getCurrentViewFrame_z() const;
+
+    bool stationary () const;
+
     SGPropertyNode_ptr view_number;
     vector<SGPropertyNode_ptr> config_list;
     typedef std::vector<FGViewerPtr> viewer_list;
@@ -123,8 +143,20 @@ private:
     SGVec3d abs_viewer_position;
 
     int current;
+    SGQuatd current_view_orientation, current_view_or_offset;
+
+    SGSoundMgr *smgr;
 
 };
 
+// This takes the conventional aviation XYZ body system 
+// i.e.  x=forward, y=starboard, z=bottom
+// which is widely used in FGFS
+// and rotates it into the OpenGL camera system 
+// i.e. Xprime=starboard, Yprime=top, Zprime=aft.
+inline const SGQuatd fsb2sta()
+{
+    return SGQuatd(-0.5, -0.5, 0.5, 0.5);
+}
 
 #endif // _VIEWMGR_HXX

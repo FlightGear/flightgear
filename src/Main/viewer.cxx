@@ -380,7 +380,7 @@ FGViewer::recalcLookFrom ()
   SGQuatd hlToBody = SGQuatd::fromYawPitchRollDeg(head, pitch, roll);
 
   // The rotation offset, don't know why heading is negative here ...
-  SGQuatd viewOffsetOr
+  mViewOffsetOr
       = SGQuatd::fromYawPitchRollDeg(-_heading_offset_deg, _pitch_offset_deg,
                                      _roll_offset_deg);
 
@@ -396,7 +396,7 @@ FGViewer::recalcLookFrom ()
   SGQuatd q(-0.5, -0.5, 0.5, 0.5);
 
   _absolute_view_pos = position + (ec2body*q).backTransform(_offset_m);
-  mViewOrientation = ec2body*viewOffsetOr*q;
+  mViewOrientation = ec2body*mViewOffsetOr*q;
 }
 
 void
@@ -437,7 +437,7 @@ FGViewer::recalcLookAt ()
   SGQuatd geodEyeHlOr = SGQuatd::fromLonLat(_position);
 
   // the rotation offset, don't know why heading is negative here ...
-  SGQuatd eyeOffsetOr =
+  mViewOffsetOr =
     SGQuatd::fromYawPitchRollDeg(-_heading_offset_deg + 180, _pitch_offset_deg,
                                  _roll_offset_deg);
 
@@ -445,7 +445,7 @@ FGViewer::recalcLookAt ()
   SGVec3d eyeOff(-_offset_m.z(), _offset_m.x(), -_offset_m.y());
   SGQuatd ec2eye = geodEyeHlOr*geodEyeOr;
   SGVec3d eyeCart = SGVec3d::fromGeod(_position);
-  eyeCart += (ec2eye*eyeOffsetOr).backTransform(eyeOff);
+  eyeCart += (ec2eye*mViewOffsetOr).backTransform(eyeOff);
 
   SGVec3d atCart = SGVec3d::fromGeod(_target);
 

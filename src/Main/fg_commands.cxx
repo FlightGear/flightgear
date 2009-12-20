@@ -20,6 +20,7 @@
 #include <simgear/structure/commands.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/event_mgr.hxx>
+#include <simgear/sound/soundmgr_openal.hxx>
 
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
@@ -33,7 +34,7 @@
 #include <Scenery/tilemgr.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scripting/NasalSys.hxx>
-#include <Sound/fg_fx.hxx>
+#include <Sound/sample_queue.hxx>
 #include <Time/sunsolver.hxx>
 #include <Time/tmp.hxx>
 
@@ -1251,13 +1252,22 @@ do_set_cursor (const SGPropertyNode * arg)
 static bool
 do_play_audio_sample (const SGPropertyNode * arg)
 {
-    FGFX *fx = (FGFX *)globals->get_subsystem("fx");
     string path = arg->getStringValue("path");
     string file = arg->getStringValue("file");
-    double volume = arg->getDoubleValue("volume");
+    float volume = arg->getFloatValue("volume");
     // cout << "playing " << path << " / " << file << endl;
     try {
-        fx->play_message( path, file, volume );
+        static FGSampleQueue *queue = 0;
+        if ( !queue ) {
+           SGSoundMgr *smgr = globals->get_soundmgr();
+           queue = new FGSampleQueue(smgr, "chatter");
+           queue->tie_to_listener();
+        }
+
+        SGSoundSample *msg = new SGSoundSample(path.c_str(), file.c_str());
+        msg->set_volume( volume );
+        queue->add( msg );
+
         return true;
 
     } catch (const sg_io_exception&) {

@@ -156,7 +156,8 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     _name(node->getStringValue("name", "nav")),
     _num(node->getIntValue("number", 0)),
     _time_before_search_sec(-1.0),
-    _falseCoursesEnabled(true)
+    _falseCoursesEnabled(true),
+    _sgr(NULL)
 {
     SGPath path( globals->get_fg_root() );
     SGPath term = path;
@@ -184,6 +185,10 @@ FGNavRadio::~FGNavRadio()
 void
 FGNavRadio::init ()
 {
+    SGSoundMgr *smgr = globals->get_soundmgr();
+    _sgr = smgr->find("avionics", true);
+    _sgr->tie_to_listener();
+
     morse.init();
 
     string branch;
@@ -575,6 +580,8 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
   if (!_gs || !inrange_node->getBoolValue()) {
     gs_dist_node->setDoubleValue( 0.0 );
     gs_inrange_node->setBoolValue(false);
+    _gsNeedleDeflection = 0.0;
+    _gsNeedleDeflectionNorm = 0.0;
     return;
   }
   
@@ -584,6 +591,8 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
   gs_inrange_node->setBoolValue(gsInRange);
         
   if (!gsInRange) {
+    _gsNeedleDeflection = 0.0;
+    _gsNeedleDeflectionNorm = 0.0;
     return;
   }
   
@@ -790,17 +799,17 @@ void FGNavRadio::updateAudio()
   
 	// play station ident via audio system if on + ident,
 	// otherwise turn it off
-	if (!power_btn_node->getBoolValue()
+  if (!power_btn_node->getBoolValue()
       || !(bus_power_node->getDoubleValue() > 1.0)
       || !ident_btn_node->getBoolValue()
       || !audio_btn_node->getBoolValue() ) {
-    globals->get_soundmgr()->stop( nav_fx_name );
-    globals->get_soundmgr()->stop( dme_fx_name );
+    _sgr->stop( nav_fx_name );
+    _sgr->stop( dme_fx_name );
     return;
   }
 
-  SGSoundSample *sound = globals->get_soundmgr()->find( nav_fx_name );
-  double vol = vol_btn_node->getDoubleValue();
+  SGSoundSample *sound = _sgr->find( nav_fx_name );
+  double vol = vol_btn_node->getFloatValue();
   SG_CLAMP_RANGE(vol, 0.0, 1.0);
   
   if ( sound != NULL ) {
@@ -809,7 +818,7 @@ void FGNavRadio::updateAudio()
     SG_LOG( SG_COCKPIT, SG_ALERT, "Can't find nav-vor-ident sound" );
   }
   
-  sound = globals->get_soundmgr()->find( dme_fx_name );
+  sound = _sgr->find( dme_fx_name );
   if ( sound != NULL ) {
     sound->set_volume( vol );
   } else {
@@ -832,16 +841,16 @@ void FGNavRadio::updateAudio()
   play_count = ++play_count % NUM_IDENT_SLOTS;
     
   // Previous ident is out of time;  if still playing, cut it off:
-  globals->get_soundmgr()->stop( nav_fx_name );
-  globals->get_soundmgr()->stop( dme_fx_name );
+  _sgr->stop( nav_fx_name );
+  _sgr->stop( dme_fx_name );
   if (play_count == 0) { // the DME slot
     if (_dmeInRange && dme_serviceable_node->getBoolValue()) {
       // play DME ident
-      globals->get_soundmgr()->play_once( dme_fx_name );
+      if (vol > 0.05) _sgr->play_once( dme_fx_name );
     }
   } else { // NAV slot
     if (inrange_node->getBoolValue() && nav_serviceable_node->getBoolValue()) {
-      globals->get_soundmgr()->play_once(nav_fx_name);
+      if (vol > 0.05) _sgr->play_once(nav_fx_name);
     }
   }
 }
@@ -924,8 +933,9 @@ void FGNavRadio::search()
     _gs = NULL;
     _dme = NULL;
     nav_id_node->setStringValue("");
-    globals->get_soundmgr()->remove( nav_fx_name );
-    globals->get_soundmgr()->remove( dme_fx_name );
+
+    _sgr->remove( nav_fx_name );
+    _sgr->remove( dme_fx_name );
   }
 
   is_valid_node->setBoolValue(nav != NULL);
@@ -967,25 +977,25 @@ double FGNavRadio::localizerWidth(FGNavRecord* aLOC)
 
 void FGNavRadio::audioNavidChanged()
 {
-  if ( globals->get_soundmgr()->exists(nav_fx_name)) {
-		globals->get_soundmgr()->remove(nav_fx_name);
+  if (_sgr->exists(nav_fx_name)) {
+		_sgr->remove(nav_fx_name);
   }
   
   try {
     string trans_ident(_navaid->get_trans_ident());
     SGSoundSample* sound = morse.make_ident(trans_ident, LO_FREQUENCY);
     sound->set_volume( 0.3 );
-    if (!globals->get_soundmgr()->add( sound, nav_fx_name )) {
+    if (!_sgr->add( sound, nav_fx_name )) {
       SG_LOG(SG_COCKPIT, SG_WARN, "Failed to add v1-vor-ident sound");
     }
 
-	  if ( globals->get_soundmgr()->exists( dme_fx_name ) ) {
-      globals->get_soundmgr()->remove( dme_fx_name );
+	  if ( _sgr->exists( dme_fx_name ) ) {
+      _sgr->remove( dme_fx_name );
     }
      
     sound = morse.make_ident( trans_ident, HI_FREQUENCY );
     sound->set_volume( 0.3 );
-    globals->get_soundmgr()->add( sound, dme_fx_name );
+    _sgr->add( sound, dme_fx_name );
 
 	  int offset = (int)(sg_random() * 30.0);
 	  play_count = offset / 4;

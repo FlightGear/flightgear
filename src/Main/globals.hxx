@@ -49,10 +49,10 @@ class SGMagVar;
 class SGMaterialLib;
 class SGPropertyNode;
 class SGTime;
-class SGSoundMgr;
 class SGEventMgr;
 class SGSubsystemMgr;
 class SGSubsystem;
+class SGSoundMgr;
 
 class FGAIMgr;
 class FGATCMgr;
@@ -94,6 +94,7 @@ private:
     FGRenderer *renderer;
     SGSubsystemMgr *subsystem_mgr;
     SGEventMgr *event_mgr;
+    SGSoundMgr *soundmgr;
 
     // Number of milliseconds elapsed since the start of the program.
     double sim_time_sec;
@@ -131,9 +132,6 @@ private:
 
     // 2D panel
     FGPanel *current_panel;
-
-    // sound manager
-    SGSoundMgr *soundmgr;
 
     // ATC manager
     FGATCMgr *ATC_mgr;
@@ -202,6 +200,8 @@ public:
 
     virtual SGEventMgr *get_event_mgr () const;
 
+    virtual SGSoundMgr *get_soundmgr () const;
+
     inline double get_sim_time_sec () const { return sim_time_sec; }
     inline void inc_sim_time_sec (double dt) { sim_time_sec += dt; }
     inline void set_sim_time_sec (double t) { sim_time_sec = t; }
@@ -243,9 +243,6 @@ public:
 
     inline FGPanel *get_current_panel() const { return current_panel; }
     inline void set_current_panel( FGPanel *cp ) { current_panel = cp; }
-
-    inline SGSoundMgr *get_soundmgr() const { return soundmgr; }
-    inline void set_soundmgr( SGSoundMgr *sm ) { soundmgr = sm; }
 
     inline FGControls *get_controls() const { return controls; }
     inline void set_controls( FGControls *c ) { controls = c; }
@@ -305,7 +302,7 @@ public:
     inline void set_tile_mgr ( FGTileMgr *t ) { tile_mgr = t; }
 
     inline FGFontCache *get_fontcache() const { return fontcache; }
-    
+
     inline FGNavList *get_navlist() const { return navlist; }
     inline void set_navlist( FGNavList *n ) { navlist = n; }
     inline FGNavList *get_loclist() const { return loclist; }

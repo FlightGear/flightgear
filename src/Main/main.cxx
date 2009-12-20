@@ -61,6 +61,7 @@
 #include <Model/acmodel.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
+#include <Sound/fg_fx.hxx>
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 #include <Sound/fg_fx.hxx>
@@ -86,7 +87,6 @@
 
 static double real_delta_time_sec = 0.0;
 double delta_time_sec = 0.0;
-extern float init_volume;
 
 using namespace flightgear;
 
@@ -103,6 +103,8 @@ long global_multi_loop;
 
 SGTimeStamp last_time_stamp;
 SGTimeStamp current_time_stamp;
+
+void fgSetNewSoundDevice(const char *);
 
 // The atexit() function handler should know when the graphical subsystem
 // is initialized.
@@ -460,8 +462,8 @@ static void fgMainLoop( void ) {
     //   we may want to move this to its own class at some point
     //
     double visibility_meters = fgGetDouble("/environment/visibility-m");
-
     globals->get_tile_mgr()->prep_ssg_nodes( visibility_meters );
+
     // update tile manager for view...
     SGVec3d viewPos = globals->get_current_view()->get_view_pos();
     SGGeod geodViewPos = SGGeod::fromCart(viewPos);
@@ -477,10 +479,26 @@ static void fgMainLoop( void ) {
     // update the view angle as late as possible, but before sound calculations
     globals->get_viewmgr()->update(real_delta_time_sec);
 
-    // Run audio scheduler
+    // Update the sound manager last so it can use the CPU while the GPU
+    // is processing the scenery (doubled the frame-rate for me) -EMH-
 #ifdef ENABLE_AUDIO_SUPPORT
-    FGFX* fx = (FGFX*) globals->get_subsystem("fx");
-    fx->update_fx_late(delta_time_sec);
+    static SGPropertyNode *sound_enabled = fgGetNode("/sim/sound/enabled");
+    static SGSoundMgr *smgr = globals->get_soundmgr();
+    static bool smgr_enabled = true;
+    if (smgr_enabled != sound_enabled->getBoolValue()) {
+        if (smgr_enabled == true) { // request to suspend
+            smgr->suspend();
+        } else {
+            smgr->resume();
+        }
+        smgr_enabled = sound_enabled->getBoolValue();
+    }
+
+    if (smgr_enabled == true) {
+        static SGPropertyNode *volume = fgGetNode("/sim/sound/volume");
+        smgr->set_volume(volume->getFloatValue());
+        smgr->update(delta_time_sec);
+    }
 #endif
 
     // END Tile Manager udpates
@@ -488,13 +506,26 @@ static void fgMainLoop( void ) {
     if (!scenery_loaded && globals->get_tile_mgr()->isSceneryLoaded()
         && cur_fdm_state->get_inited()) {
         fgSetBool("sim/sceneryloaded",true);
-        fgSetFloat("/sim/sound/volume", init_volume);
-        globals->get_soundmgr()->set_volume(init_volume);
+        if (fgGetBool("/sim/sound/working")) {
+            smgr->activate();
+        } else {
+            smgr->stop();
+        }
+        globals->get_props()->tie("/sim/sound/devices/name",
+              SGRawValueFunctions<const char *>(0, fgSetNewSoundDevice), false);
     }
 
     fgRequestRedraw();
 
     SG_LOG( SG_ALL, SG_DEBUG, "" );
+}
+
+void fgSetNewSoundDevice(const char *device)
+{
+    globals->get_soundmgr()->suspend();
+    globals->get_soundmgr()->stop();
+    globals->get_soundmgr()->init(device);
+    globals->get_soundmgr()->resume();
 }
 
 // Operation for querying OpenGL parameters. This must be done in a
@@ -627,6 +658,7 @@ static void fgIdleFunction ( void ) {
 
     } else if ( idle_state == 5 ) {
         idle_state++;
+
         ////////////////////////////////////////////////////////////////////
         // Initialize the 3D aircraft model subsystem (has a dependency on
         // the scenery subsystem.)
@@ -723,13 +755,13 @@ static void fgIdleFunction ( void ) {
             SG_LOG( SG_GENERAL, SG_INFO,
                 "Starting intro music: " << mp3file.str() );
 
-#if defined( __CYGWIN__ )
+# if defined( __CYGWIN__ )
             string command = "start /m `cygpath -w " + mp3file.str() + "`";
-#elif defined( WIN32 )
+# elif defined( WIN32 )
             string command = "start /m " + mp3file.str();
-#else
+# else
             string command = "mpg123 " + mp3file.str() + "> /dev/null 2>&1";
-#endif
+# endif
 
             system ( command.c_str() );
         }
