@@ -841,7 +841,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		// TODO - At hot 'n high airports this may be 500ft AGL though - need to make this a variable.
 		if((_pos.getElevationM() - rwy.threshold_pos.getElevationM()) * SG_METER_TO_FEET > 700) {
 			double cc = 0.0;
-			if(tower && tower->GetCrosswindConstraint(cc)) {
+			if(_controlled && tower->GetCrosswindConstraint(cc)) {
 				if(orthopos.y() > cc) {
 					//cout << "Turning to crosswind, distance from threshold = " << orthopos.y() << '\n'; 
 					leg = TURN1;
@@ -884,7 +884,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		// turn 1000m out for now, taking other traffic into accout
 		if(fabs(orthopos.x()) > 900) {
 			double dd = 0.0;
-			if(tower && tower->GetDownwindConstraint(dd)) {
+			if(_controlled && tower->GetDownwindConstraint(dd)) {
 				if(fabs(orthopos.x()) > fabs(dd)) {
 					//cout << "Turning to downwind, distance from centerline = " << fabs(orthopos.x()) << '\n'; 
 					leg = TURN2;
@@ -930,7 +930,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			// For now we're assuming that we aim to follow the same glidepath regardless of wind.
 			double d1;
 			double d2;
-			CalculateSoD(((tower && tower->GetBaseConstraint(d1)) ? d1 : -1000.0), ((tower && tower->GetDownwindConstraint(d2)) ? d2 : 1000.0 * patternDirection), (patternDirection ? true : false));
+			CalculateSoD(((_controlled && tower->GetBaseConstraint(d1)) ? d1 : -1000.0), ((_controlled && tower->GetDownwindConstraint(d2)) ? d2 : 1000.0 * patternDirection), (patternDirection ? true : false));
 			if(SoD.leg == DOWNWIND) {
 				descending = (orthopos.y() < SoD.y ? true : false);
 			}
@@ -950,7 +950,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		if(orthopos.y() < -1000.0 + turn_radius) {
 		//if(orthopos.y() < -980) {
 			double bb = 0.0;
-			if(tower && tower->GetBaseConstraint(bb)) {
+			if(_controlled && tower->GetBaseConstraint(bb)) {
 				if(fabs(orthopos.y()) > fabs(bb)) {
 					//cout << "Turning to base, distance from threshold = " << fabs(orthopos.y()) << '\n'; 
 					leg = TURN3;
@@ -982,7 +982,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 			double d1;
 			// Make downwind leg position artifically large to avoid any chance of SoD being returned as
 			// on downwind when we are already on base.
-			CalculateSoD(((tower && tower->GetBaseConstraint(d1)) ? d1 : -1000.0), (10000.0 * patternDirection), (patternDirection ? true : false));
+			CalculateSoD(((_controlled && tower->GetBaseConstraint(d1)) ? d1 : -1000.0), (10000.0 * patternDirection), (patternDirection ? true : false));
 			if(SoD.leg == BASE) {
 				descending = (fabs(orthopos.y()) < fabs(SoD.y) ? true : false);
 			}
@@ -1209,7 +1209,7 @@ void FGAILocalTraffic::TransmitPatternPositionReport(void) {
 	// airport name + "traffic" + airplane callsign + pattern direction + pattern leg + rwy + ?
 	string trns;
 	int code = 0;
-	const string& apt_name = tower ? tower->get_name() : airportID;
+	const string& apt_name = _controlled ? tower->get_name() : airportID;
 
 	trns += apt_name;
 	trns += " Traffic ";
