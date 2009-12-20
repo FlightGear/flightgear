@@ -82,7 +82,9 @@ public:
 
     virtual void init ();
     virtual void update (double delta_time_sec);
-
+    
+    virtual void bind();
+    virtual void unbind();
 private:
     friend class GPSListener;
     friend class SearchFilter;
@@ -94,8 +96,8 @@ private:
     {
     public:
       Config();
-      
-      void init(SGPropertyNode*);
+            
+      void bind(GPS* aOwner, SGPropertyNode* aCfg);
       
       bool turnAnticipationEnabled() const
       { return _enableTurnAnticipation; }
@@ -307,9 +309,28 @@ private:
   
   // true-bearing-error and mag-bearing-error
   
+
+  /**
+   * Tied-properties helper, record nodes which are tied for easy un-tie-ing
+   */
+  template <typename T>
+  void tie(SGPropertyNode* aNode, const char* aRelPath, const SGRawValue<T>& aRawValue)
+  {
+    SGPropertyNode* nd = aNode->getNode(aRelPath, true);
+    _tiedNodes.push_back(nd);
+    nd->tie(aRawValue);
+  }
+
+  /// helper, tie the lat/lon/elev of a SGGeod to the named children of aNode
+  void tieSGGeod(SGPropertyNode* aNode, SGGeod& aRef, 
+    const char* lonStr, const char* latStr, const char* altStr);
   
-  
+  /// helper, tie a SGGeod to proeprties, but read-only
+  void tieSGGeodReadOnly(SGPropertyNode* aNode, SGGeod& aRef, 
+    const char* lonStr, const char* latStr, const char* altStr);
+
 // members
+  SGPropertyNode_ptr _gpsNode;
   SGPropertyNode_ptr _magvar_node;
   SGPropertyNode_ptr _serviceable_node;
   SGPropertyNode_ptr _electrical_node;
@@ -397,6 +418,8 @@ private:
   SGPropertyNode_ptr _apTrueHeading;
   SGPropertyNode_ptr _apTargetAltitudeFt;
   SGPropertyNode_ptr _apAltitudeLock;
+  
+  std::vector<SGPropertyNode*> _tiedNodes;
 };
 
 
