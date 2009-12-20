@@ -74,28 +74,6 @@ SGGeod SGGeodProperty::get() const
     }
 }
 
-static void tieSGGeod(SGPropertyNode* aNode, SGGeod& aRef, 
-  const char* lonStr, const char* latStr, const char* altStr)
-{
-  aNode->tie(lonStr, SGRawValueMethods<SGGeod, double>(aRef, &SGGeod::getLongitudeDeg, &SGGeod::setLongitudeDeg));
-  aNode->tie(latStr, SGRawValueMethods<SGGeod, double>(aRef, &SGGeod::getLatitudeDeg, &SGGeod::setLatitudeDeg));
-  
-  if (altStr) {
-    aNode->tie(altStr, SGRawValueMethods<SGGeod, double>(aRef, &SGGeod::getElevationFt, &SGGeod::setElevationFt));
-  }
-}
-
-static void tieSGGeodReadOnly(SGPropertyNode* aNode, SGGeod& aRef, 
-  const char* lonStr, const char* latStr, const char* altStr)
-{
-  aNode->tie(lonStr, SGRawValueMethods<SGGeod, double>(aRef, &SGGeod::getLongitudeDeg, NULL));
-  aNode->tie(latStr, SGRawValueMethods<SGGeod, double>(aRef, &SGGeod::getLatitudeDeg, NULL));
-  
-  if (altStr) {
-    aNode->tie(altStr, SGRawValueMethods<SGGeod, double>(aRef, &SGGeod::getElevationFt, NULL));
-  }
-}
-
 static const char* makeTTWString(double TTW)
 {
   if ((TTW <= 0.0) || (TTW >= 356400.5)) { // 99 hours
@@ -220,20 +198,21 @@ GPS::Config::Config() :
   _extCourseSource = fgGetNode("/instrumentation/nav[0]/radials/selected-deg", true);
 }
 
-void GPS::Config::init(SGPropertyNode* aCfgNode)
+void GPS::Config::bind(GPS* aOwner, SGPropertyNode* aCfg)
 {
-  aCfgNode->tie("turn-rate-deg-sec", SGRawValuePointer<double>(&_turnRate));
-  aCfgNode->tie("turn-anticipation", SGRawValuePointer<bool>(&_enableTurnAnticipation));
-  aCfgNode->tie("wpt-alert-time", SGRawValuePointer<double>(&_waypointAlertTime));
-  aCfgNode->tie("tune-nav-radio-to-ref-vor", SGRawValuePointer<bool>(&_tuneRadio1ToRefVor));
-  aCfgNode->tie("min-runway-length-ft", SGRawValuePointer<double>(&_minRunwayLengthFt));
-  aCfgNode->tie("hard-surface-runways-only", SGRawValuePointer<bool>(&_requireHardSurface));
+  aOwner->tie(aCfg, "turn-rate-deg-sec", SGRawValuePointer<double>(&_turnRate));
   
-  aCfgNode->tie("course-source", SGRawValueMethods<GPS::Config, const char*>
+  aOwner->tie(aCfg, "turn-anticipation", SGRawValuePointer<bool>(&_enableTurnAnticipation));
+  aOwner->tie(aCfg, "wpt-alert-time", SGRawValuePointer<double>(&_waypointAlertTime));
+  aOwner->tie(aCfg, "tune-nav-radio-to-ref-vor", SGRawValuePointer<bool>(&_tuneRadio1ToRefVor));
+  aOwner->tie(aCfg, "min-runway-length-ft", SGRawValuePointer<double>(&_minRunwayLengthFt));
+  aOwner->tie(aCfg, "hard-surface-runways-only", SGRawValuePointer<bool>(&_requireHardSurface));
+  
+  aOwner->tie(aCfg, "course-source", SGRawValueMethods<GPS::Config, const char*>
     (*this, &GPS::Config::getCourseSource, &GPS::Config::setCourseSource));
     
-  aCfgNode->tie("cdi-max-deflection-nm", SGRawValuePointer<double>(&_cdiMaxDeflectionNm));
-  aCfgNode->tie("drive-autopilot", SGRawValuePointer<bool>(&_driveAutopilot));
+  aOwner->tie(aCfg, "cdi-max-deflection-nm", SGRawValuePointer<double>(&_cdiMaxDeflectionNm));
+  aOwner->tie(aCfg, "drive-autopilot", SGRawValuePointer<bool>(&_driveAutopilot));
 }
 
 const char* 
@@ -291,6 +270,9 @@ GPS::GPS ( SGPropertyNode *node) :
   _anticipateTurn(false),
   _inTurn(false)
 {
+  string branch = "/instrumentation/" + _name;
+  _gpsNode = fgGetNode(branch.c_str(), _num, true );
+  _scratchNode = _gpsNode->getChild("scratch", 0, true);
 }
 
 GPS::~GPS ()
@@ -300,112 +282,39 @@ GPS::~GPS ()
 void
 GPS::init ()
 {
-    _routeMgr = (FGRouteMgr*) globals->get_subsystem("route-manager");
-    assert(_routeMgr);
+  _routeMgr = (FGRouteMgr*) globals->get_subsystem("route-manager");
+  assert(_routeMgr);
   
-    string branch;
-    branch = "/instrumentation/" + _name;
-
-  SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
-  _config.init(node->getChild("config", 0, true));
-    
   _position.init("/position/longitude-deg", "/position/latitude-deg", "/position/altitude-ft");
   _magvar_node = fgGetNode("/environment/magnetic-variation-deg", true);
-  _serviceable_node = node->getChild("serviceable", 0, true);
+  _serviceable_node = _gpsNode->getChild("serviceable", 0, true);
   _serviceable_node->setBoolValue(true);
   _electrical_node = fgGetNode("/systems/electrical/outputs/gps", true);
 
 // basic GPS outputs
-  node->tie("selected-course-deg", SGRawValueMethods<GPS, double>(*this, &GPS::getSelectedCourse, NULL));
+  _raim_node = _gpsNode->getChild("raim", 0, true);
+  _odometer_node = _gpsNode->getChild("odometer", 0, true);
+  _trip_odometer_node = _gpsNode->getChild("trip-odometer", 0, true);
+  _true_bug_error_node = _gpsNode->getChild("true-bug-error-deg", 0, true);
+  _magnetic_bug_error_node = _gpsNode->getChild("magnetic-bug-error-deg", 0, true);
   
-  _raim_node = node->getChild("raim", 0, true);
-
-  tieSGGeodReadOnly(node, _indicated_pos, "indicated-longitude-deg", 
-        "indicated-latitude-deg", "indicated-altitude-ft");
-
-  node->tie("indicated-vertical-speed", SGRawValueMethods<GPS, double>
-    (*this, &GPS::getVerticalSpeed, NULL));
-  node->tie("indicated-track-true-deg", SGRawValueMethods<GPS, double>
-    (*this, &GPS::getTrueTrack, NULL));
-  node->tie("indicated-track-magnetic-deg", SGRawValueMethods<GPS, double>
-    (*this, &GPS::getMagTrack, NULL));
-  node->tie("indicated-ground-speed-kt", SGRawValueMethods<GPS, double>
-    (*this, &GPS::getGroundspeedKts, NULL));
-        
-  _odometer_node = node->getChild("odometer", 0, true);
-  _trip_odometer_node = node->getChild("trip-odometer", 0, true);
-  _true_bug_error_node = node->getChild("true-bug-error-deg", 0, true);
-  _magnetic_bug_error_node = node->getChild("magnetic-bug-error-deg", 0, true);
-
-// command system    
-  node->tie("mode", SGRawValueMethods<GPS, const char*>(*this, &GPS::getMode, NULL));
-  node->tie("command", SGRawValueMethods<GPS, const char*>(*this, &GPS::getCommand, &GPS::setCommand));
-    
-  _scratchNode = node->getChild("scratch", 0, true);
-  tieSGGeod(_scratchNode, _scratchPos, "longitude-deg", "latitude-deg", "altitude-ft");
-  _scratchNode->tie("valid", SGRawValueMethods<GPS, bool>(*this, &GPS::getScratchValid, NULL));
-  _scratchNode->tie("distance-nm", SGRawValueMethods<GPS, double>(*this, &GPS::getScratchDistance, NULL));
-  _scratchNode->tie("true-bearing-deg", SGRawValueMethods<GPS, double>(*this, &GPS::getScratchTrueBearing, NULL));
-  _scratchNode->tie("mag-bearing-deg", SGRawValueMethods<GPS, double>(*this, &GPS::getScratchMagBearing, NULL));
-  _scratchNode->tie("has-next", SGRawValueMethods<GPS, bool>(*this, &GPS::getScratchHasNext, NULL));
-  _scratchValid = false;
-  
-// waypoint data (including various historical things)
-  SGPropertyNode *wp_node = node->getChild("wp", 0, true);
-  SGPropertyNode *wp0_node = wp_node->getChild("wp", 0, true);
+// waypoints
+  SGPropertyNode *wp_node = _gpsNode->getChild("wp", 0, true);
   SGPropertyNode *wp1_node = wp_node->getChild("wp", 1, true);
-
-  tieSGGeodReadOnly(wp0_node, _wp0_position, "longitude-deg", "latitude-deg", "altitude-ft");
-  wp0_node->tie("ID", SGRawValueMethods<GPS, const char*>
-    (*this, &GPS::getWP0Ident, NULL));
-  wp0_node->tie("name", SGRawValueMethods<GPS, const char*>
-    (*this, &GPS::getWP0Name, NULL));
-    
-  tieSGGeodReadOnly(wp1_node, _wp1_position, "longitude-deg", "latitude-deg", "altitude-ft");
-  wp1_node->tie("ID", SGRawValueMethods<GPS, const char*>
-    (*this, &GPS::getWP1Ident, NULL));
-  wp1_node->tie("name", SGRawValueMethods<GPS, const char*>
-    (*this, &GPS::getWP1Name, NULL));
 
   // for compatability, alias selected course down to wp/wp[1]/desired-course-deg
   SGPropertyNode* wp1Crs = wp1_node->getChild("desired-course-deg", 0, true);
-  wp1Crs->alias(node->getChild("selected-course-deg"));
+  wp1Crs->alias(_gpsNode->getChild("selected-course-deg"));
     
 //    _true_wp1_bearing_error_node =
 //        wp1_node->getChild("true-bearing-error-deg", 0, true);
 //    _magnetic_wp1_bearing_error_node =
   //      wp1_node->getChild("magnetic-bearing-error-deg", 0, true);
 
-  wp1_node->tie("distance-nm", SGRawValueMethods<GPS, double>
-    (*this, &GPS::getWP1Distance, NULL));
-  wp1_node->tie("bearing-true-deg", SGRawValueMethods<GPS, double>
-    (*this, &GPS::getWP1Bearing, NULL));
-  wp1_node->tie("bearing-mag-deg", SGRawValueMethods<GPS, double>
-    (*this, &GPS::getWP1MagBearing, NULL));
-  wp1_node->tie("TTW-sec", SGRawValueMethods<GPS, double>
-    (*this, &GPS::getWP1TTW, NULL));
-  wp1_node->tie("TTW", SGRawValueMethods<GPS, const char*>
-    (*this, &GPS::getWP1TTWString, NULL));
-  
-  wp1_node->tie("course-deviation-deg", SGRawValueMethods<GPS, double>
-    (*this, &GPS::getWP1CourseDeviation, NULL));
-  wp1_node->tie("course-error-nm", SGRawValueMethods<GPS, double>
-    (*this, &GPS::getWP1CourseErrorNm, NULL));
-  wp1_node->tie("to-flag", SGRawValueMethods<GPS, bool>
-    (*this, &GPS::getWP1ToFlag, NULL));
-  wp1_node->tie("from-flag", SGRawValueMethods<GPS, bool>
-    (*this, &GPS::getWP1FromFlag, NULL));
-    
-  _tracking_bug_node = node->getChild("tracking-bug", 0, true);
+  _tracking_bug_node = _gpsNode->getChild("tracking-bug", 0, true);
          
-// leg properties (only valid in DTO/LEG modes, not OBS)
-  wp_node->tie("leg-distance-nm", SGRawValueMethods<GPS, double>(*this, &GPS::getLegDistance, NULL));
-  wp_node->tie("leg-true-course-deg", SGRawValueMethods<GPS, double>(*this, &GPS::getLegCourse, NULL));
-  wp_node->tie("leg-mag-course-deg", SGRawValueMethods<GPS, double>(*this, &GPS::getLegMagCourse, NULL));
-  wp_node->tie("alt-dist-ratio", SGRawValueMethods<GPS, double>(*this, &GPS::getAltDistanceRatio, NULL));
-
 // reference navid
-  SGPropertyNode_ptr ref_navaid = node->getChild("ref-navaid", 0, true);
+  SGPropertyNode_ptr ref_navaid = _gpsNode->getChild("ref-navaid", 0, true);
   _ref_navaid_id_node = ref_navaid->getChild("id", 0, true);
   _ref_navaid_name_node = ref_navaid->getChild("name", 0, true);
   _ref_navaid_bearing_node = ref_navaid->getChild("bearing-deg", 0, true);
@@ -417,8 +326,8 @@ GPS::init ()
     
 // route properties    
   // should these move to the route manager?
-  _routeDistanceNm = node->getChild("route-distance-nm", 0, true);
-  _routeETE = node->getChild("ETE", 0, true);
+  _routeDistanceNm = _gpsNode->getChild("route-distance-nm", 0, true);
+  _routeETE = _gpsNode->getChild("ETE", 0, true);
   _routeEditedSignal = fgGetNode("/autopilot/route-manager/signals/edited", true);
   _routeFinishedSignal = fgGetNode("/autopilot/route-manager/signals/finished", true);
   
@@ -433,16 +342,12 @@ GPS::init ()
   _routeFinishedSignal->addChangeListener(_listener);
   
 // navradio slaving properties  
-  node->tie("cdi-deflection", SGRawValueMethods<GPS,double>
-    (*this, &GPS::getCDIDeflection));
-
-  SGPropertyNode* toFlag = node->getChild("to-flag", 0, true);
+  SGPropertyNode* toFlag = _gpsNode->getChild("to-flag", 0, true);
   toFlag->alias(wp1_node->getChild("to-flag"));
   
-  SGPropertyNode* fromFlag = node->getChild("from-flag", 0, true);
+  SGPropertyNode* fromFlag = _gpsNode->getChild("from-flag", 0, true);
   fromFlag->alias(wp1_node->getChild("from-flag"));
     
-        
 // autopilot drive properties
   _apTrueHeading = fgGetNode("/autopilot/settings/true-heading-deg",true);
   _apTargetAltitudeFt = fgGetNode("/autopilot/settings/target-altitude-ft", true);
@@ -455,9 +360,99 @@ GPS::init ()
   }
   
   // last thing, add the deprecated prop watcher
-  new DeprecatedPropListener(node);
+  new DeprecatedPropListener(_gpsNode);
   
   clearOutput();
+}
+
+void
+GPS::bind()
+{
+  _config.bind(this, _gpsNode->getChild("config", 0, true));
+// basic GPS outputs
+  tie(_gpsNode, "selected-course-deg", SGRawValueMethods<GPS, double>
+    (*this, &GPS::getSelectedCourse, NULL));
+  
+  
+  tieSGGeodReadOnly(_gpsNode, _indicated_pos, "indicated-longitude-deg", 
+        "indicated-latitude-deg", "indicated-altitude-ft");
+
+  tie(_gpsNode, "indicated-vertical-speed", SGRawValueMethods<GPS, double>
+    (*this, &GPS::getVerticalSpeed, NULL));
+  tie(_gpsNode, "indicated-track-true-deg", SGRawValueMethods<GPS, double>
+    (*this, &GPS::getTrueTrack, NULL));
+  tie(_gpsNode, "indicated-track-magnetic-deg", SGRawValueMethods<GPS, double>
+    (*this, &GPS::getMagTrack, NULL));
+  tie(_gpsNode, "indicated-ground-speed-kt", SGRawValueMethods<GPS, double>
+    (*this, &GPS::getGroundspeedKts, NULL));
+  
+// command system    
+  tie(_gpsNode, "mode", SGRawValueMethods<GPS, const char*>(*this, &GPS::getMode, NULL));
+  tie(_gpsNode, "command", SGRawValueMethods<GPS, const char*>(*this, &GPS::getCommand, &GPS::setCommand));
+    
+  tieSGGeod(_scratchNode, _scratchPos, "longitude-deg", "latitude-deg", "altitude-ft");
+  tie(_scratchNode, "valid", SGRawValueMethods<GPS, bool>(*this, &GPS::getScratchValid, NULL));
+  tie(_scratchNode, "distance-nm", SGRawValueMethods<GPS, double>(*this, &GPS::getScratchDistance, NULL));
+  tie(_scratchNode, "true-bearing-deg", SGRawValueMethods<GPS, double>(*this, &GPS::getScratchTrueBearing, NULL));
+  tie(_scratchNode, "mag-bearing-deg", SGRawValueMethods<GPS, double>(*this, &GPS::getScratchMagBearing, NULL));
+  tie(_scratchNode, "has-next", SGRawValueMethods<GPS, bool>(*this, &GPS::getScratchHasNext, NULL));
+  _scratchValid = false;
+  
+// waypoint data (including various historical things)
+  SGPropertyNode *wp_node = _gpsNode->getChild("wp", 0, true);
+  SGPropertyNode *wp0_node = wp_node->getChild("wp", 0, true);
+  SGPropertyNode *wp1_node = wp_node->getChild("wp", 1, true);
+
+  tieSGGeodReadOnly(wp0_node, _wp0_position, "longitude-deg", "latitude-deg", "altitude-ft");
+  tie(wp0_node, "ID", SGRawValueMethods<GPS, const char*>
+    (*this, &GPS::getWP0Ident, NULL));
+  tie(wp0_node, "name", SGRawValueMethods<GPS, const char*>
+    (*this, &GPS::getWP0Name, NULL));
+    
+  tieSGGeodReadOnly(wp1_node, _wp1_position, "longitude-deg", "latitude-deg", "altitude-ft");
+  tie(wp1_node, "ID", SGRawValueMethods<GPS, const char*>
+    (*this, &GPS::getWP1Ident, NULL));
+  tie(wp1_node, "name", SGRawValueMethods<GPS, const char*>
+    (*this, &GPS::getWP1Name, NULL));
+  
+  tie(wp1_node, "distance-nm", SGRawValueMethods<GPS, double>
+    (*this, &GPS::getWP1Distance, NULL));
+  tie(wp1_node, "bearing-true-deg", SGRawValueMethods<GPS, double>
+    (*this, &GPS::getWP1Bearing, NULL));
+  tie(wp1_node, "bearing-mag-deg", SGRawValueMethods<GPS, double>
+    (*this, &GPS::getWP1MagBearing, NULL));
+  tie(wp1_node, "TTW-sec", SGRawValueMethods<GPS, double>
+    (*this, &GPS::getWP1TTW, NULL));
+  tie(wp1_node, "TTW", SGRawValueMethods<GPS, const char*>
+    (*this, &GPS::getWP1TTWString, NULL));
+  
+  tie(wp1_node, "course-deviation-deg", SGRawValueMethods<GPS, double>
+    (*this, &GPS::getWP1CourseDeviation, NULL));
+  tie(wp1_node, "course-error-nm", SGRawValueMethods<GPS, double>
+    (*this, &GPS::getWP1CourseErrorNm, NULL));
+  tie(wp1_node, "to-flag", SGRawValueMethods<GPS, bool>
+    (*this, &GPS::getWP1ToFlag, NULL));
+  tie(wp1_node, "from-flag", SGRawValueMethods<GPS, bool>
+    (*this, &GPS::getWP1FromFlag, NULL));
+
+// leg properties (only valid in DTO/LEG modes, not OBS)
+  tie(wp_node, "leg-distance-nm", SGRawValueMethods<GPS, double>(*this, &GPS::getLegDistance, NULL));
+  tie(wp_node, "leg-true-course-deg", SGRawValueMethods<GPS, double>(*this, &GPS::getLegCourse, NULL));
+  tie(wp_node, "leg-mag-course-deg", SGRawValueMethods<GPS, double>(*this, &GPS::getLegMagCourse, NULL));
+  tie(wp_node, "alt-dist-ratio", SGRawValueMethods<GPS, double>(*this, &GPS::getAltDistanceRatio, NULL));
+
+// navradio slaving properties  
+  tie(_gpsNode, "cdi-deflection", SGRawValueMethods<GPS,double>
+    (*this, &GPS::getCDIDeflection));
+}
+
+void
+GPS::unbind()
+{
+  for (unsigned int t=0; t<_tiedNodes.size(); ++t) {
+    _tiedNodes[t]->untie();
+  }
+  _tiedNodes.clear();
 }
 
 void
@@ -1766,6 +1761,28 @@ void GPS::removeWaypointAtIndex(int aIndex)
   }
   
   _routeMgr->pop_waypoint(aIndex);
+}
+
+void GPS::tieSGGeod(SGPropertyNode* aNode, SGGeod& aRef, 
+  const char* lonStr, const char* latStr, const char* altStr)
+{
+  tie(aNode, lonStr, SGRawValueMethods<SGGeod, double>(aRef, &SGGeod::getLongitudeDeg, &SGGeod::setLongitudeDeg));
+  tie(aNode, latStr, SGRawValueMethods<SGGeod, double>(aRef, &SGGeod::getLatitudeDeg, &SGGeod::setLatitudeDeg));
+  
+  if (altStr) {
+    tie(aNode, altStr, SGRawValueMethods<SGGeod, double>(aRef, &SGGeod::getElevationFt, &SGGeod::setElevationFt));
+  }
+}
+
+void GPS::tieSGGeodReadOnly(SGPropertyNode* aNode, SGGeod& aRef, 
+  const char* lonStr, const char* latStr, const char* altStr)
+{
+  tie(aNode, lonStr, SGRawValueMethods<SGGeod, double>(aRef, &SGGeod::getLongitudeDeg, NULL));
+  tie(aNode, latStr, SGRawValueMethods<SGGeod, double>(aRef, &SGGeod::getLatitudeDeg, NULL));
+  
+  if (altStr) {
+    tie(aNode, altStr, SGRawValueMethods<SGGeod, double>(aRef, &SGGeod::getElevationFt, NULL));
+  }
 }
 
 // end of gps.cxx
