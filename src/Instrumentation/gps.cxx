@@ -1381,7 +1381,7 @@ void GPS::loadRouteWaypoint()
   int index = _scratchNode->getIntValue("index", -9999);
   clearScratch();
   
-  if (index == -9999) { // no index supplied, use current wp
+  if ((index < 0) || (index >= _routeMgr->size())) { // no index supplied, use current wp
     index = _routeMgr->currentWaypoint();
   }
   
