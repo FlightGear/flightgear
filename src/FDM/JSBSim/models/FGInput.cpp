@@ -105,6 +105,8 @@ bool FGInput::Run(void)
                                     // return false if no error
   // This model DOES execute if "Exec->Holding"
 
+  RunPreFunctions();
+
   data = socket->Receive(); // get socket transmission if present
 
   if (data.size() > 0) {
@@ -212,6 +214,8 @@ bool FGInput::Run(void)
       start = string_end;
     }
   }
+
+  RunPostFunctions();
 
   return false;
 }

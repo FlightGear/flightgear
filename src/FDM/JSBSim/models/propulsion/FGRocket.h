@@ -162,6 +162,32 @@ public:
   std::string GetEngineLabels(const std::string& delimiter);
   std::string GetEngineValues(const std::string& delimiter);
 
+  /** Sets the thrust variation for a solid rocket engine. 
+      Solid propellant rocket motor thrust characteristics are typically
+      defined at 70 degrees F temperature. At any other temperature,
+      performance will be different. Warmer propellant grain will
+      burn quicker and at higher thrust.  Total motor impulse is
+      not changed for change in thrust.
+      @param var the variation in percent. That is, a 2 percent
+      variation would be specified as 0.02. A positive 2% variation
+      in thrust would increase the thrust by 2%, and shorten the burn time. */
+  void SetThrustVariation(double var) {ThrustVariation = var;}
+
+  /** Sets the variation in total motor energy.
+      The total energy present in a solid rocket motor can be modified
+      (such as might happen with manufacturing variations) by setting
+      the total Isp variation. 
+      @param var the variation in percent. That is, a 2 percent
+      variation would be specified as 0.02. This variation will 
+      affect the total thrust, but not the burn time.*/
+  void SetTotalIspVariation(double var) {TotalIspVariation = var;}
+
+  /** Returns the thrust variation, if any. */
+  double GetThrustVariation(void) const {return ThrustVariation;}
+
+  /** Returns the Total Isp variation, if any. */
+  double GetTotalIspVariation(void) const {return TotalIspVariation;}
+
 private:
   /** Reduces the fuel in the active tanks by the amount required.
       This function should be called from within the
@@ -192,6 +218,8 @@ private:
   double It;
   double MxR; // Mixture Ratio
   double BurnTime;
+  double ThrustVariation;
+  double TotalIspVariation;
   double VacThrust;
   double previousFuelNeedPerTank;
   double previousOxiNeedPerTank;

@@ -233,6 +233,8 @@ bool FGPropagate::Run(void)
   if (FGModel::Run()) return true;  // Fast return if we have nothing to do ...
   if (FDMExec->Holding()) return false;
 
+  RunPreFunctions();
+
   RecomputeLocalTerrainRadius();
 
   // Calculate current aircraft radius from center of planet
@@ -343,6 +345,8 @@ bool FGPropagate::Run(void)
 
   last2_vLocationDot = last_vLocationDot;
   last_vLocationDot = vLocationDot;
+
+  RunPreFunctions();
 
   Debug(2);
   return false;

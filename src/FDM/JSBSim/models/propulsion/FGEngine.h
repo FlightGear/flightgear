@@ -113,8 +113,7 @@ CLASS DOCUMENTATION
 @endcode
 <pre>
     NOTES:
-	Engines feed from all tanks equally.
-
+	
 	Not all thruster types can be matched with a given engine type.  See the class
 	documentation for engine and thruster classes.
 </pre>     
@@ -226,6 +225,7 @@ protected:
 
   double FuelFlow_gph;
   double FuelFlow_pph;
+  double FuelDensity;
 
   FGFDMExec*      FDMExec;
   FGState*        State;
