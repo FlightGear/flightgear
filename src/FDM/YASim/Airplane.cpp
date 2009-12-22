@@ -51,6 +51,8 @@ Airplane::Airplane()
     _liftRatio = 1;
     _cruiseAoA = 0;
     _tailIncidence = 0;
+
+    _failureMsg = 0;
 }
 
 Airplane::~Airplane()
@@ -507,6 +509,10 @@ float Airplane::compileFuselage(Fuselage* f)
     float fwd[3];
     Math::sub3(f->front, f->back, fwd);
     float len = Math::mag3(fwd);
+    if (len == 0) {
+        _failureMsg = "Zero length fuselage";
+	return 0;
+    }
     float wid = f->width;
     int segs = (int)Math::ceil(len/wid);
     float segWgt = len*wid/segs;
@@ -687,6 +693,10 @@ void Airplane::compile()
         gespan = _wing->getGroundEffect(gepos);
         _model.setGroundEffect(gepos, gespan, 0.15f);
     }
+
+    // solve function below resets failure message
+    // so check if we have any problems and abort here
+    if (_failureMsg) return;
 
     solveGear();
     if(_wing && _tail) solve();
