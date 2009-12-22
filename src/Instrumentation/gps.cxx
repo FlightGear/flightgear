@@ -1003,8 +1003,12 @@ void GPS::driveAutopilot()
     return;
   }
  
-  // FIXME: we want to set desired track, not heading, here
-  _apTrueHeading->setDoubleValue(getWP1Bearing());
+  // compatability feature - allow the route-manager / GPS to drive the
+  // generic autopilot heading hold *in leg mode only* 
+  if (_mode == "leg") {
+    // FIXME: we want to set desired track, not heading, here
+    _apTrueHeading->setDoubleValue(getWP1Bearing());
+  }
 }
 
 void GPS::wp1Changed()
