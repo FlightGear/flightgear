@@ -1146,24 +1146,8 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 		double axx = gxx - wxx;	// Plane in-air velocity x component
 		double ayy = gyy - wyy; // Plane in-air velocity y component
 		// Now we want the angle between gxx and axx (which is the crab)
-		double maga = sqrt(axx*axx + ayy*ayy);
-		double magg = sqrt(gxx*gxx + gyy*gyy);
-		crab = acos((axx*gxx + ayy*gyy) / (maga * magg));
-		// At this point this works except we're getting the modulus of the angle
+		crab = atan2(ayy - gyy, axx - gxx) * DCL_RADIANS_TO_DEGREES;
 		//cout << "crab = " << crab << '\n';
-		
-		// Make sure both headings are in the 0->360 circle in order to get sane differences
-		dclBoundHeading(wind_from);
-		dclBoundHeading(track);
-		if(track > wind_from) {
-			if((track - wind_from) <= 180) {
-				crab *= -1.0;
-			}
-		} else {
-			if((wind_from - track) >= 180) {
-				crab *= -1.0;
-			}
-		}
 	} else {	// on the ground - crab dosen't apply
 		crab = 0.0;
 	}
@@ -1171,6 +1155,7 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
 	//cout << "X " << orthopos.x() << "  Y " << orthopos.y() << "  SLOPE " << slope << "  elev " << _pos.elev() * SG_METER_TO_FEET << '\n';
 	
 	_hdg = track + crab;
+	dclBoundHeading(_hdg);
 	dist = vel * 0.514444 * dt;
 	_pos = dclUpdatePosition(_pos, track, slope, dist);
 }
