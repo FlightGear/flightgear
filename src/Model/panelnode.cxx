@@ -102,6 +102,11 @@ FGPanelNode::FGPanelNode(SGPropertyNode* props)
         m(1,i) *= 1.0/_ymax;
     }
 
+    _lastViewport[0] = 0;
+    _lastViewport[1] = 0;
+    _lastViewport[2] = 0;
+    _lastViewport[3] = 0;
+
     dirtyBound();
 
     // All done.  Add us to the list
@@ -152,6 +157,11 @@ FGPanelNode::computeBound() const
 
 bool FGPanelNode::doMouseAction(int button, int updown, int x, int y)
 {
+    if (_lastViewport[2] == 0 || _lastViewport[3] == 0) {
+        // we haven't been drawn yet, presumably
+        return false;
+    }
+
     // Covert the screen coordinates to viewport coordinates in the
     // range [0:1], then transform to OpenGL "post projection" coords
     // in [-1:1].  Remember the difference in Y direction!
