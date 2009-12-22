@@ -157,7 +157,6 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     _name(node->getStringValue("name", "nav")),
     _num(node->getIntValue("number", 0)),
     _time_before_search_sec(-1.0),
-    _falseCoursesEnabled(true),
     _sgr(NULL)
 {
     SGPath path( globals->get_fg_root() );
@@ -218,9 +217,14 @@ FGNavRadio::init ()
     tofrom_serviceable_node = createServiceableProp(node, "to-from");
     dme_serviceable_node = createServiceableProp(node, "dme");
     
-    globals->get_props()->tie("sim/realism/false-radio-courses-enabled", 
-      SGRawValuePointer<bool>(&_falseCoursesEnabled));
-    
+    falseCoursesEnabledNode = 
+      fgGetNode("/sim/realism/false-radio-courses-enabled");
+    if (!falseCoursesEnabledNode) {
+      falseCoursesEnabledNode = 
+        fgGetNode("/sim/realism/false-radio-courses-enabled", true);
+      falseCoursesEnabledNode->setBoolValue(true);
+    }
+
     // frequencies
     SGPropertyNode *subnode = node->getChild("frequencies", 0, true);
     freq_node = subnode->getChild("selected-mhz", 0, true);
@@ -534,7 +538,7 @@ void FGNavRadio::updateReceiver(double dt)
   SG_NORMALIZE_RANGE(r, -180.0, 180.0);
   
   if ( is_loc ) {
-    if (_falseCoursesEnabled) {
+    if (falseCoursesEnabledNode->getBoolValue()) {
       // The factor of 30.0 gives a period of 120 which gives us 3 cycles and six 
       // zeros i.e. six courses: one front course, one back course, and four 
       // false courses. Three of the six are reverse sensing.
@@ -606,7 +610,7 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
   double angle = atan2(dot_v, dot_h) * SGD_RADIANS_TO_DEGREES;
   double deflectionAngle = target_gs - angle;
   
-  if (_falseCoursesEnabled) {
+  if (falseCoursesEnabledNode->getBoolValue()) {
     // Construct false glideslopes.  The scale factor of 1.5 
     // in the sawtooth gives a period of 6 degrees.
     // There will be zeros at 3, 6r, 9, 12r et cetera
