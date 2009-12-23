@@ -20,7 +20,7 @@ It is recommended to load the model superimposed over a greyed out and immutable
   (1) load or import aircraft model (menu -> "File" -> "Import" -> "AC3D (.ac) ...")
   (2) create new *empty* scene (menu -> arrow button left of "SCE:scene1" combobox -> "ADD NEW" -> "empty")
   (3) rename scene to yasim (not required)
-  (4) link to scene1 (F10 -> "Output" tab -> arrow button left of text entry "No Set Scene" -> "scene1")
+  (4) link to scene1 (F10 -> "Output" tab in "Buttons Window" -> arrow button left of text entry "No Set Scene" -> "scene1")
   (5) now load the YASim config file (menu -> "File" -> "Import" -> "YASim (.xml) ...")
 
 This is good enough for simple checks. But if you are working on the YASim configuration, then you need a
@@ -68,9 +68,10 @@ Elements are displayed as follows:
 
   cockpit                             -> monkey head
   fuselage                            -> blue "tube" (with only 12 sides for less clutter); center at "a"
-  vstab                               -> red with yellow controls surfaces (flap0, flap1, slat, spoiler)
+  vstab                               -> red with yellow control surfaces (flap0, flap1, slat, spoiler)
   wing/mstab/hstab                    -> green with yellow control surfaces (which are always 20 cm deep);
-                                         symmetric surfaces are only displayed on the left side
+                                         symmetric surfaces are only displayed on the left side, unless
+                                         the "Mirror" button is active
   thrusters (jet/propeller/thruster)  -> dashed line from center to actionpt;
                                          arrow from actionpt along thrust vector (always 1 m long);
                                          propeller circle
@@ -83,12 +84,24 @@ Elements are displayed as follows:
   hitch                               -> circle (10 cm diameter)
   hook                                -> dashed line for up angle, T-line for down angle
   launchbar                           -> dashed line for up angles, T-line for down angles
+                                         (launchbar and holdback each)
 
 
 The Mirror button complements symmetrical surfaces (wing/hstab/mstab) and control surfaces
 (flap0/flap1/slat/spoiler). This is useful for asymmetrical aircraft, but has the disadvantage
 that it moves the surfaces' object centers from their usual place, yasim's [x, y, z] value,
 to [0, 0, 0]. Turning mirroring off restores the object center.
+
+
+
+Environment variable BLENDER_YASIM_IMPORT can be set to a space-separated list of options:
+
+  $ BLENDER_YASIM_IMPORT="mirror verbose"  blender
+
+whereby:
+
+  verbose  ... enables verbose logs
+  mirror   ... enables mirroring of symmetric surfaces
 """
 
 
@@ -136,15 +149,17 @@ class Global:
 	verbose = "verbose" in CONFIG
 	path = ""
 	matrix = None
+	data = None
 	cursor = ORIGIN
 	last_cursor = Vector(Blender.Window.GetCursorPos())
-	mirror = Blender.Draw.Create(0)
+	mirror_button = Blender.Draw.Create("mirror" in CONFIG)
 
 
 
 class Abort(Exception):
-	def __init__(self, msg):
+	def __init__(self, msg, term = None):
 		self.msg = msg
+		self.term = term
 
 
 
@@ -154,26 +169,13 @@ def log(msg):
 
 
 
-def error(msg):
-	print(("\033[31;1mError: %s\033[m" % msg))
-	Blender.Draw.PupMenu("Error%t|" + msg)
-
-
-
-def getfloat(attrs, key, default):
-	if attrs.has_key(key):
-		return float(attrs[key])
-	return default
-
-
-
 def draw_dashed_line(mesh, start, end):
 	w = 0.04
 	step = w * (end - start).normalize()
 	n = len(mesh.verts)
 	for i in range(int(1 + 0.5 * (end - start).length / w)):
 		a = start + 2 * i * step
-		b = start + (2 * i + 1) * step
+		b = a + step
 		if (b - end).length < step.length:
 			b = end
 		mesh.verts.extend([a, b])
@@ -212,8 +214,8 @@ class Item:
 		for f in mesh.faces:
 			f.mode |= Blender.Mesh.FaceModes.TWOSIDE | Blender.Mesh.FaceModes.OBCOL
 
-	def set_color(self, obj, name, color):
-		mat = Blender.Material.New(name)
+	def set_color(self, obj, color):
+		mat = Blender.Material.New()
 		mat.setRGBCol(color[0], color[1], color[2])
 		mat.setAlpha(color[3])
 		mat.mode |= Blender.Material.Modes.ZTRANSP | Blender.Material.Modes.TRANSPSHADOW
@@ -243,6 +245,7 @@ class Tank(Item):
 		mesh.transform(ScaleMatrix(0.05, 4))
 		obj = self.scene.objects.new(mesh, name)
 		obj.setMatrix(TranslationMatrix(center) * Global.matrix)
+		self.set_color(obj, [1, 0, 1, 0.5])
 
 
 
@@ -252,6 +255,7 @@ class Ballast(Item):
 		mesh.transform(ScaleMatrix(0.05, 4))
 		obj = self.scene.objects.new(mesh, name)
 		obj.setMatrix(TranslationMatrix(center) * Global.matrix)
+		self.set_color(obj, [1, 1, 0, 0.5])
 
 
 
@@ -261,6 +265,7 @@ class Weight(Item):
 		mesh.transform(ScaleMatrix(0.05, 4))
 		obj = self.scene.objects.new(mesh, name)
 		obj.setMatrix(TranslationMatrix(center) * Global.matrix)
+		self.set_color(obj, [0, 1, 1, 0.5])
 
 
 
@@ -395,7 +400,7 @@ class Fuselage(Item):
 		mesh.verts.extend([ORIGIN, length * X])
 		obj = self.scene.objects.new(mesh, name)
 		obj.setMatrix(axis.toTrackQuat('x', 'y').toMatrix().resize4x4() * TranslationMatrix(a) * Global.matrix)
-		self.set_color(obj, name + "mat", [0, 0, 0.5, 0.4])
+		self.set_color(obj, [0, 0, 0.5, 0.4])
 
 
 
@@ -417,7 +422,7 @@ class Rotor(Item):
 		draw_arrow(mesh, ORIGIN, up * invert)
 		draw_arrow(mesh, ORIGIN, fwd * invert)
 		b += 0.1 * X + direction * chord * Y
-		draw_arrow(mesh, b, b + 0.5 * radius * direction * Y)
+		draw_arrow(mesh, b, b + min(0.5 * radius, 1) * direction * Y)
 		obj = self.scene.objects.new(mesh, name)
 		obj.setMatrix(matrix * TranslationMatrix(center) * Global.matrix)
 
@@ -441,10 +446,10 @@ class Wing(Item):
 
 		obj = self.scene.objects.new(mesh, name)
 		mesh.transform(Euler(dihedral, -incidence, 0).toMatrix().resize4x4())
-		self.set_color(obj, name + "mat", [[0.5, 0.0, 0, 0.5], [0.0, 0.5, 0, 0.5]][self.is_symmetric])
+		self.set_color(obj, [[0.5, 0.0, 0, 0.5], [0.0, 0.5, 0, 0.5]][self.is_symmetric])
 		(self.obj, self.mesh) = (obj, mesh)
 
-		if self.is_symmetric and Global.mirror.val:
+		if self.is_symmetric and Global.mirror_button.val:
 			mod = obj.modifiers.append(Blender.Modifier.Type.MIRROR)
 			mod[Blender.Modifier.Settings.AXIS_X] = False
 			mod[Blender.Modifier.Settings.AXIS_Y] = True
@@ -470,9 +475,9 @@ class Wing(Item):
 
 		obj = self.scene.objects.new(mesh, name)
 		obj.setMatrix(m)
-		self.set_color(obj, name + "mat", [0.8, 0.8, 0, 0.9])
+		self.set_color(obj, [0.8, 0.8, 0, 0.9])
 
-		if self.is_symmetric and Global.mirror.val:
+		if self.is_symmetric and Global.mirror_button.val:
 			mod = obj.modifiers.append(Blender.Modifier.Type.MIRROR)
 			mod[Blender.Modifier.Settings.AXIS_X] = False
 			mod[Blender.Modifier.Settings.AXIS_Y] = True
@@ -480,47 +485,44 @@ class Wing(Item):
 
 
 
-class import_yasim(handler.ContentHandler):
+class import_yasim(handler.ErrorHandler, handler.ContentHandler):
 	ignored = ["cruise", "approach", "control-input", "control-output", "control-speed", \
 			"control-setting", "stall", "airplane", "piston-engine", "turbine-engine", \
 			"rotorgear", "tow", "winch", "solve-weight"]
 
+
 	# err_handler
+	def warning(self, exception):
+		print(self.error_string("WARNING", exception))
+
 	def error(self, exception):
-		raise Abort(str(exception))
+		print(self.error_string("ERROR", exception))
 
 	def fatalError(self, exception):
-		raise Abort(str(exception))
+		raise Abort(str(exception), self.error_string("FATAL", exception))
 
-	def warning(self, exception):
-		print(("WARNING: " + str(exception)))
+	def error_string(self, tag, e):
+		(column, line, msg) = (e.getColumnNumber(), e.getLineNumber(), e.getMessage())
+		return "\n%s%s^--------%s: %s at line %d, column %d" \
+				% (Global.data[line - 1], (column) * ' ', tag, msg, line, column)
+
 
 	# doc_handler
-	def setDocumentLocator(self, whatever):
-		pass
+	def setDocumentLocator(self, locator):
+		self.locator = locator
 
 	def startDocument(self):
 		self.tags = []
 		self.counter = {}
 		self.items = [None]
-		pass
 
 	def endDocument(self):
 		for o in Item.scene.objects:
 			o.sel = True
 
-	def characters(self, data):
-		pass
-
-	def ignorableWhitespace(self, data, start, length):
-		pass
-
-	def processingInstruction(self, target, data):
-		pass
-
 	def startElement(self, tag, attrs):
 		if len(self.tags) == 0 and tag != "airplane":
-			raise Abort("this isn't a YASim config file")
+			raise Abort("this isn't a YASim config file (bad root tag at line %d)" % self.locator.getLineNumber())
 
 		self.tags.append(tag)
 		path = string.join(self.tags, '/')
@@ -541,15 +543,15 @@ class import_yasim(handler.ContentHandler):
 			a = Vector(float(attrs["ax"]), float(attrs["ay"]), float(attrs["az"]))
 			b = Vector(float(attrs["bx"]), float(attrs["by"]), float(attrs["bz"]))
 			width = float(attrs["width"])
-			taper = getfloat(attrs, "taper", 1)
-			midpoint = getfloat(attrs, "midpoint", 0.5)
+			taper = float(attrs.get("taper", 1))
+			midpoint = float(attrs.get("midpoint", 0.5))
 			log("\033[32mfuselage ax=%f ay=%f az=%f bx=%f by=%f bz=%f width=%f taper=%f midpoint=%f\033[m" % \
 					(a[0], a[1], a[2], b[0], b[1], b[2], width, taper, midpoint))
 			item = Fuselage("YASim_%s#%d" % (tag, self.counter[tag]), a, b, width, taper, midpoint)
 
 		elif tag == "gear":
 			c = Vector(float(attrs["x"]), float(attrs["y"]), float(attrs["z"]))
-			compression = getfloat(attrs, "compression", 1)
+			compression = float(attrs.get("compression", 1))
 			up = Z * compression
 			if attrs.has_key("upx"):
 				up = Vector(float(attrs["upx"]), float(attrs["upy"]), float(attrs["upz"])).normalize() * compression
@@ -559,7 +561,7 @@ class import_yasim(handler.ContentHandler):
 
 		elif tag == "jet":
 			c = Vector(float(attrs["x"]), float(attrs["y"]), float(attrs["z"]))
-			rotate = getfloat(attrs, "rotate", 0.0)
+			rotate = float(attrs.get("rotate", 0))
 			log("\033[36;1mjet x=%f y=%f z=%f rotate=%f\033[m" % (c[0], c[1], c[2], rotate))
 			item = Jet("YASim_jet#%d" % self.counter[tag], c, rotate)
 
@@ -577,7 +579,8 @@ class import_yasim(handler.ContentHandler):
 
 		elif tag == "actionpt":
 			if not isinstance(parent, Thrust):
-				raise Abort("%s is not part of a thruster/propeller/jet" % path)
+				raise Abort("%s is not part of a thruster/propeller/jet at line %d" \
+						% (path, self.locator.getLineNumber()))
 
 			c = Vector(float(attrs["x"]), float(attrs["y"]), float(attrs["z"]))
 			log("\t\033[36mactionpt x=%f y=%f z=%f\033[m" % (c[0], c[1], c[2]))
@@ -585,7 +588,8 @@ class import_yasim(handler.ContentHandler):
 
 		elif tag == "dir":
 			if not isinstance(parent, Thrust):
-				raise Abort("%s is not part of a thruster/propeller/jet" % path)
+				raise Abort("%s is not part of a thruster/propeller/jet at line %d" \
+						% (path, self.locator.getLineNumber()))
 
 			c = Vector(float(attrs["x"]), float(attrs["y"]), float(attrs["z"]))
 			log("\t\033[36mdir x=%f y=%f z=%f\033[m" % (c[0], c[1], c[2]))
@@ -608,9 +612,9 @@ class import_yasim(handler.ContentHandler):
 
 		elif tag == "hook":
 			c = Vector(float(attrs["x"]), float(attrs["y"]), float(attrs["z"]))
-			length = getfloat(attrs, "length", 1.0)
-			up_angle = getfloat(attrs, "up-angle", 0.0)
-			down_angle = getfloat(attrs, "down-angle", 70.0)
+			length = float(attrs.get("length", 1))
+			up_angle = float(attrs.get("up-angle", 0))
+			down_angle = float(attrs.get("down-angle", 70))
 			log("\033[35m%s x=%f y=%f z=%f length=%f up-angle=%f down-angle=%f\033[m" \
 					% (tag, c[0], c[1], c[2], length, up_angle, down_angle))
 			item = Hook("YASim_hook#%d" % self.counter[tag], c, length, up_angle, down_angle)
@@ -622,11 +626,11 @@ class import_yasim(handler.ContentHandler):
 
 		elif tag == "launchbar":
 			c = Vector(float(attrs["x"]), float(attrs["y"]), float(attrs["z"]))
-			length = getfloat(attrs, "length", 1.0)
-			up_angle = getfloat(attrs, "up-angle", -45.0)
-			down_angle = getfloat(attrs, "down-angle", 45.0)
-			holdback = Vector(getfloat(attrs, "holdback-x", c[0]), getfloat(attrs, "holdback-y", c[1]), getfloat(attrs, "holdback-z", c[2]))
-			holdback_length = getfloat(attrs, "holdback-length", 2.0)
+			length = float(attrs.get("length", 1))
+			up_angle = float(attrs.get("up-angle", -45))
+			down_angle = float(attrs.get("down-angle", 45))
+			holdback = Vector(float(attrs.get("holdback-x", c[0])), float(attrs.get("holdback-y", c[1])), float(attrs.get("holdback-z", c[2])))
+			holdback_length = float(attrs.get("holdback-length", 2))
 			log("\033[35m%s x=%f y=%f z=%f length=%f down-angle=%f up-angle=%f holdback-x=%f holdback-y=%f holdback-z+%f holdback-length=%f\033[m" \
 					% (tag, c[0], c[1], c[2], length, down_angle, up_angle, \
 					holdback[0], holdback[1], holdback[2], holdback_length))
@@ -636,18 +640,19 @@ class import_yasim(handler.ContentHandler):
 			root = Vector(float(attrs["x"]), float(attrs["y"]), float(attrs["z"]))
 			length = float(attrs["length"])
 			chord = float(attrs["chord"])
-			incidence = getfloat(attrs, "incidence", 0.0)
-			twist = getfloat(attrs, "twist", 0.0)
-			taper = getfloat(attrs, "taper", 1.0)
-			sweep = getfloat(attrs, "sweep", 0.0)
-			dihedral = getfloat(attrs, "dihedral", [0.0, 90.0][tag == "vstab"])
+			incidence = float(attrs.get("incidence", 0))
+			twist = float(attrs.get("twist", 0))
+			taper = float(attrs.get("taper", 1))
+			sweep = float(attrs.get("sweep", 0))
+			dihedral = float(attrs.get("dihedral", [0, 90][tag == "vstab"]))
 			log("\033[33;1m%s x=%f y=%f z=%f length=%f chord=%f incidence=%f twist=%f taper=%f sweep=%f dihedral=%f\033[m" \
 					% (tag, root[0], root[1], root[2], length, chord, incidence, twist, taper, sweep, dihedral))
 			item = Wing("YASim_%s#%d" % (tag, self.counter[tag]), root, length, chord, incidence, twist, taper, sweep, dihedral)
 
 		elif tag == "flap0" or tag == "flap1" or tag == "slat" or tag == "spoiler":
 			if not isinstance(parent, Wing):
-				raise Abort("%s is not part of a wing or stab" % path)
+				raise Abort("%s is not part of a wing or stab at line %d" \
+						% (path, self.locator.getLineNumber()))
 
 			start = float(attrs["start"])
 			end = float(attrs["end"])
@@ -655,17 +660,17 @@ class import_yasim(handler.ContentHandler):
 			parent.add_flap("YASim_%s#%d" % (tag, self.counter[tag]), start, end)
 
 		elif tag == "rotor":
-			c = Vector(getfloat(attrs, "x", 0.0), getfloat(attrs, "y", 0.0), getfloat(attrs, "z", 0.0))
-			norm = Vector(getfloat(attrs, "nx", 0.0), getfloat(attrs, "ny", 0.0), getfloat(attrs, "nz", 1.0))
-			fwd = Vector(getfloat(attrs, "fx", 1.0), getfloat(attrs, "fy", 0.0), getfloat(attrs, "fz", 0.0))
-			diameter = getfloat(attrs, "diameter", 10.2)
-			numblades = int(getfloat(attrs, "numblades", 4))
-			chord = getfloat(attrs, "chord", 0.3)
-			twist = getfloat(attrs, "twist", 0.0)
-			taper = getfloat(attrs, "taper", 1.0)
-			rel_len_blade_start = getfloat(attrs, "rel-len-blade-start", 0.0)
-			phi0 = getfloat(attrs, "phi0", 0)
-			ccw = not not getfloat(attrs, "ccw", 0)
+			c = Vector(float(attrs.get("x", 0)), float(attrs.get("y", 0)), float(attrs.get("z", 0)))
+			norm = Vector(float(attrs.get("nx", 0)), float(attrs.get("ny", 0)), float(attrs.get("nz", 1)))
+			fwd = Vector(float(attrs.get("fx", 1)), float(attrs.get("fy", 0)), float(attrs.get("fz", 0)))
+			diameter = float(attrs.get("diameter", 10.2))
+			numblades = int(attrs.get("numblades", 4))
+			chord = float(attrs.get("chord", 0.3))
+			twist = float(attrs.get("twist", 0))
+			taper = float(attrs.get("taper", 1))
+			rel_len_blade_start = float(attrs.get("rel-len-blade-start", 0))
+			phi0 = float(attrs.get("phi0", 0))
+			ccw = not not int(attrs.get("ccw", 0))
 
 			log(("\033[36;1mrotor x=%f y=%f z=%f nx=%f ny=%f nz=%f fx=%f fy=%f fz=%f numblades=%d diameter=%f " \
 					+ "chord=%f twist=%f taper=%f rel_len_blade_start=%f phi0=%f ccw=%d\033[m") \
@@ -685,11 +690,10 @@ class import_yasim(handler.ContentHandler):
 
 
 
-def extract_matrix(path, tag):
+def extract_matrix(filedata, tag):
 	v = { 'x': 0.0, 'y': 0.0, 'z': 0.0, 'h': 0.0, 'p': 0.0, 'r': 0.0 }
 	has_offsets = False
-	f = open(path)
-	for line in f.readlines():
+	for line in filedata:
 		line = string.strip(line)
 		if not line.startswith("<!--") or not line.endswith("-->"):
 			continue
@@ -701,13 +705,12 @@ def extract_matrix(path, tag):
 			(key, value) = string.split(assignment, '=', 2)
 			v[string.strip(key)] = float(string.strip(value))
 			has_offsets = True
-	f.close()
-	matrix = None
-	if has_offsets:
-		print(("using offsets: x=%f y=%f z=%f h=%f p=%f r=%f" % (v['x'], v['y'], v['z'], v['h'], v['p'], v['r'])))
-		matrix = Euler(v['r'], v['p'], v['h']).toMatrix().resize4x4()
-		matrix *= TranslationMatrix(Vector(v['x'], v['y'], v['z']))
-	return matrix
+
+	if not has_offsets:
+		return None
+
+	print(("using offsets: x=%f y=%f z=%f h=%f p=%f r=%f" % (v['x'], v['y'], v['z'], v['h'], v['p'], v['r'])))
+	return Euler(v['r'], v['p'], v['h']).toMatrix().resize4x4() * TranslationMatrix(Vector(v['x'], v['y'], v['z']))
 
 
 
@@ -724,21 +727,22 @@ def load_yasim_config(path):
 			if o.name.startswith("YASim_"):
 				Item.scene.objects.unlink(o)
 
+		f = open(path)
+		Global.data = f.readlines()
+		f.close
+
+		Global.path = path
 		Global.matrix = YASIM_MATRIX
-		matrix = extract_matrix(path, "offsets")
+		matrix = extract_matrix(Global.data, "offsets")
 		if matrix:
 			Global.matrix *= matrix.invert()
 
-		yasim = make_parser()
-		yasim.setContentHandler(import_yasim())
-		yasim.setErrorHandler(import_yasim())
-		yasim.parse(path)
-
+		Global.yasim.parse(path)
 		Blender.Registry.SetKey("FGYASimImportExport", { "path": path }, False)
-		Global.path = path
+		Global.data = None
 
 	except Abort, e:
-		print "Error:", e.msg, "  -> aborting ...\n"
+		print("%s\nAborting ..." % (e.term or e.msg))
 		Blender.Draw.PupMenu("Error%t|" + e.msg)
 
 	Blender.Window.RedrawAll()
@@ -758,16 +762,16 @@ def gui_draw():
 	Draw.Text("FlightGear YASim Import:   '%s'" % Global.path)
 
 	Draw.PushButton("Reload", RELOAD_BUTTON, 5, 5, 80, 32, "reload YASim config file")
-	Global.mirror = Draw.Toggle("Mirror", MIRROR_BUTTON, 100, 5, 50, 16, Global.mirror.val, \
+	Global.mirror_button = Draw.Toggle("Mirror", MIRROR_BUTTON, 100, 5, 50, 16, Global.mirror_button.val, \
 			"show symmetric surfaces on both sides (reloads config)")
-	Draw.PushButton("Update Cursor", CURSOR_BUTTON, width - 650, 5, 100, 32, "update cursor display")
+	Draw.PushButton("Update Cursor", CURSOR_BUTTON, width - 650, 5, 100, 32, "update cursor display (in YASim coordinate system)")
 
 	BGL.glRasterPos2f(width - 530 + Blender.Draw.GetStringWidth("Vector from last") - Blender.Draw.GetStringWidth("Current"), 24)
 	Draw.Text("Current cursor pos:    x = %+.3f    y = %+.3f    z = %+.3f" % tuple(Global.cursor))
 
 	c = Global.cursor - Global.last_cursor
 	BGL.glRasterPos2f(width - 530, 7)
-	Draw.Text("Vector from last cursor pos:    x = %+.3f    y = %+.3f    z = %+.3f    length = %.3f" % (c[0], c[1], c[2], c.length))
+	Draw.Text("Vector from last cursor pos:    x = %+.3f    y = %+.3f    z = %+.3f    length = %.3f m" % (c[0], c[1], c[2], c.length))
 
 
 
@@ -805,6 +809,11 @@ def main():
 		path = registry["path"]
 	else:
 		path = ""
+
+	xml_handler = import_yasim()
+	Global.yasim = make_parser()
+	Global.yasim.setContentHandler(xml_handler)
+	Global.yasim.setErrorHandler(xml_handler)
 
 	if Blender.Window.GetScreenInfo(Blender.Window.Types.SCRIPT):
 		Blender.Draw.Register(gui_draw, gui_event, gui_button)
