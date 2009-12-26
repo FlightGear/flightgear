@@ -1630,9 +1630,16 @@ fgParseArgs (int argc, char **argv)
 
             } else if (result == FG_OPTIONS_SHOW_SOUND_DEVICES) {
               SGSoundMgr smgr;
+
+              smgr.init();
+              string vendor = smgr.get_vendor();
+              string renderer = smgr.get_renderer();
+              cout << renderer << " provided by " << vendor << endl;
+              cout << endl << "No. Device" << endl;
+
               vector <const char*>devices = smgr.get_available_devices();
               for (int i=0; i<devices.size(); i++) {
-                printf("%i. \"%s\"\n", i, devices[i]);
+                cout << i << ".  \"" << devices[i] << "\"" << endl;
               }
               devices.clear();
               exit(0);
