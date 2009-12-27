@@ -402,9 +402,16 @@ protected:
     typedef std::vector<FGXMLAutoComponent_ptr> comp_list;
 
 private:
-
+    /**
+     * Update helper values, especially the /autopilot/internal properties
+     */
+    void update_helper( double dt );
+    
     bool serviceable;
     comp_list components;
+    
+    SGPropertyNode_ptr latNode, lonNode;
+    SGGeod lastPosition;
 };
 
 

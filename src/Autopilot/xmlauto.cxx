@@ -928,6 +928,8 @@ FGXMLAutopilot::~FGXMLAutopilot() {
  */
 void FGXMLAutopilot::init() 
 {
+  latNode = fgGetNode("/position/latitude-deg");
+  lonNode = fgGetNode("/position/longitude-deg");
 }
 
 
@@ -975,7 +977,7 @@ bool FGXMLAutopilot::build( SGPropertyNode_ptr config_props ) {
 /*
  * Update helper values
  */
-static void update_helper( double dt ) {
+void FGXMLAutopilot::update_helper( double dt ) {
     // Estimate speed in 5,10 seconds
     static SGPropertyNode_ptr vel = fgGetNode( "/velocities/airspeed-kt", true );
     static SGPropertyNode_ptr lookahead5
@@ -1002,32 +1004,20 @@ static void update_helper( double dt ) {
         v_last = v;
     }
 
-    // Calculate heading bug error normalized to +/- 180.0 (based on
-    // DG indicated heading)
+    // Calculate heading bug error normalized to +/- 180.0
     static SGPropertyNode_ptr bug
         = fgGetNode( "/autopilot/settings/heading-bug-deg", true );
-    static SGPropertyNode_ptr ind_hdg
-        = fgGetNode( "/instrumentation/heading-indicator/indicated-heading-deg",
-                     true );
-    static SGPropertyNode_ptr ind_bug_error
-        = fgGetNode( "/autopilot/internal/heading-bug-error-deg", true );
-
-    double diff = bug->getDoubleValue() - ind_hdg->getDoubleValue();
-    if ( diff < -180.0 ) { diff += 360.0; }
-    if ( diff > 180.0 ) { diff -= 360.0; }
-    ind_bug_error->setDoubleValue( diff );
-
-    // Calculate heading bug error normalized to +/- 180.0 (based on
-    // actual/nodrift magnetic-heading, i.e. a DG slaved to magnetic
-    // compass.)
     static SGPropertyNode_ptr mag_hdg
         = fgGetNode( "/orientation/heading-magnetic-deg", true );
+    static SGPropertyNode_ptr bug_error
+        = fgGetNode( "/autopilot/internal/heading-bug-error-deg", true );
+
+    double diff = bug->getDoubleValue() - mag_hdg->getDoubleValue();
+    SG_NORMALIZE_RANGE(diff, -180.0, 180.0);
+    bug_error->setDoubleValue( diff );
+
     static SGPropertyNode_ptr fdm_bug_error
         = fgGetNode( "/autopilot/internal/fdm-heading-bug-error-deg", true );
-
-    diff = bug->getDoubleValue() - mag_hdg->getDoubleValue();
-    if ( diff < -180.0 ) { diff += 360.0; }
-    if ( diff > 180.0 ) { diff -= 360.0; }
     fdm_bug_error->setDoubleValue( diff );
 
     // Calculate true heading error normalized to +/- 180.0
@@ -1035,14 +1025,11 @@ static void update_helper( double dt ) {
         = fgGetNode( "/autopilot/settings/true-heading-deg", true );
     static SGPropertyNode_ptr true_hdg
         = fgGetNode( "/orientation/heading-deg", true );
-    static SGPropertyNode_ptr true_track
-        = fgGetNode( "/instrumentation/gps/indicated-track-true-deg", true );
     static SGPropertyNode_ptr true_error
         = fgGetNode( "/autopilot/internal/true-heading-error-deg", true );
 
     diff = target_true->getDoubleValue() - true_hdg->getDoubleValue();
-    if ( diff < -180.0 ) { diff += 360.0; }
-    if ( diff > 180.0 ) { diff -= 360.0; }
+    SG_NORMALIZE_RANGE(diff, -180.0, 180.0);
     true_error->setDoubleValue( diff );
 
     // Calculate nav1 target heading error normalized to +/- 180.0
@@ -1054,25 +1041,25 @@ static void update_helper( double dt ) {
         = fgGetNode( "/autopilot/internal/nav1-track-error-deg", true );
 
     diff = target_nav1->getDoubleValue() - true_hdg->getDoubleValue();
-    if ( diff < -180.0 ) { diff += 360.0; }
-    if ( diff > 180.0 ) { diff -= 360.0; }
+    SG_NORMALIZE_RANGE(diff, -180.0, 180.0);
     true_nav1->setDoubleValue( diff );
 
-    diff = target_nav1->getDoubleValue() - true_track->getDoubleValue();
-    if ( diff < -180.0 ) { diff += 360.0; }
-    if ( diff > 180.0 ) { diff -= 360.0; }
+    // Calculate true groundtrack
+    SGGeod currentPosition(SGGeod::fromDeg(
+        lonNode->getDoubleValue(), latNode->getDoubleValue()));
+    double true_track = SGGeodesy::courseDeg(lastPosition, currentPosition);
+    lastPosition = currentPosition;
+    diff = target_nav1->getDoubleValue() - true_track;
+    SG_NORMALIZE_RANGE(diff, -180.0, 180.0);
     true_track_nav1->setDoubleValue( diff );
 
     // Calculate nav1 selected course error normalized to +/- 180.0
-    // (based on DG indicated heading)
     static SGPropertyNode_ptr nav1_course_error
         = fgGetNode( "/autopilot/internal/nav1-course-error", true );
     static SGPropertyNode_ptr nav1_selected_course
         = fgGetNode( "/instrumentation/nav[0]/radials/selected-deg", true );
 
-    diff = nav1_selected_course->getDoubleValue() - ind_hdg->getDoubleValue();
-//    if ( diff < -180.0 ) { diff += 360.0; }
-//    if ( diff > 180.0 ) { diff -= 360.0; }
+    diff = nav1_selected_course->getDoubleValue() - mag_hdg->getDoubleValue();
     SG_NORMALIZE_RANGE( diff, -180.0, 180.0 );
     nav1_course_error->setDoubleValue( diff );
 
@@ -1088,23 +1075,20 @@ static void update_helper( double dt ) {
     // Calculate static port pressure rate in [inhg/s].
     // Used to determine vertical speed.
     static SGPropertyNode_ptr static_pressure
-	= fgGetNode( "/systems/static[0]/pressure-inhg", true );
+        = fgGetNode( "/systems/static[0]/pressure-inhg", true );
     static SGPropertyNode_ptr pressure_rate
-	= fgGetNode( "/autopilot/internal/pressure-rate", true );
+        = fgGetNode( "/autopilot/internal/pressure-rate", true );
 
     static double last_static_pressure = 0.0;
 
     if ( dt > 0.0 ) {
-	double current_static_pressure = static_pressure->getDoubleValue();
+        double current_static_pressure = static_pressure->getDoubleValue();
+        double current_pressure_rate = 
+            ( current_static_pressure - last_static_pressure ) / dt;
 
-	double current_pressure_rate = 
-	    ( current_static_pressure - last_static_pressure ) / dt;
-
-	pressure_rate->setDoubleValue(current_pressure_rate);
-
-	last_static_pressure = current_static_pressure;
+        pressure_rate->setDoubleValue(current_pressure_rate);
+        last_static_pressure = current_static_pressure;
     }
-
 }
 
 
