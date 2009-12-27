@@ -9,7 +9,7 @@
 
 __author__ = "Melchior FRANZ < mfranz # aon : at >"
 __url__ = ["http://www.flightgear.org/", "http://cvs.flightgear.org/viewvc/source/utils/Modeller/yasim_import.py"]
-__version__ = "0.1"
+__version__ = "0.2"
 __bpydoc__ = """\
 yasim_import.py loads and visualizes a YASim FDM geometry
 =========================================================
@@ -78,10 +78,10 @@ Elements are displayed as follows:
   rotor                               -> radius and rel_len_blade_start circle, normal and forward vector,
                                          one blade at phi0 with direction arrow near blade tip
   gear                                -> contact point and compression vector (no arrow head)
-  tank                                -> cube (10 cm side length)
-  weight                              -> inverted cone
-  ballast                             -> cylinder
-  hitch                               -> circle (10 cm diameter)
+  tank                                -> magenta cube (10 cm side length)
+  weight                              -> inverted cyan cone
+  ballast                             -> yellow cylinder
+  hitch                               -> hexagon (10 cm diameter)
   hook                                -> dashed line for up angle, T-line for down angle
   launchbar                           -> dashed line for up angles, T-line for down angles
                                          (launchbar and holdback each)
@@ -310,7 +310,7 @@ class Launchbar(Item):
 
 class Hitch(Item):
 	def __init__(self, name, center):
-		mesh = Blender.Mesh.Primitives.Circle(8, 0.1)
+		mesh = Blender.Mesh.Primitives.Circle(6, 0.1)
 		obj = self.scene.objects.new(mesh, name)
 		obj.setMatrix(RotationMatrix(90, 4, "x") * TranslationMatrix(center) * Global.matrix)
 
@@ -493,18 +493,17 @@ class import_yasim(handler.ErrorHandler, handler.ContentHandler):
 
 	# err_handler
 	def warning(self, exception):
-		print(self.error_string("WARNING", exception))
+		print((self.error_string("Warning", exception)))
 
 	def error(self, exception):
-		print(self.error_string("ERROR", exception))
+		print((self.error_string("Error", exception)))
 
 	def fatalError(self, exception):
-		raise Abort(str(exception), self.error_string("FATAL", exception))
+		raise Abort(str(exception), self.error_string("Fatal", exception))
 
 	def error_string(self, tag, e):
-		(column, line, msg) = (e.getColumnNumber(), e.getLineNumber(), e.getMessage())
-		return "\n%s%s^--------%s: %s at line %d, column %d" \
-				% (Global.data[line - 1], (column) * ' ', tag, msg, line, column)
+		(column, line) = (e.getColumnNumber(), e.getLineNumber())
+		return "%s: %s\n%s%s^"  % (tag, str(e), Global.data[line - 1], column * ' ')
 
 
 	# doc_handler
@@ -742,7 +741,7 @@ def load_yasim_config(path):
 		Global.data = None
 
 	except Abort, e:
-		print("%s\nAborting ..." % (e.term or e.msg))
+		print(("%s\nAborting ..." % (e.term or e.msg)))
 		Blender.Draw.PupMenu("Error%t|" + e.msg)
 
 	Blender.Window.RedrawAll()
