@@ -95,7 +95,7 @@ private:
     double _max_speed;
 
     const SGMaterial* _material;
-    const SGPropertyNode *_selected_ac;
+    SGPropertyNode_ptr _selected_ac;
 
     bool _MPControl, _patrol, _stn_deg_true;
 

@@ -92,7 +92,7 @@ private:
   double _rightBrakeOutput;
     
   SGPropertyNode_ptr _root;
-  SGPropertyNode* _brakeInputs[4];
+  SGPropertyNode_ptr _brakeInputs[4];
   SGPropertyNode_ptr _weightOnWheelsNode;
   SGPropertyNode_ptr _engineControlsNode;
   SGPropertyNode_ptr _groundspeedNode;
