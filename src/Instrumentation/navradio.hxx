@@ -168,7 +168,7 @@ class FGNavRadio : public SGSubsystem
     double _gsNeedleDeflectionNorm;
     
     SGSharedPtr<SGSampleGroup> _sgr;
-    std::vector<SGPropertyNode*> _tiedNodes;
+    std::vector<SGPropertyNode_ptr> _tiedNodes;
     
     bool updateWithPower(double aDt);
 
@@ -208,7 +208,7 @@ class FGNavRadio : public SGSubsystem
     template <typename T>
     void tie(const char* aRelPath, const SGRawValue<T>& aRawValue)
     {
-      SGPropertyNode* nd = _radio_node->getNode(aRelPath, true);
+      SGPropertyNode_ptr nd = _radio_node->getNode(aRelPath, true);
       _tiedNodes.push_back(nd);
       nd->tie(aRawValue);
     }

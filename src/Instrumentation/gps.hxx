@@ -419,7 +419,7 @@ private:
   SGPropertyNode_ptr _apTargetAltitudeFt;
   SGPropertyNode_ptr _apAltitudeLock;
   
-  std::vector<SGPropertyNode*> _tiedNodes;
+  std::vector<SGPropertyNode_ptr> _tiedNodes;
 };
 
 
