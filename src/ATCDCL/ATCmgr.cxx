@@ -97,8 +97,9 @@ void FGATCMgr::init() {
     try {
         voiceOK = v1->LoadVoice("default");
         voice = true;
-    } catch ( sg_io_exception & ) {
+    } catch ( sg_io_exception & e) {
         voiceOK  = false;
+        SG_LOG(SG_ATC, SG_ALERT, "Unable to load default voice : " << e.getFormattedMessage().c_str());
         voice = false;
         delete v1;
         v1 = 0;
