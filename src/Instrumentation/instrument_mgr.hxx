@@ -34,7 +34,7 @@ public:
     bool build ();
 
 private:
-    SGPropertyNode *config_props;
+    SGPropertyNode_ptr config_props;
     bool _explicitGps;
 };
 

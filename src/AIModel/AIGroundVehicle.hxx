@@ -96,7 +96,7 @@ private:
     double _dt_count, _next_run, _break_count;
 
     const SGMaterial* _material;
-    const SGPropertyNode *_selected_ac;
+    SGPropertyNode_ptr _selected_ac;
 
     string _parent;
 

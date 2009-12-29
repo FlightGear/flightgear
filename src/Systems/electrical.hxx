@@ -266,7 +266,7 @@ private:
     string name;
     int num;
     string path;
-    SGPropertyNode *config_props;
+    SGPropertyNode_ptr config_props;
 
     bool enabled;
 

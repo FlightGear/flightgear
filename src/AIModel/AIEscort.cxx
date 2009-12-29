@@ -235,10 +235,10 @@ bool FGAIEscort::getGroundElev(SGGeod inpos) {
 
 void FGAIEscort::setParent() {
 
-    const SGPropertyNode *ai = fgGetNode("/ai/models", true);
+    const SGPropertyNode_ptr ai = fgGetNode("/ai/models", true);
 
     for (int i = ai->nChildren() - 1; i >= -1; i--) {
-        const SGPropertyNode *model;
+        SGPropertyNode_ptr model;
 
         if (i < 0) { // last iteration: selected model
             model = _selected_ac;
