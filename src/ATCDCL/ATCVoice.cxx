@@ -144,6 +144,8 @@ void* FGATCVoice::WriteMessage(const string& message, size_t* len) {
 			token_start = message.find_first_not_of(delimiters, token_end);
 		}
 
+                if (token == "/_") continue;
+
 		for(string::iterator t = token.begin(); t != token.end(); t++) {
 			// canonicalize the token, to match what's in the index
 			*t = (*t == '-') ? '_' : tolower(*t);
