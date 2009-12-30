@@ -378,8 +378,36 @@ public:
     FGXMLAutopilotGroup();
     void init();
     void reinit();
+    void update( double dt );
 private:
     std::vector<std::string> _autopilotNames;
+
+    double average;
+    double v_last;
+    double last_static_pressure;
+
+    SGPropertyNode_ptr vel;
+    SGPropertyNode_ptr lookahead5;
+    SGPropertyNode_ptr lookahead10;
+    SGPropertyNode_ptr bug;
+    SGPropertyNode_ptr mag_hdg;
+    SGPropertyNode_ptr bug_error;
+    SGPropertyNode_ptr fdm_bug_error;
+    SGPropertyNode_ptr target_true;
+    SGPropertyNode_ptr true_hdg;
+    SGPropertyNode_ptr true_error;
+    SGPropertyNode_ptr target_nav1;
+    SGPropertyNode_ptr true_nav1;
+    SGPropertyNode_ptr true_track_nav1;
+    SGPropertyNode_ptr nav1_course_error;
+    SGPropertyNode_ptr nav1_selected_course;
+    SGPropertyNode_ptr vs_fps;
+    SGPropertyNode_ptr vs_fpm;
+    SGPropertyNode_ptr static_pressure;
+    SGPropertyNode_ptr pressure_rate;
+
+    SGPropertyNode_ptr latNode, lonNode;
+    SGGeod lastPosition;
 };
 
 class FGXMLAutopilot : public SGSubsystem
@@ -402,16 +430,9 @@ protected:
     typedef std::vector<FGXMLAutoComponent_ptr> comp_list;
 
 private:
-    /**
-     * Update helper values, especially the /autopilot/internal properties
-     */
-    void update_helper( double dt );
-    
     bool serviceable;
     comp_list components;
     
-    SGPropertyNode_ptr latNode, lonNode;
-    SGGeod lastPosition;
 };
 
 
