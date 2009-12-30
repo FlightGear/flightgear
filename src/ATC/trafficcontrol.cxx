@@ -264,7 +264,7 @@ bool FGTrafficRecord::isOpposing (FGGroundNetwork *net, FGTrafficRecord &other, 
 	  if (other.intentions.size())
 	    {
 	      for (intVecIterator j = other.intentions.begin(); j != other.intentions.end(); j++)
-		{  
+		{
 		  // cerr << "Current segment 1 " << (*i) << endl;
 		  if ((*i) > 0) {
 		    if ((opp = net->findSegment(*i)->opposite()))
@@ -402,7 +402,7 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
           // Assign SID, if necessery (TODO)
           case MSG_PERMIT_ENGINE_START:
                taxiFreqStr = formatATCFrequency3_2(taxiFreq);
-               
+
                heading = rec->getAircraft()->getTrafficRef()->getCourse();
                fltType = rec->getAircraft()->getTrafficRef()->getFlightType();
                rwyClass= rec->getAircraft()->GetFlightPlan()->getRunwayClassFromTrafficType(fltType);
@@ -453,10 +453,8 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
     // Display ATC message only when one of the radios is tuned
     // the relevant frequency.
     // Note that distance attenuation is currently not yet implemented
-    //cerr << "Transmitting " << text << " at " << stationFreq;
     if ((onBoardRadioFreqI0 == stationFreq) || (onBoardRadioFreqI1 == stationFreq)) {
         fgSetString("/sim/messages/atc", text.c_str());
-        //cerr << "Printing Message: " << endl;
     }
 }
 
@@ -466,6 +464,8 @@ string FGATCController::formatATCFrequency3_2(int freq) {
     return string(buffer);
 }
 
+// TODO: Set transponder codes according to real-world routes.
+// The current version just returns a random string of four octal numbers. 
 string FGATCController::genTransponderCode(string fltRules) {
     if (fltRules == "VFR") {
         return string("1200");

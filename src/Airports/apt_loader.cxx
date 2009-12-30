@@ -45,7 +45,9 @@
 #include "simple.hxx"
 #include "runways.hxx"
 #include "pavement.hxx"
-#include <ATCDCL/commlist.hxx>
+#if ENABLE_ATCDCL
+#    include <ATCDCL/commlist.hxx>
+#endif
 
 #include <iostream>
 
@@ -75,7 +77,12 @@ public:
      last_apt_type("")
   {}
 
+
+#ifdef ENABLE_ATCDCL
   void parseAPT(const string &aptdb_file, FGCommList *comm_list)
+#else
+  void parseAPT(const string &aptdb_file)
+#endif
   {
     sg_gzifstream in( aptdb_file );
 
@@ -461,7 +468,7 @@ private:
       pvt->addNode(pos, num == 113);
     }
   }
-  
+#if ENABLE_ATCDCL  
   void parseATISLine(FGCommList *comm_list, const vector<string>& token) 
   {
     if ( rwy_count <= 0 ) {
@@ -505,19 +512,27 @@ private:
     << "  type: " << a.type );
 #endif
   }
+#endif
 };
+
 
 // Load the airport data base from the specified aptdb file.  The
 // metar file is used to mark the airports as having metar available
 // or not.
 bool fgAirportDBLoad( const string &aptdb_file, 
+#if ENABLE_ATCDCL
         FGCommList *comm_list, const std::string &metar_file )
+#else
+        const std::string &metar_file )
+#endif
 {
 
    APTLoader ld;
-
+#if ENABLE_ATCDCL
    ld.parseAPT(aptdb_file, comm_list);
-
+#else
+   ld.parseAPT(aptdb_file);
+#endif
     //
     // Load the metar.dat file and update apt db with stations that
     // have metar data.

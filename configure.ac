@@ -158,6 +158,17 @@ else
 fi
 AM_CONDITIONAL(ENABLE_SP_FDM, test "x$enable_sp_fdms" != "xno")
 
+# Specify whether we want to compile ATCDCL.
+# default to with_atcdcl=yes
+AC_ARG_ENABLE(atcdcl, [  --enable-atcdcl                Compile and link the depricated atc/ai module], [enable_atcdcl="$enableval"] )
+if test "x$enable_atcdcl" != "xno"; then
+    AC_DEFINE([ENABLE_ATCDCL], 1, [Define to include old ATC/AI module])
+else
+    AC_DEFINE([ENABLE_ATCDCL], 0, [Define to include old ATC/AI module])
+fi
+AM_CONDITIONAL(ENABLE_ATCDCL, test "x$enable_atcdcl" != "xno")
+
+
 
 dnl EXPERIMENTAL generic event driven input device
 # defaults to no
@@ -201,6 +212,7 @@ if test "x$with_threads" = "xyes"; then
 fi
 AC_CHECK_HEADER(pthread.h)
 AM_CONDITIONAL(WITH_THREADS, test "x$with_threads" = "xyes")
+
 
 dnl Used by JSBSim to conditionally compile in fgfs interface code
 AC_DEFINE([FGFS], 1, [Define so that JSBSim compiles in 'library' mode])
@@ -283,7 +295,7 @@ AC_SEARCH_LIBS(clock_gettime, rt)
 base_LIBS="$LIBS"
 
 dnl Check for SDL or glut if enabled.
-AC_ARG_ENABLE(osgviewer, [  --enable-osgviewer                  Configure to use osgViewer(default)], [enable_osgviewer="$enableval"])
+AC_ARG_ENABLE(osgviewer, [  --enable-osgviewer             Configure to use osgViewer(default)], [enable_osgviewer="$enableval"])
 AC_ARG_ENABLE(sdl,  [  --enable-sdl                   Configure to use SDL], [enable_sdl="$enableval"])
 AC_ARG_ENABLE(glut, [  --enable-glut                  Configure to use GLUT], [enable_glut="$enableval"])
 AM_CONDITIONAL(USE_SDL, test "x$enable_sdl" = "xyes")
@@ -880,3 +892,8 @@ else
     echo "Include special purpose flight models: no"
 fi
 
+if test "x$enable_atcdcl" != "xno"; then
+    echo "Build depricated ATC/AI module: yes"
+else
+    echo "Build depricated ATC/AI module: no"
+fi
