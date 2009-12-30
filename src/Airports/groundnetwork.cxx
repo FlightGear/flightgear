@@ -508,6 +508,13 @@ void FGGroundNetwork::signOff(int id) {
 
 void FGGroundNetwork::update(int id, double lat, double lon, double heading, double speed, double alt, 
 			     double dt) {
+   // Check whether aircraft are on hold due to a preceding pushback. If so, make sure to 
+   // Transmit air-to-ground "Ready to taxi request:
+   // Transmit ground to air approval / hold
+   // Transmit confirmation ... 
+   // Probably use a status mechanism similar to the Engine start procedure in the startup controller.
+
+
    TrafficVectorIterator i = activeTraffic.begin();
    // Search search if the current id has an entry
    // This might be faster using a map instead of a vector, but let's start by taking a safe route

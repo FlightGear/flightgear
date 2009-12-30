@@ -73,8 +73,13 @@
 #include <Airports/dynamics.hxx>
 
 #include <AIModel/AIManager.hxx>
-#include <ATCDCL/ATCmgr.hxx>
-#include <ATCDCL/AIMgr.hxx>
+
+#if ENABLE_ATCDCL
+#   include <ATCDCL/ATCmgr.hxx>
+#   include <ATCDCL/AIMgr.hxx>
+#   include "ATCDCL/commlist.hxx"
+#endif
+
 #include <Autopilot/route_mgr.hxx>
 #include <Autopilot/xmlauto.hxx>
 #include <Autopilot/autobrake.hxx>
@@ -82,7 +87,8 @@
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
-#ifdef ENABLE_SP_FDM
+
+#if ENABLE_SP_FDM
 #include <FDM/SP/ADA.hxx>
 #include <FDM/SP/ACMS.hxx>
 #include <FDM/SP/MagicCarpet.hxx>
@@ -130,7 +136,7 @@
 #include "renderer.hxx"
 #include "viewmgr.hxx"
 #include "main.hxx"
-#include "ATCDCL/commlist.hxx"
+
 
 #ifdef __APPLE__
 #  include <CoreFoundation/CoreFoundation.h>
@@ -973,9 +979,16 @@ fgInitNav ()
 
 // Initialise the frequency search map BEFORE reading
 // the airport database:
+
+
+
+#if ENABLE_ATCDCL
     current_commlist = new FGCommList;
     current_commlist->init( globals->get_fg_root() );
     fgAirportDBLoad( aptdb.str(), current_commlist, p_metar.str() );
+#else
+    fgAirportDBLoad( aptdb.str(), p_metar.str() );
+#endif
 
     FGNavList *navlist = new FGNavList;
     FGNavList *loclist = new FGNavList;
