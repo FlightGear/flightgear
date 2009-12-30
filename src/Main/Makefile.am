@@ -9,6 +9,13 @@ else
 SP_FDM_LIBS = 
 endif
 
+if ENABLE_ATCDCL
+ATCDCL_LIBS = $(top_builddir)/src/ATCDCL/libATCDCL.a
+else
+ATCDCL_LIBS = 
+endif
+
+
 if WITH_THREADS
 THREAD_LIBS = -lsgthreads $(thread_LIBS)
 else
@@ -82,7 +89,7 @@ fgfs_SOURCES = bootstrap.cxx
 fgfs_LDADD = \
 	libMain.a \
 	$(top_builddir)/src/Aircraft/libAircraft.a \
-	$(top_builddir)/src/ATCDCL/libATCDCL.a \
+	$(ATCDCL_LIBS) \
 	$(top_builddir)/src/Cockpit/libCockpit.a \
 	$(top_builddir)/src/Cockpit/built_in/libBuilt_in.a \
 	$(top_builddir)/src/FDM/libFlight.a \
