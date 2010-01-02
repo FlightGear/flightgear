@@ -86,7 +86,7 @@ string ConvertNumToSpokenDigits(const int& n) {
 // Anything else is not guaranteed to be handled correctly!
 string ConvertRwyNumToSpokenString(const string &rwy) {
   string rslt;
-  for (int ii = 0; ii < rwy.length(); ii++){
+  for (size_t ii = 0; ii < rwy.length(); ii++){
     if (rslt.length()) rslt += " ";
     string ch = rwy.substr(ii,1);
     if (isdigit(ch[0])) rslt += ConvertNumToSpokenDigits(atoi(ch.c_str()));
