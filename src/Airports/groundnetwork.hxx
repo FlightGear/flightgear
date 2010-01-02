@@ -162,7 +162,7 @@ private:
   intVec nodes;
   intVec routes;
   double distance;
-  int depth;
+//  int depth;
   intVecIterator currNode;
   intVecIterator currRoute;
 
@@ -173,14 +173,14 @@ public:
     routes = rts;
     distance = dist; 
     currNode = nodes.begin();
-    depth = dpth;
+//    depth = dpth;
   };
 
   FGTaxiRoute& operator= (const FGTaxiRoute &other) {
     nodes = other.nodes;
     routes = other.routes;
     distance = other.distance;
-    depth = other.depth;
+//    depth = other.depth;
     currNode = nodes.begin();
     currRoute = routes.begin();
     return *this;
@@ -190,7 +190,7 @@ public:
     nodes(copy.nodes),
     routes(copy.routes),
     distance(copy.distance),
-    depth(copy.depth),
+//    depth(copy.depth),
     currNode(nodes.begin()),
     currRoute(routes.begin())
   {};
@@ -203,7 +203,7 @@ public:
   
   void first() { currNode = nodes.begin(); currRoute = routes.begin(); };
   int size() { return nodes.size(); };
-  int getDepth() { return depth; };
+//  int getDepth() { return depth; };
 };
 
 typedef vector<FGTaxiRoute> TaxiRouteVector;
