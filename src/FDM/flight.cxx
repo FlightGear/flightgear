@@ -278,6 +278,8 @@ FGInterface::bind ()
 	&FGInterface::get_Psi_deg,
 	&FGInterface::set_Psi_deg);
   fgSetArchivable("/orientation/heading-deg");
+  fgTie("/orientation/track-deg", this,
+	&FGInterface::get_Track);
 
   // Body-axis "euler rates" (rotation speed, but in a funny
   // representation).
@@ -404,6 +406,7 @@ FGInterface::unbind ()
   fgUntie("/orientation/roll-deg");
   fgUntie("/orientation/pitch-deg");
   fgUntie("/orientation/heading-deg");
+  fgUntie("/orientation/track-deg");
   fgUntie("/orientation/roll-rate-degps");
   fgUntie("/orientation/pitch-rate-degps");
   fgUntie("/orientation/yaw-rate-degps");
@@ -442,6 +445,7 @@ FGInterface::update (double dt)
 
 void FGInterface::_updatePositionM(const SGVec3d& cartPos)
 {
+    TrackComputer tracker( track, geodetic_position_v );
     cartesian_position_v = cartPos;
     geodetic_position_v = SGGeod::fromCart(cartesian_position_v);
     geocentric_position_v = SGGeoc::fromCart(cartesian_position_v);
@@ -452,6 +456,7 @@ void FGInterface::_updatePositionM(const SGVec3d& cartPos)
 
 void FGInterface::_updatePosition(const SGGeod& geod)
 {
+    TrackComputer tracker( track, geodetic_position_v );
     geodetic_position_v = geod;
     cartesian_position_v = SGVec3d::fromGeod(geodetic_position_v);
     geocentric_position_v = SGGeoc::fromCart(cartesian_position_v);
@@ -463,6 +468,7 @@ void FGInterface::_updatePosition(const SGGeod& geod)
 
 void FGInterface::_updatePosition(const SGGeoc& geoc)
 {
+    TrackComputer tracker( track, geodetic_position_v );
     geocentric_position_v = geoc;
     cartesian_position_v = SGVec3d::fromGeoc(geocentric_position_v);
     geodetic_position_v = SGGeod::fromCart(cartesian_position_v);

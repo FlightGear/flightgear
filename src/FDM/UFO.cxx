@@ -162,8 +162,7 @@ void FGUFO::update( double dt ) {
                             get_Psi() * SGD_RADIANS_TO_DEGREES,
                             dist, &lat2, &lon2, &az2 );
 
-        _set_Longitude( lon2 * SGD_DEGREES_TO_RADIANS );
-        _set_Latitude( lat2 * SGD_DEGREES_TO_RADIANS );
+        _set_Geodetic_Position( lat2 * SGD_DEGREES_TO_RADIANS,  lon2 * SGD_DEGREES_TO_RADIANS );
     }
 
     // cout << "lon error = " << fabs(end.x()*SGD_RADIANS_TO_DEGREES - lon2)
