@@ -164,8 +164,8 @@ void FGAILocalTraffic::GetRwyDetails(const string& id) {
   
     	// move to the +l end/center of the runway
 		//cout << "Runway center is at " << runway._lon << ", " << runway._lat << '\n';
-    	double tshlon, tshlat, tshr;
-		double tolon, tolat, tor;
+    	double tshlon = 0.0, tshlat = 0.0, tshr;
+		double tolon = 0.0, tolat = 0.0, tor;
 		rwy.length = runway->lengthM();
 		rwy.width = runway->widthM();
     	geo_direct_wgs_84 ( aptElev, runway->latitude(), runway->longitude(), other_way, 
