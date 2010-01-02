@@ -193,7 +193,7 @@ SGSoundSample *FGMorse::make_ident( const string& id, const int freq ) {
     for ( i = 0; i < (int)id.length(); ++i ) {
 	if ( idptr[i] >= 'A' && idptr[i] <= 'Z' ) {
 	    int c = (int)(idptr[i] - 'A');
-	    for ( j = 0; j < 4 || alphabet[c][j] == end; ++j ) {
+	    for ( j = 0; j < 4 && alphabet[c][j] != end; ++j ) {
 		if ( alphabet[c][j] == DIT ) {
 		    length += DIT_SIZE;
 		} else if ( alphabet[c][j] == DAH ) {
@@ -227,7 +227,7 @@ SGSoundSample *FGMorse::make_ident( const string& id, const int freq ) {
     for ( i = 0; i < (int)id.length(); ++i ) {
 	if ( idptr[i] >= 'A' && idptr[i] <= 'Z' ) {
 	    int c = (int)(idptr[i] - 'A');
-	    for ( j = 0; j < 4 || alphabet[c][j] == end; ++j ) {
+	    for ( j = 0; j < 4 && alphabet[c][j] != end; ++j ) {
 		if ( alphabet[c][j] == DIT ) {
 		    memcpy( buf_ptr, dit_ptr, DIT_SIZE );
 		    buf_ptr += DIT_SIZE;
