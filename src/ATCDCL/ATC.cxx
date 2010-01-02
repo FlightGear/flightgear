@@ -35,8 +35,8 @@
 
 
 FGATC::FGATC() :
-	_voiceOK(false),
 	_playing(false),
+	_voiceOK(false),
 	_sgr(NULL),
 	freqClear(true),
 	receiving(false),
