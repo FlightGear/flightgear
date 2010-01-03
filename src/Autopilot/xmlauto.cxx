@@ -65,7 +65,7 @@ double FGPeriodicalValue::normalize( double value )
 
   if( phase > SGLimitsd::min() ) {
     while( value < min ) value += phase;
-    while( value > max ) value -= phase;
+    while( value >= max ) value -= phase;
   } else {
     value = min; // phase is zero
   }
@@ -729,6 +729,10 @@ bool FGDigitalFilter::parseNodeHook(const string& aName, SGPropertyNode* aNode)
       filterType = gain;
     } else if (val == "reciprocal") {
       filterType = reciprocal;
+    } else if (val == "differential") {
+      filterType = differential;
+      // use a constant of two samples for current and previous input value
+      samplesInput.push_back( new FGXMLAutoInput(NULL, 2.0 ) ); 
     }
   } else if (aName == "filter-time" ) {
     TfInput.push_back( new FGXMLAutoInput( aNode, 1.0 ) );
@@ -768,72 +772,79 @@ void FGDigitalFilter::update(double dt)
         do_feedback();
     }
 
-    if ( enabled && dt > 0.0 ) {
-        /*
-         * Exponential filter
-         *
-         * Output[n] = alpha*Input[n] + (1-alpha)*Output[n-1]
-         *
-         */
-         if( debug ) cout << "Updating " << get_name()
-                          << " dt " << dt << endl;
+    if ( !enabled || dt < SGLimitsd::min() ) 
+        return;
 
-        if (filterType == exponential)
-        {
-            double alpha = 1 / ((TfInput.get_value()/dt) + 1);
-            output.push_front(alpha * input[0] + 
-                              (1 - alpha) * output[0]);
-        } 
-        else if (filterType == doubleExponential)
-        {
-            double alpha = 1 / ((TfInput.get_value()/dt) + 1);
-            output.push_front(alpha * alpha * input[0] + 
-                              2 * (1 - alpha) * output[0] -
-                              (1 - alpha) * (1 - alpha) * output[1]);
-        }
-        else if (filterType == movingAverage)
-        {
-            output.push_front(output[0] + 
-                              (input[0] - input.back()) / samplesInput.get_value());
-        }
-        else if (filterType == noiseSpike)
-        {
-            double maxChange = rateOfChangeInput.get_value() * dt;
+    /*
+     * Exponential filter
+     *
+     * Output[n] = alpha*Input[n] + (1-alpha)*Output[n-1]
+     *
+     */
+     if( debug ) cout << "Updating " << get_name()
+                      << " dt " << dt << endl;
 
-            if ((output[0] - input[0]) > maxChange)
-            {
-                output.push_front(output[0] - maxChange);
-            }
-            else if ((output[0] - input[0]) < -maxChange)
-            {
-                output.push_front(output[0] + maxChange);
-            }
-            else if (fabs(input[0] - output[0]) <= maxChange)
-            {
-                output.push_front(input[0]);
-            }
-        }
-        else if (filterType == gain)
-        {
-            output[0] = gainInput.get_value() * input[0];
-        }
-        else if (filterType == reciprocal)
-        {
-            if (input[0] != 0.0) {
-                output[0] = gainInput.get_value() / input[0];
-            }
-        }
+    if (filterType == exponential)
+    {
+        double alpha = 1 / ((TfInput.get_value()/dt) + 1);
+        output.push_front(alpha * input[0] + 
+                          (1 - alpha) * output[0]);
+    } 
+    else if (filterType == doubleExponential)
+    {
+        double alpha = 1 / ((TfInput.get_value()/dt) + 1);
+        output.push_front(alpha * alpha * input[0] + 
+                          2 * (1 - alpha) * output[0] -
+                          (1 - alpha) * (1 - alpha) * output[1]);
+    }
+    else if (filterType == movingAverage)
+    {
+        output.push_front(output[0] + 
+                          (input[0] - input.back()) / samplesInput.get_value());
+    }
+    else if (filterType == noiseSpike)
+    {
+        double maxChange = rateOfChangeInput.get_value() * dt;
 
-        output[0] = clamp(output[0]) ;
-        set_output_value( output[0] );
-
-        output.resize(2);
-
-        if (debug)
+        if ((output[0] - input[0]) > maxChange)
         {
-            cout << "input:" << input[0] 
-                 << "\toutput:" << output[0] << endl;
+            output.push_front(output[0] - maxChange);
         }
+        else if ((output[0] - input[0]) < -maxChange)
+        {
+            output.push_front(output[0] + maxChange);
+        }
+        else if (fabs(input[0] - output[0]) <= maxChange)
+        {
+            output.push_front(input[0]);
+        }
+    }
+    else if (filterType == gain)
+    {
+        output[0] = gainInput.get_value() * input[0];
+    }
+    else if (filterType == reciprocal)
+    {
+        if (input[0] != 0.0) {
+            output[0] = gainInput.get_value() / input[0];
+        }
+    }
+    else if (filterType == differential)
+    {
+        if( dt > SGLimitsd::min() ) {
+            output[0] = (input[0]-input[1]) * TfInput.get_value() / dt;
+        }
+    }
+
+    output[0] = clamp(output[0]) ;
+    set_output_value( output[0] );
+
+    output.resize(2);
+
+    if (debug)
+    {
+        cout << "input:" << input[0] 
+             << "\toutput:" << output[0] << endl;
     }
 }
 
@@ -862,8 +873,7 @@ FGXMLAutopilotGroup::FGXMLAutopilotGroup() :
   vs_fpm(fgGetNode( "/autopilot/internal/vert-speed-fpm", true )),
   static_pressure(fgGetNode( "/systems/static[0]/pressure-inhg", true )),
   pressure_rate(fgGetNode( "/autopilot/internal/pressure-rate", true )),
-  latNode(fgGetNode("/position/latitude-deg")),
-  lonNode(fgGetNode("/position/longitude-deg"))
+  track(fgGetNode( "/orientation/track-deg", true ))
 {
 }
 
@@ -907,11 +917,7 @@ void FGXMLAutopilotGroup::update( double dt )
     true_nav1->setDoubleValue( diff );
 
     // Calculate true groundtrack
-    SGGeod currentPosition(SGGeod::fromDeg(
-        lonNode->getDoubleValue(), latNode->getDoubleValue()));
-    double true_track = SGGeodesy::courseDeg(lastPosition, currentPosition);
-    lastPosition = currentPosition;
-    diff = target_nav1->getDoubleValue() - true_track;
+    diff = target_nav1->getDoubleValue() - track->getDoubleValue();
     SG_NORMALIZE_RANGE(diff, -180.0, 180.0);
     true_track_nav1->setDoubleValue( diff );
 

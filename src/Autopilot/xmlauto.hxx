@@ -354,7 +354,7 @@ private:
     std::deque <double> output;
     std::deque <double> input;
     enum filterTypes { exponential, doubleExponential, movingAverage,
-                       noiseSpike, gain, reciprocal, none };
+                       noiseSpike, gain, reciprocal, differential, none };
     filterTypes filterType;
 
 protected:
@@ -405,9 +405,7 @@ private:
     SGPropertyNode_ptr vs_fpm;
     SGPropertyNode_ptr static_pressure;
     SGPropertyNode_ptr pressure_rate;
-
-    SGPropertyNode_ptr latNode, lonNode;
-    SGGeod lastPosition;
+    SGPropertyNode_ptr track;
 };
 
 class FGXMLAutopilot : public SGSubsystem
