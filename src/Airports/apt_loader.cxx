@@ -47,6 +47,8 @@
 #include "pavement.hxx"
 #if ENABLE_ATCDCL
 #    include <ATCDCL/commlist.hxx>
+#else
+  #include <ATC/atcutils.hxx>
 #endif
 
 #include <iostream>
@@ -78,11 +80,8 @@ public:
   {}
 
 
-#ifdef ENABLE_ATCDCL
+
   void parseAPT(const string &aptdb_file, FGCommList *comm_list)
-#else
-  void parseAPT(const string &aptdb_file)
-#endif
   {
     sg_gzifstream in( aptdb_file );
 
@@ -162,7 +161,9 @@ public:
       } else if ( line_id == 0 ) {
           // ??
       } else if ( line_id == 50 ) {
+
         parseATISLine(comm_list, simgear::strutils::split(line));
+
       } else if ( line_id >= 51 && line_id <= 56 ) {
         // other frequency entries (ignore)
       } else if ( line_id == 110 ) {
@@ -468,7 +469,7 @@ private:
       pvt->addNode(pos, num == 113);
     }
   }
-#if ENABLE_ATCDCL  
+
   void parseATISLine(FGCommList *comm_list, const vector<string>& token) 
   {
     if ( rwy_count <= 0 ) {
@@ -485,6 +486,7 @@ private:
  	    // 50 11770 AWOS 3
  // This code parallels code found in "operator>>" in ATC.hxx;
  // FIXME: unify the code.      
+#if ENABLE_ATCDCL
     ATCData a;
     a.geod = SGGeod::fromDegFt(rwy_lon_accum / (double)rwy_count, 
       rwy_lat_accum / (double)rwy_count, last_apt_elev);
@@ -503,6 +505,8 @@ private:
     SGBucket bucket(a.geod);
     int bucknum = bucket.gen_index();
     comm_list->commlist_bck[bucknum].push_back(a);
+#else
+#endif
 #if 0
    SG_LOG( SG_GENERAL, SG_ALERT, 
      "Loaded ATIS/AWOS for airport: " << a.ident
@@ -512,7 +516,7 @@ private:
     << "  type: " << a.type );
 #endif
   }
-#endif
+
 };
 
 
@@ -520,19 +524,11 @@ private:
 // metar file is used to mark the airports as having metar available
 // or not.
 bool fgAirportDBLoad( const string &aptdb_file, 
-#if ENABLE_ATCDCL
         FGCommList *comm_list, const std::string &metar_file )
-#else
-        const std::string &metar_file )
-#endif
 {
 
    APTLoader ld;
-#if ENABLE_ATCDCL
    ld.parseAPT(aptdb_file, comm_list);
-#else
-   ld.parseAPT(aptdb_file);
-#endif
     //
     // Load the metar.dat file and update apt db with stations that
     // have metar data.
