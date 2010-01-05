@@ -78,6 +78,8 @@
 #   include <ATCDCL/ATCmgr.hxx>
 #   include <ATCDCL/AIMgr.hxx>
 #   include "ATCDCL/commlist.hxx"
+#else
+#   include "ATC/atcutils.hxx"
 #endif
 
 #include <Autopilot/route_mgr.hxx>
@@ -982,13 +984,9 @@ fgInitNav ()
 
 
 
-#if ENABLE_ATCDCL
     current_commlist = new FGCommList;
     current_commlist->init( globals->get_fg_root() );
     fgAirportDBLoad( aptdb.str(), current_commlist, p_metar.str() );
-#else
-    fgAirportDBLoad( aptdb.str(), p_metar.str() );
-#endif
 
     FGNavList *navlist = new FGNavList;
     FGNavList *loclist = new FGNavList;
@@ -1623,10 +1621,11 @@ bool fgInitSubsystems() {
     // Initialise the ATC Manager 
     ////////////////////////////////////////////////////////////////////
 
+#if ENABLE_ATCDCL
     SG_LOG(SG_GENERAL, SG_INFO, "  ATC Manager");
     globals->set_ATC_mgr(new FGATCMgr);
     globals->get_ATC_mgr()->init(); 
-    
+
     ////////////////////////////////////////////////////////////////////
     // Initialise the AI Manager 
     ////////////////////////////////////////////////////////////////////
@@ -1634,7 +1633,7 @@ bool fgInitSubsystems() {
     SG_LOG(SG_GENERAL, SG_INFO, "  AI Manager");
     globals->set_AI_mgr(new FGAIMgr);
     globals->get_AI_mgr()->init();
-
+#endif
     ////////////////////////////////////////////////////////////////////
     // Initialise the AI Model Manager
     ////////////////////////////////////////////////////////////////////
