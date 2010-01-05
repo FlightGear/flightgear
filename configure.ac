@@ -85,16 +85,32 @@ case "${host}" in
     ])
 
     # Mac OS X specific configure options
-    AC_ARG_WITH(osg_framework, [  --with-osg-framework=PREFIX       Specify the prefix path to osg frameworks [default=standard framework paths]])
+    AC_ARG_WITH(cocoa_framework, [  --with-cocoa-framework       Use the Cocoa rather than Carbon]])
+    if test "x$with_cocoa_framework" != "x" ; then
+        macAPI=Cocoa
+        AC_MSG_NOTICE([Using Cocoa framework])
+    else
+        macAPI=Carbon
+        AC_MSG_NOTICE([Using Carbon framework])
+    fi
 
-    if test "x$with_plib_framework" != "x" ; then
-        echo "plib prefix is $with_plib_framework"
+    AC_ARG_WITH(osg_framework, [  --with-osg-framework=PREFIX       Specify the prefix path to osg frameworks [default=standard framework paths]])
+    if test "x$with_osg_framework" != "x" ; then
+        echo "osg prefix is $with_osg_framework"
+	export DYLD_FRAMEWORK_PATH="$DYLD_FRAMEWORK_PATH:$with_osg_framework"
     fi
 
     AC_ARG_WITH(plib_framework, [  --with-plib-framework=PREFIX       Specify the prefix path to PLIB framework [default=standard framework paths]])
-    if test "x$with_osg_framework" != "x" ; then
-        echo "osg prefix is $with_osg_framework"
+    if test "x$with_plib_framework" != "x" ; then
+        echo "plib prefix is $with_plib_framework"
+	export DYLD_FRAMEWORK_PATH="$DYLD_FRAMEWORK_PATH:$with_plib_framework"
     fi
+
+    AC_ARG_WITH(openal_framework, [ --with-openal-framework=PREFIX    Speicfy the prefix path to OpenAL.framework ])
+    if test "x$with_openal_framework" != "x"; then
+        echo "OpenAL framework prefix is $with_openal_framework"
+    fi
+
     ;;
 esac
 
@@ -335,7 +351,7 @@ case "${host}" in
 *-apple-darwin*)
     dnl Mac OS X
 
-    LIBS="$LIBS -framework GLUT -framework OpenGL -framework AGL -framework Carbon -lobjc"
+    LIBS="$LIBS -framework GLUT -framework OpenGL -framework AGL -framework $macAPI -lobjc"
     joystick_LIBS="$joystick_LIBS -framework IOKit -framework CoreFoundation"
     ;;
 
@@ -399,11 +415,19 @@ case "${host}" in
 *-apple-darwin*)
     dnl Mac OS X
 
+    # Mac OS X has OpenAL.framework with ALUT by default
+    # so we can use it without checking it.
+    # Note: SimGear needs to check the existance of alut.h since it includes the header.
     LIBS="$LIBS -framework IOKit -framework OpenAL"
     openal_LIBS="$LIBS"
-    # not sure how to test if OpenAL exists on MacOS (does it come by default?)
     OPENAL_OK="yes"
     ALUT_OK="yes"
+    
+    dnl Check for OpenAL.framework when --with-openal-framework is specified
+    if test "x$with_openal_framework" != "x"; then
+      AC_CHECK_FRAMEWORK(OpenAL, [#include <OpenAL/alut.h>], $with_openal_framework)
+    fi
+
     ;;
 
 *)
@@ -589,18 +613,6 @@ dnl If we get here then plib is available, so force use of plib
 dnl joystick lib
 AC_DEFINE([ENABLE_PLIB_JOYSTICK], 1, [Define to enable plib joystick support])
 
-AC_CHECK_HEADER(osg/Version)
-if test "x$ac_cv_header_osg_Version" != "xyes"; then
-    echo
-    echo "You *must* have the OpenSceneGraph support library installed on your system"
-    echo "to build the FGFS simulator!"
-    echo
-    echo "Please see README.OSG for more details."
-    echo
-    echo "configure aborted."
-    exit
-fi
-
 # Find the OSG libraries.  Note special handling for OS X frameworks
 case "${host}" in
 *-apple-darwin*)
@@ -685,6 +697,19 @@ case "${host}" in
     ;;
 esac
 AM_CONDITIONAL(HAVE_FRAMEWORK_OSG, test "x$ac_cv_framework_osg" != "x")
+
+AC_CHECK_HEADER(osg/Version)
+if test "x$ac_cv_header_osg_Version" != "xyes"; then
+    echo
+    echo "You *must* have the OpenSceneGraph support library installed on your system"
+    echo "to build the FGFS simulator!"
+    echo
+    echo "Please see README.OSG for more details."
+    echo
+    echo "configure aborted."
+    exit
+fi
+
 
 AC_MSG_CHECKING([checking for osg::CullSettings::CLEAR_MASK])
 AC_COMPILE_IFELSE(
