@@ -1021,9 +1021,7 @@ void GPS::wp1Changed()
   }
   
   double altFt = _wp1_position.getElevationFt();
-  if (altFt < -9990.0) {
-    _apTargetAltitudeFt->setDoubleValue(0.0);
-  } else {
+  if (altFt > -9990.0) {
     _apTargetAltitudeFt->setDoubleValue(altFt);
   }
 }
