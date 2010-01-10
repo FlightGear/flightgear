@@ -455,6 +455,10 @@ void FGRouteMgr::update_mirror() {
 void FGRouteMgr::InputListener::valueChanged(SGPropertyNode *prop)
 {
     const char *s = prop->getStringValue();
+    if (strlen(s) == 0) {
+      return;
+    }
+    
     if (!strcmp(s, "@CLEAR"))
         mgr->init();
     else if (!strcmp(s, "@ACTIVATE"))
