@@ -104,6 +104,7 @@ long global_multi_loop;
 SGTimeStamp last_time_stamp;
 SGTimeStamp current_time_stamp;
 
+void fgInitSoundManager();
 void fgSetNewSoundDevice(const char *);
 
 // The atexit() function handler should know when the graphical subsystem
@@ -482,22 +483,33 @@ static void fgMainLoop( void ) {
     // Update the sound manager last so it can use the CPU while the GPU
     // is processing the scenery (doubled the frame-rate for me) -EMH-
 #ifdef ENABLE_AUDIO_SUPPORT
-    static SGPropertyNode *sound_enabled = fgGetNode("/sim/sound/enabled");
-    static SGSoundMgr *smgr = globals->get_soundmgr();
-    static bool smgr_enabled = true;
-    if (smgr_enabled != sound_enabled->getBoolValue()) {
-        if (smgr_enabled == true) { // request to suspend
-            smgr->suspend();
-        } else {
-            smgr->resume();
+    static bool smgr_init = true;
+    if (smgr_init == true) {
+        static SGPropertyNode *sound_working = fgGetNode("/sim/sound/working");
+        if (sound_working->getBoolValue() == true) {
+            fgInitSoundManager();
+            smgr_init = false;
         }
-        smgr_enabled = sound_enabled->getBoolValue();
-    }
+    } else {
+        static SGPropertyNode *sound_enabled = fgGetNode("/sim/sound/enabled");
+        static SGSoundMgr *smgr = globals->get_soundmgr();
+        static bool smgr_enabled = true;
 
-    if (smgr_enabled == true) {
-        static SGPropertyNode *volume = fgGetNode("/sim/sound/volume");
-        smgr->set_volume(volume->getFloatValue());
-        smgr->update(delta_time_sec);
+        if (smgr_enabled != sound_enabled->getBoolValue()) {
+            if (smgr_enabled == true) { // request to suspend
+                smgr->suspend();
+                smgr_enabled = false;
+            } else {
+                smgr->resume();
+                smgr_enabled = true;
+            }
+        }
+
+        if (smgr_enabled == true) {
+            static SGPropertyNode *volume = fgGetNode("/sim/sound/volume");
+            smgr->set_volume(volume->getFloatValue());
+            smgr->update(delta_time_sec);
+        }
     }
 #endif
 
@@ -507,9 +519,7 @@ static void fgMainLoop( void ) {
         && cur_fdm_state->get_inited()) {
         fgSetBool("sim/sceneryloaded",true);
         if (fgGetBool("/sim/sound/working")) {
-            smgr->activate();
-        } else {
-            smgr->stop();
+            globals->get_soundmgr()->activate();
         }
         globals->get_props()->tie("/sim/sound/devices/name",
               SGRawValueFunctions<const char *>(0, fgSetNewSoundDevice), false);
@@ -518,6 +528,21 @@ static void fgMainLoop( void ) {
     fgRequestRedraw();
 
     SG_LOG( SG_ALL, SG_DEBUG, "" );
+}
+
+void fgInitSoundManager()
+{
+    SGSoundMgr *smgr = globals->get_soundmgr();
+
+    smgr->bind();
+    smgr->init(fgGetString("/sim/sound/device-name", NULL));
+
+    vector <const char*>devices = smgr->get_available_devices();
+    for (unsigned int i=0; i<devices.size(); i++) {
+        SGPropertyNode *p = fgGetNode("/sim/sound/devices/device", i, true);
+        p->setStringValue(devices[i]);
+    }
+    devices.clear();
 }
 
 void fgSetNewSoundDevice(const char *device)
