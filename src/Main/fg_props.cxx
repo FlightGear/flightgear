@@ -85,20 +85,26 @@ LogClassMapping log_class_mappings [] = {
 /**
  * Get the logging classes.
  */
+// XXX Making the result buffer be global is a band-aid that hopefully
+// delays its destruction 'til after its last use.
+namespace
+{
+string loggingResult;
+}
+
 static const char *
 getLoggingClasses ()
 {
   sgDebugClass classes = logbuf::get_log_classes();
-  static string result;
-  result = "";
+  loggingResult.clear();
   for (int i = 0; log_class_mappings[i].c != SG_UNDEFD; i++) {
     if ((classes&log_class_mappings[i].c) > 0) {
-      if (!result.empty())
-	result += '|';
-      result += log_class_mappings[i].name;
+      if (!loggingResult.empty())
+	loggingResult += '|';
+      loggingResult += log_class_mappings[i].name;
     }
   }
-  return result.c_str();
+  return loggingResult.c_str();
 }
 
 
