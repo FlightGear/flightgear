@@ -47,6 +47,7 @@ class FGNavRadio : public SGSubsystem
     SGInterpTable *low_tbl;
     SGInterpTable *high_tbl;
 
+    SGPropertyNode_ptr _radio_node;
     SGPropertyNode_ptr lon_node;
     SGPropertyNode_ptr lat_node;
     SGPropertyNode_ptr alt_node;
@@ -120,8 +121,12 @@ class FGNavRadio : public SGSubsystem
     SGPropertyNode_ptr gps_xtrack_error_nm_node;
     SGPropertyNode_ptr _magvarNode;
     
+    // realism setting, are false courses and GS lobes enabled?
+    SGPropertyNode_ptr falseCoursesEnabledNode;
+
     // internal (private) values
 
+    bool _operable; ///< is the unit serviceable, on, powered, etc
     int play_count;
     time_t last_time;
     FGNavRecordPtr _navaid;
@@ -161,10 +166,8 @@ class FGNavRadio : public SGSubsystem
     double _gsNeedleDeflection;
     double _gsNeedleDeflectionNorm;
     
-    // realism setting, are false courses and GS lobes enabled?
-    bool _falseCoursesEnabled;
-
     SGSharedPtr<SGSampleGroup> _sgr;
+    std::vector<SGPropertyNode*> _tiedNodes;
     
     bool updateWithPower(double aDt);
 
@@ -193,6 +196,21 @@ class FGNavRadio : public SGSubsystem
      */
     double localizerWidth(FGNavRecord* aLOC);
     FGNavRecord* findPrimaryNavaid(const SGGeod& aPos, double aFreqMHz);
+    
+    /// accessor for tied, read-only 'operable' property
+    bool isOperable() const
+      { return _operable; }
+      
+    /**
+     * Tied-properties helper, record nodes which are tied for easy un-tie-ing
+     */
+    template <typename T>
+    void tie(const char* aRelPath, const SGRawValue<T>& aRawValue)
+    {
+      SGPropertyNode* nd = _radio_node->getNode(aRelPath, true);
+      _tiedNodes.push_back(nd);
+      nd->tie(aRawValue);
+    }
 public:
 
     FGNavRadio(SGPropertyNode *node);

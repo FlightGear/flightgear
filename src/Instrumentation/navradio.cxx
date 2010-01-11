@@ -94,56 +94,6 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     lon_node(fgGetNode("/position/longitude-deg", true)),
     lat_node(fgGetNode("/position/latitude-deg", true)),
     alt_node(fgGetNode("/position/altitude-ft", true)),
-    is_valid_node(NULL),
-    power_btn_node(NULL),
-    freq_node(NULL),
-    alt_freq_node(NULL),
-    sel_radial_node(NULL),
-    vol_btn_node(NULL),
-    ident_btn_node(NULL),
-    audio_btn_node(NULL),
-    backcourse_node(NULL),
-    nav_serviceable_node(NULL),
-    cdi_serviceable_node(NULL),
-    gs_serviceable_node(NULL),
-    tofrom_serviceable_node(NULL),
-    dme_serviceable_node(NULL),
-    fmt_freq_node(NULL),
-    fmt_alt_freq_node(NULL),
-    heading_node(NULL),
-    radial_node(NULL),
-    recip_radial_node(NULL),
-    target_radial_true_node(NULL),
-    target_auto_hdg_node(NULL),
-    time_to_intercept(NULL),
-    to_flag_node(NULL),
-    from_flag_node(NULL),
-    inrange_node(NULL),
-    signal_quality_norm_node(NULL),
-    cdi_deflection_node(NULL),
-    cdi_deflection_norm_node(NULL),
-    cdi_xtrack_error_node(NULL),
-    cdi_xtrack_hdg_err_node(NULL),
-    has_gs_node(NULL),
-    loc_node(NULL),
-    loc_dist_node(NULL),
-    gs_deflection_node(NULL),
-    gs_deflection_deg_node(NULL),
-    gs_deflection_norm_node(NULL),
-    gs_rate_of_climb_node(NULL),
-    gs_dist_node(NULL),
-    gs_inrange_node(NULL),
-    nav_id_node(NULL),
-    id_c1_node(NULL),
-    id_c2_node(NULL),
-    id_c3_node(NULL),
-    id_c4_node(NULL),
-    nav_slaved_to_gps_node(NULL),
-    gps_cdi_deflection_node(NULL),
-    gps_to_flag_node(NULL),
-    gps_from_flag_node(NULL),
-    gps_has_gs_node(NULL),
-    gps_xtrack_error_nm_node(NULL),
     play_count(0),
     last_time(0),
     target_radial(0.0),
@@ -156,7 +106,6 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     _name(node->getStringValue("name", "nav")),
     _num(node->getIntValue("number", 0)),
     _time_before_search_sec(-1.0),
-    _falseCoursesEnabled(true),
     _sgr(NULL)
 {
     SGPath path( globals->get_fg_root() );
@@ -170,6 +119,10 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     term_tbl = new SGInterpTable( term.str() );
     low_tbl = new SGInterpTable( low.str() );
     high_tbl = new SGInterpTable( high.str() );
+    
+    
+    string branch("/instrumentation/" + _name);
+    _radio_node = fgGetNode(branch.c_str(), _num, true);
 }
 
 
@@ -191,11 +144,7 @@ FGNavRadio::init ()
 
     morse.init();
 
-    string branch;
-    branch = "/instrumentation/" + _name;
-
-    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
-
+    SGPropertyNode* node = _radio_node.get();
     bus_power_node = 
 	fgGetNode(("/systems/electrical/outputs/" + _name).c_str(), true);
 
@@ -217,9 +166,14 @@ FGNavRadio::init ()
     tofrom_serviceable_node = createServiceableProp(node, "to-from");
     dme_serviceable_node = createServiceableProp(node, "dme");
     
-    globals->get_props()->tie("sim/realism/false-radio-courses-enabled", 
-      SGRawValuePointer<bool>(&_falseCoursesEnabled));
-    
+    falseCoursesEnabledNode = 
+      fgGetNode("/sim/realism/false-radio-courses-enabled");
+    if (!falseCoursesEnabledNode) {
+      falseCoursesEnabledNode = 
+        fgGetNode("/sim/realism/false-radio-courses-enabled", true);
+      falseCoursesEnabledNode->setBoolValue(true);
+    }
+
     // frequencies
     SGPropertyNode *subnode = node->getChild("frequencies", 0, true);
     freq_node = subnode->getChild("selected-mhz", 0, true);
@@ -263,8 +217,6 @@ FGNavRadio::init ()
     id_c3_node = node->getChild("nav-id_asc3", 0, true);
     id_c4_node = node->getChild("nav-id_asc4", 0, true);
 
-    node->tie("dme-in-range", SGRawValuePointer<bool>(&_dmeInRange));
-        
     // gps slaving support
     nav_slaved_to_gps_node = node->getChild("slaved-to-gps", 0, true);
     gps_cdi_deflection_node = fgGetNode("/instrumentation/gps/cdi-deflection", true);
@@ -285,13 +237,18 @@ FGNavRadio::init ()
 void
 FGNavRadio::bind ()
 {
-  
+  tie("dme-in-range", SGRawValuePointer<bool>(&_dmeInRange));
+  tie("operable", SGRawValueMethods<FGNavRadio, bool>(*this, &FGNavRadio::isOperable, NULL));
 }
 
 
 void
 FGNavRadio::unbind ()
 {
+  for (unsigned int t=0; t<_tiedNodes.size(); ++t) {
+    _tiedNodes[t]->untie();
+  }
+  _tiedNodes.clear();
 }
 
 
@@ -383,7 +340,8 @@ FGNavRadio::update(double dt)
   if (power_btn_node->getBoolValue() 
       && (bus_power_node->getDoubleValue() > 1.0)
       && nav_serviceable_node->getBoolValue() )
-  {   
+  {
+    _operable = true;
     if (nav_slaved_to_gps_node->getBoolValue()) {
       updateGPSSlaved();
     } else {
@@ -415,6 +373,7 @@ void FGNavRadio::clearOutputs()
   from_flag_node->setBoolValue( false );
   
   _dmeInRange = false;
+  _operable = false;
 }
 
 void FGNavRadio::updateReceiver(double dt)
@@ -532,7 +491,7 @@ void FGNavRadio::updateReceiver(double dt)
   SG_NORMALIZE_RANGE(r, -180.0, 180.0);
   
   if ( is_loc ) {
-    if (_falseCoursesEnabled) {
+    if (falseCoursesEnabledNode->getBoolValue()) {
       // The factor of 30.0 gives a period of 120 which gives us 3 cycles and six 
       // zeros i.e. six courses: one front course, one back course, and four 
       // false courses. Three of the six are reverse sensing.
@@ -604,7 +563,7 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
   double angle = atan2(dot_v, dot_h) * SGD_RADIANS_TO_DEGREES;
   double deflectionAngle = target_gs - angle;
   
-  if (_falseCoursesEnabled) {
+  if (falseCoursesEnabledNode->getBoolValue()) {
     // Construct false glideslopes.  The scale factor of 1.5 
     // in the sawtooth gives a period of 6 degrees.
     // There will be zeros at 3, 6r, 9, 12r et cetera

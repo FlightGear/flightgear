@@ -72,6 +72,21 @@ int main(int argc, char* argv[])
   
   SG_LOG(SG_GENERAL, SG_ALERT, "hello world!");
   
+  const FGAirport* egph = fgFindAirportID("EGPH");
+  SG_LOG(SG_GENERAL, SG_ALERT, "egph: cart location:" << egph->cart());
+  
+  FGAirport::AirportFilter af;
+  FGPositioned::List l = FGPositioned::findClosestN(egph->geod(), 20, 2000.0, &af);
+  for (unsigned int i=0; i<l.size(); ++i) {
+    SG_LOG(SG_GENERAL, SG_ALERT, "\t" << l[i]->ident() << "/" << l[i]->name());
+  }
+  
+  //l = FGPositioned::findWithinRange(egph->geod(), 500.0, &af);
+  //for (unsigned int i=0; i<l.size(); ++i) {
+  //  SG_LOG(SG_GENERAL, SG_ALERT, "\t" << l[i]->ident() << "/" << l[i]->name());
+  //}
+  
+
   FGRouteMgr* rm = new FGRouteMgr;
   globals->add_subsystem( "route-manager", rm );
   
@@ -84,7 +99,7 @@ int main(int argc, char* argv[])
   GPS* gps = new GPS(nd);
   globals->add_subsystem("gps", gps);
   
-  const FGAirport* egph = fgFindAirportID("EGPH");
+  
   testSetPosition(egph->geod());
   
   // startup the route manager

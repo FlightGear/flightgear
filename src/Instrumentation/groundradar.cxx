@@ -197,7 +197,7 @@ osg::Geometry *GroundRadar::addPavementGeometry(const FGPavement* aPavement, dou
   geo_inverse_wgs_84(aTowerLat, aTowerLon, (*loopBegin)->mPos.getLatitudeDeg(), (*loopBegin)->mPos.getLongitudeDeg(), &az1, &az2, &dist_m);
   osg::Vec3 p1 = fromPolar(az1, dist_m * aScale) + osg::Vec3(TextureHalfSize, TextureHalfSize, 0);
   pts->push_back( p1 );
-  polygon->setVertexArray( pts );
+  polygon->setVertexArray( pts.get() );
 
   polygon->addPrimitiveSet( new osg::DrawArrays( osg::PrimitiveSet::POLYGON, 0, pts->size() ) );
 

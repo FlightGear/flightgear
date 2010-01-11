@@ -25,9 +25,7 @@
 #include <map>
 #include <set>
 #include <algorithm> // for sort
-#include <locale> // for char-traits toupper
-
-#include <iostream>
+#include <queue>
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -36,6 +34,7 @@
 #include <simgear/timing/timestamp.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/math/SGBox.hxx>
 
 #include "positioned.hxx"
 
@@ -45,61 +44,350 @@ typedef std::pair<NamedPositionedIndex::const_iterator, NamedPositionedIndex::co
 using std::lower_bound;
 using std::upper_bound;
 
-/**
- * Order positioned elements by type, then pointer address. This allows us to
- * use range searches (lower_ and upper_bound) to grab items of a particular
- * type out of bucket efficently.
- */
-class OrderByType
-{
-public:
-  bool operator()(const FGPositioned* a, const FGPositioned* b) const
-  {
-    if (a->type() == b->type()) return a < b;
-    return a->type() < b->type();
-  }
-};
-
-class LowerLimitOfType
-{
-public:
-  bool operator()(const FGPositioned* a, const FGPositioned::Type b) const
-  {
-    return a->type() < b;
-  }
-
-  bool operator()(const FGPositioned::Type a, const FGPositioned* b) const
-  {
-    return a < b->type();
-  }
-
-  // The operator below is required by VS2005 in debug mode
-  bool operator()(const FGPositioned* a, const FGPositioned* b) const
-  {
-    return a->type() < b->type();
-  }
-};
-
-
-typedef std::set<FGPositioned*, OrderByType> BucketEntry;
-typedef std::map<long int, BucketEntry> SpatialPositionedIndex;
-
 static NamedPositionedIndex global_identIndex;
 static NamedPositionedIndex global_nameIndex;
-static SpatialPositionedIndex global_spatialIndex;
 
-SpatialPositionedIndex::iterator
-bucketEntryForPositioned(FGPositioned* aPos)
+//////////////////////////////////////////////////////////////////////////////
+
+namespace Octree
 {
-  int bucketIndex = aPos->bucket().gen_index();
-  SpatialPositionedIndex::iterator it = global_spatialIndex.find(bucketIndex);
-  if (it != global_spatialIndex.end()) {
-    return it;
-  }
-  
-  // create a new BucketEntry
-  return global_spatialIndex.insert(it, std::make_pair(bucketIndex, BucketEntry()));
+
+const double LEAF_SIZE = SG_NM_TO_METER * 8.0;
+const double LEAF_SIZE_SQR = LEAF_SIZE * LEAF_SIZE;
+
+typedef SGBox<double> SGBoxd;
+
+template<typename T1, typename T2>
+inline bool
+intersects(const SGVec3<T1>& v, const SGBox<T2>& box)
+{
+  if (v[0] < box.getMin()[0])
+    return false;
+  if (box.getMax()[0] < v[0])
+    return false;
+  if (v[1] < box.getMin()[1])
+    return false;
+  if (box.getMax()[1] < v[1])
+    return false;
+  if (v[2] < box.getMin()[2])
+    return false;
+  if (box.getMax()[2] < v[2])
+    return false;
+  return true;
 }
+
+/**
+ * Decorate an object with a double value, and use that value to order 
+ * items, for the purpoises of the STL algorithms
+ */
+template <class T>
+class Ordered
+{
+public:
+    Ordered(const T& v, double x) :
+        _order(x),
+        _inner(v)
+    {
+    }
+    
+    Ordered(const Ordered<T>& a) :
+        _order(a._order),
+        _inner(a._inner)
+    {
+    }
+    
+    Ordered<T>& operator=(const Ordered<T>& a)
+    {
+        _order = a._order;
+        _inner = a._inner;
+        return *this;
+    }
+    
+    bool operator<(const Ordered<T>& other) const
+    {
+        return _order < other._order;
+    }
+    
+    bool operator>(const Ordered<T>& other) const
+    {
+        return _order > other._order;
+    }
+    
+    const T& get() const
+        { return _inner; }
+    
+    double order() const
+        { return _order; }
+    
+private:    
+    double _order;
+    T _inner;
+};
+
+class Node;
+typedef Ordered<Node*> OrderedNode;
+typedef std::greater<OrderedNode> FNPQCompare; 
+
+/**
+ * the priority queue is fundamental to our search algorithm. When searching,
+ * we know the front of the queue is the nearest unexpanded node (to the search
+ * location). The default STL pqueue returns the 'largest' item from top(), so
+ * to get the smallest, we need to replace the default Compare functor (less<>)
+ * with greater<>.
+ */
+typedef std::priority_queue<OrderedNode, std::vector<OrderedNode>, FNPQCompare> FindNearestPQueue;
+
+typedef Ordered<FGPositioned*> OrderedPositioned;
+typedef std::vector<OrderedPositioned> FindNearestResults;
+
+Node* global_spatialOctree = NULL;
+
+/**
+ * Octree node base class, tracks its bounding box and provides various
+ * queries relating to it
+ */
+class Node
+{
+public:
+    bool contains(const SGVec3d& aPos) const
+    {
+        return intersects(aPos, _box);
+    }
+
+    double distSqrToNearest(const SGVec3d& aPos) const
+    {
+        return distSqr(aPos, getClosestPoint(aPos));
+    }
+    
+    virtual void insert(FGPositioned* aP) = 0;
+    
+    SGVec3d getClosestPoint(const SGVec3d& aPos) const
+    {
+      SGVec3d r;
+      
+      for (unsigned int i=0;i<3; ++i) {
+        if (aPos[i] < _box.getMin()[i]) {
+          r[i] = _box.getMin()[i];
+        } else if (aPos[i] > _box.getMax()[i]) {
+          r[i] = _box.getMax()[i];
+        } else {
+          r[i] = aPos[i];
+        }
+      } // of axis iteration
+      
+      return r;
+    }
+    
+    virtual void visit(const SGVec3d& aPos, double aCutoff, 
+      FGPositioned::Filter* aFilter, 
+      FindNearestResults& aResults, FindNearestPQueue&) = 0;
+protected:
+    Node(const SGBoxd &aBox) :
+        _box(aBox)
+    {
+    }
+    
+    const SGBoxd _box;
+};
+
+class Leaf : public Node
+{
+public:
+    Leaf(const SGBoxd& aBox) :
+        Node(aBox)
+    {
+    }
+    
+    const FGPositioned::List& members() const
+    { return _members; }
+    
+    virtual void insert(FGPositioned* aP)
+    {
+        _members.push_back(aP);
+    }
+    
+    virtual void visit(const SGVec3d& aPos, double aCutoff, 
+      FGPositioned::Filter* aFilter, 
+      FindNearestResults& aResults, FindNearestPQueue&)
+    {
+        int previousResultsSize = aResults.size();
+        int addedCount = 0;
+        
+        for (unsigned int i=0; i<_members.size(); ++i) {
+            FGPositioned* p = _members[i];
+            double d2 = distSqr(aPos, p->cart());
+            if (d2 > aCutoff) {
+                continue;
+            }
+            
+            if (aFilter) {
+              if (aFilter->hasTypeRange() && !aFilter->passType(p->type())) {
+                continue;
+              }
+      
+              if (!aFilter->pass(p)) {
+                continue;
+              }
+            } // of have a filter
+
+            ++addedCount;
+            aResults.push_back(OrderedPositioned(p, d2));
+        }
+        
+        if (addedCount == 0) {
+          return;
+        }
+        
+      // keep aResults sorted
+        // sort the new items, usually just one or two items
+        std::sort(aResults.begin() + previousResultsSize, aResults.end());
+        
+        // merge the two sorted ranges together - in linear time
+        std::inplace_merge(aResults.begin(), 
+          aResults.begin() + previousResultsSize, aResults.end());
+      }
+private:
+    FGPositioned::List _members;
+};
+
+class Branch : public Node
+{
+public:
+    Branch(const SGBoxd& aBox) :
+        Node(aBox)
+    {
+        memset(children, 0, sizeof(Node*) * 8);
+    }
+    
+    virtual void insert(FGPositioned* aP)
+    {
+        SGVec3d cart(aP->cart());
+        assert(contains(cart));
+        int childIndex = 0;
+        
+        SGVec3d center(_box.getCenter());
+    // tests must match indices in SGbox::getCorner
+        if (cart.x() < center.x()) {
+            childIndex += 1;
+        }
+        
+        if (cart.y() < center.y()) {
+            childIndex += 2;
+        }
+        
+        if (cart.z() < center.z()) {
+            childIndex += 4;
+        }
+        
+        Node* child = children[childIndex];
+        if (!child) { // lazy building of children
+            SGBoxd cb(boxForChild(childIndex));            
+            double d2 = dot(cb.getSize(), cb.getSize());
+            if (d2 < LEAF_SIZE_SQR) {
+                child = new Leaf(cb);
+            } else {
+                child = new Branch(cb);
+            }
+            
+            children[childIndex] = child; 
+        }
+        
+        child->insert(aP);
+    }
+    
+    virtual void visit(const SGVec3d& aPos, double aCutoff, 
+      FGPositioned::Filter*, 
+      FindNearestResults&, FindNearestPQueue& aQ)
+    {    
+        for (unsigned int i=0; i<8; ++i) {
+            if (!children[i]) {
+                continue;
+            }
+            
+            double d2 = children[i]->distSqrToNearest(aPos);
+            if (d2 > aCutoff) {
+                continue; // exceeded cutoff
+            }
+            
+            aQ.push(Ordered<Node*>(children[i], d2));
+        } // of child iteration
+    }
+    
+    
+private:
+    /**
+     * Return the box for a child touching the specified corner
+     */
+    SGBoxd boxForChild(unsigned int aCorner) const
+    {
+        SGBoxd r(_box.getCenter());
+        r.expandBy(_box.getCorner(aCorner));
+        return r;
+    }
+    
+    Node* children[8];
+};
+
+void findNearestN(const SGVec3d& aPos, unsigned int aN, double aCutoffM, FGPositioned::Filter* aFilter, FGPositioned::List& aResults)
+{
+    aResults.clear();
+    FindNearestPQueue pq;
+    FindNearestResults results;
+    pq.push(Ordered<Node*>(global_spatialOctree, 0));
+    double cut = aCutoffM * aCutoffM;
+    
+    while (!pq.empty()) {
+        if (!results.empty()) {
+          // terminate the search if we have sufficent results, and we are
+          // sure no node still on the queue contains a closer match
+          double furthestResultOrder = results.back().order();
+          if ((results.size() >= aN) && (furthestResultOrder < pq.top().order())) {
+            break;
+          }
+        }
+        
+        Node* nd = pq.top().get();
+        pq.pop();
+        
+        nd->visit(aPos, cut, aFilter, results, pq);
+    } // of queue iteration
+    
+    // depending on leaf population, we may have (slighty) more results
+    // than requested
+    unsigned int numResults = std::min((unsigned int) results.size(), aN);
+  // copy results out
+    aResults.resize(numResults);
+    for (unsigned int r=0; r<numResults; ++r) {
+      aResults[r] = results[r].get();
+    }
+}
+
+void findAllWithinRange(const SGVec3d& aPos, double aRangeM, FGPositioned::Filter* aFilter, FGPositioned::List& aResults)
+{
+    aResults.clear();
+    FindNearestPQueue pq;
+    FindNearestResults results;
+    pq.push(Ordered<Node*>(global_spatialOctree, 0));
+    double rng = aRangeM * aRangeM;
+    
+    while (!pq.empty()) {
+        Node* nd = pq.top().get();
+        pq.pop();
+        
+        nd->visit(aPos, rng, aFilter, results, pq);
+    } // of queue iteration
+    
+    unsigned int numResults = results.size();
+  // copy results out
+    aResults.resize(numResults);
+    for (unsigned int r=0; r<numResults; ++r) {
+      aResults[r] = results[r].get();
+    }
+}
+
+} // of namespace Octree
+
+//////////////////////////////////////////////////////////////////////////////
 
 static void
 addToIndices(FGPositioned* aPos)
@@ -115,9 +403,12 @@ addToIndices(FGPositioned* aPos)
                              std::make_pair(aPos->name(), aPos));
   }
 
-  
-  SpatialPositionedIndex::iterator it = bucketEntryForPositioned(aPos);
-  it->second.insert(aPos);
+  if (!Octree::global_spatialOctree) {
+    double RADIUS_EARTH_M = 7000 * 1000.0; // 7000km is plenty
+    SGVec3d earthExtent(RADIUS_EARTH_M, RADIUS_EARTH_M, RADIUS_EARTH_M);
+    Octree::global_spatialOctree = new Octree::Branch(SGBox<double>(-earthExtent, earthExtent));
+  }
+  Octree::global_spatialOctree->insert(aPos);
 }
 
 static void
@@ -148,88 +439,6 @@ removeFromIndices(FGPositioned* aPos)
       ++it;
     } // of multimap walk
   }
-
-  SpatialPositionedIndex::iterator sit = bucketEntryForPositioned(aPos);
-  sit->second.erase(aPos);
-}
-
-static void
-spatialFilterInBucket(const SGBucket& aBucket, FGPositioned::Filter* aFilter, FGPositioned::List& aResult)
-{
-  SpatialPositionedIndex::const_iterator it;
-  it = global_spatialIndex.find(aBucket.gen_index());
-  if (it == global_spatialIndex.end()) {
-    return;
-  }
-  
-  BucketEntry::const_iterator l = it->second.begin();
-  BucketEntry::const_iterator u = it->second.end();
-
-  if (!aFilter) { // pass everything
-    aResult.insert(aResult.end(), l, u);
-    return;
-  }
-
-  if (aFilter->hasTypeRange()) {
-    // avoid many calls to the filter hook
-    l = lower_bound(it->second.begin(), it->second.end(), aFilter->minType(), LowerLimitOfType());
-    u = upper_bound(l, it->second.end(), aFilter->maxType(), LowerLimitOfType());
-  }
-
-  for ( ; l != u; ++l) {
-    if ((*aFilter)(*l)) {
-      aResult.push_back(*l);
-    }
-  }
-}
-
-static void
-spatialFind(const SGGeod& aPos, double aRange, 
-  FGPositioned::Filter* aFilter, FGPositioned::List& aResult)
-{
-  SGBucket buck(aPos);
-  double lat = aPos.getLatitudeDeg(),
-    lon = aPos.getLongitudeDeg();
-  
-  int bx = (int)( aRange*SG_NM_TO_METER / buck.get_width_m() / 2);
-  int by = (int)( aRange*SG_NM_TO_METER / buck.get_height_m() / 2 );
-    
-  // loop over bucket range 
-  for ( int i=-bx; i<=bx; i++) {
-    for ( int j=-by; j<=by; j++) {
-      spatialFilterInBucket(sgBucketOffset(lon, lat, i, j), aFilter, aResult);
-    } // of j-iteration
-  } // of i-iteration  
-}
-
-/**
- */
-class RangePredictate
-{
-public:
-  RangePredictate(const SGGeod& aOrigin, double aRange) :
-    mOrigin(SGVec3d::fromGeod(aOrigin)),
-    mRangeSqr(aRange * aRange)
-  { ; }
-  
-  bool operator()(const FGPositionedRef& aPos)
-  {
-    double dSqr = distSqr(aPos->cart(), mOrigin);
-    return (dSqr > mRangeSqr);
-  }
-  
-private:
-  SGVec3d mOrigin;
-  double mRangeSqr;
-};
-
-static void
-filterListByRange(const SGGeod& aPos, double aRange, FGPositioned::List& aResult)
-{
-  RangePredictate pred(aPos, aRange * SG_NM_TO_METER);
-  FGPositioned::List::iterator newEnd; 
-  newEnd = std::remove_if(aResult.begin(), aResult.end(), pred);
-  aResult.erase(newEnd, aResult.end());
 }
 
 class DistanceOrdering
@@ -312,51 +521,6 @@ namedFindClosest(const NamedPositionedIndex& aIndex, const std::string& aName,
       minDist = d2;
       result = r;
     }
-  }
-  
-  return result;
-}
-
-static FGPositioned::List
-spatialGetClosest(const SGGeod& aPos, unsigned int aN, double aCutoffNm, FGPositioned::Filter* aFilter)
-{
-  FGPositioned::List result;
-  int radius = 1; // start at 1, radius 0 is handled explicitly
-  SGBucket buck;
-  double lat = aPos.getLatitudeDeg(),
-    lon = aPos.getLongitudeDeg();
-  // final cutoff is in metres, and scaled to account for testing the corners
-  // of the 'box' instead of the centre of each edge
-  double cutoffM = aCutoffNm * SG_NM_TO_METER * 1.5;
-  
-  // base case, simplifes loop to do it seperately here
-  spatialFilterInBucket(sgBucketOffset(lon, lat, 0, 0), aFilter, result);
-
-  for (;result.size() < aN; ++radius) {
-    // cutoff check
-    double az1, az2, d1, d2;
-    SGGeodesy::inverse(aPos, sgBucketOffset(lon, lat, -radius, -radius).get_center(), az1, az2, d1);
-    SGGeodesy::inverse(aPos, sgBucketOffset(lon, lat, radius, radius).get_center(), az1, az2, d2);  
-      
-    if ((d1 > cutoffM) && (d2 > cutoffM)) {
-      //std::cerr << "spatialGetClosest terminating due to range cutoff" << std::endl;
-      break;
-    }
-    
-    FGPositioned::List hits;
-    for ( int i=-radius; i<=radius; i++) {
-      spatialFilterInBucket(sgBucketOffset(lon, lat, i, -radius), aFilter, hits);
-      spatialFilterInBucket(sgBucketOffset(lon, lat, -radius, i), aFilter, hits);
-      spatialFilterInBucket(sgBucketOffset(lon, lat, i, radius), aFilter, hits);
-      spatialFilterInBucket(sgBucketOffset(lon, lat, radius, i), aFilter, hits);
-    }
-
-    result.insert(result.end(), hits.begin(), hits.end()); // append
-  } // of outer loop
-  
-  sortByDistance(aPos, result);
-  if (result.size() > aN) {
-    result.resize(aN); // truncate at requested number of matches
   }
   
   return result;
@@ -598,6 +762,7 @@ FGPositioned::Type FGPositioned::typeFromName(const std::string& aName)
   // aliases
     {"waypoint", WAYPOINT},
     {"apt", AIRPORT},
+    {"arpt", AIRPORT},
     {"any", INVALID},
     {"all", INVALID},
     
@@ -656,8 +821,8 @@ FGPositioned::List
 FGPositioned::findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilter)
 {
   List result;
-  spatialFind(aPos, aRangeNm, aFilter, result);
-  filterListByRange(aPos, aRangeNm, result);
+  Octree::findAllWithinRange(SGVec3d::fromGeod(aPos), 
+    aRangeNm * SG_NM_TO_METER, aFilter, result);
   return result;
 }
 
@@ -676,7 +841,7 @@ FGPositioned::findAllWithNameSortedByRange(const std::string& aName, const SGGeo
 FGPositionedRef
 FGPositioned::findClosest(const SGGeod& aPos, double aCutoffNm, Filter* aFilter)
 {
-   FGPositioned::List l(spatialGetClosest(aPos, 1, aCutoffNm, aFilter));
+   List l(findClosestN(aPos, 1, aCutoffNm, aFilter));
    if (l.empty()) {
       return NULL;
    }
@@ -688,12 +853,18 @@ FGPositioned::findClosest(const SGGeod& aPos, double aCutoffNm, Filter* aFilter)
 FGPositioned::List
 FGPositioned::findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm, Filter* aFilter)
 {
-  return spatialGetClosest(aPos, aN, aCutoffNm, aFilter);
+  List result;
+  Octree::findNearestN(SGVec3d::fromGeod(aPos), aN, aCutoffNm * SG_NM_TO_METER, aFilter, result);
+  return result;
 }
 
 FGPositionedRef
 FGPositioned::findNextWithPartialId(FGPositionedRef aCur, const std::string& aId, Filter* aFilter)
 {
+  if (aId.empty()) {
+    return NULL;
+  }
+  
   std::string id(boost::to_upper_copy(aId));
 
   // It is essential to bound our search, to avoid iterating all the way to the end of the database.
@@ -785,8 +956,8 @@ findClosestWithPartial(const SGGeod& aPos, FGPositioned::Filter* aFilter, int aO
 {
   // why aOffset +2 ? at offset=3, we want the fourth search result, but also
   // to know if the fifth result exists (to set aNext flag for iterative APIs)
-  FGPositioned::List matches = 
-    spatialGetClosest(aPos, aOffset + 2, 1000.0, aFilter);
+  FGPositioned::List matches;
+  Octree::findNearestN(SGVec3d::fromGeod(aPos), aOffset + 2, 1000 * SG_NM_TO_METER, aFilter, matches);
   
   if ((int) matches.size() <= aOffset) {
     SG_LOG(SG_GENERAL, SG_INFO, "findClosestWithPartial, couldn't match enough with prefix");
