@@ -240,11 +240,10 @@ FGRunway* getRunwayFromName(const std::string& aName)
     return NULL;
   }
   
-  FGRunway* runway = apt->getRunwayByIdent(parts[1]);
-  if (!runway) {
+  if (!apt->hasRunwayWithIdent(parts[1])) {
     SG_LOG(SG_GENERAL, SG_WARN, "navaid " << aName << " associated with bogus runway ID:" << parts[1]);
     return NULL;
   }
 
-  return runway;
+  return apt->getRunwayByIdent(parts[1]);
 }
