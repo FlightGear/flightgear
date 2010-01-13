@@ -1456,21 +1456,6 @@ bool fgInitSubsystems() {
     globals->get_event_mgr()->setRealtimeProperty(fgGetNode("/sim/time/delta-realtime-sec", true));
 
     ////////////////////////////////////////////////////////////////////
-    // Initialize the sound manager subsystem.
-    ////////////////////////////////////////////////////////////////////
-
-    globals->get_soundmgr()->bind();
-    globals->get_soundmgr()->init(fgGetString("/sim/sound/device-name", NULL));
-
-    vector <const char*>devices =
-                        globals->get_soundmgr()->get_available_devices();
-    for (unsigned int i=0; i<devices.size(); i++) {
-        SGPropertyNode *p = fgGetNode("/sim/sound/devices/device", i, true);
-        p->setStringValue(devices[i]);
-    }
-    devices.clear();
-
-    ////////////////////////////////////////////////////////////////////
     // Initialize the property interpolator subsystem. Put into the INIT
     // group because the "nasal" subsystem may need it at GENERAL take-down.
     ////////////////////////////////////////////////////////////////////
