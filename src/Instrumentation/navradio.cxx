@@ -208,6 +208,7 @@ FGNavRadio::init ()
     gs_deflection_deg_node = node->getChild("gs-needle-deflection-deg", 0, true);
     gs_deflection_norm_node = node->getChild("gs-needle-deflection-norm", 0, true);
     gs_rate_of_climb_node = node->getChild("gs-rate-of-climb", 0, true);
+    gs_rate_of_climb_fpm_node = node->getChild("gs-rate-of-climb-fpm", 0, true);
     gs_dist_node = node->getChild("gs-distance", 0, true);
     gs_inrange_node = node->getChild("gs-in-range", 0, true);
     
@@ -593,17 +594,22 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
   double gs_diff = target_gs - angle;
   // convert desired vertical path angle into a climb rate
   double des_angle = angle - 10 * gs_diff;
+  /* printf("target_gs=%.1f angle=%.1f gs_diff=%.1f des_angle=%.1f\n",
+     target_gs, angle, gs_diff, des_angle); */
 
   // estimate horizontal speed towards ILS in meters per minute
   double elapsedDistance = last_x - gsDist;
   last_x = gsDist;
       
   double new_vel = ( elapsedDistance / dt );
-  horiz_vel = 0.75 * horiz_vel + 0.25 * new_vel;
+  horiz_vel = 0.99 * horiz_vel + 0.01 * new_vel;
+  /* printf("vel=%.1f (dist=%.1f dt=%.2f)\n", horiz_vel, elapsedDistance, dt);*/
 
   gs_rate_of_climb_node
       ->setDoubleValue( -sin( des_angle * SGD_DEGREES_TO_RADIANS )
                         * horiz_vel * SG_METER_TO_FEET );
+  gs_rate_of_climb_fpm_node
+      ->setDoubleValue( gs_rate_of_climb_node->getDoubleValue() * 60 );
 }
 
 void FGNavRadio::updateDME(const SGVec3d& aircraft)
