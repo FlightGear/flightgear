@@ -43,7 +43,7 @@
 
 FGAIShip::FGAIShip(object_type ot) :
 FGAIBase(ot),
-_limit(40),
+_limit(100),
 _elevation_m(0),
 _elevation_ft(0),
 _tow_angle(0),
@@ -68,7 +68,8 @@ _old_range(0),
 _range_rate(0),
 _roll_constant(0.001),
 _hdg_constant(0.01),
-_roll_factor(-0.0083335)
+_roll_factor(-0.0083335),
+_restart(false)
 
 {
         invisible = false;
@@ -89,6 +90,7 @@ void FGAIShip::readFromScenario(SGPropertyNode* scFileNode) {
     setRadius(scFileNode->getDoubleValue("turn-radius-ft", 2000));
     std::string flightplan = scFileNode->getStringValue("flightplan");
     setRepeat(scFileNode->getBoolValue("repeat", false));
+    setRestart(scFileNode->getBoolValue("restart", false));
     setStartTime(scFileNode->getStringValue("time", ""));
     setLeadAngleGain(scFileNode->getDoubleValue("lead-angle-gain", 1.5));
     setLeadAngleLimit(scFileNode->getDoubleValue("lead-angle-limit-deg", 15));
@@ -196,6 +198,10 @@ void FGAIShip::bind() {
         SGRawValuePointer<double>(&_proportion));
     props->tie("controls/fixed-turn-radius-ft",
         SGRawValuePointer<double>(&_fixed_turn_radius));
+    props->tie("controls/restart",
+        SGRawValuePointer<bool>(&_restart));
+    props->tie("velocities/speed-kts",
+                SGRawValuePointer<double>(&speed));
 }
 
 void FGAIShip::unbind() {
@@ -231,6 +237,8 @@ void FGAIShip::unbind() {
     props->untie("controls/constants/lead-angle/proportion");
     props->untie("controls/fixed-turn-radius-ft");
     props->untie("controls/constants/speed");
+    props->untie("controls/restart");
+    props->untie("velocities/speed-kts");
 
 }
 void FGAIShip::update(double dt) {
@@ -304,8 +312,7 @@ void FGAIShip::Run(double dt) {
     }
 
     // do not allow unreasonable speeds
-    if (speed > _limit)
-        speed = _limit;
+    SG_CLAMP_RANGE(speed, -_limit * 0.75, _limit);
 
     // convert speed to degrees per second
     speed_north_deg_sec = cos(hdg / SGD_RADIANS_TO_DEGREES)
@@ -332,17 +339,26 @@ void FGAIShip::Run(double dt) {
 
 
     //we assume that at slow speed ships will manoeuvre using engines/bow thruster
-    if (fabs(speed)<=5)
-        _sp_turn_radius_ft = _fixed_turn_radius;
-    else {
-        // adjust turn radius for speed. The equation is very approximate.
-        // we need to allow for negative speeds
-        if (type == "ship")
-            _sp_turn_radius_ft = 10 * pow ((fabs(speed) - 15), 2) + turn_radius_ft;
-        else
-            _sp_turn_radius_ft = turn_radius_ft;
+	if(type == "ship" || type == "carrier" || type == "escort"){
 
-    }
+		if (fabs(speed)<=5)
+			_sp_turn_radius_ft = _fixed_turn_radius;
+		else {
+			// adjust turn radius for speed. The equation is very approximate.
+			// we need to allow for negative speeds
+			_sp_turn_radius_ft = 10 * pow ((fabs(speed) - 15), 2) + turn_radius_ft;
+		}
+
+	} else {
+		
+		if (fabs(speed) <= 40)
+           _sp_turn_radius_ft = _fixed_turn_radius;
+		else {
+			// adjust turn radius for speed. 
+			_sp_turn_radius_ft = turn_radius_ft;
+		}
+	}
+
 
     if (_rudder <= -0.25 || _rudder >= 0.25) {
         // adjust turn radius for _rudder angle. The equation is even more approximate.
@@ -404,7 +420,7 @@ void FGAIShip::Run(double dt) {
     }
 
     // set the _rudder limit by speed
-    if (type == "ship"){
+    if (type == "ship" || type == "carrier" || type == "escort"){
 
         if (speed <= 40)
             rudder_limit = (-0.825 * speed) + 35;
@@ -456,13 +472,6 @@ void FGAIShip::ClimbTo(double altitude) {
 }
 
 void FGAIShip::TurnTo(double heading) {
-    //double relbrg_corr = _relbrg;
-
-    //if ( relbrg_corr > 5)
-    //    relbrg_corr = 5;
-    //else if( relbrg_corr < -5)
-    //    relbrg_corr = -5;
-
     tgt_heading = heading - _lead_angle + _tow_angle;
     SG_NORMALIZE_RANGE(tgt_heading, 0.0, 360.0);
     _hdg_lock = true;
@@ -511,6 +520,10 @@ void FGAIShip::setRepeat(bool r) {
     _repeat = r;
 }
 
+void FGAIShip::setRestart(bool r) {
+    _restart = r;
+}
+
 void FGAIShip::setMissed(bool m) {
     _missed = m;
     props->setBoolValue("waypoint/missed", _missed);
@@ -546,6 +559,15 @@ void FGAIShip::setSpeedConstant(double sc) {
 
 void FGAIShip::setFixedTurnRadius(double ftr) {
     _fixed_turn_radius = ftr;
+}
+
+void FGAIShip::setInitialTunnel(bool t) {
+    _initial_tunnel = t;
+    setTunnel(_initial_tunnel);
+}
+
+void FGAIShip::setTunnel(bool t) {
+    _tunnel = t;
 }
 
 void FGAIShip::setWPNames() {
@@ -614,7 +636,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
     if (_dt_count < _next_run && _start_sec < time_sec)
         return;
 
-    _next_run = 1.0 + (0.5 * sg_random());
+    _next_run = 0.05 + (0.025 * sg_random());
 
     double until_time_sec = 0;
     _missed = false;
@@ -657,7 +679,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
         if (_next_name == "TUNNEL"){
             _tunnel = !_tunnel;
 
-            //SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: " << _name << " TUNNEL ");
+            SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: " << _name << " " << sp_turn_radius_nm );
 
             fp->IncrementWaypoint(false);
             next = fp->getNextWaypoint();
@@ -674,7 +696,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
         }else if(_next_name == "END" || fp->getNextWaypoint() == 0) {
 
             if (_repeat) {
-                SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: "<< _name << "Flightplan restarting ");
+                SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: "<< _name << " Flightplan repeating ");
                 fp->restart();
                 prev = curr;
                 curr = fp->getCurrentWaypoint();
@@ -687,6 +709,10 @@ void FGAIShip::ProcessFlightPlan(double dt) {
                 _missed_count = 0;
                 _lead_angle = 0;
                 AccelTo(prev->speed);
+            } else if (_restart){
+                SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: " << _name << " Flightplan restarting ");
+                _missed_count = 0;
+                initFlightPlan();
             } else {
                 SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: " << _name << " Flightplan dying ");
                 setDie(true);
@@ -802,6 +828,7 @@ bool FGAIShip::initFlightPlan() {
 
     bool init = false;
     _start_sec = 0;
+    _tunnel = _initial_tunnel;
 
     fp->restart();
     fp->IncrementWaypoint(false);
@@ -859,7 +886,7 @@ bool FGAIShip::initFlightPlan() {
     _missed_count = 0;
     _new_waypoint = true;
 
-    SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: " << _name << " done initialising waypoints ");
+    SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: " << _name << " done initialising waypoints " << _tunnel);
     if (prev)
         init = true;
 
@@ -1068,15 +1095,17 @@ void FGAIShip::setXTrackError() {
     double brg = getCourse(pos.getLatitudeDeg(), pos.getLongitudeDeg(),
         curr->latitude, curr->longitude);
     double xtrack_error_nm = sin((course - brg)* SG_DEGREES_TO_RADIANS) * _wp_range;
+    double factor = -0.0045 * speed + 1;
+    double limit = _lead_angle_limit * factor;
 
     if (_wp_range > 0){
         _lead_angle = atan2(xtrack_error_nm,(_wp_range * _proportion)) * SG_RADIANS_TO_DEGREES;
     } else
         _lead_angle = 0;
 
-    _lead_angle *= _lead_angle_gain;
+    _lead_angle *= _lead_angle_gain * factor;
     _xtrack_error = xtrack_error_nm * 6076.1155;
 
-    SG_CLAMP_RANGE(_lead_angle, -_lead_angle_limit, _lead_angle_limit);
+    SG_CLAMP_RANGE(_lead_angle, -limit, limit);
 
 }

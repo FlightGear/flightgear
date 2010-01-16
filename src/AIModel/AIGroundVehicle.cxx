@@ -45,7 +45,9 @@ _dt_count(0),
 _next_run(0),
 _parent_x_offset(0),
 _parent_y_offset(0),
-_parent("")
+_parent_z_offset(0),
+_parent(""),
+_break_count(0)
 
 {
     invisible = false;
@@ -64,16 +66,18 @@ void FGAIGroundVehicle::readFromScenario(SGPropertyNode* scFileNode) {
     setSMPath(scFileNode->getStringValue("submodel-path", ""));
     setContactX1offset(scFileNode->getDoubleValue("contact-x1-offset", 0.0));
     setContactX2offset(scFileNode->getDoubleValue("contact-x2-offset", 0.0));
-    setXOffset(scFileNode->getDoubleValue("hitch-x-offset", 38.55));
+    setXOffset(scFileNode->getDoubleValue("hitch-x-offset", 35.0));
     setYOffset(scFileNode->getDoubleValue("hitch-y-offset", 0.0));
+    setZOffset(scFileNode->getDoubleValue("hitch-z-offset", 0.0));
     setPitchoffset(scFileNode->getDoubleValue("pitch-offset", 0.0));
     setRolloffset(scFileNode->getDoubleValue("roll-offset", 0.0));
     setYawoffset(scFileNode->getDoubleValue("yaw-offset", 0.0));
     setPitchCoeff(scFileNode->getDoubleValue("pitch-coefficient", 0.1));
     setElevCoeff(scFileNode->getDoubleValue("elevation-coefficient", 0.25));
     setParentName(scFileNode->getStringValue("parent", ""));
-    setTowAngleGain(scFileNode->getDoubleValue("tow-angle-gain", 2.0));
+    setTowAngleGain(scFileNode->getDoubleValue("tow-angle-gain", 1.0));
     setTowAngleLimit(scFileNode->getDoubleValue("tow-angle-limit-deg", 2.0));
+    setInitialTunnel(scFileNode->getBoolValue("tunnel", false));
     //we may need these later for towed vehicles
     //    setSubID(scFileNode->getIntValue("SubID", 0));
     //    setGroundOffset(scFileNode->getDoubleValue("ground-offset", 0.0));
@@ -99,10 +103,14 @@ void FGAIGroundVehicle::bind() {
         SGRawValuePointer<double>(&_x_offset));
     props->tie("hitch/y-offset-ft",
         SGRawValuePointer<double>(&_y_offset));
+    props->tie("hitch/z-offset-ft",
+        SGRawValuePointer<double>(&_z_offset));
     props->tie("hitch/parent-x-offset-ft",
         SGRawValuePointer<double>(&_parent_x_offset));
     props->tie("hitch/parent-y-offset-ft",
         SGRawValuePointer<double>(&_parent_y_offset));
+    props->tie("hitch/parent-z-offset-ft",
+        SGRawValuePointer<double>(&_parent_z_offset));
     props->tie("controls/constants/tow-angle/gain",
         SGRawValuePointer<double>(&_tow_angle_gain));
     props->tie("controls/constants/tow-angle/limit-deg",
@@ -117,14 +125,16 @@ void FGAIGroundVehicle::unbind() {
     FGAIShip::unbind();
 
     props->untie("controls/constants/elevation-coeff");
+	props->untie("controls/constants/pitch-coeff");
     props->untie("position/ht-AGL-ft");
-    props->untie("controls/constants/pitch-coeff");
     props->untie("hitch/rel-bearing-deg");
     props->untie("hitch/tow-angle-deg");
     props->untie("hitch/range-ft");
     props->untie("hitch/x-offset-ft");
     props->untie("hitch/y-offset-ft");
+    props->untie("hitch/z-offset-ft");
     props->untie("hitch/parent-x-offset-ft");
+    props->untie("hitch/parent-y-offset-ft");
     props->untie("hitch/parent-y-offset-ft");
     props->untie("controls/constants/tow-angle/gain");
     props->untie("controls/constants/tow-angle/limit-deg");
@@ -145,9 +155,9 @@ bool FGAIGroundVehicle::init(bool search_in_AI_path) {
 
 void FGAIGroundVehicle::update(double dt) {
     //    SG_LOG(SG_GENERAL, SG_ALERT, "updating GroundVehicle: " << _name );
+    FGAIShip::update(dt);
 
     RunGroundVehicle(dt);
-//    FGAIShip::update(dt);
 }
 
 void FGAIGroundVehicle::setNoRoll(bool nr) {
@@ -168,6 +178,10 @@ void FGAIGroundVehicle::setXOffset(double x) {
 
 void FGAIGroundVehicle::setYOffset(double y) {
     _y_offset = y;
+}
+
+void FGAIGroundVehicle::setZOffset(double z) {
+    _z_offset = z;
 }
 
 void FGAIGroundVehicle::setPitchCoeff(double pc) {
@@ -201,9 +215,12 @@ void FGAIGroundVehicle::setParentName(const string& p) {
 }
 
 void FGAIGroundVehicle::setTowAngle(double ta, double dt, double coeff){
-    //_tow_angle = ta * _tow_angle_gain;
-    _tow_angle = pow(ta,2) * sign(ta);
-    SG_CLAMP_RANGE(_tow_angle, -_tow_angle_limit, _tow_angle_limit);
+    ta *= _tow_angle_gain;
+    double factor = -0.0045 * speed + 1;
+    double limit = _tow_angle_limit * factor;
+//	cout << "speed "<< speed << " _factor " << _factor<<" " <<_tow_angle_limit<< endl; 
+     _tow_angle = pow(ta,2) * sign(ta) * factor;
+    SG_CLAMP_RANGE(_tow_angle, -limit, limit);
 }
 
 bool FGAIGroundVehicle::getGroundElev(SGGeod inpos) {
@@ -242,10 +259,10 @@ bool FGAIGroundVehicle::getGroundElev(SGGeod inpos) {
 bool FGAIGroundVehicle::getPitch() {
 
     if (!_tunnel){
-
         double vel = props->getDoubleValue("velocities/true-airspeed-kt", 0);
         double contact_offset_x1_m = _contact_x1_offset * SG_FEET_TO_METER;
         double contact_offset_x2_m = _contact_x2_offset * SG_FEET_TO_METER;
+        double _z_offset_m = _parent_z_offset * SG_FEET_TO_METER;
 
         SGVec3d front(-contact_offset_x1_m, 0, 0);
         SGVec3d rear(-contact_offset_x2_m, 0, 0);
@@ -261,9 +278,9 @@ bool FGAIGroundVehicle::getPitch() {
         double elev_rear = 0;
         double max_alt = 10000;
 
-        if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(geodFront, 3000), elev_front,
-             &_material, 0)){
-                front_elev_m = elev_front;
+        if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(geodFront, 3000),
+            elev_front, &_material, 0)){
+                front_elev_m = elev_front + _z_offset_m;
         } else
             return false;
 
@@ -296,27 +313,27 @@ bool FGAIGroundVehicle::getPitch() {
         static double prev_alt;
 
         if (_new_waypoint){
-            cout << "new waypoint, calculating pitch " << endl;
-            curr_alt = curr->altitude * SG_METER_TO_FEET;
-            prev_alt = prev->altitude * SG_METER_TO_FEET;
-            d_alt = curr_alt - prev_alt;
-
+            //cout << "new waypoint, calculating pitch " << endl;
+            curr_alt = curr->altitude;
+            prev_alt = prev->altitude;
+            cout << "prev_alt" <<prev_alt << endl;
+            d_alt = (curr_alt - prev_alt) * SG_METER_TO_FEET;
+            //_elevation = prev->altitude;
             distance = SGGeodesy::distanceM(SGGeod::fromDeg(prev->longitude, prev->latitude),
             SGGeod::fromDeg(curr->longitude, curr->latitude));
-
             _pitch = atan2(d_alt, distance * SG_METER_TO_FEET) * SG_RADIANS_TO_DEGREES;
-//            cout << "new waypoint, calculating pitch " <<  _pitch << endl;
+            //cout << "new waypoint, calculating pitch " <<  _pitch << 
+            //    " " << _pitch_offset << " " << _elevation <<endl;
         }
-
 
         double distance_to_go = SGGeodesy::distanceM(SGGeod::fromDeg(pos.getLongitudeDeg(), pos.getLatitudeDeg()),
             SGGeod::fromDeg(curr->longitude, curr->latitude));
 
-        //cout << "tunnel " << _tunnel
-        //     << " distance curr & prev " << prev->name << " " << curr->name << " " << distance * SG_METER_TO_FEET
-        //     << " distance to go " << distance_to_go * SG_METER_TO_FEET
-        //     << " d_alt ft " << d_alt
-        //     << endl;
+        /*cout << "tunnel " << _tunnel
+             << " distance prev & curr " << prev->name << " " << curr->name << " " << distance * SG_METER_TO_FEET
+             << " distance to go " << distance_to_go * SG_METER_TO_FEET
+             << " d_alt ft " << d_alt
+             << endl;*/
 
         if (distance_to_go > distance)
             _elevation = prev_alt;
@@ -367,13 +384,17 @@ void FGAIGroundVehicle::setParent() {
             * SG_FEET_TO_METER;
         double hitch_y_offset_m = _selected_ac->getDoubleValue("hitch/y-offset-ft")
             * SG_FEET_TO_METER;
-
+        double hitch_z_offset_m = _selected_ac->getDoubleValue("hitch/z-offset-ft")
+            * SG_FEET_TO_METER;
+        
         _selectedpos.setLatitudeDeg(lat);
         _selectedpos.setLongitudeDeg(lon);
         _selectedpos.setElevationFt(elevation);
 
         _parent_x_offset = _selected_ac->getDoubleValue("hitch/x-offset-ft");
         _parent_y_offset = _selected_ac->getDoubleValue("hitch/y-offset-ft");
+        _parent_z_offset = _selected_ac->getDoubleValue("hitch/z-offset-ft");
+
         _parent_speed    = _selected_ac->getDoubleValue("velocities/true-airspeed-kt");
 
         SGVec3d rear_hitch(-hitch_x_offset_m, hitch_y_offset_m, 0);
@@ -534,7 +555,7 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
     if (_dt_count < _next_run)
         return;
 
-    _next_run = 0.055 /*+ (0.015 * sg_random())*/;
+    _next_run = 0.05 /*+ (0.015 * sg_random())*/;
 
     if (getPitch()){
         setElevation(_elevation, _dt_count, _elevation_coeff);
@@ -545,7 +566,6 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
 
     if(_parent == ""){
         AccelTo(prev->speed);
-        FGAIShip::update(_dt_count);
         _dt_count = 0;
         return;
     }
@@ -554,12 +574,15 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
 
     string parent_next_name = _selected_ac->getStringValue("waypoint/name-next");
     bool parent_waiting = _selected_ac->getBoolValue("waypoint/waiting");
+    bool parent_restart = _selected_ac->getBoolValue("controls/restart"); 
 
     if (parent_next_name == "END" && fp->getNextWaypoint()->name != "END" ){
         SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
             << " setting END: getting new waypoints ");
         AdvanceFP();
         setWPNames();
+        setTunnel(_initial_tunnel);
+        if(_restart) _missed_count = 200;
         /*} else if (parent_next_name == "WAIT" && fp->getNextWaypoint()->name != "WAIT" ){*/
     } else if (parent_waiting && !_waiting){
         SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
@@ -585,12 +608,14 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
         }
 
         setWPNames();
-    } else if (_range_ft > _parent_x_offset * 4){
-        SG_LOG(SG_GENERAL, SG_INFO, "AIGroundVeh1cle: " << _name
-            << " rescue: reforming train " << _range_ft << " " << _x_offset * 15);
+    } else if (_range_ft > (_x_offset +_parent_x_offset)* 4
+        ){
+        SG_LOG(SG_GENERAL, SG_ALERT, "AIGroundVeh1cle: " << _name
+            << " rescue: reforming train " << _range_ft 
+            );
 
         setTowAngle(0, dt, 1);
-        setSpeed(_parent_speed * 2);
+        setSpeed(_parent_speed + (10 * sign(_parent_speed)));
 
     } else if (_parent_speed > 1){
 
@@ -609,7 +634,7 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
     } else
         setSpeed(_parent_speed);
 
-    FGAIShip::update(_dt_count);
+//    FGAIShip::update(_dt_count);
     _dt_count = 0;
 
 }

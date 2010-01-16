@@ -61,6 +61,9 @@ public:
     void setRudderConstant(double rc);
     void setSpeedConstant(double sc);
     void setFixedTurnRadius(double ft);
+    void setTunnel(bool t);
+    void setInitialTunnel(bool t);
+
     void setWPNames();
     void setWPPos();
     double sign(double x);
@@ -69,13 +72,14 @@ public:
     bool _serviceable;
     bool _waiting;
     bool _new_waypoint;
-    bool _tunnel;
-
+    bool _tunnel, _initial_tunnel;
+    bool _restart;
 
     virtual const char* getTypeString(void) const { return "ship"; }
     double _rudder_constant, _speed_constant, _hdg_constant, _limit ;
     double _elevation_m, _elevation_ft;
-    double _missed_range, _tow_angle, _wait_count, _wp_range;
+    double _missed_range, _tow_angle, _wait_count, _missed_count,_wp_range;
+    double _dt_count, _next_run;
 
     FGAIFlightPlan::waypoint* prev; // the one behind you
     FGAIFlightPlan::waypoint* curr; // the one ahead
@@ -92,6 +96,7 @@ private:
     virtual void reinit() { init(); }
 
     void setRepeat(bool r);
+    void setRestart(bool r);
     void setMissed(bool m);
 
     void setServiceable(bool s);
@@ -119,8 +124,6 @@ private:
     double _roll_constant, _roll_factor;
     double _sp_turn_radius_ft, _rd_turn_radius_ft, _fixed_turn_radius;
     double _old_range, _range_rate;
-    double _dt_count, _missed_count;
-    double _next_run;
     double _missed_time_sec;
     double _start_sec;
     double _day;
@@ -137,6 +140,7 @@ private:
     bool _repeat;
     bool _fp_init;
     bool _missed;
+   
 
 };
 
