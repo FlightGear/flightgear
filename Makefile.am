@@ -83,6 +83,7 @@ data-tar:
 		data/cloudlayers.xml \
 		data/COPYING \
 		data/D* \
+		data/Effects \
 		data/Fonts \
 		data/gui \
 		data/Huds \
@@ -101,6 +102,7 @@ data-tar:
 		data/README \
 		data/Scenery/Objects \
 		data/Scenery/Terrain \
+		data/Shaders \
 		data/Sounds \
 		data/T* \
 		data/version \
