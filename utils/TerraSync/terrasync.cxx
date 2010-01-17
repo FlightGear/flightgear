@@ -35,6 +35,7 @@
 #include <simgear/compiler.h>
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <deque>
 #include <map>
@@ -56,9 +57,7 @@
 #  endif
 #endif
 
-using std::string;
-using std::cout;
-using std::endl;
+using namespace std;
 
 const char* source_base = NULL;
 const char* svn_base =
@@ -77,16 +76,33 @@ const char* svn_cmd = "svn checkout";
 
 // display usage
 static void usage( const string& prog ) {
-    cout << "Usage: " << endl
-         << prog << " -p <port> "
-	 << "-R [ -s <rsync_source> ] -d <dest>" << endl
-         << prog << " -p <port> "
-         << "-S [ -s <svn_source> ] -d <dest>" << endl;
+    cout << 
+"Usage:  terrasync [options]\n"
+"Options:  \n"
+" -d <dest>       destination directory [required]\n"
+" -R              transport using pipe to rsync\n"
+" -S              transport using built-in svn\n"
+" -p <port>       listen on UDP port [default: 5501]\n"
+" -s <source>     source base [default: '']\n"
+" -pid <pidfile>  write PID to file\n"
+" -v              be more verbose\n"
+;
+
 #ifdef HAVE_SVN_CLIENT_H
     cout << "    (defaults to the built in subversion)" << endl;
 #else
     cout << "    (defaults to rsync, using external commands)" << endl;
 #endif
+
+  cout << "\nExample:\n"
+"pid=$(cat $pidfile 2>/dev/null)\n"
+"if test -n \"$pid\" && kill -0 $pid ; then\n"
+"    echo \"terrasync already running: $pid\"\n"
+"else\n"
+"    nice /games/sport/fgs/utils/TerraSync/terrasync         \\\n"
+"      -v -pid $pidfile -S -p 5500 -d /games/orig/terrasync &\n"
+"fi" << endl;
+
 }
 
 std::deque<std::string> waitingTiles;
@@ -404,6 +420,9 @@ int main( int argc, char **argv ) {
     int port = 5501;
     char host[256] = "";        // accept messages from anyone
     bool testing = false;
+    bool do_checkout(true);
+    int verbose(0);
+    const char* pidfn = "";
 
     // parse arguments
     int i = 1;
@@ -411,6 +430,10 @@ int main( int argc, char **argv ) {
         if ( (string)argv[i] == "-p" ) {
             ++i;
             port = atoi( argv[i] );
+        } else if ( string(argv[i]).find("-pid") == 0 ) {
+            ++i;
+            pidfn = argv[i];
+            cout << "pidfn: " << pidfn << endl;
         } else if ( (string)argv[i] == "-s" ) {
             ++i;
             source_base = argv[i];
@@ -421,13 +444,31 @@ int main( int argc, char **argv ) {
 	    use_svn = false;
         } else if ( (string)argv[i] == "-S" ) {
 	    use_svn = true;
+        } else if ( (string)argv[i] == "-v" ) {
+	    verbose++;
         } else if ( (string)argv[i] == "-T" ) {
 	    testing = true;
+        } else if ( (string)argv[i] == "-h" ) {
+            usage( argv[0] );
+            exit(0);
         } else {
+            cerr << "Unrecognized verbiage '" << argv[i] << "'" << endl;
             usage( argv[0] );
             exit(-1);        
         }
         ++i;
+    }
+
+    if (*pidfn) {
+      ofstream pidstream;
+      pidstream.open(pidfn);
+      if (!pidstream.good()) {
+        cerr << "Cannot open pid file '" << pidfn << "': ";
+        perror(0);
+        exit(2);
+      }
+      pidstream << getpid() << endl;
+      pidstream.close();
     }
 
     // Use the appropriate default for the "-s" flag
@@ -448,8 +489,6 @@ int main( int argc, char **argv ) {
         return -1;
     }
 
-    s.setBlocking( false );
-
     if ( s.bind( host, port ) == -1 ) {
         printf("error binding to port %d\n", port);
         return -1;
@@ -464,33 +503,39 @@ int main( int argc, char **argv ) {
     bool recv_msg = false;
 
     char synced_other;
-    for ( synced_other = 'K'; synced_other <= 'Z'; synced_other++ ) {
-	char dir[512];
-	snprintf( dir, 512, "Airports/%c", synced_other );
-	waitingTiles.push_back( dir );
-    }
-    for ( synced_other = 'A'; synced_other <= 'J'; synced_other++ ) {
-	char dir[512];
-	snprintf( dir, 512, "Airports/%c", synced_other );
-	waitingTiles.push_back( dir );
-    }
-    if ( use_svn ) {
-	waitingTiles.push_back( "Models" );
+    if (do_checkout) {
+        for ( synced_other = 'K'; synced_other <= 'Z'; synced_other++ ) {
+            char dir[512];
+            snprintf( dir, 512, "Airports/%c", synced_other );
+            waitingTiles.push_back( dir );
+        }
+        for ( synced_other = 'A'; synced_other <= 'J'; synced_other++ ) {
+            char dir[512];
+            snprintf( dir, 512, "Airports/%c", synced_other );
+            waitingTiles.push_back( dir );
+        }
+        if ( use_svn ) {
+            waitingTiles.push_back( "Models" );
+        }
     }
 
-    while ( true ) {
+
+    while ( true ) {                    // main loop
         recv_msg = false;
         if ( testing ) {
             // No FGFS communications
             lat = 37;
             lon = -123;
             recv_msg = (lat != last_lat) || (lon != last_lon);
-        }
-        while ( (len = s.recv(msg, maxlen, 0)) >= 0 ) {
-            msg[len] = '\0';
-            recv_msg = true;
-
-            parse_message( msg, &lat, &lon );
+        } else {
+            s.setBlocking(waitingTiles.empty());
+            len = s.recv(msg, maxlen, 0);
+            if (len >= 0) {
+                msg[len] = '\0';
+                recv_msg = true;
+                if (verbose) cout << "recv length: " << len << endl;
+                parse_message( msg, &lat, &lon );
+            }
         }
 
         if ( recv_msg ) {
@@ -527,20 +572,15 @@ int main( int argc, char **argv ) {
                 last_lat = lat;
                 last_lon = lon;
             }
-	} else
+	}
 
         // No messages inbound, so process some pending work
-        if ( !waitingTiles.empty() ) {
+        else if ( !waitingTiles.empty() ) {
 	    getWaitingTile();
-        } else
+        }
 
-	if ( testing ) {
+	else if ( testing ) {
 	    exit( 0 );
-	} else
-
-	if ( last_lat == nowhere || last_lon == nowhere ) {
-	    cout << "FlightGear is not running, exiting." << endl;
-	    exit( 1 );
 	} else
 
         ulSleep( 1 );
