@@ -340,9 +340,9 @@ void FGRouteMgr::new_waypoint( const string& target, int n ) {
 SGWayPoint* FGRouteMgr::make_waypoint(const string& tgt ) {
     string target(boost::to_upper_copy(tgt));
     
-    // extract altitude
-    double alt = cruise->getDoubleValue("altitude-ft") * SG_FEET_TO_METER;
     
+    double alt = -9999.0;
+    // extract altitude
     size_t pos = target.find( '@' );
     if ( pos != string::npos ) {
         alt = atof( target.c_str() + pos + 1 );
@@ -455,6 +455,10 @@ void FGRouteMgr::update_mirror() {
 void FGRouteMgr::InputListener::valueChanged(SGPropertyNode *prop)
 {
     const char *s = prop->getStringValue();
+    if (strlen(s) == 0) {
+      return;
+    }
+    
     if (!strcmp(s, "@CLEAR"))
         mgr->init();
     else if (!strcmp(s, "@ACTIVATE"))
@@ -486,7 +490,14 @@ void FGRouteMgr::InputListener::valueChanged(SGPropertyNode *prop)
 
 bool FGRouteMgr::activate()
 {
-  if (_departure) {
+  if (isRouteActive()) {
+    SG_LOG(SG_AUTOPILOT, SG_WARN, "duplicate route-activation, no-op");
+    return false;
+  }
+
+  // only add departure waypoint if we're not airborne, so that
+  // in-air route activation doesn't confuse matters.
+  if (weightOnWheels->getBoolValue() && _departure) {
     string runwayId(departure->getStringValue("runway"));
     FGRunway* runway = NULL;
     if (_departure->hasRunwayWithIdent(runwayId)) {

@@ -186,12 +186,12 @@ private:
 GPS::Config::Config() :
   _enableTurnAnticipation(true),
   _turnRate(3.0), // degrees-per-second, so 180 degree turn takes 60 seconds
-  _overflightArmDistance(0.5),
+  _overflightArmDistance(1.0),
   _waypointAlertTime(30.0),
   _tuneRadio1ToRefVor(false),
   _minRunwayLengthFt(0.0),
   _requireHardSurface(true),
-  _cdiMaxDeflectionNm(-1), // default to angular mode
+  _cdiMaxDeflectionNm(3.0), // linear mode, 3nm at the peg
   _driveAutopilot(true)
 {
   _enableTurnAnticipation = false;
@@ -1021,9 +1021,7 @@ void GPS::wp1Changed()
   }
   
   double altFt = _wp1_position.getElevationFt();
-  if (altFt < -9990.0) {
-    _apTargetAltitudeFt->setDoubleValue(0.0);
-  } else {
+  if (altFt > -9990.0) {
     _apTargetAltitudeFt->setDoubleValue(altFt);
   }
 }
