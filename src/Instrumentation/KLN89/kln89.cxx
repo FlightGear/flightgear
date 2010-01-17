@@ -46,7 +46,7 @@
 #if ENABLE_ATCDCL
 #include <ATCDCL/ATCProjection.hxx>
 #else
-#include "ATC/atcutils.hxx"
+#include <ATC/atcutils.hxx>
 #endif
 
 #include <Main/fg_props.hxx>
