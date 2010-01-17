@@ -66,7 +66,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib osgd.lib osgDBd.lib osgViewerd.lib osgGAd.lib openthreadsd.lib osgParticled.lib osgUtild.lib ul_d.lib sg_d.lib zlibd.lib"
+				AdditionalDependencies="opengl32.lib osgd.lib osgDBd.lib osgViewerd.lib osgGAd.lib openthreadsd.lib osgParticled.lib osgUtild.lib osgTextd.lib ul_d.lib sg_d.lib zlibd.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\..\install\msvc90\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib"
 				GenerateDebugInformation="true"
@@ -147,7 +147,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib osgd.lib osgDBd.lib osgViewerd.lib osgGAd.lib openthreadsd.lib osgParticled.lib osgUtild.lib ul_d.lib sg_d.lib zlibd.lib"
+				AdditionalDependencies="opengl32.lib osgd.lib osgDBd.lib osgViewerd.lib osgGAd.lib openthreadsd.lib osgParticled.lib osgUtild.lib osgTextd.lib ul_d.lib sg_d.lib zlibd.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\..\install\msvc90-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib"
 				GenerateDebugInformation="true"
@@ -224,7 +224,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib osg.lib osgDB.lib osgViewer.lib osgGA.lib openthreads.lib osgParticle.lib osgUtil.lib ul.lib sg.lib zlib.lib"
+				AdditionalDependencies="opengl32.lib osg.lib osgDB.lib osgViewer.lib osgGA.lib openthreads.lib osgParticle.lib osgUtil.lib osgText.lib ul.lib sg.lib zlib.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\..\install\msvc90\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib"
 				GenerateDebugInformation="true"
@@ -303,7 +303,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib osg.lib osgDB.lib osgViewer.lib osgGA.lib openthreads.lib osgParticle.lib osgUtil.lib ul.lib sg.lib zlib.lib"
+				AdditionalDependencies="opengl32.lib osg.lib osgDB.lib osgViewer.lib osgGA.lib openthreads.lib osgParticle.lib osgUtil.lib osgText.lib ul.lib sg.lib zlib.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\..\install\msvc90-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib"
 				GenerateDebugInformation="true"

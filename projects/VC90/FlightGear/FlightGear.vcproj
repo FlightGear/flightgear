@@ -48,7 +48,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..\src;..\..\..\src\include;..\..\..\..\SimGear;..\..\..\src\FDM\JSBSim;..\..\..\..\install\msvc90\OpenSceneGraph\include;..\..\..\..\3rdParty\include;..\..\..\..\boost_1_39_0"
-				PreprocessorDefinitions="_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				PreprocessorDefinitions="_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;ENABLE_ATCDCL"
 				StringPooling="true"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
@@ -137,7 +137,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..\src;..\..\..\src\include;..\..\..\..\SimGear;..\..\..\src\FDM\JSBSim;..\..\..\..\install\msvc90-64\OpenSceneGraph\include;..\..\..\..\3rdParty.x64\include;..\..\..\..\boost_1_39_0"
-				PreprocessorDefinitions="_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;PU_USE_NATIVE"
+				PreprocessorDefinitions="_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;PU_USE_NATIVE;ENABLE_ATCDCL"
 				StringPooling="true"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
@@ -225,7 +225,7 @@
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\..\src;..\..\..\src\include;..\..\..\src\FDM\JSBSim;..\..\..\..\SimGear;..\..\..\..\install\msvc90\OpenSceneGraph\include;..\..\..\..\3rdParty\include;..\..\..\..\boost_1_39_0"
-				PreprocessorDefinitions="NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				PreprocessorDefinitions="NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;ENABLE_ATCDCL"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -313,7 +313,7 @@
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\..\src;..\..\..\src\include;..\..\..\src\FDM\JSBSim;..\..\..\..\SimGear;..\..\..\..\install\msvc90-64\OpenSceneGraph\include;..\..\..\..\3rdParty.x64\include;..\..\..\..\boost_1_39_0"
-				PreprocessorDefinitions="NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;PU_USE_NATIVE"
+				PreprocessorDefinitions="NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;PU_USE_NATIVE;ENABLE_ATCDCL"
 				StringPooling="true"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -1025,6 +1025,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\src\FDM\JSBSim\models\flight_control\FGGyro.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\FDM\JSBSim\models\flight_control\FGGyro.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\src\Fdm\JSBSim\models\FGInertial.cpp"
 					>
 				</File>
@@ -1046,6 +1054,14 @@
 				</File>
 				<File
 					RelativePath="..\..\..\src\Fdm\JSBSim\models\FGLGear.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\FDM\JSBSim\models\flight_control\FGMagnetometer.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\FDM\JSBSim\models\flight_control\FGMagnetometer.h"
 					>
 				</File>
 				<File
@@ -1086,6 +1102,10 @@
 				</File>
 				<File
 					RelativePath="..\..\..\src\Fdm\JSBSim\models\FGPropulsion.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\FDM\JSBSim\models\flight_control\FGSensorOrientation.h"
 					>
 				</File>
 				<Filter
@@ -3206,6 +3226,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\Sound\sample_queue.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Sound\sample_queue.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Sound\voice.cxx"
 				>
 			</File>
@@ -3938,6 +3966,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\AIModel\AIGroundVehicle.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\AIModel\AIGroundVehicle.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\AIModel\AIManager.cxx"
 				>
 			</File>
@@ -4215,7 +4251,7 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\..\..\src\Include\config.h-msvc71"
+			RelativePath="..\..\..\src\Include\config.h-msvc90"
 			>
 			<FileConfiguration
 				Name="Debug|Win32"
