@@ -46,7 +46,7 @@
 #if ENABLE_ATCDCL
 #include <ATCDCL/ATCProjection.hxx>
 #else
-#include "kln89_align.hxx"
+#include "ATC/atcutils.hxx"
 #endif
 
 #include <Main/fg_props.hxx>
