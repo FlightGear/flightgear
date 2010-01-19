@@ -66,7 +66,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ul_d.lib sg_d.lib net_d.lib ws2_32.lib libsvn_client-1.lib libsvn_diff-1.lib libsvn_delta-1.lib libsvn_ra-1.lib libsvn_subr-1.lib libsvn_wc-1.lib libapr-1.lib OpenThreadsd.lib"
+				AdditionalDependencies="ul_d.lib sg_d.lib net_d.lib ws2_32.lib libsvn_client-1.lib libsvn_diff-1.lib libsvn_delta-1.lib libsvn_ra-1.lib libsvn_subr-1.lib libsvn_wc-1.lib libapr-1.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\..\install\msvc90\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib"
 				GenerateDebugInformation="true"
@@ -147,7 +147,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ul_d.lib sg_d.lib net_d.lib ws2_32.lib libsvn_client-1.lib libsvn_diff-1.lib libsvn_delta-1.lib libsvn_ra-1.lib libsvn_subr-1.lib libsvn_wc-1.lib libapr-1.lib OpenThreadsd.lib"
+				AdditionalDependencies="ul_d.lib sg_d.lib net_d.lib ws2_32.lib libsvn_client-1.lib libsvn_diff-1.lib libsvn_delta-1.lib libsvn_ra-1.lib libsvn_subr-1.lib libsvn_wc-1.lib libapr-1.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\..\install\msvc90-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib"
 				GenerateDebugInformation="true"
@@ -224,7 +224,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ul.lib sg.lib net.lib ws2_32.lib libsvn_client-1.lib libsvn_diff-1.lib libsvn_delta-1.lib libsvn_ra-1.lib libsvn_subr-1.lib libsvn_wc-1.lib libapr-1.lib OpenThreads.lib"
+				AdditionalDependencies="ul.lib sg.lib net.lib ws2_32.lib libsvn_client-1.lib libsvn_diff-1.lib libsvn_delta-1.lib libsvn_ra-1.lib libsvn_subr-1.lib libsvn_wc-1.lib libapr-1.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\..\install\msvc90\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib"
 				GenerateDebugInformation="true"
@@ -303,7 +303,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ul.lib sg.lib net.lib ws2_32.lib libsvn_client-1.lib libsvn_diff-1.lib libsvn_delta-1.lib libsvn_ra-1.lib libsvn_subr-1.lib libsvn_wc-1.lib libapr-1.lib OpenThreads.lib"
+				AdditionalDependencies="ul.lib sg.lib net.lib ws2_32.lib libsvn_client-1.lib libsvn_diff-1.lib libsvn_delta-1.lib libsvn_ra-1.lib libsvn_subr-1.lib libsvn_wc-1.lib libapr-1.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\..\install\msvc90-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib"
 				GenerateDebugInformation="true"
