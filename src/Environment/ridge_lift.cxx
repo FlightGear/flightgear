@@ -171,7 +171,7 @@ void FGRidgeLift::update(double dt) {
 		// position is geodetic, need geocentric for advanceRadM
 		SGGeod myGeodPos = SGGeod::fromDegM( probe_lon_deg[0], probe_lat_deg[0], 20000.0 );
 		SGGeoc myGeocPos = SGGeoc::fromGeod( myGeodPos );
-		double ground_wind_from_rad = _surface_wind_from_deg_node->getDoubleValue() * SG_DEGREES_TO_RADIANS + SG_PI;
+		double ground_wind_from_rad = _surface_wind_from_deg_node->getDoubleValue() * SG_DEGREES_TO_RADIANS;
 
 		// compute the remaining probes
 		for (unsigned i = 1; i < sizeof(probe_elev_m)/sizeof(probe_elev_m[0]); i++) {
