@@ -47,7 +47,7 @@ js_demo_LDADD = $(js_demo_PLIB_LIBS) $(base_LIBS) $(joystick_LIBS)
 fgjs_SOURCES = fgjs.cxx jsinput.cxx jsinput.h jssuper.cxx jssuper.h
 
 fgjs_LDADD = $(js_demo_PLIB_LIBS) $(base_LIBS) $(joystick_LIBS) \
-	-lsgprops -lsgmisc -lsgio -lsgdebug -lsgstructure -lsgxml -lz
+	-lsgprops -lsgmisc -lsgio -lsgdebug -lsgstructure -lsgxml -lz $(network_LIBS)
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src -I$(top_srcdir)/src/Main \
 	$(libInput_Event_INCLUDES)

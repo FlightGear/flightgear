@@ -29,6 +29,10 @@
 #include <windows.h>
 #endif
 
+#ifdef __MINGW32__
+#include <time.h>
+#include <unistd.h>
+#endif
 
 #include <stdlib.h>             // atoi() atof() abs() system()
 

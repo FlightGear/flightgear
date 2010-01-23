@@ -2,8 +2,11 @@
 //  Alterations: Copyright C. Hotchkiss 1996
 //
 // $Log$
-// Revision 1.1  2002/09/10 01:14:04  curt
-// Initial revision
+// Revision 1.2  2010/01/23 22:26:52  fredb
+// MINGW patch from Benoît Laniel
+//
+// Revision 1.1.1.1  2002-09-10 01:14:04  curt
+// Initial revision of FlightGear-0.9.0
 //
 // Revision 1.2  2001/05/16 21:27:59  curt
 // Added David Megginson's patch for reconfigurable keyboard bindings.
@@ -75,11 +78,11 @@ typedef long           LONG ;    // 32-bit signed data
 typedef unsigned long  ULONG ;   // 32-bit unsigned data
 
 typedef unsigned short UWORD;   // Unsigned 16 bit quantity (WIN=SHORT)
-#if !defined(WIN32)
+#ifndef _WIN32
 typedef signed   short WORD;    // Signed   16 bit quantity
 #endif
 typedef BYTE           UBYTE;    // Used in some 3rd party code
-#ifndef WIN32
+#ifndef _WIN32
 typedef int            BOOLEAN;  //
 #endif
 

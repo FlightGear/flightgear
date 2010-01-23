@@ -59,6 +59,35 @@
 #include "WindowBuilder.hxx"
 #include "WindowSystemAdapter.hxx"
 
+// Static linking of OSG needs special macros
+#ifdef OSG_LIBRARY_STATIC
+#include <osgDB/Registry>
+USE_GRAPHICSWINDOW();
+// Image formats
+USE_OSGPLUGIN(bmp);
+USE_OSGPLUGIN(dds);
+USE_OSGPLUGIN(hdr);
+USE_OSGPLUGIN(pic);
+USE_OSGPLUGIN(pnm);
+USE_OSGPLUGIN(rgb);
+USE_OSGPLUGIN(tga);
+#ifdef OSG_JPEG_ENABLED
+  USE_OSGPLUGIN(jpeg);
+#endif
+#ifdef OSG_PNG_ENABLED
+  USE_OSGPLUGIN(png);
+#endif
+#ifdef OSG_TIFF_ENABLED
+  USE_OSGPLUGIN(tiff);
+#endif
+// Model formats
+USE_OSGPLUGIN(3ds);
+USE_OSGPLUGIN(ac);
+USE_OSGPLUGIN(ive);
+USE_OSGPLUGIN(osg);
+USE_OSGPLUGIN(txf);
+#endif
+
 // fg_os implementation using OpenSceneGraph's osgViewer::Viewer class
 // to create the graphics window and run the event/update/render loop.
 

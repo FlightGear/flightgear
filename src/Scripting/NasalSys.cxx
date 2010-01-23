@@ -415,7 +415,7 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
 // Return UNIX epoch time in seconds.
 static naRef f_systime(naContext c, naRef me, int argc, naRef* args)
 {
-#ifdef WIN32
+#ifdef _WIN32
     FILETIME ft;
     GetSystemTimeAsFileTime(&ft);
     double t = (4294967296.0 * ft.dwHighDateTime + ft.dwLowDateTime);

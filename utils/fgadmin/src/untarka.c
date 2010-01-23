@@ -52,7 +52,7 @@
  */
 
 #undef DOSISH
-#if defined(WIN32) || defined(__MINGW32__) || defined(__CYGWIN__) || MSC_VER > 1000
+#ifdef WIN32
 #  include <windows.h>
 #  define DOSISH 1
 #  undef __STRICT_ANSI__

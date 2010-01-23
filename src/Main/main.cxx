@@ -783,7 +783,7 @@ static void fgIdleFunction ( void ) {
 
 # if defined( __CYGWIN__ )
             string command = "start /m `cygpath -w " + mp3file.str() + "`";
-# elif defined( WIN32 )
+# elif defined( _WIN32 )
             string command = "start /m " + mp3file.str();
 # else
             string command = "mpg123 " + mp3file.str() + "> /dev/null 2>&1";
