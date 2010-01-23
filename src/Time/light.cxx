@@ -208,7 +208,7 @@ void FGLight::update_sky_color () {
     // if the 4th field is 0.0, this specifies a direction ...
     // const GLfloat white[4]          = { 1.0,  1.0,  1.0,  1.0 };
     const GLfloat base_sky_color[4] = { 0.31, 0.43, 0.69, 1.0 };
-    const GLfloat base_fog_color[4] = { 0.60, 0.70, 0.9,  1.0 };
+    const GLfloat base_fog_color[4] = { 0.63, 0.72, 0.88,  1.0 };
 
     SG_LOG( SG_EVENT, SG_DEBUG, "Updating light parameters." );
 
