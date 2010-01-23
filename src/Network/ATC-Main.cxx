@@ -32,7 +32,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>              //snprintf
-#if defined( _MSC_VER ) || defined(__MINGW32__)
+#ifdef _WIN32
 #  include <io.h>                 //lseek, read, write
 #endif
 

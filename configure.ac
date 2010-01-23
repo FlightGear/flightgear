@@ -17,6 +17,7 @@ AC_PROG_MAKE_SET
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_CXX
+AC_PROG_CXXCPP
 AC_PROG_RANLIB
 AC_PROG_INSTALL
 AC_PROG_LN_S
@@ -216,7 +217,6 @@ if test "x$with_threads" = "xyes"; then
     CFLAGS="$CFLAGS -D_REENTRANT"
 fi
 AC_CHECK_HEADER(pthread.h)
-AM_CONDITIONAL(WITH_THREADS, test "x$with_threads" = "xyes")
 
 dnl Used by JSBSim to conditionally compile in fgfs interface code
 AC_DEFINE([FGFS], 1, [Define so that JSBSim compiles in 'library' mode])
@@ -276,6 +276,7 @@ if test "x$ac_cv_header_pthread_h" = "xyes"; then
   if test "x$ac_cv_search_pthread_exit" = "x-lc_r"; then
     CXXFLAGS="-pthread $CXXFLAGS"
     CFLAGS="-pthread $CFLAGS"
+    LIBS="-lsgthreads $LIBS"
   fi
 fi
 
@@ -404,7 +405,7 @@ case "${host}" in
     dnl CygWin under Windoze.
     INCLUDES="$INCLUDES -I/usr/local/include/"
     LIBS="$LIBS -L/usr/local/lib"
-    AC_SEARCH_LIBS(alGenBuffers, [ openal32 openal ] )
+    AC_SEARCH_LIBS(alGenBuffers, [ openal32 openal 'openal -ldsound -lwinmm' ] )
     AC_SEARCH_LIBS(alutInit, [ openal32 ALut alut ] )
     LIBS="$LIBS -lwinmm -ldsound -ldxguid -lole32"
     openal_LIBS="$LIBS"
@@ -681,7 +682,7 @@ case "${host}" in
         AC_CHECK_LIB(osgViewerd,osgViewerGetVersion)
         AC_CHECK_LIB(osgSimd,osgSimGetVersion)
         AC_CHECK_LIB(osgParticled,osgParticleGetVersion)
-        LIBS="$LIBS -losgFXd"
+        LIBS="$LIBS -losgFXd $opengl_LIBS"
     else
         AC_CHECK_LIB(OpenThreads,OpenThreadsGetVersion)
         AC_CHECK_LIB(osg,osgGetVersion)
@@ -692,7 +693,7 @@ case "${host}" in
         AC_CHECK_LIB(osgViewer,osgViewerGetVersion)
         AC_CHECK_LIB(osgSim,osgSimGetVersion)
         AC_CHECK_LIB(osgParticle,osgParticleGetVersion)
-        LIBS="$LIBS -losgFX"
+        LIBS="$LIBS -losgFX $opengl_LIBS"
     fi
     ;;
 esac
@@ -718,6 +719,41 @@ AC_COMPILE_IFELSE(
   [AC_DEFINE([HAVE_CULLSETTINGS_CLEAR_MASK],1,[define if OSG has CullSettings::CLEAR_MASK])
    AC_MSG_RESULT([yes])],
   [AC_MSG_RESULT([no])])
+
+# Special handling for static version of OSG
+if test -n "`echo "$CPPFLAGS" "$CXXFLAGS" "$CFLAGS" | grep "\-DOSG_LIBRARY_STATIC" 2>/dev/null`" ; then
+    saved_LIBS="$LIBS"
+    LIBS=""
+    #***** Check image support (needed for static build) *****
+    AC_SEARCH_LIBS([jpeg_read_header], [jpeg], [CPPFLAGS="$CPPFLAGS -DOSG_JPEG_ENABLED"])
+    AC_SEARCH_LIBS([png_read_image], [png 'png -lz'], [CPPFLAGS="$CPPFLAGS -DOSG_PNG_ENABLED"])
+    AC_SEARCH_LIBS([TIFFOpen], [tiff], [CPPFLAGS="$CPPFLAGS -DOSG_TIFF_ENABLED"])
+    img_LIBS="$LIBS"
+    LIBS="$saved_LIBS"
+
+    if test "x$with_osg" != "x" ; then
+        osg_prefix="$with_osg"
+    else
+        osg_prefix="/usr"
+    fi
+    PKG_CHECK_EXISTS([openscenegraph], [osg_version="`$PKG_CONFIG --modversion openscenegraph 2>/dev/null`"])
+    LIBS="-L$osg_prefix/lib/osgPlugins-$osg_version -losgdb_bmp -losgdb_dds -losgdb_hdr -losgdb_pic -losgdb_pnm -losgdb_rgb -losgdb_tga \
+                                                          -losgdb_3ds -losgdb_ac -losgdb_ive -losgdb_osg -losgdb_txf \
+                                                          -losgVolume -losgTerrain $LIBS -losgUtil"
+
+    if test -n "`echo "$CPPFLAGS" "$CXXFLAGS" "$CFLAGS" | grep "\-DOSG_JPEG_ENABLED" 2>/dev/null`" ; then
+      LIBS="$LIBS -losgdb_jpeg"
+    fi
+    if test -n "`echo "$CPPFLAGS" "$CXXFLAGS" "$CFLAGS" | grep "\-DOSG_PNG_ENABLED" 2>/dev/null`" ; then
+      LIBS="$LIBS -losgdb_png"
+    fi
+    if test -n "`echo "$CPPFLAGS" "$CXXFLAGS" "$CFLAGS" | grep "\-DOSG_TIFF_ENABLED" 2>/dev/null`" ; then
+      LIBS="$LIBS -losgdb_tiff"
+    fi
+
+    LIBS="$LIBS $img_LIBS"
+fi
+
 AC_LANG_POP
 
 dnl Check for system installed zlib

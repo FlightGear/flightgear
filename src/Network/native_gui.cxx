@@ -39,8 +39,10 @@
 #include "native_gui.hxx"
 
 // FreeBSD works better with this included last ... (?)
-#if defined(WIN32) && !defined(__CYGWIN__)
+#if defined( _MSC_VER )
 #  include <windows.h>
+#elif defined( __MINGW32__ )
+#  include <winsock2.h>
 #else
 #  include <netinet/in.h>	// htonl() ntohl()
 #endif

@@ -98,7 +98,7 @@ int main ( int, char ** )
 
     /* give other processes a chance */
 
-#ifdef WIN32
+#ifdef _WIN32
     Sleep ( 1 ) ;
 #elif defined(sgi)
     sginap ( 1 ) ;

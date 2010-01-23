@@ -42,7 +42,7 @@
 #if defined( _MSC_VER )
 #  include <windows.h>
 #elif defined( __MINGW32__ )
-#  include <Winsock2.h>
+#  include <winsock2.h>
 #else
 #  include <netinet/in.h>	// htonl() ntohl()
 #endif

@@ -20,4 +20,4 @@ fgviewer_SOURCES = fgviewer.cxx
 fgviewer_LDADD = \
 	-lsgtgdb -lsgmaterial -lsgmodel -lsgbvh -lsgutil -lsgio -lsgbucket \
 	-lsgmath -lsgprops -lsgdebug -lsgmisc -lsgxml -lsgstructure \
-	$(fgviewer_PLIB_LIBS) $(OSG_LIBS) $(opengl_LIBS) $(THREAD_LIBS) -lz
+	$(fgviewer_PLIB_LIBS) $(OSG_LIBS) $(opengl_LIBS) $(thread_LIBS) -lz

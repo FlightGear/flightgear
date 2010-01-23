@@ -28,8 +28,8 @@
 
 #include <simgear/compiler.h>
 
-#if defined( _MSC_VER ) || defined( __MINGW32__ )
-#  include <Winsock2.h>
+#ifdef _WIN32
+#  include <winsock2.h>
 #endif
 
 #include <math.h>
@@ -338,9 +338,9 @@ string getFGRoot ( int argc, char **argv ) {
     // find fg-root any other way.
     if ( root.empty() ) {
 #if defined( __CYGWIN__ )
-        root = "/FlightGear";
-#elif defined( WIN32 )
-        root = "\\FlightGear";
+        root = "../data";
+#elif defined( _WIN32 )
+        root = "..\\data";
 #elif defined(OSX_BUNDLE)
         /* the following code looks for the base package directly inside
             the application bundle. This can be changed fairly easily by
