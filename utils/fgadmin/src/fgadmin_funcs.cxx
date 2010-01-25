@@ -26,7 +26,7 @@
 #include <set>
 #include <sys/stat.h>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #  include <direct.h>
 #endif
 

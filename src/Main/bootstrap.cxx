@@ -183,7 +183,7 @@ int main ( int argc, char **argv ) {
     }
     initFPE();
 #endif
-#if !defined( _MSC_VER ) && !defined( __MINGW32__ )
+#ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif
 

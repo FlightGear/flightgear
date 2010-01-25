@@ -348,9 +348,7 @@ bool FGATCOutput::open( int lock_fd ) {
 
 	ATCRelease( lock_fd );
 
-#if defined( _MSC_VER )
-	ulMilliSecondSleep(33);
-#elif defined (WIN32) && !defined(__CYGWIN__)
+#ifdef _WIN32
         Sleep (33);
 #else
 	usleep(33);

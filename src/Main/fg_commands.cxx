@@ -189,7 +189,7 @@ do_exit (const SGPropertyNode * arg)
     fgSetBool("/sim/signals/exit", true);
 
     if (fgGetBool("/sim/startup/save-on-exit")) {
-#ifdef _MSC_VER
+#ifdef _WIN32
         char* envp = ::getenv( "APPDATA" );
         if ( envp != NULL ) {
             SGPath config( envp );

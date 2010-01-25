@@ -51,12 +51,12 @@
 #include <Main/viewmgr.hxx>
 #include <GUI/new_gui.hxx>
 
-#if defined( WIN32 ) && !defined( __CYGWIN__ ) && !defined(__MINGW32__)
+#ifdef _WIN32
+#  include <shellapi.h>
+# if !defined(__MINGW32__)
 #  include <simgear/screen/win32-printer.h>
 #  include <simgear/screen/GlBitmaps.h>
-#endif
-#ifdef __MINGW32__
-#include <shellapi.h>
+# endif
 #endif
 #include "gui.h"
 
@@ -75,7 +75,7 @@ const __fg_gui_fn_t __fg_gui_fn[] = {
         {"dumpHiResSnapShot", fgHiResDumpWrapper},
 #endif
         {"dumpSnapShot", fgDumpSnapShotWrapper},
-#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
+#if defined( _WIN32 ) && !defined(__MINGW32__)
         {"printScreen", printScreen},
 #endif
         // Help
@@ -170,7 +170,7 @@ void helpCb ()
     SGPath path( globals->get_fg_root() );
     path.append( "Docs/index.html" );
 	
-#if !defined(WIN32)
+#ifndef _WIN32
 
     command = globals->get_browser();
     string::size_type pos;
@@ -182,7 +182,7 @@ void helpCb ()
     command += " &";
     system( command.c_str() );
 
-#else // WIN32
+#else // _WIN32
 
     // Look for favorite browser
     char Dummy[1024], ExecName[1024], browserParameter[1024];
@@ -404,7 +404,7 @@ void fgHiResDump()
 #endif // #if defined( TR_HIRES_SNAP)
 
 
-#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
+#if defined( _WIN32 ) && !defined(__MINGW32__)
 
 void rotateView( double roll, double pitch, double yaw )
 {
@@ -441,7 +441,7 @@ GLubyte *hiResScreenCapture( int multiplier )
 }
 #endif
 
-#if defined( WIN32 ) && !defined( __CYGWIN__) && !defined(__MINGW32__)
+#if defined( _WIN32 ) && !defined(__MINGW32__)
 // win32 print screen function
 void printScreen () {
     int mouse = fgGetMouseCursor();
@@ -455,7 +455,7 @@ void printScreen () {
 
     fgSetMouseCursor(mouse);
 }
-#endif // #ifdef WIN32
+#endif // #ifdef _WIN32
 
 
 void fgDumpSnapShotWrapper () {

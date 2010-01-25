@@ -16,12 +16,6 @@ ATCDCL_LIBS =
 endif
 
 
-if WITH_THREADS
-THREAD_LIBS = -lsgthreads $(thread_LIBS)
-else
-THREAD_LIBS =
-endif
-
 if WITH_EVENTINPUT
 EVENT_LIBS = $(eventinput_LIBS)
 else
@@ -126,7 +120,7 @@ fgfs_LDADD = \
 	-lsgserial -lsgstructure -lsgenvironment \
         $(fgfs_PLIB_LIBS) \
 	$(OSG_LIBS) \
-	$(THREAD_LIBS) \
+	$(thread_LIBS) \
 	$(network_LIBS) \
 	-lz \
 	$(opengl_LIBS) \
