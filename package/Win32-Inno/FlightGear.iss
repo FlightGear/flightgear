@@ -19,10 +19,11 @@
 ;
 
 [Setup]
+AppId=FlightGear
 AppName=FlightGear
+AppPublisher=The FlightGear Team
 OutputBaseFilename=fgsetup-2.0.0-RC2
 AppVerName=FlightGear v2.0.0-RC2
-AppPublisher=The FlightGear Organization
 AppPublisherURL=http://www.flightgear.org
 AppSupportURL=http://www.flightgear.org
 AppUpdatesURL=http://www.flightgear.org
@@ -31,9 +32,11 @@ DefaultGroupName=FlightGear v2.0.0-RC2
 LicenseFile=X:\data\COPYING
 Uninstallable=yes
 SetupIconFile=x:\flightgear.ico
-VersionInfoVersion=1.9.9.992
+VersionInfoVersion=1.9.9.993
 WizardImageFile=X:\setupimg.bmp
 WizardSmallImageFile=X:\setupsmall.bmp
+VersionInfoCompany=The FlightGear Team
+UninstallDisplayIcon={app}\bin\Win32\fgrun.exe
 
 [Tasks]
 ; NOTE: The following entry contains English phrases ("Create a desktop icon" and "Additional icons"). You are free to translate them into another language if required.
@@ -43,7 +46,9 @@ Name: "insoal"; Description: "Install OpenAL (the sound engine)"
 [Files]
 ; NOTE: run subst X: F:\ (or whatever path the expanded tree resides at)
 Source: "X:\*.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "X:\bin\*.*"; DestDir: "{app}\bin"; Flags: ignoreversion recursesubdirs
+Source: "X:\bin\Win32\*.*"; DestDir: "{app}\bin\Win32"; Flags: ignoreversion recursesubdirs
+Source: "X:\bin\vcredist_x86.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "X:\bin\OpenAL\oalinst.exe"; DestDir: "{app}\bin\OpenAL"; Flags: ignoreversion
 Source: "X:\data\*.*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
@@ -80,12 +85,10 @@ Name: "{group}\Tools\Explore Documentation Folder"; Filename: "{app}\data\Docs"
 Filename: "{app}\bin\vcredist_x86.exe"; WorkingDir: "{app}"; Parameters: "/qb!"; Description: "Installing Flightgear prerequisites"
 
 ; Put installation directory into the fgrun.prefs
-filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--fg-exe={app}\bin\Win32\fgfs.exe"" ""--fg-root={app}\data"" ""--fg-scenery={app}\data\Scenery;{app}\scenery;{app}\terrasync"""
+filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--fg-exe={app}\bin\Win32\fgfs.exe"" ""--ts-exe={app}\bin\Win32\terrasync.exe"" ""--fg-root={app}\data"" ""--fg-scenery={app}\data\Scenery;{app}\scenery;{app}\terrasync"""
 
 ; Put installation and source directories into the fgadmin.prefs
 filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--install-source={src}\..\Scenery"" ""--scenery-dest={app}\scenery"""
-
 Filename: "{app}\bin\OpenAL\oalinst.exe"; WorkingDir: "{app}"; Description: "Installing OpenAL"; Tasks: insoal
-
-Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Description: "Launch FlightGear"; Flags: postinstall skipifsilent
+;Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Description: "Launch FlightGear"; Flags: postinstall skipifsilent
 
