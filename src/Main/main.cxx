@@ -891,7 +891,7 @@ bool fgMainInit( int argc, char **argv ) {
     fgInitFGRoot(argc, argv);
 
     // Check for the correct base package version
-    static char required_version[] = "1.9.0";
+    static char required_version[] = "2.0.0";
     string base_version = fgBasePackageVersion();
     if ( !(base_version == required_version) ) {
         // tell the operator how to use this application
