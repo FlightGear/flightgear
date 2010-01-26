@@ -31,10 +31,9 @@ public:
 
     FGInstrumentMgr ();
     virtual ~FGInstrumentMgr ();
-    bool build ();
+    bool build (SGPropertyNode* config_props);
 
 private:
-    SGPropertyNode_ptr config_props;
     bool _explicitGps;
 };
 
