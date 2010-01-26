@@ -120,6 +120,7 @@ FGInterface::_setup ()
     runway_altitude=0;
     climb_rate=0;
     altitude_agl=0;
+    track=0;
 }
 
 void
