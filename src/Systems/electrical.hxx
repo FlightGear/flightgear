@@ -251,7 +251,7 @@ public:
     virtual void unbind ();
     virtual void update (double dt);
 
-    bool build ();
+    bool build (SGPropertyNode* config_props);
     float propagate( FGElectricalComponent *node, double dt,
                      float input_volts, float input_amps,
                      string s = "" );
@@ -266,7 +266,6 @@ private:
     string name;
     int num;
     string path;
-    SGPropertyNode_ptr config_props;
 
     bool enabled;
 

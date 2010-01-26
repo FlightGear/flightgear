@@ -57,7 +57,7 @@ FGInstrumentMgr::FGInstrumentMgr () :
     set_subsystem("od_gauge", new FGODGauge);
     set_subsystem("hud", new HUD);
 
-    config_props = new SGPropertyNode;
+    SGPropertyNode_ptr config_props = new SGPropertyNode;
 
     SGPropertyNode *path_n = fgGetNode("/sim/instrumentation/path");
 
@@ -70,7 +70,7 @@ FGInstrumentMgr::FGInstrumentMgr () :
         try {
             readProperties( config.str(), config_props );
 
-            if ( !build() ) {
+            if ( !build(config_props) ) {
                 throw sg_error(
                     "Detected an internal inconsistency in the instrumentation\n"
                     "system specification file.  See earlier errors for details.");
@@ -85,8 +85,6 @@ FGInstrumentMgr::FGInstrumentMgr () :
                 "No instrumentation model specified for this model!");
     }
 
-    delete config_props;
-    
     if (!_explicitGps) {
       SG_LOG(SG_INSTR, SG_INFO, "creating default GPS instrument");
       SGPropertyNode_ptr nd(new SGPropertyNode);
@@ -100,7 +98,7 @@ FGInstrumentMgr::~FGInstrumentMgr ()
 {
 }
 
-bool FGInstrumentMgr::build ()
+bool FGInstrumentMgr::build (SGPropertyNode* config_props)
 {
     for ( int i = 0; i < config_props->nChildren(); ++i ) {
         SGPropertyNode *node = config_props->getChild(i);
