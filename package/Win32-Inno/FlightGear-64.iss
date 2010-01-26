@@ -23,7 +23,7 @@ AppId=FlightGear
 AppName=FlightGear 64-bit
 AppPublisher=The FlightGear Team
 OutputBaseFilename=fgsetup64-2.0.0-RC2
-AppVerName=FlightGear v2.0.0-RC2
+AppVerName=FlightGear 64-bit v2.0.0-RC2
 AppPublisherURL=http://www.flightgear.org
 AppSupportURL=http://www.flightgear.org
 AppUpdatesURL=http://www.flightgear.org
@@ -36,10 +36,11 @@ VersionInfoVersion=1.9.9.993
 WizardImageFile=X:\setupimg.bmp
 WizardSmallImageFile=X:\setupsmall.bmp
 ;UpdateUninstallLogAppName=No
-CreateUninstallRegKey=no
+;CreateUninstallRegKey=no
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 VersionInfoCompany=The FlightGear Team
+UninstallDisplayIcon={app}\bin\Win64\fgrun.exe
 
 [Tasks]
 ; NOTE: The following entry contains English phrases ("Create a desktop icon" and "Additional icons"). You are free to translate them into another language if required.
