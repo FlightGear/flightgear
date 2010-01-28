@@ -29,7 +29,7 @@
 
 FGSystemMgr::FGSystemMgr ()
 {
-    config_props = new SGPropertyNode;
+    SGPropertyNode_ptr config_props = new SGPropertyNode;
 
     SGPropertyNode *path_n = fgGetNode("/sim/systems/path");
 
@@ -42,7 +42,7 @@ FGSystemMgr::FGSystemMgr ()
         try {
             readProperties( config.str(), config_props );
 
-            if ( build() ) {
+            if ( build(config_props) ) {
                 enabled = true;
             } else {
                 SG_LOG( SG_ALL, SG_ALERT,
@@ -63,14 +63,13 @@ FGSystemMgr::FGSystemMgr ()
                 "No systems model specified for this model!");
     }
 
-    delete config_props;
 }
 
 FGSystemMgr::~FGSystemMgr ()
 {
 }
 
-bool FGSystemMgr::build ()
+bool FGSystemMgr::build (SGPropertyNode* config_props)
 {
     SGPropertyNode *node;
     int i;

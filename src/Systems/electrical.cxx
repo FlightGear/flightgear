@@ -348,7 +348,7 @@ FGElectricalSystem::~FGElectricalSystem () {
 
 
 void FGElectricalSystem::init () {
-    config_props = new SGPropertyNode;
+    SGPropertyNode_ptr config_props = new SGPropertyNode;
 
     _volts_out = fgGetNode( "/systems/electrical/volts", true );
     _amps_out = fgGetNode( "/systems/electrical/amps", true );
@@ -381,7 +381,7 @@ void FGElectricalSystem::init () {
         try {
             readProperties( config.str(), config_props );
 
-            if ( build() ) {
+            if ( build(config_props) ) {
                 enabled = true;
             } else {
                 SG_LOG( SG_ALL, SG_ALERT,
@@ -406,7 +406,6 @@ void FGElectricalSystem::init () {
         _amps_out->setDoubleValue(0);
     }
 
-    delete config_props;
 }
 
 
@@ -553,7 +552,7 @@ void FGElectricalSystem::update (double dt) {
 }
 
 
-bool FGElectricalSystem::build () {
+bool FGElectricalSystem::build (SGPropertyNode* config_props) {
     SGPropertyNode *node;
     int i;
 

@@ -31,10 +31,9 @@ public:
 
     FGSystemMgr ();
     virtual ~FGSystemMgr ();
-    bool build ();
+    bool build (SGPropertyNode* config_props);
 
 private:
-    SGPropertyNode_ptr config_props;
     bool enabled;
 
 };
