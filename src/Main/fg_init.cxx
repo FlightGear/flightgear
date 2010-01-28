@@ -32,12 +32,12 @@
 #if defined( unix ) || defined( __CYGWIN__ )
 #  include <unistd.h>           // for gethostname()
 #endif
-#if defined( _MSC_VER) || defined(__MINGW32__)
+#ifdef _WIN32
 #  include <direct.h>           // for getcwd()
 #  define getcwd _getcwd
 #  include <io.h>               // isatty()
 #  define isatty _isatty
-#  include "Winsock2.h"		// for gethostname()
+#  include "winsock2.h"		// for gethostname()
 #endif
 
 // work around a stdc++ lib bug in some versions of linux, but doesn't
@@ -269,9 +269,9 @@ bool fgInitFGRoot ( int argc, char **argv ) {
     // find fg-root any other way.
     if ( root.empty() ) {
 #if defined( __CYGWIN__ )
-        root = "/FlightGear";
-#elif defined( WIN32 )
-        root = "\\FlightGear";
+        root = "../data";
+#elif defined( _WIN32 )
+        root = "..\\data";
 #elif defined(__APPLE__) 
         /*
         The following code looks for the base package inside the application 
@@ -585,7 +585,7 @@ bool fgInitConfig ( int argc, char **argv ) {
     }
 
     SGPropertyNode autosave;
-#if defined( _MSC_VER ) || defined( __MINGW32__ )
+#ifdef _WIN32
     char *envp = ::getenv( "APPDATA" );
     if (envp != NULL ) {
         SGPath config( envp );
