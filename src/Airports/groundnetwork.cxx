@@ -554,7 +554,7 @@ void FGGroundNetwork::update(int id, double lat, double lon, double heading, dou
    instruction. See below for the hold position instruction.
 
    Note that there currently still is one flaw in the logic that needs to be addressed. 
-   can be situations where one aircraft is in front of the current aircraft, on a separate
+   There can be situations where one aircraft is in front of the current aircraft, on a separate
    route, but really close after an intersection coming off the current route. This
    aircraft is still close enough to block the current aircraft. This situation is currently
    not addressed yet, but should be.
@@ -625,7 +625,8 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
 	    {
 	      //cerr << "Comparing " << current->getId() << " and " << i->getId() << endl;
 	      SGGeod other(SGGeod::fromDegM(i->getLongitude(),
-          i->getLatitude(), i->getAltitude()));
+                                            i->getLatitude(), 
+                                            i->getAltitude()));
         SGGeodesy::inverse(curr, other, course, az2, dist);
         bearing = fabs(heading-course);
 	      if (bearing > 180)
@@ -642,12 +643,12 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
       // Finally, check UserPosition
       double userLatitude  = fgGetDouble("/position/latitude-deg");
       double userLongitude = fgGetDouble("/position/longitude-deg");
-      SGGeod user(SGGeod::fromDeg(userLatitude,userLongitude));
-      SGGeodesy::inverse(user, curr, course, az2, dist);
-      
+      SGGeod user(SGGeod::fromDeg(userLongitude,userLatitude));
+      SGGeodesy::inverse(curr, user, course, az2, dist);
+
       bearing = fabs(heading-course);
       if (bearing > 180)
-	bearing = 360-bearing;
+      bearing = 360-bearing;
       if ((dist < mindist) && (bearing < 60.0))
 	{
 	  mindist = dist;
@@ -655,13 +656,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
 	  minbearing = bearing;
 	  otherReasonToSlowDown = true;
 	}
-      
-      // 	if (closest == current) {
-      // 	  //SG_LOG(SG_GENERAL, SG_ALERT, "AI error: closest and current match");
-      // 	  //return;
-      // 	}      
-      //cerr << "Distance : " << dist << " bearing : " << bearing << " heading : " << heading 
-      //   << " course : " << course << endl;
+
       current->clearSpeedAdjustment();
     
       if (current->checkPositionAndIntentions(*closest) || otherReasonToSlowDown) 

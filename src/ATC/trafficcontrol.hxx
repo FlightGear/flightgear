@@ -109,6 +109,7 @@ private:
   int currentPos;
   int leg;
   int state;
+  bool allowTransmission;
   time_t timer;
   intVec intentions;
   FGATCInstruction instruction;
@@ -165,12 +166,17 @@ public:
   string getRunway() { return runway; };
   //void setCallSign(string clsgn) { callsign = clsgn; };
   void setAircraft(FGAIAircraft *ref) { aircraft = ref;};
-  void updateState() { state++;};
+  void updateState() { state++; allowTransmission=true; };
   //string getCallSign() { return callsign; };
   FGAIAircraft *getAircraft() { return aircraft;};
   int getTime() { return timer; };
   int getLeg() { return leg; };
   void setTime(time_t time) { timer = time; };
+
+  bool pushBackAllowed();
+  bool allowTransmissions() { return allowTransmission; };
+  void suppressRepeatedTransmissions () { allowTransmission=false; };
+  void allowRepeatedTransmissions () { allowTransmission=true; };
 };
 
 typedef vector<FGTrafficRecord> TrafficVector;
@@ -215,7 +221,10 @@ public:
       MSG_REQUEST_ENGINE_START, 
       MSG_PERMIT_ENGINE_START,
       MSG_DENY_ENGINE_START,
-      MSG_ACKNOWLEDGE_ENGINE_START } AtcMsgId;
+      MSG_ACKNOWLEDGE_ENGINE_START,
+      MSG_REQUEST_PUSHBACK_CLEARANCE,
+      MSG_PERMIT_PUSHBACK_CLEARANCE, 
+      MSG_HOLD_PUSHBACK_CLEARANCE } AtcMsgId;
   typedef enum {
       ATC_AIR_TO_GROUND,
       ATC_GROUND_TO_AIR } AtcMsgDir;
