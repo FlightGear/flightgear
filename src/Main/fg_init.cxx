@@ -810,6 +810,7 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
         return false;
     }
     FGParking* parking = dcs->getParking(park_index);
+    parking->setAvailable(false);
     fgApplyStartOffset(
       SGGeod::fromDeg(parking->getLongitude(), parking->getLatitude()),
       parking->getHeading());

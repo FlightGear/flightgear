@@ -44,7 +44,8 @@ FGTrafficRecord::FGTrafficRecord() :
    heading(0), 
    speed(0), 
    altitude(0), 
-   radius(0) {
+   radius(0),
+   allowTransmission(true) {
 }
 
 void FGTrafficRecord::setPositionAndIntentions(int pos, FGAIFlightPlan *route)
@@ -303,6 +304,21 @@ void FGTrafficRecord::setHeadingAdjustment(double heading)
   instruction.setHeading(heading); 
 }
 
+bool FGTrafficRecord::pushBackAllowed() {
+      double course, az2,dist;
+       SGGeod curr(SGGeod::fromDegM(getLongitude(),
+                                       getLatitude(), 
+                                       getAltitude()));
+
+      double userLatitude  = fgGetDouble("/position/latitude-deg");
+      double userLongitude = fgGetDouble("/position/longitude-deg");
+      SGGeod user(SGGeod::fromDeg(userLongitude,userLatitude));
+      SGGeodesy::inverse(curr, user, course, az2, dist);
+      //cerr << "Distance to user : " << dist << endl;
+      return (dist > 250);
+
+}
+
 
 
 /***************************************************************************
@@ -441,8 +457,18 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
                       activeRunway + ", " + SID + ", squawk " + transponderCode + ". " +
                       "For push-back and taxi clearance call " + taxiFreqStr + ". " + sender;
                break;
-           default:
+           case MSG_REQUEST_PUSHBACK_CLEARANCE:
+               text = receiver + ". Request push-back. " + sender;
                break;
+           case MSG_PERMIT_PUSHBACK_CLEARANCE:
+               text = receiver + ". Push-back approved. " + sender;
+               break;
+           case MSG_HOLD_PUSHBACK_CLEARANCE:
+                text = receiver + ". Standby. " + sender;
+                 break;
+            default:
+                 text = sender + ". Transmitting unknown Message";
+                  break;
     }
     double onBoardRadioFreq0 = fgGetDouble("/instrumentation/comm[0]/frequencies/selected-mhz");
     double onBoardRadioFreq1 = fgGetDouble("/instrumentation/comm[1]/frequencies/selected-mhz");
@@ -454,7 +480,9 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
     // the relevant frequency.
     // Note that distance attenuation is currently not yet implemented
     if ((onBoardRadioFreqI0 == stationFreq) || (onBoardRadioFreqI1 == stationFreq)) {
-        fgSetString("/sim/messages/atc", text.c_str());
+        if (rec->allowTransmissions()) {
+            fgSetString("/sim/messages/atc", text.c_str());
+        }
     }
 }
 
@@ -857,6 +885,28 @@ void FGStartupController::update(int id, double lat, double lon, double heading,
      // TODO: Switch to APRON control and request pushback Clearance.
      // Get Push back clearance
      if ((state == 4) && available){
+        if (now > startTime+130) {
+            transmit(&(*i), MSG_REQUEST_PUSHBACK_CLEARANCE, ATC_AIR_TO_GROUND);
+            i->updateState();
+            lastTransmission = now;
+             available = false;
+        }
+     }
+     if ((state == 5) && available){
+        if (now > startTime+130) {
+            if (i->pushBackAllowed()) {
+                 i->allowRepeatedTransmissions();
+                 transmit(&(*i), MSG_PERMIT_PUSHBACK_CLEARANCE, ATC_GROUND_TO_AIR);
+                 i->updateState();
+            } else {
+                 transmit(&(*i), MSG_HOLD_PUSHBACK_CLEARANCE, ATC_GROUND_TO_AIR);
+                 i->suppressRepeatedTransmissions();
+            }
+            lastTransmission = now;
+             available = false;
+        }
+     }
+     if ((state == 6) && available){
           i->setHoldPosition(false);
      }
 }
