@@ -1127,27 +1127,24 @@ void FGAILocalTraffic::FlyTrafficPattern(double dt) {
     }
 
 	if(inAir) {
-		// FIXME - at the moment this is a bit screwy
-		// The velocity correction is applied based on the relative headings.
-		// Then the heading is changed based on the velocity.
-		// Which comes first, the chicken or the egg?
-		// Does it really matter?
-		
-		// Apply wind to ground-relative velocity if in the air
-		vel = IAS - (cos((_hdg - wind_from) * DCL_DEGREES_TO_RADIANS) * wind_speed);
-		//crab = f(track, wind, vel);
-		// The vector we need to fly is our desired vector minus the wind vector
-		// TODO - we probably ought to use plib's built in vector types and operations for this
-		// ie.  There's almost *certainly* a better way to do this!
-		double gxx = vel * sin(track * DCL_DEGREES_TO_RADIANS);	// Plane desired velocity x component wrt ground
-		double gyy = vel * cos(track * DCL_DEGREES_TO_RADIANS);	// Plane desired velocity y component wrt ground
-		double wxx = wind_speed * sin((wind_from + 180.0) * DCL_DEGREES_TO_RADIANS);	// Wind velocity x component
-		double wyy = wind_speed * cos((wind_from + 180.0) * DCL_DEGREES_TO_RADIANS);	// Wind velocity y component
-		double axx = gxx - wxx;	// Plane in-air velocity x component
-		double ayy = gyy - wyy; // Plane in-air velocity y component
-		// Now we want the angle between gxx and axx (which is the crab)
-		crab = atan2(ayy - gyy, axx - gxx) * DCL_RADIANS_TO_DEGREES;
-		//cout << "crab = " << crab << '\n';
+		// calculate ground speed and crab from the wind triangle
+		double wind_angle = GetAngleDiff_deg(wind_from + 180, track);
+		double wind_side = (wind_angle < 0) ? -1.0 : 1.0;
+
+		double sine_of_crab = wind_speed / IAS * sin(fabs(wind_angle) * DCL_DEGREES_TO_RADIANS);
+		if (sine_of_crab >= 1.0) {
+			// The crosswind component is greater than the IAS,
+			// we can't keep the aircraft on track.
+			// Assume increased IAS such that it cancels lateral speed.
+			// This is unrealistic, but not sure how the rest of the sim
+			// would react to the aircraft going off course.
+			// Should be a rare case anyway.
+			crab = wind_side * 90.0;
+		} else {
+			crab = asin(sine_of_crab) * DCL_RADIANS_TO_DEGREES * wind_side;
+		}
+		vel = cos(wind_angle * DCL_DEGREES_TO_RADIANS) * wind_speed
+			+ cos(crab * DCL_DEGREES_TO_RADIANS) * IAS;
 	} else {	// on the ground - crab dosen't apply
 		crab = 0.0;
 	}
