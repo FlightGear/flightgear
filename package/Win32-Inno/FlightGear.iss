@@ -22,18 +22,19 @@
 AppId=FlightGear
 AppName=FlightGear
 AppPublisher=The FlightGear Team
-OutputBaseFilename=fgsetup-2.0.0-RC2
-AppVerName=FlightGear v2.0.0-RC2
+OutputBaseFilename=fgsetup-2.0.0-RC3
+AppVerName=FlightGear v2.0.0-RC3
 AppPublisherURL=http://www.flightgear.org
 AppSupportURL=http://www.flightgear.org
 AppUpdatesURL=http://www.flightgear.org
 DefaultDirName={pf}\FlightGear
-DefaultGroupName=FlightGear v2.0.0-RC2
+DefaultGroupName=FlightGear v2.0.0-RC3
 LicenseFile=X:\data\COPYING
 Uninstallable=yes
 SetupIconFile=x:\flightgear.ico
 VersionInfoVersion=1.9.9.993
 WizardImageFile=X:\setupimg.bmp
+WizardImageStretch=No
 WizardSmallImageFile=X:\setupsmall.bmp
 VersionInfoCompany=The FlightGear Team
 UninstallDisplayIcon={app}\bin\Win32\fgrun.exe
@@ -55,7 +56,7 @@ Source: "X:\data\*.*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdir
 [Dirs]
 ; Make the user installable scenery directory
 Name: "{app}\scenery"; Permissions: everyone-modify
-Name: "{app}\terrasync"; Permissions: everyone-modify
+Name: "{code:TerrasyncDir}"; Permissions: everyone-modify
 
 [Icons]
 Name: "{group}\FlightGear Launcher"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}";
@@ -63,12 +64,13 @@ Name: "{group}\FlightGear Launcher"; Filename: "{app}\bin\Win32\fgrun.exe"; Work
 Name: "{group}\FlightGear Manual"; Filename: "{app}\data\Docs\getstart.pdf"
 Name: "{group}\FlightGear Documentation"; Filename: "{app}\data\Docs\index.html"
 Name: "{group}\Flightgear Wiki"; Filename: "http://wiki.flightgear.org"
-Name: "{userdesktop}\FlightGear v2.0.0-RC2"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{userdesktop}\FlightGear v2.0.0-RC3"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 Name: "{group}\Tools\Install & Uninstall Scenery"; Filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}";
 Name: "{group}\Tools\TerraSync"; Filename: "{app}\bin\Win32\terrasync.exe"; Parameters: "-S -p 5505 -d ""{app}\terrasync"""; WorkingDir: "{app}";
 Name: "{group}\Tools\Uninstall FlightGear"; Filename: "{uninstallexe}"
 
+Name: "{group}\Tools\js_demo"; Filename: "{app}\bin\Win32\js_demo.exe"
 Name: "{group}\Tools\fgjs"; Filename: "cmd"; Parameters: "/k fgjs.exe ""--fg-root={app}\data"""; WorkingDir: "{app}\bin\Win32";
 Name: "{group}\Tools\GPSsmooth"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\GPSsmooth.exe"" -h"; WorkingDir: "{app}\bin\Win32";
 Name: "{group}\Tools\UGsmooth"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\UGsmooth.exe"" -h"; WorkingDir: "{app}\bin\Win32";
@@ -85,10 +87,67 @@ Name: "{group}\Tools\Explore Documentation Folder"; Filename: "{app}\data\Docs"
 Filename: "{app}\bin\vcredist_x86.exe"; WorkingDir: "{app}"; Parameters: "/qb!"; Description: "Installing Flightgear prerequisites"
 
 ; Put installation directory into the fgrun.prefs
-filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--fg-exe={app}\bin\Win32\fgfs.exe"" ""--ts-exe={app}\bin\Win32\terrasync.exe"" ""--fg-root={app}\data"" ""--fg-scenery={app}\data\Scenery;{app}\scenery;{app}\terrasync"""
+filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--fg-exe={app}\bin\Win32\fgfs.exe"" ""--ts-exe={app}\bin\Win32\terrasync.exe"" ""--fg-root={app}\data"" ""--fg-scenery={app}\data\Scenery;{app}\scenery;{code:TerrasyncDir}"" --ts-dir=3"
 
 ; Put installation and source directories into the fgadmin.prefs
 filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--install-source={src}\..\Scenery"" ""--scenery-dest={app}\scenery"""
 Filename: "{app}\bin\OpenAL\oalinst.exe"; WorkingDir: "{app}"; Description: "Installing OpenAL"; Tasks: insoal
 ;Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Description: "Launch FlightGear"; Flags: postinstall skipifsilent
+
+[Code]
+var
+  TerrasyncDirPage: TInputDirWizardPage;
+
+procedure URLLabelOnClick(Sender: TObject);
+var
+  ErrorCode: Integer;
+begin
+  ShellExec('open', 'http://www.flightgear.org', '', '', SW_SHOWNORMAL, ewNoWait, ErrorCode);
+end;
+
+procedure CreateURLLabel(ParentForm: TSetupForm; CancelButton: TNewButton);
+var
+  URLLabel: TNewStaticText;
+begin
+  URLLabel := TNewStaticText.Create(ParentForm);
+  URLLabel.Caption := 'www.flightgear.org';
+  URLLabel.Cursor := crHand;
+  URLLabel.OnClick := @URLLabelOnClick;
+  URLLabel.Parent := ParentForm;
+  { Alter Font *after* setting Parent so the correct defaults are inherited first }
+  URLLabel.Font.Style := URLLabel.Font.Style + [fsUnderline];
+  URLLabel.Font.Color := clBlue;
+  URLLabel.Top := CancelButton.Top + CancelButton.Height - URLLabel.Height - 2;
+  URLLabel.Left := ScaleX(20);
+end;
+
+procedure InitializeWizard();
+begin
+  TerrasyncDirPage := CreateInputDirPage(wpSelectDir,
+    'Select Terrasync Directory', 'Where should scenery downloaded by Terrasync be put?',
+    'Select the folder in which Terrasync would download additional scenery, then click Next.',
+    False, 'New Folder');
+  TerrasyncDirPage.Add('');
+
+  CreateURLLabel(WizardForm, WizardForm.CancelButton);
+end;
+
+function NextButtonClick(CurPageID: Integer): Boolean;
+begin
+  if CurPageID = wpSelectDir then begin
+    TerrasyncDirPage.Values[0] := GetPreviousData( 'TerrasyncDir', ExpandConstant('{app}\terrasync') );
+  end;
+  Result := True;
+end;
+
+function TerrasyncDir(Param: String): String;
+begin
+  Result := TerrasyncDirPage.Values[0];
+end;
+
+procedure RegisterPreviousData(PreviousDataKey: Integer);
+begin
+  { Store the settings so we can restore them next time }
+  SetPreviousData(PreviousDataKey, 'TerrasyncDir', TerrasyncDirPage.Values[0]);
+end;
 
