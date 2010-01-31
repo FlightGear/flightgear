@@ -94,6 +94,9 @@ filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}\bin\Win32"; Paramete
 Filename: "{app}\bin\OpenAL\oalinst.exe"; WorkingDir: "{app}"; Description: "Installing OpenAL"; Tasks: insoal
 ;Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Description: "Launch FlightGear"; Flags: postinstall skipifsilent
 
+[Registry]
+Root: HKLM; Subkey: "Software\flightgear.org"; ValueType: string; ValueName: "TerrasyncDir"; ValueData: "{code:TerrasyncDir}"
+
 [Code]
 var
   TerrasyncDirPage: TInputDirWizardPage;
@@ -126,7 +129,7 @@ begin
   TerrasyncDirPage := CreateInputDirPage(wpSelectDir,
     'Select Terrasync Directory', 'Where should scenery downloaded by Terrasync be put?',
     'Select the folder in which Terrasync would download additional scenery, then click Next.',
-    False, 'New Folder');
+    False, 'Terrasync Folder');
   TerrasyncDirPage.Add('');
 
   CreateURLLabel(WizardForm, WizardForm.CancelButton);
@@ -135,7 +138,7 @@ end;
 function NextButtonClick(CurPageID: Integer): Boolean;
 begin
   if CurPageID = wpSelectDir then begin
-    TerrasyncDirPage.Values[0] := GetPreviousData( 'TerrasyncDir', ExpandConstant('{app}\terrasync') );
+    TerrasyncDirPage.Values[0] := GetPreviousData( 'TerrasyncDir', ExpandConstant('{reg:HKLM\Software\flightgear.org,TerrasyncDir|{app}\terrasync}') );
   end;
   Result := True;
 end;
@@ -149,5 +152,19 @@ procedure RegisterPreviousData(PreviousDataKey: Integer);
 begin
   { Store the settings so we can restore them next time }
   SetPreviousData(PreviousDataKey, 'TerrasyncDir', TerrasyncDirPage.Values[0]);
+end;
+
+function UpdateReadyMemo(Space, NewLine, MemoUserInfoInfo, MemoDirInfo, MemoTypeInfo, MemoComponentsInfo, MemoGroupInfo, MemoTasksInfo: String): String;
+var
+  S: String;
+begin
+  S := '';
+  S := S + MemoDirInfo + NewLine + NewLine;
+  S := S + 'Terrasync folder:' + NewLine;
+  S := S + Space + TerrasyncDirPage.Values[0] + NewLine + NewLine;
+  S := S + MemoGroupInfo + NewLine + NewLine;
+  S := S + MemoTasksInfo + NewLine + NewLine;
+
+  Result := S;
 end;
 
