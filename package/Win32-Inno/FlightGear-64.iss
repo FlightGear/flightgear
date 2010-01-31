@@ -22,13 +22,13 @@
 AppId=FlightGear
 AppName=FlightGear 64-bit
 AppPublisher=The FlightGear Team
-OutputBaseFilename=fgsetup64-2.0.0-RC2
-AppVerName=FlightGear 64-bit v2.0.0-RC2
+OutputBaseFilename=fgsetup64-2.0.0-RC3
+AppVerName=FlightGear 64-bit v2.0.0-RC3
 AppPublisherURL=http://www.flightgear.org
 AppSupportURL=http://www.flightgear.org
 AppUpdatesURL=http://www.flightgear.org
 DefaultDirName={pf}\FlightGear
-DefaultGroupName=FlightGear v2.0.0-RC2
+DefaultGroupName=FlightGear v2.0.0-RC3
 LicenseFile=X:\data\COPYING
 Uninstallable=yes
 SetupIconFile=x:\flightgear64.ico
@@ -54,7 +54,7 @@ Source: "X:\bin\vcredist_x64.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\FlightGear 64-bit Launcher"; Filename: "{app}\bin\Win64\fgrun.exe"; WorkingDir: "{app}";
-Name: "{userdesktop}\FlightGear 64-bit v2.0.0-RC2"; Filename: "{app}\bin\Win64\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{userdesktop}\FlightGear 64-bit v2.0.0-RC3"; Filename: "{app}\bin\Win64\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\bin\vcredist_x64.exe"; WorkingDir: "{app}"; Parameters: "/qb!"; Description: "Installing Flightgear prerequisites"
