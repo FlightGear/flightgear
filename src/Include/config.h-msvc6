@@ -46,7 +46,7 @@
 #define PACKAGE "FlightGear"
 
 /* Define to package version - use in main.cxx */
-#define FLIGHTGEAR_VERSION "MSVC6-WIN32-2.0.0-rc2"
+#define FLIGHTGEAR_VERSION "MSVC6-WIN32-2.0.0"
 
 /* Define as the return type of signal handlers (int or void).  */
 #define RETSIGTYPE void
@@ -64,7 +64,7 @@
 #define TM_IN_SYS_TIME 1
 
 /* Define to version number */
-#define VERSION "2.0.0-rc2"
+#define VERSION "2.0.0"
 
 /* Define if compiling on a Winbloze (95, NT, etc.) platform */
 #define WIN32 1
