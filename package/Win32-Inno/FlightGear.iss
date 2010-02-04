@@ -22,17 +22,17 @@
 AppId=FlightGear
 AppName=FlightGear
 AppPublisher=The FlightGear Team
-OutputBaseFilename=fgsetup-2.0.0-RC3
-AppVerName=FlightGear v2.0.0-RC3
+OutputBaseFilename=fgsetup-2.0.0
+AppVerName=FlightGear v2.0.0
 AppPublisherURL=http://www.flightgear.org
 AppSupportURL=http://www.flightgear.org
 AppUpdatesURL=http://www.flightgear.org
 DefaultDirName={pf}\FlightGear
-DefaultGroupName=FlightGear v2.0.0-RC3
+DefaultGroupName=FlightGear v2.0.0
 LicenseFile=X:\data\COPYING
 Uninstallable=yes
 SetupIconFile=x:\flightgear.ico
-VersionInfoVersion=1.9.9.993
+VersionInfoVersion=2.0.0.0
 WizardImageFile=X:\setupimg.bmp
 WizardImageStretch=No
 WizardSmallImageFile=X:\setupsmall.bmp
@@ -64,7 +64,7 @@ Name: "{group}\FlightGear Launcher"; Filename: "{app}\bin\Win32\fgrun.exe"; Work
 Name: "{group}\FlightGear Manual"; Filename: "{app}\data\Docs\getstart.pdf"
 Name: "{group}\FlightGear Documentation"; Filename: "{app}\data\Docs\index.html"
 Name: "{group}\Flightgear Wiki"; Filename: "http://wiki.flightgear.org"
-Name: "{userdesktop}\FlightGear v2.0.0-RC3"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{userdesktop}\FlightGear v2.0.0"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 Name: "{group}\Tools\Install & Uninstall Scenery"; Filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}";
 Name: "{group}\Tools\TerraSync"; Filename: "{app}\bin\Win32\terrasync.exe"; Parameters: "-S -p 5505 -d ""{app}\terrasync"""; WorkingDir: "{app}";
