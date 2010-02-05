@@ -19,11 +19,7 @@
 #define PACKAGE "FlightGear"
 
 /* Define to package version - use in main.cxx */
-<<<<<<< config.h-msvc71
-#define FLIGHTGEAR_VERSION "MSVC7.1-WIN32-2.0.0-rc2"
-=======
 #define FLIGHTGEAR_VERSION "MSVC7.1-WIN32-2.0.0"
->>>>>>> 1.7
 
 /* Define as the return type of signal handlers (int or void).  */
 #define RETSIGTYPE void
@@ -41,11 +37,7 @@
 #define TM_IN_SYS_TIME 1
 
 /* Define to version number */
-<<<<<<< config.h-msvc71
-#define VERSION "2.0.0-rc2"
-=======
 #define VERSION "2.0.0"
->>>>>>> 1.7
 #ifndef  FG_VERSION     /* allow override */
 #define  FG_VERSION     7
 #endif   /* FG_VERSION */
