@@ -118,6 +118,20 @@ void HUD::Item::draw_circle(float xoffs, float yoffs, float r) const
     glEnd();
 }
 
+void HUD::Item::draw_arc(float xoffs, float yoffs, float t0, float t1, float r) const
+{
+    glBegin(GL_LINE_STRIP);
+    float step = SG_PI / r;
+    t0 = t0 * SG_DEGREES_TO_RADIANS;
+    t1 = t1 * SG_DEGREES_TO_RADIANS;
+
+    for (float alpha = t0; alpha < t1; alpha += step) {
+        float x = r * cos(alpha);
+        float y = r * sin(alpha);
+        glVertex2f(x + xoffs, y + yoffs);
+    }
+    glEnd();
+}
 
 void HUD::Item::draw_bullet(float x, float y, float size)
 {
