@@ -467,25 +467,24 @@ bool FGGeneric::process() {
                 }
             }
         } else {
-            do {
-                if (!binary_mode) {
-                    length = io->readline( buf, FG_MAX_MSG_SIZE );
-                    if ( length > 0 ) {
-                        parse_message();
-                    }
-                } else {
-                    length = io->read( buf, binary_record_length );
-                    if ( length == binary_record_length ) {
-                        parse_message();
-                    } else if ( length > 0 ) {
-                        SG_LOG( SG_IO, SG_ALERT,
-                            "Generic protocol: Received binary "
-                            "record of unexpected size, expected: "
-                            << binary_record_length << " but received: "
-                            << length);
-                    }
+            if (!binary_mode) {
+                while ((length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
+                    parse_message();
                 }
-            } while ( length == binary_record_length );
+            } else {
+                while ((length = io->read( buf, binary_record_length )) 
+                          == binary_record_length ) {
+                    parse_message();
+                }
+
+                if ( length > 0 ) {
+                    SG_LOG( SG_IO, SG_ALERT,
+                        "Generic protocol: Received binary "
+                        "record of unexpected size, expected: "
+                        << binary_record_length << " but received: "
+                        << length);
+                }
+            }
         }
     }
     return true;
