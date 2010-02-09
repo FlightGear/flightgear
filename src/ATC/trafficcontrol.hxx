@@ -45,7 +45,6 @@ typedef vector<int>::iterator intVecIterator;
 
 class FGAIFlightPlan;  // forward reference
 class FGGroundNetwork; // forward reference
-//class FGAISchedule;    // forward reference
 class FGAIAircraft;    // forward reference
 
 /**************************************************************************************
