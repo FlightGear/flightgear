@@ -720,16 +720,16 @@ void FGRouteMgr::parseRouteWaypoint(SGPropertyNode* aWP)
   }
 
   SGPropertyNode_ptr altProp = aWP->getChild("altitude-ft");
-  double alt = cruise->getDoubleValue("altitude-ft") * SG_FEET_TO_METER;
+  double altM = cruise->getDoubleValue("altitude-ft") * SG_FEET_TO_METER;
   if (altProp) {
-    alt = altProp->getDoubleValue();
+    altM = altProp->getDoubleValue() * SG_FEET_TO_METER;
   }
       
   string ident(aWP->getStringValue("ident"));
   if (aWP->hasChild("longitude-deg")) {
     // explicit longitude/latitude
     SGWayPoint swp(aWP->getDoubleValue("longitude-deg"),
-      aWP->getDoubleValue("latitude-deg"), alt, 
+      aWP->getDoubleValue("latitude-deg"), altM, 
       SGWayPoint::WGS84, ident, aWP->getStringValue("name"));
     add_waypoint(swp);
   } else if (aWP->hasChild("navid")) {
@@ -750,7 +750,7 @@ void FGRouteMgr::parseRouteWaypoint(SGPropertyNode* aWP)
       SGGeodesy::direct(p->geod(), radialDeg, offsetNm * SG_NM_TO_METER, pos, az2);
     }
     
-    SGWayPoint swp(pos.getLongitudeDeg(), pos.getLatitudeDeg(), alt, 
+    SGWayPoint swp(pos.getLongitudeDeg(), pos.getLatitudeDeg(), altM, 
       SGWayPoint::WGS84, ident, "");
     add_waypoint(swp);
   } else {
@@ -760,7 +760,7 @@ void FGRouteMgr::parseRouteWaypoint(SGPropertyNode* aWP)
       throw sg_io_exception("bad route file, unknown waypoint:" + ident);
     }
     
-    SGWayPoint swp(p->longitude(), p->latitude(), alt, 
+    SGWayPoint swp(p->longitude(), p->latitude(), altM, 
       SGWayPoint::WGS84, p->ident(), p->name());
     add_waypoint(swp);
   }
