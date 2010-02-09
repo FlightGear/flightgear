@@ -1536,7 +1536,7 @@ bool fgInitSubsystems() {
     // Initialize the XML Autopilot subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem( "xml-autopilot", new FGXMLAutopilot );
+    globals->add_subsystem( "xml-autopilot", new FGXMLAutopilotGroup );
     globals->add_subsystem( "route-manager", new FGRouteMgr );
     globals->add_subsystem( "autobrake", new FGAutoBrake );
     
