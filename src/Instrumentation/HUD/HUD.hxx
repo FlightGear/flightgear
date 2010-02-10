@@ -357,6 +357,7 @@ protected:
     void draw_stipple_line(float x1, float y1, float x2, float y2);
     void draw_text(float x, float y, const char *msg, int align = 0, int digit = 0);
     void draw_circle(float x1, float y1, float r) const;
+    void draw_arc(float x1, float y1, float t0, float t1, float r) const;
     void draw_bullet(float, float, float);
 
     HUD         *_hud;
@@ -610,9 +611,25 @@ public:
 
 private:
     SGSharedPtr<SGCondition> _active_condition;  // stadiametric (true) or standby (false)
+    SGSharedPtr<SGCondition> _tachy_condition;  // tachymetric (true) or standby (false)
+    SGSharedPtr<SGCondition> _align_condition;  // tachymetric (true) or standby (false)
+
     Input   _diameter;               // inner/outer radius relation
+    Input  _pitch;
+    Input  _yaw;
+    Input  _speed;
+    Input  _range;
+    Input  _t0;
+    Input  _t1;
+    Input  _offset_x;
+    Input  _offset_y;
+
     float   _bullet_size;
     float   _inner_radius;
+    float   _compression;
+    float  _limit_x;
+    float  _limit_y;
+
 };
 
 
