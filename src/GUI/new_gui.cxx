@@ -14,6 +14,8 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/props/props_io.hxx>
 
+#include <boost/algorithm/string/case_conv.hpp>
+
 #include <Main/fg_props.hxx>
 
 #include "menubar.hxx"
@@ -468,24 +470,29 @@ inline bool FGFontCache::FntParamsLess::operator()(const FntParams& f1,
 struct FGFontCache::fnt *
 FGFontCache::getfnt(const char *name, float size, float slant)
 {
-    string fontName(name);
+    string fontName = boost::to_lower_copy(string(name));
     FntParams fntParams(fontName, size, slant);
     PuFontMap::iterator i = _puFonts.find(fntParams);
-    if (i != _puFonts.end())
+    if (i != _puFonts.end()) {
+        // found in the puFonts map, all done
         return i->second;
+    }
+    
     // fntTexFont s are all preloaded into the _texFonts map
     TexFontMap::iterator texi = _texFonts.find(fontName);
-    fntTexFont* texfont = 0;
-    puFont* pufont = 0;
+    fntTexFont* texfont = NULL;
+    puFont* pufont = NULL;
     if (texi != _texFonts.end()) {
         texfont = texi->second;
     } else {
+        // check the built-in PUI fonts (in guifonts array)
         const GuiFont* guifont = std::find_if(&guifonts[0], guifontsEnd,
                                               GuiFont::Predicate(name));
         if (guifont != guifontsEnd) {
             pufont = guifont->font;
         }
     }
+    
     fnt* f = new fnt;
     if (pufont) {
         f->pufont = pufont;
@@ -527,16 +534,18 @@ FGFontCache::get(SGPropertyNode *node)
 
 void FGFontCache::init()
 {
-    if (!_initialized) {
-        char *envp = ::getenv("FG_FONTS");
-        if (envp != NULL) {
-            _path.set(envp);
-        } else {
-            _path.set(globals->get_fg_root());
-            _path.append("Fonts");
-        }
-        _initialized = true;
+    if (_initialized) {
+        return;
     }
+    
+    char *envp = ::getenv("FG_FONTS");
+    if (envp != NULL) {
+        _path.set(envp);
+    } else {
+        _path.set(globals->get_fg_root());
+        _path.append("Fonts");
+    }
+    _initialized = true;
 }
 
 SGPath
@@ -552,7 +561,7 @@ FGFontCache::getfntpath(const char *name)
 
     path = SGPath(_path);
     path.append("Helvetica.txf");
-    
+    SG_LOG(SG_GENERAL, SG_WARN, "Unknown font name '" << name << "', defaulting to Helvetica");
     return path;
 }
 
@@ -569,9 +578,11 @@ bool FGFontCache::initializeFonts()
         path.append(dirEntry->d_name);
         if (path.extension() == fontext) {
             fntTexFont* f = new fntTexFont;
-            if (f->load((char *)path.c_str()))
-                _texFonts[string(dirEntry->d_name)] = f;
-            else
+            if (f->load((char *)path.c_str())) {
+                // convert font names in the map to lowercase for matching
+                string fontName = boost::to_lower_copy(string(dirEntry->d_name));
+                _texFonts[fontName] = f;
+            } else
                 delete f;
         }
     }
