@@ -623,6 +623,7 @@ private:
     Input  _t1;
     Input  _offset_x;
     Input  _offset_y;
+    bool _hasTachyInputs;
 
     float   _bullet_size;
     float   _inner_radius;
