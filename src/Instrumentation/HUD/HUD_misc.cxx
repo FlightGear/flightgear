@@ -28,15 +28,16 @@
 
 HUD::AimingReticle::AimingReticle(HUD *hud, const SGPropertyNode *n, float x, float y) :
 Item(hud, n, x, y),
+_diameter(n->getNode("diameter-input", false)),
 _pitch(n->getNode("pitch-input", false)),
 _yaw(n->getNode("yaw-input", false)),
 _speed(n->getNode("speed-input", false)),
 _range(n->getNode("range-input", false)),
-_offset_x(n->getNode("offset-x-input", false)),
-_offset_y(n->getNode("offset-y-input", false)),
-_diameter(n->getNode("diameter-input", false)),
 _t0(n->getNode("arc-start-input", false)),
 _t1(n->getNode("arc-stop-input", false)),
+_offset_x(n->getNode("offset-x-input", false)),
+_offset_y(n->getNode("offset-y-input", false)),
+_hasTachyInputs(false),
 _compression(n->getFloatValue("compression-factor")),
 _limit_x(n->getFloatValue("limit-x")),
 _limit_y(n->getFloatValue("limit-y")),
@@ -58,6 +59,9 @@ _inner_radius(_w / 2.0)
     const SGPropertyNode *anode = n->getNode("align-condition");
     if (anode)
         _align_condition = sgReadCondition(globals->get_props(), anode);
+    _hasTachyInputs = _pitch.isValid() && _yaw.isValid() && _speed.isValid()
+        && _range.isValid() && _t0.isValid() && _t1.isValid()
+        && _offset_x.isValid() && _offset_y.isValid();
 }
 
 
@@ -68,15 +72,9 @@ void HUD::AimingReticle::draw(void)
     bool align = _align_condition ? _align_condition->test() : true;
 
     float diameter = _diameter.isValid() ? _diameter.getFloatValue() : 2.0f; // outer circle
-    float x = _center_x + _offset_x.getFloatValue();
-    float y = _center_y + _offset_y.getFloatValue();
+    float x = _center_x + (_offset_x.isValid() ? _offset_x.getFloatValue() : 0);
+    float y = _center_y + (_offset_y.isValid() ? _offset_y.getFloatValue() : 0);
 
-    float t0 = _t0.isValid() ? _t0.getFloatValue() : 2.0f; // start arc
-    float t1 = _t1.isValid() ? _t1.getFloatValue() : 2.0f; // start arc
-
-    float yaw_value = _yaw.getFloatValue();
-    float pitch_value = _pitch.getFloatValue();
-    float tof_value = _range.getFloatValue()* 3 / _speed.getFloatValue();
 
 //        SG_LOG(SG_INPUT, SG_ALERT, "HUD: compression" << _compression);
 
@@ -86,7 +84,13 @@ void HUD::AimingReticle::draw(void)
         draw_bullet(x, y, _bullet_size);
         draw_circle(x, y, _inner_radius);
         draw_circle(x, y, diameter * _inner_radius);
-    } else if (tachy){//tachiametric
+    } else if (tachy && _hasTachyInputs){//tachiametric
+        float t0 = _t0.isValid() ? _t0.getFloatValue() : 2.0f; // start arc
+        float t1 = _t1.isValid() ? _t1.getFloatValue() : 2.0f; // start arc
+        float yaw_value = _yaw.getFloatValue();
+        float pitch_value = _pitch.getFloatValue();
+        float tof_value = _range.getFloatValue()* 3 / _speed.getFloatValue();
+        
         draw_bullet(x, y, _bullet_size);
         draw_circle(x, y, _inner_radius);
         draw_line(x + _inner_radius, y, x + _inner_radius * 3, y);
