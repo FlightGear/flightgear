@@ -240,8 +240,8 @@ bool FGGeneric::gen_message_ascii() {
 
         case FG_DOUBLE:
             val = _out_message[i].offset +
-                _out_message[i].prop->getFloatValue() * _out_message[i].factor;
-            snprintf(tmp, 255, _out_message[i].format.c_str(), (float)val);
+                _out_message[i].prop->getDoubleValue() * _out_message[i].factor;
+            snprintf(tmp, 255, _out_message[i].format.c_str(), (double)val);
             break;
 
         default: // SG_STRING
