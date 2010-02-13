@@ -1186,7 +1186,9 @@ double GPS::getWP1MagBearing() const
     return -9999.0;
   }
 
-  return _wp1TrueBearing - _magvar_node->getDoubleValue();
+  double magBearing = _wp1TrueBearing - _magvar_node->getDoubleValue();
+  SG_NORMALIZE_RANGE(magBearing, 0.0, 360.0);
+  return magBearing;
 }
 
 double GPS::getWP1CourseDeviation() const
