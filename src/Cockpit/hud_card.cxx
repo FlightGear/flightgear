@@ -56,7 +56,7 @@ hud_card::hud_card(const SGPropertyNode *node) :
     Maj_div(node->getIntValue("major_divs")),		// FIXME dup
     Min_div(node->getIntValue("minor_divs"))		// FIXME dup
 {
-    SG_LOG(SG_INPUT, SG_INFO, "Done reading dial/tape instrument "
+    SG_LOG(SG_INPUT, SG_BULK, "Done reading dial/tape instrument "
             << node->getStringValue("name", "[unnamed]"));
 
     set_data_source(get_func(node->getStringValue("loadfn")));
