@@ -8,8 +8,6 @@ SUBDIRS = \
 EXTRA_DIST = \
 	acinclude.m4 \
 	autogen.sh \
-	FlightGear.dsp \
-	FlightGear.dsw \
 	projects \
 	README \
 	README.OpenAL \
@@ -19,7 +17,6 @@ EXTRA_DIST = \
 	Thanks
 
 dist-hook:
-	(cd $(top_srcdir); $(HOME)/Projects/FlightGear/admin/am2dsp.pl)
 	(cd $(top_srcdir); tar --exclude docs-mini/CVS --exclude hints/CVS \
 		-cf - docs-mini ) | (cd $(distdir); tar xvf -)
 	rm -rf `find $(distdir)/projects -name CVS`
