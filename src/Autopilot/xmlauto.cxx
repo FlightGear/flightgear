@@ -1002,13 +1002,13 @@ void FGXMLAutopilotGroup::init()
                 continue;
             }        
         } catch (const sg_exception& e) {
-            SG_LOG( SG_ALL, SG_ALERT, "Failed to load autopilot configuration: "
+            SG_LOG( SG_AUTOPILOT, SG_ALERT, "Failed to load autopilot configuration: "
                     << config.str() << ":" << e.getMessage() );
             delete ap;
             continue;
         }
 
-        SG_LOG( SG_ALL, SG_INFO, "adding  autopilot subsystem " << apName );
+        SG_LOG( SG_AUTOPILOT, SG_INFO, "adding  autopilot subsystem " << apName );
         set_subsystem( apName, ap );
         _autopilotNames.push_back( apName );
     }
@@ -1053,7 +1053,7 @@ bool FGXMLAutopilot::build( SGPropertyNode_ptr config_props ) {
         node = config_props->getChild(i);
         string name = node->getName();
         // cout << name << endl;
-        SG_LOG( SG_ALL, SG_INFO, "adding  autopilot component " << name );
+        SG_LOG( SG_AUTOPILOT, SG_BULK, "adding  autopilot component " << name );
         if ( name == "pid-controller" ) {
             components.push_back( new FGPIDController( node ) );
         } else if ( name == "pi-simple-controller" ) {
@@ -1062,9 +1062,8 @@ bool FGXMLAutopilot::build( SGPropertyNode_ptr config_props ) {
             components.push_back( new FGPredictor( node ) );
         } else if ( name == "filter" ) {
             components.push_back( new FGDigitalFilter( node ) );
-//        } else {
-//            SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: " 
-//                    << name );
+        } else {
+            SG_LOG( SG_AUTOPILOT, SG_WARN, "Unknown top level autopilot section: " << name );
 //            return false;
         }
     }
