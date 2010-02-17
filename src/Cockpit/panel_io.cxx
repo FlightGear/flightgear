@@ -684,7 +684,6 @@ readPanel (const SGPropertyNode * root)
   if (bgTexture.empty())
     bgTexture = "FOO";
   panel->setBackground(FGTextureManager::createTexture(bgTexture.c_str()));
-  SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << bgTexture );
 
   //
   // Get multibackground if any...
@@ -692,49 +691,41 @@ readPanel (const SGPropertyNode * root)
   string mbgTexture = root->getStringValue("multibackground[0]");
   if (!mbgTexture.empty()) {
     panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 0);
-    SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
 
     mbgTexture = root->getStringValue("multibackground[1]");
     if (mbgTexture.empty())
       mbgTexture = "FOO";
     panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 1);
-    SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
 
     mbgTexture = root->getStringValue("multibackground[2]");
     if (mbgTexture.empty())
       mbgTexture = "FOO";
     panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 2);
-    SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
 
     mbgTexture = root->getStringValue("multibackground[3]");
     if (mbgTexture.empty())
       mbgTexture = "FOO";
     panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 3);
-    SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
 
     mbgTexture = root->getStringValue("multibackground[4]");
     if (mbgTexture.empty())
       mbgTexture = "FOO";
     panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 4);
-    SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
 
     mbgTexture = root->getStringValue("multibackground[5]");
     if (mbgTexture.empty())
       mbgTexture = "FOO";
     panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 5);
-    SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
 
     mbgTexture = root->getStringValue("multibackground[6]");
     if (mbgTexture.empty())
       mbgTexture = "FOO";
     panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 6);
-    SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
 
     mbgTexture = root->getStringValue("multibackground[7]");
     if (mbgTexture.empty())
       mbgTexture = "FOO";
     panel->setMultiBackground(FGTextureManager::createTexture(mbgTexture.c_str()), 7);
-    SG_LOG( SG_COCKPIT, SG_INFO, "Set background texture to " << mbgTexture );
 
   }
   
@@ -743,7 +734,7 @@ readPanel (const SGPropertyNode * root)
   //
   // Create each instrument.
   //
-  SG_LOG( SG_COCKPIT, SG_INFO, "Reading panel instruments" );
+  SG_LOG( SG_COCKPIT, SG_DEBUG, "Reading panel instruments" );
   const SGPropertyNode * instrument_group = root->getChild("instruments");
   if (instrument_group != 0) {
     int nInstruments = instrument_group->nChildren();
@@ -799,12 +790,12 @@ readPanel (const SGPropertyNode * root)
           SG_LOG( SG_COCKPIT, SG_WARN, "Unknown special instrument found" );
         }
       } else {
-        SG_LOG( SG_COCKPIT, SG_INFO, "Skipping " << node->getName()
+        SG_LOG( SG_COCKPIT, SG_WARN, "Skipping " << node->getName()
         << " in instruments section" );
       }
     }
   }
-  SG_LOG( SG_COCKPIT, SG_INFO, "Done reading panel instruments" );
+  SG_LOG( SG_COCKPIT, SG_BULK, "Done reading panel instruments" );
 
 
   //

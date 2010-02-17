@@ -1596,9 +1596,9 @@ static struct {
 void
 fgInitCommands ()
 {
-  SG_LOG(SG_GENERAL, SG_INFO, "Initializing basic built-in commands:");
+  SG_LOG(SG_GENERAL, SG_BULK, "Initializing basic built-in commands:");
   for (int i = 0; built_ins[i].name != 0; i++) {
-    SG_LOG(SG_GENERAL, SG_INFO, "  " << built_ins[i].name);
+    SG_LOG(SG_GENERAL, SG_BULK, "  " << built_ins[i].name);
     globals->get_commands()->addCommand(built_ins[i].name,
 					built_ins[i].command);
   }
