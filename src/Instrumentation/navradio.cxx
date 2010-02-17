@@ -917,7 +917,10 @@ void FGNavRadio::search()
 double FGNavRadio::localizerWidth(FGNavRecord* aLOC)
 {
   FGRunway* rwy = aLOC->runway();
-  assert(rwy);
+  if (!rwy) {
+    return 6.0; // no runway associated, return default value
+  }
+  
   
   SGVec3d thresholdCart(SGVec3d::fromGeod(rwy->threshold()));
   double axisLength = dist(aLOC->cart(), thresholdCart);
