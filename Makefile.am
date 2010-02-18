@@ -97,6 +97,7 @@ data-tar:
 		data/preferences.xml \
 		data/Protocol \
 		data/README \
+		data/Scenery/Airports \
 		data/Scenery/Objects \
 		data/Scenery/Terrain \
 		data/Shaders \
