@@ -142,11 +142,16 @@ void FGTrafficManager::update(double /*dt*/)
   if (scheduledAircraft.size() == 0) {
     return;
   }
+  
+  SGVec3d userCart = SGVec3d::fromGeod(SGGeod::fromDeg(
+    fgGetDouble("/position/longitude-deg"), 
+    fgGetDouble("/position/latitude-deg")));
+  
   if(currAircraft == scheduledAircraft.end())
     {
       currAircraft = scheduledAircraft.begin();
     }
-  if (!((*currAircraft)->update(now)))
+  if (!((*currAircraft)->update(now, userCart)))
     {
       // NOTE: With traffic manager II, this statement below is no longer true
       // after proper initialization, we shouldnt get here.

@@ -51,9 +51,6 @@ using std::string;
 
 static string tempReg;
 
-class AI_OutOfSight{};
-class FP_Inactive{};
-
 FGAIAircraft::FGAIAircraft(FGAISchedule *ref) : FGAIBase(otAircraft) {
     trafficRef = ref;
     if (trafficRef) {
@@ -148,16 +145,16 @@ void FGAIAircraft::setPerformance(const std::string& acclass) {
 
  void FGAIAircraft::Run(double dt) {
       FGAIAircraft::dt = dt;
+    
+     bool outOfSight = false, 
+        flightplanActive = true;
+     updatePrimaryTargetValues(flightplanActive, outOfSight); // target hdg, alt, speed
+     if (outOfSight) {
+        return;
+     }
 
-     try {
-         updatePrimaryTargetValues(); // target hdg, alt, speed
-     }
-     catch (AI_OutOfSight) {
-         return;
-     }
-     catch (FP_Inactive) {
-         //return;
-         groundTargetSpeed = 0;
+     if (!flightplanActive) {
+        groundTargetSpeed = 0;
      }
 
      handleATCRequests(); // ATC also has a word to say
@@ -739,7 +736,7 @@ void FGAIAircraft::controlSpeed(FGAIFlightPlan::waypoint* curr, FGAIFlightPlan::
 /**
  * Update target values (heading, alt, speed) depending on flight plan or control properties
  */
-void FGAIAircraft::updatePrimaryTargetValues() {
+void FGAIAircraft::updatePrimaryTargetValues(bool& flightplanActive, bool& aiOutOfSight) {
     if (fp)                      // AI object has a flightplan
     {
         //TODO make this a function of AIBase
@@ -760,16 +757,16 @@ void FGAIAircraft::updatePrimaryTargetValues() {
         }
         if (trafficRef) {
            //cerr << trafficRef->getRegistration() << " Setting altitude to " << altitude_ft;
-            if (! aiTrafficVisible()) {
+            aiOutOfSight = !aiTrafficVisible();
+            if (aiOutOfSight) {
                 setDie(true);
                 //cerr << trafficRef->getRegistration() << " is set to die " << endl;
-                throw AI_OutOfSight();
+                aiOutOfSight = true;
+                return;
             }
         }
         timeElapsed = now - fp->getStartTime();
-        if (! fp->isActive(now)) { 
-            throw FP_Inactive();
-        }
+        flightplanActive = fp->isActive(now);
     } else {
         // no flight plan, update target heading, speed, and altitude
         // from control properties.  These default to the initial
