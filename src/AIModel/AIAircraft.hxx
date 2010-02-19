@@ -29,7 +29,6 @@
 #include <ATC/trafficcontrol.hxx>
 
 #include <string>
-using std::string;
 
 class PerformanceData;
 
@@ -66,8 +65,8 @@ public:
     void doGroundAltitude();
     bool loadNextLeg  ();
 
-    void setAcType(const string& ac) { acType = ac; };
-    void setCompany(const string& comp) { company = comp;};
+    void setAcType(const std::string& ac) { acType = ac; };
+    void setCompany(const std::string& comp) { company = comp;};
 
     void announcePositionToController(); //TODO have to be public?
     void processATC(FGATCInstruction instruction);
@@ -75,8 +74,8 @@ public:
 
     virtual const char* getTypeString(void) const { return "aircraft"; }
 
-    string GetTransponderCode() { return transponderCode; };
-    void SetTransponderCode(string tc) { transponderCode = tc;};
+    std::string GetTransponderCode() { return transponderCode; };
+    void SetTransponderCode(const std::string& tc) { transponderCode = tc;};
 
     // included as performance data needs them, who else?
     inline PerformanceData* getPerformance() { return _performance; };
@@ -88,7 +87,7 @@ public:
     inline double getVerticalSpeed() const { return vs; };
     inline double altitudeAGL() const { return props->getFloatValue("position/altitude-agl-ft");};
     inline double airspeed() const { return props->getFloatValue("velocities/airspeed-kt");};
-    string atGate();
+    std::string atGate();
     
 protected:
     void Run(double dt);
@@ -121,7 +120,9 @@ private:
     void controlHeading(FGAIFlightPlan::waypoint* curr);
     void controlSpeed(FGAIFlightPlan::waypoint* curr,
                       FGAIFlightPlan::waypoint* next);
-    void updatePrimaryTargetValues();
+    
+    void updatePrimaryTargetValues(bool& flightplanActive, bool& aiOutOfSight);
+    
     void updateSecondaryTargetValues();
     void updatePosition();
     void updateHeading();
@@ -134,9 +135,9 @@ private:
 
     double sign(double x);
 
-    string acType;
-    string company;
-    string transponderCode;
+    std::string acType;
+    std::string company;
+    std::string transponderCode;
 
     int spinCounter;
     double prevSpeed;

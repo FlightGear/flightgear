@@ -48,8 +48,7 @@ class FGAISchedule
   string currentDestination;
   bool heavy;
   FGScheduledFlightVec flights;
-  float lat;
-  float lon; 
+  SGGeod position;
   double radius;
   double groundOffset;
   double distanceToUser;
@@ -58,7 +57,14 @@ class FGAISchedule
   bool firstRun;
   double courseToDest;
 
-
+  void scheduleFlights();
+  
+  /**
+   * Transition this schedule from distant mode to AI mode;
+   * create the AIAircraft (and flight plan) and register with the AIManager
+   */
+  bool createAIAircraft(FGScheduledFlight* flight, double speedKnots, time_t deptime);
+  
  public:
   FGAISchedule();                                           // constructor
   FGAISchedule(string model, 
@@ -79,7 +85,7 @@ class FGAISchedule
 
   ~FGAISchedule(); //destructor
 
-  bool update(time_t now);
+  bool update(time_t now, const SGVec3d& userCart);
   bool init();
 
   double getSpeed         ();
