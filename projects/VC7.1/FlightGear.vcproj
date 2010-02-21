@@ -1826,6 +1826,8 @@
 			<File
 				RelativePath="..\..\src\GUI\SafeTexFont.hxx">
 			</File>
+			<File RelativePath="..\..\..\src\GUI\WaypointList.cxx"></File>
+			<File RelativePath="..\..\..\src\GUI\WaypointList.hxx"></File>
 		</Filter>
 		<Filter
 			Name="Lib_Input"
