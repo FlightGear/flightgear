@@ -172,6 +172,7 @@ void FGRouteMgr::init() {
   wpn->getChild("eta", 0, true);
   
   _route->clear();
+  _route->set_current(0);
   update_mirror();
   
   _pathNode = fgGetNode(RM "file-path", 0, true);
@@ -285,17 +286,32 @@ void FGRouteMgr::setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDi
     aProp->setStringValue( eta_str );
 }
 
-void FGRouteMgr::add_waypoint( const SGWayPoint& wp, int n ) {
+void FGRouteMgr::add_waypoint( const SGWayPoint& wp, int n )
+{
   _route->add_waypoint( wp, n );
     
-  if (_route->current_index() > n) {
+  if ((n >= 0) && (_route->current_index() > n)) {
     _route->set_current(_route->current_index() + 1);
   }
   
-  update_mirror();
-  _edited->fireValueChanged();
+  waypointsChanged();
 }
 
+void FGRouteMgr::waypointsChanged()
+{
+  double routeDistanceNm = _route->total_distance() * SG_METER_TO_NM;
+  totalDistance->setDoubleValue(routeDistanceNm);
+  double cruiseSpeedKts = cruise->getDoubleValue("speed", 0.0);
+  if (cruiseSpeedKts > 1.0) {
+    // very very crude approximation, doesn't allow for climb / descent
+    // performance or anything else at all
+    ete->setDoubleValue(routeDistanceNm / cruiseSpeedKts * (60.0 * 60.0));
+  }
+
+  update_mirror();
+  _edited->fireValueChanged();
+  checkFinished();
+}
 
 SGWayPoint FGRouteMgr::pop_waypoint( int n ) {
   if ( _route->size() <= 0 ) {
@@ -313,10 +329,7 @@ SGWayPoint FGRouteMgr::pop_waypoint( int n ) {
   SGWayPoint wp = _route->get_waypoint(n);
   _route->delete_waypoint(n);
     
-  update_mirror();
-  _edited->fireValueChanged();
-  checkFinished();
-  
+  waypointsChanged();
   return wp;
 }
 
@@ -467,9 +480,15 @@ void FGRouteMgr::InputListener::valueChanged(SGPropertyNode *prop)
       mgr->loadRoute();
     } else if (!strcmp(s, "@SAVE")) {
       mgr->saveRoute();
-    } else if (!strcmp(s, "@POP"))
-        mgr->pop_waypoint(0);
-    else if (!strncmp(s, "@DELETE", 7))
+    } else if (!strcmp(s, "@POP")) {
+      SG_LOG(SG_AUTOPILOT, SG_WARN, "route-manager @POP command is deprecated");
+    } else if (!strcmp(s, "@NEXT")) {
+      mgr->jumpToIndex(mgr->currentWaypoint() + 1);
+    } else if (!strcmp(s, "@PREVIOUS")) {
+      mgr->jumpToIndex(mgr->currentWaypoint() - 1);
+    } else if (!strncmp(s, "@JUMP", 5)) {
+      mgr->jumpToIndex(atoi(s + 5));
+    } else if (!strncmp(s, "@DELETE", 7))
         mgr->pop_waypoint(atoi(s + 7));
     else if (!strncmp(s, "@INSERT", 7)) {
         char *r;
@@ -529,16 +548,6 @@ bool FGRouteMgr::activate()
   }
 
   _route->set_current(0);
-  
-  double routeDistanceNm = _route->total_distance() * SG_METER_TO_NM;
-  totalDistance->setDoubleValue(routeDistanceNm);
-  double cruiseSpeedKts = cruise->getDoubleValue("speed", 0.0);
-  if (cruiseSpeedKts > 1.0) {
-    // very very crude approximation, doesn't allow for climb / descent
-    // performance or anything else at all
-    ete->setDoubleValue(routeDistanceNm / cruiseSpeedKts * (60.0 * 60.0));
-  }
-  
   active->setBoolValue(true);
   SG_LOG(SG_AUTOPILOT, SG_INFO, "route-manager, activate route ok");
   return true;
@@ -576,11 +585,6 @@ bool FGRouteMgr::checkFinished()
 
 void FGRouteMgr::jumpToIndex(int index)
 {
-  if (!active->getBoolValue()) {
-    SG_LOG(SG_AUTOPILOT, SG_ALERT, "trying to sequence waypoints with no active route");
-    return;
-  }
-
   if ((index < 0) || (index >= _route->size())) {
     SG_LOG(SG_AUTOPILOT, SG_ALERT, "passed invalid index (" << 
       index << ") to FGRouteMgr::jumpToIndex");
@@ -635,6 +639,16 @@ int FGRouteMgr::size() const
 int FGRouteMgr::currentWaypoint() const
 {
   return _route->current_index();
+}
+
+void FGRouteMgr::setWaypointTargetAltitudeFt(unsigned int index, int altFt)
+{
+  SGWayPoint wp = _route->get_waypoint(index);
+  wp.setTargetAltFt(altFt);
+  // simplest way to update a waypoint is to remove and re-add it
+  _route->delete_waypoint(index);
+  _route->add_waypoint(wp, index);
+  waypointsChanged();
 }
 
 void FGRouteMgr::saveRoute()
