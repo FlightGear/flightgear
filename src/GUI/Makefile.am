@@ -24,8 +24,7 @@ libGUI_a_SOURCES = \
         layout.cxx layout-props.cxx layout.hxx \
         SafeTexFont.cxx SafeTexFont.hxx \
         WaypointList.cxx WaypointList.hxx
-
-
+        
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
 
 layout_test_SOURCES = layout-test.cxx
