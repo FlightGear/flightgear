@@ -22,6 +22,8 @@ using std::vector;
 #define FGCLASS_LIST          0x00000001
 #define FGCLASS_AIRPORTLIST   0x00000002
 #define FGCLASS_PROPERTYLIST  0x00000004
+#define FGCLASS_WAYPOINTLIST  0x00000008
+
 class GUI_ID { public: GUI_ID(int id) : id(id) {} virtual ~GUI_ID() {} int id; };
 
 
