@@ -107,6 +107,7 @@ private:
   int id, waitsForId;
   int currentPos;
   int leg;
+  int frequencyId;
   int state;
   bool allowTransmission;
   time_t timer;
@@ -176,6 +177,8 @@ public:
   bool allowTransmissions() { return allowTransmission; };
   void suppressRepeatedTransmissions () { allowTransmission=false; };
   void allowRepeatedTransmissions () { allowTransmission=true; };
+  void nextFrequency() { frequencyId++; };
+  int  getNextFrequency() { return frequencyId; };
 };
 
 typedef vector<FGTrafficRecord> TrafficVector;
@@ -223,7 +226,8 @@ public:
       MSG_ACKNOWLEDGE_ENGINE_START,
       MSG_REQUEST_PUSHBACK_CLEARANCE,
       MSG_PERMIT_PUSHBACK_CLEARANCE, 
-      MSG_HOLD_PUSHBACK_CLEARANCE } AtcMsgId;
+      MSG_HOLD_PUSHBACK_CLEARANCE,
+      MSG_ACKNOWLEDGE_SWITCH_GROUND_FREQUENCY } AtcMsgId;
   typedef enum {
       ATC_AIR_TO_GROUND,
       ATC_GROUND_TO_AIR } AtcMsgDir;
