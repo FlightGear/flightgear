@@ -108,15 +108,14 @@ static void drawClippedString(puFont& font, const char* s, int x, int y, int max
     return;
   }
   
-  int len = strlen(s);
-  char buf[len];
-  memcpy(buf, s, len);
+  std::string buf(s);
+  int len = buf.size();
   do {
-    buf[--len] = 0;
-    fullWidth = font.getStringWidth(buf);
+    buf.resize(--len);
+    fullWidth = font.getStringWidth(buf.c_str());
   } while (fullWidth > maxWidth);
   
-  font.drawString(buf, x, y);
+  font.drawString(buf.c_str(), x, y);
 }
 
 //////////////////////////////////////////////////////////////////////////////
