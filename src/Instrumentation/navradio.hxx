@@ -102,6 +102,7 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     SGPropertyNode_ptr gs_deflection_node;
     SGPropertyNode_ptr gs_deflection_deg_node;
     SGPropertyNode_ptr gs_deflection_norm_node;
+    SGPropertyNode_ptr gs_direct_node;
     SGPropertyNode_ptr gs_rate_of_climb_node;
     SGPropertyNode_ptr gs_rate_of_climb_fpm_node;
     SGPropertyNode_ptr gs_dist_node;
@@ -163,6 +164,7 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     double _cdiCrossTrackErrorM;
     double _gsNeedleDeflection;
     double _gsNeedleDeflectionNorm;
+    double _gsDirect;
     
     SGSharedPtr<SGSampleGroup> _sgr;
     std::vector<SGPropertyNode_ptr> _tiedNodes;

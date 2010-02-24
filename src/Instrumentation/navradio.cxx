@@ -231,6 +231,7 @@ FGNavRadio::init ()
     gs_deflection_node = node->getChild("gs-needle-deflection", 0, true);
     gs_deflection_deg_node = node->getChild("gs-needle-deflection-deg", 0, true);
     gs_deflection_norm_node = node->getChild("gs-needle-deflection-norm", 0, true);
+    gs_direct_node = node->getChild("gs-direct-deg", 0, true);
     gs_rate_of_climb_node = node->getChild("gs-rate-of-climb", 0, true);
     gs_rate_of_climb_fpm_node = node->getChild("gs-rate-of-climb-fpm", 0, true);
     gs_dist_node = node->getChild("gs-distance", 0, true);
@@ -393,6 +394,7 @@ void FGNavRadio::clearOutputs()
   gs_deflection_node->setDoubleValue( 0.0 );
   gs_deflection_deg_node->setDoubleValue(0.0);
   gs_deflection_norm_node->setDoubleValue(0.0);
+  gs_direct_node->setDoubleValue(0.0);
   gs_inrange_node->setBoolValue( false );
   loc_node->setBoolValue( false );
   has_gs_node->setBoolValue(false);
@@ -592,19 +594,15 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
   bool gsInRange = (gsDist < (_gs->get_range() * SG_NM_TO_METER));
   gs_inrange_node->setBoolValue(gsInRange);
         
-  if (!gsInRange) {
-    _gsNeedleDeflection = 0.0;
-    _gsNeedleDeflectionNorm = 0.0;
-    return;
-  }
+  if (!gsInRange) return;
   
   SGVec3d pos = aircraft - _gsCart; // relative vector from gs antenna to aircraft
   // The positive GS axis points along the runway in the landing direction,
   // toward the far end, not toward the approach area, so we need a - sign here:
   double dot_h = -dot(pos, _gsAxis);
   double dot_v = dot(pos, _gsVertical);
-  double angle = atan2(dot_v, dot_h) * SGD_RADIANS_TO_DEGREES;
-  double deflectionAngle = target_gs - angle;
+  _gsDirect = atan2(dot_v, dot_h) * SGD_RADIANS_TO_DEGREES;
+  double deflectionAngle = target_gs - _gsDirect;
   
   if (falseCoursesEnabledNode->getBoolValue()) {
     // Construct false glideslopes.  The scale factor of 1.5 
@@ -633,11 +631,11 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
   //////////////////////////////////////////////////////////
   // Calculate desired rate of climb for intercepting the GS
   //////////////////////////////////////////////////////////
-  double gs_diff = target_gs - angle;
+  double gs_diff = target_gs - _gsDirect;
   // convert desired vertical path angle into a climb rate
-  double des_angle = angle - 10 * gs_diff;
+  double des_angle = _gsDirect - 10 * gs_diff;
   /* printf("target_gs=%.1f angle=%.1f gs_diff=%.1f des_angle=%.1f\n",
-     target_gs, angle, gs_diff, des_angle); */
+     target_gs, _gsDirect, gs_diff, des_angle); */
 
   // estimate horizontal speed towards ILS in meters per minute
   double elapsedDistance = last_x - gsDist;
@@ -798,7 +796,7 @@ void FGNavRadio::updateCDI(double dt)
 
   //////////////////////////////////////////////////////////
   // compute the time to intercept selected radial (based on
-  // current and last cross track errors and dt
+  // current and last cross track errors and dt)
   //////////////////////////////////////////////////////////
   double t = 0.0;
   if ( inrange && cdi_serviceable ) {
@@ -819,6 +817,7 @@ void FGNavRadio::updateCDI(double dt)
   gs_deflection_node->setDoubleValue(_gsNeedleDeflection);
   gs_deflection_deg_node->setDoubleValue(_gsNeedleDeflectionNorm * 0.7);
   gs_deflection_norm_node->setDoubleValue(_gsNeedleDeflectionNorm);
+  gs_direct_node->setDoubleValue(_gsDirect);
   
   last_xtrack_error = _cdiCrossTrackErrorM;
 }
