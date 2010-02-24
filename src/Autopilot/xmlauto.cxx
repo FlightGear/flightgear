@@ -848,9 +848,58 @@ void FGDigitalFilter::update(double dt)
     }
 }
 
+FGXMLAutoLogic::FGXMLAutoLogic(SGPropertyNode * node ) :
+    FGXMLAutoComponent(),
+    inverted(false)
+{
+    parseNode(node);
+}
+
+bool FGXMLAutoLogic::parseNodeHook(const std::string& aName, SGPropertyNode* aNode)
+{
+    if (aName == "input") {
+        input = sgReadCondition( fgGetNode("/"), aNode );
+    } else if (aName == "inverted") {
+        inverted = aNode->getBoolValue();
+    } else {
+        return false;
+    }
+  
+    return true;
+}
+
+void FGXMLAutoLogic::update(double dt)
+{
+    if ( isPropertyEnabled() ) {
+        if ( !enabled ) {
+            // we have just been enabled
+        }
+        enabled = true;
+    } else {
+        enabled = false;
+        do_feedback();
+    }
+
+    if ( !enabled || dt < SGLimitsd::min() ) 
+        return;
+
+    if( input == NULL ) {
+        if ( debug ) cout << "No input for " << get_name() << endl;
+        return;
+    }
+
+    bool i = input->test();
+
+    if ( debug ) cout << "Updating " << get_name() << ": " << (inverted ? !i : i) << endl;
+
+    set_output_value( i );
+}
+
+
 FGXMLAutopilotGroup::FGXMLAutopilotGroup() :
-  SGSubsystemGroup(),
-  average(0.0), // average/filtered prediction
+  SGSubsystemGroup()
+#ifdef XMLAUTO_USEHELPER
+  ,average(0.0), // average/filtered prediction
   v_last(0.0),  // last velocity
   last_static_pressure(0.0),
   vel(fgGetNode( "/velocities/airspeed-kt", true )),
@@ -874,6 +923,7 @@ FGXMLAutopilotGroup::FGXMLAutopilotGroup() :
   static_pressure(fgGetNode( "/systems/static[0]/pressure-inhg", true )),
   pressure_rate(fgGetNode( "/autopilot/internal/pressure-rate", true )),
   track(fgGetNode( "/orientation/track-deg", true ))
+#endif
 {
 }
 
@@ -881,7 +931,7 @@ void FGXMLAutopilotGroup::update( double dt )
 {
     // update all configured autopilots
     SGSubsystemGroup::update( dt );
-
+#ifdef XMLAUTO_USEHELPER
     // update helper values
     double v = vel->getDoubleValue();
     double a = 0.0;
@@ -940,6 +990,7 @@ void FGXMLAutopilotGroup::update( double dt )
         pressure_rate->setDoubleValue(current_pressure_rate);
         last_static_pressure = current_static_pressure;
     }
+#endif
 }
 
 void FGXMLAutopilotGroup::reinit()
@@ -1062,6 +1113,8 @@ bool FGXMLAutopilot::build( SGPropertyNode_ptr config_props ) {
             components.push_back( new FGPredictor( node ) );
         } else if ( name == "filter" ) {
             components.push_back( new FGDigitalFilter( node ) );
+        } else if ( name == "logic" ) {
+            components.push_back( new FGXMLAutoLogic( node ) );
         } else {
             SG_LOG( SG_AUTOPILOT, SG_WARN, "Unknown top level autopilot section: " << name );
 //            return false;
