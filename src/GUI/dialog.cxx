@@ -295,8 +295,16 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
                 getFirstChild()->setSize(w, h); // dialog background puFrame
             }
         } else {
-            setPosition(x + _dlgX - _startX, y + _dlgY - _startY);
-        }
+            int posX = x + _dlgX - _startX,
+              posY = y + _dlgY - _startY;
+            setPosition(posX, posY);
+            
+            GUIInfo *info = (GUIInfo *)getUserData();
+            if (info && info->node) {
+                info->node->setIntValue("x", posX);
+                info->node->setIntValue("y", posY);
+            }
+        } // re-positioning
 
     } else if (_dragging) {
         fgSetMouseCursor(_start_cursor);
