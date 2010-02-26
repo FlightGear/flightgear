@@ -61,28 +61,37 @@ static double sawtooth(double xx)
   return 4.0 * fabs(xx/4.0 + 0.25 - floor(xx/4.0 + 0.75)) - 1.0;
 }
 
-// Calculate a unit vector in the horizontal tangent plane
-// starting at the given "tail" of the vector and going off 
-// with the given heading.
-static SGVec3d tangentVector(const SGGeod& tail, const SGVec3d& tail_xyz, 
-          const double heading)
+// Calculate a Cartesian unit vector in the
+// local horizontal plane, i.e. tangent to the 
+// surface of the earth at the local ground zero.
+// The tangent vector passes through the given  <midpoint> 
+// and points forward along the given <heading>.
+// The <heading> is given in degrees.
+static SGVec3d tangentVector(const SGGeod& midpoint, const double heading)
 {
-// The fudge factor here is presumably intended to improve
-// numerical stability.  I don't know if it is necessary.
-// It gets divided out later.
-  double fudge(100.0);
-  SGGeod head;
-  double az2; // ignored
-  SGGeodesy::direct(tail, heading, fudge, head, az2);
-  head.setElevationM(tail.getElevationM());
+// The size of the delta is presumably chosen to give
+// numerical stability.  I don't know how the value was chosen.
+// It probably doesn't matter much.  It gets divided out.
+  double delta(100.0);          // in meters
+  SGGeod head, tail;
+  double az2;                   // ignored
+  SGGeodesy::direct(midpoint, heading,     delta, head, az2);
+  SGGeodesy::direct(midpoint, 180+heading, delta, tail, az2);
+  head.setElevationM(midpoint.getElevationM());
+  tail.setElevationM(midpoint.getElevationM());
   SGVec3d head_xyz = SGVec3d::fromGeod(head);
-  return (head_xyz - tail_xyz) * (1.0/fudge);
+  SGVec3d tail_xyz = SGVec3d::fromGeod(tail);
+// Awkward formula here, needed because vector-by-scalar
+// multiplication is defined, but not vector-by-scalar division.
+  return (head_xyz - tail_xyz) * (0.5/delta);
 }
 
 // Create a "serviceable" node with a default value of "true"
-SGPropertyNode_ptr createServiceableProp(SGPropertyNode* aParent, const char* aName)
+SGPropertyNode_ptr createServiceableProp(SGPropertyNode* aParent, 
+        const char* aName)
 {
-  SGPropertyNode_ptr n = (aParent->getChild(aName, 0, true)->getChild("serviceable", 0, true));
+  SGPropertyNode_ptr n = 
+     aParent->getChild(aName, 0, true)->getChild("serviceable", 0, true);
   simgear::props::Type typ = n->getType();
   if ((typ == simgear::props::NONE) || (typ == simgear::props::UNSPECIFIED)) {
     n->setBoolValue(true);
@@ -945,11 +954,11 @@ void FGNavRadio::search()
                 
         // GS axis unit tangent vector 
         // (along the runway):
-        _gsAxis = tangentVector(_gs->geod(), _gsCart, gs_radial);
+        _gsAxis = tangentVector(_gs->geod(), gs_radial);
 
         // GS baseline unit tangent vector
         // (perpendicular to the runay along the ground)
-        SGVec3d baseline = tangentVector(_gs->geod(), _gsCart, gs_radial + 90.0);
+        SGVec3d baseline = tangentVector(_gs->geod(), gs_radial + 90.0);
         _gsVertical = cross(baseline, _gsAxis);
       } // of have glideslope
     } // of found LOC or ILS
