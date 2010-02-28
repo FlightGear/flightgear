@@ -35,6 +35,7 @@
 #endif
 
 #include <stdlib.h>             // atoi() atof() abs() system()
+#include <signal.h>             // signal()
 
 #include <simgear/compiler.h>
 
@@ -269,8 +270,30 @@ void sync_tree(const char* dir) {
     }
 }
 
+#ifdef _MSC_VER
+typedef void (__cdecl * sighandler_t)(int);
+#endif
+
+bool terminating = false;
+sighandler_t prior_signal_handlers[32];
+int termination_triggering_signals[] =
+#ifndef _MSC_VER
+  {SIGHUP, SIGINT, SIGQUIT, SIGKILL, 0};  // zero terminated
+#else
+  {SIGINT, SIGILL, SIGFPE, SIGSEGV, SIGTERM, SIGBREAK, SIGABRT, 0};  // zero terminated
+#endif
+
+void terminate_request_handler(int param) {
+    cout << "\nReceived signal " << param << ", "
+         << "intend to terminate soon, "
+         << "repeat to force an immediate effect.\n";
+    terminating = true;
+    signal(param, prior_signal_handlers[param]);
+}
+
 
 const int nowhere = -9999;
+
 
 // parse message
 static void parse_message( const string &msg, int *lat, int *lon ) {
@@ -281,8 +304,8 @@ static void parse_message( const string &msg, int *lat, int *lon ) {
     string::size_type pos = text.find( "$GPGGA" );
     if ( pos == string::npos )
     {
-	*lat = -9999.0;
-	*lon = -9999.0;
+	*lat = nowhere;
+	*lon = nowhere;
 	return;
     }
     string tmp = text.substr( pos + 7 );
@@ -408,7 +431,8 @@ static void sync_areas( int lat, int lon, int lat_dir, int lon_dir ) {
 
 void getWaitingTile() {
     while ( !waitingTiles.empty() ) {
-	CompletedTiles::iterator ii = completedTiles.find( waitingTiles.front() );
+	CompletedTiles::iterator ii =
+            completedTiles.find( waitingTiles.front() );
 	time_t now = time(0);
 	if ( ii == completedTiles.end() || ii->second + 600 < now ) {
 	    sync_tree(waitingTiles.front().c_str());
@@ -422,7 +446,7 @@ void getWaitingTile() {
 
 int main( int argc, char **argv ) {
     int port = 5501;
-    char host[256] = "";        // accept messages from anyone
+    char host[256] = "localhost";
     bool testing = false;
     bool do_checkout(true);
     int verbose(0);
@@ -485,7 +509,6 @@ int main( int argc, char **argv ) {
     
     // Must call this before any other net stuff
     netInit( &argc,argv );
-
     netSocket s;
 
     if ( ! s.open( false ) ) {  // open a UDP socket
@@ -524,7 +547,14 @@ int main( int argc, char **argv ) {
     }
 
 
-    while ( true ) {                    // main loop
+    for (int* sigp=termination_triggering_signals; *sigp; sigp++) {
+        prior_signal_handlers[*sigp] =
+            signal(*sigp, *terminate_request_handler);
+        if (verbose) cout << "Intercepted signal " << *sigp << endl;
+    }
+
+    while ( !terminating ) {
+        // main loop
         recv_msg = false;
         if ( testing ) {
             // No FGFS communications
@@ -532,6 +562,9 @@ int main( int argc, char **argv ) {
             lon = -123;
             recv_msg = (lat != last_lat) || (lon != last_lon);
         } else {
+            if (verbose && waitingTiles.empty()) {
+                cout << "Idle; waiting for FlightGear position\n";
+            }
             s.setBlocking(waitingTiles.empty());
             len = s.recv(msg, maxlen, 0);
             if (len >= 0) {
@@ -584,11 +617,11 @@ int main( int argc, char **argv ) {
         }
 
 	else if ( testing ) {
-	    exit( 0 );
+	    terminating = true;
 	} else
 
         ulSleep( 1 );
-    } // while true
+    } // while !terminating
         
     return 0;
 }
