@@ -32,6 +32,8 @@
 #ifdef __MINGW32__
 #include <time.h>
 #include <unistd.h>
+#elif defined(_MSC_VER)
+#include <io.h>
 #endif
 
 #include <stdlib.h>             // atoi() atof() abs() system()
@@ -110,9 +112,10 @@ static void usage( const string& prog ) {
 
 }
 
-std::deque<std::string> waitingTiles;
-typedef std::map<std::string,time_t> CompletedTiles;
+deque<string> waitingTiles;
+typedef map<string,time_t> CompletedTiles;
 CompletedTiles completedTiles;
+netSocket socket;
 
 #ifdef HAVE_SVN_CLIENT_H
 
@@ -276,19 +279,23 @@ typedef void (__cdecl * sighandler_t)(int);
 
 bool terminating = false;
 sighandler_t prior_signal_handlers[32];
-int termination_triggering_signals[] =
+int termination_triggering_signals[] = {
 #ifndef _MSC_VER
-  {SIGHUP, SIGINT, SIGQUIT, SIGKILL, 0};  // zero terminated
+    SIGHUP, SIGINT, SIGQUIT, SIGKILL,
 #else
-  {SIGINT, SIGILL, SIGFPE, SIGSEGV, SIGTERM, SIGBREAK, SIGABRT, 0};  // zero terminated
+    SIGINT, SIGILL, SIGFPE, SIGSEGV, SIGTERM, SIGBREAK, SIGABRT,
 #endif
+    0};  // zero terminated
 
 void terminate_request_handler(int param) {
-    cout << "\nReceived signal " << param << ", "
-         << "intend to terminate soon, "
-         << "repeat to force an immediate effect.\n";
+    char msg[] = "\nReceived signal XX, intend to exit soon.\n"
+         "repeat the signal to force immediate termination.\n";
+    msg[17] = '0' + param / 10;
+    msg[18] = '0' + param % 10;
+    write(1, msg, sizeof(msg) - 1);
     terminating = true;
     signal(param, prior_signal_handlers[param]);
+    socket.close();
 }
 
 
@@ -509,14 +516,13 @@ int main( int argc, char **argv ) {
     
     // Must call this before any other net stuff
     netInit( &argc,argv );
-    netSocket s;
 
-    if ( ! s.open( false ) ) {  // open a UDP socket
+    if ( ! socket.open( false ) ) {  // open a UDP socket
         printf("error opening socket\n");
         return -1;
     }
 
-    if ( s.bind( host, port ) == -1 ) {
+    if ( socket.bind( host, port ) == -1 ) {
         printf("error binding to port %d\n", port);
         return -1;
     }
@@ -565,8 +571,8 @@ int main( int argc, char **argv ) {
             if (verbose && waitingTiles.empty()) {
                 cout << "Idle; waiting for FlightGear position\n";
             }
-            s.setBlocking(waitingTiles.empty());
-            len = s.recv(msg, maxlen, 0);
+            socket.setBlocking(waitingTiles.empty());
+            len = socket.recv(msg, maxlen, 0);
             if (len >= 0) {
                 msg[len] = '\0';
                 recv_msg = true;
@@ -579,7 +585,7 @@ int main( int argc, char **argv ) {
              // Ignore messages where the location does not change
              if ( lat != last_lat || lon != last_lon ) {
 		cout << "pos in msg = " << lat << "," << lon << endl;
-		std::deque<std::string> oldRequests;
+		deque<string> oldRequests;
 		oldRequests.swap( waitingTiles );
                 int lat_dir, lon_dir, dist;
                 if ( last_lat == nowhere || last_lon == nowhere ) {
