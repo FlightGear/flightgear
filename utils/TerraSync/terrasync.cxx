@@ -115,7 +115,7 @@ static void usage( const string& prog ) {
 deque<string> waitingTiles;
 typedef map<string,time_t> CompletedTiles;
 CompletedTiles completedTiles;
-netSocket socket;
+netSocket theSocket;
 
 #ifdef HAVE_SVN_CLIENT_H
 
@@ -295,7 +295,7 @@ void terminate_request_handler(int param) {
     write(1, msg, sizeof(msg) - 1);
     terminating = true;
     signal(param, prior_signal_handlers[param]);
-    socket.close();
+    theSocket.close();
 }
 
 
@@ -517,12 +517,12 @@ int main( int argc, char **argv ) {
     // Must call this before any other net stuff
     netInit( &argc,argv );
 
-    if ( ! socket.open( false ) ) {  // open a UDP socket
+    if ( ! theSocket.open( false ) ) {  // open a UDP socket
         printf("error opening socket\n");
         return -1;
     }
 
-    if ( socket.bind( host, port ) == -1 ) {
+    if ( theSocket.bind( host, port ) == -1 ) {
         printf("error binding to port %d\n", port);
         return -1;
     }
@@ -571,8 +571,8 @@ int main( int argc, char **argv ) {
             if (verbose && waitingTiles.empty()) {
                 cout << "Idle; waiting for FlightGear position\n";
             }
-            socket.setBlocking(waitingTiles.empty());
-            len = socket.recv(msg, maxlen, 0);
+            theSocket.setBlocking(waitingTiles.empty());
+            len = theSocket.recv(msg, maxlen, 0);
             if (len >= 0) {
                 msg[len] = '\0';
                 recv_msg = true;
