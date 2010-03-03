@@ -275,6 +275,8 @@ void sync_tree(const char* dir) {
 
 #ifdef _MSC_VER
 typedef void (__cdecl * sighandler_t)(int);
+#elif defined( __APPLE__ )
+typedef sig_t sighandler_t;
 #endif
 
 bool terminating = false;
