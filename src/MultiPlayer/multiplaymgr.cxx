@@ -158,6 +158,8 @@ FGMultiplayMgr::sIdPropertyList[] = {
   {1100, "sim/model/variant", simgear::props::INT},
   {1101, "sim/model/livery/file", simgear::props::STRING},
 
+  {1200, "environment/wildfire/data", simgear::props::STRING},
+  
   {10001, "sim/multiplay/transmission-freq-hz",  simgear::props::STRING},
   {10002, "sim/multiplay/chat",  simgear::props::STRING},
 
