@@ -226,7 +226,7 @@ void FGAIBase::initModel(osg::Node *node)
 {
     if (model.valid()) {
 
-        fgSetString("/ai/models/model-added", props->getPath());
+        fgSetString("/ai/models/model-added", props->getPath().c_str());
 
     } else if (!model_path.empty()) {
         SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);
