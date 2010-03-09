@@ -28,6 +28,9 @@
 
 HUD::AimingReticle::AimingReticle(HUD *hud, const SGPropertyNode *n, float x, float y) :
 Item(hud, n, x, y),
+_active_condition(0),
+_tachy_condition(0),
+_align_condition(0),
 _diameter(n->getNode("diameter-input", false)),
 _pitch(n->getNode("pitch-input", false)),
 _yaw(n->getNode("yaw-input", false)),
@@ -37,14 +40,11 @@ _t0(n->getNode("arc-start-input", false)),
 _t1(n->getNode("arc-stop-input", false)),
 _offset_x(n->getNode("offset-x-input", false)),
 _offset_y(n->getNode("offset-y-input", false)),
+_bullet_size(_w / 6.0),
+_inner_radius(_w / 2.0),
 _compression(n->getFloatValue("compression-factor")),
 _limit_x(n->getFloatValue("limit-x")),
-_limit_y(n->getFloatValue("limit-y")),
-_active_condition(0),
-_tachy_condition(0),
-_align_condition(0),
-_bullet_size(_w / 6.0),
-_inner_radius(_w / 2.0)
+_limit_y(n->getFloatValue("limit-y"))
 
 {
     const SGPropertyNode *node = n->getNode("active-condition");
