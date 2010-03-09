@@ -64,7 +64,7 @@ double FGPeriodicalValue::normalize( double value )
   double phase = fabs(max - min);
 
   if( phase > SGLimitsd::min() ) {
-    while( value < min ) value += phase;
+    while( value < min )  value += phase;
     while( value >= max ) value -= phase;
   } else {
     value = min; // phase is zero
@@ -459,11 +459,8 @@ bool FGPIDController::parseConfigHook(const string& aName, SGPropertyNode* aNode
  */
 
 void FGPIDController::update( double dt ) {
-    double ep_n;            // proportional error with reference weighing
     double e_n;             // error
-    double ed_n;            // derivative error
-    double edf_n;           // derivative error filter
-    double Tf;              // filter time
+    double edf_n;
     double delta_u_n = 0.0; // incremental output
     double u_n = 0.0;       // absolute output
     double Ts;              // sampling interval (sec)
@@ -503,7 +500,7 @@ void FGPIDController::update( double dt ) {
         if ( debug ) cout << "  input = " << y_n << " ref = " << r_n << endl;
 
         // Calculates proportional error:
-        ep_n = beta * r_n - y_n;
+        double ep_n = beta * r_n - y_n;
         if ( debug ) cout << "  ep_n = " << ep_n;
         if ( debug ) cout << "  ep_n_1 = " << ep_n_1;
 
@@ -511,14 +508,15 @@ void FGPIDController::update( double dt ) {
         e_n = r_n - y_n;
         if ( debug ) cout << " e_n = " << e_n;
 
-        // Calculates derivate error:
-        ed_n = gamma * r_n - y_n;
-        if ( debug ) cout << " ed_n = " << ed_n;
-
         double td = Td.get_value();
-        if ( td > 0.0 ) {
+        if ( td > 0.0 ) { // do we need to calcluate derivative error?
+
+          // Calculates derivate error:
+            double ed_n = gamma * r_n - y_n;
+            if ( debug ) cout << " ed_n = " << ed_n;
+
             // Calculates filter time:
-            Tf = alpha * td;
+            double Tf = alpha * td;
             if ( debug ) cout << " Tf = " << Tf;
 
             // Filters the derivate error:
@@ -526,7 +524,7 @@ void FGPIDController::update( double dt ) {
                 + ed_n * (Ts/Tf) / (Ts/Tf + 1);
             if ( debug ) cout << " edf_n = " << edf_n;
         } else {
-            edf_n = ed_n;
+            edf_n_2 = edf_n_1 = edf_n = 0.0;
         }
 
         // Calculates the incremental output:
@@ -535,14 +533,14 @@ void FGPIDController::update( double dt ) {
             delta_u_n = Kp.get_value() * ( (ep_n - ep_n_1)
                                + ((Ts/ti) * e_n)
                                + ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2)) );
-        }
 
-        if ( debug ) {
-            cout << " delta_u_n = " << delta_u_n << endl;
-            cout << "P:" << Kp.get_value() * (ep_n - ep_n_1)
-                 << " I:" << Kp.get_value() * ((Ts/ti) * e_n)
-                 << " D:" << Kp.get_value() * ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2))
-                 << endl;
+          if ( debug ) {
+              cout << " delta_u_n = " << delta_u_n << endl;
+              cout << "P:" << Kp.get_value() * (ep_n - ep_n_1)
+                   << " I:" << Kp.get_value() * ((Ts/ti) * e_n)
+                   << " D:" << Kp.get_value() * ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2))
+                   << endl;
+        }
         }
 
         // Integrator anti-windup logic:
@@ -566,13 +564,8 @@ void FGPIDController::update( double dt ) {
 
         set_output_value( u_n );
     } else if ( !enabled ) {
-        ep_n  = 0.0;
-        edf_n = 0.0;
-        // Updates indexed values;
-        u_n_1   = u_n;
-        ep_n_1  = ep_n;
-        edf_n_2 = edf_n_1;
-        edf_n_1 = edf_n;
+        ep_n_1 = 0.0;
+        edf_n_2 = edf_n_1 = edf_n = 0.0;
     }
 }
 
@@ -757,7 +750,7 @@ void FGDigitalFilter::update(double dt)
 {
     if ( isPropertyEnabled() ) {
 
-        input.push_front(valueInput.get_value());
+        input.push_front(valueInput.get_value()-referenceInput.get_value());
         input.resize(samplesInput.get_value() + 1, 0.0);
 
         if ( !enabled ) {
