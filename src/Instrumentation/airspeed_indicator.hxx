@@ -46,12 +46,18 @@ private:
     unsigned int _num;
     string _total_pressure;
     string _static_pressure;
+    bool _has_barber_pole;
+    SGPropertyNode_ptr _ias_limit_node;
+    SGPropertyNode_ptr _mach_limit_node;
+    SGPropertyNode_ptr _alt_threshold_node;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _total_pressure_node;
     SGPropertyNode_ptr _static_pressure_node;
     SGPropertyNode_ptr _density_node;
     SGPropertyNode_ptr _speed_node;
-    
+    SGPropertyNode_ptr _airspeed_limit;
+    SGPropertyNode_ptr _pressure_alt;
+    SGPropertyNode_ptr _mach;
 };
 
 #endif // __INSTRUMENTS_AIRSPEED_INDICATOR_HXX

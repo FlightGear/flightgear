@@ -97,6 +97,7 @@ DME::update (double delta_time_sec)
         _time_before_search_sec = 0;
         _last_frequency_mhz = frequency_mhz;
     }
+    _frequency_node->setDoubleValue(frequency_mhz);
 
                                 // Get the aircraft position
     double longitude_rad =
