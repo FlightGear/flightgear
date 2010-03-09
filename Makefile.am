@@ -52,7 +52,7 @@ data-tar:
 	--exclude='*/Docs/source' \
         --exclude='*/Models/MNUAV' \
         --exclude='*/Models/Airspace' \
-	-cjvf source/FlightGear-data-$(VERSION).tar.bz2 \
+	-cjvf FlightGear-data-$(VERSION).tar.bz2 \
 		data/AI \
                 data/Aircraft/Generic \
                 data/Aircraft/Instruments \
