@@ -619,12 +619,15 @@ void FGPISimpleController::update( double dt ) {
         int_sum += error * Ki.get_value() * dt;
 
 
+        double output = prop_comp + int_sum;
+        double clamped_output = clamp( output );
+        if( output != clamped_output ) // anti-windup
+          int_sum = clamped_output - prop_comp;
+
         if ( debug ) cout << "prop_comp = " << prop_comp
                           << " int_sum = " << int_sum << endl;
 
-        double output = prop_comp + int_sum;
-        output = clamp( output );
-        set_output_value( output );
+        set_output_value( clamped_output );
         if ( debug ) cout << "output = " << output << endl;
     }
 }
