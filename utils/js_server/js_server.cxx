@@ -114,12 +114,12 @@ int main ( int argc, char ** argv )
 	  len+=sizeof(axisvalue);
 	}
 
-	long int b_l = b;
-        memcpy(packet+len, &b_l, 4);
-        len+=4;
+	int32_t b_l = b;
+        memcpy(packet+len, &b_l, sizeof(b_l));
+        len+=sizeof(b_l);
 
-	char termstr[5] = "\0\0\r\n";
-        memcpy(packet+len, &termstr, 4);
+	const char * termstr = "\0\0\r\n";
+        memcpy(packet+len, termstr, 4);
 	len += 4;
 
         c.send( packet, len, 0 );
