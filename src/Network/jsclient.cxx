@@ -91,8 +91,7 @@ bool FGJsClient::process() {
 	if ( io->get_type() == sgFileType ) {
 	    if ( io->read( (char *)(& buf), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		long int *msg;
-		msg = (long int *)buf;
+		int32_t *msg = (int32_t *)buf;
 		for( int i = 0; i < 4; ++i )
 		{
 			axis[i] = ((double)msg[i] / 2147483647.0);
@@ -105,8 +104,7 @@ bool FGJsClient::process() {
 	} else {
 	    while ( io->read( (char *)(& buf), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		long int *msg;
-		msg = (long int *)buf;
+		int32_t *msg = (int32_t *)buf;
 		SG_LOG( SG_IO, SG_DEBUG, "ax0 = " << msg[0] << " ax1 = "
 			<< msg[1] << "ax2 = " << msg[2] << "ax3 = " << msg[3]);
 		for( int i = 0; i < 4; ++i )
