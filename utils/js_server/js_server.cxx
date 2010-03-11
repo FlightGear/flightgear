@@ -67,7 +67,7 @@ int main ( int argc, char ** argv )
   ax = new float [ numaxes ] ;
   activeaxes = numaxes;
   
-  if( numaxes < 4 )
+  if( numaxes > 4 )
   {
     printf("max 4 axes joysticks supported at the moment, however %i axes were detected\nWill only use the first 4 axes!\n", numaxes);
     activeaxes = 4;
@@ -101,25 +101,25 @@ int main ( int argc, char ** argv )
         js->read( &b, ax );
 	for ( axis = 0 ; axis < activeaxes ; axis++ )
 	{
-	  long axisvalue = (long int)(ax[axis]*2147483647.0);
-	  printf("axisval=%li\n", axisvalue);
-	  memcpy(packet+len, &axisvalue, 4);
-	  len+=4;
+	  int32_t axisvalue = (int32_t)(ax[axis]*2147483647.0);
+	  printf("axisval=%li\n", (long)axisvalue);
+	  memcpy(packet+len, &axisvalue, sizeof(axisvalue));
+	  len+=sizeof(axisvalue);
 	}
 	// fill emtpy values into packes when less than 4 axes
 	for( ; axis < 4; axis++ )
 	{
-	  long axisvalue = 0;
-	  memcpy(packet+len, &axisvalue, 4);
-	  len+=4;
+	  int32_t axisvalue = 0;
+	  memcpy(packet+len, &axisvalue, sizeof(axisvalue));
+	  len+=sizeof(axisvalue);
 	}
 
-	long int b_l = b;
-        memcpy(packet+len, &b_l, 4);
-        len+=4;
+	int32_t b_l = b;
+        memcpy(packet+len, &b_l, sizeof(b_l));
+        len+=sizeof(b_l);
 
-	char termstr[5] = "\0\0\r\n";
-        memcpy(packet+len, &termstr, 4);
+	const char * termstr = "\0\0\r\n";
+        memcpy(packet+len, termstr, 4);
 	len += 4;
 
         c.send( packet, len, 0 );
