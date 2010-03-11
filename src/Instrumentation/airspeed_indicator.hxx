@@ -46,7 +46,7 @@ private:
     unsigned int _num;
     string _total_pressure;
     string _static_pressure;
-    bool _has_barber_pole;
+    bool _has_overspeed;
     SGPropertyNode_ptr _ias_limit_node;
     SGPropertyNode_ptr _mach_limit_node;
     SGPropertyNode_ptr _alt_threshold_node;

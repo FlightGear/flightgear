@@ -21,7 +21,7 @@ AirspeedIndicator::AirspeedIndicator ( SGPropertyNode *node )
     _num(node->getIntValue("number", 0)),
     _total_pressure(node->getStringValue("total-pressure", "/systems/pitot/total-pressure-inhg")),
     _static_pressure(node->getStringValue("static-pressure", "/systems/static/pressure-inhg")),
-    _has_barber_pole(node->getBoolValue("has-barber-pole",false))
+    _has_overspeed(node->getBoolValue("has-overspeed-indicator",false))
 {
 }
 
@@ -42,11 +42,23 @@ AirspeedIndicator::init ()
     _density_node = fgGetNode("/environment/density-slugft3", true);
     _speed_node = node->getChild("indicated-speed-kt", 0, true);
     
-  // barber-pole properties
+  // overspeed-indicator properties
     _ias_limit_node = node->getNode("ias-limit",0, true);
     _mach_limit_node = node->getNode("mach-limit",0, true);
     _alt_threshold_node = node->getNode("alt-threshold",0, true);
     _airspeed_limit = node->getChild("airspeed-limit-kt", 0, true);
+    
+    if (!_ias_limit_node->hasValue()) {
+      _ias_limit_node->setDoubleValue(250.0);
+    }
+    
+    if (!_mach_limit_node->hasValue()) {
+      _mach_limit_node->setDoubleValue(0.48);
+    }
+    
+    if (!_alt_threshold_node->hasValue()) {
+      _alt_threshold_node->setDoubleValue(13200);
+    }
     
     string paSource = node->getStringValue("pressure-alt-source",
       "/instrumentation/altimeter/pressure-alt-ft");
@@ -87,7 +99,7 @@ AirspeedIndicator::update (double dt)
                                              dt * RESPONSIVENESS);
     _speed_node->setDoubleValue(filtered_speed);
 
-    if (!_has_barber_pole) {
+    if (!_has_overspeed) {
         return;
     }
     
