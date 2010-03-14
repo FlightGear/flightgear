@@ -901,6 +901,7 @@ SGTexture::make_normalmap(float brightness, float contrast) {
          int yp1 = (y < (texture_height-1)) ? y+1 : 0;
          int posxp1 = (xp1 + ytw)*num_colors;
          int posyp1 = (x + yp1*texture_width)*num_colors;
+         float fx,fy;
 
          GLubyte c = texture_data[dpos];
          GLubyte cx1 = texture_data[posxp1];
@@ -918,8 +919,11 @@ SGTexture::make_normalmap(float brightness, float contrast) {
             map[mpos+3] = a;
          }
 
-         map[mpos+0] = (128+(cx1-c)/2);
-         map[mpos+1] = (128+(cy1-c)/2);
+         fx = asin(((c-cx1)/256.0)-0.5)+0,785398163;
+         fy = asin(((cy1-c)/256.0)-0.5)+0,785398163;
+
+         map[mpos+0] = (GLuint)(fx*256.0);
+         map[mpos+1] = (GLuint)(fy*256.0);
          map[mpos+2] = 127+int(brightness*128); // 255-c/2;
 
          mpos += colors;
