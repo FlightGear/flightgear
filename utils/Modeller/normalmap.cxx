@@ -35,11 +35,6 @@ int parse_option(char **args, int n) {
    }
 
    sz = strlen(opt);
-   if (!strncmp(opt, "-help", sz)) {
-      printf("usage:\n  normalmap [-c=contrast] [-b=brightness]");
-      printf(" --t=file [--o=file]\n");
-      exit(0);
-   }
    if (!strncmp(opt, "-contrast", sz)) {
       contrast = atof(arg);
       return ret;
@@ -58,6 +53,11 @@ int parse_option(char **args, int n) {
       normalmap_file = strdup(arg);
       return ret;
    }
+   if (!strncmp(opt, "-help", sz)) {
+      printf("usage:\n  normalmap [-c=contrast] [-b=brightness]");
+      printf(" --i=file [--o=file]\n\n");
+      exit(0);
+   }
 
    return 1;
 }
@@ -71,7 +71,9 @@ int main (int argc, char **argv)
 
    if ( !texture_file )
    {
-      printf("Error: texture file not specified\n");
+      printf("Error: texture file not specified.\n");
+      printf("usage:\n  normalmap [-c=contrast] [-b=brightness]");
+      printf(" --i=file [--o=file]\n\n");
       return -1;
    }
 
@@ -79,7 +81,7 @@ int main (int argc, char **argv)
    if ( !texture.texture() )
    {
       printf("Error: unable to process input file: %s\n", texture_file);
-      printf("       (%s)\n", texture.err_str());
+      printf("       (%s)\n\n", texture.err_str());
       return -2;
    }
 
