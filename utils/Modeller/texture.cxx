@@ -919,11 +919,11 @@ SGTexture::make_normalmap(float brightness, float contrast) {
             map[mpos+3] = a;
          }
 
-         fx = asin(((c-cx1)/256.0)-0.5)+0,785398163;
-         fy = asin(((cy1-c)/256.0)-0.5)+0,785398163;
+         fx = asin((c/256.0-cx1/256.0))/1.57079633;
+         fy = asin((cy1/256.0-c/256.0))/1.57079633;
 
-         map[mpos+0] = (GLuint)(fx*256.0);
-         map[mpos+1] = (GLuint)(fy*256.0);
+         map[mpos+0] = (GLuint)(fx*256.0)-128;
+         map[mpos+1] = (GLuint)(fy*256.0)-128;
          map[mpos+2] = 127+int(brightness*128); // 255-c/2;
 
          mpos += colors;
