@@ -47,6 +47,11 @@ private:
     string _total_pressure;
     string _static_pressure;
     bool _has_overspeed;
+    string _pressure_alt_source;
+    double _ias_limit;
+    double _mach_limit;
+    double _alt_threshold;
+    
     SGPropertyNode_ptr _ias_limit_node;
     SGPropertyNode_ptr _mach_limit_node;
     SGPropertyNode_ptr _alt_threshold_node;
