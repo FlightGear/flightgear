@@ -615,7 +615,7 @@ void FGPISimpleController::update( double dt ) {
                           << " error = " << error
                           << endl;
 
-        double prop_comp = error * Kp.get_value();
+        double prop_comp = clamp(error * Kp.get_value());
         int_sum += error * Ki.get_value() * dt;
 
 
@@ -628,7 +628,7 @@ void FGPISimpleController::update( double dt ) {
                           << " int_sum = " << int_sum << endl;
 
         set_output_value( clamped_output );
-        if ( debug ) cout << "output = " << output << endl;
+        if ( debug ) cout << "output = " << clamped_output << endl;
     }
 }
 
