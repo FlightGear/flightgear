@@ -142,17 +142,17 @@ void FGReplay::update( double dt ) {
     timingInfo.clear();
     stamp("begin");
     static SGPropertyNode *replay_master
-        = fgGetNode( "/sim/freeze/replay", true );
+        = fgGetNode( "/sim/freeze/replay-state", true );
 
     if( disable_replay->getBoolValue() ) {
-        if( sim_time != 0.0 ) {
+        if ( sim_time != 0.0 ) {
             // we were recording data
             init();
         }
         return;
     }
     //stamp("point_01");
-    if ( replay_master->getBoolValue() ) {
+    if ( replay_master->getIntValue() > 0 ) {
         // don't record the replay session
         return;
     }
@@ -177,9 +177,9 @@ void FGReplay::update( double dt ) {
         r = new FGReplayData;
 	stamp("Replay_02");
     } else {
-      r = recycler.front();
-      recycler.pop_front();
-    //stamp("point_04be");
+	r = recycler.front();
+	recycler.pop_front();
+	//stamp("point_04be");
     }
     r->sim_time = sim_time;
     //r->ctrls = c;
