@@ -152,12 +152,14 @@ private:
 	bool first_update;
 	bool wind_interpolation_required;
 	string metar;
+	double metar_sealevel_temperature;
+	double metar_sealevel_dewpoint;
 	double interpolate_prop(const char * currentname, const char * requiredname, double dvalue);
 	double interpolate_val(double currentval, double requiredval, double dvalue);
-	const double EnvironmentUpdatePeriodSec;	// Seconds between interpolations
 	const double MaxWindChangeKtsSec;			 // Max wind change in kts/sec
 	const double MaxVisChangePercentSec;		// Max visibility change in %/sec
 	const double MaxPressureChangeInHgSec;		// Max pressure change in InHg/sec
+	const double MaxTemperatureChangeDegcSec;       // Max temperature change in degc/s
 	const double MaxCloudAltitudeChangeFtSec;	 // Max cloud altitude change in ft/s
 	const double MaxCloudThicknessChangeFtSec;	// Max cloud thickness change in ft/s
 	const double MaxCloudInterpolationHeightFt; // Max distance from aircraft to
@@ -200,6 +202,8 @@ private:
 	SGPropertyNode_ptr boundary_wind_from_heading_n;
 	SGPropertyNode_ptr boundary_visibility_n;
 	SGPropertyNode_ptr boundary_sea_level_pressure_n;
+	SGPropertyNode_ptr boundary_sea_level_temperature_n;
+	SGPropertyNode_ptr boundary_sea_level_dewpoint_n;
 private:
 
 };
