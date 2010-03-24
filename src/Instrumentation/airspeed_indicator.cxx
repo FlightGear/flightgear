@@ -10,6 +10,8 @@
 #include "airspeed_indicator.hxx"
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
+#include <Environment/environment_mgr.hxx>
+#include <Environment/environment.hxx>
 
 
 // A higher number means more responsive.
@@ -27,6 +29,7 @@ AirspeedIndicator::AirspeedIndicator ( SGPropertyNode *node )
     _mach_limit(node->getDoubleValue("mach-limit", 0.48)),
     _alt_threshold(node->getDoubleValue("alt-threshold", 13200))
 {
+  _environmentManager = NULL;
 }
 
 AirspeedIndicator::~AirspeedIndicator ()
@@ -45,7 +48,9 @@ AirspeedIndicator::init ()
     _static_pressure_node = fgGetNode(_static_pressure.c_str(), true);
     _density_node = fgGetNode("/environment/density-slugft3", true);
     _speed_node = node->getChild("indicated-speed-kt", 0, true);
-
+    _tas_node = node->getChild("true-speed-kt", 0, true);
+    _mach_node = node->getChild("indicated-mach", 0, true);
+    
   // overspeed-indicator properties
     if (_has_overspeed) {
         _ias_limit_node = node->getNode("ias-limit",0, true);
@@ -66,8 +71,9 @@ AirspeedIndicator::init ()
 
         _airspeed_limit = node->getChild("airspeed-limit-kt", 0, true);
         _pressure_alt = fgGetNode(_pressure_alt_source.c_str(), true);
-        _mach = fgGetNode("/velocities/mach", true);
     }
+    
+    _environmentManager = (FGEnvironmentMgr*) globals->get_subsystem("environment");
 }
 
 #ifndef FPSTOKTS
@@ -102,6 +108,7 @@ AirspeedIndicator::update (double dt)
                                              current_speed_kt,
                                              dt * RESPONSIVENESS);
     _speed_node->setDoubleValue(filtered_speed);
+    computeMach(filtered_speed);
 
     if (!_has_overspeed) {
         return;
@@ -110,10 +117,36 @@ AirspeedIndicator::update (double dt)
     double lmt = _ias_limit_node->getDoubleValue();
     if (_pressure_alt->getDoubleValue() > _alt_threshold_node->getDoubleValue()) {
         double mmo = _mach_limit_node->getDoubleValue();
-        lmt = (filtered_speed/_mach->getDoubleValue())* mmo;
+        lmt = (filtered_speed/_mach_node->getDoubleValue())* mmo;
     }
     
     _airspeed_limit->setDoubleValue(lmt);
+}
+
+void
+AirspeedIndicator::computeMach(double ias)
+{
+  if (!_environmentManager) {
+    return;
+  }
+  
+  FGEnvironment env(_environmentManager->getEnvironment());
+  
+  // derived from http://williams.best.vwh.net/avform.htm#Mach
+  // names here are picked to be consistent with those formulae!
+
+  double oatK = env.get_temperature_degc() + 273.15; // OAT in Kelvin
+  double CS = 38.967854 * sqrt(oatK); // speed-of-sound in knots at altitude
+  double CS_0 = 661.4786; // speed-of-sound in knots at sea-level
+  double P_0 = env.get_pressure_sea_level_inhg();
+  double P = _static_pressure_node->getDoubleValue();
+  
+  double DP = P_0 * (pow(1 + 0.2*pow(ias/CS_0, 2), 3.5) - 1);
+  double mach = pow(5 * ( pow(DP/P + 1, 2.0/7.0) -1) , 0.5);
+  
+  // publish Mach and TAS
+  _mach_node->setDoubleValue(mach);
+  _tas_node->setDoubleValue(CS * mach);
 }
 
 // end of airspeed_indicator.cxx
