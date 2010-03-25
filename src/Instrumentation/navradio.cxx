@@ -129,6 +129,9 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
 // Destructor
 FGNavRadio::~FGNavRadio() 
 {
+    gps_course_node->removeChangeListener(this);
+    nav_slaved_to_gps_node->removeChangeListener(this);
+  
     delete term_tbl;
     delete low_tbl;
     delete high_tbl;
@@ -220,11 +223,15 @@ FGNavRadio::init ()
 
     // gps slaving support
     nav_slaved_to_gps_node = node->getChild("slaved-to-gps", 0, true);
+    nav_slaved_to_gps_node->addChangeListener(this);
+    
     gps_cdi_deflection_node = fgGetNode("/instrumentation/gps/cdi-deflection", true);
     gps_to_flag_node = fgGetNode("/instrumentation/gps/to-flag", true);
     gps_from_flag_node = fgGetNode("/instrumentation/gps/from-flag", true);
     gps_has_gs_node = fgGetNode("/instrumentation/gps/has-gs", true);
     gps_course_node = fgGetNode("/instrumentation/gps/desired-course-deg", true);
+    gps_course_node->addChangeListener(this);
+    
     gps_xtrack_error_nm_node = fgGetNode("/instrumentation/gps/wp/wp[1]/course-error-nm", true);
     _magvarNode = fgGetNode("/environment/magnetic-variation-deg", true);
     
@@ -621,6 +628,26 @@ void FGNavRadio::updateDME(const SGVec3d& aircraft)
   
   double dme_distance = dist(aircraft, _dme->cart()); 
   _dmeInRange =  (dme_distance < _dme->get_range() * SG_NM_TO_METER);
+}
+
+void FGNavRadio::valueChanged (SGPropertyNode* prop)
+{
+  if (prop == gps_course_node) {
+    if (!nav_slaved_to_gps_node->getBoolValue()) {
+      return;
+    }
+  
+    // GPS desired course has changed, sync up our selected-course
+    double v = prop->getDoubleValue();
+    if (v != sel_radial_node->getDoubleValue()) {
+      sel_radial_node->setDoubleValue(v);
+    }
+  } else if (prop == nav_slaved_to_gps_node) {
+    if (prop->getBoolValue()) {
+      // slaved-to-GPS activated, sync up selected course
+      sel_radial_node->setDoubleValue(gps_course_node->getDoubleValue());
+    }
+  }
 }
 
 void FGNavRadio::updateGPSSlaved()
