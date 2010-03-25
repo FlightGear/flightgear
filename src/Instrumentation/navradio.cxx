@@ -224,7 +224,7 @@ FGNavRadio::init ()
     gps_to_flag_node = fgGetNode("/instrumentation/gps/to-flag", true);
     gps_from_flag_node = fgGetNode("/instrumentation/gps/from-flag", true);
     gps_has_gs_node = fgGetNode("/instrumentation/gps/has-gs", true);
-    gps_course_node = fgGetNode("/instrumentation/gps/selected-course-deg", true);
+    gps_course_node = fgGetNode("/instrumentation/gps/desired-course-deg", true);
     gps_xtrack_error_nm_node = fgGetNode("/instrumentation/gps/wp/wp[1]/course-error-nm", true);
     _magvarNode = fgGetNode("/environment/magnetic-variation-deg", true);
     

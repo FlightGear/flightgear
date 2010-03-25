@@ -188,75 +188,27 @@ GPS::Config::Config() :
   _turnRate(3.0), // degrees-per-second, so 180 degree turn takes 60 seconds
   _overflightArmDistance(1.0),
   _waypointAlertTime(30.0),
-  _tuneRadio1ToRefVor(false),
   _minRunwayLengthFt(0.0),
   _requireHardSurface(true),
   _cdiMaxDeflectionNm(3.0), // linear mode, 3nm at the peg
-  _driveAutopilot(true)
+  _driveAutopilot(true),
+  _courseSelectable(false)
 {
   _enableTurnAnticipation = false;
-  _extCourseSource = fgGetNode("/instrumentation/nav[0]/radials/selected-deg", true);
 }
 
 void GPS::Config::bind(GPS* aOwner, SGPropertyNode* aCfg)
 {
   aOwner->tie(aCfg, "turn-rate-deg-sec", SGRawValuePointer<double>(&_turnRate));
-  
   aOwner->tie(aCfg, "turn-anticipation", SGRawValuePointer<bool>(&_enableTurnAnticipation));
   aOwner->tie(aCfg, "wpt-alert-time", SGRawValuePointer<double>(&_waypointAlertTime));
-  aOwner->tie(aCfg, "tune-nav-radio-to-ref-vor", SGRawValuePointer<bool>(&_tuneRadio1ToRefVor));
   aOwner->tie(aCfg, "min-runway-length-ft", SGRawValuePointer<double>(&_minRunwayLengthFt));
   aOwner->tie(aCfg, "hard-surface-runways-only", SGRawValuePointer<bool>(&_requireHardSurface));
-  
-  aOwner->tie(aCfg, "course-source", SGRawValueMethods<GPS::Config, const char*>
-    (*this, &GPS::Config::getCourseSource, &GPS::Config::setCourseSource));
-    
   aOwner->tie(aCfg, "cdi-max-deflection-nm", SGRawValuePointer<double>(&_cdiMaxDeflectionNm));
   aOwner->tie(aCfg, "drive-autopilot", SGRawValuePointer<bool>(&_driveAutopilot));
+  aOwner->tie(aCfg, "course-selectable", SGRawValuePointer<bool>(&_courseSelectable));
 }
 
-const char* 
-GPS::Config::getCourseSource() const
-{
-  if (!_extCourseSource) {
-    return "";
-  }
-  
-  return _extCourseSource->getPath(true).c_str();
-}
-
-void
-GPS::Config::setCourseSource(const char* aPath)
-{
-  SGPropertyNode* nd = fgGetNode(aPath, false);
-  if (!nd) {
-    SG_LOG(SG_INSTR, SG_WARN, "couldn't find course source at:" << aPath);
-    _extCourseSource = NULL;
-  }
-  
-  _extCourseSource = nd;
-}
-
-double 
-GPS::Config::getExternalCourse() const
-{
-  if (!_extCourseSource) {
-    return 0.0;
-  }
-  
-  return _extCourseSource->getDoubleValue();
-}
-      
-void
-GPS::Config::setExternalCourse(double aCourseDeg)
-{
-  if (!_extCourseSource) {
-    return;
-  }
-
-  _extCourseSource->setDoubleValue(aCourseDeg);
-}      
-      
 ////////////////////////////////////////////////////////////////////////////
 
 GPS::GPS ( SGPropertyNode *node) : 
@@ -304,7 +256,7 @@ GPS::init ()
 
   // for compatability, alias selected course down to wp/wp[1]/desired-course-deg
   SGPropertyNode* wp1Crs = wp1_node->getChild("desired-course-deg", 0, true);
-  wp1Crs->alias(_gpsNode->getChild("selected-course-deg"));
+  wp1Crs->alias(_gpsNode->getChild("desired-course-deg", 0, true));
     
 //    _true_wp1_bearing_error_node =
 //        wp1_node->getChild("true-bearing-error-deg", 0, true);
@@ -371,9 +323,12 @@ GPS::bind()
   _config.bind(this, _gpsNode->getChild("config", 0, true));
 // basic GPS outputs
   tie(_gpsNode, "selected-course-deg", SGRawValueMethods<GPS, double>
-    (*this, &GPS::getSelectedCourse, NULL));
+    (*this, &GPS::getSelectedCourse, &GPS::setSelectedCourse));
   
-  
+  tie(_gpsNode, "desired-course-deg", SGRawValueMethods<GPS, double>
+    (*this, &GPS::getDesiredCourse, NULL));
+  _desiredCourseNode = _gpsNode->getChild("desired-course-deg");
+    
   tieSGGeodReadOnly(_gpsNode, _indicated_pos, "indicated-longitude-deg", 
         "indicated-latitude-deg", "indicated-altitude-ft");
 
@@ -539,9 +494,7 @@ GPS::update (double delta_time_sec)
   updateBasicData(delta_time_sec);
 
   if (_dataValid) {
-    if (_mode == "obs") {
-      _selectedCourse = _config.getExternalCourse();
-    } else {
+    if (_mode != "obs") {
       updateTurn();
     }
       
@@ -555,9 +508,7 @@ GPS::update (double delta_time_sec)
   if (_dataValid && (_mode == "init")) {
     // allow a realistic delay in the future, here
     SG_LOG(SG_INSTR, SG_INFO, "GPS initialisation complete");
-    
-    _selectedCourse = _config.getExternalCourse();
-    
+        
     if (_route_active_node->getBoolValue()) {
       // GPS init with active route
       SG_LOG(SG_INSTR, SG_INFO, "GPS init with active route");
@@ -655,7 +606,6 @@ void GPS::updateReferenceNavaid(double dt)
         FGNavRecord* vor = (FGNavRecord*) nav.ptr();
         _ref_navaid_frequency_node->setDoubleValue(vor->get_freq() / 100.0);
         _listener->setGuard(false);
-        tuneNavRadios();
       } else {
         // SG_LOG(SG_INSTR, SG_ALERT, "matched existing");
       }
@@ -694,27 +644,10 @@ void GPS::referenceNavaidSet(const std::string& aNavaid)
     _ref_navaid_name_node->setStringValue(_ref_navaid->name().c_str());
     FGNavRecord* vor = (FGNavRecord*) _ref_navaid.ptr();
     _ref_navaid_frequency_node->setDoubleValue(vor->get_freq() / 100.0);
-    tuneNavRadios();
   } else {
     _ref_navaid_set = false;
     _ref_navaid_elapsed = 9999.0; // update next tick
   }
-}
-
-void GPS::tuneNavRadios()
-{
-  if (!_ref_navaid || !_config.tuneNavRadioToRefVor()) {
-    return;
-  }
-  
-  SGPropertyNode_ptr navRadio1 = fgGetNode("/instrumentation/nav", false);
-  if (!navRadio1) {
-    return;
-  }
-  
-  FGNavRecord* vor = (FGNavRecord*) _ref_navaid.ptr();
-  SGPropertyNode_ptr freqs = navRadio1->getChild("frequencies");
-  freqs->setDoubleValue("selected-mhz", vor->get_freq() / 100.0);
 }
 
 void GPS::routeActivated()
@@ -763,7 +696,8 @@ void GPS::routeManagerSequenced()
   _wp1Name = wp1.get_name();
   _wp1_position = wp1.get_target();
 
-  _selectedCourse = getLegMagCourse();
+  _desiredCourse = getLegMagCourse();
+  _desiredCourseNode->fireValueChanged();
   wp1Changed();
 }
 
@@ -917,7 +851,7 @@ void GPS::computeTurnData()
     return;
   }
   
-  _turnStartBearing = _selectedCourse;
+  _turnStartBearing = _desiredCourse;
 // compute next leg course
   SGWayPoint wp1(_routeMgr->get_waypoint(curIndex)),
     wp2(_routeMgr->get_waypoint(curIndex + 1));
@@ -1013,9 +947,6 @@ void GPS::driveAutopilot()
 
 void GPS::wp1Changed()
 {
-  // update external HSI/CDI/NavDisplay/PFD/etc
-  _config.setExternalCourse(getLegMagCourse());
-
   if (!_config.driveAutopilot()) {
     return;
   }
@@ -1028,6 +959,19 @@ void GPS::wp1Changed()
 
 /////////////////////////////////////////////////////////////////////////////
 // property getter/setters
+
+void GPS::setSelectedCourse(double crs)
+{
+  if (_selectedCourse == crs) {
+    return;
+  }
+  
+  _selectedCourse = crs;
+  if ((_mode == "obs") || _config.courseSelectable()) {
+    _desiredCourse = _selectedCourse;
+    _desiredCourseNode->fireValueChanged();
+  }
+}
 
 double GPS::getLegDistance() const
 {
@@ -1197,7 +1141,7 @@ double GPS::getWP1CourseDeviation() const
     return 0.0;
   }
   
-  double dev = getWP1MagBearing() - _selectedCourse;
+  double dev = getWP1MagBearing() - _desiredCourse;
   SG_NORMALIZE_RANGE(dev, -180.0, 180.0);
   
   if (fabs(dev) > 90.0) {
@@ -1227,7 +1171,7 @@ bool GPS::getWP1ToFlag() const
     return false;
   }
   
-  double dev = getWP1MagBearing() - _selectedCourse;
+  double dev = getWP1MagBearing() - _desiredCourse;
   SG_NORMALIZE_RANGE(dev, -180.0, 180.0);
 
   return (fabs(dev) < 90.0);
@@ -1368,7 +1312,8 @@ void GPS::directTo()
   _wp1_position = _scratchPos;
 
   _mode = "dto";
-  _selectedCourse = getLegMagCourse();
+  _desiredCourse = getLegMagCourse();
+  _desiredCourseNode->fireValueChanged();
   clearScratch();
   
   wp1Changed();
