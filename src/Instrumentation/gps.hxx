@@ -413,6 +413,7 @@ private:
   SGPropertyNode_ptr _realismSimpleGps; ///< should the GPS be simple or realistic?
   
 // autopilot drive properties
+  SGPropertyNode_ptr _apDrivingFlag;
   SGPropertyNode_ptr _apTrueHeading;
   SGPropertyNode_ptr _apTargetAltitudeFt;
   SGPropertyNode_ptr _apAltitudeLock;
