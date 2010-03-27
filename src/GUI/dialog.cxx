@@ -14,6 +14,7 @@
 #include "property_list.hxx"
 #include "layout.hxx"
 #include "WaypointList.hxx"
+#include "MapWidget.hxx"
 
 enum format_type { f_INVALID, f_INT, f_LONG, f_FLOAT, f_DOUBLE, f_STRING };
 static const int FORMAT_BUFSIZE = 255;
@@ -815,7 +816,10 @@ FGDialog::makeObject (SGPropertyNode *props, int parentWidth, int parentHeight)
         setupObject(obj, props);
         setColor(obj, props);
         return obj;
-
+    } else if (type == "map") {
+        MapWidget* mapWidget = new MapWidget(x, y, x + width, y + height);
+        setupObject(mapWidget, props);
+        return mapWidget;
     } else if (type == "combo") {
         fgComboBox *obj = new fgComboBox(x, y, x + width, y + height, props,
                 props->getBoolValue("editable", false));
@@ -953,12 +957,21 @@ FGDialog::setupObject (puObject *object, SGPropertyNode *props)
             name = "";
         const char *propname = props->getStringValue("property");
         SGPropertyNode_ptr node = fgGetNode(propname, true);
-        copy_to_pui(node, object);
+        if (type == "map") {
+          // mapWidget binds to a sub-tree of properties, and
+          // ignroes the puValue mechanism, so special case things here
+          MapWidget* mw = static_cast<MapWidget*>(object);
+          mw->setProperty(node);
+        } else {
+            // normal widget, creating PropertyObject
+            copy_to_pui(node, object);
+            PropertyObject *po = new PropertyObject(name, object, node);
+            _propertyObjects.push_back(po);
+            if (props->getBoolValue("live"))
+                _liveObjects.push_back(po);
+        }
+        
 
-        PropertyObject *po = new PropertyObject(name, object, node);
-        _propertyObjects.push_back(po);
-        if (props->getBoolValue("live"))
-            _liveObjects.push_back(po);
     }
 
     SGPropertyNode *dest = fgGetNode("/sim/bindings/gui", true);
