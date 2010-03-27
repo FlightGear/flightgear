@@ -96,6 +96,13 @@ public:
    * Retrieve the runway this navaid is associated with (for ILS/LOC/GS)
    */
   FGRunway* runway() const { return mRunway; }
+  
+  /**
+   * return the localizer width, in degrees
+   * computation is based up ICAO stdandard width at the runway threshold
+   * see implementation for further details.
+   */
+  double localizerWidth() const;
 };
 
 class FGTACANRecord : public SGReferenced {
