@@ -597,6 +597,7 @@ void FGRouteMgr::jumpToIndex(int index)
   
   _route->set_current(index);
   currentWaypointChanged();
+  _currentWpt->fireValueChanged();
 }
 
 void FGRouteMgr::currentWaypointChanged()
