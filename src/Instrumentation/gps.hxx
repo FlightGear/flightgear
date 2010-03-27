@@ -123,18 +123,11 @@ private:
       double waypointAlertTime() const
       { return _waypointAlertTime; }
             
-      bool tuneNavRadioToRefVor() const
-      { return _tuneRadio1ToRefVor; }
-      
       bool requireHardSurface() const
       { return _requireHardSurface; }
       
       double minRunwayLengthFt() const
       { return _minRunwayLengthFt; }
-      
-      double getExternalCourse() const;
-      
-      void setExternalCourse(double aCourseDeg);
       
       bool cdiDeflectionIsAngular() const
       { return (_cdiMaxDeflectionNm <= 0.0); }
@@ -147,6 +140,9 @@ private:
       
       bool driveAutopilot() const
       { return _driveAutopilot; }
+      
+      bool courseSelectable() const
+      { return _courseSelectable; }
     private:
       bool _enableTurnAnticipation;
       
@@ -160,25 +156,19 @@ private:
       // (in seconds)
       double _waypointAlertTime;
       
-      // should GPS automatically tune NAV1 to the reference VOR?
-      bool _tuneRadio1ToRefVor;
-      
       // minimum runway length to require when filtering
       double _minRunwayLengthFt;
       
       // should we require a hard-surfaced runway when filtering?
       bool _requireHardSurface;
       
-      // helpers to tie course-source property
-      const char* getCourseSource() const;
-      void setCourseSource(const char* aPropPath);
-      
-      // property to retrieve the external course from
-      SGPropertyNode_ptr _extCourseSource;
-      
       double _cdiMaxDeflectionNm;
       
+      // should we drive the autopilot directly or not?
       bool _driveAutopilot;
+      
+      // is selected-course-deg read to set desired-course or not?
+      bool _courseSelectable;
     };
     
     class SearchFilter : public FGPositioned::Filter
@@ -201,7 +191,6 @@ private:
     void updateTrackingBug();
     void updateReferenceNavaid(double dt);
     void referenceNavaidSet(const std::string& aNavaid);
-    void tuneNavRadios();
     void updateRouteData();
     void driveAutopilot();
     
@@ -276,6 +265,9 @@ private:
   bool getScratchHasNext() const { return _searchHasNext; }
   
   double getSelectedCourse() const { return _selectedCourse; }
+  void setSelectedCourse(double crs);
+  double getDesiredCourse() const { return _desiredCourse; }
+  
   double getCDIDeflection() const;
   
   double getLegDistance() const;
@@ -341,6 +333,8 @@ private:
     SGPropertyNode_ptr _trip_odometer_node;
     SGPropertyNode_ptr _true_bug_error_node;
     SGPropertyNode_ptr _magnetic_bug_error_node;
+    SGPropertyNode_ptr _eastWestVelocity;
+    SGPropertyNode_ptr _northSouthVelocity;
     
     SGPropertyNode_ptr _ref_navaid_id_node;
     SGPropertyNode_ptr _ref_navaid_bearing_node;
@@ -355,8 +349,10 @@ private:
     SGPropertyNode_ptr _routeETE;
   SGPropertyNode_ptr _routeEditedSignal;
   SGPropertyNode_ptr _routeFinishedSignal;
-
+  SGPropertyNode_ptr _desiredCourseNode;
+  
     double _selectedCourse;
+    double _desiredCourse;
     
     bool _dataValid;
     SGGeod _last_pos;
@@ -364,6 +360,8 @@ private:
     double _last_speed_kts;
     double _last_true_track;
     double _last_vertical_speed;
+    double _lastEWVelocity;
+    double _lastNSVelocity;
     
     std::string _mode;
     GPSListener* _listener;
