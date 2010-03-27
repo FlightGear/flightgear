@@ -220,7 +220,8 @@ GPS::GPS ( SGPropertyNode *node) :
   _num(node->getIntValue("number", 0)),
   _computeTurnData(false),
   _anticipateTurn(false),
-  _inTurn(false)
+  _inTurn(false),
+  _desiredCourse(0.0)
 {
   string branch = "/instrumentation/" + _name;
   _gpsNode = fgGetNode(branch.c_str(), _num, true );
