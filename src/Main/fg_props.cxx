@@ -31,6 +31,7 @@
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/scene/model/particles.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 
 #include <Aircraft/aircraft.hxx>
@@ -236,6 +237,9 @@ setFreeze (bool f)
             smgr->resume();
         }
     }
+
+    // Pause the particle system
+    simgear::Particles::setFrozen(f);
 }
 
 
