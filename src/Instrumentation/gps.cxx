@@ -1325,21 +1325,18 @@ bool GPS::isScratchPositionValid() const
 
 void GPS::directTo()
 {
-  if (!isScratchPositionValid()) {
-    SG_LOG(SG_INSTR, SG_WARN, "invalid DTO lat/lon");
-    return;
+  _wp0_position = _indicated_pos;
+  
+  if (isScratchPositionValid()) {
+    _wp1Ident = _scratchNode->getStringValue("ident");
+    _wp1Name = _scratchNode->getStringValue("name");
+    _wp1_position = _scratchPos;
   }
   
-  _wp0_position = _indicated_pos;
-  _wp1Ident = _scratchNode->getStringValue("ident");
-  _wp1Name = _scratchNode->getStringValue("name");
-  _wp1_position = _scratchPos;
-
   _mode = "dto";
   _desiredCourse = getLegMagCourse();
   _desiredCourseNode->fireValueChanged();
   clearScratch();
-  
   wp1Changed();
 }
 
@@ -1609,17 +1606,14 @@ void GPS::addAirportToScratch(FGAirport* aAirport)
 
 void GPS::selectOBSMode()
 {
-  if (!isScratchPositionValid()) {
-    SG_LOG(SG_INSTR, SG_WARN, "invalid OBS lat/lon");
-    return;
+  if (isScratchPositionValid()) {
+    _wp1Ident = _scratchNode->getStringValue("ident");
+    _wp1Name = _scratchNode->getStringValue("name");
+    _wp1_position = _scratchPos;
   }
   
   SG_LOG(SG_INSTR, SG_INFO, "GPS switching to OBS mode");
   _mode = "obs";
-  
-  _wp1Ident = _scratchNode->getStringValue("ident");
-  _wp1Name = _scratchNode->getStringValue("name");
-  _wp1_position = _scratchPos;
   _wp0_position = _indicated_pos;
   wp1Changed();
 }
