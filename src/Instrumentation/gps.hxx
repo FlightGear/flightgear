@@ -333,6 +333,8 @@ private:
     SGPropertyNode_ptr _trip_odometer_node;
     SGPropertyNode_ptr _true_bug_error_node;
     SGPropertyNode_ptr _magnetic_bug_error_node;
+    SGPropertyNode_ptr _eastWestVelocity;
+    SGPropertyNode_ptr _northSouthVelocity;
     
     SGPropertyNode_ptr _ref_navaid_id_node;
     SGPropertyNode_ptr _ref_navaid_bearing_node;
@@ -358,6 +360,8 @@ private:
     double _last_speed_kts;
     double _last_true_track;
     double _last_vertical_speed;
+    double _lastEWVelocity;
+    double _lastNSVelocity;
     
     std::string _mode;
     GPSListener* _listener;

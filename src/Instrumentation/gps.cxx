@@ -249,6 +249,8 @@ GPS::init ()
   _trip_odometer_node = _gpsNode->getChild("trip-odometer", 0, true);
   _true_bug_error_node = _gpsNode->getChild("true-bug-error-deg", 0, true);
   _magnetic_bug_error_node = _gpsNode->getChild("magnetic-bug-error-deg", 0, true);
+  _eastWestVelocity = _gpsNode->getChild("ew-velocity-msec", 0, true);
+  _northSouthVelocity = _gpsNode->getChild("ns-velocity-msec", 0, true);
   
 // waypoints
   SGPropertyNode *wp_node = _gpsNode->getChild("wp", 0, true);
@@ -420,6 +422,7 @@ GPS::clearOutput()
   _indicated_pos = SGGeod();
   _last_vertical_speed = 0.0;
   _last_true_track = 0.0;
+  _lastEWVelocity = _lastNSVelocity = 0.0;
   
   _raim_node->setDoubleValue(0.0);
   _indicated_pos = SGGeod();
@@ -431,6 +434,8 @@ GPS::clearOutput()
   _tracking_bug_node->setDoubleValue(0);
   _true_bug_error_node->setDoubleValue(0);
   _magnetic_bug_error_node->setDoubleValue(0);
+  _northSouthVelocity->setDoubleValue(0.0);
+  _eastWestVelocity->setDoubleValue(0.0);
 }
 
 void
@@ -545,8 +550,27 @@ GPS::updateBasicData(double dt)
   double vertical_speed_mpm = ((_indicated_pos.getElevationM() - _last_pos.getElevationM()) * 60 / dt);
   _last_vertical_speed = vertical_speed_mpm * SG_METER_TO_FEET;
   
-  speed_kt = fgGetLowPass(_last_speed_kts, speed_kt, dt/20.0);
+  speed_kt = fgGetLowPass(_last_speed_kts, speed_kt, dt/10.0);
   _last_speed_kts = speed_kt;
+  
+  SGGeod g = _indicated_pos;
+  g.setLongitudeDeg(_last_pos.getLongitudeDeg());
+  double northSouthM = SGGeodesy::distanceM(_last_pos, g);
+  northSouthM = copysign(northSouthM, _indicated_pos.getLatitudeDeg() - _last_pos.getLatitudeDeg());
+  
+  double nsMSec = fgGetLowPass(_lastNSVelocity, northSouthM / dt, dt/2.0);
+  _lastNSVelocity = nsMSec;
+  _northSouthVelocity->setDoubleValue(nsMSec);
+
+
+  g = _indicated_pos;
+  g.setLatitudeDeg(_last_pos.getLatitudeDeg());
+  double eastWestM = SGGeodesy::distanceM(_last_pos, g);
+  eastWestM = copysign(eastWestM, _indicated_pos.getLongitudeDeg() - _last_pos.getLongitudeDeg());
+  
+  double ewMSec = fgGetLowPass(_lastEWVelocity, eastWestM / dt, dt/2.0);
+  _lastEWVelocity = ewMSec;
+  _eastWestVelocity->setDoubleValue(ewMSec);
   
   double odometer = _odometer_node->getDoubleValue();
   _odometer_node->setDoubleValue(odometer + distance_m * SG_METER_TO_NM);
