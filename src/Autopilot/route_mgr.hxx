@@ -113,6 +113,12 @@ private:
      */
     SGWayPoint* make_waypoint(const string& target);
     
+    /**
+     * Helper to keep various pieces of state in sync when the SGRoute is
+     * modified (waypoints added, inserted, removed). Notably, this fires the
+     * 'edited' signal.
+     */
+    void waypointsChanged();
     
     void update_mirror();
     
@@ -187,6 +193,11 @@ public:
      *
      */
     void jumpToIndex(int index);
+    
+    /**
+     * 
+     */
+    void setWaypointTargetAltitudeFt(unsigned int index, int altFt);
     
     void saveRoute();
     void loadRoute();

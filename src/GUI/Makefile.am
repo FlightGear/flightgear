@@ -16,14 +16,15 @@ endif
 libGUI_a_SOURCES = \
         new_gui.cxx new_gui.hxx \
         dialog.cxx dialog.hxx \
-	menubar.cxx menubar.hxx \
-	gui.cxx gui.h gui_funcs.cxx \
-	fonts.cxx \
-	AirportList.cxx AirportList.hxx \
+        menubar.cxx menubar.hxx \
+        gui.cxx gui.h gui_funcs.cxx \
+        fonts.cxx \
+        AirportList.cxx AirportList.hxx \
         property_list.cxx property_list.hxx \
         layout.cxx layout-props.cxx layout.hxx \
-	SafeTexFont.cxx SafeTexFont.hxx
-
+        SafeTexFont.cxx SafeTexFont.hxx \
+        WaypointList.cxx WaypointList.hxx
+        
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
 
 layout_test_SOURCES = layout-test.cxx
