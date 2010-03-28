@@ -191,11 +191,6 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     
     void clearOutputs();
 
-    /**
-     * Compute the localizer width in degrees - see implementation for 
-     * more information on the relevant standards and formulae.
-     */
-    double localizerWidth(FGNavRecord* aLOC);
     FGNavRecord* findPrimaryNavaid(const SGGeod& aPos, double aFreqMHz);
     
     /// accessor for tied, read-only 'operable' property

@@ -220,7 +220,8 @@ GPS::GPS ( SGPropertyNode *node) :
   _num(node->getIntValue("number", 0)),
   _computeTurnData(false),
   _anticipateTurn(false),
-  _inTurn(false)
+  _inTurn(false),
+  _desiredCourse(0.0)
 {
   string branch = "/instrumentation/" + _name;
   _gpsNode = fgGetNode(branch.c_str(), _num, true );
@@ -303,6 +304,7 @@ GPS::init ()
   fromFlag->alias(wp1_node->getChild("from-flag"));
     
 // autopilot drive properties
+  _apDrivingFlag = fgGetNode("/autopilot/settings/gps-driving-true-heading", true);
   _apTrueHeading = fgGetNode("/autopilot/settings/true-heading-deg",true);
   _apTargetAltitudeFt = fgGetNode("/autopilot/settings/target-altitude-ft", true);
   _apAltitudeLock = fgGetNode("/autopilot/locks/altitude", true);
@@ -958,12 +960,17 @@ void GPS::updateRouteData()
 void GPS::driveAutopilot()
 {
   if (!_config.driveAutopilot() || !_realismSimpleGps->getBoolValue()) {
+    _apDrivingFlag->setBoolValue(false);
     return;
   }
  
   // compatability feature - allow the route-manager / GPS to drive the
   // generic autopilot heading hold *in leg mode only* 
-  if (_mode == "leg") {
+  
+  bool drive = _mode == "leg";
+  _apDrivingFlag->setBoolValue(drive);
+  
+  if (drive) {
     // FIXME: we want to set desired track, not heading, here
     _apTrueHeading->setDoubleValue(getWP1Bearing());
   }

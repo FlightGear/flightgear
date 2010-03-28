@@ -891,7 +891,7 @@ void FGNavRadio::search()
     } else { // ILS or LOC
       _gs = globals->get_gslist()->findByFreq(freq, pos);
       has_gs_node->setBoolValue(_gs != NULL);
-      _localizerWidth = localizerWidth(nav);
+      _localizerWidth = nav->localizerWidth();
       twist = 0.0;
 	    effective_range = nav->get_range();
       
@@ -939,39 +939,6 @@ void FGNavRadio::search()
   id_c2_node->setIntValue( (int)identBuffer[1] );
   id_c3_node->setIntValue( (int)identBuffer[2] );
   id_c4_node->setIntValue( (int)identBuffer[3] );
-}
-
-double FGNavRadio::localizerWidth(FGNavRecord* aLOC)
-{
-  FGRunway* rwy = aLOC->runway();
-  if (!rwy) {
-    return 6.0; // no runway associated, return default value
-  }
-  
-  
-  SGVec3d thresholdCart(SGVec3d::fromGeod(rwy->threshold()));
-  double axisLength = dist(aLOC->cart(), thresholdCart);
-  double landingLength = dist(thresholdCart, SGVec3d::fromGeod(rwy->end()));
-  
-// Reference: http://dcaa.slv.dk:8000/icaodocs/
-// ICAO standard width at threshold is 210 m = 689 feet = approx 700 feet.
-// ICAO 3.1.1 half course = DDM = 0.0775
-// ICAO 3.1.3.7.1 Sensitivity 0.00145 DDM/m at threshold
-//  implies peg-to-peg of 214 m ... we will stick with 210.
-// ICAO 3.1.3.7.1 "Course sector angle shall not exceed 6 degrees."
-              
-// Very short runway:  less than 1200 m (4000 ft) landing length:
-  if (landingLength < 1200.0) {
-// ICAO fudges localizer sensitivity for very short runways.
-// This produces a non-monotonic sensitivity-versus length relation.
-    axisLength += 1050.0;
-  }
-
-// Example: very short: San Diego   KMYF (Montgomery Field) ILS RWY 28R
-// Example: short:      Tom's River KMJX (Robert J. Miller) ILS RWY 6
-// Example: very long:  Denver      KDEN (Denver)           ILS RWY 16R
-  double raw_width = 210.0 / axisLength * SGD_RADIANS_TO_DEGREES;
-  return raw_width < 6.0? raw_width : 6.0;
 }
 
 void FGNavRadio::audioNavidChanged()
