@@ -51,7 +51,7 @@ HudLadder::HudLadder(const SGPropertyNode *node) :
     if (fgGetBool("/sim/hud/enable3d", true) && HUD_style == 1)
         factor = 640.0 / 55.0;
 
-    SG_LOG(SG_INPUT, SG_INFO, "Done reading HudLadder instrument"
+    SG_LOG(SG_INPUT, SG_BULK, "Done reading HudLadder instrument"
             << node->getStringValue("name", "[unnamed]"));
 
     if (!width_units)

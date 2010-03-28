@@ -447,15 +447,6 @@ void FGAIAircraft::announcePositionToController() {
         case 4:              //Take off tower controller
             if (trafficRef->getDepartureAirport()->getDynamics()) {
                 controller = trafficRef->getDepartureAirport()->getDynamics()->getTowerController();
-                //if (trafficRef->getDepartureAirport()->getId() == "EHAM") {
-                //string trns = trafficRef->getCallSign() + " at runway " + fp->getRunway() + 
-                //              ". Ready for departure. " + trafficRef->getFlightType() + " to " +
-                //              trafficRef->getArrivalAirport()->getId();
-                //fgSetString("/sim/messages/atc", trns.c_str());
-                //  if (controller == 0) {
-                //cerr << "Error in assigning controller at " << trafficRef->getDepartureAirport()->getId() << endl;
-                //}
-                //}
             } else {
                 cerr << "Error: Could not find Dynamics at airport : " << trafficRef->getDepartureAirport()->getId() << endl;
             }

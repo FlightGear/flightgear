@@ -33,7 +33,7 @@ instr_label::instr_label(const SGPropertyNode *node) :
     lon_node(fgGetNode("/position/longitude-string", true)),
     lat_node(fgGetNode("/position/latitude-string", true))
 {
-    SG_LOG(SG_INPUT, SG_INFO, "Done reading instr_label instrument "
+    SG_LOG(SG_INPUT, SG_BULK, "Done reading instr_label instrument "
             << node->getStringValue("name", "[unnamed]"));
 
     set_data_source(get_func(node->getStringValue("data_source")));

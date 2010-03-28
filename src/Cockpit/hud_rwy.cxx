@@ -60,7 +60,7 @@ runway_instr::runway_instr(const SGPropertyNode *node) :
     drawIA(arrowScale > 0 ? true : false),
     drawIAAlways(arrowScale > 0 ? node->getBoolValue("arrow_always") : false)
 {
-    SG_LOG(SG_INPUT, SG_INFO, "Done reading runway instrument "
+    SG_LOG(SG_INPUT, SG_BULK, "Done reading runway instrument "
             << node->getStringValue("name", "[unnamed]"));
 
     view[0] = 0;

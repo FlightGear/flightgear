@@ -32,7 +32,7 @@ fgTBI_instr::fgTBI_instr(const SGPropertyNode *node) :
     rad(node->getFloatValue("rad"))
 
 {
-    SG_LOG(SG_INPUT, SG_INFO, "Done reading TBI instrument"
+    SG_LOG(SG_INPUT, SG_BULK, "Done reading TBI instrument"
             << node->getStringValue("name", "[unnamed]"));
 }
 

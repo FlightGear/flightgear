@@ -1109,7 +1109,12 @@ FGTextLayer::draw (osg::State& state)
     transform();
 
     FGFontCache *fc = globals->get_fontcache();
-    text_renderer.setFont(fc->getTexFont(_font_name.c_str()));
+    fntFont* font = fc->getTexFont(_font_name.c_str());
+    if (!font) {
+        return; // don't crash on missing fonts
+    }
+    
+    text_renderer.setFont(font);
 
     text_renderer.setPointSize(_pointSize);
     text_renderer.begin();
@@ -1170,6 +1175,11 @@ void
 FGTextLayer::setFontName(const string &name)
 {
   _font_name = name + ".txf";
+  FGFontCache *fc = globals->get_fontcache();
+  fntFont* font = fc->getTexFont(_font_name.c_str());
+  if (!font) {
+      SG_LOG(SG_GENERAL, SG_WARN, "unable to find font:" << name);
+  }
 }
 
 

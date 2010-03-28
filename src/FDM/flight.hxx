@@ -88,6 +88,34 @@ using std::list;
 using std::vector;
 using std::string;
 
+/**
+ * A little helper class to update the track if
+ * the position has changed. In the constructor, 
+ * create a copy of the current position and store 
+ * references to the position object and the track
+ * variable to update.
+ * The destructor, called at TrackComputer's end of 
+ * life/visibility, computes the track if the 
+ * position has changed.
+ */
+class TrackComputer {
+public:
+  inline TrackComputer( double & track, const SGGeod & position ) : 
+    _track( track ),
+    _position( position ),
+    _prevPosition( position ) {
+  }
+
+  inline ~TrackComputer() {
+    if( _prevPosition == _position ) return;
+    _track = SGGeodesy::courseDeg( _prevPosition, _position );
+  }
+private:
+  double & _track;
+  const SGGeod & _position;
+  const SGGeod _prevPosition;
+};
+
 // This is based heavily on LaRCsim/ls_generic.h
 class FGInterface : public SGSubsystem {
 
@@ -157,6 +185,7 @@ private:
     double runway_altitude;
     double climb_rate;                // in feet per second
     double altitude_agl;
+    double track;
 
     double daux[16];		// auxilliary doubles
     float  faux[16];		// auxilliary floats
@@ -265,19 +294,27 @@ public:
 	geocentric_position_v.setLongitudeRad(lon);
 	geocentric_position_v.setRadiusFt(rad);
     }
+/*  Don't call _set_L[at|ong]itude() directly, use _set_Geodetic_Position() instead.
+    These methods can't update the track.
+ *
     inline void _set_Latitude(double lat) {
         geodetic_position_v.setLatitudeRad(lat);
     }
     inline void _set_Longitude(double lon) {
         geodetic_position_v.setLongitudeRad(lon);
     }
+*/
     inline void _set_Altitude(double altitude) {
         geodetic_position_v.setElevationFt(altitude);
     }
     inline void _set_Altitude_AGL(double agl) {
 	altitude_agl = agl;
     }
+    inline void _set_Geodetic_Position( double lat, double lon ) {
+        _set_Geodetic_Position( lat, lon, geodetic_position_v.getElevationFt());
+    }
     inline void _set_Geodetic_Position( double lat, double lon, double alt ) {
+        TrackComputer tracker( track, geodetic_position_v );
 	geodetic_position_v.setLatitudeRad(lat);
 	geodetic_position_v.setLongitudeRad(lon);
 	geodetic_position_v.setElevationFt(alt);
@@ -541,6 +578,7 @@ public:
         return geodetic_position_v.getElevationFt();
     }
     inline double get_Altitude_AGL(void) const { return altitude_agl; }
+    inline double get_Track(void) const { return track; }
 
     inline double get_Latitude_deg () const {
       return geodetic_position_v.getLatitudeDeg();

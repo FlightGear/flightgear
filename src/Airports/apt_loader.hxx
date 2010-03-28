@@ -35,8 +35,8 @@ class FGCommList;
 // Load the airport data base from the specified aptdb file.  The
 // metar file is used to mark the airports as having metar available
 // or not.
+
 bool fgAirportDBLoad( const std::string &aptdb_file, 
         FGCommList *comm_list, const std::string &metar_file );
-
 
 #endif // _FG_APT_LOADER_HXX

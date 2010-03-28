@@ -376,6 +376,8 @@ void FGNavRadio::clearOutputs()
   gs_deflection_deg_node->setDoubleValue(0.0);
   gs_deflection_norm_node->setDoubleValue(0.0);
   gs_inrange_node->setBoolValue( false );
+  loc_node->setBoolValue( false );
+  has_gs_node->setBoolValue(false);
   
   to_flag_node->setBoolValue( false );
   from_flag_node->setBoolValue( false );
@@ -925,7 +927,9 @@ void FGNavRadio::search()
     _gs = NULL;
     _dme = NULL;
     nav_id_node->setStringValue("");
-
+    loc_node->setBoolValue(false);
+    has_gs_node->setBoolValue(false);
+    
     _sgr->remove( nav_fx_name );
     _sgr->remove( dme_fx_name );
   }

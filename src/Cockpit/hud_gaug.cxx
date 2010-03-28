@@ -26,7 +26,7 @@ gauge_instr::gauge_instr(const SGPropertyNode *node) :
             0, /* hud.cxx: static int dp_shoing = 0; */    // FIXME
             node->getBoolValue("working", true))
 {
-    SG_LOG(SG_INPUT, SG_INFO, "Done reading gauge instrument "
+    SG_LOG(SG_INPUT, SG_BULK, "Done reading gauge instrument "
             << node->getStringValue("name", "[unnamed]"));
 
     set_data_source(get_func(node->getStringValue("loadfn")));

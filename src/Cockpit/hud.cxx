@@ -182,7 +182,7 @@ int readHud( istream &input )
     }
 
 
-    SG_LOG(SG_INPUT, SG_INFO, "Read properties for  " <<
+    SG_LOG(SG_INPUT, SG_DEBUG, "Read properties for  " <<
            root.getStringValue("name"));
 
     if (!root.getNode("depreciated"))
@@ -191,7 +191,7 @@ int readHud( istream &input )
     HUD_deque.erase( HUD_deque.begin(), HUD_deque.end());
 
 
-    SG_LOG(SG_INPUT, SG_INFO, "Reading Hud instruments");
+    SG_LOG(SG_INPUT, SG_DEBUG, "Reading Hud instruments");
 
     const SGPropertyNode * instrument_group = root.getChild("instruments");
     int nInstruments = instrument_group->nChildren();
@@ -203,7 +203,7 @@ int readHud( istream &input )
         SGPath path( globals->get_fg_root() );
         path.append(node->getStringValue("path"));
 
-        SG_LOG(SG_INPUT, SG_INFO, "Reading Instrument "
+        SG_LOG(SG_INPUT, SG_DEBUG, "Reading Instrument "
                << node->getName()
                << " from "
                << path.str());

@@ -13,7 +13,7 @@
 #include "AirportList.hxx"
 #include "property_list.hxx"
 #include "layout.hxx"
-
+#include "WaypointList.hxx"
 
 enum format_type { f_INVALID, f_INT, f_LONG, f_FLOAT, f_DOUBLE, f_STRING };
 static const int FORMAT_BUFSIZE = 255;
@@ -295,8 +295,16 @@ int fgPopup::checkHit(int button, int updown, int x, int y)
                 getFirstChild()->setSize(w, h); // dialog background puFrame
             }
         } else {
-            setPosition(x + _dlgX - _startX, y + _dlgY - _startY);
-        }
+            int posX = x + _dlgX - _startX,
+              posY = y + _dlgY - _startY;
+            setPosition(posX, posY);
+            
+            GUIInfo *info = (GUIInfo *)getUserData();
+            if (info && info->node) {
+                info->node->setIntValue("x", posX);
+                info->node->setIntValue("y", posY);
+            }
+        } // re-positioning
 
     } else if (_dragging) {
         fgSetMouseCursor(_start_cursor);
@@ -561,9 +569,14 @@ FGDialog::updateValues (const char *objectName)
     
     puObject *widget = _propertyObjects[i]->object;
     int widgetType = widget->getType();
-    if ((widgetType & PUCLASS_LIST) && (dynamic_cast<GUI_ID *>(widget)->id & FGCLASS_LIST)) {
-      fgList *pl = static_cast<fgList*>(widget);
-      pl->update();
+    if (widgetType & PUCLASS_LIST) {
+      GUI_ID* gui_id = dynamic_cast<GUI_ID *>(widget);
+      if (gui_id && (gui_id->id & FGCLASS_LIST)) {
+        fgList *pl = static_cast<fgList*>(widget);
+        pl->update();
+      } else {
+        copy_to_pui(_propertyObjects[i]->node, widget);
+      }
     } else if (widgetType & PUCLASS_COMBOBOX) {
       fgComboBox* combo = static_cast<fgComboBox*>(widget);
       combo->update();
@@ -864,6 +877,10 @@ FGDialog::makeObject (SGPropertyNode *props, int parentWidth, int parentHeight)
         fgSelectBox *obj = new fgSelectBox(x, y, x + width, y + height, props);
         setupObject(obj, props);
         setColor(obj, props, EDITFIELD);
+        return obj;
+    } else if (type == "waypointlist") {
+        ScrolledWaypointList* obj = new ScrolledWaypointList(x, y, width, height);
+        setupObject(obj, props);
         return obj;
     } else {
         return 0;

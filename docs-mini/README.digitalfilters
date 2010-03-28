@@ -27,6 +27,10 @@ The complete XML syntax for a InputValue is
   <max>infinity</max>
   <min>-infinity<min>
   <abs>false</abs>
+  <period>
+    <min>-180.0</min>
+    <max>-180.0</max>
+  </period>
 </some-element>
 
 The enclosing element <some-element> is the element defined in each filter, like <input>, <u_min>, 
@@ -124,7 +128,7 @@ other computations are completed.
     
 OutputValue           
 ==============================================================================
-Each filter drives one to many output properties. No scaling of offsetting is implemented
+Each filter drives one to many output properties. No scaling or offsetting is implemented
 for the output value, these should be done in the filter itself.
 The output properties are defined in the <output/> element by adding <property/> elements
 within the <output/> element. For just a single output property, the <property/> element
@@ -167,6 +171,8 @@ Example:
                           min or max value defaults to 0 (zero).
                           Note: <u_min> and <u_max> may also occour within a <config> element.
                           <min> and <max> may be used as a substitude for the corresponding u_xxx element.
+<period>      Complex     Define a periodical input or output value. The phase width is defined by the 
+                          child elements <min> and <max> which are of type InputValue
 
 Example: Limit the pilot's body temperature to a constant minimum of 36 and a maximum defined in
          /pilots/max-body-temperature-degc, initialized to 40.0
@@ -182,6 +188,17 @@ Implicit definition of the minimum value of 0 (zero) and defining a maximum of 1
 <config>
   <u_max>100.0</u_max>
 </config>
+
+This defines the input or output as a periodic value with a phase width of 360, like 
+the compass rose.  Any value reaching the filter's input or leaving the filter at the 
+output will be transformed to fit into the given range by adding or substracting one phase 
+width of 360. Values of -270, 90 or 450 applied to this periodical element will allways 
+result in +90. A value of 630, 270 or -90 will be normalized to -90 in the given example.
+<period>
+  <min>-180.0</min>
+  <max>180.0</max>
+</period>
+
 
 <enable>      Complex     Define a condition to enable or disable the filter. For disabled
                           filters, no output computations are performed. Only enabled

@@ -355,6 +355,18 @@ getHeadingMag ()
   return magheading;
 }
 
+/**
+ * Return the current track in degrees.
+ */
+static double
+getTrackMag ()
+{
+  double magtrack;
+  magtrack = current_aircraft.fdm_state->get_Track() - getMagVar();
+  if (magtrack < 0) magtrack += 360;
+  return magtrack;
+}
+
 static long
 getWarp ()
 {
@@ -514,6 +526,7 @@ FGProperties::bind ()
 
 				// Orientation
   fgTie("/orientation/heading-magnetic-deg", getHeadingMag);
+  fgTie("/orientation/track-magnetic-deg", getTrackMag);
 
   fgTie("/environment/magnetic-variation-deg", getMagVar);
   fgTie("/environment/magnetic-dip-deg", getMagDip);
@@ -543,6 +556,7 @@ FGProperties::unbind ()
 
 				// Orientation
   fgUntie("/orientation/heading-magnetic-deg");
+  fgUntie("/orientation/track-magnetic-deg");
 
 				// Environment
   fgUntie("/environment/magnetic-variation-deg");

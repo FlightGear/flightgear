@@ -8,8 +8,6 @@ SUBDIRS = \
 EXTRA_DIST = \
 	acinclude.m4 \
 	autogen.sh \
-	FlightGear.dsp \
-	FlightGear.dsw \
 	projects \
 	README \
 	README.OpenAL \
@@ -19,7 +17,6 @@ EXTRA_DIST = \
 	Thanks
 
 dist-hook:
-	(cd $(top_srcdir); $(HOME)/Projects/FlightGear/admin/am2dsp.pl)
 	(cd $(top_srcdir); tar --exclude docs-mini/CVS --exclude hints/CVS \
 		-cf - docs-mini ) | (cd $(distdir); tar xvf -)
 	rm -rf `find $(distdir)/projects -name CVS`
@@ -55,7 +52,7 @@ data-tar:
 	--exclude='*/Docs/source' \
         --exclude='*/Models/MNUAV' \
         --exclude='*/Models/Airspace' \
-	-cjvf source/FlightGear-data-$(VERSION).tar.bz2 \
+	-cjvf FlightGear-data-$(VERSION).tar.bz2 \
 		data/AI \
                 data/Aircraft/Generic \
                 data/Aircraft/Instruments \
@@ -100,6 +97,7 @@ data-tar:
 		data/preferences.xml \
 		data/Protocol \
 		data/README \
+		data/Scenery/Airports \
 		data/Scenery/Objects \
 		data/Scenery/Terrain \
 		data/Shaders \

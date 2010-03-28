@@ -40,14 +40,42 @@
 using std::cout;
 using std::endl;
 
+FGPeriodicalValue::FGPeriodicalValue( SGPropertyNode_ptr root )
+{
+  SGPropertyNode_ptr minNode = root->getChild( "min" );
+  SGPropertyNode_ptr maxNode = root->getChild( "max" );
+  if( minNode == NULL || maxNode == NULL ) {
+    SG_LOG(SG_AUTOPILOT, SG_ALERT, "periodical defined, but no <min> and/or <max> tag. Period ignored." );
+  } else {
+    minPeriod = new FGXMLAutoInput( minNode );
+    maxPeriod = new FGXMLAutoInput( maxNode );
+  }
+}
+
+double FGPeriodicalValue::normalize( double value )
+{
+  if( !(minPeriod && maxPeriod )) return value;
+
+  double p1 = minPeriod->get_value();
+  double p2 = maxPeriod->get_value();
+
+  double min = std::min<double>(p1,p2);
+  double max = std::max<double>(p1,p2);
+  double phase = fabs(max - min);
+
+  if( phase > SGLimitsd::min() ) {
+    while( value < min ) value += phase;
+    while( value >= max ) value -= phase;
+  } else {
+    value = min; // phase is zero
+  }
+
+  return value;
+}
+
 FGXMLAutoInput::FGXMLAutoInput( SGPropertyNode_ptr node, double value, double offset, double scale) :
   value(0.0),
   abs(false),
-  property(NULL),
-  offset(NULL),
-  scale(NULL),
-  min(NULL),
-  max(NULL),
   _condition(NULL) 
 {
   parse( node, value, offset, scale );
@@ -62,6 +90,7 @@ void FGXMLAutoInput::parse( SGPropertyNode_ptr node, double aValue, double aOffs
     scale = NULL;
     min = NULL;
     max = NULL;
+    periodical = NULL;
 
     if( node == NULL )
         return;
@@ -69,7 +98,7 @@ void FGXMLAutoInput::parse( SGPropertyNode_ptr node, double aValue, double aOffs
     SGPropertyNode * n;
 
     if( (n = node->getChild("condition")) != NULL ) {
-        _condition = sgReadCondition(node, n);
+        _condition = sgReadCondition(fgGetNode("/"), n);
     }
 
     if( (n = node->getChild( "scale" )) != NULL ) {
@@ -90,6 +119,10 @@ void FGXMLAutoInput::parse( SGPropertyNode_ptr node, double aValue, double aOffs
 
     if( (n = node->getChild( "abs" )) != NULL ) {
       abs = n->getBoolValue();
+    }
+
+    if( (n = node->getChild( "period" )) != NULL ) {
+      periodical = new FGPeriodicalValue( n );
     }
 
     SGPropertyNode *valueNode = node->getChild( "value" );
@@ -161,6 +194,10 @@ double FGXMLAutoInput::get_value()
         if( value > m )
             value = m;
     }
+
+    if( periodical ) {
+      value = periodical->normalize( value );
+    }
     
     return abs ? fabs(value) : value;
 }
@@ -200,7 +237,7 @@ void FGXMLAutoComponent::parseNode(SGPropertyNode* aNode)
       debug = child->getBoolValue();
     } else if ( cname == "enable" ) {
       if( (prop = child->getChild("condition")) != NULL ) {
-        _condition = sgReadCondition(child, prop);
+        _condition = sgReadCondition(fgGetNode("/"), prop);
       } else {
          if ( (prop = child->getChild( "prop" )) != NULL ) {
              enable_prop = fgGetNode( prop->getStringValue(), true );
@@ -246,6 +283,8 @@ void FGXMLAutoComponent::parseNode(SGPropertyNode* aNode)
         umaxInput.push_back( new FGXMLAutoInput( child ) );
     } else if ( cname == "u_max" ) {
         umaxInput.push_back( new FGXMLAutoInput( child ) );
+    } else if ( cname == "period" ) {
+      periodical = new FGPeriodicalValue( child );
     } else {
       SG_LOG(SG_AUTOPILOT, SG_ALERT, "malformed autopilot definition - unrecognized node:" 
         << cname << " in section " << name);
@@ -314,6 +353,11 @@ void FGXMLAutoComponent::do_feedback_if_disabled()
 
 double FGXMLAutoComponent::clamp( double value )
 {
+    //If this is a periodical value, normalize it into our domain 
+    // before clamping
+    if( periodical )
+      value = periodical->normalize( value );
+
     // clamp, if either min or max is defined
     if( uminInput.size() + umaxInput.size() > 0 ) {
         double d = umaxInput.get_value( 0.0 );
@@ -685,6 +729,10 @@ bool FGDigitalFilter::parseNodeHook(const string& aName, SGPropertyNode* aNode)
       filterType = gain;
     } else if (val == "reciprocal") {
       filterType = reciprocal;
+    } else if (val == "differential") {
+      filterType = differential;
+      // use a constant of two samples for current and previous input value
+      samplesInput.push_back( new FGXMLAutoInput(NULL, 2.0 ) ); 
     }
   } else if (aName == "filter-time" ) {
     TfInput.push_back( new FGXMLAutoInput( aNode, 1.0 ) );
@@ -724,173 +772,117 @@ void FGDigitalFilter::update(double dt)
         do_feedback();
     }
 
-    if ( enabled && dt > 0.0 ) {
-        /*
-         * Exponential filter
-         *
-         * Output[n] = alpha*Input[n] + (1-alpha)*Output[n-1]
-         *
-         */
-         if( debug ) cout << "Updating " << get_name()
-                          << " dt " << dt << endl;
+    if ( !enabled || dt < SGLimitsd::min() ) 
+        return;
 
-        if (filterType == exponential)
-        {
-            double alpha = 1 / ((TfInput.get_value()/dt) + 1);
-            output.push_front(alpha * input[0] + 
-                              (1 - alpha) * output[0]);
-        } 
-        else if (filterType == doubleExponential)
-        {
-            double alpha = 1 / ((TfInput.get_value()/dt) + 1);
-            output.push_front(alpha * alpha * input[0] + 
-                              2 * (1 - alpha) * output[0] -
-                              (1 - alpha) * (1 - alpha) * output[1]);
-        }
-        else if (filterType == movingAverage)
-        {
-            output.push_front(output[0] + 
-                              (input[0] - input.back()) / samplesInput.get_value());
-        }
-        else if (filterType == noiseSpike)
-        {
-            double maxChange = rateOfChangeInput.get_value() * dt;
+    /*
+     * Exponential filter
+     *
+     * Output[n] = alpha*Input[n] + (1-alpha)*Output[n-1]
+     *
+     */
+     if( debug ) cout << "Updating " << get_name()
+                      << " dt " << dt << endl;
 
-            if ((output[0] - input[0]) > maxChange)
-            {
-                output.push_front(output[0] - maxChange);
-            }
-            else if ((output[0] - input[0]) < -maxChange)
-            {
-                output.push_front(output[0] + maxChange);
-            }
-            else if (fabs(input[0] - output[0]) <= maxChange)
-            {
-                output.push_front(input[0]);
-            }
-        }
-        else if (filterType == gain)
-        {
-            output[0] = gainInput.get_value() * input[0];
-        }
-        else if (filterType == reciprocal)
-        {
-            if (input[0] != 0.0) {
-                output[0] = gainInput.get_value() / input[0];
-            }
-        }
+    if (filterType == exponential)
+    {
+        double alpha = 1 / ((TfInput.get_value()/dt) + 1);
+        output.push_front(alpha * input[0] + 
+                          (1 - alpha) * output[0]);
+    } 
+    else if (filterType == doubleExponential)
+    {
+        double alpha = 1 / ((TfInput.get_value()/dt) + 1);
+        output.push_front(alpha * alpha * input[0] + 
+                          2 * (1 - alpha) * output[0] -
+                          (1 - alpha) * (1 - alpha) * output[1]);
+    }
+    else if (filterType == movingAverage)
+    {
+        output.push_front(output[0] + 
+                          (input[0] - input.back()) / samplesInput.get_value());
+    }
+    else if (filterType == noiseSpike)
+    {
+        double maxChange = rateOfChangeInput.get_value() * dt;
 
-        output[0] = clamp(output[0]) ;
-        set_output_value( output[0] );
-
-        output.resize(2);
-
-        if (debug)
+        if ((output[0] - input[0]) > maxChange)
         {
-            cout << "input:" << input[0] 
-                 << "\toutput:" << output[0] << endl;
+            output.push_front(output[0] - maxChange);
+        }
+        else if ((output[0] - input[0]) < -maxChange)
+        {
+            output.push_front(output[0] + maxChange);
+        }
+        else if (fabs(input[0] - output[0]) <= maxChange)
+        {
+            output.push_front(input[0]);
         }
     }
-}
-
-
-FGXMLAutopilot::FGXMLAutopilot() {
-}
-
-
-FGXMLAutopilot::~FGXMLAutopilot() {
-}
-
- 
-void FGXMLAutopilot::init() {
-    config_props = fgGetNode( "/autopilot/new-config", true );
-
-    SGPropertyNode *path_n = fgGetNode("/sim/systems/autopilot/path");
-
-    if ( path_n ) {
-        SGPath config( globals->get_fg_root() );
-        config.append( path_n->getStringValue() );
-
-        SG_LOG( SG_ALL, SG_INFO, "Reading autopilot configuration from "
-                << config.str() );
-        try {
-            readProperties( config.str(), config_props );
-
-            if ( ! build() ) {
-                SG_LOG( SG_ALL, SG_ALERT,
-                        "Detected an internal inconsistency in the autopilot");
-                SG_LOG( SG_ALL, SG_ALERT,
-                        " configuration.  See earlier errors for" );
-                SG_LOG( SG_ALL, SG_ALERT,
-                        " details.");
-                exit(-1);
-            }        
-        } catch (const sg_exception& e) {
-            SG_LOG( SG_ALL, SG_ALERT, "Failed to load autopilot configuration: "
-                    << config.str() << ":" << e.getMessage() );
-        }
-
-    } else {
-        SG_LOG( SG_ALL, SG_WARN,
-                "No autopilot configuration specified for this model!");
+    else if (filterType == gain)
+    {
+        output[0] = gainInput.get_value() * input[0];
     }
-}
-
-
-void FGXMLAutopilot::reinit() {
-    components.clear();
-    init();
-}
-
-
-void FGXMLAutopilot::bind() {
-}
-
-void FGXMLAutopilot::unbind() {
-}
-
-bool FGXMLAutopilot::build() {
-    SGPropertyNode *node;
-    int i;
-
-    int count = config_props->nChildren();
-    for ( i = 0; i < count; ++i ) {
-        node = config_props->getChild(i);
-        string name = node->getName();
-        // cout << name << endl;
-        if ( name == "pid-controller" ) {
-            components.push_back( new FGPIDController( node ) );
-        } else if ( name == "pi-simple-controller" ) {
-            components.push_back( new FGPISimpleController( node ) );
-        } else if ( name == "predict-simple" ) {
-            components.push_back( new FGPredictor( node ) );
-        } else if ( name == "filter" ) {
-            components.push_back( new FGDigitalFilter( node ) );
-        } else {
-            SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: " 
-                    << name );
-            return false;
+    else if (filterType == reciprocal)
+    {
+        if (input[0] != 0.0) {
+            output[0] = gainInput.get_value() / input[0];
+        }
+    }
+    else if (filterType == differential)
+    {
+        if( dt > SGLimitsd::min() ) {
+            output[0] = (input[0]-input[1]) * TfInput.get_value() / dt;
         }
     }
 
-    return true;
+    output[0] = clamp(output[0]) ;
+    set_output_value( output[0] );
+
+    output.resize(2);
+
+    if (debug)
+    {
+        cout << "input:" << input[0] 
+             << "\toutput:" << output[0] << endl;
+    }
 }
 
+FGXMLAutopilotGroup::FGXMLAutopilotGroup() :
+  SGSubsystemGroup(),
+  average(0.0), // average/filtered prediction
+  v_last(0.0),  // last velocity
+  last_static_pressure(0.0),
+  vel(fgGetNode( "/velocities/airspeed-kt", true )),
+  // Estimate speed in 5,10 seconds
+  lookahead5(fgGetNode( "/autopilot/internal/lookahead-5-sec-airspeed-kt", true )),
+  lookahead10(fgGetNode( "/autopilot/internal/lookahead-10-sec-airspeed-kt", true )),
+  bug(fgGetNode( "/autopilot/settings/heading-bug-deg", true )),
+  mag_hdg(fgGetNode( "/orientation/heading-magnetic-deg", true )),
+  bug_error(fgGetNode( "/autopilot/internal/heading-bug-error-deg", true )),
+  fdm_bug_error(fgGetNode( "/autopilot/internal/fdm-heading-bug-error-deg", true )),
+  target_true(fgGetNode( "/autopilot/settings/true-heading-deg", true )),
+  true_hdg(fgGetNode( "/orientation/heading-deg", true )),
+  true_error(fgGetNode( "/autopilot/internal/true-heading-error-deg", true )),
+  target_nav1(fgGetNode( "/instrumentation/nav[0]/radials/target-auto-hdg-deg", true )),
+  true_nav1(fgGetNode( "/autopilot/internal/nav1-heading-error-deg", true )),
+  true_track_nav1(fgGetNode( "/autopilot/internal/nav1-track-error-deg", true )),
+  nav1_course_error(fgGetNode( "/autopilot/internal/nav1-course-error", true )),
+  nav1_selected_course(fgGetNode( "/instrumentation/nav[0]/radials/selected-deg", true )),
+  vs_fps(fgGetNode( "/velocities/vertical-speed-fps", true )),
+  vs_fpm(fgGetNode( "/autopilot/internal/vert-speed-fpm", true )),
+  static_pressure(fgGetNode( "/systems/static[0]/pressure-inhg", true )),
+  pressure_rate(fgGetNode( "/autopilot/internal/pressure-rate", true )),
+  track(fgGetNode( "/orientation/track-deg", true ))
+{
+}
 
-/*
- * Update helper values
- */
-static void update_helper( double dt ) {
-    // Estimate speed in 5,10 seconds
-    static SGPropertyNode_ptr vel = fgGetNode( "/velocities/airspeed-kt", true );
-    static SGPropertyNode_ptr lookahead5
-        = fgGetNode( "/autopilot/internal/lookahead-5-sec-airspeed-kt", true );
-    static SGPropertyNode_ptr lookahead10
-        = fgGetNode( "/autopilot/internal/lookahead-10-sec-airspeed-kt", true );
+void FGXMLAutopilotGroup::update( double dt )
+{
+    // update all configured autopilots
+    SGSubsystemGroup::update( dt );
 
-    static double average = 0.0; // average/filtered prediction
-    static double v_last = 0.0;  // last velocity
-
+    // update helper values
     double v = vel->getDoubleValue();
     double a = 0.0;
     if ( dt > 0.0 ) {
@@ -907,119 +899,184 @@ static void update_helper( double dt ) {
         v_last = v;
     }
 
-    // Calculate heading bug error normalized to +/- 180.0 (based on
-    // DG indicated heading)
-    static SGPropertyNode_ptr bug
-        = fgGetNode( "/autopilot/settings/heading-bug-deg", true );
-    static SGPropertyNode_ptr ind_hdg
-        = fgGetNode( "/instrumentation/heading-indicator/indicated-heading-deg",
-                     true );
-    static SGPropertyNode_ptr ind_bug_error
-        = fgGetNode( "/autopilot/internal/heading-bug-error-deg", true );
+    // Calculate heading bug error normalized to +/- 180.0
+    double diff = bug->getDoubleValue() - mag_hdg->getDoubleValue();
+    SG_NORMALIZE_RANGE(diff, -180.0, 180.0);
+    bug_error->setDoubleValue( diff );
 
-    double diff = bug->getDoubleValue() - ind_hdg->getDoubleValue();
-    if ( diff < -180.0 ) { diff += 360.0; }
-    if ( diff > 180.0 ) { diff -= 360.0; }
-    ind_bug_error->setDoubleValue( diff );
-
-    // Calculate heading bug error normalized to +/- 180.0 (based on
-    // actual/nodrift magnetic-heading, i.e. a DG slaved to magnetic
-    // compass.)
-    static SGPropertyNode_ptr mag_hdg
-        = fgGetNode( "/orientation/heading-magnetic-deg", true );
-    static SGPropertyNode_ptr fdm_bug_error
-        = fgGetNode( "/autopilot/internal/fdm-heading-bug-error-deg", true );
-
-    diff = bug->getDoubleValue() - mag_hdg->getDoubleValue();
-    if ( diff < -180.0 ) { diff += 360.0; }
-    if ( diff > 180.0 ) { diff -= 360.0; }
     fdm_bug_error->setDoubleValue( diff );
 
     // Calculate true heading error normalized to +/- 180.0
-    static SGPropertyNode_ptr target_true
-        = fgGetNode( "/autopilot/settings/true-heading-deg", true );
-    static SGPropertyNode_ptr true_hdg
-        = fgGetNode( "/orientation/heading-deg", true );
-    static SGPropertyNode_ptr true_track
-        = fgGetNode( "/instrumentation/gps/indicated-track-true-deg", true );
-    static SGPropertyNode_ptr true_error
-        = fgGetNode( "/autopilot/internal/true-heading-error-deg", true );
-
     diff = target_true->getDoubleValue() - true_hdg->getDoubleValue();
-    if ( diff < -180.0 ) { diff += 360.0; }
-    if ( diff > 180.0 ) { diff -= 360.0; }
+    SG_NORMALIZE_RANGE(diff, -180.0, 180.0);
     true_error->setDoubleValue( diff );
 
     // Calculate nav1 target heading error normalized to +/- 180.0
-    static SGPropertyNode_ptr target_nav1
-        = fgGetNode( "/instrumentation/nav[0]/radials/target-auto-hdg-deg", true );
-    static SGPropertyNode_ptr true_nav1
-        = fgGetNode( "/autopilot/internal/nav1-heading-error-deg", true );
-    static SGPropertyNode_ptr true_track_nav1
-        = fgGetNode( "/autopilot/internal/nav1-track-error-deg", true );
-
     diff = target_nav1->getDoubleValue() - true_hdg->getDoubleValue();
-    if ( diff < -180.0 ) { diff += 360.0; }
-    if ( diff > 180.0 ) { diff -= 360.0; }
+    SG_NORMALIZE_RANGE(diff, -180.0, 180.0);
     true_nav1->setDoubleValue( diff );
 
-    diff = target_nav1->getDoubleValue() - true_track->getDoubleValue();
-    if ( diff < -180.0 ) { diff += 360.0; }
-    if ( diff > 180.0 ) { diff -= 360.0; }
+    // Calculate true groundtrack
+    diff = target_nav1->getDoubleValue() - track->getDoubleValue();
+    SG_NORMALIZE_RANGE(diff, -180.0, 180.0);
     true_track_nav1->setDoubleValue( diff );
 
     // Calculate nav1 selected course error normalized to +/- 180.0
-    // (based on DG indicated heading)
-    static SGPropertyNode_ptr nav1_course_error
-        = fgGetNode( "/autopilot/internal/nav1-course-error", true );
-    static SGPropertyNode_ptr nav1_selected_course
-        = fgGetNode( "/instrumentation/nav[0]/radials/selected-deg", true );
-
-    diff = nav1_selected_course->getDoubleValue() - ind_hdg->getDoubleValue();
-//    if ( diff < -180.0 ) { diff += 360.0; }
-//    if ( diff > 180.0 ) { diff -= 360.0; }
+    diff = nav1_selected_course->getDoubleValue() - mag_hdg->getDoubleValue();
     SG_NORMALIZE_RANGE( diff, -180.0, 180.0 );
     nav1_course_error->setDoubleValue( diff );
 
     // Calculate vertical speed in fpm
-    static SGPropertyNode_ptr vs_fps
-        = fgGetNode( "/velocities/vertical-speed-fps", true );
-    static SGPropertyNode_ptr vs_fpm
-        = fgGetNode( "/autopilot/internal/vert-speed-fpm", true );
-
     vs_fpm->setDoubleValue( vs_fps->getDoubleValue() * 60.0 );
 
 
     // Calculate static port pressure rate in [inhg/s].
     // Used to determine vertical speed.
-    static SGPropertyNode_ptr static_pressure
-	= fgGetNode( "/systems/static[0]/pressure-inhg", true );
-    static SGPropertyNode_ptr pressure_rate
-	= fgGetNode( "/autopilot/internal/pressure-rate", true );
-
-    static double last_static_pressure = 0.0;
-
     if ( dt > 0.0 ) {
-	double current_static_pressure = static_pressure->getDoubleValue();
+        double current_static_pressure = static_pressure->getDoubleValue();
+        double current_pressure_rate = 
+            ( current_static_pressure - last_static_pressure ) / dt;
 
-	double current_pressure_rate = 
-	    ( current_static_pressure - last_static_pressure ) / dt;
-
-	pressure_rate->setDoubleValue(current_pressure_rate);
-
-	last_static_pressure = current_static_pressure;
+        pressure_rate->setDoubleValue(current_pressure_rate);
+        last_static_pressure = current_static_pressure;
     }
-
 }
 
+void FGXMLAutopilotGroup::reinit()
+{
+    for( vector<string>::size_type i = 0; i < _autopilotNames.size(); i++ ) {
+      FGXMLAutopilot * ap = (FGXMLAutopilot*)get_subsystem( _autopilotNames[i] );
+      if( ap == NULL ) continue; // ?
+      remove_subsystem( _autopilotNames[i] );
+      delete ap;
+    }
+    _autopilotNames.clear();
+    init();
+}
+
+void FGXMLAutopilotGroup::init()
+{
+    vector<SGPropertyNode_ptr> autopilotNodes = fgGetNode( "/sim/systems", true )->getChildren("autopilot");
+    if( autopilotNodes.size() == 0 ) {
+        SG_LOG( SG_ALL, SG_WARN, "No autopilot configuration specified for this model!");
+        return;
+    }
+
+    for( vector<SGPropertyNode_ptr>::size_type i = 0; i < autopilotNodes.size(); i++ ) {
+        SGPropertyNode_ptr pathNode = autopilotNodes[i]->getNode( "path" );
+        if( pathNode == NULL ) {
+            SG_LOG( SG_ALL, SG_WARN, "No autopilot configuration file specified for this autopilot!");
+            continue;
+        }
+
+        string apName;
+        SGPropertyNode_ptr nameNode = autopilotNodes[i]->getNode( "name" );
+        if( nameNode != NULL ) {
+            apName = nameNode->getStringValue();
+        } else {
+          std::ostringstream buf;
+          buf <<  "unnamed_autopilot_" << i;
+          apName = buf.str();
+        }
+
+        if( get_subsystem( apName.c_str() ) != NULL ) {
+            SG_LOG( SG_ALL, SG_ALERT, "Duplicate autopilot configuration name " << apName << " ignored" );
+            continue;
+        }
+
+        SGPath config( globals->get_fg_root() );
+        config.append( pathNode->getStringValue() );
+
+        SG_LOG( SG_ALL, SG_INFO, "Reading autopilot configuration from " << config.str() );
+        // FGXMLAutopilot
+        FGXMLAutopilot * ap = new FGXMLAutopilot;
+        try {
+            SGPropertyNode_ptr root = new SGPropertyNode();
+            readProperties( config.str(), root );
+
+
+            if ( ! ap->build( root ) ) {
+                SG_LOG( SG_ALL, SG_ALERT,
+                  "Detected an internal inconsistency in the autopilot configuration." << endl << " See earlier errors for details." );
+                delete ap;
+                continue;
+            }        
+        } catch (const sg_exception& e) {
+            SG_LOG( SG_AUTOPILOT, SG_ALERT, "Failed to load autopilot configuration: "
+                    << config.str() << ":" << e.getMessage() );
+            delete ap;
+            continue;
+        }
+
+        SG_LOG( SG_AUTOPILOT, SG_INFO, "adding  autopilot subsystem " << apName );
+        set_subsystem( apName, ap );
+        _autopilotNames.push_back( apName );
+    }
+
+    SGSubsystemGroup::init();
+}
+
+FGXMLAutopilot::FGXMLAutopilot() {
+}
+
+
+FGXMLAutopilot::~FGXMLAutopilot() {
+}
+
+ 
+/* read all /sim/systems/autopilot[n]/path properties, try to read the file specified therein
+ * and configure/add the digital filters specified in that file
+ */
+void FGXMLAutopilot::init() 
+{
+}
+
+
+void FGXMLAutopilot::reinit() {
+    components.clear();
+    init();
+}
+
+
+void FGXMLAutopilot::bind() {
+}
+
+void FGXMLAutopilot::unbind() {
+}
+
+bool FGXMLAutopilot::build( SGPropertyNode_ptr config_props ) {
+    SGPropertyNode *node;
+    int i;
+
+    int count = config_props->nChildren();
+    for ( i = 0; i < count; ++i ) {
+        node = config_props->getChild(i);
+        string name = node->getName();
+        // cout << name << endl;
+        SG_LOG( SG_AUTOPILOT, SG_BULK, "adding  autopilot component " << name );
+        if ( name == "pid-controller" ) {
+            components.push_back( new FGPIDController( node ) );
+        } else if ( name == "pi-simple-controller" ) {
+            components.push_back( new FGPISimpleController( node ) );
+        } else if ( name == "predict-simple" ) {
+            components.push_back( new FGPredictor( node ) );
+        } else if ( name == "filter" ) {
+            components.push_back( new FGDigitalFilter( node ) );
+        } else {
+            SG_LOG( SG_AUTOPILOT, SG_WARN, "Unknown top level autopilot section: " << name );
+//            return false;
+        }
+    }
+
+    return true;
+}
 
 /*
  * Update the list of autopilot components
  */
 
-void FGXMLAutopilot::update( double dt ) {
-    update_helper( dt );
-
+void FGXMLAutopilot::update( double dt ) 
+{
     unsigned int i;
     for ( i = 0; i < components.size(); ++i ) {
         components[i]->update( dt );

@@ -1,9 +1,16 @@
+if ENABLE_ATCDCL
+ATCDCL_DIR = ATCDCL
+else
+ATCDCL_DIR = 
+endif
+
+
 SUBDIRS = \
         Include \
         Aircraft \
         Airports \
 	ATC \
-        ATCDCL \
+        $(ATCDCL_DIR) \
         Autopilot \
         Cockpit \
         Environment \

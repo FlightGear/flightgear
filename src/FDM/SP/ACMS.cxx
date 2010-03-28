@@ -88,15 +88,14 @@ void FGACMS::update( double dt ) {
     _set_V_calibrated_kts( kts );
     _set_V_ground_speed( kts );
 
-    SGGeod pos = SGGeod::fromDegM(get_Longitude(), get_Latitude(), get_Altitude());
+    SGGeod pos = getPosition();
     // update (lon/lat) position
     SGGeod pos2;
     double az2;
     geo_direct_wgs_84 ( pos, heading * SGD_RADIANS_TO_DEGREES,
                         dist, pos2, &az2 );
 
-    _set_Longitude( pos2.getLongitudeRad() );
-    _set_Latitude( pos2.getLatitudeRad() );
+    _set_Geodetic_Position(  pos2.getLatitudeRad(), pos2.getLongitudeRad(), pos.getElevationFt() );
 
     double sl_radius, lat_geoc;
     sgGeodToGeoc( get_Latitude(), get_Altitude(), &sl_radius, &lat_geoc );

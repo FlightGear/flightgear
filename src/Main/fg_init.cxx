@@ -73,8 +73,15 @@
 #include <Airports/dynamics.hxx>
 
 #include <AIModel/AIManager.hxx>
-#include <ATCDCL/ATCmgr.hxx>
-#include <ATCDCL/AIMgr.hxx>
+
+#if ENABLE_ATCDCL
+#   include <ATCDCL/ATCmgr.hxx>
+#   include <ATCDCL/AIMgr.hxx>
+#   include "ATCDCL/commlist.hxx"
+#else
+#   include "ATC/atcutils.hxx"
+#endif
+
 #include <Autopilot/route_mgr.hxx>
 #include <Autopilot/xmlauto.hxx>
 #include <Autopilot/autobrake.hxx>
@@ -82,7 +89,8 @@
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
-#ifdef ENABLE_SP_FDM
+
+#if ENABLE_SP_FDM
 #include <FDM/SP/ADA.hxx>
 #include <FDM/SP/ACMS.hxx>
 #include <FDM/SP/MagicCarpet.hxx>
@@ -130,7 +138,7 @@
 #include "renderer.hxx"
 #include "viewmgr.hxx"
 #include "main.hxx"
-#include "ATCDCL/commlist.hxx"
+
 
 #ifdef __APPLE__
 #  include <CoreFoundation/CoreFoundation.h>
@@ -974,6 +982,9 @@ fgInitNav ()
 
 // Initialise the frequency search map BEFORE reading
 // the airport database:
+
+
+
     current_commlist = new FGCommList;
     current_commlist->init( globals->get_fg_root() );
     fgAirportDBLoad( aptdb.str(), current_commlist, p_metar.str() );
@@ -1536,7 +1547,7 @@ bool fgInitSubsystems() {
     // Initialize the XML Autopilot subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem( "xml-autopilot", new FGXMLAutopilot );
+    globals->add_subsystem( "xml-autopilot", new FGXMLAutopilotGroup );
     globals->add_subsystem( "route-manager", new FGRouteMgr );
     globals->add_subsystem( "autobrake", new FGAutoBrake );
     
@@ -1596,10 +1607,11 @@ bool fgInitSubsystems() {
     // Initialise the ATC Manager 
     ////////////////////////////////////////////////////////////////////
 
+#if ENABLE_ATCDCL
     SG_LOG(SG_GENERAL, SG_INFO, "  ATC Manager");
     globals->set_ATC_mgr(new FGATCMgr);
     globals->get_ATC_mgr()->init(); 
-    
+
     ////////////////////////////////////////////////////////////////////
     // Initialise the AI Manager 
     ////////////////////////////////////////////////////////////////////
@@ -1607,7 +1619,7 @@ bool fgInitSubsystems() {
     SG_LOG(SG_GENERAL, SG_INFO, "  AI Manager");
     globals->set_AI_mgr(new FGAIMgr);
     globals->get_AI_mgr()->init();
-
+#endif
     ////////////////////////////////////////////////////////////////////
     // Initialise the AI Model Manager
     ////////////////////////////////////////////////////////////////////

@@ -45,7 +45,11 @@
 #include "simple.hxx"
 #include "runways.hxx"
 #include "pavement.hxx"
-#include <ATCDCL/commlist.hxx>
+#if ENABLE_ATCDCL
+#    include <ATCDCL/commlist.hxx>
+#else
+  #include <ATC/atcutils.hxx>
+#endif
 
 #include <iostream>
 
@@ -74,6 +78,8 @@ public:
      last_apt_info(""),
      last_apt_type("")
   {}
+
+
 
   void parseAPT(const string &aptdb_file, FGCommList *comm_list)
   {
@@ -155,7 +161,9 @@ public:
       } else if ( line_id == 0 ) {
           // ??
       } else if ( line_id == 50 ) {
+
         parseATISLine(comm_list, simgear::strutils::split(line));
+
       } else if ( line_id >= 51 && line_id <= 56 ) {
         // other frequency entries (ignore)
       } else if ( line_id == 110 ) {
@@ -461,7 +469,7 @@ private:
       pvt->addNode(pos, num == 113);
     }
   }
-  
+
   void parseATISLine(FGCommList *comm_list, const vector<string>& token) 
   {
     if ( rwy_count <= 0 ) {
@@ -478,6 +486,7 @@ private:
  	    // 50 11770 AWOS 3
  // This code parallels code found in "operator>>" in ATC.hxx;
  // FIXME: unify the code.      
+#if ENABLE_ATCDCL
     ATCData a;
     a.geod = SGGeod::fromDegFt(rwy_lon_accum / (double)rwy_count, 
       rwy_lat_accum / (double)rwy_count, last_apt_elev);
@@ -496,6 +505,8 @@ private:
     SGBucket bucket(a.geod);
     int bucknum = bucket.gen_index();
     comm_list->commlist_bck[bucknum].push_back(a);
+#else
+#endif
 #if 0
    SG_LOG( SG_GENERAL, SG_ALERT, 
      "Loaded ATIS/AWOS for airport: " << a.ident
@@ -505,7 +516,9 @@ private:
     << "  type: " << a.type );
 #endif
   }
+
 };
+
 
 // Load the airport data base from the specified aptdb file.  The
 // metar file is used to mark the airports as having metar available
@@ -515,9 +528,7 @@ bool fgAirportDBLoad( const string &aptdb_file,
 {
 
    APTLoader ld;
-
    ld.parseAPT(aptdb_file, comm_list);
-
     //
     // Load the metar.dat file and update apt db with stations that
     // have metar data.
