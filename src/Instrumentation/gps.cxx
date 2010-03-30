@@ -222,7 +222,7 @@ GPS::Config::getCourseSource() const
     return "";
   }
   
-  return _extCourseSource->getPath(true);
+  return _extCourseSource->getPath(true).c_str();
 }
 
 void

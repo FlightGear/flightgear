@@ -93,7 +93,7 @@ FGLogger::init ()
 	fgGetNode(entry->getStringValue("property"), true);
       log.nodes.push_back(node);
       (*log.output) << log.delimiter
-		    << entry->getStringValue("title", node->getPath());
+		    << entry->getStringValue("title", node->getPath().c_str());
     }
     (*log.output) << endl;
   }

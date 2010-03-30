@@ -23,6 +23,7 @@
 #ifndef _PROPERTY_LIST_HXX
 #define _PROPERTY_LIST_HXX
 
+#include <string>
 
 #include <plib/puAux.h>
 #include <simgear/props/props.hxx>
@@ -41,7 +42,13 @@ public:
     void toggleVerbosity() { _verbose = !_verbose; }
 
     // overridden plib pui methods
-    virtual char *getStringValue(void) { return (char *)(_return ? _return->getPath(true) : ""); }
+    virtual char *getStringValue(void)
+    {
+        _return_path.clear();
+        if (_return)
+            _return_path = _return->getPath(true);
+        return const_cast<char*>(_return_path.c_str());
+    }
     //virtual char *getListStringValue() { return (char *)(_return ? _return->getPath(true) : ""); }
     virtual void setValue(const char *);
 
@@ -81,6 +88,7 @@ private:
 
     bool _dot_files;      // . and .. pseudo-dirs currently shown?
     bool _verbose;        // show SGPropertyNode flags
+    std::string _return_path;
 };
 
 
