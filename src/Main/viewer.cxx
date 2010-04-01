@@ -501,6 +501,8 @@ FGViewer::updateDampOutput(double dt)
     
     for (unsigned int i=0; i<3; ++i) {
       if (_dampFactor[i] <= 0.0) {
+        // axis is un-damped, set output to target directly
+        _dampOutput[i] = _dampTarget[i];
         continue;
       }
       
