@@ -64,10 +64,6 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
     _roll_deg(0),
     _pitch_deg(0),
     _heading_deg(0),
-    _damp_sync(0),
-    _damp_roll(0),
-    _damp_pitch(0),
-    _damp_heading(0),
     _scaling_type(FG_SCALING_MAX),
     _aspect_ratio(0),
     _cameraGroup(CameraGroup::getDefault())
@@ -81,12 +77,16 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
 
     _internal = internal;
 
+    _dampFactor = SGVec3d::zeros();
+    _dampOutput = SGVec3d::zeros();
+    _dampTarget = SGVec3d::zeros();
+    
     if (damp_roll > 0.0)
-      _damp_roll = 1.0 / pow(10.0, fabs(damp_roll));
+      _dampFactor[0] = 1.0 / pow(10.0, fabs(damp_roll));
     if (damp_pitch > 0.0)
-      _damp_pitch = 1.0 / pow(10.0, fabs(damp_pitch));
+      _dampFactor[1] = 1.0 / pow(10.0, fabs(damp_pitch));
     if (damp_heading > 0.0)
-      _damp_heading = 1.0 / pow(10.0, fabs(damp_heading));
+      _dampFactor[2] = 1.0 / pow(10.0, fabs(damp_heading));
 
     _offset_m.x() = x_offset_m;
     _offset_m.y() = y_offset_m;
@@ -369,7 +369,8 @@ FGViewer::recalcLookFrom ()
   double roll = _roll_deg;
   if ( !_from_model ) {
     // update from our own data...
-    dampEyeData(roll, pitch, head);
+    setDampTarget(roll, pitch, head);
+    getDampOutput(roll, pitch, head);
   }
 
   // The rotation rotating from the earth centerd frame to
@@ -411,13 +412,13 @@ FGViewer::recalcLookAt ()
     _target_roll_deg = placement->getRollDeg();
   } else {
     // if not model then calculate our own target position...
-    dampEyeData(_target_roll_deg, _target_pitch_deg, _target_heading_deg);
-
+    setDampTarget(_target_roll_deg, _target_pitch_deg, _target_heading_deg);
+    getDampOutput(_target_roll_deg, _target_pitch_deg, _target_heading_deg);
   }
 
   SGQuatd geodTargetOr = SGQuatd::fromYawPitchRollDeg(_target_heading_deg,
-                                                      _target_pitch_deg,
-                                                      _target_roll_deg);
+                                                   _target_pitch_deg,
+                                                   _target_roll_deg);
   SGQuatd geodTargetHlOr = SGQuatd::fromLonLat(_target);
 
 
@@ -429,11 +430,10 @@ FGViewer::recalcLookAt ()
     _roll_deg = placement->getRollDeg();
   } else {
     // update from our own data, just the rotation here...
-    dampEyeData(_roll_deg, _pitch_deg, _heading_deg);
+    setDampTarget(_roll_deg, _pitch_deg, _heading_deg);
+    getDampOutput(_roll_deg, _pitch_deg, _heading_deg);
   }
-  SGQuatd geodEyeOr = SGQuatd::fromYawPitchRollDeg(_heading_deg,
-                                                   _pitch_deg,
-                                                   _roll_deg);
+  SGQuatd geodEyeOr = SGQuatd::fromYawPitchRollDeg(_heading_deg, _pitch_deg, _roll_deg);
   SGQuatd geodEyeHlOr = SGQuatd::fromLonLat(_position);
 
   // the rotation offset, don't know why heading is negative here ...
@@ -472,61 +472,53 @@ FGViewer::recalcLookAt ()
 }
 
 void
-FGViewer::dampEyeData(double &roll_deg, double &pitch_deg, double &heading_deg)
+FGViewer::setDampTarget(double roll, double pitch, double heading)
 {
-  const double interval = 0.01;
+  _dampTarget = SGVec3d(roll, pitch, heading);
+}
 
+void
+FGViewer::getDampOutput(double& roll, double& pitch, double& heading)
+{
+  roll = _dampOutput[0];
+  pitch = _dampOutput[1];
+  heading = _dampOutput[2];
+}
+
+
+void
+FGViewer::updateDampOutput(double dt)
+{
   static FGViewer *last_view = 0;
-  if (last_view != this) {
-    _damp_sync = 0.0;
-    _damped_roll_deg = roll_deg;
-    _damped_pitch_deg = pitch_deg;
-    _damped_heading_deg = heading_deg;
+  if ((last_view != this) || (dt > 1.0)) {
+    _dampOutput = _dampTarget;
     last_view = this;
     return;
   }
-
-  if (_damp_sync < interval) {
-    if (_damp_roll > 0.0)
-      roll_deg = _damped_roll_deg;
-    if (_damp_pitch > 0.0)
-      pitch_deg = _damped_pitch_deg;
-    if (_damp_heading > 0.0)
-      heading_deg = _damped_heading_deg;
-    return;
-  }
-
-  while (_damp_sync >= interval) {
-    _damp_sync -= interval;
-
-    double d;
-    if (_damp_roll > 0.0) {
-      d = _damped_roll_deg - roll_deg;
-      if (d >= 180.0)
-        _damped_roll_deg -= 360.0;
-      else if (d < -180.0)
-        _damped_roll_deg += 360.0;
-      roll_deg = _damped_roll_deg = roll_deg * _damp_roll + _damped_roll_deg * (1 - _damp_roll);
-    }
-
-    if (_damp_pitch > 0.0) {
-      d = _damped_pitch_deg - pitch_deg;
-      if (d >= 180.0)
-        _damped_pitch_deg -= 360.0;
-      else if (d < -180.0)
-        _damped_pitch_deg += 360.0;
-      pitch_deg = _damped_pitch_deg = pitch_deg * _damp_pitch + _damped_pitch_deg * (1 - _damp_pitch);
-    }
-
-    if (_damp_heading > 0.0) {
-      d = _damped_heading_deg - heading_deg;
-      if (d >= 180.0)
-        _damped_heading_deg -= 360.0;
-      else if (d < -180.0)
-        _damped_heading_deg += 360.0;
-      heading_deg = _damped_heading_deg = heading_deg * _damp_heading + _damped_heading_deg * (1 - _damp_heading);
-    }
-  }
+  
+  const double interval = 0.01;
+  while (dt > interval) {
+    
+    for (unsigned int i=0; i<3; ++i) {
+      if (_dampFactor[i] <= 0.0) {
+        // axis is un-damped, set output to target directly
+        _dampOutput[i] = _dampTarget[i];
+        continue;
+      }
+      
+      double d = _dampOutput[i] - _dampTarget[i];
+      if (d > 180.0) {
+        _dampOutput[i] -= 360.0;
+      } else if (d < -180.0) {
+        _dampOutput[i] += 360.0;
+      }
+      
+      _dampOutput[i] = (_dampTarget[i] * _dampFactor[i]) + 
+        (_dampOutput[i] * (1.0 - _dampFactor[i]));
+    } // of axis iteration
+    
+    dt -= interval;
+  } // of dt subdivision by interval
 }
 
 double
@@ -583,8 +575,8 @@ FGViewer::get_v_fov()
 void
 FGViewer::update (double dt)
 {
-  _damp_sync += dt;
-
+  updateDampOutput(dt);
+  
   int i;
   int dt_ms = int(dt * 1000);
   for ( i = 0; i < dt_ms; i++ ) {
