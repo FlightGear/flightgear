@@ -59,6 +59,12 @@ AirportATC::AirportATC() :
 FGATCMgr::FGATCMgr() :
     initDone(false),
     atc_list(new atc_list_type),
+#ifdef ENABLE_AUDIO_SUPPORT
+    voiceOK(false),
+    voice(true),
+#else
+    voice(false),
+#endif
     last_in_range(false)
 {
 }
@@ -89,30 +95,6 @@ void FGATCMgr::init() {
         // Is this still true after the reorganization of the event managar??
         // -EMH-
     
-#ifdef ENABLE_AUDIO_SUPPORT 
-    // Load all available voices.
-    // For now we'll do one hardwired one
-    
-    v1 = new FGATCVoice;
-    try {
-        voiceOK = v1->LoadVoice("default");
-        voice = true;
-    } catch ( sg_io_exception & e) {
-        voiceOK  = false;
-        SG_LOG(SG_ATC, SG_ALERT, "Unable to load default voice : " << e.getFormattedMessage().c_str());
-        voice = false;
-        delete v1;
-        v1 = 0;
-    }
-    
-    /* I've loaded the voice even if /sim/sound/pause is true
-    *  since I know no way of forcing load of the voice if the user
-    *  subsequently switches /sim/sound/audible to true.
-        *  (which is the right thing to do -- CLO) :-) */
-#else
-    voice = false;
-#endif
-
     // Initialise the ATC Dialogs
     //cout << "Initing Transmissions..." << endl;
     SG_LOG(SG_ATC, SG_INFO, "  ATC Transmissions");
@@ -421,6 +403,31 @@ FGATCVoice* FGATCMgr::GetVoicePointer(const atc_type& type) {
     if(voice) {
         switch(type) {
         case ATIS: case AWOS:
+#ifdef ENABLE_AUDIO_SUPPORT
+            // Delayed loading fo all available voices, needed because the
+            // soundmanager might not be initialized (at all) at this point.
+            // For now we'll do one hardwired one
+
+            /* I've loaded the voice even if /sim/sound/pause is true
+             *  since I know no way of forcing load of the voice if the user
+             *  subsequently switches /sim/sound/audible to true.
+             *  (which is the right thing to do -- CLO) :-)
+             */
+            if (!voiceOK && fgGetBool("/sim/sound/working")) {
+                v1 = new FGATCVoice;
+                try {
+                    voiceOK = v1->LoadVoice("default");
+                    voice = voiceOK;
+                } catch ( sg_io_exception & e) {
+                    voiceOK  = false;
+                    SG_LOG(SG_ATC, SG_ALERT, "Unable to load default voice : "
+                                            << e.getFormattedMessage().c_str());
+                    voice = false;
+                    delete v1;
+                    v1 = 0;
+                }
+            }
+#endif
             if(voiceOK) {
                 return(v1);
             }
