@@ -485,8 +485,8 @@ static void fgMainLoop( void ) {
     // is processing the scenery (doubled the frame-rate for me) -EMH-
 #ifdef ENABLE_AUDIO_SUPPORT
     static bool smgr_init = true;
+    static SGPropertyNode *sound_working = fgGetNode("/sim/sound/working");
     if (smgr_init == true) {
-        static SGPropertyNode *sound_working = fgGetNode("/sim/sound/working");
         if (sound_working->getBoolValue() == true) {
             fgInitSoundManager();
             smgr_init = false;
@@ -495,6 +495,11 @@ static void fgMainLoop( void ) {
         static SGPropertyNode *sound_enabled = fgGetNode("/sim/sound/enabled");
         static SGSoundMgr *smgr = globals->get_soundmgr();
         static bool smgr_enabled = true;
+
+        if (sound_working->getBoolValue() == false) {	// request to reinit
+           smgr->reinit();
+           sound_working->setBoolValue(true);
+        }
 
         if (smgr_enabled != sound_enabled->getBoolValue()) {
             if (smgr_enabled == true) { // request to suspend
