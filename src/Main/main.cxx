@@ -498,6 +498,7 @@ static void fgMainLoop( void ) {
 
         if (sound_working->getBoolValue() == false) {	// request to reinit
            smgr->reinit();
+           smgr->resume();
            sound_working->setBoolValue(true);
         }
 
