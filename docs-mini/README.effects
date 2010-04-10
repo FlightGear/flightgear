@@ -35,6 +35,7 @@ and, or, equal, less, less-equal
 glversion - returns the version number of OpenGL
 extension-supported - returns true if an OpenGL extension is supported
 property - returns the boolean value of a property
+float-property - returns the float value of a property, useful inside equal, less or less-equal nodes
 shader-language - returns the version of GLSL supported, or 0 if there is none.
 
 The proper way to test whether to enable a shader-based technique is:
@@ -48,6 +49,23 @@ The proper way to test whether to enable a shader-based technique is:
 	  </and>
 	</predicate>
 
+There is also a property set by the user to indicate what is the level 
+of quality desired. This level of quality can be checked in the predicate
+like this :
+    <predicate>
+      <and>
+        <property>/sim/rendering/shader-effects</property>
+	<less-equal>
+	  <value type="float">2.0</value>
+	  <float-property>/sim/rendering/quality-level</float-property>
+	</less-equal>
+	<!-- other predicate conditions -->
+      </and>
+    </predicate>
+    
+The range of /sim/rendering/quality-level is [0..5]
+ * 2.0 is the threshold for relief mapping effects,
+ * 4.0 is the threshold for geometry shader usage.
 
 A technique can consist of several passes. A pass is basically an Open
 Scene Graph StateSet. Ultimately all OpenGL and OSG modes and state
