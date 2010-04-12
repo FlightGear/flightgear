@@ -658,10 +658,44 @@ void FGRouteMgr::saveRoute()
   SGPath path(_pathNode->getStringValue());
   SG_LOG(SG_IO, SG_INFO, "Saving route to " << path.str());
   try {
-    writeProperties(path.str(), mirror, false, SGPropertyNode::ARCHIVE);
+    SGPropertyNode_ptr d(new SGPropertyNode);
+    SGPath path(_pathNode->getStringValue());
+    d->setIntValue("version", 1);
+    
+    if (_departure) {
+      d->setStringValue("departure/airport", _departure->ident());
+      d->setStringValue("departure/sid", departure->getStringValue("sid"));
+      d->setStringValue("departure/runway", departure->getStringValue("runway"));
+    }
+    
+    if (_destination) {
+      d->setStringValue("destination/airport", _destination->ident());
+      d->setStringValue("destination/star", destination->getStringValue("star"));
+      d->setStringValue("destination/transition", destination->getStringValue("transition"));
+      d->setStringValue("destination/runway", destination->getStringValue("runway"));
+    }
+  
+    // route nodes
+    SGPropertyNode* routeNode = d->getChild("route", 0, true);
+    for (int i=0; i<_route->size(); ++i) {
+      SGPropertyNode* wpNode = routeNode->getChild("wp",i, true);
+      SGWayPoint wp(_route->get_waypoint(i));
+      
+      wpNode->setStringValue("ident", wp.get_id());
+      wpNode->setStringValue("name", wp.get_name());
+      SGGeod geod(wp.get_target());
+      
+      wpNode->setDoubleValue("longitude-deg", geod.getLongitudeDeg());
+      wpNode->setDoubleValue("latitude-deg", geod.getLatitudeDeg());
+      
+      if (geod.getElevationFt() > -9990.0) {
+        wpNode->setDoubleValue("altitude-ft", geod.getElevationFt());
+      }
+    } // of waypoint iteration
+    
+    writeProperties(path.str(), d, true /* write-all */);
   } catch (const sg_exception &e) {
     SG_LOG(SG_IO, SG_WARN, "Error saving route:" << e.getMessage());
-    //guiErrorMessage("Error writing autosave.xml: ", e);
   }
 }
 
