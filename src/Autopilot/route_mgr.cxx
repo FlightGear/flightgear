@@ -39,6 +39,7 @@
 
 #include <simgear/misc/strutils.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/misc/sgstream.hxx>
 
 #include <simgear/props/props_io.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -666,16 +667,23 @@ void FGRouteMgr::saveRoute()
 
 void FGRouteMgr::loadRoute()
 {
+  // deactivate route first
+  active->setBoolValue(false);
+  
+  SGPropertyNode_ptr routeData(new SGPropertyNode);
+  SGPath path(_pathNode->getStringValue());
+  
+  SG_LOG(SG_IO, SG_INFO, "going to read flight-plan from:" << path.str());
+    
   try {
-    // deactivate route first
-    active->setBoolValue(false);
-    
-    SGPropertyNode_ptr routeData(new SGPropertyNode);
-    SGPath path(_pathNode->getStringValue());
-    
-    SG_LOG(SG_IO, SG_INFO, "going to read flight-plan from:" << path.str());
     readProperties(path.str(), routeData);
-    
+  } catch (sg_exception& e) {
+    // if XML parsing fails, the file might be simple textual list of waypoints
+    loadPlainTextRoute(path);
+    return;
+  }
+  
+  try {
   // departure nodes
     SGPropertyNode* dep = routeData->getChild("departure");
     if (!dep) {
@@ -704,7 +712,9 @@ void FGRouteMgr::loadRoute()
   // cruise
     SGPropertyNode* crs = routeData->getChild("cruise");
     if (crs) {
-      cruise->setDoubleValue(crs->getDoubleValue("speed"));
+      cruise->setDoubleValue("speed-kts", crs->getDoubleValue("speed-kts"));
+      cruise->setDoubleValue("mach", crs->getDoubleValue("mach"));
+      cruise->setDoubleValue("altitude-ft", crs->getDoubleValue("altitude-ft"));
     } // of cruise data loading
 
   // route nodes
@@ -735,7 +745,7 @@ void FGRouteMgr::parseRouteWaypoint(SGPropertyNode* aWP)
   }
 
   SGPropertyNode_ptr altProp = aWP->getChild("altitude-ft");
-  double altM = cruise->getDoubleValue("altitude-ft") * SG_FEET_TO_METER;
+  double altM = -9999.0;
   if (altProp) {
     altM = altProp->getDoubleValue() * SG_FEET_TO_METER;
   }
@@ -779,6 +789,26 @@ void FGRouteMgr::parseRouteWaypoint(SGPropertyNode* aWP)
       SGWayPoint::WGS84, p->ident(), p->name());
     add_waypoint(swp);
   }
+}
+
+void FGRouteMgr::loadPlainTextRoute(const SGPath& path)
+{
+  sg_gzifstream in(path.str().c_str());
+  if (!in.is_open()) {
+    return;
+  }
+  
+  _route->clear();
+  while (!in.eof()) {
+    string line;
+    getline(in, line, '\n');
+  // trim CR from end of line, if found
+    if (line[line.size() - 1] == '\r') {
+      line.erase(line.size() - 1, 1);
+    }
+    
+    new_waypoint(line, -1);
+  } // of line iteration
 }
 
 const char* FGRouteMgr::getDepartureICAO() const
