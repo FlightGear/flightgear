@@ -213,6 +213,7 @@ void GPS::Config::bind(GPS* aOwner, SGPropertyNode* aCfg)
 
 GPS::GPS ( SGPropertyNode *node) : 
   _selectedCourse(0.0),
+  _desiredCourse(0.0),
   _dataValid(false),
   _lastPosValid(false),
   _mode("init"),
@@ -220,8 +221,7 @@ GPS::GPS ( SGPropertyNode *node) :
   _num(node->getIntValue("number", 0)),
   _computeTurnData(false),
   _anticipateTurn(false),
-  _inTurn(false),
-  _desiredCourse(0.0)
+  _inTurn(false)
 {
   string branch = "/instrumentation/" + _name;
   _gpsNode = fgGetNode(branch.c_str(), _num, true );
