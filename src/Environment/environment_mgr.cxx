@@ -166,9 +166,12 @@ FGEnvironmentMgr::bind ()
   fgSetArchivable("/environment/thermal-lift-fps");
   fgTie("/environment/ridge-lift-fps", _environment,
 	&FGEnvironment::get_ridge_lift_fps,
-	&FGEnvironment::set_ridge_lift_fps);
+	&FGEnvironment::set_ridge_lift_fps);	
   fgSetArchivable("/environment/ridge-lift-fps");
-
+  
+    fgTie("/environment/local-weather-lift", _environment,
+	&FGEnvironment::get_local_weather_lift_fps); //read-only
+     
   fgTie("/environment/turbulence/magnitude-norm", _environment,
         &FGEnvironment::get_turbulence_magnitude_norm,
         &FGEnvironment::set_turbulence_magnitude_norm);
@@ -255,6 +258,7 @@ FGEnvironmentMgr::unbind ()
 
   fgUntie("/environment/thermal-lift-fps");
   fgUntie("/environment/ridge-lift-fps");
+  fgUntie("/environment/local-weather-lift");
 
   fgUntie("/environment/atmosphere/altitude-half-to-sun");
   fgUntie("/environment/atmosphere/altitude-troposphere-top");
@@ -293,6 +297,7 @@ FGEnvironmentMgr::update (double dt)
 				   _environment->get_wind_from_east_fps(),
 				   _environment->get_wind_from_down_fps());
   _environment->set_elevation_ft(fgGetDouble("/position/altitude-ft"));
+  _environment->set_local_weather_lift_fps(fgGetDouble("/local-weather/current/thermal-lift"));
   osg::Vec3 windVec(-_environment->get_wind_from_north_fps(),
                     -_environment->get_wind_from_east_fps(),
                     _environment->get_wind_from_down_fps());

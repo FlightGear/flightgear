@@ -140,6 +140,7 @@ void FGEnvironment::_init()
     wind_from_down_fps = 0;
     thermal_lift_fps = 0;
     ridge_lift_fps= 0;
+    local_weather_lift_fps=0;
     altitude_half_to_sun_m = 1000;
     altitude_tropo_top_m = 10000;
 #ifdef USING_TABLES
@@ -182,6 +183,7 @@ FGEnvironment::copy (const FGEnvironment &env)
     wind_from_down_fps = env.wind_from_down_fps;
     thermal_lift_fps = env.thermal_lift_fps;
     ridge_lift_fps= env.ridge_lift_fps;
+    local_weather_lift_fps = env.local_weather_lift_fps;
     turbulence_magnitude_norm = env.turbulence_magnitude_norm;
     turbulence_rate_hz = env.turbulence_rate_hz;
 }
@@ -238,6 +240,7 @@ FGEnvironment::read (const SGPropertyNode * node)
 
     maybe_copy_value(this, node, "turbulence/rate-hz",
                      &FGEnvironment::set_turbulence_rate_hz);
+
     // calculate derived properties here to avoid duplicate expensive computations
     _recalc_ne();
     _recalc_alt_pt();
@@ -367,6 +370,12 @@ double
 FGEnvironment::get_ridge_lift_fps () const
 {
   return ridge_lift_fps;
+}
+
+double
+FGEnvironment::get_local_weather_lift_fps () const
+{
+  return local_weather_lift_fps;
 }
 
 double
@@ -524,7 +533,16 @@ FGEnvironment::set_ridge_lift_fps (double ri)
   ridge_lift_fps = ri;
   if( live_update ) {
     _recalc_updraft();
+  }
 }
+
+void
+FGEnvironment::set_local_weather_lift_fps (double lwl)
+{
+  local_weather_lift_fps = lwl;
+  if( live_update ) {
+    _recalc_updraft();
+  }
 }
 
 void
@@ -618,7 +636,7 @@ FGEnvironment::_recalc_ne ()
 void
 FGEnvironment::_recalc_updraft ()
 {
-  wind_from_down_fps = thermal_lift_fps + ridge_lift_fps ;
+  wind_from_down_fps = thermal_lift_fps + ridge_lift_fps + local_weather_lift_fps ;
 }
 
 // Intended to help with the interpretation of METAR data,
