@@ -49,6 +49,8 @@ and writes properties used only by a few aircraft.
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/condition.hxx>
 
+using simgear::PropertyList;
+
 typedef SGSharedPtr<class FGXMLAutoInput> FGXMLAutoInput_ptr;
 typedef SGSharedPtr<class FGPeriodicalValue> FGPeriodicalValue_ptr;
 
@@ -122,7 +124,7 @@ class FGXMLAutoInputList : public std::vector<FGXMLAutoInput_ptr> {
 class FGXMLAutoComponent : public SGReferenced {
 
 private:
-    std::vector <SGPropertyNode_ptr> output_list;
+    PropertyList output_list;
 
     SGSharedPtr<const SGCondition> _condition;
     SGPropertyNode_ptr enable_prop;
@@ -201,7 +203,7 @@ public:
         // helpful for things like flight directors which position
         // their vbars from the autopilot computations.
         if ( honor_passive && passive_mode->getBoolValue() ) return;
-        for( std::vector <SGPropertyNode_ptr>::iterator it = output_list.begin(); it != output_list.end(); ++it)
+        for( PropertyList::iterator it = output_list.begin(); it != output_list.end(); ++it)
           (*it)->setDoubleValue( clamp( value ) );
     }
 
@@ -212,7 +214,7 @@ public:
         // helpful for things like flight directors which position
         // their vbars from the autopilot computations.
         if ( honor_passive && passive_mode->getBoolValue() ) return;
-        for( std::vector <SGPropertyNode_ptr>::iterator it = output_list.begin(); it != output_list.end(); ++it)
+        for( PropertyList::iterator it = output_list.begin(); it != output_list.end(); ++it)
           (*it)->setBoolValue( value ); // don't use clamp here, bool is clamped anyway
     }
 

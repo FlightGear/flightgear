@@ -29,6 +29,8 @@
 #include <simgear/io/sg_file.hxx>
 #include <Scripting/NasalSys.hxx>
 
+using simgear::PropertyList;
+
 FGEventSetting::FGEventSetting( SGPropertyNode_ptr base ) :
   value(0.0)
 {
@@ -93,8 +95,8 @@ FGInputEvent::FGInputEvent( FGInputDevice * aDevice, SGPropertyNode_ptr node ) :
   
   read_bindings( node, bindings, KEYMOD_NONE, device->GetNasalModule() );
 
-  vector<SGPropertyNode_ptr> settingNodes = node->getChildren("setting");
-  for( vector<SGPropertyNode_ptr>::iterator it = settingNodes.begin(); it != settingNodes.end(); it++ )
+  PropertyList settingNodes = node->getChildren("setting");
+  for( PropertyList::iterator it = settingNodes.begin(); it != settingNodes.end(); it++ )
     settings.push_back( new FGEventSetting( *it ) );
 }
 
@@ -235,8 +237,8 @@ void FGInputDevice::Configure( SGPropertyNode_ptr aDeviceNode )
 
   nasalModule = string("__event:") + GetName();
 
-  vector<SGPropertyNode_ptr> eventNodes = deviceNode->getChildren( "event" );
-  for( vector<SGPropertyNode_ptr>::iterator it = eventNodes.begin(); it != eventNodes.end(); it++ )
+  PropertyList eventNodes = deviceNode->getChildren( "event" );
+  for( PropertyList::iterator it = eventNodes.begin(); it != eventNodes.end(); it++ )
     AddHandledEvent( FGInputEvent::NewObject( this, *it ) );
 
   debugEvents = deviceNode->getBoolValue("debug-events", debugEvents );
