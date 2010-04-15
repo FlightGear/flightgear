@@ -27,6 +27,8 @@
 #include <Scripting/NasalSys.hxx>
 #include <plib/pu.h>
 
+using simgear::PropertyList;
+
 static int getModifiers ()
 {
   return fgGetKeyModifiers() >> 1;
@@ -94,13 +96,13 @@ void FGKeyboardInput::postinit()
   }
 
   FGNasalSys *nasalsys = (FGNasalSys *)globals->get_subsystem("nasal");
-  vector<SGPropertyNode_ptr> nasal = key_nodes->getChildren("nasal");
+  PropertyList nasal = key_nodes->getChildren("nasal");
   for (unsigned int j = 0; j < nasal.size(); j++) {
     nasal[j]->setStringValue("module", module.c_str());
     nasalsys->handleCommand(nasal[j]);
   }
 
-  vector<SGPropertyNode_ptr> keys = key_nodes->getChildren("key");
+  PropertyList keys = key_nodes->getChildren("key");
   for (unsigned int i = 0; i < keys.size(); i++) {
     int index = keys[i]->getIndex();
     SG_LOG(SG_INPUT, SG_DEBUG, "Binding key " << index);

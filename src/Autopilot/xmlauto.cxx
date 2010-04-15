@@ -1003,13 +1003,13 @@ void FGXMLAutopilotGroup::reinit()
 
 void FGXMLAutopilotGroup::init()
 {
-    vector<SGPropertyNode_ptr> autopilotNodes = fgGetNode( "/sim/systems", true )->getChildren("autopilot");
+    PropertyList autopilotNodes = fgGetNode( "/sim/systems", true )->getChildren("autopilot");
     if( autopilotNodes.size() == 0 ) {
         SG_LOG( SG_ALL, SG_WARN, "No autopilot configuration specified for this model!");
         return;
     }
 
-    for( vector<SGPropertyNode_ptr>::size_type i = 0; i < autopilotNodes.size(); i++ ) {
+    for( PropertyList::size_type i = 0; i < autopilotNodes.size(); i++ ) {
         SGPropertyNode_ptr pathNode = autopilotNodes[i]->getNode( "path" );
         if( pathNode == NULL ) {
             SG_LOG( SG_ALL, SG_WARN, "No autopilot configuration file specified for this autopilot!");

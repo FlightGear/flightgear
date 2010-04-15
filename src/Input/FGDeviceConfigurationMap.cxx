@@ -35,6 +35,8 @@
 #include <simgear/props/props_io.hxx>
 #include <Main/globals.hxx>
 
+using simgear::PropertyList;
+
 FGDeviceConfigurationMap::FGDeviceConfigurationMap( const char * relative_path, SGPropertyNode_ptr aBase, const char * aChildname ) :
   base(aBase),
   childname(aChildname)
@@ -45,10 +47,10 @@ FGDeviceConfigurationMap::FGDeviceConfigurationMap( const char * relative_path, 
   int index = 1000;
   scan_dir( path, &index);
 
-  vector<SGPropertyNode_ptr> childNodes = base->getChildren(childname);
+  PropertyList childNodes = base->getChildren(childname);
   for (int k = (int)childNodes.size() - 1; k >= 0; k--) {
     SGPropertyNode *n = childNodes[k];
-    vector<SGPropertyNode_ptr> names = n->getChildren("name");
+    PropertyList names = n->getChildren("name");
     if (names.size() ) // && (n->getChildren("axis").size() || n->getChildren("button").size()))
       for (unsigned int j = 0; j < names.size(); j++)
         (*this)[names[j]->getStringValue()] = n;

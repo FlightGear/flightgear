@@ -58,6 +58,7 @@ using std::string;
 
 #include "jsinput.h"
 
+using simgear::PropertyList;
 
 bool confirmAnswer() {
     char answer;
@@ -136,8 +137,8 @@ int main( int argc, char *argv[] ) {
         cout << e.getFormattedMessage ();
     }
 
-    vector<SGPropertyNode_ptr> axes = templatetree->getChildren("axis");
-    for(vector<SGPropertyNode_ptr>::iterator iter = axes.begin(); iter != axes.end(); iter++) {
+    PropertyList axes = templatetree->getChildren("axis");
+    for(PropertyList::iterator iter = axes.begin(); iter != axes.end(); iter++) {
         cout << "Move the control you wish to use for " << (*iter)->getStringValue("desc")
              << " " << (*iter)->getStringValue("direction") << endl;
         cout << "Pressing a button skips this axis" << endl;
@@ -164,8 +165,8 @@ int main( int argc, char *argv[] ) {
         cout << endl;
     }
 
-    vector<SGPropertyNode_ptr> buttons = templatetree->getChildren("button");
-    for(vector<SGPropertyNode_ptr>::iterator iter = buttons.begin(); iter != buttons.end(); iter++) {
+    PropertyList buttons = templatetree->getChildren("button");
+    for(PropertyList::iterator iter = buttons.begin(); iter != buttons.end(); iter++) {
         cout << "Press the button you wish to use for " << (*iter)->getStringValue("desc") << endl;
         cout << "Moving a joystick axis skips this button" << endl;
         fflush( stdout );
