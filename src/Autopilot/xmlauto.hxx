@@ -24,6 +24,21 @@
 #ifndef _XMLAUTO_HXX
 #define _XMLAUTO_HXX 1
 
+/* 
+Torsten Dreyer:
+I'd like to deprecate the so called autopilot helper function
+(which is now part of the AutopilotGroup::update() method).
+Every property calculated within this helper can be calculated
+using filters defined in an external autopilot definition file.
+The complete set of calculations may be extracted into a separate
+configuration file. The current implementation is able to hande 
+multiple config files and autopilots. The helper doubles code
+and writes properties used only by a few aircraft.
+*/
+// FIXME: this should go into config.h and/or configure
+// or removed along with the "helper" one day.
+#define XMLAUTO_USEHELPER
+
 #include <simgear/compiler.h>
 
 #include <string>
@@ -188,6 +203,17 @@ public:
         if ( honor_passive && passive_mode->getBoolValue() ) return;
         for( std::vector <SGPropertyNode_ptr>::iterator it = output_list.begin(); it != output_list.end(); ++it)
           (*it)->setDoubleValue( clamp( value ) );
+    }
+
+    inline void set_output_value( bool value ) {
+        // passive_ignore == true means that we go through all the
+        // motions, but drive the outputs.  This is analogous to
+        // running the autopilot with the "servos" off.  This is
+        // helpful for things like flight directors which position
+        // their vbars from the autopilot computations.
+        if ( honor_passive && passive_mode->getBoolValue() ) return;
+        for( std::vector <SGPropertyNode_ptr>::iterator it = output_list.begin(); it != output_list.end(); ++it)
+          (*it)->setBoolValue( value ); // don't use clamp here, bool is clamped anyway
     }
 
     inline double get_output_value() {
@@ -367,6 +393,22 @@ public:
     void update(double dt);
 };
 
+class FGXMLAutoLogic : public FGXMLAutoComponent
+{
+private:
+    SGSharedPtr<SGCondition> input;
+    bool inverted;
+
+protected:
+    bool parseNodeHook(const std::string& aName, SGPropertyNode* aNode);
+
+public:
+    FGXMLAutoLogic(SGPropertyNode * node );
+    ~FGXMLAutoLogic() {}
+
+    void update(double dt);
+};
+
 /**
  * Model an autopilot system.
  * 
@@ -382,6 +424,7 @@ public:
 private:
     std::vector<std::string> _autopilotNames;
 
+#ifdef XMLAUTO_USEHELPER
     double average;
     double v_last;
     double last_static_pressure;
@@ -406,6 +449,7 @@ private:
     SGPropertyNode_ptr static_pressure;
     SGPropertyNode_ptr pressure_rate;
     SGPropertyNode_ptr track;
+#endif
 };
 
 class FGXMLAutopilot : public SGSubsystem

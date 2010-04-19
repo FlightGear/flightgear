@@ -64,7 +64,7 @@ double FGPeriodicalValue::normalize( double value )
   double phase = fabs(max - min);
 
   if( phase > SGLimitsd::min() ) {
-    while( value < min ) value += phase;
+    while( value < min )  value += phase;
     while( value >= max ) value -= phase;
   } else {
     value = min; // phase is zero
@@ -459,11 +459,8 @@ bool FGPIDController::parseConfigHook(const string& aName, SGPropertyNode* aNode
  */
 
 void FGPIDController::update( double dt ) {
-    double ep_n;            // proportional error with reference weighing
     double e_n;             // error
-    double ed_n;            // derivative error
-    double edf_n;           // derivative error filter
-    double Tf;              // filter time
+    double edf_n;
     double delta_u_n = 0.0; // incremental output
     double u_n = 0.0;       // absolute output
     double Ts;              // sampling interval (sec)
@@ -503,7 +500,7 @@ void FGPIDController::update( double dt ) {
         if ( debug ) cout << "  input = " << y_n << " ref = " << r_n << endl;
 
         // Calculates proportional error:
-        ep_n = beta * r_n - y_n;
+        double ep_n = beta * r_n - y_n;
         if ( debug ) cout << "  ep_n = " << ep_n;
         if ( debug ) cout << "  ep_n_1 = " << ep_n_1;
 
@@ -511,14 +508,15 @@ void FGPIDController::update( double dt ) {
         e_n = r_n - y_n;
         if ( debug ) cout << " e_n = " << e_n;
 
-        // Calculates derivate error:
-        ed_n = gamma * r_n - y_n;
-        if ( debug ) cout << " ed_n = " << ed_n;
-
         double td = Td.get_value();
-        if ( td > 0.0 ) {
+        if ( td > 0.0 ) { // do we need to calcluate derivative error?
+
+          // Calculates derivate error:
+            double ed_n = gamma * r_n - y_n;
+            if ( debug ) cout << " ed_n = " << ed_n;
+
             // Calculates filter time:
-            Tf = alpha * td;
+            double Tf = alpha * td;
             if ( debug ) cout << " Tf = " << Tf;
 
             // Filters the derivate error:
@@ -526,7 +524,7 @@ void FGPIDController::update( double dt ) {
                 + ed_n * (Ts/Tf) / (Ts/Tf + 1);
             if ( debug ) cout << " edf_n = " << edf_n;
         } else {
-            edf_n = ed_n;
+            edf_n_2 = edf_n_1 = edf_n = 0.0;
         }
 
         // Calculates the incremental output:
@@ -535,14 +533,14 @@ void FGPIDController::update( double dt ) {
             delta_u_n = Kp.get_value() * ( (ep_n - ep_n_1)
                                + ((Ts/ti) * e_n)
                                + ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2)) );
-        }
 
-        if ( debug ) {
-            cout << " delta_u_n = " << delta_u_n << endl;
-            cout << "P:" << Kp.get_value() * (ep_n - ep_n_1)
-                 << " I:" << Kp.get_value() * ((Ts/ti) * e_n)
-                 << " D:" << Kp.get_value() * ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2))
-                 << endl;
+          if ( debug ) {
+              cout << " delta_u_n = " << delta_u_n << endl;
+              cout << "P:" << Kp.get_value() * (ep_n - ep_n_1)
+                   << " I:" << Kp.get_value() * ((Ts/ti) * e_n)
+                   << " D:" << Kp.get_value() * ((td/Ts) * (edf_n - 2*edf_n_1 + edf_n_2))
+                   << endl;
+        }
         }
 
         // Integrator anti-windup logic:
@@ -566,13 +564,8 @@ void FGPIDController::update( double dt ) {
 
         set_output_value( u_n );
     } else if ( !enabled ) {
-        ep_n  = 0.0;
-        edf_n = 0.0;
-        // Updates indexed values;
-        u_n_1   = u_n;
-        ep_n_1  = ep_n;
-        edf_n_2 = edf_n_1;
-        edf_n_1 = edf_n;
+        ep_n_1 = 0.0;
+        edf_n_2 = edf_n_1 = edf_n = 0.0;
     }
 }
 
@@ -622,17 +615,20 @@ void FGPISimpleController::update( double dt ) {
                           << " error = " << error
                           << endl;
 
-        double prop_comp = error * Kp.get_value();
+        double prop_comp = clamp(error * Kp.get_value());
         int_sum += error * Ki.get_value() * dt;
 
+
+        double output = prop_comp + int_sum;
+        double clamped_output = clamp( output );
+        if( output != clamped_output ) // anti-windup
+          int_sum = clamped_output - prop_comp;
 
         if ( debug ) cout << "prop_comp = " << prop_comp
                           << " int_sum = " << int_sum << endl;
 
-        double output = prop_comp + int_sum;
-        output = clamp( output );
-        set_output_value( output );
-        if ( debug ) cout << "output = " << output << endl;
+        set_output_value( clamped_output );
+        if ( debug ) cout << "output = " << clamped_output << endl;
     }
 }
 
@@ -757,7 +753,7 @@ void FGDigitalFilter::update(double dt)
 {
     if ( isPropertyEnabled() ) {
 
-        input.push_front(valueInput.get_value());
+        input.push_front(valueInput.get_value()-referenceInput.get_value());
         input.resize(samplesInput.get_value() + 1, 0.0);
 
         if ( !enabled ) {
@@ -848,9 +844,58 @@ void FGDigitalFilter::update(double dt)
     }
 }
 
+FGXMLAutoLogic::FGXMLAutoLogic(SGPropertyNode * node ) :
+    FGXMLAutoComponent(),
+    inverted(false)
+{
+    parseNode(node);
+}
+
+bool FGXMLAutoLogic::parseNodeHook(const std::string& aName, SGPropertyNode* aNode)
+{
+    if (aName == "input") {
+        input = sgReadCondition( fgGetNode("/"), aNode );
+    } else if (aName == "inverted") {
+        inverted = aNode->getBoolValue();
+    } else {
+        return false;
+    }
+  
+    return true;
+}
+
+void FGXMLAutoLogic::update(double dt)
+{
+    if ( isPropertyEnabled() ) {
+        if ( !enabled ) {
+            // we have just been enabled
+        }
+        enabled = true;
+    } else {
+        enabled = false;
+        do_feedback();
+    }
+
+    if ( !enabled || dt < SGLimitsd::min() ) 
+        return;
+
+    if( input == NULL ) {
+        if ( debug ) cout << "No input for " << get_name() << endl;
+        return;
+    }
+
+    bool i = input->test();
+
+    if ( debug ) cout << "Updating " << get_name() << ": " << (inverted ? !i : i) << endl;
+
+    set_output_value( i );
+}
+
+
 FGXMLAutopilotGroup::FGXMLAutopilotGroup() :
-  SGSubsystemGroup(),
-  average(0.0), // average/filtered prediction
+  SGSubsystemGroup()
+#ifdef XMLAUTO_USEHELPER
+  ,average(0.0), // average/filtered prediction
   v_last(0.0),  // last velocity
   last_static_pressure(0.0),
   vel(fgGetNode( "/velocities/airspeed-kt", true )),
@@ -874,6 +919,7 @@ FGXMLAutopilotGroup::FGXMLAutopilotGroup() :
   static_pressure(fgGetNode( "/systems/static[0]/pressure-inhg", true )),
   pressure_rate(fgGetNode( "/autopilot/internal/pressure-rate", true )),
   track(fgGetNode( "/orientation/track-deg", true ))
+#endif
 {
 }
 
@@ -881,7 +927,7 @@ void FGXMLAutopilotGroup::update( double dt )
 {
     // update all configured autopilots
     SGSubsystemGroup::update( dt );
-
+#ifdef XMLAUTO_USEHELPER
     // update helper values
     double v = vel->getDoubleValue();
     double a = 0.0;
@@ -940,6 +986,7 @@ void FGXMLAutopilotGroup::update( double dt )
         pressure_rate->setDoubleValue(current_pressure_rate);
         last_static_pressure = current_static_pressure;
     }
+#endif
 }
 
 void FGXMLAutopilotGroup::reinit()
@@ -1062,6 +1109,8 @@ bool FGXMLAutopilot::build( SGPropertyNode_ptr config_props ) {
             components.push_back( new FGPredictor( node ) );
         } else if ( name == "filter" ) {
             components.push_back( new FGDigitalFilter( node ) );
+        } else if ( name == "logic" ) {
+            components.push_back( new FGXMLAutoLogic( node ) );
         } else {
             SG_LOG( SG_AUTOPILOT, SG_WARN, "Unknown top level autopilot section: " << name );
 //            return false;
