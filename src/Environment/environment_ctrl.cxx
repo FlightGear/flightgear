@@ -273,11 +273,13 @@ FGMetarCtrl::FGMetarCtrl( SGSubsystem * environmentCtrl )
 	metar_valid(false),
 	setup_winds_aloft(true),
 	wind_interpolation_required(true),
+	metar_sealevel_temperature(15.0),
+	metar_sealevel_dewpoint(5.0),
 	// Interpolation constant definitions.
-	EnvironmentUpdatePeriodSec( 0.2 ),
 	MaxWindChangeKtsSec( 0.2 ),
 	MaxVisChangePercentSec( 0.05 ),
-	MaxPressureChangeInHgSec( 0.0033 ),
+	MaxPressureChangeInHgSec( 0.0005 ), // approx 1hpa/min
+	MaxTemperatureChangeDegcSec(10.0/60.0), // approx 10degc/min
 	MaxCloudAltitudeChangeFtSec( 20.0 ),
 	MaxCloudThicknessChangeFtSec( 50.0 ),
 	MaxCloudInterpolationHeightFt( 5000.0 ),
@@ -311,10 +313,12 @@ FGMetarCtrl::FGMetarCtrl( SGSubsystem * environmentCtrl )
 	latitude_n = fgGetNode( "/position/latitude-deg", true );
 	environment_clouds_n = fgGetNode("/environment/clouds");
 
-	boundary_wind_speed_n = fgGetNode("/environment/config/boundary/entry/wind-speed-kt");
-	boundary_wind_from_heading_n = fgGetNode("/environment/config/boundary/entry/wind-from-heading-deg");
-	boundary_visibility_n = fgGetNode("/environment/config/boundary/entry/visibility-m");
-	boundary_sea_level_pressure_n = fgGetNode("/environment/config/boundary/entry/pressure-sea-level-inhg");
+	boundary_wind_speed_n = fgGetNode("/environment/config/boundary/entry/wind-speed-kt", true );
+	boundary_wind_from_heading_n = fgGetNode("/environment/config/boundary/entry/wind-from-heading-deg", true );
+	boundary_visibility_n = fgGetNode("/environment/config/boundary/entry/visibility-m", true );
+	boundary_sea_level_pressure_n = fgGetNode("/environment/config/boundary/entry/pressure-sea-level-inhg", true );
+	boundary_sea_level_temperature_n = fgGetNode("/environment/config/boundary/entry/temperature-sea-level-degc", true );
+	boundary_sea_level_dewpoint_n = fgGetNode("/environment/config/boundary/entry/dewpoint-sea-level-degc", true );
 }
 
 FGMetarCtrl::~FGMetarCtrl ()
@@ -336,22 +340,26 @@ void FGMetarCtrl::unbind ()
 }
 
 // use a "command" to set station temp at station elevation
-static void set_temp_at_altitude( float temp_degc, float altitude_ft ) {
+static void set_temp_at_altitude( double temp_degc, double altitude_ft ) {
 	SGPropertyNode args;
 	SGPropertyNode *node = args.getNode("temp-degc", 0, true);
-	node->setFloatValue( temp_degc );
+	node->setDoubleValue( temp_degc );
 	node = args.getNode("altitude-ft", 0, true);
-	node->setFloatValue( altitude_ft );
-	globals->get_commands()->execute("set-outside-air-temp-degc", &args);
+	node->setDoubleValue( altitude_ft );
+	globals->get_commands()->execute( altitude_ft == 0.0 ? 
+		"set-sea-level-air-temp-degc" : 
+		"set-outside-air-temp-degc", &args);
 }
 
-static void set_dewpoint_at_altitude( float dewpoint_degc, float altitude_ft ) {
+static void set_dewpoint_at_altitude( double dewpoint_degc, double altitude_ft ) {
 	SGPropertyNode args;
 	SGPropertyNode *node = args.getNode("dewpoint-degc", 0, true);
-	node->setFloatValue( dewpoint_degc );
+	node->setDoubleValue( dewpoint_degc );
 	node = args.getNode("altitude-ft", 0, true);
-	node->setFloatValue( altitude_ft );
-	globals->get_commands()->execute("set-dewpoint-temp-degc", &args);
+	node->setDoubleValue( altitude_ft );
+	globals->get_commands()->execute( altitude_ft == 0.0 ?
+		"set-dewpoint-sea-level-air-temp-degc" :
+		"set-dewpoint-temp-degc", &args);
 }
 
 /*
@@ -403,10 +411,8 @@ static void setupWind( bool setup_aloft, double dir, double speed, double gust )
 		setupWindBranch( "aloft", dir, speed, gust );
 }
 
-double FGMetarCtrl::interpolate_val(double currentval, double requiredval, double dt)
+double FGMetarCtrl::interpolate_val(double currentval, double requiredval, double dval )
 {
-	double dval = EnvironmentUpdatePeriodSec * dt;
-
 	if (fabs(currentval - requiredval) < dval) return requiredval;
 	if (currentval < requiredval) return (currentval + dval);
 	if (currentval > requiredval) return (currentval - dval);
@@ -448,13 +454,12 @@ static inline double convert_to_180( double d )
 static double reducePressureSl(double metarPressure, double fieldHt,
                                double fieldTemp)
 {
-    double elev = fieldHt * SG_FEET_TO_METER;
-    double fieldPressure
-        = FGAtmo::fieldPressure(elev, metarPressure * atmodel::inHg);
-    double slPressure = P_layer(0, elev, fieldPressure,
-                                fieldTemp + atmodel::freezing,
-                                atmodel::ISA::lam0);
-    return slPressure / atmodel::inHg;
+	double elev = fieldHt * SG_FEET_TO_METER;
+	double fieldPressure
+		= FGAtmo::fieldPressure(elev, metarPressure * atmodel::inHg);
+	double slPressure = P_layer(0, elev, fieldPressure,
+		fieldTemp + atmodel::freezing, atmodel::ISA::lam0);
+	return slPressure / atmodel::inHg;
 }
 
 void
@@ -468,7 +473,7 @@ FGMetarCtrl::update(double dt)
 
 	bool reinit_required = false;
 	bool layer_rebuild_required = false;
-        double station_elevation_ft = station_elevation_n->getDoubleValue();
+	double station_elevation_ft = station_elevation_n->getDoubleValue();
 
 	if (first_update) {
 		double dir = base_wind_dir_n->getDoubleValue()+magnetic_variation_n->getDoubleValue();
@@ -479,11 +484,14 @@ FGMetarCtrl::update(double dt)
 		double metarvis = min_visibility_n->getDoubleValue();
 		fgDefaultWeatherValue("visibility-m", metarvis);
 
+		set_temp_at_altitude(temperature_n->getDoubleValue(), station_elevation_ft);
+		set_dewpoint_at_altitude(dewpoint_n->getDoubleValue(), station_elevation_ft);
+
 		double metarpressure = pressure_n->getDoubleValue();
 		fgDefaultWeatherValue("pressure-sea-level-inhg",
-                                      reducePressureSl(metarpressure,
-                                                       station_elevation_ft,
-                                                       temperature_n->getDoubleValue()));
+			reducePressureSl(metarpressure,
+			station_elevation_ft,
+			temperature_n->getDoubleValue()));
 
 		// We haven't already loaded a METAR, so apply it immediately.
 		vector<SGPropertyNode_ptr> layers = clouds_n->getChildren("layer");
@@ -543,8 +551,8 @@ FGMetarCtrl::update(double dt)
 				double maxdy = dy * MaxWindChangeKtsSec;
 
 				// Interpolate each component separately.
-				current[0] = interpolate_val(current[0], metar[0], maxdx);
-				current[1] = interpolate_val(current[1], metar[1], maxdy);
+				current[0] = interpolate_val(current[0], metar[0], maxdx*dt);
+				current[1] = interpolate_val(current[1], metar[1], maxdy*dt);
 
 				// Now convert back to polar coordinates.
 				if ((fabs(current[0]) > 0.1) || (fabs(current[1]) > 0.1)) {
@@ -615,7 +623,7 @@ FGMetarCtrl::update(double dt)
 			double currentxval = log(1000.0 + vis);
 			double metarxval = log(1000.0 + metarvis);
 
-			currentxval = interpolate_val(currentxval, metarxval, MaxVisChangePercentSec);
+			currentxval = interpolate_val(currentxval, metarxval, MaxVisChangePercentSec*dt);
 
 			// Now convert back from an X-value to a straightforward visibility.
 			vis = exp(currentxval) - 1000.0;
@@ -625,13 +633,26 @@ FGMetarCtrl::update(double dt)
 
 		double pressure = boundary_sea_level_pressure_n->getDoubleValue();
 		double metarpressure = pressure_n->getDoubleValue();
-                double newpressure = reducePressureSl(metarpressure,
-                                                      station_elevation_ft,
-                                                      temperature_n->getDoubleValue());
+		double newpressure = reducePressureSl(metarpressure,
+			station_elevation_ft,
+			temperature_n->getDoubleValue());
 		if( pressure != newpressure ) {
-			pressure = interpolate_val( pressure, newpressure, MaxPressureChangeInHgSec );
+			pressure = interpolate_val( pressure, newpressure, MaxPressureChangeInHgSec*dt );
 			fgDefaultWeatherValue("pressure-sea-level-inhg", pressure);
 			reinit_required = true;
+		}
+
+		{
+			double temperature = boundary_sea_level_temperature_n->getDoubleValue();
+			double dewpoint = boundary_sea_level_dewpoint_n->getDoubleValue();
+			if( metar_sealevel_temperature != temperature ) {
+				temperature = interpolate_val( temperature, metar_sealevel_temperature, MaxTemperatureChangeDegcSec*dt );
+				set_temp_at_altitude( temperature, 0.0 );
+			}
+			if( metar_sealevel_dewpoint != dewpoint ) {
+				dewpoint = interpolate_val( dewpoint, metar_sealevel_dewpoint, MaxTemperatureChangeDegcSec*dt );
+				set_dewpoint_at_altitude( dewpoint, 0.0 );
+			}
 		}
 
 		// Set the cloud layers by interpolating over the METAR versions.
@@ -682,7 +703,7 @@ FGMetarCtrl::update(double dt)
 			} else {
 				// Interpolate the other values in the usual way
 				if (current_alt != required_alt) {
-					current_alt = interpolate_val(current_alt, required_alt, MaxCloudAltitudeChangeFtSec);
+					current_alt = interpolate_val(current_alt, required_alt, MaxCloudAltitudeChangeFtSec*dt);
 					target->setDoubleValue("elevation-ft", current_alt);
 				}
 
@@ -691,15 +712,12 @@ FGMetarCtrl::update(double dt)
 				if (current_thickness != required_thickness) {
 					current_thickness = interpolate_val(current_thickness,
 												 required_thickness,
-												 MaxCloudThicknessChangeFtSec);
+												 MaxCloudThicknessChangeFtSec*dt);
 					thickness->setDoubleValue(current_thickness);
 				}
 			}
 		}
 	}
-        set_temp_at_altitude(temperature_n->getDoubleValue(), station_elevation_ft);
-        set_dewpoint_at_altitude(dewpoint_n->getDoubleValue(), station_elevation_ft);
-	//TODO: check if temperature/dewpoint have changed. This requires reinit.
 
 	// Force an update of the 3D clouds
 	if( layer_rebuild_required )
@@ -782,6 +800,15 @@ void FGMetarCtrl::set_metar( const char * metar_string )
 	}
 
 	station_elevation_n->setDoubleValue( station_elevation_ft );
+
+	{	// calculate sea level temperature and dewpoint
+		FGEnvironment dummy; // instantiate a dummy so we can leech a method
+		dummy.set_elevation_ft( station_elevation_ft );
+		dummy.set_temperature_degc( temperature_n->getDoubleValue() );
+		dummy.set_dewpoint_degc( dewpoint_n->getDoubleValue() );
+		metar_sealevel_temperature = dummy.get_temperature_sea_level_degc();
+		metar_sealevel_dewpoint = dummy.get_dewpoint_sea_level_degc();
+	}
 
 	vector<SGMetarCloud> cv = m->getClouds();
 	vector<SGMetarCloud>::const_iterator cloud, cloud_end = cv.end();
