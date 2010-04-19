@@ -40,6 +40,8 @@
 using std::cout;
 using std::endl;
 
+using simgear::PropertyList;
+
 FGPeriodicalValue::FGPeriodicalValue( SGPropertyNode_ptr root )
 {
   SGPropertyNode_ptr minNode = root->getChild( "min" );
