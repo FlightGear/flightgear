@@ -65,7 +65,8 @@ FGATCMgr::FGATCMgr() :
 #else
     voice(false),
 #endif
-    last_in_range(false)
+    last_in_range(false),
+    v1(0)
 {
 }
 
