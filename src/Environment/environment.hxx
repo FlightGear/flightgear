@@ -72,6 +72,7 @@ public:
   virtual double get_wind_from_down_fps () const;
   virtual double get_thermal_lift_fps () const;
   virtual double get_ridge_lift_fps () const;  
+  virtual double get_local_weather_lift_fps () const;
 
   virtual double get_turbulence_magnitude_norm () const;
   virtual double get_turbulence_rate_hz () const;
@@ -92,6 +93,7 @@ public:
   virtual void set_wind_from_down_fps (double d);
   virtual void set_thermal_lift_fps (double th);
   virtual void set_ridge_lift_fps (double ri);
+  virtual void set_local_weather_lift_fps (double lwl);
 
   virtual void set_turbulence_magnitude_norm (double t);
   virtual void set_turbulence_rate_hz (double t);
@@ -147,6 +149,7 @@ private:
   double wind_from_down_fps;
   double thermal_lift_fps;
   double ridge_lift_fps;
+  double local_weather_lift_fps;
 
   bool     live_update;
 
