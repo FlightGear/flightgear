@@ -532,18 +532,18 @@ void MapWidget::draw(int dx, int dy)
   double julianDate = globals->get_time_params()->getJD();
   _magVar->update(_projectionCenter, julianDate);
 
-  SGGeod topLeft = unproject(SGVec2d(_width/2, _height/2));
-  // compute draw range, including a fudge factor for ILSs and other 'long'
-  // symbols
-  _drawRangeNm = SGGeodesy::distanceNm(_projectionCenter, topLeft) + 10.0;
-
   bool aircraftUp = _root->getBoolValue("aircraft-heading-up");
   if (aircraftUp) {
     _upHeading = fgGetDouble("/orientation/heading-deg");
   } else {
     _upHeading = 0.0;
   }
-    
+
+  SGGeod topLeft = unproject(SGVec2d(_width/2, _height/2));
+  // compute draw range, including a fudge factor for ILSs and other 'long'
+  // symbols
+  _drawRangeNm = SGGeodesy::distanceNm(_projectionCenter, topLeft) + 10.0;
+
 // drawing operations
   GLint sx = (int) abox.min[0],
     sy = (int) abox.min[1];
