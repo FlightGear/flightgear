@@ -45,6 +45,7 @@ FGTrafficRecord::FGTrafficRecord() :
    speed(0), 
    altitude(0), 
    radius(0),
+   frequencyId(0),
    allowTransmission(true) {
 }
 
@@ -354,45 +355,8 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
     string sender, receiver;
     int stationFreq = 0;
     int taxiFreq    = 0;
+    int freqId      = 0;
     string atisInformation;
-    //double commFreqD;
-    switch (msgDir) {
-         case ATC_AIR_TO_GROUND:
-             sender = rec->getAircraft()->getTrafficRef()->getCallSign();
-             switch (rec->getLeg()) {
-                 case 2:
-                 case 3:
-                     stationFreq =
-                        rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getGroundFrequency(rec->getLeg());
-                     taxiFreq =
-                        rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getGroundFrequency(3);
-                     receiver = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getName() + "-Ground";
-                     atisInformation = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getAtisInformation();
-                     break;
-                 case 4: 
-                     receiver = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getName() + "-Tower";
-                     break;
-             }
-             break;
-         case ATC_GROUND_TO_AIR:
-             receiver = rec->getAircraft()->getTrafficRef()->getCallSign();
-             switch (rec->getLeg()) {
-                 case 2:
-                 case 3:
-                 stationFreq =
-                        rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getGroundFrequency(rec->getLeg());
-                     taxiFreq =
-                        rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getGroundFrequency(3);
-                     sender = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getName() + "-Ground";
-                     atisInformation = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getAtisInformation();
-                     break;
-
-                 case 4: 
-                     sender = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getName() + "-Tower";
-                     break;
-             }
-             break;
-         }
     string text;
     string taxiFreqStr;
     double heading = 0;
@@ -403,6 +367,30 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
     string transponderCode;
     FGAIFlightPlan *fp;
     string fltRules;
+
+    //double commFreqD;
+    sender = rec->getAircraft()->getTrafficRef()->getCallSign();
+    switch (rec->getLeg()) {
+        case 2:
+        case 3:
+            freqId = rec->getNextFrequency();
+            stationFreq =
+            rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getGroundFrequency(rec->getLeg()+freqId);
+            taxiFreq =
+            rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getGroundFrequency(3);
+            receiver = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getName() + "-Ground";
+            atisInformation = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getDynamics()->getAtisInformation();
+            break;
+        case 4: 
+            receiver = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->getName() + "-Tower";
+            break;
+    }
+    // Swap sender and receiver value in case of a ground to air transmission
+    if (msgDir == ATC_GROUND_TO_AIR) {
+       string tmp = sender;
+       sender = receiver;
+       receiver = tmp;
+    }
     switch (msgId) {
           case MSG_ANNOUNCE_ENGINE_START:
                text = sender + ". Ready to Start up";
@@ -456,6 +444,10 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
                text = receiver + ". Start-up approved. " + atisInformation + " correct, runway " +
                       activeRunway + ", " + SID + ", squawk " + transponderCode + ". " +
                       "For push-back and taxi clearance call " + taxiFreqStr + ". " + sender;
+               break;
+           case MSG_ACKNOWLEDGE_SWITCH_GROUND_FREQUENCY:
+               taxiFreqStr = formatATCFrequency3_2(taxiFreq);
+               text = receiver + ". Switching to " + taxiFreqStr + ". " + sender;
                break;
            case MSG_REQUEST_PUSHBACK_CLEARANCE:
                text = receiver + ". Request push-back. " + sender;
@@ -882,18 +874,31 @@ void FGStartupController::update(int id, double lat, double lon, double heading,
              available = false;
         }
      }
-     // TODO: Switch to APRON control and request pushback Clearance.
-     // Get Push back clearance
+     // Note: The next two stages are only necessesary when Startup control is
+     //  on a different frequency, compared to ground control
      if ((state == 4) && available){
         if (now > startTime+130) {
+            transmit(&(*i), MSG_ACKNOWLEDGE_SWITCH_GROUND_FREQUENCY, ATC_AIR_TO_GROUND);
+            i->updateState();
+            i->nextFrequency();
+            lastTransmission = now;
+             available = false;
+        }
+     }
+
+
+     // TODO: Switch to APRON control and request pushback Clearance.
+     // Get Push back clearance
+     if ((state == 5) && available){
+        if (now > startTime+160) {
             transmit(&(*i), MSG_REQUEST_PUSHBACK_CLEARANCE, ATC_AIR_TO_GROUND);
             i->updateState();
             lastTransmission = now;
              available = false;
         }
      }
-     if ((state == 5) && available){
-        if (now > startTime+130) {
+     if ((state == 6) && available){
+        if (now > startTime+180) {
             if (i->pushBackAllowed()) {
                  i->allowRepeatedTransmissions();
                  transmit(&(*i), MSG_PERMIT_PUSHBACK_CLEARANCE, ATC_GROUND_TO_AIR);
