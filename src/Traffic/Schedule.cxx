@@ -201,15 +201,17 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
   
   if (firstRun) {
      if (fgGetBool("/sim/traffic-manager/instantaneous-action") == true) {
-         deptime = now + rand() % 300; // Wait up to 5 minutes until traffic starts moving to prevent too many aircraft 
+         deptime = now; // + rand() % 300; // Wait up to 5 minutes until traffic starts moving to prevent too many aircraft 
                                    // from cluttering the gate areas.
      }
      firstRun = false;
   }
   
   FGScheduledFlight* flight = flights.front();
-  if (!deptime)
+  if (!deptime) {
     deptime = flight->getDepartureTime();
+    //cerr << "Settiing departure time " << deptime << endl;
+  }
     
   if (AIManagerRef) {
     // Check if this aircraft has been released. 
