@@ -80,6 +80,7 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) : FGAIBase(otAircraft) {
     headingError = 0;
 
     holdPos = false;
+    needsTaxiClearance = false;
 
     _performance = 0; //TODO initialize to JET_TRANSPORT from PerformanceDB
     dt = 0;
@@ -663,9 +664,8 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIFlightPlan::waypoint* prev, time_t
     //cerr << trafficRef->getCallSign() << " has passed waypoint " << prev->name << " at speed " << speed << endl;
     if (prev->name == "PushBackPoint") {
         dep->getDynamics()->releaseParking(fp->getGate());
-        time_t holdUntil = now + 120;
-	fp->setTime(holdUntil);
-	//cerr << _getCallsign() << "Holding at pushback point" << endl;
+        AccelTo(0.0);
+        setTaxiClearanceRequest(true);
     }
 
     // This is the last taxi waypoint, and marks the the end of the flight plan

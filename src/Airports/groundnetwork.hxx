@@ -252,10 +252,10 @@ public:
   void init();
   bool exists() { return hasNetwork; };
   void setTowerController(FGTowerController *twrCtrlr) { towerController = twrCtrlr; };
-  
+
   int findNearestNode(double lat, double lon);
   int findNearestNode(const SGGeod& aGeod);
-  
+
   FGTaxiNode *findNode(unsigned idx);
   FGTaxiSegment *findSegment(unsigned idx);
   FGTaxiRoute findShortestRoute(int start, int end, bool fullSearch=true);
