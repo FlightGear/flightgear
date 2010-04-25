@@ -129,7 +129,7 @@ public:
   void setLeg(int lg) { leg = lg;};
   int getId() { return id;};
   int getState() { return state;};
-  int setState(int s) { state = s;}
+  void setState(int s) { state = s;}
   FGATCInstruction getInstruction() { return instruction;};
   bool hasInstruction() { return instruction.hasInstruction(); };
   void setPositionAndHeading(double lat, double lon, double hdg, double spd, double alt);
