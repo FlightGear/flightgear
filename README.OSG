@@ -3,8 +3,11 @@
 You *must* have OpenSceneGraph (OSG) installed to build this version of 
 FlightGear.
 
-Notice that FlightGear 1.9.0 requires at least version 2.7.8. Using earlier 
-versions of OSG will yield serious rendering bugs. 
+Notice that from FlightGear version 1.9.0, OSG version 2.7.8 or later
+is required. Using earlier versions of OSG will yield serious 
+rendering bugs. If you are using an 'older' distribution, this may mean
+a suitable version of OSG may not be availble through the usual package
+repositories.
 
 You can get the latest version of OSG from:
 
@@ -24,4 +27,67 @@ ccmake .
 
 make 
 sudo make install
+
+Also later release versions of OpenSceneGraph can be obtained by
+svn, or you can use the OSG development svn 'trunk', but be warned,
+OSG is always in heavy development, and at certain moments
+in time, it may not compile completely, so, as usual, it is
+recommended that you stay with released versions.
+
+Installation notes:
+
+In some unix/linux distributions, particularly 64-bit
+systems, OSG may install its shared libraries in other than
+/usr/lib, /usr/local/lib or $prefix/lib!
+
+This does not seem to effect binary installation, which is
+to $prefix/bin, nor header installation, which remains
+$prefix/include. Just the shared libraries, and perhaps
+only for 64-bit systems, or higher as, and when available.
+
+The default is /usr/local/lib64 or $prefix/lib64 in
+64-bit systems. This may cause problems with the auto-conf 
+tools when configuring and compiling FlighGear, since
+even using the configure option --with-osg=$prefix 
+will not 'fix' the problem.
+
+The are various ways to deal with this, which mainly depend
+on whether you just want one version of OSG 'globally'
+installed, or desire to be able to build, and run, FlightGear
+against 'different' versions of OSG.
+
+There is a parameter, -D LIB_POSTFIX= or -D LIB_POSTFIX=""
+which can be passed to cmake OSG to force the OSG library
+installation into the 'standard' "$prefix/lib".
+
+OSG cmake advises of a post installation step -
+ $ sudo make install_ld_conf
+which, if available, will add an openscenegraph.conf file
+to the /etc/ld.so.conf.d folder, with the line -
+${CMAKE_INSTALL_PREFIX}lib${LIB_POSTFIX}
+and run 'ldconfig' to add this to the 'cache'. But this
+option does not always seem available.
+
+Configuring SimGear and Flightgear notes:
+
+If you install OSG in other than the 'standard' directories,
+you must add --with-osg=$prefix when configuring
+SimGear and FlightGear. This will cause the auto-conf
+tools to look in $prefix/include for headers, and
+$prefix/lib for libraries, but _NOT_ in 'lib64'!
+
+If the OSG is installed to a unique $prefix directory, then
+it is also possible to make a 'link' entry lib -> lib64 to 
+get over this, but obviously this is not available if
+$prefix/lib already exists, and contains entries.
+
+Running fgfs, and others, with OSG shared libraries:
+
+You must also deal with the executable loader being
+able to find the OSG shared libraries when running fgfs, 
+and others, through perhaps using :-
+ $ export LD_LIBRARY_PATH=/path/to/osg/lib[64][:/other/paths]
+or more permanently using a '.conf' file in the
+/etc/ld.so.conf.d directory, and running
+ $ sudo ldconfig -v to update the 'cache'.
 

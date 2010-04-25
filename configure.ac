@@ -627,88 +627,48 @@ dnl joystick lib
 AC_DEFINE([ENABLE_PLIB_JOYSTICK], 1, [Define to enable plib joystick support])
 
 # Find the OSG libraries.  Note special handling for OS X frameworks
-case "${host}" in
-*-apple-darwin*)
-    if test "x$with_osg_framework" = "x"; then
-        if test "x$enable_osgdebug" = "xyes"; then
-            # debug version of osg libs
-            AC_CHECK_LIB(OpenThreadsd,OpenThreadsGetVersion)
-            openthreads_LIBS="$LIBS"
-            LIBS=""
-            AC_CHECK_LIB(osgd,osgGetVersion)
-            AC_CHECK_LIB(osgUtild,osgUtilGetVersion)
-            AC_CHECK_LIB(osgDBd,osgDBGetVersion)
-            AC_CHECK_LIB(osgTextd,osgTextGetVersion)
-            AC_CHECK_LIB(osgGAd,osgGAGetVersion)
-            AC_CHECK_LIB(osgViewerd,osgViewerGetVersion)
-            AC_CHECK_LIB(osgSimd,osgSimGetVersion)
-            AC_CHECK_LIB(osgParticled,osgParticleGetVersion)
-            OSG_LIBS="$LIBS -losgFXd $openthreads_LIBS"
-            LIBS=""
-        else
-            # release version of osg libs
-            AC_CHECK_LIB(OpenThreads,OpenThreadsGetVersion)
-            openthreads_LIBS="$LIBS"
-            LIBS=""
-            AC_CHECK_LIB(osg,osgGetVersion)
-            AC_CHECK_LIB(osgUtil,osgUtilGetVersion)
-            AC_CHECK_LIB(osgDB,osgDBGetVersion)
-            AC_CHECK_LIB(osgText,osgTextGetVersion)
-            AC_CHECK_LIB(osgGA,osgGAGetVersion)
-            AC_CHECK_LIB(osgViewer,osgViewerGetVersion)
-            AC_CHECK_LIB(osgSim,osgSimGetVersion)
-            AC_CHECK_LIB(osgParticle,osgParticleGetVersion)
-            OSG_LIBS="$LIBS -losgFX $openthreads_LIBS"
-            LIBS=""
-            # echo $LIBS
-        fi
-        AC_SUBST(openthreads_LIBS)
-        AC_SUBST(OSG_LIBS)
-    else
-        # Checking osg frameworks.
-        AC_CHECK_FRAMEWORK(osgViewer, [#include <osgViewer/Version>], $with_osg_framework)
-        AC_CHECK_FRAMEWORK(osgGA, [#include <osgGA/Version>], $with_osg_framework)
-        AC_CHECK_FRAMEWORK(osgText, [#include <osgText/Version>], $with_osg_framework)
-        AC_CHECK_FRAMEWORK(osgFX, [#include <osgFX/AnisotropicLighting>], $with_osg_framework)
-        AC_CHECK_FRAMEWORK(osgUtil, [#include <osgUtil/Version>], $with_osg_framework)
-        AC_CHECK_FRAMEWORK(osgDB, [#include <osgDB/Version>], $with_osg_framework)
-        AC_CHECK_FRAMEWORK(osgSim, [#include <osgSim/Version>], $with_osg_framework)
-        AC_CHECK_FRAMEWORK(osgParticle, [#include <osgParticle/Version>], $with_osg_framework)
-        AC_CHECK_FRAMEWORK(osg, [#include <osg/Version>], $with_osg_framework)
-        osg_FRAMEWORKS="$FRAMEWORKS"
-        FRAMEWORKS=""
-        AC_CHECK_FRAMEWORK(OpenThreads, [#include <OpenThreads/Version>], $with_osg_framework)
-        openthreads_FRAMEWORK="$FRAMEWORKS"
-        AC_SUBST(osg_FRAMEWORKS)
-        AC_SUBST(openthreads_FRAMEWORK)
-    fi
-    ;;
-*)
+if test "x$with_osg_framework" = "x"; then
     if test "x$enable_osgdebug" = "xyes"; then
-        AC_CHECK_LIB(OpenThreadsd,OpenThreadsGetVersion)
-        AC_CHECK_LIB(osgd,osgGetVersion)
-        AC_CHECK_LIB(osgUtild,osgUtilGetVersion)
-        AC_CHECK_LIB(osgDBd,osgDBGetVersion)
-        AC_CHECK_LIB(osgTextd,osgTextGetVersion)
-        AC_CHECK_LIB(osgGAd,osgGAGetVersion)
-        AC_CHECK_LIB(osgViewerd,osgViewerGetVersion)
-        AC_CHECK_LIB(osgSimd,osgSimGetVersion)
-        AC_CHECK_LIB(osgParticled,osgParticleGetVersion)
-        LIBS="$LIBS -losgFXd $opengl_LIBS"
+        AC_CHECK_LIB(OpenThreadsd,OpenThreadsGetVersion, , [AC_MSG_ERROR(OpenThreads library not found.)],)
+        AC_CHECK_LIB(osgd,osgGetVersion, , [AC_MSG_ERROR(OpenSceneGraph library not found.)],)
+        AC_CHECK_LIB(osgUtild,osgUtilGetVersion, , [AC_MSG_ERROR(OpenSceneGraph utility library not found.)],)
+        AC_CHECK_LIB(osgDBd,osgDBGetVersion, , [AC_MSG_ERROR(OpenSceneGraph database library not found.)],)
+        AC_CHECK_LIB(osgTextd,osgTextGetVersion, , [AC_MSG_ERROR(OpenSceneGraph Text library not found.)],)
+        AC_CHECK_LIB(osgGAd,osgGAGetVersion, , [AC_MSG_ERROR(OpenSceneGraph GUI Abstraction library not found.)],)
+        AC_CHECK_LIB(osgViewerd,osgViewerGetVersion, , [AC_MSG_ERROR(OpenSceneGraph Viewer library not found.)],)
+        AC_CHECK_LIB(osgSimd,osgSimGetVersion, , [AC_MSG_ERROR(OpenSceneGraph simulation library not found.)],)
+        AC_CHECK_LIB(osgParticled,osgParticleGetVersion, , [AC_MSG_ERROR(OpenSceneGraph Particle library not found.)],)
+        AC_CHECK_LIB(osgFXd, osgFXGetVersion, , [AC_MSG_ERROR(OpenSceneGraph FX library not found.)],)
     else
-        AC_CHECK_LIB(OpenThreads,OpenThreadsGetVersion)
-        AC_CHECK_LIB(osg,osgGetVersion)
-        AC_CHECK_LIB(osgUtil,osgUtilGetVersion)
-        AC_CHECK_LIB(osgDB,osgDBGetVersion)
-        AC_CHECK_LIB(osgText,osgTextGetVersion)
-        AC_CHECK_LIB(osgGA,osgGAGetVersion)
-        AC_CHECK_LIB(osgViewer,osgViewerGetVersion)
-        AC_CHECK_LIB(osgSim,osgSimGetVersion)
-        AC_CHECK_LIB(osgParticle,osgParticleGetVersion)
-        LIBS="$LIBS -losgFX $opengl_LIBS"
+        AC_CHECK_LIB(OpenThreads,OpenThreadsGetVersion, , [AC_MSG_ERROR(OpenThreads library not found.)],)
+        AC_CHECK_LIB(osg,osgGetVersion, , [AC_MSG_ERROR(OpenSceneGraph library not found.)],)
+        AC_CHECK_LIB(osgUtil,osgUtilGetVersion, , [AC_MSG_ERROR(OpenSceneGraph utility library not found.)],)
+        AC_CHECK_LIB(osgDB,osgDBGetVersion, , [AC_MSG_ERROR(OpenSceneGraph database library not found.)],)
+        AC_CHECK_LIB(osgText,osgTextGetVersion, , [AC_MSG_ERROR(OpenSceneGraph Text library not found.)],)
+        AC_CHECK_LIB(osgGA,osgGAGetVersion, , [AC_MSG_ERROR(OpenSceneGraph GUI Abstraction library not found.)],)
+        AC_CHECK_LIB(osgViewer,osgViewerGetVersion, , [AC_MSG_ERROR(OpenSceneGraph Viewer library not found.)],)
+        AC_CHECK_LIB(osgSim,osgSimGetVersion, , [AC_MSG_ERROR(OpenSceneGraph simulation library not found.)],)
+        AC_CHECK_LIB(osgParticle,osgParticleGetVersion, , [AC_MSG_ERROR(OpenSceneGraph Particle library not found.)],)
+        AC_CHECK_LIB(osgFX, osgFXGetVersion, , [AC_MSG_ERROR(OpenSceneGraph FX library not found.)],)
     fi
-    ;;
-esac
+else
+    # Checking osg frameworks.
+    AC_CHECK_FRAMEWORK(osgViewer, [#include <osgViewer/Version>], $with_osg_framework)
+    AC_CHECK_FRAMEWORK(osgGA, [#include <osgGA/Version>], $with_osg_framework)
+    AC_CHECK_FRAMEWORK(osgText, [#include <osgText/Version>], $with_osg_framework)
+    AC_CHECK_FRAMEWORK(osgFX, [#include <osgFX/AnisotropicLighting>], $with_osg_framework)
+    AC_CHECK_FRAMEWORK(osgUtil, [#include <osgUtil/Version>], $with_osg_framework)
+    AC_CHECK_FRAMEWORK(osgDB, [#include <osgDB/Version>], $with_osg_framework)
+    AC_CHECK_FRAMEWORK(osgSim, [#include <osgSim/Version>], $with_osg_framework)
+    AC_CHECK_FRAMEWORK(osgParticle, [#include <osgParticle/Version>], $with_osg_framework)
+    AC_CHECK_FRAMEWORK(osg, [#include <osg/Version>], $with_osg_framework)
+    osg_FRAMEWORKS="$FRAMEWORKS"
+    FRAMEWORKS=""
+    AC_CHECK_FRAMEWORK(OpenThreads, [#include <OpenThreads/Version>], $with_osg_framework)
+    openthreads_FRAMEWORK="$FRAMEWORKS"
+    AC_SUBST(osg_FRAMEWORKS)
+    AC_SUBST(openthreads_FRAMEWORK)
+fi
 AM_CONDITIONAL(HAVE_FRAMEWORK_OSG, test "x$ac_cv_framework_osg" != "x")
 
 AC_CHECK_HEADER(osg/Version)
