@@ -383,7 +383,7 @@ FGMultiplayMgr::init (void)
     mServer.set(txAddress.c_str(), txPort);
     if (strncmp (mServer.getHost(), "0.0.0.0", 8) == 0) {
       mHaveServer = false;
-      SG_LOG(SG_NETWORK, SG_ALERT,
+      SG_LOG(SG_NETWORK, SG_DEBUG,
         "FGMultiplayMgr - could not resolve '"
         << txAddress << "', Multiplayermode disabled");
     } else {
@@ -393,7 +393,7 @@ FGMultiplayMgr::init (void)
       rxPort = txPort;
   }
   if (rxPort <= 0) {
-    SG_LOG(SG_NETWORK, SG_ALERT,
+    SG_LOG(SG_NETWORK, SG_DEBUG,
       "FGMultiplayMgr - No receiver port, Multiplayermode disabled");
     return (false);
   }
@@ -408,14 +408,14 @@ FGMultiplayMgr::init (void)
            // A memory leak was reported here by valgrind
   mSocket = new netSocket();
   if (!mSocket->open(false)) {
-    SG_LOG( SG_NETWORK, SG_ALERT,
+    SG_LOG( SG_NETWORK, SG_DEBUG,
             "FGMultiplayMgr::init - Failed to create data socket" );
     return false;
   }
   mSocket->setBlocking(false);
   if (mSocket->bind(rxAddress.c_str(), rxPort) != 0) {
     perror("bind");
-    SG_LOG( SG_NETWORK, SG_ALERT,
+    SG_LOG( SG_NETWORK, SG_DEBUG,
             "FGMultiplayMgr::Open - Failed to bind receive socket" );
     return false;
   }
@@ -527,7 +527,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
   if ((! mInitialised) || (! mHaveServer))
         return;
   if (! mHaveServer) {
-    SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayMgr::SendMyPosition - no server");
+    SG_LOG( SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::SendMyPosition - no server");
     return;
   }
 
@@ -737,7 +737,7 @@ FGMultiplayMgr::Update(void)
       break;
     }
     if (bytes <= static_cast<ssize_t>(sizeof(T_MsgHdr))) {
-      SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayMgr::MP_ProcessData - "
+      SG_LOG( SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - "
               << "received message with insufficient data" );
       break;
     }
@@ -752,17 +752,17 @@ FGMultiplayMgr::Update(void)
     MsgHdr->ReplyPort   = XDR_decode_uint32 (MsgHdr->ReplyPort);
     MsgHdr->Callsign[MAX_CALLSIGN_LEN -1] = '\0';
     if (MsgHdr->Magic != MSG_MAGIC) {
-      SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayMgr::MP_ProcessData - "
+      SG_LOG( SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - "
               << "message has invalid magic number!" );
       break;
     }
     if (MsgHdr->Version != PROTO_VER) {
-      SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayMgr::MP_ProcessData - "
+      SG_LOG( SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - "
               << "message has invalid protocoll number!" );
       break;
     }
     if (MsgHdr->MsgLen != bytes) {
-      SG_LOG(SG_NETWORK, SG_ALERT, "FGMultiplayMgr::MP_ProcessData - "
+      SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - "
              << "message from " << MsgHdr->Callsign << " has invalid length!");
       break;
     }
@@ -782,7 +782,7 @@ FGMultiplayMgr::Update(void)
     case OLD_POS_DATA_ID:
       break;
     default:
-      SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayMgr::MP_ProcessData - "
+      SG_LOG( SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - "
               << "Unknown message Id received: " << MsgHdr->MsgId );
       break;
     }
@@ -813,7 +813,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
 {
   const T_MsgHdr* MsgHdr = Msg.msgHdr();
   if (MsgHdr->MsgLen < sizeof(T_MsgHdr) + sizeof(T_PositionMsg)) {
-    SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayMgr::MP_ProcessData - "
+    SG_LOG( SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - "
             << "Position message received with insufficient data" );
     return;
   }
@@ -928,7 +928,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
 
         default:
           pData->float_value = XDR_decode_float(*xdr);
-          SG_LOG(SG_NETWORK, SG_ALERT, "Unknown Prop type " << pData->id << " " << pData->type);
+          SG_LOG(SG_NETWORK, SG_DEBUG, "Unknown Prop type " << pData->id << " " << pData->type);
           xdr++;
           break;
       }            
@@ -963,7 +963,7 @@ FGMultiplayMgr::ProcessChatMsg(const MsgBuf& Msg,
 {
   const T_MsgHdr* MsgHdr = Msg.msgHdr();
   if (MsgHdr->MsgLen < sizeof(T_MsgHdr) + 1) {
-    SG_LOG( SG_NETWORK, SG_ALERT, "FGMultiplayMgr::MP_ProcessData - "
+    SG_LOG( SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - "
             << "Chat message received with insufficient data" );
     return;
   }
