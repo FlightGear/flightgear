@@ -59,6 +59,7 @@ FGATC::FGATC() :
 {
 	SGSoundMgr *smgr = globals->get_soundmgr();
 	_sgr = smgr->find("atc", true);
+        _sgr->tie_to_listener();
 
 	_volume = fgGetNode("/sim/sound/atc/volume", true);
 	_enabled = fgGetNode("/sim/sound/atc/enabled", true);
