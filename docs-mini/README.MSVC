@@ -1,20 +1,70 @@
-How to compile FlightGear with Microsoft Visual C++ 7.0
-======================================================
+Use FlightGear.sln to compile fgfs executable for Win32 or x64 architectures with Visual Studio 2008.
+Previous versions of Visual Studio are not officially supported anymore.
 
-I am receiving an increasing number of request for working 
-project files for MSVC. While I can't reply specifically 
-to everybody, I packed my current, unedited, project files
-here :
-ftp://ftp.ihg.uni-duisburg.de/FlightGear/Win32/MSVC/
+Precompiled librairies and headers for compiling x64 executables with VS2008 :
+ftp://ftp.ihg.uni-duisburg.de/FlightGear/Win32/MSVC/fgfs-x64-VS90-3rdParty+OSG-20100501.zip
 
-They are for MSVC 7. I am not trying to compile with MSVC 6
-anymore because it is an old compiler ( released 5 years ago )
-that has serious bugs and limitations that would make the 
-source ugly. For those that want to try, there are already 
-.dsp files in plib, SimGear and FlightGear source trees.
+Precompiled librairies and headers for compiling Win32 executables with VS2008 :
+ftp://ftp.ihg.uni-duisburg.de/FlightGear/Win32/MSVC/fgfs-win32-VS90-3rdParty+OSG-20100501.zip
 
-Support request must be directed to the mailing list.
+The VS2008 / v9.0 project files assume the directory layout below :
 
+Win32 build :
+ * any_directory_on_any_drive /
+      3rdParty /                 ( includes plib, fltk, zlib, libpng, libjpeg, libtiff, freetype, libsvn, gdal, ...
+         bin /
+         include /
+         lib /
+      boost_1_39_0 /
+         boost /
+      source /                   ( Flightgear CVS directory - It can also be renamed FlightGear or anything else
+         src /
+         projects /
+            VC90 /
+               Win32 /           ( generated at build time
+                  Debug /        ( Debug executable
+                  Release /      ( Release executable
+               FlightGear.sln    ( Main solution
+         utils /
+      install /
+         msvc90 /
+            OpenSceneGraph /     ( OSG CMake install
+               bin /
+               include /
+               lib /
+      SimGear /                  ( SimGear CVS directory
+         simgear /
+         projects /
+            VC90 /
 
-Pthread support for Windows can be obtained here:
-http://sourceware.org/pthreads-win32/
+3rdParty, boost_1_39_0 and install/msvc90 are included in the Win32 3rdParty archive.
+
+x64 build :
+ * any_directory_on_any_drive /
+      3rdParty.x64 /             ( includes plib, fltk, zlib, libpng, libjpeg, libtiff, freetype, ...
+         bin /
+         include /
+         lib /
+      boost_1_39_0 /
+         boost /
+      source /                   ( Flightgear CVS directory - It can also be renamed FlightGear or anything else
+         src /
+         projects /
+            VC90 /
+               x64 /             ( generated at build time
+                  Debug /        ( Debug executable
+                  Release /      ( Release executable
+               FlightGear.sln    ( Main solution
+         utils /
+      install /
+         msvc90-64 /
+            OpenSceneGraph /     ( OSG CMake install
+               bin /
+               include /
+               lib /
+      SimGear /                  ( SimGear CVS directory
+         simgear /
+         projects /
+            VC90 /
+
+3rdParty.x64, boost_1_39_0 and install/msvc90-64 are included in the x32 3rdParty archive.
