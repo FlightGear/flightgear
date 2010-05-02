@@ -24,7 +24,7 @@
 #include <vector>
 
 #include <simgear/structure/SGSharedPtr.hxx>
-#include <simgear/bucket/newbucket.hxx>
+#include <simgear/math/SGMath.hxx>
 
 class FGPositioned;
 
@@ -88,8 +88,6 @@ public:
    */
   SGVec3d cart() const;
 
-  SGBucket bucket() const;
-  
   double latitude() const
   { return mPosition.getLatitudeDeg(); }
   

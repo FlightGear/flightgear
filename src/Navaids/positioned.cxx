@@ -30,11 +30,10 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
-#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/timing/timestamp.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
-#include <simgear/math/SGBox.hxx>
+#include <simgear/math/SGGeometry.hxx>
 
 #include "positioned.hxx"
 
@@ -54,27 +53,6 @@ namespace Octree
 
 const double LEAF_SIZE = SG_NM_TO_METER * 8.0;
 const double LEAF_SIZE_SQR = LEAF_SIZE * LEAF_SIZE;
-
-typedef SGBox<double> SGBoxd;
-
-template<typename T1, typename T2>
-inline bool
-intersects(const SGVec3<T1>& v, const SGBox<T2>& box)
-{
-  if (v[0] < box.getMin()[0])
-    return false;
-  if (box.getMax()[0] < v[0])
-    return false;
-  if (v[1] < box.getMin()[1])
-    return false;
-  if (box.getMax()[1] < v[1])
-    return false;
-  if (v[2] < box.getMin()[2])
-    return false;
-  if (box.getMax()[2] < v[2])
-    return false;
-  return true;
-}
 
 /**
  * Decorate an object with a double value, and use that value to order 
@@ -156,27 +134,10 @@ public:
 
     double distSqrToNearest(const SGVec3d& aPos) const
     {
-        return distSqr(aPos, getClosestPoint(aPos));
+        return distSqr(aPos, _box.getClosestPoint(aPos));
     }
     
     virtual void insert(FGPositioned* aP) = 0;
-    
-    SGVec3d getClosestPoint(const SGVec3d& aPos) const
-    {
-      SGVec3d r;
-      
-      for (unsigned int i=0;i<3; ++i) {
-        if (aPos[i] < _box.getMin()[i]) {
-          r[i] = _box.getMin()[i];
-        } else if (aPos[i] > _box.getMax()[i]) {
-          r[i] = _box.getMax()[i];
-        } else {
-          r[i] = aPos[i];
-        }
-      } // of axis iteration
-      
-      return r;
-    }
     
     virtual void visit(const SGVec3d& aPos, double aCutoff, 
       FGPositioned::Filter* aFilter, 
@@ -726,12 +687,6 @@ FGPositioned*
 FGPositioned::createUserWaypoint(const std::string& aIdent, const SGGeod& aPos)
 {
   return new FGPositioned(WAYPOINT, aIdent, aPos, true);
-}
-
-SGBucket
-FGPositioned::bucket() const
-{
-  return SGBucket(mPosition);
 }
 
 SGVec3d
