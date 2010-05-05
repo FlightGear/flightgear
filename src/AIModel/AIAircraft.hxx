@@ -70,6 +70,8 @@ public:
 
     void announcePositionToController(); //TODO have to be public?
     void processATC(FGATCInstruction instruction);
+    void setTaxiClearanceRequest(bool arg) { needsTaxiClearance = arg; };
+    bool getTaxiClearanceRequest() { return needsTaxiClearance; };
     FGAISchedule * getTrafficRef() { return trafficRef; };
 
     virtual const char* getTypeString(void) const { return "aircraft"; }
@@ -150,6 +152,7 @@ private:
     const char * _getTransponderCode() const;
 
     bool reachedWaypoint;
+    bool needsTaxiClearance;
     time_t timeElapsed;
 
     PerformanceData* _performance; // the performance data for this aircraft

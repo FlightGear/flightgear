@@ -237,7 +237,6 @@ private:
     SGGeod pos(SGGeod::fromDegFt(lon, lat, last_apt_elev));
     FGAirport* apt = new FGAirport(last_apt_id, pos, tower, last_apt_name, false,
         fptypeFromRobinType(atoi(last_apt_type.c_str())));
-        
     apt->setRunwaysAndTaxiways(runways, taxiways, pavements);
   }
   

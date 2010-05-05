@@ -129,6 +129,7 @@ public:
   void setLeg(int lg) { leg = lg;};
   int getId() { return id;};
   int getState() { return state;};
+  int setState(int s) { state = s;}
   FGATCInstruction getInstruction() { return instruction;};
   bool hasInstruction() { return instruction.hasInstruction(); };
   void setPositionAndHeading(double lat, double lon, double hdg, double spd, double alt);
@@ -210,7 +211,10 @@ typedef vector<ActiveRunway>::iterator ActiveRunwayVecIterator;
  *************************************************************************************/
 class FGATCController
 {
-private:
+protected:
+  bool available;
+  time_t lastTransmission;
+
   double dt_count;
 
 
@@ -220,18 +224,27 @@ private:
 public:
   typedef enum {
       MSG_ANNOUNCE_ENGINE_START,
-      MSG_REQUEST_ENGINE_START, 
+      MSG_REQUEST_ENGINE_START,
       MSG_PERMIT_ENGINE_START,
       MSG_DENY_ENGINE_START,
       MSG_ACKNOWLEDGE_ENGINE_START,
       MSG_REQUEST_PUSHBACK_CLEARANCE,
-      MSG_PERMIT_PUSHBACK_CLEARANCE, 
+      MSG_PERMIT_PUSHBACK_CLEARANCE,
       MSG_HOLD_PUSHBACK_CLEARANCE,
-      MSG_ACKNOWLEDGE_SWITCH_GROUND_FREQUENCY } AtcMsgId;
+      MSG_ACKNOWLEDGE_SWITCH_GROUND_FREQUENCY,
+      MSG_INITIATE_CONTACT,
+      MSG_ACKNOWLEDGE_INITIATE_CONTACT,
+      MSG_REQUEST_TAXI_CLEARANCE,
+      MSG_ISSUE_TAXI_CLEARANCE,
+      MSG_ACKNOWLEDGE_TAXI_CLEARANCE,
+      MSG_HOLD_POSITION,
+      MSG_ACKNOWLEDGE_HOLD_POSITION,
+      MSG_RESUME_TAXI,
+      MSG_ACKNOWLEDGE_RESUME_TAXI } AtcMsgId;
   typedef enum {
       ATC_AIR_TO_GROUND,
       ATC_GROUND_TO_AIR } AtcMsgDir;
-  FGATCController() { dt_count = 0;};
+  FGATCController();
   virtual ~FGATCController() {};
   virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
 				double lat, double lon,
@@ -284,8 +297,6 @@ class FGStartupController : public FGATCController
 {
 private:
   TrafficVector activeTraffic;
-  bool available;
-  time_t lastTransmission;
   //ActiveRunwayVec activeRunways;
   
 public:
