@@ -129,6 +129,14 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
 // Destructor
 FGNavRadio::~FGNavRadio() 
 {
+    if (gps_course_node) {
+      gps_course_node->removeChangeListener(this);
+    }
+    
+    if (nav_slaved_to_gps_node) {
+      nav_slaved_to_gps_node->removeChangeListener(this);
+    }
+    
     delete term_tbl;
     delete low_tbl;
     delete high_tbl;
@@ -220,11 +228,15 @@ FGNavRadio::init ()
 
     // gps slaving support
     nav_slaved_to_gps_node = node->getChild("slaved-to-gps", 0, true);
+    nav_slaved_to_gps_node->addChangeListener(this);
+    
     gps_cdi_deflection_node = fgGetNode("/instrumentation/gps/cdi-deflection", true);
     gps_to_flag_node = fgGetNode("/instrumentation/gps/to-flag", true);
     gps_from_flag_node = fgGetNode("/instrumentation/gps/from-flag", true);
     gps_has_gs_node = fgGetNode("/instrumentation/gps/has-gs", true);
-    gps_course_node = fgGetNode("/instrumentation/gps/selected-course-deg", true);
+    gps_course_node = fgGetNode("/instrumentation/gps/desired-course-deg", true);
+    gps_course_node->addChangeListener(this);
+    
     gps_xtrack_error_nm_node = fgGetNode("/instrumentation/gps/wp/wp[1]/course-error-nm", true);
     _magvarNode = fgGetNode("/environment/magnetic-variation-deg", true);
     
@@ -625,6 +637,26 @@ void FGNavRadio::updateDME(const SGVec3d& aircraft)
   _dmeInRange =  (dme_distance < _dme->get_range() * SG_NM_TO_METER);
 }
 
+void FGNavRadio::valueChanged (SGPropertyNode* prop)
+{
+  if (prop == gps_course_node) {
+    if (!nav_slaved_to_gps_node->getBoolValue()) {
+      return;
+    }
+  
+    // GPS desired course has changed, sync up our selected-course
+    double v = prop->getDoubleValue();
+    if (v != sel_radial_node->getDoubleValue()) {
+      sel_radial_node->setDoubleValue(v);
+    }
+  } else if (prop == nav_slaved_to_gps_node) {
+    if (prop->getBoolValue()) {
+      // slaved-to-GPS activated, sync up selected course
+      sel_radial_node->setDoubleValue(gps_course_node->getDoubleValue());
+    }
+  }
+}
+
 void FGNavRadio::updateGPSSlaved()
 {
   has_gs_node->setBoolValue(gps_has_gs_node->getBoolValue());
@@ -864,7 +896,7 @@ void FGNavRadio::search()
     } else { // ILS or LOC
       _gs = globals->get_gslist()->findByFreq(freq, pos);
       has_gs_node->setBoolValue(_gs != NULL);
-      _localizerWidth = localizerWidth(nav);
+      _localizerWidth = nav->localizerWidth();
       twist = 0.0;
 	    effective_range = nav->get_range();
       
@@ -912,39 +944,6 @@ void FGNavRadio::search()
   id_c2_node->setIntValue( (int)identBuffer[1] );
   id_c3_node->setIntValue( (int)identBuffer[2] );
   id_c4_node->setIntValue( (int)identBuffer[3] );
-}
-
-double FGNavRadio::localizerWidth(FGNavRecord* aLOC)
-{
-  FGRunway* rwy = aLOC->runway();
-  if (!rwy) {
-    return 6.0; // no runway associated, return default value
-  }
-  
-  
-  SGVec3d thresholdCart(SGVec3d::fromGeod(rwy->threshold()));
-  double axisLength = dist(aLOC->cart(), thresholdCart);
-  double landingLength = dist(thresholdCart, SGVec3d::fromGeod(rwy->end()));
-  
-// Reference: http://dcaa.slv.dk:8000/icaodocs/
-// ICAO standard width at threshold is 210 m = 689 feet = approx 700 feet.
-// ICAO 3.1.1 half course = DDM = 0.0775
-// ICAO 3.1.3.7.1 Sensitivity 0.00145 DDM/m at threshold
-//  implies peg-to-peg of 214 m ... we will stick with 210.
-// ICAO 3.1.3.7.1 "Course sector angle shall not exceed 6 degrees."
-              
-// Very short runway:  less than 1200 m (4000 ft) landing length:
-  if (landingLength < 1200.0) {
-// ICAO fudges localizer sensitivity for very short runways.
-// This produces a non-monotonic sensitivity-versus length relation.
-    axisLength += 1050.0;
-  }
-
-// Example: very short: San Diego   KMYF (Montgomery Field) ILS RWY 28R
-// Example: short:      Tom's River KMJX (Robert J. Miller) ILS RWY 6
-// Example: very long:  Denver      KDEN (Denver)           ILS RWY 16R
-  double raw_width = 210.0 / axisLength * SGD_RADIANS_TO_DEGREES;
-  return raw_width < 6.0? raw_width : 6.0;
 }
 
 void FGNavRadio::audioNavidChanged()

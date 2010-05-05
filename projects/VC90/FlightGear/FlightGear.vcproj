@@ -2647,6 +2647,8 @@
 			</File>
 			<File RelativePath="..\..\..\src\GUI\WaypointList.cxx"></File>
 			<File RelativePath="..\..\..\src\GUI\WaypointList.hxx"></File>
+			<File RelativePath="..\..\..\src\GUI\MapWidget.cxx"></File>
+			<File RelativePath="..\..\..\src\GUI\MapWidget.hxx"></File>
 		</Filter>
 		<Filter
 			Name="Lib_Input"

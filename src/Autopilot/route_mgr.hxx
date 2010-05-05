@@ -135,6 +135,9 @@ private:
      */
     bool checkFinished();
     
+    
+    void loadPlainTextRoute(const SGPath& path);
+    
 // tied getters and setters
     const char* getDepartureICAO() const;
     const char* getDepartureName() const;

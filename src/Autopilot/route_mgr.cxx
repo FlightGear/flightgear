@@ -39,6 +39,7 @@
 
 #include <simgear/misc/strutils.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/misc/sgstream.hxx>
 
 #include <simgear/props/props_io.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -597,6 +598,7 @@ void FGRouteMgr::jumpToIndex(int index)
   
   _route->set_current(index);
   currentWaypointChanged();
+  _currentWpt->fireValueChanged();
 }
 
 void FGRouteMgr::currentWaypointChanged()
@@ -656,25 +658,66 @@ void FGRouteMgr::saveRoute()
   SGPath path(_pathNode->getStringValue());
   SG_LOG(SG_IO, SG_INFO, "Saving route to " << path.str());
   try {
-    writeProperties(path.str(), mirror, false, SGPropertyNode::ARCHIVE);
+    SGPropertyNode_ptr d(new SGPropertyNode);
+    SGPath path(_pathNode->getStringValue());
+    d->setIntValue("version", 1);
+    
+    if (_departure) {
+      d->setStringValue("departure/airport", _departure->ident());
+      d->setStringValue("departure/sid", departure->getStringValue("sid"));
+      d->setStringValue("departure/runway", departure->getStringValue("runway"));
+    }
+    
+    if (_destination) {
+      d->setStringValue("destination/airport", _destination->ident());
+      d->setStringValue("destination/star", destination->getStringValue("star"));
+      d->setStringValue("destination/transition", destination->getStringValue("transition"));
+      d->setStringValue("destination/runway", destination->getStringValue("runway"));
+    }
+  
+    // route nodes
+    SGPropertyNode* routeNode = d->getChild("route", 0, true);
+    for (int i=0; i<_route->size(); ++i) {
+      SGPropertyNode* wpNode = routeNode->getChild("wp",i, true);
+      SGWayPoint wp(_route->get_waypoint(i));
+      
+      wpNode->setStringValue("ident", wp.get_id());
+      wpNode->setStringValue("name", wp.get_name());
+      SGGeod geod(wp.get_target());
+      
+      wpNode->setDoubleValue("longitude-deg", geod.getLongitudeDeg());
+      wpNode->setDoubleValue("latitude-deg", geod.getLatitudeDeg());
+      
+      if (geod.getElevationFt() > -9990.0) {
+        wpNode->setDoubleValue("altitude-ft", geod.getElevationFt());
+      }
+    } // of waypoint iteration
+    
+    writeProperties(path.str(), d, true /* write-all */);
   } catch (const sg_exception &e) {
     SG_LOG(SG_IO, SG_WARN, "Error saving route:" << e.getMessage());
-    //guiErrorMessage("Error writing autosave.xml: ", e);
   }
 }
 
 void FGRouteMgr::loadRoute()
 {
+  // deactivate route first
+  active->setBoolValue(false);
+  
+  SGPropertyNode_ptr routeData(new SGPropertyNode);
+  SGPath path(_pathNode->getStringValue());
+  
+  SG_LOG(SG_IO, SG_INFO, "going to read flight-plan from:" << path.str());
+    
   try {
-    // deactivate route first
-    active->setBoolValue(false);
-    
-    SGPropertyNode_ptr routeData(new SGPropertyNode);
-    SGPath path(_pathNode->getStringValue());
-    
-    SG_LOG(SG_IO, SG_INFO, "going to read flight-plan from:" << path.str());
     readProperties(path.str(), routeData);
-    
+  } catch (sg_exception& e) {
+    // if XML parsing fails, the file might be simple textual list of waypoints
+    loadPlainTextRoute(path);
+    return;
+  }
+  
+  try {
   // departure nodes
     SGPropertyNode* dep = routeData->getChild("departure");
     if (!dep) {
@@ -703,7 +746,9 @@ void FGRouteMgr::loadRoute()
   // cruise
     SGPropertyNode* crs = routeData->getChild("cruise");
     if (crs) {
-      cruise->setDoubleValue(crs->getDoubleValue("speed"));
+      cruise->setDoubleValue("speed-kts", crs->getDoubleValue("speed-kts"));
+      cruise->setDoubleValue("mach", crs->getDoubleValue("mach"));
+      cruise->setDoubleValue("altitude-ft", crs->getDoubleValue("altitude-ft"));
     } // of cruise data loading
 
   // route nodes
@@ -734,7 +779,7 @@ void FGRouteMgr::parseRouteWaypoint(SGPropertyNode* aWP)
   }
 
   SGPropertyNode_ptr altProp = aWP->getChild("altitude-ft");
-  double altM = cruise->getDoubleValue("altitude-ft") * SG_FEET_TO_METER;
+  double altM = -9999.0;
   if (altProp) {
     altM = altProp->getDoubleValue() * SG_FEET_TO_METER;
   }
@@ -778,6 +823,26 @@ void FGRouteMgr::parseRouteWaypoint(SGPropertyNode* aWP)
       SGWayPoint::WGS84, p->ident(), p->name());
     add_waypoint(swp);
   }
+}
+
+void FGRouteMgr::loadPlainTextRoute(const SGPath& path)
+{
+  sg_gzifstream in(path.str().c_str());
+  if (!in.is_open()) {
+    return;
+  }
+  
+  _route->clear();
+  while (!in.eof()) {
+    string line;
+    getline(in, line, '\n');
+  // trim CR from end of line, if found
+    if (line[line.size() - 1] == '\r') {
+      line.erase(line.size() - 1, 1);
+    }
+    
+    new_waypoint(line, -1);
+  } // of line iteration
 }
 
 const char* FGRouteMgr::getDepartureICAO() const
