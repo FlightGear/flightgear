@@ -129,9 +129,14 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
 // Destructor
 FGNavRadio::~FGNavRadio() 
 {
-    gps_course_node->removeChangeListener(this);
-    nav_slaved_to_gps_node->removeChangeListener(this);
-  
+    if (gps_course_node) {
+      gps_course_node->removeChangeListener(this);
+    }
+    
+    if (nav_slaved_to_gps_node) {
+      nav_slaved_to_gps_node->removeChangeListener(this);
+    }
+    
     delete term_tbl;
     delete low_tbl;
     delete high_tbl;
