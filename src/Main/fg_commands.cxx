@@ -576,10 +576,8 @@ do_tile_cache_reload (const SGPropertyNode * arg)
  * boundary and aloft environment layers.
  */
 static bool
-do_set_sea_level_degc (const SGPropertyNode * arg)
+do_set_sea_level_degc ( double temp_sea_level_degc)
 {
-    double temp_sea_level_degc = arg->getDoubleValue("temp-degc", 15.0);
-
     SGPropertyNode *node, *child;
 
     // boundary layers
@@ -605,6 +603,12 @@ do_set_sea_level_degc (const SGPropertyNode * arg)
     }
 
     return true;
+}
+
+static bool
+do_set_sea_level_degc (const SGPropertyNode * arg)
+{
+    return do_set_sea_level_degc( arg->getDoubleValue("temp-degc", 15.0) );
 }
 
 
@@ -616,8 +620,7 @@ do_set_sea_level_degc (const SGPropertyNode * arg)
 static bool
 do_set_oat_degc (const SGPropertyNode * arg)
 {
-    const string &temp_str = arg->getStringValue("temp-degc", "15.0");
-
+    double oat_degc = arg->getDoubleValue("temp-degc", 15.0);
     // check for an altitude specified in the arguments, otherwise use
     // current aircraft altitude.
     const SGPropertyNode *altitude_ft = arg->getChild("altitude-ft");
@@ -627,38 +630,8 @@ do_set_oat_degc (const SGPropertyNode * arg)
 
     FGEnvironment dummy;	// instantiate a dummy so we can leech a method
     dummy.set_elevation_ft( altitude_ft->getDoubleValue() );
-    dummy.set_temperature_degc( atof( temp_str.c_str() ) );
-    double temp_sea_level_degc = dummy.get_temperature_sea_level_degc();
-
-    //cout << "Altitude = " << altitude_ft->getDoubleValue() << endl;
-    //cout << "Temp at alt (C) = " << atof( temp_str.c_str() ) << endl;
-    //cout << "Temp sea level (C) = " << temp_sea_level_degc << endl;
- 
-    SGPropertyNode *node, *child;
-
-    // boundary layers
-    node = fgGetNode( "/environment/config/boundary" );
-    if ( node != NULL ) {
-      int i = 0;
-      while ( ( child = node->getNode( "entry", i ) ) != NULL ) {
-	child->setDoubleValue( "temperature-sea-level-degc",
-			       temp_sea_level_degc );
-	++i;
-      }
-    }
-
-    // aloft layers
-    node = fgGetNode( "/environment/config/aloft" );
-    if ( node != NULL ) {
-      int i = 0;
-      while ( ( child = node->getNode( "entry", i ) ) != NULL ) {
-	child->setDoubleValue( "temperature-sea-level-degc",
-			       temp_sea_level_degc );
-	++i;
-      }
-    }
-
-    return true;
+    dummy.set_temperature_degc( oat_degc );
+    return do_set_sea_level_degc( dummy.get_temperature_sea_level_degc());
 }
 
 /**
@@ -666,9 +639,8 @@ do_set_oat_degc (const SGPropertyNode * arg)
  * boundary and aloft environment layers.
  */
 static bool
-do_set_dewpoint_sea_level_degc (const SGPropertyNode * arg)
+do_set_dewpoint_sea_level_degc (double dewpoint_sea_level_degc)
 {
-    double dewpoint_sea_level_degc = arg->getDoubleValue("dewpoint-degc", 5.0);
 
     SGPropertyNode *node, *child;
 
@@ -697,6 +669,11 @@ do_set_dewpoint_sea_level_degc (const SGPropertyNode * arg)
     return true;
 }
 
+static bool
+do_set_dewpoint_sea_level_degc (const SGPropertyNode * arg)
+{
+    return do_set_dewpoint_sea_level_degc(arg->getDoubleValue("dewpoint-degc", 5.0));
+}
 
 /**
  * Set the outside air dewpoint at the "current" altitude by first
@@ -706,7 +683,7 @@ do_set_dewpoint_sea_level_degc (const SGPropertyNode * arg)
 static bool
 do_set_dewpoint_degc (const SGPropertyNode * arg)
 {
-    const string &dewpoint_str = arg->getStringValue("dewpoint-degc", "5.0");
+    double dewpoint_degc = arg->getDoubleValue("dewpoint-degc", 5.0);
 
     // check for an altitude specified in the arguments, otherwise use
     // current aircraft altitude.
@@ -717,38 +694,8 @@ do_set_dewpoint_degc (const SGPropertyNode * arg)
 
     FGEnvironment dummy;	// instantiate a dummy so we can leech a method
     dummy.set_elevation_ft( altitude_ft->getDoubleValue() );
-    dummy.set_dewpoint_degc( atof( dewpoint_str.c_str() ) );
-    double dewpoint_sea_level_degc = dummy.get_dewpoint_sea_level_degc();
-
-    //cout << "Altitude = " << altitude_ft->getDoubleValue() << endl;
-    //cout << "Dewpoint at alt (C) = " << atof( dewpoint_str.c_str() ) << endl;
-    //cout << "Dewpoint at sea level (C) = " << dewpoint_sea_level_degc << endl;
- 
-    SGPropertyNode *node, *child;
-
-    // boundary layers
-    node = fgGetNode( "/environment/config/boundary" );
-    if ( node != NULL ) {
-      int i = 0;
-      while ( ( child = node->getNode( "entry", i ) ) != NULL ) {
-	child->setDoubleValue( "dewpoint-sea-level-degc",
-			       dewpoint_sea_level_degc );
-	++i;
-      }
-    }
-
-    // aloft layers
-    node = fgGetNode( "/environment/config/aloft" );
-    if ( node != NULL ) {
-      int i = 0;
-      while ( ( child = node->getNode( "entry", i ) ) != NULL ) {
-	child->setDoubleValue( "dewpoint-sea-level-degc",
-			       dewpoint_sea_level_degc );
-	++i;
-      }
-    }
-
-    return true;
+    dummy.set_dewpoint_degc( dewpoint_degc );
+    return do_set_dewpoint_sea_level_degc(dummy.get_dewpoint_sea_level_degc());
 }
 
 /**
