@@ -225,7 +225,13 @@ void RunwayGroup::setActive(const FGAirport* airport,
 	  validSelection = true;
 	  for (int j = 0; j < activeRwys; j++)
     {
-	     rwy = airport->getRunwayByIdent(rwyList[j].getRwyList(i));
+      string ident(rwyList[j].getRwyList(i));
+      if (!airport->hasRunwayWithIdent(ident)) {
+        SG_LOG(SG_GENERAL, SG_WARN, "no such runway:" << ident << " at " << airport->ident());
+        continue;
+      }
+      
+	     rwy = airport->getRunwayByIdent(ident);
        
 	    		  //cerr << "Succes" << endl;
 		  hdgDiff = fabs(windHeading - rwy->headingDeg());
