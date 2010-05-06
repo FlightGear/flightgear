@@ -432,13 +432,12 @@ case "${host}" in
 
     # Mac OS X has OpenAL.framework, but no ALUT, by default, so we
     # require use of a non-Apple ALUT.framework which we provide
-    LIBS="$LIBS -framework IOKit -framework OpenAL"
-    openal_LIBS="$LIBS"
+    openal_LIBS="-framework IOKit -framework OpenAL"
     
     AC_CHECK_FRAMEWORK(OpenAL, [#include <OpenAL/al.h>], "", [OPENAL_OK="yes"])
     AC_CHECK_FRAMEWORK(ALUT, [#include <ALUT/alut.h>], $with_alut_framework, [
         ALUT_OK="yes"
-        LIBS = "$LIBS -framework ALUT"
+        openal_LIBS="$openal_LIBS -framework ALUT"
     ])
     ;;
 
