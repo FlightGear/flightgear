@@ -39,6 +39,7 @@
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/bucket/newbucket.hxx>
 
 #include <string>
 
