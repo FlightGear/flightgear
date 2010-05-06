@@ -128,10 +128,6 @@ svn_opt_revision_t *mysvn_rev_peg = NULL;
 static const svn_version_checklist_t mysvn_checklist[] = {
     { "svn_subr",   svn_subr_version },
     { "svn_client", svn_client_version },
-    { "svn_wc",     svn_wc_version },
-    { "svn_ra",     svn_ra_version },
-    { "svn_delta",  svn_delta_version },
-    { "svn_diff",   svn_diff_version },
     { NULL, NULL }
 };
 

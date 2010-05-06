@@ -745,10 +745,9 @@ fi
 dnl Check for Subversion library support
 save_LIBS=$LIBS
 save_CPPFLAGS=$CPPFLAGS
-LIBS=""
+LIBS="`apr-1-config --link-ld`"
 CPPFLAGS="-I/usr/include/subversion-1 `apr-1-config --includes`"
-AC_CHECK_LIB(svn_client-1, svn_client_checkout3)
-AC_CHECK_HEADERS([svn_client.h glut.h])
+AC_CHECK_HEADERS([svn_client.h])
 if test "x$ac_cv_header_svn_client_h" != "xyes"; then
   echo "TerraSync will shell out for command line subversion"
   svn_LIBS=""
@@ -756,6 +755,7 @@ if test "x$ac_cv_header_svn_client_h" != "xyes"; then
 else
   echo "TerraSync will use integrated subversion library"
   AC_SEARCH_LIBS(svn_client_checkout, svn_client-1)
+  AC_SEARCH_LIBS(svn_cmdline_init, svn_subr-1)
   svn_LIBS=$LIBS
   svn_CPPFLAGS=$CPPFLAGS
   AC_SUBST(svn_LIBS)
