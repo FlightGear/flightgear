@@ -262,15 +262,10 @@ private:
     double _target_pitch_deg;
     double _target_heading_deg;
 
-    double _damp_sync;
-    double _damp_roll;
-    double _damp_pitch;
-    double _damp_heading;
-
-    double _damped_roll_deg;
-    double _damped_pitch_deg;
-    double _damped_heading_deg;
-
+    SGVec3d _dampTarget; ///< current target value we are damping towards
+    SGVec3d _dampOutput; ///< current output of damping filter
+    SGVec3d _dampFactor; ///< weighting of the damping filter
+    
     // Position offsets from FDM origin.  The X axis is positive
     // out the tail, Y is out the right wing, and Z is positive up.
     // distance in meters
@@ -328,8 +323,12 @@ private:
     void recalc ();
     void recalcLookFrom();
     void recalcLookAt();
-    void dampEyeData(double &roll_deg, double &pitch_deg, double &heading_deg);
 
+    void setDampTarget(double h, double p, double r);
+    void getDampOutput(double& roll, double& pitch, double& heading);
+    
+    void updateDampOutput(double dt);
+    
     // add to _heading_offset_deg
     inline void incHeadingOffset_deg( double amt ) {
 	set_dirty();
