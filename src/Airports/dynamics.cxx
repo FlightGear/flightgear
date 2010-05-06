@@ -50,31 +50,34 @@ using std::random_shuffle;
 #include "simple.hxx"
 #include "dynamics.hxx"
 
-FGAirportDynamics::FGAirportDynamics(FGAirport* ap) :
-  _ap(ap), rwyPrefs(ap), SIDs(ap) {
-  lastUpdate = 0;
+FGAirportDynamics::FGAirportDynamics(FGAirport * ap):
+_ap(ap), rwyPrefs(ap), SIDs(ap)
+{
+    lastUpdate = 0;
 
-  // For testing only. This needs to be refined when we move ATIS functionality over.
-  atisInformation = "Sierra";
+    // For testing only. This needs to be refined when we move ATIS functionality over.
+    atisInformation = "Sierra";
 }
 
 // Note that the ground network should also be copied
-FGAirportDynamics::FGAirportDynamics(const FGAirportDynamics& other) :
-  rwyPrefs(other.rwyPrefs),
-  SIDs(other.SIDs)
+FGAirportDynamics::
+FGAirportDynamics(const FGAirportDynamics & other):rwyPrefs(other.
+                                                            rwyPrefs),
+SIDs(other.SIDs)
 {
-  for (FGParkingVecConstIterator ip= other.parkings.begin(); ip != other.parkings.end(); ip++)
-    parkings.push_back(*(ip));
-  // rwyPrefs = other.rwyPrefs;
-  lastUpdate = other.lastUpdate;
-  
-  stringVecConstIterator il;
-  for (il = other.landing.begin(); il != other.landing.end(); il++)
-    landing.push_back(*il);
-  for (il = other.takeoff.begin(); il != other.takeoff.end(); il++)
-    takeoff.push_back(*il);
-  lastUpdate = other.lastUpdate;
-  atisInformation = other.atisInformation; 
+    for (FGParkingVecConstIterator ip = other.parkings.begin();
+         ip != other.parkings.end(); ip++)
+        parkings.push_back(*(ip));
+    // rwyPrefs = other.rwyPrefs;
+    lastUpdate = other.lastUpdate;
+
+    stringVecConstIterator il;
+    for (il = other.landing.begin(); il != other.landing.end(); il++)
+        landing.push_back(*il);
+    for (il = other.takeoff.begin(); il != other.takeoff.end(); il++)
+        takeoff.push_back(*il);
+    lastUpdate = other.lastUpdate;
+    atisInformation = other.atisInformation;
 }
 
 // Destructor
@@ -84,449 +87,404 @@ FGAirportDynamics::~FGAirportDynamics()
 
 
 // Initialization required after XMLRead
-void FGAirportDynamics::init() 
+void FGAirportDynamics::init()
 {
-  // This may seem a bit weird to first randomly shuffle the parkings
-  // and then sort them again. However, parkings are sorted here by ascending 
-  // radius. Since many parkings have similar radii, with each radius class they will
-  // still be allocated relatively systematically. Randomizing prior to sorting will
-  // prevent any initial orderings to be destroyed, leading (hopefully) to a more 
-  // naturalistic gate assignment. 
-  random_shuffle(parkings.begin(), parkings.end());
-  sort(parkings.begin(), parkings.end());
-  // add the gate positions to the ground network. 
-  groundNetwork.addNodes(&parkings);
-  groundNetwork.init();
-  groundNetwork.setTowerController(&towerController);
-  groundNetwork.setParent(_ap);
+    // This may seem a bit weird to first randomly shuffle the parkings
+    // and then sort them again. However, parkings are sorted here by ascending 
+    // radius. Since many parkings have similar radii, with each radius class they will
+    // still be allocated relatively systematically. Randomizing prior to sorting will
+    // prevent any initial orderings to be destroyed, leading (hopefully) to a more 
+    // naturalistic gate assignment. 
+    random_shuffle(parkings.begin(), parkings.end());
+    sort(parkings.begin(), parkings.end());
+    // add the gate positions to the ground network. 
+    groundNetwork.addNodes(&parkings);
+    groundNetwork.init();
+    groundNetwork.setTowerController(&towerController);
+    groundNetwork.setParent(_ap);
 }
 
-bool FGAirportDynamics::getAvailableParking(double *lat, double *lon, double *heading, int *gateId, double rad, const string &flType, const string &acType, const string &airline)
+bool FGAirportDynamics::getAvailableParking(double *lat, double *lon,
+                                            double *heading, int *gateId,
+                                            double rad,
+                                            const string & flType,
+                                            const string & acType,
+                                            const string & airline)
 {
-  bool found = false;
-  bool available = false;
-  //string gateType;
+    bool found = false;
+    bool available = false;
 
-  FGParkingVecIterator i;
-//   if (flType == "cargo")
-//     {
-//       gateType = "RAMP_CARGO";
-//     }
-//   else if (flType == "ga")
-//     {
-//       gateType = "RAMP_GA";
-//     }
-//   else gateType = "GATE";
-  
-  if (parkings.begin() == parkings.end())
-    {
-      //cerr << "Could not find parking spot at " << _ap->getId() << endl;
-      *lat = _ap->getLatitude();
-      *lon = _ap->getLongitude();
-      *heading = 0;
-      found = true;
-    }
-  else
-    {
-      // First try finding a parking with a designated airline code
-      for (i = parkings.begin(); !(i == parkings.end() || found); i++)
-	{
-	  //cerr << "Gate Id: " << i->getIndex()
-	  //     << " Type  : " << i->getType()
-	  //     << " Codes : " << i->getCodes()
-	  //     << " Radius: " << i->getRadius()
-	  //     << " Name  : " << i->getName()
-          //     << " Available: " << i->isAvailable() << endl;
-	  available = true;
-	  // Taken by another aircraft
-	  if (!(i->isAvailable()))
-	    {
-	      available = false;
-	      continue;
-	    }
-	  // No airline codes, so skip
-	  if (i->getCodes().empty())
-	    {
-	      available = false;
-	      continue;
-	    }
-	  else // Airline code doesn't match
-	    {
-	      //cerr << "Code = " << airline << ": Codes " << i->getCodes();
-	      if (i->getCodes().find(airline, 0) == string::npos)
-		{
-		  available = false;
-		  //cerr << "Unavailable" << endl;
-		  continue;
-		}
-	      else
-		{
-		  //cerr << "Available" << endl;
-		}
-	    }
-	  // Type doesn't match
-	  if (i->getType() != flType)
-	    {
-	      available = false;
-	      continue;
-	    }
-	  // too small
-	  if (i->getRadius() < rad)
-	    {
-	      available = false;
-	      continue;
-	    }
-	  
-	  if (available)
-	    {
-	      *lat     = i->getLatitude ();
-	      *lon     = i->getLongitude();
-	      *heading = i->getHeading  ();
-	      *gateId  = i->getIndex    ();
-	      i->setAvailable(false);
-	      found = true;
-	    }
-	}
-      // then try again for those without codes. 
-      for (i = parkings.begin(); !(i == parkings.end() || found); i++)
-	{
-	  available = true;
-	  if (!(i->isAvailable()))
-	    {
-	      available = false;
-	      continue;
-	    }
-	  if (!(i->getCodes().empty()))
-	    {
-	      if ((i->getCodes().find(airline,0) == string::npos))
-	        {
-	            available = false;
-	            continue;
-	        }
-	    }
-	  if (i->getType() != flType)
-	    {
-	      available = false;
-	      continue;
-	    }
-	      
-	  if (i->getRadius() < rad)
-	    {
-	      available = false;
-	      continue;
-	    }
-	  
-	  if (available)
-	    {
-	      *lat     = i->getLatitude ();
-	      *lon     = i->getLongitude();
-	      *heading = i->getHeading  ();
-	      *gateId  = i->getIndex    ();
-	      i->setAvailable(false);
-	      found = true;
-	    }
-	}
-      // And finally once more if that didn't work. Now ignore the airline codes, as a last resort
-      for (i = parkings.begin(); !(i == parkings.end() || found); i++)
-	{
-	  available = true;
-	  if (!(i->isAvailable()))
-	    {
-	      available = false;
-	      continue;
-	    }
-	  if (i->getType() != flType)
-	    {
-	      available = false;
-	      continue;
-	    }
-	  
-	  if (i->getRadius() < rad)
-	    {
-	      available = false;
-	      continue;
-	    }
-	  
-	  if (available)
-	    {
-	      *lat     = i->getLatitude ();
-	      *lon     = i->getLongitude();
-	      *heading = i->getHeading  ();
-	      *gateId  = i->getIndex    ();
-	      i->setAvailable(false);
-	      found = true;
-	    }
-	}
-    }
-  if (!found)
-    {
-      //cerr << "Traffic overflow at" << _ap->getId() 
-      //	   << ". flType = " << flType 
-      //	   << ". airline = " << airline 
-      //	   << " Radius = " <<rad
-      //	   << endl;
-      *lat = _ap->getLatitude();
-      *lon = _ap->getLongitude();
-      *heading = 0;
-      *gateId  = -1;
-      //exit(1);
-    }
-  return found;
-}
 
-void FGAirportDynamics::getParking (int id, double *lat, double* lon, double *heading)
-{
-  if (id < 0)
-    {
-      *lat = _ap->getLatitude();
-      *lon = _ap->getLongitude();
-      *heading = 0;
-    }
-  else
-    {
-      FGParkingVecIterator i = parkings.begin();
-      for (i = parkings.begin(); i != parkings.end(); i++)
-	{
-	  if (id == i->getIndex())
-	    {
-	      *lat     = i->getLatitude();
-	      *lon     = i->getLongitude();
-	      *heading = i->getHeading();
-	    }
-	}
-    }
-} 
+    FGParkingVecIterator i;
+    if (parkings.begin() == parkings.end()) {
+        //cerr << "Could not find parking spot at " << _ap->getId() << endl;
+        *lat = _ap->getLatitude();
+        *lon = _ap->getLongitude();
+        *heading = 0;
+        found = true;
+    } else {
+        // First try finding a parking with a designated airline code
+        for (i = parkings.begin(); !(i == parkings.end() || found); i++) {
+            available = true;
+            // Taken by another aircraft
+            if (!(i->isAvailable())) {
+                available = false;
+                continue;
+            }
+            // No airline codes, so skip
+            if (i->getCodes().empty()) {
+                available = false;
+                continue;
+            } else {             // Airline code doesn't match
+                //cerr << "Code = " << airline << ": Codes " << i->getCodes();
+                if (i->getCodes().find(airline, 0) == string::npos) {
+                    available = false;
+                    //cerr << "Unavailable" << endl;
+                    continue;
+                } else {
+                    //cerr << "Available" << endl;
+                }
+            }
+            // Type doesn't match
+            if (i->getType() != flType) {
+                available = false;
+                continue;
+            }
+            // too small
+            if (i->getRadius() < rad) {
+                available = false;
+                continue;
+            }
 
-FGParking *FGAirportDynamics::getParking(int id) 
-{ 
-    FGParkingVecIterator i = parkings.begin();
-    for (i = parkings.begin(); i != parkings.end(); i++)
-	{
-	  if (id == i->getIndex()) {
-               return &(*i);
-          }
+            if (available) {
+                *lat = i->getLatitude();
+                *lon = i->getLongitude();
+                *heading = i->getHeading();
+                *gateId = i->getIndex();
+                i->setAvailable(false);
+                found = true;
+            }
         }
+        // then try again for those without codes. 
+        for (i = parkings.begin(); !(i == parkings.end() || found); i++) {
+            available = true;
+            if (!(i->isAvailable())) {
+                available = false;
+                continue;
+            }
+            if (!(i->getCodes().empty())) {
+                if ((i->getCodes().find(airline, 0) == string::npos)) {
+                    available = false;
+                    continue;
+                }
+            }
+            if (i->getType() != flType) {
+                available = false;
+                continue;
+            }
+
+            if (i->getRadius() < rad) {
+                available = false;
+                continue;
+            }
+
+            if (available) {
+                *lat = i->getLatitude();
+                *lon = i->getLongitude();
+                *heading = i->getHeading();
+                *gateId = i->getIndex();
+                i->setAvailable(false);
+                found = true;
+            }
+        }
+        // And finally once more if that didn't work. Now ignore the airline codes, as a last resort
+        for (i = parkings.begin(); !(i == parkings.end() || found); i++) {
+            available = true;
+            if (!(i->isAvailable())) {
+                available = false;
+                continue;
+            }
+            if (i->getType() != flType) {
+                available = false;
+                continue;
+            }
+
+            if (i->getRadius() < rad) {
+                available = false;
+                continue;
+            }
+
+            if (available) {
+                *lat = i->getLatitude();
+                *lon = i->getLongitude();
+                *heading = i->getHeading();
+                *gateId = i->getIndex();
+                i->setAvailable(false);
+                found = true;
+            }
+        }
+    }
+    if (!found) {
+        //cerr << "Traffic overflow at" << _ap->getId() 
+        //           << ". flType = " << flType 
+        //           << ". airline = " << airline 
+        //           << " Radius = " <<rad
+        //           << endl;
+        *lat = _ap->getLatitude();
+        *lon = _ap->getLongitude();
+        *heading = 0;
+        *gateId = -1;
+        //exit(1);
+    }
+    return found;
+}
+
+void FGAirportDynamics::getParking(int id, double *lat, double *lon,
+                                   double *heading)
+{
+    if (id < 0) {
+        *lat = _ap->getLatitude();
+        *lon = _ap->getLongitude();
+        *heading = 0;
+    } else {
+        FGParkingVecIterator i = parkings.begin();
+        for (i = parkings.begin(); i != parkings.end(); i++) {
+            if (id == i->getIndex()) {
+                *lat = i->getLatitude();
+                *lon = i->getLongitude();
+                *heading = i->getHeading();
+            }
+        }
+    }
+}
+
+FGParking *FGAirportDynamics::getParking(int id)
+{
+    FGParkingVecIterator i = parkings.begin();
+    for (i = parkings.begin(); i != parkings.end(); i++) {
+        if (id == i->getIndex()) {
+            return &(*i);
+        }
+    }
     return 0;
 }
-string FGAirportDynamics::getParkingName(int id) 
-{ 
+
+string FGAirportDynamics::getParkingName(int id)
+{
     FGParkingVecIterator i = parkings.begin();
-    for (i = parkings.begin(); i != parkings.end(); i++)
-	{
-	  if (id == i->getIndex()) {
-               return i->getName();
-          }
+    for (i = parkings.begin(); i != parkings.end(); i++) {
+        if (id == i->getIndex()) {
+            return i->getName();
         }
+    }
 
     return string("overflow");
 }
+
 void FGAirportDynamics::releaseParking(int id)
 {
-  if (id >= 0)
-    {
-      
-      FGParkingVecIterator i = parkings.begin();
-      for (i = parkings.begin(); i != parkings.end(); i++)
-	{
-	  if (id == i->getIndex())
-	    {
-	      i -> setAvailable(true);
-	    }
-	}
+    if (id >= 0) {
+
+        FGParkingVecIterator i = parkings.begin();
+        for (i = parkings.begin(); i != parkings.end(); i++) {
+            if (id == i->getIndex()) {
+                i->setAvailable(true);
+            }
+        }
     }
 }
-  
-void FGAirportDynamics::setRwyUse(const FGRunwayPreference& ref)
+
+void FGAirportDynamics::setRwyUse(const FGRunwayPreference & ref)
 {
-  rwyPrefs = ref;
-  //cerr << "Exiting due to not implemented yet" << endl;
-  //exit(1);
+    rwyPrefs = ref;
+    //cerr << "Exiting due to not implemented yet" << endl;
+    //exit(1);
 }
 
-bool FGAirportDynamics::innerGetActiveRunway(const string &trafficType, int action, string &runway, double heading)
+bool FGAirportDynamics::innerGetActiveRunway(const string & trafficType,
+                                             int action, string & runway,
+                                             double heading)
 {
-double windSpeed;
-  double windHeading;
-  double maxTail;
-  double maxCross;
-  string name;
-  string type;
+    double windSpeed;
+    double windHeading;
+    double maxTail;
+    double maxCross;
+    string name;
+    string type;
 
-  if (!rwyPrefs.available()) {
-    return false;
-  }
-  
-  RunwayGroup *currRunwayGroup = 0;
-  int nrActiveRunways = 0;
-  time_t dayStart = fgGetLong("/sim/time/utc/day-seconds");
-  if ((abs((long)(dayStart - lastUpdate)) > 600) || trafficType != prevTrafficType)
-	{
-	  landing.clear();
-	  takeoff.clear();
-	  lastUpdate = dayStart;
-	  prevTrafficType = trafficType;
+    if (!rwyPrefs.available()) {
+        return false;
+    }
 
-	  FGEnvironment 
-	    stationweather = ((FGEnvironmentMgr *) globals->get_subsystem("environment"))
-	    ->getEnvironment(getLatitude(), 
-			     getLongitude(), 
-			     getElevation());
-	  
-	  windSpeed = stationweather.get_wind_speed_kt();
-	  windHeading = stationweather.get_wind_from_heading_deg();
-	  string scheduleName;
-	  //cerr << "finding active Runway for" << _ap->getId() << endl;
-	  //cerr << "Nr of seconds since day start << " << dayStart << endl;
+    RunwayGroup *currRunwayGroup = 0;
+    int nrActiveRunways = 0;
+    time_t dayStart = fgGetLong("/sim/time/utc/day-seconds");
+    if ((abs((long) (dayStart - lastUpdate)) > 600)
+        || trafficType != prevTrafficType) {
+        landing.clear();
+        takeoff.clear();
+        lastUpdate = dayStart;
+        prevTrafficType = trafficType;
 
-	  ScheduleTime *currSched;
-	  //cerr << "A"<< endl;
-	  currSched = rwyPrefs.getSchedule(trafficType.c_str());
-	  if (!(currSched))
-	    return false;
-	  //cerr << "B"<< endl;
-	  scheduleName = currSched->getName(dayStart);
-	  maxTail  = currSched->getTailWind  ();
-	  maxCross = currSched->getCrossWind ();
-	  //cerr << "SChedule anme = " << scheduleName << endl;
-	  if (scheduleName.empty())
-	    return false;
-	  //cerr << "C"<< endl;
-	  currRunwayGroup = rwyPrefs.getGroup(scheduleName); 
-	  //cerr << "D"<< endl;
-	  if (!(currRunwayGroup))
-	    return false;
-	  nrActiveRunways = currRunwayGroup->getNrActiveRunways();
+        FGEnvironment
+            stationweather =
+            ((FGEnvironmentMgr *) globals->get_subsystem("environment"))
+            ->getEnvironment(getLatitude(), getLongitude(),
+                             getElevation());
+
+        windSpeed = stationweather.get_wind_speed_kt();
+        windHeading = stationweather.get_wind_from_heading_deg();
+        string scheduleName;
+        //cerr << "finding active Runway for" << _ap->getId() << endl;
+        //cerr << "Nr of seconds since day start << " << dayStart << endl;
+
+        ScheduleTime *currSched;
+        //cerr << "A"<< endl;
+        currSched = rwyPrefs.getSchedule(trafficType.c_str());
+        if (!(currSched))
+            return false;
+        //cerr << "B"<< endl;
+        scheduleName = currSched->getName(dayStart);
+        maxTail = currSched->getTailWind();
+        maxCross = currSched->getCrossWind();
+        //cerr << "SChedule anme = " << scheduleName << endl;
+        if (scheduleName.empty())
+            return false;
+        //cerr << "C"<< endl;
+        currRunwayGroup = rwyPrefs.getGroup(scheduleName);
+        //cerr << "D"<< endl;
+        if (!(currRunwayGroup))
+            return false;
+        nrActiveRunways = currRunwayGroup->getNrActiveRunways();
 
         // Keep a history of the currently active runways, to ensure
         // that an already established selection of runways will not
         // be overridden once a more preferred selection becomes 
         // available as that can lead to random runway swapping.
-	if (trafficType == "com") {
-          currentlyActive = &comActive;
+        if (trafficType == "com") {
+            currentlyActive = &comActive;
         } else if (trafficType == "gen") {
-          currentlyActive = &genActive;
+            currentlyActive = &genActive;
         } else if (trafficType == "mil") {
-          currentlyActive = &milActive;
+            currentlyActive = &milActive;
         } else if (trafficType == "ul") {
-          currentlyActive = &ulActive;
+            currentlyActive = &ulActive;
         }
-	  // 
-	  currRunwayGroup->setActive(_ap, 
-				     windSpeed, 
-				     windHeading, 
-				     maxTail, 
-				     maxCross, 
-				     currentlyActive); 
 
-	  // Note that I SHOULD keep multiple lists in memory, one for 
-	  // general aviation, one for commercial and one for military
-	  // traffic.
-	  currentlyActive->clear();
-	  nrActiveRunways = currRunwayGroup->getNrActiveRunways();
-          //cerr << "Choosing runway for " << trafficType << endl;
-	  for (int i = 0; i < nrActiveRunways; i++)
-	    {
-	      type = "unknown"; // initialize to something other than landing or takeoff
-	      currRunwayGroup->getActive(i, name, type);
-	      if (type == "landing")
-		{
-		  landing.push_back(name);
-		  currentlyActive->push_back(name);
-		  //cerr << "Landing " << name << endl; 
-		}
-	      if (type == "takeoff")
-		{
-		  takeoff.push_back(name);
-		  currentlyActive->push_back(name);
-		  //cerr << "takeoff " << name << endl;
-		}
-	    }
-          //cerr << endl;
-	}
-  
-  if (action == 1) // takeoff 
-	{
-	  int nr = takeoff.size();
-	  if (nr)
-	    {
-	      // Note that the randomization below, is just a placeholder to choose between
-	      // multiple active runways for this action. This should be
-	      // under ATC control.
-	      runway = chooseRwyByHeading (takeoff, heading);
-	    }
-	  else
-	    { // Fallback
-	      runway = chooseRunwayFallback();
-	    }
-	} 
-  
-  if (action == 2) // landing
-	{
-	  int nr = landing.size();
-	  if (nr)
-	    {
-	      runway = chooseRwyByHeading (landing, heading);
-	    }
-	  else
-	    {  //fallback
-	       runway = chooseRunwayFallback();
-	    }
-	} 
+        currRunwayGroup->setActive(_ap,
+                                   windSpeed,
+                                   windHeading,
+                                   maxTail, maxCross, currentlyActive);
 
-  return true;
+        // Note that I SHOULD keep multiple lists in memory, one for 
+        // general aviation, one for commercial and one for military
+        // traffic.
+        currentlyActive->clear();
+        nrActiveRunways = currRunwayGroup->getNrActiveRunways();
+        //cerr << "Choosing runway for " << trafficType << endl;
+        for (int i = 0; i < nrActiveRunways; i++) {
+            type = "unknown";   // initialize to something other than landing or takeoff
+            currRunwayGroup->getActive(i, name, type);
+            if (type == "landing") {
+                landing.push_back(name);
+                currentlyActive->push_back(name);
+                //cerr << "Landing " << name << endl; 
+            }
+            if (type == "takeoff") {
+                takeoff.push_back(name);
+                currentlyActive->push_back(name);
+                //cerr << "takeoff " << name << endl;
+            }
+        }
+        //cerr << endl;
+    }
+
+    if (action == 1)            // takeoff 
+    {
+        int nr = takeoff.size();
+        if (nr) {
+            // Note that the randomization below, is just a placeholder to choose between
+            // multiple active runways for this action. This should be
+            // under ATC control.
+            runway = chooseRwyByHeading(takeoff, heading);
+        } else {                // Fallback
+            runway = chooseRunwayFallback();
+        }
+    }
+
+    if (action == 2)            // landing
+    {
+        int nr = landing.size();
+        if (nr) {
+            runway = chooseRwyByHeading(landing, heading);
+        } else {                //fallback
+            runway = chooseRunwayFallback();
+        }
+    }
+
+    return true;
 }
 
-string FGAirportDynamics::chooseRwyByHeading(stringVec rwys, double heading) {
-   double bestError = 360.0;
-   double rwyHeading, headingError;
-   string runway;
-   for (stringVecIterator i = rwys.begin(); i != rwys.end(); i++) {
-       FGRunway *rwy = _ap->getRunwayByIdent((*i));
-       rwyHeading = rwy->headingDeg();
-       headingError = fabs(heading - rwyHeading);
+string FGAirportDynamics::chooseRwyByHeading(stringVec rwys,
+                                             double heading)
+{
+    double bestError = 360.0;
+    double rwyHeading, headingError;
+    string runway;
+    for (stringVecIterator i = rwys.begin(); i != rwys.end(); i++) {
+        FGRunway *rwy = _ap->getRunwayByIdent((*i));
+        rwyHeading = rwy->headingDeg();
+        headingError = fabs(heading - rwyHeading);
         if (headingError > 180)
             headingError = fabs(headingError - 360);
         if (headingError < bestError) {
             runway = (*i);
             bestError = headingError;
         }
-   }
-   //cerr << "Using active runway " << runway << " for heading " << heading << endl;
-   return runway;
+    }
+    //cerr << "Using active runway " << runway << " for heading " << heading << endl;
+    return runway;
 }
 
-void FGAirportDynamics::getActiveRunway(const string &trafficType, int action, string &runway, double heading)
+void FGAirportDynamics::getActiveRunway(const string & trafficType,
+                                        int action, string & runway,
+                                        double heading)
 {
-  bool ok = innerGetActiveRunway(trafficType, action, runway, heading);
-  if (!ok) {
-    runway = chooseRunwayFallback();
-  }
+    bool ok = innerGetActiveRunway(trafficType, action, runway, heading);
+    if (!ok) {
+        runway = chooseRunwayFallback();
+    }
 }
 
 string FGAirportDynamics::chooseRunwayFallback()
-{   
-  FGRunway* rwy = _ap->getActiveRunwayForUsage();
-  return rwy->ident();
+{
+    FGRunway *rwy = _ap->getActiveRunwayForUsage();
+    return rwy->ident();
 }
 
-void FGAirportDynamics::addParking(FGParking& park) {
-  parkings.push_back(park);
+void FGAirportDynamics::addParking(FGParking & park)
+{
+    parkings.push_back(park);
 }
 
-double FGAirportDynamics::getLatitude() const {
-  return _ap->getLatitude();
+double FGAirportDynamics::getLatitude() const
+{
+    return _ap->getLatitude();
 }
 
-double FGAirportDynamics::getLongitude() const {
-  return _ap->getLongitude();
+double FGAirportDynamics::getLongitude() const
+{
+    return _ap->getLongitude();
 }
 
-double FGAirportDynamics::getElevation() const {
-  return _ap->getElevation();
+double FGAirportDynamics::getElevation() const
+{
+    return _ap->getElevation();
 }
 
-const string& FGAirportDynamics::getId() const {
-  return _ap->getId();
+const string & FGAirportDynamics::getId() const
+{
+    return _ap->getId();
 }
 
 // Experimental: Return a different ground frequency depending on the leg of the
@@ -536,28 +494,34 @@ const string& FGAirportDynamics::getId() const {
 // so that at least I can start working on assigning different frequencies to different
 // operations.
 
-int FGAirportDynamics::getGroundFrequency(unsigned leg) { 
-     //return freqGround.size() ? freqGround[0] : 0; };
-     int groundFreq = 0;
-     if (leg < 2) {
-         SG_LOG(SG_ATC, SG_ALERT, "Leg value is smaller than two at " << SG_ORIGIN);
-     }
-     if (freqGround.size() == 0) {
-         return 0;
-     }
-     if ((freqGround.size() > leg-1) && (leg > 1)) {
-          groundFreq =  freqGround[leg-1];
-     }
-     if ((freqGround.size() < leg-1) && (leg > 1)) {
-          groundFreq = (freqGround.size() < (leg-1)) ? freqGround[freqGround.size()-1] : freqGround[leg-2];
-     }
-     if ((freqGround.size() >= leg-1) && (leg > 1)) {
-          groundFreq = freqGround[leg-2];
-     }
+int FGAirportDynamics::getGroundFrequency(unsigned leg)
+{
+    //return freqGround.size() ? freqGround[0] : 0; };
+    int groundFreq = 0;
+    if (leg < 2) {
+        SG_LOG(SG_ATC, SG_ALERT,
+               "Leg value is smaller than two at " << SG_ORIGIN);
+    }
+    if (freqGround.size() == 0) {
+        return 0;
+    }
+    if ((freqGround.size() > leg - 1) && (leg > 1)) {
+        groundFreq = freqGround[leg - 1];
+    }
+    if ((freqGround.size() < leg - 1) && (leg > 1)) {
+        groundFreq =
+            (freqGround.size() <
+             (leg - 1)) ? freqGround[freqGround.size() -
+                                     1] : freqGround[leg - 2];
+    }
+    if ((freqGround.size() >= leg - 1) && (leg > 1)) {
+        groundFreq = freqGround[leg - 2];
+    }
     return groundFreq;
 }
 
-FGAIFlightPlan *FGAirportDynamics::getSID(string activeRunway, double heading)
+FGAIFlightPlan *FGAirportDynamics::getSID(string activeRunway,
+                                          double heading)
 {
-   return SIDs.getBest(activeRunway, heading);
+    return SIDs.getBest(activeRunway, heading);
 }

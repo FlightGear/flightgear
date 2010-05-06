@@ -340,9 +340,25 @@ FGATCInstruction::FGATCInstruction()
   alt     = 0;
 }
 
+
 bool FGATCInstruction::hasInstruction()
 {
   return (holdPattern || holdPosition || changeSpeed || changeHeading || changeAltitude || resolveCircularWait);
+}
+
+/***************************************************************************
+ * FGATCController
+ *
+ **************************************************************************/
+
+
+
+
+FGATCController::FGATCController() 
+{
+     dt_count = 0; 
+     available = true; 
+     lastTransmission = 0;
 }
 
 string FGATCController::getGateName(FGAIAircraft *ref) 
@@ -370,6 +386,7 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
 
     //double commFreqD;
     sender = rec->getAircraft()->getTrafficRef()->getCallSign();
+    //cerr << "transmitting for: " << sender << "Leg = " << rec->getLeg() << endl;
     switch (rec->getLeg()) {
         case 2:
         case 3:
@@ -449,6 +466,12 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
                taxiFreqStr = formatATCFrequency3_2(taxiFreq);
                text = receiver + ". Switching to " + taxiFreqStr + ". " + sender;
                break;
+           case MSG_INITIATE_CONTACT:
+                text = receiver + ". With you. " + sender;
+                break;
+           case MSG_ACKNOWLEDGE_INITIATE_CONTACT:
+                text = receiver + ". Roger. " + sender;
+                break;
            case MSG_REQUEST_PUSHBACK_CLEARANCE:
                text = receiver + ". Request push-back. " + sender;
                break;
@@ -457,9 +480,30 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
                break;
            case MSG_HOLD_PUSHBACK_CLEARANCE:
                 text = receiver + ". Standby. " + sender;
-                 break;
-            default:
-                 text = sender + ". Transmitting unknown Message";
+                break;
+           case MSG_REQUEST_TAXI_CLEARANCE:
+                text = receiver + ". Ready to Taxi. " + sender;
+                break;
+           case MSG_ISSUE_TAXI_CLEARANCE:
+                text = receiver + ". Cleared to taxi. " + sender;
+                break;
+           case MSG_ACKNOWLEDGE_TAXI_CLEARANCE:
+                text = receiver + ". Cleared to taxi. " + sender;
+                break;
+           case MSG_HOLD_POSITION:
+                text = receiver + ". Hold Position. " + sender;
+                break;
+           case MSG_ACKNOWLEDGE_HOLD_POSITION:
+                text = receiver + ". Holding Position. " + sender;
+                break;
+           case MSG_RESUME_TAXI:
+                text = receiver + ". Resume Taxiing. " + sender;
+                break;
+           case MSG_ACKNOWLEDGE_RESUME_TAXI:
+                text = receiver + ". Continuing Taxi. " + sender;
+                break;
+           default:
+                 text = text + sender + ". Transmitting unknown Message";
                   break;
     }
     double onBoardRadioFreq0 = fgGetDouble("/instrumentation/comm[0]/frequencies/selected-mhz");
@@ -691,8 +735,6 @@ FGATCInstruction FGTowerController::getInstruction(int id)
 FGStartupController::FGStartupController() :
   FGATCController()
 {
-    available        = false;
-    lastTransmission = 0;
 }
 
 void FGStartupController::announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentPosition,
@@ -874,7 +916,7 @@ void FGStartupController::update(int id, double lat, double lon, double heading,
              available = false;
         }
      }
-     // Note: The next two stages are only necessesary when Startup control is
+     // Note: The next four stages are only necessesary when Startup control is
      //  on a different frequency, compared to ground control
      if ((state == 4) && available){
         if (now > startTime+130) {
@@ -885,20 +927,36 @@ void FGStartupController::update(int id, double lat, double lon, double heading,
              available = false;
         }
      }
-
-
-     // TODO: Switch to APRON control and request pushback Clearance.
-     // Get Push back clearance
      if ((state == 5) && available){
-        if (now > startTime+160) {
-            transmit(&(*i), MSG_REQUEST_PUSHBACK_CLEARANCE, ATC_AIR_TO_GROUND);
+        if (now > startTime+140) {
+            transmit(&(*i), MSG_INITIATE_CONTACT, ATC_AIR_TO_GROUND);
             i->updateState();
             lastTransmission = now;
              available = false;
         }
      }
      if ((state == 6) && available){
+        if (now > startTime+150) {
+            transmit(&(*i), MSG_ACKNOWLEDGE_INITIATE_CONTACT, ATC_GROUND_TO_AIR);
+            i->updateState();
+            lastTransmission = now;
+             available = false;
+        }
+     }
+
+
+     // TODO: Switch to APRON control and request pushback Clearance.
+     // Get Push back clearance
+     if ((state == 7) && available){
         if (now > startTime+180) {
+            transmit(&(*i), MSG_REQUEST_PUSHBACK_CLEARANCE, ATC_AIR_TO_GROUND);
+            i->updateState();
+            lastTransmission = now;
+             available = false;
+        }
+     }
+     if ((state == 8) && available){
+        if (now > startTime+200) {
             if (i->pushBackAllowed()) {
                  i->allowRepeatedTransmissions();
                  transmit(&(*i), MSG_PERMIT_PUSHBACK_CLEARANCE, ATC_GROUND_TO_AIR);
@@ -911,7 +969,7 @@ void FGStartupController::update(int id, double lat, double lon, double heading,
              available = false;
         }
      }
-     if ((state == 6) && available){
+     if ((state == 9) && available){
           i->setHoldPosition(false);
      }
 }
