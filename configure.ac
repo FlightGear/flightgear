@@ -58,7 +58,7 @@ case "${host}" in
 
     dnl Thank you Christian Bauer from SheepSaver
     dnl Modified by Tatsuhiro Nishioka for accepting a given framework path
-    dnl AC_CHECK_FRAMEWORK($1=NAME, $2=INCLUDES, $3=FRAMEWORK_PATH) ; $3 is optional
+    dnl AC_CHECK_FRAMEWORK($1=NAME, $2=INCLUDES, $3=FRAMEWORK_PATH, $4=ACTION_IF_FOUND) ; 
     AC_DEFUN([AC_CHECK_FRAMEWORK], [
     AS_VAR_PUSHDEF([ac_Framework], [ac_cv_framework_$1])dnl
     AC_CACHE_CHECK([whether compiler supports framework $1],
@@ -71,6 +71,7 @@ case "${host}" in
             FRAMEWORKS="$FRAMEWORKS -F$3"
             CXXFLAGS="$CXXFLAGS -F$3"
             CCFLAGS="$CCFLAGS -F$3"
+            CPPFLAGS="$CPPFLAGS -F$3"
             dnl This is needed for AC_TRY_LINK when a framework path is specified
             export DYLD_FRAMEWORK_PATH="${DYLD_FRAMEWORK_PATH}:$3"
         fi
@@ -82,6 +83,7 @@ case "${host}" in
     AS_IF([test AS_VAR_GET(ac_Framework) = yes],
         [AC_DEFINE(AS_TR_CPP(HAVE_FRAMEWORK_$1), 1, [Define if framework $1 is available.])]
     )
+    AS_IF([test AS_VAR_GET(ac_Framework) = yes], $4)
     AS_VAR_POPDEF([ac_Framework])dnl
     ])
 
@@ -107,9 +109,9 @@ case "${host}" in
 	export DYLD_FRAMEWORK_PATH="$DYLD_FRAMEWORK_PATH:$with_plib_framework"
     fi
 
-    AC_ARG_WITH(openal_framework, [ --with-openal-framework=PREFIX    Speicfy the prefix path to OpenAL.framework ])
-    if test "x$with_openal_framework" != "x"; then
-        echo "OpenAL framework prefix is $with_openal_framework"
+    AC_ARG_WITH(alut_framework, [ --with-alut-framework=PREFIX    Specify the prefix path to ALUT.framework ])
+    if test "x$with_alut_framework" != "x"; then
+        echo "ALUT framework prefix is $with_alut_framework"
     fi
 
     ;;
@@ -428,19 +430,16 @@ case "${host}" in
 *-apple-darwin*)
     dnl Mac OS X
 
-    # Mac OS X has OpenAL.framework with ALUT by default
-    # so we can use it without checking it.
-    # Note: SimGear needs to check the existance of alut.h since it includes the header.
+    # Mac OS X has OpenAL.framework, but no ALUT, by default, so we
+    # require use of a non-Apple ALUT.framework which we provide
     LIBS="$LIBS -framework IOKit -framework OpenAL"
     openal_LIBS="$LIBS"
-    OPENAL_OK="yes"
-    ALUT_OK="yes"
     
-    dnl Check for OpenAL.framework when --with-openal-framework is specified
-    if test "x$with_openal_framework" != "x"; then
-      AC_CHECK_FRAMEWORK(OpenAL, [#include <OpenAL/alut.h>], $with_openal_framework)
-    fi
-
+    AC_CHECK_FRAMEWORK(OpenAL, [#include <OpenAL/al.h>], "", [OPENAL_OK="yes"])
+    AC_CHECK_FRAMEWORK(ALUT, [#include <ALUT/alut.h>], $with_alut_framework, [
+        ALUT_OK="yes"
+        LIBS = "$LIBS -framework ALUT"
+    ])
     ;;
 
 *)
