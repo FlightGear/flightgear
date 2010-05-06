@@ -27,6 +27,8 @@
 #include <Main/fg_props.hxx>
 #include <Scripting/NasalSys.hxx>
 
+using simgear::PropertyList;
+
 FGJoystickInput::axis::axis ()
   : last_value(9999999),
     tolerance(0.002),
@@ -166,7 +168,7 @@ void FGJoystickInput::postinit()
     string module = str.str();
     nasalsys->createModule(module.c_str(), module.c_str(), "", 0);
 
-    vector<SGPropertyNode_ptr> nasal = js_node->getChildren("nasal");
+    PropertyList nasal = js_node->getChildren("nasal");
     unsigned int j;
     for (j = 0; j < nasal.size(); j++) {
       nasal[j]->setStringValue("module", module.c_str());
@@ -176,7 +178,7 @@ void FGJoystickInput::postinit()
     //
     // Initialize the axes.
     //
-    vector<SGPropertyNode_ptr> axes = js_node->getChildren("axis");
+    PropertyList axes = js_node->getChildren("axis");
     size_t nb_axes = axes.size();
     for (j = 0; j < nb_axes; j++ ) {
       const SGPropertyNode * axis_node = axes[j];
@@ -219,7 +221,7 @@ void FGJoystickInput::postinit()
     //
     // Initialize the buttons.
     //
-    vector<SGPropertyNode_ptr> buttons = js_node->getChildren("button");
+    PropertyList buttons = js_node->getChildren("button");
     char buf[32];
     for (j = 0; j < buttons.size() && j < nbuttons; j++) {
       const SGPropertyNode * button_node = buttons[j];

@@ -32,10 +32,12 @@
 
 #include <simgear/math/SGMath.hxx>
 
+using simgear::PropertyList;
+
 void FGCommonInput::read_bindings (const SGPropertyNode * node, binding_list_t * binding_list, int modifiers, const string & module )
 {
   SG_LOG(SG_INPUT, SG_DEBUG, "Reading all bindings");
-  vector<SGPropertyNode_ptr> bindings = node->getChildren("binding");
+  PropertyList bindings = node->getChildren("binding");
   static string nasal = "nasal";
   for (unsigned int i = 0; i < bindings.size(); i++) {
     const char *cmd = bindings[i]->getStringValue("command");

@@ -122,7 +122,7 @@ class FGXMLAutoInputList : public std::vector<FGXMLAutoInput_ptr> {
 class FGXMLAutoComponent : public SGReferenced {
 
 private:
-    std::vector <SGPropertyNode_ptr> output_list;
+    simgear::PropertyList output_list;
 
     SGSharedPtr<const SGCondition> _condition;
     SGPropertyNode_ptr enable_prop;
@@ -201,7 +201,8 @@ public:
         // helpful for things like flight directors which position
         // their vbars from the autopilot computations.
         if ( honor_passive && passive_mode->getBoolValue() ) return;
-        for( std::vector <SGPropertyNode_ptr>::iterator it = output_list.begin(); it != output_list.end(); ++it)
+        for( simgear::PropertyList::iterator it = output_list.begin();
+             it != output_list.end(); ++it)
           (*it)->setDoubleValue( clamp( value ) );
     }
 
@@ -212,7 +213,8 @@ public:
         // helpful for things like flight directors which position
         // their vbars from the autopilot computations.
         if ( honor_passive && passive_mode->getBoolValue() ) return;
-        for( std::vector <SGPropertyNode_ptr>::iterator it = output_list.begin(); it != output_list.end(); ++it)
+        for( simgear::PropertyList::iterator it = output_list.begin();
+             it != output_list.end(); ++it)
           (*it)->setBoolValue( value ); // don't use clamp here, bool is clamped anyway
     }
 
