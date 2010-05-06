@@ -202,7 +202,7 @@ void CameraGroup::update(const osg::Vec3d& position,
                 camera->setProjectionMatrix(projectionMatrix);
                 camera->setCullMask(camera->getCullMask()
                                     | simgear::BACKGROUND_BIT);
-                camera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                camera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
                 farCamera->setNodeMask(0);
             } else {
                 Matrix nearProj, farProj;
