@@ -35,19 +35,37 @@ and, or, equal, less, less-equal
 glversion - returns the version number of OpenGL
 extension-supported - returns true if an OpenGL extension is supported
 property - returns the boolean value of a property
+float-property - returns the float value of a property, useful inside equal, less or less-equal nodes
 shader-language - returns the version of GLSL supported, or 0 if there is none.
 
 The proper way to test whether to enable a shader-based technique is:
+	<predicate>
+	  <and>
+		<property>/sim/rendering/shader-effects</property>
+		<less-equal>
+		  <value type="float">1.0</value>
+		  <shader-language/>
+		</less-equal>
+	  </and>
+	</predicate>
+
+There is also a property set by the user to indicate what is the level 
+of quality desired. This level of quality can be checked in the predicate
+like this :
     <predicate>
       <and>
         <property>/sim/rendering/shader-effects</property>
-        <less-equal>
-          <value type="float">1.0</value>
-          <shader-language/>
-        </less-equal>
+	<less-equal>
+	  <value type="float">2.0</value>
+	  <float-property>/sim/rendering/quality-level</float-property>
+	</less-equal>
+	<!-- other predicate conditions -->
       </and>
     </predicate>
-
+    
+The range of /sim/rendering/quality-level is [0..5]
+ * 2.0 is the threshold for relief mapping effects,
+ * 4.0 is the threshold for geometry shader usage.
 
 A technique can consist of several passes. A pass is basically an Open
 Scene Graph StateSet. Ultimately all OpenGL and OSG modes and state
@@ -60,11 +78,11 @@ can be based on a parameter in the parameters section of the
 effect. For example, effects that support transparent and opaque
 geometry could have as part of a technique:
 
-      <blend>
-        <active><use>blend/active</use></active>
-        <source>src-alpha</source>
-        <destination>one-minus-src-alpha</destination>
-      </blend>
+	  <blend>
+		<active><use>blend/active</use></active>
+		<source>src-alpha</source>
+		<destination>one-minus-src-alpha</destination>
+	  </blend>
 
 So if the blend/active parameter is true blending will be activated
 using the usual blending equation; otherwise blending is disabled.
@@ -75,84 +93,87 @@ Values of Technique Attributes
 Values are assigned to technique properties in several ways:
 
 	* They can appear directly in the techniques section as a
-        constant. For example:
-      <uniform>
-        <name>ColorsTex</name>
-        <type>sampler-1d</type>
-        <value type="int">2</value>
-      </uniform>
-        * The name of a property in the parameters section can be
-        referenced using a "use" clause. For example, in the technique
-        section: 
-      <material>
-        <ambient><use>material/ambient</use></ambient>
-      </material>
-        Then, in the parameters section of the effect:
-  <parameters>
-    <material>
-      <ambient type="vec4d">
-        0.2 .2 0.2 1.0
-      </ambient>
-    </material>
-  </parameters>
+		constant. For example:
+		<uniform>
+			<name>ColorsTex</name>
+			<type>sampler-1d</type>
+			<value type="int">2</value>
+		</uniform>
+		* The name of a property in the parameters section can be
+		referenced using a "use" clause. For example, in the technique
+		section:
+		<material>
+			<ambient><use>material/ambient</use></ambient>
+		</material>
+		Then, in the parameters section of the effect:
+		<parameters>
+			<material>
+				<ambient type="vec4d">0.2 0.2 0.2 1.0</ambient>
+			</material>
+		</parameters>
 
-        It's worth pointing out that the "material" property in a
-        technique specifies part of OpenGL's state, whereas "material"
-        in the parameters section is just a name, part of a
-        hierarchical namespace.
+		It's worth pointing out that the "material" property in a
+		technique specifies part of OpenGL's state, whereas "material"
+		in the parameters section is just a name, part of a
+		hierarchical namespace.
 
-        * A property in the parameters section doesn't need to contain
-        a constant value; it can also contain a "use" property. Here
-        the value of the use clause is the name of a node in an
-        external property tree which will be used as the source of a
-        value. If the name begins with '/', the node is in
-        FlightGear's global property tree; otherwise, it is in a local
-        property tree, usually belonging to a model [NOT IMPLEMENTED
-        YET]. For example:
-  <parameters>
-    <chrome-light><use>/rendering/scene/chrome-light</use></chrome-light>
-  </parameters>
-        The type is determined by what is expected by the technique
-        attribute that will ultimately receive the value. [There is
-        no way to get vector values out of the main property system
-        yet; this will be fixed shortly.] Values that are declared
-        this way are dynamically updated if the property node
-        changes.
+		* A property in the parameters section doesn't need to contain
+		a constant value; it can also contain a "use" property. Here
+		the value of the use clause is the name of a node in an
+		external property tree which will be used as the source of a
+		value. If the name begins with '/', the node is in
+		FlightGear's global property tree; otherwise, it is in a local
+		property tree, usually belonging to a model [NOT IMPLEMENTED
+		YET]. For example:
+		<parameters>
+			<chrome-light><use>/rendering/scene/chrome-light</use></chrome-light>
+		</parameters>
+		The type is determined by what is expected by the technique
+		attribute that will ultimately receive the value. [There is
+		no way to get vector values out of the main property system
+		yet; this will be fixed shortly.] Values that are declared
+		this way are dynamically updated if the property node
+		changes.
 
 OpenGL Attributes
 -----------------
 
 The following attributes are currently implemented in techiques:
 alpha-test - children: active, comparison, reference
-         Valid values for comparision:
-             never, less, equal, lequal, greater, notequal, gequal,
-             always 
+		 Valid values for comparision:
+			 never, less, equal, lequal, greater, notequal, gequal,
+			 always 
 
 blend - children: active, source, destination, source-rgb,
-         source-alpha, destination-rgb, destination-alpha
-         Each operand can have the following values:
-             dst-alpha, dst-color, one, one-minus-dst-alpha,
-             one-minus-dst-color, one-minus-src-alpha,
-             one-minus-src-color, src-alpha, src-alpha-saturate,
-             src-color, constant-color, one-minus-constant-color,
-             constant-alpha, one-minus-constant-alpha, zero
+		 source-alpha, destination-rgb, destination-alpha
+		 Each operand can have the following values:
+			 dst-alpha, dst-color, one, one-minus-dst-alpha,
+			 one-minus-dst-color, one-minus-src-alpha,
+			 one-minus-src-color, src-alpha, src-alpha-saturate,
+			 src-color, constant-color, one-minus-constant-color,
+			 constant-alpha, one-minus-constant-alpha, zero
 
 cull-face - front, back, front-back
 
 lighting - true, false
 
 material - children: active, ambient, ambient-front, ambient-back, diffuse,
-         diffuse-front, diffuse-back, specular, specular-front,
-         specular-back, emissive, emissive-front, emissive-back, shininess,
-         shininess-front, shininess-back, color-mode
+		 diffuse-front, diffuse-back, specular, specular-front,
+		 specular-back, emissive, emissive-front, emissive-back, shininess,
+		 shininess-front, shininess-back, color-mode
 
 polygon-mode - children: front, back
-        Valid values:
-              fill, line, point
+		Valid values:
+			  fill, line, point
 
 program
-        vertex-shader
-        fragment-shader
+		vertex-shader
+		geometry-shader
+		fragment-shader
+		attribute
+		geometry-vertices-out: integer, max number of vertices emitted by geometry shader
+		geometry-input-type - points, lines, lines-adjacency, triangles, triangles-adjacency
+		geometry-output-type - points, line-strip, triangle-strip
 
 render-bin - (OSG) children: bin-number, bin-name
 
@@ -162,25 +183,25 @@ shade-model - flat, smooth
 
 texture-unit - has several child properties:
 	unit - The number of an OpenGL texture unit
-        type - This is either an OpenGL texture type or the name of a
-        builtin texture. Currently supported OpenGL types are 1d, 2d,
-        3d which have the following common parameters:
+		type - This is either an OpenGL texture type or the name of a
+		builtin texture. Currently supported OpenGL types are 1d, 2d,
+		3d which have the following common parameters:
 		image (file name)
-                filter
-                mag-filter
-                wrap-s
-                wrap-t
-                wrap-r
-        The following builtin types are supported:
-                white - 1 pixel white texture
-                noise - a 3d noise texture
-        environment
-                mode
-                color
+			filter
+			mag-filter
+			wrap-s
+			wrap-t
+			wrap-r
+		The following built-in types are supported:
+			white - 1 pixel white texture
+			noise - a 3d noise texture
+		environment
+			mode
+			color
 uniform
-        name
-        type - float, float-vec3, float-vec4, sampler-1d, sampler-2d,
-        sampler-3d
+		name
+		type - float, float-vec3, float-vec4, sampler-1d, sampler-2d,
+		sampler-3d
 
 vertex-program-two-side - true, false
 
@@ -211,8 +232,49 @@ those parameters in its "techniques" section. The derived effect
 overrides any default values that might be in the base effect's
 parameters section.
 
+Generate
+--------
+
+Often shader effects need tangent vectors to work properly. These 
+tangent vectors, usually called tangent and binormal, are computed 
+on the CPU and given to the shader as vertex attributes. These 
+vectors are computed on demand on the geometry using the effect if 
+the 'generate' clause is present in the effect file. Exemple :
+
+	<generate>
+		<tangent type="int">6</tangent>
+		<binormal type="int">7</binormal>
+		<normal type="int">8</normal>
+	</generate>
+
+Valid subnodes of 'generate' are 'tangent', 'binormal' or 'normal'.
+The integer value of these subnode is the index of the attribute 
+that will hold the value of the vec3 vector.
+
+The generate clause is located under PropertyList in the xml file.
+
+In order to be available for the vertex shader, these data should 
+be bound to an attribute in the program clause, like this :
+
+	<program>
+		<vertex-shader>my_vertex_shader</vertex-shader>
+		<attribute>
+			<name>my_tangent_attribute</name>
+			<index>6</index>
+		</attribute>
+		<attribute>
+			<name>my_binormal_attribute</name>
+			<index>7</index>
+		</attribute>
+	</program>
+
+attribute names are whatever the shader use. The index is the one 
+declared in the 'generate' clause. So because generate/tangent has 
+value 6 and my_tangent_attribute has index 6, my_tangent_attribute 
+holds the tangent value for the vertex.
+
 Default Effects in Terrain Materials and Models
----------------------------------------
+-----------------------------------------------
 
 Effects for terrain work in this way: for each material type in
 materials.xml an effect is created that inherits from a single default
@@ -233,12 +295,12 @@ variation possible from the OSG model loaders than from the terrain
 system. The parameters created are: 
 
 	* material active, ambient, diffuse, specular, emissive,
-        shininess, color mode
-        * blend active, source, destination
-        * shade-model
-        * cull-face
-        * rendering-hint
-        * texture type, image, filter, wrap-s, wrap-t
+		shininess, color mode
+		* blend active, source, destination
+		* shade-model
+		* cull-face
+	* rendering-hint
+	* texture type, image, filter, wrap-s, wrap-t
 
 Specifying Custom Effects
 -------------------------
@@ -260,3 +322,30 @@ Examples
 
 The Effects directory contains the effects definitions; look there for
 examples. Effects/crop.eff is a good example of a complex effect.
+
+Application
+-----------
+
+To apply an effect to a model or part of a model use:
+
+	<effect>
+		<inherits-from>Effects/light-cone</inherits-from>
+		<object-name>Cone</object-name>
+	</effect>
+
+where <inherits-from> </inherits-from> contains the path to the effect you want to apply.
+The effect does not need the file extension.
+
+NOTE:
+
+Chrome, although now implemented as an effect, still retains the old method of application:
+
+	<animation>
+			<type>shader</type>
+			<shader>chrome</shader>
+			<texture>glass_shader.png</texture>
+			<object-name>windscreen</object-name>
+	</animation>
+
+in order to maintain backward compatibility.
+
