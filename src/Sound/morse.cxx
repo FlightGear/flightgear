@@ -28,29 +28,29 @@
 #include <cstring>
 
 static const char alphabet[26][4] = {
-    { DI, DAH, end, end },	/* A */ 
+    { DI, DAH, END, END },	/* A */ 
     { DA, DI, DI, DIT },	/* B */ 
     { DA, DI, DA, DIT },	/* C */ 
-    { DA, DI, DIT, end },	/* D */ 
-    { DIT, end, end, end },	/* E */ 
+    { DA, DI, DIT, END },	/* D */ 
+    { DIT, END, END, END },	/* E */ 
     { DI, DI, DA, DIT },	/* F */ 
-    { DA, DA, DIT, end },	/* G */ 
+    { DA, DA, DIT, END },	/* G */ 
     { DI, DI, DI, DIT },	/* H */ 
-    { DI, DIT, end, end },	/* I */ 
+    { DI, DIT, END, END },	/* I */ 
     { DI, DA, DA, DAH },	/* J */ 
-    { DA, DI, DAH, end },	/* K */ 
+    { DA, DI, DAH, END },	/* K */ 
     { DI, DA, DI, DIT },	/* L */ 
-    { DA, DAH, end, end },	/* M */ 
-    { DA, DIT, end, end },	/* N */ 
-    { DA, DA, DAH, end },	/* O */ 
+    { DA, DAH, END, END },	/* M */ 
+    { DA, DIT, END, END },	/* N */ 
+    { DA, DA, DAH, END },	/* O */ 
     { DI, DA, DA, DIT },	/* P */ 
     { DA, DA, DI, DAH },	/* Q */ 
-    { DI, DA, DIT, end },	/* R */ 
-    { DI, DI, DIT, end },	/* S */ 
-    { DAH, end, end, end },	/* T */ 
-    { DI, DI, DAH, end },	/* U */ 
+    { DI, DA, DIT, END },	/* R */ 
+    { DI, DI, DIT, END },	/* S */ 
+    { DAH, END, END, END },	/* T */ 
+    { DI, DI, DAH, END },	/* U */ 
     { DI, DI, DI, DAH },	/* V */ 
-    { DI, DA, DAH, end },	/* W */ 
+    { DI, DA, DAH, END },	/* W */ 
     { DA, DI, DI, DAH },	/* X */ 
     { DA, DI, DA, DAH },	/* Y */ 
     { DA, DA, DI, DIT }		/* Z */ 
@@ -194,7 +194,7 @@ SGSoundSample *FGMorse::make_ident( const string& id, const int freq ) {
     for ( i = 0; i < (int)id.length(); ++i ) {
 	if ( idptr[i] >= 'A' && idptr[i] <= 'Z' ) {
 	    int c = (int)(idptr[i] - 'A');
-	    for ( j = 0; j < 4 && alphabet[c][j] != end; ++j ) {
+	    for ( j = 0; j < 4 && alphabet[c][j] != END; ++j ) {
 		if ( alphabet[c][j] == DIT ) {
 		    length += DIT_SIZE;
 		} else if ( alphabet[c][j] == DAH ) {
@@ -228,7 +228,7 @@ SGSoundSample *FGMorse::make_ident( const string& id, const int freq ) {
     for ( i = 0; i < (int)id.length(); ++i ) {
 	if ( idptr[i] >= 'A' && idptr[i] <= 'Z' ) {
 	    int c = (int)(idptr[i] - 'A');
-	    for ( j = 0; j < 4 && alphabet[c][j] != end; ++j ) {
+	    for ( j = 0; j < 4 && alphabet[c][j] != END; ++j ) {
 		if ( alphabet[c][j] == DIT ) {
 		    memcpy( buf_ptr, dit_ptr, DIT_SIZE );
 		    buf_ptr += DIT_SIZE;
