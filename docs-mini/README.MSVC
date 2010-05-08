@@ -68,3 +68,20 @@ x64 build :
             VC90 /
 
 3rdParty.x64, boost_1_39_0 and install/msvc90-64 are included in the x32 3rdParty archive.
+
+Typical setup should decompose into the following steps :
+
+  1. Install Visual Studio 2008 Express (http://msdn.microsoft.com/fr-fr/express/aa975050.aspx)
+  2. Install msysGit (http://code.google.com/p/msysgit/)
+  3. Create a new directory, say D:\FGFSDevel (or anything else)
+  4. Unzip precompiled Win32 3rd party archive in it
+  5. Open a Git Bash session and cd to the new directory ( cd /d/FGFSDevel )
+  6. Get SimGear sources from Gitorious : git clone git://gitorious.org/fg/simgear.git SimGear
+  7. Get FlightGear source from Gitorious : git clone git://gitorious.org/fg/flightgear.git FlightGear
+  8. Go to D:\FGFSDevel\FlightGear\projects\VC90 and double-click on FlightGear.sln
+  9. Select the "Release" configuration
+ 10. Open file D:\FGFSDevel\SimGear\simgear\version.h.in and change @VERSION@ into "2.0.0" or any current version
+ 11. Save file as version.h in the same directory
+ 12. Start build (usually F7)
+ 13. Wait...
+ 14. Enjoy - programs are in D:\FGFSDevel\FlightGear\projects\VC90\Win32\Release
