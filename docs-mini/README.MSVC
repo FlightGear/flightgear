@@ -67,7 +67,7 @@ x64 build :
          projects /
             VC90 /
 
-3rdParty.x64, boost_1_39_0 and install/msvc90-64 are included in the x32 3rdParty archive.
+3rdParty.x64, boost_1_39_0 and install/msvc90-64 are included in the x64 3rdParty archive.
 
 Typical setup should decompose into the following steps :
 
