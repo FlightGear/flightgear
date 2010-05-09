@@ -85,3 +85,26 @@ Typical setup should decompose into the following steps :
  12. Start build (usually F7)
  13. Wait...
  14. Enjoy - programs are in D:\FGFSDevel\FlightGear\projects\VC90\Win32\Release
+ 
+It is also possible to compile a Debug version. This is only useful when hacking the code because 
+a Debug version is way slower than the Release one.
+
+When the manual build works, it is possible to start it from the command line. This is useful 
+when setting up a build server or automating the process of retrieving the code and building 
+it in a scheduled task. To do that :
+
+ 1. open a command line window
+ 2. execute "C:\Program Files\Microsoft Visual Studio 9.0\Common7\Tools\vsvars32.bat"
+     or "C:\Program Files (x86)\Microsoft Visual Studio 9.0\Common7\Tools\vsvars32.bat" in a 
+     64bit environment (Vista 64-bit or Windows7 64-bit)
+     You should see : "Setting environment for using Microsoft Visual Studio 2008 x86 tools."
+     printed in the console
+ 3. cd to the FlightGear project directory :
+     D:
+     cd \FGFSDevel\FlightGear\projects\VC90  (for example)
+ 4. start the build with the command line below :
+     msbuild FlightGear.sln /p:Configuration=Release /m
+    or 
+     msbuild FlightGear.sln /p:Configuration=Debug /m
+
+That's all...
