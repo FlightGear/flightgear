@@ -269,7 +269,7 @@ void sync_tree(const char* dir) {
     }
 }
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 typedef void (__cdecl * sighandler_t)(int);
 #elif defined( __APPLE__ )
 typedef sig_t sighandler_t;
@@ -278,10 +278,10 @@ typedef sig_t sighandler_t;
 bool terminating = false;
 sighandler_t prior_signal_handlers[32];
 int termination_triggering_signals[] = {
-#ifndef _MSC_VER
-    SIGHUP, SIGINT, SIGQUIT, SIGKILL,
-#else
+#if defined(_MSC_VER) || defined(__MINGW32__)
     SIGINT, SIGILL, SIGFPE, SIGSEGV, SIGTERM, SIGBREAK, SIGABRT,
+#else
+    SIGHUP, SIGINT, SIGQUIT, SIGKILL,
 #endif
     0};  // zero terminated
 
