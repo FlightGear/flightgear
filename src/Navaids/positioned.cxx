@@ -550,13 +550,14 @@ char** searchAirportNamesAndIdents(const std::string& aFilter)
   // We format results as follows (note whitespace!):
   //   ' name-of-airport-chars   (ident)'
   // so the total length is:
-  //    1 + strlen(name) + 4 + 4 (for the ident) + 1 + 1 (for the null)
-  // which gives a grand total of 11 + the length of the name.
-  // note the ident is sometimes only three letters for non-ICAO small strips
+  //    1 + strlen(name) + 4 + strlen(icao) + 1 + 1 (for the null)
+  // which gives a grand total of 7 + name-length + icao-length.
+  // note the ident can be three letters (non-ICAO local strip), four
+  // (default ICAO) or more (extended format ICAO)
   for (unsigned int i=0; i<numMatches; ++i) {
     int nameLength = matches[i]->name().size();
     int icaoLength = matches[i]->ident().size();
-    char* entry = new char[nameLength + 11];
+    char* entry = new char[7 + nameLength + icaoLength];
     char* dst = entry;
     *dst++ = ' ';
     memcpy(dst, matches[i]->name().c_str(), nameLength);
