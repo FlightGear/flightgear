@@ -5,3 +5,4 @@ Win32
 x64
 ipch
 *.user
+*.sln.cache
