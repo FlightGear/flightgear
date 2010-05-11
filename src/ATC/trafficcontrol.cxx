@@ -65,7 +65,6 @@ void FGTrafficRecord::setPositionAndIntentions(int pos, FGAIFlightPlan *route)
      }
      intentions.erase(i);
    } else {
-     //int legNr, routeNr;
      //FGAIFlightPlan::waypoint* const wpt= route->getCurrentWaypoint();
      int size = route->getNrOfWayPoints();
      //cerr << "Setting pos" << pos << " ";
