@@ -362,7 +362,11 @@ void FGGround::DoRwyDetails() {
 	//cout << "GetRwyDetails called" << endl;
 		
   const FGAirport* apt = fgFindAirportID(ident);
-  assert(apt);
+  if (!apt) {
+    SG_LOG(SG_ATC, SG_WARN, "FGGround::DoRwyDetails: unknown ICAO:" << ident);
+    return;
+  }
+  
 	FGRunway* runway = apt->getActiveRunwayForUsage();
 
   activeRwy = runway->ident();
