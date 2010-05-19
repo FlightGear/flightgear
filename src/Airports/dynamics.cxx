@@ -432,6 +432,12 @@ string FGAirportDynamics::chooseRwyByHeading(stringVec rwys,
     double rwyHeading, headingError;
     string runway;
     for (stringVecIterator i = rwys.begin(); i != rwys.end(); i++) {
+        if (!_ap->hasRunwayWithIdent(*i)) {
+          SG_LOG(SG_ATC, SG_WARN, "chooseRwyByHeading: runway " << *i <<
+            " not found at " << _ap->ident());
+          continue;
+        }
+        
         FGRunway *rwy = _ap->getRunwayByIdent((*i));
         rwyHeading = rwy->headingDeg();
         headingError = fabs(heading - rwyHeading);
