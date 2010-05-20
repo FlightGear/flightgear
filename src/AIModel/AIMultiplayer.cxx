@@ -72,6 +72,9 @@ void FGAIMultiplayer::bind() {
     props->tie("refuel/contact", SGRawValuePointer<bool>(&contact));
     props->setBoolValue("tanker",isTanker);
 
+    props->tie("controls/invisible",
+        SGRawValuePointer<bool>(&invisible));
+
 #define AIMPROProp(type, name) \
 SGRawValueMethods<FGAIMultiplayer, type>(*this, &FGAIMultiplayer::get##name)
 
@@ -97,6 +100,7 @@ void FGAIMultiplayer::unbind() {
     //props->untie("callsign");
     props->untie("controls/allow-extrapolation");
     props->untie("controls/lag-adjust-system-speed");
+    props->untie("controls/invisible");
     props->untie("refuel/contact");
 }
 
