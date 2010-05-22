@@ -530,6 +530,14 @@ parse_fov( const string& arg ) {
 
 static bool
 add_channel( const string& type, const string& channel_str ) {
+    // This check is neccessary to prevent fgviewer from segfaulting when given
+    // weird options. (It doesn't run the full initailization)
+    if(!globals->get_channel_options_list())
+    {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Option " << type << "=" << channel_str
+                                     << " ignored.");
+        return false;
+    }
     SG_LOG(SG_GENERAL, SG_INFO, "Channel string = " << channel_str );
     globals->get_channel_options_list()->push_back( type + "," + channel_str );
     return true;
@@ -1572,6 +1580,7 @@ parse_option (const string& arg)
                     }
                     break;
                 case OPTION_CHANNEL:
+                    // XXX return value of add_channel should be checked?
                     if ( pt->has_param && !arg_value.empty() ) {
                         add_channel( pt->option, arg_value );
                     } else if ( !pt->has_param && arg_value.empty() ) {
