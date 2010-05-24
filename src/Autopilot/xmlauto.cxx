@@ -26,6 +26,7 @@
 
 #include <iostream>
 
+#include <simgear/misc/strutils.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/sg_inlines.h>
@@ -893,6 +894,237 @@ void FGXMLAutoLogic::update(double dt)
     set_output_value( i );
 }
 
+class FGXMLAutoRSFlipFlop : public FGXMLAutoFlipFlop {
+public:
+  FGXMLAutoRSFlipFlop( SGPropertyNode * node ) :
+    FGXMLAutoFlipFlop( node ) {}
+
+  void updateState( double dt ) {
+
+    if( sInput == NULL ) {
+        if ( debug ) cout << "No set (S) input for " << get_name() << endl;
+        return;
+    }
+
+    if( rInput == NULL ) {
+        if ( debug ) cout << "No reset (R) input for " << get_name() << endl;
+        return;
+    }
+
+    bool s = sInput->test();
+    bool r = rInput->test();
+
+    // s == false && q == false: no change, keep state
+    if( s || r ) {
+      bool q = false;
+      if( s ) q = true; // set
+      if( r ) q = false; // reset
+      // s && q: race condition. we let r win
+      if( inverted ) q = !q;
+
+      if ( debug ) cout << "Updating " << get_name() << ":" 
+        << " s=" << s
+        << ",r=" << r
+        << ",q=" << q << endl;
+      set_output_value( q );
+    } else {
+      if ( debug ) cout << "Updating " << get_name() << ":" 
+        << " s=" << s
+        << ",r=" << r
+        << ",q=unchanged" << endl;
+    }
+  }
+};
+
+class FGXMLAutoJKFlipFlop : public FGXMLAutoFlipFlop {
+private: 
+  bool clock;
+public:
+  FGXMLAutoJKFlipFlop( SGPropertyNode * node ) :
+    FGXMLAutoFlipFlop( node ), 
+    clock(false) {}
+
+  void updateState( double dt ) {
+
+    if( jInput == NULL ) {
+        if ( debug ) cout << "No set (j) input for " << get_name() << endl;
+        return;
+    }
+
+    if( kInput == NULL ) {
+        if ( debug ) cout << "No reset (k) input for " << get_name() << endl;
+        return;
+    }
+
+    bool j = jInput->test();
+    bool k = kInput->test();
+    /*
+      if the user provided a clock input, use it. 
+      Otherwise use framerate as clock
+      This JK operates on the raising edge. 
+    */
+    bool c = clockInput ? clockInput->test() : false;
+    bool raisingEdge = clockInput ? (c && !clock) : true;
+    clock = c;
+
+    if( !raisingEdge ) return;
+    
+    bool q = get_bool_output_value();
+    // j == false && k == false: no change, keep state
+    if( (j || k) ) {
+      if( j && k ) {
+        q = !q; // toggle
+      } else {
+        if( j ) q = true; // set
+        if( k ) q = false; // reset
+      }
+      if( inverted ) q = !q;
+
+      if ( debug ) cout << "Updating " << get_name() << ":" 
+        << " j=" << j
+        << ",k=" << k
+        << ",q=" << q << endl;
+      set_output_value( q );
+    } else {
+      if ( debug ) cout << "Updating " << get_name() << ":" 
+        << " j=" << j
+        << ",k=" << k
+        << ",q=unchanged" << endl;
+    }
+  }
+};
+
+class FGXMLAutoDFlipFlop : public FGXMLAutoFlipFlop {
+private: 
+  bool clock;
+public:
+  FGXMLAutoDFlipFlop( SGPropertyNode * node ) :
+    FGXMLAutoFlipFlop( node ), 
+    clock(false) {}
+
+  void updateState( double dt ) {
+
+    if( clockInput == NULL ) {
+        if ( debug ) cout << "No (clock) input for " << get_name() << endl;
+        return;
+    }
+
+    if( dInput == NULL ) {
+        if ( debug ) cout << "No (D) input for " << get_name() << endl;
+        return;
+    }
+
+    bool d = dInput->test();
+
+    // check the clock - raising edge
+    bool c = clockInput->test();
+    bool raisingEdge = c && !clock;
+    clock = c;
+
+    if( raisingEdge ) {
+      bool q = d;
+      if( inverted ) q = !q;
+
+      if ( debug ) cout << "Updating " << get_name() << ":" 
+        << " d=" << d
+        << ",q=" << q << endl;
+      set_output_value( q );
+    } else {
+      if ( debug ) cout << "Updating " << get_name() << ":" 
+        << " d=" << d
+        << ",q=unchanged" << endl;
+    }
+  }
+};
+
+class FGXMLAutoTFlipFlop : public FGXMLAutoFlipFlop {
+private: 
+  bool clock;
+public:
+  FGXMLAutoTFlipFlop( SGPropertyNode * node ) :
+    FGXMLAutoFlipFlop( node ), 
+    clock(false) {}
+
+  void updateState( double dt ) {
+
+    if( clockInput == NULL ) {
+        if ( debug ) cout << "No (clock) input for " << get_name() << endl;
+        return;
+    }
+
+    // check the clock - raising edge
+    bool c = clockInput->test();
+    bool raisingEdge = c && !clock;
+    clock = c;
+
+    if( raisingEdge ) {
+      bool q = !get_bool_output_value(); // toggle
+      if( inverted ) q = !q; // doesnt really make sense for a T-FF
+
+      if ( debug ) cout << "Updating " << get_name() << ":" 
+        << ",q=" << q << endl;
+      set_output_value( q );
+    } else {
+      if ( debug ) cout << "Updating " << get_name() << ":" 
+        << ",q=unchanged" << endl;
+    }
+  }
+};
+
+FGXMLAutoFlipFlop::FGXMLAutoFlipFlop(SGPropertyNode * node ) :
+    FGXMLAutoComponent(),
+    inverted(false)
+{
+    parseNode(node);
+}
+
+bool FGXMLAutoFlipFlop::parseNodeHook(const std::string& aName, SGPropertyNode* aNode)
+{
+    if (aName == "set"||aName == "S") {
+        sInput = sgReadCondition( fgGetNode("/"), aNode );
+    } else if (aName == "reset" || aName == "R" ) {
+        rInput = sgReadCondition( fgGetNode("/"), aNode );
+    } else if (aName == "J") {
+        jInput = sgReadCondition( fgGetNode("/"), aNode );
+    } else if (aName == "K") {
+        kInput = sgReadCondition( fgGetNode("/"), aNode );
+    } else if (aName == "T") {
+        tInput = sgReadCondition( fgGetNode("/"), aNode );
+    } else if (aName == "D") {
+        dInput = sgReadCondition( fgGetNode("/"), aNode );
+    } else if (aName == "clock") {
+        clockInput = sgReadCondition( fgGetNode("/"), aNode );
+    } else if (aName == "inverted") {
+        inverted = aNode->getBoolValue();
+    } else if (aName == "type") {
+        // ignore element type, evaluated by loader
+    } else {
+        return false;
+    }
+  
+    return true;
+}
+
+void FGXMLAutoFlipFlop::update(double dt)
+{
+    if ( isPropertyEnabled() ) {
+        if ( !enabled ) {
+            // we have just been enabled
+            // initialize to a bool property
+            set_output_value( get_bool_output_value() );
+        }
+        enabled = true;
+    } else {
+        enabled = false;
+        do_feedback();
+    }
+
+    if ( !enabled || dt < SGLimitsd::min() ) 
+        return;
+
+    updateState( dt );
+}
+
 
 FGXMLAutopilotGroup::FGXMLAutopilotGroup() :
   SGSubsystemGroup()
@@ -1113,6 +1345,21 @@ bool FGXMLAutopilot::build( SGPropertyNode_ptr config_props ) {
             components.push_back( new FGDigitalFilter( node ) );
         } else if ( name == "logic" ) {
             components.push_back( new FGXMLAutoLogic( node ) );
+        } else if ( name == "flipflop" ) {
+            FGXMLAutoFlipFlop * flipFlop = NULL;
+            SGPropertyNode_ptr typeNode = node->getNode( "type" );            
+            string val;
+            if( typeNode != NULL ) val = typeNode->getStringValue();
+            val = simgear::strutils::strip(val);
+            if( val == "RS" || val =="SR" ) flipFlop      = new FGXMLAutoRSFlipFlop( node );
+            else if( val == "JK" ) flipFlop = new FGXMLAutoJKFlipFlop( node );
+            else if( val == "T" ) flipFlop  = new FGXMLAutoTFlipFlop( node );
+            else if( val == "D" ) flipFlop  = new FGXMLAutoDFlipFlop( node );
+            if( flipFlop == NULL ) {
+              SG_LOG(SG_AUTOPILOT, SG_ALERT, "can't create flipflop of type: " << val);
+              return false;
+            }
+            components.push_back( flipFlop );
         } else {
             SG_LOG( SG_AUTOPILOT, SG_WARN, "Unknown top level autopilot section: " << name );
 //            return false;

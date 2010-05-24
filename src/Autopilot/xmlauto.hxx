@@ -222,6 +222,10 @@ public:
       return output_list.size() == 0 ? 0.0 : clamp(output_list[0]->getDoubleValue());
     }
 
+    inline bool get_bool_output_value() {
+      return output_list.size() == 0 ? false : output_list[0]->getBoolValue();
+    }
+
     /* 
        Returns true if the enable-condition is true.
 
@@ -381,9 +385,9 @@ private:
 
     std::deque <double> output;
     std::deque <double> input;
-    enum filterTypes { exponential, doubleExponential, movingAverage,
+    enum FilterTypes { exponential, doubleExponential, movingAverage,
                        noiseSpike, gain, reciprocal, differential, none };
-    filterTypes filterType;
+    FilterTypes filterType;
 
 protected:
   bool parseNodeHook(const std::string& aName, SGPropertyNode* aNode);
@@ -409,6 +413,28 @@ public:
     ~FGXMLAutoLogic() {}
 
     void update(double dt);
+};
+
+class FGXMLAutoFlipFlop : public FGXMLAutoComponent
+{
+private:
+protected:
+    SGSharedPtr<SGCondition> sInput;
+    SGSharedPtr<SGCondition> rInput;
+    SGSharedPtr<SGCondition> clockInput;
+    SGSharedPtr<SGCondition> jInput;
+    SGSharedPtr<SGCondition> kInput;
+    SGSharedPtr<SGCondition> tInput;
+    SGSharedPtr<SGCondition> dInput;
+    bool inverted;
+    FGXMLAutoFlipFlop( SGPropertyNode * node );
+    bool parseNodeHook(const std::string& aName, SGPropertyNode* aNode);
+
+    void update( double dt );
+    virtual void updateState( double dt ) = 0;
+
+public:
+    ~FGXMLAutoFlipFlop() {};
 };
 
 /**
