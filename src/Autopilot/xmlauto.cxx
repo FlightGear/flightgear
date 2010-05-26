@@ -32,6 +32,8 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/props/props_io.hxx>
 
+#include <simgear/structure/SGExpression.hxx>
+
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/util.hxx>
@@ -42,6 +44,9 @@ using std::cout;
 using std::endl;
 
 using simgear::PropertyList;
+
+
+
 
 FGPeriodicalValue::FGPeriodicalValue( SGPropertyNode_ptr root )
 {
@@ -78,8 +83,7 @@ double FGPeriodicalValue::normalize( double value )
 
 FGXMLAutoInput::FGXMLAutoInput( SGPropertyNode_ptr node, double value, double offset, double scale) :
   value(0.0),
-  abs(false),
-  _condition(NULL) 
+  abs(false)
 {
   parse( node, value, offset, scale );
 }
@@ -133,6 +137,11 @@ void FGXMLAutoInput::parse( SGPropertyNode_ptr node, double aValue, double aOffs
         value = valueNode->getDoubleValue();
     }
 
+    if ((n = node->getChild("expression")) != NULL) {
+      _expression = SGReadDoubleExpression(fgGetNode("/"), n->getChild(0));
+      return;
+    }
+    
     n = node->getChild( "property" );
     // if no <property> element, check for <prop> element for backwards
     // compatibility
@@ -150,10 +159,13 @@ void FGXMLAutoInput::parse( SGPropertyNode_ptr node, double aValue, double aOffs
             else
               property->setDoubleValue( 0 ); // if scale is zero, value*scale is zero
         }
-    }
+        
+        return;
+    } // of have a <property> or <prop>
 
-    if ( n == NULL && valueNode == NULL ) {
-        // no <value> element and no <prop> element, use text node 
+    
+    if (valueNode == NULL) {
+        // no <value>, <prop> or <expression> element, use text node 
         const char * textnode = node->getStringValue();
         char * endp = NULL;
         // try to convert to a double value. If the textnode does not start with a number
@@ -168,6 +180,9 @@ void FGXMLAutoInput::parse( SGPropertyNode_ptr node, double aValue, double aOffs
 
 void FGXMLAutoInput::set_value( double aValue ) 
 {
+    if (!property)
+      return;
+      
     double s = get_scale();
     if( s != 0 )
         property->setDoubleValue( (aValue - get_offset())/s );
@@ -177,9 +192,13 @@ void FGXMLAutoInput::set_value( double aValue )
 
 double FGXMLAutoInput::get_value() 
 {
-    if( property != NULL ) 
+    if (_expression) {
+        // compute the expression value
+        value = _expression->getValue(NULL);
+    } else if( property != NULL ) {
         value = property->getDoubleValue();
-
+    }
+    
     if( scale ) 
         value *= scale->get_value();
 

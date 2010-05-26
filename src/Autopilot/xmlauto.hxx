@@ -47,7 +47,12 @@ and writes properties used only by a few aircraft.
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/props/condition.hxx>
+
+template<typename T>
+class SGExpression;
+
+typedef SGExpression<double> SGExpressiond;
+class SGCondition;
 
 typedef SGSharedPtr<class FGXMLAutoInput> FGXMLAutoInput_ptr;
 typedef SGSharedPtr<class FGPeriodicalValue> FGPeriodicalValue_ptr;
@@ -72,7 +77,8 @@ private:
      FGXMLAutoInput_ptr max;      // A maximum clip defaults to no clipping
      FGPeriodicalValue_ptr  periodical; //
      SGSharedPtr<const SGCondition> _condition;
-
+     SGSharedPtr<SGExpressiond> _expression;  ///< expression to generate the value
+     
 public:
     FGXMLAutoInput( SGPropertyNode_ptr node = NULL, double value = 0.0, double offset = 0.0, double scale = 1.0 );
     
