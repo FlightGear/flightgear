@@ -918,9 +918,15 @@ void FGXMLAutoLogic::update(double dt)
 }
 
 class FGXMLAutoRSFlipFlop : public FGXMLAutoFlipFlop {
+private:
+  bool _rs;
 public:
   FGXMLAutoRSFlipFlop( SGPropertyNode * node ) :
-    FGXMLAutoFlipFlop( node ) {}
+    FGXMLAutoFlipFlop( node ) {
+      // type exists here, otherwise we were not constructed
+      string val = node->getNode( "type" )->getStringValue();
+      _rs = (val == "RS");
+    }
 
   void updateState( double dt ) {
 
@@ -940,9 +946,13 @@ public:
     // s == false && q == false: no change, keep state
     if( s || r ) {
       bool q = false;
-      if( s ) q = true; // set
-      if( r ) q = false; // reset
-      // s && q: race condition. we let r win
+      if( _rs ) { // RS: reset is dominant
+        if( s ) q = true; // set
+        if( r ) q = false; // reset
+      } else { // SR: set is dominant
+        if( r ) q = false; // reset
+        if( s ) q = true; // set
+      }
       if( inverted ) q = !q;
 
       if ( debug ) cout << "Updating " << get_name() << ":" 
@@ -1374,7 +1384,7 @@ bool FGXMLAutopilot::build( SGPropertyNode_ptr config_props ) {
             string val;
             if( typeNode != NULL ) val = typeNode->getStringValue();
             val = simgear::strutils::strip(val);
-            if( val == "RS" || val =="SR" ) flipFlop      = new FGXMLAutoRSFlipFlop( node );
+            if( val == "RS" || val =="SR" ) flipFlop = new FGXMLAutoRSFlipFlop( node );
             else if( val == "JK" ) flipFlop = new FGXMLAutoJKFlipFlop( node );
             else if( val == "T" ) flipFlop  = new FGXMLAutoTFlipFlop( node );
             else if( val == "D" ) flipFlop  = new FGXMLAutoDFlipFlop( node );
