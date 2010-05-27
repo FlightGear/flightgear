@@ -261,6 +261,10 @@ void FGXMLAutoComponent::parseNode(SGPropertyNode* aNode)
       if( (prop = child->getChild("condition")) != NULL ) {
         _condition = sgReadCondition(fgGetNode("/"), prop);
       } else {
+         if ( (prop = child->getChild( "property" )) != NULL ) {
+             enable_prop = fgGetNode( prop->getStringValue(), true );
+         }
+         
          if ( (prop = child->getChild( "prop" )) != NULL ) {
              enable_prop = fgGetNode( prop->getStringValue(), true );
          }
