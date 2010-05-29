@@ -58,6 +58,7 @@ public:
     void setMaxLong( double deg );
     void setMinLong( double deg );
     void setMPControl( bool c );
+    void setAIControl( bool c );
     void TurnToLaunch();
     void TurnToRecover();
     void TurnToBase();
