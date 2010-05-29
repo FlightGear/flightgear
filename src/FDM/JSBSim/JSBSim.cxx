@@ -258,10 +258,6 @@ FGJSBsim::FGJSBsim( double dt )
     speedbrake_pos_pct->setDoubleValue(0);
     spoilers_pos_pct->setDoubleValue(0);
 
-    ab_brake_engaged = fgGetNode("/autopilot/autobrake/engaged", true);
-    ab_brake_left_pct = fgGetNode("/autopilot/autobrake/brake-left-output", true);
-    ab_brake_right_pct = fgGetNode("/autopilot/autobrake/brake-right-output", true);
-    
     temperature = fgGetNode("/environment/temperature-degc",true);
     pressure = fgGetNode("/environment/pressure-inhg",true);
     density = fgGetNode("/environment/density-slugft3",true);
@@ -548,12 +544,6 @@ bool FGJSBsim::copy_to_JSBsim()
     double parking_brake = globals->get_controls()->get_brake_parking();
     double left_brake = globals->get_controls()->get_brake_left();
     double right_brake = globals->get_controls()->get_brake_right();
-    
-    if (ab_brake_engaged->getBoolValue()) {
-      left_brake = ab_brake_left_pct->getDoubleValue();
-      right_brake = ab_brake_right_pct->getDoubleValue(); 
-    }
-    
     FCS->SetLBrake(FMAX(left_brake, parking_brake));
     FCS->SetRBrake(FMAX(right_brake, parking_brake));
     
