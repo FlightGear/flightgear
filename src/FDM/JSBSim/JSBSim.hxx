@@ -253,10 +253,6 @@ private:
     SGPropertyNode_ptr flap_pos_pct;
     SGPropertyNode_ptr speedbrake_pos_pct;
     SGPropertyNode_ptr spoilers_pos_pct;
-
-    SGPropertyNode_ptr ab_brake_engaged;
-    SGPropertyNode_ptr ab_brake_left_pct;
-    SGPropertyNode_ptr ab_brake_right_pct;
     
     SGPropertyNode_ptr gear_pos_pct;
     SGPropertyNode_ptr wing_fold_pos_pct;
