@@ -65,6 +65,8 @@ enum plane_type {
 // PlaneRec - a structure holding ATC-centric details of planes under control
 // This might move or change eventually
 struct PlaneRec {
+        PlaneRec() : type(UNKNOWN), squawkcode(0) {}
+        PlaneRec(const std::string& s) : type(UNKNOWN), callsign(s), squawkcode(0) {}
 	plane_type type;
 	std::string callsign;
 	int squawkcode;
