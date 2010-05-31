@@ -58,14 +58,14 @@ main(int argc, char** argv)
     osgGA::KeySwitchMatrixManipulator* keyswitchManipulator;
     keyswitchManipulator = new osgGA::KeySwitchMatrixManipulator;
     
-    osgGA::MatrixManipulator* mm = new osgGA::TrackballManipulator;
-    keyswitchManipulator->addMatrixManipulator('1', "Trackball", mm);
-    mm = new osgGA::FlightManipulator;
-    keyswitchManipulator->addMatrixManipulator('2', "Flight", mm);
-    mm = new osgGA::DriveManipulator;
-    keyswitchManipulator->addMatrixManipulator('3', "Drive", mm);
-    mm = new osgGA::TerrainManipulator;
-    keyswitchManipulator->addMatrixManipulator('4', "Terrain", mm);
+    keyswitchManipulator->addMatrixManipulator('1', "Trackball",
+                                               new osgGA::TrackballManipulator);
+    keyswitchManipulator->addMatrixManipulator('2', "Flight",
+                                               new osgGA::FlightManipulator);
+    keyswitchManipulator->addMatrixManipulator('3', "Drive",
+                                               new osgGA::DriveManipulator);
+    keyswitchManipulator->addMatrixManipulator('4', "Terrain",
+                                               new osgGA::TerrainManipulator);
     
     viewer.setCameraManipulator(keyswitchManipulator);
 
