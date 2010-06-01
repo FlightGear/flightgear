@@ -430,17 +430,16 @@ protected:
     SGSharedPtr<SGCondition> clockInput;
     SGSharedPtr<SGCondition> jInput;
     SGSharedPtr<SGCondition> kInput;
-    SGSharedPtr<SGCondition> tInput;
     SGSharedPtr<SGCondition> dInput;
     bool inverted;
     FGXMLAutoFlipFlop( SGPropertyNode * node );
     bool parseNodeHook(const std::string& aName, SGPropertyNode* aNode);
 
     void update( double dt );
-    virtual void updateState( double dt ) = 0;
 
 public:
     ~FGXMLAutoFlipFlop() {};
+    virtual bool getState( bool & result ) = 0;
 };
 
 /**
