@@ -63,10 +63,9 @@ using boost::ref;
 using boost::tie;
 
 FGATIS::FGATIS() :
-  transmission(""),
-  trans_ident(""),
   old_volume(0),
   atis_failed(false),
+  msg_OK(0),
   attention(0),
   _prev_display(0),
   refname("atis")

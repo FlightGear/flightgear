@@ -57,6 +57,7 @@ void FGAICarrier::readFromScenario(SGPropertyNode* scFileNode) {
   setMaxLong(scFileNode->getDoubleValue("max-long", 0));
   setMinLong(scFileNode->getDoubleValue("min-long", 0));
   setMPControl(scFileNode->getBoolValue("mp-control", false));
+  setAIControl(scFileNode->getBoolValue("ai-control", false));
 
   SGPropertyNode* flols = scFileNode->getChild("flols-pos");
   if (flols) {
@@ -121,6 +122,10 @@ void FGAICarrier::setMPControl(bool c) {
     MPControl = c;
 }
 
+void FGAICarrier::setAIControl(bool c) {
+    AIControl = c;
+}
+
 void FGAICarrier::update(double dt) {
     // Now update the position and heading. This will compute new hdg and
     // roll values required for the rotation speed computation.
@@ -134,8 +139,8 @@ void FGAICarrier::update(double dt) {
             TurnToLaunch();
         } else if(turn_to_recovery_hdg ){
             TurnToRecover();
-        } else if(OutsideBox() || returning ) {// check that the carrier is inside 
-            ReturnToBox();                     // the operating box,  
+        } else if(OutsideBox() || returning ) {// check that the carrier is inside
+            ReturnToBox();                     // the operating box,
         } else {
             TurnToBase();
         }
@@ -168,10 +173,10 @@ void FGAICarrier::update(double dt) {
     eyeWrtCarrier = ec2body.transform(eyeWrtCarrier);
     // the eyepoints vector wrt the flols position
     SGVec3d eyeWrtFlols = eyeWrtCarrier - flols_off;
-    
+
     // the distance from the eyepoint to the flols
     dist = norm(eyeWrtFlols);
-    
+
     // now the angle, positive angles are upwards
     if (fabs(dist) < SGLimits<float>::min()) {
       angle = 0;
@@ -180,7 +185,7 @@ void FGAICarrier::update(double dt) {
       sAngle = SGMiscd::min(1, SGMiscd::max(-1, sAngle));
       angle = SGMiscd::rad2deg(asin(sAngle));
     }
-    
+
     // set the value of source
     if ( angle <= 4.35 && angle > 4.01 )
       source = 1;
@@ -436,12 +441,12 @@ void FGAICarrier::TurnToRecover(){
     if (wind_speed_kts < 3){
         tgt_heading = base_course + 60;
     } else if (rel_wind < -9 && rel_wind >= -180){
-        tgt_heading = wind_from_deg; 
+        tgt_heading = wind_from_deg;
     } else if (rel_wind > -7 && rel_wind < 45){
         tgt_heading = wind_from_deg + 60;
     } else if (rel_wind >=45 && rel_wind < 180){
         tgt_heading = wind_from_deg + 45;
-    } else 
+    } else
         tgt_heading = hdg;
 
     SG_NORMALIZE_RANGE(tgt_heading, 0.0, 360.0);

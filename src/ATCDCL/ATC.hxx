@@ -65,6 +65,8 @@ enum plane_type {
 // PlaneRec - a structure holding ATC-centric details of planes under control
 // This might move or change eventually
 struct PlaneRec {
+        PlaneRec() : type(UNKNOWN), squawkcode(0) {}
+        PlaneRec(const std::string& s) : type(UNKNOWN), callsign(s), squawkcode(0) {}
 	plane_type type;
 	std::string callsign;
 	int squawkcode;
@@ -87,6 +89,7 @@ const int ATC_NUM_TYPES = 1 + INVALID;
 
 // DCL - new experimental ATC data store
 struct ATCData {
+        ATCData() : type(INVALID), cart(0, 0, 0), freq(0), range(0) {}
 	atc_type type;
 	SGGeod geod;
 	SGVec3d cart;
@@ -99,6 +102,7 @@ struct ATCData {
 // perhaps we could use an FGRunway instead of this.
 // That wouldn't cache the orthopos though.
 struct RunwayDetails {
+        RunwayDetails() : end1ortho(0, 0, 0), end2ortho(0, 0, 0), hdg(0), length(-1), width(-1) {}
 	SGGeod threshold_pos;
 	SGVec3d end1ortho;	// ortho projection end1 (the threshold ATM)
 	SGVec3d end2ortho;	// ortho projection end2 (the take off end in the current hardwired scheme)

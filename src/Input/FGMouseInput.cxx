@@ -25,7 +25,7 @@
 #include "FGMouseInput.hxx"
 
 
-void ActivePickCallbacks::init( int b, const osgGA::GUIEventAdapter* ea ) 
+void ActivePickCallbacks::init( int b, const osgGA::GUIEventAdapter* ea )
 {
   // Get the list of hit callbacks. Take the first callback that
   // accepts the mouse button press and ignore the rest of them
@@ -44,7 +44,7 @@ void ActivePickCallbacks::init( int b, const osgGA::GUIEventAdapter* ea )
   }
 }
 
-void ActivePickCallbacks::update( double dt ) 
+void ActivePickCallbacks::update( double dt )
 {
   // handle repeatable mouse press events
   for( iterator mi = begin(); mi != end(); ++mi ) {
@@ -202,6 +202,7 @@ FGMouseInput::mouse::mouse ()
     save_y(-1),
     nModes(1),
     current_mode(0),
+    timeout(0),
     modes(NULL)
 {
 }

@@ -219,6 +219,7 @@ GPS::GPS ( SGPropertyNode *node) :
   _mode("init"),
   _name(node->getStringValue("name", "gps")),
   _num(node->getIntValue("number", 0)),
+  _searchResultsCached(false),
   _computeTurnData(false),
   _anticipateTurn(false),
   _inTurn(false)
