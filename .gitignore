@@ -11,5 +11,6 @@ autom4te.cache
 depcomp
 install-sh
 missing
+INSTALL
 *.o
 lib*.a
