@@ -1,4 +1,8 @@
 config.h
 config.h.*
+config.h-msvc6
+config.h-msvc71
+config.h-msvc8
+config.h-msvc90
 stamp-h1
 version.h
