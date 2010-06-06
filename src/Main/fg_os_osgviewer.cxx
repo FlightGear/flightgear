@@ -45,7 +45,6 @@
 #include <osg/View>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgViewer/Viewer>
-#include <osgGA/MatrixManipulator>
 
 #include <Include/general.hxx>
 #include <Scenery/scenery.hxx>
