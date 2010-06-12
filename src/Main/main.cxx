@@ -41,7 +41,6 @@
 #include <osgDB/Registry>
 
 // Class references
-#include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/animation.hxx>
@@ -71,6 +70,7 @@
 #include <ATCDCL/AIMgr.hxx>
 #include <Time/tmp.hxx>
 #include <Environment/environment_mgr.hxx>
+#include <Environment/ephemeris.hxx>
 #include <GUI/new_gui.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
 
@@ -182,12 +182,6 @@ void fgUpdateTimeDepCalcs() {
     } else {
         // do nothing, fdm isn't inited yet
     }
-
-    // Update solar system
-    globals->get_ephem()->update( globals->get_time_params()->getMjd(),
-                                  globals->get_time_params()->getLst(),
-                                  cur_fdm_state->get_Latitude() );
-
 }
 
 
@@ -715,13 +709,10 @@ static void fgIdleFunction ( void ) {
     } else if ( idle_state == 6 ) {
         idle_state++;
         // Initialize the sky
-        SGPath ephem_data_path( globals->get_fg_root() );
-        ephem_data_path.append( "Astro" );
-        SGEphemeris *ephem = new SGEphemeris( ephem_data_path.c_str() );
-        ephem->update( globals->get_time_params()->getMjd(),
-                       globals->get_time_params()->getLst(),
-                       0.0 );
-        globals->set_ephem( ephem );
+
+        Ephemeris* eph = new Ephemeris;
+        globals->add_subsystem("ephmeris", eph);
+        eph->init(); // FIXME - remove this once SGSky code below is also a subsystem
 
         // TODO: move to environment mgr
         thesky = new SGSky;
