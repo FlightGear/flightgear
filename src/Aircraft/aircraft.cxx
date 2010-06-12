@@ -204,14 +204,8 @@ fgLoadAircraft (const SGPropertyNode * arg)
         globals->get_current_panel()->update(0);
     }
 
-    // Load the new 3D model
-    //
-    globals->get_aircraft_model()->unbind();
-    delete globals->get_aircraft_model();
-    globals->set_aircraft_model(new FGAircraftModel);
-    globals->get_aircraft_model()->init();
-    globals->get_aircraft_model()->bind();
-
+    globals->get_aircraft_model()->reinit();
+        
     // TODO:
     //    load new electrical system
     //
@@ -227,11 +221,7 @@ fgLoadAircraft (const SGPropertyNode * arg)
     t = fgInitTime();
     globals->set_time_params( t );
 
-    globals->get_viewmgr()->reinit();
-    globals->get_controls()->reset_all();
-    globals->get_aircraft_model()->reinit();
     globals->get_subsystem("xml-autopilot")->reinit();
-
     fgReInitSubsystems();
 
     if ( !freeze ) {

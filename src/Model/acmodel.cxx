@@ -55,10 +55,7 @@ FGAircraftModel::FGAircraftModel ()
 
 FGAircraftModel::~FGAircraftModel ()
 {
-  osg::Node* node = _aircraft->getSceneGraph();
-  globals->get_scenery()->get_aircraft_branch()->removeChild(node);
-
-  delete _aircraft;
+  deinit();
 }
 
 void 
@@ -81,6 +78,27 @@ FGAircraftModel::init ()
   // Do not do altitude computations with that model
   node->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
   globals->get_scenery()->get_aircraft_branch()->addChild(node);
+}
+
+void
+FGAircraftModel::reinit()
+{
+  deinit();
+  init();
+}
+
+void
+FGAircraftModel::deinit()
+{
+  if (!_aircraft) {
+    return;
+  }
+  
+  osg::Node* node = _aircraft->getSceneGraph();
+  globals->get_scenery()->get_aircraft_branch()->removeChild(node);
+
+  delete _aircraft;
+  _aircraft = NULL;
 }
 
 void

@@ -183,8 +183,6 @@ void fgUpdateTimeDepCalcs() {
         // do nothing, fdm isn't inited yet
     }
 
-    globals->get_aircraft_model()->update(delta_time_sec);
-
     // Update solar system
     globals->get_ephem()->update( globals->get_time_params()->getMjd(),
                                   globals->get_time_params()->getLst(),
@@ -455,7 +453,8 @@ static void fgMainLoop( void ) {
         SG_LOG( SG_ALL, SG_DEBUG,
                 "Elapsed time is zero ... we're zinging" );
     }
-
+  
+    globals->get_aircraft_model()->update(delta_time_sec);
     globals->get_subsystem_mgr()->update(delta_time_sec);
 
     //
@@ -697,9 +696,11 @@ static void fgIdleFunction ( void ) {
         // Initialize the 3D aircraft model subsystem (has a dependency on
         // the scenery subsystem.)
         ////////////////////////////////////////////////////////////////////
-        globals->set_aircraft_model(new FGAircraftModel);
-        globals->get_aircraft_model()->init();
-        globals->get_aircraft_model()->bind();
+        FGAircraftModel* acm = new FGAircraftModel;
+        globals->set_aircraft_model(acm);
+        //globals->add_subsystem("aircraft-model", acm);
+        acm->init();
+        acm->bind();
 
         ////////////////////////////////////////////////////////////////////
         // Initialize the view manager subsystem.
