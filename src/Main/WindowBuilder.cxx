@@ -60,6 +60,10 @@ WindowBuilder::makeDefaultTraits(bool stencil)
 
     GraphicsContext::Traits* traits = new osg::GraphicsContext::Traits;
     traits->readDISPLAY();
+    if (traits->displayNum < 0)
+        traits->displayNum = 0;
+    if (traits->screenNum < 0)
+        traits->screenNum = 0;
     int cbits = (bpp <= 16) ?  5 :  8;
     int zbits = (bpp <= 16) ? 16 : 24;
     traits->red = traits->green = traits->blue = cbits;
@@ -148,7 +152,7 @@ GraphicsWindow* WindowBuilder::buildWindow(const SGPropertyNode* winNode)
     string windowName;
     if (winNode->hasChild("window-name"))
         windowName = winNode->getStringValue("window-name");
-    else if (winNode->hasChild("name")) 
+    else if (winNode->hasChild("name"))
         windowName = winNode->getStringValue("name");
     GraphicsWindow* result = 0;
     if (!windowName.empty()) {
