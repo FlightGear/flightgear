@@ -56,10 +56,11 @@ class FGGeneral {
 #endif
 
 public:
-
+    inline char* get_glVendor() { return glVendor; }
     inline void set_glVendor( char *str ) { glVendor = str; }
     inline char* get_glRenderer() const { return glRenderer; }
     inline void set_glRenderer( char *str ) { glRenderer = str; }
+    inline char* get_glVersion() { return glVersion; }
     inline void set_glVersion( char *str ) { glVersion = str; }
     inline void set_glMaxTexSize( int i ) { glMaxTexSize = i; }
     inline int get_glMaxTexSize() const { return glMaxTexSize; }

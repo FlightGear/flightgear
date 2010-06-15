@@ -575,7 +575,9 @@ struct GeneralInitOperation : public GraphicsContextOperation
         general.set_glVendor( (char *)glGetString ( GL_VENDOR ) );
         general.set_glRenderer( (char *)glGetString ( GL_RENDERER ) );
         general.set_glVersion( (char *)glGetString ( GL_VERSION ) );
+        SG_LOG( SG_GENERAL, SG_INFO, general.get_glVendor() );
         SG_LOG( SG_GENERAL, SG_INFO, general.get_glRenderer() );
+        SG_LOG( SG_GENERAL, SG_INFO, general.get_glVersion() );
 
         GLint tmp;
         glGetIntegerv( GL_MAX_TEXTURE_SIZE, &tmp );
