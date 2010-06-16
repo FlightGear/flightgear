@@ -174,7 +174,7 @@ private:
     IC_struct  IC;
 
     // A list of pointers to AI objects
-    typedef list <osg::ref_ptr<FGAIBase> > sm_list_type;
+    typedef list <SGSharedPtr<FGAIBase> > sm_list_type;
     typedef sm_list_type::iterator sm_list_iterator;
     typedef sm_list_type::const_iterator sm_list_const_iterator;
 

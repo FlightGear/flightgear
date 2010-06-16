@@ -40,7 +40,7 @@ class SGMaterial;
 class FGAIManager;
 class FGAIFlightPlan;
 
-class FGAIBase : public osg::Referenced {
+class FGAIBase : public SGReferenced {
 
 public:
     enum object_type { otNull = 0, otAircraft, otShip, otCarrier, otBallistic,

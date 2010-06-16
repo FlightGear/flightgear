@@ -86,7 +86,7 @@ private:
   void ProcessChatMsg(const MsgBuf& Msg, const netAddress& SenderAddress);
 
   /// maps from the callsign string to the FGAIMultiplayer
-  typedef std::map<std::string, osg::ref_ptr<FGAIMultiplayer> > MultiPlayerMap;
+  typedef std::map<std::string, SGSharedPtr<FGAIMultiplayer> > MultiPlayerMap;
   MultiPlayerMap mMultiPlayerMap;
 
   netSocket* mSocket;

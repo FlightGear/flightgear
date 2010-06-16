@@ -381,7 +381,7 @@ FGAIManager::getStartPosition(const string& id, const string& pid,
                         std::string pnumber = scEntry->getStringValue("pennant-number");
                         std::string name = scEntry->getStringValue("name");
                         if (type == "carrier" && (pnumber == id || name == id)) {
-                            osg::ref_ptr<FGAICarrier> carrier = new FGAICarrier;
+                            SGSharedPtr<FGAICarrier> carrier = new FGAICarrier;
                             carrier->readFromScenario(scEntry);
 
                             if (carrier->getParkPosition(pid, geodPos, hdng, uvw)) {

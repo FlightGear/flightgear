@@ -46,7 +46,7 @@ class FGAIManager : public SGSubsystem
 public:
 
     // A list of pointers to AI objects
-    typedef list <osg::ref_ptr<FGAIBase> > ai_list_type;
+    typedef list <SGSharedPtr<FGAIBase> > ai_list_type;
     typedef ai_list_type::iterator ai_list_iterator;
     typedef ai_list_type::const_iterator ai_list_const_iterator;
 
