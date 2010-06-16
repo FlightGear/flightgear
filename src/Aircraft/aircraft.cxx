@@ -44,6 +44,7 @@
 #include <Cockpit/hud.hxx>
 #include <Cockpit/panel_io.hxx>
 #include <Model/acmodel.hxx>
+#include <FDM/flightProperties.hxx>
 
 #include "aircraft.hxx"
 
@@ -57,29 +58,26 @@ fgAIRCRAFT current_aircraft;
 void fgAircraftInit( void ) {
     SG_LOG( SG_AIRCRAFT, SG_INFO, "Initializing Aircraft structure" );
 
-    current_aircraft.fdm_state   = cur_fdm_state;
     current_aircraft.controls = globals->get_controls();
 }
 
 
 // Display various parameters to stdout
 void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
-    FGInterface *f;
-
-    f = a->fdm_state;
+    FlightProperties f;
 
     SG_LOG( SG_FLIGHT, SG_DEBUG,
             "Pos = ("
-	    << (f->get_Longitude() * 3600.0 * SGD_RADIANS_TO_DEGREES) << "," 
-	    << (f->get_Latitude()  * 3600.0 * SGD_RADIANS_TO_DEGREES) << ","
-	    << f->get_Altitude() 
+	    << (f.get_Longitude() * 3600.0 * SGD_RADIANS_TO_DEGREES) << "," 
+	    << (f.get_Latitude()  * 3600.0 * SGD_RADIANS_TO_DEGREES) << ","
+	    << f.get_Altitude() 
 	    << ")  (Phi,Theta,Psi)=("
-	    << f->get_Phi() << "," 
-	    << f->get_Theta() << "," 
-	    << f->get_Psi() << ")" );
+	    << f.get_Phi() << "," 
+	    << f.get_Theta() << "," 
+	    << f.get_Psi() << ")" );
 
     SG_LOG( SG_FLIGHT, SG_DEBUG,
-	    "Kts = " << f->get_V_equiv_kts() 
+	    "Kts = " << f.get_V_equiv_kts() 
 	    << "  Elev = " << globals->get_controls()->get_elevator() 
 	    << "  Aileron = " << globals->get_controls()->get_aileron() 
 	    << "  Rudder = " << globals->get_controls()->get_rudder() 
@@ -155,8 +153,8 @@ fgLoadAircraft (const SGPropertyNode * arg)
 
     // TODO:
     //    remove electrical system
-    cur_fdm_state->unbind();
-
+    globals->get_subsystem("flight")->unbind();
+    
     // Save the selected aircraft model since restoreInitialState
     // will obverwrite it.
     //

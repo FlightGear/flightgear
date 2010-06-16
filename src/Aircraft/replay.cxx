@@ -26,7 +26,6 @@
 
 #include <simgear/constants.h>
 
-#include <FDM/flight.hxx>
 #include <Main/fg_props.hxx>
 #include <Network/native_ctrls.hxx>
 #include <Network/native_fdm.hxx>
@@ -164,9 +163,10 @@ void FGReplay::update( double dt ) {
     //FGProps2NetFDM( &f, false );
 
     // sanity check, don't collect data if FDM data isn't good
-    if ( !cur_fdm_state->get_inited() ) {
+    if (!fgGetBool("/sim/signals/fdm-initialized", false)) {
         return;
     }
+    
     //FGNetCtrls c;
     //FGProps2NetCtrls( &c, false, false );
     //stamp("point_04ba");

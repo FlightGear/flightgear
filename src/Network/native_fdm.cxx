@@ -30,7 +30,7 @@
 #include <simgear/io/iochannel.hxx>
 #include <simgear/timing/sg_time.hxx>
 
-#include <FDM/flight.hxx>
+#include <FDM/flightProperties.hxx>
 #include <Time/tmp.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -115,7 +115,9 @@ bool FGNativeFDM::open() {
     set_enabled( true );
 
     // Is this really needed here ????
-    cur_fdm_state->_set_Sea_level_radius( SG_EQUATORIAL_RADIUS_FT );
+    fgSetDouble("/position/sea-level-radius-ft", SG_EQUATORIAL_RADIUS_FT);
+
+    
 
     return true;
 }
@@ -124,37 +126,39 @@ bool FGNativeFDM::open() {
 void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
     unsigned int i;
 
+    FlightProperties fdm_state;
+
     // Version sanity checking
     net->version = FG_NET_FDM_VERSION;
 
     // Aero parameters
-    net->longitude = cur_fdm_state->get_Longitude();
-    net->latitude = cur_fdm_state->get_Latitude();
-    net->altitude = cur_fdm_state->get_Altitude() * SG_FEET_TO_METER;
-    net->agl = cur_fdm_state->get_Altitude_AGL() * SG_FEET_TO_METER;
-    net->phi = cur_fdm_state->get_Phi();
-    net->theta = cur_fdm_state->get_Theta();
-    net->psi = cur_fdm_state->get_Psi();
-    net->alpha = cur_fdm_state->get_Alpha();
-    net->beta = cur_fdm_state->get_Beta();
-    net->phidot = cur_fdm_state->get_Phi_dot_degps() * SG_DEGREES_TO_RADIANS;
-    net->thetadot = cur_fdm_state->get_Theta_dot_degps()
+    net->longitude = fdm_state.get_Longitude();
+    net->latitude = fdm_state.get_Latitude();
+    net->altitude = fdm_state.get_Altitude() * SG_FEET_TO_METER;
+    net->agl = fdm_state.get_Altitude_AGL() * SG_FEET_TO_METER;
+    net->phi = fdm_state.get_Phi();
+    net->theta = fdm_state.get_Theta();
+    net->psi = fdm_state.get_Psi();
+    net->alpha = fdm_state.get_Alpha();
+    net->beta = fdm_state.get_Beta();
+    net->phidot = fdm_state.get_Phi_dot_degps() * SG_DEGREES_TO_RADIANS;
+    net->thetadot = fdm_state.get_Theta_dot_degps()
         * SG_DEGREES_TO_RADIANS;
-    net->psidot = cur_fdm_state->get_Psi_dot_degps() * SG_DEGREES_TO_RADIANS;
+    net->psidot = fdm_state.get_Psi_dot_degps() * SG_DEGREES_TO_RADIANS;
 
-    net->vcas = cur_fdm_state->get_V_calibrated_kts();
-    net->climb_rate = cur_fdm_state->get_Climb_Rate();
+    net->vcas = fdm_state.get_V_calibrated_kts();
+    net->climb_rate = fdm_state.get_Climb_Rate();
 
-    net->v_north = cur_fdm_state->get_V_north();
-    net->v_east = cur_fdm_state->get_V_east();
-    net->v_down = cur_fdm_state->get_V_down();
-    net->v_wind_body_north = cur_fdm_state->get_uBody();
-    net->v_wind_body_east = cur_fdm_state->get_vBody();
-    net->v_wind_body_down = cur_fdm_state->get_wBody();
+    net->v_north = fdm_state.get_V_north();
+    net->v_east = fdm_state.get_V_east();
+    net->v_down = fdm_state.get_V_down();
+    net->v_wind_body_north = fdm_state.get_uBody();
+    net->v_wind_body_east = fdm_state.get_vBody();
+    net->v_wind_body_down = fdm_state.get_wBody();
 
-    net->A_X_pilot = cur_fdm_state->get_A_X_pilot();
-    net->A_Y_pilot = cur_fdm_state->get_A_Y_pilot();
-    net->A_Z_pilot = cur_fdm_state->get_A_Z_pilot();
+    net->A_X_pilot = fdm_state.get_A_X_pilot();
+    net->A_Y_pilot = fdm_state.get_A_Y_pilot();
+    net->A_Z_pilot = fdm_state.get_A_Z_pilot();
 
     net->stall_warning = fgGetDouble("/sim/alarms/stall-warning", 0.0);
     net->slip_deg
@@ -300,7 +304,8 @@ void FGProps2NetFDM( FGNetFDM *net, bool net_byte_order ) {
 
 void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
     unsigned int i;
-
+    FlightProperties fdm_state;
+    
     if ( net_byte_order ) {
         // Convert to the net buffer from network format
         net->version = ntohl(net->version);
@@ -379,37 +384,38 @@ void FGNetFDM2Props( FGNetFDM *net, bool net_byte_order ) {
 
     if ( net->version == FG_NET_FDM_VERSION ) {
         // cout << "pos = " << net->longitude << " " << net->latitude << endl;
-        // cout << "sea level rad = " << cur_fdm_state->get_Sea_level_radius()
+        // cout << "sea level rad = " << fdm_state.get_Sea_level_radius()
 	//      << endl;
-        cur_fdm_state->_updateGeodeticPosition( net->latitude,
-                                                net->longitude,
-                                                net->altitude
-                                                  * SG_METER_TO_FEET );
+                                      
+      fdm_state.set_Latitude(net->latitude);
+        fdm_state.set_Longitude(net->longitude);
+        fdm_state.set_Altitude(net->altitude * SG_METER_TO_FEET);
+        
 	if ( net->agl > -9000 ) {
-	    cur_fdm_state->_set_Altitude_AGL( net->agl * SG_METER_TO_FEET );
+	    fdm_state.set_Altitude_AGL( net->agl * SG_METER_TO_FEET );
 	} else {
 	    double agl_m = net->altitude
-              - cur_fdm_state->get_Runway_altitude_m();
-	    cur_fdm_state->_set_Altitude_AGL( agl_m * SG_METER_TO_FEET );
+              - fdm_state.get_Runway_altitude_m();
+	    fdm_state.set_Altitude_AGL( agl_m * SG_METER_TO_FEET );
 	}
-        cur_fdm_state->_set_Euler_Angles( net->phi,
+        fdm_state.set_Euler_Angles( net->phi,
                                           net->theta,
                                           net->psi );
-        cur_fdm_state->_set_Alpha( net->alpha );
-        cur_fdm_state->_set_Beta( net->beta );
-        cur_fdm_state->_set_Euler_Rates( net->phidot,
+        fdm_state.set_Alpha( net->alpha );
+        fdm_state.set_Beta( net->beta );
+        fdm_state.set_Euler_Rates( net->phidot,
 					 net->thetadot,
 					 net->psidot );
-        cur_fdm_state->_set_V_calibrated_kts( net->vcas );
-        cur_fdm_state->_set_Climb_Rate( net->climb_rate );
-        cur_fdm_state->_set_Velocities_Local( net->v_north,
+        fdm_state.set_V_calibrated_kts( net->vcas );
+        fdm_state.set_Climb_Rate( net->climb_rate );
+        fdm_state.set_Velocities_Local( net->v_north,
                                               net->v_east,
                                               net->v_down );
-        cur_fdm_state->_set_Velocities_Wind_Body( net->v_wind_body_north,
+        fdm_state.set_Velocities_Wind_Body( net->v_wind_body_north,
                                                   net->v_wind_body_east,
                                                   net->v_wind_body_down );
 
-        cur_fdm_state->_set_Accels_Pilot_Body( net->A_X_pilot,
+        fdm_state.set_Accels_Pilot_Body( net->A_X_pilot,
 					       net->A_Y_pilot,
 					       net->A_Z_pilot );
 
@@ -502,7 +508,7 @@ bool FGNativeFDM::process() {
     int length = sizeof(buf);
 
     if ( get_direction() == SG_IO_OUT ) {
-	// cout << "size of cur_fdm_state = " << length << endl;
+
 	FGProps2NetFDM( &buf );
 	if ( ! io->write( (char *)(& buf), length ) ) {
 	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );

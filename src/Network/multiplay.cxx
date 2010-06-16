@@ -37,7 +37,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/SGMath.hxx>
 
-#include <FDM/flight.hxx>
+#include <FDM/flightProperties.hxx>
 #include <MultiPlayer/mpmessages.hxx>
 
 #include "multiplay.hxx"
@@ -129,7 +129,7 @@ bool FGMultiplay::process() {
 //     if (sim_time < 20)
 //       return true;
 
-    FGInterface *ifce = cur_fdm_state;
+    FlightProperties ifce;
 
     // put together a motion info struct, you will get that later
     // from FGInterface directly ...
@@ -150,10 +150,10 @@ bool FGMultiplay::process() {
 
     // These are for now converted from lat/lon/alt and euler angles.
     // But this should change in FGInterface ...
-    double lon = ifce->get_Longitude();
-    double lat = ifce->get_Latitude();
+    double lon = ifce.get_Longitude();
+    double lat = ifce.get_Latitude();
     // first the aprioriate structure for the geodetic one
-    SGGeod geod = SGGeod::fromRadFt(lon, lat, ifce->get_Altitude());
+    SGGeod geod = SGGeod::fromRadFt(lon, lat, ifce.get_Altitude());
     // Convert to cartesion coordinate
     motionInfo.position = SGVec3d::fromGeod(geod);
     
@@ -161,28 +161,28 @@ bool FGMultiplay::process() {
     // horizontal local frame
     SGQuatf qEc2Hl = SGQuatf::fromLonLatRad((float)lon, (float)lat);
     // The orientation wrt the horizontal local frame
-    float heading = ifce->get_Psi();
-    float pitch = ifce->get_Theta();
-    float roll = ifce->get_Phi();
+    float heading = ifce.get_Psi();
+    float pitch = ifce.get_Theta();
+    float roll = ifce.get_Phi();
     SGQuatf hlOr = SGQuatf::fromYawPitchRoll(heading, pitch, roll);
     // The orientation of the vehicle wrt the earth centered frame
     motionInfo.orientation = qEc2Hl*hlOr;
 
-    if (!ifce->is_suspended()) {
+    if (!globals->get_subsystem("flight")->is_suspended()) {
       // velocities
-      motionInfo.linearVel = SG_FEET_TO_METER*SGVec3f(ifce->get_U_body(),
-                                                      ifce->get_V_body(),
-                                                      ifce->get_W_body());
-      motionInfo.angularVel = SGVec3f(ifce->get_P_body(),
-                                      ifce->get_Q_body(),
-                                      ifce->get_R_body());
+      motionInfo.linearVel = SG_FEET_TO_METER*SGVec3f(ifce.get_uBody(),
+                                                      ifce.get_vBody(),
+                                                      ifce.get_wBody());
+      motionInfo.angularVel = SGVec3f(ifce.get_P_body(),
+                                      ifce.get_Q_body(),
+                                      ifce.get_R_body());
       
       // accels, set that to zero for now.
       // Angular accelerations are missing from the interface anyway,
       // linear accelerations are screwed up at least for JSBSim.
-//  motionInfo.linearAccel = SG_FEET_TO_METER*SGVec3f(ifce->get_U_dot_body(),
-//                                                    ifce->get_V_dot_body(),
-//                                                    ifce->get_W_dot_body());
+//  motionInfo.linearAccel = SG_FEET_TO_METER*SGVec3f(ifce.get_U_dot_body(),
+//                                                    ifce.get_V_dot_body(),
+//                                                    ifce.get_W_dot_body());
       motionInfo.linearAccel = SGVec3f::zeros();
       motionInfo.angularAccel = SGVec3f::zeros();
     } else {

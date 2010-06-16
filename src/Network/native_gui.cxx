@@ -30,11 +30,11 @@
 #include <simgear/io/iochannel.hxx>
 #include <simgear/timing/sg_time.hxx>
 
-#include <FDM/flight.hxx>
 #include <Time/tmp.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
+#include <FDM/flightProperties.hxx>
 
 #include "native_gui.hxx"
 
@@ -116,7 +116,7 @@ bool FGNativeGUI::open() {
 
     set_enabled( true );
 
-    cur_fdm_state->_set_Sea_level_radius( SG_EQUATORIAL_RADIUS_FT );
+    fgSetDouble("/position/sea-level-radius-ft", SG_EQUATORIAL_RADIUS_FT);
     return true;
 }
 
@@ -140,20 +140,22 @@ void FGProps2NetGUI( FGNetGUI *net ) {
 	= fgGetNode("/instrumentation/nav/gs-needle-deflection", true);
     unsigned int i;
 
+    static FlightProperties* fdm_state = new FlightProperties;
+
     // Version sanity checking
     net->version = FG_NET_GUI_VERSION;
 
     // Aero parameters
-    net->longitude = cur_fdm_state->get_Longitude();
-    net->latitude = cur_fdm_state->get_Latitude();
-    net->altitude = cur_fdm_state->get_Altitude() * SG_FEET_TO_METER;
-    net->phi = cur_fdm_state->get_Phi();
-    net->theta = cur_fdm_state->get_Theta();
-    net->psi = cur_fdm_state->get_Psi();
+    net->longitude = fdm_state->get_Longitude();
+    net->latitude = fdm_state->get_Latitude();
+    net->altitude = fdm_state->get_Altitude() * SG_FEET_TO_METER;
+    net->phi = fdm_state->get_Phi();
+    net->theta = fdm_state->get_Theta();
+    net->psi = fdm_state->get_Psi();
 
     // Velocities
-    net->vcas = cur_fdm_state->get_V_calibrated_kts();
-    net->climb_rate = cur_fdm_state->get_Climb_Rate();
+    net->vcas = fdm_state->get_V_calibrated_kts();
+    net->climb_rate = fdm_state->get_Climb_Rate();
 
     // Consumables
     net->num_tanks = FGNetGUI::FG_MAX_TANKS;
@@ -165,7 +167,7 @@ void FGProps2NetGUI( FGNetGUI *net ) {
     // Environment
     net->cur_time = globals->get_time_params()->get_cur_time();
     net->warp = globals->get_warp();
-    net->ground_elev = cur_fdm_state->get_Runway_altitude_m();
+    net->ground_elev = fdm_state->get_Runway_altitude_m();
 
     // Approach
     net->tuned_freq = nav_freq->getDoubleValue();
@@ -281,19 +283,22 @@ void FGNetGUI2Props( FGNetGUI *net ) {
 #endif
 
     if ( net->version == FG_NET_GUI_VERSION ) {
+        FlightProperties fdm_state;
+        
         // cout << "pos = " << net->longitude << " " << net->latitude << endl;
-        // cout << "sea level rad = " << cur_fdm_state->get_Sea_level_radius()
+        // cout << "sea level rad = " << fdm_state->get_Sea_level_radius()
 	//      << endl;
-        cur_fdm_state->_updateGeodeticPosition( net->latitude,
-                                                net->longitude,
-                                                net->altitude
-                                                  * SG_METER_TO_FEET );
-        cur_fdm_state->_set_Euler_Angles( net->phi,
+  
+        fdm_state.set_Latitude(net->latitude);
+        fdm_state.set_Longitude(net->longitude);
+        fdm_state.set_Altitude(net->altitude * SG_METER_TO_FEET);
+
+        fdm_state.set_Euler_Angles( net->phi,
                                           net->theta,
                                           net->psi );
 
-        cur_fdm_state->_set_V_calibrated_kts( net->vcas );
-        cur_fdm_state->_set_Climb_Rate( net->climb_rate );
+        fdm_state.set_V_calibrated_kts( net->vcas );
+        fdm_state.set_Climb_Rate( net->climb_rate );
 
 	for (i = 0; i < net->num_tanks; ++i ) {
 	    SGPropertyNode * node
@@ -333,7 +338,7 @@ bool FGNativeGUI::process() {
     int length = sizeof(buf);
 
     if ( get_direction() == SG_IO_OUT ) {
-	// cout << "size of cur_fdm_state = " << length << endl;
+	// cout << "size of fdm_state = " << length << endl;
 	FGProps2NetGUI( &buf );
 	if ( ! io->write( (char *)(& buf), length ) ) {
 	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );

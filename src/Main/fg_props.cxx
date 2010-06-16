@@ -34,8 +34,6 @@
 #include <simgear/scene/model/particles.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 
-#include <Aircraft/aircraft.hxx>
-#include <FDM/flight.hxx>
 #include <GUI/gui.h>
 
 #include "globals.hxx"
@@ -43,8 +41,6 @@
 
 
 static bool winding_ccw = true; // FIXME: temporary
-
-static bool fdm_data_logging = false; // FIXME: temporary
 
 static bool frozen = false;	// FIXME: temporary
 
@@ -308,8 +304,8 @@ setDateString (const char * date_string)
 				// too difficult, by the way.
   long int warp =
     mktime(&new_time) - mktime(current_time) + globals->get_warp();
-  double lon = current_aircraft.fdm_state->get_Longitude();
-  double lat = current_aircraft.fdm_state->get_Latitude();
+  double lon = fgGetDouble("/position/longitude-deg") * SG_DEGREES_TO_RADIANS;
+  double lat = fgGetDouble("/position/latitude-deg") * SG_DEGREES_TO_RADIANS;
   globals->set_warp(warp);
   st->update(lon, lat, cur_time_override->getLongValue(), warp);
 }
@@ -354,7 +350,7 @@ static double
 getHeadingMag ()
 {
   double magheading;
-  magheading = current_aircraft.fdm_state->get_Psi() * SGD_RADIANS_TO_DEGREES - getMagVar();
+  magheading = fgGetDouble("/orientation/heading-deg") - getMagVar();
   if (magheading < 0) magheading += 360;
   return magheading;
 }
@@ -366,7 +362,7 @@ static double
 getTrackMag ()
 {
   double magtrack;
-  magtrack = current_aircraft.fdm_state->get_Track() - getMagVar();
+  magtrack = fgGetDouble("/orientation/track-deg") - getMagVar();
   if (magtrack < 0) magtrack += 360;
   return magtrack;
 }
@@ -409,22 +405,6 @@ setWindingCCW (bool state)
     glFrontFace ( GL_CCW );
   else
     glFrontFace ( GL_CW );
-}
-
-static bool
-getFDMDataLogging ()
-{
-  return fdm_data_logging;
-}
-
-static void
-setFDMDataLogging (bool state)
-{
-				// kludge; no getter or setter available
-  if (state != fdm_data_logging) {
-    fgToggleFDMdataLogging();
-    fdm_data_logging = state;
-  }
 }
 
 static const char *
@@ -540,7 +520,6 @@ FGProperties::bind ()
 
 				// Misc. Temporary junk.
   fgTie("/sim/temp/winding-ccw", getWindingCCW, setWindingCCW, false);
-  fgTie("/sim/temp/fdm-data-logging", getFDMDataLogging, setFDMDataLogging);
 }
 
 void

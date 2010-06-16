@@ -428,47 +428,48 @@ void FGExternalPipe::update_binary( double dt ) {
 
 
 // Process remote FDM "set" commands
-static void process_set_command( const string_list &tokens ) {
+
+void FGExternalPipe::process_set_command( const string_list &tokens ) {
     if ( tokens[1] == "geodetic_position" ) {
         double lat_rad = atof( tokens[2].c_str() );
         double lon_rad = atof( tokens[3].c_str() );
         double alt_m   = atof( tokens[4].c_str() );
-        cur_fdm_state->_updateGeodeticPosition( lat_rad, lon_rad,
+        _updateGeodeticPosition( lat_rad, lon_rad,
                                                 alt_m * SG_METER_TO_FEET );
 
-        double agl_m = alt_m - cur_fdm_state->get_Runway_altitude_m();
-        cur_fdm_state->_set_Altitude_AGL( agl_m * SG_METER_TO_FEET );
+        double agl_m = alt_m - get_Runway_altitude_m();
+        _set_Altitude_AGL( agl_m * SG_METER_TO_FEET );
     } else if ( tokens[1] == "euler_angles" ) {
         double phi_rad   = atof( tokens[2].c_str() );
         double theta_rad = atof( tokens[3].c_str() );
         double psi_rad   = atof( tokens[4].c_str() );
-        cur_fdm_state->_set_Euler_Angles( phi_rad, theta_rad, psi_rad );
+        _set_Euler_Angles( phi_rad, theta_rad, psi_rad );
     } else if ( tokens[1] == "euler_rates" ) {
         double phidot   = atof( tokens[2].c_str() );
         double thetadot = atof( tokens[3].c_str() );
         double psidot   = atof( tokens[4].c_str() );
-        cur_fdm_state->_set_Euler_Rates( phidot, thetadot, psidot );
+        _set_Euler_Rates( phidot, thetadot, psidot );
     } else if ( tokens[1] == "ned" ) {
 	double north_fps = atof( tokens[2].c_str() );
 	double east_fps = atof( tokens[3].c_str() );
 	double down_fps = atof( tokens[4].c_str() );
-	cur_fdm_state->_set_Velocities_Local( north_fps, east_fps, down_fps );
+	_set_Velocities_Local( north_fps, east_fps, down_fps );
     } else if ( tokens[1] == "alpha" ) {
-        cur_fdm_state->_set_Alpha( atof(tokens[2].c_str()) );
+        _set_Alpha( atof(tokens[2].c_str()) );
     } else if ( tokens[1] == "beta" ) {
-        cur_fdm_state->_set_Beta( atof(tokens[2].c_str()) );
+        _set_Beta( atof(tokens[2].c_str()) );
 
 #if 0
-    cur_fdm_state->_set_V_calibrated_kts( net->vcas );
-    cur_fdm_state->_set_Climb_Rate( net->climb_rate );
-    cur_fdm_state->_set_Velocities_Local( net->v_north,
+    _set_V_calibrated_kts( net->vcas );
+    _set_Climb_Rate( net->climb_rate );
+    _set_Velocities_Local( net->v_north,
                                           net->v_east,
                                           net->v_down );
-    cur_fdm_state->_set_Velocities_Wind_Body( net->v_wind_body_north,
+    _set_Velocities_Wind_Body( net->v_wind_body_north,
                                               net->v_wind_body_east,
                                               net->v_wind_body_down );
 
-    cur_fdm_state->_set_Accels_Pilot_Body( net->A_X_pilot,
+    _set_Accels_Pilot_Body( net->A_X_pilot,
                                            net->A_Y_pilot,
                                            net->A_Z_pilot );
 #endif

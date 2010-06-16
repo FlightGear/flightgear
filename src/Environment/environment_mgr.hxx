@@ -76,8 +76,6 @@ public:
   virtual FGEnvironment getEnvironment(const SGGeod& aPos) const;
 private:
 
-  void _update_fdm () const;
-
   double get_cloud_layer_span_m (int index) const;
   void set_cloud_layer_span_m (int index, double span_m);
   double get_cloud_layer_elevation_ft (int index) const;

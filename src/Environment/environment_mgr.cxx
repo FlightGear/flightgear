@@ -90,7 +90,7 @@ FGEnvironmentMgr::init ()
 {
   SG_LOG( SG_GENERAL, SG_INFO, "Initializing environment subsystem");
   SGSubsystemGroup::init();
-  _update_fdm();
+  //_update_fdm();
 }
 
 void
@@ -98,7 +98,7 @@ FGEnvironmentMgr::reinit ()
 {
   SG_LOG( SG_GENERAL, SG_INFO, "Reinitializing environment subsystem");
   SGSubsystemGroup::reinit();
-  _update_fdm();
+  //_update_fdm();
 }
 
 void
@@ -290,20 +290,13 @@ void
 FGEnvironmentMgr::update (double dt)
 {
   SGSubsystemGroup::update(dt);
-
-				// FIXME: the FDMs should update themselves
-  current_aircraft.fdm_state
-    ->set_Velocities_Local_Airmass(_environment->get_wind_from_north_fps(),
-				   _environment->get_wind_from_east_fps(),
-				   _environment->get_wind_from_down_fps());
+  
   _environment->set_elevation_ft(fgGetDouble("/position/altitude-ft"));
   _environment->set_local_weather_lift_fps(fgGetDouble("/local-weather/current/thermal-lift"));
   osg::Vec3 windVec(-_environment->get_wind_from_north_fps(),
                     -_environment->get_wind_from_east_fps(),
                     _environment->get_wind_from_down_fps());
   simgear::Particles::setWindVector(windVec * SG_FEET_TO_METER);
-
-  _update_fdm();
 }
 
 FGEnvironment
@@ -333,27 +326,6 @@ FGEnvironmentMgr::getEnvironment(const SGGeod& aPos) const
   env.set_elevation_ft(aPos.getElevationFt());
   return env;
 
-}
-
-void
-FGEnvironmentMgr::_update_fdm () const
-{
-  //
-  // Pass atmosphere on to FDM
-  // FIXME: have FDMs read properties directly.
-  //
-  if (fgGetBool("/environment/params/control-fdm-atmosphere")) {
-				// convert from Rankine to Celsius
-    cur_fdm_state
-      ->set_Static_temperature((9.0/5.0)
-			       * (_environment->get_temperature_degc() + 273.15));
-				// convert from inHG to PSF
-    cur_fdm_state
-      ->set_Static_pressure(_environment->get_pressure_inhg() * 70.726566);
-				// keep in slugs/ft^3
-    cur_fdm_state
-      ->set_Density(_environment->get_density_slugft3());
-  }
 }
 
 double

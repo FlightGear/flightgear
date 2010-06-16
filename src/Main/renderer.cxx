@@ -630,7 +630,8 @@ FGRenderer::update( bool refresh_camera_settings ) {
     double visibility_meters = fgGetDouble("/environment/visibility-m");
     thesky->set_visibility(visibility_meters);
 
-    thesky->modify_vis( cur_fdm_state->get_Altitude() * SG_FEET_TO_METER,
+    double altitude_m = fgGetDouble("/position/altitude-ft") * SG_FEET_TO_METER;
+    thesky->modify_vis( altitude_m,
                         ( global_multi_loop * fgGetInt("/sim/speed-up") )
                         / (double)fgGetInt("/sim/model-hz") );
 
@@ -678,26 +679,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
         thesky->reposition( sstate, *globals->get_ephem(), delta_time_sec );
         thesky->repaint( scolor, *globals->get_ephem() );
 
-        /*
-        SG_LOG( SG_GENERAL, SG_BULK,
-                "thesky->reposition( view_pos = " << view_pos[0] << " "
-         << view_pos[1] << " " << view_pos[2] );
-        SG_LOG( SG_GENERAL, SG_BULK,
-                "    zero_elev = " << zero_elev[0] << " "
-         << zero_elev[1] << " " << zero_elev[2]
-         << " lon = " << cur_fdm_state->get_Longitude()
-         << " lat = " << cur_fdm_state->get_Latitude() );
-        SG_LOG( SG_GENERAL, SG_BULK,
-                "    sun_rot = " << l->get_sun_rotation
-         << " gst = " << SGTime::cur_time_params->getGst() );
-        SG_LOG( SG_GENERAL, SG_BULK,
-             "    sun ra = " << globals->get_ephem()->getSunRightAscension()
-          << " sun dec = " << globals->get_ephem()->getSunDeclination()
-          << " moon ra = " << globals->get_ephem()->getMoonRightAscension()
-          << " moon dec = " << globals->get_ephem()->getMoonDeclination() );
-        */
-
-        //OSGFIXME
+            //OSGFIXME
 //         shadows->setupShadows(
 //           current__view->getLongitude_deg(),
 //           current__view->getLatitude_deg(),

@@ -30,7 +30,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
 
-#include <FDM/flight.hxx>
+#include <FDM/flightProperties.hxx>
 
 #include "pve.hxx"
 
@@ -55,10 +55,10 @@ FGPVE::~FGPVE() {
 
 bool FGPVE::gen_message() {
     // cout << "generating pve message" << endl;
-    FGInterface *f = cur_fdm_state;
+    FlightProperties f;
 
     // get roll and pitch, convert to degrees
-    double roll_deg = f->get_Phi() * SGD_RADIANS_TO_DEGREES;
+    double roll_deg = f.get_Phi() * SGD_RADIANS_TO_DEGREES;
     while ( roll_deg <= -180.0 ) {
 	roll_deg += 360.0;
     }
@@ -66,7 +66,7 @@ bool FGPVE::gen_message() {
 	roll_deg -= 360.0;
     }
 
-    double pitch_deg = f->get_Theta() * SGD_RADIANS_TO_DEGREES;
+    double pitch_deg = f.get_Theta() * SGD_RADIANS_TO_DEGREES;
     while ( pitch_deg <= -180.0 ) {
 	pitch_deg += 360.0;
     }
@@ -74,7 +74,7 @@ bool FGPVE::gen_message() {
 	pitch_deg -= 360.0;
     }
 
-    short int heave = (int)(f->get_W_body() * 128.0);
+    short int heave = (int)(f.get_wBody() * 128.0);
 
     // scale roll and pitch to output format (1 - 255)
     // straight && level == (128, 128)

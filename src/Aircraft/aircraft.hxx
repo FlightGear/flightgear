@@ -26,13 +26,11 @@
 #ifndef _AIRCRAFT_HXX
 #define _AIRCRAFT_HXX
                                  
-class FGInterface;
 class FGControls;
 class SGPropertyNode;
 
 // Define a structure containing all the parameters for an aircraft
 typedef struct{
-    FGInterface *fdm_state;
     FGControls *controls;
 } fgAIRCRAFT ;
 

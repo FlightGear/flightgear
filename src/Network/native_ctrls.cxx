@@ -29,7 +29,6 @@
 #include <simgear/io/iochannel.hxx>
 #include <simgear/io/lowlevel.hxx> // endian tests
 
-#include <FDM/flight.hxx>
 #include <Main/fg_props.hxx>
 #include <Scenery/scenery.hxx>	// ground elevation
 
@@ -205,12 +204,7 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
     net->temp_c = fgGetDouble("/environment/temperature-degc");
     net->press_inhg = fgGetDouble("/environment/pressure-sea-level-inhg");
 
-    // cur_fdm_state->get_ground_elev_ft() is what we want ... this
-    // reports the altitude of the aircraft.
-    // "/environment/ground-elevation-m" reports the ground elevation
-    // of the current view point which could change substantially if
-    // the user is switching views.
-    net->hground = cur_fdm_state->get_ground_elev_ft() * SG_FEET_TO_METER;
+    net->hground = fgGetDouble("/position/ground-elev-m");
     net->magvar = fgGetDouble("/environment/magnetic-variation-deg");
 
     net->icing = fgGetBool("/hazards/icing/wing");
@@ -469,7 +463,6 @@ bool FGNativeCtrls::process() {
     int length = sizeof(FGNetCtrls);
 
     if ( get_direction() == SG_IO_OUT ) {
-	// cout << "size of cur_fdm_state = " << length << endl;
 
 	FGProps2NetCtrls( &net_ctrls, true, true );
 
