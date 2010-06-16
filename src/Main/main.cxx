@@ -352,9 +352,10 @@ static void fgMainLoop( void ) {
     if (fgGetBool("/sim/ai-traffic/enabled"))
         globals->get_AI_mgr()->update(delta_time_sec);
   
-    globals->get_aircraft_model()->update(delta_time_sec);
+    
     globals->get_subsystem_mgr()->update(delta_time_sec);
-
+    globals->get_aircraft_model()->update(delta_time_sec);
+    
     //
     // Tile Manager updates - see if we need to load any new scenery tiles.
     //   this code ties together the fdm, viewer and scenery classes...
