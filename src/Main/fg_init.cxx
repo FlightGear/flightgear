@@ -83,7 +83,7 @@
 #endif
 
 #include <Autopilot/route_mgr.hxx>
-#include <Autopilot/xmlauto.hxx>
+#include <Autopilot/autopilotgroup.hxx>
 
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/panel.hxx>

@@ -694,11 +694,99 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Autopilot\xmlauto.cxx"
+				RelativePath="..\..\..\src\Autopilot\autopilotgroup.cxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Autopilot\xmlauto.hxx"
+				RelativePath="..\..\..\src\Autopilot\autopilotgroup.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\autopilot.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\autopilot.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\inputvalue.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\inputvalue.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\component.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\component.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\analogcomponent.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\analogcomponent.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\pidcontroller.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\pidcontroller.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\pisimplecontroller.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\pisimplecontroller.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\predictor.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\predictor.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\digitalfilter.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\digitalfilter.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\digitalcomponent.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\digitalcomponent.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\logic.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\logic.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\flipflop.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Autopilot\flipflop.hxx"
 				>
 			</File>
 		</Filter>
