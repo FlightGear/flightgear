@@ -25,11 +25,33 @@
 
 namespace FGXMLAutopilot {
 
+/**
+ * @brief Interface for a flip flop implementation. Can be configured from a property node and
+ * returns a state depending on input lines.
+ */
 class FlipFlopImplementation : public SGReferenced {
 protected:
-    virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode ) { return false; }
+ /**
+  * @brief configure this component from a property node. Iterates through all nodes found
+  *        as childs under configNode and calls configure of the derived class for each child.
+  * @param configNode the property node containing the configuration 
+  */
+  virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode ) { return false; }
 public:
+  /**
+   * @brief evaluates the output state from the input lines
+   * @param dt the elapsed time in seconds from since the last call
+   * @param input a map of named input lines
+   * @param q a reference to a boolean variable to receive the output state
+   * @return true if the state has changed, false otherwise
+   */
   virtual bool getState( double dt, DigitalComponent::InputMap input, bool & q ) { return false; }
+
+ /**
+  * @brief configure this component from a property node. Iterates through all nodes found
+  *        as childs under configNode and calls configure of the derived class for each child.
+  * @param configNode the property node containing the configuration 
+  */
   bool configure( SGPropertyNode_ptr configNode );
 };
 
@@ -47,9 +69,21 @@ protected:
      * @return true if the node was handled, false otherwise.
      */
     virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
+
+   /** 
+    * @brief Implementation of the pure virtual function of the Component class. Gets called from
+    * the update method if it's not disabled with the firstTime parameter set to true if this
+    * is the first call after being enabled 
+    * @param firstTime set to true if this is the first update call since this component has
+             been enabled. Set to false for every subsequent call.
+    * @param dt  the elapsed time since the last call
+    */
     void update( bool firstTime, double dt );
 
 private:
+   /** 
+    * @brief Pointer to the actual flip flop implementation
+    */
     SGSharedPtr<FlipFlopImplementation> _implementation;
 
 };

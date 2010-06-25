@@ -26,6 +26,30 @@
 
 using namespace FGXMLAutopilot;
 
+/**
+ * @brief Flip flop implementation for a RS flip flop with dominant RESET
+ *
+ * <table>
+ * <tr>
+ * <td colspan="3">Logictable</td>
+ * </tr>
+ * <tr>
+ *   <td>S</td><td>R</td><td>Q</td>
+ * </tr>
+ * <tr>
+ *   <td>false</td><td>false</td><td>unchanged</td>
+ * </tr>
+ * <tr>
+ *   <td>false</td><td>true</td><td>false</td>
+ * </tr>
+ * <tr>
+ *   <td>true</td><td>false</td><td>true</td>
+ * </tr>
+ * <tr>
+ *   <td>true</td><td>true</td><td>false</td>
+ * </tr>
+ * </table>
+ */
 class RSFlipFlopImplementation : public FlipFlopImplementation {
 protected:
   bool _rIsDominant;
@@ -34,17 +58,73 @@ public:
   virtual bool getState( double dt, DigitalComponent::InputMap input, bool & q );
 };
 
+/**
+ * @brief Flip flop implementation for a RS flip flop with dominant SET
+ *
+ * <table>
+ * <tr>
+ * <td colspan="3">Logictable</td>
+ * </tr>
+ * <tr>
+ *   <td>S</td><td>R</td><td>Q</td>
+ * </tr>
+ * <tr>
+ *   <td>false</td><td>false</td><td>unchanged</td>
+ * </tr>
+ * <tr>
+ *   <td>false</td><td>true</td><td>false</td>
+ * </tr>
+ * <tr>
+ *   <td>true</td><td>false</td><td>true</td>
+ * </tr>
+ * <tr>
+ *   <td>true</td><td>true</td><td>true</td>
+ * </tr>
+ * </table>
+ */
 class SRFlipFlopImplementation : public RSFlipFlopImplementation {
 public:
   SRFlipFlopImplementation() : RSFlipFlopImplementation( false ) {}
 };
 
+/**
+ * @brief Base class for clocked flip flop implementation
+ *
+ * A clocked flip flop computes it's output on the raising edge (false/true transition)
+ * of the clock input. If such a transition is detected, the onRaisingEdge method is called
+ * by this implementation
+ */
 class ClockedFlipFlopImplementation : public RSFlipFlopImplementation {
-protected:
+private:
+  /** 
+   * @brief the previous state of the clock input 
+   */
   bool _clock;
+protected:
+
+  /**
+   * @brief pure virtual function to be implemented from the implementing class, gets called
+   * from the update method if the raising edge of the clock input was detected. 
+   * @param input a map of named input lines
+   * @param q a reference to a boolean variable to receive the output state
+   * @return true if the state has changed, false otherwise
+   */
   virtual bool onRaisingEdge( DigitalComponent::InputMap input, bool & q ) = 0;
 public:
+
+  /**
+   * @brief constructor for a ClockedFlipFlopImplementation
+   * @param rIsDominant boolean flag to signal if RESET shall be dominant (true) or SET shall be dominant (false)
+   */
   ClockedFlipFlopImplementation( bool rIsDominant = true ) : RSFlipFlopImplementation( rIsDominant ), _clock(false) {}
+
+  /**
+   * @brief evaluates the output state from the input lines, basically waits for a raising edge and calls onRaisingEdge
+   * @param dt the elapsed time in seconds from since the last call
+   * @param input a map of named input lines
+   * @param q a reference to a boolean variable to receive the output state
+   * @return true if the state has changed, false otherwise
+   */
   virtual bool getState( double dt, DigitalComponent::InputMap input, bool & q );
 };
 

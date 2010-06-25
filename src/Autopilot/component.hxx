@@ -58,7 +58,7 @@ protected:
 
    /** 
     * @brief pure virtual function to be implemented by the derived classes. Gets called from
-    * the update method if it's not disabled with the firstTime parameter set to true it this
+    * the update method if it's not disabled with the firstTime parameter set to true if this
     * is the first call after being enabled 
     * @param firstTime set to true if this is the first update call since this component has
              been enabled. Set to false for every subsequent call.
