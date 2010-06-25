@@ -29,6 +29,12 @@ using namespace FGXMLAutopilot;
 /**
  * @brief Flip flop implementation for a RS flip flop with dominant RESET
  *
+ * RS (reset-set) flip flops act as a fundamental latch. It has two input lines, 
+ * S (set) and R (reset). Activating the set input sets the output while activating
+ * the reset input resets the output. If both inputs are activated, the output
+ * is deactivated, too. This is why the RESET line is called dominant. Use a
+ * SRFlipFlopImplementation for a dominant SET line.
+ *
  * <table>
  * <tr>
  * <td colspan="3">Logictable</td>
@@ -61,6 +67,12 @@ public:
 /**
  * @brief Flip flop implementation for a RS flip flop with dominant SET
  *
+ * SR (set-reset) flip flops act as a fundamental latch. It has two input lines, 
+ * S (set) and R (reset). Activating the set input sets the output while activating
+ * the reset input resets the output. If both inputs are activated, the output
+ * is activated, too. This is why the SET line is called dominant. Use a
+ * RSFlipFlopImplementation for a dominant RESET line.
+ * 
  * <table>
  * <tr>
  * <td colspan="3">Logictable</td>
@@ -92,7 +104,11 @@ public:
  *
  * A clocked flip flop computes it's output on the raising edge (false/true transition)
  * of the clock input. If such a transition is detected, the onRaisingEdge method is called
- * by this implementation
+ * by this implementation. All clocked flip flops inherit from the RS flip flop and may
+ * be set or reset by the respective set/reset lines. Note that the RS implementation 
+ * ignores the clock, The output is set immediately, regardless of the state of the clock
+ * input. The "clock" input is mandatory for clocked flip flops.
+ * 
  */
 class ClockedFlipFlopImplementation : public RSFlipFlopImplementation {
 private:
@@ -119,7 +135,8 @@ public:
   ClockedFlipFlopImplementation( bool rIsDominant = true ) : RSFlipFlopImplementation( rIsDominant ), _clock(false) {}
 
   /**
-   * @brief evaluates the output state from the input lines, basically waits for a raising edge and calls onRaisingEdge
+   * @brief evaluates the output state from the input lines. 
+   * This method basically waits for a raising edge and calls onRaisingEdge
    * @param dt the elapsed time in seconds from since the last call
    * @param input a map of named input lines
    * @param q a reference to a boolean variable to receive the output state
@@ -128,37 +145,137 @@ public:
   virtual bool getState( double dt, DigitalComponent::InputMap input, bool & q );
 };
 
+/**
+ * @brief Implements a JK flip flop as a clocked flip flop
+ *
+ * The JK flip flop has five input lines: R, S, clock, J and K. The R and S lines work as described
+ * in the RS flip flop. Setting the J line to true sets the output to true on the next raising
+ * edge of the clock line. Setting the K line to true sets the output to false on the next raising
+ * edge of the clock line. If both, J and K are true, the output is toggled at with every raising
+ * edge of the clock line. 
+ *
+ * Undefined inputs default to false.
+ *
+ * <table>
+ * <tr>
+ * <td colspan="7">Logictable</td>
+ * </tr>
+ * <tr>
+ *   <td>S</td><td>R</td><td>J</td><td>K</td><td>clock</td><td>Q (previous)</td><td>Q</td>
+ * </tr>
+ * <tr>
+ *   <td>false</td><td>false</td><td>false</td><td>false</td><td>any</td><td>any</td><td>unchanged</td>
+ * </tr>
+ * <tr>
+ *   <td>true</td><td>false</td><td>any</td><td>any</td><td>any</td><td>any</td><td>true</td>
+ * </tr>
+ * <tr>
+ *   <td>any</td><td>true</td><td>any</td><td>any</td><td>any</td><td>any</td><td>false</td>
+ * </tr>
+ * <tr>
+ *   <td>false</td><td>false</td><td>true</td><td>false</td><td>^</td><td>any</td><td>true</td>
+ * </tr>
+ * <tr>
+ *   <td>false</td><td>false</td><td>false</td><td>true</td><td>^</td><td>any</td><td>false</td>
+ * </tr>
+ * <tr>
+ *   <td>false</td><td>false</td><td>true</td><td>true</td><td>^</td><td>false</td><td>true</td>
+ * </tr>
+ * <tr>
+ *   <td>false</td><td>false</td><td>true</td><td>true</td><td>^</td><td>true</td><td>false</td>
+ * </tr>
+ * </table>
+ */
 class JKFlipFlopImplementation : public ClockedFlipFlopImplementation {
 public:
+  /**
+   * @brief constructor for a JKFlipFlopImplementation
+   * @param rIsDominant boolean flag to signal if RESET shall be dominant (true) or SET shall be dominant (false)
+   */
   JKFlipFlopImplementation( bool rIsDominant = true ) : ClockedFlipFlopImplementation ( rIsDominant ) {}
+
+  /**
+   * @brief compute the output state according to the logic table on the raising edge of the clock
+   * @param input a map of named input lines
+   * @param q a reference to a boolean variable to receive the output state
+   * @return true if the state has changed, false otherwise
+   */
   virtual bool onRaisingEdge( DigitalComponent::InputMap input, bool & q );
 };
 
+/** 
+ * @brief Implements a D (delay) flip flop.
+ *
+ */
 class DFlipFlopImplementation : public ClockedFlipFlopImplementation {
 public:
+  /**
+   * @brief constructor for a DFlipFlopImplementation
+   * @param rIsDominant boolean flag to signal if RESET shall be dominant (true) or SET shall be dominant (false)
+   */
   DFlipFlopImplementation( bool rIsDominant = true ) : ClockedFlipFlopImplementation ( rIsDominant ) {}
+
+  /**
+   * @brief compute the output state according to the logic table on the raising edge of the clock
+   * @param input a map of named input lines
+   * @param q a reference to a boolean variable to receive the output state
+   * @return true if the state has changed, false otherwise
+   */
   virtual bool onRaisingEdge( DigitalComponent::InputMap input, bool & q ) {
     q = input.get_value("D");
     return true;
   }
 };
 
+/** 
+ * @brief Implements a T (toggle) flip flop.
+ *
+ */
 class TFlipFlopImplementation : public ClockedFlipFlopImplementation {
 public:
+  /**
+   * @brief constructor for a TFlipFlopImplementation
+   * @param rIsDominant boolean flag to signal if RESET shall be dominant (true) or SET shall be dominant (false)
+   */
   TFlipFlopImplementation( bool rIsDominant = true ) : ClockedFlipFlopImplementation ( rIsDominant ) {}
+
+  /**
+   * @brief compute the output state according to the logic table on the raising edge of the clock
+   * @param input a map of named input lines
+   * @param q a reference to a boolean variable to receive the output state
+   * @return true if the state has changed, false otherwise
+   */
   virtual bool onRaisingEdge( DigitalComponent::InputMap input, bool & q ) {
     q = !q;
     return true;
   }
 };
 
+/** 
+ * @brief Implements a monostable flip flop
+ *
+ * The stable output state is false.
+ *
+ */
 class MonoFlopImplementation : public JKFlipFlopImplementation {
 protected:
   virtual bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode );
   InputValueList _time;
   double _t;
 public:
+  /**
+   * @brief constructor for a MonoFlopImplementation
+   * @param rIsDominant boolean flag to signal if RESET shall be dominant (true) or SET shall be dominant (false)
+   */
   MonoFlopImplementation( bool rIsDominant = true ) : JKFlipFlopImplementation( rIsDominant ) {}
+  /**
+   * @brief evaluates the output state from the input lines and returns to the stable state 
+   * after expiry of the internal timer
+   * @param dt the elapsed time in seconds from since the last call
+   * @param input a map of named input lines
+   * @param q a reference to a boolean variable to receive the output state
+   * @return true if the state has changed, false otherwise
+   */
   virtual bool getState( double dt, DigitalComponent::InputMap input, bool & q );
 };
 
