@@ -24,7 +24,7 @@
 #include "inputvalue.hxx"
 #include <Main/fg_props.hxx>
 
-using namespace FGXMLAutopilot;
+namespace FGXMLAutopilot {
 
 /**
  * @brief Flip flop implementation for a RS flip flop with dominant RESET
@@ -278,6 +278,10 @@ public:
    */
   virtual bool getState( double dt, DigitalComponent::InputMap input, bool & q );
 };
+
+} // namespace
+
+using namespace FGXMLAutopilot;
 
 bool MonoFlopImplementation::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
 {
