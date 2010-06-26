@@ -620,6 +620,7 @@ static void fgIdleFunction ( void ) {
         Ephemeris* eph = new Ephemeris;
         globals->add_subsystem("ephmeris", eph);
         eph->init(); // FIXME - remove this once SGSky code below is also a subsystem
+        eph->bind();
 
         // TODO: move to environment mgr
         thesky = new SGSky;
