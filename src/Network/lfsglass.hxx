@@ -30,13 +30,12 @@
 
 #include <string>
 
-#include <FDM/flight.hxx>
 #include <Main/fg_props.hxx>
 
 #include "protocol.hxx"
 #include "lfsglass_data.hxx"
 
-class FGLFSGlass : public FGProtocol, public FGInterface {
+class FGLFSGlass : public FGProtocol {
 
     FGLFSGlassData buf;
     int length;
@@ -155,7 +154,7 @@ public:
     // close the channel
     bool close();
 
-    void collect_data( const FGInterface *fdm, FGLFSGlassData *data );
+    void collect_data(FGLFSGlassData *data );
 };
 
 #endif // _FG_LFSGlass_HXX
