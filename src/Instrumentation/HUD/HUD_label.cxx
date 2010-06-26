@@ -144,7 +144,7 @@ void HUD::Label::draw(void)
     char buf[BUFSIZE+1];
 	buf[ BUFSIZE] = '\0';  // Be sure to terminate properly
     if (_mode == NONE)
-        snprintf(buf, BUFSIZE, _format.c_str());
+        snprintf(buf, BUFSIZE, _format.c_str(), 0);
     else if (_mode == STRING)
         snprintf(buf, BUFSIZE, _format.c_str(), _input.getStringValue());
     else if (_mode == INT)

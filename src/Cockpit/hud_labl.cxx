@@ -114,7 +114,7 @@ void instr_label::draw(void)
         }
 
     } else {
-        snprintf(label_buffer, sizeof( label_buffer) -1, format_buffer.c_str());
+        snprintf(label_buffer, sizeof( label_buffer)-1, format_buffer.c_str(), 0);
     }
 
     lenstr = getStringWidth(label_buffer);
