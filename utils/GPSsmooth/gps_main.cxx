@@ -276,7 +276,7 @@ static void gps2fg( const GPSPoint p, FGNetFDM *fdm, FGNetCtrls *ctrls )
 
 static void send_data( const GPSPoint p ) {
     int len;
-    int ctrlsize = sizeof( FGNetCtrls );
+//    int ctrlsize = sizeof( FGNetCtrls );
     int fdmsize = sizeof( FGNetFDM );
 
     // cout << "Running main loop" << endl;

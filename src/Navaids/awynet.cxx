@@ -354,7 +354,7 @@ FGAirRoute FGAirwayNetwork::findShortestRoute(int start, int end)
   foundRoute = false;
   totalDistance = 0;
   FGNode *firstNode = findNode(start);
-  FGNode *lastNode  = findNode(end);
+  //FGNode *lastNode  = findNode(end);
   //prevNode = prevPrevNode = -1;
   //prevNode = start;
   routes.clear();

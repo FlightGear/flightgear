@@ -55,8 +55,8 @@ static int serial_send( SGSerialPort *serial, int sequence,
     unsigned int result = serial->write_port( package.c_str(),
                                               package.length() );
     if ( result != package.length() ) {
-        printf("ERROR: wrote %d of %d bytes to serial port!\n",
-               result, package.length() );
+        printf("ERROR: wrote %u of %u bytes to serial port!\n",
+               result, (unsigned)package.length() );
         return 0;
     }
 
@@ -88,7 +88,7 @@ int UGCommand::update( SGSerialPort *serial )
 
     // send the command
     string command = cmd_queue.front();
-    int result = serial_send( serial, cmd_send_index, command );
+    /*int result =*/ serial_send( serial, cmd_send_index, command );
 
     return cmd_send_index;
 }

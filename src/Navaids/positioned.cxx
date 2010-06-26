@@ -666,8 +666,8 @@ findWithPartial(const NamedPositionedIndex& aIndex, const std::string& aName,
 ///////////////////////////////////////////////////////////////////////////////
 
 FGPositioned::FGPositioned(Type ty, const std::string& aIdent, const SGGeod& aPos, bool aIndexed) :
-  mType(ty),
   mPosition(aPos),
+  mType(ty),
   mIdent(aIdent)
 {  
   SGReferenced::get(this); // hold an owning ref, for the moment

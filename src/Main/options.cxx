@@ -1661,7 +1661,7 @@ fgParseArgs (int argc, char **argv)
               cout << endl << "No. Device" << endl;
 
               vector <const char*>devices = smgr.get_available_devices();
-              for (int i=0; i<devices.size(); i++) {
+              for (vector <const char*>::size_type i=0; i<devices.size(); i++) {
                 cout << i << ".  \"" << devices[i] << "\"" << endl;
               }
               devices.clear();

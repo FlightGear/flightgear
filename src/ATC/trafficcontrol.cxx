@@ -38,15 +38,16 @@ FGTrafficRecord::FGTrafficRecord() :
   id(0), waitsForId(0),
   currentPos(0),
   leg(0),
+  frequencyId(0),
   state(0),
+   allowTransmission(true),
   latitude(0),
   longitude(0), 
    heading(0), 
    speed(0), 
    altitude(0), 
-   radius(0),
-   frequencyId(0),
-   allowTransmission(true) {
+   radius(0)
+{
 }
 
 void FGTrafficRecord::setPositionAndIntentions(int pos, FGAIFlightPlan *route)

@@ -69,8 +69,8 @@ bool FGCommList::init( const SGPath& path ) {
     LoadComms(temp);
     temp = path;
     temp.append( "ATC/default.approach" );
-    LoadComms(temp);
-    return true;*/
+    LoadComms(temp);*/
+    return true;
 }
     
 
@@ -107,9 +107,8 @@ bool FGCommList::LoadComms(const SGPath& path) {
         fin >> skipcomment;
     }
     
-    fin.close();
+    fin.close();*/
     return true;    
-*/
 }
 
 
@@ -160,13 +159,14 @@ bool FGCommList::FindByFreq(const SGGeod& aPos, double freq,
         return false;
     }
 */
+    return false;
 }
 
 int FGCommList::FindByPos(const SGGeod& aPos, double range, comm_list_type* stations, atc_type tp)
 {
-/*
      // number of relevant stations found within range
      int found = 0;
+/*
      stations->erase(stations->begin(), stations->end());
      
      // get bucket number for plane position
@@ -203,8 +203,8 @@ int FGCommList::FindByPos(const SGGeod& aPos, double range, comm_list_type* stat
              }
          }
      }
-     return found;
 */
+     return found;
 }
 
 
@@ -248,8 +248,8 @@ double FGCommList::FindClosest(const SGGeod& aPos, ATCData& ad, atc_type tp, dou
         }
         range *= 10;
     }
-    return(-9999.0);
 */
+    return(-9999.0);
 }
 
 
@@ -277,8 +277,8 @@ bool FGCommList::FindByCode( const string& ICAO, ATCData& ad, atc_type tp ) {
             }
         }
     }
-    return false;
 */
+    return false;
 }
 
 // TODO - this function should move somewhere else eventually!
@@ -312,6 +312,7 @@ int FGCommList::GetAtisSequence( const string& apt_id,
     //      << "  Delta: " << delta << endl;
     return(tran.sequence + (delta ? 0 : LTRS*1000));
 */
+    return 2600;
 }
 /*****************************************************************************
  * FGKln89AlignedProjection 
