@@ -342,9 +342,11 @@ static void fgMainLoop( void ) {
     // implementation is an AI model and depends on that
     globals->get_multiplayer_mgr()->Update();
 
+#if ENABLE_ATCDCL
     // Run ATC subsystem
     if (fgGetBool("/sim/atc/enabled"))
         globals->get_ATC_mgr()->update(delta_time_sec);
+#endif
 
     // Run the AI subsystem
     // FIXME: run that also if we have multiplaying enabled since the
