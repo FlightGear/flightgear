@@ -337,6 +337,14 @@ FGInterface::bind ()
   fgTie("/velocities/speed-down-fps", this,
 	&FGInterface::get_V_down, &FGInterface::set_V_down);
 
+  fgTie("/velocities/north-relground-fps", this,
+    &FGInterface::get_V_north_rel_ground);
+  fgTie("/velocities/east-relground-fps", this,
+    &FGInterface::get_V_east_rel_ground);
+  fgTie("/velocities/down-relground-fps", this,
+    &FGInterface::get_V_down_rel_ground);
+
+
 				// Relative wind
 				// FIXME: temporarily archivable, until
 				// the NED problem is fixed.
@@ -387,6 +395,8 @@ FGInterface::bind ()
         this, &FGInterface::get_A_Y_pilot, &FGInterface::set_A_Y_pilot);
   fgTie("/accelerations/pilot/z-accel-fps_sec",
         this, &FGInterface::get_A_Z_pilot, &FGInterface::set_A_Z_pilot);
+        
+  fgTie("/accelerations/n-z-cg-fps_sec", this, &FGInterface::get_N_Z_cg);
 
 }
 
@@ -430,6 +440,9 @@ FGInterface::unbind ()
   fgUntie("/velocities/speed-north-fps");
   fgUntie("/velocities/speed-east-fps");
   fgUntie("/velocities/speed-down-fps");
+  fgUntie("/velocities/north-relground-fps");
+  fgUntie("/velocities/east-relground-fps");
+  fgUntie("/velocities/down-relground-fps");
   fgUntie("/velocities/uBody-fps");
   fgUntie("/velocities/vBody-fps");
   fgUntie("/velocities/wBody-fps");
@@ -442,6 +455,7 @@ FGInterface::unbind ()
   fgUntie("/accelerations/ned/north-accel-fps_sec");
   fgUntie("/accelerations/ned/east-accel-fps_sec");
   fgUntie("/accelerations/ned/down-accel-fps_sec");
+  fgUntie("/accelerations/n-z-cg-fps_sec");
 }
 
 /**

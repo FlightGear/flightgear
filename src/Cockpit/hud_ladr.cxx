@@ -96,11 +96,11 @@ void HudLadder::draw(void)
 
 #ifdef ENABLE_SP_FDM
     int lgear, wown, wowm, ilcanclaw, ihook;
-    ilcanclaw = get_iaux2();
-    lgear = get_iaux3();
-    wown = get_iaux4();
-    wowm = get_iaux5();
-    ihook = get_iaux6();
+    ilcanclaw = fgGetInt("/fdm-ada/iaux2", 0);
+    lgear = fgGetInt("/fdm-ada/iaux3", 0);
+    wown = fgGetInt("/fdm-ada/iaux4", 0);
+    wowm = fgGetInt("/fdm-ada/iaux5", 0);;
+    ihook = fgGetInt("/fdm-ada/iaux6", 0);
 #endif
     float pitch_value = current_ch1() * SGD_RADIANS_TO_DEGREES;
 
@@ -159,12 +159,12 @@ void HudLadder::draw(void)
     //****************************************************************
     //velocity vector reticle - computations
     if (velocity_vector) {
-        Vxx = get_Vx();
-        Vyy = get_Vy();
-        Vzz = get_Vz();
-        Axx = get_Ax();
-        Ayy = get_Ay();
-        Azz = get_Az();
+        Vxx = fgGetDouble("/velocities/north-relground-fps", 0.0);
+        Vyy = fgGetDouble("/velocities/east-relground-fps", 0.0);
+        Vzz = fgGetDouble("/velocities/down-relground-fps", 0.0);
+        Axx = fgGetDouble("/accelerations/ned/north-accel-fps_sec", 0.0);
+        Ayy = fgGetDouble("/accelerations/ned/east-accel-fps_sec", 0.0);
+        Azz = fgGetDouble("/accelerations/ned/down-accel-fps_sec", 0.0);
         psi = get_heading();
 
         if (psi > 180.0)
@@ -597,8 +597,8 @@ void HudLadder::draw(void)
 
         fromwp_lon = get_longitude() * SGD_DEGREES_TO_RADIANS;
         fromwp_lat = get_latitude() * SGD_DEGREES_TO_RADIANS;
-        towp_lon = get_aux2() * SGD_DEGREES_TO_RADIANS;
-        towp_lat = get_aux1() * SGD_DEGREES_TO_RADIANS;
+        towp_lon = fgGetDouble("/fdm-ada/ship-lon", 0.0) * SGD_DEGREES_TO_RADIANS;
+        towp_lat = fgGetDouble("/fdm-ada/ship-lat", 0.0) * SGD_DEGREES_TO_RADIANS;
 
         dist = acos(sin(fromwp_lat) * sin(towp_lat) + cos(fromwp_lat)
                 * cos(towp_lat) * cos(fabs(fromwp_lon - towp_lon)));

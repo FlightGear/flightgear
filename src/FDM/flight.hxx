@@ -187,10 +187,6 @@ private:
     double altitude_agl;
     double track;
 
-    double daux[16];		// auxilliary doubles
-    float  faux[16];		// auxilliary floats
-    int    iaux[16];		// auxilliary ints
-
     // the ground cache object itself.
     FGGroundCache ground_cache;
 
@@ -366,10 +362,6 @@ public:
     inline void _set_Earth_position_angle(double a) { earth_position_angle = a; }
     inline void _set_Runway_altitude( double alt ) { runway_altitude = alt; }
     inline void _set_Climb_Rate(double rate) { climb_rate = rate; }
-
-    inline void _set_daux( int n, double value ) { daux[n] = value; }
-    inline void _set_faux( int n, float value ) { faux[n] = value; }
-    inline void _set_iaux( int n, int value ) { iaux[n] = value; }
 
 public:
   
@@ -650,11 +642,6 @@ public:
     inline double get_Runway_altitude_m() const { return SG_FEET_TO_METER * runway_altitude; }
 
     inline double get_Climb_Rate() const { return climb_rate; }
-
-    // Auxilliary variables
-    inline double get_daux( int n ) const { return daux[n]; }
-    inline float  get_faux( int n ) const { return faux[n]; }
-    inline int    get_iaux( int n ) const { return iaux[n]; }
 
     // Note that currently this is the "same" value runway altitude...
     inline double get_ground_elev_ft() const { return runway_altitude; }

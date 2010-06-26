@@ -38,9 +38,7 @@
 
 #include <Aircraft/aircraft.hxx>
 #include <Include/general.hxx>
-#ifdef ENABLE_SP_FDM
-#include <FDM/SP/ADA.hxx>
-#endif
+
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/viewmgr.hxx>
@@ -50,10 +48,6 @@
 
 #include "cockpit.hxx"
 #include "hud.hxx"
-
-// ugly hack, make the raw FDM available here, to support some
-// legacy accessor functions
-extern FGInterface* evil_global_fdm_state;
 
 // The following routines obtain information concerntin the aircraft's
 // current state and return it to calling instrument display routines.
@@ -265,235 +259,103 @@ float get_dme( void )
     return dme_node->getFloatValue();
 }
 
-// $$$ begin - added, VS Renganathan 13 Oct 2K
-// #ifdef FIGHTER_HUD
-float get_Vx   ( void )
-{
-    // Curt dont comment this and return zero. - Ranga
-    // Please remove comments from get_V_..() function in flight.hxx
-    float Vxx = evil_global_fdm_state->get_V_north_rel_ground();
-    return Vxx;
-}
-
-float get_Vy   ( void )
-{
-    // Curt dont comment this and return zero. - Ranga
-    // Please remove comments from get_V_..() function in flight.hxx
-    float Vyy = evil_global_fdm_state->get_V_east_rel_ground();
-    return Vyy;
-}
-
-float get_Vz   ( void )
-{
-    // Curt dont comment this and return zero. - Ranga
-    // Please remove comments from get_V_..() function in flight.hxx
-    float Vzz = evil_global_fdm_state->get_V_down_rel_ground();
-    return Vzz;
-}
-
 float get_Ax   ( void )
 {
-    float Ax = evil_global_fdm_state->get_V_dot_north();
-    return Ax;
-}
-
-float get_Ay   ( void )
-{
-    float Ay = evil_global_fdm_state->get_V_dot_east();
-    return Ay;
-}
-
-float get_Az   ( void )
-{
-    float Az = evil_global_fdm_state->get_V_dot_down();
-    return Az;
+    return fgGetDouble("/accelerations/ned/north-accel-fps_sec", 0.0);
 }
 
 float get_anzg   ( void )
 {
-    float anzg = evil_global_fdm_state->get_N_Z_cg();
-    return anzg;
+    return fgGetDouble("/accelerations/n-z-cg-fps_sec", 0.0);
 }
 
 #ifdef ENABLE_SP_FDM
-int get_iaux1 (void)
-{
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_iaux(1);
-}
-
-int get_iaux2 (void)
-{
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_iaux(2);
-}
-
-int get_iaux3 (void)
-{
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_iaux(3);
-}
-
-int get_iaux4 (void)
-{
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_iaux(4);
-}
-
-int get_iaux5 (void)
-{
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_iaux(5);
-}
-
-int get_iaux6 (void)
-{
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_iaux(6);
-}
-
-int get_iaux7 (void)
-{
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_iaux(7);
-}
-
-int get_iaux8 (void)
-{
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_iaux(8);
-}
-
-int get_iaux9 (void)
-{
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_iaux(9);
-}
-
-int get_iaux10 (void)
-{
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_iaux(10);
-}
-
-int get_iaux11 (void)
-{
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_iaux(11);
-}
-
-int get_iaux12 (void)
-{
-     FGADA *fdm = (FGADA *)evil_global_fdm_state;
-     return fdm->get_iaux(12);
-}
-
 float get_aux1 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_daux(1);
+    return fgGetDouble("/fdm-ada/ship-lat", 0.0);
 }
 
 float get_aux2 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_daux(2);
+    return fgGetDouble("/fdm-ada/ship-lon", 0.0);
 }
 
 float get_aux3 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_daux(3);
+    return fgGetDouble("/fdm-ada/ship-alt", 0.0);
 }
 
 float get_aux4 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_daux(4);
+    return fgGetDouble("/fdm-ada/skijump-dist", 0.0);
 }
 
 float get_aux5 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_daux(5);
+    return fgGetDouble("/fdm-ada/aux5", 0.0);
 }
 
 float get_aux6 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_daux(6);
+    return fgGetDouble("/fdm-ada/aux6", 0.0);
 }
 
 float get_aux7 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_daux(7);
+    return fgGetDouble("/fdm-ada/aux7", 0.0);
 }
 
 float get_aux8 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_daux(8);
-}
+    return fgGetDouble("/fdm-ada/aux8", 0.0);}
 
 float get_aux9 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_faux(1);
-}
+    return fgGetDouble("/fdm-ada/aux9", 0.0);}
 
 float get_aux10 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_faux(2);
+    return fgGetDouble("/fdm-ada/aux10", 0.0);
 }
 
 float get_aux11 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_faux(3);
+    return fgGetDouble("/fdm-ada/aux11", 0.0);
 }
 
 float get_aux12 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_faux(4);
+    return fgGetDouble("/fdm-ada/aux12", 0.0);
 }
 
 float get_aux13 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_faux(5);
+    return fgGetDouble("/fdm-ada/aux13", 0.0);
 }
 
 float get_aux14 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_faux(6);
+    return fgGetDouble("/fdm-ada/aux14", 0.0);
 }
 
 float get_aux15 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_faux(7);
+    return fgGetDouble("/fdm-ada/aux15", 0.0);
 }
 
 float get_aux16 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_faux(8);
+    return fgGetDouble("/fdm-ada/aux16", 0.0);
 }
 
 float get_aux17 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_faux(9);
+    return fgGetDouble("/fdm-ada/aux17", 0.0);
 }
 
 float get_aux18 (void)
 {
-    FGADA *fdm = (FGADA *)evil_global_fdm_state;
-    return fdm->get_faux(10);
+    return fgGetDouble("/fdm-ada/aux18", 0.0);
 }
 #endif
 

@@ -134,46 +134,6 @@ extern float get_mach( void );
 extern char *coord_format_lat(float);
 extern char *coord_format_lon(float);
 
-// $$$ begin - added, VS Renganathan, 13 Oct 2K
-extern float get_anzg (void);
-extern float get_Vx (void);
-extern float get_Vy (void);
-extern float get_Vz (void);
-extern float get_Ax (void);
-extern float get_Ay (void);
-extern float get_Az (void);
-extern int get_iaux1 (void);
-extern int get_iaux2 (void);
-extern int get_iaux3 (void);
-extern int get_iaux4 (void);
-extern int get_iaux5 (void);
-extern int get_iaux6 (void);
-extern int get_iaux7 (void);
-extern int get_iaux8 (void);
-extern int get_iaux9 (void);
-extern int get_iaux10 (void);
-extern int get_iaux11 (void);
-extern int get_iaux12 (void);
-extern float get_aux1(void);
-extern float get_aux2(void);
-extern float get_aux3(void);
-extern float get_aux4(void);
-extern float get_aux5 (void);
-extern float get_aux6 (void);
-extern float get_aux7 (void);
-extern float get_aux8(void);
-extern float get_aux9(void);
-extern float get_aux10(void);
-extern float get_aux11(void);
-extern float get_aux12(void);
-extern float get_aux13(void);
-extern float get_aux14(void);
-extern float get_aux15(void);
-extern float get_aux16(void);
-extern float get_aux17(void);
-extern float get_aux18(void);
-// $$$ end - added, VS Renganathan, 13 Oct 2K
-
 extern char *get_formated_gmt_time( void );
 
 enum  hudinstype{ HUDno_instr,
