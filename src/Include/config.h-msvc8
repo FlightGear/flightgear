@@ -1,4 +1,35 @@
-/* Special single config.h for MSVC71 build - F. Bouvier - 06 Jan, 2007 */
+
+/* Special single config.h for MSVC6 build - Geoff McLane - 23 July, 2003  */
+
+/* Define to enable plib joystick support */
+#ifndef  ENABLE_PLIB_JOYSTICK
+#define ENABLE_PLIB_JOYSTICK
+#endif   // #ifndef  ENABLE_PLIB_JOYSTICK
+
+/* Define to enable threaded tile paging */
+#define ENABLE_THREADS 1
+#define ENABLE_AUDIO_SUPPORT 1
+
+/* Define so that JSBSim compiles in 'library' mode */
+#define FGFS 1
+
+/* Define to build with jpeg screen shot server */
+#undef FG_JPEG_SERVER
+
+/* Define to build with multiplayer support */
+#define FG_MPLAYER_AS 1
+
+/* Define for no logging output */
+#undef FG_NDEBUG
+
+/* Define to build with Oliver's networking */
+#undef FG_NETWORK_OLK
+
+/* Define to enable plib joystick name support */
+#define FG_PLIB_JOYSTICK_GETNAME
+
+/* Define to build with Christian Mayer's weather code */
+#undef FG_WEATHERCM
 
 /* Define if the X Window System is missing or not being used.  */
 #define X_DISPLAY_MISSING 1
@@ -19,7 +50,7 @@
 #define PACKAGE "FlightGear"
 
 /* Define to package version - use in main.cxx */
-#define FLIGHTGEAR_VERSION "MSVC7.1-WIN32-@VERSION@"
+#define FLIGHTGEAR_VERSION "MSVC8-WIN32-2.0.0"
 
 /* Define as the return type of signal handlers (int or void).  */
 #define RETSIGTYPE void
@@ -37,10 +68,7 @@
 #define TM_IN_SYS_TIME 1
 
 /* Define to version number */
-#define VERSION "@VERSION@"
-#ifndef  FG_VERSION     /* allow override */
-#define  FG_VERSION     7
-#endif   /* FG_VERSION */
+#define VERSION "2.0.0"
 
 /* Define if compiling on a Winbloze (95, NT, etc.) platform */
 #define WIN32 1
@@ -160,13 +188,15 @@
 #define HAVE_MEMORY_H 1
 
 #define HAVE_MEMCPY 1
-
 #define NOMINMAX 1
+
 
 #ifndef ENABLE_AUDIO_SUPPORT
 #define  ENABLE_AUDIO_SUPPORT
 #endif
 
-#define FG_GLUT_H <GL/glut.h>
+#ifndef  FG_GLUT_H
+#define  FG_GLUT_H   <GL/glut.h>
+#endif   // #ifndef FG_GLUT_H
 
-// eof - config.h-msvc71 - single flightgear config.h file
+// eof - config.h-msvc6 - single flightgear config.h file
