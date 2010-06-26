@@ -2,8 +2,8 @@
 #define FG_FLIGHT_PROPERTIES_HXX
 
 #include <memory>
-#include <simgear/Math/SGMathFwd.hxx> // for SGVec3d 
-#include <simgear/Math/SGMisc.hxx>
+#include <simgear/math/SGMathFwd.hxx> // for SGVec3d 
+#include <simgear/math/SGMisc.hxx>
 
 // forward decls
 class SGPropertyNode;

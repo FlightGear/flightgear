@@ -17,4 +17,4 @@ libFlight_a_SOURCES = \
 	UFO.cxx UFO.hxx \
 	NullFDM.cxx NullFDM.hxx
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src -I$(top_srcdir)/src/FDM/JSBSim

@@ -138,4 +138,4 @@ metar_LDADD = \
 
 metar_LDFLAGS = $(metar_PLIB_FW)
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src -I$(top_srcdir)/src/FDM/JSBSim
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
