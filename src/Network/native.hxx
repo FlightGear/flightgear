@@ -29,12 +29,8 @@
 
 #include <string>
 
-#include <FDM/flight.hxx>
-
 #include "protocol.hxx"
-
-using std::string;
-
+#include <FDM/flight.hxx>
 
 class FGNative : public FGProtocol {
 

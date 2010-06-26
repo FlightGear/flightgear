@@ -41,7 +41,6 @@
 #include <osgDB/Registry>
 
 // Class references
-#include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/animation.hxx>
@@ -66,11 +65,11 @@
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 #include <Sound/fg_fx.hxx>
-#include <FDM/flight.hxx>
 #include <ATCDCL/ATCmgr.hxx>
 #include <ATCDCL/AIMgr.hxx>
 #include <Time/tmp.hxx>
 #include <Environment/environment_mgr.hxx>
+#include <Environment/ephemeris.hxx>
 #include <GUI/new_gui.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
 
@@ -111,87 +110,6 @@ void fgSetNewSoundDevice(const char *);
 // The atexit() function handler should know when the graphical subsystem
 // is initialized.
 extern int _bootstrap_OSInit;
-
-
-
-// Update internal time dependent calculations (i.e. flight model)
-// FIXME: this distinction is obsolete; all subsystems now get delta
-// time on update.
-void fgUpdateTimeDepCalcs() {
-    static bool inited = false;
-
-    static const SGPropertyNode *replay_state
-        = fgGetNode( "/sim/freeze/replay-state", true );
-    static SGPropertyNode *replay_time
-        = fgGetNode( "/sim/replay/time", true );
-    // static const SGPropertyNode *replay_end_time
-    //     = fgGetNode( "/sim/replay/end-time", true );
-
-    //SG_LOG(SG_FLIGHT,SG_INFO, "Updating time dep calcs()");
-
-    // Initialize the FDM here if it hasn't been and if we have a
-    // scenery elevation hit.
-
-    // cout << "cur_fdm_state->get_inited() = " << cur_fdm_state->get_inited() 
-    //      << " cur_elev = " << scenery.get_cur_elev() << endl;
-
-    if (!cur_fdm_state->get_inited()) {
-        // Check for scenery around the aircraft.
-        double lon = fgGetDouble("/sim/presets/longitude-deg");
-        double lat = fgGetDouble("/sim/presets/latitude-deg");
-        // We require just to have 50 meter scenery availabe around
-        // the aircraft.
-        double range = 1000.0;
-        SGGeod geod = SGGeod::fromDeg(lon, lat);
-        if (globals->get_scenery()->scenery_available(geod, range)) {
-            //SG_LOG(SG_FLIGHT, SG_INFO, "Finally initializing fdm");
-            cur_fdm_state->init();
-            if ( cur_fdm_state->get_bound() ) {
-                cur_fdm_state->unbind();
-            }
-            cur_fdm_state->bind();
-        }
-    }
-
-    // conceptually, the following block could be done for each fdm
-    // instance ...
-    if ( cur_fdm_state->get_inited() ) {
-        // we have been inited, and  we are good to go ...
-
-        if ( replay_state->getIntValue() == 0 ) {
-            // replay off, run fdm
-            cur_fdm_state->update( delta_time_sec );
-        } else {
-            FGReplay *r = (FGReplay *)(globals->get_subsystem( "replay" ));
-            r->replay( replay_time->getDoubleValue() );
-            if ( replay_state->getIntValue() == 1 ) {
-                // normal playback
-                replay_time->setDoubleValue( replay_time->getDoubleValue()
-                                             + ( delta_time_sec
-                                                 * fgGetInt("/sim/speed-up") ) );
-            } else if ( replay_state->getIntValue() == 2 ) {
-                // paused playback (don't advance replay time)
-            }
-        }
-
-        if ( !inited ) {
-            inited = true;
-            fgSetBool("/sim/signals/fdm-initialized", true);
-        }
-
-    } else {
-        // do nothing, fdm isn't inited yet
-    }
-
-    globals->get_aircraft_model()->update(delta_time_sec);
-
-    // Update solar system
-    globals->get_ephem()->update( globals->get_time_params()->getMjd(),
-                                  globals->get_time_params()->getLst(),
-                                  cur_fdm_state->get_Latitude() );
-
-}
-
 
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
@@ -307,6 +225,10 @@ static void fgMainLoop( void ) {
     if (0 < dtMax && dtMax < real_delta_time_sec)
         real_delta_time_sec = dtMax;
 
+    SGSubsystemGroup* fdmGroup = 
+      globals->get_subsystem_mgr()->get_group(SGSubsystemMgr::FDM);
+    fdmGroup->set_fixed_update_time(1.0 / model_hz);
+
     // round the real time down to a multiple of 1/model-hz.
     // this way all systems are updated the _same_ amount of dt.
     static double reminder = 0.0;
@@ -340,21 +262,6 @@ static void fgMainLoop( void ) {
 
     SG_LOG( SG_ALL, SG_DEBUG, "Running Main Loop");
     SG_LOG( SG_ALL, SG_DEBUG, "======= ==== ====");
-
-    // Fix elevation.  I'm just sticking this here for now, it should
-    // probably move eventually
-
-    /* printf("Before - ground = %.2f  runway = %.2f  alt = %.2f\n",
-       scenery.get_cur_elev(),
-       cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
-       cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
-
-    /* printf("Adjustment - ground = %.2f  runway = %.2f  alt = %.2f\n",
-       scenery.get_cur_elev(),
-       cur_fdm_state->get_Runway_altitude() * SG_FEET_TO_METER,
-       cur_fdm_state->get_Altitude() * SG_FEET_TO_METER); */
-
-    // cout << "Warp = " << globals->get_warp() << endl;
 
     // update "time"
     static bool last_clock_freeze = false;
@@ -444,20 +351,11 @@ static void fgMainLoop( void ) {
     // multiplayer information is interpreted by an AI model
     if (fgGetBool("/sim/ai-traffic/enabled"))
         globals->get_AI_mgr()->update(delta_time_sec);
-
-    // Run flight model
-    if (0 < global_multi_loop) {
-        // first run the flight model each frame until it is initialized
-        // then continue running each frame only after initial scenery
-        // load is complete.
-        fgUpdateTimeDepCalcs();
-    } else {
-        SG_LOG( SG_ALL, SG_DEBUG,
-                "Elapsed time is zero ... we're zinging" );
-    }
-
+  
+    
     globals->get_subsystem_mgr()->update(delta_time_sec);
-
+    globals->get_aircraft_model()->update(delta_time_sec);
+    
     //
     // Tile Manager updates - see if we need to load any new scenery tiles.
     //   this code ties together the fdm, viewer and scenery classes...
@@ -523,7 +421,7 @@ static void fgMainLoop( void ) {
     // END Tile Manager udpates
 
     if (!scenery_loaded && globals->get_tile_mgr()->isSceneryLoaded()
-        && cur_fdm_state->get_inited()) {
+        && fgGetBool("sim/signals/fdm-initialized")) {
         fgSetBool("sim/sceneryloaded",true);
         if (fgGetBool("/sim/sound/working")) {
             globals->get_soundmgr()->activate();
@@ -697,9 +595,11 @@ static void fgIdleFunction ( void ) {
         // Initialize the 3D aircraft model subsystem (has a dependency on
         // the scenery subsystem.)
         ////////////////////////////////////////////////////////////////////
-        globals->set_aircraft_model(new FGAircraftModel);
-        globals->get_aircraft_model()->init();
-        globals->get_aircraft_model()->bind();
+        FGAircraftModel* acm = new FGAircraftModel;
+        globals->set_aircraft_model(acm);
+        //globals->add_subsystem("aircraft-model", acm);
+        acm->init();
+        acm->bind();
 
         ////////////////////////////////////////////////////////////////////
         // Initialize the view manager subsystem.
@@ -714,13 +614,10 @@ static void fgIdleFunction ( void ) {
     } else if ( idle_state == 6 ) {
         idle_state++;
         // Initialize the sky
-        SGPath ephem_data_path( globals->get_fg_root() );
-        ephem_data_path.append( "Astro" );
-        SGEphemeris *ephem = new SGEphemeris( ephem_data_path.c_str() );
-        ephem->update( globals->get_time_params()->getMjd(),
-                       globals->get_time_params()->getLst(),
-                       0.0 );
-        globals->set_ephem( ephem );
+
+        Ephemeris* eph = new Ephemeris;
+        globals->add_subsystem("ephmeris", eph);
+        eph->init(); // FIXME - remove this once SGSky code below is also a subsystem
 
         // TODO: move to environment mgr
         thesky = new SGSky;

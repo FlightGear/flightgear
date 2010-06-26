@@ -29,17 +29,15 @@
 
 #include <simgear/timing/timestamp.hxx>
 
-#include <FDM/flight.hxx>
-
 #include "protocol.hxx"
 #include "net_fdm.hxx"
 
 
-class FGNativeFDM : public FGProtocol, public FGInterface {
+class FGNativeFDM : public FGProtocol {
 
     FGNetFDM buf;
     int length;
-
+    
 public:
 
     FGNativeFDM();

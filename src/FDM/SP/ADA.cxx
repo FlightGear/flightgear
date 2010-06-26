@@ -261,14 +261,15 @@ bool FGADA::copy_from_FGADA() {
     _set_Velocities_Local( V_north, V_east, V_down ); //same as UVW_local in fps
 
     //Positions and attitude for ship
-	_set_daux(1,sixdof_to_visuals.aux1);//ship lat
-    _set_daux(2,sixdof_to_visuals.aux2);//ship lon
-    _set_daux(3,sixdof_to_visuals.aux3);//ship alt+heave
-    _set_daux(4,sixdof_to_visuals.aux4);//distance of a/c from ski-jump exit
-    _set_faux(1,sixdof_to_visuals.aux9);//ship pitch
-    _set_faux(2,sixdof_to_visuals.aux10);//ship roll
-    _set_faux(3,sixdof_to_visuals.aux11);//ship yaw
-    _set_iaux(1,sixdof_to_visuals.iaux1);//flag for drawing ship
+    
+    fgSetDouble("/fdm-ada/ship-lat", sixdof_to_visuals.aux1);
+    fgSetDouble("/fdm-ada/ship-lon", sixdof_to_visuals.aux2);
+    fgSetDouble("/fdm-ada/ship-alt", sixdof_to_visuals.aux3);
+    fgSetDouble("/fdm-ada/skijump-dist", sixdof_to_visuals.aux4);
+    fgSetDouble("/fdm-ada/ship-pitch", sixdof_to_visuals.aux9); // faux1
+    fgSetDouble("/fdm-ada/ship-roll", sixdof_to_visuals.aux10); // faux2
+    fgSetDouble("/fdm-ada/ship-yaw", sixdof_to_visuals.aux11);  // faux3
+    fgSetInt("/fdm-ada/draw-ship", sixdof_to_visuals.iaux1);
 
     // controls
     globals->get_controls()->set_throttle(0,throttle/131.0);
@@ -284,30 +285,30 @@ bool FGADA::copy_from_FGADA() {
     _set_Mach_number( Machno);
     _set_Climb_Rate( W_local*SG_METER_TO_FEET ); //pressure alt in feet for lca(navy)
 
-    _set_iaux(2,sixdof_to_visuals.iaux2);//control law mode switch posn
-    _set_iaux(3,sixdof_to_visuals.iaux3);//ldg gear posn
-    _set_iaux(4,sixdof_to_visuals.iaux4);// wow nose status
-    _set_iaux(5,sixdof_to_visuals.iaux5);// wow main status
-    _set_iaux(6,sixdof_to_visuals.iaux6);// arrester hook posn
-    _set_iaux(7,sixdof_to_visuals.iaux7);
-    _set_iaux(8,sixdof_to_visuals.iaux8);
-    _set_iaux(9,sixdof_to_visuals.iaux9);
-    _set_iaux(10,sixdof_to_visuals.iaux10);
-    _set_iaux(11,sixdof_to_visuals.iaux11);
-    _set_iaux(12,sixdof_to_visuals.iaux12);
+    fgSetInt("/fdm-ada/iaux2", sixdof_to_visuals.iaux2); //control law mode switch posn
+    fgSetInt("/fdm-ada/iaux3", sixdof_to_visuals.iaux3); //ldg gear posn
+    fgSetInt("/fdm-ada/iaux4", sixdof_to_visuals.iaux4); // wow nose status
+    fgSetInt("/fdm-ada/iaux5", sixdof_to_visuals.iaux5); // wow main status
+    fgSetInt("/fdm-ada/iaux6", sixdof_to_visuals.iaux6); // arrester hook posn
+    fgSetInt("/fdm-ada/iaux7", sixdof_to_visuals.iaux7);
+    fgSetInt("/fdm-ada/iaux8", sixdof_to_visuals.iaux8);
+    fgSetInt("/fdm-ada/iaux9", sixdof_to_visuals.iaux9);
+    fgSetInt("/fdm-ada/iaux10", sixdof_to_visuals.iaux10);
+    fgSetInt("/fdm-ada/iaux11", sixdof_to_visuals.iaux11);
+    fgSetInt("/fdm-ada/iaux12", sixdof_to_visuals.iaux12);
 
-    _set_daux(5,sixdof_to_visuals.aux5);
-    _set_daux(6,sixdof_to_visuals.aux6);
-    _set_daux(7,sixdof_to_visuals.aux7);
-    _set_daux(8,sixdof_to_visuals.aux8);
+    fgSetDouble("/fdm-ada/aux5", sixdof_to_visuals.aux5);
+    fgSetDouble("/fdm-ada/aux6", sixdof_to_visuals.aux6);
+    fgSetDouble("/fdm-ada/aux7", sixdof_to_visuals.aux7);
+    fgSetDouble("/fdm-ada/aux8", sixdof_to_visuals.aux8);
 
-    _set_faux(4,sixdof_to_visuals.aux12);
-    _set_faux(5,sixdof_to_visuals.aux13);
-    _set_faux(6,sixdof_to_visuals.aux14);
-    _set_faux(7,sixdof_to_visuals.aux15);
-    _set_faux(8,sixdof_to_visuals.aux16);
-    _set_faux(9,sixdof_to_visuals.aux17);
-    _set_faux(10,sixdof_to_visuals.aux18);
+    fgSetDouble("/fdm-ada/aux12", sixdof_to_visuals.aux12);
+    fgSetDouble("/fdm-ada/aux13", sixdof_to_visuals.aux13);
+    fgSetDouble("/fdm-ada/aux14", sixdof_to_visuals.aux14);
+    fgSetDouble("/fdm-ada/aux15", sixdof_to_visuals.aux15);
+    fgSetDouble("/fdm-ada/aux16", sixdof_to_visuals.aux16);
+    fgSetDouble("/fdm-ada/aux17", sixdof_to_visuals.aux17);
+    fgSetDouble("/fdm-ada/aux18", sixdof_to_visuals.aux18);
 
     // Angular rates 
     _set_Omega_Body( P_body, Q_body, R_body );

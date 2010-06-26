@@ -31,14 +31,13 @@
 
 #include "protocol.hxx"
 
-using std::string;
-
+class FlightProperties;
 
 class FGNMEA : public FGProtocol {
 
     char buf[ FG_MAX_MSG_SIZE ];
     int length;
-
+    FlightProperties* fdm;
 public:
 
     FGNMEA();

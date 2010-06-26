@@ -62,6 +62,7 @@ private:
     void update_binary( double dt );
     void update_property( double dt );
 
+    void process_set_command( const string_list &tokens );
 public:
 
     // Constructor

@@ -30,9 +30,7 @@
 #include <string>
 
 #include "protocol.hxx"
-
-using std::string;
-
+#include <FDM/flightProperties.hxx>
 
 class FGAV400 : public FGProtocol {
 
@@ -55,6 +53,8 @@ public:
 
     // close the channel
     bool close();
+    
+  FlightProperties fdm;
 };
 
 

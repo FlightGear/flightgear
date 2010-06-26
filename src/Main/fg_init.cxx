@@ -89,19 +89,6 @@
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
 
-#if ENABLE_SP_FDM
-#include <FDM/SP/ADA.hxx>
-#include <FDM/SP/ACMS.hxx>
-#include <FDM/SP/MagicCarpet.hxx>
-#include <FDM/SP/Balloon.h>
-#endif
-#include <FDM/ExternalNet/ExternalNet.hxx>
-#include <FDM/ExternalPipe/ExternalPipe.hxx>
-#include <FDM/JSBSim/JSBSim.hxx>
-#include <FDM/LaRCsim/LaRCsim.hxx>
-#include <FDM/UFO.hxx>
-#include <FDM/NullFDM.hxx>
-#include <FDM/YASim/YASim.hxx>
 #include <GUI/new_gui.hxx>
 #include <Include/general.hxx>
 #include <Input/input.hxx>
@@ -123,6 +110,7 @@
 #include <Time/tmp.hxx>
 #include <Traffic/TrafficMgr.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
+#include <FDM/fdm_shell.hxx>
 
 #include <Environment/environment_mgr.hxx>
 #include <Environment/ridge_lift.hxx>
@@ -1207,101 +1195,6 @@ bool fgInitGeneral() {
     return true;
 }
 
-
-// Initialize the flight model subsystem.  This just creates the
-// object.  The actual fdm initialization is delayed until we get a
-// proper scenery elevation hit.  This is checked for in main.cxx
-
-void fgInitFDM() {
-
-    if ( cur_fdm_state ) {
-        delete cur_fdm_state;
-        cur_fdm_state = 0;
-    }
-
-    double dt = 1.0 / fgGetInt("/sim/model-hz");
-    string model = fgGetString("/sim/flight-model");
-
-    if ( model == "larcsim" ) {
-        cur_fdm_state = new FGLaRCsim( dt );
-    } else if ( model == "jsb" ) {
-        cur_fdm_state = new FGJSBsim( dt );
-#if ENABLE_SP_FDM
-    } else if ( model == "ada" ) {
-        cur_fdm_state = new FGADA( dt );
-    } else if ( model == "acms" ) {
-        cur_fdm_state = new FGACMS( dt );
-    } else if ( model == "balloon" ) {
-        cur_fdm_state = new FGBalloonSim( dt );
-    } else if ( model == "magic" ) {
-        cur_fdm_state = new FGMagicCarpet( dt );
-#endif
-    } else if ( model == "ufo" ) {
-        cur_fdm_state = new FGUFO( dt );
-    } else if ( model == "external" ) {
-        // external is a synonym for "--fdm=null" and is
-        // maintained here for backwards compatibility
-        cur_fdm_state = new FGNullFDM( dt );
-    } else if ( model.find("network") == 0 ) {
-        string host = "localhost";
-        int port1 = 5501;
-        int port2 = 5502;
-        int port3 = 5503;
-        string net_options = model.substr(8);
-        string::size_type begin, end;
-        begin = 0;
-        // host
-        end = net_options.find( ",", begin );
-        if ( end != string::npos ) {
-            host = net_options.substr(begin, end - begin);
-            begin = end + 1;
-        }
-        // port1
-        end = net_options.find( ",", begin );
-        if ( end != string::npos ) {
-            port1 = atoi( net_options.substr(begin, end - begin).c_str() );
-            begin = end + 1;
-        }
-        // port2
-        end = net_options.find( ",", begin );
-        if ( end != string::npos ) {
-            port2 = atoi( net_options.substr(begin, end - begin).c_str() );
-            begin = end + 1;
-        }
-        // port3
-        end = net_options.find( ",", begin );
-        if ( end != string::npos ) {
-            port3 = atoi( net_options.substr(begin, end - begin).c_str() );
-            begin = end + 1;
-        }
-        cur_fdm_state = new FGExternalNet( dt, host, port1, port2, port3 );
-    } else if ( model.find("pipe") == 0 ) {
-        // /* old */ string pipe_path = model.substr(5);
-        // /* old */ cur_fdm_state = new FGExternalPipe( dt, pipe_path );
-        string pipe_path = "";
-        string pipe_protocol = "";
-        string pipe_options = model.substr(5);
-        string::size_type begin, end;
-        begin = 0;
-        // pipe file path
-        end = pipe_options.find( ",", begin );
-        if ( end != string::npos ) {
-            pipe_path = pipe_options.substr(begin, end - begin);
-            begin = end + 1;
-        }
-        // protocol (last option)
-        pipe_protocol = pipe_options.substr(begin);
-        cur_fdm_state = new FGExternalPipe( dt, pipe_path, pipe_protocol );
-    } else if ( model == "null" ) {
-        cur_fdm_state = new FGNullFDM( dt );
-    } else if ( model == "yasim" ) {
-        cur_fdm_state = new YASim( dt );
-    } else {
-        throw sg_exception(string("Unrecognized flight model '") + model
-               + "', cannot init flight dynamics model.");
-    }
-}
-
 // Initialize view parameters
 void fgInitView() {
   // force update of model so that viewer can get some data...
@@ -1513,7 +1406,7 @@ bool fgInitSubsystems() {
     // Initialize the flight model subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    fgInitFDM();
+    globals->add_subsystem("flight", new FDMShell, SGSubsystemMgr::FDM);
         
     // allocates structures so must happen before any of the flight
     // model or control parameters are set
@@ -1539,14 +1432,14 @@ bool fgInitSubsystems() {
     // autopilot.)
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem("instrumentation", new FGInstrumentMgr);
-    globals->add_subsystem("systems", new FGSystemMgr);
+    globals->add_subsystem("instrumentation", new FGInstrumentMgr, SGSubsystemMgr::FDM);
+    globals->add_subsystem("systems", new FGSystemMgr, SGSubsystemMgr::FDM);
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the XML Autopilot subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem( "xml-autopilot", new FGXMLAutopilotGroup );
+    globals->add_subsystem( "xml-autopilot", new FGXMLAutopilotGroup, SGSubsystemMgr::FDM );
     globals->add_subsystem( "route-manager", new FGRouteMgr );
     
     ////////////////////////////////////////////////////////////////////
@@ -1747,7 +1640,7 @@ void fgReInitSubsystems()
     globals->get_subsystem("ai_model")->reinit();
 
     // Initialize the FDM
-    fgInitFDM();
+    globals->get_subsystem("flight")->reinit();
     
     // allocates structures so must happen before any of the flight
     // model or control parameters are set
@@ -1781,7 +1674,8 @@ void reInit(void)  // from gui_local.cxx -- TODO merge with fgReInitSubsystems()
         master_freeze->setBoolValue(true);
 
     fgSetBool("/sim/signals/reinit", true);
-    cur_fdm_state->unbind();
+
+    globals->get_subsystem("flight")->unbind();
 
     // in case user has changed window size as
     // restoreInitialState() overwrites these

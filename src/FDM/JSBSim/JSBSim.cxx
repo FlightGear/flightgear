@@ -977,7 +977,7 @@ void FGJSBsim::set_Altitude(double alt)
     _set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET  );
     fgic->SetSeaLevelRadiusFtIC( sea_level_radius_meters * SG_METER_TO_FEET );
     SG_LOG(SG_FLIGHT, SG_INFO,
-          "Terrain elevation: " << cur_fdm_state->get_Runway_altitude() * SG_METER_TO_FEET );
+          "Terrain elevation: " << FGInterface::get_Runway_altitude() * SG_METER_TO_FEET );
     fgic->SetLatitudeRadIC( lat_geoc );
     fgic->SetAltitudeASLFtIC(alt);
     needTrim=true;

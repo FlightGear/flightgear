@@ -1233,7 +1233,7 @@ do_presets_commit (const SGPropertyNode * arg)
     // unbind the current fdm state so property changes
     // don't get lost when we subsequently delete this fdm
     // and create a new one.
-    cur_fdm_state->unbind();
+    globals->get_subsystem("flight")->unbind();
 
     // set position from presets
     fgInitPosition();

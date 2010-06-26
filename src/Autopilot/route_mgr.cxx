@@ -51,19 +51,7 @@
 #include "Airports/simple.hxx"
 #include "Airports/runways.hxx"
 
-#include "FDM/flight.hxx" // for getting ground speed
-
 #define RM "/autopilot/route-manager/"
-
-static double get_ground_speed() {
-  // starts in ft/s so we convert to kts
-  static const SGPropertyNode * speedup_node = fgGetNode("/sim/speed-up");
-
-  double ft_s = cur_fdm_state->get_V_ground_speed()
-      * speedup_node->getIntValue();
-  double kts = ft_s * SG_FEET_TO_METER * 3600 * SG_METER_TO_NM;
-  return kts;
-}
 
 FGRouteMgr::FGRouteMgr() :
     _route( new SGRoute ),
@@ -212,7 +200,7 @@ void FGRouteMgr::update( double dt ) {
       return;
     }
     
-    double groundSpeed = get_ground_speed();
+    double groundSpeed = fgGetDouble("/velocities/groundspeed-kt", 0.0);
     if (airborne->getBoolValue()) {
       time_t now = time(NULL);
       elapsedFlightTime->setDoubleValue(difftime(now, _takeoffTime));
@@ -265,14 +253,14 @@ void FGRouteMgr::update( double dt ) {
 
 
 void FGRouteMgr::setETAPropertyFromDistance(SGPropertyNode_ptr aProp, double aDistance) {
-    double speed = get_ground_speed();
+    double speed =fgGetDouble("/velocities/groundspeed-kt", 0.0);
     if (speed < 1.0) {
       aProp->setStringValue("--:--");
       return;
     }
   
     char eta_str[64];
-    double eta = aDistance * SG_METER_TO_NM / get_ground_speed();
+    double eta = aDistance * SG_METER_TO_NM / speed;
     if ( eta >= 100.0 ) { 
         eta = 99.999; // clamp
     }

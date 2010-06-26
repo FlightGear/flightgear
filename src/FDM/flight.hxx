@@ -187,13 +187,18 @@ private:
     double altitude_agl;
     double track;
 
-    double daux[16];		// auxilliary doubles
-    float  faux[16];		// auxilliary floats
-    int    iaux[16];		// auxilliary ints
-
     // the ground cache object itself.
     FGGroundCache ground_cache;
 
+    void set_A_X_pilot(double x)
+    { _set_Accels_Pilot_Body(x, a_pilot_body_v[1], a_pilot_body_v[2]); }
+    
+    void set_A_Y_pilot(double y)
+    { _set_Accels_Pilot_Body(a_pilot_body_v[0], y, a_pilot_body_v[2]); }
+    
+    void set_A_Z_pilot(double z)
+    { _set_Accels_Pilot_Body(a_pilot_body_v[0], a_pilot_body_v[1], z); }
+    
 protected:
 
     int _calc_multiloop (double dt);
@@ -284,6 +289,22 @@ public:
 	euler_rates_v[1] = theta;
 	euler_rates_v[2] = psi;
     }
+    
+    void set_Phi_dot_degps(double x)
+    {
+      euler_rates_v[0] = x * SG_DEGREES_TO_RADIANS;
+    }
+    
+    void set_Theta_dot_degps(double x)
+    {
+      euler_rates_v[1] = x * SG_DEGREES_TO_RADIANS;
+    }
+    
+    void set_Psi_dot_degps(double x)
+    {
+      euler_rates_v[2] = x * SG_DEGREES_TO_RADIANS;
+    }
+    
     inline void _set_Geocentric_Rates( double lat, double lon, double rad ) {
 	geocentric_rates_v[0] = lat;
 	geocentric_rates_v[1] = lon;
@@ -328,6 +349,9 @@ public:
     inline void _set_T_Local_to_Body( int i, int j, double value) { }
     inline void _set_Alpha( double a ) { alpha = a; }
     inline void _set_Beta( double b ) { beta = b; }
+    
+    inline void set_Alpha_deg( double a ) { alpha = a * SG_DEGREES_TO_RADIANS; }
+    
     inline void _set_Gamma_vert_rad( double gv ) { gamma_vert_rad = gv; }
     inline void _set_Density( double d ) { density = d; }
     inline void _set_Mach_number( double m ) { mach_number = m; }
@@ -338,10 +362,6 @@ public:
     inline void _set_Earth_position_angle(double a) { earth_position_angle = a; }
     inline void _set_Runway_altitude( double alt ) { runway_altitude = alt; }
     inline void _set_Climb_Rate(double rate) { climb_rate = rate; }
-
-    inline void _set_daux( int n, double value ) { daux[n] = value; }
-    inline void _set_faux( int n, float value ) { faux[n] = value; }
-    inline void _set_iaux( int n, int value ) { iaux[n] = value; }
 
 public:
   
@@ -623,11 +643,6 @@ public:
 
     inline double get_Climb_Rate() const { return climb_rate; }
 
-    // Auxilliary variables
-    inline double get_daux( int n ) const { return daux[n]; }
-    inline float  get_faux( int n ) const { return faux[n]; }
-    inline int    get_iaux( int n ) const { return iaux[n]; }
-
     // Note that currently this is the "same" value runway altitude...
     inline double get_ground_elev_ft() const { return runway_altitude; }
 
@@ -711,11 +726,5 @@ public:
     // the wire end position.
     void release_wire(void);
 };
-
-extern FGInterface * cur_fdm_state;
-
-// Toggle data logging on/off
-void fgToggleFDMdataLogging(void);
-
 
 #endif // _FLIGHT_HXX

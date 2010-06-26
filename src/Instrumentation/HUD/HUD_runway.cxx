@@ -180,7 +180,7 @@ FGRunway* HUD::Runway::get_active_runway()
 
 void HUD::Runway::get_rwy_points(sgdVec3 *_points3d)
 {
-    double alt = current_aircraft.fdm_state->get_Runway_altitude() * SG_FEET_TO_METER;
+    double alt = _runway->geod().getElevationM();
     double length = _runway->lengthM() * 0.5;
     double width = _runway->widthM() * 0.5;
     double frontLat = 0.0, frontLon = 0.0, backLat = 0.0, backLon = 0.0, az = 0.0, tempLat = 0.0, tempLon = 0.0;

@@ -28,7 +28,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
 
-#include <FDM/flight.hxx>
+#include <FDM/flightProperties.hxx>
 
 #include "ray.hxx"
 
@@ -66,7 +66,8 @@ FGRAY::~FGRAY() {
 
 bool FGRAY::gen_message() {
     // cout << "generating RayWoodworth message" << endl;
-    FGInterface *f = cur_fdm_state;
+    FlightProperties f;
+    
     int axis, subaxis;
     const double fullscale[6] = { -0.5, -0.5, -0.5, /* radians */
 				  -0.3, -0.3, -0.15  /* meters */ };
@@ -76,7 +77,7 @@ bool FGRAY::gen_message() {
 
     /* get basic information about gravity */
     double grav_acc = -9.81;
-    double vert_acc = f->get_A_Z_pilot() * 0.3;
+    double vert_acc = f.get_A_Z_pilot() * 0.3;
     if ( -3.0 < vert_acc )
 	vert_acc = -3.0;
 
@@ -89,13 +90,13 @@ bool FGRAY::gen_message() {
 
 	/* Retrieve the desired components */
 	switch ( axis ) {
-	case 0: ang_pos = f->get_Phi();
-		lin_acc = f->get_A_Y_pilot() * 0.3;
+	case 0: ang_pos = f.get_Phi();
+		lin_acc = f.get_A_Y_pilot() * 0.3;
 		break;
-	case 1: ang_pos = f->get_Theta();
-		lin_acc = f->get_A_X_pilot() * 0.3;
+	case 1: ang_pos = f.get_Theta();
+		lin_acc = f.get_A_X_pilot() * 0.3;
 		break;
-	case 2: ang_pos = f->get_Psi();
+	case 2: ang_pos = f.get_Psi();
 		lin_acc = grav_acc - vert_acc;
 		break;
 	default:

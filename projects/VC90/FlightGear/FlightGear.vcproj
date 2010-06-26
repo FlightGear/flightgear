@@ -3485,6 +3485,14 @@
 				RelativePath="..\..\..\src\Environment\ridge_lift.hxx"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\ephemeris.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\ephemeris.hxx"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Lib_Model"

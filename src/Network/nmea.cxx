@@ -29,16 +29,18 @@
 #include <simgear/io/iochannel.hxx>
 #include <simgear/timing/sg_time.hxx>
 
-#include <FDM/flight.hxx>
+#include <FDM/flightProperties.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
 #include "nmea.hxx"
 
 FGNMEA::FGNMEA() {
+  fdm = new FlightProperties();
 }
 
 FGNMEA::~FGNMEA() {
+  delete fdm;
 }
 
 
@@ -79,7 +81,7 @@ bool FGNMEA::gen_message() {
 	     t->getGmt()->tm_hour, t->getGmt()->tm_min, t->getGmt()->tm_sec );
 
     char gga_lat[20], rmc_lat[20];
-    double latd = cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES;
+    double latd = fdm->get_Latitude() * SGD_RADIANS_TO_DEGREES;
     if ( latd < 0.0 ) {
 	latd = -latd;
 	dir = 'S';
@@ -92,7 +94,7 @@ bool FGNMEA::gen_message() {
     sprintf( rmc_lat, "%02d%07.4f,%c", abs(deg), min, dir);
 
     char gga_lon[20], rmc_lon[20];
-    double lond = cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES;
+    double lond = fdm->get_Longitude() * SGD_RADIANS_TO_DEGREES;
     if ( lond < 0.0 ) {
 	lond = -lond;
 	dir = 'W';
@@ -121,7 +123,7 @@ bool FGNMEA::gen_message() {
 
     char altitude_m[10];
     sprintf( altitude_m, "%.1f", 
-	     cur_fdm_state->get_Altitude() * SG_FEET_TO_METER );
+	     fdm->get_Altitude() * SG_FEET_TO_METER );
 
     char date[10];
     int year = t->getGmt()->tm_year;
@@ -272,7 +274,7 @@ bool FGNMEA::parse_message() {
 		lat *= -1;
 	    }
 
-	    cur_fdm_state->set_Latitude( lat * SGD_DEGREES_TO_RADIANS );
+	    fdm->set_Latitude( lat * SGD_DEGREES_TO_RADIANS );
 	    SG_LOG( SG_IO, SG_INFO, "  lat = " << lat );
 
 	    // lon val
@@ -301,17 +303,17 @@ bool FGNMEA::parse_message() {
 		lon *= -1;
 	    }
 
-	    cur_fdm_state->set_Longitude( lon * SGD_DEGREES_TO_RADIANS );
+	    fdm->set_Longitude( lon * SGD_DEGREES_TO_RADIANS );
 	    SG_LOG( SG_IO, SG_INFO, "  lon = " << lon );
 
 #if 0
 	    double sl_radius, lat_geoc;
-	    sgGeodToGeoc( cur_fdm_state->get_Latitude(), 
-			  cur_fdm_state->get_Altitude(), 
+	    sgGeodToGeoc( fdm->get_Latitude(), 
+			  fdm->get_Altitude(), 
 			  &sl_radius, &lat_geoc );
-	    cur_fdm_state->set_Geocentric_Position( lat_geoc, 
-			   cur_fdm_state->get_Longitude(), 
-	     	           sl_radius + cur_fdm_state->get_Altitude() );
+	    fdm->set_Geocentric_Position( lat_geoc, 
+			   fdm->get_Longitude(), 
+	     	           sl_radius + fdm->get_Altitude() );
 #endif
 
 	    // speed
@@ -323,8 +325,8 @@ bool FGNMEA::parse_message() {
 	    string speed_str = msg.substr(begin, end - begin);
 	    begin = end + 1;
 	    speed = atof( speed_str.c_str() );
-	    cur_fdm_state->set_V_calibrated_kts( speed );
-	    // cur_fdm_state->set_V_ground_speed( speed );
+	    fdm->set_V_calibrated_kts( speed );
+	    // fdm->set_V_ground_speed( speed );
 	    SG_LOG( SG_IO, SG_INFO, "  speed = " << speed );
 
 	    // heading
@@ -336,8 +338,8 @@ bool FGNMEA::parse_message() {
 	    string hdg_str = msg.substr(begin, end - begin);
 	    begin = end + 1;
 	    heading = atof( hdg_str.c_str() );
-	    cur_fdm_state->set_Euler_Angles( cur_fdm_state->get_Phi(), 
-					     cur_fdm_state->get_Theta(), 
+	    fdm->set_Euler_Angles( fdm->get_Phi(), 
+					     fdm->get_Theta(), 
 					     heading * SGD_DEGREES_TO_RADIANS );
 	    SG_LOG( SG_IO, SG_INFO, "  heading = " << heading );
 	} else if ( sentence == "GPGGA" ) {
@@ -377,7 +379,7 @@ bool FGNMEA::parse_message() {
 		lat *= -1;
 	    }
 
-	    // cur_fdm_state->set_Latitude( lat * SGD_DEGREES_TO_RADIANS );
+	    // fdm->set_Latitude( lat * SGD_DEGREES_TO_RADIANS );
 	    SG_LOG( SG_IO, SG_INFO, "  lat = " << lat );
 
 	    // lon val
@@ -406,7 +408,7 @@ bool FGNMEA::parse_message() {
 		lon *= -1;
 	    }
 
-	    // cur_fdm_state->set_Longitude( lon * SGD_DEGREES_TO_RADIANS );
+	    // fdm->set_Longitude( lon * SGD_DEGREES_TO_RADIANS );
 	    SG_LOG( SG_IO, SG_INFO, "  lon = " << lon );
 
 	    // junk
@@ -462,7 +464,7 @@ bool FGNMEA::parse_message() {
 		altitude *= SG_METER_TO_FEET;
 	    }
 
-	    cur_fdm_state->set_Altitude( altitude );
+	    fdm->set_Altitude( altitude );
     
  	    SG_LOG( SG_IO, SG_INFO, " altitude  = " << altitude );
 

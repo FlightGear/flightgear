@@ -6,16 +6,6 @@
 #ifndef __ACMODEL_HXX
 #define __ACMODEL_HXX 1
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
-#include <vector>
-#include <string>
-
-using std::string;
-using std::vector;
-
 #include <osg/ref_ptr>
 #include <osg/Group>
 #include <osg/Switch>
@@ -35,6 +25,7 @@ public:
   virtual ~FGAircraftModel ();
 
   virtual void init ();
+  virtual void reinit ();
   virtual void bind ();
   virtual void unbind ();
   virtual void update (double dt);
@@ -42,7 +33,8 @@ public:
   virtual SGVec3d& getVelocity() { return _velocity; }
 
 private:
-
+  void deinit ();
+  
   SGModelPlacement * _aircraft;
   SGVec3d _velocity;
   SGSharedPtr<FGFX>  _fx;

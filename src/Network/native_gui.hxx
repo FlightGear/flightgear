@@ -27,17 +27,14 @@
 
 #include <simgear/compiler.h>
 
-#include <FDM/flight.hxx>
-
 #include "protocol.hxx"
 #include "net_gui.hxx"
 
-
-class FGNativeGUI : public FGProtocol, public FGInterface {
+class FGNativeGUI : public FGProtocol {
 
     FGNetGUI buf;
     int length;
-
+    
 public:
 
     FGNativeGUI();

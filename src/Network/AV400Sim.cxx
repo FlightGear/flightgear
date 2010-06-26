@@ -34,16 +34,18 @@
 #include <simgear/io/iochannel.hxx>
 #include <simgear/timing/sg_time.hxx>
 
-#include <FDM/flight.hxx>
+#include <FDM/flightProperties.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 
 #include "AV400Sim.hxx"
 
 FGAV400Sim::FGAV400Sim() {
+  fdm = new FlightProperties;
 }
 
 FGAV400Sim::~FGAV400Sim() {
+  delete fdm;
 }
 
 
@@ -60,7 +62,7 @@ bool FGAV400Sim::gen_message() {
     double min;
 
     // create msg_a
-    double latd = cur_fdm_state->get_Latitude() * SGD_RADIANS_TO_DEGREES;
+    double latd = fdm->get_Latitude() * SGD_RADIANS_TO_DEGREES;
     if ( latd < 0.0 ) {
 	latd = -latd;
 	dir = 'S';
@@ -72,7 +74,7 @@ bool FGAV400Sim::gen_message() {
     sprintf( msg_a, "a%c %03d %04.0f\r\n", dir, deg, min);
 
     // create msg_b
-    double lond = cur_fdm_state->get_Longitude() * SGD_RADIANS_TO_DEGREES;
+    double lond = fdm->get_Longitude() * SGD_RADIANS_TO_DEGREES;
     if ( lond < 0.0 ) {
 	lond = -lond;
 	dir = 'W';
@@ -84,7 +86,7 @@ bool FGAV400Sim::gen_message() {
     sprintf( msg_b, "b%c %03d %04.0f\r\n", dir, deg, min);
 
     // create msg_c
-    double alt = cur_fdm_state->get_Altitude();
+    double alt = fdm->get_Altitude();
     if ( alt > 99999.0 ) { alt = 99999.0; }
     sprintf( msg_c, "c%05.0f\r\n", alt );
 

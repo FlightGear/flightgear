@@ -31,10 +31,10 @@
 #include <ctime>
 
 #include <simgear/math/SGMath.hxx>
-#include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/timing/sg_time.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 
 #include "tmp.hxx"
 #include "sunsolver.hxx"
@@ -56,12 +56,14 @@ void fgSunPositionGST(double gst, double *lon, double *lat) {
     double alpha, delta;
     double tmp;
 
-    double beta = globals->get_ephem()->get_sun()->getLat();
+    SGPropertyNode* sun = fgGetNode("/ephemeris/sun");
+    assert(sun);
+    double beta = sun->getDoubleValue("lat-deg");
     // double r = globals->get_ephem()->get_sun()->getDistance();
-    double xs = globals->get_ephem()->get_sun()->getxs();
-    double ys = globals->get_ephem()->get_sun()->getys();
-    double ye = globals->get_ephem()->get_sun()->getye();
-    double ze = globals->get_ephem()->get_sun()->getze();
+    double xs = sun->getDoubleValue("xs");
+    double ys = sun->getDoubleValue("ys");
+    double ye = sun->getDoubleValue("ye");
+    double ze = sun->getDoubleValue("ze");
     alpha = atan2(ys - tan(beta)*ze/ys, xs);
     delta = asin(sin(beta)*ye/ys + cos(beta)*ze);
 

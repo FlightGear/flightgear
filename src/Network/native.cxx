@@ -29,6 +29,7 @@
 
 #include "native.hxx"
 
+#include <FDM/flight.hxx>
 
 FGNative::FGNative() {
 }
@@ -57,15 +58,21 @@ bool FGNative::open() {
     return true;
 }
 
+/**
+ * The design of FGNative requires direct, memcpy access to FGInterface,
+ * unfortunately. Since this is the only remaining place that does, the
+ * extern lives here, rather than a header file.
+ *
+ */
+extern FGInterface* evil_global_fdm_state;
 
 // process work for this port
 bool FGNative::process() {
     SGIOChannel *io = get_io_channel();
-    int length = sizeof(*cur_fdm_state);
+    int length = sizeof(FGInterface);
 
     if ( get_direction() == SG_IO_OUT ) {
-	// cout << "size of cur_fdm_state = " << length << endl;
-	buf = *cur_fdm_state;
+	buf = *evil_global_fdm_state;
 	if ( ! io->write( (char *)(& buf), length ) ) {
 	    SG_LOG( SG_IO, SG_ALERT, "Error writing data." );
 	    return false;
@@ -74,12 +81,12 @@ bool FGNative::process() {
 	if ( io->get_type() == sgFileType ) {
 	    if ( io->read( (char *)(& buf), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		*cur_fdm_state = buf;
+		*evil_global_fdm_state = buf;
 	    }
 	} else {
 	    while ( io->read( (char *)(& buf), length ) == length ) {
 		SG_LOG( SG_IO, SG_DEBUG, "Success reading data." );
-		*cur_fdm_state = buf;
+		*evil_global_fdm_state = buf;
 	    }
 	}
     }

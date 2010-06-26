@@ -131,7 +131,6 @@ FGGlobals::~FGGlobals()
     delete subsystem_mgr;
     delete event_mgr;
     delete time_params;
-    delete ephem;
     delete mag;
     delete matlib;
     delete route_mgr;

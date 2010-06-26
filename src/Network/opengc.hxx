@@ -30,15 +30,18 @@
 
 #include <string>
 
-#include <FDM/flight.hxx>
 #include <Main/fg_props.hxx>
 
 #include "protocol.hxx"
 #include "opengc_data.hxx"
 
-class FGOpenGC : public FGProtocol, public FGInterface {
+class FlightProperties;
+
+class FGOpenGC : public FGProtocol
+{
 
     ogcFGData buf;
+    FlightProperties* fdm;
     
     // Environment
     SGPropertyNode_ptr press_node;
@@ -154,7 +157,7 @@ public:
     // close the channel
     bool close();
 
-    void collect_data( const FGInterface *fdm, ogcFGData *data );
+    void collect_data(ogcFGData *data );
 };
 
 #endif // _FG_OPENGC_HXX
