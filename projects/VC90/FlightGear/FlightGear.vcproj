@@ -2645,6 +2645,22 @@
 				RelativePath="..\..\..\src\FDM\NullFDM.hxx"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\src\FDM\fdm_shell.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\FDM\fdm_shell.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\FDM\flightProperties.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\FDM\flightProperties.hxx"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Lib_GUI"
