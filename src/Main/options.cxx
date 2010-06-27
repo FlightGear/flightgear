@@ -118,7 +118,7 @@ fgSetDefaults ()
 	// Otherwise, default to Scenery being in $FG_ROOT/Scenery
 	globals->set_fg_scenery("");
     }
-        
+
 				// Position (deliberately out of range)
     fgSetDouble("/position/longitude-deg", 9999.0);
     fgSetDouble("/position/latitude-deg", 9999.0);
@@ -220,7 +220,7 @@ fgSetDefaults ()
 				// HUD options
     fgSetString("/sim/startup/units", "feet");
     fgSetString("/sim/hud/frame-stat-type", "tris");
-	
+
 				// Time options
     fgSetInt("/sim/startup/time-offset", 0);
     fgSetString("/sim/startup/time-offset-type", "system-offset");
@@ -355,7 +355,7 @@ parse_time(const string& time_in) {
 
 
 // parse a date string (yyyy:mm:dd:hh:mm:ss) into a time_t (seconds)
-static long int 
+static long int
 parse_date( const string& date)
 {
     struct tm gmt;
@@ -493,7 +493,7 @@ parse_time_offset( const string& time_str) {
 }
 
 
-// Parse --fov=x.xx type option 
+// Parse --fov=x.xx type option
 static double
 parse_fov( const string& arg ) {
     double fov = atof(arg);
@@ -520,7 +520,7 @@ parse_fov( const string& arg ) {
 //        point values are ok.
 //
 // Serial example "--nmea=serial,dir,hz,device,baud" where
-// 
+//
 //  device = OS device name of serial line to be open()'ed
 //  baud = {300, 1200, 2400, ..., 230400}
 //
@@ -900,7 +900,7 @@ fgSetupProxy( const char *arg )
     string::size_type pos;
 
     host = port = auth = "";
-    if ((pos = options.find("@")) != string::npos) 
+    if ((pos = options.find("@")) != string::npos)
         auth = options.substr(0, pos++);
     else
         pos = 0;
@@ -981,7 +981,7 @@ fgOptViewOffset( const char *arg )
     } else {
 	default_view_offset = atof( woffset.c_str() ) * SGD_DEGREES_TO_RADIANS;
     }
-    /* apparently not used (CLO, 11 Jun 2002) 
+    /* apparently not used (CLO, 11 Jun 2002)
         FGViewer *pilot_view =
 	    (FGViewer *)globals->get_viewmgr()->get_view( 0 ); */
     // this will work without calls to the viewer...
@@ -1317,7 +1317,7 @@ struct OptionDesc {
     const char *s_param;
     int (*func)( const char * );
     } fgOptionArray[] = {
-       
+
     {"language",                     true,  OPTION_FUNC,   "", false, "", fgOptLanguage },
     {"disable-game-mode",            false, OPTION_BOOL,   "/sim/startup/game-mode", false, "", 0 },
     {"enable-game-mode",             false, OPTION_BOOL,   "/sim/startup/game-mode", true, "", 0 },
@@ -1464,6 +1464,9 @@ struct OptionDesc {
     {"proxy",                        true,  OPTION_FUNC,    "", false, "", fgSetupProxy },
     {"callsign",                     true,  OPTION_FUNC,    "", false, "", fgOptCallSign},
     {"multiplay",                    true,  OPTION_CHANNEL, "", false, "", 0 },
+#ifdef FG_HAVE_HLA
+    {"hla",                          true,  OPTION_CHANNEL, "", false, "", 0 },
+#endif
     {"trace-read",                   true,  OPTION_FUNC,   "", false, "", fgOptTraceRead },
     {"trace-write",                  true,  OPTION_FUNC,   "", false, "", fgOptTraceWrite },
     {"log-level",                    true,  OPTION_FUNC,   "", false, "", fgOptLogLevel },
@@ -1756,7 +1759,7 @@ fgParseOptions (const string& path) {
         line = line.substr( 0, i );
 
 	if ( parse_option( line ) == FG_OPTIONS_ERROR ) {
-            cerr << endl << "Config file parse error: " << path << " '" 
+            cerr << endl << "Config file parse error: " << path << " '"
 		    << line << "'" << endl;
 	    fgUsage();
 	    exit(-1);
@@ -1767,7 +1770,7 @@ fgParseOptions (const string& path) {
 
 
 // Print usage message
-void 
+void
 fgUsage (bool verbose)
 {
     SGPropertyNode *locale = globals->get_locale();
@@ -1784,7 +1787,7 @@ fgUsage (bool verbose)
         cout << "Make sure the file options.xml is located in the FlightGear base directory," << endl;
         cout << "and the location of the base directory is specified by setting $FG_ROOT or" << endl;
         cout << "by adding --fg-root=path as a program argument." << endl;
-        
+
         exit(-1);
     }
 
@@ -1828,7 +1831,7 @@ fgUsage (bool verbose)
                     tmp.append(", -");
                     tmp.append(short_name->getStringValue());
                 }
-				
+
                 if (tmp.size() <= 25) {
                     msg+= "   --";
                     msg += tmp;

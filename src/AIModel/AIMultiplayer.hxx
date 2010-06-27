@@ -59,6 +59,9 @@ public:
   void addPropertyId(unsigned id, const char* name)
   { mPropertyMap[id] = props->getNode(name, true); }
 
+  SGPropertyNode* getPropertyRoot()
+  { return props; }
+
   virtual const char* getTypeString(void) const { return "multiplayer"; }
 
 private:
