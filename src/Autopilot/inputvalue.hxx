@@ -21,6 +21,11 @@
 #ifndef _INPUTVALUE_HXX
 #define _INPUTVALUE_HXX 1
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+
 #include <simgear/structure/SGExpression.hxx>
 
 namespace FGXMLAutopilot {

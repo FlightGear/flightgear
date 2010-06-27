@@ -23,6 +23,10 @@
 
 #include "digitalcomponent.hxx"
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 namespace FGXMLAutopilot {
 
 /**
