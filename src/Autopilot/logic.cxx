@@ -44,7 +44,8 @@ void Logic::set_output( bool value )
 bool Logic::get_output() const
 {
   OutputMap::const_iterator it = _output.begin();
-  return it != _output.end() ? (*it).second->getValue() : false;
+  bool q = it != _output.end() ? (*it).second->getValue() : false;
+  return _inverted ? !q : q;
 }
 
 void Logic::update( bool firstTime, double dt )
