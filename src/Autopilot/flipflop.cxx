@@ -334,13 +334,14 @@ bool RSFlipFlopImplementation::getState( double dt, DigitalComponent::InputMap i
 
 bool ClockedFlipFlopImplementation::getState( double dt, DigitalComponent::InputMap input, bool & q )
 {
-  if( RSFlipFlopImplementation::getState( dt, input, q ) )
-    return true;
-
   bool c = input.get_value("clock");
   bool raisingEdge = c && !_clock;
     
   _clock = c;
+
+  if( RSFlipFlopImplementation::getState( dt, input, q ) )
+    return true;
+
 
   if( !raisingEdge ) return false; //signal no change
   return onRaisingEdge( input, q );
@@ -452,7 +453,7 @@ void FlipFlop::update( bool firstTime, double dt )
 
   q0 = q = get_output();
 
-  if( _implementation->getState( dt, _input, q ) ) {
+  if( _implementation->getState( dt, _input, q ) && q0 != q ) {
     set_output( q );
 
     if(_debug) {
