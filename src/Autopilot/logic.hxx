@@ -21,11 +21,11 @@
 #ifndef __LOGICCOMPONENT_HXX
 #define __LOGICCOMPONENT_HXX 1
 
-#include "digitalcomponent.hxx"
-
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
+
+#include "digitalcomponent.hxx"
 
 namespace FGXMLAutopilot {
 
