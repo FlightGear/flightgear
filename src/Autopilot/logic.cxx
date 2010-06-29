@@ -19,6 +19,14 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
+// for some obscure reason, MSVC needs this to compile
+#ifdef _MSC_VER
+#ifndef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+#include <simgear/math/SGMath.hxx>
+#endif
+
 #include "logic.hxx"
 
 using namespace FGXMLAutopilot;

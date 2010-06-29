@@ -27,7 +27,6 @@
 #  include <config.h>
 #endif
 
-#include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/condition.hxx>
 
