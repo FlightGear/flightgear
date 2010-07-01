@@ -2,7 +2,7 @@ dnl Process this file with autogen.sh to produce a working configure
 dnl script.
 
 AC_INIT
-AC_CONFIG_SRCDIR([src/Aircraft/aircraft.cxx])
+AC_CONFIG_SRCDIR([src/Airports/simple.cxx])
 
 dnl Require at least automake 2.52
 AC_PREREQ(2.52)
