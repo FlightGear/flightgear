@@ -378,14 +378,6 @@
 			Name="Lib_Aircraft"
 			>
 			<File
-				RelativePath="..\..\..\src\Aircraft\aircraft.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Aircraft\aircraft.hxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\Aircraft\controls.cxx"
 				>
 			</File>

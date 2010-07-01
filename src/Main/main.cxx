@@ -54,7 +54,6 @@
 #include <Time/light.hxx>
 #include <Include/general.hxx>
 #include <Aircraft/replay.hxx>
-#include <Aircraft/aircraft.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/hud.hxx>
 #include <Model/panelnode.hxx>
@@ -536,9 +535,7 @@ static void fgIdleFunction ( void ) {
 
     } else if ( idle_state == 2 ) {
         idle_state++;
-        
-        globals->get_commands()->addCommand("load-aircraft", fgLoadAircraft);
-        
+                
         fgSplashProgress("reading airport & navigation data");
 
 

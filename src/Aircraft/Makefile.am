@@ -1,7 +1,6 @@
 noinst_LIBRARIES = libAircraft.a
 
 libAircraft_a_SOURCES = \
-	aircraft.cxx aircraft.hxx \
 	controls.cxx controls.hxx \
 	replay.cxx replay.hxx
 
