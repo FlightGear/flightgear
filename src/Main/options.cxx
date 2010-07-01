@@ -28,6 +28,7 @@
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <math.h>		// rint()
 #include <stdio.h>

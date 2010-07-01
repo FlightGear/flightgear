@@ -25,25 +25,11 @@
 #ifndef _FG_INIT_HXX
 #define _FG_INIT_HXX
 
-
-#ifndef __cplusplus                                                          
-# error This library requires C++
-#endif                                   
-
-
-#ifdef HAVE_CONFIG
-#  include <config.h>
-#endif
-
-#include <simgear/compiler.h>
-#include <simgear/timing/sg_time.hxx>
-
 #include <string>
 
-#include <Airports/simple.hxx>
-
-using std::string;
-
+// forward decls
+class SGPropertyNode;
+class SGTime;
 
 // Read in configuration (files and command line optoins) but only set
 // fg_root
@@ -51,7 +37,7 @@ bool fgInitFGRoot ( int argc, char **argv );
 
 
 // Return the current base package version
-string fgBasePackageVersion();
+std::string fgBasePackageVersion();
 
 
 // Read in configuration (file and command line)

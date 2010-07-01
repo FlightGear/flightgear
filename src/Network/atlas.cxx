@@ -27,9 +27,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/io/iochannel.hxx>
-
-
-
+#include <simgear/timing/sg_time.hxx>
 
 #include <FDM/flightProperties.hxx>
 #include <Main/globals.hxx>
