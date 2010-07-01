@@ -54,6 +54,7 @@
 #include <Time/light.hxx>
 #include <Include/general.hxx>
 #include <Aircraft/replay.hxx>
+#include <Aircraft/aircraft.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/hud.hxx>
 #include <Model/panelnode.hxx>
@@ -535,8 +536,9 @@ static void fgIdleFunction ( void ) {
 
     } else if ( idle_state == 2 ) {
         idle_state++;
-        // Read the list of available aircraft
-        fgReadAircraft();
+        
+        globals->get_commands()->addCommand("load-aircraft", fgLoadAircraft);
+        
         fgSplashProgress("reading airport & navigation data");
 
 
@@ -725,7 +727,6 @@ static void fgIdleFunction ( void ) {
         // setup OpenGL view parameters
         globals->get_renderer()->init();
 
-        SG_LOG( SG_GENERAL, SG_INFO, "Panel visible = " << fgPanelVisible() );
         globals->get_renderer()->resize( fgGetInt("/sim/startup/xsize"),
                                          fgGetInt("/sim/startup/ysize") );
 

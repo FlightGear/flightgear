@@ -29,7 +29,6 @@
 #include <simgear/io/iochannel.hxx>
 #include <simgear/misc/stdint.hxx>
 
-#include <Aircraft/aircraft.hxx>
 #include <Main/fg_props.hxx>
 
 #include "jsclient.hxx"

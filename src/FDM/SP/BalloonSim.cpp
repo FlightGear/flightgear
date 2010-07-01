@@ -48,8 +48,6 @@ HISTORY
 
 #include <simgear/constants.h>
 
-#include <Aircraft/aircraft.hxx>
-
 #include "BalloonSim.h"
 
 /****************************************************************************/

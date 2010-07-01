@@ -32,8 +32,6 @@
 #include <simgear/compiler.h>
 #include <simgear/math/sg_random.h>
 
-#include <Aircraft/aircraft.hxx>
-
 #include "kt_70.hxx"
 
 

@@ -64,7 +64,6 @@
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/timing/lowleveltime.h>
 
-#include <Aircraft/aircraft.hxx>
 #include <Aircraft/controls.hxx>
 #include <Aircraft/replay.hxx>
 #include <Airports/apt_loader.hxx>
@@ -1407,11 +1406,6 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
 
     globals->add_subsystem("flight", new FDMShell, SGSubsystemMgr::FDM);
-        
-    // allocates structures so must happen before any of the flight
-    // model or control parameters are set
-    fgAircraftInit();   // In the future this might not be the case.
-
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the weather subsystem.
@@ -1525,10 +1519,7 @@ bool fgInitSubsystems() {
     globals->add_subsystem("Traffic Manager", new FGTrafficManager);
 
 
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the cockpit subsystem
-    ////////////////////////////////////////////////////////////////////
-    if( fgCockpitInit( &current_aircraft )) {
+    if( fgCockpitInit()) {
         // Cockpit initialized ok.
     } else {
         SG_LOG( SG_GENERAL, SG_ALERT, "Error in Cockpit initialization!" );
@@ -1641,10 +1632,6 @@ void fgReInitSubsystems()
 
     // Initialize the FDM
     globals->get_subsystem("flight")->reinit();
-    
-    // allocates structures so must happen before any of the flight
-    // model or control parameters are set
-    fgAircraftInit();   // In the future this might not be the case.
 
     // reload offsets from config defaults
     globals->get_viewmgr()->reinit();

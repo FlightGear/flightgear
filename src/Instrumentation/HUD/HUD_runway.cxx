@@ -29,7 +29,6 @@
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
-#include <Aircraft/aircraft.hxx>
 #include <Aircraft/controls.hxx>
 #include <FDM/flight.hxx>
 #include <Environment/environment.hxx>

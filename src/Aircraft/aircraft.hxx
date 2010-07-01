@@ -26,30 +26,8 @@
 #ifndef _AIRCRAFT_HXX
 #define _AIRCRAFT_HXX
                                  
-class FGControls;
 class SGPropertyNode;
 
-// Define a structure containing all the parameters for an aircraft
-typedef struct{
-    FGControls *controls;
-} fgAIRCRAFT ;
-
-
-// current_aircraft contains all the parameters of the aircraft
-// currently being operated.
-extern fgAIRCRAFT current_aircraft;
-
-
-// Initialize an Aircraft structure
-void fgAircraftInit( void );
-
-
-// Display various parameters to stdout
-void fgAircraftOutputCurrent(fgAIRCRAFT *a);
-
-
-// Read the list of available aircraft into to property tree
-void fgReadAircraft(void);
 bool fgLoadAircraft (const SGPropertyNode * arg);
 
 #endif // _AIRCRAFT_HXX

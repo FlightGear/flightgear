@@ -54,7 +54,6 @@ namespace osg {
 #include <simgear/constants.h>
 
 #include <Include/fg_typedefs.h>
-#include <Aircraft/aircraft.hxx>
 #include <Aircraft/controls.hxx>
 #include <FDM/flight.hxx>
 #include <GUI/gui.h>
@@ -694,8 +693,8 @@ public:
 };
 
 
-extern int  fgHUDInit( fgAIRCRAFT * /* current_aircraft */ );
-extern int  fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ );
+extern int  fgHUDInit();
+extern int  fgHUDInit2();
 extern void fgUpdateHUD( osg::State* );
 extern void fgUpdateHUD( osg::State*, GLfloat x_start, GLfloat y_start,
                          GLfloat x_end, GLfloat y_end );

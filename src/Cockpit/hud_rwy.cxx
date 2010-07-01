@@ -27,7 +27,6 @@
 #include <math.h>
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
-#include <Aircraft/aircraft.hxx>
 #include <Environment/environment.hxx>
 #include <Environment/environment_mgr.hxx>
 #include <ATCDCL/ATCutils.hxx>

@@ -42,8 +42,6 @@
 
 #include <osg/GLU>
 
-#include <Aircraft/aircraft.hxx>
-//#include <Autopilot/xmlauto.hxx>
 #include <GUI/new_gui.hxx>           // FGFontCache
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
@@ -230,7 +228,7 @@ int readHud( istream &input )
 // display for a Piper Cub doesn't show the speed range of a North American
 // mustange and the engine readouts of a B36!
 //
-int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
+int fgHUDInit()
 {
 
     HUD_style = 1;
@@ -282,7 +280,7 @@ int fgHUDInit( fgAIRCRAFT * /* current_aircraft */ )
 }
 
 
-int fgHUDInit2( fgAIRCRAFT * /* current_aircraft */ )
+int fgHUDInit2()
 {
 
     HUD_style = 2;

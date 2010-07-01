@@ -1315,14 +1315,14 @@ do_increase_visibility (const SGPropertyNode * arg)
 static bool
 do_hud_init(const SGPropertyNode *)
 {
-    fgHUDInit(0); // minimal HUD
+    fgHUDInit(); // minimal HUD
     return true;
 }
 
 static bool
 do_hud_init2(const SGPropertyNode *)
 {
-    fgHUDInit2(0);  // normal HUD
+    fgHUDInit2();  // normal HUD
     return true;
 }
 

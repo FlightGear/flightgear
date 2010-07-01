@@ -33,10 +33,7 @@
 
 #include <osg/State>
 
-#include <Aircraft/aircraft.hxx>
-#include "panel.hxx"
-
-bool fgCockpitInit( fgAIRCRAFT *cur_aircraft );
+bool fgCockpitInit();
 void fgCockpitUpdate( osg::State* );
 
 #endif /* _COCKPIT_HXX */

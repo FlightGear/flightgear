@@ -36,7 +36,6 @@
 #include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
 
-#include <Aircraft/aircraft.hxx>
 #include <Include/general.hxx>
 
 #include <Main/globals.hxx>
@@ -360,7 +359,7 @@ float get_aux18 (void)
 #endif
 
 
-bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
+bool fgCockpitInit()
 {
     SG_LOG( SG_COCKPIT, SG_INFO, "Initializing cockpit subsystem" );
 
@@ -376,7 +375,7 @@ bool fgCockpitInit( fgAIRCRAFT *cur_aircraft )
     // HI_Head is now a null pointer so we can generate a new list from the
     // current aircraft.
 
-    fgHUDInit( cur_aircraft );
+    fgHUDInit();
 
     return true;
 }

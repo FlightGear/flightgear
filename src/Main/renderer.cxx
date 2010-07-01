@@ -80,7 +80,6 @@
 
 #include <Time/light.hxx>
 #include <Time/light.hxx>
-#include <Aircraft/aircraft.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/hud.hxx>

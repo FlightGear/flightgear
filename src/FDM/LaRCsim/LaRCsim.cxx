@@ -31,7 +31,6 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/model/placement.hxx>
 
-#include <Aircraft/aircraft.hxx>
 #include <Aircraft/controls.hxx>
 #include <FDM/flight.hxx>
 #include <FDM/UIUCModel/uiuc_aircraft.h>

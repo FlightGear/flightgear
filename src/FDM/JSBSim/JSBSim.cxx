@@ -38,7 +38,6 @@
 
 #include <FDM/flight.hxx>
 
-#include <Aircraft/aircraft.hxx>
 #include <Aircraft/controls.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>

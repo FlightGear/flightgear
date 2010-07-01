@@ -32,7 +32,6 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/timing/sg_time.hxx>
 
-#include <Aircraft/aircraft.hxx>
 #include <Navaids/navlist.hxx>
 
 #include "kr_87.hxx"

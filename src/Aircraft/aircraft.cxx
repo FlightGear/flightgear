@@ -48,43 +48,6 @@
 
 #include "aircraft.hxx"
 
-
-// This is a record containing all the info for the aircraft currently
-// being operated
-fgAIRCRAFT current_aircraft;
-
-
-// Initialize an Aircraft structure
-void fgAircraftInit( void ) {
-    SG_LOG( SG_AIRCRAFT, SG_INFO, "Initializing Aircraft structure" );
-
-    current_aircraft.controls = globals->get_controls();
-}
-
-
-// Display various parameters to stdout
-void fgAircraftOutputCurrent(fgAIRCRAFT *a) {
-    FlightProperties f;
-
-    SG_LOG( SG_FLIGHT, SG_DEBUG,
-            "Pos = ("
-	    << (f.get_Longitude() * 3600.0 * SGD_RADIANS_TO_DEGREES) << "," 
-	    << (f.get_Latitude()  * 3600.0 * SGD_RADIANS_TO_DEGREES) << ","
-	    << f.get_Altitude() 
-	    << ")  (Phi,Theta,Psi)=("
-	    << f.get_Phi() << "," 
-	    << f.get_Theta() << "," 
-	    << f.get_Psi() << ")" );
-
-    SG_LOG( SG_FLIGHT, SG_DEBUG,
-	    "Kts = " << f.get_V_equiv_kts() 
-	    << "  Elev = " << globals->get_controls()->get_elevator() 
-	    << "  Aileron = " << globals->get_controls()->get_aileron() 
-	    << "  Rudder = " << globals->get_controls()->get_rudder() 
-	    << "  Power = " << globals->get_controls()->get_throttle( 0 ) );
-}
-
-
 // Show available aircraft types
 void fgReadAircraft(void) {
 
@@ -137,7 +100,7 @@ void fgReadAircraft(void) {
 
    ulCloseDir(dirp);
 
-   globals->get_commands()->addCommand("load-aircraft", fgLoadAircraft);
+   
 }
 
 bool
@@ -212,7 +175,7 @@ fgLoadAircraft (const SGPropertyNode * arg)
     fgInitPosition();
 
     // Update the HUD
-    fgHUDInit(&current_aircraft);
+    fgHUDInit();
 
     SGTime *t = globals->get_time_params();
     delete t;
