@@ -33,8 +33,6 @@ namespace flightgear
 class FGEventHandler;
 }
 
-#define FG_ENABLE_MULTIPASS_CLOUDS 1
-
 class SGSky;
 extern SGSky *thesky;
 

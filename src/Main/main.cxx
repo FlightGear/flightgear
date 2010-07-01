@@ -836,18 +836,11 @@ bool fgMainInit( int argc, char **argv ) {
     fgRegisterIdleHandler( &fgIdleFunction );
     fgRegisterDrawHandler( &FGRenderer::update );
 
-#ifdef FG_ENABLE_MULTIPASS_CLOUDS
-    bool get_stencil_buffer = true;
-#else
-    bool get_stencil_buffer = false;
-#endif
-
     // Initialize plib net interface
     netInit( &argc, argv );
 
     // Clouds3D requires an alpha channel
-    // clouds may require stencil buffer
-    fgOSOpenWindow(get_stencil_buffer);
+    fgOSOpenWindow(true /* request stencil buffer */);
 
     // Initialize the splash screen right away
     fntInit();
