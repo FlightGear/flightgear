@@ -410,6 +410,10 @@ FGInterface::bind ()
 void
 FGInterface::unbind ()
 {
+  if (!bound) {
+    return;
+  }
+  
   bound = false;
 
   fgUntie("/position/latitude-deg");

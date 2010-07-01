@@ -827,10 +827,21 @@ fgSetWritable (const char * name, bool state)
 }
 
 void
-fgUntie (const char * name)
+fgUntie(const char * name)
 {
-  if (!globals->get_props()->untie(name))
+  SGPropertyNode* node = globals->get_props()->getNode(name);
+  if (!node) {
+    SG_LOG(SG_GENERAL, SG_WARN, "fgUntie: unknown property " << name);
+    return;
+  }
+  
+  if (!node->isTied()) {
+    return;
+  }
+  
+  if (!node->untie()) {
     SG_LOG(SG_GENERAL, SG_WARN, "Failed to untie property " << name);
+  }
 }
 
 
