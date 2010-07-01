@@ -223,7 +223,7 @@ do_exit (const SGPropertyNode * arg)
 static bool
 do_reset (const SGPropertyNode * arg)
 {
-    reInit();
+    doSimulatorReset();
     return true;
 }
 

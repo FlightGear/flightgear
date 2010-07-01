@@ -1652,7 +1652,7 @@ void fgReInitSubsystems()
 }
 
 
-void reInit(void)  // from gui_local.cxx -- TODO merge with fgReInitSubsystems()
+void doSimulatorReset(void)  // from gui_local.cxx -- TODO merge with fgReInitSubsystems()
 {
     static SGPropertyNode_ptr master_freeze = fgGetNode("/sim/freeze/master", true);
 

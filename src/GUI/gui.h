@@ -55,7 +55,6 @@ extern fntTexFont *guiFntHandle;
 extern int gui_menu_on;
 
 // from gui_funcs.cxx
-extern void reInit(void);
 extern void fgDumpSnapShotWrapper();
 #ifdef TR_HIRES_SNAP
 extern void fgHiResDumpWrapper();
