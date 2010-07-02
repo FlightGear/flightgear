@@ -31,7 +31,6 @@
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
 
-#include <Aircraft/aircraft.hxx>
 #include <Navaids/navlist.hxx>
 
 #include "marker_beacon.hxx"
