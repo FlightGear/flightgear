@@ -86,7 +86,7 @@ fgfs_LDADD = \
 	$(ATCDCL_LIBS) \
 	$(top_builddir)/src/Cockpit/libCockpit.a \
 	$(top_builddir)/src/Cockpit/built_in/libBuilt_in.a \
-	$(top_builddir)/src/FDM/libFlight.a \
+	$(top_builddir)/src/Network/libNetwork.a \
 	$(top_builddir)/src/FDM/ExternalNet/libExternalNet.a \
 	$(top_builddir)/src/FDM/ExternalPipe/libExternalPipe.a \
 	$(JSBSIM_LIBS) \
@@ -94,6 +94,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/FDM/LaRCsim/libLaRCsim.a \
 	$(top_builddir)/src/FDM/UIUCModel/libUIUCModel.a \
 	$(SP_FDM_LIBS) \
+	$(top_builddir)/src/FDM/libFlight.a \
 	$(top_builddir)/src/GUI/libGUI.a \
 	$(top_builddir)/src/Autopilot/libAutopilot.a \
 	$(top_builddir)/src/Input/libInput.a \
@@ -101,7 +102,6 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Instrumentation/libInstrumentation.a \
 	$(top_builddir)/src/Instrumentation/HUD/libHUD.a \
 	$(top_builddir)/src/Model/libModel.a \
-	$(top_builddir)/src/Network/libNetwork.a \
 	$(top_builddir)/src/Navaids/libNavaids.a \
 	$(top_builddir)/src/Scenery/libScenery.a \
 	$(top_builddir)/src/Scripting/libScripting.a \
