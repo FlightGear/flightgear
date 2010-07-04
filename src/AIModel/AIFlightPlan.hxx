@@ -149,7 +149,7 @@ private:
   void createClimb(FGAIAircraft *, bool, FGAirport *, double, double, const string&);
   void createCruise(FGAIAircraft *, bool, FGAirport*, FGAirport*, double, double, double, double, const string&);
   void createDecent(FGAIAircraft *, FGAirport *, const string&);
-  void createLanding(FGAIAircraft *, FGAirport *);
+  void createLanding(FGAIAircraft *, FGAirport *, const string&);
   void createParking(FGAIAircraft *, FGAirport *, double radius);
   void deleteWaypoints(); 
   void resetWaypoints();

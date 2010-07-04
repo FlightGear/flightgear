@@ -75,7 +75,7 @@ void FGAIFlightPlan::create(FGAIAircraft *ac, FGAirport *dep, FGAirport *arr, in
       createDecent(ac, arr, fltType);
       break;
     case 7: 
-      createLanding(ac, arr);
+      createLanding(ac, arr, fltType);
       break;
     case 8: 
       createLandingTaxi(ac, arr, radius, fltType, aircraftType, airline);
@@ -366,23 +366,36 @@ void FGAIFlightPlan::createLandingTaxi(FGAIAircraft *ac, FGAirport *apt,
 
 /*******************************************************************
  * CreateTakeOff 
- * initialize the Aircraft at the parking location
+ * A note on units: 
+ *  - Speed -> knots -> nm/hour
+ *  - distance along runway =-> meters 
+ *  - accel / decel -> is given as knots/hour, but this is highly questionable:
+ *  for a jet_transport performance class, a accel / decel rate of 5 / 2 is 
+ *  given respectively. According to performance data.cxx, a value of kts / second seems
+ *  more likely however. 
+ * 
  ******************************************************************/
 void FGAIFlightPlan::createTakeOff(FGAIAircraft *ac, bool firstFlight, FGAirport *apt, double speed, const string &fltType)
 {
     double accel    = ac->getPerformance()->acceleration();
     double vTaxi    = ac->getPerformance()->vTaxi();
     double vRotate  = ac->getPerformance()->vRotate();
-//    double vTakeoff = ac->getPerformance()->vTakeoff();
+    double vTakeoff = ac->getPerformance()->vTakeoff();
     double vClimb   = ac->getPerformance()->vClimb();
+
+    double accelMetric    = (accel * SG_NM_TO_METER) / 3600;
+    double vTaxiMetric    = (vTaxi * SG_NM_TO_METER) / 3600;
+    double vRotateMetric  = (vRotate * SG_NM_TO_METER) / 3600;
+    double vTakeoffMetric = (vTakeoff *  SG_NM_TO_METER) / 3600;
+    double vClimbMetric   = (vClimb *  SG_NM_TO_METER) / 3600;
     // Acceleration = dV / dT
     // Acceleration X dT = dV
     // dT = dT / Acceleration
     //d = (Vf^2 - Vo^2) / (2*a)
-//    double accelTime = (vRotate - vTaxi) / accel;
+    //double accelTime = (vRotate - vTaxi) / accel;
     //cerr << "Using " << accelTime << " as total acceleration time" << endl;
-    double accelDistance = (vRotate*vRotate - vTaxi*vTaxi) / (2*accel);
-    //cerr << "Using " << accelDistance << " " << accel << " " << vRotate << endl;
+    double accelDistance = (vRotateMetric*vRotateMetric - vTaxiMetric*vTaxiMetric) / (2*accelMetric);
+    cerr << "Using " << accelDistance << " " << accelMetric << " " << vRotateMetric << endl;
     waypoint *wpt;
     // Get the current active runway, based on code from David Luff
     // This should actually be unified and extended to include 
@@ -400,14 +413,20 @@ void FGAIFlightPlan::createTakeOff(FGAIAircraft *ac, bool firstFlight, FGAirport
     double airportElev = apt->getElevation();
     // Acceleration point, 105 meters into the runway,
     SGGeod accelPoint = rwy->pointOnCenterline(105.0);
-    wpt = createOnGround(ac, "accel", accelPoint, airportElev, vClimb);
+    wpt = createOnGround(ac, "accel", accelPoint, airportElev, vRotate);
     waypoints.push_back(wpt);
 
-    //Start Climbing to 3000 ft. Let's do this 
-    // at the center of the runway for now:
-    SGGeod rotate = rwy->pointOnCenterline(105.0+accelDistance);
-    wpt = cloneWithPos(ac, wpt, "SOC", rotate);
-    wpt->altitude  = airportElev+1000;
+
+    accelDistance = (vTakeoffMetric*vTakeoffMetric - vTaxiMetric*vTaxiMetric) / (2*accelMetric);
+    cerr << "Using " << accelDistance << " " << accelMetric << " " << vTakeoffMetric << endl;
+    accelPoint = rwy->pointOnCenterline(105.0+accelDistance);
+    wpt = createOnGround(ac, "rotate", accelPoint, airportElev, vTakeoff);
+    waypoints.push_back(wpt);
+
+    accelDistance = ((vTakeoffMetric*1.1)*(vTakeoffMetric*1.1) - vTaxiMetric*vTaxiMetric) / (2*accelMetric);
+    cerr << "Using " << accelDistance << " " << accelMetric << " " << vTakeoffMetric << endl;
+    accelPoint = rwy->pointOnCenterline(105.0+accelDistance);
+    wpt = createOnGround(ac, "rotate", accelPoint, airportElev+1000, vTakeoff*1.1);
     wpt->on_ground = false;
     waypoints.push_back(wpt);
 
@@ -471,7 +490,7 @@ void FGAIFlightPlan::createDecent(FGAIAircraft *ac, FGAirport *apt, const string
 {
   // Ten thousand ft. Slowing down to 240 kts
   waypoint *wpt;
-double vDecent   = ac->getPerformance()->vDescent();
+  double vDecent   = ac->getPerformance()->vDescent();
   double vApproach = ac->getPerformance()->vApproach();
 
   //Beginning of Decent
@@ -499,13 +518,31 @@ double vDecent   = ac->getPerformance()->vDescent();
  * CreateLanding
  * initialize the Aircraft at the parking location
  ******************************************************************/
-void FGAIFlightPlan::createLanding(FGAIAircraft *ac, FGAirport *apt)
+void FGAIFlightPlan::createLanding(FGAIAircraft *ac, FGAirport *apt, const string &fltType)
 {
   double vTouchdown   = ac->getPerformance()->vTouchdown();
   double vTaxi        = ac->getPerformance()->vTaxi();
 
+  string rwyClass = getRunwayClassFromTrafficType(fltType);
+  double heading = ac->getTrafficRef()->getCourse();
+  apt->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway, heading);
+  rwy = apt->getRunwayByIdent(activeRunway);
+  
+
   waypoint *wpt;
   double aptElev = apt->getElevation();
+
+  SGGeod coord;
+  char buffer[12];
+  for (int i = 1; i < 10; i++) {
+      snprintf(buffer, 12, "wpt%d", i);
+      coord = rwy->pointOnCenterline(rwy->lengthM() * (i/10.0));
+      wpt = createOnGround(ac, buffer, coord, aptElev, (vTouchdown/i));
+      wpt->crossat = apt->getElevation();
+      waypoints.push_back(wpt); 
+  }
+
+  /*
   //Runway Threshold
   wpt = createOnGround(ac, "Threshold", rwy->threshold(), aptElev, vTouchdown);
   wpt->crossat = apt->getElevation();
@@ -519,6 +556,7 @@ void FGAIFlightPlan::createLanding(FGAIAircraft *ac, FGAirport *apt)
   wpt = createOnGround(ac, "Roll Out", rollOut, aptElev, vTaxi);
   wpt->crossat   = apt->getElevation();
   waypoints.push_back(wpt); 
+  */
 }
 
 /*******************************************************************
