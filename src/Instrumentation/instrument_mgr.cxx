@@ -56,45 +56,60 @@ FGInstrumentMgr::FGInstrumentMgr () :
 {
     set_subsystem("od_gauge", new FGODGauge);
     set_subsystem("hud", new HUD);
-
-    SGPropertyNode_ptr config_props = new SGPropertyNode;
-
-    SGPropertyNode *path_n = fgGetNode("/sim/instrumentation/path");
-
-    if (path_n) {
-        SGPath config = globals->resolve_aircraft_path(path_n->getStringValue());
-        
-        SG_LOG( SG_ALL, SG_INFO, "Reading instruments from "
-                << config.str() );
-        try {
-            readProperties( config.str(), config_props );
-
-            if ( !build(config_props) ) {
-                throw sg_error(
-                    "Detected an internal inconsistency in the instrumentation\n"
-                    "system specification file.  See earlier errors for details.");
-            }
-        } catch (const sg_exception&) {
-            SG_LOG( SG_ALL, SG_ALERT, "Failed to load instrumentation system model: "
-                    << config.str() );
-        }
-
-    } else {
-        SG_LOG( SG_ALL, SG_WARN,
-                "No instrumentation model specified for this model!");
-    }
-
-    if (!_explicitGps) {
-      SG_LOG(SG_INSTR, SG_INFO, "creating default GPS instrument");
-      SGPropertyNode_ptr nd(new SGPropertyNode);
-      nd->setStringValue("name", "gps");
-      nd->setIntValue("number", 0);
-      set_subsystem("gps[0]", new GPS(nd));
-    }
 }
 
 FGInstrumentMgr::~FGInstrumentMgr ()
 {
+}
+
+void FGInstrumentMgr::init()
+{
+  SGPropertyNode_ptr config_props = new SGPropertyNode;
+  SGPropertyNode* path_n = fgGetNode("/sim/instrumentation/path");
+  if (!path_n) {
+    SG_LOG(SG_COCKPIT, SG_WARN, "No instrumentation model specified for this model!");
+    return;
+  }
+
+  SGPath config = globals->resolve_aircraft_path(path_n->getStringValue());
+  SG_LOG( SG_COCKPIT, SG_INFO, "Reading instruments from " << config.str() );
+
+  try {
+    readProperties( config.str(), config_props );
+    if (!build(config_props)) {
+      throw sg_error(
+                    "Detected an internal inconsistency in the instrumentation\n"
+                    "system specification file.  See earlier errors for details.");
+    }
+  } catch (const sg_exception&) {
+    SG_LOG(SG_COCKPIT, SG_ALERT, "Failed to load instrumentation system model: "
+                    << config.str() );
+  }
+
+
+  if (!_explicitGps) {
+    SG_LOG(SG_INSTR, SG_INFO, "creating default GPS instrument");
+    SGPropertyNode_ptr nd(new SGPropertyNode);
+    nd->setStringValue("name", "gps");
+    nd->setIntValue("number", 0);
+    set_subsystem("gps[0]", new GPS(nd));
+  }
+
+  SGSubsystemGroup::init();
+}
+
+void FGInstrumentMgr::reinit()
+{  
+// delete all our instrument
+  for (unsigned int i=0; i<_instruments.size(); ++i) {
+    const std::string& nm(_instruments[i]);
+    SGSubsystem* instr = get_subsystem(nm);
+    instr->unbind();
+    remove_subsystem(nm);
+    delete instr;
+  }
+  
+  init();
 }
 
 bool FGInstrumentMgr::build (SGPropertyNode* config_props)
@@ -110,7 +125,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
         if (index > 0)
             subsystemname << '['<< index << ']';
         string id = subsystemname.str();
-
+        _instruments.push_back(id);
 
         if ( name == "adf" ) {
             set_subsystem( id, new ADF( node ), 0.15 );

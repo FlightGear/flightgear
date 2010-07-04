@@ -145,10 +145,10 @@ public:
   DeprecatedPropListener(SGPropertyNode* gps)
   {
     _parents.insert(gps);
-    SGPropertyNode* wp = gps->getChild("wp"); 
+    SGPropertyNode* wp = gps->getChild("wp", 0, true); 
     _parents.insert(wp);
-    _parents.insert(wp->getChild("wp", 0));
-    _parents.insert(wp->getChild("wp", 1));
+    _parents.insert(wp->getChild("wp", 0, true));
+    _parents.insert(wp->getChild("wp", 1, true));
     
     std::set<SGPropertyNode*>::iterator it;
     for (it = _parents.begin(); it != _parents.end(); ++it) {

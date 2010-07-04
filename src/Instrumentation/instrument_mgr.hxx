@@ -31,10 +31,15 @@ public:
 
     FGInstrumentMgr ();
     virtual ~FGInstrumentMgr ();
-    bool build (SGPropertyNode* config_props);
-
+    
+    virtual void init();
+    virtual void reinit();
 private:
+    bool build (SGPropertyNode* config_props);
+    
     bool _explicitGps;
+    
+    std::vector<std::string> _instruments;
 };
 
 #endif // __INSTRUMENT_MGR_HXX
