@@ -1738,34 +1738,10 @@ void doSimulatorReset(void)  // from gui_local.cxx -- TODO merge with fgReInitSu
 
     globals->get_subsystem("flight")->unbind();
 
-    // in case user has changed window size as
-    // restoreInitialState() overwrites these
-    int xsize = fgGetInt("/sim/startup/xsize");
-    int ysize = fgGetInt("/sim/startup/ysize");
-
-    // viewports also needs to be saved/restored as
-    // restoreInitialState() overwrites these
-    SGPropertyNode *guiNode = new SGPropertyNode;
-    SGPropertyNode *cameraNode = new SGPropertyNode;
-    SGPropertyNode *cameraGroupNode = fgGetNode("/sim/rendering/camera-group");
-    copyProperties(cameraGroupNode->getChild("camera"), cameraNode);
-    copyProperties(cameraGroupNode->getChild("gui"), guiNode);
-
     globals->restoreInitialState();
 
     // update our position based on current presets
     fgInitPosition();
-
-    // We don't know how to resize the window, so keep the last values
-    //  for xsize and ysize, and don't use the one set initially
-    fgSetInt("/sim/startup/xsize", xsize);
-    fgSetInt("/sim/startup/ysize", ysize);
-
-    copyProperties(cameraNode, cameraGroupNode->getChild("camera"));
-    copyProperties(guiNode, cameraGroupNode->getChild("gui"));
-
-    delete guiNode;
-    delete cameraNode;
 
     SGTime *t = globals->get_time_params();
     delete t;
@@ -1775,7 +1751,6 @@ void doSimulatorReset(void)  // from gui_local.cxx -- TODO merge with fgReInitSu
     fgReInitSubsystems();
 
     globals->get_tile_mgr()->update(fgGetDouble("/environment/visibility-m"));
-    globals->get_renderer()->resize(xsize, ysize);
     fgSetBool("/sim/signals/reinit", false);
 
     if (!freeze)
