@@ -419,9 +419,11 @@ void FGAIFlightPlan::setLeadDistance(double speed, double bearing,
   
   //lead_distance = turn_radius * sin(leadInAngle * SG_DEGREES_TO_RADIANS); 
   lead_distance = turn_radius * tan((leadInAngle * SG_DEGREES_TO_RADIANS)/2);
-  //  if ((errno == EDOM) || (errno == ERANGE) || lead_distance < 1.0)
-  //  {
-  //  }
+  if (lead_distance > (3*turn_radius)) {
+      // cerr << "Warning: Lead-in distance is large. Inbound = " << inbound
+      //      << ". Outbound = " << outbound << ". Lead in angle = " << leadInAngle  << ". Turn radius = " << turn_radius << endl;
+       lead_distance = 3 * turn_radius;
+  }
 }
 
 void FGAIFlightPlan::setLeadDistance(double distance_ft){
