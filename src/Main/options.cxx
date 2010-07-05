@@ -40,20 +40,12 @@
 #include <iostream>
 #include <string>
 
-#include <plib/ul.h>
-
 #include <simgear/math/sg_random.h>
 #include <simgear/props/props_io.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
-
-// #include <Include/general.hxx>
-// #include <Airports/simple.hxx>
-// #include <Cockpit/cockpit.hxx>
-// #include <FDM/flight.hxx>
-
 #include <Autopilot/route_mgr.hxx>
 #include <GUI/gui.h>
 
