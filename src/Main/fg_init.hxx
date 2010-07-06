@@ -30,6 +30,7 @@
 // forward decls
 class SGPropertyNode;
 class SGTime;
+class SGPath;
 
 // Read in configuration (files and command line optoins) but only set
 // fg_root
@@ -86,6 +87,14 @@ SGTime *fgInitTime();
 // set up a time offset (aka warp) if one is specified
 void fgInitTimeOffset();
 
+/*
+ * Search in the current directory, and in on directory deeper
+ * for <aircraft>-set.xml configuration files and show the aircaft name
+ * and the contents of the<description> tag in a sorted manner.
+ *
+ * @parampath the directory to search for configuration files
+ */
+void fgShowAircraft(const SGPath &path);
 
 #endif // _FG_INIT_HXX
 

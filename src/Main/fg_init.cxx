@@ -57,6 +57,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/interpolator.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/particles.hxx>
@@ -499,68 +500,153 @@ do_options (int argc, char ** argv)
     fgParseArgs(argc, argv);
 }
 
-
-static string fgFindAircraftPath( const SGPath &path, const string &aircraft,
-                                  SGPropertyNode *cache, int depth = 0 )
+template <class T>
+void fgFindAircraftInDir(const SGPath& dirPath, T* obj, bool (T::*pred)(const SGPath& p))
 {
-    const int MAXDEPTH = 1;
-
-    ulDirEnt* dire;
-    ulDir *dirp = ulOpenDir(path.str().c_str());
-    if (dirp == NULL) {
-        cerr << "Unable to open aircraft directory '" << path.str() << '\'' << endl;
-        exit(-1);
+  if (!dirPath.exists()) {
+    SG_LOG(SG_GENERAL, SG_WARN, "fgFindAircraftInDir: no such path:" << dirPath.str());
+    return;
+  }
+  
+  bool recurse = true;
+  simgear::Dir dir(dirPath);
+  simgear::PathList setFiles(dir.children(simgear::Dir::TYPE_FILE, "-set.xml"));
+  simgear::PathList::iterator p;
+  for (p = setFiles.begin(); p != setFiles.end(); ++p) {
+    // check file name ends with -set.xml
+    
+    // if we found a -set.xml at this level, don't recurse any deeper
+    recurse = false;
+    
+    bool done = (obj->*pred)(*p);
+    if (done) {
+      return;
     }
-
-    string result;
-    while ((dire = ulReadDir(dirp)) != NULL) {
-        if (dire->d_isdir) {
-            if (depth > MAXDEPTH)
-                continue;
-
-            if (!strcmp("CVS", dire->d_name) || !strcmp(".", dire->d_name)
-                    || !strcmp("..", dire->d_name) || !strcmp("AI", dire->d_name))
-                continue;
-
-            SGPath next = path;
-            next.append(dire->d_name);
-
-            result = fgFindAircraftPath( next, aircraft, cache, depth + 1 );
-            if ( ! result.empty() )
-                break;
-
-        } else {
-            int len = strlen(dire->d_name);
-            if (len < 9 || strcmp(dire->d_name + len - 8, "-set.xml"))
-                continue;
-
-            // create cache node
-            int i = 0;
-            while (1)
-                if (!cache->getChild("aircraft", i++, false))
-                    break;
-
-            SGPropertyNode *n, *entry = cache->getChild("aircraft", --i, true);
-
-            n = entry->getNode("file", true);
-            n->setStringValue(dire->d_name);
-            n->setAttribute(SGPropertyNode::USERARCHIVE, true);
-
-            n = entry->getNode("path", true);
-            n->setStringValue(path.str().c_str());
-            n->setAttribute(SGPropertyNode::USERARCHIVE, true);
-
-            if ( boost::equals(dire->d_name, aircraft.c_str(), is_iequal()) ) {
-                result = path.str();
-                break;
-            }
-        }
+  } // of -set.xml iteration
+  
+  if (recurse) {
+    simgear::PathList subdirs(dir.children(simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT));
+    for (p = subdirs.begin(); p != subdirs.end(); ++p) {
+      if (p->file() == "CVS") {
+        continue;
+      }
+      
+      fgFindAircraftInDir(*p, obj, pred);
     }
-
-    ulCloseDir(dirp);
-    return result;
+  } // of recursive case
 }
 
+class FindAndCacheAircraft
+{
+public:
+  FindAndCacheAircraft(SGPropertyNode* autoSave)
+  {
+    _cache = autoSave->getNode("sim/startup/path-cache", true);
+  }
+  
+  bool loadAircraft()
+  {
+    std::string aircraft = fgGetString( "/sim/aircraft", "");    
+    if (aircraft.empty()) {
+      SG_LOG(SG_GENERAL, SG_ALERT, "no aircraft specified");
+      return false;
+    }
+    
+    _searchAircraft = aircraft + "-set.xml";
+    if (!checkCache()) {
+      // prepare cache for re-scan
+      SGPropertyNode *n = _cache->getNode("fg-root", true);
+      n->setStringValue(globals->get_fg_root().c_str());
+      n->setAttribute(SGPropertyNode::USERARCHIVE, true);
+      _cache->removeChildren("aircraft");
+      
+      SGPath aircraftDir(globals->get_fg_root());
+      aircraftDir.append("Aircraft");
+
+      fgFindAircraftInDir(aircraftDir, this, &FindAndCacheAircraft::checkAircraft);
+    }
+    
+    if (_foundPath.str().empty()) {
+      SG_LOG(SG_GENERAL, SG_ALERT, "Cannot find specified aircraft: " << aircraft );
+      return false;
+    }
+    
+    SG_LOG(SG_GENERAL, SG_INFO, "Loading aircraft -set file from:" << _foundPath.str());
+    fgSetString( "/sim/aircraft-dir", _foundPath.dir().c_str());
+    if (!_foundPath.exists()) {
+      SG_LOG(SG_GENERAL, SG_ALERT, "Unable to find -set file:" << _foundPath.str());
+      return false;
+    }
+    
+    try {
+      readProperties(_foundPath.str(), globals->get_props());
+    } catch ( const sg_exception &e ) {
+      SG_LOG(SG_INPUT, SG_ALERT, "Error reading aircraft: " << e.getFormattedMessage());
+      return false;
+    }
+    
+    return true;
+  }
+  
+private:
+  bool checkCache()
+  {
+    if (globals->get_fg_root() != _cache->getStringValue("fg-root", "")) {
+      return false; // cache mismatch
+    }
+    
+    vector<SGPropertyNode_ptr> cache = _cache->getChildren("aircraft");
+    for (unsigned int i = 0; i < cache.size(); i++) {
+      const char *name = cache[i]->getStringValue("file", "");
+      if (!boost::equals(_searchAircraft, name, is_iequal())) {
+        continue;
+      }
+      
+      SGPath xml(cache[i]->getStringValue("path", ""));
+      xml.append(name);
+      if (xml.exists()) {
+        _foundPath = xml;
+        return true;
+      } 
+      
+      return false;
+    } // of aircraft in cache iteration
+    
+    return false;
+  }
+  
+  bool checkAircraft(const SGPath& p)
+  {
+    // create cache node
+    int i = 0;
+    while (1) {
+        if (!_cache->getChild("aircraft", i++, false))
+            break;
+    }
+    
+    SGPropertyNode *n, *entry = _cache->getChild("aircraft", --i, true);
+
+    std::string fileName(p.file());
+    n = entry->getNode("file", true);
+    n->setStringValue(fileName);
+    n->setAttribute(SGPropertyNode::USERARCHIVE, true);
+
+    n = entry->getNode("path", true);
+    n->setStringValue(p.dir());
+    n->setAttribute(SGPropertyNode::USERARCHIVE, true);
+
+    if ( boost::equals(fileName, _searchAircraft.c_str(), is_iequal()) ) {
+        _foundPath = p;
+        return true;
+    }
+
+    return false;
+  }
+  
+  std::string _searchAircraft;
+  SGPath _foundPath;
+  SGPropertyNode* _cache;
+};
 
 // Read in configuration (file and command line)
 bool fgInitConfig ( int argc, char **argv ) {
@@ -606,77 +692,22 @@ bool fgInitConfig ( int argc, char **argv ) {
         home->setAttribute(SGPropertyNode::WRITE, false);
 
         config.append( "autosave.xml" );
-        SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << config.str());
-        try {
-            readProperties(config.str(), &autosave, SGPropertyNode::USERARCHIVE);
-        } catch (...) {
-            SG_LOG(SG_INPUT, SG_DEBUG, "First time reading user settings");
+        if (config.exists()) {
+          SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << config.str());
+          try {
+              readProperties(config.str(), &autosave, SGPropertyNode::USERARCHIVE);
+          } catch (sg_exception& e) {
+              SG_LOG(SG_INPUT, SG_WARN, "failed to read user settings:" << e.getMessage()
+                << "(from " << e.getOrigin() << ")");
+          }
         }
-        SG_LOG(SG_INPUT, SG_DEBUG, "Finished Reading user settings");
     }
-    SGPropertyNode *cache_root = autosave.getNode("sim/startup/path-cache", true);
-
-
+    
     // Scan user config files and command line for a specified aircraft.
     fgInitFGAircraft(argc, argv);
-
-    string aircraft = fgGetString( "/sim/aircraft", "" );
-    if ( aircraft.size() > 0 ) {
-        SGPath aircraft_search( globals->get_fg_root() );
-        aircraft_search.append( "Aircraft" );
-
-        string aircraft_set = aircraft + "-set.xml";
-        string result;
-
-        // check if the *-set.xml file is already in the cache
-        if (globals->get_fg_root() == cache_root->getStringValue("fg-root", "")) {
-            vector<SGPropertyNode_ptr> cache = cache_root->getChildren("aircraft");
-            for (unsigned int i = 0; i < cache.size(); i++) {
-                const char *name = cache[i]->getStringValue("file", "");
-                if (boost::equals(aircraft_set, name, is_iequal())) {
-                    const char *path = cache[i]->getStringValue("path", "");
-                    SGPath xml(path);
-                    xml.append(name);
-                    if (xml.exists())
-                        result = path;
-                    break;
-                }
-            }
-        }
-
-        if (result.empty()) {
-            // prepare cache for rescan
-            SGPropertyNode *n = cache_root->getNode("fg-root", true);
-            n->setStringValue(globals->get_fg_root().c_str());
-            n->setAttribute(SGPropertyNode::USERARCHIVE, true);
-            cache_root->removeChildren("aircraft");
-
-            result = fgFindAircraftPath( aircraft_search, aircraft_set, cache_root );
-        }
-
-        if ( !result.empty() ) {
-            fgSetString( "/sim/aircraft-dir", result.c_str() );
-            SGPath full_name( result );
-            full_name.append( aircraft_set );
-
-            SG_LOG(SG_INPUT, SG_INFO, "Reading default aircraft: " << aircraft
-                   << " from " << full_name.str());
-            try {
-                readProperties( full_name.str(), globals->get_props() );
-            } catch ( const sg_exception &e ) {
-                string message = "Error reading default aircraft: ";
-                message += e.getFormattedMessage();
-                SG_LOG(SG_INPUT, SG_ALERT, message);
-                exit(2);
-            }
-        } else {
-            SG_LOG( SG_INPUT, SG_ALERT, "Cannot find specified aircraft: "
-                    << aircraft );
-            return false;
-        }
-
-    } else {
-        SG_LOG( SG_INPUT, SG_ALERT, "No default aircraft specified" );
+    FindAndCacheAircraft f(&autosave);
+    if (!f.loadAircraft()) {
+      return false;
     }
 
     copyProperties(&autosave, globals->get_props());
@@ -1706,4 +1737,115 @@ void doSimulatorReset(void)  // from gui_local.cxx -- TODO merge with fgReInitSu
     if (!freeze)
         master_freeze->setBoolValue(false);
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// helper object to implement the --show-aircraft command.
+// resides here so we can share the fgFindAircraftInDir template above,
+// and hence ensure this command lists exectly the same aircraft as the normal
+// loading path.
+class ShowAircraft 
+{
+public:
+  ShowAircraft()
+  {
+    _minStatus = getNumMaturity(fgGetString("/sim/aircraft-min-status", "all"));
+  }
+  
+  
+  void show(const SGPath& path)
+  {
+    fgFindAircraftInDir(path, this, &ShowAircraft::processAircraft);
+  
+    std::sort(_aircraft.begin(), _aircraft.end(), ciLessLibC());
+    SG_LOG( SG_GENERAL, SG_ALERT, "" ); // To popup the console on Windows
+    cout << "Available aircraft:" << endl;
+    for ( unsigned int i = 0; i < _aircraft.size(); i++ ) {
+        cout << _aircraft[i] << endl;
+    }
+  }
+  
+private:
+  bool processAircraft(const SGPath& path)
+  {
+    SGPropertyNode root;
+    try {
+       readProperties(path.str(), &root);
+    } catch (sg_exception& e) {
+       return false;
+    }
+  
+    int maturity = 0;
+    string descStr("   ");
+    descStr += path.file();
+    
+    SGPropertyNode *node = root.getNode("sim");
+    if (node) {
+      SGPropertyNode* desc = node->getNode("description");
+      // if a status tag is found, read it in
+      if (node->hasValue("status")) {
+        maturity = getNumMaturity(node->getStringValue("status"));
+      }
+      
+      if (desc) {
+        if (descStr.size() <= 27+3) {
+          descStr.append(29+3-descStr.size(), ' ');
+        } else {
+          descStr += '\n';
+          descStr.append( 32, ' ');
+        }
+        descStr += desc->getStringValue();
+      }
+    } // of have 'sim' node
+    
+    if (maturity < _minStatus) {
+      return false;
+    }
+
+    _aircraft.push_back(descStr);
+    return false;
+  }
+
+
+  int getNumMaturity(const char * str) 
+  {
+    // changes should also be reflected in $FG_ROOT/data/options.xml & 
+    // $FG_ROOT/data/Translations/string-default.xml
+    const char* levels[] = {"alpha","beta","early-production","production"}; 
+
+    if (!strcmp(str, "all")) {
+      return 0;
+    }
+
+    for (size_t i=0; i<(sizeof(levels)/sizeof(levels[0]));i++) 
+      if (strcmp(str,levels[i])==0)
+        return i;
+
+    return 0;
+  }
+
+  // recommended in Meyers, Effective STL when internationalization and embedded
+  // NULLs aren't an issue.  Much faster than the STL or Boost lex versions.
+  struct ciLessLibC : public std::binary_function<string, string, bool>
+  {
+    bool operator()(const std::string &lhs, const std::string &rhs) const
+    {
+      return strcasecmp(lhs.c_str(), rhs.c_str()) < 0 ? 1 : 0;
+    }
+  };
+
+  int _minStatus;
+  string_list _aircraft;
+};
+
+void fgShowAircraft(const SGPath &path)
+{
+    ShowAircraft s;
+    s.show(path);
+        
+#ifdef _MSC_VER
+    cout << "Hit a key to continue..." << endl;
+    cin.get();
+#endif
+}
+
 
