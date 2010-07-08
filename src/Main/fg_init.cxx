@@ -1390,7 +1390,6 @@ bool fgInitSubsystems() {
     if ( globals->get_tile_mgr()->init() ) {
         // Load the local scenery data
         double visibility_meters = fgGetDouble("/environment/visibility-m");
-                
         globals->get_tile_mgr()->update( visibility_meters );
     } else {
         SG_LOG( SG_GENERAL, SG_ALERT, "Error in Tile Manager initialization!" );
@@ -1474,7 +1473,7 @@ bool fgInitSubsystems() {
     // Initialize the lighting subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem("lighting", new FGLight);
+    globals->add_subsystem("lighting", new FGLight, SGSubsystemMgr::DISPLAY);
 
     //////////////////////////////////////////////////////////////////////
     // Initialize the 2D cloud subsystem.
@@ -1485,7 +1484,7 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     // Initialize the sound-effects subsystem.
     ////////////////////////////////////////////////////////////////////
-    globals->add_subsystem("voice", new FGVoiceMgr);
+    globals->add_subsystem("voice", new FGVoiceMgr, SGSubsystemMgr::DISPLAY);
 #endif
 
     ////////////////////////////////////////////////////////////////////
@@ -1509,14 +1508,14 @@ bool fgInitSubsystems() {
     // Initialise the AI Model Manager
     ////////////////////////////////////////////////////////////////////
     SG_LOG(SG_GENERAL, SG_INFO, "  AI Model Manager");
-    globals->add_subsystem("ai_model", new FGAIManager);
-    globals->add_subsystem("submodel_mgr", new FGSubmodelMgr);
+    globals->add_subsystem("ai_model", new FGAIManager, SGSubsystemMgr::POST_FDM);
+    globals->add_subsystem("submodel_mgr", new FGSubmodelMgr, SGSubsystemMgr::POST_FDM);
 
 
     // It's probably a good idea to initialize the top level traffic manager
     // After the AI and ATC systems have been initialized properly.
     // AI Traffic manager
-    globals->add_subsystem("Traffic Manager", new FGTrafficManager);
+    globals->add_subsystem("Traffic Manager", new FGTrafficManager, SGSubsystemMgr::POST_FDM);
 
 
     if( fgCockpitInit()) {
