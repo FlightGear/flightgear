@@ -68,13 +68,14 @@ FDMShell::~FDMShell()
 void FDMShell::init()
 {
   _props = globals->get_props();
+  fgSetBool("/sim/fdm-initialized", false);
   createImplementation();
 }
 
 void FDMShell::reinit()
 {
   if (_impl) {
-    fgSetBool("/sim/signals/fdm-initialized", false);
+    fgSetBool("/sim/fdm-initialized", false);
     evil_global_fdm_state = NULL;
     _impl->unbind();
     delete _impl;
@@ -122,6 +123,7 @@ void FDMShell::update(double dt)
         _impl->bind();
         
         evil_global_fdm_state = _impl;
+        fgSetBool("/sim/fdm-initialized", true);
         fgSetBool("/sim/signals/fdm-initialized", true);
     }
   }
