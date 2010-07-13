@@ -36,6 +36,8 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/sky/sky.hxx>
 #include <simgear/screen/colors.hxx>
+#include <simgear/timing/sg_time.hxx>
+#include <simgear/structure/event_mgr.hxx>
 
 #include <Main/main.hxx>
 #include <Main/globals.hxx>
@@ -44,7 +46,38 @@
 #include <Main/viewer.hxx>
 
 #include "light.hxx"
-#include "tmp.hxx"
+#include "sunsolver.hxx"
+
+/**
+ * Map i.e. project a vector onto a plane.
+ * @param normal (in) normal vector for the plane
+ * @param v0 (in) a point on the plane
+ * @param vec (in) the vector to map onto the plane
+ */
+static SGVec3f map_vec_onto_cur_surface_plane(const SGVec3f& normal, 
+					      const SGVec3f& v0, 
+					      const SGVec3f& vec)
+{
+    // calculate a vector "u1" representing the shortest distance from
+    // the plane specified by normal and v0 to a point specified by
+    // "vec".  "u1" represents both the direction and magnitude of
+    // this desired distance.
+
+    // u1 = ( (normal <dot> vec) / (normal <dot> normal) ) * normal
+    SGVec3f u1 = (dot(normal, vec) / dot(normal, normal)) * normal;
+
+    // calculate the vector "v" which is the vector "vec" mapped onto
+    // the plane specified by "normal" and "v0".
+
+    // v = v0 + vec - u1
+    SGVec3f v = v0 + vec - u1;
+    
+    // Calculate the vector "result" which is "v" - "v0" which is a
+    // directional vector pointing from v0 towards v
+
+    // result = v - v0
+    return v - v0;
+}
 
 
 // Constructor
@@ -114,6 +147,9 @@ void FGLight::init () {
     SGPath sky_path = path;
     sky_path.append( "Lighting/sky" );
     _sky_tbl = new SGInterpTable( sky_path.str() );
+    
+    globals->get_event_mgr()->addTask("updateSunPos", this,
+                            &FGLight::updateSunPos, 0.5 );
 }
 
 
@@ -128,8 +164,7 @@ void FGLight::reinit () {
 
     init();
 
-    fgUpdateSunPos();
-
+    updateSunPos();
     update_sky_color();
     update_adj_fog_color();
 }
@@ -188,18 +223,12 @@ void FGLight::unbind () {
 
 
 // update lighting parameters based on current sun position
-void FGLight::update( double dt ) {
-
-    _dt_total += dt;
-    if (_dt_total >= 0.5) {
-        _dt_total -= 0.5;
-        fgUpdateSunPos();
-    }
-
+void FGLight::update( double dt )
+{
     update_adj_fog_color();
 
     if (_prev_sun_angle != _sun_angle) {
-	_prev_sun_angle = _sun_angle;
+        _prev_sun_angle = _sun_angle;
         update_sky_color();
     }
 }
@@ -382,3 +411,101 @@ void FGLight::update_adj_fog_color () {
     gamma_correct_rgb( _sky_color.data(), gamma );
 }
 
+// update the cur_time_params structure with the current sun position
+void FGLight::updateSunPos()
+{
+    SGTime *t = globals->get_time_params();
+    FGViewer *v = globals->get_current_view();
+
+    SG_LOG( SG_EVENT, SG_DEBUG, "  Updating Sun position" );
+    SG_LOG( SG_EVENT, SG_DEBUG, "  Gst = " << t->getGst() );
+
+    double sun_l;
+    double sun_gd_lat;
+    fgSunPositionGST(t->getGst(), &sun_l, &sun_gd_lat);
+    set_sun_lon(sun_l);
+    set_sun_lat(sun_gd_lat);
+    SGVec3d sunpos(SGVec3d::fromGeod(SGGeod::fromRad(sun_l, sun_gd_lat)));
+
+    SG_LOG( SG_EVENT, SG_DEBUG, "    t->cur_time = " << t->get_cur_time() );
+    SG_LOG( SG_EVENT, SG_DEBUG,
+            "    Sun Geodetic lat = " << sun_gd_lat
+            << " Geodetic lat = " << sun_gd_lat );
+
+    // update the sun light vector
+    sun_vec() = SGVec4f(toVec3f(normalize(sunpos)), 0);
+    sun_vec_inv() = - sun_vec();
+
+    // calculate the sun's relative angle to local up
+    SGVec3d viewPos = v->get_view_pos();
+    SGQuatd hlOr = SGQuatd::fromLonLat(SGGeod::fromCart(viewPos));
+    SGVec3f world_up = toVec3f(hlOr.backTransform(-SGVec3d::e3()));
+    SGVec3f nsun = toVec3f(normalize(sunpos));
+    // cout << "nup = " << nup[0] << "," << nup[1] << ","
+    //      << nup[2] << endl;
+    // cout << "nsun = " << nsun[0] << "," << nsun[1] << ","
+    //      << nsun[2] << endl;
+
+    set_sun_angle( acos( dot ( world_up, nsun ) ) );
+    SG_LOG( SG_EVENT, SG_DEBUG, "sun angle relative to current location = "
+            << get_sun_angle() );
+
+    // calculate vector to sun's position on the earth's surface
+    SGVec3d rel_sunpos = sunpos - v->get_view_pos();
+    // vector in cartesian coordinates from current position to the
+    // postion on the earth's surface the sun is directly over
+    SGVec3f to_sun = toVec3f(rel_sunpos);
+    // printf( "Vector to sun = %.2f %.2f %.2f\n",
+    //         v->to_sun[0], v->to_sun[1], v->to_sun[2]);
+
+    // Given a vector from the view position to the point on the
+    // earth's surface the sun is directly over, map into onto the
+    // local plane representing "horizontal".
+
+    // surface direction to go to head towards sun
+    SGVec3f surface_to_sun;
+    SGVec3f view_pos = toVec3f(v->get_view_pos());
+    surface_to_sun = map_vec_onto_cur_surface_plane(world_up, view_pos, to_sun);
+    surface_to_sun = normalize(surface_to_sun);
+    // cout << "(sg) Surface direction to sun is "
+    //   << surface_to_sun[0] << ","
+    //   << surface_to_sun[1] << ","
+    //   << surface_to_sun[2] << endl;
+    // cout << "Should be close to zero = "
+    //   << sgScalarProductVec3(nup, surface_to_sun) << endl;
+
+    // calculate the angle between surface_to_sun and
+    // v->get_surface_east().  We do this so we can sort out the
+    // acos() ambiguity.  I wish I could think of a more efficient
+    // way. :-(
+    SGVec3f surface_east(toVec3f(hlOr.backTransform(SGVec3d::e2())));
+    float east_dot = dot( surface_to_sun, surface_east );
+    // cout << "  East dot product = " << east_dot << endl;
+
+    // calculate the angle between v->surface_to_sun and
+    // v->surface_south.  this is how much we have to rotate the sky
+    // for it to align with the sun
+    SGVec3f surface_south(toVec3f(hlOr.backTransform(-SGVec3d::e1())));
+    float dot_ = dot( surface_to_sun, surface_south );
+    // cout << "  Dot product = " << dot << endl;
+
+    if (dot_ > 1.0) {
+        SG_LOG( SG_ASTRO, SG_INFO,
+                "Dot product  = " << dot_ << " is greater than 1.0" );
+        dot_ = 1.0;
+    }
+    else if (dot_ < -1.0) {
+         SG_LOG( SG_ASTRO, SG_INFO,
+                 "Dot product  = " << dot_ << " is less than -1.0" );
+         dot_ = -1.0;
+     }
+
+    if ( east_dot >= 0 ) {
+        set_sun_rotation( acos(dot_) );
+    } else {
+        set_sun_rotation( -acos(dot_) );
+    }
+    // cout << "  Sky needs to rotate = " << angle << " rads = "
+    //      << angle * SGD_RADIANS_TO_DEGREES << " degrees." << endl;
+
+}

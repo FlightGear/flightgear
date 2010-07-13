@@ -34,8 +34,6 @@
 
 #include <iostream>
 
-#include <plib/netSocket.h>
-
 #include <osg/Camera>
 #include <osg/GraphicsContext>
 #include <osgDB/Registry>
@@ -66,7 +64,7 @@
 #include <Sound/morse.hxx>
 #include <Sound/fg_fx.hxx>
 #include <ATCDCL/ATCmgr.hxx>
-#include <Time/tmp.hxx>
+#include <Time/TimeManager.hxx>
 #include <Environment/environment_mgr.hxx>
 #include <Environment/ephemeris.hxx>
 #include <GUI/new_gui.hxx>
@@ -84,8 +82,6 @@
 #include "WindowSystemAdapter.hxx"
 #include <Main/viewer.hxx>
 
-static double real_delta_time_sec = 0.0;
-double delta_time_sec = 0.0;
 
 using namespace flightgear;
 
@@ -98,10 +94,7 @@ FGGeneral general;
 // our initializations out of the idle callback so that we can get a
 // splash screen up and running right away.
 int idle_state = 0;
-long global_multi_loop;
 
-SGTimeStamp last_time_stamp;
-SGTimeStamp current_time_stamp;
 
 void fgInitSoundManager();
 void fgSetNewSoundDevice(const char *);
@@ -113,8 +106,7 @@ extern int _bootstrap_OSInit;
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
 static void fgMainLoop( void ) {
-    int model_hz = fgGetInt("/sim/model-hz");
-
+    
     static SGConstPropertyNode_ptr longitude
         = fgGetNode("/position/longitude-deg");
     static SGConstPropertyNode_ptr latitude
@@ -127,172 +119,24 @@ static void fgMainLoop( void ) {
         = fgGetNode("/velocities/speed-east-fps");
     static SGConstPropertyNode_ptr vd_fps
         = fgGetNode("/velocities/speed-down-fps");
-    static SGConstPropertyNode_ptr clock_freeze
-        = fgGetNode("/sim/freeze/clock", true);
-    static SGConstPropertyNode_ptr cur_time_override
-        = fgGetNode("/sim/time/cur-time-override", true);
-    static SGConstPropertyNode_ptr max_simtime_per_frame
-        = fgGetNode("/sim/max-simtime-per-frame", true);
+      
     static SGPropertyNode_ptr frame_signal
         = fgGetNode("/sim/signals/frame", true);
 
     frame_signal->fireValueChanged();
     SGCloudLayer::enable_bump_mapping = fgGetBool("/sim/rendering/bump-mapping");
-
-    bool scenery_loaded = fgGetBool("sim/sceneryloaded");
-    bool wait_for_scenery = !(scenery_loaded || fgGetBool("sim/sceneryloaded-override"));
-
-    // Update the elapsed time.
-    static bool first_time = true;
-    if ( first_time ) {
-        last_time_stamp.stamp();
-        first_time = false;
-    }
-
-    double throttle_hz = fgGetDouble("/sim/frame-rate-throttle-hz", 0.0);
-    if ( throttle_hz > 0.0 && !wait_for_scenery ) {
-        // optionally throttle the frame rate (to get consistent frame
-        // rates or reduce cpu usage.
-
-        double frame_us = 1000000.0 / throttle_hz;
-
-#define FG_SLEEP_BASED_TIMING 1
-#if defined(FG_SLEEP_BASED_TIMING)
-        // sleep based timing loop.
-        //
-        // Calling sleep, even usleep() on linux is less accurate than
-        // we like, but it does free up the cpu for other tasks during
-        // the sleep so it is desirable.  Because of the way sleep()
-        // is implemented in consumer operating systems like windows
-        // and linux, you almost always sleep a little longer than the
-        // requested amount.
-        //
-        // To combat the problem of sleeping too long, we calculate the
-        // desired wait time and shorten it by 2000us (2ms) to avoid
-        // [hopefully] over-sleep'ing.  The 2ms value was arrived at
-        // via experimentation.  We follow this up at the end with a
-        // simple busy-wait loop to get the final pause timing exactly
-        // right.
-        //
-        // Assuming we don't oversleep by more than 2000us, this
-        // should be a reasonable compromise between sleep based
-        // waiting, and busy waiting.
-
-        // sleep() will always overshoot by a bit so undersleep by
-        // 2000us in the hopes of never oversleeping.
-        frame_us -= 2000.0;
-        if ( frame_us < 0.0 ) {
-            frame_us = 0.0;
-        }
-        current_time_stamp.stamp();
-        /* Convert to ms */
-        double elapsed_us = (current_time_stamp - last_time_stamp).toUSecs();
-        if ( elapsed_us < frame_us ) {
-            double requested_us = frame_us - elapsed_us;
-            ulMilliSecondSleep ( (int)(requested_us / 1000.0) ) ;
-        }
-#endif
-
-        // busy wait timing loop.
-        //
-        // This yields the most accurate timing.  If the previous
-        // ulMilliSecondSleep() call is omitted this will peg the cpu
-        // (which is just fine if FG is the only app you care about.)
-        current_time_stamp.stamp();
-        SGTimeStamp next_time_stamp = last_time_stamp;
-        next_time_stamp += SGTimeStamp::fromSec(1e-6*frame_us);
-        while ( current_time_stamp < next_time_stamp ) {
-            current_time_stamp.stamp();
-        }
-    } else {
-        // run as fast as the app will go
-        current_time_stamp.stamp();
-    }
-
-    real_delta_time_sec = (current_time_stamp - last_time_stamp).toSecs();
-
-    // Limit the time we need to spend in simulation loops
-    // That means, if the /sim/max-simtime-per-frame value is strictly positive
-    // you can limit the maximum amount of time you will do simulations for
-    // one frame to display. The cpu time spent in simulations code is roughly
-    // at least O(real_delta_time_sec). If this is (due to running debug
-    // builds or valgrind or something different blowing up execution times)
-    // larger than the real time you will no longer get any response
-    // from flightgear. This limits that effect. Just set to property from
-    // your .fgfsrc or commandline ...
-    double dtMax = max_simtime_per_frame->getDoubleValue();
-    if (0 < dtMax && dtMax < real_delta_time_sec)
-        real_delta_time_sec = dtMax;
-
-    SGSubsystemGroup* fdmGroup = 
-      globals->get_subsystem_mgr()->get_group(SGSubsystemMgr::FDM);
-    fdmGroup->set_fixed_update_time(1.0 / model_hz);
-
-    // round the real time down to a multiple of 1/model-hz.
-    // this way all systems are updated the _same_ amount of dt.
-    static double reminder = 0.0;
-    real_delta_time_sec += reminder;
-    global_multi_loop = long(floor(real_delta_time_sec*model_hz));
-    global_multi_loop = SGMisc<long>::max(0, global_multi_loop);
-    reminder = real_delta_time_sec - double(global_multi_loop)/double(model_hz);
-    real_delta_time_sec = double(global_multi_loop)/double(model_hz);
-
-    if (clock_freeze->getBoolValue() || wait_for_scenery) {
-        delta_time_sec = 0;
-    } else {
-        delta_time_sec = real_delta_time_sec;
-    }
-    last_time_stamp = current_time_stamp;
-    globals->inc_sim_time_sec( delta_time_sec );
-
-    // These are useful, especially for Nasal scripts.
-    fgSetDouble("/sim/time/delta-realtime-sec", real_delta_time_sec);
-    fgSetDouble("/sim/time/delta-sec", delta_time_sec);
-
-#ifdef FANCY_FRAME_COUNTER
-    int i;
-    double accum;
-#else
-    static time_t last_time = 0;
-    static int frames = 0;
-#endif // FANCY_FRAME_COUNTER
-
-    SGTime *t = globals->get_time_params();
-
+    
     SG_LOG( SG_ALL, SG_DEBUG, "Running Main Loop");
     SG_LOG( SG_ALL, SG_DEBUG, "======= ==== ====");
-
-    // update "time"
-    static bool last_clock_freeze = false;
-
-    if ( clock_freeze->getBoolValue() ) {
-        // clock freeze requested
-        if ( cur_time_override->getLongValue() == 0 ) {
-            fgSetLong( "/sim/time/cur-time-override", t->get_cur_time() );
-            globals->set_warp( 0 );
-        }
-    } else {
-        // no clock freeze requested
-        if ( last_clock_freeze == true ) {
-            // clock just unfroze, let's set warp as the difference
-            // between frozen time and current time so we don't get a
-            // time jump (and corresponding sky object and lighting
-            // jump.)
-            globals->set_warp( cur_time_override->getLongValue() - time(NULL) );
-            fgSetLong( "/sim/time/cur-time-override", 0 );
-        }
-        if ( globals->get_warp_delta() != 0 ) {
-            globals->inc_warp( globals->get_warp_delta() );
-        }
-    }
-
-    last_clock_freeze = clock_freeze->getBoolValue();
-
-    t->update( longitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
-               latitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
-               cur_time_override->getLongValue(),
-               globals->get_warp() );
-
+    
+    
+  // update "time"
+    double sim_dt, real_dt;
+    TimeManager* timeMgr = (TimeManager*) globals->get_subsystem("time");
+    // compute simulated time (allowing for pause, warp, etc) and
+    // real elapsed time
+    timeMgr->computeTimeDeltas(sim_dt, real_dt);
+    
     if (globals->get_warp_delta() != 0) {
         FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
         l->update( 0.5 );
@@ -306,36 +150,6 @@ static void fgMainLoop( void ) {
                                 altitude->getDoubleValue() * SG_FEET_TO_METER,
                                 globals->get_time_params()->getJD() );
 
-    // Calculate frame rate average
-#ifdef FANCY_FRAME_COUNTER
-    /* old fps calculation */
-    if ( elapsed > 0 ) {
-        double tmp;
-        accum = 0.0;
-        for ( i = FG_FRAME_RATE_HISTORY - 2; i >= 0; i-- ) {
-            tmp = general.get_frame(i);
-            accum += tmp;
-            // printf("frame[%d] = %.2f\n", i, g->frames[i]);
-            general.set_frame(i+1,tmp);
-        }
-        tmp = 1000000.0 / (float)elapsed;
-        general.set_frame(0,tmp);
-        // printf("frame[0] = %.2f\n", general.frames[0]);
-        accum += tmp;
-        general.set_frame_rate(accum / (float)FG_FRAME_RATE_HISTORY);
-        // printf("ave = %.2f\n", general.frame_rate);
-    }
-#else
-    if ( (t->get_cur_time() != last_time) && (last_time > 0) ) {
-        general.set_frame_rate( frames );
-        fgSetInt("/sim/frame-rate", frames);
-        SG_LOG( SG_ALL, SG_DEBUG,
-                "--> Frame rate is = " << general.get_frame_rate() );
-        frames = 0;
-    }
-    last_time = t->get_cur_time();
-    ++frames;
-#endif
 
     // Update any multiplayer's network queues, the AIMultiplayer
     // implementation is an AI model and depends on that
@@ -344,11 +158,11 @@ static void fgMainLoop( void ) {
 #if ENABLE_ATCDCL  
     // Run ATC subsystem
     if (fgGetBool("/sim/atc/enabled"))
-        globals->get_ATC_mgr()->update(delta_time_sec);
+        globals->get_ATC_mgr()->update(sim_dt);
 #endif  
     
-    globals->get_subsystem_mgr()->update(delta_time_sec);
-    globals->get_aircraft_model()->update(delta_time_sec);
+    globals->get_subsystem_mgr()->update(sim_dt);
+    globals->get_aircraft_model()->update(sim_dt);
     
     //
     // Tile Manager updates - see if we need to load any new scenery tiles.
@@ -364,14 +178,14 @@ static void fgMainLoop( void ) {
     globals->get_tile_mgr()->update(geodViewPos, visibility_meters);
 
     // run Nasal's settimer() loops right before the view manager
-    globals->get_event_mgr()->update(delta_time_sec);
+    globals->get_event_mgr()->update(sim_dt);
 
     // pick up model coordidnates that Nasal code may have set relative to the
     // aircraft's
-    globals->get_model_mgr()->update(delta_time_sec);
+    globals->get_model_mgr()->update(sim_dt);
 
     // update the view angle as late as possible, but before sound calculations
-    globals->get_viewmgr()->update(real_delta_time_sec);
+    globals->get_viewmgr()->update(real_dt);
 
     // Update the sound manager last so it can use the CPU while the GPU
     // is processing the scenery (doubled the frame-rate for me) -EMH-
@@ -407,13 +221,13 @@ static void fgMainLoop( void ) {
         if (smgr_enabled == true) {
             static SGPropertyNode *volume = fgGetNode("/sim/sound/volume");
             smgr->set_volume(volume->getFloatValue());
-            smgr->update(delta_time_sec);
+            smgr->update(sim_dt);
         }
     }
 #endif
 
     // END Tile Manager udpates
-
+    bool scenery_loaded = fgGetBool("sim/sceneryloaded");
     if (!scenery_loaded && globals->get_tile_mgr()->isSceneryLoaded()
         && fgGetBool("sim/fdm-initialized")) {
         fgSetBool("sim/sceneryloaded",true);
@@ -554,9 +368,10 @@ static void fgIdleFunction ( void ) {
         fgInitPosition();
         fgInitTowerLocationListener();
 
-        SGTime *t = fgInitTime();
-        globals->set_time_params( t );
-
+        TimeManager* t = new TimeManager;
+        globals->add_subsystem("time", t, SGSubsystemMgr::INIT);
+        t->init(); // need to init now, not during initSubsystems
+        
         // Do some quick general initializations
         if( !fgInitGeneral()) {
             SG_LOG( SG_GENERAL, SG_ALERT,
@@ -625,7 +440,7 @@ static void fgIdleFunction ( void ) {
         // Initialize the sky
 
         Ephemeris* eph = new Ephemeris;
-        globals->add_subsystem("ephmeris", eph);
+        globals->add_subsystem("ephemeris", eph);
         eph->init(); // FIXME - remove this once SGSky code below is also a subsystem
         eph->bind();
 
@@ -721,10 +536,7 @@ static void fgIdleFunction ( void ) {
 
     } else if ( idle_state == 8 ) {
         idle_state = 1000;
-        // Initialize the time offset (warp) after fgInitSubsystem
-        // (which initializes the lighting interpolation tables.)
-        fgInitTimeOffset();
-
+        
         // setup OpenGL view parameters
         globals->get_renderer()->init();
 

@@ -49,11 +49,14 @@ void Ephemeris::init()
   ephem_data_path.append("Astro");
   _impl = new SGEphemeris(ephem_data_path.c_str());
   globals->set_ephem(_impl);
+  
+  _latProp = fgGetNode("/position/latitude-deg", true);
+  update(0.0);
 }
 
 void Ephemeris::postinit()
 {
-  update(0.0);
+  
 }
 
 static void tieStar(const char* prop, Star* s, double (Star::*getter)() const)
@@ -63,8 +66,6 @@ static void tieStar(const char* prop, Star* s, double (Star::*getter)() const)
 
 void Ephemeris::bind()
 {
-  _latProp = fgGetNode("/position/latitude-deg", true);
-  
   tieStar("/ephemeris/sun/xs", _impl->get_sun(), &Star::getxs);
   tieStar("/ephemeris/sun/ys", _impl->get_sun(), &Star::getys);
   tieStar("/ephemeris/sun/ze", _impl->get_sun(), &Star::getze);

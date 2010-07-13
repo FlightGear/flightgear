@@ -37,7 +37,6 @@
 #include <Scripting/NasalSys.hxx>
 #include <Sound/sample_queue.hxx>
 #include <Time/sunsolver.hxx>
-#include <Time/tmp.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"

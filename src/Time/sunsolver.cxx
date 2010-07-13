@@ -37,7 +37,6 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 
-#include "tmp.hxx"
 #include "sunsolver.hxx"
 
 
