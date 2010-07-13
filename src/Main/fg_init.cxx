@@ -62,8 +62,6 @@
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/particles.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
-#include <simgear/timing/sg_time.hxx>
-#include <simgear/timing/lowleveltime.h>
 
 #include <Aircraft/controls.hxx>
 #include <Aircraft/replay.hxx>
@@ -107,8 +105,6 @@
 #include <Sound/voice.hxx>
 #include <Systems/system_mgr.hxx>
 #include <Time/light.hxx>
-#include <Time/sunsolver.hxx>
-#include <Time/tmp.hxx>
 #include <Traffic/TrafficMgr.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
 #include <FDM/fdm_shell.hxx>
@@ -1272,140 +1268,6 @@ void fgInitView() {
   globals->get_viewmgr()->update(0);
 }
 
-
-SGTime *fgInitTime() {
-    // Initialize time
-    static const SGPropertyNode *longitude
-        = fgGetNode("/position/longitude-deg");
-    static const SGPropertyNode *latitude
-        = fgGetNode("/position/latitude-deg");
-    static const SGPropertyNode *cur_time_override
-        = fgGetNode("/sim/time/cur-time-override", true);
-
-    SGPath zone( globals->get_fg_root() );
-    zone.append( "Timezone" );
-    SGTime *t = new SGTime( longitude->getDoubleValue()
-                              * SGD_DEGREES_TO_RADIANS,
-                            latitude->getDoubleValue()
-                              * SGD_DEGREES_TO_RADIANS,
-                            zone.str(),
-                            cur_time_override->getLongValue() );
-
-    globals->set_warp_delta( 0 );
-
-    t->update( 0.0, 0.0,
-               cur_time_override->getLongValue(),
-               globals->get_warp() );
-
-    return t;
-}
-
-
-// set up a time offset (aka warp) if one is specified
-void fgInitTimeOffset() {
-    static const SGPropertyNode *longitude
-        = fgGetNode("/position/longitude-deg");
-    static const SGPropertyNode *latitude
-        = fgGetNode("/position/latitude-deg");
-    static const SGPropertyNode *cur_time_override
-        = fgGetNode("/sim/time/cur-time-override", true);
-
-    // Handle potential user specified time offsets
-    int orig_warp = globals->get_warp();
-    SGTime *t = globals->get_time_params();
-    time_t cur_time = t->get_cur_time();
-    time_t currGMT = sgTimeGetGMT( gmtime(&cur_time) );
-    time_t systemLocalTime = sgTimeGetGMT( localtime(&cur_time) );
-    time_t aircraftLocalTime = 
-        sgTimeGetGMT( fgLocaltime(&cur_time, t->get_zonename() ) );
-    
-    // Okay, we now have several possible scenarios
-    int offset = fgGetInt("/sim/startup/time-offset");
-    string offset_type = fgGetString("/sim/startup/time-offset-type");
-
-    int warp = 0;
-    if ( offset_type == "real" ) {
-        warp = 0;
-    } else if ( offset_type == "dawn" ) {
-        warp = fgTimeSecondsUntilSunAngle( cur_time,
-                                           longitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           latitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           90.0, true ); 
-    } else if ( offset_type == "morning" ) {
-        warp = fgTimeSecondsUntilSunAngle( cur_time,
-                                           longitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           latitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           75.0, true ); 
-    } else if ( offset_type == "noon" ) {
-        warp = fgTimeSecondsUntilSunAngle( cur_time,
-                                           longitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           latitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           0.0, true ); 
-    } else if ( offset_type == "afternoon" ) {
-        warp = fgTimeSecondsUntilSunAngle( cur_time,
-                                           longitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           latitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           60.0, false ); 
-     } else if ( offset_type == "dusk" ) {
-        warp = fgTimeSecondsUntilSunAngle( cur_time,
-                                           longitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           latitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           90.0, false ); 
-     } else if ( offset_type == "evening" ) {
-        warp = fgTimeSecondsUntilSunAngle( cur_time,
-                                           longitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           latitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           100.0, false ); 
-    } else if ( offset_type == "midnight" ) {
-        warp = fgTimeSecondsUntilSunAngle( cur_time,
-                                           longitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           latitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           180.0, false ); 
-    } else if ( offset_type == "system-offset" ) {
-        warp = offset;
-	orig_warp = 0;
-    } else if ( offset_type == "gmt-offset" ) {
-        warp = offset - (currGMT - systemLocalTime);
-	orig_warp = 0;
-    } else if ( offset_type == "latitude-offset" ) {
-        warp = offset - (aircraftLocalTime - systemLocalTime);
-	orig_warp = 0;
-    } else if ( offset_type == "system" ) {
-      warp = offset - (systemLocalTime - currGMT) - cur_time;
-    } else if ( offset_type == "gmt" ) {
-        warp = offset - cur_time;
-    } else if ( offset_type == "latitude" ) {
-        warp = offset - (aircraftLocalTime - currGMT)- cur_time; 
-    } else {
-        SG_LOG( SG_GENERAL, SG_ALERT,
-                "FG_TIME::Unsupported offset type " << offset_type );
-        exit( -1 );
-    }
-    globals->set_warp( orig_warp + warp );
-    t->update( longitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
-               latitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
-               cur_time_override->getLongValue(),
-               globals->get_warp() );
-
-    SG_LOG( SG_GENERAL, SG_INFO, "After fgInitTimeOffset(): warp = " 
-            << globals->get_warp() );
-}
-
-
 // This is the top level init routine which calls all the other
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.
@@ -1527,17 +1389,6 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
 
     globals->add_subsystem("gui", new NewGUI, SGSubsystemMgr::INIT);
-
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the local time subsystem.
-    ////////////////////////////////////////////////////////////////////
-
-    // update the current timezone each 30 minutes
-    globals->get_event_mgr()->addTask( "fgUpdateLocalTime()",
-                                       &fgUpdateLocalTime, 30*60 );
-    fgInitTimeOffset();		// the environment subsystem needs this
-
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the lighting subsystem.
@@ -1714,10 +1565,7 @@ void fgReInitSubsystems()
 
     globals->get_controls()->reset_all();
 
-    fgUpdateLocalTime();
-
-    // re-init to proper time of day setting
-    fgInitTimeOffset();
+    globals->get_subsystem("time")->reinit();
 
     if ( !freeze ) {
         fgSetBool("/sim/freeze/master", false);
@@ -1742,11 +1590,6 @@ void doSimulatorReset(void)  // from gui_local.cxx -- TODO merge with fgReInitSu
 
     // update our position based on current presets
     fgInitPosition();
-
-    SGTime *t = globals->get_time_params();
-    delete t;
-    t = fgInitTime();
-    globals->set_time_params(t);
 
     fgReInitSubsystems();
 
