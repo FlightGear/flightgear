@@ -427,7 +427,7 @@ static void fgMainLoop( void ) {
     // END Tile Manager udpates
 
     if (!scenery_loaded && globals->get_tile_mgr()->isSceneryLoaded()
-        && fgGetBool("sim/signals/fdm-initialized")) {
+        && fgGetBool("sim/fdm-initialized")) {
         fgSetBool("sim/sceneryloaded",true);
         if (fgGetBool("/sim/sound/working")) {
             globals->get_soundmgr()->activate();

@@ -163,7 +163,7 @@ void FGReplay::update( double dt ) {
     //FGProps2NetFDM( &f, false );
 
     // sanity check, don't collect data if FDM data isn't good
-    if (!fgGetBool("/sim/signals/fdm-initialized", false)) {
+    if (!fgGetBool("/sim/fdm-initialized", false)) {
         return;
     }
     
