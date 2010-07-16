@@ -45,7 +45,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FCSFUNCTION "$Id$"
+#define ID_FCSFUNCTION "$Id: FGFCSFunction.h,v 1.7 2009/10/02 10:30:09 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -105,7 +105,7 @@ a function (from an aero specification):
 </function>
 @endcode
 
-    @version $Id$
+    @version $Id: FGFCSFunction.h,v 1.7 2009/10/02 10:30:09 jberndt Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

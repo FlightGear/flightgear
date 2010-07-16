@@ -44,7 +44,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_NOZZLE "$Id$";
+#define ID_NOZZLE "$Id: FGNozzle.h,v 1.8 2009/10/26 03:49:58 jberndt Exp $";
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -75,7 +75,7 @@ CLASS DOCUMENTATION
 
     All parameters MUST be specified.  
     @author Jon S. Berndt
-    @version $Id$
+    @version $Id: FGNozzle.h,v 1.8 2009/10/26 03:49:58 jberndt Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

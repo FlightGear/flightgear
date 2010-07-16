@@ -41,7 +41,6 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGLGear.h"
-#include "FGState.h"
 #include "FGGroundReactions.h"
 #include "FGFCS.h"
 #include "FGAuxiliary.h"
@@ -62,7 +61,7 @@ DEFINITIONS
 GLOBAL DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-static const char *IdSrc = "$Id$";
+static const char *IdSrc = "$Id: FGLGear.cpp,v 1.74 2010/05/18 10:54:14 jberndt Exp $";
 static const char *IdHdr = ID_LGEAR;
 
 // Body To Structural (body frame is rotated 180 deg about Y and lengths are given in
@@ -76,7 +75,8 @@ CLASS IMPLEMENTATION
 FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number) :
   FGForce(fdmex),
   GearNumber(number),
-  SteerAngle(0.0)
+  SteerAngle(0.0),
+  Castered(false)
 {
   Element *force_table=0;
   Element *dampCoeff=0;
@@ -202,7 +202,7 @@ FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number) :
 
   if      (sSteerType == "STEERABLE") eSteerType = stSteer;
   else if (sSteerType == "FIXED"    ) eSteerType = stFixed;
-  else if (sSteerType == "CASTERED" ) eSteerType = stCaster;
+  else if (sSteerType == "CASTERED" ) {eSteerType = stCaster; Castered = true;}
   else if (sSteerType.empty()       ) {eSteerType = stFixed;
                                        sSteerType = "FIXED (defaulted)";}
   else {
@@ -223,15 +223,14 @@ FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number) :
     }
   }
 
-  State       = fdmex->GetState();
   Aircraft    = fdmex->GetAircraft();
   Propagate   = fdmex->GetPropagate();
   Auxiliary   = fdmex->GetAuxiliary();
   FCS         = fdmex->GetFCS();
   MassBalance = fdmex->GetMassBalance();
 
-  LongForceLagFilterCoeff = 1/State->Getdt(); // default longitudinal force filter coefficient
-  LatForceLagFilterCoeff  = 1/State->Getdt(); // default lateral force filter coefficient
+  LongForceLagFilterCoeff = 1/fdmex->GetDeltaT(); // default longitudinal force filter coefficient
+  LatForceLagFilterCoeff  = 1/fdmex->GetDeltaT(); // default lateral force filter coefficient
 
   Element* force_lag_filter_elem = el->FindElement("force_lag_filter");
   if (force_lag_filter_elem) {
@@ -243,17 +242,17 @@ FGLGear::FGLGear(Element* el, FGFDMExec* fdmex, int number) :
     }
   }
 
-  LongForceFilter = Filter(LongForceLagFilterCoeff, State->Getdt());
-  LatForceFilter = Filter(LatForceLagFilterCoeff, State->Getdt());
+  LongForceFilter = Filter(LongForceLagFilterCoeff, fdmex->GetDeltaT());
+  LatForceFilter = Filter(LatForceLagFilterCoeff, fdmex->GetDeltaT());
 
-  WheelSlipLagFilterCoeff = 1/State->Getdt();
+  WheelSlipLagFilterCoeff = 1/fdmex->GetDeltaT();
 
   Element *wheel_slip_angle_lag_elem = el->FindElement("wheel_slip_filter");
   if (wheel_slip_angle_lag_elem) {
     WheelSlipLagFilterCoeff = wheel_slip_angle_lag_elem->GetDataAsNumber();
   }
   
-  WheelSlipFilter = Filter(WheelSlipLagFilterCoeff, State->Getdt());
+  WheelSlipFilter = Filter(WheelSlipLagFilterCoeff, fdmex->GetDeltaT());
 
   GearUp = false;
   GearDown = true;
@@ -307,8 +306,8 @@ FGLGear::~FGLGear()
 
 FGColumnVector3& FGLGear::GetBodyForces(void)
 {
-  double t = fdmex->GetState()->Getsim_time();
-  dT = State->Getdt()*fdmex->GetGroundReactions()->GetRate();
+  double t = fdmex->GetSimTime();
+  dT = fdmex->GetDeltaT()*fdmex->GetGroundReactions()->GetRate();
 
   vFn.InitMatrix();
 
@@ -324,7 +323,7 @@ FGColumnVector3& FGLGear::GetBodyForces(void)
     // Compute the height of the theoretical location of the wheel (if strut is not compressed) with
     // respect to the ground level
     double height = fdmex->GetGroundCallback()->GetAGLevel(t, gearLoc, contact, normal, cvel);
-    vGroundNormal = -1. * Propagate->GetTec2b() * normal;
+    vGroundNormal = Propagate->GetTec2b() * normal;
 
     // The height returned above is the AGL and is expressed in the Z direction of the local
     // coordinate frame. We now need to transform this height in actual compression of the strut (BOGEY)
@@ -335,7 +334,7 @@ FGColumnVector3& FGLGear::GetBodyForces(void)
       compressLength = verticalZProj > 0.0 ? -height / verticalZProj : 0.0;
       break;
     case ctSTRUCTURE:
-      verticalZProj = (Propagate->GetTec2l()*normal)(eZ);
+      verticalZProj = -(Propagate->GetTec2l()*normal)(eZ);
       compressLength = fabs(verticalZProj) > 0.0 ? -height / verticalZProj : 0.0;
       break;
     }
@@ -516,7 +515,13 @@ void FGLGear::ComputeSteeringAngle(void)
     SteerAngle = 0.0;
     break;
   case stCaster:
-    SteerAngle = atan2(vWhlVelVec(eY), fabs(vWhlVelVec(eX)));
+    if (!Castered)
+      SteerAngle = degtorad * FCS->GetSteerPosDeg(GearNumber);
+    else {
+      // Check that the speed is non-null otherwise use the current angle
+      if (vWhlVelVec.Magnitude(eX,eY) > 1E-3)
+        SteerAngle = atan2(vWhlVelVec(eY), fabs(vWhlVelVec(eX)));
+    }
     break;
   default:
     cerr << "Improper steering type membership detected for this gear." << endl;
@@ -571,7 +576,7 @@ void FGLGear::InitializeReporting(void)
 
 void FGLGear::ReportTakeoffOrLanding(void)
 {
-  double deltaT = State->Getdt()*fdmex->GetGroundReactions()->GetRate();
+  double deltaT = fdmex->GetDeltaT()*fdmex->GetGroundReactions()->GetRate();
 
   if (FirstContact)
     LandingDistanceTraveled += Auxiliary->GetVground()*deltaT;
@@ -608,10 +613,10 @@ void FGLGear::CrashDetect(void)
   if ( (compressLength > 500.0 ||
       vFn.Magnitude() > 100000000.0 ||
       GetMoments().Magnitude() > 5000000000.0 ||
-      SinkRate > 1.4666*30 ) && !State->IntegrationSuspended())
+      SinkRate > 1.4666*30 ) && !fdmex->IntegrationSuspended())
   {
     PutMessage("Crash Detected: Simulation FREEZE.");
-    State->SuspendIntegration();
+    fdmex->SuspendIntegration();
   }
 }
 
@@ -760,8 +765,10 @@ void FGLGear::bind(void)
     fdmex->GetPropertyManager()->Tie( property_name.c_str(), &staticFCoeff );
 
     if (eSteerType == stCaster) {
-      property_name = base_property_name + "/steering-angle-rad";
-      fdmex->GetPropertyManager()->Tie( property_name.c_str(), &SteerAngle );
+      property_name = base_property_name + "/steering-angle-deg";
+      fdmex->GetPropertyManager()->Tie( property_name.c_str(), this, &FGLGear::GetSteerAngleDeg );
+      property_name = base_property_name + "/castered";
+      fdmex->GetPropertyManager()->Tie( property_name.c_str(), &Castered);
     }
   }
 
@@ -780,7 +787,7 @@ void FGLGear::Report(ReportType repType)
   switch(repType) {
   case erLand:
     cout << endl << "Touchdown report for " << name << " (WOW at time: "
-         << fdmex->GetState()->Getsim_time() << " seconds)" << endl;
+         << fdmex->GetSimTime() << " seconds)" << endl;
     cout << "  Sink rate at contact:  " << SinkRate                << " fps,    "
                                 << SinkRate*0.3048          << " mps"     << endl;
     cout << "  Contact ground speed:  " << GroundSpeed*.5925       << " knots,  "
@@ -795,7 +802,7 @@ void FGLGear::Report(ReportType repType)
     break;
   case erTakeoff:
     cout << endl << "Takeoff report for " << name << " (Liftoff at time: "
-         << fdmex->GetState()->Getsim_time() << " seconds)" << endl;
+        << fdmex->GetSimTime() << " seconds)" << endl;
     cout << "  Distance traveled:                " << TakeoffDistanceTraveled
          << " ft,     " << TakeoffDistanceTraveled*0.3048  << " meters"  << endl;
     cout << "  Distance traveled (over 50'):     " << TakeoffDistanceTraveled50ft

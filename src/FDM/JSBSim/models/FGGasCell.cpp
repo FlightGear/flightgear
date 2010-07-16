@@ -53,7 +53,7 @@ using std::max;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id$";
+static const char *IdSrc = "$Id: FGGasCell.cpp,v 1.12 2009/10/24 22:59:30 jberndt Exp $";
 static const char *IdHdr = ID_GASCELL;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -43,7 +43,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FILTER "$Id$"
+#define ID_FILTER "$Id: FGFilter.h,v 1.12 2009/10/24 22:59:30 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -228,7 +228,7 @@ is so that the last component in a "string" can copy its value to the appropriat
 output, such as the elevator, or speedbrake, etc.
 
 @author Jon S. Berndt
-@version $Revision$
+@version $Revision: 1.12 $
 
 */
 

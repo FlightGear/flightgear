@@ -40,7 +40,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_XMLPARSE "$Id$"
+#define ID_XMLPARSE "$Id: FGXMLParse.h,v 1.7 2009/10/24 22:59:30 jberndt Exp $"
 #define VALID_CHARS """`!@#$%^&*()_+`1234567890-={}[];':,.<>/?abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -57,7 +57,7 @@ CLASS DOCUMENTATION
 
 /** Encapsulates an XML parser based on the EasyXML parser from the SimGear library.
     @author Jon S. Berndt
-    @version $Id$
+    @version $Id: FGXMLParse.h,v 1.7 2009/10/24 22:59:30 jberndt Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

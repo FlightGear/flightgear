@@ -60,7 +60,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FDMEXEC "$Id$"
+#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.52 2010/07/04 13:50:21 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -169,7 +169,7 @@ CLASS DOCUMENTATION
                                 property actually maps toa function call of DoTrim().
 
     @author Jon S. Berndt
-    @version $Revision$
+    @version $Revision: 1.52 $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -270,23 +270,23 @@ public:
   /** Loads a script
       @param Script the full path name and file name for the script to be loaded.
       @return true if successfully loadsd; false otherwise. */
-  bool LoadScript(string Script);
+  bool LoadScript(string Script, double deltaT);
 
   /** Sets the path to the engine config file directories.
       @param path path to the directory under which engine config
       files are kept, for instance "engine"  */
-  bool SetEnginePath(string path)   { EnginePath = path; return true; }
+  bool SetEnginePath(string path)   { EnginePath = RootDir + path; return true; }
 
   /** Sets the path to the aircraft config file directories.
       @param path path to the aircraft directory. For instance:
       "aircraft". Under aircraft, then, would be directories for various
       modeled aircraft such as C172/, x15/, etc.  */
-  bool SetAircraftPath(string path) { AircraftPath = path; return true; }
+  bool SetAircraftPath(string path) { AircraftPath = RootDir + path; return true; }
   
   /** Sets the path to the systems config file directories.
       @param path path to the directory under which systems config
       files are kept, for instance "systems"  */
-  bool SetSystemsPath(string path)   { SystemsPath = path; return true; }
+  bool SetSystemsPath(string path)   { SystemsPath = RootDir + path; return true; }
   
   /// @name Top-level executive State and Model retrieval mechanism
   //@{
@@ -318,8 +318,6 @@ public:
   inline FGInput* GetInput(void)              {return Input;}
   /// Returns the FGGroundCallback pointer.
   inline FGGroundCallback* GetGroundCallback(void) {return GroundCallback;}
-  /// Returns the FGState pointer.
-  inline FGState* GetState(void)              {return State;}
   /// Retrieves the script object
   inline FGScript* GetScript(void) {return Script;}
   // Returns a pointer to the FGInitialCondition object
@@ -351,19 +349,19 @@ public:
 
   /// Returns the model name.
   string GetModelName(void) { return modelName; }
-
+/*
   /// Returns the current time.
   double GetSimTime(void);
 
   /// Returns the current frame time (delta T).
   double GetDeltaT(void);
-  
+*/  
   /// Returns a pointer to the property manager object.
   FGPropertyManager* GetPropertyManager(void);
   /// Returns a vector of strings representing the names of all loaded models (future)
   vector <string> EnumerateFDMs(void);
   /// Gets the number of child FDMs.
-  int GetFDMCount(void) {return ChildFDMList.size();}
+  int GetFDMCount(void) {return (int)ChildFDMList.size();}
   /// Gets a particular child FDM.
   childData* GetChildFDM(int i) {return ChildFDMList[i];}
   /// Marks this instance of the Exec object as a "child" object.
@@ -454,6 +452,8 @@ public:
   // Print the contents of the property catalog for the loaded aircraft.
   void PrintPropertyCatalog(void);
 
+  vector<string>& GetPropertyCatalog(void) {return PropertyCatalog;}
+
   /// Use the MSIS atmosphere model.
   void UseAtmosphereMSIS(void);
 
@@ -465,12 +465,61 @@ public:
   void SetTrimMode(int mode){ ta_mode = mode; }
   int GetTrimMode(void) const { return ta_mode; }
 
+  /// Returns the cumulative simulation time in seconds.
+  double GetSimTime(void) const { return sim_time; }
+
+  /// Returns the simulation delta T.
+  double GetDeltaT(void) {return dT;}
+
+  /// Suspends the simulation and sets the delta T to zero.
+  void SuspendIntegration(void) {saved_dT = dT; dT = 0.0;}
+
+  /// Resumes the simulation by resetting delta T to the correct value.
+  void ResumeIntegration(void)  {dT = saved_dT;}
+
+  /** Returns the simulation suspension state.
+      @return true if suspended, false if executing  */
+  bool IntegrationSuspended(void) {return dT == 0.0;}
+
+  /** Sets the current sim time.
+      @param cur_time the current time
+      @return the current simulation time.      */
+  double Setsim_time(double cur_time) {
+    sim_time = cur_time;
+    return sim_time;
+  }
+
+  /** Sets the integration time step for the simulation executive.
+      @param delta_t the time step in seconds.     */
+  void Setdt(double delta_t) { dT = delta_t; }
+
+  /** Sets the root directory where JSBSim starts looking for its system directories.
+      @param rootDir the string containing the root directory. */
+  void SetRootDir(string rootDir) {RootDir = rootDir;}
+
+  /** Retrieves teh Root Directory.
+      @return the string representing the root (base) JSBSim directory. */
+  string GetRootDir(void) const {return RootDir;}
+
+  /** Increments the simulation time.
+      @return the new simulation time.     */
+  double IncrTime(void) {
+    sim_time += dT;
+    return sim_time;
+  }
+
+  /** Retrieves the current debug level setting. */
+  int GetDebugLevel(void) const {return debug_lvl;};
+
 private:
   static unsigned int FDMctr;
   int Error;
   unsigned int Frame;
   unsigned int IdFDM;
   unsigned short Terminate;
+  double dT;
+  double saved_dT;
+  double sim_time;
   bool holding;
   bool Constructing;
   bool modelLoaded;
@@ -482,6 +531,7 @@ private:
   string SystemsPath;
   string CFGVersion;
   string Release;
+  string RootDir;
 
   bool trim_status;
   int ta_mode;
@@ -489,7 +539,6 @@ private:
   static FGPropertyManager *master;
 
   FGGroundCallback*   GroundCallback;
-  FGState*            State;
   FGAtmosphere*       Atmosphere;
   FGFCS*              FCS;
   FGPropulsion*       Propulsion;
@@ -521,6 +570,7 @@ private:
   void ResetToInitialConditions(int mode);
   bool Allocate(void);
   bool DeAllocate(void);
+  void Initialize(FGInitialCondition *FGIC);
 
   void Debug(int from);
 };

@@ -40,16 +40,18 @@ INCLUDES
 
 #include "FGMassBalance.h"
 #include "FGPropulsion.h"
+#include "propulsion/FGTank.h"
 #include "FGBuoyantForces.h"
 #include "input_output/FGPropertyManager.h"
 #include <iostream>
+#include <iomanip>
 #include <cstdlib>
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id$";
+static const char *IdSrc = "$Id: FGMassBalance.cpp,v 1.31 2010/02/19 00:30:00 jberndt Exp $";
 static const char *IdHdr = ID_MASSBALANCE;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -124,7 +126,9 @@ bool FGMassBalance::Load(Element* el)
   SetAircraftBaseInertias(FGMatrix33(  bixx,  -bixy,  bixz,
                                       -bixy,  biyy,  -biyz,
                                        bixz,  -biyz,  bizz ));
-  EmptyWeight = el->FindElementValueAsNumberConvertTo("emptywt", "LBS");
+  if (el->FindElement("emptywt")) {
+    EmptyWeight = el->FindElementValueAsNumberConvertTo("emptywt", "LBS");
+  }
 
   element = el->FindElement("location");
   while (element) {
@@ -241,6 +245,7 @@ bool FGMassBalance::Run(void)
 
 void FGMassBalance::AddPointMass(Element* el)
 {
+  double radius=0, length=0;
   Element* loc_element = el->FindElement("location");
   string pointmass_name = el->GetAttributeValue("name");
   if (!loc_element) {
@@ -251,8 +256,36 @@ void FGMassBalance::AddPointMass(Element* el)
   double w = el->FindElementValueAsNumberConvertTo("weight", "LBS");
   FGColumnVector3 vXYZ = loc_element->FindElementTripletConvertTo("IN");
 
-  PointMasses.push_back(new PointMass(w, vXYZ));
-  PointMasses.back()->bind(PropertyManager, PointMasses.size()-1);
+  PointMass *pm = new PointMass(w, vXYZ);
+  pm->SetName(pointmass_name);
+
+  Element* form_element = el->FindElement("form");
+  if (form_element) {
+    string shape = form_element->GetAttributeValue("shape");
+    Element* radius_element = form_element->FindElement("radius");
+    Element* length_element = form_element->FindElement("length");
+    if (radius_element) radius = form_element->FindElementValueAsNumberConvertTo("radius", "FT");
+    if (length_element) length = form_element->FindElementValueAsNumberConvertTo("length", "FT");
+    if (shape == "tube") {
+      pm->SetPointMassShapeType(PointMass::esTube);
+      pm->SetRadius(radius);
+      pm->SetLength(length);
+      pm->CalculateShapeInertia();
+    } else if (shape == "cylinder") {
+      pm->SetPointMassShapeType(PointMass::esCylinder);
+      pm->SetRadius(radius);
+      pm->SetLength(length);
+      pm->CalculateShapeInertia();
+    } else if (shape == "sphere") {
+      pm->SetPointMassShapeType(PointMass::esSphere);
+      pm->SetRadius(radius);
+      pm->CalculateShapeInertia();
+    } else {
+    }
+  }
+
+  pm->bind(PropertyManager, PointMasses.size());
+  PointMasses.push_back(pm);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -290,8 +323,10 @@ FGMatrix33& FGMassBalance::CalculatePMInertias(void)
 
   pmJ = FGMatrix33();
 
-  for (unsigned int i=0; i<size; i++)
+  for (unsigned int i=0; i<size; i++) {
     pmJ += GetPointmassInertia( lbtoslug * PointMasses[i]->Weight, PointMasses[i]->Location );
+    pmJ += PointMasses[i]->GetPointMassInertia();
+  }
 
   return pmJ;
 }
@@ -339,7 +374,7 @@ void FGMassBalance::bind(void)
   PropertyManager->Tie("inertia/weight-lbs", this,
                        &FGMassBalance::GetWeight);
   PropertyManager->Tie("inertia/empty-weight-lbs", this,
-    &FGMassBalance::GetWeight, &FGMassBalance::SetEmptyWeight);
+                       &FGMassBalance::GetEmptyWeight);
   PropertyManager->Tie("inertia/cg-x-in", this,1,
                        (PMF)&FGMassBalance::GetXYZcg);
   PropertyManager->Tie("inertia/cg-y-in", this,2,
@@ -349,7 +384,9 @@ void FGMassBalance::bind(void)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+//
+// This function binds properties for each pointmass object created.
+//
 void FGMassBalance::PointMass::bind(FGPropertyManager* PropertyManager, int num) {
   string tmp = CreateIndexedPropertyName("inertia/pointmass-weight-lbs", num);
   PropertyManager->Tie( tmp.c_str(), this, &PointMass::GetPointMassWeight,
@@ -364,6 +401,63 @@ void FGMassBalance::PointMass::bind(FGPropertyManager* PropertyManager, int num)
   tmp = CreateIndexedPropertyName("inertia/pointmass-location-Z-inches", num);
   PropertyManager->Tie( tmp.c_str(), this, eZ, &PointMass::GetPointMassLocation,
                                            &PointMass::SetPointMassLocation);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGMassBalance::GetMassPropertiesReport(void) const
+{
+  cout << endl << fgblue << highint 
+       << "  Mass Properties Report (English units: lbf, in, slug-ft^2)"
+       << reset << endl;
+  cout << "                                  " << underon << "    Weight    CG-X    CG-Y"
+       << "    CG-Z         Ixx         Iyy         Izz" << underoff << endl;
+  cout.precision(1);
+  cout << highint << setw(34) << left << "    Base Vehicle " << normint
+       << right << setw(10) << EmptyWeight << setw(8) << vbaseXYZcg(eX) << setw(8)
+       << vbaseXYZcg(eY) << setw(8) << vbaseXYZcg(eZ) << setw(12) << baseJ(1,1)
+       << setw(12) << baseJ(2,2) << setw(12) << baseJ(3,3) << endl;
+
+  for (unsigned int i=0;i<PointMasses.size();i++) {
+    PointMass* pm = PointMasses[i];
+    double pmweight = pm->GetPointMassWeight();
+    cout << highint << left << setw(4) << i << setw(30) << pm->GetName() << normint
+         << right << setw(10) << pmweight << setw(8) << pm->GetLocation()(eX)
+         << setw(8) << pm->GetLocation()(eY) << setw(8) << pm->GetLocation()(eZ)
+         << setw(12) << pm->GetPointMassMoI(1,1) << setw(12) << pm->GetPointMassMoI(2,2)
+         << setw(12) << pm->GetPointMassMoI(3,3) << endl;
+  }
+
+  for (unsigned int i=0;i<Propulsion->GetNumTanks() ;i++) {
+    FGTank* tank = Propulsion->GetTank(i);
+    string tankname="";
+    if (tank->GetType() == FGTank::ttFUEL && tank->GetGrainType() != FGTank::gtUNKNOWN) {
+      tankname = "Solid Fuel";
+    } else if (tank->GetType() == FGTank::ttFUEL) {
+      tankname = "Fuel";
+    } else if (tank->GetType() == FGTank::ttOXIDIZER) {
+      tankname = "Oxidizer";
+    } else {
+      tankname = "(Unknown tank type)";
+    }
+    cout << highint << left << setw(4) << i << setw(30) << tankname << normint
+      << right << setw(10) << tank->GetContents() << setw(8) << tank->GetXYZ(eX)
+         << setw(8) << tank->GetXYZ(eY) << setw(8) << tank->GetXYZ(eZ)
+         << setw(12) << "*" << setw(12) << "*"
+         << setw(12) << "*" << endl;
+  }
+
+  cout << underon << setw(104) << " " << underoff << endl;
+  cout << highint << left << setw(30) << "    Total: " << right << setw(14) << Weight 
+       << setw(8) << vXYZcg(eX)
+       << setw(8) << vXYZcg(eY)
+       << setw(8) << vXYZcg(eZ)
+       << setw(12) << mJ(1,1)
+       << setw(12) << mJ(2,2)
+       << setw(12) << mJ(3,3)
+       << normint << endl;
+
+  cout.setf(ios_base::fixed);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -398,7 +492,7 @@ void FGMassBalance::Debug(int from)
       cout << "    baseIxy: " << baseJ(1,2) << " slug-ft2" << endl;
       cout << "    baseIxz: " << baseJ(1,3) << " slug-ft2" << endl;
       cout << "    baseIyz: " << baseJ(2,3) << " slug-ft2" << endl;
-      cout << "    EmptyWeight: " << EmptyWeight << " lbm" << endl;
+      cout << "    Empty Weight: " << EmptyWeight << " lbm" << endl;
       cout << "    CG (x, y, z): " << vbaseXYZcg << endl;
       // ToDo: Need to add point mass outputs here
       for (unsigned int i=0; i<PointMasses.size(); i++) {

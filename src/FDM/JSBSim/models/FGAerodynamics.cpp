@@ -52,7 +52,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id$";
+static const char *IdSrc = "$Id: FGAerodynamics.cpp,v 1.31 2009/11/28 14:30:11 andgi Exp $";
 static const char *IdHdr = ID_AERODYNAMICS;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

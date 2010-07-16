@@ -46,7 +46,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_THRUSTER "$Id$"
+#define ID_THRUSTER "$Id: FGThruster.h,v 1.15 2009/10/24 22:59:30 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -74,7 +74,7 @@ CLASS DOCUMENTATION
     1.57 (pi/2) results in no thrust at all.
  
     @author Jon Berndt
-    @version $Id$
+    @version $Id: FGThruster.h,v 1.15 2009/10/24 22:59:30 jberndt Exp $
     */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

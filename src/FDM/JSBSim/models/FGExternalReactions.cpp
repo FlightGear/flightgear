@@ -53,7 +53,7 @@ DEFINITIONS
 GLOBAL DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-static const char *IdSrc = "$Id$";
+static const char *IdSrc = "$Id: FGExternalReactions.cpp,v 1.8 2009/11/12 13:08:11 jberndt Exp $";
 static const char *IdHdr = ID_EXTERNALREACTIONS;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

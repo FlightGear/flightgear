@@ -62,7 +62,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_STATE "$Id$"
+#define ID_STATE "$Id: FGState.h,v 1.15 2009/10/02 10:30:07 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -78,7 +78,7 @@ CLASS DOCUMENTATION
     <h3>Properties</h3>
     @property sim-time-sec (read only) cumulative simulation in seconds.
     @author Jon S. Berndt
-    @version $Revision$
+    @version $Revision: 1.15 $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

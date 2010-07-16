@@ -43,12 +43,13 @@ INCLUDES
 #include "math/FGLocation.h"
 #include "math/FGQuaternion.h"
 #include "math/FGMatrix33.h"
+#include <deque>
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_PROPAGATE "$Id$"
+#define ID_PROPAGATE "$Id: FGPropagate.h,v 1.41 2010/07/09 04:11:45 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -56,6 +57,7 @@ FORWARD DECLARATIONS
 
 namespace JSBSim {
 
+using std::deque;
 class FGInitialCondition;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -66,6 +68,16 @@ CLASS DOCUMENTATION
     The Equations of Motion (EOM) for JSBSim are integrated to propagate the
     state of the vehicle given the forces and moments that act on it. The
     integration accounts for a rotating Earth.
+
+    The general execution of this model follows this process:
+
+    -Calculate the angular accelerations
+    -Calculate the translational accelerations
+    -Calculate the angular rate
+    -Calculate the translational velocity
+
+    -Integrate accelerations and rates
+
     Integration of rotational and translation position and rate can be 
     customized as needed or frozen by the selection of no integrator. The
     selection of which integrator to use is done through the setting of 
@@ -86,10 +98,11 @@ CLASS DOCUMENTATION
     2: Trapezoidal
     3: Adams Bashforth 2
     4: Adams Bashforth 3
+    5: Adams Bashforth 4
     @endcode
 
     @author Jon S. Berndt, Mathias Froehlich
-    @version $Id$
+    @version $Id: FGPropagate.h,v 1.41 2010/07/09 04:11:45 jberndt Exp $
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -106,17 +119,38 @@ public:
         fixed (ECEF) frame.
         units ft */
     FGLocation vLocation;
+
     /** The velocity vector of the vehicle with respect to the ECEF frame,
         expressed in the body system.
         units ft/sec */
     FGColumnVector3 vUVW;
+
     /** The angular velocity vector for the vehicle relative to the ECEF frame,
         expressed in the body frame.
         units rad/sec */
     FGColumnVector3 vPQR;
+
+    /** The angular velocity vector for the vehicle body frame relative to the
+        ECI frame, expressed in the body frame.
+        units rad/sec */
+    FGColumnVector3 vPQRi;
+
     /** The current orientation of the vehicle, that is, the orientation of the
-        body frame relative to the local, vehilce-carried, NED frame. */
-    FGQuaternion vQtrn;
+        body frame relative to the local, NED frame. */
+    FGQuaternion qAttitudeLocal;
+
+    /** The current orientation of the vehicle, that is, the orientation of the
+        body frame relative to the inertial (ECI) frame. */
+    FGQuaternion qAttitudeECI;
+
+    FGColumnVector3 vInertialVelocity;
+
+    FGColumnVector3 vInertialPosition;
+
+    deque <FGColumnVector3> dqPQRdot;
+    deque <FGColumnVector3> dqUVWdot;
+    deque <FGColumnVector3> dqInertialVelocity;
+    deque <FGQuaternion> dqQtrndot;
   };
 
   /** Constructor.
@@ -133,7 +167,10 @@ public:
   ~FGPropagate();
   
   /// These define the indices use to select the various integrators.
-  enum eIntegrateType {eNone = 0, eRectEuler, eTrapezoidal, eAdamsBashforth2, eAdamsBashforth3};
+  enum eIntegrateType {eNone = 0, eRectEuler, eTrapezoidal, eAdamsBashforth2, eAdamsBashforth3, eAdamsBashforth4};
+
+  /// These define the indices use to select the gravitation models.
+  enum eGravType {gtStandard, gtWGS84}; 
 
   /** Initializes the FGPropagate class after instantiation and prior to first execution.
       The base class FGModel::InitModel is called first, initializing pointers to the 
@@ -143,6 +180,12 @@ public:
   /** Runs the Propagate model; called by the Executive.
       @return false if no error */
   bool Run(void);
+
+  void CalculatePQRdot(void);
+  void CalculateQuatdot(void);
+  void CalculateInertialVelocity(void);
+  void CalculateUVWdot(void);
+  const FGQuaternion& GetQuaterniondot(void) const {return vQtrndot;}
 
   /** Retrieves the velocity vector.
       The vector returned is represented by an FGColumnVector reference. The vector
@@ -207,9 +250,9 @@ public:
       in FGJSBBase. The relevant enumerators for the vector returned by this call are,
       eP=1, eQ=2, eR=3.
       units rad/sec
-      @return The body frame angular rates in rad/sec.
+      @return The body frame inertial angular rates in rad/sec.
   */
-  const FGColumnVector3& GetPQRi(void) const {return vPQRi;}
+  const FGColumnVector3& GetPQRi(void) const {return VState.vPQRi;}
 
   /** Retrieves the body axis angular acceleration vector.
       Retrieves the body axis angular acceleration vector in rad/sec^2. The
@@ -241,7 +284,7 @@ public:
               angle about the Y axis, and the third item is the angle
               about the Z axis (Phi, Theta, Psi).
   */
-  const FGColumnVector3& GetEuler(void) const { return VState.vQtrn.GetEuler(); }
+  const FGColumnVector3& GetEuler(void) const { return VState.qAttitudeLocal.GetEuler(); }
 
   /** Retrieves a body frame velocity component.
       Retrieves a body frame velocity component. The velocity returned is
@@ -284,7 +327,15 @@ public:
 
   /** Retrieves the total inertial velocity in ft/sec.
   */
-  double GetInertialVelocityMagnitude(void) const { return vInertialVelocity.Magnitude(); }
+  double GetInertialVelocityMagnitude(void) const { return VState.vInertialVelocity.Magnitude(); }
+
+  /** Retrieves the inertial velocity vector in ft/sec.
+  */
+  const FGColumnVector3& GetInertialVelocity(void) const { return VState.vInertialVelocity; }
+
+  /** Retrieves the inertial position vector.
+  */
+  const FGColumnVector3& GetInertialPosition(void) const { return VState.vInertialPosition; }
 
   /** Returns the current altitude above sea level.
       This function returns the altitude above sea level.
@@ -324,7 +375,7 @@ public:
       @param axis the index of the angular velocity component desired (1-based).
       @return The body frame angular velocity component.
   */
-  double GetPQRi(int axis) const {return vPQRi(axis);}
+  double GetPQRi(int axis) const {return VState.vPQRi(axis);}
 
   /** Retrieves a body frame angular acceleration component.
       Retrieves a body frame angular acceleration component. The angular
@@ -350,7 +401,7 @@ public:
       units radians
       @return An Euler angle.
   */
-  double GetEuler(int axis) const { return VState.vQtrn.GetEuler(axis); }
+  double GetEuler(int axis) const { return VState.qAttitudeLocal.GetEuler(axis); }
 
   /** Retrieves the cosine of a vehicle Euler angle component.
       Retrieves the cosine of an Euler angle (Phi, Theta, or Psi) from the
@@ -362,7 +413,7 @@ public:
       units none
       @return The cosine of an Euler angle.
   */
-  double GetCosEuler(int idx) const { return VState.vQtrn.GetCosEuler(idx); }
+  double GetCosEuler(int idx) const { return VState.qAttitudeLocal.GetCosEuler(idx); }
 
   /** Retrieves the sine of a vehicle Euler angle component.
       Retrieves the sine of an Euler angle (Phi, Theta, or Psi) from the
@@ -374,7 +425,7 @@ public:
       units none
       @return The sine of an Euler angle.
   */
-  double GetSinEuler(int idx) const { return VState.vQtrn.GetSinEuler(idx); }
+  double GetSinEuler(int idx) const { return VState.qAttitudeLocal.GetSinEuler(idx); }
 
   /** Returns the current altitude rate.
       Returns the current altitude rate (rate of climb).
@@ -414,13 +465,13 @@ public:
       The quaternion class, being the means by which the orientation of the
       vehicle is stored, manages the local-to-body transformation matrix.
       @return a reference to the local-to-body transformation matrix.  */
-  const FGMatrix33& GetTl2b(void) const { return VState.vQtrn.GetT(); }
+  const FGMatrix33& GetTl2b(void) const { return VState.qAttitudeLocal.GetT(); }
 
   /** Retrieves the body-to-local transformation matrix.
       The quaternion class, being the means by which the orientation of the
       vehicle is stored, manages the body-to-local transformation matrix.
       @return a reference to the body-to-local matrix.  */
-  const FGMatrix33& GetTb2l(void) const { return VState.vQtrn.GetTInv(); }
+  const FGMatrix33& GetTb2l(void) const { return VState.qAttitudeLocal.GetTInv(); }
 
   /** Retrieves the ECEF-to-body transformation matrix.
       @return a reference to the ECEF-to-body transformation matrix.  */
@@ -429,6 +480,14 @@ public:
   /** Retrieves the body-to-ECEF transformation matrix.
       @return a reference to the body-to-ECEF matrix.  */
   const FGMatrix33& GetTb2ec(void) const { return Tb2ec; }
+
+  /** Retrieves the ECI-to-body transformation matrix.
+      @return a reference to the ECI-to-body transformation matrix.  */
+  const FGMatrix33& GetTi2b(void) const { return VState.qAttitudeECI.GetT(); }
+
+  /** Retrieves the body-to-ECI transformation matrix.
+      @return a reference to the body-to-ECI matrix.  */
+  const FGMatrix33& GetTb2i(void) const { return VState.qAttitudeECI.GetTInv(); }
 
   /** Retrieves the ECEF-to-ECI transformation matrix.
       @return a reference to the ECEF-to-ECI transformation matrix.  */
@@ -450,16 +509,33 @@ public:
       @return a reference to the local-to-ECEF matrix.  */
   const FGMatrix33& GetTl2ec(void) const { return VState.vLocation.GetTl2ec(); }
 
+  /** Retrieves the local-to-inertial transformation matrix.
+      @return a reference to the local-to-inertial transformation matrix.  */
+  const FGMatrix33& GetTl2i(void)  { return VState.vLocation.GetTl2i(); }
+
+  /** Retrieves the inertial-to-local transformation matrix.
+      @return a reference to the inertial-to-local matrix.  */
+  const FGMatrix33& GetTi2l(void)  { return VState.vLocation.GetTi2l(); }
+
   VehicleState* GetVState(void) { return &VState; }
 
   void SetVState(VehicleState* vstate) {
       VState.vLocation = vstate->vLocation;
       VState.vUVW = vstate->vUVW;
       VState.vPQR = vstate->vPQR;
-      VState.vQtrn = vstate->vQtrn; // ... mmh
+      VState.qAttitudeLocal = vstate->qAttitudeLocal;
+      VState.qAttitudeECI = vstate->qAttitudeECI;
+
+      VState.dqPQRdot.resize(4, FGColumnVector3(0.0,0.0,0.0));
+      VState.dqUVWdot.resize(4, FGColumnVector3(0.0,0.0,0.0));
+      VState.dqInertialVelocity.resize(4, FGColumnVector3(0.0,0.0,0.0));
+      VState.dqQtrndot.resize(4, FGColumnVector3(0.0,0.0,0.0));
   }
 
-  const FGQuaternion GetQuaternion(void) const { return VState.vQtrn; }
+  void SetInertialOrientation(FGQuaternion Qi);
+  void SetInertialVelocity(FGColumnVector3 Vi);
+
+  const FGQuaternion GetQuaternion(void) const { return VState.qAttitudeLocal; }
 
   void SetPQR(unsigned int i, double val) {
       if ((i>=1) && (i<=3) )
@@ -492,11 +568,6 @@ public:
     VState.vLocation -= vDeltaXYZEC;
   }
 
-  void CalculatePQRdot(void);
-  void CalculateQuatdot(void);
-  void CalculateLocationdot(void);
-  void CalculateUVWdot(void);
-
 private:
 
 // state vector
@@ -504,16 +575,14 @@ private:
   struct VehicleState VState;
 
   FGColumnVector3 vVel;
+  FGColumnVector3 vPQRdot;
+  FGColumnVector3 vUVWdot;
   FGColumnVector3 vInertialVelocity;
-  FGColumnVector3 vPQRdot, last_vPQRdot, last2_vPQRdot;
-  FGColumnVector3 vUVWdot, last_vUVWdot, last2_vUVWdot;
-  FGColumnVector3 vLocationDot, last_vLocationDot, last2_vLocationDot;
   FGColumnVector3 vLocation;
   FGColumnVector3 vDeltaXYZEC;
-  FGColumnVector3 vPQRi;   // Inertial frame angular velocity
-  FGColumnVector3 vOmega;  // The Earth angular velocity vector
-  FGColumnVector3 vOmegaLocal;  // The local frame angular velocity vector
-  FGQuaternion vQtrndot, last_vQtrndot, last2_vQtrndot;
+  FGColumnVector3 vGravAccel;
+  FGColumnVector3 vOmegaEarth;  // The Earth angular velocity vector
+  FGQuaternion vQtrndot;
   FGMatrix33 Tec2b;
   FGMatrix33 Tb2ec;
   FGMatrix33 Tl2b;   // local to body frame matrix copy for immediate local use
@@ -524,13 +593,30 @@ private:
   FGMatrix33 Ti2ec;  // ECI to ECEF frame matrix copy for immediate local use
   FGMatrix33 Ti2b;   // ECI to body frame rotation matrix
   FGMatrix33 Tb2i;   // body to ECI frame rotation matrix
+  FGMatrix33 Ti2l;
+  FGMatrix33 Tl2i;
+  FGLocation contactloc;
+  FGColumnVector3 dv;
   
   double LocalTerrainRadius, SeaLevelRadius, VehicleRadius;
   double radInv;
-  int integrator_rotational_rate;
-  int integrator_translational_rate;
-  int integrator_rotational_position;
-  int integrator_translational_position;
+  eIntegrateType integrator_rotational_rate;
+  eIntegrateType integrator_translational_rate;
+  eIntegrateType integrator_rotational_position;
+  eIntegrateType integrator_translational_position;
+  int gravType;
+
+  void Integrate( FGColumnVector3& Integrand,
+                  FGColumnVector3& Val,
+                  deque <FGColumnVector3>& ValDot,
+                  double dt,
+                  eIntegrateType integration_type);
+
+  void Integrate( FGQuaternion& Integrand,
+                  FGQuaternion& Val,
+                  deque <FGQuaternion>& ValDot,
+                  double dt,
+                  eIntegrateType integration_type);
 
   void bind(void);
   void Debug(int from);

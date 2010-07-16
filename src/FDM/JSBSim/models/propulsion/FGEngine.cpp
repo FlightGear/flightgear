@@ -41,7 +41,7 @@ INCLUDES
 #include "FGTank.h"
 #include "FGPropeller.h"
 #include "FGNozzle.h"
-#include "FGState.h"
+#include "FGRotor.h"
 #include "models/FGPropulsion.h"
 #include "input_output/FGXMLParse.h"
 #include "math/FGColumnVector3.h"
@@ -54,7 +54,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id$";
+static const char *IdSrc = "$Id: FGEngine.cpp,v 1.38 2010/06/02 04:05:13 jberndt Exp $";
 static const char *IdHdr = ID_ENGINE;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -80,7 +80,6 @@ FGEngine::FGEngine(FGFDMExec* exec, Element* engine_element, int engine_number)
   ResetToIC(); // initialize dynamic terms
 
   FDMExec = exec;
-  State = FDMExec->GetState();
   Atmosphere = FDMExec->GetAtmosphere();
   FCS = FDMExec->GetFCS();
   Propulsion = FDMExec->GetPropulsion();
@@ -124,8 +123,13 @@ FGEngine::FGEngine(FGFDMExec* exec, Element* engine_element, int engine_number)
     while (local_element) {
       int tankID = (int)local_element->GetDataAsNumber();
       FGTank* tank = Propulsion->GetTank(tankID); 
-      AddFeedTank( tankID , tank->GetPriority());
-      FuelDensity = tank->GetDensity();
+      if (tank) {
+        AddFeedTank(tankID, tank->GetPriority());
+        FuelDensity = tank->GetDensity();
+      } else {
+        cerr << "Feed tank " << tankID <<
+          " specified in engine definition does not exist." << endl;
+      }
       local_element = engine_element->GetParent()->FindNextElement("feed");
     }
   } else {
@@ -168,6 +172,7 @@ void FGEngine::ResetToIC(void)
   TrimMode = false;
   FuelFlow_gph = 0.0;
   FuelFlow_pph = 0.0;
+  FuelFlowRate = 0.0;
   FuelFreeze = false;
 }
 
@@ -234,7 +239,7 @@ void FGEngine::ConsumeFuel(void)
 
 double FGEngine::CalcFuelNeed(void)
 {
-  double dT = State->Getdt()*Propulsion->GetRate();
+  double dT = FDMExec->GetDeltaT()*Propulsion->GetRate();
   FuelFlowRate = SLFuelFlowMax*PctPower;
   FuelExpended = FuelFlowRate*dT;
   return FuelExpended;
@@ -317,11 +322,13 @@ bool FGEngine::LoadThruster(Element *thruster_element)
     Thruster = new FGPropeller(FDMExec, document, EngineNumber);
   } else if (thrType == "nozzle") {
     Thruster = new FGNozzle(FDMExec, document, EngineNumber);
+  } else if (thrType == "rotor") {
+    Thruster = new FGRotor(FDMExec, document, EngineNumber);
   } else if (thrType == "direct") {
     Thruster = new FGThruster( FDMExec, document, EngineNumber);
   }
 
-  Thruster->SetdeltaT(State->Getdt() * Propulsion->GetRate());
+  Thruster->SetdeltaT(FDMExec->GetDeltaT() * Propulsion->GetRate());
 
   Debug(2);
   return true;

@@ -48,7 +48,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_SensorOrientation "$Id$"
+#define ID_SensorOrientation "$Id: FGSensorOrientation.h,v 1.3 2009/10/24 22:59:30 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -65,7 +65,7 @@ CLASS DOCUMENTATION
 Syntax:
 
 @author Jon S. Berndt
-@version $Revision$
+@version $Revision: 1.3 $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

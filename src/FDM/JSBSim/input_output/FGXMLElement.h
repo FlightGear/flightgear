@@ -44,7 +44,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_XMLELEMENT "$Id$"
+#define ID_XMLELEMENT "$Id: FGXMLElement.h,v 1.16 2009/10/24 22:59:30 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -136,7 +136,7 @@ CLASS DOCUMENTATION
     - GAL = gallon (U.S. liquid) 
 
     @author Jon S. Berndt
-    @version $Id$
+    @version $Id: FGXMLElement.h,v 1.16 2009/10/24 22:59:30 jberndt Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

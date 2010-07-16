@@ -45,7 +45,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_STRINGUTILS "$Id$"
+#define ID_STRINGUTILS "$Id: string_utilities.h,v 1.13 2010/07/07 11:59:48 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -64,18 +64,19 @@ CLASS DECLARATION
   extern std::string& trim_left(std::string& str);
   extern std::string& trim_right(std::string& str);
   extern std::string& trim(std::string& str);
+  extern std::string& trim_all_space(std::string& str);
   extern std::string& to_upper(std::string& str);
   extern std::string& to_lower(std::string& str);
   extern bool is_number(const std::string& str);
   std::vector <std::string> split(std::string str, char d);
 #else
-  #include <ctype.h>
+  #include <cctype>
 
   using namespace std;
 
   string& trim_left(string& str)
   {
-    while (str.size() && !isgraph(str[0])) {
+    while (str.size() && isspace((unsigned char)str[0])) {
       str = str.erase(0,1);
     }
     return str;
@@ -83,7 +84,7 @@ CLASS DECLARATION
 
   string& trim_right(string& str)
   {
-    while (str.size() && !isgraph(str[str.size()-1])) {
+    while (str.size() && isspace((unsigned char)str[str.size()-1])) {
       str = str.erase(str.size()-1,1);
     }
     return str;
@@ -94,6 +95,17 @@ CLASS DECLARATION
     if (str.size() == 0) return str;
     string temp_str = trim_right(str);
     return str = trim_left(temp_str);
+  }
+
+  string& trim_all_space(string& str)
+  {
+    for (size_t i=0; i<str.size(); i++) {
+      if (isspace((unsigned char)str[i])) {
+        str = str.erase(i,1);
+        --i;
+      }
+    }
+    return str;
   }
 
   string& to_upper(string& str)

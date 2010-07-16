@@ -45,7 +45,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_SWITCH "$Id$"
+#define ID_SWITCH "$Id: FGSwitch.h,v 1.13 2009/10/02 10:30:09 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -124,7 +124,7 @@ ap/attitude_hold takes the value 1), the value of the switch component will be
 whatever value fcs/roll-ap-error-summer is.
 
 @author Jon S. Berndt
-@version $Id$
+@version $Id: FGSwitch.h,v 1.13 2009/10/02 10:30:09 jberndt Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
