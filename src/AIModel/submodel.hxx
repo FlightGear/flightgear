@@ -63,6 +63,7 @@ public:
         bool               no_roll;
         bool               serviceable;
         bool               collision;
+		bool			   expiry;
         bool               impact;
         string             impact_report;
         double             fuse_range;
@@ -148,6 +149,8 @@ private:
 
     bool _impact;
     bool _hit;
+	bool _expiry;
+	bool _found_sub;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _user_lat_node;

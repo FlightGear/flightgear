@@ -177,6 +177,7 @@ protected:
 
     bool _impact_reported;
     bool _collision_reported;
+	bool _expiry_reported;
 
     double _impact_lat;
     double _impact_lon;
@@ -246,6 +247,7 @@ public:
     bool   _getImpact();
     bool   _getImpactData();
     bool   _getCollisionData();
+	bool   _getExpiryData();
 
     SGPropertyNode* _getProps() const;
 

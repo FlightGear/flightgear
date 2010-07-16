@@ -37,6 +37,7 @@ FGSubmodelMgr::FGSubmodelMgr()
     string contents_node;
     contrail_altitude = 30000;
     _count = 0;
+	_found_sub = true;
 }
 
 FGSubmodelMgr::~FGSubmodelMgr()
@@ -82,7 +83,9 @@ void FGSubmodelMgr::init()
 void FGSubmodelMgr::postinit() {
     // postinit, so that the AI list is populated
     loadAI();
-    loadSubmodels();
+
+	while (_found_sub)
+		loadSubmodels();
 
     //TODO reload submodels if an MP ac joins
 }
@@ -106,6 +109,7 @@ void FGSubmodelMgr::update(double dt)
 
     _impact = false;
     _hit = false;
+	_expiry = false;
 
     // check if the submodel hit an object or terrain
     sm_list = ai->get_ai_list();
@@ -115,13 +119,14 @@ void FGSubmodelMgr::update(double dt)
     for (; sm_list_itr != end; ++sm_list_itr) {
         _impact = (*sm_list_itr)->_getImpactData();
         _hit = (*sm_list_itr)->_getCollisionData();
+		_expiry = (*sm_list_itr)->_getExpiryData();
         int parent_subID = (*sm_list_itr)->_getSubID();
         //SG_LOG(SG_GENERAL, SG_DEBUG, "Submodel: Impact " << _impact << " hit! "
         //        << _hit <<" parent_subID " << parent_subID);
         if ( parent_subID == 0) // this entry in the list has no associated submodel
             continue;           // so we can continue
 
-        if (_impact || _hit) {
+        if (_impact || _hit || _expiry) {
             //SG_LOG(SG_GENERAL, SG_DEBUG, "Submodel: Impact " << _impact << " hit! " << _hit );
 
             submodel_iterator = submodels.begin();
@@ -175,58 +180,19 @@ void FGSubmodelMgr::update(double dt)
             //cout << (*submodel_iterator)->name << "trigger node not found " << trigger << endl;
         }
 
-        if (trigger) {
-            int id = (*submodel_iterator)->id;
-            string name = (*submodel_iterator)->name;
-            // don't release submodels from AI Objects if they are
-            // too far away to be seen. id 0 is not an AI model,
-            // so we can skip the whole process
-            sm_list_iterator sm_list_itr = sm_list.begin();
-            sm_list_iterator end = sm_list.end();
+		if (trigger && (*submodel_iterator)->count != 0) {
 
-            while (sm_list_itr != end) {
-                in_range = true;
+			//int id = (*submodel_iterator)->id;
+			//string name = (*submodel_iterator)->name;
+			/*SG_LOG(SG_GENERAL, SG_DEBUG,
+			"Submodels end:  " << (*submodel_iterator)->id
+			<< " name " << (*submodel_iterator)->name
+			<< " count " << (*submodel_iterator)->count
+			<< " in range " << in_range);*/
 
-                if (id == 0) {
-                    //SG_LOG(SG_GENERAL, SG_DEBUG,
-                    //        "Submodels: continuing: " << id << " name " << name );
-                    ++sm_list_itr;
-                    continue;
-                }
-
-                int parent_id = (*submodel_iterator)->id;
-
-                if (parent_id == id) {
-                    double parent_lat = (*sm_list_itr)->_getLatitude();
-                    double parent_lon = (*sm_list_itr)->_getLongitude();
-                    string parent_name = (*sm_list_itr)->_getName();
-                    double own_lat    = _user_lat_node->getDoubleValue();
-                    double own_lon    = _user_lon_node->getDoubleValue();
-                    double range_nm   = getRange(parent_lat, parent_lon, own_lat, own_lon);
-                    //cout << "parent name " << parent_name << ", "<< parent_id << ", "<< parent_lat << ", " << parent_lon << endl;
-                    //cout << "own name " << own_lat << ", " << own_lon << " range " << range_nm << endl;
-
-                    if (range_nm > 15) {
-                        //SG_LOG(SG_GENERAL, SG_DEBUG,
-                        //    "Submodels: skipping release, out of range: " << id);
-                        in_range = false;
-                    }
-                }
-
-                ++sm_list_itr;
-            } // end while
-
-            /*SG_LOG(SG_GENERAL, SG_DEBUG,
-                    "Submodels end:  " << (*submodel_iterator)->id
-                    << " name " << (*submodel_iterator)->name
-                    << " count " << (*submodel_iterator)->count
-                    << " in range " << in_range);*/
-
-            if ((*submodel_iterator)->count != 0 && in_range)
-                release(*submodel_iterator, dt);
-
-        } else
-            (*submodel_iterator)->first_time = true;
+			release(*submodel_iterator, dt);
+		} else
+			(*submodel_iterator)->first_time = true;
 
         ++submodel_iterator;
     } // end while
@@ -281,6 +247,7 @@ bool FGSubmodelMgr::release(submodel *sm, double dt)
     ballist->setNoRoll(sm->no_roll);
     ballist->setName(sm->name);
     ballist->setCollision(sm->collision);
+	ballist->setExpiry(sm->expiry);
     ballist->setImpact(sm->impact);
     ballist->setImpactReportNode(sm->impact_report);
     ballist->setFuseRange(sm->fuse_range);
@@ -595,6 +562,7 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
         sm->aero_stabilised = entry_node->getBoolValue("aero-stabilised", true);
         sm->no_roll         = entry_node->getBoolValue("no-roll", false);
         sm->collision       = entry_node->getBoolValue("collision", false);
+		sm->expiry			= entry_node->getBoolValue("expiry", false);
         sm->impact          = entry_node->getBoolValue("impact", false);
         sm->impact_report   = entry_node->getStringValue("impact-reports");
         sm->fuse_range      = entry_node->getDoubleValue("fuse-range", 0.0);
@@ -698,6 +666,7 @@ void FGSubmodelMgr::setSubData(int id, string& path, bool serviceable)
         sm->aero_stabilised = entry_node->getBoolValue("aero-stabilised", true);
         sm->no_roll         = entry_node->getBoolValue("no-roll", false);
         sm->collision       = entry_node->getBoolValue("collision", false);
+		sm->expiry			= entry_node->getBoolValue("expiry", false);
         sm->impact          = entry_node->getBoolValue("impact", false);
         sm->impact_report   = entry_node->getStringValue("impact-reports");
         sm->fuse_range      = entry_node->getDoubleValue("fuse-range", 0.0);
@@ -757,31 +726,38 @@ void FGSubmodelMgr::loadSubmodels()
 {
     SG_LOG(SG_GENERAL, SG_DEBUG, "Submodels: Loading sub submodels");
 
+	_found_sub = false;
+
     submodel_iterator = submodels.begin();
 
-    while (submodel_iterator != submodels.end()) {
-        string submodel  = (*submodel_iterator)->submodel;
-        if (!submodel.empty()) {
-            //int id = (*submodel_iterator)->id;
-            bool serviceable = true;
-            //SG_LOG(SG_GENERAL, SG_DEBUG, "found path sub sub "
-            //        << submodel
-            //        << " index " << index
-            //        << "name " << (*submodel_iterator)->name);
+	while (submodel_iterator != submodels.end()) {
+		string submodel  = (*submodel_iterator)->submodel;
+		if (!submodel.empty()) {
+			//int id = (*submodel_iterator)->id;
+			bool serviceable = true;
+			//SG_LOG(SG_GENERAL, SG_DEBUG, "found path sub sub "
+			//        << submodel
+			//        << " index " << index
+			//        << "name " << (*submodel_iterator)->name);
 
-            (*submodel_iterator)->sub_id = index;
-            setSubData(index, submodel, serviceable);
-        }
+			if ((*submodel_iterator)->sub_id == 0){
+				(*submodel_iterator)->sub_id = index;
+				_found_sub = true;
+				setSubData(index, submodel, serviceable);
+			}
+		}
 
-        ++submodel_iterator;
-    }
+		++submodel_iterator;
+	} // end while
 
     subsubmodel_iterator = subsubmodels.begin();
 
     while (subsubmodel_iterator != subsubmodels.end()) {
         submodels.push_back(*subsubmodel_iterator);
         ++subsubmodel_iterator;
-    }
+    } // end while
+
+	subsubmodels.clear();
 
     //submodel_iterator = submodels.begin();
 

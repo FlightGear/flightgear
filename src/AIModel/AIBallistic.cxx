@@ -61,6 +61,7 @@ FGAIBallistic::FGAIBallistic(object_type ot) :
     _slave_load_to_ac(false),
     _contents_lb(0),
     _report_collision(false),
+	_report_expiry(false),
     _report_impact(false),
     _external_force(false),
     _impact_report_node(fgGetNode("/ai/models/model-impact", true)),
@@ -321,6 +322,7 @@ void FGAIBallistic::setMass(double m) {
 void FGAIBallistic::setWeight(double w) {
     _weight_lb = w;
 }
+
 void FGAIBallistic::setRandom(bool r) {
     _random = r;
 }
@@ -331,6 +333,11 @@ void FGAIBallistic::setImpact(bool i) {
 
 void FGAIBallistic::setCollision(bool c) {
     _report_collision = c;
+}
+
+void FGAIBallistic::setExpiry(bool e) {
+    _report_expiry = e;
+//	cout <<  "_report_expiry " << _report_expiry << endl;
 }
 
 void FGAIBallistic::setExternalForce(bool f) {
@@ -536,8 +543,14 @@ void FGAIBallistic::Run(double dt) {
     _life_timer += dt;
 
     // if life = -1 the object does not die
-    if (_life_timer > life && life != -1)
-        setDie(true);
+	if (_life_timer > life && life != -1){
+
+		if (_report_expiry && !_expiry_reported){
+			handle_expiry();
+		} else
+			setDie(true);
+
+	}
 
     //set the contents in the appropriate tank or other property in the parent to zero
     setContents(0);
@@ -807,6 +820,19 @@ void FGAIBallistic::handle_impact() {
         } else if (_subID == 0)  // kill the AIObject if there is no subsubmodel
             setDie(true);
     }
+}
+
+void FGAIBallistic::handle_expiry() {
+
+        report_impact(pos.getElevationM());
+        _expiry_reported = true;
+
+		SG_LOG(SG_GENERAL, SG_ALERT, "AIBallistic: expiry");
+        //if (life == -1){
+        //    invisible = true;
+        //} else if (_subID == 0)  // kill the AIObject if there is no subsubmodel
+        //    setDie(true);
+   
 }
 
 void FGAIBallistic::handle_collision()

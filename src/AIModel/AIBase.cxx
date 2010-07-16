@@ -579,6 +579,10 @@ bool FGAIBase::_getCollisionData() {
     return _collision_reported;
 }
 
+bool FGAIBase::_getExpiryData() {
+    return _expiry_reported;
+}
+
 bool FGAIBase::_getImpactData() {
     return _impact_reported;
 }
