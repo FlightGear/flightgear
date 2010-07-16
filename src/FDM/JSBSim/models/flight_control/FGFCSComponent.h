@@ -45,7 +45,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FCSCOMPONENT "$Id$"
+#define ID_FCSCOMPONENT "$Id: FGFCSComponent.h,v 1.16 2009/10/24 22:59:30 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -80,7 +80,7 @@ CLASS DOCUMENTATION
     - FGActuator
 
     @author Jon S. Berndt
-    @version $Id$
+    @version $Id: FGFCSComponent.h,v 1.16 2009/10/24 22:59:30 jberndt Exp $
     @see Documentation for the FGFCS class, and for the configuration file class
 */
 

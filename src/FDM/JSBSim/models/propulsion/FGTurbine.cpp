@@ -42,15 +42,16 @@ INCLUDES
 #include <iostream>
 #include <sstream>
 #include "FGTurbine.h"
-#include "FGState.h"
-#include "models/FGPropulsion.h"
 #include "FGThruster.h"
+#include "models/FGPropulsion.h"
+#include "models/FGAuxiliary.h"
+#include "models/FGAtmosphere.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id$";
+static const char *IdSrc = "$Id: FGTurbine.cpp,v 1.27 2010/05/24 11:26:37 jberndt Exp $";
 static const char *IdHdr = ID_TURBINE;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -118,7 +119,7 @@ double FGTurbine::Calculate(void)
 
   TAT = (Auxiliary->GetTotalTemperature() - 491.69) * 0.5555556;
   double qbar = Auxiliary->Getqbar();
-  dt = State->Getdt() * Propulsion->GetRate();
+  dt = FDMExec->GetDeltaT() * Propulsion->GetRate();
   ThrottlePos = FCS->GetThrottlePos(EngineNumber);
   if (ThrottlePos > 1.0) {
     AugmentCmd = ThrottlePos - 1.0;
@@ -145,7 +146,7 @@ double FGTurbine::Calculate(void)
 
   if (!Running && Cutoff && Starter) {
      if (phase == tpOff) phase = tpSpinUp;
-     }
+  }
 
   // start
   if ((Starter == true) || (qbar > 30.0)) {
@@ -223,7 +224,7 @@ double FGTurbine::Run()
 
   if (!Augmentation) {
     correctedTSFC = TSFC * sqrt(T/389.7) * (0.84 + (1-N2norm)*(1-N2norm));
-    FuelFlow_pph = Seek(&FuelFlow_pph, thrust * correctedTSFC, 1000.0, 100000);
+    FuelFlow_pph = Seek(&FuelFlow_pph, thrust * correctedTSFC, 1000.0, 10000.0);
     if (FuelFlow_pph < IdleFF) FuelFlow_pph = IdleFF;
     NozzlePosition = Seek(&NozzlePosition, 1.0 - N2norm, 0.8, 0.8);
     thrust = thrust * (1.0 - BleedDemand);
@@ -388,7 +389,7 @@ double FGTurbine::Trim()
 
 double FGTurbine::CalcFuelNeed(void)
 {
-  double dT = State->Getdt() * Propulsion->GetRate();
+  double dT = FDMExec->GetDeltaT() * Propulsion->GetRate();
   FuelFlowRate = FuelFlow_pph / 3600.0; // Calculates flow in lbs/sec from lbs/hr
   FuelExpended = FuelFlowRate * dT;     // Calculates fuel expended in this time step
   return FuelExpended;
@@ -539,12 +540,12 @@ void FGTurbine::bindmodel()
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 int FGTurbine::InitRunning(void) {
-  State->SuspendIntegration();
+  FDMExec->SuspendIntegration();
   Cutoff=false;
   Running=true;  
   N2=IdleN2;
   Calculate();
-  State->ResumeIntegration();
+  FDMExec->ResumeIntegration();
   return phase==tpRun;
 }
 

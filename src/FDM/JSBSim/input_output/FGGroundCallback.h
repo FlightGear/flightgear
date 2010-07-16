@@ -45,7 +45,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_GROUNDCALLBACK "$Id$"
+#define ID_GROUNDCALLBACK "$Id: FGGroundCallback.h,v 1.8 2009/10/02 10:30:09 jberndt Exp $"
 
 namespace JSBSim {
 
@@ -59,7 +59,7 @@ CLASS DOCUMENTATION
     ball formed earth.
 
     @author Mathias Froehlich
-    @version $Id$
+    @version $Id: FGGroundCallback.h,v 1.8 2009/10/02 10:30:09 jberndt Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

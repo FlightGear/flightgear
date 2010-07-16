@@ -48,7 +48,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_TRIMAXIS "$Id$"
+#define ID_TRIMAXIS "$Id: FGTrimAxis.h,v 1.4 2006/10/01 22:47:47 jberndt Exp $"
 
 #define DEFAULT_TOLERANCE 0.001
 

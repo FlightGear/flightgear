@@ -45,7 +45,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_ELECTRIC "$Id$";
+#define ID_ELECTRIC "$Id: FGElectric.h,v 1.8 2009/10/24 22:59:30 jberndt Exp $";
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -65,7 +65,7 @@ CLASS DOCUMENTATION
     there is no battery model available, so this motor does not consume any
     energy.  There is no internal friction.
     @author David Culp
-    @version "$Id$"
+    @version "$Id: FGElectric.h,v 1.8 2009/10/24 22:59:30 jberndt Exp $"
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

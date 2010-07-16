@@ -42,17 +42,19 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGScript.h"
+#include "input_output/FGXMLElement.h"
 #include "input_output/FGXMLParse.h"
 #include "initialization/FGTrim.h"
 
 #include <iostream>
 #include <cstdlib>
+#include <iomanip>
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id$";
+static const char *IdSrc = "$Id: FGScript.cpp,v 1.41 2010/07/08 11:36:28 jberndt Exp $";
 static const char *IdHdr = ID_FGSCRIPT;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -67,8 +69,8 @@ CLASS IMPLEMENTATION
 
 FGScript::FGScript(FGFDMExec* fgex) : FDMExec(fgex)
 {
-  State = FDMExec->GetState();
   PropertyManager=FDMExec->GetPropertyManager();
+
   Debug(0);
 }
 
@@ -89,7 +91,7 @@ FGScript::~FGScript()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGScript::LoadScript( string script )
+bool FGScript::LoadScript(string script, double deltaT)
 {
   string aircraft="", initialize="", comparison = "", prop_name="";
   string notifyPropertyName="";
@@ -135,10 +137,18 @@ bool FGScript::LoadScript( string script )
   // Set sim timing
 
   StartTime = run_element->GetAttributeValueAsNumber("start");
-  State->Setsim_time(StartTime);
+  FDMExec->Setsim_time(StartTime);
   EndTime   = run_element->GetAttributeValueAsNumber("end");
-  dt        = run_element->GetAttributeValueAsNumber("dt");
-  State->Setdt(dt);
+
+  if (deltaT == 0.0)
+    dt = run_element->GetAttributeValueAsNumber("dt");
+  else {
+    dt = deltaT;
+    cout << endl << "Overriding simulation step size from the command line. New step size is: "
+         << deltaT << " seconds (" << 1/deltaT << " Hz)" << endl << endl;
+  }
+
+  FDMExec->Setdt(dt);
   
   // read aircraft and initialization files
 
@@ -175,7 +185,7 @@ bool FGScript::LoadScript( string script )
     if (output_file.empty()) {
       cerr << "No logging directives file was specified." << endl;
     } else {
-      FDMExec->SetOutputDirectives(output_file);
+      if (!FDMExec->SetOutputDirectives(output_file)) return false;
     }
   }
 
@@ -226,7 +236,12 @@ bool FGScript::LoadScript( string script )
     // Process the conditions
     condition_element = event_element->FindElement("condition");
     if (condition_element != 0) {
-      newCondition = new FGCondition(condition_element, PropertyManager);
+      try {
+        newCondition = new FGCondition(condition_element, PropertyManager);
+      } catch(string str) {
+        cout << endl << fgred << str << reset << endl << endl;
+        return false;
+      }
       newEvent->Condition = newCondition;
     } else {
       cerr << "No condition specified in script event " << newEvent->Name << endl;
@@ -320,7 +335,7 @@ bool FGScript::RunScript(void)
   unsigned i, j;
   unsigned event_ctr = 0;
 
-  double currentTime = State->Getsim_time();
+  double currentTime = FDMExec->GetSimTime();
   double newSetValue = 0;
 
   if (currentTime > EndTime) return false; //Script done!
@@ -409,7 +424,7 @@ bool FGScript::RunScript(void)
         cout << endl << "  Event " << event_ctr << " (" << Events[ev_ctr].Name << ")"
              << " executed at time: " << currentTime << endl;
         for (j=0; j<Events[ev_ctr].NotifyProperties.size();j++) {
-          cout << "    " << Events[ev_ctr].NotifyProperties[j]->GetName()
+          cout << "    " << Events[ev_ctr].NotifyProperties[j]->GetRelativeName()
                << " = " << Events[ev_ctr].NotifyProperties[j]->getDoubleValue() << endl;
         }
         cout << endl;
@@ -453,7 +468,8 @@ void FGScript::Debug(int from)
       cout << endl;
       cout << "Script: \"" << ScriptName << "\"" << endl;
       cout << "  begins at " << StartTime << " seconds and runs to " << EndTime
-           << " seconds with dt = " << State->Getdt() << endl;
+        << " seconds with dt = " << setprecision(6) << FDMExec->GetDeltaT() << " (" <<
+        ceil(1.0/FDMExec->GetDeltaT()) << " Hz)" << endl;
       cout << endl;
 
       for (unsigned int i=0; i<local_properties.size(); i++) {
@@ -476,7 +492,10 @@ void FGScript::Debug(int from)
 
         Events[i].Condition->PrintCondition();
 
-        cout << endl << "  Actions taken:" << endl << "    {";
+        cout << endl << "  Actions taken";
+        if (Events[i].Delay > 0.0)
+          cout << " (after a delay of " << Events[i].Delay << " secs)";
+        cout << ":" << endl << "    {";
         for (unsigned j=0; j<Events[i].SetValue.size(); j++) {
           if (Events[i].SetValue[j] == 0.0 && Events[i].Functions[j] != 0L) {
             if (Events[i].SetParam[j] == 0) {
@@ -486,7 +505,7 @@ void FGScript::Debug(int from)
                    << reset << endl;
               exit(-1);
             }
-            cout << endl << "      set " << Events[i].SetParam[j]->GetName()
+            cout << endl << "      set " << Events[i].SetParam[j]->GetRelativeName("/fdm/jsbsim/")
                  << " to function value";
           } else {
             if (Events[i].SetParam[j] == 0) {
@@ -496,7 +515,7 @@ void FGScript::Debug(int from)
                    << reset << endl;
               exit(-1);
             }
-            cout << endl << "      set " << Events[i].SetParam[j]->GetName()
+            cout << endl << "      set " << Events[i].SetParam[j]->GetRelativeName("/fdm/jsbsim/")
                  << " to " << Events[i].SetValue[j];
           }
 
@@ -529,8 +548,21 @@ void FGScript::Debug(int from)
           if (Events[i].Action[j] == FG_RAMP || Events[i].Action[j] == FG_EXP)
             cout << " with time constant " << Events[i].TC[j] << ")";
         }
-        cout << endl << "    }" << endl << endl;
+        cout << endl << "    }" << endl;
 
+        // Print notifications
+        if (Events[i].Notify) {
+          if (Events[i].NotifyProperties.size() > 0) {
+            cout << "  Notifications" << ":" << endl << "    {" << endl;
+            for (unsigned j=0; j<Events[i].NotifyProperties.size();j++) {
+              cout << "      "
+            	   << Events[i].NotifyProperties[j]->GetRelativeName("/fdm/jsbsim/")
+                   << endl;
+            }
+            cout << "    }" << endl;
+          }
+        }
+        cout << endl;
       }
     }
   }

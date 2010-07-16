@@ -40,7 +40,6 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #include "FGOutput.h"
-#include "FGState.h"
 #include "FGFDMExec.h"
 #include "FGAtmosphere.h"
 #include "FGFCS.h"
@@ -53,6 +52,7 @@ INCLUDES
 #include "FGPropagate.h"
 #include "FGAuxiliary.h"
 #include "FGInertial.h"
+#include "FGPropulsion.h"
 #include "models/propulsion/FGEngine.h"
 #include "models/propulsion/FGTank.h"
 #include "models/propulsion/FGPiston.h"
@@ -77,7 +77,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id$";
+static const char *IdSrc = "$Id: FGOutput.cpp,v 1.48 2010/04/12 12:25:19 jberndt Exp $";
 static const char *IdHdr = ID_OUTPUT;
 
 // (stolen from FGFS native_fdm.cxx)
@@ -187,7 +187,7 @@ bool FGOutput::Run(void)
 {
   if (FGModel::Run()) return true;
 
-  if (enabled && !State->IntegrationSuspended()&& !FDMExec->Holding()) {
+  if (enabled && !FDMExec->IntegrationSuspended()&& !FDMExec->Holding()) {
     RunPreFunctions();
     if (Type == otSocket) {
       SocketOutput();
@@ -267,7 +267,8 @@ void FGOutput::DelimitedOutput(const string& fname)
     if (SubSystems & ssRates) {
       outstream << delimeter;
       outstream << "P (deg/s)" + delimeter + "Q (deg/s)" + delimeter + "R (deg/s)" + delimeter;
-      outstream << "P dot (deg/s^2)" + delimeter + "Q dot (deg/s^2)" + delimeter + "R dot (deg/s^2)";
+      outstream << "P dot (deg/s^2)" + delimeter + "Q dot (deg/s^2)" + delimeter + "R dot (deg/s^2)" + delimeter;
+      outstream << "P_{inertial} (deg/s)" + delimeter + "Q_{inertial} (deg/s)" + delimeter + "R_{inertial} (deg/s)";
     }
     if (SubSystems & ssVelocities) {
       outstream << delimeter;
@@ -277,6 +278,7 @@ void FGOutput::DelimitedOutput(const string& fname)
       outstream << "V_{Inertial} (ft/s)" + delimeter;
       outstream << "UBody" + delimeter + "VBody" + delimeter + "WBody" + delimeter;
       outstream << "Aero V_{X Body} (ft/s)" + delimeter + "Aero V_{Y Body} (ft/s)" + delimeter + "Aero V_{Z Body} (ft/s)" + delimeter;
+      outstream << "V_{X_{inertial}} (ft/s)" + delimeter + "V_{Y_{inertial}} (ft/s)" + delimeter + "V_{Z_{inertial}} (ft/s)" + delimeter;
       outstream << "V_{North} (ft/s)" + delimeter + "V_{East} (ft/s)" + delimeter + "V_{Down} (ft/s)";
     }
     if (SubSystems & ssForces) {
@@ -334,8 +336,9 @@ void FGOutput::DelimitedOutput(const string& fname)
       outstream << "Beta (deg)" + delimeter;
       outstream << "Latitude (deg)" + delimeter;
       outstream << "Longitude (deg)" + delimeter;
-      outstream << "ECEF X (ft)" + delimeter + "ECEF Y (ft)" + delimeter + "ECEF Z (ft)" + delimeter;
-      outstream << "EPA (deg)" + delimeter;
+      outstream << "X_{ECI} (ft)" + delimeter + "Y_{ECI} (ft)" + delimeter + "Z_{ECI} (ft)" + delimeter;
+      outstream << "X_{ECEF} (ft)" + delimeter + "Y_{ECEF} (ft)" + delimeter + "Z_{ECEF} (ft)" + delimeter;
+      outstream << "Earth Position Angle (deg)" + delimeter;
       outstream << "Distance AGL (ft)" + delimeter;
       outstream << "Terrain Elevation (ft)";
     }
@@ -365,7 +368,7 @@ void FGOutput::DelimitedOutput(const string& fname)
     dFirstPass = false;
   }
 
-  outstream << State->Getsim_time();
+  outstream << FDMExec->GetSimTime();
   if (SubSystems & ssSimulation) {
   }
   if (SubSystems & ssAerosurfaces) {
@@ -383,7 +386,8 @@ void FGOutput::DelimitedOutput(const string& fname)
   if (SubSystems & ssRates) {
     outstream << delimeter;
     outstream << (radtodeg*Propagate->GetPQR()).Dump(delimeter) << delimeter;
-    outstream << (radtodeg*Propagate->GetPQRdot()).Dump(delimeter);
+    outstream << (radtodeg*Propagate->GetPQRdot()).Dump(delimeter) << delimeter;
+    outstream << (radtodeg*Propagate->GetPQRi()).Dump(delimeter);
   }
   if (SubSystems & ssVelocities) {
     outstream << delimeter;
@@ -393,6 +397,7 @@ void FGOutput::DelimitedOutput(const string& fname)
     outstream << Propagate->GetInertialVelocityMagnitude() << delimeter;
     outstream << setprecision(12) << Propagate->GetUVW().Dump(delimeter) << delimeter;
     outstream << Auxiliary->GetAeroUVW().Dump(delimeter) << delimeter;
+    outstream << Propagate->GetInertialVelocity().Dump(delimeter) << delimeter;
     outstream << Propagate->GetVel().Dump(delimeter);
     outstream.precision(10);
   }
@@ -445,6 +450,7 @@ void FGOutput::DelimitedOutput(const string& fname)
     outstream << Propagate->GetLocation().GetLatitudeDeg() << delimeter;
     outstream << Propagate->GetLocation().GetLongitudeDeg() << delimeter;
     outstream.precision(18);
+    outstream << ((FGColumnVector3)Propagate->GetInertialPosition()).Dump(delimeter) << delimeter;
     outstream << ((FGColumnVector3)Propagate->GetLocation()).Dump(delimeter) << delimeter;
     outstream.precision(14);
     outstream << Inertial->GetEarthPositionAngleDeg() << delimeter;
@@ -817,7 +823,7 @@ void FGOutput::SocketOutput(void)
   }
 
   socket->Clear();
-  socket->Append(State->Getsim_time());
+  socket->Append(FDMExec->GetSimTime());
 
   if (SubSystems & ssAerosurfaces) {
     socket->Append(FCS->GetDaCmd());
@@ -952,13 +958,15 @@ bool FGOutput::Load(Element* element)
     output_file_name = DirectivesFile;      // one found in the config file.
     document = LoadXMLDocument(output_file_name);
   } else if (!element->GetAttributeValue("file").empty()) {
-    output_file_name = element->GetAttributeValue("file");
+    output_file_name = FDMExec->GetRootDir() + element->GetAttributeValue("file");
     document = LoadXMLDocument(output_file_name);
   } else {
     document = element;
   }
 
-  name = document->GetAttributeValue("name");
+  if (!document) return false;
+
+  name = FDMExec->GetRootDir() + document->GetAttributeValue("name");
   type = document->GetAttributeValue("type");
   SetType(type);
   if (!document->GetAttributeValue("port").empty() && type == string("SOCKET")) {
@@ -1035,7 +1043,7 @@ void FGOutput::SetRate(int rtHz)
 {
   rtHz = rtHz>1000?1000:(rtHz<0?0:rtHz);
   if (rtHz > 0) {
-    rate = (int)(0.5 + 1.0/(State->Getdt()*rtHz));
+    rate = (int)(0.5 + 1.0/(FDMExec->GetDeltaT()*rtHz));
     Enable();
   } else {
     rate = 1;
@@ -1085,7 +1093,7 @@ void FGOutput::Debug(int from)
       }
       switch (Type) {
       case otCSV:
-        cout << scratch << " in CSV format output at rate " << 1/(State->Getdt()*rate) << " Hz" << endl;
+        cout << scratch << " in CSV format output at rate " << 1/(FDMExec->GetDeltaT()*rate) << " Hz" << endl;
         break;
       case otNone:
       default:

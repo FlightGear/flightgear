@@ -63,7 +63,7 @@ namespace std
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_JSBBASE "$Id$"
+#define ID_JSBBASE "$Id: FGJSBBase.h,v 1.30 2010/07/01 23:13:19 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -79,7 +79,7 @@ CLASS DOCUMENTATION
 *   This class provides universal constants, utility functions, messaging
 *   functions, and enumerated constants to JSBSim.
     @author Jon S. Berndt
-    @version $Id$
+    @version $Id: FGJSBBase.h,v 1.30 2010/07/01 23:13:19 jberndt Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -310,7 +310,7 @@ protected:
 
   static std::queue <Message> Messages;
 
-  void Debug(int from) {};
+  void Debug(int) {};
 
   static unsigned int messageId;
 
