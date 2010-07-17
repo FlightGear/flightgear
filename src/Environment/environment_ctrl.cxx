@@ -183,6 +183,14 @@ FGInterpolateEnvironmentCtrl::read_table (const SGPropertyNode * node, vector<bu
 
 	if( sort_required )
 		sort(table.begin(), table.end(), bucket::lessThan);
+
+	// cleanup entries with (almost)same altitude
+	for( vector<bucket *>::size_type n = 1; n < table.size(); n++ ) {
+		if( fabs(table[n]->altitude_ft - table[n-1]->altitude_ft ) < 1 ) {
+			SG_LOG( SG_GENERAL, SG_ALERT, "Removing duplicate altitude entry in environment config for altitude " << table[n]->altitude_ft );
+			table.erase( table.begin() + n );
+		}
+	}
 }
 
 void
@@ -196,7 +204,7 @@ FGInterpolateEnvironmentCtrl::update (double delta_time_sec)
 	int length = _boundary_table.size();
 
 	if (length > 0) {
-								// boundary table
+		// boundary table
 		double boundary_limit = _boundary_table[length-1]->altitude_ft;
 		if (boundary_limit >= altitude_agl_ft) {
 			do_interpolate(_boundary_table, altitude_agl_ft, _environment);
@@ -204,16 +212,16 @@ FGInterpolateEnvironmentCtrl::update (double delta_time_sec)
 		} else if ((boundary_limit + boundary_transition) >= altitude_agl_ft) {
 			//TODO: this is 500ft above the top altitude of boundary layer
 			//shouldn't this be +/-250 ft off of the top altitude?
-								// both tables
+			// both tables
 			do_interpolate(_boundary_table, altitude_agl_ft, &env1);
 			do_interpolate(_aloft_table, altitude_ft, &env2);
-			double fraction =
-				(altitude_agl_ft - boundary_limit) / boundary_transition;
+			double fraction = boundary_transition > SGLimitsd::min() ?
+				(altitude_agl_ft - boundary_limit) / boundary_transition : 1.0;
 			interpolate(&env1, &env2, fraction, _environment);
 			return;
 		}
 	}
-								// aloft table
+	// aloft table
 	do_interpolate(_aloft_table, altitude_ft, _environment);
 }
 
@@ -224,31 +232,26 @@ FGInterpolateEnvironmentCtrl::do_interpolate (vector<bucket *> &table, double al
 	if (length == 0)
 		return;
 
-								// Boundary conditions
+	// Boundary conditions
 	if ((length == 1) || (table[0]->altitude_ft >= altitude_ft)) {
-		environment->copy(table[0]->environment);
+		environment->copy(table[0]->environment); // below bottom of table
 		return;
 	} else if (table[length-1]->altitude_ft <= altitude_ft) {
-		environment->copy(table[length-1]->environment);
+		environment->copy(table[length-1]->environment); // above top of table
 		return;
-	}
-								// Search the interpolation table
-	for (int i = 0; i < length - 1; i++) {
-		if ((i == length - 1) || (table[i]->altitude_ft <= altitude_ft)) {
-				FGEnvironment * env1 = &(table[i]->environment);
-				FGEnvironment * env2 = &(table[i+1]->environment);
-				double fraction;
-				if (table[i]->altitude_ft == table[i+1]->altitude_ft)
-					fraction = 1.0;
-				else 
-					fraction =
-						((altitude_ft - table[i]->altitude_ft) /
-						 (table[i+1]->altitude_ft - table[i]->altitude_ft));
-				interpolate(env1, env2, fraction, environment);
+	} 
 
-				return;
-		}
-	}
+	// Search the interpolation table
+	int layer;
+	for ( layer = 1; // can't be below bottom layer, handled above
+	      layer < length && table[layer]->altitude_ft <= altitude_ft;
+ 	      layer++);
+	FGEnvironment * env1 = &(table[layer-1]->environment);
+	FGEnvironment * env2 = &(table[layer]->environment);
+	// two layers of same altitude were sorted out in read_table
+	double fraction = ((altitude_ft - table[layer-1]->altitude_ft) /
+	                  (table[layer]->altitude_ft - table[layer-1]->altitude_ft));
+	interpolate(env1, env2, fraction, environment);
 }
 
 bool
@@ -747,7 +750,7 @@ void FGMetarCtrl::set_metar( const char * metar_string )
 		m = new FGMetar( metar_string );
 	}
 	catch( sg_io_exception ) {
-		fprintf( stderr, "can't get metar: %s\n", metar_string );
+		SG_LOG( SG_GENERAL, SG_WARN, "Can't get metar: " << metar_string );
 		metar_valid = false;
 		return;
 	}
