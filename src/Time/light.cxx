@@ -326,6 +326,7 @@ void FGLight::update_adj_fog_color () {
     }
 
     double hor_rotation, vert_rotation;
+    static float gamma = system_gamma;
 
     // first determine the difference between our view angle and local
     // direction to the sun
@@ -340,8 +341,8 @@ void FGLight::update_adj_fog_color () {
     //
     SGVec4f color = thesky->get_scene_color();
 
-    gamma_restore_rgb( _fog_color.data() );
-    gamma_restore_rgb( _sky_color.data() );
+    gamma_restore_rgb( _fog_color.data(), gamma );
+    gamma_restore_rgb( _sky_color.data(), gamma );
 
     // Calculate the fog color in the direction of the sun for
     // sunrise/sunset effects.
@@ -367,15 +368,17 @@ void FGLight::update_adj_fog_color () {
     float rf2 = avf * pow(rf1*rf1, 1/sif) * 1.0639;
     float rf3 = 1.0 - rf2;
 
+    gamma = system_gamma * (0.9 - sif*avf);
+
     _adj_fog_color[0] = rf3 * _fog_color[0] + rf2 * s_red;
     _adj_fog_color[1] = rf3 * _fog_color[1] + rf2 * s_green;
     _adj_fog_color[2] = rf3 * _fog_color[2] + rf2 * s_blue;
-    gamma_correct_rgb( _adj_fog_color.data() );
+    gamma_correct_rgb( _adj_fog_color.data(), gamma);
 
     // make sure the colors have their original value before they are being
     // used by the rest of the program.
     //
-    gamma_correct_rgb( _fog_color.data() );
-    gamma_correct_rgb( _sky_color.data() );
+    gamma_correct_rgb( _fog_color.data(), gamma );
+    gamma_correct_rgb( _sky_color.data(), gamma );
 }
 
