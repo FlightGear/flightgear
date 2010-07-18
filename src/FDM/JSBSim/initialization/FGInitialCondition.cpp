@@ -56,12 +56,13 @@ INCLUDES
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
+#include "input_output/string_utilities.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id$";
+static const char *IdSrc = "$Id: FGInitialCondition.cpp,v 1.40 2010/06/02 04:05:13 jberndt Exp $";
 static const char *IdHdr = ID_INITIALCONDITION;
 
 //******************************************************************************
@@ -704,23 +705,22 @@ double FGInitialCondition::calcVcas(double Mach) {
   double psl=fdmex->GetAtmosphere()->GetPressureSL();
   double rhosl=fdmex->GetAtmosphere()->GetDensitySL();
   double pt,A,B,D,vcas;
-  if(Mach < 0) Mach=0;
-  if(Mach < 1)    //calculate total pressure assuming isentropic flow
+
+  if (Mach < 0) Mach=0;
+  if (Mach < 1)    //calculate total pressure assuming isentropic flow
     pt=p*pow((1 + 0.2*Mach*Mach),3.5);
   else {
     // shock in front of pitot tube, we'll assume its normal and use
     // the Rayleigh Pitot Tube Formula, i.e. the ratio of total
-    // pressure behind the shock to the static pressure in front
-
-
-    //the normal shock assumption should not be a bad one -- most supersonic
-    //aircraft place the pitot probe out front so that it is the forward
-    //most point on the aircraft.  The real shock would, of course, take
-    //on something like the shape of a rounded-off cone but, here again,
-    //the assumption should be good since the opening of the pitot probe
-    //is very small and, therefore, the effects of the shock curvature
-    //should be small as well. AFAIK, this approach is fairly well accepted
-    //within the aerospace community
+    // pressure behind the shock to the static pressure in front of
+    // the normal shock assumption should not be a bad one -- most supersonic
+    // aircraft place the pitot probe out front so that it is the forward
+    // most point on the aircraft.  The real shock would, of course, take
+    // on something like the shape of a rounded-off cone but, here again,
+    // the assumption should be good since the opening of the pitot probe
+    // is very small and, therefore, the effects of the shock curvature
+    // should be small as well. AFAIK, this approach is fairly well accepted
+    // within the aerospace community
 
     B = 5.76*Mach*Mach/(5.6*Mach*Mach - 0.8);
 
@@ -842,8 +842,6 @@ double FGInitialCondition::GetWindDirDegIC(void) const {
 
 bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
 {
-  int n;
-
   string sep = "/";
   if( useStoredPath ) {
     init_file_name = fdmex->GetFullAircraftPath() + sep + rstfile + ".xml";
@@ -863,6 +861,26 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
     cerr << "File: " << init_file_name << " is not a reset file." << endl;
     exit(-1);
   }
+
+  double version = document->GetAttributeValueAsNumber("version");
+  if (version == HUGE_VAL) {
+    return Load_v1(); // Default to the old version
+  } else if (version >= 3.0) {
+    cerr << "Only initialization file formats 1 and 2 are currently supported" << endl;
+    exit (-1);
+  } else if (version >= 2.0) {
+    return Load_v2();
+  } else if (version >= 1.0) {
+    return Load_v1();
+  } 
+
+}
+
+//******************************************************************************
+
+bool FGInitialCondition::Load_v1(void)
+{
+  int n;
 
   if (document->FindElement("latitude"))
     SetLatitudeDegIC(document->FindElementValueAsNumberConvertTo("latitude", "DEG"));
@@ -937,6 +955,249 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
   fdmex->RunIC();
 
   return true;
+}
+
+//******************************************************************************
+
+bool FGInitialCondition::Load_v2(void)
+{
+  int n;
+  FGColumnVector3 vLoc, vOrient;
+  bool result = true;
+  FGInertial* Inertial = fdmex->GetInertial();
+  FGPropagate* Propagate = fdmex->GetPropagate();
+
+  if (document->FindElement("earth_position_angle")) {
+    double epa = document->FindElementValueAsNumberConvertTo("earth_position_angle", "RAD");
+    Inertial->SetEarthPositionAngle(epa);
+  }
+
+  // Initialize vehicle position
+  //
+  // Allowable frames:
+  // - ECI (Earth Centered Inertial)
+  // - ECEF (Earth Centered, Earth Fixed)
+
+  Element* position = document->FindElement("position");
+  if (position) {
+    vLoc = position->FindElementTripletConvertTo("FT");
+    string frame = position->GetAttributeValue("frame");
+    frame = to_lower(frame);
+    if (frame == "eci") {
+      // Need to transform vLoc to ECEF for storage and use in FGLocation.
+      vLoc = Propagate->GetTi2ec()*vLoc;
+    } else if (frame == "ecef") {
+      // Move vLoc query until after lat/lon/alt query to eliminate spurious warning msgs.
+      if (vLoc.Magnitude() == 0.0) {
+        Propagate->SetLatitudeDeg(position->FindElementValueAsNumberConvertTo("latitude", "DEG"));
+        Propagate->SetLongitudeDeg(position->FindElementValueAsNumberConvertTo("longitude", "DEG"));
+        if (position->FindElement("radius")) {
+          radius_to_vehicle = position->FindElementValueAsNumberConvertTo("radius", "FT");
+          SetAltitudeASLFtIC(radius_to_vehicle - sea_level_radius);
+        } else if (position->FindElement("altitudeAGL")) {
+          SetAltitudeAGLFtIC(position->FindElementValueAsNumberConvertTo("altitudeAGL", "FT"));
+        } else if (position->FindElement("altitudeMSL")) {
+          SetAltitudeASLFtIC(position->FindElementValueAsNumberConvertTo("altitudeMSL", "FT"));
+        } else {
+          cerr << endl << "  No altitude or radius initial condition is given." << endl;
+          result = false;
+        }
+      }
+    } else {
+      cerr << endl << "  Neither ECI nor ECEF frame is specified for initial position." << endl;
+      result = false;
+    }
+  } else {
+    cerr << endl << "  Initial position not specified in this initialization file." << endl;
+    result = false;
+  }
+
+  // End of position initialization
+
+  // Initialize vehicle orientation
+  // Allowable frames
+  // - ECI (Earth Centered Inertial)
+  // - ECEF (Earth Centered, Earth Fixed)
+  // - Local
+  //
+  // Need to convert the provided orientation to an ECI orientation, using 
+  // the given orientation and knowledge of the Earth position angle.
+  // This could be done using matrices (where in the subscript "b/a",
+  // it is meant "b with respect to a", and where b=body frame, 
+  // i=inertial frame, and e=ecef frame) as:
+  //
+  // C_b/i =  C_b/e * C_e/i
+  //
+  // Using quaternions (note reverse ordering compared to matrix representation):
+  //
+  // Q_b/i = Q_e/i * Q_b/e
+  //
+  // Use the specific matrices as needed. The above example of course is for the whole
+  // body to inertial orientation.
+  // The new orientation angles can be extracted from the matrix or the quaternion.
+  // ToDo: Do we need to deal with normalization of the quaternions here?
+
+  Element* orientation_el = document->FindElement("orientation");
+  if (orientation_el) {
+    string frame = orientation_el->GetAttributeValue("frame");
+    frame = to_lower(frame);
+    vOrient = orientation_el->FindElementTripletConvertTo("RAD");
+    FGQuaternion QuatI2Body;
+    if (frame == "eci") {
+
+      QuatI2Body = FGQuaternion(vOrient);
+
+    } else if (frame == "ecef") {
+
+      // In this case we are given the Euler angles representing the orientation of
+      // the body with respect to the ECEF system, represented by the C_b/e Matrix.
+      // We want the body orientation with respect to the inertial system:
+      //
+      // C_b/i =  C_b/e * C_e/i
+      //
+      // Using quaternions (note reverse ordering compared to matrix representation):
+      //
+      // Q_b/i = Q_e/i * Q_b/e
+
+      FGQuaternion QuatEC2Body(vOrient); // Store relationship of Body frame wrt ECEF frame, Q_b/e
+      FGQuaternion QuatI2EC = Propagate->GetTi2ec(); // Get Q_e/i from matrix
+      QuatI2Body = QuatI2EC * QuatEC2Body; // Q_b/i = Q_e/i * Q_b/e 
+
+    } else if (frame == "local") {
+
+      // In this case, we are supplying the Euler angles for the vehicle with
+      // respect to the local (NED frame), also called the navigation frame.
+      // This is the most common way of initializing the orientation of
+      // aircraft. The matrix representation is:
+      //
+      // C_b/i = C_b/n * C_n/e * C_e/i
+      //
+      // Or, using quaternions (note reverse ordering compared to matrix representation):
+      //
+      // Q_b/i = Q_e/i * Q_n/e * Q_b/n
+
+      FGQuaternion QuatLocal2Body = FGQuaternion(vOrient); // Store relationship of Body frame wrt local (NED) frame, Q_b/n
+      FGQuaternion QuatEC2Local = Propagate->GetTec2l();   // Get Q_n/e from matrix
+      FGQuaternion QuatI2EC = Propagate->GetTi2ec(); // Get Q_e/i from matrix
+      QuatI2Body = QuatI2EC * QuatEC2Local * QuatLocal2Body; // Q_b/i = Q_e/i * Q_n/e * Q_b/n
+
+    } else {
+
+      cerr << endl << fgred << "  Orientation frame type: \"" << frame
+           << "\" is not supported!" << reset << endl << endl;
+      result = false;
+
+    }
+
+    Propagate->SetInertialOrientation(QuatI2Body);
+  }
+
+  // Initialize vehicle velocity
+  // Allowable frames
+  // - ECI (Earth Centered Inertial)
+  // - ECEF (Earth Centered, Earth Fixed)
+  // - Local
+  // - Body
+  // The vehicle will be defaulted to (0,0,0) in the Body frame if nothing is provided.
+  
+  Element* velocity_el = document->FindElement("velocity");
+  FGColumnVector3 vInertialVelocity;
+  FGColumnVector3 vInitVelocity = FGColumnVector3(0.0, 0.0, 0.0);
+  if (velocity_el) {
+
+    string frame = velocity_el->GetAttributeValue("frame");
+    frame = to_lower(frame);
+    FGColumnVector3 vInitVelocity = velocity_el->FindElementTripletConvertTo("FT/SEC");
+    FGColumnVector3 omega_cross_r = Inertial->omega() * Propagate->GetInertialPosition();
+
+    if (frame == "eci") {
+      vInertialVelocity = vInitVelocity;
+    } else if (frame == "ecef") {
+      FGMatrix33 mTec2i = Propagate->GetTec2i(); // Get C_i/e
+      vInertialVelocity = mTec2i * vInitVelocity + omega_cross_r;
+    } else if (frame == "local") {
+      FGMatrix33 mTl2i = Propagate->GetTl2i();
+      vInertialVelocity = mTl2i * vInitVelocity + omega_cross_r;
+    } else if (frame == "body") {
+      FGMatrix33 mTb2i = Propagate->GetTb2i();
+      vInertialVelocity = mTb2i * vInitVelocity + omega_cross_r;
+    } else {
+
+      cerr << endl << fgred << "  Velocity frame type: \"" << frame
+           << "\" is not supported!" << reset << endl << endl;
+      result = false;
+
+    }
+
+  } else {
+
+    FGMatrix33 mTb2i = Propagate->GetTb2i();
+    vInertialVelocity = mTb2i * vInitVelocity + (Inertial->omega() * Propagate->GetInertialPosition());
+
+  }
+
+  Propagate->SetInertialVelocity(vInertialVelocity);
+
+  // Allowable frames
+  // - ECI (Earth Centered Inertial)
+  // - ECEF (Earth Centered, Earth Fixed)
+  // - Body
+  
+  FGColumnVector3 vInertialRate;
+  Element* attrate_el = document->FindElement("attitude_rate");
+  if (attrate_el) {
+
+    string frame = attrate_el->GetAttributeValue("frame");
+    frame = to_lower(frame);
+    FGColumnVector3 vAttRate = attrate_el->FindElementTripletConvertTo("RAD/SEC");
+
+    if (frame == "eci") {
+      vInertialRate = vAttRate;
+    } else if (frame == "ecef") {
+//      vInertialRate = vAttRate + Inertial->omega(); 
+    } else if (frame == "body") {
+    //Todo: determine local frame rate
+      FGMatrix33 mTb2l = Propagate->GetTb2l();
+//      vInertialRate = mTb2l*vAttRate + Inertial->omega();
+    } else if (!frame.empty()) { // misspelling of frame
+      
+      cerr << endl << fgred << "  Attitude rate frame type: \"" << frame
+           << "\" is not supported!" << reset << endl << endl;
+      result = false;
+
+    } else if (frame.empty()) {
+    
+    }
+    
+  } else { // Body frame attitude rate assumed 0 relative to local.
+/*
+    //Todo: determine local frame rate
+
+    FGMatrix33 mTi2l = Propagate->GetTi2l();
+    vVel = mTi2l * vInertialVelocity;
+
+    // Compute the local frame ECEF velocity
+    vVel = Tb2l * VState.vUVW;
+
+    FGColumnVector3 vOmegaLocal = FGColumnVector3(
+       radInv*vVel(eEast),
+      -radInv*vVel(eNorth),
+      -radInv*vVel(eEast)*VState.vLocation.GetTanLatitude() );
+*/  
+  }
+
+  // Check to see if any engines are specified to be initialized in a running state
+  FGPropulsion* propulsion = fdmex->GetPropulsion();
+  Element* running_elements = document->FindElement("running");
+  while (running_elements) {
+    n = int(running_elements->GetDataAsNumber());
+    propulsion->InitRunning(n);
+    running_elements = document->FindNextElement("running");
+  }
+
+  // fdmex->RunIC();
+
+  return result;
 }
 
 //******************************************************************************

@@ -56,10 +56,11 @@ INCLUDES
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <iomanip>
 
 #include "FGPropagate.h"
+#include "FGGroundReactions.h"
 #include "FGFDMExec.h"
-#include "FGState.h"
 #include "FGAircraft.h"
 #include "FGMassBalance.h"
 #include "FGInertial.h"
@@ -69,7 +70,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id$";
+static const char *IdSrc = "$Id: FGPropagate.cpp,v 1.55 2010/07/09 04:11:45 jberndt Exp $";
 static const char *IdHdr = ID_PROPAGATE;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -80,29 +81,22 @@ FGPropagate::FGPropagate(FGFDMExec* fdmex) : FGModel(fdmex)
 {
   Debug(0);
   Name = "FGPropagate";
-
-  last2_vPQRdot.InitMatrix();
-  last_vPQRdot.InitMatrix();
+  gravType = gtWGS84;
+ 
   vPQRdot.InitMatrix();
-  
-  last2_vQtrndot = FGQuaternion(0,0,0);
-  last_vQtrndot = FGQuaternion(0,0,0);
   vQtrndot = FGQuaternion(0,0,0);
-
-  last2_vUVWdot.InitMatrix();
-  last_vUVWdot.InitMatrix();
   vUVWdot.InitMatrix();
-  
-  last2_vLocationDot.InitMatrix();
-  last_vLocationDot.InitMatrix();
-  vLocationDot.InitMatrix();
-
-  vOmegaLocal.InitMatrix();
+  vInertialVelocity.InitMatrix();
 
   integrator_rotational_rate = eAdamsBashforth2;
   integrator_translational_rate = eTrapezoidal;
   integrator_rotational_position = eAdamsBashforth2;
   integrator_translational_position = eTrapezoidal;
+
+  VState.dqPQRdot.resize(4, FGColumnVector3(0.0,0.0,0.0));
+  VState.dqUVWdot.resize(4, FGColumnVector3(0.0,0.0,0.0));
+  VState.dqInertialVelocity.resize(4, FGColumnVector3(0.0,0.0,0.0));
+  VState.dqQtrndot.resize(4, FGQuaternion(0.0,0.0,0.0));
 
   bind();
   Debug(0);
@@ -126,25 +120,17 @@ bool FGPropagate::InitModel(void)
 
   VState.vLocation.SetRadius( LocalTerrainRadius + 4.0 );
   VState.vLocation.SetEllipse(Inertial->GetSemimajor(), Inertial->GetSemiminor());
-  vOmega = FGColumnVector3( 0.0, 0.0, Inertial->omega() ); // Earth rotation vector
+  vOmegaEarth = FGColumnVector3( 0.0, 0.0, Inertial->omega() ); // Earth rotation vector
 
-  last2_vPQRdot.InitMatrix();
-  last_vPQRdot.InitMatrix();
   vPQRdot.InitMatrix();
-  
-  last2_vQtrndot = FGQuaternion(0,0,0);
-  last_vQtrndot = FGQuaternion(0,0,0);
   vQtrndot = FGQuaternion(0,0,0);
-
-  last2_vUVWdot.InitMatrix();
-  last_vUVWdot.InitMatrix();
   vUVWdot.InitMatrix();
-  
-  last2_vLocationDot.InitMatrix();
-  last_vLocationDot.InitMatrix();
-  vLocationDot.InitMatrix();
+  vInertialVelocity.InitMatrix();
 
-  vOmegaLocal.InitMatrix();
+  VState.dqPQRdot.resize(4, FGColumnVector3(0.0,0.0,0.0));
+  VState.dqUVWdot.resize(4, FGColumnVector3(0.0,0.0,0.0));
+  VState.dqInertialVelocity.resize(4, FGColumnVector3(0.0,0.0,0.0));
+  VState.dqQtrndot.resize(4, FGColumnVector3(0.0,0.0,0.0));
 
   integrator_rotational_rate = eAdamsBashforth2;
   integrator_translational_rate = eTrapezoidal;
@@ -161,51 +147,92 @@ void FGPropagate::SetInitialState(const FGInitialCondition *FGIC)
   SetSeaLevelRadius(FGIC->GetSeaLevelRadiusFtIC());
   SetTerrainElevation(FGIC->GetTerrainElevationFtIC());
 
-  // Set the position lat/lon/radius
-  VState.vLocation.SetPosition( FGIC->GetLongitudeRadIC(),
-                          FGIC->GetLatitudeRadIC(),
-                          FGIC->GetAltitudeASLFtIC() + FGIC->GetSeaLevelRadiusFtIC() );
-
   VehicleRadius = GetRadius();
   radInv = 1.0/VehicleRadius;
 
-  // Set the Orientation from the euler angles
-  VState.vQtrn = FGQuaternion( FGIC->GetPhiRadIC(),
-                        FGIC->GetThetaRadIC(),
-                        FGIC->GetPsiRadIC() );
+  // Initialize the State Vector elements and the transformation matrices
+
+  // Set the position lat/lon/radius
+  VState.vLocation.SetPosition( FGIC->GetLongitudeRadIC(),
+                                FGIC->GetLatitudeRadIC(),
+                                FGIC->GetAltitudeASLFtIC() + FGIC->GetSeaLevelRadiusFtIC() );
+
+  VState.vLocation.SetEarthPositionAngle(Inertial->GetEarthPositionAngle());
+
+  Ti2ec = GetTi2ec();         // ECI to ECEF transform
+  Tec2i = Ti2ec.Transposed(); // ECEF to ECI frame transform
+  
+  Tl2ec = GetTl2ec();         // local to ECEF transform
+  Tec2l = Tl2ec.Transposed(); // ECEF to local frame transform
+
+  Ti2l  = GetTi2l();
+  Tl2i  = Ti2l.Transposed();
+
+  // Set the orientation from the euler angles (is normalized within the
+  // constructor). The Euler angles represent the orientation of the body
+  // frame relative to the local frame.
+  VState.qAttitudeLocal = FGQuaternion( FGIC->GetPhiRadIC(),
+                                        FGIC->GetThetaRadIC(),
+                                        FGIC->GetPsiRadIC() );
+
+  VState.qAttitudeECI = Ti2l.GetQuaternion()*VState.qAttitudeLocal;
+
+  Ti2b  = GetTi2b();           // ECI to body frame transform
+  Tb2i  = Ti2b.Transposed();   // body to ECI frame transform
+
+  Tl2b  = VState.qAttitudeLocal; // local to body frame transform
+  Tb2l  = Tl2b.Transposed();     // body to local frame transform
+
+  Tec2b = Tl2b * Tec2l;        // ECEF to body frame transform
+  Tb2ec = Tec2b.Transposed();  // body to ECEF frame tranform
 
   // Set the velocities in the instantaneus body frame
   VState.vUVW = FGColumnVector3( FGIC->GetUBodyFpsIC(),
-                          FGIC->GetVBodyFpsIC(),
-                          FGIC->GetWBodyFpsIC() );
+                                 FGIC->GetVBodyFpsIC(),
+                                 FGIC->GetWBodyFpsIC() );
 
-  // Set the angular velocities in the instantaneus body frame.
-  VState.vPQR = FGColumnVector3( FGIC->GetPRadpsIC(),
-                          FGIC->GetQRadpsIC(),
-                          FGIC->GetRRadpsIC() );
+  VState.vInertialPosition = Tec2i * VState.vLocation;
 
   // Compute the local frame ECEF velocity
-  vVel = GetTb2l()*VState.vUVW;
+  vVel = Tb2l * VState.vUVW;
 
-  // Finally, make sure that the quaternion stays normalized.
-  VState.vQtrn.Normalize();
+  // Refer to Stevens and Lewis, 1.5-14a, pg. 49.
+  // This is the rotation rate of the "Local" frame, expressed in the local frame.
+
+  FGColumnVector3 vOmegaLocal = FGColumnVector3(
+     radInv*vVel(eEast),
+    -radInv*vVel(eNorth),
+    -radInv*vVel(eEast)*VState.vLocation.GetTanLatitude() );
+
+  // Set the angular velocities of the body frame relative to the ECEF frame,
+  // expressed in the body frame. Effectively, this is:
+  //   w_b/e = w_b/l + w_l/e
+  VState.vPQR = FGColumnVector3( FGIC->GetPRadpsIC(),
+                                 FGIC->GetQRadpsIC(),
+                                 FGIC->GetRRadpsIC() ) + Tl2b*vOmegaLocal;
+
+  VState.vPQRi = VState.vPQR + Ti2b * vOmegaEarth;
+
+  // Make an initial run and set past values
+  CalculatePQRdot();           // Angular rate derivative
+  CalculateUVWdot();           // Translational rate derivative
+  CalculateQuatdot();          // Angular orientation derivative
+  CalculateInertialVelocity(); // Translational position derivative
+
+  // Initialize past values deques
+  VState.dqPQRdot.clear();
+  VState.dqUVWdot.clear();
+  VState.dqInertialVelocity.clear();
+  VState.dqQtrndot.clear();
+  for (int i=0; i<4; i++) {
+    VState.dqPQRdot.push_front(vPQRdot);
+    VState.dqUVWdot.push_front(vUVWdot);
+    VState.dqInertialVelocity.push_front(VState.vInertialVelocity);
+    VState.dqQtrndot.push_front(vQtrndot);
+  }
 
   // Recompute the LocalTerrainRadius.
   RecomputeLocalTerrainRadius();
-
-  // These local copies of the transformation matrices are for use for
-  // initial conditions only.
-
-  Tl2b = GetTl2b();           // local to body frame transform
-  Tb2l = Tl2b.Transposed();   // body to local frame transform
-  Tl2ec = GetTl2ec();         // local to ECEF transform
-  Tec2l = Tl2ec.Transposed(); // ECEF to local frame transform
-  Tec2b = Tl2b * Tec2l;       // ECEF to body frame transform
-  Tb2ec = Tec2b.Transposed(); // body to ECEF frame tranform
-  Ti2ec = GetTi2ec();         // ECI to ECEF transform
-  Tec2i = Ti2ec.Transposed(); // ECEF to ECI frame transform
-  Ti2b  = Tec2b*Ti2ec;        // ECI to body frame transform
-  Tb2i  = Ti2b.Transposed();  // body to ECI frame transform
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -230,123 +257,65 @@ Inertial.
 
 bool FGPropagate::Run(void)
 {
+static int ctr;
+
   if (FGModel::Run()) return true;  // Fast return if we have nothing to do ...
   if (FDMExec->Holding()) return false;
 
+  double dt = FDMExec->GetDeltaT()*rate;  // The 'stepsize'
+
   RunPreFunctions();
 
+  // Calculate state derivatives
+  CalculatePQRdot();           // Angular rate derivative
+  CalculateUVWdot();           // Translational rate derivative
+  CalculateQuatdot();          // Angular orientation derivative
+  CalculateInertialVelocity(); // Translational position derivative
+
+  // Propagate rotational / translational velocity, angular /translational position, respectively.
+  Integrate(VState.vPQRi,             vPQRdot,           VState.dqPQRdot,           dt, integrator_rotational_rate);
+  Integrate(VState.vUVW,              vUVWdot,           VState.dqUVWdot,           dt, integrator_translational_rate);
+  Integrate(VState.qAttitudeECI,      vQtrndot,          VState.dqQtrndot,          dt, integrator_rotational_position);
+  Integrate(VState.vInertialPosition, VState.vInertialVelocity, VState.dqInertialVelocity, dt, integrator_translational_position);
+
+  VState.qAttitudeECI.Normalize(); // Normalize the ECI Attitude quaternion
+
+  VState.vLocation.SetEarthPositionAngle(Inertial->GetEarthPositionAngle()); // Update the Earth position angle (EPA)
+
+  // Update the "Location-based" transformation matrices from the vLocation vector.
+
+  Ti2ec = GetTi2ec();          // ECI to ECEF transform
+  Tec2i = Ti2ec.Transposed();  // ECEF to ECI frame transform
+  Tl2ec = GetTl2ec();          // local to ECEF transform
+  Tec2l = Tl2ec.Transposed();  // ECEF to local frame transform
+  Ti2l  = GetTi2l();
+  Tl2i  = Ti2l.Transposed();
+
+  // Update the "Orientation-based" transformation matrices from the orientation quaternion
+
+  Ti2b  = GetTi2b();           // ECI to body frame transform
+  Tb2i  = Ti2b.Transposed();   // body to ECI frame transform
+  Tl2b  = Ti2b*Tl2i;           // local to body frame transform
+  Tb2l  = Tl2b.Transposed();   // body to local frame transform
+  Tec2b = Tl2b * Tec2l;        // ECEF to body frame transform
+  Tb2ec = Tec2b.Transposed();  // body to ECEF frame tranform
+
+  // Set auxililary state variables
+  VState.vLocation = Ti2ec*VState.vInertialPosition;
   RecomputeLocalTerrainRadius();
 
   // Calculate current aircraft radius from center of planet
-
-  VehicleRadius = GetRadius();
+  VehicleRadius = VState.vInertialPosition.Magnitude();
   radInv = 1.0/VehicleRadius;
 
-  // These local copies of the transformation matrices are for use this
-  // pass through Run() only.
+  VState.vPQR = VState.vPQRi - Ti2b * vOmegaEarth;
 
-  Tl2b = GetTl2b();           // local to body frame transform
-  Tb2l = Tl2b.Transposed();   // body to local frame transform
-  Tl2ec = GetTl2ec();         // local to ECEF transform
-  Tec2l = Tl2ec.Transposed(); // ECEF to local frame transform
-  Tec2b = Tl2b * Tec2l;       // ECEF to body frame transform
-  Tb2ec = Tec2b.Transposed(); // body to ECEF frame tranform
-  Ti2ec = GetTi2ec();         // ECI to ECEF transform
-  Tec2i = Ti2ec.Transposed(); // ECEF to ECI frame transform
-  Ti2b  = Tec2b*Ti2ec;        // ECI to body frame transform
-  Tb2i  = Ti2b.Transposed();  // body to ECI frame transform
+  VState.qAttitudeLocal = Tl2b.GetQuaternion();
 
   // Compute vehicle velocity wrt ECEF frame, expressed in Local horizontal frame.
   vVel = Tb2l * VState.vUVW;
 
-  // Inertial angular velocity measured in the body frame.
-  vPQRi = VState.vPQR + Tec2b*vOmega;
-
-  // Calculate state derivatives
-  CalculatePQRdot();      // Angular rate derivative
-  CalculateUVWdot();      // Translational rate derivative
-  CalculateQuatdot();     // Angular orientation derivative
-  CalculateLocationdot(); // Translational position derivative
-
-  // Integrate to propagate the state
-
-  double dt = State->Getdt()*rate;  // The 'stepsize'
-
-  // Propagate rotational velocity
-
-  switch(integrator_rotational_rate) {
-  case eRectEuler:       VState.vPQR += dt*vPQRdot;
-    break;
-  case eTrapezoidal:     VState.vPQR += 0.5*dt*(vPQRdot + last_vPQRdot);
-    break;
-  case eAdamsBashforth2: VState.vPQR += dt*(1.5*vPQRdot - 0.5*last_vPQRdot);
-    break;
-  case eAdamsBashforth3: VState.vPQR += (1/12.0)*dt*(23.0*vPQRdot - 16.0*last_vPQRdot + 5.0*last2_vPQRdot);
-    break;
-  case eNone: // do nothing, freeze angular rate
-    break;
-  }
-  
-  // Propagate translational velocity
-
-  switch(integrator_translational_rate) {
-  case eRectEuler:       VState.vUVW += dt*vUVWdot;
-    break;
-  case eTrapezoidal:     VState.vUVW += 0.5*dt*(vUVWdot + last_vUVWdot);
-    break;
-  case eAdamsBashforth2: VState.vUVW += dt*(1.5*vUVWdot - 0.5*last_vUVWdot);
-    break;
-  case eAdamsBashforth3: VState.vUVW += (1/12.0)*dt*(23.0*vUVWdot - 16.0*last_vUVWdot + 5.0*last2_vUVWdot);
-    break;
-  case eNone: // do nothing, freeze translational rate
-    break;
-  }
-
-  // Propagate angular position
-
-  switch(integrator_rotational_position) {
-  case eRectEuler:       VState.vQtrn += dt*vQtrndot;
-    break;
-  case eTrapezoidal:     VState.vQtrn += 0.5*dt*(vQtrndot + last_vQtrndot);
-    break;
-  case eAdamsBashforth2: VState.vQtrn += dt*(1.5*vQtrndot - 0.5*last_vQtrndot);
-    break;
-  case eAdamsBashforth3: VState.vQtrn += (1/12.0)*dt*(23.0*vQtrndot - 16.0*last_vQtrndot + 5.0*last2_vQtrndot);
-    break;
-  case eNone: // do nothing, freeze angular position
-    break;
-  }
-
-  // Propagate translational position
-
-  switch(integrator_translational_position) {
-  case eRectEuler:       VState.vLocation += dt*vLocationDot;
-    break;
-  case eTrapezoidal:     VState.vLocation += 0.5*dt*(vLocationDot + last_vLocationDot);
-    break;
-  case eAdamsBashforth2: VState.vLocation += dt*(1.5*vLocationDot - 0.5*last_vLocationDot);
-    break;
-  case eAdamsBashforth3: VState.vLocation += (1/12.0)*dt*(23.0*vLocationDot - 16.0*last_vLocationDot + 5.0*last2_vLocationDot);
-    break;
-  case eNone: // do nothing, freeze translational position
-    break;
-  }
-  
-  // Set past values
-  
-  last2_vPQRdot = last_vPQRdot;
-  last_vPQRdot = vPQRdot;
-  
-  last2_vUVWdot = last_vUVWdot;
-  last_vUVWdot = vUVWdot;
-  
-  last2_vQtrndot = last_vQtrndot;
-  last_vQtrndot = vQtrndot;
-
-  last2_vLocationDot = last_vLocationDot;
-  last_vLocationDot = vLocationDot;
-
-  RunPreFunctions();
+  RunPostFunctions();
 
   Debug(2);
   return false;
@@ -361,7 +330,7 @@ bool FGPropagate::Run(void)
 // J is the inertia matrix
 // Jinv is the inverse inertia matrix
 // vMoments is the moment vector in the body frame
-// vPQRi is the total inertial angular velocity of the vehicle
+// VState.vPQRi is the total inertial angular velocity of the vehicle
 // expressed in the body frame.
 // Reference: See Stevens and Lewis, "Aircraft Control and Simulation", 
 //            Second edition (2004), eqn 1.5-16e (page 50)
@@ -376,7 +345,7 @@ void FGPropagate::CalculatePQRdot(void)
   // moments and the total inertial angular velocity expressed in the body
   // frame.
 
-  vPQRdot = Jinv*(vMoments - vPQRi*(J*vPQRi));
+  vPQRdot = Jinv*(vMoments - VState.vPQRi*(J*VState.vPQRi));
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -388,72 +357,140 @@ void FGPropagate::CalculatePQRdot(void)
 
 void FGPropagate::CalculateQuatdot(void)
 {
-  vOmegaLocal.InitMatrix( radInv*vVel(eEast),
-                         -radInv*vVel(eNorth),
-                         -radInv*vVel(eEast)*VState.vLocation.GetTanLatitude() );
-
   // Compute quaternion orientation derivative on current body rates
-  vQtrndot = VState.vQtrn.GetQDot( VState.vPQR - Tl2b*vOmegaLocal);
+  vQtrndot = VState.qAttitudeECI.GetQDot( VState.vPQRi);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // This set of calculations results in the body frame accelerations being
 // computed.
+// Compute body frame accelerations based on the current body forces.
+// Include centripetal and coriolis accelerations.
+// vOmegaEarth is the Earth angular rate - expressed in the inertial frame -
+//   so it has to be transformed to the body frame. More completely,
+//   vOmegaEarth is the rate of the ECEF frame relative to the Inertial
+//   frame (ECI), expressed in the Inertial frame.
+// vForces is the total force on the vehicle in the body frame.
+// VState.vPQR is the vehicle body rate relative to the ECEF frame, expressed
+//   in the body frame.
+// VState.vUVW is the vehicle velocity relative to the ECEF frame, expressed
+//   in the body frame.
 // Reference: See Stevens and Lewis, "Aircraft Control and Simulation", 
-//            Second edition (2004), eqn 1.5-16d (page 50)
+//            Second edition (2004), eqns 1.5-13 (pg 48) and 1.5-16d (page 50)
 
 void FGPropagate::CalculateUVWdot(void)
 {
   double mass = MassBalance->GetMass();                      // mass
   const FGColumnVector3& vForces = Aircraft->GetForces();    // current forces
 
-  const FGColumnVector3 vGravAccel( 0.0, 0.0, Inertial->GetGAccel(VehicleRadius) );
+  vUVWdot = vForces/mass - (VState.vPQR + 2.0*(Ti2b *vOmegaEarth)) * VState.vUVW;
 
-  // Begin to compute body frame accelerations based on the current body forces
-  vUVWdot = vForces/mass - VState.vPQR * VState.vUVW;
-
-  // Include Coriolis acceleration.
-  vUVWdot -= 2.0 * (Ti2b *vOmega) * VState.vUVW;
-
-  // Include Centrifugal acceleration.
-  if (!GroundReactions->GetWOW()) {
-    vUVWdot -= Ti2b*(vOmega*(vOmega*(Tec2i*VState.vLocation)));
+  // Include Centripetal acceleration.
+  if (!GroundReactions->GetWOW() && Aircraft->GetHoldDown() == 0) {
+    vUVWdot -= Ti2b * (vOmegaEarth*(vOmegaEarth*VState.vInertialPosition));
   }
 
   // Include Gravitation accel
-  FGColumnVector3 gravAccel = Tl2b*vGravAccel;
-  vUVWdot += gravAccel;
+  switch (gravType) {
+    case gtStandard:
+      vGravAccel = Tl2b * FGColumnVector3( 0.0, 0.0, Inertial->GetGAccel(VehicleRadius) );
+      break;
+    case gtWGS84:
+      vGravAccel = Tec2b * Inertial->GetGravityJ2(VState.vLocation);
+      break;
+  }
+
+  vUVWdot += vGravAccel;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  // Transform the velocity vector of the body relative to the origin (Earth
+  // center) to be expressed in the inertial frame, and add the vehicle velocity
+  // contribution due to the rotation of the planet.
+  // Reference: See Stevens and Lewis, "Aircraft Control and Simulation", 
+  //            Second edition (2004), eqn 1.5-16c (page 50)
+
+void FGPropagate::CalculateInertialVelocity(void)
+{
+  VState.vInertialVelocity = Tb2i * VState.vUVW + (vOmegaEarth * VState.vInertialPosition);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGPropagate::CalculateLocationdot(void)
+void FGPropagate::Integrate( FGColumnVector3& Integrand,
+                             FGColumnVector3& Val,
+                             deque <FGColumnVector3>& ValDot,
+                             double dt,
+                             eIntegrateType integration_type)
 {
-  // Transform the vehicle velocity relative to the ECEF frame, expressed
-  // in the body frame, to be expressed in the ECEF frame.
-  vLocationDot = Tb2ec * VState.vUVW;
+  ValDot.push_front(Val);
+  ValDot.pop_back();
 
-  // Now, transform the velocity vector of the body relative to the origin (Earth
-  // center) to be expressed in the inertial frame, and add the vehicle velocity
-  // contribution due to the rotation of the planet. The above velocity is only
-  // relative to the rotating ECEF frame.
-  // Reference: See Stevens and Lewis, "Aircraft Control and Simulation", 
-  //            Second edition (2004), eqn 1.5-16c (page 50)
+  switch(integration_type) {
+  case eRectEuler:       Integrand += dt*ValDot[0];
+    break;
+  case eTrapezoidal:     Integrand += 0.5*dt*(ValDot[0] + ValDot[1]);
+    break;
+  case eAdamsBashforth2: Integrand += dt*(1.5*ValDot[0] - 0.5*ValDot[1]);
+    break;
+  case eAdamsBashforth3: Integrand += (1/12.0)*dt*(23.0*ValDot[0] - 16.0*ValDot[1] + 5.0*ValDot[2]);
+    break;
+  case eAdamsBashforth4: Integrand += (1/24.0)*dt*(55.0*ValDot[0] - 59.0*ValDot[1] + 37.0*ValDot[2] - 9.0*ValDot[3]);
+    break;
+  case eNone: // do nothing, freeze translational rate
+    break;
+  }
+}
 
-  vInertialVelocity = Tec2i * vLocationDot + (vOmega * (Tec2i * VState.vLocation));
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPropagate::Integrate( FGQuaternion& Integrand,
+                             FGQuaternion& Val,
+                             deque <FGQuaternion>& ValDot,
+                             double dt,
+                             eIntegrateType integration_type)
+{
+  ValDot.push_front(Val);
+  ValDot.pop_back();
+
+  switch(integration_type) {
+  case eRectEuler:       Integrand += dt*ValDot[0];
+    break;
+  case eTrapezoidal:     Integrand += 0.5*dt*(ValDot[0] + ValDot[1]);
+    break;
+  case eAdamsBashforth2: Integrand += dt*(1.5*ValDot[0] - 0.5*ValDot[1]);
+    break;
+  case eAdamsBashforth3: Integrand += (1/12.0)*dt*(23.0*ValDot[0] - 16.0*ValDot[1] + 5.0*ValDot[2]);
+    break;
+  case eAdamsBashforth4: Integrand += (1/24.0)*dt*(55.0*ValDot[0] - 59.0*ValDot[1] + 37.0*ValDot[2] - 9.0*ValDot[3]);
+    break;
+  case eNone: // do nothing, freeze translational rate
+    break;
+  }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPropagate::SetInertialOrientation(FGQuaternion Qi) {
+  VState.qAttitudeECI = Qi;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPropagate::SetInertialVelocity(FGColumnVector3 Vi) {
+  VState.vInertialVelocity = Vi;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGPropagate::RecomputeLocalTerrainRadius(void)
 {
-  double t = State->Getsim_time();
+  double t = FDMExec->GetSimTime();
 
   // Get the LocalTerrain radius.
-  FGLocation contactloc;
-  FGColumnVector3 dv;
-  FDMExec->GetGroundCallback()->GetAGLevel(t, VState.vLocation, contactloc, dv, dv);
-  LocalTerrainRadius = contactloc.GetRadius();
+//  FDMExec->GetGroundCallback()->GetAGLevel(t, VState.vLocation, contactloc, dv, dv);
+//  LocalTerrainRadius = contactloc.GetRadius();
+  LocalTerrainRadius = FDMExec->GetGroundCallback()->GetTerrainGeoCentRadius();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -472,17 +509,19 @@ double FGPropagate::GetTerrainElevation(void) const
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+//Todo: when should this be called - when should the new EPA be used to
+// calculate the transformation matrix, so that the matrix is not a step
+// ahead of the sim and the associated calculations?
 const FGMatrix33& FGPropagate::GetTi2ec(void)
 {
-  return VState.vLocation.GetTi2ec(Inertial->GetEarthPositionAngle());
+  return VState.vLocation.GetTi2ec();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 const FGMatrix33& FGPropagate::GetTec2i(void)
 {
-  return VState.vLocation.GetTec2i(Inertial->GetEarthPositionAngle());
+  return VState.vLocation.GetTec2i();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -518,7 +557,7 @@ void FGPropagate::SetDistanceAGL(double tt)
 void FGPropagate::bind(void)
 {
   typedef double (FGPropagate::*PMF)(int) const;
-//  typedef double (FGPropagate::*dPMF)() const;
+
   PropertyManager->Tie("velocities/h-dot-fps", this, &FGPropagate::Gethdot);
 
   PropertyManager->Tie("velocities/v-north-fps", this, eNorth, (PMF)&FGPropagate::GetVel);
@@ -572,10 +611,11 @@ void FGPropagate::bind(void)
   PropertyManager->Tie("attitude/pitch-rad", this, (int)eTht, (PMF)&FGPropagate::GetEuler);
   PropertyManager->Tie("attitude/heading-true-rad", this, (int)ePsi, (PMF)&FGPropagate::GetEuler);
   
-  PropertyManager->Tie("simulation/integrator/rate/rotational", &integrator_rotational_rate);
-  PropertyManager->Tie("simulation/integrator/rate/translational", &integrator_translational_rate);
-  PropertyManager->Tie("simulation/integrator/position/rotational", &integrator_rotational_position);
-  PropertyManager->Tie("simulation/integrator/position/translational", &integrator_translational_position);
+  PropertyManager->Tie("simulation/integrator/rate/rotational", (int*)&integrator_rotational_rate);
+  PropertyManager->Tie("simulation/integrator/rate/translational", (int*)&integrator_translational_rate);
+  PropertyManager->Tie("simulation/integrator/position/rotational", (int*)&integrator_rotational_position);
+  PropertyManager->Tie("simulation/integrator/position/translational", (int*)&integrator_translational_position);
+  PropertyManager->Tie("simulation/gravity-model", &gravType);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -612,7 +652,96 @@ void FGPropagate::Debug(int from)
   }
   if (debug_lvl & 4 ) { // Run() method entry print for FGModel-derived objects
   }
-  if (debug_lvl & 8 ) { // Runtime state variables
+  if (debug_lvl & 8 && from == 2) { // Runtime state variables
+    cout << endl << fgblue << highint << left 
+         << "  Propagation Report (English units: ft, degrees) at simulation time " << FDMExec->GetSimTime() << " seconds"
+         << reset << endl;
+    cout << endl;
+    cout << highint << "  Earth Position Angle (deg): " << setw(8) << setprecision(3) << reset
+                    << Inertial->GetEarthPositionAngleDeg() << endl;
+    cout << endl;
+    cout << highint << "  Body velocity (ft/sec): " << setw(8) << setprecision(3) << reset << VState.vUVW << endl;
+    cout << highint << "  Local velocity (ft/sec): " << setw(8) << setprecision(3) << reset << vVel << endl;
+    cout << highint << "  Inertial velocity (ft/sec): " << setw(8) << setprecision(3) << reset << VState.vInertialVelocity << endl;
+    cout << highint << "  Inertial Position (ft): " << setw(10) << setprecision(3) << reset << VState.vInertialPosition << endl;
+    cout << highint << "  Latitude (deg): " << setw(8) << setprecision(3) << reset << VState.vLocation.GetLatitudeDeg() << endl;
+    cout << highint << "  Longitude (deg): " << setw(8) << setprecision(3) << reset << VState.vLocation.GetLongitudeDeg() << endl;
+    cout << highint << "  Altitude ASL (ft): " << setw(8) << setprecision(3) << reset << GetAltitudeASL() << endl;
+    cout << highint << "  Acceleration (NED, ft/sec^2): " << setw(8) << setprecision(3) << reset << Tb2l*GetUVWdot() << endl;
+    cout << endl;
+    cout << highint << "  Matrix ECEF to Body (Orientation of Body with respect to ECEF): "
+                    << reset << endl << Tec2b.Dump("\t", "    ") << endl;
+    cout << highint << "    Associated Euler angles (deg): " << setw(8)
+                    << setprecision(3) << reset << (Tec2b.GetQuaternion().GetEuler()*radtodeg)
+                    << endl << endl;
+
+    cout << highint << "  Matrix Body to ECEF (Orientation of ECEF with respect to Body):"
+                    << reset << endl << Tb2ec.Dump("\t", "    ") << endl;
+    cout << highint << "    Associated Euler angles (deg): " << setw(8)
+                    << setprecision(3) << reset << (Tb2ec.GetQuaternion().GetEuler()*radtodeg)
+                    << endl << endl;
+
+    cout << highint << "  Matrix Local to Body (Orientation of Body with respect to Local):"
+                    << reset << endl << Tl2b.Dump("\t", "    ") << endl;
+    cout << highint << "    Associated Euler angles (deg): " << setw(8)
+                    << setprecision(3) << reset << (Tl2b.GetQuaternion().GetEuler()*radtodeg)
+                    << endl << endl;
+
+    cout << highint << "  Matrix Body to Local (Orientation of Local with respect to Body):"
+                    << reset << endl << Tb2l.Dump("\t", "    ") << endl;
+    cout << highint << "    Associated Euler angles (deg): " << setw(8)
+                    << setprecision(3) << reset << (Tb2l.GetQuaternion().GetEuler()*radtodeg)
+                    << endl << endl;
+
+    cout << highint << "  Matrix Local to ECEF (Orientation of ECEF with respect to Local):"
+                    << reset << endl << Tl2ec.Dump("\t", "    ") << endl;
+    cout << highint << "    Associated Euler angles (deg): " << setw(8)
+                    << setprecision(3) << reset << (Tl2ec.GetQuaternion().GetEuler()*radtodeg)
+                    << endl << endl;
+
+    cout << highint << "  Matrix ECEF to Local (Orientation of Local with respect to ECEF):"
+                    << reset << endl << Tec2l.Dump("\t", "    ") << endl;
+    cout << highint << "    Associated Euler angles (deg): " << setw(8)
+                    << setprecision(3) << reset << (Tec2l.GetQuaternion().GetEuler()*radtodeg)
+                    << endl << endl;
+
+    cout << highint << "  Matrix ECEF to Inertial (Orientation of Inertial with respect to ECEF):"
+                    << reset << endl << Tec2i.Dump("\t", "    ") << endl;
+    cout << highint << "    Associated Euler angles (deg): " << setw(8)
+                    << setprecision(3) << reset << (Tec2i.GetQuaternion().GetEuler()*radtodeg)
+                    << endl << endl;
+
+    cout << highint << "  Matrix Inertial to ECEF (Orientation of ECEF with respect to Inertial):"
+                    << reset << endl << Ti2ec.Dump("\t", "    ") << endl;
+    cout << highint << "    Associated Euler angles (deg): " << setw(8)
+                    << setprecision(3) << reset << (Ti2ec.GetQuaternion().GetEuler()*radtodeg)
+                    << endl << endl;
+
+    cout << highint << "  Matrix Inertial to Body (Orientation of Body with respect to Inertial):"
+                    << reset << endl << Ti2b.Dump("\t", "    ") << endl;
+    cout << highint << "    Associated Euler angles (deg): " << setw(8)
+                    << setprecision(3) << reset << (Ti2b.GetQuaternion().GetEuler()*radtodeg)
+                    << endl << endl;
+
+    cout << highint << "  Matrix Body to Inertial (Orientation of Inertial with respect to Body):"
+                    << reset << endl << Tb2i.Dump("\t", "    ") << endl;
+    cout << highint << "    Associated Euler angles (deg): " << setw(8)
+                    << setprecision(3) << reset << (Tb2i.GetQuaternion().GetEuler()*radtodeg)
+                    << endl << endl;
+
+    cout << highint << "  Matrix Inertial to Local (Orientation of Local with respect to Inertial):"
+                    << reset << endl << Ti2l.Dump("\t", "    ") << endl;
+    cout << highint << "    Associated Euler angles (deg): " << setw(8)
+                    << setprecision(3) << reset << (Ti2l.GetQuaternion().GetEuler()*radtodeg)
+                    << endl << endl;
+
+    cout << highint << "  Matrix Local to Inertial (Orientation of Inertial with respect to Local):"
+                    << reset << endl << Tl2i.Dump("\t", "    ") << endl;
+    cout << highint << "    Associated Euler angles (deg): " << setw(8)
+                    << setprecision(3) << reset << (Tl2i.GetQuaternion().GetEuler()*radtodeg)
+                    << endl << endl;
+
+    cout << setprecision(6); // reset the output stream
   }
   if (debug_lvl & 16) { // Sanity checking
     if (from == 2) { // State sanity checking

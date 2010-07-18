@@ -115,4 +115,5 @@ void FGMagicCarpet::update( double dt ) {
     _update_ground_elev_at_pos();
     _set_Sea_level_radius( sl_radius * SG_METER_TO_FEET);
     _set_Altitude( get_Altitude() + climb );
+    _set_Altitude_AGL( get_Altitude() - get_Runway_altitude() );
 }

@@ -953,6 +953,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\src\Fdm\JSBSim\math\FGRungeKutta.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\Fdm\JSBSim\math\FGRungeKutta.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\src\Fdm\JSBSim\math\FGFunction.cpp"
 					>
 				</File>

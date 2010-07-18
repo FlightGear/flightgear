@@ -26,6 +26,7 @@
 
 #include <simgear/structure/commands.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/sg_dir.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/ephemeris/ephemeris.hxx>
 #include <simgear/magvar/magvar.hxx>
@@ -189,7 +190,8 @@ void FGGlobals::set_fg_root (const string &root) {
     n->setAttribute(SGPropertyNode::WRITE, false);
 }
 
-void FGGlobals::set_fg_scenery (const string &scenery) {
+void FGGlobals::set_fg_scenery (const string &scenery)
+{
     SGPath s;
     if (scenery.empty()) {
         s.set( fg_root );
@@ -201,38 +203,35 @@ void FGGlobals::set_fg_scenery (const string &scenery) {
     fg_scenery.clear();
 
     for (unsigned i = 0; i < path_list.size(); i++) {
+        SGPath path(path_list[i]);
+        if (!path.exists()) {
+          SG_LOG(SG_GENERAL, SG_WARN, "scenery path not found:" << path.str());
+          continue;
+        }
 
-        ulDir *d = ulOpenDir( path_list[i].c_str() );
-        if (d == NULL)
-            continue;
-        ulCloseDir( d );
-
-        SGPath pt( path_list[i] ), po( path_list[i] );
-        pt.append("Terrain");
-        po.append("Objects");
-
-        ulDir *td = ulOpenDir( pt.c_str() );
-        ulDir *od = ulOpenDir( po.c_str() );
-
-	// "Terrain" and "Airports" directory don't exist. add directory as is
-        // otherwise, automatically append either Terrain, Objects, or both
-        //if (td == NULL && od == NULL)
-            fg_scenery.push_back( path_list[i] );
-        //else {
-            if (td != NULL) {
-                fg_scenery.push_back( pt.str() );
-                ulCloseDir( td );
-            }
-            if (od != NULL) {
-                fg_scenery.push_back( po.str() );
-                ulCloseDir( od );
-            }
-        //}
+        simgear::Dir dir(path);
+        SGPath terrainDir(dir.file("Terrain"));
+        SGPath objectsDir(dir.file("Objects"));
+        
+      // this code used to add *either* the base dir, OR add the 
+      // Terrain and Objects subdirs, but the conditional logic was commented
+      // out, such that all three dirs are added. Unfortunately there's
+      // no information as to why the change was made.
+        fg_scenery.push_back(path.str());
+        
+        if (terrainDir.exists()) {
+          fg_scenery.push_back(terrainDir.str());
+        }
+        
+        if (objectsDir.exists()) {
+          fg_scenery.push_back(objectsDir.str());
+        }
+        
         // insert a marker for FGTileEntry::load(), so that
         // FG_SCENERY=A:B becomes list ["A/Terrain", "A/Objects", "",
         // "B/Terrain", "B/Objects", ""]
         fg_scenery.push_back("");
-    }
+    } // of path list iteration
 }
 
 

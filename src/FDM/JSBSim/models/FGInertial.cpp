@@ -38,7 +38,6 @@ INCLUDES
 #include "FGInertial.h"
 #include "FGFDMExec.h"
 #include "FGPropagate.h"
-#include "FGState.h"
 #include "FGMassBalance.h"
 #include <iostream>
 
@@ -46,7 +45,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id$";
+static const char *IdSrc = "$Id: FGInertial.cpp,v 1.18 2010/03/28 05:57:00 jberndt Exp $";
 static const char *IdHdr = ID_INERTIAL;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -119,7 +118,7 @@ bool FGInertial::Run(void)
   // Gravitation accel
   double r = Propagate->GetRadius();
   gAccel = GetGAccel(r);
-  earthPosAngle += State->Getdt()*RotationRate;
+  earthPosAngle += FDMExec->GetDeltaT()*RotationRate;
 
   RunPostFunctions();
 
@@ -131,6 +130,34 @@ bool FGInertial::Run(void)
 double FGInertial::GetGAccel(double r) const
 {
   return GM/(r*r);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+// Calculate the WGS84 gravitation value in ECEF frame. Pass in the ECEF position
+// via the position parameter. The J2Gravity value returned is in ECEF frame,
+// and therefore may need to be expressed (transformed) in another frame,
+// depending on how it is used. See Stevens and Lewis eqn. 1.4-16.
+
+FGColumnVector3 FGInertial::GetGravityJ2(FGColumnVector3 position) const
+{
+  FGColumnVector3 J2Gravity;
+
+  // Gravitation accel
+  double r = position.Magnitude();
+  double lat = Propagate->GetLatitude();
+  double sinLat = sin(lat);
+
+  double preCommon = 1.5*J2*(a/r)*(a/r);
+  double xy = 1.0 - 5.0*(sinLat*sinLat);
+  double z = 3.0 - 5.0*(sinLat*sinLat);
+  double GMOverr2 = GM/(r*r);
+
+  J2Gravity(1) = -GMOverr2 * ((1.0 + (preCommon * xy)) * position(eX)/r);
+  J2Gravity(2) = -GMOverr2 * ((1.0 + (preCommon * xy)) * position(eY)/r);
+  J2Gravity(3) = -GMOverr2 * ((1.0 + (preCommon *  z)) * position(eZ)/r);
+
+  return J2Gravity;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -8,16 +8,16 @@
 ------ Copyright (C) 1999 - 2000  Curtis L. Olson (curt@flightgear.org) ------
 
  This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License as
+ modify it under the terms of the GNU Lesser General Public License as
  published by the Free Software Foundation; either version 2 of the
  License, or (at your option) any later version.
 
  This program is distributed in the hope that it will be useful, but
  WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- General Public License for more details.
+ Lesser General Public License for more details.
 
- You should have received a copy of the GNU General Public License
+ You should have received a copy of the GNU Lesser General Public License
  along with this program; if not, write to the Free Software
  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
@@ -86,7 +86,7 @@ CLASS DOCUMENTATION
     documentation for main for direction on running JSBSim apart from FlightGear.
     @author Curtis L. Olson (original)
     @author Tony Peden (Maintained and refined)
-    @version $Id$
+    @version $Id: JSBSim.hxx,v 1.13 2010/07/07 20:46:36 andgi Exp $
     @see main in file JSBSim.cpp (use main() wrapper for standalone usage)
 */
 
@@ -252,6 +252,10 @@ private:
     SGPropertyNode_ptr flap_pos_pct;
     SGPropertyNode_ptr speedbrake_pos_pct;
     SGPropertyNode_ptr spoilers_pos_pct;
+
+    SGPropertyNode_ptr ab_brake_engaged;
+    SGPropertyNode_ptr ab_brake_left_pct;
+    SGPropertyNode_ptr ab_brake_right_pct;
     
     SGPropertyNode_ptr gear_pos_pct;
     SGPropertyNode_ptr wing_fold_pos_pct;

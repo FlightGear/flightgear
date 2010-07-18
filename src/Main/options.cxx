@@ -29,6 +29,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/timing/sg_time.hxx>
+#include <simgear/misc/sg_dir.hxx>
 
 #include <math.h>		// rint()
 #include <stdio.h>
@@ -39,20 +40,12 @@
 #include <iostream>
 #include <string>
 
-#include <plib/ul.h>
-
 #include <simgear/math/sg_random.h>
 #include <simgear/props/props_io.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
-
-// #include <Include/general.hxx>
-// #include <Airports/simple.hxx>
-// #include <Cockpit/cockpit.hxx>
-// #include <FDM/flight.hxx>
-
 #include <Autopilot/route_mgr.hxx>
 #include <GUI/gui.h>
 
@@ -1649,7 +1642,7 @@ fgParseArgs (int argc, char **argv)
               fgOptLogLevel( "alert" );
               SGPath path( globals->get_fg_root() );
               path.append("Aircraft");
-              fgShowAircraft(path, true);
+              fgShowAircraft(path);
               exit(0);
 
             } else if (result == FG_OPTIONS_SHOW_SOUND_DEVICES) {
@@ -1848,138 +1841,6 @@ fgUsage (bool verbose)
     if ( !verbose ) {
         cout << endl;
         cout << "For a complete list of options use --help --verbose" << endl;
-    }
-#ifdef _MSC_VER
-    cout << "Hit a key to continue..." << endl;
-    cin.get();
-#endif
-}
-
-// A simple function to return an integer depending on the position
-// of the status string within the array in order to determine the hierarchy.
-unsigned int getNumMaturity(const char * str) 
-{
-  // changes should also be reflected in $FG_ROOT/data/options.xml & 
-  // $FG_ROOT/data/Translations/string-default.xml
-  const char* levels[] = {"alpha","beta","early-production","production"}; 
-
-  for (size_t i=0; i<(sizeof(levels)/sizeof(levels[0]));i++) 
-    if (strcmp(str,levels[i])==0)
-      return i;
-
-  return 0;
-};
-
-
-static void fgSearchAircraft(const SGPath &path, string_list &aircraft,
-                             bool recursive)
-{   
-   
-   ulDirEnt* dire;
-   ulDir *dirp = ulOpenDir(path.str().c_str());
-   if (dirp == NULL) {
-      cerr << "Unable to open aircraft directory '" << path.str() << '\'' << endl;
-      exit(-1);
-   }
-
-   while ((dire = ulReadDir(dirp)) != NULL) {
-      char *ptr;
-
-      if (dire->d_isdir) {
-          if (recursive && strcmp("CVS", dire->d_name)
-              && strcmp(".", dire->d_name) && strcmp("..", dire->d_name))
-          {
-              SGPath next = path;
-              next.append(dire->d_name);
-
-              fgSearchAircraft(next, aircraft, true);
-          }
-      } else if ((ptr = strstr(dire->d_name, "-set.xml")) && (ptr[8] == '\0')) {
-
-          SGPath afile = path;
-          afile.append(dire->d_name);
-
-          *ptr = '\0';
-
-          SGPropertyNode root;
-          try {
-             readProperties(afile.str(), &root);
-          } catch (...) {
-             continue;
-          }
-
-          SGPropertyNode *desc = NULL;
-	  SGPropertyNode *status = NULL;
-	  
-          SGPropertyNode *node = root.getNode("sim");
-          if (node) {
-             desc = node->getNode("description");
-	     // if a status tag is found, read it in
-	     if (node->hasValue("status"))
-	     	status = node->getNode("status");
-          }
-
-          //additionally display status information where it is available
-
-          string descStr("   ");
-          descStr += dire->d_name;
-          if (desc) {
-              if (descStr.size() <= 27+3) {
-                descStr.append(29+3-descStr.size(), ' ');
-              } else {
-                descStr += '\n';
-                descStr.append( 32, ' ');
-              }
-              descStr += desc->getStringValue();
-          }
-  
-          SGPropertyNode * required_status
-                             = fgGetNode ("/sim/aircraft-min-status", true);
-	  
-	  // If the node holds the value "all", then there wasn't any status 
-	  // level specified, so we simply go ahead and output ALL aircraft
-	  if (strcmp(required_status->getStringValue(),"all")==0) {	   
-		  aircraft.push_back(descStr);
-		  }
-	  else
-	  {
-	  // If the node doesn't hold "all" as its value, then we are supposed
-	  // to show only aircraft meeting specific status (development status)
-          // requirements:
- 
-     if (node->hasValue("status"))     {
-     	  //Compare (minimally) required status level with actual aircraft status:
-	   if (	getNumMaturity(status->getStringValue() ) >= 
-	  	getNumMaturity(required_status->getStringValue() ) )
-				  aircraft.push_back(descStr); }
-	  			  		  
-	  }
-      
-   
-   }
-   }
-
-   ulCloseDir(dirp);
-}
-
-/*
- * Search in the current directory, and in on directory deeper
- * for <aircraft>-set.xml configuration files and show the aircaft name
- * and the contents of the<description> tag in a sorted manner.
- *
- * @parampath the directory to search for configuration files
- * @param recursive defines whether the directory should be searched recursively
- */
-void fgShowAircraft(const SGPath &path, bool recursive) {
-    string_list aircraft;
-
-    fgSearchAircraft( path, aircraft, recursive );
-
-    sort(aircraft.begin(), aircraft.end());
-    SG_LOG( SG_GENERAL, SG_ALERT, "" ); // To popup the console on Windows
-    cout << "Available aircraft:" << endl;
-    for ( unsigned int i = 0; i < aircraft.size(); i++ ) {
-        cout << aircraft[i] << endl;
     }
 #ifdef _MSC_VER
     cout << "Hit a key to continue..." << endl;

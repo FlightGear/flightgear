@@ -5,20 +5,20 @@
 // Copyright (C) 1999  Curtis L. Olson  - curt@flightgear.org
 //
 // This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
+// modify it under the terms of the GNU Lesser General Public License as
 // published by the Free Software Foundation; either version 2 of the
 // License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// General Public License for more details.
+// Lesser General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
+// You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
-// $Id$
+// $Id: JSBSim.cxx,v 1.62 2010/07/14 05:50:40 ehofman Exp $
 
 
 #ifdef HAVE_CONFIG_H
@@ -45,7 +45,6 @@
 #include "JSBSim.hxx"
 #include <FDM/JSBSim/FGFDMExec.h>
 #include <FDM/JSBSim/FGJSBBase.h>
-#include <FDM/JSBSim/FGState.h>
 #include <FDM/JSBSim/initialization/FGInitialCondition.h>
 #include <FDM/JSBSim/initialization/FGTrim.h>
 #include <FDM/JSBSim/models/FGModel.h>
@@ -58,6 +57,8 @@
 #include <FDM/JSBSim/models/FGMassBalance.h>
 #include <FDM/JSBSim/models/FGAerodynamics.h>
 #include <FDM/JSBSim/models/FGLGear.h>
+#include <FDM/JSBSim/models/FGGroundReactions.h>
+#include <FDM/JSBSim/models/FGPropulsion.h>
 #include <FDM/JSBSim/models/propulsion/FGEngine.h>
 #include <FDM/JSBSim/models/propulsion/FGPiston.h>
 #include <FDM/JSBSim/models/propulsion/FGTurbine.h>
@@ -102,7 +103,7 @@ public:
     double contact[3], normal[3], vel[3], agl = 0;
     mInterface->get_agl_ft(t, loc_cart, SG_METER_TO_FEET*2, contact, normal,
                            vel, &agl);
-    n = FGColumnVector3( -normal[0], -normal[1], -normal[2] );
+    n = FGColumnVector3( normal[0], normal[1], normal[2] );
     v = FGColumnVector3( vel[0], vel[1], vel[2] );
     cont = FGColumnVector3( contact[0], contact[1], contact[2] );
     return agl;
@@ -147,7 +148,6 @@ FGJSBsim::FGJSBsim( double dt )
     // Register ground callback.
     fdmex->SetGroundCallback( new FGFSGroundCallback(this) );
 
-    State           = fdmex->GetState();
     Atmosphere      = fdmex->GetAtmosphere();
     FCS             = fdmex->GetFCS();
     MassBalance     = fdmex->GetMassBalance();
@@ -170,7 +170,13 @@ FGJSBsim::FGJSBsim( double dt )
     SGPath systems_path( fgGetString("/sim/aircraft-dir") );
     systems_path.append( "Systems" );
 
-    State->Setdt( dt );
+// deprecate sim-time-sec for simulation/sim-time-sec
+// remove alias with increased configuration file version number (2.1 or later)
+    SGPropertyNode * node = fgGetNode("/fdm/jsbsim/simulation/sim-time-sec");
+    fgGetNode("/fdm/jsbsim/sim-time-sec", true)->alias( node );
+// end of sim-time-sec deprecation patch
+
+    fdmex->Setdt( dt );
 
     result = fdmex->LoadModel( aircraft_path.str(),
                                engine_path.str(),
@@ -257,6 +263,10 @@ FGJSBsim::FGJSBsim( double dt )
     speedbrake_pos_pct->setDoubleValue(0);
     spoilers_pos_pct->setDoubleValue(0);
 
+    ab_brake_engaged = fgGetNode("/autopilot/autobrake/engaged", true);
+    ab_brake_left_pct = fgGetNode("/autopilot/autobrake/brake-left-output", true);
+    ab_brake_right_pct = fgGetNode("/autopilot/autobrake/brake-right-output", true);
+    
     temperature = fgGetNode("/environment/temperature-degc",true);
     pressure = fgGetNode("/environment/pressure-inhg",true);
     density = fgGetNode("/environment/density-slugft3",true);
@@ -296,8 +306,6 @@ FGJSBsim::~FGJSBsim(void)
 
 void FGJSBsim::init()
 {
-    double tmp;
-
     SG_LOG( SG_FLIGHT, SG_INFO, "Starting and initializing JSBsim" );
 
     // Explicitly call the superclass's
@@ -327,6 +335,21 @@ void FGJSBsim::init()
     SG_LOG(SG_FLIGHT,SG_INFO,"T,p,rho: " << fdmex->GetAtmosphere()->GetTemperature()
      << ", " << fdmex->GetAtmosphere()->GetPressure()
      << ", " << fdmex->GetAtmosphere()->GetDensity() );
+
+// deprecate egt_degf for egt-degf to have consistent naming
+// TODO: raise log-level to ALERT in summer 2010, 
+// remove alias in fall 2010, 
+// remove this code in winter 2010
+    for (unsigned int i=0; i < Propulsion->GetNumEngines(); i++) {
+      SGPropertyNode * node = fgGetNode("engines/engine", i, true);
+      SGPropertyNode * egtn = node->getNode( "egt_degf" );
+      if( egtn != NULL ) {
+        SG_LOG(SG_FLIGHT,SG_WARN,
+               "Aircraft uses deprecated node egt_degf. Please upgrade to egt-degf");
+        node->getNode("egt-degf", true)->alias( egtn );
+      }
+    }
+// end of egt_degf deprecation patch
 
     if (fgGetBool("/sim/presets/running")) {
           for (unsigned int i=0; i < Propulsion->GetNumEngines(); i++) {
@@ -437,7 +460,7 @@ void FGJSBsim::update( double dt )
       cart = FGLocation(lon, lat, alt+slr);
     }
     double cart_pos[3] = { cart(1), cart(2), cart(3) };
-    double t0 = State->Getsim_time();
+    double t0 = fdmex->GetSimTime();
     bool cache_ok = prepare_ground_cache_ft( t0, t0 + dt, cart_pos,
                                              groundCacheRadius );
     if (!cache_ok) {
@@ -465,7 +488,7 @@ void FGJSBsim::update( double dt )
     if ( needTrim ) {
       if ( startup_trim->getBoolValue() ) {
         double contact[3], d[3], agl;
-        get_agl_ft(State->Getsim_time(), cart_pos, SG_METER_TO_FEET*2, contact,
+        get_agl_ft(fdmex->GetSimTime(), cart_pos, SG_METER_TO_FEET*2, contact,
                    d, d, &agl);
         double terrain_alt = sqrt(contact[0]*contact[0] + contact[1]*contact[1]
              + contact[2]*contact[2]) - fgic->GetSeaLevelRadiusFtIC();
@@ -484,7 +507,7 @@ void FGJSBsim::update( double dt )
 
     for ( i=0; i < multiloop; i++ ) {
       fdmex->Run();
-      update_external_forces(State->Getsim_time() + i * State->Getdt());      
+      update_external_forces(fdmex->GetSimTime() + i * fdmex->GetDeltaT());      
     }
 
     FGJSBBase::Message* msg;
@@ -543,6 +566,12 @@ bool FGJSBsim::copy_to_JSBsim()
     double parking_brake = globals->get_controls()->get_brake_parking();
     double left_brake = globals->get_controls()->get_brake_left();
     double right_brake = globals->get_controls()->get_brake_right();
+    
+    if (ab_brake_engaged->getBoolValue()) {
+      left_brake = ab_brake_left_pct->getDoubleValue();
+      right_brake = ab_brake_right_pct->getDoubleValue(); 
+    }
+    
     FCS->SetLBrake(FMAX(left_brake, parking_brake));
     FCS->SetRBrake(FMAX(right_brake, parking_brake));
     
@@ -773,7 +802,7 @@ bool FGJSBsim::copy_from_JSBsim()
         FGTurbine* eng = (FGTurbine*)Propulsion->GetEngine(i);
         node->setDoubleValue("n1", eng->GetN1());
         node->setDoubleValue("n2", eng->GetN2());
-        node->setDoubleValue("egt_degf", 32 + eng->GetEGT()*9/5);
+        node->setDoubleValue("egt-degf", 32 + eng->GetEGT()*9/5);
         node->setBoolValue("augmentation", eng->GetAugmentation());
         node->setBoolValue("water-injection", eng->GetInjection());
         node->setBoolValue("ignition", eng->GetIgnition());
@@ -816,6 +845,8 @@ bool FGJSBsim::copy_from_JSBsim()
         FGElectric* eng = (FGElectric*)Propulsion->GetEngine(i);
         node->setDoubleValue("rpm", eng->getRPM());
         } // end FGElectric code block
+        break;
+      case FGEngine::etUnknown:
         break;
       }
 
@@ -888,7 +919,7 @@ bool FGJSBsim::copy_from_JSBsim()
 
     // force a sim crashed if crashed (altitude AGL < 0)
     if (get_Altitude_AGL() < -100.0) {
-         State->SuspendIntegration();
+         fdmex->SuspendIntegration();
          crashed = true;
     }
 
@@ -1138,9 +1169,6 @@ void FGJSBsim::do_trim(void)
   } else {
     trimmed->setBoolValue(true);
   }
-//  if (FGJSBBase::debug_lvl > 0)
-//      State->ReportState();
-
   delete fgtrim;
 
   pitch_trim->setDoubleValue( FCS->GetPitchTrimCmd() );
@@ -1257,7 +1285,6 @@ void FGJSBsim::update_external_forces(double t_off)
     FGColumnVector3 hook_tip_body = hook_root_body;
     hook_tip_body(1) -= hook_length * cos_fi;
     hook_tip_body(3) += hook_length * sin_fi;    
-    bool hook_tip_valid = true;
     
     double contact[3];
     double ground_normal[3];

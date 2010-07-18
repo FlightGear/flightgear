@@ -63,7 +63,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id$";
+static const char *IdSrc = "$Id: FGFCS.cpp,v 1.68 2010/03/18 13:21:24 jberndt Exp $";
 static const char *IdHdr = ID_FCS;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -533,19 +533,17 @@ bool FGFCS::Load(Element* el, SystemType systype)
 
   Components=0;
 
-  string separator = "/";
-
 // ToDo: The handling of name and file attributes could be improved, here,
 //       considering that a name can be in the external file, as well.
 
   name = el->GetAttributeValue("name");
 
-  if (name.empty()) {
+  if (name.empty() || !el->GetAttributeValue("file").empty()) {
     fname = el->GetAttributeValue("file");
     if (systype == stSystem) {
       file = FindSystemFullPathname(fname);
     } else { 
-      file = FDMExec->GetFullAircraftPath() + separator + fname + ".xml";
+      file = FDMExec->GetFullAircraftPath() + "/" + fname + ".xml";
     }
     if (fname.empty()) {
       cerr << "FCS, Autopilot, or system does not appear to be defined inline nor in a file" << endl;
@@ -692,49 +690,55 @@ double FGFCS::GetBrake(FGLGear::BrakeGroup bg)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGFCS::FindSystemFullPathname(const string& system_filename)
+string FGFCS::FindSystemFullPathname(const string& sysfilename)
 {
   string fullpath, localpath;
+  string system_filename = sysfilename;
   string systemPath = FDMExec->GetSystemsPath();
   string aircraftPath = FDMExec->GetFullAircraftPath();
   ifstream system_file;
 
-  string separator = "/";
+  fullpath = systemPath + "/";
+  localpath = aircraftPath + "/Systems/";
 
-  fullpath = systemPath + separator;
-  localpath = aircraftPath + separator + "Systems" + separator;
+  if (system_filename.length() <=4 || system_filename.substr(system_filename.length()-4, 4) != ".xml") {
+    system_filename.append(".xml");
+  }
 
-  system_file.open(string(fullpath + system_filename + ".xml").c_str());
+  system_file.open(string(fullpath + system_filename).c_str());
   if ( !system_file.is_open()) {
-    system_file.open(string(localpath + system_filename + ".xml").c_str());
+    system_file.open(string(localpath + system_filename).c_str());
       if ( !system_file.is_open()) {
         cerr << " Could not open system file: " << system_filename << " in path "
              << fullpath << " or " << localpath << endl;
         return string("");
       } else {
-        return string(localpath + system_filename + ".xml");
+        return string(localpath + system_filename);
       }
   }
-  return string(fullpath + system_filename + ".xml");
+  return string(fullpath + system_filename);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-ifstream* FGFCS::FindSystemFile(const string& system_filename)
+ifstream* FGFCS::FindSystemFile(const string& sysfilename)
 {
   string fullpath, localpath;
+  string system_filename = sysfilename;
   string systemPath = FDMExec->GetSystemsPath();
   string aircraftPath = FDMExec->GetFullAircraftPath();
   ifstream* system_file = new ifstream();
 
-  string separator = "/";
+  fullpath = systemPath + "/";
+  localpath = aircraftPath + "/Systems/";
 
-  fullpath = systemPath + separator;
-  localpath = aircraftPath + separator + "Systems" + separator;
+  if (system_filename.substr(system_filename.length()-4, 4) != ".xml") {
+    system_filename.append(".xml");
+  }
 
-  system_file->open(string(fullpath + system_filename + ".xml").c_str());
+  system_file->open(string(fullpath + system_filename).c_str());
   if ( !system_file->is_open()) {
-    system_file->open(string(localpath + system_filename + ".xml").c_str());
+    system_file->open(string(localpath + system_filename).c_str());
       if ( !system_file->is_open()) {
         cerr << " Could not open system file: " << system_filename << " in path "
              << fullpath << " or " << localpath << endl;
