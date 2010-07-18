@@ -27,6 +27,7 @@
 #include <simgear/compiler.h>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/misc/sg_path.hxx>
 
 #include <vector>
 #include <string>
@@ -181,6 +182,8 @@ private:
     //Mulitplayer managers
     FGMultiplayMgr *multiplayer_mgr;
 
+    /// roots of Aircraft trees
+    string_list fg_aircraft_dirs;
 public:
 
     FGGlobals();
@@ -212,6 +215,26 @@ public:
     inline const string_list &get_fg_scenery () const { return fg_scenery; }
     void set_fg_scenery (const std::string &scenery);
 
+    const string_list& get_aircraft_paths() const { return fg_aircraft_dirs; }
+    void append_aircraft_path(const std::string& path);
+    void append_aircraft_paths(const std::string& path);
+    
+    /**
+     * Given a path to an aircraft-related resource file, resolve it
+     * against the appropriate root. This means looking at the location
+     * defined by /sim/aircraft-dir, and then aircraft_path in turn,
+     * finishing with fg_root/Aircraft.
+     *
+     * if the path could not be resolved, an empty path is returned.
+     */
+    SGPath resolve_aircraft_path(const std::string& branch) const;
+    
+    /**
+     * Same as above, but test for non 'Aircraft/' branch paths, and
+     * always resolve them against fg_root.
+     */
+    SGPath resolve_maybe_aircraft_path(const std::string& branch) const;
+    
     inline const std::string &get_browser () const { return browser; }
     void set_browser (const std::string &b) { browser = b; }
 

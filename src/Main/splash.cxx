@@ -197,9 +197,10 @@ static osg::Node* fgCreateSplashCamera()
     tpath.append( "Textures/Splash" );
     tpath.concat( num_str );
     tpath.concat( ".png" );
-  } else
-    tpath.append( splash_texture );
-
+  } else {
+    tpath = globals->resolve_maybe_aircraft_path(splash_texture);
+  }
+  
   osg::Texture2D* splashTexture = new osg::Texture2D;
   splashTexture->setImage(osgDB::readImageFile(tpath.c_str()));
 

@@ -194,8 +194,7 @@ void FGXMLAutopilotGroup::init()
             continue;
         }
 
-        SGPath config( globals->get_fg_root() );
-        config.append( pathNode->getStringValue() );
+        SGPath config = globals->resolve_aircraft_path(pathNode->getStringValue());
 
         SG_LOG( SG_ALL, SG_INFO, "Reading autopilot configuration from " << config.str() );
 

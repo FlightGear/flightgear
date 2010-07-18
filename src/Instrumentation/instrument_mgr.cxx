@@ -62,9 +62,8 @@ FGInstrumentMgr::FGInstrumentMgr () :
     SGPropertyNode *path_n = fgGetNode("/sim/instrumentation/path");
 
     if (path_n) {
-        SGPath config( globals->get_fg_root() );
-        config.append( path_n->getStringValue() );
-
+        SGPath config = globals->resolve_aircraft_path(path_n->getStringValue());
+        
         SG_LOG( SG_ALL, SG_INFO, "Reading instruments from "
                 << config.str() );
         try {

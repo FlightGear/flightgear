@@ -839,10 +839,9 @@ fgReadPanel (istream &input)
 FGPanel *
 fgReadPanel (const string &relative_path)
 {
-  SGPath path(globals->get_fg_root());
-  path.append(relative_path);
+  SGPath path = globals->resolve_aircraft_path(relative_path);
   SGPropertyNode root;
-
+  
   try {
     readProperties(path.str(), &root);
   } catch (const sg_exception &e) {

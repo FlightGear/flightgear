@@ -240,7 +240,9 @@ static string fgScanForOption( const string& option ) {
 
 
 // Read in configuration (files and command line options) but only set
-// fg_root
+// fg_root and aircraft_paths, which are needed *before* do_options() is called
+// in fgInitConfig
+
 bool fgInitFGRoot ( int argc, char **argv ) {
     string root;
 
@@ -291,7 +293,7 @@ bool fgInitFGRoot ( int argc, char **argv ) {
 
     SG_LOG(SG_INPUT, SG_INFO, "fg_root = " << root );
     globals->set_fg_root(root);
-
+    
     return true;
 }
 
@@ -299,6 +301,21 @@ bool fgInitFGRoot ( int argc, char **argv ) {
 // Read in configuration (files and command line options) but only set
 // aircraft
 bool fgInitFGAircraft ( int argc, char **argv ) {
+    
+    string aircraftDir = fgScanForOption("--fg-aircraft=", argc, argv);
+    if (aircraftDir.empty()) {
+      aircraftDir =  fgScanForOption("--fg-aircraft="); 
+    }
+
+    const char* envp = ::getenv("FG_AIRCRAFT");
+    if (aircraftDir.empty() && envp) {
+      globals->append_aircraft_paths(envp);
+    }
+    
+    if (!aircraftDir.empty()) {
+      globals->append_aircraft_paths(aircraftDir);
+    }
+    
     string aircraft;
 
     // First parse command line options looking for --aircraft=, this
@@ -501,13 +518,13 @@ do_options (int argc, char ** argv)
 }
 
 template <class T>
-void fgFindAircraftInDir(const SGPath& dirPath, T* obj, bool (T::*pred)(const SGPath& p))
+bool fgFindAircraftInDir(const SGPath& dirPath, T* obj, bool (T::*pred)(const SGPath& p))
 {
   if (!dirPath.exists()) {
     SG_LOG(SG_GENERAL, SG_WARN, "fgFindAircraftInDir: no such path:" << dirPath.str());
-    return;
+    return false;
   }
-  
+    
   bool recurse = true;
   simgear::Dir dir(dirPath);
   simgear::PathList setFiles(dir.children(simgear::Dir::TYPE_FILE, "-set.xml"));
@@ -520,20 +537,44 @@ void fgFindAircraftInDir(const SGPath& dirPath, T* obj, bool (T::*pred)(const SG
     
     bool done = (obj->*pred)(*p);
     if (done) {
-      return;
+      return true;
     }
   } // of -set.xml iteration
   
-  if (recurse) {
-    simgear::PathList subdirs(dir.children(simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT));
-    for (p = subdirs.begin(); p != subdirs.end(); ++p) {
-      if (p->file() == "CVS") {
-        continue;
-      }
-      
-      fgFindAircraftInDir(*p, obj, pred);
+  if (!recurse) {
+    return false;
+  }
+  
+  simgear::PathList subdirs(dir.children(simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT));
+  for (p = subdirs.begin(); p != subdirs.end(); ++p) {
+    if (p->file() == "CVS") {
+      continue;
     }
-  } // of recursive case
+    
+    if (fgFindAircraftInDir(*p, obj, pred)) {
+      return true;
+    }
+  } // of subdirs iteration
+  
+  return false;
+}
+
+template <class T>
+void fgFindAircraft(T* obj, bool (T::*pred)(const SGPath& p))
+{
+  const string_list& paths(globals->get_aircraft_paths());
+  string_list::const_iterator it = paths.begin();
+  for (; it != paths.end(); ++it) {
+    bool done = fgFindAircraftInDir(SGPath(*it), obj, pred);
+    if (done) {
+      return;
+    }
+  } // of aircraft paths iteration
+  
+  // if we reach this point, search the default location (always last)
+  SGPath rootAircraft(globals->get_fg_root());
+  rootAircraft.append("Aircraft");
+  fgFindAircraftInDir(rootAircraft, obj, pred);
 }
 
 class FindAndCacheAircraft
@@ -559,11 +600,8 @@ public:
       n->setStringValue(globals->get_fg_root().c_str());
       n->setAttribute(SGPropertyNode::USERARCHIVE, true);
       _cache->removeChildren("aircraft");
-      
-      SGPath aircraftDir(globals->get_fg_root());
-      aircraftDir.append("Aircraft");
-
-      fgFindAircraftInDir(aircraftDir, this, &FindAndCacheAircraft::checkAircraft);
+  
+      fgFindAircraft(this, &FindAndCacheAircraft::checkAircraft);
     }
     
     if (_foundPath.str().empty()) {
