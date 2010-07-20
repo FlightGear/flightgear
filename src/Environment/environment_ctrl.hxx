@@ -101,7 +101,7 @@ private:
 		static bool lessThan(bucket *a, bucket *b);
 	};
 
-	void read_table (const SGPropertyNode * node, std::vector<bucket *> &table);
+	void read_table (const SGPropertyNode * node, std::vector<bucket *> &table, FGEnvironment * parent = NULL );
 	void do_interpolate (std::vector<bucket *> &table, double altitude_ft,
 						 FGEnvironment * environment);
 

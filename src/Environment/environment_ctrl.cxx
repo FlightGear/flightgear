@@ -132,7 +132,9 @@ void
 FGInterpolateEnvironmentCtrl::init ()
 {
 	read_table( boundary_n, _boundary_table);
-	read_table( aloft_n, _aloft_table);
+	// pass in a pointer to the environment of the last bondary layer as
+	// a starting point
+	read_table( aloft_n, _aloft_table, &(*(_boundary_table.end()-1))->environment);
 }
 
 void
@@ -142,7 +144,7 @@ FGInterpolateEnvironmentCtrl::reinit ()
 }
 
 void
-FGInterpolateEnvironmentCtrl::read_table (const SGPropertyNode * node, vector<bucket *> &table)
+FGInterpolateEnvironmentCtrl::read_table (const SGPropertyNode * node, vector<bucket *> &table, FGEnvironment * parent )
 {
 	double last_altitude_ft = 0.0;
 	double sort_required = false;
@@ -163,8 +165,11 @@ FGInterpolateEnvironmentCtrl::read_table (const SGPropertyNode * node, vector<bu
 				b = new bucket;
 				table.push_back(b);
 			}
+			if (i == 0 && parent != NULL )
+				b->environment.copy( *parent );
 			if (i > 0)
 				b->environment.copy(table[i-1]->environment);
+			
 			b->environment.read(child);
 			b->altitude_ft = b->environment.get_elevation_ft();
 
