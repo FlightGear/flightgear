@@ -1777,6 +1777,11 @@ private:
     int maturity = 0;
     string descStr("   ");
     descStr += path.file();
+  // trim common suffix from file names
+    int nPos = descStr.rfind("-set.xml");
+    if (nPos == (int)(descStr.size() - 8)) {
+      descStr.resize(nPos);
+    }
     
     SGPropertyNode *node = root.getNode("sim");
     if (node) {
