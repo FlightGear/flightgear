@@ -175,20 +175,12 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
 	    if (wpt->name == "END") wpt->finished = true;
 	    else wpt->finished = false;
 	    waypoints.push_back(wpt);
-	  }
-	}
-      catch (const sg_exception &) {
-	SG_LOG(SG_GENERAL, SG_WARN,
-	       "Error reading AI flight plan: ");
-	cerr << "Errno = " << errno << endl;
-	if (errno == ENOENT)
-	  {
-	    SG_LOG(SG_GENERAL, SG_WARN, "Reason: No such file or directory");
-	  }
-      }
+	  } // of node loop
+	} catch (const sg_exception &e) {
+      SG_LOG(SG_GENERAL, SG_WARN, "Error reading AI flight plan: " << 
+        e.getMessage() << " from " << e.getOrigin());
     }
-  else
-    {
+  } else {
       // cout << path.str() << endl;
       // cout << "Trying to create this plan dynamically" << endl;
       // cout << "Route from " << dep->id << " to " << arr->id << endl;

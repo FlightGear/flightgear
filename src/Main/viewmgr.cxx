@@ -190,7 +190,7 @@ FGViewMgr::bind ()
 
   fgTie("/sim/current-view/view-number", this,
                       &FGViewMgr::getView, &FGViewMgr::setView);
-  fgSetArchivable("/sim/current-view/view-number", FALSE);
+  fgSetArchivable("/sim/current-view/view-number", false);
 
   fgTie("/sim/current-view/axes/long", this,
 	(double_getter)0, &FGViewMgr::setViewAxisLong);
