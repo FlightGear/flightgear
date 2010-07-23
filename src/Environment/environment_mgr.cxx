@@ -295,7 +295,9 @@ FGEnvironmentMgr::update (double dt)
   osg::Vec3 windVec(-_environment->get_wind_from_north_fps(),
                     -_environment->get_wind_from_east_fps(),
                     _environment->get_wind_from_down_fps());
-  simgear::Particles::setWindVector(windVec * SG_FEET_TO_METER);
+  // simgear::Particles::setWindVector(windVec * SG_FEET_TO_METER);
+  simgear::Particles::setWindFrom( _environment->get_wind_from_heading_deg(),
+				   _environment->get_wind_speed_kt() );
 }
 
 FGEnvironment
