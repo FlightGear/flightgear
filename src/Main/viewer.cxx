@@ -34,7 +34,6 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/constants.h>
 #include <simgear/scene/model/placement.hxx>
-#include <simgear/math/vector.hxx>
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>

@@ -31,7 +31,6 @@
 
 #include <simgear/sg_inlines.h>
 #include <simgear/timing/sg_time.hxx>
-#include <simgear/math/vector.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/math/sg_geodesy.hxx>

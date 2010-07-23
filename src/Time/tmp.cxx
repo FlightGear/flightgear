@@ -26,7 +26,6 @@
 #endif
 
 #include <simgear/math/SGMath.hxx>
-#include <simgear/math/vector.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/timing/sg_time.hxx>
 
@@ -38,6 +37,37 @@
 #include "light.hxx"
 #include "sunsolver.hxx"
 #include "tmp.hxx"
+
+/**
+ * Map i.e. project a vector onto a plane.
+ * @param normal (in) normal vector for the plane
+ * @param v0 (in) a point on the plane
+ * @param vec (in) the vector to map onto the plane
+ */
+static SGVec3f map_vec_onto_cur_surface_plane(const SGVec3f& normal, 
+					      const SGVec3f& v0, 
+					      const SGVec3f& vec)
+{
+    // calculate a vector "u1" representing the shortest distance from
+    // the plane specified by normal and v0 to a point specified by
+    // "vec".  "u1" represents both the direction and magnitude of
+    // this desired distance.
+
+    // u1 = ( (normal <dot> vec) / (normal <dot> normal) ) * normal
+    SGVec3f u1 = (dot(normal, vec) / dot(normal, normal)) * normal;
+
+    // calculate the vector "v" which is the vector "vec" mapped onto
+    // the plane specified by "normal" and "v0".
+
+    // v = v0 + vec - u1
+    SGVec3f v = v0 + vec - u1;
+    
+    // Calculate the vector "result" which is "v" - "v0" which is a
+    // directional vector pointing from v0 towards v
+
+    // result = v - v0
+    return v - v0;
+}
 
 
 // periodic time updater wrapper
@@ -158,10 +188,9 @@ void fgUpdateSunPos( void ) {
     // local plane representing "horizontal".
 
     // surface direction to go to head towards sun
-    SGVec3f surface_to_sun;
     SGVec3f view_pos = toVec3f(v->get_view_pos());
-    sgmap_vec_onto_cur_surface_plane( world_up.data(), view_pos.data(),
-                                      to_sun.data(), surface_to_sun.data() );
+    SGVec3f surface_to_sun = map_vec_onto_cur_surface_plane(world_up, view_pos, to_sun);
+    
     surface_to_sun = normalize(surface_to_sun);
     // cout << "(sg) Surface direction to sun is "
     //   << surface_to_sun[0] << ","

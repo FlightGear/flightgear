@@ -24,10 +24,9 @@
 #endif
 
 #include <sstream>
-#include <simgear/math/vector.hxx>
+#include <simgear/math/SGGeometry.hxx>
 #include <Main/viewer.hxx>
 #include "HUD.hxx"
-
 
 // FIXME
 static float get__heading() { return fgGetFloat("/orientation/heading-deg") * M_PI / 180.0; }
@@ -424,12 +423,11 @@ void HUD::Ladder::draw(void)
             // however the horizon line should always stay on the horizon.  We
             // project the alpha/beta offset onto the horizon line to get the
             // result we want.
-            sgdVec3 p1; // result
-            sgdVec3 p; sgdSetVec3(p, vel_x, vel_y, 0.0);
-            sgdVec3 p0; sgdSetVec3(p0, 0.0, 0.0, 0.0);
-            sgdVec3 d; sgdSetVec3(d, cos(roll_value), sin(roll_value), 0.0);
-            sgdClosestPointToLine(p1, p, p0, d);
-            glTranslatef(p1[0], p1[1], 0);
+            
+            SGVec3d d(cos(roll_value), sin(roll_value), 0.0);
+            SGRayd r(SGVec3d::zeros(), d);
+            SGVec3d p = r.getClosestPointTo(SGVec3d(vel_x, vel_y, 0.0));
+            glTranslatef(p[0], p[1], 0);
         }
     } else {
         // ladder position is fixed relative to the center of the screen.
