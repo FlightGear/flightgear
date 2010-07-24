@@ -405,7 +405,7 @@ void FGAIFlightPlan::setLeadDistance(double speed, double bearing,
         return;
   }
   if (speed < 25) {
-       turn_radius = ((360/30)*15) / (2*M_PI);
+       turn_radius = ((360/30)*fabs(speed)) / (2*M_PI);
   } else 
       turn_radius = 0.1911 * speed * speed; // an estimate for 25 degrees bank
 
@@ -419,10 +419,15 @@ void FGAIFlightPlan::setLeadDistance(double speed, double bearing,
   
   //lead_distance = turn_radius * sin(leadInAngle * SG_DEGREES_TO_RADIANS); 
   lead_distance = turn_radius * tan((leadInAngle * SG_DEGREES_TO_RADIANS)/2);
-  if (lead_distance > (3*turn_radius)) {
+  if ((lead_distance > (3*turn_radius)) && (current->on_ground == false)) {
       // cerr << "Warning: Lead-in distance is large. Inbound = " << inbound
       //      << ". Outbound = " << outbound << ". Lead in angle = " << leadInAngle  << ". Turn radius = " << turn_radius << endl;
        lead_distance = 3 * turn_radius;
+       return;
+  }
+  if ((leadInAngle > 90) && (current->on_ground == true)) {
+      lead_distance = turn_radius * tan((90 * SG_DEGREES_TO_RADIANS)/2);
+      return;
   }
 }
 

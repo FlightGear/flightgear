@@ -629,12 +629,12 @@ bool FGAIAircraft::leadPointReached(FGAIFlightPlan::waypoint* curr) {
     //          << dist_to_go << ": Lead distance " 
     //          << lead_dist << " " << curr->name 
     //          << " Ground target speed " << groundTargetSpeed << endl;
-    if (trafficRef) {
-         if (trafficRef->getCallSign() == "Transavia7584") {
-              cerr << trafficRef->getCallSign() << " " << tgt_altitude_ft << " " << _getSpeed() << " " 
-                   << _getAltitude() << " "<< _getLatitude() << " " << _getLongitude() << " " << dist_to_go << " " << lead_dist << curr->name << endl; 
-         }
-     }
+   // if (trafficRef) {
+   //      if (trafficRef->getCallSign() == "Transavia7584") {
+   //           cerr << trafficRef->getCallSign() << " " << tgt_altitude_ft << " " << _getSpeed() << " " 
+   //                << _getAltitude() << " "<< _getLatitude() << " " << _getLongitude() << " " << dist_to_go << " " << lead_dist << curr->name << endl; 
+   //      }
+   //  }
     return dist_to_go < lead_dist;
 }
 
