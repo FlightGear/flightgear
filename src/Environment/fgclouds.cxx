@@ -100,8 +100,7 @@ double FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_
 	double y = sg_random() * SGCloudField::fieldSize - (SGCloudField::fieldSize / 2.0);
 	double z = grid_z_rand * (sg_random() - 0.5);
 		
-	sgVec3 pos={x,y,z};
-	
+	SGVec3f pos(x,y,z);
         
 	for(int i = 0; i < box_def->nChildren() ; i++) {
 		SGPropertyNode *abox = box_def->getChild(i);

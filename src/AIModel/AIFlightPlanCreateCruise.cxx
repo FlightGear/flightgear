@@ -38,7 +38,6 @@
 #include "AIAircraft.hxx"
 #include "performancedata.hxx"
 
-
 using std::iostream;
 
 void FGAIFlightPlan::evaluateRoutePart(double deplat,
@@ -55,28 +54,18 @@ void FGAIFlightPlan::evaluateRoutePart(double deplat,
   SGGeoc arr(SGGeoc::fromDegM(arrlon, arrlat, 100.0));
   
   SGVec3d a = SGVec3d::fromGeoc(dep);
-  SGVec3d b = SGVec3d::fromGeoc(arr);
-  SGVec3d _cross = cross(b, a);
+  SGVec3d nb = normalize(SGVec3d::fromGeoc(arr));
+  SGVec3d na = normalize(a);
+  
+  SGVec3d _cross = cross(nb, na);
 
-  double angle = sgACos(dot(a, b));
+  double angle = acos(dot(na, nb));
+  const double angleStep = 0.05 * SG_DEGREES_TO_RADIANS;
   tmpNode = 0;
-  for (double ang = 0.0; ang < angle; ang += 0.05)
-  {
-      sgdVec3 newPos;
-      sgdMat4 matrix;
-      //cerr << "Angle = " << ang << endl;
-      sgdMakeRotMat4(matrix, ang, _cross.data());
-      for(int j = 0; j < 3; j++)
-      {
-        newPos[j] =0.0;
-        for (int k = 0; k<3; k++)
-        {
-          newPos[j] += matrix[j][k]*a[k];
-        }
-      }
-      
-      //cerr << "1"<< endl;
-      SGGeod geod = SGGeod::fromCart(SGVec3d(newPos[0], newPos[1], newPos[2]));
+  for (double ang = 0.0; ang < angle; ang += angleStep)
+  {  
+      SGQuatd q = SGQuatd::fromAngleAxis(ang, _cross);
+      SGGeod geod = SGGeod::fromCart(q.transform(a));
 
       prevNode = tmpNode;
       tmpNode = globals->get_airwaynet()->findNearestNode(geod);

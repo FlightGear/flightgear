@@ -211,29 +211,38 @@ FGEnvironment::read (const SGPropertyNode * node)
     maybe_copy_value(this, node, "visibility-m",
                      &FGEnvironment::set_visibility_m);
 
+    maybe_copy_value(this, node, "elevation-ft",
+                     &FGEnvironment::set_elevation_ft);
+
     if (!maybe_copy_value(this, node, "temperature-sea-level-degc",
-                          &FGEnvironment::set_temperature_sea_level_degc))
-        maybe_copy_value(this, node, "temperature-degc",
-                         &FGEnvironment::set_temperature_degc);
+                          &FGEnvironment::set_temperature_sea_level_degc)) {
+        if( maybe_copy_value(this, node, "temperature-degc",
+                         &FGEnvironment::set_temperature_degc)) {
+            _recalc_sl_temperature();
+        }
+    }
 
     if (!maybe_copy_value(this, node, "dewpoint-sea-level-degc",
-                          &FGEnvironment::set_dewpoint_sea_level_degc))
-        maybe_copy_value(this, node, "dewpoint-degc",
-                         &FGEnvironment::set_dewpoint_degc);
+                          &FGEnvironment::set_dewpoint_sea_level_degc)) {
+        if( maybe_copy_value(this, node, "dewpoint-degc",
+                         &FGEnvironment::set_dewpoint_degc)) {
+            _recalc_sl_dewpoint();
+        }
+    }
 
     if (!maybe_copy_value(this, node, "pressure-sea-level-inhg",
-                          &FGEnvironment::set_pressure_sea_level_inhg))
-        maybe_copy_value(this, node, "pressure-inhg",
-                         &FGEnvironment::set_pressure_inhg);
+                          &FGEnvironment::set_pressure_sea_level_inhg)) {
+        if( maybe_copy_value(this, node, "pressure-inhg",
+                         &FGEnvironment::set_pressure_inhg)) {
+            _recalc_sl_pressure();
+        }
+   }
 
     maybe_copy_value(this, node, "wind-from-heading-deg",
                      &FGEnvironment::set_wind_from_heading_deg);
 
     maybe_copy_value(this, node, "wind-speed-kt",
                      &FGEnvironment::set_wind_speed_kt);
-
-    maybe_copy_value(this, node, "elevation-ft",
-                     &FGEnvironment::set_elevation_ft);
 
     maybe_copy_value(this, node, "turbulence/magnitude-norm",
                      &FGEnvironment::set_turbulence_magnitude_norm);
@@ -652,7 +661,7 @@ FGEnvironment::_recalc_sl_temperature ()
   }
 #endif
 
-  if (elevation_ft >= ISA_def[1].height) {
+  if (elevation_ft * atmodel::foot >= ISA_def[1].height) {
     SG_LOG(SG_GENERAL, SG_ALERT, "recalc_sl_temperature: "
         << "valid only in troposphere, not " << elevation_ft);
     return;

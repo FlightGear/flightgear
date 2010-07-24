@@ -108,6 +108,12 @@ FGAILocalTraffic::FGAILocalTraffic() {
 	_controlled = false;
 	
 	_invisible = false;
+
+        ground = NULL;
+        tower = NULL;
+        ourGate = NULL;
+        nextTaxiNode = NULL;
+        holdShortNode = NULL;
 }
 
 FGAILocalTraffic::~FGAILocalTraffic() {
@@ -1254,13 +1260,13 @@ void FGAILocalTraffic::ProcessCallback(int code) {
 	if(code == 1) {
 		ground->RequestDeparture(plane, this);
 	} else if(code == 2) {
-		tower->ContactAtHoldShort(plane, this, CIRCUIT);
+		if (_controlled) tower->ContactAtHoldShort(plane, this, CIRCUIT);
 	} else if(code == 3) {
-		tower->ReportRunwayVacated(plane.callsign);
+                if (_controlled) tower->ReportRunwayVacated(plane.callsign);
 	} else if(code == 11) {
-		tower->ReportDownwind(plane.callsign);
+                if (_controlled) tower->ReportDownwind(plane.callsign);
 	} else if(code == 13) {
-		tower->ReportFinal(plane.callsign);
+                if (_controlled) tower->ReportFinal(plane.callsign);
 	} else if(code == 99) { // Flag this instance for deletion
 		responseCounter = 0;
 		_removeSelf = true;

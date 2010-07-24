@@ -32,7 +32,6 @@
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
-#include <simgear/math/vector.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/tgdb/SGReaderWriterBTGOptions.hxx>

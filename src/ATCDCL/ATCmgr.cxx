@@ -273,8 +273,7 @@ typedef map<string,int> MSI;
 
 void FGATCMgr::ZapOtherService(const string ncunit, const string svc_name){
   for (atc_list_iterator svc = atc_list->begin(); svc != atc_list->end(); svc++) {
-    //cout << "Zapping " << navcomm 
-    //  << "[" << unit << "]"  << "  otherthan: " << svc_name << endl;
+   
     if (svc->first != svc_name) {
       MSI &actv = svc->second->active_on;
       // OK, we have found some OTHER service;
@@ -286,7 +285,9 @@ void FGATCMgr::ZapOtherService(const string ncunit, const string svc_name){
         //cout << "Eradicating service: '" << svc->first << "'" << endl;
     svc->second->SetNoDisplay();
     svc->second->Update(0);     // one last update
-    delete svc->second;
+    SG_LOG(SG_GENERAL, SG_INFO, "would have erased ATC service:" << svc->second->get_name()<< "/" 
+      << svc->second->get_ident());
+   // delete svc->second;
     atc_list->erase(svc);
 // ALL pointers into the ATC list are now invalid,
 // so let's reset them:
