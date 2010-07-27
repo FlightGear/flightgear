@@ -25,6 +25,7 @@
 #endif
 
 #include <algorithm>
+#include <cstring>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/commands.hxx>

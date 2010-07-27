@@ -3,6 +3,7 @@
 #endif 
 
 #include <iostream>
+#include <cstdio>
 
 #include <simgear/constants.h>
 #include <simgear/io/sg_file.hxx>

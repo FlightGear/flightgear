@@ -11,6 +11,7 @@
 
 #include <memory>
 #include <set>
+#include <cstring>
 
 #include "Main/fg_props.hxx"
 #include "Main/globals.hxx" // for get_subsystem

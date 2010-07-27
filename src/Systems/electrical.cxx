@@ -24,6 +24,8 @@
 #  include <config.h>
 #endif
 
+#include <cstring>
+
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>

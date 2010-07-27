@@ -24,6 +24,7 @@
 #  include "config.h"
 #endif
 
+#include <cstring>
 #include <Main/fg_props.hxx>
 
 #include <simgear/constants.h>

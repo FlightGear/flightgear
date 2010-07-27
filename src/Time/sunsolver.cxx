@@ -29,6 +29,7 @@
 
 #include <cmath>
 #include <ctime>
+#include <cassert>
 
 #include <simgear/math/SGMath.hxx>
 #include <simgear/timing/sg_time.hxx>

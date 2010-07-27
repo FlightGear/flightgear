@@ -24,6 +24,8 @@
 #  include <config.h>
 #endif
 
+#include <cstring>
+
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/sky/sky.hxx>

@@ -25,6 +25,7 @@
 #endif
 
 #include <iostream>
+#include <cstring>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>

@@ -24,6 +24,8 @@
 #  include "config.h"
 #endif
 
+#include <cstring>
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/io/iochannel.hxx>

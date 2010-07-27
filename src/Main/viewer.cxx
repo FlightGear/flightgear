@@ -28,6 +28,7 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <cassert>
 
 #include "fg_props.hxx"
 

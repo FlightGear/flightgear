@@ -31,6 +31,7 @@
 #  include <unistd.h>           // unlink()
 #endif
 
+#include <cstring>
 #include <stdio.h>              // FILE*, fopen(), fread(), fwrite(), et. al.
 #include <iostream>             // for cout, endl
 

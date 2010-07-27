@@ -22,6 +22,8 @@
 #  include <config.h>
 #endif
 
+#include <cstring>
+
 #include <simgear/io/iochannel.hxx>
 #include <simgear/io/sg_socket.hxx>
 #include <simgear/constants.h>

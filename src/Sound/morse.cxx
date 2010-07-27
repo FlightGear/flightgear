@@ -25,6 +25,7 @@
 
 #include "morse.hxx"
 
+#include <cstring>
 
 static const char alphabet[26][4] = {
     { DI, DAH, end, end },	/* A */ 

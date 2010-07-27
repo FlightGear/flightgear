@@ -8,6 +8,9 @@
 #endif
 
 #include "vacuum.hxx"
+
+#include <cstring>
+
 #include <Main/fg_props.hxx>
 
 

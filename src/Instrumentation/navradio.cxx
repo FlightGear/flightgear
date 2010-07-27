@@ -28,6 +28,7 @@
 #include "navradio.hxx"
 
 #include <sstream>
+#include <cstring>
 
 #include <simgear/sg_inlines.h>
 #include <simgear/timing/sg_time.hxx>

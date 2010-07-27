@@ -25,6 +25,7 @@
 #include <iostream>
 #include <string.h>
 #include <time.h>
+#include <cstdlib>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/environment/metar.hxx>

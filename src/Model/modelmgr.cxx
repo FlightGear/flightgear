@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <functional>
 #include <vector>
+#include <cstring>
 
 #include <osg/Math>
 

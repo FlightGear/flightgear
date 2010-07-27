@@ -7,6 +7,8 @@
 #ifndef __INSTRUMENTS_GPS_HXX
 #define __INSTRUMENTS_GPS_HXX 1
 
+#include <cassert>
+
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/SGMath.hxx>

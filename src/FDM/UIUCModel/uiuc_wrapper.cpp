@@ -83,6 +83,7 @@
 #endif
 
 #include <iostream>
+#include <cstring>
 
 #include <simgear/compiler.h>
 #include <simgear/misc/sg_path.hxx>

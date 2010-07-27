@@ -22,6 +22,7 @@
 
 
 #include <stdlib.h>
+#include <cstring>
 
 #include "beacon.hxx"
 
