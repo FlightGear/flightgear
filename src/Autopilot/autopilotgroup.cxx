@@ -177,6 +177,18 @@ void FGXMLAutopilotGroup::init()
           apName = buf.str();
         }
 
+        {
+          // check for duplicate names
+          string name = apName;
+          for( unsigned i = 0; get_subsystem( apName.c_str() ) != NULL; i++ ) {
+              ostringstream buf;
+              buf <<  apName << "_" << i;
+              apName = buf.str();
+          }
+          if( apName != name )
+            SG_LOG( SG_ALL, SG_ALERT, "Duplicate autopilot component " << name << ", renamed to " << apName );
+        }
+
         if( get_subsystem( apName.c_str() ) != NULL ) {
             SG_LOG( SG_ALL, SG_ALERT, "Duplicate autopilot configuration name " << apName << " ignored" );
             continue;
