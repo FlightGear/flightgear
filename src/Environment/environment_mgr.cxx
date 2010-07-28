@@ -24,8 +24,6 @@
 #  include <config.h>
 #endif
 
-#include <cstring>
-
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/sky/sky.hxx>
@@ -294,12 +292,22 @@ FGEnvironmentMgr::update (double dt)
   
   _environment->set_elevation_ft(fgGetDouble("/position/altitude-ft"));
   _environment->set_local_weather_lift_fps(fgGetDouble("/local-weather/current/thermal-lift"));
-  osg::Vec3 windVec(-_environment->get_wind_from_north_fps(),
+  osg::Vec3 windVec(_environment->get_wind_from_north_fps(),
                     -_environment->get_wind_from_east_fps(),
-                    _environment->get_wind_from_down_fps());
+                    0);
+  	  // SG_LOG(SG_GENERAL, SG_ALERT, "-_environment->get_wind_from_north_mps() " <<
+		   //_environment->get_wind_from_north_fps() * SG_FEET_TO_METER
+		   //<< " -_environment->get_wind_from_east_mps() " 
+		   //<< -_environment->get_wind_from_east_fps() * SG_FEET_TO_METER
+		   //);
+
   // simgear::Particles::setWindVector(windVec * SG_FEET_TO_METER);
   simgear::Particles::setWindFrom( _environment->get_wind_from_heading_deg(),
 				   _environment->get_wind_speed_kt() );
+  //double wind_true_deg = _environment->get_wind_from_heading_deg();
+  //simgear::Particles::setWindFrom( wind_true_deg,
+  //                                _environment->get_wind_speed_kt() );
+
 }
 
 FGEnvironment

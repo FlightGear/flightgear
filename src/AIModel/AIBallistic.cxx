@@ -61,10 +61,12 @@ FGAIBallistic::FGAIBallistic(object_type ot) :
     _slave_load_to_ac(false),
     _contents_lb(0),
     _report_collision(false),
+	_report_expiry(false),
     _report_impact(false),
     _external_force(false),
     _impact_report_node(fgGetNode("/ai/models/model-impact", true)),
-    _old_height(0)
+    _old_height(0),
+	_elapsed_time(0)
 
 {
     no_roll = false;
@@ -80,7 +82,8 @@ void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
 
     FGAIBase::readFromScenario(scFileNode);
 
-    //setPath(scFileNode->getStringValue("model", "Models/Geometry/rocket.ac"));
+    //setPath(scFileNode->getStringValue("model", "Models/Geometry/rocket.ac")); 
+	setRandom(scFileNode->getBoolValue("random", false));
     setAzimuth(scFileNode->getDoubleValue("azimuth", 0.0));
     setElevation(scFileNode->getDoubleValue("elevation", 0));
     setDragArea(scFileNode->getDoubleValue("eda", 0.007));
@@ -93,10 +96,11 @@ void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
     setCd(scFileNode->getDoubleValue("cd", 0.029));
     //setMass(scFileNode->getDoubleValue("mass", 0.007));
     setWeight(scFileNode->getDoubleValue("weight", 0.25));
-    setStabilisation(scFileNode->getBoolValue("aero-stabilized", false));
+    setStabilisation(scFileNode->getBoolValue("aero-stabilised", false));
     setNoRoll(scFileNode->getBoolValue("no-roll", false));
-    setRandom(scFileNode->getBoolValue("random", false));
     setImpact(scFileNode->getBoolValue("impact", false));
+	setExpiry(scFileNode->getBoolValue("expiry", false));
+	setCollision(scFileNode->getBoolValue("collision", false));
     setImpactReportNode(scFileNode->getStringValue("impact-reports"));
     setName(scFileNode->getStringValue("name", "Rocket"));
     setFuseRange(scFileNode->getDoubleValue("fuse-range", 0.0));
@@ -104,7 +108,7 @@ void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
     setSubID(scFileNode->getIntValue("SubID", 0));
     setExternalForce(scFileNode->getBoolValue("external-force", false));
     setForcePath(scFileNode->getStringValue("force-path", ""));
-    setForceStabilisation(scFileNode->getBoolValue("force-stabilized", false));
+    setForceStabilisation(scFileNode->getBoolValue("force-stabilised", false));
     setXoffset(scFileNode->getDoubleValue("x-offset", 0.0));
     setYoffset(scFileNode->getDoubleValue("y-offset", 0.0));
     setZoffset(scFileNode->getDoubleValue("z-offset", 0.0));
@@ -116,7 +120,6 @@ void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
     setSlaved(scFileNode->getBoolValue("slaved", false));
     setSlavedLoad(scFileNode->getBoolValue("slaved-load", false));
     setContentsNode(scFileNode->getStringValue("contents"));
-    setRandom(scFileNode->getBoolValue("random", false));
 }
 
 bool FGAIBallistic::init(bool search_in_AI_path) {
@@ -124,6 +127,16 @@ bool FGAIBallistic::init(bool search_in_AI_path) {
 
     _impact_reported = false;
     _collision_reported = false;
+	_expiry_reported = false;
+
+	_impact_lat = 0;
+    _impact_lon = 0;
+    _impact_elev = 0;
+    _impact_hdg = 0;
+    _impact_pitch = 0;
+    _impact_roll = 0;
+    _impact_speed = 0;
+
     invisible = false;
 
     _elapsed_time += (sg_random() * 100);
@@ -131,6 +144,8 @@ bool FGAIBallistic::init(bool search_in_AI_path) {
     props->setStringValue("material/name", "");
     props->setStringValue("name", _name.c_str());
     props->setStringValue("submodels/path", _submodel.c_str());
+	props->setStringValue("force/path", _force_path.c_str());
+	//props->setStringValue("vector/path", _vector_path.c_str());
 
     // start with high value so that animations don't trigger yet
     _ht_agl_ft = 1e10;
@@ -263,7 +278,14 @@ void FGAIBallistic::update(double dt) {
 }
 
 void FGAIBallistic::setAzimuth(double az) {
-    hdg = _azimuth = az;
+    
+		
+	if (_random)
+		hdg = _azimuth = (az - 5 ) + (10 * sg_random());
+	else 
+		hdg = _azimuth = az;
+
+	//cout << _name << " init hdg " << hdg << " random " << _random << endl;
 }
 
 void FGAIBallistic::setElevation(double el) {
@@ -291,7 +313,12 @@ void FGAIBallistic::setDragArea(double a) {
 }
 
 void FGAIBallistic::setLife(double seconds) {
-    life = seconds;
+
+	if (_random){
+		life = seconds * _randomness + (seconds * (1 -_randomness) * sg_random());
+		//cout << "life " << life << endl;
+	} else
+		life = seconds;
 }
 
 void FGAIBallistic::setBuoyancy(double fpss) {
@@ -321,6 +348,11 @@ void FGAIBallistic::setMass(double m) {
 void FGAIBallistic::setWeight(double w) {
     _weight_lb = w;
 }
+
+void FGAIBallistic::setRandomness(double r) {
+    _randomness = r;
+}
+
 void FGAIBallistic::setRandom(bool r) {
     _random = r;
 }
@@ -331,6 +363,11 @@ void FGAIBallistic::setImpact(bool i) {
 
 void FGAIBallistic::setCollision(bool c) {
     _report_collision = c;
+}
+
+void FGAIBallistic::setExpiry(bool e) {
+    _report_expiry = e;
+	//cout <<  "_report_expiry " << _report_expiry << endl;
 }
 
 void FGAIBallistic::setExternalForce(bool f) {
@@ -479,17 +516,17 @@ void FGAIBallistic::setHt(double h, double dt, double coeff){
 }
 
 void FGAIBallistic::setHdg(double az, double dt, double coeff){
-    double recip = getRecip(hdg);
-    double c = dt / (coeff + dt);
-    //we need to ensure that we turn the short way to the new hdg
-    if (az < recip && az < hdg && hdg > 180) {
-        hdg = ((az + 360) * c) + (hdg * (1 - c));
-    } else if (az > recip && az > hdg && hdg <= 180){
-        hdg = ((az - 360) * c) + (hdg * (1 - c));
-    } else {
-        hdg = (az * c) + (hdg * (1 - c));
-    }
-    }
+	double recip = getRecip(hdg);
+	double c = dt / (coeff + dt);
+	//we need to ensure that we turn the short way to the new hdg
+	if (az < recip && az < hdg && hdg > 180) {
+		hdg = ((az + 360) * c) + (hdg * (1 - c));
+	} else if (az > recip && az > hdg && hdg <= 180){
+		hdg = ((az - 360) * c) + (hdg * (1 - c));
+	} else {
+		hdg = (az * c) + (hdg * (1 - c));
+	}
+}
 
 double  FGAIBallistic::getTgtXOffset() const {
     return _tgt_x_offset;
@@ -536,15 +573,22 @@ void FGAIBallistic::Run(double dt) {
     _life_timer += dt;
 
     // if life = -1 the object does not die
-    if (_life_timer > life && life != -1)
-        setDie(true);
+	if (_life_timer > life && life != -1){
+
+		if (_report_expiry && !_expiry_reported){
+			//cout<<"AIBallistic: expiry"<< endl;
+			handle_expiry();
+		} else
+			setDie(true);
+
+	}
 
     //set the contents in the appropriate tank or other property in the parent to zero
     setContents(0);
 
-    //randomise Cd by +- 5%
+    //randomise Cd by +- 10%
     if (_random)
-        _Cd = _Cd * 0.95 + (0.05 * sg_random());
+        _Cd = _Cd * 0.90 + (0.10 * sg_random());
 
     // Adjust Cd by Mach number. The equations are based on curves
     // for a conventional shell/bullet (no boat-tail).
@@ -617,12 +661,13 @@ void FGAIBallistic::Run(double dt) {
     double friction_force_speed_east_deg_sec = 0;
     double force_elevation_deg = 0;
 
-    if (_external_force) {
+	if (_external_force) {
+
         SGPropertyNode *n = fgGetNode(_force_path.c_str(), true);
         double force_lbs            = n->getChild("force-lb", 0, true)->getDoubleValue();
         force_elevation_deg         = n->getChild("force-elevation-deg", 0, true)->getDoubleValue();
         double force_azimuth_deg    = n->getChild("force-azimuth-deg", 0, true)->getDoubleValue();
-
+		
         //resolve force into vertical and horizontal components:
         double v_force_lbs = force_lbs * sin( force_elevation_deg * SG_DEGREES_TO_RADIANS );
         h_force_lbs = force_lbs * cos( force_elevation_deg * SG_DEGREES_TO_RADIANS );
@@ -751,14 +796,19 @@ void FGAIBallistic::Run(double dt) {
     if (_azimuth < 0)
         _azimuth += 360;
 
+	//cout << "_azimuth " << _azimuth << " hdg "<<  hdg << endl;
+
     if (_aero_stabilised) { // we simulate rotational moment of inertia by using a filter
+		cout<< "_aero_stabilised "<< endl;
         const double coeff = 0.9;
 
         // we assume a symetrical MI about the pitch and yaw axis
         setPch(_elevation, dt, coeff);
         setHdg(_azimuth, dt, coeff);
     } else if (_force_stabilised) { // we simulate rotational moment of inertia by using a filter
-        const double coeff = 0.9;
+        //cout<< "_force_stabilised "<< endl;
+		
+		const double coeff = 0.9;
         double ratio = h_force_lbs/(_mass * slugs_to_lbs);
 
         if (ratio >  1) ratio =  1;
@@ -809,6 +859,20 @@ void FGAIBallistic::handle_impact() {
     }
 }
 
+void FGAIBallistic::handle_expiry() {
+	
+		SG_LOG(SG_GENERAL, SG_DEBUG, "AIBallistic: handle_expiry " << pos.getElevationM());
+
+        report_impact(pos.getElevationM());
+        _expiry_reported = true;
+
+        //if (life == -1){
+        //    invisible = true;
+        //} else if (_subID == 0)  // kill the AIObject if there is no subsubmodel
+        //    setDie(true);
+   
+}
+
 void FGAIBallistic::handle_collision()
 {
     const FGAIBase *object = manager->calcCollision(pos.getElevationFt(),
@@ -857,7 +921,7 @@ SGVec3d FGAIBallistic::getCartHitchPos() const{
 
     // convert geodetic positions to geocentered
     SGVec3d cartuserPos = getCartUserPos();
-    SGVec3d cartPos = getCartPos();
+    //SGVec3d cartPos = getCartPos();
 
     // Transform to the right coordinate frame, configuration is done in
     // the x-forward, y-right, z-up coordinates (feet), computation
