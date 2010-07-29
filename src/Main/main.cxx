@@ -342,7 +342,7 @@ static void fgMainLoop( void ) {
     // implementation is an AI model and depends on that
     globals->get_multiplayer_mgr()->Update();
 
-#if ENABLE_ATCDCL
+#if ENABLE_ATCDCL  
     // Run ATC subsystem
     if (fgGetBool("/sim/atc/enabled"))
         globals->get_ATC_mgr()->update(delta_time_sec);
@@ -493,6 +493,20 @@ struct GeneralInitOperation : public GraphicsContextOperation
         SG_LOG ( SG_GENERAL, SG_INFO, "Depth buffer bits = " << tmp );
     }
 };
+
+
+osg::Node* load_panel(SGPropertyNode *n)
+{
+    osg::Geode* geode = new osg::Geode;
+    geode->addDrawable(new FGPanelNode(n));
+    return geode;
+}
+
+SGPath resolve_path(const std::string& s)
+{
+  return globals->resolve_maybe_aircraft_path(s);
+}
+
 }
 
 // This is the top level master main function that is registered as
@@ -573,8 +587,10 @@ static void fgIdleFunction ( void ) {
         ////////////////////////////////////////////////////////////////////
         globals->set_matlib( new SGMaterialLib );
         simgear::SGModelLib::init(globals->get_fg_root());
-
-
+        simgear::SGModelLib::setPropRoot(globals->get_props());
+        simgear::SGModelLib::setResolveFunc(resolve_path);
+        simgear::SGModelLib::setPanelFunc(load_panel);
+        
         ////////////////////////////////////////////////////////////////////
         // Initialize the TG scenery subsystem.
         ////////////////////////////////////////////////////////////////////
