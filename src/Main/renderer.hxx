@@ -2,7 +2,6 @@
 #ifndef __FG_RENDERER_HXX
 #define __FG_RENDERER_HXX 1
 
-#include <simgear/screen/extensions.hxx>
 #include <simgear/scene/util/SGPickCallback.hxx>
 
 #include <osg/ref_ptr>
