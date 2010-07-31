@@ -53,11 +53,8 @@
 
 #ifdef _WIN32
 #  include <shellapi.h>
-# if !defined(__MINGW32__)
-#  include <simgear/screen/win32-printer.h>
-#  include <simgear/screen/GlBitmaps.h>
-# endif
 #endif
+
 #include "gui.h"
 
 using std::string;
@@ -75,9 +72,6 @@ const __fg_gui_fn_t __fg_gui_fn[] = {
         {"dumpHiResSnapShot", fgHiResDumpWrapper},
 #endif
         {"dumpSnapShot", fgDumpSnapShotWrapper},
-#if defined( _WIN32 ) && !defined(__MINGW32__)
-        {"printScreen", printScreen},
-#endif
         // Help
         {"helpCb", helpCb},
 
@@ -402,61 +396,6 @@ void fgHiResDump()
     }
 }
 #endif // #if defined( TR_HIRES_SNAP)
-
-
-#if defined( _WIN32 ) && !defined(__MINGW32__)
-
-void rotateView( double roll, double pitch, double yaw )
-{
-	// rotate view
-}
-
-GlBitmap *b1 = NULL;
-GLubyte *hiResScreenCapture( int multiplier )
-{
-    float oldfov = fgGetDouble("/sim/current-view/field-of-view");
-    float fov = oldfov / multiplier;
-    FGViewer *v = globals->get_current_view();
-    fgSetDouble("/sim/current-view/field-of-view", fov);
-//     globals->get_renderer()->init();
-    int cur_width = fgGetInt("/sim/startup/xsize");
-    int cur_height = fgGetInt("/sim/startup/ysize");
-    delete( b1 );
-    // New empty (mostly) bitmap
-    b1 = new GlBitmap( GL_RGB, 1, 1, (unsigned char *)"123" );
-    int x,y;
-    for ( y = 0; y < multiplier; y++ ) {
-	for ( x = 0; x < multiplier; x++ ) {
-	    globals->get_renderer()->resize( cur_width, cur_height );
-	    // pan to tile
-	    rotateView( 0, (y*fov)-((multiplier-1)*fov/2), (x*fov)-((multiplier-1)*fov/2) );
-	    globals->get_renderer()->update( false );
-	    // restore view
-	    GlBitmap b2;
-	    b1->copyBitmap( &b2, cur_width*x, cur_height*y );
-	}
-    }
-    fgSetDouble("/sim/current-view/field-of-view", oldfov);
-    return b1->getBitmap();
-}
-#endif
-
-#if defined( _WIN32 ) && !defined(__MINGW32__)
-// win32 print screen function
-void printScreen () {
-    int mouse = fgGetMouseCursor();
-    fgSetMouseCursor(MOUSE_CURSOR_NONE);
-
-    CGlPrinter p( CGlPrinter::PRINT_BITMAP );
-    int cur_width = fgGetInt("/sim/startup/xsize");
-    int cur_height = fgGetInt("/sim/startup/ysize");
-    p.Begin( "FlightGear", cur_width*3, cur_height*3 );
-    p.End( hiResScreenCapture(3) );
-
-    fgSetMouseCursor(mouse);
-}
-#endif // #ifdef _WIN32
-
 
 void fgDumpSnapShotWrapper () {
     fgDumpSnapShot();

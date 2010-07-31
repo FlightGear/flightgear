@@ -60,9 +60,7 @@ extern void fgDumpSnapShotWrapper();
 extern void fgHiResDumpWrapper();
 extern void fgHiResDump();
 #endif
-#if defined( _WIN32 ) && !defined(__MINGW32__)
-extern void printScreen();
-#endif
+
 extern void helpCb();
 
 typedef struct {
