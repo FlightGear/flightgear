@@ -26,7 +26,11 @@
 #endif
 
 #include "kln89_page_apt.hxx"
-#include <ATCDCL/commlist.hxx>
+#if ENABLE_ATCDCL
+#    include <ATCDCL/commlist.hxx>
+#else
+  #include <ATC/atcutils.hxx>
+#endif
 #include <Main/globals.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>

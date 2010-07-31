@@ -52,7 +52,8 @@
 #if !ENABLE_ATCDCL
 
 class SGPath;
-struct ATCData;
+
+
 
 // Possible types of ATC type that the radios may be tuned to.
 // INVALID implies not tuned in to anything.
@@ -66,6 +67,18 @@ enum atc_type {
 	ENROUTE,
   INVALID	 /* must be last element;  see ATC_NUM_TYPES */
 };
+
+struct ATCData {
+        ATCData() : type(INVALID), cart(0, 0, 0), freq(0), range(0) {}
+	atc_type type;
+	SGGeod geod;
+	SGVec3d cart;
+	unsigned short int freq;
+	unsigned short int range;
+	std::string ident;
+	std::string name;
+};
+
 
 
 // A list of ATC stations
