@@ -52,7 +52,7 @@
 #if !ENABLE_ATCDCL
 
 class SGPath;
-class ATCData;
+struct ATCData;
 
 // Possible types of ATC type that the radios may be tuned to.
 // INVALID implies not tuned in to anything.
