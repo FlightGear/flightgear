@@ -563,12 +563,16 @@ FGRenderer::init( void )
 // Update all Visuals (redraws anything graphics related)
 void
 FGRenderer::update( bool refresh_camera_settings ) {
-    bool scenery_loaded = fgGetBool("sim/sceneryloaded", false)
+    bool scenery_loaded = fgGetBool("sim/sceneryloaded")
                           || fgGetBool("sim/sceneryloaded-override");
     osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
-    if (!scenery_loaded) {
-      fgSetDouble("/sim/startup/splash-alpha", 1.0);
-      return;
+    if ( idle_state < 1000 || !scenery_loaded ) {
+        fgSetDouble("/sim/startup/splash-alpha", 1.0);
+
+        // Keep resetting sim time while the sim is initializing
+        // the splash screen is now in the scenegraph
+        globals->set_sim_time_sec( 0.0 );
+        return;
     }
 
     // Fade out the splash screen over the first three seconds.
@@ -625,7 +629,9 @@ FGRenderer::update( bool refresh_camera_settings ) {
     thesky->set_visibility(visibility_meters);
 
     double altitude_m = fgGetDouble("/position/altitude-ft") * SG_FEET_TO_METER;
-    thesky->modify_vis( altitude_m, 0.0 /* time factor, now unused */);
+    thesky->modify_vis( altitude_m,
+                        ( global_multi_loop * fgGetInt("/sim/speed-up") )
+                        / (double)fgGetInt("/sim/model-hz") );
 
     // update the sky dome
     if ( skyblend ) {
@@ -667,8 +673,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
         scolor.cloud_color = SGVec3f(l->cloud_color().data());
         scolor.sun_angle   = l->get_sun_angle();
         scolor.moon_angle  = l->get_moon_angle();
-  
-        double delta_time_sec = fgGetDouble("/sim/time/delta-sec");
+
         thesky->reposition( sstate, *globals->get_ephem(), delta_time_sec );
         thesky->repaint( scolor, *globals->get_ephem() );
 
