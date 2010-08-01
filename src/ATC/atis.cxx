@@ -26,6 +26,7 @@
 
 #include <iostream>
 
+#include <simgear/math/SGMath.hxx>
 #include "atis.hxx"
 
 FGAtisManager::FGAtisManager() {
