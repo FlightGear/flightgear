@@ -41,5 +41,5 @@ void FGAtisManager::init() {
 }
 
 void FGAtisManager::update ( double time ) {
-    cerr << "ATIS code is running at time: " << time << endl;
+    //cerr << "ATIS code is running at time: " << time << endl;
 }
