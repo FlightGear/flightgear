@@ -79,6 +79,7 @@
 #   include <ATCDCL/AIMgr.hxx>
 #   include "ATCDCL/commlist.hxx"
 #else
+#   include "ATC/atis.hxx"
 #   include "ATC/atcutils.hxx"
 #endif
 
@@ -1572,6 +1573,11 @@ bool fgInitSubsystems() {
     SG_LOG(SG_GENERAL, SG_INFO, "  AI Manager");
     globals->set_AI_mgr(new FGAIMgr);
     globals->get_AI_mgr()->init();
+#else
+    ////////////////////////////////////////////////////////////////////
+    // Initialise the ATIS Manager
+    ////////////////////////////////////////////////////////////////////
+    globals->add_subsystem("atis", new FGAtisManager, SGSubsystemMgr::POST_FDM);
 #endif
     ////////////////////////////////////////////////////////////////////
     // Initialise the AI Model Manager
