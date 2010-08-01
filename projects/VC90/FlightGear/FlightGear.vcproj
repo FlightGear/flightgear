@@ -5508,6 +5508,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\ATC\atis.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\ATC\atis.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Atc\trafficcontrol.cxx"
 				>
 			</File>
