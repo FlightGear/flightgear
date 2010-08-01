@@ -1533,6 +1533,9 @@
     <ClCompile Include="..\..\..\src\Environment\ephemeris.cxx">
       <Filter>Lib_Environment</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\ATC\atis.cxx">
+      <Filter>Lib_ATC</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\Aircraft\controls.hxx">
@@ -2890,6 +2893,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\Environment\ephemeris.hxx">
       <Filter>Lib_Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATC\atis.hxx">
+      <Filter>Lib_ATC</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

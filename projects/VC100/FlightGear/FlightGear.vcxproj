@@ -370,6 +370,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\..\src\ATC\atcutils.cxx" />
+    <ClCompile Include="..\..\..\src\ATC\atis.cxx" />
     <ClCompile Include="..\..\..\src\Autopilot\analogcomponent.cxx" />
     <ClCompile Include="..\..\..\src\Autopilot\autopilot.cxx" />
     <ClCompile Include="..\..\..\src\Autopilot\autopilotgroup.cxx" />
@@ -957,6 +958,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\..\src\ATC\atcutils.hxx" />
+    <ClInclude Include="..\..\..\src\ATC\atis.hxx" />
     <ClInclude Include="..\..\..\src\Autopilot\analogcomponent.hxx" />
     <ClInclude Include="..\..\..\src\Autopilot\autopilot.hxx" />
     <ClInclude Include="..\..\..\src\Autopilot\autopilotgroup.hxx" />
