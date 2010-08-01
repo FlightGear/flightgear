@@ -1,0 +1,1426 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{49142EAF-B264-4B9F-B096-F669999EBB2E}</ProjectGuid>
+    <RootNamespace>FlightGear</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">fgfs</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">fgfs</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">fgfs</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">fgfs</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Midl>
+      <TypeLibraryName>.\Debug/FlightGear.tlb</TypeLibraryName>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\..\SimGear;..\..\..\src\FDM\JSBSim;..\..\..\..\install\msvc100\OpenSceneGraph\include;..\..\..\..\3rdParty\include;..\..\..\..\boost_1_43_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <BrowseInformation>true</BrowseInformation>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0c09</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalOptions>/MACHINE:I386 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;winmm.lib;wsock32.lib;sg_d.lib;net_d.lib;pui_d.lib;puaux_d.lib;fnt_d.lib;js_d.lib;ul_d.lib;zlibd.lib;OpenAL32.lib;ALut.lib;osgd.lib;osgDBd.lib;osgUtild.lib;osgViewerd.lib;osgGAd.lib;osgTextd.lib;osgParticled.lib;OpenThreadsd.lib;libjpegd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)fgfs.exe</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>..\..\..\..\install\msvc100\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <ForceFileOutput>MultiplyDefinedSymbolOnly</ForceFileOutput>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+      <TypeLibraryName>.\Debug/FlightGear.tlb</TypeLibraryName>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\..\SimGear;..\..\..\src\FDM\JSBSim;..\..\..\..\install\msvc100-64\OpenSceneGraph\include;..\..\..\..\3rdParty.x64\include;..\..\..\..\boost_1_43_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;PU_USE_NATIVE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <BrowseInformation>true</BrowseInformation>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0c09</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;winmm.lib;wsock32.lib;sg_d.lib;net_d.lib;pui_d.lib;puaux_d.lib;fnt_d.lib;js_d.lib;ul_d.lib;zlibd.lib;OpenAL32.lib;ALut.lib;osgd.lib;osgDBd.lib;osgUtild.lib;osgViewerd.lib;osgGAd.lib;osgTextd.lib;osgParticled.lib;OpenThreadsd.lib;libjpegd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)fgfs.exe</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>..\..\..\..\install\msvc100-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX64</TargetMachine>
+      <ForceFileOutput>MultiplyDefinedSymbolOnly</ForceFileOutput>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Midl>
+      <TypeLibraryName>.\Release/FlightGear.tlb</TypeLibraryName>
+    </Midl>
+    <ClCompile>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\src\FDM\JSBSim;..\..\..\..\SimGear;..\..\..\..\install\msvc100\OpenSceneGraph\include;..\..\..\..\3rdParty\include;..\..\..\..\boost_1_43_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0c09</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalOptions>/MACHINE:I386 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;winmm.lib;wsock32.lib;sg.lib;net.lib;pui.lib;puAux.lib;fnt.lib;js.lib;ul.lib;zlib.lib;OpenAL32.lib;ALut.lib;osg.lib;osgDB.lib;osgUtil.lib;osgViewer.lib;osgGA.lib;osgText.lib;osgParticle.lib;OpenThreads.lib;libjpeg.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)fgfs.exe</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>..\..\..\..\install\msvc100\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <ForceFileOutput>MultiplyDefinedSymbolOnly</ForceFileOutput>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+      <TypeLibraryName>.\Release/FlightGear.tlb</TypeLibraryName>
+    </Midl>
+    <ClCompile>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\src\FDM\JSBSim;..\..\..\..\SimGear;..\..\..\..\install\msvc100-64\OpenSceneGraph\include;..\..\..\..\3rdParty.x64\include;..\..\..\..\boost_1_43_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;PU_USE_NATIVE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0c09</Culture>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;winmm.lib;wsock32.lib;sg.lib;net.lib;pui.lib;puAux.lib;fnt.lib;js.lib;ul.lib;zlib.lib;OpenAL32.lib;ALut.lib;osg.lib;osgDB.lib;osgUtil.lib;osgViewer.lib;osgGA.lib;osgText.lib;osgParticle.lib;OpenThreads.lib;libjpeg.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)fgfs.exe</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>..\..\..\..\install\msvc100-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX64</TargetMachine>
+      <ForceFileOutput>MultiplyDefinedSymbolOnly</ForceFileOutput>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\Aircraft\controls.cxx" />
+    <ClCompile Include="..\..\..\src\Aircraft\replay.cxx" />
+    <ClCompile Include="..\..\..\src\Airports\apt_loader.cxx" />
+    <ClCompile Include="..\..\..\src\Airports\dynamicloader.cxx" />
+    <ClCompile Include="..\..\..\src\Airports\dynamics.cxx" />
+    <ClCompile Include="..\..\..\src\Airports\gnnode.cxx" />
+    <ClCompile Include="..\..\..\src\Airports\groundnetwork.cxx" />
+    <ClCompile Include="..\..\..\src\Airports\parking.cxx" />
+    <ClCompile Include="..\..\..\src\Airports\pavement.cxx" />
+    <ClCompile Include="..\..\..\src\Airports\runwaybase.cxx" />
+    <ClCompile Include="..\..\..\src\Airports\runwayprefloader.cxx" />
+    <ClCompile Include="..\..\..\src\Airports\runwayprefs.cxx" />
+    <ClCompile Include="..\..\..\src\Airports\runways.cxx" />
+    <ClCompile Include="..\..\..\src\Airports\sidstar.cxx" />
+    <ClCompile Include="..\..\..\src\Airports\simple.cxx" />
+    <ClCompile Include="..\..\..\src\Airports\xmlloader.cxx" />
+    <ClCompile Include="..\..\..\src\ATCDCL\AIEntity.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\AIGAVFRTraffic.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\AILocalTraffic.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\AIMgr.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\AIPlane.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\approach.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\ATC.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\ATCDialog.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\ATCmgr.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\ATCProjection.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\ATCutils.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\ATCVoice.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\atis.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\commlist.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\ground.cxx">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\tower.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\transmission.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\transmissionlist.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATC\atcutils.cxx" />
+    <ClCompile Include="..\..\..\src\ATC\atis.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\analogcomponent.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\autopilot.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\autopilotgroup.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\component.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\digitalcomponent.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\digitalfilter.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\flipflop.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\inputvalue.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\logic.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\pidcontroller.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\pisimplecontroller.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\predictor.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\route_mgr.cxx" />
+    <ClCompile Include="..\..\..\src\Cockpit\cockpit.cxx" />
+    <ClCompile Include="..\..\..\src\Cockpit\hud.cxx">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Cockpit\hud_card.cxx" />
+    <ClCompile Include="..\..\..\src\Cockpit\hud_dnst.cxx" />
+    <ClCompile Include="..\..\..\src\Cockpit\hud_gaug.cxx" />
+    <ClCompile Include="..\..\..\src\Cockpit\hud_inst.cxx" />
+    <ClCompile Include="..\..\..\src\Cockpit\hud_labl.cxx" />
+    <ClCompile Include="..\..\..\src\Cockpit\hud_ladr.cxx" />
+    <ClCompile Include="..\..\..\src\Cockpit\hud_rwy.cxx" />
+    <ClCompile Include="..\..\..\src\Cockpit\hud_scal.cxx" />
+    <ClCompile Include="..\..\..\src\Cockpit\hud_tbi.cxx">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Cockpit\panel.cxx" />
+    <ClCompile Include="..\..\..\src\Cockpit\panel_io.cxx" />
+    <ClCompile Include="..\..\..\src\Cockpit\built_in\FGMagRibbon.cxx" />
+    <ClCompile Include="..\..\..\src\Environment\ephemeris.cxx" />
+    <ClCompile Include="..\..\..\src\FDM\fdm_shell.cxx" />
+    <ClCompile Include="..\..\..\src\FDM\flightProperties.cxx" />
+    <ClCompile Include="..\..\..\src\FDM\JSBSim\FGFDMExec.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\JSBSim\FGJSBBase.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\JSBSim\FGState.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\JSBSim\JSBSim.cxx" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGColumnVector3.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGCondition.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGFunction.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGLocation.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGMatrix33.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGPropertyValue.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGQuaternion.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGRealValue.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\JSBSim\math\FGRungeKutta.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGTable.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGAerodynamics.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGAircraft.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGAtmosphere.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGAuxiliary.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGBuoyantForces.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGExternalForce.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGExternalReactions.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGFCS.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGGasCell.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGGroundReactions.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\JSBSim\models\flight_control\FGGyro.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGInertial.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGInput.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGLGear.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\JSBSim\models\flight_control\FGMagnetometer.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGMassBalance.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGModel.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGOutput.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGPropagate.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGPropulsion.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\atmosphere\FGMars.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\atmosphere\FGMSIS.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\atmosphere\FGMSISData.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGAccelerometer.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGActuator.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGDeadBand.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGFCSComponent.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGFCSFunction.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGFilter.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGGain.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGGradient.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGKinemat.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGPID.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGSensor.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGSummer.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGSwitch.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGElectric.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGEngine.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGForce.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGNozzle.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGPiston.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGPropeller.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGRocket.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGRotor.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGTank.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGThruster.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGTurbine.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGTurboProp.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\input_output\FGfdmSocket.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\input_output\FGGroundCallback.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\input_output\FGPropertyManager.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\input_output\FGScript.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\input_output\FGXMLElement.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\input_output\FGXMLParse.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\initialization\FGInitialCondition.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\initialization\FGTrim.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\JSBSim\initialization\FGTrimAxis.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\atmos_62.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\basic_aero.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\basic_engine.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\basic_gear.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\basic_init.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\c172_aero.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\c172_engine.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\c172_gear.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\c172_init.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\cherokee_aero.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\cherokee_engine.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\cherokee_gear.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\cherokee_init.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\default_model_routines.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\IO360.cxx" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\LaRCsim.cxx" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\LaRCsimIC.cxx" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\ls_accel.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\ls_aux.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\ls_geodesy.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\ls_gravity.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\ls_init.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\ls_interface.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\ls_matrix.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\ls_model.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\ls_step.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\navion_aero.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\navion_engine.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\navion_gear.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\navion_init.c" />
+    <ClCompile Include="..\..\..\src\FDM\LaRCsim\uiuc_aero.c" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_1DdataFileReader.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_1Dinterpolation.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_2DdataFileReader.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_2Dinterpolation.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_3Dinterpolation.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_aerodeflections.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_alh_ap.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_auto_pilot.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_betaprobe.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_coef_drag.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_coef_lift.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_coef_pitch.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_coef_roll.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_coef_sideforce.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_coef_yaw.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_coefficients.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_controlInput.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_convert.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_engine.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_find_position.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_flapdata.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_fog.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_gear.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_get_flapper.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_getwind.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_hh_ap.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_ice.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_iceboot.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_iced_nonlin.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_icing_demo.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_initializemaps.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_CD.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_CL.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_Cm.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_Cn.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_controlSurface.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_Croll.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_CY.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_engine.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_fog.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_gear.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_geometry.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_ice.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_init.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_keyword.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_mass.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_misc.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_record1.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_record2.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_record3.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_record4.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_record5.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_map_record6.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_CD.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_CL.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_Cm.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_Cn.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_controlSurface.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_Croll.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_CY.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_engine.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_fog.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_functions.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_gear.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_geometry.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_ice.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_init.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_mass.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_misc.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_record.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_pah_ap.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_parsefile.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_rah_ap.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_recorder.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_warnings_errors.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\UIUCModel\uiuc_wrapper.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\Airplane.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\Atmosphere.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\ControlMap.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\FGFDM.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\YASim\FGGround.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\Gear.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\Glue.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\YASim\Ground.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Fdm\YASim\Hitch.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\YASim\Hook.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\Integrator.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\Jet.cpp" />
+    <ClCompile Include="..\..\..\src\Fdm\YASim\Launchbar.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\Math.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\Model.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\PistonEngine.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\Propeller.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\PropEngine.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\RigidBody.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\Rotor.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\Rotorpart.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\SimpleJet.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\Surface.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\Thruster.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\TurbineEngine.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\Turbulence.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\Wing.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\YASim\YASim.cxx" />
+    <ClCompile Include="..\..\..\src\FDM\flight.cxx" />
+    <ClCompile Include="..\..\..\src\Fdm\groundcache.cxx" />
+    <ClCompile Include="..\..\..\src\FDM\NullFDM.cxx" />
+    <ClCompile Include="..\..\..\src\GUI\AirportList.cxx" />
+    <ClCompile Include="..\..\..\src\GUI\dialog.cxx" />
+    <ClCompile Include="..\..\..\src\Gui\fonts.cxx" />
+    <ClCompile Include="..\..\..\src\GUI\gui.cxx" />
+    <ClCompile Include="..\..\..\src\GUI\gui_funcs.cxx" />
+    <ClCompile Include="..\..\..\src\GUI\layout-props.cxx" />
+    <ClCompile Include="..\..\..\src\GUI\layout.cxx" />
+    <ClCompile Include="..\..\..\src\GUI\menubar.cxx" />
+    <ClCompile Include="..\..\..\src\GUI\new_gui.cxx" />
+    <ClCompile Include="..\..\..\src\Gui\property_list.cxx" />
+    <ClCompile Include="..\..\..\src\GUI\SafeTexFont.cxx" />
+    <ClCompile Include="..\..\..\src\GUI\WaypointList.cxx" />
+    <ClCompile Include="..\..\..\src\GUI\MapWidget.cxx" />
+    <ClCompile Include="..\..\..\src\Input\FGButton.cxx" />
+    <ClCompile Include="..\..\..\src\Input\FGCommonInput.cxx" />
+    <ClCompile Include="..\..\..\src\Input\FGDeviceConfigurationMap.cxx" />
+    <ClCompile Include="..\..\..\src\Input\FGJoystickInput.cxx" />
+    <ClCompile Include="..\..\..\src\Input\FGKeyboardInput.cxx" />
+    <ClCompile Include="..\..\..\src\Input\FGMouseInput.cxx" />
+    <ClCompile Include="..\..\..\src\Input\input.cxx" />
+    <ClCompile Include="..\..\..\src\Main\bootstrap.cxx" />
+    <ClCompile Include="..\..\..\src\Main\CameraGroup.cxx" />
+    <ClCompile Include="..\..\..\src\Main\fg_commands.cxx" />
+    <ClCompile Include="..\..\..\src\Main\fg_init.cxx" />
+    <ClCompile Include="..\..\..\src\Main\fg_io.cxx" />
+    <ClCompile Include="..\..\..\src\Main\fg_os_common.cxx" />
+    <ClCompile Include="..\..\..\src\Main\fg_os_osgviewer.cxx" />
+    <ClCompile Include="..\..\..\src\Main\fg_props.cxx" />
+    <ClCompile Include="..\..\..\src\Main\FGEventHandler.cxx" />
+    <ClCompile Include="..\..\..\src\Main\fgviewer.cxx" />
+    <ClCompile Include="..\..\..\src\Main\globals.cxx" />
+    <ClCompile Include="..\..\..\src\Main\logger.cxx" />
+    <ClCompile Include="..\..\..\src\Main\main.cxx" />
+    <ClCompile Include="..\..\..\src\Scripting\nasal-props.cxx" />
+    <ClCompile Include="..\..\..\src\Scripting\NasalSys.cxx" />
+    <ClCompile Include="..\..\..\src\Main\options.cxx" />
+    <ClCompile Include="..\..\..\src\Main\renderer.cxx" />
+    <ClCompile Include="..\..\..\src\Main\splash.cxx" />
+    <ClCompile Include="..\..\..\src\Main\util.cxx" />
+    <ClCompile Include="..\..\..\src\Main\viewer.cxx" />
+    <ClCompile Include="..\..\..\src\Main\viewmgr.cxx" />
+    <ClCompile Include="..\..\..\src\Main\WindowBuilder.cxx" />
+    <ClCompile Include="..\..\..\src\Main\WindowSystemAdapter.cxx" />
+    <ClCompile Include="..\..\..\src\Navaids\awynet.cxx" />
+    <ClCompile Include="..\..\..\src\Navaids\fixlist.cxx" />
+    <ClCompile Include="..\..\..\src\Navaids\markerbeacon.cxx" />
+    <ClCompile Include="..\..\..\src\Navaids\navdb.cxx" />
+    <ClCompile Include="..\..\..\src\Navaids\navlist.cxx" />
+    <ClCompile Include="..\..\..\src\Navaids\navrecord.cxx" />
+    <ClCompile Include="..\..\..\src\Navaids\positioned.cxx" />
+    <ClCompile Include="..\..\..\src\Network\ATC-Inputs.cxx" />
+    <ClCompile Include="..\..\..\src\Network\ATC-Main.cxx" />
+    <ClCompile Include="..\..\..\src\Network\ATC-Outputs.cxx" />
+    <ClCompile Include="..\..\..\src\Network\atlas.cxx" />
+    <ClCompile Include="..\..\..\src\Network\AV400.cxx" />
+    <ClCompile Include="..\..\..\src\Network\AV400Sim.cxx" />
+    <ClCompile Include="..\..\..\src\Network\garmin.cxx" />
+    <ClCompile Include="..\..\..\src\Network\generic.cxx" />
+    <ClCompile Include="..\..\..\src\Network\httpd.cxx" />
+    <ClCompile Include="..\..\..\src\Network\joyclient.cxx" />
+    <ClCompile Include="..\..\..\src\Network\jpg-httpd.cxx" />
+    <ClCompile Include="..\..\..\src\Network\jsclient.cxx" />
+    <ClCompile Include="..\..\..\src\Network\multiplay.cxx" />
+    <ClCompile Include="..\..\..\src\Network\native.cxx" />
+    <ClCompile Include="..\..\..\src\Network\native_ctrls.cxx" />
+    <ClCompile Include="..\..\..\src\Network\native_fdm.cxx" />
+    <ClCompile Include="..\..\..\src\Network\native_gui.cxx" />
+    <ClCompile Include="..\..\..\src\Network\nmea.cxx" />
+    <ClCompile Include="..\..\..\src\Network\opengc.cxx" />
+    <ClCompile Include="..\..\..\src\Network\props.cxx" />
+    <ClCompile Include="..\..\..\src\Network\protocol.cxx" />
+    <ClCompile Include="..\..\..\src\Network\pve.cxx" />
+    <ClCompile Include="..\..\..\src\Network\ray.cxx" />
+    <ClCompile Include="..\..\..\src\Network\rul.cxx" />
+    <ClCompile Include="..\..\..\src\Scenery\redout.cxx" />
+    <ClCompile Include="..\..\..\src\Scenery\scenery.cxx" />
+    <ClCompile Include="..\..\..\src\Scenery\SceneryPager.cxx" />
+    <ClCompile Include="..\..\..\src\Scenery\tilemgr.cxx" />
+    <ClCompile Include="..\..\..\src\Sound\beacon.cxx" />
+    <ClCompile Include="..\..\..\src\Sound\fg_fx.cxx" />
+    <ClCompile Include="..\..\..\src\Sound\morse.cxx" />
+    <ClCompile Include="..\..\..\src\Sound\sample_queue.cxx" />
+    <ClCompile Include="..\..\..\src\Sound\voice.cxx" />
+    <ClCompile Include="..\..\..\src\Time\light.cxx" />
+    <ClCompile Include="..\..\..\src\Time\sunsolver.cxx" />
+    <ClCompile Include="..\..\..\src\Time\tmp.cxx" />
+    <ClCompile Include="..\..\..\src\MultiPlayer\multiplaymgr.cxx" />
+    <ClCompile Include="..\..\..\src\MultiPlayer\tiny_xdr.cxx" />
+    <ClCompile Include="..\..\..\src\Environment\atmosphere.cxx">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Environment\environment.cxx" />
+    <ClCompile Include="..\..\..\src\Environment\environment_ctrl.cxx" />
+    <ClCompile Include="..\..\..\src\Environment\environment_mgr.cxx" />
+    <ClCompile Include="..\..\..\src\Environment\fgclouds.cxx" />
+    <ClCompile Include="..\..\..\src\Environment\fgmetar.cxx" />
+    <ClCompile Include="..\..\..\src\Environment\fgwind.cxx" />
+    <ClCompile Include="..\..\..\src\Environment\precipitation_mgr.cxx" />
+    <ClCompile Include="..\..\..\src\Environment\ridge_lift.cxx" />
+    <ClCompile Include="..\..\..\src\Model\acmodel.cxx" />
+    <ClCompile Include="..\..\..\src\Model\model_panel.cxx" />
+    <ClCompile Include="..\..\..\src\Model\modelmgr.cxx" />
+    <ClCompile Include="..\..\..\src\Model\panelnode.cxx" />
+    <ClCompile Include="..\..\..\src\FDM\UFO.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\adf.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\agradar.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\airspeed_indicator.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\altimeter.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\attitude_indicator.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\clock.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\dclgps.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\dme.cxx">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Instrumentation\gps.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\groundradar.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\gsdi.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\gyro.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\heading_indicator.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\heading_indicator_dg.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\heading_indicator_fg.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\inst_vertical_speed_indicator.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\instrument_mgr.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\kr_87.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\kt_70.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\mag_compass.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\marker_beacon.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\mk_viii.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\mrg.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\navradio.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\od_gauge.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\rad_alt.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\render_area_2d.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\slip_skid_ball.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\tacan.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\transponder.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\turn_indicator.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\vertical_speed_indicator.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\wxradar.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Hud\HUD.cxx">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Instrumentation\Hud\HUD_dial.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Hud\HUD_gauge.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Hud\HUD_instrument.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Hud\HUD_label.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Hud\HUD_ladder.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Hud\HUD_misc.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Hud\HUD_runway.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Hud\HUD_scale.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Hud\HUD_tape.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Hud\HUD_tbi.cxx">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Systems\electrical.cxx" />
+    <ClCompile Include="..\..\..\src\Systems\pitot.cxx" />
+    <ClCompile Include="..\..\..\src\Systems\static.cxx" />
+    <ClCompile Include="..\..\..\src\Systems\system_mgr.cxx" />
+    <ClCompile Include="..\..\..\src\Systems\vacuum.cxx" />
+    <ClCompile Include="..\..\..\src\FDM\ExternalNet\ExternalNet.cxx" />
+    <ClCompile Include="..\..\..\src\FDM\ExternalPipe\ExternalPipe.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AIAircraft.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AIBallistic.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AIBase.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AICarrier.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AIEscort.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AIFlightPlan.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AIFlightPlanCreate.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AIFlightPlanCreateCruise.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AIFlightPlanCreatePushBack.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AIGroundVehicle.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AIManager.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AIMultiplayer.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AIShip.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AIStatic.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AIStorm.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AITanker.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AIThermal.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\AIWingman.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\performancedata.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\performancedb.cxx" />
+    <ClCompile Include="..\..\..\src\AIModel\submodel.cxx" />
+    <ClCompile Include="..\..\..\src\Traffic\SchedFlight.cxx" />
+    <ClCompile Include="..\..\..\src\Traffic\Schedule.cxx" />
+    <ClCompile Include="..\..\..\src\Traffic\TrafficMgr.cxx" />
+    <ClCompile Include="..\..\..\src\Fdm\Sp\ACMS.cxx" />
+    <ClCompile Include="..\..\..\src\Fdm\Sp\ADA.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Kln89\kln89.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Kln89\kln89_page.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Kln89\kln89_page_act.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Kln89\kln89_page_apt.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Kln89\kln89_page_cal.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Kln89\kln89_page_dir.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Kln89\kln89_page_fpl.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Kln89\kln89_page_int.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Kln89\kln89_page_nav.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Kln89\kln89_page_ndb.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Kln89\kln89_page_nrst.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Kln89\kln89_page_oth.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Kln89\kln89_page_set.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Kln89\kln89_page_usr.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\Kln89\kln89_page_vor.cxx" />
+    <ClCompile Include="..\..\..\src\Atc\trafficcontrol.cxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\Aircraft\controls.hxx" />
+    <ClInclude Include="..\..\..\src\Aircraft\replay.hxx" />
+    <ClInclude Include="..\..\..\src\Airports\apt_loader.hxx" />
+    <ClInclude Include="..\..\..\src\Airports\dynamicloader.hxx" />
+    <ClInclude Include="..\..\..\src\Airports\dynamics.hxx" />
+    <ClInclude Include="..\..\..\src\Airports\gnnode.hxx" />
+    <ClInclude Include="..\..\..\src\Airports\groundnetwork.hxx" />
+    <ClInclude Include="..\..\..\src\Airports\parking.hxx" />
+    <ClInclude Include="..\..\..\src\Airports\pavement.hxx" />
+    <ClInclude Include="..\..\..\src\Airports\runwaybase.hxx" />
+    <ClInclude Include="..\..\..\src\Airports\runwayprefloader.hxx" />
+    <ClInclude Include="..\..\..\src\Airports\runwayprefs.hxx" />
+    <ClInclude Include="..\..\..\src\Airports\runways.hxx" />
+    <ClInclude Include="..\..\..\src\Airports\sidstar.hxx" />
+    <ClInclude Include="..\..\..\src\Airports\simple.hxx" />
+    <ClInclude Include="..\..\..\src\Airports\xmlloader.hxx" />
+    <ClInclude Include="..\..\..\src\ATCDCL\AIEntity.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\AIGAVFRTraffic.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\AILocalTraffic.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\AIMgr.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\AIPlane.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\approach.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\ATC.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\ATCDialog.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\ATCmgr.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\ATCProjection.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\ATCutils.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\ATCVoice.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\atis.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\commlist.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\ground.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\tower.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\transmission.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\transmissionlist.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATC\atcutils.hxx" />
+    <ClInclude Include="..\..\..\src\ATC\atis.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\analogcomponent.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\autopilot.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\autopilotgroup.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\component.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\digitalcomponent.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\digitalfilter.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\flipflop.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\functor.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\inputvalue.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\logic.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\pidcontroller.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\pisimplecontroller.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\predictor.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\route_mgr.hxx" />
+    <ClInclude Include="..\..\..\src\Cockpit\cockpit.hxx" />
+    <ClInclude Include="..\..\..\src\Cockpit\hud.hxx" />
+    <ClInclude Include="..\..\..\src\Cockpit\panel.hxx" />
+    <ClInclude Include="..\..\..\src\Cockpit\panel_io.hxx" />
+    <ClInclude Include="..\..\..\src\Cockpit\built_in\FGMagRibbon.hxx" />
+    <ClInclude Include="..\..\..\src\Environment\ephemeris.hxx" />
+    <ClInclude Include="..\..\..\src\FDM\fdm_shell.hxx" />
+    <ClInclude Include="..\..\..\src\FDM\flightProperties.hxx" />
+    <ClInclude Include="..\..\..\src\FDM\JSBSim\FGFDMExec.h" />
+    <ClInclude Include="..\..\..\src\FDM\JSBSim\FGJSBBase.h" />
+    <ClInclude Include="..\..\..\src\FDM\JSBSim\FGState.h" />
+    <ClInclude Include="..\..\..\src\FDM\JSBSim\JSBSim.hxx" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGColumnVector3.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGCondition.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGFunction.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGLocation.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGMatrix33.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGParameter.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGPropertyValue.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGQuaternion.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGRealValue.h" />
+    <ClInclude Include="..\..\..\src\FDM\JSBSim\math\FGRungeKutta.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGTable.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGAerodynamics.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGAircraft.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGAtmosphere.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGAuxiliary.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGBuoyantForces.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGExternalForce.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGExternalReactions.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGFCS.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGGasCell.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGGroundReactions.h" />
+    <ClInclude Include="..\..\..\src\FDM\JSBSim\models\flight_control\FGGyro.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGInertial.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGInput.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGLGear.h" />
+    <ClInclude Include="..\..\..\src\FDM\JSBSim\models\flight_control\FGMagnetometer.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGMassBalance.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGModel.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGOutput.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGPropagate.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGPropulsion.h" />
+    <ClInclude Include="..\..\..\src\FDM\JSBSim\models\flight_control\FGSensorOrientation.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\atmosphere\FGMars.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\atmosphere\FGMSIS.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGAccelerometer.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGActuator.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGDeadBand.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGFCSComponent.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGFCSFunction.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGFilter.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGGain.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGGradient.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGKinemat.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGPID.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGSensor.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGSummer.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\flight_control\FGSwitch.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGElectric.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGEngine.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGForce.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGNozzle.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGPiston.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGPropeller.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGRocket.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGRotor.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGTank.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGThruster.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGTurbine.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\propulsion\FGTurboProp.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\input_output\FGfdmSocket.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\input_output\FGGroundCallback.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\input_output\FGPropertyManager.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\input_output\FGScript.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\input_output\FGXMLElement.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\input_output\FGXMLFileRead.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\input_output\FGXMLParse.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\input_output\net_fdm.hxx" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\initialization\FGInitialCondition.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\initialization\FGTrim.h" />
+    <ClInclude Include="..\..\..\src\Fdm\JSBSim\initialization\FGTrimAxis.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\atmos_62.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\basic_aero.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\basic_init.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\c172_aero.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\c172_init.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\default_model_routines.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\IO360.hxx" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\LaRCsim.hxx" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\LaRCsimIC.hxx" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\ls_accel.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\ls_aux.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\ls_cockpit.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\ls_constants.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\ls_generic.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\ls_geodesy.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\ls_gravity.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\ls_init.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\ls_interface.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\ls_matrix.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\ls_model.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\ls_sim_control.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\ls_step.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\ls_sym.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\ls_types.h" />
+    <ClInclude Include="..\..\..\src\FDM\LaRCsim\navion_init.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_1DdataFileReader.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_1Dinterpolation.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_2DdataFileReader.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_2Dinterpolation.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_3Dinterpolation.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_aerodeflections.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_aircraft.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_aircraftdir.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_alh_ap.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_auto_pilot.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_betaprobe.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_coef_drag.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_coef_lift.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_coef_pitch.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_coef_roll.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_coef_sideforce.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_coef_yaw.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_coefficients.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_controlInput.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_convert.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_engine.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_find_position.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_flapdata.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_fog.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_gear.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_get_flapper.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_getwind.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_hh_ap.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_ice.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_iceboot.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_iced_nonlin.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_icing_demo.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_initializemaps.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_CD.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_CL.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_Cm.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_Cn.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_controlSurface.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_Croll.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_CY.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_engine.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_fog.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_gear.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_geometry.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_ice.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_init.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_keyword.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_mass.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_misc.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_record1.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_record2.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_record3.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_record4.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_record5.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_map_record6.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_CD.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_CL.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_Cm.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_Cn.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_controlSurface.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_Croll.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_CY.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_engine.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_fog.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_functions.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_gear.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_geometry.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_ice.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_init.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_mass.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_misc.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_menu_record.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_pah_ap.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_parsefile.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_rah_ap.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_recorder.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_warnings_errors.h" />
+    <ClInclude Include="..\..\..\src\FDM\UIUCModel\uiuc_wrapper.h" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\Airplane.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\Atmosphere.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\BodyEnvironment.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\ControlMap.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\FGFDM.hpp" />
+    <ClInclude Include="..\..\..\src\Fdm\YASim\FGGround.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\Gear.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\Glue.hpp" />
+    <ClInclude Include="..\..\..\src\Fdm\YASim\Ground.hpp" />
+    <ClInclude Include="..\..\..\src\Fdm\YASim\Hitch.hpp" />
+    <ClInclude Include="..\..\..\src\Fdm\YASim\Hook.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\Integrator.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\Jet.hpp" />
+    <ClInclude Include="..\..\..\src\Fdm\YASim\Launchbar.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\Math.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\Model.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\PistonEngine.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\Propeller.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\PropEngine.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\RigidBody.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\Rotor.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\Rotorpart.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\SimpleJet.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\Surface.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\Thruster.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\TurbineEngine.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\Turbulence.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\Vector.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\Wing.hpp" />
+    <ClInclude Include="..\..\..\src\FDM\YASim\YASim.hxx" />
+    <ClInclude Include="..\..\..\src\FDM\flight.hxx" />
+    <ClInclude Include="..\..\..\src\Fdm\groundcache.hxx" />
+    <ClInclude Include="..\..\..\src\FDM\NullFDM.hxx" />
+    <ClInclude Include="..\..\..\src\GUI\AirportList.hxx" />
+    <ClInclude Include="..\..\..\src\GUI\dialog.hxx" />
+    <ClInclude Include="..\..\..\src\GUI\gui.h" />
+    <ClInclude Include="..\..\..\src\GUI\layout.hxx" />
+    <ClInclude Include="..\..\..\src\GUI\menubar.hxx" />
+    <ClInclude Include="..\..\..\src\GUI\new_gui.hxx" />
+    <ClInclude Include="..\..\..\src\Gui\property_list.hxx" />
+    <ClInclude Include="..\..\..\src\GUI\SafeTexFont.hxx" />
+    <ClInclude Include="..\..\..\src\GUI\WaypointList.hxx" />
+    <ClInclude Include="..\..\..\src\GUI\MapWidget.hxx" />
+    <ClInclude Include="..\..\..\src\Input\FGButton.hxx" />
+    <ClInclude Include="..\..\..\src\Input\FGCommonInput.hxx" />
+    <ClInclude Include="..\..\..\src\Input\FGDeviceConfigurationMap.hxx" />
+    <ClInclude Include="..\..\..\src\Input\FGJoystickInput.hxx" />
+    <ClInclude Include="..\..\..\src\Input\FGKeyboardInput.hxx" />
+    <ClInclude Include="..\..\..\src\Input\FGMouseInput.hxx" />
+    <ClInclude Include="..\..\..\src\Input\input.hxx" />
+    <ClInclude Include="..\..\..\src\Main\CameraGroup.hxx" />
+    <ClInclude Include="..\..\..\src\Main\fg_commands.hxx" />
+    <ClInclude Include="..\..\..\src\Main\fg_init.hxx" />
+    <ClInclude Include="..\..\..\src\Main\fg_io.hxx" />
+    <ClInclude Include="..\..\..\src\Main\fg_os.hxx" />
+    <ClInclude Include="..\..\..\src\Main\fg_props.hxx" />
+    <ClInclude Include="..\..\..\src\Main\FGEventHandler.hxx" />
+    <ClInclude Include="..\..\..\src\Main\fgviewer.hxx" />
+    <ClInclude Include="..\..\..\src\Main\globals.hxx" />
+    <ClInclude Include="..\..\..\src\Main\logger.hxx" />
+    <ClInclude Include="..\..\..\src\Main\main.hxx" />
+    <ClInclude Include="..\..\..\src\Scripting\NasalSys.hxx" />
+    <ClInclude Include="..\..\..\src\Main\options.hxx" />
+    <ClInclude Include="..\..\..\src\Main\renderer.hxx" />
+    <ClInclude Include="..\..\..\src\Main\splash.hxx" />
+    <ClInclude Include="..\..\..\src\Main\util.hxx" />
+    <ClInclude Include="..\..\..\src\Main\viewer.hxx" />
+    <ClInclude Include="..\..\..\src\Main\viewmgr.hxx" />
+    <ClInclude Include="..\..\..\src\Main\WindowBuilder.hxx" />
+    <ClInclude Include="..\..\..\src\Main\WindowSystemAdapter.hxx" />
+    <ClInclude Include="..\..\..\src\Navaids\awynet.hxx" />
+    <ClInclude Include="..\..\..\src\Navaids\fix.hxx" />
+    <ClInclude Include="..\..\..\src\Navaids\fixlist.hxx" />
+    <ClInclude Include="..\..\..\src\Navaids\markerbeacon.hxx" />
+    <ClInclude Include="..\..\..\src\Navaids\nav.hxx" />
+    <ClInclude Include="..\..\..\src\Navaids\navdb.hxx" />
+    <ClInclude Include="..\..\..\src\Navaids\navlist.hxx" />
+    <ClInclude Include="..\..\..\src\Navaids\positioned.hxx" />
+    <ClInclude Include="..\..\..\src\Network\ATC-Inputs.hxx" />
+    <ClInclude Include="..\..\..\src\Network\ATC-Main.hxx" />
+    <ClInclude Include="..\..\..\src\Network\ATC-Outputs.hxx" />
+    <ClInclude Include="..\..\..\src\Network\atlas.hxx" />
+    <ClInclude Include="..\..\..\src\Network\AV400.hxx" />
+    <ClInclude Include="..\..\..\src\Network\AV400Sim.hxx" />
+    <ClInclude Include="..\..\..\src\Network\garmin.hxx" />
+    <ClInclude Include="..\..\..\src\Network\generic.hxx" />
+    <ClInclude Include="..\..\..\src\Network\httpd.hxx" />
+    <ClInclude Include="..\..\..\src\Network\joyclient.hxx" />
+    <ClInclude Include="..\..\..\src\Network\jpg-httpd.hxx" />
+    <ClInclude Include="..\..\..\src\Network\jsclient.hxx" />
+    <ClInclude Include="..\..\..\src\Network\multiplay.hxx" />
+    <ClInclude Include="..\..\..\src\Network\native.hxx" />
+    <ClInclude Include="..\..\..\src\Network\native_ctrls.hxx" />
+    <ClInclude Include="..\..\..\src\Network\native_fdm.hxx" />
+    <ClInclude Include="..\..\..\src\Network\native_gui.hxx" />
+    <ClInclude Include="..\..\..\src\Network\net_ctrls.hxx" />
+    <ClInclude Include="..\..\..\src\Network\net_fdm.hxx" />
+    <ClInclude Include="..\..\..\src\Network\net_fdm_mini.hxx" />
+    <ClInclude Include="..\..\..\src\Network\net_gui.hxx" />
+    <ClInclude Include="..\..\..\src\Network\nmea.hxx" />
+    <ClInclude Include="..\..\..\src\Network\opengc.hxx" />
+    <ClInclude Include="..\..\..\src\Network\opengc_data.hxx" />
+    <ClInclude Include="..\..\..\src\Network\props.hxx" />
+    <ClInclude Include="..\..\..\src\Network\protocol.hxx" />
+    <ClInclude Include="..\..\..\src\Network\pve.hxx" />
+    <ClInclude Include="..\..\..\src\Network\ray.hxx" />
+    <ClInclude Include="..\..\..\src\Network\rul.hxx" />
+    <ClInclude Include="..\..\..\src\Scenery\redout.hxx" />
+    <ClInclude Include="..\..\..\src\Scenery\scenery.hxx" />
+    <ClInclude Include="..\..\..\src\Scenery\SceneryPager.hxx" />
+    <ClInclude Include="..\..\..\src\Scenery\tilemgr.hxx" />
+    <ClInclude Include="..\..\..\src\Sound\beacon.hxx" />
+    <ClInclude Include="..\..\..\src\Sound\fg_fx.hxx" />
+    <ClInclude Include="..\..\..\src\Sound\morse.hxx" />
+    <ClInclude Include="..\..\..\src\Sound\sample_queue.hxx" />
+    <ClInclude Include="..\..\..\src\Sound\voice.hxx" />
+    <ClInclude Include="..\..\..\src\Time\light.hxx" />
+    <ClInclude Include="..\..\..\src\Time\sunsolver.hxx" />
+    <ClInclude Include="..\..\..\src\Time\tmp.hxx" />
+    <ClInclude Include="..\..\..\src\MultiPlayer\mpmessages.hxx" />
+    <ClInclude Include="..\..\..\src\MultiPlayer\multiplaymgr.hxx" />
+    <ClInclude Include="..\..\..\src\MultiPlayer\tiny_xdr.hxx" />
+    <ClInclude Include="..\..\..\src\Environment\atmosphere.hxx" />
+    <ClInclude Include="..\..\..\src\Environment\environment.hxx" />
+    <ClInclude Include="..\..\..\src\Environment\environment_ctrl.hxx" />
+    <ClInclude Include="..\..\..\src\Environment\environment_mgr.hxx" />
+    <ClInclude Include="..\..\..\src\Environment\fgclouds.hxx" />
+    <ClInclude Include="..\..\..\src\Environment\fgmetar.hxx" />
+    <ClInclude Include="..\..\..\src\Environment\fgwind.hxx" />
+    <ClInclude Include="..\..\..\src\Environment\precipitation_mgr.hxx" />
+    <ClInclude Include="..\..\..\src\Environment\ridge_lift.hxx" />
+    <ClInclude Include="..\..\..\src\Model\acmodel.hxx" />
+    <ClInclude Include="..\..\..\src\Model\model_panel.hxx" />
+    <ClInclude Include="..\..\..\src\Model\modelmgr.hxx" />
+    <ClInclude Include="..\..\..\src\Model\panelnode.hxx" />
+    <ClInclude Include="..\..\..\src\FDM\UFO.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\adf.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\agradar.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\airspeed_indicator.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\altimeter.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\attitude_indicator.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\clock.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\dclgps.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\dme.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\gps.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\groundradar.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\gsdi.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\gyro.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\heading_indicator.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\heading_indicator_dg.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\heading_indicator_fg.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\inst_vertical_speed_indicator.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\instrument_mgr.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\kr_87.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\kt_70.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\mag_compass.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\marker_beacon.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\mk_viii.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\mrg.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\navradio.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\od_gauge.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\rad_alt.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\render_area_2d.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\slip_skid_ball.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\tacan.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\transponder.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\turn_indicator.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\vertical_speed_indicator.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\wxradar.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\Hud\HUD.hxx" />
+    <ClInclude Include="..\..\..\src\Systems\electrical.hxx" />
+    <ClInclude Include="..\..\..\src\Systems\pitot.hxx" />
+    <ClInclude Include="..\..\..\src\Systems\static.hxx" />
+    <ClInclude Include="..\..\..\src\Systems\system_mgr.hxx" />
+    <ClInclude Include="..\..\..\src\Systems\vacuum.hxx" />
+    <ClInclude Include="..\..\..\src\FDM\ExternalNet\ExternalNet.hxx" />
+    <ClInclude Include="..\..\..\src\FDM\ExternalPipe\ExternalPipe.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\AIAircraft.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\AIBallistic.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\AIBase.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\AICarrier.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\AIEscort.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\AIFlightPlan.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\AIGroundVehicle.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\AIManager.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\AIMultiplayer.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\AIShip.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\AIStatic.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\AIStorm.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\AITanker.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\AIThermal.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\AIWingman.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\performancedata.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\performancedb.hxx" />
+    <ClInclude Include="..\..\..\src\AIModel\submodel.hxx" />
+    <ClInclude Include="..\..\..\src\Traffic\SchedFlight.hxx" />
+    <ClInclude Include="..\..\..\src\Traffic\Schedule.hxx" />
+    <ClInclude Include="..\..\..\src\Traffic\TrafficMgr.hxx" />
+    <ClInclude Include="..\..\..\src\Fdm\Sp\ACMS.hxx" />
+    <ClInclude Include="..\..\..\src\Fdm\Sp\ADA.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\Kln89\kln89.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\Kln89\kln89_page.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\Kln89\kln89_page_act.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\Kln89\kln89_page_apt.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\Kln89\kln89_page_cal.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\Kln89\kln89_page_dir.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\Kln89\kln89_page_fpl.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\Kln89\kln89_page_int.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\Kln89\kln89_page_nav.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\Kln89\kln89_page_ndb.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\Kln89\kln89_page_nrst.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\Kln89\kln89_page_oth.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\Kln89\kln89_page_set.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\Kln89\kln89_page_usr.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\Kln89\kln89_page_vor.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\Kln89\kln89_symbols.hxx" />
+    <ClInclude Include="..\..\..\src\Atc\trafficcontrol.hxx" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\..\..\src\Include\config.h-msvc90">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Generation of config.h</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">copy %(FullPath) %(RootDir)%(Directory)\%(Filename).h
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\..\src\Include\config.h;%(Outputs)</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Generation of config.h</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">copy %(FullPath) %(RootDir)%(Directory)\%(Filename).h
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\..\src\Include\config.h;%(Outputs)</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Generation of config.h</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">copy %(FullPath) %(RootDir)%(Directory)\%(Filename).h
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\..\src\Include\config.h;%(Outputs)</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Generation of config.h</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">copy %(FullPath) %(RootDir)%(Directory)\%(Filename).h
+</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\..\src\Include\config.h;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuildStep Include="..\flightgear.ico">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <CustomBuildStep Include="..\flightgear64.ico">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\flightgear.rc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ResourceCompile>
+    <ResourceCompile Include="..\flightgear64.rc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\SimGear\projects\VC100\SimGear.vcxproj">
+      <Project>{22540cd3-d3ca-4c86-a773-80aeee3acded}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

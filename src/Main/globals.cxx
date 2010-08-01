@@ -359,6 +359,21 @@ FGGlobals::saveInitialState ()
 
   if (!copyProperties(props, initial_state))
     SG_LOG(SG_GENERAL, SG_ALERT, "Error saving initial state");
+    
+  // delete various properties from the initial state, since we want to
+  // preserve their values even if doing a restore
+  
+  SGPropertyNode* sim = initial_state->getChild("sim");
+  sim->removeChild("presets");
+  SGPropertyNode* simStartup = sim->getChild("startup");
+  simStartup->removeChild("xsize");
+  simStartup->removeChild("ysize");
+  
+  SGPropertyNode* cameraGroupNode = sim->getNode("rendering/camera-group");
+  if (cameraGroupNode) {
+    cameraGroupNode->removeChild("camera");
+    cameraGroupNode->removeChild("gui");
+  }
 }
 
 
@@ -372,14 +387,6 @@ FGGlobals::restoreInitialState ()
         return;
     }
 
-    SGPropertyNode *currentPresets = new SGPropertyNode;
-    SGPropertyNode *targetNode = fgGetNode( "/sim/presets" );
-
-    // stash the /sim/presets tree
-    if ( !copyProperties(targetNode, currentPresets) ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Failed to save /sim/presets subtree" );
-    }
-    
     if ( copyProperties(initial_state, props) ) {
         SG_LOG( SG_GENERAL, SG_INFO, "Initial state restored successfully" );
     } else {
@@ -387,13 +394,6 @@ FGGlobals::restoreInitialState ()
                 "Some errors restoring initial state (read-only props?)" );
     }
 
-    // recover the /sim/presets tree
-    if ( !copyProperties(currentPresets, targetNode) ) {
-        SG_LOG( SG_GENERAL, SG_ALERT,
-                "Failed to restore /sim/presets subtree" );
-    }
-
-   delete currentPresets;
 }
 
 FGViewer *

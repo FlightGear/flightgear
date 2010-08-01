@@ -4512,11 +4512,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Time\tmp.cxx"
+				RelativePath="..\..\..\src\Time\TimeManager.cxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Time\tmp.hxx"
+				RelativePath="..\..\..\src\Time\TimeManager.hxx"
 				>
 			</File>
 		</Filter>
@@ -5505,6 +5505,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\ATC\atcutils.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\ATC\atis.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\ATC\atis.hxx"
 				>
 			</File>
 			<File

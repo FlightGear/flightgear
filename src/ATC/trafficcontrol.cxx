@@ -510,7 +510,7 @@ void FGATCController::transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir m
     double onBoardRadioFreq1 = fgGetDouble("/instrumentation/comm[1]/frequencies/selected-mhz");
     int onBoardRadioFreqI0 = (int) floor(onBoardRadioFreq0 * 100 + 0.5);
     int onBoardRadioFreqI1 = (int) floor(onBoardRadioFreq1 * 100 + 0.5);
-    cerr << "Using " << onBoardRadioFreq0 << ", " << onBoardRadioFreq1 << " and " << stationFreq << " for " << text << endl;
+    //cerr << "Using " << onBoardRadioFreq0 << ", " << onBoardRadioFreq1 << " and " << stationFreq << " for " << text << endl;
 
     // Display ATC message only when one of the radios is tuned
     // the relevant frequency.
