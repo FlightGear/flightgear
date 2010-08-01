@@ -279,7 +279,6 @@ void FGAIBallistic::update(double dt) {
 
 void FGAIBallistic::setAzimuth(double az) {
     
-		
 	if (_random)
 		hdg = _azimuth = (az - 5 ) + (10 * sg_random());
 	else 
