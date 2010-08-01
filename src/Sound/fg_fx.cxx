@@ -69,13 +69,12 @@ FGFX::init()
     SGPropertyNode *node = fgGetNode("/sim/sound", true);
 
     string path_str = node->getStringValue("path");
-    SGPath path( globals->get_fg_root() );
     if (path_str.empty()) {
         SG_LOG(SG_GENERAL, SG_ALERT, "No path in /sim/sound/path");
         return;
     }
-
-    path.append(path_str.c_str());
+    
+    SGPath path = globals->resolve_aircraft_path(path_str);
     SG_LOG(SG_GENERAL, SG_INFO, "Reading sound " << node->getName()
            << " from " << path.str());
 

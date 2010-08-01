@@ -22,15 +22,6 @@
 using std::vector;
 
 using namespace simgear;
-
-static
-osg::Node* load_panel(SGPropertyNode *n)
-{
-    osg::Geode* geode = new osg::Geode;
-    geode->addDrawable(new FGPanelNode(n));
-    return geode;
-}
-
 
 ////////////////////////////////////////////////////////////////////////
 // Global functions.
@@ -39,7 +30,7 @@ osg::Node* load_panel(SGPropertyNode *n)
 osg::Node *
 fgLoad3DModelPanel(const string &path, SGPropertyNode *prop_root)
 {
-    osg::Node* node = SGModelLib::loadModel(path, prop_root, load_panel);
+    osg::Node* node = SGModelLib::loadModel(path, prop_root);
     if (node)
         node->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
     return node;

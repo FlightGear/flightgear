@@ -33,7 +33,6 @@
  *
  * TODO:
  * - Check the code for known portability issues
- * - Find an alternative for the depricated Point3D class
  *
  *****************************************************************************/
 

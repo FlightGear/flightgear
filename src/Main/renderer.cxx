@@ -57,7 +57,6 @@
 #include <osgDB/WriteFile>
 
 #include <simgear/math/SGMath.hxx>
-#include <simgear/screen/extensions.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/animation.hxx>
 #include <simgear/scene/model/placement.hxx>

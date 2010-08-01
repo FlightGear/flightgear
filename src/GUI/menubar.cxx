@@ -36,16 +36,6 @@ do_hires_snapshot_dialog (const SGPropertyNode * arg)
 }
 #endif // TR_HIRES_SNAP
 
-#if defined( _WIN32 ) && !defined(__MINGW32__)
-extern void printScreen ();
-static bool
-do_print_dialog (const SGPropertyNode * arg)
-{
-    printScreen();
-    return true;
-}
-#endif
-
 extern void helpCb ();
 static bool
 do_help_dialog (const SGPropertyNode * arg)
@@ -60,9 +50,6 @@ static struct {
 } deprecated_dialogs [] = {
 #if defined(TR_HIRES_SNAP)
     { "old-hires-snapshot-dialog", do_hires_snapshot_dialog },
-#endif
-#if defined( _WIN32 ) && !defined(__MINGW32__)
-    { "old-print-dialog", do_print_dialog },
 #endif
     { "old-help-dialog", do_help_dialog },
     { 0, 0 }

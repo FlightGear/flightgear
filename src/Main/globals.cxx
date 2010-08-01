@@ -234,6 +234,82 @@ void FGGlobals::set_fg_scenery (const string &scenery)
     } // of path list iteration
 }
 
+void FGGlobals::append_aircraft_path(const std::string& path)
+{
+  SGPath dirPath(path);
+  if (!dirPath.exists()) {
+    SG_LOG(SG_GENERAL, SG_WARN, "aircraft path not found:" << path);
+    return;
+  }
+  
+  fg_aircraft_dirs.push_back(path);
+}
+
+void FGGlobals::append_aircraft_paths(const std::string& path)
+{
+  string_list paths = sgPathSplit(path);
+  for (unsigned int p = 0; p<paths.size(); ++p) {
+    append_aircraft_path(paths[p]);
+  }
+}
+
+SGPath FGGlobals::resolve_aircraft_path(const std::string& branch) const
+{
+  string_list pieces(sgPathBranchSplit(branch));
+  if ((pieces.size() < 3) || (pieces.front() != "Aircraft")) {
+    SG_LOG(SG_AIRCRAFT, SG_ALERT, "resolve_aircraft_path: bad path:" <<  branch);
+    return SGPath();
+  }
+  
+// check current aircraft dir first (takes precedence, allows Generics to be
+// over-riden
+  const char* aircraftDir = fgGetString("/sim/aircraft-dir");
+  string_list aircraftDirPieces(sgPathBranchSplit(aircraftDir));
+  if (!aircraftDirPieces.empty() && (aircraftDirPieces.back() == pieces[1])) {
+    SGPath r(aircraftDir);
+    
+    for (unsigned int i=2; i<pieces.size(); ++i) {
+      r.append(pieces[i]);
+    }
+        
+    if (r.exists()) {
+      std::cout << "using aircraft-dir for:" << r.str() << std::endl;
+      return r;
+    }
+  } // of using aircraft-dir case
+  
+// try each fg_aircraft_dirs in turn
+  for (unsigned int p=0; p<fg_aircraft_dirs.size(); ++p) {
+    SGPath r(fg_aircraft_dirs[p]);
+    r.append(branch);
+    if (r.exists()) {
+      std::cout << "using aircraft directory for:" << r.str() << std::endl;
+      return r;
+    }
+  } // of fg_aircraft_dirs iteration
+
+// finally, try fg_root
+  SGPath r(fg_root);
+  r.append(branch);
+  if (r.exists()) {
+    std::cout << "using FG_ROOT for:" << r.str() << std::endl;
+    return r;
+  }
+
+  SG_LOG(SG_AIRCRAFT, SG_ALERT, "resolve_aircraft_path: failed to resolve:" << branch);
+  return SGPath();
+}
+
+SGPath FGGlobals::resolve_maybe_aircraft_path(const std::string& branch) const
+{
+  if (branch.find("Aircraft/") == 0) {
+    return resolve_aircraft_path(branch);
+  } else {
+    SGPath r(fg_root);
+    r.append(branch);
+    return r;
+  }
+}
 
 FGRenderer *
 FGGlobals::get_renderer () const

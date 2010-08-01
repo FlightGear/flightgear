@@ -750,8 +750,7 @@ void FGNasalSys::loadPropertyScripts()
         while((fn = n->getChild("file", j)) != NULL) {
             file_specified = true;
             const char* file = fn->getStringValue();
-            SGPath p(globals->get_fg_root());
-            p.append(file);
+            SGPath p = globals->resolve_maybe_aircraft_path(file);
             loadModule(p, module);
             j++;
         }

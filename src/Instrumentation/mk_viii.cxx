@@ -182,6 +182,8 @@ MK_VIII::PropertiesHandler::init ()
   mk_node(altimeter_serviceable) = fgGetNode("/instrumentation/altimeter/serviceable", true);
   mk_node(altitude) = fgGetNode("/position/altitude-ft", true);
   mk_node(altitude_agl) = fgGetNode("/position/altitude-agl-ft", true);
+  mk_node(altitude_gear_agl) = fgGetNode("/position/gear-agl-ft", true);
+  mk_node(orientation_roll) = fgGetNode("/orientation/roll-deg", true);
   mk_node(asi_serviceable) = fgGetNode("/instrumentation/airspeed-indicator/serviceable", true);
   mk_node(asi_speed) = fgGetNode("/instrumentation/airspeed-indicator/indicated-speed-kt", true);
   mk_node(autopilot_heading_lock) = fgGetNode("/autopilot/locks/heading", true);
@@ -712,7 +714,10 @@ MK_VIII::ConfigurationModule::read_options_select_group_1 (int value)
 bool
 MK_VIII::ConfigurationModule::read_radio_altitude_input_select (int value)
 {
-  // unimplemented
+  if (value >= 0 && value <= 2)
+    mk->io_handler.conf.use_gear_altitude = true;
+  else
+    mk->io_handler.conf.use_gear_altitude = false;
   return (value >= 0 && value <= 4) || (value >= 251 && value <= 255);
 }
 
@@ -732,7 +737,10 @@ MK_VIII::ConfigurationModule::read_navigation_input_select (int value)
 bool
 MK_VIII::ConfigurationModule::read_attitude_input_select (int value)
 {
-  // unimplemented
+  if (value == 2)
+    mk->io_handler.conf.use_attitude_indicator=true;
+  else
+    mk->io_handler.conf.use_attitude_indicator=false;
   return (value >= 0 && value <= 6) || value == 253 || value == 255;
 }
 
@@ -1144,9 +1152,13 @@ MK_VIII::IOHandler::update_inputs ()
     mk_ainput(barometric_altitude_rate).set(mk_node(vs)->getDoubleValue() * 60);
   if (mk_ainput_feed(radio_altitude))
     {
+      double agl;
+      if (conf.use_gear_altitude)
+        agl = mk_node(altitude_gear_agl)->getDoubleValue();
+      else
+        agl = mk_node(altitude_agl)->getDoubleValue();
       // Some flight models may return negative values when on the
       // ground or after a crash; do not allow them.
-      double agl = mk_node(altitude_agl)->getDoubleValue();
       mk_ainput(radio_altitude).set(SG_MAX2(0.0, agl));
     }
   if (mk_ainput_feed(glideslope_deviation))
@@ -1164,10 +1176,19 @@ MK_VIII::IOHandler::update_inputs ()
     }
   if (mk_ainput_feed(roll_angle))
     {
+      if (conf.use_attitude_indicator)
+      {
+        // read data from attitude indicator instrument (requires vacuum system to work)
       if (mk_node(ai_serviceable)->getBoolValue() && ! mk_node(ai_caged)->getBoolValue())
 	mk_ainput(roll_angle).set(mk_node(ai_roll)->getDoubleValue());
       else
 	mk_ainput(roll_angle).unset();
+    }
+      else
+      {
+        // use simulator source
+        mk_ainput(roll_angle).set(mk_node(orientation_roll)->getDoubleValue());
+      }
     }
   if (mk_ainput_feed(localizer_deviation))
     {
@@ -2624,6 +2645,8 @@ MK_VIII::SelfTestHandler::stop ()
 
       button_pressed = false;
       state = STATE_NONE;
+      // reset self-test handler position
+      current=0;
     }
 }
 
@@ -3764,6 +3787,7 @@ MK_VIII::Mode4Handler::update_ab ()
     }
 
   mk_unset_alerts(mk_alert(MODE4_TOO_LOW_FLAPS) | mk_alert(MODE4_TOO_LOW_GEAR));
+  ab_bias=0.0;
 }
 
 void
@@ -3789,6 +3813,7 @@ MK_VIII::Mode4Handler::update_ab_expanded ()
     }
 
   mk_unset_alerts(mk_alert(MODE4AB_TOO_LOW_TERRAIN));
+  ab_expanded_bias=0.0;
 }
 
 void
@@ -3805,7 +3830,10 @@ MK_VIII::Mode4Handler::update_c ()
       && mk_data(radio_altitude).get() < mk_data(terrain_clearance).get())
     handle_alert(mk_alert(MODE4C_TOO_LOW_TERRAIN), mk_data(terrain_clearance).get(), &c_bias);
   else
+  {
     mk_unset_alerts(mk_alert(MODE4C_TOO_LOW_TERRAIN));
+    c_bias=0.0;
+  }
 }
 
 void

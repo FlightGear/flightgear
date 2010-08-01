@@ -38,7 +38,6 @@
 #include <osgDB/FileNameUtils>
 
 #include <simgear/scene/util/RenderConstants.hxx>
-#include <simgear/screen/extensions.hxx>
 #include <simgear/debug/logstream.hxx>
 
 #include <Main/globals.hxx>

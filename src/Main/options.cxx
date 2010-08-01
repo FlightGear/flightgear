@@ -114,6 +114,7 @@ fgSetDefaults ()
 	// Otherwise, default to Scenery being in $FG_ROOT/Scenery
 	globals->set_fg_scenery("");
     }
+        
 				// Position (deliberately out of range)
     fgSetDouble("/position/longitude-deg", 9999.0);
     fgSetDouble("/position/latitude-deg", 9999.0);
@@ -772,7 +773,7 @@ fgOptRoc( const char *arg )
 static int
 fgOptFgRoot( const char *arg )
 {
-    globals->set_fg_root(arg);
+    // this option is dealt with by fgInitFGRoot
     return FG_OPTIONS_OK;
 }
 
@@ -781,6 +782,13 @@ fgOptFgScenery( const char *arg )
 {
     globals->set_fg_scenery(arg);
     return FG_OPTIONS_OK;
+}
+
+static int
+fgOptFgAircraft(const char* arg)
+{
+  // this option is dealt with by fgInitFGAircraft
+  return FG_OPTIONS_OK;
 }
 
 static int
@@ -1339,6 +1347,7 @@ struct OptionDesc {
     {"roc",                          true,  OPTION_FUNC,   "", false, "", fgOptRoc },
     {"fg-root",                      true,  OPTION_FUNC,   "", false, "", fgOptFgRoot },
     {"fg-scenery",                   true,  OPTION_FUNC,   "", false, "", fgOptFgScenery },
+    {"fg-aircraft",                  true,  OPTION_FUNC,   "", false, "", fgOptFgAircraft },
     {"fdm",                          true,  OPTION_STRING, "/sim/flight-model", false, "", 0 },
     {"aero",                         true,  OPTION_STRING, "/sim/aero", false, "", 0 },
     {"aircraft-dir",                 true,  OPTION_STRING, "/sim/aircraft-dir", false, "", 0 },
@@ -1622,7 +1631,7 @@ fgParseArgs (int argc, char **argv)
     bool verbose = false;
     bool help = false;
 
-    SG_LOG(SG_GENERAL, SG_INFO, "Processing command line arguments");
+    SG_LOG(SG_GENERAL, SG_ALERT, "Processing command line arguments");
 
     for (int i = 1; i < argc; i++) {
         string arg = argv[i];

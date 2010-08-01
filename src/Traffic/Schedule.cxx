@@ -496,7 +496,6 @@ bool compareSchedules(FGAISchedule*a, FGAISchedule*b)
 //   double course;
 //   double dist;
 
-//   Point3D temp;
 //   time_t 
 //     totalTimeEnroute, 
 //     elapsedTimeEnroute;

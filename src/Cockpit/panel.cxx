@@ -122,11 +122,7 @@ FGTextureManager::createTexture (const string &relativePath, bool staticTexture)
 {
   osg::Texture2D* texture = _textureMap[relativePath].get();
   if (texture == 0) {
-    SG_LOG( SG_COCKPIT, SG_DEBUG,
-            "Texture " << relativePath << " does not yet exist" );
-    SGPath tpath(globals->get_fg_root());
-    tpath.append(relativePath);
-
+    SGPath tpath = globals->resolve_aircraft_path(relativePath);
     texture = SGLoadTexture2D(staticTexture, tpath);
 
     _textureMap[relativePath] = texture;
