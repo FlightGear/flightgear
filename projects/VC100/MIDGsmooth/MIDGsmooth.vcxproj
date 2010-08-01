@@ -127,7 +127,7 @@
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
       <AdditionalDependencies>sg_d.lib;net_d.lib;ul_d.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>

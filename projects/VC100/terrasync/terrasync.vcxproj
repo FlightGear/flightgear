@@ -127,7 +127,7 @@
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
       <AdditionalDependencies>ul_d.lib;sg_d.lib;net_d.lib;ws2_32.lib;libsvn_client-1.lib;libsvn_diff-1.lib;libsvn_delta-1.lib;libsvn_ra-1.lib;libsvn_subr-1.lib;libsvn_wc-1.lib;libapr-1.lib;%(AdditionalDependencies)</AdditionalDependencies>

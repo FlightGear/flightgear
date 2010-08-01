@@ -123,9 +123,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\Aircraft\aircraft.cxx">
-      <Filter>Lib_Aircraft</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\Aircraft\controls.cxx">
       <Filter>Lib_Aircraft</Filter>
     </ClCompile>
@@ -228,13 +225,7 @@
     <ClCompile Include="..\..\..\src\ATCDCL\transmissionlist.cxx">
       <Filter>Lib_ATCDCL</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\Autopilot\autobrake.cxx">
-      <Filter>Lib_Autopilot</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\Autopilot\route_mgr.cxx">
-      <Filter>Lib_Autopilot</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Autopilot\xmlauto.cxx">
       <Filter>Lib_Autopilot</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\Cockpit\cockpit.cxx">
@@ -1491,11 +1482,59 @@
     <ClCompile Include="..\..\..\src\Atc\trafficcontrol.cxx">
       <Filter>Lib_ATC</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\FDM\JSBSim\math\FGRungeKutta.cpp">
+      <Filter>Lib_JSBSim\math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\FDM\flightProperties.cxx">
+      <Filter>Lib_Flight</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATC\atcutils.cxx">
+      <Filter>Lib_ATC</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Autopilot\autopilotgroup.cxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Autopilot\analogcomponent.cxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Autopilot\autopilot.cxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Autopilot\component.cxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Autopilot\digitalcomponent.cxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Autopilot\digitalfilter.cxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Autopilot\flipflop.cxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Autopilot\inputvalue.cxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Autopilot\logic.cxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Autopilot\pidcontroller.cxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Autopilot\pisimplecontroller.cxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Autopilot\predictor.cxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\FDM\fdm_shell.cxx">
+      <Filter>Lib_Flight</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Environment\ephemeris.cxx">
+      <Filter>Lib_Environment</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\src\Aircraft\aircraft.hxx">
-      <Filter>Lib_Aircraft</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\Aircraft\controls.hxx">
       <Filter>Lib_Aircraft</Filter>
     </ClInclude>
@@ -1598,13 +1637,7 @@
     <ClInclude Include="..\..\..\src\ATCDCL\transmissionlist.hxx">
       <Filter>Lib_ATCDCL</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\Autopilot\autobrake.hxx">
-      <Filter>Lib_Autopilot</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\Autopilot\route_mgr.hxx">
-      <Filter>Lib_Autopilot</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\Autopilot\xmlauto.hxx">
       <Filter>Lib_Autopilot</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\Cockpit\cockpit.hxx">
@@ -2803,6 +2836,60 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\Atc\trafficcontrol.hxx">
       <Filter>Lib_ATC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\FDM\JSBSim\math\FGRungeKutta.h">
+      <Filter>Lib_JSBSim\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\FDM\flightProperties.hxx">
+      <Filter>Lib_Flight</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATC\atcutils.hxx">
+      <Filter>Lib_ATC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Autopilot\autopilotgroup.hxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Autopilot\analogcomponent.hxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Autopilot\autopilot.hxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Autopilot\component.hxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Autopilot\digitalcomponent.hxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Autopilot\digitalfilter.hxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Autopilot\flipflop.hxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Autopilot\functor.hxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Autopilot\inputvalue.hxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Autopilot\logic.hxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Autopilot\pidcontroller.hxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Autopilot\pisimplecontroller.hxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Autopilot\predictor.hxx">
+      <Filter>Lib_Autopilot</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\FDM\fdm_shell.hxx">
+      <Filter>Lib_Flight</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Environment\ephemeris.hxx">
+      <Filter>Lib_Environment</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

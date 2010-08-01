@@ -125,7 +125,7 @@
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
       <AdditionalDependencies>fltkd.lib;ul_d.lib;comctl32.lib;wsock32.lib;zlibd.lib;sg_d.lib;%(AdditionalDependencies)</AdditionalDependencies>

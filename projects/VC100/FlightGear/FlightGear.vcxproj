@@ -100,8 +100,8 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\..\SimGear;..\..\..\src\FDM\JSBSim;..\..\..\..\install\msvc100\OpenSceneGraph\include;..\..\..\..\3rdParty\include;..\..\..\..\boost_1_42_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;ENABLE_ATCDCL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\..\SimGear;..\..\..\src\FDM\JSBSim;..\..\..\..\install\msvc100\OpenSceneGraph\include;..\..\..\..\3rdParty\include;..\..\..\..\boost_1_43_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -128,6 +128,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
+      <ForceFileOutput>MultiplyDefinedSymbolOnly</ForceFileOutput>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -137,8 +138,8 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\..\SimGear;..\..\..\src\FDM\JSBSim;..\..\..\..\install\msvc100-64\OpenSceneGraph\include;..\..\..\..\3rdParty.x64\include;..\..\..\..\boost_1_42_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;PU_USE_NATIVE;ENABLE_ATCDCL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\..\SimGear;..\..\..\src\FDM\JSBSim;..\..\..\..\install\msvc100-64\OpenSceneGraph\include;..\..\..\..\3rdParty.x64\include;..\..\..\..\boost_1_43_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;PU_USE_NATIVE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -146,7 +147,7 @@
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <ResourceCompile>
@@ -165,6 +166,7 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX64</TargetMachine>
+      <ForceFileOutput>MultiplyDefinedSymbolOnly</ForceFileOutput>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -173,8 +175,8 @@
     </Midl>
     <ClCompile>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\src\FDM\JSBSim;..\..\..\..\SimGear;..\..\..\..\install\msvc100\OpenSceneGraph\include;..\..\..\..\3rdParty\include;..\..\..\..\boost_1_42_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;ENABLE_ATCDCL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\src\FDM\JSBSim;..\..\..\..\SimGear;..\..\..\..\install\msvc100\OpenSceneGraph\include;..\..\..\..\3rdParty\include;..\..\..\..\boost_1_43_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -200,6 +202,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
+      <ForceFileOutput>MultiplyDefinedSymbolOnly</ForceFileOutput>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -209,8 +212,8 @@
     </Midl>
     <ClCompile>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\src\FDM\JSBSim;..\..\..\..\SimGear;..\..\..\..\install\msvc100-64\OpenSceneGraph\include;..\..\..\..\3rdParty.x64\include;..\..\..\..\boost_1_42_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;PU_USE_NATIVE;ENABLE_ATCDCL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\src\FDM\JSBSim;..\..\..\..\SimGear;..\..\..\..\install\msvc100-64\OpenSceneGraph\include;..\..\..\..\3rdParty.x64\include;..\..\..\..\boost_1_43_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;PU_USE_NATIVE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -236,10 +239,10 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX64</TargetMachine>
+      <ForceFileOutput>MultiplyDefinedSymbolOnly</ForceFileOutput>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\Aircraft\aircraft.cxx" />
     <ClCompile Include="..\..\..\src\Aircraft\controls.cxx" />
     <ClCompile Include="..\..\..\src\Aircraft\replay.cxx" />
     <ClCompile Include="..\..\..\src\Airports\apt_loader.cxx" />
@@ -256,30 +259,130 @@
     <ClCompile Include="..\..\..\src\Airports\sidstar.cxx" />
     <ClCompile Include="..\..\..\src\Airports\simple.cxx" />
     <ClCompile Include="..\..\..\src\Airports\xmlloader.cxx" />
-    <ClCompile Include="..\..\..\src\ATCDCL\AIEntity.cxx" />
-    <ClCompile Include="..\..\..\src\ATCDCL\AIGAVFRTraffic.cxx" />
-    <ClCompile Include="..\..\..\src\ATCDCL\AILocalTraffic.cxx" />
-    <ClCompile Include="..\..\..\src\ATCDCL\AIMgr.cxx" />
-    <ClCompile Include="..\..\..\src\ATCDCL\AIPlane.cxx" />
-    <ClCompile Include="..\..\..\src\ATCDCL\approach.cxx" />
-    <ClCompile Include="..\..\..\src\ATCDCL\ATC.cxx" />
-    <ClCompile Include="..\..\..\src\ATCDCL\ATCDialog.cxx" />
-    <ClCompile Include="..\..\..\src\ATCDCL\ATCmgr.cxx" />
-    <ClCompile Include="..\..\..\src\ATCDCL\ATCProjection.cxx" />
-    <ClCompile Include="..\..\..\src\ATCDCL\ATCutils.cxx" />
-    <ClCompile Include="..\..\..\src\ATCDCL\ATCVoice.cxx" />
-    <ClCompile Include="..\..\..\src\ATCDCL\atis.cxx" />
-    <ClCompile Include="..\..\..\src\ATCDCL\commlist.cxx" />
+    <ClCompile Include="..\..\..\src\ATCDCL\AIEntity.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\AIGAVFRTraffic.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\AILocalTraffic.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\AIMgr.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\AIPlane.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\approach.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\ATC.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\ATCDialog.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\ATCmgr.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\ATCProjection.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\ATCutils.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\ATCVoice.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\atis.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\commlist.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\ATCDCL\ground.cxx">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\ATCDCL\tower.cxx" />
-    <ClCompile Include="..\..\..\src\ATCDCL\transmission.cxx" />
-    <ClCompile Include="..\..\..\src\ATCDCL\transmissionlist.cxx" />
-    <ClCompile Include="..\..\..\src\Autopilot\autobrake.cxx" />
+    <ClCompile Include="..\..\..\src\ATCDCL\tower.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\transmission.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATCDCL\transmissionlist.cxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\ATC\atcutils.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\analogcomponent.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\autopilot.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\autopilotgroup.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\component.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\digitalcomponent.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\digitalfilter.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\flipflop.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\inputvalue.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\logic.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\pidcontroller.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\pisimplecontroller.cxx" />
+    <ClCompile Include="..\..\..\src\Autopilot\predictor.cxx" />
     <ClCompile Include="..\..\..\src\Autopilot\route_mgr.cxx" />
-    <ClCompile Include="..\..\..\src\Autopilot\xmlauto.cxx" />
     <ClCompile Include="..\..\..\src\Cockpit\cockpit.cxx" />
     <ClCompile Include="..\..\..\src\Cockpit\hud.cxx">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
@@ -300,6 +403,9 @@
     <ClCompile Include="..\..\..\src\Cockpit\panel.cxx" />
     <ClCompile Include="..\..\..\src\Cockpit\panel_io.cxx" />
     <ClCompile Include="..\..\..\src\Cockpit\built_in\FGMagRibbon.cxx" />
+    <ClCompile Include="..\..\..\src\Environment\ephemeris.cxx" />
+    <ClCompile Include="..\..\..\src\FDM\fdm_shell.cxx" />
+    <ClCompile Include="..\..\..\src\FDM\flightProperties.cxx" />
     <ClCompile Include="..\..\..\src\FDM\JSBSim\FGFDMExec.cpp" />
     <ClCompile Include="..\..\..\src\FDM\JSBSim\FGJSBBase.cpp" />
     <ClCompile Include="..\..\..\src\FDM\JSBSim\FGState.cpp" />
@@ -312,6 +418,7 @@
     <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGPropertyValue.cpp" />
     <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGQuaternion.cpp" />
     <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGRealValue.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\JSBSim\math\FGRungeKutta.cpp" />
     <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGTable.cpp" />
     <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGAerodynamics.cpp" />
     <ClCompile Include="..\..\..\src\Fdm\JSBSim\models\FGAircraft.cpp" />
@@ -725,7 +832,6 @@
     <ClCompile Include="..\..\..\src\Atc\trafficcontrol.cxx" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\src\Aircraft\aircraft.hxx" />
     <ClInclude Include="..\..\..\src\Aircraft\controls.hxx" />
     <ClInclude Include="..\..\..\src\Aircraft\replay.hxx" />
     <ClInclude Include="..\..\..\src\Airports\apt_loader.hxx" />
@@ -742,32 +848,137 @@
     <ClInclude Include="..\..\..\src\Airports\sidstar.hxx" />
     <ClInclude Include="..\..\..\src\Airports\simple.hxx" />
     <ClInclude Include="..\..\..\src\Airports\xmlloader.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\AIEntity.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\AIGAVFRTraffic.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\AILocalTraffic.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\AIMgr.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\AIPlane.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\approach.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\ATC.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\ATCDialog.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\ATCmgr.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\ATCProjection.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\ATCutils.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\ATCVoice.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\atis.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\commlist.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\ground.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\tower.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\transmission.hxx" />
-    <ClInclude Include="..\..\..\src\ATCDCL\transmissionlist.hxx" />
-    <ClInclude Include="..\..\..\src\Autopilot\autobrake.hxx" />
+    <ClInclude Include="..\..\..\src\ATCDCL\AIEntity.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\AIGAVFRTraffic.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\AILocalTraffic.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\AIMgr.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\AIPlane.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\approach.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\ATC.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\ATCDialog.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\ATCmgr.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\ATCProjection.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\ATCutils.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\ATCVoice.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\atis.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\commlist.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\ground.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\tower.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\transmission.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATCDCL\transmissionlist.hxx">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\ATC\atcutils.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\analogcomponent.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\autopilot.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\autopilotgroup.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\component.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\digitalcomponent.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\digitalfilter.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\flipflop.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\functor.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\inputvalue.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\logic.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\pidcontroller.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\pisimplecontroller.hxx" />
+    <ClInclude Include="..\..\..\src\Autopilot\predictor.hxx" />
     <ClInclude Include="..\..\..\src\Autopilot\route_mgr.hxx" />
-    <ClInclude Include="..\..\..\src\Autopilot\xmlauto.hxx" />
     <ClInclude Include="..\..\..\src\Cockpit\cockpit.hxx" />
     <ClInclude Include="..\..\..\src\Cockpit\hud.hxx" />
     <ClInclude Include="..\..\..\src\Cockpit\panel.hxx" />
     <ClInclude Include="..\..\..\src\Cockpit\panel_io.hxx" />
     <ClInclude Include="..\..\..\src\Cockpit\built_in\FGMagRibbon.hxx" />
+    <ClInclude Include="..\..\..\src\Environment\ephemeris.hxx" />
+    <ClInclude Include="..\..\..\src\FDM\fdm_shell.hxx" />
+    <ClInclude Include="..\..\..\src\FDM\flightProperties.hxx" />
     <ClInclude Include="..\..\..\src\FDM\JSBSim\FGFDMExec.h" />
     <ClInclude Include="..\..\..\src\FDM\JSBSim\FGJSBBase.h" />
     <ClInclude Include="..\..\..\src\FDM\JSBSim\FGState.h" />
@@ -781,6 +992,7 @@
     <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGPropertyValue.h" />
     <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGQuaternion.h" />
     <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGRealValue.h" />
+    <ClInclude Include="..\..\..\src\FDM\JSBSim\math\FGRungeKutta.h" />
     <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGTable.h" />
     <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGAerodynamics.h" />
     <ClInclude Include="..\..\..\src\Fdm\JSBSim\models\FGAircraft.h" />
