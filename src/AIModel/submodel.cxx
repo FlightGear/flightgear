@@ -121,8 +121,10 @@ void FGSubmodelMgr::update(double dt)
         _hit = (*sm_list_itr)->_getCollisionData();
 		_expiry = (*sm_list_itr)->_getExpiryData();
         int parent_subID = (*sm_list_itr)->_getSubID();
+
         //SG_LOG(SG_GENERAL, SG_DEBUG, "Submodel: Impact " << _impact << " hit! "
         //        << _hit <<" parent_subID " << parent_subID);
+
         if ( parent_subID == 0) // this entry in the list has no associated submodel
             continue;           // so we can continue
 
@@ -187,6 +189,7 @@ void FGSubmodelMgr::update(double dt)
 
 			int id = (*submodel_iterator)->id;
 			string name = (*submodel_iterator)->name;
+			
 			/*SG_LOG(SG_GENERAL, SG_DEBUG,
 			"Submodels end:  " << (*submodel_iterator)->id
 			<< " name " << (*submodel_iterator)->name
@@ -316,13 +319,6 @@ void FGSubmodelMgr::transform(submodel *sm)
     if (_impact || _hit || _expiry) {
         // set the data for a submodel tied to a submodel
         _count++;
-        //cout << "Submodels: release sub sub " << _count<< endl;
-        //cout << " id " << sm->id
-        //    << " lat " << _parent_lat
-        //    << " lon " << _parent_lon
-        //    << " elev " << _parent_elev
-        //    << " name " << sm->name
-        //    << endl;
 
         IC.lat             = _parent_lat;
         IC.lon             = _parent_lon;
@@ -337,10 +333,7 @@ void FGSubmodelMgr::transform(submodel *sm)
 
     } else if (id == 0) {
         //set the data for a submodel tied to the main model
-        /*cout << "Submodels: release main sub " << endl;
-        cout << " name " << sm->name
-        << " id" << sm->id
-        << endl;*/
+
         IC.lat             = _user_lat_node->getDoubleValue();
         IC.lon             = _user_lon_node->getDoubleValue();
         IC.alt             = _user_alt_node->getDoubleValue();
@@ -413,40 +406,6 @@ void FGSubmodelMgr::transform(submodel *sm)
     cosRz = cos(IC.azimuth * SG_DEGREES_TO_RADIANS);
     sinRz = sin(IC.azimuth * SG_DEGREES_TO_RADIANS);
 
-    //// set up the transform matrix
-    //trans[0][0] =  cosRy * cosRz;
-    //trans[0][1] =  -1 * cosRx * sinRz + sinRx * sinRy * cosRz ;
-    //trans[0][2] =  sinRx * sinRz + cosRx * sinRy * cosRz;
-
-    //trans[1][0] =  cosRy * sinRz;
-    //trans[1][1] =  cosRx * cosRz + sinRx * sinRy * sinRz;
-    //trans[1][2] =  -1 * sinRx * cosRx + cosRx * sinRy * sinRz;
-
-    //trans[2][0] =  -1 * sinRy;
-    //trans[2][1] =  sinRx * cosRy;
-    //trans[2][2] =  cosRx * cosRy;
-
-
-    //// multiply the input and transform matrices
-    //out[0] = in[0] * trans[0][0] + in[1] * trans[0][1] + in[2] * trans[0][2];
-    //out[1] = in[0] * trans[1][0] + in[1] * trans[1][1] + in[2] * trans[1][2];
-    //out[2] = in[0] * trans[2][0] + in[1] * trans[2][1] + in[2] * trans[2][2];
-
-    //// convert ft to degrees of latitude
-    //out[0] = out[0] / (366468.96 - 3717.12 * cos(IC.lat * SG_DEGREES_TO_RADIANS));
-
-    //// convert ft to degrees of longitude
-    //out[1] = out[1] / (365228.16 * cos(IC.lat * SG_DEGREES_TO_RADIANS));
-
-    //// set submodel initial position
-    //IC.lat += out[0];
-    //IC.lon += out[1];
-    //IC.alt += out[2];
-
-    // get aircraft velocity vector angles in XZ and XY planes
-    //double alpha = _user_alpha_node->getDoubleValue();
-    //double velXZ = IC.elevation - alpha * cosRx;
-    //double velXY = IC.azimuth - (IC.elevation - alpha * sinRx);
 
     // Get submodel initial velocity vector angles in XZ and XY planes.
     // This vector should be added to aircraft's vector.
@@ -731,7 +690,7 @@ void FGSubmodelMgr::setSubData(int id, string& path, bool serviceable)
 
         string force_path = sm->force_path;
         sm->prop->setStringValue("force_path", force_path.c_str());
-        cout << "set force_path  AI" << force_path << endl;
+        //cout << "set force_path  AI" << force_path << endl;
 
         if (sm->contents_node != 0)
             sm->prop->tie("contents-lbs", SGRawValuePointer<double>(&(sm->contents)));

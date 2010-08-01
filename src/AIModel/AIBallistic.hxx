@@ -153,7 +153,7 @@ private:
     double _Cd;              // drag coefficient
     double _mass;            // slugs
     bool   _random;          // modifier for Cd, life, az
-	double _randomness;		 // dimension for _random
+	double _randomness;		 // dimension for _random, only applies to life at present
     double _load_resistance; // ground load resistanc N/m^2
     double _frictionFactor;  // dimensionless modifier for Coefficient of Friction
     bool   _solid;           // if true ground is solid for FDMs

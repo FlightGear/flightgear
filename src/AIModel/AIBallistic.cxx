@@ -799,7 +799,7 @@ void FGAIBallistic::Run(double dt) {
 	//cout << "_azimuth " << _azimuth << " hdg "<<  hdg << endl;
 
     if (_aero_stabilised) { // we simulate rotational moment of inertia by using a filter
-		cout<< "_aero_stabilised "<< endl;
+		//cout<< "_aero_stabilised "<< endl;
         const double coeff = 0.9;
 
         // we assume a symetrical MI about the pitch and yaw axis
