@@ -31,6 +31,7 @@
 #include <simgear/timing/sg_time.hxx>
 
 #include <FDM/flightProperties.hxx>
+#include <Time/tmp.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>

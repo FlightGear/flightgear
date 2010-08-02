@@ -102,8 +102,6 @@ private:
     void update_sky_color ();
     void update_adj_fog_color ();
 
-    void updateSunPos();
-    
     // properties for chrome light; not a tie because I want to fire
     // property listeners when the values change.
     SGPropertyNode_ptr _chromeProps[4];

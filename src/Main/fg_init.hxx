@@ -79,6 +79,14 @@ bool fgInitPosition();
 // Listen to /sim/tower/airport-id and set tower view position accordingly
 void fgInitTowerLocationListener();
 
+
+// Initialize various time dependent systems (lighting, sun position, etc.)
+// returns a new instance of the SGTime class
+SGTime *fgInitTime();
+
+// set up a time offset (aka warp) if one is specified
+void fgInitTimeOffset();
+
 /*
  * Search in the current directory, and in on directory deeper
  * for <aircraft>-set.xml configuration files and show the aircaft name

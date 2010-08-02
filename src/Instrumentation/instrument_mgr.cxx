@@ -95,6 +95,13 @@ void FGInstrumentMgr::init()
     set_subsystem("gps[0]", new GPS(nd));
   }
 
+  // bind() created instruments before init.
+  for (unsigned int i=0; i<_instruments.size(); ++i) {
+    const std::string& nm(_instruments[i]);
+    SGSubsystem* instr = get_subsystem(nm);
+    instr->bind();
+  }
+
   SGSubsystemGroup::init();
 }
 
