@@ -34,7 +34,6 @@
 
 #include <string>
 
-class FGAIEntity;
 class FGATCMgr;
 
 //////////////////////////////////////////////////////
@@ -176,9 +175,7 @@ typedef shortest_path_map_type::iterator shortest_path_map_iterator;
 // Planes active within the ground network.
 
 // A more specialist plane rec to include ground information
-struct GroundRec {
-    FGAIEntity* planePtr;	// This might move to the planeRec eventually
-	
+struct GroundRec {	
     PlaneRec plane;
     node* destination;
     node* last_clearance;
@@ -211,19 +208,6 @@ public:
     void Update(double dt);
 	
 	inline const std::string& get_trans_ident() { return trans_ident; }
-
-    // Contact ground control on arrival, assumed to request any gate
-    //void NewArrival(plane_rec plane);
-
-    // Contact ground control on departure, assumed to request currently active runway.
-    void RequestDeparture(const PlaneRec& plane, FGAIEntity* requestee);
-
-    // Contact ground control when the calling routine doesn't know if arrival
-    // or departure is appropriate.
-    //void NewContact(plane_rec plane);
-
-    // Make a request of ground control.
-    //void Request(ground_request request);
 	
 	// Randomly fill some of the available gates and GA parking spots with planes
 	void PopulateGates();

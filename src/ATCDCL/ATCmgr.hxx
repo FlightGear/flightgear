@@ -156,9 +156,6 @@ public:
 	// Returns zero if not found
 	unsigned short int GetFrequency(const string& ident, const atc_type& tp);
 	
-	// Register the fact that the AI system wants to activate an airport
-	bool AIRegisterAirport(const string& ident);
-	
 	// Register the fact that the comm radio is tuned to an airport
 	bool CommRegisterAirport(const string& ident, int chan, const atc_type& tp);
 	

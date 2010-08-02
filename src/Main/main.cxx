@@ -66,7 +66,6 @@
 #include <Sound/morse.hxx>
 #include <Sound/fg_fx.hxx>
 #include <ATCDCL/ATCmgr.hxx>
-#include <ATCDCL/AIMgr.hxx>
 #include <Time/tmp.hxx>
 #include <Environment/environment_mgr.hxx>
 #include <Environment/ephemeris.hxx>
@@ -346,17 +345,6 @@ static void fgMainLoop( void ) {
     // Run ATC subsystem
     if (fgGetBool("/sim/atc/enabled"))
         globals->get_ATC_mgr()->update(delta_time_sec);
-
-
-    // Run the AI subsystem
-    // NOTE: the AI_mgr has nothing to do with the AIModels subsystem.
-    // There was previously a comment here stating that the
-    // AI_mgr code should be run then multiplayer is enabled.
-    // Multiplayer relies on AIModels, and not on the old and
-    // depricated AI_mgr system. So, we can safely skip the following
-    // two lines at compile time when compiling with --disable-atcdcl
-    if (fgGetBool("/sim/ai-traffic/enabled"))
-        globals->get_AI_mgr()->update(delta_time_sec);
 #endif  
     
     globals->get_subsystem_mgr()->update(delta_time_sec);

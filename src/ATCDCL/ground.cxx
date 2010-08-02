@@ -36,7 +36,6 @@
 
 #include "ground.hxx"
 #include "ATCutils.hxx"
-#include "AILocalTraffic.hxx"
 #include "ATCmgr.hxx"
 
 using std::ifstream;
@@ -290,64 +289,6 @@ void FGGround::Init() {
 }
 
 void FGGround::Update(double dt) {
-	// Each time step, what do we need to do?
-	// We need to go through the list of outstanding requests and acknowedgements
-	// and process at least one of them.
-	// We need to go through the list of planes under our control and check if
-	// any need to be addressed.
-	// We need to check for planes not under our control coming within our 
-	// control area and address if necessary.
-	
-	// Lets take the example of a plane which has just contacted ground
-	// following landing - presumably requesting where to go?
-	// First we need to establish the position of the plane within the logical network.
-	// Next we need to decide where its going.
-	
-	if(ground_traffic.size()) {
-		if(ground_traffic_itr == ground_traffic.end()) {
-			ground_traffic_itr = ground_traffic.begin();
-		}
-		
-		//Process(*ground_traffic_itr);
-		GroundRec* g = *ground_traffic_itr;
-		if(g->taxiRequestOutstanding) {
-			double responseTime = 10.0;		// seconds - this should get more sophisticated at some point
-			if(g->clearanceCounter > responseTime) {
-				// DO CLEARANCE
-				// TODO - move the mechanics of making up the transmission out of the main Update(...) routine.
-				string trns = "";
-				trns += g->plane.callsign;
-				trns += " taxi holding point runway ";	// TODO - add the holding point name
-				// eg " taxi holding point G2 runway "
-				trns += ConvertRwyNumToSpokenString(activeRwy);
-				if(_display) {
-					fgSetString("/sim/messages/ground", trns.c_str());
-				}
-				g->planePtr->RegisterTransmission(1);	// cleared to taxi
-				g->clearanceCounter = 0.0;
-				g->taxiRequestOutstanding = false;
-			} else {
-				g->clearanceCounter += (dt * ground_traffic.size());
-			}
-		} else if(((FGAILocalTraffic*)(g->planePtr))->AtHoldShort()) {		// That's a hack - eventually we should monitor actual position
-			// HACK ALERT - the automatic cast to AILocalTraffic has to go once we have other sorts working!!!!! FIXME TODO
-			// NOTE - we don't need to do the contact tower bit unless we have separate tower and ground
-			string trns = g->plane.callsign;
-			trns += " contact Tower ";
-			double f = globals->get_ATC_mgr()->GetFrequency(ident, TOWER) / 100.0;
-			char buf[10];
-			sprintf(buf, "%.2f", f);
-			trns += buf;
-			if(_display) {
-				fgSetString("/sim/messages/ground", trns.c_str());
-			}
-			g->planePtr->RegisterTransmission(2);	// contact tower
-			delete *ground_traffic_itr;
-			ground_traffic.erase(ground_traffic_itr);
-			ground_traffic_itr = ground_traffic.begin();
-		}				
-		++ground_traffic_itr;
-	}
 	
 	// Call the base class update for the response time handling.
 	FGATC::Update(dt);
@@ -657,68 +598,3 @@ node_array_type FGGround::GetExits(const string& rwyID) {
 	// FIXME - get a 07L or similar in here and we're stuffed!!!
 	return(runways[atoi(rwyID.c_str())].exits);
 }
-
-void FGGround::RequestDeparture(const PlaneRec& plane, FGAIEntity* requestee) {
-	// For now we'll just automatically clear all planes to the runway hold.
-	// This communication needs to be delayed 20 sec or so from receiving the request.
-	// Even if display=false we still need to start the timer in case display=true when communication starts.
-	// We also need to bear in mind we also might have other outstanding communications, although for now we'll punt that issue!
-	// FIXME - sort the above!
-	
-	// HACK - assume that anything requesting departure is new for now - FIXME LATER
-	GroundRec* g = new GroundRec;
-	g->plane = plane;
-	g->planePtr = requestee;
-	g->taxiRequestOutstanding = true;
-	g->clearanceCounter = 0;
-	g->cleared = false;
-	g->incoming = false;
-	// TODO - need to handle the next 3 as well
-    //node* destination;
-    //node* last_clearance;
-	
-	ground_traffic.push_back(g);
-}
-
-#if 0
-void FGGround::NewArrival(plane_rec plane) {
-	// What are we going to do here?
-	// We need to start a new ground_rec and add the plane_rec to it
-	// We need to decide what gate we are going to clear it to.
-	// Then we need to add clearing it to that gate to the pending transmissions queue? - or simply transmit?
-	// Probably simply transmit for now and think about a transmission queue later if we need one.
-	// We might need one though in order to add a little delay for response time.
-	ground_rec* g = new ground_rec;
-	g->plane_rec = plane;
-	g->current_pos = ConvertWGS84ToXY(plane.pos);
-	g->node = GetNode(g->current_pos);  // TODO - might need to sort out node/arc here
-	AssignGate(g);
-	g->cleared = false;
-	ground_traffic.push_back(g);
-	NextClearance(g);
-}
-
-void FGGround::NewContact(plane_rec plane) {
-	// This is a bit of a convienience function at the moment and is likely to change.
-	if(at a gate or apron)
-		NewDeparture(plane);
-	else
-		NewArrival(plane);
-}
-
-void FGGround::NextClearance(ground_rec &g) {
-	// Need to work out where we can clear g to.
-	// Assume the pilot doesn't need progressive instructions
-	// We *should* already have a gate or holding point assigned by the time we get here
-	// but it wouldn't do any harm to check.
-	
-	// For now though we will hardwire it to clear to the final destination.
-}
-
-void FGGround::AssignGate(ground_rec &g) {
-	// We'll cheat for now - since we only have the user's aircraft and a couple of airports implemented
-	// we'll hardwire the gate!
-	// In the long run the logic of which gate or area to send the plane to could be somewhat non-trivial.
-}
-#endif //0
-

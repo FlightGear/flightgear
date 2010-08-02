@@ -12,11 +12,6 @@ libATCDCL_a_SOURCES = \
 	ATCmgr.hxx ATCmgr.cxx \
 	ATCutils.hxx ATCutils.cxx \
 	ATCProjection.hxx ATCProjection.cxx \
-	AIMgr.hxx AIMgr.cxx \
-	AIEntity.hxx AIEntity.cxx \
-	AIPlane.hxx AIPlane.cxx \
-	AILocalTraffic.hxx AILocalTraffic.cxx \
-	AIGAVFRTraffic.hxx AIGAVFRTraffic.cxx \
 	transmission.hxx transmission.cxx \
 	transmissionlist.hxx transmissionlist.cxx
 

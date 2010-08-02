@@ -55,7 +55,6 @@ class SGSubsystemMgr;
 class SGSubsystem;
 class SGSoundMgr;
 
-class FGAIMgr;
 class FGATCMgr;
 class FGAircraftModel;
 class FGControls;
@@ -136,9 +135,6 @@ private:
 
     // ATC manager
     FGATCMgr *ATC_mgr;
-
-    // AI manager
-    FGAIMgr *AI_mgr;
 
     // control input state
     FGControls *controls;
@@ -260,9 +256,6 @@ public:
 
     inline FGATCMgr *get_ATC_mgr() const { return ATC_mgr; }
     inline void set_ATC_mgr( FGATCMgr *a ) {ATC_mgr = a; }
-
-    inline FGAIMgr *get_AI_mgr() const { return AI_mgr; }
-    inline void set_AI_mgr( FGAIMgr *a ) {AI_mgr = a; }
 
     inline FGPanel *get_current_panel() const { return current_panel; }
     inline void set_current_panel( FGPanel *cp ) { current_panel = cp; }

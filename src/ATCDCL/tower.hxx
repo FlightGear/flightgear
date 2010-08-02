@@ -31,7 +31,6 @@
 
 #include "ATC.hxx"
 #include "ATCProjection.hxx"
-#include "AIPlane.hxx"
 
 class FGATCMgr;
 class FGGround;
@@ -48,6 +47,32 @@ enum tower_traffic_type {
 };
 
 ostream& operator << (ostream& os, tower_traffic_type ttt);
+
+enum PatternLeg {
+	TAKEOFF_ROLL,
+	CLIMBOUT,
+	TURN1,
+	CROSSWIND,
+	TURN2,
+	DOWNWIND,
+	TURN3,
+	BASE,
+	TURN4,
+	FINAL,
+	LANDING_ROLL,
+	LEG_UNKNOWN
+};
+
+ostream& operator << (ostream& os, PatternLeg pl);
+
+enum LandingType {
+	FULL_STOP,
+	STOP_AND_GO,
+	TOUCH_AND_GO,
+	AIP_LT_UNKNOWN
+};
+
+ostream& operator << (ostream& os, LandingType lt);
 
 enum tower_callback_type {
 	USER_REQUEST_VFR_DEPARTURE = 1,
@@ -74,7 +99,6 @@ public:
 	TowerPlaneRec(const SGGeod& pt);
 	TowerPlaneRec(const PlaneRec& p, const SGGeod& pt);
 	
-	FGAIPlane* planePtr;	// This might move to the planeRec eventually
 	PlaneRec plane;
 	
 	SGGeod pos;
@@ -136,8 +160,6 @@ public:
 	// eg "Cessna Charlie Foxtrot Golf Foxtrot Sierra eight miles South of the airport for full stop with Bravo"
 	// This function probably only called via user interaction - AI planes will have an overloaded function taking a planerec.
 	void VFRArrivalContact(const std::string& ID, const LandingType& opt = AIP_LT_UNKNOWN);
-	// For the AI planes...
-	void VFRArrivalContact(const PlaneRec& plane, FGAIPlane* requestee, const LandingType& lt = AIP_LT_UNKNOWN);
 	
 	void RequestDepartureClearance(const std::string& ID);
 	void RequestTakeOffClearance(const std::string& ID);
@@ -150,16 +172,6 @@ public:
 	void ReportReadyForDeparture(const std::string& ID);
 	void ReportDownwind(const std::string& ID);
 	void ReportGoingAround(const std::string& ID);
-	
-	// Contact tower when at a hold short for departure - for now we'll assume plane - maybe vehicles might want to cross runway eventually?
-	void ContactAtHoldShort(const PlaneRec& plane, FGAIPlane* requestee, tower_traffic_type operation);
-	
-	// Register the presence of an AI plane at a point where contact would already have been made in real life
-	// CAUTION - currently it is assumed that this plane's callsign is unique - it is up to AIMgr to generate unique callsigns.
-	void RegisterAIPlane(const PlaneRec& plane, FGAIPlane* ai, const tower_traffic_type& op, const PatternLeg& lg = LEG_UNKNOWN);
-	
-	// Deregister and remove an AI plane.
-	void DeregisterAIPlane(const std::string& id);
 	
 	// Public interface to the active runway - this will get more complex 
 	// in the future and consider multi-runway use, airplane weight etc.

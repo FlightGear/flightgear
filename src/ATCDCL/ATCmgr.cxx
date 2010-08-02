@@ -178,45 +178,6 @@ unsigned short int FGATCMgr::GetFrequency(const string& ident, const atc_type& t
     return(ok ? test.freq : 0);
 }   
 
-
-// Register the fact that the AI system wants to activate an airport
-// Might need more sophistication in this in the future - eg registration by aircraft call-sign.
-bool FGATCMgr::AIRegisterAirport(const string& ident) {
-    SG_LOG(SG_ATC, SG_BULK, "AI registered airport " << ident << " with the ATC system");
-    //cout << "AI registered airport " << ident << " with the ATC system" << '\n';
-    if(airport_atc_map.find(ident) != airport_atc_map.end()) {
-        airport_atc_map[ident]->set_by_AI = true;
-        airport_atc_map[ident]->numAI++;
-        return(true);
-    } else {
-        const FGAirport *ap = fgFindAirportID(ident);
-        if (ap) {
-            //cout << "ident = " << ident << '\n';
-            AirportATC *a = new AirportATC;
-            // I'm not entirely sure that this AirportATC structure business is actually needed - it just duplicates what we can find out anyway!
-            a->geod = ap->geod();
-            a->atis_freq = GetFrequency(ident, ATIS)
-                    || GetFrequency(ident, AWOS);
-            //cout << "ATIS freq = " << a->atis_freq << '\n';
-            a->atis_active = false;
-            a->tower_freq = GetFrequency(ident, TOWER);
-            //cout << "Tower freq = " << a->tower_freq << '\n';
-            a->tower_active = false;
-            a->ground_freq = GetFrequency(ident, GROUND);
-            //cout << "Ground freq = " << a->ground_freq << '\n';
-            a->ground_active = false;
-            // TODO - some airports will have a tower/ground frequency but be inactive overnight.
-            a->set_by_AI = true;
-            a->numAI = 1;
-            airport_atc_map[ident] = a;
-            return(true);
-        } else {
-            SG_LOG(SG_ATC, SG_ALERT, "ERROR - can't find airport " << ident << " in AIRegisterAirport(...)");
-        }
-    }
-    return(false);
-}
-
 // Register the fact that the comm radio is tuned to an airport
 // Channel is zero based
 bool FGATCMgr::CommRegisterAirport(const string& ident, int chan, const atc_type& tp) {
