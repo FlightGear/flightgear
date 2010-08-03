@@ -245,6 +245,13 @@ public:
       is equal to zero it is left untouched.   */
   FGColumnVector3& Normalize(void);
 
+  /** Dot product of two vectors
+      Compute and return the euclidean dot (or scalar) product of two vectors
+      v1 and v2 */
+  friend inline double DotProduct(const FGColumnVector3& v1, const FGColumnVector3& v2) {
+    return v1(1)*v2(1) + v1(2)*v2(2) + v1(3)*v2(3);
+  }
+
 private:
   double data[3];
 

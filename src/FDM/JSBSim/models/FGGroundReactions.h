@@ -45,7 +45,7 @@ INCLUDES
 #include "math/FGColumnVector3.h"
 #include "input_output/FGXMLElement.h"
 
-#define ID_GROUNDREACTIONS "$Id: FGGroundReactions.h,v 1.15 2009/10/02 10:30:09 jberndt Exp $"
+#define ID_GROUNDREACTIONS "$Id: FGGroundReactions.h,v 1.17 2010/07/30 11:50:01 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -78,6 +78,19 @@ CLASS DOCUMENTATION
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+class MultiplierIterator
+{
+public:
+  MultiplierIterator(FGGroundReactions* GndReactions);
+  MultiplierIterator& operator++();
+  FGPropagate::LagrangeMultiplier* operator*() { return multiplier; }
+private:
+  FGGroundReactions* GroundReactions;
+  FGPropagate::LagrangeMultiplier* multiplier;
+  int gearNum;
+  int entry;
+};
+
 class FGGroundReactions : public FGModel
 {
 public:
@@ -94,6 +107,7 @@ public:
   string GetGroundReactionStrings(string delimeter);
   string GetGroundReactionValues(string delimeter);
   bool GetWOW(void);
+  void UpdateForcesAndMoments(void);
 
   int GetNumGearUnits(void) const { return (int)lGear.size(); }
 

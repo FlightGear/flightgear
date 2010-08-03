@@ -4,7 +4,7 @@
  Author:       Tony Peden, Jon Berndt
  Date started: 01/26/99
  Purpose:      Calculates additional parameters needed by the visual system, etc.
- Called by:    FGSimExec
+ Called by:    FGFDMExec
 
  ------------- Copyright (C) 1999  Jon S. Berndt (jon@jsbsim.org) -------------
 
@@ -59,7 +59,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGAuxiliary.cpp,v 1.39 2010/07/09 12:06:11 jberndt Exp $";
+static const char *IdSrc = "$Id: FGAuxiliary.cpp,v 1.42 2010/07/27 23:18:19 jberndt Exp $";
 static const char *IdHdr = ID_AUXILIARY;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -167,22 +167,10 @@ bool FGAuxiliary::Run()
     vEulerRates(ePhi) = vPQR(eP) + vEulerRates(ePsi)*sTht;
   }
 
-// 12/16/2005, JSB: For ground handling purposes, at this time, let's ramp
-// in the effects of wind from 10 fps to 30 fps when there is weight on the
-// landing gear wheels.
-
-  if (GroundReactions->GetWOW() && vUVW(eU) < 10) {
-    vAeroPQR = vPQR;
-    vAeroUVW = vUVW;
-  } else if (GroundReactions->GetWOW() && vUVW(eU) < 30) {
-    double factor = (vUVW(eU) - 10.0)/20.0;
-    vAeroPQR = vPQR - factor*Atmosphere->GetTurbPQR();
-    vAeroUVW = vUVW - factor*Propagate->GetTl2b()*Atmosphere->GetTotalWindNED();
-  } else {
-    FGColumnVector3 wind = Propagate->GetTl2b()*Atmosphere->GetTotalWindNED();
-    vAeroPQR = vPQR - Atmosphere->GetTurbPQR();
-    vAeroUVW = vUVW - wind;
-  }
+// Combine the wind speed with aircraft speed to obtain wind relative speed
+  FGColumnVector3 wind = Propagate->GetTl2b()*Atmosphere->GetTotalWindNED();
+  vAeroPQR = vPQR - Atmosphere->GetTurbPQR();
+  vAeroUVW = vUVW - wind;
 
   Vt = vAeroUVW.Magnitude();
   if ( Vt > 0.05) {
@@ -258,7 +246,7 @@ bool FGAuxiliary::Run()
 
      vAircraftAccel /= MassBalance->GetMass();
      // Nz is Acceleration in "g's", along normal axis (-Z body axis)
-     Nz = -vAircraftAccel(eZ)/Inertial->gravity();
+     Nz = -vAircraftAccel(eZ)/Inertial->SLgravity();
      vToEyePt = MassBalance->StructuralToBody(Aircraft->GetXYZep());
      vPilotAccel = vAircraftAccel + Propagate->GetPQRdot() * vToEyePt;
      vPilotAccel += vPQR * (vPQR * vToEyePt);
@@ -269,11 +257,11 @@ bool FGAuxiliary::Run()
      // any jitter that could be introduced by the landing gear. Theoretically,
      // this branch could be eliminated, with a penalty of having a short
      // transient at startup (lasting only a fraction of a second).
-     vPilotAccel = Propagate->GetTl2b() * FGColumnVector3( 0.0, 0.0, -Inertial->gravity() );
-     Nz = -vPilotAccel(eZ)/Inertial->gravity();
+     vPilotAccel = Propagate->GetTl2b() * FGColumnVector3( 0.0, 0.0, -Inertial->SLgravity() );
+     Nz = -vPilotAccel(eZ)/Inertial->SLgravity();
   }
 
-  vPilotAccelN = vPilotAccel/Inertial->gravity();
+  vPilotAccelN = vPilotAccel/Inertial->SLgravity();
 
   // VRP computation
   const FGLocation& vLocation = Propagate->GetLocation();

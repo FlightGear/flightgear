@@ -46,13 +46,52 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGGroundReactions.cpp,v 1.26 2009/11/12 13:08:11 jberndt Exp $";
+static const char *IdSrc = "$Id: FGGroundReactions.cpp,v 1.29 2010/07/30 11:50:01 jberndt Exp $";
 static const char *IdHdr = ID_GROUNDREACTIONS;
+
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CLASS IMPLEMENTATION for MultiplierIterator (See below for FGGroundReactions)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
+MultiplierIterator::MultiplierIterator(FGGroundReactions* GndReactions)
+: GroundReactions(GndReactions),
+  multiplier(NULL),
+  gearNum(0),
+  entry(0)
+{
+  for (int i=0; i < GroundReactions->GetNumGearUnits(); i++) {
+		FGLGear* gear = GroundReactions->GetGearUnit(i);
+
+		if (!gear->GetWOW()) continue;
+
+    gearNum = i;
+    multiplier = gear->GetMultiplierEntry(0);
+    break;
+  }
+}
+
+MultiplierIterator& MultiplierIterator::operator++()
+{
+  for (int i=gearNum; i < GroundReactions->GetNumGearUnits(); i++) {
+		FGLGear* gear = GroundReactions->GetGearUnit(i);
+
+    if (!gear->GetWOW()) continue;
+
+    multiplier = gear->GetMultiplierEntry(++entry);
+    if (multiplier) {
+      gearNum = i;
+      break;
+    }
+    else
+      entry = -1;
+  }
+
+  return *this;
+}
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
 
 FGGroundReactions::FGGroundReactions(FGFDMExec* fgex) : FGModel(fgex)
 {
@@ -121,6 +160,20 @@ bool FGGroundReactions::GetWOW(void)
     }
   }
   return result;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// This function must be called after friction forces are resolved in order to
+// include them in the ground reactions total force and moment.
+void FGGroundReactions::UpdateForcesAndMoments(void)
+{
+  vForces.InitMatrix();
+  vMoments.InitMatrix();
+
+  for (unsigned int i=0; i<lGear.size(); i++) {
+    vForces  += lGear[i]->UpdateForces();
+    vMoments += lGear[i]->GetMoments();
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
