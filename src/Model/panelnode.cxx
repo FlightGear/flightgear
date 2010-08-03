@@ -6,6 +6,7 @@
 #include <simgear/structure/exception.hxx>
 
 #include <vector>
+#include <algorithm>
 
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
@@ -119,6 +120,11 @@ FGPanelNode::FGPanelNode(SGPropertyNode* props)
 
 FGPanelNode::~FGPanelNode()
 {
+    vector<FGPanelNode*>::iterator i =
+      find(all_3d_panels.begin(), all_3d_panels.end(), this);
+    if (i != all_3d_panels.end()) {
+        all_3d_panels.erase(i);
+    }
     delete _panel;
 }
 
