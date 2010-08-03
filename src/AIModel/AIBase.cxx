@@ -81,6 +81,8 @@ FGAIBase::FGAIBase(object_type ot) :
     delete_me = false;
     _impact_reported = false;
     _collision_reported = false;
+	_expiry_reported = false;
+
     _subID = 0;
 
     _x_offset = 0;
@@ -577,6 +579,10 @@ bool FGAIBase::_isNight() {
 
 bool FGAIBase::_getCollisionData() {
     return _collision_reported;
+}
+
+bool FGAIBase::_getExpiryData() {
+    return _expiry_reported;
 }
 
 bool FGAIBase::_getImpactData() {

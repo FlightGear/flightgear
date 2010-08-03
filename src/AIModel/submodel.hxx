@@ -53,6 +53,7 @@ public:
         double             drag_area;
         double             life;
         double             buoyancy;
+		double			   randomness;
         bool               wind;
         bool               first_time;
         double             cd;
@@ -62,7 +63,9 @@ public:
         int                id;
         bool               no_roll;
         bool               serviceable;
+		bool               random;
         bool               collision;
+		bool			   expiry;
         bool               impact;
         string             impact_report;
         double             fuse_range;
@@ -141,6 +144,10 @@ private:
     double _parent_pitch;
     double _parent_roll;
     double _parent_speed;
+	double _x_offset;
+    double _y_offset;
+    double _z_offset;
+
 
     static const double lbs_to_slugs; //conversion factor
 
@@ -148,6 +155,8 @@ private:
 
     bool _impact;
     bool _hit;
+	bool _expiry;
+	bool _found_sub;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _user_lat_node;
@@ -190,9 +199,13 @@ private:
 
     bool release(submodel *, double dt);
 
-    double getRange(double lat, double lon, double lat2, double lon2) const;
 
     int _count;
+	
+	SGGeod userpos;
+	SGGeod offsetpos;
+	SGVec3d getCartOffsetPos() const;
+	void setOffsetPos();
 
 };
 

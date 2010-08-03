@@ -68,8 +68,10 @@ public:
     void setWeight( double w );
     void setNoRoll( bool nr );
     void setRandom( bool r );
+	void setRandomness( double r );
     void setName(const string&);
     void setCollision(bool c);
+	void setExpiry(bool e);
     void setImpact(bool i);
     void setImpactReportNode(const string&);
     void setContentsNode(const string&);
@@ -150,7 +152,8 @@ private:
     bool   _wind;            // if true, local wind will be applied to object
     double _Cd;              // drag coefficient
     double _mass;            // slugs
-    bool   _random;          // modifier for Cd
+    bool   _random;          // modifier for Cd, life, az
+	double _randomness;		 // dimension for _random, only applies to life at present
     double _load_resistance; // ground load resistanc N/m^2
     double _frictionFactor;  // dimensionless modifier for Coefficient of Friction
     bool   _solid;           // if true ground is solid for FDMs
@@ -164,6 +167,7 @@ private:
     bool   _report_collision;       // if true a collision point with AI Objects is calculated
     bool   _report_impact;          // if true an impact point on the terrain is calculated
     bool   _external_force;         // if true then apply external force
+	bool   _report_expiry;
 
     SGPropertyNode_ptr _impact_report_node;  // report node for impact and collision
     SGPropertyNode_ptr _contents_node;  // report node for impact and collision
@@ -181,6 +185,7 @@ private:
     const SGMaterial* _material;
 
     void handle_collision();
+	void handle_expiry();
     void handle_impact();
     void report_impact(double elevation, const FGAIBase *target = 0);
     void slaveToAC(double dt);
@@ -192,13 +197,13 @@ private:
     double getDistanceLoadToHitch() const;
     double getElevLoadToHitch() const;
     double getBearingLoadToHitch() const;
+
     double getRecip(double az);
     double getMass() const;
 
     double hs;
     double _ground_offset;
     double _load_offset;
-    double _force;
     double _old_height;
 
     SGVec3d _oldcarthitchPos;
