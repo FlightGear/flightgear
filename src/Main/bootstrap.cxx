@@ -57,8 +57,14 @@ using std::endl;
 
 #include "fg_os.hxx"
 
+#ifdef _MSC_VER
+char homepath[256] = "";
+char * homedir = homepath;
+char *hostname = ::getenv( "COMPUTERNAME" );
+#else
 char *homedir = ::getenv( "HOME" );
 char *hostname = ::getenv( "HOSTNAME" );
+#endif
 bool free_hostname = false;
 
 // foreward declaration.
@@ -163,6 +169,14 @@ int _bootstrap_OSInit;
 
 // Main entry point; catch any exceptions that have made it this far.
 int main ( int argc, char **argv ) {
+#if _MSC_VER
+  // Windows has no $HOME aka %HOME%, so we have to construct the full path.
+  // make sure it fits into the buffer. Max. path length is 255, but who knows
+  // what's in these environment variables?
+  homepath[sizeof(homepath)-1] = 0;
+  strncpy( homepath, ::getenv("APPDATA"), sizeof(homepath)-1 );
+  strncat( homepath, "\\flightgear.org", sizeof(homepath)-strlen(homepath)-1 );
+#endif
 
 #ifdef PTW32_STATIC_LIB
     // Initialise static pthread win32 lib

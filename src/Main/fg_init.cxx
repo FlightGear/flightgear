@@ -141,9 +141,10 @@ static string fgScanForOption( const string& option, int argc, char **argv ) {
     if (hostname == NULL)
     {
         char _hostname[256];
-        gethostname(_hostname, 256);
-        hostname = strdup(_hostname);
-        free_hostname = true;
+        if( gethostname(_hostname, 256) >= 0 ) {
+            hostname = strdup(_hostname);
+            free_hostname = true;
+        }
     }
 
     SG_LOG(SG_GENERAL, SG_INFO, "Scanning command line for: " << option );
@@ -202,10 +203,10 @@ static string fgScanForOption( const string& option, const string& path ) {
 static string fgScanForOption( const string& option ) {
     string arg("");
 
-#if defined( unix ) || defined( __CYGWIN__ )
+#if defined( unix ) || defined( __CYGWIN__ ) || defined(_MSC_VER)
     // Next check home directory for .fgfsrc.hostname file
     if ( arg.empty() ) {
-        if ( homedir != NULL ) {
+        if ( homedir != NULL && hostname != NULL && strlen(hostname) > 0) {
             SGPath config( homedir );
             config.append( ".fgfsrc" );
             config.concat( "." );
@@ -488,10 +489,12 @@ do_options (int argc, char ** argv)
     config.append( "system.fgfsrc" );
     fgParseOptions(config.str());
 
-#if defined( unix ) || defined( __CYGWIN__ )
-    config.concat( "." );
-    config.concat( hostname );
-    fgParseOptions(config.str());
+#if defined( unix ) || defined( __CYGWIN__ ) || defined(_MSC_VER)
+    if( hostname != NULL && strlen(hostname) > 0 ) {
+        config.concat( "." );
+        config.concat( hostname );
+        fgParseOptions(config.str());
+    }
 #endif
 
     // Check for ~/.fgfsrc
@@ -501,11 +504,13 @@ do_options (int argc, char ** argv)
         fgParseOptions(config.str());
     }
 
-#if defined( unix ) || defined( __CYGWIN__ )
-    // Check for ~/.fgfsrc.hostname
-    config.concat( "." );
-    config.concat( hostname );
-    fgParseOptions(config.str());
+#if defined( unix ) || defined( __CYGWIN__ ) || defined(_MSC_VER)
+    if( hostname != NULL && strlen(hostname) > 0 ) {
+        // Check for ~/.fgfsrc.hostname
+        config.concat( "." );
+        config.concat( hostname );
+        fgParseOptions(config.str());
+    }
 #endif
 
     // Parse remaining command line options
@@ -1623,7 +1628,7 @@ private:
     SGPropertyNode root;
     try {
        readProperties(path.str(), &root);
-    } catch (sg_exception& e) {
+    } catch (sg_exception& ) {
        return false;
     }
   
