@@ -98,7 +98,7 @@ void FDMShell::bind()
 
 void FDMShell::unbind()
 {
-  _impl->unbind();
+  if( _impl ) _impl->unbind();
 }
 
 void FDMShell::update(double dt)
