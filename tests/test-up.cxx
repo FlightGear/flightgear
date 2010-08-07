@@ -8,8 +8,6 @@
 
 #include <iostream>
 
-#include <plib/sg.h>
-
 #include <simgear/constants.h>
 #include <simgear/math/sg_geodesy.hxx>
 
