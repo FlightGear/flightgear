@@ -26,6 +26,9 @@
 #endif
 
 #include "kln89_page_apt.hxx"
+
+#include <cassert>
+
 #if ENABLE_ATCDCL
 #    include <ATCDCL/commlist.hxx>
 #else

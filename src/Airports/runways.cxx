@@ -27,6 +27,7 @@
 
 #include <cstdio>              // sprintf()
 #include <cstdlib>             // atoi()
+#include <cassert>
 
 #include <simgear/compiler.h>
 

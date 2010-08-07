@@ -20,6 +20,8 @@
 #  include "config.h"
 #endif
 
+#include <cassert>
+
 #include <osg/Node>
 #include <osg/Geode>
 #include <osg/Geometry>

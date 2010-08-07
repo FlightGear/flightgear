@@ -2,6 +2,8 @@
 #  include <config.h>
 #endif 
 
+#include <simgear/compiler.h>
+
 #include <iostream>
 
 #include <simgear/constants.h>
