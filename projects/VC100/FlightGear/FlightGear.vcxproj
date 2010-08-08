@@ -705,7 +705,6 @@
     <ClCompile Include="..\..\..\src\Sound\voice.cxx" />
     <ClCompile Include="..\..\..\src\Time\light.cxx" />
     <ClCompile Include="..\..\..\src\Time\sunsolver.cxx" />
-    <ClCompile Include="..\..\..\src\Time\tmp.cxx" />
     <ClCompile Include="..\..\..\src\MultiPlayer\multiplaymgr.cxx" />
     <ClCompile Include="..\..\..\src\MultiPlayer\tiny_xdr.cxx" />
     <ClCompile Include="..\..\..\src\Environment\atmosphere.cxx">
@@ -810,6 +809,7 @@
     <ClCompile Include="..\..\..\src\AIModel\performancedata.cxx" />
     <ClCompile Include="..\..\..\src\AIModel\performancedb.cxx" />
     <ClCompile Include="..\..\..\src\AIModel\submodel.cxx" />
+    <ClCompile Include="..\..\..\src\Time\TimeManager.cxx" />
     <ClCompile Include="..\..\..\src\Traffic\SchedFlight.cxx" />
     <ClCompile Include="..\..\..\src\Traffic\Schedule.cxx" />
     <ClCompile Include="..\..\..\src\Traffic\TrafficMgr.cxx" />
@@ -1277,7 +1277,6 @@
     <ClInclude Include="..\..\..\src\Sound\voice.hxx" />
     <ClInclude Include="..\..\..\src\Time\light.hxx" />
     <ClInclude Include="..\..\..\src\Time\sunsolver.hxx" />
-    <ClInclude Include="..\..\..\src\Time\tmp.hxx" />
     <ClInclude Include="..\..\..\src\MultiPlayer\mpmessages.hxx" />
     <ClInclude Include="..\..\..\src\MultiPlayer\multiplaymgr.hxx" />
     <ClInclude Include="..\..\..\src\MultiPlayer\tiny_xdr.hxx" />
@@ -1354,6 +1353,7 @@
     <ClInclude Include="..\..\..\src\AIModel\performancedata.hxx" />
     <ClInclude Include="..\..\..\src\AIModel\performancedb.hxx" />
     <ClInclude Include="..\..\..\src\AIModel\submodel.hxx" />
+    <ClInclude Include="..\..\..\src\Time\TimeManager.hxx" />
     <ClInclude Include="..\..\..\src\Traffic\SchedFlight.hxx" />
     <ClInclude Include="..\..\..\src\Traffic\Schedule.hxx" />
     <ClInclude Include="..\..\..\src\Traffic\TrafficMgr.hxx" />

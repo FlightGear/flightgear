@@ -1152,9 +1152,6 @@
     <ClCompile Include="..\..\..\src\Time\sunsolver.cxx">
       <Filter>Lib_Time</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\Time\tmp.cxx">
-      <Filter>Lib_Time</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\MultiPlayer\multiplaymgr.cxx">
       <Filter>Lib_Multiplayer</Filter>
     </ClCompile>
@@ -1535,6 +1532,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\ATC\atis.cxx">
       <Filter>Lib_ATC</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Time\TimeManager.cxx">
+      <Filter>Lib_Time</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -2543,9 +2543,6 @@
     <ClInclude Include="..\..\..\src\Time\sunsolver.hxx">
       <Filter>Lib_Time</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\Time\tmp.hxx">
-      <Filter>Lib_Time</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\MultiPlayer\mpmessages.hxx">
       <Filter>Lib_Multiplayer</Filter>
     </ClInclude>
@@ -2896,6 +2893,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\ATC\atis.hxx">
       <Filter>Lib_ATC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Time\TimeManager.hxx">
+      <Filter>Lib_Time</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
