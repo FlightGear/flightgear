@@ -39,14 +39,14 @@
 
 class FGCommonInput {
 public:
-  typedef vector<SGSharedPtr<SGBinding> > binding_list_t;
+  typedef std::vector<SGSharedPtr<SGBinding> > binding_list_t;
 
   /*
    read all "binding" nodes directly under the specified base node and fill the 
    vector of SGBinding supplied in binding_list. Reads all the mod-xxx bindings and 
    add the corresponding SGBindings.
    */
-  static void read_bindings (const SGPropertyNode * base, binding_list_t * binding_list, int modifiers, const string & module );
+  static void read_bindings (const SGPropertyNode * base, binding_list_t * binding_list, int modifiers, const std::string & module );
 };
 
 #endif
