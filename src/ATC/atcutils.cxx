@@ -256,7 +256,7 @@ double FGCommList::FindClosest(const SGGeod& aPos, ATCData& ad, atc_type tp, dou
 // Find by Airport code.
 // This is basically a wrapper for a call to the airport database to get the airport
 // position followed by a call to FindByPos(...)
-bool FGCommList::FindByCode( const string& ICAO, ATCData& ad, atc_type tp ) {
+bool FGCommList::FindByCode( const std::string& ICAO, ATCData& ad, atc_type tp ) {
 /*
     const FGAirport *a = fgFindAirportID( ICAO);
     if ( a) {
@@ -285,7 +285,7 @@ bool FGCommList::FindByCode( const string& ICAO, ATCData& ad, atc_type tp ) {
 // Return an appropriate sequence number for an ATIS transmission.
 // Return sequence number + 2600 if sequence is unchanged since 
 // last time.
-int FGCommList::GetAtisSequence( const string& apt_id, 
+int FGCommList::GetAtisSequence( const std::string& apt_id, 
         const double tstamp, const int interval, const int special)
 {
 /*
