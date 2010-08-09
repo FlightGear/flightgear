@@ -66,7 +66,7 @@ bool FGFixList::init(const SGPath& path ) {
     // read in each remaining line of the file
     while ( ! in.eof() ) {
       double lat, lon;
-      string ident;
+      std::string ident;
       in >> lat >> lon >> ident;
       if (lat > 95) break;
 

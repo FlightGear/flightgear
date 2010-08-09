@@ -161,7 +161,7 @@ private:
     bool _needsRelayout;
 
     // Nasal module.
-    string _module;
+    std::string _module;
     SGPropertyNode_ptr _nasal_close;
 
     // PUI provides no way for userdata to be deleted automatically
@@ -173,7 +173,7 @@ private:
         PropertyObject (const char * name,
                         puObject * object,
                         SGPropertyNode_ptr node);
-        string name;
+        std::string name;
         puObject * object;
         SGPropertyNode_ptr node;
     };

@@ -37,7 +37,7 @@
 #include "awynet.hxx"
 
 using std::sort;
-
+using std::string;
 using std::cerr;
 using std::endl;
 

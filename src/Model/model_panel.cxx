@@ -28,7 +28,7 @@ using namespace simgear;
 ////////////////////////////////////////////////////////////////////////
 
 osg::Node *
-fgLoad3DModelPanel(const string &path, SGPropertyNode *prop_root)
+fgLoad3DModelPanel(const std::string &path, SGPropertyNode *prop_root)
 {
     osg::Node* node = SGModelLib::loadModel(path, prop_root);
     if (node)

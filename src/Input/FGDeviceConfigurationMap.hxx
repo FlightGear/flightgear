@@ -33,9 +33,8 @@
 #include <simgear/misc/sg_path.hxx>
 
 #include <map>
-using std::map;
 
-class FGDeviceConfigurationMap : public map<string,SGPropertyNode_ptr> {
+class FGDeviceConfigurationMap : public std::map<std::string,SGPropertyNode_ptr> {
 public:
   FGDeviceConfigurationMap ( const char * relative_path, SGPropertyNode_ptr base, const char * childname );
   virtual ~FGDeviceConfigurationMap();

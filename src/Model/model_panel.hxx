@@ -45,7 +45,7 @@ class FGLocation;
  * Subsystems should not normally invoke this function directly;
  * instead, they should use the SGModelLoader declared in loader.hxx.
  */
-osg::Node *fgLoad3DModelPanel( const string &path, SGPropertyNode *prop_root);
+osg::Node *fgLoad3DModelPanel( const std::string &path, SGPropertyNode *prop_root);
 
 
 #endif // __MODEL_HXX
