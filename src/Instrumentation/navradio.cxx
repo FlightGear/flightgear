@@ -37,6 +37,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/math/interpolater.hxx>
+#include <simgear/misc/strutils.hxx>
 
 #include <Navaids/navrecord.hxx>
 
@@ -878,12 +879,12 @@ void FGNavRadio::search()
   }
   
   _navaid = nav;
-  char identBuffer[5] = "    ";
+  string identBuffer(4, ' ');
   if (nav) {
     _dme = globals->get_dmelist()->findByFreq(freq, pos);
     
     nav_id_node->setStringValue(nav->get_ident());
-    strncpy(identBuffer, nav->ident().c_str(), 5);
+    identBuffer =  simgear::strutils::rpad( nav->ident(), 4, ' ' );
     
     effective_range = adjustNavRange(nav->get_elev_ft(), pos.getElevationM(), nav->get_range());
     loc_node->setBoolValue(nav->type() != FGPositioned::VOR);
