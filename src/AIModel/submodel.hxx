@@ -25,7 +25,7 @@ using std::list;
 
 class FGAIBase;
 
-class FGSubmodelMgr : public SGSubsystem
+class FGSubmodelMgr : public SGSubsystem, public SGPropertyChangeListener
 {
 
 public:
@@ -53,7 +53,7 @@ public:
         double             drag_area;
         double             life;
         double             buoyancy;
-		double			   randomness;
+        double             randomness;
         bool               wind;
         bool               first_time;
         double             cd;
@@ -63,9 +63,9 @@ public:
         int                id;
         bool               no_roll;
         bool               serviceable;
-		bool               random;
+        bool               random;
         bool               collision;
-		bool			   expiry;
+        bool               expiry;
         bool               impact;
         string             impact_report;
         double             fuse_range;
@@ -144,7 +144,7 @@ private:
     double _parent_pitch;
     double _parent_roll;
     double _parent_speed;
-	double _x_offset;
+    double _x_offset;
     double _y_offset;
     double _z_offset;
 
@@ -155,8 +155,8 @@ private:
 
     bool _impact;
     bool _hit;
-	bool _expiry;
-	bool _found_sub;
+    bool _expiry;
+    bool _found_sub;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _user_lat_node;
@@ -178,6 +178,9 @@ private:
     SGPropertyNode_ptr _count_node;
     SGPropertyNode_ptr _trigger_node;
     SGPropertyNode_ptr props;
+    SGPropertyNode_ptr _model_added_node;
+    SGPropertyNode_ptr _path_node;
+
 
     FGAIManager* ai;
     IC_struct  IC;
@@ -201,11 +204,11 @@ private:
 
 
     int _count;
-	
-	SGGeod userpos;
-	SGGeod offsetpos;
-	SGVec3d getCartOffsetPos() const;
-	void setOffsetPos();
+
+    SGGeod userpos;
+    SGGeod offsetpos;
+    SGVec3d getCartOffsetPos() const;
+    void setOffsetPos();
 
 };
 

@@ -154,6 +154,9 @@ void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
     SGPropertyNode* submodels = scFileNode->getChild("submodels");
 
     if (submodels) {
+        //cout << "IN submodels path  " << submodels->getStringValue("path")
+        //    << "IN serviceable " << submodels->getBoolValue("serviceable")
+        //    << endl;
         setServiceable(submodels->getBoolValue("serviceable", false));
         setSMPath(submodels->getStringValue("path", ""));
     }
@@ -227,14 +230,17 @@ bool FGAIBase::init(bool search_in_AI_path) {
 void FGAIBase::initModel(osg::Node *node)
 {
     if (model.valid()) {
-
+        if( _path != ""){
+            props->setStringValue("submodels/path", _path.c_str());
+            //props->setStringValue("submodel/path", _path.c_str());
+            SG_LOG(SG_INPUT, SG_ALERT, "AIBase: submodels/path " << _path);
+        }
         fgSetString("/ai/models/model-added", props->getPath().c_str());
-
     } else if (!model_path.empty()) {
         SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);
     }
 
-    props->setStringValue("submodels/path", _path.c_str());
+    //props->setStringValue("submodels/path", _path.c_str());
     setDie(false);
 }
 
@@ -533,7 +539,7 @@ double FGAIBase::_getLatitude() const {
     return pos.getLatitudeDeg();
 }
 
-double FGAIBase::_getElevationFt () const {
+double FGAIBase::_getElevationFt() const {
     return pos.getElevationFt();
 }
 

@@ -44,9 +44,9 @@ class FGAIBase : public SGReferenced {
 
 public:
     enum object_type { otNull = 0, otAircraft, otShip, otCarrier, otBallistic,
-                       otRocket, otStorm, otThermal, otStatic, otWingman, otGroundVehicle,
-                       otEscort, otMultiplayer,
-                       MAX_OBJECTS };	// Needs to be last!!!
+        otRocket, otStorm, otThermal, otStatic, otWingman, otGroundVehicle,
+        otEscort, otMultiplayer,
+        MAX_OBJECTS };	// Needs to be last!!!
 
     FGAIBase(object_type ot);
     virtual ~FGAIBase();
@@ -95,7 +95,7 @@ public:
     SGVec3d getCartPos() const;
 
     bool getGroundElevationM(const SGGeod& pos, double& elev,
-                             const SGMaterial** material) const;
+        const SGMaterial** material) const;
 
     double _getCartPosX() const;
     double _getCartPosY() const;
@@ -177,7 +177,7 @@ protected:
 
     bool _impact_reported;
     bool _collision_reported;
-	bool _expiry_reported;
+    bool _expiry_reported;
 
     double _impact_lat;
     double _impact_lon;
@@ -247,7 +247,7 @@ public:
     bool   _getImpact();
     bool   _getImpactData();
     bool   _getCollisionData();
-	bool   _getExpiryData();
+    bool   _getExpiryData();
 
     SGPropertyNode* _getProps() const;
 
@@ -274,8 +274,8 @@ public:
     inline double _getBearing() { return bearing; };
 
     virtual osg::Node* load3DModel(const string &path,
-                           SGPropertyNode *prop_root);
- 
+        SGPropertyNode *prop_root);
+
     static bool _isNight();
 };
 
@@ -289,6 +289,7 @@ inline void FGAIBase::setPath(const char* model ) {
 }
 
 inline void FGAIBase::setSMPath(const string& p) {
+    cout << "setSMPath " << p <<endl;
     _path = p;
 }
 
@@ -335,6 +336,8 @@ inline void FGAIBase::setCallSign(const string& s) {
 }
 inline void FGAIBase::setXoffset(double x) {
     _x_offset = x;
+    cout << "setXoffset " << _x_offset << endl;
+
 }
 
 inline void FGAIBase::setYoffset(double y) {
