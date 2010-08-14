@@ -245,7 +245,7 @@ float get_climb_rate( void )
 float get_view_direction( void )
 {
     double view_off = 360.0 - globals->get_current_view()->getHeadingOffset_deg();
-    double view = SGMiscd::normalizeAngle(fgGetDouble("/orientation/heading-deg") + view_off);
+    double view = SGMiscd::normalizeAngle2(fgGetDouble("/orientation/heading-deg") + view_off);
     return view;
 }
 
