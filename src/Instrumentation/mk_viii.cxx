@@ -2956,7 +2956,7 @@ MK_VIII::AlertHandler::update ()
 
   // set new state
 
-  old_alerts = alerts;
+  old_alerts = voice_alerts;
   repeated_alerts = 0;
   altitude_callout_voice = NULL;
 }
