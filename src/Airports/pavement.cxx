@@ -25,8 +25,9 @@
 #include "pavement.hxx"
 
 FGPavement::FGPavement(const std::string& aIdent, const SGGeod& aPos) :
-  FGPositioned(PAVEMENT, aIdent, aPos, false)
+  FGPositioned(PAVEMENT, aIdent, aPos)
 {
+  init(false); // FGPositioned::init
 }
 
 void FGPavement::addNode(const SGGeod &aPos, bool aClose)
