@@ -357,13 +357,17 @@ addToIndices(FGPositioned* aPos)
 {
   assert(aPos);
   if (!aPos->ident().empty()) {
+    std::string u(boost::to_upper_copy(aPos->ident()));
+    
     global_identIndex.insert(global_identIndex.begin(), 
-      std::make_pair(aPos->ident(), aPos));
+      std::make_pair(u, aPos));
   }
   
   if (!aPos->name().empty()) {
+    std::string u(boost::to_upper_copy(aPos->name()));
+    
     global_nameIndex.insert(global_nameIndex.begin(), 
-                             std::make_pair(aPos->name(), aPos));
+                             std::make_pair(u, aPos));
   }
 
   if (!Octree::global_spatialOctree) {
@@ -380,8 +384,9 @@ removeFromIndices(FGPositioned* aPos)
   assert(aPos);
   
   if (!aPos->ident().empty()) {
-    NamedPositionedIndex::iterator it = global_identIndex.find(aPos->ident());
-    while (it != global_identIndex.end() && (it->first == aPos->ident())) {
+    std::string u(boost::to_upper_copy(aPos->ident()));
+    NamedPositionedIndex::iterator it = global_identIndex.find(u);
+    while (it != global_identIndex.end() && (it->first == u)) {
       if (it->second == aPos) {
         global_identIndex.erase(it);
         break;
@@ -392,8 +397,9 @@ removeFromIndices(FGPositioned* aPos)
   }
   
   if (!aPos->name().empty()) {
-    NamedPositionedIndex::iterator it = global_nameIndex.find(aPos->name());
-    while (it != global_nameIndex.end() && (it->first == aPos->name())) {
+    std::string u(boost::to_upper_copy(aPos->name()));
+    NamedPositionedIndex::iterator it = global_nameIndex.find(u);
+    while (it != global_nameIndex.end() && (it->first == u)) {
       if (it->second == aPos) {
         global_nameIndex.erase(it);
         break;
@@ -415,6 +421,27 @@ public:
   }
 };
 
+void findInIndex(NamedPositionedIndex& aIndex, const std::string& aFind, std::vector<FGPositioned*>& aResult)
+{
+  NamedPositionedIndex::const_iterator it = aIndex.begin();
+  NamedPositionedIndex::const_iterator end = aIndex.end();
+
+  bool haveFilter = !aFind.empty();
+
+  for (; it != end; ++it) {
+    FGPositioned::Type ty = it->second->type();
+    if ((ty < FGPositioned::AIRPORT) || (ty > FGPositioned::SEAPORT)) {
+      continue;
+    }
+    
+    if (haveFilter && it->first.find(aFind) == std::string::npos) {
+      continue;
+    }
+    
+    aResult.push_back(it->second);
+  } // of index iteration
+}
+
 /**
  * A special purpose helper (imported by FGAirport::searchNamesAndIdents) to
  * implement the AirportList dialog. It's unfortunate that it needs to reside
@@ -422,43 +449,23 @@ public:
  */
 char** searchAirportNamesAndIdents(const std::string& aFilter)
 {
-  const std::ctype<char> &ct = std::use_facet<std::ctype<char> >(std::locale());
-  std::string filter(aFilter);
-  bool hasFilter = !filter.empty();
-  if (hasFilter) {
-    ct.toupper((char *)filter.data(), (char *)filter.data() + filter.size());
-  }
-  
-  NamedPositionedIndex::const_iterator it = global_identIndex.begin();
-  NamedPositionedIndex::const_iterator end = global_identIndex.end();
-  
-  // note this is a vector of raw pointers, not smart pointers, because it
-  // may get very large and smart-pointer-atomicity-locking then becomes a
-  // bottleneck for this case.
+// note this is a vector of raw pointers, not smart pointers, because it
+// may get very large and smart-pointer-atomicity-locking then becomes a
+// bottleneck for this case.
   std::vector<FGPositioned*> matches;
-  std::string upper;
-  
-  for (; it != end; ++it) {
-    FGPositioned::Type ty = it->second->type();
-    if ((ty < FGPositioned::AIRPORT) || (ty > FGPositioned::SEAPORT)) {
-      continue;
-    }
+  if (!aFilter.empty()) {
+    std::string filter = boost::to_upper_copy(aFilter);
+    findInIndex(global_identIndex, filter, matches);
+    findInIndex(global_nameIndex, filter, matches);
+  } else {
     
-    if (hasFilter && (it->second->ident().find(aFilter) == std::string::npos)) {
-      upper = it->second->name(); // string copy, sadly
-      ct.toupper((char *)upper.data(), (char *)upper.data() + upper.size());
-      if (upper.find(aFilter) == std::string::npos) {
-        continue;
-      }
-    }
-    
-    matches.push_back(it->second);
+    findInIndex(global_identIndex, std::string(), matches);
   }
   
-  // sort alphabetically on name
+// sort alphabetically on name
   std::sort(matches.begin(), matches.end(), OrderByName());
   
-  // convert results to format comptible with puaList
+// convert results to format comptible with puaList
   unsigned int numMatches = matches.size();
   char** result = new char*[numMatches + 1];
   result[numMatches] = NULL; // end-of-list marker
@@ -518,10 +525,11 @@ findAll(const NamedPositionedIndex& aIndex,
     return result;
   }
   
-  std::string upperBoundId = aName;
+  std::string name = boost::to_upper_copy(aName);
+  std::string upperBoundId = name;
   upperBoundId[upperBoundId.size()-1]++;
   NamedPositionedIndex::const_iterator upperBound = aIndex.lower_bound(upperBoundId);
-  NamedPositionedIndex::const_iterator it = aIndex.lower_bound(aName);
+  NamedPositionedIndex::const_iterator it = aIndex.lower_bound(name);
   
   for (; it != upperBound; ++it) {
     FGPositionedRef candidate = it->second;
