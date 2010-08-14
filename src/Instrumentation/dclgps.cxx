@@ -1102,7 +1102,8 @@ FGPositioned* DCLGPS::FindTypedFirstById(const string& id, FGPositioned::Type ty
   
   if (exact) {
     FGPositioned::List matches = 
-      FGPositioned::findAllWithIdentSortedByRange(id, SGGeod::fromRad(_lon, _lat), &filter);
+      FGPositioned::findAllWithIdent(id, &filter);
+    FGPositioned::sortByRange(matches, SGGeod::fromRad(_lon, _lat));
     multi = (matches.size() > 1);
     return matches.empty() ? NULL : matches.front().ptr();
   }

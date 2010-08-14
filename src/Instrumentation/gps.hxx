@@ -264,7 +264,7 @@ private:
   double getScratchDistance() const;
   double getScratchMagBearing() const;
   double getScratchTrueBearing() const;
-  bool getScratchHasNext() const { return _searchHasNext; }
+  bool getScratchHasNext() const;
   
   double getSelectedCourse() const { return _selectedCourse; }
   void setSelectedCourse(double crs);
@@ -394,8 +394,6 @@ private:
   std::string _searchQuery;
   FGPositioned::Type _searchType;
   bool _searchExact;
-  bool _searchOrderByRange;
-  bool _searchResultsCached;
   FGPositioned::List _searchResults;
   bool _searchIsRoute; ///< set if 'search' is actually the current route
   bool _searchHasNext; ///< is there a result after this one?

@@ -65,4 +65,5 @@ FGMarkerBeaconRecord::FGMarkerBeaconRecord(Type aTy, FGRunway* aRunway, const SG
   FGPositioned(aTy, string(), aPos),
   _runway(aRunway)
 {
+  init(true); // init FGPositioned
 }

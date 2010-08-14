@@ -82,6 +82,7 @@ FGNavRecord::FGNavRecord(Type aTy, const std::string& aIdent,
     }
   }
   
+  init(true); // init FGPositioned (now position is adjusted)
 }
 
 void FGNavRecord::initAirportRelation()

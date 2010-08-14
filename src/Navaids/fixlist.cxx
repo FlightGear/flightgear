@@ -39,6 +39,7 @@
 FGFix::FGFix(const std::string& aIdent, const SGGeod& aPos) :
   FGPositioned(FIX, aIdent, aPos)
 {
+  init(true); // init FGPositioned
 }
 
 // Constructor

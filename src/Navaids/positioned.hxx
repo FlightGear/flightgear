@@ -84,9 +84,9 @@ public:
   { return mPosition; }
 
   /**
-   * Compute the cartesian position associated with this object
+   *  The cartesian position associated with this object
    */
-  SGVec3d cart() const;
+  const SGVec3d& cart() const;
 
   double latitude() const
   { return mPosition.getLatitudeDeg(); }
@@ -157,27 +157,20 @@ public:
   static FGPositionedRef findNextWithPartialId(FGPositionedRef aCur, const std::string& aId, Filter* aFilter = NULL);
   
   /**
-   * As above, but searches using an offset index
-   */
-  static FGPositionedRef findWithPartialId(const std::string& aId, Filter* aFilter, int aOffset, bool& aNext);
-
-  /**
-   * As above, but search names instead of idents
-   */
-  static FGPositionedRef findWithPartialName(const std::string& aName, Filter* aFilter, int aOffset, bool& aNext);
-  
-  /**
-   * Find all items with the specified ident, and return then sorted by
-   * distance from a position
-   *
+   * Find all items with the specified ident
    * @param aFilter - optional filter on items
    */
-  static List findAllWithIdentSortedByRange(const std::string& aIdent, const SGGeod& aPos, Filter* aFilter = NULL);
+  static List findAllWithIdent(const std::string& aIdent, Filter* aFilter = NULL);
   
   /**
    * As above, but searches names instead of idents
    */
-  static List findAllWithNameSortedByRange(const std::string& aName, const SGGeod& aPos, Filter* aFilter = NULL);
+  static List findAllWithName(const std::string& aName, Filter* aFilter = NULL);
+  
+  /**
+   * Sort an FGPositionedList by distance from a position
+   */
+  static void sortByRange(List&, const SGGeod& aPos);
   
   /**
    * Find the closest item to a position, which pass the specified filter
@@ -202,18 +195,6 @@ public:
   static List findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm, Filter* aFilter = NULL);
   
   /**
-   * Find the closest match based on partial id (with an offset to allow selecting the n-th closest).
-   * Cutoff distance is limited internally, to avoid making this very slow.
-   */
-  static FGPositionedRef findClosestWithPartialId(const SGGeod& aPos, const std::string& aId, Filter* aFilter, int aOffset, bool& aNext);
-
-  /**
-   * As above, but matches on name
-   */
-  static FGPositionedRef findClosestWithPartialName(const SGGeod& aPos, const std::string& aName, Filter* aFilter, int aOffset, bool& aNext);
-  
-  
-  /**
    * Map a candidate type string to a real type. Returns INVALID if the string
    * does not correspond to a defined type.
    */
@@ -227,12 +208,15 @@ public:
   static FGPositioned* createUserWaypoint(const std::string& aIdent, const SGGeod& aPos);
 protected:
   
-  FGPositioned(Type ty, const std::string& aIdent, const SGGeod& aPos, bool aIndex = true);
+  FGPositioned(Type ty, const std::string& aIdent, const SGGeod& aPos);
+  
+  void init(bool aIndexed);
   
   // can't be const right now, navrecord at least needs to fix up the position
   // after navaids are parsed
   SGGeod mPosition; 
   
+  SGVec3d mCart; // once mPosition is const, this can be const too
   const Type mType;
   const std::string mIdent;
 };
