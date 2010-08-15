@@ -1349,6 +1349,10 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
     if (file.extension() != "xml")
         file.concat(".xml");
 
+    if (file.isRelative()) {
+      file = globals->resolve_maybe_aircraft_path(file.str());
+    }
+
     if (!fgValidatePath(file.c_str(), false)) {
         SG_LOG(SG_IO, SG_ALERT, "loadxml: reading '" << file.str() << "' denied "
                 "(unauthorized access)");

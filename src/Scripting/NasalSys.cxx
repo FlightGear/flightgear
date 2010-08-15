@@ -374,6 +374,19 @@ static naRef f_directory(naContext c, naRef me, int argc, naRef* args)
     return result;
 }
 
+/**
+ * Given a data path, resolve it in FG_ROOT or an FG_AIRCRFT directory
+ */
+static naRef f_resolveDataPath(naContext c, naRef me, int argc, naRef* args)
+{
+    if(argc != 1 || !naIsString(args[0]))
+        naRuntimeError(c, "bad arguments to resolveDataPath()");
+
+    SGPath p = globals->resolve_maybe_aircraft_path(naStr_data(args[0]));
+    const char* pdata = p.c_str();
+    return naStr_fromdata(naNewString(c), const_cast<char*>(pdata), strlen(pdata));
+}
+
 // Parse XML file.
 //     parsexml(<path> [, <start-tag> [, <end-tag> [, <data> [, <pi>]]]]);
 //
@@ -635,6 +648,7 @@ static struct { const char* name; naCFunction func; } funcs[] = {
     { "srand",  f_srand },
     { "abort", f_abort },
     { "directory", f_directory },
+    { "resolvepath", f_resolveDataPath },
     { "parsexml", f_parsexml },
     { "systime", f_systime },
     { "carttogeod", f_carttogeod },
