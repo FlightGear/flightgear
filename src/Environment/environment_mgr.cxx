@@ -41,6 +41,7 @@
 #include "environment_ctrl.hxx"
 #include "fgclouds.hxx"
 #include "precipitation_mgr.hxx"
+#include "ridge_lift.hxx"
 
 class SGSky;
 extern SGSky *thesky;
@@ -65,10 +66,18 @@ FGEnvironmentMgr::FGEnvironmentMgr ()
 
   _precipitationManager = new FGPrecipitationMgr;
   set_subsystem("precipitation", _precipitationManager);
+
+  set_subsystem("ridgelift", new FGRidgeLift);
 }
 
 FGEnvironmentMgr::~FGEnvironmentMgr ()
 {
+  SGSubsystem * subsys;
+
+  subsys = get_subsystem( "ridgelift" );
+  remove_subsystem( "ridgelift" );
+  delete subsys;
+
   remove_subsystem("precipitation");
   delete _precipitationManager;
 
