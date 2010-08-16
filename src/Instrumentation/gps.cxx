@@ -332,7 +332,7 @@ GPS::bind()
   
   tie(_gpsNode, "desired-course-deg", SGRawValueMethods<GPS, double>
     (*this, &GPS::getDesiredCourse, NULL));
-  _desiredCourseNode = _gpsNode->getChild("desired-course-deg");
+  _desiredCourseNode = _gpsNode->getChild("desired-course-deg", 0, true);
     
   tieSGGeodReadOnly(_gpsNode, _indicated_pos, "indicated-longitude-deg", 
         "indicated-latitude-deg", "indicated-altitude-ft");
