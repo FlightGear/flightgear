@@ -1258,8 +1258,8 @@ bool fgInitGeneral() {
     curr->setStringValue(cwd ? cwd : "");
     curr->setAttribute(SGPropertyNode::WRITE, false);
 
-    fgSetBool("/sim/startup/stdout-to-terminal", isatty(1));
-    fgSetBool("/sim/startup/stderr-to-terminal", isatty(2));
+    fgSetBool("/sim/startup/stdout-to-terminal", isatty(1) != 0 );
+    fgSetBool("/sim/startup/stderr-to-terminal", isatty(2) != 0 );
     return true;
 }
 
@@ -1360,7 +1360,7 @@ bool fgInitSubsystems() {
     // Initialize the XML Autopilot subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem( "xml-autopilot", new FGXMLAutopilotGroup, SGSubsystemMgr::FDM );
+    globals->add_subsystem( "xml-autopilot", FGXMLAutopilotGroup::createInstance(), SGSubsystemMgr::FDM );
     globals->add_subsystem( "route-manager", new FGRouteMgr );
     
     ////////////////////////////////////////////////////////////////////

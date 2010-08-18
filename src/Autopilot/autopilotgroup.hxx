@@ -24,11 +24,6 @@
 #ifndef _XMLAUTO_HXX
 #define _XMLAUTO_HXX 1
 
-#include <string>
-#include <vector>
-
-#include <simgear/props/props.hxx>
-#include <simgear/structure/subsystem_mgr.hxx>
 
 /**
  * @brief Model an autopilot system by implementing a SGSubsystemGroup
@@ -37,12 +32,9 @@
 class FGXMLAutopilotGroup : public SGSubsystemGroup
 {
 public:
-    FGXMLAutopilotGroup();
-    void init();
-    void reinit();
-    void update( double dt );
-private:
-    std::vector<std::string> _autopilotNames;
+    static FGXMLAutopilotGroup * createInstance();
+protected:
+    FGXMLAutopilotGroup() : SGSubsystemGroup() {}
 
 };
 
