@@ -29,10 +29,8 @@ namespace Environment {
 class TerrainSampler : public SGSubsystemGroup
 {
 public:
-	virtual ~TerrainSampler();
 	static TerrainSampler * createInstance( SGPropertyNode_ptr rootNode );
 };
 
 } // namespace
-
 #endif
