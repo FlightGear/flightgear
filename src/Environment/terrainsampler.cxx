@@ -40,14 +40,13 @@ namespace Environment {
  */
 class AreaSampler : public SGSubsystem {
 public:
-	AreaSampler( SGPropertyNode_ptr rootNode );
-	virtual ~AreaSampler();
-	void update( double dt );
+    AreaSampler( SGPropertyNode_ptr rootNode );
+    virtual ~AreaSampler();
+    void update( double dt );
     void bind();
     void unbind();
-
-    double getOrientationDeg() const { return _orientation_rad * SG_RADIANS_TO_DEGREES; }
-    void setOrientationDeg( double value ) { _orientation_rad = value * SG_DEGREES_TO_RADIANS; }
+    void init();
+    void reinit();
 
     int getElevationHistogramStep() const { return _elevationHistogramStep; }
     void setElevationHistograpStep( int value ) { 
@@ -70,27 +69,30 @@ private:
 
     bool _enabled;
     bool _useAircraftPosition;
-	double _latitude_deg;
-	double _longitude_deg;
-	double _orientation_rad;
-	int _radius;
-	int _samples_per_frame;
+    double _heading_deg;
+    double _speed_kt;
+    int _radius;
+    double _max_computation_time_norm;
     int _max_samples;    // keep xx samples in queue for analysis
-    int _analyze_every;  // Run analysis every xx samples
+    double _reuse_samples_norm;
+    double _recalc_distance_norm;
     int _elevationHistogramMax;
     int _elevationHistogramStep;
     int _elevationHistogramCount;
+    SGGeod _inputPosition;
 
     double _altOffset;
     double _altMedian;
     double _altMin;
     double _altLayered;
     double _altMean;
+    SGGeod _outputPosition;
 
+    SGPropertyNode_ptr _signalNode;
     SGPropertyNode_ptr _positionLatitudeNode;
     SGPropertyNode_ptr _positionLongitudeNode;
 
-    deque<double> elevations;
+    deque<double> _elevations;
     TiedPropertyList _tiedProperties;
 };
 
@@ -98,13 +100,13 @@ AreaSampler::AreaSampler( SGPropertyNode_ptr rootNode ) :
     _rootNode(rootNode),
     _enabled(true),
     _useAircraftPosition(false),
-    _latitude_deg(0.0),
-	_longitude_deg(0.0),
-	_orientation_rad(0.0),
-	_radius(40000.0),
-	_samples_per_frame(5),
+    _heading_deg(0.0),
+    _speed_kt(0.0),
+    _radius(40000.0),
+    _max_computation_time_norm(0.1),
     _max_samples(1000),
-    _analyze_every(200),
+    _reuse_samples_norm(0.8),
+    _recalc_distance_norm(0.1),
     _elevationHistogramMax(10000),
     _elevationHistogramStep(500),
     _elevationHistogramCount(_elevationHistogramMax/_elevationHistogramStep),
@@ -112,10 +114,12 @@ AreaSampler::AreaSampler( SGPropertyNode_ptr rootNode ) :
     _altMedian(0),
     _altMin(0),
     _altLayered(0),
-    _altMean(0)
+    _altMean(0),
+    _signalNode(rootNode->getNode("output/valid", true )),
+    _positionLatitudeNode(fgGetNode( "/position/latitude-deg", true )),
+    _positionLongitudeNode(fgGetNode( "/position/longitude-deg", true ))
 {
-    _positionLatitudeNode = fgGetNode( "/position/latitude-deg", true );
-    _positionLongitudeNode = fgGetNode( "/position/longitude-deg", true );
+    _inputPosition.setElevationM( SG_MAX_ELEVATION_M );
 }
 
 AreaSampler::~AreaSampler()
@@ -130,14 +134,15 @@ void AreaSampler::bind()
 
     _tiedProperties.setRoot( _rootNode->getNode( "input", true ) );
     _tiedProperties.Tie( "use-aircraft-position", &_useAircraftPosition );
-    _tiedProperties.Tie( "latitude-deg", &_latitude_deg );
-    _tiedProperties.Tie( "latitude-deg", &_latitude_deg );
-    _tiedProperties.Tie( "longitude-deg", &_longitude_deg );
-    _tiedProperties.Tie( "orientation-deg", this, &AreaSampler::getOrientationDeg, &AreaSampler::setOrientationDeg );
+    _tiedProperties.Tie( "latitude-deg", &_inputPosition, &SGGeod::getLatitudeDeg, &SGGeod::setLatitudeDeg );
+    _tiedProperties.Tie( "longitude-deg", &_inputPosition, &SGGeod::getLongitudeDeg, &SGGeod::setLongitudeDeg );
+    _tiedProperties.Tie( "heading-deg", &_heading_deg );
+    _tiedProperties.Tie( "speed-kt", &_speed_kt );
     _tiedProperties.Tie( "radius-m", &_radius );
-    _tiedProperties.Tie( "max-samples-per-frame", &_samples_per_frame );
+    _tiedProperties.Tie( "max-computation-time-norm", &_max_computation_time_norm );
     _tiedProperties.Tie( "max-samples", &_max_samples );
-    _tiedProperties.Tie( "analyse-every", &_analyze_every );
+    _tiedProperties.Tie( "reuse-samples-norm", &_reuse_samples_norm );
+    _tiedProperties.Tie( "recalc-distance-norm", &_recalc_distance_norm );
     _tiedProperties.Tie( "elevation-histogram-max-ft", this, &AreaSampler::getElevationHistogramMax, &AreaSampler::setElevationHistograpMax );
     _tiedProperties.Tie( "elevation-histogram-step-ft", this, &AreaSampler::getElevationHistogramStep, &AreaSampler::setElevationHistograpStep );
     _tiedProperties.Tie( "elevation-histogram-count", this, &AreaSampler::getElevationHistogramCount );
@@ -148,6 +153,9 @@ void AreaSampler::bind()
     _tiedProperties.Tie( "alt-min-ft", &_altMin );
     _tiedProperties.Tie( "alt-layered-ft", &_altLayered );
     _tiedProperties.Tie( "alt-mean-ft", &_altMean );
+    _tiedProperties.Tie( "longitude-deg", &_outputPosition, &SGGeod::getLongitudeDeg );
+    _tiedProperties.Tie( "latitude-deg", &_outputPosition, &SGGeod::getLatitudeDeg );
+
 }
 
 void AreaSampler::unbind()
@@ -155,45 +163,90 @@ void AreaSampler::unbind()
     _tiedProperties.Untie();
 }
 
+void AreaSampler::init()
+{
+   _signalNode->setBoolValue(false);
+   _elevations.clear();
+   _altOffset = 0.0;
+   _altMedian = 0.0;
+   _altMin = 0.0;
+   _altLayered = 0.0;
+   _altMean = 0.0;
+}
+
+void AreaSampler::reinit()
+{
+    init();
+}
+
 void AreaSampler::update( double dt )
 {
-	if( !(_enabled && dt > SGLimitsd::min()) )
+    // if not enabled or time has stalled, do nothing
+    if( !(_enabled && dt > SGLimitsd::min()) )
         return;
 
-    if( _useAircraftPosition ) {
-        _longitude_deg = _positionLongitudeNode->getDoubleValue();
-        _latitude_deg = _positionLatitudeNode->getDoubleValue();
+    // get the aircraft's position if requested
+    if( _useAircraftPosition && _speed_kt < 0.5 ) {
+        _inputPosition = SGGeod::fromDegM( 
+            _positionLongitudeNode->getDoubleValue(), 
+            _positionLatitudeNode->getDoubleValue(), 
+            SG_MAX_ELEVATION_M );
     }
 
-    SGGeoc center = SGGeoc::fromGeod( SGGeod::fromDegM( _longitude_deg, _latitude_deg, SG_MAX_ELEVATION_M ) );
+    // need geocentric coordinates
+    SGGeoc center = SGGeoc::fromGeod( _inputPosition );
+
+    // if a speed is set, move the input position
+    if( _speed_kt >= 0.5 ) {
+        double distance_m = _speed_kt * dt * SG_NM_TO_METER;
+        center = center.advanceRadM( _heading_deg * SG_DEGREES_TO_RADIANS, distance_m );
+        _inputPosition = SGGeod::fromGeoc( center );
+    }
+
+    if( _signalNode->getBoolValue() ) {
+        // if we had finished the iteration and moved more than 10% of the radius
+        // of the sampling area, drop the oldest samples and continue sampling
+        if( SGGeoc::distanceM( center, SGGeoc::fromGeod(_outputPosition ) ) >= _recalc_distance_norm * _radius ) {
+            _elevations.resize( _max_samples * _reuse_samples_norm );
+            _signalNode->setBoolValue( false );
+        }
+    }
+
+    if( _signalNode->getBoolValue() )
+        return; // nothing to do.
 
     FGScenery * scenery = globals->get_scenery();
-	for( int i = 0; 
-		i < _samples_per_frame; 
-		i++ ) {
 
-		double distance = sg_random() * _radius;
-		double course = sg_random() * 2.0 * SG_PI;
-		SGGeod probe = SGGeod::fromGeoc(center.advanceRadM( course, distance ));
-		double elevation_m = 0.0;
-	    if (scenery->get_elevation_m( probe, elevation_m, NULL ))
-            elevations.push_front(elevation_m *= SG_METER_TO_FEET);
+    SGTimeStamp start = SGTimeStamp::now();
+    while( (SGTimeStamp::now() - start).toSecs() < dt * _max_computation_time_norm ) {
+        // sample until we used up all our configured time
+        double distance = sg_random();
+        distance = _radius * (1-distance*distance);
+        double course = sg_random() * 2.0 * SG_PI;
+        SGGeod probe = SGGeod::fromGeoc(center.advanceRadM( course, distance ));
+        double elevation_m = 0.0;
+
+        if (scenery->get_elevation_m( probe, elevation_m, NULL )) 
+            _elevations.push_front(elevation_m *= SG_METER_TO_FEET);
         
-        if( elevations.size() >= (deque<unsigned>::size_type)_max_samples ) {
+        if( _elevations.size() >= (deque<unsigned>::size_type)_max_samples ) {
+            // sampling complete? 
             analyse();
-            elevations.resize( _max_samples - _analyze_every );
+            _outputPosition = _inputPosition;
+            _signalNode->setBoolValue( true );
+            break;
         }
-	}
+    }
 }
 
 void AreaSampler::analyse()
 {
     double sum;
 
-	vector<int> histogram(_elevationHistogramCount,0);
+    vector<int> histogram(_elevationHistogramCount,0);
     
-    for( deque<double>::size_type i = 0; i < elevations.size(); i++ ) {
-        int idx = SGMisc<int>::clip( (int)(elevations[i]/_elevationHistogramStep), 0, histogram.size()-1 );
+    for( deque<double>::size_type i = 0; i < _elevations.size(); i++ ) {
+        int idx = SGMisc<int>::clip( (int)(_elevations[i]/_elevationHistogramStep), 0, histogram.size()-1 );
         histogram[idx]++;
     }
 
@@ -201,7 +254,7 @@ void AreaSampler::analyse()
     sum = 0.0;
     for( vector<int>::size_type i = 0; i < histogram.size(); i++ ) {
         sum += histogram[i];
-        if( sum > 0.5 * elevations.size() ) {
+        if( sum > 0.5 * _elevations.size() ) {
             _altMedian = i * _elevationHistogramStep;
             break;
         }
@@ -211,7 +264,7 @@ void AreaSampler::analyse()
     sum = 0.0;
     for(  vector<int>::size_type i = 0; i < histogram.size(); i++ ) {
         sum += histogram[i];
-        if( sum > 0.3 * elevations.size() ) {
+        if( sum > 0.3 * _elevations.size() ) {
             _altOffset = i * _elevationHistogramStep;
             break;
         }
@@ -222,7 +275,7 @@ void AreaSampler::analyse()
         _altMean += histogram[i] * i;
     }
     _altMean *= _elevationHistogramStep;
-    if( elevations.size() != 0.0 ) _altMean /= elevations.size();
+    if( _elevations.size() != 0.0 ) _altMean /= _elevations.size();
 
     _altMin = 0.0;
     for(  vector<int>::size_type i = 0; i < histogram.size(); i++ ) {
@@ -238,7 +291,7 @@ void AreaSampler::analyse()
     for(  vector<int>::size_type i = 0; i < histogram.size()-1; i++ ) {
         sum += histogram[i];
         if( histogram[i] > n_max ) n_max = histogram[i];
-        if( n_max > histogram[i+1] && sum > 0.3*elevations.size()) {
+        if( n_max > histogram[i+1] && sum > 0.3*_elevations.size()) {
             alt_low_min = i * _elevationHistogramStep;
             break;
         }
@@ -246,14 +299,6 @@ void AreaSampler::analyse()
 
     _altLayered = 0.5 * (_altMin + _altOffset);
 
-#if 0
-    SG_LOG( SG_ALL, SG_ALERT, "TerrainPresampler - alalysis results:" <<
-        " total:" << elevations.size() <<
-        " mean:" << _altMean <<
-        " median:" << _altMedian <<
-        " min:" << _altMin <<
-        " alt_20:" << _altOffset );
-#endif
 #if 0
 append(alt_50_array, alt_med);
 #endif
@@ -266,14 +311,15 @@ append(alt_50_array, alt_med);
 class TerrainSamplerImplementation : public TerrainSampler
 {
 public:
-	TerrainSamplerImplementation ( SGPropertyNode_ptr rootNode );
-	virtual ~TerrainSamplerImplementation ();
-	
-	virtual void init ();
-	virtual void reinit ();
+    TerrainSamplerImplementation ( SGPropertyNode_ptr rootNode );
+    virtual ~TerrainSamplerImplementation ();
+    
+    virtual void init ();
+    virtual void postinit();
+    virtual void reinit ();
     virtual void bind();
     virtual void unbind();
-	virtual void update (double delta_time_sec);
+    virtual void update (double delta_time_sec);
 private:
     inline string areaSubsystemName( unsigned i ) {
       ostringstream name;
@@ -281,7 +327,7 @@ private:
       return name.str();
     }
 
-	SGPropertyNode_ptr _rootNode;
+    SGPropertyNode_ptr _rootNode;
     bool _enabled;
     TiedPropertyList _tiedProperties;
 };
@@ -303,8 +349,12 @@ void TerrainSamplerImplementation::init()
     for( PropertyList::size_type i = 0; i < areaNodes.size(); i++ )
         set_subsystem( areaSubsystemName(i), new AreaSampler( areaNodes[i] ) );
 
-    SGSubsystemGroup::bind();// bind the subsystems before the get init()ed
     SGSubsystemGroup::init();
+}
+
+void TerrainSamplerImplementation::postinit()
+{
+    SGSubsystemGroup::bind();// 
 }
 
 void TerrainSamplerImplementation::reinit()
@@ -334,8 +384,8 @@ void TerrainSamplerImplementation::unbind()
 
 void TerrainSamplerImplementation::update( double dt )
 {
-	if( !(_enabled && dt > SGLimitsd::min()) )
-		return;
+    if( !(_enabled && dt > SGLimitsd::min()) )
+        return;
     SGSubsystemGroup::update(dt);
 }
 
@@ -343,13 +393,9 @@ void TerrainSamplerImplementation::update( double dt )
 
 /* implementation of the TerrainSampler factory to hide the implementation
    details */
-TerrainSampler::~TerrainSampler ()
-{
-}
-
 TerrainSampler * TerrainSampler::createInstance( SGPropertyNode_ptr rootNode )
 {
-	return new TerrainSamplerImplementation( rootNode );
+    return new TerrainSamplerImplementation( rootNode );
 }
 
 } // namespace
