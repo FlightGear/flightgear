@@ -112,7 +112,7 @@ void FGXMLAutopilotGroupImplementation::initFrom( SGPropertyNode_ptr rootNode, c
               apName = buf.str();
           }
           if( apName != name )
-            SG_LOG( SG_ALL, SG_ALERT, "Duplicate property-rule configuration name " << name << ", renamed to " << apName );
+            SG_LOG( SG_ALL, SG_WARN, "Duplicate property-rule configuration name " << name << ", renamed to " << apName );
         }
 
         SGPath config = globals->resolve_maybe_aircraft_path(pathNode->getStringValue());
