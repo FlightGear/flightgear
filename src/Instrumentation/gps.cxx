@@ -220,7 +220,6 @@ GPS::GPS ( SGPropertyNode *node) :
   _mode("init"),
   _name(node->getStringValue("name", "gps")),
   _num(node->getIntValue("number", 0)),
-  _searchResultsCached(false),
   _computeTurnData(false),
   _anticipateTurn(false),
   _inTurn(false)
@@ -333,7 +332,7 @@ GPS::bind()
   
   tie(_gpsNode, "desired-course-deg", SGRawValueMethods<GPS, double>
     (*this, &GPS::getDesiredCourse, NULL));
-  _desiredCourseNode = _gpsNode->getChild("desired-course-deg");
+  _desiredCourseNode = _gpsNode->getChild("desired-course-deg", 0, true);
     
   tieSGGeodReadOnly(_gpsNode, _indicated_pos, "indicated-longitude-deg", 
         "indicated-latitude-deg", "indicated-altitude-ft");
@@ -1384,9 +1383,6 @@ void GPS::setScratchFromRouteWaypoint(int aIndex)
   _scratchValid = true;
   _scratchNode->setDoubleValue("course", wp.get_track());
   _scratchNode->setIntValue("index", aIndex);
-  
-  int lastResult = _routeMgr->size() - 1;
-  _searchHasNext = (_searchResultIndex < lastResult);
 }
 
 void GPS::loadNearest()
@@ -1411,17 +1407,14 @@ void GPS::loadNearest()
     
   _searchResults = 
     FGPositioned::findClosestN(searchPos, limitCount, cutoffDistance, f.get());
-  _searchResultsCached = true;
   _searchResultIndex = 0;
   _searchIsRoute = false;
-  _searchHasNext = false;
   
   if (_searchResults.empty()) {
     SG_LOG(SG_INSTR, SG_INFO, "GPS:loadNearest: no matches at all");
     return;
   }
   
-  _searchHasNext = (_searchResults.size() > 1);
   setScratchFromCachedSearchResult();
 }
 
@@ -1478,66 +1471,47 @@ void GPS::search()
   }
   
   _searchExact = _scratchNode->getBoolValue("exact", true);
-  _searchOrderByRange = _scratchNode->getBoolValue("order-by-distance", true);
   _searchResultIndex = 0;
   _searchIsRoute = false;
-  _searchHasNext = false;
-  
-  if (_searchExact && _searchOrderByRange) {
-    // immediate mode search, get all the results now and cache them
-    auto_ptr<FGPositioned::Filter> f(createFilter(_searchType));
-    if (_searchNames) {
-      _searchResults = FGPositioned::findAllWithNameSortedByRange(_searchQuery, _indicated_pos, f.get());
-    } else {
-      _searchResults = FGPositioned::findAllWithIdentSortedByRange(_searchQuery, _indicated_pos, f.get());
-    }
-    
-    _searchResultsCached = true;
-    
-    if (_searchResults.empty()) {
-      clearScratch();
-      return;
-    }
-    
-    _searchHasNext = (_searchResults.size() > 1);
-    setScratchFromCachedSearchResult();
-  } else {
-    // iterative search, look up result zero
-    _searchResultsCached = false;
-    performSearch();
-  }
-}
 
-void GPS::performSearch()
-{
   auto_ptr<FGPositioned::Filter> f(createFilter(_searchType));
-  clearScratch();
-  
-  FGPositionedRef r;
   if (_searchNames) {
-    if (_searchOrderByRange) {
-      r = FGPositioned::findClosestWithPartialName(_indicated_pos, _searchQuery, f.get(), _searchResultIndex, _searchHasNext);
-    } else {
-      r = FGPositioned::findWithPartialName(_searchQuery, f.get(), _searchResultIndex, _searchHasNext);
-    }
+    _searchResults = FGPositioned::findAllWithName(_searchQuery, f.get());
   } else {
-    if (_searchOrderByRange) {
-      r = FGPositioned::findClosestWithPartialId(_indicated_pos, _searchQuery, f.get(), _searchResultIndex, _searchHasNext);
-    } else {
-      r = FGPositioned::findWithPartialId(_searchQuery, f.get(), _searchResultIndex, _searchHasNext);
-    }
+    _searchResults = FGPositioned::findAllWithIdent(_searchQuery, f.get());
   }
   
-  if (!r) {
+  bool orderByRange = _scratchNode->getBoolValue("order-by-distance", true);
+  if (orderByRange) {
+    FGPositioned::sortByRange(_searchResults, _indicated_pos);
+  }
+  
+  if (_searchResults.empty()) {
+    clearScratch();
     return;
   }
   
-  setScratchFromPositioned(r.get(), _searchResultIndex);
+  setScratchFromCachedSearchResult();
+}
+
+bool GPS::getScratchHasNext() const
+{
+  int lastResult;
+  if (_searchIsRoute) {
+    lastResult = _routeMgr->size() - 1;
+  } else {
+    lastResult = (int) _searchResults.size() - 1;
+  }
+
+  if (lastResult < 0) { // search array might be empty
+    return false;
+  }
+  
+  return (_searchResultIndex < lastResult);
 }
 
 void GPS::setScratchFromCachedSearchResult()
 {
-  assert(_searchResultsCached);
   int index = _searchResultIndex;
   
   if ((index < 0) || (index >= (int) _searchResults.size())) {
@@ -1546,9 +1520,6 @@ void GPS::setScratchFromCachedSearchResult()
   }
   
   setScratchFromPositioned(_searchResults[index], index);
-  
-  int lastResult = (int) _searchResults.size() - 1;
-  _searchHasNext = (_searchResultIndex < lastResult);
 }
 
 void GPS::setScratchFromPositioned(FGPositioned* aPos, int aIndex)
@@ -1566,9 +1537,7 @@ void GPS::setScratchFromPositioned(FGPositioned* aPos, int aIndex)
   }
   
   _scratchValid = true;
-  if (_searchResultsCached) {
-    _scratchNode->setIntValue("result-count", _searchResults.size());
-  }
+  _scratchNode->setIntValue("result-count", _searchResults.size());
   
   switch (aPos->type()) {
   case FGPositioned::VOR:
@@ -1652,20 +1621,17 @@ void GPS::selectLegMode()
 
 void GPS::nextResult()
 {
-  if (!_searchHasNext) {
+  if (!getScratchHasNext()) {
     return;
   }
   
   clearScratch();
   if (_searchIsRoute) {
     setScratchFromRouteWaypoint(++_searchResultIndex);
-  } else if (_searchResultsCached) {
-    ++_searchResultIndex;
-    setScratchFromCachedSearchResult();
   } else {
     ++_searchResultIndex;
-    performSearch();
-  } // of iterative search case
+    setScratchFromCachedSearchResult();
+  }
 }
 
 void GPS::previousResult()
@@ -1679,10 +1645,8 @@ void GPS::previousResult()
   
   if (_searchIsRoute) {
     setScratchFromRouteWaypoint(_searchResultIndex);
-  } else if (_searchResultsCached) {
-    setScratchFromCachedSearchResult();
   } else {
-    performSearch();
+    setScratchFromCachedSearchResult();
   }
 }
 
@@ -1701,14 +1665,15 @@ void GPS::defineWaypoint()
     
 // check for duplicate idents
   FGPositioned::TypeFilter f(FGPositioned::WAYPOINT);
-  FGPositioned::List dups = FGPositioned::findAllWithIdentSortedByRange(ident, _indicated_pos, &f);
+  FGPositioned::List dups = FGPositioned::findAllWithIdent(ident, &f);
   if (!dups.empty()) {
     SG_LOG(SG_INSTR, SG_WARN, "GPS:defineWaypoint: non-unique waypoint identifier, ho-hum");
   }
   
   SG_LOG(SG_INSTR, SG_INFO, "GPS:defineWaypoint: creating waypoint:" << ident);
   FGPositionedRef wpt = FGPositioned::createUserWaypoint(ident, _scratchPos);
-  _searchResultsCached = false;
+  _searchResults.clear();
+  _searchResults.push_back(wpt);
   setScratchFromPositioned(wpt.get(), -1);
 }
 

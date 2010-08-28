@@ -896,7 +896,7 @@ void FGSubmodelMgr::setParentNode(int id) {
         if (!model)
             continue;
 
-    }// end for loop
+    }// end for loop 
 
     if (_selected_ac != 0){
 

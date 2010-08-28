@@ -135,7 +135,9 @@ FGInterpolateEnvironmentCtrl::init ()
 	read_table( boundary_n, _boundary_table);
 	// pass in a pointer to the environment of the last bondary layer as
 	// a starting point
-	read_table( aloft_n, _aloft_table, &(*(_boundary_table.end()-1))->environment);
+	read_table( aloft_n, _aloft_table, 
+		_boundary_table.size() > 0 ?  
+		&(*(_boundary_table.end()-1))->environment : NULL );
 }
 
 void

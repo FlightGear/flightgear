@@ -151,6 +151,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;osg.lib;osgDB.lib;osgViewer.lib;osgGA.lib;openthreads.lib;osgParticle.lib;osgUtil.lib;osgText.lib;ul.lib;sg.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>

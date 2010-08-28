@@ -1,7 +1,7 @@
 // FGAIWingman - FGAIBllistic-derived class creates an AI Wingman
 //
 // Written by Vivian Meazza, started February 2008.
-// - vivian.meazza at lineone.net
+// - vivian.meazza at lineone.net 
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as

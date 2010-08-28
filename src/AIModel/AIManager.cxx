@@ -2,7 +2,7 @@
 // - a global management type for AI objects
 //
 // Written by David Culp, started October 2003.
-// - davidculp2@comcast.net
+// - davidculp2@comcast.net 
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as

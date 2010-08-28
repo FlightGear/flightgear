@@ -940,7 +940,7 @@ void FGAIBallistic::handle_impact() {
             invisible = true;
         } else if (_subID == 0)  // kill the AIObject if there is no subsubmodel
             setDie(true);
-    }
+    } 
 }
 
 void FGAIBallistic::handle_expiry() {

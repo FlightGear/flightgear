@@ -97,11 +97,11 @@ void Autopilot::add_component( Component * component )
   std::string name = component->get_name();
   for( unsigned i = 0; get_subsystem( name.c_str() ) != NULL; i++ ) {
       ostringstream buf;
-      buf <<  name << "_" << i;
+      buf <<  component->get_name() << "_" << i;
       name = buf.str();
   }
   if( name != component->get_name() )
-    SG_LOG( SG_ALL, SG_ALERT, "Duplicate autopilot component " << component->get_name() << ", renamed to " << name );
+    SG_LOG( SG_ALL, SG_WARN, "Duplicate autopilot component " << component->get_name() << ", renamed to " << name );
 
   set_subsystem( name.c_str(), component );
 }

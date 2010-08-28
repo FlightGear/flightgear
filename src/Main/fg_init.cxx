@@ -109,7 +109,6 @@
 #include <FDM/fdm_shell.hxx>
 
 #include <Environment/environment_mgr.hxx>
-#include <Environment/ridge_lift.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -1259,8 +1258,8 @@ bool fgInitGeneral() {
     curr->setStringValue(cwd ? cwd : "");
     curr->setAttribute(SGPropertyNode::WRITE, false);
 
-    fgSetBool("/sim/startup/stdout-to-terminal", isatty(1));
-    fgSetBool("/sim/startup/stderr-to-terminal", isatty(2));
+    fgSetBool("/sim/startup/stdout-to-terminal", isatty(1) != 0 );
+    fgSetBool("/sim/startup/stderr-to-terminal", isatty(2) != 0 );
     return true;
 }
 
@@ -1350,13 +1349,6 @@ bool fgInitSubsystems() {
     globals->add_subsystem("environment", new FGEnvironmentMgr);
 
     ////////////////////////////////////////////////////////////////////
-    // Initialize the ridge lift simulation.
-    ////////////////////////////////////////////////////////////////////
-
-    // Initialize the ridgelift subsystem
-    globals->add_subsystem("ridgelift", new FGRidgeLift);
-
-    ////////////////////////////////////////////////////////////////////
     // Initialize the aircraft systems and instrumentation (before the
     // autopilot.)
     ////////////////////////////////////////////////////////////////////
@@ -1368,7 +1360,7 @@ bool fgInitSubsystems() {
     // Initialize the XML Autopilot subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem( "xml-autopilot", new FGXMLAutopilotGroup, SGSubsystemMgr::FDM );
+    globals->add_subsystem( "xml-autopilot", FGXMLAutopilotGroup::createInstance(), SGSubsystemMgr::FDM );
     globals->add_subsystem( "route-manager", new FGRouteMgr );
     
     ////////////////////////////////////////////////////////////////////

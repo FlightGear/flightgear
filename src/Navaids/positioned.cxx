@@ -22,6 +22,8 @@
 #  include "config.h"
 #endif
 
+#include "positioned.hxx"
+
 #include <map>
 #include <set>
 #include <algorithm> // for sort
@@ -35,7 +37,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/math/SGGeometry.hxx>
 
-#include "positioned.hxx"
+
 
 typedef std::multimap<std::string, FGPositioned*> NamedPositionedIndex;
 typedef std::pair<NamedPositionedIndex::const_iterator, NamedPositionedIndex::const_iterator> NamedIndexRange;
@@ -355,13 +357,17 @@ addToIndices(FGPositioned* aPos)
 {
   assert(aPos);
   if (!aPos->ident().empty()) {
+    std::string u(boost::to_upper_copy(aPos->ident()));
+    
     global_identIndex.insert(global_identIndex.begin(), 
-      std::make_pair(aPos->ident(), aPos));
+      std::make_pair(u, aPos));
   }
   
   if (!aPos->name().empty()) {
+    std::string u(boost::to_upper_copy(aPos->name()));
+    
     global_nameIndex.insert(global_nameIndex.begin(), 
-                             std::make_pair(aPos->name(), aPos));
+                             std::make_pair(u, aPos));
   }
 
   if (!Octree::global_spatialOctree) {
@@ -378,8 +384,9 @@ removeFromIndices(FGPositioned* aPos)
   assert(aPos);
   
   if (!aPos->ident().empty()) {
-    NamedPositionedIndex::iterator it = global_identIndex.find(aPos->ident());
-    while (it != global_identIndex.end() && (it->first == aPos->ident())) {
+    std::string u(boost::to_upper_copy(aPos->ident()));
+    NamedPositionedIndex::iterator it = global_identIndex.find(u);
+    while (it != global_identIndex.end() && (it->first == u)) {
       if (it->second == aPos) {
         global_identIndex.erase(it);
         break;
@@ -390,8 +397,9 @@ removeFromIndices(FGPositioned* aPos)
   }
   
   if (!aPos->name().empty()) {
-    NamedPositionedIndex::iterator it = global_nameIndex.find(aPos->name());
-    while (it != global_nameIndex.end() && (it->first == aPos->name())) {
+    std::string u(boost::to_upper_copy(aPos->name()));
+    NamedPositionedIndex::iterator it = global_nameIndex.find(u);
+    while (it != global_nameIndex.end() && (it->first == u)) {
       if (it->second == aPos) {
         global_nameIndex.erase(it);
         break;
@@ -400,91 +408,6 @@ removeFromIndices(FGPositioned* aPos)
       ++it;
     } // of multimap walk
   }
-}
-
-class DistanceOrdering
-{
-public:
-  DistanceOrdering(const SGGeod& aPos) :
-    mPos(SGVec3d::fromGeod(aPos))
-  { }
-  
-  bool operator()(const FGPositionedRef& a, const FGPositionedRef& b) const
-  {
-    if (!a || !b) {
-      throw sg_exception("empty reference passed to DistanceOrdering");
-    }
-  
-    double dA = distSqr(a->cart(), mPos),
-      dB = distSqr(b->cart(), mPos);
-    return dA < dB;
-  }
-
-private:
-  SGVec3d mPos;
-};
-
-static void
-sortByDistance(const SGGeod& aPos, FGPositioned::List& aResult)
-{
-  std::sort(aResult.begin(), aResult.end(), DistanceOrdering(aPos));
-}
-
-static FGPositionedRef
-namedFindClosest(const NamedPositionedIndex& aIndex, const std::string& aName, 
-                 const SGGeod& aOrigin, FGPositioned::Filter* aFilter)
-{
-  NamedIndexRange range = aIndex.equal_range(aName);
-  if (range.first == range.second) {
-    return NULL;
-  }
-  
-// common case, only one result. looks a bit ugly because these are
-// sequential iterators, not random-access ones
-  NamedPositionedIndex::const_iterator check = range.first;
-  if (++check == range.second) {
-    // excellent, only one match in the range
-    FGPositioned* r = range.first->second;
-    if (aFilter) {
-      if (aFilter->hasTypeRange() && !aFilter->passType(r->type())) {
-        return NULL;
-      }
-      
-      if (!aFilter->pass(r)) {
-        return NULL;
-      }
-    } // of have a filter
-  
-    return r;
-  } // of short-circuit logic for single-element range
-  
-// multiple matches, we need to actually check the distance to each one
-  double minDist = HUGE_VAL;
-  FGPositionedRef result;
-  NamedPositionedIndex::const_iterator it = range.first;
-  SGVec3d cartOrigin(SGVec3d::fromGeod(aOrigin));
-  
-  for (; it != range.second; ++it) {
-    FGPositioned* r = it->second;
-    if (aFilter) {
-      if (aFilter->hasTypeRange() && !aFilter->passType(r->type())) {
-        continue;
-      }
-      
-      if (!aFilter->pass(r)) {
-        continue;
-      }
-    }
-    
-  // find distance
-    double d2 = distSqr(cartOrigin, r->cart());
-    if (d2 < minDist) {
-      minDist = d2;
-      result = r;
-    }
-  }
-  
-  return result;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -498,6 +421,27 @@ public:
   }
 };
 
+void findInIndex(NamedPositionedIndex& aIndex, const std::string& aFind, std::vector<FGPositioned*>& aResult)
+{
+  NamedPositionedIndex::const_iterator it = aIndex.begin();
+  NamedPositionedIndex::const_iterator end = aIndex.end();
+
+  bool haveFilter = !aFind.empty();
+
+  for (; it != end; ++it) {
+    FGPositioned::Type ty = it->second->type();
+    if ((ty < FGPositioned::AIRPORT) || (ty > FGPositioned::SEAPORT)) {
+      continue;
+    }
+    
+    if (haveFilter && it->first.find(aFind) == std::string::npos) {
+      continue;
+    }
+    
+    aResult.push_back(it->second);
+  } // of index iteration
+}
+
 /**
  * A special purpose helper (imported by FGAirport::searchNamesAndIdents) to
  * implement the AirportList dialog. It's unfortunate that it needs to reside
@@ -505,43 +449,23 @@ public:
  */
 char** searchAirportNamesAndIdents(const std::string& aFilter)
 {
-  const std::ctype<char> &ct = std::use_facet<std::ctype<char> >(std::locale());
-  std::string filter(aFilter);
-  bool hasFilter = !filter.empty();
-  if (hasFilter) {
-    ct.toupper((char *)filter.data(), (char *)filter.data() + filter.size());
-  }
-  
-  NamedPositionedIndex::const_iterator it = global_identIndex.begin();
-  NamedPositionedIndex::const_iterator end = global_identIndex.end();
-  
-  // note this is a vector of raw pointers, not smart pointers, because it
-  // may get very large and smart-pointer-atomicity-locking then becomes a
-  // bottleneck for this case.
+// note this is a vector of raw pointers, not smart pointers, because it
+// may get very large and smart-pointer-atomicity-locking then becomes a
+// bottleneck for this case.
   std::vector<FGPositioned*> matches;
-  std::string upper;
-  
-  for (; it != end; ++it) {
-    FGPositioned::Type ty = it->second->type();
-    if ((ty < FGPositioned::AIRPORT) || (ty > FGPositioned::SEAPORT)) {
-      continue;
-    }
+  if (!aFilter.empty()) {
+    std::string filter = boost::to_upper_copy(aFilter);
+    findInIndex(global_identIndex, filter, matches);
+    findInIndex(global_nameIndex, filter, matches);
+  } else {
     
-    if (hasFilter && (it->second->ident().find(aFilter) == std::string::npos)) {
-      upper = it->second->name(); // string copy, sadly
-      ct.toupper((char *)upper.data(), (char *)upper.data() + upper.size());
-      if (upper.find(aFilter) == std::string::npos) {
-        continue;
-      }
-    }
-    
-    matches.push_back(it->second);
+    findInIndex(global_identIndex, std::string(), matches);
   }
   
-  // sort alphabetically on name
+// sort alphabetically on name
   std::sort(matches.begin(), matches.end(), OrderByName());
   
-  // convert results to format comptible with puaList
+// convert results to format comptible with puaList
   unsigned int numMatches = matches.size();
   char** result = new char*[numMatches + 1];
   result[numMatches] = NULL; // end-of-list marker
@@ -592,14 +516,23 @@ FGPositioned::Filter::passType(Type aTy) const
   return (minType() <= aTy) && (maxType() >= aTy);
 }
 
-static FGPositioned::List
-findAllSortedByRange(const NamedPositionedIndex& aIndex, 
-                             const std::string& aName, const SGGeod& aPos, FGPositioned::Filter* aFilter)
+static FGPositioned::List 
+findAll(const NamedPositionedIndex& aIndex, 
+                             const std::string& aName, FGPositioned::Filter* aFilter)
 {
   FGPositioned::List result;
-  NamedIndexRange range = aIndex.equal_range(aName);
-  for (; range.first != range.second; ++range.first) {
-    FGPositioned* candidate = range.first->second;
+  if (aName.empty()) {
+    return result;
+  }
+  
+  std::string name = boost::to_upper_copy(aName);
+  std::string upperBoundId = name;
+  upperBoundId[upperBoundId.size()-1]++;
+  NamedPositionedIndex::const_iterator upperBound = aIndex.lower_bound(upperBoundId);
+  NamedPositionedIndex::const_iterator it = aIndex.lower_bound(name);
+  
+  for (; it != upperBound; ++it) {
+    FGPositionedRef candidate = it->second;
     if (aFilter) {
       if (aFilter->hasTypeRange() && !aFilter->passType(candidate->type())) {
         continue;
@@ -610,70 +543,28 @@ findAllSortedByRange(const NamedPositionedIndex& aIndex,
       }
     }
     
-    result.push_back(range.first->second);
+    result.push_back(candidate);
   }
   
-  sortByDistance(aPos, result);
   return result;
-}
-
-static FGPositionedRef
-findWithPartial(const NamedPositionedIndex& aIndex, const std::string& aName, 
-                    FGPositioned::Filter* aFilter, int aOffset, bool& aNext)
-{
-  // see comment in findNextWithPartialId concerning upperBoundId
-  std::string upperBoundId = aName;
-  upperBoundId[upperBoundId.size()-1]++;
-  NamedPositionedIndex::const_iterator upperBound = aIndex.lower_bound(upperBoundId);
-  
-  NamedIndexRange range = aIndex.equal_range(aName);
-  FGPositionedRef result;
-  
-  while (range.first != upperBound) {
-    for (; range.first != range.second; ++range.first) {
-      FGPositionedRef candidate = range.first->second;
-      if (aFilter) {
-        if (aFilter->hasTypeRange() && !aFilter->passType(candidate->type())) {
-          continue;
-        }
-        
-        if (!aFilter->pass(candidate)) {
-          continue;
-        }
-      }
-      
-      if (result) {
-        aNext = true;
-        return result;
-      } else if (aOffset == 0) {
-        // okay, found our result. we need to go around once more to set aNext
-        result = candidate;
-      } else {
-        --aOffset; // seen one more valid result, decrement the count
-      }
-    }
-    
-    // Unable to match the filter with this range - try the next range.
-    range = aIndex.equal_range(range.second->first);
-  }
-  
-  // if we fell out, we reached the end of the valid range. We might have a
-  // valid result, but we definitiely don't have a next result.
-  aNext = false;
-  return result;  
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-FGPositioned::FGPositioned(Type ty, const std::string& aIdent, const SGGeod& aPos, bool aIndexed) :
+FGPositioned::FGPositioned(Type ty, const std::string& aIdent, const SGGeod& aPos) :
   mPosition(aPos),
   mType(ty),
   mIdent(aIdent)
 {  
+}
+
+void FGPositioned::init(bool aIndexed)
+{
   SGReferenced::get(this); // hold an owning ref, for the moment
+  mCart = SGVec3d::fromGeod(mPosition);
   
   if (aIndexed) {
-    assert(ty != TAXIWAY && ty != PAVEMENT);
+    assert(mType != TAXIWAY && mType != PAVEMENT);
     addToIndices(this);
   }
 }
@@ -687,13 +578,15 @@ FGPositioned::~FGPositioned()
 FGPositioned*
 FGPositioned::createUserWaypoint(const std::string& aIdent, const SGGeod& aPos)
 {
-  return new FGPositioned(WAYPOINT, aIdent, aPos, true);
+  FGPositioned* wpt = new FGPositioned(WAYPOINT, aIdent, aPos);
+  wpt->init(true);
+  return wpt;
 }
 
-SGVec3d
+const SGVec3d&
 FGPositioned::cart() const
 {
-  return SGVec3d::fromGeod(mPosition);
+  return mCart;
 }
 
 FGPositioned::Type FGPositioned::typeFromName(const std::string& aName)
@@ -770,7 +663,13 @@ const char* FGPositioned::nameForType(Type aTy)
 FGPositionedRef
 FGPositioned::findClosestWithIdent(const std::string& aIdent, const SGGeod& aPos, Filter* aFilter)
 {
-  return namedFindClosest(global_identIndex, aIdent, aPos, aFilter);
+  FGPositioned::List r(findAll(global_identIndex, aIdent, aFilter));
+  if (r.empty()) {
+    return FGPositionedRef();
+  }
+  
+  sortByRange(r, aPos);
+  return r.front();
 }
 
 FGPositioned::List
@@ -783,15 +682,15 @@ FGPositioned::findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilt
 }
 
 FGPositioned::List
-FGPositioned::findAllWithIdentSortedByRange(const std::string& aIdent, const SGGeod& aPos, Filter* aFilter)
+FGPositioned::findAllWithIdent(const std::string& aIdent, Filter* aFilter)
 {
-  return findAllSortedByRange(global_identIndex, aIdent, aPos, aFilter);
+  return findAll(global_identIndex, aIdent, aFilter);
 }
 
 FGPositioned::List
-FGPositioned::findAllWithNameSortedByRange(const std::string& aName, const SGGeod& aPos, Filter* aFilter)
+FGPositioned::findAllWithName(const std::string& aName, Filter* aFilter)
 {
-  return findAllSortedByRange(global_nameIndex, aName, aPos, aFilter);
+  return findAll(global_nameIndex, aName, aFilter);
 }
 
 FGPositionedRef
@@ -861,115 +760,24 @@ FGPositioned::findNextWithPartialId(FGPositionedRef aCur, const std::string& aId
   return NULL; // Reached the end of the valid sequence with no match.  
 }
   
-FGPositionedRef
-FGPositioned::findWithPartialId(const std::string& aId, Filter* aFilter, int aOffset, bool& aNext)
+void
+FGPositioned::sortByRange(List& aResult, const SGGeod& aPos)
 {
-  return findWithPartial(global_identIndex, aId, aFilter, aOffset, aNext);
-}
-
-
-FGPositionedRef
-FGPositioned::findWithPartialName(const std::string& aName, Filter* aFilter, int aOffset, bool& aNext)
-{
-  return findWithPartial(global_nameIndex, aName, aFilter, aOffset, aNext);
-}
-
-/**
- * Wrapper filter which proxies to an inner filter, but also ensures the
- * ident starts with supplied partial ident.
- */
-class PartialIdentFilter : public FGPositioned::Filter
-{
-public:
-  PartialIdentFilter(const std::string& ident, FGPositioned::Filter* filter) :
-    _inner(filter)
-  {
-    _ident = boost::to_upper_copy(ident);
+  SGVec3d cartPos(SGVec3d::fromGeod(aPos));
+// computer ordering values
+  Octree::FindNearestResults r;
+  List::iterator it = aResult.begin(), lend = aResult.end();
+  for (; it != lend; ++it) {
+    double d2 = distSqr((*it)->cart(), cartPos);
+    r.push_back(Octree::OrderedPositioned(*it, d2));
   }
   
-  virtual bool pass(FGPositioned* aPos) const
-  {
-    if (!_inner->pass(aPos)) {
-      return false;
-    }
-    
-    return (boost::algorithm::starts_with(aPos->ident(), _ident));
-  }
-    
-  virtual FGPositioned::Type minType() const
-  { return _inner->minType(); }
-    
-  virtual FGPositioned::Type maxType() const
-  { return _inner->maxType(); }
-    
-private:
-  std::string _ident;
-  FGPositioned::Filter* _inner;
-};
-
-static FGPositionedRef
-findClosestWithPartial(const SGGeod& aPos, FGPositioned::Filter* aFilter, int aOffset, bool& aNext)
-{
-  // why aOffset +2 ? at offset=3, we want the fourth search result, but also
-  // to know if the fifth result exists (to set aNext flag for iterative APIs)
-  FGPositioned::List matches;
-  Octree::findNearestN(SGVec3d::fromGeod(aPos), aOffset + 2, 1000 * SG_NM_TO_METER, aFilter, matches);
+// sort
+  std::sort(r.begin(), r.end());
   
-  if ((int) matches.size() <= aOffset) {
-    SG_LOG(SG_GENERAL, SG_INFO, "findClosestWithPartial, couldn't match enough with prefix");
-    aNext = false;
-    return NULL; // couldn't find a match within the cutoff distance
+// convert to a plain list
+  unsigned int count = aResult.size();
+  for (unsigned int i=0; i<count; ++i) {
+    aResult[i] = r[i].get();
   }
-  
-  aNext = ((int) matches.size() >= (aOffset + 2));
-  return matches[aOffset];
-
 }
-
-FGPositionedRef
-FGPositioned::findClosestWithPartialId(const SGGeod& aPos, const std::string& aId, Filter* aFilter, int aOffset, bool& aNext)
-{
-  PartialIdentFilter pf(aId, aFilter);
-  return findClosestWithPartial(aPos, &pf, aOffset, aNext);
-}
-
-/**
- * Wrapper filter which proxies to an inner filter, but also ensures the
- * name starts with supplied partial name.
- */
-class PartialNameFilter : public FGPositioned::Filter
-{
-public:
-  PartialNameFilter(const std::string& nm, FGPositioned::Filter* filter) :
-  _inner(filter)
-  {
-    _name = nm;
-  }
-  
-  virtual bool pass(FGPositioned* aPos) const
-  {
-    if (!_inner->pass(aPos)) {
-      return false;
-    }
-    
-    return (boost::algorithm::istarts_with(aPos->name(), _name));
-  }
-  
-  virtual FGPositioned::Type minType() const
-  { return _inner->minType(); }
-  
-  virtual FGPositioned::Type maxType() const
-  { return _inner->maxType(); }
-  
-private:
-  std::string _name;
-  FGPositioned::Filter* _inner;
-};
-
-FGPositionedRef
-FGPositioned::findClosestWithPartialName(const SGGeod& aPos, const std::string& aName, Filter* aFilter, int aOffset, bool& aNext)
-{
-  PartialNameFilter pf(aName, aFilter);
-  return findClosestWithPartial(aPos, &pf, aOffset, aNext);
-}
-

@@ -92,6 +92,7 @@ void FGInstrumentMgr::init()
     SGPropertyNode_ptr nd(new SGPropertyNode);
     nd->setStringValue("name", "gps");
     nd->setIntValue("number", 0);
+    _instruments.push_back("gps[0]");
     set_subsystem("gps[0]", new GPS(nd));
   }
 

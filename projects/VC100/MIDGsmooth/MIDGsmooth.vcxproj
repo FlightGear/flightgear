@@ -151,6 +151,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
     </ClCompile>
     <Link>
       <AdditionalDependencies>sg.lib;net.lib;ul.lib;ws2_32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>

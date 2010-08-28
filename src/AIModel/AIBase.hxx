@@ -1,7 +1,7 @@
 // FGAIBase.hxx - abstract base class for AI objects
 // Written by David Culp, started Nov 2003, based on
 // David Luff's FGAIEntity class.
-// - davidculp2@comcast.net
+// - davidculp2@comcast.net 
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as

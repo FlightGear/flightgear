@@ -51,12 +51,14 @@ FGRunwayBase::FGRunwayBase(Type aTy, const string& aIdent,
                         const double width,
                         const int surface_code,
                         bool index) :
-  FGPositioned(aTy, aIdent, aGeod, index)
+  FGPositioned(aTy, aIdent, aGeod)
 {
   _heading = heading;
   _length = length;
   _width = width;
   _surface_code = surface_code;
+  
+  init(index);
 }
 
 SGGeod FGRunwayBase::pointOnCenterline(double aOffset) const

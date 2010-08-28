@@ -20,7 +20,7 @@
 #include <Main/fg_props.hxx>
 
 using std::vector;
-using std::string;
+using std::string; 
 using std::list;
 
 class FGAIBase;

@@ -63,6 +63,7 @@ FGAirport::FGAirport(const string &id, const SGGeod& location, const SGGeod& tow
     mRunwaysLoaded(false),
     mTaxiwaysLoaded(true)
 {
+  init(true); // init FGPositioned
 }
 
 

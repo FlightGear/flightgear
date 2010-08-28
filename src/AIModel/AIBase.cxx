@@ -236,7 +236,7 @@ void FGAIBase::initModel(osg::Node *node)
         SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);
     }
 
-    //props->setStringValue("submodels/path", _path.c_str());
+    //props->setStringValue("submodels/path", _path.c_str()); 
     setDie(false);
 }
 

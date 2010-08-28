@@ -1,10 +1,10 @@
-// autopilotgroup.hxx - an even more flexible, generic way to build autopilots
+// terrainsampler.hxx -- 
 //
-// Written by Torsten Dreyer
-// Based heavily on work created by Curtis Olson, started January 2004.
+// Written by Torsten Dreyer, started July 2010
+// Based on local weather implementation in nasal from 
+// Thorsten Renk
 //
-// Copyright (C) 2004  Curtis L. Olson  - http://www.flightgear.org/~curt
-// Copyright (C) 2010  Torsten Dreyer - Torsten (at) t3r (dot) de
+// Copyright (C) 2010  Curtis Olson
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -20,22 +20,17 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
+#ifndef _TERRAIN_SAMPLER_HXX
+#define _TERRAIN_SAMPLER_HXX
 
-#ifndef _XMLAUTO_HXX
-#define _XMLAUTO_HXX 1
+#include <simgear/structure/subsystem_mgr.hxx>
 
-
-/**
- * @brief Model an autopilot system by implementing a SGSubsystemGroup
- * 
- */
-class FGXMLAutopilotGroup : public SGSubsystemGroup
+namespace Environment {
+class TerrainSampler : public SGSubsystemGroup
 {
 public:
-    static FGXMLAutopilotGroup * createInstance();
-protected:
-    FGXMLAutopilotGroup() : SGSubsystemGroup() {}
-
+	static TerrainSampler * createInstance( SGPropertyNode_ptr rootNode );
 };
 
-#endif // _XMLAUTO_HXX
+} // namespace
+#endif

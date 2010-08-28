@@ -105,6 +105,7 @@ FGGlobals::FGGlobals() :
     airwaynet( NULL ),
     multiplayer_mgr( NULL )
 {
+  
 }
 
 
@@ -239,7 +240,15 @@ void FGGlobals::append_aircraft_path(const std::string& path)
     return;
   }
   
+  unsigned int index = fg_aircraft_dirs.size();  
   fg_aircraft_dirs.push_back(path);
+  
+// make aircraft dirs available to Nasal
+  SGPropertyNode* sim = fgGetNode("/sim", true);
+  sim->removeChild("fg-aircraft", index, false);
+  SGPropertyNode* n = sim->getChild("fg-aircraft", index, true);
+  n->setStringValue(path);
+  n->setAttribute(SGPropertyNode::WRITE, false);
 }
 
 void FGGlobals::append_aircraft_paths(const std::string& path)
