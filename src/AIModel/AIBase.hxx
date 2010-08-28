@@ -289,7 +289,6 @@ inline void FGAIBase::setPath(const char* model ) {
 }
 
 inline void FGAIBase::setSMPath(const string& p) {
-    cout << "setSMPath " << p <<endl;
     _path = p;
 }
 
@@ -336,8 +335,6 @@ inline void FGAIBase::setCallSign(const string& s) {
 }
 inline void FGAIBase::setXoffset(double x) {
     _x_offset = x;
-    cout << "setXoffset " << _x_offset << endl;
-
 }
 
 inline void FGAIBase::setYoffset(double y) {

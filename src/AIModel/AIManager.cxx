@@ -97,7 +97,7 @@ FGAIManager::postinit() {
             continue;
 
         if (scenarios.find(name) != scenarios.end()) {
-            SG_LOG(SG_GENERAL, SG_WARN, "won't load scenario '" << name << "' twice");
+            SG_LOG(SG_GENERAL, SG_DEBUG, "won't load scenario '" << name << "' twice");
             continue;
         }
 
@@ -110,6 +110,7 @@ FGAIManager::postinit() {
 void
 FGAIManager::reinit() {
     update(0.0);
+
     ai_list_iterator ai_list_itr = ai_list.begin();
 
     while(ai_list_itr != ai_list.end()) {

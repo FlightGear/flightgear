@@ -27,6 +27,7 @@ FGAIWingman::FGAIWingman() : FGAIBallistic(otWingman)
 {
     invisible = false;
     _formate_to_ac = true;
+
 }
 
 FGAIWingman::~FGAIWingman() {}
@@ -78,6 +79,7 @@ void FGAIWingman::bind() {
     props->tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
     props->tie("orientation/true-heading-deg", SGRawValuePointer<double>(&hdg));
 
+    props->tie("submodels/serviceable", SGRawValuePointer<bool>(&serviceable));
 
     props->tie("load/rel-brg-to-user-deg",
         SGRawValueMethods<FGAIBallistic,double>
@@ -85,8 +87,17 @@ void FGAIWingman::bind() {
     props->tie("load/elev-to-user-deg",
         SGRawValueMethods<FGAIBallistic,double>
         (*this, &FGAIBallistic::getElevHitchToUser));
+
     props->tie("velocities/vertical-speed-fps",
         SGRawValuePointer<double>(&vs));
+    props->tie("velocities/true-airspeed-kt",
+        SGRawValuePointer<double>(&speed));
+    props->tie("velocities/speed-east-fps",
+        SGRawValuePointer<double>(&_speed_east_fps));
+    props->tie("velocities/speed-north-fps",
+        SGRawValuePointer<double>(&_speed_north_fps));
+
+
     props->tie("position/x-offset", 
         SGRawValueMethods<FGAIBase,double>(*this, &FGAIBase::_getXOffset, &FGAIBase::setXoffset));
     props->tie("position/y-offset", 
@@ -107,17 +118,23 @@ void FGAIWingman::unbind() {
     props->untie("id");
     props->untie("SubID");
 
-    props->untie("position/altitude-ft");
-    props->untie("position/latitude-deg");
-    props->untie("position/longitude-deg");
-
     props->untie("orientation/pitch-deg");
     props->untie("orientation/roll-deg");
     props->untie("orientation/true-heading-deg");
 
+    props->untie("submodels/serviceable");
+
+    props->untie("velocities/true-airspeed-kt");
+    props->untie("velocities/vertical-speed-fps");
+    props->untie("velocities/speed_east_fps");
+    props->untie("velocities/speed_north_fps");
+
     props->untie("load/rel-brg-to-user-deg");
     props->untie("load/elev-to-user-deg");
-    props->untie("velocities/vertical-speed-fps");
+
+    props->untie("position/altitude-ft");
+    props->untie("position/latitude-deg");
+    props->untie("position/longitude-deg");
     props->untie("position/x-offset");
     props->untie("position/y-offset");
     props->untie("position/z-offset");
@@ -141,11 +158,13 @@ bool FGAIWingman::init(bool search_in_AI_path) {
     roll = _rotation;
     _ht_agl_ft = 1e10;
 
+    props->setStringValue("submodels/path", _path.c_str());
     return true;
 }
 
 void FGAIWingman::update(double dt) {
     FGAIBallistic::update(dt);
+//    cout << FGAIBase::_getName() << " update speed " << FGAIBase::_getSpeed() << endl;
 }
 
 // end AIWingman

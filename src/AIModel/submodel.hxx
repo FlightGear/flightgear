@@ -58,6 +58,7 @@ public:
         bool               first_time;
         double             cd;
         double             weight;
+        double             mass;
         double             contents;
         bool               aero_stabilised;
         int                id;
@@ -95,6 +96,7 @@ public:
         double     mass;
         int        id;
         bool       no_roll;
+        int        parent_id;
     }   IC_struct;
 
     FGSubmodelMgr();
@@ -144,6 +146,8 @@ private:
     double _parent_pitch;
     double _parent_roll;
     double _parent_speed;
+    double _parent_ID;
+
     double _x_offset;
     double _y_offset;
     double _z_offset;
@@ -180,6 +184,7 @@ private:
     SGPropertyNode_ptr props;
     SGPropertyNode_ptr _model_added_node;
     SGPropertyNode_ptr _path_node;
+    SGPropertyNode_ptr _selected_ac;
 
 
     FGAIManager* ai;
@@ -199,6 +204,7 @@ private:
     void setSubData(int id, string& path, bool serviceable);
     void valueChanged (SGPropertyNode *);
     void transform(submodel *);
+    void setParentNode(int parent_id);
 
     bool release(submodel *, double dt);
 
