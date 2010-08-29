@@ -300,8 +300,11 @@ void FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport 
   arr->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway, heading);
   rwy = arr->getRunwayByIdent(activeRunway);
   // begin descent 110km out
-  SGGeod beginDescentPoint = rwy->pointOnCenterline(-110000);
+  SGGeod beginDescentPoint     = rwy->pointOnCenterline(0);
+  SGGeod secondaryDescentPoint = rwy->pointOnCenterline(-10000);
   
-  wpt = createInAir(ac, "BOD", beginDescentPoint, alt, vCruise);
+  wpt = createInAir(ac, "BOD", beginDescentPoint,  alt, vCruise);
+  waypoints.push_back(wpt); 
+  wpt = createInAir(ac, "BOD2", secondaryDescentPoint, alt, vCruise);
   waypoints.push_back(wpt); 
 }

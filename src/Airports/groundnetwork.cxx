@@ -553,35 +553,46 @@ void FGGroundNetwork::update(int id, double lat, double lon,
     current->clearResolveCircularWait();
     current->setWaitsForId(0);
     checkSpeedAdjustment(id, lat, lon, heading, speed, alt);
-    checkHoldPosition(id, lat, lon, heading, speed, alt);
-    if (checkForCircularWaits(id)) {
-        i->setResolveCircularWait();
-    }
     bool needsTaxiClearance = current->getAircraft()->getTaxiClearanceRequest();
-    int state = current->getState();
-    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
-    if ((now - lastTransmission) > 15) {
-        available = true;
+    if (!needsTaxiClearance) {
+        checkHoldPosition(id, lat, lon, heading, speed, alt);
+        if (checkForCircularWaits(id)) {
+            i->setResolveCircularWait();
+        }
+    } else {
+        current->setHoldPosition(true);
+        int state = current->getState();
+        time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+        if ((now - lastTransmission) > 15) {
+            available = true;
+        }
+        if ((state < 3) && available) {
+             transmit(&(*current), MSG_REQUEST_TAXI_CLEARANCE, ATC_AIR_TO_GROUND);
+             current->setState(3);
+             lastTransmission = now;
+             available = false;
+        }
+        if ((state == 3) && available) {
+            transmit(&(*current), MSG_ISSUE_TAXI_CLEARANCE, ATC_GROUND_TO_AIR);
+            current->setState(4);
+            lastTransmission = now;
+            available = false;
+        }
+        if ((state == 4) && available) {
+            transmit(&(*current), MSG_ACKNOWLEDGE_TAXI_CLEARANCE, ATC_AIR_TO_GROUND);
+            current->setState(5);
+            lastTransmission = now;
+            available = false;
+        }
+        if ((state == 5) && available) {
+            current->setState(0);
+            current->getAircraft()->setTaxiClearanceRequest(false);
+            current->setHoldPosition(true);
+            available = false;
+        }
+
     }
-    if (needsTaxiClearance && available) {
-         transmit(&(*current), MSG_REQUEST_TAXI_CLEARANCE, ATC_AIR_TO_GROUND);
-         current->getAircraft()->setTaxiClearanceRequest(false);
-         current->setState(3);
-         lastTransmission = now;
-         available = false;
-    }
-    if ((state == 3) && available) {
-         transmit(&(*current), MSG_ISSUE_TAXI_CLEARANCE, ATC_GROUND_TO_AIR);
-         current->setState(4);
-         lastTransmission = now;
-         available = false;
-    }
-    if ((state == 4) && available) {
-         transmit(&(*current), MSG_ACKNOWLEDGE_TAXI_CLEARANCE, ATC_AIR_TO_GROUND);
-         current->setState(0);
-         lastTransmission = now;
-         available = false;
-    }
+
 }
 
 /**

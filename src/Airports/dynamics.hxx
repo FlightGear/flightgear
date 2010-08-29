@@ -46,12 +46,13 @@ class FGAirportDynamics {
 private:
   FGAirport* _ap;
 
-  FGParkingVec        parkings;
-  FGRunwayPreference  rwyPrefs;
-  FGSidStar           SIDs;
-  FGStartupController startupController;
-  FGGroundNetwork     groundNetwork;
-  FGTowerController   towerController;
+  FGParkingVec         parkings;
+  FGRunwayPreference   rwyPrefs;
+  FGSidStar            SIDs;
+  FGStartupController  startupController;
+  FGGroundNetwork      groundNetwork;
+  FGTowerController    towerController;
+  FGApproachController approachController;
 
   time_t lastUpdate;
   string prevTrafficType;
@@ -112,9 +113,10 @@ public:
 
 
   // ATC related functions. 
-  FGStartupController *getStartupController() { return &startupController; };
-  FGGroundNetwork     *getGroundNetwork()     { return &groundNetwork; };
-  FGTowerController   *getTowerController()   { return &towerController; };
+  FGStartupController    *getStartupController()    { return &startupController; };
+  FGGroundNetwork        *getGroundNetwork()        { return &groundNetwork; };
+  FGTowerController      *getTowerController()      { return &towerController; };
+  FGApproachController   *getApproachController()   { return &approachController; };
 
   const string& getAtisInformation() { return atisInformation; };
   int getGroundFrequency(unsigned leg); //{ return freqGround.size() ? freqGround[0] : 0; };

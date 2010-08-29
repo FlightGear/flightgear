@@ -53,6 +53,7 @@ public:
     void initializeFlightPlan();
     FGAIFlightPlan* GetFlightPlan() const { return fp; };
     void ProcessFlightPlan( double dt, time_t now );
+    time_t checkForArrivalTime(string wptName);
     
     void AccelTo(double speed);
     void PitchTo(double angle);
@@ -63,7 +64,9 @@ public:
     
     void getGroundElev(double dt); //TODO these 3 really need to be public?
     void doGroundAltitude();
-    bool loadNextLeg  ();
+    bool loadNextLeg  (double dist=0);
+    void resetPositionFromFlightPlan();
+    double getBearing(double crse);
 
     void setAcType(const std::string& ac) { acType = ac; };
     void setCompany(const std::string& comp) { company = comp;};
@@ -90,6 +93,7 @@ public:
     inline double altitudeAGL() const { return props->getFloatValue("position/altitude-agl-ft");};
     inline double airspeed() const { return props->getFloatValue("velocities/airspeed-kt");};
     std::string atGate();
+
     
 protected:
     void Run(double dt);
@@ -104,6 +108,8 @@ private:
     double dt_elev_count;
     double headingChangeRate;
     double headingError;
+    double minBearing;
+    double speedFraction;
     double groundTargetSpeed;
     double groundOffset;
     double dt;
@@ -118,6 +124,7 @@ private:
     void handleFirstWaypoint(void);
     bool leadPointReached(FGAIFlightPlan::waypoint* curr);
     bool handleAirportEndPoints(FGAIFlightPlan::waypoint* prev, time_t now);
+    bool reachedEndOfCruise(double&);
     bool aiTrafficVisible(void);
     void controlHeading(FGAIFlightPlan::waypoint* curr);
     void controlSpeed(FGAIFlightPlan::waypoint* curr,

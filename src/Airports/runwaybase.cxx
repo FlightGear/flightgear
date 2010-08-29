@@ -73,6 +73,27 @@ SGGeod FGRunwayBase::pointOnCenterline(double aOffset) const
   return result;
 }
 
+
+
+SGGeod FGRunwayBase::pointOffCenterline(double aOffset, double lateralOffset) const
+{
+  SGGeod result;
+  SGGeod temp;
+  double dummyAz2;
+  double halfLengthMetres = lengthM() * 0.5;
+
+  SGGeodesy::direct(mPosition, _heading, 
+    aOffset - halfLengthMetres,
+    temp, dummyAz2);
+
+  SGGeodesy::direct(temp, (_heading+90.0), 
+    lateralOffset,
+    result, dummyAz2);
+
+  return result;
+}
+
+
 bool FGRunwayBase::isHardSurface() const
 {
   return ((_surface_code == 1) || (_surface_code == 2));
