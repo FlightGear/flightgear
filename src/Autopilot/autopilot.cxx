@@ -97,7 +97,7 @@ void Autopilot::add_component( Component * component )
   std::string name = component->get_name();
   for( unsigned i = 0; get_subsystem( name.c_str() ) != NULL; i++ ) {
       ostringstream buf;
-      buf <<  name << "_" << i;
+      buf <<  component->get_name() << "_" << i;
       name = buf.str();
   }
   if( name != component->get_name() )

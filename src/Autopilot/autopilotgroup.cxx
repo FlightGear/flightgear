@@ -78,6 +78,9 @@ void FGXMLAutopilotGroupImplementation::init()
     };
     for( unsigned i = 0; i < sizeof(nodeNames)/sizeof(nodeNames[0]); i++ )
         initFrom( fgGetNode( "/sim/systems" ), nodeNames[i] );
+
+    SGSubsystemGroup::bind();
+    SGSubsystemGroup::init();
 }
 
 void FGXMLAutopilotGroupImplementation::initFrom( SGPropertyNode_ptr rootNode, const char * childName )
@@ -108,7 +111,7 @@ void FGXMLAutopilotGroupImplementation::initFrom( SGPropertyNode_ptr rootNode, c
           string name = apName;
           for( unsigned i = 0; get_subsystem( apName.c_str() ) != NULL; i++ ) {
               ostringstream buf;
-              buf <<  apName << "_" << i;
+              buf <<  name << "_" << i;
               apName = buf.str();
           }
           if( apName != name )
@@ -135,9 +138,6 @@ void FGXMLAutopilotGroupImplementation::initFrom( SGPropertyNode_ptr rootNode, c
             continue;
         }
     }
-
-    SGSubsystemGroup::bind();
-    SGSubsystemGroup::init();
 }
 
 FGXMLAutopilotGroup * FGXMLAutopilotGroup::createInstance()
