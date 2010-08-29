@@ -137,7 +137,9 @@ void FGTrafficManager::init()
 
 void FGTrafficManager::update(double /*dt*/)
 {
-
+  if (fgGetBool("/environment/metar/valid") == false) {
+       return;
+  }
   time_t now = time(NULL) + fgGetLong("/sim/time/warp");
   if (scheduledAircraft.size() == 0) {
     return;
