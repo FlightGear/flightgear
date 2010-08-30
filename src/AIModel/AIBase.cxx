@@ -81,7 +81,7 @@ FGAIBase::FGAIBase(object_type ot) :
     delete_me = false;
     _impact_reported = false;
     _collision_reported = false;
-	_expiry_reported = false;
+    _expiry_reported = false;
 
     _subID = 0;
 
@@ -227,14 +227,16 @@ bool FGAIBase::init(bool search_in_AI_path) {
 void FGAIBase::initModel(osg::Node *node)
 {
     if (model.valid()) {
-
+        if( _path != ""){
+            props->setStringValue("submodels/path", _path.c_str());
+            SG_LOG(SG_INPUT, SG_DEBUG, "AIBase: submodels/path " << _path);
+        }
         fgSetString("/ai/models/model-added", props->getPath().c_str());
-
     } else if (!model_path.empty()) {
         SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);
     }
 
-    props->setStringValue("submodels/path", _path.c_str());
+    //props->setStringValue("submodels/path", _path.c_str()); 
     setDie(false);
 }
 
@@ -472,7 +474,7 @@ SGVec3d FGAIBase::getCartPosAt(const SGVec3d& _off) const {
     hlTrans *= SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
 
     // The offset converted to the usual body fixed coordinate system
-    // rotated to the earth fiexed coordinates axis
+    // rotated to the earth fixed coordinates axis
     SGVec3d off = hlTrans.backTransform(_off);
 
     // Add the position offset of the AIModel to gain the earth centered position
@@ -533,7 +535,7 @@ double FGAIBase::_getLatitude() const {
     return pos.getLatitudeDeg();
 }
 
-double FGAIBase::_getElevationFt () const {
+double FGAIBase::_getElevationFt() const {
     return pos.getElevationFt();
 }
 

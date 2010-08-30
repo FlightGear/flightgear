@@ -2,7 +2,7 @@
 // - a global management type for AI objects
 //
 // Written by David Culp, started October 2003.
-// - davidculp2@comcast.net
+// - davidculp2@comcast.net 
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -97,7 +97,7 @@ FGAIManager::postinit() {
             continue;
 
         if (scenarios.find(name) != scenarios.end()) {
-            SG_LOG(SG_GENERAL, SG_WARN, "won't load scenario '" << name << "' twice");
+            SG_LOG(SG_GENERAL, SG_DEBUG, "won't load scenario '" << name << "' twice");
             continue;
         }
 
@@ -110,6 +110,7 @@ FGAIManager::postinit() {
 void
 FGAIManager::reinit() {
     update(0.0);
+
     ai_list_iterator ai_list_itr = ai_list.begin();
 
     while(ai_list_itr != ai_list.end()) {
