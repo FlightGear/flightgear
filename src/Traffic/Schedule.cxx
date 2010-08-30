@@ -289,7 +289,6 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
   if (distanceToUser >= TRAFFICTOAIDISTTOSTART) {
     return true; // out of visual range, for the moment.
   }
-  
   return createAIAircraft(flight, speed, deptime);
 }
 

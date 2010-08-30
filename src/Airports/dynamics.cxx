@@ -325,17 +325,21 @@ bool FGAirportDynamics::innerGetActiveRunway(const string & trafficType,
         takeoff.clear();
         lastUpdate = dayStart;
         prevTrafficType = trafficType;
-
+        /*
         FGEnvironment
             stationweather =
             ((FGEnvironmentMgr *) globals->get_subsystem("environment"))
             ->getEnvironment(getLatitude(), getLongitude(),
                              getElevation());
-
-        windSpeed = stationweather.get_wind_speed_kt();
-        windHeading = stationweather.get_wind_from_heading_deg();
+        */
+        windSpeed   = fgGetInt("/environment/metar/base-wind-speed-kt"); //stationweather.get_wind_speed_kt();
+        windHeading = fgGetInt("/environment/metar/base-wind-dir-deg");
+        //stationweather.get_wind_from_heading_deg();
         string scheduleName;
-        //cerr << "finding active Runway for" << _ap->getId() << endl;
+        //cerr << "finding active Runway for : " << _ap->getId() << endl;
+        //cerr << "Wind Heading              : " << windHeading << endl;
+        //cerr << "Wind Speed                : " << windSpeed << endl;
+
         //cerr << "Nr of seconds since day start << " << dayStart << endl;
 
         ScheduleTime *currSched;
@@ -347,7 +351,7 @@ bool FGAirportDynamics::innerGetActiveRunway(const string & trafficType,
         scheduleName = currSched->getName(dayStart);
         maxTail = currSched->getTailWind();
         maxCross = currSched->getCrossWind();
-        //cerr << "SChedule anme = " << scheduleName << endl;
+        //cerr << "Current Schedule =        : " << scheduleName << endl;
         if (scheduleName.empty())
             return false;
         //cerr << "C"<< endl;
@@ -370,6 +374,13 @@ bool FGAirportDynamics::innerGetActiveRunway(const string & trafficType,
         } else if (trafficType == "ul") {
             currentlyActive = &ulActive;
         }
+
+        //cerr << "Durrently active selection for " << trafficType << ": ";
+        for (stringVecIterator it = currentlyActive->begin();
+             it != currentlyActive->end(); it++) {
+             //cerr << (*it) << " ";
+         }
+         //cerr << endl;
 
         currRunwayGroup->setActive(_ap,
                                    windSpeed,

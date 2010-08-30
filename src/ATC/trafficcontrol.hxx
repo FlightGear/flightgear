@@ -28,6 +28,8 @@
 
 
 #include <simgear/compiler.h>
+// There is probably a better include than sg_geodesy to get the SG_NM_TO_METER...
+#include <simgear/math/sg_geodesy.hxx>
 #include <simgear/debug/logstream.hxx>
 
 
@@ -185,6 +187,9 @@ public:
 typedef vector<FGTrafficRecord> TrafficVector;
 typedef vector<FGTrafficRecord>::iterator TrafficVectorIterator;
 
+typedef vector<time_t> TimeVector;
+typedef vector<time_t>::iterator TimeVectorIterator;
+
 
 /***********************************************************************
  * Active runway, a utility class to keep track of which aircraft has
@@ -195,11 +200,18 @@ class ActiveRunway
 private:
   string rwy;
   int currentlyCleared;
+  double distanceToFinal;
+  TimeVector estimatedArrivalTimes;
 public:
-  ActiveRunway(string r, int cc) { rwy = r; currentlyCleared = cc; };
+  ActiveRunway(string r, int cc) { rwy = r; currentlyCleared = cc; distanceToFinal = 6.0 * SG_NM_TO_METER; };
   
   string getRunwayName() { return rwy; };
   int    getCleared   () { return currentlyCleared; };
+  double getApproachDistance() { return distanceToFinal; };
+  //time_t getEstApproachTime() { return estimatedArrival; };
+
+  //void setEstApproachTime(time_t time) { estimatedArrival = time; };
+  time_t requestTimeSlot(time_t eta);
 };
 
 typedef vector<ActiveRunway> ActiveRunwayVec;
@@ -207,7 +219,7 @@ typedef vector<ActiveRunway>::iterator ActiveRunwayVecIterator;
 
 /**
  * class FGATCController
- * NOTE: this class serves as an abstraction layer for all sorts of ATC controller. 
+ * NOTE: this class serves as an abstraction layer for all sorts of ATC controllers. 
  *************************************************************************************/
 class FGATCController
 {
@@ -316,5 +328,34 @@ public:
   TrafficVector &getActiveTraffic() { return activeTraffic; };
 
 }; 
+
+/******************************************************************************
+ * class FGTowerControl
+ *****************************************************************************/
+class FGApproachController : public FGATCController
+{
+private:
+  TrafficVector activeTraffic;
+  ActiveRunwayVec activeRunways;
+  
+public:
+  FGApproachController();
+  virtual ~FGApproachController() {};
+  virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
+				double lat, double lon,
+				double hdg, double spd, double alt, double radius, int leg,
+				FGAIAircraft *aircraft);
+  virtual void             signOff(int id);
+  virtual void             update(int id, double lat, double lon, 
+				  double heading, double speed, double alt, double dt);
+  virtual bool             hasInstruction(int id);
+  virtual FGATCInstruction getInstruction(int id);
+
+  ActiveRunway* getRunway(string name);
+
+  bool hasActiveTraffic() { return activeTraffic.size() != 0; };
+  TrafficVector &getActiveTraffic() { return activeTraffic; };
+};
+
 
 #endif // _TRAFFIC_CONTROL_HXX

@@ -55,6 +55,7 @@ public:
    bool on_ground;
     int routeIndex;  // For AI/ATC purposes;
    double time_sec;
+   double trackLength; // distance from previous waypoint (for AI purposes);
    string time;
 
   } waypoint;
@@ -90,10 +91,12 @@ public:
    double getLeadDistance( void ) const {return lead_distance;}
    double getBearing(waypoint* previous, waypoint* next) const;
    double getBearing(double lat, double lon, waypoint* next) const;
+   double checkTrackLength(string wptName);
   time_t getStartTime() const { return start_time; }
+   time_t getArrivalTime() const { return arrivalTime; }
 
   void    create(FGAIAircraft *, FGAirport *dep, FGAirport *arr, int leg, double alt, double speed, double lat, double lon,
-		 bool firstLeg, double radius, const string& fltType, const string& aircraftType, const string& airline);
+		 bool firstLeg, double radius, const string& fltType, const string& aircraftType, const string& airline, double distance);
 
   void setLeg(int val) { leg = val;}
   void setTime(time_t st) { start_time = st; }
@@ -128,6 +131,7 @@ private:
   typedef vector <waypoint*> wpt_vector_type;
   typedef wpt_vector_type::const_iterator wpt_vector_iterator;
 
+
   wpt_vector_type       waypoints;
   wpt_vector_iterator   wpt_iterator;
 
@@ -136,6 +140,7 @@ private:
   double lead_distance;
   double leadInAngle;
   time_t start_time;
+  time_t arrivalTime;       // For AI/ATC purposes.
   int leg;
   int gateId, lastNodeVisited;
   string activeRunway;
@@ -148,7 +153,7 @@ private:
   void createTakeOff(FGAIAircraft *, bool, FGAirport *, double, const string&);
   void createClimb(FGAIAircraft *, bool, FGAirport *, double, double, const string&);
   void createCruise(FGAIAircraft *, bool, FGAirport*, FGAirport*, double, double, double, double, const string&);
-  void createDecent(FGAIAircraft *, FGAirport *, const string&);
+  void createDescent(FGAIAircraft *, FGAirport *,  double latitude, double longitude, double speed, double alt,const string&, double distance);
   void createLanding(FGAIAircraft *, FGAirport *, const string&);
   void createParking(FGAIAircraft *, FGAirport *, double radius);
   void deleteWaypoints(); 
@@ -158,6 +163,8 @@ private:
   void createDefaultLandingTaxi(FGAIAircraft *, FGAirport* aAirport);
   void createDefaultTakeoffTaxi(FGAIAircraft *, FGAirport* aAirport, FGRunway* aRunway);
   void createTakeoffTaxi(FGAIAircraft *, bool firstFlight, FGAirport *apt, double radius, const string& fltType, const string& acType, const string& airline);
+
+  double getTurnRadius(double, bool);
         
   waypoint* createOnGround(FGAIAircraft *, const std::string& aName, const SGGeod& aPos, double aElev, double aSpeed);
   waypoint* createInAir(FGAIAircraft *, const std::string& aName, const SGGeod& aPos, double aElev, double aSpeed);

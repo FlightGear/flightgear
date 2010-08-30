@@ -52,6 +52,7 @@ public:
    * opposited direction. 0.0 corresponds to the (non-displaced) threshold
    */
   SGGeod pointOnCenterline(double aOffset) const;
+  SGGeod pointOffCenterline(double aOffset, double lateralOffset) const;
   
   double lengthFt() const
   { return _length; }

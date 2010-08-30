@@ -187,8 +187,8 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
       time_t now = time(NULL) + fgGetLong("/sim/time/warp");
       time_t timeDiff = now-start; 
       leg = 1;
-      /*
-      if ((timeDiff > 300) && (timeDiff < 1200))
+      
+      if ((timeDiff > 60) && (timeDiff < 1200))
 	leg = 2;
       else if ((timeDiff >= 1200) && (timeDiff < 1500))
 	leg = 3;
@@ -196,14 +196,15 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
 	leg = 4;
       else if (timeDiff >= 2000)
 	leg = 5;
-      */
+      /*
       if (timeDiff >= 2000)
           leg = 5;
-
+      */
       SG_LOG(SG_GENERAL, SG_INFO, "Route from " << dep->getId() << " to " << arr->getId() << ". Set leg to : " << leg << " " << ac->getTrafficRef()->getCallSign());
       wpt_iterator = waypoints.begin();
+      bool dist = 0;
       create(ac, dep,arr, leg, alt, speed, lat, lon,
-	     firstLeg, radius, fltType, acType, airline);
+	     firstLeg, radius, fltType, acType, airline, dist);
       wpt_iterator = waypoints.begin();
       //cerr << "after create: " << (*wpt_iterator)->name << endl;
       //leg++;
@@ -411,6 +412,7 @@ void FGAIFlightPlan::setLeadDistance(double speed, double bearing,
   
   //lead_distance = turn_radius * sin(leadInAngle * SG_DEGREES_TO_RADIANS); 
   lead_distance = turn_radius * tan((leadInAngle * SG_DEGREES_TO_RADIANS)/2);
+  /*
   if ((lead_distance > (3*turn_radius)) && (current->on_ground == false)) {
       // cerr << "Warning: Lead-in distance is large. Inbound = " << inbound
       //      << ". Outbound = " << outbound << ". Lead in angle = " << leadInAngle  << ". Turn radius = " << turn_radius << endl;
@@ -420,7 +422,7 @@ void FGAIFlightPlan::setLeadDistance(double speed, double bearing,
   if ((leadInAngle > 90) && (current->on_ground == true)) {
       lead_distance = turn_radius * tan((90 * SG_DEGREES_TO_RADIANS)/2);
       return;
-  }
+  }*/
 }
 
 void FGAIFlightPlan::setLeadDistance(double distance_ft){
@@ -492,4 +494,21 @@ int FGAIFlightPlan::getRouteIndex(int i) {
   }
   else
     return 0;
+}
+
+
+double FGAIFlightPlan::checkTrackLength(string wptName) {
+    // skip the first two waypoints: first one is behind, second one is partially done;
+    double trackDistance = 0;
+    wpt_vector_iterator wptvec = waypoints.begin();
+    wptvec++;
+    wptvec++;
+    while ((wptvec != waypoints.end()) && ((*wptvec)->name != wptName)) {
+           trackDistance += (*wptvec)->trackLength;
+           wptvec++;
+    }
+    if (wptvec == waypoints.end()) {
+        trackDistance = 0; // name not found
+    }
+    return trackDistance;
 }
