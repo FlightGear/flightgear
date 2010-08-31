@@ -497,6 +497,19 @@ double FGAISchedule::getSpeed()
   return speed;
 }
 
+void FGAISchedule::setScore   () 
+{ 
+    if (runCount) {
+        score = ((double) hits / (double) runCount);
+    } else {
+        if (homePort == fgGetString("/sim/presets/airport-id")) {
+            score = 0.1;
+        } else {
+            score = 0.0;
+        }
+    }
+}
+
 bool compareSchedules(FGAISchedule*a, FGAISchedule*b)
 { 
   return (*a) < (*b); 
