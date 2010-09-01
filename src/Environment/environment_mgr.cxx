@@ -306,19 +306,9 @@ FGEnvironmentMgr::update (double dt)
   osg::Vec3 windVec(_environment->get_wind_from_north_fps(),
                     -_environment->get_wind_from_east_fps(),
                     0);
-  	  // SG_LOG(SG_GENERAL, SG_ALERT, "-_environment->get_wind_from_north_mps() " <<
-		   //_environment->get_wind_from_north_fps() * SG_FEET_TO_METER
-		   //<< " -_environment->get_wind_from_east_mps() " 
-		   //<< -_environment->get_wind_from_east_fps() * SG_FEET_TO_METER
-		   //);
-
-  // simgear::Particles::setWindVector(windVec * SG_FEET_TO_METER);
-  simgear::Particles::setWindFrom( _environment->get_wind_from_heading_deg(),
-				   _environment->get_wind_speed_kt() );
-  //double wind_true_deg = _environment->get_wind_from_heading_deg();
-  //simgear::Particles::setWindFrom( wind_true_deg,
-  //                                _environment->get_wind_speed_kt() );
-
+  simgear::Particles::setWindVector(windVec * SG_FEET_TO_METER);
+  //simgear::Particles::setWindFrom( _environment->get_wind_from_heading_deg(),
+  //			   _environment->get_wind_speed_kt() );
 }
 
 FGEnvironment

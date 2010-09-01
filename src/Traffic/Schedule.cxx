@@ -115,8 +115,11 @@ FGAISchedule::FGAISchedule(string model,
        i++)
     flights.push_back(new FGScheduledFlight((*(*i))));*/
   AIManagerRef     = 0;
-  //score    = scre;
+  score    =         0;
   firstRun         = true;
+  runCount         = 0;
+  hits             = 0;
+  initialized      = false;
 }
 
 FGAISchedule::FGAISchedule(const FGAISchedule &other)
@@ -136,11 +139,15 @@ FGAISchedule::FGAISchedule(const FGAISchedule &other)
   radius             = other.radius;
   groundOffset       = other.groundOffset;
   flightType         = other.flightType;
-  //score            = other.score;
+  score              = other.score;
   distanceToUser     = other.distanceToUser;
   currentDestination = other.currentDestination;
   firstRun           = other.firstRun;
+  runCount           = other.runCount;
+  hits               = other.hits;
+  initialized        = other.initialized;
 }
+
 
 
 FGAISchedule::~FGAISchedule()
@@ -355,6 +362,14 @@ void FGAISchedule::scheduleFlights()
     }
     
     currentDestination = flight->getArrivalAirport()->getId();
+    if (!initialized) {
+        string departurePort = flight->getDepartureAirport()->getId();
+        if (fgGetString("/sim/presets/airport-id") == departurePort) {
+            hits++;
+        }
+        runCount++;
+        initialized = true;
+    }
   
     time_t arr, dep;
     dep = flight->getDepartureTime();
@@ -481,12 +496,25 @@ double FGAISchedule::getSpeed()
   SG_CLAMP_RANGE(speed, 300.0, 500.0);
   return speed;
 }
-/*
+
+void FGAISchedule::setScore   () 
+{ 
+    if (runCount) {
+        score = ((double) hits / (double) runCount);
+    } else {
+        if (homePort == fgGetString("/sim/presets/airport-id")) {
+            score = 0.1;
+        } else {
+            score = 0.0;
+        }
+    }
+}
+
 bool compareSchedules(FGAISchedule*a, FGAISchedule*b)
 { 
-  //return (*a) < (*b); 
+  return (*a) < (*b); 
 } 
-*/
+
 
 // void FGAISchedule::setClosestDistanceToUser()
 // {

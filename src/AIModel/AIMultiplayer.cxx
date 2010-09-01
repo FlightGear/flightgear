@@ -70,7 +70,7 @@ void FGAIMultiplayer::bind() {
     FGAIBase::bind();
 
     props->tie("refuel/contact", SGRawValuePointer<bool>(&contact));
-    props->setBoolValue("tanker",isTanker);
+    props->tie("tanker", SGRawValuePointer<bool>(&isTanker));
 
     props->tie("controls/invisible",
         SGRawValuePointer<bool>(&invisible));
@@ -460,16 +460,20 @@ void FGAIMultiplayer::update(double dt)
 
 
     if ( isTanker) {
+        //cout << "IS tanker ";
         if ( (range_ft2 < 250.0 * 250.0) &&
             (y_shift > 0.0)    &&
             (elevation > 0.0) ){
                 // refuel_node->setBoolValue(true);
+                 //cout << "in contact"  << endl;
             contact = true;
         } else {
             // refuel_node->setBoolValue(false);
+            //cout << "not in contact"  << endl;
             contact = false;
         }
     } else {
+        //cout << "NOT tanker " << endl;
         contact = false;
     }
 

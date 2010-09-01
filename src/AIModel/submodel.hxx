@@ -20,12 +20,12 @@
 #include <Main/fg_props.hxx>
 
 using std::vector;
-using std::string;
+using std::string; 
 using std::list;
 
 class FGAIBase;
 
-class FGSubmodelMgr : public SGSubsystem
+class FGSubmodelMgr : public SGSubsystem, public SGPropertyChangeListener
 {
 
 public:
@@ -53,19 +53,20 @@ public:
         double             drag_area;
         double             life;
         double             buoyancy;
-		double			   randomness;
+        double             randomness;
         bool               wind;
         bool               first_time;
         double             cd;
         double             weight;
+        double             mass;
         double             contents;
         bool               aero_stabilised;
         int                id;
         bool               no_roll;
         bool               serviceable;
-		bool               random;
+        bool               random;
         bool               collision;
-		bool			   expiry;
+        bool               expiry;
         bool               impact;
         string             impact_report;
         double             fuse_range;
@@ -95,6 +96,7 @@ public:
         double     mass;
         int        id;
         bool       no_roll;
+        int        parent_id;
     }   IC_struct;
 
     FGSubmodelMgr();
@@ -144,7 +146,9 @@ private:
     double _parent_pitch;
     double _parent_roll;
     double _parent_speed;
-	double _x_offset;
+    double _parent_ID;
+
+    double _x_offset;
     double _y_offset;
     double _z_offset;
 
@@ -155,8 +159,8 @@ private:
 
     bool _impact;
     bool _hit;
-	bool _expiry;
-	bool _found_sub;
+    bool _expiry;
+    bool _found_sub;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _user_lat_node;
@@ -178,6 +182,10 @@ private:
     SGPropertyNode_ptr _count_node;
     SGPropertyNode_ptr _trigger_node;
     SGPropertyNode_ptr props;
+    SGPropertyNode_ptr _model_added_node;
+    SGPropertyNode_ptr _path_node;
+    SGPropertyNode_ptr _selected_ac;
+
 
     FGAIManager* ai;
     IC_struct  IC;
@@ -196,16 +204,17 @@ private:
     void setSubData(int id, string& path, bool serviceable);
     void valueChanged (SGPropertyNode *);
     void transform(submodel *);
+    void setParentNode(int parent_id);
 
     bool release(submodel *, double dt);
 
 
     int _count;
-	
-	SGGeod userpos;
-	SGGeod offsetpos;
-	SGVec3d getCartOffsetPos() const;
-	void setOffsetPos();
+
+    SGGeod userpos;
+    SGGeod offsetpos;
+    SGVec3d getCartOffsetPos() const;
+    void setOffsetPos();
 
 };
 

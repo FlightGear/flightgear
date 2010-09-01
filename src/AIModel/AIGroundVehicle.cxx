@@ -316,7 +316,7 @@ bool FGAIGroundVehicle::getPitch() {
             //cout << "new waypoint, calculating pitch " << endl;
             curr_alt = curr->altitude;
             prev_alt = prev->altitude;
-            cout << "prev_alt" <<prev_alt << endl;
+            //cout << "prev_alt" <<prev_alt << endl;
             d_alt = (curr_alt - prev_alt) * SG_METER_TO_FEET;
             //_elevation = prev->altitude;
             distance = SGGeodesy::distanceM(SGGeod::fromDeg(prev->longitude, prev->latitude),
