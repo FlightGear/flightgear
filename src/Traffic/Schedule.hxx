@@ -53,9 +53,12 @@ class FGAISchedule
   double groundOffset;
   double distanceToUser;
   int AIManagerRef;
-  //int score;
+  double score;
+  unsigned int runCount;
+  unsigned int hits;
   bool firstRun;
   double courseToDest;
+  bool initialized;
 
   void scheduleFlights();
   
@@ -107,10 +110,17 @@ class FGAISchedule
   const string& getFlightRules    () { return (*flights.begin())->getFlightRules (); };
   bool getHeavy                   () { return heavy; };
   double getCourse                () { return courseToDest; };
+  unsigned int getRunCount        () { return runCount; };
+  unsigned int getHits            () { return hits; };
+
+  void         setrunCount(unsigned int count) { runCount = count; };
+  void         setHits    (unsigned int count) { hits     = count; };
+  void         setScore   ();
+  double       getScore   () { return score; };
   FGScheduledFlight*findAvailableFlight (const string &currentDestination, const string &req);
   // used to sort in decending order of score: I've probably found a better way to
   // decending order sorting, but still need to test that.
-  //bool operator< (const FGAISchedule &other) const { return (score > other.score); };
+  bool operator< (const FGAISchedule &other) const { return (score > other.score); };
   //void * getAiRef                 () { return AIManagerRef; };
   //FGAISchedule* getAddress        () { return this;};
 

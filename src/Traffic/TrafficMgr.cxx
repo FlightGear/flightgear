@@ -85,10 +85,39 @@ FGTrafficManager::FGTrafficManager()
 
 FGTrafficManager:: ~FGTrafficManager()
 {
-  for (ScheduleVectorIterator sched = scheduledAircraft.begin(); sched != scheduledAircraft.end(); sched++)
-    {
+    // Save the heuristics data
+    bool saveData = false;
+    ofstream cachefile;
+    if (fgGetBool("/sim/traffic-manager/heuristics")) {
+        SGPath cacheData(fgGetString("/sim/fg-home"));
+        cacheData.append("ai");
+        string airport = fgGetString("/sim/presets/airport-id");
+        
+        if ((airport) != "")  {
+            char buffer[128];
+            ::snprintf(buffer, 128, "%c/%c/%c/",
+                airport[0], airport[1], airport[2]);
+            cacheData.append(buffer);
+            if (!cacheData.exists()) {
+                cacheData.create_dir(0777);
+            }
+            cacheData.append(airport + "-cache.txt");
+            //cerr << "Saving AI traffic heuristics" << endl;
+            saveData = true;
+            cachefile.open(cacheData.str().c_str());
+        }
+   }
+   for (ScheduleVectorIterator sched = scheduledAircraft.begin(); sched != scheduledAircraft.end(); sched++) {
+      if (saveData) {
+          cachefile << (*sched)->getRegistration() << " " 
+                    << (*sched)-> getRunCount() << " " 
+                    << (*sched)->getHits() << endl;
+      }
       delete (*sched);
     }
+  if (saveData) {
+      cachefile.close();
+  }
   scheduledAircraft.clear();
   flights.clear();
 }
@@ -99,9 +128,11 @@ void FGTrafficManager::init()
   ulDir* d, *d2;
   ulDirEnt* dent, *dent2;
   SGPath aircraftDir = globals->get_fg_root();
-
   SGPath path = aircraftDir;
+  heuristicsVector heuristics;
+  HeuristicMap     heurMap;
   
+    
   aircraftDir.append("AI/Traffic");
   if ((d = ulOpenDir(aircraftDir.c_str())) != NULL)
     {
@@ -130,7 +161,53 @@ void FGTrafficManager::init()
       }
       ulCloseDir(d);
     }
-    
+    if (fgGetBool("/sim/traffic-manager/heuristics")) {
+        //cerr << "Processing Heuristics" << endl;
+        // Load the heuristics data
+        SGPath cacheData(fgGetString("/sim/fg-home"));
+        cacheData.append("ai");
+        string airport = fgGetString("/sim/presets/airport-id");
+        if ((airport) != "") {
+            char buffer[128];
+            ::snprintf(buffer, 128, "%c/%c/%c/",
+                 airport[0], airport[1], airport[2]);
+            cacheData.append(buffer);
+            cacheData.append(airport + "-cache.txt");
+            if (cacheData.exists()) {
+                ifstream data(cacheData.c_str());
+                while (1) {
+                    Heuristic *h = new Heuristic;
+                    data >> h->registration >> h->runCount >> h->hits;
+                    if (data.eof())
+                        break;
+                    heurMap[h->registration] = h;
+                    heuristics.push_back(h);
+                }
+            }
+        }
+        for (currAircraft = scheduledAircraft.begin(); 
+            currAircraft != scheduledAircraft.end();
+            currAircraft++) {
+            string registration = (*currAircraft)->getRegistration();
+            HeuristicMapIterator itr = heurMap.find(registration);
+            //cerr << "Processing heuristics for" << (*currAircraft)->getRegistration() << endl;
+            if (itr == heurMap.end()) {
+                //cerr << "No heuristics found for " << registration << endl;
+            } else {
+                (*currAircraft)->setrunCount(itr->second->runCount);
+                (*currAircraft)->setHits    (itr->second->hits);
+                (*currAircraft)->setScore();
+                //cerr <<"Runcount " << itr->second->runCount << ".Hits " << itr->second->hits << endl;
+            }
+        }
+        //cerr << "Done" << endl;
+        for (heuristicsVectorIterator hvi = heuristics.begin();
+                                      hvi != heuristics.end();
+                                      hvi++) {
+            delete (*hvi);
+        }
+        sort (scheduledAircraft.begin(), scheduledAircraft.end(), compareSchedules);
+    }
     currAircraft = scheduledAircraft.begin();
     currAircraftClosest = scheduledAircraft.begin();
 }
@@ -153,6 +230,7 @@ void FGTrafficManager::update(double /*dt*/)
     {
       currAircraft = scheduledAircraft.begin();
     }
+  //cerr << "Processing << " << (*currAircraft)->getRegistration() << " with score " << (*currAircraft)->getScore() << endl;
   if (!((*currAircraft)->update(now, userCart)))
     {
       // NOTE: With traffic manager II, this statement below is no longer true

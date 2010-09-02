@@ -57,6 +57,22 @@
 typedef vector<int> IdList;
 typedef vector<int>::iterator IdListIterator;
 
+class Heuristic
+{
+public:
+   string registration;
+   unsigned int runCount;
+   unsigned int hits;
+};
+
+typedef vector<Heuristic*> heuristicsVector;
+typedef vector<Heuristic*>::iterator heuristicsVectorIterator;
+
+typedef std::map < std::string, Heuristic *> HeuristicMap;
+typedef HeuristicMap::iterator               HeuristicMapIterator;
+
+
+
 
 class FGTrafficManager : public SGSubsystem, public XMLVisitor
 {
