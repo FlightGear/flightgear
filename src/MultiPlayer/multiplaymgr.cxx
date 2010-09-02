@@ -159,6 +159,7 @@ FGMultiplayMgr::sIdPropertyList[] = {
   {1101, "sim/model/livery/file", simgear::props::STRING},
 
   {1200, "environment/wildfire/data", simgear::props::STRING},
+  {1201, "environment/contrail", simgear::props::INT},
 
   {1300, "tanker", simgear::props::INT},
 
