@@ -75,6 +75,11 @@ void FGAIWingman::bind() {
         &FGAIBase::_getLongitude,
         &FGAIBase::_setLongitude));
 
+    props->tie("controls/formate-to-ac",
+        SGRawValueMethods<FGAIBallistic,bool>
+        (*this, &FGAIBallistic::getFormate, &FGAIBallistic::setFormate));
+
+
     props->tie("orientation/pitch-deg",   SGRawValuePointer<double>(&pitch));
     props->tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
     props->tie("orientation/true-heading-deg", SGRawValuePointer<double>(&hdg));
@@ -121,6 +126,8 @@ void FGAIWingman::unbind() {
     props->untie("orientation/pitch-deg");
     props->untie("orientation/roll-deg");
     props->untie("orientation/true-heading-deg");
+
+    props->untie("controls/formate-to-ac");
 
     props->untie("submodels/serviceable");
 

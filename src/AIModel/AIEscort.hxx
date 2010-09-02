@@ -51,7 +51,7 @@ private:
     virtual void update (double dt);
 
     void setParentName(const std::string& p);
-    void setParent();
+    void setParentNode();
     void setStnRange(double r);
     void setStnBrg(double y);
     void setStationSpeed();
@@ -61,6 +61,7 @@ private:
     void setStnHtFt(double h);
     void setStnPatrol(bool p);
     void setStnDegTrue(bool t);
+    void setParent();
 
     void setMaxSpeed(double m);
     void setUpdateInterval(double i);

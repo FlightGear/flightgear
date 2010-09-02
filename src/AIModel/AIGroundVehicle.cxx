@@ -61,9 +61,9 @@ void FGAIGroundVehicle::readFromScenario(SGPropertyNode* scFileNode) {
 
     FGAIShip::readFromScenario(scFileNode);
 
-    setNoRoll(scFileNode->getBoolValue("no-roll", true));
     setName(scFileNode->getStringValue("name", "groundvehicle"));
-    setSMPath(scFileNode->getStringValue("submodel-path", ""));
+    setParentName(scFileNode->getStringValue("parent", ""));
+    setNoRoll(scFileNode->getBoolValue("no-roll", true));
     setContactX1offset(scFileNode->getDoubleValue("contact-x1-offset", 0.0));
     setContactX2offset(scFileNode->getDoubleValue("contact-x2-offset", 0.0));
     setXOffset(scFileNode->getDoubleValue("hitch-x-offset", 35.0));
@@ -74,7 +74,6 @@ void FGAIGroundVehicle::readFromScenario(SGPropertyNode* scFileNode) {
     setYawoffset(scFileNode->getDoubleValue("yaw-offset", 0.0));
     setPitchCoeff(scFileNode->getDoubleValue("pitch-coefficient", 0.1));
     setElevCoeff(scFileNode->getDoubleValue("elevation-coefficient", 0.25));
-    setParentName(scFileNode->getStringValue("parent", ""));
     setTowAngleGain(scFileNode->getDoubleValue("tow-angle-gain", 1.0));
     setTowAngleLimit(scFileNode->getDoubleValue("tow-angle-limit-deg", 2.0));
     setInitialTunnel(scFileNode->getBoolValue("tunnel", false));
@@ -125,7 +124,7 @@ void FGAIGroundVehicle::unbind() {
     FGAIShip::unbind();
 
     props->untie("controls/constants/elevation-coeff");
-	props->untie("controls/constants/pitch-coeff");
+    props->untie("controls/constants/pitch-coeff");
     props->untie("position/ht-AGL-ft");
     props->untie("hitch/rel-bearing-deg");
     props->untie("hitch/tow-angle-deg");
@@ -149,6 +148,9 @@ bool FGAIGroundVehicle::init(bool search_in_AI_path) {
     invisible = false;
     _limit = 200;
     no_roll = true;
+
+    props->setStringValue("controls/parent-name", _parent.c_str());
+    setParentNode();
 
     return true;
 }
@@ -342,12 +344,15 @@ bool FGAIGroundVehicle::getPitch() {
 
     }
 
-    getGroundElev(pos);
+    //getGroundElev(pos);
 
     return true;
 }
 
-void FGAIGroundVehicle::setParent() {
+void FGAIGroundVehicle::setParentNode() {
+
+    if(_parent == "")
+        return;
 
     const SGPropertyNode_ptr ai = fgGetNode("/ai/models", true);
 
@@ -377,46 +382,50 @@ void FGAIGroundVehicle::setParent() {
 
     if (_selected_ac != 0){
         const string name = _selected_ac->getStringValue("name");
-        double lat = _selected_ac->getDoubleValue("position/latitude-deg");
-        double lon = _selected_ac->getDoubleValue("position/longitude-deg");
-        double elevation = _selected_ac->getDoubleValue("position/altitude-ft");
-        double hitch_x_offset_m = _selected_ac->getDoubleValue("hitch/x-offset-ft")
-            * SG_FEET_TO_METER;
-        double hitch_y_offset_m = _selected_ac->getDoubleValue("hitch/y-offset-ft")
-            * SG_FEET_TO_METER;
-        double hitch_z_offset_m = _selected_ac->getDoubleValue("hitch/z-offset-ft")
-            * SG_FEET_TO_METER;
-        
-        _selectedpos.setLatitudeDeg(lat);
-        _selectedpos.setLongitudeDeg(lon);
-        _selectedpos.setElevationFt(elevation);
-
         _parent_x_offset = _selected_ac->getDoubleValue("hitch/x-offset-ft");
         _parent_y_offset = _selected_ac->getDoubleValue("hitch/y-offset-ft");
         _parent_z_offset = _selected_ac->getDoubleValue("hitch/z-offset-ft");
-
-        _parent_speed    = _selected_ac->getDoubleValue("velocities/true-airspeed-kt");
-
-        SGVec3d rear_hitch(-hitch_x_offset_m, hitch_y_offset_m, 0);
-        SGVec3d RearHitch = getCartHitchPosAt(rear_hitch);
-
-        SGGeod rearpos = SGGeod::fromCart(RearHitch);
-
-        double user_lat = rearpos.getLatitudeDeg();
-        double user_lon = rearpos.getLongitudeDeg();
-
-        double range, bearing;
-
-        calcRangeBearing(pos.getLatitudeDeg(), pos.getLongitudeDeg(),
-            user_lat, user_lon, range, bearing);
-        _range_ft = range * 6076.11549;
-        _relbrg = calcRelBearingDeg(bearing, hdg);
+        _hitch_x_offset_m = _selected_ac->getDoubleValue("hitch/x-offset-ft")
+            * SG_FEET_TO_METER;
+        _hitch_y_offset_m = _selected_ac->getDoubleValue("hitch/y-offset-ft")
+            * SG_FEET_TO_METER;
+        _hitch_z_offset_m = _selected_ac->getDoubleValue("hitch/z-offset-ft")
+            * SG_FEET_TO_METER;
+        setParent();
     } else {
         SG_LOG(SG_GENERAL, SG_ALERT, "AIGroundVeh1cle: " << _name
                 << " parent not found: dying ");
         setDie(true);
     }
 
+}
+
+void FGAIGroundVehicle::setParent(){
+
+    double lat = _selected_ac->getDoubleValue("position/latitude-deg");
+    double lon = _selected_ac->getDoubleValue("position/longitude-deg");
+    double elevation = _selected_ac->getDoubleValue("position/altitude-ft");
+
+    _selectedpos.setLatitudeDeg(lat);
+    _selectedpos.setLongitudeDeg(lon);
+    _selectedpos.setElevationFt(elevation);
+
+    _parent_speed = _selected_ac->getDoubleValue("velocities/true-airspeed-kt");
+
+    SGVec3d rear_hitch(-_hitch_x_offset_m, _hitch_y_offset_m, 0);
+    SGVec3d RearHitch = getCartHitchPosAt(rear_hitch);
+
+    SGGeod rearpos = SGGeod::fromCart(RearHitch);
+
+    double user_lat = rearpos.getLatitudeDeg();
+    double user_lon = rearpos.getLongitudeDeg();
+
+    double range, bearing;
+
+    calcRangeBearing(pos.getLatitudeDeg(), pos.getLongitudeDeg(),
+        user_lat, user_lon, range, bearing);
+    _range_ft = range * 6076.11549;
+    _relbrg = calcRelBearingDeg(bearing, hdg);
 }
 
 void FGAIGroundVehicle::calcRangeBearing(double lat, double lon, double lat2, double lon2,

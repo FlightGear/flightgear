@@ -479,6 +479,10 @@ bool FGAIBallistic::getSlaved() const {
     return _slave_to_ac;
 }
 
+bool FGAIBallistic::getFormate() const {
+    return _formate_to_ac;
+}
+
 double FGAIBallistic::getMass() const {
     return _mass;
 }
