@@ -364,10 +364,12 @@ void FGAISchedule::scheduleFlights()
     currentDestination = flight->getArrivalAirport()->getId();
     if (!initialized) {
         string departurePort = flight->getDepartureAirport()->getId();
+       //cerr << "Scheduled " << registration <<  " " << score << " for Flight " 
+       //     << flight-> getCallSign() << " from " << departurePort << " to " << currentDestination << endl;
         if (fgGetString("/sim/presets/airport-id") == departurePort) {
             hits++;
         }
-        runCount++;
+        //runCount++;
         initialized = true;
     }
   
@@ -508,6 +510,7 @@ void FGAISchedule::setScore   ()
             score = 0.0;
         }
     }
+    runCount++;
 }
 
 bool compareSchedules(FGAISchedule*a, FGAISchedule*b)
