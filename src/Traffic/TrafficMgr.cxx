@@ -200,6 +200,11 @@ void FGTrafficManager::init()
                     data >> h.registration >> h.runCount >> h.hits;
                     if (data.eof())
                         break;
+                    HeuristicMapIterator itr = heurMap.find(h.registration);
+                    if (itr != heurMap.end()) {
+                         SG_LOG(SG_GENERAL, SG_WARN,"Traffic Manager Warning: found duplicate tailnumber " << 
+                         h.registration << " for AI aircraft");
+                    }
                     heurMap[h.registration] = h;
                     heuristics.push_back(h);
                 }
