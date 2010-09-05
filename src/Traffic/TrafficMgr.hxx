@@ -65,11 +65,11 @@ public:
    unsigned int hits;
 };
 
-typedef vector<Heuristic*> heuristicsVector;
-typedef vector<Heuristic*>::iterator heuristicsVectorIterator;
+typedef vector<Heuristic> heuristicsVector;
+typedef vector<Heuristic>::iterator heuristicsVectorIterator;
 
-typedef std::map < std::string, Heuristic *> HeuristicMap;
-typedef HeuristicMap::iterator               HeuristicMapIterator;
+typedef std::map < std::string, Heuristic> HeuristicMap;
+typedef HeuristicMap::iterator             HeuristicMapIterator;
 
 
 
@@ -93,8 +93,8 @@ private:
     
   FGScheduledFlightMap flights;
 
-  //void readTimeTableFromFile(SGPath infilename);
-  //void Tokenize(const string& str, vector<string>& tokens, const string& delimiters = " ");
+  void readTimeTableFromFile(SGPath infilename);
+  void Tokenize(const string& str, vector<string>& tokens, const string& delimiters = " ");
 
 public:
   FGTrafficManager();
