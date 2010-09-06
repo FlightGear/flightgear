@@ -94,7 +94,7 @@ FGFX::init()
   
             try {
                 sound->init(globals->get_props(), node->getChild(i), this,
-                            _avionics, globals->get_fg_root());
+                            _avionics, path.dir());
   
                 _sound.push_back(sound);
             } catch ( sg_exception &e ) {

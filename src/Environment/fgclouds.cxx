@@ -66,7 +66,7 @@ void FGClouds::set_update_event(int count) {
 
 void FGClouds::init(void) {
 	if( snd_lightning == NULL ) {
-		snd_lightning = new SGSoundSample(globals->get_fg_root().c_str(), "Sounds/thunder.wav");
+		snd_lightning = new SGSoundSample("Sounds/thunder.wav", SGPath());
 		snd_lightning->set_max_dist(7000.0f);
 		snd_lightning->set_reference_dist(3000.0f);
 		SGSoundMgr *smgr = globals->get_soundmgr();
