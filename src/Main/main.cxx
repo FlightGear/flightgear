@@ -391,7 +391,6 @@ static void fgIdleFunction ( void ) {
         globals->set_matlib( new SGMaterialLib );
         simgear::SGModelLib::init(globals->get_fg_root());
         simgear::SGModelLib::setPropRoot(globals->get_props());
-        simgear::SGModelLib::setResolveFunc(resolve_path);
         simgear::SGModelLib::setPanelFunc(load_panel);
         
         ////////////////////////////////////////////////////////////////////

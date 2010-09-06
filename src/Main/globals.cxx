@@ -34,6 +34,7 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/misc/ResourceManager.hxx>
 
 #include <Aircraft/controls.hxx>
 #include <Airports/runways.hxx>
@@ -56,7 +57,36 @@
 #include "fg_props.hxx"
 #include "fg_io.hxx"
 
-
+class AircraftResourceProvider : public simgear::ResourceProvider
+{
+public:
+  AircraftResourceProvider() :
+    simgear::ResourceProvider(simgear::ResourceManager::PRIORITY_HIGH)
+  {
+  }
+  
+  virtual SGPath resolve(const std::string& aResource, SGPath&) const
+  {
+    string_list pieces(sgPathBranchSplit(aResource));
+    if ((pieces.size() < 3) || (pieces.front() != "Aircraft")) {
+      return SGPath(); // not an Aircraft path
+    }
+    
+    const char* aircraftDir = fgGetString("/sim/aircraft-dir");
+    string_list aircraftDirPieces(sgPathBranchSplit(aircraftDir));
+    if (aircraftDirPieces.empty() || (aircraftDirPieces.back() != pieces[1])) {
+      return SGPath(); // current aircraft-dir does not match resource aircraft
+    }
+    
+    SGPath r(aircraftDir);
+    for (unsigned int i=2; i<pieces.size(); ++i) {
+      r.append(pieces[i]);
+    }
+    
+    return r.exists() ? r : SGPath();
+  }
+};
+
 ////////////////////////////////////////////////////////////////////////
 // Implementation of FGGlobals.
 ////////////////////////////////////////////////////////////////////////
@@ -186,6 +216,9 @@ void FGGlobals::set_fg_root (const string &root) {
     n = n->getChild("fg-root", 0, true);
     n->setStringValue(fg_root.c_str());
     n->setAttribute(SGPropertyNode::WRITE, false);
+    
+    simgear::ResourceManager::instance()->addBasePath(fg_root, 
+      simgear::ResourceManager::PRIORITY_DEFAULT);
 }
 
 void FGGlobals::set_fg_scenery (const string &scenery)
@@ -243,6 +276,9 @@ void FGGlobals::append_aircraft_path(const std::string& path)
   unsigned int index = fg_aircraft_dirs.size();  
   fg_aircraft_dirs.push_back(path);
   
+  simgear::ResourceManager::instance()->addBasePath(path, 
+    simgear::ResourceManager::PRIORITY_NORMAL);
+  
 // make aircraft dirs available to Nasal
   SGPropertyNode* sim = fgGetNode("/sim", true);
   sim->removeChild("fg-aircraft", index, false);
@@ -261,60 +297,12 @@ void FGGlobals::append_aircraft_paths(const std::string& path)
 
 SGPath FGGlobals::resolve_aircraft_path(const std::string& branch) const
 {
-  string_list pieces(sgPathBranchSplit(branch));
-  if ((pieces.size() < 3) || (pieces.front() != "Aircraft")) {
-    SG_LOG(SG_AIRCRAFT, SG_ALERT, "resolve_aircraft_path: bad path:" <<  branch);
-    return SGPath();
-  }
-  
-// check current aircraft dir first (takes precedence, allows Generics to be
-// over-riden
-  const char* aircraftDir = fgGetString("/sim/aircraft-dir");
-  string_list aircraftDirPieces(sgPathBranchSplit(aircraftDir));
-  if (!aircraftDirPieces.empty() && (aircraftDirPieces.back() == pieces[1])) {
-    SGPath r(aircraftDir);
-    
-    for (unsigned int i=2; i<pieces.size(); ++i) {
-      r.append(pieces[i]);
-    }
-        
-    if (r.exists()) {
-      std::cout << "using aircraft-dir for:" << r.str() << std::endl;
-      return r;
-    }
-  } // of using aircraft-dir case
-  
-// try each fg_aircraft_dirs in turn
-  for (unsigned int p=0; p<fg_aircraft_dirs.size(); ++p) {
-    SGPath r(fg_aircraft_dirs[p]);
-    r.append(branch);
-    if (r.exists()) {
-      std::cout << "using aircraft directory for:" << r.str() << std::endl;
-      return r;
-    }
-  } // of fg_aircraft_dirs iteration
-
-// finally, try fg_root
-  SGPath r(fg_root);
-  r.append(branch);
-  if (r.exists()) {
-    std::cout << "using FG_ROOT for:" << r.str() << std::endl;
-    return r;
-  }
-
-  SG_LOG(SG_AIRCRAFT, SG_ALERT, "resolve_aircraft_path: failed to resolve:" << branch);
-  return SGPath();
+  return simgear::ResourceManager::instance()->findPath(branch);
 }
 
 SGPath FGGlobals::resolve_maybe_aircraft_path(const std::string& branch) const
 {
-  if (branch.find("Aircraft/") == 0) {
-    return resolve_aircraft_path(branch);
-  } else {
-    SGPath r(fg_root);
-    r.append(branch);
-    return r;
-  }
+  return simgear::ResourceManager::instance()->findPath(branch);
 }
 
 FGRenderer *
