@@ -135,7 +135,7 @@ FGGlobals::FGGlobals() :
     airwaynet( NULL ),
     multiplayer_mgr( NULL )
 {
-  
+  simgear::ResourceManager::instance()->addProvider(new AircraftResourceProvider());
 }
 
 
