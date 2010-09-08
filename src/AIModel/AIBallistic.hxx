@@ -92,7 +92,7 @@ public:
     void setBnk(double r, double dt, double c);
     void setHt(double h, double dt, double c);
     void setFormate(bool f);
-    void setParentNode(const SGPropertyNode_ptr);
+    void setParentNodes(const SGPropertyNode_ptr);
     void setParentPos();
 
     double _getTime() const;

@@ -121,6 +121,7 @@ void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
     setSlaved(scFileNode->getBoolValue("slaved", false));
     setSlavedLoad(scFileNode->getBoolValue("slaved-load", false));
     setContentsPath(scFileNode->getStringValue("contents"));
+    setParentName(scFileNode->getStringValue("parent"));
 }
 
 bool FGAIBallistic::init(bool search_in_AI_path) {
@@ -151,6 +152,11 @@ bool FGAIBallistic::init(bool search_in_AI_path) {
         props->setStringValue("contents/path", _contents_path.c_str());
     }
 
+    if(_parent != ""){
+        setParentNode();
+    }
+
+    setParentNodes(_selected_ac);
     //props->setStringValue("vector/path", _vector_path.c_str());
 
     // start with high value so that animations don't trigger yet
@@ -443,7 +449,8 @@ void FGAIBallistic::setContentsNode(SGPropertyNode_ptr node) {
     }
 }
 
-void FGAIBallistic::setParentNode(SGPropertyNode_ptr node) {
+void FGAIBallistic::setParentNodes(SGPropertyNode_ptr node) {
+
     if (node != 0) {
         _pnode = node;
         _p_pos_node = _pnode->getChild("position", 0, true);
@@ -458,11 +465,12 @@ void FGAIBallistic::setParentNode(SGPropertyNode_ptr node) {
 
         _p_vel_node = _pnode->getChild("velocities", 0, true);
         _p_spd_node = _p_vel_node->getChild("true-airspeed-kt", 0, true);
-
     }
+
 }
 
 void FGAIBallistic::setParentPos() {
+
     if (_pnode != 0) {
         double lat = _p_lat_node->getDoubleValue();
         double lon = _p_lon_node->getDoubleValue();
@@ -471,8 +479,8 @@ void FGAIBallistic::setParentPos() {
         _parentpos.setLongitudeDeg(lon);
         _parentpos.setLatitudeDeg(lat);
         _parentpos.setElevationFt(alt);
-
     }
+
 }
 
 bool FGAIBallistic::getSlaved() const {
@@ -1140,12 +1148,24 @@ void FGAIBallistic::setTgtOffsets(double dt, double coeff){
 
 void FGAIBallistic::formateToAC(double dt){
 
+    double hdg, pch, rll = 0;
+
     setTgtOffsets(dt, 25);
-    setOffsetPos(userpos,
-            manager->get_user_heading(),
-            manager->get_user_pitch(), 
-            manager->get_user_roll()
-            );
+
+    if (_pnode != 0) {
+        setParentPos();
+        hdg = _p_hdg_node->getDoubleValue();
+        pch = _p_pch_node->getDoubleValue();
+        rll = _p_rll_node->getDoubleValue();
+        setOffsetPos(_parentpos, hdg, pch, rll);
+        setSpeed(_p_spd_node->getDoubleValue());
+    }else {
+        hdg = manager->get_user_heading();
+        pch = manager->get_user_pitch();
+        rll = manager->get_user_roll();
+        setOffsetPos(userpos, hdg, pch, rll);
+        setSpeed(manager->get_user_speed());
+    }
 
     // elapsed time has a random initialisation so that each 
     // wingman moves differently
