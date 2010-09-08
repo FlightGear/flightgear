@@ -68,7 +68,8 @@ FGAIBase::FGAIBase(object_type ot) :
 
     _refID( _newAIModelID() ),
     _otype(ot),
-    _initialized(false)
+    _initialized(false),
+    _parent("")
 {
     tgt_heading = hdg = tgt_altitude_ft = tgt_speed = 0.0;
     tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
@@ -226,17 +227,22 @@ bool FGAIBase::init(bool search_in_AI_path) {
 
 void FGAIBase::initModel(osg::Node *node)
 {
-    if (model.valid()) {
+    if (model.valid()) { 
+
         if( _path != ""){
             props->setStringValue("submodels/path", _path.c_str());
             SG_LOG(SG_INPUT, SG_DEBUG, "AIBase: submodels/path " << _path);
         }
+
+        if( _parent!= ""){
+            props->setStringValue("parent-name", _parent.c_str());
+        }
+
         fgSetString("/ai/models/model-added", props->getPath().c_str());
     } else if (!model_path.empty()) {
         SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);
     }
 
-    //props->setStringValue("submodels/path", _path.c_str()); 
     setDie(false);
 }
 
@@ -527,6 +533,46 @@ void FGAIBase::_setSubID( int s ) {
     _subID = s;
 }
 
+void FGAIBase::setParentNode() {
+//    cout << "AIBase: setParentNode " << _parent << endl;
+
+    const SGPropertyNode_ptr ai = fgGetNode("/ai/models", true);
+
+    for (int i = ai->nChildren() - 1; i >= -1; i--) {
+        SGPropertyNode_ptr model;
+
+        if (i < 0) { // last iteration: selected model
+            model = _selected_ac;
+        } else {
+            model = ai->getChild(i);
+            string path = ai->getPath();
+            const string name = model->getStringValue("name");
+
+            if (!model->nChildren()){
+                continue;
+            }
+            if (name == _parent) {
+                _selected_ac = model;  // save selected model for last iteration
+                break;
+            }
+
+        }
+        if (!model)
+            continue;
+
+    }// end for loop
+
+    if (_selected_ac != 0){
+        const string name = _selected_ac->getStringValue("name");
+        //setParent();
+
+    } else {
+        SG_LOG(SG_GENERAL, SG_ALERT, "AIEscort: " << _name
+            << " parent not found: dying ");
+        setDie(true);
+    }
+
+}
 double FGAIBase::_getLongitude() const {
     return pos.getLongitudeDeg();
 }

@@ -85,6 +85,8 @@ public:
     void setImpactLat( double lat );
     void setImpactLon( double lon );
     void setImpactElev( double e );
+    void setParentName(const string& p);
+    void setParentNode();
 
     int getID() const;
     int _getSubID() const;
@@ -113,12 +115,14 @@ public:
     string _callsign;
     string _submodel;
     string _name;
+    string _parent;
 
     SGGeod userpos;
 
 
 protected:
 
+    SGPropertyNode_ptr _selected_ac;
     SGPropertyNode_ptr props;
     SGPropertyNode_ptr trigger_node;
     SGPropertyNode_ptr model_removed; // where to report model removal
@@ -355,6 +359,10 @@ inline void FGAIBase::setRolloffset(double r) {
 
 inline void FGAIBase::setYawoffset(double y) {
     _yaw_offset = y;
+}
+
+inline void FGAIBase::setParentName(const string& p) {
+    _parent = p;
 }
 
 inline void FGAIBase::setDie( bool die ) { delete_me = die; }
