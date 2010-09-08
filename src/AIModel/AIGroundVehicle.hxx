@@ -65,6 +65,7 @@ private:
     void setParentName(const string& p);
     void setTrainSpeed(double s, double dt, double coeff);
     void setParent();
+    void setParentNode();
     void AdvanceFP();
     void setTowSpeed();
     void RunGroundVehicle(double dt);
@@ -93,6 +94,7 @@ private:
     double _range_ft;
     double _relbrg;
     double _parent_speed, _parent_x_offset, _parent_y_offset, _parent_z_offset;
+    double _hitch_x_offset_m, _hitch_y_offset_m, _hitch_z_offset_m;
     double _dt_count, _next_run, _break_count;
 
     const SGMaterial* _material;

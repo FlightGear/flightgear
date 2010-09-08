@@ -99,6 +99,7 @@ void FGAIShip::readFromScenario(SGPropertyNode* scFileNode) {
     setRudderConstant(scFileNode->getDoubleValue("rudder-constant", 0.5));
     setFixedTurnRadius(scFileNode->getDoubleValue("fixed-turn-radius-ft", 500));
     setSpeedConstant(scFileNode->getDoubleValue("speed-constant", 0.5));
+    setSMPath(scFileNode->getStringValue("submodel-path", ""));
 
     if (!flightplan.empty()) {
         SG_LOG(SG_GENERAL, SG_ALERT, "getting flightplan: " << _name );
@@ -250,12 +251,12 @@ void FGAIShip::update(double dt) {
     // Update the velocity information stored in those nodes.
     // Transform that one to the horizontal local coordinate system.
     SGQuatd ec2hl = SGQuatd::fromLonLat(pos);
-    // The orientation of the carrier wrt the horizontal local frame
+    // The orientation of the ship wrt the horizontal local frame
     SGQuatd hl2body = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
     // and postrotate the orientation of the AIModel wrt the horizontal
     // local frame
     SGQuatd ec2body = ec2hl*hl2body;
-    // The cartesian position of the carrier in the wgs84 world
+    // The cartesian position of the ship in the wgs84 world
     SGVec3d cartPos = SGVec3d::fromGeod(pos);
 
     // The simulation time this transform is meant for
@@ -680,7 +681,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
         if (_next_name == "TUNNEL"){
             _tunnel = !_tunnel;
 
-            SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: " << _name << " " << sp_turn_radius_nm );
+            SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: " << _name << " " << sp_turn_radius_nm );
 
             fp->IncrementWaypoint(false);
             next = fp->getNextWaypoint();
@@ -697,7 +698,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
         }else if(_next_name == "END" || fp->getNextWaypoint() == 0) {
 
             if (_repeat) {
-                SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: "<< _name << " Flightplan repeating ");
+                SG_LOG(SG_GENERAL, SG_INFO, "AIShip: "<< _name << " Flightplan repeating ");
                 fp->restart();
                 prev = curr;
                 curr = fp->getCurrentWaypoint();
@@ -711,7 +712,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
                 _lead_angle = 0;
                 AccelTo(prev->speed);
             } else if (_restart){
-                SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: " << _name << " Flightplan restarting ");
+                SG_LOG(SG_GENERAL, SG_INFO, "AIShip: " << _name << " Flightplan restarting ");
                 _missed_count = 0;
                 initFlightPlan();
             } else {
@@ -755,7 +756,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
             _until_time = next->time;
             setUntilTime(next->time);
             if (until_time_sec > time_sec) {
-                SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: " << _name << " "
+                SG_LOG(SG_GENERAL, SG_INFO, "AIShip: " << _name << " "
                     << curr->name << " waiting until: "
                     << _until_time << " " << until_time_sec << " now " << time_sec );
                 setSpeed(0);
@@ -763,7 +764,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
                 _waiting = true;
                 return;
             } else {
-                SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: "
+                SG_LOG(SG_GENERAL, SG_INFO, "AIShip: "
                     << _name << " wait until done: getting new waypoints ");
                 setUntilTime("");
                 fp->IncrementWaypoint(false);
