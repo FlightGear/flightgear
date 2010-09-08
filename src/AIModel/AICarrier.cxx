@@ -58,6 +58,8 @@ void FGAICarrier::readFromScenario(SGPropertyNode* scFileNode) {
   setMinLong(scFileNode->getDoubleValue("min-long", 0));
   setMPControl(scFileNode->getBoolValue("mp-control", false));
   setAIControl(scFileNode->getBoolValue("ai-control", false));
+  setCallSign(scFileNode->getStringValue("callsign", ""));
+
 
   SGPropertyNode* flols = scFileNode->getChild("flols-pos");
   if (flols) {
