@@ -78,9 +78,6 @@ void FGSubmodelMgr::init()
 
     load();
 
-    //_model_added_node = fgGetNode("ai/models/model-added", true);
-    //_model_added_node->addChangeListener(this, false);
-
 }
 
 void FGSubmodelMgr::postinit() {
@@ -300,7 +297,7 @@ bool FGSubmodelMgr::release(submodel *sm, double dt)
     ballist->setZoffset(sm->z_offset);
     ballist->setPitchoffset(sm->pitch_offset);
     ballist->setYawoffset(sm->yaw_offset);
-    ballist->setParentNode(_selected_ac);
+    ballist->setParentNodes(_selected_ac);
     ballist->setContentsNode(sm->contents_node);
     ballist->setWeight(sm->weight);
     ai->attach(ballist);
@@ -821,47 +818,34 @@ void FGSubmodelMgr::setOffsetPos(){
 
 void FGSubmodelMgr::valueChanged(SGPropertyNode *prop)
 {
-//    cout << "LISTENER: " << endl;
+    return; // this isn't working atm
 
     const char* _model_added = _model_added_node->getStringValue();
 
     basic_string <char>::size_type indexCh2b;
 
     string str2 = _model_added;
-    const char *cstr2b = "ballistic";
+    const char *cstr2b = "multiplayer";
     indexCh2b = str2.find( cstr2b, 0 );
 
-//    cout << "model added - " << str2 <<" now do something "<< endl;
-
     if (indexCh2b != string::npos ){        // we will ignore Ballistic Objects - there are potentially too many 
-        return;
-    } else {
-       
-        SGPropertyNode *a_node = fgGetNode(_model_added, true );
-        SGPropertyNode *sub_node = a_node->getChild("submodels", 0, true);
+
+        //cout << "Submodels: model added - " << str2 <<" read path "<< endl;
+        //return;
+        SGPropertyNode *a_node = fgGetNode(_model_added, true);
+        SGPropertyNode *sub_node = a_node->getChild("sim", 0, true);
         SGPropertyNode_ptr path_node = sub_node->getChild("path", 0, true);
+        SGPropertyNode_ptr callsign_node = a_node->getChild("callsign", 0, true);
 
-        string path = path_node->getStringValue();
+        string callsign = callsign_node->getStringValue();
 
-        if (path.empty()){
-            // nothing to do - return
-            //cout << "subpath empty - return"  << endl << endl;
+        //cout << "Submodels: model added - " << callsign <<" read callsign "<< endl;
             return;
+
         } else {
-            //cout << "subpath found - loading"  << endl << endl;
-            SGPropertyNode_ptr ident_node = a_node->getChild("id", 0, true);
-            int id = ident_node->getIntValue();
-
-            setData(id, path, true);
-
-            _found_sub = true;
-
-            while (_found_sub)
-                loadSubmodels();
-
+            cout << "model added - " << str2 <<" returning "<< endl;
+        return;
         }
-
-    }
 
 }
 
