@@ -44,7 +44,6 @@ using std::string;
 FGAIEscort::FGAIEscort() :
 FGAIShip(otEscort),
 
-_selected_ac(0),
 _relbrg (0),
 _stn_truebrg(0),
 _parent_speed(0),
@@ -56,8 +55,7 @@ _max_speed(0),
 _interval(0),
 _MPControl(false),
 _patrol(false),
-_stn_deg_true(false),
-_parent("")
+_stn_deg_true(false)
 
 {
     invisible = false;
@@ -143,6 +141,8 @@ bool FGAIEscort::init(bool search_in_AI_path) {
 
     props->setStringValue("controls/parent-name", _parent.c_str());
     setParentNode();
+    setParent();
+
     pos = _tgtpos;
     speed = _parent_speed;
     hdg = _parent_hdg;
@@ -196,10 +196,6 @@ void FGAIEscort::setStnPatrol(bool p) {
     _patrol = p;
 }
 
-void FGAIEscort::setParentName(const string& p) {
-    _parent = p;
-}
-
 bool FGAIEscort::getGroundElev(SGGeod inpos) {
 
     double height_m ;
@@ -233,79 +229,6 @@ bool FGAIEscort::getGroundElev(SGGeod inpos) {
 
 }
 
-void FGAIEscort::setParentNode() {
-
-    const SGPropertyNode_ptr ai = fgGetNode("/ai/models", true);
-
-    for (int i = ai->nChildren() - 1; i >= -1; i--) {
-        SGPropertyNode_ptr model;
-
-        if (i < 0) { // last iteration: selected model
-            model = _selected_ac;
-        } else {
-            model = ai->getChild(i);
-            string path = ai->getPath();
-            const string name = model->getStringValue("name");
-
-            if (!model->nChildren()){
-                continue;
-            }
-            if (name == _parent) {
-                _selected_ac = model;  // save selected model for last iteration
-                break;
-            }
-
-        }
-        if (!model)
-            continue;
-
-    }// end for loop
-
-    if (_selected_ac != 0){
-        const string name = _selected_ac->getStringValue("name");
-        setParent();
-
-        //double lat = _selected_ac->getDoubleValue("position/latitude-deg");
-        //double lon = _selected_ac->getDoubleValue("position/longitude-deg");
-        //double elevation = _selected_ac->getDoubleValue("position/altitude-ft");
-        //_MPControl = _selected_ac->getBoolValue("controls/mp-control");
-
-        //_selectedpos.setLatitudeDeg(lat);
-        //_selectedpos.setLongitudeDeg(lon);
-        //_selectedpos.setElevationFt(elevation);
-
-        //_parent_speed    = _selected_ac->getDoubleValue("velocities/speed-kts");
-        //_parent_hdg      = _selected_ac->getDoubleValue("orientation/true-heading-deg");
-
-        //if(!_stn_deg_true){
-        //    _stn_truebrg = calcTrueBearingDeg(_stn_brg, _parent_hdg);
-        //    _stn_relbrg = _stn_brg;
-        //    //cout << _name <<" set rel"<<endl;
-        //} else {
-        //    _stn_truebrg = _stn_brg;
-        //    _stn_relbrg = calcRelBearingDeg(_stn_brg, _parent_hdg); 
-        //    //cout << _name << " set true"<<endl;
-        //}
-
-        //double course2;
-
-        //SGGeodesy::direct( _selectedpos, _stn_truebrg, _stn_range * SG_NM_TO_METER,
-        //    _tgtpos, course2);
-
-        //_tgtpos.setElevationFt(_stn_height);
-
-        //calcRangeBearing(pos.getLatitudeDeg(), pos.getLongitudeDeg(),
-        //    _tgtpos.getLatitudeDeg(), _tgtpos.getLongitudeDeg(), _tgtrange, _tgtbrg);
-
-        //_relbrg = calcRelBearingDeg(_tgtbrg, hdg);
-
-    } else {
-        SG_LOG(SG_GENERAL, SG_ALERT, "AIEscort: " << _name
-            << " parent not found: dying ");
-        setDie(true);
-    }
-
-}
 
 void FGAIEscort::setParent()
 {
@@ -331,17 +254,17 @@ void FGAIEscort::setParent()
         //cout << _name << " set true"<<endl;
     }
 
-            double course2;
+    double course2;
 
-        SGGeodesy::direct( _selectedpos, _stn_truebrg, _stn_range * SG_NM_TO_METER,
-            _tgtpos, course2);
+    SGGeodesy::direct( _selectedpos, _stn_truebrg, _stn_range * SG_NM_TO_METER,
+        _tgtpos, course2);
 
-        _tgtpos.setElevationFt(_stn_height);
+    _tgtpos.setElevationFt(_stn_height);
 
-        calcRangeBearing(pos.getLatitudeDeg(), pos.getLongitudeDeg(),
-            _tgtpos.getLatitudeDeg(), _tgtpos.getLongitudeDeg(), _tgtrange, _tgtbrg);
+    calcRangeBearing(pos.getLatitudeDeg(), pos.getLongitudeDeg(),
+        _tgtpos.getLatitudeDeg(), _tgtpos.getLongitudeDeg(), _tgtrange, _tgtbrg);
 
-        _relbrg = calcRelBearingDeg(_tgtbrg, hdg);
+    _relbrg = calcRelBearingDeg(_tgtbrg, hdg);
 
 }
 
@@ -474,10 +397,9 @@ void FGAIEscort::RunEscort(double dt){
 
     setParent();
     setStationSpeed();
-    //getGroundElev(pos);
 
     _dt_count = 0;
 
 }
 
-// end AIGroundvehicle
+// end AIEscort

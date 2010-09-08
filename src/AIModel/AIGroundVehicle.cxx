@@ -46,7 +46,6 @@ _next_run(0),
 _parent_x_offset(0),
 _parent_y_offset(0),
 _parent_z_offset(0),
-_parent(""),
 _break_count(0)
 
 {
@@ -210,10 +209,6 @@ void FGAIGroundVehicle::setElevation(double h, double dt, double coeff){
 void FGAIGroundVehicle::setPitch(double p, double dt, double coeff){
     double c = dt / (coeff + dt);
     _pitch_deg = (p * c) + (_pitch_deg * (1 - c));
-}
-
-void FGAIGroundVehicle::setParentName(const string& p) {
-    _parent = p;
 }
 
 void FGAIGroundVehicle::setTowAngle(double ta, double dt, double coeff){

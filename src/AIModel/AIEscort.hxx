@@ -50,8 +50,6 @@ private:
     virtual void reinit() { init(); }
     virtual void update (double dt);
 
-    void setParentName(const std::string& p);
-    void setParentNode();
     void setStnRange(double r);
     void setStnBrg(double y);
     void setStationSpeed();
@@ -96,12 +94,12 @@ private:
     double _max_speed;
 
     const SGMaterial* _material;
-    SGPropertyNode_ptr _selected_ac;
 
     bool _MPControl, _patrol, _stn_deg_true;
 
-    std::string _parent;
+//    std::string _parent;
 
 };
 
 #endif  // FG_AIGROUNDVEHICLE_HXX
+

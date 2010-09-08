@@ -43,6 +43,7 @@ void FGAIWingman::readFromScenario(SGPropertyNode* scFileNode) {
     setLife(scFileNode->getDoubleValue("life", -1));
     setNoRoll(scFileNode->getBoolValue("no-roll", false));
     setName(scFileNode->getStringValue("name", "Wingman"));
+    setParentName(scFileNode->getStringValue("parent", ""));
     //setSMPath(scFileNode->getStringValue("submodel-path", ""));
     setSubID(scFileNode->getIntValue("SubID", 0));
     setXoffset(scFileNode->getDoubleValue("x-offset", 0.0));
@@ -171,7 +172,6 @@ bool FGAIWingman::init(bool search_in_AI_path) {
 
 void FGAIWingman::update(double dt) {
     FGAIBallistic::update(dt);
-//    cout << FGAIBase::_getName() << " update speed " << FGAIBase::_getSpeed() << endl;
 }
 
 // end AIWingman

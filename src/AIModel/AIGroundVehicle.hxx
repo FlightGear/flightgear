@@ -62,7 +62,7 @@ private:
     void setElevation(double _elevation, double dt, double _elevation_coeff);
     void setPitch(double _pitch, double dt, double _pitch_coeff);
     void setTowAngle(double _relbrg, double dt, double _towangle_coeff);
-    void setParentName(const string& p);
+//    void setParentName(const string& p);
     void setTrainSpeed(double s, double dt, double coeff);
     void setParent();
     void setParentNode();
@@ -100,7 +100,7 @@ private:
     const SGMaterial* _material;
     SGPropertyNode_ptr _selected_ac;
 
-    string _parent;
+//    string _parent;
 
 };
 
