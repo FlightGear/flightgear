@@ -72,6 +72,7 @@ public:
       return SGPath(); // not an Aircraft path
     }
     
+  // test against the aircraft-dir property
     const char* aircraftDir = fgGetString("/sim/aircraft-dir");
     string_list aircraftDirPieces(sgPathBranchSplit(aircraftDir));
     if (aircraftDirPieces.empty() || (aircraftDirPieces.back() != pieces[1])) {
@@ -83,7 +84,24 @@ public:
       r.append(pieces[i]);
     }
     
-    return r.exists() ? r : SGPath();
+    if (r.exists()) {
+      SG_LOG(SG_IO, SG_INFO, "found path:" << aResource << " via /sim/aircraft-dir: " << r.str());
+      return r;
+    }
+  
+  // try each aircaft dir in turn
+    std::string res(aResource, 9); // resource path with 'Aircraft/' removed
+    const string_list& dirs(globals->get_aircraft_paths());
+    string_list::const_iterator it = dirs.begin();
+    for (; it != dirs.end(); ++it) {
+      SGPath p(*it, res);
+      if (p.exists()) {
+        SG_LOG(SG_IO, SG_INFO, "found path:" << aResource << " in aircraft dir: " << r.str());
+        return p;
+      }
+    } // of aircraft path iteration
+    
+    return SGPath(); // not found
   }
 };
 
@@ -275,9 +293,6 @@ void FGGlobals::append_aircraft_path(const std::string& path)
   
   unsigned int index = fg_aircraft_dirs.size();  
   fg_aircraft_dirs.push_back(path);
-  
-  simgear::ResourceManager::instance()->addBasePath(path, 
-    simgear::ResourceManager::PRIORITY_NORMAL);
   
 // make aircraft dirs available to Nasal
   SGPropertyNode* sim = fgGetNode("/sim", true);
