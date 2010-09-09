@@ -373,9 +373,8 @@ void FGElectricalSystem::init () {
     }
 
     if ( path.length() ) {
-        SGPath config( globals->get_fg_root() );
-        config.append( path );
-
+        SGPath config = globals->resolve_aircraft_path(path);
+        
         // load an obsolete xml configuration
         SG_LOG( SG_ALL, SG_WARN,
                 "Reading deprecated xml electrical system model from\n    "

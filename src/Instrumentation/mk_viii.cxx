@@ -2272,13 +2272,10 @@ MK_VIII::VoicePlayer::get_sample (const char *name)
   SGSoundSample *sample = _sgr->find(refname.str());
   if (! sample)
     {
-      SGPath sample_path(globals->get_fg_root());
-      sample_path.append("Sounds/mk-viii");
-
-      string filename = string(name) + ".wav";
+      string filename = "Sounds/mk-viii" + string(name) + ".wav";
       try
 	{
-	  sample = new SGSoundSample(sample_path.c_str(), filename.c_str());
+	  sample = new SGSoundSample(filename.c_str(), SGPath());
 	}
       catch (const sg_exception &e)
 	{

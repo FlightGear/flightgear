@@ -515,9 +515,7 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
 {
     SGPropertyNode root;
 
-    SGPath config(globals->get_fg_root());
-    config.append(path);
-    SG_LOG(SG_GENERAL, SG_DEBUG, "setData: path " << path);
+    SGPath config = globals->resolve_aircraft_path(path);
     try {
         SG_LOG(SG_GENERAL, SG_DEBUG,
                 "Submodels: Trying to read AI submodels file: " << config.str());
@@ -620,10 +618,7 @@ void FGSubmodelMgr::setData(int id, string& path, bool serviceable)
 void FGSubmodelMgr::setSubData(int id, string& path, bool serviceable)
 {
     SGPropertyNode root;
-
-    SGPath config(globals->get_fg_root());
-    config.append(path);
-    SG_LOG(SG_GENERAL, SG_DEBUG, "setSubData: path " << path);
+    SGPath config = globals->resolve_aircraft_path(path);
 
     try {
         SG_LOG(SG_GENERAL, SG_DEBUG,

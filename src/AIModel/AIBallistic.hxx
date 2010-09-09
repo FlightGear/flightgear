@@ -105,6 +105,7 @@ public:
 
     bool getHtAGL(double start);
     bool getSlaved() const;
+    bool getFormate() const;
     bool getSlavedLoad() const;
 
     virtual const char* getTypeString(void) const { return "ballistic"; }

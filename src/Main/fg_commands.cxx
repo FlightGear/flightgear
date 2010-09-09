@@ -1211,7 +1211,7 @@ do_play_audio_sample (const SGPropertyNode * arg)
            queue->tie_to_listener();
         }
 
-        SGSoundSample *msg = new SGSoundSample(path.c_str(), file.c_str());
+        SGSoundSample *msg = new SGSoundSample(file.c_str(), path);
         msg->set_volume( volume );
         queue->add( msg );
 
