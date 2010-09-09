@@ -37,7 +37,6 @@ FGAIShip(otGroundVehicle),
 _pitch(0),
 _pitch_deg(0),
 _speed_kt(0),
-_selected_ac(0),
 _range_ft(0),
 _relbrg (0),
 _parent_speed(0),
@@ -50,6 +49,7 @@ _break_count(0)
 
 {
     invisible = false;
+    _parent = "";
 }
 
 FGAIGroundVehicle::~FGAIGroundVehicle() {}
@@ -149,7 +149,19 @@ bool FGAIGroundVehicle::init(bool search_in_AI_path) {
     no_roll = true;
 
     props->setStringValue("controls/parent-name", _parent.c_str());
-    setParentNode();
+
+    if (setParentNode()){
+        _parent_x_offset = _selected_ac->getDoubleValue("hitch/x-offset-ft");
+        _parent_y_offset = _selected_ac->getDoubleValue("hitch/y-offset-ft");
+        _parent_z_offset = _selected_ac->getDoubleValue("hitch/z-offset-ft");
+        _hitch_x_offset_m = _selected_ac->getDoubleValue("hitch/x-offset-ft")
+            * SG_FEET_TO_METER;
+        _hitch_y_offset_m = _selected_ac->getDoubleValue("hitch/y-offset-ft")
+            * SG_FEET_TO_METER;
+        _hitch_z_offset_m = _selected_ac->getDoubleValue("hitch/z-offset-ft")
+            * SG_FEET_TO_METER;
+        setParent();
+    }
 
     return true;
 }
@@ -344,56 +356,56 @@ bool FGAIGroundVehicle::getPitch() {
     return true;
 }
 
-void FGAIGroundVehicle::setParentNode() {
-
-    if(_parent == "")
-        return;
-
-    const SGPropertyNode_ptr ai = fgGetNode("/ai/models", true);
-
-    for (int i = ai->nChildren() - 1; i >= -1; i--) {
-        SGPropertyNode_ptr model;
-
-        if (i < 0) { // last iteration: selected model
-            model = _selected_ac;
-        } else {
-            model = ai->getChild(i);
-            string path = ai->getPath();
-            const string name = model->getStringValue("name");
-
-            if (!model->nChildren()){
-                continue;
-            }
-            if (name == _parent) {
-                _selected_ac = model;  // save selected model for last iteration
-                break;
-            }
-
-        }
-        if (!model)
-            continue;
-
-    }// end for loop
-
-    if (_selected_ac != 0){
-        const string name = _selected_ac->getStringValue("name");
-        _parent_x_offset = _selected_ac->getDoubleValue("hitch/x-offset-ft");
-        _parent_y_offset = _selected_ac->getDoubleValue("hitch/y-offset-ft");
-        _parent_z_offset = _selected_ac->getDoubleValue("hitch/z-offset-ft");
-        _hitch_x_offset_m = _selected_ac->getDoubleValue("hitch/x-offset-ft")
-            * SG_FEET_TO_METER;
-        _hitch_y_offset_m = _selected_ac->getDoubleValue("hitch/y-offset-ft")
-            * SG_FEET_TO_METER;
-        _hitch_z_offset_m = _selected_ac->getDoubleValue("hitch/z-offset-ft")
-            * SG_FEET_TO_METER;
-        setParent();
-    } else {
-        SG_LOG(SG_GENERAL, SG_ALERT, "AIGroundVeh1cle: " << _name
-                << " parent not found: dying ");
-        setDie(true);
-    }
-
-}
+//void FGAIGroundVehicle::setParentNode() {
+//
+//    if(_parent == "")
+//        return;
+//
+//    const SGPropertyNode_ptr ai = fgGetNode("/ai/models", true);
+//
+//    for (int i = ai->nChildren() - 1; i >= -1; i--) {
+//        SGPropertyNode_ptr model;
+//
+//        if (i < 0) { // last iteration: selected model
+//            model = _selected_ac;
+//        } else {
+//            model = ai->getChild(i);
+//            string path = ai->getPath();
+//            const string name = model->getStringValue("name");
+//
+//            if (!model->nChildren()){
+//                continue;
+//            }
+//            if (name == _parent) {
+//                _selected_ac = model;  // save selected model for last iteration
+//                break;
+//            }
+//
+//        }
+//        if (!model)
+//            continue;
+//
+//    }// end for loop
+//
+//    if (_selected_ac != 0){
+//        const string name = _selected_ac->getStringValue("name");
+//        //_parent_x_offset = _selected_ac->getDoubleValue("hitch/x-offset-ft");
+//        //_parent_y_offset = _selected_ac->getDoubleValue("hitch/y-offset-ft");
+//        //_parent_z_offset = _selected_ac->getDoubleValue("hitch/z-offset-ft");
+//        //_hitch_x_offset_m = _selected_ac->getDoubleValue("hitch/x-offset-ft")
+//        //    * SG_FEET_TO_METER;
+//        //_hitch_y_offset_m = _selected_ac->getDoubleValue("hitch/y-offset-ft")
+//        //    * SG_FEET_TO_METER;
+//        //_hitch_z_offset_m = _selected_ac->getDoubleValue("hitch/z-offset-ft")
+//        //    * SG_FEET_TO_METER;
+//        //setParent();
+//    } else {
+//        SG_LOG(SG_GENERAL, SG_ALERT, "AIGroundVeh1cle: " << _name
+//                << " parent not found: dying ");
+//        setDie(true);
+//    }
+//
+//}
 
 void FGAIGroundVehicle::setParent(){
 

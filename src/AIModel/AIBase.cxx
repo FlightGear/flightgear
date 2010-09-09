@@ -533,8 +533,13 @@ void FGAIBase::_setSubID( int s ) {
     _subID = s;
 }
 
-void FGAIBase::setParentNode() {
-//    cout << "AIBase: setParentNode " << _parent << endl;
+bool FGAIBase::setParentNode() {
+
+    if (_parent == ""){
+       SG_LOG(SG_GENERAL, SG_ALERT, "AIBase: " << _name
+            << " parent not set ");
+       return false;
+    }
 
     const SGPropertyNode_ptr ai = fgGetNode("/ai/models", true);
 
@@ -564,15 +569,16 @@ void FGAIBase::setParentNode() {
 
     if (_selected_ac != 0){
         const string name = _selected_ac->getStringValue("name");
-        //setParent();
-
+        return true;
     } else {
-        SG_LOG(SG_GENERAL, SG_ALERT, "AIEscort: " << _name
+        SG_LOG(SG_GENERAL, SG_ALERT, "AIBase: " << _name
             << " parent not found: dying ");
         setDie(true);
+        return false;
     }
 
 }
+
 double FGAIBase::_getLongitude() const {
     return pos.getLongitudeDeg();
 }

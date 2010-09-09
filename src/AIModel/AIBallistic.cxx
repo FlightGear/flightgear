@@ -157,6 +157,7 @@ bool FGAIBallistic::init(bool search_in_AI_path) {
     }
 
     setParentNodes(_selected_ac);
+
     //props->setStringValue("vector/path", _vector_path.c_str());
 
     // start with high value so that animations don't trigger yet

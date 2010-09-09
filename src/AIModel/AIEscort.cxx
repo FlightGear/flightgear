@@ -140,12 +140,13 @@ bool FGAIEscort::init(bool search_in_AI_path) {
     no_roll = false;
 
     props->setStringValue("controls/parent-name", _parent.c_str());
-    setParentNode();
-    setParent();
 
-    pos = _tgtpos;
-    speed = _parent_speed;
-    hdg = _parent_hdg;
+    if (setParentNode()){
+        setParent();
+        pos = _tgtpos;
+        speed = _parent_speed;
+        hdg = _parent_hdg;
+    }
 
     return true;
 }

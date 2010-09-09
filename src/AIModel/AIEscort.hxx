@@ -102,4 +102,3 @@ private:
 };
 
 #endif  // FG_AIGROUNDVEHICLE_HXX
-

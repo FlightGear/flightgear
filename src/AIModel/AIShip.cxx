@@ -70,7 +70,8 @@ _range_rate(0),
 _roll_constant(0.001),
 _hdg_constant(0.01),
 _roll_factor(-0.0083335),
-_restart(false)
+_restart(false),
+_name("")
 
 {
         invisible = false;

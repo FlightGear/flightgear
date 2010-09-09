@@ -86,7 +86,7 @@ public:
     void setImpactLon( double lon );
     void setImpactElev( double e );
     void setParentName(const string& p);
-    void setParentNode();
+    bool setParentNode();
 
     int getID() const;
     int _getSubID() const;
