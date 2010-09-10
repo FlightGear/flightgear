@@ -70,8 +70,7 @@ _range_rate(0),
 _roll_constant(0.001),
 _hdg_constant(0.01),
 _roll_factor(-0.0083335),
-_restart(false),
-_name("")
+_restart(false)
 
 {
         invisible = false;
@@ -489,10 +488,6 @@ double FGAIShip::sign(double x) {
 
 void FGAIShip::setFlightPlan(FGAIFlightPlan* f) {
     fp = f;
-}
-
-void FGAIShip::setName(const string& n) {
-    _name = n;
 }
 
 void FGAIShip::setStartTime(const string& st) {

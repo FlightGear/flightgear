@@ -76,6 +76,7 @@ FGAIManager::init() {
     user_latitude_node  = fgGetNode("/position/latitude-deg", true);
     user_longitude_node = fgGetNode("/position/longitude-deg", true);
     user_altitude_node  = fgGetNode("/position/altitude-ft", true);
+    user_altitude_agl_node  = fgGetNode("/position/altitude-agl-ft", true);
     user_heading_node   = fgGetNode("/orientation/heading-deg", true);
     user_pitch_node     = fgGetNode("/orientation/pitch-deg", true);
     user_yaw_node       = fgGetNode("/orientation/side-slip-deg", true);
@@ -248,7 +249,9 @@ FGAIManager::fetchUserState( void ) {
     user_speed     = user_speed_node->getDoubleValue() * 0.592484;
     user_roll      = user_roll_node->getDoubleValue();
     wind_from_east = wind_from_east_node->getDoubleValue();
-    wind_from_north = wind_from_north_node->getDoubleValue();
+    wind_from_north   = wind_from_north_node->getDoubleValue();
+    user_altitude_agl = user_altitude_agl_node->getDoubleValue();
+
 }
 
 // only keep the results from the nearest thermal

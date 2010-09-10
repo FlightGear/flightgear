@@ -69,7 +69,9 @@ FGAIBase::FGAIBase(object_type ot) :
     _refID( _newAIModelID() ),
     _otype(ot),
     _initialized(false),
-    _parent("")
+    _parent(""),
+    _name("")
+
 {
     tgt_heading = hdg = tgt_altitude_ft = tgt_speed = 0.0;
     tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs = pitch = 0.0;
@@ -613,6 +615,12 @@ void FGAIBase::_setVS_fps( double _vs ) {
 
 double FGAIBase::_getAltitude() const {
     return altitude_ft;
+}
+
+double FGAIBase::_getAltitudeAGL(SGGeod inpos, double start){
+    getGroundElevationM(SGGeod::fromGeodM(inpos, start),
+        _elevation_m, &_material);
+    return inpos.getElevationFt() - _elevation_m * SG_METER_TO_FEET;
 }
 
 bool FGAIBase::_getServiceable() const {

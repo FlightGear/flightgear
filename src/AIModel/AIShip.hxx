@@ -42,7 +42,7 @@ public:
     virtual void unbind();
     virtual void update(double dt);
     void setFlightPlan(FGAIFlightPlan* f);
-    void setName(const string&);
+//    void setName(const string&);
     void setRudder(float r);
     void setRoll(double rl);
     void ProcessFlightPlan( double dt);
@@ -87,7 +87,7 @@ public:
 
 protected:
 
-    string _name; // The name of this ship.
+//    string _name; // The name of this ship.
 
 private:
 

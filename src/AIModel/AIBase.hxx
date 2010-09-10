@@ -66,6 +66,7 @@ public:
     void setCallSign(const string& );
     void setSpeed( double speed_KTAS );
     void setAltitude( double altitude_ft );
+    void setAltitudeAGL( double altitude_agl_ft );
     void setHeading( double heading );
     void setLatitude( double latitude );
     void setLongitude( double longitude );
@@ -86,6 +87,7 @@ public:
     void setImpactLon( double lon );
     void setImpactElev( double e );
     void setParentName(const string& p);
+    void setName(const string& n);
     bool setParentNode();
 
     int getID() const;
@@ -98,6 +100,9 @@ public:
 
     bool getGroundElevationM(const SGGeod& pos, double& elev,
         const SGMaterial** material) const;
+
+    double _elevation_m;
+    const SGMaterial* _material;
 
     double _getCartPosX() const;
     double _getCartPosY() const;
@@ -139,6 +144,7 @@ protected:
     double speed_north_deg_sec;
     double speed_east_deg_sec;
     double turn_radius_ft; // turn radius ft at 15 kts rudder angle 15 degrees
+    double altitude_agl_ft;
 
     double ft_per_deg_lon;
     double ft_per_deg_lat;
@@ -215,6 +221,8 @@ public:
     void _setLatitude ( double latitude );
     void _setSubID( int s );
     void _setUserPos();
+
+    double _getAltitudeAGL(SGGeod inpos, double start);
 
     double _getVS_fps() const;
     double _getAltitude() const;
@@ -317,6 +325,10 @@ inline void FGAIBase::setAltitude( double alt_ft ) {
     pos.setElevationFt(altitude_ft);
 }
 
+inline void FGAIBase::setAltitudeAGL( double alt_ft ) {
+    altitude_agl_ft = alt_ft;
+}
+
 inline void FGAIBase::setBank( double bank ) {
     roll = tgt_roll = bank;
     no_roll = false;
@@ -363,6 +375,10 @@ inline void FGAIBase::setYawoffset(double y) {
 
 inline void FGAIBase::setParentName(const string& p) {
     _parent = p;
+}
+
+inline void FGAIBase::setName(const string& n) {
+    _name = n;
 }
 
 inline void FGAIBase::setDie( bool die ) { delete_me = die; }

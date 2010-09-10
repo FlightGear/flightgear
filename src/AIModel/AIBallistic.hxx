@@ -69,7 +69,7 @@ public:
     void setNoRoll( bool nr );
     void setRandom( bool r );
     void setRandomness( double r );
-    void setName(const string&);
+//    void setName(const string&);
     void setCollision(bool c);
     void setExpiry(bool e);
     void setImpact(bool i);
@@ -179,6 +179,7 @@ private:
     SGPropertyNode_ptr _p_lat_node;
     SGPropertyNode_ptr _p_lon_node;
     SGPropertyNode_ptr _p_alt_node;
+    SGPropertyNode_ptr _p_agl_node;
     SGPropertyNode_ptr _p_ori_node;
     SGPropertyNode_ptr _p_pch_node;
     SGPropertyNode_ptr _p_rll_node;

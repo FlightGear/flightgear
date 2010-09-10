@@ -81,6 +81,7 @@ public:
     inline double get_wind_from_east() const {return wind_from_east; }
     inline double get_wind_from_north() const {return wind_from_north; }
     inline double get_user_roll() const { return user_roll; }
+    inline double get_user_agl() const { return user_agl; }
 
     int getNumAiObjects(void) const;
 
@@ -104,6 +105,7 @@ private:
     SGPropertyNode_ptr user_latitude_node;
     SGPropertyNode_ptr user_longitude_node;
     SGPropertyNode_ptr user_altitude_node;
+    SGPropertyNode_ptr user_altitude_agl_node;
     SGPropertyNode_ptr user_heading_node;
     SGPropertyNode_ptr user_pitch_node;
     SGPropertyNode_ptr user_yaw_node;
@@ -115,11 +117,13 @@ private:
     double user_latitude;
     double user_longitude;
     double user_altitude;
+    double user_altitude_agl;
     double user_heading;
     double user_pitch;
     double user_yaw;
     double user_roll;
     double user_speed;
+    double user_agl;
     double wind_from_east;
     double wind_from_north;
     double _dt;

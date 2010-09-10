@@ -392,10 +392,6 @@ void FGAIBallistic::setImpactReportNode(const string& path) {
         _impact_report_node = fgGetNode(path.c_str(), true);
 }
 
-void FGAIBallistic::setName(const string& n) {
-    _name = n;
-}
-
 void FGAIBallistic::setSMPath(const string& s) {
     _path = s;
     //cout << "submodel path " << _path << endl;
@@ -458,6 +454,8 @@ void FGAIBallistic::setParentNodes(SGPropertyNode_ptr node) {
         _p_lat_node = _p_pos_node->getChild("latitude-deg", 0, true);
         _p_lon_node = _p_pos_node->getChild("longitude-deg", 0, true);
         _p_alt_node = _p_pos_node->getChild("altitude-ft", 0, true);
+        _p_agl_node = _p_pos_node->getChild("altitude-agl-ft", 0, true);
+
 
         _p_ori_node = _pnode->getChild("orientation", 0, true);
         _p_pch_node = _p_ori_node->getChild("pitch-deg", 0, true);
@@ -472,7 +470,7 @@ void FGAIBallistic::setParentNodes(SGPropertyNode_ptr node) {
 
 void FGAIBallistic::setParentPos() {
 
-    if (_pnode != 0) {
+    if (_pnode != 0) { 
         double lat = _p_lat_node->getDoubleValue();
         double lon = _p_lon_node->getDoubleValue();
         double alt = _p_alt_node->getDoubleValue();
@@ -480,6 +478,7 @@ void FGAIBallistic::setParentPos() {
         _parentpos.setLongitudeDeg(lon);
         _parentpos.setLatitudeDeg(lat);
         _parentpos.setElevationFt(alt);
+
     }
 
 }
@@ -623,19 +622,21 @@ void FGAIBallistic::setTgtZOffset(double z){
 
 void FGAIBallistic::slaveToAC(double dt){
 
-    double hdg, pch, rll = 0;
+    double hdg, pch, rll, agl = 0;
 
     if (_pnode != 0) {
         setParentPos();
         hdg = _p_hdg_node->getDoubleValue();
         pch = _p_pch_node->getDoubleValue();
         rll = _p_rll_node->getDoubleValue();
+        agl = _p_agl_node->getDoubleValue();
         setOffsetPos(_parentpos, hdg, pch, rll);
         setSpeed(_p_spd_node->getDoubleValue());
     }else {
         hdg = manager->get_user_heading();
         pch = manager->get_user_pitch();
         rll = manager->get_user_roll();
+        agl = manager->get_user_agl();
         setOffsetPos(userpos, hdg, pch, rll);
         setSpeed(manager->get_user_speed());
     }
@@ -1149,7 +1150,7 @@ void FGAIBallistic::setTgtOffsets(double dt, double coeff){
 
 void FGAIBallistic::formateToAC(double dt){
 
-    double hdg, pch, rll = 0;
+    double hdg, pch, rll, agl, ht = 0;
 
     setTgtOffsets(dt, 25);
 
@@ -1158,12 +1159,16 @@ void FGAIBallistic::formateToAC(double dt){
         hdg = _p_hdg_node->getDoubleValue();
         pch = _p_pch_node->getDoubleValue();
         rll = _p_rll_node->getDoubleValue();
+        agl = _p_agl_node->getDoubleValue();
+        ht  = _p_alt_node->getDoubleValue();
         setOffsetPos(_parentpos, hdg, pch, rll);
         setSpeed(_p_spd_node->getDoubleValue());
     }else {
         hdg = manager->get_user_heading();
         pch = manager->get_user_pitch();
         rll = manager->get_user_roll();
+        agl = manager->get_user_agl();
+        ht  = manager->get_user_altitude();
         setOffsetPos(userpos, hdg, pch, rll);
         setSpeed(manager->get_user_speed());
     }
@@ -1183,19 +1188,21 @@ void FGAIBallistic::formateToAC(double dt){
     pos.setLatitudeDeg(_offsetpos.getLatitudeDeg());
     pos.setLongitudeDeg(_offsetpos.getLongitudeDeg());
 
-    if (getHtAGL(10000)){
-
-        if(_ht_agl_ft <= 10) {
-            _height = userpos.getElevationFt();
-        } else if (_ht_agl_ft > 10 && _ht_agl_ft <= 150 ) {
-            setHt(userpos.getElevationFt(), dt, 1.0);
-        } else if (_ht_agl_ft > 150 && _ht_agl_ft <= 250) {
-            setHt(_offsetpos.getElevationFt()+ h_feet, dt, 0.75);
-        } else
-            setHt(_offsetpos.getElevationFt()+ h_feet, dt, 0.5);
-
-        pos.setElevationFt(_height);
+    if(agl <= 10) {
+        _height = ht;
+        //cout << "ht case1" << endl;
+    } else if (agl > 10 && agl <= 150 ) {
+        setHt(ht, dt, 1.0);
+        //cout << "ht case2" << endl;
+    } else if (agl > 150 && agl <= 250) {
+        setHt(_offsetpos.getElevationFt()+ h_feet, dt, 0.75);
+        //cout << "ht case3" << endl;
+    } else{
+        setHt(_offsetpos.getElevationFt()+ h_feet, dt, 0.5);
+        //cout << "ht case4" << endl;
     }
+
+    pos.setElevationFt(_height);
 
     // these calculations are unreliable at slow speeds
     if(speed >= 10) {

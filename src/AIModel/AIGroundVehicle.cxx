@@ -232,38 +232,38 @@ void FGAIGroundVehicle::setTowAngle(double ta, double dt, double coeff){
     SG_CLAMP_RANGE(_tow_angle, -limit, limit);
 }
 
-bool FGAIGroundVehicle::getGroundElev(SGGeod inpos) {
-
-    double height_m ;
-
-    if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(inpos, 3000), height_m, &_material,0)){
-            _ht_agl_ft = inpos.getElevationFt() - height_m * SG_METER_TO_FEET;
-
-            if (_material) {
-                const vector<string>& names = _material->get_names();
-
-                _solid = _material->get_solid();
-
-                if (!names.empty())
-                    props->setStringValue("material/name", names[0].c_str());
-                else
-                    props->setStringValue("material/name", "");
-
-                //cout << "material " << names[0].c_str()
-                //    << " _elevation_m " << _elevation_m
-                //    << " solid " << _solid
-                //    << " load " << _load_resistance
-                //    << " frictionFactor " << _frictionFactor
-                //    << endl;
-
-            }
-
-            return true;
-    } else {
-        return false;
-    }
-
-}
+//bool FGAIGroundVehicle::getGroundElev(SGGeod inpos) {
+//
+//    double height_m ;
+//
+//    if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(inpos, 3000), height_m, &_material,0)){
+//            _ht_agl_ft = inpos.getElevationFt() - height_m * SG_METER_TO_FEET;
+//
+//            if (_material) {
+//                const vector<string>& names = _material->get_names();
+//
+//                _solid = _material->get_solid();
+//
+//                if (!names.empty())
+//                    props->setStringValue("material/name", names[0].c_str());
+//                else
+//                    props->setStringValue("material/name", "");
+//
+//                //cout << "material " << names[0].c_str()
+//                //    << " _elevation_m " << _elevation_m
+//                //    << " solid " << _solid
+//                //    << " load " << _load_resistance
+//                //    << " frictionFactor " << _frictionFactor
+//                //    << endl;
+//
+//            }
+//
+//            return true;
+//    } else {
+//        return false;
+//    }
+//
+//}
 
 bool FGAIGroundVehicle::getPitch() {
 
@@ -351,61 +351,8 @@ bool FGAIGroundVehicle::getPitch() {
 
     }
 
-    //getGroundElev(pos);
-
     return true;
 }
-
-//void FGAIGroundVehicle::setParentNode() {
-//
-//    if(_parent == "")
-//        return;
-//
-//    const SGPropertyNode_ptr ai = fgGetNode("/ai/models", true);
-//
-//    for (int i = ai->nChildren() - 1; i >= -1; i--) {
-//        SGPropertyNode_ptr model;
-//
-//        if (i < 0) { // last iteration: selected model
-//            model = _selected_ac;
-//        } else {
-//            model = ai->getChild(i);
-//            string path = ai->getPath();
-//            const string name = model->getStringValue("name");
-//
-//            if (!model->nChildren()){
-//                continue;
-//            }
-//            if (name == _parent) {
-//                _selected_ac = model;  // save selected model for last iteration
-//                break;
-//            }
-//
-//        }
-//        if (!model)
-//            continue;
-//
-//    }// end for loop
-//
-//    if (_selected_ac != 0){
-//        const string name = _selected_ac->getStringValue("name");
-//        //_parent_x_offset = _selected_ac->getDoubleValue("hitch/x-offset-ft");
-//        //_parent_y_offset = _selected_ac->getDoubleValue("hitch/y-offset-ft");
-//        //_parent_z_offset = _selected_ac->getDoubleValue("hitch/z-offset-ft");
-//        //_hitch_x_offset_m = _selected_ac->getDoubleValue("hitch/x-offset-ft")
-//        //    * SG_FEET_TO_METER;
-//        //_hitch_y_offset_m = _selected_ac->getDoubleValue("hitch/y-offset-ft")
-//        //    * SG_FEET_TO_METER;
-//        //_hitch_z_offset_m = _selected_ac->getDoubleValue("hitch/z-offset-ft")
-//        //    * SG_FEET_TO_METER;
-//        //setParent();
-//    } else {
-//        SG_LOG(SG_GENERAL, SG_ALERT, "AIGroundVeh1cle: " << _name
-//                << " parent not found: dying ");
-//        setDie(true);
-//    }
-//
-//}
 
 void FGAIGroundVehicle::setParent(){
 
