@@ -721,6 +721,9 @@
     <ClCompile Include="..\..\..\src\Environment\fgwind.cxx" />
     <ClCompile Include="..\..\..\src\Environment\precipitation_mgr.cxx" />
     <ClCompile Include="..\..\..\src\Environment\ridge_lift.cxx" />
+    <ClCompile Include="..\..\..\src\Environment\realwx_ctrl.cxx" />
+    <ClCompile Include="..\..\..\src\Environment\metarproperties.cxx" />
+    <ClCompile Include="..\..\..\src\Environment\metarairportfilter.cxx" />
     <ClCompile Include="..\..\..\src\Model\acmodel.cxx" />
     <ClCompile Include="..\..\..\src\Model\model_panel.cxx" />
     <ClCompile Include="..\..\..\src\Model\modelmgr.cxx" />
@@ -1289,6 +1292,9 @@
     <ClInclude Include="..\..\..\src\Environment\fgwind.hxx" />
     <ClInclude Include="..\..\..\src\Environment\precipitation_mgr.hxx" />
     <ClInclude Include="..\..\..\src\Environment\ridge_lift.hxx" />
+    <ClCompile Include="..\..\..\src\Environment\realwx_ctrl.hxx" />
+    <ClCompile Include="..\..\..\src\Environment\metarproperties.hxx" />
+    <ClCompile Include="..\..\..\src\Environment\metarairportfilter.hxx" />
     <ClInclude Include="..\..\..\src\Model\acmodel.hxx" />
     <ClInclude Include="..\..\..\src\Model\model_panel.hxx" />
     <ClInclude Include="..\..\..\src\Model\modelmgr.hxx" />

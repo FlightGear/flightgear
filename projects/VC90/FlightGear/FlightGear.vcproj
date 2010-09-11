@@ -4659,6 +4659,30 @@
 				RelativePath="..\..\..\src\Environment\ridge_lift.hxx"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\realwx_ctrl.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\realwx_ctrl.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\metarproperties.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\metarproperties.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\metarairportfilter.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\metarairportfilter.hxx"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Lib_Model"
