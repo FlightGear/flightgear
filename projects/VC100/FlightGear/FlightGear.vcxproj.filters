@@ -1185,6 +1185,18 @@
     <ClCompile Include="..\..\..\src\Environment\ridge_lift.cxx">
       <Filter>Lib_Environment</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\Environment\realwx_ctrl.cxx">
+      <Filter>Lib_Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Environment\metarproperties.cxx">
+      <Filter>Lib_Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Environment\metarairportfilter.cxx">
+      <Filter>Lib_Environment</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Environment\terrainsampler.cxx">
+      <Filter>Lib_Environment</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\Model\acmodel.cxx">
       <Filter>Lib_Model</Filter>
     </ClCompile>
@@ -2577,6 +2589,18 @@
       <Filter>Lib_Environment</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\Environment\ridge_lift.hxx">
+      <Filter>Lib_Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Environment\realwx_ctrl.hxx">
+      <Filter>Lib_Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Environment\metarproperties.hxx">
+      <Filter>Lib_Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Environment\metarairportfilter.hxx">
+      <Filter>Lib_Environment</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Environment\terrainsampler.hxx">
       <Filter>Lib_Environment</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\Model\acmodel.hxx">
