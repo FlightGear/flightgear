@@ -302,6 +302,9 @@ void
 FGEnvironmentMgr::set_cloud_layer_coverage (int index,
                                             const char * coverage_name)
 {
+  if( thesky->get_cloud_layer(index)->getCoverageString() == coverage_name )
+    return;
+
   thesky->get_cloud_layer(index)->setCoverageString(coverage_name);
   _cloudLayersDirty = true;
 }
@@ -316,10 +319,14 @@ FGEnvironmentMgr::get_cloud_layer_coverage_type (int index) const
 void 
 FGEnvironmentMgr::set_cloud_layer_coverage_type (int index, int type )
 {
-  if( index < 0 || index >= SGCloudLayer::SG_MAX_CLOUD_COVERAGES ) {
+  if( type < 0 || type >= SGCloudLayer::SG_MAX_CLOUD_COVERAGES ) {
     SG_LOG(SG_ALL,SG_WARN,"Unknown cloud layer type " << type << " ignored" );
     return;
   }
+
+  if( static_cast<SGCloudLayer::Coverage>(type) == thesky->get_cloud_layer(index)->getCoverage() )
+    return;
+
   thesky->get_cloud_layer(index)->setCoverage(static_cast<SGCloudLayer::Coverage>(type));
   _cloudLayersDirty = true;
 }
