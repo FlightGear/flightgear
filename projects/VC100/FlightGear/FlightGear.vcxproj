@@ -724,6 +724,7 @@
     <ClCompile Include="..\..\..\src\Environment\realwx_ctrl.cxx" />
     <ClCompile Include="..\..\..\src\Environment\metarproperties.cxx" />
     <ClCompile Include="..\..\..\src\Environment\metarairportfilter.cxx" />
+    <ClCompile Include="..\..\..\src\Environment\terrainsampler.cxx" />
     <ClCompile Include="..\..\..\src\Model\acmodel.cxx" />
     <ClCompile Include="..\..\..\src\Model\model_panel.cxx" />
     <ClCompile Include="..\..\..\src\Model\modelmgr.cxx" />
@@ -1295,6 +1296,7 @@
     <ClCompile Include="..\..\..\src\Environment\realwx_ctrl.hxx" />
     <ClCompile Include="..\..\..\src\Environment\metarproperties.hxx" />
     <ClCompile Include="..\..\..\src\Environment\metarairportfilter.hxx" />
+    <ClCompile Include="..\..\..\src\Environment\terrainsampler.hxx" />
     <ClInclude Include="..\..\..\src\Model\acmodel.hxx" />
     <ClInclude Include="..\..\..\src\Model\model_panel.hxx" />
     <ClInclude Include="..\..\..\src\Model\modelmgr.hxx" />

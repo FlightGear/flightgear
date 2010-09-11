@@ -4683,6 +4683,14 @@
 				RelativePath="..\..\..\src\Environment\metarairportfilter.hxx"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\terrainsampler.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\terrainsampler.hxx"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Lib_Model"
