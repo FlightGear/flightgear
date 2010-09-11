@@ -17,8 +17,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-//
-// $Id$
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -39,34 +37,26 @@
 #include "environment.hxx"
 #include "environment_mgr.hxx"
 #include "environment_ctrl.hxx"
+#include "realwx_ctrl.hxx"
 #include "fgclouds.hxx"
 #include "precipitation_mgr.hxx"
 #include "ridge_lift.hxx"
+#include "terrainsampler.hxx"
 
 class SGSky;
 extern SGSky *thesky;
 
-
-
-FGEnvironmentMgr::FGEnvironmentMgr ()
-  : _environment(new FGEnvironment)
+FGEnvironmentMgr::FGEnvironmentMgr () :
+  _environment(new FGEnvironment()),
+  fgClouds(new FGClouds()),
+  _altitudeNode(fgGetNode("/position/altitude-ft", true)),
+  _cloudLayersDirty(true)
 {
+  set_subsystem("controller", Environment::LayerInterpolateController::createInstance( fgGetNode("/environment/config", true ) ));
+  set_subsystem("realwx", Environment::RealWxController::createInstance( fgGetNode("/environment/realwx", true ) ), 1.0 );
 
-  _controller = new FGInterpolateEnvironmentCtrl;
-  _controller->setEnvironment(_environment);
-  set_subsystem("controller", _controller, 0.1 );
-
-  fgClouds = new FGClouds();
-
-  _metarcontroller = new FGMetarCtrl(_controller );
-  set_subsystem("metarcontroller", _metarcontroller, 0.1 );
-
-  _metarfetcher = new FGMetarFetcher();
-  set_subsystem("metarfetcher", _metarfetcher, 1.0 );
-
-  _precipitationManager = new FGPrecipitationMgr;
-  set_subsystem("precipitation", _precipitationManager);
-
+  set_subsystem("precipitation", new FGPrecipitationMgr);
+  set_subsystem("terrainsampler", Environment::TerrainSampler::createInstance( fgGetNode("/environment/terrain", true ) ));
   set_subsystem("ridgelift", new FGRidgeLift);
 }
 
@@ -78,20 +68,27 @@ FGEnvironmentMgr::~FGEnvironmentMgr ()
   remove_subsystem( "ridgelift" );
   delete subsys;
 
+  subsys = get_subsystem( "terrainsampler" );
+  remove_subsystem( "terrainsampler" );
+  delete subsys;
+
+  subsys = get_subsystem( "precipitation" );
   remove_subsystem("precipitation");
-  delete _precipitationManager;
+  delete subsys;
 
-  remove_subsystem("metarcontroller");
-  delete _metarfetcher;
-
+  subsys = get_subsystem("metarfetcher");
   remove_subsystem("metarfetcher");
-  delete _metarcontroller;
+  delete subsys;
+
+  subsys = get_subsystem("metarcontroller");
+  remove_subsystem("metarcontroller");
+  delete subsys;
+
+  subsys = get_subsystem("controller");
+  remove_subsystem("controller");
+  delete subsys;
 
   delete fgClouds;
-
-  remove_subsystem("controller");
-  delete _controller;
-
   delete _environment;
 }
 
@@ -100,7 +97,6 @@ FGEnvironmentMgr::init ()
 {
   SG_LOG( SG_GENERAL, SG_INFO, "Initializing environment subsystem");
   SGSubsystemGroup::init();
-  //_update_fdm();
 }
 
 void
@@ -108,191 +104,86 @@ FGEnvironmentMgr::reinit ()
 {
   SG_LOG( SG_GENERAL, SG_INFO, "Reinitializing environment subsystem");
   SGSubsystemGroup::reinit();
-  //_update_fdm();
 }
 
 void
 FGEnvironmentMgr::bind ()
 {
   SGSubsystemGroup::bind();
-  fgTie("/environment/visibility-m", _environment,
-	&FGEnvironment::get_visibility_m, &FGEnvironment::set_visibility_m);
-  fgSetArchivable("/environment/visibility-m");
-  fgTie("/environment/effective-visibility-m", thesky,
-       &SGSky::get_visibility );
-  fgTie("/environment/temperature-sea-level-degc", _environment,
-	&FGEnvironment::get_temperature_sea_level_degc,
-	&FGEnvironment::set_temperature_sea_level_degc);
-  fgSetArchivable("/environment/temperature-sea-level-degc");
-  fgTie("/environment/temperature-degc", _environment,
-	&FGEnvironment::get_temperature_degc); // FIXME: read-only for now
-  fgTie("/environment/temperature-degf", _environment,
-	&FGEnvironment::get_temperature_degf); // FIXME: read-only for now
-  fgTie("/environment/dewpoint-sea-level-degc", _environment,
-	&FGEnvironment::get_dewpoint_sea_level_degc,
-	&FGEnvironment::set_dewpoint_sea_level_degc);
-  fgSetArchivable("/environment/dewpoint-sea-level-degc");
-  fgTie("/environment/dewpoint-degc", _environment,
-	&FGEnvironment::get_dewpoint_degc); // FIXME: read-only for now
-  fgTie("/environment/pressure-sea-level-inhg", _environment,
-	&FGEnvironment::get_pressure_sea_level_inhg,
-	&FGEnvironment::set_pressure_sea_level_inhg);
-  fgSetArchivable("/environment/pressure-sea-level-inhg");
-  fgTie("/environment/pressure-inhg", _environment,
-	&FGEnvironment::get_pressure_inhg); // FIXME: read-only for now
-  fgTie("/environment/density-slugft3", _environment,
-	&FGEnvironment::get_density_slugft3); // read-only
-  fgTie("/environment/relative-humidity", _environment,
-	&FGEnvironment::get_relative_humidity); //ro
-  fgTie("/environment/atmosphere/density-tropo-avg", _environment,
-	&FGEnvironment::get_density_tropo_avg_kgm3); //ro
-  fgTie("/environment/atmosphere/altitude-half-to-sun", _environment,
-	&FGEnvironment::get_altitude_half_to_sun_m, 
-	&FGEnvironment::set_altitude_half_to_sun_m);
-  fgTie("/environment/atmosphere/altitude-troposphere-top", _environment,
-        &FGEnvironment::get_altitude_tropo_top_m,
-        &FGEnvironment::set_altitude_tropo_top_m);
-  fgTie("/environment/wind-from-heading-deg", _environment,
-	&FGEnvironment::get_wind_from_heading_deg,
-	&FGEnvironment::set_wind_from_heading_deg);
-  fgTie("/environment/wind-speed-kt", _environment,
-	&FGEnvironment::get_wind_speed_kt, &FGEnvironment::set_wind_speed_kt);
-  fgTie("/environment/wind-from-north-fps", _environment,
-	&FGEnvironment::get_wind_from_north_fps,
-	&FGEnvironment::set_wind_from_north_fps);
-  fgSetArchivable("/environment/wind-from-north-fps");
-  fgTie("/environment/wind-from-east-fps", _environment,
-	&FGEnvironment::get_wind_from_east_fps,
-	&FGEnvironment::set_wind_from_east_fps);
-  fgSetArchivable("/environment/wind-from-east-fps");
-  fgTie("/environment/wind-from-down-fps", _environment,
-	&FGEnvironment::get_wind_from_down_fps,
-	&FGEnvironment::set_wind_from_down_fps);
-  fgSetArchivable("/environment/wind-from-down-fps");
-
-  fgTie("/environment/thermal-lift-fps", _environment,
-	&FGEnvironment::get_thermal_lift_fps,
-	&FGEnvironment::set_thermal_lift_fps);
-  fgSetArchivable("/environment/thermal-lift-fps");
-  fgTie("/environment/ridge-lift-fps", _environment,
-	&FGEnvironment::get_ridge_lift_fps,
-	&FGEnvironment::set_ridge_lift_fps);	
-  fgSetArchivable("/environment/ridge-lift-fps");
+  _environment->Tie( fgGetNode("/environment", true ) );
   
-    fgTie("/environment/local-weather-lift", _environment,
-	&FGEnvironment::get_local_weather_lift_fps); //read-only
-     
-  fgTie("/environment/turbulence/magnitude-norm", _environment,
-        &FGEnvironment::get_turbulence_magnitude_norm,
-        &FGEnvironment::set_turbulence_magnitude_norm);
-  fgSetArchivable("/environment/turbulence/magnitude-norm");
-  fgTie("/environment/turbulence/rate-hz", _environment,
-        &FGEnvironment::get_turbulence_rate_hz,
-        &FGEnvironment::set_turbulence_rate_hz);
-  fgSetArchivable("/environment/turbulence/rate-hz");
+  _tiedProperties.setRoot( fgGetNode( "/environment", true ) );
+
+  _tiedProperties.Tie( "effective-visibility-m", thesky,
+       &SGSky::get_visibility );
+
+  _tiedProperties.Tie("rebuild-layers", fgClouds,
+      &FGClouds::get_update_event,
+      &FGClouds::set_update_event);
+
+  _tiedProperties.Tie("turbulence/use-cloud-turbulence", &sgEnviro,
+      &SGEnviro::get_turbulence_enable_state,
+      &SGEnviro::set_turbulence_enable_state);
 
   for (int i = 0; i < MAX_CLOUD_LAYERS; i++) {
-    char buf[128];
-    sprintf(buf, "/environment/clouds/layer[%d]/span-m", i);
-    fgTie(buf, this, i,
+    SGPropertyNode_ptr layerNode = fgGetNode("/environment/clouds",true)->getChild("layer", i, true );
+
+    _tiedProperties.Tie( layerNode->getNode("span-m",true), this, i, 
 	  &FGEnvironmentMgr::get_cloud_layer_span_m,
 	  &FGEnvironmentMgr::set_cloud_layer_span_m);
-    fgSetArchivable(buf);
-    sprintf(buf, "/environment/clouds/layer[%d]/elevation-ft", i);
-    fgTie(buf, this, i,
+
+    _tiedProperties.Tie( layerNode->getNode("elevation-ft",true), this, i, 
 	  &FGEnvironmentMgr::get_cloud_layer_elevation_ft,
 	  &FGEnvironmentMgr::set_cloud_layer_elevation_ft);
-    fgSetArchivable(buf);
-    sprintf(buf, "/environment/clouds/layer[%d]/thickness-ft", i);
-    fgTie(buf, this, i,
+
+    _tiedProperties.Tie( layerNode->getNode("thickness-ft",true), this, i, 
 	  &FGEnvironmentMgr::get_cloud_layer_thickness_ft,
 	  &FGEnvironmentMgr::set_cloud_layer_thickness_ft);
-    fgSetArchivable(buf);
-    sprintf(buf, "/environment/clouds/layer[%d]/transition-ft", i);
-    fgTie(buf, this, i,
+
+    _tiedProperties.Tie( layerNode->getNode("transition-ft",true), this, i, 
 	  &FGEnvironmentMgr::get_cloud_layer_transition_ft,
 	  &FGEnvironmentMgr::set_cloud_layer_transition_ft);
-    fgSetArchivable(buf);
-    sprintf(buf, "/environment/clouds/layer[%d]/coverage", i);
-    fgTie(buf, this, i,
+
+    _tiedProperties.Tie( layerNode->getNode("coverage",true), this, i, 
 	  &FGEnvironmentMgr::get_cloud_layer_coverage,
 	  &FGEnvironmentMgr::set_cloud_layer_coverage);
-    fgSetArchivable(buf);
+
+    _tiedProperties.Tie( layerNode->getNode("coverage-type",true), this, i, 
+	  &FGEnvironmentMgr::get_cloud_layer_coverage_type,
+	  &FGEnvironmentMgr::set_cloud_layer_coverage_type);
+
   }
 
-  fgTie("/environment/metar/data", _metarcontroller,
-          &FGMetarCtrl::get_metar, &FGMetarCtrl::set_metar );
+  _tiedProperties.setRoot( fgGetNode("/sim/rendering", true ) );
 
-  fgTie("/sim/rendering/clouds3d-enable", fgClouds,
+  _tiedProperties.Tie( "clouds3d-enable", fgClouds,
 	  &FGClouds::get_3dClouds,
 	  &FGClouds::set_3dClouds);
-  fgTie("/sim/rendering/clouds3d-density", thesky,
+
+  _tiedProperties.Tie( "clouds3d-density", thesky,
 	  &SGSky::get_3dCloudDensity,
 	  &SGSky::set_3dCloudDensity);
-  fgTie("/sim/rendering/clouds3d-vis-range", thesky,
+
+  _tiedProperties.Tie("clouds3d-vis-range", thesky,
         &SGSky::get_3dCloudVisRange,
         &SGSky::set_3dCloudVisRange);
   
-  fgTie("/sim/rendering/precipitation-enable", &sgEnviro,
+  _tiedProperties.Tie("precipitation-enable", &sgEnviro,
 	  &SGEnviro::get_precipitation_enable_state, 
 	  &SGEnviro::set_precipitation_enable_state);
-  fgTie("/environment/rebuild-layers", fgClouds,
-      &FGClouds::get_update_event,
-      &FGClouds::set_update_event);
-  fgTie("/sim/rendering/lightning-enable", &sgEnviro,
+
+  _tiedProperties.Tie("lightning-enable", &sgEnviro,
       &SGEnviro::get_lightning_enable_state,
       &SGEnviro::set_lightning_enable_state);
-  fgTie("/environment/turbulence/use-cloud-turbulence", &sgEnviro,
-      &SGEnviro::get_turbulence_enable_state,
-      &SGEnviro::set_turbulence_enable_state);
+
   sgEnviro.config(fgGetNode("/sim/rendering/precipitation"));
 }
 
 void
 FGEnvironmentMgr::unbind ()
 {
-  fgUntie("/environment/visibility-m");
-  fgUntie("/environment/effective-visibility-m");
-  fgUntie("/environment/temperature-sea-level-degc");
-  fgUntie("/environment/temperature-degc");
-  fgUntie("/environment/dewpoint-sea-level-degc");
-  fgUntie("/environment/dewpoint-degc");
-  fgUntie("/environment/pressure-sea-level-inhg");
-  fgUntie("/environment/pressure-inhg");
-  fgUntie("/environment/density-inhg");
-  fgUntie("/environment/relative-humidity");
-  fgUntie("/environment/atmosphere/density-tropo-avg");
-  fgUntie("/environment/wind-from-north-fps");
-  fgUntie("/environment/wind-from-east-fps");
-  fgUntie("/environment/wind-from-down-fps");
-
-  fgUntie("/environment/thermal-lift-fps");
-  fgUntie("/environment/ridge-lift-fps");
-  fgUntie("/environment/local-weather-lift");
-
-  fgUntie("/environment/atmosphere/altitude-half-to-sun");
-  fgUntie("/environment/atmosphere/altitude-troposphere-top");
-  for (int i = 0; i < MAX_CLOUD_LAYERS; i++) {
-    char buf[128];
-    sprintf(buf, "/environment/clouds/layer[%d]/span-m", i);
-    fgUntie(buf);
-    sprintf(buf, "/environment/clouds/layer[%d]/elevation-ft", i);
-    fgUntie(buf);
-    sprintf(buf, "/environment/clouds/layer[%d]/thickness-ft", i);
-    fgUntie(buf);
-    sprintf(buf, "/environment/clouds/layer[%d]/transition-ft", i);
-    fgUntie(buf);
-    sprintf(buf, "/environment/clouds/layer[%d]/type", i);
-    fgUntie(buf);
-  }
-  fgUntie("/sim/rendering/clouds3d-enable");
-  fgUntie("/sim/rendering/clouds3d-vis-range");
-  fgUntie("/sim/rendering/clouds3d-density");
-  fgUntie("/sim/rendering/precipitation-enable");
-  fgUntie("/environment/rebuild-layers");
-  fgUntie("/environment/weather-scenario");
-  fgUntie("/sim/rendering/lightning-enable");
-  fgUntie("/environment/turbulence/use-cloud-turbulence");
+  _tiedProperties.Untie();
+  _environment->Untie();
   SGSubsystemGroup::unbind();
 }
 
@@ -301,14 +192,14 @@ FGEnvironmentMgr::update (double dt)
 {
   SGSubsystemGroup::update(dt);
   
-  _environment->set_elevation_ft(fgGetDouble("/position/altitude-ft"));
-  _environment->set_local_weather_lift_fps(fgGetDouble("/local-weather/current/thermal-lift"));
-  osg::Vec3 windVec(_environment->get_wind_from_north_fps(),
-                    -_environment->get_wind_from_east_fps(),
-                    0);
-  simgear::Particles::setWindVector(windVec * SG_FEET_TO_METER);
-  //simgear::Particles::setWindFrom( _environment->get_wind_from_heading_deg(),
-  //			   _environment->get_wind_speed_kt() );
+  _environment->set_elevation_ft( _altitudeNode->getDoubleValue() );
+
+  simgear::Particles::setWindFrom( _environment->get_wind_from_heading_deg(),
+				   _environment->get_wind_speed_kt() );
+  if( _cloudLayersDirty ) {
+    _cloudLayersDirty = false;
+    fgClouds->set_update_event( fgClouds->get_update_event()+1 );
+  }
 }
 
 FGEnvironment
@@ -320,9 +211,9 @@ FGEnvironmentMgr::getEnvironment () const
 FGEnvironment
 FGEnvironmentMgr::getEnvironment (double lat, double lon, double alt) const
 {
-				// Always returns the same environment
-				// for now; we'll make it interesting
-				// later.
+  // Always returns the same environment
+  // for now; we'll make it interesting
+  // later.
   FGEnvironment env = *_environment;
   env.set_elevation_ft(alt);
   return env;
@@ -404,48 +295,41 @@ FGEnvironmentMgr::set_cloud_layer_transition_ft (int index,
 const char *
 FGEnvironmentMgr::get_cloud_layer_coverage (int index) const
 {
-  switch (thesky->get_cloud_layer(index)->getCoverage()) {
-  case SGCloudLayer::SG_CLOUD_OVERCAST:
-    return "overcast";
-  case SGCloudLayer::SG_CLOUD_BROKEN:
-    return "broken";
-  case SGCloudLayer::SG_CLOUD_SCATTERED:
-    return "scattered";
-  case SGCloudLayer::SG_CLOUD_FEW:
-    return "few";
-  case SGCloudLayer::SG_CLOUD_CIRRUS:
-    return "cirrus";
-  case SGCloudLayer::SG_CLOUD_CLEAR:
-    return "clear";
-  default:
-    return "unknown";
-  }
+  return thesky->get_cloud_layer(index)->getCoverageString().c_str();
 }
 
 void
 FGEnvironmentMgr::set_cloud_layer_coverage (int index,
                                             const char * coverage_name)
 {
-  SGCloudLayer::Coverage coverage;
-  if (!strcmp(coverage_name, "overcast"))
-    coverage = SGCloudLayer::SG_CLOUD_OVERCAST;
-  else if (!strcmp(coverage_name, "broken"))
-    coverage = SGCloudLayer::SG_CLOUD_BROKEN;
-  else if (!strcmp(coverage_name, "scattered"))
-    coverage = SGCloudLayer::SG_CLOUD_SCATTERED;
-  else if (!strcmp(coverage_name, "few"))
-    coverage = SGCloudLayer::SG_CLOUD_FEW;
-  else if (!strcmp(coverage_name, "cirrus"))
-    coverage = SGCloudLayer::SG_CLOUD_CIRRUS;
-  else if (!strcmp(coverage_name, "clear"))
-    coverage = SGCloudLayer::SG_CLOUD_CLEAR;
-  else {
-    SG_LOG(SG_INPUT, SG_WARN, "Unknown cloud type " << coverage_name);
-    coverage = SGCloudLayer::SG_CLOUD_CLEAR;
-  }
-  thesky->get_cloud_layer(index)->setCoverage(coverage);
+  if( thesky->get_cloud_layer(index)->getCoverageString() == coverage_name )
+    return;
+
+  thesky->get_cloud_layer(index)->setCoverageString(coverage_name);
+  _cloudLayersDirty = true;
 }
 
+int
+FGEnvironmentMgr::get_cloud_layer_coverage_type (int index) const
+{
+  return thesky->get_cloud_layer(index)->getCoverage();
+}
+
+
+void 
+FGEnvironmentMgr::set_cloud_layer_coverage_type (int index, int type )
+{
+  if( type < 0 || type >= SGCloudLayer::SG_MAX_CLOUD_COVERAGES ) {
+    SG_LOG(SG_ALL,SG_WARN,"Unknown cloud layer type " << type << " ignored" );
+    return;
+  }
+
+  if( static_cast<SGCloudLayer::Coverage>(type) == thesky->get_cloud_layer(index)->getCoverage() )
+    return;
+
+  thesky->get_cloud_layer(index)->setCoverage(static_cast<SGCloudLayer::Coverage>(type));
+  _cloudLayersDirty = true;
+}
 
 
 // end of environment-mgr.cxx

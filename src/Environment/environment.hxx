@@ -18,8 +18,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-// $Id$
-
 
 #ifndef _ENVIRONMENT_HXX
 #define _ENVIRONMENT_HXX
@@ -27,6 +25,7 @@
 #include <simgear/compiler.h>
 
 #include <cmath>
+#include "tiedpropertylist.hxx"
 
 /**
  * Model the natural environment.
@@ -45,9 +44,11 @@ public:
   FGEnvironment (const FGEnvironment &environment);
   virtual ~FGEnvironment();
 
-  virtual void copy (const FGEnvironment &environment);
+  FGEnvironment & operator = ( const FGEnvironment & other );
 
   virtual void read (const SGPropertyNode * node);
+  virtual void Tie( SGPropertyNode_ptr base, bool setArchivable = true );
+  virtual void Untie();
   
   virtual double get_visibility_m () const;
 
@@ -70,9 +71,6 @@ public:
   virtual double get_wind_from_north_fps () const;
   virtual double get_wind_from_east_fps () const;
   virtual double get_wind_from_down_fps () const;
-  virtual double get_thermal_lift_fps () const;
-  virtual double get_ridge_lift_fps () const;  
-  virtual double get_local_weather_lift_fps () const;
 
   virtual double get_turbulence_magnitude_norm () const;
   virtual double get_turbulence_rate_hz () const;
@@ -91,9 +89,6 @@ public:
   virtual void set_wind_from_north_fps (double n);
   virtual void set_wind_from_east_fps (double e);
   virtual void set_wind_from_down_fps (double d);
-  virtual void set_thermal_lift_fps (double th);
-  virtual void set_ridge_lift_fps (double ri);
-  virtual void set_local_weather_lift_fps (double lwl);
 
   virtual void set_turbulence_magnitude_norm (double t);
   virtual void set_turbulence_rate_hz (double t);
@@ -105,21 +100,23 @@ public:
 
   virtual bool set_live_update(bool live_update);
 
-  void _recalc_ne ();
-  void _recalc_alt_dewpoint ();
-  void _recalc_density ();
-  void _recalc_relative_humidity ();
-  void _recalc_alt_pt ();
+
+  FGEnvironment & interpolate (const FGEnvironment & env2, double fraction, FGEnvironment * result) const;
 private:
+  virtual void copy (const FGEnvironment &environment);
   void _init();
   void _recalc_hdgspd ();
-  void _recalc_updraft ();
 
   void _recalc_sl_temperature ();
   void _recalc_sl_dewpoint ();
   void _recalc_sl_pressure ();
 
   void _recalc_density_tropo_avg_kgm3 ();
+  void _recalc_ne ();
+  void _recalc_alt_dewpoint ();
+  void _recalc_density ();
+  void _recalc_relative_humidity ();
+  void _recalc_alt_pt ();
 
   double elevation_ft;
   double visibility_m;
@@ -147,15 +144,10 @@ private:
   double wind_from_north_fps;
   double wind_from_east_fps;
   double wind_from_down_fps;
-  double thermal_lift_fps;
-  double ridge_lift_fps;
-  double local_weather_lift_fps;
 
   bool     live_update;
+  TiedPropertyList _tiedProperties;
 
 };
-
-void interpolate (const FGEnvironment * env1, const FGEnvironment * env2,
-                  double fraction, FGEnvironment * result);
 
 #endif // _ENVIRONMENT_HXX

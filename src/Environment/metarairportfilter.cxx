@@ -1,8 +1,8 @@
-// environment-ctrl.hxx -- controller for environment information.
+// metarairportfilter.cxx -- Implementation of AirportFilter
 //
-// Written by David Megginson, started May 2002.
+// Written by Torsten Dreyer, August 2010
 //
-// Copyright (C) 2002  David Megginson - david@megginson.com
+// Copyright (C) 2010  Torsten Dreyer Torsten(at)t3r(dot)de
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -19,16 +19,20 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#ifndef _ENVIRONMENT_CTRL_HXX
-#define _ENVIRONMENT_CTRL_HXX
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
-#include <simgear/structure/subsystem_mgr.hxx>
+#include "metarairportfilter.hxx"
 
 namespace Environment {
-    class LayerInterpolateController : public SGSubsystem {
-    public:
-        static LayerInterpolateController * createInstance( SGPropertyNode_ptr rootNode );
-    };
-} // namespace
 
-#endif // _ENVIRONMENT_CTRL_HXX
+MetarAirportFilter * MetarAirportFilter::_instance = NULL;
+
+MetarAirportFilter * MetarAirportFilter::instance()
+{
+  return _instance != NULL ? _instance :
+    (_instance = new MetarAirportFilter());
+}
+
+} // namespace Environment

@@ -108,7 +108,7 @@ pair<double,double> PT_vs_hpt(
   }
   
 // Should never get here.
-  SG_LOG(SG_GENERAL, SG_ALERT, "PT_vs_hpt: ran out of layers");
+  SG_LOG(SG_GENERAL, SG_ALERT, "PT_vs_hpt: ran out of layers for h=" << hh );
   return make_pair(d0, d0);
 }
 
