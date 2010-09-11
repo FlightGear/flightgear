@@ -18,7 +18,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-// $Id$
 
 #ifndef _ENVIRONMENT_MGR_HXX
 #define _ENVIRONMENT_MGR_HXX
@@ -26,6 +25,7 @@
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/SGMath.hxx>
+#include "tiedpropertylist.hxx"
 
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <cmath>
@@ -34,7 +34,6 @@
 #endif
 
 class FGEnvironment;
-class FGEnvironmentCtrl;
 class FGMetarCtrl;
 class FGMetarFetcher;
 class FGClouds;
@@ -86,14 +85,14 @@ private:
   void set_cloud_layer_transition_ft (int index, double transition_ft);
   const char * get_cloud_layer_coverage (int index) const;
   void set_cloud_layer_coverage (int index, const char * coverage);
+  int get_cloud_layer_coverage_type (int index) const;
+  void set_cloud_layer_coverage_type (int index, int type );
 
   FGEnvironment * _environment;	// always the same, for now
-  FGEnvironmentCtrl * _controller; // always the same, for now
-  FGMetarCtrl * _metarcontroller; 
-  FGMetarFetcher * _metarfetcher;
-  FGPrecipitationMgr* _precipitationManager;
-
   FGClouds *fgClouds;
+  SGPropertyNode_ptr _altitudeNode;
+  bool _cloudLayersDirty;
+  TiedPropertyList _tiedProperties;
 };
 
 #endif // _ENVIRONMENT_MGR_HXX

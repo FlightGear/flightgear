@@ -1,6 +1,7 @@
-// environment-ctrl.hxx -- controller for environment information.
+// realwx_ctrl.cxx -- Process real weather data
 //
 // Written by David Megginson, started May 2002.
+// Rewritten by Torsten Dreyer, August 2010
 //
 // Copyright (C) 2002  David Megginson - david@megginson.com
 //
@@ -19,16 +20,17 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#ifndef _ENVIRONMENT_CTRL_HXX
-#define _ENVIRONMENT_CTRL_HXX
+#ifndef _REALWX_CTRL_HXX
+#define _REALWX_CTRL_HXX
 
 #include <simgear/structure/subsystem_mgr.hxx>
 
 namespace Environment {
-    class LayerInterpolateController : public SGSubsystem {
-    public:
-        static LayerInterpolateController * createInstance( SGPropertyNode_ptr rootNode );
-    };
-} // namespace
+class RealWxController : public SGSubsystem
+{
+public:
+	static RealWxController * createInstance( SGPropertyNode_ptr rootNode );
+};
 
-#endif // _ENVIRONMENT_CTRL_HXX
+} // namespace
+#endif // _REALWX_CTRL_HXX

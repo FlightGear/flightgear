@@ -18,8 +18,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-// $Id$
-
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -138,9 +136,6 @@ void FGEnvironment::_init()
     wind_from_north_fps = 0;
     wind_from_east_fps = 0;
     wind_from_down_fps = 0;
-    thermal_lift_fps = 0;
-    ridge_lift_fps= 0;
-    local_weather_lift_fps=0;
     altitude_half_to_sun_m = 1000;
     altitude_tropo_top_m = 10000;
 #ifdef USING_TABLES
@@ -164,6 +159,13 @@ FGEnvironment::FGEnvironment (const FGEnvironment &env)
 
 FGEnvironment::~FGEnvironment()
 {
+    Untie();
+}
+
+FGEnvironment & FGEnvironment::operator = ( const FGEnvironment & other )
+{
+    copy( other );
+    return *this;
 }
 
 void
@@ -181,9 +183,6 @@ FGEnvironment::copy (const FGEnvironment &env)
     wind_from_north_fps = env.wind_from_north_fps;
     wind_from_east_fps = env.wind_from_east_fps;
     wind_from_down_fps = env.wind_from_down_fps;
-    thermal_lift_fps = env.thermal_lift_fps;
-    ridge_lift_fps= env.ridge_lift_fps;
-    local_weather_lift_fps = env.local_weather_lift_fps;
     turbulence_magnitude_norm = env.turbulence_magnitude_norm;
     turbulence_rate_hz = env.turbulence_rate_hz;
 }
@@ -260,6 +259,107 @@ FGEnvironment::read (const SGPropertyNode * node)
     set_live_update(live_update);
 }
 
+void FGEnvironment::Tie( SGPropertyNode_ptr base, bool archivable )
+{
+  _tiedProperties.setRoot( base );
+
+  _tiedProperties.Tie( "visibility-m", this, 
+      &FGEnvironment::get_visibility_m, 
+      &FGEnvironment::set_visibility_m)
+      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+
+  _tiedProperties.Tie("temperature-sea-level-degc", this, 
+      &FGEnvironment::get_temperature_sea_level_degc, 
+      &FGEnvironment::set_temperature_sea_level_degc)
+      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+
+  _tiedProperties.Tie("temperature-degc", this, 
+      &FGEnvironment::get_temperature_degc,
+      &FGEnvironment::set_temperature_degc)
+      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+
+  _tiedProperties.Tie("temperature-degf", this, 
+      &FGEnvironment::get_temperature_degf);
+
+  _tiedProperties.Tie("dewpoint-sea-level-degc", this, 
+      &FGEnvironment::get_dewpoint_sea_level_degc, 
+      &FGEnvironment::set_dewpoint_sea_level_degc)
+      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+
+  _tiedProperties.Tie("dewpoint-degc", this, 
+      &FGEnvironment::get_dewpoint_degc,
+      &FGEnvironment::set_dewpoint_degc)
+      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+
+  _tiedProperties.Tie("pressure-sea-level-inhg", this, 
+      &FGEnvironment::get_pressure_sea_level_inhg, 
+      &FGEnvironment::set_pressure_sea_level_inhg)
+      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+
+  _tiedProperties.Tie("pressure-inhg", this, 
+      &FGEnvironment::get_pressure_inhg,
+      &FGEnvironment::set_pressure_inhg)
+      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+
+  _tiedProperties.Tie("density-slugft3", this, 
+      &FGEnvironment::get_density_slugft3); // read-only
+
+  _tiedProperties.Tie("relative-humidity", this, 
+      &FGEnvironment::get_relative_humidity); //ro
+
+  _tiedProperties.Tie("atmosphere/density-tropo-avg", this, 
+      &FGEnvironment::get_density_tropo_avg_kgm3); //ro
+
+  _tiedProperties.Tie("atmosphere/altitude-half-to-sun", this, 
+      &FGEnvironment::get_altitude_half_to_sun_m, 
+      &FGEnvironment::set_altitude_half_to_sun_m)
+      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+
+  _tiedProperties.Tie("atmosphere/altitude-troposphere-top", this, 
+      &FGEnvironment::get_altitude_tropo_top_m, 
+      &FGEnvironment::set_altitude_tropo_top_m)
+      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+
+  _tiedProperties.Tie("wind-from-heading-deg", this, 
+      &FGEnvironment::get_wind_from_heading_deg, 
+      &FGEnvironment::set_wind_from_heading_deg)
+      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+
+  _tiedProperties.Tie("wind-speed-kt", this, 
+      &FGEnvironment::get_wind_speed_kt, 
+      &FGEnvironment::set_wind_speed_kt)
+      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+
+  _tiedProperties.Tie("wind-from-north-fps", this, 
+      &FGEnvironment::get_wind_from_north_fps, 
+      &FGEnvironment::set_wind_from_north_fps)
+      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+
+  _tiedProperties.Tie("wind-from-east-fps", this, 
+      &FGEnvironment::get_wind_from_east_fps, 
+      &FGEnvironment::set_wind_from_east_fps)
+      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+
+  _tiedProperties.Tie("wind-from-down-fps", this, 
+      &FGEnvironment::get_wind_from_down_fps, 
+      &FGEnvironment::set_wind_from_down_fps)
+      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+
+  _tiedProperties.Tie("turbulence/magnitude-norm", this, 
+      &FGEnvironment::get_turbulence_magnitude_norm, 
+      &FGEnvironment::set_turbulence_magnitude_norm)
+      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+
+  _tiedProperties.Tie("turbulence/rate-hz", this, 
+      &FGEnvironment::get_turbulence_rate_hz, 
+      &FGEnvironment::set_turbulence_rate_hz)
+      ->setAttribute( SGPropertyNode::ARCHIVE, archivable );
+}
+
+void FGEnvironment::Untie()
+{
+    _tiedProperties.Untie();
+}
 
 double
 FGEnvironment::get_visibility_m () const
@@ -367,24 +467,6 @@ double
 FGEnvironment::get_wind_from_down_fps () const
 {
   return wind_from_down_fps;
-}
-
-double
-FGEnvironment::get_thermal_lift_fps () const
-{
-  return thermal_lift_fps;
-}
-
-double
-FGEnvironment::get_ridge_lift_fps () const
-{
-  return ridge_lift_fps;
-}
-
-double
-FGEnvironment::get_local_weather_lift_fps () const
-{
-  return local_weather_lift_fps;
 }
 
 double
@@ -528,33 +610,6 @@ FGEnvironment::set_wind_from_down_fps (double d)
 }
 
 void
-FGEnvironment::set_thermal_lift_fps (double th)
-{
-  thermal_lift_fps = th;
-  if( live_update ) {
-    _recalc_updraft();
-  }
-}
-
-void
-FGEnvironment::set_ridge_lift_fps (double ri)
-{
-  ridge_lift_fps = ri;
-  if( live_update ) {
-    _recalc_updraft();
-  }
-}
-
-void
-FGEnvironment::set_local_weather_lift_fps (double lwl)
-{
-  local_weather_lift_fps = lwl;
-  if( live_update ) {
-    _recalc_updraft();
-  }
-}
-
-void
 FGEnvironment::set_turbulence_magnitude_norm (double t)
 {
   turbulence_magnitude_norm = t;
@@ -600,34 +655,15 @@ FGEnvironment::set_altitude_tropo_top_m (double alt)
 void
 FGEnvironment::_recalc_hdgspd ()
 {
-  double angle_rad;
+  wind_from_heading_deg = 
+    atan2(wind_from_east_fps, wind_from_north_fps) * SGD_RADIANS_TO_DEGREES;
 
-  if (wind_from_east_fps == 0) {
-    angle_rad = (wind_from_north_fps >= 0 ? SGD_PI_2 : -SGD_PI_2);
-  } else {
-    angle_rad = atan(wind_from_north_fps/wind_from_east_fps);
-  }
-  wind_from_heading_deg = angle_rad * SGD_RADIANS_TO_DEGREES;
-  if (wind_from_east_fps >= 0)
-    wind_from_heading_deg = 90 - wind_from_heading_deg;
-  else
-    wind_from_heading_deg = 270 - wind_from_heading_deg;
+  if( wind_from_heading_deg < 0 )
+    wind_from_heading_deg += 360.0;
 
-#if 0
-  // FIXME: Windspeed can become negative with these formulas.
-  //        which can cause problems for animations that rely
-  //        on the windspeed property.
-  if (angle_rad == 0)
-    wind_speed_kt = fabs(wind_from_east_fps
-			 * SG_METER_TO_NM * SG_FEET_TO_METER * 3600);
-  else
-    wind_speed_kt = (wind_from_north_fps / sin(angle_rad))
-      * SG_METER_TO_NM * SG_FEET_TO_METER * 3600;
-#else
   wind_speed_kt = sqrt(wind_from_north_fps * wind_from_north_fps +
                        wind_from_east_fps * wind_from_east_fps) 
                   * SG_METER_TO_NM * SG_FEET_TO_METER * 3600;
-#endif
 }
 
 void
@@ -640,12 +676,6 @@ FGEnvironment::_recalc_ne ()
     cos(wind_from_heading_deg * SGD_DEGREES_TO_RADIANS);
   wind_from_east_fps = speed_fps *
     sin(wind_from_heading_deg * SGD_DEGREES_TO_RADIANS);
-}
-
-void
-FGEnvironment::_recalc_updraft ()
-{
-  wind_from_down_fps = thermal_lift_fps + ridge_lift_fps + local_weather_lift_fps ;
 }
 
 // Intended to help with the interpretation of METAR data,
@@ -736,7 +766,8 @@ FGEnvironment::_recalc_alt_pt ()
     }
   }
 #endif
-  double press, temp;
+  double press = pressure_inhg * inHg;
+  double temp = temperature_degc + freezing;
   boost::tie(press, temp) = PT_vs_hpt(elevation_ft * foot, 
         pressure_sea_level_inhg * inHg, temperature_sea_level_degc + freezing);
   temperature_degc = temp - freezing;
@@ -830,57 +861,57 @@ do_interp_deg (double a, double b, double fraction)
     return fmod(do_interp(a, b, fraction), 360);
 }
 
-void
-interpolate (const FGEnvironment * env1, const FGEnvironment * env2,
-             double fraction, FGEnvironment * result)
+FGEnvironment &
+FGEnvironment::interpolate( const FGEnvironment & env2,
+             double fraction, FGEnvironment * result) const
 {
     // don't calculate each internal property every time we set a single value
     // we trigger that at the end of the interpolation process
     bool live_update = result->set_live_update( false );
 
     result->set_visibility_m
-        (do_interp(env1->get_visibility_m(),
-                   env2->get_visibility_m(),
+        (do_interp(get_visibility_m(),
+                   env2.get_visibility_m(),
                    fraction));
 
     result->set_temperature_sea_level_degc
-        (do_interp(env1->get_temperature_sea_level_degc(),
-                   env2->get_temperature_sea_level_degc(),
+        (do_interp(get_temperature_sea_level_degc(),
+                   env2.get_temperature_sea_level_degc(),
                    fraction));
 
     result->set_dewpoint_sea_level_degc
-        (do_interp(env1->get_dewpoint_sea_level_degc(),
-                   env2->get_dewpoint_sea_level_degc(),
+        (do_interp(get_dewpoint_sea_level_degc(),
+                   env2.get_dewpoint_sea_level_degc(),
                    fraction));
 
     result->set_pressure_sea_level_inhg
-        (do_interp(env1->get_pressure_sea_level_inhg(),
-                   env2->get_pressure_sea_level_inhg(),
+        (do_interp(get_pressure_sea_level_inhg(),
+                   env2.get_pressure_sea_level_inhg(),
                    fraction));
 
     result->set_wind_from_heading_deg
-        (do_interp_deg(env1->get_wind_from_heading_deg(),
-                       env2->get_wind_from_heading_deg(),
+        (do_interp_deg(get_wind_from_heading_deg(),
+                       env2.get_wind_from_heading_deg(),
                        fraction));
 
     result->set_wind_speed_kt
-        (do_interp(env1->get_wind_speed_kt(),
-                   env2->get_wind_speed_kt(),
+        (do_interp(get_wind_speed_kt(),
+                   env2.get_wind_speed_kt(),
                    fraction));
 
     result->set_elevation_ft
-        (do_interp(env1->get_elevation_ft(),
-                   env2->get_elevation_ft(),
+        (do_interp(get_elevation_ft(),
+                   env2.get_elevation_ft(),
                    fraction));
 
     result->set_turbulence_magnitude_norm
-        (do_interp(env1->get_turbulence_magnitude_norm(),
-                   env2->get_turbulence_magnitude_norm(),
+        (do_interp(get_turbulence_magnitude_norm(),
+                   env2.get_turbulence_magnitude_norm(),
                    fraction));
 
     result->set_turbulence_rate_hz
-        (do_interp(env1->get_turbulence_rate_hz(),
-                   env2->get_turbulence_rate_hz(),
+        (do_interp(get_turbulence_rate_hz(),
+                   env2.get_turbulence_rate_hz(),
                    fraction));
 
     // calculate derived properties here to avoid duplicate expensive computations
@@ -891,6 +922,8 @@ interpolate (const FGEnvironment * env1, const FGEnvironment * env2,
     result->_recalc_relative_humidity();
 
     result->set_live_update(live_update);
+
+    return *result;
 }
 
 // end of environment.cxx
