@@ -108,6 +108,7 @@ FGLight::FGLight ()
       _cloud_color(0, 0, 0, 0),
       _adj_fog_color(0, 0, 0, 0),
       _adj_sky_color(0, 0, 0, 0),
+      _saturation(1.0),
       _dt_total(0)
 {
 }
@@ -172,6 +173,7 @@ void FGLight::reinit () {
 void FGLight::bind () {
     SGPropertyNode *prop = globals->get_props();
     prop->tie("/sim/time/sun-angle-rad",SGRawValuePointer<double>(&_sun_angle));
+    prop->tie("/rendering/scene/saturation",SGRawValuePointer<float>(&_saturation));
     prop->tie("/rendering/scene/ambient/red",SGRawValuePointer<float>(&_scene_ambient[0]));
     prop->tie("/rendering/scene/ambient/green",SGRawValuePointer<float>(&_scene_ambient[1]));
     prop->tie("/rendering/scene/ambient/blue",SGRawValuePointer<float>(&_scene_ambient[2]));
@@ -201,6 +203,7 @@ void FGLight::bind () {
 void FGLight::unbind () {
     SGPropertyNode *prop = globals->get_props();
     prop->untie("/sim/time/sun-angle-rad");
+    prop->untie("/rendering/scene/saturation");
     prop->untie("/rendering/scene/ambient/red");
     prop->untie("/rendering/scene/ambient/green");
     prop->untie("/rendering/scene/ambient/blue");
@@ -251,10 +254,18 @@ void FGLight::update_sky_color () {
     float deg = _sun_angle * SGD_RADIANS_TO_DEGREES;
     SG_LOG( SG_EVENT, SG_DEBUG, "  Sun angle = " << deg );
 
+    if (_saturation < 0.0) _saturation = 0.0;
+    else if (_saturation > 1.0) _saturation = 1.0;
+
     float ambient = _ambient_tbl->interpolate( deg ) + visibility_inv/10;
     float diffuse = _diffuse_tbl->interpolate( deg );
     float specular = _specular_tbl->interpolate( deg ) * visibility_log;
     float sky_brightness = _sky_tbl->interpolate( deg );
+
+    ambient *= _saturation;
+    diffuse *= _saturation;
+    specular *= _saturation;
+    sky_brightness *= _saturation;
 
     SG_LOG( SG_EVENT, SG_DEBUG,
 	    "  ambient = " << ambient << "  diffuse = " << diffuse 
@@ -394,7 +405,7 @@ void FGLight::update_adj_fog_color () {
        sif = 1e-4;
 
     float rf1 = fabs((hor_rotation - SGD_PI) / SGD_PI);		// 0.0 .. 1.0
-    float rf2 = avf * pow(rf1*rf1, 1/sif) * 1.0639;
+    float rf2 = avf * pow(rf1*rf1, 1/sif) * 1.0639 * _saturation;
     float rf3 = 1.0 - rf2;
 
     gamma = system_gamma * (0.9 - sif*avf);

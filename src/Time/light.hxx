@@ -96,6 +96,7 @@ private:
     // clear sky and fog color adjusted for sunset effects
     SGVec4f _adj_fog_color;
     SGVec4f _adj_sky_color;
+    float _saturation;
 
     double _dt_total;
 
@@ -130,7 +131,6 @@ public:
     inline const SGVec4f& cloud_color () const { return _cloud_color; }
     inline const SGVec4f& adj_fog_color () const { return _adj_fog_color; }
     inline const SGVec4f& adj_sky_color () const { return _adj_sky_color; }
-
 
     // Sun related functions
 
