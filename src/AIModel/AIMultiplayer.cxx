@@ -102,6 +102,8 @@ void FGAIMultiplayer::unbind() {
     props->untie("controls/lag-adjust-system-speed");
     props->untie("controls/invisible");
     props->untie("refuel/contact");
+    props->untie("tanker");
+
 }
 
 void FGAIMultiplayer::update(double dt)
