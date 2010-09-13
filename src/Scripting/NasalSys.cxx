@@ -212,6 +212,7 @@ static naRef f_setprop(naContext c, naRef me, int argc, naRef* args)
     buf[BUFLEN] = 0;
     char* p = buf;
     int buflen = BUFLEN;
+    if(argc < 2) naRuntimeError(c, "setprop() expects at least 2 arguments");
     for(int i=0; i<argc-1; i++) {
         naRef s = naStringValue(c, args[i]);
         if(naIsNil(s)) return naNil();
