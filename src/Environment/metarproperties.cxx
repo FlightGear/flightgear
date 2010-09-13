@@ -35,6 +35,8 @@ using std::string;
 
 namespace Environment {
 
+static vector<string> coverage_string;
+
 MetarProperties::MetarProperties( SGPropertyNode_ptr rootNode ) :
   _rootNode(rootNode),
   _metarValidNode( rootNode->getNode( "valid", true ) ),
@@ -62,6 +64,14 @@ MetarProperties::MetarProperties( SGPropertyNode_ptr rootNode ) :
   _snow(0.0),
   _snow_cover(false)
 {
+  // Hack to avoid static initialization order problems on OSX
+  if( coverage_string.size() == 0 ) {
+    coverage_string.push_back(SGCloudLayer::SG_CLOUD_CLEAR_STRING);
+    coverage_string.push_back(SGCloudLayer::SG_CLOUD_FEW_STRING);
+    coverage_string.push_back(SGCloudLayer::SG_CLOUD_SCATTERED_STRING);
+    coverage_string.push_back(SGCloudLayer::SG_CLOUD_BROKEN_STRING);
+    coverage_string.push_back(SGCloudLayer::SG_CLOUD_OVERCAST_STRING);
+  }
   // don't tie metar-valid, so listeners get triggered
   _metarValidNode->setBoolValue( false );
   _tiedProperties.setRoot( _rootNode );
@@ -96,13 +106,6 @@ MetarProperties::~MetarProperties()
 {
 }
 
-static const string coverage_string[] = { 
-  SGCloudLayer::SG_CLOUD_CLEAR_STRING,
-  SGCloudLayer::SG_CLOUD_FEW_STRING,
-  SGCloudLayer::SG_CLOUD_SCATTERED_STRING,
-  SGCloudLayer::SG_CLOUD_BROKEN_STRING,
-  SGCloudLayer::SG_CLOUD_OVERCAST_STRING,
-};
 
 static const double thickness_value[] = { 0, 65, 600, 750, 1000 };
 
