@@ -1548,6 +1548,9 @@
     <ClCompile Include="..\..\..\src\Time\TimeManager.cxx">
       <Filter>Lib_Time</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\FDM\JSBSim\math\FGModelFunctions.cpp">
+      <Filter>Lib_JSBSim\math</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\Aircraft\controls.hxx">
@@ -2920,6 +2923,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\Time\TimeManager.hxx">
       <Filter>Lib_Time</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\FDM\JSBSim\math\FGModelFunctions.h">
+      <Filter>Lib_JSBSim\math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

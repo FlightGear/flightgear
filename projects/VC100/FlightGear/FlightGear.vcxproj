@@ -416,6 +416,7 @@
     <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGFunction.cpp" />
     <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGLocation.cpp" />
     <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGMatrix33.cpp" />
+    <ClCompile Include="..\..\..\src\FDM\JSBSim\math\FGModelFunctions.cpp" />
     <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGPropertyValue.cpp" />
     <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGQuaternion.cpp" />
     <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGRealValue.cpp" />
@@ -994,6 +995,7 @@
     <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGFunction.h" />
     <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGLocation.h" />
     <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGMatrix33.h" />
+    <ClInclude Include="..\..\..\src\FDM\JSBSim\math\FGModelFunctions.h" />
     <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGParameter.h" />
     <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGPropertyValue.h" />
     <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGQuaternion.h" />
