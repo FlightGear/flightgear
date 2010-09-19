@@ -2115,6 +2115,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\..\src\FDM\JSBSim\math\FGModelFunctions.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\FDM\JSBSim\math\FGModelFunctions.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\src\Fdm\JSBSim\math\FGParameter.h"
 					>
 				</File>
@@ -4644,27 +4652,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Environment\precipitation_mgr.cxx"
+				RelativePath="..\..\..\src\Environment\metarairportfilter.cxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Environment\precipitation_mgr.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Environment\ridge_lift.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Environment\ridge_lift.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Environment\realwx_ctrl.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Environment\realwx_ctrl.hxx"
+				RelativePath="..\..\..\src\Environment\metarairportfilter.hxx"
 				>
 			</File>
 			<File
@@ -4676,11 +4668,27 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Environment\metarairportfilter.cxx"
+				RelativePath="..\..\..\src\Environment\precipitation_mgr.cxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Environment\metarairportfilter.hxx"
+				RelativePath="..\..\..\src\Environment\precipitation_mgr.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\realwx_ctrl.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\realwx_ctrl.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\ridge_lift.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\ridge_lift.hxx"
 				>
 			</File>
 			<File
