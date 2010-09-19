@@ -43,7 +43,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGFunction.cpp,v 1.32 2010/03/18 13:21:24 jberndt Exp $";
+static const char *IdSrc = "$Id: FGFunction.cpp,v 1.35 2010/08/28 12:41:56 jberndt Exp $";
 static const char *IdHdr = ID_FUNCTION;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -167,12 +167,19 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
     // data types
     if (operation == property_string || operation == p_string) {
       property_name = element->GetDataLine();
-      FGPropertyManager* newNode = PropertyManager->GetNode(property_name);
-      if (newNode == 0) {
-        cerr << "The property " << property_name << " is undefined." << endl;
-        abort();
-      } else {
+      if (property_name.find("#") != string::npos) {
+        if (is_number(Prefix)) {
+          property_name = replace(property_name,"#",Prefix);
+        }
+      }
+      FGPropertyManager* newNode = 0L;
+      if (PropertyManager->HasNode(property_name)) {
+        newNode = PropertyManager->GetNode(property_name);
         Parameters.push_back(new FGPropertyValue( newNode ));
+      } else {
+        cerr << fgcyan << "The property " + property_name + " is initially undefined."
+             << reset << endl;
+        Parameters.push_back(new FGPropertyValue( property_name ));
       }
     } else if (operation == value_string || operation == v_string) {
       Parameters.push_back(new FGRealValue(element->GetDataAsNumber()));
@@ -204,7 +211,7 @@ FGFunction::FGFunction(FGPropertyManager* propMan, Element* el, const string& pr
                operation == random_string ||
                operation == avg_string )
     {
-      Parameters.push_back(new FGFunction(PropertyManager, element));
+      Parameters.push_back(new FGFunction(PropertyManager, element, Prefix));
     } else if (operation != description_string) {
       cerr << "Bad operation " << operation << " detected in configuration file" << endl;
     }
@@ -241,10 +248,20 @@ double FGFunction::GetValue(void) const
 {
   unsigned int i;
   double scratch;
+  double temp=0;
 
   if (cached) return cachedValue;
 
-  double temp = Parameters[0]->GetValue();
+  try {
+    temp = Parameters[0]->GetValue();
+  } catch (string prop) {
+    if (PropertyManager->HasNode(prop)) {
+      ((FGPropertyValue*)Parameters[0])->SetNode(PropertyManager->GetNode(prop));
+      temp = Parameters[0]->GetValue();
+    } else {
+      throw("Property " + prop + " was not defined anywhere.");
+    }
+  }
 
   switch (Type) {
   case eTopLevel:
@@ -366,9 +383,21 @@ void FGFunction::bind(void)
   if ( !Name.empty() ) {
     string tmp;
     if (Prefix.empty())
-      tmp  = PropertyManager->mkPropertyName(Name, false); // Allow upper case
-    else
-      tmp  = PropertyManager->mkPropertyName(Prefix + "/" + Name, false); // Allow upper case
+      tmp  = PropertyManager->mkPropertyName(Name, false);
+    else {
+      if (is_number(Prefix)) {
+        if (Name.find("#") != string::npos) { // if "#" is found
+          Name = replace(Name,"#",Prefix);
+          tmp  = PropertyManager->mkPropertyName(Name, false);
+        } else {
+          cerr << "Malformed function name with number: " << Prefix
+            << " and property name: " << Name
+            << " but no \"#\" sign for substitution." << endl;
+        }
+      } else {
+        tmp  = PropertyManager->mkPropertyName(Prefix + "/" + Name, false);
+      }
+    }
 
     PropertyManager->Tie( tmp, this, &FGFunction::GetValue);
   }

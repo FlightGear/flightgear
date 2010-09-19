@@ -47,7 +47,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGFCSComponent.cpp,v 1.27 2009/10/24 22:59:30 jberndt Exp $";
+static const char *IdSrc = "$Id: FGFCSComponent.cpp,v 1.29 2010/09/07 00:40:03 jberndt Exp $";
 static const char *IdHdr = ID_FCSCOMPONENT;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -122,14 +122,16 @@ FGFCSComponent::FGFCSComponent(FGFCS* _fcs, Element* element) : fcs(_fcs)
     } else {
       InputSigns.push_back( 1.0);
     }
-    tmp = PropertyManager->GetNode(input);
-    if (tmp) {
-      InputNodes.push_back( tmp );
+    if (PropertyManager->HasNode(input)) {
+      tmp = PropertyManager->GetNode(input);
     } else {
-      cerr << fgred << "  In component: " << Name << " unknown property "
-           << input << " referenced. Aborting" << reset << endl;
-      exit(-1);
+      tmp = 0L;
+      // cerr << fgcyan << "In component: " + Name + " property "
+      //      + input + " is initially undefined." << reset << endl;
     }
+    InputNodes.push_back( tmp );
+    InputNames.push_back( input );
+
     input_element = element->FindNextElement("input");
   }
 
@@ -233,6 +235,24 @@ void FGFCSComponent::Clip(void)
     if (ClipMaxPropertyNode != 0) clipmax = clipMaxSign*ClipMaxPropertyNode->getDoubleValue();
     if (Output > clipmax)      Output = clipmax;
     else if (Output < clipmin) Output = clipmin;
+  }
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGFCSComponent::LateBind(void)
+{
+  FGPropertyManager* node = 0L;
+
+  for (unsigned int i=0; i<InputNodes.size(); i++) {
+    if (!InputNodes[i]) {
+      if (PropertyManager->HasNode(InputNames[i])) {
+        node = PropertyManager->GetNode(InputNames[i]);
+        InputNodes[i] = node;
+      } else {
+        throw(InputNames[i]);
+      }
+    }
   }
 }
 

@@ -49,7 +49,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_PROPAGATE "$Id: FGPropagate.h,v 1.43 2010/07/25 15:35:11 jberndt Exp $"
+#define ID_PROPAGATE "$Id: FGPropagate.h,v 1.48 2010/09/18 22:48:12 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -102,7 +102,7 @@ CLASS DOCUMENTATION
     @endcode
 
     @author Jon S. Berndt, Mathias Froehlich
-    @version $Id: FGPropagate.h,v 1.43 2010/07/25 15:35:11 jberndt Exp $
+    @version $Id: FGPropagate.h,v 1.48 2010/09/18 22:48:12 jberndt Exp $
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -148,9 +148,9 @@ public:
     FGColumnVector3 vInertialPosition;
 
     deque <FGColumnVector3> dqPQRdot;
-    deque <FGColumnVector3> dqUVWdot;
+    deque <FGColumnVector3> dqUVWidot;
     deque <FGColumnVector3> dqInertialVelocity;
-    deque <FGQuaternion> dqQtrndot;
+    deque <FGQuaternion>    dqQtrndot;
   };
 
   /** Constructor.
@@ -517,19 +517,23 @@ public:
 
   void SetVState(VehicleState* vstate) {
       VState.vLocation = vstate->vLocation;
+      UpdateLocationMatrices();
+      SetInertialOrientation(vstate->qAttitudeECI);
+      VehicleRadius = GetRadius();
       VState.vUVW = vstate->vUVW;
+      vVel = GetTb2l() * VState.vUVW;
       VState.vPQR = vstate->vPQR;
-      VState.qAttitudeLocal = vstate->qAttitudeLocal;
-      VState.qAttitudeECI = vstate->qAttitudeECI;
+      VState.vPQRi = VState.vPQR + Ti2b * vOmegaEarth;
+      VState.vInertialPosition = vstate->vInertialPosition;
 
-      VState.dqPQRdot.resize(4, FGColumnVector3(0.0,0.0,0.0));
-      VState.dqUVWdot.resize(4, FGColumnVector3(0.0,0.0,0.0));
-      VState.dqInertialVelocity.resize(4, FGColumnVector3(0.0,0.0,0.0));
-      VState.dqQtrndot.resize(4, FGColumnVector3(0.0,0.0,0.0));
+      InitializeDerivatives();
   }
+
+  void InitializeDerivatives(void);
 
   void SetInertialOrientation(FGQuaternion Qi);
   void SetInertialVelocity(FGColumnVector3 Vi);
+  void SetInertialRates(FGColumnVector3 vRates);
 
   const FGQuaternion GetQuaternion(void) const { return VState.qAttitudeLocal; }
 
@@ -545,18 +549,46 @@ public:
 
 // SET functions
 
-  void SetLongitude(double lon) { VState.vLocation.SetLongitude(lon); }
-  void SetLongitudeDeg(double lon) {SetLongitude(lon*degtorad);}
-  void SetLatitude(double lat) { VState.vLocation.SetLatitude(lat); }
-  void SetLatitudeDeg(double lat) {SetLatitude(lat*degtorad);}
-  void SetRadius(double r) { VState.vLocation.SetRadius(r); }
-  void SetLocation(const FGLocation& l) { VState.vLocation = l; }
+  void SetLongitude(double lon) {
+      VState.vLocation.SetLongitude(lon);
+      VState.vInertialPosition = GetTec2i() * VState.vLocation;
+      UpdateLocationMatrices();
+  }
+  void SetLongitudeDeg(double lon) { SetLongitude(lon*degtorad); }
+  void SetLatitude(double lat) {
+      VState.vLocation.SetLatitude(lat);
+      VState.vInertialPosition = GetTec2i() * VState.vLocation;
+      UpdateLocationMatrices();
+  }
+  void SetLatitudeDeg(double lat) { SetLatitude(lat*degtorad); }
+  void SetRadius(double r) {
+      VState.vLocation.SetRadius(r);
+      VState.vInertialPosition = GetTec2i() * VState.vLocation;
+      UpdateLocationMatrices();
+  }
+  void SetLocation(const FGLocation& l) {
+      VState.vLocation = l;
+      VState.vInertialPosition = GetTec2i() * VState.vLocation;
+      UpdateLocationMatrices();
+  }
+  void SetLocation(const FGColumnVector3& l) {
+      VState.vLocation = l;
+      VState.vInertialPosition = GetTec2i() * VState.vLocation;
+      UpdateLocationMatrices();
+  }
   void SetAltitudeASL(double altASL);
   void SetAltitudeASLmeters(double altASL) {SetAltitudeASL(altASL/fttom);}
   void SetSeaLevelRadius(double tt) { SeaLevelRadius = tt; }
   void SetTerrainElevation(double tt);
   void SetDistanceAGL(double tt);
   void SetInitialState(const FGInitialCondition *);
+  void SetPosition(const double Lon, const double Lat, const double Radius) {
+      VState.vLocation.SetPosition(Lon, Lat, Radius);
+      VState.vInertialPosition = GetTec2i() * VState.vLocation;
+      VehicleRadius = GetRadius();
+      UpdateLocationMatrices();
+  }
+
   void RecomputeLocalTerrainRadius(void);
 
   void NudgeBodyLocation(FGColumnVector3 deltaLoc) {
@@ -580,7 +612,7 @@ private:
 
   FGColumnVector3 vVel;
   FGColumnVector3 vPQRdot;
-  FGColumnVector3 vUVWdot;
+  FGColumnVector3 vUVWdot, vUVWidot;
   FGColumnVector3 vInertialVelocity;
   FGColumnVector3 vLocation;
   FGColumnVector3 vDeltaXYZEC;
@@ -599,11 +631,9 @@ private:
   FGMatrix33 Tb2i;   // body to ECI frame rotation matrix
   FGMatrix33 Ti2l;
   FGMatrix33 Tl2i;
-  FGLocation contactloc;
-  FGColumnVector3 dv;
   
   double LocalTerrainRadius, SeaLevelRadius, VehicleRadius;
-  double radInv;
+  FGColumnVector3 LocalTerrainVelocity;
   eIntegrateType integrator_rotational_rate;
   eIntegrateType integrator_translational_rate;
   eIntegrateType integrator_rotational_position;
@@ -613,6 +643,7 @@ private:
   void CalculatePQRdot(void);
   void CalculateQuatdot(void);
   void CalculateInertialVelocity(void);
+  void CalculateUVW(void);
   void CalculateUVWdot(void);
 
   void Integrate( FGColumnVector3& Integrand,
@@ -628,6 +659,9 @@ private:
                   eIntegrateType integration_type);
 
   void ResolveFrictionForces(double dt);
+
+  void UpdateLocationMatrices(void);
+  void UpdateBodyMatrices(void);
 
   void bind(void);
   void Debug(int from);
