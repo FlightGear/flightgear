@@ -3590,9 +3590,16 @@ MK_VIII::Mode3Handler::max_alt_loss (double _bias)
 double
 MK_VIII::Mode3Handler::get_bias (double initial_bias, double alt_loss)
 {
-  if (mk_data(radio_altitude).get() > 0)
-    while (alt_loss > max_alt_loss(initial_bias))
+  // do not repeat altitude-loss alerts below 30ft agl
+  if (mk_data(radio_altitude).get() > 30)
+  {
+    if (initial_bias < 0.0) // sanity check
+      initial_bias = 0.0;
+    // mk-viii spec: repeat alerts whenever losing 20% of initial altitude
+    while ((alt_loss > max_alt_loss(initial_bias))&&
+           (initial_bias < 1.0))
       initial_bias += 0.2;
+  }
 
   return initial_bias;
 }
@@ -3724,8 +3731,15 @@ MK_VIII::Mode4Handler::get_ab_envelope ()
 double
 MK_VIII::Mode4Handler::get_bias (double initial_bias, double min_agl)
 {
-  while (mk_data(radio_altitude).get() < min_agl - min_agl * initial_bias)
+  // do not repeat terrain/gear/flap alerts below 30ft agl
+  if (mk_data(radio_altitude).get() > 30.0)
+  {
+    if (initial_bias < 0.0) // sanity check
+      initial_bias = 0.0;
+    while ((mk_data(radio_altitude).get() < min_agl - min_agl * initial_bias)&&
+           (initial_bias < 1.0))
     initial_bias += 0.2;
+  }
 
   return initial_bias;
 }
@@ -3870,6 +3884,7 @@ MK_VIII::Mode5Handler::is_hard ()
 bool
 MK_VIII::Mode5Handler::is_soft (double bias)
 {
+  // do not repeat glide-slope alerts below 30ft agl
   if (mk_data(radio_altitude).get() > 30)
     {
       double bias_dots = 1.3 * bias;
@@ -3908,7 +3923,10 @@ MK_VIII::Mode5Handler::is_soft (double bias)
 double
 MK_VIII::Mode5Handler::get_soft_bias (double initial_bias)
 {
-  while (is_soft(initial_bias))
+  if (initial_bias < 0.0) // sanity check
+    initial_bias = 0.0;
+  while ((is_soft(initial_bias))&&
+         (initial_bias < 1.0))
     initial_bias += 0.2;
 
   return initial_bias;
@@ -4515,10 +4533,12 @@ MK_VIII::TCFHandler::update_runway ()
       
   if (!apt) return;
   
-	  has_runway = true;
-
 	  FGRunway* _runway = select_runway(apt);
     
+  if (!_runway) return;
+
+	  has_runway = true;
+
 	  runway.center.latitude = _runway->latitude();
 	  runway.center.longitude = _runway->longitude();
 
@@ -4808,8 +4828,15 @@ MK_VIII::TCFHandler::update ()
 	  if (mk_test_alert(TCF_TOO_LOW_TERRAIN))
 	    {
 	      double new_bias = bias;
-	      while (*reference < initial_value - initial_value * new_bias)
+	      // do not repeat terrain alerts below 30ft agl
+	      if (mk_data(radio_altitude).get() > 30)
+	      {
+	        if (new_bias < 0.0) // sanity check
+	          new_bias = 0.0;
+	        while ((*reference < initial_value - initial_value * new_bias)&&
+	               (new_bias < 1.0))
 		new_bias += 0.2;
+	      }
 
 	      if (new_bias > bias)
 		{
