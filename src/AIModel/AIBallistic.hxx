@@ -88,24 +88,30 @@ public:
     void setSlaved(bool s);
     void setSlavedLoad(bool s);
     void setPch (double e, double dt, double c);
-    void setHdg (double az, double dt, double c);
+    int setHdg (double az, double dt, double c);
     void setBnk(double r, double dt, double c);
     void setHt(double h, double dt, double c);
-    void setFormate(bool f);
+    void setSpd(double s, double dt, double c);
     void setParentNodes(const SGPropertyNode_ptr);
     void setParentPos();
+    void setOffsetPos(SGGeod pos, double heading, double pitch, double roll);
+    void setOffsetVelocity(double dt, SGGeod pos);
+
 
     double _getTime() const;
     double getRelBrgHitchToUser() const;
     double getElevHitchToUser() const;
     double getLoadOffset() const;
     double getContents();
+    double getDistanceToHitch() const;
+    double getElevToHitch() const;
+    double getBearingToHitch() const;
 
     SGVec3d getCartHitchPos() const;
 
     bool getHtAGL(double start);
     bool getSlaved() const;
-    bool getFormate() const;
+//    bool getFormate() const;
     bool getSlavedLoad() const;
 
     virtual const char* getTypeString(void) const { return "ballistic"; }
@@ -116,15 +122,32 @@ public:
     SGPropertyNode_ptr _force_azimuth_node;
     SGPropertyNode_ptr _force_elevation_node;
 
+    SGPropertyNode_ptr _pnode; // node for parent model
+    SGPropertyNode_ptr _p_pos_node; // nodes for parent parameters
+    SGPropertyNode_ptr _p_lat_node;
+    SGPropertyNode_ptr _p_lon_node;
+    SGPropertyNode_ptr _p_alt_node;
+    SGPropertyNode_ptr _p_agl_node;
+    SGPropertyNode_ptr _p_ori_node;
+    SGPropertyNode_ptr _p_pch_node;
+    SGPropertyNode_ptr _p_rll_node;
+    SGPropertyNode_ptr _p_hdg_node;
+    SGPropertyNode_ptr _p_vel_node;
+    SGPropertyNode_ptr _p_spd_node;
+
     double _height;
+    double _speed;
     double _ht_agl_ft;       // height above ground level
     double _azimuth;         // degrees true
     double _elevation;       // degrees
     double _rotation;        // degrees
     double _speed_north_fps;
     double _speed_east_fps;
+    double _wind_from_east;  // fps
+    double _wind_from_north; // fps
 
-    bool   _formate_to_ac;
+    double hs;
+
 
     void setTgtXOffset(double x);
     void setTgtYOffset(double y);
@@ -140,6 +163,11 @@ public:
     double _tgt_z_offset;
     double _elapsed_time;
 
+    SGGeod _parentpos;
+    SGGeod _oldpos;
+    SGGeod _offsetpos;
+    SGGeod _oldoffsetpos;
+
 private:
 
     virtual void reinit() { init(); }
@@ -149,8 +177,6 @@ private:
     double _life_timer;      // seconds
     double _gravity;         // fps^2
     double _buoyancy;        // fps^2
-    double _wind_from_east;  // fps
-    double _wind_from_north; // fps
     bool   _wind;            // if true, local wind will be applied to object
     double _Cd;              // drag coefficient
     double _mass;            // slugs
@@ -174,18 +200,18 @@ private:
 
     SGPropertyNode_ptr _impact_report_node;  // report node for impact and collision
     SGPropertyNode_ptr _contents_node;  // node for droptank etc. contents
-    SGPropertyNode_ptr _pnode; // node for parent model
-    SGPropertyNode_ptr _p_pos_node; // nodes for parent parameters 
-    SGPropertyNode_ptr _p_lat_node;
-    SGPropertyNode_ptr _p_lon_node;
-    SGPropertyNode_ptr _p_alt_node;
-    SGPropertyNode_ptr _p_agl_node;
-    SGPropertyNode_ptr _p_ori_node;
-    SGPropertyNode_ptr _p_pch_node;
-    SGPropertyNode_ptr _p_rll_node;
-    SGPropertyNode_ptr _p_hdg_node;
-    SGPropertyNode_ptr _p_vel_node;
-    SGPropertyNode_ptr _p_spd_node;
+    //SGPropertyNode_ptr _pnode; // node for parent model
+    //SGPropertyNode_ptr _p_pos_node; // nodes for parent parameters
+    //SGPropertyNode_ptr _p_lat_node;
+    //SGPropertyNode_ptr _p_lon_node;
+    //SGPropertyNode_ptr _p_alt_node;
+    //SGPropertyNode_ptr _p_agl_node;
+    //SGPropertyNode_ptr _p_ori_node;
+    //SGPropertyNode_ptr _p_pch_node;
+    //SGPropertyNode_ptr _p_rll_node;
+    //SGPropertyNode_ptr _p_hdg_node;
+    //SGPropertyNode_ptr _p_vel_node;
+    //SGPropertyNode_ptr _p_spd_node;
 
     double _fuse_range;
     double _distance;
@@ -204,22 +230,20 @@ private:
     void report_impact(double elevation, const FGAIBase *target = 0);
     void slaveToAC(double dt);
     void setContents(double c);
-    void formateToAC(double dt);
     void calcVSHS();
     void calcNE();
-    void setOffsetPos(SGGeod pos, double heading, double pitch, double roll);
-    void setOffsetVelocity(double dt, SGGeod pos);
+    //void setOffsetPos(SGGeod pos, double heading, double pitch, double roll);
+    //void setOffsetVelocity(double dt, SGGeod pos);
 
     SGVec3d getCartUserPos() const;
     SGVec3d getCartOffsetPos(SGGeod pos, double heading, double pitch, double roll) const;
 
-    double getDistanceLoadToHitch() const;
-    double getElevLoadToHitch() const;
-    double getBearingLoadToHitch() const;
+    //double getDistanceLoadToHitch() const;
+    //double getElevLoadToHitch() const;
+    //double getBearingLoadToHitch() const;
     double getRecip(double az);
     double getMass() const;
 
-    double hs;
     double _ground_offset;
     double _load_offset;
     double _old_height;
@@ -227,10 +251,10 @@ private:
     SGVec3d _oldcartoffsetPos;
     SGVec3d _oldcartPos;
 
-    SGGeod _parentpos;
-    SGGeod _oldpos;
-    SGGeod _offsetpos;
-    SGGeod _oldoffsetpos;
+    //SGGeod _parentpos;
+    //SGGeod _oldpos;
+    //SGGeod _offsetpos;
+    //SGGeod _oldoffsetpos;
 
 };
 

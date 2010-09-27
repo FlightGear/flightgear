@@ -81,16 +81,16 @@ public:
     inline double get_wind_from_east() const {return wind_from_east; }
     inline double get_wind_from_north() const {return wind_from_north; }
     inline double get_user_roll() const { return user_roll; }
-    inline double get_user_agl() const { return user_agl; }
+    inline double get_user_agl() const { return user_altitude_agl; }
 
     int getNumAiObjects(void) const;
 
     void processScenario( const string &filename );
 
-  static SGPropertyNode_ptr loadScenarioFile(const std::string& filename);
+    static SGPropertyNode_ptr loadScenarioFile(const std::string& filename);
 
-  static bool getStartPosition(const string& id, const string& pid,
-                               SGGeod& geodPos, double& hdng, SGVec3d& uvw);
+    static bool getStartPosition(const string& id, const string& pid,
+        SGGeod& geodPos, double& hdng, SGVec3d& uvw);
 
 private:
 
@@ -123,7 +123,6 @@ private:
     double user_yaw;
     double user_roll;
     double user_speed;
-    double user_agl;
     double wind_from_east;
     double wind_from_north;
     double _dt;

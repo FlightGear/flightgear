@@ -70,11 +70,11 @@ private:
 
     SGVec3d getCartHitchPosAt(const SGVec3d& off) const;
 
-    void calcRangeBearing(double lat, double lon, double lat2, double lon2,
-        double &range, double &bearing) const;
-    double calcRelBearingDeg(double bearing, double heading);
-    double calcTrueBearingDeg(double bearing, double heading);
-    double calcRecipBearingDeg(double bearing);
+//    void calcRangeBearing(double lat, double lon, double lat2, double lon2,
+//        double &range, double &bearing) const;
+    //double calcRelBearingDeg(double bearing, double heading);
+    //double calcTrueBearingDeg(double bearing, double heading);
+    //double calcRecipBearingDeg(double bearing);
 
     SGGeod _selectedpos;
     SGGeod _tgtpos;

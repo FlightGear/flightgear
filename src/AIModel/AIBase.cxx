@@ -65,6 +65,7 @@ FGAIBase::FGAIBase(object_type ot) :
     _impact_pitch(0),
     _impact_roll(0),
     _impact_speed(0),
+    _max_speed(300),
 
     _refID( _newAIModelID() ),
     _otype(ot),

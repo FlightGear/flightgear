@@ -45,7 +45,6 @@ _ht_agl_ft(0.0),
 _azimuth(0.0),
 _elevation(0.0),
 _rotation(0.0),
-_formate_to_ac(false),
 _aero_stabilised(false),
 _drag_area(0.007),
 _life_timer(0.0),
@@ -67,6 +66,7 @@ _external_force(false),
 _impact_report_node(fgGetNode("/ai/models/model-impact", true)),
 _old_height(0),
 _elapsed_time(0),
+_speed(),
 hs(0)
 
 {
@@ -228,13 +228,13 @@ void FGAIBallistic::bind() {
             (*this, &FGAIBallistic::getLoadOffset, &FGAIBallistic::setLoadOffset));
         props->tie("load/distance-to-hitch-ft",
             SGRawValueMethods<FGAIBallistic,double>
-            (*this, &FGAIBallistic::getDistanceLoadToHitch));
+            (*this, &FGAIBallistic::getDistanceToHitch));
         props->tie("load/elevation-to-hitch-deg",
             SGRawValueMethods<FGAIBallistic,double>
-            (*this, &FGAIBallistic::getElevLoadToHitch));
+            (*this, &FGAIBallistic::getElevToHitch));
         props->tie("load/bearing-to-hitch-deg",
             SGRawValueMethods<FGAIBallistic,double>
-            (*this, &FGAIBallistic::getBearingLoadToHitch));
+            (*this, &FGAIBallistic::getBearingToHitch));
         props->tie("material/load-resistance",
         SGRawValuePointer<double>(&_load_resistance));
     }
@@ -278,10 +278,7 @@ void FGAIBallistic::update(double dt) {
     FGAIBase::update(dt);
     _setUserPos();
 
-    if (_formate_to_ac){
-        formateToAC(dt);
-        Transform();
-    } else if (_slave_to_ac){
+    if (_slave_to_ac){
         slaveToAC(dt);
         Transform();
     } else if (!invisible){
@@ -425,10 +422,6 @@ void FGAIBallistic::setSlaved(bool s) {
     _slave_to_ac = s;
 }
 
-void FGAIBallistic::setFormate(bool f) {
-    _formate_to_ac = f;
-}
-
 void FGAIBallistic::setContentsPath(const string& path) {
 
     _contents_path = path;
@@ -471,6 +464,8 @@ void FGAIBallistic::setParentNodes(SGPropertyNode_ptr node) {
 void FGAIBallistic::setParentPos() {
 
     if (_pnode != 0) { 
+        //cout << "set parent pos" << endl;
+
         double lat = _p_lat_node->getDoubleValue();
         double lon = _p_lon_node->getDoubleValue();
         double alt = _p_alt_node->getDoubleValue();
@@ -485,10 +480,6 @@ void FGAIBallistic::setParentPos() {
 
 bool FGAIBallistic::getSlaved() const {
     return _slave_to_ac;
-}
-
-bool FGAIBallistic::getFormate() const {
-    return _formate_to_ac;
 }
 
 double FGAIBallistic::getMass() const {
@@ -578,22 +569,31 @@ void FGAIBallistic::setBnk(double r, double dt, double coeff){
     roll = (r * c) + (roll * (1 - c));
 }
 
+void FGAIBallistic::setSpd(double s, double dt, double coeff){
+    double c = dt / (coeff + dt);
+    _speed = (s * c) + (_speed * (1 - c));
+}
+
 void FGAIBallistic::setHt(double h, double dt, double coeff){
     double c = dt / (coeff + dt);
     _height = (h * c) + (_height * (1 - c));
 }
 
-void FGAIBallistic::setHdg(double az, double dt, double coeff){
+int FGAIBallistic::setHdg(double tgt_hdg, double dt, double coeff){
     double recip = getRecip(hdg);
     double c = dt / (coeff + dt);
     //we need to ensure that we turn the short way to the new hdg
-    if (az < recip && az < hdg && hdg > 180) {
-        hdg = ((az + 360) * c) + (hdg * (1 - c));
-    } else if (az > recip && az > hdg && hdg <= 180){
-        hdg = ((az - 360) * c) + (hdg * (1 - c));
+    if (tgt_hdg < recip && tgt_hdg < hdg && hdg > 180) {
+        hdg = ((tgt_hdg + 360) * c) + (hdg * (1 - c));
+//        cout << "case 1: right turn" << endl;
+    } else if (tgt_hdg > recip && tgt_hdg > hdg && hdg <= 180){
+        hdg = ((tgt_hdg - 360) * c) + (hdg * (1 - c));
+//        cout << "case 2: left turn" << endl;
     } else {
-        hdg = (az * c) + (hdg * (1 - c));
+        hdg = (tgt_hdg * c) + (hdg * (1 - c));
+//        cout << "case 4: left turn" << endl;
     }
+    return -1;
 }
 
 double  FGAIBallistic::getTgtXOffset() const {
@@ -1064,7 +1064,7 @@ void FGAIBallistic::setOffsetPos(SGGeod inpos, double heading, double pitch, dou
 
 }
 
-double FGAIBallistic::getDistanceLoadToHitch() const {
+double FGAIBallistic::getDistanceToHitch() const {
     //calculate the distance load to hitch 
     SGVec3d carthitchPos = getCartHitchPos();
     SGVec3d cartPos = getCartPos();
@@ -1074,10 +1074,9 @@ double FGAIBallistic::getDistanceLoadToHitch() const {
     return distance * SG_METER_TO_FEET;
 }
 
-
-double FGAIBallistic::getElevLoadToHitch() const {
+double FGAIBallistic::getElevToHitch() const {
     // now the angle, positive angles are upwards
-    double distance = getDistanceLoadToHitch() * SG_FEET_TO_METER;
+    double distance = getDistanceToHitch() * SG_FEET_TO_METER;
     double angle = 0;
     double daltM = _offsetpos.getElevationM() - pos.getElevationM();
 
@@ -1092,9 +1091,10 @@ double FGAIBallistic::getElevLoadToHitch() const {
     return angle;
 }
 
-double FGAIBallistic::getBearingLoadToHitch() const {
+double FGAIBallistic::getBearingToHitch() const {
     //calculate the bearing and range of the second pos from the first
-    double az1, az2, distance;
+    double distance = getDistanceToHitch() * SG_FEET_TO_METER;
+    double az1, az2;
 
     geo_inverse_wgs_84(pos, _offsetpos, &az1, &az2, &distance);
 
@@ -1109,8 +1109,7 @@ double FGAIBallistic::getRelBrgHitchToUser() const {
 
     double rel_brg = az1 - hdg;
 
-    if (rel_brg > 180)
-        rel_brg -= 360;
+    SG_NORMALIZE_RANGE(rel_brg, -180.0, 180.0);
 
     return rel_brg;
 }
@@ -1148,80 +1147,7 @@ void FGAIBallistic::setTgtOffsets(double dt, double coeff){
     _z_offset = (_tgt_z_offset * c) + (_z_offset * (1 - c));
 }
 
-void FGAIBallistic::formateToAC(double dt){
 
-    double hdg, pch, rll, agl, ht = 0;
-
-    setTgtOffsets(dt, 25);
-
-    if (_pnode != 0) {
-        setParentPos();
-        hdg = _p_hdg_node->getDoubleValue();
-        pch = _p_pch_node->getDoubleValue();
-        rll = _p_rll_node->getDoubleValue();
-        agl = _p_agl_node->getDoubleValue();
-        ht  = _p_alt_node->getDoubleValue();
-        setOffsetPos(_parentpos, hdg, pch, rll);
-        setSpeed(_p_spd_node->getDoubleValue());
-    }else {
-        hdg = manager->get_user_heading();
-        pch = manager->get_user_pitch();
-        rll = manager->get_user_roll();
-        agl = manager->get_user_agl();
-        ht  = manager->get_user_altitude();
-        setOffsetPos(userpos, hdg, pch, rll);
-        setSpeed(manager->get_user_speed());
-    }
-
-    // elapsed time has a random initialisation so that each 
-    // wingman moves differently
-    _elapsed_time += dt;
-
-    // we derive a sine based factor to give us smoothly 
-    // varying error between -1 and 1
-    double factor  = sin(SGMiscd::deg2rad(_elapsed_time * 10));
-    double r_angle = 5 * factor;
-    double p_angle = 2.5 * factor;
-    double h_angle = 5 * factor;
-    double h_feet  = 3 * factor;
-
-    pos.setLatitudeDeg(_offsetpos.getLatitudeDeg());
-    pos.setLongitudeDeg(_offsetpos.getLongitudeDeg());
-
-    if(agl <= 10) {
-        _height = ht;
-        //cout << "ht case1" << endl;
-    } else if (agl > 10 && agl <= 150 ) {
-        setHt(ht, dt, 1.0);
-        //cout << "ht case2" << endl;
-    } else if (agl > 150 && agl <= 250) {
-        setHt(_offsetpos.getElevationFt()+ h_feet, dt, 0.75);
-        //cout << "ht case3" << endl;
-    } else{
-        setHt(_offsetpos.getElevationFt()+ h_feet, dt, 0.5);
-        //cout << "ht case4" << endl;
-    }
-
-    pos.setElevationFt(_height);
-
-    // these calculations are unreliable at slow speeds
-    if(speed >= 10) {
-        setHdg(_azimuth + h_angle, dt, 0.9);
-        setPch(_elevation + p_angle + _pitch_offset, dt, 0.9);
-
-        if (roll <= 115 && roll >= -115)
-            setBnk(manager->get_user_roll() + r_angle + _roll_offset, dt, 0.5);
-        else
-            roll = manager->get_user_roll() + r_angle + _roll_offset;
-
-    } else {
-        setHdg(manager->get_user_heading(), dt, 0.9);
-        setPch(manager->get_user_pitch() + _pitch_offset, dt, 0.9);
-        setBnk(manager->get_user_roll() + _roll_offset, dt, 0.9);
-    }
-
-        setOffsetVelocity(dt, pos);
-}
 void FGAIBallistic::calcVSHS(){
     // calculate vertical and horizontal speed components
     double speed_fps = speed * SG_KT_TO_FPS;
@@ -1263,7 +1189,7 @@ SGVec3d FGAIBallistic::getCartOffsetPos(SGGeod inpos, double user_heading,
             -_z_offset * SG_FEET_TO_METER);
 
     // Transform the user position to the horizontal local coordinate system.
-    SGQuatd hlTrans = SGQuatd::fromLonLat(userpos);
+    SGQuatd hlTrans = SGQuatd::fromLonLat(inpos);
 
     // and postrotate the orientation of the user model wrt the horizontal
     // local frame

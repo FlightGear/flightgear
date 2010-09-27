@@ -29,6 +29,10 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/structure/SGReferenced.hxx>
+#include <simgear/sg_inlines.h>
+
+#include <simgear/math/sg_geodesy.hxx>
+
 
 #include <Main/fg_props.hxx>
 
@@ -88,6 +92,14 @@ public:
     void setImpactElev( double e );
     void setParentName(const string& p);
     void setName(const string& n);
+    void setMaxSpeed(double kts);
+
+    void calcRangeBearing(double lat, double lon, double lat2, double lon2,
+        double &range, double &bearing) const;
+    double calcRelBearingDeg(double bearing, double heading);
+    double calcTrueBearingDeg(double bearing, double heading);
+    double calcRecipBearingDeg(double bearing);
+
     bool setParentNode();
 
     int getID() const;
@@ -115,6 +127,8 @@ public:
     double _pitch_offset;
     double _roll_offset;
     double _yaw_offset;
+
+    double _max_speed;
 
     string _path;
     string _callsign;
@@ -386,5 +400,36 @@ inline void FGAIBase::setDie( bool die ) { delete_me = die; }
 inline bool FGAIBase::getDie() { return delete_me; }
 
 inline FGAIBase::object_type FGAIBase::getType() { return _otype; }
+
+inline void FGAIBase::calcRangeBearing(double lat, double lon, double lat2, double lon2,
+                                  double &range, double &bearing) const
+{
+    // calculate the bearing and range of the second pos from the first
+    double az2, distance;
+    geo_inverse_wgs_84(lat, lon, lat2, lon2, &bearing, &az2, &distance);
+    range = distance * SG_METER_TO_NM;
+}
+
+inline double FGAIBase::calcRelBearingDeg(double bearing, double heading){
+    double angle = bearing - heading;
+    SG_NORMALIZE_RANGE(angle, -180.0, 180.0);
+    return angle;
+}
+
+inline double FGAIBase::calcTrueBearingDeg(double bearing, double heading){
+    double angle = bearing + heading;
+    SG_NORMALIZE_RANGE(angle, 0.0, 360.0);
+    return angle;
+}
+
+inline double FGAIBase::calcRecipBearingDeg(double bearing){
+    double angle = bearing - 180;
+    SG_NORMALIZE_RANGE(angle, 0.0, 360.0);
+    return angle;
+}
+
+inline void FGAIBase::setMaxSpeed(double m) {
+    _max_speed = m;
+}
 
 #endif	// _FG_AIBASE_HXX

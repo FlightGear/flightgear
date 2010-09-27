@@ -240,6 +240,7 @@ FGAIManager::getNumAiObjects(void) const
 
 void
 FGAIManager::fetchUserState( void ) {
+
     user_latitude  = user_latitude_node->getDoubleValue();
     user_longitude = user_longitude_node->getDoubleValue();
     user_altitude  = user_altitude_node->getDoubleValue();
