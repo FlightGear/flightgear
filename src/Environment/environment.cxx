@@ -473,7 +473,7 @@ double
 FGEnvironment::get_turbulence_magnitude_norm () const
 {
   if( sgEnviro.get_turbulence_enable_state() )
-    if (fgGetBool("/environment/params/real-world-weather-fetch") == true)
+    if (fgGetBool("/environment/realwx/enabled")||fgGetBool("/environment/metar/valid"))
       return sgEnviro.get_cloud_turbulence();
   return turbulence_magnitude_norm;
 }
