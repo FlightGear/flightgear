@@ -53,11 +53,12 @@ const double FGAIBase::lbs_to_slugs = 0.031080950172;   //conversion factor
 using namespace simgear;
 
 FGAIBase::FGAIBase(object_type ot) :
+    _name(""),
+    _parent(""),
     props( NULL ),
     model_removed( fgGetNode("/ai/models/model-removed", true) ),
     manager( NULL ),
     fp( NULL ),
-
     _impact_lat(0),
     _impact_lon(0),
     _impact_elev(0),
@@ -65,12 +66,9 @@ FGAIBase::FGAIBase(object_type ot) :
     _impact_pitch(0),
     _impact_roll(0),
     _impact_speed(0),
-
     _refID( _newAIModelID() ),
     _otype(ot),
-    _initialized(false),
-    _parent(""),
-    _name("")
+    _initialized(false)
 
 {
     tgt_heading = hdg = tgt_altitude_ft = tgt_speed = 0.0;

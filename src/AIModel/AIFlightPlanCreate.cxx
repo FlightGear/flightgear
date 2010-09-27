@@ -419,13 +419,13 @@ void FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
     double vTaxi = ac->getPerformance()->vTaxi();
     double vRotate = ac->getPerformance()->vRotate();
     double vTakeoff = ac->getPerformance()->vTakeoff();
-    double vClimb = ac->getPerformance()->vClimb();
+    //double vClimb = ac->getPerformance()->vClimb();
 
     double accelMetric = (accel * SG_NM_TO_METER) / 3600;
     double vTaxiMetric = (vTaxi * SG_NM_TO_METER) / 3600;
     double vRotateMetric = (vRotate * SG_NM_TO_METER) / 3600;
     double vTakeoffMetric = (vTakeoff * SG_NM_TO_METER) / 3600;
-    double vClimbMetric = (vClimb * SG_NM_TO_METER) / 3600;
+    //double vClimbMetric = (vClimb * SG_NM_TO_METER) / 3600;
     // Acceleration = dV / dT
     // Acceleration X dT = dV
     // dT = dT / Acceleration
@@ -558,7 +558,7 @@ void FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
 
     // Create a slow descent path that ends 250 lateral to the runway.
     double initialTurnRadius = getTurnRadius(vDescent, true);
-    double finalTurnRadius = getTurnRadius(vApproach, true);
+    //double finalTurnRadius = getTurnRadius(vApproach, true);
 
 // get length of the downwind leg for the intended runway
     double distanceOut = apt->getDynamics()->getApproachController()->getRunway(rwy->name())->getApproachDistance();    //12 * SG_NM_TO_METER;
@@ -801,7 +801,7 @@ void FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
 
     if (reposition) {
         double tempDistance;
-        double minDistance = HUGE_VAL;
+        //double minDistance = HUGE_VAL;
         string wptName;
         tempDistance = SGGeodesy::distanceM(current, initialTarget);
         time_t eta =
@@ -836,7 +836,7 @@ void FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
                                    const string & fltType)
 {
     double vTouchdown = ac->getPerformance()->vTouchdown();
-    double vTaxi = ac->getPerformance()->vTaxi();
+    //double vTaxi = ac->getPerformance()->vTaxi();
 
     //string rwyClass = getRunwayClassFromTrafficType(fltType);
     //double heading = ac->getTrafficRef()->getCourse();
