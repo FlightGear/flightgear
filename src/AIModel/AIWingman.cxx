@@ -33,7 +33,9 @@ _break_angle(-90),
 _break(false),
 _join(false),
 _coeff_hdg(5.0),
-_coeff_pch(5.0)
+_coeff_pch(5.0),
+_coeff_bnk(5.0),
+_coeff_spd(2.0)
 
 {
     invisible = false;
@@ -56,7 +58,6 @@ void FGAIWingman::readFromScenario(SGPropertyNode* scFileNode) {
     setNoRoll(scFileNode->getBoolValue("no-roll", false));
     setName(scFileNode->getStringValue("name", "Wingman"));
     setParentName(scFileNode->getStringValue("parent", ""));
-    //setSMPath(scFileNode->getStringValue("submodel-path", ""));
     setSubID(scFileNode->getIntValue("SubID", 0));
     setXoffset(scFileNode->getDoubleValue("x-offset", 0.0));
     setYoffset(scFileNode->getDoubleValue("y-offset", 0.0));
@@ -121,8 +122,6 @@ void FGAIWingman::bind() {
     props->tie("controls/coefficients/speed",
         SGRawValuePointer<double>(&_coeff_spd));
 
-
-
     props->tie("orientation/pitch-deg",   SGRawValuePointer<double>(&pitch));
     props->tie("orientation/roll-deg",    SGRawValuePointer<double>(&roll));
     props->tie("orientation/true-heading-deg", SGRawValuePointer<double>(&hdg));
@@ -144,7 +143,6 @@ void FGAIWingman::bind() {
         SGRawValuePointer<double>(&_speed_east_fps));
     props->tie("velocities/speed-north-fps",
         SGRawValuePointer<double>(&_speed_north_fps));
-
 
     props->tie("position/x-offset", 
         SGRawValueMethods<FGAIBase,double>(*this, &FGAIBase::_getXOffset, &FGAIBase::setXoffset));
@@ -171,11 +169,11 @@ void FGAIWingman::unbind() {
     props->untie("orientation/true-heading-deg");
 
     props->untie("controls/formate-to-ac");
+    props->untie("controls/break");
+    props->untie("controls/join");
     props->untie("controls/tgt-heading-deg");
     props->untie("controls/tgt-speed-kt");
     props->untie("controls/break-deg-rel");
-    props->untie("controls/break");
-    props->untie("controls/join");
     props->untie("controls/coefficients/heading");
     props->untie("controls/coefficients/pitch");
     props->untie("controls/coefficients/bank");
@@ -228,6 +226,7 @@ bool FGAIWingman::init(bool search_in_AI_path) {
 }
 
 void FGAIWingman::update(double dt) {
+
 //    FGAIBallistic::update(dt);
 
     if (_formate_to_ac){
@@ -287,7 +286,6 @@ void FGAIWingman::formateToAC(double dt){
         p_hdg = _p_hdg_node->getDoubleValue();
         p_pch = _p_pch_node->getDoubleValue();
         p_rll = _p_rll_node->getDoubleValue();
-        //agl = _p_agl_node->getDoubleValue();
         p_ht  = _p_alt_node->getDoubleValue();
         setOffsetPos(_parentpos, p_hdg, p_pch, p_rll);
         setSpeed(_p_spd_node->getDoubleValue());
@@ -296,7 +294,6 @@ void FGAIWingman::formateToAC(double dt){
         p_hdg = manager->get_user_heading();
         p_pch = manager->get_user_pitch();
         p_rll = manager->get_user_roll();
-        //agl = manager->get_user_agl();
         p_ht  = manager->get_user_altitude();
         setOffsetPos(userpos, p_hdg,p_pch, p_rll);
         setSpeed(manager->get_user_speed());
