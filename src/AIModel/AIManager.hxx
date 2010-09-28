@@ -123,6 +123,7 @@ private:
     double user_yaw;
     double user_roll;
     double user_speed;
+    double user_agl;
     double wind_from_east;
     double wind_from_north;
     double _dt;
