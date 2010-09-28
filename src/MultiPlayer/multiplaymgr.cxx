@@ -462,38 +462,38 @@ union FGMultiplayMgr::MsgBuf
 {
     MsgBuf()
     {
-        memset(&Msg.Raw, 0, sizeof(Msg));
+        memset(&Msg, 0, sizeof(Msg));
     }
 
     T_MsgHdr* msgHdr()
     {
-        return &Msg.Header;
+        return &Header;
     }
 
     const T_MsgHdr* msgHdr() const
     {
-        return reinterpret_cast<const T_MsgHdr*>(&Msg.Header);
+        return reinterpret_cast<const T_MsgHdr*>(&Header);
     }
 
     T_PositionMsg* posMsg()
     {
-        return reinterpret_cast<T_PositionMsg*>(Msg.Raw + sizeof(T_MsgHdr));
+        return reinterpret_cast<T_PositionMsg*>(Msg + sizeof(T_MsgHdr));
     }
 
     const T_PositionMsg* posMsg() const
     {
-        return reinterpret_cast<const T_PositionMsg*>(Msg.Raw + sizeof(T_MsgHdr));
+        return reinterpret_cast<const T_PositionMsg*>(Msg + sizeof(T_MsgHdr));
     }
 
     xdr_data_t* properties()
     {
-        return reinterpret_cast<xdr_data_t*>(Msg.Raw + sizeof(T_MsgHdr)
+        return reinterpret_cast<xdr_data_t*>(Msg + sizeof(T_MsgHdr)
                                              + sizeof(T_PositionMsg));
     }
 
     const xdr_data_t* properties() const
     {
-        return reinterpret_cast<const xdr_data_t*>(Msg.Raw + sizeof(T_MsgHdr)
+        return reinterpret_cast<const xdr_data_t*>(Msg + sizeof(T_MsgHdr)
                                                    + sizeof(T_PositionMsg));
     }
     /**
@@ -501,12 +501,12 @@ union FGMultiplayMgr::MsgBuf
      */
     xdr_data_t* propsEnd()
     {
-        return reinterpret_cast<xdr_data_t*>(Msg.Raw + MAX_PACKET_SIZE);
+        return reinterpret_cast<xdr_data_t*>(Msg + MAX_PACKET_SIZE);
     };
 
     const xdr_data_t* propsEnd() const
     {
-        return reinterpret_cast<const xdr_data_t*>(Msg.Raw + MAX_PACKET_SIZE);
+        return reinterpret_cast<const xdr_data_t*>(Msg + MAX_PACKET_SIZE);
     };
     /**
      * The end of properties actually in the buffer. This assumes that
@@ -514,20 +514,17 @@ union FGMultiplayMgr::MsgBuf
      */
     xdr_data_t* propsRecvdEnd()
     {
-        return reinterpret_cast<xdr_data_t*>(Msg.Raw + Msg.Header.MsgLen);
+        return reinterpret_cast<xdr_data_t*>(Msg + Header.MsgLen);
     }
 
     const xdr_data_t* propsRecvdEnd() const
     {
-        return reinterpret_cast<const xdr_data_t*>(Msg.Raw + Msg.Header.MsgLen);
+        return reinterpret_cast<const xdr_data_t*>(Msg + Header.MsgLen);
     }
     
     xdr_data2_t double_val;
-    union
-    {
-      char Raw[MAX_PACKET_SIZE];
-      T_MsgHdr Header;
-    } Msg;
+    char Msg[MAX_PACKET_SIZE];
+    T_MsgHdr Header;
 };
 
 void
@@ -658,9 +655,9 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
     ++it;
   }
 escape:
-  unsigned msgLen = reinterpret_cast<char*>(ptr) - msgBuf.Msg.Raw;
+  unsigned msgLen = reinterpret_cast<char*>(ptr) - msgBuf.Msg;
   FillMsgHdr(msgBuf.msgHdr(), POS_DATA_ID, msgLen);
-  mSocket->sendto(msgBuf.Msg.Raw, msgLen, 0, &mServer);
+  mSocket->sendto(msgBuf.Msg, msgLen, 0, &mServer);
   SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::SendMyPosition");
 } // FGMultiplayMgr::SendMyPosition()
 
@@ -735,7 +732,7 @@ FGMultiplayMgr::Update(void)
     //  packet waiting to be processed.
     //////////////////////////////////////////////////
     netAddress SenderAddress;
-    bytes = mSocket->recvfrom(msgBuf.Msg.Raw, sizeof(msgBuf.Msg.Raw), 0,
+    bytes = mSocket->recvfrom(msgBuf.Msg, sizeof(msgBuf.Msg), 0,
                               &SenderAddress);
     //////////////////////////////////////////////////
     //  no Data received
@@ -979,7 +976,7 @@ FGMultiplayMgr::ProcessChatMsg(const MsgBuf& Msg,
   
   char *chatStr = new char[MsgHdr->MsgLen - sizeof(T_MsgHdr)];
   const T_ChatMsg* ChatMsg
-      = reinterpret_cast<const T_ChatMsg *>(Msg.Msg.Raw + sizeof(T_MsgHdr));
+      = reinterpret_cast<const T_ChatMsg *>(Msg.Msg + sizeof(T_MsgHdr));
   strncpy(chatStr, ChatMsg->Text,
           MsgHdr->MsgLen - sizeof(T_MsgHdr));
   chatStr[MsgHdr->MsgLen - sizeof(T_MsgHdr) - 1] = '\0';
