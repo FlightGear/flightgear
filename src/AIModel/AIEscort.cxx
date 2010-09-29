@@ -230,7 +230,6 @@ bool FGAIEscort::getGroundElev(SGGeod inpos) {
 
 }
 
-
 void FGAIEscort::setParent()
 {
     double lat = _selected_ac->getDoubleValue("position/latitude-deg");
@@ -267,6 +266,22 @@ void FGAIEscort::setParent()
 
     _relbrg = calcRelBearingDeg(_tgtbrg, hdg);
 
+}
+
+void FGAIEscort::calcRangeBearing(double lat, double lon, double lat2, double lon2,
+                                  double &range, double &bearing) const
+{
+    // calculate the bearing and range of the second pos from the first
+    double az2, distance;
+    geo_inverse_wgs_84(lat, lon, lat2, lon2, &bearing, &az2, &distance);
+    range = distance * SG_METER_TO_NM;
+}
+
+double FGAIEscort::calcTrueBearingDeg(double bearing, double heading)
+{
+    double angle = bearing + heading;
+    SG_NORMALIZE_RANGE(angle, 0.0, 360.0);
+    return angle;
 }
 
 SGVec3d FGAIEscort::getCartHitchPosAt(const SGVec3d& _off) const {
