@@ -355,11 +355,9 @@ osg::Node* fgCreateSplashNode() {
 void fgSplashInit () {
   SG_LOG( SG_GENERAL, SG_INFO, "Initializing splash screen" );
   globals->get_renderer()->splashinit();
-  fgRequestRedraw();
 }
 
 void fgSplashProgress ( const char *text ) {
   SG_LOG( SG_GENERAL, SG_INFO, "Splash screen progress " << text );
   fgSetString("/sim/startup/splash-progress-text", text);
-  fgRequestRedraw();
 }

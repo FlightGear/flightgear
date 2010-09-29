@@ -69,8 +69,6 @@ void fgWarpMouse(int x, int y);
 
 int  fgGetKeyModifiers();
 
-void fgRequestRedraw();
-
 //
 // Callbacks and registration API
 //

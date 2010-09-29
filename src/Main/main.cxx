@@ -238,7 +238,6 @@ static void fgMainLoop( void ) {
               SGRawValueFunctions<const char *>(0, fgSetNewSoundDevice), false);
     }
     simgear::AtomicChangeListener::fireChangeListeners();
-    fgRequestRedraw();
 
     SG_LOG( SG_ALL, SG_DEBUG, "" );
 }
