@@ -648,7 +648,7 @@ bool FGAIAircraft::leadPointReached(FGAIFlightPlan::waypoint* curr) {
     //          << dist_to_go << ": Lead distance " 
     //          << lead_dist << " " << curr->name 
     //          << " Ground target speed " << groundTargetSpeed << endl;
-    double bearing;
+    double bearing = 0;
     if (speed > 50) { // don't do bearing calculations for ground traffic
        bearing = getBearing(fp->getBearing(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr));
        if (bearing < minBearing) {

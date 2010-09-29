@@ -40,11 +40,11 @@ _speed_kt(0),
 _range_ft(0),
 _relbrg (0),
 _parent_speed(0),
-_dt_count(0),
-_next_run(0),
 _parent_x_offset(0),
 _parent_y_offset(0),
 _parent_z_offset(0),
+_dt_count(0),
+_next_run(0),
 _break_count(0)
 
 {
@@ -285,7 +285,7 @@ bool FGAIGroundVehicle::getPitch() {
         double rear_elev_m = 0;
         double elev_front = 0;
         double elev_rear = 0;
-        double max_alt = 10000;
+        //double max_alt = 10000;
 
         if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(geodFront, 3000),
             elev_front, &_material, 0)){
@@ -480,7 +480,7 @@ void FGAIGroundVehicle::AdvanceFP(){
 
 void FGAIGroundVehicle::setTowSpeed(){
 
-    double diff = _range_ft - _x_offset;
+    //double diff = _range_ft - _x_offset;
     double  x = 0;
 
     if (_range_ft > _x_offset * 3) x = 50;
@@ -537,7 +537,7 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
 
     string parent_next_name = _selected_ac->getStringValue("waypoint/name-next");
     bool parent_waiting = _selected_ac->getBoolValue("waypoint/waiting");
-    bool parent_restart = _selected_ac->getBoolValue("controls/restart"); 
+    //bool parent_restart = _selected_ac->getBoolValue("controls/restart"); 
 
     if (parent_next_name == "END" && fp->getNextWaypoint()->name != "END" ){
         SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name

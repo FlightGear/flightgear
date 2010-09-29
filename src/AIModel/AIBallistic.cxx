@@ -45,6 +45,7 @@ _ht_agl_ft(0.0),
 _azimuth(0.0),
 _elevation(0.0),
 _rotation(0.0),
+_elapsed_time(0),
 _aero_stabilised(false),
 _drag_area(0.007),
 _life_timer(0.0),
@@ -60,14 +61,13 @@ _slave_to_ac(false),
 _slave_load_to_ac(false),
 _contents_lb(0),
 _report_collision(false),
-_report_expiry(false),
 _report_impact(false),
 _external_force(false),
+_report_expiry(false),
 _impact_report_node(fgGetNode("/ai/models/model-impact", true)),
+hs(0),
 _old_height(0),
-_elapsed_time(0),
-_speed(),
-hs(0)
+_speed()
 
 {
     no_roll = false;

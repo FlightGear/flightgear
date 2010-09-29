@@ -204,7 +204,7 @@ void FGSubmodelMgr::update(double dt)
 
         if (trigger && (*submodel_iterator)->count != 0) {
 
-            int id = (*submodel_iterator)->id;
+            //int id = (*submodel_iterator)->id;
             string name = (*submodel_iterator)->name;
             
             SG_LOG(SG_GENERAL, SG_DEBUG,
@@ -338,7 +338,7 @@ void FGSubmodelMgr::transform(submodel *sm)
         IC.mass = sm->weight * lbs_to_slugs;
 
     int id = sm->id;
-    int sub_id = sm->sub_id;
+    //int sub_id = sm->sub_id;
     string name = sm->name;
 
 

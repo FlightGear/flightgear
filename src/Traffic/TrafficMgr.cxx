@@ -375,7 +375,7 @@ void FGTrafficManager::readTimeTableFromFile(SGPath infileName)
                  string arrTimeGen    = tokens[6];
                  string repeat        = "WEEK";
                  string requiredAircraft = tokens[9];
-                 
+
                  if (weekdays.size() != 7) {
                      SG_LOG(SG_GENERAL, SG_ALERT, "Found misconfigured weekdays string" << weekdays);
                      exit(1);
@@ -611,7 +611,7 @@ void FGTrafficManager::endElement(const char *name)
             if (fgGetBool("/sim/traffic-manager/dumpdata") == true) {
                 SG_LOG(SG_GENERAL, SG_ALERT, "Traffic Dump AC," << homePort << "," << registration << "," << requiredAircraft 
                  << "," << acType << "," << livery << "," 
-                 << airline << "," << offset << "," << radius << "," << flighttype << "," << isHeavy << "," << mdl);
+                 << airline << ","  << m_class << "," << offset << "," << radius << "," << flighttype << "," << isHeavy << "," << mdl);
             }
             //scheduledAircraft.push_back(new FGAISchedule(mdl, 
             //                                     livery, 
