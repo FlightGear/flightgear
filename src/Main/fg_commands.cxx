@@ -211,7 +211,8 @@ do_exit (const SGPropertyNode * arg)
             SG_LOG(SG_INPUT, SG_DEBUG, "Finished Saving user settings");
         }
     }
-    fgExit(arg->getIntValue("status", 0));
+    
+    fgOSExit(arg->getIntValue("status", 0));
     return true;
 }
 

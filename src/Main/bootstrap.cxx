@@ -241,6 +241,8 @@ int main ( int argc, char **argv ) {
             fgviewerMain(argc, argv);
         else
             fgMainInit(argc, argv);
+            
+        
     } catch (const sg_throwable &t) {
                             // We must use cerr rather than
                             // logging, since logging may be
