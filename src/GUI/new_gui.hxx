@@ -3,17 +3,8 @@
 #ifndef __NEW_GUI_HXX
 #define __NEW_GUI_HXX 1
 
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <plib/pu.h>
 
-#include <simgear/compiler.h>	// for SG_USING_STD
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -21,10 +12,6 @@
 #include <functional>
 #include <vector>
 #include <map>
-
-using std::vector;
-using std::map;
-using std::string;
 
 #include <Main/fg_props.hxx>
 
@@ -119,7 +106,7 @@ public:
      * @param name The name of the dialog box.
      * @return true if the dialog exists, false otherwise.
      */
-    virtual bool showDialog (const string &name);
+    virtual bool showDialog (const std::string &name);
 
 
     /**
@@ -138,14 +125,14 @@ public:
      * @param name The name of the dialog box.
      * @return true if the dialog was active, false otherwise.
      */
-    virtual bool closeDialog (const string &name);
+    virtual bool closeDialog (const std::string &name);
 
     /**
      * Get dialog property tree's root node.
      * @param name The name of the dialog box.
      * @return node pointer if the dialog was found, zero otherwise.
      */
-    virtual SGPropertyNode_ptr getDialogProperties (const string &name);
+    virtual SGPropertyNode_ptr getDialogProperties (const std::string &name);
 
     /**
      * Return a pointer to the current menubar.
@@ -173,14 +160,14 @@ public:
      *
      * @return The named dialog, or 0 if it isn't active.
      */
-    virtual FGDialog * getDialog (const string &name);
+    virtual FGDialog * getDialog (const std::string &name);
 
 
     virtual FGColor *getColor (const char * name) const {
         _citt_t it = _colors.find(name);
         return (it != _colors.end()) ? it->second : NULL;
     }
-    virtual FGColor *getColor (const string &name) const {
+    virtual FGColor *getColor (const std::string &name) const {
         _citt_t it = _colors.find(name.c_str());
         return (it != _colors.end()) ? it->second : NULL;
     }
@@ -236,8 +223,8 @@ private:
 
     FGMenuBar * _menubar;
     FGDialog * _active_dialog;
-    map<string,FGDialog *> _active_dialogs;
-    map<string,SGPropertyNode_ptr> _dialog_props;
+    std::map<std::string,FGDialog *> _active_dialogs;
+    std::map<std::string,SGPropertyNode_ptr> _dialog_props;
 
 };
 

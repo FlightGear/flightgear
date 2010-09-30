@@ -1,11 +1,16 @@
 // new_gui.cxx: implementation of XML-configurable GUI support.
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#include "new_gui.hxx"
+
 #include <algorithm>
 #include <iostream>
 #include <cstring>
 #include <sys/types.h>
 #include <plib/ul.h>
-
-#include "new_gui.hxx"
 
 #include <plib/pu.h>
 #include <plib/ul.h>
