@@ -230,7 +230,6 @@ bool FGAIEscort::getGroundElev(SGGeod inpos) {
 
 }
 
-
 void FGAIEscort::setParent()
 {
     double lat = _selected_ac->getDoubleValue("position/latitude-deg");
@@ -278,23 +277,9 @@ void FGAIEscort::calcRangeBearing(double lat, double lon, double lat2, double lo
     range = distance * SG_METER_TO_NM;
 }
 
-double FGAIEscort::calcRelBearingDeg(double bearing, double heading)
-{
-    double angle = bearing - heading;
-    SG_NORMALIZE_RANGE(angle, -180.0, 180.0);
-    return angle;
-}
-
 double FGAIEscort::calcTrueBearingDeg(double bearing, double heading)
 {
     double angle = bearing + heading;
-    SG_NORMALIZE_RANGE(angle, 0.0, 360.0);
-    return angle;
-}
-
-double FGAIEscort::calcRecipBearingDeg(double bearing)
-{
-    double angle = bearing - 180;
     SG_NORMALIZE_RANGE(angle, 0.0, 360.0);
     return angle;
 }

@@ -271,7 +271,7 @@ void fgOSExit(int code)
     status = code;
 }
 
-void fgOSMainLoop()
+int fgOSMainLoop()
 {
     ref_ptr<FGEventHandler> manipulator
         = globals->get_renderer()->getEventHandler();
@@ -287,7 +287,8 @@ void fgOSMainLoop()
             (*drawFunc)();
         viewer->frame();
     }
-    fgExit(status);
+    
+    return status;
 }
 
 int fgGetKeyModifiers()

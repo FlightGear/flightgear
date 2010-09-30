@@ -987,6 +987,11 @@ MK_VIII::IOHandler::TerrainClearanceFilter::update (double agl)
   // [PILOT] page 20 specifies that the terrain clearance is equal to
   // 75% of the radio altitude, averaged over the previous 15 seconds.
 
+  // no updates when simulation is paused (dt=0.0), and add 5 samples/second only 
+  if (globals->get_sim_time_sec() - last_update < 0.2)
+      return value;
+  last_update = globals->get_sim_time_sec();
+
   samples_type::iterator iter;
 
   // remove samples older than 15 seconds
@@ -1000,8 +1005,10 @@ MK_VIII::IOHandler::TerrainClearanceFilter::update (double agl)
   double new_value = 0;
   if (samples.size() > 0)
     {
+      // time consuming loop => queue limited to 75 samples
+      // (= 15seconds * 5samples/second)
       for (iter = samples.begin(); iter != samples.end(); iter++)
-	new_value += (*iter).value;
+        new_value += (*iter).value;
       new_value /= samples.size();
     }
   new_value *= 0.75;
@@ -1017,6 +1024,7 @@ MK_VIII::IOHandler::TerrainClearanceFilter::reset ()
 {
   samples.clear();
   value = 0;
+  last_update = -1.0;
 }
 
 MK_VIII::IOHandler::IOHandler (MK_VIII *device)
@@ -2272,7 +2280,7 @@ MK_VIII::VoicePlayer::get_sample (const char *name)
   SGSoundSample *sample = _sgr->find(refname.str());
   if (! sample)
     {
-      string filename = "Sounds/mk-viii" + string(name) + ".wav";
+      string filename = "Sounds/mk-viii/" + string(name) + ".wav";
       try
 	{
 	  sample = new SGSoundSample(filename.c_str(), SGPath());
@@ -2868,6 +2876,7 @@ MK_VIII::AlertHandler::update ()
 	{
 	  assert(altitude_callout_voice != NULL);
 	  mk->voice_player.play(altitude_callout_voice);
+	  altitude_callout_voice = NULL;
 	}
     }
   else if (select_voice_alerts(ALERT_MODE4_TOO_LOW_GEAR))
@@ -2955,7 +2964,6 @@ MK_VIII::AlertHandler::update ()
 
   old_alerts = voice_alerts;
   repeated_alerts = 0;
-  altitude_callout_voice = NULL;
 }
 
 void
@@ -2975,6 +2983,8 @@ MK_VIII::AlertHandler::unset_alerts (unsigned int _alerts)
 {
   alerts &= ~_alerts;
   repeated_alerts &= ~_alerts;
+  if (_alerts & ALERT_MODE6_ALTITUDE_CALLOUT)
+    altitude_callout_voice = NULL;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3738,7 +3748,7 @@ MK_VIII::Mode4Handler::get_bias (double initial_bias, double min_agl)
       initial_bias = 0.0;
     while ((mk_data(radio_altitude).get() < min_agl - min_agl * initial_bias)&&
            (initial_bias < 1.0))
-    initial_bias += 0.2;
+      initial_bias += 0.2;
   }
 
   return initial_bias;
@@ -4835,7 +4845,7 @@ MK_VIII::TCFHandler::update ()
 	          new_bias = 0.0;
 	        while ((*reference < initial_value - initial_value * new_bias)&&
 	               (new_bias < 1.0))
-		new_bias += 0.2;
+	          new_bias += 0.2;
 	      }
 
 	      if (new_bias > bias)

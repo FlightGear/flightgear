@@ -232,39 +232,6 @@ void FGAIGroundVehicle::setTowAngle(double ta, double dt, double coeff){
     SG_CLAMP_RANGE(_tow_angle, -limit, limit);
 }
 
-//bool FGAIGroundVehicle::getGroundElev(SGGeod inpos) {
-//
-//    double height_m ;
-//
-//    if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(inpos, 3000), height_m, &_material,0)){
-//            _ht_agl_ft = inpos.getElevationFt() - height_m * SG_METER_TO_FEET;
-//
-//            if (_material) {
-//                const vector<string>& names = _material->get_names();
-//
-//                _solid = _material->get_solid();
-//
-//                if (!names.empty())
-//                    props->setStringValue("material/name", names[0].c_str());
-//                else
-//                    props->setStringValue("material/name", "");
-//
-//                //cout << "material " << names[0].c_str()
-//                //    << " _elevation_m " << _elevation_m
-//                //    << " solid " << _solid
-//                //    << " load " << _load_resistance
-//                //    << " frictionFactor " << _frictionFactor
-//                //    << endl;
-//
-//            }
-//
-//            return true;
-//    } else {
-//        return false;
-//    }
-//
-//}
-
 bool FGAIGroundVehicle::getPitch() {
 
     if (!_tunnel){
@@ -391,12 +358,6 @@ void FGAIGroundVehicle::calcRangeBearing(double lat, double lon, double lat2, do
     range = distance * SG_METER_TO_NM;
 }
 
-double FGAIGroundVehicle::calcRelBearingDeg(double bearing, double heading)
-{
-    double angle = bearing - heading;
-    SG_NORMALIZE_RANGE(angle, -180.0, 180.0);
-    return angle;
-}
 
 SGVec3d FGAIGroundVehicle::getCartHitchPosAt(const SGVec3d& _off) const {
     double hdg = _selected_ac->getDoubleValue("orientation/true-heading-deg");

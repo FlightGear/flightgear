@@ -37,8 +37,8 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/fg_os.hxx>
 #include <Main/util.hxx>
-
 #include "generic.hxx"
 
 
@@ -491,7 +491,7 @@ bool FGGeneric::process() {
     return true;
 error_out:
     if (exitOnError) {
-        fgExit(1);
+        fgOSExit(1);
         return true; // should not get there, but please the compiler
     } else
         return false;

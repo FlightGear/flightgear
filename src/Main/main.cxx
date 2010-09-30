@@ -238,7 +238,6 @@ static void fgMainLoop( void ) {
               SGRawValueFunctions<const char *>(0, fgSetNewSoundDevice), false);
     }
     simgear::AtomicChangeListener::fireChangeListeners();
-    fgRequestRedraw();
 
     SG_LOG( SG_ALL, SG_DEBUG, "" );
 }
@@ -576,7 +575,7 @@ static void upper_case_property(const char *name)
 
 
 // Main top level initialization
-bool fgMainInit( int argc, char **argv ) {
+int fgMainInit( int argc, char **argv ) {
 
     // set default log levels
     sglog().setLogLevels( SG_ALL, SG_ALERT );
@@ -660,11 +659,14 @@ bool fgMainInit( int argc, char **argv ) {
     fgSplashInit();
 
     // pass control off to the master event handler
-    fgOSMainLoop();
-
-    // we never actually get here ... but to avoid compiler warnings,
-    // etc.
-    return false;
+    int result = fgOSMainLoop();
+    
+    // clean up here; ensure we null globals to avoid
+    // confusing the atexit() handler
+    delete globals;
+    globals = NULL;
+    
+    return result;
 }
 
 

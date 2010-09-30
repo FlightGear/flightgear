@@ -53,6 +53,7 @@ const double FGAIBase::lbs_to_slugs = 0.031080950172;   //conversion factor
 using namespace simgear;
 
 FGAIBase::FGAIBase(object_type ot) :
+    _max_speed(300),
     _name(""),
     _parent(""),
     props( NULL ),

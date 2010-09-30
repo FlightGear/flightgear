@@ -75,7 +75,6 @@ private:
 
     void calcRangeBearing(double lat, double lon, double lat2, double lon2,
         double &range, double &bearing) const;
-    double calcRelBearingDeg(double bearing, double heading);
 
     SGGeod _selectedpos;
 
