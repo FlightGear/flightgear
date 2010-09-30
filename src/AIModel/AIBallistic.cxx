@@ -67,7 +67,7 @@ _report_expiry(false),
 _impact_report_node(fgGetNode("/ai/models/model-impact", true)),
 hs(0),
 _old_height(0),
-_speed()
+_speed(0)
 
 {
     no_roll = false;
