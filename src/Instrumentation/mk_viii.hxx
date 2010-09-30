@@ -1,4 +1,4 @@
-// mk_viii.cxx -- Honeywell MK VIII EGPWS emulation
+// mk_viii.hxx -- Honeywell MK VIII EGPWS emulation
 //
 // Written by Jean-Yves Lefort, started September 2005.
 //
@@ -635,6 +635,7 @@ public:
       typedef deque< Sample<double> > samples_type;
       samples_type		samples;
       double			value;
+      double			last_update;
 
     public:
       inline TerrainClearanceFilter ()
