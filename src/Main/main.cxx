@@ -50,7 +50,6 @@
 #include <simgear/math/sg_random.h>
 
 #include <Time/light.hxx>
-#include <Include/general.hxx>
 #include <Aircraft/replay.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/hud.hxx>
@@ -86,9 +85,6 @@
 using namespace flightgear;
 
 using std::cerr;
-
-// This is a record containing a bit of global housekeeping information
-FGGeneral general;
 
 // Specify our current idle function state.  This is used to run all
 // our initializations out of the idle callback so that we can get a
@@ -277,21 +273,23 @@ struct GeneralInitOperation : public GraphicsContextOperation
     }
     void run(osg::GraphicsContext* gc)
     {
-        general.set_glVendor( (char *)glGetString ( GL_VENDOR ) );
-        general.set_glRenderer( (char *)glGetString ( GL_RENDERER ) );
-        general.set_glVersion( (char *)glGetString ( GL_VERSION ) );
-        SG_LOG( SG_GENERAL, SG_INFO, general.get_glVendor() );
-        SG_LOG( SG_GENERAL, SG_INFO, general.get_glRenderer() );
-        SG_LOG( SG_GENERAL, SG_INFO, general.get_glVersion() );
+        SGPropertyNode* simRendering = fgGetNode("/sim/rendering");
+        
+        simRendering->setStringValue("gl-vendor", (char*) glGetString(GL_VENDOR));
+        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_VENDOR));
+        
+        simRendering->setStringValue("gl-renderer", (char*) glGetString(GL_RENDERER));
+        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_RENDERER));
+        
+        simRendering->setStringValue("gl-version", (char*) glGetString(GL_VERSION));
+        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_VERSION));
 
         GLint tmp;
         glGetIntegerv( GL_MAX_TEXTURE_SIZE, &tmp );
-        general.set_glMaxTexSize( tmp );
-        SG_LOG ( SG_GENERAL, SG_INFO, "Max texture size = " << tmp );
+        simRendering->setIntValue("max-texture-size", tmp);
 
         glGetIntegerv( GL_DEPTH_BITS, &tmp );
-        general.set_glDepthBits( tmp );
-        SG_LOG ( SG_GENERAL, SG_INFO, "Depth buffer bits = " << tmp );
+        simRendering->setIntValue("depth-buffer-bits", tmp);
     }
 };
 

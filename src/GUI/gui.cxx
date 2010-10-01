@@ -39,7 +39,6 @@
 
 #include <plib/pu.h>
 
-#include <Include/general.hxx>
 #include <Main/main.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>

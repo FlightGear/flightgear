@@ -37,8 +37,6 @@
 #include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
 
-#include <Include/general.hxx>
-
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/viewmgr.hxx>
@@ -198,7 +196,7 @@ float get_sideslip( void )
 
 float get_frame_rate( void )
 {
-    return general.get_frame_rate();
+    return fgGetInt("/sim/frame-rate");
 }
 
 float get_fov( void )
