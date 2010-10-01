@@ -58,7 +58,6 @@ using std::setfill;
 #include <Cockpit/panel.hxx>
 #include <Cockpit/hud.hxx>
 
-#include <Include/general.hxx>
 #include "instrument_mgr.hxx"
 #include "od_gauge.hxx"
 #include "wxradar.hxx"

@@ -46,7 +46,6 @@
 #include <osgViewer/ViewerEventHandlers>
 #include <osgViewer/Viewer>
 
-#include <Include/general.hxx>
 #include <Scenery/scenery.hxx>
 #include "fg_os.hxx"
 #include "fg_props.hxx"

@@ -88,7 +88,6 @@
 #include <Cockpit/panel_io.hxx>
 
 #include <GUI/new_gui.hxx>
-#include <Include/general.hxx>
 #include <Input/input.hxx>
 #include <Instrumentation/instrument_mgr.hxx>
 #include <Model/acmodel.hxx>

@@ -4,5 +4,4 @@ EXTRA_DIST = \
 	config.h-msvc71 \
 	config.h-msvc8 \
 	cmdargs.h \
-	fg_typedefs.h \
-	general.hxx
+	fg_typedefs.h 

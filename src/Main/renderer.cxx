@@ -93,7 +93,6 @@
 #include <Instrumentation/HUD/HUD.hxx>
 #include <Environment/precipitation_mgr.hxx>
 
-#include <Include/general.hxx>
 #include "splash.hxx"
 #include "renderer.hxx"
 #include "main.hxx"
