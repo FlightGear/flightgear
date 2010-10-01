@@ -159,19 +159,6 @@ static void fgMainLoop( void ) {
     
     globals->get_subsystem_mgr()->update(sim_dt);
     globals->get_aircraft_model()->update(sim_dt);
-    
-    //
-    // Tile Manager updates - see if we need to load any new scenery tiles.
-    //   this code ties together the fdm, viewer and scenery classes...
-    //   we may want to move this to its own class at some point
-    //
-    double visibility_meters = fgGetDouble("/environment/visibility-m");
-    globals->get_tile_mgr()->prep_ssg_nodes( visibility_meters );
-
-    // update tile manager for view...
-    SGVec3d viewPos = globals->get_current_view()->get_view_pos();
-    SGGeod geodViewPos = SGGeod::fromCart(viewPos);
-    globals->get_tile_mgr()->update(geodViewPos, visibility_meters);
 
     // run Nasal's settimer() loops right before the view manager
     globals->get_event_mgr()->update(sim_dt);

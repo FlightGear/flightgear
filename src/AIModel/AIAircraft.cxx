@@ -421,7 +421,7 @@ void FGAIAircraft::getGroundElev(double dt) {
         double range = 500.0;
         if (!globals->get_tile_mgr()->scenery_available(pos, range)) {
             // Try to shedule tiles for that position.
-            globals->get_tile_mgr()->update( pos, range );
+            globals->get_tile_mgr()->schedule_tiles_at( pos, range );
         }
 
         double alt;
