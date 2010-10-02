@@ -189,7 +189,6 @@ FGGlobals::~FGGlobals()
     delete viewmgr;
 
 //     delete commands;
-    delete acmodel;
     delete model_mgr;
     delete channel_options_list;
     delete initial_waypoints;

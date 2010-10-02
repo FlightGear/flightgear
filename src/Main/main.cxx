@@ -158,7 +158,6 @@ static void fgMainLoop( void ) {
 #endif  
     
     globals->get_subsystem_mgr()->update(sim_dt);
-    globals->get_aircraft_model()->update(sim_dt);
 
     // run Nasal's settimer() loops right before the view manager
     globals->get_event_mgr()->update(sim_dt);
@@ -404,9 +403,7 @@ static void fgIdleFunction ( void ) {
         ////////////////////////////////////////////////////////////////////
         FGAircraftModel* acm = new FGAircraftModel;
         globals->set_aircraft_model(acm);
-        //globals->add_subsystem("aircraft-model", acm);
-        acm->init();
-        acm->bind();
+        globals->add_subsystem("aircraft-model", acm, SGSubsystemMgr::DISPLAY);
 
         ////////////////////////////////////////////////////////////////////
         // Initialize the view manager subsystem.

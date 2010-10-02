@@ -1262,14 +1262,6 @@ bool fgInitGeneral() {
     return true;
 }
 
-// Initialize view parameters
-void fgInitView() {
-  // force update of model so that viewer can get some data...
-  globals->get_aircraft_model()->update(0);
-  // run update for current view so that data is current...
-  globals->get_viewmgr()->update(0);
-}
-
 // This is the top level init routine which calls all the other
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.
@@ -1355,12 +1347,6 @@ bool fgInitSubsystems() {
 
     globals->add_subsystem( "xml-autopilot", FGXMLAutopilotGroup::createInstance(), SGSubsystemMgr::FDM );
     globals->add_subsystem( "route-manager", new FGRouteMgr );
-    
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the view manager subsystem.
-    ////////////////////////////////////////////////////////////////////
-
-    fgInitView();
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the Input-Output subsystem
@@ -1541,8 +1527,6 @@ void fgReInitSubsystems()
 
     // reload offsets from config defaults
     globals->get_viewmgr()->reinit();
-
-    fgInitView();
 
     globals->get_controls()->reset_all();
 
