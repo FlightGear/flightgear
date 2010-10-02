@@ -146,11 +146,6 @@ static void fgMainLoop( void ) {
                                 altitude->getDoubleValue() * SG_FEET_TO_METER,
                                 globals->get_time_params()->getJD() );
 
-
-    // Update any multiplayer's network queues, the AIMultiplayer
-    // implementation is an AI model and depends on that
-    globals->get_multiplayer_mgr()->Update();
-
 #if ENABLE_ATCDCL  
     // Run ATC subsystem
     if (fgGetBool("/sim/atc/enabled"))

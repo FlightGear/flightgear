@@ -366,7 +366,7 @@ FGMultiplayMgr::~FGMultiplayMgr()
 //  Initialise object
 //
 //////////////////////////////////////////////////////////////////////
-bool
+void
 FGMultiplayMgr::init (void) 
 {
   //////////////////////////////////////////////////
@@ -374,7 +374,7 @@ FGMultiplayMgr::init (void)
   //////////////////////////////////////////////////
   if (mInitialised) {
     SG_LOG(SG_NETWORK, SG_WARN, "FGMultiplayMgr::init - already initialised");
-    return false;
+    return;
   }
   //////////////////////////////////////////////////
   //  Set members from property values
@@ -400,7 +400,7 @@ FGMultiplayMgr::init (void)
   if (rxPort <= 0) {
     SG_LOG(SG_NETWORK, SG_DEBUG,
       "FGMultiplayMgr - No receiver port, Multiplayermode disabled");
-    return (false);
+    return;
   }
   if (mCallsign.empty())
     mCallsign = "JohnDoe"; // FIXME: use getpwuid
@@ -415,17 +415,17 @@ FGMultiplayMgr::init (void)
   if (!mSocket->open(false)) {
     SG_LOG( SG_NETWORK, SG_DEBUG,
             "FGMultiplayMgr::init - Failed to create data socket" );
-    return false;
+    return;
   }
   mSocket->setBlocking(false);
   if (mSocket->bind(rxAddress.c_str(), rxPort) != 0) {
     perror("bind");
     SG_LOG( SG_NETWORK, SG_DEBUG,
             "FGMultiplayMgr::Open - Failed to bind receive socket" );
-    return false;
+    return;
   }
+  
   mInitialised = true;
-  return true;
 } // FGMultiplayMgr::init()
 //////////////////////////////////////////////////////////////////////
 
@@ -710,7 +710,7 @@ FGMultiplayMgr::SendTextMessage(const string &MsgText)
 //  
 //////////////////////////////////////////////////////////////////////
 void
-FGMultiplayMgr::Update(void) 
+FGMultiplayMgr::update(double) 
 {
   if (!mInitialised)
     return;

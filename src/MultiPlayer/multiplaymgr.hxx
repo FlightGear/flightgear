@@ -33,25 +33,20 @@
 
 #include "mpmessages.hxx"
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <string>
-using std::string;
 #include <vector>
-using std::vector;
 
 #include <simgear/compiler.h>
 #include <simgear/props/props.hxx>
 #include <plib/netSocket.h>
 #include <Main/globals.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 #include <AIModel/AIMultiplayer.hxx>
 
 struct FGExternalMotionInfo;
 
-class FGMultiplayMgr 
+class FGMultiplayMgr : public SGSubsystem
 {
 public:
 
@@ -67,13 +62,15 @@ public:
   
   FGMultiplayMgr();
   ~FGMultiplayMgr();
-  bool init(void);
+  
+  virtual void init(void);
+  virtual void update(double dt);
+  
   void Close(void);
   // transmitter
   void SendMyPosition(const FGExternalMotionData& motionInfo);
   void SendTextMessage(const string &sMsgText);
   // receiver
-  void Update(void);
   
 private:
   union MsgBuf;
@@ -93,7 +90,7 @@ private:
   netAddress mServer;
   bool mHaveServer;
   bool mInitialised;
-  string mCallsign;
+  std::string mCallsign;
 };
 
 #endif

@@ -66,7 +66,6 @@ class FGLight;
 class FGModelMgr;
 class FGRouteMgr;
 class FGScenery;
-class FGMultiplayMgr;
 class FGPanel;
 class FGTileMgr;
 class FGViewMgr;
@@ -174,9 +173,6 @@ private:
     FGNavList *carrierlist;
     FGTACANList *channellist;
     FGAirwayNetwork *airwaynet;
-
-    //Mulitplayer managers
-    FGMultiplayMgr *multiplayer_mgr;
 
     /// roots of Aircraft trees
     string_list fg_aircraft_dirs;
@@ -287,13 +283,6 @@ public:
     inline void set_model_mgr (FGModelMgr * mgr)
     {
       model_mgr = mgr;
-    }
-
-    inline FGMultiplayMgr *get_multiplayer_mgr () { return multiplayer_mgr; }
-
-    inline void set_multiplayer_mgr (FGMultiplayMgr * mgr)
-    {
-      multiplayer_mgr = mgr;
     }
 
     inline string_list *get_channel_options_list () {

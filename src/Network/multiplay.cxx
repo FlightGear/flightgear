@@ -243,7 +243,7 @@ bool FGMultiplay::process() {
       motionInfo.properties.push_back(pData);
     }
 
-    FGMultiplayMgr* mpmgr = globals->get_multiplayer_mgr();
+    FGMultiplayMgr* mpmgr = (FGMultiplayMgr*) globals->get_subsystem("mp");
     mpmgr->SendMyPosition(motionInfo);
     
     // Now remove the data
@@ -272,7 +272,7 @@ bool FGMultiplay::process() {
 ******************************************************************/
 bool FGMultiplay::close() {
 
-  FGMultiplayMgr *mgr = globals->get_multiplayer_mgr();
+  FGMultiplayMgr* mgr = (FGMultiplayMgr*) globals->get_subsystem("mp");
 
   if (mgr == 0) {
     return false;
