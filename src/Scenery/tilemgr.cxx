@@ -103,17 +103,19 @@ void FGTileMgr::reinit()
 }
 
 // schedule a tile for loading
-void FGTileMgr::sched_tile( const SGBucket& b, const bool is_inner_ring ) {
+void FGTileMgr::sched_tile( const SGBucket& b, const bool is_inner_ring, const bool is_cache_locked ) {
     // see if tile already exists in the cache
     TileEntry *t = tile_cache.get_tile( b );
     if (t) {
-      t->set_inner_ring( is_inner_ring );
+        t->set_timestamp(tile_cache.get_current_time());
+        t->set_inner_ring( is_inner_ring );
+        t->set_cache_lock( is_cache_locked );
       return;
     }
     
     // make space in the cache
     SceneryPager* pager = FGScenery::getPagerSingleton();
-    while ( (int)tile_cache.get_size() > tile_cache.get_max_cache_size() ) {
+    while ( (int)tile_cache.get_size() >= tile_cache.get_max_cache_size() ) {
         long index = tile_cache.get_oldest_tile();
         if ( index >= 0 ) {
             TileEntry *old = tile_cache.get_tile( index );
@@ -132,19 +134,20 @@ void FGTileMgr::sched_tile( const SGBucket& b, const bool is_inner_ring ) {
 
     // create a new entry
     TileEntry *e = new TileEntry( b );
-
+    
     // insert the tile into the cache
     if ( tile_cache.insert_tile( e ) ) {
+        e->set_inner_ring( is_inner_ring );
+        e->set_cache_lock( is_cache_locked );
         // update_queues will generate load request
+        // Attach to scene graph
+        e->addToSceneGraph(globals->get_scenery()->get_terrain_branch());
     } else {
         // insert failed (cache full with no available entries to
         // delete.)  Try again later
         delete e;
     }
-    // Attach to scene graph
-    e->addToSceneGraph(globals->get_scenery()->get_terrain_branch());
 }
-
 
 // schedule a needed buckets for loading
 void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis) {
@@ -188,11 +191,20 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis) {
     // location.
     tile_cache.clear_inner_ring_flags();
 
+    // clear the cache lock flags which prevented tiles of the previous position to be dropped
+    // from the cache.
+    tile_cache.clear_cache_lock_flags();
+
+    // update timestamps, so all tiles scheduled now are *newer* than any tile previously loaded
+    osg::FrameStamp* framestamp
+            = globals->get_renderer()->getViewer()->getFrameStamp();
+    tile_cache.set_current_time(framestamp->getReferenceTime());
+
     SGBucket b;
 
     // schedule center tile first so it can be loaded first
     b = sgBucketOffset( longitude, latitude, 0, 0 );
-    sched_tile( b, true );
+    sched_tile( b, true, true );
 
     int x, y;
 
@@ -201,7 +213,7 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis) {
         for ( y = -1; y <= 1; ++y ) {
             if ( x != 0 || y != 0 ) {
                 b = sgBucketOffset( longitude, latitude, x, y );
-                sched_tile( b, true );
+                sched_tile( b, true, true);
             }
         }
     }
@@ -211,7 +223,7 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis) {
         for ( y = -yrange; y <= yrange; ++y ) {
             if ( x < -1 || x > 1 || y < -1 || y > 1 ) {
                 SGBucket b = sgBucketOffset( longitude, latitude, x, y );
-                sched_tile( b, false );
+                sched_tile( b, false, true);
             }
         }
     }

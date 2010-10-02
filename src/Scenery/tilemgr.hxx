@@ -52,7 +52,7 @@ private:
     load_state state;
     
     // schedule a tile for loading
-    void sched_tile( const SGBucket& b, const bool is_inner_ring );
+    void sched_tile( const SGBucket& b, const bool is_inner_ring, const bool is_cache_locked );
 
     // schedule a needed buckets for loading
     void schedule_needed(const SGBucket& curr_bucket, double rangeM);
