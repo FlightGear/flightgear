@@ -193,7 +193,6 @@ FGGlobals::~FGGlobals()
     delete model_mgr;
     delete channel_options_list;
     delete initial_waypoints;
-    delete tile_mgr;
     delete scenery;
     delete fontcache;
 

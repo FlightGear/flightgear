@@ -1321,14 +1321,8 @@ bool fgInitSubsystems() {
     // Initialize the scenery management subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    if ( globals->get_tile_mgr()->init() ) {
-        // Load the local scenery data
-        double visibility_meters = fgGetDouble("/environment/visibility-m");
-        globals->get_tile_mgr()->update( visibility_meters );
-    } else {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Error in Tile Manager initialization!" );
-        exit(-1);
-    }
+    globals->add_subsystem("tile-manager", globals->get_tile_mgr(), 
+      SGSubsystemMgr::DISPLAY);
 
     globals->get_scenery()->get_scene_graph()
         ->addChild(simgear::Particles::getCommonRoot());
@@ -1553,7 +1547,8 @@ void fgReInitSubsystems()
     globals->get_controls()->reset_all();
 
     globals->get_subsystem("time")->reinit();
-
+    globals->get_subsystem("tile-manager")->reinit();
+    
     if ( !freeze ) {
         fgSetBool("/sim/freeze/master", false);
     }
@@ -1580,7 +1575,6 @@ void doSimulatorReset(void)  // from gui_local.cxx -- TODO merge with fgReInitSu
 
     fgReInitSubsystems();
 
-    globals->get_tile_mgr()->update(fgGetDouble("/environment/visibility-m"));
     fgSetBool("/sim/signals/reinit", false);
 
     if (!freeze)
