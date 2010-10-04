@@ -132,11 +132,6 @@ static void fgMainLoop( void ) {
     // compute simulated time (allowing for pause, warp, etc) and
     // real elapsed time
     timeMgr->computeTimeDeltas(sim_dt, real_dt);
-    
-    if (globals->get_warp_delta() != 0) {
-        FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
-        l->update( 0.5 );
-    }
 
     // update magvar model
     globals->get_mag()->update( longitude->getDoubleValue()

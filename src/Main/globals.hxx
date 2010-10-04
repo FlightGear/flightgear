@@ -62,7 +62,6 @@ class FGFlightPlanDispatcher;
 class FGNavList;
 class FGAirwayNetwork;
 class FGTACANList;
-class FGLight;
 class FGModelMgr;
 class FGRouteMgr;
 class FGScenery;
