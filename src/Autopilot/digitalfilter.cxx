@@ -343,8 +343,10 @@ void DigitalFilter::update( bool firstTime, double dt)
 {
   if( _implementation == NULL ) return;
 
-  if( firstTime ) 
-    _implementation->initialize( get_output_value() );
+  if( firstTime ) {
+    SG_LOG(SG_AUTOPILOT,SG_DEBUG, "First time initialization of " << get_name() << " to " << _valueInput.get_value() );
+    _implementation->initialize( _valueInput.get_value() );
+  }
 
   double input = _valueInput.get_value() - _referenceInput.get_value();
   double output = _implementation->compute( dt, input );
