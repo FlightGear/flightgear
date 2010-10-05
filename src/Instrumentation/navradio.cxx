@@ -390,6 +390,7 @@ void FGNavRadio::clearOutputs()
   
   _dmeInRange = false;
   _operable = false;
+  _navaid = NULL;
 }
 
 void FGNavRadio::updateReceiver(double dt)
