@@ -609,6 +609,7 @@ public:
     void update_egpws_alert_discrete_2 ();
     void update_egpwc_alert_discrete_3 ();
     void update_outputs ();
+    void reposition ();
 
     void update_lamps ();
     void set_lamp (Lamp lamp);
@@ -639,7 +640,7 @@ public:
 
     public:
       inline TerrainClearanceFilter ()
-	: value(0) {}
+	: value(0.0), last_update(-1.0) {}
 
       double update (double agl);
       void reset ();
