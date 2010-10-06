@@ -292,6 +292,10 @@ int fgOSMainLoop()
 
 int fgGetKeyModifiers()
 {
+    if (!globals->get_renderer()) { // happens during shutdown
+      return 0;
+    }
+    
     return globals->get_renderer()->getEventHandler()->getCurrentModifiers();
 }
 

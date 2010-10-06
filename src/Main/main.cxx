@@ -132,11 +132,6 @@ static void fgMainLoop( void ) {
     // compute simulated time (allowing for pause, warp, etc) and
     // real elapsed time
     timeMgr->computeTimeDeltas(sim_dt, real_dt);
-    
-    if (globals->get_warp_delta() != 0) {
-        FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
-        l->update( 0.5 );
-    }
 
     // update magvar model
     globals->get_mag()->update( longitude->getDoubleValue()
@@ -146,11 +141,6 @@ static void fgMainLoop( void ) {
                                 altitude->getDoubleValue() * SG_FEET_TO_METER,
                                 globals->get_time_params()->getJD() );
 
-
-    // Update any multiplayer's network queues, the AIMultiplayer
-    // implementation is an AI model and depends on that
-    globals->get_multiplayer_mgr()->Update();
-
 #if ENABLE_ATCDCL  
     // Run ATC subsystem
     if (fgGetBool("/sim/atc/enabled"))
@@ -158,7 +148,6 @@ static void fgMainLoop( void ) {
 #endif  
     
     globals->get_subsystem_mgr()->update(sim_dt);
-    globals->get_aircraft_model()->update(sim_dt);
 
     // run Nasal's settimer() loops right before the view manager
     globals->get_event_mgr()->update(sim_dt);
@@ -404,9 +393,7 @@ static void fgIdleFunction ( void ) {
         ////////////////////////////////////////////////////////////////////
         FGAircraftModel* acm = new FGAircraftModel;
         globals->set_aircraft_model(acm);
-        //globals->add_subsystem("aircraft-model", acm);
-        acm->init();
-        acm->bind();
+        globals->add_subsystem("aircraft-model", acm, SGSubsystemMgr::DISPLAY);
 
         ////////////////////////////////////////////////////////////////////
         // Initialize the view manager subsystem.

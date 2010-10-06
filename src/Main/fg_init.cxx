@@ -1262,14 +1262,6 @@ bool fgInitGeneral() {
     return true;
 }
 
-// Initialize view parameters
-void fgInitView() {
-  // force update of model so that viewer can get some data...
-  globals->get_aircraft_model()->update(0);
-  // run update for current view so that data is current...
-  globals->get_viewmgr()->update(0);
-}
-
 // This is the top level init routine which calls all the other
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.
@@ -1355,12 +1347,6 @@ bool fgInitSubsystems() {
 
     globals->add_subsystem( "xml-autopilot", FGXMLAutopilotGroup::createInstance(), SGSubsystemMgr::FDM );
     globals->add_subsystem( "route-manager", new FGRouteMgr );
-    
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the view manager subsystem.
-    ////////////////////////////////////////////////////////////////////
-
-    fgInitView();
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the Input-Output subsystem
@@ -1411,6 +1397,14 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("atis", new FGAtisManager, SGSubsystemMgr::POST_FDM);
 #endif
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize multiplayer subsystem
+    ////////////////////////////////////////////////////////////////////
+
+    globals->add_subsystem("mp", new FGMultiplayMgr, SGSubsystemMgr::POST_FDM);
+
     ////////////////////////////////////////////////////////////////////
     // Initialise the AI Model Manager
     ////////////////////////////////////////////////////////////////////
@@ -1479,13 +1473,6 @@ bool fgInitSubsystems() {
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();
 
-    ////////////////////////////////////////////////////////////////////
-    // Initialize multiplayer subsystem
-    ////////////////////////////////////////////////////////////////////
-
-    globals->set_multiplayer_mgr(new FGMultiplayMgr);
-    globals->get_multiplayer_mgr()->init();
-
     ////////////////////////////////////////////////////////////////////////
     // Initialize the Nasal interpreter.
     // Do this last, so that the loaded scripts see initialized state
@@ -1541,8 +1528,6 @@ void fgReInitSubsystems()
 
     // reload offsets from config defaults
     globals->get_viewmgr()->reinit();
-
-    fgInitView();
 
     globals->get_controls()->reset_all();
 
