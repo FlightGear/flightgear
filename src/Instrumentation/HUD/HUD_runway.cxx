@@ -25,7 +25,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/math/sg_geodesy.hxx>
-#include <osg/GLU>
+#include <simgear/math/project.hxx>
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
@@ -129,8 +129,9 @@ void HUD::Runway::draw()
     //Calculate the 2D points via gluProject
     int result = GL_TRUE;
     for (int i = 0; i < 6; i++) {
-        result = gluProject(_points3d[i][0], _points3d[i][1], _points3d[i][2], _mm,
-                _pm, _view, &_points2d[i][0], &_points2d[i][1], &_points2d[i][2]);
+        result = simgear::project(_points3d[i][0], _points3d[i][1], _points3d[i][2],
+                                  _mm, _pm, _view,
+                                  &_points2d[i][0], &_points2d[i][1], &_points2d[i][2]);
     }
     //set the line width based on our distance from the runway
     setLineWidth();
@@ -229,7 +230,8 @@ bool HUD::Runway::drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& 
         sgdVec3 newPt;
         sgdCopyVec3(newPt, a1);
         sgdAddVec3(newPt, vec);
-        if (gluProject(newPt[0], newPt[1], newPt[2], _mm, _pm, _view, &p2[0], &p2[1], &p2[2])
+        if (simgear::project(newPt[0], newPt[1], newPt[2], _mm, _pm, _view,
+                             &p2[0], &p2[1], &p2[2])
                 && (p2[2] > 0 && p2[2] < 1.0)) {
             boundPoint(p1, p2);
             glBegin(GL_LINES);
@@ -245,7 +247,8 @@ bool HUD::Runway::drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& 
         sgdVec3 newPt;
         sgdCopyVec3(newPt, a2);
         sgdAddVec3(newPt, vec);
-        if (gluProject(newPt[0], newPt[1], newPt[2], _mm, _pm, _view, &p1[0], &p1[1], &p1[2])
+        if (simgear::project(newPt[0], newPt[1], newPt[2], _mm, _pm, _view,
+                             &p1[0], &p1[1], &p1[2])
                 && (p1[2] > 0 && p1[2] < 1.0)) {
             boundPoint(p2, p1);
             glBegin(GL_LINES);

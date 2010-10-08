@@ -17,7 +17,7 @@
 # include <windows.h>
 #endif
 
-#include <osg/GLU>
+#include <osg/Matrixf>
 
 #include <math.h>
 #include <zlib.h>
@@ -95,6 +95,7 @@ SGTexture::bind()
 void
 SGTexture::resize(unsigned int width, unsigned int height)
 {
+    using namespace osg;
     GLfloat aspect;
 
     // Make sure that we don't get a divide by zero exception
@@ -110,10 +111,10 @@ SGTexture::resize(unsigned int width, unsigned int height)
     // Go to the projection matrix, this gets modified by the perspective
     // calulations
     glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
 
     // Do the perspective calculations
-    gluPerspective(45.0, aspect, 1.0, 400.0);
+    Matrixf proj = Matrixf::perspective(45.0, aspect, 1.0, 400.0);
+    glLoadMatrix(proj.ptr());
 
     // Return to the modelview matrix
     glMatrixMode(GL_MODELVIEW);
