@@ -23,15 +23,6 @@
 
 #include "predictor.hxx"
 
-#ifdef SG_BULK
-#undef SG_BULK
-#endif
-#define SG_BULK SG_ALERT
-#ifdef SG_INFO
-#undef SG_INFO
-#endif
-#define SG_INFO SG_ALERT
-
 using namespace FGXMLAutopilot;
 
 Predictor::Predictor () :
