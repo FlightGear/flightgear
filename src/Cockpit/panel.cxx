@@ -40,6 +40,7 @@
 #include <osg/CullFace>
 #include <osg/Depth>
 #include <osg/Material>
+#include <osg/Matrixf>
 #include <osg/TexEnv>
 #include <osg/PolygonOffset>
 
@@ -273,6 +274,7 @@ FGPanel::update (double dt)
 void
 FGPanel::update (osg::State& state, GLfloat winx, GLfloat winw, GLfloat winy, GLfloat winh)
 {
+  using namespace osg;
                                // Calculate accelerations
                                // and jiggle the panel accordingly
                                // The factors and bounds are just
@@ -284,12 +286,13 @@ FGPanel::update (osg::State& state, GLfloat winx, GLfloat winw, GLfloat winy, GL
 
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
-  glLoadIdentity();
+  Matrixf proj;
   if ( _flipx->getBoolValue() ) {
-    gluOrtho2D(winx + winw, winx, winy + winh, winy); /* up side down */
+      proj = Matrixf::ortho2D(winx + winw, winx, winy + winh, winy); /* up side down */
   } else {
-    gluOrtho2D(winx, winx + winw, winy, winy + winh); /* right side up */
+      proj = Matrixf::ortho2D(winx, winx + winw, winy, winy + winh); /* right side up */
   }
+  glLoadMatrix(proj.ptr());
   
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();

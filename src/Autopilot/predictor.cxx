@@ -23,15 +23,6 @@
 
 #include "predictor.hxx"
 
-#ifdef SG_BULK
-#undef SG_BULK
-#endif
-#define SG_BULK SG_ALERT
-#ifdef SG_INFO
-#undef SG_INFO
-#endif
-#define SG_INFO SG_ALERT
-
 using namespace FGXMLAutopilot;
 
 Predictor::Predictor () :
@@ -40,9 +31,18 @@ Predictor::Predictor () :
 {
 }
 
-bool Predictor::configure(const string& nodeName, SGPropertyNode* configNode)
+bool Predictor::configure(const string& nodeName, SGPropertyNode_ptr configNode)
 {
   SG_LOG( SG_AUTOPILOT, SG_BULK, "Predictor::configure(" << nodeName << ")" << endl );
+
+  if( AnalogComponent::configure( nodeName, configNode ) )
+    return true;
+
+  if( nodeName == "config" ) {
+    Component::configure( configNode );
+    return true;
+  }
+  
   if (nodeName == "seconds") {
     _seconds.push_back( new InputValue( configNode, 0 ) );
     return true;

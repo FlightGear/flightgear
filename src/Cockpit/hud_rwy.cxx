@@ -32,8 +32,7 @@
 #include <ATCDCL/ATCutils.hxx>
 #include <Main/viewer.hxx>
 
-#include <osg/GLU>
-
+#include <simgear/math/project.hxx>
 
 // int x, int y, int width, int height, float scale_data, bool working)
 
@@ -134,8 +133,9 @@ void runway_instr::draw()
         //Calculate the 2D points via gluProject
         int result = GL_TRUE;
         for (int i = 0; i < 6; i++) {
-            result = gluProject(points3d[i][0], points3d[i][1], points3d[i][2], mm,
-                    pm, view, &points2d[i][0], &points2d[i][1], &points2d[i][2]);
+            result = simgear::project(points3d[i][0], points3d[i][1], points3d[i][2],
+                                      mm, pm, view,
+                                      &points2d[i][0], &points2d[i][1], &points2d[i][2]);
         }
         //set the line width based on our distance from the runway
         setLineWidth();
@@ -239,7 +239,8 @@ bool runway_instr::drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3&
         sgdVec3 newPt;
         sgdCopyVec3(newPt, a1);
         sgdAddVec3(newPt, vec);
-        if (gluProject(newPt[0], newPt[1], newPt[2], mm, pm, view, &p2[0], &p2[1], &p2[2])
+        if (simgear::project(newPt[0], newPt[1], newPt[2], mm, pm, view,
+                             &p2[0], &p2[1], &p2[2])
                 && (p2[2] > 0 && p2[2] < 1.0)) {
             boundPoint(p1, p2);
             glBegin(GL_LINES);
@@ -255,7 +256,8 @@ bool runway_instr::drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3&
         sgdVec3 newPt;
         sgdCopyVec3(newPt, a2);
         sgdAddVec3(newPt, vec);
-        if (gluProject(newPt[0], newPt[1], newPt[2], mm, pm, view, &p1[0], &p1[1], &p1[2])
+        if (simgear::project(newPt[0], newPt[1], newPt[2], mm, pm, view,
+                             &p1[0], &p1[1], &p1[2])
                 && (p1[2] > 0 && p1[2] < 1.0)) {
             boundPoint(p2, p1);
             glBegin(GL_LINES);
