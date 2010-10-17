@@ -78,7 +78,15 @@ public:
     */
     bool close();
 
+    void setPropertiesChanged()
+    {
+      mPropertiesChanged = true;
+    }
 private:
+  bool mPropertiesChanged;
+  
+  void findProperties();
+  
   // Map between the property id's from the multiplayers network packets
   // and the property nodes
   typedef std::map<unsigned, SGSharedPtr<SGPropertyNode> > PropertyMap;
