@@ -467,12 +467,12 @@ union FGMultiplayMgr::MsgBuf
 
     T_MsgHdr* msgHdr()
     {
-        return reinterpret_cast<T_MsgHdr*>(Msg);
+        return &Header;
     }
 
     const T_MsgHdr* msgHdr() const
     {
-        return reinterpret_cast<const T_MsgHdr*>(Msg);
+        return reinterpret_cast<const T_MsgHdr*>(&Header);
     }
 
     T_PositionMsg* posMsg()
@@ -514,16 +514,17 @@ union FGMultiplayMgr::MsgBuf
      */
     xdr_data_t* propsRecvdEnd()
     {
-        return reinterpret_cast<xdr_data_t*>(Msg + msgHdr()->MsgLen);
+        return reinterpret_cast<xdr_data_t*>(Msg + Header.MsgLen);
     }
 
     const xdr_data_t* propsRecvdEnd() const
     {
-        return reinterpret_cast<const xdr_data_t*>(Msg + msgHdr()->MsgLen);
+        return reinterpret_cast<const xdr_data_t*>(Msg + Header.MsgLen);
     }
     
     xdr_data2_t double_val;
     char Msg[MAX_PACKET_SIZE];
+    T_MsgHdr Header;
 };
 
 void
