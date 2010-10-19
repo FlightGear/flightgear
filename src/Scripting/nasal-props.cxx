@@ -169,7 +169,16 @@ static naRef f_getValue(naContext c, naRef me, int argc, naRef* args)
     case props::BOOL:   case props::INT:
     case props::LONG:   case props::FLOAT:
     case props::DOUBLE:
-        return naNum((*node)->getDoubleValue());
+    {
+        double dv = (*node)->getDoubleValue();
+        if (osg::isNaN(dv)) {
+          SG_LOG(SG_GENERAL, SG_ALERT, "Nasal getValue: property " << (*node)->getPath() << " is NaN");
+          naRuntimeError(c, "props.getValue() would have read NaN");
+        }
+        
+        return naNum(dv);
+    }
+    
     case props::STRING:
     case props::UNSPECIFIED:
         return NASTR((*node)->getStringValue());
@@ -217,7 +226,13 @@ static naRef f_setValue(naContext c, naRef me, int argc, naRef* args)
         naRef n = naNumValue(val);
         if(naIsNil(n))
             naRuntimeError(c, "props.setValue() with non-number");
-        result = (*node)->setDoubleValue(naNumValue(val).num);
+            
+        double d = naNumValue(val).num;
+        if (osg::isNaN(d)) {
+          naRuntimeError(c, "props.setValue() passed a NaN");
+        }
+        
+        result = (*node)->setDoubleValue(d);
     }
     return naNum(result);
 }
@@ -250,8 +265,13 @@ static naRef f_setDoubleValue(naContext c, naRef me, int argc, naRef* args)
 {
     NODEARG();
     naRef r = naNumValue(naVec_get(argv, 0));
-    if(naIsNil(r))
+    if (naIsNil(r))
         naRuntimeError(c, "props.setDoubleValue() with non-number");
+        
+    if (osg::isNaN(r.num)) {
+      naRuntimeError(c, "props.setDoubleValue() passed a NaN");
+    }
+        
     return naNum((*node)->setDoubleValue(r.num));
 }
 
