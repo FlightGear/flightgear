@@ -1,4 +1,9 @@
 
+#include <fstream>
+
+#include <simgear/misc/sg_path.hxx>
+#include <simgear/structure/exception.hxx>
+
 #include <Main/fg_init.hxx>
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -6,8 +11,12 @@
 #include <Instrumentation/gps.hxx>
 #include <Autopilot/route_mgr.hxx>
 #include <Environment/environment_mgr.hxx>
+#include <Navaids/airways.hxx>
+#include <Navaids/waypoint.hxx>
+#include <Navaids/procedure.hxx>
 
 using std::string;
+using namespace flightgear;
 
 char *homedir = ::getenv( "HOME" );
 char *hostname = ::getenv( "HOSTNAME" );
@@ -45,6 +54,16 @@ void printScratch(SGPropertyNode* scratch)
   }
 }
 
+void printRoute(const WayptVec& aRoute)
+{
+  SG_LOG(SG_GENERAL, SG_INFO, "route size=" << aRoute.size());
+  for (unsigned int r=0; r<aRoute.size();++r) {
+    Waypt* w = aRoute[r];
+    SG_LOG(SG_GENERAL, SG_ALERT, "\t" << r << ": " << w->ident() << " "
+      << w->owner()->ident());
+  }
+}
+
 void createDummyRoute(FGRouteMgr* rm)
 {
   SGPropertyNode* rmInput = fgGetNode("/autopilot/route-manager/input", true);
@@ -59,6 +78,8 @@ void createDummyRoute(FGRouteMgr* rm)
 
 int main(int argc, char* argv[])
 {
+
+try{
   globals = new FGGlobals;
     
   fgInitFGRoot(argc, argv);
@@ -69,6 +90,9 @@ int main(int argc, char* argv[])
   
   
   fgInitNav();
+  fgSetDouble("/environment/magnetic-variation-deg", 0.0);
+  
+  Airway::load();
   
   SG_LOG(SG_GENERAL, SG_ALERT, "hello world!");
   
@@ -94,12 +118,15 @@ int main(int argc, char* argv[])
  // globals->add_subsystem("environment", envMgr);
  // envMgr->init();
   
+  fgSetBool("/sim/realism/simple-gps", true);
+  
+  // _realismSimpleGps
   
   SGPropertyNode* nd = fgGetNode("/instrumentation/gps", true);
   GPS* gps = new GPS(nd);
   globals->add_subsystem("gps", gps);
-  
-  
+
+  const FGAirport* egph = fgFindAirportID("EGPH");
   testSetPosition(egph->geod());
   
   // startup the route manager
@@ -114,6 +141,7 @@ int main(int argc, char* argv[])
   SGPropertyNode* wp1 = wp->getChild("wp", 1, true);
   
   // update a few times
+  gps->update(0.05);
   gps->update(0.05);
   gps->update(0.05);
   
@@ -221,7 +249,105 @@ int main(int argc, char* argv[])
   nd->setStringValue("command", "define-user-wpt");
   printScratch(scratch);
   
+// airways
+  FGPositioned::TypeFilter vorFilt(FGPositioned::VOR);
+  FGPositionedRef tla = FGPositioned::findClosestWithIdent("TLA", pos, &vorFilt);
+  FGPositionedRef big = FGPositioned::findClosestWithIdent("BIG", pos, &vorFilt); 
+  FGPositionedRef pol = FGPositioned::findClosestWithIdent("POL", pos, &vorFilt);
+   
+  const FGAirport* eddm = fgFindAirportID("EDDM");
+  FGPositionedRef mun = FGPositioned::findClosestWithIdent("MUN", 
+    eddm->geod(), &vorFilt);
+  
+  const FGAirport* ksfo = fgFindAirportID("KSFO");
+  FGPositionedRef sfo = FGPositioned::findClosestWithIdent("SFO", 
+    ksfo->geod(), &vorFilt);
+
+
+  WayptRef awy1 = new NavaidWaypoint(tla, NULL);
+  WayptRef awy2 = new NavaidWaypoint(big, NULL);
+  WayptRef awy3 = new NavaidWaypoint(pol, NULL);
+  WayptRef awy4 = new NavaidWaypoint(mun, NULL);
+  WayptRef awy5 = new NavaidWaypoint(sfo, NULL);
+  
+  WayptRef awy6 = new NavaidWaypoint(
+    (FGPositioned*) fgFindAirportID("KJFK"), NULL);
+  
+  SGPath p("/Users/jmt/Desktop/airways.kml");
+  std::fstream f;
+  f.open(p.str().c_str(), fstream::out | fstream::trunc);
+  
+// pre-amble
+  f << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+      "<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n"
+    "<Document>\n";
+
+  WayptVec route;
+  Airway::highLevel()->route(awy1, awy3, route);
+  Route::dumpRouteToLineString("egph-egcc", route, f);
+  
+  Airway::lowLevel()->route(awy1, awy2, route);
+  Route::dumpRouteToLineString("egph-big", route, f);
+  
+  Airway::lowLevel()->route(awy2, awy4, route);
+  Route::dumpRouteToLineString("big-mun", route, f);
+  
+  Airway::highLevel()->route(awy4, awy5, route);
+  Route::dumpRouteToLineString("mun-sfo", route, f);
+  
+  Airway::lowLevel()->route(awy5, awy6, route);
+  Route::dumpRouteToLineString("sfo-jfk", route, f);
+  
+  // post-amble
+  f << "</Document>\n" 
+    "</kml>" << endl;
+  f.close();
+  
+// procedures
+  SGPath op("/Users/jmt/Desktop/procedures.kml");
+  f.open(op.str().c_str(), fstream::out | fstream::trunc);
+  
+  FGAirport* eham = (FGAirport*) fgFindAirportID("EHAM");
+  FGPositioned::TypeFilter fixFilt(FGPositioned::FIX);
+  
+  WayptVec approach;
+  FGPositionedRef redfa = FGPositioned::findClosestWithIdent("REDFA", 
+    eham->geod(), &fixFilt);
+  bool ok = eham->buildApproach(new NavaidWaypoint(redfa, NULL), 
+    eham->getRunwayByIdent("18R"), approach);
+  if (!ok ) {
+    SG_LOG(SG_GENERAL, SG_INFO, "failed to build approach");
+  }
   
   
+  FGAirport* egll = (FGAirport*) fgFindAirportID("EGLL");  
+  WayptVec approach2;
+  ok = egll->buildApproach(new NavaidWaypoint(big, NULL), 
+    egll->getRunwayByIdent("27R"), approach2);
+  if (!ok ) {
+    SG_LOG(SG_GENERAL, SG_INFO, "failed to build approach");
+  }
+  
+// pre-amble
+  f << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+      "<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n"
+    "<Document>\n";
+    
+  Route::dumpRouteToLineString("REDFA 18R", approach, f);
+  Route::dumpRouteToLineString("EGLL 27R", approach2, f);
+  
+  // post-amble
+  f << "</Document>\n" 
+    "</kml>" << endl;
+  f.close();  
+  
+             
   return EXIT_SUCCESS;
+
+
+  
+} catch (sg_exception& ex) {
+  SG_LOG(SG_GENERAL, SG_ALERT, "exception:" << ex.getFormattedMessage());
+}
+  return EXIT_FAILURE;
 }

@@ -33,6 +33,7 @@
 #include <Main/util.hxx>
 #include <Scenery/scenery.hxx>
 #include <Navaids/navrecord.hxx>
+#include <Navaids/procedure.hxx>
 
 #include "NasalSys.hxx"
 
@@ -613,6 +614,28 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
           HASHSET("ils_frequency_mhz", 17, naNum(rwy->ILS()->get_freq() / 100.0));
         }
         
+        std::vector<flightgear::SID*> sids(rwy->getSIDs());
+        naRef sidVec = naNewVector(c);
+        
+        for (unsigned int s=0; s < sids.size(); ++s) {
+          naRef procId = naStr_fromdata(naNewString(c),
+                    const_cast<char *>(sids[s]->ident().c_str()),
+                    sids[s]->ident().length());
+          naVec_append(sidVec, procId);
+        }
+        HASHSET("sids", 4, sidVec); 
+        
+        std::vector<flightgear::STAR*> stars(rwy->getSTARs());
+        naRef starVec = naNewVector(c);
+      
+        for (unsigned int s=0; s < stars.size(); ++s) {
+          naRef procId = naStr_fromdata(naNewString(c),
+                    const_cast<char *>(stars[s]->ident().c_str()),
+                    stars[s]->ident().length());
+          naVec_append(starVec, procId);
+        }
+        HASHSET("stars", 5, starVec); 
+
 #undef HASHSET
         naHash_set(rwys, rwyid, rwydata);
     }

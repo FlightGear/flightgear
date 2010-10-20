@@ -60,7 +60,6 @@ class FGAircraftModel;
 class FGControls;
 class FGFlightPlanDispatcher;
 class FGNavList;
-class FGAirwayNetwork;
 class FGTACANList;
 class FGModelMgr;
 class FGRouteMgr;
@@ -171,7 +170,6 @@ private:
     FGNavList *tacanlist;
     FGNavList *carrierlist;
     FGTACANList *channellist;
-    FGAirwayNetwork *airwaynet;
 
     /// roots of Aircraft trees
     string_list fg_aircraft_dirs;
@@ -321,10 +319,6 @@ public:
     inline void set_carrierlist( FGNavList *n ) { carrierlist = n; }
     inline FGTACANList *get_channellist() const { return channellist; }
     inline void set_channellist( FGTACANList *c ) { channellist = c; }
-
-    inline FGAirwayNetwork *get_airwaynet() const { return airwaynet; }
-    inline void set_airwaynet( FGAirwayNetwork *a ) { airwaynet = a; }
-
 
    /**
      * Save the current state as the initial state.

@@ -29,6 +29,7 @@
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Airports/dynamics.hxx>
+#include <Airports/simple.hxx>
 
 #include <string>
 #include <math.h>

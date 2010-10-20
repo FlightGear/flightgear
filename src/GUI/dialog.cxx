@@ -1339,8 +1339,41 @@ fgList::update()
 
 void fgComboBox::update()
 {
+  if (_inHit) {
+    return;
+  }
+  
+  std::string curValue(getStringValue());
   fgValueList::update();
   newList(_list);
+  int currentItem = puaComboBox::getCurrentItem();
+
+  
+// look for the previous value, in the new list
+  for (int i = 0; _list[i] != 0; i++) {
+    if (_list[i] == curValue) {
+    // don't set the current item again; this is important to avoid
+    // recursion here if the combo callback ultimately causes another dialog-update
+      if (i != currentItem) {
+        puaComboBox::setCurrentItem(i);
+      }
+      
+      return;
+    }
+  } // of list values iteration
+  
+// cound't find current item, default to first
+  if (currentItem != 0) {
+    puaComboBox::setCurrentItem(0);
+  }
+}
+
+int fgComboBox::checkHit(int b, int up, int x, int y)
+{
+  _inHit = true;
+  int r = puaComboBox::checkHit(b, up, x, y);
+  _inHit = false;
+  return r;
 }
 
 // end of dialog.cxx

@@ -23,6 +23,8 @@
 #endif
 
 #include <simgear/math/sg_geodesy.hxx>
+
+#include <Airports/simple.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/dynamics.hxx>
 

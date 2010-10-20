@@ -30,6 +30,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/route/waypoint.hxx>
 
+#include <Airports/simple.hxx>
 #include <Airports/dynamics.hxx>
 
 #include <AIModel/AIAircraft.hxx>

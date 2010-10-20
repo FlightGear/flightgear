@@ -45,7 +45,6 @@
 #include <Model/acmodel.hxx>
 #include <Model/modelmgr.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
-#include <Navaids/awynet.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Navaids/navlist.hxx>
@@ -149,9 +148,7 @@ FGGlobals::FGGlobals() :
     dmelist( NULL ),
     tacanlist( NULL ),
     carrierlist( NULL ),
-    channellist( NULL ),
-    airwaynet( NULL )
-    
+    channellist( NULL )    
 {
   simgear::ResourceManager::instance()->addProvider(new AircraftResourceProvider());
 }
@@ -199,7 +196,6 @@ FGGlobals::~FGGlobals()
     delete tacanlist;
     delete carrierlist;
     delete channellist;
-    delete airwaynet;
 
     soundmgr->unbind();
     delete soundmgr;

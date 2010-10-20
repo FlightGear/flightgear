@@ -34,7 +34,7 @@
 #include <Traffic/TrafficMgr.hxx>
 #include <Airports/groundnetwork.hxx>
 #include <Airports/dynamics.hxx>
-
+#include <Airports/simple.hxx>
 
 using std::sort;
 

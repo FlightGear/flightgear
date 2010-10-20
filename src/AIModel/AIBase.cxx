@@ -194,18 +194,27 @@ void FGAIBase::Transform() {
 }
 
 bool FGAIBase::init(bool search_in_AI_path) {
-    osg::ref_ptr<osgDB::ReaderWriter::Options> opt=
-        new osgDB::ReaderWriter::Options(*osgDB::Registry::instance()->getOptions());
-
+    
+    string f;
     if(search_in_AI_path)
     {
-        SGPath ai_path(globals->get_fg_root());
-        ai_path.append("AI");
-        opt->getDatabasePathList().push_front(ai_path.str());
+    // setup a modified Options strucutre, with only the $fg-root/AI defined;
+    // we'll check that first, then give the normal search logic a chance.
+    // this ensures that models in AI/ are preferred to normal models, where
+    // both exist.
+        osg::ref_ptr<osgDB::ReaderWriter::Options> 
+          opt(osg::clone(osgDB::Registry::instance()->getOptions(), osg::CopyOp::SHALLOW_COPY));
+
+        SGPath ai_path(globals->get_fg_root(), "AI");
+        opt->setDatabasePath(ai_path.str());
+        
+        f = osgDB::findDataFile(model_path, opt.get());
     }
 
-    string f = osgDB::findDataFile(model_path, opt.get());
-
+    if (f.empty()) {
+      f = simgear::SGModelLib::findDataFile(model_path);
+    }
+    
     if(f.empty())
         f = fgGetString("/sim/multiplay/default-model", default_model);
 

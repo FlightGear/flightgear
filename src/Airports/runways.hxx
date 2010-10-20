@@ -33,6 +33,11 @@ class FGAirport;
 class FGNavRecord;
 class SGPropertyNode;
 
+namespace flightgear {
+  class SID;
+  class STAR;
+}
+
 class FGRunway : public FGRunwayBase
 {
   FGAirport* _airport;
@@ -115,6 +120,16 @@ public:
    * Helper to process property data loaded from an ICAO.threshold.xml file
    */
   void processThreshold(SGPropertyNode* aThreshold);
+  
+  /**
+   * Get SIDs (DPs) associated with this runway
+   */
+  std::vector<flightgear::SID*> getSIDs();
+  
+  /**
+   * Get STARs associared with this runway
+   */ 
+  std::vector<flightgear::STAR*> getSTARs();
 };
 
 #endif // _FG_RUNWAYS_HXX
