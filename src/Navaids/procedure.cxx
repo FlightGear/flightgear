@@ -19,6 +19,9 @@
 
 #include "procedure.hxx"
 
+#include <cassert>
+#include <algorithm> // for reverse_copy
+
 #include <simgear/structure/exception.hxx>
 
 #include <Navaids/waypoint.hxx>

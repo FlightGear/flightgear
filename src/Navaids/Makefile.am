@@ -14,6 +14,7 @@ libNavaids_a_SOURCES = \
 	route.hxx route.cxx \
 	waypoint.hxx waypoint.cxx \
 	procedure.hxx procedure.cxx \
+	awynet.cxx awynet.hxx
 
 #
 # testnavs_SOURCES = testnavs.cxx

@@ -19,6 +19,8 @@
 
 #include "rnav_waypt_controller.hxx"
 
+#include <cassert>
+
 #include <simgear/sg_inlines.h>
 #include <simgear/structure/exception.hxx>
 
