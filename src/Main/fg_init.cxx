@@ -58,6 +58,8 @@
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sg_dir.hxx>
+#include <simgear/misc/sgstream.hxx>
+
 #include <simgear/misc/interpolator.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/particles.hxx>
@@ -1072,16 +1074,6 @@ fgInitNav ()
     fixlist.init( p_fix );  // adds fixes to the DB in positioned.cxx
 
     SG_LOG(SG_GENERAL, SG_INFO, "  Airways");
- #if 0 
-      SGPath p_awy( globals->get_fg_root() );
-    p_awy.append( "Navaids/awy.dat" );
-    FGAirwayNetwork *awyNet = new FGAirwayNetwork;
-    //cerr << "Loading Airways" << endl;
-    awyNet->load (p_awy );
-    awyNet->init();
-    //cerr << "initializing airways" << endl;
-    globals->set_airwaynet( awyNet );
-#endif
     flightgear::Airway::load();
     
     return true;

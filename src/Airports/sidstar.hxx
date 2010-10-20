@@ -24,6 +24,7 @@
 #define _SIDSTAR_HXX_
 
 #include <string>
+#include <map>
 
 #include <simgear/misc/sg_path.hxx>
 
@@ -36,12 +37,10 @@
 #include "runwayprefs.hxx"
 
 
-using std::string;
-
 class FGAirport;
 
-typedef vector<FGAIFlightPlan*>           FlightPlanVec;
-typedef vector<FGAIFlightPlan*>::iterator FlightPlanVecIterator;
+typedef std::vector<FGAIFlightPlan*>           FlightPlanVec;
+typedef std::vector<FGAIFlightPlan*>::iterator FlightPlanVecIterator;
 
 typedef std::map < std::string, FlightPlanVec > FlightPlanVecMap;
 
@@ -49,7 +48,7 @@ typedef std::map < std::string, FlightPlanVec > FlightPlanVecMap;
 class FGSidStar 
 {
    private:
-      string id;
+      std::string id;
       bool initialized;
       FlightPlanVecMap data;
 
@@ -57,9 +56,9 @@ class FGSidStar
       FGSidStar(FGAirport *ap);
       FGSidStar(const FGSidStar &other);
 
-      string getId() { return id; };
+      std::string getId() { return id; };
       void load(SGPath path);
-      FGAIFlightPlan *getBest(string activeRunway, double heading);
+      FGAIFlightPlan *getBest(std::string activeRunway, double heading);
 };
 
 

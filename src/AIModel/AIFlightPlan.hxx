@@ -24,26 +24,18 @@
 #include <string>
 
 
-#include <Airports/simple.hxx>
-#include <Navaids/awynet.hxx>
-
-#include "AIBase.hxx"
-
-
-
-using std::vector;
-using std::string;
-
 class FGTaxiRoute;
 class FGRunway;
 class FGAIAircraft;
+class FGAirport;
+class SGGeod;
 
 class FGAIFlightPlan {
 
 public:
 
   typedef struct {
-   string name;
+   std::string name;
    double latitude;
    double longitude;
    double altitude;
@@ -56,11 +48,11 @@ public:
     int routeIndex;  // For AI/ATC purposes;
    double time_sec;
    double trackLength; // distance from previous waypoint (for AI purposes);
-   string time;
+   std::string time;
 
   } waypoint;
   FGAIFlightPlan();
-  FGAIFlightPlan(const string& filename);
+  FGAIFlightPlan(const std::string& filename);
   FGAIFlightPlan(FGAIAircraft *,
                  const std::string& p,
 		 double course,
@@ -73,9 +65,9 @@ public:
                  double lat,
                  double lon,
                  double speed,
-		 const string& fltType,
-		 const string& acType,
-		 const string& airline);
+		 const std::string& fltType,
+		 const std::string& acType,
+		 const std::string& airline);
    ~FGAIFlightPlan();
 
    waypoint* const getPreviousWaypoint( void ) const;
@@ -91,18 +83,18 @@ public:
    double getLeadDistance( void ) const {return lead_distance;}
    double getBearing(waypoint* previous, waypoint* next) const;
    double getBearing(double lat, double lon, waypoint* next) const;
-   double checkTrackLength(string wptName);
+   double checkTrackLength(std::string wptName);
   time_t getStartTime() const { return start_time; }
    time_t getArrivalTime() const { return arrivalTime; }
 
   void    create(FGAIAircraft *, FGAirport *dep, FGAirport *arr, int leg, double alt, double speed, double lat, double lon,
-		 bool firstLeg, double radius, const string& fltType, const string& aircraftType, const string& airline, double distance);
+		 bool firstLeg, double radius, const std::string& fltType, const std::string& aircraftType, const std::string& airline, double distance);
 
   void setLeg(int val) { leg = val;}
   void setTime(time_t st) { start_time = st; }
   int getGate() const { return gateId; }
   double getLeadInAngle() const { return leadInAngle; }
-  const string& getRunway() const;
+  const std::string& getRunway() const;
   
   void setRepeat(bool r) { repeat = r; }
   bool getRepeat(void) const { return repeat; }
@@ -111,16 +103,16 @@ public:
   int getRouteIndex(int i); // returns the AI related index of this current routes. 
   FGTaxiRoute *getTaxiRoute() { return taxiRoute; }
   void deleteTaxiRoute();
-  string getRunway() { return activeRunway; }
+  std::string getRunway() { return activeRunway; }
   bool isActive(time_t time) {return time >= this->getStartTime();}
 
-  void setRunway(string rwy) { activeRunway = rwy; };
-  string getRunwayClassFromTrafficType(string fltType);
+  void setRunway(std::string rwy) { activeRunway = rwy; };
+  std::string getRunwayClassFromTrafficType(std::string fltType);
 
   void addWaypoint(waypoint* wpt) { waypoints.push_back(wpt); };
 
-  void setName(string n) { name = n; };
-  string getName() { return name; };
+  void setName(std::string n) { name = n; };
+  std::string getName() { return name; };
 
   void setSID(FGAIFlightPlan* fp) { sid = fp;};
   FGAIFlightPlan* getSID() { return sid; };
@@ -128,7 +120,7 @@ public:
 private:
   FGRunway* rwy;
   FGAIFlightPlan *sid;
-  typedef vector <waypoint*> wpt_vector_type;
+  typedef std::vector <waypoint*> wpt_vector_type;
   typedef wpt_vector_type::const_iterator wpt_vector_iterator;
 
 
@@ -143,26 +135,25 @@ private:
   time_t arrivalTime;       // For AI/ATC purposes.
   int leg;
   int gateId, lastNodeVisited;
-  string activeRunway;
-  FGAirRoute airRoute;
+  std::string activeRunway;
   FGTaxiRoute *taxiRoute;
-  string name;
+  std::string name;
 
-  void createPushBack(FGAIAircraft *, bool, FGAirport*, double, double, double, const string&, const string&, const string&);
-  void createPushBackFallBack(FGAIAircraft *, bool, FGAirport*, double, double, double, const string&, const string&, const string&);
-  void createTakeOff(FGAIAircraft *, bool, FGAirport *, double, const string&);
-  void createClimb(FGAIAircraft *, bool, FGAirport *, double, double, const string&);
-  void createCruise(FGAIAircraft *, bool, FGAirport*, FGAirport*, double, double, double, double, const string&);
-  void createDescent(FGAIAircraft *, FGAirport *,  double latitude, double longitude, double speed, double alt,const string&, double distance);
-  void createLanding(FGAIAircraft *, FGAirport *, const string&);
+  void createPushBack(FGAIAircraft *, bool, FGAirport*, double, double, double, const std::string&, const std::string&, const std::string&);
+  void createPushBackFallBack(FGAIAircraft *, bool, FGAirport*, double, double, double, const std::string&, const std::string&, const std::string&);
+  void createTakeOff(FGAIAircraft *, bool, FGAirport *, double, const std::string&);
+  void createClimb(FGAIAircraft *, bool, FGAirport *, double, double, const std::string&);
+  void createCruise(FGAIAircraft *, bool, FGAirport*, FGAirport*, double, double, double, double, const std::string&);
+  void createDescent(FGAIAircraft *, FGAirport *,  double latitude, double longitude, double speed, double alt,const std::string&, double distance);
+  void createLanding(FGAIAircraft *, FGAirport *, const std::string&);
   void createParking(FGAIAircraft *, FGAirport *, double radius);
   void deleteWaypoints(); 
   void resetWaypoints();
 
-  void createLandingTaxi(FGAIAircraft *, FGAirport *apt, double radius, const string& fltType, const string& acType, const string& airline);
+  void createLandingTaxi(FGAIAircraft *, FGAirport *apt, double radius, const std::string& fltType, const std::string& acType, const std::string& airline);
   void createDefaultLandingTaxi(FGAIAircraft *, FGAirport* aAirport);
   void createDefaultTakeoffTaxi(FGAIAircraft *, FGAirport* aAirport, FGRunway* aRunway);
-  void createTakeoffTaxi(FGAIAircraft *, bool firstFlight, FGAirport *apt, double radius, const string& fltType, const string& acType, const string& airline);
+  void createTakeoffTaxi(FGAIAircraft *, bool firstFlight, FGAirport *apt, double radius, const std::string& fltType, const std::string& acType, const std::string& airline);
 
   double getTurnRadius(double, bool);
         
