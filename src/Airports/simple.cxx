@@ -511,13 +511,13 @@ bool FGAirport::buildApproach(Waypt* aEnroute, STAR* aSTAR, FGRunway* aRwy, Wayp
   return aps.front()->routeFromVectors(aRoute);
 }
 
-pair<SID*, WayptRef>
+pair<flightgear::SID*, WayptRef>
 FGAirport::selectSID(const SGGeod& aDest, FGRunway* aRwy)
 {
   loadProcedures();
   
   WayptRef enroute;
-  SID* sid = NULL;
+  flightgear::SID* sid = NULL;
   double d = 1e9;
   
   for (unsigned int i=0; i<mSIDs.size(); ++i) {
@@ -580,7 +580,7 @@ FGAirport::selectSTAR(const SGGeod& aOrigin, FGRunway* aRwy)
 }
 
 
-void FGAirport::addSID(SID* aSid)
+void FGAirport::addSID(flightgear::SID* aSid)
 {
   mSIDs.push_back(aSid);
 }
@@ -601,13 +601,13 @@ unsigned int FGAirport::numSIDs() const
   return mSIDs.size();
 }
 
-SID* FGAirport::getSIDByIndex(unsigned int aIndex) const
+flightgear::SID* FGAirport::getSIDByIndex(unsigned int aIndex) const
 {
   loadProcedures();
   return mSIDs[aIndex];
 }
 
-SID* FGAirport::findSIDWithIdent(const std::string& aIdent) const
+flightgear::SID* FGAirport::findSIDWithIdent(const std::string& aIdent) const
 {
   loadProcedures();
   for (unsigned int i=0; i<mSIDs.size(); ++i) {

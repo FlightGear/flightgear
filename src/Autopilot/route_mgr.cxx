@@ -468,7 +468,7 @@ void FGRouteMgr::autoRoute()
     
   _route.clear(); // clear out the existing, first
 // SID
-  SID* sid;
+  flightgear::SID* sid;
   WayptRef sidTrans;
   
   boost::tie(sid, sidTrans) = _departure->selectSID(_destination->geod(), runway);
@@ -569,7 +569,7 @@ void FGRouteMgr::buildDeparture(WayptRef enroute, WayptVec& wps)
   
   FGRunway* r = _departure->getRunwayByIdent(runwayId);
   string sidId = departure->getStringValue("sid");
-  SID* sid = _departure->findSIDWithIdent(sidId);
+  flightgear::SID* sid = _departure->findSIDWithIdent(sidId);
   if (!sid) {
 // valid runway, but no SID selected/found, so just the runway node for now
     if (!sidId.empty() && (sidId != "(none)")) {
