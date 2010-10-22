@@ -237,7 +237,7 @@ void FGRouteMgr::postinit()
     SG_LOG(SG_AUTOPILOT, SG_INFO, "loaded initial waypoints:" << _route.size());
   }
 
-  weightOnWheels = fgGetNode("/gear/gear[0]/wow", false);
+  weightOnWheels = fgGetNode("/gear/gear[0]/wow", true);
   // check airbone flag agrees with presets
 }
 

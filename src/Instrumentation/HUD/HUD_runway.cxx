@@ -93,11 +93,6 @@ void HUD::Runway::draw()
     double sPitch = sin(pitch), cPitch = cos(pitch),
            sYaw = sin(yaw), cYaw = cos(yaw);
 
-    //Assuming that the "Cockpit View" is always at position zero!!!
-    if (curr_view_id != 0) {
-        globals->get_viewmgr()->set_view(0);
-        globals->get_viewmgr()->copyToCurrent();
-    }
     //Set the camera to the cockpit view to get the view of the runway from the cockpit
     // OSGFIXME
 //     ssgSetCamera((sgVec4 *)_cockpit_view->get_VIEW());
@@ -152,15 +147,6 @@ void HUD::Runway::draw()
         drawArrow(); //draw indication arrow
     }
 
-    //Restore the current view and any offsets
-    if (curr_view_id != 0) {
-        globals->get_viewmgr()->set_view(curr_view_id);
-        globals->get_viewmgr()->copyToCurrent();
-        curr_view->setHeadingOffset_deg(ho);
-        curr_view->setPitchOffset_deg(po);
-        curr_view->setGoalHeadingOffset_deg(gho);
-        curr_view->setGoalPitchOffset_deg(gpo);
-    }
     //Set the camera back to the current view
     // OSGFIXME
 //     ssgSetCamera((sgVec4 *)curr_view);

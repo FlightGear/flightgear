@@ -93,6 +93,7 @@
 #include <Input/input.hxx>
 #include <Instrumentation/instrument_mgr.hxx>
 #include <Model/acmodel.hxx>
+#include <Model/modelmgr.hxx>
 #include <AIModel/submodel.hxx>
 #include <AIModel/AIManager.hxx>
 #include <Navaids/navdb.hxx>
@@ -1309,9 +1310,6 @@ bool fgInitSubsystems() {
     // Initialize the scenery management subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem("tile-manager", globals->get_tile_mgr(), 
-      SGSubsystemMgr::DISPLAY);
-
     globals->get_scenery()->get_scene_graph()
         ->addChild(simgear::Particles::getCommonRoot());
     simgear::GlobalParticleCallback::setSwitch(fgGetNode("/sim/rendering/particles", true));
@@ -1361,23 +1359,12 @@ bool fgInitSubsystems() {
 
     globals->add_subsystem("gui", new NewGUI, SGSubsystemMgr::INIT);
 
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the lighting subsystem.
-    ////////////////////////////////////////////////////////////////////
-
-    globals->add_subsystem("lighting", new FGLight, SGSubsystemMgr::DISPLAY);
-
     //////////////////////////////////////////////////////////////////////
     // Initialize the 2D cloud subsystem.
     ////////////////////////////////////////////////////////////////////
     fgGetBool("/sim/rendering/bump-mapping", false);
 
-#ifdef ENABLE_AUDIO_SUPPORT
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the sound-effects subsystem.
-    ////////////////////////////////////////////////////////////////////
-    globals->add_subsystem("voice", new FGVoiceMgr, SGSubsystemMgr::DISPLAY);
-#endif
+
 
     ////////////////////////////////////////////////////////////////////
     // Initialise the ATC Manager 
@@ -1461,7 +1448,37 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("replay", new FGReplay);
 
+#ifdef ENABLE_AUDIO_SUPPORT
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the sound-effects subsystem.
+    ////////////////////////////////////////////////////////////////////
+    globals->add_subsystem("voice", new FGVoiceMgr, SGSubsystemMgr::DISPLAY);
+#endif
 
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the lighting subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+    globals->add_subsystem("lighting", new FGLight, SGSubsystemMgr::DISPLAY);
+    
+    // ordering here is important : Nasal (via events), then models, then views
+    globals->add_subsystem("events", globals->get_event_mgr(), SGSubsystemMgr::DISPLAY);
+    
+    FGAircraftModel* acm = new FGAircraftModel;
+    globals->set_aircraft_model(acm);
+    globals->add_subsystem("aircraft-model", acm, SGSubsystemMgr::DISPLAY);
+
+    FGModelMgr* mm = new FGModelMgr;
+    globals->set_model_mgr(mm);
+    globals->add_subsystem("model-manager", mm, SGSubsystemMgr::DISPLAY);
+
+    FGViewMgr *viewmgr = new FGViewMgr;
+    globals->set_viewmgr( viewmgr );
+    globals->add_subsystem("view-manager", viewmgr, SGSubsystemMgr::DISPLAY);
+
+    globals->add_subsystem("tile-manager", globals->get_tile_mgr(), 
+      SGSubsystemMgr::DISPLAY);
+      
     ////////////////////////////////////////////////////////////////////
     // Bind and initialize subsystems.
     ////////////////////////////////////////////////////////////////////

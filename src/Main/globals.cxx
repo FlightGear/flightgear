@@ -170,7 +170,6 @@ FGGlobals::~FGGlobals()
 
     subsystem_mgr->unbind();
     delete subsystem_mgr;
-    delete event_mgr;
     
     delete time_params;
     delete mag;
@@ -180,10 +179,7 @@ FGGlobals::~FGGlobals()
 
     delete ATC_mgr;
     delete controls;
-    delete viewmgr;
 
-//     delete commands;
-    delete model_mgr;
     delete channel_options_list;
     delete initial_waypoints;
     delete scenery;
