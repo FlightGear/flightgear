@@ -115,14 +115,8 @@ HUD::~HUD()
     _scr_heightN->removeChangeListener(this);
     _unitsN->removeChangeListener(this);
     delete _font_renderer;
-    delete _clip_box;
-
-    deque<Item *>::const_iterator it, end = _items.end();
-    for (it = _items.begin(); it != end; ++it)
-        delete *it;
-    end = _ladders.end();
-    for (it = _ladders.begin(); it != end; ++it)
-        delete *it;
+    
+    deinit();
 }
 
 
@@ -146,6 +140,27 @@ void HUD::init()
     _path->fireValueChanged();
 }
 
+void HUD::deinit()
+{
+  deque<Item *>::const_iterator it, end = _items.end();
+    for (it = _items.begin(); it != end; ++it)
+        delete *it;
+    end = _ladders.end();
+    for (it = _ladders.begin(); it != end; ++it)
+        delete *it;
+        
+  _items.clear();
+  _ladders.clear();
+  
+  delete _clip_box;
+  _clip_box = NULL;
+}
+
+void HUD::reinit()
+{
+    deinit();
+    _path->fireValueChanged();
+}
 
 void HUD::update(double dt)
 {
@@ -328,8 +343,7 @@ int HUD::load(const char *file, float x, float y, int level, const string& inden
     const sgDebugPriority TREE = SG_INFO;
     const int MAXNEST = 10;
 
-    SGPath path(globals->get_fg_root());
-    path.append(file);
+    SGPath path(globals->resolve_maybe_aircraft_path(file));
 
     if (!level) {
         SG_LOG(SG_INPUT, TREE, endl << "load " << file);
