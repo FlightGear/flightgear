@@ -153,6 +153,8 @@ public:
     void init();
     void update(double);
 
+  void reinit();
+
     // called from Main/renderer.cxx to draw 2D and 3D HUD
     void draw(osg::State&);
 
@@ -195,6 +197,8 @@ protected:
             int level = 0, const std::string& indent = "");
 
 private:
+    void deinit();
+    
     void draw3D();
     void draw2D(GLfloat, GLfloat, GLfloat, GLfloat);
 

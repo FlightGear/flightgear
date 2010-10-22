@@ -39,6 +39,7 @@
 FGViewMgr::FGViewMgr( void ) :
   axis_long(0),
   axis_lat(0),
+  inited(false),
   view_number(fgGetNode("/sim/current-view/view-number", true)),
   config_list(fgGetNode("/sim", true)->getChildren("view")),
   current(0)
@@ -53,6 +54,13 @@ FGViewMgr::~FGViewMgr( void ) {
 void
 FGViewMgr::init ()
 {
+  if (inited) {
+    SG_LOG(SG_GENERAL, SG_WARN, "duplicate init of view manager");
+    return;
+  }
+  
+  inited = true;
+  
   double aspect_ratio_multiplier
       = fgGetDouble("/sim/current-view/aspect-ratio-multiplier");
 
@@ -118,6 +126,7 @@ FGViewMgr::init ()
   }
 
   copyToCurrent();
+  do_bind();
 }
 
 void
@@ -160,7 +169,14 @@ FGViewMgr::reinit ()
 typedef double (FGViewMgr::*double_getter)() const;
 
 void
-FGViewMgr::bind ()
+FGViewMgr::bind()
+{
+  // view-manager code was designed to init before bind, so
+  // this is a no-op; init() calls the real bind() impl below
+}
+
+void
+FGViewMgr::do_bind()
 {
   // these are bound to the current view properties
   fgTie("/sim/current-view/heading-offset-deg", this,
@@ -352,6 +368,10 @@ FGViewMgr::update (double dt)
 void
 FGViewMgr::copyToCurrent()
 {
+  if (!inited) {
+    return;
+  }
+  
     SGPropertyNode *n = config_list[current];
     fgSetString("/sim/current-view/name", n->getStringValue("name"));
     fgSetString("/sim/current-view/type", n->getStringValue("type"));
@@ -719,15 +739,9 @@ FGViewMgr::setView (int newview)
     newview = 0;
 
   // set new view
-  set_view(newview);
+  current = newview;
   // copy in view data
   copyToCurrent();
-
-  // Copy the fdm's position into the SGLocation which is shared with
-  // some views ...
-  globals->get_aircraft_model()->update(0);
-  // Do the update ...
-  update(0);
 }
 
 
@@ -755,7 +769,7 @@ FGViewMgr::getARM_deg () const
 
 void
 FGViewMgr::setARM_deg (double aspect_ratio_multiplier)
-{
+{  
   FGViewer * view = get_current_view();
   if (view != 0)
     view->set_aspect_ratio_multiplier(aspect_ratio_multiplier);

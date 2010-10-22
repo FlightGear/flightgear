@@ -69,14 +69,12 @@ public:
       
     // setters
     void clear();
-    inline void set_view( const int v ) { current = v; }
+
     void add_view( FGViewer * v );
     
-    // copies current offset settings to current-view path...
-    void copyToCurrent ();
-
 private:
-
+    void do_bind();
+    
     list<const char*> tied_props;
 
     double axis_long;
@@ -136,6 +134,10 @@ private:
 
     bool stationary () const;
 
+    // copies current offset settings to current-view path...
+    void copyToCurrent ();
+    
+    bool inited;
     SGPropertyNode_ptr view_number;
     vector<SGPropertyNode_ptr> config_list;
     typedef std::vector<FGViewerPtr> viewer_list;

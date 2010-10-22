@@ -54,7 +54,6 @@
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/hud.hxx>
 #include <Model/panelnode.hxx>
-#include <Model/modelmgr.hxx>
 #include <Model/acmodel.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
@@ -148,16 +147,6 @@ static void fgMainLoop( void ) {
 #endif  
     
     globals->get_subsystem_mgr()->update(sim_dt);
-
-    // run Nasal's settimer() loops right before the view manager
-    globals->get_event_mgr()->update(sim_dt);
-
-    // pick up model coordidnates that Nasal code may have set relative to the
-    // aircraft's
-    globals->get_model_mgr()->update(sim_dt);
-
-    // update the view angle as late as possible, but before sound calculations
-    globals->get_viewmgr()->update(real_dt);
 
     // Update the sound manager last so it can use the CPU while the GPU
     // is processing the scenery (doubled the frame-rate for me) -EMH-
@@ -375,33 +364,12 @@ static void fgIdleFunction ( void ) {
         globals->set_tile_mgr( new FGTileMgr );
 
 
-        ////////////////////////////////////////////////////////////////////
-        // Initialize the general model subsystem.
-        ////////////////////////////////////////////////////////////////////
-        globals->set_model_mgr(new FGModelMgr);
-        globals->get_model_mgr()->init();
-        globals->get_model_mgr()->bind();
         fgSplashProgress("loading aircraft");
 
 
     } else if ( idle_state == 5 ) {
         idle_state++;
 
-        ////////////////////////////////////////////////////////////////////
-        // Initialize the 3D aircraft model subsystem (has a dependency on
-        // the scenery subsystem.)
-        ////////////////////////////////////////////////////////////////////
-        FGAircraftModel* acm = new FGAircraftModel;
-        globals->set_aircraft_model(acm);
-        globals->add_subsystem("aircraft-model", acm, SGSubsystemMgr::DISPLAY);
-
-        ////////////////////////////////////////////////////////////////////
-        // Initialize the view manager subsystem.
-        ////////////////////////////////////////////////////////////////////
-        FGViewMgr *viewmgr = new FGViewMgr;
-        globals->set_viewmgr( viewmgr );
-        viewmgr->init();
-        viewmgr->bind();
         fgSplashProgress("generating sky elements");
 
 
