@@ -48,6 +48,7 @@
 #include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/io/raw_socket.hxx>
 
 #include <Time/light.hxx>
 #include <Aircraft/replay.hxx>
@@ -588,8 +589,8 @@ int fgMainInit( int argc, char **argv ) {
     fgRegisterIdleHandler( &fgIdleFunction );
     fgRegisterDrawHandler( &FGRenderer::update );
 
-    // Initialize plib net interface
-    netInit( &argc, argv );
+    // Initialize sockets (WinSock needs this)
+    simgear::Socket::initSockets();
 
     // Clouds3D requires an alpha channel
     fgOSOpenWindow(true /* request stencil buffer */);

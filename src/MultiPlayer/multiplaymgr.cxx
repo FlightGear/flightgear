@@ -35,7 +35,6 @@
 #include <algorithm>
 #include <cstring>
 #include <osg/Math>             // isNaN
-#include <plib/netSocket.h>
 
 #include <simgear/misc/stdint.hxx>
 #include <simgear/timing/timestamp.hxx>
@@ -411,7 +410,7 @@ FGMultiplayMgr::init (void)
   SG_LOG(SG_NETWORK,SG_INFO,"FGMultiplayMgr::init-callsign= "<<mCallsign);
   Close(); // Should Init be called twice, close Socket first
            // A memory leak was reported here by valgrind
-  mSocket = new netSocket();
+  mSocket = new simgear::Socket();
   if (!mSocket->open(false)) {
     SG_LOG( SG_NETWORK, SG_DEBUG,
             "FGMultiplayMgr::init - Failed to create data socket" );
@@ -731,7 +730,7 @@ FGMultiplayMgr::update(double)
     //  returned will only be that of the next
     //  packet waiting to be processed.
     //////////////////////////////////////////////////
-    netAddress SenderAddress;
+    simgear::IPAddress SenderAddress;
     bytes = mSocket->recvfrom(msgBuf.Msg, sizeof(msgBuf.Msg), 0,
                               &SenderAddress);
     //////////////////////////////////////////////////
@@ -815,7 +814,7 @@ FGMultiplayMgr::update(double)
 //////////////////////////////////////////////////////////////////////
 void
 FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
-                              const netAddress& SenderAddress, long stamp)
+                              const simgear::IPAddress& SenderAddress, long stamp)
 {
   const T_MsgHdr* MsgHdr = Msg.msgHdr();
   if (MsgHdr->MsgLen < sizeof(T_MsgHdr) + sizeof(T_PositionMsg)) {
@@ -965,7 +964,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
 //////////////////////////////////////////////////////////////////////
 void
 FGMultiplayMgr::ProcessChatMsg(const MsgBuf& Msg,
-                               const netAddress& SenderAddress)
+                               const simgear::IPAddress& SenderAddress)
 {
   const T_MsgHdr* MsgHdr = Msg.msgHdr();
   if (MsgHdr->MsgLen < sizeof(T_MsgHdr) + 1) {

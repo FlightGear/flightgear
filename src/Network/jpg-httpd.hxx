@@ -32,7 +32,7 @@
 #  include <config.h>
 #endif
 
-#include <plib/netChat.h>
+#include <simgear/io/sg_netChat.hxx>
 
 #ifdef FG_JPEG_SERVER
 #  include <simgear/screen/jpgfactory.hxx>
@@ -57,10 +57,10 @@ class trJpgFactory;
 /* simple httpd server that makes an hasty stab at following the http
    1.1 rfc.  */
 
-class HttpdImageChannel : public netChat
+class HttpdImageChannel : public simgear::NetChat
 {
 
-    netBuffer buffer ;
+    simgear::NetBuffer buffer ;
     trJpgFactory *JpgFactory;
     
 public:
@@ -89,12 +89,12 @@ public:
 };
 
 
-class HttpdImageServer : private netChannel
+class HttpdImageServer : private simgear::NetChannel
 {
     virtual bool writable (void) { return false ; }
 
     virtual void handleAccept (void) {
-        netAddress addr ;
+        simgear::IPAddress addr ;
         int handle = accept ( &addr ) ;
         SG_LOG( SG_IO, SG_INFO, "Client " << addr.getHost() << ":" << addr.getPort() << " connected" );
 

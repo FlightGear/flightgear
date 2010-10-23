@@ -13,9 +13,6 @@
 
 #include <string>
 
-#include <plib/ul.h>
-#include <plib/netSocket.h>
-
 #include "tiny_xdr.hxx"
 
 /* XDR 8bit integers */

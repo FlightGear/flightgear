@@ -66,7 +66,7 @@ bool FGHttpd::open() {
 
 
 bool FGHttpd::process() {
-    netChannel::poll();
+    simgear::NetChannel::poll();
 
     return true;
 }

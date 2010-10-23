@@ -75,7 +75,7 @@ bool FGJpegHttpd::open() {
 
 
 bool FGJpegHttpd::process() {
-    netChannel::poll();
+    simgear::NetChannel::poll();
 
     return true;
 }

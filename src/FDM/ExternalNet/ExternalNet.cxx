@@ -26,6 +26,7 @@
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/lowlevel.hxx> // endian tests
+#include <simgear/io/sg_netBuffer.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Network/native_ctrls.hxx>
@@ -33,6 +34,49 @@
 
 #include "ExternalNet.hxx"
 
+
+class HTTPClient : public simgear::NetBufferChannel
+{
+
+    bool done;
+    SGTimeStamp start;
+
+public:
+
+    HTTPClient ( const char* host, int port, const char* path ) :
+        done( false )
+    {
+	open ();
+	connect (host, port);
+
+  char buffer[256];
+  ::snprintf (buffer, 256, "GET %s HTTP/1.0\r\n\r\n", path );
+	bufferSend(buffer, strlen(buffer) ) ;
+
+        start.stamp();
+    }
+
+    virtual void handleBufferRead (simgear::NetBuffer& buffer)
+    {
+	const char* s = buffer.getData();
+	while (*s)
+	    fputc(*s++,stdout);
+
+	printf("done\n");
+	buffer.remove();
+	printf("after buffer.remove()\n");
+        done = true;
+    }
+
+    bool isDone() const { return done; }
+    bool isDone( long usec ) const { 
+        if ( start + SGTimeStamp::fromUSec(usec) < SGTimeStamp::now() ) {
+            return true;
+        } else {
+            return done;
+        }
+    }
+};
 
 FGExternalNet::FGExternalNet( double dt, string host, int dop, int dip, int cp )
 {
