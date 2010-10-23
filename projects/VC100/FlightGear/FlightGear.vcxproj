@@ -641,6 +641,7 @@
     <ClCompile Include="..\..\..\src\Input\FGKeyboardInput.cxx" />
     <ClCompile Include="..\..\..\src\Input\FGMouseInput.cxx" />
     <ClCompile Include="..\..\..\src\Input\input.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\rnav_waypt_controller.cxx" />
     <ClCompile Include="..\..\..\src\Main\bootstrap.cxx" />
     <ClCompile Include="..\..\..\src\Main\CameraGroup.cxx" />
     <ClCompile Include="..\..\..\src\Main\fg_commands.cxx" />
@@ -654,6 +655,11 @@
     <ClCompile Include="..\..\..\src\Main\globals.cxx" />
     <ClCompile Include="..\..\..\src\Main\logger.cxx" />
     <ClCompile Include="..\..\..\src\Main\main.cxx" />
+    <ClCompile Include="..\..\..\src\Navaids\airways.cxx" />
+    <ClCompile Include="..\..\..\src\Navaids\procedure.cxx" />
+    <ClCompile Include="..\..\..\src\Navaids\route.cxx" />
+    <ClCompile Include="..\..\..\src\Navaids\routePath.cxx" />
+    <ClCompile Include="..\..\..\src\Navaids\waypoint.cxx" />
     <ClCompile Include="..\..\..\src\Scripting\nasal-props.cxx" />
     <ClCompile Include="..\..\..\src\Scripting\NasalSys.cxx" />
     <ClCompile Include="..\..\..\src\Main\options.cxx" />
@@ -1215,6 +1221,7 @@
     <ClInclude Include="..\..\..\src\Input\FGKeyboardInput.hxx" />
     <ClInclude Include="..\..\..\src\Input\FGMouseInput.hxx" />
     <ClInclude Include="..\..\..\src\Input\input.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\rnav_waypt_controller.hxx" />
     <ClInclude Include="..\..\..\src\Main\CameraGroup.hxx" />
     <ClInclude Include="..\..\..\src\Main\fg_commands.hxx" />
     <ClInclude Include="..\..\..\src\Main\fg_init.hxx" />
@@ -1226,6 +1233,11 @@
     <ClInclude Include="..\..\..\src\Main\globals.hxx" />
     <ClInclude Include="..\..\..\src\Main\logger.hxx" />
     <ClInclude Include="..\..\..\src\Main\main.hxx" />
+    <ClInclude Include="..\..\..\src\Navaids\airways.hxx" />
+    <ClInclude Include="..\..\..\src\Navaids\procedure.hxx" />
+    <ClInclude Include="..\..\..\src\Navaids\route.hxx" />
+    <ClInclude Include="..\..\..\src\Navaids\routePath.hxx" />
+    <ClInclude Include="..\..\..\src\Navaids\waypoint.hxx" />
     <ClInclude Include="..\..\..\src\Scripting\NasalSys.hxx" />
     <ClInclude Include="..\..\..\src\Main\options.hxx" />
     <ClInclude Include="..\..\..\src\Main\renderer.hxx" />
