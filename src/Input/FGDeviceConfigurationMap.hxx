@@ -30,16 +30,17 @@
 #endif
 
 #include <simgear/props/props.hxx>
-#include <simgear/misc/sg_path.hxx>
 
 #include <map>
+
+class SGPath;
 
 class FGDeviceConfigurationMap : public std::map<std::string,SGPropertyNode_ptr> {
 public:
   FGDeviceConfigurationMap ( const char * relative_path, SGPropertyNode_ptr base, const char * childname );
   virtual ~FGDeviceConfigurationMap();
 private:
-  void scan_dir( SGPath & path, int *index);
+  void scan_dir(const SGPath & path, int *index);
   SGPropertyNode_ptr base;
   const char * childname;
 };

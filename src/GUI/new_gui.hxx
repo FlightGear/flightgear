@@ -219,7 +219,7 @@ private:
     void clear_colors();
 
     // Read all the configuration files in a directory.
-    void readDir (const char * path);
+    void readDir (const SGPath& path);
 
     FGMenuBar * _menubar;
     FGDialog * _active_dialog;
