@@ -31,9 +31,9 @@
 
 #include <simgear/compiler.h>
 
-#include <stdlib.h>		// atoi() atof()
+#include <cstdlib>		// atoi() atof()
 
-#include <string>
+#include <cstring>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
