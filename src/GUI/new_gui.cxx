@@ -296,9 +296,6 @@ NewGUI::readDir (const char * path)
                 continue;
             }
             string name = nameprop->getStringValue();
-            if (_dialog_props[name])
-                delete (SGPropertyNode *)_dialog_props[name];
-
             _dialog_props[name] = props;
         }
     }
