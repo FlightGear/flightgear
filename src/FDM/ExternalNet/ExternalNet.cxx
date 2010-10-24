@@ -24,6 +24,8 @@
 #  include <config.h>
 #endif
 
+#include <cstring>
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/lowlevel.hxx> // endian tests
 #include <simgear/io/sg_netBuffer.hxx>
