@@ -2056,14 +2056,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\FDM\JSBSim\FGState.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\FDM\JSBSim\FGState.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\FDM\JSBSim\JSBSim.cxx"
 				>
 			</File>
