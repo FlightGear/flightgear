@@ -62,7 +62,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGInitialCondition.cpp,v 1.44 2010/09/18 22:48:12 jberndt Exp $";
+static const char *IdSrc = "$Id: FGInitialCondition.cpp,v 1.46 2010/09/29 02:19:05 jberndt Exp $";
 static const char *IdHdr = ID_INITIALCONDITION;
 
 //******************************************************************************
@@ -120,7 +120,7 @@ void FGInitialCondition::ResetIC(double u0, double v0, double w0,
   FGQuaternion Quat( phi, theta, psi );
   Quat.Normalize();
 
-  const FGMatrix33& _Tl2b  = Quat.GetT();     // local to body frame
+//  const FGMatrix33& _Tl2b  = Quat.GetT();     // local to body frame
   const FGMatrix33& _Tb2l  = Quat.GetTInv();  // body to local
 
   FGColumnVector3 _vUVW_BODY(u,v,w);
@@ -863,17 +863,22 @@ bool FGInitialCondition::Load(string rstfile, bool useStoredPath)
   }
 
   double version = document->GetAttributeValueAsNumber("version");
+  bool result = false;
+
   if (version == HUGE_VAL) {
-    return Load_v1(); // Default to the old version
+    result = Load_v1(); // Default to the old version
   } else if (version >= 3.0) {
     cerr << "Only initialization file formats 1 and 2 are currently supported" << endl;
     exit (-1);
   } else if (version >= 2.0) {
-    return Load_v2();
+    result = Load_v2();
   } else if (version >= 1.0) {
-    return Load_v1();
+    result = Load_v1();
   } 
 
+  fdmex->GetPropagate()->DumpState();
+
+  return result;
 }
 
 //******************************************************************************
@@ -962,6 +967,7 @@ bool FGInitialCondition::Load_v1(void)
 bool FGInitialCondition::Load_v2(void)
 {
   int n;
+  double epa = 0.0;
   FGColumnVector3 vLoc, vOrient;
   bool result = true;
   FGInertial* Inertial = fdmex->GetInertial();
@@ -969,10 +975,10 @@ bool FGInitialCondition::Load_v2(void)
   FGColumnVector3 vOmegaEarth = FGColumnVector3(0.0, 0.0, Inertial->omega());
 
   if (document->FindElement("earth_position_angle")) {
-    double epa = document->FindElementValueAsNumberConvertTo("earth_position_angle", "RAD");
+    epa = document->FindElementValueAsNumberConvertTo("earth_position_angle", "RAD");
+  }
     Inertial->SetEarthPositionAngle(epa);
     Propagate->GetVState()->vLocation.SetEarthPositionAngle(epa);
-  }
 
   Propagate->SetSeaLevelRadius(GetSeaLevelRadiusFtIC());
 
@@ -989,15 +995,15 @@ bool FGInitialCondition::Load_v2(void)
 
   Element* position = document->FindElement("position");
   if (position) {
-    vLoc = position->FindElementTripletConvertTo("FT");
     string frame = position->GetAttributeValue("frame");
     frame = to_lower(frame);
     if (frame == "eci") { // Need to transform vLoc to ECEF for storage and use in FGLocation.
+      vLoc = position->FindElementTripletConvertTo("FT");
       vLoc = Propagate->GetTi2ec()*vLoc;
       Propagate->SetLocation(vLoc);
     } else if (frame == "ecef") {
       double AltitudeASL = 0.0;
-      if (vLoc.Magnitude() == 0.0) {
+      if (!position->FindElement("x") && !position->FindElement("y") && !position->FindElement("z")) {
         if (position->FindElement("radius")) {
           AltitudeASL = position->FindElementValueAsNumberConvertTo("radius", "FT") - sea_level_radius;
         } else if (position->FindElement("altitudeAGL")) {
@@ -1008,11 +1014,15 @@ bool FGInitialCondition::Load_v2(void)
           cerr << endl << "  No altitude or radius initial condition is given." << endl;
           result = false;
         }
-        Propagate->SetPosition(
-                         position->FindElementValueAsNumberConvertTo("longitude", "RAD"),
-                         position->FindElementValueAsNumberConvertTo("latitude", "RAD"),
-                         AltitudeASL + GetSeaLevelRadiusFtIC());
+        double lat_rad=0.0;
+        double long_rad = 0.0;
+        if (position->FindElement("longitude"))
+            long_rad = position->FindElementValueAsNumberConvertTo("longitude", "RAD");
+        if (position->FindElement("latitude"))
+            lat_rad = position->FindElementValueAsNumberConvertTo("latitude", "RAD");
+        Propagate->SetPosition(long_rad, lat_rad, AltitudeASL + GetSeaLevelRadiusFtIC());
       } else {
+        vLoc = position->FindElementTripletConvertTo("FT");
         Propagate->SetLocation(vLoc);
       }
     } else {
@@ -1072,7 +1082,9 @@ bool FGInitialCondition::Load_v2(void)
       // Q_b/i = Q_e/i * Q_b/e
 
       FGQuaternion QuatEC2Body(vOrient); // Store relationship of Body frame wrt ECEF frame, Q_b/e
+      QuatEC2Body.Normalize();
       FGQuaternion QuatI2EC = Propagate->GetTi2ec(); // Get Q_e/i from matrix
+      QuatI2EC.Normalize();
       QuatI2Body = QuatI2EC * QuatEC2Body; // Q_b/i = Q_e/i * Q_b/e 
 
     } else if (frame == "local") {
@@ -1089,8 +1101,11 @@ bool FGInitialCondition::Load_v2(void)
       // Q_b/i = Q_e/i * Q_n/e * Q_b/n
 
       FGQuaternion QuatLocal2Body = FGQuaternion(vOrient); // Store relationship of Body frame wrt local (NED) frame, Q_b/n
+      QuatLocal2Body.Normalize();
       FGQuaternion QuatEC2Local = Propagate->GetTec2l();   // Get Q_n/e from matrix
+      QuatEC2Local.Normalize();
       FGQuaternion QuatI2EC = Propagate->GetTi2ec(); // Get Q_e/i from matrix
+      QuatI2EC.Normalize();
       QuatI2Body = QuatI2EC * QuatEC2Local * QuatLocal2Body; // Q_b/i = Q_e/i * Q_n/e * Q_b/n
 
     } else {
@@ -1102,6 +1117,7 @@ bool FGInitialCondition::Load_v2(void)
     }
   }
 
+  QuatI2Body.Normalize();
   Propagate->SetInertialOrientation(QuatI2Body);
 
   // Initialize vehicle velocity
@@ -1201,7 +1217,9 @@ bool FGInitialCondition::Load_v2(void)
     running_elements = document->FindNextElement("running");
   }
 
-  // fdmex->RunIC();
+  fdmex->SuspendIntegration(); // saves the integration rate, dt, then sets it to 0.0.
+  fdmex->Run();
+  fdmex->ResumeIntegration(); // Restores the integration rate to what it was.
 
   return result;
 }
