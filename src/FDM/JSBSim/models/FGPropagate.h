@@ -49,7 +49,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_PROPAGATE "$Id: FGPropagate.h,v 1.48 2010/09/18 22:48:12 jberndt Exp $"
+#define ID_PROPAGATE "$Id: FGPropagate.h,v 1.51 2010/10/07 03:45:40 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -102,7 +102,7 @@ CLASS DOCUMENTATION
     @endcode
 
     @author Jon S. Berndt, Mathias Froehlich
-    @version $Id: FGPropagate.h,v 1.48 2010/09/18 22:48:12 jberndt Exp $
+    @version $Id: FGPropagate.h,v 1.51 2010/10/07 03:45:40 jberndt Exp $
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -135,6 +135,11 @@ public:
         units rad/sec */
     FGColumnVector3 vPQRi;
 
+    /** The angular velocity vector for the vehicle body frame relative to the
+        ECI frame, expressed in the ECI frame.
+        units rad/sec */
+    FGColumnVector3 vPQRi_i;
+
     /** The current orientation of the vehicle, that is, the orientation of the
         body frame relative to the local, NED frame. */
     FGQuaternion qAttitudeLocal;
@@ -148,6 +153,7 @@ public:
     FGColumnVector3 vInertialPosition;
 
     deque <FGColumnVector3> dqPQRdot;
+    deque <FGColumnVector3> dqPQRidot;
     deque <FGColumnVector3> dqUVWidot;
     deque <FGColumnVector3> dqInertialVelocity;
     deque <FGQuaternion>    dqQtrndot;
@@ -566,16 +572,6 @@ public:
       VState.vInertialPosition = GetTec2i() * VState.vLocation;
       UpdateLocationMatrices();
   }
-  void SetLocation(const FGLocation& l) {
-      VState.vLocation = l;
-      VState.vInertialPosition = GetTec2i() * VState.vLocation;
-      UpdateLocationMatrices();
-  }
-  void SetLocation(const FGColumnVector3& l) {
-      VState.vLocation = l;
-      VState.vInertialPosition = GetTec2i() * VState.vLocation;
-      UpdateLocationMatrices();
-  }
   void SetAltitudeASL(double altASL);
   void SetAltitudeASLmeters(double altASL) {SetAltitudeASL(altASL/fttom);}
   void SetSeaLevelRadius(double tt) { SeaLevelRadius = tt; }
@@ -586,6 +582,16 @@ public:
       VState.vLocation.SetPosition(Lon, Lat, Radius);
       VState.vInertialPosition = GetTec2i() * VState.vLocation;
       VehicleRadius = GetRadius();
+      UpdateLocationMatrices();
+  }
+  void SetLocation(const FGLocation& l) {
+      VState.vLocation = l;
+      VState.vInertialPosition = GetTec2i() * VState.vLocation;
+      UpdateLocationMatrices();
+  }
+  void SetLocation(const FGColumnVector3& l) {
+      VState.vLocation = l;
+      VState.vInertialPosition = GetTec2i() * VState.vLocation;
       UpdateLocationMatrices();
   }
 
@@ -604,6 +610,8 @@ public:
     double value;
   };
 
+  void DumpState(void);
+
 private:
 
 // state vector
@@ -612,6 +620,7 @@ private:
 
   FGColumnVector3 vVel;
   FGColumnVector3 vPQRdot;
+  FGColumnVector3 vPQRidot;
   FGColumnVector3 vUVWdot, vUVWidot;
   FGColumnVector3 vInertialVelocity;
   FGColumnVector3 vLocation;
@@ -633,7 +642,7 @@ private:
   FGMatrix33 Tl2i;
   
   double LocalTerrainRadius, SeaLevelRadius, VehicleRadius;
-  FGColumnVector3 LocalTerrainVelocity;
+  FGColumnVector3 LocalTerrainVelocity, LocalTerrainAngularVelocity;
   eIntegrateType integrator_rotational_rate;
   eIntegrateType integrator_translational_rate;
   eIntegrateType integrator_rotational_position;
