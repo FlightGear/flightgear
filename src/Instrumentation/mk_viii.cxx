@@ -362,6 +362,7 @@ MK_VIII::SystemHandler::update ()
       if (replay_state != last_replay_state)
 	{
 	  mk->alert_handler.reposition();
+	  mk->io_handler.reposition();
 
 	  last_replay_state = replay_state;
 	  state = STATE_REPOSITION;
@@ -1065,6 +1066,7 @@ MK_VIII::IOHandler::boot ()
   mk_doutput(glideslope_cancel) = power_saved.glideslope_cancel;
 
   altitude_samples.clear();
+  reset_terrain_clearance();
 }
 
 void
@@ -1362,6 +1364,12 @@ MK_VIII::IOHandler::reset_terrain_clearance ()
 {
   terrain_clearance_filter.reset();
   update_terrain_clearance();
+}
+
+void
+MK_VIII::IOHandler::reposition ()
+{
+  reset_terrain_clearance();
 }
 
 void

@@ -51,10 +51,9 @@
 #include <vector>
 #include <algorithm>
 
-#include <plib/ul.h>
-
 #include <simgear/compiler.h>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/sg_dir.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/route/waypoint.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -126,41 +125,22 @@ FGTrafficManager::~FGTrafficManager()
 
 void FGTrafficManager::init()
 {
-    ulDir *d, *d2;
-    ulDirEnt *dent, *dent2;
-
     heuristicsVector heuristics;
     HeuristicMap heurMap;
 
     if (string(fgGetString("/sim/traffic-manager/datafile")) == string("")) {
-        SGPath aircraftDir = globals->get_fg_root();
-        SGPath path = aircraftDir;
-
-        aircraftDir.append("AI/Traffic");
-        if ((d = ulOpenDir(aircraftDir.c_str())) != NULL) {
-            while ((dent = ulReadDir(d)) != NULL) {
-                if (string(dent->d_name) != string(".") &&
-                    string(dent->d_name) != string("..") && dent->d_isdir) {
-                    SGPath currACDir = aircraftDir;
-                    currACDir.append(dent->d_name);
-                    if ((d2 = ulOpenDir(currACDir.c_str())) == NULL)
-                        return;
-                    while ((dent2 = ulReadDir(d2)) != NULL) {
-                        SGPath currFile = currACDir;
-                        currFile.append(dent2->d_name);
-                        if (currFile.extension() == string("xml")) {
-                            SGPath currFile = currACDir;
-                            currFile.append(dent2->d_name);
-                            SG_LOG(SG_GENERAL, SG_DEBUG,
-                                   "Scanning " << currFile.
-                                   str() << " for traffic");
-                            readXML(currFile.str(), *this);
-                        }
-                    }
-                    ulCloseDir(d2);
-                }
-            }
-            ulCloseDir(d);
+        simgear::Dir trafficDir(SGPath(globals->get_fg_root(), "AI/Traffic"));
+        simgear::PathList d = trafficDir.children(simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT);
+        
+        for (unsigned int i=0; i<d.size(); ++i) {
+          simgear::Dir d2(d[i]);
+          simgear::PathList trafficFiles = d2.children(simgear::Dir::TYPE_FILE, ".xml");
+          for (unsigned int j=0; j<trafficFiles.size(); ++j) {
+            SGPath curFile = trafficFiles[j];
+            SG_LOG(SG_GENERAL, SG_DEBUG,
+                  "Scanning " << curFile.str() << " for traffic");
+            readXML(curFile.str(), *this);
+          }
         }
     } else {
         fgSetBool("/sim/traffic-manager/heuristics", false);

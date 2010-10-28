@@ -89,11 +89,9 @@
 #include <Scenery/redout.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <GUI/new_gui.hxx>
-#include <Instrumentation/instrument_mgr.hxx>
 #include <Instrumentation/HUD/HUD.hxx>
 #include <Environment/precipitation_mgr.hxx>
 
-#include <Include/general.hxx>
 #include "splash.hxx"
 #include "renderer.hxx"
 #include "main.hxx"
@@ -210,8 +208,7 @@ public:
 
     fgCockpitUpdate(&state);
 
-    FGInstrumentMgr *instr = static_cast<FGInstrumentMgr*>(globals->get_subsystem("instrumentation"));
-    HUD *hud = static_cast<HUD*>(instr->get_subsystem("hud"));
+    HUD *hud = static_cast<HUD*>(globals->get_subsystem("hud"));
     hud->draw(state);
 
     // update the panel subsystem

@@ -26,6 +26,7 @@
 
 #include <simgear/compiler.h>
 
+#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/scene/tgdb/TileEntry.hxx>
 #include <simgear/scene/tgdb/TileCache.hxx>
@@ -37,7 +38,7 @@ namespace osg
 class Node;
 }
 
-class FGTileMgr : public simgear::ModelLoadHelper {
+class FGTileMgr : public SGSubsystem, public simgear::ModelLoadHelper {
 
 private:
 
@@ -49,15 +50,12 @@ private:
     };
 
     load_state state;
-
-    // initialize the cache
-    void initialize_queue();
-
+    
     // schedule a tile for loading
-    void sched_tile( const SGBucket& b, const bool is_inner_ring );
+    void sched_tile( const SGBucket& b, const bool is_inner_ring, const bool is_cache_locked );
 
     // schedule a needed buckets for loading
-    void schedule_needed(double visibility_meters, const SGBucket& curr_bucket);
+    void schedule_needed(const SGBucket& curr_bucket, double rangeM);
 
     SGBucket previous_bucket;
     SGBucket current_bucket;
@@ -77,29 +75,31 @@ private:
      */
     simgear::TileCache tile_cache;
 
+    // Update the various queues maintained by the tilemagr (private
+    // internal function, do not call directly.)
+    void update_queues();
+    
+    // Prepare the ssg nodes corresponding to each tile.  For each
+    // tile, set the ssg transform and update it's range selector
+    // based on current visibilty void prep_ssg_nodes( float
+    // visibility_meters );
+    void prep_ssg_nodes();
+    
+    SGPropertyNode* _visibilityMeters;
+    
 public:
     FGTileMgr();
 
     ~FGTileMgr();
 
     // Initialize the Tile Manager
-    int init();
+    virtual void init();
+    virtual void reinit();
 
-    // Update the various queues maintained by the tilemagr (private
-    // internal function, do not call directly.)
-    void update_queues();
+    virtual void update(double dt);
 
-    // given the current lon/lat (in degrees), fill in the array of
-    // local chunks.  If the chunk isn't already in the cache, then
-    // read it from disk.
-    int update( double visibility_meters );
-    int update( const SGGeod& location, double visibility_meters);
+    int schedule_tiles_at(const SGGeod& location, double rangeM);
 
-    // Prepare the ssg nodes corresponding to each tile.  For each
-    // tile, set the ssg transform and update it's range selector
-    // based on current visibilty void prep_ssg_nodes( float
-    // visibility_meters );
-    void prep_ssg_nodes(float visibility_meters );
 
     const SGBucket& get_current_bucket () const { return current_bucket; }
 

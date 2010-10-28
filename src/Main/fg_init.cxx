@@ -58,6 +58,8 @@
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sg_dir.hxx>
+#include <simgear/misc/sgstream.hxx>
+
 #include <simgear/misc/interpolator.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/model/particles.hxx>
@@ -88,16 +90,17 @@
 #include <Cockpit/panel_io.hxx>
 
 #include <GUI/new_gui.hxx>
-#include <Include/general.hxx>
 #include <Input/input.hxx>
 #include <Instrumentation/instrument_mgr.hxx>
 #include <Model/acmodel.hxx>
+#include <Model/modelmgr.hxx>
 #include <AIModel/submodel.hxx>
 #include <AIModel/AIManager.hxx>
 #include <Navaids/navdb.hxx>
 #include <Navaids/navlist.hxx>
 #include <Navaids/fix.hxx>
 #include <Navaids/fixlist.hxx>
+#include <Navaids/airways.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Scripting/NasalSys.hxx>
@@ -1072,15 +1075,8 @@ fgInitNav ()
     fixlist.init( p_fix );  // adds fixes to the DB in positioned.cxx
 
     SG_LOG(SG_GENERAL, SG_INFO, "  Airways");
-    SGPath p_awy( globals->get_fg_root() );
-    p_awy.append( "Navaids/awy.dat" );
-    FGAirwayNetwork *awyNet = new FGAirwayNetwork;
-    //cerr << "Loading Airways" << endl;
-    awyNet->load (p_awy );
-    awyNet->init();
-    //cerr << "initializing airways" << endl;
-    globals->set_airwaynet( awyNet );
-
+    flightgear::Airway::load();
+    
     return true;
 }
 
@@ -1263,14 +1259,6 @@ bool fgInitGeneral() {
     return true;
 }
 
-// Initialize view parameters
-void fgInitView() {
-  // force update of model so that viewer can get some data...
-  globals->get_aircraft_model()->update(0);
-  // run update for current view so that data is current...
-  globals->get_viewmgr()->update(0);
-}
-
 // This is the top level init routine which calls all the other
 // initialization routines.  If you are adding a subsystem to flight
 // gear, its initialization call should located in this routine.
@@ -1322,15 +1310,6 @@ bool fgInitSubsystems() {
     // Initialize the scenery management subsystem.
     ////////////////////////////////////////////////////////////////////
 
-    if ( globals->get_tile_mgr()->init() ) {
-        // Load the local scenery data
-        double visibility_meters = fgGetDouble("/environment/visibility-m");
-        globals->get_tile_mgr()->update( visibility_meters );
-    } else {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Error in Tile Manager initialization!" );
-        exit(-1);
-    }
-
     globals->get_scenery()->get_scene_graph()
         ->addChild(simgear::Particles::getCommonRoot());
     simgear::GlobalParticleCallback::setSwitch(fgGetNode("/sim/rendering/particles", true));
@@ -1362,12 +1341,6 @@ bool fgInitSubsystems() {
 
     globals->add_subsystem( "xml-autopilot", FGXMLAutopilotGroup::createInstance(), SGSubsystemMgr::FDM );
     globals->add_subsystem( "route-manager", new FGRouteMgr );
-    
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the view manager subsystem.
-    ////////////////////////////////////////////////////////////////////
-
-    fgInitView();
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the Input-Output subsystem
@@ -1386,23 +1359,12 @@ bool fgInitSubsystems() {
 
     globals->add_subsystem("gui", new NewGUI, SGSubsystemMgr::INIT);
 
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the lighting subsystem.
-    ////////////////////////////////////////////////////////////////////
-
-    globals->add_subsystem("lighting", new FGLight, SGSubsystemMgr::DISPLAY);
-
     //////////////////////////////////////////////////////////////////////
     // Initialize the 2D cloud subsystem.
     ////////////////////////////////////////////////////////////////////
     fgGetBool("/sim/rendering/bump-mapping", false);
 
-#ifdef ENABLE_AUDIO_SUPPORT
-    ////////////////////////////////////////////////////////////////////
-    // Initialize the sound-effects subsystem.
-    ////////////////////////////////////////////////////////////////////
-    globals->add_subsystem("voice", new FGVoiceMgr, SGSubsystemMgr::DISPLAY);
-#endif
+
 
     ////////////////////////////////////////////////////////////////////
     // Initialise the ATC Manager 
@@ -1418,6 +1380,14 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("atis", new FGAtisManager, SGSubsystemMgr::POST_FDM);
 #endif
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Initialize multiplayer subsystem
+    ////////////////////////////////////////////////////////////////////
+
+    globals->add_subsystem("mp", new FGMultiplayMgr, SGSubsystemMgr::POST_FDM);
+
     ////////////////////////////////////////////////////////////////////
     // Initialise the AI Model Manager
     ////////////////////////////////////////////////////////////////////
@@ -1444,19 +1414,19 @@ bool fgInitSubsystems() {
     // Add a new 2D panel.
     ////////////////////////////////////////////////////////////////////
 
-    string panel_path = fgGetString("/sim/panel/path",
-                                    "Panels/Default/default.xml");
-
-    globals->set_current_panel( fgReadPanel(panel_path) );
-    if (globals->get_current_panel() == 0) {
+    string panel_path(fgGetString("/sim/panel/path"));
+    if (!panel_path.empty()) {
+      FGPanel* p = fgReadPanel(panel_path);
+      if (p) {
+        globals->set_current_panel(p);
+        p->init();
+        p->bind();
+        SG_LOG( SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path );
+      } else {
         SG_LOG( SG_INPUT, SG_ALERT,
                 "Error reading new panel from " << panel_path );
-    } else {
-        SG_LOG( SG_INPUT, SG_INFO, "Loaded new panel from " << panel_path );
-        globals->get_current_panel()->init();
-        globals->get_current_panel()->bind();
+      }
     }
-
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the controls subsystem.
@@ -1478,20 +1448,43 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("replay", new FGReplay);
 
+#ifdef ENABLE_AUDIO_SUPPORT
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the sound-effects subsystem.
+    ////////////////////////////////////////////////////////////////////
+    globals->add_subsystem("voice", new FGVoiceMgr, SGSubsystemMgr::DISPLAY);
+#endif
 
+    ////////////////////////////////////////////////////////////////////
+    // Initialize the lighting subsystem.
+    ////////////////////////////////////////////////////////////////////
+
+    globals->add_subsystem("lighting", new FGLight, SGSubsystemMgr::DISPLAY);
+    
+    // ordering here is important : Nasal (via events), then models, then views
+    globals->add_subsystem("events", globals->get_event_mgr(), SGSubsystemMgr::DISPLAY);
+    
+    FGAircraftModel* acm = new FGAircraftModel;
+    globals->set_aircraft_model(acm);
+    globals->add_subsystem("aircraft-model", acm, SGSubsystemMgr::DISPLAY);
+
+    FGModelMgr* mm = new FGModelMgr;
+    globals->set_model_mgr(mm);
+    globals->add_subsystem("model-manager", mm, SGSubsystemMgr::DISPLAY);
+
+    FGViewMgr *viewmgr = new FGViewMgr;
+    globals->set_viewmgr( viewmgr );
+    globals->add_subsystem("view-manager", viewmgr, SGSubsystemMgr::DISPLAY);
+
+    globals->add_subsystem("tile-manager", globals->get_tile_mgr(), 
+      SGSubsystemMgr::DISPLAY);
+      
     ////////////////////////////////////////////////////////////////////
     // Bind and initialize subsystems.
     ////////////////////////////////////////////////////////////////////
 
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialize multiplayer subsystem
-    ////////////////////////////////////////////////////////////////////
-
-    globals->set_multiplayer_mgr(new FGMultiplayMgr);
-    globals->get_multiplayer_mgr()->init();
 
     ////////////////////////////////////////////////////////////////////////
     // Initialize the Nasal interpreter.
@@ -1549,12 +1542,11 @@ void fgReInitSubsystems()
     // reload offsets from config defaults
     globals->get_viewmgr()->reinit();
 
-    fgInitView();
-
     globals->get_controls()->reset_all();
 
     globals->get_subsystem("time")->reinit();
-
+    globals->get_subsystem("tile-manager")->reinit();
+    
     if ( !freeze ) {
         fgSetBool("/sim/freeze/master", false);
     }
@@ -1581,7 +1573,6 @@ void doSimulatorReset(void)  // from gui_local.cxx -- TODO merge with fgReInitSu
 
     fgReInitSubsystems();
 
-    globals->get_tile_mgr()->update(fgGetDouble("/environment/visibility-m"));
     fgSetBool("/sim/signals/reinit", false);
 
     if (!freeze)

@@ -9,6 +9,8 @@
 
 #include "gps.hxx"
 
+#include <boost/tuple/tuple.hpp>
+
 #include <memory>
 #include <set>
 #include <cstring>
@@ -17,6 +19,7 @@
 #include "Main/globals.hxx" // for get_subsystem
 #include "Main/util.hxx" // for fgLowPass
 #include "Navaids/positioned.hxx"
+#include <Navaids/waypoint.hxx>
 #include "Navaids/navrecord.hxx"
 #include "Airports/simple.hxx"
 #include "Airports/runways.hxx"
@@ -29,6 +32,7 @@
 
 using std::auto_ptr;
 using std::string;
+using namespace flightgear;
 
 ///////////////////////////////////////////////////////////////////
 
@@ -227,6 +231,9 @@ GPS::GPS ( SGPropertyNode *node) :
   string branch = "/instrumentation/" + _name;
   _gpsNode = fgGetNode(branch.c_str(), _num, true );
   _scratchNode = _gpsNode->getChild("scratch", 0, true);
+  
+  SGPropertyNode *wp_node = _gpsNode->getChild("wp", 0, true);
+  _currentWayptNode = wp_node->getChild("wp", 1, true);
 }
 
 GPS::~GPS ()
@@ -255,17 +262,9 @@ GPS::init ()
   _northSouthVelocity = _gpsNode->getChild("ns-velocity-msec", 0, true);
   
 // waypoints
-  SGPropertyNode *wp_node = _gpsNode->getChild("wp", 0, true);
-  SGPropertyNode *wp1_node = wp_node->getChild("wp", 1, true);
-
   // for compatability, alias selected course down to wp/wp[1]/desired-course-deg
-  SGPropertyNode* wp1Crs = wp1_node->getChild("desired-course-deg", 0, true);
+  SGPropertyNode* wp1Crs = _currentWayptNode->getChild("desired-course-deg", 0, true);
   wp1Crs->alias(_gpsNode->getChild("desired-course-deg", 0, true));
-    
-//    _true_wp1_bearing_error_node =
-//        wp1_node->getChild("true-bearing-error-deg", 0, true);
-//    _magnetic_wp1_bearing_error_node =
-  //      wp1_node->getChild("magnetic-bearing-error-deg", 0, true);
 
   _tracking_bug_node = _gpsNode->getChild("tracking-bug", 0, true);
          
@@ -299,10 +298,10 @@ GPS::init ()
   
 // navradio slaving properties  
   SGPropertyNode* toFlag = _gpsNode->getChild("to-flag", 0, true);
-  toFlag->alias(wp1_node->getChild("to-flag"));
+  toFlag->alias(_currentWayptNode->getChild("to-flag"));
   
   SGPropertyNode* fromFlag = _gpsNode->getChild("from-flag", 0, true);
-  fromFlag->alias(wp1_node->getChild("from-flag"));
+  fromFlag->alias(_currentWayptNode->getChild("from-flag"));
     
 // autopilot drive properties
   _apDrivingFlag = fgGetNode("/autopilot/settings/gps-driving-true-heading", true);
@@ -357,49 +356,39 @@ GPS::bind()
   tie(_scratchNode, "mag-bearing-deg", SGRawValueMethods<GPS, double>(*this, &GPS::getScratchMagBearing, NULL));
   tie(_scratchNode, "has-next", SGRawValueMethods<GPS, bool>(*this, &GPS::getScratchHasNext, NULL));
   _scratchValid = false;
-  
-// waypoint data (including various historical things)
-  SGPropertyNode *wp_node = _gpsNode->getChild("wp", 0, true);
-  SGPropertyNode *wp0_node = wp_node->getChild("wp", 0, true);
-  SGPropertyNode *wp1_node = wp_node->getChild("wp", 1, true);
 
-  tieSGGeodReadOnly(wp0_node, _wp0_position, "longitude-deg", "latitude-deg", "altitude-ft");
-  tie(wp0_node, "ID", SGRawValueMethods<GPS, const char*>
-    (*this, &GPS::getWP0Ident, NULL));
-  tie(wp0_node, "name", SGRawValueMethods<GPS, const char*>
-    (*this, &GPS::getWP0Name, NULL));
-    
-  tieSGGeodReadOnly(wp1_node, _wp1_position, "longitude-deg", "latitude-deg", "altitude-ft");
-  tie(wp1_node, "ID", SGRawValueMethods<GPS, const char*>
-    (*this, &GPS::getWP1Ident, NULL));
-  tie(wp1_node, "name", SGRawValueMethods<GPS, const char*>
-    (*this, &GPS::getWP1Name, NULL));
   
-  tie(wp1_node, "distance-nm", SGRawValueMethods<GPS, double>
+  SGPropertyNode *wp_node = _gpsNode->getChild("wp", 0, true);
+  SGPropertyNode* wp0_node = wp_node->getChild("wp", 0, true);
+  
+  tieSGGeodReadOnly(wp0_node, _wp0_position, "longitude-deg", "latitude-deg", "altitude-ft");
+  tie(_currentWayptNode, "ID", SGRawValueMethods<GPS, const char*>
+    (*this, &GPS::getWP1Ident, NULL));
+  
+  tie(_currentWayptNode, "distance-nm", SGRawValueMethods<GPS, double>
     (*this, &GPS::getWP1Distance, NULL));
-  tie(wp1_node, "bearing-true-deg", SGRawValueMethods<GPS, double>
+  tie(_currentWayptNode, "bearing-true-deg", SGRawValueMethods<GPS, double>
     (*this, &GPS::getWP1Bearing, NULL));
-  tie(wp1_node, "bearing-mag-deg", SGRawValueMethods<GPS, double>
+  tie(_currentWayptNode, "bearing-mag-deg", SGRawValueMethods<GPS, double>
     (*this, &GPS::getWP1MagBearing, NULL));
-  tie(wp1_node, "TTW-sec", SGRawValueMethods<GPS, double>
+  tie(_currentWayptNode, "TTW-sec", SGRawValueMethods<GPS, double>
     (*this, &GPS::getWP1TTW, NULL));
-  tie(wp1_node, "TTW", SGRawValueMethods<GPS, const char*>
+  tie(_currentWayptNode, "TTW", SGRawValueMethods<GPS, const char*>
     (*this, &GPS::getWP1TTWString, NULL));
   
-  tie(wp1_node, "course-deviation-deg", SGRawValueMethods<GPS, double>
+  tie(_currentWayptNode, "course-deviation-deg", SGRawValueMethods<GPS, double>
     (*this, &GPS::getWP1CourseDeviation, NULL));
-  tie(wp1_node, "course-error-nm", SGRawValueMethods<GPS, double>
+  tie(_currentWayptNode, "course-error-nm", SGRawValueMethods<GPS, double>
     (*this, &GPS::getWP1CourseErrorNm, NULL));
-  tie(wp1_node, "to-flag", SGRawValueMethods<GPS, bool>
+  tie(_currentWayptNode, "to-flag", SGRawValueMethods<GPS, bool>
     (*this, &GPS::getWP1ToFlag, NULL));
-  tie(wp1_node, "from-flag", SGRawValueMethods<GPS, bool>
+  tie(_currentWayptNode, "from-flag", SGRawValueMethods<GPS, bool>
     (*this, &GPS::getWP1FromFlag, NULL));
 
 // leg properties (only valid in DTO/LEG modes, not OBS)
   tie(wp_node, "leg-distance-nm", SGRawValueMethods<GPS, double>(*this, &GPS::getLegDistance, NULL));
   tie(wp_node, "leg-true-course-deg", SGRawValueMethods<GPS, double>(*this, &GPS::getLegCourse, NULL));
   tie(wp_node, "leg-mag-course-deg", SGRawValueMethods<GPS, double>(*this, &GPS::getLegMagCourse, NULL));
-  tie(wp_node, "alt-dist-ratio", SGRawValueMethods<GPS, double>(*this, &GPS::getAltDistanceRatio, NULL));
 
 // navradio slaving properties  
   tie(_gpsNode, "cdi-deflection", SGRawValueMethods<GPS,double>
@@ -426,12 +415,11 @@ GPS::clearOutput()
   _last_vertical_speed = 0.0;
   _last_true_track = 0.0;
   _lastEWVelocity = _lastNSVelocity = 0.0;
+  _currentWaypt = _prevWaypt = NULL;
+  _legDistanceNm = -1.0;
   
   _raim_node->setDoubleValue(0.0);
   _indicated_pos = SGGeod();
-  _wp1DistanceM = 0.0;
-  _wp1TrueBearing = 0.0;
-  _wp1_position = SGGeod();
   _odometer_node->setDoubleValue(0);
   _trip_odometer_node->setDoubleValue(0);
   _tracking_bug_node->setDoubleValue(0);
@@ -455,61 +443,28 @@ GPS::update (double delta_time_sec)
   if (delta_time_sec <= 0.0) {
     return; // paused, don't bother
   }    
-    // TODO: Add noise and other errors.
-/*
-
-    // Bias and random error
-    double random_factor = sg_random();
-    double random_error = 1.4;
-    double error_radius = 5.1;
-    double bias_max_radius = 5.1;
-    double random_max_radius = 1.4;
-
-    bias_length += (random_factor-0.5) * 1.0e-3;
-    if (bias_length <= 0.0) bias_length = 0.0;
-    else if (bias_length >= bias_max_radius) bias_length = bias_max_radius;
-    bias_angle  += (random_factor-0.5) * 1.0e-3;
-    if (bias_angle <= 0.0) bias_angle = 0.0;
-    else if (bias_angle >= 360.0) bias_angle = 360.0;
-
-    double random_length = random_factor * random_max_radius;
-    double random_angle = random_factor * 360.0;
-
-    double bias_x = bias_length * cos(bias_angle * SG_PI / 180.0);
-    double bias_y = bias_length * sin(bias_angle * SG_PI / 180.0);
-    double random_x = random_length * cos(random_angle * SG_PI / 180.0);
-    double random_y = random_length * sin(random_angle * SG_PI / 180.0);
-    double error_x = bias_x + random_x;
-    double error_y = bias_y + random_y;
-    double error_length = sqrt(error_x*error_x + error_y*error_y);
-    double error_angle = atan(error_y / error_x) * 180.0 / SG_PI;
-
-    double lat2;
-    double lon2;
-    double az2;
-    geo_direct_wgs_84 ( altitude_m, latitude_deg,
-                        longitude_deg, error_angle,
-                        error_length, &lat2, &lon2,
-                        &az2 );
-    //cout << lat2 << " " << lon2 << endl;
-    printf("%f %f \n", bias_length, bias_angle);
-    printf("%3.7f %3.7f \n", lat2, lon2);
-    printf("%f %f \n", error_length, error_angle);
-
-*/
+  
   _raim_node->setDoubleValue(1.0);
   _indicated_pos = _position.get();
   updateBasicData(delta_time_sec);
 
   if (_dataValid) {
-    if (_mode != "obs") {
-      updateTurn();
-    }
+    if (_wayptController.get()) {
+      _wayptController->update();
+      SGGeod p(_wayptController->position());
+      _currentWayptNode->setDoubleValue("longitude-deg", p.getLongitudeDeg());
+      _currentWayptNode->setDoubleValue("latitude-deg", p.getLatitudeDeg());
+      _currentWayptNode->setDoubleValue("altitude-ft", p.getElevationFt());
       
-    updateWaypoints();
+      _desiredCourse = getLegMagCourse();
+      
+      updateTurn();
+      updateRouteData();
+    }
+
+    
     updateTrackingBug();
     updateReferenceNavaid(delta_time_sec);
-    updateRouteData();
     driveAutopilot();
   }
   
@@ -537,6 +492,49 @@ GPS::update (double delta_time_sec)
   _last_pos = _indicated_pos;
   _lastPosValid = true;
 }
+
+///////////////////////////////////////////////////////////////////////////
+// implement the RNAV interface 
+SGGeod GPS::position()
+{
+  if (!_dataValid) {
+    return SGGeod();
+  }
+  
+  return _indicated_pos;
+}
+
+double GPS::trackDeg()
+{
+  return _last_true_track;
+}
+
+double GPS::groundSpeedKts()
+{
+  return _last_speed_kts;
+}
+
+double GPS::vspeedFPM()
+{
+  return _last_vertical_speed;
+}
+
+double GPS::magvarDeg()
+{
+  return _magvar_node->getDoubleValue();
+}
+
+double GPS::overflightArmDistanceM()
+{
+  return _config.overflightArmDistanceNm() * SG_NM_TO_METER;
+}
+
+double GPS::selectedMagCourse()
+{
+  return _selectedCourse;
+}
+
+///////////////////////////////////////////////////////////////////////////
 
 void
 GPS::updateBasicData(double dt)
@@ -599,13 +597,6 @@ GPS::updateTrackingBug()
 
   _true_bug_error_node->setDoubleValue(true_bug_error);
   _magnetic_bug_error_node->setDoubleValue(magnetic_bug_error);
-}
-
-void
-GPS::updateWaypoints()
-{  
-  double az2;
-  SGGeodesy::inverse(_indicated_pos, _wp1_position, _wp1TrueBearing, az2,_wp1DistanceM);
 }
 
 void GPS::updateReferenceNavaid(double dt)
@@ -690,7 +681,9 @@ void GPS::routeActivated()
     }
   } else if (_mode == "leg") {
     SG_LOG(SG_INSTR, SG_INFO, "GPS::route deactivated, switching to OBS mode");
-    selectOBSMode();
+    // select OBS mode, but keep current waypoint-as is
+    _mode = "obs";
+    wp1Changed();
   }
 }
 
@@ -701,8 +694,8 @@ void GPS::routeManagerSequenced()
     return;
   }
   
-  int index = _routeMgr->currentWaypoint(),
-    count = _routeMgr->size();
+  int index = _routeMgr->currentIndex(),
+    count = _routeMgr->numWaypts();
   if ((index < 0) || (index >= count)) {
     SG_LOG(SG_INSTR, SG_ALERT, "GPS: malformed route, index=" << index);
     return;
@@ -711,17 +704,15 @@ void GPS::routeManagerSequenced()
   SG_LOG(SG_INSTR, SG_INFO, "GPS waypoint index is now " << index);
   
   if (index > 0) {
-    SGWayPoint wp0(_routeMgr->get_waypoint(index - 1));
-    _wp0Ident = wp0.get_id();
-    _wp0Name = wp0.get_name();
-    _wp0_position = wp0.get_target();
-
+    _prevWaypt = _routeMgr->previousWaypt();
+    if (_prevWaypt->flag(WPT_DYNAMIC)) {
+      _wp0_position = _indicated_pos;
+    } else {
+      _wp0_position = _prevWaypt->position();
+    }
   }
   
-  SGWayPoint wp1(_routeMgr->get_waypoint(index));
-  _wp1Ident = wp1.get_id();
-  _wp1Name = wp1.get_name();
-  _wp1_position = wp1.get_target();
+  _currentWaypt = _routeMgr->currentWaypt();
 
   _desiredCourse = getLegMagCourse();
   _desiredCourseNode->fireValueChanged();
@@ -745,8 +736,8 @@ void GPS::routeFinished()
   }
   
   SG_LOG(SG_INSTR, SG_INFO, "GPS route finished, reverting to OBS");
+  // select OBS mode, but keep current waypoint-as is
   _mode = "obs";
-  _wp0_position = _indicated_pos;
   wp1Changed();
 }
 
@@ -800,7 +791,7 @@ void GPS::updateTurn()
     double deviationNm = (distanceM * SG_METER_TO_NM) - _turnRadius;
     double deviationDeg = desiredCourse - getMagTrack();
     deviationNm = copysign(deviationNm, deviationDeg);
-    // FXIME
+    // FIXME
     //_wp1_course_deviation_node->setDoubleValue(deviationDeg);
     //_wp1_course_error_nm_node->setDoubleValue(deviationNm);
     //_cdiDeflectionNode->setDoubleValue(deviationDeg);
@@ -809,12 +800,8 @@ void GPS::updateTurn()
 
 void GPS::updateOverflight()
 {
-  if ((_wp1DistanceM * SG_METER_TO_NM) > _config.overflightArmDistanceNm()) {
+  if (!_wayptController->isDone()) {
     return;
-  }
-  
-  if (getWP1ToFlag()) {
-    return; // still heading towards the WP
   }
   
   if (_mode == "dto") {
@@ -822,12 +809,19 @@ void GPS::updateOverflight()
     
     // check for wp1 being on active route - resume leg mode
     if (_routeMgr->isRouteActive()) {
-      int index = _routeMgr->findWaypoint(_wp1_position);
+      int index = _routeMgr->findWayptIndex(_currentWaypt->position());
       if (index >= 0) {
         SG_LOG(SG_INSTR, SG_INFO, "GPS DTO, resuming LEG mode at wp:" << index);
         _mode = "leg";
         _routeMgr->jumpToIndex(index);
       }
+    }
+    
+    if (_mode == "dto") {
+      // if we didn't enter leg mode, drop back to OBS mode
+      // select OBS mode, but keep current waypoint-as is
+      _mode = "obs";
+      wp1Changed();
     }
   } else if (_mode == "leg") {
     SG_LOG(SG_INSTR, SG_INFO, "GPS doing overflight sequencing");
@@ -867,8 +861,8 @@ void GPS::computeTurnData()
     return;
   }
   
-  int curIndex = _routeMgr->currentWaypoint();
-  if ((curIndex + 1) >= _routeMgr->size()) {
+  WayptRef next = _routeMgr->nextWaypt();
+  if (!next || next->flag(WPT_DYNAMIC)) {
     _anticipateTurn = false;
     return;
   }
@@ -880,11 +874,9 @@ void GPS::computeTurnData()
   
   _turnStartBearing = _desiredCourse;
 // compute next leg course
-  SGWayPoint wp1(_routeMgr->get_waypoint(curIndex)),
-    wp2(_routeMgr->get_waypoint(curIndex + 1));
   double crs, dist;
-  wp2.CourseAndDistance(wp1, &crs, &dist);
-  
+  boost::tie(crs, dist) = next->courseAndDistanceFrom(_currentWaypt->position());
+    
 
 // compute offset bearing
   _turnAngle = crs - _turnStartBearing;
@@ -897,9 +889,9 @@ void GPS::computeTurnData()
     ", out=" << crs << "; turnAngle=" << _turnAngle << ", median=" << median 
     << ", offset=" << offsetBearing);
 
-  SG_LOG(SG_INSTR, SG_INFO, "next leg is now:" << wp1.get_id() << "->" << wp2.get_id());
+  SG_LOG(SG_INSTR, SG_INFO, "next leg is now:" << _currentWaypt->ident() << "->" << next->ident());
 
-  _turnPt = _wp1_position;
+  _turnPt = _currentWaypt->position();
   _anticipateTurn = true;
 }
 
@@ -945,10 +937,10 @@ double GPS::computeTurnRadiusNm(double aGroundSpeedKts) const
 
 void GPS::updateRouteData()
 {
-  double totalDistance = _wp1DistanceM * SG_METER_TO_NM;
+  double totalDistance = _wayptController->distanceToWayptM() * SG_METER_TO_NM;
   // walk all waypoints from wp2 to route end, and sum
-  for (int i=_routeMgr->currentWaypoint()+1; i<_routeMgr->size(); ++i) {
-    totalDistance += _routeMgr->get_waypoint(i).get_distance();
+  for (int i=_routeMgr->currentIndex()+1; i<_routeMgr->numWaypts(); ++i) {
+    //totalDistance += _routeMgr->get_waypoint(i).get_distance();
   }
   
   _routeDistanceNm->setDoubleValue(totalDistance * SG_METER_TO_NM);
@@ -979,13 +971,36 @@ void GPS::driveAutopilot()
 
 void GPS::wp1Changed()
 {
+  if (_mode == "leg") {
+    _wayptController.reset(WayptController::createForWaypt(this, _currentWaypt));
+  } else if (_mode == "obs") {
+    _wayptController.reset(new OBSController(this, _currentWaypt));
+  } else if (_mode == "dto") {
+    _wayptController.reset(new DirectToController(this, _currentWaypt, _wp0_position));
+  }
+
+  _wayptController->init();
+
+  if (_mode == "obs") {
+    _legDistanceNm = -1.0;
+  } else {
+    _wayptController->update();
+    _legDistanceNm = _wayptController->distanceToWayptM() * SG_METER_TO_NM;
+  }
+  
   if (!_config.driveAutopilot()) {
     return;
   }
   
-  double altFt = _wp1_position.getElevationFt();
-  if (altFt > -9990.0) {
-    _apTargetAltitudeFt->setDoubleValue(altFt);
+  RouteRestriction ar = _currentWaypt->altitudeRestriction();
+  double restrictAlt = _currentWaypt->altitudeFt();
+  double alt = _indicated_pos.getElevationFt();
+  if ((ar == RESTRICT_AT) ||
+       ((ar == RESTRICT_ABOVE) && (alt < restrictAlt)) ||
+       ((ar == RESTRICT_BELOW) && (alt > restrictAlt)))
+  {
+    SG_LOG(SG_AUTOPILOT, SG_INFO, "current waypt has altitude set, setting on AP");
+    _apTargetAltitudeFt->setDoubleValue(restrictAlt);
   }
 }
 
@@ -1011,16 +1026,16 @@ double GPS::getLegDistance() const
     return -1;
   }
   
-  return SGGeodesy::distanceNm(_wp0_position, _wp1_position);
+  return _legDistanceNm;
 }
 
 double GPS::getLegCourse() const
 {
-  if (!_dataValid) {
+  if (!_dataValid || !_wayptController.get()) {
     return -9999.0;
   }
   
-  return SGGeodesy::courseDeg(_wp0_position, _wp1_position);
+  return _wayptController->targetTrackDeg();
 }
 
 double GPS::getLegMagCourse() const
@@ -1032,21 +1047,6 @@ double GPS::getLegMagCourse() const
   double m = getLegCourse() - _magvar_node->getDoubleValue();
   SG_NORMALIZE_RANGE(m, 0.0, 360.0);
   return m;
-}
-
-double GPS::getAltDistanceRatio() const
-{
-  if (!_dataValid || (_mode == "obs")) {
-    return 0.0;
-  }
-  
-  double dist = SGGeodesy::distanceM(_wp0_position, _wp1_position);
-  if ( dist <= 0.0 ) {
-    return 0.0;
-  }
-  
-  double alt_difference_m = _wp0_position.getElevationM() - _wp1_position.getElevationM();
-  return alt_difference_m / dist;
 }
 
 double GPS::getMagTrack() const
@@ -1086,16 +1086,12 @@ const char* GPS::getWP0Ident() const
     return "";
   }
   
-  return _wp0Ident.c_str();
+  return _prevWaypt->ident().c_str();
 }
 
 const char* GPS::getWP0Name() const
 {
-  if (!_dataValid || (_mode != "leg")) {
-    return "";
-  }
-  
-  return _wp0Name.c_str();
+  return "";
 }
 
 const char* GPS::getWP1Ident() const
@@ -1104,56 +1100,49 @@ const char* GPS::getWP1Ident() const
     return "";
   }
   
-  return _wp1Ident.c_str();
+  return _currentWaypt->ident().c_str();
 }
 
 const char* GPS::getWP1Name() const
 {
-  if (!_dataValid) {
-    return "";
-  }
-
-  return _wp1Name.c_str();
+  return "";
 }
 
 double GPS::getWP1Distance() const
 {
-  if (!_dataValid) {
+  if (!_dataValid || !_wayptController.get()) {
     return -1.0;
   }
   
-  return _wp1DistanceM * SG_METER_TO_NM;
+  return _wayptController->distanceToWayptM() * SG_METER_TO_NM;
 }
 
 double GPS::getWP1TTW() const
 {
-  if (!_dataValid) {
+  if (!_dataValid || !_wayptController.get()) {
     return -1.0;
   }
   
-  if (_last_speed_kts < 1.0) {
-    return -1.0;
-  }
-  
-  return (getWP1Distance() / _last_speed_kts) * 3600.0;
+  return _wayptController->timeToWaypt();
 }
 
 const char* GPS::getWP1TTWString() const
 {
-  if (!_dataValid) {
+  double t = getWP1TTW();
+  if (t <= 0.0) {
     return "";
   }
   
-  return makeTTWString(getWP1TTW());
+  return makeTTWString(t);
 }
 
 double GPS::getWP1Bearing() const
 {
-  if (!_dataValid) {
+  if (!_dataValid || !_wayptController.get()) {
     return -9999.0;
   }
   
-  return _wp1TrueBearing;
+  return _wayptController->trueBearingDeg();
 }
 
 double GPS::getWP1MagBearing() const
@@ -1162,56 +1151,41 @@ double GPS::getWP1MagBearing() const
     return -9999.0;
   }
 
-  double magBearing = _wp1TrueBearing - _magvar_node->getDoubleValue();
+  double magBearing =  _wayptController->trueBearingDeg() - _magvar_node->getDoubleValue();
   SG_NORMALIZE_RANGE(magBearing, 0.0, 360.0);
   return magBearing;
 }
 
 double GPS::getWP1CourseDeviation() const
 {
-  if (!_dataValid) {
+  if (!_dataValid || !_wayptController.get()) {
     return 0.0;
   }
-  
-  double dev = getWP1MagBearing() - _desiredCourse;
-  SG_NORMALIZE_RANGE(dev, -180.0, 180.0);
-  
-  if (fabs(dev) > 90.0) {
-    // When the course is away from the waypoint, 
-    // it makes sense to change the sign of the deviation.
-    dev *= -1.0;
-    SG_NORMALIZE_RANGE(dev, -90.0, 90.0);
-  }
-  
-  return dev;
+
+  return _wayptController->courseDeviationDeg();
 }
 
 double GPS::getWP1CourseErrorNm() const
 {
-  if (!_dataValid) {
+  if (!_dataValid || !_wayptController.get()) {
     return 0.0;
   }
   
-  double radDev = getWP1CourseDeviation() * SG_DEGREES_TO_RADIANS;
-  double course_error_m = sin(radDev) * _wp1DistanceM;
-  return course_error_m * SG_METER_TO_NM;
+  return _wayptController->xtrackErrorNm();
 }
 
 bool GPS::getWP1ToFlag() const
 {
-  if (!_dataValid) {
+  if (!_dataValid || !_wayptController.get()) {
     return false;
   }
   
-  double dev = getWP1MagBearing() - _desiredCourse;
-  SG_NORMALIZE_RANGE(dev, -180.0, 180.0);
-
-  return (fabs(dev) < 90.0);
+  return _wayptController->toFlag();
 }
 
 bool GPS::getWP1FromFlag() const
 {
-  if (!_dataValid) {
+  if (!_dataValid || !_wayptController.get()) {
     return false;
   }
   
@@ -1278,9 +1252,9 @@ void GPS::setCommand(const char* aCmd)
     defineWaypoint();
   } else if (!strcmp(aCmd, "route-insert-before")) {
     int index = _scratchNode->getIntValue("index");
-    if (index < 0 || (_routeMgr->size() == 0)) {
-      index = _routeMgr->size();
-    } else if (index >= _routeMgr->size()) {
+    if (index < 0 || (_routeMgr->numWaypts() == 0)) {
+      index = _routeMgr->numWaypts();
+    } else if (index >= _routeMgr->numWaypts()) {
       SG_LOG(SG_INSTR, SG_WARN, "GPS:route-insert-before, bad index:" << index);
       return;
     }
@@ -1288,9 +1262,9 @@ void GPS::setCommand(const char* aCmd)
     insertWaypointAtIndex(index);
   } else if (!strcmp(aCmd, "route-insert-after")) {
     int index = _scratchNode->getIntValue("index");
-    if (index < 0 || (_routeMgr->size() == 0)) {
-      index = _routeMgr->size();
-    } else if (index >= _routeMgr->size()) {
+    if (index < 0 || (_routeMgr->numWaypts() == 0)) {
+      index = _routeMgr->numWaypts();
+    } else if (index >= _routeMgr->numWaypts()) {
       SG_LOG(SG_INSTR, SG_WARN, "GPS:route-insert-after, bad index:" << index);
       return;
     } else {
@@ -1301,8 +1275,8 @@ void GPS::setCommand(const char* aCmd)
   } else if (!strcmp(aCmd, "route-delete")) {
     int index = _scratchNode->getIntValue("index");
     if (index < 0) {
-      index = _routeMgr->size();
-    } else if (index >= _routeMgr->size()) {
+      index = _routeMgr->numWaypts();
+    } else if (index >= _routeMgr->numWaypts()) {
       SG_LOG(SG_INSTR, SG_WARN, "GPS:route-delete, bad index:" << index);
       return;
     }
@@ -1332,18 +1306,16 @@ bool GPS::isScratchPositionValid() const
 }
 
 void GPS::directTo()
-{
-  _wp0_position = _indicated_pos;
-  
-  if (isScratchPositionValid()) {
-    _wp1Ident = _scratchNode->getStringValue("ident");
-    _wp1Name = _scratchNode->getStringValue("name");
-    _wp1_position = _scratchPos;
+{  
+  if (!isScratchPositionValid()) {
+    return;
   }
   
+  _prevWaypt = NULL;
+  _wp0_position = _indicated_pos;
+  _currentWaypt = new BasicWaypt(_scratchPos, _scratchNode->getStringValue("ident"), NULL);
   _mode = "dto";
-  _desiredCourse = getLegMagCourse();
-  _desiredCourseNode->fireValueChanged();
+
   clearScratch();
   wp1Changed();
 }
@@ -1359,8 +1331,8 @@ void GPS::loadRouteWaypoint()
   int index = _scratchNode->getIntValue("index", -9999);
   clearScratch();
   
-  if ((index < 0) || (index >= _routeMgr->size())) { // no index supplied, use current wp
-    index = _routeMgr->currentWaypoint();
+  if ((index < 0) || (index >= _routeMgr->numWaypts())) { // no index supplied, use current wp
+    index = _routeMgr->currentIndex();
   }
   
   _searchIsRoute = true;
@@ -1370,18 +1342,16 @@ void GPS::loadRouteWaypoint()
 void GPS::setScratchFromRouteWaypoint(int aIndex)
 {
   assert(_searchIsRoute);
-  if ((aIndex < 0) || (aIndex >= _routeMgr->size())) {
+  if ((aIndex < 0) || (aIndex >= _routeMgr->numWaypts())) {
     SG_LOG(SG_INSTR, SG_WARN, "GPS:setScratchFromRouteWaypoint: route-index out of bounds");
     return;
   }
   
   _searchResultIndex = aIndex;
-  SGWayPoint wp(_routeMgr->get_waypoint(aIndex));
-  _scratchNode->setStringValue("name", wp.get_name());
-  _scratchNode->setStringValue("ident", wp.get_id());
-  _scratchPos = wp.get_target();
+  WayptRef wp = _routeMgr->wayptAtIndex(aIndex);
+  _scratchNode->setStringValue("ident", wp->ident());
+  _scratchPos = wp->position();
   _scratchValid = true;
-  _scratchNode->setDoubleValue("course", wp.get_track());
   _scratchNode->setIntValue("index", aIndex);
 }
 
@@ -1476,9 +1446,9 @@ void GPS::search()
 
   auto_ptr<FGPositioned::Filter> f(createFilter(_searchType));
   if (_searchNames) {
-    _searchResults = FGPositioned::findAllWithName(_searchQuery, f.get());
+    _searchResults = FGPositioned::findAllWithName(_searchQuery, f.get(), _searchExact);
   } else {
-    _searchResults = FGPositioned::findAllWithIdent(_searchQuery, f.get());
+    _searchResults = FGPositioned::findAllWithIdent(_searchQuery, f.get(), _searchExact);
   }
   
   bool orderByRange = _scratchNode->getBoolValue("order-by-distance", true);
@@ -1498,7 +1468,7 @@ bool GPS::getScratchHasNext() const
 {
   int lastResult;
   if (_searchIsRoute) {
-    lastResult = _routeMgr->size() - 1;
+    lastResult = _routeMgr->numWaypts() - 1;
   } else {
     lastResult = (int) _searchResults.size() - 1;
   }
@@ -1584,14 +1554,14 @@ void GPS::addAirportToScratch(FGAirport* aAirport)
 
 void GPS::selectOBSMode()
 {
-  if (isScratchPositionValid()) {
-    _wp1Ident = _scratchNode->getStringValue("ident");
-    _wp1Name = _scratchNode->getStringValue("name");
-    _wp1_position = _scratchPos;
+  if (!isScratchPositionValid()) {
+    return;
   }
   
   SG_LOG(SG_INSTR, SG_INFO, "GPS switching to OBS mode");
   _mode = "obs";
+
+  _currentWaypt = new BasicWaypt(_scratchPos, _scratchNode->getStringValue("ident"), NULL);
   _wp0_position = _indicated_pos;
   wp1Changed();
 }
@@ -1680,7 +1650,7 @@ void GPS::defineWaypoint()
 void GPS::insertWaypointAtIndex(int aIndex)
 {
   // note we do allow index = routeMgr->size(), that's an append
-  if ((aIndex < 0) || (aIndex > _routeMgr->size())) {
+  if ((aIndex < 0) || (aIndex > _routeMgr->numWaypts())) {
     throw sg_range_exception("GPS::insertWaypointAtIndex: index out of bounds");
   }
   
@@ -1690,18 +1660,18 @@ void GPS::insertWaypointAtIndex(int aIndex)
   }
   
   string ident = _scratchNode->getStringValue("ident");
-  string name = _scratchNode->getStringValue("name");
-  
-  _routeMgr->add_waypoint(SGWayPoint(_scratchPos, ident, name), aIndex);
+
+  WayptRef wpt = new BasicWaypt(_scratchPos, ident, NULL);
+  _routeMgr->insertWayptAtIndex(wpt, aIndex);
 }
 
 void GPS::removeWaypointAtIndex(int aIndex)
 {
-  if ((aIndex < 0) || (aIndex >= _routeMgr->size())) {
+  if ((aIndex < 0) || (aIndex >= _routeMgr->numWaypts())) {
     throw sg_range_exception("GPS::removeWaypointAtIndex: index out of bounds");
   }
   
-  _routeMgr->pop_waypoint(aIndex);
+  _routeMgr->removeWayptAtIndex(aIndex);
 }
 
 void GPS::tieSGGeod(SGPropertyNode* aNode, SGGeod& aRef, 

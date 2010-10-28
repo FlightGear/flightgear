@@ -32,8 +32,8 @@
 #include <simgear/compiler.h>
 
 #include <algorithm>		// sort()
-#include <stdlib.h>		// atoi() atof()
-
+#include <cstdlib>		// atoi() atof()
+#include <cstring>
 #include <string>
 
 #include <simgear/debug/logstream.hxx>
@@ -66,7 +66,7 @@ bool FGHttpd::open() {
 
 
 bool FGHttpd::process() {
-    netChannel::poll();
+    simgear::NetChannel::poll();
 
     return true;
 }

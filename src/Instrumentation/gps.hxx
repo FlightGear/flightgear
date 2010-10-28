@@ -8,12 +8,14 @@
 #define __INSTRUMENTS_GPS_HXX 1
 
 #include <cassert>
+#include <memory>
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/SGMath.hxx>
 
-#include "Navaids/positioned.hxx"
+#include <Navaids/positioned.hxx>
+#include <Instrumentation/rnav_waypt_controller.hxx>
 
 // forward decls
 class SGRoute;
@@ -73,20 +75,29 @@ private:
  * /instrumentation/gps/magnetic-bug-error-deg
 
  */
-class GPS : public SGSubsystem
+class GPS : public SGSubsystem, public flightgear::RNAV
 {
-
 public:
-
     GPS (SGPropertyNode *node);
     GPS ();
     virtual ~GPS ();
 
+  // SGSubsystem interface
     virtual void init ();
     virtual void update (double delta_time_sec);
     
     virtual void bind();
     virtual void unbind();
+
+  // RNAV interface
+    virtual SGGeod position();
+    virtual double trackDeg();
+    virtual double groundSpeedKts();
+    virtual double vspeedFPM();
+    virtual double magvarDeg();
+    virtual double selectedMagCourse();
+    virtual double overflightArmDistanceM();
+    
 private:
     friend class GPSListener;
     friend class SearchFilter;
@@ -188,7 +199,6 @@ private:
     void clearOutput();
 
     void updateBasicData(double dt);
-    void updateWaypoints();
 
     void updateTrackingBug();
     void updateReferenceNavaid(double dt);
@@ -275,7 +285,6 @@ private:
   double getLegDistance() const;
   double getLegCourse() const;
   double getLegMagCourse() const;
-  double getAltDistanceRatio() const;
   
   double getTrueTrack() const { return _last_true_track; }
   double getMagTrack() const;
@@ -325,6 +334,7 @@ private:
 
 // members
   SGPropertyNode_ptr _gpsNode;
+  SGPropertyNode_ptr _currentWayptNode;
   SGPropertyNode_ptr _magvar_node;
   SGPropertyNode_ptr _serviceable_node;
   SGPropertyNode_ptr _electrical_node;
@@ -379,10 +389,8 @@ private:
   
   SGGeodProperty _position;
   SGGeod _wp0_position;
-  SGGeod _wp1_position;
   SGGeod _indicated_pos;
-  std::string _wp0Ident, _wp0Name, _wp1Ident, _wp1Name;
-  double _wp1DistanceM, _wp1TrueBearing;
+  double _legDistanceNm;
   
 // scratch data
   SGGeod _scratchPos;
@@ -410,7 +418,11 @@ private:
     SGGeod _turnPt;
     SGGeod _turnCentre;
   
+  std::auto_ptr<flightgear::WayptController> _wayptController;
+  
   SGPropertyNode_ptr _realismSimpleGps; ///< should the GPS be simple or realistic?
+  flightgear::WayptRef _prevWaypt;
+  flightgear::WayptRef _currentWaypt;
   
 // autopilot drive properties
   SGPropertyNode_ptr _apDrivingFlag;

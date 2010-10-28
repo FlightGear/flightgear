@@ -24,11 +24,9 @@ endif
 
 if HAVE_FRAMEWORK_PLIB
 fgfs_PLIB_FW = $(plib_FRAMEWORK)
-metar_PLIB_FW = $(plib_FRAMEWORK)
 else
-fgfs_PLIB_LIBS = -lplibpuaux -lplibpu -lplibfnt -lplibjs -lplibnet \
+fgfs_PLIB_LIBS = -lplibpuaux -lplibpu -lplibfnt -lplibjs  \
 	-lplibsg -lplibul 
-metar_PLIB_LIBS = -lplibnet -lplibul 
 endif
 
 if HAVE_FRAMEWORK_OSG
@@ -133,9 +131,8 @@ metar_SOURCES = metar_main.cxx
 
 metar_LDADD = \
         -lsgenvironment -lsgio -lsgbucket -lsgmisc -lsgstructure -lsgdebug \
-        $(metar_PLIB_LIBS) $(network_LIBS) \
+        $(network_LIBS) \
         -lz $(base_LIBS)
 
-metar_LDFLAGS = $(metar_PLIB_FW)
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

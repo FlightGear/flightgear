@@ -48,14 +48,13 @@
 #include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/math/sg_random.h>
+#include <simgear/io/raw_socket.hxx>
 
 #include <Time/light.hxx>
-#include <Include/general.hxx>
 #include <Aircraft/replay.hxx>
 #include <Cockpit/cockpit.hxx>
 #include <Cockpit/hud.hxx>
 #include <Model/panelnode.hxx>
-#include <Model/modelmgr.hxx>
 #include <Model/acmodel.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
@@ -86,9 +85,6 @@
 using namespace flightgear;
 
 using std::cerr;
-
-// This is a record containing a bit of global housekeeping information
-FGGeneral general;
 
 // Specify our current idle function state.  This is used to run all
 // our initializations out of the idle callback so that we can get a
@@ -136,11 +132,6 @@ static void fgMainLoop( void ) {
     // compute simulated time (allowing for pause, warp, etc) and
     // real elapsed time
     timeMgr->computeTimeDeltas(sim_dt, real_dt);
-    
-    if (globals->get_warp_delta() != 0) {
-        FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
-        l->update( 0.5 );
-    }
 
     // update magvar model
     globals->get_mag()->update( longitude->getDoubleValue()
@@ -150,11 +141,6 @@ static void fgMainLoop( void ) {
                                 altitude->getDoubleValue() * SG_FEET_TO_METER,
                                 globals->get_time_params()->getJD() );
 
-
-    // Update any multiplayer's network queues, the AIMultiplayer
-    // implementation is an AI model and depends on that
-    globals->get_multiplayer_mgr()->Update();
-
 #if ENABLE_ATCDCL  
     // Run ATC subsystem
     if (fgGetBool("/sim/atc/enabled"))
@@ -162,30 +148,6 @@ static void fgMainLoop( void ) {
 #endif  
     
     globals->get_subsystem_mgr()->update(sim_dt);
-    globals->get_aircraft_model()->update(sim_dt);
-    
-    //
-    // Tile Manager updates - see if we need to load any new scenery tiles.
-    //   this code ties together the fdm, viewer and scenery classes...
-    //   we may want to move this to its own class at some point
-    //
-    double visibility_meters = fgGetDouble("/environment/visibility-m");
-    globals->get_tile_mgr()->prep_ssg_nodes( visibility_meters );
-
-    // update tile manager for view...
-    SGVec3d viewPos = globals->get_current_view()->get_view_pos();
-    SGGeod geodViewPos = SGGeod::fromCart(viewPos);
-    globals->get_tile_mgr()->update(geodViewPos, visibility_meters);
-
-    // run Nasal's settimer() loops right before the view manager
-    globals->get_event_mgr()->update(sim_dt);
-
-    // pick up model coordidnates that Nasal code may have set relative to the
-    // aircraft's
-    globals->get_model_mgr()->update(sim_dt);
-
-    // update the view angle as late as possible, but before sound calculations
-    globals->get_viewmgr()->update(real_dt);
 
     // Update the sound manager last so it can use the CPU while the GPU
     // is processing the scenery (doubled the frame-rate for me) -EMH-
@@ -238,7 +200,6 @@ static void fgMainLoop( void ) {
               SGRawValueFunctions<const char *>(0, fgSetNewSoundDevice), false);
     }
     simgear::AtomicChangeListener::fireChangeListeners();
-    fgRequestRedraw();
 
     SG_LOG( SG_ALL, SG_DEBUG, "" );
 }
@@ -278,21 +239,23 @@ struct GeneralInitOperation : public GraphicsContextOperation
     }
     void run(osg::GraphicsContext* gc)
     {
-        general.set_glVendor( (char *)glGetString ( GL_VENDOR ) );
-        general.set_glRenderer( (char *)glGetString ( GL_RENDERER ) );
-        general.set_glVersion( (char *)glGetString ( GL_VERSION ) );
-        SG_LOG( SG_GENERAL, SG_INFO, general.get_glVendor() );
-        SG_LOG( SG_GENERAL, SG_INFO, general.get_glRenderer() );
-        SG_LOG( SG_GENERAL, SG_INFO, general.get_glVersion() );
+        SGPropertyNode* simRendering = fgGetNode("/sim/rendering");
+        
+        simRendering->setStringValue("gl-vendor", (char*) glGetString(GL_VENDOR));
+        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_VENDOR));
+        
+        simRendering->setStringValue("gl-renderer", (char*) glGetString(GL_RENDERER));
+        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_RENDERER));
+        
+        simRendering->setStringValue("gl-version", (char*) glGetString(GL_VERSION));
+        SG_LOG( SG_GENERAL, SG_INFO, glGetString(GL_VERSION));
 
         GLint tmp;
         glGetIntegerv( GL_MAX_TEXTURE_SIZE, &tmp );
-        general.set_glMaxTexSize( tmp );
-        SG_LOG ( SG_GENERAL, SG_INFO, "Max texture size = " << tmp );
+        simRendering->setIntValue("max-texture-size", tmp);
 
         glGetIntegerv( GL_DEPTH_BITS, &tmp );
-        general.set_glDepthBits( tmp );
-        SG_LOG ( SG_GENERAL, SG_INFO, "Depth buffer bits = " << tmp );
+        simRendering->setIntValue("depth-buffer-bits", tmp);
     }
 };
 
@@ -402,35 +365,12 @@ static void fgIdleFunction ( void ) {
         globals->set_tile_mgr( new FGTileMgr );
 
 
-        ////////////////////////////////////////////////////////////////////
-        // Initialize the general model subsystem.
-        ////////////////////////////////////////////////////////////////////
-        globals->set_model_mgr(new FGModelMgr);
-        globals->get_model_mgr()->init();
-        globals->get_model_mgr()->bind();
         fgSplashProgress("loading aircraft");
 
 
     } else if ( idle_state == 5 ) {
         idle_state++;
 
-        ////////////////////////////////////////////////////////////////////
-        // Initialize the 3D aircraft model subsystem (has a dependency on
-        // the scenery subsystem.)
-        ////////////////////////////////////////////////////////////////////
-        FGAircraftModel* acm = new FGAircraftModel;
-        globals->set_aircraft_model(acm);
-        //globals->add_subsystem("aircraft-model", acm);
-        acm->init();
-        acm->bind();
-
-        ////////////////////////////////////////////////////////////////////
-        // Initialize the view manager subsystem.
-        ////////////////////////////////////////////////////////////////////
-        FGViewMgr *viewmgr = new FGViewMgr;
-        globals->set_viewmgr( viewmgr );
-        viewmgr->init();
-        viewmgr->bind();
         fgSplashProgress("generating sky elements");
 
 
@@ -576,7 +516,7 @@ static void upper_case_property(const char *name)
 
 
 // Main top level initialization
-bool fgMainInit( int argc, char **argv ) {
+int fgMainInit( int argc, char **argv ) {
 
     // set default log levels
     sglog().setLogLevels( SG_ALL, SG_ALERT );
@@ -649,8 +589,8 @@ bool fgMainInit( int argc, char **argv ) {
     fgRegisterIdleHandler( &fgIdleFunction );
     fgRegisterDrawHandler( &FGRenderer::update );
 
-    // Initialize plib net interface
-    netInit( &argc, argv );
+    // Initialize sockets (WinSock needs this)
+    simgear::Socket::initSockets();
 
     // Clouds3D requires an alpha channel
     fgOSOpenWindow(true /* request stencil buffer */);
@@ -660,11 +600,14 @@ bool fgMainInit( int argc, char **argv ) {
     fgSplashInit();
 
     // pass control off to the master event handler
-    fgOSMainLoop();
-
-    // we never actually get here ... but to avoid compiler warnings,
-    // etc.
-    return false;
+    int result = fgOSMainLoop();
+    
+    // clean up here; ensure we null globals to avoid
+    // confusing the atexit() handler
+    delete globals;
+    globals = NULL;
+    
+    return result;
 }
 
 

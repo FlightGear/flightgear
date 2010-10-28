@@ -32,8 +32,7 @@
 #include <ATCDCL/ATCutils.hxx>
 #include <Main/viewer.hxx>
 
-#include <osg/GLU>
-
+#include <simgear/math/project.hxx>
 
 // int x, int y, int width, int height, float scale_data, bool working)
 
@@ -98,11 +97,6 @@ void runway_instr::draw()
         double sPitch = sin(pitch), cPitch = cos(pitch),
                sYaw = sin(yaw), cYaw = cos(yaw);
 
-        //Assuming that the "Cockpit View" is always at position zero!!!
-        if (curr_view_id != 0) {
-            globals->get_viewmgr()->set_view(0);
-            globals->get_viewmgr()->copyToCurrent();
-        }
         //Set the camera to the cockpit view to get the view of the runway from the cockpit
         // OSGFIXME
 //         ssgSetCamera((sgVec4 *)cockpit_view->get_VIEW());
@@ -134,8 +128,9 @@ void runway_instr::draw()
         //Calculate the 2D points via gluProject
         int result = GL_TRUE;
         for (int i = 0; i < 6; i++) {
-            result = gluProject(points3d[i][0], points3d[i][1], points3d[i][2], mm,
-                    pm, view, &points2d[i][0], &points2d[i][1], &points2d[i][2]);
+            result = simgear::project(points3d[i][0], points3d[i][1], points3d[i][2],
+                                      mm, pm, view,
+                                      &points2d[i][0], &points2d[i][1], &points2d[i][2]);
         }
         //set the line width based on our distance from the runway
         setLineWidth();
@@ -156,15 +151,6 @@ void runway_instr::draw()
             drawArrow(); //draw indication arrow
         }
 
-        //Restore the current view and any offsets
-        if (curr_view_id != 0) {
-            globals->get_viewmgr()->set_view(curr_view_id);
-            globals->get_viewmgr()->copyToCurrent();
-            curr_view->setHeadingOffset_deg(ho);
-            curr_view->setPitchOffset_deg(po);
-            curr_view->setGoalHeadingOffset_deg(gho);
-            curr_view->setGoalPitchOffset_deg(gpo);
-        }
         //Set the camera back to the current view
         // OSGFIXME
 //         ssgSetCamera((sgVec4 *)curr_view);
@@ -239,7 +225,8 @@ bool runway_instr::drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3&
         sgdVec3 newPt;
         sgdCopyVec3(newPt, a1);
         sgdAddVec3(newPt, vec);
-        if (gluProject(newPt[0], newPt[1], newPt[2], mm, pm, view, &p2[0], &p2[1], &p2[2])
+        if (simgear::project(newPt[0], newPt[1], newPt[2], mm, pm, view,
+                             &p2[0], &p2[1], &p2[2])
                 && (p2[2] > 0 && p2[2] < 1.0)) {
             boundPoint(p1, p2);
             glBegin(GL_LINES);
@@ -255,7 +242,8 @@ bool runway_instr::drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3&
         sgdVec3 newPt;
         sgdCopyVec3(newPt, a2);
         sgdAddVec3(newPt, vec);
-        if (gluProject(newPt[0], newPt[1], newPt[2], mm, pm, view, &p1[0], &p1[1], &p1[2])
+        if (simgear::project(newPt[0], newPt[1], newPt[2], mm, pm, view,
+                             &p1[0], &p1[1], &p1[2])
                 && (p1[2] > 0 && p1[2] < 1.0)) {
             boundPoint(p2, p1);
             glBegin(GL_LINES);

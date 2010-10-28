@@ -35,7 +35,6 @@
 #include <algorithm>
 #include <cstring>
 #include <osg/Math>             // isNaN
-#include <plib/netSocket.h>
 
 #include <simgear/misc/stdint.hxx>
 #include <simgear/timing/timestamp.hxx>
@@ -366,7 +365,7 @@ FGMultiplayMgr::~FGMultiplayMgr()
 //  Initialise object
 //
 //////////////////////////////////////////////////////////////////////
-bool
+void
 FGMultiplayMgr::init (void) 
 {
   //////////////////////////////////////////////////
@@ -374,7 +373,7 @@ FGMultiplayMgr::init (void)
   //////////////////////////////////////////////////
   if (mInitialised) {
     SG_LOG(SG_NETWORK, SG_WARN, "FGMultiplayMgr::init - already initialised");
-    return false;
+    return;
   }
   //////////////////////////////////////////////////
   //  Set members from property values
@@ -400,7 +399,7 @@ FGMultiplayMgr::init (void)
   if (rxPort <= 0) {
     SG_LOG(SG_NETWORK, SG_DEBUG,
       "FGMultiplayMgr - No receiver port, Multiplayermode disabled");
-    return (false);
+    return;
   }
   if (mCallsign.empty())
     mCallsign = "JohnDoe"; // FIXME: use getpwuid
@@ -411,21 +410,21 @@ FGMultiplayMgr::init (void)
   SG_LOG(SG_NETWORK,SG_INFO,"FGMultiplayMgr::init-callsign= "<<mCallsign);
   Close(); // Should Init be called twice, close Socket first
            // A memory leak was reported here by valgrind
-  mSocket = new netSocket();
+  mSocket = new simgear::Socket();
   if (!mSocket->open(false)) {
     SG_LOG( SG_NETWORK, SG_DEBUG,
             "FGMultiplayMgr::init - Failed to create data socket" );
-    return false;
+    return;
   }
   mSocket->setBlocking(false);
   if (mSocket->bind(rxAddress.c_str(), rxPort) != 0) {
     perror("bind");
     SG_LOG( SG_NETWORK, SG_DEBUG,
             "FGMultiplayMgr::Open - Failed to bind receive socket" );
-    return false;
+    return;
   }
+  
   mInitialised = true;
-  return true;
 } // FGMultiplayMgr::init()
 //////////////////////////////////////////////////////////////////////
 
@@ -467,12 +466,12 @@ union FGMultiplayMgr::MsgBuf
 
     T_MsgHdr* msgHdr()
     {
-        return reinterpret_cast<T_MsgHdr*>(Msg);
+        return &Header;
     }
 
     const T_MsgHdr* msgHdr() const
     {
-        return reinterpret_cast<const T_MsgHdr*>(Msg);
+        return reinterpret_cast<const T_MsgHdr*>(&Header);
     }
 
     T_PositionMsg* posMsg()
@@ -514,16 +513,17 @@ union FGMultiplayMgr::MsgBuf
      */
     xdr_data_t* propsRecvdEnd()
     {
-        return reinterpret_cast<xdr_data_t*>(Msg + msgHdr()->MsgLen);
+        return reinterpret_cast<xdr_data_t*>(Msg + Header.MsgLen);
     }
 
     const xdr_data_t* propsRecvdEnd() const
     {
-        return reinterpret_cast<const xdr_data_t*>(Msg + msgHdr()->MsgLen);
+        return reinterpret_cast<const xdr_data_t*>(Msg + Header.MsgLen);
     }
     
     xdr_data2_t double_val;
     char Msg[MAX_PACKET_SIZE];
+    T_MsgHdr Header;
 };
 
 void
@@ -710,7 +710,7 @@ FGMultiplayMgr::SendTextMessage(const string &MsgText)
 //  
 //////////////////////////////////////////////////////////////////////
 void
-FGMultiplayMgr::Update(void) 
+FGMultiplayMgr::update(double) 
 {
   if (!mInitialised)
     return;
@@ -730,7 +730,7 @@ FGMultiplayMgr::Update(void)
     //  returned will only be that of the next
     //  packet waiting to be processed.
     //////////////////////////////////////////////////
-    netAddress SenderAddress;
+    simgear::IPAddress SenderAddress;
     bytes = mSocket->recvfrom(msgBuf.Msg, sizeof(msgBuf.Msg), 0,
                               &SenderAddress);
     //////////////////////////////////////////////////
@@ -814,7 +814,7 @@ FGMultiplayMgr::Update(void)
 //////////////////////////////////////////////////////////////////////
 void
 FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
-                              const netAddress& SenderAddress, long stamp)
+                              const simgear::IPAddress& SenderAddress, long stamp)
 {
   const T_MsgHdr* MsgHdr = Msg.msgHdr();
   if (MsgHdr->MsgLen < sizeof(T_MsgHdr) + sizeof(T_PositionMsg)) {
@@ -964,7 +964,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
 //////////////////////////////////////////////////////////////////////
 void
 FGMultiplayMgr::ProcessChatMsg(const MsgBuf& Msg,
-                               const netAddress& SenderAddress)
+                               const simgear::IPAddress& SenderAddress)
 {
   const T_MsgHdr* MsgHdr = Msg.msgHdr();
   if (MsgHdr->MsgLen < sizeof(T_MsgHdr) + 1) {

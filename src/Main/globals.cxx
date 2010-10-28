@@ -45,7 +45,6 @@
 #include <Model/acmodel.hxx>
 #include <Model/modelmgr.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
-#include <Navaids/awynet.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <Navaids/navlist.hxx>
@@ -149,9 +148,7 @@ FGGlobals::FGGlobals() :
     dmelist( NULL ),
     tacanlist( NULL ),
     carrierlist( NULL ),
-    channellist( NULL ),
-    airwaynet( NULL ),
-    multiplayer_mgr( NULL )
+    channellist( NULL )    
 {
   simgear::ResourceManager::instance()->addProvider(new AircraftResourceProvider());
 }
@@ -161,23 +158,21 @@ FGGlobals::FGGlobals() :
 FGGlobals::~FGGlobals() 
 {
     delete renderer;
+    renderer = NULL;
+    
 // The AIModels manager performs a number of actions upon
     // Shutdown that implicitly assume that other subsystems
     // are still operational (Due to the dynamic allocation and
     // deallocation of AIModel objects. To ensure we can safely
     // shut down all subsystems, make sure we take down the 
     // AIModels system first.
-    subsystem_mgr->get_group(SGSubsystemMgr::GENERAL)->remove_subsystem("ai_model");
-    // FGInput (FGInputEvent) and FGDialog calls get_subsystem() in their destructors, 
-    // which is not safe since some subsystem are already deleted but can be referred.
-    // So these subsystems must be deleted prior to deleting subsystem_mgr unless
-    // ~SGSubsystemGroup and SGSubsystemMgr::get_subsystem are changed not to refer to
-    // deleted subsystems.
-    subsystem_mgr->get_group(SGSubsystemMgr::GENERAL)->remove_subsystem("input");
-    subsystem_mgr->get_group(SGSubsystemMgr::GENERAL)->remove_subsystem("gui");
+    SGSubsystem* ai = subsystem_mgr->remove("ai_model");
+    ai->unbind();
+    delete ai;
+    
     subsystem_mgr->unbind();
     delete subsystem_mgr;
-    delete event_mgr;
+    
     delete time_params;
     delete mag;
     delete matlib;
@@ -186,14 +181,9 @@ FGGlobals::~FGGlobals()
 
     delete ATC_mgr;
     delete controls;
-    delete viewmgr;
 
-//     delete commands;
-    delete acmodel;
-    delete model_mgr;
     delete channel_options_list;
     delete initial_waypoints;
-    delete tile_mgr;
     delete scenery;
     delete fontcache;
 
@@ -204,8 +194,6 @@ FGGlobals::~FGGlobals()
     delete tacanlist;
     delete carrierlist;
     delete channellist;
-    delete airwaynet;
-    delete multiplayer_mgr;
 
     soundmgr->unbind();
     delete soundmgr;

@@ -60,7 +60,7 @@ enum { KEYMOD_NONE     = 0,
 void fgOSInit(int* argc, char** argv);
 void fgOSOpenWindow(bool stencil);
 void fgOSFullScreen();
-void fgOSMainLoop();
+int fgOSMainLoop();
 void fgOSExit(int code);
 
 void fgSetMouseCursor(int cursor);
@@ -68,8 +68,6 @@ int  fgGetMouseCursor();
 void fgWarpMouse(int x, int y);
 
 int  fgGetKeyModifiers();
-
-void fgRequestRedraw();
 
 //
 // Callbacks and registration API

@@ -14,12 +14,11 @@
 #include <fstream>
 #include <sstream>
 
-#include <plib/ul.h>
-
 #include <simgear/nasal/nasal.h>
 #include <simgear/props/props.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/interpolator.hxx>
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/structure/commands.hxx>
@@ -33,6 +32,7 @@
 #include <Main/util.hxx>
 #include <Scenery/scenery.hxx>
 #include <Navaids/navrecord.hxx>
+#include <Navaids/procedure.hxx>
 
 #include "NasalSys.hxx"
 
@@ -363,15 +363,17 @@ static naRef f_directory(naContext c, naRef me, int argc, naRef* args)
 {
     if(argc != 1 || !naIsString(args[0]))
         naRuntimeError(c, "bad arguments to directory()");
-    naRef ldir = args[0];
-    ulDir* dir = ulOpenDir(naStr_data(args[0]));
-    if(!dir) return naNil();
+    
+    simgear::Dir d(SGPath(naStr_data(args[0])));
+    if(!d.exists()) return naNil();
     naRef result = naNewVector(c);
-    ulDirEnt* dent;
-    while((dent = ulReadDir(dir)))
-        naVec_append(result, naStr_fromdata(naNewString(c), dent->d_name,
-                                            strlen(dent->d_name)));
-    ulCloseDir(dir);
+
+    simgear::PathList paths = d.children(simgear::Dir::TYPE_FILE | simgear::Dir::TYPE_DIR);
+    for (unsigned int i=0; i<paths.size(); ++i) {
+      std::string p = paths[i].file();
+      naVec_append(result, naStr_fromdata(naNewString(c), p.c_str(), p.size()));
+    }
+    
     return result;
 }
 
@@ -613,6 +615,28 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
           HASHSET("ils_frequency_mhz", 17, naNum(rwy->ILS()->get_freq() / 100.0));
         }
         
+        std::vector<flightgear::SID*> sids(rwy->getSIDs());
+        naRef sidVec = naNewVector(c);
+        
+        for (unsigned int s=0; s < sids.size(); ++s) {
+          naRef procId = naStr_fromdata(naNewString(c),
+                    const_cast<char *>(sids[s]->ident().c_str()),
+                    sids[s]->ident().length());
+          naVec_append(sidVec, procId);
+        }
+        HASHSET("sids", 4, sidVec); 
+        
+        std::vector<flightgear::STAR*> stars(rwy->getSTARs());
+        naRef starVec = naNewVector(c);
+      
+        for (unsigned int s=0; s < stars.size(); ++s) {
+          naRef procId = naStr_fromdata(naNewString(c),
+                    const_cast<char *>(stars[s]->ident().c_str()),
+                    stars[s]->ident().length());
+          naVec_append(starVec, procId);
+        }
+        HASHSET("stars", 5, starVec); 
+
 #undef HASHSET
         naHash_set(rwys, rwyid, rwydata);
     }
@@ -699,18 +723,14 @@ void FGNasalSys::init()
     hashset(_globals, "__gcsave", _gcHash);
 
     // Now load the various source files in the Nasal directory
-    SGPath p(globals->get_fg_root());
-    p.append("Nasal");
-    ulDirEnt* dent;
-    ulDir* dir = ulOpenDir(p.c_str());
-    while(dir && (dent = ulReadDir(dir)) != 0) {
-        SGPath fullpath(p);
-        fullpath.append(dent->d_name);
-        SGPath file(dent->d_name);
-        if(file.extension() != "nas") continue;
-        loadModule(fullpath, file.base().c_str());
+    simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));
+    simgear::PathList scripts = nasalDir.children(simgear::Dir::TYPE_FILE, ".nas");
+    
+    for (unsigned int i=0; i<scripts.size(); ++i) {
+      SGPath fullpath(scripts[i]);
+      SGPath file = fullpath.file();
+      loadModule(fullpath, file.base().c_str());
     }
-    ulCloseDir(dir);
 
     // set signal and remove node to avoid restoring at reinit
     const char *s = "nasal-dir-initialized";

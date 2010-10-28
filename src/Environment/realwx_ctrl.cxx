@@ -55,6 +55,9 @@ public:
 protected:
     void bind();
     void unbind();
+    void update( double dt );
+
+    virtual void update( bool first, double dt ) = 0;
 
     long getMetarMaxAgeMin() const { return _max_age_n == NULL ? 0 : _max_age_n->getLongValue(); }
 
@@ -65,6 +68,7 @@ protected:
     SGPropertyNode_ptr _max_age_n;
 
     bool _enabled;
+    bool __enabled;
     TiedPropertyList _tiedProperties;
     MetarProperties  _metarProperties;
 };
@@ -83,6 +87,7 @@ BasicRealWxController::BasicRealWxController( SGPropertyNode_ptr rootNode ) :
   _ground_elevation_n( fgGetNode( "/position/ground-elev-m", true )),
   _max_age_n( fgGetNode( "/environment/params/metar-max-age-min", false ) ),
   _enabled(true),
+  __enabled(false),
   _metarProperties( fgGetNode( rootNode->getStringValue("metar", "/environment/metar"), true ) )
 {
 }
@@ -93,11 +98,13 @@ BasicRealWxController::~BasicRealWxController()
 
 void BasicRealWxController::init()
 {
+    __enabled = false;
     update(0); // fetch data ASAP
 }
 
 void BasicRealWxController::reinit()
 {
+    __enabled = false;
 }
 
 void BasicRealWxController::bind()
@@ -111,13 +118,23 @@ void BasicRealWxController::unbind()
     _tiedProperties.Untie();
 }
 
+void BasicRealWxController::update( double dt )
+{
+  if( _enabled ) {
+    update( !__enabled, dt );
+    __enabled = true;
+  } else {
+    __enabled = false;
+  }
+}
+
 /* -------------------------------------------------------------------------------- */
 
 class NoaaMetarRealWxController : public BasicRealWxController {
 public:
     NoaaMetarRealWxController( SGPropertyNode_ptr rootNode );
     virtual ~NoaaMetarRealWxController();
-    virtual void update (double delta_time_sec);
+    virtual void update (bool first, double delta_time_sec);
 
     class MetarLoadRequest {
     public:
@@ -146,12 +163,13 @@ private:
 #if defined(ENABLE_THREADS)
      class MetarLoadThread : public OpenThreads::Thread {
      public:
-         MetarLoadThread( long maxAge );
-         void requestMetar( const MetarLoadRequest & metarRequest );
-         bool hasMetar() { return _responseQueue.size() > 0; }
-         string getMetar() { return _responseQueue.pop(); }
-         virtual void run();
+        MetarLoadThread( long maxAge );
+        void requestMetar( const MetarLoadRequest & metarRequest, bool background = true );
+        bool hasMetar() { return _responseQueue.size() > 0; }
+        string getMetar() { return _responseQueue.pop(); }
+        virtual void run();
      private:
+        void fetch( const MetarLoadRequest & );
         long _maxAge;
         SGBlockingQueue <MetarLoadRequest> _requestQueue;
         SGBlockingQueue <string> _responseQueue;
@@ -188,17 +206,8 @@ NoaaMetarRealWxController::~NoaaMetarRealWxController()
 #endif // ENABLE_THREADS
 }
 
-void NoaaMetarRealWxController::update( double dt )
+void NoaaMetarRealWxController::update( bool first, double dt )
 {
-    if( !_enabled )
-        return;
-
-    if( _metarLoadThread->hasMetar() ) {
-        string metar = _metarLoadThread->getMetar();
-        SG_LOG( SG_ALL, SG_ALERT, "NoaaMetarRwalWxController::update() received METAR " << metar );
-        _metarDataNode->setStringValue( metar );
-    }
-
     _metarTimeToLive -= dt;
     _positionTimeToLive -= dt;
     _minimumRequestInterval -= dt;
@@ -234,10 +243,20 @@ void NoaaMetarRealWxController::update( double dt )
     if( !valid ) {
         if( _minimumRequestInterval <= 0 && stationId.length() > 0 ) {
             MetarLoadRequest request( stationId );
-            _metarLoadThread->requestMetar( request );
+            // load the first metar in the foreground to make sure a metar is received
+            // before the automatic runway selection code runs. All subsequent calls
+            // run in the background
+            _metarLoadThread->requestMetar( request, !first );
             _minimumRequestInterval = 10;
         }
     }
+
+    if( _metarLoadThread->hasMetar() ) {
+        string metar = _metarLoadThread->getMetar();
+        SG_LOG( SG_ALL, SG_ALERT, "NoaaMetarRwalWxController::update() received METAR " << metar );
+        _metarDataNode->setStringValue( metar );
+    }
+
 
 }
 
@@ -249,16 +268,20 @@ NoaaMetarRealWxController::MetarLoadThread::MetarLoadThread( long maxAge ) :
 {
 }
 
-void NoaaMetarRealWxController::MetarLoadThread::requestMetar( const MetarLoadRequest & metarRequest )
+void NoaaMetarRealWxController::MetarLoadThread::requestMetar( const MetarLoadRequest & metarRequest, bool background )
 {
-    if( _requestQueue.size() > 10 ) {
-        SG_LOG(SG_ALL,SG_ALERT,
-            "NoaaMetarRealWxController::MetarLoadThread::requestMetar() more than 10 outstanding METAR requests, dropping " 
-            << metarRequest._stationId );
-        return;
-    }
+    if( background ) {
+        if( _requestQueue.size() > 10 ) {
+            SG_LOG(SG_ALL,SG_ALERT,
+                "NoaaMetarRealWxController::MetarLoadThread::requestMetar() more than 10 outstanding METAR requests, dropping " 
+                << metarRequest._stationId );
+            return;
+        }
 
-    _requestQueue.push( metarRequest );
+        _requestQueue.push( metarRequest );
+    } else {
+        fetch( metarRequest );
+    }
 }
 
 void NoaaMetarRealWxController::MetarLoadThread::run()
@@ -269,33 +292,39 @@ void NoaaMetarRealWxController::MetarLoadThread::run()
         if( request._stationId.size() == 0 )
             break;
 
-       SGSharedPtr<FGMetar> result = NULL;
-
-        try {
-            result = new FGMetar( request._stationId, request._proxyHost, request._proxyPort, request._proxyAuth );
-        } catch (const sg_io_exception& e) {
-            SG_LOG( SG_GENERAL, SG_WARN, "NoaaMetarRealWxController::fetchMetar(): can't get METAR for " 
-                                        << request._stationId << ":" << e.getFormattedMessage().c_str() );
-            continue;
-        }
-
-        string reply = result->getData();
-        std::replace(reply.begin(), reply.end(), '\n', ' ');
-        string metar = simgear::strutils::strip( reply );
-
-        if( metar.empty() ) {
-            SG_LOG( SG_GENERAL, SG_WARN, "NoaaMetarRealWxController::fetchMetar(): dropping empty METAR for " 
-                                        << request._stationId );
-        }
-
-        if( _maxAge && result->getAge_min() > _maxAge ) {
-            SG_LOG( SG_GENERAL, SG_ALERT, "NoaaMetarRealWxController::fetchMetar(): dropping outdated METAR " 
-                                         << metar );
-            return;
-        }
-
-        _responseQueue.push( metar );
+        fetch( request );
     }
+}
+
+void NoaaMetarRealWxController::MetarLoadThread::fetch( const MetarLoadRequest & request )
+{
+   SGSharedPtr<FGMetar> result = NULL;
+
+    try {
+        result = new FGMetar( request._stationId, request._proxyHost, request._proxyPort, request._proxyAuth );
+    } catch (const sg_io_exception& e) {
+        SG_LOG( SG_GENERAL, SG_WARN, "NoaaMetarRealWxController::fetchMetar(): can't get METAR for " 
+                                    << request._stationId << ":" << e.getFormattedMessage().c_str() );
+        return;
+    }
+
+    string reply = result->getData();
+    std::replace(reply.begin(), reply.end(), '\n', ' ');
+    string metar = simgear::strutils::strip( reply );
+
+    if( metar.empty() ) {
+        SG_LOG( SG_GENERAL, SG_WARN, "NoaaMetarRealWxController::fetchMetar(): dropping empty METAR for " 
+                                    << request._stationId );
+        return;
+    }
+
+    if( _maxAge && result->getAge_min() > _maxAge ) {
+        SG_LOG( SG_GENERAL, SG_ALERT, "NoaaMetarRealWxController::fetchMetar(): dropping outdated METAR " 
+                                     << metar );
+        return;
+    }
+
+    _responseQueue.push( metar );
 }
 #endif
 

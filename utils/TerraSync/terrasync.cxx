@@ -47,9 +47,7 @@
 #include <deque>
 #include <map>
 
-#include <plib/netSocket.h>
-#include <plib/ul.h>
-
+#include <simgear/io/raw_socket.hxx>
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/misc/sg_path.hxx>
 
@@ -115,7 +113,7 @@ static void usage( const string& prog ) {
 deque<string> waitingTiles;
 typedef map<string,time_t> CompletedTiles;
 CompletedTiles completedTiles;
-netSocket theSocket;
+simgear::Socket theSocket;
 
 #ifdef HAVE_SVN_CLIENT_H
 
@@ -513,7 +511,7 @@ int main( int argc, char **argv ) {
     }
     
     // Must call this before any other net stuff
-    netInit( &argc,argv );
+    simgear::Socket::initSockets();
 
     if ( ! theSocket.open( false ) ) {  // open a UDP socket
         printf("error opening socket\n");
@@ -624,7 +622,11 @@ int main( int argc, char **argv ) {
 	    terminating = true;
 	} else
 
-        ulSleep( 1 );
+        #ifdef _WIN32
+                Sleep(1000);
+#else
+	        sleep(1);
+#endif
     } // while !terminating
         
     return 0;

@@ -10,14 +10,13 @@
 #include <iostream>
 #include <cstring>
 #include <sys/types.h>
-#include <plib/ul.h>
 
 #include <plib/pu.h>
-#include <plib/ul.h>
 
 #include <simgear/compiler.h>
 #include <simgear/structure/exception.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/misc/sg_dir.hxx>
 
 #include <boost/algorithm/string/case_conv.hpp>
 
@@ -56,11 +55,8 @@ void
 NewGUI::init ()
 {
     setStyle();
-    char path1[1024];
-    char path2[1024];
-    ulMakePath(path1, globals->get_fg_root().c_str(), "gui");
-    ulMakePath(path2, path1, "dialogs");
-    readDir(path2);
+    SGPath p(globals->get_fg_root(), "gui/dialogs");
+    readDir(p);
     _menubar->init();
 }
 
@@ -233,19 +229,6 @@ NewGUI::setMenuBarVisible (bool visible)
         _menubar->hide();
 }
 
-static bool
-test_extension (const char * path, const char * ext)
-{
-    int pathlen = strlen(path);
-    int extlen = strlen(ext);
-
-    for (int i = 1; i <= pathlen && i <= extlen; i++) {
-        if (path[pathlen-i] != ext[extlen-i])
-            return false;
-    }
-    return true;
-}
-
 void
 NewGUI::newDialog (SGPropertyNode* props)
 {
@@ -260,49 +243,31 @@ NewGUI::newDialog (SGPropertyNode* props)
 }
 
 void
-NewGUI::readDir (const char * path)
+NewGUI::readDir (const SGPath& path)
 {
-    ulDir * dir = ulOpenDir(path);
-
-    if (dir == 0) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Failed to read GUI files from "
-               << path);
-        return;
+    simgear::Dir dir(path);
+    simgear::PathList xmls = dir.children(simgear::Dir::TYPE_FILE, ".xml");
+    
+    for (unsigned int i=0; i<xmls.size(); ++i) {
+      SGPropertyNode * props = new SGPropertyNode;
+      try {
+          readProperties(xmls[i].str(), props);
+      } catch (const sg_exception &) {
+          SG_LOG(SG_INPUT, SG_ALERT, "Error parsing dialog "
+                 << xmls[i].str());
+          delete props;
+          continue;
+      }
+      SGPropertyNode *nameprop = props->getNode("name");
+      if (!nameprop) {
+          SG_LOG(SG_INPUT, SG_WARN, "dialog " << xmls[i].str()
+             << " has no name; skipping.");
+          delete props;
+          continue;
+      }
+      string name = nameprop->getStringValue();
+      _dialog_props[name] = props;
     }
-
-    for (ulDirEnt * dirEnt = ulReadDir(dir);
-         dirEnt != 0;
-         dirEnt = ulReadDir(dir)) {
-
-        char subpath[1024];
-
-        ulMakePath(subpath, path, dirEnt->d_name);
-
-        if (!dirEnt->d_isdir && test_extension(subpath, ".xml")) {
-            SGPropertyNode * props = new SGPropertyNode;
-            try {
-                readProperties(subpath, props);
-            } catch (const sg_exception &) {
-                SG_LOG(SG_INPUT, SG_ALERT, "Error parsing dialog "
-                       << subpath);
-                delete props;
-                continue;
-            }
-            SGPropertyNode *nameprop = props->getNode("name");
-            if (!nameprop) {
-                SG_LOG(SG_INPUT, SG_WARN, "dialog " << subpath
-                   << " has no name; skipping.");
-                delete props;
-                continue;
-            }
-            string name = nameprop->getStringValue();
-            if (_dialog_props[name])
-                delete (SGPropertyNode *)_dialog_props[name];
-
-            _dialog_props[name] = props;
-        }
-    }
-    ulCloseDir(dir);
 }
 
 

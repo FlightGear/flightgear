@@ -29,6 +29,8 @@
 #include <poll.h>
 #include <linux/input.h>
 #include <dbus/dbus.h>
+#include <fcntl.h>
+
 
 struct TypeCode {
   unsigned type;
@@ -238,7 +240,7 @@ static EventNameByType EVENT_NAME_BY_TYPE;
 
 struct ltstr {
   bool operator()(const char * s1, const char * s2 ) const {
-    return strcmp( s1, s2 ) < 0;
+    return string(s1).compare( s2 ) < 0;
   }
 };
 

@@ -211,7 +211,8 @@ do_exit (const SGPropertyNode * arg)
             SG_LOG(SG_INPUT, SG_DEBUG, "Finished Saving user settings");
         }
     }
-    fgExit(arg->getIntValue("status", 0));
+    
+    fgOSExit(arg->getIntValue("status", 0));
     return true;
 }
 
@@ -391,9 +392,11 @@ static bool
 do_panel_load (const SGPropertyNode * arg)
 {
   string panel_path =
-    arg->getStringValue("path",
-			fgGetString("/sim/panel/path",
-				    "Panels/Default/default.xml"));
+    arg->getStringValue("path", fgGetString("/sim/panel/path"));
+  if (panel_path.empty()) {
+    return false;
+  }
+  
   FGPanel * new_panel = fgReadPanel(panel_path);
   if (new_panel == 0) {
     SG_LOG(SG_INPUT, SG_ALERT,
@@ -555,15 +558,9 @@ do_tile_cache_reload (const SGPropertyNode * arg)
     if ( !freeze ) {
 	fgSetBool("/sim/freeze/master", true);
     }
-    if ( globals->get_tile_mgr()->init() ) {
-	// Load the local scenery data
-        double visibility_meters = fgGetDouble("/environment/visibility-m");
-	globals->get_tile_mgr()->update( visibility_meters );
-    } else {
-	SG_LOG( SG_GENERAL, SG_ALERT, 
-		"Error in Tile Manager initialization!" );
-	exit(-1);
-    }
+
+    globals->get_subsystem("tile-manager")->reinit();
+
     if ( !freeze ) {
 	fgSetBool("/sim/freeze/master", false);
     }
@@ -1239,8 +1236,6 @@ do_presets_commit (const SGPropertyNode * arg)
     fgInitPosition();
 
     fgReInitSubsystems();
-
-    globals->get_tile_mgr()->update( fgGetDouble("/environment/visibility-m") );
 
 #if 0
     if ( ! fgGetBool("/sim/presets/onground") ) {

@@ -37,6 +37,9 @@
 
 #include "runways.hxx"
 
+#include <Airports/simple.hxx>
+#include <Navaids/procedure.hxx>
+
 using std::string;
 
 static std::string cleanRunwayNo(const std::string& aRwyNo)
@@ -167,4 +170,31 @@ void FGRunway::setReciprocalRunway(FGRunway* other)
   
   _reciprocal = other;
 }
+
+std::vector<flightgear::SID*> FGRunway::getSIDs()
+{
+  std::vector<flightgear::SID*> result;
+  for (unsigned int i=0; i<_airport->numSIDs(); ++i) {
+    flightgear::SID* s = _airport->getSIDByIndex(i);
+    if (s->isForRunway(this)) {
+      result.push_back(s);
+    }
+  } // of SIDs at the airport iteration
+  
+  return result;
+}
+
+std::vector<flightgear::STAR*> FGRunway::getSTARs()
+{
+  std::vector<flightgear::STAR*> result;
+  for (unsigned int i=0; i<_airport->numSTARs(); ++i) {
+    flightgear::STAR* s = _airport->getSTARByIndex(i);
+    if (s->isForRunway(this)) {
+      result.push_back(s);
+    }
+  } // of STARs at the airport iteration
+  
+  return result;
+}
+
 

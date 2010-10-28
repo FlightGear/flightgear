@@ -4,7 +4,7 @@
 
 void fgUpdateTimeDepCalcs();
 
-bool fgMainInit( int argc, char **argv );
+int fgMainInit( int argc, char **argv );
 
 
 extern int idle_state;

@@ -60,13 +60,10 @@ class FGAircraftModel;
 class FGControls;
 class FGFlightPlanDispatcher;
 class FGNavList;
-class FGAirwayNetwork;
 class FGTACANList;
-class FGLight;
 class FGModelMgr;
 class FGRouteMgr;
 class FGScenery;
-class FGMultiplayMgr;
 class FGPanel;
 class FGTileMgr;
 class FGViewMgr;
@@ -173,10 +170,6 @@ private:
     FGNavList *tacanlist;
     FGNavList *carrierlist;
     FGTACANList *channellist;
-    FGAirwayNetwork *airwaynet;
-
-    //Mulitplayer managers
-    FGMultiplayMgr *multiplayer_mgr;
 
     /// roots of Aircraft trees
     string_list fg_aircraft_dirs;
@@ -289,13 +282,6 @@ public:
       model_mgr = mgr;
     }
 
-    inline FGMultiplayMgr *get_multiplayer_mgr () { return multiplayer_mgr; }
-
-    inline void set_multiplayer_mgr (FGMultiplayMgr * mgr)
-    {
-      multiplayer_mgr = mgr;
-    }
-
     inline string_list *get_channel_options_list () {
 	return channel_options_list;
     }
@@ -333,10 +319,6 @@ public:
     inline void set_carrierlist( FGNavList *n ) { carrierlist = n; }
     inline FGTACANList *get_channellist() const { return channellist; }
     inline void set_channellist( FGTACANList *c ) { channellist = c; }
-
-    inline FGAirwayNetwork *get_airwaynet() const { return airwaynet; }
-    inline void set_airwaynet( FGAirwayNetwork *a ) { airwaynet = a; }
-
 
    /**
      * Save the current state as the initial state.

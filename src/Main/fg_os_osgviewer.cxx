@@ -46,7 +46,6 @@
 #include <osgViewer/ViewerEventHandlers>
 #include <osgViewer/Viewer>
 
-#include <Include/general.hxx>
 #include <Scenery/scenery.hxx>
 #include "fg_os.hxx"
 #include "fg_props.hxx"
@@ -271,7 +270,7 @@ void fgOSExit(int code)
     status = code;
 }
 
-void fgOSMainLoop()
+int fgOSMainLoop()
 {
     ref_ptr<FGEventHandler> manipulator
         = globals->get_renderer()->getEventHandler();
@@ -287,11 +286,16 @@ void fgOSMainLoop()
             (*drawFunc)();
         viewer->frame();
     }
-    fgExit(status);
+    
+    return status;
 }
 
 int fgGetKeyModifiers()
 {
+    if (!globals->get_renderer()) { // happens during shutdown
+      return 0;
+    }
+    
     return globals->get_renderer()->getEventHandler()->getCurrentModifiers();
 }
 

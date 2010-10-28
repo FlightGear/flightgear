@@ -27,7 +27,7 @@
 #include <iostream>
 #include <simgear/route/waypoint.hxx>
 
-#include <Navaids/awynet.hxx>
+#include <Airports/simple.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/dynamics.hxx>
 
@@ -40,6 +40,7 @@
 
 using std::iostream;
 
+/*
 void FGAIFlightPlan::evaluateRoutePart(double deplat,
 				       double deplon,
 				       double arrlat,
@@ -97,7 +98,7 @@ void FGAIFlightPlan::evaluateRoutePart(double deplat,
 	}
 }
 
-
+*/
 /*
 void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
 				  FGAirport *arr, double latitude,

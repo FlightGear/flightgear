@@ -40,7 +40,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props_io.hxx>
 
-#include <osg/GLU>
+#include <osg/Matrixf>
 
 #include <GUI/new_gui.hxx>           // FGFontCache
 #include <Main/globals.hxx>
@@ -338,27 +338,31 @@ void fgUpdateHUD( osg::State* state ) {
 
 void fgUpdateHUDVirtual(osg::State* state)
 {
+    using namespace osg;
     FGViewer* view = globals->get_current_view();
 
     // Standard fgfs projection, with essentially meaningless clip
     // planes (we'll map the whole HUD plane to z=-1)
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
-    glLoadIdentity();
-    gluPerspective(view->get_v_fov(), 1/view->get_aspect_ratio(), 0.1, 10);
+    Matrixf proj
+        = Matrixf::perspective(view->get_v_fov(), 1/view->get_aspect_ratio(),
+                               0.1, 10);
+    glLoadMatrix(proj.ptr());
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
-    glLoadIdentity();
 
     // Standard fgfs view direction computation
-    float lookat[3];
+    Vec3f lookat;
     lookat[0] = -sin(SG_DEGREES_TO_RADIANS * view->getHeadingOffset_deg());
     lookat[1] = tan(SG_DEGREES_TO_RADIANS * view->getPitchOffset_deg());
     lookat[2] = -cos(SG_DEGREES_TO_RADIANS * view->getHeadingOffset_deg());
     if (fabs(lookat[1]) > 9999)
         lookat[1] = 9999; // FPU sanity
-    gluLookAt(0, 0, 0, lookat[0], lookat[1], lookat[2], 0, 1, 0);
+    Matrixf mv = Matrixf::lookAt(Vec3f(0.0, 0.0, 0.0), lookat,
+                                 Vec3f(0.0, 1.0, 0.0));
+    glLoadMatrix(mv.ptr());
 
     // Map the -1:1 square to a 55.0x41.25 degree wide patch at z=1.
     // This is the default fgfs field of view, which the HUD files are
@@ -391,10 +395,11 @@ void fgUpdateHUDVirtual(osg::State* state)
 void fgUpdateHUD( osg::State* state, GLfloat x_start, GLfloat y_start,
                   GLfloat x_end, GLfloat y_end )
 {
+    using namespace osg;
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
-    glLoadIdentity();
-    gluOrtho2D(x_start, x_end, y_start, y_end);
+    Matrixf proj = Matrixf::ortho2D(x_start, x_end, y_start, y_end);
+    glLoadMatrix(proj.ptr());
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();

@@ -2056,14 +2056,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\FDM\JSBSim\FGState.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\FDM\JSBSim\FGState.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\FDM\JSBSim\JSBSim.cxx"
 				>
 			</File>
@@ -4203,6 +4195,46 @@
 				RelativePath="..\..\..\src\Navaids\positioned.hxx"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\src\Navaids\airways.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Navaids\airways.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Navaids\procedure.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Navaids\procedure.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Navaids\route.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Navaids\route.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Navaids\routePath.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Navaids\routePath.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Navaids\waypoint.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Navaids\waypoint.hxx"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Lib_Network"
@@ -4853,6 +4885,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\Instrumentation\gps.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Instrumentation\rnav_waypt_controller.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Instrumentation\rnav_waypt_controller.hxx"
 				>
 			</File>
 			<File

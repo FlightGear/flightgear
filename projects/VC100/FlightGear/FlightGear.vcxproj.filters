@@ -1551,6 +1551,24 @@
     <ClCompile Include="..\..\..\src\FDM\JSBSim\math\FGModelFunctions.cpp">
       <Filter>Lib_JSBSim\math</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\Navaids\airways.cxx">
+      <Filter>Lib_Navaids</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Navaids\procedure.cxx">
+      <Filter>Lib_Navaids</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Navaids\route.cxx">
+      <Filter>Lib_Navaids</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Navaids\routePath.cxx">
+      <Filter>Lib_Navaids</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Navaids\waypoint.cxx">
+      <Filter>Lib_Navaids</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\Instrumentation\rnav_waypt_controller.cxx">
+      <Filter>Lib_Instrumentation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\Aircraft\controls.hxx">
@@ -2926,6 +2944,24 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\FDM\JSBSim\math\FGModelFunctions.h">
       <Filter>Lib_JSBSim\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Navaids\airways.hxx">
+      <Filter>Lib_Navaids</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Navaids\procedure.hxx">
+      <Filter>Lib_Navaids</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Navaids\route.hxx">
+      <Filter>Lib_Navaids</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Navaids\routePath.hxx">
+      <Filter>Lib_Navaids</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Navaids\waypoint.hxx">
+      <Filter>Lib_Navaids</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Instrumentation\rnav_waypt_controller.hxx">
+      <Filter>Lib_Instrumentation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

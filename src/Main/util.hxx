@@ -50,17 +50,6 @@ extern void fgSetupWind (double min_hdg, double max_hdg,
                          double speed, double gust);
 
 /**
- * Clean up and exit FlightGear.
- *
- * This function makes sure that network connections and I/O streams
- * are cleaned up.
- *
- * @param status The exit status to pass to the operating system.
- */
-extern void fgExit (int status = 0);
-
-
-/**
  * Move a value towards a target.
  *
  * This function was originally written by Alex Perry.

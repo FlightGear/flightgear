@@ -105,19 +105,6 @@ fgSetupWind (double min_hdg, double max_hdg, double speed, double gust)
               speed);
 }
 
-
-void
-fgExit (int status)
-{
-#ifdef OSG_LIBRARY_STATIC
-    osgDB::Registry::instance( true);
-#endif
-
-    SG_LOG(SG_GENERAL, SG_INFO, "Exiting FlightGear with status " << status);
-    std::exit(status);
-}
-
-
 // Originally written by Alex Perry.
 double
 fgGetLowPass (double current, double target, double timeratio)

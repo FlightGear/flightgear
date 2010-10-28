@@ -115,14 +115,8 @@ HUD::~HUD()
     _scr_heightN->removeChangeListener(this);
     _unitsN->removeChangeListener(this);
     delete _font_renderer;
-    delete _clip_box;
-
-    deque<Item *>::const_iterator it, end = _items.end();
-    for (it = _items.begin(); it != end; ++it)
-        delete *it;
-    end = _ladders.end();
-    for (it = _ladders.begin(); it != end; ++it)
-        delete *it;
+    
+    deinit();
 }
 
 
@@ -146,6 +140,27 @@ void HUD::init()
     _path->fireValueChanged();
 }
 
+void HUD::deinit()
+{
+  deque<Item *>::const_iterator it, end = _items.end();
+    for (it = _items.begin(); it != end; ++it)
+        delete *it;
+    end = _ladders.end();
+    for (it = _ladders.begin(); it != end; ++it)
+        delete *it;
+        
+  _items.clear();
+  _ladders.clear();
+  
+  delete _clip_box;
+  _clip_box = NULL;
+}
+
+void HUD::reinit()
+{
+    deinit();
+    _path->fireValueChanged();
+}
 
 void HUD::update(double dt)
 {
@@ -186,27 +201,31 @@ void HUD::draw(osg::State&)
 
 void HUD::draw3D()
 {
+    using namespace osg;
     FGViewer* view = globals->get_current_view();
 
     // Standard fgfs projection, with essentially meaningless clip
     // planes (we'll map the whole HUD plane to z=-1)
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
-    glLoadIdentity();
-    gluPerspective(view->get_v_fov(), 1.0 / view->get_aspect_ratio(), 0.1, 10);
+    Matrixf proj
+        = Matrixf::perspective(view->get_v_fov(), 1/view->get_aspect_ratio(),
+                               0.1, 10);
+    glLoadMatrix(proj.ptr());
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
-    glLoadIdentity();
 
     // Standard fgfs view direction computation
-    float lookat[3];
+    Vec3f lookat;
     lookat[0] = -sin(SG_DEGREES_TO_RADIANS * view->getHeadingOffset_deg());
     lookat[1] = tan(SG_DEGREES_TO_RADIANS * view->getPitchOffset_deg());
     lookat[2] = -cos(SG_DEGREES_TO_RADIANS * view->getHeadingOffset_deg());
     if (fabs(lookat[1]) > 9999)
         lookat[1] = 9999; // FPU sanity
-    gluLookAt(0, 0, 0, lookat[0], lookat[1], lookat[2], 0, 1, 0);
+    Matrixf mv = Matrixf::lookAt(Vec3f(0.0, 0.0, 0.0), lookat,
+                                 Vec3f(0.0, 1.0, 0.0));
+    glLoadMatrix(mv.ptr());
 
     // Map the -1:1 square to a 55.0x41.25 degree wide patch at z=1.
     // This is the default fgfs field of view, which the HUD files are
@@ -236,10 +255,11 @@ void HUD::draw3D()
 
 void HUD::draw2D(GLfloat x_start, GLfloat y_start, GLfloat x_end, GLfloat y_end)
 {
+    using namespace osg;
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
-    glLoadIdentity();
-    gluOrtho2D(x_start, x_end, y_start, y_end);
+    Matrixf proj = Matrixf::ortho2D(x_start, x_end, y_start, y_end);
+    glLoadMatrix(proj.ptr());
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -323,8 +343,7 @@ int HUD::load(const char *file, float x, float y, int level, const string& inden
     const sgDebugPriority TREE = SG_INFO;
     const int MAXNEST = 10;
 
-    SGPath path(globals->get_fg_root());
-    path.append(file);
+    SGPath path(globals->resolve_maybe_aircraft_path(file));
 
     if (!level) {
         SG_LOG(SG_INPUT, TREE, endl << "load " << file);

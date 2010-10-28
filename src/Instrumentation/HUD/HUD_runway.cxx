@@ -25,7 +25,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/math/sg_geodesy.hxx>
-#include <osg/GLU>
+#include <simgear/math/project.hxx>
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
@@ -49,7 +49,6 @@ HUD::Runway::Runway(HUD *hud, const SGPropertyNode *node, float x, float y) :
     _scale_dist(node->getDoubleValue("scale-dist-nm")),
     _default_pitch(fgGetDouble("/sim/view[0]/config/pitch-pitch-deg", 0.0)),
     _default_heading(fgGetDouble("/sim/view[0]/config/pitch-heading-deg", 0.0)),
-    _cockpit_view(globals->get_viewmgr()->get_view(0)),
     _stipple_out(node->getIntValue("outer_stipple", 0xFFFF)),
     _stipple_center(node->getIntValue("center-stipple", 0xFFFF)),
     _draw_arrow(_arrow_scale > 0 ? true : false),
@@ -69,7 +68,6 @@ HUD::Runway::Runway(HUD *hud, const SGPropertyNode *node, float x, float y) :
     _top = _center_y + (_h / 2) + _y;
 }
 
-
 void HUD::Runway::draw()
 {
     _runway = get_active_runway();
@@ -87,17 +85,14 @@ void HUD::Runway::draw()
     double po = curr_view->getPitchOffset_deg();
     double ho = curr_view->getHeadingOffset_deg();
 
-    double yaw = -(_cockpit_view->getHeadingOffset_deg() - _default_heading) * SG_DEGREES_TO_RADIANS;
-    double pitch = (_cockpit_view->getPitchOffset_deg() - _default_pitch) * SG_DEGREES_TO_RADIANS;
+    FGViewer* cockpitView = globals->get_viewmgr()->get_view(0);
+    
+    double yaw = -(cockpitView->getHeadingOffset_deg() - _default_heading) * SG_DEGREES_TO_RADIANS;
+    double pitch = (cockpitView->getPitchOffset_deg() - _default_pitch) * SG_DEGREES_TO_RADIANS;
     //double roll = fgGetDouble("/sim/view[0]/config/roll-offset-deg",0.0) //TODO: adjust for default roll offset
     double sPitch = sin(pitch), cPitch = cos(pitch),
            sYaw = sin(yaw), cYaw = cos(yaw);
 
-    //Assuming that the "Cockpit View" is always at position zero!!!
-    if (curr_view_id != 0) {
-        globals->get_viewmgr()->set_view(0);
-        globals->get_viewmgr()->copyToCurrent();
-    }
     //Set the camera to the cockpit view to get the view of the runway from the cockpit
     // OSGFIXME
 //     ssgSetCamera((sgVec4 *)_cockpit_view->get_VIEW());
@@ -129,8 +124,9 @@ void HUD::Runway::draw()
     //Calculate the 2D points via gluProject
     int result = GL_TRUE;
     for (int i = 0; i < 6; i++) {
-        result = gluProject(_points3d[i][0], _points3d[i][1], _points3d[i][2], _mm,
-                _pm, _view, &_points2d[i][0], &_points2d[i][1], &_points2d[i][2]);
+        result = simgear::project(_points3d[i][0], _points3d[i][1], _points3d[i][2],
+                                  _mm, _pm, _view,
+                                  &_points2d[i][0], &_points2d[i][1], &_points2d[i][2]);
     }
     //set the line width based on our distance from the runway
     setLineWidth();
@@ -151,15 +147,6 @@ void HUD::Runway::draw()
         drawArrow(); //draw indication arrow
     }
 
-    //Restore the current view and any offsets
-    if (curr_view_id != 0) {
-        globals->get_viewmgr()->set_view(curr_view_id);
-        globals->get_viewmgr()->copyToCurrent();
-        curr_view->setHeadingOffset_deg(ho);
-        curr_view->setPitchOffset_deg(po);
-        curr_view->setGoalHeadingOffset_deg(gho);
-        curr_view->setGoalPitchOffset_deg(gpo);
-    }
     //Set the camera back to the current view
     // OSGFIXME
 //     ssgSetCamera((sgVec4 *)curr_view);
@@ -229,7 +216,8 @@ bool HUD::Runway::drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& 
         sgdVec3 newPt;
         sgdCopyVec3(newPt, a1);
         sgdAddVec3(newPt, vec);
-        if (gluProject(newPt[0], newPt[1], newPt[2], _mm, _pm, _view, &p2[0], &p2[1], &p2[2])
+        if (simgear::project(newPt[0], newPt[1], newPt[2], _mm, _pm, _view,
+                             &p2[0], &p2[1], &p2[2])
                 && (p2[2] > 0 && p2[2] < 1.0)) {
             boundPoint(p1, p2);
             glBegin(GL_LINES);
@@ -245,7 +233,8 @@ bool HUD::Runway::drawLine(const sgdVec3& a1, const sgdVec3& a2, const sgdVec3& 
         sgdVec3 newPt;
         sgdCopyVec3(newPt, a2);
         sgdAddVec3(newPt, vec);
-        if (gluProject(newPt[0], newPt[1], newPt[2], _mm, _pm, _view, &p1[0], &p1[1], &p1[2])
+        if (simgear::project(newPt[0], newPt[1], newPt[2], _mm, _pm, _view,
+                             &p1[0], &p1[1], &p1[2])
                 && (p1[2] > 0 && p1[2] < 1.0)) {
             boundPoint(p2, p1);
             glBegin(GL_LINES);

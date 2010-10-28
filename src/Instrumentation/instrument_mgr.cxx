@@ -55,7 +55,8 @@ FGInstrumentMgr::FGInstrumentMgr () :
   _explicitGps(false)
 {
     set_subsystem("od_gauge", new FGODGauge);
-    set_subsystem("hud", new HUD);
+    
+    globals->add_subsystem("hud", new HUD, SGSubsystemMgr::DISPLAY);
 }
 
 FGInstrumentMgr::~FGInstrumentMgr ()

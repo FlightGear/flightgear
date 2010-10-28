@@ -64,9 +64,5 @@ void fgRegisterMouseMotionHandler(fgMouseMotionHandler func)
     globals->get_renderer()->getEventHandler()->setMouseMotionHandler(func);
 }
 
-// Redraw "happens" every frame whether you want it or not.
-void fgRequestRedraw()
-{
-}
 
 

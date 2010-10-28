@@ -28,8 +28,7 @@
 
 #include <simgear/compiler.h>
 
-#include <string>
-
+#include <cstring>
 #include <iostream>
 #include <map>
 #include <string>
@@ -49,6 +48,24 @@ using std::string;
 const char sFG_MULTIPLAY_BID[] = "$Id$";
 const char sFG_MULTIPLAY_HID[] = FG_MULTIPLAY_HID;
 
+typedef std::set<std::string> string_set;
+
+class MPPropertyListener : public SGPropertyChangeListener
+{
+public:
+  MPPropertyListener(FGMultiplay* mp) :
+    _multiplay(mp)
+  {
+  }
+
+  virtual void childAdded(SGPropertyNode*, SGPropertyNode*)
+  {
+    _multiplay->setPropertiesChanged();
+  }
+
+private:
+  FGMultiplay* _multiplay;
+};
 
 /******************************************************************
 * Name: FGMultiplay
@@ -73,6 +90,7 @@ FGMultiplay::FGMultiplay (const string &dir, const int rate, const string &host,
 
   }
 
+  mPropertiesChanged = true;
 }
 
 
@@ -97,19 +115,38 @@ bool FGMultiplay::open() {
     }
 
     set_enabled(true);
-
-    SGPropertyNode* root = globals->get_props();
-
-    /// Build up the id to property map
     
-    for (unsigned i = 0; i < FGMultiplayMgr::numProperties; ++i) {
+    mPropertiesChanged = true;
+    
+    MPPropertyListener* pl = new MPPropertyListener(this);
+    globals->get_props()->addChangeListener(pl, false);
+    return is_enabled();
+}
+
+void FGMultiplay::findProperties()
+{
+  if (!mPropertiesChanged) {
+    return;
+  }
+  
+  mPropertiesChanged = false;
+  
+  for (unsigned i = 0; i < FGMultiplayMgr::numProperties; ++i) {
       const char* name = FGMultiplayMgr::sIdPropertyList[i].name;
-      SGPropertyNode* pNode = root->getNode(name);
-      if (pNode)
-        mPropertyMap[FGMultiplayMgr::sIdPropertyList[i].id] = pNode;
+      SGPropertyNode* pNode = globals->get_props()->getNode(name);
+      if (!pNode) {
+        continue;
+      }
+      
+      int id = FGMultiplayMgr::sIdPropertyList[i].id;
+      if (mPropertyMap.find(id) != mPropertyMap.end()) {
+        continue; // already activated
+      }
+      
+      mPropertyMap[id] = pNode;
+      SG_LOG(SG_NETWORK, SG_INFO, "activating MP property:" << pNode->getPath());
     }
 
-    return is_enabled();
 }
 
 
@@ -121,7 +158,8 @@ bool FGMultiplay::open() {
 bool FGMultiplay::process() {
   using namespace simgear;
   if (get_direction() == SG_IO_OUT) {
-
+    findProperties();
+    
     // check if we have left initialization phase. That will not provide
     // interresting data, also the freeze in simulation time hurts the
     // multiplayer clients
@@ -243,7 +281,7 @@ bool FGMultiplay::process() {
       motionInfo.properties.push_back(pData);
     }
 
-    FGMultiplayMgr* mpmgr = globals->get_multiplayer_mgr();
+    FGMultiplayMgr* mpmgr = (FGMultiplayMgr*) globals->get_subsystem("mp");
     mpmgr->SendMyPosition(motionInfo);
     
     // Now remove the data
@@ -270,9 +308,11 @@ bool FGMultiplay::process() {
 * Description:  Closes the multiplayer mgrs to stop any further
 * network processing
 ******************************************************************/
-bool FGMultiplay::close() {
-
-  FGMultiplayMgr *mgr = globals->get_multiplayer_mgr();
+bool FGMultiplay::close()
+{
+  mPropertyMap.clear();
+  
+  FGMultiplayMgr* mgr = (FGMultiplayMgr*) globals->get_subsystem("mp");
 
   if (mgr == 0) {
     return false;

@@ -45,6 +45,11 @@
 #include <Airports/pavement.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/xmlloader.hxx>
+#include <Navaids/procedure.hxx>
+#include <Navaids/waypoint.hxx>
+
+using std::vector;
+using namespace flightgear;
 
 // magic import of a helper which uses FGPositioned internals
 extern char** searchAirportNamesAndIdents(const std::string& aFilter);
@@ -185,6 +190,30 @@ FGRunway* FGAirport::findBestRunwayForHeading(double aHeading) const
   }
 
   return result;
+}
+
+FGRunway* FGAirport::findBestRunwayForPos(const SGGeod& aPos) const
+{
+  loadRunways();
+  
+  Runway_iterator it = mRunways.begin();
+  FGRunway* result = NULL;
+  double currentLowestDev = 180.0;
+  
+  for (; it != mRunways.end(); ++it) {
+    double inboundCourse = SGGeodesy::courseDeg(aPos, (*it)->end());
+    double dev = inboundCourse - (*it)->headingDeg();
+    SG_NORMALIZE_RANGE(dev, -180.0, 180.0);
+
+    dev = fabs(dev);
+    if (dev < currentLowestDev) { // new best match
+      currentLowestDev = dev;
+      result = *it;
+    }
+  } // of runway iteration
+  
+  return result;
+
 }
 
 bool FGAirport::hasHardRunwayOfLengthFt(double aLengthFt) const
@@ -350,6 +379,23 @@ void FGAirport::loadTaxiways() const
   }
 }
 
+void FGAirport::loadProcedures() const
+{
+  if (mProceduresLoaded) {
+    return;
+  }
+  
+  mProceduresLoaded = true;
+  SGPath path;
+  if (!XMLLoader::findAirportData(ident(), "procedures", path)) {
+    SG_LOG(SG_GENERAL, SG_INFO, "no procedures data available for " << ident());
+    return;
+  }
+  
+  SG_LOG(SG_GENERAL, SG_INFO, ident() << ": loading procedures from " << path.str());
+  Route::loadAirportProcedures(path, const_cast<FGAirport*>(this));
+}
+
 void FGAirport::loadSceneryDefintions() const
 {  
   // allow users to disable the scenery data in the short-term
@@ -410,6 +456,203 @@ void FGAirport::readTowerData(SGPropertyNode* aRoot)
     elevM = twrNode->getDoubleValue("elev-m");
     
   _tower_location = SGGeod::fromDegM(lon, lat, elevM);
+}
+
+bool FGAirport::buildApproach(Waypt* aEnroute, STAR* aSTAR, FGRunway* aRwy, WayptVec& aRoute)
+{
+  loadProcedures();
+
+  if ((aRwy && (aRwy->airport() != this))) {
+    throw sg_exception("invalid parameters", "FGAirport::buildApproach");
+  }
+  
+  if (aSTAR) {
+    bool ok = aSTAR->route(aRwy, aEnroute, aRoute);
+    if (!ok) {
+      SG_LOG(SG_GENERAL, SG_WARN, ident() << ": build approach, STAR " << aSTAR->ident() 
+         << " failed to route from transition " << aEnroute->ident());
+      return false;
+    }
+  } else if (aEnroute) {
+    // no a STAR specified, just use enroute point directly
+    aRoute.push_back(aEnroute);
+  }
+  
+  if (!aRwy) {
+    // no runway selected yet, but we loaded the STAR, so that's fine, we're done
+    return true;
+  }
+  
+// build the approach (possibly including transition), and including the missed segment
+  vector<Approach*> aps;
+  for (unsigned int j=0; j<mApproaches.size();++j) {
+    if (mApproaches[j]->runway() == aRwy) {
+      aps.push_back(mApproaches[j]);
+    }
+  } // of approach filter by runway
+  
+  if (aps.empty()) {
+    SG_LOG(SG_GENERAL, SG_INFO, ident() << "; no approaches defined for runway " << aRwy->ident());
+    // could build a fallback approach here
+    return false;
+  }
+  
+  for (unsigned int k=0; k<aps.size(); ++k) {
+    if (aps[k]->route(aRoute.back(), aRoute)) {
+      return true;
+    }
+  } // of initial approach iteration
+  
+  SG_LOG(SG_GENERAL, SG_INFO, ident() << ": unable to find transition to runway "
+    << aRwy->ident() << ", assume vectors");
+  
+  WayptRef v(new ATCVectors(NULL, this));
+  aRoute.push_back(v);
+  return aps.front()->routeFromVectors(aRoute);
+}
+
+pair<flightgear::SID*, WayptRef>
+FGAirport::selectSID(const SGGeod& aDest, FGRunway* aRwy)
+{
+  loadProcedures();
+  
+  WayptRef enroute;
+  flightgear::SID* sid = NULL;
+  double d = 1e9;
+  
+  for (unsigned int i=0; i<mSIDs.size(); ++i) {
+    if (aRwy && !mSIDs[i]->isForRunway(aRwy)) {
+      continue;
+    }
+  
+    WayptRef e = mSIDs[i]->findBestTransition(aDest);
+    if (!e) {
+      continue; // strange, but let's not worry about it
+    }
+    
+    // assert(e->isFixedPosition());
+    double ed = SGGeodesy::distanceM(aDest, e->position());
+    if (ed < d) { // new best match
+      enroute = e;
+      d = ed;
+      sid = mSIDs[i];
+    }
+  } // of SID iteration
+  
+  if (!mSIDs.empty() && !sid) {
+    SG_LOG(SG_GENERAL, SG_INFO, ident() << "selectSID, no SID found (runway=" 
+      << (aRwy ? aRwy->ident() : "no runway preference"));
+  }
+  
+  return make_pair(sid, enroute);
+}
+    
+pair<STAR*, WayptRef>
+FGAirport::selectSTAR(const SGGeod& aOrigin, FGRunway* aRwy)
+{
+  loadProcedures();
+  
+  WayptRef enroute;
+  STAR* star = NULL;
+  double d = 1e9;
+  
+  for (unsigned int i=0; i<mSTARs.size(); ++i) {
+    if (!mSTARs[i]->isForRunway(aRwy)) {
+      continue;
+    }
+    
+    SG_LOG(SG_GENERAL, SG_INFO, "STAR " << mSTARs[i]->ident() << " is valid for runway");
+    WayptRef e = mSTARs[i]->findBestTransition(aOrigin);
+    if (!e) {
+      continue; // strange, but let's not worry about it
+    }
+    
+    // assert(e->isFixedPosition());
+    double ed = SGGeodesy::distanceM(aOrigin, e->position());
+    if (ed < d) { // new best match
+      enroute = e;
+      d = ed;
+      star = mSTARs[i];
+    }
+  } // of STAR iteration
+  
+  return make_pair(star, enroute);
+}
+
+
+void FGAirport::addSID(flightgear::SID* aSid)
+{
+  mSIDs.push_back(aSid);
+}
+
+void FGAirport::addSTAR(STAR* aStar)
+{
+  mSTARs.push_back(aStar);
+}
+
+void FGAirport::addApproach(Approach* aApp)
+{
+  mApproaches.push_back(aApp);
+}
+
+unsigned int FGAirport::numSIDs() const
+{
+  loadProcedures();
+  return mSIDs.size();
+}
+
+flightgear::SID* FGAirport::getSIDByIndex(unsigned int aIndex) const
+{
+  loadProcedures();
+  return mSIDs[aIndex];
+}
+
+flightgear::SID* FGAirport::findSIDWithIdent(const std::string& aIdent) const
+{
+  loadProcedures();
+  for (unsigned int i=0; i<mSIDs.size(); ++i) {
+    if (mSIDs[i]->ident() == aIdent) {
+      return mSIDs[i];
+    }
+  }
+  
+  return NULL;
+}
+
+unsigned int FGAirport::numSTARs() const
+{
+  loadProcedures();
+  return mSTARs.size();
+}
+
+STAR* FGAirport::getSTARByIndex(unsigned int aIndex) const
+{
+  loadProcedures();
+  return mSTARs[aIndex];
+}
+
+STAR* FGAirport::findSTARWithIdent(const std::string& aIdent) const
+{
+  loadProcedures();
+  for (unsigned int i=0; i<mSTARs.size(); ++i) {
+    if (mSTARs[i]->ident() == aIdent) {
+      return mSTARs[i];
+    }
+  }
+  
+  return NULL;
+}
+
+unsigned int FGAirport::numApproaches() const
+{
+  loadProcedures();
+  return mApproaches.size();
+}
+
+Approach* FGAirport::getApproachByIndex(unsigned int aIndex) const
+{
+  loadProcedures();
+  return mApproaches[aIndex];
 }
 
 // get airport elevation

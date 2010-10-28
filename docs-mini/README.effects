@@ -192,6 +192,15 @@ texture-unit - has several child properties:
 			wrap-s
 			wrap-t
 			wrap-r
+			mipmap-control - controls how the mipmap levels are computed.
+			Each color channel can be computed with different functions
+			among average, sum, product, min and max. For example :
+					<function-r>average</function-r>
+					<function-a>min</function-a>
+				function-r - function for red
+				function-g - function for green
+				function-b - function for blue
+				function-a - function for alpha
 		The following built-in types are supported:
 			white - 1 pixel white texture
 			noise - a 3d noise texture

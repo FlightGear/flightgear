@@ -37,8 +37,8 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/fg_os.hxx>
 #include <Main/util.hxx>
-
 #include "generic.hxx"
 
 
@@ -95,20 +95,20 @@ bool FGGeneric::gen_message_binary() {
 
         switch (_out_message[i].type) {
         case FG_INT:
+        {
             val = _out_message[i].offset +
                   _out_message[i].prop->getIntValue() * _out_message[i].factor;
-
-            if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
-                *((int32_t*)&buf[length]) = (int32_t)val;
-            } else {
-                *((uint32_t*)&buf[length]) = sg_bswap_32((uint32_t)val);
+            int32_t intVal = val;
+            if (binary_byte_order != BYTE_ORDER_MATCHES_NETWORK_ORDER) {
+                intVal = (int32_t) sg_bswap_32((uint32_t)intVal);
             }
+            memcpy(&buf[length], &intVal, sizeof(int32_t));
             length += sizeof(int32_t);
             break;
+        }
 
         case FG_BOOL:
-            *((int8_t*)&buf[length])
-                      = _out_message[i].prop->getBoolValue() ? true : false;
+            buf[length] = (char) (_out_message[i].prop->getBoolValue() ? true : false);
             length += 1;
             break;
 
@@ -117,46 +117,48 @@ bool FGGeneric::gen_message_binary() {
             val = _out_message[i].offset +
                  _out_message[i].prop->getFloatValue() * _out_message[i].factor;
 
-            int fixed = (int)(val * 65536.0f); 
-            if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
-                *((int32_t*)&buf[length]) = (int32_t)fixed;
-            } else {
-                *((uint32_t*)&buf[length]) = sg_bswap_32((uint32_t)fixed);
+            int32_t fixed = (int)(val * 65536.0f);
+            if (binary_byte_order != BYTE_ORDER_MATCHES_NETWORK_ORDER) {
+                fixed = (int32_t) sg_bswap_32((uint32_t)fixed);
             } 
+            memcpy(&buf[length], &fixed, sizeof(int32_t));
             length += sizeof(int32_t);
             break;
         }
+
         case FG_FLOAT:
+        {
             val = _out_message[i].offset +
                  _out_message[i].prop->getFloatValue() * _out_message[i].factor;
+            u32 tmpun32;
+            tmpun32.floatVal = static_cast<float>(val);
 
-            if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
-                *((float*)&buf[length]) = val;
-            } else {
-                u32 tmpun32;
-                tmpun32.floatVal = static_cast<float>(val);
-                *((uint32_t*)&buf[length]) = sg_bswap_32(tmpun32.intVal);
+            if (binary_byte_order != BYTE_ORDER_MATCHES_NETWORK_ORDER) {
+                tmpun32.intVal = sg_bswap_32(tmpun32.intVal);
             }
+            memcpy(&buf[length], &tmpun32.intVal, sizeof(uint32_t));
             length += sizeof(uint32_t);
             break;
+        }
 
         case FG_DOUBLE:
+        {
             val = _out_message[i].offset +
                  _out_message[i].prop->getFloatValue() * _out_message[i].factor;
+            u64 tmpun64;
+            tmpun64.doubleVal = val;
 
-            if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
-                *((double*)&buf[length]) = val;
-            } else {
-                u64 tmpun64;
-                tmpun64.doubleVal = val;
-                *((uint64_t*)&buf[length]) = sg_bswap_64(tmpun64.longVal);
+            if (binary_byte_order != BYTE_ORDER_MATCHES_NETWORK_ORDER) {
+                tmpun64.longVal = sg_bswap_64(tmpun64.longVal);
             }
-            length += sizeof(int64_t);
+            memcpy(&buf[length], &tmpun64.longVal, sizeof(uint64_t));
+            length += sizeof(uint64_t);
             break;
+        }
 
         default: // SG_STRING
             const char *strdata = _out_message[i].prop->getStringValue();
-            int strlength = strlen(strdata);
+            int32_t strlength = strlen(strdata);
 
             if (binary_byte_order == BYTE_ORDER_NEEDS_CONVERSION) {
                 SG_LOG( SG_IO, SG_ALERT, "Generic protocol: "
@@ -165,11 +167,10 @@ bool FGGeneric::gen_message_binary() {
             /* Format for strings is 
              * [length as int, 4 bytes][ASCII data, length bytes]
              */
-            if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
-                *((int32_t*)&buf[length]) = strlength;
-            } else {
-                *((int32_t*)&buf[length]) = sg_bswap_32(strlength);
+            if (binary_byte_order != BYTE_ORDER_MATCHES_NETWORK_ORDER) {
+                strlength = sg_bswap_32(strlength);
             }
+            memcpy(&buf[length], &strlength, sizeof(int32_t));
             length += sizeof(int32_t);
             strncpy(&buf[length], strdata, strlength);
             length += strlength; 
@@ -191,11 +192,11 @@ bool FGGeneric::gen_message_binary() {
     }
 
     if (binary_footer_type != FOOTER_NONE) {
-        if (binary_byte_order == BYTE_ORDER_MATCHES_NETWORK_ORDER) {
-            *((int32_t*)&buf[length]) = binary_footer_value;
-        } else {
-            *((int32_t*)&buf[length]) = sg_bswap_32(binary_footer_value);
+        int32_t intValue = binary_footer_value;
+        if (binary_byte_order != BYTE_ORDER_MATCHES_NETWORK_ORDER) {
+            intValue = sg_bswap_32(binary_footer_value);
         }
+        memcpy(&buf[length], &intValue, sizeof(int32_t));
         length += sizeof(int32_t);
     }
 
@@ -490,7 +491,7 @@ bool FGGeneric::process() {
     return true;
 error_out:
     if (exitOnError) {
-        fgExit(1);
+        fgOSExit(1);
         return true; // should not get there, but please the compiler
     } else
         return false;
