@@ -215,13 +215,14 @@ bool FGAIWingman::init(bool search_in_AI_path) {
     roll = _rotation;
     _ht_agl_ft = 1e10;
 
-    props->setStringValue("submodels/path", _path.c_str());
-
     if(_parent != ""){
         setParentNode();
     }
 
     setParentNodes(_selected_ac);
+
+    props->setStringValue("submodels/path", _path.c_str());
+    user_WoW_node      = fgGetNode("gear/gear[1]/wow", true);
     return true;
 }
 
@@ -277,7 +278,7 @@ double FGAIWingman::calcAngle(double range, SGGeod pos1, SGGeod pos2){
 
 void FGAIWingman::formateToAC(double dt){
 
-    double p_hdg, p_pch, p_rll, p_agl, p_ht = 0;
+    double p_hdg, p_pch, p_rll, p_agl, p_ht, p_wow = 0;
 
     setTgtOffsets(dt, 25);
 
@@ -312,8 +313,9 @@ void FGAIWingman::formateToAC(double dt){
     double h_feet  = 3 * factor;
 
     p_agl = manager->get_user_agl();
+    p_wow = user_WoW_node->getDoubleValue();
 
-    if(p_agl <= 10) {
+    if(p_agl <= 10 || p_wow == 1) {
         _height = p_ht;
         //cout << "ht case1 " ;
     } else if (p_agl > 10 && p_agl <= 150 ) {
@@ -332,7 +334,8 @@ void FGAIWingman::formateToAC(double dt){
     pos.setLongitudeDeg(_offsetpos.getLongitudeDeg());
 
     // these calculations are unreliable at slow speeds
-    if(speed >= 10) {
+    // and we don't want random movement on the ground
+    if(speed >= 10 && p_wow != 1) {
         setHdg(p_hdg + h_angle, dt, 0.9);
         setPch(p_pch + p_angle + _pitch_offset, dt, 0.9);
 

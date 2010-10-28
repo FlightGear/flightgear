@@ -152,11 +152,11 @@ bool FGAIBallistic::init(bool search_in_AI_path) {
         props->setStringValue("contents/path", _contents_path.c_str());
     }
 
-    if(_parent != ""){
-        setParentNode();
-    }
+    //if(_parent != ""){
+    //    setParentNode();
+    //}
 
-    setParentNodes(_selected_ac);
+    //setParentNodes(_selected_ac);
 
     //props->setStringValue("vector/path", _vector_path.c_str());
 
@@ -168,7 +168,11 @@ bool FGAIBallistic::init(bool search_in_AI_path) {
 
     Transform();
 
-    //cout << _name << " speed init: " << speed << endl;
+    if(_parent != ""){
+        setParentNode();
+    }
+
+    setParentNodes(_selected_ac);
 
     return true;
 }
