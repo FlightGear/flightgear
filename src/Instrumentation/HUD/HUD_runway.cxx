@@ -49,7 +49,6 @@ HUD::Runway::Runway(HUD *hud, const SGPropertyNode *node, float x, float y) :
     _scale_dist(node->getDoubleValue("scale-dist-nm")),
     _default_pitch(fgGetDouble("/sim/view[0]/config/pitch-pitch-deg", 0.0)),
     _default_heading(fgGetDouble("/sim/view[0]/config/pitch-heading-deg", 0.0)),
-    _cockpit_view(globals->get_viewmgr()->get_view(0)),
     _stipple_out(node->getIntValue("outer_stipple", 0xFFFF)),
     _stipple_center(node->getIntValue("center-stipple", 0xFFFF)),
     _draw_arrow(_arrow_scale > 0 ? true : false),
@@ -69,7 +68,6 @@ HUD::Runway::Runway(HUD *hud, const SGPropertyNode *node, float x, float y) :
     _top = _center_y + (_h / 2) + _y;
 }
 
-
 void HUD::Runway::draw()
 {
     _runway = get_active_runway();
@@ -87,8 +85,10 @@ void HUD::Runway::draw()
     double po = curr_view->getPitchOffset_deg();
     double ho = curr_view->getHeadingOffset_deg();
 
-    double yaw = -(_cockpit_view->getHeadingOffset_deg() - _default_heading) * SG_DEGREES_TO_RADIANS;
-    double pitch = (_cockpit_view->getPitchOffset_deg() - _default_pitch) * SG_DEGREES_TO_RADIANS;
+    FGViewer* cockpitView = globals->get_viewmgr()->get_view(0);
+    
+    double yaw = -(cockpitView->getHeadingOffset_deg() - _default_heading) * SG_DEGREES_TO_RADIANS;
+    double pitch = (cockpitView->getPitchOffset_deg() - _default_pitch) * SG_DEGREES_TO_RADIANS;
     //double roll = fgGetDouble("/sim/view[0]/config/roll-offset-deg",0.0) //TODO: adjust for default roll offset
     double sPitch = sin(pitch), cPitch = cos(pitch),
            sYaw = sin(yaw), cYaw = cos(yaw);
