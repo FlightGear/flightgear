@@ -392,9 +392,11 @@ static bool
 do_panel_load (const SGPropertyNode * arg)
 {
   string panel_path =
-    arg->getStringValue("path",
-			fgGetString("/sim/panel/path",
-				    "Panels/Default/default.xml"));
+    arg->getStringValue("path", fgGetString("/sim/panel/path"));
+  if (panel_path.empty()) {
+    return false;
+  }
+  
   FGPanel * new_panel = fgReadPanel(panel_path);
   if (new_panel == 0) {
     SG_LOG(SG_INPUT, SG_ALERT,
