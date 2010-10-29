@@ -30,10 +30,7 @@
 #include <string>
 #include <vector>
 
-using std::string;
-using std::vector;
-
-#include <plib/netChannel.h>
+#include <simgear/io/sg_netChannel.hxx>
 
 #include "protocol.hxx"
 
@@ -43,7 +40,7 @@ using std::vector;
  * FlightGear properties.
  */
 class FGProps : public FGProtocol,
-		public netChannel
+		public simgear::NetChannel
 {
 private:
 
@@ -58,7 +55,7 @@ public:
      * 
      * @param tokens Tokenized configuration parameters
      */
-    FGProps( const vector<string>& tokens );
+    FGProps( const std::vector<std::string>& tokens );
 
     /**
      * Destructor.

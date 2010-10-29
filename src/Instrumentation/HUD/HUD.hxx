@@ -599,7 +599,6 @@ private:
     double _default_heading;
     GLint  _view[4];
     FGRunway* _runway;
-    FGViewer* _cockpit_view;
     unsigned short _stipple_out;    // stipple pattern of the outline of the runway
     unsigned short _stipple_center; // stipple pattern of the center line of the runway
     bool   _draw_arrow;             // draw arrow when runway is not visible in HUD

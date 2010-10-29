@@ -40,7 +40,7 @@
 #include <Main/globals.hxx>
 #include <Main/viewmgr.hxx>
 
-#include <plib/netChat.h>
+#include <simgear/io/sg_netChat.hxx>
 
 #include "props.hxx"
 
@@ -54,9 +54,9 @@ using std::endl;
  * Props connection class.
  * This class represents a connection to props client.
  */
-class PropsChannel : public netChat
+class PropsChannel : public simgear::NetChat
 {
-    netBuffer buffer;
+    simgear::NetBuffer buffer;
 
     /**
      * Current property node name.
@@ -471,9 +471,9 @@ FGProps::open()
         return false;
     }
 
-    netChannel::open();
-    netChannel::bind( "", port );
-    netChannel::listen( 5 );
+    simgear::NetChannel::open();
+    simgear::NetChannel::bind( "", port );
+    simgear::NetChannel::listen( 5 );
     SG_LOG( SG_IO, SG_INFO, "Props server started on port " << port );
 
     set_enabled( true );
@@ -496,7 +496,7 @@ FGProps::close()
 bool
 FGProps::process()
 {
-    netChannel::poll();
+    simgear::NetChannel::poll();
     return true;
 }
 
@@ -506,7 +506,7 @@ FGProps::process()
 void
 FGProps::handleAccept()
 {
-    netAddress addr;
+    simgear::IPAddress addr;
     int handle = accept( &addr );
     SG_LOG( SG_IO, SG_INFO, "Props server accepted connection from "
             << addr.getHost() << ":" << addr.getPort() );

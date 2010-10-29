@@ -80,8 +80,6 @@
 #include <Time/light.hxx>
 #include <Time/light.hxx>
 #include <Cockpit/panel.hxx>
-#include <Cockpit/cockpit.hxx>
-#include <Cockpit/hud.hxx>
 #include <Model/panelnode.hxx>
 #include <Model/modelmgr.hxx>
 #include <Model/acmodel.hxx>
@@ -89,7 +87,6 @@
 #include <Scenery/redout.hxx>
 #include <Scenery/tilemgr.hxx>
 #include <GUI/new_gui.hxx>
-#include <Instrumentation/instrument_mgr.hxx>
 #include <Instrumentation/HUD/HUD.hxx>
 #include <Environment/precipitation_mgr.hxx>
 
@@ -99,6 +96,7 @@
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"
 #include <Main/viewer.hxx>
+#include <Main/viewmgr.hxx>
 
 using namespace osg;
 using namespace simgear;
@@ -207,10 +205,7 @@ public:
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glPushClientAttrib(~0u);
 
-    fgCockpitUpdate(&state);
-
-    FGInstrumentMgr *instr = static_cast<FGInstrumentMgr*>(globals->get_subsystem("instrumentation"));
-    HUD *hud = static_cast<HUD*>(instr->get_subsystem("hud"));
+    HUD *hud = static_cast<HUD*>(globals->get_subsystem("hud"));
     hud->draw(state);
 
     // update the panel subsystem

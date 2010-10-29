@@ -30,8 +30,7 @@
 
 #include "FGDeviceConfigurationMap.hxx"
 
-#include <plib/ul.h>
-
+#include <simgear/misc/sg_dir.hxx>
 #include <simgear/props/props_io.hxx>
 #include <Main/globals.hxx>
 
@@ -41,11 +40,8 @@ FGDeviceConfigurationMap::FGDeviceConfigurationMap( const char * relative_path, 
   base(aBase),
   childname(aChildname)
 {
-  SGPath path(globals->get_fg_root());
-  path.append( relative_path );
-
   int index = 1000;
-  scan_dir( path, &index);
+  scan_dir( SGPath(globals->get_fg_root(), relative_path), &index);
 
   PropertyList childNodes = base->getChildren(childname);
   for (int k = (int)childNodes.size() - 1; k >= 0; k--) {
@@ -62,26 +58,22 @@ FGDeviceConfigurationMap::~FGDeviceConfigurationMap()
   base->removeChildren( childname );
 }
 
-void FGDeviceConfigurationMap::scan_dir( SGPath & path, int *index)
+void FGDeviceConfigurationMap::scan_dir(const SGPath & path, int *index)
 {
-  ulDir *dir = ulOpenDir(path.c_str());
-  if (dir) {
-    ulDirEnt* dent;
-    while ((dent = ulReadDir(dir)) != 0) {
-      if (dent->d_name[0] == '.')
-        continue;
+  simgear::Dir dir(path);
+  simgear::PathList children = dir.children(simgear::Dir::TYPE_FILE | 
+    simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT);
 
-      SGPath p(path.str());
-      p.append(dent->d_name);
-      scan_dir(p, index);
+  for (unsigned int c=0; c<children.size(); ++c) {
+    SGPath path(children[c]);
+    if (path.isDir()) {
+      scan_dir(path, index);
+    } else if (path.extension() == "xml") {
+      SG_LOG(SG_INPUT, SG_DEBUG, "Reading joystick file " << path.str());
+      SGPropertyNode_ptr n = base->getChild(childname, (*index)++, true);
+      readProperties(path.str(), n);
+      n->setStringValue("source", path.c_str());
     }
-    ulCloseDir(dir);
-
-  } else if (path.extension() == "xml") {
-    SG_LOG(SG_INPUT, SG_DEBUG, "Reading joystick file " << path.str());
-    SGPropertyNode_ptr n = base->getChild(childname, (*index)++, true);
-    readProperties(path.str(), n);
-    n->setStringValue("source", path.c_str());
   }
 }
 

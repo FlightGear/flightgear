@@ -28,8 +28,7 @@
 
 #include <simgear/compiler.h>
 
-#include <string>
-
+#include <cstring>
 #include <iostream>
 #include <map>
 #include <string>

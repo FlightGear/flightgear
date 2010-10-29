@@ -23,57 +23,12 @@
 #ifndef _EXTERNAL_NET_HXX
 #define _EXTERNAL_NET_HXX
 
-#include <plib/netBuffer.h>
-#include <plib/netSocket.h>
-
 #include <simgear/timing/timestamp.hxx> // fine grained timing measurements
+#include <simgear/io/raw_socket.hxx>
 
 #include <Network/net_ctrls.hxx>
 #include <Network/net_fdm.hxx>
 #include <FDM/flight.hxx>
-
-
-class HTTPClient : public netBufferChannel
-{
-
-    bool done;
-    SGTimeStamp start;
-
-public:
-
-    HTTPClient ( const char* host, int port, const char* path ) :
-        done( false )
-    {
-	open ();
-	connect (host, port);
-
-	const char* s = netFormat ( "GET %s HTTP/1.0\r\n\r\n", path );
-	bufferSend( s, strlen(s) ) ;
-
-        start.stamp();
-    }
-
-    virtual void handleBufferRead (netBuffer& buffer)
-    {
-	const char* s = buffer.getData();
-	while (*s)
-	    fputc(*s++,stdout);
-
-	printf("done\n");
-	buffer.remove();
-	printf("after buffer.remove()\n");
-        done = true;
-    }
-
-    bool isDone() const { return done; }
-    bool isDone( long usec ) const { 
-        if ( start + SGTimeStamp::fromUSec(usec) < SGTimeStamp::now() ) {
-            return true;
-        } else {
-            return done;
-        }
-    }
-};
 
 
 class FGExternalNet: public FGInterface {
@@ -85,8 +40,8 @@ private:
     int cmd_port;
     string fdm_host;
 
-    netSocket data_client;
-    netSocket data_server;
+    simgear::Socket data_client;
+    simgear::Socket data_server;
 
     bool valid;
 

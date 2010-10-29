@@ -13,17 +13,13 @@
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <AIModel/AIBase.hxx>
+#include <simgear/math/SGMath.hxx>
+
 #include <vector>
 #include <string>
 
-#include <Main/fg_props.hxx>
-
-using std::vector;
-using std::string; 
-using std::list;
-
 class FGAIBase;
+class FGAIManager;
 
 class FGSubmodelMgr : public SGSubsystem, public SGPropertyChangeListener
 {
@@ -37,8 +33,8 @@ public:
         SGPropertyNode_ptr submodel_node;
         SGPropertyNode_ptr speed_node;
 
-        string             name;
-        string             model;
+        std::string        name;
+        std::string        model;
         double             speed;
         bool               slaved;
         bool               repeat;
@@ -68,13 +64,13 @@ public:
         bool               collision;
         bool               expiry;
         bool               impact;
-        string             impact_report;
+        std::string        impact_report;
         double             fuse_range;
-        string             submodel;
+        std::string        submodel;
         int                sub_id;
         bool               force_stabilised;
         bool               ext_force;
-        string             force_path;
+        std::string        force_path;
     }   submodel;
 
     typedef struct {
@@ -112,7 +108,7 @@ public:
 
 private:
 
-    typedef vector <submodel*> submodel_vector_type;
+    typedef std::vector <submodel*> submodel_vector_type;
     typedef submodel_vector_type::iterator submodel_vector_iterator;
 
     submodel_vector_type       submodels;
@@ -186,22 +182,17 @@ private:
     SGPropertyNode_ptr _path_node;
     SGPropertyNode_ptr _selected_ac;
 
-
-    FGAIManager* ai;
     IC_struct  IC;
-
-    // A list of pointers to AI objects
-    typedef list <SGSharedPtr<FGAIBase> > sm_list_type;
-    typedef sm_list_type::iterator sm_list_iterator;
-    typedef sm_list_type::const_iterator sm_list_const_iterator;
-
-    sm_list_type sm_list;
-
-
+    
+    /**
+     * Helper to retrieve the AI manager, if it currently exists
+     */
+    FGAIManager* aiManager();
+    
     void loadAI();
     void loadSubmodels();
-    void setData(int id, string& path, bool serviceable);
-    void setSubData(int id, string& path, bool serviceable);
+    void setData(int id, std::string& path, bool serviceable);
+    void setSubData(int id, std::string& path, bool serviceable);
     void valueChanged (SGPropertyNode *);
     void transform(submodel *);
     void setParentNode(int parent_id);

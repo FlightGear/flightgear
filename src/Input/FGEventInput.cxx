@@ -66,7 +66,7 @@ bool FGEventSetting::Test()
 
 static inline bool StartsWith( string & s, const char * cp )
 {
-  return s.compare( 0, strlen(cp), cp ) == 0;
+  return s.find( cp ) == 0;
 }
 
 FGInputEvent * FGInputEvent::NewObject( FGInputDevice * device, SGPropertyNode_ptr node )
@@ -223,8 +223,8 @@ FGInputDevice::~FGInputDevice()
     if( nasal ) {
       SGPropertyNode_ptr nasalClose = nasal->getNode("close");
       if (nasalClose) {
-        const char *s = nasalClose->getStringValue();
-        nas->createModule(nasalModule.c_str(), nasalModule.c_str(), s, strlen(s), deviceNode );
+        const string s = nasalClose->getStringValue();
+        nas->createModule(nasalModule.c_str(), nasalModule.c_str(), s.c_str(), s.length(), deviceNode );
       }
     }
     nas->deleteModule(nasalModule.c_str());
@@ -253,10 +253,10 @@ void FGInputDevice::Configure( SGPropertyNode_ptr aDeviceNode )
   if (nasal) {
     SGPropertyNode_ptr open = nasal->getNode("open");
     if (open) {
-      const char *s = open->getStringValue();
+      const string s = open->getStringValue();
       FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
       if (nas)
-        nas->createModule(nasalModule.c_str(), nasalModule.c_str(), s, strlen(s), deviceNode );
+        nas->createModule(nasalModule.c_str(), nasalModule.c_str(), s.c_str(), s.length(), deviceNode );
     }
   }
 

@@ -32,7 +32,7 @@
 #  include <config.h>
 #endif
 
-#include <plib/netChat.h>
+#include <simgear/io/sg_netChat.hxx>
 
 #include "protocol.hxx"
 
@@ -40,10 +40,10 @@
 /* simple httpd server that makes an hasty stab at following the http
    1.1 rfc.  */
 
-class HttpdChannel : public netChat
+class HttpdChannel : public simgear::NetChat
 {
 
-    netBuffer buffer ;
+    simgear::NetBuffer buffer ;
 
     string urlEncode(string);
     string urlDecode(string);
@@ -61,12 +61,12 @@ public:
 } ;
 
 
-class HttpdServer : private netChannel
+class HttpdServer : private simgear::NetChannel
 {
     virtual bool writable (void) { return false ; }
 
     virtual void handleAccept (void) {
-        netAddress addr ;
+        simgear::IPAddress addr ;
         int handle = accept ( &addr ) ;
         SG_LOG( SG_IO, SG_INFO, "Client " << addr.getHost() << ":" << addr.getPort() << " connected" );
 

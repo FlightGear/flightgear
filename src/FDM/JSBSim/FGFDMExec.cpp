@@ -71,15 +71,8 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGFDMExec.cpp,v 1.80 2010/08/21 22:56:10 jberndt Exp $";
+static const char *IdSrc = "$Id: FGFDMExec.cpp,v 1.82 2010/10/07 03:17:29 jberndt Exp $";
 static const char *IdHdr = ID_FDMEXEC;
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-GLOBAL DECLARATIONS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-unsigned int FGFDMExec::FDMctr = 0;
-FGPropertyManager* FGFDMExec::master=0;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -102,11 +95,21 @@ void checkTied ( FGPropertyManager *node )
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// Constructor
-
-FGFDMExec::FGFDMExec(FGPropertyManager* root) : Root(root)
+// Constructors
+FGFDMExec::FGFDMExec(FGPropertyManager* root) : Root(root), delete_root(false)
 {
+  FDMctr = new unsigned int;
+  *FDMctr = 0;
+  Initialize();
+}
 
+FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root), delete_root(false), FDMctr(fdmctr)
+{
+  Initialize();
+}
+
+void FGFDMExec::Initialize()
+{
   Frame           = 0;
   Error           = 0;
   GroundCallback  = 0;
@@ -138,21 +141,26 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root) : Root(root)
   dT = 1.0/120.0; // a default timestep size. This is needed for when JSBSim is
                   // run in standalone mode with no initialization file.
 
-  IdFDM = FDMctr; // The main (parent) JSBSim instance is always the "zeroth"
-  FDMctr++;       // instance. "child" instances are loaded last.
-
   try {
     char* num = getenv("JSBSIM_DEBUG");
     if (num) debug_lvl = atoi(num); // set debug level
-  } catch (...) {               // if error set to 1
+  } catch (...) {                   // if error set to 1
     debug_lvl = 1;
   }
 
-  if (Root == 0) {
-    if (master == 0)
-      master = new FGPropertyManager;
-    Root = master;
+  if (Root == 0) {                 // Then this is the root FDM
+    Root = new FGPropertyManager;  // Create the property manager
+    delete_root = true;
+    
+    FDMctr = new unsigned int;     // Create and initialize the child FDM counter
+    (*FDMctr) = 0;
   }
+
+  // Store this FDM's ID
+  IdFDM = (*FDMctr); // The main (parent) JSBSim instance is always the "zeroth"
+                                                                      
+  // Prepare FDMctr for the next child FDM id
+  (*FDMctr)++;       // instance. "child" instances are loaded last.
 
   instance = Root->GetNode("/fdm/jsbsim",IdFDM,true);
   Debug(0);
@@ -186,7 +194,18 @@ FGFDMExec::~FGFDMExec()
   try {
     checkTied( instance );
     DeAllocate();
-    if (Root == 0)  delete master;
+    
+    if (IdFDM == 0) { // Meaning this is no child FDM
+      if(Root != 0) {
+         if (delete_root)
+            delete Root;
+         Root = 0;
+      }
+      if(FDMctr != 0) {
+         delete FDMctr;
+         FDMctr = 0;
+      }
+    }
   } catch ( string msg ) {
     cout << "Caught error: " << msg << endl;
   }
@@ -439,7 +458,7 @@ vector <string> FGFDMExec::EnumerateFDMs(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGFDMExec::LoadScript(string script, double deltaT)
+bool FGFDMExec::LoadScript(const string& script, double deltaT)
 {
   bool result;
 
@@ -451,8 +470,8 @@ bool FGFDMExec::LoadScript(string script, double deltaT)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGFDMExec::LoadModel(string AircraftPath, string EnginePath, string SystemsPath,
-                string model, bool addModelToPath)
+bool FGFDMExec::LoadModel(const string& AircraftPath, const string& EnginePath, const string& SystemsPath,
+                const string& model, bool addModelToPath)
 {
   FGFDMExec::AircraftPath = RootDir + AircraftPath;
   FGFDMExec::EnginePath = RootDir + EnginePath;
@@ -463,7 +482,7 @@ bool FGFDMExec::LoadModel(string AircraftPath, string EnginePath, string Systems
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGFDMExec::LoadModel(string model, bool addModelToPath)
+bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
 {
   string token;
   string aircraftCfgFileName;
@@ -730,7 +749,7 @@ void FGFDMExec::BuildPropertyCatalog(struct PropertyCatalogStructure* pcs)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGFDMExec::QueryPropertyCatalog(string in)
+string FGFDMExec::QueryPropertyCatalog(const string& in)
 {
   string results="";
   for (unsigned i=0; i<PropertyCatalog.size(); i++) {
@@ -852,7 +871,7 @@ bool FGFDMExec::ReadChild(Element* el)
 
   struct childData* child = new childData;
 
-  child->exec = new FGFDMExec();
+  child->exec = new FGFDMExec(Root, FDMctr);
   child->exec->SetChild(true);
 
   string childAircraft = el->GetAttributeValue("name");
@@ -922,7 +941,7 @@ void FGFDMExec::EnableOutput(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGFDMExec::SetOutputDirectives(string fname)
+bool FGFDMExec::SetOutputDirectives(const string& fname)
 {
   bool result;
 

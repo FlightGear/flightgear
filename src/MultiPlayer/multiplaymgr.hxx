@@ -38,8 +38,8 @@
 
 #include <simgear/compiler.h>
 #include <simgear/props/props.hxx>
-#include <plib/netSocket.h>
 #include <Main/globals.hxx>
+#include <simgear/io/raw_socket.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
 #include <AIModel/AIMultiplayer.hxx>
@@ -78,16 +78,16 @@ private:
                                   const std::string& modelName);
   FGAIMultiplayer* getMultiplayer(const std::string& callsign);
   void FillMsgHdr(T_MsgHdr *MsgHdr, int iMsgId, unsigned _len = 0u);
-  void ProcessPosMsg(const MsgBuf& Msg, const netAddress& SenderAddress,
+  void ProcessPosMsg(const MsgBuf& Msg, const simgear::IPAddress& SenderAddress,
                      long stamp);
-  void ProcessChatMsg(const MsgBuf& Msg, const netAddress& SenderAddress);
+  void ProcessChatMsg(const MsgBuf& Msg, const simgear::IPAddress& SenderAddress);
 
   /// maps from the callsign string to the FGAIMultiplayer
   typedef std::map<std::string, SGSharedPtr<FGAIMultiplayer> > MultiPlayerMap;
   MultiPlayerMap mMultiPlayerMap;
 
-  netSocket* mSocket;
-  netAddress mServer;
+  simgear::Socket* mSocket;
+  simgear::IPAddress mServer;
   bool mHaveServer;
   bool mInitialised;
   std::string mCallsign;

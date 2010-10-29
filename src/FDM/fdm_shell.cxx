@@ -24,6 +24,7 @@
 #  include <config.h>
 #endif
 
+#include <cassert>
 #include <simgear/structure/exception.hxx>
 
 #include <FDM/fdm_shell.hxx>

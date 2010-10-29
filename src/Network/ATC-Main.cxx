@@ -31,14 +31,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <errno.h>
+
 #include <stdio.h>              //snprintf
 #ifdef _WIN32
 #  include <io.h>                 //lseek, read, write
 #endif
 
 #include <string>
-
-#include <plib/ul.h>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/props/props_io.hxx>
