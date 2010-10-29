@@ -867,7 +867,7 @@ int KLN89::GetLabelQuadrant(double h1, double h2) {
 	while(h2 < 0.0) h2 += 360.0;
 	while(h2 > 360.0) h2 -= 360.0;
 	double max_min_diff = 0.0;
-	int quad;
+	int quad = 1;
 	for(int i=0; i<4; ++i) {
 		double h = 45 + (90 * i);
 		double diff1 = fabs(h - h1);
