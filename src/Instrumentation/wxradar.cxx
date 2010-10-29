@@ -56,7 +56,6 @@ using std::setfill;
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Cockpit/panel.hxx>
-#include <Cockpit/hud.hxx>
 
 #include "instrument_mgr.hxx"
 #include "od_gauge.hxx"
@@ -331,7 +330,7 @@ wxRadarBg::update (double delta_time_sec)
         }
 
         _radar_ref_rng = _radar_ref_rng_node->getDoubleValue();
-        _view_heading = get_heading() * SG_DEGREES_TO_RADIANS;
+        _view_heading = fgGetDouble("/orientation/heading-deg") * SG_DEGREES_TO_RADIANS;
         _centerTrans.makeTranslate(0.0f, 0.0f, 0.0f);
 
         _scale = 200.0 / _range_nm;
@@ -500,7 +499,7 @@ wxRadarBg::update_weather()
                 if (iradarEcho->lightning || lwc < LWClevel[level])
                     continue;
 
-                float radius = sgSqrt(iradarEcho->dist) * SG_METER_TO_NM * _scale;
+                float radius = sqrt(iradarEcho->dist) * SG_METER_TO_NM * _scale;
                 float size = iradarEcho->radius * 2.0 * SG_METER_TO_NM * _scale;
 
                 if (radius - size > 180)
@@ -617,7 +616,7 @@ wxRadarBg::update_aircraft()
 //                double bearing = test_brg * SG_DEGREES_TO_RADIANS;
 //                float angle = calcRelBearing(bearing, _view_heading);
                 double bumpinessFactor  = (*ground_echoes_iterator)->bumpiness;
-                float heading = get_heading();
+                float heading = fgGetDouble("/orientation/heading-deg");
                 if ( _display_mode == BSCAN ){
                     test_rng = (*ground_echoes_iterator)->elevation * 6;
                     test_brg = (*ground_echoes_iterator)->bearing;

@@ -85,7 +85,6 @@
 #include <Autopilot/route_mgr.hxx>
 #include <Autopilot/autopilotgroup.hxx>
 
-#include <Cockpit/cockpit.hxx>
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
 
@@ -1400,15 +1399,6 @@ bool fgInitSubsystems() {
     // After the AI and ATC systems have been initialized properly.
     // AI Traffic manager
     globals->add_subsystem("Traffic Manager", new FGTrafficManager, SGSubsystemMgr::POST_FDM);
-
-
-    if( fgCockpitInit()) {
-        // Cockpit initialized ok.
-    } else {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Error in Cockpit initialization!" );
-        exit(-1);
-    }
-
 
     ////////////////////////////////////////////////////////////////////
     // Add a new 2D panel.

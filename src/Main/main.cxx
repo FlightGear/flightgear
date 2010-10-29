@@ -52,8 +52,7 @@
 
 #include <Time/light.hxx>
 #include <Aircraft/replay.hxx>
-#include <Cockpit/cockpit.hxx>
-#include <Cockpit/hud.hxx>
+#include <Aircraft/controls.hxx>
 #include <Model/panelnode.hxx>
 #include <Model/acmodel.hxx>
 #include <Scenery/scenery.hxx>
