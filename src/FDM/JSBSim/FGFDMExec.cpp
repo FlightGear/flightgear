@@ -101,11 +101,13 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root) : Root(root)
   FDMctr = new unsigned int;
   *FDMctr = 0;
   Initialize();
+  root_overload = (root != NULL);
 }
 
 FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root), FDMctr(fdmctr)
 {
   Initialize();
+  root_overload = (root != NULL);
 }
 
 void FGFDMExec::Initialize()
@@ -194,12 +196,12 @@ FGFDMExec::~FGFDMExec()
     checkTied( instance );
     DeAllocate();
     
-    if (IdFDM == 0) { // Meaning this is no child FDM
+   if(FDMctr != 0 && !root_overload) {
       if(Root != 0) {
          delete Root;
          Root = 0;
       }
-      if(FDMctr != 0) {
+      if (IdFDM == 0) { // Meaning this is no child FDM
          delete FDMctr;
          FDMctr = 0;
       }

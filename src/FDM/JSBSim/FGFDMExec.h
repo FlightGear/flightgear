@@ -524,6 +524,7 @@ private:
   bool Constructing;
   bool modelLoaded;
   bool IsChild;
+  bool root_overload;
   string modelName;
   string AircraftPath;
   string FullAircraftPath;
