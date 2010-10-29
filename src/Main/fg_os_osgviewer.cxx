@@ -102,7 +102,7 @@ static osg::ref_ptr<osg::Camera> mainCamera;
 
 static void setStereoMode( const char * mode )
 {
-    DisplaySettings::StereoMode stereoMode;
+    DisplaySettings::StereoMode stereoMode = DisplaySettings::QUAD_BUFFER;
     bool stereoOn = true;
 
     if (strcmp(mode,"QUAD_BUFFER")==0)

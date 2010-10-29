@@ -41,10 +41,12 @@ const double FGAIBallistic::slugs_to_lbs = 32.1740485564;
 FGAIBallistic::FGAIBallistic(object_type ot) :
 FGAIBase(ot),
 _height(0.0),
+_speed(0),
 _ht_agl_ft(0.0),
 _azimuth(0.0),
 _elevation(0.0),
 _rotation(0.0),
+hs(0),
 _elapsed_time(0),
 _aero_stabilised(false),
 _drag_area(0.007),
@@ -65,9 +67,7 @@ _report_impact(false),
 _external_force(false),
 _report_expiry(false),
 _impact_report_node(fgGetNode("/ai/models/model-impact", true)),
-hs(0),
-_old_height(0),
-_speed(0)
+_old_height(0)
 
 {
     no_roll = false;

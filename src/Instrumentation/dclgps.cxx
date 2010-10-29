@@ -635,7 +635,7 @@ void DCLGPS::update(double dt) {
 */
 string DCLGPS::ExpandSIAPIdent(const string& ident) {
 	string name;
-	bool has_rwy;
+	bool has_rwy = false;
 	
 	switch(ident[0]) {
 	case 'N': name = "NDB or GPS"; has_rwy = false; break;

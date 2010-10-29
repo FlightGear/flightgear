@@ -25,7 +25,6 @@
 
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
-#include <Cockpit/hud.hxx>
 #include <Environment/environment.hxx>
 #include <FDM/flight.hxx>
 #include <GUI/gui.h>
@@ -454,24 +453,11 @@ do_preferences_load (const SGPropertyNode * arg)
   return true;
 }
 
-
-static void
-fix_hud_visibility()
-{
-  if ( !strcmp(fgGetString("/sim/flight-model"), "ada") ) {
-      globals->get_props()->setBoolValue( "/sim/hud/visibility", true );
-      if ( globals->get_viewmgr()->get_current() == 1 ) {
-          globals->get_props()->setBoolValue( "/sim/hud/visibility", false );
-      }
-  }
-}
-
 static void
 do_view_next( bool )
 {
     globals->get_current_view()->setHeadingOffset_deg(0.0);
     globals->get_viewmgr()->next_view();
-    fix_hud_visibility();
 }
 
 static void
@@ -479,7 +465,6 @@ do_view_prev( bool )
 {
     globals->get_current_view()->setHeadingOffset_deg(0.0);
     globals->get_viewmgr()->prev_view();
-    fix_hud_visibility();
 }
 
 /**
@@ -490,7 +475,6 @@ do_view_cycle (const SGPropertyNode * arg)
 {
   globals->get_current_view()->setHeadingOffset_deg(0.0);
   globals->get_viewmgr()->next_view();
-  fix_hud_visibility();
   return true;
 }
 
@@ -1307,21 +1291,6 @@ do_increase_visibility (const SGPropertyNode * arg)
     return true;
 }
 
-static bool
-do_hud_init(const SGPropertyNode *)
-{
-    fgHUDInit(); // minimal HUD
-    return true;
-}
-
-static bool
-do_hud_init2(const SGPropertyNode *)
-{
-    fgHUDInit2();  // normal HUD
-    return true;
-}
-
-
 /**
  * An fgcommand to allow loading of xml files via nasal,
  * the xml file's structure will be made available within
@@ -1521,8 +1490,6 @@ static struct {
     { "replay", do_replay },
     { "decrease-visibility", do_decrease_visibility },
     { "increase-visibility", do_increase_visibility },
-    { "hud-init", do_hud_init },
-    { "hud-init2", do_hud_init2 },
     { "loadxml", do_load_xml_to_proptree},
     { "savexml", do_save_xml_from_proptree },
     { "press-cockpit-button", do_press_cockpit_button },

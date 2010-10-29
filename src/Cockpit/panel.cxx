@@ -61,9 +61,6 @@
 #include <Main/viewer.hxx>
 #include <Instrumentation/dclgps.hxx>
 
-#include "hud.hxx"
-
-
 #define WIN_X 0
 #define WIN_Y 0
 #define WIN_W 1024

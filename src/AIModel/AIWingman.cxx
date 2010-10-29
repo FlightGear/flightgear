@@ -29,9 +29,9 @@
 
 FGAIWingman::FGAIWingman() : FGAIBallistic(otWingman),
 _formate_to_ac(true),
-_break_angle(-90),
 _break(false),
 _join(false),
+_break_angle(-90),
 _coeff_hdg(5.0),
 _coeff_pch(5.0),
 _coeff_bnk(5.0),

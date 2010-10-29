@@ -80,8 +80,6 @@
 #include <Time/light.hxx>
 #include <Time/light.hxx>
 #include <Cockpit/panel.hxx>
-#include <Cockpit/cockpit.hxx>
-#include <Cockpit/hud.hxx>
 #include <Model/panelnode.hxx>
 #include <Model/modelmgr.hxx>
 #include <Model/acmodel.hxx>
@@ -98,6 +96,7 @@
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"
 #include <Main/viewer.hxx>
+#include <Main/viewmgr.hxx>
 
 using namespace osg;
 using namespace simgear;
@@ -205,8 +204,6 @@ public:
 
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glPushClientAttrib(~0u);
-
-    fgCockpitUpdate(&state);
 
     HUD *hud = static_cast<HUD*>(globals->get_subsystem("hud"));
     hud->draw(state);
