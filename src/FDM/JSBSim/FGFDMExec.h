@@ -555,6 +555,7 @@ private:
   FGTrim*             Trim;
 
   FGPropertyManager* Root;
+  bool delete_root;
   FGPropertyManager* instance;
   
   // The FDM counter is used to give each child FDM an unique ID. The root FDM has the ID 0
