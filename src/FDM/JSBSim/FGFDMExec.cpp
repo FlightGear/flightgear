@@ -96,7 +96,7 @@ void checkTied ( FGPropertyManager *node )
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 // Constructors
-FGFDMExec::FGFDMExec(FGPropertyManager* root) : Root(root)
+FGFDMExec::FGFDMExec(FGPropertyManager* root) : Root(root), delete_root(false)
 {
   FDMctr = new unsigned int;
   *FDMctr = 0;
@@ -104,7 +104,7 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root) : Root(root)
   root_overload = (root != NULL);
 }
 
-FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root), FDMctr(fdmctr)
+FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root), delete_root(false), FDMctr(fdmctr)
 {
   Initialize();
   root_overload = (root != NULL);
@@ -152,6 +152,7 @@ void FGFDMExec::Initialize()
 
   if (Root == 0) {                 // Then this is the root FDM
     Root = new FGPropertyManager;  // Create the property manager
+    delete_root = true;
     
     FDMctr = new unsigned int;     // Create and initialize the child FDM counter
     (*FDMctr) = 0;
@@ -198,7 +199,8 @@ FGFDMExec::~FGFDMExec()
     
    if(FDMctr != 0 && !root_overload) {
       if(Root != 0) {
-         delete Root;
+         if (delete_root)
+            delete Root;
          Root = 0;
       }
       if (IdFDM == 0) { // Meaning this is no child FDM

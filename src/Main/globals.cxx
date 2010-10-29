@@ -167,6 +167,7 @@ FGGlobals::~FGGlobals()
     // shut down all subsystems, make sure we take down the 
     // AIModels system first.
     SGSubsystem* ai = subsystem_mgr->remove("ai_model");
+    ai->unbind();
     delete ai;
     
     subsystem_mgr->unbind();

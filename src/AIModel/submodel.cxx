@@ -43,6 +43,11 @@ FGSubmodelMgr::~FGSubmodelMgr()
 {
 }
 
+FGAIManager* FGSubmodelMgr::aiManager()
+{
+   return (FGAIManager*)globals->get_subsystem("ai_model");
+}
+
 void FGSubmodelMgr::init()
 {
     index = 0;
@@ -73,8 +78,6 @@ void FGSubmodelMgr::init()
     contrail_altitude       = _contrail_altitude_node->getDoubleValue();
     _contrail_trigger       = fgGetNode("ai/submodels/contrails", true);
     _contrail_trigger->setBoolValue(false);
-
-    ai = (FGAIManager*)globals->get_subsystem("ai_model");
 
     load();
 
@@ -116,9 +119,9 @@ void FGSubmodelMgr::update(double dt)
     _expiry = false;
 
     // check if the submodel hit an object or terrain
-    sm_list = ai->get_ai_list();
-    sm_list_iterator sm_list_itr = sm_list.begin();
-    sm_list_iterator end = sm_list.end();
+    FGAIManager::ai_list_type sm_list(aiManager()->get_ai_list());
+    FGAIManager::ai_list_iterator sm_list_itr = sm_list.begin(),
+      end = sm_list.end();
 
     for (; sm_list_itr != end; ++sm_list_itr) {
         FGAIBase::object_type object_type =(*sm_list_itr)->getType();
@@ -300,7 +303,8 @@ bool FGSubmodelMgr::release(submodel *sm, double dt)
     ballist->setParentNodes(_selected_ac);
     ballist->setContentsNode(sm->contents_node);
     ballist->setWeight(sm->weight);
-    ai->attach(ballist);
+    
+    aiManager()->attach(ballist);
 
     if (sm->count > 0)
         sm->count--;
@@ -383,8 +387,6 @@ void FGSubmodelMgr::transform(submodel *sm)
     } else {
         // set the data for a submodel tied to an AI Object
         //cout << " set the data for a submodel tied to an AI Object " << id << endl;
-        sm_list_iterator sm_list_itr = sm_list.begin();
-        sm_list_iterator end = sm_list.end();
         setParentNode(id);
     }
 
@@ -477,15 +479,15 @@ void FGSubmodelMgr::loadAI()
 {
     SG_LOG(SG_GENERAL, SG_DEBUG, "Submodels: Loading AI submodels ");
 
-    sm_list = ai->get_ai_list();
+    FGAIManager::ai_list_type sm_list(aiManager()->get_ai_list());
 
     if (sm_list.empty()) {
         SG_LOG(SG_GENERAL, SG_ALERT, "Submodels: Unable to read AI submodel list");
         return;
     }
 
-    sm_list_iterator sm_list_itr = sm_list.begin();
-    sm_list_iterator end = sm_list.end();
+    FGAIManager::ai_list_iterator sm_list_itr = sm_list.begin(),
+      end = sm_list.end();
 
     while (sm_list_itr != end) {
         string path = (*sm_list_itr)->_getSMPath();
