@@ -27,10 +27,11 @@
 
 #include <vector>
 #include <simgear/structure/SGBinding.hxx>
+#include <simgear/compiler.h>
 
-#if defined( UL_WIN32 )
+#if defined( SG_WINDOWS )
 #define TGT_PLATFORM	"windows"
-#elif defined ( UL_MAC_OSX )
+#elif defined ( SG_MAC )
 #define TGT_PLATFORM    "mac"
 #else
 #define TGT_PLATFORM	"unix"
