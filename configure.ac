@@ -23,6 +23,10 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AX_BOOST_BASE([1.37.0])
 
+# Show all compiler warnings by default
+CXXFLAGS="$CXXFLAGS -Wall"
+CFLAGS="$CFLAGS -Wall"
+
 if test "x$BOOST_CPPFLAGS" != "x-I/usr/include" ; then
    CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
 fi
@@ -88,7 +92,7 @@ case "${host}" in
     ])
 
     # Mac OS X specific configure options
-    AC_ARG_WITH(cocoa_framework, [  --with-cocoa-framework       Use the Cocoa rather than Carbon]])
+    AC_ARG_WITH(cocoa_framework, [  --with-cocoa-framework         Use the Cocoa rather than Carbon])
     if test "x$with_cocoa_framework" != "x" ; then
         macAPI=Cocoa
         AC_MSG_NOTICE([Using Cocoa framework])
@@ -97,19 +101,19 @@ case "${host}" in
         AC_MSG_NOTICE([Using Carbon framework])
     fi
 
-    AC_ARG_WITH(osg_framework, [  --with-osg-framework=PREFIX       Specify the prefix path to osg frameworks [default=standard framework paths]])
+    AC_ARG_WITH(osg_framework, [  --with-osg-framework=PREFIX    Specify the prefix path to osg frameworks [default=standard framework paths]])
     if test "x$with_osg_framework" != "x" ; then
         echo "osg prefix is $with_osg_framework"
 	export DYLD_FRAMEWORK_PATH="$DYLD_FRAMEWORK_PATH:$with_osg_framework"
     fi
 
-    AC_ARG_WITH(plib_framework, [  --with-plib-framework=PREFIX       Specify the prefix path to PLIB framework [default=standard framework paths]])
+    AC_ARG_WITH(plib_framework, [  --with-plib-framework=PREFIX   Specify the prefix path to PLIB framework [default=standard framework paths]])
     if test "x$with_plib_framework" != "x" ; then
         echo "plib prefix is $with_plib_framework"
 	export DYLD_FRAMEWORK_PATH="$DYLD_FRAMEWORK_PATH:$with_plib_framework"
     fi
 
-    AC_ARG_WITH(alut_framework, [ --with-alut-framework=PREFIX    Specify the prefix path to ALUT.framework ])
+    AC_ARG_WITH(alut_framework, [  --with-alut-framework=PREFIX   Specify the prefix path to ALUT.framework ])
     if test "x$with_alut_framework" != "x"; then
         echo "ALUT framework prefix is $with_alut_framework"
     fi
@@ -179,15 +183,13 @@ AM_CONDITIONAL(ENABLE_SP_FDM, test "x$enable_sp_fdms" != "xno")
 
 # Specify whether we want to compile ATCDCL.
 # default to with_atcdcl=yes
-AC_ARG_ENABLE(atcdcl, [  --enable-atcdcl                Compile and link the depricated atc/ai module], [], [enable_atcdcl="$enableval"] )
+AC_ARG_ENABLE(atcdcl, [  --enable-atcdcl                Compile and link the deprecated atc/ai module], [], [enable_atcdcl="$enableval"] )
 if test "x$enable_atcdcl" = "xyes"; then
     AC_DEFINE([ENABLE_ATCDCL], 1, [Define to include old ATC/AI module])
 else
     AC_DEFINE([ENABLE_ATCDCL], 0, [Define to include old ATC/AI module])
 fi
 AM_CONDITIONAL(ENABLE_ATCDCL, test "x$enable_atcdcl" = "xyes")
-
-
 
 dnl EXPERIMENTAL generic event driven input device
 # defaults to no
@@ -230,7 +232,6 @@ if test "x$with_threads" = "xyes"; then
     CFLAGS="$CFLAGS -D_REENTRANT"
 fi
 AC_CHECK_HEADER(pthread.h)
-
 
 dnl Used by JSBSim to conditionally compile in fgfs interface code
 AC_DEFINE([FGFS], 1, [Define so that JSBSim compiles in 'library' mode])
@@ -314,7 +315,7 @@ AC_SEARCH_LIBS(clock_gettime, rt)
 base_LIBS="$LIBS"
 
 dnl Check for SDL or glut if enabled.
-AC_ARG_ENABLE(osgviewer, [  --enable-osgviewer             Configure to use osgViewer(default)], [enable_osgviewer="$enableval"])
+AC_ARG_ENABLE(osgviewer, [  --enable-osgviewer             Configure to use osgViewer (default)], [enable_osgviewer="$enableval"])
 AC_ARG_ENABLE(sdl,  [  --enable-sdl                   Configure to use SDL], [enable_sdl="$enableval"])
 AC_ARG_ENABLE(glut, [  --enable-glut                  Configure to use GLUT], [enable_glut="$enableval"])
 AM_CONDITIONAL(USE_SDL, test "x$enable_sdl" = "xyes")
@@ -913,3 +914,4 @@ if test "x$enable_atcdcl" = "xyes"; then
 else
     echo "Build depricated ATC/AI module: no"
 fi
+

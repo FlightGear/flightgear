@@ -27,16 +27,19 @@
 #endif
 
 #include "input.hxx"
+
+#include <simgear/compiler.h>
+
 #include "FGMouseInput.hxx"
 #include "FGKeyboardInput.hxx"
 #include "FGJoystickInput.hxx"
 
 #ifdef WITH_EVENTINPUT
-#if defined( UL_WIN32 )
+#if defined( SG_WINDOWS )
 //to be developed
 //#include "FGDirectXEventInput.hxx"
 //#define INPUTEVENT_CLASS FGDirectXEventInput
-#elif defined ( UL_MAC_OSX )
+#elif defined ( SG_MAC )
 #include "FGMacOSXEventInput.hxx"
 #define INPUTEVENT_CLASS FGMacOSXEventInput
 #else
