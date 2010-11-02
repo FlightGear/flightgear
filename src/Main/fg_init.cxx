@@ -1503,25 +1503,32 @@ bool fgInitSubsystems() {
 
 void fgReInitSubsystems()
 {
-    // static const SGPropertyNode *longitude
-    //     = fgGetNode("/sim/presets/longitude-deg");
-    // static const SGPropertyNode *latitude
-    //     = fgGetNode("/sim/presets/latitude-deg");
-    static const SGPropertyNode *altitude
-        = fgGetNode("/sim/presets/altitude-ft");
     static const SGPropertyNode *master_freeze
         = fgGetNode("/sim/freeze/master");
 
-    SG_LOG( SG_GENERAL, SG_INFO,
-            "fgReInitSubsystems(): /position/altitude = "
-            << altitude->getDoubleValue() );
+    SG_LOG( SG_GENERAL, SG_INFO, "fgReInitSubsystems()");
 
+// setup state to begin re-init
     bool freeze = master_freeze->getBoolValue();
     if ( !freeze ) {
         fgSetBool("/sim/freeze/master", true);
     }
+    
+    fgSetBool("/sim/signals/reinit", true);
     fgSetBool("/sim/crashed", false);
 
+// do actual re-init steps
+    globals->get_subsystem("flight")->unbind();
+    
+  // reset control state, before restoring initial state; -set or config files
+  // may specify values for flaps, trim tabs, magnetos, etc
+    globals->get_controls()->reset_all();
+        
+    globals->restoreInitialState();
+
+    // update our position based on current presets
+    fgInitPosition();
+    
     // Force reupdating the positions of the ai 3d models. They are used for
     // initializing ground level for the FDM.
     globals->get_subsystem("ai_model")->reinit();
@@ -1532,11 +1539,11 @@ void fgReInitSubsystems()
     // reload offsets from config defaults
     globals->get_viewmgr()->reinit();
 
-    globals->get_controls()->reset_all();
-
     globals->get_subsystem("time")->reinit();
     globals->get_subsystem("tile-manager")->reinit();
     
+// setup state to end re-init
+    fgSetBool("/sim/signals/reinit", false);
     if ( !freeze ) {
         fgSetBool("/sim/freeze/master", false);
     }
@@ -1546,27 +1553,9 @@ void fgReInitSubsystems()
 
 void doSimulatorReset(void)  // from gui_local.cxx -- TODO merge with fgReInitSubsystems()
 {
-    static SGPropertyNode_ptr master_freeze = fgGetNode("/sim/freeze/master", true);
-
-    bool freeze = master_freeze->getBoolValue();
-    if (!freeze)
-        master_freeze->setBoolValue(true);
-
-    fgSetBool("/sim/signals/reinit", true);
-
-    globals->get_subsystem("flight")->unbind();
-
-    globals->restoreInitialState();
-
-    // update our position based on current presets
-    fgInitPosition();
+    
 
     fgReInitSubsystems();
-
-    fgSetBool("/sim/signals/reinit", false);
-
-    if (!freeze)
-        master_freeze->setBoolValue(false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

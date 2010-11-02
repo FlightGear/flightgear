@@ -1211,23 +1211,7 @@ do_play_audio_sample (const SGPropertyNode * arg)
 static bool
 do_presets_commit (const SGPropertyNode * arg)
 {
-    // unbind the current fdm state so property changes
-    // don't get lost when we subsequently delete this fdm
-    // and create a new one.
-    globals->get_subsystem("flight")->unbind();
-
-    // set position from presets
-    fgInitPosition();
-
     fgReInitSubsystems();
-
-#if 0
-    if ( ! fgGetBool("/sim/presets/onground") ) {
-        fgSetBool( "/sim/freeze/master", true );
-        fgSetBool( "/sim/freeze/clock", true );
-    }
-#endif
-
     return true;
 }
 
