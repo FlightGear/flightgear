@@ -384,23 +384,6 @@
     <ClCompile Include="..\..\..\src\Autopilot\pisimplecontroller.cxx" />
     <ClCompile Include="..\..\..\src\Autopilot\predictor.cxx" />
     <ClCompile Include="..\..\..\src\Autopilot\route_mgr.cxx" />
-    <ClCompile Include="..\..\..\src\Cockpit\cockpit.cxx" />
-    <ClCompile Include="..\..\..\src\Cockpit\hud.cxx">
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Cockpit\hud_card.cxx" />
-    <ClCompile Include="..\..\..\src\Cockpit\hud_dnst.cxx" />
-    <ClCompile Include="..\..\..\src\Cockpit\hud_gaug.cxx" />
-    <ClCompile Include="..\..\..\src\Cockpit\hud_inst.cxx" />
-    <ClCompile Include="..\..\..\src\Cockpit\hud_labl.cxx" />
-    <ClCompile Include="..\..\..\src\Cockpit\hud_ladr.cxx" />
-    <ClCompile Include="..\..\..\src\Cockpit\hud_rwy.cxx" />
-    <ClCompile Include="..\..\..\src\Cockpit\hud_scal.cxx" />
-    <ClCompile Include="..\..\..\src\Cockpit\hud_tbi.cxx">
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\Cockpit\panel.cxx" />
     <ClCompile Include="..\..\..\src\Cockpit\panel_io.cxx" />
     <ClCompile Include="..\..\..\src\Cockpit\built_in\FGMagRibbon.cxx" />
@@ -409,7 +392,6 @@
     <ClCompile Include="..\..\..\src\FDM\flightProperties.cxx" />
     <ClCompile Include="..\..\..\src\FDM\JSBSim\FGFDMExec.cpp" />
     <ClCompile Include="..\..\..\src\FDM\JSBSim\FGJSBBase.cpp" />
-    <ClCompile Include="..\..\..\src\FDM\JSBSim\FGState.cpp" />
     <ClCompile Include="..\..\..\src\FDM\JSBSim\JSBSim.cxx" />
     <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGColumnVector3.cpp" />
     <ClCompile Include="..\..\..\src\Fdm\JSBSim\math\FGCondition.cpp" />
@@ -984,8 +966,6 @@
     <ClInclude Include="..\..\..\src\Autopilot\pisimplecontroller.hxx" />
     <ClInclude Include="..\..\..\src\Autopilot\predictor.hxx" />
     <ClInclude Include="..\..\..\src\Autopilot\route_mgr.hxx" />
-    <ClInclude Include="..\..\..\src\Cockpit\cockpit.hxx" />
-    <ClInclude Include="..\..\..\src\Cockpit\hud.hxx" />
     <ClInclude Include="..\..\..\src\Cockpit\panel.hxx" />
     <ClInclude Include="..\..\..\src\Cockpit\panel_io.hxx" />
     <ClInclude Include="..\..\..\src\Cockpit\built_in\FGMagRibbon.hxx" />
@@ -994,7 +974,6 @@
     <ClInclude Include="..\..\..\src\FDM\flightProperties.hxx" />
     <ClInclude Include="..\..\..\src\FDM\JSBSim\FGFDMExec.h" />
     <ClInclude Include="..\..\..\src\FDM\JSBSim\FGJSBBase.h" />
-    <ClInclude Include="..\..\..\src\FDM\JSBSim\FGState.h" />
     <ClInclude Include="..\..\..\src\FDM\JSBSim\JSBSim.hxx" />
     <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGColumnVector3.h" />
     <ClInclude Include="..\..\..\src\Fdm\JSBSim\math\FGCondition.h" />
