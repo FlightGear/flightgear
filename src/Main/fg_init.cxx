@@ -1491,6 +1491,8 @@ bool fgInitSubsystems() {
     // End of subsystem initialization.
     ////////////////////////////////////////////////////////////////////
 
+    fgSetBool("/sim/initialized", true);
+
     SG_LOG( SG_GENERAL, SG_INFO, endl);
 
                                 // Save the initial state for future

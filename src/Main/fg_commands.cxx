@@ -1211,7 +1211,15 @@ do_play_audio_sample (const SGPropertyNode * arg)
 static bool
 do_presets_commit (const SGPropertyNode * arg)
 {
-    fgReInitSubsystems();
+    if (fgGetBool("/sim/initialized", false)) {
+      fgReInitSubsystems();
+    } else {
+      // Nasal can trigger this during initial init, which confuses
+      // the logic in ReInitSubsystems, since initial state has not been
+      // saved at that time. Short-circuit everything here.
+      fgInitPosition();
+    }
+    
     return true;
 }
 
