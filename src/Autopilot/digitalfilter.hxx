@@ -53,6 +53,12 @@ class DigitalFilter : public AnalogComponent
 private:
     SGSharedPtr<DigitalFilterImplementation> _implementation;
 
+    enum InitializeTo {
+      INITIALIZE_OUTPUT,
+      INITIALIZE_INPUT,
+      INITIALIZE_NONE
+    };
+
 protected:
     bool configure( const std::string & nodeName, SGPropertyNode_ptr configNode);
     void update( bool firstTime, double dt);
@@ -61,6 +67,7 @@ protected:
     InputValueList _samples;
     InputValueList _rateOfChange;
     InputValueList _gain;
+    InitializeTo _initializeTo;
 
 public:
     DigitalFilter();
