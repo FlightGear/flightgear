@@ -33,12 +33,16 @@ dmgPath = Dir.pwd + "/fg_mac_nightly.dmg"
 puts "Erasing previous image dir"
 `rm -rf #{dmgDir}`
 
+osgVersion = `export PKG_CONFIG_PATH=#{prefixDir}/lib/pkgconfig;  pkg-config --modversion openscenegraph`
+osgVersion = osgVersion.chomp # strip trailing newlines
+puts "osgVersion='#{osgVersion}'"
+
 bundle=dmgDir + "/FlightGear.app"
 contents=bundle + "/Contents"
 macosDir=contents + "/MacOS"
 frameworksDir=contents +"/Frameworks"
 resourcesDir=contents+"/Resources"
-osgPluginsDir=contents+"/PlugIns/osgPlugins-2.9.7"
+osgPluginsDir=contents+"/PlugIns/osgPlugins-#{osgVersion}"
 volName="\"FlightGear Nightly Build\""
 
 puts "Creating directory structure"
@@ -67,7 +71,7 @@ libFile = "libOpenThreads.12.dylib"
 
 $osgPlugins.each do |p|
   pluginFile = "osgdb_#{p}.so"
-  `cp #{prefixDir}/lib/osgPlugins-2.9.7/#{pluginFile} #{osgPluginsDir}`
+  `cp #{prefixDir}/lib/osgPlugins-#{osgVersion}/#{pluginFile} #{osgPluginsDir}`
   fix_install_names("#{osgPluginsDir}/#{pluginFile}")
 end
 
