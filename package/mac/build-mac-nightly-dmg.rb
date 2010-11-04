@@ -4,19 +4,24 @@ require 'ERB'
 
 $osgLibs = ['osgFX', 'osgParticle', 'osg', 'osgGA', 'osgText', 'osgUtil', 'osgSim', 'osgViewer', 'osgDB']
 $osgPlugins = ['ac', 'osg', 'freetype', 'qt', 'imageio', 'rgb', 'txf']
-$osgDylibVersion='63'
+
+osgVersion = `./run-osgversion --version-number`
+puts "osgVersion='#{osgVersion}'"
+$osgSoVersion=`./run-osgversion --so-number`
+$openThreadsSoVersion=`./run-osgversion --openthreads-soversion-number`
+
 $alutSourcePath='/Library/Frameworks/ALUT.framework'
 
 def fix_install_names(object)
   #puts "fixing install names for #{object}"
   
   $osgLibs.each do |l|
-    oldName = "lib#{l}.#{$osgDylibVersion}.dylib"
+    oldName = "lib#{l}.#{$osgSoVersion}.dylib"
     newName = "@executable_path/../Frameworks/#{oldName}"
     `install_name_tool -change #{oldName} #{newName} #{object}`
   end
   
-  oldName = "libOpenThreads.12.dylib"
+  oldName = "libOpenThreads.#{openThreadsSoVersion}.dylib"
   newName= "@executable_path/../Frameworks/#{oldName}"
   `install_name_tool -change #{oldName} #{newName} #{object}`
   
@@ -38,7 +43,7 @@ contents=bundle + "/Contents"
 macosDir=contents + "/MacOS"
 frameworksDir=contents +"/Frameworks"
 resourcesDir=contents+"/Resources"
-osgPluginsDir=contents+"/PlugIns/osgPlugins-2.9.7"
+osgPluginsDir=contents+"/PlugIns/osgPlugins-#{osgVersion}"
 volName="\"FlightGear Nightly Build\""
 
 puts "Creating directory structure"
@@ -56,18 +61,18 @@ end
 
 puts "copying libraries"
 $osgLibs.each do |l|
-  libFile = "lib#{l}.#{$osgDylibVersion}.dylib"
+  libFile = "lib#{l}.#{$osgSoVersion}.dylib"
   `cp #{prefixDir}/lib/#{libFile} #{frameworksDir}`
   fix_install_names("#{frameworksDir}/#{libFile}")
 end
 
 # and not forgetting OpenThreads
-libFile = "libOpenThreads.12.dylib"
+libFile = "libOpenThreads.#{openThreadsSoVersion}.dylib"
 `cp #{prefixDir}/lib/#{libFile} #{frameworksDir}`
 
 $osgPlugins.each do |p|
   pluginFile = "osgdb_#{p}.so"
-  `cp #{prefixDir}/lib/osgPlugins-2.9.7/#{pluginFile} #{osgPluginsDir}`
+  `cp #{prefixDir}/lib/osgPlugins-#{osgVersion}/#{pluginFile} #{osgPluginsDir}`
   fix_install_names("#{osgPluginsDir}/#{pluginFile}")
 end
 
