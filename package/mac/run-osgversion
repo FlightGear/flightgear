@@ -1,0 +1,4 @@
+#/bin/bash
+DYLD_LIBRARY_PATH=$PWD/dist/lib
+./dist/bin/osgversion $1
+

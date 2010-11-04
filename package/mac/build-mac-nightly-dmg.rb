@@ -4,19 +4,24 @@ require 'ERB'
 
 $osgLibs = ['osgFX', 'osgParticle', 'osg', 'osgGA', 'osgText', 'osgUtil', 'osgSim', 'osgViewer', 'osgDB']
 $osgPlugins = ['ac', 'osg', 'freetype', 'qt', 'imageio', 'rgb', 'txf']
-$osgDylibVersion='63'
+
+osgVersion = `./run-osgversion --version-number`
+puts "osgVersion='#{osgVersion}'"
+$osgSoVersion=`./run-osgversion --so-number`
+$openThreadsSoVersion=`./run-osgversion --openthreads-soversion-number`
+
 $alutSourcePath='/Library/Frameworks/ALUT.framework'
 
 def fix_install_names(object)
   #puts "fixing install names for #{object}"
   
   $osgLibs.each do |l|
-    oldName = "lib#{l}.#{$osgDylibVersion}.dylib"
+    oldName = "lib#{l}.#{$osgSoVersion}.dylib"
     newName = "@executable_path/../Frameworks/#{oldName}"
     `install_name_tool -change #{oldName} #{newName} #{object}`
   end
   
-  oldName = "libOpenThreads.12.dylib"
+  oldName = "libOpenThreads.#{openThreadsSoVersion}.dylib"
   newName= "@executable_path/../Frameworks/#{oldName}"
   `install_name_tool -change #{oldName} #{newName} #{object}`
   
@@ -32,10 +37,6 @@ dmgPath = Dir.pwd + "/fg_mac_nightly.dmg"
 
 puts "Erasing previous image dir"
 `rm -rf #{dmgDir}`
-
-osgVersion = `export PKG_CONFIG_PATH=#{prefixDir}/lib/pkgconfig;  pkg-config --modversion openscenegraph`
-osgVersion = osgVersion.chomp # strip trailing newlines
-puts "osgVersion='#{osgVersion}'"
 
 bundle=dmgDir + "/FlightGear.app"
 contents=bundle + "/Contents"
@@ -60,13 +61,13 @@ end
 
 puts "copying libraries"
 $osgLibs.each do |l|
-  libFile = "lib#{l}.#{$osgDylibVersion}.dylib"
+  libFile = "lib#{l}.#{$osgSoVersion}.dylib"
   `cp #{prefixDir}/lib/#{libFile} #{frameworksDir}`
   fix_install_names("#{frameworksDir}/#{libFile}")
 end
 
 # and not forgetting OpenThreads
-libFile = "libOpenThreads.12.dylib"
+libFile = "libOpenThreads.#{openThreadsSoVersion}.dylib"
 `cp #{prefixDir}/lib/#{libFile} #{frameworksDir}`
 
 $osgPlugins.each do |p|
