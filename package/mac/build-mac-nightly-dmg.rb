@@ -5,10 +5,17 @@ require 'ERB'
 $osgLibs = ['osgFX', 'osgParticle', 'osg', 'osgGA', 'osgText', 'osgUtil', 'osgSim', 'osgViewer', 'osgDB']
 $osgPlugins = ['ac', 'osg', 'freetype', 'qt', 'imageio', 'rgb', 'txf']
 
-osgVersion = `./run-osgversion --version-number`
-puts "osgVersion='#{osgVersion}'"
-$osgSoVersion=`./run-osgversion --so-number`
-$openThreadsSoVersion=`./run-osgversion --openthreads-soversion-number`
+def runOsgVersion(option)
+  env = "export DYLD_LIBRARY_PATH=#{Dir.pwd}/dist/lib"
+  bin = Dir.pwd + "/dist/bin/osgversion"
+  return `#{env}; #{bin} --#{option}`.chomp
+end
+
+osgVersion = runOsgVersion('version-number')
+$osgSoVersion=runOsgVersion('so-number')
+$openThreadsSoVersion=runOsgVersion('openthreads-soversion-number')
+
+puts "osgVersion=#{osgVersion}, so-number=#{$osgSoVersion}"
 
 $alutSourcePath='/Library/Frameworks/ALUT.framework'
 
@@ -21,7 +28,7 @@ def fix_install_names(object)
     `install_name_tool -change #{oldName} #{newName} #{object}`
   end
   
-  oldName = "libOpenThreads.#{openThreadsSoVersion}.dylib"
+  oldName = "libOpenThreads.#{$openThreadsSoVersion}.dylib"
   newName= "@executable_path/../Frameworks/#{oldName}"
   `install_name_tool -change #{oldName} #{newName} #{object}`
   
@@ -67,7 +74,7 @@ $osgLibs.each do |l|
 end
 
 # and not forgetting OpenThreads
-libFile = "libOpenThreads.#{openThreadsSoVersion}.dylib"
+libFile = "libOpenThreads.#{$openThreadsSoVersion}.dylib"
 `cp #{prefixDir}/lib/#{libFile} #{frameworksDir}`
 
 $osgPlugins.each do |p|
