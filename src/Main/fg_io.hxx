@@ -45,7 +45,7 @@ public:
     void unbind();
     void update( double dt );
 
-    void shutdown_all();
+    void shutdown();
 
 private:
 
@@ -55,7 +55,9 @@ private:
 
     // define the global I/O channel list
     //io_container global_io_list;
-    std::vector< FGProtocol* > io_channels;
+    
+    typedef std::vector< FGProtocol* > ProtocolVec;
+    ProtocolVec io_channels;
 };
 
 
