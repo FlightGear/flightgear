@@ -1,0 +1,53 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1038\cocoasubrtf320
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww14720\viewh15300\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\qc\pardirnatural
+
+\f0\b\fs30 \cf0 FlightGear nightly build
+\b0\fs24 \
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+
+\b\fs26 \cf0 Introduction
+\b0\fs24 \
+\
+This is an automatically generated build of FlightGear from the developer code repositories (Git), for Intel Macs running Mac OSX 10.5 (Leopard) or higher. It does not include a GUI launcher, despite being packaged as an application - see 'Running' below.\
+\
+This build receives NO manual testing, and only the most limited automatic testing (at present). Use it at your own risk, and report problems you encounter via the appropriate project communication channels - the {\field{\*\fldinst{HYPERLINK "https://lists.sourceforge.net/lists/listinfo/flightgear-devel"}}{\fldrslt developer mailing list}} or the {\field{\*\fldinst{HYPERLINK "http://code.google.com/p/flightgear-bugs/issues/list"}}{\fldrslt bug tracker}}. Please don't use IRC or the forums as a bug-reporting tool, since they are difficult to track over time.\
+\
+
+\b\fs26 Running
+\b0\fs24 \
+\
+No GUI launcher tool is included, unlike official releases. Launch the 
+\f1 fgfs
+\f0  binary from Terminal, passing appropriate arguments, such as 
+\f1 --fg-root
+\f0 , 
+\f1 --aircraft
+\f0  and 
+\f1 --airport
+\f0 . If you're not familiar with using Terminal to launch a bundled application, or specifying arguments directly to FlightGear, this build is not for you!\
+\
+This build will read settings from 
+\f1 .fgfsrc
+\f0  as normal, if you wish to save standard options (such as the root, aircraft and scenery dirs) instead of specifying them on the command line. Note all directory paths passed to FlightGear must be absolute.\
+\
+
+\b\fs26 Examples
+\b0\fs24 \
+\
+	
+\f1 ./FlightGear.app/Contents/MacOS/fgfs --fg-root=$HOME/Documents/fgdata --aircraft=b1900d\
+
+\f0 \
+	
+\f1 ./FlightGear.app/Contents/MacOS/fgfs --fg-root=$HOME/fgdata --fg-scenery=$HOME/terrasync-scenery
+\f0 \
+\
+
+\b\fs26 TerraSync
+\b0\fs24 \
+\
+A terrasync binary is included in the bundle, also in Contents/MacOS. Again it is assumed the user is familiar with manually specifying appropriate terrasync arguments to specify a scenery direction, and also connecting terrasync to FlightGear.}

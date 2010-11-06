@@ -125,7 +125,7 @@ fgfs_LDADD = \
 	$(openal_LIBS) \
 	$(EVENT_LIBS)
 
-fgfs_LDFLAGS = $(fgfs_PLIB_FW) $(fgfs_OSG_FW)
+fgfs_LDFLAGS = $(fgfs_PLIB_FW) $(fgfs_OSG_FW) $(LDFLAGS)
 
 metar_SOURCES = metar_main.cxx
 

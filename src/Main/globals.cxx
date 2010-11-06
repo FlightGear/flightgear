@@ -172,6 +172,7 @@ FGGlobals::~FGGlobals()
         delete ai;
     }
     
+    subsystem_mgr->shutdown();
     subsystem_mgr->unbind();
     delete subsystem_mgr;
     

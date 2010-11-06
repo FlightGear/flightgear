@@ -303,7 +303,8 @@ bool ExponentialFilterImplementation::configure( const std::string & nodeName, S
 /* --------------------------------------------------------------------------------- */
 
 DigitalFilter::DigitalFilter() :
-    AnalogComponent()
+    AnalogComponent(),
+    _initializeTo(INITIALIZE_INPUT)
 {
 }
 
@@ -335,6 +336,20 @@ bool DigitalFilter::configure(const string& nodeName, SGPropertyNode_ptr configN
     return true;
   }
 
+  if( nodeName == "initialize-to" ) {
+    string s( configNode->getStringValue() );
+    if( s == "input" ) {
+      _initializeTo = INITIALIZE_INPUT;
+    } else if( s == "output" ) {
+      _initializeTo = INITIALIZE_OUTPUT;
+    } else if( s == "none" ) {
+      _initializeTo = INITIALIZE_NONE;
+    } else {
+      SG_LOG( SG_AUTOPILOT, SG_WARN, "unhandled initialize-to value '" << s << "' ignored" );
+    }
+    return true;
+  }
+
   SG_LOG( SG_AUTOPILOT, SG_BULK, "DigitalFilter::configure(" << nodeName << ") [unhandled]" << endl );
   return false; // not handled by us, let the base class try
 }
@@ -344,8 +359,22 @@ void DigitalFilter::update( bool firstTime, double dt)
   if( _implementation == NULL ) return;
 
   if( firstTime ) {
-    SG_LOG(SG_AUTOPILOT,SG_DEBUG, "First time initialization of " << get_name() << " to " << _valueInput.get_value() );
-    _implementation->initialize( _valueInput.get_value() );
+    switch( _initializeTo ) {
+
+      case INITIALIZE_INPUT:
+        SG_LOG(SG_AUTOPILOT,SG_DEBUG, "First time initialization of " << get_name() << " to " << _valueInput.get_value() );
+        _implementation->initialize( _valueInput.get_value() );
+        break;
+
+      case INITIALIZE_OUTPUT:
+        SG_LOG(SG_AUTOPILOT,SG_DEBUG, "First time initialization of " << get_name() << " to " << get_output_value() );
+        _implementation->initialize( get_output_value() );
+        break;
+
+      default:
+        SG_LOG(SG_AUTOPILOT,SG_DEBUG, "First time initialization of " << get_name() << " to (uninitialized)" );
+        break;
+    }
   }
 
   double input = _valueInput.get_value() - _referenceInput.get_value();

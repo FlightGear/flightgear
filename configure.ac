@@ -368,6 +368,7 @@ case "${host}" in
     dnl Mac OS X
 
     LIBS="$LIBS -framework GLUT -framework OpenGL -framework AGL -framework $macAPI -lobjc"
+    LDFLAGS="$LDFLAGS -headerpad_max_install_names"
     joystick_LIBS="$joystick_LIBS -framework IOKit -framework CoreFoundation"
     ;;
 

@@ -228,39 +228,6 @@
     <ClCompile Include="..\..\..\src\Autopilot\route_mgr.cxx">
       <Filter>Lib_Autopilot</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\Cockpit\cockpit.cxx">
-      <Filter>Lib_Cockpit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Cockpit\hud.cxx">
-      <Filter>Lib_Cockpit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Cockpit\hud_card.cxx">
-      <Filter>Lib_Cockpit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Cockpit\hud_dnst.cxx">
-      <Filter>Lib_Cockpit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Cockpit\hud_gaug.cxx">
-      <Filter>Lib_Cockpit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Cockpit\hud_inst.cxx">
-      <Filter>Lib_Cockpit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Cockpit\hud_labl.cxx">
-      <Filter>Lib_Cockpit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Cockpit\hud_ladr.cxx">
-      <Filter>Lib_Cockpit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Cockpit\hud_rwy.cxx">
-      <Filter>Lib_Cockpit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Cockpit\hud_scal.cxx">
-      <Filter>Lib_Cockpit</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\Cockpit\hud_tbi.cxx">
-      <Filter>Lib_Cockpit</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\Cockpit\panel.cxx">
       <Filter>Lib_Cockpit</Filter>
     </ClCompile>
@@ -274,9 +241,6 @@
       <Filter>Lib_JSBSim</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\FDM\JSBSim\FGJSBBase.cpp">
-      <Filter>Lib_JSBSim</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\FDM\JSBSim\FGState.cpp">
       <Filter>Lib_JSBSim</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\FDM\JSBSim\JSBSim.cxx">
@@ -1676,12 +1640,6 @@
     <ClInclude Include="..\..\..\src\Autopilot\route_mgr.hxx">
       <Filter>Lib_Autopilot</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\Cockpit\cockpit.hxx">
-      <Filter>Lib_Cockpit</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\Cockpit\hud.hxx">
-      <Filter>Lib_Cockpit</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\Cockpit\panel.hxx">
       <Filter>Lib_Cockpit</Filter>
     </ClInclude>
@@ -1695,9 +1653,6 @@
       <Filter>Lib_JSBSim</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\FDM\JSBSim\FGJSBBase.h">
-      <Filter>Lib_JSBSim</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\FDM\JSBSim\FGState.h">
       <Filter>Lib_JSBSim</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\FDM\JSBSim\JSBSim.hxx">

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIconFile</key>
+	<string>FlightGear.icns</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleGetInfoString</key>
+	<string>FlightGear nightly build</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleExecutable</key>
+	<string>fgfs</string>
+	<key>CFBundleIdentifier</key>
+	<string>org.flightgear.FlightGear</string>
+	<key>CFBundleVersion</key>
+	<string>2.0</string>
+	<key>CFBundleShortVersionString</key>
+	<string>unstable nightly build</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.5.0</string>
+</dict>
+</plist>
+
