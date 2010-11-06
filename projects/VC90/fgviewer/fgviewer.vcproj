@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\SimGear;..\..\..\..\install\msvc90\OpenSceneGraph\include;..\..\..\..\boost_1_39_0;..\..\..\..\3rdParty\include"
+				AdditionalIncludeDirectories="..\..\..\..\SimGear;..\..\..\..\install\msvc90\OpenSceneGraph\include;..\..\..\..\boost_1_44_0;..\..\..\..\3rdParty\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;NOMINMAX"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,7 +68,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="opengl32.lib osgd.lib osgDBd.lib osgViewerd.lib osgGAd.lib openthreadsd.lib osgParticled.lib osgUtild.lib osgTextd.lib ul_d.lib sg_d.lib zlibd.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\..\..\..\install\msvc90\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib"
+				AdditionalLibraryDirectories="..\..\..\..\install\msvc90\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib;..\..\..\..\boost_1_44_0\lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)/fgviewer.pdb"
 				SubSystem="1"
@@ -125,7 +125,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\SimGear;..\..\..\..\install\msvc90-64\OpenSceneGraph\include;..\..\..\..\boost_1_39_0;..\..\..\..\3rdParty.x64\include"
+				AdditionalIncludeDirectories="..\..\..\..\SimGear;..\..\..\..\install\msvc90-64\OpenSceneGraph\include;..\..\..\..\boost_1_44_0;..\..\..\..\3rdParty.x64\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;NOMINMAX"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -149,7 +149,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="opengl32.lib osgd.lib osgDBd.lib osgViewerd.lib osgGAd.lib openthreadsd.lib osgParticled.lib osgUtild.lib osgTextd.lib ul_d.lib sg_d.lib zlibd.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\..\..\..\install\msvc90-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib"
+				AdditionalLibraryDirectories="..\..\..\..\install\msvc90-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib;..\..\..\..\boost_1_44_0\lib64"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)/fgviewer.pdb"
 				SubSystem="1"
@@ -204,7 +204,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\SimGear;..\..\..\..\install\msvc90\OpenSceneGraph\include;..\..\..\..\boost_1_39_0;..\..\..\..\3rdParty\include"
+				AdditionalIncludeDirectories="..\..\..\..\SimGear;..\..\..\..\install\msvc90\OpenSceneGraph\include;..\..\..\..\boost_1_44_0;..\..\..\..\3rdParty\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;NOMINMAX"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
@@ -226,7 +226,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="opengl32.lib osg.lib osgDB.lib osgViewer.lib osgGA.lib openthreads.lib osgParticle.lib osgUtil.lib osgText.lib ul.lib sg.lib zlib.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\..\..\..\install\msvc90\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib"
+				AdditionalLibraryDirectories="..\..\..\..\install\msvc90\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib;..\..\..\..\boost_1_44_0\lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -283,7 +283,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\SimGear;..\..\..\..\install\msvc90-64\OpenSceneGraph\include;..\..\..\..\boost_1_39_0;..\..\..\..\3rdParty.x64\include"
+				AdditionalIncludeDirectories="..\..\..\..\SimGear;..\..\..\..\install\msvc90-64\OpenSceneGraph\include;..\..\..\..\boost_1_44_0;..\..\..\..\3rdParty.x64\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;NOMINMAX"
 				RuntimeLibrary="2"
 				RuntimeTypeInfo="true"
@@ -305,7 +305,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="opengl32.lib osg.lib osgDB.lib osgViewer.lib osgGA.lib openthreads.lib osgParticle.lib osgUtil.lib osgText.lib ul.lib sg.lib zlib.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\..\..\..\install\msvc90-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib"
+				AdditionalLibraryDirectories="..\..\..\..\install\msvc90-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib;..\..\..\..\boost_1_44_0\lib64"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
