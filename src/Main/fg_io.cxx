@@ -29,6 +29,7 @@
 #include <cstdlib>             // atoi()
 
 #include <string>
+#include <algorithm>
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/iochannel.hxx>
@@ -76,15 +77,13 @@ FGIO::FGIO()
 {
 }
 
-#include <algorithm>
-using std::for_each;
 
-static void delete_ptr( FGProtocol* p ) { delete p; }
+
+
 
 FGIO::~FGIO()
 {
-    shutdown_all();
-    for_each( io_channels.begin(), io_channels.end(), delete_ptr );
+    
 }
 
 
@@ -94,7 +93,7 @@ FGIO::parse_port_config( const string& config )
 {
     SG_LOG( SG_IO, SG_INFO, "Parse I/O channel request: " << config );
 
-    vector<string> tokens = simgear::strutils::split( config, "," );
+    string_list tokens = simgear::strutils::split( config, "," );
     if (tokens.empty())
     {
 	SG_LOG( SG_IO, SG_ALERT,
@@ -315,9 +314,8 @@ FGIO::init()
 
     // parse the configuration strings and store the results in the
     // appropriate FGIOChannel structures
-    typedef vector<string> container;
-    container::iterator i = globals->get_channel_options_list()->begin();
-    container::iterator end = globals->get_channel_options_list()->end();
+    string_list::iterator i = globals->get_channel_options_list()->begin();
+    string_list::iterator end = globals->get_channel_options_list()->end();
     for (; i != end; ++i )
     {
 	p = parse_port_config( *i );
@@ -339,7 +337,6 @@ FGIO::reinit()
 {
 }
 
-
 // process any IO channel work
 void
 FGIO::update( double delta_time_sec )
@@ -347,9 +344,8 @@ FGIO::update( double delta_time_sec )
     // cout << "processing I/O channels" << endl;
     // cout << "  Elapsed time = " << delta_time_sec << endl;
 
-    typedef vector< FGProtocol* > container;
-    container::iterator i = io_channels.begin();
-    container::iterator end = io_channels.end();
+    ProtocolVec::iterator i = io_channels.begin();
+    ProtocolVec::iterator end = io_channels.end();
     for (; i != end; ++i ) {
 	FGProtocol* p = *i;
 
@@ -369,24 +365,24 @@ FGIO::update( double delta_time_sec )
     }
 }
 
-
 void
-FGIO::shutdown_all() {
+FGIO::shutdown()
+{
     FGProtocol *p;
 
-    // cout << "shutting down all I/O channels" << endl;
-
-    typedef vector< FGProtocol* > container;
-    container::iterator i = io_channels.begin();
-    container::iterator end = io_channels.end();
+    ProtocolVec::iterator i = io_channels.begin();
+    ProtocolVec::iterator end = io_channels.end();
     for (; i != end; ++i )
     {
-	p = *i;
-
-	if ( p->is_enabled() ) {
-	    p->close();
-	}
+      p = *i;
+      if ( p->is_enabled() ) {
+          p->close();
+      }
+      
+      delete p;
     }
+
+  io_channels.clear();
 }
 
 void
