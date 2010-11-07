@@ -477,9 +477,15 @@ void CameraGroup::setCameraCullMasks(Node::NodeMask nm)
             continue;
         if (info->farCamera.valid() && info->farCamera->getNodeMask() != 0) {
             info->camera->setCullMask(nm & ~simgear::BACKGROUND_BIT);
+            info->camera->setCullMaskLeft(nm & ~simgear::BACKGROUND_BIT);
+            info->camera->setCullMaskRight(nm & ~simgear::BACKGROUND_BIT);
             info->farCamera->setCullMask(nm);
+            info->farCamera->setCullMaskLeft(nm);
+            info->farCamera->setCullMaskRight(nm);
         } else {
             info->camera->setCullMask(nm);
+            info->camera->setCullMaskLeft(nm);
+            info->camera->setCullMaskRight(nm);
         }
     }
 }
