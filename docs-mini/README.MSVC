@@ -2,10 +2,10 @@ Use FlightGear.sln to compile fgfs executable for Win32 or x64 architectures wit
 Previous versions of Visual Studio are not officially supported anymore.
 
 Precompiled librairies and headers for compiling x64 executables with VS2008 :
-ftp://ftp.ihg.uni-duisburg.de/FlightGear/Win32/MSVC/fgfs-x64-VS90-3rdParty+OSG-20100501.zip
+ftp://ftp.ihg.uni-duisburg.de/FlightGear/Win32/MSVC/fgfs-x64-VS90-3rdParty+OSG-20101106.zip
 
 Precompiled librairies and headers for compiling Win32 executables with VS2008 :
-ftp://ftp.ihg.uni-duisburg.de/FlightGear/Win32/MSVC/fgfs-win32-VS90-3rdParty+OSG-20100501.zip
+ftp://ftp.ihg.uni-duisburg.de/FlightGear/Win32/MSVC/fgfs-win32-VS90-3rdParty+OSG-20101106.zip
 
 The VS2008 / v9.0 project files assume the directory layout below :
 
@@ -15,8 +15,9 @@ Win32 build :
          bin /
          include /
          lib /
-      boost_1_39_0 /
+      boost_1_44_0 /
          boost /
+         lib /
       source /                   ( Flightgear CVS directory - It can also be renamed FlightGear or anything else
          src /
          projects /
@@ -37,7 +38,7 @@ Win32 build :
          projects /
             VC90 /
 
-3rdParty, boost_1_39_0 and install/msvc90 are included in the Win32 3rdParty archive.
+3rdParty, boost_1_44_0 and install/msvc90 are included in the Win32 3rdParty archive.
 
 x64 build :
  * any_directory_on_any_drive /
@@ -45,8 +46,9 @@ x64 build :
          bin /
          include /
          lib /
-      boost_1_39_0 /
+      boost_1_44_0 /
          boost /
+         lib64 /
       source /                   ( Flightgear CVS directory - It can also be renamed FlightGear or anything else
          src /
          projects /
@@ -67,7 +69,7 @@ x64 build :
          projects /
             VC90 /
 
-3rdParty.x64, boost_1_39_0 and install/msvc90-64 are included in the x64 3rdParty archive.
+3rdParty.x64, boost_1_44_0 and install/msvc90-64 are included in the x64 3rdParty archive.
 
 Typical setup should decompose into the following steps :
 
@@ -113,3 +115,9 @@ it in a scheduled task. To do that :
      msbuild FlightGear.sln /p:Configuration=Debug /m
 
 That's all...
+
+Note: you may experience the error below running the msbuild command :
+FlightGear\projects\VC90\FlightGear.sln : error MSB4018: The "ResolveVCProjectOutput" task failed unexpectedly.
+...(lots of additionnal messages)
+
+In that case, remove the /m switch from the command line.

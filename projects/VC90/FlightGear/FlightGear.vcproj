@@ -47,7 +47,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\src;..\..\..\src\include;..\..\..\..\SimGear;..\..\..\src\FDM\JSBSim;..\..\..\..\install\msvc90\OpenSceneGraph\include;..\..\..\..\3rdParty\include;..\..\..\..\boost_1_39_0"
+				AdditionalIncludeDirectories="..\..\..\src;..\..\..\src\include;..\..\..\..\SimGear;..\..\..\src\FDM\JSBSim;..\..\..\..\install\msvc90\OpenSceneGraph\include;..\..\..\..\3rdParty\include;..\..\..\..\boost_1_44_0"
 				PreprocessorDefinitions="_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				StringPooling="true"
 				BasicRuntimeChecks="0"
@@ -77,7 +77,7 @@
 				OutputFile="$(OutDir)\fgfs.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\..\install\msvc90\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib"
+				AdditionalLibraryDirectories="..\..\..\..\install\msvc90\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib;..\..\..\..\boost_1_44_0\lib"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -136,7 +136,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\src;..\..\..\src\include;..\..\..\..\SimGear;..\..\..\src\FDM\JSBSim;..\..\..\..\install\msvc90-64\OpenSceneGraph\include;..\..\..\..\3rdParty.x64\include;..\..\..\..\boost_1_39_0"
+				AdditionalIncludeDirectories="..\..\..\src;..\..\..\src\include;..\..\..\..\SimGear;..\..\..\src\FDM\JSBSim;..\..\..\..\install\msvc90-64\OpenSceneGraph\include;..\..\..\..\3rdParty.x64\include;..\..\..\..\boost_1_44_0"
 				PreprocessorDefinitions="_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;PU_USE_NATIVE"
 				StringPooling="true"
 				BasicRuntimeChecks="0"
@@ -165,7 +165,7 @@
 				OutputFile="$(OutDir)\fgfs.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\..\install\msvc90-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib"
+				AdditionalLibraryDirectories="..\..\..\..\install\msvc90-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib;..\..\..\..\boost_1_44_0\lib64"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -224,7 +224,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\..\src;..\..\..\src\include;..\..\..\src\FDM\JSBSim;..\..\..\..\SimGear;..\..\..\..\install\msvc90\OpenSceneGraph\include;..\..\..\..\3rdParty\include;..\..\..\..\boost_1_39_0"
+				AdditionalIncludeDirectories="..\..\..\src;..\..\..\src\include;..\..\..\src\FDM\JSBSim;..\..\..\..\SimGear;..\..\..\..\install\msvc90\OpenSceneGraph\include;..\..\..\..\3rdParty\include;..\..\..\..\boost_1_44_0"
 				PreprocessorDefinitions="NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -253,7 +253,7 @@
 				OutputFile="$(OutDir)\fgfs.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\..\install\msvc90\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib"
+				AdditionalLibraryDirectories="..\..\..\..\install\msvc90\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib;..\..\..\..\boost_1_44_0\lib"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -312,7 +312,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\..\src;..\..\..\src\include;..\..\..\src\FDM\JSBSim;..\..\..\..\SimGear;..\..\..\..\install\msvc90-64\OpenSceneGraph\include;..\..\..\..\3rdParty.x64\include;..\..\..\..\boost_1_39_0"
+				AdditionalIncludeDirectories="..\..\..\src;..\..\..\src\include;..\..\..\src\FDM\JSBSim;..\..\..\..\SimGear;..\..\..\..\install\msvc90-64\OpenSceneGraph\include;..\..\..\..\3rdParty.x64\include;..\..\..\..\boost_1_44_0"
 				PreprocessorDefinitions="NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;PU_USE_NATIVE"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -340,7 +340,7 @@
 				OutputFile="$(OutDir)\fgfs.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\..\install\msvc90-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib"
+				AdditionalLibraryDirectories="..\..\..\..\install\msvc90-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib;..\..\..\..\boost_1_44_0\lib64"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -4052,6 +4052,14 @@
 			Name="Lib_Navaids"
 			>
 			<File
+				RelativePath="..\..\..\src\Navaids\airways.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Navaids\airways.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Navaids\awynet.cxx"
 				>
 			</File>
@@ -4112,19 +4120,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Navaids\airways.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Navaids\airways.cxx"
+				RelativePath="..\..\..\src\Navaids\procedure.cxx"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\src\Navaids\procedure.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Navaids\procedure.cxx"
 				>
 			</File>
 			<File
@@ -4136,11 +4136,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Navaids\routePath.hxx"
+				RelativePath="..\..\..\src\Navaids\routePath.cxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Navaids\routePath.cxx"
+				RelativePath="..\..\..\src\Navaids\routePath.hxx"
 				>
 			</File>
 			<File
@@ -4804,14 +4804,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Instrumentation\rnav_waypt_controller.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Instrumentation\rnav_waypt_controller.hxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\Instrumentation\groundradar.cxx"
 				>
 			</File>
@@ -4953,6 +4945,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\Instrumentation\render_area_2d.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Instrumentation\rnav_waypt_controller.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Instrumentation\rnav_waypt_controller.hxx"
 				>
 			</File>
 			<File
