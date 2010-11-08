@@ -27,17 +27,28 @@ AutoCloseWindow true
 
 !define ThirdPartyBinDir "3rdParty\bin"
 
+!define MUI_ICON "flightgear\projects\VC90\flightgear.ico"
+!define MUI_UNICON "flightgear\projects\VC90\flightgear.ico"
+
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
-;!define MUI_HEADERIMAGE_BITMAP "logo.bmp" ; optional
-!define MUI_ABORTWARNING
+!define MUI_HEADERIMAGE_BITMAP "flightgear\package\Win-NSIS\fg-install-header.bmp" ; optional
+
+
+
 ;!define MUI_WELCOMEFINISHPAGE_BITMAP "welcome.bmp"
 ;!define MUI_UNWELCOMEFINISHPAGE_BITMAP "welcome.bmp"
 
 !insertmacro MUI_PAGE_WELCOME
-;!insertmacro MUI_PAGE_LICENSE "License.txt"
+; include GPL license page
+!insertmacro MUI_PAGE_LICENSE "flightgear\Copying"
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
+
+!define MUI_FINISHPAGE_RUN $INSTDIR\fgrun.exe
+!define MUI_FINISHPAGE_RUN_TEXT "Run FlightGear now"
+!insertmacro MUI_PAGE_FINISH
+
 
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
@@ -83,9 +94,9 @@ Section "" ;No components page, name is not important
   File ${OSGPluginsDir}\osgdb_txf.dll
   
   
+  Exec '"$INSTDIR\fgrun.exe"  --silent --fg-exe="$INSTDIR\fgfs.exe" --ts-exe="$INSTDIR\terrasync.exe" '
   
-  
-  CreateShortCut "$SMPROGRAMS\FlightGear-nightly.lnk" "$INSTDIR\fgrun.exe"
+  CreateShortCut "$SMPROGRAMS\FlightGear-nightly.lnk" "$INSTDIR\fgrun.exe" 
   WriteUninstaller "$INSTDIR\FlightGear_Uninstall.exe"
   
   WriteRegStr HKLM ${UninstallKey} "DisplayName" "FlightGear Nightly"
