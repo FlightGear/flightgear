@@ -11,6 +11,10 @@
 Name "FlightGear Nightly"
 OutFile fgfs_win32_nightly.exe
 
+; use LZMA for best compression
+SetCompressor /FINAL /SOLID lzma
+SetCompressorDictSize 64
+
 InstallDir $PROGRAMFILES\FlightGear-nightly
 
 ; Request admin privileges for Windows Vista
@@ -88,6 +92,9 @@ Section "" ;No components page, name is not important
   
   SetOutPath $INSTDIR\osgPlugins-${OSGVersion}
   File ${OSGPluginsDir}\osgdb_ac.dll
+  File ${OSGPluginsDir}\osgdb_osg.dll
+  File ${OSGPluginsDir}\osgdb_3ds.dll
+  File ${OSGPluginsDir}\osgdb_mdl.dll
   File ${OSGPluginsDir}\osgdb_jpeg.dll
   File ${OSGPluginsDir}\osgdb_rgb.dll  
   File ${OSGPluginsDir}\osgdb_png.dll
@@ -96,7 +103,8 @@ Section "" ;No components page, name is not important
   
   Exec '"$INSTDIR\fgrun.exe"  --silent --fg-exe="$INSTDIR\fgfs.exe" --ts-exe="$INSTDIR\terrasync.exe" '
   
-  CreateShortCut "$SMPROGRAMS\FlightGear-nightly.lnk" "$INSTDIR\fgrun.exe" 
+  CreateDirectory "$SMPROGRAMS\FlightGear"
+  CreateShortCut "$SMPROGRAMS\FlightGear\FlightGear-nightly.lnk" "$INSTDIR\fgrun.exe" 
   WriteUninstaller "$INSTDIR\FlightGear_Uninstall.exe"
   
   WriteRegStr HKLM ${UninstallKey} "DisplayName" "FlightGear Nightly"
@@ -116,7 +124,9 @@ Section "Uninstall"
   SetShellVarContext all
   
   
-  Delete "$SMPROGRAMS\FlightGear-nightly.lnk"
+  Delete "$SMPROGRAMS\FlightGear\FlightGear-nightly.lnk"
+  ; only delete the FlightGear group if it's empty
+  RMDir "$SMPROGRAMS\FlightGear"
   
   RMDir /r "$INSTDIR"
   
