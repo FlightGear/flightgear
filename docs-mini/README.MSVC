@@ -93,8 +93,8 @@ Typical setup should decompose into the following steps :
 It is also possible to compile a Debug version. This is only useful when hacking the code because 
 a Debug version is way slower than the Release one.
 
-The 64bit build is only available to people having the Professional edition of Visual Studio 2008. In that case, 14. above should be :
- 14. Add <any_directory_on_any_drive>/install/msvc90-64/OpenSceneGraph/bin and <any_directory_on_any_drive>/3rdParty.x64/bin to your PATH environment variable
+The 64bit build is only available to people having the Professional edition of Visual Studio 2008. In that case, 15. above should be :
+ 15. Add <any_directory_on_any_drive>/install/msvc90-64/OpenSceneGraph/bin and <any_directory_on_any_drive>/3rdParty.x64/bin to your PATH environment variable
 
 When the manual build works, it is possible to start it from the command line. This is useful 
 when setting up a build server or automating the process of retrieving the code and building 
