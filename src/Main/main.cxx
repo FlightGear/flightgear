@@ -483,10 +483,11 @@ static void fgIdleFunction ( void ) {
             string apt = fgGetString( "/sim/startup/options/airport" );
             string rwy = fgGetString( "/sim/startup/options/runway" );
             double strthdg = fgGetDouble( "/sim/startup/options/heading-deg", 9999.0 );
+            string parkpos = fgGetString( "/sim/presets/parkpos" );
             bool onground = fgGetBool( "/sim/presets/onground", false );
             // don't check for wind-speed < 1kt, this belongs to the runway-selection code
             // the other logic is taken from former startup.nas
-            if( hdg < 360.0 && apt.length() > 0 && strthdg > 360.0 && rwy.length() == 0 && onground ) {
+            if( hdg < 360.0 && apt.length() > 0 && strthdg > 360.0 && rwy.length() == 0 && onground && parkpos.length() == 0 ) {
                 extern bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg );
                 fgSetPosFromAirportIDandHdg( apt, hdg );
             }
