@@ -773,23 +773,31 @@ if test "x$ac_cv_header_zlib_h" != "xyes"; then
 fi
 
 dnl Check for Subversion library support
+# libsvn support defaults to yes
 save_LIBS=$LIBS
 save_CPPFLAGS=$CPPFLAGS
-LIBS="`apr-1-config --link-ld`"
-CPPFLAGS="-I/usr/include/subversion-1 `apr-1-config --includes`"
-AC_CHECK_HEADERS([svn_client.h])
-if test "x$ac_cv_header_svn_client_h" != "xyes"; then
-  echo "TerraSync will shell out for command line subversion"
+AC_ARG_WITH(libsvn, [  --without-libsvn        Do not use libsvn for terrasync [default=no]], [], [with_libsvn=yes])
+if test "x$with_libsvn" = "xyes"; then
+    LIBS="`apr-1-config --link-ld`"
+    CPPFLAGS="-I/usr/include/subversion-1 `apr-1-config --includes`"
+    AC_CHECK_HEADERS([svn_client.h])
+       if test "x$ac_cv_header_svn_client_h" = "xyes"; then
+	echo "TerraSync will use libsvn"
+	AC_SEARCH_LIBS(svn_client_checkout, svn_client-1)
+	AC_SEARCH_LIBS(svn_cmdline_init, svn_subr-1)
+	svn_LIBS=$LIBS
+	svn_CPPFLAGS=$CPPFLAGS
+	AC_SUBST(svn_LIBS)
+	AC_SUBST(svn_CPPFLAGS)
+       else
+	echo "Libsvn not found. TerraSync will use command line subversion"
+	svn_LIBS=""
+	svn_CPPFLAGS=""
+       fi
+else
+echo "Libsvn explicitly disabled. TerraSync will use command line subversion"
   svn_LIBS=""
   svn_CPPFLAGS=""
-else
-  echo "TerraSync will use integrated subversion library"
-  AC_SEARCH_LIBS(svn_client_checkout, svn_client-1)
-  AC_SEARCH_LIBS(svn_cmdline_init, svn_subr-1)
-  svn_LIBS=$LIBS
-  svn_CPPFLAGS=$CPPFLAGS
-  AC_SUBST(svn_LIBS)
-  AC_SUBST(svn_CPPFLAGS)
 fi
 LIBS=$save_LIBS
 CPPFLAGS=$save_CPPFLAGS
