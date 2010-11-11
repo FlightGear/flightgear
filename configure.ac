@@ -916,9 +916,9 @@ echo "================="
 echo "Prefix: $prefix"
 
 if test "x$with_logging" != "x"; then
-    echo "Debug messages: $with_logging"
+    echo "Log messages: $with_logging"
 else
-    echo "Debug messages: yes"
+    echo "Log messages: yes"
 fi
 
 echo -n "Automake version: "
@@ -929,15 +929,15 @@ if test "x$with_multiplayer" != "xno"; then
 fi
 
 if test "x$with_threads" = "xyes"; then
-    echo "threads: yes"
+    echo "Threads: yes"
 else
-    echo "threads: no"
+    echo "Threads: no"
 fi
 
 if test "x$with_eventinput" = "xyes"; then
-    echo "event input: yes"
+    echo "Event input: yes"
 else
-    echo "event input: no"
+    echo "Event input: no"
 fi
 
 if test "x$enable_sp_fdms" != "xno"; then
@@ -947,8 +947,8 @@ else
 fi
 
 if test "x$enable_atcdcl" = "xyes"; then
-    echo "Build depricated ATC/AI module: yes"
+    echo "Build deprecated ATC/AI module: yes"
 else
-    echo "Build depricated ATC/AI module: no"
+    echo "Build deprecated ATC/AI module: no"
 fi
 
