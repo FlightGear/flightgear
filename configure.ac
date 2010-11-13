@@ -1,7 +1,7 @@
 dnl Process this file with autogen.sh to produce a working configure
 dnl script.
 
-AC_INIT(FlightGear, m4_esyscmd([cat version]), [http://www.flightgear.org])
+AC_INIT(FlightGear, m4_esyscmd([cat ./version | tr -d '\n']), [http://www.flightgear.org])
 
 dnl Ensure touching the version causes autoconf to re-run
 AC_SUBST([CONFIGURE_DEPENDENCIES], ['$(top_srcdir)/version'])
