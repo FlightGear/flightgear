@@ -76,9 +76,13 @@ using std::string;
 
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
-#ifndef _MSC_VER
+
+#ifdef HAVE_VERSION_H
 #  include <Include/version.h>
+#else
+#  include <Include/no_version.h>
 #endif
+
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include "instrument_mgr.hxx"
