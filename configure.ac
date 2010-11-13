@@ -25,7 +25,7 @@ if test "x$BUILD_ID" != "x" ; then
     AC_SUBST([HUDSON_BUILD_NUMBER], $BUILD_NUMBER)
 else
     AC_SUBST([HUDSON_BUILD_ID], [none])
-    AC_SUBST([HUDSON_BUILD_NUMBER], [none])
+    AC_SUBST([HUDSON_BUILD_NUMBER], 0)
 fi
 
 AC_CHECK_PROG([HAVE_GIT], git, 1)
