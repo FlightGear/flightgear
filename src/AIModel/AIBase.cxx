@@ -60,6 +60,7 @@ FGAIBase::FGAIBase(object_type ot) :
     model_removed( fgGetNode("/ai/models/model-removed", true) ),
     manager( NULL ),
     fp( NULL ),
+    _installed(false),
     _impact_lat(0),
     _impact_lon(0),
     _impact_elev(0),
@@ -198,7 +199,7 @@ bool FGAIBase::init(bool search_in_AI_path) {
     string f;
     if(search_in_AI_path)
     {
-    // setup a modified Options strucutre, with only the $fg-root/AI defined;
+    // setup a modified Options structure, with only the $fg-root/AI defined;
     // we'll check that first, then give the normal search logic a chance.
     // this ensures that models in AI/ are preferred to normal models, where
     // both exist.
@@ -217,6 +218,8 @@ bool FGAIBase::init(bool search_in_AI_path) {
     
     if(f.empty())
         f = fgGetString("/sim/multiplay/default-model", default_model);
+    else
+        _installed = true;
 
     model = load3DModel(f, props);
 
@@ -229,6 +232,8 @@ bool FGAIBase::init(bool search_in_AI_path) {
 
     } else if (!model_path.empty()) {
         SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);
+        // not properly installed...
+        _installed = false;
     }
 
     setDie(false);
