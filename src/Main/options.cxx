@@ -56,7 +56,9 @@
 #include "util.hxx"
 #include "viewmgr.hxx"
 #include <Main/viewer.hxx>
+
 #include <simgear/version.h>
+#include <osg/Version>
 
 using std::string;
 using std::sort;
@@ -237,7 +239,8 @@ fgSetDefaults ()
     fgSetInt("/sim/multiplay/txport", 0);
     
     fgSetString("/sim/version/flightgear", FLIGHTGEAR_VERSION);
-    //fgSetString("/sim/version/simgear", FLIGHTGEAR_VERSION);
+    fgSetString("/sim/version/simgear", SG_STRINGIZE(SIMGEAR_VERSION));
+    fgSetString("/sim/version/openscenegraph", osgGetVersion());
     fgSetString("/sim/version/revision", REVISION);
     fgSetInt("/sim/version/build-number", HUDSON_BUILD_NUMBER);
     fgSetString("/sim/version/build-id", HUDSON_BUILD_ID);
