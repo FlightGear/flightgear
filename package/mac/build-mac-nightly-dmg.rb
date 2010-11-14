@@ -40,7 +40,7 @@ end
 prefixDir=Dir.pwd + "/dist"
 dmgDir=Dir.pwd + "/image"
 srcDir=Dir.pwd + "/flightgear"
-dmgPath = Dir.pwd + "/fg_mac_nightly.dmg"
+
 
 puts "Erasing previous image dir"
 `rm -rf #{dmgDir}`
@@ -54,6 +54,8 @@ osgPluginsDir=contents+"/PlugIns/osgPlugins-#{osgVersion}"
 volName="\"FlightGear Nightly Build\""
 
 VERSION = File.read("#{srcDir}/version").strip
+
+dmgPath = Dir.pwd + "/fg_mac_nightly_#{VERSION}.dmg"
 
 puts "Creating directory structure"
 `mkdir -p #{macosDir}`
