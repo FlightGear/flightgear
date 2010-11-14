@@ -15,6 +15,8 @@ osgVersion = runOsgVersion('version-number')
 $osgSoVersion=runOsgVersion('so-number')
 $openThreadsSoVersion=runOsgVersion('openthreads-soversion-number')
 
+VERSION = File.read("#{srcDir}/version").strip
+
 puts "osgVersion=#{osgVersion}, so-number=#{$osgSoVersion}"
 
 $alutSourcePath='/Library/Frameworks/ALUT.framework'
