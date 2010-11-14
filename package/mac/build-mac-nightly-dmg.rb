@@ -15,8 +15,6 @@ osgVersion = runOsgVersion('version-number')
 $osgSoVersion=runOsgVersion('so-number')
 $openThreadsSoVersion=runOsgVersion('openthreads-soversion-number')
 
-VERSION = File.read("#{srcDir}/version").strip
-
 puts "osgVersion=#{osgVersion}, so-number=#{$osgSoVersion}"
 
 $alutSourcePath='/Library/Frameworks/ALUT.framework'
@@ -54,6 +52,8 @@ frameworksDir=contents +"/Frameworks"
 resourcesDir=contents+"/Resources"
 osgPluginsDir=contents+"/PlugIns/osgPlugins-#{osgVersion}"
 volName="\"FlightGear Nightly Build\""
+
+VERSION = File.read("#{srcDir}/version").strip
 
 puts "Creating directory structure"
 `mkdir -p #{macosDir}`
