@@ -555,5 +555,22 @@ void fgDumpTerrainBranch()
     }
 }
 
+void fgPrintVisibleSceneInfoCommand()
+{
+    static const SGPropertyNode *master_freeze
+        = fgGetNode("/sim/freeze/master");
+
+    bool freeze = master_freeze->getBoolValue();
+    if ( !freeze ) {
+        fgSetBool("/sim/freeze/master", true);
+    }
+
+    flightgear::printVisibleSceneInfo(globals->get_renderer());
+
+    if ( !freeze ) {
+        fgSetBool("/sim/freeze/master", false);
+    }
+}
+
     
 
