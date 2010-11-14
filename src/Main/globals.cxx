@@ -56,7 +56,7 @@
 #include "fg_props.hxx"
 #include "fg_io.hxx"
 
-class AircraftResourceProvider : public simgear::ResourceProvider
+class AircraftResourceProvider : public simgear::ResourceProvider
 {
 public:
   AircraftResourceProvider() :
@@ -74,28 +74,27 @@ public:
   // test against the aircraft-dir property
     const char* aircraftDir = fgGetString("/sim/aircraft-dir");
     string_list aircraftDirPieces(sgPathBranchSplit(aircraftDir));
-    if (aircraftDirPieces.empty() || (aircraftDirPieces.back() != pieces[1])) {
-      return SGPath(); // current aircraft-dir does not match resource aircraft
-    }
-    
-    SGPath r(aircraftDir);
-    for (unsigned int i=2; i<pieces.size(); ++i) {
-      r.append(pieces[i]);
-    }
-    
-    if (r.exists()) {
-      SG_LOG(SG_IO, SG_INFO, "found path:" << aResource << " via /sim/aircraft-dir: " << r.str());
-      return r;
+    if (!aircraftDirPieces.empty() && (aircraftDirPieces.back() == pieces[1])) {
+        // current aircraft-dir matches resource aircraft
+        SGPath r(aircraftDir);
+        for (unsigned int i=2; i<pieces.size(); ++i) {
+          r.append(pieces[i]);
+        }
+        
+        if (r.exists()) {
+          SG_LOG(SG_IO, SG_INFO, "found path:" << aResource << " via /sim/aircraft-dir: " << r.str());
+          return r;
+        }
     }
   
-  // try each aircaft dir in turn
+  // try each aircraft dir in turn
     std::string res(aResource, 9); // resource path with 'Aircraft/' removed
     const string_list& dirs(globals->get_aircraft_paths());
     string_list::const_iterator it = dirs.begin();
     for (; it != dirs.end(); ++it) {
       SGPath p(*it, res);
       if (p.exists()) {
-        SG_LOG(SG_IO, SG_INFO, "found path:" << aResource << " in aircraft dir: " << r.str());
+        SG_LOG(SG_IO, SG_INFO, "found path:" << aResource << " in aircraft dir: " << *it);
         return p;
       }
     } // of aircraft path iteration

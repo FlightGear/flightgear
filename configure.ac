@@ -1,7 +1,11 @@
 dnl Process this file with autogen.sh to produce a working configure
 dnl script.
 
-AC_INIT
+AC_INIT(FlightGear, m4_esyscmd([cat ./version | tr -d '\n']), [http://www.flightgear.org])
+
+dnl Ensure touching the version causes autoconf to re-run
+AC_SUBST([CONFIGURE_DEPENDENCIES], ['$(top_srcdir)/version'])
+
 AC_CONFIG_SRCDIR([src/Airports/simple.cxx])
 
 dnl Require at least automake 2.52
@@ -10,7 +14,31 @@ AC_PREREQ(2.52)
 dnl Initialize the automake stuff
 dnl set the $host variable based on local machine/os
 AC_CANONICAL_TARGET
-AM_INIT_AUTOMAKE(FlightGear, 2.0.0)
+AM_INIT_AUTOMAKE([dist-bzip2])
+
+# variables for version.h
+AC_DEFINE([HAVE_VERSION_H], 1, [Set if version.h is generated])
+
+# are we running under Hudson? (defines BUILD_ID, BUILD_NUMBER in the environment)
+if test "x$BUILD_ID" != "x" ; then
+    AC_SUBST([HUDSON_BUILD_ID], $BUILD_ID)
+    AC_SUBST([HUDSON_BUILD_NUMBER], $BUILD_NUMBER)
+else
+    AC_SUBST([HUDSON_BUILD_ID], [none])
+    AC_SUBST([HUDSON_BUILD_NUMBER], 0)
+fi
+
+AC_CHECK_PROG([HAVE_GIT], git, 1)
+if test "x$HAVE_GIT" != "x" ; then 
+    # git might be installed, but we might be building from a tarball
+    if git rev-parse ; then
+	AC_SUBST([REVISION], `git rev-parse HEAD`)
+    else
+	AC_SUBST([REVISION], [none])	
+    fi
+else
+    AC_SUBST([REVISION], [none])	
+fi
 
 dnl Checks for programs.
 AC_PROG_MAKE_SET

@@ -193,6 +193,7 @@ protected:
     bool invisible;
     bool no_roll;
     bool serviceable;
+    bool _installed;
     int _subID;
 
     double life;

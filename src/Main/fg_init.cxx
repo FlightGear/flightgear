@@ -820,7 +820,7 @@ static void fgApplyStartOffset(const SGGeod& aStartPos, double aHeading, double 
 }
 
 // Set current_options lon/lat given an airport id and heading (degrees)
-static bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
+bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
     if ( id.empty() )
         return false;
 

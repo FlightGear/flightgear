@@ -3,7 +3,7 @@
 require 'ERB'
 
 $osgLibs = ['osgFX', 'osgParticle', 'osg', 'osgGA', 'osgText', 'osgUtil', 'osgSim', 'osgViewer', 'osgDB']
-$osgPlugins = ['ac', 'osg', 'freetype', 'qt', 'imageio', 'rgb', 'txf']
+$osgPlugins = ['ac', 'osg', 'freetype', 'qt', 'imageio', 'rgb', 'txf', 'mdl', '3ds']
 
 def runOsgVersion(option)
   env = "export DYLD_LIBRARY_PATH=#{Dir.pwd}/dist/lib"
@@ -52,6 +52,8 @@ frameworksDir=contents +"/Frameworks"
 resourcesDir=contents+"/Resources"
 osgPluginsDir=contents+"/PlugIns/osgPlugins-#{osgVersion}"
 volName="\"FlightGear Nightly Build\""
+
+VERSION = File.read("#{srcDir}/version").strip
 
 puts "Creating directory structure"
 `mkdir -p #{macosDir}`

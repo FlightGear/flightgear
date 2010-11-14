@@ -46,7 +46,7 @@
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/props/AtomicChangeListener.hxx>
 #include <simgear/props/props.hxx>
-#include <simgear/timing/sg_time.hxx>
+//#include <simgear/timing/sg_time.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/io/raw_socket.hxx>
 
@@ -469,8 +469,30 @@ static void fgIdleFunction ( void ) {
                 "Subsystem initialization failed ..." );
             exit(-1);
         }
-        fgSplashProgress("setting up time & renderer");
 
+        // Torsten Dreyer:
+        // ugly hack for automatic runway selection on startup based on
+        // metar data. Makes startup.nas obsolete and guarantees the same
+        // runway selection as for AI traffic. However, this code belongs to
+        // somewhere(?) else - if I only new where...
+        if( true == fgGetBool( "/environment/metar/valid" ) ) {
+            // the realwx_ctrl fetches metar in the foreground on init,
+            // If it was able to fetch a metar or one was given on the commandline,
+            // the valid flag is set here, otherwise it is false
+            double hdg = fgGetDouble( "/environment/metar/base-wind-dir-deg", 9999.0 );
+            string apt = fgGetString( "/sim/startup/options/airport" );
+            string rwy = fgGetString( "/sim/startup/options/runway" );
+            double strthdg = fgGetDouble( "/sim/startup/options/heading-deg", 9999.0 );
+            string parkpos = fgGetString( "/sim/presets/parkpos" );
+            bool onground = fgGetBool( "/sim/presets/onground", false );
+            // don't check for wind-speed < 1kt, this belongs to the runway-selection code
+            // the other logic is taken from former startup.nas
+            if( hdg < 360.0 && apt.length() > 0 && strthdg > 360.0 && rwy.length() == 0 && onground && parkpos.length() == 0 ) {
+                extern bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg );
+                fgSetPosFromAirportIDandHdg( apt, hdg );
+            }
+        }
+        fgSplashProgress("setting up time & renderer");
 
     } else if ( idle_state == 8 ) {
         idle_state = 1000;
