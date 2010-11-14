@@ -5,11 +5,12 @@
 
 !define /file OSGSoNumber $%TEMP%\osg-so-number.txt
 !define /file OSGVersion $%TEMP%\osg-version.txt
+!define /file FGVersion flightgear\version
 
 !echo "osg-so is ${OSGSoNumber}"
 
 Name "FlightGear Nightly"
-OutFile fgfs_win32_nightly.exe
+OutFile fgfs_win32_nightly_${FGVersion}.exe
 
 ; use LZMA for best compression
 SetCompressor /FINAL /SOLID lzma
@@ -105,10 +106,12 @@ Section "" ;No components page, name is not important
   
   CreateDirectory "$SMPROGRAMS\FlightGear"
   CreateShortCut "$SMPROGRAMS\FlightGear\FlightGear-nightly.lnk" "$INSTDIR\fgrun.exe" 
+  
+  
   WriteUninstaller "$INSTDIR\FlightGear_Uninstall.exe"
   
   WriteRegStr HKLM ${UninstallKey} "DisplayName" "FlightGear Nightly"
-  WriteRegStr HKLM ${UninstallKey} "DisplayVersion" "2.1"
+  WriteRegStr HKLM ${UninstallKey} "DisplayVersion" "${FGVersion}"
   WriteRegStr HKLM ${UninstallKey} "UninstallString" "$INSTDIR\FlightGear_Uninstall.exe"
   WriteRegStr HKLM ${UninstallKey} "UninstallPath" "$INSTDIR\FlightGear_Uninstall.exe"
   WriteRegDWORD HKLM ${UninstallKey} "NoModify" 1
