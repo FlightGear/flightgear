@@ -64,7 +64,7 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-#ifdef HAVE_VERSION_H
+#if defined( HAVE_VERSION_H ) && HAVE_VERSION_H
 #  include <Include/version.h>
 #else
 #  include <Include/no_version.h>
