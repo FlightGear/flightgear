@@ -536,127 +536,144 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
     return;
   }
 
-  MsgBuf msgBuf;
+  static MsgBuf msgBuf;
+  static unsigned msgLen = 0;
   T_PositionMsg* PosMsg = msgBuf.posMsg();
 
   strncpy(PosMsg->Model, fgGetString("/sim/model/path"), MAX_MODEL_NAME_LEN);
   PosMsg->Model[MAX_MODEL_NAME_LEN - 1] = '\0';
-  
-  PosMsg->time = XDR_encode_double (motionInfo.time);
-  PosMsg->lag = XDR_encode_double (motionInfo.lag);
-  for (unsigned i = 0 ; i < 3; ++i)
-    PosMsg->position[i] = XDR_encode_double (motionInfo.position(i));
-  SGVec3f angleAxis;
-  motionInfo.orientation.getAngleAxis(angleAxis);
-  for (unsigned i = 0 ; i < 3; ++i)
-    PosMsg->orientation[i] = XDR_encode_float (angleAxis(i));
-  for (unsigned i = 0 ; i < 3; ++i)
-    PosMsg->linearVel[i] = XDR_encode_float (motionInfo.linearVel(i));
-  for (unsigned i = 0 ; i < 3; ++i)
-    PosMsg->angularVel[i] = XDR_encode_float (motionInfo.angularVel(i));
-  for (unsigned i = 0 ; i < 3; ++i)
-    PosMsg->linearAccel[i] = XDR_encode_float (motionInfo.linearAccel(i));
-  for (unsigned i = 0 ; i < 3; ++i)
-    PosMsg->angularAccel[i] = XDR_encode_float (motionInfo.angularAccel(i));
-  
-  xdr_data_t* ptr = msgBuf.properties();
-  std::vector<FGPropertyData*>::const_iterator it;
-  it = motionInfo.properties.begin();
-  //cout << "OUTPUT PROPERTIES\n";
-  xdr_data_t* msgEnd = msgBuf.propsEnd();
-  while (it != motionInfo.properties.end() && ptr + 2 < msgEnd) {
-    
-    // First element is the ID. Write it out when we know we have room for
-    // the whole property.
-    xdr_data_t id =  XDR_encode_uint32((*it)->id);
-    // The actual data representation depends on the type
-    switch ((*it)->type) {
-      case simgear::props::INT:
-      case simgear::props::BOOL:
-      case simgear::props::LONG:
-        *ptr++ = id;
-        *ptr++ = XDR_encode_uint32((*it)->int_value);
-        //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->int_value << "\n";
-        break;
-      case simgear::props::FLOAT:
-      case simgear::props::DOUBLE:
-        *ptr++ = id;
-        *ptr++ = XDR_encode_float((*it)->float_value);
-        //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->float_value << "\n";
-        break;
-      case simgear::props::STRING:
-      case simgear::props::UNSPECIFIED:
-        {
-          // String is complicated. It consists of
-          // The length of the string
-          // The string itself
-          // Padding to the nearest 4-bytes.        
-          const char* lcharptr = (*it)->string_value;
-          
-          if (lcharptr != 0)
-          {
-            // Add the length         
-            ////cout << "String length: " << strlen(lcharptr) << "\n";
-            uint32_t len = strlen(lcharptr);
-            if (len > MAX_TEXT_SIZE)
-              len = MAX_TEXT_SIZE;
-            // XXX This should not be using 4 bytes per character!
-            // If there's not enough room for this property, drop it
-            // on the floor.
-            if (ptr + 2 + ((len + 3) & ~3) > msgEnd)
-                goto escape;
-            //cout << "String length unint32: " << len << "\n";
-            *ptr++ = id;
-            *ptr++ = XDR_encode_uint32(len);
-            if (len != 0)
-            {
-              // Now the text itself
-              // XXX This should not be using 4 bytes per character!
-              int lcount = 0;
-              while ((*lcharptr != '\0') && (lcount < MAX_TEXT_SIZE)) 
-              {
-                *ptr++ = XDR_encode_int8(*lcharptr);
-                lcharptr++;
-                lcount++;          
-              }
-
-              //cout << "Prop:" << (*it)->id << " " << (*it)->type << " " << len << " " << (*it)->string_value;
-
-              // Now pad if required
-              while ((lcount % 4) != 0)
-              {
-                *ptr++ = XDR_encode_int8(0);
-                lcount++;          
-                //cout << "0";
-              }
-              
-              //cout << "\n";
-            }
-          }
-          else
-          {
-            // Nothing to encode
-            *ptr++ = id;
-            *ptr++ = XDR_encode_uint32(0);
-            //cout << "Prop:" << (*it)->id << " " << (*it)->type << " 0\n";
-          }
-        }
-        break;
-        
-      default:
-        //cout << " Unknown Type: " << (*it)->type << "\n";
-        *ptr++ = id;
-        *ptr++ = XDR_encode_float((*it)->float_value);;
-        //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->float_value << "\n";
-        break;
-    }
-        
-    ++it;
+  if (fgGetBool("/sim/freeze/replay-state", true))
+  {
+      // do not send position updates during replay
+      for (unsigned i = 0 ; i < 3; ++i)
+      {
+          // no movement during replay
+          PosMsg->linearVel[i] = XDR_encode_float (0.0);
+          PosMsg->angularVel[i] = XDR_encode_float (0.0);
+          PosMsg->linearAccel[i] = XDR_encode_float (0.0);
+          PosMsg->angularAccel[i] = XDR_encode_float (0.0);
+      }
+      // all other data remains unchanged (resend last state) 
   }
-escape:
-  unsigned msgLen = reinterpret_cast<char*>(ptr) - msgBuf.Msg;
-  FillMsgHdr(msgBuf.msgHdr(), POS_DATA_ID, msgLen);
-  mSocket->sendto(msgBuf.Msg, msgLen, 0, &mServer);
+  else
+  {
+      PosMsg->time = XDR_encode_double (motionInfo.time);
+      PosMsg->lag = XDR_encode_double (motionInfo.lag);
+      for (unsigned i = 0 ; i < 3; ++i)
+        PosMsg->position[i] = XDR_encode_double (motionInfo.position(i));
+      SGVec3f angleAxis;
+      motionInfo.orientation.getAngleAxis(angleAxis);
+      for (unsigned i = 0 ; i < 3; ++i)
+        PosMsg->orientation[i] = XDR_encode_float (angleAxis(i));
+      for (unsigned i = 0 ; i < 3; ++i)
+        PosMsg->linearVel[i] = XDR_encode_float (motionInfo.linearVel(i));
+      for (unsigned i = 0 ; i < 3; ++i)
+        PosMsg->angularVel[i] = XDR_encode_float (motionInfo.angularVel(i));
+      for (unsigned i = 0 ; i < 3; ++i)
+        PosMsg->linearAccel[i] = XDR_encode_float (motionInfo.linearAccel(i));
+      for (unsigned i = 0 ; i < 3; ++i)
+        PosMsg->angularAccel[i] = XDR_encode_float (motionInfo.angularAccel(i));
+
+      xdr_data_t* ptr = msgBuf.properties();
+      std::vector<FGPropertyData*>::const_iterator it;
+      it = motionInfo.properties.begin();
+      //cout << "OUTPUT PROPERTIES\n";
+      xdr_data_t* msgEnd = msgBuf.propsEnd();
+      while (it != motionInfo.properties.end() && ptr + 2 < msgEnd) {
+        
+        // First element is the ID. Write it out when we know we have room for
+        // the whole property.
+        xdr_data_t id =  XDR_encode_uint32((*it)->id);
+        // The actual data representation depends on the type
+        switch ((*it)->type) {
+          case simgear::props::INT:
+          case simgear::props::BOOL:
+          case simgear::props::LONG:
+            *ptr++ = id;
+            *ptr++ = XDR_encode_uint32((*it)->int_value);
+            //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->int_value << "\n";
+            break;
+          case simgear::props::FLOAT:
+          case simgear::props::DOUBLE:
+            *ptr++ = id;
+            *ptr++ = XDR_encode_float((*it)->float_value);
+            //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->float_value << "\n";
+            break;
+          case simgear::props::STRING:
+          case simgear::props::UNSPECIFIED:
+            {
+              // String is complicated. It consists of
+              // The length of the string
+              // The string itself
+              // Padding to the nearest 4-bytes.        
+              const char* lcharptr = (*it)->string_value;
+              
+              if (lcharptr != 0)
+              {
+                // Add the length         
+                ////cout << "String length: " << strlen(lcharptr) << "\n";
+                uint32_t len = strlen(lcharptr);
+                if (len > MAX_TEXT_SIZE)
+                  len = MAX_TEXT_SIZE;
+                // XXX This should not be using 4 bytes per character!
+                // If there's not enough room for this property, drop it
+                // on the floor.
+                if (ptr + 2 + ((len + 3) & ~3) > msgEnd)
+                    goto escape;
+                //cout << "String length unint32: " << len << "\n";
+                *ptr++ = id;
+                *ptr++ = XDR_encode_uint32(len);
+                if (len != 0)
+                {
+                  // Now the text itself
+                  // XXX This should not be using 4 bytes per character!
+                  int lcount = 0;
+                  while ((*lcharptr != '\0') && (lcount < MAX_TEXT_SIZE)) 
+                  {
+                    *ptr++ = XDR_encode_int8(*lcharptr);
+                    lcharptr++;
+                    lcount++;          
+                  }
+    
+                  //cout << "Prop:" << (*it)->id << " " << (*it)->type << " " << len << " " << (*it)->string_value;
+    
+                  // Now pad if required
+                  while ((lcount % 4) != 0)
+                  {
+                    *ptr++ = XDR_encode_int8(0);
+                    lcount++;          
+                    //cout << "0";
+                  }
+                  
+                  //cout << "\n";
+                }
+              }
+              else
+              {
+                // Nothing to encode
+                *ptr++ = id;
+                *ptr++ = XDR_encode_uint32(0);
+                //cout << "Prop:" << (*it)->id << " " << (*it)->type << " 0\n";
+              }
+            }
+            break;
+            
+          default:
+            //cout << " Unknown Type: " << (*it)->type << "\n";
+            *ptr++ = id;
+            *ptr++ = XDR_encode_float((*it)->float_value);;
+            //cout << "Prop:" << (*it)->id << " " << (*it)->type << " "<< (*it)->float_value << "\n";
+            break;
+        }
+            
+        ++it;
+      }
+  escape:
+      msgLen = reinterpret_cast<char*>(ptr) - msgBuf.Msg;
+      FillMsgHdr(msgBuf.msgHdr(), POS_DATA_ID, msgLen);
+  }
+  if (msgLen>0)
+      mSocket->sendto(msgBuf.Msg, msgLen, 0, &mServer);
   SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::SendMyPosition");
 } // FGMultiplayMgr::SendMyPosition()
 
