@@ -106,6 +106,9 @@ it in a scheduled task. To do that :
      64bit environment (Vista 64-bit or Windows7 64-bit)
      You should see : "Setting environment for using Microsoft Visual Studio 2008 x86 tools."
      printed in the console
+     ( To start 64-bit build, the right environment is set with :
+       "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" amd64
+     )
  3. cd to the FlightGear project directory :
      D:
      cd \FGFSDevel\FlightGear\projects\VC90  (for example)
