@@ -92,7 +92,6 @@
 #include <Model/acmodel.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/redout.hxx>
-#include <Scenery/tilemgr.hxx>
 #include <GUI/new_gui.hxx>
 #include <Instrumentation/HUD/HUD.hxx>
 #include <Environment/precipitation_mgr.hxx>

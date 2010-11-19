@@ -31,7 +31,6 @@
 #include <GUI/new_gui.hxx>
 #include <GUI/dialog.hxx>
 #include <Aircraft/replay.hxx>
-#include <Scenery/tilemgr.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scripting/NasalSys.hxx>
 #include <Sound/sample_queue.hxx>
