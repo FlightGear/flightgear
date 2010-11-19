@@ -116,6 +116,7 @@ HeadingIndicatorDG::update (double dt)
     double offset = _offset_node->getDoubleValue();
     offset -= dt * (0.25 / 60.0); // 360deg/day
     SG_NORMALIZE_RANGE(offset, -360.0, 360.0);
+    _offset_node->setDoubleValue(offset);
 
                                 // No magvar - set the alignment manually
     double align = _align_node->getDoubleValue();
@@ -127,12 +128,10 @@ HeadingIndicatorDG::update (double dt)
     int sign = 0;
 
     if ( fabs ( yaw_rate ) > 5 ) {
-        sign = (yaw_rate < 0 ? -1 : 1);
         error += 0.033 * -yaw_rate * dt ;
     }
 
     if ( g > 1.5 || g < -0.5){
-        sign = (g < 0 ? -1 : 1);
         error += 0.033 * g * dt;
     }
 
