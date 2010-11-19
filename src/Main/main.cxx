@@ -187,16 +187,24 @@ static void fgMainLoop( void ) {
     }
 #endif
 
-    // END Tile Manager udpates
+    // END Tile Manager updates
     bool scenery_loaded = fgGetBool("sim/sceneryloaded");
-    if (!scenery_loaded && globals->get_tile_mgr()->isSceneryLoaded()
-        && fgGetBool("sim/fdm-initialized")) {
-        fgSetBool("sim/sceneryloaded",true);
-        if (fgGetBool("/sim/sound/working")) {
-            globals->get_soundmgr()->activate();
+    if (!scenery_loaded)
+    {
+        if (globals->get_tile_mgr()->isSceneryLoaded()
+             && fgGetBool("sim/fdm-initialized")) {
+            fgSetBool("sim/sceneryloaded",true);
+            if (fgGetBool("/sim/sound/working")) {
+                globals->get_soundmgr()->activate();
+            }
+            globals->get_props()->tie("/sim/sound/devices/name",
+                  SGRawValueFunctions<const char *>(0, fgSetNewSoundDevice), false);
         }
-        globals->get_props()->tie("/sim/sound/devices/name",
-              SGRawValueFunctions<const char *>(0, fgSetNewSoundDevice), false);
+        else
+        {
+            // be nice to loader threads while waiting for initial scenery, reduce to 2fps
+            usleep(500000);
+        }
     }
     simgear::AtomicChangeListener::fireChangeListeners();
 

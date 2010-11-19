@@ -82,7 +82,6 @@ void FGTileMgr::init() {
     TileEntry::setModelLoadHelper(this);
     
     _visibilityMeters = fgGetNode("/environment/visibility-m", true);
-    
 
     reinit();
 }
@@ -90,68 +89,55 @@ void FGTileMgr::init() {
 
 void FGTileMgr::reinit()
 {
-  tile_cache.init();
-  
-  state = Inited;
-
-  previous_bucket.make_bad();
-  current_bucket.make_bad();
-  longitude = latitude = -1000.0;
-
-  // force an update now
-  update(0.0);
+    tile_cache.init();
+    
+    state = Inited;
+    
+    previous_bucket.make_bad();
+    current_bucket.make_bad();
+    longitude = latitude = -1000.0;
+    
+    // force an update now
+    update(0.0);
 }
 
-// schedule a tile for loading
-void FGTileMgr::sched_tile( const SGBucket& b, const bool is_inner_ring, const bool is_cache_locked ) {
+
+/* schedule a tile for loading, keep request for given amount of time.
+ * Returns true if tile is already loaded. */
+bool FGTileMgr::sched_tile( const SGBucket& b, double priority, bool current_view, double duration)
+{
     // see if tile already exists in the cache
     TileEntry *t = tile_cache.get_tile( b );
-    if (t) {
-        t->set_timestamp(tile_cache.get_current_time());
-        t->set_inner_ring( is_inner_ring );
-        t->set_cache_lock( is_cache_locked );
-      return;
-    }
-    
-    // make space in the cache
-    SceneryPager* pager = FGScenery::getPagerSingleton();
-    while ( (int)tile_cache.get_size() >= tile_cache.get_max_cache_size() ) {
-        long index = tile_cache.get_oldest_tile();
-        if ( index >= 0 ) {
-            TileEntry *old = tile_cache.get_tile( index );
-            tile_cache.clear_entry( index );
-            osg::ref_ptr<osg::Object> subgraph = old->getNode();
-            old->removeFromSceneGraph();
-            delete old;
-            // zeros out subgraph ref_ptr, so subgraph is owned by
-            // the pager and will be deleted in the pager thread.
-            pager->queueDeleteRequest(subgraph);
-        } else {
-            // nothing to free ?!? forge ahead
-            break;
+    if (!t)
+    {
+        // create a new entry
+        t = new TileEntry( b );
+        // insert the tile into the cache, update will generate load request
+        if ( tile_cache.insert_tile( t ) )
+        {
+            // Attach to scene graph
+            t->addToSceneGraph(globals->get_scenery()->get_terrain_branch());
+        } else
+        {
+            // insert failed (cache full with no available entries to
+            // delete.)  Try again later
+            delete t;
+            return false;
         }
+
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "  New tile cache size " << (int)tile_cache.get_size() );
     }
 
-    // create a new entry
-    TileEntry *e = new TileEntry( b );
-    
-    // insert the tile into the cache
-    if ( tile_cache.insert_tile( e ) ) {
-        e->set_inner_ring( is_inner_ring );
-        e->set_cache_lock( is_cache_locked );
-        // update_queues will generate load request
-        // Attach to scene graph
-        e->addToSceneGraph(globals->get_scenery()->get_terrain_branch());
-    } else {
-        // insert failed (cache full with no available entries to
-        // delete.)  Try again later
-        delete e;
-    }
+    // update tile's properties
+    tile_cache.request_tile(t,priority,current_view,duration);
+
+    return t->is_loaded();
 }
 
-// schedule a needed buckets for loading
-void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis) {
-    
+/* schedule needed buckets for the current view position for loading,
+ * keep request for given amount of time */
+void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
+{
     // sanity check (unfortunately needed!)
     if ( longitude < -180.0 || longitude > 180.0 
          || latitude < -90.0 || latitude > 90.0 )
@@ -185,15 +171,8 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis) {
     // cout << "max cache size = " << tile_cache.get_max_cache_size()
     //      << " current cache size = " << tile_cache.get_size() << endl;
 
-    // clear the inner ring flags so we can set them below.  This
-    // prevents us from having "true" entries we aren't able to find
-    // to get rid of if we teleport a long ways away from the current
-    // location.
-    tile_cache.clear_inner_ring_flags();
-
-    // clear the cache lock flags which prevented tiles of the previous position to be dropped
-    // from the cache.
-    tile_cache.clear_cache_lock_flags();
+    // clear flags of all tiles belonging to the previous view set 
+    tile_cache.clear_current_view();
 
     // update timestamps, so all tiles scheduled now are *newer* than any tile previously loaded
     osg::FrameStamp* framestamp
@@ -202,29 +181,17 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis) {
 
     SGBucket b;
 
-    // schedule center tile first so it can be loaded first
-    b = sgBucketOffset( longitude, latitude, 0, 0 );
-    sched_tile( b, true, true );
-
     int x, y;
 
-    // schedule next ring of 8 tiles
-    for ( x = -1; x <= 1; ++x ) {
-        for ( y = -1; y <= 1; ++y ) {
-            if ( x != 0 || y != 0 ) {
-                b = sgBucketOffset( longitude, latitude, x, y );
-                sched_tile( b, true, true);
-            }
-        }
-    }
-
-    // schedule remaining tiles
-    for ( x = -xrange; x <= xrange; ++x ) {
-        for ( y = -yrange; y <= yrange; ++y ) {
-            if ( x < -1 || x > 1 || y < -1 || y > 1 ) {
-                SGBucket b = sgBucketOffset( longitude, latitude, x, y );
-                sched_tile( b, false, true);
-            }
+    /* schedule all tiles, use distance-based loading priority,
+     * so tiles are loaded in innermost-to-outermost sequence. */
+    for ( x = -xrange; x <= xrange; ++x )
+    {
+        for ( y = -yrange; y <= yrange; ++y )
+        {
+            SGBucket b = sgBucketOffset( longitude, latitude, x, y );
+            float priority = (-1.0) * (x*x+y*y);
+            sched_tile( b, priority, true, 0.0 );
         }
     }
 }
@@ -268,37 +235,6 @@ FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
     return result;
 }
 
-// Helper class for STL fun
-class TileLoad : public std::unary_function<TileCache::tile_map::value_type,
-                                            void>
-{
-public:
-    TileLoad(SceneryPager *pager, osg::FrameStamp* framestamp,
-             osg::Group* terrainBranch, osgDB::ReaderWriter::Options* options) :
-        _pager(pager), _framestamp(framestamp), _options(options) {}
-
-    TileLoad(const TileLoad& rhs) :
-        _pager(rhs._pager), _framestamp(rhs._framestamp),
-        _options(rhs._options) {}
-
-    void operator()(TileCache::tile_map::value_type& tilePair)
-    {
-        TileEntry* entry = tilePair.second;
-        if (entry->getNode()->getNumChildren() == 0) {
-            _pager->queueRequest(entry->tileFileName,
-                                 entry->getNode(),
-                                 entry->get_inner_ring() ? 10.0f : 1.0f,
-                                 _framestamp,
-                                 entry->getDatabaseRequest(),
-                                 _options);
-        }
-    }
-private:
-    SceneryPager* _pager;
-    osg::FrameStamp* _framestamp;
-    osgDB::ReaderWriter::Options* _options;
-};
-
 /**
  * Update the various queues maintained by the tilemagr (private
  * internal function, do not call directly.)
@@ -308,13 +244,71 @@ void FGTileMgr::update_queues()
     SceneryPager* pager = FGScenery::getPagerSingleton();
     osg::FrameStamp* framestamp
         = globals->get_renderer()->getViewer()->getFrameStamp();
-    tile_cache.set_current_time(framestamp->getReferenceTime());
-    for_each(tile_cache.begin(), tile_cache.end(),
-             TileLoad(pager,
-                      framestamp,
-                      globals->get_scenery()->get_terrain_branch(), _options.get()));
-}
+    double current_time = framestamp->getReferenceTime();
+    double vis = _visibilityMeters->getDoubleValue();
+    TileEntry *e;
+    int loading=0;
+    int sz=0;
 
+    tile_cache.set_current_time( current_time );
+    tile_cache.reset_traversal();
+
+    while ( ! tile_cache.at_end() )
+    {
+        e = tile_cache.get_current();
+        // cout << "processing a tile" << endl;
+        if ( e )
+        {
+            // Prepare the ssg nodes corresponding to each tile.
+            // Set the ssg transform and update it's range selector
+            // based on current visibilty
+            e->prep_ssg_node(vis);
+
+            if (( !e->is_loaded() )&&
+                ( !e->is_expired(current_time) ))
+            {
+                // schedule tile for loading with osg pager
+                pager->queueRequest(e->tileFileName,
+                                    e->getNode(),
+                                    e->get_priority(),
+                                    framestamp,
+                                    e->getDatabaseRequest(),
+                                    _options.get());
+                loading++;
+            }
+        } else
+        {
+            SG_LOG(SG_INPUT, SG_ALERT, "warning ... empty tile in cache");
+        }
+        tile_cache.next();
+        sz++;
+    }
+
+    int drop_count = sz - tile_cache.get_max_cache_size();
+    if (( drop_count > 0 )&&
+         ((loading==0)||(drop_count > 10)))
+    {
+        long drop_index = tile_cache.get_drop_tile();
+        while ( drop_index > -1 )
+        {
+            // schedule tile for deletion with osg pager
+            TileEntry* old = tile_cache.get_tile(drop_index);
+            tile_cache.clear_entry(drop_index);
+            
+            osg::ref_ptr<osg::Object> subgraph = old->getNode();
+            old->removeFromSceneGraph();
+            delete old;
+            // zeros out subgraph ref_ptr, so subgraph is owned by
+            // the pager and will be deleted in the pager thread.
+            pager->queueDeleteRequest(subgraph);
+            
+            if (--drop_count > 0)
+                drop_index = tile_cache.get_drop_tile();
+            else
+                drop_index = -1;
+        }
+    }
+}
 
 // given the current lon/lat (in degrees), fill in the array of local
 // chunks.  If the chunk isn't already in the cache, then read it from
@@ -323,12 +317,15 @@ void FGTileMgr::update(double)
 {
     SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update()" );
     SGVec3d viewPos = globals->get_current_view()->get_view_pos();
-    prep_ssg_nodes();
     double vis = _visibilityMeters->getDoubleValue();
     schedule_tiles_at(SGGeod::fromCart(viewPos), vis);
+
+    update_queues();
 }
 
-int FGTileMgr::schedule_tiles_at(const SGGeod& location, double rangeM)
+// schedule tiles for the viewer bucket (FDM/AI/groundcache/... use
+// "schedule_scenery" instead
+int FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
 {
     longitude = location.getLongitudeDeg();
     latitude = location.getLatitudeDeg();
@@ -337,6 +334,12 @@ int FGTileMgr::schedule_tiles_at(const SGGeod& location, double rangeM)
     //         << longitude << " " << latatitude );
 
     current_bucket.set_bucket( location );
+
+    // schedule more tiles when visibility increased considerably
+    // TODO Calculate tile size - instead of using fixed value (5000m)
+    if (range_m-scheduled_visibility > 5000.0)
+        previous_bucket.make_bad();
+
     // SG_LOG( SG_TERRAIN, SG_DEBUG, "Updating tile list for "
     //         << current_bucket );
     fgSetInt( "/environment/current-tile-id", current_bucket.gen_index() );
@@ -349,107 +352,86 @@ int FGTileMgr::schedule_tiles_at(const SGGeod& location, double rangeM)
             // We've moved to a new bucket, we need to schedule any
             // needed tiles for loading.
             SG_LOG( SG_TERRAIN, SG_INFO, "FGTileMgr::update()" );
-            schedule_needed(current_bucket, rangeM);
+            scheduled_visibility = range_m;
+            schedule_needed(current_bucket, range_m);
         }
+        // save bucket
+        previous_bucket = current_bucket;
     } else if ( state == Start || state == Inited ) {
         SG_LOG( SG_TERRAIN, SG_INFO, "State == Start || Inited" );
-
+        // do not update bucket yet (position not valid in initial loop)
         state = Running;
-        if (current_bucket != previous_bucket
-            && current_bucket.get_chunk_lon() != -1000) {
-               SG_LOG( SG_TERRAIN, SG_INFO, "FGTileMgr::update()" );
-               schedule_needed(current_bucket, rangeM);
-        }
+        previous_bucket.make_bad();
     }
-
-    update_queues();
-
-    // save bucket...
-    previous_bucket = current_bucket;
 
     return 1;
 }
 
-void FGTileMgr::prep_ssg_nodes() {
-
-    // traverse the potentially viewable tile list and update range
-    // selector and transform
-
-    double vis = _visibilityMeters->getDoubleValue();
-    TileEntry *e;
-    tile_cache.reset_traversal();
-
-    while ( ! tile_cache.at_end() ) {
-        // cout << "processing a tile" << endl;
-        if ( (e = tile_cache.get_current()) ) {
-            e->prep_ssg_node(vis);
-        } else {
-            SG_LOG(SG_INPUT, SG_ALERT, "warning ... empty tile in cache");
-        }
-        tile_cache.next();
-    }
-}
-
-bool FGTileMgr::scenery_available(const SGGeod& position, double range_m)
+/** Schedules scenery for given position. Load request remains valid for given duration
+ * (duration=0.0 => nothing is loaded).
+ * Used for FDM/AI/groundcache/... requests. Viewer uses "schedule_tiles_at" instead.
+ * Returns true when all tiles for the given position are already loaded, false otherwise.
+ */
+bool FGTileMgr::schedule_scenery(const SGGeod& position, double range_m, double duration)
 {
-  // sanity check (unfortunately needed!)
-  if (position.getLongitudeDeg() < -180 || position.getLongitudeDeg() > 180 ||
-      position.getLatitudeDeg() < -90 || position.getLatitudeDeg() > 90)
-    return false;
+    const float priority = 0.0;
+    double current_longitude = position.getLongitudeDeg();
+    double current_latitude = position.getLatitudeDeg();
+    bool available = true;
+    
+    // sanity check (unfortunately needed!)
+    if (current_longitude < -180 || current_longitude > 180 ||
+        current_latitude < -90 || current_latitude > 90)
+        return false;
   
-  SGBucket bucket(position);
-  TileEntry *te = tile_cache.get_tile(bucket);
-  if (!te || !te->is_loaded())
-    return false;
-
-  SGVec3d cartPos = SGVec3d::fromGeod(position);
-
-  // Traverse all tiles required to be there for the given visibility.
-  // This uses exactly the same algorithm like the tile scheduler.
-  double tile_width = bucket.get_width_m();
-  double tile_height = bucket.get_height_m();
-  double tile_r = 0.5*sqrt(tile_width*tile_width + tile_height*tile_height);
-  double max_dist = tile_r + range_m;
-  double max_dist2 = max_dist*max_dist;
+    SGBucket bucket(position);
+    available = sched_tile( bucket, priority, false, duration );
   
-  int xrange = (int)fabs(range_m / tile_width) + 1;
-  int yrange = (int)fabs(range_m / tile_height) + 1;
-  
-  for ( int x = -xrange; x <= xrange; ++x ) {
-    for ( int y = -yrange; y <= yrange; ++y ) {
-      // We have already checked for the center tile.
-      if ( x != 0 || y != 0 ) {
-        SGBucket b = sgBucketOffset( position.getLongitudeDeg(),
-                                     position.getLatitudeDeg(), x, y );
-        // Do not ask if it is just the next tile but way out of range.
-        if (max_dist2 < distSqr(cartPos, SGVec3d::fromGeod(b.get_center())))
-          continue;
-        TileEntry *te = tile_cache.get_tile(b);
-        if (!te || !te->is_loaded())
-          return false;
-      }
-    }
-  }
+    if ((!available)&&(duration==0.0))
+        return false;
 
-  // Survived all tests.
-  return true;
-}
+    SGVec3d cartPos = SGVec3d::fromGeod(position);
 
-namespace
-{
-struct IsTileLoaded :
-        public std::unary_function<TileCache::tile_map::value_type, bool>
-{
-    bool operator()(const TileCache::tile_map::value_type& tilePair) const
+    // Traverse all tiles required to be there for the given visibility.
+    double tile_width = bucket.get_width_m();
+    double tile_height = bucket.get_height_m();
+    double tile_r = 0.5*sqrt(tile_width*tile_width + tile_height*tile_height);
+    double max_dist = tile_r + range_m;
+    double max_dist2 = max_dist*max_dist;
+    
+    int xrange = (int)fabs(range_m / tile_width) + 1;
+    int yrange = (int)fabs(range_m / tile_height) + 1;
+
+    for ( int x = -xrange; x <= xrange; ++x )
     {
-        return tilePair.second->is_loaded();
+        for ( int y = -yrange; y <= yrange; ++y )
+        {
+            // We have already checked for the center tile.
+            if ( x != 0 || y != 0 )
+            {
+                SGBucket b = sgBucketOffset( current_longitude,
+                                             current_latitude, x, y );
+                double distance2 = distSqr(cartPos, SGVec3d::fromGeod(b.get_center()));
+                // Do not ask if it is just the next tile but way out of range.
+                if (distance2 <= max_dist2)
+                {
+                    available &= sched_tile( b, priority, false, duration );
+                    if ((!available)&&(duration==0.0))
+                        return false;
+                }
+            }
+        }
     }
-};
+
+    return available;
 }
 
+// Returns true if tiles around current view position have been loaded
 bool FGTileMgr::isSceneryLoaded()
 {
-    return (std::find_if(tile_cache.begin(), tile_cache.end(),
-                         std::not1(IsTileLoaded()))
-            == tile_cache.end());
+    double range_m = 100.0;
+    if (scheduled_visibility < range_m)
+        range_m = scheduled_visibility;
+
+    return schedule_scenery(SGGeod::fromDeg(longitude, latitude), range_m, 0.0);
 }

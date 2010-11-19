@@ -51,8 +51,8 @@ private:
 
     load_state state;
     
-    // schedule a tile for loading
-    void sched_tile( const SGBucket& b, const bool is_inner_ring, const bool is_cache_locked );
+    // schedule a tile for loading, returns true when tile is already loaded
+    bool sched_tile( const SGBucket& b, double priority,bool current_view, double request_time);
 
     // schedule a needed buckets for loading
     void schedule_needed(const SGBucket& curr_bucket, double rangeM);
@@ -69,6 +69,7 @@ private:
     // current longitude latitude
     double longitude;
     double latitude;
+    double scheduled_visibility;
 
     /**
      * tile cache
@@ -78,12 +79,6 @@ private:
     // Update the various queues maintained by the tilemagr (private
     // internal function, do not call directly.)
     void update_queues();
-    
-    // Prepare the ssg nodes corresponding to each tile.  For each
-    // tile, set the ssg transform and update it's range selector
-    // based on current visibilty void prep_ssg_nodes( float
-    // visibility_meters );
-    void prep_ssg_nodes();
     
     SGPropertyNode* _visibilityMeters;
     
@@ -103,15 +98,15 @@ public:
 
     const SGBucket& get_current_bucket () const { return current_bucket; }
 
-    /// Returns true if scenery is avaliable for the given lat, lon position
+    /// Returns true if scenery is available for the given lat, lon position
     /// within a range of range_m.
     /// lat and lon are expected to be in degrees.
-    bool scenery_available(const SGGeod& position, double range_m);
+    bool schedule_scenery(const SGGeod& position, double range_m, double duration=0.0);
 
     // Load a model for a tile
     osg::Node* loadTileModel(const string& modelPath, bool cacheModel);
 
-    // Returns true if all the tiles in the tile cache have been loaded
+    // Returns true if tiles around current view position have been loaded
     bool isSceneryLoaded();
 };
 
