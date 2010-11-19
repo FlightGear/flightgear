@@ -29,11 +29,18 @@
 
 #include <simgear/compiler.h>
 
+#include <algorithm>
+#include <iostream>
+#include <map>
+#include <vector>
+#include <typeinfo>
+
 #include <osg/ref_ptr>
 #include <osg/AlphaFunc>
 #include <osg/BlendFunc>
 #include <osg/Camera>
 #include <osg/CullFace>
+#include <osg/CullStack>
 #include <osg/Depth>
 #include <osg/Fog>
 #include <osg/Group>
@@ -85,7 +92,6 @@
 #include <Model/acmodel.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scenery/redout.hxx>
-#include <Scenery/tilemgr.hxx>
 #include <GUI/new_gui.hxx>
 #include <Instrumentation/HUD/HUD.hxx>
 #include <Environment/precipitation_mgr.hxx>
@@ -822,6 +828,208 @@ bool
 fgDumpNodeToFile(osg::Node* node, const char* filename)
 {
     return osgDB::writeNodeFile(*node, filename);
+}
+
+namespace flightgear
+{
+using namespace osg;
+
+class VisibleSceneInfoVistor : public NodeVisitor, CullStack
+{
+public:
+    VisibleSceneInfoVistor()
+        : NodeVisitor(CULL_VISITOR, TRAVERSE_ACTIVE_CHILDREN)
+    {
+        setCullingMode(CullSettings::SMALL_FEATURE_CULLING
+                       | CullSettings::VIEW_FRUSTUM_CULLING);
+        setComputeNearFarMode(CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+    }
+
+    VisibleSceneInfoVistor(const VisibleSceneInfoVistor& rhs)
+    {
+    }
+
+    META_NodeVisitor("flightgear","VisibleSceneInfoVistor")
+
+    typedef std::map<const std::string,int> InfoMap;
+
+    void getNodeInfo(Node* node)
+    {
+        const char* typeName = typeid(*node).name();
+        classInfo[typeName]++;
+        const std::string& nodeName = node->getName();
+        if (!nodeName.empty())
+            nodeInfo[nodeName]++;
+    }
+
+    void dumpInfo()
+    {
+        using namespace std;
+        typedef vector<InfoMap::iterator> FreqVector;
+        cout << "class info:\n";
+        FreqVector classes;
+        for (InfoMap::iterator itr = classInfo.begin(), end = classInfo.end();
+             itr != end;
+             ++itr)
+            classes.push_back(itr);
+        sort(classes.begin(), classes.end(), freqComp);
+        for (FreqVector::iterator itr = classes.begin(), end = classes.end();
+             itr != end;
+             ++itr) {
+            cout << (*itr)->first << " " << (*itr)->second << "\n";
+        }
+        cout << "\nnode info:\n";
+        FreqVector nodes;
+        for (InfoMap::iterator itr = nodeInfo.begin(), end = nodeInfo.end();
+             itr != end;
+             ++itr)
+            nodes.push_back(itr);
+
+        sort (nodes.begin(), nodes.end(), freqComp);
+        for (FreqVector::iterator itr = nodes.begin(), end = nodes.end();
+             itr != end;
+             ++itr) {
+            cout << (*itr)->first << " " << (*itr)->second << "\n";
+        }
+        cout << endl;
+    }
+    
+    void doTraversal(Camera* camera, Node* root, Viewport* viewport)
+    {
+        ref_ptr<RefMatrix> projection
+            = createOrReuseMatrix(camera->getProjectionMatrix());
+        ref_ptr<RefMatrix> mv = createOrReuseMatrix(camera->getViewMatrix());
+        if (!viewport)
+            viewport = camera->getViewport();
+        if (viewport)
+            pushViewport(viewport);
+        pushProjectionMatrix(projection.get());
+        pushModelViewMatrix(mv.get(), Transform::ABSOLUTE_RF);
+        root->accept(*this);
+        popModelViewMatrix();
+        popProjectionMatrix();
+        if (viewport)
+            popViewport();
+        dumpInfo();
+    }
+
+    void apply(Node& node)
+    {
+        if (isCulled(node))
+            return;
+        pushCurrentMask();
+        getNodeInfo(&node);
+        traverse(node);
+        popCurrentMask();
+    }
+    void apply(Group& node)
+    {
+        if (isCulled(node))
+            return;
+        pushCurrentMask();
+        getNodeInfo(&node);
+        traverse(node);
+        popCurrentMask();
+    }
+
+    void apply(Transform& node)
+    {
+        if (isCulled(node))
+            return;
+        pushCurrentMask();
+        ref_ptr<RefMatrix> matrix = createOrReuseMatrix(*getModelViewMatrix());
+        node.computeLocalToWorldMatrix(*matrix,this);
+        pushModelViewMatrix(matrix.get(), node.getReferenceFrame());
+        getNodeInfo(&node);
+        traverse(node);
+        popModelViewMatrix();
+        popCurrentMask();
+    }
+
+    void apply(Camera& camera)
+    {
+        // Save current cull settings
+        CullSettings saved_cull_settings(*this);
+
+        // set cull settings from this Camera
+        setCullSettings(camera);
+        // inherit the settings from above
+        inheritCullSettings(saved_cull_settings, camera.getInheritanceMask());
+
+        // set the cull mask.
+        unsigned int savedTraversalMask = getTraversalMask();
+        bool mustSetCullMask = (camera.getInheritanceMask()
+                                & osg::CullSettings::CULL_MASK) == 0;
+        if (mustSetCullMask)
+            setTraversalMask(camera.getCullMask());
+
+        osg::RefMatrix* projection = 0;
+        osg::RefMatrix* modelview = 0;
+
+        if (camera.getReferenceFrame()==osg::Transform::RELATIVE_RF) {
+            if (camera.getTransformOrder()==osg::Camera::POST_MULTIPLY) {
+                projection = createOrReuseMatrix(*getProjectionMatrix()
+                                                 *camera.getProjectionMatrix());
+                modelview = createOrReuseMatrix(*getModelViewMatrix()
+                                                * camera.getViewMatrix());
+            }
+            else {              // pre multiply 
+                projection = createOrReuseMatrix(camera.getProjectionMatrix()
+                                                 * (*getProjectionMatrix()));
+                modelview = createOrReuseMatrix(camera.getViewMatrix()
+                                                * (*getModelViewMatrix()));
+            }
+        } else {
+            // an absolute reference frame
+            projection = createOrReuseMatrix(camera.getProjectionMatrix());
+            modelview = createOrReuseMatrix(camera.getViewMatrix());
+        }
+        if (camera.getViewport())
+            pushViewport(camera.getViewport());
+
+        pushProjectionMatrix(projection);
+        pushModelViewMatrix(modelview, camera.getReferenceFrame());    
+
+        traverse(camera);
+    
+        // restore the previous model view matrix.
+        popModelViewMatrix();
+
+        // restore the previous model view matrix.
+        popProjectionMatrix();
+
+        if (camera.getViewport()) popViewport();
+
+        // restore the previous traversal mask settings
+        if (mustSetCullMask)
+            setTraversalMask(savedTraversalMask);
+
+        // restore the previous cull settings
+        setCullSettings(saved_cull_settings);
+    }
+
+protected:
+    // sort in reverse
+    static bool freqComp(const InfoMap::iterator& lhs, const InfoMap::iterator& rhs)
+    {
+        return lhs->second > rhs->second;
+    }
+    InfoMap classInfo;
+    InfoMap nodeInfo;
+};
+
+bool printVisibleSceneInfo(FGRenderer* renderer)
+{
+    osgViewer::Viewer* viewer = renderer->getViewer();
+    VisibleSceneInfoVistor vsv;
+    Viewport* vp = 0;
+    if (!viewer->getCamera()->getViewport() && viewer->getNumSlaves() > 0) {
+        const View::Slave& slave = viewer->getSlave(0);
+        vp = slave._camera->getViewport();
+    }
+    vsv.doTraversal(viewer->getCamera(), viewer->getSceneData(), vp);
+    return true;
+}
 }
 // end of renderer.cxx
     

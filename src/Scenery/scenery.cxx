@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <osgViewer/Viewer>
 #include <osgUtil/IntersectVisitor>
 
 #include <simgear/constants.h>
@@ -38,6 +39,7 @@
 #include <simgear/scene/util/SGSceneUserData.hxx>
 #include <simgear/scene/model/CheckSceneryVisitor.hxx>
 
+#include <Main/renderer.hxx>
 #include <Main/fg_props.hxx>
 
 #include "tilemgr.hxx"
@@ -226,13 +228,15 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
 
 bool FGScenery::scenery_available(const SGGeod& position, double range_m)
 {
-  if(globals->get_tile_mgr()->scenery_available(position, range_m))
+  if(globals->get_tile_mgr()->schedule_scenery(position, range_m, 0.0))
   {
     double elev;
     if (!get_elevation_m(SGGeod::fromGeodM(position, SG_MAX_ELEVATION_M), elev, 0, 0))
       return false;
     SGVec3f p = SGVec3f::fromGeod(SGGeod::fromGeodM(position, elev));
-    simgear::CheckSceneryVisitor csnv(getPagerSingleton(), toOsg(p), range_m);
+    osg::FrameStamp* framestamp
+            = globals->get_renderer()->getViewer()->getFrameStamp();
+    simgear::CheckSceneryVisitor csnv(getPagerSingleton(), toOsg(p), range_m, framestamp);
     // currently the PagedLODs will not be loaded by the DatabasePager
     // while the splashscreen is there, so CheckSceneryVisitor force-loads
     // missing objects in the main thread

@@ -3,7 +3,7 @@
 require 'ERB'
 
 $osgLibs = ['osgFX', 'osgParticle', 'osg', 'osgGA', 'osgText', 'osgUtil', 'osgSim', 'osgViewer', 'osgDB']
-$osgPlugins = ['ac', 'osg', 'freetype', 'qt', 'imageio', 'rgb', 'txf']
+$osgPlugins = ['ac', 'osg', 'freetype', 'qt', 'imageio', 'rgb', 'txf', 'mdl', '3ds']
 
 def runOsgVersion(option)
   env = "export DYLD_LIBRARY_PATH=#{Dir.pwd}/dist/lib"
@@ -40,7 +40,7 @@ end
 prefixDir=Dir.pwd + "/dist"
 dmgDir=Dir.pwd + "/image"
 srcDir=Dir.pwd + "/flightgear"
-dmgPath = Dir.pwd + "/fg_mac_nightly.dmg"
+
 
 puts "Erasing previous image dir"
 `rm -rf #{dmgDir}`
@@ -52,6 +52,10 @@ frameworksDir=contents +"/Frameworks"
 resourcesDir=contents+"/Resources"
 osgPluginsDir=contents+"/PlugIns/osgPlugins-#{osgVersion}"
 volName="\"FlightGear Nightly Build\""
+
+VERSION = File.read("#{srcDir}/version").strip
+
+dmgPath = Dir.pwd + "/fg_mac_nightly_#{VERSION}.dmg"
 
 puts "Creating directory structure"
 `mkdir -p #{macosDir}`

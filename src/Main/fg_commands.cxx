@@ -31,7 +31,6 @@
 #include <GUI/new_gui.hxx>
 #include <GUI/dialog.hxx>
 #include <Aircraft/replay.hxx>
-#include <Scenery/tilemgr.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scripting/NasalSys.hxx>
 #include <Sound/sample_queue.hxx>
@@ -515,6 +514,13 @@ do_dump_terrain_branch (const SGPropertyNode*)
     SG_LOG(SG_INPUT, SG_INFO, "Center: " << zero.x() << ", " << zero.y() << ", " << zero.z() );
     SG_LOG(SG_INPUT, SG_INFO, "Rotation: " << lat_deg << ", " << lon_deg );
 
+    return true;
+}
+
+static bool
+do_print_visible_scene_info(const SGPropertyNode*)
+{
+    fgPrintVisibleSceneInfoCommand();
     return true;
 }
 
@@ -1488,6 +1494,7 @@ static struct {
     { "release-cockpit-button", do_release_cockpit_button },
     { "dump-scenegraph", do_dump_scene_graph },
     { "dump-terrainbranch", do_dump_terrain_branch },
+    { "print-visible-scene", do_print_visible_scene_info },
     { "reload-shaders", do_reload_shaders },
     { 0, 0 }			// zero-terminated
 };

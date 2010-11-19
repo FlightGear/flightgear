@@ -100,7 +100,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\..\SimGear;..\..\..\src\FDM\JSBSim;..\..\..\..\install\msvc100\OpenSceneGraph\include;..\..\..\..\3rdParty\include;..\..\..\..\boost_1_43_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\..\SimGear;..\..\..\src\FDM\JSBSim;..\..\..\..\install\msvc100\OpenSceneGraph\include;..\..\..\..\3rdParty\include;..\..\..\..\boost_1_44_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -121,7 +121,7 @@
       <AdditionalDependencies>opengl32.lib;glu32.lib;winmm.lib;wsock32.lib;sg_d.lib;net_d.lib;pui_d.lib;puaux_d.lib;fnt_d.lib;js_d.lib;ul_d.lib;zlibd.lib;OpenAL32.lib;ALut.lib;osgd.lib;osgDBd.lib;osgUtild.lib;osgViewerd.lib;osgGAd.lib;osgTextd.lib;osgParticled.lib;OpenThreadsd.lib;libjpegd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)fgfs.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\..\..\install\msvc100\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\..\install\msvc100\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib;..\..\..\..\boost_1_44_0\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -138,7 +138,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\..\SimGear;..\..\..\src\FDM\JSBSim;..\..\..\..\install\msvc100-64\OpenSceneGraph\include;..\..\..\..\3rdParty.x64\include;..\..\..\..\boost_1_43_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\..\SimGear;..\..\..\src\FDM\JSBSim;..\..\..\..\install\msvc100-64\OpenSceneGraph\include;..\..\..\..\3rdParty.x64\include;..\..\..\..\boost_1_44_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;PU_USE_NATIVE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -158,7 +158,7 @@
       <AdditionalDependencies>opengl32.lib;glu32.lib;winmm.lib;wsock32.lib;sg_d.lib;net_d.lib;pui_d.lib;puaux_d.lib;fnt_d.lib;js_d.lib;ul_d.lib;zlibd.lib;OpenAL32.lib;ALut.lib;osgd.lib;osgDBd.lib;osgUtild.lib;osgViewerd.lib;osgGAd.lib;osgTextd.lib;osgParticled.lib;OpenThreadsd.lib;libjpegd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)fgfs.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\..\..\install\msvc100-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\..\install\msvc100-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib;..\..\..\..\boost_1_44_0\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -175,7 +175,7 @@
     </Midl>
     <ClCompile>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\src\FDM\JSBSim;..\..\..\..\SimGear;..\..\..\..\install\msvc100\OpenSceneGraph\include;..\..\..\..\3rdParty\include;..\..\..\..\boost_1_43_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\src\FDM\JSBSim;..\..\..\..\SimGear;..\..\..\..\install\msvc100\OpenSceneGraph\include;..\..\..\..\3rdParty\include;..\..\..\..\boost_1_44_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -195,7 +195,7 @@
       <AdditionalDependencies>opengl32.lib;glu32.lib;winmm.lib;wsock32.lib;sg.lib;net.lib;pui.lib;puAux.lib;fnt.lib;js.lib;ul.lib;zlib.lib;OpenAL32.lib;ALut.lib;osg.lib;osgDB.lib;osgUtil.lib;osgViewer.lib;osgGA.lib;osgText.lib;osgParticle.lib;OpenThreads.lib;libjpeg.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)fgfs.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\..\..\install\msvc100\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\..\install\msvc100\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib;..\..\..\..\boost_1_44_0\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -212,7 +212,7 @@
     </Midl>
     <ClCompile>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\src\FDM\JSBSim;..\..\..\..\SimGear;..\..\..\..\install\msvc100-64\OpenSceneGraph\include;..\..\..\..\3rdParty.x64\include;..\..\..\..\boost_1_43_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\src\include;..\..\..\src\FDM\JSBSim;..\..\..\..\SimGear;..\..\..\..\install\msvc100-64\OpenSceneGraph\include;..\..\..\..\3rdParty.x64\include;..\..\..\..\boost_1_44_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;WIN32;_CONSOLE;HAVE_CONFIG_H;FGFS;ENABLE_AUDIO_SUPPORT;_FG_NDEBUG;ENABLE_THREADS=1;FG_ENABLE_MULTIPASS_CLOUDS;ENABLE_SP_FMDS;_USE_MATH_DEFINES;FG_JPEG_SERVER;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;PU_USE_NATIVE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -231,7 +231,7 @@
       <AdditionalDependencies>opengl32.lib;glu32.lib;winmm.lib;wsock32.lib;sg.lib;net.lib;pui.lib;puAux.lib;fnt.lib;js.lib;ul.lib;zlib.lib;OpenAL32.lib;ALut.lib;osg.lib;osgDB.lib;osgUtil.lib;osgViewer.lib;osgGA.lib;osgText.lib;osgParticle.lib;OpenThreads.lib;libjpeg.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)fgfs.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\..\..\install\msvc100-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\..\..\install\msvc100-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib;..\..\..\..\boost_1_44_0\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>

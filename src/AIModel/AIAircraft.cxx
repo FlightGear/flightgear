@@ -420,14 +420,12 @@ void FGAIAircraft::getGroundElev(double dt) {
         }
 
         double range = 500.0;
-        if (!globals->get_tile_mgr()->scenery_available(pos, range)) {
-            // Try to shedule tiles for that position.
-            globals->get_tile_mgr()->schedule_tiles_at( pos, range );
+        if (globals->get_tile_mgr()->schedule_scenery(pos, range, 5.0))
+        {
+            double alt;
+            if (getGroundElevationM(SGGeod::fromGeodM(pos, 20000), alt, 0))
+                tgt_altitude_ft = alt * SG_METER_TO_FEET;
         }
-
-        double alt;
-        if (getGroundElevationM(SGGeod::fromGeodM(pos, 20000), alt, 0))
-            tgt_altitude_ft = alt * SG_METER_TO_FEET;
     }
 }
 

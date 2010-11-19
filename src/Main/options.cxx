@@ -56,7 +56,9 @@
 #include "util.hxx"
 #include "viewmgr.hxx"
 #include <Main/viewer.hxx>
+
 #include <simgear/version.h>
+#include <osg/Version>
 
 using std::string;
 using std::sort;
@@ -64,8 +66,10 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-#ifndef VERSION
-#define VERSION "CVS "__DATE__
+#if defined( HAVE_VERSION_H ) && HAVE_VERSION_H
+#  include <Include/version.h>
+#else
+#  include <Include/no_version.h>
 #endif
 
 #define NEW_DEFAULT_MODEL_HZ 120
@@ -233,6 +237,13 @@ fgSetDefaults ()
     fgSetString("/sim/multiplay/txhost", "0");
     fgSetInt("/sim/multiplay/rxport", 0);
     fgSetInt("/sim/multiplay/txport", 0);
+    
+    fgSetString("/sim/version/flightgear", FLIGHTGEAR_VERSION);
+    fgSetString("/sim/version/simgear", SG_STRINGIZE(SIMGEAR_VERSION));
+    fgSetString("/sim/version/openscenegraph", osgGetVersion());
+    fgSetString("/sim/version/revision", REVISION);
+    fgSetInt("/sim/version/build-number", HUDSON_BUILD_NUMBER);
+    fgSetString("/sim/version/build-id", HUDSON_BUILD_ID);
 }
 
 static bool
@@ -985,6 +996,7 @@ fgOptVisibilityMeters( const char *arg )
 {
     double visibility = atof( arg );
     fgDefaultWeatherValue("visibility-m", visibility);
+    fgSetDouble("/environment/visibility-m", visibility);
     return FG_OPTIONS_OK;
 }
 
@@ -993,6 +1005,7 @@ fgOptVisibilityMiles( const char *arg )
 {
     double visibility = atof( arg ) * 5280.0 * SG_FEET_TO_METER;
     fgDefaultWeatherValue("visibility-m", visibility);
+    fgSetDouble("/environment/visibility-m", visibility);
     return FG_OPTIONS_OK;
 }
 
@@ -1208,7 +1221,9 @@ fgOptParking( const char *arg )
 static int
 fgOptVersion( const char *arg )
 {
-    cerr << "FlightGear version: " << VERSION << endl;
+    cerr << "FlightGear version: " << FLIGHTGEAR_VERSION << endl;
+    cerr << "Revision: " << REVISION << endl;
+    cerr << "Build-Id: " << HUDSON_BUILD_ID << endl;
     cerr << "FG_ROOT=" << globals->get_fg_root() << endl;
     cerr << "FG_HOME=" << fgGetString("/sim/fg-home") << endl;
     cerr << "FG_SCENERY=";

@@ -877,7 +877,7 @@ void FGControls::unbind ()
              "/controls/engines/engine[%d]/starter", index);
     fgUntie(name);
     snprintf(name, MAX_NAME_LEN,
-             "/controls/engines/engine[%d]/fuel_pump", index);
+             "/controls/engines/engine[%d]/fuel-pump", index);
     fgUntie(name);
     snprintf(name, MAX_NAME_LEN,
              "/controls/engines/engine[%d]/fire-switch", index);

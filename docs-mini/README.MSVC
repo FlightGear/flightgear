@@ -93,8 +93,8 @@ Typical setup should decompose into the following steps :
 It is also possible to compile a Debug version. This is only useful when hacking the code because 
 a Debug version is way slower than the Release one.
 
-The 64bit build is only available to people having the Professional edition of Visual Studio 2008. In that case, 14. above should be :
- 14. Add <any_directory_on_any_drive>/install/msvc90-64/OpenSceneGraph/bin and <any_directory_on_any_drive>/3rdParty.x64/bin to your PATH environment variable
+The 64bit build is only available to people having the Professional edition of Visual Studio 2008. In that case, 15. above should be :
+ 15. Add <any_directory_on_any_drive>/install/msvc90-64/OpenSceneGraph/bin and <any_directory_on_any_drive>/3rdParty.x64/bin to your PATH environment variable
 
 When the manual build works, it is possible to start it from the command line. This is useful 
 when setting up a build server or automating the process of retrieving the code and building 
@@ -106,6 +106,9 @@ it in a scheduled task. To do that :
      64bit environment (Vista 64-bit or Windows7 64-bit)
      You should see : "Setting environment for using Microsoft Visual Studio 2008 x86 tools."
      printed in the console
+     ( To start 64-bit build, the right environment is set with :
+       "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" amd64
+     )
  3. cd to the FlightGear project directory :
      D:
      cd \FGFSDevel\FlightGear\projects\VC90  (for example)

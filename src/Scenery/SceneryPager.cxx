@@ -1,4 +1,4 @@
-// SceneryPager.hxx -- Interface to OSG database pager
+// SceneryPager.cxx -- Interface to OSG database pager
 //
 // Copyright (C) 2007 Tim Moore timoore@redhat.com
 //

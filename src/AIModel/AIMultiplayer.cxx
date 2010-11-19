@@ -63,7 +63,12 @@ bool FGAIMultiplayer::init(bool search_in_AI_path) {
         isTanker = true;
         //	   cout << "isTanker " << isTanker << " " << mCallSign <<endl;
     }
-   return FGAIBase::init(search_in_AI_path);
+
+    // load model
+    bool result = FGAIBase::init(search_in_AI_path);
+    // propagate installation state (used by MP pilot list)
+    props->setBoolValue("model-installed", _installed);
+    return result;
 }
 
 void FGAIMultiplayer::bind() {

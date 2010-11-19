@@ -113,7 +113,7 @@ void FDMShell::update(double dt)
     double lon = fgGetDouble("/sim/presets/longitude-deg");
     double lat = fgGetDouble("/sim/presets/latitude-deg");
         
-    double range = 1000.0; // in metres
+    double range = 100.0; // in meters
     SGGeod geod = SGGeod::fromDeg(lon, lat);
     if (globals->get_scenery()->scenery_available(geod, range)) {
         SG_LOG(SG_FLIGHT, SG_INFO, "Scenery loaded, will init FDM");
