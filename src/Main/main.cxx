@@ -49,6 +49,7 @@
 //#include <simgear/timing/sg_time.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/io/raw_socket.hxx>
+#include <simgear/misc/sg_sleep.hxx>
 
 #include <Time/light.hxx>
 #include <Aircraft/replay.hxx>
@@ -203,7 +204,7 @@ static void fgMainLoop( void ) {
         else
         {
             // be nice to loader threads while waiting for initial scenery, reduce to 2fps
-            usleep(500000);
+            simgear::sleepForMSec(500);
         }
     }
     simgear::AtomicChangeListener::fireChangeListeners();
