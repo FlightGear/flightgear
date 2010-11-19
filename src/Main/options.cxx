@@ -996,6 +996,7 @@ fgOptVisibilityMeters( const char *arg )
 {
     double visibility = atof( arg );
     fgDefaultWeatherValue("visibility-m", visibility);
+    fgSetDouble("/environment/visibility-m", visibility);
     return FG_OPTIONS_OK;
 }
 
@@ -1004,6 +1005,7 @@ fgOptVisibilityMiles( const char *arg )
 {
     double visibility = atof( arg ) * 5280.0 * SG_FEET_TO_METER;
     fgDefaultWeatherValue("visibility-m", visibility);
+    fgSetDouble("/environment/visibility-m", visibility);
     return FG_OPTIONS_OK;
 }
 
