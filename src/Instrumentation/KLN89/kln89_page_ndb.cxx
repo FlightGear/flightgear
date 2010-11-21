@@ -3,7 +3,7 @@
 //
 // Written by David Luff, started 2005.
 //
-// Copyright (C) 2005 - David C Luff - david.luff@nottingham.ac.uk
+// Copyright (C) 2005 - David C Luff - daveluff AT ntlworld.com
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
