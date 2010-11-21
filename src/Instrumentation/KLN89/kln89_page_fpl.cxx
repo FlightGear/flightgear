@@ -1020,9 +1020,9 @@ void KLN89FplPage::Knob2Right1() {
                 ShowScratchpadMessage("Invald", " Add  ");
             } else {
                 if((_wLinePos + 1) > _entWpStr.size()) {
-                    _entWpStr += '9';
+                    _entWpStr += 'A';
                 } else {
-                    _entWpStr[_wLinePos] = _kln89->DecChar(_entWpStr[_wLinePos], (_wLinePos == 0 ? false : true));
+                    _entWpStr[_wLinePos] = _kln89->IncChar(_entWpStr[_wLinePos], (_wLinePos == 0 ? false : true));
                 }
                 _bEntWp = true;
                 _fp0SelWpId.clear();    // Waypoints don't become the DTO default whilst being entered.
