@@ -84,7 +84,7 @@ void TimeManager::init()
     
 // frame/update-rate counters
   _frameRate = fgGetNode("/sim/frame-rate", true);
-  _lastFrameTime = _impl->get_cur_time();
+  _lastFrameTime = 0;
   _frameCount = 0;
 }
 
@@ -97,6 +97,7 @@ void TimeManager::reinit()
 {
   globals->set_time_params(NULL);
   delete _impl;
+  _impl = NULL;
   _inited = false;
   globals->get_event_mgr()->removeTask("updateLocalTime");
   
@@ -118,6 +119,12 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
   
   if (!wait_for_scenery) {
     throttleUpdateRate();
+  }
+  else
+  {
+      // suppress framerate while initial scenery isn't loaded yet (splash screen still active) 
+      _lastFrameTime=0;
+      _frameCount = 0;
   }
   
   SGTimeStamp currentStamp;
@@ -205,7 +212,7 @@ void TimeManager::update(double dt)
 void TimeManager::computeFrameRate()
 {
   // Calculate frame rate average
-  if ((_impl->get_cur_time() != _lastFrameTime) && (_lastFrameTime > 0)) {
+  if ((_impl->get_cur_time() != _lastFrameTime)) {
     _frameRate->setIntValue(_frameCount);
     _frameCount = 0;
   }

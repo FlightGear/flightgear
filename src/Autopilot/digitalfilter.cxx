@@ -265,9 +265,14 @@ void ExponentialFilterImplementation::initialize( double output )
 double ExponentialFilterImplementation::compute(  double dt, double input )
 {
   input = GainFilterImplementation::compute( dt, input );
+  double tf = _TfInput.get_value();
 
   double output_0;
-  double alpha = 1 / ((_TfInput.get_value()/dt) + 1);
+
+  // avoid negative filter times 
+  // and div by zero if -tf == dt
+
+  double alpha = tf > 0.0 ? 1 / ((tf/dt) + 1) : 1.0;
  
   if(_isSecondOrder) {
     output_0 = alpha * alpha * input + 
