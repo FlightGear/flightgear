@@ -775,10 +775,10 @@ void KLN89::DrawMap(bool draw_avs) {
 			GPSWaypoint* wp1 = _activeFP->waypoints[i];
 			SGVec3d p0 = mapProj.ConvertToLocal(SGGeod::fromRad(wp0->lon, wp0->lat));
 			SGVec3d p1 = mapProj.ConvertToLocal(SGGeod::fromRad(wp1->lon, wp1->lat));
-			int mx0 = int(p0.x() / meter_per_pix) + 56;
-			int my0 = int(p0.y() / meter_per_pix) + (_mapOrientation == 0 ? 19 : 10);
-			int mx1 = int(p1.x() / meter_per_pix) + 56;
-			int my1 = int(p1.y() / meter_per_pix) + (_mapOrientation == 0 ? 19 : 10);
+			int mx0 = int(p0.x() / meter_per_pix + 0.5) + 56;
+			int my0 = int(p0.y() / meter_per_pix + 0.5) + (_mapOrientation == 0 ? 19 : 10);
+			int mx1 = int(p1.x() / meter_per_pix + 0.5) + 56;
+			int my1 = int(p1.y() / meter_per_pix + 0.5) + (_mapOrientation == 0 ? 19 : 10);
 			if(i == 1) {
 				xvec.push_back(mx0);
 				yvec.push_back(my0);
