@@ -779,7 +779,7 @@ save_CPPFLAGS=$CPPFLAGS
 AC_ARG_WITH(libsvn, [  --without-libsvn        Do not use libsvn for terrasync [default=no]], [], [with_libsvn=yes])
 if test "x$with_libsvn" = "xyes"; then
     LIBS="`apr-1-config --link-ld`"
-    CPPFLAGS="-I/usr/include/subversion-1 `apr-1-config --includes`"
+    CPPFLAGS="-I/usr/include/subversion-1 `apr-1-config --includes --cppflags`"
     AC_CHECK_HEADERS([svn_client.h])
        if test "x$ac_cv_header_svn_client_h" = "xyes"; then
 	echo "TerraSync will use libsvn"
