@@ -122,8 +122,6 @@ FGGlobals::FGGlobals() :
     soundmgr( new SGSoundMgr ),
     sim_time_sec( 0.0 ),
     fg_root( "" ),
-    warp( 0 ),
-    warp_delta( 0 ),
     time_params( NULL ),
     ephem( NULL ),
     mag( NULL ),
@@ -401,4 +399,24 @@ FGGlobals::get_current_view () const
   return viewmgr->get_current_view();
 }
 
+long int FGGlobals::get_warp() const
+{
+  return fgGetInt("/sim/time/warp");
+}
+
+void FGGlobals::set_warp( long int w )
+{
+  fgSetInt("/sim/time/warp", w);
+}
+
+long int FGGlobals::get_warp_delta() const
+{
+  return fgGetInt("/sim/time/warp-delta");
+}
+
+void FGGlobals::set_warp_delta( long int d )
+{
+  fgSetInt("/sim/time/warp-delta", d);
+}
+    
 // end of globals.cxx

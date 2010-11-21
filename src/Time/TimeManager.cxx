@@ -58,10 +58,15 @@ void TimeManager::init()
   _firstUpdate = true;
   _inited = true;
   _dtRemainder = 0.0;
+  _adjustWarpOnUnfreeze = false;
   
   _maxDtPerFrame = fgGetNode("/sim/max-simtime-per-frame", true);
   _clockFreeze = fgGetNode("/sim/freeze/clock", true);
   _timeOverride = fgGetNode("/sim/time/cur-time-override", true);
+  _warp = fgGetNode("/sim/time/warp", true);
+  _warp->addChangeListener(this);
+  
+  _warpDelta = fgGetNode("/sim/time/warp-delta", true);
   
   _longitudeDeg = fgGetNode("/position/longitude-deg", true);
   _latitudeDeg = fgGetNode("/position/latitude-deg", true);
@@ -70,16 +75,17 @@ void TimeManager::init()
   zone.append("Timezone");
   double lon = _longitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
   double lat = _latitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
+  
   _impl = new SGTime(lon, lat, zone.str(), _timeOverride->getLongValue());
   
-  globals->set_warp_delta(0);
+  _warpDelta->setIntValue(0);
   
   globals->get_event_mgr()->addTask("updateLocalTime", this,
                             &TimeManager::updateLocalTime, 30*60 );
   updateLocalTime();
   
   _impl->update(lon, lat, _timeOverride->getLongValue(),
-               globals->get_warp());
+               _warp->getIntValue());
   globals->set_time_params(_impl);
     
 // frame/update-rate counters
@@ -95,14 +101,38 @@ void TimeManager::postinit()
 
 void TimeManager::reinit()
 {
+  shutdown();
+  init();
+  postinit();
+}
+
+void TimeManager::shutdown()
+{
+  _warp->removeChangeListener(this);
+  
   globals->set_time_params(NULL);
   delete _impl;
   _impl = NULL;
   _inited = false;
   globals->get_event_mgr()->removeTask("updateLocalTime");
-  
-  init();
-  postinit();
+}
+
+void TimeManager::valueChanged(SGPropertyNode* aProp)
+{
+  if (aProp == _warp) {
+    if (_clockFreeze->getBoolValue()) {
+    // if the warp is changed manually while frozen, don't modify it when
+    // un-freezing - the user wants to unfreeze with exactly the warp
+    // they specified.
+      _adjustWarpOnUnfreeze = false;
+    }
+    
+    double lon = _longitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
+    double lat = _latitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
+    _impl->update(lon, lat,
+                   _timeOverride->getLongValue(),
+                   _warp->getIntValue());
+  }
 }
 
 void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
@@ -177,25 +207,32 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
 void TimeManager::update(double dt)
 {
   bool freeze = _clockFreeze->getBoolValue();
+  time_t now = time(NULL);
+  
   if (freeze) {
     // clock freeze requested
     if (_timeOverride->getLongValue() == 0) {
-      fgSetLong( "/sim/time/cur-time-override", _impl->get_cur_time());
-      globals->set_warp(0);
+      _timeOverride->setLongValue(now);
+      _adjustWarpOnUnfreeze = true;
     }
   } else {
     // no clock freeze requested
     if (_lastClockFreeze) {
-    // clock just unfroze, let's set warp as the difference
-    // between frozen time and current time so we don't get a
-    // time jump (and corresponding sky object and lighting
-    // jump.)
-      globals->set_warp(_timeOverride->getLongValue() - time(NULL));
-      fgSetLong( "/sim/time/cur-time-override", 0 );
+      if (_adjustWarpOnUnfreeze) {
+      // clock just unfroze, let's set warp as the difference
+      // between frozen time and current time so we don't get a
+      // time jump (and corresponding sky object and lighting
+      // jump.)
+        int adjust = _timeOverride->getLongValue() - now;
+        SG_LOG(SG_GENERAL, SG_INFO, "adjusting on un-freeze:" << adjust);
+        _warp->setIntValue(_warp->getIntValue() + adjust);
+      }
+      _timeOverride->setLongValue(0);
     }
     
-    if ( globals->get_warp_delta() != 0 ) {
-      globals->inc_warp( globals->get_warp_delta() );
+    int warpDelta = _warpDelta->getIntValue();
+    if (warpDelta != 0) {
+      _warp->setIntValue(_warp->getIntValue() + warpDelta);
     }
   }
 
@@ -204,7 +241,7 @@ void TimeManager::update(double dt)
   double lat = _latitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
   _impl->update(lon, lat,
                _timeOverride->getLongValue(),
-               globals->get_warp());
+               _warp->getIntValue());
 
   computeFrameRate();
 }
@@ -304,7 +341,7 @@ void TimeManager::updateLocalTime()
 void TimeManager::initTimeOffset()
 {
   // Handle potential user specified time offsets
-  int orig_warp = globals->get_warp();
+  int orig_warp = _warp->getIntValue();
   time_t cur_time = _impl->get_cur_time();
   time_t currGMT = sgTimeGetGMT( gmtime(&cur_time) );
   time_t systemLocalTime = sgTimeGetGMT( localtime(&cur_time) );
@@ -355,10 +392,8 @@ void TimeManager::initTimeOffset()
      warp = 0;
   }
   
-  globals->set_warp( orig_warp + warp );
-  _impl->update(lon, lat, _timeOverride->getLongValue(),
-               globals->get_warp() );
+  _warp->setIntValue( orig_warp + warp );
 
   SG_LOG( SG_GENERAL, SG_INFO, "After fgInitTimeOffset(): warp = " 
-            << globals->get_warp() );
+            << _warp->getIntValue() );
 }

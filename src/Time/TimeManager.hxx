@@ -26,7 +26,7 @@
 // forward decls
 class SGTime;
 
-class TimeManager : public SGSubsystem
+class TimeManager : public SGSubsystem, public SGPropertyChangeListener
 {
 public:
   TimeManager();
@@ -36,10 +36,14 @@ public:
   virtual void init();
   virtual void reinit();
   virtual void postinit();
+  virtual void shutdown();
   
   void update(double dt);
   
+// SGPropertyChangeListener overrides
+  virtual void valueChanged(SGPropertyNode *);
 private:
+  
   /**
    * Ensure a consistent update-rate using a combination of
    * sleep()-ing and busy-waiting.  
@@ -64,8 +68,12 @@ private:
   SGPropertyNode_ptr _maxDtPerFrame;
   SGPropertyNode_ptr _clockFreeze;
   SGPropertyNode_ptr _timeOverride;
+  SGPropertyNode_ptr _warp;
+  SGPropertyNode_ptr _warpDelta;
+  
   bool _lastClockFreeze;
-
+  bool _adjustWarpOnUnfreeze;
+  
   SGPropertyNode_ptr _longitudeDeg;
   SGPropertyNode_ptr _latitudeDeg;
   
