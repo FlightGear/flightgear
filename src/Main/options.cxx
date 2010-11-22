@@ -1552,6 +1552,10 @@ parse_option (const string& arg)
             SG_LOG( SG_GENERAL, SG_ALERT, "Bad property assignment: " << arg );
             return FG_OPTIONS_ERROR;
         }
+    } else if ( arg.find("-psn_") == 0) {
+    // on Mac, when launched from the GUI, we are passed the ProcessSerialNumber
+    // as an argument (and no others). Silently ignore the argument here.
+        return FG_OPTIONS_OK;
     } else if ( arg.find( "--" ) == 0 ) {
         size_t pos = arg.find( '=' );
         string arg_name, arg_value;
