@@ -60,8 +60,6 @@ public:
 	RenderArea2D(int logx, int logy, int sizex, int sizey, int posx, int posy);
 	~RenderArea2D();
 	
-	void draw(osg::State& state);
-	
 	void SetPixelColor(const float* rgba);
 	void SetBackgroundColor(const float* rgba);
 	void SetPosition(int posx, int posy);
@@ -73,23 +71,17 @@ public:
 	// Set clip region to be the same as the rendered area (default)
 	void ResetClipRegion();
 	
-	// Drawing specified in logical units
+	// The DrawXXX functions place the shapes in the buffer, specified 
+	// in logical units, and clipped to the current clip region.
+	void DrawPixel(int x, int y, bool invert = false);
 	void DrawLine(int x1, int y1, int x2, int y2);
 	void DrawQuad(int x1, int y1, int x2, int y2, bool invert = false);
 	void DrawBackground();
-	// Draw a pixel specified by *logical* position
-	void DrawPixel(int x, int y, bool invert = false);
 	
-	// The old drawing functions have been renamed in order to buffer the drawing for FG
-	//
-	// Drawing specified in logical units
-	void oldDrawLine(int x1, int y1, int x2, int y2);
-	void oldDrawQuad(int x1, int y1, int x2, int y2, bool invert = false);
-	void oldDrawBackground();
-	// Draw a pixel specified by *logical* position
-	void oldDrawPixel(int x, int y, bool invert = false);
+	// Call Draw to have the buffer contents drawn and then cleared.
+	void Draw(osg::State& state);
 	
-	// Flush the buffer pipeline
+	// Clear the buffer contents
 	void Flush();
 	
 	// Turn debugging on or off.
@@ -104,10 +96,16 @@ private:
 	float _backgroundColor[4];
 	float _pixelColor[4];
 	
-	// Actual drawing routines copied from Atlas
-	void doSetColor( const float *rgb );
-	void doDrawQuad( const SGVec2f *p);
-	void doDrawQuad( const SGVec2f *p, const SGVec4f *color );
+	// Drawing specified in logical units
+	void DoDrawPixel(int x, int y, bool invert = false);
+	void DoDrawLine(int x1, int y1, int x2, int y2);
+	void DoDrawQuad(int x1, int y1, int x2, int y2, bool invert = false);
+	void DoDrawBackground();
+	
+	// Actual rendering routines copied from Atlas
+	void SetRenderColor( const float *rgb );
+	void RenderQuad( const SGVec2f *p);
+	void RenderQuad( const SGVec2f *p, const SGVec4f *color );
 	
 	vector<RA2DPrimitive> drawing_list;
 	

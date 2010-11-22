@@ -232,7 +232,7 @@ DCLGPS::~DCLGPS() {
 }
 
 void DCLGPS::draw(osg::State& state) {
-	_instrument->draw(state);
+	_instrument->Draw(state);
 }
 
 void DCLGPS::init() {

@@ -57,7 +57,7 @@ RenderArea2D::RenderArea2D(int logx, int logy, int sizex, int sizey, int posx, i
     _ra2d_debug = false;
 }
 
-void RenderArea2D::draw(osg::State& state) {
+void RenderArea2D::Draw(osg::State& state) {
     
     static osg::ref_ptr<osg::StateSet> renderArea2DStateSet;
     if(!renderArea2DStateSet.valid()) {
@@ -82,26 +82,28 @@ void RenderArea2D::draw(osg::State& state) {
     glDisable(GL_CLIP_PLANE2);
     glDisable(GL_CLIP_PLANE3);
 
-    oldDrawBackground();
+    DoDrawBackground();
     
     for(unsigned int i = 0; i < drawing_list.size(); ++i) {
         RA2DPrimitive prim = drawing_list[i];
         switch(prim.type) {
         case RA2D_LINE:
-            oldDrawLine(prim.x1, prim.y1, prim.x2, prim.y2);
+            DoDrawLine(prim.x1, prim.y1, prim.x2, prim.y2);
             break;
         case RA2D_QUAD:
             if(prim.debug) {
                 //cout << "Clipping = " << _clipx1 << ", " << _clipy1 << " to " << _clipx2 << ", " << _clipy2 << '\n';
                 //cout << "Drawing quad " << prim.x1 << ", " << prim.y1 << " to " << prim.x2 << ", " << prim.y2 << '\n';
             }
-            oldDrawQuad(prim.x1, prim.y1, prim.x2, prim.y2, prim.invert);
+            DoDrawQuad(prim.x1, prim.y1, prim.x2, prim.y2, prim.invert);
             break;
         case RA2D_PIXEL:
-            oldDrawPixel(prim.x1, prim.y1, prim.invert);
+            DoDrawPixel(prim.x1, prim.y1, prim.invert);
             break;
         }
     }
+    
+    drawing_list.clear();
     
     glPopAttrib();
     
@@ -109,6 +111,10 @@ void RenderArea2D::draw(osg::State& state) {
     state.apply();
     state.setActiveTextureUnit(0);
     state.setClientActiveTextureUnit(0);
+}
+
+void RenderArea2D::Flush() {
+    drawing_list.clear();
 }
 
 // Set clipping region in logical units
@@ -158,7 +164,7 @@ void RenderArea2D::DrawPixel(int x, int y, bool invert) {
     drawing_list.push_back(prim);
 }
 
-void RenderArea2D::oldDrawPixel(int x, int y, bool invert) {
+void RenderArea2D::DoDrawPixel(int x, int y, bool invert) {
     // Clip.  In theory this shouldn't be necessary, since all input is clipped before adding
     // to the drawing list, but it ensures that any errors in clipping lines etc will only 
     // spill over the clip area within the instrument, and still be clipped from straying
@@ -182,14 +188,14 @@ void RenderArea2D::oldDrawPixel(int x, int y, bool invert) {
     
     //cout << "DP: " << fx1 << ", " << fy1 << " ... " << fx2 << ", " << fy2 << '\n';
     
-    doSetColor(invert ? _backgroundColor : _pixelColor);
+    SetRenderColor(invert ? _backgroundColor : _pixelColor);
     SGVec2f corners[4] = {
         SGVec2f(fx1, fy1),
         SGVec2f(fx2, fy1),
         SGVec2f(fx2, fy2),
         SGVec2f(fx1, fy2)
     };
-    doDrawQuad(corners);
+    RenderQuad(corners);
 }
 
 void RenderArea2D::DrawLine(int x1, int y1, int x2, int y2) {
@@ -243,7 +249,7 @@ void RenderArea2D::DrawLine(int x1, int y1, int x2, int y2) {
     drawing_list.push_back(prim);
 }
 
-void RenderArea2D::oldDrawLine(int x1, int y1, int x2, int y2) {
+void RenderArea2D::DoDrawLine(int x1, int y1, int x2, int y2) {
     // Crude implementation of Bresenham line drawing algorithm.
     
     // Our lines are non directional, so first order the points x-direction-wise to leave only 4 octants to consider.
@@ -264,7 +270,7 @@ void RenderArea2D::oldDrawLine(int x1, int y1, int x2, int y2) {
         int y = y1;
         int yn = dx/2;
         for(int x=x1; x<=x2; ++x) {
-            oldDrawPixel(x, y);
+            DoDrawPixel(x, y);
             yn += dy;
             if(yn >= dx) {
                 yn -= dx;
@@ -278,7 +284,7 @@ void RenderArea2D::oldDrawLine(int x1, int y1, int x2, int y2) {
         // Must be a more elegant way to roll the next two cases into one!
         if(flip_y) {
             for(int y=y1; y>=y2; --y) {
-                oldDrawPixel(x, y);
+                DoDrawPixel(x, y);
                 xn += dx;
                 if(xn >= dy) {
                     xn -= dy;
@@ -287,7 +293,7 @@ void RenderArea2D::oldDrawLine(int x1, int y1, int x2, int y2) {
             }
         } else {
             for(int y=y1; y<=y2; ++y) {
-                oldDrawPixel(x, y);
+                DoDrawPixel(x, y);
                 xn += dx;
                 if(xn >= dy) {
                     xn -= dy;
@@ -332,7 +338,7 @@ void RenderArea2D::DrawQuad(int x1, int y1, int x2, int y2, bool invert) {
     drawing_list.push_back(prim);
 }
 
-void RenderArea2D::oldDrawQuad(int x1, int y1, int x2, int y2, bool invert) {
+void RenderArea2D::DoDrawQuad(int x1, int y1, int x2, int y2, bool invert) {
     // Scale to position within background
     float fx1 = (float)x1, fy1 = (float)y1;
     float fx2 = (float)x2, fy2 = (float)y2;
@@ -354,22 +360,22 @@ void RenderArea2D::oldDrawQuad(int x1, int y1, int x2, int y2, bool invert) {
     
     //cout << "DP: " << fx1 << ", " << fy1 << " ... " << fx2 << ", " << fy2 << '\n';
     
-    doSetColor(invert ? _backgroundColor : _pixelColor);
+    SetRenderColor(invert ? _backgroundColor : _pixelColor);
     SGVec2f corners[4] = {
         SGVec2f(fx1, fy1),
         SGVec2f(fx2, fy1),
         SGVec2f(fx2, fy2),
         SGVec2f(fx1, fy2)
     };
-    doDrawQuad(corners);
+    RenderQuad(corners);
 }
 
 void RenderArea2D::DrawBackground() {
-    // TODO
+    // Currently a NO-OP
 }
 
-void RenderArea2D::oldDrawBackground() {
-    doSetColor(_backgroundColor);
+void RenderArea2D::DoDrawBackground() {
+    SetRenderColor(_backgroundColor);
     SGVec2f corners[4] = {
         SGVec2f(_posx, _posy),
         SGVec2f(_posx + _sizex, _posy),
@@ -377,11 +383,7 @@ void RenderArea2D::oldDrawBackground() {
         SGVec2f(_posx, _posy + _sizey)                                                                  
     };
   
-    doDrawQuad(corners);
-}
-
-void RenderArea2D::Flush() {
-    drawing_list.clear();
+    RenderQuad(corners);
 }
 
 // -----------------------------------------
@@ -390,12 +392,12 @@ void RenderArea2D::Flush() {
 //
 // -----------------------------------------
 
-void RenderArea2D::doSetColor( const float *rgba ) {
+void RenderArea2D::SetRenderColor( const float *rgba ) {
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, rgba);
     glColor4fv( rgba );
 }
 
-void RenderArea2D::doDrawQuad( const SGVec2f *p) {
+void RenderArea2D::RenderQuad( const SGVec2f *p) {
     glBegin(GL_QUADS);
         glNormal3f(0.0f, 0.0f, 0.0f);
         glVertex2fv( p[0].data() );
@@ -405,7 +407,7 @@ void RenderArea2D::doDrawQuad( const SGVec2f *p) {
     glEnd();
 }
 
-void RenderArea2D::doDrawQuad( const SGVec2f *p, const SGVec4f *color ) {
+void RenderArea2D::RenderQuad( const SGVec2f *p, const SGVec4f *color ) {
     glBegin(GL_QUADS);
         glNormal3f(0.0f, 0.0f, 0.0f);
         glColor4fv( color[0].data() ); glVertex2fv( p[0].data() );
