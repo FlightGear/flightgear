@@ -3,7 +3,7 @@
 //
 // Written by David Luff, started 2005.
 //
-// Copyright (C) 2005 - David C Luff - david.luff@nottingham.ac.uk
+// Copyright (C) 2005 - David C Luff - daveluff AT ntlworld.com
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -251,15 +251,24 @@ void KLN89NavPage::Update(double dt) {
 			_kln89->DrawText("-:--", 2, 11, 0);
 		}
 	} else {	// if(3 == _subPage)
+		//
 		// Switch the cursor off if scan-pull is out on this page.
+		//
 		if(fgGetBool("/instrumentation/kln89/scan-pull")) { _kln89->_mode = KLN89_MODE_DISP; } 
-		// The moving map page the core KLN89 class draws this.
+		
+		//
+		// Draw the moving map if valid.
+		// We call the core KLN89 class to do this.
+		//
 		if(_kln89->_mapOrientation == 2 && _kln89->_groundSpeed_kts < 2) {
 			// Don't draw it if in track up mode and groundspeed < 2kts, as per real-life unit.
 		} else {
 			_kln89->DrawMap(!_suspendAVS);
 		}
-		// Now draw any annotation over it.
+		
+		//
+		// Now that the map has been drawn, add the annotation (scale, etc).
+		//
 		int scale = KLN89MapScales[_kln89->_mapScaleUnits][_kln89->_mapScaleIndex];
 		string scle_str = GPSitoa(scale);
 		if(crsr) {
@@ -325,7 +334,10 @@ void KLN89NavPage::Update(double dt) {
 				}		
 			}
 		}
-		// And do part of the field 1 update, since NAV 4 is a special case for the last line.
+		
+		//
+		// Do part of the field 1 update, since NAV 4 is a special case for the last line.
+		//
 		_kln89->DrawChar('>', 1, 0, 0);
 		if(crsr && _uLinePos == 1) _kln89->Underline(1, 1, 0, 5);
 		if(!(crsr && _uLinePos == 1 && _kln89->_blink)) {
