@@ -36,9 +36,13 @@
 
 #include <osg/Camera>
 #include <osg/GraphicsContext>
+#include <osg/io_utils>
 #include <osg/Math>
 #include <osg/Matrix>
+#include <osg/Notify>
+#include <osg/Program>
 #include <osg/Quat>
+#include <osg/TexMat>
 #include <osg/Vec3d>
 #include <osg/Viewport>
 
@@ -148,7 +152,18 @@ CameraInfo* CameraGroup::addCamera(unsigned flags, Camera* camera,
         // resized; if the the viewport isn't copied here, it gets updated
         // twice and ends up with the wrong value.
         farCamera->setViewport(simgear::clone(camera->getViewport()));
-        _viewer->addSlave(farCamera, view, projection, useMasterSceneData);
+        farCamera->setDrawBuffer(camera->getDrawBuffer());
+        farCamera->setReadBuffer(camera->getReadBuffer());
+        farCamera->setRenderTargetImplementation(
+            camera->getRenderTargetImplementation());
+        const Camera::BufferAttachmentMap& bufferMap
+            = camera->getBufferAttachmentMap();
+        if (bufferMap.count(Camera::COLOR_BUFFER) != 0) {
+            farCamera->attach(
+                Camera::COLOR_BUFFER,
+                bufferMap.find(Camera::COLOR_BUFFER)->second._texture);
+        }
+        _viewer->addSlave(farCamera, projection, view, useMasterSceneData);
         installCullVisitor(farCamera);
         info->farCamera = farCamera;
         info->farSlaveIndex = _viewer->getNumSlaves() - 1;
@@ -156,7 +171,7 @@ CameraInfo* CameraGroup::addCamera(unsigned flags, Camera* camera,
         camera->setCullMask(camera->getCullMask() & ~simgear::BACKGROUND_BIT);
         camera->setClearMask(GL_DEPTH_BUFFER_BIT);
     }
-    _viewer->addSlave(camera, view, projection, useMasterSceneData);
+    _viewer->addSlave(camera, projection, view, useMasterSceneData);
     installCullVisitor(camera);
     info->camera = camera;
     info->slaveIndex = _viewer->getNumSlaves() - 1;
@@ -297,6 +312,199 @@ void buildViewport(flightgear::CameraInfo* info, SGPropertyNode* viewportNode,
 namespace flightgear
 {
 
+// Mostly copied from osg's osgViewer/View.cpp
+
+static osg::Geometry* createParoramicSphericalDisplayDistortionMesh(
+    const Vec3& origin, const Vec3& widthVector, const Vec3& heightVector,
+    double sphere_radius, double collar_radius,
+    Image* intensityMap = 0, const Matrix& projectorMatrix = Matrix())
+{
+    osg::Vec3d center(0.0,0.0,0.0);
+    osg::Vec3d eye(0.0,0.0,0.0);
+
+    double distance = sqrt(sphere_radius*sphere_radius - collar_radius*collar_radius);
+    bool flip = false;
+    bool texcoord_flip = false;
+
+    osg::Vec3d projector = eye - osg::Vec3d(0.0,0.0, distance);
+
+
+    OSG_INFO<<"createParoramicSphericalDisplayDistortionMesh : Projector position = "<<projector<<std::endl;
+    OSG_INFO<<"createParoramicSphericalDisplayDistortionMesh : distance = "<<distance<<std::endl;
+
+    // create the quad to visualize.
+    osg::Geometry* geometry = new osg::Geometry();
+
+    geometry->setSupportsDisplayList(false);
+
+    osg::Vec3 xAxis(widthVector);
+    float width = widthVector.length();
+    xAxis /= width;
+
+    osg::Vec3 yAxis(heightVector);
+    float height = heightVector.length();
+    yAxis /= height;
+
+    int noSteps = 160;
+
+    osg::Vec3Array* vertices = new osg::Vec3Array;
+    osg::Vec2Array* texcoords0 = new osg::Vec2Array;
+    osg::Vec2Array* texcoords1 = intensityMap==0 ? new osg::Vec2Array : 0;
+    osg::Vec4Array* colors = new osg::Vec4Array;
+
+    osg::Vec3 bottom = origin;
+    osg::Vec3 dx = xAxis*(width/((float)(noSteps-2)));
+    osg::Vec3 dy = yAxis*(height/((float)(noSteps-1)));
+
+    osg::Vec3 top = origin + yAxis*height;
+
+    osg::Vec3 screenCenter = origin + widthVector*0.5f + heightVector*0.5f;
+    float screenRadius = heightVector.length() * 0.5f;
+
+    geometry->getOrCreateStateSet()->setMode(GL_CULL_FACE, osg::StateAttribute::OFF | osg::StateAttribute::PROTECTED);
+
+    for(int i=0;i<noSteps;++i)
+    {
+        osg::Vec3 cursor = bottom+dy*(float)i;
+        for(int j=0;j<noSteps;++j)
+        {
+            osg::Vec2 texcoord(double(i)/double(noSteps-1), double(j)/double(noSteps-1));
+            double theta = texcoord.x() * 2.0 * osg::PI;
+            double phi = (1.0-texcoord.y()) * osg::PI;
+
+            if (texcoord_flip) texcoord.y() = 1.0f - texcoord.y();
+
+            osg::Vec3 pos(sin(phi)*sin(theta), sin(phi)*cos(theta), cos(phi));
+            pos = pos*projectorMatrix;
+
+            double alpha = atan2(pos.x(), pos.y());
+            if (alpha<0.0) alpha += 2.0*osg::PI;
+
+            double beta = atan2(sqrt(pos.x()*pos.x() + pos.y()*pos.y()), pos.z());
+            if (beta<0.0) beta += 2.0*osg::PI;
+
+            double gamma = atan2(sqrt(double(pos.x()*pos.x() + pos.y()*pos.y())), double(pos.z()+distance));
+            if (gamma<0.0) gamma += 2.0*osg::PI;
+
+
+            osg::Vec3 v = screenCenter + osg::Vec3(sin(alpha)*gamma*2.0/osg::PI, -cos(alpha)*gamma*2.0/osg::PI, 0.0f)*screenRadius;
+
+            if (flip)
+                vertices->push_back(osg::Vec3(v.x(), top.y()-(v.y()-origin.y()),v.z()));
+            else
+                vertices->push_back(v);
+
+            texcoords0->push_back( texcoord );
+
+            osg::Vec2 texcoord1(alpha/(2.0*osg::PI), 1.0f - beta/osg::PI);
+            if (intensityMap)
+            {
+                colors->push_back(intensityMap->getColor(texcoord1));
+            }
+            else
+            {
+                colors->push_back(osg::Vec4(1.0f,1.0f,1.0f,1.0f));
+                if (texcoords1) texcoords1->push_back( texcoord1 );
+            }
+
+
+        }
+    }
+
+
+    // pass the created vertex array to the points geometry object.
+    geometry->setVertexArray(vertices);
+
+    geometry->setColorArray(colors);
+    geometry->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
+
+    geometry->setTexCoordArray(0,texcoords0);
+    if (texcoords1) geometry->setTexCoordArray(1,texcoords1);
+
+    osg::DrawElementsUShort* elements = new osg::DrawElementsUShort(osg::PrimitiveSet::TRIANGLES);
+    geometry->addPrimitiveSet(elements);
+
+    for(int i=0;i<noSteps-1;++i)
+    {
+        for(int j=0;j<noSteps-1;++j)
+        {
+            int i1 = j+(i+1)*noSteps;
+            int i2 = j+(i)*noSteps;
+            int i3 = j+1+(i)*noSteps;
+            int i4 = j+1+(i+1)*noSteps;
+
+            osg::Vec3& v1 = (*vertices)[i1];
+            osg::Vec3& v2 = (*vertices)[i2];
+            osg::Vec3& v3 = (*vertices)[i3];
+            osg::Vec3& v4 = (*vertices)[i4];
+
+            if ((v1-screenCenter).length()>screenRadius) continue;
+            if ((v2-screenCenter).length()>screenRadius) continue;
+            if ((v3-screenCenter).length()>screenRadius) continue;
+            if ((v4-screenCenter).length()>screenRadius) continue;
+
+            elements->push_back(i1);
+            elements->push_back(i2);
+            elements->push_back(i3);
+
+            elements->push_back(i1);
+            elements->push_back(i3);
+            elements->push_back(i4);
+        }
+    }
+
+    return geometry;
+}
+
+void CameraGroup::buildDistortionCamera(const SGPropertyNode* psNode,
+                                        Camera* camera)
+{
+    const SGPropertyNode* texNode = psNode->getNode("texture");
+    if (!texNode) {
+        // error
+        return;
+    }
+    string texName = texNode->getStringValue();
+    TextureMap::iterator itr = _textureTargets.find(texName);
+    if (itr == _textureTargets.end()) {
+        // error
+        return;
+    }
+    Viewport* viewport = camera->getViewport();
+    float width = viewport->width();
+    float height = viewport->height();
+    TextureRectangle* texRect = itr->second.get();
+    double radius = psNode->getDoubleValue("radius", 1.0);
+    double collar = psNode->getDoubleValue("collar", 0.45);
+    Geode* geode = new Geode();
+    geode->addDrawable(createParoramicSphericalDisplayDistortionMesh(
+                           Vec3(0.0f,0.0f,0.0f), Vec3(width,0.0f,0.0f),
+                           Vec3(0.0f,height,0.0f), radius, collar));
+
+    // new we need to add the texture to the mesh, we do so by creating a
+    // StateSet to contain the Texture StateAttribute.
+    StateSet* stateset = geode->getOrCreateStateSet();
+    stateset->setTextureAttributeAndModes(0, texRect, StateAttribute::ON);
+    stateset->setMode(GL_LIGHTING, StateAttribute::OFF);
+
+    TexMat* texmat = new TexMat;
+    texmat->setScaleByTextureRectangleSize(true);
+    stateset->setTextureAttributeAndModes(0, texmat, osg::StateAttribute::ON);
+#if 0
+    if (!applyIntensityMapAsColours && intensityMap)
+    {
+        stateset->setTextureAttributeAndModes(1, new osg::Texture2D(intensityMap), osg::StateAttribute::ON);
+    }
+#endif
+    // add subgraph to render
+    camera->addChild(geode);
+    camera->setClearMask(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+    camera->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 1.0));
+    camera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+    camera->setCullingMode(osg::CullSettings::NO_CULLING);
+    camera->setName("DistortionCorrectionCamera");
+}
+
 CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
 {
     WindowBuilder *wBuild = WindowBuilder::getWindowBuilder();
@@ -390,13 +598,43 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         double sheary = cameraNode->getDoubleValue("shear-y", 0);
         pOff.makeTranslate(-shearx, -sheary, 0);
     }
-    CameraInfo* info = addCamera(cameraFlags, camera, pOff, vOff);
+    const SGPropertyNode* textureNode = cameraNode->getNode("texture");
+    if (textureNode) {
+        string texName = textureNode->getStringValue("name");
+        int tex_width = textureNode->getIntValue("width");
+        int tex_height = textureNode->getIntValue("height");
+        TextureRectangle* texture = new TextureRectangle;
+
+        texture->setTextureSize(tex_width, tex_height);
+        texture->setInternalFormat(GL_RGB);
+        texture->setFilter(Texture::MIN_FILTER, Texture::LINEAR);
+        texture->setFilter(Texture::MAG_FILTER, Texture::LINEAR);
+        texture->setWrap(Texture::WRAP_S, Texture::CLAMP_TO_EDGE);
+        texture->setWrap(Texture::WRAP_T, Texture::CLAMP_TO_EDGE);
+        camera->setDrawBuffer(GL_FRONT);
+        camera->setReadBuffer(GL_FRONT);
+        camera->setRenderTargetImplementation(Camera::FRAME_BUFFER_OBJECT);
+        camera->attach(Camera::COLOR_BUFFER, texture);
+        _textureTargets[texName] = texture;
+    } else {
+        camera->setDrawBuffer(GL_BACK);
+        camera->setReadBuffer(GL_BACK);
+    }
+    const SGPropertyNode* psNode = cameraNode->getNode("panoramic-spherical");
+    bool useMasterSceneGraph = !psNode;
+    CameraInfo* info = addCamera(cameraFlags, camera, vOff, pOff,
+                                 useMasterSceneGraph);
     // If a viewport isn't set on the camera, then it's hard to dig it
     // out of the SceneView objects in the viewer, and the coordinates
     // of mouse events are somewhat bizzare.
     SGPropertyNode* viewportNode = cameraNode->getNode("viewport", true);
     buildViewport(info, viewportNode, window->gc->getTraits());
     updateCameras(info);
+    // Distortion camera needs the viewport which is created by addCamera().
+    if (psNode) {
+        info->flags = info->flags | VIEW_ABSOLUTE;
+        buildDistortionCamera(psNode, camera);
+    }
     return info;
 }
 
