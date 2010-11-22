@@ -145,7 +145,8 @@ void RenderArea2D::SetActualSize(int sizex, int sizey) {
 }
 
 void RenderArea2D::DrawPixel(int x, int y, bool invert) {
-    // Clipping is currently performed in oldDrawPixel - could clip here instead though.
+    // Clip
+    if(x < _clipx1 || x > _clipx2 || y < _clipy1 || y > _clipy2) return;
 
     RA2DPrimitive prim;
     prim.x1 = x;
@@ -158,7 +159,10 @@ void RenderArea2D::DrawPixel(int x, int y, bool invert) {
 }
 
 void RenderArea2D::oldDrawPixel(int x, int y, bool invert) {
-    // Clip
+    // Clip.  In theory this shouldn't be necessary, since all input is clipped before adding
+    // to the drawing list, but it ensures that any errors in clipping lines etc will only 
+    // spill over the clip area within the instrument, and still be clipped from straying
+    // outside the instrument.
     if(x < _clipx1 || x > _clipx2 || y < _clipy1 || y > _clipy2) return;
     
     // Scale to position within background
@@ -189,6 +193,46 @@ void RenderArea2D::oldDrawPixel(int x, int y, bool invert) {
 }
 
 void RenderArea2D::DrawLine(int x1, int y1, int x2, int y2) {
+    // We need to clip the line to the current region before storing it in the drawing 
+    // list, since when we come to actually draw it the clip region may have changed.
+
+    // Liang-Barsky clipping algorithm
+    int p[4], q[4];
+    float u1 = 0.0f, u2 = 1.0f;
+    p[0] = -(x2 - x1); q[0] = (x1 - _clipx1);
+    p[1] =  (x2 - x1); q[1] = (_clipx2 - x1);
+    p[2] = -(y2 - y1); q[2] = (y1 - _clipy1);
+    p[3] =  (y2 - y1); q[3] = (_clipy2 - y1);
+    
+    for(int i=0; i<4; ++i) {
+        if(p[i] == 0) {
+            if(q[i] < 0) {
+                // Then we have a trivial rejection of a line parallel to a clip plane
+                // completely outside the clip region.
+                return;
+            }
+        } else if(p[i] < 0) {
+            float r = (float)q[i]/(float)p[i];
+            u1 = (u1 > r ? u1 : r);
+        } else {        // p[i] > 0
+            float r = (float)q[i]/(float)p[i];
+            u2 = (u2 < r ? u2 : r);
+        }
+        if(u1 > u2) {
+            // Then the line is completely outside the clip area.
+            return;
+        }
+    }
+    
+    float fx1 = x1 + u1 * (float)(x2 - x1);
+    float fy1 = y1 + u1 * (float)(y2 - y1);
+    float fx2 = x1 + u2 * (float)(x2 - x1);
+    float fy2 = y1 + u2 * (float)(y2 - y1);
+    x1 = (int)(fx1 + 0.5);
+    y1 = (int)(fy1 + 0.5);
+    x2 = (int)(fx2 + 0.5);
+    y2 = (int)(fy2 + 0.5);
+    
     RA2DPrimitive prim;
     prim.x1 = x1;
     prim.y1 = y1;
@@ -220,7 +264,7 @@ void RenderArea2D::oldDrawLine(int x1, int y1, int x2, int y2) {
         int y = y1;
         int yn = dx/2;
         for(int x=x1; x<=x2; ++x) {
-            DrawPixel(x, y);
+            oldDrawPixel(x, y);
             yn += dy;
             if(yn >= dx) {
                 yn -= dx;
@@ -234,7 +278,7 @@ void RenderArea2D::oldDrawLine(int x1, int y1, int x2, int y2) {
         // Must be a more elegant way to roll the next two cases into one!
         if(flip_y) {
             for(int y=y1; y>=y2; --y) {
-                DrawPixel(x, y);
+                oldDrawPixel(x, y);
                 xn += dx;
                 if(xn >= dy) {
                     xn -= dy;
@@ -243,7 +287,7 @@ void RenderArea2D::oldDrawLine(int x1, int y1, int x2, int y2) {
             }
         } else {
             for(int y=y1; y<=y2; ++y) {
-                DrawPixel(x, y);
+                oldDrawPixel(x, y);
                 xn += dx;
                 if(xn >= dy) {
                     xn -= dy;
@@ -255,7 +299,7 @@ void RenderArea2D::oldDrawLine(int x1, int y1, int x2, int y2) {
 }
 
 void RenderArea2D::DrawQuad(int x1, int y1, int x2, int y2, bool invert) {
-    // Clip and sanity-check.
+    // Force the input to be ordered with x1 < x2 and y1 < y2.
     if(x1 > x2) {
         int x = x2;
         x2 = x1;
@@ -266,6 +310,8 @@ void RenderArea2D::DrawQuad(int x1, int y1, int x2, int y2, bool invert) {
         y2 = y1;
         y1 = y;
     }
+    
+    // Clip the input to the current drawing region.
     x1 = x1 < _clipx1 ? _clipx1 : x1;
     if(x1 > _clipx2) { return; }
     x2 = x2 > _clipx2 ? _clipx2 : x2;
