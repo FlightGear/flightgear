@@ -886,7 +886,7 @@ void KLN89FplPage::Knob1Right1() {
                 }
                 if(_kln89->_flightPlans[_subPage]->waypoints.size() == 1 || _fplPos == _kln89->_flightPlans[_subPage]->waypoints.size() + hfcount - 1) {
                     // 1: Don't move
-                } else if(_fplPos >= _kln89->_flightPlans[_subPage]->waypoints.size() + hfcount - (_subPage == 0 ? 4 : 3)) {
+                } else if((int)_fplPos >= static_cast<int>(_kln89->_flightPlans[_subPage]->waypoints.size()) + hfcount - (_subPage == 0 ? 4 : 3)) {
                     _uLinePos++;
                 } else {
                     _fplPos++;
