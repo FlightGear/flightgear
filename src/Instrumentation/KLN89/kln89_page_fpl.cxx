@@ -618,6 +618,8 @@ void KLN89FplPage::ClrPressed() {
                     _entWp = NULL;
                     _entWpStr.clear();
                     _wLinePos = 0;
+                    // We can also get here from the waypoint review page, so clear _bEntExp as well
+                    _bEntExp = false;
                     // Do we need to re-calc _fplPos here?                    
                 } else {
                     // First check that we're not trying to delete an approach waypoint.  Note that we can delete the approach by deleting the header though.
@@ -751,9 +753,9 @@ void KLN89FplPage::EntPressed() {
                 SG_LOG(SG_GENERAL, SG_ALERT, "Error - unknown waypoint type found in KLN89::FplPage::EntPressed()\n");
             }
             _kln89->_activePage->SetId(_entWp->id);
-            _kln89->_entJump = 7;
+            _kln89->_entJump = _kln89->_clrJump = 7;
             _kln89->_cleanUpPage = 7;
-            _kln89->_entRestoreCrsr = true;
+            _kln89->_jumpRestoreCrsr = true;
             _kln89->_mode = KLN89_MODE_DISP;
         }
         _bEntExp = true;

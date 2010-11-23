@@ -213,9 +213,12 @@ private:
 	// And a facility to save the immediately preceeding active page
 	KLN89Page* _lastActivePage;
 	
-	// Hackish
-	int _entJump;	// The page to jump back to if ent is pressed.  -1 indicates no jump
-	bool _entRestoreCrsr;	// Indicates that pressing ENT at this point should restore cursor mode
+	// Ugly hack.  Housekeeping to allow us to temporarily display one page, while remembering which
+	// other page to "jump" back to.  Used when the waypoint pages are used to review waypoint entry
+	// from the flightplan page.
+	int _entJump;	// The page to jump back to if ENT is pressed.  -1 indicates no jump.
+	int _clrJump;	// The page to jump back to if CLR is pressed.  -1 indicates no jump.
+	bool _jumpRestoreCrsr;	// Indicates that jump back at this point should restore cursor mode.
 	
 	// Misc pages that aren't in the cyclic list.
 	// Direct To
