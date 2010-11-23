@@ -711,15 +711,23 @@ void KLN89FplPage::EntPressed() {
         _delWp = false;
         // Do we need to re-calc _fplPos here?
     } else if(_bEntExp) {
+        // We get here if we have just approved a waypoint review for addition with the ENT button
         _bEntWp = false;
         _bEntExp = false;
         _entWp = NULL;  // DON'T delete it! - it's been pushed onto the waypoint list at this point.
         _entWpStr.clear();
         _kln89->_cleanUpPage = -1;
         _wLinePos = 0;
-        // TODO - in actual fact the previously underlined waypoint stays in the same position and underlined
-        // in some or possibly all circumstances - need to check this out and match it, but not too important
-        // for now.
+        // The cursor should be moved either to the next waypoint in the list, or to the empty position at
+        // the end of the list if the waypoint just entered was the last one in the list.  Unfortunately
+        // that means that we have to deal with the horrible _uLinePos / _fplPos interaction yet again :-(
+        if(_uLinePos == 4) {
+            // We can't handle this case by calling K1R1, since we want to jump the field type
+            _uLinePos = 5;
+        } else {
+            // Just call Knob1Right1 and let that handle the horrible logic :-)
+            Knob1Right1();
+        }
     } else if(_bEntWp) {
         if(_entWp != NULL) {
             // TODO - should be able to get rid of this switch I think and use the enum values.
