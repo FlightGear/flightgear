@@ -304,6 +304,11 @@ void KLN89FplPage::Update(double dt) {
                         _kln89->DrawText(_entWpStr.substr(_wLinePos+1, _entWpStr.size()-_wLinePos-1), 2, 5+_wLinePos, 3-i);
                     }
                 }
+                // Draw the param - this is "----" during waypoint entry (not for the first row though or we draw through the label!)
+                if(i != 0) {
+                    _kln89->DrawText("----", 2, 12, 3-i);
+                }
+                
                 drawID = false;
             }
             if(drawID) {
@@ -316,10 +321,16 @@ void KLN89FplPage::Update(double dt) {
                     //cout << "last_pos = " << last_pos << endl;
                     if(last_pos > 0 && last_pos < waylist.size() && i > 0) {
                         // Draw the param
-                        if(_actFpMode == 0) {
-                            string s = _params[last_pos - 1];
-                            _kln89->DrawText(s, 2, 16-s.size(), 3-i);
-                        } else if(_actFpMode == 3) {
+                        if(_actFpMode == 0) {   // DIS
+                            if(_kln89->_mode == KLN89_MODE_CRSR && _bEntWp && _uLinePos < i+4) {
+                                // This means that we are beyond the waypoint being entered.  In DIS mode
+                                // this means that we dash out the field.
+                                _kln89->DrawText("----", 2, 12, 3-i);
+                            } else {
+                                string s = _params[last_pos - 1];
+                                _kln89->DrawText(s, 2, 16-s.size(), 3-i);
+                            }
+                        } else if(_actFpMode == 3) {    // DTK
                             string s = _params[last_pos - 1];
                             _kln89->DrawText(s, 2, 15-s.size(), 3-i);
                             _kln89->DrawSpecialChar(0, 2, 15, 3-i);
@@ -348,10 +359,19 @@ void KLN89FplPage::Update(double dt) {
                 if(i > 0) {
                     // Draw the param
                     //cout << "i > 0 param draw...\n";
-                    if(_actFpMode == 0) {
-                        string s = _params[_fplPos + i - 1];
-                        _kln89->DrawText(s, 2, 16-s.size(), 3-i);
-                    } else if(_actFpMode == 3) {
+                    if(_actFpMode == 0) {   // DIS
+                        if(_kln89->_mode == KLN89_MODE_CRSR && _bEntWp && _uLinePos < i+4) {
+                            // This means that we are beyond the waypoint being entered.  In DIS mode
+                            // this means that we dash out the field.
+                            _kln89->DrawText("----", 2, 12, 3-i);
+                        } else {
+                            string s = _params[_fplPos + i - 1];
+                            _kln89->DrawText(s, 2, 16-s.size(), 3-i);
+                        }
+                    } else if(_actFpMode == 3) {    // DTK
+                        // TODO - figure out properly what to do in DTK mode when beyond a waypoint being entered.
+                        // I *think* it is OK to do the same as here, but maybe not for the waypoint immediately
+                        // beyond the one being entered - need to check.
                         string s = _params[_fplPos + i - 1];
                         _kln89->DrawText(s, 2, 15-s.size(), 3-i);
                         _kln89->DrawSpecialChar(0, 2, 15, 3-i);
@@ -437,6 +457,7 @@ void KLN89FplPage::Update(double dt) {
                     _kln89->DrawEnt();
                 }
             } else if(_kln89->_mode == KLN89_MODE_CRSR && _bEntWp && _uLinePos == i+4) {
+                // This means that we are drawing a waypoint currently being entered
                 if(!_kln89->_blink) {
                     if(_wLinePos >= _entWpStr.size()) {
                         _kln89->DrawText(_entWpStr, 2, 4, 2-i);
@@ -447,6 +468,11 @@ void KLN89FplPage::Update(double dt) {
                         _kln89->DrawText(_entWpStr.substr(_wLinePos+1, _entWpStr.size()-_wLinePos-1), 2, 5+_wLinePos, 2-i);
                     }
                 }
+                // Draw the param - this is "----" during waypoint entry (not for the first row though or we draw through the label!)
+                if(i != 0) {
+                    _kln89->DrawText("----", 2, 12, 2-i);
+                }
+                
                 drawID = false;
             }
             if(drawID) {
@@ -456,9 +482,16 @@ void KLN89FplPage::Update(double dt) {
                     }
                     if(last_pos > 0 && last_pos < waylist.size() && i > 0) {
                         // Draw the param
-                        if(_fpMode == 0) {
-                            string s = _params[last_pos - 1];
-                            _kln89->DrawText(s, 2, 16-s.size(), 2-i);
+                        // TODO - we should also handle DTK mode params here.
+                        if(_fpMode == 0) {  // DIS
+                            if(_kln89->_mode == KLN89_MODE_CRSR && _bEntWp && _uLinePos < i+4) {
+                                // This means that we are beyond the waypoint being entered.  In DIS mode
+                                // this means that we dash out the field.
+                                _kln89->DrawText("----", 2, 12, 2-i);
+                            } else {
+                                string s = _params[last_pos - 1];
+                                _kln89->DrawText(s, 2, 16-s.size(), 2-i);
+                            }
                         }
                     }
                     break;
@@ -468,9 +501,16 @@ void KLN89FplPage::Update(double dt) {
                     }
                     if(i > 0) {
                         // Draw the param
-                        if(_fpMode == 0) {
-                            string s = _params[_fplPos + i - 1];
-                            _kln89->DrawText(s, 2, 16-s.size(), 2-i);
+                        // TODO - we should also handle DTK mode params here.
+                        if(_fpMode == 0) {  // DIS
+                            if(_kln89->_mode == KLN89_MODE_CRSR && _bEntWp && _uLinePos < i+4) {
+                                // This means that we are beyond the waypoint being entered.  In DIS mode
+                                // this means that we dash out the field.
+                                _kln89->DrawText("----", 2, 12, 2-i);
+                            } else {
+                                string s = _params[_fplPos + i - 1];
+                                _kln89->DrawText(s, 2, 16-s.size(), 2-i);
+                            }
                         }
                     }
                 }
