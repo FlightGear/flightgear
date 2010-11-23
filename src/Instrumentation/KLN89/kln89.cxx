@@ -206,9 +206,8 @@ KLN89::KLN89(RenderArea2D* instrument)
 	}
 	_activeFP = _flightPlans[0];
 	
-	// Hackish
-	_entJump = -1;
-	_entRestoreCrsr = false;
+	_entJump = _clrJump = -1;
+	_jumpRestoreCrsr = false;
 	
 	_dispMsg = false;
 	
@@ -490,8 +489,8 @@ void KLN89::CrsrPressed() {
 		_pages[(unsigned int)_cleanUpPage]->CleanUp();
 		_cleanUpPage = -1;
 	}
-	_entRestoreCrsr = false;
-	_entJump = -1;
+	_jumpRestoreCrsr = false;
+	_entJump = _clrJump = -1;
 	((KLN89Page*)_activePage)->SetEntInvert(false);
 	if(_mode == KLN89_MODE_DISP) {
 		_mode = KLN89_MODE_CRSR;
@@ -512,8 +511,8 @@ void KLN89::EntPressed() {
 		}
 		_curPage = _entJump;
 		_activePage = _pages[(unsigned int)_entJump];
-		if(_entRestoreCrsr) _mode = KLN89_MODE_CRSR;
-		_entJump = -1;
+		if(_jumpRestoreCrsr) _mode = KLN89_MODE_CRSR;
+		_entJump = _clrJump = -1;
 	}
 	if(_activePage == _dir_page) {
 		_dir_page->EntPressed();
@@ -525,6 +524,12 @@ void KLN89::EntPressed() {
 }
 
 void KLN89::ClrPressed() {
+	if(_clrJump >= 0) {
+		_curPage = _clrJump;
+		_activePage = _pages[(unsigned int)_clrJump];
+		if(_jumpRestoreCrsr) _mode = KLN89_MODE_CRSR;
+		_entJump = _clrJump = -1;
+	}
 	_activePage->ClrPressed();
 }
 

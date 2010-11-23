@@ -295,15 +295,20 @@ void KLN89FplPage::Update(double dt) {
                 }
             } else if(_kln89->_mode == KLN89_MODE_CRSR && _bEntWp && _uLinePos == i+4) {
                 if(!_kln89->_blink) {
-                    if(_wLinePos >= _entWp->id.size()) {
-                        _kln89->DrawText(_entWp->id, 2, 4, 3-i);
+                    if(_wLinePos >= _entWpStr.size()) {
+                        _kln89->DrawText(_entWpStr, 2, 4, 3-i);
                         _kln89->DrawChar(' ', 2, 4+_wLinePos, 3-i, false, true);
                     } else {
-                        _kln89->DrawText(_entWp->id.substr(0, _wLinePos), 2, 4, 3-i);
-                        _kln89->DrawChar(_entWp->id[_wLinePos], 2, 4+_wLinePos, 3-i, false, true);
-                        _kln89->DrawText(_entWp->id.substr(_wLinePos+1, _entWp->id.size()-_wLinePos-1), 2, 5+_wLinePos, 3-i);
+                        _kln89->DrawText(_entWpStr.substr(0, _wLinePos), 2, 4, 3-i);
+                        _kln89->DrawChar(_entWpStr[_wLinePos], 2, 4+_wLinePos, 3-i, false, true);
+                        _kln89->DrawText(_entWpStr.substr(_wLinePos+1, _entWpStr.size()-_wLinePos-1), 2, 5+_wLinePos, 3-i);
                     }
                 }
+                // Draw the param - this is "----" during waypoint entry (not for the first row though or we draw through the label!)
+                if(i != 0) {
+                    _kln89->DrawText("----", 2, 12, 3-i);
+                }
+                
                 drawID = false;
             }
             if(drawID) {
@@ -316,10 +321,16 @@ void KLN89FplPage::Update(double dt) {
                     //cout << "last_pos = " << last_pos << endl;
                     if(last_pos > 0 && last_pos < waylist.size() && i > 0) {
                         // Draw the param
-                        if(_actFpMode == 0) {
-                            string s = _params[last_pos - 1];
-                            _kln89->DrawText(s, 2, 16-s.size(), 3-i);
-                        } else if(_actFpMode == 3) {
+                        if(_actFpMode == 0) {   // DIS
+                            if(_kln89->_mode == KLN89_MODE_CRSR && _bEntWp && _uLinePos < i+4) {
+                                // This means that we are beyond the waypoint being entered.  In DIS mode
+                                // this means that we dash out the field.
+                                _kln89->DrawText("----", 2, 12, 3-i);
+                            } else {
+                                string s = _params[last_pos - 1];
+                                _kln89->DrawText(s, 2, 16-s.size(), 3-i);
+                            }
+                        } else if(_actFpMode == 3) {    // DTK
                             string s = _params[last_pos - 1];
                             _kln89->DrawText(s, 2, 15-s.size(), 3-i);
                             _kln89->DrawSpecialChar(0, 2, 15, 3-i);
@@ -348,10 +359,19 @@ void KLN89FplPage::Update(double dt) {
                 if(i > 0) {
                     // Draw the param
                     //cout << "i > 0 param draw...\n";
-                    if(_actFpMode == 0) {
-                        string s = _params[_fplPos + i - 1];
-                        _kln89->DrawText(s, 2, 16-s.size(), 3-i);
-                    } else if(_actFpMode == 3) {
+                    if(_actFpMode == 0) {   // DIS
+                        if(_kln89->_mode == KLN89_MODE_CRSR && _bEntWp && _uLinePos < i+4) {
+                            // This means that we are beyond the waypoint being entered.  In DIS mode
+                            // this means that we dash out the field.
+                            _kln89->DrawText("----", 2, 12, 3-i);
+                        } else {
+                            string s = _params[_fplPos + i - 1];
+                            _kln89->DrawText(s, 2, 16-s.size(), 3-i);
+                        }
+                    } else if(_actFpMode == 3) {    // DTK
+                        // TODO - figure out properly what to do in DTK mode when beyond a waypoint being entered.
+                        // I *think* it is OK to do the same as here, but maybe not for the waypoint immediately
+                        // beyond the one being entered - need to check.
                         string s = _params[_fplPos + i - 1];
                         _kln89->DrawText(s, 2, 15-s.size(), 3-i);
                         _kln89->DrawSpecialChar(0, 2, 15, 3-i);
@@ -437,16 +457,22 @@ void KLN89FplPage::Update(double dt) {
                     _kln89->DrawEnt();
                 }
             } else if(_kln89->_mode == KLN89_MODE_CRSR && _bEntWp && _uLinePos == i+4) {
+                // This means that we are drawing a waypoint currently being entered
                 if(!_kln89->_blink) {
-                    if(_wLinePos >= _entWp->id.size()) {
-                        _kln89->DrawText(_entWp->id, 2, 4, 2-i);
+                    if(_wLinePos >= _entWpStr.size()) {
+                        _kln89->DrawText(_entWpStr, 2, 4, 2-i);
                         _kln89->DrawChar(' ', 2, 4+_wLinePos, 2-i, false, true);
                     } else {
-                        _kln89->DrawText(_entWp->id.substr(0, _wLinePos), 2, 4, 2-i);
-                        _kln89->DrawChar(_entWp->id[_wLinePos], 2, 4+_wLinePos, 2-i, false, true);
-                        _kln89->DrawText(_entWp->id.substr(_wLinePos+1, _entWp->id.size()-_wLinePos-1), 2, 5+_wLinePos, 2-i);
+                        _kln89->DrawText(_entWpStr.substr(0, _wLinePos), 2, 4, 2-i);
+                        _kln89->DrawChar(_entWpStr[_wLinePos], 2, 4+_wLinePos, 2-i, false, true);
+                        _kln89->DrawText(_entWpStr.substr(_wLinePos+1, _entWpStr.size()-_wLinePos-1), 2, 5+_wLinePos, 2-i);
                     }
                 }
+                // Draw the param - this is "----" during waypoint entry (not for the first row though or we draw through the label!)
+                if(i != 0) {
+                    _kln89->DrawText("----", 2, 12, 2-i);
+                }
+                
                 drawID = false;
             }
             if(drawID) {
@@ -456,9 +482,16 @@ void KLN89FplPage::Update(double dt) {
                     }
                     if(last_pos > 0 && last_pos < waylist.size() && i > 0) {
                         // Draw the param
-                        if(_fpMode == 0) {
-                            string s = _params[last_pos - 1];
-                            _kln89->DrawText(s, 2, 16-s.size(), 2-i);
+                        // TODO - we should also handle DTK mode params here.
+                        if(_fpMode == 0) {  // DIS
+                            if(_kln89->_mode == KLN89_MODE_CRSR && _bEntWp && _uLinePos < i+4) {
+                                // This means that we are beyond the waypoint being entered.  In DIS mode
+                                // this means that we dash out the field.
+                                _kln89->DrawText("----", 2, 12, 2-i);
+                            } else {
+                                string s = _params[last_pos - 1];
+                                _kln89->DrawText(s, 2, 16-s.size(), 2-i);
+                            }
                         }
                     }
                     break;
@@ -468,9 +501,16 @@ void KLN89FplPage::Update(double dt) {
                     }
                     if(i > 0) {
                         // Draw the param
-                        if(_fpMode == 0) {
-                            string s = _params[_fplPos + i - 1];
-                            _kln89->DrawText(s, 2, 16-s.size(), 2-i);
+                        // TODO - we should also handle DTK mode params here.
+                        if(_fpMode == 0) {  // DIS
+                            if(_kln89->_mode == KLN89_MODE_CRSR && _bEntWp && _uLinePos < i+4) {
+                                // This means that we are beyond the waypoint being entered.  In DIS mode
+                                // this means that we dash out the field.
+                                _kln89->DrawText("----", 2, 12, 2-i);
+                            } else {
+                                string s = _params[_fplPos + i - 1];
+                                _kln89->DrawText(s, 2, 16-s.size(), 2-i);
+                            }
                         }
                     }
                 }
@@ -600,8 +640,27 @@ void KLN89FplPage::ClrPressed() {
             // TODO - see if we need to delete a waypoint
             if(_uLinePos >= 4) {
                 if(_delWp) {
+                    // If we are already displaying a clear waypoint dialog in response to the CLR button,
+                    // then a further press of the CLR button cancels the dialog.
                     _kln89->_mode = KLN89_MODE_DISP;
                     _delWp = false;
+                } else if(_bEntWp) {
+                    // If we are currently entering a waypoint, then CLR deletes it unconditionally
+                    // without a confirmation dialog and cancels waypoint entry.
+                    int pos = _uLinePos - 4 + _fplPos;
+                    // Sanity check - the calculated wp position should never be off the end of the waypoint list.
+                    if(pos > static_cast<int>(_kln89->_flightPlans[_subPage]->waypoints.size()) - 1) {
+                        SG_LOG(SG_GENERAL, SG_ALERT, "ERROR - _uLinePos too big in KLN89FplPage::ClrPressed!\n");
+                        return;
+                    }
+                    _kln89->_flightPlans[_subPage]->waypoints.erase(_kln89->_flightPlans[_subPage]->waypoints.begin() + pos);
+                    _bEntWp = false;
+                    _entWp = NULL;
+                    _entWpStr.clear();
+                    _wLinePos = 0;
+                    // We can also get here from the waypoint review page, so clear _bEntExp as well
+                    _bEntExp = false;
+                    // Do we need to re-calc _fplPos here?                    
                 } else {
                     // First check that we're not trying to delete an approach waypoint.  Note that we can delete the approach by deleting the header though.
                     // Check for approach waypoints or header/fences in flightplan 0
@@ -685,22 +744,30 @@ void KLN89FplPage::EntPressed() {
         int pos = _uLinePos - 4 + _fplPos;
         // Sanity check - the calculated wp position should never be off the end of the waypoint list.
         if(pos > static_cast<int>(_kln89->_flightPlans[_subPage]->waypoints.size()) - 1) {
-            cout << "ERROR - _uLinePos too big in KLN89FplPage::EntPressed!\n";
+            SG_LOG(SG_GENERAL, SG_ALERT, "ERROR - _uLinePos too big in KLN89FplPage::EntPressed!\n");
             return;
         }
         _kln89->_flightPlans[_subPage]->waypoints.erase(_kln89->_flightPlans[_subPage]->waypoints.begin() + pos);
         _delWp = false;
         // Do we need to re-calc _fplPos here?
     } else if(_bEntExp) {
+        // We get here if we have just approved a waypoint review for addition with the ENT button
         _bEntWp = false;
         _bEntExp = false;
         _entWp = NULL;  // DON'T delete it! - it's been pushed onto the waypoint list at this point.
         _entWpStr.clear();
         _kln89->_cleanUpPage = -1;
         _wLinePos = 0;
-        // TODO - in actual fact the previously underlined waypoint stays in the same position and underlined
-        // in some or possibly all circumstances - need to check this out and match it, but not too important
-        // for now.
+        // The cursor should be moved either to the next waypoint in the list, or to the empty position at
+        // the end of the list if the waypoint just entered was the last one in the list.  Unfortunately
+        // that means that we have to deal with the horrible _uLinePos / _fplPos interaction yet again :-(
+        if(_uLinePos == 4) {
+            // We can't handle this case by calling K1R1, since we want to jump the field type
+            _uLinePos = 5;
+        } else {
+            // Just call Knob1Right1 and let that handle the horrible logic :-)
+            Knob1Right1();
+        }
     } else if(_bEntWp) {
         if(_entWp != NULL) {
             // TODO - should be able to get rid of this switch I think and use the enum values.
@@ -731,12 +798,12 @@ void KLN89FplPage::EntPressed() {
                 ((KLN89Page*)_kln89->_pages[4])->SetEntInvert(true);
                 break;
             default:
-                cout << "Error - unknown waypoint type found in KLN89::FplPage::EntPressed()\n";
+                SG_LOG(SG_GENERAL, SG_ALERT, "Error - unknown waypoint type found in KLN89::FplPage::EntPressed()\n");
             }
             _kln89->_activePage->SetId(_entWp->id);
-            _kln89->_entJump = 7;
+            _kln89->_entJump = _kln89->_clrJump = 7;
             _kln89->_cleanUpPage = 7;
-            _kln89->_entRestoreCrsr = true;
+            _kln89->_jumpRestoreCrsr = true;
             _kln89->_mode = KLN89_MODE_DISP;
         }
         _bEntExp = true;
@@ -867,7 +934,7 @@ void KLN89FplPage::Knob1Right1() {
                 }
                 if(_kln89->_flightPlans[_subPage]->waypoints.size() == 1 || _fplPos == _kln89->_flightPlans[_subPage]->waypoints.size() + hfcount - 1) {
                     // 1: Don't move
-                } else if(_fplPos >= _kln89->_flightPlans[_subPage]->waypoints.size() + hfcount - (_subPage == 0 ? 4 : 3)) {
+                } else if((int)_fplPos >= static_cast<int>(_kln89->_flightPlans[_subPage]->waypoints.size()) + hfcount - (_subPage == 0 ? 4 : 3)) {
                     _uLinePos++;
                 } else {
                     _fplPos++;
@@ -956,8 +1023,15 @@ void KLN89FplPage::Knob2Left1() {
                 
                 GPSWaypoint* wp = _kln89->FindFirstById(_entWpStr.substr(0, _wLinePos+1));
                 if(NULL == wp) {
-                    // no-op
+                    // No ID matches the partial ID entered so _entWpStr must be shortened to the cursor
+                    // position if it was longer due to a match on the previous character.
+                    if(_entWpStr.size() > _wLinePos+1) {
+                        _entWpStr = _entWpStr.substr(0, _wLinePos+1);
+                    }
                 } else {
+                    // There is a matching full ID to the entered partial ID, so copy the full ID
+                    // into _entWpStr
+                    _entWpStr = wp->id;
                     if(_entWp) {
                         *_entWp = *wp; // copy
                         delete wp;
@@ -1029,8 +1103,15 @@ void KLN89FplPage::Knob2Right1() {
                 
                 GPSWaypoint* wp = _kln89->FindFirstById(_entWpStr.substr(0, _wLinePos+1));
                 if(NULL == wp) {
-                    // no-op
+                    // No ID matches the partial ID entered so _entWpStr must be shortened to the cursor
+                    // position if it was longer due to a match on the previous character.
+                    if(_entWpStr.size() > _wLinePos+1) {
+                        _entWpStr = _entWpStr.substr(0, _wLinePos+1);
+                    }
                 } else {
+                    // There is a matching full ID to the entered partial ID, so copy the full ID
+                    // into _entWpStr
+                    _entWpStr = wp->id;
                     if(_entWp) {
                         *_entWp = *wp; // copy
                         delete wp;
