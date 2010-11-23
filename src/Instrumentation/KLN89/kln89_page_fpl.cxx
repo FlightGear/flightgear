@@ -600,8 +600,25 @@ void KLN89FplPage::ClrPressed() {
             // TODO - see if we need to delete a waypoint
             if(_uLinePos >= 4) {
                 if(_delWp) {
+                    // If we are already displaying a clear waypoint dialog in response to the CLR button,
+                    // then a further press of the CLR button cancels the dialog.
                     _kln89->_mode = KLN89_MODE_DISP;
                     _delWp = false;
+                } else if(_bEntWp) {
+                    // If we are currently entering a waypoint, then CLR deletes it unconditionally
+                    // without a confirmation dialog and cancels waypoint entry.
+                    int pos = _uLinePos - 4 + _fplPos;
+                    // Sanity check - the calculated wp position should never be off the end of the waypoint list.
+                    if(pos > static_cast<int>(_kln89->_flightPlans[_subPage]->waypoints.size()) - 1) {
+                        SG_LOG(SG_GENERAL, SG_ALERT, "ERROR - _uLinePos too big in KLN89FplPage::ClrPressed!\n");
+                        return;
+                    }
+                    _kln89->_flightPlans[_subPage]->waypoints.erase(_kln89->_flightPlans[_subPage]->waypoints.begin() + pos);
+                    _bEntWp = false;
+                    _entWp = NULL;
+                    _entWpStr.clear();
+                    _wLinePos = 0;
+                    // Do we need to re-calc _fplPos here?                    
                 } else {
                     // First check that we're not trying to delete an approach waypoint.  Note that we can delete the approach by deleting the header though.
                     // Check for approach waypoints or header/fences in flightplan 0
@@ -685,7 +702,7 @@ void KLN89FplPage::EntPressed() {
         int pos = _uLinePos - 4 + _fplPos;
         // Sanity check - the calculated wp position should never be off the end of the waypoint list.
         if(pos > static_cast<int>(_kln89->_flightPlans[_subPage]->waypoints.size()) - 1) {
-            cout << "ERROR - _uLinePos too big in KLN89FplPage::EntPressed!\n";
+            SG_LOG(SG_GENERAL, SG_ALERT, "ERROR - _uLinePos too big in KLN89FplPage::EntPressed!\n");
             return;
         }
         _kln89->_flightPlans[_subPage]->waypoints.erase(_kln89->_flightPlans[_subPage]->waypoints.begin() + pos);
@@ -731,7 +748,7 @@ void KLN89FplPage::EntPressed() {
                 ((KLN89Page*)_kln89->_pages[4])->SetEntInvert(true);
                 break;
             default:
-                cout << "Error - unknown waypoint type found in KLN89::FplPage::EntPressed()\n";
+                SG_LOG(SG_GENERAL, SG_ALERT, "Error - unknown waypoint type found in KLN89::FplPage::EntPressed()\n");
             }
             _kln89->_activePage->SetId(_entWp->id);
             _kln89->_entJump = 7;
