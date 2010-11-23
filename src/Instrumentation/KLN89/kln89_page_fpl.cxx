@@ -295,13 +295,13 @@ void KLN89FplPage::Update(double dt) {
                 }
             } else if(_kln89->_mode == KLN89_MODE_CRSR && _bEntWp && _uLinePos == i+4) {
                 if(!_kln89->_blink) {
-                    if(_wLinePos >= _entWp->id.size()) {
-                        _kln89->DrawText(_entWp->id, 2, 4, 3-i);
+                    if(_wLinePos >= _entWpStr.size()) {
+                        _kln89->DrawText(_entWpStr, 2, 4, 3-i);
                         _kln89->DrawChar(' ', 2, 4+_wLinePos, 3-i, false, true);
                     } else {
-                        _kln89->DrawText(_entWp->id.substr(0, _wLinePos), 2, 4, 3-i);
-                        _kln89->DrawChar(_entWp->id[_wLinePos], 2, 4+_wLinePos, 3-i, false, true);
-                        _kln89->DrawText(_entWp->id.substr(_wLinePos+1, _entWp->id.size()-_wLinePos-1), 2, 5+_wLinePos, 3-i);
+                        _kln89->DrawText(_entWpStr.substr(0, _wLinePos), 2, 4, 3-i);
+                        _kln89->DrawChar(_entWpStr[_wLinePos], 2, 4+_wLinePos, 3-i, false, true);
+                        _kln89->DrawText(_entWpStr.substr(_wLinePos+1, _entWpStr.size()-_wLinePos-1), 2, 5+_wLinePos, 3-i);
                     }
                 }
                 drawID = false;
@@ -438,13 +438,13 @@ void KLN89FplPage::Update(double dt) {
                 }
             } else if(_kln89->_mode == KLN89_MODE_CRSR && _bEntWp && _uLinePos == i+4) {
                 if(!_kln89->_blink) {
-                    if(_wLinePos >= _entWp->id.size()) {
-                        _kln89->DrawText(_entWp->id, 2, 4, 2-i);
+                    if(_wLinePos >= _entWpStr.size()) {
+                        _kln89->DrawText(_entWpStr, 2, 4, 2-i);
                         _kln89->DrawChar(' ', 2, 4+_wLinePos, 2-i, false, true);
                     } else {
-                        _kln89->DrawText(_entWp->id.substr(0, _wLinePos), 2, 4, 2-i);
-                        _kln89->DrawChar(_entWp->id[_wLinePos], 2, 4+_wLinePos, 2-i, false, true);
-                        _kln89->DrawText(_entWp->id.substr(_wLinePos+1, _entWp->id.size()-_wLinePos-1), 2, 5+_wLinePos, 2-i);
+                        _kln89->DrawText(_entWpStr.substr(0, _wLinePos), 2, 4, 2-i);
+                        _kln89->DrawChar(_entWpStr[_wLinePos], 2, 4+_wLinePos, 2-i, false, true);
+                        _kln89->DrawText(_entWpStr.substr(_wLinePos+1, _entWpStr.size()-_wLinePos-1), 2, 5+_wLinePos, 2-i);
                     }
                 }
                 drawID = false;
@@ -956,8 +956,15 @@ void KLN89FplPage::Knob2Left1() {
                 
                 GPSWaypoint* wp = _kln89->FindFirstById(_entWpStr.substr(0, _wLinePos+1));
                 if(NULL == wp) {
-                    // no-op
+                    // No ID matches the partial ID entered so _entWpStr must be shortened to the cursor
+                    // position if it was longer due to a match on the previous character.
+                    if(_entWpStr.size() > _wLinePos+1) {
+                        _entWpStr = _entWpStr.substr(0, _wLinePos+1);
+                    }
                 } else {
+                    // There is a matching full ID to the entered partial ID, so copy the full ID
+                    // into _entWpStr
+                    _entWpStr = wp->id;
                     if(_entWp) {
                         *_entWp = *wp; // copy
                         delete wp;
@@ -1029,8 +1036,15 @@ void KLN89FplPage::Knob2Right1() {
                 
                 GPSWaypoint* wp = _kln89->FindFirstById(_entWpStr.substr(0, _wLinePos+1));
                 if(NULL == wp) {
-                    // no-op
+                    // No ID matches the partial ID entered so _entWpStr must be shortened to the cursor
+                    // position if it was longer due to a match on the previous character.
+                    if(_entWpStr.size() > _wLinePos+1) {
+                        _entWpStr = _entWpStr.substr(0, _wLinePos+1);
+                    }
                 } else {
+                    // There is a matching full ID to the entered partial ID, so copy the full ID
+                    // into _entWpStr
+                    _entWpStr = wp->id;
                     if(_entWp) {
                         *_entWp = *wp; // copy
                         delete wp;
