@@ -306,6 +306,8 @@ FGIO::init()
     // SG_LOG( SG_IO, SG_INFO, "I/O Channel initialization, " <<
     //         globals->get_channel_options_list()->size() << " requests." );
 
+    _realDeltaTime = fgGetNode("/sim/time/delta-realtime-sec");
+    
     FGProtocol *p;
 
     // we could almost do this in a single step except pushing a valid
@@ -339,30 +341,31 @@ FGIO::reinit()
 
 // process any IO channel work
 void
-FGIO::update( double delta_time_sec )
+FGIO::update( double /* delta_time_sec */ )
 {
-    // cout << "processing I/O channels" << endl;
-    // cout << "  Elapsed time = " << delta_time_sec << endl;
+  // use wall-clock, not simulation, delta time, so that network
+  // protocols update when the simulation is paused
+  // see http://code.google.com/p/flightgear-bugs/issues/detail?id=125
+    double delta_time_sec = _realDeltaTime->getDoubleValue();
 
     ProtocolVec::iterator i = io_channels.begin();
     ProtocolVec::iterator end = io_channels.end();
     for (; i != end; ++i ) {
-	FGProtocol* p = *i;
-
-	if ( p->is_enabled() ) {
+      FGProtocol* p = *i;
+      if (!p->is_enabled()) {
+        continue;
+      }
+      
 	    p->dec_count_down( delta_time_sec );
 	    double dt = 1 / p->get_hz();
 	    if ( p->get_count_down() < 0.33 * dt ) {
 	      p->process();
 	      p->inc_count();
 	      while ( p->get_count_down() < 0.33 * dt ) {
-		p->inc_count_down( dt );
+          p->inc_count_down( dt );
 	      }
-	      // double ave = elapsed_time / p->get_count();
-	      // cout << "  ave rate = " << ave << endl;
-	    }
-	}
-    }
+	    } // of channel processing
+    } // of io_channels iteration
 }
 
 void
