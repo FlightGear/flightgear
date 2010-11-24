@@ -697,8 +697,6 @@ do_timeofday (const SGPropertyNode * arg)
         = fgGetNode("/position/longitude-deg");
     static const SGPropertyNode *latitude
         = fgGetNode("/position/latitude-deg");
-    static const SGPropertyNode *cur_time_override
-        = fgGetNode("/sim/time/cur-time-override", true);
 
     int orig_warp = globals->get_warp();
     SGTime *t = globals->get_time_params();
@@ -759,14 +757,10 @@ do_timeofday (const SGPropertyNode * arg)
                                              * SGD_DEGREES_TO_RADIANS,
                                            180.0, false ); 
     }
-    // cout << "warp = " << warp << endl;
-    globals->set_warp( orig_warp + warp );
+    
 
-    t->update( longitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
-               latitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS,
-               cur_time_override->getLongValue(),
-               globals->get_warp() );
-
+    fgSetInt("/sim/time/warp", orig_warp + warp);
+    
     return true;
 }
 

@@ -104,14 +104,6 @@ private:
 
     std::string browser;
 
-    // An offset in seconds from the true time.  Allows us to adjust
-    // the effective time of day.
-    long int warp;
-
-    // How much to change the value of warp each iteration.  Allows us
-    // to make time progress faster than normal (or even run in reverse.)
-    long int warp_delta;
-
     // Time structure
     SGTime *time_params;
 
@@ -227,13 +219,11 @@ public:
     inline const std::string &get_browser () const { return browser; }
     void set_browser (const std::string &b) { browser = b; }
 
-    inline long int get_warp() const { return warp; }
-    inline void set_warp( long int w ) { warp = w; }
-    inline void inc_warp( long int w ) { warp += w; }
+    long int get_warp() const;
+    void set_warp( long int w );
 
-    inline long int get_warp_delta() const { return warp_delta; }
-    inline void set_warp_delta( long int d ) { warp_delta = d; }
-    inline void inc_warp_delta( long int d ) { warp_delta += d; }
+    long int get_warp_delta() const;
+    void set_warp_delta( long int d );
 
     inline SGTime *get_time_params() const { return time_params; }
     inline void set_time_params( SGTime *t ) { time_params = t; }

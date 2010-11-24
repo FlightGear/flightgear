@@ -7,7 +7,7 @@
 //
 // Written by David Luff, started 2005.
 //
-// Copyright (C) 2005 - David C Luff - david.luff@nottingham.ac.uk
+// Copyright (C) 2005 - David C Luff - daveluff AT ntlworld.com
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -206,9 +206,8 @@ KLN89::KLN89(RenderArea2D* instrument)
 	}
 	_activeFP = _flightPlans[0];
 	
-	// Hackish
-	_entJump = -1;
-	_entRestoreCrsr = false;
+	_entJump = _clrJump = -1;
+	_jumpRestoreCrsr = false;
 	
 	_dispMsg = false;
 	
@@ -490,8 +489,8 @@ void KLN89::CrsrPressed() {
 		_pages[(unsigned int)_cleanUpPage]->CleanUp();
 		_cleanUpPage = -1;
 	}
-	_entRestoreCrsr = false;
-	_entJump = -1;
+	_jumpRestoreCrsr = false;
+	_entJump = _clrJump = -1;
 	((KLN89Page*)_activePage)->SetEntInvert(false);
 	if(_mode == KLN89_MODE_DISP) {
 		_mode = KLN89_MODE_CRSR;
@@ -512,8 +511,8 @@ void KLN89::EntPressed() {
 		}
 		_curPage = _entJump;
 		_activePage = _pages[(unsigned int)_entJump];
-		if(_entRestoreCrsr) _mode = KLN89_MODE_CRSR;
-		_entJump = -1;
+		if(_jumpRestoreCrsr) _mode = KLN89_MODE_CRSR;
+		_entJump = _clrJump = -1;
 	}
 	if(_activePage == _dir_page) {
 		_dir_page->EntPressed();
@@ -525,6 +524,12 @@ void KLN89::EntPressed() {
 }
 
 void KLN89::ClrPressed() {
+	if(_clrJump >= 0) {
+		_curPage = _clrJump;
+		_activePage = _pages[(unsigned int)_clrJump];
+		if(_jumpRestoreCrsr) _mode = KLN89_MODE_CRSR;
+		_entJump = _clrJump = -1;
+	}
 	_activePage->ClrPressed();
 }
 
@@ -775,10 +780,10 @@ void KLN89::DrawMap(bool draw_avs) {
 			GPSWaypoint* wp1 = _activeFP->waypoints[i];
 			SGVec3d p0 = mapProj.ConvertToLocal(SGGeod::fromRad(wp0->lon, wp0->lat));
 			SGVec3d p1 = mapProj.ConvertToLocal(SGGeod::fromRad(wp1->lon, wp1->lat));
-			int mx0 = int(p0.x() / meter_per_pix) + 56;
-			int my0 = int(p0.y() / meter_per_pix) + (_mapOrientation == 0 ? 19 : 10);
-			int mx1 = int(p1.x() / meter_per_pix) + 56;
-			int my1 = int(p1.y() / meter_per_pix) + (_mapOrientation == 0 ? 19 : 10);
+			int mx0 = int(p0.x() / meter_per_pix + 0.5) + 56;
+			int my0 = int(p0.y() / meter_per_pix + 0.5) + (_mapOrientation == 0 ? 19 : 10);
+			int mx1 = int(p1.x() / meter_per_pix + 0.5) + 56;
+			int my1 = int(p1.y() / meter_per_pix + 0.5) + (_mapOrientation == 0 ? 19 : 10);
 			if(i == 1) {
 				xvec.push_back(mx0);
 				yvec.push_back(my0);

@@ -256,7 +256,14 @@ static const char *
 getDateString ()
 {
   static char buf[64];		// FIXME
-  struct tm * t = globals->get_time_params()->getGmt();
+  
+  SGTime * st = globals->get_time_params();
+  if (!st) {
+    buf[0] = 0;
+    return buf;
+  }
+  
+  struct tm * t = st->getGmt();
   sprintf(buf, "%.4d-%.2d-%.2dT%.2d:%.2d:%.2d",
 	  t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
 	  t->tm_hour, t->tm_min, t->tm_sec);
@@ -270,9 +277,6 @@ getDateString ()
 static void
 setDateString (const char * date_string)
 {
-  static const SGPropertyNode *cur_time_override
-	= fgGetNode("/sim/time/cur-time-override", true);
-
   SGTime * st = globals->get_time_params();
   struct tm * current_time = st->getGmt();
   struct tm new_time;
@@ -298,16 +302,13 @@ setDateString (const char * date_string)
 				// values, one way or another.
   new_time.tm_year -= 1900;
   new_time.tm_mon -= 1;
-
 				// Now, tell flight gear to use
 				// the new time.  This was far
 				// too difficult, by the way.
   long int warp =
     mktime(&new_time) - mktime(current_time) + globals->get_warp();
-  double lon = fgGetDouble("/position/longitude-deg") * SG_DEGREES_TO_RADIANS;
-  double lat = fgGetDouble("/position/latitude-deg") * SG_DEGREES_TO_RADIANS;
-  globals->set_warp(warp);
-  st->update(lon, lat, cur_time_override->getLongValue(), warp);
+    
+  fgSetInt("/sim/time/warp", warp);
 }
 
 /**
@@ -317,7 +318,13 @@ static const char *
 getGMTString ()
 {
   static char buf[16];
-  struct tm *t = globals->get_time_params()->getGmt();
+  SGTime * st = globals->get_time_params();
+  if (!st) {
+    buf[0] = 0;
+    return buf;
+  }
+  
+  struct tm *t = st->getGmt();
   snprintf(buf, 16, "%.2d:%.2d:%.2d",
       t->tm_hour, t->tm_min, t->tm_sec);
   return buf;
@@ -365,30 +372,6 @@ getTrackMag ()
   magtrack = fgGetDouble("/orientation/track-deg") - getMagVar();
   if (magtrack < 0) magtrack += 360;
   return magtrack;
-}
-
-static long
-getWarp ()
-{
-  return globals->get_warp();
-}
-
-static void
-setWarp (long warp)
-{
-  globals->set_warp(warp);
-}
-
-static long
-getWarpDelta ()
-{
-  return globals->get_warp_delta();
-}
-
-static void
-setWarpDelta (long delta)
-{
-  globals->set_warp_delta(delta);
 }
 
 static bool
@@ -515,9 +498,6 @@ FGProperties::bind ()
   fgTie("/environment/magnetic-variation-deg", getMagVar);
   fgTie("/environment/magnetic-dip-deg", getMagDip);
 
-  fgTie("/sim/time/warp", getWarp, setWarp, false);
-  fgTie("/sim/time/warp-delta", getWarpDelta, setWarpDelta);
-
 				// Misc. Temporary junk.
   fgTie("/sim/temp/winding-ccw", getWindingCCW, setWindingCCW, false);
 }
@@ -544,9 +524,6 @@ FGProperties::unbind ()
 				// Environment
   fgUntie("/environment/magnetic-variation-deg");
   fgUntie("/environment/magnetic-dip-deg");
-
-  fgUntie("/sim/time/warp");
-  fgUntie("/sim/time/warp-delta");
 
 				// Misc. Temporary junk.
   fgUntie("/sim/temp/winding-ccw");
