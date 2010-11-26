@@ -152,6 +152,11 @@ FGEnvironmentMgr::bind ()
 	  &FGEnvironmentMgr::get_cloud_layer_coverage_type,
 	  &FGEnvironmentMgr::set_cloud_layer_coverage_type);
 
+    _tiedProperties.Tie( layerNode->getNode( "visibility-m",true), this, i,
+        &FGEnvironmentMgr::get_cloud_layer_visibility_m,
+        &FGEnvironmentMgr::set_cloud_layer_visibility_m);
+
+
   }
 
   _tiedProperties.setRoot( fgGetNode("/sim/rendering", true ) );
@@ -314,6 +319,19 @@ FGEnvironmentMgr::get_cloud_layer_coverage_type (int index) const
 {
   return thesky->get_cloud_layer(index)->getCoverage();
 }
+
+double 
+FGEnvironmentMgr::get_cloud_layer_visibility_m (int index) const
+{
+    return thesky->get_cloud_layer(index)->getVisibility_m();
+}
+
+void 
+FGEnvironmentMgr::set_cloud_layer_visibility_m (int index, double visibility_m)
+{
+    thesky->get_cloud_layer(index)->setVisibility_m(visibility_m);
+}
+
 
 
 void 
