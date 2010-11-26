@@ -279,12 +279,9 @@ void FGClouds::buildCloudLayers(void) {
 
 	//double wind_speed_kt	 = metar_root->getDoubleValue("wind-speed-kt");
 	double temperature_degc  = metar_root->getDoubleValue("temperature-sea-level-degc");
-	double dewpoint_degc	 = metar_root->getDoubleValue("dewpoint-sea-level-degc");
-	double pressure_mb		= metar_root->getDoubleValue("pressure-sea-level-inhg") * SG_INHG_TO_PA / 100.0;
-
-	double dewp = pow(10.0, 7.5 * dewpoint_degc / (237.7 + dewpoint_degc));
-	double temp = pow(10.0, 7.5 * temperature_degc / (237.7 + temperature_degc));
-	double rel_humidity = dewp * 100 / temp;
+	double dewpoint_degc     = metar_root->getDoubleValue("dewpoint-sea-level-degc");
+	double pressure_mb       = metar_root->getDoubleValue("pressure-sea-level-inhg") * SG_INHG_TO_PA / 100.0;
+	double rel_humidity      = metar_root->getDoubleValue("relative-humidity");
 
 	// formule d'Epsy, base d'un cumulus
 	double cumulus_base = 122.0 * (temperature_degc - dewpoint_degc);
@@ -295,7 +292,7 @@ void FGClouds::buildCloudLayers(void) {
 
 		double alt_ft = cloud_root->getDoubleValue("elevation-ft");
 		double alt_m = alt_ft * SG_FEET_TO_METER;
-                string coverage = cloud_root->getStringValue("coverage");
+		string coverage = cloud_root->getStringValue("coverage");
                 
 		double coverage_norm = 0.0;
 		if( coverage == "few" )
@@ -337,6 +334,7 @@ void FGClouds::buildCloudLayers(void) {
 			}
 		}
                 
+		cloud_root->setStringValue("layer-type",layer_type);
 		buildLayer(iLayer, layer_type, alt_m, coverage_norm);
 	}
 }
