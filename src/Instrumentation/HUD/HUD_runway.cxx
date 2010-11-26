@@ -78,12 +78,12 @@ void HUD::Runway::draw()
     float modelView[4][4], projMat[4][4];
     bool anyLines;
     //Get the current view
-    FGViewer* curr_view = globals->get_viewmgr()->get_current_view();
-    int curr_view_id = globals->get_viewmgr()->get_current();
-    double gpo = curr_view->getGoalPitchOffset_deg();
-    double gho = curr_view->getGoalHeadingOffset_deg();
-    double po = curr_view->getPitchOffset_deg();
-    double ho = curr_view->getHeadingOffset_deg();
+//    FGViewer* curr_view = globals->get_viewmgr()->get_current_view();
+//    int curr_view_id = globals->get_viewmgr()->get_current();
+//    double gpo = curr_view->getGoalPitchOffset_deg();
+//    double gho = curr_view->getGoalHeadingOffset_deg();
+//    double po = curr_view->getPitchOffset_deg();
+//    double ho = curr_view->getHeadingOffset_deg();
 
     FGViewer* cockpitView = globals->get_viewmgr()->get_view(0);
     
