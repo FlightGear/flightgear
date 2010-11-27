@@ -673,7 +673,7 @@ void FGRouteMgr::insertWayptAtIndex(Waypt* aWpt, int aIndex)
   }
   
   int index = aIndex;
-  if ((aIndex == -1) || (aIndex > _route.size())) {
+  if ((aIndex == -1) || (aIndex > (int) _route.size())) {
     index = _route.size();
   }
   
@@ -1027,7 +1027,7 @@ void FGRouteMgr::jumpToIndex(int index)
 
 void FGRouteMgr::currentWaypointChanged()
 {
-  Waypt* cur = currentWaypt();
+  Waypt* cur = (_currentIndex<numWaypts()) ? currentWaypt() : NULL;
   Waypt* next = nextWaypt();
 
   wp0->getChild("id")->setStringValue(cur ? cur->ident() : "");
