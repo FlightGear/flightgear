@@ -191,7 +191,7 @@ bool FGInput::Run(void)
         ostringstream info;
         info << "JSBSim version: " << JSBSim_version << endl;
         info << "Config File version: " << needed_cfg_version << endl;
-        info << "Aircraft simulated: " << Aircraft->GetAircraftName() << endl;
+//      info << "Aircraft simulated: " << Aircraft->GetAircraftName() << endl;
         info << "Simulation time: " << setw(8) << setprecision(3) << FDMExec->GetSimTime() << endl;
         socket->Reply(info.str());
 

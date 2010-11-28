@@ -65,7 +65,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGPropulsion.cpp,v 1.41 2010/10/15 11:32:41 jberndt Exp $";
+static const char *IdSrc = "$Id: FGPropulsion.cpp,v 1.43 2010/11/18 12:38:06 jberndt Exp $";
 static const char *IdHdr = ID_PROPULSION;
 
 extern short debug_lvl;
@@ -115,6 +115,8 @@ FGPropulsion::~FGPropulsion()
 
 bool FGPropulsion::InitModel(void)
 {
+  bool result = true;
+
   if (!FGModel::InitModel()) return false;
 
   for (unsigned int i=0; i<numTanks; i++) Tanks[i]->ResetToIC();
@@ -123,18 +125,28 @@ bool FGPropulsion::InitModel(void)
     switch (Engines[i]->GetType()) {
       case FGEngine::etPiston:
         ((FGPiston*)Engines[i])->ResetToIC();
-        if (HasInitializedEngines && (InitializedEngines & i)) InitRunning(i);
+        try {
+          if (HasInitializedEngines && (InitializedEngines & i)) InitRunning(i);
+        } catch (string str) {
+          cerr << str << endl;
+          result = false;
+        }
         break;
       case FGEngine::etTurbine:
         ((FGTurbine*)Engines[i])->ResetToIC();
-        if (HasInitializedEngines && (InitializedEngines & i)) InitRunning(i);
+        try {
+          if (HasInitializedEngines && (InitializedEngines & i)) InitRunning(i);
+        } catch (string str) {
+          cerr << str << endl;
+          result = false;
+        }
         break;
       default:
         break;
     }
   }
 
-  return true;
+  return result;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -226,14 +238,13 @@ bool FGPropulsion::GetSteadyState(void)
 
 void FGPropulsion::InitRunning(int n)
 {
-  if (n > 0) { // A specific engine is supposed to be initialized
+  if (n >= 0) { // A specific engine is supposed to be initialized
 
     if (n >= (int)GetNumEngines() ) {
-      cerr << "Tried to initialize a non-existent engine!" << endl;
-      throw;
+      throw(string("Tried to initialize a non-existent engine!"));
     }
-    FCS->SetThrottleCmd(n,1);
-    FCS->SetMixtureCmd(n,1);
+    FDMExec->GetFCS()->SetThrottleCmd(n,1);
+    FDMExec->GetFCS()->SetMixtureCmd(n,1);
     GetEngine(n)->InitRunning();
     GetSteadyState();
 
@@ -243,16 +254,14 @@ void FGPropulsion::InitRunning(int n)
   } else if (n < 0) { // -1 refers to "All Engines"
 
     for (unsigned int i=0; i<GetNumEngines(); i++) {
-      FCS->SetThrottleCmd(i,1);
-      FCS->SetMixtureCmd(i,1);
+      FDMExec->GetFCS()->SetThrottleCmd(i,1);
+      FDMExec->GetFCS()->SetMixtureCmd(i,1);
       GetEngine(i)->InitRunning();
     }
     GetSteadyState();
     InitializedEngines = -1;
     HasInitializedEngines = true;
 
-  } else if (n == 0) { // No engines are to be initialized
-    // Do nothing
   }
 }
 
@@ -325,7 +334,7 @@ bool FGPropulsion::Load(Element* el)
       return false;
     }
 
-    FCS->AddThrottle();
+    FDMExec->GetFCS()->AddThrottle();
     ThrottleAdded = true;
 
     numEngines++;
@@ -335,7 +344,7 @@ bool FGPropulsion::Load(Element* el)
   }
 
   CalculateTankInertias();
-  if (!ThrottleAdded) FCS->AddThrottle(); // need to have at least one throttle
+  if (!ThrottleAdded) FDMExec->GetFCS()->AddThrottle(); // need to have at least one throttle
 
   // Process fuel dump rate
   if (el->FindElement("dump-rate"))
@@ -401,7 +410,7 @@ ifstream* FGPropulsion::FindEngineFile(const string& engine_filename)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGPropulsion::GetPropulsionStrings(const string& delimiter)
+string FGPropulsion::GetPropulsionStrings(const string& delimiter) const
 {
   unsigned int i;
 
@@ -425,7 +434,7 @@ string FGPropulsion::GetPropulsionStrings(const string& delimiter)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGPropulsion::GetPropulsionValues(const string& delimiter)
+string FGPropulsion::GetPropulsionValues(const string& delimiter) const
 {
   unsigned int i;
 
@@ -483,7 +492,7 @@ FGMatrix33& FGPropulsion::CalculateTankInertias(void)
   tankJ = FGMatrix33();
 
   for (unsigned int i=0; i<size; i++) {
-    tankJ += MassBalance->GetPointmassInertia( lbtoslug * Tanks[i]->GetContents(),
+    tankJ += FDMExec->GetMassBalance()->GetPointmassInertia( lbtoslug * Tanks[i]->GetContents(),
                                                Tanks[i]->GetXYZ() );
     tankJ(1,1) += Tanks[i]->GetIxx();
     tankJ(2,2) += Tanks[i]->GetIyy();

@@ -41,7 +41,10 @@ SENTRY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "models/FGModel.h"
+#include <vector>
+#include <string>
+
+//#include "models/FGModel.h"
 #include "models/FGOutput.h"
 #include "models/FGInput.h"
 #include "initialization/FGTrim.h"
@@ -53,14 +56,11 @@ INCLUDES
 #include "models/FGPropagate.h"
 #include "math/FGColumnVector3.h"
 
-#include <vector>
-#include <string>
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.54 2010/10/07 03:17:29 jberndt Exp $"
+#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.56 2010/11/18 20:37:10 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -70,6 +70,20 @@ namespace JSBSim {
 
 class FGScript;
 class FGTrim;
+class FGAerodynamics;
+class FGAircraft;
+class FGAtmosphere;
+class FGAuxiliary;
+class FGBuoyantForces;
+class FGExternalReactions;
+class FGGroundReactions;
+class FGFCS;
+class FGInertial;
+class FGInput;
+class FGOutput;
+class FGPropagate;
+class FGPropulsion;
+class FGMassBalance;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
@@ -169,7 +183,7 @@ CLASS DOCUMENTATION
                                 property actually maps toa function call of DoTrim().
 
     @author Jon S. Berndt
-    @version $Revision: 1.54 $
+    @version $Revision: 1.56 $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -206,9 +220,8 @@ class FGFDMExec : public FGJSBBase, public FGXMLFileRead
 
 public:
 
-  /// Default constructors
-  FGFDMExec(FGPropertyManager* root = 0);
-  FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr);
+  /// Default constructor
+  FGFDMExec(FGPropertyManager* root = 0, unsigned int* fdmctr = 0);
 
   /// Default destructor
   ~FGFDMExec();
@@ -292,49 +305,49 @@ public:
   /// @name Top-level executive State and Model retrieval mechanism
   //@{
   /// Returns the FGAtmosphere pointer.
-  inline FGAtmosphere* GetAtmosphere(void)    {return Atmosphere;}
+  FGAtmosphere* GetAtmosphere(void)    {return Atmosphere;}
   /// Returns the FGFCS pointer.
-  inline FGFCS* GetFCS(void)                  {return FCS;}
+  FGFCS* GetFCS(void)                  {return FCS;}
   /// Returns the FGPropulsion pointer.
-  inline FGPropulsion* GetPropulsion(void)    {return Propulsion;}
+  FGPropulsion* GetPropulsion(void)    {return Propulsion;}
   /// Returns the FGAircraft pointer.
-  inline FGMassBalance* GetMassBalance(void)  {return MassBalance;}
+  FGMassBalance* GetMassBalance(void)  {return MassBalance;}
   /// Returns the FGAerodynamics pointer
-  inline FGAerodynamics* GetAerodynamics(void){return Aerodynamics;}
+  FGAerodynamics* GetAerodynamics(void){return Aerodynamics;}
   /// Returns the FGInertial pointer.
-  inline FGInertial* GetInertial(void)        {return Inertial;}
+  FGInertial* GetInertial(void)        {return Inertial;}
   /// Returns the FGGroundReactions pointer.
-  inline FGGroundReactions* GetGroundReactions(void) {return GroundReactions;}
+  FGGroundReactions* GetGroundReactions(void) {return GroundReactions;}
   /// Returns the FGExternalReactions pointer.
-  inline FGExternalReactions* GetExternalReactions(void) {return ExternalReactions;}
+  FGExternalReactions* GetExternalReactions(void) {return ExternalReactions;}
   /// Returns the FGBuoyantForces pointer.
-  inline FGBuoyantForces* GetBuoyantForces(void) {return BuoyantForces;}
+  FGBuoyantForces* GetBuoyantForces(void) {return BuoyantForces;}
   /// Returns the FGAircraft pointer.
-  inline FGAircraft* GetAircraft(void)        {return Aircraft;}
+  FGAircraft* GetAircraft(void)        {return Aircraft;}
   /// Returns the FGPropagate pointer.
-  inline FGPropagate* GetPropagate(void)      {return Propagate;}
+  FGPropagate* GetPropagate(void)      {return Propagate;}
   /// Returns the FGAuxiliary pointer.
-  inline FGAuxiliary* GetAuxiliary(void)      {return Auxiliary;}
+  FGAuxiliary* GetAuxiliary(void)      {return Auxiliary;}
   /// Returns the FGInput pointer.
-  inline FGInput* GetInput(void)              {return Input;}
+  FGInput* GetInput(void)              {return Input;}
   /// Returns the FGGroundCallback pointer.
-  inline FGGroundCallback* GetGroundCallback(void) {return GroundCallback;}
+  FGGroundCallback* GetGroundCallback(void) {return GroundCallback;}
   /// Retrieves the script object
-  inline FGScript* GetScript(void) {return Script;}
+  FGScript* GetScript(void) {return Script;}
   // Returns a pointer to the FGInitialCondition object
-  inline FGInitialCondition* GetIC(void)      {return IC;}
+  FGInitialCondition* GetIC(void)      {return IC;}
   // Returns a pointer to the FGTrim object
   FGTrim* GetTrim(void);
   //@}
 
   /// Retrieves the engine path.
-  inline const string& GetEnginePath(void)    {return EnginePath;}
+  const string& GetEnginePath(void)    {return EnginePath;}
   /// Retrieves the aircraft path.
-  inline const string& GetAircraftPath(void)  {return AircraftPath;}
+  const string& GetAircraftPath(void)  {return AircraftPath;}
   /// Retrieves the systems path.
-  inline const string& GetSystemsPath(void)   {return SystemsPath;}
+  const string& GetSystemsPath(void)   {return SystemsPath;}
   /// Retrieves the full aircraft path name.
-  inline const string& GetFullAircraftPath(void) {return FullAircraftPath;}
+  const string& GetFullAircraftPath(void) {return FullAircraftPath;}
 
   /** Retrieves the value of a property.
       @param property the name of the property
@@ -524,7 +537,6 @@ private:
   bool Constructing;
   bool modelLoaded;
   bool IsChild;
-  bool root_overload;
   string modelName;
   string AircraftPath;
   string FullAircraftPath;
@@ -556,7 +568,7 @@ private:
   FGTrim*             Trim;
 
   FGPropertyManager* Root;
-  bool delete_root;
+  bool StandAlone;
   FGPropertyManager* instance;
   
   // The FDM counter is used to give each child FDM an unique ID. The root FDM has the ID 0
@@ -567,7 +579,6 @@ private:
   vector <childData*> ChildFDMList;
   vector <FGModel*> Models;
 
-  void Initialize();
   bool ReadFileHeader(Element*);
   bool ReadChild(Element*);
   bool ReadPrologue(Element*);

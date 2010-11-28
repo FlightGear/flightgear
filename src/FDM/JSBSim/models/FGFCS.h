@@ -348,13 +348,13 @@ public:
   /** Retrieves all component names for inclusion in output stream
       @param delimiter either a tab or comma string depending on output type
       @return a string containing the descriptive names for all components */
-  std::string GetComponentStrings(const std::string& delimiter);
+  std::string GetComponentStrings(const std::string& delimiter) const;
 
   /** Retrieves all component outputs for inclusion in output stream
       @param delimiter either a tab or comma string depending on output type
       @return a string containing the numeric values for the current set of
       component outputs */
-  std::string GetComponentValues(const std::string& delimiter);
+  std::string GetComponentValues(const std::string& delimiter) const;
 
   /// @name Pilot input command setting
   //@{

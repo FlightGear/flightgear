@@ -71,7 +71,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGFDMExec.cpp,v 1.82 2010/10/07 03:17:29 jberndt Exp $";
+static const char *IdSrc = "$Id: FGFDMExec.cpp,v 1.83 2010/11/07 13:30:54 jberndt Exp $";
 static const char *IdHdr = ID_FDMEXEC;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -95,23 +95,11 @@ void checkTied ( FGPropertyManager *node )
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// Constructors
-FGFDMExec::FGFDMExec(FGPropertyManager* root) : Root(root), delete_root(false)
-{
-  FDMctr = new unsigned int;
-  *FDMctr = 0;
-  Initialize();
-  root_overload = (root != NULL);
-}
+// Constructor
 
-FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root), delete_root(false), FDMctr(fdmctr)
+FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root), FDMctr(fdmctr)
 {
-  Initialize();
-  root_overload = (root != NULL);
-}
 
-void FGFDMExec::Initialize()
-{
   Frame           = 0;
   Error           = 0;
   GroundCallback  = 0;
@@ -138,6 +126,7 @@ void FGFDMExec::Initialize()
   IsChild = false;
   holding = false;
   Terminate = false;
+  StandAlone = false;
 
   sim_time = 0.0;
   dT = 1.0/120.0; // a default timestep size. This is needed for when JSBSim is
@@ -152,8 +141,10 @@ void FGFDMExec::Initialize()
 
   if (Root == 0) {                 // Then this is the root FDM
     Root = new FGPropertyManager;  // Create the property manager
-    delete_root = true;
-    
+    StandAlone = true;
+  }
+
+  if (FDMctr == 0) {
     FDMctr = new unsigned int;     // Create and initialize the child FDM counter
     (*FDMctr) = 0;
   }
@@ -197,13 +188,13 @@ FGFDMExec::~FGFDMExec()
     checkTied( instance );
     DeAllocate();
     
-   if(FDMctr != 0 && !root_overload) {
+    if (IdFDM == 0) { // Meaning this is no child FDM
       if(Root != 0) {
-         if (delete_root)
+         if(StandAlone)
             delete Root;
          Root = 0;
       }
-      if (IdFDM == 0) { // Meaning this is no child FDM
+      if(FDMctr != 0) {
          delete FDMctr;
          FDMctr = 0;
       }
