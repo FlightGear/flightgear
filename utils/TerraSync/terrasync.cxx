@@ -279,7 +279,7 @@ int termination_triggering_signals[] = {
 #if defined(_MSC_VER) || defined(__MINGW32__)
     SIGINT, SIGILL, SIGFPE, SIGSEGV, SIGTERM, SIGBREAK, SIGABRT,
 #else
-    SIGHUP, SIGINT, SIGQUIT, SIGKILL,
+    SIGHUP, SIGINT, SIGQUIT, SIGKILL, SIGTERM,
 #endif
     0};  // zero terminated
 

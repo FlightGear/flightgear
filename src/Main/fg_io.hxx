@@ -27,6 +27,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/props.hxx>
 
 #include <vector>
 #include <string>
@@ -58,6 +59,8 @@ private:
     
     typedef std::vector< FGProtocol* > ProtocolVec;
     ProtocolVec io_channels;
+    
+    SGPropertyNode_ptr _realDeltaTime;
 };
 
 
