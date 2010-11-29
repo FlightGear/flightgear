@@ -35,6 +35,7 @@
 #include <string>
 
 #include <osg/Camera>
+#include <osg/Geometry>
 #include <osg/GraphicsContext>
 #include <osg/io_utils>
 #include <osg/Math>
@@ -328,10 +329,10 @@ static osg::Geometry* createParoramicSphericalDisplayDistortionMesh(
 
     osg::Vec3d projector = eye - osg::Vec3d(0.0,0.0, distance);
 
-
+#if 0
     OSG_INFO<<"createParoramicSphericalDisplayDistortionMesh : Projector position = "<<projector<<std::endl;
     OSG_INFO<<"createParoramicSphericalDisplayDistortionMesh : distance = "<<distance<<std::endl;
-
+#endif
     // create the quad to visualize.
     osg::Geometry* geometry = new osg::Geometry();
 
