@@ -49,6 +49,8 @@ public:
 
 private:
 
+    static const double gravity; //conversion factor
+
     string _name;
     int _num;
 
@@ -66,6 +68,7 @@ private:
     double _last_yaw_rate;
     double _last_g;
     double _erect_time;
+    double _g_error;
 
     Gyro _gyro;
 

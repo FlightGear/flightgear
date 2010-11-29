@@ -67,7 +67,7 @@ private:
     double _coeff_bnk; //dimensionless coefficient
     double _coeff_spd; //dimensionless coefficient
 
-
+    SGPropertyNode_ptr user_WoW_node;
 
     inline void setFormate(bool f);
     inline void setTgtHdg(double hdg);
