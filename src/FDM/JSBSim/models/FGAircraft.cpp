@@ -152,7 +152,10 @@ bool FGAircraft::Run(void)
 
 double FGAircraft::GetNlf(void) const
 {
+  if (FDMExec->GetMassBalance()->GetWeight() != 0)
   return (-FDMExec->GetAerodynamics()->GetvFw(3))/FDMExec->GetMassBalance()->GetWeight();
+  else
+    return 0.;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

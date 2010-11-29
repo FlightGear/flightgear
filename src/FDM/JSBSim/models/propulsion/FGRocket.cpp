@@ -124,6 +124,8 @@ FGRocket::~FGRocket(void)
 
 void FGRocket::Calculate(void)
 {
+  if (FDMExec->IntegrationSuspended()) return;
+
   double dT = FDMExec->GetDeltaT()*Propulsion->GetRate();
 
   RunPreFunctions();
