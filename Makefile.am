@@ -67,7 +67,7 @@ data-tar:
 		data/Aircraft/Dragonfly \
 		data/Aircraft/dhc2 \
 		data/Aircraft/f-14b \
-		data/Aircraft/j3cub \
+		data/Aircraft/Cub \
 		data/Aircraft/SenecaII \
 		data/Aircraft/sopwithCamel \
                 data/Aircraft/ufo \
@@ -81,6 +81,7 @@ data-tar:
 		data/COPYING \
 		data/D* \
 		data/Effects \
+		data/Environment \
 		data/Fonts \
 		data/gui \
 		data/Huds \
