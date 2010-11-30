@@ -1,0 +1,29 @@
+
+
+#cmakedefine FG_NDEBUG
+#cmakedefine ENABLE_ATCDCL
+#cmakedefine ENABLE_SP_FDM
+
+// JSBSim needs this, to switch from standalone to in-FG mode
+#define FGFS 
+
+#define PU_USE_NONE // PLIB needs this to avoid linking to GLUT
+
+#cmakedefine ENABLE_PLIB_JOYSTICK
+
+// threads are required (used to be optional)
+#define ENABLE_THREADS 1 
+
+// audio support is assumed
+#define ENABLE_AUDIO_SUPPORT 1 
+
+#cmakedefine HAVE_SYS_TIME_H
+
+#define VERSION "@FLIGHTGEAR_VERSION"
+
+#cmakedefine ENABLE_UIUC_MODEL
+#cmakedefine ENABLE_LARCSIM
+#cmakedefine ENABLE_YASIM
+#cmakedefine ENABLE_JSBSIM
+
+#define PKGLIBDIR "@PKGLIBDIR"
