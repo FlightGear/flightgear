@@ -33,7 +33,6 @@ SceneryPager::SceneryPager()
 {
     _pagerRequests.reserve(48);
     _deleteRequests.reserve(16);
-    setExpiryDelay(120.0);
 }
 
 SceneryPager::SceneryPager(const SceneryPager& rhs) :

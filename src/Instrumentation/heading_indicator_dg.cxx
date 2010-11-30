@@ -7,6 +7,7 @@
 // This file is in the Public Domain and comes with no warranty.
 
 #include <simgear/compiler.h>
+#include <simgear/sg_inlines.h>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -54,15 +55,26 @@ HeadingIndicatorDG::init ()
     branch = "/instrumentation/" + name;
 
     _heading_in_node = fgGetNode("/orientation/heading-deg", true);
+    _yaw_rate_node   = fgGetNode("/orientation/yaw-rate-degps", true);
+     _g_node         =   fgGetNode("/accelerations/pilot-g", true);
+
+
     SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
     _offset_node = node->getChild("offset-deg", 0, true);
     _serviceable_node = node->getChild("serviceable", 0, true);
-    _error_node = node->getChild("heading-bug-error-deg", 0, true);
+    _heading_bug_error_node = node->getChild("heading-bug-error-deg", 0, true);
+    _error_node = node->getChild("error-deg", 0, true);
     _nav1_error_node = node->getChild("nav1-course-error-deg", 0, true);
     _heading_out_node = node->getChild("indicated-heading-deg", 0, true);
-    _last_heading_deg = (_heading_in_node->getDoubleValue() +
-                         _offset_node->getDoubleValue());
+    _align_node = node->getChild("align-deg", 0, true);
+
     _electrical_node = fgGetNode("/systems/electrical/outputs/DG", true);
+
+    _align_node->setDoubleValue(0);
+    _error_node->setDoubleValue(0);
+
+    _last_heading_deg = (_heading_in_node->getDoubleValue() +
+        _offset_node->getDoubleValue() + _align_node->getDoubleValue());
 }
 
 void
@@ -100,11 +112,30 @@ HeadingIndicatorDG::update (double dt)
     _gyro.update(dt);
     double spin = _gyro.get_spin_norm();
 
-                                // No time-based precession	for a flux gate compass
-                                // No magvar
-    double offset = 0;
+                                // Next, calculate time-based precession
+    double offset = _offset_node->getDoubleValue();
+    offset -= dt * (0.25 / 60.0); // 360deg/day
+    SG_NORMALIZE_RANGE(offset, -360.0, 360.0);
+    _offset_node->setDoubleValue(offset);
 
-                                // TODO: movement-induced error
+                                // No magvar - set the alignment manually
+    double align = _align_node->getDoubleValue();
+
+                                // Movement-induced error
+    double yaw_rate = _yaw_rate_node->getDoubleValue();
+    double error = _error_node->getDoubleValue();
+    double g = _g_node->getDoubleValue();
+    int sign = 0;
+
+    if ( fabs ( yaw_rate ) > 5 ) {
+        error += 0.033 * -yaw_rate * dt ;
+    }
+
+    if ( g > 1.5 || g < -0.5){
+        error += 0.033 * g * dt;
+    }
+
+    _error_node->setDoubleValue(error);
 
                                 // Next, calculate the indicated heading,
                                 // introducing errors.
@@ -122,11 +153,8 @@ HeadingIndicatorDG::update (double dt)
     heading = fgGetLowPass(_last_heading_deg, heading, dt * factor);
     _last_heading_deg = heading;
 
-    heading += offset;
-    while (heading < 0)
-        heading += 360;
-    while (heading > 360)
-        heading -= 360;
+    heading += offset + align + error;
+    SG_NORMALIZE_RANGE(heading, 0.0, 360.0);
 
     _heading_out_node->setDoubleValue(heading);
 
@@ -138,7 +166,7 @@ HeadingIndicatorDG::update (double dt)
         double diff = bnode->getDoubleValue() - heading;
         if ( diff < -180.0 ) { diff += 360.0; }
         if ( diff > 180.0 ) { diff -= 360.0; }
-        _error_node->setDoubleValue( diff );
+            _heading_bug_error_node->setDoubleValue( diff );
     }
                                  // calculate the difference between the indicated heading
                                  // and the selected nav1 radial for use with an autopilot
@@ -152,4 +180,4 @@ HeadingIndicatorDG::update (double dt)
     }
 }
 
-// end of heading_indicator_fg.cxx
+// end of heading_indicator_dg.cxx

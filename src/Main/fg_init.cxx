@@ -589,7 +589,7 @@ public:
   
   bool loadAircraft()
   {
-    std::string aircraft = fgGetString( "/sim/aircraft", "");    
+    std::string aircraft = fgGetString( "/sim/aircraft", "");
     if (aircraft.empty()) {
       SG_LOG(SG_GENERAL, SG_ALERT, "no aircraft specified");
       return false;
@@ -600,6 +600,9 @@ public:
       // prepare cache for re-scan
       SGPropertyNode *n = _cache->getNode("fg-root", true);
       n->setStringValue(globals->get_fg_root().c_str());
+      n->setAttribute(SGPropertyNode::USERARCHIVE, true);
+      n = _cache->getNode("fg-aircraft", true);
+      n->setStringValue(getAircraftPaths().c_str());
       n->setAttribute(SGPropertyNode::USERARCHIVE, true);
       _cache->removeChildren("aircraft");
   
@@ -629,9 +632,27 @@ public:
   }
   
 private:
+  SGPath getAircraftPaths() {
+    string_list pathList = globals->get_aircraft_paths();
+    SGPath aircraftPaths;
+    string_list::const_iterator it = pathList.begin();
+    if (it != pathList.end()) {
+        aircraftPaths.set(*it);
+        it++;
+    }
+    for (; it != pathList.end(); ++it) {
+        aircraftPaths.add(*it);
+    }
+    return aircraftPaths;
+  }
+  
   bool checkCache()
   {
     if (globals->get_fg_root() != _cache->getStringValue("fg-root", "")) {
+      return false; // cache mismatch
+    }
+
+    if (getAircraftPaths().str() != _cache->getStringValue("fg-aircraft", "")) {
       return false; // cache mismatch
     }
     

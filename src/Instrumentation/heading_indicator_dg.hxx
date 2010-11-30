@@ -10,6 +10,7 @@
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/math/sg_random.h>
 
 #include "gyro.hxx"
 
@@ -59,6 +60,10 @@ private:
     SGPropertyNode_ptr _electrical_node;
     SGPropertyNode_ptr _error_node;
     SGPropertyNode_ptr _nav1_error_node;
+    SGPropertyNode_ptr _align_node;
+    SGPropertyNode_ptr _yaw_rate_node;
+    SGPropertyNode_ptr _heading_bug_error_node;
+    SGPropertyNode_ptr _g_node;
 };
 
 #endif // __INSTRUMENTS_HEADING_INDICATOR_ELEC_HXX

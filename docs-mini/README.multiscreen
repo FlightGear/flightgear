@@ -133,6 +133,30 @@ window, camera, or gui tags.
   This specifies an orthographic view. The parameters are the sames as
   the frustum node's.
 
+  texture
+  This tag indicates that the camera renders to a texture instead of the
+  framebuffer. For now the following tags are supported, but obviously
+  different  texture formats should be specified too. 
+   name - string
+   The name of the texture. This can be referred to by other cameras.
+   width, height - double
+   The dimensions of the texture
+
+  panoramic-distortion
+  This tag cause the camera to create distortion geometry that
+  corrects for projection onto a spherical screen. It is equivalent to
+  the --panoramic-sd option to osgviewer.
+
+   texture - string
+   The name of a texture, created by another camera, that will be
+   rendered on the distortion correction geometry.
+
+   radius - double
+   Radius of string
+
+   collar - double
+   size of screen collar.
+
  gui
  This is a special camera node that displays the 2D GUI.
 
@@ -313,3 +337,61 @@ accounted for.
     </rendering>
   </sim>
 </PropertyList>
+
+This example renders the scene for projection onto a spherical screen.
+
+<PropertyList>
+  <sim>
+    <rendering>
+      <camera-group>
+        <camera>
+          <window>
+            <name type="string">main</name>
+            <host-name type="string"></host-name>
+            <display>0</display>
+            <screen>0</screen>
+            <!-- <fullscreen type = "bool">true</fullscreen>-->
+            <width>1024</width>
+            <height>768</height>
+          </window>
+          <view>
+            <heading-deg type = "double">0</heading-deg>
+          </view>
+          <frustum>
+            <top>0.133</top>
+            <bottom>-0.133</bottom>
+            <left>-.1668</left>
+            <right>.1668</right>
+            <near>0.4</near>
+            <far>120000.0</far>
+          </frustum>
+          <texture>
+            <name>mainview</name>
+            <width>1024</width>
+            <height>768</height>
+          </texture>
+        </camera>
+        <camera>
+          <window><name>main</name></window>
+          <ortho>
+            <top>768</top>
+            <bottom>0</bottom>
+            <left>0</left>
+            <right>1024</right>
+            <near>-1.0</near>
+            <far>1.0</far>
+          </ortho>
+          <panoramic-spherical>
+            <texture>mainview</texture>
+          </panoramic-spherical>
+        </camera>
+        <gui>
+          <window>
+            <name type="string">main</name>
+          </window>
+        </gui>
+      </camera-group>
+    </rendering>
+  </sim>
+</PropertyList>
+ 

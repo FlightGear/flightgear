@@ -17,6 +17,7 @@
 #ifndef CAMERAGROUP_HXX
 #define CAMERAGROUP_HXX 1
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -24,6 +25,7 @@
 #include <osg/ref_ptr>
 #include <osg/Referenced>
 #include <osg/Node>
+#include <osg/TextureRectangle>
 
 // For osgUtil::LineSegmentIntersector::Intersections, which is a typedef.
 #include <osgUtil/LineSegmentIntersector>
@@ -178,6 +180,9 @@ public:
     /** Update camera properties after a resize event.
      */
     void resized();
+
+    void buildDistortionCamera(const SGPropertyNode* psNode,
+                               osg::Camera* camera);
 protected:
     CameraList _cameras;
     osg::ref_ptr<osgViewer::Viewer> _viewer;
@@ -186,6 +191,8 @@ protected:
     float _zNear;
     float _zFar;
     float _nearField;
+    typedef std::map<std::string, osg::ref_ptr<osg::TextureRectangle> > TextureMap;
+    TextureMap _textureTargets;
 };
 
 }
