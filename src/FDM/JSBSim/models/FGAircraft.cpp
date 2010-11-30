@@ -67,7 +67,7 @@ DEFINITIONS
 GLOBAL DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-static const char *IdSrc = "$Id: FGAircraft.cpp,v 1.29 2010/11/18 12:38:06 jberndt Exp $";
+static const char *IdSrc = "$Id: FGAircraft.cpp,v 1.30 2010/11/29 12:33:57 jberndt Exp $";
 static const char *IdHdr = ID_AIRCRAFT;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -153,7 +153,7 @@ bool FGAircraft::Run(void)
 double FGAircraft::GetNlf(void) const
 {
   if (FDMExec->GetMassBalance()->GetWeight() != 0)
-  return (-FDMExec->GetAerodynamics()->GetvFw(3))/FDMExec->GetMassBalance()->GetWeight();
+    return (-FDMExec->GetAerodynamics()->GetvFw(3))/FDMExec->GetMassBalance()->GetWeight();
   else
     return 0.;
 }
