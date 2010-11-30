@@ -120,6 +120,41 @@ set(UIUC_SOURCES
 	uiuc_wrapper.cpp
 	)
 	
+set(LARCSIM_SOURCES
+    atmos_62.c
+    basic_aero.c
+    basic_engine.c
+    basic_gear.c
+    basic_init.c
+    c172_aero.c
+    c172_engine.c
+    c172_gear.c
+    c172_init.c
+    cherokee_aero.c
+    cherokee_engine.c
+    cherokee_gear.c
+    cherokee_init.c
+    default_model_routines.c
+    ls_accel.c
+    ls_aux.c
+    ls_geodesy.c
+    ls_gravity.c
+    ls_init.c
+    ls_interface.c
+    ls_matrix.c
+    ls_model.c
+    ls_step.c
+    ls_trim.c
+    navion_aero.c
+    navion_engine.c
+    navion_gear.c
+    navion_init.c
+    uiuc_aero.c
+    IO360.cxx
+    LaRCsim.cxx
+    LaRCsimIC.cxx
+    )
+	
 set(SOURCES
 	NullFDM.cxx
 	UFO.cxx
@@ -131,10 +166,12 @@ set(SOURCES
 	ExternalNet/ExternalNet.cxx
 	ExternalPipe/ExternalPipe.cxx
 	)
-	
-foreach(component ${YASIM_SOURCES})
-	list(APPEND SOURCES "YASim/${component}")
-endforeach()
+
+if(ENABLE_YASIM)
+    foreach(component ${YASIM_SOURCES})
+    	list(APPEND SOURCES "YASim/${component}")
+    endforeach()
+endif()
 
 if(ENABLE_UIUC_MODEL)
 	foreach(component ${UIUC_SOURCES})
@@ -142,6 +179,18 @@ if(ENABLE_UIUC_MODEL)
 	endforeach()
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
+if(ENABLE_LARCSIM)
+	foreach(component ${LARCSIM_SOURCES})
+		list(APPEND SOURCES "LaRCsim/${component}")
+	endforeach()
+endif()
+
+if(ENABLE_JSBSIM)
+    add_subdirectory(JSBSim)
+    
+    # FIXME - push this down once JSBSim doesn't expose private headers
+    include_directories(${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
+endif()
+
 flightgear_component(FDM "${SOURCES}")
 

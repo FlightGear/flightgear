@@ -34,16 +34,26 @@
 # OPENAL_LIBRARY to override this selection or set the CMake environment
 # CMAKE_INCLUDE_PATH to modify the search paths.
 
+set(save_FIND_FRAMEWORK ${CMAKE_FIND_FRAMEWORK})
+set(CMAKE_FIND_FRAMEWORK ONLY)
 FIND_PATH(PLIB_INCLUDE_DIR ul.h
-  HINTS $ENV{PLIBDIR}
   PATH_SUFFIXES include/plib include 
   PATHS
   ~/Library/Frameworks
   /Library/Frameworks
-  /usr/local
-  /usr
-  /opt
 )
+set(CMAKE_FIND_FRAMEWORK ${save_FIND_FRAMEWORK})
+
+if(NOT PLIB_INCLUDE_DIR)
+    FIND_PATH(PLIB_INCLUDE_DIR plib/ul.h
+      PATH_SUFFIXES include 
+      HINTS $ENV{PLIBDIR}
+      PATHS
+      /usr/local
+      /opt/local
+      /usr
+    )
+endif()
 
 message(STATUS ${PLIB_INCLUDE_DIR})
 

@@ -19,8 +19,13 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
 set(PKGLIBDIR "foo")
 
 option(LOGGING "Set to OFF to build FlightGear without logging" ON)
+
 option(SP_FDMS "Set to ON to build FlightGear with special-purpose FDMs" OFF)
 option(ENABLE_UIUC_MODEL "Set to ON to build FlightGear with UIUCModel FDM" ON)
+option(ENABLE_LARCSIM "Set to ON to build FlightGear with LaRCsim FDM" ON)
+option(ENABLE_YASIM "Set to ON to build FlightGear with YASIM FDM" ON)
+option(ENABLE_JSBSIM "Set to ON to build FlightGear with JSBSim FDM" ON)
+
 option(ATCDCL "Set to ON to build FlightGear with Dave Luff's ATC code" OFF)
 option(EVENT_INPUT "Set to ON to build FlightGear with event-based Input support" OFF)
 

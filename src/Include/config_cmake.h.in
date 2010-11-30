@@ -19,5 +19,8 @@
 #define VERSION "@FLIGHTGEAR_VERSION"
 
 #cmakedefine ENABLE_UIUC_MODEL
+#cmakedefine ENABLE_LARCSIM
+#cmakedefine ENABLE_YASIM
+#cmakedefine ENABLE_JSBSIM
 
 #define PKGLIBDIR "@PKGLIBDIR"
