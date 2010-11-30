@@ -1,0 +1,67 @@
+include(FlightGearComponent)
+
+set(SOURCES
+	adf.cxx
+	agradar.cxx
+	airspeed_indicator.cxx
+	altimeter.cxx
+	attitude_indicator.cxx
+	clock.cxx
+	dclgps.cxx
+	dme.cxx
+	gps.cxx
+	groundradar.cxx
+	gsdi.cxx
+	gyro.cxx
+	heading_indicator.cxx
+	heading_indicator_dg.cxx
+	heading_indicator_fg.cxx
+	inst_vertical_speed_indicator.cxx
+	instrument_mgr.cxx
+	kr_87.cxx
+	kt_70.cxx
+	mag_compass.cxx
+	marker_beacon.cxx
+	mk_viii.cxx
+	mrg.cxx
+	navradio.cxx
+	od_gauge.cxx
+	rad_alt.cxx
+	render_area_2d.cxx
+	rnav_waypt_controller.cxx
+	slip_skid_ball.cxx
+	tacan.cxx
+	transponder.cxx
+	turn_indicator.cxx
+	vertical_speed_indicator.cxx
+	wxradar.cxx
+    HUD/HUD.cxx
+    HUD/HUD_dial.cxx
+    HUD/HUD_gauge.cxx
+    HUD/HUD_instrument.cxx
+    HUD/HUD_label.cxx
+    HUD/HUD_ladder.cxx
+    HUD/HUD_misc.cxx
+    HUD/HUD_runway.cxx
+    HUD/HUD_scale.cxx
+    HUD/HUD_tape.cxx
+    HUD/HUD_tbi.cxx
+    KLN89/kln89.cxx
+    KLN89/kln89_page.cxx
+    KLN89/kln89_page_act.cxx
+    KLN89/kln89_page_apt.cxx
+    KLN89/kln89_page_cal.cxx
+    KLN89/kln89_page_dir.cxx
+    KLN89/kln89_page_fpl.cxx
+    KLN89/kln89_page_int.cxx
+    KLN89/kln89_page_nav.cxx
+    KLN89/kln89_page_ndb.cxx
+    KLN89/kln89_page_nrst.cxx
+    KLN89/kln89_page_oth.cxx
+    KLN89/kln89_page_set.cxx
+    KLN89/kln89_page_usr.cxx
+    KLN89/kln89_page_vor.cxx
+	)
+	
+	
+flightgear_component(Instruments "${SOURCES}")
