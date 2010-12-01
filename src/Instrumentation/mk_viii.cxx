@@ -187,6 +187,7 @@ MK_VIII::PropertiesHandler::init ()
   mk_node(altitude) = fgGetNode("/position/altitude-ft", true);
   mk_node(altitude_agl) = fgGetNode("/position/altitude-agl-ft", true);
   mk_node(altitude_gear_agl) = fgGetNode("/position/gear-agl-ft", true);
+  mk_node(altitude_radar_agl) = fgGetNode("/instrumentation/radar-altimeter/radar-altitude-ft", true);
   mk_node(orientation_roll) = fgGetNode("/orientation/roll-deg", true);
   mk_node(asi_serviceable) = fgGetNode("/instrumentation/airspeed-indicator/serviceable", true);
   mk_node(asi_speed) = fgGetNode("/instrumentation/airspeed-indicator/indicated-speed-kt", true);
@@ -719,10 +720,7 @@ MK_VIII::ConfigurationModule::read_options_select_group_1 (int value)
 bool
 MK_VIII::ConfigurationModule::read_radio_altitude_input_select (int value)
 {
-  if (value >= 0 && value <= 2)
-    mk->io_handler.conf.use_gear_altitude = true;
-  else
-    mk->io_handler.conf.use_gear_altitude = false;
+  mk->io_handler.conf.altitude_source = value;
   return (value >= 0 && value <= 4) || (value >= 251 && value <= 255);
 }
 
@@ -1167,10 +1165,18 @@ MK_VIII::IOHandler::update_inputs ()
   if (mk_ainput_feed(radio_altitude))
     {
       double agl;
-      if (conf.use_gear_altitude)
-        agl = mk_node(altitude_gear_agl)->getDoubleValue();
-      else
-        agl = mk_node(altitude_agl)->getDoubleValue();
+      switch (conf.altitude_source)
+      {
+          case 3:
+              agl = mk_node(altitude_gear_agl)->getDoubleValue();
+              break;
+          case 4:
+              agl = mk_node(altitude_radar_agl)->getDoubleValue();
+              break;
+          default: // 0,1,2 (and any currently unsupported values)
+              agl = mk_node(altitude_agl)->getDoubleValue();
+              break;
+      }
       // Some flight models may return negative values when on the
       // ground or after a crash; do not allow them.
       mk_ainput(radio_altitude).set(SG_MAX2(0.0, agl));

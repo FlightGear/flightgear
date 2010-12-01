@@ -201,6 +201,7 @@ class MK_VIII : public SGSubsystem
       SGPropertyNode_ptr altitude;
       SGPropertyNode_ptr altitude_agl;
       SGPropertyNode_ptr altitude_gear_agl;
+      SGPropertyNode_ptr altitude_radar_agl;
       SGPropertyNode_ptr orientation_roll;
       SGPropertyNode_ptr asi_serviceable;
       SGPropertyNode_ptr asi_speed;
@@ -481,7 +482,7 @@ public:
       bool			alternate_steep_approach;
       bool			use_internal_gps;
       bool			localizer_enabled;
-      bool			use_gear_altitude;
+      int			altitude_source;
       bool			use_attitude_indicator;
     } conf;
 
