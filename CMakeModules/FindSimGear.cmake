@@ -85,26 +85,32 @@ endmacro()
 if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")	
 	set(SIMGEAR_LIBRARIES "") # clear value
 	
+  # note the order here affects the order Simgear libraries are
+  # linked in, and hence ability to link when using a traditional
+  # linker such as GNU ld on Linux
 	set(comps 
 		ephemeris
 		bucket
-		serial
-		screen
 		environment
 		nasal
 		props
 		xml
-		debug math bvh 
-		model material tgdb
-		sky
+		debug 
+    sky
+		material tgdb
+    model    
+    screen
+    bvh
 		structure
 		util route
 		timing
 		threads
 		io
+    serial
 		sound
 		misc
-		magvar)
+		magvar
+    math)
 	
 	foreach(component ${comps})
 		find_sg_component(${component} SIMGEAR_LIBRARIES)

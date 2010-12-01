@@ -185,12 +185,12 @@ if(ENABLE_LARCSIM)
 	endforeach()
 endif()
 
+flightgear_component(FDM "${SOURCES}")
+
 if(ENABLE_JSBSIM)
     add_subdirectory(JSBSim)
     
     # FIXME - push this down once JSBSim doesn't expose private headers
     include_directories(${PROJECT_SOURCE_DIR}/src/FDM/JSBSim)
 endif()
-
-flightgear_component(FDM "${SOURCES}")
 
