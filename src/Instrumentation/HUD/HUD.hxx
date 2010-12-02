@@ -202,6 +202,8 @@ private:
     void draw3D();
     void draw2D(GLfloat, GLfloat, GLfloat, GLfloat);
 
+    void currentColorChanged();
+    
     class Input;
     class Item;
     class Label;

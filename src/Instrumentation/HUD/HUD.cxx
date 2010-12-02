@@ -137,6 +137,8 @@ void HUD::init()
     _font_renderer->setPointSize(_font_size);
     _text_list.setFont(_font_renderer);
 
+    currentColorChanged();
+    
     _path->fireValueChanged();
 }
 
@@ -446,29 +448,9 @@ void HUD::valueChanged(SGPropertyNode *node)
         load(fgGetString("/sim/hud/path[1]", "Huds/default.xml"));
 
     if (!strcmp(node->getName(), "current-color")) {
-        int i = node->getIntValue();
-        if (i < 0)
-            i = 0;
-        SGPropertyNode *n = fgGetNode("/sim/hud/palette", true);
-        if ((n = n->getChild("color", i, false))) {
-            if (n->hasValue("red"))
-                _red->setFloatValue(n->getFloatValue("red", 1.0));
-            if (n->hasValue("green"))
-                _green->setFloatValue(n->getFloatValue("green", 1.0));
-            if (n->hasValue("blue"))
-                _blue->setFloatValue(n->getFloatValue("blue", 1.0));
-            if (n->hasValue("alpha"))
-                _alpha->setFloatValue(n->getFloatValue("alpha", 0.67));
-            if (n->hasValue("alpha-clamp"))
-                _alpha_clamp->setFloatValue(n->getFloatValue("alpha-clamp", 0.01));
-            if (n->hasValue("brightness"))
-                _brightness->setFloatValue(n->getFloatValue("brightness", 0.75));
-            if (n->hasValue("antialiased"))
-                _antialiasing->setBoolValue(n->getBoolValue("antialiased", false));
-            if (n->hasValue("transparent"))
-                _transparency->setBoolValue(n->getBoolValue("transparent", false));
-        }
+        currentColorChanged();
     }
+    
     _scr_width = _scr_widthN->getIntValue();
     _scr_height = _scr_heightN->getIntValue();
 
@@ -487,6 +469,36 @@ void HUD::valueChanged(SGPropertyNode *node)
     _listener_active = false;
 }
 
+void HUD::currentColorChanged()
+{
+  SGPropertyNode *n = fgGetNode("/sim/hud/palette", true);
+  int index = _current->getIntValue();
+  if (index < 0) {
+    index = 0;
+  }
+  
+  n = n->getChild("color", index, false);
+  if (!n) {
+    return;
+  }
+  
+  if (n->hasValue("red"))
+      _red->setFloatValue(n->getFloatValue("red", 1.0));
+  if (n->hasValue("green"))
+      _green->setFloatValue(n->getFloatValue("green", 1.0));
+  if (n->hasValue("blue"))
+      _blue->setFloatValue(n->getFloatValue("blue", 1.0));
+  if (n->hasValue("alpha"))
+      _alpha->setFloatValue(n->getFloatValue("alpha", 0.67));
+  if (n->hasValue("alpha-clamp"))
+      _alpha_clamp->setFloatValue(n->getFloatValue("alpha-clamp", 0.01));
+  if (n->hasValue("brightness"))
+      _brightness->setFloatValue(n->getFloatValue("brightness", 0.75));
+  if (n->hasValue("antialiased"))
+      _antialiasing->setBoolValue(n->getBoolValue("antialiased", false));
+  if (n->hasValue("transparent"))
+      _transparency->setBoolValue(n->getBoolValue("transparent", false));
+}
 
 void HUD::setColor() const
 {
