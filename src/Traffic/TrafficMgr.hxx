@@ -47,6 +47,7 @@
 #define _TRAFFICMGR_HXX_
 
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/propertyObject.hxx>
 #include <simgear/xml/easyxml.hxx>
 #include <simgear/misc/sg_path.hxx>
 
@@ -54,19 +55,19 @@
 #include "Schedule.hxx"
 
 
-typedef vector<int> IdList;
-typedef vector<int>::iterator IdListIterator;
+typedef std::vector<int> IdList;
+typedef std::vector<int>::iterator IdListIterator;
 
 class Heuristic
 {
 public:
-   string registration;
+   std::string registration;
    unsigned int runCount;
    unsigned int hits;
 };
 
-typedef vector<Heuristic> heuristicsVector;
-typedef vector<Heuristic>::iterator heuristicsVectorIterator;
+typedef std::vector<Heuristic> heuristicsVector;
+typedef std::vector<Heuristic>::iterator heuristicsVectorIterator;
 
 typedef std::map < std::string, Heuristic> HeuristicMap;
 typedef HeuristicMap::iterator             HeuristicMapIterator;
@@ -77,11 +78,13 @@ typedef HeuristicMap::iterator             HeuristicMapIterator;
 class FGTrafficManager : public SGSubsystem, public XMLVisitor
 {
 private:
+  bool inited;
+  
   ScheduleVector scheduledAircraft;
   ScheduleVectorIterator currAircraft, currAircraftClosest;
   vector<string> elementValueStack;
 
-  string mdl, livery, registration, callsign, fltrules, 
+  std::string mdl, livery, registration, callsign, fltrules, 
     port, timeString, departurePort, departureTime, arrivalPort, arrivalTime,
     repeat, acType, airline, m_class, flighttype, requiredAircraft, homePort;
   int cruiseAlt;
@@ -96,6 +99,7 @@ private:
   void readTimeTableFromFile(SGPath infilename);
   void Tokenize(const string& str, vector<string>& tokens, const string& delimiters = " ");
 
+  simgear::PropertyObject<bool> enabled, aiEnabled, metarValid;
 public:
   FGTrafficManager();
   ~FGTrafficManager();

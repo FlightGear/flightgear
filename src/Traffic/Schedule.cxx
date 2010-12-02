@@ -187,9 +187,6 @@ bool FGAISchedule::init()
 
 bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
 { 
-  if (!fgGetBool("/sim/traffic-manager/enabled"))
-    return true;
-  
   time_t 
     totalTimeEnroute, 
     elapsedTimeEnroute,

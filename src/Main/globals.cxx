@@ -35,6 +35,7 @@
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/misc/ResourceManager.hxx>
+#include <simgear/props/propertyObject.hxx>
 
 #include <Aircraft/controls.hxx>
 #include <Airports/runways.hxx>
@@ -148,6 +149,7 @@ FGGlobals::FGGlobals() :
     channellist( NULL )    
 {
   simgear::ResourceManager::instance()->addProvider(new AircraftResourceProvider());
+  simgear::PropertyObjectBase::setDefaultRoot(props);
 }
 
 
