@@ -143,7 +143,10 @@ FGRunway* FGAirport::getRunwayByIdent(const string& aIdent) const
 
 FGAirport::Runway_iterator
 FGAirport::getIteratorForRunwayIdent(const string& aIdent) const
-{ 
+{
+  if (aIdent.empty())
+    return mRunways.end();
+
   loadRunways();
   
   string ident(aIdent);
