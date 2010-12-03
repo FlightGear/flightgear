@@ -75,7 +75,11 @@ using std::strcmp;
 /******************************************************************************
  * TrafficManager
  *****************************************************************************/
-FGTrafficManager::FGTrafficManager()
+FGTrafficManager::FGTrafficManager() :
+  inited(false),
+  enabled("/sim/traffic-manager/enabled"),
+  aiEnabled("/sim/ai/enabled"),
+  metarValid("/environment/metar/valid")
 {
     //score = 0;
     //runCount = 0;
@@ -125,6 +129,10 @@ FGTrafficManager::~FGTrafficManager()
 
 void FGTrafficManager::init()
 {
+    if (!enabled || !aiEnabled) {
+      return;
+    }
+  
     heuristicsVector heuristics;
     HeuristicMap heurMap;
 
@@ -218,13 +226,22 @@ void FGTrafficManager::init()
          compareSchedules);
     currAircraft = scheduledAircraft.begin();
     currAircraftClosest = scheduledAircraft.begin();
+    
+    inited = true;
 }
 
 void FGTrafficManager::update(double /*dt */ )
 {
-    if (fgGetBool("/environment/metar/valid") == false) {
+    if (!enabled || !aiEnabled || !metarValid) {
         return;
     }
+        
+    if (!inited) {
+    // lazy-initialization, we've been enabled at run-time
+      SG_LOG(SG_GENERAL, SG_INFO, "doing lazy-init of TrafficManager");
+      init();
+    }
+        
     time_t now = time(NULL) + fgGetLong("/sim/time/warp");
     if (scheduledAircraft.size() == 0) {
         return;
