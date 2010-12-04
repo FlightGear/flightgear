@@ -26,8 +26,10 @@
 #include "dclgps.hxx"
 
 #include <simgear/sg_inlines.h>
+#include <simgear/misc/sg_path.hxx>
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/magvar/magvar.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Navaids/fix.hxx>
@@ -35,6 +37,7 @@
 #include <Airports/simple.hxx>
 #include <Airports/runways.hxx>
 
+#include <fstream>
 #include <iostream>
 
 using namespace std;
@@ -240,95 +243,7 @@ void DCLGPS::init() {
 	// Not sure if this should be here, but OK for now.
 	CreateDefaultFlightPlans();
 
-	// Hack - hardwire some instrument approaches for development.
-	// These will shortly be replaced by a routine to read ARINC data from file instead.
-	FGNPIAP* iap;
-	GPSWaypoint* wp;
-	GPSFlightPlan* fp;
-	const GPSWaypoint* cwp;
-	
-	iap = new FGNPIAP;
-	iap->_aptIdent = "KHAF";
-	iap->_ident = "R12-Y";
-	iap->_name = ExpandSIAPIdent(iap->_ident);
-	iap->_rwyStr = "12";
-	iap->_approachRoutes.clear();
-	iap->_IAP.clear();
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "GOBBS";
-	// Nasty using the find any function here, but it saves converting data from FGFix etc. 
-	cwp = FindFirstByExactId(wp->id);
-	if(cwp) {
-		*wp = *cwp;
-		wp->appType = GPS_IAF;
-		fp = new GPSFlightPlan;
-		fp->waypoints.push_back(wp);
-	} else {
-		//cout << "Unable to find waypoint " << wp->id << '\n';
-	}
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "FUJCE";
-	cwp = FindFirstByExactId(wp->id);
-	if(cwp) {
-		*wp = *cwp;
-		wp->appType = GPS_IAP;
-		fp->waypoints.push_back(wp);
-		iap->_approachRoutes.push_back(fp);
-		iap->_IAP.push_back(wp);
-	} else {
-		//cout << "Unable to find waypoint " << wp->id << '\n';
-	}
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "JEVXY";
-	cwp = FindFirstByExactId(wp->id);
-	if(cwp) {
-		*wp = *cwp;
-		wp->appType = GPS_FAF;
-		iap->_IAP.push_back(wp);
-	} else {
-		//cout << "Unable to find waypoint " << wp->id << '\n';
-	}
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "RW12";
-	wp->appType = GPS_MAP;
-	if(wp->id.substr(0, 2) == "RW" && wp->appType == GPS_MAP) {
-		// Assume that this is a missed-approach point based on the runway number, which appears to be standard for most approaches.
-		const FGAirport* apt = fgFindAirportID(iap->_aptIdent);
-		if(apt) {
-			// TODO - sanity check the waypoint ID to ensure we have a double digit number
-			FGRunway* rwy = apt->getRunwayByIdent(wp->id.substr(2, 2));
-			if(rwy) {
-				wp->lat = rwy->begin().getLatitudeRad();
-				wp->lon = rwy->begin().getLongitudeRad();
-			}
-		}
-	} else {
-		cwp = FindFirstByExactId(wp->id);
-		if(cwp) {
-			*wp = *cwp;
-			wp->appType = GPS_MAP;
-		} else {
-			//cout << "Unable to find waypoint " << wp->id << '\n';
-		}
-	}
-	iap->_IAP.push_back(wp);
-	// -------
-	wp = new GPSWaypoint;
-	wp->id = "SEEMS";
-	cwp = FindFirstByExactId(wp->id);
-	if(cwp) {
-		*wp = *cwp;
-		wp->appType = GPS_MAHP;
-		iap->_IAP.push_back(wp);
-	} else {
-		//cout << "Unable to find waypoint " << wp->id << '\n';
-	}
-	// -------
-	_np_iap[iap->_aptIdent].push_back(iap);
+	LoadApproachData();
 }
 
 void DCLGPS::bind() {
@@ -685,6 +600,362 @@ string DCLGPS::ExpandSIAPIdent(const string& ident) {
 	return(name);
 }
 
+/*
+	Load instrument approaches from an ARINC 424-18 file.
+	Known / current best guess at the format:
+	Col 1:		Always 'S'.  If it isn't, ditch it.
+	Col 2-4:	"Customer area" code, eg "USA", "CAN".  I think that CAN is used for Alaska.
+	Col 5:		Section code.  Used in conjunction with sub-section code.  Definitions are with sub-section code.
+	Col 6:		Always blank.
+	Col 7-10:	ICAO (or FAA) airport ident. Left justified if < 4 chars.
+	Col 11-12:	Based on ICAO geographical region.
+	Col 13:		Sub-section code.  Used in conjunction with section code.
+				"HD/E/F" => Helicopter record.
+				"HS" => Helicopter minimum safe altitude.
+				"PA" => Airport record.
+				"PF" => Approach segment.
+				"PG" => Runway record.
+				"PP" => Path point record.	???
+				"PS" => MSA record (minimum safe altitude).
+				
+	------ The following is for "PF", approach segment -------
+				
+	Col 14-19:	SIAP ident for this approach (left justified).  This is a standardised abbreviated approach name.
+				e.g. "R10LZ" expands to "RNAV (GPS) Z RWY 10 L".  See the comment block for ExpandSIAPIdent for full details.
+	Col 20:		Route type.  This is tricky - I don't have full documentation and am having to guess a bit.
+				'A'	=> Arrival route?  	This seems to be used to encode arrival routes from the IAF to the approach proper.
+										Note that the final fix of the arrival route is duplicated in the approach proper.
+				'D'	=> VOR/DME or GPS 
+				'N' => NDB or GPS
+				'P'	=> GPS (ARINC 424-18), GPS and RNAV (GPS) (ARINC 424-15 and before).
+				'R' => RNAV (GPS) (ARINC 424-18).
+				'S'	=> VOR or GPS
+	Col 21-25:	Transition identifier.  AFAICT, this is the ident of the IAF for this initial approach route, and left blank for the final approach course.  See col 30-34 for the actual fix ident.
+	Col 26:		BLANK
+	Col 27-29:	Sequence number - position within the route segment.  Rule: 10-20-30 etc.
+	Col 30-34:	Fix identifer.  The ident of the waypoint.
+	Col 35-36:	ICAO geographical region code.  I think we can ignore this for now.
+	Col 37:		Section code - ??? I don't know what this means
+	Col 38		Subsection code - ??? ditto - no idea!
+	Col 40:		Waypoint type.
+				'A' => Airport as waypoint
+				'E' => Essential waypoint (e.g. change of heading at this waypoint, etc).
+				'G' => Runway or helipad as waypoint
+				'H' => Heliport as waypoint
+				'N' => NDB as waypoint
+				'P' => Phantom waypoint (not sure if this is used in rev 18?)
+				'V' => VOR as waypoint
+	Col 41:		Waypoint type.
+				'B' => Flyover, approach transition, or final approach.
+				'E' => end of route segment (transition waypoint). (Actually "End of terminal procedure route type" in the docs).
+				'N' => ??? I've also seen 'N' in this column, but don't know what it indicates.
+				'Y' => Flyover.
+	Col 43:		Waypoint type.  May also be blank when none of the below.
+				'A' => Initial approach fix (IAF)
+				'F' => Final approach fix
+				'H' => Holding fix
+				'I' => Final approach course fix
+				'M' => Missed approach point
+				'P' => ??? This is present, but I don't know what this means and it wasn't in the FAA docs that I found the above in!
+					   ??? Possibly procedure turn?
+				'C' => ??? This is also present in the data, but missing from the docs.  Is at airport 00R.
+	Col 107-111	MSA center fix.  We can ignore this.
+*/
+void DCLGPS::LoadApproachData() {
+	FGNPIAP* iap;
+	GPSWaypoint* wp;
+	GPSFlightPlan* fp;
+	const GPSWaypoint* cwp;
+	
+	std::ifstream fin;
+	SGPath path = globals->get_fg_root();
+	path.append("Navaids/rnav.dat");
+	fin.open(path.c_str(), ios::in);
+	if(!fin) {
+		cout << "Unable to open input file " << path.c_str() << '\n';
+		return;
+	} else {
+		cout << "Opened " << path.c_str() << " for reading\n";
+	}
+	char tmp[256];
+	string s;
+	
+	string apt_ident;    // This gets set to the ICAO code of the current airport being processed.
+	string iap_ident;    // The abbreviated name of the current approach being processed.
+	string wp_ident;     // The ident of the waypoint of the current line
+	string last_apt_ident;
+	string last_iap_ident;
+	string last_wp_ident;
+	// There is no need to save the full name - it can be generated on the fly from the abbreviated name as and when needed.
+	bool apt_in_progress = false;    // Set true whilst loading all the approaches for a given airport.
+	bool iap_in_progress = false;    // Set true whilst loading a given approach.
+	bool iap_error = false;			 // Set true if there is an error loading a given approach.
+	bool route_in_progress = false;  // Set true when we are loading a "route" segment of the approach.
+	int last_sequence_number = 0;    // Position within the route, rule (rev 18): 10, 20, 30 etc.
+	int sequence_number;
+	char last_route_type = 0;
+	char route_type;
+	char waypoint_fix_type;  // This is the waypoint type from col 43, i.e. the type of fix.  May be blank.
+	
+	int j;
+	
+	// Debugging info
+	unsigned int nLoaded = 0;
+	unsigned int nErrors = 0;
+	
+	//for(i=0; i<64; ++i) {
+	while(!fin.eof()) {
+		fin.getline(tmp, 256);
+		//s = Fake_rnav_dat[i];
+		s = tmp;
+		if(s.size() < 132) continue;
+		if(s[0] == 'S') {    // Valid line
+			string country_code = s.substr(1, 3);
+			if(country_code == "USA") {    // For now we'll stick to US procedures in case there are unknown gotchas with others
+				if(s[4] == 'P') {    // Includes approaches.
+					if(s[12] == 'A') {	// Airport record
+						apt_ident = s.substr(6, 4);
+						// Trim any whitespace from the ident.  The ident is left justified,
+						// so any space will be at the end.
+						if(apt_ident[3] == ' ') apt_ident = apt_ident.substr(0, 3);
+						// I think that all idents are either 3 or 4 chars - could check this though!
+						if(!apt_in_progress) {
+							last_apt_ident = apt_ident;
+							apt_in_progress = 1;
+						} else {
+							if(last_apt_ident != apt_ident) {
+								if(iap_in_progress) {
+									if(iap_error) {
+										cout << "ERROR: Unable to load approach " << iap->_ident << " at " << iap->_aptIdent << '\n';
+										nErrors++;
+									} else {
+										_np_iap[iap->_aptIdent].push_back(iap);
+										//cout << "** Loaded " << iap->_aptIdent << "\t" << iap->_ident << '\n';
+										nLoaded++;
+									}
+									iap_in_progress = false;
+								}
+							}
+							last_apt_ident = apt_ident;
+						}
+						iap_in_progress = 0;
+					} else if(s[12] == 'F') {	// Approach segment
+						if(apt_in_progress) {
+							iap_ident = s.substr(13, 6);
+							// Trim any whitespace from the RH end.
+							for(j=0; j<6; ++j) {
+								if(iap_ident[5-j] == ' ') {
+									iap_ident = iap_ident.substr(0, 5-j);
+								} else {
+									// It's important to break here, since earlier versions of ARINC 424 allowed spaces in the ident.
+									break;
+								}
+							}
+							if(iap_in_progress) {
+								if(iap_ident != last_iap_ident) {
+									// This is a new approach - store the last one and trigger
+									// starting afresh by setting the in progress flag to false.
+									if(iap_error) {
+										cout << "ERROR: Unable to load approach " << iap->_ident << " at " << iap->_aptIdent << '\n';
+										nErrors++;
+									} else {
+										_np_iap[iap->_aptIdent].push_back(iap);
+										//cout << "Loaded " << iap->_aptIdent << "\t" << iap->_ident << '\n';
+										nLoaded++;
+									}
+									iap_in_progress = false;
+								}
+							}
+							if(!iap_in_progress) {
+								iap = new FGNPIAP;
+								iap->_aptIdent = apt_ident;
+								iap->_ident = iap_ident;
+								iap->_name = ExpandSIAPIdent(iap_ident); // I suspect that it's probably better to just store idents, and to expand the names as needed.
+								// Note, we haven't set iap->_rwyStr yet.
+								last_iap_ident = iap_ident;
+								iap_in_progress = true;
+								iap_error = false;
+							}
+							
+							// Route type
+							route_type = s[19];
+							sequence_number = atoi(s.substr(26,3).c_str());
+							wp_ident = s.substr(29, 5);
+							waypoint_fix_type = s[42];
+							// Trim any whitespace from the RH end
+							for(j=0; j<5; ++j) {
+								if(wp_ident[4-j] == ' ') {
+									wp_ident = wp_ident.substr(0, 4-j);
+								} else {
+									break;
+								}
+							}
+							
+							// Ignore lines with no waypoint ID for now - these are normally part of the
+							// missed approach procedure, and we don't use them in the KLN89.
+							if(!wp_ident.empty()) {
+								// Make a local copy of the waypoint for now, since we're not yet sure if we'll be using it
+								GPSWaypoint w;
+								w.id = wp_ident;
+								bool wp_error = false;
+								if(w.id.substr(0, 2) == "RW" && waypoint_fix_type == 'M') {
+									// Assume that this is a missed-approach point based on the runway number, which appears to be standard for most approaches.
+									// Note: Currently fgFindAirportID returns NULL on error, but getRunwayByIdent throws an exception.
+									const FGAirport* apt = fgFindAirportID(iap->_aptIdent);
+									if(apt) {
+										try {
+											// TODO - sanity check the waypoint ID to ensure we have a double digit number
+											FGRunway* rwy = apt->getRunwayByIdent(w.id.substr(2, 2));
+											w.lat = rwy->begin().getLatitudeRad();
+											w.lon = rwy->begin().getLongitudeRad();
+										} catch(const sg_exception&) {
+											SG_LOG(SG_GENERAL, SG_WARN, "Unable to find runway " << w.id.substr(2, 2) << " at airport " << iap->_aptIdent);
+											wp_error = true;
+										}
+									} else {
+										wp_error = true;
+									}
+								} else {
+									cwp = FindFirstByExactId(w.id);
+									if(cwp) {
+										w = *cwp;
+									} else {
+										wp_error = true;
+									}
+								}
+								switch(waypoint_fix_type) {
+								case 'A': w.appType = GPS_IAF; break;
+								case 'F': w.appType = GPS_FAF; break;
+								case 'H': w.appType = GPS_MAHP; break;
+								case 'I': w.appType = GPS_IAP; break;
+								case 'M': w.appType = GPS_MAP; break;
+								case ' ': w.appType = GPS_APP_NONE; break;
+								//default: cout << "Unknown waypoint_fix_type: \'" << waypoint_fix_type << "\' [" << apt_ident << ", " << iap_ident << "]\n";
+								}
+								
+								if(wp_error) {
+									//cout << "Unable to find waypoint " << w.id << " [" << apt_ident << ", " << iap_ident << "]\n";
+									iap_error = true;
+								}
+							
+								if(!wp_error) {
+									if(route_in_progress) {
+										if(sequence_number > last_sequence_number) {
+											// TODO - add a check for runway numbers
+											// Check for the waypoint ID being the same as the previous line.
+											// This is often the case for the missed approach holding point.
+											if(wp_ident == last_wp_ident) {
+												if(waypoint_fix_type == 'H') {
+													if(!iap->_IAP.empty()) {
+														if(iap->_IAP[iap->_IAP.size() - 1]->appType == GPS_APP_NONE) {
+															iap->_IAP[iap->_IAP.size() - 1]->appType = GPS_MAHP;
+														} else {
+															cout << "Waypoint is MAHP and another type! " << w.id << " [" << apt_ident << ", " << iap_ident << "]\n";
+														}
+													}
+												}
+											} else {
+												// Create a new waypoint on the heap, copy the local copy into it, and push it onto the approach.
+												wp = new GPSWaypoint;
+												*wp = w;
+												if(route_type == 'A') {
+													fp->waypoints.push_back(wp);
+												} else {
+													iap->_IAP.push_back(wp);
+												}
+											}
+										} else if(sequence_number == last_sequence_number) {
+											// This seems to happen once per final approach route - one of the waypoints
+											// is duplicated with the same sequence number - I'm not sure what information
+											// the second line give yet so ignore it for now.
+											// TODO - figure this out!
+										} else {
+											// Finalise the current route and start a new one
+											//
+											// Finalise the current route
+											if(last_route_type == 'A') {
+												// Push the flightplan onto the approach
+												iap->_approachRoutes.push_back(fp);
+											} else {
+												// All the waypoints get pushed individually - don't need to do it.
+											}
+											// Start a new one
+											// There are basically 2 possibilities here - either it's one of the arrival transitions,
+											// or it's the core final approach course.
+											wp = new GPSWaypoint;
+											*wp = w;
+											if(route_type == 'A') {	// It's one of the arrival transition(s)
+												fp = new GPSFlightPlan;
+												fp->waypoints.push_back(wp);
+											} else {
+												iap->_IAP.push_back(wp);
+											}
+											route_in_progress = true;
+										}
+									} else {
+										// Start a new route.
+										// There are basically 2 possibilities here - either it's one of the arrival transitions,
+										// or it's the core final approach course.
+										wp = new GPSWaypoint;
+										*wp = w;
+										if(route_type == 'A') {	// It's one of the arrival transition(s)
+											fp = new GPSFlightPlan;
+											fp->waypoints.push_back(wp);
+										} else {
+											iap->_IAP.push_back(wp);
+										}
+										route_in_progress = true;
+									}
+									last_route_type = route_type;
+									last_wp_ident = wp_ident;
+									last_sequence_number = sequence_number;
+								}
+							}
+						} else {
+							// ERROR - no airport record read.
+						}
+					}
+				} else {
+					// Check and finalise any approaches in progress
+					// TODO - sanity check that the approach has all the required elements
+					if(iap_in_progress) {
+						// This is a new approach - store the last one and trigger
+						// starting afresh by setting the in progress flag to false.
+						if(iap_error) {
+							cout << "ERROR: Unable to load approach " << iap->_ident << " at " << iap->_aptIdent << '\n';
+							nErrors++;
+						} else {
+							_np_iap[iap->_aptIdent].push_back(iap);
+							//cout << "* Loaded " << iap->_aptIdent << "\t" << iap->_ident << '\n';
+							nLoaded++;
+						}
+						iap_in_progress = false;
+					}
+				}
+			}
+		}
+	}
+	
+	// If we get to the end of the file, load any approach that is still in progress
+	// TODO - sanity check that the approach has all the required elements
+	if(iap_in_progress) {
+		if(iap_error) {
+			cout << "ERROR: Unable to load approach " << iap->_ident << " at " << iap->_aptIdent << '\n';
+			nErrors++;
+		} else {
+			_np_iap[iap->_aptIdent].push_back(iap);
+			//cout << "*** Loaded " << iap->_aptIdent << "\t" << iap->_ident << '\n';
+			nLoaded++;
+		}
+	}
+	
+	cout << "Done loading approach database\n";
+	cout << "Loaded: " << nLoaded << '\n';
+	cout << "Failed: " << nErrors << '\n';
+	
+	fin.close();
+}
+
 GPSWaypoint* DCLGPS::GetActiveWaypoint() { 
 	return &_activeWaypoint; 
 }
@@ -735,6 +1006,7 @@ void DCLGPS::DtoInitiate(const string& s) {
 		_fromWaypoint.id = "DTOWP";
 		delete wp;
 	} else {
+		// TODO - Should bring up the user waypoint page.
 		_dto = false;
 	}
 }

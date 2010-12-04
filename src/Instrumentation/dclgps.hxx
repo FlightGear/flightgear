@@ -342,6 +342,8 @@ protected:
 
 
 protected:
+	void LoadApproachData();
+
 	// Find first of any type of waypoint by id.  (TODO - Possibly we should return multiple waypoints here).
 	GPSWaypoint* FindFirstById(const string& id) const;
 	GPSWaypoint* FindFirstByExactId(const string& id) const;
