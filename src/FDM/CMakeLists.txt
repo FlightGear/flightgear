@@ -9,37 +9,6 @@ set(SP_FDM_SOURCES
 	)
 endif()
 
-set(YASIM_SOURCES
-	Airplane.cpp
-	Atmosphere.cpp
-	ControlMap.cpp
-	FGFDM.cpp
-	FGGround.cpp
-	Gear.cpp
-	Glue.cpp
-	Ground.cpp
-	Hitch.cpp
-	Hook.cpp
-	Integrator.cpp
-	Jet.cpp
-	Launchbar.cpp
-	Math.cpp
-	Model.cpp
-	PistonEngine.cpp
-	PropEngine.cpp
-	Propeller.cpp
-	RigidBody.cpp
-	Rotor.cpp
-	Rotorpart.cpp
-	SimpleJet.cpp
-	Surface.cpp
-	Thruster.cpp
-	TurbineEngine.cpp
-	Turbulence.cpp
-	Wing.cpp
-	YASim.cxx
-	)
-
 set(UIUC_SOURCES
 	uiuc_1DdataFileReader.cpp
 	uiuc_1Dinterpolation.cpp
@@ -168,9 +137,7 @@ set(SOURCES
 	)
 
 if(ENABLE_YASIM)
-    foreach(component ${YASIM_SOURCES})
-    	list(APPEND SOURCES "YASim/${component}")
-    endforeach()
+	add_subdirectory(YASim)
 endif()
 
 if(ENABLE_UIUC_MODEL)

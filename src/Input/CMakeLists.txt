@@ -41,3 +41,5 @@ target_link_libraries(js_demo
 	${ZLIB_LIBRARY})
 
 flightgear_component(Input "${SOURCES}")
+
+install(TARGETS fgjs js_demo RUNTIME DESTINATION bin)

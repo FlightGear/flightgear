@@ -26,9 +26,9 @@ set(SOURCES
 add_executable(fgfs ${SOURCES})
 
 get_property(FG_LIBS GLOBAL PROPERTY FG_LIBS)
-message(STATUS "fg libs ${FG_LIBS}")
-message(STATUS "OSG libs ${OPENSCENEGRAPH_LIBRARIES}")
-message(STATUS "SG libs ${SIMGEAR_LIBRARIES}")
+#message(STATUS "fg libs ${FG_LIBS}")
+#message(STATUS "OSG libs ${OPENSCENEGRAPH_LIBRARIES}")
+#message(STATUS "SG libs ${SIMGEAR_LIBRARIES}")
 
 target_link_libraries(fgfs 
 	${FG_LIBS}
@@ -39,4 +39,7 @@ target_link_libraries(fgfs
 	${ALUT_LIBRARY} 
 	${ZLIB_LIBRARIES}
 	${PLIB_LIBRARIES})
+	
+install(TARGETS fgfs RUNTIME DESTINATION bin)
+
 	
