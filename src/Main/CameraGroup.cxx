@@ -162,7 +162,7 @@ CameraInfo* CameraGroup::addCamera(unsigned flags, Camera* camera,
         if (bufferMap.count(Camera::COLOR_BUFFER) != 0) {
             farCamera->attach(
                 Camera::COLOR_BUFFER,
-                bufferMap.find(Camera::COLOR_BUFFER)->second._texture);
+                bufferMap.find(Camera::COLOR_BUFFER)->second._texture.get());
         }
         _viewer->addSlave(farCamera, projection, view, useMasterSceneData);
         installCullVisitor(farCamera);
