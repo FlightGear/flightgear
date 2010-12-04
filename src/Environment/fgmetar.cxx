@@ -61,7 +61,7 @@ FGMetar::FGMetar(const string& icao, const string& proxy, const string& port, co
 		vector<SGMetarCloud> cv = _clouds;;
 		if (!cv.size()) {
 			SGMetarCloud cl;
-			cl.set(5500 * SG_FEET_TO_METER, 2);
+			cl.set(5500 * SG_FEET_TO_METER, SGMetarCloud::COVERAGE_SCATTERED);
 			_clouds.push_back(cl);
 		}
 	}
@@ -109,9 +109,9 @@ FGMetar::FGMetar(const string& icao, const string& proxy, const string& port, co
 	vector<SGMetarCloud>::iterator cloud, cv_end = cv.end();
 
 	for (i = 0, cloud = cv.begin(); cloud != cv_end; ++cloud, i++) {
-		int cov = cloud->getCoverage();
-		if (cov == -1)
-			cov = 0;
+		SGMetarCloud::Coverage cov = cloud->getCoverage();
+		if (cov == SGMetarCloud::COVERAGE_NIL)
+			cov = SGMetarCloud::COVERAGE_CLEAR;
 
 		double alt = cloud->getAltitude_ft();
 		if (alt == SGMetarNaN)
