@@ -697,6 +697,8 @@ void GPS::routeManagerSequenced()
   int index = _routeMgr->currentIndex(),
     count = _routeMgr->numWaypts();
   if ((index < 0) || (index >= count)) {
+    _currentWaypt=NULL;
+    _prevWaypt=NULL;
     SG_LOG(SG_INSTR, SG_ALERT, "GPS: malformed route, index=" << index);
     return;
   }
@@ -971,6 +973,8 @@ void GPS::driveAutopilot()
 
 void GPS::wp1Changed()
 {
+  if (!_currentWaypt)
+    return;
   if (_mode == "leg") {
     _wayptController.reset(WayptController::createForWaypt(this, _currentWaypt));
   } else if (_mode == "obs") {
@@ -1082,7 +1086,7 @@ double GPS::getCDIDeflection() const
 
 const char* GPS::getWP0Ident() const
 {
-  if (!_dataValid || (_mode != "leg")) {
+  if (!_dataValid || (_mode != "leg") || (!_prevWaypt)) {
     return "";
   }
   
@@ -1096,7 +1100,7 @@ const char* GPS::getWP0Name() const
 
 const char* GPS::getWP1Ident() const
 {
-  if (!_dataValid) {
+  if ((!_dataValid)||(!_currentWaypt)) {
     return "";
   }
   
