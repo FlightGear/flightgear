@@ -58,16 +58,14 @@ void fgSunPositionGST(double gst, double *lon, double *lat) {
 
     SGPropertyNode* sun = fgGetNode("/ephemeris/sun");
     assert(sun);
-    double beta = sun->getDoubleValue("lat-deg");
-    // double r = globals->get_ephem()->get_sun()->getDistance();
     double xs = sun->getDoubleValue("xs");
     double ys = sun->getDoubleValue("ys");
     double ye = sun->getDoubleValue("ye");
     double ze = sun->getDoubleValue("ze");
-    alpha = atan2(ys - tan(beta)*ze/ys, xs);
-    delta = asin(sin(beta)*ye/ys + cos(beta)*ze);
+    double ra = atan2(ye, xs);
+    double dec = atan2(ze, sqrt(xs * xs + ye * ye));
 
-    tmp = alpha - (SGD_2PI/24)*gst;
+    tmp = ra - (SGD_2PI/24)*gst;
     if (tmp < -SGD_PI) {
         do tmp += SGD_2PI;
         while (tmp < -SGD_PI);
@@ -77,7 +75,7 @@ void fgSunPositionGST(double gst, double *lon, double *lat) {
     }
 
     *lon = tmp;
-    *lat = delta;
+    *lat = dec;
 }
 
 static double sun_angle( const SGTime &t, const SGVec3d& world_up,
@@ -85,17 +83,18 @@ static double sun_angle( const SGTime &t, const SGVec3d& world_up,
     SG_LOG( SG_EVENT, SG_DEBUG, "  Updating Sun position" );
     SG_LOG( SG_EVENT, SG_DEBUG, "  Gst = " << t.getGst() );
 
-    double sun_lon, sun_gd_lat;
-    fgSunPositionGST( t.getGst(), &sun_lon, &sun_gd_lat );
-    SGVec3d sunpos = SGVec3d::fromGeod(SGGeod::fromRad(sun_lon, sun_gd_lat));
+    double sun_lon, sun_gc_lat;
+    fgSunPositionGST( t.getGst(), &sun_lon, &sun_gc_lat );
+    SGVec3d sunpos = SGVec3d::fromGeoc(SGGeoc::fromRadM(sun_lon, sun_gc_lat,
+                                                        SGGeodesy::EQURAD));
 
     SG_LOG( SG_EVENT, SG_DEBUG, "    t.cur_time = " << t.get_cur_time() );
     SG_LOG( SG_EVENT, SG_DEBUG, 
-	    "    Sun Geodetic lat = " << sun_gd_lat );
+	    "    Sun Geocentric lat = " << sun_gc_lat );
 
     // calculate the sun's relative angle to local up
-    SGVec3f nup = normalize(toVec3f(world_up));
-    SGVec3f nsun = normalize(toVec3f(sunpos));
+    SGVec3d nup = normalize(world_up);
+    SGVec3d nsun = normalize(sunpos);
     // cout << "nup = " << nup[0] << "," << nup[1] << "," 
     //      << nup[2] << endl;
     // cout << "nsun = " << nsun[0] << "," << nsun[1] << "," 
