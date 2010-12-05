@@ -100,6 +100,7 @@ MetarProperties::MetarProperties( SGPropertyNode_ptr rootNode ) :
   _tiedProperties.Tie("hail-norm", &_hail );
   _tiedProperties.Tie("snow-norm", &_snow);
   _tiedProperties.Tie("snow-cover", &_snow_cover );
+  _tiedProperties.Tie("decoded", this, &MetarProperties::get_decoded );
 }
 
 MetarProperties::~MetarProperties()
@@ -121,6 +122,13 @@ void MetarProperties::set_metar( const char * metar )
         SG_LOG( SG_GENERAL, SG_WARN, "Can't parse metar: " << _metar );
         _metarValidNode->setBoolValue(false);
         return;
+    }
+
+    _decoded.clear();
+    const vector<string> weather = m->getWeather();
+    for( vector<string>::const_iterator it = weather.begin(); it != weather.end(); it++ ) {
+        if( false == _decoded.empty() ) _decoded.append(", ");
+        _decoded.append(*it);
     }
 
     _min_visibility = m->getMinVisibility().getVisibility_m();
@@ -189,6 +197,38 @@ void MetarProperties::set_metar( const char * metar )
         _sea_level_pressure = P_layer(0, elevation_m, fieldPressure, _temperature + atmodel::freezing, atmodel::ISA::lam0) / atmodel::inHg;
     }
 
+    bool isBC = false;
+    bool isBR = false;
+    bool isFG = false;
+    bool isMI = false;
+    bool isHZ = false;
+
+    {
+        for( unsigned i = 0; i < 3; i++ ) {
+            SGPropertyNode_ptr n = _rootNode->getChild("weather", i, true );
+            vector<struct SGMetar::Weather> weather = m->getWeather2();
+            struct SGMetar::Weather * w = i < weather.size() ? &weather[i] : NULL;
+            n->getNode("intensity",true)->setIntValue( w != NULL ? w->intensity : 0 );
+            n->getNode("vincinity",true)->setBoolValue( w != NULL ? w->vincinity : false );
+            for( unsigned j = 0; j < 3; j++ ) { 
+
+                const string & phenomenon = w != NULL && j < w->phenomena.size() ? w->phenomena[j].c_str() : "";
+                n->getChild( "phenomenon", j, true )->setStringValue( phenomenon );
+
+                const string & description = w != NULL && j < w->descriptions.size() ? w->descriptions[j].c_str() : "";
+                n->getChild( "description", j, true )->setStringValue( description );
+
+                // need to know later, 
+                // if its fog(FG) (might be shallow(MI) or patches(BC)) or haze (HZ) or mist(BR)
+                if( phenomenon == "FG" ) isFG = true;
+                if( phenomenon == "HZ" ) isHZ = true;
+                if( description == "MI" ) isMI = true;
+                if( description == "BC" ) isBC = true;
+                if( description == "BR" ) isBR = true;
+            }
+        }
+    }
+
     vector<SGMetarCloud> cv = m->getClouds();
     vector<SGMetarCloud>::const_iterator cloud, cloud_end = cv.end();
 
@@ -196,17 +236,45 @@ void MetarProperties::set_metar( const char * metar )
         static const char * LAYER = "layer";
         SGPropertyNode_ptr cloudsNode = _rootNode->getNode("clouds", true );
         const vector<SGMetarCloud> & metarClouds = m->getClouds();
-        for( unsigned i = 0; i < 5; i++ ) {
-            SGPropertyNode_ptr layerNode = cloudsNode->getChild(LAYER, i, true );
-            int coverage = i < metarClouds.size() ? metarClouds[i].getCoverage() : 0;
-            double elevation = i >= metarClouds.size() || coverage == 0 ? -9999.0 : metarClouds[i].getAltitude_ft() + _station_elevation;
+        unsigned layerOffset = 0; // Oh, this is ugly!
+        bool setGroundCloudLayer = _rootNode->getBoolValue("set-ground-cloud-layer", false );
+
+        if( setGroundCloudLayer && isFG ) {
+            // make sure fog actually starts at ground and set it's bottom at a constant
+            // value below the station's elevation
+            const double LAYER_BOTTOM_BELOW_STATION_ELEVATION=200;
+
+            // fog - create a cloud layer #0 starting at the ground
+            // fog is "overcast" by default of "broken" for patches of fog
+            SGPropertyNode_ptr layerNode = cloudsNode->getChild(LAYER, 0, true );
+            SGMetarCloud::Coverage coverage = isBC ? SGMetarCloud::COVERAGE_SCATTERED : SGMetarCloud::COVERAGE_BROKEN;
+            layerNode->setDoubleValue( "coverage-type", SGCloudLayer::getCoverageType(coverage_string[coverage]) );
+            layerNode->setStringValue( "coverage", coverage_string[coverage] );
+            layerNode->setDoubleValue( "elevation-ft", _station_elevation - LAYER_BOTTOM_BELOW_STATION_ELEVATION );
+            layerNode->setDoubleValue( "thickness-ft", isMI ? 
+               30 + LAYER_BOTTOM_BELOW_STATION_ELEVATION : // shallow fog, 10m/30ft
+               500 + LAYER_BOTTOM_BELOW_STATION_ELEVATION ); // fog, 150m/500ft
+            layerNode->setDoubleValue( "visibility-m", _min_visibility );
+            _min_visibility = _max_visibility = 20000.0; // assume good visibility above the fog
+            layerOffset = 1;  // shudder
+        } else if( setGroundCloudLayer && isHZ ) {
+        }
+
+        for( unsigned i = 0; i < 5-layerOffset; i++ ) {
+            SGPropertyNode_ptr layerNode = cloudsNode->getChild(LAYER, i+layerOffset, true );
+            SGMetarCloud::Coverage coverage = i < metarClouds.size() ? metarClouds[i].getCoverage() : SGMetarCloud::COVERAGE_CLEAR;
+            double elevation = 
+                i >= metarClouds.size() || coverage == SGMetarCloud::COVERAGE_CLEAR ? 
+                -9999.0 : 
+                metarClouds[i].getAltitude_ft() + _station_elevation;
+
             layerNode->setStringValue( "coverage", coverage_string[coverage] );
             layerNode->setDoubleValue( "coverage-type", SGCloudLayer::getCoverageType(coverage_string[coverage]) );
             layerNode->setDoubleValue( "elevation-ft", elevation );
             layerNode->setDoubleValue( "thickness-ft", thickness_value[coverage]);
             layerNode->setDoubleValue( "span-m", 40000 );
+            layerNode->setDoubleValue( "visibility-m", 50.0 );
         }
-
     }
 
     _rain = m->getRain();

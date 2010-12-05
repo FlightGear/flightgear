@@ -41,6 +41,7 @@ private:
     const char * get_metar() const { return _metar.c_str(); }
     void set_metar( const char * metar );
     const char * get_station_id() const { return _station_id.c_str(); }
+    const char * get_decoded() const { return _decoded.c_str(); }
 
     SGPropertyNode_ptr _rootNode;
     SGPropertyNode_ptr _metarValidNode;
@@ -69,6 +70,7 @@ private:
     double _hail;
     double _snow;
     bool _snow_cover;
+    std::string _decoded;
 
     TiedPropertyList _tiedProperties;
 };
