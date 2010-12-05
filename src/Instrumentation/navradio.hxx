@@ -137,8 +137,6 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     string dme_fx_name;
 
     double target_radial;
-    SGTimeStamp prev_time;
-    SGTimeStamp curr_time;
     double effective_range;
     double target_gs;
     double twist;
