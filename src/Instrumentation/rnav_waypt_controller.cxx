@@ -69,8 +69,8 @@ bool geocRadialIntersection(const SGGeoc& a, double r1, const SGGeoc& b, double 
   double crs12 = SGGeodesy::courseRad(a, b),
     crs21 = SGGeodesy::courseRad(b, a);
     
-  double degCrs12 = crs12 * SG_RADIANS_TO_DEGREES;
-  double degCrs21 = crs21 * SG_RADIANS_TO_DEGREES;
+  //double degCrs12 = crs12 * SG_RADIANS_TO_DEGREES;
+  //double degCrs21 = crs21 * SG_RADIANS_TO_DEGREES;
     
  /* 
   if (sin(diffLon) < 0.0) {
@@ -157,7 +157,9 @@ class BasicWayptCtl : public WayptController
 {
 public:
   BasicWayptCtl(RNAV* aRNAV, const WayptRef& aWpt) :
-    WayptController(aRNAV, aWpt)
+    WayptController(aRNAV, aWpt),
+    _distanceM(0.0),
+    _courseDev(0.0)
   {
     if (aWpt->flag(WPT_DYNAMIC)) {
       throw sg_exception("BasicWayptCtrl doesn't work with dynamic waypoints");
@@ -226,7 +228,10 @@ class RunwayCtl : public WayptController
 {
 public:
   RunwayCtl(RNAV* aRNAV, const WayptRef& aWpt) :
-    WayptController(aRNAV, aWpt)
+    WayptController(aRNAV, aWpt),
+    _runway(NULL),
+    _distanceM(0.0),
+    _courseDev(0.0)
   {
   }
   
@@ -365,8 +370,8 @@ class InterceptCtl : public WayptController
 {
 public:
   InterceptCtl(RNAV* aRNAV, const WayptRef& aWpt) :
-    WayptController(aRNAV, aWpt)
-    
+    WayptController(aRNAV, aWpt),
+    _trueRadial(0.0)
   {
     if (_waypt->type() != "radialIntercept") {
       throw sg_exception("invalid waypoint type", "InterceptCtl ctor");
@@ -412,8 +417,9 @@ class DMEInterceptCtl : public WayptController
 {
 public:
   DMEInterceptCtl(RNAV* aRNAV, const WayptRef& aWpt) :
-    WayptController(aRNAV, aWpt)
-    
+    WayptController(aRNAV, aWpt),
+    _dme(NULL),
+    _distanceNm(0.0)
   {
     if (_waypt->type() != "dmeIntercept") {
       throw sg_exception("invalid waypoint type", "DMEInterceptCtl ctor");
@@ -546,7 +552,9 @@ private:
 
 DirectToController::DirectToController(RNAV* aRNAV, const WayptRef& aWpt, const SGGeod& aOrigin) :
   WayptController(aRNAV, aWpt),
-  _origin(aOrigin)
+  _origin(aOrigin),
+  _distanceM(0.0),
+  _courseDev(0.0)
 {
 }
 
@@ -600,7 +608,9 @@ SGGeod DirectToController::position() const
 ///////////////////////////////////////////////////////////////////////////////
 
 OBSController::OBSController(RNAV* aRNAV, const WayptRef& aWpt) :
-  WayptController(aRNAV, aWpt)
+  WayptController(aRNAV, aWpt),
+  _distanceM(0.0),
+  _courseDev(0.0)
 {
 }
 

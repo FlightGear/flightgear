@@ -129,6 +129,7 @@ public:
 protected:
   WayptController(RNAV* aRNAV, const WayptRef& aWpt) :
     _waypt(aWpt),
+    _targetTrack(0),
     _rnav(aRNAV),
     _isDone(false)
   { }

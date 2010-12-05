@@ -92,12 +92,19 @@ SGPropertyNode_ptr createServiceableProp(SGPropertyNode* aParent, const char* aN
 
 // Constructor
 FGNavRadio::FGNavRadio(SGPropertyNode *node) :
+    term_tbl(NULL),
+    low_tbl(NULL),
+    high_tbl(NULL),
     lon_node(fgGetNode("/position/longitude-deg", true)),
     lat_node(fgGetNode("/position/latitude-deg", true)),
     alt_node(fgGetNode("/position/altitude-ft", true)),
+    _operable(false),
     play_count(0),
     last_time(0),
     target_radial(0.0),
+    effective_range(0.0),
+    target_gs(0.0),
+    twist(0.0),
     horiz_vel(0.0),
     last_x(0.0),
     last_loc_dist(0.0),
@@ -107,6 +114,16 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     _name(node->getStringValue("name", "nav")),
     _num(node->getIntValue("number", 0)),
     _time_before_search_sec(-1.0),
+    _gsCart(SGVec3d::zeros()),
+    _gsAxis(SGVec3d::zeros()),
+    _gsVertical(SGVec3d::zeros()),
+    _dmeInRange(false),
+    _toFlag(false),
+    _fromFlag(false),
+    _cdiDeflection(0.0),
+    _cdiCrossTrackErrorM(0.0),
+    _gsNeedleDeflection(0.0),
+    _gsNeedleDeflectionNorm(0.0),
     _sgr(NULL)
 {
     SGPath path( globals->get_fg_root() );
@@ -120,8 +137,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     term_tbl = new SGInterpTable( term.str() );
     low_tbl = new SGInterpTable( low.str() );
     high_tbl = new SGInterpTable( high.str() );
-    
-    
+
     string branch("/instrumentation/" + _name);
     _radio_node = fgGetNode(branch.c_str(), _num, true);
 }
