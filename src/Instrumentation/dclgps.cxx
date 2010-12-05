@@ -601,7 +601,8 @@ string DCLGPS::ExpandSIAPIdent(const string& ident) {
 }
 
 /*
-	Load instrument approaches from an ARINC 424-18 file.
+	Load instrument approaches from an ARINC 424 file.
+	Tested on ARINC 424-18.
 	Known / current best guess at the format:
 	Col 1:		Always 'S'.  If it isn't, ditch it.
 	Col 2-4:	"Customer area" code, eg "USA", "CAN".  I think that CAN is used for Alaska.
@@ -672,10 +673,10 @@ void DCLGPS::LoadApproachData() {
 	path.append("Navaids/rnav.dat");
 	fin.open(path.c_str(), ios::in);
 	if(!fin) {
-		cout << "Unable to open input file " << path.c_str() << '\n';
+		//cout << "Unable to open input file " << path.c_str() << '\n';
 		return;
 	} else {
-		cout << "Opened " << path.c_str() << " for reading\n";
+		//cout << "Opened " << path.c_str() << " for reading\n";
 	}
 	char tmp[256];
 	string s;
@@ -726,7 +727,7 @@ void DCLGPS::LoadApproachData() {
 							if(last_apt_ident != apt_ident) {
 								if(iap_in_progress) {
 									if(iap_error) {
-										cout << "ERROR: Unable to load approach " << iap->_ident << " at " << iap->_aptIdent << '\n';
+										//cout << "ERROR: Unable to load approach " << iap->_ident << " at " << iap->_aptIdent << '\n';
 										nErrors++;
 									} else {
 										_np_iap[iap->_aptIdent].push_back(iap);
@@ -756,7 +757,7 @@ void DCLGPS::LoadApproachData() {
 									// This is a new approach - store the last one and trigger
 									// starting afresh by setting the in progress flag to false.
 									if(iap_error) {
-										cout << "ERROR: Unable to load approach " << iap->_ident << " at " << iap->_aptIdent << '\n';
+										//cout << "ERROR: Unable to load approach " << iap->_ident << " at " << iap->_aptIdent << '\n';
 										nErrors++;
 									} else {
 										_np_iap[iap->_aptIdent].push_back(iap);
@@ -803,13 +804,21 @@ void DCLGPS::LoadApproachData() {
 									// Note: Currently fgFindAirportID returns NULL on error, but getRunwayByIdent throws an exception.
 									const FGAirport* apt = fgFindAirportID(iap->_aptIdent);
 									if(apt) {
+										string rwystr;
 										try {
-											// TODO - sanity check the waypoint ID to ensure we have a double digit number
-											FGRunway* rwy = apt->getRunwayByIdent(w.id.substr(2, 2));
+											rwystr = w.id.substr(2, 2);
+											// TODO - sanity check the rwystr at this point to ensure we have a double digit number
+											if(w.id.size() > 4) {
+												if(w.id[4] == 'L' || w.id[4] == 'C' || w.id[4] == 'R') {
+													rwystr += w.id[4];
+												}
+											}
+											FGRunway* rwy = apt->getRunwayByIdent(rwystr);
 											w.lat = rwy->begin().getLatitudeRad();
 											w.lon = rwy->begin().getLongitudeRad();
 										} catch(const sg_exception&) {
 											SG_LOG(SG_GENERAL, SG_WARN, "Unable to find runway " << w.id.substr(2, 2) << " at airport " << iap->_aptIdent);
+											//cout << "Unable to find runway " << w.id.substr(2, 2) << " at airport " << iap->_aptIdent << " ( w.id = " << w.id << ", rwystr = " << rwystr << " )\n";
 											wp_error = true;
 										}
 									} else {
@@ -850,7 +859,7 @@ void DCLGPS::LoadApproachData() {
 														if(iap->_IAP[iap->_IAP.size() - 1]->appType == GPS_APP_NONE) {
 															iap->_IAP[iap->_IAP.size() - 1]->appType = GPS_MAHP;
 														} else {
-															cout << "Waypoint is MAHP and another type! " << w.id << " [" << apt_ident << ", " << iap_ident << "]\n";
+															//cout << "Waypoint is MAHP and another type! " << w.id << " [" << apt_ident << ", " << iap_ident << "]\n";
 														}
 													}
 												}
@@ -922,7 +931,7 @@ void DCLGPS::LoadApproachData() {
 						// This is a new approach - store the last one and trigger
 						// starting afresh by setting the in progress flag to false.
 						if(iap_error) {
-							cout << "ERROR: Unable to load approach " << iap->_ident << " at " << iap->_aptIdent << '\n';
+							//cout << "ERROR: Unable to load approach " << iap->_ident << " at " << iap->_aptIdent << '\n';
 							nErrors++;
 						} else {
 							_np_iap[iap->_aptIdent].push_back(iap);
@@ -940,7 +949,7 @@ void DCLGPS::LoadApproachData() {
 	// TODO - sanity check that the approach has all the required elements
 	if(iap_in_progress) {
 		if(iap_error) {
-			cout << "ERROR: Unable to load approach " << iap->_ident << " at " << iap->_aptIdent << '\n';
+			//cout << "ERROR: Unable to load approach " << iap->_ident << " at " << iap->_aptIdent << '\n';
 			nErrors++;
 		} else {
 			_np_iap[iap->_aptIdent].push_back(iap);
@@ -949,9 +958,9 @@ void DCLGPS::LoadApproachData() {
 		}
 	}
 	
-	cout << "Done loading approach database\n";
-	cout << "Loaded: " << nLoaded << '\n';
-	cout << "Failed: " << nErrors << '\n';
+	//cout << "Done loading approach database\n";
+	//cout << "Loaded: " << nLoaded << '\n';
+	//cout << "Failed: " << nErrors << '\n';
 	
 	fin.close();
 }
