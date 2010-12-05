@@ -345,7 +345,7 @@ flightgear::WayptRef FGRouteMgr::removeWayptAtIndex(int aIndex)
 {
   int index = aIndex;
   if (aIndex < 0) { // negative indices count the the end
-    index = _route.size() -  index;
+    index = _route.size() + index;
   }
   
   if ((index < 0) || (index >= numWaypts())) {
@@ -1027,7 +1027,7 @@ void FGRouteMgr::jumpToIndex(int index)
 
 void FGRouteMgr::currentWaypointChanged()
 {
-  Waypt* cur = (_currentIndex<numWaypts()) ? currentWaypt() : NULL;
+  Waypt* cur = currentWaypt();
   Waypt* next = nextWaypt();
 
   wp0->getChild("id")->setStringValue(cur ? cur->ident() : "");
@@ -1050,6 +1050,8 @@ int FGRouteMgr::findWayptIndex(const SGGeod& aPos) const
 
 Waypt* FGRouteMgr::currentWaypt() const
 {
+  if ((_currentIndex < 0) || (_currentIndex >= numWaypts()))
+      return NULL;
   return wayptAtIndex(_currentIndex);
 }
 
@@ -1064,7 +1066,7 @@ Waypt* FGRouteMgr::previousWaypt() const
 
 Waypt* FGRouteMgr::nextWaypt() const
 {
-  if ((_currentIndex + 1) >= numWaypts()) {
+  if ((_currentIndex < 0) || ((_currentIndex + 1) >= numWaypts())) {
     return NULL;
   }
   
@@ -1353,4 +1355,3 @@ void FGRouteMgr::setDestinationICAO(const char* aIdent)
   
   arrivalChanged();
 }
-    
