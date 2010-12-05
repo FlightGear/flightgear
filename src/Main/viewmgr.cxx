@@ -42,9 +42,12 @@ FGViewMgr::FGViewMgr( void ) :
   inited(false),
   view_number(fgGetNode("/sim/current-view/view-number", true)),
   config_list(fgGetNode("/sim", true)->getChildren("view")),
-  current(0)
+  abs_viewer_position(SGVec3d::zeros()),
+  current(0),
+  current_view_orientation(SGQuatd::zeros()),
+  current_view_or_offset(SGQuatd::zeros()),
+  smgr(globals->get_soundmgr())
 {
-    smgr = globals->get_soundmgr();
 }
 
 // Destructor
