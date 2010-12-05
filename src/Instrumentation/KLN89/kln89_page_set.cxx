@@ -168,6 +168,17 @@ void KLN89SetPage::Update(double dt) {
 	case 11:
 		_kln89->DrawText("MIN DISPLAY", 2, 2, 3);
 		_kln89->DrawText("BRIGHTNESS ADJ", 2, 1, 2);
+		if(_kln89->_mode == KLN89_MODE_CRSR && _uLinePos == 1) {
+			if(!_kln89->_blink) {
+				_kln89->DrawChar('0' + _kln89->GetMinDisplayBrightness(), 2, 6, 0);
+			}
+			_kln89->Underline(2, 6, 0, 1);
+		} else {
+			_kln89->DrawChar('0' + _kln89->GetMinDisplayBrightness(), 2, 6, 0);
+		}
+		if(_kln89->GetMinDisplayBrightness() == 4) {
+			_kln89->DrawText("Default", 2, 8, 0);
+		}
 		break;
 	}
 	
@@ -208,6 +219,7 @@ void KLN89SetPage::CrsrPressed() {
 	case 10:
 		break;
 	case 11:
+		_maxULinePos = 1;
 		break;
 	}
 }
@@ -249,6 +261,11 @@ void KLN89SetPage::Knob2Left1() {
 				_kln89->SetDistVelUnitsSI(!_kln89->GetDistVelUnitsSI());
 			}
 			break;
+		case 11:
+			if(_uLinePos == 1) {
+				_kln89->DecrementMinDisplayBrightness();
+			}
+			break;
 		}
 	}
 }
@@ -288,6 +305,11 @@ void KLN89SetPage::Knob2Right1() {
 				_kln89->SetAltUnitsSI(!_kln89->GetAltUnitsSI());
 			} else if(_uLinePos == 3) {
 				_kln89->SetDistVelUnitsSI(!_kln89->GetDistVelUnitsSI());
+			}
+			break;
+		case 11:
+			if(_uLinePos == 1) {
+				_kln89->IncrementMinDisplayBrightness();
 			}
 			break;
 		}

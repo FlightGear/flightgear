@@ -227,6 +227,7 @@ KLN89::KLN89(RenderArea2D* instrument)
 	// Configuration.  Eventually this may be user-achivable in order that settings can be persistent between sessions.
 	_suaAlertEnabled = false;
 	_altAlertEnabled = false;
+	_minDisplayBrightness = 4;
 	
 	// Mega-hack - hardwire airport town and state names for the FG base area since we don't have any data for these at the moment
 	// TODO - do this better one day!
@@ -307,6 +308,17 @@ void KLN89::init() {
 void KLN89::update(double dt) {
 	// Run any positional calc's required first
 	DCLGPS::update(dt);
+	
+	// Set the display brightness.  This should be reduced in response to falling light
+	// (i.e. nighttime), or the user covering the photocell that detects the light level.
+	// At the moment I don't know how to detect nighttime or actual light level, so only
+	// respond to the photocell being obscured.
+	// TODO - reduce the brightness in response to nighttime / lowlight.
+	float rgba[4] = {1.0, 0.0, 0.0, 1.0};
+	if(fgGetBool("/instrumentation/kln89/photocell-obscured")) {
+		rgba[0] -= (9 - _minDisplayBrightness) * 0.05;
+	}
+	_instrument->SetPixelColor(rgba);
 	
 	_cum_dt += dt;
 	if(_blink) {
@@ -622,6 +634,22 @@ void KLN89::DtoInitiate(const string& id) {
 	// TODO - need to output a scratchpad message with the new course, but we don't know it yet!
 	// Call the base class to actually initiate the DTO.
 	DCLGPS::DtoInitiate(id);
+}
+
+void KLN89::SetMinDisplayBrightness(int n) {
+	_minDisplayBrightness = n;
+	if(_minDisplayBrightness < 1) _minDisplayBrightness = 1;
+	if(_minDisplayBrightness > 9) _minDisplayBrightness = 9;
+}
+
+void KLN89::DecrementMinDisplayBrightness() {
+	_minDisplayBrightness--;
+	if(_minDisplayBrightness < 1) _minDisplayBrightness = 1;
+}
+
+void KLN89::IncrementMinDisplayBrightness() {
+	_minDisplayBrightness++;
+	if(_minDisplayBrightness > 9) _minDisplayBrightness = 9;
 }
 
 void KLN89::DrawBar(int page) {

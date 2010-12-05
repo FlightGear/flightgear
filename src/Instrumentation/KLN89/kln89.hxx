@@ -87,6 +87,11 @@ public:
 	
 	inline void SetAltAlertEnabled(bool b) { _altAlertEnabled = b; }
 	inline bool GetAltAlertEnabled() { return(_altAlertEnabled); }
+
+	void SetMinDisplayBrightness(int n);	// Set minDisplayBrightness (between 1 and 9)
+	void DecrementMinDisplayBrightness();	// Decrease by 1
+	void IncrementMinDisplayBrightness();	// Increase by 1
+	inline int GetMinDisplayBrightness() { return(_minDisplayBrightness); }
 	
 	inline bool GetMsgAlert() const { return(!_messageStack.empty()); }
 	
@@ -296,6 +301,7 @@ private:
 	// Configuration settings that the user can set via. the KLN89 SET pages.
 	bool _suaAlertEnabled;		// Alert user to potential SUA entry
 	bool _altAlertEnabled;		// Alert user to min safe alt violation
+	int _minDisplayBrightness;	// Minimum display brightness in low light.
 };
 
 #endif  // _KLN89_HXX

@@ -45,13 +45,14 @@ RenderArea2D::RenderArea2D(int logx, int logy, int sizex, int sizey, int posx, i
     _clipy1 = 0;
     _clipy2 = _logy - 1;
     
+    // Default to black background / white text.
     _backgroundColor[0] = 0.0;
     _backgroundColor[1] = 0.0;
     _backgroundColor[2] = 0.0;
     _backgroundColor[3] = 1.0;
     _pixelColor[0] = 1.0;
-    _pixelColor[1] = 0.0;
-    _pixelColor[2] = 0.0;
+    _pixelColor[1] = 1.0;
+    _pixelColor[2] = 1.0;
     _pixelColor[3] = 1.0;
     
     _ra2d_debug = false;
@@ -115,6 +116,13 @@ void RenderArea2D::Draw(osg::State& state) {
 
 void RenderArea2D::Flush() {
     drawing_list.clear();
+}
+
+void RenderArea2D::SetPixelColor(const float* rgba) {
+    _pixelColor[0] = rgba[0];
+    _pixelColor[1] = rgba[1];
+    _pixelColor[2] = rgba[2];
+    _pixelColor[3] = rgba[3];
 }
 
 // Set clipping region in logical units
