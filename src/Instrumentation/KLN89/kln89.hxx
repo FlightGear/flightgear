@@ -292,6 +292,10 @@ private:
 	// Sometimes the datapages can be used to review a waypoint whilst the user makes a decision,
 	// and we need to remember why.
 	bool _dtoReview;	// Set true when we a reviewing a waypoint for DTO operation.
+	
+	// Configuration settings that the user can set via. the KLN89 SET pages.
+	bool _suaAlertEnabled;		// Alert user to potential SUA entry
+	bool _altAlertEnabled;		// Alert user to min safe alt violation
 };
 
 #endif  // _KLN89_HXX

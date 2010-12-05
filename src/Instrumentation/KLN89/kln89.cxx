@@ -224,6 +224,10 @@ KLN89::KLN89(RenderArea2D* instrument)
 	_mapScaleIndex = 7;	// I think that the above is more accurate for no-flightplan default, but this is more sane for initial testing!
 	_mapScaleAuto = true;
 	
+	// Configuration.  Eventually this may be user-achivable in order that settings can be persistent between sessions.
+	_suaAlertEnabled = false;
+	_altAlertEnabled = false;
+	
 	// Mega-hack - hardwire airport town and state names for the FG base area since we don't have any data for these at the moment
 	// TODO - do this better one day!
 	_airportTowns["KSFO"] = "San Francisco";

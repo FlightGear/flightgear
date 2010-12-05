@@ -211,8 +211,6 @@ DCLGPS::DCLGPS(RenderArea2D* instrument) {
 	// Configuration Initialisation
 	// Should this be in kln89.cxx ?
 	_turnAnticipationEnabled = false;
-	_suaAlertEnabled = false;
-	_altAlertEnabled = false;
         
 	_time = new SGTime;
 	

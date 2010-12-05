@@ -473,10 +473,6 @@ protected:
 	
 	// Configuration that affects flightplan operation
 	bool _turnAnticipationEnabled;
-	
-	// Configuration that affects general operation
-	bool _suaAlertEnabled;		// Alert user to potential SUA entry
-	bool _altAlertEnabled;		// Alert user to min safe alt violation
         
 	// Magvar stuff.  Might get some of this stuff (such as time) from FG in future.
 	SGTime* _time;
