@@ -1,0 +1,3 @@
+[submodule "simgear"]
+	path = simgear
+	url = http://git.gitorious.org/fg/simgear.git
