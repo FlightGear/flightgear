@@ -11,8 +11,11 @@
 
 #cmakedefine ENABLE_PLIB_JOYSTICK
 
-#define ENABLE_THREADS 1 // threads are required (used to be optional)
+// threads are required (used to be optional)
+#define ENABLE_THREADS 1 
 
+// audio support is assumed
+#define ENABLE_AUDIO_SUPPORT 1 
 
 #cmakedefine HAVE_SYS_TIME_H
 

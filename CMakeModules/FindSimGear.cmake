@@ -117,6 +117,45 @@ if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
 	endforeach()
 endif()
 
+# now we've found SimGear, check its version
+
+include(CheckCXXSourceRuns)
+
+
+message(STATUS "looking for version: ${SimGear_FIND_VERSION}")
+
+SET(CMAKE_REQUIRED_INCLUDES ${SIMGEAR_INCLUDE_DIR})
+#SET(CMAKE_REQUIRED_LIBRARIES ${SIMGEAR_LIBRARIES})
+
+check_cxx_source_runs(
+    "#include <simgear/version.h>
+
+	#define MIN_MAJOR 2
+	#define MIN_MINOR 0
+	#define MIN_MICRO 0
+	
+	int main() {
+	    int major, minor, micro;
+
+	    /* printf(%d.%d.%d or greater, , MIN_MAJOR, MIN_MINOR, MIN_MICRO); */
+	    printf(\"found %s ... \", STRINGIFY(SIMGEAR_VERSION));
+
+	    sscanf( STRINGIFY(SIMGEAR_VERSION), \"%d.%d.%d\", &major, &minor, &micro );
+
+	    if ( (major < MIN_MAJOR) ||
+	         (major == MIN_MAJOR && minor < MIN_MINOR) ||
+	         (major == MIN_MAJOR && minor == MIN_MINOR && micro < MIN_MICRO) ) {
+		 return -1;
+	    }
+
+	    return 0;
+	}
+    "
+    SIMGEAR_VERSION_OK)
+
+message(STATUS "Simgear version: ${SIMGEAR_VERSION_OK}")
+
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(SimGear DEFAULT_MSG SIMGEAR_LIBRARIES SIMGEAR_INCLUDE_DIR)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(SimGear DEFAULT_MSG 
+	 SIMGEAR_LIBRARIES SIMGEAR_INCLUDE_DIR)
 
