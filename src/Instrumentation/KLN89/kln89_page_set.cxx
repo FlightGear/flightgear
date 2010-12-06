@@ -76,6 +76,14 @@ void KLN89SetPage::Update(double dt) {
 		_kln89->DrawText("Character of", 2, 1, 2);
 		_kln89->DrawText("Wpt identifier", 2, 0, 1);
 		_kln89->DrawText("Entry:", 2, 3, 0);
+		if(_kln89->_mode == KLN89_MODE_CRSR && _uLinePos == 1) {
+			if(!_kln89->_blink) {
+				_kln89->DrawChar(_kln89->_defaultFirstChar, 2, 10, 0);
+			}
+			_kln89->Underline(2, 10, 0, 1);
+		} else {
+			_kln89->DrawChar(_kln89->_defaultFirstChar, 2, 10, 0);
+		}
 		break;
 	case 6:
 		_kln89->DrawText("NEAREST APT", 2, 1, 3);
@@ -203,6 +211,7 @@ void KLN89SetPage::CrsrPressed() {
 		_maxULinePos = 1;
 		break;
 	case 5:
+		_maxULinePos = 1;
 		break;
 	case 6:
 		_maxULinePos = 2;
@@ -241,6 +250,9 @@ void KLN89SetPage::Knob2Left1() {
 			}
 			break;
 		case 5:
+			if(_uLinePos == 1) {
+				_kln89->_defaultFirstChar = _kln89->DecChar(_kln89->_defaultFirstChar, false, true);
+			}
 			break;
 		case 6:
 			break;
@@ -287,6 +299,9 @@ void KLN89SetPage::Knob2Right1() {
 			}
 			break;
 		case 5:
+			if(_uLinePos == 1) {
+				_kln89->_defaultFirstChar = _kln89->IncChar(_kln89->_defaultFirstChar, false, true);
+			}
 			break;
 		case 6:
 			break;

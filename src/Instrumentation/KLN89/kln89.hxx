@@ -302,6 +302,7 @@ private:
 	bool _suaAlertEnabled;		// Alert user to potential SUA entry
 	bool _altAlertEnabled;		// Alert user to min safe alt violation
 	int _minDisplayBrightness;	// Minimum display brightness in low light.
+	char _defaultFirstChar;		// Default first waypoint character.
 };
 
 #endif  // _KLN89_HXX

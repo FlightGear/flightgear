@@ -228,6 +228,7 @@ KLN89::KLN89(RenderArea2D* instrument)
 	_suaAlertEnabled = false;
 	_altAlertEnabled = false;
 	_minDisplayBrightness = 4;
+	_defaultFirstChar = 'A';
 	
 	// Mega-hack - hardwire airport town and state names for the FG base area since we don't have any data for these at the moment
 	// TODO - do this better one day!

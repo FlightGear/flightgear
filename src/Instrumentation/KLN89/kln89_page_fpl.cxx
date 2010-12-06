@@ -1013,7 +1013,11 @@ void KLN89FplPage::Knob2Left1() {
             } else if(appWp) {
                 ShowScratchpadMessage("Invald", " Add  ");
             } else {
-                if((_wLinePos + 1) > _entWpStr.size()) {
+                if(!_entWpStr.size()) {
+                    _entWpStr += _kln89->DecChar(_kln89->_defaultFirstChar, false, true);
+                } else if((_wLinePos + 1) > _entWpStr.size()) {
+                    // I don't think we can ever reach this state since I think it only ever applies to the
+                    // first char and gets caught by the line above, but it can stay for now just in case.
                     _entWpStr += '9';
                 } else {
                     _entWpStr[_wLinePos] = _kln89->DecChar(_entWpStr[_wLinePos], (_wLinePos == 0 ? false : true));
@@ -1093,7 +1097,11 @@ void KLN89FplPage::Knob2Right1() {
             } else if(appWp) {
                 ShowScratchpadMessage("Invald", " Add  ");
             } else {
-                if((_wLinePos + 1) > _entWpStr.size()) {
+                if(!_entWpStr.size()) {
+                    _entWpStr += _kln89->_defaultFirstChar;
+                } else if((_wLinePos + 1) > _entWpStr.size()) {
+                    // I don't think we can ever reach this state since I think it only ever applies to the
+                    // first char and gets caught by the line above, but it can stay for now just in case.
                     _entWpStr += 'A';
                 } else {
                     _entWpStr[_wLinePos] = _kln89->IncChar(_entWpStr[_wLinePos], (_wLinePos == 0 ? false : true));
