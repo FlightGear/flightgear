@@ -818,6 +818,7 @@ void ScrolledWaypointList::setScrollPercent(float v)
 void ScrolledWaypointList::setSize(int w, int h)
 {
   updateWantsScroll(w, h);
+  puGroup::setSize(w, h);
 }
 
 void ScrolledWaypointList::updateWantsScroll(int w, int h)

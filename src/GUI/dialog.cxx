@@ -1376,4 +1376,36 @@ int fgComboBox::checkHit(int b, int up, int x, int y)
   return r;
 }
 
+void fgComboBox::setSize(int w, int h)
+{
+  puaComboBox::setSize(w, h);
+  recalc_bbox();
+}
+
+void fgComboBox::recalc_bbox()
+{
+// bug-fix for issue #192
+// http://code.google.com/p/flightgear-bugs/issues/detail?id=192
+// puaComboBox is including the height of its popupMenu in the height
+// computation, which breaks layout computations.
+// this implementation skips popup-menus
+  
+  puBox contents;
+  contents.empty();
+  
+  for (puObject *bo = dlist; bo != NULL; bo = bo -> getNextObject()) {
+    if (bo->getType() & PUCLASS_POPUPMENU) {
+      continue;
+    }
+    
+    contents.extend (bo -> getBBox()) ;
+  }
+  
+  abox.max[0] = abox.min[0] + contents.max[0] ;
+  abox.max[1] = abox.min[1] + contents.max[1] ;
+
+  puObject::recalc_bbox () ;
+
+}
+
 // end of dialog.cxx
