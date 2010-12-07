@@ -80,7 +80,7 @@ void LayoutWidget::calcPrefSize(int* w, int* h)
         if(getBool("vertical")) *w = 4*UNIT;
         else                    *h = 4*UNIT;
     } else if (isType("list") || isType("airport-list")
-            || isType("property-list") || isType("dial")) {
+            || isType("property-list") || isType("dial") || isType("waypointlist")) {
         *w = *h = 12*UNIT;
     } else if (isType("hrule")) {
         *h = 1;

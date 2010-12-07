@@ -266,8 +266,11 @@ public:
         
     void update();
     
+    virtual void setSize(int w, int h);
+    
     virtual int checkHit(int b, int up, int x, int y);
-
+    
+    virtual void recalc_bbox();
 private:
     bool _inHit;
 };
