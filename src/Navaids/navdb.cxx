@@ -34,6 +34,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sgstream.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include "navrecord.hxx"
 #include "navlist.hxx"
@@ -41,8 +42,15 @@
 #include <Main/globals.hxx>
 #include <Navaids/markerbeacon.hxx>
 #include <Airports/simple.hxx>
+#include <Airports/runways.hxx>
+#include <Airports/xmlloader.hxx>
+#include <Main/fg_props.hxx>
 
 using std::string;
+
+typedef std::map<FGAirport*, SGPropertyNode_ptr> AirportPropertyMap;
+
+static AirportPropertyMap static_airportIlsData;
 
 static FGPositioned::Type
 mapRobinTypeToFGPType(int aTy)
@@ -223,7 +231,60 @@ bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
  // end ReadChanFile
 
 
+  // flush all the parsed ils.xml data, we don't need it anymore,
+  // since it's been meregd into the FGNavRecords
+    static_airportIlsData.clear();
+
     return true;
+}
+
+SGPropertyNode* ilsDataForRunwayAndNavaid(FGRunway* aRunway, const std::string& aNavIdent)
+{
+  if (!fgGetBool("/sim/paths/use-custom-scenery-data")) {
+    return NULL; 
+  }
+  
+  if (!aRunway) {
+    return NULL;
+  }
+  
+  FGAirport* apt = aRunway->airport();
+// find (or load) the airprot ILS data
+  AirportPropertyMap::iterator it = static_airportIlsData.find(apt);
+  if (it == static_airportIlsData.end()) {
+    SGPath path;
+    if (!XMLLoader::findAirportData(apt->ident(), "ils", path)) {
+    // no ils.xml file for this airpot, insert a NULL entry so we don't
+    // check again
+      static_airportIlsData.insert(it, std::make_pair(apt, SGPropertyNode_ptr()));
+      return NULL;
+    }
+    
+    SGPropertyNode_ptr rootNode = new SGPropertyNode;
+    readProperties(path.str(), rootNode);
+    it = static_airportIlsData.insert(it, std::make_pair(apt, rootNode));
+  } // of ils.xml file not loaded
+  
+  if (!it->second) {
+    return NULL;
+  }
+  
+// find the entry matching the runway
+  SGPropertyNode* runwayNode, *ilsNode;
+  for (int i=0; (runwayNode = it->second->getChild("runway", i)) != NULL; ++i) {
+    for (int j=0; (ilsNode = runwayNode->getChild("ils", j)) != NULL; ++j) {
+      // must match on both nav-ident and runway ident, to support the following:
+      // - runways with multiple distinct ILS installations (KEWD, for example)
+      // - runways where both ends share the same nav ident (LFAT, for example)
+      if ((ilsNode->getStringValue("nav-id") == aNavIdent) &&
+          (ilsNode->getStringValue("rwy") == aRunway->ident())) 
+      {
+        return ilsNode;
+      }
+    } // of ILS iteration
+  } // of runway iteration
+
+  return NULL;
 }
 
 FGRunway* getRunwayFromName(const std::string& aName)

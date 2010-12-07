@@ -32,7 +32,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/sg_inlines.h>
 #include <simgear/props/props.hxx>
-#include <simgear/props/props_io.hxx>
+
 
 #include <Navaids/navrecord.hxx>
 #include <Navaids/navdb.hxx>
@@ -97,7 +97,10 @@ void FGNavRecord::initAirportRelation()
   }
   
   if (type() != GS) {
-    readAirportSceneryData();
+    SGPropertyNode* ilsData = ilsDataForRunwayAndNavaid(mRunway, ident());
+    if (ilsData) {
+      processSceneryILS(ilsData);
+    }
   }
         
   // fudge elevation to the runway elevation if it's not specified
@@ -119,36 +122,6 @@ void FGNavRecord::initAirportRelation()
      = fgGetDouble( "/sim/navdb/localizers/auto-align-threshold-deg", 5.0 );
     alignLocaliserWithRunway(threshold);
   }
-}
-
-void FGNavRecord::readAirportSceneryData()
-{
-  // allow users to disable the scenery data in the short-term
-  // longer term, this option can probably disappear
-  if (!fgGetBool("/sim/use-scenery-airport-data")) {
-    return; 
-  }
-  
-  SGPath path;
-  SGPropertyNode_ptr rootNode = new SGPropertyNode;
-  if (!XMLLoader::findAirportData(mRunway->airport()->ident(), "ils", path)) {
-    return;
-  }
-  
-  readProperties(path.str(), rootNode);
-  SGPropertyNode* runwayNode, *ilsNode;
-  for (int i=0; (runwayNode = rootNode->getChild("runway", i)) != NULL; ++i) {
-    for (int j=0; (ilsNode = runwayNode->getChild("ils", j)) != NULL; ++j) {
-      // must match on both nav-ident and runway ident, to support the following:
-      // - runways with multiple distinct ILS installations (KEWD, for example)
-      // - runways where both ends share the same nav ident (LFAT, for example)
-      if ((ilsNode->getStringValue("nav-id") == ident()) &&
-          (ilsNode->getStringValue("rwy") == mRunway->ident())) {
-        processSceneryILS(ilsNode);
-        return;
-      }
-    } // of ILS iteration
-  } // of runway iteration
 }
 
 void FGNavRecord::processSceneryILS(SGPropertyNode* aILSNode)

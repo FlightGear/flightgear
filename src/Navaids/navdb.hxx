@@ -38,6 +38,13 @@ bool fgNavDBInit( FGNavList *navlist, FGNavList *loclist, FGNavList *gslist,
 
 
 /**
+ * Return the property node corresponding to the runway ILS installation,
+ * from the Airports/I/C/A/ICAO.ils.xml file (loading it if necessary)
+ * returns NULL is no ILS data is defined for the runway.
+ */
+SGPropertyNode* ilsDataForRunwayAndNavaid(FGRunway* aRunway, const std::string& aNavIdent);
+
+/**
  * Helper to map a nav.data name (eg 'KBWI 33R GS') into a FGRunway reference.
  * returns NULL, and complains loudly, if the airport/runway is not found.
  */
