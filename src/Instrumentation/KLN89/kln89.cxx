@@ -606,8 +606,11 @@ void KLN89::AltPressed() {}
 void KLN89::OBSPressed() {
 	ToggleOBSMode();
 	if(_obsMode) {
-		// if(ORS 02)
-		_mode = KLN89_MODE_CRSR;
+		if(!fgGetBool("/instrumentation/nav/slaved-to-gps")) {
+			// NOTE: this only applies to ORS 02 firmware, in ORS 01
+			// CRSR mode is not automatically set when OBS is started.
+			_mode = KLN89_MODE_CRSR;
+		}
 		_activePage->OBSPressed();
 	}
 }

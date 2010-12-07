@@ -83,7 +83,9 @@ void KLN89NavPage::Update(double dt) {
 			}
 			_kln89->DrawText(awp->id, 2, 10, 3);
 			if(!_kln89->_dto && !_kln89->_obsMode && !_kln89->_fromWaypoint.id.empty()) {
-				_kln89->DrawText(_kln89->_fromWaypoint.id, 2, 1, 3);
+				if(_kln89->_fromWaypoint.type != GPS_WP_VIRT) {		// Don't draw the virtual waypoint names
+					_kln89->DrawText(_kln89->_fromWaypoint.id, 2, 1, 3);
+				}
 			}
 			if(!(crsr && blink && _uLinePos == 1)) {
 				if(_cdiFormat == 0) {

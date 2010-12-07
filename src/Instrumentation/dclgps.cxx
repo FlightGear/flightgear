@@ -489,8 +489,7 @@ void DCLGPS::update(double dt) {
 						_fromWaypoint = _activeWaypoint;
 						_activeWaypoint = *_activeFP->waypoints[idx + 1];
 						_dto = false;
-						// TODO - course alteration message format is dependent on whether we are slaved HSI/CDI indicator or not.
-						// For now assume we are not.
+						// Course alteration message format is dependent on whether we are slaved HSI/CDI indicator or not.
 						string s;
 						if(fgGetBool("/instrumentation/nav[0]/slaved-to-gps")) {
 							// TODO - avoid the hardwiring on nav[0]
@@ -1010,7 +1009,7 @@ void DCLGPS::DtoInitiate(const string& s) {
 		_fromWaypoint.lat = _gpsLat;
 		_fromWaypoint.lon = _gpsLon;
 		_fromWaypoint.type = GPS_WP_VIRT;
-		_fromWaypoint.id = "DTOWP";
+		_fromWaypoint.id = "_DTOWP_";
 		delete wp;
 	} else {
 		// TODO - Should bring up the user waypoint page.
@@ -1030,9 +1029,37 @@ void DCLGPS::DtoCancel() {
 void DCLGPS::ToggleOBSMode() {
 	_obsMode = !_obsMode;
 	if(_obsMode) {
-		if(!_activeWaypoint.id.empty()) {
-			_obsHeading = static_cast<int>(_dtkMag);
+		// We need to set the OBS heading.  The rules for this are:
+		//
+		// If the KLN89 is connected to an external HSI or CDI, then the OBS heading must be set
+		// to the OBS radial on the external indicator, and cannot be changed in the KLN89.
+		//
+		// If the KLN89 is not connected to an external indicator, then:
+		// 		If there is an active waypoint, the OBS heading is set such that the
+		//		deviation indicator remains at the same deviation (i.e. set to DTK, 
+		//		although there may be some small difference).
+		//
+		//		If there is not an active waypoint, I am not sure what value should be
+		//		set.
+		//
+		if(fgGetBool("/instrumentation/nav/slaved-to-gps")) {
+			_obsHeading = static_cast<int>(fgGetDouble("/instrumentation/nav/radials/selected-deg") + 0.5);
+		} else if(!_activeWaypoint.id.empty()) {
+			// NOTE: I am not sure if this is completely correct.  There are sometimes small differences
+			// between DTK and default OBS heading in the simulator (~ 1 or 2 degrees).  It might also
+			// be that OBS heading should be stored as float and only displayed as int, in order to maintain
+			// the initial bar deviation?
+			_obsHeading = static_cast<int>(_dtkMag + 0.5);
+			//cout << "_dtkMag = " << _dtkMag << ", _dtkTrue = " << _dtkTrue << ", _obsHeading = " << _obsHeading << '\n';
+		} else {
+			// TODO - what should we really do here?
+			_obsHeading = 0;
 		}
+		
+		// Valid OBS heading values are 0 -> 359 degrees inclusive (from kln89 simulator).
+		if(_obsHeading > 359) _obsHeading -= 360;
+		if(_obsHeading < 0) _obsHeading += 360;
+		
 		// TODO - the _fromWaypoint location will change as the OBS heading changes.
 		// Might need to store the OBS initiation position somewhere in case it is needed again.
 		SetOBSFromWaypoint();
@@ -1046,7 +1073,8 @@ void DCLGPS::SetOBSFromWaypoint() {
 	
 	// TODO - base the 180 deg correction on the to/from flag.
 	_fromWaypoint = GetPositionOnMagRadial(_activeWaypoint, 10, _obsHeading + 180.0);
-	_fromWaypoint.id = "OBSWP";
+	_fromWaypoint.type = GPS_WP_VIRT;
+	_fromWaypoint.id = "_OBSWP_";
 }
 
 void DCLGPS::CDIFSDIncrease() {
