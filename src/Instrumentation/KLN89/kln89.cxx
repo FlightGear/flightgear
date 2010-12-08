@@ -357,11 +357,11 @@ void KLN89::update(double dt) {
 		}
 	}
 	
+	// Draw the indicator that shows which page we are on.
 	if(_curPage == 6 && _activePage->GetSubPage() == 3) {
 		// Don't draw the bar on the nav-4 page
-	} else if(_activePage == _nrst_page) {
-		// Don't draw the bar on the nearest page
-	} else {
+	} else if((_activePage != _nrst_page) && (_activePage != _dir_page) && (!_dispMsg)) {
+		// Don't draw the bar on the NRST, DTO or MSG pages
 		DrawBar(_curPage);
 	}
 	
