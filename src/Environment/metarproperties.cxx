@@ -239,26 +239,46 @@ void MetarProperties::set_metar( const char * metar )
         unsigned layerOffset = 0; // Oh, this is ugly!
         bool setGroundCloudLayer = _rootNode->getBoolValue("set-ground-cloud-layer", false );
 
-        if( setGroundCloudLayer && isFG ) {
-            // make sure fog actually starts at ground and set it's bottom at a constant
+        if( setGroundCloudLayer ) {
+            // create a cloud layer #0 starting at the ground if its fog, mist or haze
+
+            // make sure layer actually starts at ground and set it's bottom at a constant
             // value below the station's elevation
             const double LAYER_BOTTOM_BELOW_STATION_ELEVATION=200;
 
-            // fog - create a cloud layer #0 starting at the ground
+            SGMetarCloud::Coverage coverage = SGMetarCloud::COVERAGE_NIL;
+            double thickness = 0;
+            double alpha = 1.0;
+
+            if( isFG ) { // fog
+                coverage = isBC ? SGMetarCloud::COVERAGE_SCATTERED : SGMetarCloud::COVERAGE_BROKEN;
+                thickness = isMI ? 
+                   30 + LAYER_BOTTOM_BELOW_STATION_ELEVATION : // shallow fog, 10m/30ft
+                   500 + LAYER_BOTTOM_BELOW_STATION_ELEVATION; // fog, 150m/500ft
+                alpha = 1.0;
+
+            } else if( isBR ) { // mist
+                coverage = SGMetarCloud::COVERAGE_OVERCAST;
+                thickness = 2000 + LAYER_BOTTOM_BELOW_STATION_ELEVATION;
+                alpha = 0.8;
+            } else if( isHZ ) { // hase
+                coverage = SGMetarCloud::COVERAGE_OVERCAST;
+                thickness = 2000 + LAYER_BOTTOM_BELOW_STATION_ELEVATION;
+                alpha = 0.6;
+            }
             // fog is "overcast" by default of "broken" for patches of fog
-            SGPropertyNode_ptr layerNode = cloudsNode->getChild(LAYER, 0, true );
-            SGMetarCloud::Coverage coverage = isBC ? SGMetarCloud::COVERAGE_SCATTERED : SGMetarCloud::COVERAGE_BROKEN;
-            layerNode->setDoubleValue( "coverage-type", SGCloudLayer::getCoverageType(coverage_string[coverage]) );
-            layerNode->setStringValue( "coverage", coverage_string[coverage] );
-            layerNode->setDoubleValue( "elevation-ft", _station_elevation - LAYER_BOTTOM_BELOW_STATION_ELEVATION );
-            layerNode->setDoubleValue( "thickness-ft", isMI ? 
-               30 + LAYER_BOTTOM_BELOW_STATION_ELEVATION : // shallow fog, 10m/30ft
-               500 + LAYER_BOTTOM_BELOW_STATION_ELEVATION ); // fog, 150m/500ft
-            layerNode->setDoubleValue( "visibility-m", _min_visibility );
-            _min_visibility = _max_visibility = 20000.0; // assume good visibility above the fog
-            layerOffset = 1;  // shudder
-        } else if( setGroundCloudLayer && isHZ ) {
-        }
+            if( coverage != SGMetarCloud::COVERAGE_NIL ) {
+                SGPropertyNode_ptr layerNode = cloudsNode->getChild(LAYER, 0, true );
+                layerNode->setDoubleValue( "coverage-type", SGCloudLayer::getCoverageType(coverage_string[coverage]) );
+                layerNode->setStringValue( "coverage", coverage_string[coverage] );
+                layerNode->setDoubleValue( "elevation-ft", _station_elevation - LAYER_BOTTOM_BELOW_STATION_ELEVATION );
+                layerNode->setDoubleValue( "thickness-ft", thickness );
+                layerNode->setDoubleValue( "visibility-m", _min_visibility );
+                layerNode->setDoubleValue( "alpha", alpha );
+                _min_visibility = _max_visibility = 20000.0; // assume good visibility above the fog
+                layerOffset = 1;  // shudder
+            }
+        } 
 
         for( unsigned i = 0; i < 5-layerOffset; i++ ) {
             SGPropertyNode_ptr layerNode = cloudsNode->getChild(LAYER, i+layerOffset, true );
