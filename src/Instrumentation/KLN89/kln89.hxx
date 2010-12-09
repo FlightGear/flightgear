@@ -67,6 +67,7 @@ class KLN89 : public DCLGPS {
 	friend class KLN89CalPage;
 	friend class KLN89SetPage;
 	friend class KLN89OthPage;
+	friend class KLN89AltPage;
 	friend class KLN89DirPage;
 	friend class KLN89NrstPage;
 	
@@ -226,6 +227,8 @@ private:
 	bool _jumpRestoreCrsr;	// Indicates that jump back at this point should restore cursor mode.
 	
 	// Misc pages that aren't in the cyclic list.
+	// ALT
+	KLN89Page* _alt_page;
 	// Direct To
 	KLN89Page* _dir_page;
 	// Nearest
@@ -303,6 +306,15 @@ private:
 	bool _altAlertEnabled;		// Alert user to min safe alt violation
 	int _minDisplayBrightness;	// Minimum display brightness in low light.
 	char _defaultFirstChar;		// Default first waypoint character.
+	
+	// The user-settable barometric pressure.
+	// This can be set in the range 22.00 -> 32.99", or 745 -> 1117mB/hPa.
+	// For user input, we maintain a single integer value that is either between 2200 and 3299 (")
+	// or between 745 and 1117 (mB/hPa).  It gets converted from one to the other only when the
+	// units are changed.
+	// For internal VNAV calculations (which we don't currently do) this will be converted to a floating
+	// point value before use.
+	int _userBaroSetting;
 };
 
 #endif  // _KLN89_HXX

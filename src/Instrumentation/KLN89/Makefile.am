@@ -4,6 +4,7 @@ libKLN89_a_SOURCES = \
 	kln89.cxx kln89.hxx \
 	kln89_page.cxx kln89_page.hxx \
 	kln89_page_act.cxx kln89_page_act.hxx \
+	kln89_page_alt.cxx kln89_page_alt.hxx \
 	kln89_page_apt.cxx kln89_page_apt.hxx \
 	kln89_page_cal.cxx kln89_page_cal.hxx \
 	kln89_page_dir.cxx kln89_page_dir.hxx \

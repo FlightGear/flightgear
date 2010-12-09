@@ -38,6 +38,7 @@
 #include "kln89_page_cal.hxx"
 #include "kln89_page_set.hxx"
 #include "kln89_page_oth.hxx"
+#include "kln89_page_alt.hxx"
 #include "kln89_page_dir.hxx"
 #include "kln89_page_nrst.hxx"
 #include "kln89_symbols.hxx"
@@ -189,6 +190,7 @@ KLN89::KLN89(RenderArea2D* instrument)
 	_curPage = 0;
 	
 	// Other pages
+	_alt_page = new KLN89AltPage(this);
 	_dir_page = new KLN89DirPage(this);
 	_nrst_page = new KLN89NrstPage(this);
 	
@@ -197,6 +199,12 @@ KLN89::KLN89(RenderArea2D* instrument)
 	_dto = false;
 	_fullLegMode = true;
 	_obsHeading = 215;
+	
+	if(_baroUnits == GPS_PRES_UNITS_IN) {
+		_userBaroSetting = 2992;
+	} else {
+		_userBaroSetting = 1013;
+	}
 	
 	_maxFlightPlans = 26;
 	for(unsigned int i=0; i<_maxFlightPlans; ++i) {
@@ -270,6 +278,7 @@ KLN89::~KLN89() {
 		delete _pages[i];
 	}
 	
+	delete _alt_page;
 	delete _dir_page;
 	delete _nrst_page;
 	
@@ -360,7 +369,7 @@ void KLN89::update(double dt) {
 	// Draw the indicator that shows which page we are on.
 	if(_curPage == 6 && _activePage->GetSubPage() == 3) {
 		// Don't draw the bar on the nav-4 page
-	} else if((_activePage != _nrst_page) && (_activePage != _dir_page) && (!_dispMsg)) {
+	} else if((_activePage != _nrst_page) && (_activePage != _dir_page) && (_activePage != _alt_page) && (!_dispMsg)) {
 		// Don't draw the bar on the NRST, DTO or MSG pages
 		DrawBar(_curPage);
 	}
@@ -601,7 +610,25 @@ void KLN89::NrstPressed() {
 	}
 }
 	
-void KLN89::AltPressed() {}
+void KLN89::AltPressed() {
+	if(_activePage != _alt_page) {
+		_activePage->LooseFocus();	// TODO - check whether we should call loose focus here
+		_lastActivePage = _activePage;
+		_alt_page->SetSubPage(0);
+		_activePage = _alt_page;
+		_lastMode = _mode;
+		_mode = KLN89_MODE_CRSR;
+	} else {
+		_alt_page->LooseFocus();
+		if(_alt_page->GetSubPage() == 0) {
+			_alt_page->SetSubPage(1);
+			_mode = KLN89_MODE_CRSR;
+		} else {
+			_activePage = _lastActivePage;
+			_mode = _lastMode;
+		}
+	}
+}
 
 void KLN89::OBSPressed() {
 	ToggleOBSMode();
