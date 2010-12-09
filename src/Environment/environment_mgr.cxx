@@ -156,7 +156,9 @@ FGEnvironmentMgr::bind ()
         &FGEnvironmentMgr::get_cloud_layer_visibility_m,
         &FGEnvironmentMgr::set_cloud_layer_visibility_m);
 
-
+    _tiedProperties.Tie( layerNode->getNode( "alpha",true), this, i,
+        &FGEnvironmentMgr::get_cloud_layer_maxalpha,
+        &FGEnvironmentMgr::set_cloud_layer_maxalpha);
   }
 
   _tiedProperties.setRoot( fgGetNode("/sim/rendering", true ) );
@@ -331,6 +333,19 @@ FGEnvironmentMgr::set_cloud_layer_visibility_m (int index, double visibility_m)
 {
     thesky->get_cloud_layer(index)->setVisibility_m(visibility_m);
 }
+
+double 
+FGEnvironmentMgr::get_cloud_layer_maxalpha (int index ) const
+{
+    return thesky->get_cloud_layer(index)->getMaxAlpha();
+}
+
+void 
+FGEnvironmentMgr::set_cloud_layer_maxalpha (int index, double maxalpha)
+{
+    thesky->get_cloud_layer(index)->setMaxAlpha(maxalpha);
+}
+
 
 
 

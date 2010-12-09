@@ -89,6 +89,8 @@ private:
   void set_cloud_layer_coverage_type (int index, int type );
   double get_cloud_layer_visibility_m (int index) const;
   void set_cloud_layer_visibility_m (int index, double visibility_m);
+  double get_cloud_layer_maxalpha (int index ) const;
+  void set_cloud_layer_maxalpha (int index, double maxalpha);
 
   FGEnvironment * _environment;	// always the same, for now
   FGClouds *fgClouds;
