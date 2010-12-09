@@ -152,12 +152,6 @@ DCLGPS::DCLGPS(RenderArea2D* instrument) {
 	_instrument = instrument;
 	_nFields = 1;
 	_maxFields = 2;
-	
-	// Units - lets default to US units - FG can set them to other units from config during startup if desired.
-	_altUnits = GPS_ALT_UNITS_FT;
-	_baroUnits = GPS_PRES_UNITS_IN;
-	_velUnits = GPS_VEL_UNITS_KT;
-	_distUnits = GPS_DIST_UNITS_NM;
 
 	_lon_node = fgGetNode("/instrumentation/gps/indicated-longitude-deg", true);
 	_lat_node = fgGetNode("/instrumentation/gps/indicated-latitude-deg", true);
@@ -1096,16 +1090,6 @@ void DCLGPS::DrawChar(char c, int field, int px, int py, bool bold) {
 }
 
 void DCLGPS::DrawText(const string& s, int field, int px, int py, bool bold) {
-}
-
-void DCLGPS::SetBaroUnits(int n, bool wrap) {
-	if(n < 1) {
-		_baroUnits = (GPSPressureUnits)(wrap ? 3 : 1);
-	} else if(n > 3) {
-		_baroUnits = (GPSPressureUnits)(wrap ? 1 : 3);
-	} else {
-		_baroUnits = (GPSPressureUnits)n;
-	}
 }
 
 void DCLGPS::CreateDefaultFlightPlans() {}

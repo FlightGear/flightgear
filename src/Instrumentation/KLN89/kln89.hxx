@@ -41,6 +41,27 @@ enum KLN89Mode {
 	KLN89_MODE_CRSR
 };
 
+enum KLN89DistanceUnits {
+	GPS_DIST_UNITS_NM = 0,
+	GPS_DIST_UNITS_KM
+};
+
+enum KLN89SpeedUnits {
+	GPS_VEL_UNITS_KT,
+	GPS_VEL_UNITS_KPH
+};
+
+enum KLN89AltitudeUnits {
+	GPS_ALT_UNITS_FT,
+	GPS_ALT_UNITS_M
+};
+
+enum KLN89PressureUnits {
+	GPS_PRES_UNITS_IN = 1,
+	GPS_PRES_UNITS_MB,
+	GPS_PRES_UNITS_HP
+};
+
 /*
 const char* KLN89TimeCodes[20] = { "UTC", "GST", "GDT", "ATS", "ATD", "EST", "EDT", "CST", "CDT", "MST", 
                                    "MDT", "PST", "PDT", "AKS", "AKD", "HAS", "HAD", "SST", "SDT", "LCL" };
@@ -79,6 +100,20 @@ public:
 	void unbind();
 	void init();
 	void update(double dt);
+	
+	// Set Units
+	// m if true, ft if false
+	inline void SetAltUnitsSI(bool b) { _altUnits = (b ? GPS_ALT_UNITS_M : GPS_ALT_UNITS_FT); }
+	// Returns true if alt units are SI (m), false if ft
+	inline bool GetAltUnitsSI() { return(_altUnits == GPS_ALT_UNITS_M ? true : false); }
+	// km and k/h if true, nm and kt if false
+	inline void SetDistVelUnitsSI(bool b) { _distUnits = (b ? GPS_DIST_UNITS_KM : GPS_DIST_UNITS_NM); _velUnits = (b ? GPS_VEL_UNITS_KPH : GPS_VEL_UNITS_KT); }
+	// Returns true if dist/vel units are SI
+	inline bool GetDistVelUnitsSI() { return(_distUnits == GPS_DIST_UNITS_KM && _velUnits == GPS_VEL_UNITS_KPH ? true : false); }
+	// Set baro units - 1 = in, 2 = mB, 3 = hP   Wrapping if for the convienience of the GPS setter.
+	void SetBaroUnits(int n, bool wrap = false);
+	// Get baro units: 1 = in, 2 = mB, 3 = hP
+	inline int GetBaroUnits() { return((int)_baroUnits); }
 	
 	inline void SetTurnAnticipation(bool b) { _turnAnticipationEnabled = b; }
 	inline bool GetTurnAnticipation() { return(_turnAnticipationEnabled); }
@@ -302,6 +337,10 @@ private:
 	bool _dtoReview;	// Set true when we a reviewing a waypoint for DTO operation.
 	
 	// Configuration settings that the user can set via. the KLN89 SET pages.
+	KLN89SpeedUnits _velUnits;
+	KLN89DistanceUnits _distUnits;
+	KLN89PressureUnits _baroUnits;
+	KLN89AltitudeUnits _altUnits;
 	bool _suaAlertEnabled;		// Alert user to potential SUA entry
 	bool _altAlertEnabled;		// Alert user to min safe alt violation
 	int _minDisplayBrightness;	// Minimum display brightness in low light.

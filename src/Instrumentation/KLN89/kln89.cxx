@@ -199,6 +199,16 @@ KLN89::KLN89(RenderArea2D* instrument)
 	_dto = false;
 	_fullLegMode = true;
 	_obsHeading = 215;
+
+	// User-settable configuration.  Eventually this should be user-achivable in order that settings can be persistent between sessions.
+	_altUnits = GPS_ALT_UNITS_FT;
+	_baroUnits = GPS_PRES_UNITS_IN;
+	_velUnits = GPS_VEL_UNITS_KT;
+	_distUnits = GPS_DIST_UNITS_NM;
+	_suaAlertEnabled = false;
+	_altAlertEnabled = false;
+	_minDisplayBrightness = 4;
+	_defaultFirstChar = 'A';	
 	
 	if(_baroUnits == GPS_PRES_UNITS_IN) {
 		_userBaroSetting = 2992;
@@ -231,12 +241,6 @@ KLN89::KLN89(RenderArea2D* instrument)
 	//_mapScaleIndex = 20;
 	_mapScaleIndex = 7;	// I think that the above is more accurate for no-flightplan default, but this is more sane for initial testing!
 	_mapScaleAuto = true;
-	
-	// Configuration.  Eventually this may be user-achivable in order that settings can be persistent between sessions.
-	_suaAlertEnabled = false;
-	_altAlertEnabled = false;
-	_minDisplayBrightness = 4;
-	_defaultFirstChar = 'A';
 	
 	// Mega-hack - hardwire airport town and state names for the FG base area since we don't have any data for these at the moment
 	// TODO - do this better one day!
@@ -460,6 +464,16 @@ void KLN89::CreateDefaultFlightPlans() {
 	wps.push_back(GPS_WP_APT);
 	CreateFlightPlan(_flightPlans[0], ids, wps);
 	*/
+}
+
+void KLN89::SetBaroUnits(int n, bool wrap) {
+	if(n < 1) {
+		_baroUnits = (KLN89PressureUnits)(wrap ? 3 : 1);
+	} else if(n > 3) {
+		_baroUnits = (KLN89PressureUnits)(wrap ? 1 : 3);
+	} else {
+		_baroUnits = (KLN89PressureUnits)n;
+	}
 }
 
 void KLN89::Knob1Right1() {

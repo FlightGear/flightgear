@@ -43,27 +43,6 @@ class FGNavRecord;
 class FGAirport;
 class FGFix;
 
-enum GPSDistanceUnits {
-	GPS_DIST_UNITS_NM = 0,
-	GPS_DIST_UNITS_KM
-};
-
-enum GPSSpeedUnits {
-	GPS_VEL_UNITS_KT,
-	GPS_VEL_UNITS_KPH
-};
-
-enum GPSAltitudeUnits {
-	GPS_ALT_UNITS_FT,
-	GPS_ALT_UNITS_M
-};
-
-enum GPSPressureUnits {
-	GPS_PRES_UNITS_IN = 1,
-	GPS_PRES_UNITS_MB,
-	GPS_PRES_UNITS_HP
-};
-
 // --------------------- Waypoint / Flightplan stuff -----------------------------
 // This should be merged with other similar stuff in FG at some point.
 
@@ -216,20 +195,6 @@ public:
 	// Set the number of fields
 	inline void SetNumFields(int n) { _nFields = (n > _maxFields ? _maxFields : (n < 1 ? 1 : n)); }
 	
-	// Set Units
-	// m if true, ft if false
-	inline void SetAltUnitsSI(bool b) { _altUnits = (b ? GPS_ALT_UNITS_M : GPS_ALT_UNITS_FT); }
-	// Returns true if alt units are SI (m), false if ft
-	inline bool GetAltUnitsSI() { return(_altUnits == GPS_ALT_UNITS_M ? true : false); }
-	// km and k/h if true, nm and kt if false
-	inline void SetDistVelUnitsSI(bool b) { _distUnits = (b ? GPS_DIST_UNITS_KM : GPS_DIST_UNITS_NM); _velUnits = (b ? GPS_VEL_UNITS_KPH : GPS_VEL_UNITS_KT); }
-	// Returns true if dist/vel units are SI
-	inline bool GetDistVelUnitsSI() { return(_distUnits == GPS_DIST_UNITS_KM && _velUnits == GPS_VEL_UNITS_KPH ? true : false); }
-	// Set baro units - 1 = in, 2 = mB, 3 = hP   Wrapping if for the convienience of the GPS setter.
-	void SetBaroUnits(int n, bool wrap = false);
-	// Get baro units: 1 = in, 2 = mB, 3 = hP
-	inline int GetBaroUnits() { return((int)_baroUnits); }
-	
 	// It is expected that specific GPS units will override these functions.
 	// Increase the CDI full-scale deflection (ie. increase the nm per dot) one (GPS unit dependent) increment.  Wraps if necessary (GPS unit dependent).
 	virtual void CDIFSDIncrease();
@@ -316,12 +281,6 @@ protected:
 	
 	// 2D rendering area
 	RenderArea2D* _instrument;
-	
-	// Units
-	GPSSpeedUnits _velUnits;
-	GPSDistanceUnits _distUnits;
-	GPSPressureUnits _baroUnits;
-	GPSAltitudeUnits _altUnits;
 	
 	// CDI full-scale deflection, specified either as an index into a vector of values (standard values) or as a double precision float (intermediate values).
 	// This will influence how an externally driven CDI will display as well as the NAV1 page.
