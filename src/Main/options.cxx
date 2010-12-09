@@ -1256,6 +1256,30 @@ fgOptFgviewer(const char* arg)
     return FG_OPTIONS_OK;
 }
 
+static int
+fgOptCallSign(const char * arg)
+{
+    int i;
+    char callsign[11];
+    strncpy(callsign,arg,10);
+    callsign[10]=0;
+    for (i=0;callsign[i];i++)
+    {
+        switch (callsign[i])
+        {
+            case 'A'...'Z':break;
+            case 'a'...'z':break;
+            case '0'...'9':break;
+            case '_':case '-':break;
+            default:
+                // convert any other illegal characters
+                callsign[i]='-';
+                break;
+        }
+    }
+    fgSetString("sim/multiplay/callsign", callsign );
+    return FG_OPTIONS_OK;
+}
 
 
 static map<string,size_t> fgOptionMap;
@@ -1440,7 +1464,7 @@ struct OptionDesc {
     {"joyclient",                    true,  OPTION_CHANNEL, "", false, "", 0 },
     {"jsclient",                     true,  OPTION_CHANNEL, "", false, "", 0 },
     {"proxy",                        true,  OPTION_FUNC,    "", false, "", fgSetupProxy },
-    {"callsign",                     true, OPTION_STRING,  "sim/multiplay/callsign", false, "", 0 },
+    {"callsign",                     true,  OPTION_FUNC,    "", false, "", fgOptCallSign},
     {"multiplay",                    true,  OPTION_CHANNEL, "", false, "", 0 },
     {"trace-read",                   true,  OPTION_FUNC,   "", false, "", fgOptTraceRead },
     {"trace-write",                  true,  OPTION_FUNC,   "", false, "", fgOptTraceWrite },
