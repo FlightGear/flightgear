@@ -1265,17 +1265,13 @@ fgOptCallSign(const char * arg)
     callsign[10]=0;
     for (i=0;callsign[i];i++)
     {
-        switch (callsign[i])
-        {
-            case 'A'...'Z':break;
-            case 'a'...'z':break;
-            case '0'...'9':break;
-            case '_':case '-':break;
-            default:
-                // convert any other illegal characters
-                callsign[i]='-';
-                break;
-        }
+        char c = callsign[i];
+        if (c >= 'A' && c <= 'Z') continue;
+        if (c >= 'a' && c <= 'z') continue;
+        if (c >= '0' && c <= '9') continue;
+        if (c == '-' || c == '_') continue;
+        // convert any other illegal characters
+        callsign[i]='-';
     }
     fgSetString("sim/multiplay/callsign", callsign );
     return FG_OPTIONS_OK;
