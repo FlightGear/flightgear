@@ -5392,6 +5392,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\Instrumentation\KLN89\kln89_page_alt.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Instrumentation\KLN89\kln89_page_alt.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Instrumentation\Kln89\kln89_page_apt.cxx"
 				>
 			</File>
