@@ -623,6 +623,7 @@
     <ClCompile Include="..\..\..\src\Input\FGKeyboardInput.cxx" />
     <ClCompile Include="..\..\..\src\Input\FGMouseInput.cxx" />
     <ClCompile Include="..\..\..\src\Input\input.cxx" />
+    <ClCompile Include="..\..\..\src\Instrumentation\KLN89\kln89_page_alt.cxx" />
     <ClCompile Include="..\..\..\src\Instrumentation\rnav_waypt_controller.cxx" />
     <ClCompile Include="..\..\..\src\Main\bootstrap.cxx" />
     <ClCompile Include="..\..\..\src\Main\CameraGroup.cxx" />
@@ -1200,6 +1201,7 @@
     <ClInclude Include="..\..\..\src\Input\FGKeyboardInput.hxx" />
     <ClInclude Include="..\..\..\src\Input\FGMouseInput.hxx" />
     <ClInclude Include="..\..\..\src\Input\input.hxx" />
+    <ClInclude Include="..\..\..\src\Instrumentation\KLN89\kln89_page_alt.hxx" />
     <ClInclude Include="..\..\..\src\Instrumentation\rnav_waypt_controller.hxx" />
     <ClInclude Include="..\..\..\src\Main\CameraGroup.hxx" />
     <ClInclude Include="..\..\..\src\Main\fg_commands.hxx" />

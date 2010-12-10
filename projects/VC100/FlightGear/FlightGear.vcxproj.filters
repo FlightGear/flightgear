@@ -1533,6 +1533,9 @@
     <ClCompile Include="..\..\..\src\Instrumentation\rnav_waypt_controller.cxx">
       <Filter>Lib_Instrumentation</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\Instrumentation\KLN89\kln89_page_alt.cxx">
+      <Filter>Lib_KLN89</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\Aircraft\controls.hxx">
@@ -2917,6 +2920,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\Instrumentation\rnav_waypt_controller.hxx">
       <Filter>Lib_Instrumentation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Instrumentation\KLN89\kln89_page_alt.hxx">
+      <Filter>Lib_KLN89</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
