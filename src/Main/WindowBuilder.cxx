@@ -224,12 +224,14 @@ GraphicsWindow* WindowBuilder::getDefaultWindow()
     GraphicsContext::Traits* traits
         = new GraphicsContext::Traits(*defaultTraits);
     traits->windowName = "FlightGear";
+    
     GraphicsContext* gc = GraphicsContext::createGraphicsContext(traits);
     if (gc) {
         defaultWindow = WindowSystemAdapter::getWSA()
             ->registerWindow(gc, defaultWindowName);
         return defaultWindow;
     } else {
+        SG_LOG(SG_GENERAL, SG_ALERT, "getDefaultWindow: failed to create GraphicsContext");
         return 0;
     }
 }

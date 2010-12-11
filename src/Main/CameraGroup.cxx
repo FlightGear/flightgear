@@ -646,15 +646,16 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
     const SGPropertyNode* windowNode = (cameraNode
                                         ? cameraNode->getNode("window")
                                         : 0);
-    if (!window) {
-        if (windowNode) {
-            // New style window declaration / definition
-            window = wBuild->buildWindow(windowNode);
-            
-        } else {
-            return 0;
-        }
+    if (!window && windowNode) {
+      // New style window declaration / definition
+      window = wBuild->buildWindow(windowNode);
     }
+    
+    if (!window) { // buildWindow can fail
+      SG_LOG(SG_GENERAL, SG_WARN, "CameraGroup::buildGUICamera: failed to build a window");
+      return NULL;
+    }
+    
     Camera* camera = new Camera;
     camera->setAllowEventFocus(false);
     camera->setGraphicsContext(window->gc.get());
