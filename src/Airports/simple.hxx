@@ -242,7 +242,7 @@ private:
     /**
      * helper to read airport data from the scenery XML files.
      */
-    void loadSceneryDefintions() const;
+    void loadSceneryDefinitions() const;
     
     /**
      * Helpers to process property data loaded from an ICAO.threshold.xml file

@@ -372,7 +372,7 @@ void FGAirport::loadRunways() const
   }
   
   mRunwaysLoaded = true;
-  loadSceneryDefintions();
+  loadSceneryDefinitions();
 }
 
 void FGAirport::loadTaxiways() const
@@ -399,7 +399,7 @@ void FGAirport::loadProcedures() const
   Route::loadAirportProcedures(path, const_cast<FGAirport*>(this));
 }
 
-void FGAirport::loadSceneryDefintions() const
+void FGAirport::loadSceneryDefinitions() const
 {  
   // allow users to disable the scenery data in the short-term
   // longer term, this option can probably disappear
