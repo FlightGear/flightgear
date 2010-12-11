@@ -142,7 +142,6 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     double twist;
     double horiz_vel;
     double last_x;
-    double last_loc_dist;
     double last_xtrack_error;
     double xrate_ms;
     double _localizerWidth; // cached localizer width in degrees

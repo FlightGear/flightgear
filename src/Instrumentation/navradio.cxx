@@ -107,7 +107,6 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     twist(0.0),
     horiz_vel(0.0),
     last_x(0.0),
-    last_loc_dist(0.0),
     last_xtrack_error(0.0),
     xrate_ms(0.0),
     _localizerWidth(5.0),
@@ -372,12 +371,7 @@ FGNavRadio::update(double dt)
       && nav_serviceable_node->getBoolValue() )
   {
     _operable = true;
-    if (nav_slaved_to_gps_node->getBoolValue()) {
-      updateGPSSlaved();
-    } else {
-      updateReceiver(dt);
-    }
-    
+    updateReceiver(dt);
     updateCDI(dt);
   } else {
     clearOutputs();
@@ -394,6 +388,7 @@ void FGNavRadio::clearOutputs()
   cdi_xtrack_error_node->setDoubleValue( 0.0 );
   cdi_xtrack_hdg_err_node->setDoubleValue( 0.0 );
   time_to_intercept->setDoubleValue( 0.0 );
+  heading_node->setDoubleValue(0.0);
   gs_deflection_node->setDoubleValue( 0.0 );
   gs_deflection_deg_node->setDoubleValue(0.0);
   gs_deflection_norm_node->setDoubleValue(0.0);
@@ -403,6 +398,8 @@ void FGNavRadio::clearOutputs()
   
   to_flag_node->setBoolValue( false );
   from_flag_node->setBoolValue( false );
+  is_valid_node->setBoolValue(false);
+  nav_id_node->setStringValue("");
   
   _dmeInRange = false;
   _operable = false;
@@ -411,6 +408,12 @@ void FGNavRadio::clearOutputs()
 
 void FGNavRadio::updateReceiver(double dt)
 {
+  SGGeod pos = SGGeod::fromDegFt(lon_node->getDoubleValue(),
+                               lat_node->getDoubleValue(),
+                               alt_node->getDoubleValue());
+  SGVec3d aircraft = SGVec3d::fromGeod(pos);
+  double loc_dist = 0;
+
   // Do a nav station search only once a second to reduce
   // unnecessary work. (Also, make sure to do this before caching
   // any values!)
@@ -419,24 +422,33 @@ void FGNavRadio::updateReceiver(double dt)
    search();
   }
 
+  if (_navaid)
+  {
+      loc_dist = dist(aircraft, _navaid->cart());
+      loc_dist_node->setDoubleValue( loc_dist );
+  }
+  updateDME(aircraft);
+
+  if (nav_slaved_to_gps_node->getBoolValue()) {
+    // when slaved to GPS: only allow stuff above: tune NAV station
+    // upate DME. All other data driven by GPS only.
+    updateGPSSlaved();
+    return;
+  }
+
   if (!_navaid) {
     _cdiDeflection = 0.0;
     _cdiCrossTrackErrorM = 0.0;
     _toFlag = _fromFlag = false;
     _gsNeedleDeflection = 0.0;
     _gsNeedleDeflectionNorm = 0.0;
+    heading_node->setDoubleValue(0.0);
     inrange_node->setBoolValue(false);
     return;
   }
 
-  SGGeod pos = SGGeod::fromDegFt(lon_node->getDoubleValue(),
-                               lat_node->getDoubleValue(),
-                               alt_node->getDoubleValue());
-                               
   double nav_elev = _navaid->get_elev_ft();
-  SGVec3d aircraft = SGVec3d::fromGeod(pos);
-  double loc_dist = dist(aircraft, _navaid->cart());
-  loc_dist_node->setDoubleValue( loc_dist );
+
   bool is_loc = loc_node->getBoolValue();
   double signal_quality_norm = signal_quality_norm_node->getDoubleValue();
   
@@ -561,9 +573,6 @@ void FGNavRadio::updateReceiver(double dt)
   _cdiCrossTrackErrorM = loc_dist * sin(r * SGD_DEGREES_TO_RADIANS);
   
   updateGlideSlope(dt, aircraft, signal_quality_norm);
-  updateDME(aircraft);
-  
-  last_loc_dist = loc_dist;
 }
 
 void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double signal_quality_norm)
@@ -669,9 +678,13 @@ void FGNavRadio::valueChanged (SGPropertyNode* prop)
     }
   } else if (prop == nav_slaved_to_gps_node) {
     if (prop->getBoolValue()) {
-      // slaved-to-GPS activated, sync up selected course
+      // slaved-to-GPS activated, clear obsolete NAV outputs and sync up selected course
+      clearOutputs();
       sel_radial_node->setDoubleValue(gps_course_node->getDoubleValue());
     }
+    // slave-to-GPS enabled/disabled, resync NAV station (update all outputs)
+    _navaid = NULL;
+    _time_before_search_sec = 0;
   }
 }
 
@@ -689,6 +702,7 @@ void FGNavRadio::updateGPSSlaved()
     _cdiDeflection = 0.0;
     _cdiCrossTrackErrorM = 0.0;
     _gsNeedleDeflection = 0.0;
+    _gsNeedleDeflectionNorm = 0.0;
     return;
   }
   
