@@ -30,6 +30,7 @@
 #include "atmosphere.hxx"
 #include <simgear/scene/sky/cloud.hxx>
 #include <simgear/structure/exception.hxx>
+#include <Main/fg_props.hxx>
 
 using std::string;
 
@@ -222,9 +223,9 @@ void MetarProperties::set_metar( const char * metar )
                 // if its fog(FG) (might be shallow(MI) or patches(BC)) or haze (HZ) or mist(BR)
                 if( phenomenon == "FG" ) isFG = true;
                 if( phenomenon == "HZ" ) isHZ = true;
+                if( phenomenon == "BR" ) isBR = true;
                 if( description == "MI" ) isMI = true;
                 if( description == "BC" ) isBC = true;
-                if( description == "BR" ) isBR = true;
             }
         }
     }
@@ -238,35 +239,38 @@ void MetarProperties::set_metar( const char * metar )
         const vector<SGMetarCloud> & metarClouds = m->getClouds();
         unsigned layerOffset = 0; // Oh, this is ugly!
         bool setGroundCloudLayer = _rootNode->getBoolValue("set-ground-cloud-layer", false );
-
         if( setGroundCloudLayer ) {
             // create a cloud layer #0 starting at the ground if its fog, mist or haze
 
             // make sure layer actually starts at ground and set it's bottom at a constant
             // value below the station's elevation
-            const double LAYER_BOTTOM_BELOW_STATION_ELEVATION=200;
+            const double LAYER_BOTTOM_BELOW_STATION_ELEVATION =
+              fgGetDouble( "/environment/config/offset-from-station-elevation-ft", 200 );
 
             SGMetarCloud::Coverage coverage = SGMetarCloud::COVERAGE_NIL;
             double thickness = 0;
             double alpha = 1.0;
 
             if( isFG ) { // fog
-                coverage = isBC ? SGMetarCloud::COVERAGE_SCATTERED : SGMetarCloud::COVERAGE_BROKEN;
-                thickness = isMI ? 
-                   30 + LAYER_BOTTOM_BELOW_STATION_ELEVATION : // shallow fog, 10m/30ft
-                   500 + LAYER_BOTTOM_BELOW_STATION_ELEVATION; // fog, 150m/500ft
-                alpha = 1.0;
+                coverage = SGMetarCloud::getCoverage( isBC ? 
+                    fgGetString( "/environment/config/fog-bc-2dlayer-coverage", SGMetarCloud::COVERAGE_SCATTERED_STRING ) :
+                    fgGetString( "/environment/config/fog-2dlayer-coverage", SGMetarCloud::COVERAGE_BROKEN_STRING )
+                );
 
+                thickness = isMI ? 
+                   fgGetDouble("/environment/config/fog-shallow-thickness-ft",30) + LAYER_BOTTOM_BELOW_STATION_ELEVATION : // shallow fog, 10m/30ft
+                   fgGetDouble("/environment/config/fog-thickness-ft",500) + LAYER_BOTTOM_BELOW_STATION_ELEVATION; // fog, 150m/500ft
+                alpha =  fgGetDouble("/environment/config/fog-alpha",0.0);
             } else if( isBR ) { // mist
-                coverage = SGMetarCloud::COVERAGE_OVERCAST;
-                thickness = 2000 + LAYER_BOTTOM_BELOW_STATION_ELEVATION;
-                alpha = 0.8;
+                coverage = SGMetarCloud::getCoverage(fgGetString("/environment/config/mist-2dlayer-coverage", SGMetarCloud::COVERAGE_OVERCAST_STRING));
+                thickness =  fgGetDouble("/environment/config/mist-thickness-ft",2000) + LAYER_BOTTOM_BELOW_STATION_ELEVATION;
+                alpha =  fgGetDouble("/environment/config/mist-alpha",0.8);
             } else if( isHZ ) { // hase
-                coverage = SGMetarCloud::COVERAGE_OVERCAST;
-                thickness = 2000 + LAYER_BOTTOM_BELOW_STATION_ELEVATION;
-                alpha = 0.6;
+                coverage = SGMetarCloud::getCoverage(fgGetString("/environment/config/mist-2dlayer-coverage", SGMetarCloud::COVERAGE_OVERCAST_STRING));
+                thickness =  fgGetDouble("/environment/config/haze-thickness-ft",2000) + LAYER_BOTTOM_BELOW_STATION_ELEVATION;
+                alpha =  fgGetDouble("/environment/config/haze-alpha",0.6);
             }
-            // fog is "overcast" by default of "broken" for patches of fog
+
             if( coverage != SGMetarCloud::COVERAGE_NIL ) {
                 SGPropertyNode_ptr layerNode = cloudsNode->getChild(LAYER, 0, true );
                 layerNode->setDoubleValue( "coverage-type", SGCloudLayer::getCoverageType(coverage_string[coverage]) );
@@ -275,7 +279,8 @@ void MetarProperties::set_metar( const char * metar )
                 layerNode->setDoubleValue( "thickness-ft", thickness );
                 layerNode->setDoubleValue( "visibility-m", _min_visibility );
                 layerNode->setDoubleValue( "alpha", alpha );
-                _min_visibility = _max_visibility = 20000.0; // assume good visibility above the fog
+                _min_visibility = _max_visibility =
+                  fgGetDouble("/environment/config/visibility-above-layer-m",20000.0); // assume good visibility above the fog
                 layerOffset = 1;  // shudder
             }
         } 
