@@ -4,8 +4,8 @@
 # SIMGEAR_FOUND, if false, do not try to link to SimGear 
 # SIMGEAR_INCLUDE_DIR, where to find the headers
 #
-# $SIMGEARDIR is an environment variable that would
-# correspond to the ./configure --prefix=$SIMGEARDIR
+# $SIMGEAR_DIR is an environment variable that would
+# correspond to the ./configure --prefix=$SIMGEAR_DIR
 # used in building SimGear.
 #
 # Created by James Turner. This was influenced by the FindOpenAL.cmake module.
@@ -25,17 +25,17 @@
 
 # Per my request, CMake should search for frameworks first in
 # the following order:
-# ~/Library/Frameworks/OpenAL.framework/Headers
-# /Library/Frameworks/OpenAL.framework/Headers
-# /System/Library/Frameworks/OpenAL.framework/Headers
+# ~/Library/Frameworks/SimGear.framework/Headers
+# /Library/Frameworks/SimGear.framework/Headers
+# /System/Library/Frameworks/SimGear.framework/Headers
 #
 # On OS X, this will prefer the Framework version (if found) over others.
 # People will have to manually change the cache values of 
-# OPENAL_LIBRARY to override this selection or set the CMake environment
+# SimGear_LIBRARIES to override this selection or set the CMake environment
 # CMAKE_INCLUDE_PATH to modify the search paths.
 
 FIND_PATH(SIMGEAR_INCLUDE_DIR simgear/math/SGMath.hxx
-  HINTS $ENV{SIMGEARDIR}
+  HINTS $ENV{SIMGEAR_DIR}
   PATH_SUFFIXES include 
   PATHS
   ~/Library/Frameworks
@@ -51,7 +51,7 @@ message(STATUS ${SIMGEAR_INCLUDE_DIR})
 FIND_LIBRARY(SIMGEAR_LIBRARIES
   NAMES simgear SimGear
   HINTS
-  $ENV{SIMGEARDIR}
+  $ENV{SIMGEAR_DIR}
   PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
   PATHS
   ~/Library/Frameworks
@@ -67,7 +67,7 @@ macro(find_sg_component comp libs)
 	
 	FIND_LIBRARY(${compLibName}
 	  NAMES ${compLib}
-	  HINTS $ENV{SIMGEARDIR}
+	  HINTS $ENV{SIMGEAR_DIR}
 	  PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
 	  PATHS
 	  /usr/local
