@@ -28,6 +28,7 @@
 #include "fgmetar.hxx"
 #include "environment.hxx"
 #include "atmosphere.hxx"
+#include "metarairportfilter.hxx"
 #include <simgear/scene/sky/cloud.hxx>
 #include <simgear/structure/exception.hxx>
 #include <Main/fg_props.hxx>
@@ -161,13 +162,15 @@ void MetarProperties::set_metar( const char * metar )
     {
         // 1. check the id given in the metar
         FGAirport* a = FGAirport::findByIdent(m->getId());
-/*
+
         // 2. if unknown, find closest airport with metar to current position
         if( a == NULL ) {
-            SGGeod pos = SGGeod::fromDeg(_longitude_n->getDoubleValue(), _latitude_n->getDoubleValue());
-            a = FGAirport::findClosest(pos, 10000.0, &_airportWithMetarFilter);
+            SGGeod pos = SGGeod::fromDeg(
+                fgGetDouble( "/position/longitude-deg", 0.0 ),
+                fgGetDouble( "/position/latitude-deg", 0.0 ) );
+            a = FGAirport::findClosest(pos, 10000.0, MetarAirportFilter::instance() );
         }
-*/
+
         // 3. otherwise use ground elevation
         if( a != NULL ) {
             _station_elevation = a->getElevation();
@@ -176,12 +179,10 @@ void MetarProperties::set_metar( const char * metar )
             _station_longitude = towerPosition.getLongitudeDeg();
             _station_id = a->ident();
         } else {
-            _station_elevation = 0.0;
-            _station_latitude = 0.0;
-            _station_longitude = 0.0;
+            _station_elevation = fgGetDouble("/position/ground-elev-m", 0.0 ) * SG_METER_TO_FEET;
+            _station_latitude = fgGetDouble( "/position/latitude-deg", 0.0 );
+            _station_longitude = fgGetDouble( "/position/longitude-deg", 0.0 );
             _station_id = "XXXX";
-//            station_elevation_ft = _ground_elevation_n->getDoubleValue() * SG_METER_TO_FEET;
-//            _station_id = m->getId();
         }
     }
 
