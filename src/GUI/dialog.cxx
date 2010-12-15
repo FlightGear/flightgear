@@ -369,7 +369,7 @@ void fgPopup::applySize(puObject *object)
 void FGDialog::ConditionalObject::update(FGDialog* aDlg)
 {
   if (_name == "visible") {
-    bool wasVis = _pu->isVisible();
+    bool wasVis = _pu->isVisible() != 0;
     bool newVis = test();
     
     if (newVis == wasVis) {
@@ -382,7 +382,7 @@ void FGDialog::ConditionalObject::update(FGDialog* aDlg)
       _pu->hide();
     }
   } else if (_name == "enable") {
-    bool wasEnabled = _pu->isActive();
+    bool wasEnabled = _pu->isActive() != 0;
     bool newEnable = test();
     
     if (wasEnabled == newEnable) {

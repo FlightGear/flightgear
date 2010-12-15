@@ -66,7 +66,7 @@ std::string Waypt::ident() const
   
 bool Waypt::flag(WayptFlag aFlag) const
 {
-  return (_flags & aFlag);
+  return ((_flags & aFlag) != 0);
 }
 	
 void Waypt::setFlag(WayptFlag aFlag, bool aV)

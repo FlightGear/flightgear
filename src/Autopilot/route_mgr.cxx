@@ -1128,7 +1128,7 @@ void FGRouteMgr::loadRoute()
     
   try {
     readProperties(path.str(), routeData);
-  } catch (sg_exception& e) {
+  } catch (sg_exception& ) {
     // if XML parsing fails, the file might be simple textual list of waypoints
     loadPlainTextRoute(path);
     return;
