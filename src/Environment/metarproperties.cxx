@@ -244,8 +244,8 @@ void MetarProperties::set_metar( const char * metar )
 
             // make sure layer actually starts at ground and set it's bottom at a constant
             // value below the station's elevation
-            const double LAYER_BOTTOM_BELOW_STATION_ELEVATION =
-              fgGetDouble( "/environment/config/offset-from-station-elevation-ft", 200 );
+            const double LAYER_BOTTOM_STATION_OFFSET =
+              fgGetDouble( "/environment/params/fog-mist-haze-layer/offset-from-station-elevation-ft", -200 );
 
             SGMetarCloud::Coverage coverage = SGMetarCloud::COVERAGE_NIL;
             double thickness = 0;
@@ -253,34 +253,34 @@ void MetarProperties::set_metar( const char * metar )
 
             if( isFG ) { // fog
                 coverage = SGMetarCloud::getCoverage( isBC ? 
-                    fgGetString( "/environment/config/fog-bc-2dlayer-coverage", SGMetarCloud::COVERAGE_SCATTERED_STRING ) :
-                    fgGetString( "/environment/config/fog-2dlayer-coverage", SGMetarCloud::COVERAGE_BROKEN_STRING )
+                    fgGetString( "/environment/params/fog-mist-haze-layer/fog-bc-2dlayer-coverage", SGMetarCloud::COVERAGE_SCATTERED_STRING ) :
+                    fgGetString( "/environment/params/fog-mist-haze-layer/fog-2dlayer-coverage", SGMetarCloud::COVERAGE_BROKEN_STRING )
                 );
 
                 thickness = isMI ? 
-                   fgGetDouble("/environment/config/fog-shallow-thickness-ft",30) + LAYER_BOTTOM_BELOW_STATION_ELEVATION : // shallow fog, 10m/30ft
-                   fgGetDouble("/environment/config/fog-thickness-ft",500) + LAYER_BOTTOM_BELOW_STATION_ELEVATION; // fog, 150m/500ft
-                alpha =  fgGetDouble("/environment/config/fog-alpha",0.0);
+                   fgGetDouble("/environment/params/fog-mist-haze-layer/fog-shallow-thickness-ft",30) - LAYER_BOTTOM_STATION_OFFSET : // shallow fog, 10m/30ft
+                   fgGetDouble("/environment/params/fog-mist-haze-layer/fog-thickness-ft",500) - LAYER_BOTTOM_STATION_OFFSET; // fog, 150m/500ft
+                alpha =  fgGetDouble("/environment/params/fog-mist-haze-layer/fog-2dlayer-alpha", 1.0);
             } else if( isBR ) { // mist
-                coverage = SGMetarCloud::getCoverage(fgGetString("/environment/config/mist-2dlayer-coverage", SGMetarCloud::COVERAGE_OVERCAST_STRING));
-                thickness =  fgGetDouble("/environment/config/mist-thickness-ft",2000) + LAYER_BOTTOM_BELOW_STATION_ELEVATION;
-                alpha =  fgGetDouble("/environment/config/mist-alpha",0.8);
+                coverage = SGMetarCloud::getCoverage(fgGetString("/environment/params/fog-mist-haze-layer/mist-2dlayer-coverage", SGMetarCloud::COVERAGE_OVERCAST_STRING));
+                thickness =  fgGetDouble("/environment/params/fog-mist-haze-layer/mist-thickness-ft",2000) - LAYER_BOTTOM_STATION_OFFSET;
+                alpha =  fgGetDouble("/environment/params/fog-mist-haze-layer/mist-2dlayer-alpha",0.8);
             } else if( isHZ ) { // hase
-                coverage = SGMetarCloud::getCoverage(fgGetString("/environment/config/mist-2dlayer-coverage", SGMetarCloud::COVERAGE_OVERCAST_STRING));
-                thickness =  fgGetDouble("/environment/config/haze-thickness-ft",2000) + LAYER_BOTTOM_BELOW_STATION_ELEVATION;
-                alpha =  fgGetDouble("/environment/config/haze-alpha",0.6);
+                coverage = SGMetarCloud::getCoverage(fgGetString("/environment/params/fog-mist-haze-layer/mist-2dlayer-coverage", SGMetarCloud::COVERAGE_OVERCAST_STRING));
+                thickness =  fgGetDouble("/environment/params/fog-mist-haze-layer/haze-thickness-ft",2000) - LAYER_BOTTOM_STATION_OFFSET;
+                alpha =  fgGetDouble("/environment/params/fog-mist-haze-layer/haze-2dlayer-alpha",0.6);
             }
 
             if( coverage != SGMetarCloud::COVERAGE_NIL ) {
                 SGPropertyNode_ptr layerNode = cloudsNode->getChild(LAYER, 0, true );
                 layerNode->setDoubleValue( "coverage-type", SGCloudLayer::getCoverageType(coverage_string[coverage]) );
                 layerNode->setStringValue( "coverage", coverage_string[coverage] );
-                layerNode->setDoubleValue( "elevation-ft", _station_elevation - LAYER_BOTTOM_BELOW_STATION_ELEVATION );
+                layerNode->setDoubleValue( "elevation-ft", _station_elevation + LAYER_BOTTOM_STATION_OFFSET );
                 layerNode->setDoubleValue( "thickness-ft", thickness );
                 layerNode->setDoubleValue( "visibility-m", _min_visibility );
                 layerNode->setDoubleValue( "alpha", alpha );
                 _min_visibility = _max_visibility =
-                  fgGetDouble("/environment/config/visibility-above-layer-m",20000.0); // assume good visibility above the fog
+                  fgGetDouble("/environment/params/fog-mist-haze-layer/visibility-above-layer-m",20000.0); // assume good visibility above the fog
                 layerOffset = 1;  // shudder
             }
         } 
