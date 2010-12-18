@@ -77,7 +77,6 @@ data-tar:
 		data/ATC \
 		data/AUTHORS \
 		data/ChangeLog \
-		data/cloudlayers.xml \
 		data/COPYING \
 		data/D* \
 		data/Effects \
