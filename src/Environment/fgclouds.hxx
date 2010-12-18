@@ -34,23 +34,19 @@
 
 using std::string;
 
-class SGSampleGroup;
 class SGCloudField;
-class SGNewCloud;
-class FGMetar;
-//class FGEnvironmentCtrl;
 
 class FGClouds {
 
 private:
 	double buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_def_root, const string& name, double grid_z_rand, SGCloudField *layer);
-	void buildLayer(int iLayer, const string& name, double alt, double coverage);
+	void buildLayer(int iLayer, const string& name, double coverage);
 
 	void buildCloudLayers(void);
 
 	int update_event;
 	SGSoundSample *snd_lightning;
-        bool clouds_3d_enabled;
+	bool clouds_3d_enabled;
 
 public:
 	FGClouds();
@@ -60,8 +56,8 @@ public:
 
 	int get_update_event(void) const;
 	void set_update_event(int count);
-        bool get_3dClouds() const;
-        void set_3dClouds(bool enable);
+	bool get_3dClouds() const;
+	void set_3dClouds(bool enable);
 };
 
 #endif // _FGCLOUDS_HXX
