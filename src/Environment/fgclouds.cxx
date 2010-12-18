@@ -52,7 +52,8 @@ FGClouds::FGClouds() :
 	update_event = 0;
 }
 
-FGClouds::~FGClouds() {
+FGClouds::~FGClouds() 
+{
 }
 
 int FGClouds::get_update_event(void) const {
@@ -87,7 +88,7 @@ double FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_
 	texture_root.append("Sky");
 
 	box_def = box_def_root->getChild(name.c_str());
-  
+
 	string base_name = name.substr(0,2);
 	if( !box_def ) {
 		if( name[2] == '-' ) {
@@ -102,7 +103,7 @@ double FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_
 	double z = grid_z_rand * (sg_random() - 0.5);
 		
 	SGVec3f pos(x,y,z);
-        
+
 	for(int i = 0; i < box_def->nChildren() ; i++) {
 		SGPropertyNode *abox = box_def->getChild(i);
 		if( strcmp(abox->getName(), "box") == 0) {
@@ -186,27 +187,27 @@ double FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_
 	return extent;
 }
 
-void FGClouds::buildLayer(int iLayer, const string& name, double alt, double coverage) {
+void FGClouds::buildLayer(int iLayer, const string& name, double coverage) {
 	struct {
 		string name;
 		double count;
 	} tCloudVariety[20];
 	int CloudVarietyCount = 0;
 	double totalCount = 0.0;
-        
+
 	SGPropertyNode *cloud_def_root = fgGetNode("/environment/cloudlayers/clouds", false);
 	SGPropertyNode *box_def_root   = fgGetNode("/environment/cloudlayers/boxes", false);
 	SGPropertyNode *layer_def_root = fgGetNode("/environment/cloudlayers/layers", false);
-        SGCloudField *layer = thesky->get_cloud_layer(iLayer)->get_layer3D();
+	SGCloudField *layer = thesky->get_cloud_layer(iLayer)->get_layer3D();
 	layer->clear();
-        
+
 	// If we don't have the required properties, then render the cloud in 2D
 	if ((! clouds_3d_enabled) || coverage == 0.0 ||
 		layer_def_root == NULL || cloud_def_root == NULL || box_def_root == NULL) {
 			thesky->get_cloud_layer(iLayer)->set_enable3dClouds(false);
 			return;
 	}
-        
+
 	// If we can't find a definition for this cloud type, then render the cloud in 2D
 	SGPropertyNode *layer_def=NULL;
 	layer_def = layer_def_root->getChild(name.c_str());
@@ -248,25 +249,25 @@ void FGClouds::buildLayer(int iLayer, const string& name, double alt, double cov
 	}
 	totalCount = 1.0 / totalCount;
 
-        // Determine how much cloud coverage we need in m^2.
-        double cov = coverage * SGCloudField::fieldSize * SGCloudField::fieldSize;
+	// Determine how much cloud coverage we need in m^2.
+	double cov = coverage * SGCloudField::fieldSize * SGCloudField::fieldSize;
 
-        while (cov > 0.0f) {
+	while (cov > 0.0f) {
 		double choice = sg_random();
-    
+
 		for(int i = 0; i < CloudVarietyCount ; i ++) {
 			choice -= tCloudVariety[i].count * totalCount;
 			if( choice <= 0.0 ) {
 				cov -= buildCloud(cloud_def_root,
 						box_def_root,
 						tCloudVariety[i].name,
-      						grid_z_rand,
+						grid_z_rand,
 						layer);
 				break;
 			}
 		}
 		
-        }
+	}
 
 	// Now we've built any clouds, enable them and set the density (coverage)
 	//layer->setCoverage(coverage);
@@ -293,7 +294,7 @@ void FGClouds::buildCloudLayers(void) {
 		double alt_ft = cloud_root->getDoubleValue("elevation-ft");
 		double alt_m = alt_ft * SG_FEET_TO_METER;
 		string coverage = cloud_root->getStringValue("coverage");
-                
+
 		double coverage_norm = 0.0;
 		if( coverage == "few" )
 			coverage_norm = 2.0/8.0;	// <1-2
@@ -305,6 +306,7 @@ void FGClouds::buildCloudLayers(void) {
 			coverage_norm = 8.0/8.0;	// 8
 
 		string layer_type = "nn";
+
 		if( coverage == "cirrus" ) {
 			layer_type = "ci";
 		} else if( alt_ft > 16500 ) {
@@ -333,21 +335,22 @@ void FGClouds::buildCloudLayers(void) {
 					layer_type = "sc";
 			}
 		}
-                
+	
 		cloud_root->setStringValue("layer-type",layer_type);
-		buildLayer(iLayer, layer_type, alt_m, coverage_norm);
+		buildLayer(iLayer, layer_type, coverage_norm);
 	}
 }
 
 void FGClouds::set_3dClouds(bool enable)
 {
-  if (enable != clouds_3d_enabled) {
-    clouds_3d_enabled = enable;
-    buildCloudLayers();
-  }
+	if (enable != clouds_3d_enabled) {
+		clouds_3d_enabled = enable;
+		buildCloudLayers();
+	}
 }
 
-bool FGClouds::get_3dClouds() const {
-  return clouds_3d_enabled;
+bool FGClouds::get_3dClouds() const 
+{
+	return clouds_3d_enabled;
 }
-  
+
