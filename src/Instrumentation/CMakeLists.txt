@@ -61,6 +61,7 @@ set(SOURCES
     KLN89/kln89_page_set.cxx
     KLN89/kln89_page_usr.cxx
     KLN89/kln89_page_vor.cxx
+    KLN89/kln89_page_alt.cxx
 	)
 	
 	
