@@ -72,6 +72,13 @@ SGGeod SGGeodProperty::get() const
 {
     double lon = _lon->getDoubleValue(),
         lat = _lat->getDoubleValue();
+        
+    if (osg::isNaN(lon) || osg::isNaN(lat)) {
+      SG_LOG(SG_INSTR, SG_WARN, "read NaN for lon/lat:" << _lon->getPath() 
+        << ", " << _lat->getPath());
+      return SGGeod();
+    }
+        
     if (_alt) {
         return SGGeod::fromDegFt(lon, lat, _alt->getDoubleValue());
     } else {
@@ -490,7 +497,7 @@ GPS::update (double delta_time_sec)
   } // of init mode check
   
   _last_pos = _indicated_pos;
-  _lastPosValid = true;
+  _lastPosValid = !(_last_pos == SGGeod());
 }
 
 ///////////////////////////////////////////////////////////////////////////

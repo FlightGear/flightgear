@@ -32,6 +32,8 @@
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
+#include <osg/Math> // for osg::isNaN
+
 #include <simgear/timing/timestamp.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
@@ -500,6 +502,15 @@ char** searchAirportNamesAndIdents(const std::string& aFilter)
   return result;
 }
 
+static void validateSGGeod(const SGGeod& geod)
+{
+  if (osg::isNaN(geod.getLatitudeDeg()) ||
+      osg::isNaN(geod.getLongitudeDeg()))
+  {
+    throw sg_range_exception("position is invalid, NaNs");
+  }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 bool
@@ -672,6 +683,8 @@ const char* FGPositioned::nameForType(Type aTy)
 FGPositionedRef
 FGPositioned::findClosestWithIdent(const std::string& aIdent, const SGGeod& aPos, Filter* aFilter)
 {
+  validateSGGeod(aPos);
+
   FGPositioned::List r(findAll(global_identIndex, aIdent, aFilter, true));
   if (r.empty()) {
     return FGPositionedRef();
@@ -684,6 +697,8 @@ FGPositioned::findClosestWithIdent(const std::string& aIdent, const SGGeod& aPos
 FGPositioned::List
 FGPositioned::findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilter)
 {
+  validateSGGeod(aPos);
+
   List result;
   Octree::findAllWithinRange(SGVec3d::fromGeod(aPos), 
     aRangeNm * SG_NM_TO_METER, aFilter, result);
@@ -705,18 +720,22 @@ FGPositioned::findAllWithName(const std::string& aName, Filter* aFilter, bool aE
 FGPositionedRef
 FGPositioned::findClosest(const SGGeod& aPos, double aCutoffNm, Filter* aFilter)
 {
-   List l(findClosestN(aPos, 1, aCutoffNm, aFilter));
-   if (l.empty()) {
-      return NULL;
-   }
-   
-   assert(l.size() == 1);
-   return l.front();
+  validateSGGeod(aPos);
+  
+  List l(findClosestN(aPos, 1, aCutoffNm, aFilter));
+  if (l.empty()) {
+    return NULL;
+  }
+
+  assert(l.size() == 1);
+  return l.front();
 }
 
 FGPositioned::List
 FGPositioned::findClosestN(const SGGeod& aPos, unsigned int aN, double aCutoffNm, Filter* aFilter)
 {
+  validateSGGeod(aPos);
+  
   List result;
   Octree::findNearestN(SGVec3d::fromGeod(aPos), aN, aCutoffNm * SG_NM_TO_METER, aFilter, result);
   return result;
@@ -772,6 +791,8 @@ FGPositioned::findNextWithPartialId(FGPositionedRef aCur, const std::string& aId
 void
 FGPositioned::sortByRange(List& aResult, const SGGeod& aPos)
 {
+  validateSGGeod(aPos);
+  
   SGVec3d cartPos(SGVec3d::fromGeod(aPos));
 // computer ordering values
   Octree::FindNearestResults r;
