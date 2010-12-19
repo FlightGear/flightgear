@@ -90,24 +90,24 @@ if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
   # linker such as GNU ld on Linux
 	set(comps 
 		ephemeris
-		bucket
 		environment
 		nasal
-		props
-		xml
-		debug 
     sky
 		material tgdb
     model    
     screen
+    bucket
     bvh
-		structure
 		util route
 		timing
 		threads
 		io
     serial
 		sound
+    structure
+    props
+    xml
+    debug 
 		misc
 		magvar
     math)

@@ -136,10 +136,6 @@ set(SOURCES
 	ExternalPipe/ExternalPipe.cxx
 	)
 
-if(ENABLE_YASIM)
-	add_subdirectory(YASim)
-endif()
-
 if(ENABLE_UIUC_MODEL)
 	foreach(component ${UIUC_SOURCES})
 		list(APPEND SOURCES "UIUCModel/${component}")
@@ -153,6 +149,11 @@ if(ENABLE_LARCSIM)
 endif()
 
 flightgear_component(FDM "${SOURCES}")
+
+if(ENABLE_YASIM)
+	add_subdirectory(YASim)
+endif()
+
 
 if(ENABLE_JSBSIM)
     add_subdirectory(JSBSim)
