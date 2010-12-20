@@ -239,7 +239,12 @@ void MetarProperties::set_metar( const char * metar )
         SGPropertyNode_ptr cloudsNode = _rootNode->getNode("clouds", true );
         const vector<SGMetarCloud> & metarClouds = m->getClouds();
         unsigned layerOffset = 0; // Oh, this is ugly!
-        bool setGroundCloudLayer = _rootNode->getBoolValue("set-ground-cloud-layer", false );
+
+        // fog/mist/haze cloud layer does not work with 3d clouds yet :-(
+        bool setGroundCloudLayer = _rootNode->getBoolValue("set-ground-cloud-layer", false ) &&
+              false == (fgGetBool("/sim/rendering/shader-effects", false ) && 
+                        fgGetBool("/sim/rendering/clouds3d-enable", false ) );
+
         if( setGroundCloudLayer ) {
             // create a cloud layer #0 starting at the ground if its fog, mist or haze
 
@@ -266,13 +271,18 @@ void MetarProperties::set_metar( const char * metar )
                 coverage = SGMetarCloud::getCoverage(fgGetString("/environment/params/fog-mist-haze-layer/mist-2dlayer-coverage", SGMetarCloud::COVERAGE_OVERCAST_STRING));
                 thickness =  fgGetDouble("/environment/params/fog-mist-haze-layer/mist-thickness-ft",2000) - LAYER_BOTTOM_STATION_OFFSET;
                 alpha =  fgGetDouble("/environment/params/fog-mist-haze-layer/mist-2dlayer-alpha",0.8);
-            } else if( isHZ ) { // hase
+            } else if( isHZ ) { // haze
                 coverage = SGMetarCloud::getCoverage(fgGetString("/environment/params/fog-mist-haze-layer/mist-2dlayer-coverage", SGMetarCloud::COVERAGE_OVERCAST_STRING));
                 thickness =  fgGetDouble("/environment/params/fog-mist-haze-layer/haze-thickness-ft",2000) - LAYER_BOTTOM_STATION_OFFSET;
                 alpha =  fgGetDouble("/environment/params/fog-mist-haze-layer/haze-2dlayer-alpha",0.6);
             }
 
             if( coverage != SGMetarCloud::COVERAGE_NIL ) {
+
+                // if there is a layer above the fog, limit the top to one foot below that layer's bottom
+                if( metarClouds[0].getCoverage() != SGMetarCloud::COVERAGE_CLEAR )
+                    thickness = metarClouds[0].getAltitude_ft() - LAYER_BOTTOM_STATION_OFFSET - 1;
+
                 SGPropertyNode_ptr layerNode = cloudsNode->getChild(LAYER, 0, true );
                 layerNode->setDoubleValue( "coverage-type", SGCloudLayer::getCoverageType(coverage_string[coverage]) );
                 layerNode->setStringValue( "coverage", coverage_string[coverage] );
