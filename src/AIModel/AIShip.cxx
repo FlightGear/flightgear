@@ -620,6 +620,10 @@ double FGAIShip::getCourse(double lat, double lon, double lat2, double lon2) con
 
 void FGAIShip::ProcessFlightPlan(double dt) {
 
+    if ( dt < 0.00001 ) {
+	return;
+    }
+
     double time_sec = getDaySeconds();
 
     _dt_count += dt;
