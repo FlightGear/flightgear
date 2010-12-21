@@ -228,8 +228,8 @@ void FGPrecipitationMgr::update(double dt)
     }
     else {
         // The aircraft is bellow the cloud layer
-        rain_intensity = fgGetDouble("/environment/metar/rain-norm", 0.0);
-        snow_intensity = fgGetDouble("/environment/metar/snow-norm", 0.0);
+        rain_intensity = fgGetDouble("/environment/rain-norm", 0.0);
+        snow_intensity = fgGetDouble("/environment/snow-norm", 0.0);
     }
 
     // Get the current and dew temperature
