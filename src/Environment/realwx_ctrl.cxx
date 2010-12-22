@@ -215,6 +215,7 @@ void NoaaMetarRealWxController::update( bool first, double dt )
     bool valid = _metarValidNode->getBoolValue();
     string stationId = valid ? _metarStationIdNode->getStringValue() : "";
 
+    if( first ) _metarTimeToLive = 0.0;
 
     if( _metarTimeToLive <= 0.0 ) {
         valid = false;
