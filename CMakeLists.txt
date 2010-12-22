@@ -64,7 +64,7 @@ find_package(OpenGL REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(ALUT REQUIRED)
 find_package(OpenSceneGraph 2.8.2 REQUIRED osgText osgSim osgDB osgParticle osgFX osgUtil osgViewer osgGA)
-find_package(PLIB REQUIRED pu puaux js fnt)
+find_package(PLIB REQUIRED puaux pu js fnt)
 find_package(SimGear 2.0.0 REQUIRED)
 
 find_path (HAVE_SYS_TIME_H sys/time.h )
