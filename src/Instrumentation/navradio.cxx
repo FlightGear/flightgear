@@ -383,6 +383,7 @@ FGNavRadio::update(double dt)
 void FGNavRadio::clearOutputs()
 {
   inrange_node->setBoolValue( false );
+  signal_quality_norm_node->setDoubleValue( 0.0 );
   cdi_deflection_node->setDoubleValue( 0.0 );
   cdi_deflection_norm_node->setDoubleValue( 0.0 );
   cdi_xtrack_error_node->setDoubleValue( 0.0 );
