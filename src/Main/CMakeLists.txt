@@ -38,8 +38,7 @@ target_link_libraries(fgfs
 	${OPENGL_LIBRARIES}
 	${ALUT_LIBRARY} 
 	${ZLIB_LIBRARIES}
-	${PLIB_LIBRARIES})
+	${PLIB_LIBRARIES}
+	${RT_LIBRARY})
 	
 install(TARGETS fgfs RUNTIME DESTINATION bin)
-
-	

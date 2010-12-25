@@ -2,6 +2,8 @@ cmake_minimum_required (VERSION 2.6)
 
 include (CheckFunctionExists)
 include (CheckCSourceCompiles)
+include (CheckCXXSourceCompiles)
+include (CheckIncludeFile)
 include (CPack)
 
 project(FlightGear)
@@ -67,7 +69,48 @@ find_package(OpenSceneGraph 2.8.2 REQUIRED osgText osgSim osgDB osgParticle osgF
 find_package(PLIB REQUIRED puaux pu js fnt)
 find_package(SimGear 2.0.0 REQUIRED)
 
-find_path (HAVE_SYS_TIME_H sys/time.h )
+check_include_file(unistd.h HAVE_UNISTD_H)
+check_include_file(sys/time.h HAVE_SYS_TIME_H)
+
+# definition depends on OSG version
+set(CMAKE_REQUIRED_INCLUDES ${OPENSCENEGRAPH_INCLUDE_DIRS})
+
+check_cxx_source_compiles(
+    "#include <osg/CullSettings>
+    int main()
+    {
+       osg::CullSettings::VariablesMask mask = osg::CullSettings::CLEAR_MASK;
+       return 0;
+    }
+    "
+    HAVE_CULLSETTINGS_CLEAR_MASK)
+
+# library required by simgear
+# XXX This should go in a module and only run if simgear is not shared.
+
+if(HAVE_UNISTD_H)
+set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH})
+check_cxx_source_compiles(
+   "#include <unistd.h>
+    #if !defined(_POSIX_TIMERS) || (0 >= _POSIX_TIMERS)
+    #error clock_gettime is not supported
+    #endif
+
+    int main() { return 0; }
+    "
+    HAVE_CLOCK_GETTIME)    
+endif(HAVE_UNISTD_H)
+
+set(RT_LIBRARY "")
+if(HAVE_CLOCK_GETTIME)
+check_function_exists(clock_gettime CLOCK_GETTIME_IN_LIBC)
+if(NOT CLOCK_GETTIME_IN_LIBC)
+check_library_exists(rt clock_gettime "" HAVE_RT)
+if(HAVE_RT)
+set(RT_LIBRARY rt)
+endif(HAVE_RT)
+endif(NOT CLOCK_GETTIME_IN_LIBC)
+endif(HAVE_CLOCK_GETTIME)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(WARNING_FLAGS -Wall)
