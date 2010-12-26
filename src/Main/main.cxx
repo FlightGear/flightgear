@@ -46,7 +46,8 @@
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/props/AtomicChangeListener.hxx>
 #include <simgear/props/props.hxx>
-//#include <simgear/timing/sg_time.hxx>
+#include <simgear/timing/sg_time.hxx>
+#include <simgear/magvar/magvar.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/io/raw_socket.hxx>
 #include <simgear/misc/sg_sleep.hxx>
@@ -62,10 +63,13 @@
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 #include <Sound/fg_fx.hxx>
+#if ENABLE_ATCDCL
 #include <ATCDCL/ATCmgr.hxx>
+#endif
 #include <Time/TimeManager.hxx>
 #include <Environment/environment_mgr.hxx>
 #include <Environment/ephemeris.hxx>
+#include <GUI/gui.h>
 #include <GUI/new_gui.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
 
