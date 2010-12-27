@@ -50,27 +50,6 @@ inline int kHz10(double freq)
  if (freq > 1000.) return int(freq);
  return int(freq*100.0 + 0.25);
 }
- 
-enum plane_type {
-	UNKNOWN,
-	GA_SINGLE,
-	GA_HP_SINGLE,
-	GA_TWIN,
-	GA_JET,
-	MEDIUM,
-	HEAVY,
-	MIL_JET
-};
-
-// PlaneRec - a structure holding ATC-centric details of planes under control
-// This might move or change eventually
-struct PlaneRec {
-        PlaneRec() : type(UNKNOWN), squawkcode(0) {}
-        PlaneRec(const std::string& s) : type(UNKNOWN), callsign(s), squawkcode(0) {}
-	plane_type type;
-	std::string callsign;
-	int squawkcode;
-};
 
 // Possible types of ATC type that the radios may be tuned to.
 // INVALID implies not tuned in to anything.
@@ -82,14 +61,14 @@ enum atc_type {
 	APPROACH,
 	DEPARTURE,
 	ENROUTE,
-  INVALID	 /* must be last element;  see ATC_NUM_TYPES */
+	INVALID	 /* must be last element;  see ATC_NUM_TYPES */
 };
 
 const int ATC_NUM_TYPES = 1 + INVALID;
 
 // DCL - new experimental ATC data store
 struct ATCData {
-        ATCData() : type(INVALID), cart(0, 0, 0), freq(0), range(0) {}
+	ATCData() : type(INVALID), cart(0, 0, 0), freq(0), range(0) {}
 	atc_type type;
 	SGGeod geod;
 	SGVec3d cart;
@@ -102,7 +81,7 @@ struct ATCData {
 // perhaps we could use an FGRunway instead of this.
 // That wouldn't cache the orthopos though.
 struct RunwayDetails {
-        RunwayDetails() : end1ortho(0, 0, 0), end2ortho(0, 0, 0), hdg(0), length(-1), width(-1) {}
+	RunwayDetails() : end1ortho(0, 0, 0), end2ortho(0, 0, 0), hdg(0), length(-1), width(-1) {}
 	SGGeod threshold_pos;
 	SGVec3d end1ortho;	// ortho projection end1 (the threshold ATM)
 	SGVec3d end2ortho;	// ortho projection end2 (the take off end in the current hardwired scheme)
@@ -116,7 +95,7 @@ struct RunwayDetails {
 std::ostream& operator << (std::ostream& os, atc_type atc);
 
 class FGATC {
-  friend class FGATCMgr;
+	friend class FGATCMgr;
 public:
 	
 	FGATC();
@@ -131,12 +110,6 @@ public:
 	
 	// Recieve a coded callback from the ATC menu system based on the user's selection
 	virtual void ReceiveUserCallback(int code);
-	
-	// Add plane to a stack
-	virtual void AddPlane(const std::string& pid);
-	
-	// Remove plane from stack
-	virtual int RemovePlane();
 	
 	// Indicate that this instance should output to the display if appropriate 
 	inline void SetDisplay() { _display = true; }
@@ -191,17 +164,6 @@ protected:
 	// Requires the sound manager refname if audio, else "".
 	void NoRender(const std::string& refname);
 	
-	// Transmit a message when channel becomes free of other dialog
-	void Transmit(int callback_code = 0);
-	
-	// Transmit a message if channel becomes free within timeout (seconds). timeout of zero implies no limit
-	void ConditionalTransmit(double timeout, int callback_code = 0);
-	
-	// Transmit regardless of other dialog on the channel eg emergency
-	void ImmediateTransmit(int callback_code = 0);
-	
-	virtual void ProcessCallback(int code);
-	
 	SGGeod _geod;
 	SGVec3d _cart;
 	int freq;
@@ -237,7 +199,7 @@ protected:
 	bool responseReqd;	// Flag to indicate we should be responding to a request/report 
 	double _releaseTime;
 	double _releaseCounter;
-  atc_type _type;
+	atc_type _type;
 	bool _display;	// Flag to indicate whether we should be outputting to the ATC display.
 	std::string pending_transmission; // derived classes set this string before calling Transmit(...)	
 	
@@ -245,9 +207,6 @@ private:
 	// Transmission timing stuff.
 	double _timeout;
 	bool _pending;
-	
-	int _callback_code;	// A callback code to be notified and processed by the derived classes
-						// A value of zero indicates no callback required
 	bool _transmit;		// we are to transmit
 	bool _transmitting;	// we are transmitting
 	double _counter;

@@ -51,7 +51,6 @@ FGATC::FGATC() :
 	pending_transmission(""),
 	_timeout(0),
 	_pending(false),
-	_callback_code(0),
 	_transmit(false),
 	_transmitting(false),
 	_counter(0.0),
@@ -134,11 +133,6 @@ void FGATC::Update(double dt) {
 			//Render(pending_transmission, ident, false);
 			Render(pending_transmission);
 		}
-		// Run the callback regardless of whether on same freq as user or not.
-		//cout << "_callback_code = " << _callback_code << '\n';
-		if(_callback_code) {
-			ProcessCallback(_callback_code);
-		}
 		_transmit = false;
 		_transmitting = true;
 	} else if(_transmitting) {
@@ -185,43 +179,6 @@ void FGATC::NotifyTransmissionFinished(const string& rid) {
 	} else {
 		freqClear = true;
 	}
-}
-
-void FGATC::Transmit(int callback_code) {
-	SG_LOG(SG_ATC, SG_INFO, "Transmit called by " << ident << " " << _type << ", msg = " << pending_transmission);
-	_pending = true;
-	_callback_code = callback_code;
-	_timeout = 0.0;
-}
-
-void FGATC::ConditionalTransmit(double timeout, int callback_code) {
-	SG_LOG(SG_ATC, SG_INFO, "Timed transmit called by " << ident << " " << _type << ", msg = " << pending_transmission);
-	_pending = true;
-	_callback_code = callback_code;
-	_timeout = timeout;
-}
-
-void FGATC::ImmediateTransmit(int callback_code) {
-	SG_LOG(SG_ATC, SG_INFO, "Immediate transmit called by " << ident << " " << _type << ", msg = " << pending_transmission);
-	if(_display) {
-		//Render(pending_transmission, ident, false);
-		Render(pending_transmission);
-		// At the moment Render doesn't work except for ATIS
-	}
-	if(callback_code) {
-		ProcessCallback(callback_code);
-	}
-}
-
-// Derived classes should override this.
-void FGATC::ProcessCallback(int code) {
-}
-
-void FGATC::AddPlane(const string& pid) {
-}
-
-int FGATC::RemovePlane() {
-	return 0;
 }
 
 void FGATC::SetData(ATCData* d) {
