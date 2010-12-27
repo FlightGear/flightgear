@@ -32,7 +32,6 @@
 #include <map>
 
 #include "tower.hxx"
-#include "approach.hxx"
 
 using std::string;
 using std::list;
@@ -108,8 +107,6 @@ private:
     //FGATIS atis;
     //FGGround ground;
     FGTower tower;
-    FGApproach approach;
-    //FGDeparture departure;
 	
 	// Voice related stuff
 	bool voice;			// Flag - true if we are using voice
@@ -173,12 +170,6 @@ private:
 
     // Search the specified radio for stations on the same frequency and in range.
     void FreqSearch(const string navcomm, const int unit);
-	
-#ifdef AREA_SEARCH
-    // Search ATC stations by area in order that we appear 'on the radar'
-    void AreaSearch(); 
-#endif
-
 };
 
 #endif  // _FG_ATCMGR_HXX

@@ -31,7 +31,6 @@
 #include "commlist.hxx"
 #include "ATCDialog.hxx"
 #include "ATCutils.hxx"
-#include "transmissionlist.hxx"
 #include "ground.hxx"
 
 
@@ -97,14 +96,6 @@ void FGATCMgr::init() {
         // -EMH-
     
     // Initialise the ATC Dialogs
-    //cout << "Initing Transmissions..." << endl;
-    SG_LOG(SG_ATC, SG_INFO, "  ATC Transmissions");
-    current_transmissionlist = new FGTransmissionList;
-    SGPath p_transmission( globals->get_fg_root() );
-    p_transmission.append( "ATC/default.transmissions" );
-    current_transmissionlist->init( p_transmission );
-    //cout << "Done Transmissions" << endl;
-
     SG_LOG(SG_ATC, SG_INFO, "  ATC Dialog System");
     current_atcdialog = new FGATCDialog;
     current_atcdialog->Init();
@@ -147,12 +138,6 @@ void FGATCMgr::update(double dt) {
     
     // Search the tuned frequencies every now and then - this should be done with the event scheduler
     static int i = 0;   // Very ugly - but there should only ever be one instance of FGATCMgr.
-    /*** Area search is defeated.  Why?
-    if(i == 7) {
-        //cout << "About to AreaSearch()" << endl;
-        AreaSearch();
-    }
-    ***/
     if(i == 15) {
         //cout << "About to search navcomm1" << endl;
         FreqSearch("comm", 0);
@@ -459,7 +444,6 @@ void FGATCMgr::FreqSearch(const string navcomm, const int unit) {
               || data.type == AWOS)     (*atc_list)[svc_name] = new FGATIS;
         else if (data.type == TOWER)    (*atc_list)[svc_name] = new FGTower;
         else if (data.type == GROUND)   (*atc_list)[svc_name] = new FGGround;
-        else if (data.type == APPROACH) (*atc_list)[svc_name] = new FGApproach;
         FGATC* svc = (*atc_list)[svc_name];
         svc->SetData(&data);
         svc->active_on[ncunit] = 1;
@@ -471,64 +455,3 @@ void FGATCMgr::FreqSearch(const string navcomm, const int unit) {
       ZapOtherService(ncunit, "x x x");
     } 
 }
-
-#ifdef AREA_SEARCH
-/* I don't think AreaSearch ever gets called */
-// Search ATC stations by area in order that we appear 'on the radar'
-void FGATCMgr::AreaSearch() {
-  const string AREA("AREA");
-  // Search for Approach stations
-  comm_list_type approaches;
-  comm_list_iterator app_itr;
-
-  lon = lon_node->getDoubleValue();
-  lat = lat_node->getDoubleValue();
-  elev = elev_node->getDoubleValue() * SG_FEET_TO_METER;
-  for (atc_list_iterator svc = atc_list->begin(); svc != atc_list->end(); svc++) {
-    MSI &actv = svc->second->active_on;
-    if (actv.count(AREA)) actv[AREA] = 0;  // Mark all as maybe not in range
-  }
-
-  // search stations in range
-  int num_app = current_commlist->FindByPos(lon, lat, elev, 100.0, &approaches, APPROACH);
-  if (num_app != 0) {
-    //cout << num_app << " approaches found in area search !!!!" << endl;
-
-    for(app_itr = approaches.begin(); app_itr != approaches.end(); app_itr++) {
-      FGATC* app = FindInList(app_itr->ident, app_itr->type);
-      string svc_name = app_itr->ident+decimalNumeral(app_itr->type);
-      if(app != NULL) {
-    // The station is already in the ATC list
-    app->AddPlane("Player");
-      } else {
-    // Generate the station and put in the ATC list
-    FGApproach* a = new FGApproach;
-    a->SetData(&(*app_itr));
-    a->AddPlane("Player");
-    (*atc_list)[svc_name] = a;
-    //cout << "New area service: " << svc_name << endl;
-      }
-      FGATC* svc = (*atc_list)[svc_name];
-      svc->active_on[AREA] = 1;
-    }
-  }
-
-  for (atc_list_iterator svc = atc_list->begin(); svc != atc_list->end(); svc++) {
-    MSI &actv = svc->second->active_on;
-    if (!actv.count(AREA)) continue;
-    if (!actv[AREA]) actv.erase(AREA);
-    if (!actv.size()) {     // this service no longer active at all
-      cout << "Eradicating area service: " << svc->first << endl;
-      svc->second->SetNoDisplay();
-      svc->second->Update(0);
-      delete (svc->second);
-      atc_list->erase(svc);
-// Reset the persistent iterator, since any erase() makes it invalid:
-      atc_list_itr = atc_list->begin(); 
-// Hope we only move out of one approach-area;
-// others will not be noticed until next update:
-      break;
-    }
-  }
-}
-#endif
