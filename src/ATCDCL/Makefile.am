@@ -3,8 +3,6 @@ noinst_LIBRARIES = libATCDCL.a
 libATCDCL_a_SOURCES = \
 	ATC.hxx ATC.cxx \
 	atis.hxx atis.cxx \
-	tower.hxx tower.cxx \
-	ground.hxx ground.cxx \
 	commlist.hxx commlist.cxx \
 	ATCDialog.hxx ATCDialog.cxx \
 	ATCVoice.hxx ATCVoice.cxx \

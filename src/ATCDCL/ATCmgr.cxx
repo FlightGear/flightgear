@@ -31,7 +31,6 @@
 #include "commlist.hxx"
 #include "ATCDialog.hxx"
 #include "ATCutils.hxx"
-#include "ground.hxx"
 
 
 /*
@@ -44,13 +43,7 @@ static void fgATCSearch( void ) {
 
 AirportATC::AirportATC() :
     atis_freq(0.0),
-    atis_active(false),
-    tower_freq(0.0),
-    tower_active(false),
-    ground_freq(0.0),
-    ground_active(false),
-    set_by_AI(false),
-    numAI(0)
+    atis_active(false)
     //airport_atc_map.clear();
 {
 }
@@ -123,17 +116,18 @@ void FGATCMgr::update(double dt) {
         }
         //cout << "Updating " << (*atc_list_itr)->get_ident() << ' ' << (*atc_list_itr)->GetType() << '\n';
         //cout << "Freq = " << (*atc_list_itr)->get_freq() << '\n';
+        //cout << "Updating...\n";
         (*atc_list_itr).second->Update(dt * atc_list->size());
         //cout << "Done ATC update..." << endl;
         ++atc_list_itr;
     }
     
 #ifdef ATC_TEST
-    cout << "ATC_LIST: " << atc_list->size() << ' ';
+    //cout << "ATC_LIST: " << atc_list->size() << ' ';
     for(atc_list_iterator it = atc_list->begin(); it != atc_list->end(); it++) {
         cout << (*it)->get_ident() << ' ';
     }
-    cout << '\n';
+    //cout << '\n';
 #endif
     
     // Search the tuned frequencies every now and then - this should be done with the event scheduler
@@ -169,17 +163,9 @@ bool FGATCMgr::CommRegisterAirport(const string& ident, int chan, const atc_type
     SG_LOG(SG_ATC, SG_BULK, "Comm channel " << chan << " registered airport " << ident);
     //cout << "Comm channel " << chan << " registered airport " << ident << ' ' << tp << '\n';
     if(airport_atc_map.find(ident) != airport_atc_map.end()) {
-        //cout << "IN MAP - flagging set by comm..." << endl;
-//xx        airport_atc_map[ident]->set_by_comm[chan][tp] = true;
         if(tp == ATIS || tp == AWOS) {
             airport_atc_map[ident]->atis_active = true;
-        } else if(tp == TOWER) {
-            airport_atc_map[ident]->tower_active = true;
-        } else if(tp == GROUND) {
-            airport_atc_map[ident]->ground_active = true;
-        } else if(tp == APPROACH) {
-            //a->approach_active = true;
-        }   // TODO - there *must* be a better way to do this!!!
+        }
         return(true);
     } else {
         //cout << "NOT IN MAP - creating new..." << endl;
@@ -191,23 +177,9 @@ bool FGATCMgr::CommRegisterAirport(const string& ident, int chan, const atc_type
             a->atis_freq = GetFrequency(ident, ATIS)
                     || GetFrequency(ident, AWOS);
             a->atis_active = false;
-            a->tower_freq = GetFrequency(ident, TOWER);
-            a->tower_active = false;
-            a->ground_freq = GetFrequency(ident, GROUND);
-            a->ground_active = false;
             if(tp == ATIS || tp == AWOS) {
                 a->atis_active = true;
-            } else if(tp == TOWER) {
-                a->tower_active = true;
-            } else if(tp == GROUND) {
-                a->ground_active = true;
-            } else if(tp == APPROACH) {
-                //a->approach_active = true;
-            }   // TODO - there *must* be a better way to do this!!!
-            // TODO - some airports will have a tower/ground frequency but be inactive overnight.
-            a->set_by_AI = false;
-            a->numAI = 0;
-//xx            a->set_by_comm[chan][tp] = true;
+            }
             airport_atc_map[ident] = a;
             return(true);
         }
@@ -225,25 +197,24 @@ void FGATCMgr::ZapOtherService(const string ncunit, const string svc_name){
       // OK, we have found some OTHER service;
       // see if it is (was) active on our unit:
       if (!actv.count(ncunit)) continue;
-      // cout << "Eradicating '" << svc->first << "' from: " << ncunit << endl;
+      //cout << "Eradicating '" << svc->first << "' from: " << ncunit << endl;
       actv.erase(ncunit);
       if (!actv.size()) {
         //cout << "Eradicating service: '" << svc->first << "'" << endl;
-    svc->second->SetNoDisplay();
-    svc->second->Update(0);     // one last update
-    SG_LOG(SG_GENERAL, SG_INFO, "would have erased ATC service:" << svc->second->get_name()<< "/" 
-      << svc->second->get_ident());
-   // delete svc->second;
-    atc_list->erase(svc);
-// ALL pointers into the ATC list are now invalid,
-// so let's reset them:
-    atc_list_itr = atc_list->begin();
+        svc->second->SetNoDisplay();
+        svc->second->Update(0);     // one last update
+        SG_LOG(SG_GENERAL, SG_INFO, "would have erased ATC service:" << svc->second->get_name()<< "/"
+          << svc->second->get_ident());
+        // delete svc->second;
+        atc_list->erase(svc);
+        // ALL pointers into the ATC list are now invalid,
+        // so let's reset them:
+        atc_list_itr = atc_list->begin();
       }
       break;        // cannot be duplicates in the active list
     }
   }
 }
-
 
 // Find in list - return a currently active ATC pointer given ICAO code and type
 // Return NULL if the given service is not in the list
@@ -262,81 +233,6 @@ bool FGATCMgr::GetAirportATCDetails(const string& icao, AirportATC* a) {
     } else {
         return(false);
     }
-}
-
-
-// Return a pointer to a given sort of ATC at a given airport and activate if necessary
-// Returns NULL if service doesn't exist - calling function should check for this.
-// We really ought to make this private and call it from the CommRegisterAirport / AIRegisterAirport functions
-// - at the moment all these GetATC... functions exposed are just too complicated.
-FGATC* FGATCMgr::GetATCPointer(const string& icao, const atc_type& type) {
-    if(airport_atc_map.find(icao) == airport_atc_map.end()) {
-        //cout << "Unable to find " << icao << ' ' << type << " in the airport_atc_map" << endl;
-        return NULL;
-    }
-    //cout << "In GetATCPointer, found " << icao << ' ' << type << endl;
-    AirportATC *a = airport_atc_map[icao];
-    //cout << "a->lon = " << a->lon << '\n';
-    //cout << "a->elev = " << a->elev << '\n';
-    //cout << "a->tower_freq = " << a->tower_freq << '\n';
-    switch(type) {
-    case TOWER:
-        if(a->tower_active) {
-            // Get the pointer from the list
-            return(FindInList(icao, type));
-        } else {
-            ATCData data;
-            if(current_commlist->FindByFreq(a->geod, a->tower_freq, &data, TOWER)) {
-                FGTower* t = new FGTower;
-                t->SetData(&data);
-                (*atc_list)[icao+decimalNumeral(type)] = t;
-                a->tower_active = true;
-                airport_atc_map[icao] = a;
-                //cout << "Initing tower " << icao << " in GetATCPointer()\n";
-                t->Init();
-                return(t);
-            } else {
-                SG_LOG(SG_ATC, SG_ALERT, "ERROR - tower that should exist in FGATCMgr::GetATCPointer for airport " << icao << " not found");
-            }
-        }
-        break;
-    case APPROACH:
-        break;
-    case ATIS: case AWOS:
-        SG_LOG(SG_ATC, SG_ALERT, "ERROR - ATIS station should not be requested from FGATCMgr::GetATCPointer");
-        break;
-    case GROUND:
-        //cout << "IN CASE GROUND" << endl;
-        if(a->ground_active) {
-            // Get the pointer from the list
-            return(FindInList(icao, type));
-        } else {
-            ATCData data;
-            if(current_commlist->FindByFreq(a->geod, a->ground_freq, &data, GROUND)) {
-                FGGround* g = new FGGround;
-                g->SetData(&data);
-                (*atc_list)[icao+decimalNumeral(type)] = g;
-                a->ground_active = true;
-                airport_atc_map[icao] = a;
-                g->Init();
-                return(g);
-            } else {
-                SG_LOG(SG_ATC, SG_ALERT, "ERROR - ground control that should exist in FGATCMgr::GetATCPointer for airport " << icao << " not found");
-            }
-        }
-        break;
-        case INVALID:
-        break;
-        case ENROUTE:
-        break;
-        case DEPARTURE:
-        break;
-    }
-    
-    SG_LOG(SG_ATC, SG_ALERT, "ERROR IN FGATCMgr - reached end of GetATCPointer");
-    //cout << "ERROR IN FGATCMgr - reached end of GetATCPointer" << endl;
-    
-    return(NULL);
 }
 
 // Return a pointer to an appropriate voice for a given type of ATC
@@ -398,10 +294,10 @@ FGATCVoice* FGATCMgr::GetVoicePointer(const atc_type& type) {
 void FGATCMgr::FreqSearch(const string navcomm, const int unit) {
 
 
-        string ncunit = navcomm + "[" + decimalNumeral(unit) + "]";
+    string ncunit = navcomm + "[" + decimalNumeral(unit) + "]";
     string commbase = "/instrumentation/" + ncunit;
     string commfreq = commbase + "/frequencies/selected-mhz";
-        SGPropertyNode_ptr comm_node = fgGetNode(commfreq.c_str(), false);
+    SGPropertyNode_ptr comm_node = fgGetNode(commfreq.c_str(), false);
 
     //cout << "FreqSearch: " << ncunit
     //  << "  node: " << comm_node << endl;
@@ -410,48 +306,47 @@ void FGATCMgr::FreqSearch(const string navcomm, const int unit) {
     ATCData data;   
     double freq = comm_node->getDoubleValue();
     _aircraftPos = SGGeod::fromDegFt(lon_node->getDoubleValue(),
-      lat_node->getDoubleValue(), elev_node->getDoubleValue());
+        lat_node->getDoubleValue(), elev_node->getDoubleValue());
     
-// Query the data store and get the closest match if any
+    // Query the data store and get the closest match if any
     //cout << "Will FindByFreq: " << lat << " " << lon << " " << elev
     //      << "  freq: " << freq << endl;
     if(current_commlist->FindByFreq(_aircraftPos, freq, &data)) {
-      //cout << "FoundByFreq: " << freq 
-      //  << "  ident: " << data.ident 
-      //  << "  type: " << data.type << " ***" << endl;
-// We are in range of something.
+        //cout << "FoundByFreq: " << freq
+        //  << "  ident: " << data.ident
+        //  << "  type: " << data.type << " ***" << endl;
+        // We are in range of something.
 
 
-// Get rid of any *other* service that was on this radio unit:
-            string svc_name = data.ident+decimalNumeral(data.type);
+        // Get rid of any *other* service that was on this radio unit:
+        string svc_name = data.ident+decimalNumeral(data.type);
         ZapOtherService(ncunit, svc_name);
-// See if the service already exists, possibly connected to
-// some other radio unit:
+        // See if the service already exists, possibly connected to
+        // some other radio unit:
         if (atc_list->count(svc_name)) {
-          // make sure the service knows it's tuned on this radio:
-          FGATC* svc = (*atc_list)[svc_name];
-          svc->active_on[ncunit] = 1;
-          svc->SetDisplay();
-          if (data.type == APPROACH) svc->AddPlane("Player");
-          return;
+            // make sure the service knows it's tuned on this radio:
+            FGATC* svc = (*atc_list)[svc_name];
+            svc->active_on[ncunit] = 1;
+            svc->SetDisplay();
+            return;
         }
 
         CommRegisterAirport(data.ident, unit, data.type);
 
-// This was a switch-case statement but the compiler didn't like 
-// the new variable creation with it. 
-        if      (data.type == ATIS
-              || data.type == AWOS)     (*atc_list)[svc_name] = new FGATIS;
-        else if (data.type == TOWER)    (*atc_list)[svc_name] = new FGTower;
-        else if (data.type == GROUND)   (*atc_list)[svc_name] = new FGGround;
-        FGATC* svc = (*atc_list)[svc_name];
-        svc->SetData(&data);
-        svc->active_on[ncunit] = 1;
-        svc->SetDisplay();
-        svc->Init();
-        if (data.type == APPROACH) svc->AddPlane("Player");
+        // This was a switch-case statement but the compiler didn't like
+        // the new variable creation with it.
+        if(data.type == ATIS || data.type == AWOS) {
+            (*atc_list)[svc_name] = new FGATIS;
+            FGATC* svc = (*atc_list)[svc_name];
+            if(svc != NULL) {
+                svc->SetData(&data);
+                svc->active_on[ncunit] = 1;
+                svc->SetDisplay();
+                svc->Init();
+            }
+        }
     } else {
-      // No services in range.  Zap any service on this unit.
-      ZapOtherService(ncunit, "x x x");
+        // No services in range.  Zap any service on this unit.
+        ZapOtherService(ncunit, "x x x");
     } 
 }

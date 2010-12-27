@@ -31,7 +31,7 @@
 #include <list>
 #include <map>
 
-#include "tower.hxx"
+#include "ATC.hxx"
 
 using std::string;
 using std::list;
@@ -47,22 +47,6 @@ struct AirportATC {
     SGGeod geod;
     float atis_freq;
     bool atis_active;
-    float tower_freq;
-    bool tower_active;
-    float ground_freq;
-    bool ground_active;
-    //float approach_freq;
-    //bool approach_active;
-    //float departure_freq;
-    //bool departure_active;
-	
-	// NOTE - the *_active flags determine whether the service is active in atc_list,
-	// *NOT* whether the tower etc is closed or not!!!!
-
-    // Flags to ensure the stations don't get wrongly deactivated
-    bool set_by_AI;	// true when the AI manager has activated this station
-	unsigned int numAI;	// Ref count of the number of AI planes registered
-//xx    bool set_by_comm[2][ATC_NUM_TYPES];	// true when the relevant comm_freq has activated this station and type
 };
 
 class FGATCMgr : public SGSubsystem
@@ -70,7 +54,7 @@ class FGATCMgr : public SGSubsystem
 
 private:
 
-	bool initDone;	// Hack - guard against update getting called before init
+    bool initDone;	// Hack - guard against update getting called before init
 
     // A map of airport ID vs frequencies and ATC provision
     typedef map < string, AirportATC* > airport_atc_map_type;
@@ -105,14 +89,12 @@ private:
     bool last_in_range;
 
     //FGATIS atis;
-    //FGGround ground;
-    FGTower tower;
 	
-	// Voice related stuff
-	bool voice;			// Flag - true if we are using voice
+    // Voice related stuff
+    bool voice;			// Flag - true if we are using voice
 #ifdef ENABLE_AUDIO_SUPPORT
-	bool voiceOK;		// Flag - true if at least one voice has loaded OK
-	FGATCVoice* v1;
+    bool voiceOK;		// Flag - true if at least one voice has loaded OK
+    FGATCVoice* v1;
 #endif
 
 public:
@@ -130,31 +112,27 @@ public:
 
     // Returns true if the airport is found in the map
     bool GetAirportATCDetails(const string& icao, AirportATC* a);
-
-    // Return a pointer to a given sort of ATC at a given airport and activate if necessary
-	// Returns NULL if service doesn't exist - calling function should check for this.
-    FGATC* GetATCPointer(const string& icao, const atc_type& type);
 	
-	// Return a pointer to an appropriate voice for a given type of ATC
-	// creating the voice if necessary - ie. make sure exactly one copy
-	// of every voice in use exists in memory.
-	//
-	// TODO - in the future this will get more complex and dole out country/airport
-	// specific voices, and possible make sure that the same voice doesn't get used
-	// at different airports in quick succession if a large enough selection are available.
-	FGATCVoice* GetVoicePointer(const atc_type& type);
-	
-	atc_type GetComm1ATCType() { return(INVALID/* kludge */); }
-	FGATC* GetComm1ATCPointer() { return(0/* kludge */); }
-	atc_type GetComm2ATCType() { return(INVALID); }
-	FGATC* GetComm2ATCPointer() { return(0/* kludge */); }
-	
-	// Get the frequency of a given service at a given airport
-	// Returns zero if not found
-	unsigned short int GetFrequency(const string& ident, const atc_type& tp);
-	
-	// Register the fact that the comm radio is tuned to an airport
-	bool CommRegisterAirport(const string& ident, int chan, const atc_type& tp);
+    // Return a pointer to an appropriate voice for a given type of ATC
+    // creating the voice if necessary - ie. make sure exactly one copy
+    // of every voice in use exists in memory.
+    //
+    // TODO - in the future this will get more complex and dole out country/airport
+    // specific voices, and possible make sure that the same voice doesn't get used
+    // at different airports in quick succession if a large enough selection are available.
+    FGATCVoice* GetVoicePointer(const atc_type& type);
+    
+    atc_type GetComm1ATCType() { return(INVALID/* kludge */); }
+    FGATC* GetComm1ATCPointer() { return(0/* kludge */); }
+    atc_type GetComm2ATCType() { return(INVALID); }
+    FGATC* GetComm2ATCPointer() { return(0/* kludge */); }
+    
+    // Get the frequency of a given service at a given airport
+    // Returns zero if not found
+    unsigned short int GetFrequency(const string& ident, const atc_type& tp);
+    
+    // Register the fact that the comm radio is tuned to an airport
+    bool CommRegisterAirport(const string& ident, int chan, const atc_type& tp);
 	
 private:
 
@@ -163,9 +141,8 @@ private:
     void ZapOtherService(const string ncunit, const string svc_name);
 
     // Return a pointer to a class in the list given ICAO code and type
-	// (external interface to this is through GetATCPointer) 
-	// Return NULL if the given service is not in the list
-	// - *** THE CALLING FUNCTION MUST CHECK FOR THIS ***
+    // Return NULL if the given service is not in the list
+    // - *** THE CALLING FUNCTION MUST CHECK FOR THIS ***
     FGATC* FindInList(const string& id, const atc_type& tp);
 
     // Search the specified radio for stations on the same frequency and in range.
