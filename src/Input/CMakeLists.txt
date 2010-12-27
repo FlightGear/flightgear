@@ -28,7 +28,12 @@ set(FGJS_SOURCES
 	
 add_executable(fgjs ${FGJS_SOURCES})
 
+if(WIN32)
+   set(SOCKETS_LIBRARY wsock32.lib)
+endif(WIN32)
+
 target_link_libraries(fgjs 
+    ${SOCKETS_LIBRARY}
 	${SIMGEAR_LIBRARIES}
 	${PLIB_LIBRARIES}
 	${ZLIB_LIBRARY})

@@ -59,7 +59,17 @@ else(EVENT_INPUT)
 endif(EVENT_INPUT)
 
 # check required dependencies
-find_package(Boost REQUIRED)
+if (MSVC)
+    # on MSVC, Olaf reports that the serialization library is required at
+    # link time. No one has you explained why, unfortunately.
+    set(Boost_USE_STATIC_LIBS        ON)
+    set(Boost_USE_MULTITHREADED      ON)
+    set(Boost_USE_STATIC_RUNTIME    OFF)
+    find_package(Boost REQUIRED COMPONENTS serialization)
+else (MSVC)
+    find_package(Boost REQUIRED)
+endif (MSVC)
+
 find_package(ZLIB REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -130,8 +140,8 @@ if(WIN32)
     set(NOMINMAX 1)
 endif(WIN32)    
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARNING_FLAGS} ${MSVC_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS} ${MSVC_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARNING_FLAGS} ${MSVC_FLAGS} -D_REENTRANT")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS} ${MSVC_FLAGS} -D_REENTRANT")
 
 include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS} 
     ${Boost_INCLUDE_DIRS} 
