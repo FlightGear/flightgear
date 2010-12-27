@@ -62,59 +62,66 @@ FIND_LIBRARY(SIMGEAR_LIBRARIES
 )
 
 macro(find_sg_component comp libs)
-	set(compLib "sg${comp}")
-	string(TOUPPER "SIMGEAR_${comp}_LIBRARY" compLibName)
-	
-	FIND_LIBRARY(${compLibName}
-	  NAMES ${compLib}
-	  HINTS $ENV{SIMGEAR_DIR}
-	  PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
-	  PATHS
-	  /usr/local
-	  /usr
-	  /opt
-	)
-	
-	set(componentLib ${${compLibName}})
-	if (NOT ${componentLib} STREQUAL "componentLib-NOTFOUND")
-		#message(STATUS "found ${componentLib}")
-		list(APPEND ${libs} ${componentLib})
-	endif()
+    set(compLib "sg${comp}")
+    string(TOUPPER "SIMGEAR_${comp}_LIBRARY" compLibName)
+    
+    FIND_LIBRARY(${compLibName}
+      NAMES ${compLib}
+      HINTS $ENV{SIMGEAR_DIR}
+      PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
+      PATHS
+      /usr/local
+      /usr
+      /opt
+    )
+    
+    set(componentLib ${${compLibName}})
+    if (NOT ${componentLib} STREQUAL "componentLib-NOTFOUND")
+        #message(STATUS "found ${componentLib}")
+        list(APPEND ${libs} ${componentLib})
+    endif()
 endmacro()
 
-if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")	
-	set(SIMGEAR_LIBRARIES "") # clear value
-	
+
+if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")  
+    set(SIMGEAR_LIBRARIES "") # clear value
+    
+    if(NOT MSVC)
+        # Olaf indicates that linking the threads libs causes failures
+        # on MSVC builds
+        set(thread_lib threads)
+    endif(NOT MSVC)
+    
   # note the order here affects the order Simgear libraries are
   # linked in, and hence ability to link when using a traditional
   # linker such as GNU ld on Linux
-	set(comps 
-		ephemeris
-		environment
-		nasal
-    sky
-		material tgdb
-    model    
-    screen
-    bucket
-    bvh
-		util route
-		timing
-		threads
-		io
-    serial
-		sound
-    structure
-    props
-    xml
-    debug 
-		misc
-		magvar
-    math)
-	
-	foreach(component ${comps})
-		find_sg_component(${component} SIMGEAR_LIBRARIES)
-	endforeach()
+    set(comps 
+        ephemeris
+        environment
+        nasal
+        sky
+        material tgdb
+        model    
+        screen
+        bucket
+        bvh
+        util route
+        timing
+        ${thread_lib}
+        io
+        serial
+        sound
+        structure
+        props
+        xml
+        debug 
+        misc
+        magvar
+        math)
+    
+    foreach(component ${comps})
+        find_sg_component(${component} SIMGEAR_LIBRARIES)
+    endforeach()
 endif()
 
 # now we've found SimGear, check its version
@@ -132,30 +139,30 @@ check_cxx_source_runs(
     #define xstr(s) str(s)
     #define str(s) #s
      
-	#define MIN_MAJOR ${SimGear_FIND_VERSION_MAJOR}
-	#define MIN_MINOR ${SimGear_FIND_VERSION_MINOR}
-	#define MIN_MICRO ${SimGear_FIND_VERSION_PATCH}
-	
-	int main() {
-	    int major, minor, micro;
+    #define MIN_MAJOR ${SimGear_FIND_VERSION_MAJOR}
+    #define MIN_MINOR ${SimGear_FIND_VERSION_MINOR}
+    #define MIN_MICRO ${SimGear_FIND_VERSION_PATCH}
+    
+    int main() {
+        int major, minor, micro;
 
-	    /* printf(%d.%d.%d or greater, , MIN_MAJOR, MIN_MINOR, MIN_MICRO); */
-	    printf(\"found %s ... \", xstr(SIMGEAR_VERSION));
+        /* printf(%d.%d.%d or greater, , MIN_MAJOR, MIN_MINOR, MIN_MICRO); */
+        printf(\"found %s ... \", xstr(SIMGEAR_VERSION));
 
-	    sscanf( xstr(SIMGEAR_VERSION), \"%d.%d.%d\", &major, &minor, &micro );
+        sscanf( xstr(SIMGEAR_VERSION), \"%d.%d.%d\", &major, &minor, &micro );
 
-	    if ( (major < MIN_MAJOR) ||
-	         (major == MIN_MAJOR && minor < MIN_MINOR) ||
-	         (major == MIN_MAJOR && minor == MIN_MINOR && micro < MIN_MICRO) ) {
-		 return -1;
-	    }
+        if ( (major < MIN_MAJOR) ||
+             (major == MIN_MAJOR && minor < MIN_MINOR) ||
+             (major == MIN_MAJOR && minor == MIN_MINOR && micro < MIN_MICRO) ) {
+         return -1;
+        }
 
-	    return 0;
-	}
+        return 0;
+    }
     "
     SIMGEAR_VERSION_OK)
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(SimGear DEFAULT_MSG 
-	 SIMGEAR_LIBRARIES SIMGEAR_INCLUDE_DIR SIMGEAR_VERSION_OK)
+     SIMGEAR_LIBRARIES SIMGEAR_INCLUDE_DIR SIMGEAR_VERSION_OK)
 

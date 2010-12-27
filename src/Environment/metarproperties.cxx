@@ -280,7 +280,7 @@ void MetarProperties::set_metar( const char * metar )
             if( coverage != SGMetarCloud::COVERAGE_NIL ) {
 
                 // if there is a layer above the fog, limit the top to one foot below that layer's bottom
-                if( metarClouds[0].getCoverage() != SGMetarCloud::COVERAGE_CLEAR )
+                if( metarClouds.size() > 0 && metarClouds[0].getCoverage() != SGMetarCloud::COVERAGE_CLEAR )
                     thickness = metarClouds[0].getAltitude_ft() - LAYER_BOTTOM_STATION_OFFSET - 1;
 
                 SGPropertyNode_ptr layerNode = cloudsNode->getChild(LAYER, 0, true );
