@@ -39,7 +39,6 @@
 #include <string>
 #include <iostream>
 
-
 #include <boost/tuple/tuple.hpp>
 
 #include <simgear/misc/sg_path.hxx>
@@ -63,6 +62,8 @@ using boost::ref;
 using boost::tie;
 
 FGATIS::FGATIS() :
+  transmission(""),
+  trans_ident(""),
   old_volume(0),
   atis_failed(false),
   msg_OK(0),
@@ -107,7 +108,7 @@ FGATIS::attend (int attn)
 void FGATIS::Update(double dt) {
   cur_time = globals->get_time_params()->get_cur_time();
   msg_OK = (msg_time < cur_time);
-#if 0
+#ifdef ATIS_TEST
   if (msg_OK || _display != _prev_display) {
     cout << "ATIS Update: " << _display << "  " << _prev_display
       << "  len: " << transmission.length()
@@ -212,10 +213,13 @@ int FGATIS::GenTransmission(const int regen, const int special) {
 
   transmission = "";
 
-// UK CAA radiotelephony manual indicated ATIS transmissions start
+  if (ident.substr(0,2) == "EG") {
+// UK CAA radiotelephony manual indicates ATIS transmissions start
 // with "This is ..." 
-// In the US they just start with the airport name.
-// transmission += "This_is ";
+    transmission += "This_is + ";
+  } else {
+    // In the US they just start with the airport name.
+  }
 
   // SG_LOG(SG_ATC, SG_ALERT, "ATIS: facility name: " << name);
 
@@ -247,10 +251,13 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   transmission += name2 + " ";
   if (_type == ATIS /* as opposed to AWOS */) {
     transmission += "airport_information ";
-    phonetic_seq_string = GetPhoneticLetter(sequence);  // Add the sequence letter
-    transmission += phonetic_seq_string + BRK;
+  } else {
+    transmission += "Automated_weather_observation ";
   }
-  transmission += "Automated_weather_observation ";
+
+  phonetic_seq_string = GetPhoneticLetter(sequence);  // Add the sequence letter
+  transmission += phonetic_seq_string + BRK;
+
 // Warning - this is fragile if the time string format changes
   hours = time_str.substr(0,2).c_str();
   mins  = time_str.substr(3,2).c_str();
