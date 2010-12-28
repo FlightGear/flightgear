@@ -527,8 +527,8 @@ FGProperties::unbind ()
 
 				// Misc. Temporary junk.
   fgUntie("/sim/temp/winding-ccw");
-  fgUntie("/sim/temp/full-screen");
-  fgUntie("/sim/temp/fdm-data-logging");
+//  fgUntie("/sim/temp/full-screen");
+//  fgUntie("/sim/temp/fdm-data-logging");
 }
 
 void
