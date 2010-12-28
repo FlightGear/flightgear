@@ -44,11 +44,7 @@
 #include "kln89_symbols.hxx"
 #include <iostream>
 
-#if ENABLE_ATCDCL
 #include <ATCDCL/ATCProjection.hxx>
-#else
-#include <ATC/atcutils.hxx>
-#endif
 
 #include <Main/fg_props.hxx>
 #include <simgear/math/SGMath.hxx>
@@ -763,11 +759,7 @@ void KLN89::DrawMap(bool draw_avs) {
 	double mapScaleMeters = _mapScale * (_mapScaleUnits == 0 ? SG_NM_TO_METER : 1000);
 	
 	// TODO - use an aligned projection when either DTK or TK up!
-#if ENABLE_ATCDCL
 	FGATCAlignedProjection mapProj(SGGeod::fromRad(_gpsLon, _gpsLat), _mapHeading);
-#else	
-        FGKln89AlignedProjection mapProj(SGGeod::fromRad(_gpsLon, _gpsLat), _mapHeading);
-#endif
 	double meter_per_pix = (_mapOrientation == 0 ? mapScaleMeters / 20.0f : mapScaleMeters / 29.0f);
 	SGGeod bottomLeft = mapProj.ConvertFromLocal(SGVec3d(gps_max(-57.0 * meter_per_pix, -50000), gps_max((_mapOrientation == 0 ? -20.0 * meter_per_pix : -11.0 * meter_per_pix), -25000), 0.0));
 	SGGeod topRight = mapProj.ConvertFromLocal(SGVec3d(gps_min(54.0 * meter_per_pix, 50000), gps_min((_mapOrientation == 0 ? 20.0 * meter_per_pix : 29.0 * meter_per_pix), 25000), 0.0));

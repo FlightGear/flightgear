@@ -209,16 +209,6 @@ else
 fi
 AM_CONDITIONAL(ENABLE_SP_FDM, test "x$enable_sp_fdms" != "xno")
 
-# Specify whether we want to compile ATCDCL.
-# default to with_atcdcl=yes
-AC_ARG_ENABLE(atcdcl, [  --enable-atcdcl                Compile and link the deprecated atc/ai module], [], [enable_atcdcl="$enableval"] )
-if test "x$enable_atcdcl" = "xyes"; then
-    AC_DEFINE([ENABLE_ATCDCL], 1, [Define to include old ATC/AI module])
-else
-    AC_DEFINE([ENABLE_ATCDCL], 0, [Define to include old ATC/AI module])
-fi
-AM_CONDITIONAL(ENABLE_ATCDCL, test "x$enable_atcdcl" = "xyes")
-
 dnl EXPERIMENTAL generic event driven input device
 # defaults to no
 AC_ARG_WITH(eventinput, [  --with-eventinput       Include event driven input (EXPERIMENTAL) [default=no]], [], [with_eventinput=no])
@@ -945,10 +935,3 @@ if test "x$enable_sp_fdms" != "xno"; then
 else
     echo "Include special purpose flight models: no"
 fi
-
-if test "x$enable_atcdcl" = "xyes"; then
-    echo "Build deprecated ATC/AI module: yes"
-else
-    echo "Build deprecated ATC/AI module: no"
-fi
-

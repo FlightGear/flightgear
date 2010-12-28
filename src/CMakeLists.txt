@@ -7,6 +7,7 @@ foreach( mylibfolder
 		Airports
 		Aircraft
 		ATC
+		ATCDCL
 		Autopilot
 		Cockpit
 		Environment

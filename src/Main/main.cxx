@@ -63,9 +63,7 @@
 #include <Sound/beacon.hxx>
 #include <Sound/morse.hxx>
 #include <Sound/fg_fx.hxx>
-#if ENABLE_ATCDCL
 #include <ATCDCL/ATCmgr.hxx>
-#endif
 #include <Time/TimeManager.hxx>
 #include <Environment/environment_mgr.hxx>
 #include <Environment/ephemeris.hxx>
@@ -145,11 +143,8 @@ static void fgMainLoop( void ) {
                                 altitude->getDoubleValue() * SG_FEET_TO_METER,
                                 globals->get_time_params()->getJD() );
 
-#if ENABLE_ATCDCL  
     // Run ATC subsystem
-    if (fgGetBool("/sim/atc/enabled"))
-        globals->get_ATC_mgr()->update(sim_dt);
-#endif  
+    globals->get_ATC_mgr()->update(sim_dt);
     
     globals->get_subsystem_mgr()->update(sim_dt);
 

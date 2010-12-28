@@ -46,11 +46,7 @@
 #include "simple.hxx"
 #include "runways.hxx"
 #include "pavement.hxx"
-#if ENABLE_ATCDCL
-#    include <ATCDCL/commlist.hxx>
-#else
-  #include <ATC/atcutils.hxx>
-#endif
+#include <ATCDCL/commlist.hxx>
 
 #include <iostream>
 
@@ -486,7 +482,6 @@ private:
  	    // 50 11770 AWOS 3
  // This code parallels code found in "operator>>" in ATC.hxx;
  // FIXME: unify the code.      
-#if ENABLE_ATCDCL
     ATCData a;
     a.geod = SGGeod::fromDegFt(rwy_lon_accum / (double)rwy_count, 
       rwy_lat_accum / (double)rwy_count, last_apt_elev);
@@ -505,8 +500,6 @@ private:
     SGBucket bucket(a.geod);
     int bucknum = bucket.gen_index();
     comm_list->commlist_bck[bucknum].push_back(a);
-#else
-#endif
 #if 0
    SG_LOG( SG_GENERAL, SG_ALERT, 
      "Loaded ATIS/AWOS for airport: " << a.ident
