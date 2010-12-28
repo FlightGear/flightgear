@@ -85,9 +85,6 @@ private:
     SGPropertyNode_ptr lat_node;
     SGPropertyNode_ptr elev_node;
 
-    //string approach_ident;
-    bool last_in_range;
-
     //FGATIS atis;
 	
     // Voice related stuff
