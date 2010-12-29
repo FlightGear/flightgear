@@ -611,7 +611,7 @@ double FGAIBase::_getRdot() const {
 }
 
 double FGAIBase::_getVS_fps() const {
-    return vs*60.0;
+    return vs/60.0;
 }
 
 double FGAIBase::_get_speed_east_fps() const {
@@ -623,7 +623,7 @@ double FGAIBase::_get_speed_north_fps() const {
 }
 
 void FGAIBase::_setVS_fps( double _vs ) {
-    vs = _vs/60.0;
+    vs = _vs*60.0;
 }
 
 double FGAIBase::_getAltitude() const {
