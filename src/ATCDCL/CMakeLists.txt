@@ -11,4 +11,4 @@ set(SOURCES
 	ATCProjection.cxx
 	)
 	
-flightgear_component(ATC "${SOURCES}")
+flightgear_component(ATCDCL "${SOURCES}")

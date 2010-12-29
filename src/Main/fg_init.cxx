@@ -76,7 +76,7 @@
 
 #include <ATCDCL/ATCmgr.hxx>
 #include <ATCDCL/commlist.hxx>
-#include <ATC/atis.hxx>
+#include <ATC/atis_mgr.hxx>
 
 #include <Autopilot/route_mgr.hxx>
 #include <Autopilot/autopilotgroup.hxx>

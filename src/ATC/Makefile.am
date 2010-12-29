@@ -1,7 +1,7 @@
 noinst_LIBRARIES = libATC.a
 
 libATC_a_SOURCES = \
-	atis.cxx atis.hxx \
+	atis_mgr.cxx atis_mgr.hxx \
 	trafficcontrol.cxx trafficcontrol.hxx 
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
