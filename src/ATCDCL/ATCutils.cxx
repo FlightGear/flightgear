@@ -268,4 +268,4 @@ bool OnRunway(const SGGeod& pt, const FGRunwayBase* rwy) {
 	
 	return(false);
 }
-	
+
