@@ -78,6 +78,8 @@ private:
   double mTimeOffset;
   bool mTimeOffsetSet;
 
+  double lastUpdateTime;
+
   /// Properties which are for now exposed for testing
   bool mAllowExtrapolation;
   double mLagAdjustSystemSpeed;

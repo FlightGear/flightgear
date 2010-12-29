@@ -39,11 +39,11 @@ FGAIMultiplayer::FGAIMultiplayer() : FGAIBase(otMultiplayer) {
    mTimeOffsetSet = false;
    mAllowExtrapolation = true;
    mLagAdjustSystemSpeed = 10;
-
+   mLastTimestamp = 0;
    aip.getSceneGraph()->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
+   lastUpdateTime = 0;
 
-}
-
+} 
 
 FGAIMultiplayer::~FGAIMultiplayer() {
 }
@@ -417,7 +417,20 @@ void FGAIMultiplayer::update(double dt)
   
   // extract the position
   pos = SGGeod::fromCart(ecPos);
+  double recent_alt_ft = altitude_ft;
   altitude_ft = pos.getElevationFt();
+
+  // expose a valid vertical speed
+  if (lastUpdateTime != 0)
+  {
+      double dT = curtime - lastUpdateTime;
+      double Weighting=1;
+      if (dt < 1.0)
+          Weighting = dt;
+      // simple smoothing over 1 second
+      vs = (1.0-Weighting)*vs +  Weighting * (altitude_ft - recent_alt_ft) / dT * 60;
+  }
+  lastUpdateTime = curtime;
 
   // The quaternion rotating from the earth centered frame to the
   // horizontal local frame
