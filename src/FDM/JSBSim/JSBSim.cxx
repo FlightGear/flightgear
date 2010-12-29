@@ -298,6 +298,13 @@ FGJSBsim::FGJSBsim( double dt )
 FGJSBsim::~FGJSBsim(void)
 {
   delete fdmex;
+  
+  SGPropertyNode_ptr jsbsimRoot = fgGetNode("/fdm/jsbsim");
+  if (jsbsimRoot) {
+    SGPropertyNode* fdm = jsbsimRoot->getParent();
+    fdm->removeChild("jsbsim", 0, false);
+  }
+  // properties are deleted when the sharedPtr above goes away
 }
 
 /******************************************************************************/
