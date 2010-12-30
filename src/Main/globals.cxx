@@ -83,7 +83,7 @@ public:
         }
         
         if (r.exists()) {
-          SG_LOG(SG_IO, SG_INFO, "found path:" << aResource << " via /sim/aircraft-dir: " << r.str());
+          SG_LOG(SG_IO, SG_DEBUG, "found path:" << aResource << " via /sim/aircraft-dir: " << r.str());
           return r;
         }
     }
@@ -95,7 +95,7 @@ public:
     for (; it != dirs.end(); ++it) {
       SGPath p(*it, res);
       if (p.exists()) {
-        SG_LOG(SG_IO, SG_INFO, "found path:" << aResource << " in aircraft dir: " << *it);
+        SG_LOG(SG_IO, SG_DEBUG, "found path:" << aResource << " in aircraft dir: " << *it);
         return p;
       }
     } // of aircraft path iteration
