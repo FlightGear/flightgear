@@ -42,6 +42,8 @@
 
 #include <boost/tuple/tuple.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
+
 
 #include <simgear/misc/sg_path.hxx>
 
@@ -256,7 +258,12 @@ int FGATIS::GenTransmission(const int regen, const int special) {
 // make things nicer for the text-to-speech system:
     for (MSS::const_iterator replace = _remap.begin();
           replace != _remap.end(); replace++) {
-      if (word == replace->first) {
+      // Due to inconsistent capitalisation in the apt.dat file, we need
+      // to do a case-insensitive comparison here.
+      string tmp1 = word, tmp2 = replace->first;
+      boost::algorithm::to_lower(tmp1);
+      boost::algorithm::to_lower(tmp2);
+      if (tmp1 == tmp2) {
         word = replace->second;
         break;
       }
