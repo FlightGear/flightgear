@@ -91,7 +91,7 @@ FGATIS::FGATIS() :
   using namespace lex;
 # define NIL ""
 # define REMAP(from,to) _remap[#from] = to;
-# include <atis_remap.hxx>
+# include "atis_remap.hxx"
 # undef REMAP
 # undef NIL
 
