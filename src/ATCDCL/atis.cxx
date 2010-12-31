@@ -285,7 +285,7 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   mins  = time_str.substr(3,2).c_str();
 // speak each digit separately:
   transmission += ConvertNumToSpokenDigits(hours + mins);
-  transmission += " " + zulu_weather + BRK;
+  transmission += " " + zulu + " " + weather + BRK;
 
   transmission += wind + ": ";
 
