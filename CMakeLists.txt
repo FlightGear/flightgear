@@ -27,8 +27,6 @@ option(ENABLE_UIUC_MODEL "Set to ON to build FlightGear with UIUCModel FDM" ON)
 option(ENABLE_LARCSIM "Set to ON to build FlightGear with LaRCsim FDM" ON)
 option(ENABLE_YASIM "Set to ON to build FlightGear with YASIM FDM" ON)
 option(ENABLE_JSBSIM "Set to ON to build FlightGear with JSBSim FDM" ON)
-
-option(ATCDCL "Set to ON to build FlightGear with Dave Luff's ATC code" OFF)
 option(EVENT_INPUT "Set to ON to build FlightGear with event-based Input support" OFF)
 
 if(LOGGING)
@@ -39,10 +37,6 @@ endif()
 
 if(${SP_FDMS})
 	set(ENABLE_SP_FDM 1)
-endif()
-
-if(ATCDCL)
-	set(ENABLE_ATCDCL 1)
 endif()
 
 if(EVENT_INPUT)
@@ -165,3 +159,14 @@ configure_file (
   
 add_subdirectory(src)
 add_subdirectory(utils)
+
+#-----------------------------------------------------------------------------
+### uninstall target
+#-----------------------------------------------------------------------------
+CONFIGURE_FILE(
+  "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules/cmake_uninstall.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+  IMMEDIATE @ONLY)
+ADD_CUSTOM_TARGET(uninstall
+  "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
+

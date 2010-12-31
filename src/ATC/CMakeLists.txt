@@ -1,8 +1,7 @@
 include(FlightGearComponent)
 
 set(SOURCES
-	atcutils.cxx
-	atis.cxx
+	atis_mgr.cxx
 	trafficcontrol.cxx
 	)
 	

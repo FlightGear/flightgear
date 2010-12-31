@@ -29,11 +29,7 @@
 
 #include <cassert>
 
-#if ENABLE_ATCDCL
-#    include <ATCDCL/commlist.hxx>
-#else
-  #include <ATC/atcutils.hxx>
-#endif
+#include <ATCDCL/commlist.hxx>
 #include <Main/globals.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>

@@ -186,8 +186,16 @@ static naRef f_getprop(naContext c, naRef me, int argc, naRef* args)
     case props::BOOL:   case props::INT:
     case props::LONG:   case props::FLOAT:
     case props::DOUBLE:
-        return naNum(p->getDoubleValue());
-
+        {
+        double dv = p->getDoubleValue();
+        if (osg::isNaN(dv)) {
+          SG_LOG(SG_GENERAL, SG_ALERT, "Nasal getprop: property " << p->getPath() << " is NaN");
+          naRuntimeError(c, "getprop() would have read NaN");
+        }
+        
+        return naNum(dv);
+        }
+        
     case props::STRING:
     case props::UNSPECIFIED:
         {
@@ -234,6 +242,11 @@ static naRef f_setprop(naContext c, naRef me, int argc, naRef* args)
             naRef n = naNumValue(val);
             if(naIsNil(n))
                 naRuntimeError(c, "setprop() value is not string or number");
+                
+            if (osg::isNaN(n.num)) {
+                naRuntimeError(c, "setprop() passed a NaN");
+            }
+            
             result = props->setDoubleValue(buf, n.num);
         }
     } catch (const string& err) {

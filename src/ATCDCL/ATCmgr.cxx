@@ -52,13 +52,12 @@ FGATCMgr::FGATCMgr() :
     initDone(false),
     atc_list(new atc_list_type),
 #ifdef ENABLE_AUDIO_SUPPORT
-    voiceOK(false),
     voice(true),
+    voiceOK(false),
+    v1(0)
 #else
     voice(false),
 #endif
-    last_in_range(false),
-    v1(0)
 {
 }
 

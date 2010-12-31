@@ -31,6 +31,7 @@
 #endif
 
 #include "atis.hxx"
+#include "atis_lexicon.hxx"
 
 #include <simgear/compiler.h>
 
@@ -39,8 +40,10 @@
 #include <string>
 #include <iostream>
 
-
 #include <boost/tuple/tuple.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
+
 
 #include <simgear/misc/sg_path.hxx>
 
@@ -63,6 +66,8 @@ using boost::ref;
 using boost::tie;
 
 FGATIS::FGATIS() :
+  transmission(""),
+  trans_ident(""),
   old_volume(0),
   atis_failed(false),
   msg_OK(0),
@@ -76,6 +81,23 @@ FGATIS::FGATIS() :
        SG_LOG(SG_ATC, SG_ALERT, "ERROR - _type not ATIS or AWOS in atis.cxx");
   }
   fgTie("/environment/attention", this, (int_getter)0, &FGATIS::attend);
+
+///////////////
+// FIXME:  This would be more flexible and more extensible
+// if the mappings were taken from an XML file, not hard-coded ...
+// ... although having it in a .hxx file is better than nothing.
+//
+// Load the remap list from the .hxx file:
+  using namespace lex;
+# define NIL ""
+# define REMAP(from,to) _remap[#from] = to;
+# include "atis_remap.hxx"
+# undef REMAP
+# undef NIL
+
+#ifdef ATIS_TEST
+  SG_LOG(SG_ATC, SG_ALERT, "ATIS initialized");
+#endif
 }
 
 // Hint:
@@ -107,7 +129,7 @@ FGATIS::attend (int attn)
 void FGATIS::Update(double dt) {
   cur_time = globals->get_time_params()->get_cur_time();
   msg_OK = (msg_time < cur_time);
-#if 0
+#ifdef ATIS_TEST
   if (msg_OK || _display != _prev_display) {
     cout << "ATIS Update: " << _display << "  " << _prev_display
       << "  len: " << transmission.length()
@@ -191,6 +213,7 @@ const int minute(60);		// measured in seconds
 // Returns 1 if we actually generated something.
 int FGATIS::GenTransmission(const int regen, const int special) {
   using namespace atmodel;
+  using namespace lex;
 
   string BRK = ".\n";
 
@@ -212,53 +235,59 @@ int FGATIS::GenTransmission(const int regen, const int special) {
 
   transmission = "";
 
-// UK CAA radiotelephony manual indicated ATIS transmissions start
+  if (ident.substr(0,2) == "EG") {
+// UK CAA radiotelephony manual indicates ATIS transmissions start
 // with "This is ..." 
-// In the US they just start with the airport name.
-// transmission += "This_is ";
+    transmission += This_is + " ";
+  } else {
+    // In the US they just start with the airport name.
+  }
 
   // SG_LOG(SG_ATC, SG_ALERT, "ATIS: facility name: " << name);
 
 // Note that at this point, multi-word facility names
 // will sometimes contain hyphens, not spaces.
-// Force the issue, just to be safe:
+  
+  vector<string> name_words;
+  boost::split(name_words, name, boost::is_any_of(" -"));
 
-  string name2 = name;
-  for(string::iterator p = name2.begin(); p != name2.end(); p++){
-    if (*p == ' ') *p = '-';
-  }
-
-///////////////
-// FIXME:  This would be more flexible and more extensible
-// if the mappings were taken from an XML file, not hard-coded.
-///////////////
-
+  for (vector<string>::const_iterator wordp = name_words.begin();
+                wordp != name_words.end(); wordp++) {
+    string word(*wordp);
 // Remap some abbreviations that occur in apt.dat, to
 // make things nicer for the text-to-speech system:
-  name2 = replace_word(name2, "Intl",  "International");
-  name2 = replace_word(name2, "Rgnl",  "Regional");
-  name2 = replace_word(name2, "Co",    "County");
-  name2 = replace_word(name2, "Muni",  "Municipal");
-  name2 = replace_word(name2, "Mem",   "Memorial");
-  name2 = replace_word(name2, "Fld",   "Field");
-  name2 = replace_word(name2, "AFB",   "Air-Force-Base");
-  name2 = replace_word(name2, "AAF",   "Army-Air-Field");
-  name2 = replace_word(name2, "MCAS",  "Marine-Corps-Air-Station");
-  transmission += name2 + " ";
-  if (_type == ATIS /* as opposed to AWOS */) {
-    transmission += "airport_information ";
-    phonetic_seq_string = GetPhoneticLetter(sequence);  // Add the sequence letter
-    transmission += phonetic_seq_string + BRK;
+    for (MSS::const_iterator replace = _remap.begin();
+          replace != _remap.end(); replace++) {
+      // Due to inconsistent capitalisation in the apt.dat file, we need
+      // to do a case-insensitive comparison here.
+      string tmp1 = word, tmp2 = replace->first;
+      boost::algorithm::to_lower(tmp1);
+      boost::algorithm::to_lower(tmp2);
+      if (tmp1 == tmp2) {
+        word = replace->second;
+        break;
+      }
+    }
+    transmission += word + " ";
   }
-  transmission += "Automated_weather_observation ";
+
+  if (_type == ATIS /* as opposed to AWOS */) {
+    transmission += airport_information + " ";
+  } else {
+    transmission += Automated_weather_observation + " ";
+  }
+
+  phonetic_seq_string = GetPhoneticLetter(sequence);  // Add the sequence letter
+  transmission += phonetic_seq_string + BRK;
+
 // Warning - this is fragile if the time string format changes
   hours = time_str.substr(0,2).c_str();
   mins  = time_str.substr(3,2).c_str();
 // speak each digit separately:
   transmission += ConvertNumToSpokenDigits(hours + mins);
-  transmission += " zulu weather" + BRK;
+  transmission += " " + zulu + " " + weather + BRK;
 
-  transmission += "Wind: ";
+  transmission += wind + ": ";
 
   double wind_speed = fgGetDouble("/environment/config/boundary/entry[0]/wind-speed-kt");
   double wind_dir = fgGetDouble("/environment/config/boundary/entry[0]/wind-from-heading-deg");
@@ -281,14 +310,14 @@ int FGATIS::GenTransmission(const int regen, const int special) {
 // Force west-facing rwys to be used in no-wind situations
 // which is consistent with Flightgear's initial setup:
       wind_dir = 270;
-      transmission += " light_and_variable";
+      transmission += " " + light_and_variable;
   } else {
       // FIXME: get gust factor in somehow
       snprintf(buf, bs, "%03.0f", 5*SGMiscd::round(wind_dir/5));
       transmission += ConvertNumToSpokenDigits(buf);
 
       snprintf(buf, bs, "%1.0f", wind_speed);
-      transmission += " at " + ConvertNumToSpokenDigits(buf) + BRK;
+      transmission += " " + at + " " + ConvertNumToSpokenDigits(buf) + BRK;
   }
 
   int did_some(0);
@@ -297,17 +326,17 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   for (int layer = 0; layer <= 4; layer++) {
     snprintf(buf, bs, "/environment/clouds/layer[%i]/coverage", layer);
     string coverage = fgGetString(buf);
-    if (coverage == "clear") continue;
+    if (coverage == clear) continue;
     snprintf(buf, bs, "/environment/clouds/layer[%i]/thickness-ft", layer);
     if (fgGetDouble(buf) == 0) continue;
     snprintf(buf, bs, "/environment/clouds/layer[%i]/elevation-ft", layer);
     double ceiling = int(fgGetDouble(buf) - _geod.getElevationFt());
     if (ceiling > 12000) continue;
-    if (coverage == "scattered") {
-      if (!did_some) transmission += "   Sky_condition: ";
+    if (coverage == scattered) {
+      if (!did_some) transmission += "   " + Sky_condition + ": ";
       did_some++;
     } else /* must be a ceiling */  if (!did_ceiling) {
-      transmission += "   Ceiling: ";
+      transmission += "   " + Ceiling + ": ";
       did_ceiling++;
       did_some++;
     } else {
@@ -320,51 +349,52 @@ int FGATIS::GenTransmission(const int regen, const int special) {
       if (cig000) {
     snprintf(buf, bs, "%i", cig000);
     transmission += ConvertNumToSpokenDigits(buf);
-    transmission += " thousand ";
+    transmission += " " + thousand + " ";
       }
       if (cig00) {
     snprintf(buf, bs, "%i", cig00);
     transmission += ConvertNumToSpokenDigits(buf);
-    transmission += " hundred ";
+    transmission += " " + hundred + " ";
       }
     } else {
       // Should this be "sky obscured?"
-      transmission += " zero ";     // not "zero hundred"
+      transmission += " " + zero + " ";     // not "zero hundred"
     }
     transmission += coverage + BRK;
   }
 
-  transmission += "Temperature: ";
+  transmission += Temperature + ": ";
   double Tsl = fgGetDouble("/environment/temperature-sea-level-degc");
   int temp = int(SGMiscd::round(FGAtmo().fake_T_vs_a_us(_geod.getElevationFt(), Tsl)));
   if(temp < 0) {
-      transmission += "minus ";
+      transmission += lex::minus + " ";
   }
   snprintf(buf, bs, "%i", abs(temp));
   transmission += ConvertNumToSpokenDigits(buf);
-  transmission += " dewpoint ";
+  transmission += " " + Celsius;
+  transmission += " " + dewpoint + " ";
   double dpsl = fgGetDouble("/environment/dewpoint-sea-level-degc");
   temp = int(SGMiscd::round(FGAtmo().fake_dp_vs_a_us(dpsl, _geod.getElevationFt())));
   if(temp < 0) {
-      transmission += "minus ";
+      transmission += lex::minus + " ";
   }
   snprintf(buf, bs, "%i", abs(temp));
-  transmission += ConvertNumToSpokenDigits(buf) + BRK;
+  transmission += ConvertNumToSpokenDigits(buf);
+  transmission += " " + Celsius + BRK;
 
-
-  transmission += "Visibility: ";
+  transmission += Visibility + ": ";
   double visibility = fgGetDouble("/environment/config/boundary/entry[0]/visibility-m");
   visibility /= atmodel::sm;    // convert to statute miles
   if (visibility < 0.25) {
-    transmission += "less than one quarter";
+    transmission += less_than_one_quarter;
   } else if (visibility < 0.5) {
-    transmission += "one quarter";
+    transmission += one_quarter;
   } else if (visibility < 0.75) {
-    transmission += "one half";
+    transmission += one_half;
   } else if (visibility < 1.0) {
-    transmission += "three quarters";
+    transmission += three_quarters;
   } else if (visibility >= 1.5 && visibility < 2.0) {
-    transmission += "one and one half";
+    transmission += one_and_one_half;
   } else {
     // integer miles
     if (visibility > 10) visibility = 10;
@@ -373,7 +403,7 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   }
   transmission += BRK;
 
-  transmission += "Altimeter: ";
+  transmission += Altimeter + ": ";
   double myQNH;
   double Psl = fgGetDouble("/environment/pressure-sea-level-inhg");
   {
@@ -405,7 +435,7 @@ int FGATIS::GenTransmission(const int regen, const int special) {
       assert(apt);
         string rwy_no = apt->getActiveRunwayForUsage()->ident();
       if(rwy_no != "NN") {
-        transmission += "Landing_and_departing_runway ";
+        transmission += Landing_and_departing_runway + " ";
         transmission += ConvertRwyNumToSpokenString(rwy_no) + BRK;
         if (msg_OK) {
           msg_time = cur_time;
@@ -413,7 +443,7 @@ int FGATIS::GenTransmission(const int regen, const int special) {
           //   << " wind_dir: " << wind_dir << endl;
         }
     }
-    transmission += "On_initial_contact_advise_you_have_information ";
+    transmission += On_initial_contact_advise_you_have_information + " ";
     transmission += phonetic_seq_string;
     transmission += "... " + BRK;
   }

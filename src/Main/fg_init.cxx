@@ -74,13 +74,9 @@
 
 #include <AIModel/AIManager.hxx>
 
-#if ENABLE_ATCDCL
-#   include <ATCDCL/ATCmgr.hxx>
-#   include "ATCDCL/commlist.hxx"
-#else
-#   include "ATC/atis.hxx"
-#   include "ATC/atcutils.hxx"
-#endif
+#include <ATCDCL/ATCmgr.hxx>
+#include <ATCDCL/commlist.hxx>
+#include <ATC/atis_mgr.hxx>
 
 #include <Autopilot/route_mgr.hxx>
 #include <Autopilot/autopilotgroup.hxx>
@@ -1387,19 +1383,17 @@ bool fgInitSubsystems() {
 
 
     ////////////////////////////////////////////////////////////////////
-    // Initialise the ATC Manager 
+    // Initialise the ATC Manager
     ////////////////////////////////////////////////////////////////////
 
-#if ENABLE_ATCDCL
     SG_LOG(SG_GENERAL, SG_INFO, "  ATC Manager");
     globals->set_ATC_mgr(new FGATCMgr);
     globals->get_ATC_mgr()->init(); 
-#else
+
     ////////////////////////////////////////////////////////////////////
     // Initialise the ATIS Manager
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("atis", new FGAtisManager, SGSubsystemMgr::POST_FDM);
-#endif
 
 
     ////////////////////////////////////////////////////////////////////

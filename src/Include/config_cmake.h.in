@@ -1,7 +1,6 @@
 
 
 #cmakedefine FG_NDEBUG
-#cmakedefine ENABLE_ATCDCL
 #cmakedefine ENABLE_SP_FDM
 
 // JSBSim needs this, to switch from standalone to in-FG mode

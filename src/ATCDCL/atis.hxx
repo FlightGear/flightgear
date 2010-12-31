@@ -34,6 +34,7 @@
 //DCL - a complete guess for now.
 #define FG_ATIS_DEFAULT_RANGE 30
 	
+typedef std::map<std::string,std::string> MSS;
 
 class FGATIS : public FGATC {
 	
@@ -52,6 +53,7 @@ class FGATIS : public FGATC {
 	int attention;
 	
 	bool _prev_display;		// Previous value of _display flag
+	MSS _remap;                     // abbreviations to be expanded
 
 	// Aircraft position
 	// ATIS is actually a special case in that unlike other ATC eg.tower it doesn't actually know about
