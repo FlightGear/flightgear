@@ -8,7 +8,9 @@ include (CPack)
 
 project(FlightGear)
 
-file(READ version FLIGHTGEAR_VERSION)
+# read 'version' file into a variable (stripping any newlines or spaces)
+file(READ version versionFile)
+string(STRIP ${versionFile} FLIGHTGEAR_VERSION) 
 
 #packaging
 SET(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
@@ -178,6 +180,10 @@ include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
 	${PLIB_INCLUDE_DIR} )
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
+
+# following is needed, because config.h is include 'bare', whereas
+# version.h is included as <Include/version.h> - this should be cleaned up
+include_directories(${PROJECT_BINARY_DIR}/src)
 include_directories(${PROJECT_BINARY_DIR}/src/Include)
 
 add_definitions(-DHAVE_CONFIG_H)
