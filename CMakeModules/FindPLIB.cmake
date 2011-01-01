@@ -67,76 +67,92 @@ FIND_LIBRARY(PLIB_LIBRARIES
   /Library/Frameworks
 )
 
+if (MSVC) 
+   set (PUNAME "pui")
+else (MSVC)
+   set (PUNAME "pu")
+endif (MSVC)
+
+
 macro(find_static_component comp libs)
-	set(compLib "plib${comp}")
-	string(TOUPPER "PLIB_${comp}_LIBRARY" compLibName)
-	
-	FIND_LIBRARY(${compLibName}
-	  NAMES ${compLib}
-	  HINTS $ENV{PLIBDIR}
-	  PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
-	  PATHS
-	  /usr/local
-	  /usr
-	  /opt
-	)
-	
-	set(componentLib ${${compLibName}})
-	if (NOT ${componentLib} STREQUAL "componentLib-NOTFOUND")
-		#message(STATUS "found ${componentLib}")
-		list(APPEND ${libs} ${componentLib})
-		#set(PLIB_LIBRARIES "${PLIB_LIBRARIES} ${componentLib}" PARENT_SCOPE)
-	endif()
+    # account for alternative Windows PLIB distribution naming
+    if(MSVC)
+      set(compLib "${comp}")
+    else(MSVC)
+      set(compLib "plib${comp}")
+    endif(MSVC)
+    
+    string(TOUPPER "PLIB_${comp}_LIBRARY" compLibName)
+    
+    FIND_LIBRARY(${compLibName}
+      NAMES ${compLib}
+      HINTS $ENV{PLIBDIR}
+      PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
+      PATHS
+      /usr/local
+      /usr
+      /opt
+    )
+    
+    set(componentLib ${${compLibName}})
+    if (NOT ${componentLib} STREQUAL "componentLib-NOTFOUND")
+        list(APPEND ${libs} ${componentLib})
+    endif()
 endmacro()
 
-if(${PLIB_LIBRARIES} STREQUAL "PLIB_LIBRARIES-NOTFOUND")	
-	set(PLIB_LIBRARIES "") # clear value
-	
+if(${PLIB_LIBRARIES} STREQUAL "PLIB_LIBRARIES-NOTFOUND")    
+    set(PLIB_LIBRARIES "") # clear value
+    
 # based on the contents of deps, add other required PLIB
 # static library dependencies. Eg PUI requires SSG and FNT
-	set(outDeps ${PLIB_FIND_COMPONENTS})
-	
-	foreach(c ${PLIB_FIND_COMPONENTS})
-		if (${c} STREQUAL "pu")
-			list(APPEND outDeps "fnt" "ssg" "sg")
-		elseif (${c} STREQUAL "puaux")
-			list(APPEND outDeps "pu" "fnt" "ssg" "sg")
-		elseif (${c} STREQUAL "ssg")
-			list(APPEND outDeps "sg")
-		endif()
-	endforeach()
-		
-	list(APPEND outDeps "ul") # everything needs ul
-	list(REMOVE_DUPLICATES outDeps) # clean up
-		
-	# look for traditional static libraries
-	foreach(component ${outDeps})
-		find_static_component(${component} PLIB_LIBRARIES)
-	endforeach()
+    set(outDeps ${PLIB_FIND_COMPONENTS})
+    
+    foreach(c ${PLIB_FIND_COMPONENTS})
+        if (${c} STREQUAL "pu")
+            # handle MSVC confusion over pu/pui naming, by removing
+            # 'pu' and then adding it back
+            list(REMOVE_ITEM outDeps "pu")
+            list(APPEND outDeps ${PUNAME} "fnt" "ssg" "sg")
+        elseif (${c} STREQUAL "puaux")
+            list(APPEND outDeps ${PUNAME} "fnt" "ssg" "sg")
+        elseif (${c} STREQUAL "ssg")
+            list(APPEND outDeps "sg")
+        endif()
+    endforeach()
+        
+    list(APPEND outDeps "ul") # everything needs ul
+    list(REMOVE_DUPLICATES outDeps) # clean up
+
+    
+
+    # look for traditional static libraries
+    foreach(component ${outDeps})
+        find_static_component(${component} PLIB_LIBRARIES)
+    endforeach()
 endif()
 
 list(FIND outDeps "js" haveJs)
 if(${haveJs} GREATER -1)
-	message(STATUS "adding runtime JS dependencies")
-	if(APPLE)
-	# resolve frameworks to full paths
-		find_library(IOKIT_LIBRARY IOKit)
-		find_library(CF_LIBRARY CoreFoundation)
-		set(JS_LIBS ${IOKIT_LIBRARY} ${CF_LIBRARY})
-	elseif(WIN32)
-		find_library(WINMM_LIBRARY winmm)
-		set(JS_LIBS ${WINMM_LIBRARY})
-	elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-		# anything needed here?
-	elseif(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
-		find_library(USBHID_LIBRARY usbhid)
-		# check_function_exists(hidinit)
-		set(JS_LIBS ${USBHID_LIBRARY})
-	else()
-		message(WARNING "Unsupported platform for PLIB JS libs")
-	endif()
-	
-	list(APPEND PLIB_LIBRARIES ${JS_LIBS})
+    message(STATUS "adding runtime JS dependencies")
+    if(APPLE)
+    # resolve frameworks to full paths
+        find_library(IOKIT_LIBRARY IOKit)
+        find_library(CF_LIBRARY CoreFoundation)
+        set(JS_LIBS ${IOKIT_LIBRARY} ${CF_LIBRARY})
+    elseif(WIN32)
+        find_library(WINMM_LIBRARY winmm)
+        set(JS_LIBS ${WINMM_LIBRARY})
+    elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
+        # anything needed here?
+    elseif(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
+        find_library(USBHID_LIBRARY usbhid)
+        # check_function_exists(hidinit)
+        set(JS_LIBS ${USBHID_LIBRARY})
+    else()
+        message(WARNING "Unsupported platform for PLIB JS libs")
+    endif()
+    
+    list(APPEND PLIB_LIBRARIES ${JS_LIBS})
 endif()
 
 include(FindPackageHandleStandardArgs)
