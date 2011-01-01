@@ -21,6 +21,8 @@
 
 #define VERSION "@FLIGHTGEAR_VERSION"
 
+#define HAVE_VERSION_H 1 // version.h is assumed for CMake builds
+
 #cmakedefine ENABLE_UIUC_MODEL
 #cmakedefine ENABLE_LARCSIM
 #cmakedefine ENABLE_YASIM

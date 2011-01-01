@@ -1,0 +1,8 @@
+
+#cmakedefine FLIGHTGEAR_VERSION
+
+#cmakedefine HUDSON_BUILD_NUMBER
+#cmakedefine HUDSON_BUILD_ID
+#cmakedefine REVISION
+
+

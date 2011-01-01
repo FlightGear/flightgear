@@ -20,6 +20,25 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
 # autoconf compatibility
 set(PKGLIBDIR "foo")
 
+if($ENV{BUILD_ID})
+	set(HUDSON_BUILD_ID $ENV{BUILD_ID})
+	set(HUDSON_BUILD_NUMBER $ENV{BUILD_NUMBER})
+	message(STATUS "running under Hudson, build-number is ${HUDSON_BUILD_NUMBER}")
+else()
+	set(HUDSON_BUILD_NUMBER 0)
+	set(HUDSON_BUILD_ID "none")
+endif()
+
+find_package(Git)
+if (GIT_FOUND)
+	execute_process(COMMAND git --git-dir ${PROJECT_SOURCE_DIR}/.git rev-parse  HEAD
+		OUTPUT_VARIABLE REVISION
+		OUTPUT_STRIP_TRAILING_WHITESPACE)
+	message(STATUS "Git revision is ${REVISION}")
+else()
+	set(REVISION "none")
+endif()
+
 option(LOGGING "Set to OFF to build FlightGear without logging" ON)
 
 option(SP_FDMS "Set to ON to build FlightGear with special-purpose FDMs" OFF)
@@ -156,7 +175,13 @@ configure_file (
   "${PROJECT_SOURCE_DIR}/src/Include/config_cmake.h.in"
   "${PROJECT_BINARY_DIR}/src/Include/config.h"
   )
-  
+
+#and the same for the version header
+configure_file (
+  "${PROJECT_SOURCE_DIR}/src/Include/version.h.cmake-in"
+  "${PROJECT_BINARY_DIR}/src/Include/version.h"
+  ) 
+
 add_subdirectory(src)
 add_subdirectory(utils)
 
