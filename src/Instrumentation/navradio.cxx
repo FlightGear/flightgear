@@ -938,18 +938,13 @@ void FGNavRadio::search()
       if (_gs) {
         int tmp = (int)(_gs->get_multiuse() / 1000.0);
         target_gs = (double)tmp / 100.0;
-        
-        // until penaltyForNav goes away, we cannot assume we always pick
-        // paired LOC/GS trasmsitters. As we pass over a runway threshold, we
-        // often end up picking the 'wrong' LOC, but the correct GS. To avoid
-        // breaking the basis computation, ensure we use the GS radial and not
-        // the (potentially reversed) LOC radial.
+
         double gs_radial = fmod(_gs->get_multiuse(), 1000.0);
         SG_NORMALIZE_RANGE(gs_radial, 0.0, 360.0);
-                
-        // GS axis unit tangent vector
-        // (along the runway)
         _gsCart = _gs->cart();
+                
+        // GS axis unit tangent vector 
+        // (along the runway):
         _gsAxis = tangentVector(_gs->geod(), _gsCart, gs_radial);
 
         // GS baseline unit tangent vector
