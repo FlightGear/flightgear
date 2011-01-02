@@ -19,7 +19,9 @@
 #cmakedefine HAVE_SYS_TIME_H
 #cmakedefine HAVE_CULLSETTINGS_CLEAR_MASK
 
-#define VERSION "@FLIGHTGEAR_VERSION"
+#define VERSION "@FLIGHTGEAR_VERSION@"
+
+#define HAVE_VERSION_H 1 // version.h is assumed for CMake builds
 
 #cmakedefine ENABLE_UIUC_MODEL
 #cmakedefine ENABLE_LARCSIM

@@ -143,6 +143,8 @@ FGJSBsim::FGJSBsim( double dt )
             break;
         }
     }
+    
+    resetPropertyState();
 
     fdmex = new FGFDMExec( (FGPropertyManager*)globals->get_props() );
 
@@ -298,13 +300,6 @@ FGJSBsim::FGJSBsim( double dt )
 FGJSBsim::~FGJSBsim(void)
 {
   delete fdmex;
-  
-  SGPropertyNode_ptr jsbsimRoot = fgGetNode("/fdm/jsbsim");
-  if (jsbsimRoot) {
-    SGPropertyNode* fdm = jsbsimRoot->getParent();
-    fdm->removeChild("jsbsim", 0, false);
-  }
-  // properties are deleted when the sharedPtr above goes away
 }
 
 /******************************************************************************/
@@ -1416,5 +1411,24 @@ void FGJSBsim::update_external_forces(double t_off)
     last_hook_root[2] = hook_area[1][2];
     
     fgSetDouble("/fdm/jsbsim/systems/hook/tailhook-pos-deg", fi);
+}
+
+
+void FGJSBsim::resetPropertyState()
+{
+// this code works-around bug #222:
+// http://code.google.com/p/flightgear-bugs/issues/detail?id=222
+// for whatever reason, having an existing value for the WOW
+// property causes the NaNs. Should that be fixed, this code can die
+  SGPropertyNode* gear = fgGetNode("/fdm/jsbsim/gear", false);
+  if (!gear) {
+    return;
+  }
+  
+  int index = 0;
+  SGPropertyNode* unitNode = NULL;
+  for (; (unitNode = gear->getChild("unit", index)) != NULL; ++index) {
+    unitNode->removeChild("WOW", 0, false);
+  }
 }
 

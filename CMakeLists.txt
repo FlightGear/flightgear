@@ -8,7 +8,9 @@ include (CPack)
 
 project(FlightGear)
 
-file(READ version FLIGHTGEAR_VERSION)
+# read 'version' file into a variable (stripping any newlines or spaces)
+file(READ version versionFile)
+string(STRIP ${versionFile} FLIGHTGEAR_VERSION) 
 
 #packaging
 SET(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
@@ -20,6 +22,25 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
 # autoconf compatibility
 set(PKGLIBDIR "foo")
 
+if($ENV{BUILD_ID})
+	set(HUDSON_BUILD_ID $ENV{BUILD_ID})
+	set(HUDSON_BUILD_NUMBER $ENV{BUILD_NUMBER})
+	message(STATUS "running under Hudson, build-number is ${HUDSON_BUILD_NUMBER}")
+else()
+	set(HUDSON_BUILD_NUMBER 0)
+	set(HUDSON_BUILD_ID "none")
+endif()
+
+find_package(Git)
+if (GIT_FOUND)
+	execute_process(COMMAND git --git-dir ${PROJECT_SOURCE_DIR}/.git rev-parse  HEAD
+		OUTPUT_VARIABLE REVISION
+		OUTPUT_STRIP_TRAILING_WHITESPACE)
+	message(STATUS "Git revision is ${REVISION}")
+else()
+	set(REVISION "none")
+endif()
+
 option(LOGGING "Set to OFF to build FlightGear without logging" ON)
 
 option(SP_FDMS "Set to ON to build FlightGear with special-purpose FDMs" OFF)
@@ -28,6 +49,7 @@ option(ENABLE_LARCSIM "Set to ON to build FlightGear with LaRCsim FDM" ON)
 option(ENABLE_YASIM "Set to ON to build FlightGear with YASIM FDM" ON)
 option(ENABLE_JSBSIM "Set to ON to build FlightGear with JSBSim FDM" ON)
 option(EVENT_INPUT "Set to ON to build FlightGear with event-based Input support" OFF)
+option(MSVC_3RDPARTY_DIR "Location where the third-party dependencies are extracted" NOT_FOUND)
 
 if(LOGGING)
 	# nothing
@@ -52,6 +74,17 @@ else(EVENT_INPUT)
 	set(ENABLE_PLIB_JOYSTICK 1)
 endif(EVENT_INPUT)
 
+if (MSVC_3RDPARTY_DIR)
+  message(STATUS "3rdparty files located in ${MSVC_3RDPARTY_DIR}")
+  set (CMAKE_LIBRARY_PATH ${MSVC_3RDPARTY_DIR}/3rdParty/lib ${MSVC_3RDPARTY_DIR}/install/msvc90/OpenScenegraph/lib )
+  set (CMAKE_INCLUDE_PATH ${MSVC_3RDPARTY_DIR}/3rdParty/include ${MSVC_3RDPARTY_DIR}/install/msvc90/OpenScenegraph/include)
+  set (BOOST_ROOT ${MSVC_3RDPARTY_DIR}/boost_1_44_0)
+  set (OPENAL_INCLUDE_DIR ${MSVC_3RDPARTY_DIR}/3rdParty/include)
+  set (ALUT_INCLUDE_DIR ${MSVC_3RDPARTY_DIR}/3rdParty/include)
+  set (OPENAL_LIBRARY_DIR ${MSVC_3RDPARTY_DIR}/3rdParty/lib)
+endif (MSVC_3RDPARTY_DIR)
+
+
 # check required dependencies
 if (MSVC)
     # on MSVC, Olaf reports that the serialization library is required at
@@ -70,6 +103,7 @@ find_package(OpenGL REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(ALUT REQUIRED)
 find_package(OpenSceneGraph 2.8.2 REQUIRED osgText osgSim osgDB osgParticle osgFX osgUtil osgViewer osgGA)
+
 find_package(PLIB REQUIRED puaux pu js fnt)
 find_package(SimGear 2.0.0 REQUIRED)
 
@@ -146,6 +180,10 @@ include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
 	${PLIB_INCLUDE_DIR} )
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
+
+# following is needed, because config.h is include 'bare', whereas
+# version.h is included as <Include/version.h> - this should be cleaned up
+include_directories(${PROJECT_BINARY_DIR}/src)
 include_directories(${PROJECT_BINARY_DIR}/src/Include)
 
 add_definitions(-DHAVE_CONFIG_H)
@@ -156,7 +194,13 @@ configure_file (
   "${PROJECT_SOURCE_DIR}/src/Include/config_cmake.h.in"
   "${PROJECT_BINARY_DIR}/src/Include/config.h"
   )
-  
+
+#and the same for the version header
+configure_file (
+  "${PROJECT_SOURCE_DIR}/src/Include/version.h.cmake-in"
+  "${PROJECT_BINARY_DIR}/src/Include/version.h"
+  ) 
+
 add_subdirectory(src)
 add_subdirectory(utils)
 
