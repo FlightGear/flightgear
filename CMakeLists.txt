@@ -49,7 +49,7 @@ option(ENABLE_LARCSIM "Set to ON to build FlightGear with LaRCsim FDM" ON)
 option(ENABLE_YASIM "Set to ON to build FlightGear with YASIM FDM" ON)
 option(ENABLE_JSBSIM "Set to ON to build FlightGear with JSBSim FDM" ON)
 option(EVENT_INPUT "Set to ON to build FlightGear with event-based Input support" OFF)
-option(MSVC_3RDPARTY_DIR "Location where the third-party dependencies are extracted" NOT_FOUND)
+set(MSVC_3RDPARTY_DIR NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
 
 if(LOGGING)
 	# nothing
@@ -76,8 +76,8 @@ endif(EVENT_INPUT)
 
 if (MSVC_3RDPARTY_DIR)
   message(STATUS "3rdparty files located in ${MSVC_3RDPARTY_DIR}")
-  set (CMAKE_LIBRARY_PATH ${MSVC_3RDPARTY_DIR}/3rdParty/lib ${MSVC_3RDPARTY_DIR}/install/msvc90/OpenScenegraph/lib )
-  set (CMAKE_INCLUDE_PATH ${MSVC_3RDPARTY_DIR}/3rdParty/include ${MSVC_3RDPARTY_DIR}/install/msvc90/OpenScenegraph/include)
+  set (CMAKE_LIBRARY_PATH ${MSVC_3RDPARTY_DIR}/3rdParty/lib ${MSVC_3RDPARTY_DIR}/install/msvc90/OpenScenegraph/lib ${MSVC_3RDPARTY_DIR}/install/msvc90/SimGear/lib )
+  set (CMAKE_INCLUDE_PATH ${MSVC_3RDPARTY_DIR}/3rdParty/include ${MSVC_3RDPARTY_DIR}/install/msvc90/OpenScenegraph/include ${MSVC_3RDPARTY_DIR}/install/msvc90/SimGear/include)
   set (BOOST_ROOT ${MSVC_3RDPARTY_DIR}/boost_1_44_0)
   set (OPENAL_INCLUDE_DIR ${MSVC_3RDPARTY_DIR}/3rdParty/include)
   set (ALUT_INCLUDE_DIR ${MSVC_3RDPARTY_DIR}/3rdParty/include)
@@ -86,17 +86,7 @@ endif (MSVC_3RDPARTY_DIR)
 
 
 # check required dependencies
-if (MSVC)
-    # on MSVC, Olaf reports that the serialization library is required at
-    # link time. No one has you explained why, unfortunately.
-    set(Boost_USE_STATIC_LIBS        ON)
-    set(Boost_USE_MULTITHREADED      ON)
-    set(Boost_USE_STATIC_RUNTIME    OFF)
-    find_package(Boost REQUIRED COMPONENTS serialization)
-else (MSVC)
-    find_package(Boost REQUIRED)
-endif (MSVC)
-
+find_package(Boost REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenGL REQUIRED)

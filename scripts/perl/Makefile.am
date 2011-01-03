@@ -1,1 +1,2 @@
-SUBDIRS = examples
+SUBDIRS = examples \
+	traffic
