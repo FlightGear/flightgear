@@ -86,17 +86,7 @@ endif (MSVC_3RDPARTY_DIR)
 
 
 # check required dependencies
-if (MSVC)
-    # on MSVC, Olaf reports that the serialization library is required at
-    # link time. No one has you explained why, unfortunately.
-    set(Boost_USE_STATIC_LIBS        ON)
-    set(Boost_USE_MULTITHREADED      ON)
-    set(Boost_USE_STATIC_RUNTIME    OFF)
-    find_package(Boost REQUIRED COMPONENTS serialization)
-else (MSVC)
-    find_package(Boost REQUIRED)
-endif (MSVC)
-
+find_package(Boost REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenGL REQUIRED)
