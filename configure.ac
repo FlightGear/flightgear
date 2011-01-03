@@ -837,6 +837,7 @@ AC_CONFIG_FILES([ \
 	scripts/debug/Makefile \
 	scripts/perl/Makefile \
 	scripts/perl/examples/Makefile \
+	scripts/perl/traffic/Makefile \
 	scripts/python/Makefile \
 	src/Makefile \
 	src/Include/Makefile \
