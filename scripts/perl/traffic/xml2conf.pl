@@ -1,17 +1,25 @@
 #!/usr/bin/perl -w
 
-use strict;
-use warnings;
+#use strict;
+#use warnings;
 
 # DEBUG
 #  use Data::Dumper;
 #  print Dumper($data) . "\n";
 # END
 
+if (scalar (@ARGV) == 1) {
+    @files = glob("$ARGV[0]");
+    print "Processing : ", @files, "\n";
+} else {
+    die "Usage : conf2xml.pl <inputfile> [ > outputfile ]\n";
+}
+$file = shift(@files);
+
 use Switch;
 use XML::LibXML;
 my $parser = XML::LibXML->new();
-my $doc = $parser->load_xml(location => './CEB.xml');
+my $doc = $parser->load_xml(location => $file);
 my $data;
 
 # reformatting days
