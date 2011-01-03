@@ -33,14 +33,6 @@
 #define FG_DME_DEFAULT_RANGE 50 // nm
 #define FG_NAV_MAX_RANGE 300    // nm
 
-// FIXME - get rid of these, and use the real enum directly
-#define FG_NAV_VOR FGPositioned::VOR
-#define FG_NAV_NDB FGPositioned::NDB
-#define FG_NAV_ILS FGPositioned::ILS
-#define FG_NAV_ANY FGPositioned::INVALID
-
-typedef FGPositioned::Type fg_nav_types;
-
 // forward decls
 class FGRunway;
 class SGPropertyNode;
