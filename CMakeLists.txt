@@ -49,7 +49,7 @@ option(ENABLE_LARCSIM "Set to ON to build FlightGear with LaRCsim FDM" ON)
 option(ENABLE_YASIM "Set to ON to build FlightGear with YASIM FDM" ON)
 option(ENABLE_JSBSIM "Set to ON to build FlightGear with JSBSim FDM" ON)
 option(EVENT_INPUT "Set to ON to build FlightGear with event-based Input support" OFF)
-option(MSVC_3RDPARTY_DIR "Location where the third-party dependencies are extracted" NOT_FOUND)
+set(MSVC_3RDPARTY_DIR NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
 
 if(LOGGING)
 	# nothing
