@@ -131,7 +131,6 @@ include(CheckCXXSourceRuns)
 message(STATUS "looking for version: ${SimGear_FIND_VERSION}")
 
 SET(CMAKE_REQUIRED_INCLUDES ${SIMGEAR_INCLUDE_DIR})
-message(STATUS "Version Simgear include " ${CMAKE_REQUIRED_INCLUDES})
 
 check_cxx_source_runs(
     "#include <cstdio>
