@@ -17,6 +17,7 @@
 #define ENABLE_AUDIO_SUPPORT 1 
 
 #cmakedefine HAVE_SYS_TIME_H
+#cmakedefine HAVE_WINDOWS_H
 #cmakedefine HAVE_CULLSETTINGS_CLEAR_MASK
 
 #define VERSION "@FLIGHTGEAR_VERSION@"
