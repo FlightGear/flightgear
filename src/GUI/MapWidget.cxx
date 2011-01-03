@@ -1285,6 +1285,22 @@ void MapWidget::drawILS(bool tuned, FGRunway* rwy)
 		glVertex2dv(endCentre.data());
 		glVertex2dv(endR.data());
 	glEnd();
+  
+	if (validDataForKey(loc)) {
+    setAnchorForKey(loc, endR);
+    return;
+  }
+	
+	char buffer[1024];
+	::snprintf(buffer, 1024, "%s\n%s\n%3.2fMHz",
+		loc->name().c_str(), loc->ident().c_str(),loc->get_freq()/100.0);
+  
+  MapData* d = createDataForKey(loc);
+  d->setPriority(40);
+  d->setLabel(loc->ident());
+  d->setText(buffer);
+  d->setOffset(MapData::HALIGN_CENTER | MapData::VALIGN_BOTTOM, 10);
+  d->setAnchor(endR);
 }
 
 void MapWidget::drawTraffic()
