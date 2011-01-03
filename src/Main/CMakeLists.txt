@@ -39,7 +39,6 @@ target_link_libraries(fgfs
 	${ALUT_LIBRARY} 
 	${ZLIB_LIBRARIES}
 	${PLIB_LIBRARIES}
-	${RT_LIBRARY}
-	${Boost_SERIALIZATION_LIBRARY})
+	${RT_LIBRARY})
 	
 install(TARGETS fgfs RUNTIME DESTINATION bin)

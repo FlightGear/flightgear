@@ -216,9 +216,12 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   using namespace lex;
 
   string BRK = ".\n";
+  string PAUSE = " / ";
 
   double tstamp = atof(fgGetString("sim/time/elapsed-sec"));
-  int interval = ATIS ? ATIS_interval : 2*minute;	// AWOS updated frequently
+  int interval = _type == ATIS ?
+        ATIS_interval   // ATIS updated hourly
+      : 2*minute;	// AWOS updated more frequently
   int sequence = current_commlist->GetAtisSequence(ident, 
   			tstamp, interval, special);
   if (!regen && sequence > LTRS) {
@@ -319,6 +322,9 @@ int FGATIS::GenTransmission(const int regen, const int special) {
       snprintf(buf, bs, "%1.0f", wind_speed);
       transmission += " " + at + " " + ConvertNumToSpokenDigits(buf) + BRK;
   }
+
+// Sounds better with a pause in there:
+  transmission += PAUSE;
 
   int did_some(0);
   int did_ceiling(0);
@@ -431,21 +437,24 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   transmission += ConvertNumToSpokenDigits(buf) + BRK;
 
   if (_type == ATIS /* as opposed to AWOS */) {
-      const FGAirport* apt = fgFindAirportID(ident);
-      assert(apt);
-        string rwy_no = apt->getActiveRunwayForUsage()->ident();
+    const FGAirport* apt = fgFindAirportID(ident);
+    if (apt) {
+      string rwy_no = apt->getActiveRunwayForUsage()->ident();
       if(rwy_no != "NN") {
         transmission += Landing_and_departing_runway + " ";
         transmission += ConvertRwyNumToSpokenString(rwy_no) + BRK;
+#ifdef ATIS_TEST
         if (msg_OK) {
           msg_time = cur_time;
-          //cout << "In atis.cxx, r.rwy_no: " << rwy_no
-          //   << " wind_dir: " << wind_dir << endl;
+          cout << "In atis.cxx, r.rwy_no: " << rwy_no
+             << " wind_dir: " << wind_dir << endl;
         }
+#endif
+      }
     }
     transmission += On_initial_contact_advise_you_have_information + " ";
     transmission += phonetic_seq_string;
-    transmission += "... " + BRK;
+    transmission += "... " + BRK + PAUSE + PAUSE;
   }
 #ifdef ATIS_TEST
   cout << "**** ATIS active on:";
@@ -474,7 +483,7 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   for (size_t where;;) {
     where = transmission.find_first_of(":.");
     if (where == string::npos) break;
-    transmission.replace(where, 1, " /_ ");
+    transmission.replace(where, 1, PAUSE);
   }
   return 1;
 }
