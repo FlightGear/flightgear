@@ -37,7 +37,7 @@ UGsmooth_SOURCES = \
 
 UGsmooth_LDADD = \
         $(UGsmooth_PLIB_LIBS) -lsgio -lsgserial -lsgtiming \
-        -lsgmath -lsgbucket -lsgmisc -lsgdebug \
+        -lsgmath -lsgbucket -lsgmisc -lsgdebug -lsgstructure \
         $(joystick_LIBS) $(network_LIBS) $(base_LIBS) -lz
 
 INCLUDES = -I$(top_srcdir)/src
