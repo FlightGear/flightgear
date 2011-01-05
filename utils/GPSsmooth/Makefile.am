@@ -5,9 +5,9 @@ GPSsmooth_LDFLAGS = $(plib_FRAMEWORK)
 MIDGsmooth_LDFLAGS = $(plib_FRAMEWORK)
 UGsmooth_LDFLAGS = $(plib_FRAMEWORK)
 else
-GPSsmooth_PLIB_LIBS = -lplibnet -lplibul
-MIDGsmooth_PLIB_LIBS = -lplibnet -lplibul
-UGsmooth_PLIB_LIBS = -lplibnet -lplibul
+GPSsmooth_PLIB_LIBS = -lplibul
+MIDGsmooth_PLIB_LIBS = -lplibul
+UGsmooth_PLIB_LIBS = -plibul
 endif
 
 
@@ -16,7 +16,7 @@ GPSsmooth_SOURCES = \
 	gps_main.cxx
 
 GPSsmooth_LDADD = \
-        $(GPSsmooth_PLIB_LIBS) -lsgtiming -lsgmisc -lsgdebug \
+        $(GPSsmooth_PLIB_LIBS) -lsgtiming -lsgmisc -lsgdebug -lsgio \
 	$(joystick_LIBS) $(network_LIBS) $(base_LIBS) -lz
 
 MIDGsmooth_SOURCES = \
