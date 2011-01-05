@@ -462,7 +462,7 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   }
 
 // Convert to millibars for most of the world (not US, not CA)
-  if((!US_CA) || fgGetBool("/sim/atc/use-millibars")) {
+  if((!US_CA) && fgGetBool("/sim/atc/use-millibars")) {
     transmission += QNH + ": ";
     myQNH /= mbar;
     if  (myQNH > 1000) myQNH -= 1000;       // drop high digit
