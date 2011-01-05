@@ -16,7 +16,7 @@ GPSsmooth_SOURCES = \
 	gps_main.cxx
 
 GPSsmooth_LDADD = \
-        $(GPSsmooth_PLIB_LIBS) -lsgio -lsgtiming -lsgmisc -lsgdebug \
+        $(GPSsmooth_PLIB_LIBS) -lsgio -lsgtiming -lsgmisc -lsgdebug -lsgstructure \
 	$(joystick_LIBS) $(network_LIBS) $(base_LIBS) -lz
 
 MIDGsmooth_SOURCES = \
