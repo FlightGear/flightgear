@@ -4,6 +4,8 @@
 
 #ifdef HAVE_WINDOWS_H
 #  include <windows.h>
+#else
+#  include <netinet/in.h>       // htonl() ntohl()
 #endif
 
 #ifndef _WIN32
