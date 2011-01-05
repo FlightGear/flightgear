@@ -151,6 +151,7 @@ void FGATIS::Update(double dt) {
 // If !_prev_display, the radio had been detuned for a while and our
 // "transmission" variable was lost when we were de-instantiated.
     int rslt = GenTransmission(!_prev_display, attention);
+    TreeOut(msg_OK);
     if (rslt || volume != old_volume) {
       //cout << "ATIS calling ATC::render  volume: " << volume << endl;
       Render(transmission, volume, refname, true);
@@ -207,6 +208,28 @@ const int minute(60);		// measured in seconds
   const int ATIS_interval(60*minute);
 #endif
 
+// FIXME:  This is heuristic.  It gets the right answer for
+// more than 90% of the world's airports, which is a lot
+// better than nothing ... but it's not 100%.
+// We know "most" of the world uses millibars,
+// but the US, Canada and *some* other places use inches of mercury,
+// but (a) we have not implemented a reliable method of
+// ascertaining which airports are in the US, let alone
+// (b) ascertaining which other places use inches.
+//
+int Apt_US_CA(const string id) {
+// Assume all IDs have length 3 or 4.
+// No counterexamples have been seen.
+  if (id.length() == 4) {
+    if (id.substr(0,1) == "K") return 1;
+    if (id.substr(0,2) == "CY") return 1;
+  }
+  for (string::const_iterator ptr = id.begin(); ptr != id.end();  ptr++) {
+    if (isdigit(*ptr)) return 1;
+  }
+  return 0;
+}
+
 // Generate the actual broadcast ATIS transmission.
 // Regen means regenerate the /current/ transmission.
 // Special means generate a new transmission, with a new sequence.
@@ -216,9 +239,12 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   using namespace lex;
 
   string BRK = ".\n";
+  string PAUSE = " / ";
 
   double tstamp = atof(fgGetString("sim/time/elapsed-sec"));
-  int interval = ATIS ? ATIS_interval : 2*minute;	// AWOS updated frequently
+  int interval = _type == ATIS ?
+        ATIS_interval   // ATIS updated hourly
+      : 2*minute;	// AWOS updated more frequently
   int sequence = current_commlist->GetAtisSequence(ident, 
   			tstamp, interval, special);
   if (!regen && sequence > LTRS) {
@@ -235,7 +261,9 @@ int FGATIS::GenTransmission(const int regen, const int special) {
 
   transmission = "";
 
-  if (ident.substr(0,2) == "EG") {
+  int US_CA = Apt_US_CA(ident);
+
+  if (!US_CA) {
 // UK CAA radiotelephony manual indicates ATIS transmissions start
 // with "This is ..." 
     transmission += This_is + " ";
@@ -320,6 +348,9 @@ int FGATIS::GenTransmission(const int regen, const int special) {
       transmission += " " + at + " " + ConvertNumToSpokenDigits(buf) + BRK;
   }
 
+// Sounds better with a pause in there:
+  transmission += PAUSE;
+
   int did_some(0);
   int did_ceiling(0);
 
@@ -332,29 +363,39 @@ int FGATIS::GenTransmission(const int regen, const int special) {
     snprintf(buf, bs, "/environment/clouds/layer[%i]/elevation-ft", layer);
     double ceiling = int(fgGetDouble(buf) - _geod.getElevationFt());
     if (ceiling > 12000) continue;
-    if (coverage == scattered) {
-      if (!did_some) transmission += "   " + Sky_condition + ": ";
-      did_some++;
+
+// BEWARE:  At the present time, the environment system has no
+// way (so far as I know) to represent a "thin broken" or
+// "thin overcast" layer.  If/when such things are implemented
+// in the environment system, code will have to be written here
+// to handle them.
+
+// First, do the prefix if any:
+    if (coverage == scattered || coverage == few) {
+      if (!did_some) {
+        transmission += "   " + Sky_condition + ": ";
+        did_some++;
+      }
     } else /* must be a ceiling */  if (!did_ceiling) {
       transmission += "   " + Ceiling + ": ";
       did_ceiling++;
       did_some++;
     } else {
-      transmission += "   ";
+      transmission += "   ";    // no prefix required
     }
     int cig00  = int(SGMiscd::round(ceiling/100));  // hundreds of feet
     if (cig00) {
       int cig000 = cig00/10;
       cig00 -= cig000*10;       // just the hundreds digit
       if (cig000) {
-    snprintf(buf, bs, "%i", cig000);
-    transmission += ConvertNumToSpokenDigits(buf);
-    transmission += " " + thousand + " ";
+        snprintf(buf, bs, "%i", cig000);
+        transmission += ConvertNumToSpokenDigits(buf);
+        transmission += " " + thousand + " ";
       }
       if (cig00) {
-    snprintf(buf, bs, "%i", cig00);
-    transmission += ConvertNumToSpokenDigits(buf);
-    transmission += " " + hundred + " ";
+        snprintf(buf, bs, "%i", cig00);
+        transmission += ConvertNumToSpokenDigits(buf);
+        transmission += " " + hundred + " ";
       }
     } else {
       // Should this be "sky obscured?"
@@ -362,6 +403,7 @@ int FGATIS::GenTransmission(const int regen, const int special) {
     }
     transmission += coverage + BRK;
   }
+  if (!did_some) transmission += "   " + Sky + " " + clear + BRK;
 
   transmission += Temperature + ": ";
   double Tsl = fgGetDouble("/environment/temperature-sea-level-degc");
@@ -371,7 +413,7 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   }
   snprintf(buf, bs, "%i", abs(temp));
   transmission += ConvertNumToSpokenDigits(buf);
-  transmission += " " + Celsius;
+  if (US_CA) transmission += " " + Celsius;
   transmission += " " + dewpoint + " ";
   double dpsl = fgGetDouble("/environment/dewpoint-sea-level-degc");
   temp = int(SGMiscd::round(FGAtmo().fake_dp_vs_a_us(dpsl, _geod.getElevationFt())));
@@ -380,7 +422,8 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   }
   snprintf(buf, bs, "%i", abs(temp));
   transmission += ConvertNumToSpokenDigits(buf);
-  transmission += " " + Celsius + BRK;
+  if (US_CA) transmission += " " + Celsius;
+  transmission += BRK;
 
   transmission += Visibility + ": ";
   double visibility = fgGetDouble("/environment/config/boundary/entry[0]/visibility-m");
@@ -403,7 +446,6 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   }
   transmission += BRK;
 
-  transmission += Altimeter + ": ";
   double myQNH;
   double Psl = fgGetDouble("/environment/pressure-sea-level-inhg");
   {
@@ -418,63 +460,75 @@ int FGATIS::GenTransmission(const int regen, const int special) {
 #endif
     myQNH = FGAtmo().QNH(_geod.getElevationM(), press);
   }
-  if(ident.substr(0,2) == "EG" && fgGetBool("/sim/atc/use-millibars")) {
-    // Convert to millibars for the UK!
+
+// Convert to millibars for most of the world (not US, not CA)
+  if((!US_CA) || fgGetBool("/sim/atc/use-millibars")) {
+    transmission += QNH + ": ";
     myQNH /= mbar;
     if  (myQNH > 1000) myQNH -= 1000;       // drop high digit
     snprintf(buf, bs, "%03.0f", myQNH);
+    transmission += ConvertNumToSpokenDigits(buf) + " " + millibars + BRK;
   } else {
-    myQNH /= inHg;
-    myQNH *= 100.;                        // shift two decimal places
-    snprintf(buf, bs, "%04.0f", myQNH);
+    transmission += Altimeter + ": ";
+    double asetting = myQNH / inHg;         // use inches of mercury
+    asetting *= 100.;                       // shift two decimal places
+    snprintf(buf, bs, "%04.0f", asetting);
+    transmission += ConvertNumToSpokenDigits(buf) + BRK;
   }
-  transmission += ConvertNumToSpokenDigits(buf) + BRK;
 
   if (_type == ATIS /* as opposed to AWOS */) {
-      const FGAirport* apt = fgFindAirportID(ident);
-      assert(apt);
-        string rwy_no = apt->getActiveRunwayForUsage()->ident();
+    const FGAirport* apt = fgFindAirportID(ident);
+    if (apt) {
+      string rwy_no = apt->getActiveRunwayForUsage()->ident();
       if(rwy_no != "NN") {
         transmission += Landing_and_departing_runway + " ";
         transmission += ConvertRwyNumToSpokenString(rwy_no) + BRK;
+#ifdef ATIS_TEST
         if (msg_OK) {
           msg_time = cur_time;
-          //cout << "In atis.cxx, r.rwy_no: " << rwy_no
-          //   << " wind_dir: " << wind_dir << endl;
+          cout << "In atis.cxx, r.rwy_no: " << rwy_no
+             << " wind_dir: " << wind_dir << endl;
         }
+#endif
+      }
     }
     transmission += On_initial_contact_advise_you_have_information + " ";
     transmission += phonetic_seq_string;
-    transmission += "... " + BRK;
+    transmission += "... " + BRK + PAUSE + PAUSE;
   }
-#ifdef ATIS_TEST
-  cout << "**** ATIS active on:";
-#endif
-  for (map<string,int>::iterator act = active_on.begin(); act != active_on.end(); act++){
-    string prop = "/instrumentation/" + act->first + "/atis";
-    globals->get_props()->setStringValue(prop.c_str(),
-      ("<pre>\n" + transmission + "</pre>\n").c_str());
-#ifdef ATIS_TEST
-    cout << "  " << prop;
-#endif
-  }
-#ifdef ATIS_TEST
-  cout << " ****" << endl;
-  cout << transmission << endl;
-// Note that even if we aren't outputting the transmission
-// on stdout, you can still see it by pointing a web browser
-// at the property tree.  The second comm radio is:
-// http://localhost:5400/instrumentation/comm[1]
-#endif
-
-// Take the previous English-looking string and munge it to
+  transmission_readable = transmission;
+// Take the previous readable string and munge it to
 // be relatively-more acceptable to the primitive tts system.
 // Note that : ; and . are among the token-delimeters recognized
 // by the tts system.
   for (size_t where;;) {
     where = transmission.find_first_of(":.");
     if (where == string::npos) break;
-    transmission.replace(where, 1, " /_ ");
+    transmission.replace(where, 1, PAUSE);
   }
   return 1;
+}
+
+// Put the transmission into the property tree,
+// possibly in multiple places if multiple radios
+// are tuned to the same ATIS.
+// You can see it by pointing a web browser
+// at the property tree.  The second comm radio is:
+// http://localhost:5400/instrumentation/comm[1]
+//
+// (Also, if in debug mode, dump it to the console.)
+void FGATIS::TreeOut(int msg_OK){
+  for (map<string,int>::iterator act = active_on.begin();
+                act != active_on.end();
+                act++){
+    string prop = "/instrumentation/" + act->first + "/atis";
+    globals->get_props()->setStringValue(prop.c_str(),
+      ("<pre>\n" + transmission_readable + "</pre>\n").c_str());
+#ifdef ATIS_TEST
+    if (msg_OK) cout << "**** ATIS active on: " << prop << endl;
+#endif
+  }
+#ifdef ATIS_TEST
+  if (msg_OK) cout << transmission_readable << endl;
+#endif
 }

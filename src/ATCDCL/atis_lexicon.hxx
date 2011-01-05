@@ -3,6 +3,9 @@
 
 #include <string>
 
+// NOTE:  This file serves as a database.
+// It is read by some utility programs that synthesize
+// the library of spoken words.
 
 #define Q(word) const std::string word(#word);
 
@@ -34,10 +37,14 @@ Q(hundred)
 Q(zero)
 Q(Temperature)
 Q(clear)
+Q(isolated)
+Q(few)
 Q(scattered)
 Q(broken)
 Q(overcast)
+Q(thin)
 Q(Sky_condition)
+Q(Sky)
 Q(Ceiling)
 Q(minus)
 Q(dewpoint)
@@ -48,6 +55,8 @@ Q(one_half)
 Q(three_quarters)
 Q(one_and_one_half)
 Q(Altimeter)
+Q(QNH)
+Q(millibars)
 Q(Landing_and_departing_runway)
 Q(On_initial_contact_advise_you_have_information)
 Q(This_is)

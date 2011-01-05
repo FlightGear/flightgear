@@ -8,7 +8,9 @@ include (CPack)
 
 project(FlightGear)
 
-file(READ version FLIGHTGEAR_VERSION)
+# read 'version' file into a variable (stripping any newlines or spaces)
+file(READ version versionFile)
+string(STRIP ${versionFile} FLIGHTGEAR_VERSION) 
 
 #packaging
 SET(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
@@ -20,6 +22,25 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
 # autoconf compatibility
 set(PKGLIBDIR "foo")
 
+if($ENV{BUILD_ID})
+	set(HUDSON_BUILD_ID $ENV{BUILD_ID})
+	set(HUDSON_BUILD_NUMBER $ENV{BUILD_NUMBER})
+	message(STATUS "running under Hudson, build-number is ${HUDSON_BUILD_NUMBER}")
+else()
+	set(HUDSON_BUILD_NUMBER 0)
+	set(HUDSON_BUILD_ID "none")
+endif()
+
+find_package(Git)
+if (GIT_FOUND)
+	execute_process(COMMAND git --git-dir ${PROJECT_SOURCE_DIR}/.git rev-parse  HEAD
+		OUTPUT_VARIABLE REVISION
+		OUTPUT_STRIP_TRAILING_WHITESPACE)
+	message(STATUS "Git revision is ${REVISION}")
+else()
+	set(REVISION "none")
+endif()
+
 option(LOGGING "Set to OFF to build FlightGear without logging" ON)
 
 option(SP_FDMS "Set to ON to build FlightGear with special-purpose FDMs" OFF)
@@ -28,6 +49,7 @@ option(ENABLE_LARCSIM "Set to ON to build FlightGear with LaRCsim FDM" ON)
 option(ENABLE_YASIM "Set to ON to build FlightGear with YASIM FDM" ON)
 option(ENABLE_JSBSIM "Set to ON to build FlightGear with JSBSim FDM" ON)
 option(EVENT_INPUT "Set to ON to build FlightGear with event-based Input support" OFF)
+set(MSVC_3RDPARTY_DIR NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
 
 if(LOGGING)
 	# nothing
@@ -52,29 +74,32 @@ else(EVENT_INPUT)
 	set(ENABLE_PLIB_JOYSTICK 1)
 endif(EVENT_INPUT)
 
-# check required dependencies
-if (MSVC)
-    # on MSVC, Olaf reports that the serialization library is required at
-    # link time. No one has you explained why, unfortunately.
-    set(Boost_USE_STATIC_LIBS        ON)
-    set(Boost_USE_MULTITHREADED      ON)
-    set(Boost_USE_STATIC_RUNTIME    OFF)
-    find_package(Boost REQUIRED COMPONENTS serialization)
-else (MSVC)
-    find_package(Boost REQUIRED)
-endif (MSVC)
+if (MSVC_3RDPARTY_DIR)
+  message(STATUS "3rdparty files located in ${MSVC_3RDPARTY_DIR}")
+  set (CMAKE_LIBRARY_PATH ${MSVC_3RDPARTY_DIR}/3rdParty/lib ${MSVC_3RDPARTY_DIR}/install/msvc90/OpenScenegraph/lib ${MSVC_3RDPARTY_DIR}/install/msvc90/SimGear/lib )
+  set (CMAKE_INCLUDE_PATH ${MSVC_3RDPARTY_DIR}/3rdParty/include ${MSVC_3RDPARTY_DIR}/install/msvc90/OpenScenegraph/include ${MSVC_3RDPARTY_DIR}/install/msvc90/SimGear/include)
+  set (BOOST_ROOT ${MSVC_3RDPARTY_DIR}/boost_1_44_0)
+  set (OPENAL_INCLUDE_DIR ${MSVC_3RDPARTY_DIR}/3rdParty/include)
+  set (ALUT_INCLUDE_DIR ${MSVC_3RDPARTY_DIR}/3rdParty/include)
+  set (OPENAL_LIBRARY_DIR ${MSVC_3RDPARTY_DIR}/3rdParty/lib)
+endif (MSVC_3RDPARTY_DIR)
 
+
+# check required dependencies
+find_package(Boost REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(ALUT REQUIRED)
 find_package(OpenSceneGraph 2.8.2 REQUIRED osgText osgSim osgDB osgParticle osgFX osgUtil osgViewer osgGA)
+
 find_package(PLIB REQUIRED puaux pu js fnt)
 find_package(SimGear 2.0.0 REQUIRED)
 
 check_include_file(unistd.h HAVE_UNISTD_H)
 check_include_file(sys/time.h HAVE_SYS_TIME_H)
+check_include_file(windows.h HAVE_WINDOWS_H)
 
 # definition depends on OSG version
 set(CMAKE_REQUIRED_INCLUDES ${OPENSCENEGRAPH_INCLUDE_DIRS})
@@ -128,7 +153,7 @@ if(WIN32)
         #     SET(WARNING_FLAGS "${WARNING_FLAGS} /wd${warning}")
         # endforeach(warning)
         
-        set(MSVC_FLAGS "-DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS")
+        set(MSVC_FLAGS "-DNOMINMAX -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D__CRT_NONSTDC_NO_WARNINGS")
     endif(MSVC)
 
     set(NOMINMAX 1)
@@ -146,6 +171,10 @@ include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
 	${PLIB_INCLUDE_DIR} )
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
+
+# following is needed, because config.h is include 'bare', whereas
+# version.h is included as <Include/version.h> - this should be cleaned up
+include_directories(${PROJECT_BINARY_DIR}/src)
 include_directories(${PROJECT_BINARY_DIR}/src/Include)
 
 add_definitions(-DHAVE_CONFIG_H)
@@ -156,7 +185,13 @@ configure_file (
   "${PROJECT_SOURCE_DIR}/src/Include/config_cmake.h.in"
   "${PROJECT_BINARY_DIR}/src/Include/config.h"
   )
-  
+
+#and the same for the version header
+configure_file (
+  "${PROJECT_SOURCE_DIR}/src/Include/version.h.cmake-in"
+  "${PROJECT_BINARY_DIR}/src/Include/version.h"
+  ) 
+
 add_subdirectory(src)
 add_subdirectory(utils)
 

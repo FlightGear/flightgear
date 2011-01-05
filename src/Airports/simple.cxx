@@ -456,9 +456,13 @@ void FGAirport::readTowerData(SGPropertyNode* aRoot)
   SGPropertyNode* twrNode = aRoot->getChild("tower")->getChild("twr");
   double lat = twrNode->getDoubleValue("lat"), 
     lon = twrNode->getDoubleValue("lon"), 
-    elevM = twrNode->getDoubleValue("elev-m");
-    
-  _tower_location = SGGeod::fromDegM(lon, lat, elevM);
+    elevM = twrNode->getDoubleValue("elev-m");  
+// tower elevation is AGL, not AMSL. Since we don't want to depend on the
+// scenery for a precise terrain elevation, we use the field elevation
+// (this is also what the apt.dat code does)
+  double fieldElevationM = geod().getElevationM();
+  
+  _tower_location = SGGeod::fromDegM(lon, lat, fieldElevationM + elevM);
 }
 
 bool FGAirport::buildApproach(Waypt* aEnroute, STAR* aSTAR, FGRunway* aRwy, WayptVec& aRoute)
