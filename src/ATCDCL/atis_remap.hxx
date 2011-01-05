@@ -1,3 +1,7 @@
+// NOTE:  This file serves as a database.
+// It is read by some utility programs that synthesize
+// the library of spoken words.
+
 REMAP(Intl,  International)
 REMAP(Rgnl,  Regional)
 REMAP(Co,    County)
