@@ -53,6 +53,7 @@ option(ENABLE_UIUC_MODEL "Set to ON to build FlightGear with UIUCModel FDM" ON)
 option(ENABLE_LARCSIM "Set to ON to build FlightGear with LaRCsim FDM" ON)
 option(ENABLE_YASIM "Set to ON to build FlightGear with YASIM FDM" ON)
 option(ENABLE_JSBSIM "Set to ON to build FlightGear with JSBSim FDM" ON)
+option(ENABLE_FGADMIN "Set to ON to build FlightGear with FGADMIN" ON)
 option(EVENT_INPUT "Set to ON to build FlightGear with event-based Input support" OFF)
 set(MSVC_3RDPARTY_DIR NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
 
@@ -98,10 +99,13 @@ find_package(OpenGL REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(ALUT REQUIRED)
 find_package(OpenSceneGraph 2.8.2 REQUIRED osgText osgSim osgDB osgParticle osgFX osgUtil osgViewer osgGA)
-find_package(FLTK)
+
+if(ENABLE_FGADMIN)
+  find_package(FLTK)
+endif(ENABLE_FGADMIN)
 
 find_package(PLIB REQUIRED puaux pu js fnt)
-find_package(SimGear 2.0.0 REQUIRED)
+find_package(SimGear 2.2.0 REQUIRED)
 
 check_include_file(unistd.h HAVE_UNISTD_H)
 check_include_file(sys/time.h HAVE_SYS_TIME_H)
