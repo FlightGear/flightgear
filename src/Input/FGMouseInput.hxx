@@ -118,6 +118,13 @@ private:
   } mouse_cursor_map[];
 
   mouse bindings[MAX_MICE];
+
+  SGPropertyNode_ptr xSizeNode;
+  SGPropertyNode_ptr ySizeNode;
+  SGPropertyNode_ptr xAccelNode;
+  SGPropertyNode_ptr yAccelNode;
+  SGPropertyNode_ptr hideCursorNode;
+  SGPropertyNode_ptr cursorTimeoutNode;
 };
 
 #endif
