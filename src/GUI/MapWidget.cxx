@@ -1318,7 +1318,7 @@ void MapWidget::drawTraffic()
   for (int i = 0; i < ai->nChildren(); ++i) {
     const SGPropertyNode *model = ai->getChild(i);
     // skip bad or dead entries
-    if (!model || model->getIntValue("id", -1) < 0) {
+    if (!model || model->getIntValue("id", -1) == -1) {
       continue;
     }
 
@@ -1392,7 +1392,47 @@ void MapWidget::drawAIAircraft(const SGPropertyNode* model, const SGGeod& pos, d
 
 void MapWidget::drawAIShip(const SGPropertyNode* model, const SGGeod& pos, double hdg)
 {
+  SGVec2d p = project(pos);
 
+  glColor3f(0.0, 0.0, 0.0);
+  glLineWidth(2.0);
+  circleAt(p, 4, 6.0); // black diamond
+  
+// draw heading vector
+  int speedKts = static_cast<int>(model->getDoubleValue("velocities/true-airspeed-kt"));
+  if (speedKts > 1) {
+    glLineWidth(1.0);
+
+    const double dt = 15.0 / (3600.0); // 15 seconds look-ahead
+    double distanceM = speedKts * SG_NM_TO_METER * dt;
+    
+    SGGeod advance;
+    double az2;
+    SGGeodesy::direct(pos, hdg, distanceM, advance, az2);
+    
+    drawLine(p, project(advance));
+  }
+    
+  if (validDataForKey((void*) model)) {
+    setAnchorForKey((void*) model, p);
+    return;
+  }
+  
+  // draw callsign / altitude / speed
+
+  
+  char buffer[1024];
+	::snprintf(buffer, 1024, "%s\n%d'\n%dkts",
+		model->getStringValue("callsign", "<>"),
+		static_cast<int>(pos.getElevationFt() / 50.0) * 50,
+    speedKts);
+	
+  MapData* d = createDataForKey((void*) model);
+  d->setText(buffer);
+  d->setLabel(model->getStringValue("callsign", "<>"));
+  d->setPriority(speedKts > 5 ? 60 : 10); // low priority for parked aircraft
+  d->setOffset(MapData::VALIGN_CENTER | MapData::HALIGN_LEFT, 10);
+  d->setAnchor(p);
 }
 
 SGVec2d MapWidget::project(const SGGeod& geod) const
