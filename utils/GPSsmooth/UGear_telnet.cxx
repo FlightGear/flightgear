@@ -23,13 +23,12 @@
 // $Id$
 
 
+#include <simgear/io/sg_netChat.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/math/SGMath.hxx>
 
 #include <sstream>
-
-#include <plib/netChat.h>
 
 #include "UGear_command.hxx"
 #include "UGear_telnet.hxx"
@@ -41,9 +40,9 @@ using std::ends;
  * Props connection class.
  * This class represents a connection to props client.
  */
-class PropsChannel : public netChat
+class PropsChannel : public simgear::NetChat
 {
-    netBuffer buffer;
+    simgear::NetBuffer buffer;
 
     /**
      * Current property node name.
@@ -188,9 +187,9 @@ UGTelnet::open()
 	return false;
     }
 
-    netChannel::open();
-    netChannel::bind( "", port );
-    netChannel::listen( 5 );
+    simgear::NetChannel::open();
+    simgear::NetChannel::bind( "", port );
+    simgear::NetChannel::listen( 5 );
     printf("Telnet server started on port %d\n", port );
 
     enabled = true;
@@ -214,7 +213,7 @@ UGTelnet::close()
 bool
 UGTelnet::process()
 {
-    netChannel::poll();
+    simgear::NetChannel::poll();
     return true;
 }
 
@@ -224,8 +223,8 @@ UGTelnet::process()
 void
 UGTelnet::handleAccept()
 {
-    netAddress addr;
-    int handle = netChannel::accept( &addr );
+    simgear::IPAddress addr;
+    int handle = simgear::NetChannel::accept( &addr );
     printf("Telent server accepted connection from %s:%d\n",
            addr.getHost(), addr.getPort() );
     PropsChannel* channel = new PropsChannel();

@@ -39,10 +39,15 @@ typedef std::map<std::string,std::string> MSS;
 class FGATIS : public FGATC {
 	
 	//atc_type type;
-	std::string transmission;	// The actual ATIS transmission
-	// This is not stored in default.atis but is generated
-	// from the prevailing conditions when required.
+
+	// The actual ATIS transmission
+	// This is generated from the prevailing conditions when required.
+	// This is the version with markup, suitable for voice synthesis:
+	std::string transmission;
 	
+	// Same as above, but in a form more readable as text.
+	std::string transmission_readable;
+
 	// for failure modeling
 	std::string trans_ident;		// transmitted ident
 	double old_volume;
@@ -82,9 +87,13 @@ class FGATIS : public FGATC {
 	
 	std::string refname;		// Holds the refname of a transmission in progress
 	
-	int GenTransmission(const int regen, 
-		const int special);		// Generate the transmission string
+	// Generate the ATIS transmission text:
+	int GenTransmission(const int regen, const int special);
 	
+	// Put the text into the property tree
+	// (and in debug mode, print it on the console):
+	void TreeOut(int msgOK);
+
 	friend std::istream& operator>> ( std::istream&, FGATIS& );
 };
 

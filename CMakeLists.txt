@@ -8,6 +8,11 @@ include (CPack)
 
 project(FlightGear)
 
+set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "add a postfix, usually d on windows")
+set(CMAKE_RELEASE_POSTFIX "" CACHE STRING "add a postfix, usually empty on windows")
+set(CMAKE_RELWITHDEBINFO_POSTFIX "rd" CACHE STRING "add a postfix, usually empty on windows")
+set(CMAKE_MINSIZEREL_POSTFIX "s" CACHE STRING "add a postfix, usually empty on windows")
+
 # read 'version' file into a variable (stripping any newlines or spaces)
 file(READ version versionFile)
 string(STRIP ${versionFile} FLIGHTGEAR_VERSION) 
@@ -48,6 +53,7 @@ option(ENABLE_UIUC_MODEL "Set to ON to build FlightGear with UIUCModel FDM" ON)
 option(ENABLE_LARCSIM "Set to ON to build FlightGear with LaRCsim FDM" ON)
 option(ENABLE_YASIM "Set to ON to build FlightGear with YASIM FDM" ON)
 option(ENABLE_JSBSIM "Set to ON to build FlightGear with JSBSim FDM" ON)
+option(ENABLE_FGADMIN "Set to ON to build FlightGear with FGADMIN" ON)
 option(EVENT_INPUT "Set to ON to build FlightGear with event-based Input support" OFF)
 set(MSVC_3RDPARTY_DIR NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
 
@@ -94,8 +100,12 @@ find_package(OpenAL REQUIRED)
 find_package(ALUT REQUIRED)
 find_package(OpenSceneGraph 2.8.2 REQUIRED osgText osgSim osgDB osgParticle osgFX osgUtil osgViewer osgGA)
 
+if(ENABLE_FGADMIN)
+  find_package(FLTK)
+endif(ENABLE_FGADMIN)
+
 find_package(PLIB REQUIRED puaux pu js fnt)
-find_package(SimGear 2.0.0 REQUIRED)
+find_package(SimGear 2.2.0 REQUIRED)
 
 check_include_file(unistd.h HAVE_UNISTD_H)
 check_include_file(sys/time.h HAVE_SYS_TIME_H)
@@ -157,6 +167,7 @@ if(WIN32)
     endif(MSVC)
 
     set(NOMINMAX 1)
+    set( WINSOCK_LIBRARY "ws2_32.lib" )
 endif(WIN32)    
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARNING_FLAGS} ${MSVC_FLAGS} -D_REENTRANT")

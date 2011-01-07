@@ -2,13 +2,19 @@
 #  include <config.h>
 #endif
 
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#else
+#  include <netinet/in.h>       // htonl() ntohl()
+#endif
+
 #include <iostream>
 #include <string>
 
-#include <plib/net.h>
 #include <plib/sg.h>
 
 #include <simgear/io/lowlevel.hxx> // endian tests
+#include <simgear/io/raw_socket.hxx>
 #include <simgear/timing/timestamp.hxx>
 
 #include <Network/net_ctrls.hxx>
@@ -23,7 +29,7 @@ using std::string;
 
 
 // Network channels
-static netSocket fdm_sock, ctrls_sock;
+static simgear::Socket fdm_sock, ctrls_sock;
 
 // gps data
 GPSTrack track;
@@ -369,7 +375,7 @@ int main( int argc, char **argv ) {
 
     // Setup up outgoing network connections
 
-    netInit( &argc,argv ); // We must call this before any other net stuff
+    simgear::Socket::initSockets(); // We must call this before any other net stuff
 
     if ( ! fdm_sock.open( false ) ) {  // open a UDP socket
         cout << "error opening fdm output socket" << endl;

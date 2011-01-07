@@ -2,6 +2,12 @@
 #  include <config.h>
 #endif
 
+#ifdef HAVE_WINDOWS_H
+#  include <windows.h>
+#else
+#  include <netinet/in.h>       // htonl() ntohl()
+#endif
+
 #ifndef _WIN32
 #  include <strings.h>		// for bzero()
 #else
@@ -10,12 +16,12 @@
 #include <iostream>
 #include <string>
 
-#include <plib/net.h>
 #include <plib/sg.h>
 
 #include <simgear/constants.h>
 #include <simgear/io/lowlevel.hxx> // endian tests
 #include <simgear/io/sg_file.hxx>
+#include <simgear/io/raw_socket.hxx>
 #include <simgear/serial/serial.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/timing/timestamp.hxx>
@@ -35,7 +41,7 @@ using std::string;
 
 
 // Network channels
-static netSocket fdm_sock, ctrls_sock, opengc_sock;
+static simgear::Socket fdm_sock, ctrls_sock, opengc_sock;
 
 // ugear data
 UGTrack track;
@@ -658,7 +664,7 @@ int main( int argc, char **argv ) {
 
     // Setup up outgoing network connections
 
-    netInit( &argc,argv ); // We must call this before any other net stuff
+    simgear::Socket::initSockets(); // We must call this before any other net stuff
 
     if ( ! opengc_sock.open( false ) ) {  // open a UDP socket
         cout << "error opening opengc output socket" << endl;
