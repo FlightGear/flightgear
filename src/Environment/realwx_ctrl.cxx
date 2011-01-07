@@ -43,6 +43,42 @@
 
 namespace Environment {
 
+/* -------------------------------------------------------------------------------- */
+
+class LiveMetarProperties : public MetarProperties {
+public:
+    LiveMetarProperties( SGPropertyNode_ptr rootNode );
+    virtual ~LiveMetarProperties();
+    virtual void update( double dt );
+
+    virtual double getTimeToLive() const { return _timeToLive; }
+    virtual void setTimeToLive( double value ) { _timeToLive = value; }
+private:
+    double _timeToLive;
+
+};
+
+typedef SGSharedPtr<LiveMetarProperties> LiveMetarProperties_ptr;
+
+LiveMetarProperties::LiveMetarProperties( SGPropertyNode_ptr rootNode ) :
+    MetarProperties( rootNode ),
+    _timeToLive(0.0)
+{
+    _tiedProperties.Tie("time-to-live", &_timeToLive );
+}
+
+LiveMetarProperties::~LiveMetarProperties()
+{
+}
+
+void LiveMetarProperties::update( double dt )
+{
+    _timeToLive -= dt;
+    if( _timeToLive < 0.0 ) _timeToLive = 0.0;
+}
+
+/* -------------------------------------------------------------------------------- */
+
 class BasicRealWxController : public RealWxController
 {
 public:
@@ -70,7 +106,8 @@ protected:
     bool _enabled;
     bool __enabled;
     TiedPropertyList _tiedProperties;
-    MetarProperties  _metarProperties;
+ ;   typedef std::vector<LiveMetarProperties_ptr> MetarPropertiesList;
+    MetarPropertiesList _metarProperties;
 };
 
 /* -------------------------------------------------------------------------------- */
@@ -87,9 +124,18 @@ BasicRealWxController::BasicRealWxController( SGPropertyNode_ptr rootNode ) :
   _ground_elevation_n( fgGetNode( "/position/ground-elev-m", true )),
   _max_age_n( fgGetNode( "/environment/params/metar-max-age-min", false ) ),
   _enabled(true),
-  __enabled(false),
-  _metarProperties( fgGetNode( rootNode->getStringValue("metar", "/environment/metar"), true ) )
+  __enabled(false)
 {
+    // at least instantiate MetarProperties for /environment/metar
+    _metarProperties.push_back( new LiveMetarProperties( 
+            fgGetNode( rootNode->getStringValue("metar", "/environment/metar"), true ) ) );
+
+    PropertyList metars = rootNode->getChildren("metar");
+    for( PropertyList::size_type i = 1; i < metars.size(); i++ ) {
+       SG_LOG( SG_ALL, SG_INFO, "Adding metar properties at " << metars[i]->getStringValue() );
+        _metarProperties.push_back( new LiveMetarProperties( 
+            fgGetNode( metars[i]->getStringValue(), true )));
+    }
 }
 
 BasicRealWxController::~BasicRealWxController()
@@ -121,7 +167,17 @@ void BasicRealWxController::unbind()
 void BasicRealWxController::update( double dt )
 {
   if( _enabled ) {
-    update( !__enabled, dt );
+    bool firstIteration = !__enabled; // first iteration after being enabled?
+
+    // clock tick for every METAR in stock
+    for( MetarPropertiesList::iterator it = _metarProperties.begin();
+          it != _metarProperties.end(); it++ ) {
+      // first round? All received METARs are outdated
+      if( firstIteration ) (*it)->setTimeToLive( 0.0 );
+      (*it)->update(dt);
+    }
+
+    update( firstIteration, dt );
     __enabled = true;
   } else {
     __enabled = false;
@@ -144,21 +200,35 @@ public:
             _proxyPort = fgGetNode("/sim/presets/proxy/port", true)->getStringValue();
             _proxyAuth = fgGetNode("/sim/presets/proxy/authentication", true)->getStringValue();
         }
+        MetarLoadRequest( const MetarLoadRequest & other ) {
+            _stationId = other._stationId;
+            _proxyHost = other._proxyAuth;
+            _proxyPort = other._proxyPort;
+            _proxyAuth = other._proxyAuth;
+        }
         string _stationId;
         string _proxyHost;
         string _proxyPort;
         string _proxyAuth;
     private:
     };
-private:
-    double _metarTimeToLive;
-    double _positionTimeToLive;
-    double _minimumRequestInterval;
-    
-    SGPropertyNode_ptr _metarDataNode;
-    SGPropertyNode_ptr _metarValidNode;
-    SGPropertyNode_ptr _metarStationIdNode;
 
+    class MetarLoadResponse {
+    public:
+        MetarLoadResponse( const string & stationId, const string metar ) {
+            _stationId = stationId;
+            _metar = metar;
+        }
+        MetarLoadResponse( const MetarLoadResponse & other ) {
+            _stationId = other._stationId;
+            _metar = other._metar;
+        }
+        string _stationId;
+        string _metar;
+    };
+private:
+    double _positionTimeToLive;
+    double _requestTimer;
 
 #if defined(ENABLE_THREADS)
      class MetarLoadThread : public OpenThreads::Thread {
@@ -166,13 +236,14 @@ private:
         MetarLoadThread( long maxAge );
         void requestMetar( const MetarLoadRequest & metarRequest, bool background = true );
         bool hasMetar() { return _responseQueue.size() > 0; }
-        string getMetar() { return _responseQueue.pop(); }
+        MetarLoadResponse getMetar() { return _responseQueue.pop(); }
         virtual void run();
      private:
         void fetch( const MetarLoadRequest & );
         long _maxAge;
+        long _minRequestInterval;
         SGBlockingQueue <MetarLoadRequest> _requestQueue;
-        SGBlockingQueue <string> _responseQueue;
+        SGBlockingQueue <MetarLoadResponse> _responseQueue;
      };
 
      MetarLoadThread * _metarLoadThread;
@@ -181,12 +252,8 @@ private:
 
 NoaaMetarRealWxController::NoaaMetarRealWxController( SGPropertyNode_ptr rootNode ) :
   BasicRealWxController(rootNode),
-  _metarTimeToLive(0.0),
   _positionTimeToLive(0.0),
-  _minimumRequestInterval(0.0),
-  _metarDataNode(_metarProperties.get_root_node()->getNode("data",true)),
-  _metarValidNode(_metarProperties.get_root_node()->getNode("valid",true)),
-  _metarStationIdNode(_metarProperties.get_root_node()->getNode("station-id",true))
+  _requestTimer(0.0)
 {
 #if defined(ENABLE_THREADS)
     _metarLoadThread = new MetarLoadThread(getMetarMaxAgeMin());
@@ -208,22 +275,12 @@ NoaaMetarRealWxController::~NoaaMetarRealWxController()
 
 void NoaaMetarRealWxController::update( bool first, double dt )
 {
-    _metarTimeToLive -= dt;
     _positionTimeToLive -= dt;
-    _minimumRequestInterval -= dt;
+    _requestTimer -= dt;
 
-    bool valid = _metarValidNode->getBoolValue();
-    string stationId = valid ? _metarStationIdNode->getStringValue() : "";
-
-    if( first ) _metarTimeToLive = 0.0;
-
-    if( _metarTimeToLive <= 0.0 ) {
-        valid = false;
-        _metarTimeToLive = 900;
-        _positionTimeToLive = 0;
-    }
-
-    if( _positionTimeToLive <= 0.0 || valid == false ) {
+    if( _positionTimeToLive <= 0.0 ) {
+        // check nearest airport
+        SG_LOG(SG_ALL, SG_INFO, "NoaaMetarRealWxController::update(): (re) checking nearby airport with METAR" );
         _positionTimeToLive = 60.0;
 
         SGGeod pos = SGGeod::fromDeg(_longitude_n->getDoubleValue(), _latitude_n->getDoubleValue());
@@ -234,38 +291,64 @@ void NoaaMetarRealWxController::update( bool first, double dt )
             return;
         }
 
-        if( stationId != nearestAirport->ident() ) {
-            valid = false;
-            stationId = nearestAirport->ident();
-        }
+        SG_LOG(SG_ALL, SG_INFO, 
+            "NoaaMetarRealWxController::update(): nearest airport with METAR is: " << nearestAirport->ident() );
 
-    }
-
-    if( !valid ) {
-        if( _minimumRequestInterval <= 0 && stationId.length() > 0 ) {
-            MetarLoadRequest request( stationId );
-            // load the first metar in the foreground to make sure a metar is received
-            // before the automatic runway selection code runs. All subsequent calls
-            // run in the background
-            _metarLoadThread->requestMetar( request, !first );
-            _minimumRequestInterval = 10;
+        // if it has changed, invalidate the associated METAR
+        if( _metarProperties[0]->getStationId() != nearestAirport->ident() ) {
+            SG_LOG(SG_ALL, SG_INFO, 
+                "NoaaMetarRealWxController::update(): nearest airport with METAR has changed. Old: '" << 
+                _metarProperties[0]->getStationId() <<
+                "', new: '" << nearestAirport->ident() << "'" );
+            _metarProperties[0]->setStationId( nearestAirport->ident() );
+            _metarProperties[0]->setTimeToLive( 0.0 );
         }
     }
+  
+    if( _requestTimer <= 0.0 ) {
+        _requestTimer = 10.0;
 
-    if( _metarLoadThread->hasMetar() ) {
-        string metar = _metarLoadThread->getMetar();
-        SG_LOG( SG_ALL, SG_ALERT, "NoaaMetarRwalWxController::update() received METAR " << metar );
-        _metarDataNode->setStringValue( metar );
+        for( MetarPropertiesList::iterator it = _metarProperties.begin(); 
+            it != _metarProperties.end(); it++ ) {
+
+                if( (*it)->getTimeToLive() > 0.0 ) continue;
+                const std::string & stationId = (*it)->getStationId();
+                if( stationId.empty() ) continue;
+
+                SG_LOG(SG_ALL, SG_INFO, 
+                    "NoaaMetarRealWxController::update(): spawning load request for station-id '" << stationId << "'" );
+            
+                MetarLoadRequest request( stationId );
+                // load the metar for the neares airport in the foreground if the fdm is uninitialized
+                // to make sure a metar is received
+                // before the automatic runway selection code runs. All subsequent calls
+                // run in the background
+                bool background = fgGetBool("/sim/fdm-initialized", false ) || it != _metarProperties.begin();
+                _metarLoadThread->requestMetar( request, background );
+        }
     }
 
-
+    // pick all the received responses from the result queue and update the associated
+    // property tree
+    while( _metarLoadThread->hasMetar() ) {
+        MetarLoadResponse metar = _metarLoadThread->getMetar();
+        SG_LOG( SG_ALL, SG_INFO, "NoaaMetarRwalWxController::update() received METAR for " << metar._stationId << ": " << metar._metar );
+        for( MetarPropertiesList::iterator it = _metarProperties.begin(); 
+            it != _metarProperties.end(); it++ ) {
+                if( (*it)->getStationId() != metar._stationId )
+                    continue;
+                (*it)->setTimeToLive(900);
+                (*it)->setMetar( metar._metar );
+        }
+    }
 }
 
 /* -------------------------------------------------------------------------------- */
 
 #if defined(ENABLE_THREADS)
 NoaaMetarRealWxController::MetarLoadThread::MetarLoadThread( long maxAge ) :
-  _maxAge(maxAge)
+  _maxAge(maxAge),
+  _minRequestInterval(2000)
 {
 }
 
@@ -287,13 +370,22 @@ void NoaaMetarRealWxController::MetarLoadThread::requestMetar( const MetarLoadRe
 
 void NoaaMetarRealWxController::MetarLoadThread::run()
 {
+    SGTimeStamp lastRun = SGTimeStamp::fromSec(0);
     for( ;; ) {
+        SGTimeStamp dt = SGTimeStamp::now() - lastRun;
+
+        if( dt.getSeconds() * 1000 < _minRequestInterval )
+            microSleep( (_minRequestInterval - dt.getSeconds() * 1000 ) * 1000 );
+        
+        lastRun = SGTimeStamp::now();
+
         const MetarLoadRequest request = _requestQueue.pop();
 
         if( request._stationId.size() == 0 )
             break;
 
         fetch( request );
+
     }
 }
 
@@ -303,9 +395,13 @@ void NoaaMetarRealWxController::MetarLoadThread::fetch( const MetarLoadRequest &
 
     try {
         result = new FGMetar( request._stationId, request._proxyHost, request._proxyPort, request._proxyAuth );
+        _minRequestInterval = 2000;
     } catch (const sg_io_exception& e) {
         SG_LOG( SG_GENERAL, SG_WARN, "NoaaMetarRealWxController::fetchMetar(): can't get METAR for " 
                                     << request._stationId << ":" << e.getFormattedMessage().c_str() );
+        _minRequestInterval += _minRequestInterval/2; 
+        if( _minRequestInterval > 30000 )
+            _minRequestInterval = 30000;
         return;
     }
 
@@ -325,7 +421,8 @@ void NoaaMetarRealWxController::MetarLoadThread::fetch( const MetarLoadRequest &
         return;
     }
 
-    _responseQueue.push( metar );
+    MetarLoadResponse response( request._stationId, metar );
+    _responseQueue.push( response );
 }
 #endif
 

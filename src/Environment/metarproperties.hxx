@@ -29,6 +29,8 @@
 
 namespace Environment {
 
+class MagneticVariation;
+
 class MetarProperties : public SGReferenced
 {
 public:
@@ -36,12 +38,19 @@ public:
     virtual ~MetarProperties();
 
     SGPropertyNode_ptr get_root_node() const { return _rootNode; }
+    virtual bool isValid() const { return _metarValidNode->getBoolValue(); }
+    virtual const std::string & getStationId() const { return _station_id; }
+    virtual void setStationId( const std::string & value );
+    virtual void setMetar( const std::string & value ) { set_metar( value.c_str() ); }
 
 private:
     const char * get_metar() const { return _metar.c_str(); }
     void set_metar( const char * metar );
     const char * get_station_id() const { return _station_id.c_str(); }
+    void set_station_id( const char * value );
     const char * get_decoded() const { return _decoded.c_str(); }
+    double get_magnetic_variation_deg() const;
+    double get_magnetic_dip_deg() const;
 
     SGPropertyNode_ptr _rootNode;
     SGPropertyNode_ptr _metarValidNode;
@@ -71,9 +80,15 @@ private:
     double _snow;
     bool _snow_cover;
     std::string _decoded;
-
+protected:
     TiedPropertyList _tiedProperties;
+    MagneticVariation * _magneticVariation;
 };
+
+inline void MetarProperties::set_station_id( const char * value )
+{ 
+    _station_id = value; 
+}
 
 } // namespace
 #endif // __METARPROPERTIES_HXX
