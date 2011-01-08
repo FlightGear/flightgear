@@ -332,7 +332,7 @@ void FGMouseInput::doMouseMotion (int x, int y)
   }
   if (y != m.y) {
     int delta = y - m.y;
-    yAccelNode->setIntValue( delta );
+    yAccelNode->setIntValue( -delta );
     for (unsigned int i = 0; i < mode.y_bindings[modifiers].size(); i++)
       mode.y_bindings[modifiers][i]->fire(double(delta), double(ysize));
   }
