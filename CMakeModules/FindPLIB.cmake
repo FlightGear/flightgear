@@ -89,7 +89,7 @@ macro(find_static_component comp libs)
 
     FIND_LIBRARY(${compLibName}_DEBUG
       NAMES ${compLib}_d
-      HINTS $ENV{SIMGEAR_DIR}
+      HINTS $ENV{PLIBDIR}
       PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
       PATHS
       /usr/local
@@ -98,7 +98,7 @@ macro(find_static_component comp libs)
     )
     FIND_LIBRARY(${compLibName}_RELEASE
       NAMES ${compLib}
-      HINTS $ENV{SIMGEAR_DIR}
+      HINTS $ENV{PLIBDIR}
       PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
       PATHS
       /usr/local
