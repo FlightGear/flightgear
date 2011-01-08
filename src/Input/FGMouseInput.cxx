@@ -117,7 +117,7 @@ void FGMouseInput::init()
       m.mode_node->setIntValue(0);
     }
     for (j = 0; j < MAX_MOUSE_BUTTONS; j++) {
-      buf.clear();
+      buf.seekp(ios_base::beg);
       buf << "/devices/status/mice/mouse["<< i << "]/button[" << j << "]";
       m.mouse_button_nodes[j] = fgGetNode(buf.str().c_str(), true);
       m.mouse_button_nodes[j]->setBoolValue(false);
@@ -150,7 +150,7 @@ void FGMouseInput::init()
       m.modes[j].buttons = new FGButton[MAX_MOUSE_BUTTONS];
       std::ostringstream buf;
       for (k = 0; k < MAX_MOUSE_BUTTONS; k++) {
-        buf.clear();
+        buf.seekp(ios_base::beg);
         buf << "mouse button " << k;
         SG_LOG(SG_INPUT, SG_DEBUG, "Initializing mouse button " << k);
         m.modes[j].buttons[k].init( mode_node->getChild("button", k), buf.str(), module );
