@@ -1334,6 +1334,8 @@ struct OptionDesc {
     {"metar",                        true,  OPTION_STRING, "/environment/metar/data", false, "", 0 },
     {"disable-ai-models",            false, OPTION_BOOL,   "/sim/ai/enabled", false, "", 0 },
     {"enable-ai-models",             false, OPTION_BOOL,   "/sim/ai/enabled", true, "", 0 },
+    {"disable-ai-traffic",           false, OPTION_BOOL,   "/sim/traffic-manager/enabled", false, "", 0 },
+    {"enable-ai-traffic",            false, OPTION_BOOL,   "/sim/traffic-manager/enabled", true,  "", 0 },
     {"disable-freeze",               false, OPTION_BOOL,   "/sim/freeze/master", false, "", 0 },
     {"enable-freeze",                false, OPTION_BOOL,   "/sim/freeze/master", true, "", 0 },
     {"disable-fuel-freeze",          false, OPTION_BOOL,   "/sim/freeze/fuel", false, "", 0 },
@@ -1419,7 +1421,7 @@ struct OptionDesc {
     {"enable-skyblend",              false, OPTION_BOOL,   "/sim/rendering/skyblend", true, "", 0 },
     {"disable-textures",             false, OPTION_BOOL,   "/sim/rendering/textures", false, "", 0 },
     {"enable-textures",              false, OPTION_BOOL,   "/sim/rendering/textures", true, "", 0 },
-    {"texture-filtering",	     false, OPTION_INT,    "/sim/rendering/filtering", 1, "", 0 },
+    {"texture-filtering",            false, OPTION_INT,    "/sim/rendering/filtering", 1, "", 0 },
     {"disable-wireframe",            false, OPTION_BOOL,   "/sim/rendering/wireframe", false, "", 0 },
     {"enable-wireframe",             false, OPTION_BOOL,   "/sim/rendering/wireframe", true, "", 0 },
     {"geometry",                     true,  OPTION_FUNC,   "", false, "", fgOptGeometry },
@@ -1489,8 +1491,8 @@ struct OptionDesc {
     {"ai-scenario",                  true,  OPTION_FUNC,   "", false, "", fgOptScenario },
     {"parking-id",                   true,  OPTION_FUNC,   "", false, "", fgOptParking  },
     {"version",                      false, OPTION_FUNC,   "", false, "", fgOptVersion },
-    {"enable-fpe", 		     false, OPTION_FUNC,   "", false, "", fgOptFpe},
-    {"fgviewer", 		     false, OPTION_FUNC,   "", false, "", fgOptFgviewer},
+    {"enable-fpe",                   false, OPTION_FUNC,   "", false, "", fgOptFpe},
+    {"fgviewer",                     false, OPTION_FUNC,   "", false, "", fgOptFgviewer},
     {0}
 };
 

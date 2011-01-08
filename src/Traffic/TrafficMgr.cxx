@@ -79,6 +79,7 @@ FGTrafficManager::FGTrafficManager() :
   inited(false),
   enabled("/sim/traffic-manager/enabled"),
   aiEnabled("/sim/ai/enabled"),
+  realWxEnabled("/environment/realwx/enabled"),
   metarValid("/environment/metar/valid")
 {
     //score = 0;
@@ -232,7 +233,7 @@ void FGTrafficManager::init()
 
 void FGTrafficManager::update(double /*dt */ )
 {
-    if (!enabled || !aiEnabled || !metarValid) {
+    if (!enabled || !aiEnabled || (realWxEnabled && !metarValid)) {
         return;
     }
         
