@@ -33,7 +33,7 @@
 # People will have to manually change the cache values of 
 # SimGear_LIBRARIES to override this selection or set the CMake environment
 # CMAKE_INCLUDE_PATH to modify the search paths.
-    
+
 include(SelectLibraryConfigurations)
 
 FIND_PATH(SIMGEAR_INCLUDE_DIR simgear/math/SGMath.hxx
@@ -89,9 +89,9 @@ macro(find_sg_component comp libs)
     select_library_configurations( ${compLibBase} )
 
     set(componentLibRelease ${${compLibName}_RELEASE})
-    message(STATUS "Simgear ${compLibName}_RELEASE ${componentLibRelease}")
+    #message(STATUS "Simgear ${compLibName}_RELEASE ${componentLibRelease}")
     set(componentLibDebug ${${compLibName}_DEBUG})
-    message(STATUS "Simgear ${compLibName}_DEBUG ${componentLibDebug}")
+    #message(STATUS "Simgear ${compLibName}_DEBUG ${componentLibDebug}")
     if (NOT ${compLibName}_DEBUG)
         if (NOT ${compLibName}_RELEASE)
             #message(STATUS "found ${componentLib}")
