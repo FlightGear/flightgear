@@ -55,6 +55,8 @@ option(ENABLE_YASIM "Set to ON to build FlightGear with YASIM FDM" ON)
 option(ENABLE_JSBSIM "Set to ON to build FlightGear with JSBSim FDM" ON)
 option(ENABLE_FGADMIN "Set to ON to build FlightGear with FGADMIN" ON)
 option(EVENT_INPUT "Set to ON to build FlightGear with event-based Input support" OFF)
+option(ENABLE_LIBSVN "Set to ON to build terrasync with libsvnclient support" OFF)
+
 set(MSVC_3RDPARTY_DIR NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
 
 if(LOGGING)
@@ -103,6 +105,16 @@ find_package(OpenSceneGraph 2.8.2 REQUIRED osgText osgSim osgDB osgParticle osgF
 if(ENABLE_FGADMIN)
   find_package(FLTK)
 endif(ENABLE_FGADMIN)
+
+if(ENABLE_LIBSVN)
+	find_package(SvnClient)
+	
+	if(LIBSVN_FOUND)
+		message(STATUS "libsvn found, enabling in terrasync")
+		set(HAVE_SVN_CLIENT_H 1)
+		set(HAVE_LIBSVN_CLIENT_1 1)
+	endif(LIBSVN_FOUND)
+endif(ENABLE_LIBSVN)
 
 find_package(PLIB REQUIRED puaux pu js fnt)
 find_package(SimGear 2.2.0 REQUIRED)
