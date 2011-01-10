@@ -24,6 +24,7 @@
 #  include <config.h>
 #endif
 
+#include <cstring>
 #include "FGEventInput.hxx"
 #include <Main/fg_props.hxx>
 #include <simgear/io/sg_file.hxx>

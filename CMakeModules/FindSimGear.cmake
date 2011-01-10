@@ -34,6 +34,8 @@
 # SimGear_LIBRARIES to override this selection or set the CMake environment
 # CMAKE_INCLUDE_PATH to modify the search paths.
 
+include(SelectLibraryConfigurations)
+
 FIND_PATH(SIMGEAR_INCLUDE_DIR simgear/math/SGMath.hxx
   HINTS $ENV{SIMGEAR_DIR}
   PATH_SUFFIXES include 
@@ -63,10 +65,11 @@ FIND_LIBRARY(SIMGEAR_LIBRARIES
 
 macro(find_sg_component comp libs)
     set(compLib "sg${comp}")
-    string(TOUPPER "SIMGEAR_${comp}_LIBRARY" compLibName)
-    
-    FIND_LIBRARY(${compLibName}
-      NAMES ${compLib}
+    string(TOUPPER "SIMGEAR_${comp}" compLibBase)
+    set( compLibName ${compLibBase}_LIBRARY )
+
+    FIND_LIBRARY(${compLibName}_DEBUG
+      NAMES ${compLib}${CMAKE_DEBUG_POSTFIX}
       HINTS $ENV{SIMGEAR_DIR}
       PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
       PATHS
@@ -74,11 +77,28 @@ macro(find_sg_component comp libs)
       /usr
       /opt
     )
-    
-    set(componentLib ${${compLibName}})
-    if (NOT ${componentLib} STREQUAL "componentLib-NOTFOUND")
-        #message(STATUS "found ${componentLib}")
-        list(APPEND ${libs} ${componentLib})
+    FIND_LIBRARY(${compLibName}_RELEASE
+      NAMES ${compLib}${CMAKE_RELEASE_POSTFIX}
+      HINTS $ENV{SIMGEAR_DIR}
+      PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
+      PATHS
+      /usr/local
+      /usr
+      /opt
+    )
+    select_library_configurations( ${compLibBase} )
+
+    set(componentLibRelease ${${compLibName}_RELEASE})
+    #message(STATUS "Simgear ${compLibName}_RELEASE ${componentLibRelease}")
+    set(componentLibDebug ${${compLibName}_DEBUG})
+    #message(STATUS "Simgear ${compLibName}_DEBUG ${componentLibDebug}")
+    if (NOT ${compLibName}_DEBUG)
+        if (NOT ${compLibName}_RELEASE)
+            #message(STATUS "found ${componentLib}")
+            list(APPEND ${libs} ${componentLibRelease})
+        endif()
+    else()
+        list(APPEND ${libs} optimized ${componentLibRelease} debug ${componentLibDebug})
     endif()
 endmacro()
 

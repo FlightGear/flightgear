@@ -33,7 +33,11 @@
 #include <time.h>
 #include <unistd.h>
 #elif defined(_MSC_VER)
-#include <io.h>
+#   include <io.h>
+#   ifndef HAVE_SVN_CLIENT_H
+#       include <time.h>
+#       include <process.h>
+#   endif
 #endif
 
 #include <stdlib.h>             // atoi() atof() abs() system()

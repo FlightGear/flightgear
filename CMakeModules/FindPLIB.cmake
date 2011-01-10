@@ -34,6 +34,8 @@
 # OPENAL_LIBRARY to override this selection or set the CMake environment
 # CMAKE_INCLUDE_PATH to modify the search paths.
 
+include(SelectLibraryConfigurations)
+
 set(save_FIND_FRAMEWORK ${CMAKE_FIND_FRAMEWORK})
 set(CMAKE_FIND_FRAMEWORK ONLY)
 FIND_PATH(PLIB_INCLUDE_DIR ul.h
@@ -82,9 +84,19 @@ macro(find_static_component comp libs)
       set(compLib "plib${comp}")
     endif(MSVC)
     
-    string(TOUPPER "PLIB_${comp}_LIBRARY" compLibName)
-    
-    FIND_LIBRARY(${compLibName}
+    string(TOUPPER "PLIB_${comp}" compLibBase)
+    set( compLibName ${compLibBase}_LIBRARY )
+
+    FIND_LIBRARY(${compLibName}_DEBUG
+      NAMES ${compLib}_d
+      HINTS $ENV{PLIBDIR}
+      PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
+      PATHS
+      /usr/local
+      /usr
+      /opt
+    )
+    FIND_LIBRARY(${compLibName}_RELEASE
       NAMES ${compLib}
       HINTS $ENV{PLIBDIR}
       PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
@@ -93,10 +105,19 @@ macro(find_static_component comp libs)
       /usr
       /opt
     )
-    
-    set(componentLib ${${compLibName}})
-    if (NOT ${componentLib} STREQUAL "componentLib-NOTFOUND")
-        list(APPEND ${libs} ${componentLib})
+    select_library_configurations( ${compLibBase} )
+
+    set(componentLibRelease ${${compLibName}_RELEASE})
+    #message(STATUS "Simgear ${compLibName}_RELEASE ${componentLibRelease}")
+    set(componentLibDebug ${${compLibName}_DEBUG})
+    #message(STATUS "Simgear ${compLibName}_DEBUG ${componentLibDebug}")
+    if (NOT ${compLibName}_DEBUG)
+        if (NOT ${compLibName}_RELEASE)
+            #message(STATUS "found ${componentLib}")
+            list(APPEND ${libs} ${componentLibRelease})
+        endif()
+    else()
+        list(APPEND ${libs} optimized ${componentLibRelease} debug ${componentLibDebug})
     endif()
 endmacro()
 

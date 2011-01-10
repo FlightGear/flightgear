@@ -33,7 +33,7 @@
 using std::string;
 using std::vector;
 
-#include <plib/netChannel.h>
+#include <simgear/io/sg_netChannel.hxx>
 
 
 /**
@@ -41,7 +41,7 @@ using std::vector;
  * This class provides a telnet-like server for remote access to
  * FlightGear properties.
  */
-class UGTelnet: netChannel
+class UGTelnet: simgear::NetChannel
 {
 
 private:

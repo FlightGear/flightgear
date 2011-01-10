@@ -31,6 +31,9 @@
 #include "metarairportfilter.hxx"
 #include <simgear/scene/sky/cloud.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/misc/strutils.hxx>
+#include <simgear/magvar/magvar.hxx>
+#include <simgear/timing/sg_time.hxx>
 #include <Main/fg_props.hxx>
 
 using std::string;
@@ -38,6 +41,72 @@ using std::string;
 namespace Environment {
 
 static vector<string> coverage_string;
+
+/**
+ * @brief Helper class to wrap SGMagVar functionality and cache the variation and dip for
+ *        a certain position. 
+ */
+class MagneticVariation : public SGMagVar {
+public:
+  /**
+   * Constructor
+   */
+  MagneticVariation() : _lat(1), _lon(1), _alt(1) {
+    recalc( 0.0, 0.0, 0.0 );
+  }
+
+  /**
+   * @brief get the magnetic variation for a specific position at the current time
+   * @param lon the positions longitude in degrees
+   * @param lat the positions latitude in degrees
+   * @param alt the positions height above MSL (aka altitude) in feet
+   * @return the magnetic variation in degrees
+   */
+  double get_variation_deg( double lon, double lat, double alt );
+
+  /**
+   * @brief get the magnetic dip for a specific position at the current time
+   * @param lon the positions longitude in degrees
+   * @param lat the positions latitude in degrees
+   * @param alt the positions height above MSL (aka altitude) in feet
+   * @return the magnetic dip in degrees
+   */
+  double get_dip_deg( double lon, double lat, double alt );
+private:
+  void recalc( double lon, double lat, double alt );
+  SGTime _time;
+  double _lat, _lon, _alt;
+};
+
+inline void MagneticVariation::recalc( double lon, double lat, double alt )
+{
+  // calculation of magnetic variation is expensive. Cache the position
+  // and perform this calculation only if it has changed
+  if( _lon != lon || _lat != lat || _alt != alt ) {
+    SG_LOG(SG_ALL, SG_DEBUG, "Recalculating magvar for lon=" << lon << ", lat=" << lat << ", alt=" << alt );
+    _lon = lon;
+    _lat = lat;
+    _alt = alt;
+
+    lon *= SGD_DEGREES_TO_RADIANS;
+    lat *= SGD_DEGREES_TO_RADIANS;
+    alt *= SG_FEET_TO_METER;
+   _time.update( lon, lat, 0, 0 );
+    update( lon, lat, alt, _time.getJD() );
+  }
+}
+
+inline double MagneticVariation::get_variation_deg( double lon, double lat, double alt )
+{
+  recalc( lon, lat, alt );
+  return get_magvar() * SGD_RADIANS_TO_DEGREES;
+}
+
+inline double MagneticVariation::get_dip_deg( double lon, double lat, double alt )
+{
+  recalc( lon, lat, alt );
+  return get_magdip() * SGD_RADIANS_TO_DEGREES;
+}
 
 MetarProperties::MetarProperties( SGPropertyNode_ptr rootNode ) :
   _rootNode(rootNode),
@@ -64,7 +133,8 @@ MetarProperties::MetarProperties( SGPropertyNode_ptr rootNode ) :
   _rain(0.0),
   _hail(0.0),
   _snow(0.0),
-  _snow_cover(false)
+  _snow_cover(false),
+  _magneticVariation(new MagneticVariation())
 {
   // Hack to avoid static initialization order problems on OSX
   if( coverage_string.size() == 0 ) {
@@ -78,10 +148,12 @@ MetarProperties::MetarProperties( SGPropertyNode_ptr rootNode ) :
   _metarValidNode->setBoolValue( false );
   _tiedProperties.setRoot( _rootNode );
   _tiedProperties.Tie("data", this, &MetarProperties::get_metar, &MetarProperties::set_metar );
-  _tiedProperties.Tie("station-id", this, &MetarProperties::get_station_id );
+  _tiedProperties.Tie("station-id", this, &MetarProperties::get_station_id, &MetarProperties::set_station_id );
   _tiedProperties.Tie("station-elevation-ft", &_station_elevation );
   _tiedProperties.Tie("station-latitude-deg", &_station_latitude );
   _tiedProperties.Tie("station-longitude-deg", &_station_longitude );
+  _tiedProperties.Tie("station-magnetic-variation-deg", this, &MetarProperties::get_magnetic_variation_deg );
+  _tiedProperties.Tie("station-magnetic-dip-deg", this, &MetarProperties::get_magnetic_dip_deg );
   _tiedProperties.Tie("min-visibility-m", &_min_visibility );
   _tiedProperties.Tie("max-visibility-m", &_max_visibility );
   _tiedProperties.Tie("base-wind-range-from", &_base_wind_range_from );
@@ -107,6 +179,7 @@ MetarProperties::MetarProperties( SGPropertyNode_ptr rootNode ) :
 
 MetarProperties::~MetarProperties()
 {
+  delete _magneticVariation;
 }
 
 
@@ -318,6 +391,21 @@ void MetarProperties::set_metar( const char * metar )
     _snow = m->getSnow();
     _snow_cover = m->getSnowCover();
     _metarValidNode->setBoolValue(true);
+}
+
+void MetarProperties::setStationId( const std::string & value )
+{ 
+    set_station_id(simgear::strutils::strip(value).c_str());
+}
+
+double MetarProperties::get_magnetic_variation_deg() const 
+{
+  return _magneticVariation->get_variation_deg( _station_longitude, _station_latitude, _station_elevation );
+}
+
+double MetarProperties::get_magnetic_dip_deg() const
+{
+  return _magneticVariation->get_dip_deg( _station_longitude, _station_latitude, _station_elevation );
 }
 
 } // namespace Environment

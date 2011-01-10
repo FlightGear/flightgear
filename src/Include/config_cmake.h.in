@@ -29,4 +29,7 @@
 #cmakedefine ENABLE_YASIM
 #cmakedefine ENABLE_JSBSIM
 
+#cmakedefine HAVE_SVN_CLIENT_H
+#cmakedefine HAVE_LIBSVN_CLIENT_1
+
 #define PKGLIBDIR "@PKGLIBDIR"

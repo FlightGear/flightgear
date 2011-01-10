@@ -99,7 +99,7 @@ private:
   void readTimeTableFromFile(SGPath infilename);
   void Tokenize(const string& str, vector<string>& tokens, const string& delimiters = " ");
 
-  simgear::PropertyObject<bool> enabled, aiEnabled, metarValid;
+  simgear::PropertyObject<bool> enabled, aiEnabled, realWxEnabled, metarValid;
 public:
   FGTrafficManager();
   ~FGTrafficManager();

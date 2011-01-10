@@ -24,12 +24,14 @@
 #  include <config.h>
 #endif
 
-#include "FGLinuxEventInput.hxx"
-
+#include <cstring>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <poll.h>
 #include <linux/input.h>
 #include <dbus/dbus.h>
 #include <fcntl.h>
+#include "FGLinuxEventInput.hxx"
 
 
 struct TypeCode {

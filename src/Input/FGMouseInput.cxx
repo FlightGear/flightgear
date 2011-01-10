@@ -74,7 +74,13 @@ const FGMouseInput::MouseCursorMap FGMouseInput::mouse_cursor_map[] = {
 
 FGMouseInput * FGMouseInput::mouseInput = NULL;
 
-FGMouseInput::FGMouseInput()
+FGMouseInput::FGMouseInput() :
+  xSizeNode(fgGetNode("/sim/startup/xsize", false ) ),
+  ySizeNode(fgGetNode("/sim/startup/ysize", false ) ),
+  xAccelNode(fgGetNode("/devices/status/mice/mouse/accel-x", true ) ),
+  yAccelNode(fgGetNode("/devices/status/mice/mouse/accel-y", true ) ),
+  hideCursorNode(fgGetNode("/sim/mouse/hide-cursor", true ) ),
+  cursorTimeoutNode(fgGetNode("/sim/mouse/cursor-timeout-sec", true ) )
 {
   if( mouseInput == NULL )
     mouseInput = this;
@@ -103,16 +109,17 @@ void FGMouseInput::init()
     mouse &m = bindings[i];
 
                                 // Grab node pointers
-    char buf[64];
-    sprintf(buf, "/devices/status/mice/mouse[%d]/mode", i);
-    m.mode_node = fgGetNode(buf);
+    std::ostringstream buf;
+    buf <<  "/devices/status/mice/mouse[" << i << "]/mode";
+    m.mode_node = fgGetNode(buf.str().c_str());
     if (m.mode_node == NULL) {
-      m.mode_node = fgGetNode(buf, true);
+      m.mode_node = fgGetNode(buf.str().c_str(), true);
       m.mode_node->setIntValue(0);
     }
     for (j = 0; j < MAX_MOUSE_BUTTONS; j++) {
-      sprintf(buf, "/devices/status/mice/mouse[%d]/button[%d]", i, j);
-      m.mouse_button_nodes[j] = fgGetNode(buf, true);
+      buf.seekp(ios_base::beg);
+      buf << "/devices/status/mice/mouse["<< i << "]/button[" << j << "]";
+      m.mouse_button_nodes[j] = fgGetNode(buf.str().c_str(), true);
       m.mouse_button_nodes[j]->setBoolValue(false);
     }
 
@@ -141,11 +148,12 @@ void FGMouseInput::init()
 
                                 // Read the button bindings for this mode
       m.modes[j].buttons = new FGButton[MAX_MOUSE_BUTTONS];
-      char buf[32];
+      std::ostringstream buf;
       for (k = 0; k < MAX_MOUSE_BUTTONS; k++) {
-        sprintf(buf, "mouse button %d", k);
+        buf.seekp(ios_base::beg);
+        buf << "mouse button " << k;
         SG_LOG(SG_INPUT, SG_DEBUG, "Initializing mouse button " << k);
-        m.modes[j].buttons[k].init( mode_node->getChild("button", k), buf, module );
+        m.modes[j].buttons[k].init( mode_node->getChild("button", k), buf.str(), module );
       }
 
                                 // Read the axis bindings for this mode
@@ -160,15 +168,17 @@ void FGMouseInput::init()
 
 void FGMouseInput::update ( double dt )
 {
+  double cursorTimeout = cursorTimeoutNode ? cursorTimeoutNode->getDoubleValue() : 10.0;
+
   mouse &m = bindings[0];
   int mode =  m.mode_node->getIntValue();
   if (mode != m.current_mode) {
     m.current_mode = mode;
-    m.timeout = fgGetDouble( "/sim/mouse/cursor-timeout-sec", 10.0 );
+    m.timeout = cursorTimeout;
     if (mode >= 0 && mode < m.nModes) {
       fgSetMouseCursor(m.modes[mode].cursor);
-      m.x = fgGetInt("/sim/startup/xsize", 800) / 2;
-      m.y = fgGetInt("/sim/startup/ysize", 600) / 2;
+      m.x = (xSizeNode ? xSizeNode->getIntValue() : 800) / 2;
+      m.y = (ySizeNode ? ySizeNode->getIntValue() : 600) / 2;
       fgWarpMouse(m.x, m.y);
     } else {
       SG_LOG(SG_INPUT, SG_DEBUG, "Mouse mode " << mode << " out of range");
@@ -176,9 +186,9 @@ void FGMouseInput::update ( double dt )
     }
   }
 
-  if ( fgGetBool( "/sim/mouse/hide-cursor", true ) ) {
+  if ( hideCursorNode ==NULL || hideCursorNode->getBoolValue() ) {
       if ( m.x != m.save_x || m.y != m.save_y ) {
-          m.timeout = fgGetDouble( "/sim/mouse/cursor-timeout-sec", 10.0 );
+          m.timeout = cursorTimeout;
           if (fgGetMouseCursor() == MOUSE_CURSOR_NONE)
               fgSetMouseCursor(m.modes[mode].cursor);
       } else {
@@ -292,8 +302,8 @@ void FGMouseInput::doMouseMotion (int x, int y)
   // callback.  Glut doesn't.
   int modifiers = KEYMOD_NONE;
 
-  int xsize = fgGetInt("/sim/startup/xsize", 800);
-  int ysize = fgGetInt("/sim/startup/ysize", 600);
+  int xsize = xSizeNode ? xSizeNode->getIntValue() : 800;
+  int ysize = ySizeNode ? ySizeNode->getIntValue() : 600;
 
   mouse &m = bindings[0];
 
@@ -316,11 +326,13 @@ void FGMouseInput::doMouseMotion (int x, int y)
                                 // so we can play with it.
   if (x != m.x) {
     int delta = x - m.x;
+    xAccelNode->setIntValue( delta );
     for (unsigned int i = 0; i < mode.x_bindings[modifiers].size(); i++)
       mode.x_bindings[modifiers][i]->fire(double(delta), double(xsize));
   }
   if (y != m.y) {
     int delta = y - m.y;
+    yAccelNode->setIntValue( -delta );
     for (unsigned int i = 0; i < mode.y_bindings[modifiers].size(); i++)
       mode.y_bindings[modifiers][i]->fire(double(delta), double(ysize));
   }
