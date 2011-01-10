@@ -444,7 +444,7 @@ void FGAIAircraft::getGroundElev(double dt) {
 
 void FGAIAircraft::doGroundAltitude() {
     if ((fabs(altitude_ft - (tgt_altitude_ft+groundOffset)) > 1000.0)||
-        (fabs(speed)<0.0001))
+        (isStationary()))
         altitude_ft = (tgt_altitude_ft + groundOffset);
     else
         altitude_ft += 0.1 * ((tgt_altitude_ft+groundOffset) - altitude_ft);
