@@ -84,6 +84,7 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) : FGAIBase(otAircraft) {
 
     holdPos = false;
     needsTaxiClearance = false;
+    _needsGroundElevation = true;
 
     _performance = 0; //TODO initialize to JET_TRANSPORT from PerformanceDB
     dt = 0;
@@ -179,6 +180,8 @@ void FGAIAircraft::checkVisibility()
 
 void FGAIAircraft::AccelTo(double speed) {
     tgt_speed = speed;
+    if (!isStationary())
+        _needsGroundElevation = true;
 }
 
 
@@ -334,7 +337,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
                 use_perf_vs = true;
             }
         }
-        tgt_speed = prev->speed;
+        AccelTo(prev->speed);
         hdg_lock = alt_lock = true;
         no_roll = prev->on_ground;
     }
@@ -403,6 +406,8 @@ bool FGAIAircraft::loadNextLeg(double distance) {
 void FGAIAircraft::getGroundElev(double dt) {
     dt_elev_count += dt;
 
+    if (!needGroundElevation())
+        return;
     // Update minimally every three secs, but add some randomness
     // to prevent all AI objects doing this in synchrony
     if (dt_elev_count < (3.0) + (rand() % 10))
@@ -424,14 +429,22 @@ void FGAIAircraft::getGroundElev(double dt) {
         {
             double alt;
             if (getGroundElevationM(SGGeod::fromGeodM(pos, 20000), alt, 0))
+            {
                 tgt_altitude_ft = alt * SG_METER_TO_FEET;
+                if (isStationary())
+                {
+                    // aircraft is stationary and we obtained altitude for this spot - we're done.
+                    _needsGroundElevation = false;
+                }
+            }
         }
     }
 }
 
 
 void FGAIAircraft::doGroundAltitude() {
-    if (fabs(altitude_ft - (tgt_altitude_ft+groundOffset)) > 1000.0)
+    if ((fabs(altitude_ft - (tgt_altitude_ft+groundOffset)) > 1000.0)||
+        (fabs(speed)<0.0001))
         altitude_ft = (tgt_altitude_ft + groundOffset);
     else
         altitude_ft += 0.1 * ((tgt_altitude_ft+groundOffset) - altitude_ft);
@@ -601,6 +614,7 @@ void FGAIAircraft::handleFirstWaypoint() {
         Transform();             // make sure aip is initialized.
         getGroundElev(60.1);     // make sure it's executed first time around, so force a large dt value
         doGroundAltitude();
+        _needsGroundElevation = true; // check ground elevation again (maybe scenery wasn't available yet)
     }
     // Make sure to announce the aircraft's position
     announcePositionToController();
