@@ -73,7 +73,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="opengl32.lib glu32.lib winmm.lib wsock32.lib sg_d.lib net_d.lib pui_d.lib puaux_d.lib fnt_d.lib js_d.lib ul_d.lib zlibd.lib OpenAL32.lib ALut.lib osgd.lib osgDBd.lib osgUtild.lib osgViewerd.lib osgGAd.lib osgTextd.lib osgParticled.lib OpenThreadsd.lib libjpegd.lib"
+				AdditionalDependencies="opengl32.lib glu32.lib winmm.lib wsock32.lib sg_d.lib pui_d.lib puaux_d.lib fnt_d.lib ul_d.lib zlibd.lib OpenAL32.lib ALut.lib osgd.lib osgDBd.lib osgUtild.lib osgViewerd.lib osgGAd.lib osgTextd.lib osgParticled.lib OpenThreadsd.lib libjpegd.lib"
 				OutputFile="$(OutDir)\fgfs.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -161,7 +161,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib glu32.lib winmm.lib wsock32.lib sg_d.lib net_d.lib pui_d.lib puaux_d.lib fnt_d.lib js_d.lib ul_d.lib zlibd.lib OpenAL32.lib ALut.lib osgd.lib osgDBd.lib osgUtild.lib osgViewerd.lib osgGAd.lib osgTextd.lib osgParticled.lib OpenThreadsd.lib libjpegd.lib"
+				AdditionalDependencies="opengl32.lib glu32.lib winmm.lib wsock32.lib sg_d.lib pui_d.lib puaux_d.lib fnt_d.lib ul_d.lib zlibd.lib OpenAL32.lib ALut.lib osgd.lib osgDBd.lib osgUtild.lib osgViewerd.lib osgGAd.lib osgTextd.lib osgParticled.lib OpenThreadsd.lib libjpegd.lib"
 				OutputFile="$(OutDir)\fgfs.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -249,7 +249,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="opengl32.lib glu32.lib winmm.lib wsock32.lib sg.lib net.lib pui.lib puAux.lib fnt.lib js.lib ul.lib zlib.lib OpenAL32.lib ALut.lib osg.lib osgDB.lib osgUtil.lib osgViewer.lib osgGA.lib osgText.lib osgParticle.lib OpenThreads.lib libjpeg.lib"
+				AdditionalDependencies="opengl32.lib glu32.lib winmm.lib wsock32.lib sg.lib pui.lib puAux.lib fnt.lib ul.lib zlib.lib OpenAL32.lib ALut.lib osg.lib osgDB.lib osgUtil.lib osgViewer.lib osgGA.lib osgText.lib osgParticle.lib OpenThreads.lib libjpeg.lib"
 				OutputFile="$(OutDir)\fgfs.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -336,7 +336,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib glu32.lib winmm.lib wsock32.lib sg.lib net.lib pui.lib puAux.lib fnt.lib js.lib ul.lib zlib.lib OpenAL32.lib ALut.lib osg.lib osgDB.lib osgUtil.lib osgViewer.lib osgGA.lib osgText.lib osgParticle.lib OpenThreads.lib libjpeg.lib"
+				AdditionalDependencies="opengl32.lib glu32.lib winmm.lib wsock32.lib sg.lib pui.lib puAux.lib fnt.lib ul.lib zlib.lib OpenAL32.lib ALut.lib osg.lib osgDB.lib osgUtil.lib osgViewer.lib osgGA.lib osgText.lib osgParticle.lib OpenThreads.lib libjpeg.lib"
 				OutputFile="$(OutDir)\fgfs.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -2614,6 +2614,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\Input\FGjs.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Input\FGKeyboardInput.cxx"
 				>
 			</File>
@@ -2635,6 +2639,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\Input\input.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Input\js.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Input\jsWindows.cxx"
 				>
 			</File>
 		</Filter>
