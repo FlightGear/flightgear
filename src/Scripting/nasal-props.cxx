@@ -173,7 +173,7 @@ static naRef f_getValue(naContext c, naRef me, int argc, naRef* args)
         double dv = (*node)->getDoubleValue();
         if (osg::isNaN(dv)) {
           SG_LOG(SG_GENERAL, SG_ALERT, "Nasal getValue: property " << (*node)->getPath() << " is NaN");
-          naRuntimeError(c, "props.getValue() would have read NaN");
+          return naNil();
         }
         
         return naNum(dv);

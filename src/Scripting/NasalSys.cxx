@@ -190,7 +190,7 @@ static naRef f_getprop(naContext c, naRef me, int argc, naRef* args)
         double dv = p->getDoubleValue();
         if (osg::isNaN(dv)) {
           SG_LOG(SG_GENERAL, SG_ALERT, "Nasal getprop: property " << p->getPath() << " is NaN");
-          naRuntimeError(c, "getprop() would have read NaN");
+          return naNil();
         }
         
         return naNum(dv);
