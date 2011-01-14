@@ -25,6 +25,8 @@
 
 #include "FGjs.hxx"
 
+#include <plib/ul.h>
+
 #include <mach/mach.h>
 #include <IOKit/IOKitLib.h>
 #include <IOKit/hid/IOHIDLib.h>
