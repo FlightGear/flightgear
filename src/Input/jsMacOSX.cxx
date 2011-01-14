@@ -18,7 +18,7 @@
 
      For further information visit http://plib.sourceforge.net
 
-     $Id: jsMacOSX.cxx 2118 2007-09-14 22:23:32Z fayjf $
+     $Id: jsMacOSX.cxx 2158 2009-08-29 12:35:36Z fayjf $
 */
 
 #ifdef __APPLE__
@@ -137,7 +137,7 @@ static void findDevices(mach_port_t masterPort)
 jsJoystick::jsJoystick(int ident) :
 	id(ident),
 	os(NULL), 
-	error(false),
+	error(JS_FALSE),
 	num_axes(0),
 	num_buttons(0)
 {	
@@ -154,18 +154,24 @@ jsJoystick::jsJoystick(int ident) :
 	CFTypeRef ref = CFDictionaryGetValue (properties, CFSTR(kIOHIDProductKey));
 	if (!ref)
 		ref = CFDictionaryGetValue (properties, CFSTR("USB Product Name"));
-	char tmpname[128];
-	if (!ref || !CFStringGetCString ((CFStringRef) ref, tmpname, sizeof(tmpname), CFStringGetSystemEncoding ())) {
+			
+	if (!ref || !CFStringGetCString ((CFStringRef) ref, name, 128, CFStringGetSystemEncoding ())) {
 		ulSetError(UL_WARNING, "error getting device name");
-		tmpname[0] = '\0';
+		name[0] = '\0';
 	}
-	name = tmpname;
 	//printf("Joystick name: %s \n", name);
 	open();
 }
 
 void jsJoystick::open()
 {
+#if 0		// test already done in the constructor
+	if (id >= numDevices) {
+		ulSetError(UL_WARNING, "device index out of range in jsJoystick::open");
+		return;
+	}
+#endif
+
 	// create device interface
 	IOReturn rv;
 	SInt32 score;
@@ -222,6 +228,27 @@ CFDictionaryRef getCFProperties(io_object_t ioDev)
 	IOReturn rv;
 	CFMutableDictionaryRef cfProperties;
 
+#if 0	
+	// comment copied from darwin/SDL_sysjoystick.c
+	/* Mac OS X currently is not mirroring all USB properties to HID page so need to look at USB device page also
+	 * get dictionary for usb properties: step up two levels and get CF dictionary for USB properties
+	 */
+	 
+	io_registry_entry_t parent1, parent2;
+	
+	rv = IORegistryEntryGetParentEntry (ioDev, kIOServicePlane, &parent1);
+	if (rv != kIOReturnSuccess) {
+		ulSetError(UL_WARNING, "error getting device entry parent");
+		return NULL;
+	}
+	
+	rv = IORegistryEntryGetParentEntry (parent1, kIOServicePlane, &parent2);
+	if (rv != kIOReturnSuccess) {
+		ulSetError(UL_WARNING, "error getting device entry parent 2");
+		return NULL;
+	}
+	
+#endif
 	rv = IORegistryEntryCreateCFProperties( ioDev /*parent2*/, 
 		&cfProperties, kCFAllocatorDefault, kNilOptions);
 	if (rv != kIOReturnSuccess || !cfProperties) {
@@ -302,9 +329,22 @@ void os_specific_s::parseElement(jsJoystick* joy, CFDictionaryRef element)
 					ulSetError(UL_WARNING, "input type element has weird usage (%lx)\n", usage);
 		break;
 			}					
+		} else if (page == kHIDPage_Simulation) {
+			switch (usage) /* look at usage to determine function */
+			{
+				case kHIDUsage_Sim_Rudder:
+				case kHIDUsage_Sim_Throttle:
+					//printf(" axis\n");
+					/*joy->os->*/addAxisElement(joy, (CFDictionaryRef) element);
+					break;
+				default:
+					ulSetError(UL_WARNING, "Simulation page input type element has weird usage (%lx)\n", usage);
+			}
 		} else if (page == kHIDPage_Button) {
 			//printf(" button\n");
 			/*joy->os->*/addButtonElement(joy, (CFDictionaryRef) element);
+		} else if (page == kHIDPage_PID) {
+			ulSetError(UL_WARNING, "Force feedback and related data ignored\n", usage);
 		} else
 			ulSetError(UL_WARNING, "input type element has weird usage (%lx)\n", usage);
 		break;
@@ -385,12 +425,14 @@ void os_specific_s::addHatElement(jsJoystick* joy, CFDictionaryRef hat)
 
 void jsJoystick::rawRead(int *buttons, float *axes)
 {
-	*buttons = 0;
+  if (buttons)
+	  *buttons = 0;
+
 	 IOHIDEventStruct hidEvent;
 	
 	for (int b=0; b<num_buttons; ++b) {
 		(*(os->hidDev))->getElementValue(os->hidDev, os->buttonCookies[b], &hidEvent);
-		if (hidEvent.value)
+		if (hidEvent.value && buttons)
 			*buttons |= 1 << b; 
 	}
 	
