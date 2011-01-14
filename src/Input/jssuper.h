@@ -25,8 +25,7 @@
 #  include <config.h>
 #endif
 
-#include <string.h>		// plib/js.h should really include this !!!!!!
-#include <plib/js.h>
+#include "FGjs.hxx"
 
 #define MAX_JOYSTICKS 8
 

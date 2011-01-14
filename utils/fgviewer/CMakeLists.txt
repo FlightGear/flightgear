@@ -6,6 +6,7 @@ target_link_libraries(fgviewer
 	${OPENSCENEGRAPH_LIBRARIES} 
 	${OPENGL_LIBRARIES}
 	${ZLIB_LIBRARIES}
-	${PLIB_LIBRARIES})
+	${PLIB_LIBRARIES}
+	${JS_LIBS})
 	
 install(TARGETS fgviewer RUNTIME DESTINATION bin)

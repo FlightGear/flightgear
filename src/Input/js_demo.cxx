@@ -2,12 +2,12 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>                     
+#ifdef _WIN32
+#include <windows.h>
 #endif
 
 #include <string.h>		// plib/js.h should really include this !!!!!!
-#include <plib/js.h>
+#include "Input/FGjs.hxx"
 
 #define Z 8
 
@@ -30,7 +30,7 @@ int main ( int, char ** )
   { useful[i] = ! ( js[i]->notWorking () );
     if ( useful[i] ) {
          t++;
-         printf ( "Joystick %i: \"%s\"\n", i, js[i]->getName() ) ;
+         printf ( "Joystick %i: \"%s\"\n", i, js[i]->getName().c_str() ) ;
     } else printf ( "Joystick %i not detected\n", i ) ;
   }
   if ( t == 0 ) exit ( 1 ) ;

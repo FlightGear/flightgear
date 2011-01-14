@@ -89,7 +89,7 @@ void FGJoystickInput::init()
       continue;
     }
 
-    const char * name = js->getName();
+    std::string name = js->getName();
     SGPropertyNode_ptr js_node = js_nodes->getChild("js", i);
 
     if (js_node) {
@@ -130,14 +130,8 @@ void FGJoystickInput::postinit()
     if (!js_node || js->notWorking())
       continue;
 
-#ifdef WIN32
-    JOYCAPS jsCaps ;
-    joyGetDevCaps( i, &jsCaps, sizeof(jsCaps) );
-    unsigned int nbuttons = jsCaps.wNumButtons;
+    int nbuttons = js->getNumButtons();
     if (nbuttons > MAX_JOYSTICK_BUTTONS) nbuttons = MAX_JOYSTICK_BUTTONS;
-#else
-    unsigned int nbuttons = MAX_JOYSTICK_BUTTONS;
-#endif
 
     int naxes = js->getNumAxes();
     if (naxes > MAX_JOYSTICK_AXES) naxes = MAX_JOYSTICK_AXES;

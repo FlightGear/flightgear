@@ -152,30 +152,6 @@ if(${PLIB_LIBRARIES} STREQUAL "PLIB_LIBRARIES-NOTFOUND")
     endforeach()
 endif()
 
-list(FIND outDeps "js" haveJs)
-if(${haveJs} GREATER -1)
-    message(STATUS "adding runtime JS dependencies")
-    if(APPLE)
-    # resolve frameworks to full paths
-        find_library(IOKIT_LIBRARY IOKit)
-        find_library(CF_LIBRARY CoreFoundation)
-        set(JS_LIBS ${IOKIT_LIBRARY} ${CF_LIBRARY})
-    elseif(WIN32)
-        find_library(WINMM_LIBRARY winmm)
-        set(JS_LIBS ${WINMM_LIBRARY})
-    elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-        # anything needed here?
-    elseif(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
-        find_library(USBHID_LIBRARY usbhid)
-        # check_function_exists(hidinit)
-        set(JS_LIBS ${USBHID_LIBRARY})
-    else()
-        message(WARNING "Unsupported platform for PLIB JS libs")
-    endif()
-    
-    list(APPEND PLIB_LIBRARIES ${JS_LIBS})
-endif()
-
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(PLIB DEFAULT_MSG PLIB_LIBRARIES PLIB_INCLUDE_DIR)
 
