@@ -32,7 +32,6 @@ get_property(FG_LIBS GLOBAL PROPERTY FG_LIBS)
 
 target_link_libraries(fgfs 
 	${FG_LIBS}
-	${JS_LIBS}
 	${SIMGEAR_LIBRARIES}
 	${OPENSCENEGRAPH_LIBRARIES} 
 	${OPENAL_LIBRARY} 

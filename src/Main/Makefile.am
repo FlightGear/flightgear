@@ -18,7 +18,7 @@ endif
 if HAVE_FRAMEWORK_PLIB
 fgfs_PLIB_FW = $(plib_FRAMEWORK)
 else
-fgfs_PLIB_LIBS = -lplibpuaux -lplibpu -lplibfnt \
+fgfs_PLIB_LIBS = -lplibpuaux -lplibpu -lplibfnt -lplibjs  \
 	-lplibsg -lplibul 
 endif
 

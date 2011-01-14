@@ -67,7 +67,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="sg_d.lib ul_d.lib zlibd.lib winmm.lib ws2_32.lib OpenThreadsd.lib"
+				AdditionalDependencies="sg_d.lib js_d.lib ul_d.lib zlibd.lib winmm.lib ws2_32.lib OpenThreadsd.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\..\install\msvc90\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib"
 				GenerateDebugInformation="true"
@@ -148,7 +148,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="sg_d.lib ul_d.lib zlibd.lib winmm.lib ws2_32.lib OpenThreadsd.lib"
+				AdditionalDependencies="sg_d.lib js_d.lib ul_d.lib zlibd.lib winmm.lib ws2_32.lib OpenThreadsd.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\..\install\msvc90-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib"
 				GenerateDebugInformation="true"
@@ -225,7 +225,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="sg.lib ul.lib zlib.lib winmm.lib ws2_32.lib OpenThreads.lib"
+				AdditionalDependencies="sg.lib js.lib ul.lib zlib.lib winmm.lib ws2_32.lib OpenThreads.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\..\install\msvc90\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib"
 				GenerateDebugInformation="true"
@@ -304,7 +304,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="sg.lib ul.lib zlib.lib winmm.lib ws2_32.lib OpenThreads.lib"
+				AdditionalDependencies="sg.lib js.lib ul.lib zlib.lib winmm.lib ws2_32.lib OpenThreads.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\..\install\msvc90-64\OpenSceneGraph\lib;..\..\..\..\3rdParty.x64\lib"
 				GenerateDebugInformation="true"
@@ -351,19 +351,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Input\js.cxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\Input\jsinput.cxx"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\src\Input\jssuper.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Input\jsWindows.cxx"
 				>
 			</File>
 		</Filter>
@@ -372,10 +364,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath="..\..\..\src\Input\FGjs.hxx"
-				>
-			</File>
 			<File
 				RelativePath="..\..\..\src\Input\jsinput.h"
 				>

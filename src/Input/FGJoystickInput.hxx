@@ -31,9 +31,8 @@
 
 #include "FGCommonInput.hxx"
 #include "FGButton.hxx"
-#include "FGjs.hxx"
 #include <simgear/structure/subsystem_mgr.hxx>
-
+#include <plib/js.h>
 
 ////////////////////////////////////////////////////////////////////////
 // The Joystick Input Class

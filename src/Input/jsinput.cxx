@@ -21,13 +21,12 @@
 #include <simgear/compiler.h>
 
 #include <iostream>
-#include <math.h>
+
 using std::cout;
 using std::cin;
 using std::endl;
 
 #include "jsinput.h"
-#include <plib/ul.h>
 
 jsInput::jsInput(jsSuper *j) {
     jss=j;
