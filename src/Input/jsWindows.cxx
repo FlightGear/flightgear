@@ -21,6 +21,8 @@
      $Id: jsWindows.cxx 2114 2006-12-21 20:53:13Z fayjf $
 */
 
+#if defined (_WIN32)
+
 #include "FGjs.hxx"
 #include <windows.h>
 #include <regstr.h>
@@ -28,8 +30,6 @@
 #include <math.h>
 
 #include <plib/ul.h>
-
-#if defined (_WIN32)
 
 #define _JS_MAX_AXES_WIN 8  /* X,Y,Z,R,U,V,POV_X,POV_Y */
 
