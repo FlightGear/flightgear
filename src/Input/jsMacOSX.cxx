@@ -23,7 +23,7 @@
 
 #ifdef __APPLE__
 
-#include "FGjs.h"
+#include "FGjs.hxx"
 
 #include <mach/mach.h>
 #include <IOKit/IOKitLib.h>
