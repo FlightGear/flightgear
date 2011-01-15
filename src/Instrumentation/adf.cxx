@@ -103,9 +103,6 @@ ADF::init ()
     _ident_audible_node = node->getChild("ident-audible", 0, true);
     _power_btn_node = node->getChild("power-btn", 0, true);
 
-    if (_power_btn_node->getType() == simgear::props::NONE) 
-      _power_btn_node->setBoolValue(true); // front end didn't implement a power button
-
     SGSoundMgr *smgr = globals->get_soundmgr();
     _sgr = smgr->find("avionics", true);
     _sgr->tie_to_listener();
