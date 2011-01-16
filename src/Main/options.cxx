@@ -185,8 +185,8 @@ fgSetDefaults ()
 
 				// Features
     fgSetBool("/sim/hud/color/antialiased", false);
-    fgSetBool("/sim/hud/enable3d", true);
-    fgSetBool("/sim/hud/visibility", false);
+    fgSetBool("/sim/hud/enable3d[1]", true);
+    fgSetBool("/sim/hud/visibility[1]", false);
     fgSetBool("/sim/panel/visibility", true);
     fgSetBool("/sim/sound/enabled", true);
     fgSetBool("/sim/sound/working", true);
@@ -1342,16 +1342,16 @@ struct OptionDesc {
     {"enable-fuel-freeze",           false, OPTION_BOOL,   "/sim/freeze/fuel", true, "", 0 },
     {"disable-clock-freeze",         false, OPTION_BOOL,   "/sim/freeze/clock", false, "", 0 },
     {"enable-clock-freeze",          false, OPTION_BOOL,   "/sim/freeze/clock", true, "", 0 },
-    {"disable-hud-3d",               false, OPTION_BOOL,   "/sim/hud/enable3d", false, "", 0 },
-    {"enable-hud-3d",                false, OPTION_BOOL,   "/sim/hud/enable3d", true, "", 0 },
+    {"disable-hud-3d",               false, OPTION_BOOL,   "/sim/hud/enable3d[1]", false, "", 0 },
+    {"enable-hud-3d",                false, OPTION_BOOL,   "/sim/hud/enable3d[1]", true, "", 0 },
     {"disable-anti-alias-hud",       false, OPTION_BOOL,   "/sim/hud/color/antialiased", false, "", 0 },
     {"enable-anti-alias-hud",        false, OPTION_BOOL,   "/sim/hud/color/antialiased", true, "", 0 },
     {"control",                      true,  OPTION_STRING, "/sim/control-mode", false, "", 0 },
     {"disable-auto-coordination",    false, OPTION_BOOL,   "/sim/auto-coordination", false, "", 0 },
     {"enable-auto-coordination",     false, OPTION_BOOL,   "/sim/auto-coordination", true, "", 0 },
     {"browser-app",                  true,  OPTION_STRING, "/sim/startup/browser-app", false, "", 0 },
-    {"disable-hud",                  false, OPTION_BOOL,   "/sim/hud/visibility", false, "", 0 },
-    {"enable-hud",                   false, OPTION_BOOL,   "/sim/hud/visibility", true, "", 0 },
+    {"disable-hud",                  false, OPTION_BOOL,   "/sim/hud/visibility[1]", false, "", 0 },
+    {"enable-hud",                   false, OPTION_BOOL,   "/sim/hud/visibility[1]", true, "", 0 },
     {"disable-panel",                false, OPTION_BOOL,   "/sim/panel/visibility", false, "", 0 },
     {"enable-panel",                 false, OPTION_BOOL,   "/sim/panel/visibility", true, "", 0 },
     {"disable-sound",                false, OPTION_BOOL,   "/sim/sound/working", false, "", 0 },
