@@ -141,6 +141,8 @@ private:
     void updateActualState();
     void handleATCRequests();
     void checkVisibility();
+    inline bool isStationary() { return ((fabs(speed)<=0.0001)&&(fabs(tgt_speed)<=0.0001));}
+    inline bool needGroundElevation() { if (!isStationary()) _needsGroundElevation=true;return _needsGroundElevation;}
 
     double sign(double x);
 
@@ -160,6 +162,7 @@ private:
 
     bool reachedWaypoint;
     bool needsTaxiClearance;
+    bool _needsGroundElevation;
     time_t timeElapsed;
 
     PerformanceData* _performance; // the performance data for this aircraft
