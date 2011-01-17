@@ -17,8 +17,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-//
-// $Id$
 
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
@@ -33,6 +31,12 @@
 #include <fcntl.h>
 #include "FGLinuxEventInput.hxx"
 
+#include <poll.h>
+#include <linux/input.h>
+#include <dbus/dbus.h>
+#include <fcntl.h>
+
+#include <string.h>
 
 struct TypeCode {
   unsigned type;
@@ -277,9 +281,9 @@ FGLinuxInputDevice::FGLinuxInputDevice() :
 {
 }
 
-static inline bool bitSet( unsigned char * buf, unsigned char bit )
+static inline bool bitSet( unsigned char * buf, unsigned bit )
 {
-  return (buf[bit/sizeof(bit)/8] >> (bit%(sizeof(bit)*8))) & 1;
+  return (buf[bit/sizeof(unsigned char)/8] >> (bit%(sizeof(unsigned char)*8))) & 1;
 }
 
 void FGLinuxInputDevice::Open()
@@ -293,19 +297,75 @@ void FGLinuxInputDevice::Open()
     SG_LOG( SG_INPUT, SG_WARN, "Can't grab " << devname << " for exclusive access" );
   }
 
-  unsigned char buf[ABS_CNT/sizeof(unsigned char)/8];
-  // get axes maximums
-  if( ioctl( fd, EVIOCGBIT(EV_ABS,ABS_MAX), buf ) == -1 ) {
-    SG_LOG( SG_INPUT, SG_WARN, "Can't get abs-axes for " << devname );
-  } else {
-    for( unsigned i = 0; i < ABS_MAX; i++ ) {
-      if( bitSet( buf, i ) ) {
-        struct input_absinfo ai;
-        if( ioctl(fd, EVIOCGABS(i), &ai) == -1 ) {
-          SG_LOG( SG_INPUT, SG_WARN, "Can't get abs-axes maximums for " << devname );
-          continue;
+  {
+    unsigned char buf[ABS_CNT/sizeof(unsigned char)/8];
+    // get axes maximums
+    if( ioctl( fd, EVIOCGBIT(EV_ABS,ABS_MAX), buf ) == -1 ) {
+      SG_LOG( SG_INPUT, SG_WARN, "Can't get abs-axes for " << devname );
+    } else {
+      for( unsigned i = 0; i < ABS_MAX; i++ ) {
+        if( bitSet( buf, i ) ) {
+          struct input_absinfo ai;
+          if( ioctl(fd, EVIOCGABS(i), &ai) == -1 ) {
+            SG_LOG( SG_INPUT, SG_WARN, "Can't get abs-axes maximums for " << devname );
+            continue;
+          }
+          absinfo[i] = ai;
+          SG_LOG( SG_INPUT, SG_INFO, "Axis #" << i <<
+            ": value=" << ai.value << 
+            ": minimum=" << ai.minimum << 
+            ": maximum=" << ai.maximum << 
+            ": fuzz=" << ai.fuzz << 
+            ": flat=" << ai.flat << 
+            ": resolution=" << ai.resolution );
+
+          // kick an initial event
+          struct input_event event;
+          event.type = EV_ABS;
+          event.code = i;
+          event.value = ai.value;
+          FGLinuxEventData eventData( event, 0, 0 );
+          eventData.value = Normalize( event );
+          HandleEvent(eventData);
         }
-        absinfo[i] = ai;
+      }
+    }
+  }
+  {
+    unsigned char mask[KEY_CNT/sizeof(unsigned char)/8];
+    unsigned char flag[KEY_CNT/sizeof(unsigned char)/8];
+    memset(mask,0,sizeof(mask));
+    memset(flag,0,sizeof(flag));
+    if( ioctl( fd, EVIOCGKEY(sizeof(flag)), flag ) == -1 ||
+        ioctl( fd, EVIOCGBIT(EV_KEY, sizeof(mask)), mask ) == -1 ) {
+      SG_LOG( SG_INPUT, SG_WARN, "Can't get keys for " << devname );
+    } else {
+      for( unsigned i = 0; i < KEY_MAX; i++ ) {
+        if( bitSet( mask, i ) ) {
+          struct input_event event;
+          event.type = EV_KEY;
+          event.code = i;
+          event.value = bitSet(flag,i);
+          FGLinuxEventData eventData( event, 0, 0 );
+          HandleEvent(eventData);
+        }
+      }
+    }
+  }
+  {
+    unsigned char buf[SW_CNT/sizeof(unsigned char)/8];
+    if( ioctl( fd, EVIOCGSW(sizeof(buf)), buf ) == -1 ) {
+      SG_LOG( SG_INPUT, SG_WARN, "Can't get switches for " << devname );
+    } else {
+      for( unsigned i = 0; i < SW_MAX; i++ ) {
+        if( bitSet( buf, i ) ) {
+          struct input_event event;
+          event.type = EV_SW;
+          event.code = i;
+          event.value = 1;
+          FGLinuxEventData eventData( event, 0, 0 );
+          HandleEvent(eventData);
+        }
       }
     }
   }
@@ -514,3 +574,4 @@ void FGLinuxEventInput::update( double dt )
     }
   }
 }
+
