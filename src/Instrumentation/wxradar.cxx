@@ -186,6 +186,7 @@ wxRadarBg::init ()
     _radar_centre_node      = n->getNode("centre", true);
     _radar_rotate_node      = n->getNode("rotate", true);
     _radar_tcas_node        = n->getNode("tcas", true);
+    _radar_absalt_node      = n->getNode("abs-altitude", true);
 
     _radar_centre_node->setBoolValue(false);
     if (!_radar_coverage_node->hasValue())
@@ -670,10 +671,11 @@ wxRadarBg::update_aircraft()
     if (!_ai_enabled_node->getBoolValue())
         return;
 
-    bool draw_tcas = _radar_tcas_node->getBoolValue();
-    bool draw_echoes = _radar_position_node->getBoolValue();
-    bool draw_symbols = _radar_symbol_node->getBoolValue();
-    bool draw_data = _radar_data_node->getBoolValue();
+    bool draw_tcas     = _radar_tcas_node->getBoolValue();
+    bool draw_absolute = _radar_absalt_node->getBoolValue();
+    bool draw_echoes   = _radar_position_node->getBoolValue();
+    bool draw_symbols  = _radar_symbol_node->getBoolValue();
+    bool draw_data     = _radar_data_node->getBoolValue();
     if (!draw_echoes && !draw_symbols && !draw_data)
         return;
 
@@ -761,7 +763,7 @@ wxRadarBg::update_aircraft()
         bool is_tcas_contact = false;
         if (draw_tcas)
         {
-            is_tcas_contact = update_tcas(model,range,user_alt,alt,bearing,radius);
+            is_tcas_contact = update_tcas(model,range,user_alt,alt,bearing,radius,draw_absolute);
         }
 
         // pos mode
@@ -796,7 +798,7 @@ wxRadarBg::update_aircraft()
  * Return true when processed as TCAS contact, false otherwise. */
 bool
 wxRadarBg::update_tcas(const SGPropertyNode *model,double range,double user_alt,double alt,
-                       double bearing,double radius)
+                       double bearing,double radius,bool absMode)
 {
     int threatLevel=0;
     {
@@ -858,6 +860,13 @@ wxRadarBg::update_tcas(const SGPropertyNode *model,double range,double user_alt,
             dy=-30;
         }
         altStr->setPosition(osg::Vec3((int)pos.x()-30, (int)pos.y()+dy, 0));
+        if (absMode)
+        {
+            // absolute altitude display
+            text << setprecision(0) << fixed
+                 << setw(3) << setfill('0') << alt/100 << endl;
+        }
+        else // relative altitude display
         if (sign)
         {
             text << sign

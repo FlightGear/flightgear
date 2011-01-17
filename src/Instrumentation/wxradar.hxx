@@ -129,6 +129,7 @@ private:
     SGPropertyNode_ptr _radar_hdg_marker_node;
     SGPropertyNode_ptr _radar_rotate_node;
     SGPropertyNode_ptr _radar_tcas_node;
+    SGPropertyNode_ptr _radar_absalt_node;
 
     SGPropertyNode_ptr _font_node;
     SGPropertyNode_ptr _ai_enabled_node;
@@ -156,7 +157,7 @@ private:
     void update_data(const SGPropertyNode *ac, double alt, double heading,
         double radius, double bearing, bool selected);
     bool update_tcas(const SGPropertyNode *model,double range,double user_alt,double alt,
-                     double bearing,double radius);
+                     double bearing,double radius, bool absMode);
     void center_map();
     void apply_map_offset();
     void updateFont();

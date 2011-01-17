@@ -30,7 +30,7 @@
 #include <simgear/props/props.hxx>
 #include <simgear/sound/sample_openal.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include "mk_viii.hxx" // voiceplayer only
+#include "mk_viii.hxx" // FGVoicePlayer only
 
 using std::vector;
 using std::deque;
@@ -115,15 +115,27 @@ class TCAS : public SGSubsystem
 
     typedef struct
     {
-        bool  verticalTA;
-        bool  verticalRA;
-        bool  horizontalTA;
-        bool  horizontalRA;
-        float horizontalTau;
-        float verticalTau;
-        float relativeAltitudeFt;
-        float verticalFps;
+        string callsign;
+        bool   verticalTA;
+        bool   verticalRA;
+        bool   horizontalTA;
+        bool   horizontalRA;
+        bool   isTracked;
+        float  horizontalTau;
+        float  verticalTau;
+        float  relativeAltitudeFt;
+        float  verticalFps;
+        int    RASense;
     } ThreatInfo;
+
+    typedef struct
+    {
+        int    threatLevel;
+        double TAtimestamp;
+        double RAtimestamp;
+    } TrackerTarget;
+
+    typedef map<string,TrackerTarget*> TrackerTargets;
 
     typedef struct
     {
@@ -236,6 +248,7 @@ class TCAS : public SGSubsystem
         bool isPlaying (void) { return voicePlayer.is_playing();}
 
     private:
+        TCAS* tcas;
         ResolutionAdvisory previous;
         FGVoicePlayer::Voice* pLastVoice;
         VoicePlayer voicePlayer;
@@ -268,6 +281,33 @@ class TCAS : public SGSubsystem
     };
 
     /////////////////////////////////////////////////////////////////////////////
+    // TCAS::Tracker ////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////
+
+    class Tracker
+    {
+    public:
+        Tracker  (TCAS* _tcas);
+        ~Tracker (void) {}
+
+        void update          (void);
+
+        void add             (const string callsign, int detectedLevel);
+        bool active          (void) { return haveTargets;}
+        bool newTraffic      (void) { return newTargets;}
+        bool isTracked       (string callsign) { if (!haveTargets) return false;else return _isTracked(callsign);}
+        bool _isTracked      (string callsign);
+        int  getThreatLevel  (string callsign);
+
+    private:
+        TCAS*  tcas;
+        double currentTime;
+        bool   haveTargets;
+        bool   newTargets;
+        TrackerTargets targets;
+    };
+    
+    /////////////////////////////////////////////////////////////////////////////
     // TCAS::AdvisoryGenerator //////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////
 
@@ -277,7 +317,7 @@ class TCAS : public SGSubsystem
         AdvisoryGenerator        (TCAS* _tcas);
         ~AdvisoryGenerator       (void) {}
 
-        void init                (const LocalInfo* _pSelf, const ThreatInfo* _pCurrentThreat);
+        void init                (const LocalInfo* _pSelf, ThreatInfo* _pCurrentThreat);
 
         void setAlarmThresholds  (const SensitivityLevel* _pAlarmThresholds);
 
@@ -291,7 +331,7 @@ class TCAS : public SGSubsystem
     private:
         TCAS*             tcas;
         const LocalInfo*  pSelf;          /*< info structure for local aircraft */
-        const ThreatInfo* pCurrentThreat; /*< info structure on current intruder/threat */
+        ThreatInfo* pCurrentThreat; /*< info structure on current intruder/threat */
         const SensitivityLevel* pAlarmThresholds;
     };
 
@@ -317,6 +357,7 @@ class TCAS : public SGSubsystem
         void  setAlt              (float altFt) { self.altFt = altFt;}
         float getAlt              (void)        { return self.altFt;}
         float getVelocityKt       (void)        { return self.velocityKt;}
+        int   getRASense          (void)        { return currentThreat.RASense;}
 
     private:
         void  unitTest            (void);
@@ -354,6 +395,7 @@ private:
 
     PropertiesHandler   properties_handler;
     ThreatDetector      threatDetector;
+    Tracker             tracker;
     AdvisoryCoordinator advisoryCoordinator;
     AdvisoryGenerator   advisoryGenerator;
     Annunciator         annunciator;

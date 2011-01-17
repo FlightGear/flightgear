@@ -125,6 +125,7 @@ using std::string;
 //#define FEATURE_TCAS_DEBUG_ANNUNCIATOR
 //#define FEATURE_TCAS_DEBUG_COORDINATOR
 //#define FEATURE_TCAS_DEBUG_THREAT_DETECTOR
+//#define FEATURE_TCAS_DEBUG_TRACKER
 //#define FEATURE_TCAS_DEBUG_ADV_GENERATOR
 //#define FEATURE_TCAS_DEBUG_PROPERTIES
 
@@ -218,9 +219,10 @@ TCAS::VoicePlayer::init(void)
 // TCAS::Annunciator ////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
-TCAS::Annunciator::Annunciator(TCAS* tcas) :
+TCAS::Annunciator::Annunciator(TCAS* _tcas) :
+    tcas(_tcas),
     pLastVoice(NULL),
-    voicePlayer(tcas)
+    voicePlayer(_tcas)
 {
     clear();
 }
@@ -279,7 +281,8 @@ TCAS::Annunciator::trigger(const ResolutionAdvisory& current, bool revertedRA)
         return;
     }
 
-    if (previous.RA == AdvisoryClear)
+    if ((previous.RA == AdvisoryClear)||
+        (tcas->tracker.newTraffic()))
     {
         voicePlayer.play(voicePlayer.Voices.pTrafficTraffic, VoicePlayer::PLAY_NOW);
     }
@@ -340,7 +343,8 @@ TCAS::Annunciator::trigger(const ResolutionAdvisory& current, bool revertedRA)
 
     previous = current;
 
-    if (pLastVoice == pVoice)
+    if ((pLastVoice == pVoice)&&
+        (!tcas->tracker.newTraffic()))
     {
         // don't repeat annunciation
         return;
@@ -400,20 +404,20 @@ TCAS::AdvisoryCoordinator::clear(void)
 void
 TCAS::AdvisoryCoordinator::add(const ResolutionAdvisory& newAdvisory)
 {
-    if (newAdvisory.RA == AdvisoryClear)
+    if ((newAdvisory.RA == AdvisoryClear)||
+        (newAdvisory.threatLevel < current.threatLevel))
         return;
 
-    if ((current.RA == AdvisoryClear)||
-        (current.threatLevel == ThreatTA))
-    {
-        current = newAdvisory;
-    }
-    else
+    if (current.threatLevel == newAdvisory.threatLevel)
     {
         // combine with other advisories so far
         current.RA &= newAdvisory.RA;
         // remember any advisory modifier
         current.RAOption |= newAdvisory.RAOption;
+    }
+    else
+    {
+        current = newAdvisory;
     }
 }
 
@@ -582,6 +586,13 @@ TCAS::ThreatDetector::checkTransponder(const SGPropertyNode* pModel, float veloc
         return false;
     }
 
+    if ((name == "multiplayer")&&
+        (pModel->getBoolValue("controls/invisible")))
+    {
+        // ignored MP plane: pretend transponder is switched off
+        return false;
+    }
+
     return true;
 }
 
@@ -590,7 +601,7 @@ int
 TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
 {
     checkCount++;
-
+    
     float velocityKt  = pModel->getDoubleValue("velocities/true-airspeed-kt");
 
     if (!checkTransponder(pModel, velocityKt))
@@ -616,7 +627,6 @@ TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
     if ((distanceNm > 10)||(distanceNm < 0))
         return threatLevel;
 
-    // first stage: vertical movement
     currentThreat.verticalFps = pModel->getDoubleValue("velocities/vertical-speed-fps");
     
     /* Detect proximity targets
@@ -629,44 +639,79 @@ TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
         threatLevel = ThreatProximity;
     }
 
+    /* do not detect any threats when in standby or on ground and taxiing */
+    if ((mode <= SwitchStandby)||
+        ((self.altFt < 360)&&(self.velocityKt < 40)))
+    {
+        return threatLevel;
+    }
+
+    if (tcas->tracker.active())
+    {
+        currentThreat.callsign = pModel->getStringValue("callsign");
+        currentThreat.isTracked = tcas->tracker.isTracked(currentThreat.callsign);
+    }
+    else
+        currentThreat.isTracked = false;
+    
+    // first stage: vertical movement
     checkVerticalThreat();
 
     // stop processing when no vertical threat
-    if (!currentThreat.verticalTA)
+    if ((!currentThreat.verticalTA)&&
+        (!currentThreat.isTracked))
         return threatLevel;
 
     // second stage: horizontal movement
     horizontalThreat(bearing, distanceNm, heading, velocityKt);
 
-    // no horizontal threat?
-    if (!currentThreat.horizontalTA)
-        return threatLevel;
-
-    if ((currentThreat.horizontalTau < 0)||
-        (currentThreat.verticalTau < 0))
+    if (!currentThreat.isTracked)
     {
-        // do not trigger new alerts when Tau is negative, but keep existing alerts
-        int previousThreatLevel = pModel->getIntValue("tcas/threat-level", 0);
-        if (previousThreatLevel == 0)
+        // no horizontal threat?
+        if (!currentThreat.horizontalTA)
             return threatLevel;
+
+        if ((currentThreat.horizontalTau < 0)||
+            (currentThreat.verticalTau < 0))
+        {
+            // do not trigger new alerts when Tau is negative, but keep existing alerts
+            int previousThreatLevel = pModel->getIntValue("tcas/threat-level", 0);
+            if (previousThreatLevel == 0)
+                return threatLevel;
+        }
     }
 
 #ifdef FEATURE_TCAS_DEBUG_THREAT_DETECTOR
     cout << "#" << checkCount << ": " << pModel->getStringValue("callsign") << endl;
 #endif
 
-    threatLevel = ThreatTA;
-    /* at least a TA-level threat, may also have a RA-level threat...
-     * [TCASII]: "For either a TA or an RA to be issued, both the range and 
+    
+    /* [TCASII]: "For either a TA or an RA to be issued, both the range and 
      *    vertical criteria, in terms of tau or the fixed thresholds, must be
      *    satisfied only one of the criteria is satisfied, TCAS will not issue
      *    an advisory." */
+    if (currentThreat.horizontalTA && currentThreat.verticalTA)
+        threatLevel = ThreatTA;
     if (currentThreat.horizontalRA && currentThreat.verticalRA)
         threatLevel = ThreatRA;
 
-    // find all resolution options for this conflict
-    tcas->advisoryGenerator.resolution(mode, threatLevel, distanceNm, altFt, heading, velocityKt);
+    if (!tcas->tracker.active())
+        currentThreat.callsign = pModel->getStringValue("callsign");
 
+    tcas->tracker.add(currentThreat.callsign, threatLevel);
+    
+    // check existing threat level
+    if (currentThreat.isTracked)
+    {
+        int oldLevel = tcas->tracker.getThreatLevel(currentThreat.callsign);
+        if (oldLevel > threatLevel)
+            threatLevel = oldLevel;
+    }
+
+    // find all resolution options for this conflict
+    threatLevel = tcas->advisoryGenerator.resolution(mode, threatLevel, distanceNm, altFt, heading, velocityKt);
+   
+    
 #ifdef FEATURE_TCAS_DEBUG_THREAT_DETECTOR
     printf("  threat: distance: %4.1f, bearing: %4.1f, alt: %5.1f, velocity: %4.1f, heading: %4.1f, vspeed: %4.1f, "
            "own alt: %5.1f, own heading: %4.1f, own velocity: %4.1f, vertical tau: %3.2f"
@@ -730,7 +775,7 @@ TCAS::ThreatDetector::checkVerticalThreat(void)
             (tau >= -5))
         {
             currentThreat.verticalTA = true;
-            currentThreat.verticalRA = (tau<pAlarmThresholds->RA.Tau);
+            currentThreat.verticalRA = (tau < pAlarmThresholds->RA.Tau);
         }
     }
     currentThreat.verticalTau = tau;
@@ -878,7 +923,7 @@ TCAS::AdvisoryGenerator::AdvisoryGenerator(TCAS* _tcas) :
 }
 
 void
-TCAS::AdvisoryGenerator::init(const LocalInfo* _pSelf, const ThreatInfo* _pCurrentThreat)
+TCAS::AdvisoryGenerator::init(const LocalInfo* _pSelf, ThreatInfo* _pCurrentThreat)
 {
     pCurrentThreat = _pCurrentThreat;
     pSelf = _pSelf;
@@ -961,6 +1006,8 @@ TCAS::AdvisoryGenerator::determineRAsense(int& RASense, bool& isCrossing)
     }
     // else: threat is at same altitude, keep optimal RA sense (non-crossing)
 
+    pCurrentThreat->RASense = RASense;
+
 #ifdef FEATURE_TCAS_DEBUG_ADV_GENERATOR
         printf("  RASense: %i, crossing: %u, relAlt: %4.1f, upward separation: %4.1f, downward separation: %4.1f\n",
                RASense,isCrossing,
@@ -972,7 +1019,7 @@ TCAS::AdvisoryGenerator::determineRAsense(int& RASense, bool& isCrossing)
 /** Determine suitable resolution advisories. */
 int
 TCAS::AdvisoryGenerator::resolution(int mode, int threatLevel, float rangeNm, float altFt,
-                                 float heading, float velocityKt)
+                                    float heading, float velocityKt)
 {
     int RAOption = OptionNone;
     int RA       = AdvisoryIntrusion;
@@ -1074,7 +1121,7 @@ TCAS::AdvisoryGenerator::resolution(int mode, int threatLevel, float rangeNm, fl
     newAdvisory.threatLevel = threatLevel;
     tcas->advisoryCoordinator.add(newAdvisory);
     
-    return RA;
+    return threatLevel;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1088,6 +1135,7 @@ TCAS::TCAS(SGPropertyNode* pNode) :
     selfTestStep(0),
     properties_handler(this),
     threatDetector(this),
+    tracker(this),
     advisoryCoordinator(this),
     advisoryGenerator(this),
     annunciator(this)
@@ -1170,6 +1218,9 @@ TCAS::update(double dt)
     {
         nextUpdateTime = 1.0;
 
+        // remove obsolete targets
+        tracker.update();
+
         // get aircrafts current position/speed/heading
         threatDetector.update();
 
@@ -1218,6 +1269,8 @@ TCAS::update(double dt)
                     int threatLevel = threatDetector.checkThreat(mode, pModel);
                     /* expose aircraft threat-level (to be used by other instruments,
                      * i.e. TCAS display) */
+                    if (threatLevel==ThreatRA)
+                        pModel->setIntValue("tcas/ra-sense", -threatDetector.getRASense());
                     pModel->setIntValue("tcas/threat-level", threatLevel);
                 }
             }
@@ -1300,4 +1353,112 @@ TCAS::selfTest(void)
     advisoryCoordinator.update(SwitchAuto);
 
     selfTestStep++;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// TCAS::Tracker //////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+TCAS::Tracker::Tracker(TCAS* _tcas) :
+    tcas(_tcas),
+    currentTime(0),
+    haveTargets(false),
+    newTargets(false)
+{
+    targets.clear();
+}
+
+void
+TCAS::Tracker::update(void)
+{
+    currentTime = globals->get_sim_time_sec();
+    newTargets = false;
+
+    if (haveTargets)
+    {
+        // remove outdated targets
+        TrackerTargets::iterator it = targets.begin();
+        while (it != targets.end())
+        {
+            TrackerTarget* pTarget = it->second;
+            if (currentTime - pTarget->TAtimestamp > 10.0)
+            {
+                TrackerTargets::iterator temp = it;
+                ++it;
+#ifdef FEATURE_TCAS_DEBUG_TRACKER
+                printf("target %s no longer a TA threat.\n",temp->first.c_str());
+#endif
+                targets.erase(temp->first);
+                delete pTarget;
+                pTarget = NULL;
+            }
+            else
+            {
+                if ((pTarget->threatLevel == ThreatRA)&&
+                    (currentTime - pTarget->RAtimestamp > 7.0))
+                {
+                    pTarget->threatLevel = ThreatTA;
+#ifdef FEATURE_TCAS_DEBUG_TRACKER
+                    printf("target %s no longer an RA threat.\n",it->first.c_str());
+#endif
+                }
+                ++it;
+            }
+        }
+        haveTargets = !targets.empty();
+    }
+}
+
+void
+TCAS::Tracker::add(const string callsign, int detectedLevel)
+{
+    TrackerTarget* pTarget = NULL;
+    if (haveTargets)
+    {
+        TrackerTargets::iterator it = targets.find(callsign);
+        if (it != targets.end())
+        {
+            pTarget = it->second;
+        }
+    }
+
+    if (!pTarget)
+    {
+        pTarget = new TrackerTarget();
+        pTarget->TAtimestamp = 0;
+        pTarget->RAtimestamp = 0;
+        pTarget->threatLevel = 0;
+        newTargets = true;
+        targets[callsign] = pTarget;
+#ifdef FEATURE_TCAS_DEBUG_TRACKER
+        printf("new target: %s, level: %i\n",callsign.c_str(),detectedLevel);
+#endif
+    }
+
+    if (detectedLevel > pTarget->threatLevel)
+        pTarget->threatLevel = detectedLevel;
+
+    if (detectedLevel >= ThreatTA)
+        pTarget->TAtimestamp = currentTime;
+
+    if (detectedLevel >= ThreatRA)
+        pTarget->RAtimestamp = currentTime;
+
+    haveTargets = true;
+}
+
+bool
+TCAS::Tracker::_isTracked(string callsign)
+{
+    return targets.find(callsign) != targets.end();
+}
+
+int
+TCAS::Tracker::getThreatLevel(string callsign)
+{
+    TrackerTargets::iterator it = targets.find(callsign);
+    if (it != targets.end())
+        return it->second->threatLevel;
+    else
+        return 0;
 }
