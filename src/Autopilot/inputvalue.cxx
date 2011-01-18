@@ -36,23 +36,7 @@ PeriodicalValue::PeriodicalValue( SGPropertyNode_ptr root )
 
 double PeriodicalValue::normalize( double value )
 {
-  if( !(minPeriod && maxPeriod )) return value;
-
-  double p1 = minPeriod->get_value();
-  double p2 = maxPeriod->get_value();
-
-  double min = std::min<double>(p1,p2);
-  double max = std::max<double>(p1,p2);
-  double phase = fabs(max - min);
-
-  if( phase > SGLimitsd::min() ) {
-    while( value < min )  value += phase;
-    while( value >= max ) value -= phase;
-  } else {
-    value = min; // phase is zero
-  }
-
-  return value;
+  return SGMiscd::normalizePeriodic( minPeriod->get_value(), maxPeriod->get_value(), value );
 }
 
 InputValue::InputValue( SGPropertyNode_ptr node, double value, double offset, double scale) :

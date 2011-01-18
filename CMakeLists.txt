@@ -72,9 +72,9 @@ endif()
 if(EVENT_INPUT)
 	message(STATUS "checking event-based Input")
 	IF(APPLE)
-		
+
 	elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-		
+
 	else()
 		message(WARNING "event input is not supported on this platform yet")
 	endif()
@@ -163,6 +163,11 @@ endif(HAVE_RT)
 endif(NOT CLOCK_GETTIME_IN_LIBC)
 endif(HAVE_CLOCK_GETTIME)
 
+find_package(RTI)
+if(RTI_FOUND)
+  set(FG_HAVE_HLA 1)
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(WARNING_FLAGS -Wall)
 endif(CMAKE_COMPILER_IS_GNUCXX)
@@ -185,9 +190,9 @@ endif(WIN32)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARNING_FLAGS} ${MSVC_FLAGS} -D_REENTRANT")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS} ${MSVC_FLAGS} -D_REENTRANT")
 
-include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS} 
-    ${Boost_INCLUDE_DIRS} 
-	${ZLIB_INCLUDE_DIR} 
+include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIRS}
+	${ZLIB_INCLUDE_DIR}
     ${ALUT_INCLUDE_DIR}
 	${OPENAL_INCLUDE_DIR}
 	${SIMGEAR_INCLUDE_DIR}

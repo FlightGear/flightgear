@@ -30,3 +30,7 @@ set(SOURCES
 	
 flightgear_component(Network "${SOURCES}")
 
+if(RTI_FOUND)
+  add_subdirectory(HLA)
+endif()
+

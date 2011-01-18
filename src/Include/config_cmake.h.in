@@ -4,17 +4,17 @@
 #cmakedefine ENABLE_SP_FDM
 
 // JSBSim needs this, to switch from standalone to in-FG mode
-#define FGFS 
+#define FGFS
 
 #define PU_USE_NONE // PLIB needs this to avoid linking to GLUT
 
 #cmakedefine ENABLE_PLIB_JOYSTICK
 
 // threads are required (used to be optional)
-#define ENABLE_THREADS 1 
+#define ENABLE_THREADS 1
 
 // audio support is assumed
-#define ENABLE_AUDIO_SUPPORT 1 
+#define ENABLE_AUDIO_SUPPORT 1
 
 #cmakedefine HAVE_SYS_TIME_H
 #cmakedefine HAVE_WINDOWS_H
@@ -33,3 +33,5 @@
 #cmakedefine HAVE_LIBSVN_CLIENT_1
 
 #define PKGLIBDIR "@PKGLIBDIR"
+
+#cmakedefine FG_HAVE_HLA

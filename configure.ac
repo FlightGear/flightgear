@@ -29,15 +29,15 @@ else
 fi
 
 AC_CHECK_PROG([HAVE_GIT], git, 1)
-if test "x$HAVE_GIT" != "x" ; then 
+if test "x$HAVE_GIT" != "x" ; then
     # git might be installed, but we might be building from a tarball
     if git rev-parse ; then
 	AC_SUBST([REVISION], `git rev-parse HEAD`)
     else
-	AC_SUBST([REVISION], [none])	
+	AC_SUBST([REVISION], [none])
     fi
 else
-    AC_SUBST([REVISION], [none])	
+    AC_SUBST([REVISION], [none])
 fi
 
 dnl Checks for programs.
@@ -90,7 +90,7 @@ case "${host}" in
 
     dnl Thank you Christian Bauer from SheepSaver
     dnl Modified by Tatsuhiro Nishioka for accepting a given framework path
-    dnl AC_CHECK_FRAMEWORK($1=NAME, $2=INCLUDES, $3=FRAMEWORK_PATH, $4=ACTION_IF_FOUND) ; 
+    dnl AC_CHECK_FRAMEWORK($1=NAME, $2=INCLUDES, $3=FRAMEWORK_PATH, $4=ACTION_IF_FOUND) ;
     AC_DEFUN([AC_CHECK_FRAMEWORK], [
     AS_VAR_PUSHDEF([ac_Framework], [ac_cv_framework_$1])dnl
     AC_CACHE_CHECK([whether compiler supports framework $1],
@@ -251,13 +251,55 @@ if test "x$with_threads" = "xyes"; then
 fi
 AC_CHECK_HEADER(pthread.h)
 
+dnl Configure HLA support
+AC_ARG_WITH(rti13, [  --with-rti13[[=PATH]]     Enable the HLA/RTI 1.3 interface, set a path to the RTI13 RTI libraries (default=no)])
+if test "x$with_rti13" != "xno"; then
+    if test "x$with_rti13" != "xyes"; then
+        AC_SUBST(HLA_CPPFLAGS, "-I$with_rti13/include")
+        AC_SUBST(HLA_LDFLAGS, "-L$with_rti13/lib")
+    fi
+
+    dnl Configure HLA support
+    AC_MSG_CHECKING([for simgear HLA/RTI support])
+    AC_LANG_PUSH(C++)
+    AC_TRY_COMPILE([
+        #include <simgear/hla/HLA13Federate.hxx>
+        ],[
+        new simgear::HLA13Federate;
+        ], simgear_hla=yes, simgear_hla=no)
+    AC_MSG_RESULT($simgear_hla)
+    if test "x$simgear_hla" = "xyes" ; then
+        AC_MSG_CHECKING([for hla libraries])
+        saved_LIBS="$LIBS"
+        for rti13libs in "-lRTI-NG -lFedTime" "-lRTI-NGd -lFedTimed" ; do
+            if test "x$hla_libs" = "x" ; then
+                LIBS="-lsghla13 -lsghla -lsgxml -lsgstructure -lsgmath -lsgdebug -lsgtiming $rti13libs -lrt $saved_LIBS"
+                AC_TRY_LINK([
+                    #include <simgear/hla/HLA13Federate.hxx>
+                    ],[
+                    new simgear::HLA13Federate;
+                    ], [hla_libs="$rti13libs"; have_rti13=yes],)
+            fi
+        done
+        LIBS="$saved_LIBS"
+        AC_MSG_RESULT($hla_libs)
+    fi
+    AC_LANG_POP()
+fi
+dnl Currently only the rti13 variant, but in the future also rti1516
+AM_CONDITIONAL(WITH_HLA, test "x$have_rti13" = "xyes")
+if test "x$have_rti13" = "xyes" ; then
+    AC_DEFINE([FG_HAVE_HLA], 1, [Define if HLA/RTI is available.])
+    AC_SUBST(HLA_LIBS, "-lsghla13 -lsghla $hla_libs")
+fi
+
 dnl Used by JSBSim to conditionally compile in fgfs interface code
 AC_DEFINE([FGFS], 1, [Define so that JSBSim compiles in 'library' mode])
 
 # Check for MS Windows environment
 AC_CHECK_HEADER(windows.h)
 
-dnl Using AM_CONDITIONAL is a step out of the protected little 
+dnl Using AM_CONDITIONAL is a step out of the protected little
 dnl automake fold so it is potentially dangerous.  But, we are
 dnl beginning to run into cases where the standard checks are not
 dnl enough.  AM_CONDITIONALS are then referenced to conditionally
@@ -453,7 +495,7 @@ case "${host}" in
     # Mac OS X has OpenAL.framework, but no ALUT, by default, so we
     # require use of a non-Apple ALUT.framework which we provide
     openal_LIBS="-framework IOKit -framework OpenAL"
-    
+
     AC_CHECK_FRAMEWORK(OpenAL, [#include <OpenAL/al.h>], "", [OPENAL_OK="yes"])
     AC_CHECK_FRAMEWORK(ALUT, [#include <ALUT/alut.h>], $with_alut_framework, [
         ALUT_OK="yes"
@@ -878,6 +920,7 @@ AC_CONFIG_FILES([ \
 	src/MultiPlayer/Makefile \
 	src/Navaids/Makefile \
 	src/Network/Makefile \
+	src/Network/HLA/Makefile \
 	src/Scenery/Makefile \
 	src/Scripting/Makefile \
 	src/Sound/Makefile \

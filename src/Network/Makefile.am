@@ -40,3 +40,7 @@ libNetwork_a_SOURCES = \
 	generic.hxx generic.cxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
+
+if WITH_HLA
+SUBDIRS = HLA
+endif

@@ -65,6 +65,9 @@
 #include <Network/rul.hxx>
 #include <Network/generic.hxx>
 #include <Network/multiplay.hxx>
+#ifdef FG_HAVE_HLA
+#include <Network/HLA/hla.hxx>
+#endif
 
 #include "globals.hxx"
 #include "fg_io.hxx"
@@ -213,6 +216,10 @@ FGIO::parse_port_config( const string& config )
 	    string host = tokens[3];
 	    string port = tokens[4];
 	    return new FGMultiplay(dir, atoi(rate.c_str()), host, atoi(port.c_str()));
+#ifdef FG_HAVE_HLA
+	} else if ( protocol == "hla" ) {
+	    return new FGHLA(tokens);
+#endif
 	} else {
 	    return NULL;
 	}
@@ -223,7 +230,7 @@ FGIO::parse_port_config( const string& config )
 	delete io;
 	return 0;
     }
-    
+
     if (tokens.size() < 3) {
       SG_LOG( SG_IO, SG_ALERT, "Incompatible number of network arguments.");
       return NULL;
@@ -253,7 +260,7 @@ FGIO::parse_port_config( const string& config )
 	string baud = tokens[5];
 	SG_LOG( SG_IO, SG_INFO, "  baud = " << baud );
 
-        
+
 	SGSerial *ch = new SGSerial( device, baud );
 	io->set_io_channel( ch );
     } else if ( medium == "file" ) {
@@ -262,7 +269,7 @@ FGIO::parse_port_config( const string& config )
           SG_LOG( SG_IO, SG_ALERT, "Incompatible number of arguments for file I/O.");
 	  return NULL;
         }
-	  
+
 	string file = tokens[4];
 	SG_LOG( SG_IO, SG_INFO, "  file name = " << file );
         int repeat = 1;

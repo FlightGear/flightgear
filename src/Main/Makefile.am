@@ -6,7 +6,7 @@ MPLAYER_LIBS = $(top_builddir)/src/MultiPlayer/libMultiPlayer.a
 if ENABLE_SP_FDM
 SP_FDM_LIBS = $(top_builddir)/src/FDM/SP/libSPFDM.a
 else
-SP_FDM_LIBS = 
+SP_FDM_LIBS =
 endif
 
 if WITH_EVENTINPUT
@@ -24,6 +24,10 @@ endif
 
 if HAVE_FRAMEWORK_OSG
 fgfs_OSG_FW = $(osg_FRAMEWORKS) $(openthreads_FRAMEWORK)
+endif
+
+if WITH_HLA
+HLA_LDADD=$(HLA_LDFLAGS) $(top_builddir)/src/Network/HLA/libFGHLA.a $(HLA_LIBS)
 endif
 
 GFX_CODE = fg_os_osgviewer.cxx fg_os_common.cxx fg_os.hxx
@@ -105,6 +109,7 @@ fgfs_LDADD = \
 	$(top_builddir)/src/Time/libTime.a \
 	$(top_builddir)/src/Traffic/libTraffic.a \
 	$(top_builddir)/src/Environment/libEnvironment.a \
+	$(HLA_LDADD) \
 	-lsgroute -lsgsky -lsgsound -lsgephem -lsgtgdb -lsgmodel -lsgbvh \
 	-lsgmaterial -lsgutil -lsgtiming -lsgio -lsgscreen -lsgmath -lsgbucket \
 	-lsgprops -lsgdebug -lsgmagvar -lsgmisc -lsgnasal -lsgxml -lsgsound \
@@ -128,4 +133,4 @@ metar_LDADD = \
         -lz $(base_LIBS)
 
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src -I$(top_builddir)/src
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src -I$(top_builddir)/src $(HLA_CPPFLAGS)
