@@ -51,6 +51,14 @@ private:
     const char * get_decoded() const { return _decoded.c_str(); }
     double get_magnetic_variation_deg() const;
     double get_magnetic_dip_deg() const;
+    double get_wind_from_north_fps() const { return _wind_from_north_fps; }
+    double get_wind_from_east_fps() const { return _wind_from_east_fps; }
+    double get_base_wind_dir() const { return _base_wind_dir; }
+    double get_wind_speed() const { return _wind_speed; }
+    void set_wind_from_north_fps( double value );
+    void set_wind_from_east_fps( double value );
+    void set_base_wind_dir( double value );
+    void set_wind_speed( double value );
 
     SGPropertyNode_ptr _rootNode;
     SGPropertyNode_ptr _metarValidNode;

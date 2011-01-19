@@ -15,6 +15,7 @@ set(SOURCES
 	realwx_ctrl.cxx
 	ridge_lift.cxx
 	terrainsampler.cxx
+	presets.cxx
 	)
 	
 flightgear_component(Environment "${SOURCES}")

@@ -158,10 +158,10 @@ MetarProperties::MetarProperties( SGPropertyNode_ptr rootNode ) :
   _tiedProperties.Tie("max-visibility-m", &_max_visibility );
   _tiedProperties.Tie("base-wind-range-from", &_base_wind_range_from );
   _tiedProperties.Tie("base-wind-range-to", &_base_wind_range_to );
-  _tiedProperties.Tie("base-wind-speed-kt", &_wind_speed );
-  _tiedProperties.Tie("base-wind-dir-deg", &_base_wind_dir );
-  _tiedProperties.Tie("base-wind-from-north-fps", &_wind_from_north_fps );
-  _tiedProperties.Tie("base-wind-from-east-fps", &_wind_from_east_fps );
+  _tiedProperties.Tie("base-wind-speed-kt", this, &MetarProperties::get_wind_speed, &MetarProperties::set_wind_speed );
+  _tiedProperties.Tie("base-wind-dir-deg", this, &MetarProperties::get_base_wind_dir, &MetarProperties::set_base_wind_dir );
+  _tiedProperties.Tie("base-wind-from-north-fps", this, &MetarProperties::get_wind_from_north_fps, &MetarProperties::set_wind_from_north_fps );
+  _tiedProperties.Tie("base-wind-from-east-fps",this, &MetarProperties::get_wind_from_east_fps, &MetarProperties::set_wind_from_east_fps );
   _tiedProperties.Tie("gust-wind-speed-kt", &_gusts );
   _tiedProperties.Tie("temperature-degc", &_temperature );
   _tiedProperties.Tie("dewpoint-degc", &_dewpoint );
@@ -218,14 +218,11 @@ void MetarProperties::set_metar( const char * metar )
         vis->setDoubleValue("max-m", v);
     }
 
-    _base_wind_dir = m->getWindDir();
+    set_base_wind_dir(m->getWindDir());
     _base_wind_range_from = m->getWindRangeFrom();
     _base_wind_range_to = m->getWindRangeTo();
-    _wind_speed = m->getWindSpeed_kt();
+    set_wind_speed(m->getWindSpeed_kt());
 
-    double speed_fps = _wind_speed * SG_NM_TO_METER * SG_METER_TO_FEET / 3600.0;
-    _wind_from_north_fps = speed_fps * cos((double)_base_wind_dir * SGD_DEGREES_TO_RADIANS);
-    _wind_from_east_fps = speed_fps * sin((double)_base_wind_dir * SGD_DEGREES_TO_RADIANS);
     _gusts = m->getGustSpeed_kt();
     _temperature = m->getTemperature_C();
     _dewpoint = m->getDewpoint_C();
@@ -407,5 +404,44 @@ double MetarProperties::get_magnetic_dip_deg() const
 {
   return _magneticVariation->get_dip_deg( _station_longitude, _station_latitude, _station_elevation );
 }
+
+static inline void calc_wind_hs( double north_fps, double east_fps, int & heading_deg, double & speed_kt )
+{
+    speed_kt = sqrt((north_fps)*(north_fps)+(east_fps)*(east_fps)) * 3600.0 / (SG_NM_TO_METER * SG_METER_TO_FEET);
+    heading_deg = SGMiscd::roundToInt( 
+        SGMiscd::normalizeAngle2( atan2( east_fps, north_fps ) ) * SGD_RADIANS_TO_DEGREES );
+}
+
+void MetarProperties::set_wind_from_north_fps( double value )
+{
+    _wind_from_north_fps = value;
+    calc_wind_hs( _wind_from_north_fps, _wind_from_east_fps, _base_wind_dir, _wind_speed );
+}
+
+void MetarProperties::set_wind_from_east_fps( double value )
+{
+    _wind_from_east_fps = value;
+    calc_wind_hs( _wind_from_north_fps, _wind_from_east_fps, _base_wind_dir, _wind_speed );
+}
+
+static inline void calc_wind_ne( double heading_deg, double speed_kt, double & north_fps, double & east_fps )
+{
+    double speed_fps = speed_kt * SG_NM_TO_METER * SG_METER_TO_FEET / 3600.0;
+    north_fps = speed_fps * cos(heading_deg * SGD_DEGREES_TO_RADIANS);
+    east_fps = speed_fps * sin(heading_deg * SGD_DEGREES_TO_RADIANS);
+}
+
+void MetarProperties::set_base_wind_dir( double value )
+{
+    _base_wind_dir = value;
+    calc_wind_ne( (double)_base_wind_dir, _wind_speed, _wind_from_north_fps, _wind_from_east_fps );
+}
+
+void MetarProperties::set_wind_speed( double value )
+{
+    _wind_speed = value;
+    calc_wind_ne( (double)_base_wind_dir, _wind_speed, _wind_from_north_fps, _wind_from_east_fps );
+}
+
 
 } // namespace Environment

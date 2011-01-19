@@ -16,6 +16,7 @@ libEnvironment_a_SOURCES = \
 	precipitation_mgr.cxx precipitation_mgr.hxx \
 	ridge_lift.cxx ridge_lift.hxx \
 	ephemeris.cxx ephemeris.hxx \
-	terrainsampler.cxx terrainsampler.cxx
+	terrainsampler.cxx terrainsampler.cxx \
+	presets.cxx presets.cxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
