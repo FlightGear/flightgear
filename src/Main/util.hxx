@@ -27,29 +27,6 @@
 
 
 /**
- * Initialize a single value through all existing weather levels.
- *
- * This function is useful mainly from the command-line.
- *
- * @param propname The name of the subproperty to initialized.
- * @param value The initial value.
- */
-extern void fgDefaultWeatherValue (const char * propname, double value);
-
-
-/**
- * Set up a plausible wind layout, boundary and aloft,
- * based on just a few parameters.
- *
- * @param min_hdg Minimal wind heading
- * @param max_hdg Maximal wind heading
- * @param speed Windspeed in knots
- * @param gust Wind gust variation in knots
- */
-extern void fgSetupWind (double min_hdg, double max_hdg,
-                         double speed, double gust);
-
-/**
  * Move a value towards a target.
  *
  * This function was originally written by Alex Perry.

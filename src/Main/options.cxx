@@ -56,6 +56,7 @@
 #include "util.hxx"
 #include "viewmgr.hxx"
 #include <Main/viewer.hxx>
+#include <Environment/presets.hxx>
 
 #include <simgear/version.h>
 #include <osg/Version>
@@ -994,18 +995,14 @@ fgOptViewOffset( const char *arg )
 static int
 fgOptVisibilityMeters( const char *arg )
 {
-    double visibility = atof( arg );
-    fgDefaultWeatherValue("visibility-m", visibility);
-    fgSetDouble("/environment/visibility-m", visibility);
+    Environment::Presets::VisibilitySingleton::instance()->preset( atof( arg ) );
     return FG_OPTIONS_OK;
 }
 
 static int
 fgOptVisibilityMiles( const char *arg )
 {
-    double visibility = atof( arg ) * 5280.0 * SG_FEET_TO_METER;
-    fgDefaultWeatherValue("visibility-m", visibility);
-    fgSetDouble("/environment/visibility-m", visibility);
+    Environment::Presets::VisibilitySingleton::instance()->preset( atof( arg ) * 5280.0 * SG_FEET_TO_METER );
     return FG_OPTIONS_OK;
 }
 
@@ -1016,7 +1013,7 @@ fgOptRandomWind( const char *arg )
     double max_hdg = min_hdg + (20 - sqrt(sg_random() * 400));
     double speed = sg_random() * sg_random() * 40;
     double gust = speed + (10 - sqrt(sg_random() * 100));
-    fgSetupWind(min_hdg, max_hdg, speed, gust);
+    Environment::Presets::WindSingleton::instance()->preset(min_hdg, max_hdg, speed, gust);
     return FG_OPTIONS_OK;
 }
 
@@ -1028,14 +1025,14 @@ fgOptWind( const char *arg )
 	SG_LOG( SG_GENERAL, SG_ALERT, "bad wind value " << arg );
 	return FG_OPTIONS_ERROR;
     }
-    fgSetupWind(min_hdg, max_hdg, speed, gust);
+    Environment::Presets::WindSingleton::instance()->preset(min_hdg, max_hdg, speed, gust);
     return FG_OPTIONS_OK;
 }
 
 static int
 fgOptTurbulence( const char *arg )
 {
-    fgDefaultWeatherValue("turbulence/magnitude-norm", atof(arg));
+    Environment::Presets::TurbulenceSingleton::instance()->preset( atof(arg) );
     return FG_OPTIONS_OK;
 }
 
@@ -1052,9 +1049,7 @@ fgOptCeiling( const char *arg )
         elevation = atof(spec.substr(0, pos).c_str());
         thickness = atof(spec.substr(pos + 1).c_str());
     }
-    fgSetDouble("/environment/clouds/layer[0]/elevation-ft", elevation);
-    fgSetDouble("/environment/clouds/layer[0]/thickness-ft", thickness);
-    fgSetString("/environment/clouds/layer[0]/coverage", "overcast");
+    Environment::Presets::CeilingSingleton::instance()->preset( elevation, thickness );
     return FG_OPTIONS_OK;
 }
 
