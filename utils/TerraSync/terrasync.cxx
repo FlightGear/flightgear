@@ -229,16 +229,31 @@ void sync_tree(const char* dir) {
 	if (mysvn_setup() != EXIT_SUCCESS)
 	    exit(1);
 	apr_pool_t *subpool = svn_pool_create(mysvn_pool);
+	
+#if (SVN_VER_MINOR >= 5)
 	err = svn_client_checkout3(NULL,
 	    command,
 	    dest_base_dir,
 	    mysvn_rev_peg,
 	    mysvn_rev,
 	    svn_depth_infinity,
-	    0,
-	    0,
+	    0, // ignore-externals = false
+	    0, // allow unver obstructions = false
 	    mysvn_ctx,
 	    subpool);
+#else
+    // version 1.4 API
+    err = svn_client_checkout2(NULL,
+	    command,
+	    dest_base_dir,
+	    mysvn_rev_peg,
+	    mysvn_rev,
+	    1, // recurse=true - same as svn_depth_infinity for checkout3 above
+	    0, // ignore externals = false
+	    mysvn_ctx,
+	    subpool);
+#endif
+	    
 	if (err) {
 	    // Report errors from the checkout attempt
 	    cout << "failed: " << endl
