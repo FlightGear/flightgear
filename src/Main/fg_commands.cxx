@@ -25,7 +25,6 @@
 
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
-#include <Environment/environment.hxx>
 #include <FDM/flight.hxx>
 #include <GUI/gui.h>
 #include <GUI/new_gui.hxx>
@@ -47,6 +46,7 @@
 #include "viewmgr.hxx"
 #include "main.hxx"
 #include <Main/viewer.hxx>
+#include <Environment/presets.hxx>
 
 using std::string;
 using std::ifstream;
@@ -558,6 +558,9 @@ do_tile_cache_reload (const SGPropertyNode * arg)
 }
 
 
+#if 0
+These do_set_(some-environment-parameters) are deprecated and no longer 
+useful/functional - Torsten Dreyer, January 2011
 /**
  * Set the sea level outside air temperature and assigning that to all
  * boundary and aloft environment layers.
@@ -684,7 +687,7 @@ do_set_dewpoint_degc (const SGPropertyNode * arg)
     dummy.set_dewpoint_degc( dewpoint_degc );
     return do_set_dewpoint_sea_level_degc(dummy.get_dewpoint_sea_level_degc());
 }
-
+#endif
 /**
  * Update the lighting manually.
  */
@@ -1260,29 +1263,21 @@ do_replay (const SGPropertyNode * arg)
     return true;
 }
 
-
+/*
 static bool
 do_decrease_visibility (const SGPropertyNode * arg)
 {
-    double new_value = fgGetDouble("/environment/visibility-m") * 0.9;
-    fgSetDouble("/environment/visibility-m", new_value);
-    fgDefaultWeatherValue("visibility-m", new_value);
-    globals->get_subsystem("environment")->reinit();
-
+    Environment::Presets::VisibilitySingleton::instance()->adjust( 0.9 );
     return true;
 }
  
 static bool
 do_increase_visibility (const SGPropertyNode * arg)
 {
-    double new_value = fgGetDouble("/environment/visibility-m") * 1.1;
-    fgSetDouble("/environment/visibility-m", new_value);
-    fgDefaultWeatherValue("visibility-m", new_value);
-    globals->get_subsystem("environment")->reinit();
-
+    Environment::Presets::VisibilitySingleton::instance()->adjust( 1.1 );
     return true;
 }
-
+*/
 /**
  * An fgcommand to allow loading of xml files via nasal,
  * the xml file's structure will be made available within
@@ -1454,10 +1449,12 @@ static struct {
     { "screen-capture", do_screen_capture },
     { "hires-screen-capture", do_hires_screen_capture },
     { "tile-cache-reload", do_tile_cache_reload },
+    /*
     { "set-sea-level-air-temp-degc", do_set_sea_level_degc },
     { "set-outside-air-temp-degc", do_set_oat_degc },
     { "set-dewpoint-sea-level-air-temp-degc", do_set_dewpoint_sea_level_degc },
     { "set-dewpoint-temp-degc", do_set_dewpoint_degc },
+    */
     { "timeofday", do_timeofday },
     { "property-toggle", do_property_toggle },
     { "property-assign", do_property_assign },
@@ -1480,8 +1477,10 @@ static struct {
     { "presets-commit", do_presets_commit },
     { "log-level", do_log_level },
     { "replay", do_replay },
+    /*
     { "decrease-visibility", do_decrease_visibility },
     { "increase-visibility", do_increase_visibility },
+    */
     { "loadxml", do_load_xml_to_proptree},
     { "savexml", do_save_xml_from_proptree },
     { "press-cockpit-button", do_press_cockpit_button },

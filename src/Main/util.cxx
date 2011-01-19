@@ -17,6 +17,9 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #include <simgear/compiler.h>
 
@@ -28,6 +31,8 @@
 using std::vector;
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/math/SGLimits.hxx>
+#include <simgear/math/SGMisc.hxx>
 
 #include "fg_io.hxx"
 #include "fg_props.hxx"
@@ -37,73 +42,6 @@ using std::vector;
 #ifdef OSG_LIBRARY_STATIC
 #include "osgDB/Registry"
 #endif
-
-void
-fgDefaultWeatherValue (const char * propname, double value)
-{
-    unsigned int i;
-
-    SGPropertyNode * branch = fgGetNode("/environment/config/boundary", true);
-    vector<SGPropertyNode_ptr> entries = branch->getChildren("entry");
-    for (i = 0; i < entries.size(); i++) {
-        entries[i]->setDoubleValue(propname, value);
-    }
-
-    branch = fgGetNode("/environment/config/aloft", true);
-    entries = branch->getChildren("entry");
-    for (i = 0; i < entries.size(); i++) {
-        entries[i]->setDoubleValue(propname, value);
-    }
-}
-
-
-void
-fgSetupWind (double min_hdg, double max_hdg, double speed, double gust)
-{
-                                // Initialize to a reasonable state
-  fgDefaultWeatherValue("wind-from-heading-deg", min_hdg);
-  fgDefaultWeatherValue("wind-speed-kt", speed);
-
-  SG_LOG(SG_GENERAL, SG_INFO, "WIND: " << min_hdg << '@' <<
-         speed << " knots" << endl);
-
-                                // Now, add some variety to the layers
-  min_hdg += 10;
-  if (min_hdg > 360)
-      min_hdg -= 360;
-  speed *= 1.1;
-  fgSetDouble("/environment/config/boundary/entry[1]/wind-from-heading-deg",
-              min_hdg);
-  fgSetDouble("/environment/config/boundary/entry[1]/wind-speed-kt",
-              speed);
-
-  min_hdg += 20;
-  if (min_hdg > 360)
-      min_hdg -= 360;
-  speed *= 1.1;
-  fgSetDouble("/environment/config/aloft/entry[0]/wind-from-heading-deg",
-              min_hdg);
-  fgSetDouble("/environment/config/aloft/entry[0]/wind-speed-kt",
-              speed);
-
-  min_hdg += 10;
-  if (min_hdg > 360)
-      min_hdg -= 360;
-  speed *= 1.1;
-  fgSetDouble("/environment/config/aloft/entry[1]/wind-from-heading-deg",
-              min_hdg);
-  fgSetDouble("/environment/config/aloft/entry[1]/wind-speed-kt",
-              speed);
-
-  min_hdg += 10;
-  if (min_hdg > 360)
-      min_hdg -= 360;
-  speed *= 1.1;
-  fgSetDouble("/environment/config/aloft/entry[2]/wind-from-heading-deg",
-              min_hdg);
-  fgSetDouble("/environment/config/aloft/entry[2]/wind-speed-kt",
-              speed);
-}
 
 // Originally written by Alex Perry.
 double

@@ -3413,6 +3413,14 @@
 				RelativePath="..\..\..\src\Environment\terrainsampler.hxx"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\presets.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\presets.hxx"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Lib_Model"
