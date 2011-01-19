@@ -924,11 +924,20 @@ void FGRouteMgr::initAtPosition()
   }
   
 // on the ground
-  SGGeod pos = SGGeod::fromDegFt(lon->getDoubleValue(), lat->getDoubleValue(), alt->getDoubleValue());
-  _departure = FGAirport::findClosest(pos, 20.0);
+  SGGeod pos = SGGeod::fromDegFt(lon->getDoubleValue(), 
+    lat->getDoubleValue(), alt->getDoubleValue());
   if (!_departure) {
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "initAtPosition: couldn't find an airport within 20nm");
-    departure->setStringValue("runway", "");
+    _departure = FGAirport::findClosest(pos, 20.0);
+    if (!_departure) {
+      SG_LOG(SG_AUTOPILOT, SG_INFO, "initAtPosition: couldn't find an airport within 20nm");
+      departure->setStringValue("runway", "");
+      return;
+    }
+  }
+  
+  std::string rwy = departure->getStringValue("runway");
+  if (!rwy.empty()) {
+    // runway already set, fine
     return;
   }
   
