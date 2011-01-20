@@ -156,6 +156,12 @@ public:
   bool matches(const SGGeod& aPos) const;
   
   virtual std::string type() const = 0;
+  
+  /**
+   * Magentic variation at/in the vicinity of the waypoint.
+   * For some waypoint types this will always return 0.
+   */
+  virtual double magvarDeg() const;
 protected:
   friend class NavdataVisitor;
   
@@ -187,7 +193,7 @@ private:
 
 	Route* _owner;
 	unsigned short _flags;
-	
+  mutable double _magVarDeg; 
 };
 
 typedef std::vector<WayptRef> WayptVec;
