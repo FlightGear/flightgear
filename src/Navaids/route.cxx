@@ -51,7 +51,7 @@ namespace flightgear {
 
 Waypt::Waypt(Route* aOwner) :
   _altitudeFt(0.0),
-  _speedKts(0.0),
+  _speed(0.0),
   _altRestrict(RESTRICT_NONE),
   _speedRestrict(RESTRICT_NONE),
   _owner(aOwner),
@@ -100,10 +100,22 @@ void Waypt::setAltitude(double aAlt, RouteRestriction aRestrict)
 
 void Waypt::setSpeed(double aSpeed, RouteRestriction aRestrict)
 {
-  _speedKts = aSpeed;
+  _speed = aSpeed;
   _speedRestrict = aRestrict;
 }
 
+double Waypt::speedKts() const
+{
+  assert(_speedRestrict != SPEED_RESTRICT_MACH);
+  return speed();
+}
+  
+double Waypt::speedMach() const
+{
+  assert(_speedRestrict == SPEED_RESTRICT_MACH);
+  return speed();
+}
+  
 std::pair<double, double>
 Waypt::courseAndDistanceFrom(const SGGeod& aPos) const
 {
@@ -127,6 +139,7 @@ static RouteRestriction restrictionFromString(const char* aStr)
   if (l == "above") return RESTRICT_ABOVE;
   if (l == "below") return RESTRICT_BELOW;
   if (l == "none") return RESTRICT_NONE;
+  if (l == "mach") return SPEED_RESTRICT_MACH;
   
   if (l.empty()) return RESTRICT_NONE;
   throw sg_io_exception("unknown restriction specification:" + l, 
@@ -140,6 +153,8 @@ static const char* restrictionToString(RouteRestriction aRestrict)
   case RESTRICT_BELOW: return "below";
   case RESTRICT_ABOVE: return "above";
   case RESTRICT_NONE: return "none";
+  case SPEED_RESTRICT_MACH: return "mach";
+  
   default:
     throw sg_exception("invalid route restriction",
       "Route restrictToString");
@@ -224,7 +239,7 @@ void Waypt::initFromProperties(SGPropertyNode_ptr aProp)
   
   if (aProp->hasChild("speed-restrict")) {
     _speedRestrict = restrictionFromString(aProp->getStringValue("speed-restrict"));
-    _speedKts = aProp->getDoubleValue("speed-kts");
+    _speed = aProp->getDoubleValue("speed");
   }
   
   
@@ -259,7 +274,7 @@ void Waypt::writeToProperties(SGPropertyNode_ptr aProp) const
   
   if (_speedRestrict != RESTRICT_NONE) {
     aProp->setStringValue("speed-restrict", restrictionToString(_speedRestrict));
-    aProp->setDoubleValue("speed-kts", _speedKts);
+    aProp->setDoubleValue("speed", _speed);
   }
 }
 

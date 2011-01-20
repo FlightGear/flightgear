@@ -467,7 +467,10 @@ void WaypointList::drawRow(int dx, int dy, int rowIndex, int y)
   } // of valid wp altitude
   x += 60 + PUSTR_LGAP;
   
-  if (wp->speedRestriction() != RESTRICT_NONE) {
+  if (wp->speedRestriction() == SPEED_RESTRICT_MACH) {
+    count = ::snprintf(buffer, 126, "%03.2fM", wp->speedMach());
+    f->drawString(buffer, x, yy);
+  } else if (wp->speedRestriction() != RESTRICT_NONE) {
     count = ::snprintf(buffer, 126, "%dKts", (int) wp->speedKts());
     f->drawString(buffer, x, yy);
   }
