@@ -1158,7 +1158,7 @@ double GPS::getWP1Bearing() const
 
 double GPS::getWP1MagBearing() const
 {
-  if (!_dataValid) {
+  if (!_dataValid || !_wayptController.get()) {
     return -9999.0;
   }
 
