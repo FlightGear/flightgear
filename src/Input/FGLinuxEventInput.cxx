@@ -311,6 +311,7 @@ void FGLinuxInputDevice::Open()
             continue;
           }
           absinfo[i] = ai;
+/*
           SG_LOG( SG_INPUT, SG_INFO, "Axis #" << i <<
             ": value=" << ai.value << 
             ": minimum=" << ai.minimum << 
@@ -318,6 +319,7 @@ void FGLinuxInputDevice::Open()
             ": fuzz=" << ai.fuzz << 
             ": flat=" << ai.flat << 
             ": resolution=" << ai.resolution );
+*/
 
           // kick an initial event
           struct input_event event;
