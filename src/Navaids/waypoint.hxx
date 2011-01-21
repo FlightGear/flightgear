@@ -206,6 +206,9 @@ public:
   double headingDegMagnetic() const
     { return _magHeading; }
   
+  virtual double magvarDeg() const
+    { return 0.0; }
+  
 private:
   std::string _ident;
   double _magHeading;

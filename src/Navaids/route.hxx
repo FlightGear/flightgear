@@ -74,7 +74,8 @@ typedef enum {
 	RESTRICT_NONE,
 	RESTRICT_AT,
 	RESTRICT_ABOVE,
-	RESTRICT_BELOW
+	RESTRICT_BELOW,
+  SPEED_RESTRICT_MACH
 } RouteRestriction;
 
 /**
@@ -104,9 +105,15 @@ public:
 	virtual double altitudeFt() const 
 		{ return _altitudeFt; }
 		
-	virtual double speedKts() const
-		{ return _speedKts; }
-	
+  virtual double speed() const
+    { return _speed; }
+  
+// wrapper - asserts if restriction type is _MACH
+  double speedKts() const;
+  
+// wrapper - asserts if restriction type is not _MACH
+  double speedMach() const;
+  
 	virtual RouteRestriction altitudeRestriction() const
 		{ return _altRestrict; }
 	
@@ -149,6 +156,12 @@ public:
   bool matches(const SGGeod& aPos) const;
   
   virtual std::string type() const = 0;
+  
+  /**
+   * Magentic variation at/in the vicinity of the waypoint.
+   * For some waypoint types this will always return 0.
+   */
+  virtual double magvarDeg() const;
 protected:
   friend class NavdataVisitor;
   
@@ -168,7 +181,7 @@ protected:
   static void registerFactory(const std::string aNodeType, FactoryFunction* aFactory);
   
   double _altitudeFt;
-	double _speedKts;
+	double _speed; // knots IAS or mach
 	RouteRestriction _altRestrict;
 	RouteRestriction _speedRestrict;
 private:
@@ -180,7 +193,7 @@ private:
 
 	Route* _owner;
 	unsigned short _flags;
-	
+  mutable double _magVarDeg; 
 };
 
 typedef std::vector<WayptRef> WayptVec;

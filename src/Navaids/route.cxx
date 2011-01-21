@@ -36,8 +36,11 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/xml/easyxml.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/magvar/magvar.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 // FlightGear
+#include <Main/globals.hxx>
 #include <Navaids/procedure.hxx>
 #include <Navaids/waypoint.hxx>
 #include <Airports/simple.hxx>
@@ -49,13 +52,16 @@ using std::fstream;
 
 namespace flightgear {
 
+const double NO_MAG_VAR = -1000.0; // an impossible mag-var value
+
 Waypt::Waypt(Route* aOwner) :
   _altitudeFt(0.0),
-  _speedKts(0.0),
+  _speed(0.0),
   _altRestrict(RESTRICT_NONE),
   _speedRestrict(RESTRICT_NONE),
   _owner(aOwner),
-  _flags(0)
+  _flags(0),
+  _magVarDeg(NO_MAG_VAR)
 {
 }
 
@@ -100,10 +106,22 @@ void Waypt::setAltitude(double aAlt, RouteRestriction aRestrict)
 
 void Waypt::setSpeed(double aSpeed, RouteRestriction aRestrict)
 {
-  _speedKts = aSpeed;
+  _speed = aSpeed;
   _speedRestrict = aRestrict;
 }
 
+double Waypt::speedKts() const
+{
+  assert(_speedRestrict != SPEED_RESTRICT_MACH);
+  return speed();
+}
+  
+double Waypt::speedMach() const
+{
+  assert(_speedRestrict == SPEED_RESTRICT_MACH);
+  return speed();
+}
+  
 std::pair<double, double>
 Waypt::courseAndDistanceFrom(const SGGeod& aPos) const
 {
@@ -114,6 +132,19 @@ Waypt::courseAndDistanceFrom(const SGGeod& aPos) const
   double course, az2, distance;
   SGGeodesy::inverse(aPos, position(), course, az2, distance);
   return std::make_pair(course, distance);
+}
+
+double Waypt::magvarDeg() const
+{
+  if (_magVarDeg == NO_MAG_VAR) {
+    // derived classes with a default pos must override this method
+    assert(!(position() == SGGeod()));
+    
+    double jd = globals->get_time_params()->getJD();
+    _magVarDeg = sgGetMagVar(position(), jd);
+  }
+  
+  return _magVarDeg;
 }
   
 ///////////////////////////////////////////////////////////////////////////
@@ -127,6 +158,7 @@ static RouteRestriction restrictionFromString(const char* aStr)
   if (l == "above") return RESTRICT_ABOVE;
   if (l == "below") return RESTRICT_BELOW;
   if (l == "none") return RESTRICT_NONE;
+  if (l == "mach") return SPEED_RESTRICT_MACH;
   
   if (l.empty()) return RESTRICT_NONE;
   throw sg_io_exception("unknown restriction specification:" + l, 
@@ -140,6 +172,8 @@ static const char* restrictionToString(RouteRestriction aRestrict)
   case RESTRICT_BELOW: return "below";
   case RESTRICT_ABOVE: return "above";
   case RESTRICT_NONE: return "none";
+  case SPEED_RESTRICT_MACH: return "mach";
+  
   default:
     throw sg_exception("invalid route restriction",
       "Route restrictToString");
@@ -224,7 +258,7 @@ void Waypt::initFromProperties(SGPropertyNode_ptr aProp)
   
   if (aProp->hasChild("speed-restrict")) {
     _speedRestrict = restrictionFromString(aProp->getStringValue("speed-restrict"));
-    _speedKts = aProp->getDoubleValue("speed-kts");
+    _speed = aProp->getDoubleValue("speed");
   }
   
   
@@ -259,7 +293,7 @@ void Waypt::writeToProperties(SGPropertyNode_ptr aProp) const
   
   if (_speedRestrict != RESTRICT_NONE) {
     aProp->setStringValue("speed-restrict", restrictionToString(_speedRestrict));
-    aProp->setDoubleValue("speed-kts", _speedKts);
+    aProp->setDoubleValue("speed", _speed);
   }
 }
 

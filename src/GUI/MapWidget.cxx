@@ -714,7 +714,9 @@ void MapWidget::paintRoute()
       legend << '\n' << SGMiscd::roundToInt(wpt->altitudeFt()) << '\'';
     }
     
-    if (wpt->speedRestriction() != flightgear::RESTRICT_NONE) {
+    if (wpt->speedRestriction() == flightgear::SPEED_RESTRICT_MACH) {
+      legend << '\n' << wpt->speedMach() << "M";
+    } else if (wpt->speedRestriction() != flightgear::RESTRICT_NONE) {
       legend << '\n' << SGMiscd::roundToInt(wpt->speedKts()) << "Kts";
     }
 	

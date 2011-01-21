@@ -310,6 +310,8 @@ void FGRouteMgr::update( double dt )
     if (w->flag(WPT_DYNAMIC)) continue;
     totalDistanceRemaining += SGGeodesy::distanceM(prev->position(), w->position());
     prev = w;
+    
+    
   }
   
   wpn->setDoubleValue("dist", totalDistanceRemaining * SG_METER_TO_NM);
@@ -801,7 +803,9 @@ WayptRef FGRouteMgr::waypointFromString(const string& tgt )
 void FGRouteMgr::update_mirror()
 {
   mirror->removeChildren("wp");
-  for (int i = 0; i < numWaypts(); i++) {
+  
+  int num = numWaypts();
+  for (int i = 0; i < num; i++) {
     Waypt* wp = _route[i];
     SGPropertyNode *prop = mirror->getChild("wp", i, 1);
 
@@ -811,6 +815,15 @@ void FGRouteMgr::update_mirror()
     prop->setDoubleValue("longitude-deg", pos.getLongitudeDeg());
     prop->setDoubleValue("latitude-deg",pos.getLatitudeDeg());
    
+    // leg course+distance
+    if (i < (num - 1)) {
+      Waypt* next = _route[i+1];
+      std::pair<double, double> crsDist =
+        next->courseAndDistanceFrom(pos);
+      prop->setDoubleValue("leg-bearing-true-deg", crsDist.first);
+      prop->setDoubleValue("leg-distance-nm", crsDist.second * SG_METER_TO_NM);
+    }
+    
     if (wp->altitudeRestriction() != RESTRICT_NONE) {
       double ft = wp->altitudeFt();
       prop->setDoubleValue("altitude-m", ft * SG_FEET_TO_METER);
@@ -820,7 +833,9 @@ void FGRouteMgr::update_mirror()
       prop->setDoubleValue("altitude-ft", -9999.9);
     }
     
-    if (wp->speedRestriction() != RESTRICT_NONE) {
+    if (wp->speedRestriction() == SPEED_RESTRICT_MACH) {
+      prop->setDoubleValue("speed-mach", wp->speedMach());
+    } else if (wp->speedRestriction() != RESTRICT_NONE) {
       prop->setDoubleValue("speed-kts", wp->speedKts());
     }
     
@@ -924,11 +939,20 @@ void FGRouteMgr::initAtPosition()
   }
   
 // on the ground
-  SGGeod pos = SGGeod::fromDegFt(lon->getDoubleValue(), lat->getDoubleValue(), alt->getDoubleValue());
-  _departure = FGAirport::findClosest(pos, 20.0);
+  SGGeod pos = SGGeod::fromDegFt(lon->getDoubleValue(), 
+    lat->getDoubleValue(), alt->getDoubleValue());
   if (!_departure) {
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "initAtPosition: couldn't find an airport within 20nm");
-    departure->setStringValue("runway", "");
+    _departure = FGAirport::findClosest(pos, 20.0);
+    if (!_departure) {
+      SG_LOG(SG_AUTOPILOT, SG_INFO, "initAtPosition: couldn't find an airport within 20nm");
+      departure->setStringValue("runway", "");
+      return;
+    }
+  }
+  
+  std::string rwy = departure->getStringValue("runway");
+  if (!rwy.empty()) {
+    // runway already set, fine
     return;
   }
   
