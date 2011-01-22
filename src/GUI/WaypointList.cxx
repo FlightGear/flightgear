@@ -83,9 +83,15 @@ public:
       --destIndex;
     }
     
+    int currentWpIndex = currentWaypoint();
     WayptRef w(_rm->removeWayptAtIndex(srcIndex));
     SG_LOG(SG_GENERAL, SG_INFO, "wpt:" << w->ident());
     _rm->insertWayptAtIndex(w, destIndex);
+
+    if (srcIndex == currentWpIndex) {
+        // current waypoint was moved
+        _rm->jumpToIndex(destIndex);
+    }
   }
   
   virtual void setUpdateCallback(SGCallback* cb)

@@ -354,11 +354,6 @@ flightgear::WayptRef FGRouteMgr::removeWayptAtIndex(int aIndex)
     SG_LOG(SG_AUTOPILOT, SG_WARN, "removeWayptAtIndex with invalid index:" << aIndex);
     return NULL;
   }
-  
-  if (_currentIndex > index) {
-    --_currentIndex; // shift current index down if necessary
-  }
-
   WayptVec::iterator it = _route.begin();
   it += index;
   
@@ -366,6 +361,15 @@ flightgear::WayptRef FGRouteMgr::removeWayptAtIndex(int aIndex)
   _route.erase(it);
   
   update_mirror();
+  
+  if (_currentIndex == index) {
+    currentWaypointChanged(); // current waypoint was removed
+  }
+  else
+  if (_currentIndex > index) {
+    --_currentIndex; // shift current index down if necessary
+  }
+
   _edited->fireValueChanged();
   checkFinished();
   
@@ -682,7 +686,7 @@ void FGRouteMgr::insertWayptAtIndex(Waypt* aWpt, int aIndex)
   WayptVec::iterator it = _route.begin();
   it += index;
       
-  if (_currentIndex > index) {
+  if (_currentIndex >= index) {
     ++_currentIndex;
   }
   
