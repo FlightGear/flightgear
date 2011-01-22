@@ -183,8 +183,10 @@ int mysvn_setup(void) {
     if (err)
         return svn_cmdline_handle_exit_error(err, pool, "terrasync: ");
     mysvn_ctx->auth_baton = ab;
+#if (SVN_VER_MINOR >= 5)
     mysvn_ctx->conflict_func = NULL;
     mysvn_ctx->conflict_baton = NULL;
+#endif
     // Now our magic revisions
     mysvn_rev = (svn_opt_revision_t*) apr_palloc(pool, 
         sizeof(svn_opt_revision_t));
