@@ -7,7 +7,7 @@ using simgear::PropertyList;
 class TiedPropertyList : PropertyList {
 public:
     TiedPropertyList() {}
-    TiedPropertyList( SGPropertyNode_ptr root ) { _root = root; }
+    TiedPropertyList( SGPropertyNode_ptr root ) : _root(root) {}
 
     void setRoot( SGPropertyNode_ptr root ) { _root = root; }
     SGPropertyNode_ptr getRoot() const { return _root; }

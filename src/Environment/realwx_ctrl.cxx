@@ -194,18 +194,18 @@ public:
 
     class MetarLoadRequest {
     public:
-        MetarLoadRequest( const string & stationId ) {
-            _stationId = stationId;
-            _proxyHost = fgGetNode("/sim/presets/proxy/host", true)->getStringValue();
-            _proxyPort = fgGetNode("/sim/presets/proxy/port", true)->getStringValue();
-            _proxyAuth = fgGetNode("/sim/presets/proxy/authentication", true)->getStringValue();
-        }
-        MetarLoadRequest( const MetarLoadRequest & other ) {
-            _stationId = other._stationId;
-            _proxyHost = other._proxyAuth;
-            _proxyPort = other._proxyPort;
-            _proxyAuth = other._proxyAuth;
-        }
+        MetarLoadRequest( const string & stationId ) :
+            _stationId(stationId),
+            _proxyHost(fgGetNode("/sim/presets/proxy/host", true)->getStringValue()),
+            _proxyPort(fgGetNode("/sim/presets/proxy/port", true)->getStringValue()),
+            _proxyAuth(fgGetNode("/sim/presets/proxy/authentication", true)->getStringValue())
+        {}
+        MetarLoadRequest( const MetarLoadRequest & other ) :
+            _stationId(other._stationId),
+            _proxyHost(other._proxyAuth),
+            _proxyPort(other._proxyPort),
+            _proxyAuth(other._proxyAuth)
+        {}
         string _stationId;
         string _proxyHost;
         string _proxyPort;
