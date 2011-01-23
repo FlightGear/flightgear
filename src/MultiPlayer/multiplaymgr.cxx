@@ -561,7 +561,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
   {
       // Current local data is invalid (NaN), so stop MP transmission.
       // => Be nice to older FG versions (no NaN checks) and don't waste bandwidth.
-      SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::SendMyPosition - "
+      SG_LOG(SG_NETWORK, SG_ALERT, "FGMultiplayMgr::SendMyPosition - "
               << "Local data is invalid (NaN). Data not transmitted.");
       return;
   }
