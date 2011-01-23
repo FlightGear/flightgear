@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 //
-// multiplaymgr.hpp
+// multiplaymgr.hxx
 //
 // Written by Duncan McCreanor, started February 2003.
 // duncan.mccreanor@airservicesaustralia.com
@@ -81,6 +81,7 @@ private:
   void ProcessPosMsg(const MsgBuf& Msg, const simgear::IPAddress& SenderAddress,
                      long stamp);
   void ProcessChatMsg(const MsgBuf& Msg, const simgear::IPAddress& SenderAddress);
+  bool isSane(const FGExternalMotionData& motionInfo);
 
   /// maps from the callsign string to the FGAIMultiplayer
   typedef std::map<std::string, SGSharedPtr<FGAIMultiplayer> > MultiPlayerMap;
