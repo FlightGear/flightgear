@@ -44,13 +44,12 @@ INCLUDES
 #include <iosfwd>
 
 #include "FGColumnVector3.h"
-#include "FGJSBBase.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_MATRIX33 "$Id: FGMatrix33.h,v 1.12 2010/08/21 17:13:47 jberndt Exp $"
+#define ID_MATRIX33 "$Id: FGMatrix33.h,v 1.14 2010/12/07 12:57:14 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -72,7 +71,7 @@ CLASS DOCUMENTATION
 DECLARATION: MatrixException
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class MatrixException : public FGJSBBase
+class MatrixException //: public FGJSBBase
 {
 public:
   std::string Message;
@@ -90,7 +89,7 @@ CLASS DOCUMENTATION
 DECLARATION: FGMatrix33
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGMatrix33 : public FGJSBBase
+class FGMatrix33
 {
 public:
 
@@ -122,8 +121,6 @@ public:
     data[6] = M.data[6];
     data[7] = M.data[7];
     data[8] = M.data[8];
-
-    // Debug(0);
   }
 
   /** Initialization by given values.
@@ -140,9 +137,10 @@ public:
 
       Create a matrix from the doubles given in the arguments.
    */
-  FGMatrix33(double m11, double m12, double m13,
-             double m21, double m22, double m23,
-             double m31, double m32, double m33) {
+  FGMatrix33(const double m11, const double m12, const double m13,
+             const double m21, const double m22, const double m23,
+             const double m31, const double m32, const double m33)
+  {
     data[0] = m11;
     data[1] = m21;
     data[2] = m31;
@@ -152,13 +150,11 @@ public:
     data[6] = m13;
     data[7] = m23;
     data[8] = m33;
-
-    // Debug(0);
   }
 
   /** Destructor.
    */
-  ~FGMatrix33(void) { /* Debug(1); */ }
+  ~FGMatrix33(void) {}
 
   /** Prints the contents of the matrix.
       @param delimeter the item separator (tab or comma)
@@ -263,9 +259,10 @@ public:
 /** Initialize the matrix.
     This function initializes a matrix to user specified values.
  */
-  void InitMatrix(double m11, double m12, double m13,
-                  double m21, double m22, double m23,
-                  double m31, double m32, double m33) {
+  void InitMatrix(const double m11, const double m12, const double m13,
+                  const double m21, const double m22, const double m23,
+                  const double m31, const double m32, const double m33)
+  {
     data[0] = m11;
     data[1] = m21;
     data[2] = m31;
@@ -309,7 +306,8 @@ public:
 
       Copy the content of the matrix given in the argument into *this.
    */
-  FGMatrix33& operator=(const FGMatrix33& A) {
+  FGMatrix33& operator=(const FGMatrix33& A)
+  {
     data[0] = A.data[0];
     data[1] = A.data[1];
     data[2] = A.data[2];
@@ -434,8 +432,6 @@ public:
 
 private:
   double data[eRows*eColumns];
-
-  void Debug(int from);
 };
 
 /** Scalar multiplication.

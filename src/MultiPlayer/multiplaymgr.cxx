@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 //
-// multiplaymgr.hpp
+// multiplaymgr.cxx
 //
 // Written by Duncan McCreanor, started February 2003.
 // duncan.mccreanor@airservicesaustralia.com
@@ -526,14 +526,44 @@ union FGMultiplayMgr::MsgBuf
     T_MsgHdr Header;
 };
 
+bool
+FGMultiplayMgr::isSane(const FGExternalMotionData& motionInfo)
+{
+    // check for corrupted data (NaNs)
+    bool isCorrupted = false;
+    isCorrupted |= ((osg::isNaN(motionInfo.time           )) ||
+                    (osg::isNaN(motionInfo.lag            )) ||
+                    (osg::isNaN(motionInfo.orientation(3) )));
+    for (unsigned i = 0; (i < 3)&&(!isCorrupted); ++i)
+    {
+        isCorrupted |= ((osg::isNaN(motionInfo.position(i)      ))||
+                        (osg::isNaN(motionInfo.orientation(i)   ))||
+                        (osg::isNaN(motionInfo.linearVel(i))    )||
+                        (osg::isNaN(motionInfo.angularVel(i))   )||
+                        (osg::isNaN(motionInfo.linearAccel(i))  )||
+                        (osg::isNaN(motionInfo.angularAccel(i)) ));
+    }
+    return !isCorrupted;
+}
+
 void
 FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
 {
   if ((! mInitialised) || (! mHaveServer))
         return;
+
   if (! mHaveServer) {
-    SG_LOG( SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::SendMyPosition - no server");
-    return;
+      SG_LOG( SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::SendMyPosition - no server");
+      return;
+  }
+
+  if (!isSane(motionInfo))
+  {
+      // Current local data is invalid (NaN), so stop MP transmission.
+      // => Be nice to older FG versions (no NaN checks) and don't waste bandwidth.
+      SG_LOG(SG_NETWORK, SG_ALERT, "FGMultiplayMgr::SendMyPosition - "
+              << "Local data is invalid (NaN). Data not transmitted.");
+      return;
   }
 
   static MsgBuf msgBuf;
@@ -780,7 +810,7 @@ FGMultiplayMgr::update(double)
     }
     if (MsgHdr->Version != PROTO_VER) {
       SG_LOG( SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - "
-              << "message has invalid protocoll number!" );
+              << "message has invalid protocol number!" );
       break;
     }
     if (MsgHdr->MsgLen != bytes) {
@@ -858,6 +888,15 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
   for (unsigned i = 0; i < 3; ++i)
     motionInfo.angularAccel(i) = XDR_decode_float(PosMsg->angularAccel[i]);
 
+  // sanity check: do not allow injection of corrupted data (NaNs)
+  if (!isSane(motionInfo))
+  {
+      // drop this message, keep old position until receiving valid data
+      SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::ProcessPosMsg - "
+              << "Position message with invalid data (NaN) received from "
+              << MsgHdr->Callsign);
+      return;
+  }
 
   //cout << "INPUT MESSAGE\n";
 
@@ -953,7 +992,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
           SG_LOG(SG_NETWORK, SG_DEBUG, "Unknown Prop type " << pData->id << " " << pData->type);
           xdr++;
           break;
-      }            
+      }
 
       motionInfo.properties.push_back(pData);
     }

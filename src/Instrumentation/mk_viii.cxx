@@ -2319,6 +2319,8 @@ MK_VIII::VoicePlayer::get_sample (const char *name)
 void
 MK_VIII::VoicePlayer::play (Voice *_voice, unsigned int flags)
 {
+  if (!_voice)
+      return;
   if (test_bits(flags, PLAY_NOW) || ! voice || voice->element->silence)
     {
       if (voice)
@@ -2978,9 +2980,10 @@ MK_VIII::AlertHandler::update ()
 	mk->voice_player.play(mk_voice(bank_angle_pause_bank_angle));
     }
 
-  // set new state
-
-  old_alerts = voice_alerts;
+  // remember all alerts voiced so far...
+  old_alerts |= voice_alerts;
+  // ... forget those no longer active
+  old_alerts &= alerts;
   repeated_alerts = 0;
 }
 

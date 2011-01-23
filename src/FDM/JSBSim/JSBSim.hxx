@@ -284,7 +284,6 @@ private:
 
     void update_external_forces(double t_off);
 
-    void resetPropertyState();
 };
 
 
