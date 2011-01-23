@@ -49,7 +49,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGRocket.cpp,v 1.20 2010/08/21 17:13:48 jberndt Exp $";
+static const char *IdSrc = "$Id: FGRocket.cpp,v 1.22 2010/12/30 13:35:09 jberndt Exp $";
 static const char *IdHdr = ID_ROCKET;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -215,9 +215,9 @@ void FGRocket::ConsumeFuel(void)
         if (Tank->GetContents() > 0.0 && Tank->GetSelected() && SourceTanks[i] > 0) ++TanksWithFuel;
         break;
       case FGTank::ttOXIDIZER:
-        if (Tank->GetContents() > 0.0 && Tank->GetSelected() && SourceTanks[i] > 0) {
+        if (Tank->GetSelected() && SourceTanks[i] > 0) {
           haveOxTanks = true;
-          ++TanksWithOxidizer;
+          if (Tank->GetContents() > 0.0) ++TanksWithOxidizer;
         }
         break;
     }
