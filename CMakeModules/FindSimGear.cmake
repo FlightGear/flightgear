@@ -111,16 +111,17 @@ if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
         # on MSVC builds
         set(thread_lib threads)
     endif(NOT MSVC)
-    
+
   # note the order here affects the order Simgear libraries are
   # linked in, and hence ability to link when using a traditional
   # linker such as GNU ld on Linux
     set(comps 
-        ephemeris
+        ephem
         environment
         nasal
         sky
-        material tgdb
+        material
+        tgdb
         model    
         screen
         bucket
