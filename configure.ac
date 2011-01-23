@@ -271,9 +271,11 @@ if test "x$with_rti13" != "xno"; then
     if test "x$simgear_hla" = "xyes" ; then
         AC_MSG_CHECKING([for hla libraries])
         saved_LIBS="$LIBS"
+        saved_LDFLAGS="$LDFLAGS"
         for rti13libs in "-lRTI-NG -lFedTime" "-lRTI-NGd -lFedTimed" ; do
             if test "x$hla_libs" = "x" ; then
                 LIBS="-lsghla13 -lsghla -lsgxml -lsgstructure -lsgmath -lsgdebug -lsgtiming $rti13libs -lrt $saved_LIBS"
+                LDFLAGS="$HLA_LDFLAGS $saved_LDFLAGS"
                 AC_TRY_LINK([
                     #include <simgear/hla/HLA13Federate.hxx>
                     ],[
@@ -282,6 +284,7 @@ if test "x$with_rti13" != "xno"; then
             fi
         done
         LIBS="$saved_LIBS"
+        LDFLAGS="$saved_LDFLAGS"
         AC_MSG_RESULT($hla_libs)
     fi
     AC_LANG_POP()
