@@ -55,7 +55,7 @@ volName="\"FlightGear Nightly Build\""
 
 fgVersion = File.read("#{srcDir}/version").strip
 
-dmgPath = Dir.pwd + "/fg_mac_nightly_#{VERSION}.dmg"
+dmgPath = Dir.pwd + "/fg_mac_nightly_#{fgVersion}.dmg"
 
 puts "Creating directory structure"
 `mkdir -p #{macosDir}`
