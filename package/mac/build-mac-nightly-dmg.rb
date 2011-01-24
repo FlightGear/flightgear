@@ -53,7 +53,7 @@ resourcesDir=contents+"/Resources"
 osgPluginsDir=contents+"/PlugIns/osgPlugins-#{osgVersion}"
 volName="\"FlightGear Nightly Build\""
 
-VERSION = File.read("#{srcDir}/version").strip
+fgVersion = File.read("#{srcDir}/version").strip
 
 dmgPath = Dir.pwd + "/fg_mac_nightly_#{VERSION}.dmg"
 
@@ -102,6 +102,14 @@ File.open("#{contents}/Info.plist", 'w') { |f|
 `cp #{srcDir}/package/mac/nightly-readme.rtf #{dmgDir}/ReadMe.rtf`
 `cp #{srcDir}/package/mac/FlightGear.icns #{resourcesDir}/FlightGear.icns`
 `cp #{srcDir}/COPYING #{dmgDir}`
+
+# Macflightgear launcher
+puts "Copying Macflightgear launcher files"
+
+Dir.chdir "macflightgear" do
+  `cp FlightGear #{macosDir}`
+  `rsync -a --exclude=\".svn\" *.rb *.lproj *.sh *.tiff #{resourcesDir}`
+end
 
 puts "Creating DMG"
 
