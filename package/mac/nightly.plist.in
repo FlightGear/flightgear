@@ -15,7 +15,7 @@
 	<key>CFBundleIdentifier</key>
 	<string>org.flightgear.FlightGear</string>
 	<key>CFBundleVersion</key>
-	<string><%= VERSION %></string>
+	<string><%= fgVersion %></string>
 	<key>CFBundleShortVersionString</key>
 	<string>unstable nightly build</string>
 	<key>LSMinimumSystemVersion</key>

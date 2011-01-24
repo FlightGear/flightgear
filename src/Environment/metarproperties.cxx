@@ -374,6 +374,7 @@ void MetarProperties::set_metar( const char * metar )
                 -9999.0 : 
                 metarClouds[i].getAltitude_ft() + _station_elevation;
 
+            layerNode->setDoubleValue( "alpha", 1.0 );
             layerNode->setStringValue( "coverage", coverage_string[coverage] );
             layerNode->setDoubleValue( "coverage-type", SGCloudLayer::getCoverageType(coverage_string[coverage]) );
             layerNode->setDoubleValue( "elevation-ft", elevation );
