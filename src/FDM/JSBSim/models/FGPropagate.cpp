@@ -78,7 +78,8 @@ static const char *IdHdr = ID_PROPAGATE;
 CLASS IMPLEMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-FGPropagate::FGPropagate(FGFDMExec* fdmex) : FGModel(fdmex)
+FGPropagate::FGPropagate(FGFDMExec* fdmex) : FGModel(fdmex),
+LocalTerrainRadius(0), SeaLevelRadius(0), VehicleRadius(0)
 {
   Debug(0);
   Name = "FGPropagate";

@@ -292,6 +292,8 @@ FGJSBsim::FGJSBsim( double dt )
         fgGetDouble("/fdm/jsbsim/systems/hook/tailhook-offset-x-in", 196),
         fgGetDouble("/fdm/jsbsim/systems/hook/tailhook-offset-y-in", 0),
         fgGetDouble("/fdm/jsbsim/systems/hook/tailhook-offset-z-in", -16));
+    last_hook_tip[0] = 0; last_hook_tip[1] = 0; last_hook_tip[2] = 0;
+    last_hook_root[0] = 0; last_hook_root[1] = 0; last_hook_root[2] = 0;
 
     crashed = false;
 }
