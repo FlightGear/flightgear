@@ -1,4 +1,8 @@
 
+if (MSVC)
+	set( RESOURCE_FILE flightgear.rc )
+endif (MSVC)
+
 set(SOURCES
 	CameraGroup.cxx
 	FGEventHandler.cxx
@@ -21,6 +25,7 @@ set(SOURCES
 	util.cxx
 	viewer.cxx
 	viewmgr.cxx
+	${RESOURCE_FILE}
 	)
 	
 add_executable(fgfs ${SOURCES})
