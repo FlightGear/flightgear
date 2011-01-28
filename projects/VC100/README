@@ -1,0 +1,2 @@
+The handmade VS2010 project files have been replaced by the Cmake build system.
+Please use Cmake to build FlightGear with Visual Studio 2010.
