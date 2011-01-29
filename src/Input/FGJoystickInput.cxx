@@ -119,6 +119,14 @@ void FGJoystickInput::init()
   }
 }
 
+void FGJoystickInput::reinit() {
+  SG_LOG(SG_INPUT, SG_DEBUG, "Re-Initializing joystick bindings");
+  SGPropertyNode * js_nodes = fgGetNode("/input/joysticks", true);
+  js_nodes->removeChildren("js", false);
+  FGJoystickInput::init();
+  FGJoystickInput::postinit();
+}
+
 void FGJoystickInput::postinit()
 {
   FGNasalSys *nasalsys = (FGNasalSys *)globals->get_subsystem("nasal");
