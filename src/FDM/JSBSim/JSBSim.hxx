@@ -110,6 +110,9 @@ public:
     /// Reset flight params to a specific position
     void init();
 
+    /// Unbind properties
+    void unbind();
+
     /// @name Position Parameter Set
     //@{
     /** Set geocentric latitude
@@ -283,8 +286,6 @@ private:
     void update_gear(void);
 
     void update_external_forces(double t_off);
-
-    void resetPropertyState();
 };
 
 
