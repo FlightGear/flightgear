@@ -268,15 +268,15 @@ FGInterface::bind ()
 				// Orientation
   fgTie("/orientation/roll-deg", this,
 	&FGInterface::get_Phi_deg,
-	&FGInterface::set_Phi_deg);
+	&FGInterface::set_Phi_deg, false);
   fgSetArchivable("/orientation/roll-deg");
   fgTie("/orientation/pitch-deg", this,
 	&FGInterface::get_Theta_deg,
-	&FGInterface::set_Theta_deg);
+	&FGInterface::set_Theta_deg, false);
   fgSetArchivable("/orientation/pitch-deg");
   fgTie("/orientation/heading-deg", this,
 	&FGInterface::get_Psi_deg,
-	&FGInterface::set_Psi_deg);
+	&FGInterface::set_Psi_deg, false);
   fgSetArchivable("/orientation/heading-deg");
   fgTie("/orientation/track-deg", this,
 	&FGInterface::get_Track);
@@ -331,11 +331,11 @@ FGInterface::bind ()
 				// LaRCSim are fixed (LaRCSim adds the
 				// earth's rotation to the east velocity).
   fgTie("/velocities/speed-north-fps", this,
-	&FGInterface::get_V_north, &FGInterface::set_V_north);
+	&FGInterface::get_V_north, &FGInterface::set_V_north, false);
   fgTie("/velocities/speed-east-fps", this,
-	&FGInterface::get_V_east, &FGInterface::set_V_east);
+	&FGInterface::get_V_east, &FGInterface::set_V_east, false);
   fgTie("/velocities/speed-down-fps", this,
-	&FGInterface::get_V_down, &FGInterface::set_V_down);
+	&FGInterface::get_V_down, &FGInterface::set_V_down, false);
 
   fgTie("/velocities/north-relground-fps", this,
     &FGInterface::get_V_north_rel_ground);
