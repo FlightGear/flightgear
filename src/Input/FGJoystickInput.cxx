@@ -275,6 +275,8 @@ void FGJoystickInput::update( double dt )
       continue;
 
     js->read(&buttons, axis_values);
+    if (js->notWorking()) // If js is disconnected
+      continue;
 
                                 // Fire bindings for the axes.
     for (int j = 0; j < bindings[i].naxes; j++) {
