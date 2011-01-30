@@ -610,7 +610,7 @@ wxRadarBg::update_aircraft()
             diff = _elapsed_time - (*ground_echoes_iterator)->elapsed_time;
 
             if( diff > _persistance) {
-                ground_echoes.erase(ground_echoes_iterator);
+                ground_echoes.erase(ground_echoes_iterator++);
             } else {
 //                double test_brg = (*ground_echoes_iterator)->bearing;
 //                double bearing = test_brg * SG_DEGREES_TO_RADIANS;
