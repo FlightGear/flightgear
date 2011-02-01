@@ -83,6 +83,7 @@ FGModelMgr::add_model (SGPropertyNode * node)
   } catch (const sg_throwable& t) {
     SG_LOG(SG_GENERAL, SG_ALERT, "Error loading " << path << ":\n  "
         << t.getFormattedMessage() << t.getOrigin());
+    delete instance;
     return;
   }
 

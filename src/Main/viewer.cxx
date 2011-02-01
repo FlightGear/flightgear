@@ -289,7 +289,14 @@ void
 FGViewer::setHeadingOffset_deg (double heading_offset_deg)
 {
   _dirty = true;
-  _heading_offset_deg = heading_offset_deg;
+  if (_at_model && (_offset_m.x() == 0.0)&&(_offset_m.y() == 0.0))
+  {
+      /* avoid optical effects (e.g. rotating sky) when looking at something
+       * with heading offsets x==y==0 (view heading cannot change). */
+      _heading_offset_deg = 0.0;
+  }
+  else
+      _heading_offset_deg = heading_offset_deg;
 }
 
 void
@@ -317,6 +324,14 @@ void
 FGViewer::setGoalHeadingOffset_deg (double goal_heading_offset_deg)
 {
   _dirty = true;
+  if (_at_model && (_offset_m.x() == 0.0)&&(_offset_m.y() == 0.0))
+  {
+      /* avoid optical effects (e.g. rotating sky) when looking at something
+       * with heading offsets x==y==0 (view heading cannot change). */
+      _goal_heading_offset_deg = 0.0;
+      return;
+  }
+  
   _goal_heading_offset_deg = goal_heading_offset_deg;
   while ( _goal_heading_offset_deg < 0.0 ) {
     _goal_heading_offset_deg += 360;

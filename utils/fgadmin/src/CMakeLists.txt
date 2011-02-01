@@ -1,7 +1,11 @@
 
-add_executable(fgadmin fgadmin.cxx fgadmin_funcs.cxx main.cxx untarka.c)
+fltk_wrap_ui(FGAdminUI fgadmin.fl)
+add_library(FGAdminUI ${FGAdminUI_FLTK_UI_SRCS})
 
-target_link_libraries(fgadmin 
+add_executable(fgadmin fgadmin_funcs.cxx main.cxx untarka.c)
+add_dependencies(fgadmin FGAdminUI)
+
+target_link_libraries(fgadmin FGAdminUI
 	${SIMGEAR_LIBRARIES}
 	${ZLIB_LIBRARIES}
 	${PLIB_LIBRARIES}

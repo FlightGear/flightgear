@@ -49,6 +49,7 @@ using std::cerr;
 FGAIFlightPlan::FGAIFlightPlan() 
 {
    sid = 0;
+   wpt_iterator = waypoints.begin();
 }
 
 FGAIFlightPlan::FGAIFlightPlan(const string& filename)
@@ -176,6 +177,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
 	    else wpt->finished = false;
 	    waypoints.push_back(wpt);
 	  } // of node loop
+          wpt_iterator = waypoints.begin();
 	} catch (const sg_exception &e) {
       SG_LOG(SG_GENERAL, SG_WARN, "Error reading AI flight plan: " << 
         e.getMessage() << " from " << e.getOrigin());

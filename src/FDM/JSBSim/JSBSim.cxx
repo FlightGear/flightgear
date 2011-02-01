@@ -144,8 +144,6 @@ FGJSBsim::FGJSBsim( double dt )
         }
     }
 
-    resetPropertyState();
-    
     fdmex = new FGFDMExec( (FGPropertyManager*)globals->get_props() );
 
     // Register ground callback.
@@ -420,6 +418,33 @@ void FGJSBsim::init()
 
     SG_LOG( SG_FLIGHT, SG_INFO, "FGControls::get_gear_down()= " <<
                                   globals->get_controls()->get_gear_down() );
+}
+
+/******************************************************************************/
+
+void checkTied ( FGPropertyManager *node )
+{
+  int N = node->nChildren();
+  string name;
+
+  for (int i=0; i<N; i++) {
+    if (node->getChild(i)->nChildren() ) {
+      checkTied( (FGPropertyManager*)node->getChild(i) );
+    }
+    if ( node->getChild(i)->isTied() ) {
+      name = ((FGPropertyManager*)node->getChild(i))->GetFullyQualifiedName();
+      node->Untie(name);
+    }
+  }
+}
+
+/******************************************************************************/
+
+void FGJSBsim::unbind()
+{
+  SGPropertyNode* instance = globals->get_props()->getNode("/fdm/jsbsim");
+  checkTied((FGPropertyManager*)instance);
+  FGInterface::unbind();
 }
 
 /******************************************************************************/
@@ -1413,23 +1438,5 @@ void FGJSBsim::update_external_forces(double t_off)
     last_hook_root[2] = hook_area[1][2];
     
     fgSetDouble("/fdm/jsbsim/systems/hook/tailhook-pos-deg", fi);
-}
-
-void FGJSBsim::resetPropertyState()
-{
-// this code works-around bug #222:
-// http://code.google.com/p/flightgear-bugs/issues/detail?id=222
-// for whatever reason, having an existing value for the WOW
-// property causes the NaNs. Should that be fixed, this code can die
-  SGPropertyNode* gear = fgGetNode("/fdm/jsbsim/gear", false);
-  if (!gear) {
-    return;
-  }
-  
-  int index = 0;
-  SGPropertyNode* unitNode = NULL;
-  for (; (unitNode = gear->getChild("unit", index)) != NULL; ++index) {
-    unitNode->removeChild("WOW", 0, false);
-  }
 }
 

@@ -1,4 +1,12 @@
 
+if (MSVC)
+	if (CMAKE_CL_64)
+		set( RESOURCE_FILE flightgear64.rc )
+	else (CMAKE_CL_64)
+		set( RESOURCE_FILE flightgear.rc )
+	endif (CMAKE_CL_64)
+endif (MSVC)
+
 set(SOURCES
 	CameraGroup.cxx
 	FGEventHandler.cxx
@@ -21,6 +29,7 @@ set(SOURCES
 	util.cxx
 	viewer.cxx
 	viewmgr.cxx
+	${RESOURCE_FILE}
 	)
 	
 add_executable(fgfs ${SOURCES})

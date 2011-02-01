@@ -44,6 +44,7 @@ public:
 
   virtual void init();
   virtual void postinit();
+  virtual void reinit();
   virtual void update( double dt );
 
   static const int MAX_JOYSTICKS        = 10;

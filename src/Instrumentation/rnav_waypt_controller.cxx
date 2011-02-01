@@ -221,7 +221,7 @@ private:
 
 /**
  * Special controller for runways. For runways, we want very narrow deviation
- * contraints, and to understand that any point along the paved area is
+ * constraints, and to understand that any point along the paved area is
  * equivalent to being 'at' the runway.
  */
 class RunwayCtl : public WayptController
@@ -252,7 +252,7 @@ public:
     double _courseDev = brg - _targetTrack;
     SG_NORMALIZE_RANGE(_courseDev, -180.0, 180.0);
     
-    if (fabs(_courseDev) > 90.0) {
+    if ((fabs(_courseDev) > 90.0) && (_distanceM < _rnav->overflightArmDistanceM())) {
       setDone();
     }
   } 

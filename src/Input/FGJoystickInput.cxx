@@ -119,6 +119,14 @@ void FGJoystickInput::init()
   }
 }
 
+void FGJoystickInput::reinit() {
+  SG_LOG(SG_INPUT, SG_DEBUG, "Re-Initializing joystick bindings");
+  SGPropertyNode * js_nodes = fgGetNode("/input/joysticks", true);
+  js_nodes->removeChildren("js", false);
+  FGJoystickInput::init();
+  FGJoystickInput::postinit();
+}
+
 void FGJoystickInput::postinit()
 {
   FGNasalSys *nasalsys = (FGNasalSys *)globals->get_subsystem("nasal");
@@ -267,6 +275,8 @@ void FGJoystickInput::update( double dt )
       continue;
 
     js->read(&buttons, axis_values);
+    if (js->notWorking()) // If js is disconnected
+      continue;
 
                                 // Fire bindings for the axes.
     for (int j = 0; j < bindings[i].naxes; j++) {
