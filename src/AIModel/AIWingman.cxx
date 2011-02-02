@@ -375,7 +375,7 @@ void FGAIWingman::Break(double dt) {
 void FGAIWingman::Join(double dt) {
 
     double range, bearing, az2;
-    double parent_hdg, parent_spd, parent_ht= 0;
+    double parent_hdg, parent_spd = 0;
     double p_hdg, p_pch, p_rll = 0;
 
     setTgtOffsets(dt, 25);
@@ -425,7 +425,7 @@ void FGAIWingman::Join(double dt) {
     double rel_brg   = calcRelBearingDeg(bearing, hdg);
     double recip_brg = calcRecipBearingDeg(bearing);
     double angle = calcAngle(distance,_offsetpos, pos);
-    double approx_angle = atan2(daltM, range);
+    //double approx_angle = atan2(daltM, range);
     double frm_spd = 50; // formation speed
     double join_rnge = 1000.0;
     double recip_parent_hdg = calcRecipBearingDeg(parent_hdg);

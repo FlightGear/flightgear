@@ -53,13 +53,12 @@ void fgSunPositionGST(double gst, double *lon, double *lat) {
     /* double *lat;            (return) latitude        */
     /* double *lon;            (return) longitude       */
 
-    double alpha, delta;
     double tmp;
 
     SGPropertyNode* sun = fgGetNode("/ephemeris/sun");
     assert(sun);
     double xs = sun->getDoubleValue("xs");
-    double ys = sun->getDoubleValue("ys");
+    //double ys = sun->getDoubleValue("ys");
     double ye = sun->getDoubleValue("ye");
     double ze = sun->getDoubleValue("ze");
     double ra = atan2(ye, xs);

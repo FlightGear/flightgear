@@ -125,7 +125,6 @@ HeadingIndicatorDG::update (double dt)
     double yaw_rate = _yaw_rate_node->getDoubleValue();
     double error = _error_node->getDoubleValue();
     double g = _g_node->getDoubleValue();
-    int sign = 0;
 
     if ( fabs ( yaw_rate ) > 5 ) {
         error += 0.033 * -yaw_rate * dt ;

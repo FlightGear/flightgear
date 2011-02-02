@@ -342,6 +342,9 @@ public:
     case RESTRICT_NONE:
       assert(false);
       break;
+    case SPEED_RESTRICT_MACH:
+      assert(false);
+      break;
     }
   }
   
