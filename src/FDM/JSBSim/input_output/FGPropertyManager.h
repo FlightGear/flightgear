@@ -77,6 +77,7 @@ class FGPropertyManager : public SGPropertyNode, public FGJSBBase
 {
   private:
     static bool suppress_warning;
+    static std::vector<std::string> tied_properties;
   public:
     /// Constructor
     FGPropertyManager(void) {suppress_warning = false;}
@@ -399,6 +400,13 @@ class FGPropertyManager : public SGPropertyNode, public FGJSBBase
      */
     void Untie (const std::string &name);
 
+    /**
+     * Unbind all properties bound by this manager to an external data source.
+     *
+     * Classes should use this function to release control of any
+     * properties they have bound using this property manager.
+     */
+    void unbind (void);
 
         // Templates cause ambiguity here
 

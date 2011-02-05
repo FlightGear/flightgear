@@ -49,6 +49,19 @@ COMMENTS, REFERENCES, and NOTES [use "class documentation" below for API docs]
 namespace JSBSim {
 
 bool FGPropertyManager::suppress_warning = true;
+std::vector<std::string> FGPropertyManager::tied_properties;
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPropertyManager::unbind(void)
+{
+    vector<string>::iterator it;
+    for (it = tied_properties.begin();it < tied_properties.end();it++)
+    {
+        Untie(*it);
+    }
+    tied_properties.clear();
+}
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -301,6 +314,7 @@ void FGPropertyManager::Untie (const string &name)
 
 void FGPropertyManager::Tie (const string &name, bool *pointer, bool useDefault)
 {
+  tied_properties.push_back(name);
   if (!tie(name.c_str(), SGRawValuePointer<bool>(pointer), useDefault))
     cerr << "Failed to tie property " << name << " to a pointer" << endl;
   else if (debug_lvl & 0x20)
@@ -312,6 +326,7 @@ void FGPropertyManager::Tie (const string &name, bool *pointer, bool useDefault)
 void FGPropertyManager::Tie (const string &name, int *pointer,
                                           bool useDefault )
 {
+  tied_properties.push_back(name);
   if (!tie(name.c_str(), SGRawValuePointer<int>(pointer), useDefault))
     cerr << "Failed to tie property " << name << " to a pointer" << endl;
   else if (debug_lvl & 0x20)
@@ -323,6 +338,7 @@ void FGPropertyManager::Tie (const string &name, int *pointer,
 void FGPropertyManager::Tie (const string &name, long *pointer,
                                           bool useDefault )
 {
+  tied_properties.push_back(name);
   if (!tie(name.c_str(), SGRawValuePointer<long>(pointer), useDefault))
     cerr << "Failed to tie property " << name << " to a pointer" << endl;
   else if (debug_lvl & 0x20)
@@ -334,6 +350,7 @@ void FGPropertyManager::Tie (const string &name, long *pointer,
 void FGPropertyManager::Tie (const string &name, float *pointer,
                                           bool useDefault )
 {
+  tied_properties.push_back(name);
   if (!tie(name.c_str(), SGRawValuePointer<float>(pointer), useDefault))
     cerr << "Failed to tie property " << name << " to a pointer" << endl;
   else if (debug_lvl & 0x20)
@@ -344,6 +361,7 @@ void FGPropertyManager::Tie (const string &name, float *pointer,
 
 void FGPropertyManager::Tie (const string &name, double *pointer, bool useDefault)
 {
+  tied_properties.push_back(name);
   if (!tie(name.c_str(), SGRawValuePointer<double>(pointer), useDefault))
     cerr << "Failed to tie property " << name << " to a pointer" << endl;
   else if (debug_lvl & 0x20)
