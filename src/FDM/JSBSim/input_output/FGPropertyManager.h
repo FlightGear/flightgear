@@ -406,7 +406,7 @@ class FGPropertyManager : public SGPropertyNode, public FGJSBBase
      * Classes should use this function to release control of any
      * properties they have bound using this property manager.
      */
-    void unbind (void);
+    void Unbind (void);
 
         // Templates cause ambiguity here
 
@@ -534,8 +534,10 @@ class FGPropertyManager : public SGPropertyNode, public FGJSBBase
     {
       if (!tie(name.c_str(), SGRawValueFunctions<V>(getter, setter), useDefault))
         std::cout << "Failed to tie property " << name << " to functions" << std::endl;
-      else if (debug_lvl & 0x20)
-        std::cout << name << std::endl;
+      else {
+        tied_properties.push_back(name);
+        if (debug_lvl & 0x20) std::cout << name << std::endl;
+      }
     }
 
 
@@ -562,8 +564,10 @@ class FGPropertyManager : public SGPropertyNode, public FGJSBBase
     {
       if (!tie(name.c_str(), SGRawValueFunctionsIndexed<V>(index, getter, setter), useDefault))
         std::cout << "Failed to tie property " << name << " to indexed functions" << std::endl;
-      else if (debug_lvl & 0x20)
-        std::cout << name << std::endl;
+      else {
+        tied_properties.push_back(name);
+        if (debug_lvl & 0x20) std::cout << name << std::endl;
+      }
     }
 
 
@@ -592,8 +596,10 @@ class FGPropertyManager : public SGPropertyNode, public FGJSBBase
     {
       if (!tie(name.c_str(), SGRawValueMethods<T,V>(*obj, getter, setter), useDefault))
         std::cout << "Failed to tie property " << name << " to object methods" << std::endl;
-      else if (debug_lvl & 0x20)
-        std::cout << name << std::endl;
+      else {
+        tied_properties.push_back(name);
+        if (debug_lvl & 0x20) std::cout << name << std::endl;
+      }
     }
 
     /**
@@ -621,8 +627,10 @@ class FGPropertyManager : public SGPropertyNode, public FGJSBBase
     {
       if (!tie(name.c_str(), SGRawValueMethodsIndexed<T,V>(*obj, index, getter, setter), useDefault))
         std::cout << "Failed to tie property " << name << " to indexed object methods" << std::endl;
-      else if (debug_lvl & 0x20)
-        std::cout << name << std::endl;
+      else {
+        tied_properties.push_back(name);
+        if (debug_lvl & 0x20) std::cout << name << std::endl;
+      }
    }
 };
 }
