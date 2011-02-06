@@ -26,6 +26,7 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <simgear/sg_inlines.h>
 
 #include <stdio.h>    //    size_t
 #include <string>
@@ -217,12 +218,20 @@ FGJSBsim::FGJSBsim( double dt )
       FGTank* tank = Propulsion->GetTank(i);
 
       d = node->getNode( "density-ppg", true )->getDoubleValue();
-      if( d > 0.0 )
+      if( d > 0.0 ) {
         tank->SetDensity( d );
+      } else {
+        node->getNode( "density-ppg", true )->setDoubleValue( SG_MAX2<double>(tank->GetDensity(), 0.1) );
+      }
 
       d = node->getNode( "level-lbs", true )->getDoubleValue();
-      if( d > 0.0 )
+      if( d > 0.0 ) {
         tank->SetContents( d );
+      } else {
+        node->getNode( "level-lbs", true )->setDoubleValue( tank->GetContents() );
+      }
+      /* Capacity is read-only in FGTank and can't be overwritten from FlightGear */
+      node->getNode("capacity-gal_us", true )->setDoubleValue( tank->GetCapacityGallons() );
     }
     Propulsion->SetFuelFreeze((fgGetNode("/sim/freeze/fuel",true))->getBoolValue());
 
