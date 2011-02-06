@@ -426,7 +426,7 @@ void FGJSBsim::init()
 
 void FGJSBsim::unbind()
 {
-  fdmex->unbind();
+  fdmex->Unbind();
   FGInterface::unbind();
 }
 

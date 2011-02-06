@@ -227,7 +227,7 @@ public:
   ~FGFDMExec();
 
   /** Unbind all tied JSBSim properties. */
-  void unbind(void) {instance->unbind();}
+  void Unbind(void) {instance->Unbind();}
 
   /** This routine places a model into the runlist at the specified rate. The
       "rate" is not really a clock rate. It represents how many calls to the
