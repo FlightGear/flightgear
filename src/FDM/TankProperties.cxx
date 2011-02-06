@@ -37,7 +37,7 @@ static const double M3_PER_IMPGAL = 1.0/IMPGAL_PER_M3;
 
 TankProperties::TankProperties(SGPropertyNode_ptr rootNode ) :
   _content_kg(0.0),
-  _density_kgpm3(755.0), // avg. AVGAS density (more or less)
+  _density_kgpm3(0.0),
   _capacity_m3(0.0)
 {
   _tiedProperties.setRoot( rootNode );
