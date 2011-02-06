@@ -32,7 +32,7 @@
 #include "terrainsampler.hxx"
 using simgear::PropertyList;
 
-#include "tiedpropertylist.hxx"
+#include <simgear/props/tiedpropertylist.hxx>
 
 namespace Environment {
 /**
@@ -93,7 +93,7 @@ private:
     SGPropertyNode_ptr _positionLongitudeNode;
 
     deque<double> _elevations;
-    TiedPropertyList _tiedProperties;
+    simgear::TiedPropertyList _tiedProperties;
 };
 
 AreaSampler::AreaSampler( SGPropertyNode_ptr rootNode ) :
@@ -329,7 +329,7 @@ private:
 
     SGPropertyNode_ptr _rootNode;
     bool _enabled;
-    TiedPropertyList _tiedProperties;
+    simgear::TiedPropertyList _tiedProperties;
 };
 
 TerrainSamplerImplementation::TerrainSamplerImplementation( SGPropertyNode_ptr rootNode ) :

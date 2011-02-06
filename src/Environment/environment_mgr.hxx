@@ -25,7 +25,7 @@
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/SGMath.hxx>
-#include "tiedpropertylist.hxx"
+#include <simgear/props/tiedpropertylist.hxx>
 
 #ifdef SG_HAVE_STD_INCLUDES
 #  include <cmath>
@@ -96,7 +96,7 @@ private:
   FGClouds *fgClouds;
   SGPropertyNode_ptr _altitudeNode;
   bool _cloudLayersDirty;
-  TiedPropertyList _tiedProperties;
+  simgear::TiedPropertyList _tiedProperties;
 };
 
 #endif // _ENVIRONMENT_MGR_HXX

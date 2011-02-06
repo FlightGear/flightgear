@@ -654,7 +654,7 @@ string DCLGPS::ExpandSIAPIdent(const string& ident) {
 	Col 107-111	MSA center fix.  We can ignore this.
 */
 void DCLGPS::LoadApproachData() {
-	FGNPIAP* iap;
+	FGNPIAP* iap = NULL;
 	GPSWaypoint* wp;
 	GPSFlightPlan* fp;
 	const GPSWaypoint* cwp;

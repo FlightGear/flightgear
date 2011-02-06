@@ -70,10 +70,6 @@ FGModelMgr::add_model (SGPropertyNode * node)
 {
   SG_LOG(SG_GENERAL, SG_INFO,
          "Adding model " << node->getStringValue("name", "[unnamed]"));
-  Instance * instance = new Instance;
-  SGModelPlacement *model = new SGModelPlacement;
-  instance->model = model;
-  instance->node = node;
 
   const char *path = node->getStringValue("path", "Models/Geometry/glider.ac");
   osg::Node *object;
@@ -83,9 +79,13 @@ FGModelMgr::add_model (SGPropertyNode * node)
   } catch (const sg_throwable& t) {
     SG_LOG(SG_GENERAL, SG_ALERT, "Error loading " << path << ":\n  "
         << t.getFormattedMessage() << t.getOrigin());
-    delete instance;
     return;
   }
+  
+  Instance * instance = new Instance;
+  SGModelPlacement *model = new SGModelPlacement;
+  instance->model = model;
+  instance->node = node;
 
   model->init( object );
 

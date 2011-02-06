@@ -99,7 +99,7 @@ void Rotorpart::inititeration(float dt,float *rot)
     float b;
     b=_rotor->getBalance();
     float s =Math::sin(_phi+_direction);
-    float c =Math::cos(_phi+_direction);
+    //float c =Math::cos(_phi+_direction);
     if (s>0)
         _balance=(b>0)?(1.-s*(1.-b)):(1.-s)*(1.+b);
     else
@@ -548,7 +548,7 @@ void Rotorpart::calcForce(float* v, float rho,  float* out, float* torque,
 
     float dirblade[3];
     Math::cross3(_normal,_directionofcentripetalforce,dirblade);
-    float vblade=Math::abs(Math::dot3(dirblade,v));
+    //float vblade=Math::abs(Math::dot3(dirblade,v));
 
     alpha=_alphaalt+(alpha-_alphaalt)*factor;
     _alpha=alpha;

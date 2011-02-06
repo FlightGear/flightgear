@@ -25,7 +25,7 @@
 
 #include <Airports/simple.hxx>
 #include <simgear/props/props.hxx>
-#include "tiedpropertylist.hxx"
+#include <simgear/props/tiedpropertylist.hxx>
 
 namespace Environment {
 
@@ -89,7 +89,7 @@ private:
     bool _snow_cover;
     std::string _decoded;
 protected:
-    TiedPropertyList _tiedProperties;
+    simgear::TiedPropertyList _tiedProperties;
     MagneticVariation * _magneticVariation;
 };
 

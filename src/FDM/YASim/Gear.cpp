@@ -332,8 +332,10 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
     float b = ground[3] - Math::dot3(tmp, ground)+BumpAltitude;
 
     // Calculate the point of ground _contact.
-    _frac = a/(a-b);
-    if(b < 0) _frac = 1;
+    if(b < 0)
+        _frac = 1;
+    else
+        _frac = a/(a-b);
     for(i=0; i<3; i++)
 	_contact[i] = _pos[i] + _frac*_cmpr[i];
 

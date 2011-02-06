@@ -123,7 +123,7 @@ private:
     LayerTable _aloft_table;
 
     FGEnvironment _environment;
-    TiedPropertyList _tiedProperties;
+    simgear::TiedPropertyList _tiedProperties;
 };
 
 //////////////////////////////////////////////////////////////////////////////
