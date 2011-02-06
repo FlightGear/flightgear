@@ -2450,6 +2450,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\FDM\TankProperties.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\FDM\TankProperties.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\FDM\flight.cxx"
 				>
 			</File>
