@@ -25,7 +25,6 @@
 #endif
 
 #include "realwx_ctrl.hxx"
-#include "tiedpropertylist.hxx"
 #include "metarproperties.hxx"
 #include "metarairportfilter.hxx"
 #include "fgmetar.hxx"
@@ -34,6 +33,7 @@
 
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
 #include <algorithm>
 #if defined(ENABLE_THREADS)
 #include <OpenThreads/Thread>
@@ -105,7 +105,7 @@ protected:
 
     bool _enabled;
     bool __enabled;
-    TiedPropertyList _tiedProperties;
+    simgear::TiedPropertyList _tiedProperties;
  ;   typedef std::vector<LiveMetarProperties_ptr> MetarPropertiesList;
     MetarPropertiesList _metarProperties;
 };

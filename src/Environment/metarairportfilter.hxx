@@ -24,7 +24,6 @@
 
 #include <Airports/simple.hxx>
 #include <simgear/props/props.hxx>
-#include "tiedpropertylist.hxx"
 
 namespace Environment {
 

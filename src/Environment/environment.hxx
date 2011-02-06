@@ -25,7 +25,7 @@
 #include <simgear/compiler.h>
 
 #include <cmath>
-#include "tiedpropertylist.hxx"
+#include <simgear/props/tiedpropertylist.hxx>
 
 /**
  * Model the natural environment.
@@ -146,7 +146,7 @@ private:
   double wind_from_down_fps;
 
   bool     live_update;
-  TiedPropertyList _tiedProperties;
+  simgear::TiedPropertyList _tiedProperties;
 
 };
 
