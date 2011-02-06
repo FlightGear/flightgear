@@ -24,6 +24,7 @@
 #define FG_FDM_SHELL_HXX
 
 #include <simgear/structure/subsystem_mgr.hxx>
+#include "TankProperties.hxx"
 
 // forward decls
 class FGInterface;
@@ -54,6 +55,7 @@ private:
 
   void createImplementation();
   
+  TankPropertiesList _tankProperties;
   FGInterface* _impl;
   SGPropertyNode* _props; // root property tree for this FDM instance
   bool _dataLogging;

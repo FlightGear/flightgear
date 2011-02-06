@@ -130,6 +130,7 @@ set(SOURCES
 	fdm_shell.cxx
 	flight.cxx
 	flightProperties.cxx
+	TankProperties.cxx
 	groundcache.cxx
 	${SP_FDM_SOURCES}
 	ExternalNet/ExternalNet.cxx

@@ -13,6 +13,7 @@ libFlight_a_SOURCES = \
 	flight.cxx flight.hxx \
 	fdm_shell.cxx fdm_shell.hxx \
 	flightProperties.cxx flightProperties.hxx \
+	TankProperties.cxx TankProperties.hxx \
 	groundcache.cxx groundcache.hxx \
 	UFO.cxx UFO.hxx \
 	NullFDM.cxx NullFDM.hxx

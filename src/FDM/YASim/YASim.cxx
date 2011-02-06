@@ -95,9 +95,10 @@ void YASim::bind()
     // Run the superclass bind to set up a bunch of property ties
     FGInterface::bind();
 
+//Torsten Dreyer: we shouldn't do this anymore because we don't set these values nomore
     // Now UNtie the ones that we are going to set ourselves.
-    fgUntie("/consumables/fuel/tank[0]/level-gal_us");
-    fgUntie("/consumables/fuel/tank[1]/level-gal_us");
+//    fgUntie("/consumables/fuel/tank[0]/level-gal_us");
+//    fgUntie("/consumables/fuel/tank[1]/level-gal_us");
 
     char buf[256];
     for(int i=0; i<_fdm->getAirplane()->getModel()->numThrusters(); i++) {
