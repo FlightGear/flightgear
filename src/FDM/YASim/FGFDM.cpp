@@ -132,8 +132,9 @@ void FGFDM::init()
         sprintf(buf, "/consumables/fuel/tank[%d]/density-ppg", i);
         fgSetDouble(buf, density * (KG2LBS/CM2GALS));
 
-        sprintf(buf, "/consumables/fuel/tank[%d]/level-gal_us", i);
-        fgSetDouble(buf, _airplane.getFuel(i) * CM2GALS / density);
+// set in TankProperties class
+//        sprintf(buf, "/consumables/fuel/tank[%d]/level-gal_us", i);
+//        fgSetDouble(buf, _airplane.getFuel(i) * CM2GALS / density);
 
         sprintf(buf, "/consumables/fuel/tank[%d]/capacity-gal_us", i);
         fgSetDouble(buf, CM2GALS * _airplane.getTankCapacity(i)/density);

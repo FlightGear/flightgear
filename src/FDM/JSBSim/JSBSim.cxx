@@ -212,15 +212,17 @@ FGJSBsim::FGJSBsim( double dt )
 
     // Set initial fuel levels if provided.
     for (unsigned int i = 0; i < Propulsion->GetNumTanks(); i++) {
+      double d;
       SGPropertyNode * node = fgGetNode("/consumables/fuel/tank", i, true);
-      if (node->getChild("level-gal_us", 0, false) != 0) {
-        Propulsion->GetTank(i)->SetContents(node->getDoubleValue("level-gal_us") * 6.6);
-      } else {
-        node->setDoubleValue("level-lbs", Propulsion->GetTank(i)->GetContents());
-        node->setDoubleValue("level-gal_us", Propulsion->GetTank(i)->GetContents() / 6.6);
-      }
-      node->setDoubleValue("capacity-gal_us",
-                           Propulsion->GetTank(i)->GetCapacity() / 6.6);
+      FGTank* tank = Propulsion->GetTank(i);
+
+      d = node->getNode( "density-ppg", true )->getDoubleValue();
+      if( d > 0.0 )
+        tank->SetDensity( d );
+
+      d = node->getNode( "level-lbs", true )->getDoubleValue();
+      if( d > 0.0 )
+        tank->SetContents( d );
     }
     Propulsion->SetFuelFreeze((fgGetNode("/sim/freeze/fuel",true))->getBoolValue());
 
@@ -676,8 +678,13 @@ bool FGJSBsim::copy_to_JSBsim()
     for (i = 0; i < Propulsion->GetNumTanks(); i++) {
       SGPropertyNode * node = fgGetNode("/consumables/fuel/tank", i, true);
       FGTank * tank = Propulsion->GetTank(i);
-      tank->SetContents(node->getDoubleValue("level-gal_us") * 6.6);
-//       tank->SetContents(node->getDoubleValue("level-lbs"));
+      double fuelDensity = node->getDoubleValue("density-ppg");
+
+      if (fuelDensity < 0.1)
+        fuelDensity = 6.0; // Use average fuel value
+
+      tank->SetDensity(fuelDensity);
+      tank->SetContents(node->getDoubleValue("level-lbs"));
     }
 
     Propulsion->SetFuelFreeze((fgGetNode("/sim/freeze/fuel",true))->getBoolValue());
@@ -915,7 +922,12 @@ bool FGJSBsim::copy_from_JSBsim()
         FGTank* tank = Propulsion->GetTank(i);
         double contents = tank->GetContents();
         double temp = tank->GetTemperature_degC();
-        node->setDoubleValue("level-gal_us", contents/6.6);
+        double fuelDensity = tank->GetDensity();
+
+        if (fuelDensity < 0.1)
+          fuelDensity = 6.0; // Use average fuel value
+
+        node->setDoubleValue("density-ppg" , fuelDensity);
         node->setDoubleValue("level-lbs", contents);
         if (temp != -9999.0) node->setDoubleValue("temperature_degC", temp);
       }

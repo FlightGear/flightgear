@@ -49,6 +49,7 @@
 #include <FDM/NullFDM.hxx>
 #include <FDM/YASim/YASim.hxx>
 
+
 /*
  * Evil global variable required by Network/FGNative,
  * see that class for more information
@@ -56,6 +57,7 @@
 FGInterface* evil_global_fdm_state = NULL;
 
 FDMShell::FDMShell() :
+  _tankProperties( fgGetNode("/consumables/fuel", true) ),
   _impl(NULL),
   _dataLogging(false)
 {
