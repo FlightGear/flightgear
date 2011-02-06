@@ -424,6 +424,33 @@ void FGJSBsim::init()
 
 /******************************************************************************/
 
+void checkTied ( FGPropertyManager *node )
+{
+  int N = node->nChildren();
+  string name;
+
+  for (int i=0; i<N; i++) {
+    if (node->getChild(i)->nChildren() ) {
+      checkTied( (FGPropertyManager*)node->getChild(i) );
+    }
+    if ( node->getChild(i)->isTied() ) {
+      name = ((FGPropertyManager*)node->getChild(i))->GetFullyQualifiedName();
+      node->Untie(name);
+    }
+  }
+}
+
+/******************************************************************************/
+
+void FGJSBsim::unbind()
+{
+  SGPropertyNode* instance = globals->get_props()->getNode("/fdm/jsbsim");
+  checkTied((FGPropertyManager*)instance);
+  FGInterface::unbind();
+}
+
+/******************************************************************************/
+
 // Run an iteration of the EOM (equations of motion)
 
 void FGJSBsim::update( double dt )

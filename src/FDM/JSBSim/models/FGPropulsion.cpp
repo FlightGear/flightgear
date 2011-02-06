@@ -307,18 +307,23 @@ bool FGPropulsion::Load(Element* el)
     try {
       if (type == "piston_engine") {
         HavePistonEngine = true;
+        if (!IsBound) bind();
         Engines.push_back(new FGPiston(FDMExec, document, numEngines));
       } else if (type == "turbine_engine") {
         HaveTurbineEngine = true;
+        if (!IsBound) bind();
         Engines.push_back(new FGTurbine(FDMExec, document, numEngines));
       } else if (type == "turboprop_engine") {
         HaveTurboPropEngine = true;
+        if (!IsBound) bind();
         Engines.push_back(new FGTurboProp(FDMExec, document, numEngines));
       } else if (type == "rocket_engine") {
         HaveRocketEngine = true;
+        if (!IsBound) bind();
         Engines.push_back(new FGRocket(FDMExec, document, numEngines));
       } else if (type == "electric_engine") {
         HaveElectricEngine = true;
+        if (!IsBound) bind();
         Engines.push_back(new FGElectric(FDMExec, document, numEngines));
       } else {
         cerr << "Unknown engine type: " << type << endl;
@@ -345,7 +350,6 @@ bool FGPropulsion::Load(Element* el)
   if (el->FindElement("dump-rate"))
     DumpRate = el->FindElementValueAsNumberConvertTo("dump-rate", "LBS/MIN");
 
-  if (!IsBound) bind();
   PostLoad(el, PropertyManager);
 
   return true;
@@ -642,7 +646,7 @@ void FGPropulsion::bind(void)
   typedef int (FGPropulsion::*iPMF)(void) const;
 
   IsBound = true;
-  PropertyManager->Tie("propulsion/set-running", this, (iPMF)0, &FGPropulsion::InitRunning, true);
+  PropertyManager->Tie("propulsion/set-running", this, (iPMF)0, &FGPropulsion::InitRunning, false);
   if (HaveTurbineEngine) {
     PropertyManager->Tie("propulsion/starter_cmd", this, (iPMF)0, &FGPropulsion::SetStarter,  true);
     PropertyManager->Tie("propulsion/cutoff_cmd", this,  (iPMF)0, &FGPropulsion::SetCutoff,   true);
