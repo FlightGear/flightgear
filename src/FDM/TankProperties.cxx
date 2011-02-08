@@ -106,7 +106,8 @@ double TankProperties::getContent_m3() const
 
 void TankProperties::setContent_m3( double value )
 {
-  _content_kg = value * _density_kgpm3;
+  // ugly hack to allow setting of a volumetric content without having the density
+  _content_kg = value * (_density_kgpm3>0.0?_density_kgpm3:755.0);
 }
 
 double TankProperties::getContent_gal_us() const
@@ -172,9 +173,11 @@ void TankProperties::setContent_norm( double value )
 TankPropertiesList::TankPropertiesList( SGPropertyNode_ptr rootNode )
 {
   // we don't have a global rule how many tanks we support, so I assume eight.
-  // Because hard coded values suck, make it settable by a property
-  size_type n = rootNode->getIntValue( "numtanks", 8 );
-  for( size_type i = 0; i < n; i++ ) {
+  // Because hard coded values suck, make it settable by a property.
+  // If tanks were configured, use that number
+  int n = rootNode->nChildren();
+  if( n == 0 ) n = rootNode->getIntValue( "numtanks", 8 );
+  for( int i = 0; i < n; i++ ) {
     push_back( new TankProperties( rootNode->getChild( "tank", i, true ) ) );
   }
 
