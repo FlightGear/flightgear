@@ -290,7 +290,7 @@ void sync_tree(const char* dir) {
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 typedef void (__cdecl * sighandler_t)(int);
-#elif defined( __APPLE__ )
+#elif defined( __APPLE__ ) || defined (__FreeBSD__)
 typedef sig_t sighandler_t;
 #endif
 
