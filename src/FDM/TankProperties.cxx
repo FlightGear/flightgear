@@ -38,12 +38,14 @@ static const double M3_PER_IMPGAL = 1.0/IMPGAL_PER_M3;
 TankProperties::TankProperties(SGPropertyNode_ptr rootNode ) :
   _content_kg(0.0),
   _density_kgpm3(0.0),
-  _capacity_m3(0.0)
+  _capacity_m3(0.0),
+  _unusable_m3(0.0)
 {
   _tiedProperties.setRoot( rootNode );
   _tiedProperties.Tie("level-kg", this, &TankProperties::getContent_kg, &TankProperties::setContent_kg );
   _tiedProperties.Tie("density-kgpm3", this, &TankProperties::getDensity_kgpm3, &TankProperties::setDensity_kgpm3 );
   _tiedProperties.Tie("capacity-m3", this, &TankProperties::getCapacity_m3, &TankProperties::setCapacity_m3 );
+  _tiedProperties.Tie("unusable-m3", this, &TankProperties::getUnusable_m3, &TankProperties::setUnusable_m3 );
   _tiedProperties.Tie("level-m3", this, &TankProperties::getContent_m3, &TankProperties::setContent_m3 );
   _tiedProperties.Tie("level-norm", this, &TankProperties::getContent_norm, &TankProperties::setContent_norm );
 
@@ -51,8 +53,14 @@ TankProperties::TankProperties(SGPropertyNode_ptr rootNode ) :
   _tiedProperties.Tie("level-lbs", this, &TankProperties::getContent_lbs, &TankProperties::setContent_lbs );
   _tiedProperties.Tie("level-gal_us", this, &TankProperties::getContent_gal_us, &TankProperties::setContent_gal_us );
   _tiedProperties.Tie("level-gal_imp", this, &TankProperties::getContent_gal_imp, &TankProperties::setContent_gal_imp );
+
   _tiedProperties.Tie("capacity-gal_us", this, &TankProperties::getCapacity_gal_us, &TankProperties::setCapacity_gal_us );
+  _tiedProperties.Tie("unusable-gal_us", this, &TankProperties::getUnusable_gal_us, &TankProperties::setUnusable_gal_us );
+
   _tiedProperties.Tie("capacity-gal_imp", this, &TankProperties::getCapacity_gal_imp, &TankProperties::setCapacity_gal_imp );
+  _tiedProperties.Tie("unusable-gal_imp", this, &TankProperties::getUnusable_gal_imp, &TankProperties::setUnusable_gal_imp );
+
+  _tiedProperties.Tie("empty", this, &TankProperties::getEmpty );
 }
 
 TankProperties::~TankProperties()
@@ -160,6 +168,37 @@ void TankProperties::setCapacity_gal_imp( double value )
   _capacity_m3 = value * M3_PER_IMPGAL;
 }
 
+double TankProperties::getUnusable_m3() const
+{
+  return _unusable_m3;
+}
+
+void TankProperties::setUnusable_m3( double value )
+{
+  _unusable_m3 = value;
+}
+
+double TankProperties::getUnusable_gal_us() const
+{
+  return _unusable_m3 * USGAL_PER_M3;
+}
+
+void TankProperties::setUnusable_gal_us( double value )
+{
+  _unusable_m3 = value * M3_PER_USGAL;
+}
+
+
+double TankProperties::getUnusable_gal_imp() const
+{
+  return _unusable_m3 * IMPGAL_PER_M3;
+}
+
+void TankProperties::setUnusable_gal_imp( double value )
+{
+  _unusable_m3 = value * M3_PER_IMPGAL;
+}
+
 double TankProperties::getContent_norm() const
 {
   return  _capacity_m3 > SGLimitsd::min() ? getContent_m3() / _capacity_m3 : 0.0;
@@ -170,12 +209,17 @@ void TankProperties::setContent_norm( double value )
   setContent_m3(_capacity_m3 * value);
 }
 
+bool TankProperties::getEmpty() const
+{
+  return getContent_m3() <= _unusable_m3;
+}
+
 TankPropertiesList::TankPropertiesList( SGPropertyNode_ptr rootNode )
 {
   // we don't have a global rule how many tanks we support, so I assume eight.
   // Because hard coded values suck, make it settable by a property.
   // If tanks were configured, use that number
-  int n = rootNode->nChildren();
+  int n = rootNode->getChildren("tank").size();
   if( n == 0 ) n = rootNode->getIntValue( "numtanks", 8 );
   for( int i = 0; i < n; i++ ) {
     push_back( new TankProperties( rootNode->getChild( "tank", i, true ) ) );
