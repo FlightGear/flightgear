@@ -52,10 +52,33 @@ using simgear::SGModelLib;
 using simgear::TileEntry;
 using simgear::TileCache;
 
+
+// helper: listen to property changes affecting tile loading
+class LoaderPropertyWatcher : public SGPropertyChangeListener
+{
+public:
+    LoaderPropertyWatcher(FGTileMgr* pTileMgr) :
+        _pTileMgr(pTileMgr)
+    {
+    }
+
+    virtual void valueChanged(SGPropertyNode*)
+    {
+        _pTileMgr->configChanged();
+    }
+
+private:
+    FGTileMgr* _pTileMgr;
+};
+
+
 FGTileMgr::FGTileMgr():
     state( Start ),
-    vis( 16000 )
+    vis( 16000 ),
+    _propListener(new LoaderPropertyWatcher(this))
 {
+    _randomObjects = fgGetNode("/sim/rendering/random-objects", true);
+    _randomVegetation = fgGetNode("/sim/rendering/random-vegetation", true);
 }
 
 
@@ -63,6 +86,8 @@ FGTileMgr::~FGTileMgr() {
     // remove all nodes we might have left behind
     osg::Group* group = globals->get_scenery()->get_terrain_branch();
     group->removeChildren(0, group->getNumChildren());
+    delete _propListener;
+    _propListener = NULL;
 }
 
 
@@ -72,8 +97,11 @@ void FGTileMgr::init() {
 
     _options = new SGReaderWriterBTGOptions;
     _options->setMatlib(globals->get_matlib());
-    _options->setUseRandomObjects(fgGetBool("/sim/rendering/random-objects", true));
-    _options->setUseRandomVegetation(fgGetBool("/sim/rendering/random-vegetation", true));
+
+    _randomObjects.get()->addChangeListener(_propListener, false);
+    _randomVegetation.get()->addChangeListener(_propListener, false);
+    configChanged();
+
     osgDB::FilePathList &fp = _options->getDatabasePathList();
     const string_list &sc = globals->get_fg_scenery();
     fp.clear();
@@ -101,6 +129,11 @@ void FGTileMgr::reinit()
     update(0.0);
 }
 
+void FGTileMgr::configChanged()
+{
+    _options->setUseRandomObjects(_randomObjects.get()->getBoolValue());
+    _options->setUseRandomVegetation(_randomVegetation.get()->getBoolValue());
+}
 
 /* schedule a tile for loading, keep request for given amount of time.
  * Returns true if tile is already loaded. */
