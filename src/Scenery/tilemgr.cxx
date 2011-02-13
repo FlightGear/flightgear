@@ -117,6 +117,9 @@ void FGTileMgr::init() {
 
 void FGTileMgr::reinit()
 {
+    // remove all old scenery nodes from scenegraph and clear cache
+    osg::Group* group = globals->get_scenery()->get_terrain_branch();
+    group->removeChildren(0, group->getNumChildren());
     tile_cache.init();
     
     state = Inited;
