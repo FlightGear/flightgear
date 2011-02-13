@@ -247,7 +247,7 @@ do_reinit (const SGPropertyNode * arg)
             if (subsystem == 0) {
                 result = false;
                 SG_LOG( SG_GENERAL, SG_ALERT,
-                        "Subsystem " << name << "not found" );
+                        "Subsystem " << name << " not found" );
             } else {
                 subsystem->reinit();
             }
@@ -280,7 +280,7 @@ do_suspend (const SGPropertyNode * arg)
         SGSubsystem * subsystem = globals->get_subsystem(name);
         if (subsystem == 0) {
             result = false;
-            SG_LOG(SG_GENERAL, SG_ALERT, "Subsystem " << name << "not found");
+            SG_LOG(SG_GENERAL, SG_ALERT, "Subsystem " << name << " not found");
         } else {
             subsystem->suspend();
         }
@@ -304,7 +304,7 @@ do_resume (const SGPropertyNode * arg)
         SGSubsystem * subsystem = globals->get_subsystem(name);
         if (subsystem == 0) {
             result = false;
-            SG_LOG(SG_GENERAL, SG_ALERT, "Subsystem " << name << "not found");
+            SG_LOG(SG_GENERAL, SG_ALERT, "Subsystem " << name << " not found");
         } else {
             subsystem->resume();
         }
