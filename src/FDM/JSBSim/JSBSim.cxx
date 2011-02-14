@@ -540,7 +540,7 @@ void FGJSBsim::update( double dt )
     }
 
     FGJSBBase::Message* msg;
-    while (msg = fdmex->ProcessNextMessage()) {
+    while ((msg = fdmex->ProcessNextMessage()) != NULL) {
 //      msg = fdmex->ProcessNextMessage();
       switch (msg->type) {
       case FGJSBBase::Message::eText:
@@ -636,7 +636,7 @@ bool FGJSBsim::copy_to_JSBsim()
         } // end FGTurbine code block
       case FGEngine::etRocket:
         { // FGRocket code block
-        FGRocket* eng = (FGRocket*)Propulsion->GetEngine(i);
+//        FGRocket* eng = (FGRocket*)Propulsion->GetEngine(i);
         break;
         } // end FGRocket code block
       case FGEngine::etTurboprop:
@@ -828,7 +828,7 @@ bool FGJSBsim::copy_from_JSBsim()
         break;
       case FGEngine::etRocket:
         { // FGRocket code block
-        FGRocket* eng = (FGRocket*)Propulsion->GetEngine(i);
+//        FGRocket* eng = (FGRocket*)Propulsion->GetEngine(i);
         } // end FGRocket code block
         break;
       case FGEngine::etTurbine:
@@ -898,7 +898,7 @@ bool FGJSBsim::copy_from_JSBsim()
       switch (thruster->GetType()) {
       case FGThruster::ttNozzle:
         { // FGNozzle code block
-        FGNozzle* noz = (FGNozzle*)thruster;
+//        FGNozzle* noz = (FGNozzle*)thruster;
         } // end FGNozzle code block
         break;
       case FGThruster::ttPropeller:
@@ -912,7 +912,7 @@ bool FGJSBsim::copy_from_JSBsim()
         break;
       case FGThruster::ttRotor:
         { // FGRotor code block
-        FGRotor* rotor = (FGRotor*)thruster;
+//        FGRotor* rotor = (FGRotor*)thruster;
         } // end FGRotor code block
         break;
       case FGThruster::ttDirect:
