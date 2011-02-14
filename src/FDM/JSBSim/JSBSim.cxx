@@ -839,7 +839,7 @@ bool FGJSBsim::copy_from_JSBsim()
         node->setDoubleValue("egt-degf", 32 + eng->GetEGT()*9/5);
         node->setBoolValue("augmentation", eng->GetAugmentation());
         node->setBoolValue("water-injection", eng->GetInjection());
-        node->setBoolValue("ignition", eng->GetIgnition());
+        node->setBoolValue("ignition", eng->GetIgnition() != 0);
         node->setDoubleValue("nozzle-pos-norm", eng->GetNozzle());
         node->setDoubleValue("inlet-pos-norm", eng->GetInlet());
         node->setDoubleValue("oil-pressure-psi", eng->getOilPressure_psi());
@@ -858,7 +858,7 @@ bool FGJSBsim::copy_from_JSBsim()
         node->setDoubleValue("n1", eng->GetN1());
         //node->setDoubleValue("n2", eng->GetN2());
         node->setDoubleValue("itt_degf", 32 + eng->GetITT()*9/5);
-        node->setBoolValue("ignition", eng->GetIgnition());
+        node->setBoolValue("ignition", eng->GetIgnition() != 0);
         node->setDoubleValue("nozzle-pos-norm", eng->GetNozzle());
         node->setDoubleValue("inlet-pos-norm", eng->GetInlet());
         node->setDoubleValue("oil-pressure-psi", eng->getOilPressure_psi());
@@ -866,7 +866,7 @@ bool FGJSBsim::copy_from_JSBsim()
         node->setBoolValue("cutoff", eng->GetCutoff());
         node->setBoolValue("starting", eng->GetEngStarting());
         node->setBoolValue("generator-power", eng->GetGeneratorPower());
-        node->setBoolValue("damaged", eng->GetCondition());
+        node->setBoolValue("damaged", eng->GetCondition() != 0);
         node->setBoolValue("ielu-intervent", eng->GetIeluIntervent());
         node->setDoubleValue("oil-temperature-degf", eng->getOilTemp_degF());
 //        node->setBoolValue("onfire", eng->GetFire());
