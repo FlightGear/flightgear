@@ -1557,8 +1557,7 @@ void fgReInitSubsystems()
     globals->get_viewmgr()->reinit();
 
     globals->get_subsystem("time")->reinit();
-    globals->get_subsystem("tile-manager")->reinit();
-    
+
 // setup state to end re-init
     fgSetBool("/sim/signals/reinit", false);
     if ( !freeze ) {

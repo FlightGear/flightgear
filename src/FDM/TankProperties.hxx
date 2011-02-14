@@ -64,8 +64,19 @@ public:
   double getCapacity_gal_imp() const;
   void setCapacity_gal_imp( double value );
 
+  double getUnusable_m3() const;
+  void setUnusable_m3( double value );
+
+  double getUnusable_gal_us() const;
+  void setUnusable_gal_us( double value );
+
+  double getUnusable_gal_imp() const;
+  void setUnusable_gal_imp( double value );
+
   double getContent_norm() const;
   void setContent_norm( double value );
+
+  bool getEmpty() const;
 
 protected:
   simgear::TiedPropertyList _tiedProperties;
@@ -73,6 +84,7 @@ protected:
   double _content_kg;
   double _density_kgpm3;
   double _capacity_m3;
+  double _unusable_m3;
 };
 
 class TankPropertiesList : std::vector<SGSharedPtr<TankProperties> > {

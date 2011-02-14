@@ -103,42 +103,20 @@ void FGRidgeLift::init(void)
 void FGRidgeLift::bind() {
 	string prop;
 
+	_tiedProperties.setRoot( fgGetNode("/environment/ridge-lift",true));
 	for( int i = 0; i < 5; i++ ) {
-		prop = CreateIndexedPropertyName("/environment/ridge-lift/probe-elev-m", i );
-		fgTie( prop.c_str(), this, i, &FGRidgeLift::get_probe_elev_m); // read-only
-
-		prop = CreateIndexedPropertyName("/environment/ridge-lift/probe-lat-deg", i );
-		fgTie( prop.c_str(), this, i, &FGRidgeLift::get_probe_lat_deg); // read-only
-
-		prop = CreateIndexedPropertyName("/environment/ridge-lift/probe-lon-deg", i );
-		fgTie( prop.c_str(), this, i, &FGRidgeLift::get_probe_lon_deg); // read-only
+		_tiedProperties.Tie( "probe-elev-m", i, this, i, &FGRidgeLift::get_probe_elev_m );
+		_tiedProperties.Tie( "probe-lat-deg", i, this, i, &FGRidgeLift::get_probe_lat_deg );
+		_tiedProperties.Tie( "probe-lon-deg", i, this, i, &FGRidgeLift::get_probe_lon_deg );
 	}
 
 	for( int i = 0; i < 4; i++ ) {
-		prop = CreateIndexedPropertyName("/environment/ridge-lift/slope", i );
-		fgTie( prop.c_str(), this, i, &FGRidgeLift::get_slope); // read-only
+		_tiedProperties.Tie( "slope", i, this, i, &FGRidgeLift::get_slope );
 	}
 }
 
 void FGRidgeLift::unbind() {
-	string prop;
-
-	for( int i = 0; i < 5; i++ ) {
-
-		prop = CreateIndexedPropertyName("/environment/ridge-lift/probe-elev-m", i );
-		fgUntie( prop.c_str() );
-
-		prop = CreateIndexedPropertyName("/environment/ridge-lift/probe-lat-deg", i );
-		fgUntie( prop.c_str() );
-
-		prop = CreateIndexedPropertyName("/environment/ridge-lift/probe-lon-deg", i );
-		fgUntie( prop.c_str() );
-	}
-
-	for( int i = 0; i < 4; i++ ) {
-		prop = CreateIndexedPropertyName("/environment/ridge-lift/slope", i );
-		fgUntie( prop.c_str() );
-	}
+	_tiedProperties.Untie();
 }
 
 void FGRidgeLift::update(double dt) {

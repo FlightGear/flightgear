@@ -25,6 +25,7 @@
 #define _CONTROLS_HXX
 
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
 
 // Define a structure containing the control parameters
 
@@ -34,65 +35,65 @@ class FGControls : public SGSubsystem
 public:
 
     enum {
-	ALL_ENGINES = -1,
-	MAX_ENGINES = 12
+        ALL_ENGINES = -1,
+        MAX_ENGINES = 12
     };
 
     enum {
-	ALL_WHEELS = -1,
-	MAX_WHEELS = 3
+        ALL_WHEELS = -1,
+        MAX_WHEELS = 3
     };
 
     enum {
-	ALL_TANKS = -1,
-	MAX_TANKS = 8
+        ALL_TANKS = -1,
+        MAX_TANKS = 8
     };
 
     enum {
-	ALL_BOOSTPUMPS = -1,
-	MAX_BOOSTPUMPS = 2
+        ALL_BOOSTPUMPS = -1,
+        MAX_BOOSTPUMPS = 2
     };
 
     enum {
-	ALL_HYD_SYSTEMS = -1,
-	MAX_HYD_SYSTEMS = 4
+        ALL_HYD_SYSTEMS = -1,
+        MAX_HYD_SYSTEMS = 4
     };
 
     enum {
-	ALL_PACKS = -1,
-	MAX_PACKS = 4
+        ALL_PACKS = -1,
+        MAX_PACKS = 4
     };
 
     enum {
-	ALL_LIGHTS = -1,
-	MAX_LIGHTS = 4
+        ALL_LIGHTS = -1,
+        MAX_LIGHTS = 4
     };
 
     enum {
-	ALL_STATIONS = -1,
-	MAX_STATIONS = 12
+        ALL_STATIONS = -1,
+        MAX_STATIONS = 12
     };
 
     enum {
-	ALL_AUTOPILOTS = -1,
-	MAX_AUTOPILOTS = 3
+        ALL_AUTOPILOTS = -1,
+        MAX_AUTOPILOTS = 3
     };
 
     enum {
-	ALL_EJECTION_SEATS = -1,
-	MAX_EJECTION_SEATS = 10
+        ALL_EJECTION_SEATS = -1,
+        MAX_EJECTION_SEATS = 10
     };
    
     enum {
-	SEAT_SAFED = -1,
-	SEAT_ARMED = 0,
-	SEAT_FAIL = 1
+        SEAT_SAFED = -1,
+        SEAT_ARMED = 0,
+        SEAT_FAIL = 1
     };
    
     enum { 
-	CMD_SEL_NORM = -1,
-	CMD_SEL_AFT = 0,
-	CMD_SEL_SOLO = 1
+        CMD_SEL_NORM = -1,
+        CMD_SEL_AFT = 0,
+        CMD_SEL_SOLO = 1
     };
     
 private:
@@ -252,7 +253,7 @@ private:
      
 
     SGPropertyNode_ptr auto_coordination;
-
+    simgear::TiedPropertyList _tiedProperties;
 public:
 
     FGControls();
@@ -266,7 +267,7 @@ public:
 
     // Reset function
     void reset_all(void);
-	
+        
     // Query functions
     // controls/flight/
     inline double get_aileron() const { return aileron; }
@@ -298,7 +299,7 @@ public:
     inline bool get_cutoff(int engine) const { return cutoff[engine]; }
     inline double get_mixture(int engine) const { return mixture[engine]; }
     inline double get_prop_advance(int engine) const {
-	return prop_advance[engine];
+        return prop_advance[engine];
     }
     inline int get_magnetos(int engine) const { return magnetos[engine]; }
     inline int get_feed_tank(int engine) const { return feed_tank[engine]; }

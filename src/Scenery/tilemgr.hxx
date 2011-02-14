@@ -81,6 +81,9 @@ private:
     void update_queues();
     
     SGPropertyNode* _visibilityMeters;
+    SGPropertyChangeListener* _propListener;
+    SGPropertyNode_ptr _randomObjects;
+    SGPropertyNode_ptr _randomVegetation;
     
 public:
     FGTileMgr();
@@ -92,6 +95,9 @@ public:
     virtual void reinit();
 
     virtual void update(double dt);
+
+    // update loader configuration options
+    void configChanged();
 
     int schedule_tiles_at(const SGGeod& location, double rangeM);
 

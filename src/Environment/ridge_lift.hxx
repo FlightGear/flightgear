@@ -36,6 +36,7 @@
 #include <string>
 using std::string;
 
+#include <simgear/props/tiedpropertylist.hxx>
 
 class FGRidgeLift : public SGSubsystem {
 public:
@@ -80,6 +81,7 @@ private:
 	SGPropertyNode_ptr _user_latitude_node;
 	SGPropertyNode_ptr _ground_elev_node;
 
+	simgear::TiedPropertyList _tiedProperties;
 };
 
 #endif  // _FG_RidgeLift_HXX

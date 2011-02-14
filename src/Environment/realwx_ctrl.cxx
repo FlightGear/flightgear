@@ -191,6 +191,7 @@ public:
     NoaaMetarRealWxController( SGPropertyNode_ptr rootNode );
     virtual ~NoaaMetarRealWxController();
     virtual void update (bool first, double delta_time_sec);
+    virtual void shutdown ();
 
     class MetarLoadRequest {
     public:
@@ -234,14 +235,17 @@ private:
      class MetarLoadThread : public OpenThreads::Thread {
      public:
         MetarLoadThread( long maxAge );
+        virtual ~MetarLoadThread( ) { stop(); } 
         void requestMetar( const MetarLoadRequest & metarRequest, bool background = true );
         bool hasMetar() { return _responseQueue.size() > 0; }
         MetarLoadResponse getMetar() { return _responseQueue.pop(); }
         virtual void run();
+        void stop();
      private:
         void fetch( const MetarLoadRequest & );
         long _maxAge;
         long _minRequestInterval;
+        volatile bool _stop;
         SGBlockingQueue <MetarLoadRequest> _requestQueue;
         SGBlockingQueue <MetarLoadResponse> _responseQueue;
      };
@@ -261,16 +265,18 @@ NoaaMetarRealWxController::NoaaMetarRealWxController( SGPropertyNode_ptr rootNod
 #endif
 }
 
-NoaaMetarRealWxController::~NoaaMetarRealWxController()
+void NoaaMetarRealWxController::shutdown()
 {
 #if defined(ENABLE_THREADS)
     if( _metarLoadThread ) {
-        MetarLoadRequest request("");
-        _metarLoadThread->requestMetar(request);
-        _metarLoadThread->join();
         delete _metarLoadThread;
+        _metarLoadThread = NULL;
     }
 #endif // ENABLE_THREADS
+}
+
+NoaaMetarRealWxController::~NoaaMetarRealWxController()
+{
 }
 
 void NoaaMetarRealWxController::update( bool first, double dt )
@@ -319,7 +325,7 @@ void NoaaMetarRealWxController::update( bool first, double dt )
                     "NoaaMetarRealWxController::update(): spawning load request for station-id '" << stationId << "'" );
             
                 MetarLoadRequest request( stationId );
-                // load the metar for the neares airport in the foreground if the fdm is uninitialized
+                // load the metar for the nearest airport in the foreground if the fdm is uninitialized
                 // to make sure a metar is received
                 // before the automatic runway selection code runs. All subsequent calls
                 // run in the background
@@ -348,7 +354,8 @@ void NoaaMetarRealWxController::update( bool first, double dt )
 #if defined(ENABLE_THREADS)
 NoaaMetarRealWxController::MetarLoadThread::MetarLoadThread( long maxAge ) :
   _maxAge(maxAge),
-  _minRequestInterval(2000)
+  _minRequestInterval(2000),
+  _stop(false)
 {
 }
 
@@ -368,24 +375,41 @@ void NoaaMetarRealWxController::MetarLoadThread::requestMetar( const MetarLoadRe
     }
 }
 
+void NoaaMetarRealWxController::MetarLoadThread::stop()
+{
+    // set stop flag and wake up the thread with an empty request
+    _stop = true;
+    MetarLoadRequest request("");
+    requestMetar(request);
+    join();
+}
+
 void NoaaMetarRealWxController::MetarLoadThread::run()
 {
     SGTimeStamp lastRun = SGTimeStamp::fromSec(0);
     for( ;; ) {
         SGTimeStamp dt = SGTimeStamp::now() - lastRun;
 
-        if( dt.getSeconds() * 1000 < _minRequestInterval )
-            microSleep( (_minRequestInterval - dt.getSeconds() * 1000 ) * 1000 );
-        
-        lastRun = SGTimeStamp::now();
+        long delayMs = _minRequestInterval - dt.getSeconds() * 1000;
+        while (( delayMs > 0 ) && !_stop)
+        {
+            // sleep no more than 3 seconds at a time, otherwise shutdown response is too slow
+            long sleepMs = (delayMs>3000) ? 3000 : delayMs; 
+            microSleep( sleepMs * 1000 );
+            delayMs -= sleepMs;
+        }
 
+        if (_stop)
+            break;
+
+        lastRun = SGTimeStamp::now();
+ 
         const MetarLoadRequest request = _requestQueue.pop();
 
-        if( request._stationId.size() == 0 )
+        if (( request._stationId.size() == 0 ) || _stop)
             break;
 
         fetch( request );
-
     }
 }
 
