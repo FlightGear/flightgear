@@ -26,6 +26,7 @@
 #include "TankProperties.hxx"
 
 #include <simgear/math/SGMath.hxx>
+#include <simgear/sg_inlines.h>
 #include <Main/fg_props.hxx>
 
 static const double LBS_PER_KG = 2.20462262;
@@ -74,7 +75,7 @@ double TankProperties::getContent_kg() const
 
 void TankProperties::setContent_kg( double value )
 {
-  _content_kg = value;
+  _content_kg = SG_MAX2<double>(value, 0.0);
 }
 
 double TankProperties::getDensity_kgpm3() const
@@ -84,7 +85,7 @@ double TankProperties::getDensity_kgpm3() const
 
 void TankProperties::setDensity_kgpm3( double value )
 {
-  _density_kgpm3 = value;
+  _density_kgpm3 = SG_MAX2<double>(value, 0.0);
 }
 
 double TankProperties::getDensity_ppg() const
@@ -94,7 +95,7 @@ double TankProperties::getDensity_ppg() const
 
 void TankProperties::setDensity_ppg( double value )
 {
-  _density_kgpm3 = value * KG_PER_LBS / M3_PER_USGAL;
+  _density_kgpm3 = SG_MAX2<double>(value * KG_PER_LBS / M3_PER_USGAL, 0.0);
 }
 
 double TankProperties::getContent_lbs() const
@@ -104,7 +105,7 @@ double TankProperties::getContent_lbs() const
 
 void TankProperties::setContent_lbs( double value )
 {
-  _content_kg = value * KG_PER_LBS;
+  _content_kg = SG_MAX2<double>(value * KG_PER_LBS, 0.0);
 }
 
 double TankProperties::getContent_m3() const
@@ -115,7 +116,7 @@ double TankProperties::getContent_m3() const
 void TankProperties::setContent_m3( double value )
 {
   // ugly hack to allow setting of a volumetric content without having the density
-  _content_kg = value * (_density_kgpm3>0.0?_density_kgpm3:755.0);
+  _content_kg = SG_MAX2<double>(value * (_density_kgpm3>0.0?_density_kgpm3:755.0), 0.0);
 }
 
 double TankProperties::getContent_gal_us() const
@@ -145,7 +146,7 @@ double TankProperties::getCapacity_m3() const
 
 void TankProperties::setCapacity_m3( double value )
 {
-  _capacity_m3 = value;
+  _capacity_m3 = SG_MAX2<double>(value, 0.0);
 }
 
 double TankProperties::getCapacity_gal_us() const
@@ -155,7 +156,7 @@ double TankProperties::getCapacity_gal_us() const
 
 void TankProperties::setCapacity_gal_us( double value )
 {
-  _capacity_m3 = value * M3_PER_USGAL;
+  _capacity_m3 = SG_MAX2<double>(value * M3_PER_USGAL, 0.0);
 }
 
 double TankProperties::getCapacity_gal_imp() const
@@ -165,7 +166,7 @@ double TankProperties::getCapacity_gal_imp() const
 
 void TankProperties::setCapacity_gal_imp( double value )
 {
-  _capacity_m3 = value * M3_PER_IMPGAL;
+  _capacity_m3 = SG_MAX2<double>(value * M3_PER_IMPGAL, 0.0);
 }
 
 double TankProperties::getUnusable_m3() const
@@ -175,7 +176,7 @@ double TankProperties::getUnusable_m3() const
 
 void TankProperties::setUnusable_m3( double value )
 {
-  _unusable_m3 = value;
+  _unusable_m3 = SG_MAX2<double>(value, 0.0);
 }
 
 double TankProperties::getUnusable_gal_us() const
@@ -185,7 +186,7 @@ double TankProperties::getUnusable_gal_us() const
 
 void TankProperties::setUnusable_gal_us( double value )
 {
-  _unusable_m3 = value * M3_PER_USGAL;
+  _unusable_m3 = SG_MAX2<double>(value * M3_PER_USGAL, 0.0);
 }
 
 
@@ -196,7 +197,7 @@ double TankProperties::getUnusable_gal_imp() const
 
 void TankProperties::setUnusable_gal_imp( double value )
 {
-  _unusable_m3 = value * M3_PER_IMPGAL;
+  _unusable_m3 = SG_MAX2<double>(value * M3_PER_IMPGAL, 0.0);
 }
 
 double TankProperties::getContent_norm() const
