@@ -540,7 +540,7 @@ void FGJSBsim::update( double dt )
     }
 
     FGJSBBase::Message* msg;
-    while (msg = fdmex->ProcessNextMessage()) {
+    while ((msg = fdmex->ProcessNextMessage()) != NULL) {
 //      msg = fdmex->ProcessNextMessage();
       switch (msg->type) {
       case FGJSBBase::Message::eText:
@@ -636,7 +636,7 @@ bool FGJSBsim::copy_to_JSBsim()
         } // end FGTurbine code block
       case FGEngine::etRocket:
         { // FGRocket code block
-        FGRocket* eng = (FGRocket*)Propulsion->GetEngine(i);
+//        FGRocket* eng = (FGRocket*)Propulsion->GetEngine(i);
         break;
         } // end FGRocket code block
       case FGEngine::etTurboprop:
@@ -828,7 +828,7 @@ bool FGJSBsim::copy_from_JSBsim()
         break;
       case FGEngine::etRocket:
         { // FGRocket code block
-        FGRocket* eng = (FGRocket*)Propulsion->GetEngine(i);
+//        FGRocket* eng = (FGRocket*)Propulsion->GetEngine(i);
         } // end FGRocket code block
         break;
       case FGEngine::etTurbine:
@@ -839,7 +839,7 @@ bool FGJSBsim::copy_from_JSBsim()
         node->setDoubleValue("egt-degf", 32 + eng->GetEGT()*9/5);
         node->setBoolValue("augmentation", eng->GetAugmentation());
         node->setBoolValue("water-injection", eng->GetInjection());
-        node->setBoolValue("ignition", eng->GetIgnition());
+        node->setBoolValue("ignition", eng->GetIgnition() != 0);
         node->setDoubleValue("nozzle-pos-norm", eng->GetNozzle());
         node->setDoubleValue("inlet-pos-norm", eng->GetInlet());
         node->setDoubleValue("oil-pressure-psi", eng->getOilPressure_psi());
@@ -858,7 +858,7 @@ bool FGJSBsim::copy_from_JSBsim()
         node->setDoubleValue("n1", eng->GetN1());
         //node->setDoubleValue("n2", eng->GetN2());
         node->setDoubleValue("itt_degf", 32 + eng->GetITT()*9/5);
-        node->setBoolValue("ignition", eng->GetIgnition());
+        node->setBoolValue("ignition", eng->GetIgnition() != 0);
         node->setDoubleValue("nozzle-pos-norm", eng->GetNozzle());
         node->setDoubleValue("inlet-pos-norm", eng->GetInlet());
         node->setDoubleValue("oil-pressure-psi", eng->getOilPressure_psi());
@@ -866,7 +866,7 @@ bool FGJSBsim::copy_from_JSBsim()
         node->setBoolValue("cutoff", eng->GetCutoff());
         node->setBoolValue("starting", eng->GetEngStarting());
         node->setBoolValue("generator-power", eng->GetGeneratorPower());
-        node->setBoolValue("damaged", eng->GetCondition());
+        node->setBoolValue("damaged", eng->GetCondition() != 0);
         node->setBoolValue("ielu-intervent", eng->GetIeluIntervent());
         node->setDoubleValue("oil-temperature-degf", eng->getOilTemp_degF());
 //        node->setBoolValue("onfire", eng->GetFire());
@@ -898,7 +898,7 @@ bool FGJSBsim::copy_from_JSBsim()
       switch (thruster->GetType()) {
       case FGThruster::ttNozzle:
         { // FGNozzle code block
-        FGNozzle* noz = (FGNozzle*)thruster;
+//        FGNozzle* noz = (FGNozzle*)thruster;
         } // end FGNozzle code block
         break;
       case FGThruster::ttPropeller:
@@ -912,7 +912,7 @@ bool FGJSBsim::copy_from_JSBsim()
         break;
       case FGThruster::ttRotor:
         { // FGRotor code block
-        FGRotor* rotor = (FGRotor*)thruster;
+//        FGRotor* rotor = (FGRotor*)thruster;
         } // end FGRotor code block
         break;
       case FGThruster::ttDirect:
@@ -1217,8 +1217,8 @@ void FGJSBsim::do_trim(void)
 
   globals->get_controls()->set_elevator_trim(FCS->GetPitchTrimCmd());
   globals->get_controls()->set_elevator(FCS->GetDeCmd());
-  globals->get_controls()->set_throttle(FGControls::ALL_ENGINES,
-  FCS->GetThrottleCmd(0));
+  for( unsigned i = 0; i < Propulsion->GetNumEngines(); i++ )
+    globals->get_controls()->set_throttle(i, FCS->GetThrottleCmd(i));
 
   globals->get_controls()->set_aileron(FCS->GetDaCmd());
   globals->get_controls()->set_rudder( FCS->GetDrCmd());
