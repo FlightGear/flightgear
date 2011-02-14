@@ -1217,8 +1217,8 @@ void FGJSBsim::do_trim(void)
 
   globals->get_controls()->set_elevator_trim(FCS->GetPitchTrimCmd());
   globals->get_controls()->set_elevator(FCS->GetDeCmd());
-  globals->get_controls()->set_throttle(FGControls::ALL_ENGINES,
-  FCS->GetThrottleCmd(0));
+  for( unsigned i = 0; i < Propulsion->GetNumEngines(); i++ )
+    globals->get_controls()->set_throttle(i, FCS->GetThrottleCmd(i));
 
   globals->get_controls()->set_aileron(FCS->GetDaCmd());
   globals->get_controls()->set_rudder( FCS->GetDrCmd());
