@@ -44,15 +44,12 @@ SceneryPager::~SceneryPager()
 {
 }
 
+#if SG_PAGEDLOD_HAS_OPTIONS
+#else
 void SceneryPager::requestNodeFile(const std::string& fileName, Group* group,
                                    float priority, const FrameStamp* framestamp,
                                    ref_ptr<Referenced>& databaseRequest,
-#if SG_OSG_MIN_VERSION_REQUIRED(2,9,5)
-                                   const osg::Referenced* options
-#else
-                                   osgDB::ReaderWriter::Options* options
-#endif
-                                   )
+                                   osgDB::ReaderWriter::Options* options)
 {
     simgear::SGPagedLOD *sgplod = dynamic_cast<simgear::SGPagedLOD*>(group);
     if(sgplod)
@@ -64,6 +61,7 @@ void SceneryPager::requestNodeFile(const std::string& fileName, Group* group,
                                        databaseRequest,
                                        options);
 }
+#endif
 
 void SceneryPager::queueRequest(const std::string& fileName, Group* group,
                                 float priority, FrameStamp* frameStamp,
@@ -81,6 +79,35 @@ void SceneryPager::queueDeleteRequest(osg::ref_ptr<osg::Object>& objptr)
     _deleteRequests.push_back(objptr);
     objptr = 0;
 }
+
+// Work around interface change in
+// osgDB::DatabasePager::requestNodeFile
+namespace
+{
+struct NodePathProxy
+{
+    NodePathProxy(NodePath& nodePath)
+        : _nodePath(nodePath)
+    {
+    }
+    operator Group* () { return static_cast<Group*>(_nodePath.back()); }
+    operator NodePath& () { return _nodePath; }
+    NodePath& _nodePath;
+};
+}
+
+void SceneryPager::PagerRequest::doRequest(SceneryPager* pager)
+{
+    if (_group->getNumChildren() == 0) {
+        NodePath path;
+        path.push_back(_group.get());
+        pager->requestNodeFile(_fileName, NodePathProxy(path), _priority,
+                               _frameStamp.get(),
+                               *_databaseRequest,
+                               _options.get());
+    }
+}
+
 void SceneryPager::signalEndFrame()
 {
     using namespace std;
