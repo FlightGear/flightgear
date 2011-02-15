@@ -19,17 +19,7 @@ if(HAVE_APR_CONFIG)
 	string(STRIP ${RAW_APR_LIBS} APR_LIBS)
 
 else(HAVE_APR_CONFIG)
-	FIND_LIBRARY(APR_LIBS
-	  NAMES libapr-1 apr-1
-	  HINTS
-	  PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
-	  PATHS
-	  ~/Library/Frameworks
-	  /Library/Frameworks
-	  /usr/local
-	  /usr
-	  /opt
-	)
+    message(STATUS "apr-1-config not found, implement manual search for APR")
 endif(HAVE_APR_CONFIG)
 
 find_path(LIBSVN_INCLUDE_DIR svn_client.h
@@ -42,49 +32,17 @@ find_path(LIBSVN_INCLUDE_DIR svn_client.h
   /opt
 )
 
-FIND_LIBRARY(SVNCLIENT_LIBRARY
-  NAMES libsvn_client-1 svn_client-1
-  HINTS
-  PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
-  PATHS
-  ~/Library/Frameworks
-  /Library/Frameworks
-  /usr/local
-  /usr
-  /opt
-)
-
-FIND_LIBRARY(SVNSUBR_LIBRARY
-  NAMES libsvn_subr-1 svn_subr-1
-  HINTS
-  PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
-  PATHS
-  ~/Library/Frameworks
-  /Library/Frameworks
-  /usr/local
-  /usr
-  /opt
-)
-
-FIND_LIBRARY(SVNRA_LIBRARY
-  NAMES libsvn_ra-1 svn_ra-1
-  HINTS
-  PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
-  PATHS
-  ~/Library/Frameworks
-  /Library/Frameworks
-  /usr/local
-  /usr
-  /opt
-)
+check_library_exists(svn_client-1 svn_client_checkout "" HAVE_LIB_SVNCLIENT)
+check_library_exists(svn_subr-1 svn_cmdline_init "" HAVE_LIB_SVNSUBR)
+check_library_exists(svn_ra-1 svn_ra_initialize "" HAVE_LIB_SVNRA)
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(LIBSVN DEFAULT_MSG 
-    SVNSUBR_LIBRARY 
-    SVNCLIENT_LIBRARY
-    SVNRA_LIBRARY 
+    HAVE_LIB_SVNSUBR 
+    HAVE_LIB_SVNCLIENT
+    HAVE_LIB_SVNRA 
     LIBSVN_INCLUDE_DIR)
 
 if(LIBSVN_FOUND)
-	set(LIBSVN_LIBRARIES ${SVNCLIENT_LIBRARY} ${SVNSUBR_LIBRARY} ${SVNRA_LIBRARY} ${APR_LIBS})
+    set(LIBSVN_LIBRARIES "svn_client-1" "svn_subr-1" "svn_ra-1" ${APR_LIBS})
 endif(LIBSVN_FOUND)
