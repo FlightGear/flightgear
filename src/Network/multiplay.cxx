@@ -283,20 +283,6 @@ bool FGMultiplay::process() {
 
     FGMultiplayMgr* mpmgr = (FGMultiplayMgr*) globals->get_subsystem("mp");
     mpmgr->SendMyPosition(motionInfo);
-    
-    // Now remove the data
-    std::vector<FGPropertyData*>::const_iterator propIt;
-    std::vector<FGPropertyData*>::const_iterator propItEnd;
-    propIt = motionInfo.properties.begin();
-    propItEnd = motionInfo.properties.end();
-
-    //cout << "Deleting data\n";
-
-    while (propIt != propItEnd)
-    {
-      delete *propIt;
-      propIt++;
-    }    
   }
 
   return true;

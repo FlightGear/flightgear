@@ -37,7 +37,7 @@ public:
   virtual void unbind();
   virtual void update(double dt);
 
-  void addMotionInfo(const FGExternalMotionData& motionInfo, long stamp);
+  void addMotionInfo(FGExternalMotionData& motionInfo, long stamp);
   void setDoubleProperty(const std::string& prop, double val);
 
   long getLastTimestamp(void) const

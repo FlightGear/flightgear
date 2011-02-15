@@ -923,19 +923,20 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
       goto noprops;
   }
   while (xdr < Msg.propsRecvdEnd()) {
-    FGPropertyData* pData = new FGPropertyData;
     // simgear::props::Type type = simgear::props::UNSPECIFIED;
     
     // First element is always the ID
-    pData->id = XDR_decode_uint32(*xdr);
+    unsigned id = XDR_decode_uint32(*xdr);
     //cout << pData->id << " ";
     xdr++;
     
     // Check the ID actually exists and get the type
-    const IdPropertyList* plist = findProperty(pData->id);
+    const IdPropertyList* plist = findProperty(id);
     
     if (plist)
     {
+      FGPropertyData* pData = new FGPropertyData;
+      pData->id = id;
       pData->type = plist->type;
       // How we decode the remainder of the property depends on the type
       switch (pData->type) {
@@ -1001,7 +1002,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
       // We failed to find the property. We'll try the next packet immediately.
       SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr::ProcessPosMsg - "
              "message from " << MsgHdr->Callsign << " has unknown property id "
-             << pData->id); 
+             << id); 
     }
   }
  noprops:
@@ -1015,7 +1016,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
 //////////////////////////////////////////////////////////////////////
 //
 //  handle a chat message
-//  FIXME: display chat message withi flightgear
+//  FIXME: display chat message within flightgear
 //
 //////////////////////////////////////////////////////////////////////
 void
