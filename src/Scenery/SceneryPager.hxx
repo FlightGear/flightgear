@@ -28,6 +28,7 @@
 #include <osgDB/DatabasePager>
 
 #include <simgear/structure/OSGVersion.hxx>
+#include <simgear/scene/model/SGPagedLOD.hxx>
 
 namespace flightgear
 {
@@ -39,16 +40,14 @@ public:
     // Unhide DatabasePager::requestNodeFile
     using osgDB::DatabasePager::requestNodeFile;
     // reimplement to add readerWriterOptions from SGPagedLOD
+#if SG_PAGEDLOD_HAS_OPTIONS
+#else
     virtual void requestNodeFile(const std::string& fileName, osg::Group* group,
                                  float priority,
                                  const osg::FrameStamp* framestamp,
                                  osg::ref_ptr<osg::Referenced>& databaseRequest,
-#if SG_OSG_MIN_VERSION_REQUIRED(2,9,5)
-                                 const osg::Referenced* options
-#else
-                                 osgDB::ReaderWriter::Options* options
+                                 osgDB::ReaderWriter::Options* options);
 #endif
-                                 );
     void queueRequest(const std::string& fileName, osg::Group* node,
                       float priority, osg::FrameStamp* frameStamp,
                       osg::ref_ptr<osg::Referenced>& databaseRequest,
@@ -77,15 +76,7 @@ protected:
             _databaseRequest(&databaseRequest)
         {}
 
-        void doRequest(SceneryPager* pager)
-        {
-            if (_group->getNumChildren() == 0)
-                pager->requestNodeFile(_fileName, _group.get(), _priority,
-                                       _frameStamp.get(),
-                                       *_databaseRequest,
-                                       _options.get());
-        }
-
+        void doRequest(SceneryPager* pager);
         std::string _fileName;
         osg::ref_ptr<osg::Group> _group;
         float _priority;
