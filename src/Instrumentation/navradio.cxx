@@ -608,9 +608,21 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
   SGVec3d pos = aircraft - _gsCart; // relative vector from gs antenna to aircraft
   // The positive GS axis points along the runway in the landing direction,
   // toward the far end, not toward the approach area, so we need a - sign here:
-  double dot_h = -dot(pos, _gsAxis);
-  double dot_v = dot(pos, _gsVertical);
-  _gsDirect = atan2(dot_v, dot_h) * SGD_RADIANS_TO_DEGREES;
+  double comp_h = -dot(pos, _gsAxis);      // component in horiz direction
+  double comp_v = dot(pos, _gsVertical);   // component in vertical direction
+  //double comp_b = dot(pos, _gsBaseline);   // component in baseline direction
+  //if (comp_b) {}                           // ... (useful for debugging)
+
+// _gsDirect represents the angle of elevation of the aircraft
+// as seen by the GS transmitter.
+  _gsDirect = atan2(comp_v, comp_h) * SGD_RADIANS_TO_DEGREES;
+// At this point, if the aircraft is centered on the glide slope,
+// _gsDirect will be a small positive number, e.g. 3.0 degrees
+
+// Aim the branch cut straight down 
+// into the ground below the GS transmitter:
+  if (_gsDirect < -90.0) _gsDirect += 360.0;
+
   double deflectionAngle = target_gs - _gsDirect;
   
   if (falseCoursesEnabledNode->getBoolValue()) {
@@ -631,10 +643,17 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
     }
   }
   
+// GS is documented to be 1.4 degrees thick, 
+// i.e. plus or minus 0.7 degrees from the midline:
+  SG_CLAMP_RANGE(deflectionAngle, -0.7, 0.7);
+
+// Many older instrument xml frontends depend on
+// the un-normalized gs-needle-deflection.
+// Apparently the interface standard is plus or minus 3.5 "volts"
+// for a full-scale deflection:
   _gsNeedleDeflection = deflectionAngle * 5.0;
   _gsNeedleDeflection *= signal_quality_norm;
   
-  SG_CLAMP_RANGE(deflectionAngle, -0.7, 0.7);
   _gsNeedleDeflectionNorm = (deflectionAngle / 0.7) * signal_quality_norm;
   
   //////////////////////////////////////////////////////////
@@ -957,9 +976,9 @@ void FGNavRadio::search()
         _gsAxis = tangentVector(_gs->geod(), gs_radial);
 
         // GS baseline unit tangent vector
-        // (perpendicular to the runay along the ground)
-        SGVec3d baseline = tangentVector(_gs->geod(), gs_radial + 90.0);
-        _gsVertical = cross(baseline, _gsAxis);
+        // (transverse to the runay along the ground)
+        _gsBaseline = tangentVector(_gs->geod(), gs_radial + 90.0);
+        _gsVertical = cross(_gsBaseline, _gsAxis);
       } // of have glideslope
     } // of found LOC or ILS
     

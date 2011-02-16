@@ -153,7 +153,7 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     // internal periodic station search timer
     double _time_before_search_sec;
 
-    SGVec3d _gsCart, _gsAxis, _gsVertical;
+    SGVec3d _gsCart, _gsAxis, _gsVertical, _gsBaseline;
 
     FGNavRecordPtr _dme;
     bool _dmeInRange;
