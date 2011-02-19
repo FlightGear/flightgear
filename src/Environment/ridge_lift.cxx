@@ -36,24 +36,11 @@
 #include <Scenery/scenery.hxx>
 #include <string>
 #include <math.h>
-
+#include <simgear/sg_inlines.h>
 
 using std::string;
 
 #include "ridge_lift.hxx"
-
-static string CreateIndexedPropertyName(string Property, int index)
-{
-	std::stringstream str;
-	str << index;
-	string tmp;
-	str >> tmp;
-	return Property + "[" + tmp + "]";
-}
-
-static inline double sign(double x) {
-	return x == 0 ? 0 : x > 0 ? 1.0 : -1.0;
-}
 
 static const double BOUNDARY1_m = 40.0;
 
@@ -172,7 +159,7 @@ void FGRidgeLift::update(double dt) {
 		slope[3] = (probe_elev_m[4] - probe_elev_m[0]) / -dist_probe_m[4];
 	
 		for (unsigned i = 0; i < sizeof(slope)/sizeof(slope[0]); i++)
-			adj_slope[i] = sin(atan(5.0 * pow ( (fabs(slope[i])),1.7) ) ) *sign(slope[i]);
+			adj_slope[i] = sin(atan(5.0 * pow ( (fabs(slope[i])),1.7) ) ) *SG_SIGN<double>(slope[i]);
 	
 		//adjustment
 		adj_slope[0] *= 0.2;
