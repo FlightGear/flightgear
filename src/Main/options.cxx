@@ -46,6 +46,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
+#include <simgear/misc/strutils.hxx>
 #include <Autopilot/route_mgr.hxx>
 #include <GUI/gui.h>
 
@@ -900,9 +901,15 @@ fgOptStartDateGmt( const char *arg )
 static int
 fgSetupProxy( const char *arg )
 {
-    string options = arg;
+    string options = simgear::strutils::strip( arg );
     string host, port, auth;
     string::size_type pos;
+
+    // this is NURLP - NURLP is not an url parser
+    if( simgear::strutils::starts_with( options, "http://" ) )
+        options = options.substr( 7 );
+    if( simgear::strutils::ends_with( options, "/" ) )
+        options = options.substr( 0, options.length() - 1 );
 
     host = port = auth = "";
     if ((pos = options.find("@")) != string::npos)
