@@ -335,35 +335,13 @@ void FGAIMultiplayer::update(double dt)
       if (prevIt != mMotionInfo.begin()) 
       {
         --prevIt;
-        
-        MotionInfo::iterator delIt;
-        delIt = mMotionInfo.begin();
-        
-        while (delIt != prevIt) 
-        {
-          std::vector<FGPropertyData*>::const_iterator propIt;
-          std::vector<FGPropertyData*>::const_iterator propItEnd;
-          propIt = delIt->second.properties.begin();
-          propItEnd = delIt->second.properties.end();
-
-          //cout << "Deleting data\n";
-          
-          while (propIt != propItEnd)
-          {
-            delete *propIt;
-            propIt++;
-          }
-          
-          delIt++;
-        }
-        
         mMotionInfo.erase(mMotionInfo.begin(), prevIt);
       }
     }
   } else {
     // Ok, we need to predict the future, so, take the best data we can have
     // and do some eom computation to guess that for now.
-    FGExternalMotionData motionInfo = it->second;
+    FGExternalMotionData& motionInfo = it->second;
 
     // The time to predict, limit to 5 seconds
     double t = tInterp - motionInfo.time;
@@ -488,7 +466,7 @@ void FGAIMultiplayer::update(double dt)
 }
 
 void
-FGAIMultiplayer::addMotionInfo(const FGExternalMotionData& motionInfo,
+FGAIMultiplayer::addMotionInfo(FGExternalMotionData& motionInfo,
                                long stamp)
 {
   mLastTimestamp = stamp;
@@ -505,6 +483,9 @@ FGAIMultiplayer::addMotionInfo(const FGExternalMotionData& motionInfo,
       return;
   }
   mMotionInfo[motionInfo.time] = motionInfo;
+  // We just copied the property (pointer) list - they are ours now. Clear the
+  // properties list in given/returned object, so former owner won't deallocate them.
+  motionInfo.properties.clear();
 }
 
 void

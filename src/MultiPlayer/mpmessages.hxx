@@ -141,7 +141,7 @@ struct FGExternalMotionData {
   // simulation time when this packet was generated
   double time;
   // the artificial lag the client should stay behind the average
-  // simulation time to arrival time diference
+  // simulation time to arrival time difference
   // FIXME: should be some 'per model' instead of 'per packet' property
   double lag;
   
@@ -166,6 +166,20 @@ struct FGExternalMotionData {
   
   // The set of properties recieved for this timeslot
   std::vector<FGPropertyData*> properties;
+
+  ~FGExternalMotionData()
+  {
+      std::vector<FGPropertyData*>::const_iterator propIt;
+      std::vector<FGPropertyData*>::const_iterator propItEnd;
+      propIt = properties.begin();
+      propItEnd = properties.end();
+
+      while (propIt != propItEnd)
+      {
+        delete *propIt;
+        propIt++;
+      }
+  }
 };
 
 #endif

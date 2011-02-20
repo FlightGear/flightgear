@@ -61,28 +61,37 @@ static double sawtooth(double xx)
   return 4.0 * fabs(xx/4.0 + 0.25 - floor(xx/4.0 + 0.75)) - 1.0;
 }
 
-// Calculate a unit vector in the horizontal tangent plane
-// starting at the given "tail" of the vector and going off 
-// with the given heading.
-static SGVec3d tangentVector(const SGGeod& tail, const SGVec3d& tail_xyz, 
-          const double heading)
+// Calculate a Cartesian unit vector in the
+// local horizontal plane, i.e. tangent to the 
+// surface of the earth at the local ground zero.
+// The tangent vector passes through the given  <midpoint> 
+// and points forward along the given <heading>.
+// The <heading> is given in degrees.
+static SGVec3d tangentVector(const SGGeod& midpoint, const double heading)
 {
-// The fudge factor here is presumably intended to improve
-// numerical stability.  I don't know if it is necessary.
-// It gets divided out later.
-  double fudge(100.0);
-  SGGeod head;
-  double az2; // ignored
-  SGGeodesy::direct(tail, heading, fudge, head, az2);
-  head.setElevationM(tail.getElevationM());
+// The size of the delta is presumably chosen to give
+// numerical stability.  I don't know how the value was chosen.
+// It probably doesn't matter much.  It gets divided out.
+  double delta(100.0);          // in meters
+  SGGeod head, tail;
+  double az2;                   // ignored
+  SGGeodesy::direct(midpoint, heading,     delta, head, az2);
+  SGGeodesy::direct(midpoint, 180+heading, delta, tail, az2);
+  head.setElevationM(midpoint.getElevationM());
+  tail.setElevationM(midpoint.getElevationM());
   SGVec3d head_xyz = SGVec3d::fromGeod(head);
-  return (head_xyz - tail_xyz) * (1.0/fudge);
+  SGVec3d tail_xyz = SGVec3d::fromGeod(tail);
+// Awkward formula here, needed because vector-by-scalar
+// multiplication is defined, but not vector-by-scalar division.
+  return (head_xyz - tail_xyz) * (0.5/delta);
 }
 
 // Create a "serviceable" node with a default value of "true"
-SGPropertyNode_ptr createServiceableProp(SGPropertyNode* aParent, const char* aName)
+SGPropertyNode_ptr createServiceableProp(SGPropertyNode* aParent, 
+        const char* aName)
 {
-  SGPropertyNode_ptr n = (aParent->getChild(aName, 0, true)->getChild("serviceable", 0, true));
+  SGPropertyNode_ptr n = 
+     aParent->getChild(aName, 0, true)->getChild("serviceable", 0, true);
   simgear::props::Type typ = n->getType();
   if ((typ == simgear::props::NONE) || (typ == simgear::props::UNSPECIFIED)) {
     n->setBoolValue(true);
@@ -231,6 +240,7 @@ FGNavRadio::init ()
     gs_deflection_node = node->getChild("gs-needle-deflection", 0, true);
     gs_deflection_deg_node = node->getChild("gs-needle-deflection-deg", 0, true);
     gs_deflection_norm_node = node->getChild("gs-needle-deflection-norm", 0, true);
+    gs_direct_node = node->getChild("gs-direct-deg", 0, true);
     gs_rate_of_climb_node = node->getChild("gs-rate-of-climb", 0, true);
     gs_rate_of_climb_fpm_node = node->getChild("gs-rate-of-climb-fpm", 0, true);
     gs_dist_node = node->getChild("gs-distance", 0, true);
@@ -393,6 +403,7 @@ void FGNavRadio::clearOutputs()
   gs_deflection_node->setDoubleValue( 0.0 );
   gs_deflection_deg_node->setDoubleValue(0.0);
   gs_deflection_norm_node->setDoubleValue(0.0);
+  gs_direct_node->setDoubleValue(0.0);
   gs_inrange_node->setBoolValue( false );
   loc_node->setBoolValue( false );
   has_gs_node->setBoolValue(false);
@@ -592,19 +603,27 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
   bool gsInRange = (gsDist < (_gs->get_range() * SG_NM_TO_METER));
   gs_inrange_node->setBoolValue(gsInRange);
         
-  if (!gsInRange) {
-    _gsNeedleDeflection = 0.0;
-    _gsNeedleDeflectionNorm = 0.0;
-    return;
-  }
+  if (!gsInRange) return;
   
   SGVec3d pos = aircraft - _gsCart; // relative vector from gs antenna to aircraft
   // The positive GS axis points along the runway in the landing direction,
   // toward the far end, not toward the approach area, so we need a - sign here:
-  double dot_h = -dot(pos, _gsAxis);
-  double dot_v = dot(pos, _gsVertical);
-  double angle = atan2(dot_v, dot_h) * SGD_RADIANS_TO_DEGREES;
-  double deflectionAngle = target_gs - angle;
+  double comp_h = -dot(pos, _gsAxis);      // component in horiz direction
+  double comp_v = dot(pos, _gsVertical);   // component in vertical direction
+  //double comp_b = dot(pos, _gsBaseline);   // component in baseline direction
+  //if (comp_b) {}                           // ... (useful for debugging)
+
+// _gsDirect represents the angle of elevation of the aircraft
+// as seen by the GS transmitter.
+  _gsDirect = atan2(comp_v, comp_h) * SGD_RADIANS_TO_DEGREES;
+// At this point, if the aircraft is centered on the glide slope,
+// _gsDirect will be a small positive number, e.g. 3.0 degrees
+
+// Aim the branch cut straight down 
+// into the ground below the GS transmitter:
+  if (_gsDirect < -90.0) _gsDirect += 360.0;
+
+  double deflectionAngle = target_gs - _gsDirect;
   
   if (falseCoursesEnabledNode->getBoolValue()) {
     // Construct false glideslopes.  The scale factor of 1.5 
@@ -624,20 +643,27 @@ void FGNavRadio::updateGlideSlope(double dt, const SGVec3d& aircraft, double sig
     }
   }
   
+// GS is documented to be 1.4 degrees thick, 
+// i.e. plus or minus 0.7 degrees from the midline:
+  SG_CLAMP_RANGE(deflectionAngle, -0.7, 0.7);
+
+// Many older instrument xml frontends depend on
+// the un-normalized gs-needle-deflection.
+// Apparently the interface standard is plus or minus 3.5 "volts"
+// for a full-scale deflection:
   _gsNeedleDeflection = deflectionAngle * 5.0;
   _gsNeedleDeflection *= signal_quality_norm;
   
-  SG_CLAMP_RANGE(deflectionAngle, -0.7, 0.7);
   _gsNeedleDeflectionNorm = (deflectionAngle / 0.7) * signal_quality_norm;
   
   //////////////////////////////////////////////////////////
   // Calculate desired rate of climb for intercepting the GS
   //////////////////////////////////////////////////////////
-  double gs_diff = target_gs - angle;
+  double gs_diff = target_gs - _gsDirect;
   // convert desired vertical path angle into a climb rate
-  double des_angle = angle - 10 * gs_diff;
+  double des_angle = _gsDirect - 10 * gs_diff;
   /* printf("target_gs=%.1f angle=%.1f gs_diff=%.1f des_angle=%.1f\n",
-     target_gs, angle, gs_diff, des_angle); */
+     target_gs, _gsDirect, gs_diff, des_angle); */
 
   // estimate horizontal speed towards ILS in meters per minute
   double elapsedDistance = last_x - gsDist;
@@ -798,7 +824,7 @@ void FGNavRadio::updateCDI(double dt)
 
   //////////////////////////////////////////////////////////
   // compute the time to intercept selected radial (based on
-  // current and last cross track errors and dt
+  // current and last cross track errors and dt)
   //////////////////////////////////////////////////////////
   double t = 0.0;
   if ( inrange && cdi_serviceable ) {
@@ -819,6 +845,7 @@ void FGNavRadio::updateCDI(double dt)
   gs_deflection_node->setDoubleValue(_gsNeedleDeflection);
   gs_deflection_deg_node->setDoubleValue(_gsNeedleDeflectionNorm * 0.7);
   gs_deflection_norm_node->setDoubleValue(_gsNeedleDeflectionNorm);
+  gs_direct_node->setDoubleValue(_gsDirect);
   
   last_xtrack_error = _cdiCrossTrackErrorM;
 }
@@ -939,24 +966,19 @@ void FGNavRadio::search()
       if (_gs) {
         int tmp = (int)(_gs->get_multiuse() / 1000.0);
         target_gs = (double)tmp / 100.0;
-        
-        // until penaltyForNav goes away, we cannot assume we always pick
-        // paired LOC/GS trasmsitters. As we pass over a runway threshold, we
-        // often end up picking the 'wrong' LOC, but the correct GS. To avoid
-        // breaking the basis computation, ensure we use the GS radial and not
-        // the (potentially reversed) LOC radial.
+
         double gs_radial = fmod(_gs->get_multiuse(), 1000.0);
         SG_NORMALIZE_RANGE(gs_radial, 0.0, 360.0);
-                
-        // GS axis unit tangent vector
-        // (along the runway)
         _gsCart = _gs->cart();
-        _gsAxis = tangentVector(_gs->geod(), _gsCart, gs_radial);
+                
+        // GS axis unit tangent vector 
+        // (along the runway):
+        _gsAxis = tangentVector(_gs->geod(), gs_radial);
 
         // GS baseline unit tangent vector
-        // (perpendicular to the runay along the ground)
-        SGVec3d baseline = tangentVector(_gs->geod(), _gsCart, gs_radial + 90.0);
-        _gsVertical = cross(baseline, _gsAxis);
+        // (transverse to the runay along the ground)
+        _gsBaseline = tangentVector(_gs->geod(), gs_radial + 90.0);
+        _gsVertical = cross(_gsBaseline, _gsAxis);
       } // of have glideslope
     } // of found LOC or ILS
     
