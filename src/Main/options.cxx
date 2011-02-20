@@ -98,6 +98,8 @@ atoi( const string& str )
     return ::atoi( str.c_str() );
 }
 
+static int fgSetupProxy( const char *arg );
+
 /**
  * Set a few fail-safe default property values.
  *
@@ -245,6 +247,8 @@ fgSetDefaults ()
     fgSetString("/sim/version/revision", REVISION);
     fgSetInt("/sim/version/build-number", HUDSON_BUILD_NUMBER);
     fgSetString("/sim/version/build-id", HUDSON_BUILD_ID);
+    if( (envp = ::getenv( "http_proxy" )) != NULL )
+      fgSetupProxy( envp );
 }
 
 static bool
