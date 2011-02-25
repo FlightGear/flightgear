@@ -238,7 +238,7 @@ void TCAS::Annunciator::clear(void)
 void
 TCAS::Annunciator::bind(SGPropertyNode* node)
 {
-    voicePlayer.bind(node, "Sounds/tcas/");
+    voicePlayer.bind(node, "Sounds/tcas/female/");
 }
 
 void

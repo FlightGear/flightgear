@@ -147,35 +147,6 @@ class TCAS : public SGSubsystem
         float  verticalFps;
     } LocalInfo; /*< info structure for local aircraft */
 
-//    /////////////////////////////////////////////////////////////////////////////
-//    // TCAS::Timer //////////////////////////////////////////////////////////////
-//    /////////////////////////////////////////////////////////////////////////////
-//
-//    class Timer
-//    {
-//        double start_time;
-//
-//    public:
-//        bool   running;
-//
-//        inline Timer ()
-//          : running(false) {}
-//
-//        inline void start () { running = true; start_time = globals->get_sim_time_sec(); }
-//        inline void stop ()  { running = false; }
-//        inline double elapsed () const { assert(running); return globals->get_sim_time_sec() - start_time; }
-//        inline double start_or_elapsed ()
-//        {
-//            if (running)
-//                return elapsed();
-//            else
-//            {
-//                start();
-//                return 0;
-//            }
-//        }
-//    };
-
     /////////////////////////////////////////////////////////////////////////////
     // TCAS::PropertiesHandler ///////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////
