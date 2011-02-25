@@ -83,7 +83,7 @@ public:
       --destIndex;
     }
     
-    int currentWpIndex = currentWaypoint();
+    unsigned int currentWpIndex = currentWaypoint();
     WayptRef w(_rm->removeWayptAtIndex(srcIndex));
     SG_LOG(SG_GENERAL, SG_INFO, "wpt:" << w->ident());
     _rm->insertWayptAtIndex(w, destIndex);
