@@ -29,6 +29,7 @@
 #include <vector>
 
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/props.hxx>
 #include <simgear/sound/sample_group.hxx>
 
 class SGXmlSound;

@@ -11,6 +11,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/props.hxx>
 
 /**
  * Log any property values to any number of CSV files.

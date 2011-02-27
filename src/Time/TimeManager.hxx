@@ -22,6 +22,7 @@
 #define FG_TIME_TIMEMANAGER_HXX
 
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/props.hxx>
 
 // forward decls
 class SGTime;
