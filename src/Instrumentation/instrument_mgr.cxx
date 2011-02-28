@@ -50,6 +50,7 @@
 #include "groundradar.hxx"
 #include "agradar.hxx"
 #include "rad_alt.hxx"
+#include "tcas.hxx"
 
 FGInstrumentMgr::FGInstrumentMgr () :
   _explicitGps(false)
@@ -222,6 +223,9 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
 
         } else if ( name == "radar-altimeter" ) {
             set_subsystem( id, new radAlt( node ),1);
+
+        } else if ( name == "tcas" ) {
+            set_subsystem( id, new TCAS( node ) );
 
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: "

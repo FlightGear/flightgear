@@ -24,7 +24,7 @@
 #define _REALWX_CTRL_HXX
 
 #include <simgear/structure/subsystem_mgr.hxx>
-
+#include <simgear/props/props.hxx>
 namespace Environment {
 class RealWxController : public SGSubsystem
 {

@@ -96,8 +96,6 @@ private:
     typedef enum { ARC, MAP, PLAN, ROSE, BSCAN} DisplayMode;
     DisplayMode _display_mode;
 
-    string _last_switchKnob;
-
     float _range_nm;
     float _scale;   // factor to convert nm to display units
     float _angle_offset;
@@ -130,6 +128,8 @@ private:
     SGPropertyNode_ptr _radar_ref_rng_node;
     SGPropertyNode_ptr _radar_hdg_marker_node;
     SGPropertyNode_ptr _radar_rotate_node;
+    SGPropertyNode_ptr _radar_tcas_node;
+    SGPropertyNode_ptr _radar_absalt_node;
 
     SGPropertyNode_ptr _font_node;
     SGPropertyNode_ptr _ai_enabled_node;
@@ -144,6 +144,7 @@ private:
     osg::Matrixf _centerTrans;
     osg::ref_ptr<osgText::Font> _font;
     osg::Vec4 _font_color;
+    osg::Vec4 _tcas_colors[4];
     float _font_size;
     float _font_spacing;
 
@@ -155,6 +156,8 @@ private:
     void update_heading_marker();
     void update_data(const SGPropertyNode *ac, double alt, double heading,
         double radius, double bearing, bool selected);
+    bool update_tcas(const SGPropertyNode *model,double range,double user_alt,double alt,
+                     double bearing,double radius, bool absMode);
     void center_map();
     void apply_map_offset();
     void updateFont();

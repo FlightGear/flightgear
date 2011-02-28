@@ -94,6 +94,7 @@ public:
     inline double airspeed() const { return props->getFloatValue("velocities/airspeed-kt");};
     std::string atGate();
 
+    void checkTcas();
     
 protected:
     void Run(double dt);

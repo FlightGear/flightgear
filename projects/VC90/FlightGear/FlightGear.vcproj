@@ -3785,6 +3785,14 @@
 				RelativePath="..\..\..\src\Instrumentation\wxradar.hxx"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\src\Instrumentation\tcas.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Instrumentation\tcas.hxx"
+				>
+			</File>
 			<Filter
 				Name="Lib_HUD"
 				>
