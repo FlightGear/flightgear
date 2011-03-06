@@ -42,7 +42,7 @@ public:
     ~FGGeneric();
 
     bool gen_message();
-    bool parse_message();
+    bool parse_message(int length);
 
     // open hailing frequencies
     bool open();
@@ -95,8 +95,8 @@ private:
 
     bool gen_message_ascii();
     bool gen_message_binary();
-    bool parse_message_ascii();
-    bool parse_message_binary();
+    bool parse_message_ascii(int length);
+    bool parse_message_binary(int length);
     void read_config(SGPropertyNode *root, vector<_serial_prot> &msg);
     bool exitOnError;
 };
