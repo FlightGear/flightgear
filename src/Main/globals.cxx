@@ -182,6 +182,7 @@ FGGlobals::~FGGlobals()
     delete current_panel;
 
     delete ATC_mgr;
+    controls->unbind();
     delete controls;
 
     delete channel_options_list;

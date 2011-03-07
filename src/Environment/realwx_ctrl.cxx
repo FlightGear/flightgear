@@ -69,6 +69,7 @@ LiveMetarProperties::LiveMetarProperties( SGPropertyNode_ptr rootNode ) :
 
 LiveMetarProperties::~LiveMetarProperties()
 {
+    _tiedProperties.Untie();
 }
 
 void LiveMetarProperties::update( double dt )
@@ -106,7 +107,7 @@ protected:
     bool _enabled;
     bool __enabled;
     simgear::TiedPropertyList _tiedProperties;
- ;   typedef std::vector<LiveMetarProperties_ptr> MetarPropertiesList;
+    typedef std::vector<LiveMetarProperties_ptr> MetarPropertiesList;
     MetarPropertiesList _metarProperties;
 };
 

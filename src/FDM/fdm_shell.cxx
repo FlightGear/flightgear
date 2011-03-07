@@ -102,6 +102,7 @@ void FDMShell::bind()
 void FDMShell::unbind()
 {
   if( _impl ) _impl->unbind();
+  _tankProperties.unbind();
 }
 
 void FDMShell::update(double dt)
