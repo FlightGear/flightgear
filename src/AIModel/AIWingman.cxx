@@ -428,7 +428,7 @@ void FGAIWingman::Join(double dt) {
     //double approx_angle = atan2(daltM, range);
     double frm_spd = 50; // formation speed
     double join_rnge = 1000.0;
-    double recip_parent_hdg = calcRecipBearingDeg(parent_hdg);
+//    double recip_parent_hdg = calcRecipBearingDeg(parent_hdg);
     int turn = SGMiscd::sign(rel_brg);// turn direction: 1 = right, -1 = left
 
     if (range <= join_rnge && (hdg >= hdg_l_lim || hdg <= hdg_r_lim)){

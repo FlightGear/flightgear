@@ -332,6 +332,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
                 use_perf_vs = false;
                 tgt_vs = (curr->crossat - altitude_ft) / (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)
                          / 6076.0 / speed*60.0);
+                checkTcas();
                 tgt_altitude_ft = curr->crossat;
             } else {
                 use_perf_vs = true;
@@ -343,6 +344,32 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
     }
 }
 
+void FGAIAircraft::checkTcas(void)
+{
+    if (props->getIntValue("tcas/threat-level",0)==3)
+    {
+        int RASense = props->getIntValue("tcas/ra-sense",0);
+        if ((RASense>0)&&(tgt_vs<4000))
+            // upward RA: climb!
+            tgt_vs = 4000;
+        else
+        if (RASense<0)
+        {
+            // downward RA: descend!
+            if (altitude_ft < 1000)
+            {
+                // too low: level off
+                if (tgt_vs>0)
+                    tgt_vs = 0;
+            }
+            else
+            {
+                if (tgt_vs >- 4000)
+                    tgt_vs = -4000;
+            }
+        }
+    }
+}
 
 void FGAIAircraft::initializeFlightPlan() {
 }
@@ -603,6 +630,7 @@ void FGAIAircraft::handleFirstWaypoint() {
         tgt_vs = (curr->crossat - prev->altitude)
                  / (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)
                     / 6076.0 / prev->speed*60.0);
+        checkTcas();
         tgt_altitude_ft = curr->crossat;
     } else {
         use_perf_vs = true;
@@ -1025,6 +1053,7 @@ void FGAIAircraft::updateVerticalSpeedTarget() {
         }
     } //else 
     //    tgt_vs = 0.0;
+    checkTcas();
 }
 
 void FGAIAircraft::updatePitchAngleTarget() {

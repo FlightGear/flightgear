@@ -33,6 +33,7 @@
 #include <map>
 
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/props.hxx>
 #include <Navaids/positioned.hxx>
 
 class SGTime;

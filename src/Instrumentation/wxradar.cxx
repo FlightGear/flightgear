@@ -69,18 +69,29 @@ using std::endl;
 static const float UNIT = 1.0f / 8.0f;  // 8 symbols in a row/column in the texture
 static const char *DEFAULT_FONT = "typewriter.txf";
 
-
 wxRadarBg::wxRadarBg(SGPropertyNode *node) :
     _name(node->getStringValue("name", "radar")),
     _num(node->getIntValue("number", 0)),
     _time(0.0),
     _interval(node->getDoubleValue("update-interval-sec", 1.0)),
+    _elapsed_time(0),
+    _persistance(0),
     _sim_init_done(false),
     _odg(0),
-    _last_switchKnob("off"),
+    _range_nm(0),
+    _scale(0),
+    _angle_offset(0),
+    _view_heading(0),
+    _x_offset(0),
+    _y_offset(0),
+    _radar_ref_rng(0),
+    _lat(0),
+    _lon(0),
     _antenna_ht(node->getDoubleValue("antenna-ht-ft", 0.0)),
     _resultTexture(0),
-    _wxEcho(0)
+    _wxEcho(0),
+    _font_size(0),
+    _font_spacing(0)
 {
     string branch;
     branch = "/instrumentation/" + _name;
@@ -174,6 +185,8 @@ wxRadarBg::init ()
     _radar_symbol_node      = n->getNode("symbol", true);
     _radar_centre_node      = n->getNode("centre", true);
     _radar_rotate_node      = n->getNode("rotate", true);
+    _radar_tcas_node        = n->getNode("tcas", true);
+    _radar_absalt_node      = n->getNode("abs-altitude", true);
 
     _radar_centre_node->setBoolValue(false);
     if (!_radar_coverage_node->hasValue())
@@ -231,6 +244,8 @@ wxRadarBg::init ()
     osg::Camera *camera = _odg->getCamera();
     camera->addChild(_radarGeode.get());
     camera->addChild(_textGeode.get());
+
+    updateFont();
 }
 
 
@@ -305,16 +320,6 @@ wxRadarBg::update (double delta_time_sec)
     }
 
     string switchKnob = _Instrument->getStringValue("switch", "on");
-    if (_last_switchKnob != switchKnob) {
-        // since 3D models don't share textures with the rest of the world
-        // we must locate them and replace their handle by hand
-        // only do that when the instrument is turned on
-        //if (_last_switchKnob == "off")
-        //_odg->set_texture(_texture_path.c_str(), _resultTexture->getHandle());
-
-        _last_switchKnob = switchKnob;
-    }
-
     if (switchKnob == "off") {
         _Instrument->setStringValue("status", "");
     } else if (switchKnob == "stby") {
@@ -666,9 +671,11 @@ wxRadarBg::update_aircraft()
     if (!_ai_enabled_node->getBoolValue())
         return;
 
-    bool draw_echoes = _radar_position_node->getBoolValue();
-    bool draw_symbols = _radar_symbol_node->getBoolValue();
-    bool draw_data = _radar_data_node->getBoolValue();
+    bool draw_tcas     = _radar_tcas_node->getBoolValue();
+    bool draw_absolute = _radar_absalt_node->getBoolValue();
+    bool draw_echoes   = _radar_position_node->getBoolValue();
+    bool draw_symbols  = _radar_symbol_node->getBoolValue();
+    bool draw_data     = _radar_data_node->getBoolValue();
     if (!draw_echoes && !draw_symbols && !draw_data)
         return;
 
@@ -697,7 +704,8 @@ wxRadarBg::update_aircraft()
             model = ai->getChild(i);
             if (!model->nChildren())
                 continue;
-            if (model->getIntValue("id") == selected_id) {
+            if ((model->getIntValue("id") == selected_id)&&
+                (!draw_tcas)) {
                 selected_ac = model;  // save selected model for last iteration
                 continue;
             }
@@ -752,8 +760,14 @@ wxRadarBg::update_aircraft()
         bearing += _angle_offset;
         heading += _angle_offset;
 
+        bool is_tcas_contact = false;
+        if (draw_tcas)
+        {
+            is_tcas_contact = update_tcas(model,range,user_alt,alt,bearing,radius,draw_absolute);
+        }
+
         // pos mode
-        if (draw_echoes) {
+        if (draw_echoes && (!is_tcas_contact)) {
             float size = echo_radius * 120 * UNIT;
 
             const osg::Vec2f texBase(3 * UNIT, 3 * UNIT);
@@ -764,7 +778,7 @@ wxRadarBg::update_aircraft()
         }
 
         // data mode
-        if (draw_symbols) {
+        if (draw_symbols && (!draw_tcas)) {
             const osg::Vec2f texBase(0, 3 * UNIT);
             float size = 600 * UNIT;
             osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
@@ -774,11 +788,98 @@ wxRadarBg::update_aircraft()
             addQuad(_vertices, _texCoords, m, texBase);
         }
 
-        if (draw_data || i < 0)  // selected one (i == -1) is always drawn
+        if ((draw_data || i < 0)&&  // selected one (i == -1) is always drawn
+            ((!draw_tcas)||(is_tcas_contact)||(draw_echoes)))
             update_data(model, alt, heading, radius, bearing, i < 0);
     }
 }
 
+/** Update TCAS display.
+ * Return true when processed as TCAS contact, false otherwise. */
+bool
+wxRadarBg::update_tcas(const SGPropertyNode *model,double range,double user_alt,double alt,
+                       double bearing,double radius,bool absMode)
+{
+    int threatLevel=0;
+    {
+        // update TCAS symbol
+        osg::Vec2f texBase;
+        threatLevel = model->getIntValue("tcas/threat-level",-1);
+        if (threatLevel == -1)
+        {
+            // no TCAS information (i.e. no transponder) => not visible to TCAS
+            return false;
+        }
+        int row = 7 - threatLevel;
+        int col = 4;
+        double vspeed = model->getDoubleValue("velocities/vertical-speed-fps");
+        if (vspeed < -3.0) // descending
+            col+=1;
+        else
+        if (vspeed > 3.0) // climbing
+            col+=2;
+        texBase = osg::Vec2f(col*UNIT,row * UNIT);
+        float size = 200 * UNIT;
+            osg::Matrixf m(osg::Matrixf::scale(size, size, 1.0f)
+                * wxRotate(-bearing)
+                * osg::Matrixf::translate(0.0f, radius, 0.0f)
+                * wxRotate(bearing) * _centerTrans);
+            addQuad(_vertices, _texCoords, m, texBase);
+    }
+
+    {
+        // update TCAS data
+        osgText::Text *altStr = new osgText::Text;
+        altStr->setFont(_font.get());
+        altStr->setFontResolution(12, 12);
+        altStr->setCharacterSize(_font_size);
+        altStr->setColor(_tcas_colors[threatLevel]);
+        osg::Matrixf m(wxRotate(-bearing)
+            * osg::Matrixf::translate(0.0f, radius, 0.0f)
+            * wxRotate(bearing) * _centerTrans);
+    
+        osg::Vec3 pos = m.preMult(osg::Vec3(16, 16, 0));
+        // cast to int's, otherwise text comes out ugly
+        altStr->setLineSpacing(_font_spacing);
+    
+        stringstream text;
+        altStr->setAlignment(osgText::Text::LEFT_CENTER);
+        int altDif = (alt-user_alt+50)/100;
+        char sign = 0;
+        int dy=0;
+        if (altDif>=0)
+        {
+            sign='+';
+            dy=2;
+        }
+        else
+        if (altDif<0)
+        {
+            sign='-';
+            altDif = -altDif;
+            dy=-30;
+        }
+        altStr->setPosition(osg::Vec3((int)pos.x()-30, (int)pos.y()+dy, 0));
+        if (absMode)
+        {
+            // absolute altitude display
+            text << setprecision(0) << fixed
+                 << setw(3) << setfill('0') << alt/100 << endl;
+        }
+        else // relative altitude display
+        if (sign)
+        {
+            text << sign
+                 << setprecision(0) << fixed
+                 << setw(2) << setfill('0') << altDif << endl;
+        }
+    
+        altStr->setText(text.str());
+        _textGeode->addDrawable(altStr);
+    }
+
+    return true;
+}
 
 void
 wxRadarBg::update_tacan()
@@ -983,11 +1084,23 @@ wxRadarBg::updateFont()
         _font->setGlyphImageMargin(0);
         _font->setGlyphImageMarginRatio(0);
     }
+
+    for (int i=0;i<4;i++)
+    {
+        const float defaultColors[4][3] = {{0,1,1},{0,1,1},{1,0.5,0},{1,0,0}};
+        SGPropertyNode_ptr color_node = _font_node->getNode("tcas/color",i,true);
+        float red   = color_node->getFloatValue("red",defaultColors[i][0]);
+        float green = color_node->getFloatValue("green",defaultColors[i][1]);
+        float blue  = color_node->getFloatValue("blue",defaultColors[i][2]);
+        float alpha = color_node->getFloatValue("alpha",1);
+        _tcas_colors[i]=osg::Vec4(red, green, blue, alpha);
+    }
 }
 
 void
 wxRadarBg::valueChanged(SGPropertyNode*)
 {
     updateFont();
+    _time = _interval;
 }
 

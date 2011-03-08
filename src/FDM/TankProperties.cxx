@@ -68,6 +68,11 @@ TankProperties::~TankProperties()
 {
 }
 
+void TankProperties::unbind()
+{
+    _tiedProperties.Untie();
+}
+
 double TankProperties::getContent_kg() const
 {
   return _content_kg;
@@ -286,4 +291,10 @@ double TankPropertiesList::getTotalContent_norm() const
   return capacity > SGLimitsd::min() ? content / capacity : 0.0;
 }
 
-
+void TankPropertiesList::unbind()
+{
+    for( const_iterator it = begin(); it != end(); ++it ) {
+      (*it)->unbind();
+    }
+    _tiedProperties.Untie();
+}

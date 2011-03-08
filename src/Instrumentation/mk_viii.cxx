@@ -210,17 +210,6 @@ MK_VIII::PropertiesHandler::init ()
   mk_node(vs) = fgGetNode("/velocities/vertical-speed-fps", true);
 }
 
-void
-MK_VIII::PropertiesHandler::unbind ()
-{
-  vector<SGPropertyNode_ptr>::iterator iter;
-
-  for (iter = tied_properties.begin(); iter != tied_properties.end(); iter++)
-    (*iter)->untie();
-
-  tied_properties.clear();
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // PowerHandler ///////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -1858,7 +1847,8 @@ MK_VIII::IOHandler::tie_input (SGPropertyNode *node,
 			       bool *input,
 			       bool *feed)
 {
-  mk->properties_handler.tie(node, (string("inputs/discretes/") + name).c_str(), RawValueMethodsData<MK_VIII::IOHandler, bool, bool *>(*this, input, &MK_VIII::IOHandler::get_discrete_input, &MK_VIII::IOHandler::set_discrete_input));
+  mk->properties_handler.tie(node, (string("inputs/discretes/") + name).c_str(),
+          FGVoicePlayer::RawValueMethodsData<MK_VIII::IOHandler, bool, bool *>(*this, input, &MK_VIII::IOHandler::get_discrete_input, &MK_VIII::IOHandler::set_discrete_input));
   if (feed)
     mk->properties_handler.tie(node, (string("input-feeders/discretes/") + name).c_str(), SGRawValuePointer<bool>(feed));
 }
@@ -2144,11 +2134,22 @@ MK_VIII::IOHandler::set_present_status (bool value)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// VoicePlayer ////////////////////////////////////////////////////////////////
+// FGVoicePlayer //////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
 void
-MK_VIII::VoicePlayer::Speaker::bind (SGPropertyNode *node)
+FGVoicePlayer::PropertiesHandler::unbind ()
+{
+  vector<SGPropertyNode_ptr>::iterator iter;
+
+  for (iter = tied_properties.begin(); iter != tied_properties.end(); iter++)
+    (*iter)->untie();
+
+  tied_properties.clear();
+}
+
+void
+FGVoicePlayer::Speaker::bind (SGPropertyNode *node)
 {
   // uses xmlsound property names
   tie(node, "volume", &volume);
@@ -2156,7 +2157,7 @@ MK_VIII::VoicePlayer::Speaker::bind (SGPropertyNode *node)
 }
 
 void
-MK_VIII::VoicePlayer::Speaker::update_configuration ()
+FGVoicePlayer::Speaker::update_configuration ()
 {
   map< string, SGSharedPtr<SGSoundSample> >::iterator iter;
   for (iter = player->samples.begin(); iter != player->samples.end(); iter++)
@@ -2170,7 +2171,7 @@ MK_VIII::VoicePlayer::Speaker::update_configuration ()
     player->voice->volume_changed();
 }
 
-MK_VIII::VoicePlayer::Voice::~Voice ()
+FGVoicePlayer::Voice::~Voice ()
 {
   for (iter = elements.begin(); iter != elements.end(); iter++)
     delete *iter;		// we owned the element
@@ -2178,7 +2179,7 @@ MK_VIII::VoicePlayer::Voice::~Voice ()
 }
 
 void
-MK_VIII::VoicePlayer::Voice::play ()
+FGVoicePlayer::Voice::play ()
 {
   iter = elements.begin();
   element = *iter;
@@ -2187,7 +2188,7 @@ MK_VIII::VoicePlayer::Voice::play ()
 }
 
 void
-MK_VIII::VoicePlayer::Voice::stop (bool now)
+FGVoicePlayer::Voice::stop (bool now)
 {
   if (element)
     {
@@ -2202,21 +2203,21 @@ MK_VIII::VoicePlayer::Voice::stop (bool now)
 }
 
 void
-MK_VIII::VoicePlayer::Voice::set_volume (float _volume)
+FGVoicePlayer::Voice::set_volume (float _volume)
 {
   volume = _volume;
   volume_changed();
 }
 
 void
-MK_VIII::VoicePlayer::Voice::volume_changed ()
+FGVoicePlayer::Voice::volume_changed ()
 {
   if (element)
     element->set_volume(get_volume());
 }
 
 void
-MK_VIII::VoicePlayer::Voice::update ()
+FGVoicePlayer::Voice::update ()
 {
   if (element)
     {
@@ -2233,7 +2234,7 @@ MK_VIII::VoicePlayer::Voice::update ()
     }
 }
 
-MK_VIII::VoicePlayer::~VoicePlayer ()
+FGVoicePlayer::~FGVoicePlayer ()
 {
   vector<Voice *>::iterator iter1;
   for (iter1 = _voices.begin(); iter1 != _voices.end(); iter1++)
@@ -2243,85 +2244,80 @@ MK_VIII::VoicePlayer::~VoicePlayer ()
 }
 
 void
-MK_VIII::VoicePlayer::init ()
+FGVoicePlayer::bind (SGPropertyNode *node, const char* default_dir_prefix)
 {
-#define STDPAUSE 0.75	// [SPEC] 6.4.4: "the standard 0.75 second delay"
+  dir_prefix = node->getStringValue("voice/file-prefix", default_dir_prefix);
+  speaker.bind(node);
+}
 
+void
+FGVoicePlayer::init ()
+{
   SGSoundMgr *smgr = globals->get_soundmgr();
   _sgr = smgr->find("avionics", true);
   _sgr->tie_to_listener();
-
-  make_voice(&voices.application_data_base_failed, "application-data-base-failed");
-  make_voice(&voices.bank_angle, "bank-angle");
-  make_voice(&voices.bank_angle_bank_angle, "bank-angle", "bank-angle");
-  make_voice(&voices.bank_angle_bank_angle_3, "bank-angle", "bank-angle", 3.0);
-  make_voice(&voices.bank_angle_inop, "bank-angle-inop");
-  make_voice(&voices.bank_angle_pause_bank_angle, "bank-angle", STDPAUSE, "bank-angle");
-  make_voice(&voices.bank_angle_pause_bank_angle_3, "bank-angle", STDPAUSE, "bank-angle", 3.0);
-  make_voice(&voices.callouts_inop, "callouts-inop");
-  make_voice(&voices.configuration_type_invalid, "configuration-type-invalid");
-  make_voice(&voices.dont_sink, "dont-sink");
-  make_voice(&voices.dont_sink_pause_dont_sink, "dont-sink", STDPAUSE, "dont-sink");
-  make_voice(&voices.five_hundred_above, "500-above");
-  make_voice(&voices.glideslope, "glideslope");
-  make_voice(&voices.glideslope_inop, "glideslope-inop");
-  make_voice(&voices.gpws_inop, "gpws-inop");
-  make_voice(&voices.hard_glideslope, "glideslope", "glideslope", 3.0);
-  make_voice(&voices.minimums, "minimums");
-  make_voice(&voices.minimums_minimums, "minimums", "minimums");
-  make_voice(&voices.pull_up, "pull-up");
-  make_voice(&voices.sink_rate, "sink-rate");
-  make_voice(&voices.sink_rate_pause_sink_rate, "sink-rate", STDPAUSE, "sink-rate");
-  make_voice(&voices.soft_glideslope, new Voice::SampleElement(get_sample("glideslope"), modify_amplitude(1.0, -6)));
-  make_voice(&voices.terrain, "terrain");
-  make_voice(&voices.terrain_pause_terrain, "terrain", STDPAUSE, "terrain");
-  make_voice(&voices.too_low_flaps, "too-low-flaps");
-  make_voice(&voices.too_low_gear, "too-low-gear");
-  make_voice(&voices.too_low_terrain, "too-low-terrain");
-
-  for (unsigned i = 0; i < n_altitude_callouts; i++)
-    {
-      std::ostringstream name;
-      name << "altitude-" << mk->mode6_handler.altitude_callout_definitions[i];
-      make_voice(&voices.altitude_callouts[i], name.str().c_str());
-    }
-
   speaker.update_configuration();
 }
 
-SGSoundSample *
-MK_VIII::VoicePlayer::get_sample (const char *name)
+void
+FGVoicePlayer::pause()
 {
-  std::ostringstream refname;
-  refname << mk->name << "[" << mk->num << "]" << "/" << name;
+    if (paused)
+        return;
 
-  SGSoundSample *sample = _sgr->find(refname.str());
+    paused = true;
+    if (voice)
+    {
+        voice->stop(true);
+    }
+}
+
+void
+FGVoicePlayer::resume()
+{
+    if (!paused)
+        return;
+    paused = false;
+    if (voice)
+    {
+        voice->play();
+    }
+}
+
+SGSoundSample *
+FGVoicePlayer::get_sample (const char *name)
+{
+  string refname;
+  refname = dev_name + "/" + dir_prefix + name;
+
+  SGSoundSample *sample = _sgr->find(refname);
   if (! sample)
     {
-      string filename = "Sounds/mk-viii/" + string(name) + ".wav";
+      string filename = dir_prefix + string(name) + ".wav";
       try
 	{
 	  sample = new SGSoundSample(filename.c_str(), SGPath());
 	}
       catch (const sg_exception &e)
 	{
-	  SG_LOG(SG_INSTR, SG_ALERT, "Error loading MK VIII sound sample \"" + filename + "\": " + e.getFormattedMessage());
+	  SG_LOG(SG_INSTR, SG_ALERT, "Error loading sound sample \"" + filename + "\": " + e.getFormattedMessage());
 	  exit(1);
 	}
 
-      _sgr->add(sample, refname.str());
-      samples[refname.str()] = sample;
+      _sgr->add(sample, refname);
+      samples[refname] = sample;
     }
 
   return sample;
 }
 
 void
-MK_VIII::VoicePlayer::play (Voice *_voice, unsigned int flags)
+FGVoicePlayer::play (Voice *_voice, unsigned int flags)
 {
   if (!_voice)
       return;
-  if (test_bits(flags, PLAY_NOW) || ! voice || voice->element->silence)
+  if (test_bits(flags, PLAY_NOW) || ! voice ||
+      (voice->element && voice->element->silence))
     {
       if (voice)
 	voice->stop(true);
@@ -2332,7 +2328,8 @@ MK_VIII::VoicePlayer::play (Voice *_voice, unsigned int flags)
       next_voice = NULL;
       next_looped = false;
 
-      voice->play();
+      if (!paused)
+          voice->play();
     }
   else
     {
@@ -2342,7 +2339,7 @@ MK_VIII::VoicePlayer::play (Voice *_voice, unsigned int flags)
 }
 
 void
-MK_VIII::VoicePlayer::stop (unsigned int flags)
+FGVoicePlayer::stop (unsigned int flags)
 {
   if (voice)
     {
@@ -2356,7 +2353,7 @@ MK_VIII::VoicePlayer::stop (unsigned int flags)
 }
 
 void
-MK_VIII::VoicePlayer::set_volume (float _volume)
+FGVoicePlayer::set_volume (float _volume)
 {
   volume = _volume;
   if (voice)
@@ -2364,7 +2361,7 @@ MK_VIII::VoicePlayer::set_volume (float _volume)
 }
 
 void
-MK_VIII::VoicePlayer::update ()
+FGVoicePlayer::update ()
 {
   if (voice)
     {
@@ -2394,6 +2391,53 @@ MK_VIII::VoicePlayer::update ()
 	    }
 	}
     }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// MK_VIII::VoicePlayer ///////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+void
+MK_VIII::VoicePlayer::init ()
+{
+    FGVoicePlayer::init();
+
+#define STDPAUSE 0.75   // [SPEC] 6.4.4: "the standard 0.75 second delay"
+    make_voice(&voices.application_data_base_failed, "application-data-base-failed");
+    make_voice(&voices.bank_angle, "bank-angle");
+    make_voice(&voices.bank_angle_bank_angle, "bank-angle", "bank-angle");
+    make_voice(&voices.bank_angle_bank_angle_3, "bank-angle", "bank-angle", 3.0);
+    make_voice(&voices.bank_angle_inop, "bank-angle-inop");
+    make_voice(&voices.bank_angle_pause_bank_angle, "bank-angle", STDPAUSE, "bank-angle");
+    make_voice(&voices.bank_angle_pause_bank_angle_3, "bank-angle", STDPAUSE, "bank-angle", 3.0);
+    make_voice(&voices.callouts_inop, "callouts-inop");
+    make_voice(&voices.configuration_type_invalid, "configuration-type-invalid");
+    make_voice(&voices.dont_sink, "dont-sink");
+    make_voice(&voices.dont_sink_pause_dont_sink, "dont-sink", STDPAUSE, "dont-sink");
+    make_voice(&voices.five_hundred_above, "500-above");
+    make_voice(&voices.glideslope, "glideslope");
+    make_voice(&voices.glideslope_inop, "glideslope-inop");
+    make_voice(&voices.gpws_inop, "gpws-inop");
+    make_voice(&voices.hard_glideslope, "glideslope", "glideslope", 3.0);
+    make_voice(&voices.minimums, "minimums");
+    make_voice(&voices.minimums_minimums, "minimums", "minimums");
+    make_voice(&voices.pull_up, "pull-up");
+    make_voice(&voices.sink_rate, "sink-rate");
+    make_voice(&voices.sink_rate_pause_sink_rate, "sink-rate", STDPAUSE, "sink-rate");
+    make_voice(&voices.soft_glideslope, new Voice::SampleElement(get_sample("glideslope"), modify_amplitude(1.0, -6)));
+    make_voice(&voices.terrain, "terrain");
+    make_voice(&voices.terrain_pause_terrain, "terrain", STDPAUSE, "terrain");
+    make_voice(&voices.too_low_flaps, "too-low-flaps");
+    make_voice(&voices.too_low_gear, "too-low-gear");
+    make_voice(&voices.too_low_terrain, "too-low-terrain");
+
+    for (unsigned i = 0; i < n_altitude_callouts; i++)
+      {
+        std::ostringstream name;
+        name << "altitude-" << MK_VIII::Mode6Handler::altitude_callout_definitions[i];
+        make_voice(&voices.altitude_callouts[i], name.str().c_str());
+      }
+    speaker.update_configuration();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4949,7 +4993,7 @@ MK_VIII::bind ()
   configuration_module.bind(node);
   power_handler.bind(node);
   io_handler.bind(node);
-  voice_player.bind(node);
+  voice_player.bind(node, "Sounds/mk-viii/");
 }
 
 void

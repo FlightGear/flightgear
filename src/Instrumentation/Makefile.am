@@ -33,6 +33,7 @@ libInstrumentation_a_SOURCES = \
 	render_area_2d.cxx render_area_2d.hxx        \
 	groundradar.cxx groundradar.hxx \
 	agradar.cxx agradar.hxx rad_alt.cxx rad_alt.hxx \
-	rnav_waypt_controller.cxx rnav_waypt_controller.hxx
+	rnav_waypt_controller.cxx rnav_waypt_controller.hxx \
+	tcas.cxx tcas.hxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src -I$(top_builddir)/src

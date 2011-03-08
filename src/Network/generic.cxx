@@ -272,13 +272,13 @@ bool FGGeneric::gen_message() {
     }
 }
 
-bool FGGeneric::parse_message_binary() {
+bool FGGeneric::parse_message_binary(int length) {
     char *p2, *p1 = buf;
     int32_t tmp32;
     double val;
     int i = -1;
 
-    p2 = p1 + FG_MAX_MSG_SIZE;
+    p2 = p1 + length;
     while ((++i < (int)_in_message.size()) && (p1  < p2)) {
 
         switch (_in_message[i].type) {
@@ -353,14 +353,23 @@ bool FGGeneric::parse_message_binary() {
     return true;
 }
 
-bool FGGeneric::parse_message_ascii() {
+bool FGGeneric::parse_message_ascii(int length) {
     char *p2, *p1 = buf;
     double val;
     int i = -1;
+    int chunks = _in_message.size();
+    int line_separator_size = line_separator.size();
 
-    while ((++i < (int)_in_message.size()) &&
-           p1 && strcmp(p1, line_separator.c_str())) {
+    if (length < line_separator_size ||
+        line_separator.compare(buf + length - line_separator_size) != 0) {
 
+        SG_LOG(SG_IO, SG_WARN,
+               "Input line does not end with expected line separator." );
+    } else {
+        buf[length - line_separator_size] = 0;
+    }
+
+    while ((++i < chunks) && p1) {
         p2 = strstr(p1, var_separator.c_str());
         if (p2) {
             *p2 = 0;
@@ -398,11 +407,11 @@ bool FGGeneric::parse_message_ascii() {
     return true;
 }
 
-bool FGGeneric::parse_message() {
+bool FGGeneric::parse_message(int length) {
     if (binary_mode) {
-        return parse_message_binary(); 
+        return parse_message_binary(length);
     } else {
-        return parse_message_ascii();
+        return parse_message_ascii(length);
     }
 }
 
@@ -450,7 +459,7 @@ bool FGGeneric::process() {
             if (!binary_mode) {
                 length = io->readline( buf, FG_MAX_MSG_SIZE );
                 if ( length > 0 ) {
-                    parse_message();
+                    parse_message( length );
                 } else {
                     SG_LOG( SG_IO, SG_ALERT, "Error reading data." );
                     return false;
@@ -458,7 +467,7 @@ bool FGGeneric::process() {
             } else {
                 length = io->read( buf, binary_record_length );
                 if ( length == binary_record_length ) {
-                    parse_message();
+                    parse_message( length );
                 } else {
                     SG_LOG( SG_IO, SG_ALERT,
                             "Generic protocol: Received binary "
@@ -470,12 +479,12 @@ bool FGGeneric::process() {
         } else {
             if (!binary_mode) {
                 while ((length = io->readline( buf, FG_MAX_MSG_SIZE )) > 0 ) {
-                    parse_message();
+                    parse_message( length );
                 }
             } else {
                 while ((length = io->read( buf, binary_record_length )) 
                           == binary_record_length ) {
-                    parse_message();
+                    parse_message( length );
                 }
 
                 if ( length > 0 ) {
@@ -549,6 +558,13 @@ FGGeneric::reinit()
         if (input) {
             _in_message.clear();
             read_config(input, _in_message);
+            if (!binary_mode && (line_separator.size() == 0 ||
+                *line_separator.rbegin() != '\n')) {
+
+                SG_LOG(SG_IO, SG_WARN,
+                    "Warning: Appending newline to line separator in generic input.");
+                line_separator.push_back('\n');
+            }
         }
     }
 }

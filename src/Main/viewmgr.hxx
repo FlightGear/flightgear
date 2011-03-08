@@ -29,6 +29,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/props/props.hxx>
 #include <simgear/math/SGMath.hxx>
 
 // forward decls

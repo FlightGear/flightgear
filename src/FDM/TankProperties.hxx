@@ -34,6 +34,8 @@ public:
   TankProperties( const TankProperties & );
   const TankProperties & operator = ( const TankProperties & );
 
+  void unbind();
+  
   double getContent_kg() const;
   void setContent_kg( double value );
 
@@ -98,6 +100,8 @@ public:
   double getTotalContent_m3() const;
   double getTotalContent_norm() const;
 
+  void unbind();
+  
 private:
   simgear::TiedPropertyList _tiedProperties;
 };

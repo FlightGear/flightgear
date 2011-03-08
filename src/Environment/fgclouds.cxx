@@ -162,8 +162,8 @@ double FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_
 				double bottom_shade = cld_def->getDoubleValue("bottom-shade", 1.0);
 				string texture = cld_def->getStringValue("texture", "cu.png");
 
-				SGNewCloud *cld = 
-					new SGNewCloud(type,
+				SGNewCloud cld = 
+					SGNewCloud(type,
 						texture_root, 
 						texture, 
 						min_width, 
@@ -178,7 +178,7 @@ double FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_
 						num_sprites,
 						num_textures_x,
 						num_textures_y);
-				layer->addCloud(newpos, cld);
+				layer->addCloud(newpos, cld.genCloud());
 			}
 		}
 	}

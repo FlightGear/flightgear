@@ -1821,6 +1821,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\instrumentation\tcas.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\autopilot\xmlauto.hxx"
 				>
 			</File>
@@ -3564,6 +3568,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\instrumentation\wxradar.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\instrumentation\tcas.cxx"
 				>
 			</File>
 			<File

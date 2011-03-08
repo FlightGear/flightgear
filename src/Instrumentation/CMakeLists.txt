@@ -31,6 +31,7 @@ set(SOURCES
 	rnav_waypt_controller.cxx
 	slip_skid_ball.cxx
 	tacan.cxx
+	tcas.cxx
 	transponder.cxx
 	turn_indicator.cxx
 	vertical_speed_indicator.cxx
