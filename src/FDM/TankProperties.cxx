@@ -43,6 +43,10 @@ TankProperties::TankProperties(SGPropertyNode_ptr rootNode ) :
   _unusable_m3(0.0)
 {
   _tiedProperties.setRoot( rootNode );
+}
+
+void TankProperties::bind()
+{
   _tiedProperties.Tie("level-kg", this, &TankProperties::getContent_kg, &TankProperties::setContent_kg );
   _tiedProperties.Tie("density-kgpm3", this, &TankProperties::getDensity_kgpm3, &TankProperties::setDensity_kgpm3 );
   _tiedProperties.Tie("capacity-m3", this, &TankProperties::getCapacity_m3, &TankProperties::setCapacity_m3 );
@@ -289,6 +293,13 @@ double TankPropertiesList::getTotalContent_norm() const
     capacity += (*it)->getCapacity_m3();
   }
   return capacity > SGLimitsd::min() ? content / capacity : 0.0;
+}
+
+void TankPropertiesList::bind()
+{
+    for( const_iterator it = begin(); it != end(); ++it ) {
+      (*it)->bind();
+    }
 }
 
 void TankPropertiesList::unbind()
