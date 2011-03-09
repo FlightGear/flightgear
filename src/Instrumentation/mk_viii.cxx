@@ -2138,17 +2138,6 @@ MK_VIII::IOHandler::set_present_status (bool value)
 ///////////////////////////////////////////////////////////////////////////////
 
 void
-FGVoicePlayer::PropertiesHandler::unbind ()
-{
-  vector<SGPropertyNode_ptr>::iterator iter;
-
-  for (iter = tied_properties.begin(); iter != tied_properties.end(); iter++)
-    (*iter)->untie();
-
-  tied_properties.clear();
-}
-
-void
 FGVoicePlayer::Speaker::bind (SGPropertyNode *node)
 {
   // uses xmlsound property names

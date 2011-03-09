@@ -29,9 +29,9 @@
 #include <map>
 
 #include <simgear/props/props.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
 #include <simgear/sound/sample_openal.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-
 using std::vector;
 using std::deque;
 using std::map;
@@ -98,16 +98,14 @@ public:
       setter_t    _setter;
     };
     
-    class PropertiesHandler
+    class PropertiesHandler : public simgear::TiedPropertyList
     {
     public:
-        vector<SGPropertyNode_ptr> tied_properties;
 
       template <class T>
       inline void tie (SGPropertyNode *node, const SGRawValue<T> &raw_value)
       {
-        node->tie(raw_value);
-        tied_properties.push_back(node);
+          Tie(node,raw_value);
       }
 
       template <class T>
@@ -115,12 +113,12 @@ public:
                const char *relative_path,
                const SGRawValue<T> &raw_value)
       {
-        tie(node->getNode(relative_path, true), raw_value);
+        Tie(node->getNode(relative_path, true),raw_value);
       }
 
       PropertiesHandler() {};
 
-      void unbind ();
+      void unbind () {Untie();}
     };
 
   ///////////////////////////////////////////////////////////////////////////
