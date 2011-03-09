@@ -940,7 +940,11 @@ void FGNavRadio::search()
   _navaid = nav;
   string identBuffer(4, ' ');
   if (nav) {
-    _dme = globals->get_dmelist()->findByFreq(freq, pos);
+    // use ILS signals as DME, otherwise search by frequency
+    if (nav->type()==FGPositioned::ILS)
+        _dme = nav;
+    else
+        _dme = globals->get_dmelist()->findByFreq(freq, pos);
     
     nav_id_node->setStringValue(nav->get_ident());
     identBuffer =  simgear::strutils::rpad( nav->ident(), 4, ' ' );
