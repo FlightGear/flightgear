@@ -39,8 +39,8 @@ class SGSoundSample;
  *
  *    This modules maintains a queue of 'message' audio files.  These
  *    are played sequentially with no overlap until the queue is finished.
- *    This second mechanims is useful for things like tutorial messages or
- *    background atc chatter.
+ *    This second mechanisms is useful for things like tutorial messages or
+ *    background ATC chatter.
  */
 class FGSampleQueue : public SGSampleGroup
 {
