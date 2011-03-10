@@ -34,6 +34,7 @@ public:
   TankProperties( const TankProperties & );
   const TankProperties & operator = ( const TankProperties & );
 
+  void bind();
   void unbind();
   
   double getContent_kg() const;
@@ -93,14 +94,15 @@ class TankPropertiesList : std::vector<SGSharedPtr<TankProperties> > {
 public:
   TankPropertiesList( SGPropertyNode_ptr rootNode );
 
+  void bind();
+  void unbind();
+
   double getTotalContent_lbs() const;
   double getTotalContent_kg() const;
   double getTotalContent_gal_us() const;
   double getTotalContent_gal_imp() const;
   double getTotalContent_m3() const;
   double getTotalContent_norm() const;
-
-  void unbind();
   
 private:
   simgear::TiedPropertyList _tiedProperties;

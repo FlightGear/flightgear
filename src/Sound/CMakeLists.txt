@@ -6,6 +6,7 @@ set(SOURCES
 	morse.cxx
 	sample_queue.cxx
 	voice.cxx
+	voiceplayer.cxx
 	)
 	
 flightgear_component(Sound "${SOURCES}")

@@ -1813,6 +1813,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\sound\voiceplayer.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\fdm\yasim\Wing.hpp"
 				>
 			</File>
@@ -3560,6 +3564,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\sound\voice.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\sound\voiceplayer.cxx"
 				>
 			</File>
 			<File

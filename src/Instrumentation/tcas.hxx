@@ -28,9 +28,8 @@
 #include <map>
 
 #include <simgear/props/props.hxx>
-#include <simgear/sound/sample_openal.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include "mk_viii.hxx" // FGVoicePlayer only
+#include <Sound/voiceplayer.hxx>
 
 using std::vector;
 using std::deque;

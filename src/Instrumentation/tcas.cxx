@@ -100,8 +100,6 @@
 #include <simgear/sg_inlines.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
-#include <simgear/math/sg_random.h>
-#include <simgear/misc/sg_path.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/structure/exception.hxx>
 
@@ -115,7 +113,6 @@ using std::string;
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <AIModel/submodel.hxx>
 #include "instrument_mgr.hxx"
 #include "tcas.hxx"
 

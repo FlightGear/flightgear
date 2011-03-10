@@ -3221,6 +3221,14 @@
 				RelativePath="..\..\..\src\Sound\voice.hxx"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\src\Sound\voiceplayer.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Sound\voiceplayer.hxx"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Lib_Time"
