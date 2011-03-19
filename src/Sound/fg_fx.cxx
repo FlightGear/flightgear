@@ -109,6 +109,9 @@ FGFX::init()
 void
 FGFX::reinit()
 {
+    for ( unsigned int i = 0; i < _sound.size(); i++ ) {
+        delete _sound[i];
+    }
     _sound.clear();
     init();
 };

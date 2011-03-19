@@ -1,4 +1,4 @@
-// model.hxx - manage a 3D aircraft model.
+// acmodel.hxx - manage a 3D aircraft model.
 // Written by David Megginson, started 2002.
 //
 // This file is in the Public Domain, and comes with no warranty.
