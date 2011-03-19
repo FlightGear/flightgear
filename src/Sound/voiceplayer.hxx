@@ -135,6 +135,7 @@ public:
     public:
         bool silence;
 
+        virtual ~Element() {}
         virtual inline void play (float volume) {}
         virtual inline void stop () {}
         virtual bool is_playing () = 0;
@@ -186,7 +187,7 @@ public:
     inline Voice (FGVoicePlayer *_player)
       : element(NULL), player(_player), volume(1.0) {}
 
-    ~Voice ();
+    virtual ~Voice ();
 
     inline void append (Element *_element) { elements.push_back(_element); }
 
@@ -229,7 +230,7 @@ public:
       dev_name(_dev_name), dir_prefix(""),
       speaker(this,properties_handler) {}
 
-  ~FGVoicePlayer ();
+  virtual ~FGVoicePlayer ();
 
   void init ();
   void pause();
