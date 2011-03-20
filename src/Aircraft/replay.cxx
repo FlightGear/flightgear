@@ -83,6 +83,14 @@ FGReplay::~FGReplay() {
  */
 
 void FGReplay::init() {
+    reinit();
+}
+
+/** 
+ * Reset replay queues.
+ */
+
+void FGReplay::reinit() {
     sim_time = 0.0;
     last_mt_time = 0.0;
     last_lt_time = 0.0;
@@ -110,10 +118,8 @@ void FGReplay::init() {
                              (lt_list_time*lt_dt)); 
     for (int i = 0; i < estNrObjects; i++) {
         recycler.push_back(new FGReplayData);
-
     }
 }
-
 
 /** 
  * Bind to the property tree
@@ -121,6 +127,7 @@ void FGReplay::init() {
 
 void FGReplay::bind() {
     disable_replay = fgGetNode( "/sim/replay/disable", true );
+    replay_master = fgGetNode( "/sim/freeze/replay-state", true );
 }
 
 
@@ -140,8 +147,6 @@ void FGReplay::unbind() {
 void FGReplay::update( double dt ) {
     timingInfo.clear();
     stamp("begin");
-    static SGPropertyNode *replay_master
-        = fgGetNode( "/sim/freeze/replay-state", true );
 
     if( disable_replay->getBoolValue() ) {
         if ( sim_time != 0.0 ) {

@@ -1243,8 +1243,10 @@ do_log_level (const SGPropertyNode * arg)
 static bool
 do_replay (const SGPropertyNode * arg)
 {
-    // freeze the master fdm
+    // freeze the fdm, resume from sim pause 
     fgSetInt( "/sim/freeze/replay-state", 1 );
+    fgSetBool("/sim/freeze/master", 0 );
+    fgSetBool("/sim/freeze/clock", 0 );
 
     FGReplay *r = (FGReplay *)(globals->get_subsystem( "replay" ));
 

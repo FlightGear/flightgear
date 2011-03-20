@@ -69,6 +69,7 @@ public:
     virtual ~FGReplay();
 
     virtual void init();
+    virtual void reinit();
     virtual void bind();
     virtual void unbind();
     virtual void update( double dt );
@@ -96,6 +97,7 @@ private:
     replay_list_type long_term;
     replay_list_type recycler;
     SGPropertyNode_ptr disable_replay;
+    SGPropertyNode_ptr replay_master;
 };
 
 

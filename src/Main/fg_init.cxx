@@ -1553,6 +1553,9 @@ void fgReInitSubsystems()
     // Initialize the FDM
     globals->get_subsystem("flight")->reinit();
 
+    // reset replay buffers
+    globals->get_subsystem("replay")->reinit();
+    
     // reload offsets from config defaults
     globals->get_viewmgr()->reinit();
 
