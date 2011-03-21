@@ -50,7 +50,8 @@ public:
   virtual void unbind();
   
   virtual void update(double dt);
-  
+  SGSubsystem* getFDM();
+
 private:
 
   void createImplementation();

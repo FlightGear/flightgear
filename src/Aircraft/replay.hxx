@@ -79,6 +79,7 @@ public:
     double get_end_time();
     
 private:
+    void clear();
 
     static const double st_list_time;   // 60 secs of high res data
     static const double mt_list_time;  // 10 mins of 1 fps data
@@ -91,6 +92,7 @@ private:
     double sim_time;
     double last_mt_time;
     double last_lt_time;
+    int last_replay_state;
 
     replay_list_type short_term;
     replay_list_type medium_term;
@@ -98,6 +100,7 @@ private:
     replay_list_type recycler;
     SGPropertyNode_ptr disable_replay;
     SGPropertyNode_ptr replay_master;
+    SGPropertyNode_ptr replay_time;
 };
 
 

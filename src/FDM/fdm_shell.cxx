@@ -139,8 +139,8 @@ void FDMShell::update(double dt)
 // pull environmental data in, since the FDMs are lazy
   _impl->set_Velocities_Local_Airmass(
       _props->getDoubleValue("environment/wind-from-north-fps", 0.0),
-			_props->getDoubleValue("environment/wind-from-east-fps", 0.0),
-			_props->getDoubleValue("environment/wind-from-down-fps", 0.0));
+      _props->getDoubleValue("environment/wind-from-east-fps", 0.0),
+      _props->getDoubleValue("environment/wind-from-down-fps", 0.0));
 
   if (_props->getBoolValue("environment/params/control-fdm-atmosphere")) {
     // convert from Rankine to Celsius
@@ -160,24 +160,8 @@ void FDMShell::update(double dt)
     _impl->ToggleDataLogging(doLog);
   }
 
-// FIXME - replay manager should handle most of this           
-  int replayState = fgGetInt("/sim/freeze/replay-state", 0);
-  if (replayState == 0) {
-    _impl->update(dt); // normal code path
-  } else if (replayState == 1) {
-    // should be inside FGReplay!
-    SGPropertyNode* replay_time = fgGetNode("/sim/replay/time", true);
-    FGReplay *r = (FGReplay *)(globals->get_subsystem( "replay" ));
-    r->replay( replay_time->getDoubleValue() );
-    replay_time->setDoubleValue( replay_time->getDoubleValue()
-                                             + ( dt
-                                                 * fgGetInt("/sim/speed-up") ) );
-  
-  } else if (replayState == 2) {
-    // paused replay, no-op
-  } else {
-    throw sg_range_exception("unknown FGReplay state");
-  }  
+  if (!_impl->is_suspended())
+      _impl->update(dt);
 }
 
 void FDMShell::createImplementation()
@@ -268,3 +252,13 @@ void FDMShell::createImplementation()
 
 }
 
+/*
+ * Return FDM subsystem.
+ */
+
+SGSubsystem* FDMShell::getFDM()
+{
+    /* FIXME we could drop/replace this method, when _impl was a added
+     * to the global subsystem manager - like other proper subsystems... */
+    return _impl;
+}
