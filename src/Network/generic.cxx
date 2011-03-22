@@ -541,9 +541,9 @@ FGGeneric::reinit()
     SGPropertyNode root;
     try {
         readProperties(path.str(), &root);
-    } catch (const sg_exception &) {
+    } catch (const sg_exception & ex) {
         SG_LOG(SG_GENERAL, SG_ALERT,
-         "Unable to load the protocol configuration file");
+         "Unable to load the protocol configuration file: " << ex.getFormattedMessage() );
          return;
     }
 

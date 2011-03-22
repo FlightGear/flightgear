@@ -94,9 +94,9 @@ void FDMShell::bind()
     if (_impl->get_bound()) {
       throw sg_exception("FDMShell::bind of bound FGInterface impl");
     }
-    _tankProperties.bind();
     _impl->bind();
   }
+  _tankProperties.bind();
 }
 
 void FDMShell::unbind()
