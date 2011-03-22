@@ -1517,7 +1517,7 @@ bool fgInitSubsystems() {
     return true;
 }
 
-
+// Reset: this is what the 'reset' command (and hence, GUI) is attached to
 void fgReInitSubsystems()
 {
     static const SGPropertyNode *master_freeze
@@ -1569,13 +1569,6 @@ void fgReInitSubsystems()
     fgSetBool("/sim/sceneryloaded",false);
 }
 
-
-void doSimulatorReset(void)  // from gui_local.cxx -- TODO merge with fgReInitSubsystems()
-{
-    
-
-    fgReInitSubsystems();
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // helper object to implement the --show-aircraft command.

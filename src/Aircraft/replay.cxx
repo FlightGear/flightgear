@@ -96,6 +96,9 @@ void FGReplay::clear()
 
 void FGReplay::init()
 {
+    disable_replay = fgGetNode( "/sim/replay/disable", true );
+    replay_master = fgGetNode( "/sim/freeze/replay-state", true );
+    replay_time = fgGetNode( "/sim/replay/time", true);
     reinit();
 }
 
@@ -120,6 +123,9 @@ void FGReplay::reinit()
     {
         recycler.push_back(new FGReplayData);
     }
+    replay_master->setIntValue(0);
+    disable_replay->setBoolValue(0);
+    replay_time->setDoubleValue(0);
 }
 
 /** 
@@ -128,9 +134,6 @@ void FGReplay::reinit()
 
 void FGReplay::bind()
 {
-    disable_replay = fgGetNode( "/sim/replay/disable", true );
-    replay_master = fgGetNode( "/sim/freeze/replay-state", true );
-    replay_time = fgGetNode( "/sim/replay/time", true);
 }
 
 

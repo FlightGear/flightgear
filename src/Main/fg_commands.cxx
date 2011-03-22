@@ -221,7 +221,7 @@ do_exit (const SGPropertyNode * arg)
 static bool
 do_reset (const SGPropertyNode * arg)
 {
-    doSimulatorReset();
+    fgReInitSubsystems();
     return true;
 }
 

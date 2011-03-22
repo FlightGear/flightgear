@@ -62,15 +62,9 @@ bool fgInitGeneral ();
 // gear, its initialization call should located in this routine.
 bool fgInitSubsystems();
 
-
-// Reset
+ 
+// Reset: this is what the 'reset' command (and hence, GUI) is attached to
 void fgReInitSubsystems();
-
-/**
- * this is what the 'reset' command (and hence, GUI) is attached too
- * it overlaps with fgReInitSubsystems quite substantially
- */
-void doSimulatorReset(void);
 
 // Set the initial position based on presets (or defaults)
 bool fgInitPosition();
