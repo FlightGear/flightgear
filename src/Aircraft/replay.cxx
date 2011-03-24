@@ -159,11 +159,6 @@ void FGReplay::update( double dt )
 
     if ( disable_replay->getBoolValue() )
     {
-        if (replay_master->getIntValue())
-        {
-            // replay was active, restore most recent frame
-            replay(DBL_MAX);
-        }
         replay_master->setIntValue(0);
         replay_time->setDoubleValue(0);
         disable_replay->setBoolValue(0);
@@ -184,6 +179,8 @@ void FGReplay::update( double dt )
     if ((replay_state == 0)&&
         (last_replay_state > 0))
     {
+        // replay was active, restore most recent frame
+        replay(DBL_MAX);
         // replay is finished, resume FDM
         ((FDMShell*) globals->get_subsystem("flight"))->getFDM()->resume();
     }
