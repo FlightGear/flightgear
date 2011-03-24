@@ -24,6 +24,7 @@
 #  include "config.h"
 #endif
 
+#include <float.h>
 #include <simgear/constants.h>
 #include <simgear/structure/exception.hxx>
 
@@ -156,11 +157,16 @@ void FGReplay::update( double dt )
     timingInfo.clear();
     stamp("begin");
 
-    if (( sim_time != 0.0 )&&
-        ( disable_replay->getBoolValue() ))
+    if ( disable_replay->getBoolValue() )
     {
-        // we were recording data
-        reinit();
+        if (replay_master->getIntValue())
+        {
+            // replay was active, restore most recent frame
+            replay(DBL_MAX);
+        }
+        replay_master->setIntValue(0);
+        replay_time->setDoubleValue(0);
+        disable_replay->setBoolValue(0);
     }
 
     int replay_state = replay_master->getIntValue();
