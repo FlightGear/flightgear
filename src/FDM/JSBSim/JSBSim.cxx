@@ -570,6 +570,22 @@ void FGJSBsim::update( double dt )
 
 /******************************************************************************/
 
+void FGJSBsim::suspend()
+{
+  fdmex->Hold();
+  SGSubsystem::suspend();
+}
+
+/******************************************************************************/
+
+void FGJSBsim::resume()
+{
+  fdmex->Resume();
+  SGSubsystem::resume();
+}
+
+/******************************************************************************/
+
 // Convert from the FGInterface struct to the JSBsim generic_ struct
 
 bool FGJSBsim::copy_to_JSBsim()
@@ -1011,7 +1027,9 @@ void FGJSBsim::set_Latitude(double lat)
     _set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET  );
     fgic->SetSeaLevelRadiusFtIC( sea_level_radius_meters * SG_METER_TO_FEET  );
     fgic->SetLatitudeRadIC( lat_geoc );
-    needTrim=true;
+
+    if (!fdmex->Holding())
+      needTrim=true;
 }
 
 
@@ -1024,7 +1042,9 @@ void FGJSBsim::set_Longitude(double lon)
 
     update_ic();
     fgic->SetLongitudeRadIC( lon );
-    needTrim=true;
+
+    if (!fdmex->Holding())
+      needTrim=true;
 }
 
 // Sets the altitude above sea level.
@@ -1049,7 +1069,9 @@ void FGJSBsim::set_Altitude(double alt)
           "Terrain elevation: " << FGInterface::get_Runway_altitude() * SG_METER_TO_FEET );
     fgic->SetLatitudeRadIC( lat_geoc );
     fgic->SetAltitudeASLFtIC(alt);
-    needTrim=true;
+
+    if (!fdmex->Holding())
+      needTrim=true;
 }
 
 void FGJSBsim::set_V_calibrated_kts(double vc)
@@ -1061,7 +1083,9 @@ void FGJSBsim::set_V_calibrated_kts(double vc)
 
     update_ic();
     fgic->SetVcalibratedKtsIC(vc);
-    needTrim=true;
+
+    if (!fdmex->Holding())
+      needTrim=true;
 }
 
 void FGJSBsim::set_Mach_number(double mach)
@@ -1073,7 +1097,9 @@ void FGJSBsim::set_Mach_number(double mach)
 
     update_ic();
     fgic->SetMachIC(mach);
-    needTrim=true;
+
+    if (!fdmex->Holding())
+      needTrim=true;
 }
 
 void FGJSBsim::set_Velocities_Local( double north, double east, double down )
@@ -1088,7 +1114,9 @@ void FGJSBsim::set_Velocities_Local( double north, double east, double down )
     fgic->SetVNorthFpsIC(north);
     fgic->SetVEastFpsIC(east);
     fgic->SetVDownFpsIC(down);
-    needTrim=true;
+
+    if (!fdmex->Holding())
+      needTrim=true;
 }
 
 void FGJSBsim::set_Velocities_Wind_Body( double u, double v, double w)
@@ -1103,7 +1131,9 @@ void FGJSBsim::set_Velocities_Wind_Body( double u, double v, double w)
     fgic->SetUBodyFpsIC(u);
     fgic->SetVBodyFpsIC(v);
     fgic->SetWBodyFpsIC(w);
-    needTrim=true;
+
+    if (!fdmex->Holding())
+      needTrim=true;
 }
 
 //Euler angles
@@ -1119,7 +1149,9 @@ void FGJSBsim::set_Euler_Angles( double phi, double theta, double psi )
     fgic->SetThetaRadIC(theta);
     fgic->SetPhiRadIC(phi);
     fgic->SetPsiRadIC(psi);
-    needTrim=true;
+
+    if (!fdmex->Holding())
+      needTrim=true;
 }
 
 //Flight Path
@@ -1137,7 +1169,9 @@ void FGJSBsim::set_Climb_Rate( double roc)
     if( !(fabs(roc) > 1 && fabs(fgic->GetFlightPathAngleRadIC()) < 0.01) ) {
       fgic->SetClimbRateFpsIC(roc);
     }
-    needTrim=true;
+
+    if (!fdmex->Holding())
+      needTrim=true;
 }
 
 void FGJSBsim::set_Gamma_vert_rad( double gamma)
@@ -1148,7 +1182,9 @@ void FGJSBsim::set_Gamma_vert_rad( double gamma)
     if( !(fabs(gamma) < 0.01 && fabs(fgic->GetClimbRateFpsIC()) > 1) ) {
       fgic->SetFlightPathAngleRadIC(gamma);
     }
-    needTrim=true;
+
+    if (!fdmex->Holding())
+      needTrim=true;
 }
 
 void FGJSBsim::init_gear(void )

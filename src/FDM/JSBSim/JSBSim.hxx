@@ -113,6 +113,12 @@ public:
     /// Unbind properties
     void unbind();
 
+    /// Suspend integration
+    void suspend();
+
+    /// Resume integration
+    void resume();
+
     /// @name Position Parameter Set
     //@{
     /** Set geocentric latitude
