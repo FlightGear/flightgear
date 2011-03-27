@@ -1396,7 +1396,7 @@ void MapWidget::drawAIShip(const SGPropertyNode* model, const SGGeod& pos, doubl
 {
   SGVec2d p = project(pos);
 
-  glColor3f(0.0, 0.0, 0.3);
+  glColor3f(0.0, 0.0, 0.5);
   glLineWidth(2.0);
   circleAt(p, 4, 6.0); // blue diamond (to differentiate from aircraft.
 
