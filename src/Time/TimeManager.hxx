@@ -78,11 +78,11 @@ private:
   SGPropertyNode_ptr _longitudeDeg;
   SGPropertyNode_ptr _latitudeDeg;
   
-  // frame-rate / worst-case delay / update-rate counters
+  // frame-rate / worst-case latency / update-rate counters
   SGPropertyNode_ptr _frameRate;
-  SGPropertyNode_ptr _frameDelayMax;
+  SGPropertyNode_ptr _frameLatency;
   time_t _lastFrameTime;
-  double _wcFrameDelayMax;
+  double _frameLatencyMax;
   int _frameCount;
 };
 
