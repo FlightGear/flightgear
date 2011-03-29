@@ -90,13 +90,13 @@ void FDMShell::reinit()
 
 void FDMShell::bind()
 {
+  _tankProperties.bind();
   if (_impl && _impl->get_inited()) {
     if (_impl->get_bound()) {
       throw sg_exception("FDMShell::bind of bound FGInterface impl");
     }
     _impl->bind();
   }
-  _tankProperties.bind();
 }
 
 void FDMShell::unbind()

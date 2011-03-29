@@ -1561,6 +1561,9 @@ void fgReInitSubsystems()
 
     globals->get_subsystem("time")->reinit();
 
+    // need to bind FDMshell again, since we manually unbound it above...
+    globals->get_subsystem("flight")->bind();
+
 // setup state to end re-init
     fgSetBool("/sim/signals/reinit", false);
     if ( !freeze ) {
