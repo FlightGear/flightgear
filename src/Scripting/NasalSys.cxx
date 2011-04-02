@@ -737,12 +737,15 @@ void FGNasalSys::init()
 
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));
-    simgear::PathList scripts = nasalDir.children(simgear::Dir::TYPE_FILE, ".nas");
-    
-    for (unsigned int i=0; i<scripts.size(); ++i) {
-      SGPath fullpath(scripts[i]);
-      SGPath file = fullpath.file();
-      loadModule(fullpath, file.base().c_str());
+    loadScriptDirectory(nasalDir);
+
+    // Add modules in Nasal subdirectories to property tree
+    simgear::PathList directories = nasalDir.children(simgear::Dir::TYPE_DIR+
+            simgear::Dir::NO_DOT_OR_DOTDOT, "");
+    for (unsigned int i=0; i<directories.size(); ++i) {
+        simgear::Dir dir(directories[i]);
+        simgear::PathList scripts = dir.children(simgear::Dir::TYPE_FILE, ".nas");
+        addModule(directories[i].file(), scripts);
     }
 
     // set signal and remove node to avoid restoring at reinit
@@ -777,6 +780,37 @@ void FGNasalSys::update(double)
     _context = naNewContext();
 }
 
+// Loads all scripts in given directory 
+void FGNasalSys::loadScriptDirectory(simgear::Dir nasalDir)
+{
+    simgear::PathList scripts = nasalDir.children(simgear::Dir::TYPE_FILE, ".nas");
+    for (unsigned int i=0; i<scripts.size(); ++i) {
+      SGPath fullpath(scripts[i]);
+      SGPath file = fullpath.file();
+      loadModule(fullpath, file.base().c_str());
+    }
+}
+
+// Create module with list of scripts
+void FGNasalSys::addModule(string moduleName, simgear::PathList scripts)
+{
+    if (scripts.size()>0)
+    {
+        SGPropertyNode* nasal = globals->get_props()->getNode("nasal");
+        SGPropertyNode* module_node = nasal->getChild(moduleName,0,true);
+        for (unsigned int i=0; i<scripts.size(); ++i) {
+            SGPropertyNode* pFileNode = module_node->getChild("file",i,true);
+            pFileNode->setStringValue(scripts[i].c_str());
+        }
+        if (!module_node->hasChild("enabled",0))
+        {
+            SGPropertyNode* node = module_node->getChild("enabled",0,true);
+            node->setBoolValue(true);
+            node->setAttribute(SGPropertyNode::USERARCHIVE,true);
+        }
+    }
+}
+
 // Loads the scripts found under /nasal in the global tree
 void FGNasalSys::loadPropertyScripts()
 {
@@ -785,33 +819,51 @@ void FGNasalSys::loadPropertyScripts()
 
     for(int i=0; i<nasal->nChildren(); i++) {
         SGPropertyNode* n = nasal->getChild(i);
+        bool is_loaded = false;
 
         const char* module = n->getName();
         if(n->hasChild("module"))
             module = n->getStringValue("module");
+        if (n->getBoolValue("enabled",true))
+        {
+            // allow multiple files to be specified within a single
+            // Nasal module tag
+            int j = 0;
+            SGPropertyNode *fn;
+            bool file_specified = false;
+            while((fn = n->getChild("file", j)) != NULL) {
+                file_specified = true;
+                const char* file = fn->getStringValue();
+                SGPath p(file);
+                if (!p.isAbsolute() || !p.exists())
+                {
+                    p = globals->resolve_maybe_aircraft_path(file);
+                }
+                loadModule(p, module);
+                j++;
+            }
+    
+            const char* src = n->getStringValue("script");
+            if(!n->hasChild("script")) src = 0; // Hrm...
+            if(src)
+                createModule(module, n->getPath().c_str(), src, strlen(src));
+    
+            if(!file_specified && !src)
+            {
+                // module no longer exists - clear the archived "enable" flag
+                n->setAttribute(SGPropertyNode::USERARCHIVE,false);
+                SGPropertyNode* node = n->getChild("enabled",0,false);
+                if (node)
+                    node->setAttribute(SGPropertyNode::USERARCHIVE,false);
 
-        // allow multiple files to be specified within a single
-        // Nasal module tag
-        int j = 0;
-        SGPropertyNode *fn;
-        bool file_specified = false;
-        while((fn = n->getChild("file", j)) != NULL) {
-            file_specified = true;
-            const char* file = fn->getStringValue();
-            SGPath p = globals->resolve_maybe_aircraft_path(file);
-            loadModule(p, module);
-            j++;
+                SG_LOG(SG_NASAL, SG_ALERT, "Nasal error: " <<
+                        "no <file> or <script> defined in " <<
+                        "/nasal/" << module);
+            }
+            else
+                is_loaded = true;
         }
-
-        const char* src = n->getStringValue("script");
-        if(!n->hasChild("script")) src = 0; // Hrm...
-        if(src)
-            createModule(module, n->getPath().c_str(), src, strlen(src));
-
-        if(!file_specified && !src)
-            SG_LOG(SG_NASAL, SG_ALERT, "Nasal error: " <<
-                   "no <file> or <script> defined in " <<
-                   "/nasal/" << module);
+        n->setBoolValue("loaded",is_loaded);
     }
 }
 

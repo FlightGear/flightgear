@@ -3,6 +3,7 @@
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/misc/sg_dir.hxx>
 #include <simgear/nasal/nasal.h>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/xml/easyxml.hxx>
@@ -85,6 +86,8 @@ private:
     static int _listenerId;
 
     void loadPropertyScripts();
+    void loadScriptDirectory(simgear::Dir nasalDir);
+    void addModule(string moduleName, simgear::PathList scripts);
     void hashset(naRef hash, const char* key, naRef val);
     void logError(naContext);
     naRef parse(const char* filename, const char* buf, int len);
