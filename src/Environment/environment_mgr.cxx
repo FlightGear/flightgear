@@ -76,12 +76,8 @@ FGEnvironmentMgr::~FGEnvironmentMgr ()
   remove_subsystem("precipitation");
   delete subsys;
 
-  subsys = get_subsystem("metarfetcher");
-  remove_subsystem("metarfetcher");
-  delete subsys;
-
-  subsys = get_subsystem("metarcontroller");
-  remove_subsystem("metarcontroller");
+  subsys = get_subsystem("realwx");
+  remove_subsystem("realwx");
   delete subsys;
 
   subsys = get_subsystem("controller");
@@ -345,9 +341,6 @@ FGEnvironmentMgr::set_cloud_layer_maxalpha (int index, double maxalpha)
 {
     thesky->get_cloud_layer(index)->setMaxAlpha(maxalpha);
 }
-
-
-
 
 void 
 FGEnvironmentMgr::set_cloud_layer_coverage_type (int index, int type )
