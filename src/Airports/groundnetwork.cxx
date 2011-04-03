@@ -510,9 +510,9 @@ void FGGroundNetwork::signOff(int id)
     }
 }
 
-void FGGroundNetwork::update(int id, double lat, double lon,
-                             double heading, double speed, double alt,
-                             double dt)
+void FGGroundNetwork::updateAircraftInformation(int id, double lat, double lon,
+                                                double heading, double speed, double alt,
+                                                double dt)
 {
     // Check whether aircraft are on hold due to a preceding pushback. If so, make sure to 
     // Transmit air-to-ground "Ready to taxi request:

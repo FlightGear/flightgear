@@ -269,7 +269,7 @@ public:
 				double lat, double lon, double hdg, double spd, double alt, 
 				double radius, int leg, FGAIAircraft *aircraft);
   virtual void signOff(int id);
-  virtual void update(int id, double lat, double lon, double heading, double speed, double alt, double dt);
+  virtual void updateAircraftInformation(int id, double lat, double lon, double heading, double speed, double alt, double dt);
   virtual bool hasInstruction(int id);
   virtual FGATCInstruction getInstruction(int id);
 

@@ -46,6 +46,7 @@ FGATCDialog *current_atcdialog;
 
 // For the command manager - maybe eventually this should go in the built in command list
 static bool do_ATC_dialog(const SGPropertyNode* arg) {
+        cerr << "Running ATCDCL do_ATC_dialog" << endl;
 	current_atcdialog->PopupDialog();
 	return(true);
 }
@@ -101,39 +102,39 @@ FGATCDialog::~FGATCDialog() {
 
 void FGATCDialog::Init() {
 	// Add ATC-dialog to the command list
-	globals->get_commands()->addCommand("ATC-dialog", do_ATC_dialog);
+	//globals->get_commands()->addCommand("ATC-dialog", do_ATC_dialog);
 	// Add ATC-freq-search to the command list
-	globals->get_commands()->addCommand("ATC-freq-search", do_ATC_freq_search);
+	//globals->get_commands()->addCommand("ATC-freq-search", do_ATC_freq_search);
 
 	// initialize properties polled in Update()
-	globals->get_props()->setStringValue("/sim/atc/freq-airport", "");
-	globals->get_props()->setIntValue("/sim/atc/transmission-num", -1);
+	//globals->get_props()->setStringValue("/sim/atc/freq-airport", "");
+	//globals->get_props()->setIntValue("/sim/atc/transmission-num", -1);
 }
 
 void FGATCDialog::Update(double dt) {
-	static SGPropertyNode_ptr airport = globals->get_props()->getNode("/sim/atc/freq-airport", true);
-	string s = airport->getStringValue();
-	if (!s.empty()) {
-		airport->setStringValue("");
-		FreqDisplay(s);
-	}
+	//static SGPropertyNode_ptr airport = globals->get_props()->getNode("/sim/atc/freq-airport", true);
+	//string s = airport->getStringValue();
+	//if (!s.empty()) {
+	//	airport->setStringValue("");
+	//	FreqDisplay(s);
+	//}
 
-	static SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
-	int n = trans_num->getIntValue();
-	if (n >= 0) {
-		trans_num->setIntValue(-1);
-		PopupCallback(n);
-	}
+	//static SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
+	//int n = trans_num->getIntValue();
+	//if (n >= 0) {
+	//	trans_num->setIntValue(-1);
+	//	PopupCallback(n);
+	//}
 
-	if(_callbackPending) {
-		if(_callbackTimer > _callbackWait) {
-			_callbackPtr->ReceiveUserCallback(_callbackCode);
-			_callbackPtr->NotifyTransmissionFinished(fgGetString("/sim/user/callsign"));
-			_callbackPending = false;
-		} else {
-			_callbackTimer += dt;
-		}
-	}
+	//if(_callbackPending) {
+	//	if(_callbackTimer > _callbackWait) {
+	//		_callbackPtr->ReceiveUserCallback(_callbackCode);
+	//		_callbackPtr->NotifyTransmissionFinished(fgGetString("/sim/user/callsign"));
+	//		_callbackPending = false;
+	//	} else {
+	//		_callbackTimer += dt;
+	//	}
+	//}
 }
 
 // Add an entry

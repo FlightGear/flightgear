@@ -77,6 +77,7 @@
 #include <ATCDCL/ATCmgr.hxx>
 #include <ATCDCL/commlist.hxx>
 #include <ATC/atis_mgr.hxx>
+#include <ATC/atc_mgr.hxx>
 
 #include <Autopilot/route_mgr.hxx>
 #include <Autopilot/autopilotgroup.hxx>
@@ -1384,6 +1385,10 @@ bool fgInitSubsystems() {
 
     ////////////////////////////////////////////////////////////////////
     // Initialise the ATC Manager
+    // Note that this is old stuff, but might be necessesary for the 
+    // current ATIS implementation. Therefore, leave it in here
+    // until the ATIS system is ported over to make use of the ATIS 
+    // sub system infrastructure.
     ////////////////////////////////////////////////////////////////////
 
     SG_LOG(SG_GENERAL, SG_INFO, "  ATC Manager");
@@ -1391,7 +1396,11 @@ bool fgInitSubsystems() {
     globals->get_ATC_mgr()->init(); 
 
     ////////////////////////////////////////////////////////////////////
-    // Initialise the ATIS Manager
+   // Initialize the ATC subsystem
+    ////////////////////////////////////////////////////////////////////
+    globals->add_subsystem("ATC", new FGATCManager, SGSubsystemMgr::POST_FDM);
+    ////////////////////////////////////////////////////////////////////
+    // Initialise the ATIS Subsystem
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("atis", new FGAtisManager, SGSubsystemMgr::POST_FDM);
 

@@ -31,6 +31,8 @@
 // There is probably a better include than sg_geodesy to get the SG_NM_TO_METER...
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/structure/SGReferenced.hxx>
+#include <simgear/structure/SGSharedPtr.hxx>
 
 
 
@@ -257,14 +259,14 @@ public:
       ATC_AIR_TO_GROUND,
       ATC_GROUND_TO_AIR } AtcMsgDir;
   FGATCController();
-  virtual ~FGATCController() {};
+  virtual ~FGATCController();
   virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
-				double lat, double lon,
-				double hdg, double spd, double alt, double radius, int leg,
-				FGAIAircraft *aircraft) = 0;
+                                double lat, double lon,
+                                double hdg, double spd, double alt, double radius, int leg,
+                                FGAIAircraft *aircraft) = 0;
   virtual void             signOff(int id) = 0;
-  virtual void             update(int id, double lat, double lon, 
-				  double heading, double speed, double alt, double dt) = 0;
+  virtual void             updateAircraftInformation(int id, double lat, double lon, 
+                                                     double heading, double speed, double alt, double dt) = 0;
   virtual bool             hasInstruction(int id) = 0;
   virtual FGATCInstruction getInstruction(int id) = 0;
 
@@ -291,7 +293,7 @@ public:
 				double hdg, double spd, double alt, double radius, int leg,
 				FGAIAircraft *aircraft);
   virtual void             signOff(int id);
-  virtual void             update(int id, double lat, double lon, 
+  virtual void             updateAircraftInformation(int id, double lat, double lon, 
 				  double heading, double speed, double alt, double dt);
   virtual bool             hasInstruction(int id);
   virtual FGATCInstruction getInstruction(int id);
@@ -319,7 +321,7 @@ public:
 				double hdg, double spd, double alt, double radius, int leg,
 				FGAIAircraft *aircraft);
   virtual void             signOff(int id);
-  virtual void             update(int id, double lat, double lon, 
+  virtual void             updateAircraftInformation(int id, double lat, double lon, 
 				  double heading, double speed, double alt, double dt);
   virtual bool             hasInstruction(int id);
   virtual FGATCInstruction getInstruction(int id);
@@ -346,7 +348,7 @@ public:
 				double hdg, double spd, double alt, double radius, int leg,
 				FGAIAircraft *aircraft);
   virtual void             signOff(int id);
-  virtual void             update(int id, double lat, double lon, 
+  virtual void             updateAircraftInformation(int id, double lat, double lon, 
 				  double heading, double speed, double alt, double dt);
   virtual bool             hasInstruction(int id);
   virtual FGATCInstruction getInstruction(int id);

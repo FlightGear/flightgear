@@ -27,6 +27,7 @@
 #include <algorithm>
 
 #include "trafficcontrol.hxx"
+#include "atc_mgr.hxx"
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/AIFlightPlan.hxx>
 #include <AIModel/performancedata.hxx>
@@ -447,9 +448,17 @@ bool FGATCInstruction::hasInstruction()
 
 FGATCController::FGATCController()
 {
+    cerr << "running FGATController constructor" << endl;
     dt_count = 0;
     available = true;
     lastTransmission = 0;
+    FGATCManager *mgr = (FGATCManager*) globals->get_subsystem("ATC");
+    mgr->addController(this);
+}
+
+FGATCController::~FGATCController()
+{
+     cerr << "running FGATController destructor" << endl;
 }
 
 string FGATCController::getGateName(FGAIAircraft * ref)
@@ -709,9 +718,9 @@ void FGTowerController::announcePosition(int id,
     }
 }
 
-void FGTowerController::update(int id, double lat, double lon,
-                               double heading, double speed, double alt,
-                               double dt)
+void FGTowerController::updateAircraftInformation(int id, double lat, double lon,
+                                                  double heading, double speed, double alt,
+                                                  double dt)
 {
     TrafficVectorIterator i = activeTraffic.begin();
     // Search whether the current id has an entry
@@ -978,9 +987,9 @@ void FGStartupController::signOff(int id)
     }
 }
 
-void FGStartupController::update(int id, double lat, double lon,
-                                 double heading, double speed, double alt,
-                                 double dt)
+void FGStartupController::updateAircraftInformation(int id, double lat, double lon,
+                                                    double heading, double speed, double alt,
+                                                    double dt)
 {
     TrafficVectorIterator i = activeTraffic.begin();
     // Search search if the current id has an entry
@@ -1160,9 +1169,9 @@ void FGApproachController::announcePosition(int id,
     }
 }
 
-void FGApproachController::update(int id, double lat, double lon,
-                                  double heading, double speed, double alt,
-                                  double dt)
+void FGApproachController::updateAircraftInformation(int id, double lat, double lon,
+                                                     double heading, double speed, double alt,
+                                                     double dt)
 {
     TrafficVectorIterator i = activeTraffic.begin();
     // Search search if the current id has an entry

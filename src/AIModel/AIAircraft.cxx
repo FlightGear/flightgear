@@ -1088,12 +1088,12 @@ string FGAIAircraft::atGate() {
 void FGAIAircraft::handleATCRequests() {
     //TODO implement NullController for having no ATC to save the conditionals
     if (controller) {
-        controller->update(getID(),
-                           pos.getLatitudeDeg(),
-                           pos.getLongitudeDeg(),
-                           hdg,
-                           speed,
-                           altitude_ft, dt);
+        controller->updateAircraftInformation(getID(),
+                                              pos.getLatitudeDeg(),
+                                              pos.getLongitudeDeg(),
+                                              hdg,
+                                              speed,
+                                              altitude_ft, dt);
         processATC(controller->getInstruction(getID()));
     }
 }
