@@ -25,7 +25,7 @@ public:
 
     // Loads a nasal script from an external file and inserts it as a
     // global module of the specified name.
-    void loadModule(SGPath file, const char* moduleName);
+    bool loadModule(SGPath file, const char* moduleName);
 
     // Simple hook to run arbitrary source code.  Returns a bool to
     // indicate successful execution.  Does *not* return any Nasal
@@ -54,7 +54,7 @@ public:
     // Callbacks for command and timer bindings
     virtual bool handleCommand(const SGPropertyNode* arg);
 
-    void createModule(const char* moduleName, const char* fileName,
+    bool createModule(const char* moduleName, const char* fileName,
                       const char* src, int len, const SGPropertyNode* cmdarg=0,
                       int argc=0, naRef*args=0);
 
@@ -66,6 +66,7 @@ public:
 private:
     friend class FGNasalScript;
     friend class FGNasalListener;
+    friend class FGNasalModuleListener;
 
     //
     // FGTimer subclass for handling Nasal timer callbacks.
@@ -86,6 +87,7 @@ private:
     static int _listenerId;
 
     void loadPropertyScripts();
+    void loadPropertyScripts(SGPropertyNode* n);
     void loadScriptDirectory(simgear::Dir nasalDir);
     void addModule(string moduleName, simgear::PathList scripts);
     void hashset(naRef hash, const char* key, naRef val);
