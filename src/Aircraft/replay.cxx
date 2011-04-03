@@ -24,13 +24,16 @@
 #  include "config.h"
 #endif
 
+#include <float.h>
 #include <simgear/constants.h>
+#include <simgear/structure/exception.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Network/native_ctrls.hxx>
 #include <Network/native_fdm.hxx>
 #include <Network/net_ctrls.hxx>
 #include <Network/net_fdm.hxx>
+#include <FDM/fdm_shell.hxx>
 
 #include "replay.hxx"
 
@@ -46,7 +49,9 @@ const double FGReplay::lt_dt = 5.0; // long term sample rate (sec)
  * Constructor
  */
 
-FGReplay::FGReplay() {
+FGReplay::FGReplay() :
+    last_replay_state(0)
+{
 }
 
 
@@ -54,73 +59,82 @@ FGReplay::FGReplay() {
  * Destructor
  */
 
-FGReplay::~FGReplay() {
-    while ( !short_term.empty() ) {
-	//cerr << "Deleting Short term" <<endl;
+FGReplay::~FGReplay()
+{
+    clear();
+}
+
+/**
+ * Clear all internal buffers.
+ */
+void FGReplay::clear()
+{
+    while ( !short_term.empty() )
+    {
         delete short_term.front();
         short_term.pop_front();
     }
-    while ( !medium_term.empty() ) {
-	//cerr << "Deleting Medium term" <<endl;
-	delete medium_term.front();
+    while ( !medium_term.empty() )
+    {
+        delete medium_term.front();
         medium_term.pop_front();
     }
-    while ( !long_term.empty() ) {
-	//cerr << "Deleting Long term" <<endl;
-	delete long_term.front();
+    while ( !long_term.empty() )
+    {
+        delete long_term.front();
         long_term.pop_front();
     }
-    while ( !recycler.empty() ) {
-	//cerr << "Deleting Recycler" <<endl;
-	delete recycler.front();
+    while ( !recycler.empty() )
+    {
+        delete recycler.front();
         recycler.pop_front();
     }
 }
-
 
 /** 
  * Initialize the data structures
  */
 
-void FGReplay::init() {
+void FGReplay::init()
+{
+    disable_replay = fgGetNode( "/sim/replay/disable", true );
+    replay_master = fgGetNode( "/sim/freeze/replay-state", true );
+    replay_time = fgGetNode( "/sim/replay/time", true);
+    reinit();
+}
+
+/** 
+ * Reset replay queues.
+ */
+
+void FGReplay::reinit()
+{
     sim_time = 0.0;
     last_mt_time = 0.0;
     last_lt_time = 0.0;
 
     // Make sure all queues are flushed
-    while ( !short_term.empty() ) {
-        delete short_term.front();
-        short_term.pop_front();
-    }
-    while ( !medium_term.empty() ) {
-	delete medium_term.front();
-        medium_term.pop_front();
-    }
-    while ( !long_term.empty() ) {
-	delete long_term.front();
-        long_term.pop_front();
-    }
-    while ( !recycler.empty() ) {
-	delete recycler.front();
-        recycler.pop_front();
-    }
+    clear();
+
     // Create an estimated nr of required ReplayData objects
     // 120 is an estimated maximum frame rate. 
     int estNrObjects = (int) ((st_list_time*120) + (mt_list_time*mt_dt) +
                              (lt_list_time*lt_dt)); 
-    for (int i = 0; i < estNrObjects; i++) {
+    for (int i = 0; i < estNrObjects; i++)
+    {
         recycler.push_back(new FGReplayData);
-
     }
+    replay_master->setIntValue(0);
+    disable_replay->setBoolValue(0);
+    replay_time->setDoubleValue(0);
 }
-
 
 /** 
  * Bind to the property tree
  */
 
-void FGReplay::bind() {
-    disable_replay = fgGetNode( "/sim/replay/disable", true );
+void FGReplay::bind()
+{
 }
 
 
@@ -128,7 +142,8 @@ void FGReplay::bind() {
  *  Unbind from the property tree
  */
 
-void FGReplay::unbind() {
+void FGReplay::unbind()
+{
     // nothing to unbind
 }
 
@@ -137,24 +152,62 @@ void FGReplay::unbind() {
  *  Update the saved data
  */
 
-void FGReplay::update( double dt ) {
+void FGReplay::update( double dt )
+{
     timingInfo.clear();
     stamp("begin");
-    static SGPropertyNode *replay_master
-        = fgGetNode( "/sim/freeze/replay-state", true );
 
-    if( disable_replay->getBoolValue() ) {
-        if ( sim_time != 0.0 ) {
-            // we were recording data
-            init();
-        }
-        return;
+    if ( disable_replay->getBoolValue() )
+    {
+        replay_master->setIntValue(0);
+        replay_time->setDoubleValue(0);
+        disable_replay->setBoolValue(0);
     }
-    //stamp("point_01");
-    if ( replay_master->getIntValue() > 0 ) {
-        // don't record the replay session
-        return;
+
+    int replay_state = replay_master->getIntValue();
+
+    if ((replay_state > 0)&&
+       (last_replay_state == 0))
+    {
+        // replay is starting, suspend FDM
+        /* FIXME we need to suspend/resume the FDM - not the entire FDM shell.
+         * FDM isn't available via the global subsystem manager yet, so need a
+         * method at the FDMshell for now */
+        ((FDMShell*) globals->get_subsystem("flight"))->getFDM()->suspend();
     }
+    else
+    if ((replay_state == 0)&&
+        (last_replay_state > 0))
+    {
+        // replay was active, restore most recent frame
+        replay(DBL_MAX);
+        // replay is finished, resume FDM
+        ((FDMShell*) globals->get_subsystem("flight"))->getFDM()->resume();
+    }
+
+    // remember recent state
+    last_replay_state = replay_state;
+
+    switch(replay_state)
+    {
+        case 0:
+            // replay inactive, keep recording
+            break;
+        case 1:
+            // replay active
+            replay( replay_time->getDoubleValue() );
+            replay_time->setDoubleValue( replay_time->getDoubleValue()
+                                         + ( dt * fgGetInt("/sim/speed-up") ) );
+            return; // don't record the replay session 
+        case 2:
+            // replay paused, no-op
+            return; // don't record the replay session
+        default:
+            throw sg_range_exception("unknown FGReplay state");
+    }
+
+    // flight recording
+
     //cerr << "Recording replay" << endl;
     sim_time += dt;
 
@@ -175,12 +228,13 @@ void FGReplay::update( double dt ) {
     if (!recycler.size()) {
         stamp("Replay_01");
         r = new FGReplayData;
-	stamp("Replay_02");
+        stamp("Replay_02");
     } else {
-	r = recycler.front();
-	recycler.pop_front();
-	//stamp("point_04be");
+        r = recycler.front();
+        recycler.pop_front();
+        //stamp("point_04be");
     }
+
     r->sim_time = sim_time;
     //r->ctrls = c;
     //stamp("point_04e");

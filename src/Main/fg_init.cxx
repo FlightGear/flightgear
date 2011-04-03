@@ -1517,7 +1517,7 @@ bool fgInitSubsystems() {
     return true;
 }
 
-
+// Reset: this is what the 'reset' command (and hence, GUI) is attached to
 void fgReInitSubsystems()
 {
     static const SGPropertyNode *master_freeze
@@ -1553,10 +1553,16 @@ void fgReInitSubsystems()
     // Initialize the FDM
     globals->get_subsystem("flight")->reinit();
 
+    // reset replay buffers
+    globals->get_subsystem("replay")->reinit();
+    
     // reload offsets from config defaults
     globals->get_viewmgr()->reinit();
 
     globals->get_subsystem("time")->reinit();
+
+    // need to bind FDMshell again, since we manually unbound it above...
+    globals->get_subsystem("flight")->bind();
 
 // setup state to end re-init
     fgSetBool("/sim/signals/reinit", false);
@@ -1566,13 +1572,6 @@ void fgReInitSubsystems()
     fgSetBool("/sim/sceneryloaded",false);
 }
 
-
-void doSimulatorReset(void)  // from gui_local.cxx -- TODO merge with fgReInitSubsystems()
-{
-    
-
-    fgReInitSubsystems();
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // helper object to implement the --show-aircraft command.

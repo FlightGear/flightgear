@@ -236,12 +236,6 @@ TankPropertiesList::TankPropertiesList( SGPropertyNode_ptr rootNode )
   }
 
   _tiedProperties.setRoot( rootNode );
-  _tiedProperties.Tie("total-fuel-kg", this, &TankPropertiesList::getTotalContent_kg );
-  _tiedProperties.Tie("total-fuel-lbs", this, &TankPropertiesList::getTotalContent_lbs );
-  _tiedProperties.Tie("total-fuel-gal_us", this, &TankPropertiesList::getTotalContent_gal_us );
-  _tiedProperties.Tie("total-fuel-gals", this, &TankPropertiesList::getTotalContent_gal_us );
-  _tiedProperties.Tie("total-fuel-gal_imp", this, &TankPropertiesList::getTotalContent_gal_imp );
-  _tiedProperties.Tie("total-fuel-norm", this, &TankPropertiesList::getTotalContent_norm );
 }
 
 double TankPropertiesList::getTotalContent_lbs() const
@@ -297,6 +291,12 @@ double TankPropertiesList::getTotalContent_norm() const
 
 void TankPropertiesList::bind()
 {
+    _tiedProperties.Tie("total-fuel-kg", this, &TankPropertiesList::getTotalContent_kg );
+    _tiedProperties.Tie("total-fuel-lbs", this, &TankPropertiesList::getTotalContent_lbs );
+    _tiedProperties.Tie("total-fuel-gal_us", this, &TankPropertiesList::getTotalContent_gal_us );
+    _tiedProperties.Tie("total-fuel-gals", this, &TankPropertiesList::getTotalContent_gal_us );
+    _tiedProperties.Tie("total-fuel-gal_imp", this, &TankPropertiesList::getTotalContent_gal_imp );
+    _tiedProperties.Tie("total-fuel-norm", this, &TankPropertiesList::getTotalContent_norm );
     for( const_iterator it = begin(); it != end(); ++it ) {
       (*it)->bind();
     }

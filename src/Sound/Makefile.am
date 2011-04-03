@@ -8,4 +8,4 @@ libSound_a_SOURCES = \
 	sample_queue.cxx sample_queue.hxx \
 	voiceplayer.cxx voiceplayer.hxx
 
-INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
+INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src -I$(top_builddir) -I$(top_builddir)/src

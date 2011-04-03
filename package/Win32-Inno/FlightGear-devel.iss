@@ -20,7 +20,7 @@
 ;     C:\> subst X: /d
 ;
 
-#define FGVER "v20110228"
+#define FGVER "v20110324"
 
 [Setup]
 AppId=FlightGear {#FGVER}
@@ -52,7 +52,7 @@ Name: "insoal"; Description: "Install OpenAL (the sound engine)"
 ; NOTE: run subst X: F:\ (or whatever path the expanded tree resides at)
 Source: "X:\*.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "X:\bin\Win32\*.*"; DestDir: "{app}\bin\Win32"; Flags: ignoreversion recursesubdirs
-Source: "X:\bin\vcredist_x86.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
+;;; Source: "X:\bin\vcredist_x86.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "X:\bin\oalinst.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "X:\data\*.*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
@@ -88,7 +88,7 @@ Name: "{group}\Tools\Explore Documentation Folder"; Filename: "{app}\data\Docs"
 ; Name: "{userdesktop}\FlightGear {#FGVER}"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\bin\vcredist_x86.exe"; WorkingDir: "{app}"; Parameters: "/qb!"; Description: "Installing Flightgear prerequisites"
+;;; Filename: "{app}\bin\vcredist_x86.exe"; WorkingDir: "{app}"; Parameters: "/qb!"; Description: "Installing Flightgear prerequisites"
 
 ; Put installation directory into the fgrun.prefs
 filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--fg-exe={app}\bin\Win32\fgfs.exe"" ""--ts-exe={app}\bin\Win32\terrasync.exe"" ""--fg-root={app}\data"" ""--fg-scenery={app}\data\Scenery;{app}\scenery;{code:TerrasyncDir}"" --ts-dir=3"

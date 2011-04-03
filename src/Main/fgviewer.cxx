@@ -204,7 +204,7 @@ fgviewerMain(int argc, char** argv)
     }
 
     globals->set_matlib( new SGMaterialLib );
-    simgear::SGModelLib::init(globals->get_fg_root());
+    simgear::SGModelLib::init(globals->get_fg_root(), globals->get_props());
 
     // Initialize the material property subsystem.
 

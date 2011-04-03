@@ -40,6 +40,7 @@
 #include <simgear/threads/SGQueue.hxx>
 #endif
 
+using simgear::PropertyList;
 
 namespace Environment {
 
