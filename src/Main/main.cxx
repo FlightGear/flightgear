@@ -390,8 +390,7 @@ static void fgIdleFunction ( void ) {
         // Initialize the material manager
         ////////////////////////////////////////////////////////////////////
         globals->set_matlib( new SGMaterialLib );
-        simgear::SGModelLib::init(globals->get_fg_root());
-        simgear::SGModelLib::setPropRoot(globals->get_props());
+        simgear::SGModelLib::init(globals->get_fg_root(), globals->get_props());
         simgear::SGModelLib::setPanelFunc(load_panel);
         
         ////////////////////////////////////////////////////////////////////
