@@ -97,6 +97,7 @@ FGEnvironmentMgr::init ()
 {
   SG_LOG( SG_GENERAL, SG_INFO, "Initializing environment subsystem");
   SGSubsystemGroup::init();
+  fgClouds->Init();
 }
 
 void
@@ -111,7 +112,7 @@ FGEnvironmentMgr::bind ()
 {
   SGSubsystemGroup::bind();
   _environment->Tie( fgGetNode("/environment", true ) );
-  
+
   _tiedProperties.setRoot( fgGetNode( "/environment", true ) );
 
   _tiedProperties.Tie( "effective-visibility-m", thesky,
@@ -128,27 +129,27 @@ FGEnvironmentMgr::bind ()
   for (int i = 0; i < MAX_CLOUD_LAYERS; i++) {
       SGPropertyNode_ptr layerNode = fgGetNode("/environment/clouds",true)->getChild("layer", i, true );
 
-      _tiedProperties.Tie( layerNode->getNode("span-m",true), this, i, 
+      _tiedProperties.Tie( layerNode->getNode("span-m",true), this, i,
               &FGEnvironmentMgr::get_cloud_layer_span_m,
               &FGEnvironmentMgr::set_cloud_layer_span_m);
 
-      _tiedProperties.Tie( layerNode->getNode("elevation-ft",true), this, i, 
+      _tiedProperties.Tie( layerNode->getNode("elevation-ft",true), this, i,
               &FGEnvironmentMgr::get_cloud_layer_elevation_ft,
               &FGEnvironmentMgr::set_cloud_layer_elevation_ft);
 
-      _tiedProperties.Tie( layerNode->getNode("thickness-ft",true), this, i, 
+      _tiedProperties.Tie( layerNode->getNode("thickness-ft",true), this, i,
               &FGEnvironmentMgr::get_cloud_layer_thickness_ft,
               &FGEnvironmentMgr::set_cloud_layer_thickness_ft);
 
-      _tiedProperties.Tie( layerNode->getNode("transition-ft",true), this, i, 
+      _tiedProperties.Tie( layerNode->getNode("transition-ft",true), this, i,
               &FGEnvironmentMgr::get_cloud_layer_transition_ft,
               &FGEnvironmentMgr::set_cloud_layer_transition_ft);
 
-      _tiedProperties.Tie( layerNode->getNode("coverage",true), this, i, 
+      _tiedProperties.Tie( layerNode->getNode("coverage",true), this, i,
               &FGEnvironmentMgr::get_cloud_layer_coverage,
               &FGEnvironmentMgr::set_cloud_layer_coverage);
 
-      _tiedProperties.Tie( layerNode->getNode("coverage-type",true), this, i, 
+      _tiedProperties.Tie( layerNode->getNode("coverage-type",true), this, i,
               &FGEnvironmentMgr::get_cloud_layer_coverage_type,
               &FGEnvironmentMgr::set_cloud_layer_coverage_type);
 
@@ -174,9 +175,9 @@ FGEnvironmentMgr::bind ()
   _tiedProperties.Tie("clouds3d-vis-range", thesky,
           &SGSky::get_3dCloudVisRange,
           &SGSky::set_3dCloudVisRange);
-  
+
   _tiedProperties.Tie("precipitation-enable", &sgEnviro,
-          &SGEnviro::get_precipitation_enable_state, 
+          &SGEnviro::get_precipitation_enable_state,
           &SGEnviro::set_precipitation_enable_state);
 
   _tiedProperties.Tie("lightning-enable", &sgEnviro,
@@ -198,7 +199,7 @@ void
 FGEnvironmentMgr::update (double dt)
 {
   SGSubsystemGroup::update(dt);
-  
+
   _environment->set_elevation_ft( _altitudeNode->getDoubleValue() );
 
   simgear::Particles::setWindFrom( _environment->get_wind_from_heading_deg(),
@@ -226,7 +227,7 @@ FGEnvironmentMgr::update (double dt)
       }
       else
       {
-          const string currentId = fgGetString("/sim/airport/closest-airport-id", ""); 
+          const string currentId = fgGetString("/sim/airport/closest-airport-id", "");
           if (currentId != nearestAirport->ident())
           {
               fgSetString("/sim/airport/closest-airport-id",
@@ -349,31 +350,31 @@ FGEnvironmentMgr::get_cloud_layer_coverage_type (int index) const
   return thesky->get_cloud_layer(index)->getCoverage();
 }
 
-double 
+double
 FGEnvironmentMgr::get_cloud_layer_visibility_m (int index) const
 {
     return thesky->get_cloud_layer(index)->getVisibility_m();
 }
 
-void 
+void
 FGEnvironmentMgr::set_cloud_layer_visibility_m (int index, double visibility_m)
 {
     thesky->get_cloud_layer(index)->setVisibility_m(visibility_m);
 }
 
-double 
+double
 FGEnvironmentMgr::get_cloud_layer_maxalpha (int index ) const
 {
     return thesky->get_cloud_layer(index)->getMaxAlpha();
 }
 
-void 
+void
 FGEnvironmentMgr::set_cloud_layer_maxalpha (int index, double maxalpha)
 {
     thesky->get_cloud_layer(index)->setMaxAlpha(maxalpha);
 }
 
-void 
+void
 FGEnvironmentMgr::set_cloud_layer_coverage_type (int index, int type )
 {
   if( type < 0 || type >= SGCloudLayer::SG_MAX_CLOUD_COVERAGES ) {
