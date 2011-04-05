@@ -46,7 +46,7 @@ class FGATCManager : public SGSubsystem
 {
 private:
   AtcVec activeStations;
-  FGATCDialogNew dialog;
+  //FGATCDialogNew dialog;  // note that this variable should really replace the ugly global "currentATCDialog();
 
 public:
   FGATCManager();

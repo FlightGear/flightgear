@@ -32,11 +32,11 @@
 
 #include "atcdialog.hxx"
 
-
+FGATCDialogNew *currentATCDialog;
 
 static bool doATCDialog(const SGPropertyNode* arg) {
         cerr << "Running doATCDialog" << endl;
-	current_atcdialog->PopupDialog();
+	currentATCDialog->PopupDialog();
 	return(true);
 }
 
@@ -62,18 +62,30 @@ void FGATCDialogNew::init() {
 	//globals->get_props()->setIntValue("/sim/atc/transmission-num", -1);
 }
 
+
+
 // Display the ATC popup dialog box with options relevant to the users current situation.
+// 
+// So, the first thing we need to do is check the frequency that our pilot's nav radio
+// is currently tuned to. The dialog should always contain an option to to tune the 
+// to a particular frequency,
 void FGATCDialogNew::PopupDialog() {
-	const char *dialog_name = "atc-dialog";
-        _gui = (NewGUI *)globals->get_subsystem("gui");
-	SGPropertyNode_ptr dlg = _gui->getDialogProperties(dialog_name);
-	if (!dlg)
-		return;
-        if (dialogVisible) {
-	     _gui->closeDialog(dialog_name);
-        } else {
-	     _gui->showDialog(dialog_name);
-        }
-        dialogVisible = !dialogVisible;
-	return;
+    double onBoardRadioFreq0 =
+        fgGetDouble("/instrumentation/comm[0]/frequencies/selected-mhz");
+    double onBoardRadioFreq1 =
+        fgGetDouble("/instrumentation/comm[1]/frequencies/selected-mhz");
+
+    const char *dialog_name = "atc-dialog";
+    _gui = (NewGUI *)globals->get_subsystem("gui");
+    SGPropertyNode_ptr dlg = _gui->getDialogProperties(dialog_name);
+    if (!dlg)
+        return;
+    
+    if (dialogVisible) {
+        _gui->closeDialog(dialog_name);
+    } else {
+        _gui->showDialog(dialog_name);
+    }
+    dialogVisible = !dialogVisible;
+    return;
 }

@@ -58,6 +58,6 @@ public:
     void PopupDialog();
 };
 
-extern FGATCDialogNew *current_atcdialog;
+extern FGATCDialogNew *currentATCDialog;
 
 #endif // _ATC_DIALOG_HXX_

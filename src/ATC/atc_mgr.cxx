@@ -40,7 +40,10 @@ FGATCManager::~FGATCManager() {
 
 void FGATCManager::init() {
     SGSubsystem::init();
-    dialog.init();
+    currentATCDialog = new FGATCDialogNew;
+    currentATCDialog->init();
+
+    //dialog.init();
 }
 
 void FGATCManager::addController(FGATCController *controller) {
