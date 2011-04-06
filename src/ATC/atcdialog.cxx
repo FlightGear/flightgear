@@ -25,6 +25,7 @@
 #include <simgear/structure/commands.hxx>
 #include <simgear/compiler.h>
 #include <simgear/props/props.hxx>
+#include <simgear/props/props_io.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/debug/logstream.hxx>
@@ -69,6 +70,23 @@ void FGATCDialogNew::init() {
 // So, the first thing we need to do is check the frequency that our pilot's nav radio
 // is currently tuned to. The dialog should always contain an option to to tune the 
 // to a particular frequency,
+
+// Okay, let's see, according to my interpretation of David Luff's original code,
+// his ATC subsystem wrote properties to a named node, called "transmission-choice"
+
+static SGPropertyNode *getNamedNode(SGPropertyNode *prop, const char *name) {
+    SGPropertyNode* p;
+
+    for (int i = 0; i < prop->nChildren(); i++)
+        if ((p = getNamedNode(prop->getChild(i), name)))
+            return p;
+
+        if (!strcmp(prop->getStringValue("name"), name))
+            return prop;
+      return 0;
+}
+
+
 void FGATCDialogNew::PopupDialog() {
     double onBoardRadioFreq0 =
         fgGetDouble("/instrumentation/comm[0]/frequencies/selected-mhz");
@@ -80,7 +98,32 @@ void FGATCDialogNew::PopupDialog() {
     SGPropertyNode_ptr dlg = _gui->getDialogProperties(dialog_name);
     if (!dlg)
         return;
-    
+
+    _gui->closeDialog(dialog_name);
+    SGPropertyNode_ptr button_group = getNamedNode(dlg, "transmission-choice");
+    button_group->removeChildren("button", false);
+
+    const int bufsize = 32;
+    char buf[bufsize];
+    // loop over all entries that should fill up the dialog; use 10 items for now...
+    for (int i = 0; i < 10; i++) {
+        snprintf(buf, bufsize, "/sim/atc/opt[%d]", i);
+            fgSetBool(buf, false);
+        SGPropertyNode *entry = button_group->getNode("button", i, true);
+        copyProperties(button_group->getNode("button-template", true), entry);
+	entry->removeChildren("enabled", true);
+	entry->setStringValue("property", buf);
+	entry->setIntValue("keynum", '1' + i);
+	if (i == 0)
+	    entry->setBoolValue("default", true);
+
+	snprintf(buf, bufsize, "%d", i + 1);
+	string legend = string(buf) + ". test"; // + current->menuentry;
+	entry->setStringValue("legend", legend.c_str());
+	entry->setIntValue("binding/value", i);
+	//current++;
+    }
+
     if (dialogVisible) {
         _gui->closeDialog(dialog_name);
     } else {
