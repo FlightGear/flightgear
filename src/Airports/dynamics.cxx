@@ -535,6 +535,32 @@ int FGAirportDynamics::getGroundFrequency(unsigned leg)
     return groundFreq;
 }
 
+int FGAirportDynamics::getTowerFrequency(unsigned nr)
+{
+    int towerFreq = 0;
+    if (nr < 2) {
+        SG_LOG(SG_ATC, SG_ALERT,
+               "Leg value is smaller than two at " << SG_ORIGIN);
+    }
+    if (freqTower.size() == 0) {
+        return 0;
+    }
+    if ((freqTower.size() > nr - 1) && (nr > 1)) {
+        towerFreq = freqTower[nr - 1];
+    }
+    if ((freqTower.size() < nr - 1) && (nr > 1)) {
+        towerFreq =
+            (freqTower.size() <
+             (nr - 1)) ? freqTower[freqTower.size() -
+                                     1] : freqTower[nr - 2];
+    }
+    if ((freqTower.size() >= nr - 1) && (nr > 1)) {
+        towerFreq = freqTower[nr - 2];
+    }
+    return towerFreq;
+}
+
+
 FGAIFlightPlan *FGAirportDynamics::getSID(string activeRunway,
                                           double heading)
 {

@@ -27,6 +27,9 @@
 #include <iostream>
 
 #include <simgear/math/SGMath.hxx>
+#include <Airports/dynamics.hxx>
+#include <Airports/simple.hxx>
+
 #include "atc_mgr.hxx"
 
 
@@ -43,6 +46,37 @@ void FGATCManager::init() {
     currentATCDialog = new FGATCDialogNew;
     currentATCDialog->init();
 
+    // find a reasonable controller for our user's aircraft..
+    // Let's start by working out the following three scenarios: 
+    // Starting on ground at a parking position
+    // Starting on ground at the runway.
+    // Starting in the Air
+    bool onGround  = fgGetBool("/sim/presets/onground");
+    string runway  = fgGetString("/sim/atc/runway");
+    string airport = fgGetString("/sim/presets/airport-id");
+    string parking = fgGetString("/sim/presets/parkpos");
+
+    FGAirport *apt = FGAirport::findByIdent(airport); 
+    cerr << "found information: " << runway << " " << airport << ": parking = " << parking << endl;
+     if (onGround) {
+        if (parking.empty()) {
+            controller = apt->getDynamics()->getTowerController();
+            int stationFreq = apt->getDynamics()->getTowerFrequency(2);
+            cerr << "Setting radio frequency to in airfrequency: " << stationFreq << endl;
+            fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
+
+        } else {
+            controller = apt->getDynamics()->getGroundNetwork();
+            int stationFreq = apt->getDynamics()->getGroundFrequency(2);
+            cerr << "Setting radio frequency to : " << stationFreq << endl;
+            fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
+
+        }
+     } else {
+        controller = 0;
+     }
+    //controller = 
+
     //dialog.init();
 }
 
@@ -52,4 +86,5 @@ void FGATCManager::addController(FGATCController *controller) {
 
 void FGATCManager::update ( double time ) {
     //cerr << "ATC update code is running at time: " << time << endl;
+   currentATCDialog->update(time);
 }

@@ -119,8 +119,8 @@ public:
   FGApproachController   *getApproachController()   { return &approachController; };
 
   const string& getAtisInformation() { return atisInformation; };
-  int getGroundFrequency(unsigned leg); //{ return freqGround.size() ? freqGround[0] : 0; };
-
+  int getGroundFrequency (unsigned leg); //{ return freqGround.size() ? freqGround[0] : 0; };
+  int getTowerFrequency  (unsigned nr);
   void setRwyUse(const FGRunwayPreference& ref);
 };
 

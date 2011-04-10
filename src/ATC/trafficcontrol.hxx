@@ -225,6 +225,8 @@ typedef vector<ActiveRunway>::iterator ActiveRunwayVecIterator;
  *************************************************************************************/
 class FGATCController
 {
+private:
+     bool initialized;
 protected:
   bool available;
   time_t lastTransmission;
@@ -260,6 +262,8 @@ public:
       ATC_GROUND_TO_AIR } AtcMsgDir;
   FGATCController();
   virtual ~FGATCController();
+  void init();
+
   virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
                                 double lat, double lon,
                                 double hdg, double spd, double alt, double radius, int leg,

@@ -452,8 +452,7 @@ FGATCController::FGATCController()
     dt_count = 0;
     available = true;
     lastTransmission = 0;
-    FGATCManager *mgr = (FGATCManager*) globals->get_subsystem("ATC");
-    mgr->addController(this);
+    initialized = false;
 }
 
 FGATCController::~FGATCController()
@@ -672,6 +671,15 @@ string FGATCController::genTransponderCode(string fltRules)
     }
 }
 
+void FGATCController::init() 
+{
+   if (!initialized) {
+       FGATCManager *mgr = (FGATCManager*) globals->get_subsystem("ATC");
+       mgr->addController(this);
+       initialized = true;
+    }
+}
+
 /***************************************************************************
  * class FGTowerController
  *
@@ -690,6 +698,7 @@ void FGTowerController::announcePosition(int id,
                                          double radius, int leg,
                                          FGAIAircraft * ref)
 {
+    init();
     TrafficVectorIterator i = activeTraffic.begin();
     // Search whether the current id alread has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
@@ -882,6 +891,7 @@ void FGStartupController::announcePosition(int id,
                                            double radius, int leg,
                                            FGAIAircraft * ref)
 {
+    init();
     TrafficVectorIterator i = activeTraffic.begin();
     // Search whether the current id alread has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route
@@ -1141,6 +1151,7 @@ void FGApproachController::announcePosition(int id,
                                             double alt, double radius,
                                             int leg, FGAIAircraft * ref)
 {
+    init();
     TrafficVectorIterator i = activeTraffic.begin();
     // Search whether the current id alread has an entry
     // This might be faster using a map instead of a vector, but let's start by taking a safe route

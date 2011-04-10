@@ -132,3 +132,13 @@ void FGATCDialogNew::PopupDialog() {
     dialogVisible = !dialogVisible;
     return;
 }
+
+void FGATCDialogNew::update(double dt) {
+    static SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
+    int n = trans_num->getIntValue();
+    if (n >= 0) {
+        trans_num->setIntValue(-1);
+           // PopupCallback(n);
+        cerr << "Selected transmission message" << n << endl;
+    }
+}
