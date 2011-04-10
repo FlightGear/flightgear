@@ -1,4 +1,4 @@
-// FGAIFlightPlan - class for loading and storing  AI flight plans
+// // FGAIFlightPlan - class for loading and storing  AI flight plans
 // Written by David Culp, started May 2004
 // - davidculp2@comcast.net
 //
@@ -89,10 +89,14 @@ public:
 
   void    create(FGAIAircraft *, FGAirport *dep, FGAirport *arr, int leg, double alt, double speed, double lat, double lon,
 		 bool firstLeg, double radius, const std::string& fltType, const std::string& aircraftType, const std::string& airline, double distance);
+  void createPushBack(FGAIAircraft *, bool, FGAirport*, double, double, double, const std::string&, const std::string&, const std::string&);
+  void createTakeOff(FGAIAircraft *, bool, FGAirport *, double, const std::string&);
 
   void setLeg(int val) { leg = val;}
   void setTime(time_t st) { start_time = st; }
   int getGate() const { return gateId; }
+  void setGate(int id) { gateId = id; };
+
   double getLeadInAngle() const { return leadInAngle; }
   const std::string& getRunway() const;
   
@@ -139,9 +143,7 @@ private:
   FGTaxiRoute *taxiRoute;
   std::string name;
 
-  void createPushBack(FGAIAircraft *, bool, FGAirport*, double, double, double, const std::string&, const std::string&, const std::string&);
   void createPushBackFallBack(FGAIAircraft *, bool, FGAirport*, double, double, double, const std::string&, const std::string&, const std::string&);
-  void createTakeOff(FGAIAircraft *, bool, FGAirport *, double, const std::string&);
   void createClimb(FGAIAircraft *, bool, FGAirport *, double, double, const std::string&);
   void createCruise(FGAIAircraft *, bool, FGAirport*, FGAirport*, double, double, double, double, const std::string&);
   void createDescent(FGAIAircraft *, FGAirport *,  double latitude, double longitude, double speed, double alt,const std::string&, double distance);
