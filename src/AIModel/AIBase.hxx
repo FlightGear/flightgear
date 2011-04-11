@@ -304,6 +304,8 @@ public:
         SGPropertyNode *prop_root);
 
     static bool _isNight();
+
+     string & getCallSign();
 };
 
 inline void FGAIBase::setManager(FGAIManager* mgr, SGPropertyNode* p) {
@@ -364,6 +366,10 @@ inline void FGAIBase::setLatitude ( double latitude ) {
 inline void FGAIBase::setCallSign(const string& s) {
     _callsign = s;
 }
+inline string& FGAIBase::getCallSign() {
+    return _callsign;
+}
+
 inline void FGAIBase::setXoffset(double x) {
     _x_offset = x;
 }

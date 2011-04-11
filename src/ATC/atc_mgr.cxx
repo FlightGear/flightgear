@@ -77,6 +77,8 @@ void FGATCManager::init() {
     ai_ac.setAltitude ( altitude  );
     ai_ac.setPerformance("jet_transport");
 
+    // NEXT UP: Create a traffic Schedule and fill that with appropriate information. This we can use to flight plannign.
+
     FGAIFlightPlan *fp = new FGAIFlightPlan;
     
     string flightPlanName = airport + "-" + airport + ".xml";
@@ -105,7 +107,7 @@ void FGATCManager::init() {
             string fltType = "ga";
             fp->createTakeOff(&ai_ac, false, apt, 0, fltType);
         } else {
-            controller = apt->getDynamics()->getGroundNetwork();
+            controller = apt->getDynamics()->getStartupController();
             int stationFreq = apt->getDynamics()->getGroundFrequency(2);
             cerr << "Setting radio frequency to : " << stationFreq << endl;
             fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
@@ -151,11 +153,22 @@ void FGATCManager::addController(FGATCController *controller) {
     activeStations.push_back(controller);
 }
 
-
-
 void FGATCManager::update ( double time ) {
     //cerr << "ATC update code is running at time: " << time << endl;
-   currentATCDialog->update(time);
+    currentATCDialog->update(time);
+    if (controller) {
+        double longitude = fgGetDouble("/position/longitude-deg");
+        double latitude  = fgGetDouble("/position/latitude-deg");
+        double heading   = fgGetDouble("/orientation/heading-deg");
+        double speed     = fgGetDouble("/velocities/groundspeed-kt");
+        double altitude  = fgGetDouble("/position/altitude-ft");
 
-
+        cerr << "Running FGATCManager::update()" << endl;
+        controller->updateAircraftInformation(ai_ac.getID(),
+                                              latitude,
+                                              longitude,
+                                              heading,
+                                              speed,
+                                              altitude, time);
+    }
 }

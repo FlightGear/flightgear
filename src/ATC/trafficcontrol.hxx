@@ -34,8 +34,6 @@
 #include <simgear/structure/SGReferenced.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 
-
-
 #include <string>
 #include <vector>
 
@@ -227,6 +225,7 @@ class FGATCController
 {
 private:
      bool initialized;
+
 protected:
   bool available;
   time_t lastTransmission;
@@ -236,6 +235,7 @@ protected:
 
   string formatATCFrequency3_2(int );
   string genTransponderCode(string fltRules);
+  bool isUserAircraft(FGAIAircraft*); 
 
 public:
   typedef enum {
@@ -278,6 +278,9 @@ public:
   void   setDt(double dt) { dt_count = dt;};
   void transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir msgDir);
   string getGateName(FGAIAircraft *aircraft);
+
+private:
+ AtcMsgDir lastTransmissionDirection;
 };
 
 /******************************************************************************

@@ -465,6 +465,11 @@ string FGATCController::getGateName(FGAIAircraft * ref)
     return ref->atGate();
 }
 
+bool FGATCController::isUserAircraft(FGAIAircraft* ac) 
+{ 
+    return (ac->getCallSign() == fgGetString("/sim/multiplay/callsign")) ? true : false; 
+};
+
 void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
                                AtcMsgDir msgDir)
 {
@@ -1015,6 +1020,7 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
         }
     }
 //    // update position of the current aircraft
+
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
         SG_LOG(SG_GENERAL, SG_ALERT,
                "AI error: updating aircraft without traffic record");
@@ -1025,8 +1031,17 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
     setDt(getDt() + dt);
 
     int state = i->getState();
-    time_t startTime =
-        i->getAircraft()->getTrafficRef()->getDepartureTime();
+
+    // The user controlled aircraft should have crased here, because it doesn't have a traffic reference. 
+    // NOTE: if we create a traffic schedule for the user aircraft, we can use this to plan a flight.
+    time_t startTime = 0;
+    if (isUserAircraft(i->getAircraft())) {
+       cerr << i->getAircraft->getCallSign() << " is user aircraft " << endl;
+    } else {
+        time_t startTime =
+            i->getAircraft()->getTrafficRef()->getDepartureTime();
+
+    }
     time_t now = time(NULL) + fgGetLong("/sim/time/warp");
     //cerr << i->getAircraft()->getTrafficRef()->getCallSign() 
     //     << " is scheduled to depart in " << startTime-now << " seconds. Available = " << available
