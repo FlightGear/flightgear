@@ -44,11 +44,9 @@ INCLUDES
 #include <vector>
 #include <string>
 
-//#include "models/FGModel.h"
 #include "models/FGOutput.h"
 #include "models/FGInput.h"
 #include "initialization/FGTrim.h"
-#include "initialization/FGInitialCondition.h"
 #include "FGJSBBase.h"
 #include "input_output/FGPropertyManager.h"
 #include "input_output/FGGroundCallback.h"
@@ -60,7 +58,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.56 2010/11/18 20:37:10 jberndt Exp $"
+#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.63 2011/02/19 16:44:41 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -183,7 +181,7 @@ CLASS DOCUMENTATION
                                 property actually maps toa function call of DoTrim().
 
     @author Jon S. Berndt
-    @version $Revision: 1.56 $
+    @version $Revision: 1.63 $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -286,8 +284,11 @@ public:
 
   /** Loads a script
       @param Script the full path name and file name for the script to be loaded.
+      @param deltaT The simulation integration step size, if given.  If no value is supplied
+                    then 0.0 is used and the value is expected to be supplied in
+                    the script file itself.
       @return true if successfully loadsd; false otherwise. */
-  bool LoadScript(const string& Script, double deltaT);
+  bool LoadScript(const string& Script, double deltaT=0.0);
 
   /** Sets the path to the engine config file directories.
       @param path path to the directory under which engine config
@@ -400,6 +401,9 @@ public:
       @param fname the filename of an output directives file.
     */
   bool SetOutputDirectives(const string& fname);
+
+  /** Forces the specified output object to print its items once */
+  void ForceOutput(int idx=0);
 
   /** Sets (or overrides) the output filename
       @param fname the name of the file to output data to
@@ -514,7 +518,7 @@ public:
       @param rootDir the string containing the root directory. */
   void SetRootDir(const string& rootDir) {RootDir = rootDir;}
 
-  /** Retrieves teh Root Directory.
+  /** Retrieves the Root Directory.
       @return the string representing the root (base) JSBSim directory. */
   const string& GetRootDir(void) const {return RootDir;}
 
