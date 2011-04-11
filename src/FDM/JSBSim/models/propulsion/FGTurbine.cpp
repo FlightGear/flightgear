@@ -51,7 +51,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGTurbine.cpp,v 1.29 2010/08/31 04:01:32 jberndt Exp $";
+static const char *IdSrc = "$Id: FGTurbine.cpp,v 1.31 2011/03/03 12:16:26 jberndt Exp $";
 static const char *IdHdr = ID_TURBINE;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -74,6 +74,7 @@ FGTurbine::FGTurbine(FGFDMExec* exec, Element *el, int engine_number)
   BypassRatio = BleedDemand = 0.0;
   IdleThrustLookup = MilThrustLookup = MaxThrustLookup = InjectionLookup = 0;
   N1_spinup = 1.0; N2_spinup = 3.0; 
+  EPR = 1.0;
 
   ResetToIC();
 
@@ -96,6 +97,9 @@ FGTurbine::~FGTurbine()
 
 void FGTurbine::ResetToIC(void)
 {
+    
+  FGEngine::ResetToIC();
+    
   N1 = N2 = 0.0;
   N2norm = 0.0;
   correctedTSFC = TSFC;
@@ -534,6 +538,8 @@ void FGTurbine::bindmodel()
   PropertyManager->Tie( property_name.c_str(), &Seized);
   property_name = base_property_name + "/stalled";
   PropertyManager->Tie( property_name.c_str(), &Stalled);
+  property_name = base_property_name + "/bleed-factor";
+  PropertyManager->Tie( property_name.c_str(), (FGTurbine*)this, &FGTurbine::GetBleedDemand, &FGTurbine::SetBleedDemand);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

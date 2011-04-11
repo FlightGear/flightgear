@@ -51,7 +51,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_OUTPUT "$Id: FGOutput.h,v 1.19 2010/10/31 04:48:46 jberndt Exp $"
+#define ID_OUTPUT "$Id: FGOutput.h,v 1.22 2011/03/11 13:02:26 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -124,7 +124,7 @@ CLASS DOCUMENTATION
     propulsion       ON|OFF
 </pre>
     NOTE that Time is always output with the data.
-    @version $Id: FGOutput.h,v 1.19 2010/10/31 04:48:46 jberndt Exp $
+    @version $Id: FGOutput.h,v 1.22 2011/03/11 13:02:26 jberndt Exp $
  */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -140,6 +140,7 @@ public:
   bool InitModel(void);
   bool Run(void);
 
+  void Print(void);
   void DelimitedOutput(const std::string&);
   void SocketOutput(void);
   void FlightGearSocketOutput(void);
@@ -153,7 +154,7 @@ public:
   void SetSubsystems(int tt) {SubSystems = tt;}
   void SetOutputFileName(const std::string& fname) {Filename = fname;}
   void SetDirectivesFile(const std::string& fname) {DirectivesFile = fname;}
-  void SetRate(int rt);
+  void SetRate(double rt);
   void Enable(void) { enabled = true; }
   void Disable(void) { enabled = false; }
   bool Toggle(void) {enabled = !enabled; return enabled;}
@@ -171,7 +172,7 @@ public:
     /** Subsystem: Moments (= 32)            */ ssMoments         = 32,
     /** Subsystem: Atmosphere (= 64)         */ ssAtmosphere      = 64,
     /** Subsystem: Mass Properties (= 128)   */ ssMassProps       = 128,
-    /** Subsystem: Coefficients (= 256)      */ ssCoefficients    = 256,
+    /** Subsystem: Coefficients (= 256)      */ ssAeroFunctions    = 256,
     /** Subsystem: Propagate (= 512)         */ ssPropagate       = 512,
     /** Subsystem: Ground Reactions (= 1024) */ ssGroundReactions = 1024,
     /** Subsystem: FCS (= 2048)              */ ssFCS             = 2048,

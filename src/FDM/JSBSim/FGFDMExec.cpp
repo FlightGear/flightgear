@@ -71,7 +71,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGFDMExec.cpp,v 1.84 2011/01/16 16:26:14 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGFDMExec.cpp,v 1.91 2011/04/05 20:20:21 andgi Exp $";
 static const char *IdHdr = ID_FDMEXEC;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -116,6 +116,10 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root)
   dT = 1.0/120.0; // a default timestep size. This is needed for when JSBSim is
                   // run in standalone mode with no initialization file.
 
+  AircraftPath = "aircraft";
+  EnginePath = "engine";
+  SystemsPath = "systems";
+
   try {
     char* num = getenv("JSBSIM_DEBUG");
     if (num) debug_lvl = atoi(num); // set debug level
@@ -154,12 +158,13 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root)
 
   Constructing = true;
   typedef int (FGFDMExec::*iPMF)(void) const;
-//  instance->Tie("simulation/do_trim_analysis", this, (iPMF)0, &FGFDMExec::DoTrimAnalysis);
-  instance->Tie("simulation/do_simple_trim", this, (iPMF)0, &FGFDMExec::DoTrim);
-  instance->Tie("simulation/reset", this, (iPMF)0, &FGFDMExec::ResetToInitialConditions);
+//  instance->Tie("simulation/do_trim_analysis", this, (iPMF)0, &FGFDMExec::DoTrimAnalysis, false);
+  instance->Tie("simulation/do_simple_trim", this, (iPMF)0, &FGFDMExec::DoTrim, false);
+  instance->Tie("simulation/reset", this, (iPMF)0, &FGFDMExec::ResetToInitialConditions, false);
   instance->Tie("simulation/terminate", (int *)&Terminate);
   instance->Tie("simulation/sim-time-sec", this, &FGFDMExec::GetSimTime);
   instance->Tie("simulation/jsbsim-debug", this, &FGFDMExec::GetDebugLevel, &FGFDMExec::SetDebugLevel);
+  instance->Tie("simulation/frame", (int *)&Frame, false);
 
   Constructing = false;
 }
@@ -350,6 +355,8 @@ bool FGFDMExec::RunIC(void)
 
 void FGFDMExec::Initialize(FGInitialCondition *FGIC)
 {
+  Setsim_time(0.0);
+
   Propagate->SetInitialState( FGIC );
 
   Atmosphere->Run();
@@ -358,6 +365,9 @@ void FGFDMExec::Initialize(FGInitialCondition *FGIC)
                           FGIC->GetWindDFpsIC() );
 
   FGColumnVector3 vAeroUVW;
+
+  //ToDo: move this to the Auxiliary class !?
+
   vAeroUVW = Propagate->GetUVW() + Propagate->GetTl2b()*Atmosphere->GetTotalWindNED();
 
   double alpha, beta;
@@ -629,7 +639,9 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
 
     // Process the output element[s]. This element is OPTIONAL, and there may be more than one.
     unsigned int idx=0;
-    typedef int (FGOutput::*iOPMF)(void) const;
+    typedef double (FGOutput::*iOPMF)(void) const;
+    typedef int (FGFDMExec::*iOPV)(void) const;
+    typedef void (FGFDMExec::*vOPI)(int) const;
     element = document->FindElement("output");
     while (element) {
       if (debug_lvl > 0) cout << endl << "  Output data set: " << idx << "  ";
@@ -643,7 +655,8 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
       } else {
         Outputs.push_back(Output);
         string outputProp = CreateIndexedPropertyName("simulation/output",idx);
-        instance->Tie(outputProp+"/log_rate_hz", Output, (iOPMF)0, &FGOutput::SetRate);
+        instance->Tie(outputProp+"/log_rate_hz", Output, (iOPMF)0, &FGOutput::SetRate, false);
+        instance->Tie("simulation/force-output", this, (iOPV)0, &FGFDMExec::ForceOutput, false);
         idx++;
       }
       element = document->FindNextElement("output");
@@ -677,15 +690,6 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     cerr << fgred
          << "  JSBSim failed to open the configuration file: " << aircraftCfgFileName
          << fgdef << endl;
-  }
-
-  // Late bind previously undefined FCS inputs.
-  try {
-    FCS->LateBind();
-  } catch (string prop) {
-    cerr << endl << fgred << "  Could not late bind property " << prop 
-         << ". Aborting." << reset << endl;
-    result = false;
   }
 
   if (result) {
@@ -918,6 +922,13 @@ void FGFDMExec::EnableOutput(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+void FGFDMExec::ForceOutput(int idx)
+{
+  if (idx >= 0 && idx < Outputs.size()) Outputs[idx]->Print();
+}
+	
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 bool FGFDMExec::SetOutputDirectives(const string& fname)
 {
   bool result;
@@ -930,9 +941,9 @@ bool FGFDMExec::SetOutputDirectives(const string& fname)
 
   if (result) {
     Outputs.push_back(Output);
-    typedef int (FGOutput::*iOPMF)(void) const;
+    typedef double (FGOutput::*iOPMF)(void) const;
     string outputProp = CreateIndexedPropertyName("simulation/output",Outputs.size()-1);
-    instance->Tie(outputProp+"/log_rate_hz", Output, (iOPMF)0, &FGOutput::SetRate);
+    instance->Tie(outputProp+"/log_rate_hz", Output, (iOPMF)0, &FGOutput::SetRate, false);
   }
 
   return result;

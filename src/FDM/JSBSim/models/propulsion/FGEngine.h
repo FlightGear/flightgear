@@ -55,7 +55,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_ENGINE "$Id: FGEngine.h,v 1.21 2010/08/21 17:13:48 jberndt Exp $"
+#define ID_ENGINE "$Id: FGEngine.h,v 1.23 2011/03/03 12:16:26 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -118,7 +118,7 @@ CLASS DOCUMENTATION
 	documentation for engine and thruster classes.
 </pre>     
     @author Jon S. Berndt
-    @version $Id: FGEngine.h,v 1.21 2010/08/21 17:13:48 jberndt Exp $
+    @version $Id: FGEngine.h,v 1.23 2011/03/03 12:16:26 jberndt Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -146,6 +146,7 @@ public:
   virtual double getFuelFlow_gph () const {return FuelFlow_gph;}
   virtual double getFuelFlow_pph () const {return FuelFlow_pph;}
   virtual double GetFuelFlowRate(void) const {return FuelFlowRate;}
+  virtual double GetFuelUsedLbs(void) const {return FuelUsedLbs;}
   virtual bool   GetStarved(void) { return Starved; }
   virtual bool   GetRunning(void) const { return Running; }
   virtual bool   GetCranking(void) { return Cranking; }
@@ -172,9 +173,6 @@ public:
   virtual void SetPlacement(FGColumnVector3& location, FGColumnVector3& orientation);
 
   virtual double GetPowerAvailable(void) {return 0.0;};
-
-  virtual bool GetTrimMode(void) {return TrimMode;}
-  virtual void SetTrimMode(bool state) {TrimMode = state;}
 
   virtual FGColumnVector3& GetBodyForces(void);
   virtual FGColumnVector3& GetMoments(void);
@@ -219,12 +217,12 @@ protected:
   bool  Starved;
   bool  Running;
   bool  Cranking;
-  bool  TrimMode;
   bool  FuelFreeze;
 
   double FuelFlow_gph;
   double FuelFlow_pph;
   double FuelDensity;
+  double FuelUsedLbs;
 
   FGFDMExec*      FDMExec;
   FGAtmosphere*   Atmosphere;
