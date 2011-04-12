@@ -74,8 +74,12 @@
 
 FGScheduledFlight::FGScheduledFlight()
 {
-   initialized = false;
-   available = true;
+    departureTime  = 0;
+    arrivalTime    = 0;
+    cruiseAltitude = 0;
+    repeatPeriod   = 0;
+    initialized = false;
+    available = true;
 }
   
 FGScheduledFlight::FGScheduledFlight(const FGScheduledFlight &other)

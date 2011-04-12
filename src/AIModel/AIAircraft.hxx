@@ -76,6 +76,7 @@ public:
     void setTaxiClearanceRequest(bool arg) { needsTaxiClearance = arg; };
     bool getTaxiClearanceRequest() { return needsTaxiClearance; };
     FGAISchedule * getTrafficRef() { return trafficRef; };
+    void setTrafficRef(FGAISchedule *ref) { trafficRef = ref; };
 
     virtual const char* getTypeString(void) const { return "aircraft"; }
 

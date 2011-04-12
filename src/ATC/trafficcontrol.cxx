@@ -1034,14 +1034,7 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
 
     // The user controlled aircraft should have crased here, because it doesn't have a traffic reference. 
     // NOTE: if we create a traffic schedule for the user aircraft, we can use this to plan a flight.
-    time_t startTime = 0;
-    if (isUserAircraft(i->getAircraft())) {
-       cerr << i->getAircraft->getCallSign() << " is user aircraft " << endl;
-    } else {
-        time_t startTime =
-            i->getAircraft()->getTrafficRef()->getDepartureTime();
-
-    }
+    time_t startTime = i->getAircraft()->getTrafficRef()->getDepartureTime();
     time_t now = time(NULL) + fgGetLong("/sim/time/warp");
     //cerr << i->getAircraft()->getTrafficRef()->getCallSign() 
     //     << " is scheduled to depart in " << startTime-now << " seconds. Available = " << available

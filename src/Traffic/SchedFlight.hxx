@@ -90,6 +90,8 @@ public:
   time_t getDepartureTime() { return departureTime; };
   time_t getArrivalTime  () { return arrivalTime;   };
   
+  void setDepartureAirport(string port) { depId = port; };
+  void setArrivalAirport  (string port) { arrId = port; };
   FGAirport *getDepartureAirport();
   FGAirport *getArrivalAirport  ();
 
@@ -109,6 +111,9 @@ public:
   void release() { available = true; };
 
   bool isAvailable() { return available; };
+
+  void setCallSign(string val)    { callsign = val; };
+  void setFlightRules(string val) { fltRules = val; };
 };
 
 typedef vector<FGScheduledFlight*>           FGScheduledFlightVec;

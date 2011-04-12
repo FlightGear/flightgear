@@ -117,6 +117,9 @@ class FGAISchedule
   void         setHits    (unsigned int count) { hits     = count; };
   void         setScore   ();
   double       getScore   () { return score; };
+  void         setHeading (); 
+  void         assign         (FGScheduledFlight *ref) { flights.push_back(ref); };
+  void         setFlightType  (string val            ) { flightType = val; };
   FGScheduledFlight*findAvailableFlight (const string &currentDestination, const string &req);
   // used to sort in decending order of score: I've probably found a better way to
   // decending order sorting, but still need to test that.

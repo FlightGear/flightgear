@@ -344,6 +344,12 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
   return true;
 }
 
+// Create an initial heading for user controlled aircraft.
+void FGAISchedule::setHeading()  
+{ 
+    courseToDest = SGGeodesy::courseDeg((*flights.begin())->getDepartureAirport()->geod(), (*flights.begin())->getArrivalAirport()->geod());
+}
+
 void FGAISchedule::scheduleFlights()
 {
   if (!flights.empty()) {

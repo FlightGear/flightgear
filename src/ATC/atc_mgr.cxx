@@ -29,7 +29,6 @@
 #include <simgear/math/SGMath.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/simple.hxx>
-
 #include "atc_mgr.hxx"
 
 
@@ -69,7 +68,6 @@ void FGATCManager::init() {
     double speed     = fgGetDouble("/velocities/groundspeed-kt");
     double aircraftRadius = 40; // note that this is currently hardcoded to a one-size-fits all JumboJet value. Should change later;
 
-    // Next, 
 
     ai_ac.setCallSign ( callsign  );
     ai_ac.setLongitude( longitude );
@@ -78,8 +76,19 @@ void FGATCManager::init() {
     ai_ac.setPerformance("jet_transport");
 
     // NEXT UP: Create a traffic Schedule and fill that with appropriate information. This we can use to flight plannign.
+    FGAISchedule *trafficRef = new FGAISchedule;
+    trafficRef->setFlightType("gate");
 
+    FGScheduledFlight *flight =  new FGScheduledFlight;
+    flight->setDepartureAirport(airport);
+    flight->setArrivalAirport(airport);
+    flight->initializeAirports();
+    flight->setFlightRules("IFR");
+    flight->setCallSign(callsign);
+    
+    trafficRef->assign(flight);
     FGAIFlightPlan *fp = new FGAIFlightPlan;
+    ai_ac.setTrafficRef(trafficRef);
     
     string flightPlanName = airport + "-" + airport + ".xml";
     double cruiseAlt = 100; // Doesn't really matter right now.
