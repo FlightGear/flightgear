@@ -1,0 +1,7 @@
+fgpanel
+*.o
+*.obj
+.deps
+*.Po
+Makefile
+Makefile.in
