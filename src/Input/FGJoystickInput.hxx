@@ -52,6 +52,8 @@ public:
   static const int MAX_JOYSTICK_BUTTONS = 32;
 
 private:
+   void _remove();
+
   /**
    * Settings for a single joystick axis.
    */

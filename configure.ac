@@ -296,6 +296,14 @@ if test "x$have_rti13" = "xyes" ; then
     AC_SUBST(HLA_LIBS, "-lsghla13 -lsghla $hla_libs")
 fi
 
+dnl EXPERIMENTAL fgpanel application
+# defaults to no
+AC_ARG_WITH(fgpanel, [  --with-fgpanel          Include fgpanel application (EXPERIMENTAL) [default=no]], [], [with_fgpanel=no])
+if test "x$with_fgpanel" = "xyes"; then
+    AC_DEFINE([WITH_FGPANEL], 1, [Define to enable fgpanel application])
+fi
+AM_CONDITIONAL(WITH_FGPANEL, test "x$with_fgpanel" = "xyes")
+
 dnl Used by JSBSim to conditionally compile in fgfs interface code
 AC_DEFINE([FGFS], 1, [Define so that JSBSim compiles in 'library' mode])
 
@@ -940,7 +948,8 @@ AC_CONFIG_FILES([ \
 	utils/propmerge/Makefile \
 	utils/TerraSync/Makefile \
 	utils/xmlgrep/Makefile \
-	utils/fgviewer/Makefile
+	utils/fgviewer/Makefile \
+	utils/fgpanel/Makefile
 ])
 AC_OUTPUT
 
@@ -975,6 +984,12 @@ if test "x$with_eventinput" = "xyes"; then
     echo "Event input: yes"
 else
     echo "Event input: no"
+fi
+
+if test "x$with_fgpanel" = "xyes"; then
+    echo "fgpanel: yes"
+else
+    echo "fgpanel: no"
 fi
 
 if test "x$enable_sp_fdms" != "xno"; then
