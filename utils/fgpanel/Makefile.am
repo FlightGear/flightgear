@@ -1,3 +1,4 @@
+if WITH_FGPANEL
 AM_CXXFLAGS = -DPKGDATADIR=\"$(pkgdatadir)\"
 
 bin_PROGRAMS = fgpanel
@@ -12,9 +13,10 @@ fgpanel_SOURCES = main.cxx \
 		panel.cxx panel.hxx \
 		panel_io.cxx panel_io.hxx
 
-LIBS =
+#LIBS =
 
 fgpanel_LDADD = \
 	-lGLU -lglut -lsgmath -lsgprops -lsgio -lsgdebug -lsgmisc -lsgstructure -lsgxml -lsgtiming \
 	-lplibpu -lplibfnt -lplibul \
 	-lrt -lpng
+endif
