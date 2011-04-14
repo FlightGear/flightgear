@@ -1002,6 +1002,35 @@ void FGStartupController::signOff(int id)
     }
 }
 
+bool FGStartupController::checkTransmissionState(int st, time_t now, time_t startTime, TrafficVectorIterator i, AtcMsgId msgId,
+                               AtcMsgDir msgDir)
+{
+    int state = i->getState();
+    if ((state == st) && available) {
+        if ((msgDir == ATC_AIR_TO_GROUND) && isUserAircraft(i->getAircraft())) {
+            cerr << "Checking state " << st << " for " << i->getAircraft()->getCallSign() << endl;
+            static SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
+            int n = trans_num->getIntValue();
+            if (n >= 0) {
+                trans_num->setIntValue(-1);
+                 // PopupCallback(n);
+                 cerr << "Selected transmission message" << n << endl;
+            } else {
+                return false;
+            }
+        }
+        if (now > startTime) {
+            //cerr << "Transmitting startup msg" << endl;
+            transmit(&(*i), msgId, msgDir);
+            i->updateState();
+            lastTransmission = now;
+            available = false;
+            return true;
+        }
+    }
+    return false;
+}
+
 void FGStartupController::updateAircraftInformation(int id, double lat, double lon,
                                                     double heading, double speed, double alt,
                                                     double dt)
@@ -1044,6 +1073,18 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
         available = true;
     }
 
+    checkTransmissionState(0, now, (startTime + 0  ), i, MSG_ANNOUNCE_ENGINE_START,                     ATC_AIR_TO_GROUND);
+    checkTransmissionState(1, now, (startTime + 60 ), i, MSG_REQUEST_ENGINE_START,                      ATC_AIR_TO_GROUND);
+    checkTransmissionState(2, now, (startTime + 80 ), i, MSG_PERMIT_ENGINE_START,                       ATC_GROUND_TO_AIR);
+    checkTransmissionState(3, now, (startTime + 100), i, MSG_ACKNOWLEDGE_ENGINE_START,                  ATC_AIR_TO_GROUND);
+    if (checkTransmissionState(4, now, (startTime + 130), i, MSG_ACKNOWLEDGE_SWITCH_GROUND_FREQUENCY,       ATC_AIR_TO_GROUND)) {
+        i->nextFrequency();
+    }
+    checkTransmissionState(5, now, (startTime + 140), i, MSG_INITIATE_CONTACT,                          ATC_AIR_TO_GROUND);
+    checkTransmissionState(6, now, (startTime + 150), i, MSG_ACKNOWLEDGE_INITIATE_CONTACT,              ATC_GROUND_TO_AIR);
+
+
+    /*
     if ((state == 0) && available) {
         if (now > startTime) {
             //cerr << "Transmitting startup msg" << endl;
@@ -1118,7 +1159,7 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
             lastTransmission = now;
             available = false;
         }
-    }
+    } */
     if ((state == 8) && available) {
         if (now > startTime + 200) {
             if (i->pushBackAllowed()) {
