@@ -61,7 +61,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGInitialCondition.cpp,v 1.56 2011/01/23 12:13:44 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGInitialCondition.cpp,v 1.59 2011/04/03 13:18:51 bcoconni Exp $";
 static const char *IdHdr = ID_INITIALCONDITION;
 
 //******************************************************************************
@@ -700,6 +700,8 @@ void FGInitialCondition::SetAltitudeASLFtIC(double alt)
     case setve:
       SetVtrueFpsIC(ve0 * sqrt(rho/rhoSL));
       break;
+    default: // Make the compiler stop complaining about missing enums
+      break;
   }
 
   position.SetRadius(alt + sea_level_radius);
@@ -998,6 +1000,18 @@ bool FGInitialCondition::Load_v1(void)
     SetTargetNlfIC(document->FindElementValueAsNumber("targetNlf"));
   }
 
+  // Refer to Stevens and Lewis, 1.5-14a, pg. 49.
+  // This is the rotation rate of the "Local" frame, expressed in the local frame.
+  double radInv = 1.0 / position.GetRadius();
+  FGColumnVector3 vOmegaLocal = FGColumnVector3(
+   radInv*vUVW_NED(eEast),
+  -radInv*vUVW_NED(eNorth),
+  -radInv*vUVW_NED(eEast)*position.GetTanLatitude() );
+
+  p = vOmegaLocal(eP);
+  q = vOmegaLocal(eR);
+  r = vOmegaLocal(eQ);
+
   return result;
 }
 
@@ -1032,7 +1046,7 @@ bool FGInitialCondition::Load_v2(void)
         if (position_el->FindElement("radius")) {
           position.SetRadius(position_el->FindElementValueAsNumberConvertTo("radius", "FT"));
         } else if (position_el->FindElement("altitudeAGL")) {
-          position.SetRadius(sea_level_radius + terrain_elevation + position_el->FindElementValueAsNumberConvertTo("altitude", "FT"));
+          position.SetRadius(sea_level_radius + terrain_elevation + position_el->FindElementValueAsNumberConvertTo("altitudeAGL", "FT"));
         } else if (position_el->FindElement("altitudeMSL")) {
           position.SetRadius(sea_level_radius + position_el->FindElementValueAsNumberConvertTo("altitudeMSL", "FT"));
         } else {
@@ -1096,7 +1110,7 @@ bool FGInitialCondition::Load_v2(void)
       //
       // Or, using quaternions (note reverse ordering compared to matrix representation):
       //
-      // Q_b/l = Q_e/l * Q_b/i
+      // Q_b/l = Q_i/l * Q_b/i
 
       FGQuaternion QuatI2Body = FGQuaternion(vOrient);
       QuatI2Body.Normalize();
@@ -1196,6 +1210,9 @@ bool FGInitialCondition::Load_v2(void)
   
   FGColumnVector3 vLocalRate;
   Element* attrate_el = document->FindElement("attitude_rate");
+
+  // Refer to Stevens and Lewis, 1.5-14a, pg. 49.
+  // This is the rotation rate of the "Local" frame, expressed in the local frame.
   double radInv = 1.0 / position.GetRadius();
   FGColumnVector3 vOmegaLocal = FGColumnVector3(
    radInv*vUVW_NED(eEast),
@@ -1209,11 +1226,11 @@ bool FGInitialCondition::Load_v2(void)
     FGColumnVector3 vAttRate = attrate_el->FindElementTripletConvertTo("RAD/SEC");
 
     if (frame == "eci") {
-      vLocalRate = Tl2b * (position.GetTi2l() * (vAttRate - vOmegaEarth) - vOmegaLocal);
+      vLocalRate = Tl2b * position.GetTi2l() * (vAttRate - vOmegaEarth);
     } else if (frame == "ecef") {
-      vLocalRate = Tl2b * (position.GetTec2l() * vAttRate - vOmegaLocal);
+      vLocalRate = Tl2b * position.GetTec2l() * vAttRate;
     } else if (frame == "local") {
-      vLocalRate = vAttRate;
+      vLocalRate = vAttRate + vOmegaLocal;
     } else if (!frame.empty()) { // misspelling of frame
       
       cerr << endl << fgred << "  Attitude rate frame type: \"" << frame
@@ -1221,11 +1238,11 @@ bool FGInitialCondition::Load_v2(void)
       result = false;
 
     } else if (frame.empty()) {
-    
+      vLocalRate = vOmegaLocal;
     }
-    
+
   } else { // Body frame attitude rate assumed 0 relative to local.
-      vLocalRate.InitMatrix();
+      vLocalRate = vOmegaLocal;
   }
 
   p = vLocalRate(eP);

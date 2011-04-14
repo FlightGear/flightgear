@@ -43,7 +43,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGActuator.cpp,v 1.14 2009/10/24 22:59:30 jberndt Exp $";
+static const char *IdSrc = "$Id: FGActuator.cpp,v 1.17 2011/02/13 00:42:45 jberndt Exp $";
 static const char *IdHdr = ID_ACTUATOR;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -114,10 +114,12 @@ bool FGActuator::Run(void )
                   // the Input will be further processed and the eventual Output
                   // will be overwritten from this perfect value.
 
-  if (lag != 0.0)              Lag();        // models actuator lag
-  if (rate_limit != 0)         RateLimit();  // limit the actuator rate
+  if (!fcs->GetTrimStatus()) {
+    if (lag != 0.0)              Lag();        // models actuator lag
+    if (rate_limit != 0)         RateLimit();  // limit the actuator rate
+  }
   if (deadband_width != 0.0)   Deadband();
-  if (hysteresis_width != 0.0) Hysteresis();
+  if (!fcs->GetTrimStatus() && hysteresis_width != 0.0) Hysteresis();
   if (bias != 0.0)             Bias();       // models a finite bias
 
   if (fail_stuck) Output = PreviousOutput;
@@ -187,6 +189,18 @@ void FGActuator::RateLimit(void)
 
 void FGActuator::Deadband(void)
 {
+  // Note: this function acts cumulatively on the "Output" parameter. So, "Output"
+  // is - for the purposes of this Deadband method - really the input to the
+  // method.
+  double input = Output;
+
+  if (input < -deadband_width/2.0) {
+    Output = (input + deadband_width/2.0);
+  } else if (input > deadband_width/2.0) {
+    Output = (input - deadband_width/2.0);
+  } else {
+    Output = 0.0;
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -232,9 +246,9 @@ void FGActuator::Debug(int from)
   if (debug_lvl & 1) { // Standard console startup message output
     if (from == 0) { // Constructor
       if (InputSigns[0] < 0)
-        cout << "      INPUT: -" << InputNodes[0]->getName() << endl;
+        cout << "      INPUT: -" << InputNames[0] << endl;
       else
-        cout << "      INPUT: " << InputNodes[0]->getName() << endl;
+        cout << "      INPUT: " << InputNames[0] << endl;
 
       if (IsOutput) {
         for (unsigned int i=0; i<OutputNodes.size(); i++)
