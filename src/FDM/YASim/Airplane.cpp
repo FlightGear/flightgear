@@ -671,8 +671,8 @@ void Airplane::compile()
         t->handle = body->addMass(0, t->pos);
         totalFuel += t->cap;
     }
-    _cruiseWeight = _emptyWeight + totalFuel*0.5f;
-    _approachWeight = _emptyWeight + totalFuel*0.2f;
+    _cruiseWeight = _emptyWeight + totalFuel*_cruiseFuel;
+    _approachWeight = _emptyWeight + totalFuel*_approachFuel;
 
     body->recalc();
 
@@ -795,7 +795,7 @@ void Airplane::setupWeights(bool isApproach)
 
 void Airplane::runCruise()
 {
-    setupState(_cruiseAoA, _cruiseSpeed,_approachGlideAngle, &_cruiseState);
+    setupState(_cruiseAoA, _cruiseSpeed,_cruiseGlideAngle, &_cruiseState);
     _model.setState(&_cruiseState);
     _model.setAir(_cruiseP, _cruiseT,
                   Atmosphere::calcStdDensity(_cruiseP, _cruiseT));
