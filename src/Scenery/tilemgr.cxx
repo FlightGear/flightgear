@@ -88,6 +88,8 @@ FGTileMgr::~FGTileMgr() {
     group->removeChildren(0, group->getNumChildren());
     delete _propListener;
     _propListener = NULL;
+    // clear OSG cache
+    osgDB::Registry::instance()->clearObjectCache();
 }
 
 
@@ -121,6 +123,12 @@ void FGTileMgr::reinit()
     osg::Group* group = globals->get_scenery()->get_terrain_branch();
     group->removeChildren(0, group->getNumChildren());
     tile_cache.init();
+    
+    // clear OSG cache, except on initial start-up
+    if (state != Start)
+    {
+        osgDB::Registry::instance()->clearObjectCache();
+    }
     
     state = Inited;
     
