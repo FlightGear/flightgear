@@ -86,6 +86,11 @@ static SGPropertyNode *getNamedNode(SGPropertyNode *prop, const char *name) {
       return 0;
 }
 
+void FGATCDialogNew::addEntry(int nr, string txt) {
+    commands.clear();
+    commands.push_back(txt);
+}
+
 
 void FGATCDialogNew::PopupDialog() {
     double onBoardRadioFreq0 =
@@ -105,22 +110,24 @@ void FGATCDialogNew::PopupDialog() {
 
     const int bufsize = 32;
     char buf[bufsize];
+    int commandNr = 0;
     // loop over all entries that should fill up the dialog; use 10 items for now...
-    for (int i = 0; i < 10; i++) {
-        snprintf(buf, bufsize, "/sim/atc/opt[%d]", i);
+    for (StringVecIterator i = commands.begin(); i != commands.end(); i++) {
+        snprintf(buf, bufsize, "/sim/atc/opt[%d]", commandNr);
             fgSetBool(buf, false);
-        SGPropertyNode *entry = button_group->getNode("button", i, true);
+        SGPropertyNode *entry = button_group->getNode("button", commandNr, true);
         copyProperties(button_group->getNode("button-template", true), entry);
 	entry->removeChildren("enabled", true);
 	entry->setStringValue("property", buf);
-	entry->setIntValue("keynum", '1' + i);
-	if (i == 0)
+	entry->setIntValue("keynum", '1' + commandNr);
+	if (commandNr == 0)
 	    entry->setBoolValue("default", true);
 
-	snprintf(buf, bufsize, "%d", i + 1);
-	string legend = string(buf) + ". test"; // + current->menuentry;
+	snprintf(buf, bufsize, "%d", 1 + commandNr);
+	string legend = string(buf) + (*i); //"; // + current->menuentry;
 	entry->setStringValue("legend", legend.c_str());
-	entry->setIntValue("binding/value", i);
+	entry->setIntValue("binding/value", commandNr);
+        commandNr++;
 	//current++;
     }
 

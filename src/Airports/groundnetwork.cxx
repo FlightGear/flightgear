@@ -569,19 +569,19 @@ void FGGroundNetwork::updateAircraftInformation(int id, double lat, double lon,
             available = true;
         }
         if ((state < 3) && available) {
-             transmit(&(*current), MSG_REQUEST_TAXI_CLEARANCE, ATC_AIR_TO_GROUND);
+             transmit(&(*current), MSG_REQUEST_TAXI_CLEARANCE, ATC_AIR_TO_GROUND, true);
              current->setState(3);
              lastTransmission = now;
              available = false;
         }
         if ((state == 3) && available) {
-            transmit(&(*current), MSG_ISSUE_TAXI_CLEARANCE, ATC_GROUND_TO_AIR);
+            transmit(&(*current), MSG_ISSUE_TAXI_CLEARANCE, ATC_GROUND_TO_AIR, true);
             current->setState(4);
             lastTransmission = now;
             available = false;
         }
         if ((state == 4) && available) {
-            transmit(&(*current), MSG_ACKNOWLEDGE_TAXI_CLEARANCE, ATC_AIR_TO_GROUND);
+            transmit(&(*current), MSG_ACKNOWLEDGE_TAXI_CLEARANCE, ATC_AIR_TO_GROUND, true);
             current->setState(5);
             lastTransmission = now;
             available = false;
@@ -846,11 +846,11 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
     if ((origStatus != currStatus) && available) {
         //cerr << "Issueing hold short instrudtion " << currStatus << " " << available << endl;
         if (currStatus == true) { // No has a hold short instruction
-           transmit(&(*current), MSG_HOLD_POSITION, ATC_GROUND_TO_AIR);
+           transmit(&(*current), MSG_HOLD_POSITION, ATC_GROUND_TO_AIR, true);
            //cerr << "Transmittin hold short instrudtion " << currStatus << " " << available << endl;
            current->setState(1);
         } else {
-           transmit(&(*current), MSG_RESUME_TAXI, ATC_GROUND_TO_AIR);
+           transmit(&(*current), MSG_RESUME_TAXI, ATC_GROUND_TO_AIR, true);
            //cerr << "Transmittig resume instrudtion " << currStatus << " " << available << endl;
            current->setState(2);
         }
@@ -865,7 +865,7 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
     int state = current->getState();
     if ((state == 1) && (available)) {
         //cerr << "ACKNOWLEDGE HOLD" << endl;
-        transmit(&(*current), MSG_ACKNOWLEDGE_HOLD_POSITION, ATC_AIR_TO_GROUND);
+        transmit(&(*current), MSG_ACKNOWLEDGE_HOLD_POSITION, ATC_AIR_TO_GROUND, true);
         current->setState(0);
         current->setHoldPosition(true);
         lastTransmission = now;
@@ -874,7 +874,7 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
     }
     if ((state == 2) && (available)) {
         //cerr << "ACKNOWLEDGE RESUME" << endl;
-        transmit(&(*current), MSG_ACKNOWLEDGE_RESUME_TAXI, ATC_AIR_TO_GROUND);
+        transmit(&(*current), MSG_ACKNOWLEDGE_RESUME_TAXI, ATC_AIR_TO_GROUND, true);
         current->setState(0);
         current->setHoldPosition(false);
         lastTransmission = now;

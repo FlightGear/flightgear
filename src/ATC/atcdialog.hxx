@@ -40,13 +40,16 @@
 #include <GUI/gui.h>		// mkDialog
 #include <GUI/new_gui.hxx>
 
+typedef vector<string> StringVec;
+typedef vector<string>:: iterator StringVecIterator;
 
 static bool doATCDialog(const SGPropertyNode* arg);
 
 class FGATCDialogNew {
 private:
      NewGUI *_gui;
-     bool dialogVisible;	
+     bool dialogVisible;
+     StringVec commands;
 public:
 
     FGATCDialogNew();
@@ -56,6 +59,7 @@ public:
 
     void update(double dt);
     void PopupDialog();
+    void addEntry(int, string);
 };
 
 extern FGATCDialogNew *currentATCDialog;

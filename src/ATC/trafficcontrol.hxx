@@ -276,7 +276,7 @@ public:
 
   double getDt() { return dt_count; };
   void   setDt(double dt) { dt_count = dt;};
-  void transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir msgDir);
+  void transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir msgDir, bool audible);
   string getGateName(FGAIAircraft *aircraft);
 
 private:

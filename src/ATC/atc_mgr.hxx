@@ -58,6 +58,7 @@ public:
   void init();
   void addController(FGATCController *controller);
   void update(double time);
+  FGATCDialogNew * getATCDialog() {  return currentATCDialog; };
 };
   
 #endif // _ATC_MRG_HXX_

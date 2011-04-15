@@ -32,6 +32,7 @@
 #include <AIModel/AIFlightPlan.hxx>
 #include <AIModel/performancedata.hxx>
 #include <AIModel/performancedb.hxx>
+#include <ATC/atc_mgr.hxx>
 #include <Traffic/TrafficMgr.hxx>
 #include <Airports/groundnetwork.hxx>
 #include <Airports/dynamics.hxx>
@@ -471,7 +472,7 @@ bool FGATCController::isUserAircraft(FGAIAircraft* ac)
 };
 
 void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
-                               AtcMsgDir msgDir)
+                               AtcMsgDir msgDir, bool audible)
 {
     string sender, receiver;
     int stationFreq = 0;
@@ -636,22 +637,28 @@ void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
         text = text + sender + ". Transmitting unknown Message";
         break;
     }
-    double onBoardRadioFreq0 =
-        fgGetDouble("/instrumentation/comm[0]/frequencies/selected-mhz");
-    double onBoardRadioFreq1 =
-        fgGetDouble("/instrumentation/comm[1]/frequencies/selected-mhz");
-    int onBoardRadioFreqI0 = (int) floor(onBoardRadioFreq0 * 100 + 0.5);
-    int onBoardRadioFreqI1 = (int) floor(onBoardRadioFreq1 * 100 + 0.5);
-    //cerr << "Using " << onBoardRadioFreq0 << ", " << onBoardRadioFreq1 << " and " << stationFreq << " for " << text << endl;
+    if (audible) {
+        double onBoardRadioFreq0 =
+            fgGetDouble("/instrumentation/comm[0]/frequencies/selected-mhz");
+        double onBoardRadioFreq1 =
+            fgGetDouble("/instrumentation/comm[1]/frequencies/selected-mhz");
+        int onBoardRadioFreqI0 = (int) floor(onBoardRadioFreq0 * 100 + 0.5);
+        int onBoardRadioFreqI1 = (int) floor(onBoardRadioFreq1 * 100 + 0.5);
+        //cerr << "Using " << onBoardRadioFreq0 << ", " << onBoardRadioFreq1 << " and " << stationFreq << " for " << text << endl;
 
-    // Display ATC message only when one of the radios is tuned
-    // the relevant frequency.
-    // Note that distance attenuation is currently not yet implemented
-    if ((onBoardRadioFreqI0 == stationFreq)
-        || (onBoardRadioFreqI1 == stationFreq)) {
-        if (rec->allowTransmissions()) {
-            fgSetString("/sim/messages/atc", text.c_str());
+        // Display ATC message only when one of the radios is tuned
+        // the relevant frequency.
+        // Note that distance attenuation is currently not yet implemented
+        if ((onBoardRadioFreqI0 == stationFreq)
+            || (onBoardRadioFreqI1 == stationFreq)) {
+            if (rec->allowTransmissions()) {
+                fgSetString("/sim/messages/atc", text.c_str());
+            }
         }
+    } else {
+        FGATCManager *atc = (FGATCManager*) globals->get_subsystem("atc");
+        atc->getATCDialog()->addEntry(1, text);
+        
     }
 }
 
@@ -1008,6 +1015,7 @@ bool FGStartupController::checkTransmissionState(int st, time_t now, time_t star
     int state = i->getState();
     if ((state == st) && available) {
         if ((msgDir == ATC_AIR_TO_GROUND) && isUserAircraft(i->getAircraft())) {
+            
             cerr << "Checking state " << st << " for " << i->getAircraft()->getCallSign() << endl;
             static SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
             int n = trans_num->getIntValue();
@@ -1016,12 +1024,14 @@ bool FGStartupController::checkTransmissionState(int st, time_t now, time_t star
                  // PopupCallback(n);
                  cerr << "Selected transmission message" << n << endl;
             } else {
+                cerr << "creading message for " << i->getAircraft()->getCallSign() << endl;
+                transmit(&(*i), msgId, msgDir, false);
                 return false;
             }
         }
         if (now > startTime) {
             //cerr << "Transmitting startup msg" << endl;
-            transmit(&(*i), msgId, msgDir);
+            transmit(&(*i), msgId, msgDir, true);
             i->updateState();
             lastTransmission = now;
             available = false;
@@ -1084,92 +1094,17 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
     checkTransmissionState(6, now, (startTime + 150), i, MSG_ACKNOWLEDGE_INITIATE_CONTACT,              ATC_GROUND_TO_AIR);
 
 
-    /*
-    if ((state == 0) && available) {
-        if (now > startTime) {
-            //cerr << "Transmitting startup msg" << endl;
-            transmit(&(*i), MSG_ANNOUNCE_ENGINE_START, ATC_AIR_TO_GROUND);
-            i->updateState();
-            lastTransmission = now;
-            available = false;
-        }
-    }
-    if ((state == 1) && available) {
-        if (now > startTime + 60) {
-            transmit(&(*i), MSG_REQUEST_ENGINE_START, ATC_AIR_TO_GROUND);
-            i->updateState();
-            lastTransmission = now;
-            available = false;
-        }
-    }
-    if ((state == 2) && available) {
-        if (now > startTime + 80) {
-            transmit(&(*i), MSG_PERMIT_ENGINE_START, ATC_GROUND_TO_AIR);
-            i->updateState();
-            lastTransmission = now;
-            available = false;
-        }
-    }
-    if ((state == 3) && available) {
-        if (now > startTime + 100) {
-            transmit(&(*i), MSG_ACKNOWLEDGE_ENGINE_START,
-                     ATC_AIR_TO_GROUND);
-            i->updateState();
-            lastTransmission = now;
-            available = false;
-        }
-    }
-    // Note: The next four stages are only necessesary when Startup control is
-    //  on a different frequency, compared to ground control
-    if ((state == 4) && available) {
-        if (now > startTime + 130) {
-            transmit(&(*i), MSG_ACKNOWLEDGE_SWITCH_GROUND_FREQUENCY,
-                     ATC_AIR_TO_GROUND);
-            i->updateState();
-            i->nextFrequency();
-            lastTransmission = now;
-            available = false;
-        }
-    }
-    if ((state == 5) && available) {
-        if (now > startTime + 140) {
-            transmit(&(*i), MSG_INITIATE_CONTACT, ATC_AIR_TO_GROUND);
-            i->updateState();
-            lastTransmission = now;
-            available = false;
-        }
-    }
-    if ((state == 6) && available) {
-        if (now > startTime + 150) {
-            transmit(&(*i), MSG_ACKNOWLEDGE_INITIATE_CONTACT,
-                     ATC_GROUND_TO_AIR);
-            i->updateState();
-            lastTransmission = now;
-            available = false;
-        }
-    }
-
-    // TODO: Switch to APRON control and request pushback Clearance.
-    // Get Push back clearance
-    if ((state == 7) && available) {
-        if (now > startTime + 180) {
-            transmit(&(*i), MSG_REQUEST_PUSHBACK_CLEARANCE,
-                     ATC_AIR_TO_GROUND);
-            i->updateState();
-            lastTransmission = now;
-            available = false;
-        }
-    } */
+   
     if ((state == 8) && available) {
         if (now > startTime + 200) {
             if (i->pushBackAllowed()) {
                 i->allowRepeatedTransmissions();
                 transmit(&(*i), MSG_PERMIT_PUSHBACK_CLEARANCE,
-                         ATC_GROUND_TO_AIR);
+                         ATC_GROUND_TO_AIR, true);
                 i->updateState();
             } else {
                 transmit(&(*i), MSG_HOLD_PUSHBACK_CLEARANCE,
-                         ATC_GROUND_TO_AIR);
+                         ATC_GROUND_TO_AIR, true);
                 i->suppressRepeatedTransmissions();
             }
             lastTransmission = now;
