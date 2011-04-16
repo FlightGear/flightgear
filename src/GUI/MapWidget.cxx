@@ -527,7 +527,6 @@ void MapWidget::draw(int dx, int dy)
 
   if (_root->getBoolValue("centre-on-aircraft")) {
     _projectionCenter = _aircraft;
-    _root->setBoolValue("centre-on-aircraft", false);
   }
 
   double julianDate = globals->get_time_params()->getJD();
