@@ -613,11 +613,11 @@ FGRenderer::update( bool refresh_camera_settings ) {
 	
         if ( fgGetBool("/sim/rendering/textures") ) {
             SGVec4f clearColor(l->adj_fog_color());
-            camera->setClearColor(toOsg(clearColor));
+            camera->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 1.0));
         }
     } else {
         SGVec4f clearColor(l->sky_color());
-        camera->setClearColor(toOsg(clearColor));
+        camera->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 1.0));
     }
 
     // update fog params if visibility has changed
