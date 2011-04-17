@@ -72,6 +72,9 @@ private:
   string chooseRunwayFallback();
   bool innerGetActiveRunway(const string &trafficType, int action, string &runway, double heading);
   string chooseRwyByHeading(stringVec rwys, double heading);
+
+    double elevation;
+
 public:
   FGAirportDynamics(FGAirport* ap);
   FGAirportDynamics(const FGAirportDynamics &other);

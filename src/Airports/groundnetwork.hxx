@@ -56,8 +56,8 @@ private:
   int startNode;
   int endNode;
   double length;
-  double course;
-  double headingDiff;
+  double heading;
+  SGGeod center;
   bool isActive;
   bool isPushBackRoute;
   FGTaxiNode *start;
@@ -72,8 +72,7 @@ public:
       startNode(0),
       endNode(0),
       length(0),
-      course(0),
-      headingDiff(0),
+      heading(0),
       isActive(0),
       isPushBackRoute(0),
       start(0),
@@ -87,8 +86,8 @@ public:
       startNode         (other.startNode),
       endNode           (other.endNode),
       length            (other.length),
-      course            (other.course),
-      headingDiff       (other.headingDiff),
+      heading           (other.heading),
+      center            (other.center),
       isActive          (other.isActive),
       isPushBackRoute   (other.isPushBackRoute),
       start             (other.start),
@@ -103,8 +102,8 @@ public:
       startNode          = other.startNode;
       endNode            = other.endNode;
       length             = other.length;
-      course             = other.course;
-      headingDiff        = other.headingDiff;
+      heading            = other.heading;
+      center             = other.center;
       isActive           = other.isActive;
       isPushBackRoute    = other.isPushBackRoute;
       start              = other.start;
@@ -123,13 +122,15 @@ public:
   void setStart(FGTaxiNodeVector *nodes);
   void setEnd  (FGTaxiNodeVector *nodes);
   void setPushBackType(bool val) { isPushBackRoute = val; };
-  void setTrackDistance();
+  void setDimensions(double elevation);
 
   FGTaxiNode * getEnd() { return end;};
   FGTaxiNode * getStart() { return start; };
   double getLength() { return length; };
   int getIndex() { return index; };
-  
+  double getLatitude()  { return center.getLatitudeDeg();  };
+  double getLongitude() { return center.getLongitudeDeg(); };
+  double getHeading()   { return heading; }; 
   bool isPushBack() { return isPushBackRoute; };
 
   int getPenalty(int nGates);
@@ -137,7 +138,7 @@ public:
   FGTaxiSegment *getAddress() { return this;};
 
   bool operator<(const FGTaxiSegment &other) const { return index < other.index; };
-  bool hasSmallerHeadingDiff (const FGTaxiSegment &other) const { return headingDiff < other.headingDiff; };
+  //bool hasSmallerHeadingDiff (const FGTaxiSegment &other) const { return headingDiff < other.headingDiff; };
   FGTaxiSegment *opposite() { return oppositeDirection; };
   void setCourseDiff(double crse);
 
@@ -273,7 +274,10 @@ public:
   virtual bool hasInstruction(int id);
   virtual FGATCInstruction getInstruction(int id);
 
+  bool checkTransmissionState(int minState, int MaxState, TrafficVectorIterator i, time_t now, AtcMsgId msgId,
+                               AtcMsgDir msgDir);
   bool checkForCircularWaits(int id);
+  osg::Node* getRenderNode();
 };
 
 

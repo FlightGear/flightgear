@@ -27,8 +27,15 @@
 #include <math.h>
 #include <algorithm>
 
+
+#include <osg/Geode>
+#include <osg/Geometry>
+#include <osg/MatrixTransform>
+#include <osg/Shape>
+
 #include <simgear/debug/logstream.hxx>
 #include <simgear/route/waypoint.hxx>
+#include <simgear/scene/material/EffectGeode.hxx>
 
 #include <Airports/simple.hxx>
 #include <Airports/dynamics.hxx>
@@ -77,19 +84,26 @@ void FGTaxiSegment::setEnd(FGTaxiNodeVector * nodes)
 
 // There is probably a computationally cheaper way of 
 // doing this.
-void FGTaxiSegment::setTrackDistance()
+void FGTaxiSegment::setDimensions(double elevation)
 {
     length = SGGeodesy::distanceM(start->getGeod(), end->getGeod());
+    //heading = SGGeodesy::headingDeg(start->getGeod(), end->getGeod());
+
+    double az2; //, distanceM;
+    SGGeodesy::inverse(start->getGeod(), end->getGeod(), heading, az2, length);
+    double coveredDistance = length * 0.5;
+    SGGeodesy::direct(start->getGeod(), heading, coveredDistance, center, az2);
+    cerr << "Centerpoint = (" << center.getLatitudeDeg() << ", " << center.getLongitudeDeg() << "). Heading = " << heading << endl;
 }
 
 
-void FGTaxiSegment::setCourseDiff(double crse)
-{
-    headingDiff = fabs(course - crse);
+//void FGTaxiSegment::setCourseDiff(double crse)
+//{
+//    headingDiff = fabs(course - crse);
 
-    if (headingDiff > 180)
-        headingDiff = fabs(headingDiff - 360);
-}
+//    if (headingDiff > 180)
+//        headingDiff = fabs(headingDiff - 360);
+//}
 
 
 /***************************************************************************
@@ -227,6 +241,7 @@ void FGGroundNetwork::addNodes(FGParkingVec * parkings)
         n.setIndex(i->getIndex());
         n.setLatitude(i->getLatitude());
         n.setLongitude(i->getLongitude());
+        n.setElevation(parent->getElevation());
         nodes.push_back(new FGTaxiNode(n));
 
         i++;
@@ -245,7 +260,7 @@ void FGGroundNetwork::init()
     while (i != segments.end()) {
         (*i)->setStart(&nodes);
         (*i)->setEnd(&nodes);
-        (*i)->setTrackDistance();
+        (*i)->setDimensions(parent->getElevation());
         (*i)->setIndex(index);
         if ((*i)->isPushBack()) {
             pushBackNodes.push_back((*i)->getEnd());
@@ -511,6 +526,36 @@ void FGGroundNetwork::signOff(int id)
     }
 }
 
+bool FGGroundNetwork::checkTransmissionState(int minState, int maxState, TrafficVectorIterator i, time_t now, AtcMsgId msgId,
+                               AtcMsgDir msgDir)
+{
+    int state = i->getState();
+    if ((state >= minState) && (state <= maxState) && available) {
+        if ((msgDir == ATC_AIR_TO_GROUND) && isUserAircraft(i->getAircraft())) {
+            
+            cerr << "Checking state " << state << " for " << i->getAircraft()->getCallSign() << endl;
+            static SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
+            int n = trans_num->getIntValue();
+            if (n >= 0) {
+                trans_num->setIntValue(-1);
+                 // PopupCallback(n);
+                 cerr << "Selected transmission message" << n << endl;
+            } else {
+                cerr << "creading message for " << i->getAircraft()->getCallSign() << endl;
+                transmit(&(*i), msgId, msgDir, false);
+                return false;
+            }
+        }
+        //cerr << "Transmitting startup msg" << endl;
+        transmit(&(*i), msgId, msgDir, true);
+        i->updateState();
+        lastTransmission = now;
+        available = false;
+        return true;
+    }
+    return false;
+}
+
 void FGGroundNetwork::updateAircraftInformation(int id, double lat, double lon,
                                                 double heading, double speed, double alt,
                                                 double dt)
@@ -568,23 +613,14 @@ void FGGroundNetwork::updateAircraftInformation(int id, double lat, double lon,
         if ((now - lastTransmission) > 15) {
             available = true;
         }
-        if ((state < 3) && available) {
-             transmit(&(*current), MSG_REQUEST_TAXI_CLEARANCE, ATC_AIR_TO_GROUND, true);
-             current->setState(3);
-             lastTransmission = now;
-             available = false;
+        if (checkTransmissionState(0,2, current, now, MSG_REQUEST_TAXI_CLEARANCE, ATC_AIR_TO_GROUND)) {
+            current->setState(3);
         }
-        if ((state == 3) && available) {
-            transmit(&(*current), MSG_ISSUE_TAXI_CLEARANCE, ATC_GROUND_TO_AIR, true);
+        if (checkTransmissionState(3,3, current, now, MSG_ISSUE_TAXI_CLEARANCE, ATC_GROUND_TO_AIR)) {
             current->setState(4);
-            lastTransmission = now;
-            available = false;
         }
-        if ((state == 4) && available) {
-            transmit(&(*current), MSG_ACKNOWLEDGE_TAXI_CLEARANCE, ATC_AIR_TO_GROUND, true);
+        if (checkTransmissionState(4,4, current, now, MSG_ACKNOWLEDGE_TAXI_CLEARANCE, ATC_AIR_TO_GROUND)) {
             current->setState(5);
-            lastTransmission = now;
-            available = false;
         }
         if ((state == 5) && available) {
             current->setState(0);
@@ -862,8 +898,17 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
         //cerr << "Current state " << current->getState() << endl;
     } else {
     }
-    int state = current->getState();
-    if ((state == 1) && (available)) {
+    //int state = current->getState();
+    if (checkTransmissionState(1,1, current, now, MSG_ACKNOWLEDGE_HOLD_POSITION, ATC_AIR_TO_GROUND)) {
+            current->setState(0);
+            current->setHoldPosition(true);
+    }
+    if (checkTransmissionState(2,2, current, now, MSG_ACKNOWLEDGE_RESUME_TAXI, ATC_AIR_TO_GROUND)) {
+            current->setState(0);
+            current->setHoldPosition(false);
+    }
+
+    /*if ((state == 1) && (available)) {
         //cerr << "ACKNOWLEDGE HOLD" << endl;
         transmit(&(*current), MSG_ACKNOWLEDGE_HOLD_POSITION, ATC_AIR_TO_GROUND, true);
         current->setState(0);
@@ -879,8 +924,8 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
         current->setHoldPosition(false);
         lastTransmission = now;
         available = false;
-    }
-}
+    }*/
+} 
 
 /**
  * Check whether situations occur where the current aircraft is waiting for itself
@@ -1035,4 +1080,52 @@ FGATCInstruction FGGroundNetwork::getInstruction(int id)
         return i->getInstruction();
     }
     return FGATCInstruction();
+}
+
+// Note that this function is copied from simgear. for maintanance purposes, it's probabtl better to make a general function out of that.
+static void WorldCoordinate(osg::Matrix& obj_pos, double lat,
+                            double lon, double elev, double hdg)
+{
+    SGGeod geod = SGGeod::fromDegM(lon, lat, elev);
+    obj_pos = geod.makeZUpFrame();
+    // hdg is not a compass heading, but a counter-clockwise rotation
+    // around the Z axis
+    obj_pos.preMult(osg::Matrix::rotate(hdg * SGD_DEGREES_TO_RADIANS,
+                                        0.0, 0.0, 1.0));
+}
+
+
+
+osg::Node* FGGroundNetwork::getRenderNode()
+{
+    osg::Group* group = new osg::Group;
+
+    for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
+        osg::Matrix obj_pos;
+        osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
+        obj_trans->setDataVariance(osg::Object::STATIC);
+        WorldCoordinate( obj_pos, (*i)->getLatitude(), (*i)->getLongitude(), parent->elevation()+10, -((*i)->getHeading()) );
+
+                obj_trans->setMatrix( obj_pos );
+        //osg::Vec3 center(0, 0, 0)
+
+        float width = (*i)->getLength() /2.0;
+        osg::Vec3 corner(-width, 0, 0.25f);
+        osg::Vec3 widthVec(2*width + 1, 0, 0);
+        osg::Vec3 heightVec(0, 0, 1);
+        osg::Geometry* geometry;
+        geometry = osg::createTexturedQuadGeometry(corner, widthVec, heightVec);
+        simgear::EffectGeode* geode = new simgear::EffectGeode;
+        geode->setName("test");
+        geode->addDrawable(geometry);
+        //osg::Node *custom_obj;
+        
+        obj_trans->addChild(geode);
+            // wire as much of the scene graph together as we can
+        //->addChild( obj_trans );
+        group->addChild( obj_trans );
+    }
+
+
+    return group;
 }

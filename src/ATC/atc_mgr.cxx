@@ -29,6 +29,7 @@
 #include <simgear/math/SGMath.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/simple.hxx>
+#include <Scenery/scenery.hxx>
 #include "atc_mgr.hxx"
 
 
@@ -155,6 +156,10 @@ void FGATCManager::init() {
                                       aircraftRadius, leg, &ai_ac);
 
     //dialog.init();
+
+   osg::Node* node = apt->getDynamics()->getGroundNetwork()->getRenderNode();
+   cerr << "Adding groundnetWork to the scenegraph" << endl;
+   globals->get_scenery()->get_scene_graph()->addChild(node);
    }
 }
 
@@ -180,4 +185,10 @@ void FGATCManager::update ( double time ) {
                                               speed,
                                               altitude, time);
     }
+   /*string airport = fgGetString("/sim/presets/airport-id");
+   FGAirport *apt = FGAirport::findByIdent(airport); 
+   osg::Node* node = apt->getDynamics()->getGroundNetwork()->getRenderNode();
+   cerr << "Adding groundnetWork to the scenegraph" << endl;
+   globals->get_scenery()->get_scene_graph()->addChild(node);
+*/
 }

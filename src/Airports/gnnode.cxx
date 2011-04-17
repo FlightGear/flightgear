@@ -31,9 +31,9 @@ double processPosition(const string &pos)
   return value;
 }
 
-bool sortByHeadingDiff(FGTaxiSegment *a, FGTaxiSegment *b) {
-  return a->hasSmallerHeadingDiff(*b);
-}
+//bool sortByHeadingDiff(FGTaxiSegment *a, FGTaxiSegment *b) {
+//  return a->hasSmallerHeadingDiff(*b);
+//}
 
 bool sortByLength(FGTaxiSegment *a, FGTaxiSegment *b) {
   return a->getLength() > b->getLength();
@@ -42,7 +42,10 @@ bool sortByLength(FGTaxiSegment *a, FGTaxiSegment *b) {
 /**************************************************************************
  * FGTaxiNode
  *************************************************************************/
-
+void FGTaxiNode::setElevation(double val)
+{
+    geod.setElevationM(val);
+}
 
 void FGTaxiNode::setLatitude (double val)
 {
@@ -64,10 +67,10 @@ void FGTaxiNode::setLongitude(const string& val)
   geod.setLongitudeDeg(processPosition(val));
 }
   
-void FGTaxiNode::sortEndSegments(bool byLength)
-{
-  if (byLength)
-    sort(next.begin(), next.end(), sortByLength);
-  else
-    sort(next.begin(), next.end(), sortByHeadingDiff);
-}
+//void FGTaxiNode::sortEndSegments(bool byLength)
+//{
+//  if (byLength)
+//    sort(next.begin(), next.end(), sortByLength);
+//  else
+//    sort(next.begin(), next.end(), sortByHeadingDiff);
+//}

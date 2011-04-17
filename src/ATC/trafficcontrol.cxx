@@ -399,6 +399,10 @@ void FGTrafficRecord::setHeadingAdjustment(double heading)
 
 bool FGTrafficRecord::pushBackAllowed()
 {
+    // With the user ATC / AI integration, checking whether the user's aircraft is near no longer works, because
+    // this will effectively block the user's aircraft itself from receiving pushback clearance. 
+    // So, what can we do?
+    /*
     double course, az2, dist;
     SGGeod curr(SGGeod::fromDegM(getLongitude(),
                                  getLatitude(), getAltitude()));
@@ -409,7 +413,12 @@ bool FGTrafficRecord::pushBackAllowed()
     SGGeodesy::inverse(curr, user, course, az2, dist);
     //cerr << "Distance to user : " << dist << endl;
     return (dist > 250);
+    */
 
+
+    // In essence, we should check whether the pusbback route itself, as well as the associcated
+    // taxiways near the pushback point are free of traffic. 
+    // To do so, we need to 
 }
 
 
@@ -1023,6 +1032,8 @@ bool FGStartupController::checkTransmissionState(int st, time_t now, time_t star
                 trans_num->setIntValue(-1);
                  // PopupCallback(n);
                  cerr << "Selected transmission message" << n << endl;
+                 FGATCManager *atc = (FGATCManager*) globals->get_subsystem("atc");
+                 atc->getATCDialog()->removeEntry(1);
             } else {
                 cerr << "creading message for " << i->getAircraft()->getCallSign() << endl;
                 transmit(&(*i), msgId, msgDir, false);
@@ -1092,6 +1103,7 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
     }
     checkTransmissionState(5, now, (startTime + 140), i, MSG_INITIATE_CONTACT,                          ATC_AIR_TO_GROUND);
     checkTransmissionState(6, now, (startTime + 150), i, MSG_ACKNOWLEDGE_INITIATE_CONTACT,              ATC_GROUND_TO_AIR);
+    checkTransmissionState(7, now, (startTime + 180), i, MSG_REQUEST_PUSHBACK_CLEARANCE,                ATC_AIR_TO_GROUND);
 
 
    

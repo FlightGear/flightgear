@@ -152,6 +152,7 @@ bool FGTileMgr::sched_tile( const SGBucket& b, double priority, bool current_vie
         if ( tile_cache.insert_tile( t ) )
         {
             // Attach to scene graph
+
             t->addToSceneGraph(globals->get_scenery()->get_terrain_branch());
         } else
         {

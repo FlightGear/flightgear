@@ -83,6 +83,7 @@ FGTaxiNode &operator =(const FGTaxiNode &other)
   void setIndex(int idx)                  { index = idx;                 };
   void setLatitude (double val);
   void setLongitude(double val);
+  void setElevation(double val);
   void setLatitude (const std::string& val);
   void setLongitude(const std::string& val);
   void addSegment(FGTaxiSegment *segment) { next.push_back(segment);     };
@@ -99,6 +100,7 @@ FGTaxiNode &operator =(const FGTaxiNode &other)
   double getPathScore() { return pathScore; };
   double getLatitude() { return geod.getLatitudeDeg();};
   double getLongitude(){ return geod.getLongitudeDeg();};
+  double getElevation() { return geod.getElevationM();};
 
   const SGGeod& getGeod() const { return geod; }
 
@@ -111,7 +113,7 @@ FGTaxiNode &operator =(const FGTaxiNode &other)
   FGTaxiSegmentVectorIterator getEndRoute()   { return next.end();   }; 
   bool operator<(const FGTaxiNode &other) const { return index < other.index; };
 
-  void sortEndSegments(bool);
+  //void sortEndSegments(bool);
 
 };
 

@@ -60,6 +60,7 @@ public:
     void update(double dt);
     void PopupDialog();
     void addEntry(int, string);
+    void removeEntry(int);
 };
 
 extern FGATCDialogNew *currentATCDialog;

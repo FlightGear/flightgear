@@ -96,10 +96,11 @@ void FGAirportDynamics::init()
     random_shuffle(parkings.begin(), parkings.end());
     sort(parkings.begin(), parkings.end());
     // add the gate positions to the ground network. 
+    groundNetwork.setParent(_ap);
     groundNetwork.addNodes(&parkings);
     groundNetwork.init();
     groundNetwork.setTowerController(&towerController);
-    groundNetwork.setParent(_ap);
+    
 }
 
 bool FGAirportDynamics::getAvailableParking(double *lat, double *lon,
