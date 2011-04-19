@@ -1150,12 +1150,22 @@ fgOptNAV2( const char * arg )
 }
 
 static int
-fgOptADF( const char * arg )
+fgOptADF1( const char * arg )
 {
     double rot, freq;
     if (parse_colon(arg, &rot, &freq))
-        fgSetDouble("/instrumentation/adf/rotation-deg", rot);
-    fgSetDouble("/instrumentation/adf/frequencies/selected-khz", freq);
+        fgSetDouble("/instrumentation/adf[0]/rotation-deg", rot);
+    fgSetDouble("/instrumentation/adf[0]/frequencies/selected-khz", freq);
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptADF2( const char * arg )
+{
+    double rot, freq;
+    if (parse_colon(arg, &rot, &freq))
+        fgSetDouble("/instrumentation/adf[1]/rotation-deg", rot);
+    fgSetDouble("/instrumentation/adf[1]/frequencies/selected-khz", freq);
     return FG_OPTIONS_OK;
 }
 
@@ -1493,7 +1503,9 @@ struct OptionDesc {
     {"com2",                         true,  OPTION_DOUBLE, "/instrumentation/comm[1]/frequencies/selected-mhz", false, "", 0 },
     {"nav1",                         true,  OPTION_FUNC,   "", false, "", fgOptNAV1 },
     {"nav2",                         true,  OPTION_FUNC,   "", false, "", fgOptNAV2 },
-    {"adf",                          true,  OPTION_FUNC,   "", false, "", fgOptADF },
+    {"adf", /*legacy*/               true,  OPTION_FUNC,   "", false, "", fgOptADF1 },
+    {"adf1",                         true,  OPTION_FUNC,   "", false, "", fgOptADF1 },
+    {"adf2",                         true,  OPTION_FUNC,   "", false, "", fgOptADF2 },
     {"dme",                          true,  OPTION_FUNC,   "", false, "", fgOptDME },
     {"min-status",                   true,  OPTION_STRING,  "/sim/aircraft-min-status", false, "all", 0 },
     {"livery",                       true,  OPTION_FUNC,   "", false, "", fgOptLivery },

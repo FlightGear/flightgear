@@ -794,14 +794,44 @@ static bool fgSetTowerPosFromAirportID( const string& id) {
 
 struct FGTowerLocationListener : SGPropertyChangeListener {
     void valueChanged(SGPropertyNode* node) {
-        const string id(node->getStringValue());
+        string id(node->getStringValue());
+        if (fgGetBool("/sim/tower/auto-position",true))
+        {
+            // enforce using closest airport when auto-positioning is enabled 
+            const char* closest_airport = fgGetString("/sim/airport/closest-airport-id", "");
+            if (closest_airport && (id != closest_airport))
+            {
+                id = closest_airport;
+                node->setStringValue(id);
+            }
+        }
         fgSetTowerPosFromAirportID(id);
+    }
+};
+
+struct FGClosestTowerLocationListener : SGPropertyChangeListener
+{
+    void valueChanged(SGPropertyNode* )
+    {
+        // closest airport has changed
+        if (fgGetBool("/sim/tower/auto-position",true))
+        {
+            // update tower position
+            const char* id = fgGetString("/sim/airport/closest-airport-id", "");
+            if (id && *id!=0)
+                fgSetString("/sim/tower/airport-id", id);
+        }
     }
 };
 
 void fgInitTowerLocationListener() {
     fgGetNode("/sim/tower/airport-id",  true)
         ->addChangeListener( new FGTowerLocationListener(), true );
+    FGClosestTowerLocationListener* ntcl = new FGClosestTowerLocationListener();
+    fgGetNode("/sim/airport/closest-airport-id", true)
+        ->addChangeListener(ntcl , true );
+    fgGetNode("/sim/tower/auto-position", true)
+           ->addChangeListener(ntcl, true );
 }
 
 static void fgApplyStartOffset(const SGGeod& aStartPos, double aHeading, double aTargetHeading = HUGE_VAL)
@@ -1164,6 +1194,7 @@ bool fgInitPosition() {
         // An airport + parking position is requested
         if ( fgSetPosFromAirportIDandParkpos( apt, parkpos ) ) {
             // set tower position
+            fgSetString("/sim/airport/closest-airport-id",  apt.c_str());
             fgSetString("/sim/tower/airport-id",  apt.c_str());
             set_pos = true;
         }
@@ -1174,7 +1205,8 @@ bool fgInitPosition() {
         if ( fgSetPosFromAirportIDandRwy( apt, rwy_no, rwy_req ) ) {
             // set tower position (a little off the heading for single
             // runway airports)
-	    fgSetString("/sim/tower/airport-id",  apt.c_str());
+            fgSetString("/sim/airport/closest-airport-id",  apt.c_str());
+            fgSetString("/sim/tower/airport-id",  apt.c_str());
             set_pos = true;
         }
     }
@@ -1184,7 +1216,8 @@ bool fgInitPosition() {
         if ( fgSetPosFromAirportIDandHdg( apt, hdg ) ) {
             // set tower position (a little off the heading for single
             // runway airports)
-	    fgSetString("/sim/tower/airport-id",  apt.c_str());
+            fgSetString("/sim/airport/closest-airport-id",  apt.c_str());
+            fgSetString("/sim/tower/airport-id",  apt.c_str());
             set_pos = true;
         }
     }
