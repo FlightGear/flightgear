@@ -1,4 +1,4 @@
-// FGAIAircraft - FGAIBase-derived class creates an AI airplane
+// // FGAIAircraft - FGAIBase-derived class creates an AI airplane
 //
 // Written by David Culp, started October 2003.
 //
@@ -276,6 +276,19 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
     if (! leadPointReached(curr)) {
         controlHeading(curr);
         controlSpeed(curr, next);
+            if (speed < 0) { 
+                cerr << getCallSign() 
+                     << ": verifying lead distance to waypoint : " 
+                     << fp->getCurrentWaypoint()->name << " "
+                     << fp->getLeadDistance() << ". Distance to go " 
+                     << (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)) 
+                     << ". Target speed = " 
+                     << tgt_speed
+                     << ". Current speed = "
+                     << speed
+                     << ". Minimum Bearing " << minBearing
+                     << endl;
+            }
     } else {
         if (curr->finished)      //end of the flight plan
         {
@@ -676,7 +689,15 @@ bool FGAIAircraft::leadPointReached(FGAIFlightPlan::waypoint* curr) {
     //cerr << "2" << endl;
     double lead_dist = fp->getLeadDistance();
     // experimental: Use fabs, because speed can be negative (I hope) during push_back.
-
+    if ((dist_to_go < fabs(10.0* speed)) && (speed < 0) && (tgt_speed < 0) && fp->getCurrentWaypoint()->name == string("PushBackPoint")) {
+          tgt_speed = -(dist_to_go / 10.0);
+          if (tgt_speed > -0.5) {
+                tgt_speed = -0.5;
+          }
+          if (fp->getPreviousWaypoint()->speed < tgt_speed) {
+              fp->getPreviousWaypoint()->speed = tgt_speed;
+          }
+    }
     if (lead_dist < fabs(2*speed)) {
       //don't skip over the waypoint
       lead_dist = fabs(2*speed);
@@ -936,8 +957,8 @@ void FGAIAircraft::updateHeading() {
                 bank_sense = 1.0;
             }
             //if (trafficRef)
-            	//cerr << trafficRef->getCallSign() << " Heading " 
-                //     << hdg << ". Target " << tgt_heading <<  ". Diff " << fabs(sum - tgt_heading) << ". Speed " << speed << endl;
+            //	cerr << trafficRef->getCallSign() << " Heading " 
+            //         << hdg << ". Target " << tgt_heading <<  ". Diff " << fabs(sum - tgt_heading) << ". Speed " << speed << endl;
             //if (headingDiff > 60) {
             groundTargetSpeed = tgt_speed; // * cos(headingDiff * SG_DEGREES_TO_RADIANS);
                 //groundTargetSpeed = tgt_speed - tgt_speed * (headingDiff/180);
@@ -946,27 +967,34 @@ void FGAIAircraft::updateHeading() {
             //}
             if (sign(groundTargetSpeed) != sign(tgt_speed))
                 groundTargetSpeed = 0.21 * sign(tgt_speed); // to prevent speed getting stuck in 'negative' mode
+            
+            // Only update the target values when we're not moving because otherwise we might introduce an enormous target change rate while waiting a the gate, or holding.
+            if (speed != 0) {
+                if (headingDiff > 30.0) {
+                    // invert if pushed backward
+                    headingChangeRate += 10.0 * dt * sign(roll);
 
-            if (headingDiff > 30.0) {
-                // invert if pushed backward
-                headingChangeRate += 10.0 * dt * sign(roll);
-
-                // Clamp the maximum steering rate to 30 degrees per second,
-                // But only do this when the heading error is decreasing.
-                if ((headingDiff < headingError)) {
-                    if (headingChangeRate > 30)
-                        headingChangeRate = 30;
-                    else if (headingChangeRate < -30)
-                        headingChangeRate = -30;
+                    // Clamp the maximum steering rate to 30 degrees per second,
+                    // But only do this when the heading error is decreasing.
+                    if ((headingDiff < headingError)) {
+                        if (headingChangeRate > 30)
+                            headingChangeRate = 30;
+                        else if (headingChangeRate < -30)
+                            headingChangeRate = -30;
+                    }
+                } else {
+                    if (speed != 0) {
+                        if (fabs(headingChangeRate) > headingDiff)
+                            headingChangeRate = headingDiff*sign(roll);
+                        else
+                            headingChangeRate += dt * sign(roll);
+                    }
                 }
-            } else {
-                   if (fabs(headingChangeRate) > headingDiff)
-                       headingChangeRate = headingDiff*sign(roll);
-                   else
-                       headingChangeRate += dt * sign(roll);
             }
-
-	    hdg += headingChangeRate * dt * (fabs(speed) / 15);
+            if (trafficRef)
+            	cerr << trafficRef->getCallSign() << " Heading " 
+                     << hdg << ". Target " << tgt_heading <<  ". Diff " << fabs(sum - tgt_heading) << ". Speed " << speed << "Heading change rate : " << headingChangeRate << " bacnk sence " << bank_sense << endl;
+	    hdg += headingChangeRate * dt * sqrt(fabs(speed) / 15);
             headingError = headingDiff;
         } else {
             if (fabs(speed) > 1.0) {

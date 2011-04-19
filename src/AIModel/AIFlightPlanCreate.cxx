@@ -47,7 +47,7 @@
 
 
 // Check lat/lon values during initialization;
-void FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
+bool FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
                             FGAirport * arr, int legNr, double alt,
                             double speed, double latitude,
                             double longitude, bool firstFlight,
@@ -55,38 +55,39 @@ void FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
                             const string & aircraftType,
                             const string & airline, double distance)
 {
+    bool retVal = true;
     int currWpt = wpt_iterator - waypoints.begin();
     switch (legNr) {
     case 1:
-        createPushBack(ac, firstFlight, dep, latitude, longitude,
-                       radius, fltType, aircraftType, airline);
+        retVal = createPushBack(ac, firstFlight, dep, latitude, longitude,
+                                radius, fltType, aircraftType, airline);
         break;
     case 2:
-        createTakeoffTaxi(ac, firstFlight, dep, radius, fltType,
+        retVal =  createTakeoffTaxi(ac, firstFlight, dep, radius, fltType,
                           aircraftType, airline);
         break;
     case 3:
-        createTakeOff(ac, firstFlight, dep, speed, fltType);
+        retVal = createTakeOff(ac, firstFlight, dep, speed, fltType);
         break;
     case 4:
-        createClimb(ac, firstFlight, dep, speed, alt, fltType);
+        retVal = createClimb(ac, firstFlight, dep, speed, alt, fltType);
         break;
     case 5:
-        createCruise(ac, firstFlight, dep, arr, latitude, longitude, speed,
+        retVal = createCruise(ac, firstFlight, dep, arr, latitude, longitude, speed,
                      alt, fltType);
         break;
     case 6:
-        createDescent(ac, arr, latitude, longitude, speed, alt, fltType,
+        retVal = createDescent(ac, arr, latitude, longitude, speed, alt, fltType,
                       distance);
         break;
     case 7:
-        createLanding(ac, arr, fltType);
+        retVal = createLanding(ac, arr, fltType);
         break;
     case 8:
-        createLandingTaxi(ac, arr, radius, fltType, aircraftType, airline);
+        retVal = createLandingTaxi(ac, arr, radius, fltType, aircraftType, airline);
         break;
     case 9:
-        createParking(ac, arr, radius);
+        retVal = createParking(ac, arr, radius);
         break;
     default:
         //exit(1);
@@ -96,6 +97,7 @@ void FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
     }
     wpt_iterator = waypoints.begin() + currWpt;
     leg++;
+    return retVal;
 }
 
 FGAIFlightPlan::waypoint *
@@ -200,7 +202,7 @@ void FGAIFlightPlan::createDefaultTakeoffTaxi(FGAIAircraft * ac,
     waypoints.push_back(wpt);
 }
 
-void FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
+bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
                                        FGAirport * apt,
                                        double radius,
                                        const string & fltType,
@@ -240,7 +242,7 @@ void FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
     FGGroundNetwork *gn = apt->getDynamics()->getGroundNetwork();
     if (!gn->exists()) {
         createDefaultTakeoffTaxi(ac, apt, rwy);
-        return;
+        return true;
     }
 
     intVec ids;
@@ -278,7 +280,7 @@ void FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
 
     if (taxiRoute->empty()) {
         createDefaultTakeoffTaxi(ac, apt, rwy);
-        return;
+        return true;
     }
 
     taxiRoute->first();
@@ -313,6 +315,7 @@ void FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
         wpt->routeIndex = route;
         waypoints.push_back(wpt);
     }
+    return true;
 }
 
 void FGAIFlightPlan::createDefaultLandingTaxi(FGAIAircraft * ac,
@@ -341,7 +344,7 @@ void FGAIFlightPlan::createDefaultLandingTaxi(FGAIAircraft * ac,
     waypoints.push_back(wpt);
 }
 
-void FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
+bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
                                        double radius,
                                        const string & fltType,
                                        const string & acType,
@@ -360,7 +363,7 @@ void FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
     // Find a route from runway end to parking/gate.
     if (!gn->exists()) {
         createDefaultLandingTaxi(ac, apt);
-        return;
+        return true;
     }
 
     intVec ids;
@@ -379,7 +382,7 @@ void FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
 
     if (taxiRoute->empty()) {
         createDefaultLandingTaxi(ac, apt);
-        return;
+        return true;
     }
 
     int node;
@@ -399,6 +402,7 @@ void FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
         wpt->routeIndex = route;
         waypoints.push_back(wpt);
     }
+    return true;
 }
 
 /*******************************************************************
@@ -412,7 +416,7 @@ void FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
  *  more likely however. 
  * 
  ******************************************************************/
-void FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
+bool FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
                                    FGAirport * apt, double speed,
                                    const string & fltType)
 {
@@ -487,13 +491,14 @@ void FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
     wpt = cloneWithPos(ac, wpt, "5000 ft", pt);
     wpt->altitude = airportElev + 5000;
     waypoints.push_back(wpt);
+    return true;
 }
 
 /*******************************************************************
  * CreateClimb
  * initialize the Aircraft at the parking location
  ******************************************************************/
-void FGAIFlightPlan::createClimb(FGAIAircraft * ac, bool firstFlight,
+bool FGAIFlightPlan::createClimb(FGAIAircraft * ac, bool firstFlight,
                                  FGAirport * apt, double speed, double alt,
                                  const string & fltType)
 {
@@ -527,6 +532,7 @@ void FGAIFlightPlan::createClimb(FGAIAircraft * ac, bool firstFlight,
         wpt->altitude = 18000;
         waypoints.push_back(wpt);
     }
+    return true;
 }
 
 
@@ -536,7 +542,7 @@ void FGAIFlightPlan::createClimb(FGAIAircraft * ac, bool firstFlight,
  * Generate a flight path from the last waypoint of the cruise to 
  * the permission to land point
  ******************************************************************/
-void FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
+bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
                                    double latitude, double longitude,
                                    double speed, double alt,
                                    const string & fltType,
@@ -823,8 +829,7 @@ void FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
         //cerr << "Repositioning to waypoint " << (*waypoints.begin())->name << endl;
         ac->resetPositionFromFlightPlan();
     }
-
-
+    return true;
 }
 
 /*******************************************************************
@@ -833,7 +838,7 @@ void FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
    hardcoded at 5000 meters from the threshold) to the threshold, at
    a standard glide slope angle of 3 degrees. 
  ******************************************************************/
-void FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
+bool FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
                                    const string & fltType)
 {
     double vTouchdown = ac->getPerformance()->vTouchdown();
@@ -873,13 +878,14 @@ void FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
        wpt->crossat   = apt->getElevation();
        waypoints.push_back(wpt); 
      */
+    return true;
 }
 
 /*******************************************************************
  * CreateParking
  * initialize the Aircraft at the parking location
  ******************************************************************/
-void FGAIFlightPlan::createParking(FGAIAircraft * ac, FGAirport * apt,
+bool FGAIFlightPlan::createParking(FGAIAircraft * ac, FGAirport * apt,
                                    double radius)
 {
     waypoint *wpt;
@@ -914,6 +920,7 @@ void FGAIFlightPlan::createParking(FGAIAircraft * ac, FGAirport * apt,
         createOnGround(ac, "END", SGGeod::fromDeg(lon, lat), aptElev,
                        vTaxiReduced);
     waypoints.push_back(wpt);
+    return true;
 }
 
 /**

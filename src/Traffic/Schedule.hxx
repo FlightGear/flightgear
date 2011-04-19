@@ -59,6 +59,7 @@ class FGAISchedule
   bool firstRun;
   double courseToDest;
   bool initialized;
+  bool valid;
 
   void scheduleFlights();
   
@@ -124,6 +125,7 @@ class FGAISchedule
   // used to sort in decending order of score: I've probably found a better way to
   // decending order sorting, but still need to test that.
   bool operator< (const FGAISchedule &other) const { return (score > other.score); };
+    void taint() { valid = false; };
   //void * getAiRef                 () { return AIManagerRef; };
   //FGAISchedule* getAddress        () { return this;};
 

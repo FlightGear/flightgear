@@ -24,6 +24,12 @@
 #ifndef _GROUNDNETWORK_HXX_
 #define _GROUNDNETWORK_HXX_
 
+#include <osg/Geode>
+#include <osg/Geometry>
+#include <osg/MatrixTransform>
+#include <osg/Shape>
+
+
 #include <simgear/compiler.h>
 #include <simgear/route/waypoint.hxx>
 
@@ -36,6 +42,7 @@ using std::vector;
 #include "gnnode.hxx"
 #include "parking.hxx"
 #include <ATC/trafficcontrol.hxx>
+
 
 class FGTaxiSegment; // forward reference
 class FGAIFlightPlan; // forward reference
@@ -241,6 +248,8 @@ private:
 			    double heading, double speed, double alt);
   void checkHoldPosition(int id, double lat, double lon, 
 			 double heading, double speed, double alt);
+
+  osg::Group* group;
 
 public:
   FGGroundNetwork();

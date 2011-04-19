@@ -37,7 +37,7 @@
 
 
 // TODO: Use James Turner's createOnGround functions.
-void FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
+bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
                                     bool firstFlight, FGAirport *dep, 
  				    double latitude,
  				    double longitude,
@@ -71,6 +71,7 @@ void FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
                                               " of flight type " << fltType << 
                                               " of airline     " << airline <<
                                               " at airport     " << dep->getId());
+                    return false;
                     char buffer[10];
                     snprintf (buffer, 10, "%d", gateId);
                     //FGTaxiNode *tn = dep->getDynamics()->getGroundNetwork()->findNode(node);
@@ -104,7 +105,7 @@ void FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
         if (gateId < 0) {
              createPushBackFallBack(ac, firstFlight, dep, latitude, longitude,
                                     radius, fltType, aircraftType, airline);
-             return;
+             return true;
 
         }
 	//cerr << "getting parking " << gateId;
@@ -231,6 +232,7 @@ void FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
         }
 
     }
+    return true;
 }
 /*******************************************************************
  * createPushBackFallBack

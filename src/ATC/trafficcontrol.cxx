@@ -419,6 +419,7 @@ bool FGTrafficRecord::pushBackAllowed()
     // In essence, we should check whether the pusbback route itself, as well as the associcated
     // taxiways near the pushback point are free of traffic. 
     // To do so, we need to 
+    return true;
 }
 
 

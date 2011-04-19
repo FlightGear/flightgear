@@ -1,3 +1,4 @@
+
 // groundnet.cxx - Implimentation of the FlightGear airport ground handling code
 //
 // Written by Durk Talsma, started June 2005.
@@ -36,12 +37,16 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/route/waypoint.hxx>
 #include <simgear/scene/material/EffectGeode.hxx>
+#include <simgear/scene/material/matlib.hxx>
+#include <simgear/scene/material/mat.hxx>
 
 #include <Airports/simple.hxx>
 #include <Airports/dynamics.hxx>
 
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/AIFlightPlan.hxx>
+
+#include <Scenery/scenery.hxx>
 
 #include "groundnetwork.hxx"
 
@@ -93,7 +98,7 @@ void FGTaxiSegment::setDimensions(double elevation)
     SGGeodesy::inverse(start->getGeod(), end->getGeod(), heading, az2, length);
     double coveredDistance = length * 0.5;
     SGGeodesy::direct(start->getGeod(), heading, coveredDistance, center, az2);
-    cerr << "Centerpoint = (" << center.getLatitudeDeg() << ", " << center.getLongitudeDeg() << "). Heading = " << heading << endl;
+    //cerr << "Centerpoint = (" << center.getLatitudeDeg() << ", " << center.getLongitudeDeg() << "). Heading = " << heading << endl;
 }
 
 
@@ -205,6 +210,7 @@ FGGroundNetwork::FGGroundNetwork()
     //maxDepth    = 1000;
     count = 0;
     currTraffic = activeTraffic.begin();
+    group = 0;
 
 }
 
@@ -1096,34 +1102,107 @@ static void WorldCoordinate(osg::Matrix& obj_pos, double lat,
 
 
 
+
 osg::Node* FGGroundNetwork::getRenderNode()
 {
-    osg::Group* group = new osg::Group;
 
-    for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
-        osg::Matrix obj_pos;
-        osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
-        obj_trans->setDataVariance(osg::Object::STATIC);
-        WorldCoordinate( obj_pos, (*i)->getLatitude(), (*i)->getLongitude(), parent->elevation()+10, -((*i)->getHeading()) );
+    SGMaterialLib *matlib = globals->get_matlib();
+    if (group) {
+        //int nr = ;
+        globals->get_scenery()->get_scene_graph()->removeChild(group);
+        //while (group->getNumChildren()) {
+        //  cerr << "Number of children: " << group->getNumChildren() << endl;
+        simgear::EffectGeode* geode = (simgear::EffectGeode*) group->getChild(0);
+          //osg::MatrixTransform *obj_trans = (osg::MatrixTransform*) group->getChild(0);
+           //geode->releaseGLObjects();
+           //group->removeChild(geode);
+           //delete geode;
+    }
+    group = new osg::Group;
+
+    //for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
+    double dx = 0;
+    for   (TrafficVectorIterator i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
+        // Handle start point
+        int pos = i->getCurrentPosition() - 1;
+        if (pos >= 0) {
+            
+            SGGeod start(SGGeod::fromDeg((i->getLongitude()), (i->getLatitude())));
+            SGGeod end  (SGGeod::fromDeg(segments[pos]->getEnd()->getLongitude(), segments[pos]->getEnd()->getLatitude()));
+
+            double length = SGGeodesy::distanceM(start, end);
+            //heading = SGGeodesy::headingDeg(start->getGeod(), end->getGeod());
+
+            double az2, heading; //, distanceM;
+            SGGeodesy::inverse(start, end, heading, az2, length);
+            double coveredDistance = length * 0.5;
+            SGGeod center;
+            SGGeodesy::direct(start, heading, coveredDistance, center, az2);
+            //cerr << "Active Aircraft : Centerpoint = (" << center.getLatitudeDeg() << ", " << center.getLongitudeDeg() << "). Heading = " << heading << endl;
+            ///////////////////////////////////////////////////////////////////////////////
+            // Make a helper function out of this
+            osg::Matrix obj_pos;
+                osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
+                obj_trans->setDataVariance(osg::Object::STATIC);
+
+                WorldCoordinate( obj_pos, center.getLatitudeDeg(), center.getLongitudeDeg(), parent->elevation()+8+dx, -(heading) );
 
                 obj_trans->setMatrix( obj_pos );
-        //osg::Vec3 center(0, 0, 0)
+                //osg::Vec3 center(0, 0, 0)
 
-        float width = (*i)->getLength() /2.0;
-        osg::Vec3 corner(-width, 0, 0.25f);
-        osg::Vec3 widthVec(2*width + 1, 0, 0);
-        osg::Vec3 heightVec(0, 0, 1);
-        osg::Geometry* geometry;
-        geometry = osg::createTexturedQuadGeometry(corner, widthVec, heightVec);
-        simgear::EffectGeode* geode = new simgear::EffectGeode;
-        geode->setName("test");
-        geode->addDrawable(geometry);
-        //osg::Node *custom_obj;
-        
-        obj_trans->addChild(geode);
-            // wire as much of the scene graph together as we can
-        //->addChild( obj_trans );
-        group->addChild( obj_trans );
+                float width = length /2.0;
+                osg::Vec3 corner(-width, 0, 0.25f);
+                osg::Vec3 widthVec(2*width + 1, 0, 0);
+                osg::Vec3 heightVec(0, 1, 0);
+                osg::Geometry* geometry;
+                geometry = osg::createTexturedQuadGeometry(corner, widthVec, heightVec);
+                simgear::EffectGeode* geode = new simgear::EffectGeode;
+                geode->setName("test");
+                geode->addDrawable(geometry);
+                //osg::Node *custom_obj;
+                SGMaterial *mat = matlib->find("UnidirectionalTaper");
+                if (mat)
+                    geode->setEffect(mat->get_effect());
+                obj_trans->addChild(geode);
+                // wire as much of the scene graph together as we can
+                //->addChild( obj_trans );
+                group->addChild( obj_trans );
+        /////////////////////////////////////////////////////////////////////
+        } else {
+             cerr << "BIG FAT WARNING: current position is here : " << pos << endl;
+        }
+        for(intVecIterator j = (i)->getIntentions().begin(); j != (i)->getIntentions().end(); j++) {
+             osg::Matrix obj_pos;
+            int k = (*j)-1;
+            if (k >= 0) {
+                osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
+                obj_trans->setDataVariance(osg::Object::STATIC);
+
+                WorldCoordinate( obj_pos, segments[k]->getLatitude(), segments[k]->getLongitude(), parent->elevation()+8+dx, -(segments[k]->getHeading()) );
+
+                obj_trans->setMatrix( obj_pos );
+                //osg::Vec3 center(0, 0, 0)
+
+                float width = segments[k]->getLength() /2.0;
+                osg::Vec3 corner(-width, 0, 0.25f);
+                osg::Vec3 widthVec(2*width + 1, 0, 0);
+                osg::Vec3 heightVec(0, 1, 0);
+                osg::Geometry* geometry;
+                geometry = osg::createTexturedQuadGeometry(corner, widthVec, heightVec);
+                simgear::EffectGeode* geode = new simgear::EffectGeode;
+                geode->setName("test");
+                geode->addDrawable(geometry);
+                //osg::Node *custom_obj;
+                SGMaterial *mat = matlib->find("UnidirectionalTaper");
+                if (mat)
+                    geode->setEffect(mat->get_effect());
+                obj_trans->addChild(geode);
+                // wire as much of the scene graph together as we can
+                //->addChild( obj_trans );
+                group->addChild( obj_trans );
+            }
+        }
+        dx += 0.1;
     }
 
 

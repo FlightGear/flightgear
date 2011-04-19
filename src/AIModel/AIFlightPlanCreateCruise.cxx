@@ -286,7 +286,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
  * Note that this is the original version that does not 
  * do any dynamic route computation.
  ******************************************************************/
-void FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport *dep, 
+bool FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport *dep, 
 				  FGAirport *arr, double latitude, 
 				  double longitude, double speed, 
 				  double alt, const string& fltType)

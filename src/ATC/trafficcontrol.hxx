@@ -182,6 +182,8 @@ public:
   void allowRepeatedTransmissions () { allowTransmission=true; };
   void nextFrequency() { frequencyId++; };
   int  getNextFrequency() { return frequencyId; };
+  intVec& getIntentions() { return intentions; };
+  int getCurrentPosition() { return currentPos; };
 };
 
 typedef vector<FGTrafficRecord> TrafficVector;

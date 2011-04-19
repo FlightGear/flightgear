@@ -87,10 +87,10 @@ public:
   time_t getStartTime() const { return start_time; }
    time_t getArrivalTime() const { return arrivalTime; }
 
-  void    create(FGAIAircraft *, FGAirport *dep, FGAirport *arr, int leg, double alt, double speed, double lat, double lon,
+  bool    create(FGAIAircraft *, FGAirport *dep, FGAirport *arr, int leg, double alt, double speed, double lat, double lon,
 		 bool firstLeg, double radius, const std::string& fltType, const std::string& aircraftType, const std::string& airline, double distance);
-  void createPushBack(FGAIAircraft *, bool, FGAirport*, double, double, double, const std::string&, const std::string&, const std::string&);
-  void createTakeOff(FGAIAircraft *, bool, FGAirport *, double, const std::string&);
+  bool createPushBack(FGAIAircraft *, bool, FGAirport*, double, double, double, const std::string&, const std::string&, const std::string&);
+  bool createTakeOff(FGAIAircraft *, bool, FGAirport *, double, const std::string&);
 
   void setLeg(int val) { leg = val;}
   void setTime(time_t st) { start_time = st; }
@@ -142,20 +142,21 @@ private:
   std::string activeRunway;
   FGTaxiRoute *taxiRoute;
   std::string name;
+  bool isValid;
 
   void createPushBackFallBack(FGAIAircraft *, bool, FGAirport*, double, double, double, const std::string&, const std::string&, const std::string&);
-  void createClimb(FGAIAircraft *, bool, FGAirport *, double, double, const std::string&);
-  void createCruise(FGAIAircraft *, bool, FGAirport*, FGAirport*, double, double, double, double, const std::string&);
-  void createDescent(FGAIAircraft *, FGAirport *,  double latitude, double longitude, double speed, double alt,const std::string&, double distance);
-  void createLanding(FGAIAircraft *, FGAirport *, const std::string&);
-  void createParking(FGAIAircraft *, FGAirport *, double radius);
+  bool createClimb(FGAIAircraft *, bool, FGAirport *, double, double, const std::string&);
+  bool createCruise(FGAIAircraft *, bool, FGAirport*, FGAirport*, double, double, double, double, const std::string&);
+  bool createDescent(FGAIAircraft *, FGAirport *,  double latitude, double longitude, double speed, double alt,const std::string&, double distance);
+  bool createLanding(FGAIAircraft *, FGAirport *, const std::string&);
+  bool createParking(FGAIAircraft *, FGAirport *, double radius);
   void deleteWaypoints(); 
   void resetWaypoints();
 
-  void createLandingTaxi(FGAIAircraft *, FGAirport *apt, double radius, const std::string& fltType, const std::string& acType, const std::string& airline);
+  bool createLandingTaxi(FGAIAircraft *, FGAirport *apt, double radius, const std::string& fltType, const std::string& acType, const std::string& airline);
   void createDefaultLandingTaxi(FGAIAircraft *, FGAirport* aAirport);
   void createDefaultTakeoffTaxi(FGAIAircraft *, FGAirport* aAirport, FGRunway* aRunway);
-  void createTakeoffTaxi(FGAIAircraft *, bool firstFlight, FGAirport *apt, double radius, const std::string& fltType, const std::string& acType, const std::string& airline);
+  bool createTakeoffTaxi(FGAIAircraft *, bool firstFlight, FGAirport *apt, double radius, const std::string& fltType, const std::string& acType, const std::string& airline);
 
   double getTurnRadius(double, bool);
         
@@ -170,7 +171,7 @@ private:
  public:
   wpt_vector_iterator getFirstWayPoint() { return waypoints.begin(); };
   wpt_vector_iterator getLastWayPoint()  { return waypoints.end(); };
-
+    bool isValidPlan() { return isValid; };
 };    
 
 #endif  // _FG_AIFLIGHTPLAN_HXX

@@ -157,9 +157,9 @@ void FGATCManager::init() {
 
     //dialog.init();
 
-   osg::Node* node = apt->getDynamics()->getGroundNetwork()->getRenderNode();
-   cerr << "Adding groundnetWork to the scenegraph" << endl;
-   globals->get_scenery()->get_scene_graph()->addChild(node);
+   //osg::Node* node = apt->getDynamics()->getGroundNetwork()->getRenderNode();
+   //cerr << "Adding groundnetWork to the scenegraph::init" << endl;
+   //globals->get_scenery()->get_scene_graph()->addChild(node);
    }
 }
 
@@ -177,7 +177,7 @@ void FGATCManager::update ( double time ) {
         double speed     = fgGetDouble("/velocities/groundspeed-kt");
         double altitude  = fgGetDouble("/position/altitude-ft");
 
-        cerr << "Running FGATCManager::update()" << endl;
+        //cerr << "Running FGATCManager::update()" << endl;
         controller->updateAircraftInformation(ai_ac.getID(),
                                               latitude,
                                               longitude,
@@ -185,10 +185,10 @@ void FGATCManager::update ( double time ) {
                                               speed,
                                               altitude, time);
     }
-   /*string airport = fgGetString("/sim/presets/airport-id");
+   string airport = fgGetString("/sim/presets/airport-id");
    FGAirport *apt = FGAirport::findByIdent(airport); 
    osg::Node* node = apt->getDynamics()->getGroundNetwork()->getRenderNode();
-   cerr << "Adding groundnetWork to the scenegraph" << endl;
+   //cerr << "Adding groundnetWork to the scenegraph::update" << endl;
+   
    globals->get_scenery()->get_scene_graph()->addChild(node);
-*/
 }

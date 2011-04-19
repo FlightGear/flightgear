@@ -68,6 +68,7 @@ FGAISchedule::FGAISchedule()
   radius = 0;
   groundOffset = 0;
   distanceToUser = 0;
+  valid = true;
   //score = 0;
 }
 
@@ -120,6 +121,7 @@ FGAISchedule::FGAISchedule(string model,
   runCount         = 0;
   hits             = 0;
   initialized      = false;
+  valid            = true;
 }
 
 FGAISchedule::FGAISchedule(const FGAISchedule &other)
@@ -146,6 +148,7 @@ FGAISchedule::FGAISchedule(const FGAISchedule &other)
   runCount           = other.runCount;
   hits               = other.hits;
   initialized        = other.initialized;
+  valid              = other.valid;
 }
 
 
@@ -192,9 +195,12 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
     elapsedTimeEnroute,
     remainingTimeEnroute, 
     deptime = 0;
-  
+  if (!valid) {
+    return false;
+  }
   scheduleFlights();
   if (flights.empty()) { // No flights available for this aircraft
+      valid = false;
       return false;
   }
   
@@ -211,7 +217,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
      firstRun = false;
   }
   
-  FGScheduledFlight* flight = flights.front();
+    FGScheduledFlight* flight = flights.front();
   if (!deptime) {
     deptime = flight->getDepartureTime();
     //cerr << "Settiing departure time " << deptime << endl;
@@ -329,19 +335,29 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
   aircraft->setBank(0);
       
   courseToDest = SGGeodesy::courseDeg(position, arr->geod());
-  aircraft->SetFlightPlan(new FGAIFlightPlan(aircraft, flightPlanName, courseToDest, deptime, 
-							     dep, arr, true, radius, 
-							     flight->getCruiseAlt()*100, 
-							     position.getLatitudeDeg(), 
-                   position.getLongitudeDeg(), 
-                   speedKnots, flightType, acType, 
-							     airline));
-                   
-    
-  FGAIManager* aimgr = (FGAIManager *) globals-> get_subsystem("ai_model");
-  aimgr->attach(aircraft);
-  AIManagerRef = aircraft->getID();
-  return true;
+    FGAIFlightPlan *fp = new FGAIFlightPlan(aircraft, flightPlanName, courseToDest, deptime, 
+                                            dep, arr, true, radius, 
+                                            flight->getCruiseAlt()*100, 
+                                            position.getLatitudeDeg(), 
+                                            position.getLongitudeDeg(), 
+                                            speedKnots, flightType, acType, 
+                                            airline);
+  if (fp->isValidPlan()) {
+        aircraft->SetFlightPlan(fp);
+        FGAIManager* aimgr = (FGAIManager *) globals-> get_subsystem("ai_model");
+        aimgr->attach(aircraft);
+        AIManagerRef = aircraft->getID();
+        return true;
+  } else {
+        delete aircraft;
+        delete fp;
+        //hand back the flights that had already been scheduled
+        while (!flights.empty()) {
+            flights.front()->release();
+            flights.erase(flights.begin());
+        }
+        return false;
+  }
 }
 
 // Create an initial heading for user controlled aircraft.

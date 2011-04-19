@@ -1,4 +1,4 @@
-// FGAIFlightPlan - class for loading and storing  AI flight plans
+// // FGAIFlightPlan - class for loading and storing  AI flight plans
 // Written by David Culp, started May 2004
 // - davidculp2@comcast.net
 //
@@ -50,6 +50,7 @@ FGAIFlightPlan::FGAIFlightPlan()
 {
    sid = 0;
    wpt_iterator = waypoints.begin();
+   isValid = true;
 }
 
 FGAIFlightPlan::FGAIFlightPlan(const string& filename)
@@ -98,6 +99,7 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename)
    }
 
   wpt_iterator = waypoints.begin();
+  isValid = true;
   //cout << waypoints.size() << " waypoints read." << endl;
 }
 
@@ -137,7 +139,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
   path.append( p );
   
   SGPropertyNode root;
-  
+  isValid = true;
   // This is a bit of a hack:
   // Normally the value of course will be used to evaluate whether
   // or not a waypoint will be used for midair initialization of 
@@ -205,7 +207,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
       SG_LOG(SG_GENERAL, SG_INFO, "Route from " << dep->getId() << " to " << arr->getId() << ". Set leg to : " << leg << " " << ac->getTrafficRef()->getCallSign());
       wpt_iterator = waypoints.begin();
       bool dist = 0;
-      create(ac, dep,arr, leg, alt, speed, lat, lon,
+      isValid = create(ac, dep,arr, leg, alt, speed, lat, lon,
 	     firstLeg, radius, fltType, acType, airline, dist);
       wpt_iterator = waypoints.begin();
       //cerr << "after create: " << (*wpt_iterator)->name << endl;
