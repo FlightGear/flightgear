@@ -88,9 +88,11 @@ void TimeManager::init()
                _warp->getIntValue());
   globals->set_time_params(_impl);
     
-// frame/update-rate counters
+  // frame-rate / worst-case latency / update-rate counters
   _frameRate = fgGetNode("/sim/frame-rate", true);
+  _frameLatency = fgGetNode("/sim/frame-latency-max-ms", true);
   _lastFrameTime = 0;
+  _frameLatencyMax = 0.0;
   _frameCount = 0;
 }
 
@@ -160,7 +162,9 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
   SGTimeStamp currentStamp;
   currentStamp.stamp();
   double dt = (currentStamp - _lastStamp).toSecs();
-  
+  if (dt > _frameLatencyMax)
+      _frameLatencyMax = dt;
+
 // Limit the time we need to spend in simulation loops
 // That means, if the /sim/max-simtime-per-frame value is strictly positive
 // you can limit the maximum amount of time you will do simulations for
@@ -251,7 +255,9 @@ void TimeManager::computeFrameRate()
   // Calculate frame rate average
   if ((_impl->get_cur_time() != _lastFrameTime)) {
     _frameRate->setIntValue(_frameCount);
+    _frameLatency->setDoubleValue(_frameLatencyMax*1000);
     _frameCount = 0;
+    _frameLatencyMax = 0.0;
   }
   
   _lastFrameTime = _impl->get_cur_time();

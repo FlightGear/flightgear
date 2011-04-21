@@ -55,10 +55,15 @@ FGJoystickInput::joystick::joystick ()
 
 FGJoystickInput::joystick::~joystick ()
 {
-//  delete js? why not?
-//   delete js;
+  //  delete js? no, since js == this - and we're in the destructor already.
   delete[] axes;
   delete[] buttons;
+  jsnum = 0;
+  js = NULL;
+  naxes = 0;
+  nbuttons = 0;
+  axes = NULL;
+  buttons = NULL;
 }
 
 
@@ -68,13 +73,24 @@ FGJoystickInput::FGJoystickInput()
 
 FGJoystickInput::~FGJoystickInput()
 {
+    _remove();
 }
 
+void FGJoystickInput::_remove()
+{
+    SGPropertyNode * js_nodes = fgGetNode("/input/joysticks", true);
+    js_nodes->removeChildren("js", false);
+    for (int i = 0; i < MAX_JOYSTICKS; i++)
+    {
+        if (bindings[i].js)
+            delete bindings[i].js;
+        bindings[i].js = NULL;
+    }
+}
 
 void FGJoystickInput::init()
 {
   jsInit();
-                                // TODO: zero the old bindings first.
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing joystick bindings");
   SGPropertyNode * js_nodes = fgGetNode("/input/joysticks", true);
 
@@ -121,8 +137,7 @@ void FGJoystickInput::init()
 
 void FGJoystickInput::reinit() {
   SG_LOG(SG_INPUT, SG_DEBUG, "Re-Initializing joystick bindings");
-  SGPropertyNode * js_nodes = fgGetNode("/input/joysticks", true);
-  js_nodes->removeChildren("js", false);
+  _remove();
   FGJoystickInput::init();
   FGJoystickInput::postinit();
 }

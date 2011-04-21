@@ -49,7 +49,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_PROPAGATE "$Id: FGPropagate.h,v 1.55 2011/01/16 16:10:59 bcoconni Exp $"
+#define ID_PROPAGATE "$Id: FGPropagate.h,v 1.58 2011/04/03 19:24:58 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -102,7 +102,7 @@ CLASS DOCUMENTATION
     @endcode
 
     @author Jon S. Berndt, Mathias Froehlich
-    @version $Id: FGPropagate.h,v 1.55 2011/01/16 16:10:59 bcoconni Exp $
+    @version $Id: FGPropagate.h,v 1.58 2011/04/03 19:24:58 jberndt Exp $
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -134,11 +134,6 @@ public:
         ECI frame, expressed in the body frame.
         units rad/sec */
     FGColumnVector3 vPQRi;
-
-    /** The angular velocity vector for the vehicle body frame relative to the
-        ECI frame, expressed in the ECI frame.
-        units rad/sec */
-    FGColumnVector3 vPQRi_i;
 
     /** The current orientation of the vehicle, that is, the orientation of the
         body frame relative to the local, NED frame. */
@@ -337,6 +332,10 @@ public:
   /** Retrieves the inertial position vector.
   */
   const FGColumnVector3& GetInertialPosition(void) const { return VState.vInertialPosition; }
+
+  /** Calculates and retrieves the velocity vector relative to the earth centered earth fixed (ECEF) frame.
+  */
+  const FGColumnVector3 GetECEFVelocity(void) const {return Tb2ec * VState.vUVW; }
 
   /** Returns the current altitude above sea level.
       This function returns the altitude above sea level.
@@ -581,8 +580,8 @@ public:
   void RecomputeLocalTerrainRadius(void);
 
   void NudgeBodyLocation(FGColumnVector3 deltaLoc) {
-    vDeltaXYZEC = Tb2ec*deltaLoc;
-    VState.vLocation -= vDeltaXYZEC;
+    VState.vInertialPosition -= Tb2i*deltaLoc;
+    VState.vLocation -= Tb2ec*deltaLoc;
   }
 
   struct LagrangeMultiplier {
@@ -602,8 +601,7 @@ private:
   struct VehicleState VState;
 
   FGColumnVector3 vVel;
-  FGColumnVector3 vPQRdot;
-  FGColumnVector3 vPQRidot;
+  FGColumnVector3 vPQRdot, vPQRidot;
   FGColumnVector3 vUVWdot, vUVWidot;
   FGColumnVector3 vInertialVelocity;
   FGColumnVector3 vLocation;

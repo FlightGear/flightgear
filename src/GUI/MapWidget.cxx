@@ -527,7 +527,6 @@ void MapWidget::draw(int dx, int dy)
 
   if (_root->getBoolValue("centre-on-aircraft")) {
     _projectionCenter = _aircraft;
-    _root->setBoolValue("centre-on-aircraft", false);
   }
 
   double julianDate = globals->get_time_params()->getJD();
@@ -1396,7 +1395,7 @@ void MapWidget::drawAIShip(const SGPropertyNode* model, const SGGeod& pos, doubl
 {
   SGVec2d p = project(pos);
 
-  glColor3f(0.0, 0.0, 0.3);
+  glColor3f(0.0, 0.0, 0.5);
   glLineWidth(2.0);
   circleAt(p, 4, 6.0); // blue diamond (to differentiate from aircraft.
 

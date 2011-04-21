@@ -47,7 +47,7 @@
 #include "groundradar.hxx"
 
 static const char* airport_source_node_name = "airport-id-source";
-static const char* default_airport_node_name = "/sim/tower/airport-id";
+static const char* default_airport_node_name = "/sim/airport/closest-airport-id";
 static const char* texture_node_name = "texture-name";
 static const char* default_texture_name = "Aircraft/Instruments/Textures/od_groundradar.rgb";
 static const char* range_source_node_name = "range-source";

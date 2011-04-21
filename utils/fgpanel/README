@@ -1,0 +1,148 @@
+=====================================================================
+This is fgpanel - basically the stripped down 2D-Panel code from
+FlightGear. It is designed as a standalone lightweight panel 
+rendering engine to draw 2d panels on a lowcost computer/graphic card
+without 3d acceleration at reasonablel framerates.
+
+=====================================================================
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+=====================================================================
+Usage
+start fgpanel with
+fgpanel --fg-root=/path/to/fg/data --panel=Aircraft/MyAircraft/Panels/MyPanel.xml
+with the command args set to
+--fg-root shall point to the directory where your FGDATA lives
+  NOTE: you don't need a full copy of FGDATA, just the panel definition files for
+  your aircraft, e.g.
+  - Aircraft/MyAircraft/Panels/*
+  - Aircraft/Instruments/* (if referenced)
+
+-panel shall point to a panel-configuration file, relative to FGDATA
+
+start flightgear with
+fgfs --generic=socket,out,10,239.24.10.64,5432,udp,../Aircraft/MyAircraft/Panels/SampleProtocol
+
+=====================================================================
+Sample:
+
+Create the sample files within your aicraft directory, preferrable under Panels
+MyPanel.xml
+sample-2d-panel.xml
+SampleProtocol.xml
+
+=====================================================================
+Sample panel configuration file (MyPanel.xml)
+<PropertyList>
+
+  <!-- true: run full-screen, false; run in window -->
+  <game-mode type="bool">false</game-mode>
+
+  <!-- include the panel definitions (2d-panel syntax)-->
+  <panel include="sample-2d-panel.xml"/>
+
+  <!-- compose your property-tree here -->
+  <sim>
+    <panel>
+      <flip-x type="bool">false</flip-x>
+    </panel>
+    <instrument-options>
+      <omit-knobs type="bool">true</omit-knobs>
+    </instrument-options>
+  </sim>
+
+  <!-- network communication settings -->
+  <communication>
+    <listen>
+      <!-- interface to bind to, 
+           leave empty for all interfaces -->
+      <host>239.24.10.64</host> <!-- multicast address! -->
+      <port>5432</port> <!-- tcp port to listen to -->
+      <style>udp</style> <!-- udp or tcp (forget about tcp!) -->
+    </listen>
+
+    <!-- the generic protocol definition 
+         same as used for fgfs --generic=foobar option
+    -->
+    <protocol include="SampleProtocol.xml"/>
+  </communication>
+</PropertyList>
+
+=====================================================================
+Sampe 2d-panel configuration file sample-2d-panel.xml
+To be included from the panel configuration file
+
+<?xml version="1.0"?>
+<PropertyList>
+    <name>Sample Instrument Panel</name>
+    <w>375</w> <!-- screen width: 375mm -->
+    <h>305</h> <!-- screen height: 305mm -->
+    <instruments>
+        <!-- use FlightGear's c172 attitude indicator -->
+        <instrument include="../../Instruments/ati-c172s.xml">
+            <name>Attitude Gyro</name>
+            <x alias="../../../params/col-2"/>
+            <y alias="../../../params/row-1"/>
+            <w>80</w>
+            <h>80</h>
+        </instrument>
+    </instruments>
+</PropertyList>
+
+=====================================================================
+Sample protocol configuration file to drive the AI (SampleProtocol.xml)
+<?xml version="1.0"?>
+
+<PropertyList>
+ <generic>
+
+  <output>
+   <line_separator>newline</line_separator>
+   <var_separator>,</var_separator>
+
+   <chunk>
+    <type>float</type>
+    <format>%.2f</format>
+    <node>/position/altitude-agl-ft</node>
+   </chunk>
+
+   <chunk>
+    <type>float</type>
+    <format>%.2f</format>
+    <node>/instrumentation/attitude-indicator/indicated-roll-deg</node>
+   </chunk>
+
+   <chunk>
+    <type>float</type>
+    <format>%.2f</format>
+    <node>/instrumentation/attitude-indicator/indicated-pitch-deg</node>
+   </chunk>
+
+   <chunk>
+    <type>float</type>
+    <format>%.2f</format>
+    <node>/instrumentation/attitude-indicator/horizon-offset-deg</node>
+   </chunk>
+
+   <chunk>
+    <type>float</type>
+    <format>%.4e</format>
+    <node>/instrumentation/attitude-indicator/spin</node>
+   </chunk>
+  </output>
+ </generic>
+</PropertyList>
+
+=====================================================================

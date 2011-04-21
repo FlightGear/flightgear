@@ -74,7 +74,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGOutput.cpp,v 1.50 2010/11/18 12:38:06 jberndt Exp $";
+static const char *IdSrc = "$Id: FGOutput.cpp,v 1.54 2011/03/11 13:02:26 jberndt Exp $";
 static const char *IdHdr = ID_OUTPUT;
 
 // (stolen from FGFS native_fdm.cxx)
@@ -182,24 +182,31 @@ bool FGOutput::Run(void)
 {
   if (FGModel::Run()) return true;
 
-  if (enabled && !FDMExec->IntegrationSuspended()&& !FDMExec->Holding()) {
+  if (enabled && !FDMExec->IntegrationSuspended() && !FDMExec->Holding()) {
     RunPreFunctions();
-    if (Type == otSocket) {
-      SocketOutput();
-    } else if (Type == otFlightGear) {
-      FlightGearSocketOutput();
-    } else if (Type == otCSV || Type == otTab) {
-      DelimitedOutput(Filename);
-    } else if (Type == otTerminal) {
-      // Not done yet
-    } else if (Type == otNone) {
-      // Do nothing
-    } else {
-      // Not a valid type of output
-    }
+    Print();
     RunPostFunctions();
   }
   return false;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGOutput::Print(void)
+{
+  if (Type == otSocket) {
+    SocketOutput();
+  } else if (Type == otFlightGear) {
+    FlightGearSocketOutput();
+  } else if (Type == otCSV || Type == otTab) {
+    DelimitedOutput(Filename);
+  } else if (Type == otTerminal) {
+    // Not done yet
+  } else if (Type == otNone) {
+    // Do nothing
+  } else {
+    // Not a valid type of output
+  }
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -296,6 +303,7 @@ void FGOutput::DelimitedOutput(const string& fname)
       outstream << "UBody" + delimeter + "VBody" + delimeter + "WBody" + delimeter;
       outstream << "Aero V_{X Body} (ft/s)" + delimeter + "Aero V_{Y Body} (ft/s)" + delimeter + "Aero V_{Z Body} (ft/s)" + delimeter;
       outstream << "V_{X_{inertial}} (ft/s)" + delimeter + "V_{Y_{inertial}} (ft/s)" + delimeter + "V_{Z_{inertial}} (ft/s)" + delimeter;
+      outstream << "V_{X_{ecef}} (ft/s)" + delimeter + "V_{Y_{ecef}} (ft/s)" + delimeter + "V_{Z_{ecef}} (ft/s)" + delimeter;
       outstream << "V_{North} (ft/s)" + delimeter + "V_{East} (ft/s)" + delimeter + "V_{Down} (ft/s)";
     }
     if (SubSystems & ssForces) {
@@ -359,8 +367,8 @@ void FGOutput::DelimitedOutput(const string& fname)
       outstream << "Distance AGL (ft)" + delimeter;
       outstream << "Terrain Elevation (ft)";
     }
-    if (SubSystems & ssCoefficients) {
-      scratch = Aerodynamics->GetCoefficientStrings(delimeter);
+    if (SubSystems & ssAeroFunctions) {
+      scratch = Aerodynamics->GetAeroFunctionStrings(delimeter);
       if (scratch.length() != 0) outstream << delimeter << scratch;
     }
     if (SubSystems & ssFCS) {
@@ -415,6 +423,7 @@ void FGOutput::DelimitedOutput(const string& fname)
     outstream << setprecision(12) << Propagate->GetUVW().Dump(delimeter) << delimeter;
     outstream << Auxiliary->GetAeroUVW().Dump(delimeter) << delimeter;
     outstream << Propagate->GetInertialVelocity().Dump(delimeter) << delimeter;
+    outstream << Propagate->GetECEFVelocity().Dump(delimeter) << delimeter;
     outstream << Propagate->GetVel().Dump(delimeter);
     outstream.precision(10);
   }
@@ -475,8 +484,8 @@ void FGOutput::DelimitedOutput(const string& fname)
     outstream << Propagate->GetTerrainElevation();
     outstream.precision(10);
   }
-  if (SubSystems & ssCoefficients) {
-    scratch = Aerodynamics->GetCoefficientValues(delimeter);
+  if (SubSystems & ssAeroFunctions) {
+    scratch = Aerodynamics->GetAeroFunctionValues(delimeter);
     if (scratch.length() != 0) outstream << delimeter << scratch;
   }
   if (SubSystems & ssFCS) {
@@ -826,8 +835,8 @@ void FGOutput::SocketOutput(void)
         socket->Append("Latitude (deg)");
         socket->Append("Longitude (deg)");
     }
-    if (SubSystems & ssCoefficients) {
-      scratch = Aerodynamics->GetCoefficientStrings(",");
+    if (SubSystems & ssAeroFunctions) {
+      scratch = Aerodynamics->GetAeroFunctionStrings(",");
       if (scratch.length() != 0) socket->Append(scratch);
     }
     if (SubSystems & ssFCS) {
@@ -932,8 +941,8 @@ void FGOutput::SocketOutput(void)
     socket->Append(Propagate->GetLocation().GetLatitudeDeg());
     socket->Append(Propagate->GetLocation().GetLongitudeDeg());
   }
-  if (SubSystems & ssCoefficients) {
-    scratch = Aerodynamics->GetCoefficientValues(",");
+  if (SubSystems & ssAeroFunctions) {
+    scratch = Aerodynamics->GetAeroFunctionValues(",");
     if (scratch.length() != 0) socket->Append(scratch);
   }
   if (SubSystems & ssFCS) {
@@ -974,7 +983,7 @@ bool FGOutput::Load(Element* element)
 {
   string parameter="";
   string name="";
-  int OutRate = 0;
+  double OutRate = 0.0;
   unsigned int port;
   Element *property_element;
 
@@ -1003,7 +1012,7 @@ bool FGOutput::Load(Element* element)
     BaseFilename = Filename = name;
   }
   if (!document->GetAttributeValue("rate").empty()) {
-    OutRate = (int)document->GetAttributeValueAsNumber("rate");
+    OutRate = document->GetAttributeValueAsNumber("rate");
   } else {
     OutRate = 1;
   }
@@ -1027,7 +1036,7 @@ bool FGOutput::Load(Element* element)
   if (document->FindElementValue("position") == string("ON"))
     SubSystems += ssPropagate;
   if (document->FindElementValue("coefficients") == string("ON"))
-    SubSystems += ssCoefficients;
+    SubSystems += ssAeroFunctions;
   if (document->FindElementValue("ground_reactions") == string("ON"))
     SubSystems += ssGroundReactions;
   if (document->FindElementValue("fcs") == string("ON"))
@@ -1058,7 +1067,7 @@ bool FGOutput::Load(Element* element)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGOutput::SetRate(int rtHz)
+void FGOutput::SetRate(double rtHz)
 {
   rtHz = rtHz>1000?1000:(rtHz<0?0:rtHz);
   if (rtHz > 0) {
@@ -1128,7 +1137,7 @@ void FGOutput::Debug(int from)
       if (SubSystems & ssMoments)         cout << "    Moments parameters logged" << endl;
       if (SubSystems & ssAtmosphere)      cout << "    Atmosphere parameters logged" << endl;
       if (SubSystems & ssMassProps)       cout << "    Mass parameters logged" << endl;
-      if (SubSystems & ssCoefficients)    cout << "    Coefficient parameters logged" << endl;
+      if (SubSystems & ssAeroFunctions)    cout << "    Coefficient parameters logged" << endl;
       if (SubSystems & ssPropagate)       cout << "    Propagate parameters logged" << endl;
       if (SubSystems & ssGroundReactions) cout << "    Ground parameters logged" << endl;
       if (SubSystems & ssFCS)             cout << "    FCS parameters logged" << endl;
