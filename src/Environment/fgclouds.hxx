@@ -47,17 +47,24 @@ private:
 	int update_event;
 	SGSoundSample *snd_lightning;
 	bool clouds_3d_enabled;
+  int index;
 
 public:
 	FGClouds();
 	~FGClouds();
 
-	void init(void);
+	void Init(void);
 
 	int get_update_event(void) const;
 	void set_update_event(int count);
 	bool get_3dClouds() const;
 	void set_3dClouds(bool enable);
+
 };
 
+static bool do_delete_3Dcloud (const SGPropertyNode *arg);
+static bool do_move_3Dcloud (const SGPropertyNode *arg);
+static bool do_add_3Dcloud (const SGPropertyNode *arg);
+
 #endif // _FGCLOUDS_HXX
+
