@@ -408,7 +408,9 @@ bool FGClouds::get_3dClouds() const
 	 float lon = arg->getFloatValue("lon-deg", 0.0f);
 	 float lat = arg->getFloatValue("lat-deg", 0.0f);
 	 float alt = arg->getFloatValue("alt-ft",  0.0f);
+	 float x   = arg->getFloatValue("x-offset-m",  0.0f);
+	 float y   = arg->getFloatValue("y-offset-m",  0.0f);
 
    SGCloudField *layer = thesky->get_cloud_layer(l)->get_layer3D();
-	 return layer->repositionCloud(i, lon, lat, alt);
+	 return layer->repositionCloud(i, lon, lat, alt, x, y);
  }
