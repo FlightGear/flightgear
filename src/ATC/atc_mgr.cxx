@@ -184,11 +184,10 @@ void FGATCManager::update ( double time ) {
                                               heading,
                                               speed,
                                               altitude, time);
-    }
-   string airport = fgGetString("/sim/presets/airport-id");
-   FGAirport *apt = FGAirport::findByIdent(airport); 
-   osg::Node* node = apt->getDynamics()->getGroundNetwork()->getRenderNode();
-   //cerr << "Adding groundnetWork to the scenegraph::update" << endl;
-   
-   globals->get_scenery()->get_scene_graph()->addChild(node);
+        //string airport = fgGetString("/sim/presets/airport-id");
+        //FGAirport *apt = FGAirport::findByIdent(airport); 
+        controller->render();
+        //cerr << "Adding groundnetWork to the scenegraph::update" << endl;
+   }
+   //globals->get_scenery()->get_scene_graph()->addChild(node);
 }

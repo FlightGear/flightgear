@@ -26,6 +26,10 @@
 # error This library requires C++
 #endif
 
+#include <osg/Geode>
+#include <osg/Geometry>
+#include <osg/MatrixTransform>
+#include <osg/Shape>
 
 #include <simgear/compiler.h>
 // There is probably a better include than sg_geodesy to get the SG_NM_TO_METER...
@@ -48,6 +52,7 @@ typedef vector<int>::iterator intVecIterator;
 class FGAIFlightPlan;  // forward reference
 class FGGroundNetwork; // forward reference
 class FGAIAircraft;    // forward reference
+class FGAirportDynamics;
 
 /**************************************************************************************
  * class FGATCInstruction
@@ -233,7 +238,7 @@ protected:
   time_t lastTransmission;
 
   double dt_count;
-
+  osg::Group* group;
 
   string formatATCFrequency3_2(int );
   string genTransponderCode(string fltRules);
@@ -280,8 +285,10 @@ public:
   void   setDt(double dt) { dt_count = dt;};
   void transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir msgDir, bool audible);
   string getGateName(FGAIAircraft *aircraft);
+  virtual void render() = 0;
 
 private:
+
  AtcMsgDir lastTransmissionDirection;
 };
 
@@ -307,6 +314,7 @@ public:
   virtual bool             hasInstruction(int id);
   virtual FGATCInstruction getInstruction(int id);
 
+  virtual void render();
   bool hasActiveTraffic() { return activeTraffic.size() != 0; };
   TrafficVector &getActiveTraffic() { return activeTraffic; };
 };
@@ -321,9 +329,10 @@ class FGStartupController : public FGATCController
 private:
   TrafficVector activeTraffic;
   //ActiveRunwayVec activeRunways;
+FGAirportDynamics *parent;
   
 public:
-  FGStartupController();
+  FGStartupController(FGAirportDynamics *parent);
   virtual ~FGStartupController() {};
   virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
 				double lat, double lon,
@@ -334,6 +343,8 @@ public:
 				  double heading, double speed, double alt, double dt);
   virtual bool             hasInstruction(int id);
   virtual FGATCInstruction getInstruction(int id);
+
+  virtual void render();
 
   bool hasActiveTraffic() { return activeTraffic.size() != 0; };
   TrafficVector &getActiveTraffic() { return activeTraffic; };
@@ -365,6 +376,8 @@ public:
 				  double heading, double speed, double alt, double dt);
   virtual bool             hasInstruction(int id);
   virtual FGATCInstruction getInstruction(int id);
+
+  virtual void render();
 
   ActiveRunway* getRunway(string name);
 

@@ -249,7 +249,7 @@ private:
   void checkHoldPosition(int id, double lat, double lon, 
 			 double heading, double speed, double alt);
 
-  osg::Group* group;
+
 
 public:
   FGGroundNetwork();
@@ -286,7 +286,8 @@ public:
   bool checkTransmissionState(int minState, int MaxState, TrafficVectorIterator i, time_t now, AtcMsgId msgId,
                                AtcMsgDir msgDir);
   bool checkForCircularWaits(int id);
-  osg::Node* getRenderNode();
+  virtual void render();
+
 };
 
 

@@ -49,7 +49,7 @@ using std::random_shuffle;
 #include "dynamics.hxx"
 
 FGAirportDynamics::FGAirportDynamics(FGAirport * ap):
-_ap(ap), rwyPrefs(ap), SIDs(ap)
+_ap(ap), rwyPrefs(ap), SIDs(ap),startupController(this) 
 {
     lastUpdate = 0;
 
@@ -61,7 +61,7 @@ _ap(ap), rwyPrefs(ap), SIDs(ap)
 FGAirportDynamics::
 FGAirportDynamics(const FGAirportDynamics & other):rwyPrefs(other.
                                                             rwyPrefs),
-SIDs(other.SIDs)
+SIDs(other.SIDs), startupController(other.startupController)
 {
     for (FGParkingVecConstIterator ip = other.parkings.begin();
          ip != other.parkings.end(); ip++)

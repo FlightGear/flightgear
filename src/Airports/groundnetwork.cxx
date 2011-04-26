@@ -1103,7 +1103,7 @@ static void WorldCoordinate(osg::Matrix& obj_pos, double lat,
 
 
 
-osg::Node* FGGroundNetwork::getRenderNode()
+void FGGroundNetwork::render()
 {
 
     SGMaterialLib *matlib = globals->get_matlib();
@@ -1204,7 +1204,5 @@ osg::Node* FGGroundNetwork::getRenderNode()
         }
         dx += 0.1;
     }
-
-
-    return group;
+    globals->get_scenery()->get_scene_graph()->addChild(group);
 }
