@@ -149,6 +149,7 @@ void FGATCManager::init() {
     
     
     fp->restart();
+    fp->setLeg(leg);
     ai_ac.SetFlightPlan(fp);
     if (controller) {
         controller->announcePosition(ai_ac.getID(), fp, fp->getCurrentWaypoint()->routeIndex,
@@ -186,6 +187,13 @@ void FGATCManager::update ( double time ) {
                                               altitude, time);
         //string airport = fgGetString("/sim/presets/airport-id");
         //FGAirport *apt = FGAirport::findByIdent(airport); 
+        // AT this stage we should update the flightplan, so that waypoint incrementing is conducted as well as leg loading. 
+        ai_ac.setLatitude(latitude);
+        ai_ac.setLongitude(longitude);
+        ai_ac.setAltitude(altitude);
+        ai_ac.setHeading(heading);
+        ai_ac.setSpeed(speed);
+        ai_ac.update(time);
         controller->render();
         //cerr << "Adding groundnetWork to the scenegraph::update" << endl;
    }

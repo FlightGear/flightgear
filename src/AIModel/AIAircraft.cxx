@@ -165,7 +165,12 @@ void FGAIAircraft::setPerformance(const std::string& acclass) {
      handleATCRequests(); // ATC also has a word to say
      updateSecondaryTargetValues(); // target roll, vertical speed, pitch
      updateActualState(); 
-     UpdateRadar(manager);
+    // We currently have one situation in which an AIAircraft object is used that is not attached to the 
+    // AI manager. In this particular case, the AIAircraft is used to shadow the user's aircraft's behavior in the AI world.
+    // Since we perhaps don't want a radar entry of our own aircraft, the following conditional should probably be adequate
+    // enough
+     if (manager)
+        UpdateRadar(manager);
      checkVisibility();
   }
 
