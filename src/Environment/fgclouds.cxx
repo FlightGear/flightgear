@@ -33,6 +33,7 @@
 #include <simgear/environment/visual_enviro.hxx>
 #include <simgear/scene/sky/cloudfield.hxx>
 #include <simgear/scene/sky/newcloud.hxx>
+#include <simgear/structure/commands.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/props/props_io.hxx>
 
@@ -47,12 +48,13 @@ extern SGSky *thesky;
 
 FGClouds::FGClouds() :
     snd_lightning(0),
-    clouds_3d_enabled(false)
+    clouds_3d_enabled(false),
+    index(0)
 {
 	update_event = 0;
 }
 
-FGClouds::~FGClouds() 
+FGClouds::~FGClouds()
 {
 }
 
@@ -65,7 +67,7 @@ void FGClouds::set_update_event(int count) {
 	buildCloudLayers();
 }
 
-void FGClouds::init(void) {
+void FGClouds::Init(void) {
 	if( snd_lightning == NULL ) {
 		snd_lightning = new SGSoundSample("Sounds/thunder.wav", SGPath());
 		snd_lightning->set_max_dist(7000.0f);
@@ -75,6 +77,10 @@ void FGClouds::init(void) {
 		sgr->add( snd_lightning, "thunder" );
 		sgEnviro.set_sampleGroup( sgr );
 	}
+
+	globals->get_commands()->addCommand("add-cloud", do_add_3Dcloud);
+	globals->get_commands()->addCommand("del-cloud", do_delete_3Dcloud);
+	globals->get_commands()->addCommand("move-cloud", do_move_3Dcloud);
 }
 
 // Build an invidual cloud. Returns the extents of the cloud for coverage calculations
@@ -101,7 +107,10 @@ double FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_
 	double x = sg_random() * SGCloudField::fieldSize - (SGCloudField::fieldSize / 2.0);
 	double y = sg_random() * SGCloudField::fieldSize - (SGCloudField::fieldSize / 2.0);
 	double z = grid_z_rand * (sg_random() - 0.5);
-		
+
+	float lon = fgGetNode("/position/longitude-deg", false)->getFloatValue();
+	float lat = fgGetNode("/position/latitude-deg", false)->getFloatValue();
+
 	SGVec3f pos(x,y,z);
 
 	for(int i = 0; i < box_def->nChildren() ; i++) {
@@ -111,7 +120,7 @@ double FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_
 			string type = abox->getStringValue("type", "cu-small");
 			cld_def = cloud_def_root->getChild(type.c_str());
 			if ( !cld_def ) return 0.0;
-			
+
 			double w = abox->getDoubleValue("width", 1000.0);
 			double h = abox->getDoubleValue("height", 1000.0);
 			int hdist = abox->getIntValue("hdist", 1);
@@ -147,38 +156,10 @@ double FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_
 				z = h * z + pos[2]; // Up/Down. pos[2] is the cloudbase
 
 				SGVec3f newpos = SGVec3f(x, y, z);
+				SGNewCloud cld = SGNewCloud(texture_root, cld_def);
 
-				double min_width = cld_def->getDoubleValue("min-cloud-width-m", 500.0);
-				double max_width = cld_def->getDoubleValue("max-cloud-width-m", 1000.0);
-				double min_height = cld_def->getDoubleValue("min-cloud-height-m", min_width);
-				double max_height = cld_def->getDoubleValue("max-cloud-height-m", max_width);
-				double min_sprite_width = cld_def->getDoubleValue("min-sprite-width-m", 200.0);
-				double max_sprite_width = cld_def->getDoubleValue("max-sprite-width-m", min_sprite_width);
-				double min_sprite_height = cld_def->getDoubleValue("min-sprite-height-m", min_sprite_width);
-				double max_sprite_height = cld_def->getDoubleValue("max-sprite-height-m", max_sprite_width);
-				int num_sprites = cld_def->getIntValue("num-sprites", 20);
-				int num_textures_x = cld_def->getIntValue("num-textures-x", 1);
-				int num_textures_y = cld_def->getIntValue("num-textures-y", 1);
-				double bottom_shade = cld_def->getDoubleValue("bottom-shade", 1.0);
-				string texture = cld_def->getStringValue("texture", "cu.png");
-
-				SGNewCloud cld = 
-					SGNewCloud(type,
-						texture_root, 
-						texture, 
-						min_width, 
-						max_width, 
-						min_height,
-						max_height,
-						min_sprite_width,
-						max_sprite_width,
-						min_sprite_height,
-						max_sprite_height,
-						bottom_shade,
-						num_sprites,
-						num_textures_x,
-						num_textures_y);
-				layer->addCloud(newpos, cld.genCloud());
+				//layer->addCloud(newpos, cld.genCloud());
+				layer->addCloud(lon, lat, z, x, y, index++, cld.genCloud());
 			}
 		}
 	}
@@ -266,7 +247,6 @@ void FGClouds::buildLayer(int iLayer, const string& name, double coverage) {
 				break;
 			}
 		}
-		
 	}
 
 	// Now we've built any clouds, enable them and set the density (coverage)
@@ -335,7 +315,7 @@ void FGClouds::buildCloudLayers(void) {
 					layer_type = "sc";
 			}
 		}
-	
+
 		cloud_root->setStringValue("layer-type",layer_type);
 		buildLayer(iLayer, layer_type, coverage_norm);
 	}
@@ -349,8 +329,88 @@ void FGClouds::set_3dClouds(bool enable)
 	}
 }
 
-bool FGClouds::get_3dClouds() const 
+bool FGClouds::get_3dClouds() const
 {
 	return clouds_3d_enabled;
 }
 
+/**
+ * Adds a 3D cloud to a cloud layer.
+ *
+ * Property arguments
+ * layer - the layer index to add this cloud to. (Defaults to 0)
+ * index - the index for this cloud (to be used later)
+ * lon/lat/alt - the position for the cloud
+ * (Various) - cloud definition properties. See README.3DClouds
+ *
+ */
+ static bool
+ do_add_3Dcloud (const SGPropertyNode *arg)
+ {
+   int l = arg->getIntValue("layer", 0);
+   int index = arg->getIntValue("index", 0);
+
+   SGPath texture_root = globals->get_fg_root();
+	 texture_root.append("Textures");
+	 texture_root.append("Sky");
+
+	 float lon = arg->getFloatValue("lon-deg", 0.0f);
+	 float lat = arg->getFloatValue("lat-deg", 0.0f);
+	 float alt = arg->getFloatValue("alt-ft",  0.0f);
+	 float x   = arg->getFloatValue("x-offset-m",  0.0f);
+	 float y   = arg->getFloatValue("y-offset-m",  0.0f);
+
+
+   SGCloudField *layer = thesky->get_cloud_layer(l)->get_layer3D();
+   SGNewCloud cld = SGNewCloud(texture_root, arg);
+	 bool success = layer->addCloud(lon, lat, alt, x, y, index, cld.genCloud());
+
+   // Adding a 3D cloud immediately makes this layer 3D.
+   thesky->get_cloud_layer(l)->set_enable3dClouds(true);
+
+   return success;
+ }
+
+ /**
+  * Removes a 3D cloud from a cloud layer
+  *
+  * Property arguments
+  *
+  * layer - the layer index to remove this cloud from. (defaults to 0)
+  * index - the cloud index
+  *
+  */
+ static bool
+ do_delete_3Dcloud (const SGPropertyNode *arg)
+ {
+   int l = arg->getIntValue("layer", 0);
+   int i = arg->getIntValue("index", 0);
+
+   SGCloudField *layer = thesky->get_cloud_layer(l)->get_layer3D();
+	 return layer->deleteCloud(i);
+ }
+
+/**
+ * Move a cloud within a 3D layer
+ *
+ * Property arguments
+ * layer - the layer index to add this cloud to. (Defaults to 0)
+ * index - the cloud index to move.
+ * lon/lat/alt - the position for the cloud
+ *
+ */
+ static bool
+ do_move_3Dcloud (const SGPropertyNode *arg)
+ {
+   int l = arg->getIntValue("layer", 0);
+   int i = arg->getIntValue("index", 0);
+
+	 float lon = arg->getFloatValue("lon-deg", 0.0f);
+	 float lat = arg->getFloatValue("lat-deg", 0.0f);
+	 float alt = arg->getFloatValue("alt-ft",  0.0f);
+	 float x   = arg->getFloatValue("x-offset-m",  0.0f);
+	 float y   = arg->getFloatValue("y-offset-m",  0.0f);
+
+   SGCloudField *layer = thesky->get_cloud_layer(l)->get_layer3D();
+	 return layer->repositionCloud(i, lon, lat, alt, x, y);
+ }
