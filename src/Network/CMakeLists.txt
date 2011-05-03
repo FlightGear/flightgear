@@ -6,6 +6,7 @@ set(SOURCES
 	ATC-Outputs.cxx
 	AV400.cxx
 	AV400Sim.cxx
+	AV400WSim.cxx
 	atlas.cxx
 	garmin.cxx
 	generic.cxx
