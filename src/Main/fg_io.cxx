@@ -46,6 +46,7 @@
 #include <Network/atlas.hxx>
 #include <Network/AV400.hxx>
 #include <Network/AV400Sim.hxx>
+#include <Network/AV400WSim.hxx>
 #include <Network/garmin.hxx>
 #include <Network/httpd.hxx>
 #ifdef FG_JPEG_SERVER
@@ -142,7 +143,13 @@ FGIO::parse_port_config( const string& config )
 	} else if ( protocol == "AV400Sim" ) {
 	    FGAV400Sim *av400sim = new FGAV400Sim;
 	    io = av400sim;
-	} else if ( protocol == "garmin" ) {
+        } else if ( protocol == "AV400WSimA" ) {
+            FGAV400WSimA *av400wsima = new FGAV400WSimA;
+            io = av400wsima;
+        } else if ( protocol == "AV400WSimB" ) {
+            FGAV400WSimB *av400wsimb = new FGAV400WSimB;
+            io = av400wsimb;
+ 	} else if ( protocol == "garmin" ) {
 	    FGGarmin *garmin = new FGGarmin;
 	    io = garmin;
 	} else if ( protocol == "httpd" ) {
@@ -263,6 +270,17 @@ FGIO::parse_port_config( const string& config )
 
 	SGSerial *ch = new SGSerial( device, baud );
 	io->set_io_channel( ch );
+        
+        if ( protocol == "AV400WSimB" ) {
+            if ( tokens.size() < 7 ) {
+                SG_LOG( SG_IO, SG_ALERT, "Missing second hz for AV400WSimB.");
+                return NULL;
+            }
+            FGAV400WSimB *fgavb = static_cast<FGAV400WSimB*>(io);
+            string hz2_str = tokens[6];
+            double hz2 = atof(hz2_str.c_str());
+            fgavb->set_hz2(hz2);
+        }
     } else if ( medium == "file" ) {
 	// file name
         if ( tokens.size() < 4) {

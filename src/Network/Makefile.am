@@ -19,6 +19,7 @@ libNetwork_a_SOURCES = \
 	atlas.cxx atlas.hxx \
 	AV400.cxx AV400.hxx \
 	AV400Sim.cxx AV400Sim.hxx \
+	AV400WSim.cxx AV400WSim.hxx \
 	garmin.cxx garmin.hxx \
 	lfsglass.cxx lfsglass.hxx lfsglass_data.hxx \
         httpd.cxx httpd.hxx \
