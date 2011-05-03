@@ -2978,6 +2978,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\Network\AV400WSim.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Network\AV400WSim.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Network\garmin.cxx"
 				>
 			</File>
