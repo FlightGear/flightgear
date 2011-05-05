@@ -27,7 +27,7 @@
 #  include <config.h>
 #endif
 
-#include <memory>
+#include <cstring>
 #include <simgear/math/SGMathFwd.hxx> // for SGVec3d 
 #include <simgear/math/SGMisc.hxx>
 
