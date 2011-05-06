@@ -31,7 +31,7 @@
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/environment/precipitation.hxx>
-
+#include <simgear/props/tiedpropertylist.hxx>
 
 class FGPrecipitationMgr : public SGSubsystem
 {
@@ -40,12 +40,15 @@ private:
     osg::ref_ptr<osg::MatrixTransform> transform;
     osg::ref_ptr<SGPrecipitation> precipitation;
     float getPrecipitationAtAltitudeMax(void);
+    simgear::TiedPropertyList _tiedProperties;
 
 public:
     FGPrecipitationMgr();
     virtual ~FGPrecipitationMgr();
 
     // SGSubsystem methods
+    virtual void bind ();
+    virtual void unbind ();
     virtual void init ();
     virtual void update (double dt);
     

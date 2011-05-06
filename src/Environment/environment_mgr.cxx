@@ -27,7 +27,6 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/sky/sky.hxx>
-#include <simgear/environment/visual_enviro.hxx>
 #include <simgear/scene/model/particles.hxx>
 
 #include <Main/main.hxx>
@@ -122,9 +121,9 @@ FGEnvironmentMgr::bind ()
           &FGClouds::get_update_event,
           &FGClouds::set_update_event);
 
-  _tiedProperties.Tie("turbulence/use-cloud-turbulence", &sgEnviro,
-          &SGEnviro::get_turbulence_enable_state,
-          &SGEnviro::set_turbulence_enable_state);
+//  _tiedProperties.Tie("turbulence/use-cloud-turbulence", &sgEnviro,
+//          &SGEnviro::get_turbulence_enable_state,
+//          &SGEnviro::set_turbulence_enable_state);
 
   for (int i = 0; i < MAX_CLOUD_LAYERS; i++) {
       SGPropertyNode_ptr layerNode = fgGetNode("/environment/clouds",true)->getChild("layer", i, true );
@@ -176,15 +175,10 @@ FGEnvironmentMgr::bind ()
           &SGSky::get_3dCloudVisRange,
           &SGSky::set_3dCloudVisRange);
 
-  _tiedProperties.Tie("precipitation-enable", &sgEnviro,
-          &SGEnviro::get_precipitation_enable_state,
-          &SGEnviro::set_precipitation_enable_state);
+//  _tiedProperties.Tie("lightning-enable", &sgEnviro,
+//          &SGEnviro::get_lightning_enable_state,
+//          &SGEnviro::set_lightning_enable_state);
 
-  _tiedProperties.Tie("lightning-enable", &sgEnviro,
-          &SGEnviro::get_lightning_enable_state,
-          &SGEnviro::set_lightning_enable_state);
-
-  sgEnviro.config(fgGetNode("/sim/rendering/precipitation"));
 }
 
 void

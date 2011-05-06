@@ -82,8 +82,6 @@
 #include <simgear/screen/jpgfactory.hxx>
 #endif
 
-#include <simgear/environment/visual_enviro.hxx>
-
 #include <Time/light.hxx>
 #include <Time/light.hxx>
 #include <Cockpit/panel.hxx>

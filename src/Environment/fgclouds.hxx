@@ -45,7 +45,9 @@ private:
 	void buildCloudLayers(void);
 
 	int update_event;
+#if 0
 	SGSoundSample *snd_lightning;
+#endif
 	bool clouds_3d_enabled;
   int index;
 
