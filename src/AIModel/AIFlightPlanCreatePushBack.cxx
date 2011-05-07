@@ -165,7 +165,66 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
               //    cerr << "Waypoint Name: " << (*i)->name << endl;
               //}
         } else {
+           /*
+           string rwyClass = getRunwayClassFromTrafficType(fltType);
+
+           // Only set this if it hasn't been set by ATC already.
+          if (activeRunway.empty()) {
+               //cerr << "Getting runway for " << ac->getTrafficRef()->getCallSign() << " at " << apt->getId() << endl;
+              double depHeading = ac->getTrafficRef()->getCourse();
+             dep->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway,
+                                                 depHeading);
+           }
+           rwy = dep->getRunwayByIdent(activeRunway);
+           SGGeod runwayTakeoff = rwy->pointOnCenterline(5.0);
+
+          FGGroundNetwork *gn = dep->getDynamics()->getGroundNetwork();
+          if (!gn->exists()) {
+              createDefaultTakeoffTaxi(ac, dep, rwy);
+              return true;
+          }
+          int runwayId = gn->findNearestNode(runwayTakeoff);
+          int node = 0;
+           // Find out which node to start from
+          FGParking *park = dep->getDynamics()->getParking(gateId);
+        if (park) {
+            node = park->getPushBackPoint();
+        }
+
+        if (node == -1) {
+            node = gateId;
+        }
+        // HAndle case where parking doens't have a node
+        if ((node == 0) && park) {
+            if (firstFlight) {
+                node = gateId;
+            } else {
+                node = gateId;
+            }
+        }
+        //delete taxiRoute;
+        //taxiRoute = new FGTaxiRoute;
+        FGTaxiRoute tr = gn->findShortestRoute(node, runwayId);
+        int route;
+        FGTaxiNode *tn;
+        waypoint *wpt;
+        int nr = 0;
+        cerr << "Creating taxiroute from gate: " << gateId << " at " << dep->getId() << endl;
+        while (tr.next(&node, &route) && (nr++ < 3)) {
+            char buffer[10];
+            snprintf(buffer, 10, "%d", node);
+             tn = dep->getDynamics()->getGroundNetwork()->findNode(node);
+             wpt = createOnGround(ac, buffer, tn->getGeod(), dep->getElevation(),
+                               vTaxiReduced);
+            wpt->routeIndex = route;
+            waypoints.push_back(wpt);
+        }
+        wpt->name      = "PushBackPoint";
+        lastNodeVisited = tn->getIndex();
+           //FGTaxiNode *firstNode = findNode(gateId);
+           //FGTaxiNode *lastNode =  findNode(runwayId);
            //cerr << "Creating direct forward departure route fragment" << endl;
+           */
            double lat2 = 0.0, lon2 = 0.0, az2 = 0.0;
            waypoint *wpt;
            geo_direct_wgs_84 ( 0, lat, lon, heading, 
@@ -227,8 +286,6 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
            wpt->on_ground = true;
            wpt->routeIndex = (*ts)->getIndex();
            waypoints.push_back(wpt);
-
-
         }
 
     }

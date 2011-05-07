@@ -181,6 +181,7 @@ public:
     routes = rts;
     distance = dist; 
     currNode = nodes.begin();
+    currRoute = routes.begin();
 //    depth = dpth;
   };
 

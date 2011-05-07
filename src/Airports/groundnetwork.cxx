@@ -1202,7 +1202,7 @@ void FGGroundNetwork::render()
                 group->addChild( obj_trans );
             }
         }
-        dx += 0.1;
+        //dx += 0.1;
     }
     globals->get_scenery()->get_scene_graph()->addChild(group);
 }

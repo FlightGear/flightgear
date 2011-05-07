@@ -170,13 +170,40 @@ void FGATCManager::addController(FGATCController *controller) {
 
 void FGATCManager::update ( double time ) {
     //cerr << "ATC update code is running at time: " << time << endl;
+    // Test code: let my virtual co-pilot handle ATC:
+   
+    
+
+    FGAIFlightPlan *fp = ai_ac.GetFlightPlan();
+        
+    /* test code : find out how the routing develops */
+    int size = fp->getNrOfWayPoints();
+    //cerr << "Setting pos" << pos << " ";
+    cerr << "setting intentions " ;
+    for (int i = 0; i < size; i++) {
+        int val = fp->getRouteIndex(i);
+        cerr << val << " ";
+        //if ((val) && (val != pos)) {
+            //intentions.push_back(val);
+            //cerr << "[done ] " << endl;
+        //}
+    }
+    cerr << "[done ] " << endl;
+    double longitude = fgGetDouble("/position/longitude-deg");
+    double latitude  = fgGetDouble("/position/latitude-deg");
+    double heading   = fgGetDouble("/orientation/heading-deg");
+    double speed     = fgGetDouble("/velocities/groundspeed-kt");
+    double altitude  = fgGetDouble("/position/altitude-ft");
+    ai_ac.setLatitude(latitude);
+    ai_ac.setLongitude(longitude);
+    ai_ac.setAltitude(altitude);
+    ai_ac.setHeading(heading);
+    ai_ac.setSpeed(speed);
+    ai_ac.update(time);
+    controller = ai_ac.getATCController();
     currentATCDialog->update(time);
     if (controller) {
-        double longitude = fgGetDouble("/position/longitude-deg");
-        double latitude  = fgGetDouble("/position/latitude-deg");
-        double heading   = fgGetDouble("/orientation/heading-deg");
-        double speed     = fgGetDouble("/velocities/groundspeed-kt");
-        double altitude  = fgGetDouble("/position/altitude-ft");
+       
 
         //cerr << "Running FGATCManager::update()" << endl;
         controller->updateAircraftInformation(ai_ac.getID(),
@@ -188,13 +215,9 @@ void FGATCManager::update ( double time ) {
         //string airport = fgGetString("/sim/presets/airport-id");
         //FGAirport *apt = FGAirport::findByIdent(airport); 
         // AT this stage we should update the flightplan, so that waypoint incrementing is conducted as well as leg loading. 
-        ai_ac.setLatitude(latitude);
-        ai_ac.setLongitude(longitude);
-        ai_ac.setAltitude(altitude);
-        ai_ac.setHeading(heading);
-        ai_ac.setSpeed(speed);
-        ai_ac.update(time);
-        controller->render();
+
+       controller->render();
+
         //cerr << "Adding groundnetWork to the scenegraph::update" << endl;
    }
    //globals->get_scenery()->get_scene_graph()->addChild(node);

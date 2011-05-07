@@ -1,4 +1,3 @@
-
 // FGAIAircraft - AIBase derived class creates an AI aircraft
 //
 // Written by David Culp, started October 2003.
@@ -97,6 +96,8 @@ public:
     std::string atGate();
 
     void checkTcas();
+
+    FGATCController * getATCController() { return controller; };
     
 protected:
     void Run(double dt);

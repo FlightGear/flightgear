@@ -1033,6 +1033,7 @@ void FGStartupController::signOff(int id)
         SG_LOG(SG_GENERAL, SG_ALERT,
                "AI error: Aircraft without traffic record is signing off from tower");
     } else {
+        cerr << i->getAircraft()->getCallSign() << " signing off from startupcontroller" << endl;
         i = activeTraffic.erase(i);
     }
 }
@@ -1182,6 +1183,7 @@ void FGStartupController::render()
     for   (TrafficVectorIterator i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
         // Handle start point
         int pos = i->getCurrentPosition();
+        //cerr << "rendering for " << i->getAircraft()->getCallSign() << "pos = " << pos << endl;
         if (pos > 0) {
             FGTaxiSegment *segment  = parent->getGroundNetwork()->findSegment(pos);
             SGGeod start(SGGeod::fromDeg((i->getLongitude()), (i->getLatitude())));
@@ -1232,6 +1234,7 @@ void FGStartupController::render()
              osg::Matrix obj_pos;
             int k = (*j);
             if (k > 0) {
+                //cerr << "rendering for " << i->getAircraft()->getCallSign() << "intention = " << k << endl;
                 osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
                 obj_trans->setDataVariance(osg::Object::STATIC);
                 FGTaxiSegment *segment  = parent->getGroundNetwork()->findSegment(k);
@@ -1261,7 +1264,7 @@ void FGStartupController::render()
                 cerr << "BIG FAT WARNING: k is here : " << pos << endl;
             }
         }
-        dx += 0.1;
+        //dx += 0.1;
     }
     globals->get_scenery()->get_scene_graph()->addChild(group);
 }
