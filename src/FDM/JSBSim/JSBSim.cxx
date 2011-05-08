@@ -114,12 +114,38 @@ private:
   FGJSBsim* mInterface;
 };
 
+// FG uses a squared normalized magnitude for turbulence
+// this lookup table maps fg's severity levels 
+// none(0), light(1/3), moderate(2/3) and severe(3/3)
+// to the POE table indexes 0, 3, 4 and 7
+class FGTurbulenceSeverityTable : public FGTable {
+public:
+  FGTurbulenceSeverityTable() : FGTable(4) {
+    *this << (0.0/9.0) << 0.0;
+    *this << (1.0/9.0) << 3.0;
+    *this << (4.0/9.0) << 4.0;
+    *this << (9.0/9.0) << 7.0;
+  }
+};
+
 /******************************************************************************/
+std::map<std::string,int> FGJSBsim::TURBULENCE_TYPE_NAMES;
+
+static FGTurbulenceSeverityTable TurbulenceSeverityTable;
 
 FGJSBsim::FGJSBsim( double dt )
   : FGInterface(dt), got_wire(false)
 {
     bool result;
+    if( TURBULENCE_TYPE_NAMES.empty() ) {
+        TURBULENCE_TYPE_NAMES["ttNone"]     = FGAtmosphere::ttNone;
+        TURBULENCE_TYPE_NAMES["ttStandard"] = FGAtmosphere::ttStandard;
+        TURBULENCE_TYPE_NAMES["ttBerndt"]   = FGAtmosphere::ttBerndt;
+        TURBULENCE_TYPE_NAMES["ttCulp"]     = FGAtmosphere::ttCulp;
+        TURBULENCE_TYPE_NAMES["ttMilspec"]  = FGAtmosphere::ttMilspec;
+        TURBULENCE_TYPE_NAMES["ttTustin"]   = FGAtmosphere::ttTustin;
+    }
+
                                 // Set up the debugging level
                                 // FIXME: this will not respond to
                                 // runtime changes
@@ -282,8 +308,10 @@ FGJSBsim::FGJSBsim( double dt )
     temperature = fgGetNode("/environment/temperature-degc",true);
     pressure = fgGetNode("/environment/pressure-inhg",true);
     density = fgGetNode("/environment/density-slugft3",true);
+    ground_wind = fgGetNode("/environment/config/boundary/entry[0]/wind-speed-kt",true);
     turbulence_gain = fgGetNode("/environment/turbulence/magnitude-norm",true);
     turbulence_rate = fgGetNode("/environment/turbulence/rate-hz",true);
+    turbulence_model = fgGetNode("/environment/params/jsbsim-turbulence-model",true);
 
     wind_from_north= fgGetNode("/environment/wind-from-north-fps",true);
     wind_from_east = fgGetNode("/environment/wind-from-east-fps" ,true);
@@ -331,10 +359,12 @@ void FGJSBsim::init()
                   9.0/5.0*(temperature->getDoubleValue()+273.15) );
       Atmosphere->SetExPressure(pressure->getDoubleValue()*70.726566);
       Atmosphere->SetExDensity(density->getDoubleValue());
-      Atmosphere->SetTurbType(FGAtmosphere::ttCulp);
-      Atmosphere->SetTurbGain(turbulence_gain->getDoubleValue());
-      Atmosphere->SetTurbRate(turbulence_rate->getDoubleValue());
-
+      // initialize to no turbulence, these values get set in the update loop
+      Atmosphere->SetTurbType(FGAtmosphere::ttNone);
+      Atmosphere->SetTurbGain(0.0);
+      Atmosphere->SetTurbRate(0.0);
+      Atmosphere->SetWindspeed20ft(0.0);
+      Atmosphere->SetProbabilityOfExceedence(0.0);
     } else {
       Atmosphere->UseInternal();
     }
@@ -351,14 +381,12 @@ void FGJSBsim::init()
      << ", " << fdmex->GetAtmosphere()->GetDensity() );
 
 // deprecate egt_degf for egt-degf to have consistent naming
-// TODO: raise log-level to ALERT in summer 2010, 
-// remove alias in fall 2010, 
-// remove this code in winter 2010
+// TODO: remove this by end of 2011
     for (unsigned int i=0; i < Propulsion->GetNumEngines(); i++) {
       SGPropertyNode * node = fgGetNode("engines/engine", i, true);
       SGPropertyNode * egtn = node->getNode( "egt_degf" );
       if( egtn != NULL ) {
-        SG_LOG(SG_FLIGHT,SG_WARN,
+        SG_LOG(SG_FLIGHT,SG_ALERT,
                "Aircraft uses deprecated node egt_degf. Please upgrade to egt-degf");
         node->getNode("egt-degf", true)->alias( egtn );
       }
@@ -590,7 +618,6 @@ void FGJSBsim::resume()
 
 bool FGJSBsim::copy_to_JSBsim()
 {
-    double tmp;
     unsigned int i;
 
     // copy control positions into the JSBsim structure
@@ -686,11 +713,31 @@ bool FGJSBsim::copy_to_JSBsim()
     Atmosphere->SetExPressure(pressure->getDoubleValue()*70.726566);
     Atmosphere->SetExDensity(density->getDoubleValue());
 
-    tmp = turbulence_gain->getDoubleValue();
-    //Atmosphere->SetTurbGain(tmp * tmp * 100.0);
+    Atmosphere->SetTurbType((FGAtmosphere::tType)TURBULENCE_TYPE_NAMES[turbulence_model->getStringValue()]);
+    switch( Atmosphere->GetTurbType() ) {
+        case FGAtmosphere::ttStandard:
+        case FGAtmosphere::ttCulp:
+        case FGAtmosphere::ttBerndt: {
+            double tmp = turbulence_gain->getDoubleValue();
+            Atmosphere->SetTurbGain(tmp * tmp * 100.0);
+            Atmosphere->SetTurbRate(turbulence_rate->getDoubleValue());
+            break;
+        }
+        case FGAtmosphere::ttMilspec:
+        case FGAtmosphere::ttTustin: {
+            // milspec turbulence: 3=light, 4=moderate, 6=severe turbulence
+            // turbulence_gain normalized: 0: none, 1/3: light, 2/3: moderate, 3/3: severe
+            double tmp = turbulence_gain->getDoubleValue();
+            Atmosphere->SetProbabilityOfExceedence(
+              round(TurbulenceSeverityTable.GetValue( tmp ) )
+            );
+            Atmosphere->SetWindspeed20ft(ground_wind->getDoubleValue());
+            break;
+        }
 
-    tmp = turbulence_rate->getDoubleValue();
-    //Atmosphere->SetTurbRate(tmp);
+        default:
+            break;
+    }
 
     Atmosphere->SetWindNED( -wind_from_north->getDoubleValue(),
                             -wind_from_east->getDoubleValue(),
