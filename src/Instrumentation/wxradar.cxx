@@ -38,7 +38,6 @@
 
 #include <simgear/constants.h>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/environment/visual_enviro.hxx>
 #include <simgear/scene/model/model.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -137,7 +136,7 @@ wxRadarBg::init ()
     SGPath tpath = globals->resolve_aircraft_path(path);
 
     // no mipmap or else alpha will mix with pixels on the border of shapes, ruining the effect
-    _wxEcho = SGLoadTexture2D(tpath, false, false);
+    _wxEcho = SGLoadTexture2D(tpath, NULL, false, false);
 
 
     _Instrument->setFloatValue("trk", 0.0);
@@ -472,13 +471,16 @@ void
 wxRadarBg::update_weather()
 {
     string modeButton = _Instrument->getStringValue("mode", "WX");
-    _radarEchoBuffer = *sgEnviro.get_radar_echo();
+// FIXME: implementation of radar echoes missing
+//    _radarEchoBuffer = *sgEnviro.get_radar_echo();
 
     // pretend we have a scan angle bigger then the FOV
     // TODO:check real fov, enlarge if < nn, and do clipping if > mm
 //    const float fovFactor = 1.45f;
     _Instrument->setStringValue("status", modeButton.c_str());
 
+// FIXME: implementation of radar echoes missing
+#if 0
     list_of_SGWxRadarEcho *radarEcho = &_radarEchoBuffer;
     list_of_SGWxRadarEcho::iterator iradarEcho, end = radarEcho->end();
     const float LWClevel[] = { 0.1f, 0.5f, 2.1f };
@@ -558,6 +560,7 @@ wxRadarBg::update_weather()
             addQuad(_vertices, _texCoords, m, texBase);
         }
     }
+#endif
 }
 
 

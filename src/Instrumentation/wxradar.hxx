@@ -30,7 +30,6 @@
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/environment/visual_enviro.hxx>
 
 #include <vector>
 #include <string>
@@ -148,7 +147,8 @@ private:
     float _font_size;
     float _font_spacing;
 
-    list_of_SGWxRadarEcho _radarEchoBuffer;
+// FIXME: implementation of radar echoes missing
+//    list_of_SGWxRadarEcho _radarEchoBuffer;
 
     void update_weather();
     void update_aircraft();
