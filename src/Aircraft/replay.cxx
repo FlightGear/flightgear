@@ -197,12 +197,25 @@ void FGReplay::update( double dt )
         case 1:
             {
                 // replay active
+                double current_time = replay_time->getDoubleValue();
+                if (current_time<0.0)
+                {
+                    // initialize start time
+                    fgSetDouble( "/sim/replay/start-time", get_start_time() );
+                    fgSetDouble( "/sim/replay/end-time", get_end_time() );
+                    double duration = fgGetDouble( "/sim/replay/duration" );
+                    if( duration && duration < (get_end_time() - get_start_time()) ) {
+                        current_time = get_end_time() - duration;
+                    } else {
+                        current_time = get_start_time();
+                    }
+                }
                 bool IsFinished = replay( replay_time->getDoubleValue() );
                 if ((IsFinished)&&(replay_looped->getBoolValue()))
-                    replay_time->setDoubleValue(0.0);
+                    current_time = -1;
                 else
-                    replay_time->setDoubleValue( replay_time->getDoubleValue()
-                                                 + ( dt * fgGetInt("/sim/speed-up") ) );
+                    current_time += dt * fgGetInt("/sim/speed-up");
+                replay_time->setDoubleValue(current_time);
             }
             return; // don't record the replay session 
         case 2:
