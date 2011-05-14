@@ -74,7 +74,7 @@ public:
     virtual void unbind();
     virtual void update( double dt );
 
-    void replay( double time );
+    bool replay( double time );
     double get_start_time();
     double get_end_time();
     
@@ -101,6 +101,7 @@ private:
     SGPropertyNode_ptr disable_replay;
     SGPropertyNode_ptr replay_master;
     SGPropertyNode_ptr replay_time;
+    SGPropertyNode_ptr replay_looped;
 };
 
 
