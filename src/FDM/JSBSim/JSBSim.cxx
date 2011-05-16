@@ -729,7 +729,7 @@ bool FGJSBsim::copy_to_JSBsim()
             // turbulence_gain normalized: 0: none, 1/3: light, 2/3: moderate, 3/3: severe
             double tmp = turbulence_gain->getDoubleValue();
             Atmosphere->SetProbabilityOfExceedence(
-              round(TurbulenceSeverityTable.GetValue( tmp ) )
+              SGMiscd::roundToInt(TurbulenceSeverityTable.GetValue( tmp ) )
             );
             Atmosphere->SetWindspeed20ft(ground_wind->getDoubleValue());
             break;

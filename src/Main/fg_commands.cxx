@@ -1247,17 +1247,7 @@ do_replay (const SGPropertyNode * arg)
     fgSetInt( "/sim/freeze/replay-state", 1 );
     fgSetBool("/sim/freeze/master", 0 );
     fgSetBool("/sim/freeze/clock", 0 );
-
-    FGReplay *r = (FGReplay *)(globals->get_subsystem( "replay" ));
-
-    fgSetDouble( "/sim/replay/start-time", r->get_start_time() );
-    fgSetDouble( "/sim/replay/end-time", r->get_end_time() );
-    double duration = fgGetDouble( "/sim/replay/duration" );
-    if( duration && duration < (r->get_end_time() - r->get_start_time()) ) {
-        fgSetDouble( "/sim/replay/time", r->get_end_time() - duration );
-    } else {
-        fgSetDouble( "/sim/replay/time", r->get_start_time() );
-    }
+    fgSetDouble( "/sim/replay/time", -1 );
 
     // cout << "start = " << r->get_start_time()
     //      << "  end = " << r->get_end_time() << endl;

@@ -100,6 +100,7 @@ void FGReplay::init()
     disable_replay = fgGetNode( "/sim/replay/disable", true );
     replay_master = fgGetNode( "/sim/freeze/replay-state", true );
     replay_time = fgGetNode( "/sim/replay/time", true);
+    replay_looped = fgGetNode( "/sim/replay/looped", true);
     reinit();
 }
 
@@ -194,10 +195,28 @@ void FGReplay::update( double dt )
             // replay inactive, keep recording
             break;
         case 1:
-            // replay active
-            replay( replay_time->getDoubleValue() );
-            replay_time->setDoubleValue( replay_time->getDoubleValue()
-                                         + ( dt * fgGetInt("/sim/speed-up") ) );
+            {
+                // replay active
+                double current_time = replay_time->getDoubleValue();
+                if (current_time<0.0)
+                {
+                    // initialize start time
+                    fgSetDouble( "/sim/replay/start-time", get_start_time() );
+                    fgSetDouble( "/sim/replay/end-time", get_end_time() );
+                    double duration = fgGetDouble( "/sim/replay/duration" );
+                    if( duration && duration < (get_end_time() - get_start_time()) ) {
+                        current_time = get_end_time() - duration;
+                    } else {
+                        current_time = get_start_time();
+                    }
+                }
+                bool IsFinished = replay( replay_time->getDoubleValue() );
+                if ((IsFinished)&&(replay_looped->getBoolValue()))
+                    current_time = -1;
+                else
+                    current_time += dt * fgGetInt("/sim/speed-up");
+                replay_time->setDoubleValue(current_time);
+            }
             return; // don't record the replay session 
         case 2:
             // replay paused, no-op
@@ -279,7 +298,7 @@ void FGReplay::update( double dt )
 
                     FGReplayData *lt_front = long_term.front();
                     if ( sim_time - lt_front->sim_time > lt_list_time ) {
-			//stamp("point_10");
+                        //stamp("point_10");
                         while ( sim_time - lt_front->sim_time > lt_list_time ) {
                             lt_front = long_term.front();
                             recycler.push_back(lt_front);
@@ -558,9 +577,10 @@ static void interpolate( double time, const replay_list_type &list ) {
 /** 
  *  Replay a saved frame based on time, interpolate from the two
  *  nearest saved frames.
+ *  Returns true when replay sequence has finished, false otherwise.
  */
 
-void FGReplay::replay( double time ) {
+bool FGReplay::replay( double time ) {
     // cout << "replay: " << time << " ";
     // find the two frames to interpolate between
     double t1, t2;
@@ -571,6 +591,8 @@ void FGReplay::replay( double time ) {
         if ( time > t1 ) {
             // replay the most recent frame
             update_fdm( (*short_term.back()) );
+            // replay is finished now
+            return true;
             // cout << "first frame" << endl;
         } else if ( time <= t1 && time >= t2 ) {
             interpolate( time, short_term );
@@ -624,7 +646,9 @@ void FGReplay::replay( double time ) {
         }
     } else {
         // nothing to replay
+        return true;
     }
+    return false;
 }
 
 
