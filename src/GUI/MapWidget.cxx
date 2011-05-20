@@ -386,6 +386,7 @@ MapWidget::MapWidget(int x, int y, int maxX, int maxY) :
   _zoom = 6;
   _width = maxX - x;
   _height = maxY - y;
+  _hasPanned = false;
 
   MapData::setFont(legendFont);
   MapData::setPalette(colour);
@@ -496,6 +497,7 @@ int MapWidget::checkKey (int key, int updown )
 
 void MapWidget::pan(const SGVec2d& delta)
 {
+  _hasPanned = true; 
   _projectionCenter = unproject(-delta);
 }
 
@@ -525,6 +527,12 @@ void MapWidget::draw(int dx, int dy)
     fgGetDouble("/position/latitude-deg"));
   _magneticHeadings = _root->getBoolValue("magnetic-headings");
 
+  if (_hasPanned)
+  {
+      _root->setBoolValue("centre-on-aircraft", false);
+      _hasPanned = false;
+  }
+  else
   if (_root->getBoolValue("centre-on-aircraft")) {
     _projectionCenter = _aircraft;
   }
