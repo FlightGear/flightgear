@@ -203,6 +203,7 @@ static void fgMainLoop( void ) {
         if (globals->get_tile_mgr()->isSceneryLoaded()
              && fgGetBool("sim/fdm-initialized")) {
             fgSetBool("sim/sceneryloaded",true);
+            fgSplashProgress("");
             if (fgGetBool("/sim/sound/working")) {
                 globals->get_soundmgr()->activate();
             }
@@ -555,6 +556,10 @@ static void fgIdleFunction ( void ) {
     }
 }
 
+static void fgWinResizeFunction(int width, int height)
+{
+    globals->get_renderer()->resize(width, height);
+}
 
 static void upper_case_property(const char *name)
 {
@@ -644,7 +649,7 @@ int fgMainInit( int argc, char **argv ) {
     fgOSInit(&argc, argv);
     _bootstrap_OSInit++;
 
-    fgRegisterWindowResizeHandler( &FGRenderer::resize );
+    fgRegisterWindowResizeHandler( &fgWinResizeFunction );
     fgRegisterIdleHandler( &fgIdleFunction );
     fgRegisterDrawHandler( &FGRenderer::update );
 
