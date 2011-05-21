@@ -390,7 +390,6 @@ FGRenderer::FGRenderer()
    jpgRenderFrame = FGRenderer::update;
 #endif
    eventHandler = new FGEventHandler;
-   _splash_screen_active = true;
 }
 
 FGRenderer::~FGRenderer()
@@ -428,6 +427,7 @@ FGRenderer::init( void )
 
     _xsize         = fgGetNode("/sim/startup/xsize", true);
     _ysize         = fgGetNode("/sim/startup/ysize", true);
+    _splash_alpha  = fgGetNode("/sim/startup/splash-alpha", true);
 
     _skyblend             = fgGetNode("/sim/rendering/skyblend", true);
     _point_sprites        = fgGetNode("/sim/rendering/point-sprites", true);
@@ -599,12 +599,11 @@ FGRenderer::update( bool refresh_camera_settings ) {
     {
         // alas, first "update" is being called before "init"...
         fgSetDouble("/sim/startup/splash-alpha", 1.0);
-        _splash_screen_active = true;
         return;
     }
     osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
 
-    if (_splash_screen_active)
+    if (_splash_alpha->getDoubleValue()>0.0)
     {
         // Fade out the splash screen
         const double fade_time = 0.8;
@@ -615,7 +614,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
         double sAlpha = fgGetDouble("/sim/startup/splash-alpha", 1.0);
         sAlpha -= SGMiscd::max(0.0,delay_time/fade_time);
         FGScenerySwitchCallback::scenery_enabled = (sAlpha<1.0);
-        _splash_screen_active = (sAlpha > 0.0);
         fgSetDouble("/sim/startup/splash-alpha", sAlpha);
     }
 
