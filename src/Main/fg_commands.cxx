@@ -314,6 +314,15 @@ do_resume (const SGPropertyNode * arg)
 
 #endif
 
+static bool
+do_pause (const SGPropertyNode * arg)
+{
+    bool paused = fgGetBool("/sim/freeze/master",true);
+    fgSetBool("/sim/freeze/master",!paused);
+    fgSetBool("/sim/freeze/clock",!paused);
+    if (fgGetBool("/sim/freeze/replay-state",false))
+        fgSetBool("/sim/replay/disable",true);
+}
 
 /**
  * Built-in command: load flight.
@@ -1432,6 +1441,7 @@ static struct {
     { "reinit", do_reinit },
     { "suspend", do_reinit },
     { "resume", do_reinit },
+    { "pause", do_pause },
     { "load", do_load },
     { "save", do_save },
     { "panel-load", do_panel_load },
