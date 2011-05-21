@@ -362,14 +362,17 @@ public:
     assert(dynamic_cast<osg::Switch*>(node));
     osg::Switch* sw = static_cast<osg::Switch*>(node);
 
-    double t = globals->get_sim_time_sec();
-    bool enabled = 0 < t;
+    bool enabled = scenery_enabled;
     sw->setValue(0, enabled);
     if (!enabled)
       return;
     traverse(node, nv);
   }
+
+  static bool scenery_enabled;
 };
+
+bool FGScenerySwitchCallback::scenery_enabled = false;
 
 // Sky structures
 SGSky *thesky;
@@ -604,7 +607,14 @@ FGRenderer::update( bool refresh_camera_settings ) {
     if (_splash_screen_active)
     {
         // Fade out the splash screen
-        double sAlpha = SGMiscd::max(0, (2.5 - globals->get_sim_time_sec()) / 2.5);
+        const double fade_time = 0.8;
+        const double fade_steps_per_sec = 20;
+        double delay_time = SGMiscd::min(fade_time/fade_steps_per_sec,
+                                         (SGTimeStamp::now() - _splash_time).toSecs());
+        _splash_time = SGTimeStamp::now();
+        double sAlpha = fgGetDouble("/sim/startup/splash-alpha", 1.0);
+        sAlpha -= SGMiscd::max(0.0,delay_time/fade_time);
+        FGScenerySwitchCallback::scenery_enabled = (sAlpha<1.0);
         _splash_screen_active = (sAlpha > 0.0);
         fgSetDouble("/sim/startup/splash-alpha", sAlpha);
     }

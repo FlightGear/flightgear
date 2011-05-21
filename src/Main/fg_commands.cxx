@@ -317,7 +317,7 @@ do_resume (const SGPropertyNode * arg)
 static bool
 do_pause (const SGPropertyNode * arg)
 {
-    bool paused = fgGetBool("/sim/freeze/master",true);
+    bool paused = fgGetBool("/sim/freeze/master",true) || fgGetBool("/sim/freeze/clock",true);
     fgSetBool("/sim/freeze/master",!paused);
     fgSetBool("/sim/freeze/clock",!paused);
     if (fgGetBool("/sim/freeze/replay-state",false))

@@ -4,6 +4,7 @@
 
 #include <simgear/scene/util/SGPickCallback.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/timing/timestamp.hxx>
 
 #include <osg/ref_ptr>
 
@@ -85,6 +86,7 @@ protected:
     SGPropertyNode_ptr _xsize, _ysize;
     SGPropertyNode_ptr _panel_hotspots, _sim_delta_sec, _horizon_effect, _altitude_ft;
     SGPropertyNode_ptr _virtual_cockpit;
+    SGTimeStamp _splash_time;
     bool _splash_screen_active;
 };
 
