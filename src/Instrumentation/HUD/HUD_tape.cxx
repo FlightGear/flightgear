@@ -534,7 +534,7 @@ void HUD::Tape::draw_horizontal(float value)
 
 char *HUD::Tape::format_value(float v)
 {
-    if (fabsf(v) < 1e-8)   // avoid -0.0
+    if (fabs(v) < 1e-8)   // avoid -0.0
         v = 0.0f;
 
     if (_label_fmt == INT)
