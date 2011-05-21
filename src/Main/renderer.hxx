@@ -79,7 +79,7 @@ protected:
     osg::ref_ptr<osgViewer::Viewer> viewer;
     osg::ref_ptr<flightgear::FGEventHandler> eventHandler;
     SGPropertyNode_ptr _scenery_loaded,_scenery_override;
-    SGPropertyNode_ptr _skyblend;
+    SGPropertyNode_ptr _skyblend, _splash_alpha;
     SGPropertyNode_ptr _point_sprites, _enhanced_lighting, _distance_attenuation;
     SGPropertyNode_ptr _textures;
     SGPropertyNode_ptr _cloud_status, _visibility_m; 
@@ -87,7 +87,6 @@ protected:
     SGPropertyNode_ptr _panel_hotspots, _sim_delta_sec, _horizon_effect, _altitude_ft;
     SGPropertyNode_ptr _virtual_cockpit;
     SGTimeStamp _splash_time;
-    bool _splash_screen_active;
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);
