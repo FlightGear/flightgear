@@ -322,6 +322,7 @@ do_pause (const SGPropertyNode * arg)
     fgSetBool("/sim/freeze/clock",!paused);
     if (fgGetBool("/sim/freeze/replay-state",false))
         fgSetBool("/sim/replay/disable",true);
+    return true;
 }
 
 /**
