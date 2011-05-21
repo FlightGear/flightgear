@@ -182,7 +182,7 @@ void FGAIBallistic::bind() {
 
     props->tie("sim/time/elapsed-sec",
         SGRawValueMethods<FGAIBallistic,double>(*this,
-        &FGAIBallistic::_getTime));
+        &FGAIBallistic::_getTime, &FGAIBallistic::setTime));
     //props->tie("mass-slug",
     //    SGRawValueMethods<FGAIBallistic,double>(*this,
     //    &FGAIBallistic::getMass));
@@ -586,6 +586,7 @@ void FGAIBallistic::setHt(double h, double dt, double coeff){
 int FGAIBallistic::setHdg(double tgt_hdg, double dt, double coeff){
     double recip = getRecip(hdg);
     double c = dt / (coeff + dt);
+    //cout << "set heading " << tgt_hdg << endl;
     //we need to ensure that we turn the short way to the new hdg
     if (tgt_hdg < recip && tgt_hdg < hdg && hdg > 180) {
         hdg = ((tgt_hdg + 360) * c) + (hdg * (1 - c));
@@ -626,6 +627,9 @@ void FGAIBallistic::setTgtZOffset(double z){
 
 void FGAIBallistic::slaveToAC(double dt){
 
+    if (invisible)
+        return;
+
     double hdg, pch, rll, agl = 0;
 
     if (_pnode != 0) {
@@ -652,6 +656,7 @@ void FGAIBallistic::slaveToAC(double dt){
     setPitch(pch + _pitch_offset);
     setBank(rll + _roll_offset);
     setOffsetVelocity(dt, pos);
+    setTime(0);
 
     //update the mass (slugs)
     _mass = (_weight_lb + getContents()) / slugs_to_lbs;
@@ -710,23 +715,13 @@ void FGAIBallistic::Run(double dt) {
         speed = 0.0;
 
     double speed_fps = speed * SG_KT_TO_FPS;
-    //double hs;
 
     // calculate vertical and horizontal speed components
-    if (speed == 0.0) {
-        hs = vs = 0.0;
-    } else {
-        vs = sin( _elevation * SG_DEGREES_TO_RADIANS ) * speed_fps;
-        hs = cos( _elevation * SG_DEGREES_TO_RADIANS ) * speed_fps;
-    }
+    calcVSHS();
 
     //resolve horizontal speed into north and east components:
-    double speed_north_fps = cos(_azimuth / SG_RADIANS_TO_DEGREES) * hs;
-    double speed_east_fps = sin(_azimuth / SG_RADIANS_TO_DEGREES) * hs;
-
-    // convert horizontal speed (fps) to degrees per second
-    double speed_north_deg_sec = speed_north_fps / ft_per_deg_lat;
-    double speed_east_deg_sec  = speed_east_fps / ft_per_deg_lon;
+    //and convert horizontal speed (fps) to degrees per second
+    calcNE();
 
     // if wind not required, set to zero
     if (!_wind) {
@@ -755,55 +750,61 @@ void FGAIBallistic::Run(double dt) {
     double friction_force_speed_north_deg_sec = 0;
     double friction_force_speed_east_deg_sec = 0;
     double force_elevation_deg = 0;
+    double force_azimuth_deg  = 0;
+    double force_lbs = 0;
 
     if (_external_force) {
-        //cout << _name << " external force" << endl;
+        //cout << _name << " external force " <<  hdg << " az " << _azimuth << endl;
 
         SGPropertyNode *n = fgGetNode(_force_path.c_str(), true);
-        double force_lbs            = n->getChild("force-lb", 0, true)->getDoubleValue();
-        force_elevation_deg         = n->getChild("force-elevation-deg", 0, true)->getDoubleValue();
-        double force_azimuth_deg    = n->getChild("force-azimuth-deg", 0, true)->getDoubleValue();
+        force_lbs            = n->getChild("force-lb", 0, true)->getDoubleValue();
+        force_elevation_deg  = n->getChild("force-elevation-deg", 0, true)->getDoubleValue();
+        force_azimuth_deg    = n->getChild("force-azimuth-deg", 0, true)->getDoubleValue();
         
         //resolve force into vertical and horizontal components:
         double v_force_lbs = force_lbs * sin( force_elevation_deg * SG_DEGREES_TO_RADIANS );
         h_force_lbs = force_lbs * cos( force_elevation_deg * SG_DEGREES_TO_RADIANS );
 
         //ground interaction 
+        //we don't do this if impacts are calculated
+        if(!_report_impact){
 
-        if (getHtAGL(10000)){
-            double deadzone = 0.1;
+            if (getHtAGL(10000)){
+                double deadzone = 0.1;
 
-            if (_ht_agl_ft <= (0 + _ground_offset + deadzone) && _solid){
-                normal_force_lbs = (_mass * slugs_to_lbs) - v_force_lbs;
+                if (_ht_agl_ft <= (0 + _ground_offset + deadzone) && _solid){
+                    normal_force_lbs = (_mass * slugs_to_lbs) - v_force_lbs;
 
-                if ( normal_force_lbs < 0 )
-                    normal_force_lbs = 0;
+                    if ( normal_force_lbs < 0 )
+                        normal_force_lbs = 0;
 
-                pos.setElevationFt(0 + _ground_offset);
-                if (vs < 0) 
-                    vs = -vs * 0.5;
+                    pos.setElevationFt(0 + _ground_offset);
+                    if (vs < 0) 
+                        vs = -vs * 0.5;
 
-                // calculate friction
-                // we assume a static Coefficient of Friction (mu) of 0.62 (wood on concrete)
-                double mu = 0.62;
+                    // calculate friction
+                    // we assume a static Coefficient of Friction (mu) of 0.62 (wood on concrete)
+                    double mu = 0.62;
 
-                static_friction_force_lbs = mu * normal_force_lbs * _frictionFactor;
+                    static_friction_force_lbs = mu * normal_force_lbs * _frictionFactor;
 
-                //adjust horizontal force. We assume that a speed of <= 5 fps is static 
-                if (h_force_lbs <= static_friction_force_lbs && hs <= 5){
-                    h_force_lbs = hs = 0;
-                    speed_north_fps = speed_east_fps = 0;
-                } else
-                    dynamic_friction_force_lbs = (static_friction_force_lbs * 0.95);
+                    //adjust horizontal force. We assume that a speed of <= 5 fps is static 
+                    if (h_force_lbs <= static_friction_force_lbs && hs <= 5){
+                        h_force_lbs = hs = 0;
+                        _speed_north_fps = _speed_east_fps = 0;
+                    } else
+                        dynamic_friction_force_lbs = (static_friction_force_lbs * 0.95);
 
-                //ignore wind when on the ground for now
-                //TODO fix this
-                _wind_from_north = 0;
-                _wind_from_east = 0;
+                    //ignore wind when on the ground for now
+                    //TODO fix this
+                    _wind_from_north = 0;
+                    _wind_from_east = 0;
+
+                }
 
             }
 
-        }
+        } //endif
 
         //acceleration = (force(lbsf)/mass(slugs))
         v_force_acc_fpss = v_force_lbs/_mass;
@@ -835,10 +836,10 @@ void FGAIBallistic::Run(double dt) {
     double wind_speed_from_east_deg_sec  = _wind_from_east / ft_per_deg_lon;
 
     //recombine the horizontal velocity components
-    hs = sqrt(((speed_north_fps + force_speed_north_fps + friction_force_speed_north_fps) 
-        * (speed_north_fps + force_speed_north_fps + friction_force_speed_north_fps))
-        + ((speed_east_fps + force_speed_east_fps + friction_force_speed_east_fps) 
-        * (speed_east_fps + force_speed_east_fps + friction_force_speed_east_fps)));
+    hs = sqrt(((_speed_north_fps + force_speed_north_fps + friction_force_speed_north_fps) 
+        * (_speed_north_fps + force_speed_north_fps + friction_force_speed_north_fps))
+        + ((_speed_east_fps + force_speed_east_fps + friction_force_speed_east_fps) 
+        * (_speed_east_fps + force_speed_east_fps + friction_force_speed_east_fps)));
 
     if (hs <= 0.00001)
         hs = 0;
@@ -890,8 +891,8 @@ void FGAIBallistic::Run(double dt) {
 
     // recalculate elevation and azimuth (velocity vectors)
     _elevation = atan2( vs, hs ) * SG_RADIANS_TO_DEGREES;
-    _azimuth =  atan2((speed_east_fps + force_speed_east_fps + friction_force_speed_east_fps), 
-        (speed_north_fps + force_speed_north_fps + friction_force_speed_north_fps))
+    _azimuth =  atan2((_speed_east_fps + force_speed_east_fps + friction_force_speed_east_fps), 
+        (_speed_north_fps + force_speed_north_fps + friction_force_speed_north_fps))
         * SG_RADIANS_TO_DEGREES;
 
     // rationalise azimuth
@@ -899,7 +900,7 @@ void FGAIBallistic::Run(double dt) {
         _azimuth += 360;
 
     if (_aero_stabilised) { // we simulate rotational moment of inertia by using a filter
-        //cout<< "_aero_stabilised "<< endl;
+        //cout<< "_aero_stabilised " << hdg << " az " << _azimuth << endl;
         const double coeff = 0.9;
 
         // we assume a symetrical MI about the pitch and yaw axis
@@ -941,16 +942,20 @@ double FGAIBallistic::_getTime() const {
     return _life_timer;
 }
 
+void FGAIBallistic::setTime(double s){
+    _life_timer = s;
+}
+
 void FGAIBallistic::handle_impact() {
 
     // try terrain intersection
-    double start = pos.getElevationM() + 10;
+    double start = pos.getElevationM() + 100;
 
     if(!getHtAGL(start)) 
         return;
 
     if (_ht_agl_ft <= 0) {
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AIBallistic: terrain impact");
+        SG_LOG(SG_GENERAL, SG_DEBUG, "AIBallistic: terrain impact material" << _mat_name);
         report_impact(_elevation_m);
         _impact_reported = true;
 
@@ -1004,7 +1009,8 @@ void FGAIBallistic::report_impact(double elevation, const FGAIBase *object)
     else
         n->setStringValue("type", "terrain");
 
-    SG_LOG(SG_GENERAL, SG_DEBUG, "AIBallistic: object impact" << _name << " lon " <<_impact_lon);
+    SG_LOG(SG_GENERAL, SG_DEBUG, "AIBallistic: object impact " << _name 
+        << " lon " <<_impact_lon << " lat " <<_impact_lat);
 
     n->setDoubleValue("longitude-deg", _impact_lon);
     n->setDoubleValue("latitude-deg", _impact_lat);
@@ -1239,9 +1245,17 @@ void FGAIBallistic::setOffsetVelocity(double dt, SGGeod offsetpos) {
     calcVSHS();
 
     //calculate the bearing of the new offset position from the old
-    double az1, az2, dist;
-    geo_inverse_wgs_84(_oldoffsetpos, offsetpos, &az1, &az2, &dist);
-    _azimuth = az1;
+    //don't do this if speed is low
+    //cout << "speed " << speed << endl;
+    if (speed > 0.1){
+        double az1, az2, dist;
+        geo_inverse_wgs_84(_oldoffsetpos, offsetpos, &az1, &az2, &dist);
+        _azimuth = az1;
+        //cout << "offset az " << _azimuth << endl;
+    } else {
+        _azimuth = hdg;
+        //cout << " slow offset az " << _azimuth << endl;
+    }
 
     //resolve horizontal speed into north and east components:
     calcNE();
