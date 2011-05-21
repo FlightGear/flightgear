@@ -85,6 +85,7 @@ private:
   double _drawRangeNm;
   double _upHeading; // true heading corresponding to +ve y-axis
   bool _magneticHeadings;
+  bool _hasPanned;
   
   SGGeod _projectionCenter;
   SGGeod _aircraft;
