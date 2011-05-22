@@ -272,7 +272,6 @@ void fgOSExit(int code)
 
 int fgOSMainLoop()
 {
-    globals->get_renderer()->init();
     ref_ptr<FGEventHandler> manipulator
         = globals->get_renderer()->getEventHandler();
     viewer->setReleaseContextAtEndOfFrameHint(false);
@@ -307,6 +306,7 @@ void fgWarpMouse(int x, int y)
 
 void fgOSInit(int* argc, char** argv)
 {
+    globals->get_renderer()->init();
     WindowSystemAdapter::setWSA(new WindowSystemAdapter);
 }
 
