@@ -770,16 +770,16 @@ FGRenderer::update( bool refresh_camera_settings ) {
 // Handle new window size or exposure
 void
 FGRenderer::resize( int width, int height ) {
-    int view_h;
+    int view_h = height;
 
-    if ( (!_virtual_cockpit->getBoolValue())
-         && fgPanelVisible() && idle_state == 1000 ) {
-        view_h = (int)(height * (globals->get_current_panel()->getViewHeight() -
-                             globals->get_current_panel()->getYOffset()) / 768.0);
-    } else {
-        view_h = height;
-    }
-
+// the following breaks aspect-ratio of the main 3D scenery window when 2D panels are moved
+// in y direction - causing issues for aircraft with 2D panels (/sim/virtual_cockpit=false).
+// Disabling for now. Seems this useful for the pre-OSG time only.
+//    if ( (!_virtual_cockpit->getBoolValue())
+//         && fgPanelVisible() && idle_state == 1000 ) {
+//        view_h = (int)(height * (globals->get_current_panel()->getViewHeight() -
+//                             globals->get_current_panel()->getYOffset()) / 768.0);
+//    }
     static int lastwidth = 0;
     static int lastheight = 0;
     if (width != lastwidth)
