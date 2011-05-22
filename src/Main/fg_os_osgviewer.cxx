@@ -272,6 +272,7 @@ void fgOSExit(int code)
 
 int fgOSMainLoop()
 {
+    globals->get_renderer()->init();
     ref_ptr<FGEventHandler> manipulator
         = globals->get_renderer()->getEventHandler();
     viewer->setReleaseContextAtEndOfFrameHint(false);

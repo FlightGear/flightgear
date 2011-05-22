@@ -47,6 +47,8 @@ public:
     void splashinit();
     void init();
 
+    void setupView();
+
     void resize(int width, int height );
 
     // calling update( refresh_camera_settings = false ) will not

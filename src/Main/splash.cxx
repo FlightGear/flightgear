@@ -295,6 +295,7 @@ static osg::Node* fgCreateSplashCamera()
   text->setPosition(osg::Vec3(0, -0.92, 0));
   text->setAlignment(osgText::Text::CENTER_CENTER);
   SGPropertyNode* prop = fgGetNode("/sim/startup/splash-progress-text", true);
+  prop->setStringValue("initializing");
   text->setUpdateCallback(new FGSplashTextUpdateCallback(prop));
   geode->addDrawable(text);
 
