@@ -34,6 +34,7 @@
 #include <Scripting/NasalSys.hxx>
 #include <Sound/sample_queue.hxx>
 #include <Time/sunsolver.hxx>
+#include <Airports/xmlloader.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -1301,11 +1302,20 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
 
     if (file.extension() != "xml")
         file.concat(".xml");
-
-    if (file.isRelative()) {
-      file = globals->resolve_maybe_aircraft_path(file.str());
+    
+    std::string icao = arg->getStringValue("icao");
+    if (icao.empty()) {
+        if (file.isRelative()) {
+          file = globals->resolve_maybe_aircraft_path(file.str());
+        }
+    } else {
+        if (!XMLLoader::findAirportData(icao, file.str(), file)) {
+          SG_LOG(SG_IO, SG_INFO, "loadxml: failed to find airport data for "
+            << file.str() << " at ICAO:" << icao);
+          return false;
+        }
     }
-
+    
     if (!fgValidatePath(file.c_str(), false)) {
         SG_LOG(SG_IO, SG_ALERT, "loadxml: reading '" << file.str() << "' denied "
                 "(unauthorized access)");

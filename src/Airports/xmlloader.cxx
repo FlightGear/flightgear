@@ -84,11 +84,17 @@ void XMLLoader::load(FGSidStar* p) {
 bool XMLLoader::findAirportData(const std::string& aICAO, 
     const std::string& aFileName, SGPath& aPath)
 {
+  string fileName(aFileName);
+  int extPos = fileName.size() - 4;
+  if ((int) fileName.rfind(".xml") != extPos) {
+    fileName.append(".xml");
+  }
+  
   string_list sc = globals->get_fg_scenery();
   char buffer[128];
-  ::snprintf(buffer, 128, "%c/%c/%c/%s.%s.xml", 
+  ::snprintf(buffer, 128, "%c/%c/%c/%s.%s", 
     aICAO[0], aICAO[1], aICAO[2], 
-    aICAO.c_str(), aFileName.c_str());
+    aICAO.c_str(), fileName.c_str());
 
   for (string_list_iterator it = sc.begin(); it != sc.end(); ++it) {
     SGPath path(*it);
