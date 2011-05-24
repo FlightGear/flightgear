@@ -212,6 +212,7 @@ static void fgMainLoop( void ) {
         }
         else
         {
+            fgSplashProgress("loading scenery");
             // be nice to loader threads while waiting for initial scenery, reduce to 2fps
             simgear::sleepForMSec(500);
         }
@@ -314,7 +315,7 @@ SGPath resolve_path(const std::string& s)
 }
 
 // This is the top level master main function that is registered as
-// our idle funciton
+// our idle function
 
 // The first few passes take care of initialization things (a couple
 // per pass) and once everything has been initialized fgMainLoop from
@@ -348,20 +349,17 @@ static void fgIdleFunction ( void ) {
         if (!guiFinishInit())
             return;
         idle_state++;
-        fgSplashProgress("reading aircraft list");
-
+        fgSplashProgress("loading aircraft list");
 
     } else if ( idle_state == 2 ) {
         idle_state++;
-                
-        fgSplashProgress("reading airport & navigation data");
-
+        fgSplashProgress("loading navigation data");
 
     } else if ( idle_state == 3 ) {
         idle_state++;
         fgInitNav();
-        fgSplashProgress("setting up scenery");
 
+        fgSplashProgress("initializing scenery system");
 
     } else if ( idle_state == 4 ) {
         idle_state++;
@@ -386,14 +384,13 @@ static void fgIdleFunction ( void ) {
         ////////////////////////////////////////////////////////////////////
         fgInitCommands();
 
-
         ////////////////////////////////////////////////////////////////////
         // Initialize the material manager
         ////////////////////////////////////////////////////////////////////
         globals->set_matlib( new SGMaterialLib );
         simgear::SGModelLib::init(globals->get_fg_root(), globals->get_props());
         simgear::SGModelLib::setPanelFunc(load_panel);
-        
+
         ////////////////////////////////////////////////////////////////////
         // Initialize the TG scenery subsystem.
         ////////////////////////////////////////////////////////////////////
@@ -402,15 +399,12 @@ static void fgIdleFunction ( void ) {
         globals->get_scenery()->bind();
         globals->set_tile_mgr( new FGTileMgr );
 
-
         fgSplashProgress("loading aircraft");
-
 
     } else if ( idle_state == 5 ) {
         idle_state++;
 
-        fgSplashProgress("generating sky elements");
-
+        fgSplashProgress("initializing sky elements");
 
     } else if ( idle_state == 6 ) {
         idle_state++;
@@ -471,9 +465,7 @@ static void fgIdleFunction ( void ) {
         // airport->setName( "Airport Lighting" );
         // lighting->addKid( airport );
 
-        // build our custom render states
         fgSplashProgress("initializing subsystems");
-
 
     } else if ( idle_state == 7 ) {
         idle_state++;
@@ -531,18 +523,18 @@ static void fgIdleFunction ( void ) {
                 fgSetPosFromAirportIDandHdg( apt, hdg );
             }
         }
-        fgSplashProgress("setting up time & renderer");
+
+        fgSplashProgress("initializing graphics engine");
 
     } else if ( idle_state == 8 ) {
         idle_state = 1000;
         
         // setup OpenGL view parameters
-        globals->get_renderer()->init();
+        globals->get_renderer()->setupView();
 
         globals->get_renderer()->resize( fgGetInt("/sim/startup/xsize"),
                                          fgGetInt("/sim/startup/ysize") );
 
-        fgSplashProgress("loading scenery objects");
         int session = fgGetInt("/sim/session",0);
         session++;
         fgSetInt("/sim/session",session);
@@ -673,5 +665,3 @@ int fgMainInit( int argc, char **argv ) {
     
     return result;
 }
-
-

@@ -440,7 +440,11 @@ FGRenderer::init( void )
 
     _cloud_status = fgGetNode("/environment/clouds/status", true);
     _visibility_m = fgGetNode("/environment/visibility-m", true);
+}
 
+void
+FGRenderer::setupView( void )
+{
     osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
     osg::initNotifyLevel();
 
@@ -593,12 +597,10 @@ FGRenderer::update()
 // Update all Visuals (redraws anything graphics related)
 void
 FGRenderer::update( bool refresh_camera_settings ) {
-    if ((!_scenery_loaded.get())||
-         !(_scenery_loaded->getBoolValue() || 
+    if (!(_scenery_loaded->getBoolValue() || 
            _scenery_override->getBoolValue()))
     {
-        // alas, first "update" is being called before "init"...
-        fgSetDouble("/sim/startup/splash-alpha", 1.0);
+        _splash_alpha->setDoubleValue(1.0);
         return;
     }
     osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
@@ -611,10 +613,10 @@ FGRenderer::update( bool refresh_camera_settings ) {
         double delay_time = SGMiscd::min(fade_time/fade_steps_per_sec,
                                          (SGTimeStamp::now() - _splash_time).toSecs());
         _splash_time = SGTimeStamp::now();
-        double sAlpha = fgGetDouble("/sim/startup/splash-alpha", 1.0);
+        double sAlpha = _splash_alpha->getDoubleValue();
         sAlpha -= SGMiscd::max(0.0,delay_time/fade_time);
         FGScenerySwitchCallback::scenery_enabled = (sAlpha<1.0);
-        fgSetDouble("/sim/startup/splash-alpha", sAlpha);
+        _splash_alpha->setDoubleValue(sAlpha);
     }
 
     bool skyblend = _skyblend->getBoolValue();
@@ -770,16 +772,16 @@ FGRenderer::update( bool refresh_camera_settings ) {
 // Handle new window size or exposure
 void
 FGRenderer::resize( int width, int height ) {
-    int view_h;
+    int view_h = height;
 
-    if ( (!_virtual_cockpit->getBoolValue())
-         && fgPanelVisible() && idle_state == 1000 ) {
-        view_h = (int)(height * (globals->get_current_panel()->getViewHeight() -
-                             globals->get_current_panel()->getYOffset()) / 768.0);
-    } else {
-        view_h = height;
-    }
-
+// the following breaks aspect-ratio of the main 3D scenery window when 2D panels are moved
+// in y direction - causing issues for aircraft with 2D panels (/sim/virtual_cockpit=false).
+// Disabling for now. Seems this useful for the pre-OSG time only.
+//    if ( (!_virtual_cockpit->getBoolValue())
+//         && fgPanelVisible() && idle_state == 1000 ) {
+//        view_h = (int)(height * (globals->get_current_panel()->getViewHeight() -
+//                             globals->get_current_panel()->getYOffset()) / 768.0);
+//    }
     static int lastwidth = 0;
     static int lastheight = 0;
     if (width != lastwidth)
