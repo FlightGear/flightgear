@@ -772,7 +772,6 @@ FGRenderer::update( bool refresh_camera_settings ) {
 // Handle new window size or exposure
 void
 FGRenderer::resize( int width, int height ) {
-    int view_h = height;
 
 // the following breaks aspect-ratio of the main 3D scenery window when 2D panels are moved
 // in y direction - causing issues for aircraft with 2D panels (/sim/virtual_cockpit=false).
@@ -782,20 +781,26 @@ FGRenderer::resize( int width, int height ) {
 //        view_h = (int)(height * (globals->get_current_panel()->getViewHeight() -
 //                             globals->get_current_panel()->getYOffset()) / 768.0);
 //    }
-    static int lastwidth = 0;
-    static int lastheight = 0;
-    if (width != lastwidth)
-        _xsize->setIntValue(lastwidth = width);
-    if (height != lastheight)
-        _ysize->setIntValue(lastheight = height);
+
+    int curWidth = _xsize->getIntValue(),
+        curHeight = _ysize->getIntValue();
+
+    if ((width == curWidth) && (height == curHeight)) {
+      return;
+    }
+
+    SG_LOG(SG_GENERAL, SG_INFO, "renderer resized to " << width << "," << height);
+
+    _xsize->setIntValue(width);
+    _ysize->setIntValue(height);
+    double aspect = height / (double) width;
 
     // for all views
     FGViewMgr *viewmgr = globals->get_viewmgr();
     if (viewmgr) {
-      for ( int i = 0; i < viewmgr->size(); ++i ) {
-        viewmgr->get_view(i)->
-          set_aspect_ratio((float)view_h / (float)width);
-      }
+        for ( int i = 0; i < viewmgr->size(); ++i ) {
+            viewmgr->get_view(i)->set_aspect_ratio(aspect);
+        }
     }
 }
 
