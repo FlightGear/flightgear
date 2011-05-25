@@ -785,12 +785,6 @@ FGRenderer::resize( int width, int height ) {
     int curWidth = _xsize->getIntValue(),
         curHeight = _ysize->getIntValue();
 
-    if ((width == curWidth) && (height == curHeight)) {
-      return;
-    }
-
-    SG_LOG(SG_GENERAL, SG_INFO, "renderer resized to " << width << "," << height);
-
     _xsize->setIntValue(width);
     _ysize->setIntValue(height);
     double aspect = height / (double) width;
