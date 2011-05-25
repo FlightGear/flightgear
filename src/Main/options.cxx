@@ -555,54 +555,6 @@ add_channel( const string& type, const string& channel_str ) {
     return true;
 }
 
-
-// The parse wp and parse flight-plan options don't work anymore, because
-// the route manager and the airport subsystems have not yet been initialized
-// at this stage.
-
-// Parse --wp=ID[@alt]
-static void
-parse_wp( const string& arg ) {
-    string_list *waypoints = globals->get_initial_waypoints();
-    if (!waypoints) {
-        waypoints = new string_list;
-        globals->set_initial_waypoints(waypoints);
-    }
-    waypoints->push_back(arg);
-}
-
-
-// Parse --flight-plan=[file]
-static bool
-parse_flightplan(const string& arg)
-{
-    string_list *waypoints = globals->get_initial_waypoints();
-    if (!waypoints) {
-        waypoints = new string_list;
-        globals->set_initial_waypoints(waypoints);
-    }
-
-    sg_gzifstream in(arg.c_str());
-    if ( !in.is_open() )
-        return false;
-
-    while ( true ) {
-        string line;
-        getline( in, line, '\n' );
-
-        // catch extraneous (DOS) line ending character
-        if ( line[line.length() - 1] < 32 )
-            line = line.substr( 0, line.length()-1 );
-
-        if ( in.eof() )
-            break;
-
-        waypoints->push_back(line);
-    }
-    return true;
-}
-
-
 static int
 fgOptLanguage( const char *arg )
 {
@@ -1067,14 +1019,12 @@ fgOptCeiling( const char *arg )
 static int
 fgOptWp( const char *arg )
 {
-    parse_wp( arg );
-    return FG_OPTIONS_OK;
-}
-
-static int
-fgOptFlightPlan( const char *arg )
-{
-    parse_flightplan ( arg );
+    string_list *waypoints = globals->get_initial_waypoints();
+    if (!waypoints) {
+        waypoints = new string_list;
+        globals->set_initial_waypoints(waypoints);
+    }
+    waypoints->push_back(arg);
     return FG_OPTIONS_OK;
 }
 
@@ -1496,7 +1446,7 @@ struct OptionDesc {
     {"turbulence",                   true,  OPTION_FUNC,   "", false, "", fgOptTurbulence },
     {"ceiling",                      true,  OPTION_FUNC,   "", false, "", fgOptCeiling },
     {"wp",                           true,  OPTION_FUNC,   "", false, "", fgOptWp },
-    {"flight-plan",                  true,  OPTION_FUNC,   "", false, "", fgOptFlightPlan },
+    {"flight-plan",                  true,  OPTION_STRING,   "/autopilot/route-manager/file-path", false, "", NULL },
     {"config",                       true,  OPTION_FUNC,   "", false, "", fgOptConfig },
     {"aircraft",                     true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
     {"vehicle",                      true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
