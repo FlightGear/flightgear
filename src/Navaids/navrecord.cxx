@@ -41,6 +41,7 @@
 #include <Airports/xmlloader.hxx>
 
 #include <Main/fg_props.hxx>
+#include <Navaids/PositionedBinding.hxx>
 
 FGNavRecord::FGNavRecord(Type aTy, const std::string& aIdent, 
   const std::string& aName, const SGGeod& aPos,
@@ -186,6 +187,13 @@ double FGNavRecord::localizerWidth() const
   return raw_width < 6.0? raw_width : 6.0;
 
 }
+
+flightgear::PositionedBinding*
+FGNavRecord::createBinding(SGPropertyNode* nd) const
+{
+    return new flightgear::NavaidBinding(this, nd);
+}
+
 
 FGTACANRecord::FGTACANRecord(void) :
     channel(""),

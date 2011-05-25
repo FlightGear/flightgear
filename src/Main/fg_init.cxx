@@ -75,8 +75,6 @@
 #include <AIModel/AIManager.hxx>
 
 #include <ATCDCL/ATCmgr.hxx>
-#include <ATCDCL/commlist.hxx>
-#include <ATC/atis_mgr.hxx>
 
 #include <Autopilot/route_mgr.hxx>
 #include <Autopilot/autopilotgroup.hxx>
@@ -1084,15 +1082,10 @@ fgInitNav ()
     SGPath p_metar( globals->get_fg_root() );
     p_metar.append( "Airports/metar.dat" );
 
-// Initialise the frequency search map BEFORE reading
-// the airport database:
-
-
-
-    current_commlist = new FGCommList;
-    current_commlist->init( globals->get_fg_root() );
-    fgAirportDBLoad( aptdb.str(), current_commlist, p_metar.str() );
-
+    fgAirportDBLoad( aptdb.str(), p_metar.str() );
+    FGAirport::installPropertyListener();
+    FGPositioned::installCommands();
+    
     FGNavList *navlist = new FGNavList;
     FGNavList *loclist = new FGNavList;
     FGNavList *gslist = new FGNavList;
@@ -1422,12 +1415,6 @@ bool fgInitSubsystems() {
     SG_LOG(SG_GENERAL, SG_INFO, "  ATC Manager");
     globals->set_ATC_mgr(new FGATCMgr);
     globals->get_ATC_mgr()->init(); 
-
-    ////////////////////////////////////////////////////////////////////
-    // Initialise the ATIS Manager
-    ////////////////////////////////////////////////////////////////////
-    globals->add_subsystem("atis", new FGAtisManager, SGSubsystemMgr::POST_FDM);
-
 
     ////////////////////////////////////////////////////////////////////
     // Initialize multiplayer subsystem

@@ -47,6 +47,8 @@
 #include <Airports/xmlloader.hxx>
 #include <Navaids/procedure.hxx>
 #include <Navaids/waypoint.hxx>
+#include <Navaids/PositionedBinding.hxx>
+#include <ATC/CommStation.hxx>
 
 using std::vector;
 using namespace flightgear;
@@ -660,6 +662,61 @@ Approach* FGAirport::getApproachByIndex(unsigned int aIndex) const
 {
   loadProcedures();
   return mApproaches[aIndex];
+}
+
+class AirportNodeListener : public SGPropertyChangeListener
+{
+public:
+    AirportNodeListener()
+    {
+        SGPropertyNode* airports = fgGetNode("/sim/airport");
+        airports->addChangeListener(this, false);
+    }
+
+    virtual void valueChanged(SGPropertyNode*)
+    {
+    }
+
+    virtual void childAdded(SGPropertyNode* pr, SGPropertyNode* child)
+    {
+       FGAirport* apt = FGAirport::findByIdent(child->getName());
+       if (!apt) {
+           return;
+       }
+       
+       flightgear::PositionedBinding::bind(apt, child);
+    }
+};
+    
+void FGAirport::installPropertyListener()
+{
+    new AirportNodeListener;  
+}
+
+flightgear::PositionedBinding*
+FGAirport::createBinding(SGPropertyNode* nd) const
+{
+    return new flightgear::AirportBinding(this, nd);
+}
+
+void FGAirport::setCommStations(CommStationList& comms)
+{
+    mCommStations.swap(comms);
+    for (unsigned int c=0; c<mCommStations.size(); ++c) {
+        mCommStations[c]->setAirport(this);
+    }
+}
+
+CommStationList
+FGAirport::commStationsOfType(FGPositioned::Type aTy) const
+{
+    CommStationList result;
+    for (unsigned int c=0; c<mCommStations.size(); ++c) {
+        if (mCommStations[c]->type() == aTy) {
+            result.push_back(mCommStations[c]);
+        }
+    }
+    return result;
 }
 
 // get airport elevation

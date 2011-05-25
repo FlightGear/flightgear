@@ -39,6 +39,8 @@
 
 #include <Airports/simple.hxx>
 #include <Navaids/procedure.hxx>
+#include <Navaids/navrecord.hxx>
+#include <Navaids/PositionedBinding.hxx>
 
 using std::string;
 
@@ -197,4 +199,9 @@ std::vector<flightgear::STAR*> FGRunway::getSTARs()
   return result;
 }
 
+flightgear::PositionedBinding*
+FGRunway::createBinding(SGPropertyNode* nd) const
+{
+    return new flightgear::RunwayBinding(this, nd);
+}
 
