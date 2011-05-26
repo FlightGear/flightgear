@@ -30,7 +30,7 @@
 #include <simgear/constants.h>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/scene/sky/sky.hxx>
-#include <simgear/environment/visual_enviro.hxx>
+//#include <simgear/environment/visual_enviro.hxx>
 #include <simgear/scene/sky/cloudfield.hxx>
 #include <simgear/scene/sky/newcloud.hxx>
 #include <simgear/structure/commands.hxx>
@@ -47,7 +47,9 @@ extern SGSky *thesky;
 
 
 FGClouds::FGClouds() :
+#if 0
     snd_lightning(0),
+#endif
     clouds_3d_enabled(false),
     index(0)
 {
@@ -68,6 +70,7 @@ void FGClouds::set_update_event(int count) {
 }
 
 void FGClouds::Init(void) {
+#if 0
 	if( snd_lightning == NULL ) {
 		snd_lightning = new SGSoundSample("Sounds/thunder.wav", SGPath());
 		snd_lightning->set_max_dist(7000.0f);
@@ -75,8 +78,8 @@ void FGClouds::Init(void) {
 		SGSoundMgr *smgr = globals->get_soundmgr();
 		SGSampleGroup *sgr = smgr->find("weather", true);
 		sgr->add( snd_lightning, "thunder" );
-		sgEnviro.set_sampleGroup( sgr );
 	}
+#endif
 
 	globals->get_commands()->addCommand("add-cloud", do_add_3Dcloud);
 	globals->get_commands()->addCommand("del-cloud", do_delete_3Dcloud);

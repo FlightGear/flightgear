@@ -82,8 +82,6 @@
 #include <simgear/screen/jpgfactory.hxx>
 #endif
 
-#include <simgear/environment/visual_enviro.hxx>
-
 #include <Time/light.hxx>
 #include <Time/light.hxx>
 #include <Cockpit/panel.hxx>
@@ -130,7 +128,7 @@ public:
       hint->setMode(GL_DONT_CARE);
   }
 private:
-  SGSharedPtr<SGPropertyNode> mConfigNode;
+  SGPropertyNode_ptr mConfigNode;
 };
 
 
@@ -274,7 +272,7 @@ private:
 class FGWireFrameModeUpdateCallback : public osg::StateAttribute::Callback {
 public:
   FGWireFrameModeUpdateCallback() :
-    mWireframe(fgGetNode("/sim/rendering/wireframe"))
+    mWireframe(fgGetNode("/sim/rendering/wireframe", true))
   { }
   virtual void operator()(osg::StateAttribute* stateAttribute,
                           osg::NodeVisitor*)
@@ -291,13 +289,13 @@ public:
                            osg::PolygonMode::FILL);
   }
 private:
-  SGSharedPtr<SGPropertyNode> mWireframe;
+  SGPropertyNode_ptr mWireframe;
 };
 
 class FGLightModelUpdateCallback : public osg::StateAttribute::Callback {
 public:
   FGLightModelUpdateCallback() :
-    mHighlights(fgGetNode("/sim/rendering/specular-highlight"))
+    mHighlights(fgGetNode("/sim/rendering/specular-highlight", true))
   { }
   virtual void operator()(osg::StateAttribute* stateAttribute,
                           osg::NodeVisitor*)
@@ -322,13 +320,13 @@ public:
     }
   }
 private:
-  SGSharedPtr<SGPropertyNode> mHighlights;
+  SGPropertyNode_ptr mHighlights;
 };
 
 class FGFogEnableUpdateCallback : public osg::StateSet::Callback {
 public:
   FGFogEnableUpdateCallback() :
-    mFogEnabled(fgGetNode("/sim/rendering/fog"))
+    mFogEnabled(fgGetNode("/sim/rendering/fog", true))
   { }
   virtual void operator()(osg::StateSet* stateSet, osg::NodeVisitor*)
   {
@@ -339,7 +337,7 @@ public:
     }
   }
 private:
-  SGSharedPtr<SGPropertyNode> mFogEnabled;
+  SGPropertyNode_ptr mFogEnabled;
 };
 
 class FGFogUpdateCallback : public osg::StateAttribute::Callback {
@@ -364,14 +362,17 @@ public:
     assert(dynamic_cast<osg::Switch*>(node));
     osg::Switch* sw = static_cast<osg::Switch*>(node);
 
-    double t = globals->get_sim_time_sec();
-    bool enabled = 0 < t;
+    bool enabled = scenery_enabled;
     sw->setValue(0, enabled);
     if (!enabled)
       return;
     traverse(node, nv);
   }
+
+  static bool scenery_enabled;
 };
+
+bool FGScenerySwitchCallback::scenery_enabled = false;
 
 // Sky structures
 SGSky *thesky;
@@ -411,10 +412,38 @@ FGRenderer::splashinit( void ) {
     // visitor automatically.
     mUpdateVisitor->setFrameStamp(mFrameStamp.get());
     viewer->setUpdateVisitor(mUpdateVisitor.get());
+    fgSetDouble("/sim/startup/splash-alpha", 1.0);
 }
 
 void
 FGRenderer::init( void )
+{
+    _scenery_loaded   = fgGetNode("/sim/sceneryloaded", true);
+    _scenery_override = fgGetNode("/sim/sceneryloaded-override", true);
+    _panel_hotspots   = fgGetNode("/sim/panel-hotspots", true);
+    _virtual_cockpit  = fgGetNode("/sim/virtual-cockpit", true);
+
+    _sim_delta_sec = fgGetNode("/sim/time/delta-sec", true);
+
+    _xsize         = fgGetNode("/sim/startup/xsize", true);
+    _ysize         = fgGetNode("/sim/startup/ysize", true);
+    _splash_alpha  = fgGetNode("/sim/startup/splash-alpha", true);
+
+    _skyblend             = fgGetNode("/sim/rendering/skyblend", true);
+    _point_sprites        = fgGetNode("/sim/rendering/point-sprites", true);
+    _enhanced_lighting    = fgGetNode("/sim/rendering/enhanced-lighting", true);
+    _distance_attenuation = fgGetNode("/sim/rendering/distance-attenuation", true);
+    _horizon_effect       = fgGetNode("/sim/rendering/horizon-effect", true);
+    _textures             = fgGetNode("/sim/rendering/textures", true);
+
+    _altitude_ft = fgGetNode("/position/altitude-ft", true);
+
+    _cloud_status = fgGetNode("/environment/clouds/status", true);
+    _visibility_m = fgGetNode("/environment/visibility-m", true);
+}
+
+void
+FGRenderer::setupView( void )
 {
     osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
     osg::initNotifyLevel();
@@ -559,27 +588,42 @@ FGRenderer::init( void )
     stateSet->setAttributeAndModes(new osg::Program, osg::StateAttribute::ON);
 }
 
+void
+FGRenderer::update()
+{
+    globals->get_renderer()->update(true);
+}
 
 // Update all Visuals (redraws anything graphics related)
 void
 FGRenderer::update( bool refresh_camera_settings ) {
-    bool scenery_loaded = fgGetBool("sim/sceneryloaded", false)
-                          || fgGetBool("sim/sceneryloaded-override");
+    if (!(_scenery_loaded->getBoolValue() || 
+           _scenery_override->getBoolValue()))
+    {
+        _splash_alpha->setDoubleValue(1.0);
+        return;
+    }
     osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
-    if (!scenery_loaded) {
-      fgSetDouble("/sim/startup/splash-alpha", 1.0);
-      return;
+
+    if (_splash_alpha->getDoubleValue()>0.0)
+    {
+        // Fade out the splash screen
+        const double fade_time = 0.8;
+        const double fade_steps_per_sec = 20;
+        double delay_time = SGMiscd::min(fade_time/fade_steps_per_sec,
+                                         (SGTimeStamp::now() - _splash_time).toSecs());
+        _splash_time = SGTimeStamp::now();
+        double sAlpha = _splash_alpha->getDoubleValue();
+        sAlpha -= SGMiscd::max(0.0,delay_time/fade_time);
+        FGScenerySwitchCallback::scenery_enabled = (sAlpha<1.0);
+        _splash_alpha->setDoubleValue(sAlpha);
     }
 
-    // Fade out the splash screen over the first three seconds.
-    double sAlpha = SGMiscd::max(0, (2.5 - globals->get_sim_time_sec()) / 2.5);
-    fgSetDouble("/sim/startup/splash-alpha", sAlpha);
+    bool skyblend = _skyblend->getBoolValue();
+    bool use_point_sprites = _point_sprites->getBoolValue();
+    bool enhanced_lighting = _enhanced_lighting->getBoolValue();
+    bool distance_attenuation = _distance_attenuation->getBoolValue();
 
-    bool skyblend = fgGetBool("/sim/rendering/skyblend");
-    bool use_point_sprites = fgGetBool("/sim/rendering/point-sprites");
-    bool enhanced_lighting = fgGetBool("/sim/rendering/enhanced-lighting");
-    bool distance_attenuation
-        = fgGetBool("/sim/rendering/distance-attenuation");
     // OSGFIXME
     SGConfigureDirectionalLights( use_point_sprites, enhanced_lighting,
                                   distance_attenuation );
@@ -588,10 +632,10 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
     // update fog params
     double actual_visibility;
-    if (fgGetBool("/environment/clouds/status")) {
+    if (_cloud_status->getBoolValue()) {
         actual_visibility = thesky->get_visibility();
     } else {
-        actual_visibility = fgGetDouble("/environment/visibility-m");
+        actual_visibility = _visibility_m->getDoubleValue();
     }
 
     // idle_state is now 1000 meaning we've finished all our
@@ -604,27 +648,27 @@ FGRenderer::update( bool refresh_camera_settings ) {
 
     if ( refresh_camera_settings ) {
         // update view port
-        resize( fgGetInt("/sim/startup/xsize"),
-                fgGetInt("/sim/startup/ysize") );
+        resize( _xsize->getIntValue(),
+                _ysize->getIntValue() );
     }
     osg::Camera *camera = viewer->getCamera();
 
     if ( skyblend ) {
 	
-        if ( fgGetBool("/sim/rendering/textures") ) {
+        if ( _textures->getBoolValue() ) {
             SGVec4f clearColor(l->adj_fog_color());
-            camera->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 1.0));
+            camera->setClearColor(toOsg(clearColor));
         }
     } else {
         SGVec4f clearColor(l->sky_color());
-        camera->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 1.0));
+        camera->setClearColor(toOsg(clearColor));
     }
 
     // update fog params if visibility has changed
-    double visibility_meters = fgGetDouble("/environment/visibility-m");
+    double visibility_meters = _visibility_m->getDoubleValue();
     thesky->set_visibility(visibility_meters);
 
-    double altitude_m = fgGetDouble("/position/altitude-ft") * SG_FEET_TO_METER;
+    double altitude_m = _altitude_ft->getDoubleValue() * SG_FEET_TO_METER;
     thesky->modify_vis( altitude_m, 0.0 /* time factor, now unused */);
 
     // update the sky dome
@@ -637,7 +681,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
         // Sun distance: 150,000,000 kilometers
 
         double sun_horiz_eff, moon_horiz_eff;
-        if (fgGetBool("/sim/rendering/horizon-effect")) {
+        if (_horizon_effect->getBoolValue()) {
             sun_horiz_eff
                 = 0.67 + pow(osg::clampAbove(0.5 + cos(l->get_sun_angle()),
                                              0.0),
@@ -668,7 +712,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
         scolor.sun_angle   = l->get_sun_angle();
         scolor.moon_angle  = l->get_moon_angle();
   
-        double delta_time_sec = fgGetDouble("/sim/time/delta-sec");
+        double delta_time_sec = _sim_delta_sec->getDoubleValue();
         thesky->reposition( sstate, *globals->get_ephem(), delta_time_sec );
         thesky->repaint( scolor, *globals->get_ephem() );
 
@@ -714,11 +758,10 @@ FGRenderer::update( bool refresh_camera_settings ) {
                              l->get_sun_angle()*SGD_RADIANS_TO_DEGREES);
     mUpdateVisitor->setVisibility(actual_visibility);
     simgear::GroundLightManager::instance()->update(mUpdateVisitor.get());
-    bool hotspots = fgGetBool("/sim/panel-hotspots");
     osg::Node::NodeMask cullMask = ~simgear::LIGHTS_BITS & ~simgear::PICK_BIT;
     cullMask |= simgear::GroundLightManager::instance()
         ->getLightNodeMask(mUpdateVisitor.get());
-    if (hotspots)
+    if (_panel_hotspots->getBoolValue())
         cullMask |= simgear::PICK_BIT;
     CameraGroup::getDefault()->setCameraCullMasks(cullMask);
 }
@@ -729,30 +772,29 @@ FGRenderer::update( bool refresh_camera_settings ) {
 // Handle new window size or exposure
 void
 FGRenderer::resize( int width, int height ) {
-    int view_h;
 
-    if ( (!fgGetBool("/sim/virtual-cockpit"))
-         && fgPanelVisible() && idle_state == 1000 ) {
-        view_h = (int)(height * (globals->get_current_panel()->getViewHeight() -
-                             globals->get_current_panel()->getYOffset()) / 768.0);
-    } else {
-        view_h = height;
-    }
+// the following breaks aspect-ratio of the main 3D scenery window when 2D panels are moved
+// in y direction - causing issues for aircraft with 2D panels (/sim/virtual_cockpit=false).
+// Disabling for now. Seems this useful for the pre-OSG time only.
+//    if ( (!_virtual_cockpit->getBoolValue())
+//         && fgPanelVisible() && idle_state == 1000 ) {
+//        view_h = (int)(height * (globals->get_current_panel()->getViewHeight() -
+//                             globals->get_current_panel()->getYOffset()) / 768.0);
+//    }
 
-    static int lastwidth = 0;
-    static int lastheight = 0;
-    if (width != lastwidth)
-        fgSetInt("/sim/startup/xsize", lastwidth = width);
-    if (height != lastheight)
-        fgSetInt("/sim/startup/ysize", lastheight = height);
+    int curWidth = _xsize->getIntValue(),
+        curHeight = _ysize->getIntValue();
+
+    _xsize->setIntValue(width);
+    _ysize->setIntValue(height);
+    double aspect = height / (double) width;
 
     // for all views
     FGViewMgr *viewmgr = globals->get_viewmgr();
     if (viewmgr) {
-      for ( int i = 0; i < viewmgr->size(); ++i ) {
-        viewmgr->get_view(i)->
-          set_aspect_ratio((float)view_h / (float)width);
-      }
+        for ( int i = 0; i < viewmgr->size(); ++i ) {
+            viewmgr->get_view(i)->set_aspect_ratio(aspect);
+        }
     }
 }
 

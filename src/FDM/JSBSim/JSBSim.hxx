@@ -271,14 +271,18 @@ private:
     SGPropertyNode_ptr temperature;
     SGPropertyNode_ptr pressure;
     SGPropertyNode_ptr density;
+    SGPropertyNode_ptr ground_wind;
     SGPropertyNode_ptr turbulence_gain;
     SGPropertyNode_ptr turbulence_rate;
+    SGPropertyNode_ptr turbulence_model;
 
     SGPropertyNode_ptr wind_from_north;
     SGPropertyNode_ptr wind_from_east;
     SGPropertyNode_ptr wind_from_down;
 
     SGPropertyNode_ptr slaved;
+
+    static std::map<std::string,int> TURBULENCE_TYPE_NAMES;
 
     double last_hook_tip[3];
     double last_hook_root[3];

@@ -48,7 +48,7 @@ HUD::Ladder::Ladder(HUD *hud, const SGPropertyNode *n, float x, float y) :
     _roll(n->getNode("roll-input", false)),
     _width_units(int(n->getFloatValue("display-span"))),
     _div_units(int(fabs(n->getFloatValue("divisions")))),
-    _scr_hole(fabsf(n->getFloatValue("screen-hole")) * 0.5f),
+    _scr_hole(fabs(n->getFloatValue("screen-hole")) * 0.5f),
     _zero_bar_overlength(n->getFloatValue("zero-bar-overlength", 10)),
     _dive_bar_angle(n->getBoolValue("enable-dive-bar-angle")),
     _tick_length(n->getFloatValue("tick-length")),

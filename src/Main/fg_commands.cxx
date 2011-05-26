@@ -33,7 +33,7 @@
 #include <Scenery/scenery.hxx>
 #include <Scripting/NasalSys.hxx>
 #include <Sound/sample_queue.hxx>
-#include <Time/sunsolver.hxx>
+#include <Airports/xmlloader.hxx>
 
 #include "fg_init.hxx"
 #include "fg_io.hxx"
@@ -314,6 +314,16 @@ do_resume (const SGPropertyNode * arg)
 
 #endif
 
+static bool
+do_pause (const SGPropertyNode * arg)
+{
+    bool paused = fgGetBool("/sim/freeze/master",true) || fgGetBool("/sim/freeze/clock",true);
+    fgSetBool("/sim/freeze/master",!paused);
+    fgSetBool("/sim/freeze/clock",!paused);
+    if (fgGetBool("/sim/freeze/replay-state",false))
+        fgSetBool("/sim/replay/disable",true);
+    return true;
+}
 
 /**
  * Built-in command: load flight.
@@ -688,85 +698,6 @@ do_set_dewpoint_degc (const SGPropertyNode * arg)
     return do_set_dewpoint_sea_level_degc(dummy.get_dewpoint_sea_level_degc());
 }
 #endif
-/**
- * Update the lighting manually.
- */
-static bool
-do_timeofday (const SGPropertyNode * arg)
-{
-    const string &offset_type = arg->getStringValue("timeofday", "noon");
-
-    static const SGPropertyNode *longitude
-        = fgGetNode("/position/longitude-deg");
-    static const SGPropertyNode *latitude
-        = fgGetNode("/position/latitude-deg");
-
-    int orig_warp = globals->get_warp();
-    SGTime *t = globals->get_time_params();
-    time_t cur_time = t->get_cur_time();
-    // cout << "cur_time = " << cur_time << endl;
-    // cout << "orig_warp = " << orig_warp << endl;
-
-    int warp = 0;
-    if ( offset_type == "real" ) {
-        warp = -orig_warp;
-    } else if ( offset_type == "dawn" ) {
-        warp = fgTimeSecondsUntilSunAngle( cur_time,
-                                           longitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           latitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           90.0, true ); 
-    } else if ( offset_type == "morning" ) {
-        warp = fgTimeSecondsUntilSunAngle( cur_time,
-                                           longitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           latitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           75.0, true ); 
-    } else if ( offset_type == "noon" ) {
-        warp = fgTimeSecondsUntilSunAngle( cur_time,
-                                           longitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           latitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           0.0, true ); 
-    } else if ( offset_type == "afternoon" ) {
-        warp = fgTimeSecondsUntilSunAngle( cur_time,
-                                           longitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           latitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           60.0, false ); 
-     } else if ( offset_type == "dusk" ) {
-        warp = fgTimeSecondsUntilSunAngle( cur_time,
-                                           longitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           latitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           90.0, false ); 
-     } else if ( offset_type == "evening" ) {
-        warp = fgTimeSecondsUntilSunAngle( cur_time,
-                                           longitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           latitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           100.0, false ); 
-    } else if ( offset_type == "midnight" ) {
-        warp = fgTimeSecondsUntilSunAngle( cur_time,
-                                           longitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           latitude->getDoubleValue()
-                                             * SGD_DEGREES_TO_RADIANS,
-                                           180.0, false ); 
-    }
-    
-
-    fgSetInt("/sim/time/warp", orig_warp + warp);
-    
-    return true;
-}
-
 
 /**
  * Built-in command: toggle a bool property value.
@@ -1247,17 +1178,7 @@ do_replay (const SGPropertyNode * arg)
     fgSetInt( "/sim/freeze/replay-state", 1 );
     fgSetBool("/sim/freeze/master", 0 );
     fgSetBool("/sim/freeze/clock", 0 );
-
-    FGReplay *r = (FGReplay *)(globals->get_subsystem( "replay" ));
-
-    fgSetDouble( "/sim/replay/start-time", r->get_start_time() );
-    fgSetDouble( "/sim/replay/end-time", r->get_end_time() );
-    double duration = fgGetDouble( "/sim/replay/duration" );
-    if( duration && duration < (r->get_end_time() - r->get_start_time()) ) {
-        fgSetDouble( "/sim/replay/time", r->get_end_time() - duration );
-    } else {
-        fgSetDouble( "/sim/replay/time", r->get_start_time() );
-    }
+    fgSetDouble( "/sim/replay/time", -1 );
 
     // cout << "start = " << r->get_start_time()
     //      << "  end = " << r->get_end_time() << endl;
@@ -1301,11 +1222,20 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
 
     if (file.extension() != "xml")
         file.concat(".xml");
-
-    if (file.isRelative()) {
-      file = globals->resolve_maybe_aircraft_path(file.str());
+    
+    std::string icao = arg->getStringValue("icao");
+    if (icao.empty()) {
+        if (file.isRelative()) {
+          file = globals->resolve_maybe_aircraft_path(file.str());
+        }
+    } else {
+        if (!XMLLoader::findAirportData(icao, file.str(), file)) {
+          SG_LOG(SG_IO, SG_INFO, "loadxml: failed to find airport data for "
+            << file.str() << " at ICAO:" << icao);
+          return false;
+        }
     }
-
+    
     if (!fgValidatePath(file.c_str(), false)) {
         SG_LOG(SG_IO, SG_ALERT, "loadxml: reading '" << file.str() << "' denied "
                 "(unauthorized access)");
@@ -1442,6 +1372,7 @@ static struct {
     { "reinit", do_reinit },
     { "suspend", do_reinit },
     { "resume", do_reinit },
+    { "pause", do_pause },
     { "load", do_load },
     { "save", do_save },
     { "panel-load", do_panel_load },
@@ -1457,7 +1388,6 @@ static struct {
     { "set-dewpoint-sea-level-air-temp-degc", do_set_dewpoint_sea_level_degc },
     { "set-dewpoint-temp-degc", do_set_dewpoint_degc },
     */
-    { "timeofday", do_timeofday },
     { "property-toggle", do_property_toggle },
     { "property-assign", do_property_assign },
     { "property-adjust", do_property_adjust },

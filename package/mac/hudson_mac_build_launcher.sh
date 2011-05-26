@@ -1,7 +1,7 @@
 #!/bin/sh
 
-SDK_PATH="/Developer/SDKs/MacOSX10.5.sdk"
-OSX_TARGET="10.5"
+SDK_PATH="/Developer/SDKs/MacOSX10.6.sdk"
+OSX_TARGET="10.6"
 
 svn co https://macflightgear.svn.sourceforge.net/svnroot/macflightgear/trunk/FlightGearOSX  macflightgear
 
