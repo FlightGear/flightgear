@@ -14,8 +14,8 @@
 //
 
 #include <simgear/misc/sg_path.hxx>
-
 #include <simgear/xml/easyxml.hxx>
+#include <simgear/misc/strutils.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -85,8 +85,7 @@ bool XMLLoader::findAirportData(const std::string& aICAO,
     const std::string& aFileName, SGPath& aPath)
 {
   string fileName(aFileName);
-  int extPos = fileName.size() - 4;
-  if ((int) fileName.rfind(".xml") != extPos) {
+  if (!simgear::strutils::ends_with(aFileName, ".xml")) {
     fileName.append(".xml");
   }
   
