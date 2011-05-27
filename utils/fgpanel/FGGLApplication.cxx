@@ -15,9 +15,18 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include "FGGLApplication.hxx"
-#include "GL/gl.h"
-#include "GL/glut.h"
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
+#define snprintf sprintf_s
+#endif
+#include <GL/gl.h>
+#include <GL/glut.h>
 
 #include <iostream>
 #include <exception>
