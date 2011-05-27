@@ -241,7 +241,8 @@ void FGGlobals::set_fg_scenery (const string &scenery)
 
     string_list path_list = sgPathSplit( s.str() );
     fg_scenery.clear();
-
+    SGPropertyNode* sim = fgGetNode("/sim", true);
+    
     for (unsigned i = 0; i < path_list.size(); i++) {
         SGPath path(path_list[i]);
         if (!path.exists()) {
@@ -271,6 +272,12 @@ void FGGlobals::set_fg_scenery (const string &scenery)
         // FG_SCENERY=A:B becomes list ["A/Terrain", "A/Objects", "",
         // "B/Terrain", "B/Objects", ""]
         fg_scenery.push_back("");
+        
+      // make scenery dirs available to Nasal
+        sim->removeChild("fg-scenery", i, false);
+        SGPropertyNode* n = sim->getChild("fg-scenery", i, true);
+        n->setStringValue(path.str());
+        n->setAttribute(SGPropertyNode::WRITE, false);
     } // of path list iteration
 }
 

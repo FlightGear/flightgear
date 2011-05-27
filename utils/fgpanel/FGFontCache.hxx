@@ -14,6 +14,7 @@
 //
 #ifndef __FGFONTCACHE_HXX
 #define __FGFONTCACHE_HXX
+#include <simgear/math/SGMath.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <plib/pu.h>
@@ -55,8 +56,8 @@ private:
     // Path to the font directory
     SGPath _path;
 
-    typedef map<const string, fntTexFont*> TexFontMap;
-    typedef map<const FntParams, fnt*, FntParamsLess> PuFontMap;
+    typedef std::map<const std::string, fntTexFont*> TexFontMap;
+    typedef std::map<const FntParams, fnt*, FntParamsLess> PuFontMap;
     TexFontMap _texFonts;
     PuFontMap _puFonts;
 

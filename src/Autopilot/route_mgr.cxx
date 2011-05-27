@@ -224,6 +224,15 @@ void FGRouteMgr::init() {
 
 void FGRouteMgr::postinit()
 {
+  SGPath path(_pathNode->getStringValue());
+  if (path.exists()) {
+    SG_LOG(SG_AUTOPILOT, SG_INFO, "loading flight-plan from:" << path.str());
+    loadRoute();
+  }
+  
+// this code only matters for the --wp option now - perhaps the option
+// should be deprecated in favour of an explicit flight-plan file?
+// then the global initial waypoint list could die.
   string_list *waypoints = globals->get_initial_waypoints();
   if (waypoints) {
     string_list::iterator it;

@@ -15,6 +15,16 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
+#endif
+
+#include "FGGLApplication.hxx"
 #include "FGPanelApplication.hxx"
 #include <GL/gl.h>
 #include <GL/glut.h>
@@ -131,7 +141,7 @@ void FGPanelApplication::Init()
 {
   glAlphaFunc(GL_GREATER, 0.1);
   glutSetCursor( GLUT_CURSOR_NONE );
-  ApplicationProperties::fontCache.initializeFonts();  
+  ApplicationProperties::fontCache.initializeFonts();
 }
 
 void FGPanelApplication::Reshape( int width, int height )
@@ -172,8 +182,7 @@ void FGPanelApplication::Key( unsigned char key, int x, int y )
 {
   switch( key ) {
     case 0x1b:
-      if( gameMode ) glutLeaveGameMode();
-      else           glutDestroyWindow( windowId );
+      exit(0);
       break;
   }
 }
@@ -226,7 +235,11 @@ double FGPanelApplication::Sleep()
     double elapsed_us = (current_time_stamp - last_time_stamp).toUSecs();
     if ( elapsed_us < frame_us ) {
       double requested_us = frame_us - elapsed_us;
+#ifdef _WIN32
+      ::Sleep ((int)(requested_us / 1000.0)) ;
+#else
       usleep ( (useconds_t)(requested_us ) ) ;
+#endif
     }
     // busy wait timing loop.
     //

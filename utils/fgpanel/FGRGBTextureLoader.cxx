@@ -17,6 +17,14 @@
 // Reader for sgi's .rgb format.
 // specification can be found at http://local.wasp.uwa.edu.au/~pbourke/dataformats/sgirgb/sgiversion.html
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
+#endif
+
 #include "FGRGBTextureLoader.hxx"
 #include <GL/gl.h>
 #include <GL/glu.h>

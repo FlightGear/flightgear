@@ -35,16 +35,32 @@
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/timing/lowleveltime.h>
+#include <simgear/structure/commands.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Time/sunsolver.hxx>
 
+static bool do_timeofday (const SGPropertyNode * arg)
+{
+    const string &offset_type = arg->getStringValue("timeofday", "noon");
+    int offset = arg->getIntValue("offset", 0);
+    TimeManager* self = (TimeManager*) globals->get_subsystem("time");
+    if (offset_type == "real") {
+    // without this, setting 'real' time is a no-op, since the current
+    // wrap value (orig_warp) is retained in setTimeOffset. Ick.
+        fgSetInt("/sim/time/warp", 0);
+    }
+    
+    self->setTimeOffset(offset_type, offset);
+    return true;
+}
+
 TimeManager::TimeManager() :
   _inited(false),
   _impl(NULL)
 {
-  
+  SGCommandMgr::instance()->addCommand("timeofday", do_timeofday);
 }
 
 void TimeManager::init()
@@ -346,6 +362,14 @@ void TimeManager::updateLocalTime()
 
 void TimeManager::initTimeOffset()
 {
+
+  int offset = fgGetInt("/sim/startup/time-offset");
+  string offset_type = fgGetString("/sim/startup/time-offset-type");
+  setTimeOffset(offset_type, offset);
+}
+
+void TimeManager::setTimeOffset(const std::string& offset_type, int offset)
+{
   // Handle potential user specified time offsets
   int orig_warp = _warp->getIntValue();
   time_t cur_time = _impl->get_cur_time();
@@ -355,8 +379,6 @@ void TimeManager::initTimeOffset()
       sgTimeGetGMT( fgLocaltime(&cur_time, _impl->get_zonename() ) );
     
   // Okay, we now have several possible scenarios
-  int offset = fgGetInt("/sim/startup/time-offset");
-  string offset_type = fgGetString("/sim/startup/time-offset-type");
   double lon = _longitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
   double lat = _latitudeDeg->getDoubleValue() * SG_DEGREES_TO_RADIANS;
   int warp = 0;
@@ -394,12 +416,12 @@ void TimeManager::initTimeOffset()
       warp = offset - (aircraftLocalTime - currGMT)- cur_time; 
   } else {
     SG_LOG( SG_GENERAL, SG_ALERT,
-          "TimeManager::initTimeOffset: unsupported offset: " << offset_type );
+          "TimeManager::setTimeOffset: unsupported offset: " << offset_type );
      warp = 0;
   }
   
   _warp->setIntValue( orig_warp + warp );
 
-  SG_LOG( SG_GENERAL, SG_INFO, "After fgInitTimeOffset(): warp = " 
+  SG_LOG( SG_GENERAL, SG_INFO, "After TimeManager::setTimeOffset(): warp = " 
             << _warp->getIntValue() );
 }

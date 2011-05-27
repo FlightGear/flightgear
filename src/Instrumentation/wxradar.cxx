@@ -378,90 +378,99 @@ wxRadarBg::update (double delta_time_sec)
         _texCoords->clear();
         _textGeode->removeDrawables(0, _textGeode->getNumDrawables());
 
+#if 0
+        //TODO FIXME Mask below (only used for ARC mode) isn't properly aligned, i.e.
+        // it assumes the a/c position at the center of the display - though it's somewhere at
+        // bottom part for ARC mode.
+        // The mask hadn't worked at all for a while (probably since the OSG port) due to
+        // another bug (which is fixed now). Now, the mask is disabled completely until s.o.
+        // adapted the coordinates below. And the mask is only really useful to limit displayed
+        // weather blobs (not support yet).
+        // Aircraft echos are already limited properly through wxradar's "limit-deg" property.
+        {
+            osg::DrawArrays *maskPSet
+                = static_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(1));
+            osg::DrawArrays *trimaskPSet
+                = static_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(2));
+
+            if (_display_mode == ARC) {
+                // erase what is out of sight of antenna
+                /*
+                |\     /|
+                | \   / |
+                |  \ /  |
+                ---------
+                |       |
+                |       |
+                ---------
+                */
+                float xOffset = 256.0f;
+                float yOffset = 200.0f;
+
+                int firstQuadVert = _vertices->size();
+                _texCoords->push_back(osg::Vec2f(0.5f, 0.25f));
+                _vertices->push_back(osg::Vec2f(-xOffset, 0.0 + yOffset));
+                _texCoords->push_back(osg::Vec2f(1.0f, 0.25f));
+                _vertices->push_back(osg::Vec2f(xOffset, 0.0 + yOffset));
+                _texCoords->push_back(osg::Vec2f(1.0f, 0.5f));
+                _vertices->push_back(osg::Vec2f(xOffset, 256.0 + yOffset));
+                _texCoords->push_back(osg::Vec2f(0.5f, 0.5f));
+                _vertices->push_back(osg::Vec2f(-xOffset, 256.0 + yOffset));
+                maskPSet->set(osg::PrimitiveSet::QUADS, firstQuadVert, 4);
+                firstQuadVert += 4;
+
+                // The triangles aren't supposed to be textured, but there's
+                // no need to set up a different Geometry, switch modes,
+                // etc. I happen to know that there's a white pixel in the
+                // texture at 1.0, 0.0 :)
+                float centerY = tan(30 * SG_DEGREES_TO_RADIANS);
+                _vertices->push_back(osg::Vec2f(0.0, 0.0));
+                _vertices->push_back(osg::Vec2f(-256.0, 0.0));
+                _vertices->push_back(osg::Vec2f(-256.0, 256.0 * centerY));
+
+                _vertices->push_back(osg::Vec2f(0.0, 0.0));
+                _vertices->push_back(osg::Vec2f(256.0, 0.0));
+                _vertices->push_back(osg::Vec2f(256.0, 256.0 * centerY));
+
+                _vertices->push_back(osg::Vec2f(-256, 0.0));
+                _vertices->push_back(osg::Vec2f(256.0, 0.0));
+                _vertices->push_back(osg::Vec2f(-256.0, -256.0));
+
+                _vertices->push_back(osg::Vec2f(256, 0.0));
+                _vertices->push_back(osg::Vec2f(256.0, -256.0));
+                _vertices->push_back(osg::Vec2f(-256.0, -256.0));
+
+                const osg::Vec2f whiteSpot(1.0f, 0.0f);
+                for (int i = 0; i < 3 * 4; i++)
+                    _texCoords->push_back(whiteSpot);
+
+                trimaskPSet->set(osg::PrimitiveSet::TRIANGLES, firstQuadVert, 3 * 4);
+
+            } else
+            {
+                maskPSet->set(osg::PrimitiveSet::QUADS, 0, 0);
+                trimaskPSet->set(osg::PrimitiveSet::TRIANGLES, 0, 0);
+            }
+
+            maskPSet->dirty();
+            trimaskPSet->dirty();
+        }
+#endif
+
+        // remember index of next vertex
+        int vIndex = _vertices->size();
 
         update_weather();
 
-
         osg::DrawArrays *quadPSet
             = static_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(0));
-        quadPSet->set(osg::PrimitiveSet::QUADS, 0, _vertices->size());
-        quadPSet->dirty();
-
-        // erase what is out of sight of antenna
-        /*
-        |\     /|
-        | \   / |
-        |  \ /  |
-        ---------
-        |       |
-        |       |
-        ---------
-        */
-
-        osg::DrawArrays *maskPSet
-            = static_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(1));
-        osg::DrawArrays *trimaskPSet
-            = static_cast<osg::DrawArrays*>(_geom->getPrimitiveSet(2));
-
-        if (_display_mode == ARC) {
-            float xOffset = 256.0f;
-            float yOffset = 200.0f;
-
-            int firstQuadVert = _vertices->size();
-            _texCoords->push_back(osg::Vec2f(0.5f, 0.25f));
-            _vertices->push_back(osg::Vec2f(-xOffset, 0.0 + yOffset));
-            _texCoords->push_back(osg::Vec2f(1.0f, 0.25f));
-            _vertices->push_back(osg::Vec2f(xOffset, 0.0 + yOffset));
-            _texCoords->push_back(osg::Vec2f(1.0f, 0.5f));
-            _vertices->push_back(osg::Vec2f(xOffset, 256.0 + yOffset));
-            _texCoords->push_back(osg::Vec2f(0.5f, 0.5f));
-            _vertices->push_back(osg::Vec2f(-xOffset, 256.0 + yOffset));
-            maskPSet->set(osg::PrimitiveSet::QUADS, firstQuadVert, 4);
-
-            // The triangles aren't supposed to be textured, but there's
-            // no need to set up a different Geometry, switch modes,
-            // etc. I happen to know that there's a white pixel in the
-            // texture at 1.0, 0.0 :)
-            float centerY = tan(30 * SG_DEGREES_TO_RADIANS);
-            _vertices->push_back(osg::Vec2f(0.0, 0.0));
-            _vertices->push_back(osg::Vec2f(-256.0, 0.0));
-            _vertices->push_back(osg::Vec2f(-256.0, 256.0 * centerY));
-
-            _vertices->push_back(osg::Vec2f(0.0, 0.0));
-            _vertices->push_back(osg::Vec2f(256.0, 0.0));
-            _vertices->push_back(osg::Vec2f(256.0, 256.0 * centerY));
-
-            _vertices->push_back(osg::Vec2f(-256, 0.0));
-            _vertices->push_back(osg::Vec2f(256.0, 0.0));
-            _vertices->push_back(osg::Vec2f(-256.0, -256.0));
-
-            _vertices->push_back(osg::Vec2f(256, 0.0));
-            _vertices->push_back(osg::Vec2f(256.0, -256.0));
-            _vertices->push_back(osg::Vec2f(-256.0, -256.0));
-
-            const osg::Vec2f whiteSpot(1.0f, 0.0f);
-            for (int i = 0; i < 3 * 4; i++)
-                _texCoords->push_back(whiteSpot);
-
-            trimaskPSet->set(osg::PrimitiveSet::TRIANGLES, firstQuadVert + 4, 3 * 4);
-
-        } else {
-            maskPSet->set(osg::PrimitiveSet::QUADS, 0, 0);
-            trimaskPSet->set(osg::PrimitiveSet::TRIANGLES, 0, 0);
-        }
-
-        maskPSet->dirty();
-        trimaskPSet->dirty();
-
-        // draw without mask
-        _vertices->clear();
-        _texCoords->clear();
 
         update_aircraft();
         update_tacan();
         update_heading_marker();
 
-        quadPSet->set(osg::PrimitiveSet::QUADS, 0, _vertices->size());
+        // draw all new vertices are quads
+        quadPSet->set(osg::PrimitiveSet::QUADS, vIndex, _vertices->size()-vIndex);
         quadPSet->dirty();
     }
 }
