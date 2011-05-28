@@ -181,7 +181,7 @@ FGJSBsim::FGJSBsim( double dt )
     MassBalance     = fdmex->GetMassBalance();
     Propulsion      = fdmex->GetPropulsion();
     Aircraft        = fdmex->GetAircraft();
-    Propagate        = fdmex->GetPropagate();
+    Propagate       = fdmex->GetPropagate();
     Auxiliary       = fdmex->GetAuxiliary();
     Inertial        = fdmex->GetInertial();
     Aerodynamics    = fdmex->GetAerodynamics();
@@ -369,9 +369,9 @@ void FGJSBsim::init()
       Atmosphere->UseInternal();
     }
 
-    fgic->SetVNorthFpsIC( -wind_from_north->getDoubleValue() );
-    fgic->SetVEastFpsIC( -wind_from_east->getDoubleValue() );
-    fgic->SetVDownFpsIC( -wind_from_down->getDoubleValue() );
+    fgic->SetWindNEDFpsIC( -wind_from_north->getDoubleValue(),
+                           -wind_from_east->getDoubleValue(),
+                           -wind_from_down->getDoubleValue() );
 
     //Atmosphere->SetExTemperature(get_Static_temperature());
     //Atmosphere->SetExPressure(get_Static_pressure());
@@ -393,20 +393,20 @@ void FGJSBsim::init()
     }
 // end of egt_degf deprecation patch
 
-    if (fgGetBool("/sim/presets/running")) {
-          for (unsigned int i=0; i < Propulsion->GetNumEngines(); i++) {
-            SGPropertyNode * node = fgGetNode("engines/engine", i, true);
-            node->setBoolValue("running", true);
-            Propulsion->GetEngine(i)->SetRunning(true);
-          }
-    }
-
     FCS->SetDfPos( ofNorm, globals->get_controls()->get_flaps() );
 
     common_init();
 
     copy_to_JSBsim();
     fdmex->RunIC();     //loop JSBSim once w/o integrating
+    if (fgGetBool("/sim/presets/running")) {
+      Propulsion->InitRunning(-1);
+      for (unsigned int i = 0; i < Propulsion->GetNumEngines(); i++) {
+        FGPiston* eng = (FGPiston*)Propulsion->GetEngine(i);
+        globals->get_controls()->set_magnetos(i, eng->GetMagnetos());
+        globals->get_controls()->set_mixture(i, FCS->GetMixtureCmd(i));
+      }
+    }
     copy_from_JSBsim(); //update the bus
 
     SG_LOG( SG_FLIGHT, SG_INFO, "  Initialized JSBSim with:" );
@@ -1282,7 +1282,7 @@ void FGJSBsim::do_trim(void)
   {
     fgtrim = new FGTrim(fdmex,tGround);
   } else {
-    fgtrim = new FGTrim(fdmex,tLongitudinal);
+    fgtrim = new FGTrim(fdmex,tFull);
   }
 
   if ( !fgtrim->DoTrim() ) {
@@ -1296,7 +1296,7 @@ void FGJSBsim::do_trim(void)
   pitch_trim->setDoubleValue( FCS->GetPitchTrimCmd() );
   throttle_trim->setDoubleValue( FCS->GetThrottleCmd(0) );
   aileron_trim->setDoubleValue( FCS->GetDaCmd() );
-  rudder_trim->setDoubleValue( FCS->GetDrCmd() );
+  rudder_trim->setDoubleValue( -FCS->GetDrCmd() );
 
   globals->get_controls()->set_elevator_trim(FCS->GetPitchTrimCmd());
   globals->get_controls()->set_elevator(FCS->GetDeCmd());
@@ -1304,7 +1304,7 @@ void FGJSBsim::do_trim(void)
     globals->get_controls()->set_throttle(i, FCS->GetThrottleCmd(i));
 
   globals->get_controls()->set_aileron(FCS->GetDaCmd());
-  globals->get_controls()->set_rudder( FCS->GetDrCmd());
+  globals->get_controls()->set_rudder( -FCS->GetDrCmd());
 
   SG_LOG( SG_FLIGHT, SG_INFO, "  Trim complete" );
 }

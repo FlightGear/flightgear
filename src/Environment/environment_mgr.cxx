@@ -97,6 +97,13 @@ FGEnvironmentMgr::init ()
   SG_LOG( SG_GENERAL, SG_INFO, "Initializing environment subsystem");
   SGSubsystemGroup::init();
   fgClouds->Init();
+
+  // Initialize the longitude, latitude and altitude to the initial position
+  // of the aircraft so that the atmospheric properties (pressure, temperature
+  // and density) can be initialized accordingly.
+  _altitudeNode->setDoubleValue(fgGetDouble("/sim/presets/altitude-ft"));
+  _longitude_n->setDoubleValue(fgGetDouble("/sim/presets/longitude-deg"));
+  _latitude_n->setDoubleValue(fgGetDouble("/sim/presets/latitude-deg"));
 }
 
 void
