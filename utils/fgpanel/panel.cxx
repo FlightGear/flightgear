@@ -36,6 +36,7 @@
 #include <plib/fnt.h>
 
 #include <simgear/debug/logstream.hxx>
+#include <simgear/math/SGMath.hxx>
 #include <simgear/misc/sg_path.hxx>
 
 #include "panel.hxx"

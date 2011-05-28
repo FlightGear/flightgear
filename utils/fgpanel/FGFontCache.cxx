@@ -17,7 +17,12 @@
 #  include <config.h>
 #endif
 
-using namespace std;
+#include "FGGLApplication.hxx"
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
+#endif
+
+
 #include <map>
 #include <algorithm>
 #include "ApplicationProperties.hxx"
@@ -93,7 +98,7 @@ inline bool FGFontCache::FntParamsLess::operator()(const FntParams& f1,
 struct FGFontCache::fnt *
 FGFontCache::getfnt(const char *name, float size, float slant)
 {
-    string fontName(name);
+    std::string fontName(name);
     FntParams fntParams(fontName, size, slant);
     PuFontMap::iterator i = _puFonts.find(fntParams);
     if (i != _puFonts.end())
@@ -183,7 +188,7 @@ FGFontCache::getfntpath(const char *name)
 
 bool FGFontCache::initializeFonts()
 {
-    static string fontext("txf");
+    static std::string fontext("txf");
     init();
     ulDir* fontdir = ulOpenDir(_path.c_str());
     if (!fontdir)
@@ -195,7 +200,7 @@ bool FGFontCache::initializeFonts()
         if (path.extension() == fontext) {
             fntTexFont* f = new fntTexFont;
             if (f->load((char *)path.c_str()))
-                _texFonts[string(dirEntry->d_name)] = f;
+                _texFonts[std::string(dirEntry->d_name)] = f;
             else
                 delete f;
         }
