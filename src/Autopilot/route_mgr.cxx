@@ -40,6 +40,7 @@
 
 #include <simgear/misc/strutils.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/structure/commands.hxx>
 #include <simgear/misc/sgstream.hxx>
 
 #include <simgear/props/props_io.hxx>
@@ -109,6 +110,151 @@ PropertyWatcher* createWatcher(T* obj, void (T::*m)())
   return new MethodPropertyWatcher<T>(obj, m);
 }
 
+static bool commandLoadFlightPlan(const SGPropertyNode* arg)
+{
+  FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
+  SGPath path(arg->getStringValue("path"));
+  return self->loadRoute(path);
+}
+
+static bool commandSaveFlightPlan(const SGPropertyNode* arg)
+{
+  FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
+  SGPath path(arg->getStringValue("path"));
+  return self->saveRoute(path);
+}
+
+static bool commandActivateFlightPlan(const SGPropertyNode* arg)
+{
+  FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
+  bool activate = arg->getBoolValue("activate", true);
+  if (activate) {
+    self->activate();
+  } else {
+    
+  }
+  
+  return true;
+}
+
+static bool commandClearFlightPlan(const SGPropertyNode*)
+{
+  FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
+  self->clearRoute();
+  return true;
+}
+
+static bool commandSetActiveWaypt(const SGPropertyNode* arg)
+{
+  FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
+  int index = arg->getIntValue("index");
+  if ((index < 0) || (index >= self->numWaypts())) {
+    return false;
+  }
+  
+  self->jumpToIndex(index);
+  return true;
+}
+
+static bool commandInsertWaypt(const SGPropertyNode* arg)
+{
+  FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
+  int index = arg->getIntValue("index");
+  std::string ident(arg->getStringValue("id"));
+  int alt = arg->getIntValue("altitude-ft", -999);
+  int ias = arg->getIntValue("speed-knots", -999);
+  
+  WayptRef wp;
+// lat/lon may be supplied to narrow down navaid search, or to specify
+// a raw waypoint
+  SGGeod pos;
+  if (arg->hasChild("longitude-deg")) {
+    pos = SGGeod::fromDeg(arg->getDoubleValue("longitude-deg"),
+                               arg->getDoubleValue("latitude-deg"));
+  }
+  
+  if (arg->hasChild("navaid")) {
+    FGPositionedRef p = FGPositioned::findClosestWithIdent(arg->getStringValue("navaid"), pos);
+    
+    if (arg->hasChild("navaid", 1)) {
+      // intersection of two radials
+      FGPositionedRef p2 = FGPositioned::findClosestWithIdent(arg->getStringValue("navaid[1]"), pos);
+      if (!p2) {
+        SG_LOG( SG_AUTOPILOT, SG_INFO, "Unable to find FGPositioned with ident:" << arg->getStringValue("navaid[1]"));
+        return false;
+      }
+      
+      double r1 = arg->getDoubleValue("radial"),
+        r2 = arg->getDoubleValue("radial[1]");
+      
+      SGGeod intersection;
+      bool ok = SGGeodesy::radialIntersection(p->geod(), r1, p2->geod(), r2, intersection);
+      if (!ok) {
+        SG_LOG(SG_AUTOPILOT, SG_INFO, "no valid intersection for:" << p->ident() 
+                << "," << p2->ident());
+        return false;
+      }
+      
+      std::string name = p->ident() + "-" + p2->ident();
+      wp = new BasicWaypt(intersection, name, NULL);
+    } else if (arg->hasChild("offset-nm") && arg->hasChild("radial")) {
+      // offset radial from navaid
+      double radial = arg->getDoubleValue("radial");
+      double distanceNm = arg->getDoubleValue("offset-nm");
+      //radial += magvar->getDoubleValue(); // convert to true bearing
+      wp = new OffsetNavaidWaypoint(p, NULL, radial, distanceNm);
+    } else {
+      wp = new NavaidWaypoint(p, NULL);
+    }
+  } else if (arg->hasChild("airport")) {
+    const FGAirport* apt = fgFindAirportID(arg->getStringValue("airport"));
+    if (!apt) {
+      SG_LOG(SG_AUTOPILOT, SG_INFO, "no such airport" << arg->getStringValue("airport"));
+      return false;
+    }
+    
+    if (arg->hasChild("runway")) {
+      if (!apt->hasRunwayWithIdent(arg->getStringValue("runway"))) {
+        SG_LOG(SG_AUTOPILOT, SG_INFO, "No runway: " << arg->getStringValue("runway") << " at " << apt->ident());
+        return false;
+      }
+      
+      FGRunway* runway = apt->getRunwayByIdent(arg->getStringValue("runway"));
+      wp = new RunwayWaypt(runway, NULL);
+    } else {
+      wp = new NavaidWaypoint((FGAirport*) apt, NULL);
+    }
+  } else if (arg->hasChild("text")) {
+    wp = self->waypointFromString(arg->getStringValue("text"));
+  } else if (!(pos == SGGeod())) {
+    // just a raw lat/lon
+    wp = new BasicWaypt(pos, ident, NULL);
+  } else {
+    return false; // failed to build waypoint
+  }
+  
+  if (alt >= 0) {
+    wp->setAltitude(alt, flightgear::RESTRICT_AT);
+  }
+  
+  if (ias > 0) {
+    wp->setSpeed(ias, flightgear::RESTRICT_AT);
+  }
+
+  self->insertWayptAtIndex(wp, index);
+  return true;
+}
+
+static bool commandDeleteWaypt(const SGPropertyNode* arg)
+{
+  FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
+  int index = arg->getIntValue("index");
+  self->removeWayptAtIndex(index);
+  return true;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
 FGRouteMgr::FGRouteMgr() :
   _currentIndex(0),
   input(fgGetNode( RM "input", true )),
@@ -117,6 +263,14 @@ FGRouteMgr::FGRouteMgr() :
   listener = new InputListener(this);
   input->setStringValue("");
   input->addChangeListener(listener);
+  
+  SGCommandMgr::instance()->addCommand("load-flightplan", commandLoadFlightPlan);
+  SGCommandMgr::instance()->addCommand("save-flightplan", commandSaveFlightPlan);
+  SGCommandMgr::instance()->addCommand("activate-flightplan", commandActivateFlightPlan);
+  SGCommandMgr::instance()->addCommand("clear-flightplan", commandClearFlightPlan);
+  SGCommandMgr::instance()->addCommand("set-active-waypt", commandSetActiveWaypt);
+  SGCommandMgr::instance()->addCommand("insert-waypt", commandInsertWaypt);
+  SGCommandMgr::instance()->addCommand("delete-waypt", commandDeleteWaypt);
 }
 
 
@@ -227,7 +381,7 @@ void FGRouteMgr::postinit()
   SGPath path(_pathNode->getStringValue());
   if (path.exists()) {
     SG_LOG(SG_AUTOPILOT, SG_INFO, "loading flight-plan from:" << path.str());
-    loadRoute();
+    loadRoute(path);
   }
   
 // this code only matters for the --wp option now - perhaps the option
@@ -897,11 +1051,11 @@ void FGRouteMgr::InputListener::valueChanged(SGPropertyNode *prop)
     else if (!strcmp(s, "@ACTIVATE"))
         mgr->activate();
     else if (!strcmp(s, "@LOAD")) {
-      mgr->loadRoute();
+      SGPath path(mgr->_pathNode->getStringValue());
+      mgr->loadRoute(path);
     } else if (!strcmp(s, "@SAVE")) {
-      mgr->saveRoute();
-    } else if (!strcmp(s, "@POP")) {
-      SG_LOG(SG_AUTOPILOT, SG_WARN, "route-manager @POP command is deprecated");
+      SGPath path(mgr->_pathNode->getStringValue());
+      mgr->saveRoute(path);
     } else if (!strcmp(s, "@NEXT")) {
       mgr->jumpToIndex(mgr->_currentIndex + 1);
     } else if (!strcmp(s, "@PREVIOUS")) {
@@ -1119,9 +1273,8 @@ Waypt* FGRouteMgr::wayptAtIndex(int index) const
   return _route[index];
 }
 
-void FGRouteMgr::saveRoute()
+bool FGRouteMgr::saveRoute(const SGPath& path)
 {
-  SGPath path(_pathNode->getStringValue());
   SG_LOG(SG_IO, SG_INFO, "Saving route to " << path.str());
   try {
     SGPropertyNode_ptr d(new SGPropertyNode);
@@ -1148,18 +1301,19 @@ void FGRouteMgr::saveRoute()
       wpt->saveAsNode(routeNode->getChild("wp", i, true));
     } // of waypoint iteration
     writeProperties(path.str(), d, true /* write-all */);
+    return true;
   } catch (sg_exception& e) {
     SG_LOG(SG_IO, SG_WARN, "failed to save flight-plan:" << e.getMessage());
+    return false;
   }
 }
 
-void FGRouteMgr::loadRoute()
+bool FGRouteMgr::loadRoute(const SGPath& path)
 {
   // deactivate route first
   active->setBoolValue(false);
   
   SGPropertyNode_ptr routeData(new SGPropertyNode);
-  SGPath path(_pathNode->getStringValue());
   
   SG_LOG(SG_IO, SG_INFO, "going to read flight-plan from:" << path.str());
     
@@ -1167,8 +1321,7 @@ void FGRouteMgr::loadRoute()
     readProperties(path.str(), routeData);
   } catch (sg_exception& ) {
     // if XML parsing fails, the file might be simple textual list of waypoints
-    loadPlainTextRoute(path);
-    return;
+    return loadPlainTextRoute(path);
   }
   
   try {
@@ -1180,9 +1333,11 @@ void FGRouteMgr::loadRoute()
     } else {
       throw sg_io_exception("unsupported XML route version");
     }
+    return true;
   } catch (sg_exception& e) {
     SG_LOG(SG_IO, SG_WARN, "failed to load flight-plan (from '" << e.getOrigin()
       << "'):" << e.getMessage());
+    return false;
   }
 }
 
@@ -1299,11 +1454,11 @@ WayptRef FGRouteMgr::parseVersion1XMLWaypt(SGPropertyNode* aWP)
   return w;
 }
 
-void FGRouteMgr::loadPlainTextRoute(const SGPath& path)
+bool FGRouteMgr::loadPlainTextRoute(const SGPath& path)
 {
   sg_gzifstream in(path.str().c_str());
   if (!in.is_open()) {
-    return;
+    return false;
   }
   
   try {
@@ -1330,8 +1485,10 @@ void FGRouteMgr::loadPlainTextRoute(const SGPath& path)
     } // of line iteration
   
     _route = wpts;
+    return true;
   } catch (sg_exception& e) {
     SG_LOG(SG_IO, SG_WARN, "failed to load route from:" << path.str() << ":" << e.getMessage());
+    return false;
   }
 }
 
