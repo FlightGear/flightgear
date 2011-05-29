@@ -356,7 +356,7 @@ FGViewMgr::update (double dt)
   abs_viewer_position = loop_view->getViewPosition();
 
   // update audio listener values
-  // set the viewer posotion in Cartesian coordinates in meters
+  // set the viewer position in Cartesian coordinates in meters
   smgr->set_position( abs_viewer_position, loop_view->getPosition() );
   smgr->set_orientation( current_view_orientation );
 

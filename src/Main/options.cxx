@@ -1838,7 +1838,7 @@ fgUsage (bool verbose)
 
                          while ( t_str.size() > 47 ) {
 
-                            unsigned int m = t_str.rfind(' ', 47);
+                            string::size_type m = t_str.rfind(' ', 47);
                             msg += t_str.substr(0, m) + '\n';
                             msg.append( 32, ' ');
 
