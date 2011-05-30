@@ -3034,14 +3034,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Network\multiplay.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Network\multiplay.hxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\Network\native.cxx"
 				>
 			</File>

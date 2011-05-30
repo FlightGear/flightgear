@@ -31,48 +31,51 @@
 
 #define MULTIPLAYTXMGR_HID "$Id$"
 
-#include "mpmessages.hxx"
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include <simgear/compiler.h>
 #include <simgear/props/props.hxx>
-#include <Main/globals.hxx>
 #include <simgear/io/raw_socket.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
-#include <AIModel/AIMultiplayer.hxx>
-
-struct FGExternalMotionInfo;
+struct FGExternalMotionData;
+class MPPropertyListener;
+struct T_MsgHdr;
+class FGAIMultiplayer;
 
 class FGMultiplayMgr : public SGSubsystem
 {
-public:
-
-  struct IdPropertyList {
-    unsigned id;
-    const char* name;
-    simgear::props::Type type;
-  };
-  static const IdPropertyList sIdPropertyList[];
-  static const unsigned numProperties;
-
-  static const IdPropertyList* findProperty(unsigned id);
-  
+public:  
   FGMultiplayMgr();
   ~FGMultiplayMgr();
   
   virtual void init(void);
   virtual void update(double dt);
   
-  void Close(void);
+  virtual void shutdown(void);
+  virtual void reinit();
+  
   // transmitter
-  void SendMyPosition(const FGExternalMotionData& motionInfo);
+  
   void SendTextMessage(const string &sMsgText);
   // receiver
   
 private:
+  friend class MPPropertyListener;
+  
+  void setPropertiesChanged()
+  {
+    mPropertiesChanged = true;
+  }
+  
+  void findProperties();
+  
+  void Send();
+  void SendMyPosition(const FGExternalMotionData& motionInfo);
+
   union MsgBuf;
   FGAIMultiplayer* addMultiplayer(const std::string& callsign,
                                   const std::string& modelName);
@@ -87,11 +90,22 @@ private:
   typedef std::map<std::string, SGSharedPtr<FGAIMultiplayer> > MultiPlayerMap;
   MultiPlayerMap mMultiPlayerMap;
 
-  simgear::Socket* mSocket;
+  std::auto_ptr<simgear::Socket> mSocket;
   simgear::IPAddress mServer;
   bool mHaveServer;
   bool mInitialised;
   std::string mCallsign;
+  
+  // Map between the property id's from the multiplayers network packets
+  // and the property nodes
+  typedef std::map<unsigned int, SGSharedPtr<SGPropertyNode> > PropertyMap;
+  PropertyMap mPropertyMap;
+  
+  bool mPropertiesChanged;
+  MPPropertyListener* mListener;
+  
+  double mDt; // reciprocal of /sim/multiplay/tx-rate-hz
+  double mTimeUntilSend;
 };
 
 #endif

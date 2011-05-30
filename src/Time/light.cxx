@@ -345,7 +345,7 @@ void FGLight::update_adj_fog_color () {
     else
        hor_rotation = fmod(hor_rotation, SGD_2PI);
 
-    // revert to unmodified values before usign them.
+    // revert to unmodified values before using them.
     //
     SGVec4f color = thesky->get_scene_color();
 
@@ -359,7 +359,7 @@ void FGLight::update_adj_fog_color () {
     float s_green = color[1]*color[1]*color[1];
     float s_blue =  color[2]*color[2];
 
-    // interpolate beween the sunrise/sunset color and the color
+    // interpolate between the sunrise/sunset color and the color
     // at the opposite direction of this effect. Take in account
     // the current visibility.
     //

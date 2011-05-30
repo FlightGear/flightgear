@@ -42,6 +42,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/screen/screen-dump.hxx>
+#include <simgear/structure/event_mgr.hxx>
 
 #include <Cockpit/panel.hxx>
 #include <Main/globals.hxx>
@@ -49,7 +50,10 @@
 #include <Main/fg_os.hxx>
 #include <Main/renderer.hxx>
 #include <Main/viewmgr.hxx>
+#include <Main/WindowSystemAdapter.hxx>
+#include <Main/CameraGroup.hxx>
 #include <GUI/new_gui.hxx>
+
 
 #ifdef _WIN32
 #  include <shellapi.h>
@@ -406,9 +410,134 @@ void fgHiResDumpWrapper () {
     fgHiResDump();
 }
 
+namespace
+{
+    using namespace flightgear;
+
+    class GUISnapShotOperation : 
+        public GraphicsContextOperation
+    {
+    public:
+
+        // start new snap shot
+        static bool start()
+        {
+            // allow only one snapshot at a time
+            if (_snapShotOp.valid())
+                return false;
+            _snapShotOp = new GUISnapShotOperation();
+            /* register with graphics context so actual snap shot is done
+             * in the graphics context (thread) */
+            osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
+            WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
+            osg::GraphicsContext* gc = 0;
+            if (guiCamera)
+                gc = guiCamera->getGraphicsContext();
+            if (gc) {
+                gc->add(_snapShotOp.get());
+            } else {
+                wsa->windows[0]->gc->add(_snapShotOp.get());
+            }
+            return true;
+        }
+
+    private:
+        // constructor to be executed in main loop's thread
+        GUISnapShotOperation() :
+            flightgear::GraphicsContextOperation(std::string("GUI snap shot")),
+            _master_freeze(fgGetNode("/sim/freeze/master", true)),
+            _freeze(_master_freeze->getBoolValue()),
+            _result(false),
+            _mouse(fgGetMouseCursor())
+        {
+            if (!_freeze)
+                _master_freeze->setBoolValue(true);
+
+            fgSetMouseCursor(MOUSE_CURSOR_NONE);
+
+            string dir = fgGetString("/sim/paths/screenshot-dir");
+            if (dir.empty())
+                dir = fgGetString("/sim/fg-current");
+
+            _path.set(dir + '/');
+            if (_path.create_dir( 0755 )) {
+                SG_LOG(SG_GENERAL, SG_ALERT, "Cannot create screenshot directory '"
+                        << dir << "'. Trying home directory.");
+                dir = fgGetString("/sim/fg-home");
+            }
+
+            char filename[24];
+            static int count = 1;
+            while (count < 1000) {
+                snprintf(filename, 24, "fgfs-screen-%03d.png", count++);
+
+                SGPath p(dir);
+                p.append(filename);
+                if (!p.exists()) {
+                    _path.set(p.str());
+                    break;
+                }
+            }
+
+            _xsize = fgGetInt("/sim/startup/xsize");
+            _ysize = fgGetInt("/sim/startup/ysize");
+
+            FGRenderer *renderer = globals->get_renderer();
+            renderer->resize(_xsize, _ysize);
+            globals->get_event_mgr()->addTask("SnapShotTimer",
+                    this, &GUISnapShotOperation::timerExpired,
+                    0.1, false);
+        }
+
+        // to be executed in graphics context (maybe separate thread)
+        void run(osg::GraphicsContext* gc)
+        {
+            _result = sg_glDumpWindow(_path.c_str(),
+                                     _xsize,
+                                     _ysize);
+        }
+
+        // timer method, to be executed in main loop's thread
+        virtual void timerExpired()
+        {
+            if (isFinished())
+            {
+                globals->get_event_mgr()->removeTask("SnapShotTimer");
+
+                fgSetString("/sim/paths/screenshot-last", _path.c_str());
+                fgSetBool("/sim/signals/screenshot", _result);
+
+                fgSetMouseCursor(_mouse);
+
+                if ( !_freeze )
+                    _master_freeze->setBoolValue(false);
+
+                _snapShotOp = 0;
+            }
+        }
+    
+        static osg::ref_ptr<GUISnapShotOperation> _snapShotOp;
+        SGPropertyNode_ptr _master_freeze;
+        bool _freeze;
+        bool _result;
+        int _mouse;
+        int _xsize, _ysize;
+        SGPath _path;
+    };
+
+}
+
+osg::ref_ptr<GUISnapShotOperation> GUISnapShotOperation::_snapShotOp;
 
 // do a screen snap shot
-bool fgDumpSnapShot () {
+bool fgDumpSnapShot ()
+{
+#if 1
+    // start snap shot operation, while needs to be executed in
+    // graphics context
+    return GUISnapShotOperation::start();
+#else
+    // obsolete code => remove when new code is stable
     static SGConstPropertyNode_ptr master_freeze = fgGetNode("/sim/freeze/master");
 
     bool freeze = master_freeze->getBoolValue();
@@ -455,7 +584,7 @@ bool fgDumpSnapShot () {
         }
     }
 
-    int result = sg_glDumpWindow(path.c_str(),
+    bool result = sg_glDumpWindow(path.c_str(),
                                  fgGetInt("/sim/startup/xsize"),
                                  fgGetInt("/sim/startup/ysize"));
 
@@ -467,7 +596,8 @@ bool fgDumpSnapShot () {
     if ( !freeze ) {
         fgSetBool("/sim/freeze/master", false);
     }
-    return result != 0;
+    return result;
+#endif
 }
 
 // do an entire scenegraph dump
