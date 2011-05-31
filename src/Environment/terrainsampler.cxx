@@ -285,6 +285,7 @@ void AreaSampler::analyse()
         }
     }
 
+/*
     double alt_low_min = 0.0;
     double n_max = 0.0;
     sum = 0.0;
@@ -296,7 +297,7 @@ void AreaSampler::analyse()
             break;
         }
     }
-
+*/
     _altLayered = 0.5 * (_altMin + _altOffset);
 
 #if 0

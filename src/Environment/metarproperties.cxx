@@ -301,9 +301,6 @@ void MetarProperties::set_metar( const char * metar )
         }
     }
 
-    vector<SGMetarCloud> cv = m->getClouds();
-    vector<SGMetarCloud>::const_iterator cloud, cloud_end = cv.end();
-
     {
         static const char * LAYER = "layer";
         SGPropertyNode_ptr cloudsNode = _rootNode->getNode("clouds", true );
