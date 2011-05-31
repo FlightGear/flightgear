@@ -45,6 +45,9 @@
 
 extern SGSky *thesky;
 
+static bool do_delete_3Dcloud (const SGPropertyNode *arg);
+static bool do_move_3Dcloud (const SGPropertyNode *arg);
+static bool do_add_3Dcloud (const SGPropertyNode *arg);
 
 FGClouds::FGClouds() :
 #if 0

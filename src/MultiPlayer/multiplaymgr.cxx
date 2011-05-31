@@ -42,9 +42,11 @@
 #include <simgear/props/props.hxx>
 
 #include <AIModel/AIManager.hxx>
+#include <AIModel/AIMultiplayer.hxx>
 #include <Main/fg_props.hxx>
 #include "multiplaymgr.hxx"
 #include "mpmessages.hxx"
+#include <FDM/flightProperties.hxx>
 
 using namespace std;
 
@@ -56,11 +58,18 @@ using namespace std;
 const char sMULTIPLAYMGR_BID[] = "$Id$";
 const char sMULTIPLAYMGR_HID[] = MULTIPLAYTXMGR_HID;
 
+struct IdPropertyList {
+  unsigned id;
+  const char* name;
+  simgear::props::Type type;
+};
+ 
+static const IdPropertyList* findProperty(unsigned id);
+  
 // A static map of protocol property id values to property paths,
 // This should be extendable dynamically for every specific aircraft ...
 // For now only that static list
-const FGMultiplayMgr::IdPropertyList
-FGMultiplayMgr::sIdPropertyList[] = {
+static const IdPropertyList sIdPropertyList[] = {
   {100, "surface-positions/left-aileron-pos-norm",  simgear::props::FLOAT},
   {101, "surface-positions/right-aileron-pos-norm", simgear::props::FLOAT},
   {102, "surface-positions/elevator-pos-norm",      simgear::props::FLOAT},
@@ -229,34 +238,33 @@ FGMultiplayMgr::sIdPropertyList[] = {
   {10319, "sim/multiplay/generic/int[19]", simgear::props::INT}
 };
 
-const unsigned
-FGMultiplayMgr::numProperties = (sizeof(FGMultiplayMgr::sIdPropertyList)
-                                 / sizeof(FGMultiplayMgr::sIdPropertyList[0]));
+const unsigned int numProperties = (sizeof(sIdPropertyList)
+                                 / sizeof(sIdPropertyList[0]));
 
 // Look up a property ID using binary search.
 namespace
 {
   struct ComparePropertyId
   {
-    bool operator()(const FGMultiplayMgr::IdPropertyList& lhs,
-                    const FGMultiplayMgr::IdPropertyList& rhs)
+    bool operator()(const IdPropertyList& lhs,
+                    const IdPropertyList& rhs)
     {
       return lhs.id < rhs.id;
     }
-    bool operator()(const FGMultiplayMgr::IdPropertyList& lhs,
+    bool operator()(const IdPropertyList& lhs,
                     unsigned id)
     {
       return lhs.id < id;
     }
     bool operator()(unsigned id,
-                    const FGMultiplayMgr::IdPropertyList& rhs)
+                    const IdPropertyList& rhs)
     {
       return id < rhs.id;
     }
-  };
-    
+  };    
 }
-const FGMultiplayMgr::IdPropertyList* FGMultiplayMgr::findProperty(unsigned id)
+
+const IdPropertyList* findProperty(unsigned id)
 {
   std::pair<const IdPropertyList*, const IdPropertyList*> result
     = std::equal_range(sIdPropertyList, sIdPropertyList + numProperties, id,
@@ -276,8 +284,7 @@ namespace
     const xdr_data_t* xdr = data;
     while (xdr < end) {
       unsigned id = XDR_decode_uint32(*xdr);
-      const FGMultiplayMgr::IdPropertyList* plist
-        = FGMultiplayMgr::findProperty(id);
+      const IdPropertyList* plist = findProperty(id);
     
       if (plist) {
         xdr++;
@@ -336,6 +343,24 @@ namespace
     return true;
   }
 }
+
+class MPPropertyListener : public SGPropertyChangeListener
+{
+public:
+  MPPropertyListener(FGMultiplayMgr* mp) :
+    _multiplay(mp)
+  {
+  }
+
+  virtual void childAdded(SGPropertyNode*, SGPropertyNode*)
+  {
+    _multiplay->setPropertiesChanged();
+  }
+
+private:
+  FGMultiplayMgr* _multiplay;
+};
+
 //////////////////////////////////////////////////////////////////////
 //
 //  MultiplayMgr constructor
@@ -343,9 +368,9 @@ namespace
 //////////////////////////////////////////////////////////////////////
 FGMultiplayMgr::FGMultiplayMgr() 
 {
-  mSocket        = 0;
   mInitialised   = false;
   mHaveServer    = false;
+  mListener = NULL;
 } // FGMultiplayMgr::FGMultiplayMgr()
 //////////////////////////////////////////////////////////////////////
 
@@ -356,7 +381,7 @@ FGMultiplayMgr::FGMultiplayMgr()
 //////////////////////////////////////////////////////////////////////
 FGMultiplayMgr::~FGMultiplayMgr() 
 {
-  Close();
+  
 } // FGMultiplayMgr::~FGMultiplayMgr()
 //////////////////////////////////////////////////////////////////////
 
@@ -375,22 +400,36 @@ FGMultiplayMgr::init (void)
     SG_LOG(SG_NETWORK, SG_WARN, "FGMultiplayMgr::init - already initialised");
     return;
   }
+  
+  fgSetBool("/sim/multiplay/online", false);
+  
   //////////////////////////////////////////////////
   //  Set members from property values
   //////////////////////////////////////////////////
   short rxPort = fgGetInt("/sim/multiplay/rxport");
   string rxAddress = fgGetString("/sim/multiplay/rxhost");
-  short txPort = fgGetInt("/sim/multiplay/txport");
+  short txPort = fgGetInt("/sim/multiplay/txport", 5000);
   string txAddress = fgGetString("/sim/multiplay/txhost");
+  
+  int hz = fgGetInt("/sim/multiplay/tx-rate-hz", 10);
+  if (hz < 1) {
+    hz = 10;
+  }
+  
+  mDt = 1.0 / hz;
+  mTimeUntilSend = 0.0;
+  
   mCallsign = fgGetString("/sim/multiplay/callsign");
-  if (txPort > 0 && !txAddress.empty()) {
+  if (!txAddress.empty()) {
     mServer.set(txAddress.c_str(), txPort);
     if (strncmp (mServer.getHost(), "0.0.0.0", 8) == 0) {
       mHaveServer = false;
-      SG_LOG(SG_NETWORK, SG_DEBUG,
+      SG_LOG(SG_NETWORK, SG_WARN,
         "FGMultiplayMgr - could not resolve '"
         << txAddress << "', Multiplayermode disabled");
+      return;
     } else {
+        SG_LOG(SG_NETWORK, SG_INFO, "have server");
       mHaveServer = true;
     }
     if (rxPort <= 0)
@@ -408,11 +447,10 @@ FGMultiplayMgr::init (void)
   SG_LOG(SG_NETWORK,SG_INFO,"FGMultiplayMgr::init-rxaddress="<<rxAddress );
   SG_LOG(SG_NETWORK,SG_INFO,"FGMultiplayMgr::init-rxport= "<<rxPort);
   SG_LOG(SG_NETWORK,SG_INFO,"FGMultiplayMgr::init-callsign= "<<mCallsign);
-  Close(); // Should Init be called twice, close Socket first
-           // A memory leak was reported here by valgrind
-  mSocket = new simgear::Socket();
+  
+  mSocket.reset(new simgear::Socket());
   if (!mSocket->open(false)) {
-    SG_LOG( SG_NETWORK, SG_DEBUG,
+    SG_LOG( SG_NETWORK, SG_WARN,
             "FGMultiplayMgr::init - Failed to create data socket" );
     return;
   }
@@ -424,6 +462,11 @@ FGMultiplayMgr::init (void)
     return;
   }
   
+  mPropertiesChanged = true;
+  mListener = new MPPropertyListener(this);
+  globals->get_props()->addChangeListener(mListener, false);
+  
+  fgSetBool("/sim/multiplay/online", true);
   mInitialised = true;
 } // FGMultiplayMgr::init()
 //////////////////////////////////////////////////////////////////////
@@ -435,18 +478,38 @@ FGMultiplayMgr::init (void)
 //
 //////////////////////////////////////////////////////////////////////
 void
-FGMultiplayMgr::Close (void) 
+FGMultiplayMgr::shutdown (void) 
 {
-  mMultiPlayerMap.clear();
-
-  if (mSocket) {
+  fgSetBool("/sim/multiplay/online", false);
+  
+  if (mSocket.get()) {
     mSocket->close();
-    delete mSocket;
-    mSocket = 0;
+    mSocket.reset(); 
   }
+  
+  MultiPlayerMap::iterator it = mMultiPlayerMap.begin(),
+    end = mMultiPlayerMap.end();
+  for (; it != end; ++it) {
+    it->second->setDie(true);
+  }
+  mMultiPlayerMap.clear();
+  
+  if (mListener) {
+    globals->get_props()->removeChangeListener(mListener);
+    delete mListener;
+    mListener = NULL;
+  }
+  
   mInitialised = false;
 } // FGMultiplayMgr::Close(void)
 //////////////////////////////////////////////////////////////////////
+
+void
+FGMultiplayMgr::reinit()
+{
+  shutdown();
+  init();
+}
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -757,13 +820,21 @@ FGMultiplayMgr::SendTextMessage(const string &MsgText)
 //  
 //////////////////////////////////////////////////////////////////////
 void
-FGMultiplayMgr::update(double) 
+FGMultiplayMgr::update(double dt) 
 {
   if (!mInitialised)
     return;
 
   /// Just for expiry
   long stamp = SGTimeStamp::now().getSeconds();
+
+  //////////////////////////////////////////////////
+  //  Send if required
+  //////////////////////////////////////////////////
+  mTimeUntilSend -= dt;
+  if (mTimeUntilSend <= 0.0) {
+    Send();
+  }
 
   //////////////////////////////////////////////////
   //  Read the receive socket and process any data
@@ -813,7 +884,7 @@ FGMultiplayMgr::update(double)
               << "message has invalid protocol number!" );
       break;
     }
-    if (MsgHdr->MsgLen != bytes) {
+    if (static_cast<ssize_t>(MsgHdr->MsgLen) != bytes) {
       SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - "
              << "message from " << MsgHdr->Callsign << " has invalid length!");
       break;
@@ -853,6 +924,140 @@ FGMultiplayMgr::update(double)
   }
 } // FGMultiplayMgr::ProcessData(void)
 //////////////////////////////////////////////////////////////////////
+
+void
+FGMultiplayMgr::Send()
+{
+  using namespace simgear;
+  
+  findProperties();
+    
+  // smooth the send rate, by adjusting based on the 'remainder' time, which
+  // is how -ve mTimeUntilSend is. Watch for large values and ignore them,
+  // however.
+    if ((mTimeUntilSend < 0.0) && (fabs(mTimeUntilSend) < mDt)) {
+      mTimeUntilSend = mDt + mTimeUntilSend;
+    } else {
+      mTimeUntilSend = mDt;
+    }
+
+    double sim_time = globals->get_sim_time_sec();
+    static double lastTime = 0.0;
+    
+   // SG_LOG(SG_GENERAL, SG_INFO, "actual dt=" << sim_time - lastTime);
+    lastTime = sim_time;
+    
+    FlightProperties ifce;
+
+    // put together a motion info struct, you will get that later
+    // from FGInterface directly ...
+    FGExternalMotionData motionInfo;
+
+    // The current simulation time we need to update for,
+    // note that the simulation time is updated before calling all the
+    // update methods. Thus it contains the time intervals *end* time.
+    // The FDM is already run, so the states belong to that time.
+    motionInfo.time = sim_time;
+    motionInfo.lag = mDt;
+
+    // These are for now converted from lat/lon/alt and euler angles.
+    // But this should change in FGInterface ...
+    double lon = ifce.get_Longitude();
+    double lat = ifce.get_Latitude();
+    // first the aprioriate structure for the geodetic one
+    SGGeod geod = SGGeod::fromRadFt(lon, lat, ifce.get_Altitude());
+    // Convert to cartesion coordinate
+    motionInfo.position = SGVec3d::fromGeod(geod);
+    
+    // The quaternion rotating from the earth centered frame to the
+    // horizontal local frame
+    SGQuatf qEc2Hl = SGQuatf::fromLonLatRad((float)lon, (float)lat);
+    // The orientation wrt the horizontal local frame
+    float heading = ifce.get_Psi();
+    float pitch = ifce.get_Theta();
+    float roll = ifce.get_Phi();
+    SGQuatf hlOr = SGQuatf::fromYawPitchRoll(heading, pitch, roll);
+    // The orientation of the vehicle wrt the earth centered frame
+    motionInfo.orientation = qEc2Hl*hlOr;
+
+    if (!globals->get_subsystem("flight")->is_suspended()) {
+      // velocities
+      motionInfo.linearVel = SG_FEET_TO_METER*SGVec3f(ifce.get_uBody(),
+                                                      ifce.get_vBody(),
+                                                      ifce.get_wBody());
+      motionInfo.angularVel = SGVec3f(ifce.get_P_body(),
+                                      ifce.get_Q_body(),
+                                      ifce.get_R_body());
+      
+      // accels, set that to zero for now.
+      // Angular accelerations are missing from the interface anyway,
+      // linear accelerations are screwed up at least for JSBSim.
+//  motionInfo.linearAccel = SG_FEET_TO_METER*SGVec3f(ifce.get_U_dot_body(),
+//                                                    ifce.get_V_dot_body(),
+//                                                    ifce.get_W_dot_body());
+      motionInfo.linearAccel = SGVec3f::zeros();
+      motionInfo.angularAccel = SGVec3f::zeros();
+    } else {
+      // if the interface is suspendend, prevent the client from
+      // wild extrapolations
+      motionInfo.linearVel = SGVec3f::zeros();
+      motionInfo.angularVel = SGVec3f::zeros();
+      motionInfo.linearAccel = SGVec3f::zeros();
+      motionInfo.angularAccel = SGVec3f::zeros();
+    }
+
+    // now send the properties
+    PropertyMap::iterator it;
+    for (it = mPropertyMap.begin(); it != mPropertyMap.end(); ++it) {
+      FGPropertyData* pData = new FGPropertyData;
+      pData->id = it->first;
+      pData->type = it->second->getType();
+      
+      switch (pData->type) {
+        case props::INT:
+        case props::LONG:
+        case props::BOOL:
+          pData->int_value = it->second->getIntValue();
+          break;
+        case props::FLOAT:
+        case props::DOUBLE:
+          pData->float_value = it->second->getFloatValue();
+          break;
+        case props::STRING:
+        case props::UNSPECIFIED:
+          {
+            // FIXME: We assume unspecified are strings for the moment.
+
+            const char* cstr = it->second->getStringValue();
+            int len = strlen(cstr);
+            
+            if (len > 0)
+            {            
+              pData->string_value = new char[len + 1];
+              strcpy(pData->string_value, cstr);
+            }
+            else
+            {
+              // Size 0 - ignore
+              pData->string_value = 0;            
+            }
+
+            //cout << " Sending property " << pData->id << " " << pData->type << " " <<  pData->string_value << "\n";
+            break;        
+          }
+        default:
+          // FIXME Currently default to a float. 
+          //cout << "Unknown type when iterating through props: " << pData->type << "\n";
+          pData->float_value = it->second->getFloatValue();
+          break;
+      }
+      
+      motionInfo.properties.push_back(pData);
+    }
+
+    SendMyPosition(motionInfo);
+}
+
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -1100,4 +1305,30 @@ FGMultiplayMgr::getMultiplayer(const std::string& callsign)
     return mMultiPlayerMap[callsign].get();
   else
     return 0;
+}
+
+void
+FGMultiplayMgr::findProperties()
+{
+  if (!mPropertiesChanged) {
+    return;
+  }
+  
+  mPropertiesChanged = false;
+  
+  for (unsigned i = 0; i < numProperties; ++i) {
+      const char* name = sIdPropertyList[i].name;
+      SGPropertyNode* pNode = globals->get_props()->getNode(name);
+      if (!pNode) {
+        continue;
+      }
+      
+      int id = sIdPropertyList[i].id;
+      if (mPropertyMap.find(id) != mPropertyMap.end()) {
+        continue; // already activated
+      }
+      
+      mPropertyMap[id] = pNode;
+      SG_LOG(SG_NETWORK, SG_DEBUG, "activating MP property:" << pNode->getPath());
+    }
 }

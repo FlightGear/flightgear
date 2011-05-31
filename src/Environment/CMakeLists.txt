@@ -16,6 +16,7 @@ set(SOURCES
 	ridge_lift.cxx
 	terrainsampler.cxx
 	presets.cxx
+	gravity.cxx
 	)
 	
 flightgear_component(Environment "${SOURCES}")

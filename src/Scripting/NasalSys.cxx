@@ -805,10 +805,19 @@ void FGNasalSys::update(double)
     _context = naNewContext();
 }
 
+bool pathSortPredicate(const SGPath& p1, const SGPath& p2)
+{
+  return p1.file() < p2.file();
+}
+
 // Loads all scripts in given directory 
 void FGNasalSys::loadScriptDirectory(simgear::Dir nasalDir)
 {
     simgear::PathList scripts = nasalDir.children(simgear::Dir::TYPE_FILE, ".nas");
+    // sort scripts, avoid loading sequence effects due to file system's
+    // random directory order
+    std::sort(scripts.begin(), scripts.end(), pathSortPredicate);
+
     for (unsigned int i=0; i<scripts.size(); ++i) {
       SGPath fullpath(scripts[i]);
       SGPath file = fullpath.file();

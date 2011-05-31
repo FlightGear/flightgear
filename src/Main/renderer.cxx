@@ -784,9 +784,14 @@ FGRenderer::resize( int width, int height ) {
 
     int curWidth = _xsize->getIntValue(),
         curHeight = _ysize->getIntValue();
-
-    _xsize->setIntValue(width);
-    _ysize->setIntValue(height);
+    if ((curHeight != height) || (curWidth != width)) {
+    // must guard setting these, or PLIB-PUI fails with too many live interfaces
+        _xsize->setIntValue(width);
+        _ysize->setIntValue(height);
+    }
+    
+    // must set view aspect ratio each frame, or initial values are wrong.
+    // should probably be fixed 'smarter' during view setup.
     double aspect = height / (double) width;
 
     // for all views

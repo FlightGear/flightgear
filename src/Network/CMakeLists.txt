@@ -15,7 +15,6 @@ set(SOURCES
 	jpg-httpd.cxx
 	jsclient.cxx
 	lfsglass.cxx
-	multiplay.cxx
 	native.cxx
 	native_ctrls.cxx
 	native_fdm.cxx

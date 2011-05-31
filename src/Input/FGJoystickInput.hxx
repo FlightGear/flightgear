@@ -25,7 +25,7 @@
 #ifndef _FGJOYSTICKINPUT_HXX
 #define _FGJOYSTICKINPUT_HXX
 
-#ifndef __cplusplus                                                          
+#ifndef __cplusplus
 # error This library requires C++
 #endif
 
@@ -52,7 +52,7 @@ public:
   static const int MAX_JOYSTICK_BUTTONS = 32;
 
 private:
-   void _remove();
+   void _remove(bool all);
 
   /**
    * Settings for a single joystick axis.
@@ -83,6 +83,7 @@ private:
     int nbuttons;
     axis * axes;
     FGButton * buttons;
+    bool predefined;
   };
   joystick bindings[MAX_JOYSTICKS];
 
