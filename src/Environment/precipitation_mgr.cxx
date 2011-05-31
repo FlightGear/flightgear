@@ -36,7 +36,6 @@
 #include <simgear/math/SGMath.hxx>
 #include <simgear/scene/sky/sky.hxx>
 #include <simgear/scene/sky/cloud.hxx>
-#include <simgear/environment/visual_enviro.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
@@ -91,6 +90,19 @@ void FGPrecipitationMgr::init()
     osg::Group* scenery = globals->get_scenery()->get_scene_graph();
     scenery->addChild(getObject());
     fgGetNode("environment/params/precipitation-level-ft", true);
+}
+
+void FGPrecipitationMgr::bind ()
+{
+  _tiedProperties.setRoot( fgGetNode("/sim/rendering", true ) );
+  _tiedProperties.Tie("precipitation-enable", precipitation.get(),
+          &SGPrecipitation::getEnabled,
+          &SGPrecipitation::setEnabled);
+}
+
+void FGPrecipitationMgr::unbind ()
+{
+  _tiedProperties.Untie();
 }
 
 void FGPrecipitationMgr::setPrecipitationLevel(double a)
@@ -206,7 +218,7 @@ void FGPrecipitationMgr::update(double dt)
     setPrecipitationLevel(altitudeCloudLayer);
 
 	// Does the user enable the precipitation ?
-	if (!sgEnviro.get_precipitation_enable_state()) {
+	if (!precipitation->getEnabled() ) {
 		// Disable precipitations
 	    precipitation->setRainIntensity(0);
 	    precipitation->setSnowIntensity(0);

@@ -89,7 +89,7 @@ void HUD::Label::draw(void)
 
         l = _center_x - pw;
         r = _center_x + pw;
-        bool draw_parallel = fabsf(_pointer_width - _w) > 2.0; // draw lines left and right of arrow?
+        bool draw_parallel = fabs(_pointer_width - _w) > 2.0; // draw lines left and right of arrow?
 
         if (option_bottom()) {
             if (draw_parallel) {
@@ -115,7 +115,7 @@ void HUD::Label::draw(void)
 
         l = _center_y - pw;
         r = _center_y + pw;
-        draw_parallel = fabsf(_pointer_width - _h) > 2.0;
+        draw_parallel = fabs(_pointer_width - _h) > 2.0;
 
         if (option_left()) {
             if (draw_parallel) {

@@ -27,7 +27,6 @@
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/sky/sky.hxx>
-#include <simgear/environment/visual_enviro.hxx>
 #include <simgear/scene/model/particles.hxx>
 
 #include <Main/main.hxx>
@@ -43,6 +42,7 @@
 #include "ridge_lift.hxx"
 #include "terrainsampler.hxx"
 #include "Airports/simple.hxx"
+#include "gravity.hxx"
 
 class SGSky;
 extern SGSky *thesky;
@@ -51,7 +51,7 @@ FGEnvironmentMgr::FGEnvironmentMgr () :
   _environment(new FGEnvironment()),
   fgClouds(new FGClouds()),
   _cloudLayersDirty(true),
-  _altitudeNode(fgGetNode("/position/altitude-ft", true)),
+  _altitude_n(fgGetNode("/position/altitude-ft", true)),
   _longitude_n(fgGetNode( "/position/longitude-deg", true )),
   _latitude_n( fgGetNode( "/position/latitude-deg", true )),
   _positionTimeToLive(0.0)
@@ -98,6 +98,14 @@ FGEnvironmentMgr::init ()
   SG_LOG( SG_GENERAL, SG_INFO, "Initializing environment subsystem");
   SGSubsystemGroup::init();
   fgClouds->Init();
+
+  // FIXME: is this really part of the environment_mgr?
+  // Initialize the longitude, latitude and altitude to the initial position
+  // of the aircraft so that the atmospheric properties (pressure, temperature
+  // and density) can be initialized accordingly.
+  _altitude_n->setDoubleValue(fgGetDouble("/sim/presets/altitude-ft"));
+  _longitude_n->setDoubleValue(fgGetDouble("/sim/presets/longitude-deg"));
+  _latitude_n->setDoubleValue(fgGetDouble("/sim/presets/latitude-deg"));
 }
 
 void
@@ -122,9 +130,9 @@ FGEnvironmentMgr::bind ()
           &FGClouds::get_update_event,
           &FGClouds::set_update_event);
 
-  _tiedProperties.Tie("turbulence/use-cloud-turbulence", &sgEnviro,
-          &SGEnviro::get_turbulence_enable_state,
-          &SGEnviro::set_turbulence_enable_state);
+//  _tiedProperties.Tie("turbulence/use-cloud-turbulence", &sgEnviro,
+//          &SGEnviro::get_turbulence_enable_state,
+//          &SGEnviro::set_turbulence_enable_state);
 
   for (int i = 0; i < MAX_CLOUD_LAYERS; i++) {
       SGPropertyNode_ptr layerNode = fgGetNode("/environment/clouds",true)->getChild("layer", i, true );
@@ -176,15 +184,10 @@ FGEnvironmentMgr::bind ()
           &SGSky::get_3dCloudVisRange,
           &SGSky::set_3dCloudVisRange);
 
-  _tiedProperties.Tie("precipitation-enable", &sgEnviro,
-          &SGEnviro::get_precipitation_enable_state,
-          &SGEnviro::set_precipitation_enable_state);
+//  _tiedProperties.Tie("lightning-enable", &sgEnviro,
+//          &SGEnviro::get_lightning_enable_state,
+//          &SGEnviro::set_lightning_enable_state);
 
-  _tiedProperties.Tie("lightning-enable", &sgEnviro,
-          &SGEnviro::get_lightning_enable_state,
-          &SGEnviro::set_lightning_enable_state);
-
-  sgEnviro.config(fgGetNode("/sim/rendering/precipitation"));
 }
 
 void
@@ -200,7 +203,7 @@ FGEnvironmentMgr::update (double dt)
 {
   SGSubsystemGroup::update(dt);
 
-  _environment->set_elevation_ft( _altitudeNode->getDoubleValue() );
+  _environment->set_elevation_ft( _altitude_n->getDoubleValue() );
 
   simgear::Particles::setWindFrom( _environment->get_wind_from_heading_deg(),
                                    _environment->get_wind_speed_kt() );
@@ -208,6 +211,14 @@ FGEnvironmentMgr::update (double dt)
     _cloudLayersDirty = false;
     fgClouds->set_update_event( fgClouds->get_update_event()+1 );
   }
+
+
+  fgSetDouble( "/environment/gravitational-acceleration-mps2", 
+    Environment::Gravity::instance()->getGravity(SGGeod::fromDegFt(
+      _longitude_n->getDoubleValue(),
+      _latitude_n->getDoubleValue(),
+      _altitude_n->getDoubleValue()
+  )));
 
   _positionTimeToLive -= dt;
   if( _positionTimeToLive <= 0.0 )

@@ -80,7 +80,7 @@ FGSampleQueue::update (double dt)
             last_volume = volume;
         }
 
-        // process mesage queue
+        // process message queue
         const string msgid = "Sequential Audio Message";
         bool now_playing = false;
         if ( exists( msgid ) ) {

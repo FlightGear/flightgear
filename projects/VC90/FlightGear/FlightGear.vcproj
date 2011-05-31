@@ -2978,6 +2978,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\Network\AV400WSim.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Network\AV400WSim.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Network\garmin.cxx"
 				>
 			</File>
@@ -3023,14 +3031,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\Network\jsclient.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Network\multiplay.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Network\multiplay.hxx"
 				>
 			</File>
 			<File
@@ -3435,6 +3435,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\Environment\presets.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\gravity.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\gravity.hxx"
 				>
 			</File>
 		</Filter>

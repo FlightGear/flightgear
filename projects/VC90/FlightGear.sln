@@ -54,6 +54,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yasim", "yasim\yasim.vcproj
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimGear", "..\..\..\Simgear\projects\VC90\SimGear.vcproj", "{22540CD3-D3CA-4C86-A773-80AEEE3ACDED}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fgpanel", "fgpanel\fgpanel.vcproj", "{FA27B353-179C-4DE8-B3AC-E260F8F790DD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{22540CD3-D3CA-4C86-A773-80AEEE3ACDED} = {22540CD3-D3CA-4C86-A773-80AEEE3ACDED}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -156,6 +161,12 @@ Global
 		{22540CD3-D3CA-4C86-A773-80AEEE3ACDED}.Release|Win32.Build.0 = Release|Win32
 		{22540CD3-D3CA-4C86-A773-80AEEE3ACDED}.Release|x64.ActiveCfg = Release|x64
 		{22540CD3-D3CA-4C86-A773-80AEEE3ACDED}.Release|x64.Build.0 = Release|x64
+		{FA27B353-179C-4DE8-B3AC-E260F8F790DD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FA27B353-179C-4DE8-B3AC-E260F8F790DD}.Debug|Win32.Build.0 = Debug|Win32
+		{FA27B353-179C-4DE8-B3AC-E260F8F790DD}.Debug|x64.ActiveCfg = Debug|Win32
+		{FA27B353-179C-4DE8-B3AC-E260F8F790DD}.Release|Win32.ActiveCfg = Release|Win32
+		{FA27B353-179C-4DE8-B3AC-E260F8F790DD}.Release|Win32.Build.0 = Release|Win32
+		{FA27B353-179C-4DE8-B3AC-E260F8F790DD}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

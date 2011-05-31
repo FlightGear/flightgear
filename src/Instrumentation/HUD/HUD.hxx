@@ -269,7 +269,7 @@ public:
         _offset = n->getFloatValue("offset", offset);
         _min = n->getFloatValue("min", min);
         _max = n->getFloatValue("max", max);
-        _coeff = 1.0 - 1.0 / powf(10, fabsf(n->getFloatValue("damp", 0.0)));
+        _coeff = 1.0 - 1.0 / powf(10, fabs(n->getFloatValue("damp", 0.0)));
         SGPropertyNode *p = ((SGPropertyNode *)n)->getNode("property", false);
         if (p) {
             const char *path = p->getStringValue();

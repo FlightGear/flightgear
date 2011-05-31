@@ -306,6 +306,7 @@ void fgWarpMouse(int x, int y)
 
 void fgOSInit(int* argc, char** argv)
 {
+    globals->get_renderer()->init();
     WindowSystemAdapter::setWSA(new WindowSystemAdapter);
 }
 

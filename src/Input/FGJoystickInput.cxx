@@ -49,7 +49,8 @@ FGJoystickInput::joystick::joystick ()
     naxes(0),
     nbuttons(0),
     axes(0),
-    buttons(0)
+    buttons(0),
+    predefined(true)
 {
 }
 
@@ -73,15 +74,18 @@ FGJoystickInput::FGJoystickInput()
 
 FGJoystickInput::~FGJoystickInput()
 {
-    _remove();
+    _remove(true);
 }
 
-void FGJoystickInput::_remove()
+void FGJoystickInput::_remove(bool all)
 {
     SGPropertyNode * js_nodes = fgGetNode("/input/joysticks", true);
-    js_nodes->removeChildren("js", false);
+
     for (int i = 0; i < MAX_JOYSTICKS; i++)
     {
+        // do not remove predefined joysticks info on reinit
+        if ((all)||(!bindings[i].predefined))
+            js_nodes->removeChild("js", i, false);
         if (bindings[i].js)
             delete bindings[i].js;
         bindings[i].js = NULL;
@@ -92,7 +96,7 @@ void FGJoystickInput::init()
 {
   jsInit();
   SG_LOG(SG_INPUT, SG_DEBUG, "Initializing joystick bindings");
-  SGPropertyNode * js_nodes = fgGetNode("/input/joysticks", true);
+  SGPropertyNode_ptr js_nodes = fgGetNode("/input/joysticks", true);
 
   FGDeviceConfigurationMap configMap("Input/Joysticks", js_nodes, "js-named");
 
@@ -112,6 +116,7 @@ void FGJoystickInput::init()
       SG_LOG(SG_INPUT, SG_INFO, "Using existing bindings for joystick " << i);
 
     } else {
+      bindings[i].predefined = false;
       SG_LOG(SG_INPUT, SG_INFO, "Looking for bindings for joystick \"" << name << '"');
       SGPropertyNode_ptr named;
 
@@ -137,7 +142,7 @@ void FGJoystickInput::init()
 
 void FGJoystickInput::reinit() {
   SG_LOG(SG_INPUT, SG_DEBUG, "Re-Initializing joystick bindings");
-  _remove();
+  _remove(false);
   FGJoystickInput::init();
   FGJoystickInput::postinit();
 }

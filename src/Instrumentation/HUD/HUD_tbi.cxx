@@ -129,12 +129,12 @@ void HUD::TurnBankIndicator::draw_scale()
 
     int dir = bank > 0 ? 1 : -1;
 
-    if (fabsf(bank) > 25) {
+    if (fabs(bank) > 25) {
         draw_tick(45, r, minor, dir);
         draw_tick(60, r, major, dir);
     }
 
-    if (fabsf(bank) > 55) {
+    if (fabs(bank) > 55) {
         draw_tick(90, r, major, dir);
         draw_tick(135, r, major, dir);
     }

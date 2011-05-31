@@ -17,6 +17,7 @@ libEnvironment_a_SOURCES = \
 	ridge_lift.cxx ridge_lift.hxx \
 	ephemeris.cxx ephemeris.hxx \
 	terrainsampler.cxx terrainsampler.cxx \
-	presets.cxx presets.hxx
+	presets.cxx presets.hxx \
+	gravity.cxx gravity.hxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src

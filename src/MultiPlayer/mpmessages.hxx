@@ -164,7 +164,7 @@ struct FGExternalMotionData {
   // the earth centered frame
   SGVec3f angularAccel;
   
-  // The set of properties recieved for this timeslot
+  // The set of properties received for this timeslot
   std::vector<FGPropertyData*> properties;
 
   ~FGExternalMotionData()

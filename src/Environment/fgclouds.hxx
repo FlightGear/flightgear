@@ -45,7 +45,9 @@ private:
 	void buildCloudLayers(void);
 
 	int update_event;
+#if 0
 	SGSoundSample *snd_lightning;
+#endif
 	bool clouds_3d_enabled;
   int index;
 
@@ -61,10 +63,6 @@ public:
 	void set_3dClouds(bool enable);
 
 };
-
-static bool do_delete_3Dcloud (const SGPropertyNode *arg);
-static bool do_move_3Dcloud (const SGPropertyNode *arg);
-static bool do_add_3Dcloud (const SGPropertyNode *arg);
 
 #endif // _FGCLOUDS_HXX
 

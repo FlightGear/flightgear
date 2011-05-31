@@ -69,9 +69,9 @@ WindowBuilder::makeDefaultTraits(bool stencil)
     traits->red = traits->green = traits->blue = cbits;
     traits->depth = zbits;
     if (alpha)
-	traits->alpha = 8;
+        traits->alpha = 8;
     if (stencil)
-	traits->stencil = 8;
+        traits->stencil = 8;
     traits->doubleBuffer = true;
     traits->mipMapGeneration = true;
     traits->windowName = "FlightGear";
@@ -83,20 +83,21 @@ WindowBuilder::makeDefaultTraits(bool stencil)
         unsigned width = 0;
         unsigned height = 0;
         wsi->getScreenResolution(*traits, width, height);
-	traits->windowDecoration = false;
+        traits->windowDecoration = false;
         traits->width = width;
         traits->height = height;
         traits->supportsResize = false;
     } else {
-	traits->windowDecoration = true;
+        traits->windowDecoration = true;
         traits->width = w;
         traits->height = h;
-#if defined(WIN32) || defined(__APPLE__)
+        unsigned screenwidth = 0;
+        unsigned screenheight = 0;
+        wsi->getScreenResolution(*traits, screenwidth, screenheight);
         // Ugly Hack, why does CW_USEDEFAULT works like phase of the moon?
         // Mac also needs this to show window frame, menubar and Docks
-        traits->x = 100;
-        traits->y = 100;
-#endif
+        traits->x = (w>screenwidth) ? 0 : (screenwidth-w)/3;
+        traits->y = (h>screenheight) ? 0 : (screenheight-h)/3;
         traits->supportsResize = true;
     }
     return traits;

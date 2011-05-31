@@ -3,6 +3,8 @@
 #define __FG_RENDERER_HXX 1
 
 #include <simgear/scene/util/SGPickCallback.hxx>
+#include <simgear/props/props.hxx>
+#include <simgear/timing/timestamp.hxx>
 
 #include <osg/ref_ptr>
 
@@ -45,18 +47,20 @@ public:
     void splashinit();
     void init();
 
-    static void resize(int width, int height );
+    void setupView();
+
+    void resize(int width, int height );
 
     // calling update( refresh_camera_settings = false ) will not
     // touch window or camera settings.  This is useful for the tiled
     // renderer which needs to set the view frustum itself.
-    static void update( bool refresh_camera_settings );
-    inline static void update() { update( true ); }
+    void update( bool refresh_camera_settings);
+    static void update();
 
     /** Just pick into the scene and return the pick callbacks on the way ...
      */
-    static bool pick( std::vector<SGSceneryPick>& pickList,
-                      const osgGA::GUIEventAdapter* ea );
+    bool pick( std::vector<SGSceneryPick>& pickList,
+               const osgGA::GUIEventAdapter* ea );
 
     /** Get and set the OSG Viewer object, if any.
      */
@@ -76,6 +80,15 @@ public:
 protected:
     osg::ref_ptr<osgViewer::Viewer> viewer;
     osg::ref_ptr<flightgear::FGEventHandler> eventHandler;
+    SGPropertyNode_ptr _scenery_loaded,_scenery_override;
+    SGPropertyNode_ptr _skyblend, _splash_alpha;
+    SGPropertyNode_ptr _point_sprites, _enhanced_lighting, _distance_attenuation;
+    SGPropertyNode_ptr _textures;
+    SGPropertyNode_ptr _cloud_status, _visibility_m; 
+    SGPropertyNode_ptr _xsize, _ysize;
+    SGPropertyNode_ptr _panel_hotspots, _sim_delta_sec, _horizon_effect, _altitude_ft;
+    SGPropertyNode_ptr _virtual_cockpit;
+    SGTimeStamp _splash_time;
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);

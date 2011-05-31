@@ -23,8 +23,8 @@
 // $Id$
 
 #include "FGMouseInput.hxx"
+#include "Main/globals.hxx"
 
-
 void ActivePickCallbacks::init( int b, const osgGA::GUIEventAdapter* ea )
 {
   // Get the list of hit callbacks. Take the first callback that
@@ -33,7 +33,7 @@ void ActivePickCallbacks::init( int b, const osgGA::GUIEventAdapter* ea )
   // The nearest one is the first one and the deepest
   // (the most specialized one in the scenegraph) is the first.
   std::vector<SGSceneryPick> pickList;
-  if (FGRenderer::pick(pickList, ea)) {
+  if (globals->get_renderer()->pick(pickList, ea)) {
     std::vector<SGSceneryPick>::const_iterator i;
     for (i = pickList.begin(); i != pickList.end(); ++i) {
       if (i->callback->buttonPressed(b, i->info)) {

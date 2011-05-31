@@ -96,9 +96,9 @@ public:
     void setParentPos();
     void setOffsetPos(SGGeod pos, double heading, double pitch, double roll);
     void setOffsetVelocity(double dt, SGGeod pos);
+    void setTime(double sec);
 
-
-    double _getTime() const;
+    double _getTime()const;
     double getRelBrgHitchToUser() const;
     double getElevHitchToUser() const;
     double getLoadOffset() const;

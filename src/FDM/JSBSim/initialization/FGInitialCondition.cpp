@@ -61,7 +61,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGInitialCondition.cpp,v 1.59 2011/04/03 13:18:51 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGInitialCondition.cpp,v 1.61 2011/05/20 00:47:03 bcoconni Exp $";
 static const char *IdHdr = ID_INITIALCONDITION;
 
 //******************************************************************************
@@ -112,7 +112,7 @@ void FGInitialCondition::ResetIC(double u0, double v0, double w0,
   FGQuaternion Quat(phi, theta, psi);
   Quat.Normalize();
   Tl2b = Quat.GetT();
-  Tb2l = Quat.GetTInv();
+  Tb2l = Tl2b.Transposed();
 
   vUVW_NED = Tb2l * FGColumnVector3(u0, v0, w0);
   vt = vUVW_NED.Magnitude();
@@ -322,20 +322,18 @@ void FGInitialCondition::SetClimbRateFpsIC(double hdot)
 
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
   FGColumnVector3 _WIND_NED = _vt_NED - vUVW_NED;
-  double hdot0 = _vt_NED(eW);
+  double hdot0 = -_vt_NED(eW);
 
   if (fabs(hdot0) < vt) {
     double scale = sqrt((vt*vt-hdot*hdot)/(vt*vt-hdot0*hdot0));
     _vt_NED(eU) *= scale;
     _vt_NED(eV) *= scale;
   }
-  _vt_NED(eW) = hdot;
+  _vt_NED(eW) = -hdot;
   vUVW_NED = _vt_NED - _WIND_NED;
 
-  // The AoA is not modified here but the function SetAlphaRadIC is updating the
-  // same angles than SetClimbRateFpsIC needs to update.
-  // TODO : create a subroutine that only shares the relevant code.
-  SetAlphaRadIC(alpha);
+  // Updating the angles theta and beta to keep the true airspeed amplitude
+  calcThetaBeta(alpha, _vt_NED);
 }
 
 //******************************************************************************
@@ -346,13 +344,22 @@ void FGInitialCondition::SetClimbRateFpsIC(double hdot)
 void FGInitialCondition::SetAlphaRadIC(double alfa)
 {
   FGColumnVector3 _vt_NED = Tb2l * Tw2b * FGColumnVector3(vt, 0., 0.);
+  calcThetaBeta(alfa, _vt_NED);
+}
 
+//******************************************************************************
+// When the AoA is modified, we need to update the angles theta and beta to
+// keep the true airspeed amplitude, the climb rate and the heading unchanged.
+// Beta will be modified if the aircraft roll angle is not null.
+
+void FGInitialCondition::calcThetaBeta(double alfa, const FGColumnVector3& _vt_NED)
+{
   double calpha = cos(alfa), salpha = sin(alfa);
   double cpsi = cos(psi), spsi = sin(psi);
   double cphi = cos(phi), sphi = sin(phi);
   FGMatrix33 Tpsi( cpsi, spsi, 0.,
-                    -spsi, cpsi, 0.,
-                       0.,   0., 1.);
+                  -spsi, cpsi, 0.,
+                     0.,   0., 1.);
   FGMatrix33 Tphi(1.,   0.,   0.,
                   0., cphi, sphi,
                   0.,-sphi, cphi);
@@ -398,11 +405,11 @@ void FGInitialCondition::SetAlphaRadIC(double alfa)
   Tl2b = Quat.GetT();
   Tb2l = Quat.GetTInv();
 
-  FGColumnVector3 v2 = Talpha * Quat.GetT() * _vt_NED;
+  FGColumnVector3 v2 = Talpha * Tl2b * _vt_NED;
 
   alpha = alfa;
   beta = atan2(v2(eV), v2(eU));
-  double cbeta=0.0, sbeta=0.0;
+  double cbeta=1.0, sbeta=0.0;
   if (vt != 0.0) {
     cbeta = v2(eU) / vt;
     sbeta = v2(eV) / vt;
@@ -687,6 +694,8 @@ void FGInitialCondition::SetAltitudeASLFtIC(double alt)
   double ve0 = vt * sqrt(rho/rhoSL);
 
   altitudeASL=alt;
+  position.SetRadius(alt + sea_level_radius);
+
   temperature = fdmex->GetAtmosphere()->GetTemperature(altitudeASL);
   soundSpeed = sqrt(SHRatio*Reng*temperature);
   rho = fdmex->GetAtmosphere()->GetDensity(altitudeASL);
@@ -703,8 +712,6 @@ void FGInitialCondition::SetAltitudeASLFtIC(double alt)
     default: // Make the compiler stop complaining about missing enums
       break;
   }
-
-  position.SetRadius(alt + sea_level_radius);
 }
 
 //******************************************************************************

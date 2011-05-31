@@ -9,8 +9,6 @@ else
 JPEG_SERVER =
 endif
 
-MPLAYER_AS = multiplay.cxx multiplay.hxx
-
 libNetwork_a_SOURCES = \
 	protocol.cxx protocol.hxx \
 	ATC-Main.cxx ATC-Main.hxx \
@@ -19,6 +17,7 @@ libNetwork_a_SOURCES = \
 	atlas.cxx atlas.hxx \
 	AV400.cxx AV400.hxx \
 	AV400Sim.cxx AV400Sim.hxx \
+	AV400WSim.cxx AV400WSim.hxx \
 	garmin.cxx garmin.hxx \
 	lfsglass.cxx lfsglass.hxx lfsglass_data.hxx \
         httpd.cxx httpd.hxx \
@@ -32,7 +31,6 @@ libNetwork_a_SOURCES = \
 	net_ctrls.hxx net_fdm.hxx net_fdm_mini.hxx net_gui.hxx \
         nmea.cxx nmea.hxx \
         opengc.cxx opengc.hxx opengc_data.hxx \
-	$(MPLAYER_AS) \
 	props.cxx props.hxx \
 	pve.cxx pve.hxx \
 	ray.cxx ray.hxx \

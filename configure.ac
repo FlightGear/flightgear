@@ -583,7 +583,7 @@ if test "x$ac_cv_header_simgear_version_h" != "xyes"; then
     exit
 fi
 
-AC_MSG_CHECKING([for SimGear 2.2.0 or newer])
+AC_MSG_CHECKING([for SimGear 2.3.0 or newer])
 AC_TRY_RUN([
 #include <stdio.h>
 
@@ -593,7 +593,7 @@ AC_TRY_RUN([
 #define XSTRINGIFY(X) #X
 
 #define MIN_MAJOR 2
-#define MIN_MINOR 2
+#define MIN_MINOR 3
 #define MIN_MICRO 0
 
 int main() {

@@ -46,6 +46,7 @@
 #include <Network/atlas.hxx>
 #include <Network/AV400.hxx>
 #include <Network/AV400Sim.hxx>
+#include <Network/AV400WSim.hxx>
 #include <Network/garmin.hxx>
 #include <Network/httpd.hxx>
 #ifdef FG_JPEG_SERVER
@@ -64,7 +65,7 @@
 #include <Network/ray.hxx>
 #include <Network/rul.hxx>
 #include <Network/generic.hxx>
-#include <Network/multiplay.hxx>
+
 #ifdef FG_HAVE_HLA
 #include <Network/HLA/hla.hxx>
 #endif
@@ -142,7 +143,13 @@ FGIO::parse_port_config( const string& config )
 	} else if ( protocol == "AV400Sim" ) {
 	    FGAV400Sim *av400sim = new FGAV400Sim;
 	    io = av400sim;
-	} else if ( protocol == "garmin" ) {
+        } else if ( protocol == "AV400WSimA" ) {
+            FGAV400WSimA *av400wsima = new FGAV400WSimA;
+            io = av400wsima;
+        } else if ( protocol == "AV400WSimB" ) {
+            FGAV400WSimB *av400wsimb = new FGAV400WSimB;
+            io = av400wsimb;
+ 	} else if ( protocol == "garmin" ) {
 	    FGGarmin *garmin = new FGGarmin;
 	    io = garmin;
 	} else if ( protocol == "httpd" ) {
@@ -212,10 +219,23 @@ FGIO::parse_port_config( const string& config )
 		return NULL;
 	    }
 	    string dir = tokens[1];
-	    string rate = tokens[2];
+	    int rate = atoi(tokens[2].c_str());
 	    string host = tokens[3];
-	    string port = tokens[4];
-	    return new FGMultiplay(dir, atoi(rate.c_str()), host, atoi(port.c_str()));
+
+	     short port = atoi(tokens[4].c_str());    
+
+        // multiplay used to be handled by an FGProtocol, but no longer. This code
+        // retains compatability with existing command-line syntax
+          fgSetInt("/sim/multiplay/tx-rate-hz", rate);
+          if (dir == "in") {
+            fgSetInt("/sim/multiplay/rxport", port);
+            fgSetString("/sim/multiplay/rxhost", host.c_str());
+          } else if (dir == "out") {
+            fgSetInt("/sim/multiplay/txport", port);
+            fgSetString("/sim/multiplay/txhost", host.c_str());
+          }
+
+          return NULL;
 #ifdef FG_HAVE_HLA
 	} else if ( protocol == "hla" ) {
 	    return new FGHLA(tokens);
@@ -263,6 +283,17 @@ FGIO::parse_port_config( const string& config )
 
 	SGSerial *ch = new SGSerial( device, baud );
 	io->set_io_channel( ch );
+        
+        if ( protocol == "AV400WSimB" ) {
+            if ( tokens.size() < 7 ) {
+                SG_LOG( SG_IO, SG_ALERT, "Missing second hz for AV400WSimB.");
+                return NULL;
+            }
+            FGAV400WSimB *fgavb = static_cast<FGAV400WSimB*>(io);
+            string hz2_str = tokens[6];
+            double hz2 = atof(hz2_str.c_str());
+            fgavb->set_hz2(hz2);
+        }
     } else if ( medium == "file" ) {
 	// file name
         if ( tokens.size() < 4) {
@@ -325,20 +356,20 @@ FGIO::init()
     // appropriate FGIOChannel structures
     string_list::iterator i = globals->get_channel_options_list()->begin();
     string_list::iterator end = globals->get_channel_options_list()->end();
-    for (; i != end; ++i )
-    {
-	p = parse_port_config( *i );
-	if ( p != NULL ) {
-	    p->open();
-	    io_channels.push_back( p );
-	    if ( !p->is_enabled() ) {
-		SG_LOG( SG_IO, SG_ALERT, "I/O Channel config failed." );
-		exit(-1);
-	    }
-	} else {
-	    SG_LOG( SG_IO, SG_INFO, "I/O Channel parse failed." );
-	}
-    }
+    for (; i != end; ++i ) {
+      p = parse_port_config( *i );
+      if (!p) {
+        continue;
+      }
+      
+      p->open();
+      if ( !p->is_enabled() ) {
+        SG_LOG( SG_IO, SG_ALERT, "I/O Channel config failed." );
+        delete p;
+      }
+      
+      io_channels.push_back( p );
+    } // of channel options iteration
 }
 
 void

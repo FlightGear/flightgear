@@ -6,6 +6,7 @@ set(SOURCES
 	ATC-Outputs.cxx
 	AV400.cxx
 	AV400Sim.cxx
+	AV400WSim.cxx
 	atlas.cxx
 	garmin.cxx
 	generic.cxx
@@ -14,7 +15,6 @@ set(SOURCES
 	jpg-httpd.cxx
 	jsclient.cxx
 	lfsglass.cxx
-	multiplay.cxx
 	native.cxx
 	native_ctrls.cxx
 	native_fdm.cxx
