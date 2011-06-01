@@ -28,6 +28,7 @@
 #include <set>
 #include <algorithm> // for sort
 #include <queue>
+#include <memory>
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/predicate.hpp>
