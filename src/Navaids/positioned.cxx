@@ -861,7 +861,7 @@ FGPositioned::Filter* createSearchFilter(const SGPropertyNode* arg)
     return NULL;
 }
 
-SGGeod commandSearchPos(const SGPropertyNode* arg)
+static SGGeod commandSearchPos(const SGPropertyNode* arg)
 {
     if (arg->hasChild("longitude-deg") && arg->hasChild("latitude-deg")) {
         return SGGeod::fromDeg(arg->getDoubleValue("longitude-deg"),

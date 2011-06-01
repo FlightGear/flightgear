@@ -148,12 +148,27 @@ AirportBinding::AirportBinding(const FGAirport* apt, SGPropertyNode* nd) :
     for (unsigned int c=0; c<apt->commStations().size(); ++c) {
         flightgear::CommStation* comm = apt->commStations()[c];
         std::string tynm = FGPositioned::nameForType(comm->type());
-        int count = nd->getChildren(tynm).size();
         
-        SGPropertyNode* commNode = nd->getChild(tynm, count, true);
-        commNode->setStringValue("ident", comm->ident());
-        commNode->setDoubleValue("frequency-mhz", comm->freqMHz());
-    }
+      // for some standard frequence types, we don't care about the ident,
+      // so just list the frequencies under one group.
+        if ((comm->type() == FGPositioned::FREQ_ATIS) ||
+            (comm->type() == FGPositioned::FREQ_AWOS) ||
+            (comm->type() == FGPositioned::FREQ_TOWER) ||
+            (comm->type() == FGPositioned::FREQ_GROUND))
+        {
+          SGPropertyNode* commNode = nd->getChild(tynm, 0, true);
+          int count = nd->getChildren("frequency-mhz").size();
+          SGPropertyNode* freqNode = commNode->getChild("frequency-mhz", count, true);
+          freqNode->setDoubleValue(comm->freqMHz());
+        } else {
+      // for other kinds of frequency, there's more variation, so list the ID too
+          int count = nd->getChildren(tynm).size();
+          SGPropertyNode* commNode = nd->getChild(tynm, count, true);
+          commNode->setStringValue("ident", comm->ident());
+          commNode->setDoubleValue("frequency-mhz", comm->freqMHz());
+
+        }
+      } // of airprot comm stations iteration
 }
 
 CommStationBinding::CommStationBinding(const CommStation* sta, SGPropertyNode* node) :
