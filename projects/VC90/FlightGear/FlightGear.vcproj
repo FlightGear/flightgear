@@ -3437,6 +3437,14 @@
 				RelativePath="..\..\..\src\Environment\presets.hxx"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\gravity.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\gravity.hxx"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Lib_Model"

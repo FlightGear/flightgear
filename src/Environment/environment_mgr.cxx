@@ -42,6 +42,7 @@
 #include "ridge_lift.hxx"
 #include "terrainsampler.hxx"
 #include "Airports/simple.hxx"
+#include "gravity.hxx"
 
 class SGSky;
 extern SGSky *thesky;
@@ -50,7 +51,7 @@ FGEnvironmentMgr::FGEnvironmentMgr () :
   _environment(new FGEnvironment()),
   fgClouds(new FGClouds()),
   _cloudLayersDirty(true),
-  _altitudeNode(fgGetNode("/position/altitude-ft", true)),
+  _altitude_n(fgGetNode("/position/altitude-ft", true)),
   _longitude_n(fgGetNode( "/position/longitude-deg", true )),
   _latitude_n( fgGetNode( "/position/latitude-deg", true )),
   _positionTimeToLive(0.0)
@@ -98,10 +99,11 @@ FGEnvironmentMgr::init ()
   SGSubsystemGroup::init();
   fgClouds->Init();
 
+  // FIXME: is this really part of the environment_mgr?
   // Initialize the longitude, latitude and altitude to the initial position
   // of the aircraft so that the atmospheric properties (pressure, temperature
   // and density) can be initialized accordingly.
-  _altitudeNode->setDoubleValue(fgGetDouble("/sim/presets/altitude-ft"));
+  _altitude_n->setDoubleValue(fgGetDouble("/sim/presets/altitude-ft"));
   _longitude_n->setDoubleValue(fgGetDouble("/sim/presets/longitude-deg"));
   _latitude_n->setDoubleValue(fgGetDouble("/sim/presets/latitude-deg"));
 }
@@ -201,7 +203,7 @@ FGEnvironmentMgr::update (double dt)
 {
   SGSubsystemGroup::update(dt);
 
-  _environment->set_elevation_ft( _altitudeNode->getDoubleValue() );
+  _environment->set_elevation_ft( _altitude_n->getDoubleValue() );
 
   simgear::Particles::setWindFrom( _environment->get_wind_from_heading_deg(),
                                    _environment->get_wind_speed_kt() );
@@ -209,6 +211,14 @@ FGEnvironmentMgr::update (double dt)
     _cloudLayersDirty = false;
     fgClouds->set_update_event( fgClouds->get_update_event()+1 );
   }
+
+
+  fgSetDouble( "/environment/gravitational-acceleration-mps2", 
+    Environment::Gravity::instance()->getGravity(SGGeod::fromDegFt(
+      _longitude_n->getDoubleValue(),
+      _latitude_n->getDoubleValue(),
+      _altitude_n->getDoubleValue()
+  )));
 
   _positionTimeToLive -= dt;
   if( _positionTimeToLive <= 0.0 )

@@ -31,8 +31,6 @@
 #include <cmath>
 #include <utility>
 
-using namespace std;
-
 /**
  * Model the atmosphere in a way consistent with the laws
  * of physics.
