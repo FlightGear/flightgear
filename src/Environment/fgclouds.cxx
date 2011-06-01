@@ -161,7 +161,7 @@ double FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_
 				y = w * (y - 0.5) + pos[1]; // E/W
 				z = h * z + pos[2]; // Up/Down. pos[2] is the cloudbase
 
-				SGVec3f newpos = SGVec3f(x, y, z);
+				//SGVec3f newpos = SGVec3f(x, y, z);
 				SGNewCloud cld = SGNewCloud(texture_root, cld_def);
 
 				//layer->addCloud(newpos, cld.genCloud());
