@@ -50,10 +50,12 @@ namespace flightgear {
   class STAR;
   class Approach;
   class Waypt;
-
+  class CommStation;
 
   typedef SGSharedPtr<Waypt> WayptRef;
   typedef std::vector<WayptRef> WayptVec;
+  
+  typedef std::vector<CommStation*> CommStationList;
 }
 
 
@@ -185,6 +187,8 @@ public:
       unsigned int numApproaches() const;
       flightgear::Approach* getApproachByIndex(unsigned int aIndex) const;
 
+      static void installPropertyListener();
+      
      /**
       * Syntactic wrapper around FGPositioned::findClosest - find the closest
       * match for filter, and return it cast to FGAirport. The default filter
@@ -228,6 +232,14 @@ public:
      */
     std::pair<flightgear::STAR*, flightgear::WayptRef> selectSTAR(const SGGeod& aOrigin, FGRunway* aRwy);
     
+    virtual flightgear::PositionedBinding* createBinding(SGPropertyNode* nd) const;
+    
+    void setCommStations(flightgear::CommStationList& comms);
+    
+    flightgear::CommStationList commStationsOfType(FGPositioned::Type aTy) const;
+    
+    const flightgear::CommStationList& commStations() const
+        { return mCommStations; }
 private:
     typedef std::vector<FGRunwayPtr>::const_iterator Runway_iterator;
     /**
@@ -275,6 +287,8 @@ private:
     std::vector<flightgear::SID*> mSIDs;
     std::vector<flightgear::STAR*> mSTARs;
     std::vector<flightgear::Approach*> mApproaches;
+    
+    flightgear::CommStationList mCommStations;
 };
 
 // find basic airport location info from airport database
