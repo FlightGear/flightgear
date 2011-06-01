@@ -31,8 +31,8 @@
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
-
-
+#include <ATC/CommStation.hxx>
+#include <Airports/simple.hxx>
 
 FGATC::FGATC() :
 	_playing(false),
@@ -181,14 +181,20 @@ void FGATC::NotifyTransmissionFinished(const string& rid) {
 	}
 }
 
-void FGATC::SetData(ATCData* d) {
-	_type = d->type;
-	_geod = d->geod;
-	_cart = d->cart;
-	range = d->range;
-	ident = d->ident;
-	name = d->name;
-	freq = d->freq;
+void FGATC::SetStation(flightgear::CommStation* sta) {
+    switch (sta->type()) {
+        case FGPositioned::FREQ_ATIS:   _type = ATIS; break;
+        case FGPositioned::FREQ_AWOS:   _type = AWOS; break;
+        default:
+        throw sg_exception("unsupported comm station type");
+    }
+    
+    _geod = sta->geod();
+    _cart = sta->cart();
+    range = sta->rangeNm();
+    ident = sta->airport()->ident();
+    name = sta->airport()->name();
+    freq = sta->freqKHz();
 }
 
 // Render a transmission

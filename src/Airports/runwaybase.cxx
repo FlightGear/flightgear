@@ -26,6 +26,7 @@
 #endif
 
 #include <simgear/compiler.h>
+#include <simgear/props/props.hxx>
 
 #include "runwaybase.hxx"
 

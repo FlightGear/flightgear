@@ -27,57 +27,13 @@
 
 #include "kln89_page_apt.hxx"
 
+#include <simgear/structure/exception.hxx>
 #include <cassert>
 
-#include <ATCDCL/commlist.hxx>
+#include <ATC/CommStation.hxx>
 #include <Main/globals.hxx>
 #include <Airports/runways.hxx>
 #include <Airports/simple.hxx>
-
-// This function is copied from Airports/runways.cxx
-// TODO - Make the original properly available and remove this instance!!!!
-// Return reverse rwy number
-// eg 01 -> 19
-// 03L -> 21R
-static string GetReverseRunwayNo(string rwyno) {	
-    // cout << "Original rwyno = " << rwyNo << '\n';
-    
-    // standardize input number
-    string tmp = rwyno.substr(1, 1);
-    if (( tmp == "L" || tmp == "R" || tmp == "C" ) || (rwyno.size() == 1)) {
-		tmp = rwyno;
-		rwyno = "0" + tmp;
-		SG_LOG( SG_GENERAL, SG_INFO,
-		        "Standardising rwy number from " << tmp << " to " << rwyno );
-    }
-    
-    char buf[4];
-    int rn = atoi(rwyno.substr(0,2).c_str());
-    rn += 18;
-    while(rn > 36) {
-		rn -= 36;
-    }
-    sprintf(buf, "%02i", rn);
-    if(rwyno.size() == 3) {
-		if(rwyno.substr(2,1) == "L") {
-			buf[2] = 'R';
-			buf[3] = '\0';
-		} else if (rwyno.substr(2,1) == "R") {
-			buf[2] = 'L';
-			buf[3] = '\0';
-		} else if (rwyno.substr(2,1) == "C") {
-			buf[2] = 'C';
-			buf[3] = '\0';
-		} else if (rwyno.substr(2,1) == "T") {
-			buf[2] = 'T';
-			buf[3] = '\0';
-		} else {
-			SG_LOG(SG_GENERAL, SG_ALERT, "Unknown runway code "
-			<< rwyno << " passed to GetReverseRunwayNo(...)");
-		}
-    }
-    return(buf);
-}
 
 KLN89AptPage::KLN89AptPage(KLN89* parent) 
 : KLN89Page(parent) {
@@ -230,7 +186,8 @@ void KLN89AptPage::Update(double dt) {
 				string s = _aptRwys[i]->ident();
 				_kln89->DrawText(s, 2, 9, 3);
 				_kln89->DrawText("/", 2, 12, 3);
-				_kln89->DrawText(GetReverseRunwayNo(s), 2, 13, 3);
+                string recipIdent = _aptRwys[i]->reciprocalRunway()->ident();
+				_kln89->DrawText(recipIdent, 2, 13, 3);
 				// Length
 				s = GPSitoa(int(float(_aptRwys[i]->lengthFt()) * (_kln89->_altUnits == GPS_ALT_UNITS_FT ? 1.0 : SG_FEET_TO_METER) + 0.5));
 				_kln89->DrawText(s, 2, 5 - s.size(), 2);
@@ -278,7 +235,8 @@ void KLN89AptPage::Update(double dt) {
 				string s = _aptRwys[i]->ident();
 				_kln89->DrawText(s, 2, 9, 1);
 				_kln89->DrawText("/", 2, 12, 1);
-				_kln89->DrawText(GetReverseRunwayNo(s), 2, 13, 1);
+                string recip = _aptRwys[i]->reciprocalRunway()->ident();
+				_kln89->DrawText(recip, 2, 13, 1);
 				// Length
 				s = GPSitoa(int(float(_aptRwys[i]->lengthFt()) * (_kln89->_altUnits == GPS_ALT_UNITS_FT ? 1.0 : SG_FEET_TO_METER) + 0.5));
 				_kln89->DrawText(s, 2, 5 - s.size(), 0);
@@ -499,38 +457,35 @@ void KLN89AptPage::SetId(const string& s) {
 // Update the cached airport details
 void KLN89AptPage::UpdateAirport(const string& id) {
 	// Frequencies
-	_aptFreqs.clear();
-	ATCData ad;
-	AptFreq aq;
-	//cout << "UpdateAirport called, id = " << id << '\n';
-	// TODO - the logic below only returns one service per type per airport - they can be on more than one freq though.
-	if(current_commlist->FindByCode(id, ad, ATIS)) {
-		//cout << "Found ATIS\n";
-		aq.service = "ATIS*";
-		aq.freq = ad.freq;
-		_aptFreqs.push_back(aq);
-	}
-	if(current_commlist->FindByCode(id, ad, GROUND)) {
-		aq.service = "GRND*";
-		aq.freq = ad.freq;
-		_aptFreqs.push_back(aq);
-	}
-	if(current_commlist->FindByCode(id, ad, TOWER)) {
-		aq.service = "TWR *";
-		aq.freq = ad.freq;
-		_aptFreqs.push_back(aq);
-	}
-	if(current_commlist->FindByCode(id, ad, APPROACH)) {
-		aq.service = "APR";
-		aq.freq = ad.freq;
-		_aptFreqs.push_back(aq);
-	}
+	_aptFreqs.clear();	
+	
+    const FGAirport* apt = fgFindAirportID(id);
+    if (!apt) {
+        throw sg_exception("UpdateAirport: unknown airport id " + id);
+    }
+	
+    for (unsigned int c=0; c<apt->commStations().size(); ++c) {
+        flightgear::CommStation* comm = apt->commStations()[c];
+        AptFreq aq;
+        aq.freq = comm->freqKHz();
+        switch (comm->type()) {
+        case FGPositioned::FREQ_ATIS:
+            aq.service = "ATIS*"; break;
+        case FGPositioned::FREQ_GROUND:
+            aq.service = "GRND*"; break;
+        case FGPositioned::FREQ_TOWER:
+            aq.service = "TWR *"; break;
+        case FGPositioned::FREQ_APP_DEP:
+            aq.service = "APR *"; break;
+        default:
+            continue;
+        }
+    }
+
 	_nFreqPages = (unsigned int)ceil((float(_aptFreqs.size())) / 3.0f);
 	
 	// Runways
 	_aptRwys.clear();
-  const FGAirport* apt = fgFindAirportID(id);
-  assert(apt);
   
   // build local array, longest runway first
   for (unsigned int r=0; r<apt->numRunways(); ++r) {

@@ -75,8 +75,6 @@
 #include <AIModel/AIManager.hxx>
 
 #include <ATCDCL/ATCmgr.hxx>
-#include <ATCDCL/commlist.hxx>
-#include <ATC/atis_mgr.hxx>
 #include <ATC/atc_mgr.hxx>
 
 #include <Autopilot/route_mgr.hxx>
@@ -1085,15 +1083,10 @@ fgInitNav ()
     SGPath p_metar( globals->get_fg_root() );
     p_metar.append( "Airports/metar.dat" );
 
-// Initialise the frequency search map BEFORE reading
-// the airport database:
-
-
-
-    current_commlist = new FGCommList;
-    current_commlist->init( globals->get_fg_root() );
-    fgAirportDBLoad( aptdb.str(), current_commlist, p_metar.str() );
-
+    fgAirportDBLoad( aptdb.str(), p_metar.str() );
+    FGAirport::installPropertyListener();
+    FGPositioned::installCommands();
+    
     FGNavList *navlist = new FGNavList;
     FGNavList *loclist = new FGNavList;
     FGNavList *gslist = new FGNavList;
@@ -1435,7 +1428,7 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     // Initialise the ATIS Subsystem
     ////////////////////////////////////////////////////////////////////
-    globals->add_subsystem("atis", new FGAtisManager, SGSubsystemMgr::POST_FDM);
+    //globals->add_subsystem("atis", new FGAtisManager, SGSubsystemMgr::POST_FDM);
 
 
     ////////////////////////////////////////////////////////////////////

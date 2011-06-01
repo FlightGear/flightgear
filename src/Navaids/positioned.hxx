@@ -27,8 +27,14 @@
 #include <simgear/math/SGMath.hxx>
 
 class FGPositioned;
+class SGPropertyNode;
 
 typedef SGSharedPtr<FGPositioned> FGPositionedRef;
+
+namespace flightgear
+{
+    class PositionedBinding;
+}
 
 class FGPositioned : public SGReferenced
 {
@@ -56,9 +62,14 @@ public:
     DME,
     TACAN,
     OBSTACLE,
-    FREQ_GND,
-    FREQ_TWR,
+    FREQ_GROUND,
+    FREQ_TOWER,
     FREQ_ATIS,
+    FREQ_AWOS,
+    FREQ_APP_DEP,
+    FREQ_ENROUTE,
+    FREQ_CLEARANCE,
+    FREQ_UNICOM,
     LAST_TYPE
   } Type;
 
@@ -97,6 +108,9 @@ public:
   double elevation() const
   { return mPosition.getElevationFt(); }
   
+
+  virtual flightgear::PositionedBinding* createBinding(SGPropertyNode* nd) const;
+
   /**
    * Predicate class to support custom filtering of FGPositioned queries
    * Default implementation of this passes any FGPositioned instance.
@@ -135,12 +149,14 @@ public:
   class TypeFilter : public Filter
   {
   public:
-    TypeFilter(Type aTy) : mType(aTy) { ; }
-    virtual bool pass(FGPositioned* aPos) const
-    { return (mType == aPos->type()); }
+    TypeFilter(Type aTy);
+    virtual bool pass(FGPositioned* aPos) const;
+    void addType(Type aTy);
   private:
-    const Type mType;
+      std::vector<Type> types;
   };
+  
+  static void installCommands();
   
   static List findWithinRange(const SGGeod& aPos, double aRangeNm, Filter* aFilter = NULL);
         

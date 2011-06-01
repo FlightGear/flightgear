@@ -42,7 +42,6 @@ Somigliana::Somigliana()
 Somigliana::~Somigliana()
 {
 }
-#include <stdio.h>
 
 double Somigliana::getGravity( const SGGeod & position ) const
 {

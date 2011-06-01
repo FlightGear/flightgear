@@ -118,13 +118,22 @@ public:
    */
   void jumpToIndex(int index);
   
-  void saveRoute();
-  void loadRoute();
+  bool saveRoute(const SGPath& p);
+  bool loadRoute(const SGPath& p);
   
   /**
    * Helper command to setup current airport/runway if necessary
    */
   void initAtPosition();
+  
+    /**
+     * Create a WayPoint from a string in the following format:
+     *  - simple identifier
+     *  - decimal-lon,decimal-lat
+     *  - airport-id/runway-id
+     *  - navaid/radial-deg/offset-nm
+     */
+    flightgear::WayptRef waypointFromString(const std::string& target);
 private:
   flightgear::WayptVec _route;
   int _currentIndex;
@@ -188,17 +197,7 @@ private:
     SGPropertyNode_ptr weightOnWheels;
     
     InputListener *listener;
-    SGPropertyNode_ptr mirror;
-
-    /**
-     * Create a SGWayPoint from a string in the following format:
-     *  - simple identifier
-     *  - decimal-lon,decimal-lat
-     *  - airport-id/runway-id
-     *  - navaid/radial-deg/offset-nm
-     */
-    flightgear::WayptRef waypointFromString(const std::string& target);
-    
+    SGPropertyNode_ptr mirror;    
     
     void departureChanged();
     void buildDeparture(flightgear::WayptRef enroute, flightgear::WayptVec& wps);
@@ -229,7 +228,7 @@ private:
     bool checkFinished();
     
     
-    void loadPlainTextRoute(const SGPath& path);
+    bool loadPlainTextRoute(const SGPath& path);
     
     void loadVersion1XMLRoute(SGPropertyNode_ptr routeData);
     void loadVersion2XMLRoute(SGPropertyNode_ptr routeData);

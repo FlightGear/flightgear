@@ -34,9 +34,9 @@
 #include "ATCDialog.hxx"
 #include "ATC.hxx"
 #include "ATCmgr.hxx"
-#include "commlist.hxx"
 #include "ATCutils.hxx"
 #include <Airports/simple.hxx>
+#include <ATC/CommStation.hxx>
 
 #include <sstream>
 
@@ -287,21 +287,17 @@ void FGATCDialog::PopupCallback(int num) {
 	}
 }
 
-// map() key data type (removes duplicates and sorts by distance)
-struct atcdata {
-	atcdata() {}
-	atcdata(const string i, const string n, const double d) {
-		id = i, name = n, distance = d;
-	}
-	bool operator<(const atcdata& a) const {
-		return id != a.id && distance < a.distance;
-	}
-	bool operator==(const atcdata& a) const {
-		return id == a.id && distance == a.distance;
-	}
-	string id;
-	string name;
-	double distance;
+class AirportsWithATC : public FGAirport::AirportFilter
+{
+public:
+    virtual FGPositioned::Type maxType() const {
+      return FGPositioned::SEAPORT;
+    }
+  
+    virtual bool passAirport(FGAirport* aApt) const
+    {
+      return (!aApt->commStations().empty());
+    }
 };
 
 void FGATCDialog::FreqDialog() {
@@ -316,38 +312,25 @@ void FGATCDialog::FreqDialog() {
 	// remove all dynamic airport/ATC buttons
 	button_group->removeChildren("button", false);
 
-	// Find the ATC stations within a reasonable range
-	comm_list_type atc_stations;
-	comm_list_iterator atc_stat_itr;
 
   SGGeod geod(SGGeod::fromDegFt(fgGetDouble("/position/longitude-deg"),
     fgGetDouble("/position/latitude-deg"), fgGetDouble("/position/altitude-ft")));
-	SGVec3d aircraft = SGVec3d::fromGeod(geod);
 
-	// search stations in range
-	int num_stat = current_commlist->FindByPos(geod, 50.0, &atc_stations);
-	if (num_stat != 0) {
-		map<atcdata, bool> uniq;
-		// fill map (sorts by distance and removes duplicates)
-		comm_list_iterator itr = atc_stations.begin();
-		for (; itr != atc_stations.end(); ++itr) {
-			double distance = distSqr(aircraft, itr->cart);
-			uniq[atcdata(itr->ident, itr->name, distance)] = true;
-		}
-		// create button per map entry (modified copy of <button-template>)
-		map<atcdata, bool>::iterator uit = uniq.begin();
-		for (int n = 0; uit != uniq.end() && n < 6; ++uit, ++n) { // max 6 buttons
-			SGPropertyNode *entry = button_group->getNode("button", n, true);
-			copyProperties(button_group->getNode("button-template", true), entry);
-			entry->removeChildren("enabled", true);
-			entry->setStringValue("legend", uit->first.id.c_str());
-			entry->setStringValue("binding[0]/value", uit->first.id.c_str());
-		}
-	}
-
+    AirportsWithATC filt;
+    FGPositioned::List results = FGPositioned::findWithinRange(geod, 50.0, &filt);
+    FGPositioned::sortByRange(results, geod);
+    for (unsigned int r=0; (r<results.size()) && (r < 6); ++r) {
+      
+        SGPropertyNode *entry = button_group->getNode("button", r, true);
+		copyProperties(button_group->getNode("button-template", true), entry);
+		entry->removeChildren("enabled", true);
+		entry->setStringValue("legend", results[r]->ident());
+		entry->setStringValue("binding[0]/value", results[r]->ident());
+    }
+    
 	// (un)hide message saying no things in range
 	SGPropertyNode_ptr range_error = getNamedNode(dlg, "no-atc-in-range");
-	range_error->setBoolValue("enabled", !num_stat);
+	range_error->setBoolValue("enabled", !results.empty());
 
 	_gui->showDialog(dialog_name);
 }
@@ -378,43 +361,33 @@ void FGATCDialog::FreqDisplay(string& ident) {
 	label = ident + " Frequencies";
 	dlg->setStringValue("text/label", label.c_str());
 
-	int n = 0;	// Number of ATC frequencies at this airport
-
-	comm_list_type stations;
-	int found = current_commlist->FindByPos(a->geod(), 20.0, &stations);
-	if(found) {
-		comm_list_iterator itr = stations.begin();
-		for (n = 0; itr != stations.end(); ++itr) {
-			if(itr->ident != ident)
-				continue;
-
-			if(itr->type == INVALID)
-				continue;
-
-			// add frequency line (modified copy of <group-template>)
-			SGPropertyNode *entry = freq_group->getNode("group", n, true);
-			copyProperties(freq_group->getNode("group-template", true), entry);
-			entry->removeChildren("enabled", true);
-
-			ostringstream ostr;
-			ostr << itr->type;
-			entry->setStringValue("text[0]/label", ostr.str());
-
-			char buf[8];
-			snprintf(buf, 8, "%.2f", (itr->freq / 100.0));	// Convert from KHz to MHz
-			if(buf[5] == '3') buf[5] = '2';
-			if(buf[5] == '8') buf[5] = '7';
-			buf[7] = '\0';
-
-			entry->setStringValue("text[1]/label", buf);
-			n++;
-		}
-	}
-	if(n == 0) {
-		label = "No frequencies found for airport " + ident;
+    const flightgear::CommStationList& comms(a->commStations());
+    if (comms.empty()) {
+        label = "No frequencies found for airport " + ident;
 		mkDialog(label.c_str());
 		return;
-	}
+    }
+    
+    int n = 0;
+    for (unsigned int c=0; c < comms.size(); ++c) {
+        flightgear::CommStation* comm = comms[c];
+        
+        // add frequency line (modified copy of <group-template>)
+		SGPropertyNode *entry = freq_group->getNode("group", n, true);
+		copyProperties(freq_group->getNode("group-template", true), entry);
+		entry->removeChildren("enabled", true);
+
+        entry->setStringValue("text[0]/label", comm->ident());
+
+		char buf[8];
+		snprintf(buf, 8, "%.2f", comm->freqMHz());
+		if(buf[5] == '3') buf[5] = '2';
+		if(buf[5] == '8') buf[5] = '7';
+		buf[7] = '\0';
+
+		entry->setStringValue("text[1]/label", buf);
+        ++n;
+    }
 
 	_gui->showDialog(dialog_name);
 }

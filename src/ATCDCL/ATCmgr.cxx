@@ -24,29 +24,18 @@
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <Airports/simple.hxx>
+#include <ATC/CommStation.hxx>
+#include <Main/fg_props.hxx>
 
 #include "ATCmgr.hxx"
-#include "commlist.hxx"
 #include "ATCDialog.hxx"
 #include "ATCutils.hxx"
+#include "atis.hxx"
 
-
-/*
-// periodic radio station search wrapper
-static void fgATCSearch( void ) {
-    globals->get_ATC_mgr()->Search();
-}
-*/ //This wouldn't compile - including Time/event.hxx breaks it :-(
-   // Is this still true?? -EMH-
-
-AirportATC::AirportATC() :
-    atis_freq(0.0),
-    atis_active(false)
-    //airport_atc_map.clear();
-{
-}
+using flightgear::CommStation;
 
 FGATCMgr::FGATCMgr() :
     initDone(false),
@@ -148,44 +137,6 @@ void FGATCMgr::update(double dt) {
     //cout << "Leaving update..." << endl;
 }
 
-
-// Returns frequency in KHz - should I alter this to return in MHz?
-unsigned short int FGATCMgr::GetFrequency(const string& ident, const atc_type& tp) {
-    ATCData test;
-    bool ok = current_commlist->FindByCode(ident, test, tp);
-    return(ok ? test.freq : 0);
-}   
-
-// Register the fact that the comm radio is tuned to an airport
-// Channel is zero based
-bool FGATCMgr::CommRegisterAirport(const string& ident, int chan, const atc_type& tp) {
-    SG_LOG(SG_ATC, SG_BULK, "Comm channel " << chan << " registered airport " << ident);
-    //cout << "Comm channel " << chan << " registered airport " << ident << ' ' << tp << '\n';
-    if(airport_atc_map.find(ident) != airport_atc_map.end()) {
-        if(tp == ATIS || tp == AWOS) {
-            airport_atc_map[ident]->atis_active = true;
-        }
-        return(true);
-    } else {
-        //cout << "NOT IN MAP - creating new..." << endl;
-        const FGAirport *ap = fgFindAirportID(ident);
-        if (ap) {
-            AirportATC *a = new AirportATC;
-            // I'm not entirely sure that this AirportATC structure business is actually needed - it just duplicates what we can find out anyway!
-            a->geod = ap->geod();
-            a->atis_freq = GetFrequency(ident, ATIS)
-                    || GetFrequency(ident, AWOS);
-            a->atis_active = false;
-            if(tp == ATIS || tp == AWOS) {
-                a->atis_active = true;
-            }
-            airport_atc_map[ident] = a;
-            return(true);
-        }
-    }
-    return(false);
-}
-
 typedef map<string,int> MSI;
 
 void FGATCMgr::ZapOtherService(const string ncunit, const string svc_name){
@@ -222,16 +173,6 @@ FGATC* FGATCMgr::FindInList(const string& id, const atc_type& tp) {
   string ndx = id + decimalNumeral(tp);
   if (!atc_list->count(ndx)) return 0;
   return (*atc_list)[ndx];
-}
-
-// Returns true if the airport is found in the map
-bool FGATCMgr::GetAirportATCDetails(const string& icao, AirportATC* a) {
-    if(airport_atc_map.find(icao) != airport_atc_map.end()) {
-        *a = *airport_atc_map[icao];
-        return(true);
-    } else {
-        return(false);
-    }
 }
 
 // Return a pointer to an appropriate voice for a given type of ATC
@@ -303,49 +244,44 @@ void FGATCMgr::FreqSearch(const string navcomm, const int unit) {
     if (!comm_node) return; // no such radio unit
 
     ATCData data;   
-    double freq = comm_node->getDoubleValue();
+    // Note:  122.375 must be rounded DOWN to 12237 
+    // in order to be consistent with apt.dat et cetera.
+    int freqKhz = static_cast<int>(comm_node->getDoubleValue() * 100.0 + 0.25);
+    
     _aircraftPos = SGGeod::fromDegFt(lon_node->getDoubleValue(),
         lat_node->getDoubleValue(), elev_node->getDoubleValue());
     
-    // Query the data store and get the closest match if any
-    //cout << "Will FindByFreq: " << lat << " " << lon << " " << elev
-    //      << "  freq: " << freq << endl;
-    if(current_commlist->FindByFreq(_aircraftPos, freq, &data)) {
-        //cout << "FoundByFreq: " << freq
-        //  << "  ident: " << data.ident
-        //  << "  type: " << data.type << " ***" << endl;
-        // We are in range of something.
+    CommStation* sta = CommStation::findByFreq(freqKhz, _aircraftPos);
+    if (!sta) {
+        ZapOtherService(ncunit, "x x x");
+        return;
+    }
+    
+    // Get rid of any *other* service that was on this radio unit:
+    FGPositioned::Type ty = sta->type();
+    string svc_name = sta->ident() + FGPositioned::nameForType(ty);
+    ZapOtherService(ncunit, svc_name);
+    // See if the service already exists, possibly connected to
+    // some other radio unit:
+    if (atc_list->count(svc_name)) {
+        // make sure the service knows it's tuned on this radio:
+        FGATC* svc = (*atc_list)[svc_name];
+        svc->active_on[ncunit] = 1;
+        svc->SetDisplay();
+        return;
+    }
 
-
-        // Get rid of any *other* service that was on this radio unit:
-        string svc_name = data.ident+decimalNumeral(data.type);
-        ZapOtherService(ncunit, svc_name);
-        // See if the service already exists, possibly connected to
-        // some other radio unit:
-        if (atc_list->count(svc_name)) {
-            // make sure the service knows it's tuned on this radio:
-            FGATC* svc = (*atc_list)[svc_name];
+    // This was a switch-case statement but the compiler didn't like
+    // the new variable creation with it.
+    if(ty == FGPositioned::FREQ_ATIS || ty == FGPositioned::FREQ_AWOS) {
+        (*atc_list)[svc_name] = new FGATIS;
+        FGATC* svc = (*atc_list)[svc_name];
+        if(svc != NULL) {
+            svc->SetStation(sta);
             svc->active_on[ncunit] = 1;
             svc->SetDisplay();
-            return;
+            svc->Init();
         }
+    }
 
-        CommRegisterAirport(data.ident, unit, data.type);
-
-        // This was a switch-case statement but the compiler didn't like
-        // the new variable creation with it.
-        if(data.type == ATIS || data.type == AWOS) {
-            (*atc_list)[svc_name] = new FGATIS;
-            FGATC* svc = (*atc_list)[svc_name];
-            if(svc != NULL) {
-                svc->SetData(&data);
-                svc->active_on[ncunit] = 1;
-                svc->SetDisplay();
-                svc->Init();
-            }
-        }
-    } else {
-        // No services in range.  Zap any service on this unit.
-        ZapOtherService(ncunit, "x x x");
-    } 
 }
