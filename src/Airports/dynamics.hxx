@@ -22,24 +22,15 @@
 #ifndef _AIRPORT_DYNAMICS_HXX_
 #define _AIRPORT_DYNAMICS_HXX_
 
-
-#ifndef __cplusplus
-# error This library requires C++
-#endif
-
-#include <simgear/xml/easyxml.hxx>
-
 #include <ATC/trafficcontrol.hxx>
 #include "parking.hxx"
 #include "groundnetwork.hxx"
 #include "runwayprefs.hxx"
 #include "sidstar.hxx"
 
-//typedef vector<float> DoubleVec;
-//typedef vector<float>::iterator DoubleVecIterator;
-
+// forward decls
 class FGAirport;
-
+class FGEnvironment;
 
 class FGAirportDynamics {
 
@@ -55,7 +46,7 @@ private:
   FGApproachController approachController;
 
   time_t lastUpdate;
-  string prevTrafficType;
+  std::string prevTrafficType;
   stringVec landing;
   stringVec takeoff;
   stringVec milActive, comActive, genActive, ulActive;
@@ -67,14 +58,14 @@ private:
   intVec freqTower;    // </TOWER>
   intVec freqApproach; // </APPROACH>
 
-  string atisInformation;
-
-  string chooseRunwayFallback();
-  bool innerGetActiveRunway(const string &trafficType, int action, string &runway, double heading);
-  string chooseRwyByHeading(stringVec rwys, double heading);
+  int atisSequenceIndex;
+  double atisSequenceTimeStamp;
+  
+  std::string chooseRunwayFallback();
+  bool innerGetActiveRunway(const std::string &trafficType, int action, std::string &runway, double heading);
+  std::string chooseRwyByHeading(stringVec rwys, double heading);
 public:
   FGAirportDynamics(FGAirport* ap);
-  FGAirportDynamics(const FGAirportDynamics &other);
   ~FGAirportDynamics();
 
   void addAwosFreq     (int val) { freqAwos.push_back(val);      };
@@ -118,8 +109,13 @@ public:
   FGTowerController      *getTowerController()      { return &towerController; };
   FGApproachController   *getApproachController()   { return &approachController; };
 
-  const string& getAtisInformation() { return atisInformation; };
-  int getGroundFrequency(unsigned leg); //{ return freqGround.size() ? freqGround[0] : 0; };
+  int getGroundFrequency(unsigned leg);
+  
+  /// get current ATIS sequence letter
+  const std::string getAtisSequence();
+
+  /// get the current ATIS sequence number, updating it if necessary
+  int updateAtisSequence(int interval, bool forceUpdate);
 
   void setRwyUse(const FGRunwayPreference& ref);
 };
