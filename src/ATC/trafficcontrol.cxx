@@ -528,7 +528,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
             getName() + "-Ground";
         atisInformation =
             rec->getAircraft()->getTrafficRef()->getDepartureAirport()->
-            getDynamics()->getAtisInformation();
+            getDynamics()->getAtisSequence();
         break;
     case 4:
         receiver =

@@ -19,6 +19,7 @@
 #cmakedefine HAVE_SYS_TIME_H
 #cmakedefine HAVE_WINDOWS_H
 #cmakedefine HAVE_CULLSETTINGS_CLEAR_MASK
+#cmakedefine HAVE_MKFIFO
 
 #define VERSION "@FLIGHTGEAR_VERSION@"
 

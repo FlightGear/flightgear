@@ -95,9 +95,7 @@ class FGATIS : public FGATC {
 	void TreeOut(int msgOK);
 
 	friend std::istream& operator>> ( std::istream&, FGATIS& );
-	
-	int GetAtisSequence( const std::string& apt_id, 
-        const double tstamp, const int interval, const int special);
+
 };
 
 typedef int (FGATIS::*int_getter)() const;

@@ -53,6 +53,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Airports/runways.hxx>
+#include <Airports/dynamics.hxx>
 
 
 #include "ATCutils.hxx"
@@ -228,47 +229,6 @@ int Apt_US_CA(const string id) {
   return 0;
 }
 
-// Add structure and map for storing a log of atis transmissions
-// made in this session of FlightGear.  This allows the callsign
-// to be allocated correctly wrt time.
-typedef struct {
-        double tstamp;
-    int sequence;
-} atis_transmission_type;
-
-typedef std::map < std::string, atis_transmission_type > atis_log_type;
-typedef atis_log_type::iterator atis_log_iterator;
-typedef atis_log_type::const_iterator atis_log_const_iterator;
-
-static atis_log_type atislog;
-
-int FGATIS::GetAtisSequence( const string& apt_id, 
-        const double tstamp, const int interval, const int special)
-{
-    atis_transmission_type tran;
-    
-    if(atislog.find(apt_id) == atislog.end()) { // New station
-      tran.tstamp = tstamp - interval;
-// Random number between 0 and 25 inclusive, i.e. 26 equiprobable outcomes:
-      tran.sequence = int(sg_random() * LTRS);
-      atislog[apt_id] = tran;
-      //cout << "New ATIS station: " << apt_id << " seq-1: "
-      //      << tran.sequence << endl;
-    } 
-
-// calculate the appropriate identifier and update the log
-    tran = atislog[apt_id];
-
-    int delta = int((tstamp - tran.tstamp) / interval);
-    tran.tstamp += delta * interval;
-    if (special && !delta) delta++;     // a "special" ATIS update is required
-    tran.sequence = (tran.sequence + delta) % LTRS;
-    atislog[apt_id] = tran;
-    //if (delta) cout << "New ATIS sequence: " << tran.sequence
-    //      << "  Delta: " << delta << endl;
-    return(tran.sequence + (delta ? 0 : LTRS*1000));
-}
-
 // Generate the actual broadcast ATIS transmission.
 // Regen means regenerate the /current/ transmission.
 // Special means generate a new transmission, with a new sequence.
@@ -280,12 +240,12 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   string BRK = ".\n";
   string PAUSE = " / ";
 
-  double tstamp = atof(fgGetString("sim/time/elapsed-sec"));
   int interval = _type == ATIS ?
         ATIS_interval   // ATIS updated hourly
       : 2*minute;	// AWOS updated more frequently
-  
-  int sequence = GetAtisSequence(ident, tstamp, interval, special);
+
+  FGAirport* apt = FGAirport::findByIdent(ident);
+  int sequence = apt->getDynamics()->updateAtisSequence(interval, special);
   if (!regen && sequence > LTRS) {
 //xx      if (msg_OK) cout << "ATIS:  no change: " << sequence << endl;
 //xx      msg_time = cur_time;

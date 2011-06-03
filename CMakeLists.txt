@@ -224,6 +224,8 @@ include_directories(${PROJECT_BINARY_DIR}/src/Include)
 
 add_definitions(-DHAVE_CONFIG_H)
 
+check_function_exists(mkfifo HAVE_MKFIFO)
+
 # configure a header file to pass some of the CMake settings
 # to the source code
 configure_file (

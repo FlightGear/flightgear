@@ -841,7 +841,7 @@ FGPositioned::sortByRange(List& aResult, const SGGeod& aPos)
 
 FGPositioned::Filter* createSearchFilter(const SGPropertyNode* arg)
 {
-    string sty(arg->getStringValue("type", 0));
+    string sty(arg->getStringValue("type", "any"));
     FGPositioned::Type ty = FGPositioned::typeFromName(sty);
     double minRunwayLenFt = arg->getDoubleValue("min-runway-length-ft", -1.0);
     
@@ -861,7 +861,7 @@ FGPositioned::Filter* createSearchFilter(const SGPropertyNode* arg)
     return NULL;
 }
 
-SGGeod commandSearchPos(const SGPropertyNode* arg)
+static SGGeod commandSearchPos(const SGPropertyNode* arg)
 {
     if (arg->hasChild("longitude-deg") && arg->hasChild("latitude-deg")) {
         return SGGeod::fromDeg(arg->getDoubleValue("longitude-deg"),
@@ -932,7 +932,7 @@ bool commandFindByIdent(const SGPropertyNode* arg)
     if (arg->hasChild("name")) {
         results = FGPositioned::findAllWithName(arg->getStringValue("name"), filt.get(), exact);
     } else if (arg->hasChild("ident")) {
-        results = FGPositioned::findAllWithName(arg->getStringValue("ident"), filt.get(), exact);
+        results = FGPositioned::findAllWithIdent(arg->getStringValue("ident"), filt.get(), exact);
     } else {
         SG_LOG(SG_GENERAL, SG_WARN, "commandFindByIdent: no search term defined");
         return false;

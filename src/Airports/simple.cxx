@@ -96,20 +96,18 @@ bool FGAirport::isHeliport() const
 
 FGAirportDynamics * FGAirport::getDynamics()
 {
-    if (_dynamics != 0) {
+    if (_dynamics) {
         return _dynamics;
-    } else {
-        //cerr << "Trying to load dynamics for " << _id << endl;
-        _dynamics = new FGAirportDynamics(this);
-        XMLLoader::load(_dynamics);
+    }
+    
+    _dynamics = new FGAirportDynamics(this);
+    XMLLoader::load(_dynamics);
 
-        FGRunwayPreference rwyPrefs(this);
-        XMLLoader::load(&rwyPrefs);
-        _dynamics->setRwyUse(rwyPrefs);
-
-        //FGSidStar SIDs(this);
-        XMLLoader::load(_dynamics->getSIDs());
-   }
+    FGRunwayPreference rwyPrefs(this);
+    XMLLoader::load(&rwyPrefs);
+    _dynamics->setRwyUse(rwyPrefs);
+    XMLLoader::load(_dynamics->getSIDs());
+    
     return _dynamics;
 }
 
