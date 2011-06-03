@@ -58,23 +58,15 @@ private:
   intVec freqTower;    // </TOWER>
   intVec freqApproach; // </APPROACH>
 
-<<<<<<< HEAD:src/Airports/dynamics.hxx
-  string atisInformation;
-
-  string chooseRunwayFallback();
-  bool innerGetActiveRunway(const string &trafficType, int action, string &runway, double heading);
-  string chooseRwyByHeading(stringVec rwys, double heading);
-
-    double elevation;
-
-=======
   int atisSequenceIndex;
   double atisSequenceTimeStamp;
   
   std::string chooseRunwayFallback();
   bool innerGetActiveRunway(const std::string &trafficType, int action, std::string &runway, double heading);
   std::string chooseRwyByHeading(stringVec rwys, double heading);
->>>>>>> next:src/Airports/dynamics.hxx
+
+  double elevation;
+
 public:
   FGAirportDynamics(FGAirport* ap);
   ~FGAirportDynamics();

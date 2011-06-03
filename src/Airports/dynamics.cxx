@@ -52,8 +52,8 @@ using std::random_shuffle;
 FGAirportDynamics::FGAirportDynamics(FGAirport * ap):
     _ap(ap), rwyPrefs(ap), SIDs(ap),
     atisSequenceIndex(-1),
-    atisSequenceTimeStamp(0.0)
-    startupController(this);
+    atisSequenceTimeStamp(0.0),
+    startupController(this)
 {
     lastUpdate = 0;
 }
