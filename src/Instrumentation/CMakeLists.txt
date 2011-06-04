@@ -36,6 +36,7 @@ set(SOURCES
 	turn_indicator.cxx
 	vertical_speed_indicator.cxx
 	wxradar.cxx
+	NavDisplay.cxx
     HUD/HUD.cxx
     HUD/HUD_dial.cxx
     HUD/HUD_gauge.cxx

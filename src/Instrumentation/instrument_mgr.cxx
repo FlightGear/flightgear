@@ -52,6 +52,7 @@
 #include "agradar.hxx"
 #include "rad_alt.hxx"
 #include "tcas.hxx"
+#include "NavDisplay.hxx"
 
 FGInstrumentMgr::FGInstrumentMgr () :
   _explicitGps(false)
@@ -227,7 +228,10 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
 
         } else if ( name == "tcas" ) {
             set_subsystem( id, new TCAS( node ) );
-
+        
+        } else if ( name == "navigation-display" ) {
+            set_subsystem( id, new NavDisplay( node ) );
+            
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: "
                     << name );
