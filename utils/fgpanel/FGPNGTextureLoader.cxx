@@ -22,7 +22,11 @@
 #endif
 #include "FGPNGTextureLoader.hxx"
 
-#include <GL/glu.h>
+#if defined (SG_MAC)
+#include <GLUT/glut.h>
+#else
+#include <GL/glut.h>
+#endif
 #include <png.h>
 #include <stdio.h>
 #include <stdlib.h>
