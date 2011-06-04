@@ -98,7 +98,6 @@ private:
     SGVec4f _adj_sky_color;
 
     // input parameters affected by the weather system
-    float _humidity;
     float _saturation;
     float _scattering;
 
