@@ -76,7 +76,9 @@ FGLight::FGLight ()
       _cloud_color(0, 0, 0, 0),
       _adj_fog_color(0, 0, 0, 0),
       _adj_sky_color(0, 0, 0, 0),
+      _humidity(69.5),
       _saturation(1.0),
+      _scattering(0.8),
       _dt_total(0)
 {
 }
@@ -140,8 +142,14 @@ void FGLight::reinit () {
 
 void FGLight::bind () {
     SGPropertyNode *prop = globals->get_props();
-    prop->tie("/sim/time/sun-angle-rad",SGRawValuePointer<double>(&_sun_angle));
+
+    // Write Only
     prop->tie("/rendering/scene/saturation",SGRawValuePointer<float>(&_saturation));
+    prop->tie("/rendering/scene/scattering",SGRawValuePointer<float>(&_scattering));
+    prop->tie("/environment/relative-humidity",SGRawValuePointer<float>(&_humidity));
+
+    // Read Only
+    prop->tie("/sim/time/sun-angle-rad",SGRawValuePointer<double>(&_sun_angle));
     prop->tie("/rendering/scene/ambient/red",SGRawValuePointer<float>(&_scene_ambient[0]));
     prop->tie("/rendering/scene/ambient/green",SGRawValuePointer<float>(&_scene_ambient[1]));
     prop->tie("/rendering/scene/ambient/blue",SGRawValuePointer<float>(&_scene_ambient[2]));
@@ -170,8 +178,11 @@ void FGLight::bind () {
 
 void FGLight::unbind () {
     SGPropertyNode *prop = globals->get_props();
-    prop->untie("/sim/time/sun-angle-rad");
     prop->untie("/rendering/scene/saturation");
+    prop->untie("/rendering/scene/scattering");
+    prop->untie("/environment/relative-humidity");
+
+    prop->untie("/sim/time/sun-angle-rad");
     prop->untie("/rendering/scene/ambient/red");
     prop->untie("/rendering/scene/ambient/green");
     prop->untie("/rendering/scene/ambient/blue");
@@ -214,8 +225,7 @@ void FGLight::update_sky_color () {
 
     // calculate lighting parameters based on sun's relative angle to
     // local up
-    static SGConstPropertyNode_ptr humidity = fgGetNode("/environment/relative-humidity");
-    float av = humidity->getFloatValue() * 45;
+    float av = _humidity * 45;
     float visibility_log = log(av)/11.0;
     float visibility_inv = (45000.0 - av)/45000.0;
 
@@ -224,6 +234,8 @@ void FGLight::update_sky_color () {
 
     if (_saturation < 0.0) _saturation = 0.0;
     else if (_saturation > 1.0) _saturation = 1.0;
+    if (_scattering < 0.0) _scattering = 0.0;
+    else if (_scattering > 1.0) _scattering = 1.0;
 
     float ambient = _ambient_tbl->interpolate( deg ) + visibility_inv/10;
     float diffuse = _diffuse_tbl->interpolate( deg );
@@ -242,7 +254,7 @@ void FGLight::update_sky_color () {
     // sky_brightness = 0.15;  // used to force a dark sky (when testing)
 
     // set fog and cloud color
-    float sqrt_sky_brightness = 1.0 - sqrt(1.0 - sky_brightness);
+    float sqrt_sky_brightness = (1.0 - sqrt(1.0 - sky_brightness))*_scattering;
     _fog_color[0] = base_fog_color[0] * sqrt_sky_brightness;
     _fog_color[1] = base_fog_color[1] * sqrt_sky_brightness;
     _fog_color[2] = base_fog_color[2] * sqrt_sky_brightness;
@@ -373,11 +385,10 @@ void FGLight::update_adj_fog_color () {
        sif = 1e-4;
 
     float rf1 = fabs((hor_rotation - SGD_PI) / SGD_PI);		// 0.0 .. 1.0
-    float rf2 = avf * pow(rf1*rf1, 1/sif) * 1.0639 * _saturation;
+    float rf2 = avf * pow(rf1*rf1, 1/sif) * 1.0639 * _saturation * _scattering;
     float rf3 = 1.0 - rf2;
 
     gamma = system_gamma * (0.9 - sif*avf);
-
     _adj_fog_color[0] = rf3 * _fog_color[0] + rf2 * s_red;
     _adj_fog_color[1] = rf3 * _fog_color[1] + rf2 * s_green;
     _adj_fog_color[2] = rf3 * _fog_color[2] + rf2 * s_blue;
@@ -399,23 +410,19 @@ void FGLight::updateSunPos()
     SG_LOG( SG_EVENT, SG_DEBUG, "  Updating Sun position" );
     SG_LOG( SG_EVENT, SG_DEBUG, "  Gst = " << t->getGst() );
 
-    double sun_l;
-    double sun_gc_lat;
-    fgSunPositionGST(t->getGst(), &sun_l, &sun_gc_lat);
-    set_sun_lon(sun_l);
+    fgSunPositionGST(t->getGst(), &_sun_lon, &_sun_lat);
     // It might seem that sun_gc_lat needs to be converted to geodetic
     // latitude here, but it doesn't. The sun latitude is the latitude
     // of the point on the earth where the up vector has the same
     // angle from geocentric Z as the sun direction. But geodetic
     // latitude is defined as 90 - angle of up vector from Z!
-    set_sun_lat(sun_gc_lat);
-    SGVec3d sunpos(SGVec3d::fromGeoc(SGGeoc::fromRadM(sun_l, sun_gc_lat,
+    SGVec3d sunpos(SGVec3d::fromGeoc(SGGeoc::fromRadM(_sun_lon, _sun_lat,
                                                       SGGeodesy::EQURAD)));
 
     SG_LOG( SG_EVENT, SG_DEBUG, "    t->cur_time = " << t->get_cur_time() );
     SG_LOG( SG_EVENT, SG_DEBUG,
-            "    Sun Geocentric lat = " << sun_gc_lat
-            << " Geodcentric lat = " << sun_gc_lat );
+            "    Sun Geocentric lat = " << _sun_lat
+            << " Geodcentric lat = " << _sun_lat );
 
     // update the sun light vector
     sun_vec() = SGVec4f(toVec3f(normalize(sunpos)), 0);
@@ -431,15 +438,16 @@ void FGLight::updateSunPos()
     // cout << "nsun = " << nsun[0] << "," << nsun[1] << ","
     //      << nsun[2] << endl;
 
-    set_sun_angle( acos( dot ( world_up, nsun ) ) );
+    _sun_angle = acos( dot ( world_up, nsun ) );
     SG_LOG( SG_EVENT, SG_DEBUG, "sun angle relative to current location = "
             << get_sun_angle() );
 
     // Get direction to the sun in the local frame.
     SGVec3d local_sun_vec = hlOr.transform(nsun);
+
     // Angle from south. XXX Is this correct in the southern hemisphere?
-    double angle = atan2(local_sun_vec.x(), -local_sun_vec.y());
-    set_sun_rotation(angle);
-    // cout << "  Sky needs to rotate = " << angle << " rads = "
-    //      << angle * SGD_RADIANS_TO_DEGREES << " degrees." << endl;
+    _sun_rotation = atan2(local_sun_vec.x(), -local_sun_vec.y());
+
+    // cout << "  Sky needs to rotate = " << _sun_rotation << " rads = "
+    //      << _sun_rotation * SGD_RADIANS_TO_DEGREES << " degrees." << endl;
 }

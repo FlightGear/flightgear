@@ -96,7 +96,11 @@ private:
     // clear sky and fog color adjusted for sunset effects
     SGVec4f _adj_fog_color;
     SGVec4f _adj_sky_color;
+
+    // input parameters affected by the weather system
+    float _humidity;
     float _saturation;
+    float _scattering;
 
     double _dt_total;
 
