@@ -76,7 +76,6 @@ FGLight::FGLight ()
       _cloud_color(0, 0, 0, 0),
       _adj_fog_color(0, 0, 0, 0),
       _adj_sky_color(0, 0, 0, 0),
-      _humidity(69.5),
       _saturation(1.0),
       _scattering(0.8),
       _dt_total(0)
@@ -146,7 +145,6 @@ void FGLight::bind () {
     // Write Only
     prop->tie("/rendering/scene/saturation",SGRawValuePointer<float>(&_saturation));
     prop->tie("/rendering/scene/scattering",SGRawValuePointer<float>(&_scattering));
-    prop->tie("/environment/relative-humidity",SGRawValuePointer<float>(&_humidity));
 
     // Read Only
     prop->tie("/sim/time/sun-angle-rad",SGRawValuePointer<double>(&_sun_angle));
@@ -225,7 +223,8 @@ void FGLight::update_sky_color () {
 
     // calculate lighting parameters based on sun's relative angle to
     // local up
-    float av = _humidity * 45;
+    static SGConstPropertyNode_ptr humidity = fgGetNode("/environment/relative-humidity");
+    float av = humidity->getFloatValue() * 45;
     float visibility_log = log(av)/11.0;
     float visibility_inv = (45000.0 - av)/45000.0;
 
