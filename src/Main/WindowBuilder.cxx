@@ -53,12 +53,8 @@ WindowBuilder::makeDefaultTraits(bool stencil)
     GraphicsContext::WindowingSystemInterface* wsi
         = osg::GraphicsContext::getWindowingSystemInterface();
     GraphicsContext::Traits* traits = new osg::GraphicsContext::Traits;
+
     traits->readDISPLAY();
-
-    unsigned screenwidth = 0;
-    unsigned screenheight = 0;
-    wsi->getScreenResolution(*traits, screenwidth, screenheight);
-
     if (traits->displayNum < 0)
         traits->displayNum = 0;
     if (traits->screenNum < 0)
@@ -75,6 +71,10 @@ WindowBuilder::makeDefaultTraits(bool stencil)
 
     if (stencil)
         traits->stencil = 8;
+
+    unsigned screenwidth = 0;
+    unsigned screenheight = 0;
+    wsi->getScreenResolution(*traits, screenwidth, screenheight);
 
     traits->doubleBuffer = true;
     traits->mipMapGeneration = true;
