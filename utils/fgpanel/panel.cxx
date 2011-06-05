@@ -31,7 +31,11 @@
 
 #include <simgear/compiler.h>
 
+#if defined (SG_MAC)
+#include <GLUT/glut.h>
+#else
 #include <GL/glut.h>
+#endif
 
 #include <plib/fnt.h>
 

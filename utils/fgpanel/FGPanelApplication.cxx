@@ -26,8 +26,13 @@
 
 #include "FGGLApplication.hxx"
 #include "FGPanelApplication.hxx"
+#if defined (SG_MAC)
+#include <OpenGL/gl.h>
+#include <GLUT/glut.h>
+#else
 #include <GL/gl.h>
 #include <GL/glut.h>
+#endif
 
 #include <simgear/math/SGMisc.hxx>
 #include <simgear/misc/sg_path.hxx>

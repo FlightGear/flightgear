@@ -17,8 +17,12 @@
 //
 #ifndef __FGTEXTURELOADERINTERFACE_HXX
 #define __FGTEXTURELOADERINTERFACE_HXX
-
+#include <simgear/compiler.h>
+#if defined (SG_MAC)
+#include <OpenGL/gl.h>
+#else
 #include <GL/gl.h>
+#endif
 #include <string>
 class FGTextureLoaderInterface {
 public:
