@@ -52,26 +52,30 @@ WindowBuilder::makeDefaultTraits(bool stencil)
 {
     GraphicsContext::WindowingSystemInterface* wsi
         = osg::GraphicsContext::getWindowingSystemInterface();
-    int w = fgGetInt("/sim/startup/xsize");
-    int h = fgGetInt("/sim/startup/ysize");
-    int bpp = fgGetInt("/sim/rendering/bits-per-pixel");
-    bool alpha = fgGetBool("/sim/rendering/clouds3d-enable");
-    bool fullscreen = fgGetBool("/sim/startup/fullscreen");
-
     GraphicsContext::Traits* traits = new osg::GraphicsContext::Traits;
+
     traits->readDISPLAY();
     if (traits->displayNum < 0)
         traits->displayNum = 0;
     if (traits->screenNum < 0)
         traits->screenNum = 0;
+
+    int bpp = fgGetInt("/sim/rendering/bits-per-pixel");
+    bool alpha = fgGetBool("/sim/rendering/clouds3d-enable");
     int cbits = (bpp <= 16) ?  5 :  8;
     int zbits = (bpp <= 16) ? 16 : 24;
     traits->red = traits->green = traits->blue = cbits;
     traits->depth = zbits;
     if (alpha)
-	traits->alpha = 8;
+        traits->alpha = 8;
+
     if (stencil)
-	traits->stencil = 8;
+        traits->stencil = 8;
+
+    unsigned screenwidth = 0;
+    unsigned screenheight = 0;
+    wsi->getScreenResolution(*traits, screenwidth, screenheight);
+
     traits->doubleBuffer = true;
     traits->mipMapGeneration = true;
     traits->windowName = "FlightGear";
@@ -79,25 +83,25 @@ WindowBuilder::makeDefaultTraits(bool stencil)
     traits->sampleBuffers = fgGetBool("/sim/rendering/multi-sample-buffers", traits->sampleBuffers);
     traits->samples = fgGetInt("/sim/rendering/multi-samples", traits->samples);
     traits->vsync = fgGetBool("/sim/rendering/vsync-enable", traits->vsync);
-    if (fullscreen) {
-        unsigned width = 0;
-        unsigned height = 0;
-        wsi->getScreenResolution(*traits, width, height);
-	traits->windowDecoration = false;
-        traits->width = width;
-        traits->height = height;
+    traits->windowDecoration = !fgGetBool("/sim/startup/fullscreen");
+
+    if (!traits->windowDecoration) {
+        // fullscreen
         traits->supportsResize = false;
+        traits->width = screenwidth;
+        traits->height = screenheight;
     } else {
-	traits->windowDecoration = true;
+        // window
+        int w = fgGetInt("/sim/startup/xsize");
+        int h = fgGetInt("/sim/startup/ysize");
+        traits->supportsResize = true;
         traits->width = w;
         traits->height = h;
-#if defined(WIN32) || defined(__APPLE__)
-        // Ugly Hack, why does CW_USEDEFAULT works like phase of the moon?
-        // Mac also needs this to show window frame, menubar and Docks
-        traits->x = 100;
-        traits->y = 100;
-#endif
-        traits->supportsResize = true;
+        if ((w>0)&&(h>0))
+        {
+            traits->x = ((unsigned)w>screenwidth) ? 0 : (screenwidth-w)/3;
+            traits->y = ((unsigned)h>screenheight) ? 0 : (screenheight-h)/3;
+        }
     }
     return traits;
 }
@@ -165,8 +169,11 @@ GraphicsWindow* WindowBuilder::buildWindow(const SGPropertyNode* winNode)
     int traitsSet = setFromProperty(traits->hostName, winNode, "host-name");
     traitsSet |= setFromProperty(traits->displayNum, winNode, "display");
     traitsSet |= setFromProperty(traits->screenNum, winNode, "screen");
+
     const SGPropertyNode* fullscreenNode = winNode->getNode("fullscreen");
+
     if (fullscreenNode && fullscreenNode->getBoolValue()) {
+        // fullscreen mode
         unsigned width = 0;
         unsigned height = 0;
         wsi->getScreenResolution(*traits, width, height);
@@ -174,9 +181,16 @@ GraphicsWindow* WindowBuilder::buildWindow(const SGPropertyNode* winNode)
         traits->width = width;
         traits->height = height;
         traits->supportsResize = false;
+        traits->x = 0;
+        traits->y = 0;
         traitsSet = 1;
     } else {
         int resizable = 0;
+        if (fullscreenNode && !fullscreenNode->getBoolValue())
+        {
+            traits->windowDecoration = true;
+            resizable = 1;
+        }
         resizable |= setFromProperty(traits->windowDecoration, winNode,
                                      "decoration");
         resizable |= setFromProperty(traits->width, winNode, "width");

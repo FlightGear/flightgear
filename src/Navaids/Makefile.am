@@ -13,7 +13,8 @@ libNavaids_a_SOURCES = \
 	airways.hxx airways.cxx \
 	route.hxx route.cxx \
 	waypoint.hxx waypoint.cxx \
-	procedure.hxx procedure.cxx
+	procedure.hxx procedure.cxx \
+	PositionedBinding.hxx PositionedBinding.cxx
 
 #
 # testnavs_SOURCES = testnavs.cxx

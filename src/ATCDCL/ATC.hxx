@@ -37,6 +37,11 @@
 
 class SGSampleGroup;
 
+namespace flightgear
+{
+    class CommStation;
+}
+
 // Convert a frequency in MHz to tens of kHz
 // so we can use it e.g. as an index into commlist_freq
 //
@@ -140,7 +145,7 @@ public:
 	inline atc_type GetType() { return _type; }
 	
 	// Set the core ATC data
-	void SetData(ATCData* d);
+    void SetStation(flightgear::CommStation* sta);
 
 	inline int get_freq() const { return freq; }
 	inline void set_freq(const int fq) {freq = fq;}

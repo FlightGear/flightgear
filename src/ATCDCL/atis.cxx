@@ -34,6 +34,8 @@
 #include "atis_lexicon.hxx"
 
 #include <simgear/compiler.h>
+#include <simgear/math/sg_random.h>
+#include <simgear/misc/sg_path.hxx>
 
 #include <stdlib.h> // atoi()
 #include <stdio.h>  // sprintf
@@ -44,9 +46,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
 
-
-#include <simgear/misc/sg_path.hxx>
-
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
 #include <Environment/atmosphere.hxx>
@@ -54,9 +53,9 @@
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Airports/runways.hxx>
+#include <Airports/dynamics.hxx>
 
 
-#include "commlist.hxx"
 #include "ATCutils.hxx"
 #include "ATCmgr.hxx"
 
@@ -241,12 +240,12 @@ int FGATIS::GenTransmission(const int regen, const int special) {
   string BRK = ".\n";
   string PAUSE = " / ";
 
-  double tstamp = atof(fgGetString("sim/time/elapsed-sec"));
   int interval = _type == ATIS ?
         ATIS_interval   // ATIS updated hourly
       : 2*minute;	// AWOS updated more frequently
-  int sequence = current_commlist->GetAtisSequence(ident, 
-  			tstamp, interval, special);
+
+  FGAirport* apt = FGAirport::findByIdent(ident);
+  int sequence = apt->getDynamics()->updateAtisSequence(interval, special);
   if (!regen && sequence > LTRS) {
 //xx      if (msg_OK) cout << "ATIS:  no change: " << sequence << endl;
 //xx      msg_time = cur_time;

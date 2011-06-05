@@ -1216,6 +1216,9 @@ FGHLA::open()
 bool
 FGHLA::process()
 {
+    if (!is_enabled())
+        return false;
+
     // First push our own data so that others can recieve ...
     if (get_direction() & SG_IO_OUT) {
         if (fgGetBool("/sim/fdm-initialized", false) && _localAircraftClass.valid()) {
@@ -1245,6 +1248,9 @@ FGHLA::process()
 bool
 FGHLA::close()
 {
+    if (!is_enabled())
+        return false;
+
     if (get_direction() & SG_IO_OUT) {
         // Remove the local object from the rti
         _localAircraftInstance->deleteInstance(simgear::RTIData("gone"));

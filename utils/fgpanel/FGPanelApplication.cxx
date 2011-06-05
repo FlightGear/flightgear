@@ -26,8 +26,13 @@
 
 #include "FGGLApplication.hxx"
 #include "FGPanelApplication.hxx"
+#if defined (SG_MAC)
+#include <OpenGL/gl.h>
+#include <GLUT/glut.h>
+#else
 #include <GL/gl.h>
 #include <GL/glut.h>
+#endif
 
 #include <simgear/math/SGMisc.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -98,7 +103,7 @@ FGPanelApplication::FGPanelApplication( int argc, char ** argv ) :
     string arg = argv[i];
     if( arg.find( "--prop:" ) == 0 ) {
       string s2 = arg.substr( 7 );
-      unsigned p = s2.find( "=" );
+      string::size_type p = s2.find( "=" );
       if( p != string::npos ) {
         string propertyName = s2.substr( 0, p );
         string propertyValue = s2.substr( p+1 );

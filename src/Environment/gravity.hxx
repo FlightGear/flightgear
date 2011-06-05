@@ -1,9 +1,8 @@
-// apt_loader.hxx -- a front end loader of the apt.dat file.  This loader
-//                   populates the runway and basic classes.
+// gravity.hxx -- interface for earth gravitational model
 //
-// Written by Curtis Olson, started December 2004.
+// Written by Torsten Dreyer, June 2011
 //
-// Copyright (C) 2004  Curtis L. Olson  - http://www.flightgear.org/~curt
+// Copyright (C) 2011  Torsten Dreyer - torsten (at) t3r _dot_ de
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -19,21 +18,26 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-// $Id$
 
+#ifndef __GRAVITY_HXX
+#define __GRAVITY_HXX
 
-#ifndef _FG_APT_LOADER_HXX
-#define _FG_APT_LOADER_HXX
+#include <simgear/math/SGMath.hxx>
 
-#include <simgear/compiler.h>
+namespace Environment {
 
-#include <string>
+class Gravity 
+{
+public:
+    virtual ~Gravity();
+    virtual double getGravity( const SGGeod & position ) const = 0;
 
-// Load the airport data base from the specified aptdb file.  The
-// metar file is used to mark the airports as having metar available
-// or not.
+    const static Gravity * instance();
 
-bool fgAirportDBLoad( const std::string &aptdb_file, 
-        const std::string &metar_file );
+private:
+    static Gravity * _instance;
+    
+};
 
-#endif // _FG_APT_LOADER_HXX
+} // namespace
+#endif // __GRAVITY_HXX

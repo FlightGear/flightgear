@@ -569,14 +569,6 @@
 				RelativePath="..\..\..\src\ATCDCL\atis.hxx"
 				>
 			</File>
-			<File
-				RelativePath="..\..\..\src\ATCDCL\commlist.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\ATCDCL\commlist.hxx"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Lib_Autopilot"
@@ -2450,14 +2442,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\FDM\TankProperties.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\FDM\TankProperties.hxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\FDM\flight.cxx"
 				>
 			</File>
@@ -2487,6 +2471,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\FDM\NullFDM.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\FDM\TankProperties.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\FDM\TankProperties.hxx"
 				>
 			</File>
 		</Filter>
@@ -2894,6 +2886,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\Navaids\PositionedBinding.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Navaids\PositionedBinding.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Navaids\procedure.cxx"
 				>
 			</File>
@@ -3031,14 +3031,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\Network\jsclient.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Network\multiplay.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Network\multiplay.hxx"
 				>
 			</File>
 			<File
@@ -3390,6 +3382,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\Environment\gravity.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\gravity.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Environment\metarairportfilter.cxx"
 				>
 			</File>
@@ -3414,6 +3414,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\Environment\presets.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\presets.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Environment\realwx_ctrl.cxx"
 				>
 			</File>
@@ -3435,14 +3443,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\Environment\terrainsampler.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Environment\presets.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Environment\presets.hxx"
 				>
 			</File>
 		</Filter>
@@ -3770,6 +3770,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\Instrumentation\tcas.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Instrumentation\tcas.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Instrumentation\transponder.cxx"
 				>
 			</File>
@@ -3799,14 +3807,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\Instrumentation\wxradar.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Instrumentation\tcas.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Instrumentation\tcas.hxx"
 				>
 			</File>
 			<Filter
@@ -4310,11 +4310,11 @@
 			Name="Lib_ATC"
 			>
 			<File
-				RelativePath="..\..\..\src\ATC\atis_mgr.cxx"
+				RelativePath="..\..\..\src\ATC\CommStation.cxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\ATC\atis_mgr.hxx"
+				RelativePath="..\..\..\src\ATC\CommStation.hxx"
 				>
 			</File>
 			<File

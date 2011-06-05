@@ -65,7 +65,7 @@
 #include <Network/ray.hxx>
 #include <Network/rul.hxx>
 #include <Network/generic.hxx>
-#include <Network/multiplay.hxx>
+
 #ifdef FG_HAVE_HLA
 #include <Network/HLA/hla.hxx>
 #endif
@@ -219,10 +219,23 @@ FGIO::parse_port_config( const string& config )
 		return NULL;
 	    }
 	    string dir = tokens[1];
-	    string rate = tokens[2];
+	    int rate = atoi(tokens[2].c_str());
 	    string host = tokens[3];
-	    string port = tokens[4];
-	    return new FGMultiplay(dir, atoi(rate.c_str()), host, atoi(port.c_str()));
+
+	     short port = atoi(tokens[4].c_str());    
+
+        // multiplay used to be handled by an FGProtocol, but no longer. This code
+        // retains compatability with existing command-line syntax
+          fgSetInt("/sim/multiplay/tx-rate-hz", rate);
+          if (dir == "in") {
+            fgSetInt("/sim/multiplay/rxport", port);
+            fgSetString("/sim/multiplay/rxhost", host.c_str());
+          } else if (dir == "out") {
+            fgSetInt("/sim/multiplay/txport", port);
+            fgSetString("/sim/multiplay/txhost", host.c_str());
+          }
+
+          return NULL;
 #ifdef FG_HAVE_HLA
 	} else if ( protocol == "hla" ) {
 	    return new FGHLA(tokens);
@@ -343,20 +356,20 @@ FGIO::init()
     // appropriate FGIOChannel structures
     string_list::iterator i = globals->get_channel_options_list()->begin();
     string_list::iterator end = globals->get_channel_options_list()->end();
-    for (; i != end; ++i )
-    {
-	p = parse_port_config( *i );
-	if ( p != NULL ) {
-	    p->open();
-	    io_channels.push_back( p );
-	    if ( !p->is_enabled() ) {
-		SG_LOG( SG_IO, SG_ALERT, "I/O Channel config failed." );
-		exit(-1);
-	    }
-	} else {
-	    SG_LOG( SG_IO, SG_INFO, "I/O Channel parse failed." );
-	}
-    }
+    for (; i != end; ++i ) {
+      p = parse_port_config( *i );
+      if (!p) {
+        continue;
+      }
+      
+      p->open();
+      if ( !p->is_enabled() ) {
+        SG_LOG( SG_IO, SG_ALERT, "I/O Channel config failed." );
+        delete p;
+      }
+      
+      io_channels.push_back( p );
+    } // of channel options iteration
 }
 
 void

@@ -36,6 +36,7 @@
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
 #include <Airports/runways.hxx>
+#include <ATCDCL/ATCutils.hxx>
 
 #include <string>
 #include <vector>
@@ -49,33 +50,11 @@ using std::random_shuffle;
 #include "dynamics.hxx"
 
 FGAirportDynamics::FGAirportDynamics(FGAirport * ap):
-_ap(ap), rwyPrefs(ap), SIDs(ap)
+_ap(ap), rwyPrefs(ap), SIDs(ap),
+    atisSequenceIndex(-1),
+    atisSequenceTimeStamp(0.0)
 {
     lastUpdate = 0;
-
-    // For testing only. This needs to be refined when we move ATIS functionality over.
-    atisInformation = "Sierra";
-}
-
-// Note that the ground network should also be copied
-FGAirportDynamics::
-FGAirportDynamics(const FGAirportDynamics & other):rwyPrefs(other.
-                                                            rwyPrefs),
-SIDs(other.SIDs)
-{
-    for (FGParkingVecConstIterator ip = other.parkings.begin();
-         ip != other.parkings.end(); ip++)
-        parkings.push_back(*(ip));
-    // rwyPrefs = other.rwyPrefs;
-    lastUpdate = other.lastUpdate;
-
-    stringVecConstIterator il;
-    for (il = other.landing.begin(); il != other.landing.end(); il++)
-        landing.push_back(*il);
-    for (il = other.takeoff.begin(); il != other.takeoff.end(); il++)
-        takeoff.push_back(*il);
-    lastUpdate = other.lastUpdate;
-    atisInformation = other.atisInformation;
 }
 
 // Destructor
@@ -539,4 +518,34 @@ FGAIFlightPlan *FGAirportDynamics::getSID(string activeRunway,
                                           double heading)
 {
     return SIDs.getBest(activeRunway, heading);
+}
+
+const std::string FGAirportDynamics::getAtisSequence()
+{
+   if (atisSequenceIndex == -1) {
+       updateAtisSequence(1, false);
+   }
+   
+   return GetPhoneticLetter(atisSequenceIndex);
+}
+
+int FGAirportDynamics::updateAtisSequence(int interval, bool forceUpdate)
+{
+    double now = globals->get_sim_time_sec();
+    if (atisSequenceIndex == -1) {
+        // first computation
+        atisSequenceTimeStamp = now;
+        atisSequenceIndex = rand() % LTRS; // random initial sequence letters
+        return atisSequenceIndex;
+    }
+
+    int steps = static_cast<int>((now - atisSequenceTimeStamp) / interval);
+    atisSequenceTimeStamp += (interval * steps);
+    if (forceUpdate && (steps == 0)) {
+        ++steps; // a "special" ATIS update is required
+    } 
+    
+    atisSequenceIndex = (atisSequenceIndex + steps) % LTRS;
+    // return a huge value if no update occurred
+    return (atisSequenceIndex + (steps ? 0 : LTRS*1000));
 }

@@ -1,8 +1,8 @@
 include(FlightGearComponent)
 
 set(SOURCES
-	atis_mgr.cxx
 	trafficcontrol.cxx
+	CommStation.cxx
 	)
 	
 flightgear_component(ATC "${SOURCES}")

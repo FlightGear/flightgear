@@ -270,12 +270,10 @@ float Turbulence::iturb(unsigned int x, unsigned int y)
         xfrac = xfrac*xfrac*(3 - 2*xfrac); // ... as cubics
         yfrac = yfrac*yfrac*(3 - 2*yfrac);
 
-#define WRAP(a) (a) >= wrapmax ? 0 : (a)
-        float p00 = lattice(WRAP(xl),   WRAP(yl)); // lattice values
-        float p01 = lattice(WRAP(xl),   WRAP(yl+1));
-        float p10 = lattice(WRAP(xl+1), WRAP(yl));
-        float p11 = lattice(WRAP(xl+1), WRAP(yl+1));
-#undef WRAP
+	float p00 = lattice(xl,   yl); // lattice values
+        float p01 = lattice(xl,   yl+1);
+        float p10 = lattice(xl+1, yl);
+        float p11 = lattice(xl+1, yl+1);
 
         float p0 = p00 * (1-yfrac) + p01 * yfrac;
         float p1 = p10 * (1-yfrac) + p11 * yfrac;
