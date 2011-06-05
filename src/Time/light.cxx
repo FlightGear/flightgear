@@ -237,6 +237,8 @@ void FGLight::update_sky_color () {
     else if (_saturation > 1.0) _saturation = 1.0;
     if (_scattering < 0.0) _scattering = 0.0;
     else if (_scattering > 1.0) _scattering = 1.0;
+    if (_overcast < 0.0) _overcast = 0.0;
+    else if (_overcast > 1.0) _overcast = 1.0;
 
     float ambient = _ambient_tbl->interpolate( deg ) + visibility_inv/10;
     float diffuse = _diffuse_tbl->interpolate( deg );
