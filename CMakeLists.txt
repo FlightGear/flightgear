@@ -130,7 +130,7 @@ if(ENABLE_LIBSVN)
 endif(ENABLE_LIBSVN)
 
 find_package(PLIB REQUIRED puaux pu js fnt)
-find_package(SimGear 2.2.0 REQUIRED)
+find_package(SimGear 2.3.0 REQUIRED)
 
 check_include_file(unistd.h HAVE_UNISTD_H)
 check_include_file(sys/time.h HAVE_SYS_TIME_H)

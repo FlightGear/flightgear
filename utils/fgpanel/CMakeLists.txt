@@ -1,7 +1,7 @@
-#FIXME: does this work in *nix/windows?
-find_package(png REQUIRED)
+#FIXME: does this work in windows?
+find_package(PNG REQUIRED)
 find_package(OpenGL REQUIRED)
-find_package(glut REQUIRED)
+find_package(GLUT REQUIRED)
 
 add_executable(fgpanel main.cxx
 	FGGLApplication.cxx 
