@@ -32,6 +32,7 @@
 #include "AIBallistic.hxx"
 
 #include <Main/util.hxx>
+#include <Environment/gravity.hxx>
 
 using namespace simgear;
 
@@ -51,7 +52,6 @@ _elapsed_time(0),
 _aero_stabilised(false),
 _drag_area(0.007),
 _life_timer(0.0),
-_gravity(32.1740485564),
 _buoyancy(0),
 _wind(true),
 _mass(0),
@@ -727,7 +727,7 @@ void FGAIBallistic::Run(double dt) {
     if ( speed < 0.0 )
         speed = 0.0;
 
-    double speed_fps = speed * SG_KT_TO_FPS;
+//    double speed_fps = speed * SG_KT_TO_FPS;
 
     // calculate vertical and horizontal speed components
     calcVSHS();
@@ -858,7 +858,8 @@ void FGAIBallistic::Run(double dt) {
         hs = 0;
 
     // adjust vertical speed for acceleration of gravity, buoyancy, and vertical force
-    vs -= (_gravity - _buoyancy - v_force_acc_fpss - normal_force_fpss) * dt;
+    double gravity = Environment::Gravity::instance()->getGravity(pos);
+    vs -= (gravity - _buoyancy - v_force_acc_fpss - normal_force_fpss) * dt;
 
     if (vs <= 0.00001 && vs >= -0.00001)
         vs = 0;
