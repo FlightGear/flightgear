@@ -28,7 +28,7 @@
 #include <string>
 #include <FL/Fl.H>
 #include <FL/filename.H>
-
+#include <string.h>
 #include "fgadmin.h"
 
 using std::string;
