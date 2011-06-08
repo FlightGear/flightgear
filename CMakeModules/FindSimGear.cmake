@@ -135,8 +135,8 @@ if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
         structure
         props
         xml
-        debug 
         misc
+        debug 
         magvar
         math)
     
