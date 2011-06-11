@@ -826,8 +826,11 @@ if test "x$with_libsvn" = "xyes"; then
     AC_CHECK_HEADERS([svn_client.h])
        if test "x$ac_cv_header_svn_client_h" = "xyes"; then
 	echo "TerraSync will use libsvn"
-	AC_SEARCH_LIBS(svn_client_checkout, svn_client-1)
-	AC_SEARCH_LIBS(svn_cmdline_init, svn_subr-1)
+	AC_SEARCH_LIBS(svn_client_checkout, svn_client-1,
+	               [AC_DEFINE([HAVE_LIBSVN_CLIENT_1], [1], [Define to 1 if you have libsvn_client-1])],
+	               [AC_MSG_ERROR(svn_client-1 library not found.)],)
+	AC_SEARCH_LIBS(svn_cmdline_init, svn_subr-1, , [AC_MSG_ERROR(svn_subr-1 library not found.)],)
+	AC_SEARCH_LIBS(svn_ra_initialize, svn_ra-1, , [AC_MSG_ERROR(svn_ra-1 library not found.)],)
 	svn_LIBS=$LIBS
 	svn_CPPFLAGS=$CPPFLAGS
 	AC_SUBST(svn_LIBS)
