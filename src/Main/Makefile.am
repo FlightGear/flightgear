@@ -113,7 +113,7 @@ fgfs_LDADD = \
 	-lsgroute -lsgsky -lsgsound -lsgephem -lsgtgdb -lsgmodel -lsgbvh \
 	-lsgmaterial -lsgutil -lsgtiming -lsgio -lsgscreen -lsgmath -lsgbucket \
 	-lsgprops -lsgdebug -lsgmagvar -lsgmisc -lsgnasal -lsgxml -lsgsound \
-	-lsgserial -lsgstructure -lsgenvironment \
+	-lsgserial -lsgstructure -lsgenvironment -lsgtsync\
         $(fgfs_PLIB_LIBS) \
 	$(OSG_LIBS) \
 	$(thread_LIBS) \
@@ -121,7 +121,8 @@ fgfs_LDADD = \
 	-lz \
 	$(opengl_LIBS) \
 	$(openal_LIBS) \
-	$(EVENT_LIBS)
+	$(EVENT_LIBS) \
+	$(svn_LIBS)
 
 fgfs_LDFLAGS = $(fgfs_PLIB_FW) $(fgfs_OSG_FW) $(LDFLAGS)
 

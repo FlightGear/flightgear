@@ -49,7 +49,7 @@ endif()
 
 target_link_libraries(fgfs 
 	${FG_LIBS}
-        ${HLA_LIBRARIES}
+	${HLA_LIBRARIES}
 	${SIMGEAR_LIBRARIES}
 	${OPENSCENEGRAPH_LIBRARIES} 
 	${OPENAL_LIBRARY} 
