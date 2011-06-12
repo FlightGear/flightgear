@@ -364,7 +364,10 @@ FGGlobals::saveInitialState ()
 {
   initial_state = new SGPropertyNode();
 
-  if (!copyProperties(props, initial_state))
+  // copy properties which are READ/WRITEable - but not USERARCHIVEd
+  if (!copyProperties(props, initial_state,
+          SGPropertyNode::READ+SGPropertyNode::WRITE,
+          SGPropertyNode::READ+SGPropertyNode::WRITE+SGPropertyNode::USERARCHIVE))
     SG_LOG(SG_GENERAL, SG_ALERT, "Error saving initial state");
     
   // delete various properties from the initial state, since we want to
@@ -393,8 +396,10 @@ FGGlobals::restoreInitialState ()
                "No initial state available to restore!!!");
         return;
     }
-
-    if ( copyProperties(initial_state, props) ) {
+    // restore properties which are READ/WRITEable - but not USERARCHIVEd
+    if ( copyProperties(initial_state, props,
+            SGPropertyNode::READ+SGPropertyNode::WRITE,
+            SGPropertyNode::READ+SGPropertyNode::WRITE+SGPropertyNode::USERARCHIVE)) {
         SG_LOG( SG_GENERAL, SG_INFO, "Initial state restored successfully" );
     } else {
         SG_LOG( SG_GENERAL, SG_INFO,
