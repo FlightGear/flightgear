@@ -65,7 +65,7 @@ else()
 	set(FG_NDEBUG 1)
 endif()
 
-if(${SP_FDMS})
+if(SP_FDMS)
 	set(ENABLE_SP_FDM 1)
 endif()
 
