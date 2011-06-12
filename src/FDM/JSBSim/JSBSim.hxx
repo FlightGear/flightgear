@@ -38,7 +38,6 @@ INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #undef MAX_ENGINES
-#include "math/FGColumnVector3.h"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
@@ -69,6 +68,7 @@ class FGPropagate;
 class FGAuxiliary;
 class FGOutput;
 class FGInitialCondition;
+class FGLocation;
 }
 
 // Adding it here will cause a namespace clash in FlightGear -EMH-
@@ -209,10 +209,9 @@ public:
     /** Update the position based on inputs, positions, velocities, etc.
         @param dt delta time in seconds. */
     void update(double dt);
+
     bool ToggleDataLogging(bool state);
     bool ToggleDataLogging(void);
-    void do_trim(void);
-    void update_ic(void);
 
     bool get_agl_ft(double t, const double pt[3], double alt_off,
                     double contact[3], double normal[3], double vel[3],
@@ -292,6 +291,10 @@ private:
 
     bool crashed;
 
+    void do_trim(void);
+
+    double getMachFromVcas(double vcas);
+    bool update_ground_cache(JSBSim::FGLocation cart, double* cart_pos, double dt);
     void init_gear(void);
     void update_gear(void);
 
