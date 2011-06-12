@@ -1,9 +1,11 @@
 include(FlightGearComponent)
 
-set(EVENT_INPUT_SOURCES
-	FGLinuxEventInput.cxx
-	FGMacOSXEventInput.cxx
-	)
+IF(APPLE)
+	set(EVENT_INPUT_SOURCES FGMacOSXEventInput.cxx)
+else()
+	set(EVENT_INPUT_SOURCES FGLinuxEventInput.cxx)
+endif()
+
 
 set(SOURCES
 	FGButton.cxx
@@ -18,6 +20,7 @@ set(SOURCES
 	
 if(EVENT_INPUT)
 	list(APPEND SOURCES ${EVENT_INPUT_SOURCES})
+	include_directories(${DBUS_INCLUDE_DIR} ${DBUS_ARCH_INCLUDE_DIR})
 endif()
 	
 set(FGJS_SOURCES

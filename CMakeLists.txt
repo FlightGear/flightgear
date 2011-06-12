@@ -71,6 +71,7 @@ endif()
 
 if(EVENT_INPUT)
 	message(STATUS "checking event-based Input")
+	find_package(DBus)
 	IF(APPLE)
 
 	elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
