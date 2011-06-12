@@ -76,8 +76,8 @@ private:
 FGTileMgr::FGTileMgr():
     state( Start ),
     vis( 16000 ),
-    _propListener(new LoaderPropertyWatcher(this)),
-    _terra_sync(NULL)
+    _terra_sync(NULL),
+    _propListener(new LoaderPropertyWatcher(this))
 {
     _randomObjects = fgGetNode("/sim/rendering/random-objects", true);
     _randomVegetation = fgGetNode("/sim/rendering/random-vegetation", true);
