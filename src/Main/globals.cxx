@@ -364,21 +364,18 @@ FGGlobals::saveInitialState ()
 {
   initial_state = new SGPropertyNode();
 
-  // copy properties which are READ/WRITEable - but not USERARCHIVEd
-  if (!copyProperties(props, initial_state,
-          SGPropertyNode::READ+SGPropertyNode::WRITE,
-          SGPropertyNode::READ+SGPropertyNode::WRITE+SGPropertyNode::USERARCHIVE))
+  // copy properties which are READ/WRITEable - but not USERARCHIVEd or PRESERVEd
+  int checked  = SGPropertyNode::READ+SGPropertyNode::WRITE+
+                 SGPropertyNode::USERARCHIVE+SGPropertyNode::PRESERVE;
+  int expected = SGPropertyNode::READ+SGPropertyNode::WRITE;
+  if (!copyProperties(props, initial_state, expected, checked))
     SG_LOG(SG_GENERAL, SG_ALERT, "Error saving initial state");
     
   // delete various properties from the initial state, since we want to
   // preserve their values even if doing a restore
-  
+  // => Properties should now use the PRESERVE flag to protect their values
+  // on sim-reset. Remove some specific properties for backward compatibility.
   SGPropertyNode* sim = initial_state->getChild("sim");
-  sim->removeChild("presets");
-  SGPropertyNode* simStartup = sim->getChild("startup");
-  simStartup->removeChild("xsize");
-  simStartup->removeChild("ysize");
-  
   SGPropertyNode* cameraGroupNode = sim->getNode("rendering/camera-group");
   if (cameraGroupNode) {
     cameraGroupNode->removeChild("camera");
@@ -396,10 +393,11 @@ FGGlobals::restoreInitialState ()
                "No initial state available to restore!!!");
         return;
     }
-    // restore properties which are READ/WRITEable - but not USERARCHIVEd
-    if ( copyProperties(initial_state, props,
-            SGPropertyNode::READ+SGPropertyNode::WRITE,
-            SGPropertyNode::READ+SGPropertyNode::WRITE+SGPropertyNode::USERARCHIVE)) {
+    // copy properties which are READ/WRITEable - but not USERARCHIVEd or PRESERVEd
+    int checked  = SGPropertyNode::READ+SGPropertyNode::WRITE+
+                   SGPropertyNode::USERARCHIVE+SGPropertyNode::PRESERVE;
+    int expected = SGPropertyNode::READ+SGPropertyNode::WRITE;
+    if ( copyProperties(initial_state, props, expected, checked)) {
         SG_LOG( SG_GENERAL, SG_INFO, "Initial state restored successfully" );
     } else {
         SG_LOG( SG_GENERAL, SG_INFO,
