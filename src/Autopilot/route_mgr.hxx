@@ -35,6 +35,8 @@ class SGPath;
 class PropertyWatcher;
 
 class FGAirport;
+class FGRunway;
+
 typedef SGSharedPtr<FGAirport> FGAirportRef;
 
 /**
@@ -134,6 +136,12 @@ public:
      *  - navaid/radial-deg/offset-nm
      */
     flightgear::WayptRef waypointFromString(const std::string& target);
+    
+    FGAirportRef departureAirport() const;
+    FGAirportRef destinationAirport() const;
+    
+    FGRunway* departureRunway() const;
+    FGRunway* destinationRunway() const;
 private:
   flightgear::WayptVec _route;
   int _currentIndex;

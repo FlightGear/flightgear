@@ -37,6 +37,7 @@
 
 class FGODGauge;
 class FGRouteMgr;
+class FGNavRecord;
 
 class NavDisplay : public SGSubsystem
 {
@@ -52,10 +53,7 @@ protected:
     string _name;
     int _num;
     double _time;
-    double _interval;
-    double _elapsed_time;
-    double _persistance;
-    bool _sim_init_done;
+    double _updateInterval;
 
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _Instrument;
@@ -80,13 +78,7 @@ private:
     DisplayMode _display_mode;
 
     float _scale;   // factor to convert nm to display units
-    float _angle_offset;
     float _view_heading;
-    float _x_offset, _y_offset;
-
-    double _radar_ref_rng;
-    double _lat, _lon;
-
     bool _drawData;
     
     SGPropertyNode_ptr _Radar_controls;
@@ -95,7 +87,9 @@ private:
     SGPropertyNode_ptr _radar_position_node;
     SGPropertyNode_ptr _radar_data_node;
     SGPropertyNode_ptr _radar_symbol_node;
-
+    SGPropertyNode_ptr _radar_arpt_node;
+    SGPropertyNode_ptr _radar_station_node;
+    
     SGPropertyNode_ptr _radar_centre_node;
     SGPropertyNode_ptr _radar_coverage_node;
     SGPropertyNode_ptr _radar_ref_rng_node;
@@ -104,9 +98,16 @@ private:
     SGPropertyNode_ptr _radar_tcas_node;
     SGPropertyNode_ptr _radar_absalt_node;
 
+    SGPropertyNode_ptr _draw_track_node;
+    SGPropertyNode_ptr _draw_heading_node;
+    SGPropertyNode_ptr _draw_north_node;
+    SGPropertyNode_ptr _draw_fix_node;
+    
     SGPropertyNode_ptr _font_node;
     SGPropertyNode_ptr _ai_enabled_node;
-
+    SGPropertyNode_ptr _navRadio1Node;
+    SGPropertyNode_ptr _navRadio2Node;
+    
     osg::ref_ptr<osg::Texture2D> _resultTexture;
     osg::ref_ptr<osg::Texture2D> _symbols;
     osg::ref_ptr<osg::Geode> _radarGeode;
@@ -117,7 +118,8 @@ private:
     osg::DrawArrays* _symbolPrimSet;
     osg::Vec2Array *_vertices;
     osg::Vec2Array *_texCoords;
-  
+    osg::Vec3Array* _quadColors;
+    
     osg::Geometry* _lineGeometry;
     osg::DrawArrays* _linePrimSet;
     osg::Vec2Array* _lineVertices;
@@ -125,6 +127,8 @@ private:
   
   
     osg::Matrixf _centerTrans;
+    osg::Matrixf _projectMat;
+    
     osg::ref_ptr<osgText::Font> _font;
     osg::Vec4 _font_color;
     osg::Vec4 _tcas_colors[4];
@@ -137,14 +141,26 @@ private:
     
     void update_route();
     void update_aircraft();
-    bool update_tcas(const SGPropertyNode *model,double range,double user_alt,double alt,
-                     double bearing,double radius, bool absMode);
+    void update_stations();
+    void update_airports();
+    void update_waypoints();
+    
+    bool update_tcas(const SGPropertyNode *model, const SGGeod& modelPos, 
+                            double user_alt,double alt, bool absMode);
     void update_data(const SGPropertyNode *ac, double altitude, double heading,
                                double radius, double bearing, bool selected);
     void updateFont();
     
     osg::Matrixf project(const SGGeod& geod) const;
-    void addSymbol(const SGGeod& pos, int symbolIndex, const std::string& data);
+    osg::Vec2 projectBearingRange(double bearingDeg, double rangeNm) const;
+    osg::Vec2 projectGeod(const SGGeod& geod) const;
+    
+    void addSymbol(const SGGeod& pos, int symbolIndex, 
+        const std::string& data, const osg::Vec3& color);
+  
+    void addLine(osg::Vec2 a, osg::Vec2 b, const osg::Vec3& color);
+    
+    FGNavRecord* drawTunedNavaid(const SGPropertyNode_ptr& radio );    
 };
 
 #endif // _INST_ND_HXX

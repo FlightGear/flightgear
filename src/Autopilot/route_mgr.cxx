@@ -1556,3 +1556,42 @@ void FGRouteMgr::setDestinationICAO(const char* aIdent)
   
   arrivalChanged();
 }
+
+FGAirportRef FGRouteMgr::departureAirport() const
+{
+    return _departure;
+}
+
+FGAirportRef FGRouteMgr::destinationAirport() const
+{
+    return _destination;
+}
+
+FGRunway* FGRouteMgr::departureRunway() const
+{
+    if (!_departure) {
+        return NULL;
+    }
+    
+    string runwayId(departure->getStringValue("runway"));
+    if (!_departure->hasRunwayWithIdent(runwayId)) {
+        return NULL;
+    }
+    
+    return _departure->getRunwayByIdent(runwayId);
+}
+
+FGRunway* FGRouteMgr::destinationRunway() const
+{
+    if (!_destination) {
+        return NULL;
+    }
+    
+    string runwayId(destination->getStringValue("runway"));
+    if (!_destination->hasRunwayWithIdent(runwayId)) {
+        return NULL;
+    }
+    
+    return _destination->getRunwayByIdent(runwayId);
+}
+

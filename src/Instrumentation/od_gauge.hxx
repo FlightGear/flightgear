@@ -43,7 +43,9 @@ public:
     virtual void update (double dt);
 
     void setSize(int viewSize);
-
+    int size() const
+        { return textureWH; }
+    
     /**
      * Say if we can render to a texture.
      * @return true if rtt is available
