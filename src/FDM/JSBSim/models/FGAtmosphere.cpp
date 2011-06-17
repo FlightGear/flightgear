@@ -61,7 +61,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGAtmosphere.cpp,v 1.42 2011/02/18 12:44:16 jberndt Exp $";
+static const char *IdSrc = "$Id: FGAtmosphere.cpp,v 1.45 2011/05/20 03:18:36 jberndt Exp $";
 static const char *IdHdr = ID_ATMOSPHERE;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -84,8 +84,7 @@ FGAtmosphere::FGAtmosphere(FGFDMExec* fdmex) : FGModel(fdmex)
   htab[7]=278385.0; //ft.
 
   MagnitudedAccelDt = MagnitudeAccel = Magnitude = 0.0;
-//  SetTurbType( ttCulp );
-  SetTurbType( ttNone );
+  SetTurbType( ttMilspec );
   TurbGain = 1.0;
   TurbRate = 10.0;
   Rhythmicity = 0.1;
@@ -132,8 +131,6 @@ FGAtmosphere::~FGAtmosphere()
 
 bool FGAtmosphere::InitModel(void)
 {
-  if (!FGModel::InitModel()) return false;
-
   UseInternal();  // this is the default
 
   Calculate(h);
@@ -151,10 +148,10 @@ bool FGAtmosphere::InitModel(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGAtmosphere::Run(void)
+bool FGAtmosphere::Run(bool Holding)
 {
-  if (FGModel::Run()) return true;
-  if (FDMExec->Holding()) return false;
+  if (FGModel::Run(Holding)) return true;
+  if (Holding) return false;
 
   RunPreFunctions();
 
@@ -483,45 +480,7 @@ void FGAtmosphere::Turbulence(void)
 
     break;
   }
-  case ttBerndt: { // This is very experimental and incomplete at the moment.
 
-    vDirectiondAccelDt(eX) = GaussianRandomNumber();
-    vDirectiondAccelDt(eY) = GaussianRandomNumber();
-    vDirectiondAccelDt(eZ) = GaussianRandomNumber();
-/*
-    MagnitudedAccelDt = GaussianRandomNumber();
-    MagnitudeAccel    += MagnitudedAccelDt * DeltaT;
-    Magnitude         += MagnitudeAccel * DeltaT;
-*/
-    Magnitude         += GaussianRandomNumber() * DeltaT;
-
-    vDirectiondAccelDt.Normalize();
-    vDirectionAccel += TurbRate * vDirectiondAccelDt * DeltaT;
-    vDirectionAccel.Normalize();
-    vDirection      += vDirectionAccel*DeltaT;
-
-    // Diminish z-vector within two wingspans of the ground
-    if (HOverBMAC < 2.0) vDirection(eZ) *= HOverBMAC / 2.0;
-
-    vDirection.Normalize();
-
-    vTurbulenceNED = TurbGain*Magnitude * vDirection;
-    vTurbulenceGrad = TurbGain*MagnitudeAccel * vDirection;
-
-    vBodyTurbGrad = Tl2b * vTurbulenceGrad;
-    vTurbPQR(eP) = vBodyTurbGrad(eY) / wingspan;
-    if (HTailArm > 0)
-      vTurbPQR(eQ) = vBodyTurbGrad(eZ) / HTailArm;
-    else
-      vTurbPQR(eQ) = vBodyTurbGrad(eZ) / 10.0;
-
-    if (VTailArm > 0)
-      vTurbPQR(eR) = vBodyTurbGrad(eX) / VTailArm;
-    else
-      vTurbPQR(eR) = vBodyTurbGrad(eX)/10.0;
-
-    break;
-  }
   case ttCulp: { 
 
     vTurbPQR(eP) = wind_from_clockwise;

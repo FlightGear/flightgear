@@ -140,7 +140,7 @@ FGJSBsim::FGJSBsim( double dt )
     if( TURBULENCE_TYPE_NAMES.empty() ) {
         TURBULENCE_TYPE_NAMES["ttNone"]     = FGAtmosphere::ttNone;
         TURBULENCE_TYPE_NAMES["ttStandard"] = FGAtmosphere::ttStandard;
-        TURBULENCE_TYPE_NAMES["ttBerndt"]   = FGAtmosphere::ttBerndt;
+//      TURBULENCE_TYPE_NAMES["ttBerndt"]   = FGAtmosphere::ttBerndt;
         TURBULENCE_TYPE_NAMES["ttCulp"]     = FGAtmosphere::ttCulp;
         TURBULENCE_TYPE_NAMES["ttMilspec"]  = FGAtmosphere::ttMilspec;
         TURBULENCE_TYPE_NAMES["ttTustin"]   = FGAtmosphere::ttTustin;
@@ -672,9 +672,9 @@ bool FGJSBsim::copy_to_JSBsim()
 
     Atmosphere->SetTurbType((FGAtmosphere::tType)TURBULENCE_TYPE_NAMES[turbulence_model->getStringValue()]);
     switch( Atmosphere->GetTurbType() ) {
+//      case FGAtmosphere::ttBerndt:
         case FGAtmosphere::ttStandard:
-        case FGAtmosphere::ttCulp:
-        case FGAtmosphere::ttBerndt: {
+        case FGAtmosphere::ttCulp: {
             double tmp = turbulence_gain->getDoubleValue();
             Atmosphere->SetTurbGain(tmp * tmp * 100.0);
             Atmosphere->SetTurbRate(turbulence_rate->getDoubleValue());
