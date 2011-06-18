@@ -99,6 +99,7 @@ Section "" ;No components page, name is not important
   File ${OSGPluginsDir}\osgdb_jpeg.dll
   File ${OSGPluginsDir}\osgdb_rgb.dll  
   File ${OSGPluginsDir}\osgdb_png.dll
+  File ${OSGPluginsDir}\osgdb_dds.dll
   File ${OSGPluginsDir}\osgdb_txf.dll
   
   
