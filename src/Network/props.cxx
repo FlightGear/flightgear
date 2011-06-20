@@ -449,6 +449,7 @@ FGProps::FGProps( const vector<string>& tokens )
     } else {
         throw FGProtocolConfigError( "FGProps: incorrect number of configuration arguments" );
     }
+    printf( "Property server started on port %d\n", port );
 }
 
 /**
