@@ -2,9 +2,11 @@
 #include <cstdlib>
 
 #include <osg/ArgumentParser>
+#include <osg/Fog>
 #include <osgDB/ReadFile>
 #include <osgViewer/Viewer>
 #include <osgViewer/ViewerEventHandlers>
+#include <osgViewer/Renderer>
 #include <osgGA/KeySwitchMatrixManipulator>
 #include <osgGA/TrackballManipulator>
 #include <osgGA/FlightManipulator>
@@ -14,6 +16,7 @@
 #include <simgear/props/props.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/material/matlib.hxx>
 #include <simgear/scene/tgdb/SGReaderWriterBTGOptions.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
@@ -26,8 +29,7 @@ public:
     virtual osg::Node *loadTileModel(const string& modelPath, bool)
     {
         try {
-            SGSharedPtr<SGPropertyNode> prop = new SGPropertyNode;
-            return simgear::SGModelLib::loadModel(modelPath, prop);
+            return simgear::SGModelLib::loadModel(modelPath, simgear::getPropertyRoot());
         } catch (...) {
             std::cerr << "Error loading \"" << modelPath << "\"" << std::endl;
             return 0;
@@ -42,7 +44,6 @@ main(int argc, char** argv)
     // pulled in by the linker ...
     // FIXME: make that more explicit clear and call an initialization function
     simgear::ModelRegistry::instance();
-    sgUserDataInit(0);
     DummyLoadHelper dummyLoadHelper;
     simgear::TileEntry::setModelLoadHelper(&dummyLoadHelper);
 
@@ -51,13 +52,11 @@ main(int argc, char** argv)
 
     // construct the viewer.
     osgViewer::Viewer viewer(arguments);
-    // ... for some reason, get rid of that FIXME!
-    viewer.setThreadingModel(osgViewer::Viewer::SingleThreaded);
-    
+
     // set up the camera manipulators.
     osgGA::KeySwitchMatrixManipulator* keyswitchManipulator;
     keyswitchManipulator = new osgGA::KeySwitchMatrixManipulator;
-    
+
     keyswitchManipulator->addMatrixManipulator('1', "Trackball",
                                                new osgGA::TrackballManipulator);
     keyswitchManipulator->addMatrixManipulator('2', "Flight",
@@ -66,16 +65,30 @@ main(int argc, char** argv)
                                                new osgGA::DriveManipulator);
     keyswitchManipulator->addMatrixManipulator('4', "Terrain",
                                                new osgGA::TerrainManipulator);
-    
+
     viewer.setCameraManipulator(keyswitchManipulator);
 
     // Usefull stats
     viewer.addEventHandler(new osgViewer::HelpHandler);
     viewer.addEventHandler(new osgViewer::StatsHandler);
-    // Same FIXME ...
-    // viewer.addEventHandler(new osgViewer::ThreadingHandler);
+    viewer.addEventHandler(new osgViewer::ThreadingHandler);
     viewer.addEventHandler(new osgViewer::LODScaleHandler);
     viewer.addEventHandler(new osgViewer::ScreenCaptureHandler);
+    viewer.addEventHandler(new osgViewer::WindowSizeHandler);
+
+    // Sigh, we need our own cull visitor ...
+    osg::Camera* camera = viewer.getCamera();
+    osgViewer::Renderer* renderer = static_cast<osgViewer::Renderer*>(camera->getRenderer());
+    for (int j = 0; j < 2; ++j) {
+        osgUtil::SceneView* sceneView = renderer->getSceneView(j);
+        sceneView->setCullVisitor(new simgear::EffectCullVisitor);
+    }
+    // Shaders expect valid fog
+    osg::Fog* fog = new osg::Fog;
+    fog->setMode(osg::Fog::EXP2);
+    fog->setColor(osg::Vec4(1, 1, 1, 1));
+    fog->setDensity(1e-6);
+    camera->getOrCreateStateSet()->setAttribute(fog);
 
     const char *fg_root_env = std::getenv("FG_ROOT");
     std::string fg_root;
@@ -110,6 +123,7 @@ main(int argc, char** argv)
     }
 
     SGSharedPtr<SGPropertyNode> props = new SGPropertyNode;
+    sgUserDataInit(props.get());
     try {
         SGPath preferencesFile = fg_root;
         preferencesFile.append("preferences.xml");
@@ -130,14 +144,15 @@ main(int argc, char** argv)
         std::cerr << "Problems loading FlightGear materials.\n"
                   << "Probably FG_ROOT is not properly set." << std::endl;
     }
+    simgear::SGModelLib::init(fg_root, props);
 
     // The file path list must be set in the registry.
     osgDB::Registry::instance()->getDataFilePathList() = filePathList;
-    
+
     SGReaderWriterBTGOptions* btgOptions = new SGReaderWriterBTGOptions;
     btgOptions->getDatabasePathList() = filePathList;
     btgOptions->setMatlib(ml);
-    
+
     // read the scene from the list of file specified command line args.
     osg::ref_ptr<osg::Node> loadedModel;
     loadedModel = osgDB::readNodeFiles(arguments, btgOptions);
@@ -148,9 +163,9 @@ main(int argc, char** argv)
                   << ": No data loaded" << std::endl;
         return EXIT_FAILURE;
     }
-    
+
     // pass the loaded scene graph to the viewer.
     viewer.setSceneData(loadedModel.get());
-    
+
     return viewer.run();
 }
