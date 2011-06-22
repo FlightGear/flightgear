@@ -476,10 +476,9 @@ static naRef f_systime(naContext c, naRef me, int argc, naRef* args)
     // Converts from 100ns units in 1601 epoch to unix epoch in sec
     return naNum((t * 1e-7) - 11644473600.0);
 #else
-    time_t t;
     struct timeval td;
-    do { t = time(0); gettimeofday(&td, 0); } while(t != time(0));
-    return naNum(t + 1e-6 * td.tv_usec);
+    gettimeofday(&td, 0);
+    return naNum(td.tv_sec + 1e-6 * td.tv_usec);
 #endif
 }
 
@@ -915,7 +914,9 @@ void FGNasalSys::loadPropertyScripts(SGPropertyNode* n)
             enable->addChangeListener(listener, false);
         }
     }
-    n->setBoolValue("loaded",is_loaded);
+    SGPropertyNode* loaded = n->getChild("loaded",0,true);
+    loaded->setAttribute(SGPropertyNode::PRESERVE,true);
+    loaded->setBoolValue(is_loaded);
 }
 
 // Logs a runtime error, with stack trace, to the FlightGear log stream

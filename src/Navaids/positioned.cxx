@@ -28,6 +28,7 @@
 #include <set>
 #include <algorithm> // for sort
 #include <queue>
+#include <memory>
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -35,11 +36,16 @@
 #include <osg/Math> // for osg::isNaN
 
 #include <simgear/timing/timestamp.hxx>
+#include <simgear/props/props.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/math/SGGeometry.hxx>
+#include <simgear/sg_inlines.h>
+#include <simgear/structure/commands.hxx>
 
-
+#include "PositionedBinding.hxx"
+#include "Airports/simple.hxx"
+#include "Main/fg_props.hxx"
 
 typedef std::multimap<std::string, FGPositioned*> NamedPositionedIndex;
 typedef std::pair<NamedPositionedIndex::const_iterator, NamedPositionedIndex::const_iterator> NamedIndexRange;
@@ -628,7 +634,15 @@ FGPositioned::Type FGPositioned::typeFromName(const std::string& aName)
     {"fix", FIX},
     {"tacan", TACAN},
     {"dme", DME},
+    {"atis", FREQ_ATIS},
+    {"awos", FREQ_AWOS},
+    {"tower", FREQ_TOWER},
+    {"ground", FREQ_GROUND},
+    {"approach", FREQ_APP_DEP},
+    {"departure", FREQ_APP_DEP},
   // aliases
+    {"gnd", FREQ_GROUND},
+    {"twr", FREQ_TOWER},
     {"waypoint", WAYPOINT},
     {"apt", AIRPORT},
     {"arpt", AIRPORT},
@@ -672,9 +686,22 @@ const char* FGPositioned::nameForType(Type aTy)
  case WAYPOINT: return "waypoint";
  case DME: return "dme";
  case TACAN: return "tacan";
+ case FREQ_TOWER: return "tower";
+ case FREQ_ATIS: return "atis";
+ case FREQ_AWOS: return "awos";
+ case FREQ_GROUND: return "ground";
+ case FREQ_CLEARANCE: return "clearance";
+ case FREQ_UNICOM: return "unicom";
+ case FREQ_APP_DEP: return "approach-departure";
  default:
   return "unknown";
  }
+}
+
+flightgear::PositionedBinding*
+FGPositioned::createBinding(SGPropertyNode* node) const
+{
+    return new flightgear::PositionedBinding(this, node);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -811,3 +838,145 @@ FGPositioned::sortByRange(List& aResult, const SGGeod& aPos)
     aResult[i] = r[i].get();
   }
 }
+
+FGPositioned::Filter* createSearchFilter(const SGPropertyNode* arg)
+{
+    string sty(arg->getStringValue("type", "any"));
+    FGPositioned::Type ty = FGPositioned::typeFromName(sty);
+    double minRunwayLenFt = arg->getDoubleValue("min-runway-length-ft", -1.0);
+    
+    if ((ty == FGPositioned::AIRPORT) && (minRunwayLenFt > 0.0)) {
+        return new FGAirport::HardSurfaceFilter(minRunwayLenFt);
+    } else if (ty != FGPositioned::INVALID) {
+        FGPositioned::TypeFilter* tf = new FGPositioned::TypeFilter(ty);
+        
+        for (int t=1; arg->hasChild("type", t); ++t) {
+            sty = arg->getChild("type", t)->getStringValue();
+            tf->addType(FGPositioned::typeFromName(sty));
+        }
+        
+        return tf;
+    }
+    
+    return NULL;
+}
+
+static SGGeod commandSearchPos(const SGPropertyNode* arg)
+{
+    if (arg->hasChild("longitude-deg") && arg->hasChild("latitude-deg")) {
+        return SGGeod::fromDeg(arg->getDoubleValue("longitude-deg"),
+            arg->getDoubleValue("latitude-deg"));
+    }
+    
+    // use current viewer/aircraft position
+    return SGGeod::fromDeg(fgGetDouble("/position/longitude-deg"), 
+            fgGetDouble("/position/latitude-deg"));
+}
+
+void commandClearExisting(const SGPropertyNode* arg)
+{
+    if (arg->getBoolValue("clear", true)) {
+    // delete all existing result children from their parent
+        string resultPath = arg->getStringValue("results");
+        SGPropertyNode* n = fgGetNode(resultPath.c_str(), 0, true);
+        SGPropertyNode* pr = n->getParent();
+        pr->removeChildren(n->getName(), false /* keep=false, i.e delete nodes */);
+    }
+}
+
+bool commandFindClosest(const SGPropertyNode* arg)
+{
+    int n = arg->getIntValue("max-results", 1);
+    if ((n < 1) || (n > 100)) {
+        SG_LOG(SG_GENERAL, SG_WARN, "commandFindClosest: max-results invalid:" << n);
+        return false;
+    }
+    
+    string resultPath = arg->getStringValue("results");
+    if (resultPath.empty()) {
+        SG_LOG(SG_GENERAL, SG_WARN, "commandFindClosest: no results path defined");
+        return false;
+    }
+
+    std::auto_ptr<FGPositioned::Filter> filt(createSearchFilter(arg));    
+// cap search range, since huge ranges will overload everything
+    double cutoff = arg->getDoubleValue("cutoff-nm", 400.0);
+    SG_CLAMP_RANGE(cutoff, 0.0, 1000.0);
+    
+    SGGeod pos = commandSearchPos(arg);
+    commandClearExisting(arg);
+    
+    FGPositioned::List results = FGPositioned::findClosestN(pos, n, cutoff, filt.get());
+    for (unsigned int i=0; i<results.size(); ++i) {
+       SGPropertyNode* resultsNode = fgGetNode(resultPath.c_str(), i, true);
+       flightgear::PositionedBinding::bind(results[i], resultsNode);
+    }
+    
+    return true;
+}
+
+bool commandFindByIdent(const SGPropertyNode* arg)
+{
+    string resultPath = arg->getStringValue("results");
+    if (resultPath.empty()) {
+        SG_LOG(SG_GENERAL, SG_WARN, "commandFindByIdent: no results path defined");
+        return false;
+    }
+    
+    std::auto_ptr<FGPositioned::Filter> filt(createSearchFilter(arg));    
+    SGGeod pos = commandSearchPos(arg);
+    commandClearExisting(arg);
+    
+    FGPositioned::List results;
+    bool exact = arg->getBoolValue("exact", true);
+    if (arg->hasChild("name")) {
+        results = FGPositioned::findAllWithName(arg->getStringValue("name"), filt.get(), exact);
+    } else if (arg->hasChild("ident")) {
+        results = FGPositioned::findAllWithIdent(arg->getStringValue("ident"), filt.get(), exact);
+    } else {
+        SG_LOG(SG_GENERAL, SG_WARN, "commandFindByIdent: no search term defined");
+        return false;
+    }
+    
+    bool orderByRange = arg->getBoolValue("order-by-distance", true);
+    if (orderByRange) {
+        FGPositioned::sortByRange(results, pos);
+    }
+      
+    for (unsigned int i=0; i<results.size(); ++i) {
+       SGPropertyNode* resultsNode = fgGetNode(resultPath.c_str(), i, true);
+       flightgear::PositionedBinding::bind(results[i], resultsNode);
+    }
+      
+    return true;
+}
+
+void
+FGPositioned::installCommands()
+{
+    SGCommandMgr::instance()->addCommand("find-nearest", commandFindClosest);
+    SGCommandMgr::instance()->addCommand("find-by-ident", commandFindByIdent);
+}
+
+FGPositioned::TypeFilter::TypeFilter(Type aTy)
+{
+    types.push_back(aTy);
+}
+
+void FGPositioned::TypeFilter::addType(Type aTy)
+{
+    types.push_back(aTy);
+}
+
+bool
+FGPositioned::TypeFilter::pass(FGPositioned* aPos) const
+{
+    std::vector<Type>::const_iterator it = types.begin(),
+        end = types.end();
+    for (; it != end; ++it) {
+        return aPos->type() == *it;
+    }
+    
+    return false;
+}
+

@@ -47,6 +47,42 @@
 class SGSky;
 extern SGSky *thesky;
 
+class FG3DCloudsListener : public SGPropertyChangeListener {
+public:
+  FG3DCloudsListener( FGClouds * fgClouds );
+  virtual ~FG3DCloudsListener();
+
+  virtual void valueChanged (SGPropertyNode * node);
+
+private:
+  FGClouds * _fgClouds;
+  SGPropertyNode_ptr _shaderNode;
+  SGPropertyNode_ptr _enableNode;
+};
+
+FG3DCloudsListener::FG3DCloudsListener( FGClouds * fgClouds ) :
+    _fgClouds( fgClouds ) 
+{
+  _shaderNode = fgGetNode( "/sim/rendering/shader-effects", true );
+  _shaderNode->addChangeListener( this );
+
+  _enableNode = fgGetNode( "/sim/rendering/clouds3d-enable", true );
+  _enableNode->addChangeListener( this );
+
+  valueChanged( _enableNode );
+}
+
+FG3DCloudsListener::~FG3DCloudsListener()
+{
+  _enableNode->removeChangeListener( this );
+  _shaderNode->removeChangeListener( this );
+}
+
+void FG3DCloudsListener::valueChanged( SGPropertyNode * node )
+{
+  _fgClouds->set_3dClouds( _enableNode->getBoolValue() && _shaderNode->getBoolValue() );
+}
+
 FGEnvironmentMgr::FGEnvironmentMgr () :
   _environment(new FGEnvironment()),
   fgClouds(new FGClouds()),
@@ -54,7 +90,8 @@ FGEnvironmentMgr::FGEnvironmentMgr () :
   _altitude_n(fgGetNode("/position/altitude-ft", true)),
   _longitude_n(fgGetNode( "/position/longitude-deg", true )),
   _latitude_n( fgGetNode( "/position/latitude-deg", true )),
-  _positionTimeToLive(0.0)
+  _positionTimeToLive(0.0),
+  _3dCloudsEnableListener(new FG3DCloudsListener(fgClouds) )
 {
   set_subsystem("controller", Environment::LayerInterpolateController::createInstance( fgGetNode("/environment/config", true ) ));
   set_subsystem("realwx", Environment::RealWxController::createInstance( fgGetNode("/environment/realwx", true ) ), 1.0 );
@@ -90,6 +127,8 @@ FGEnvironmentMgr::~FGEnvironmentMgr ()
 
   delete fgClouds;
   delete _environment;
+
+  delete _3dCloudsEnableListener;
 }
 
 void
@@ -171,10 +210,6 @@ FGEnvironmentMgr::bind ()
   }
 
   _tiedProperties.setRoot( fgGetNode("/sim/rendering", true ) );
-
-  _tiedProperties.Tie( "clouds3d-enable", fgClouds,
-          &FGClouds::get_3dClouds,
-          &FGClouds::set_3dClouds);
 
   _tiedProperties.Tie( "clouds3d-density", thesky,
           &SGSky::get_3dCloudDensity,

@@ -85,6 +85,7 @@ public:
   { return _surface_code; }
   
 protected:
+    
   double _heading;
   double _length;
   double _width;

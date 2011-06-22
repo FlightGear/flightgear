@@ -38,26 +38,15 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <iostream>
 #include "FGModel.h"
 #include "FGFDMExec.h"
-#include "FGAtmosphere.h"
-#include "FGFCS.h"
-#include "FGPropulsion.h"
-#include "FGMassBalance.h"
-#include "FGAerodynamics.h"
-#include "FGInertial.h"
-#include "FGGroundReactions.h"
-#include "FGExternalReactions.h"
-#include "FGAircraft.h"
-#include "FGPropagate.h"
-#include "FGAuxiliary.h"
-#include <iostream>
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGModel.cpp,v 1.17 2011/02/16 12:30:53 jberndt Exp $";
+static const char *IdSrc = "$Id: FGModel.cpp,v 1.19 2011/05/22 12:44:30 jberndt Exp $";
 static const char *IdHdr = ID_MODEL;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -99,7 +88,7 @@ bool FGModel::InitModel(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-bool FGModel::Run()
+bool FGModel::Run(bool Holding)
 {
   if (debug_lvl & 4) cout << "Entering Run() for model " << Name << endl;
 

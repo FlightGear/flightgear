@@ -52,7 +52,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_TANK "$Id: FGTank.h,v 1.21 2010/02/05 05:53:00 jberndt Exp $"
+#define ID_TANK "$Id: FGTank.h,v 1.23 2011/06/13 15:23:09 jentron Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -100,7 +100,16 @@ CLASS DOCUMENTATION
     tree at <tt>propulsion/tank[i]/contents-lbs</tt>, where i is the tank number (Tanks
     are automatically numbered, starting at zero, in the order in which they are read in
     the aircraft configuration file).  The latter method allows one to use a system of FCS
-    components to control tank contents. 
+    components to control tank contents.
+
+    There is also a property <tt>propulsion/tank[i]/external-flow-rate-pps</tt>. Setting
+    this property to a positive value causes the tank to fill at the rate specified.
+    Setting a negative number causes the tank to drain. The value is the rate in pounds
+    of fuel per second. The tank will not fill past 100% full and will not drain below 0%.
+    Fuel may be transfered between two tanks by setting the source tank's external flow rate
+    to a negative value and the destination's external flow rate to the same positive value.
+    Care must be taken to stop fuel flow before the source tank becomes empty to prevent
+    phantom fuel being created.
 
 <h3>Configuration File Format:</h3>
 
@@ -275,6 +284,9 @@ public:
   double GetDensity(void) const {return Density;}
   void   SetDensity(double d) { Density = d; }
 
+  double GetExternalFlow(void) const {return ExternalFlow;}
+  void   SetExternalFlow(double f) { ExternalFlow = f; }
+
   const FGColumnVector3 GetXYZ(void);
   const double GetXYZ(int idx);
 
@@ -309,6 +321,7 @@ private:
   double Area;
   double Temperature, InitialTemperature;
   double Standpipe, InitialStandpipe;
+  double ExternalFlow;
   bool  Selected;
   int Priority, InitialPriority;
   FGFDMExec* Exec;

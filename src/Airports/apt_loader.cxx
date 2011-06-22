@@ -46,7 +46,8 @@
 #include "simple.hxx"
 #include "runways.hxx"
 #include "pavement.hxx"
-#include <ATCDCL/commlist.hxx>
+
+#include <ATC/CommStation.hxx>
 
 #include <iostream>
 
@@ -78,7 +79,7 @@ public:
 
 
 
-  void parseAPT(const string &aptdb_file, FGCommList *comm_list)
+  void parseAPT(const string &aptdb_file)
   {
     sg_gzifstream in( aptdb_file );
 
@@ -157,12 +158,8 @@ public:
           // custom startup locations (ignore)
       } else if ( line_id == 0 ) {
           // ??
-      } else if ( line_id == 50 ) {
-
-        parseATISLine(comm_list, simgear::strutils::split(line));
-
-      } else if ( line_id >= 51 && line_id <= 56 ) {
-        // other frequency entries (ignore)
+      } else if ( line_id >= 50 && line_id <= 56) {
+        parseCommLine(line_id, simgear::strutils::split(line));
       } else if ( line_id == 110 ) {
         pavement = true;
         parsePavementLine850(simgear::strutils::split(line, 0, 4));
@@ -206,6 +203,7 @@ private:
   vector<FGRunwayPtr> runways;
   vector<FGTaxiwayPtr> taxiways;
   vector<FGPavementPtr> pavements;
+  vector<flightgear::CommStation*> commStations;
   
   void addAirport()
   {  
@@ -235,6 +233,7 @@ private:
     FGAirport* apt = new FGAirport(last_apt_id, pos, tower, last_apt_name, false,
         fptypeFromRobinType(atoi(last_apt_type.c_str())));
     apt->setRunwaysAndTaxiways(runways, taxiways, pavements);
+    apt->setCommStations(commStations);
   }
   
   void parseAirportLine(const vector<string>& token)
@@ -466,48 +465,38 @@ private:
     }
   }
 
-  void parseATISLine(FGCommList *comm_list, const vector<string>& token) 
+  void parseCommLine(int lineId, const vector<string>& token) 
   {
     if ( rwy_count <= 0 ) {
-      SG_LOG( SG_GENERAL, SG_ALERT, 
-        "No runways; skipping AWOS for " + last_apt_id);
+      SG_LOG( SG_GENERAL, SG_ALERT, "No runways; skipping comm for " + last_apt_id);
     }
-     
-// This assumes/requires that any code-50 line (ATIS or AWOS)
- // applies to the preceding code-1 line (airport ID and name)
- // and that a full set of code-10 lines (runway descriptors)
- // has come between the code-1 and code-50 lines.
- 	    // typical code-50 lines:
- 	    // 50 11770 ATIS
- 	    // 50 11770 AWOS 3
- // This code parallels code found in "operator>>" in ATC.hxx;
- // FIXME: unify the code.      
-    ATCData a;
-    a.geod = SGGeod::fromDegFt(rwy_lon_accum / (double)rwy_count, 
-      rwy_lat_accum / (double)rwy_count, last_apt_elev);
-    a.range = 50;	// give all ATISs small range
-    a.ident = last_apt_id;
-    a.name = last_apt_name;
+ 
+    SGGeod pos = SGGeod::fromDegFt(rwy_lon_accum / (double)rwy_count, 
+        rwy_lat_accum / (double)rwy_count, last_apt_elev);
+    
     // short int representing tens of kHz:
-    a.freq = atoi(token[1].c_str());
-    if (token[2] == "ATIS") a.type = ATIS;
-    else a.type = AWOS;		// ASOS same as AWOS
+    int freqKhz = atoi(token[1].c_str());
+    int rangeNm = 50;
+    FGPositioned::Type ty;
+    switch (lineId) {
+    case 50:
+        ty = FGPositioned::FREQ_AWOS;
+        if (token[2] == "ATIS") {
+            ty = FGPositioned::FREQ_ATIS;
+        }
+        break;
+        
+    case 51:    ty = FGPositioned::FREQ_UNICOM; break;
+    case 52:    ty = FGPositioned::FREQ_CLEARANCE; break;
+    case 53:    ty = FGPositioned::FREQ_GROUND; break;
+    case 54:    ty = FGPositioned::FREQ_TOWER; break;
+    case 55:    
+    case 56:    ty = FGPositioned::FREQ_APP_DEP; break;   
+    default:
+        throw sg_range_exception("unupported apt.dat comm station type");
+    }
 
-    // generate cartesian coordinates
-    a.cart = SGVec3d::fromGeod(a.geod);
-    comm_list->commlist_freq[a.freq].push_back(a);
-
-    SGBucket bucket(a.geod);
-    int bucknum = bucket.gen_index();
-    comm_list->commlist_bck[bucknum].push_back(a);
-#if 0
-   SG_LOG( SG_GENERAL, SG_ALERT, 
-     "Loaded ATIS/AWOS for airport: " << a.ident
-    << "  lat: "  << a.geod.getLatitudeDeg()
-    << "  lon: "  << a.geod.getLongitudeDeg()
-    << "  freq: " << a.freq
-    << "  type: " << a.type );
-#endif
+    commStations.push_back(new flightgear::CommStation(token[2], ty, pos, rangeNm, freqKhz));
   }
 
 };
@@ -516,12 +505,11 @@ private:
 // Load the airport data base from the specified aptdb file.  The
 // metar file is used to mark the airports as having metar available
 // or not.
-bool fgAirportDBLoad( const string &aptdb_file, 
-        FGCommList *comm_list, const std::string &metar_file )
+bool fgAirportDBLoad( const string &aptdb_file, const std::string &metar_file )
 {
 
    APTLoader ld;
-   ld.parseAPT(aptdb_file, comm_list);
+   ld.parseAPT(aptdb_file);
     //
     // Load the metar.dat file and update apt db with stations that
     // have metar data.

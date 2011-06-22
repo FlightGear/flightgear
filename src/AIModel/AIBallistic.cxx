@@ -32,6 +32,7 @@
 #include "AIBallistic.hxx"
 
 #include <Main/util.hxx>
+#include <Environment/gravity.hxx>
 
 using namespace simgear;
 
@@ -51,7 +52,6 @@ _elapsed_time(0),
 _aero_stabilised(false),
 _drag_area(0.007),
 _life_timer(0.0),
-_gravity(32.1740485564),
 _buoyancy(0),
 _wind(true),
 _mass(0),
@@ -143,6 +143,8 @@ bool FGAIBallistic::init(bool search_in_AI_path) {
 
     _elapsed_time += (sg_random() * 100);
 
+    _life_timer = 0;
+
     props->setStringValue("material/name", "");
     props->setStringValue("name", _name.c_str());
     props->setStringValue("submodels/path", _path.c_str());
@@ -151,6 +153,9 @@ bool FGAIBallistic::init(bool search_in_AI_path) {
         props->setStringValue("force/path", _force_path.c_str());
         props->setStringValue("contents/path", _contents_path.c_str());
     }
+
+    //cout << "init: name " << _name.c_str() << " _life_timer " << _life_timer 
+    //    << endl;
 
     //if(_parent != ""){
     //    setParentNode();
@@ -330,7 +335,7 @@ void FGAIBallistic::setLife(double seconds) {
 
     if (_random){
         life = seconds * _randomness + (seconds * (1 -_randomness) * sg_random());
-        //cout << "life " << life << endl;
+        //cout << " set life " << life << endl;
     } else
         life = seconds;
 }
@@ -670,15 +675,23 @@ void FGAIBallistic::slaveToAC(double dt){
 
 void FGAIBallistic::Run(double dt) {
     _life_timer += dt;
+    
+    //_pass += 1;
+    //cout<<"AIBallistic run: name " << _name.c_str() 
+    //    << " dt " << dt <<  " _life_timer " << _life_timer << " pass " << _pass << endl;
 
     // if life = -1 the object does not die
     if (_life_timer > life && life != -1){
 
         if (_report_expiry && !_expiry_reported && !_impact_reported && !_collision_reported){
-            //cout<<"AIBallistic: expiry"<< endl;
+            //cout<<"AIBallistic run: name " << _name.c_str() << " expiry " << " pass " << _pass <<endl;
             handle_expiry();
-        } else
+        } else{
+            //cout<<"AIBallistic run: name " << _name.c_str() 
+            //    << " die " <<  " _life_timer " << _life_timer << " pass " << _pass << endl;
             setDie(true);
+            setTime(0);
+        }
 
     }
 
@@ -714,7 +727,7 @@ void FGAIBallistic::Run(double dt) {
     if ( speed < 0.0 )
         speed = 0.0;
 
-    double speed_fps = speed * SG_KT_TO_FPS;
+//    double speed_fps = speed * SG_KT_TO_FPS;
 
     // calculate vertical and horizontal speed components
     calcVSHS();
@@ -845,7 +858,8 @@ void FGAIBallistic::Run(double dt) {
         hs = 0;
 
     // adjust vertical speed for acceleration of gravity, buoyancy, and vertical force
-    vs -= (_gravity - _buoyancy - v_force_acc_fpss - normal_force_fpss) * dt;
+    double gravity = Environment::Gravity::instance()->getGravity(pos);
+    vs -= (gravity - _buoyancy - v_force_acc_fpss - normal_force_fpss) * dt;
 
     if (vs <= 0.00001 && vs >= -0.00001)
         vs = 0;
@@ -1010,7 +1024,7 @@ void FGAIBallistic::report_impact(double elevation, const FGAIBase *object)
         n->setStringValue("type", "terrain");
 
     SG_LOG(SG_GENERAL, SG_DEBUG, "AIBallistic: object impact " << _name 
-        << " lon " <<_impact_lon << " lat " <<_impact_lat);
+        << " lon " <<_impact_lon << " lat " <<_impact_lat << " sec " << _life_timer);
 
     n->setDoubleValue("longitude-deg", _impact_lon);
     n->setDoubleValue("latitude-deg", _impact_lat);

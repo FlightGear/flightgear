@@ -73,7 +73,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="opengl32.lib glu32.lib winmm.lib wsock32.lib sg_d.lib net_d.lib pui_d.lib puaux_d.lib fnt_d.lib js_d.lib ul_d.lib zlibd.lib OpenAL32.lib ALut.lib osgd.lib osgDBd.lib osgUtild.lib osgViewerd.lib osgGAd.lib osgTextd.lib osgParticled.lib OpenThreadsd.lib libjpegd.lib"
+				AdditionalDependencies="opengl32.lib glu32.lib winmm.lib wsock32.lib sg_d.lib net_d.lib pui_d.lib puaux_d.lib fnt_d.lib js_d.lib ul_d.lib zlibd.lib OpenAL32.lib ALut.lib osgd.lib osgDBd.lib osgUtild.lib osgViewerd.lib osgGAd.lib osgTextd.lib osgParticled.lib OpenThreadsd.lib libjpegd.lib libsvn_client-1.lib libsvn_diff-1.lib libsvn_delta-1.lib libsvn_ra-1.lib libsvn_subr-1.lib libsvn_wc-1.lib libapr-1.lib"
 				OutputFile="$(OutDir)\fgfs.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -249,7 +249,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="opengl32.lib glu32.lib winmm.lib wsock32.lib sg.lib net.lib pui.lib puAux.lib fnt.lib js.lib ul.lib zlib.lib OpenAL32.lib ALut.lib osg.lib osgDB.lib osgUtil.lib osgViewer.lib osgGA.lib osgText.lib osgParticle.lib OpenThreads.lib libjpeg.lib"
+				AdditionalDependencies="opengl32.lib glu32.lib winmm.lib wsock32.lib sg.lib net.lib pui.lib puAux.lib fnt.lib js.lib ul.lib zlib.lib OpenAL32.lib ALut.lib osg.lib osgDB.lib osgUtil.lib osgViewer.lib osgGA.lib osgText.lib osgParticle.lib OpenThreads.lib libjpeg.lib libsvn_client-1.lib libsvn_diff-1.lib libsvn_delta-1.lib libsvn_ra-1.lib libsvn_subr-1.lib libsvn_wc-1.lib libapr-1.lib"
 				OutputFile="$(OutDir)\fgfs.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -567,14 +567,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\ATCDCL\atis.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\ATCDCL\commlist.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\ATCDCL\commlist.hxx"
 				>
 			</File>
 		</Filter>
@@ -2450,14 +2442,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\FDM\TankProperties.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\FDM\TankProperties.hxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\FDM\flight.cxx"
 				>
 			</File>
@@ -2487,6 +2471,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\FDM\NullFDM.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\FDM\TankProperties.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\FDM\TankProperties.hxx"
 				>
 			</File>
 		</Filter>
@@ -2891,6 +2883,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\Navaids\positioned.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Navaids\PositionedBinding.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Navaids\PositionedBinding.hxx"
 				>
 			</File>
 			<File
@@ -3382,6 +3382,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\Environment\gravity.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\gravity.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Environment\metarairportfilter.cxx"
 				>
 			</File>
@@ -3406,6 +3414,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\Environment\presets.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Environment\presets.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Environment\realwx_ctrl.cxx"
 				>
 			</File>
@@ -3427,22 +3443,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\Environment\terrainsampler.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Environment\presets.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Environment\presets.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Environment\gravity.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Environment\gravity.hxx"
 				>
 			</File>
 		</Filter>
@@ -3770,6 +3770,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\Instrumentation\tcas.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Instrumentation\tcas.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Instrumentation\transponder.cxx"
 				>
 			</File>
@@ -3799,14 +3807,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\Instrumentation\wxradar.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Instrumentation\tcas.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Instrumentation\tcas.hxx"
 				>
 			</File>
 			<Filter
@@ -4310,11 +4310,11 @@
 			Name="Lib_ATC"
 			>
 			<File
-				RelativePath="..\..\..\src\ATC\atis_mgr.cxx"
+				RelativePath="..\..\..\src\ATC\CommStation.cxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\ATC\atis_mgr.hxx"
+				RelativePath="..\..\..\src\ATC\CommStation.hxx"
 				>
 			</File>
 			<File

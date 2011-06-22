@@ -116,6 +116,8 @@ public:
   { return _reciprocal; }
   void setReciprocalRunway(FGRunway* other);
   
+  virtual flightgear::PositionedBinding* createBinding(SGPropertyNode* nd) const;
+  
   /**
    * Helper to process property data loaded from an ICAO.threshold.xml file
    */
@@ -130,6 +132,7 @@ public:
    * Get STARs associared with this runway
    */ 
   std::vector<flightgear::STAR*> getSTARs();
+  
 };
 
 #endif // _FG_RUNWAYS_HXX

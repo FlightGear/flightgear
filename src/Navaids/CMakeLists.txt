@@ -13,6 +13,7 @@ set(SOURCES
 	route.cxx
 	routePath.cxx
 	waypoint.cxx
+	PositionedBinding.cxx
 	)
 
 flightgear_component(Navaids "${SOURCES}")

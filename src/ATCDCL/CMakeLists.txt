@@ -3,7 +3,6 @@ include(FlightGearComponent)
 set(SOURCES
 	ATC.cxx
 	atis.cxx
-	commlist.cxx
 	ATCDialog.cxx
 	ATCVoice.cxx
 	ATCmgr.cxx

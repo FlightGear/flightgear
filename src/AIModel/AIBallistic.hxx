@@ -175,7 +175,6 @@ private:
     bool   _aero_stabilised; // if true, object will align with trajectory
     double _drag_area;       // equivalent drag area in ft2
     double _life_timer;      // seconds
-    double _gravity;         // fps^2
     double _buoyancy;        // fps^2
     bool   _wind;            // if true, local wind will be applied to object
     double _Cd;              // drag coefficient
