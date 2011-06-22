@@ -1392,7 +1392,7 @@ struct OptionDesc {
     {"enable-wireframe",             false, OPTION_BOOL,   "/sim/rendering/wireframe", true, "", 0 },
     {"disable-terrasync",            false, OPTION_BOOL,   "/sim/terrasync/enabled", false, "", 0 },
     {"enable-terrasync",             false, OPTION_BOOL,   "/sim/terrasync/enabled", true, "", 0 },
-    {"terrasync-dir",                false, OPTION_STRING, "/sim/terrasync/scenery-dir", false, "", 0 },
+    {"terrasync-dir",                true,  OPTION_STRING, "/sim/terrasync/scenery-dir", false, "", 0 },
     {"geometry",                     true,  OPTION_FUNC,   "", false, "", fgOptGeometry },
     {"bpp",                          true,  OPTION_FUNC,   "", false, "", fgOptBpp },
     {"units-feet",                   false, OPTION_STRING, "/sim/startup/units", false, "feet", 0 },
