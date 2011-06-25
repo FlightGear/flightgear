@@ -35,7 +35,9 @@ using std::string;
 #include "AIThermal.hxx"
 
 
-FGAIThermal::FGAIThermal() : FGAIBase(otThermal) {
+FGAIThermal::FGAIThermal() :
+   FGAIBase(otThermal, false)
+{
    max_strength = 6.0;
    diameter = 0.5;
    strength = factor = 0.0;

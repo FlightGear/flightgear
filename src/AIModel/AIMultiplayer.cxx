@@ -29,18 +29,18 @@
 
 #include "AIMultiplayer.hxx"
 
-#include <simgear/scene/util/SGNodeMasks.hxx>
 
 // #define SG_DEBUG SG_ALERT
 
-FGAIMultiplayer::FGAIMultiplayer() : FGAIBase(otMultiplayer) {
+FGAIMultiplayer::FGAIMultiplayer() :
+   FGAIBase(otMultiplayer, false)
+{
    no_roll = false;
 
    mTimeOffsetSet = false;
    mAllowExtrapolation = true;
    mLagAdjustSystemSpeed = 10;
    mLastTimestamp = 0;
-   aip.getSceneGraph()->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
    lastUpdateTime = 0;
 
 } 
