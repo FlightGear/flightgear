@@ -442,7 +442,7 @@ void FGAirport::processThreshold(SGPropertyNode* aThreshold)
   // first, let's identify the current runway
   string id(aThreshold->getStringValue("rwy"));
   if (!hasRunwayWithIdent(id)) {
-    SG_LOG(SG_GENERAL, SG_WARN, "FGAirport::processThreshold: "
+    SG_LOG(SG_GENERAL, SG_DEBUG, "FGAirport::processThreshold: "
       "found runway not defined in the global data:" << ident() << "/" << id);
     return;
   }

@@ -1205,7 +1205,7 @@ FGMultiplayMgr::ProcessPosMsg(const FGMultiplayMgr::MsgBuf& Msg,
     else
     {
       // We failed to find the property. We'll try the next packet immediately.
-      SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr::ProcessPosMsg - "
+      SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::ProcessPosMsg - "
              "message from " << MsgHdr->Callsign << " has unknown property id "
              << id); 
     }
