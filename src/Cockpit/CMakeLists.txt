@@ -6,4 +6,11 @@ set(SOURCES
 	built_in/FGMagRibbon.cxx
 	)
 	
-flightgear_component(Cockpit "${SOURCES}")
+set(HEADERS
+	panel.hxx
+	panel_io.hxx
+	built_in/FGMagRibbon.hxx
+	)
+
+
+flightgear_component(Cockpit "${SOURCES}" "${HEADERS}")

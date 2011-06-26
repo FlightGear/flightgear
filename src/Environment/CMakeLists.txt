@@ -18,5 +18,24 @@ set(SOURCES
 	presets.cxx
 	gravity.cxx
 	)
-	
-flightgear_component(Environment "${SOURCES}")
+
+set(HEADERS
+	atmosphere.hxx
+	environment.hxx
+	environment_ctrl.hxx
+	environment_mgr.hxx
+	ephemeris.hxx
+	fgclouds.hxx
+	fgmetar.hxx
+	fgwind.hxx
+	metarairportfilter.hxx
+	metarproperties.hxx
+	precipitation_mgr.hxx
+	realwx_ctrl.hxx
+	ridge_lift.hxx
+	terrainsampler.hxx
+	presets.hxx
+	gravity.hxx
+	)
+    		
+flightgear_component(Environment "${SOURCES}" "${HEADERS}")
