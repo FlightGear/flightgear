@@ -6,5 +6,12 @@ set(SOURCES
 	modelmgr.cxx
 	panelnode.cxx
 	)
-	
-flightgear_component(Model "${SOURCES}")
+
+set(HEADERS
+	acmodel.hxx
+	model_panel.hxx
+	modelmgr.hxx
+	panelnode.hxx
+	)
+    		
+flightgear_component(Model "${SOURCES}" "${HEADERS}")

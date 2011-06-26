@@ -4,6 +4,11 @@ set(SOURCES
 	NasalSys.cxx
 	nasal-props.cxx
 	)
+
+set(HEADERS
+	NasalSys.hxx
+	)
+
 	
-flightgear_component(Scripting "${SOURCES}")
+flightgear_component(Scripting "${SOURCES}" "${HEADERS}")
 
