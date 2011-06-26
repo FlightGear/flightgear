@@ -52,7 +52,7 @@ public:
         otEscort, otMultiplayer,
         MAX_OBJECTS };	// Needs to be last!!!
 
-    FGAIBase(object_type ot);
+    FGAIBase(object_type ot, bool enableHot);
     virtual ~FGAIBase();
 
     virtual void readFromScenario(SGPropertyNode* scFileNode);
