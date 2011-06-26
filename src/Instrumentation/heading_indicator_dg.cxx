@@ -153,6 +153,10 @@ HeadingIndicatorDG::update (double dt)
     _last_heading_deg = heading;
 
     heading += offset + align + error;
+    // sanity check: bail out when the FDM runs wild, to avoid
+    // SG_NORMALIZE_RANGE from freezing on huge/infinite numbers.
+    if (fabs(heading)>1e10)
+        return;
     SG_NORMALIZE_RANGE(heading, 0.0, 360.0);
 
     _heading_out_node->setDoubleValue(heading);
