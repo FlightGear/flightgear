@@ -115,7 +115,7 @@ HeadingIndicatorDG::update (double dt)
                                 // Next, calculate time-based precession
     double offset = _offset_node->getDoubleValue();
     offset -= dt * (0.25 / 60.0); // 360deg/day
-    SG_NORMALIZE_RANGE(offset, -360.0, 360.0);
+    offset = SGMiscd::normalizePeriodic(-360.0,360.0,offset);
     _offset_node->setDoubleValue(offset);
 
                                 // No magvar - set the alignment manually
@@ -153,11 +153,7 @@ HeadingIndicatorDG::update (double dt)
     _last_heading_deg = heading;
 
     heading += offset + align + error;
-    // sanity check: bail out when the FDM runs wild, to avoid
-    // SG_NORMALIZE_RANGE from freezing on huge/infinite numbers.
-    if (fabs(heading)>1e10)
-        return;
-    SG_NORMALIZE_RANGE(heading, 0.0, 360.0);
+    heading = SGMiscd::normalizePeriodic(0.0,360.0,heading);
 
     _heading_out_node->setDoubleValue(heading);
 
