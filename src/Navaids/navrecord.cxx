@@ -61,7 +61,7 @@ FGNavRecord::FGNavRecord(Type aTy, const std::string& aIdent,
   // assign our own defaults, unless the range is not set for some
   // reason.
   if (range < 0.1) {
-    SG_LOG(SG_GENERAL, SG_WARN, "navaid " << ident() << " has no range set, using defaults");
+    SG_LOG(SG_GENERAL, SG_DEBUG, "navaid " << ident() << " has no range set, using defaults");
     switch (type()) {
     case NDB:
     case VOR:

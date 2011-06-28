@@ -40,7 +40,7 @@ const double FGAIBallistic::slugs_to_kgs = 14.5939029372;
 const double FGAIBallistic::slugs_to_lbs = 32.1740485564;
 
 FGAIBallistic::FGAIBallistic(object_type ot) :
-FGAIBase(ot),
+FGAIBase(ot, false),
 _height(0.0),
 _speed(0),
 _ht_agl_ft(0.0),

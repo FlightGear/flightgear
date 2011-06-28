@@ -197,13 +197,13 @@ void Airway::Network::addEdge(Airway* aWay, const SGGeod& aStartPos,
   FGPositionedRef end = FGPositioned::findClosestWithIdent(aEndIdent, aEndPos);
     
   if (!start) {
-    SG_LOG(SG_GENERAL, SG_INFO, "unknown airways start pt: '" << aStartIdent << "'");
+    SG_LOG(SG_GENERAL, SG_DEBUG, "unknown airways start pt: '" << aStartIdent << "'");
     start = FGPositioned::createUserWaypoint(aStartIdent, aStartPos);
     return;
   }
   
   if (!end) {
-    SG_LOG(SG_GENERAL, SG_INFO, "unknown airways end pt: '" << aEndIdent << "'");
+    SG_LOG(SG_GENERAL, SG_DEBUG, "unknown airways end pt: '" << aEndIdent << "'");
     end = FGPositioned::createUserWaypoint(aEndIdent, aEndPos);
     return;
   }

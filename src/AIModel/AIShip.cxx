@@ -42,7 +42,8 @@
 
 
 FGAIShip::FGAIShip(object_type ot) :
-FGAIBase(ot),
+// allow HOT to be enabled
+FGAIBase(ot, true),
 
 
 _waiting(false),

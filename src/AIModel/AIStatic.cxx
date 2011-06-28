@@ -33,7 +33,7 @@ using std::string;
 #include "AIStatic.hxx"
 
 
-FGAIStatic::FGAIStatic() : FGAIBase(otStatic) {
+FGAIStatic::FGAIStatic() : FGAIBase(otStatic, false) {
 }
 
 

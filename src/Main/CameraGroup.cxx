@@ -27,6 +27,7 @@
 #include "WindowSystemAdapter.hxx"
 #include <simgear/props/props.hxx>
 #include <simgear/structure/OSGUtils.hxx>
+#include <simgear/structure/OSGVersion.hxx>
 #include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/util/RenderConstants.hxx>
 
@@ -191,8 +192,10 @@ void CameraGroup::update(const osg::Vec3d& position,
     for (CameraList::iterator i = _cameras.begin(); i != _cameras.end(); ++i) {
         const CameraInfo* info = i->get();
         const View::Slave& slave = _viewer->getSlave(info->slaveIndex);
+#if SG_OSG_VERSION_LESS_THAN(3,0,0)
         // refreshes camera viewports (for now)
         updateCameras(info);
+#endif
         Camera* camera = info->camera.get();
         Matrix viewMatrix;
         if ((info->flags & VIEW_ABSOLUTE) != 0)

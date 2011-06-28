@@ -35,7 +35,9 @@ using std::string;
 #include "AIStorm.hxx"
 
 
-FGAIStorm::FGAIStorm() : FGAIBase(otStorm) {
+FGAIStorm::FGAIStorm() :
+   FGAIBase(otStorm, false)
+{
    delay = 3.6;
    subflashes = 1;
    timer = 0.0;
