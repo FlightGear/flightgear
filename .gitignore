@@ -12,5 +12,6 @@ depcomp
 install-sh
 missing
 INSTALL
+Debug/
 *.o
 lib*.a

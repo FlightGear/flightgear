@@ -273,13 +273,13 @@ bool FGScheduledFlight::initializeAirports()
   departurePort = FGAirport::findByIdent(depId);
   if(departurePort == NULL)
     {
-      SG_LOG( SG_GENERAL, SG_WARN, "Traffic manager could not find departure airport : " << depId);
+      SG_LOG( SG_GENERAL, SG_DEBUG, "Traffic manager could not find departure airport : " << depId);
       return false;
     }
   arrivalPort = FGAirport::findByIdent(arrId);
   if(arrivalPort == NULL)
     {
-      SG_LOG( SG_GENERAL, SG_WARN, "Traffic manager could not find arrival airport   : " << arrId);
+      SG_LOG( SG_GENERAL, SG_DEBUG, "Traffic manager could not find arrival airport   : " << arrId);
       return false;
     }
 

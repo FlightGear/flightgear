@@ -52,7 +52,7 @@ const double FGAIBase::lbs_to_slugs = 0.031080950172;   //conversion factor
 
 using namespace simgear;
 
-FGAIBase::FGAIBase(object_type ot) :
+FGAIBase::FGAIBase(object_type ot, bool enableHot) :
     _max_speed(300),
     _name(""),
     _parent(""),
@@ -121,6 +121,10 @@ FGAIBase::FGAIBase(object_type ot) :
     p = 1e5;
     a = 340;
     Mach = 0;
+
+    // explicitly disable HOT for (most) AI models
+    if (!enableHot)
+        aip.getSceneGraph()->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
 }
 
 FGAIBase::~FGAIBase() {

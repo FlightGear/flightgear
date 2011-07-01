@@ -71,7 +71,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGPropagate.cpp,v 1.86 2011/04/17 11:27:14 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGPropagate.cpp,v 1.88 2011/05/20 03:18:36 jberndt Exp $";
 static const char *IdHdr = ID_PROPAGATE;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -121,8 +121,6 @@ FGPropagate::~FGPropagate(void)
 
 bool FGPropagate::InitModel(void)
 {
-  if (!FGModel::InitModel()) return false;
-
   // For initialization ONLY:
   SeaLevelRadius = LocalTerrainRadius = FDMExec->GetInertial()->GetRefRadius();
 
@@ -140,10 +138,10 @@ bool FGPropagate::InitModel(void)
   VState.dqInertialVelocity.resize(4, FGColumnVector3(0.0,0.0,0.0));
   VState.dqQtrndot.resize(4, FGColumnVector3(0.0,0.0,0.0));
 
-  integrator_rotational_rate = eAdamsBashforth2;
-  integrator_translational_rate = eTrapezoidal;
-  integrator_rotational_position = eAdamsBashforth2;
-  integrator_translational_position = eTrapezoidal;
+  integrator_rotational_rate = eRectEuler;
+  integrator_translational_rate = eAdamsBashforth2;
+  integrator_rotational_position = eRectEuler;
+  integrator_translational_position = eAdamsBashforth3;
 
   return true;
 }
@@ -226,10 +224,10 @@ Inertial.
 
 */
 
-bool FGPropagate::Run(void)
+bool FGPropagate::Run(bool Holding)
 {
-  if (FGModel::Run()) return true;  // Fast return if we have nothing to do ...
-  if (FDMExec->Holding()) return false;
+  if (FGModel::Run(Holding)) return true;  // Fast return if we have nothing to do ...
+  if (Holding) return false;
 
   double dt = FDMExec->GetDeltaT()*rate;  // The 'stepsize'
 

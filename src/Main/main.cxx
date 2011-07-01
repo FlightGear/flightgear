@@ -50,6 +50,7 @@
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/io/raw_socket.hxx>
+#include <simgear/scene/tsync/terrasync.hxx>
 #include <simgear/misc/sg_sleep.hxx>
 
 #include <Time/light.hxx>
@@ -394,6 +395,8 @@ static void fgIdleFunction ( void ) {
         ////////////////////////////////////////////////////////////////////
         // Initialize the TG scenery subsystem.
         ////////////////////////////////////////////////////////////////////
+        simgear::SGTerraSync* terra_sync = new simgear::SGTerraSync(globals->get_props());
+        globals->add_subsystem("terrasync", terra_sync);
         globals->set_scenery( new FGScenery );
         globals->get_scenery()->init();
         globals->get_scenery()->bind();
@@ -621,7 +624,7 @@ int fgMainInit( int argc, char **argv ) {
         cerr << endl << "Base package check failed:" << endl \
              << "  Version " << base_version << " found at: " \
              << globals->get_fg_root() << endl \
-             << "  Version " << required_version << " is required." << endl \ 
+             << "  Version " << required_version << " is required." << endl \
              << "Please upgrade/downgrade base package." << endl;
 #ifdef _MSC_VER
         cerr << "Hit a key to continue..." << endl;

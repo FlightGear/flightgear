@@ -69,7 +69,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGSwitch.cpp,v 1.20 2011/04/05 20:20:21 andgi Exp $";
+static const char *IdSrc = "$Id: FGSwitch.cpp,v 1.22 2011/06/17 12:12:19 jberndt Exp $";
 static const char *IdHdr = ID_SWITCH;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -119,8 +119,11 @@ FGSwitch::FGSwitch(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, element)
       tests.push_back(current_test);
     }
 
-    if (test_element->GetName() != "output"
-        && test_element->GetName() != "description") { // this is not an output element
+    string el_name = test_element->GetName();
+    if (   el_name != "output"
+        && el_name != "description"
+        && el_name != "delay" )
+    {
       value = test_element->GetAttributeValue("value");
       if (value.empty()) {
         cerr << "No VALUE supplied for switch component: " << Name << endl;
@@ -196,6 +199,7 @@ bool FGSwitch::Run(void )
   
   if (!pass) Output = default_output;
 
+  if (delay != 0) Delay();
   Clip();
   if (IsOutput) SetOutput();
 

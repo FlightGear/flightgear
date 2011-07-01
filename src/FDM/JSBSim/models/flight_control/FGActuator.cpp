@@ -43,7 +43,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGActuator.cpp,v 1.17 2011/02/13 00:42:45 jberndt Exp $";
+static const char *IdSrc = "$Id: FGActuator.cpp,v 1.21 2011/06/30 03:16:10 jentron Exp $";
 static const char *IdHdr = ID_ACTUATOR;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -73,7 +73,7 @@ FGActuator::FGActuator(FGFCS* fcs, Element* element) : FGFCSComponent(fcs, eleme
     hysteresis_width = element->FindElementValueAsNumber("hysteresis_width");
   }
   if ( element->FindElement("rate_limit") ) {
-    rate_limit = element->FindElementValueAsNumber("rate_limit");
+    rate_limit = fabs(element->FindElementValueAsNumber("rate_limit"));
   }
   if ( element->FindElement("bias") ) {
     bias = element->FindElementValueAsNumber("bias");
@@ -114,15 +114,16 @@ bool FGActuator::Run(void )
                   // the Input will be further processed and the eventual Output
                   // will be overwritten from this perfect value.
 
-  if (!fcs->GetTrimStatus()) {
+  if (fail_stuck) {
+    Output = PreviousOutput;
+  } else {
     if (lag != 0.0)              Lag();        // models actuator lag
     if (rate_limit != 0)         RateLimit();  // limit the actuator rate
+    if (deadband_width != 0.0)   Deadband();
+    if (hysteresis_width != 0.0) Hysteresis();
+    if (bias != 0.0)             Bias();       // models a finite bias
   }
-  if (deadband_width != 0.0)   Deadband();
-  if (!fcs->GetTrimStatus() && hysteresis_width != 0.0) Hysteresis();
-  if (bias != 0.0)             Bias();       // models a finite bias
 
-  if (fail_stuck) Output = PreviousOutput;
   PreviousOutput = Output; // previous value needed for "stuck" malfunction
 
   Clip();
@@ -145,7 +146,10 @@ void FGActuator::Lag(void)
   // "Output" on the right side of the "=" is the current frame input
   // for this Lag filter
   double input = Output;
-  Output = ca * (input + PreviousLagInput) + PreviousLagOutput * cb;
+
+  if (!fcs->GetTrimStatus())
+    Output = ca * (input + PreviousLagInput) + PreviousLagOutput * cb;
+
   PreviousLagInput = input;
   PreviousLagOutput = Output;
 }
@@ -159,10 +163,11 @@ void FGActuator::Hysteresis(void)
   // method.
   double input = Output;
   
-  if (input > PreviousHystOutput) {
-    Output = max(PreviousHystOutput, input-0.5*hysteresis_width);
-  } else if (input < PreviousHystOutput) {
-    Output = min(PreviousHystOutput, input+0.5*hysteresis_width);
+  if (!fcs->GetTrimStatus()) {
+    if (input > PreviousHystOutput)
+      Output = max(PreviousHystOutput, input-0.5*hysteresis_width);
+    else if (input < PreviousHystOutput)
+      Output = min(PreviousHystOutput, input+0.5*hysteresis_width);
   }
 
   PreviousHystOutput = Output;
@@ -176,10 +181,11 @@ void FGActuator::RateLimit(void)
   // is - for the purposes of this RateLimit method - really the input to the
   // method.
   double input = Output;
-  if (dt > 0.0) {
-    double rate = (input - PreviousRateLimOutput)/dt;
-    if (fabs(rate) > rate_limit) {
-      Output = PreviousRateLimOutput + (rate_limit*fabs(rate)/rate)*dt;
+  if (!fcs->GetTrimStatus()) {
+    double delta = input - PreviousRateLimOutput;
+    if (fabs(delta) > dt * rate_limit) {
+      double signed_rate_limit = delta > 0.0 ? rate_limit : -rate_limit;
+      Output = PreviousRateLimOutput + signed_rate_limit * dt;
     }
   }
   PreviousRateLimOutput = Output;

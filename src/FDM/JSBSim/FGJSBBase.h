@@ -63,7 +63,7 @@ namespace std
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_JSBBASE "$Id: FGJSBBase.h,v 1.30 2010/07/01 23:13:19 jberndt Exp $"
+#define ID_JSBBASE "$Id: FGJSBBase.h,v 1.32 2011/06/13 11:47:04 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -79,7 +79,7 @@ CLASS DOCUMENTATION
 *   This class provides universal constants, utility functions, messaging
 *   functions, and enumerated constants to JSBSim.
     @author Jon S. Berndt
-    @version $Id: FGJSBBase.h,v 1.30 2010/07/01 23:13:19 jberndt Exp $
+    @version $Id: FGJSBBase.h,v 1.32 2011/06/13 11:47:04 jberndt Exp $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -92,7 +92,7 @@ public:
   FGJSBBase() {};
 
   /// Destructor for FGJSBBase.
-  ~FGJSBBase() {};
+  virtual ~FGJSBBase() {};
 
   /// JSBSim Message structure
   class Message {
@@ -327,6 +327,8 @@ protected:
   static const double inhgtopa;
   static const double fttom;
   static double Reng;         // Specific Gas Constant,ft^2/(sec^2*R)
+  static double Rstar;
+  static double Mair;
   static const double SHRatio;
   static const double lbtoslug;
   static const double slugtolb;

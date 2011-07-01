@@ -53,7 +53,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGPiston.cpp,v 1.55 2011/03/10 01:35:25 dpculp Exp $";
+static const char *IdSrc = "$Id: FGPiston.cpp,v 1.58 2011/06/13 15:23:09 jentron Exp $";
 static const char *IdHdr = ID_PISTON;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,7 +64,7 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   : FGEngine(exec, el, engine_number),
   R_air(287.3),                  // Gas constant for air J/Kg/K
   rho_fuel(800),                 // estimate
-  calorific_value_fuel(47.3e6),
+  calorific_value_fuel(47.3e6),  // J/Kg
   Cp_air(1005),                  // Specific heat (constant pressure) J/Kg/K
   Cp_fuel(1700),
   standard_pressure(101320.73)
@@ -100,6 +100,7 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   FMEPDynamic= 18400;
   FMEPStatic = 46500;
   Cooling_Factor = 0.5144444;
+  StaticFriction_HP = 1.5;
 
   // These are internal program variables
 
@@ -177,6 +178,8 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
     Displacement = el->FindElementValueAsNumberConvertTo("displacement","IN3");
   if (el->FindElement("maxhp"))
     MaxHP = el->FindElementValueAsNumberConvertTo("maxhp","HP");
+  if (el->FindElement("static-friction"))
+    StaticFriction_HP = el->FindElementValueAsNumberConvertTo("static-friction","HP");
   if (el->FindElement("sparkfaildrop"))
     SparkFailDrop = Constrain(0, 1 - el->FindElementValueAsNumber("sparkfaildrop"), 1);
   if (el->FindElement("cycles"))
@@ -259,7 +262,7 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
       pmep *= inhgtopa  * volumetric_efficiency;
       double fmep = (FMEPDynamic * RatedMeanPistonSpeed_fps * fttom + FMEPStatic);
       double hp_loss = ((pmep + fmep) * displacement_SI * MaxRPM)/(Cycles*22371);
-      ISFC = ( 1.1*Displacement * MaxRPM * volumetric_efficiency *(MaxManifoldPressure_inHg / 29.92) ) / (9411 * (MaxHP+hp_loss));
+      ISFC = ( 1.1*Displacement * MaxRPM * volumetric_efficiency *(MaxManifoldPressure_inHg / 29.92) ) / (9411 * (MaxHP+hp_loss-StaticFriction_HP));
 // cout <<"FMEP: "<< fmep <<" PMEP: "<< pmep << " hp_loss: " <<hp_loss <<endl;
   }
   if ( MaxManifoldPressure_inHg > 29.9 ) {   // Don't allow boosting with a bogus number
@@ -314,6 +317,14 @@ FGPiston::FGPiston(FGFDMExec* exec, Element* el, int engine_number)
   PropertyManager->Tie(property_name, &BoostSpeed);
   property_name = base_property_name + "/cht-degF";
   PropertyManager->Tie(property_name, this, &FGPiston::getCylinderHeadTemp_degF);
+  property_name = base_property_name + "/engine-rpm";
+  PropertyManager->Tie(property_name, this, &FGPiston::getRPM);
+  property_name = base_property_name + "/oil-temperature-degF";
+  PropertyManager->Tie(property_name, this, &FGPiston::getOilTemp_degF);
+  property_name = base_property_name + "/oil-pressure-psi";
+  PropertyManager->Tie(property_name, this, &FGPiston::getOilPressure_psi);
+  property_name = base_property_name + "/egt-degF";
+  PropertyManager->Tie(property_name, this, &FGPiston::getExhaustGasTemp_degF);
 
   // Set up and sanity-check the turbo/supercharging configuration based on the input values.
   if (TakeoffBoost > RatedBoost[0]) bTakeoffBoost = true;
@@ -730,7 +741,7 @@ void FGPiston::doEnginePower(void)
   // (1/2) convert cycles, 60 minutes to seconds, 745.7 watts to hp.
   double pumping_hp = ((PMEP + FMEP) * displacement_SI * RPM)/(Cycles*22371);
 
-  HP = IndicatedHorsePower + pumping_hp - 1.5; //FIXME 1.5 static friction should depend on oil temp and configuration
+  HP = IndicatedHorsePower + pumping_hp - StaticFriction_HP; //FIXME static friction should depend on oil temp and configuration
 //  cout << "pumping_hp " <<pumping_hp << FMEP << PMEP <<endl;
   PctPower = HP / MaxHP ;
 //  cout << "Power = " << HP << "  RPM = " << RPM << "  Running = " << Running << "  Cranking = " << Cranking << endl;
@@ -756,11 +767,10 @@ void FGPiston::doEGT(void)
   if ((Running) && (m_dot_air > 0.0)) {  // do the energy balance
     combustion_efficiency = Lookup_Combustion_Efficiency->GetValue(equivalence_ratio);
     enthalpy_exhaust = m_dot_fuel * calorific_value_fuel *
-                              combustion_efficiency * 0.33;
+                              combustion_efficiency * 0.30;
     heat_capacity_exhaust = (Cp_air * m_dot_air) + (Cp_fuel * m_dot_fuel);
     delta_T_exhaust = enthalpy_exhaust / heat_capacity_exhaust;
     ExhaustGasTemp_degK = T_amb + delta_T_exhaust;
-    ExhaustGasTemp_degK *= 0.444 + ((0.544 - 0.444) * PctPower);
   } else {  // Drop towards ambient - guess an appropriate time constant for now
     combustion_efficiency = 0;
     dEGTdt = (RankineToKelvin(Atmosphere->GetTemperature()) - ExhaustGasTemp_degK) / 100.0;

@@ -35,7 +35,7 @@
 #include <Scenery/scenery.hxx>
 
 // all the FDMs, since we are the factory method
-#if ENABLE_SP_FDM
+#ifdef ENABLE_SP_FDM
 #include <FDM/SP/ADA.hxx>
 #include <FDM/SP/ACMS.hxx>
 #include <FDM/SP/MagicCarpet.hxx>
@@ -175,7 +175,7 @@ void FDMShell::createImplementation()
         _impl = new FGLaRCsim( dt );
     } else if ( model == "jsb" ) {
         _impl = new FGJSBsim( dt );
-#if ENABLE_SP_FDM
+#ifdef ENABLE_SP_FDM
     } else if ( model == "ada" ) {
         _impl = new FGADA( dt );
     } else if ( model == "acms" ) {

@@ -914,7 +914,9 @@ void FGNasalSys::loadPropertyScripts(SGPropertyNode* n)
             enable->addChangeListener(listener, false);
         }
     }
-    n->setBoolValue("loaded",is_loaded);
+    SGPropertyNode* loaded = n->getChild("loaded",0,true);
+    loaded->setAttribute(SGPropertyNode::PRESERVE,true);
+    loaded->setBoolValue(is_loaded);
 }
 
 // Logs a runtime error, with stack trace, to the FlightGear log stream

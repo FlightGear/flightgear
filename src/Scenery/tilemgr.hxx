@@ -38,6 +38,11 @@ namespace osg
 class Node;
 }
 
+namespace simgear
+{
+class SGTerraSync;
+}
+
 class FGTileMgr : public SGSubsystem, public simgear::ModelLoadHelper {
 
 private:
@@ -75,6 +80,7 @@ private:
      * tile cache
      */
     simgear::TileCache tile_cache;
+    simgear::SGTerraSync* _terra_sync;
 
     // Update the various queues maintained by the tilemagr (private
     // internal function, do not call directly.)
@@ -84,6 +90,7 @@ private:
     SGPropertyChangeListener* _propListener;
     SGPropertyNode_ptr _randomObjects;
     SGPropertyNode_ptr _randomVegetation;
+    SGPropertyNode_ptr _maxTileRangeM;
     
 public:
     FGTileMgr();

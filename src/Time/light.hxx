@@ -100,6 +100,7 @@ private:
     // input parameters affected by the weather system
     float _saturation;
     float _scattering;
+    float _overcast;
 
     double _dt_total;
 

@@ -1168,6 +1168,15 @@ fgOptScenario( const char *arg )
 }
 
 static int
+fgOptNoScenarios( const char *arg )
+{
+    SGPropertyNode_ptr ai_node = fgGetNode( "/sim/ai", true );
+    ai_node->removeChildren("scenario",false);
+    ai_node->setBoolValue( "enabled", false );
+    return FG_OPTIONS_OK;
+}
+
+static int
 fgOptRunway( const char *arg )
 {
     fgSetString("/sim/presets/runway", arg );
@@ -1390,6 +1399,9 @@ struct OptionDesc {
     {"texture-filtering",            false, OPTION_INT,    "/sim/rendering/filtering", 1, "", 0 },
     {"disable-wireframe",            false, OPTION_BOOL,   "/sim/rendering/wireframe", false, "", 0 },
     {"enable-wireframe",             false, OPTION_BOOL,   "/sim/rendering/wireframe", true, "", 0 },
+    {"disable-terrasync",            false, OPTION_BOOL,   "/sim/terrasync/enabled", false, "", 0 },
+    {"enable-terrasync",             false, OPTION_BOOL,   "/sim/terrasync/enabled", true, "", 0 },
+    {"terrasync-dir",                true,  OPTION_STRING, "/sim/terrasync/scenery-dir", false, "", 0 },
     {"geometry",                     true,  OPTION_FUNC,   "", false, "", fgOptGeometry },
     {"bpp",                          true,  OPTION_FUNC,   "", false, "", fgOptBpp },
     {"units-feet",                   false, OPTION_STRING, "/sim/startup/units", false, "feet", 0 },
@@ -1462,6 +1474,7 @@ struct OptionDesc {
     {"min-status",                   true,  OPTION_STRING,  "/sim/aircraft-min-status", false, "all", 0 },
     {"livery",                       true,  OPTION_FUNC,   "", false, "", fgOptLivery },
     {"ai-scenario",                  true,  OPTION_FUNC,   "", false, "", fgOptScenario },
+    {"disable-ai-scenarios",         false, OPTION_FUNC,   "", false, "", fgOptNoScenarios},
     {"parking-id",                   true,  OPTION_FUNC,   "", false, "", fgOptParking  },
     {"version",                      false, OPTION_FUNC,   "", false, "", fgOptVersion },
     {"enable-fpe",                   false, OPTION_FUNC,   "", false, "", fgOptFpe},

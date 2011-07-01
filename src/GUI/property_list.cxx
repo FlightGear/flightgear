@@ -343,6 +343,8 @@ void PropertyList::updateTextForEntry(NodeData& data)
                 ext += 'A';
             if (node->getAttribute(SGPropertyNode::USERARCHIVE))
                 ext += 'U';
+            if (node->getAttribute(SGPropertyNode::PRESERVE))
+                ext += 'P';
             if (node->isTied())
                 ext += 'T';
 
@@ -356,6 +358,12 @@ void PropertyList::updateTextForEntry(NodeData& data)
                 line << ", L" << num;
         }
         line << ')';
+    }
+    else
+    if ((_verbose)&&(node->getAttribute(SGPropertyNode::PRESERVE)))
+    {
+        // only preserve/protection flag matters for nodes without values
+        line << " (P)";
     }
 
     stdString out = line.str();

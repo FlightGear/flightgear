@@ -94,12 +94,16 @@ Section "" ;No components page, name is not important
   SetOutPath $INSTDIR\osgPlugins-${OSGVersion}
   File ${OSGPluginsDir}\osgdb_ac.dll
   File ${OSGPluginsDir}\osgdb_osg.dll
+  File ${OSGPluginsDir}\osgdb_osga.dll
   File ${OSGPluginsDir}\osgdb_3ds.dll
   File ${OSGPluginsDir}\osgdb_mdl.dll
   File ${OSGPluginsDir}\osgdb_jpeg.dll
   File ${OSGPluginsDir}\osgdb_rgb.dll  
   File ${OSGPluginsDir}\osgdb_png.dll
+  File ${OSGPluginsDir}\osgdb_dds.dll
   File ${OSGPluginsDir}\osgdb_txf.dll
+  File ${OSGPluginsDir}\osgdb_deprecated_osg.dll
+  File ${OSGPluginsDir}\osgdb_deprecated_osgparticle.dll
   
   
   Exec '"$INSTDIR\fgrun.exe"  --silent --fg-exe="$INSTDIR\fgfs.exe" --ts-exe="$INSTDIR\terrasync.exe" '

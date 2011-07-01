@@ -52,11 +52,15 @@ using std::string;
 
 static string tempReg;
 
-FGAIAircraft::FGAIAircraft(FGAISchedule *ref) : FGAIBase(otAircraft) {
+FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
+     /* HOT must be disabled for AI Aircraft,
+      * otherwise traffic detection isn't working as expected.*/
+     FGAIBase(otAircraft, false) 
+{
     trafficRef = ref;
     if (trafficRef) {
         groundOffset = trafficRef->getGroundOffset();
-	setCallSign(trafficRef->getCallSign());
+        setCallSign(trafficRef->getCallSign());
     }
     else
         groundOffset = 0;

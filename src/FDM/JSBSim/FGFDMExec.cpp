@@ -71,7 +71,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGFDMExec.cpp,v 1.91 2011/04/05 20:20:21 andgi Exp $";
+static const char *IdSrc = "$Id: FGFDMExec.cpp,v 1.95 2011/05/20 10:35:25 jberndt Exp $";
 static const char *IdHdr = ID_FDMEXEC;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -228,19 +228,19 @@ bool FGFDMExec::Allocate(void)
   // Schedule a model. The second arg (the integer) is the pass number. For
   // instance, the atmosphere model could get executed every fifth pass it is called.
   
-  Schedule(Input,           1);
-  Schedule(Atmosphere,      1);
-  Schedule(FCS,             1);
-  Schedule(Propulsion,      1);
-  Schedule(MassBalance,     1);
-  Schedule(Aerodynamics,    1);
-  Schedule(Inertial,        1);
-  Schedule(GroundReactions, 1);
-  Schedule(ExternalReactions, 1);
-  Schedule(BuoyantForces,   1);
-  Schedule(Aircraft,        1);
-  Schedule(Propagate,       1);
-  Schedule(Auxiliary,       1);
+  Schedule(Input,           1);   // Input model is Models[0]
+  Schedule(Atmosphere,      1);   // Input model is Models[1]
+  Schedule(FCS,             1);   // Input model is Models[2]
+  Schedule(Propulsion,      1);   // Input model is Models[3]
+  Schedule(MassBalance,     1);   // Input model is Models[4]
+  Schedule(Aerodynamics,    1);   // Input model is Models[5]
+  Schedule(Inertial,        1);   // Input model is Models[6]
+  Schedule(GroundReactions, 1);   // Input model is Models[7]
+  Schedule(ExternalReactions, 1); // Input model is Models[8]
+  Schedule(BuoyantForces,   1);   // Input model is Models[9]
+  Schedule(Aircraft,        1);   // Input model is Models[10]
+  Schedule(Propagate,       1);   // Input model is Models[11]
+  Schedule(Auxiliary,       1);   // Input model is Models[12]
 
   // Initialize models so they can communicate with each other
 
@@ -329,10 +329,9 @@ bool FGFDMExec::Run(void)
   if (Script != 0 && !IntegrationSuspended()) success = Script->RunScript();
 
   vector <FGModel*>::iterator it;
-  for (it = Models.begin(); it != Models.end(); ++it) (*it)->Run();
+  for (it = Models.begin(); it != Models.end(); ++it) (*it)->Run(holding);
 
-  Frame++;
-  if (!Holding()) IncrTime();
+  IncrTime();
   if (Terminate) success = false;
 
   return (success);
@@ -359,36 +358,12 @@ void FGFDMExec::Initialize(FGInitialCondition *FGIC)
 
   Propagate->SetInitialState( FGIC );
 
-  Atmosphere->Run();
+  Atmosphere->Run(false);
   Atmosphere->SetWindNED( FGIC->GetWindNFpsIC(),
                           FGIC->GetWindEFpsIC(),
                           FGIC->GetWindDFpsIC() );
 
-  FGColumnVector3 vAeroUVW;
-
-  //ToDo: move this to the Auxiliary class !?
-
-  vAeroUVW = Propagate->GetUVW() + Propagate->GetTl2b()*Atmosphere->GetTotalWindNED();
-
-  double alpha, beta;
-  if (vAeroUVW(eW) != 0.0)
-    alpha = vAeroUVW(eU)*vAeroUVW(eU) > 0.0 ? atan2(vAeroUVW(eW), vAeroUVW(eU)) : 0.0;
-  else
-    alpha = 0.0;
-  if (vAeroUVW(eV) != 0.0)
-    beta = vAeroUVW(eU)*vAeroUVW(eU)+vAeroUVW(eW)*vAeroUVW(eW) > 0.0 ? atan2(vAeroUVW(eV), (fabs(vAeroUVW(eU))/vAeroUVW(eU))*sqrt(vAeroUVW(eU)*vAeroUVW(eU) + vAeroUVW(eW)*vAeroUVW(eW))) : 0.0;
-  else
-    beta = 0.0;
-
-  Auxiliary->SetAB(alpha, beta);
-
-  double Vt = vAeroUVW.Magnitude();
-  Auxiliary->SetVt(Vt);
-
-  Auxiliary->SetMach(Vt/Atmosphere->GetSoundSpeed());
-
-  double qbar = 0.5*Vt*Vt*Atmosphere->GetDensity();
-  Auxiliary->Setqbar(qbar);
+  Auxiliary->Run(false);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -675,7 +650,7 @@ bool FGFDMExec::LoadModel(const string& model, bool addModelToPath)
     modelLoaded = true;
 
     if (debug_lvl > 0) {
-      MassBalance->Run(); // Update all mass properties for the report.
+      MassBalance->Run(false); // Update all mass properties for the report.
       MassBalance->GetMassPropertiesReport();
 
       cout << endl << fgblue << highint
@@ -969,38 +944,6 @@ void FGFDMExec::DoTrim(int mode)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-/*
-void FGFDMExec::DoTrimAnalysis(int mode)
-{
-  double saved_time;
-  if (Constructing) return;
-
-  if (mode < 0 || mode > JSBSim::taNone) {
-    cerr << endl << "Illegal trimming mode!" << endl << endl;
-    return;
-  }
-  saved_time = sim_time;
-
-  FGTrimAnalysis trimAnalysis(this, (JSBSim::TrimAnalysisMode)mode);
-
-  if ( !trimAnalysis.Load(IC->GetInitFile(), false) ) {
-    cerr << "A problem occurred with trim configuration file " << trimAnalysis.Load(IC->GetInitFile()) << endl;
-    exit(-1);
-  }
-
-  bool result = trimAnalysis.DoTrim();
-
-  if ( !result ) cerr << endl << "Trim Failed" << endl << endl;
-
-  trimAnalysis.Report();
-  Setsim_time(saved_time);
-
-  EnableOutput();
-  cout << "\nOutput: " << GetOutputFileName() << endl;
-
-}
-*/
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGFDMExec::UseAtmosphereMSIS(void)
 {
@@ -1010,6 +953,8 @@ void FGFDMExec::UseAtmosphereMSIS(void)
     cerr << fgred << "MSIS Atmosphere model init failed" << fgdef << endl;
     Error+=1;
   }
+  Models[1] = Atmosphere; // Reassign the atmosphere model that has already been scheduled
+                          // to the new atmosphere.
   delete oldAtmosphere;
 }
 
@@ -1024,6 +969,8 @@ void FGFDMExec::UseAtmosphereMars(void)
     cerr << fgred << "Mars Atmosphere model init failed" << fgdef << endl;
     Error+=1;
   }
+  Models[1] = Atmosphere; // Reassign the atmosphere model that has already been scheduled
+                          // to the new atmosphere.
   delete oldAtmosphere;
 */
 }

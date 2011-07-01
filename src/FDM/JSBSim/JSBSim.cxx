@@ -140,7 +140,7 @@ FGJSBsim::FGJSBsim( double dt )
     if( TURBULENCE_TYPE_NAMES.empty() ) {
         TURBULENCE_TYPE_NAMES["ttNone"]     = FGAtmosphere::ttNone;
         TURBULENCE_TYPE_NAMES["ttStandard"] = FGAtmosphere::ttStandard;
-        TURBULENCE_TYPE_NAMES["ttBerndt"]   = FGAtmosphere::ttBerndt;
+//      TURBULENCE_TYPE_NAMES["ttBerndt"]   = FGAtmosphere::ttBerndt;
         TURBULENCE_TYPE_NAMES["ttCulp"]     = FGAtmosphere::ttCulp;
         TURBULENCE_TYPE_NAMES["ttMilspec"]  = FGAtmosphere::ttMilspec;
         TURBULENCE_TYPE_NAMES["ttTustin"]   = FGAtmosphere::ttTustin;
@@ -407,6 +407,33 @@ void FGJSBsim::init()
         globals->get_controls()->set_mixture(i, FCS->GetMixtureCmd(i));
       }
     }
+
+    if ( startup_trim->getBoolValue() ) {
+      FGLocation cart(fgic->GetLongitudeRadIC(), fgic->GetLatitudeRadIC(),
+                    fgic->GetSeaLevelRadiusFtIC() + fgic->GetAltitudeASLFtIC());
+      double cart_pos[3], contact[3], d[3], vel[3], agl;
+      update_ground_cache(cart, cart_pos, 0.01);
+
+      get_agl_ft(fdmex->GetSimTime(), cart_pos, SG_METER_TO_FEET*2, contact,
+                 d, vel, d, &agl);
+      double terrain_alt = sqrt(contact[0]*contact[0] + contact[1]*contact[1]
+           + contact[2]*contact[2]) - fgic->GetSeaLevelRadiusFtIC();
+
+      SG_LOG(SG_FLIGHT, SG_INFO, "Ready to trim, terrain elevation is: "
+                                 << terrain_alt * SG_METER_TO_FEET );
+
+      if (fgGetBool("/sim/presets/onground")) {
+        FGColumnVector3 gndVelNED = cart.GetTec2l()
+                                  * FGColumnVector3(vel[0], vel[1], vel[2]);
+        fgic->SetVNorthFpsIC(gndVelNED(1));
+        fgic->SetVEastFpsIC(gndVelNED(2));
+        fgic->SetVDownFpsIC(gndVelNED(3));
+      }
+      fgic->SetTerrainElevationFtIC( terrain_alt );
+      do_trim();
+      needTrim = false;
+    }
+
     copy_from_JSBsim(); //update the bus
 
     SG_LOG( SG_FLIGHT, SG_INFO, "  Initialized JSBSim with:" );
@@ -483,88 +510,18 @@ void FGJSBsim::update( double dt )
       return;
 
     int multiloop = _calc_multiloop(dt);
-
-    int i;
-
-    // Compute the radius of the aircraft. That is the radius of a ball
-    // where all gear units are in. At the moment it is at least 10ft ...
-    double acrad = 10.0;
-    int n_gears = GroundReactions->GetNumGearUnits();
-    for (i=0; i<n_gears; ++i) {
-      FGColumnVector3 bl = GroundReactions->GetGearUnit(i)->GetBodyLocation();
-      double r = bl.Magnitude();
-      if (acrad < r)
-        acrad = r;
-    }
-
-    // Compute the potential movement of this aircraft and query for the
-    // ground in this area.
-    double groundCacheRadius = acrad + 2*dt*Propagate->GetUVW().Magnitude();
-    double alt, slr, lat, lon;
     FGLocation cart = Auxiliary->GetLocationVRP();
-    if ( needTrim && startup_trim->getBoolValue() ) {
-      alt = fgic->GetAltitudeASLFtIC();
-      slr = fgic->GetSeaLevelRadiusFtIC();
-      lat = fgic->GetLatitudeDegIC() * SGD_DEGREES_TO_RADIANS;
-      lon = fgic->GetLongitudeDegIC() * SGD_DEGREES_TO_RADIANS;
-      cart = FGLocation(lon, lat, alt+slr);
-    }
-    double cart_pos[3] = { cart(1), cart(2), cart(3) };
-    double t0 = fdmex->GetSimTime();
-    bool cache_ok = prepare_ground_cache_ft( t0, t0 + dt, cart_pos,
-                                             groundCacheRadius );
-    if (!cache_ok) {
-      SG_LOG(SG_FLIGHT, SG_WARN,
-             "FGInterface is being called without scenery below the aircraft!");
+    double cart_pos[3];
 
-      alt = fgic->GetAltitudeASLFtIC();
-      SG_LOG(SG_FLIGHT, SG_WARN, "altitude         = " << alt);
-
-      slr = fgic->GetSeaLevelRadiusFtIC();
-      SG_LOG(SG_FLIGHT, SG_WARN, "sea level radius = " << slr);
-
-      lat = fgic->GetLatitudeDegIC() * SGD_DEGREES_TO_RADIANS;
-      SG_LOG(SG_FLIGHT, SG_WARN, "latitude         = " << lat);
-
-      lon = fgic->GetLongitudeDegIC() * SGD_DEGREES_TO_RADIANS;
-      SG_LOG(SG_FLIGHT, SG_WARN, "longitude        = " << lon);
-      //return;
-    }
+    update_ground_cache(cart, cart_pos, dt);
 
     copy_to_JSBsim();
 
     trimmed->setBoolValue(false);
 
-    if ( needTrim ) {
-      if ( startup_trim->getBoolValue() ) {
-        double contact[3], d[3], vel[3], agl;
-        get_agl_ft(fdmex->GetSimTime(), cart_pos, SG_METER_TO_FEET*2, contact,
-                   d, vel, d, &agl);
-        double terrain_alt = sqrt(contact[0]*contact[0] + contact[1]*contact[1]
-             + contact[2]*contact[2]) - fgic->GetSeaLevelRadiusFtIC();
-
-        SG_LOG(SG_FLIGHT, SG_INFO,
-          "Ready to trim, terrain elevation is: "
-            << terrain_alt * SG_METER_TO_FEET );
-
-        if (fgGetBool("/sim/presets/onground")) {
-          FGColumnVector3 gndVelNED = cart.GetTec2l()
-                                    * FGColumnVector3(vel[0], vel[1], vel[2]);
-          fgic->SetVNorthFpsIC(gndVelNED(1));
-          fgic->SetVEastFpsIC(gndVelNED(2));
-          fgic->SetVDownFpsIC(gndVelNED(3));
-        }
-        fgic->SetTerrainElevationFtIC( terrain_alt );
-        do_trim();
-      } else {
-        fdmex->RunIC();  //apply any changes made through the set_ functions
-      }
-      needTrim = false;
-    }
-
-    for ( i=0; i < multiloop; i++ ) {
+    for ( int i=0; i < multiloop; i++ ) {
       fdmex->Run();
-      update_external_forces(fdmex->GetSimTime() + i * fdmex->GetDeltaT());      
+      update_external_forces(fdmex->GetSimTime() + i * fdmex->GetDeltaT());
     }
 
     FGJSBBase::Message* msg;
@@ -715,9 +672,9 @@ bool FGJSBsim::copy_to_JSBsim()
 
     Atmosphere->SetTurbType((FGAtmosphere::tType)TURBULENCE_TYPE_NAMES[turbulence_model->getStringValue()]);
     switch( Atmosphere->GetTurbType() ) {
+//      case FGAtmosphere::ttBerndt:
         case FGAtmosphere::ttStandard:
-        case FGAtmosphere::ttCulp:
-        case FGAtmosphere::ttBerndt: {
+        case FGAtmosphere::ttCulp: {
             double tmp = turbulence_gain->getDoubleValue();
             Atmosphere->SetTurbGain(tmp * tmp * 100.0);
             Atmosphere->SetTurbRate(turbulence_rate->getDoubleValue());
@@ -1052,186 +1009,240 @@ bool FGJSBsim::ToggleDataLogging(bool state)
 //Positions
 void FGJSBsim::set_Latitude(double lat)
 {
-    static SGConstPropertyNode_ptr altitude = fgGetNode("/position/altitude-ft");
-    double alt;
-    double sea_level_radius_meters, lat_geoc;
+  static SGConstPropertyNode_ptr altitude = fgGetNode("/position/altitude-ft");
+  double alt;
+  double sea_level_radius_meters, lat_geoc;
 
-    // In case we're not trimming
-    FGInterface::set_Latitude(lat);
+  if ( altitude->getDoubleValue() > -9990 )
+    alt = altitude->getDoubleValue();
+  else
+    alt = 0.0;
 
-    if ( altitude->getDoubleValue() > -9990 ) {
-      alt = altitude->getDoubleValue();
-    } else {
-      alt = 0.0;
-    }
+  SG_LOG(SG_FLIGHT,SG_INFO,"FGJSBsim::set_Latitude: " << lat );
+  SG_LOG(SG_FLIGHT,SG_INFO," cur alt (ft) =  " << alt );
 
-    update_ic();
-    SG_LOG(SG_FLIGHT,SG_INFO,"FGJSBsim::set_Latitude: " << lat );
-    SG_LOG(SG_FLIGHT,SG_INFO," cur alt (ft) =  " << alt );
+  sgGeodToGeoc( lat, alt * SG_FEET_TO_METER,
+                    &sea_level_radius_meters, &lat_geoc );
+  _set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET  );
 
-    sgGeodToGeoc( lat, alt * SG_FEET_TO_METER,
-                      &sea_level_radius_meters, &lat_geoc );
-    _set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET  );
+  if (needTrim) {
     fgic->SetSeaLevelRadiusFtIC( sea_level_radius_meters * SG_METER_TO_FEET  );
     fgic->SetLatitudeRadIC( lat_geoc );
-
-    if (!fdmex->Holding())
-      needTrim=true;
+  }
+  else {
+    Propagate->SetLatitude(lat_geoc);
+    FGInterface::set_Latitude(lat);
+  }
 }
 
 
 void FGJSBsim::set_Longitude(double lon)
 {
-    SG_LOG(SG_FLIGHT,SG_INFO,"FGJSBsim::set_Longitude: " << lon );
+  SG_LOG(SG_FLIGHT,SG_INFO,"FGJSBsim::set_Longitude: " << lon );
 
-    // In case we're not trimming
+  if (needTrim)
+    fgic->SetLongitudeRadIC(lon);
+  else {
+    Propagate->SetLongitude(lon);
     FGInterface::set_Longitude(lon);
-
-    update_ic();
-    fgic->SetLongitudeRadIC( lon );
-
-    if (!fdmex->Holding())
-      needTrim=true;
+  }
 }
 
 // Sets the altitude above sea level.
 void FGJSBsim::set_Altitude(double alt)
 {
-    static SGConstPropertyNode_ptr latitude = fgGetNode("/position/latitude-deg");
+  SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Altitude: " << alt );
 
-    double sea_level_radius_meters,lat_geoc;
-
-    SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Altitude: " << alt );
-    SG_LOG(SG_FLIGHT,SG_INFO, "  lat (deg) = " << latitude->getDoubleValue() );
-
-    // In case we're not trimming
-    FGInterface::set_Altitude(alt);
-
-    update_ic();
-    sgGeodToGeoc( latitude->getDoubleValue() * SGD_DEGREES_TO_RADIANS, alt,
-                  &sea_level_radius_meters, &lat_geoc);
-    _set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET  );
-    fgic->SetSeaLevelRadiusFtIC( sea_level_radius_meters * SG_METER_TO_FEET );
-    SG_LOG(SG_FLIGHT, SG_INFO,
-          "Terrain elevation: " << FGInterface::get_Runway_altitude() * SG_METER_TO_FEET );
-    fgic->SetLatitudeRadIC( lat_geoc );
+  if (needTrim)
     fgic->SetAltitudeASLFtIC(alt);
-
-    if (!fdmex->Holding())
-      needTrim=true;
+  else {
+    Propagate->SetAltitudeASL(alt);
+    FGInterface::set_Altitude(alt);
+  }
 }
 
 void FGJSBsim::set_V_calibrated_kts(double vc)
 {
     SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_V_calibrated_kts: " <<  vc );
 
-    // In case we're not trimming
-    FGInterface::set_V_calibrated_kts(vc);
-
-    update_ic();
+  if (needTrim)
     fgic->SetVcalibratedKtsIC(vc);
+  else {
+    double mach = getMachFromVcas(vc);
+    double temp = 1.8*(temperature->getDoubleValue()+273.15);
+    double soundSpeed = sqrt(1.4*1716.0*temp);
+    FGColumnVector3 vUVW = Propagate->GetUVW();
+    vUVW.Normalize();
+    vUVW *= mach * soundSpeed;
+    Propagate->SetUVW(1, vUVW(1));
+    Propagate->SetUVW(2, vUVW(2));
+    Propagate->SetUVW(3, vUVW(3));
 
-    if (!fdmex->Holding())
-      needTrim=true;
+    FGInterface::set_V_calibrated_kts(vc);
+  }
 }
 
 void FGJSBsim::set_Mach_number(double mach)
 {
-    SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Mach_number: " <<  mach );
+  SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Mach_number: " <<  mach );
 
-    // In case we're not trimming
-    FGInterface::set_Mach_number(mach);
-
-    update_ic();
+  if (needTrim)
     fgic->SetMachIC(mach);
+  else {
+    double temp = 1.8*(temperature->getDoubleValue()+273.15);
+    double soundSpeed = sqrt(1.4*1716.0*temp);
+    FGColumnVector3 vUVW = Propagate->GetUVW();
+    vUVW.Normalize();
+    vUVW *= mach * soundSpeed;
+    Propagate->SetUVW(1, vUVW(1));
+    Propagate->SetUVW(2, vUVW(2));
+    Propagate->SetUVW(3, vUVW(3));
 
-    if (!fdmex->Holding())
-      needTrim=true;
+    FGInterface::set_Mach_number(mach);
+  }
 }
 
 void FGJSBsim::set_Velocities_Local( double north, double east, double down )
 {
-    SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Velocities_Local: "
-       << north << ", " <<  east << ", " << down );
+  SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Velocities_Local: "
+     << north << ", " <<  east << ", " << down );
 
-    // In case we're not trimming
-    FGInterface::set_Velocities_Local(north, east, down);
-
-    update_ic();
+  if (needTrim) {
     fgic->SetVNorthFpsIC(north);
     fgic->SetVEastFpsIC(east);
     fgic->SetVDownFpsIC(down);
+  }
+  else {
+    FGColumnVector3 vNED(north, east, down);
+    FGColumnVector3 vUVW = Propagate->GetTl2b() * vNED;
+    Propagate->SetUVW(1, vUVW(1));
+    Propagate->SetUVW(2, vUVW(2));
+    Propagate->SetUVW(3, vUVW(3));
 
-    if (!fdmex->Holding())
-      needTrim=true;
+    FGInterface::set_Velocities_Local(north, east, down);
+  }
 }
 
 void FGJSBsim::set_Velocities_Wind_Body( double u, double v, double w)
 {
-    SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Velocities_Wind_Body: "
-       << u << ", " <<  v << ", " <<  w );
+  SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Velocities_Wind_Body: "
+     << u << ", " <<  v << ", " <<  w );
 
-    // In case we're not trimming
-    FGInterface::set_Velocities_Wind_Body(u, v, w);
-
-    update_ic();
+  if (needTrim) {
     fgic->SetUBodyFpsIC(u);
     fgic->SetVBodyFpsIC(v);
     fgic->SetWBodyFpsIC(w);
+  }
+  else {
+    Propagate->SetUVW(1, u);
+    Propagate->SetUVW(2, v);
+    Propagate->SetUVW(3, w);
 
-    if (!fdmex->Holding())
-      needTrim=true;
+    FGInterface::set_Velocities_Wind_Body(u, v, w);
+  }
 }
 
 //Euler angles
 void FGJSBsim::set_Euler_Angles( double phi, double theta, double psi )
 {
-    SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Euler_Angles: "
-       << phi << ", " << theta << ", " << psi );
+  SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Euler_Angles: "
+     << phi << ", " << theta << ", " << psi );
 
-    // In case we're not trimming
-    FGInterface::set_Euler_Angles(phi, theta, psi);
-
-    update_ic();
+  if (needTrim) {
     fgic->SetThetaRadIC(theta);
     fgic->SetPhiRadIC(phi);
     fgic->SetPsiRadIC(psi);
+  }
+  else {
+    FGQuaternion quat(phi, theta, psi);
+    FGMatrix33 Tl2b = quat.GetT();
+    FGMatrix33 Ti2b = Tl2b*Propagate->GetTi2l();
+    FGQuaternion Qi = Ti2b.GetQuaternion();
+    Propagate->SetInertialOrientation(Qi);
 
-    if (!fdmex->Holding())
-      needTrim=true;
+    FGInterface::set_Euler_Angles(phi, theta, psi);
+  }
 }
 
 //Flight Path
 void FGJSBsim::set_Climb_Rate( double roc)
 {
-    SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Climb_Rate: " << roc );
+  SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Climb_Rate: " << roc );
 
-    // In case we're not trimming
-    FGInterface::set_Climb_Rate(roc);
-
-    update_ic();
-    //since both climb rate and flight path angle are set in the FG
-    //startup sequence, something is needed to keep one from cancelling
-    //out the other.
-    if( !(fabs(roc) > 1 && fabs(fgic->GetFlightPathAngleRadIC()) < 0.01) ) {
+  //since both climb rate and flight path angle are set in the FG
+  //startup sequence, something is needed to keep one from cancelling
+  //out the other.
+  if( !(fabs(roc) > 1 && fabs(fgic->GetFlightPathAngleRadIC()) < 0.01) ) {
+    if (needTrim)
       fgic->SetClimbRateFpsIC(roc);
-    }
+    else {
+      FGColumnVector3 vNED = Propagate->GetVel();
+      vNED(FGJSBBase::eDown) = -roc;
+      FGColumnVector3 vUVW = Propagate->GetTl2b() * vNED;
+      Propagate->SetUVW(1, vUVW(1));
+      Propagate->SetUVW(2, vUVW(2));
+      Propagate->SetUVW(3, vUVW(3));
 
-    if (!fdmex->Holding())
-      needTrim=true;
+      FGInterface::set_Climb_Rate(roc);
+    }
+  }
 }
 
 void FGJSBsim::set_Gamma_vert_rad( double gamma)
 {
-    SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Gamma_vert_rad: " << gamma );
+  SG_LOG(SG_FLIGHT,SG_INFO, "FGJSBsim::set_Gamma_vert_rad: " << gamma );
 
-    update_ic();
-    if( !(fabs(gamma) < 0.01 && fabs(fgic->GetClimbRateFpsIC()) > 1) ) {
+  if( !(fabs(gamma) < 0.01 && fabs(fgic->GetClimbRateFpsIC()) > 1) ) {
+    if (needTrim)
       fgic->SetFlightPathAngleRadIC(gamma);
+    else {
+      FGColumnVector3 vNED = Propagate->GetVel();
+      double vt = vNED.Magnitude();
+      vNED(FGJSBBase::eDown) = -vt * sin(gamma);
+      FGColumnVector3 vUVW = Propagate->GetTl2b() * vNED;
+      Propagate->SetUVW(1, vUVW(1));
+      Propagate->SetUVW(2, vUVW(2));
+      Propagate->SetUVW(3, vUVW(3));
+
+      FGInterface::set_Gamma_vert_rad(gamma);
+    }
+  }
+}
+// Reverse the VCAS formula to obtain the corresponding Mach number. For subsonic
+// speeds, the reversed formula has a closed form. For supersonic speeds, the
+// formula is reversed by the Newton-Raphson algorithm.
+
+double FGJSBsim::getMachFromVcas(double vcas)
+{
+  double p=pressure->getDoubleValue();
+  double psl=fdmex->GetAtmosphere()->GetPressureSL();
+  double rhosl=fdmex->GetAtmosphere()->GetDensitySL();
+
+  double pt = p + psl*(pow(1+vcas*vcas*rhosl/(7.0*psl),3.5)-1);
+
+  if (pt/p < 1.89293)
+    return sqrt(5.0*(pow(pt/p, 0.2857143) -1)); // Mach < 1
+  else {
+    // Mach >= 1
+    double mach = sqrt(0.77666*pt/p); // Initial guess is based on a quadratic approximation of the Rayleigh formula
+    double delta = 1.;
+    double target = pt/(166.92158*p);
+    int iter = 0;
+
+    // Find the root with Newton-Raphson. Since the differential is never zero,
+    // the function is monotonic and has only one root with a multiplicity of one.
+    // Convergence is certain.
+    while (delta > 1E-5 && iter < 10) {
+      double m2 = mach*mach; // Mach^2
+      double m6 = m2*m2*m2;  // Mach^6
+      delta = mach*m6/pow(7.0*m2-1.0,2.5) - target;
+      double diff = 7.0*m6*(2.0*m2-1)/pow(7.0*m2-1.0,3.5); // Never zero when Mach >= 1
+      mach -= delta/diff;
+      iter++;
     }
 
-    if (!fdmex->Holding())
-      needTrim=true;
+    return mach;
+  }
 }
 
 void FGJSBsim::init_gear(void )
@@ -1309,18 +1320,46 @@ void FGJSBsim::do_trim(void)
   SG_LOG( SG_FLIGHT, SG_INFO, "  Trim complete" );
 }
 
-void FGJSBsim::update_ic(void)
+bool FGJSBsim::update_ground_cache(FGLocation cart, double* cart_pos, double dt)
 {
-   if ( !needTrim ) {
-     fgic->SetLatitudeRadIC(get_Lat_geocentric() );
-     fgic->SetLongitudeRadIC( get_Longitude() );
-     fgic->SetAltitudeASLFtIC( get_Altitude() );
-     fgic->SetVcalibratedKtsIC( get_V_calibrated_kts() );
-     fgic->SetThetaRadIC( get_Theta() );
-     fgic->SetPhiRadIC( get_Phi() );
-     fgic->SetPsiRadIC( get_Psi() );
-     fgic->SetClimbRateFpsIC( get_Climb_Rate() );
-   }
+  // Compute the radius of the aircraft. That is the radius of a ball
+  // where all gear units are in. At the moment it is at least 10ft ...
+  double acrad = 10.0;
+  int n_gears = GroundReactions->GetNumGearUnits();
+  for (int i=0; i<n_gears; ++i) {
+    FGColumnVector3 bl = GroundReactions->GetGearUnit(i)->GetBodyLocation();
+    double r = bl.Magnitude();
+    if (acrad < r)
+      acrad = r;
+  }
+
+  // Compute the potential movement of this aircraft and query for the
+  // ground in this area.
+  double groundCacheRadius = acrad + 2*dt*Propagate->GetUVW().Magnitude();
+  cart_pos[0] = cart(1);
+  cart_pos[1] = cart(2);
+  cart_pos[2] = cart(3);
+  double t0 = fdmex->GetSimTime();
+  bool cache_ok = prepare_ground_cache_ft( t0, t0 + dt, cart_pos,
+                                           groundCacheRadius );
+  if (!cache_ok) {
+    SG_LOG(SG_FLIGHT, SG_WARN,
+           "FGInterface is being called without scenery below the aircraft!");
+
+    SG_LOG(SG_FLIGHT, SG_WARN, "altitude         = "
+                      << fgic->GetAltitudeASLFtIC());
+
+    SG_LOG(SG_FLIGHT, SG_WARN, "sea level radius = "
+                      << fgic->GetSeaLevelRadiusFtIC());
+
+    SG_LOG(SG_FLIGHT, SG_WARN, "latitude         = "
+                      << fgic->GetLatitudeRadIC());
+
+    SG_LOG(SG_FLIGHT, SG_WARN, "longitude        = "
+                      << fgic->GetLongitudeRadIC());
+  }
+
+  return cache_ok;
 }
 
 bool
@@ -1339,11 +1378,6 @@ FGJSBsim::get_agl_ft(double t, const double pt[3], double alt_off,
    return true;
 }
 
-inline static double dot3(const FGColumnVector3& a, const FGColumnVector3& b)
-{
-    return a(1) * b(1) + a(2) * b(2) + a(3) * b(3);
-}
-
 inline static double sqr(double x)
 {
     return x * x;
@@ -1360,7 +1394,7 @@ static double angle_diff(double a, double b)
 static void check_hook_solution(const FGColumnVector3& ground_normal_body, double E, double hook_length, double sin_fi_guess, double cos_fi_guess, double* sin_fis, double* cos_fis, double* fis, int* points)
 {
     FGColumnVector3 tip(-hook_length * cos_fi_guess, 0, hook_length * sin_fi_guess);
-    double dist = dot3(tip, ground_normal_body);
+    double dist = DotProduct(tip, ground_normal_body);
     if (fabs(dist + E) < 0.0001) {
 	sin_fis[*points] = sin_fi_guess;
 	cos_fis[*points] = cos_fi_guess;
@@ -1419,16 +1453,16 @@ void FGJSBsim::update_external_forces(double t_off)
         if (got && root_agl_ft > 0 && root_agl_ft < hook_length) {
             FGColumnVector3 ground_normal_body = Tl2b * (Tec2l * FGColumnVector3(ground_normal[0], ground_normal[1], ground_normal[2]));
             FGColumnVector3 contact_body = Tl2b * Location.LocationToLocal(FGColumnVector3(contact[0], contact[1], contact[2]));
-            double D = -dot3(contact_body, ground_normal_body);
+            double D = -DotProduct(contact_body, ground_normal_body);
 
 	    // check hook tip agl against same ground plane
-	    double hook_tip_agl_ft = dot3(hook_tip_body, ground_normal_body) + D;
+	    double hook_tip_agl_ft = DotProduct(hook_tip_body, ground_normal_body) + D;
 	    if (hook_tip_agl_ft < 0) {
 
         	// hook tip: hx - l cos, hy, hz + l sin
         	// on ground:  - n0 l cos + n2 l sin + E = 0
 
-        	double E = D + dot3(hook_root_body, ground_normal_body);
+        	double E = D + DotProduct(hook_root_body, ground_normal_body);
 
         	// substitue x = sin fi, cos fi = sqrt(1 - x * x)
 		// and rearrange to get a quadratic with coeffs:
@@ -1480,7 +1514,7 @@ void FGJSBsim::update_external_forces(double t_off)
             FGColumnVector3 wire_end2_body = Tl2b * Location.LocationToLocal(FGColumnVector3(wire_ends_ec[1][0], wire_ends_ec[1][1], wire_ends_ec[1][2])) - hook_root_body;
             FGColumnVector3 force_plane_normal = wire_end1_body * wire_end2_body;
             force_plane_normal.Normalize();
-            cos_fi = dot3(force_plane_normal, FGColumnVector3(0, 0, 1));
+            cos_fi = DotProduct(force_plane_normal, FGColumnVector3(0, 0, 1));
             if (cos_fi < 0) cos_fi = -cos_fi;
             sin_fi = sqrt(1 - sqr(cos_fi));
             fi = atan2(sin_fi, cos_fi) * SG_RADIANS_TO_DEGREES;

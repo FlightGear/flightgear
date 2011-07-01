@@ -117,6 +117,7 @@ if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
   # linker such as GNU ld on Linux
     set(comps 
         ephem
+        tsync
         environment
         nasal
         sky
@@ -135,8 +136,8 @@ if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
         structure
         props
         xml
-        debug 
         misc
+        debug 
         magvar
         math)
     

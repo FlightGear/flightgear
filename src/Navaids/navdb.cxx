@@ -297,12 +297,12 @@ FGRunway* getRunwayFromName(const std::string& aName)
   
   const FGAirport* apt = fgFindAirportID(parts[0]);
   if (!apt) {
-    SG_LOG(SG_GENERAL, SG_WARN, "navaid " << aName << " associated with bogus airport ID:" << parts[0]);
+    SG_LOG(SG_GENERAL, SG_DEBUG, "navaid " << aName << " associated with bogus airport ID:" << parts[0]);
     return NULL;
   }
   
   if (!apt->hasRunwayWithIdent(parts[1])) {
-    SG_LOG(SG_GENERAL, SG_WARN, "navaid " << aName << " associated with bogus runway ID:" << parts[1]);
+    SG_LOG(SG_GENERAL, SG_DEBUG, "navaid " << aName << " associated with bogus runway ID:" << parts[1]);
     return NULL;
   }
 

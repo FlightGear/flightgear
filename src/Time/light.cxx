@@ -78,6 +78,7 @@ FGLight::FGLight ()
       _adj_sky_color(0, 0, 0, 0),
       _saturation(1.0),
       _scattering(0.8),
+      _overcast(0.0),
       _dt_total(0)
 {
 }
@@ -145,6 +146,7 @@ void FGLight::bind () {
     // Write Only
     prop->tie("/rendering/scene/saturation",SGRawValuePointer<float>(&_saturation));
     prop->tie("/rendering/scene/scattering",SGRawValuePointer<float>(&_scattering));
+    prop->tie("/rendering/scene/overcast",SGRawValuePointer<float>(&_overcast));
 
     // Read Only
     prop->tie("/sim/time/sun-angle-rad",SGRawValuePointer<double>(&_sun_angle));
@@ -178,7 +180,7 @@ void FGLight::unbind () {
     SGPropertyNode *prop = globals->get_props();
     prop->untie("/rendering/scene/saturation");
     prop->untie("/rendering/scene/scattering");
-    prop->untie("/environment/relative-humidity");
+    prop->untie("/rendering/scene/overcast");
 
     prop->untie("/sim/time/sun-angle-rad");
     prop->untie("/rendering/scene/ambient/red");
@@ -235,6 +237,8 @@ void FGLight::update_sky_color () {
     else if (_saturation > 1.0) _saturation = 1.0;
     if (_scattering < 0.0) _scattering = 0.0;
     else if (_scattering > 1.0) _scattering = 1.0;
+    if (_overcast < 0.0) _overcast = 0.0;
+    else if (_overcast > 1.0) _overcast = 1.0;
 
     float ambient = _ambient_tbl->interpolate( deg ) + visibility_inv/10;
     float diffuse = _diffuse_tbl->interpolate( deg );
@@ -261,9 +265,9 @@ void FGLight::update_sky_color () {
     gamma_correct_rgb( _fog_color.data() );
 
     // set sky color
-    _sky_color[0] = base_sky_color[0] * sky_brightness;
-    _sky_color[1] = base_sky_color[1] * sky_brightness;
-    _sky_color[2] = base_sky_color[2] * sky_brightness;
+    _sky_color[0] = (base_sky_color[0] + (1.0f-base_sky_color[0]) * _overcast) * sky_brightness;
+    _sky_color[1] = (base_sky_color[1] + (1.0f-base_sky_color[1]) * _overcast)  * sky_brightness;
+    _sky_color[2] = (base_sky_color[2] + (1.0f-base_sky_color[2]) * _overcast)  * sky_brightness;
     _sky_color[3] = base_sky_color[3];
     gamma_correct_rgb( _sky_color.data() );
 

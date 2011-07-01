@@ -55,7 +55,7 @@ option(ENABLE_YASIM "Set to ON to build FlightGear with YASIM FDM" ON)
 option(ENABLE_JSBSIM "Set to ON to build FlightGear with JSBSim FDM" ON)
 option(ENABLE_FGADMIN "Set to ON to build FlightGear with FGADMIN" ON)
 option(EVENT_INPUT "Set to ON to build FlightGear with event-based Input support" OFF)
-option(ENABLE_LIBSVN "Set to ON to build terrasync with libsvnclient support" OFF)
+option(ENABLE_LIBSVN "Set to ON to build FlightGear/terrasync with libsvnclient support" OFF)
 
 set(MSVC_3RDPARTY_ROOT NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
 
@@ -65,12 +65,13 @@ else()
 	set(FG_NDEBUG 1)
 endif()
 
-if(${SP_FDMS})
+if(SP_FDMS)
 	set(ENABLE_SP_FDM 1)
 endif()
 
 if(EVENT_INPUT)
 	message(STATUS "checking event-based Input")
+	find_package(DBus)
 	IF(APPLE)
 
 	elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
@@ -130,7 +131,7 @@ if(ENABLE_LIBSVN)
 endif(ENABLE_LIBSVN)
 
 find_package(PLIB REQUIRED puaux pu js fnt)
-find_package(SimGear 2.2.0 REQUIRED)
+find_package(SimGear 2.3.0 REQUIRED)
 
 check_include_file(unistd.h HAVE_UNISTD_H)
 check_include_file(sys/time.h HAVE_SYS_TIME_H)

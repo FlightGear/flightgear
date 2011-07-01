@@ -35,6 +35,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/tgdb/SGReaderWriterBTGOptions.hxx>
+#include <simgear/scene/tsync/terrasync.hxx>
 
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -75,14 +76,20 @@ private:
 FGTileMgr::FGTileMgr():
     state( Start ),
     vis( 16000 ),
+    _terra_sync(NULL),
     _propListener(new LoaderPropertyWatcher(this))
 {
     _randomObjects = fgGetNode("/sim/rendering/random-objects", true);
     _randomVegetation = fgGetNode("/sim/rendering/random-vegetation", true);
+    _maxTileRangeM = fgGetNode("/sim/rendering/static-lod/bare", true);
 }
 
 
-FGTileMgr::~FGTileMgr() {
+FGTileMgr::~FGTileMgr()
+{
+    if (_terra_sync)
+        _terra_sync->setTileCache(NULL);
+
     // remove all nodes we might have left behind
     osg::Group* group = globals->get_scenery()->get_terrain_branch();
     group->removeChildren(0, group->getNumChildren());
@@ -135,7 +142,11 @@ void FGTileMgr::reinit()
     previous_bucket.make_bad();
     current_bucket.make_bad();
     longitude = latitude = -1000.0;
-    
+
+    _terra_sync = (simgear::SGTerraSync*) globals->get_subsystem("terrasync");
+    if (_terra_sync)
+        _terra_sync->setTileCache(&tile_cache);
+
     // force an update now
     update(0.0);
 }
@@ -190,10 +201,7 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
         SG_LOG( SG_TERRAIN, SG_ALERT,
                 "Attempting to schedule tiles for bogus lon and lat  = ("
                 << longitude << "," << latitude << ")" );
-        return;		// FIXME
-        SG_LOG( SG_TERRAIN, SG_ALERT,
-                "This is a FATAL error.  Exiting!" );
-        exit(-1);
+        return;
     }
 
     SG_LOG( SG_TERRAIN, SG_INFO,
@@ -204,8 +212,9 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
     // cout << "tile width = " << tile_width << "  tile_height = "
     //      << tile_height << endl;
 
-    xrange = (int)(vis / tile_width) + 1;
-    yrange = (int)(vis / tile_height) + 1;
+    double tileRangeM = min(vis,_maxTileRangeM->getDoubleValue());
+    xrange = (int)(tileRangeM / tile_width) + 1;
+    yrange = (int)(tileRangeM / tile_height) + 1;
     if ( xrange < 1 ) { xrange = 1; }
     if ( yrange < 1 ) { yrange = 1; }
 
@@ -310,7 +319,8 @@ void FGTileMgr::update_queues()
             e->prep_ssg_node(vis);
 
             if (( !e->is_loaded() )&&
-                ( !e->is_expired(current_time) ))
+                ((!e->is_expired(current_time))||
+                  e->is_current_view() ))
             {
                 // schedule tile for loading with osg pager
                 pager->queueRequest(e->tileFileName,
@@ -323,7 +333,7 @@ void FGTileMgr::update_queues()
             }
         } else
         {
-            SG_LOG(SG_INPUT, SG_ALERT, "warning ... empty tile in cache");
+            SG_LOG(SG_INPUT, SG_ALERT, "Warning: empty tile in cache!");
         }
         tile_cache.next();
         sz++;
@@ -389,7 +399,7 @@ int FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
     //         << current_bucket );
     fgSetInt( "/environment/current-tile-id", current_bucket.gen_index() );
 
-    // do tile load scheduling. 
+    // do tile load scheduling.
     // Note that we need keep track of both viewer buckets and fdm buckets.
     if ( state == Running ) {
         SG_LOG( SG_TERRAIN, SG_DEBUG, "State == Running" );
@@ -399,6 +409,8 @@ int FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
             SG_LOG( SG_TERRAIN, SG_INFO, "FGTileMgr::update()" );
             scheduled_visibility = range_m;
             schedule_needed(current_bucket, range_m);
+            if (_terra_sync)
+                _terra_sync->schedulePosition(latitude,longitude);
         }
         // save bucket
         previous_bucket = current_bucket;
