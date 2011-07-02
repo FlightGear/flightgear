@@ -358,9 +358,9 @@ FGAIManager::loadScenarioFile(const std::string& filename)
         SGPropertyNode_ptr root = new SGPropertyNode;
         readProperties(path.str(), root);
         return root;
-    } catch (const sg_exception &) {
-        SG_LOG(SG_GENERAL, SG_DEBUG, "Incorrect path specified for AI "
-            "scenario: \"" << path.str() << "\"");
+    } catch (const sg_exception &t) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Failed to load scenario '"
+            << path.str() << "': " << t.getFormattedMessage());
         return 0;
     }
 }

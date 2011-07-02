@@ -917,7 +917,7 @@ public:
   virtual bool pass(FGPositioned* aPos) const {
     if (_fixes && (aPos->type() == FGPositioned::FIX)) {
       // ignore fixes which end in digits - expirmental
-      if (isdigit(aPos->ident()[3]) && isdigit(aPos->ident()[4])) {
+      if (aPos->ident().length() > 4 && isdigit(aPos->ident()[3]) && isdigit(aPos->ident()[4])) {
         return false;
       }
     }
