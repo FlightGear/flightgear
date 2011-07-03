@@ -880,8 +880,13 @@ void FGNasalSys::loadPropertyScripts(SGPropertyNode* n)
             if (!p.isAbsolute() || !p.exists())
             {
                 p = globals->resolve_maybe_aircraft_path(file);
+                if (p.isNull())
+                {
+                    SG_LOG(SG_NASAL, SG_ALERT, "Cannot find Nasal script '" <<
+                            file << "' for module '" << module << "'.");
+                }
             }
-            ok &= loadModule(p, module);
+            ok &= p.isNull() ? false : loadModule(p, module);
             j++;
         }
 

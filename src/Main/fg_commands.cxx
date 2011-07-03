@@ -1229,7 +1229,15 @@ do_load_xml_to_proptree(const SGPropertyNode * arg)
     std::string icao = arg->getStringValue("icao");
     if (icao.empty()) {
         if (file.isRelative()) {
-          file = globals->resolve_maybe_aircraft_path(file.str());
+          SGPath absPath = globals->resolve_maybe_aircraft_path(file.str());
+          if (!absPath.isNull())
+              file = absPath;
+          else
+          {
+              SG_LOG(SG_IO, SG_ALERT, "loadxml: Cannot find XML property file '"  
+                          << file.str() << "'.");
+              return false;
+          }
         }
     } else {
         if (!XMLLoader::findAirportData(icao, file.str(), file)) {
