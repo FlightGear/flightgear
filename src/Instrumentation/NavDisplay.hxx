@@ -38,6 +38,18 @@
 class FGODGauge;
 class FGRouteMgr;
 class FGNavRecord;
+class FGPositioned;
+
+class SymbolInstance;
+class SymbolDef;
+
+namespace flightgear
+{
+    class Waypt;
+}
+
+typedef std::set<std::string> string_set;
+typedef std::vector<SymbolDef*> SymbolDefVector;
 
 class NavDisplay : public SGSubsystem
 {
@@ -72,36 +84,41 @@ protected:
     SGPropertyNode *getInstrumentNode(const char *name, DefaultType value);
 
 private:
+    void addSymbolsToScene();
+    void addSymbolToScene(SymbolInstance* sym);
+    void limitDisplayedSymbols();
+    
+    void findItems();
+    void foundPositionedItem(FGPositioned* pos);
+    void computePositionedPropsAndHeading(FGPositioned* pos, SGPropertyNode* nd, double& heading);
+    void computePositionedState(FGPositioned* pos, string_set& states);
+    void processRoute();
+    void computeWayptPropsAndHeading(flightgear::Waypt* wpt, const SGGeod& pos, SGPropertyNode* nd, double& heading);
+    void processNavRadios();
+    FGNavRecord* processNavRadio(const SGPropertyNode_ptr& radio);
+    void processAI();
+    void computeAIStates(const SGPropertyNode* ai, string_set& states);
+    
+    bool anyRuleForType(const std::string& type) const;
+    bool anyRuleMatches(const std::string& type, const string_set& states) const;
+    void findRules(const std::string& type, const string_set& states, SymbolDefVector& rules);
+    
+    void addSymbolInstance(const osg::Vec2& proj, double heading, SymbolDef* def, SGPropertyNode* vars);
+    void addLine(osg::Vec2 a, osg::Vec2 b, const osg::Vec4& color);
+    osg::Vec2 projectBearingRange(double bearingDeg, double rangeNm) const;
+    osg::Vec2 projectGeod(const SGGeod& geod) const;
+    
+    void updateFont();
+    
     string _texture_path;
 
-    typedef enum { ARC, MAP, PLAN, ROSE, BSCAN} DisplayMode;
-    DisplayMode _display_mode;
 
     float _scale;   // factor to convert nm to display units
     float _view_heading;
-    bool _drawData;
     
     SGPropertyNode_ptr _Radar_controls;
 
-    SGPropertyNode_ptr _radar_weather_node;
-    SGPropertyNode_ptr _radar_position_node;
-    SGPropertyNode_ptr _radar_data_node;
-    SGPropertyNode_ptr _radar_symbol_node;
-    SGPropertyNode_ptr _radar_arpt_node;
-    SGPropertyNode_ptr _radar_station_node;
-    
-    SGPropertyNode_ptr _radar_centre_node;
-    SGPropertyNode_ptr _radar_coverage_node;
-    SGPropertyNode_ptr _radar_ref_rng_node;
-    SGPropertyNode_ptr _radar_hdg_marker_node;
-    SGPropertyNode_ptr _radar_rotate_node;
-    SGPropertyNode_ptr _radar_tcas_node;
-    SGPropertyNode_ptr _radar_absalt_node;
 
-    SGPropertyNode_ptr _draw_track_node;
-    SGPropertyNode_ptr _draw_heading_node;
-    SGPropertyNode_ptr _draw_north_node;
-    SGPropertyNode_ptr _draw_fix_node;
     
     SGPropertyNode_ptr _font_node;
     SGPropertyNode_ptr _ai_enabled_node;
@@ -109,7 +126,7 @@ private:
     SGPropertyNode_ptr _navRadio2Node;
     
     osg::ref_ptr<osg::Texture2D> _resultTexture;
-    osg::ref_ptr<osg::Texture2D> _symbols;
+    osg::ref_ptr<osg::Texture2D> _symbolTexture;
     osg::ref_ptr<osg::Geode> _radarGeode;
     osg::ref_ptr<osg::Geode> _textGeode;
   
@@ -118,12 +135,12 @@ private:
     osg::DrawArrays* _symbolPrimSet;
     osg::Vec2Array *_vertices;
     osg::Vec2Array *_texCoords;
-    osg::Vec3Array* _quadColors;
+    osg::Vec4Array* _quadColors;
     
     osg::Geometry* _lineGeometry;
     osg::DrawArrays* _linePrimSet;
     osg::Vec2Array* _lineVertices;
-    osg::Vec3Array* _lineColors;
+    osg::Vec4Array* _lineColors;
   
   
     osg::Matrixf _centerTrans;
@@ -131,36 +148,19 @@ private:
     
     osg::ref_ptr<osgText::Font> _font;
     osg::Vec4 _font_color;
-    osg::Vec4 _tcas_colors[4];
     float _font_size;
     float _font_spacing;
 
     FGRouteMgr* _route;
     SGGeod _pos;
     double _rangeNm;
-    
-    void update_route();
-    void update_aircraft();
-    void update_stations();
-    void update_airports();
-    void update_waypoints();
-    
-    bool update_tcas(const SGPropertyNode *model, const SGGeod& modelPos, 
-                            double user_alt,double alt, bool absMode);
-    void update_data(const SGPropertyNode *ac, double altitude, double heading,
-                               double radius, double bearing, bool selected);
-    void updateFont();
-    
-    osg::Matrixf project(const SGGeod& geod) const;
-    osg::Vec2 projectBearingRange(double bearingDeg, double rangeNm) const;
-    osg::Vec2 projectGeod(const SGGeod& geod) const;
-    
-    void addSymbol(const SGGeod& pos, int symbolIndex, 
-        const std::string& data, const osg::Vec3& color);
-  
-    void addLine(osg::Vec2 a, osg::Vec2 b, const osg::Vec3& color);
-    
-    FGNavRecord* drawTunedNavaid(const SGPropertyNode_ptr& radio );    
+
+    SymbolDefVector _rules;
+    FGNavRecord* _nav1Station;
+    FGNavRecord* _nav2Station;
+    std::vector<SymbolInstance*> _symbols;
+    std::set<FGPositioned*> _routeSources;
+    SGPropertyNode_ptr _excessDataNode;
 };
 
 #endif // _INST_ND_HXX

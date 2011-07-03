@@ -978,7 +978,6 @@ void FGRouteMgr::update_mirror()
 
     const SGGeod& pos(wp->position());
     prop->setStringValue("id", wp->ident().c_str());
-    //prop->setStringValue("name", wp.get_name().c_str());
     prop->setDoubleValue("longitude-deg", pos.getLongitudeDeg());
     prop->setDoubleValue("latitude-deg",pos.getLatitudeDeg());
    
@@ -995,6 +994,7 @@ void FGRouteMgr::update_mirror()
       double ft = wp->altitudeFt();
       prop->setDoubleValue("altitude-m", ft * SG_FEET_TO_METER);
       prop->setDoubleValue("altitude-ft", ft);
+      prop->setIntValue("flight-level", static_cast<int>(ft / 1000) * 10);
     } else {
       prop->setDoubleValue("altitude-m", -9999.9);
       prop->setDoubleValue("altitude-ft", -9999.9);
@@ -1271,6 +1271,15 @@ Waypt* FGRouteMgr::wayptAtIndex(int index) const
   }
   
   return _route[index];
+}
+
+SGPropertyNode_ptr FGRouteMgr::wayptNodeAtIndex(int index) const
+{
+    if ((index < 0) || (index >= numWaypts())) {
+        throw sg_range_exception("waypt index out of range", "FGRouteMgr::wayptAtIndex");
+    }
+    
+    return mirror->getChild("wp", index);
 }
 
 bool FGRouteMgr::saveRoute(const SGPath& path)

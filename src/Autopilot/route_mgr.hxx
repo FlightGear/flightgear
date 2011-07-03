@@ -94,6 +94,8 @@ public:
     
   flightgear::Waypt* wayptAtIndex(int index) const;
              
+  SGPropertyNode_ptr wayptNodeAtIndex(int index) const;
+             
   /**
    * Find a waypoint in the route, by position, and return its index, or
    * -1 if no matching waypoint was found in the route.
