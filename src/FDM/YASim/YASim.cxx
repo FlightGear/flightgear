@@ -259,6 +259,11 @@ void YASim::copyToYASim(bool copyState)
 
     // position
     sgGeodToCart(lat, lon, alt, s.pos);
+    {
+      // allow setting of /position/[lat|long|alti]tude
+      double * dp = &model->getState()->pos[0];
+      dp[0] = s.pos[0]; dp[1] = s.pos[1]; dp[2] = s.pos[2];
+    }
 
     // orientation
     Glue::euler2orient(roll, pitch, hdg, s.orient);
