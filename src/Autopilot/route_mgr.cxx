@@ -380,7 +380,7 @@ void FGRouteMgr::postinit()
 {
   SGPath path(_pathNode->getStringValue());
   if (path.exists()) {
-    SG_LOG(SG_AUTOPILOT, SG_INFO, "loading flight-plan from:" << path.str());
+    SG_LOG(SG_AUTOPILOT, SG_INFO, "loading flight-plan from: " << path.str());
     loadRoute(path);
   }
   
@@ -1303,7 +1303,7 @@ bool FGRouteMgr::saveRoute(const SGPath& path)
     writeProperties(path.str(), d, true /* write-all */);
     return true;
   } catch (sg_exception& e) {
-    SG_LOG(SG_IO, SG_WARN, "failed to save flight-plan:" << e.getMessage());
+    SG_LOG(SG_IO, SG_ALERT, "Failed to save flight-plan '" << path.str() << "'. " << e.getMessage());
     return false;
   }
 }
@@ -1335,8 +1335,8 @@ bool FGRouteMgr::loadRoute(const SGPath& path)
     }
     return true;
   } catch (sg_exception& e) {
-    SG_LOG(SG_IO, SG_WARN, "failed to load flight-plan (from '" << e.getOrigin()
-      << "'):" << e.getMessage());
+    SG_LOG(SG_IO, SG_ALERT, "Failed to load flight-plan '" << e.getOrigin()
+      << "'. " << e.getMessage());
     return false;
   }
 }
@@ -1478,7 +1478,7 @@ bool FGRouteMgr::loadPlainTextRoute(const SGPath& path)
       
       WayptRef w = waypointFromString(line);
       if (!w) {
-        throw sg_io_exception("failed to create waypoint from line:" + line);
+        throw sg_io_exception("Failed to create waypoint from line '" + line + "'.");
       }
       
       wpts.push_back(w);
@@ -1487,7 +1487,7 @@ bool FGRouteMgr::loadPlainTextRoute(const SGPath& path)
     _route = wpts;
     return true;
   } catch (sg_exception& e) {
-    SG_LOG(SG_IO, SG_WARN, "failed to load route from:" << path.str() << ":" << e.getMessage());
+    SG_LOG(SG_IO, SG_ALERT, "Failed to load route from: '" << path.str() << "'. " << e.getMessage());
     return false;
   }
 }
