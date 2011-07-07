@@ -329,7 +329,7 @@ void FGJoystickInput::update( double dt )
       FGButton &b = bindings[i].buttons[j];
       b.last_dt += dt;
       if(b.last_dt >= b.interval_sec) {
-        bindings[i].buttons[j].update( modifiers, (buttons & (1 << j)) > 0 );
+        bindings[i].buttons[j].update( modifiers, (buttons & (1u << j)) > 0 );
         b.last_dt -= b.interval_sec;
       }
     }
