@@ -379,7 +379,7 @@ void FGRouteMgr::init() {
 void FGRouteMgr::postinit()
 {
   SGPath path(_pathNode->getStringValue());
-  if (path.exists()) {
+  if (!path.isNull()) {
     SG_LOG(SG_AUTOPILOT, SG_INFO, "loading flight-plan from: " << path.str());
     loadRoute(path);
   }
@@ -1310,6 +1310,13 @@ bool FGRouteMgr::saveRoute(const SGPath& path)
 
 bool FGRouteMgr::loadRoute(const SGPath& path)
 {
+  if (!path.exists())
+  {
+      SG_LOG(SG_IO, SG_ALERT, "Failed to load flight-plan '" << path.str()
+              << "'. The file does not exist.");
+      return false;
+  }
+    
   // deactivate route first
   active->setBoolValue(false);
   
@@ -1456,12 +1463,12 @@ WayptRef FGRouteMgr::parseVersion1XMLWaypt(SGPropertyNode* aWP)
 
 bool FGRouteMgr::loadPlainTextRoute(const SGPath& path)
 {
-  sg_gzifstream in(path.str().c_str());
-  if (!in.is_open()) {
-    return false;
-  }
-  
   try {
+    sg_gzifstream in(path.str().c_str());
+    if (!in.is_open()) {
+        throw sg_io_exception("Cannot open file for reading.");
+    }
+  
     WayptVec wpts;
     while (!in.eof()) {
       string line;
