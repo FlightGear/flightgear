@@ -250,8 +250,25 @@ void FGATCMgr::FreqSearch(const string navcomm, const int unit) {
     
     _aircraftPos = SGGeod::fromDegFt(lon_node->getDoubleValue(),
         lat_node->getDoubleValue(), elev_node->getDoubleValue());
+
+    class RangeFilter : public CommStation::Filter {
+    public:
+        RangeFilter( const SGGeod & pos ) : CommStation::Filter(), _pos(pos) {}
+        virtual bool pass(FGPositioned* aPos) const {
+            flightgear::CommStation * stn = dynamic_cast<flightgear::CommStation*>(aPos);
+            if( NULL == stn ) return false;
+            double dist = SGGeodesy::distanceNm( stn->geod(), _pos );
+            // if range is not configured, assume at least 10NM range
+            // TODO: maybe ramp down range with proximity to ground?
+            return dist <= SGMiscd::max( stn->rangeNm(), 10.0 );
+        }
+    private:
+        SGGeod _pos;
+    };
+
+    RangeFilter rangeFilter(_aircraftPos );
     
-    CommStation* sta = CommStation::findByFreq(freqKhz, _aircraftPos);
+    CommStation* sta = CommStation::findByFreq(freqKhz, _aircraftPos, &rangeFilter );
     if (!sta) {
         ZapOtherService(ncunit, "x x x");
         return;
