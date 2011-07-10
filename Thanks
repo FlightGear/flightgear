@@ -36,8 +36,10 @@ Raul Alonzo <amil@las.es>
 Michele America <nomimarketing@mail.telepac.pt>
   Contributed to the HUD code.
 
+
 Emmanuel Baranger <>
   Many, many very nice aircraft models.
+
 
 Andrei Barbu <andrei@0xab.com>
   Designed and implemented the current version of the FlightGear website.
@@ -74,12 +76,15 @@ Paul Bleisch <pbleisch@acm.org>
   Also contributed a first stab at a config file/command line parsing
   system.
 
+
 Matthias Boerner <> 
   Coorganizer of the FlightGear booth at the annual LinuxTag event in
   Germany.
 
+
 Alexis Bory
   Very nice models, including the F14-B.
+
 
 Jim Brennan <jj@kingmont.com>
   Provided a big chunk of online space to store USA scenery for Flight Gear.
@@ -91,8 +96,10 @@ Bernie Bright <bbright@bigpond.net.au>
   Threading support and threaded tile pager.
   Initiate the fgrun project
 
+
 Francesco Brisa <>
   Scenery models and ground networks for Italian airports.
+  Scripts for automated source downloads and builds.
 
 
 Bernhard H. Buckel <buckel@mail.uni-wuerzburg.de>
@@ -128,6 +135,11 @@ John Check <j4strngs@rockfish.net>
   New instrument panel configurations
 
 
+Bertrand Coconnier
+  Contributed several bugfixes and improvements for the integration of
+  the JSBSim flight dynamics model.
+
+
 Dave Cornish <dmc@halcyon.com>
   Created our new, super cool, runway textures.
   Created some of our cloud textures.
@@ -139,15 +151,24 @@ Oliver Delise <delise@mail.isis.de>
   Founder of the FlightGear MultiPilot Project :
   http://www.isis.de/members/~odelise/progs/flightgear
 
+
+John Denker
+  Contributed bugfixes and improvements to the navigation and ATIS code.
+
+
 Jean-Francois Doue
   Vector 2D, 3D, 4D and Matrix 3D and 4D inlined C++ classes.  (Based on
   Graphics Gems IV ed. Paul S. Heckbert)
   http://www.animats.com/simpleppp/ftp/public_html/topics/developers.html
 
+
 Torsten Dreyer
-  Contributed a very nice Piper Sceneca, closely modelled after the 
-  real thing. 
-  Many other nice aircraft, buildings, etc etc.
+  Contributed the very nice Piper Seneca, closely modelled after the 
+  real thing. Also added many other nice aircraft (such as the ogeL, also
+  closely modelled after the real thing), buildings, etc.
+  Creator of fgpanel. Code maintainer of weather, environment, autopilot
+  and many other core systems.
+
 
 Dave Eberly <eberly@magic-software.com>
   Contributed some sphere interpolation code used by Christian Mayer's
@@ -155,8 +176,10 @@ Dave Eberly <eberly@magic-software.com>
   really useful looking code available there.
   http://www.magic-software.com
 
+
 Martin Eschen <>
  Helped enourmously toward finishing the full scale traffic demo at EHAM.
+
 
 Francine Evans <evans@cs.sunysb.edu>
   Wrote the @#$@#$@% GPL'd tri-striper we use and "love". :-)
@@ -168,6 +191,7 @@ Oscar Everitt <bigoc@premier.net>
   for FS98.  They are pretty cool and Oscar was happy to contribute
   them to our little project.
 
+
 Detlef Faber
   Many WWII era aircraft.
 
@@ -175,12 +199,15 @@ Detlef Faber
 Leidson Campos A. Ferreira <leidson@planetamessenger.org>
   Rewrote the Jpeg screen httpd streaming (--jpg-httpd option)
 
+
 Olaf Flebbe
   Improved the build system for Windows and provided pre-built
   dependencies.
 
+
 Bruce Finney <bfinney@gte.net>
   MSVC5 compatibility.
+
 
 Thomas Förster <>
    Updates to the AI system, including the Dykstra route finding algorithm,
@@ -209,13 +236,16 @@ Jean-loup Gailly and Mark Adler <zlib@gzip.org>
 Thomas Gellekum <tg@ihf.rwth-aachen.de>
   Changes and updates for compiling on FreeBSD
 
+
 Ralf Gerlich <>
   Technical Genius behind the Custom Scenery Project. 
   Current maintainer of TaxiDraw
 
+
 Anders Gidenstam <>
   Support for Lighter than Air vehicles.
   Author of the ZeppelinNT.
+
 
 Neetha Girish <neethagirish@usa.net>
   Contributed the xml configurable HUD changes.
@@ -235,17 +265,21 @@ Michael I. Gold <gold@puck.asd.sgi.com>
 Habibie <habibie@MailandNews.com>
   RedHat package building changes for SimGear.
 
+
 Csaba Halász <>
   Many bugfixes and code checking.
+
 
 Ampere Hardraade <>
   Many detailed 3D models of aircraft, including the MD11, and several
   Airbuses.
 
+
 Brett Harrison <>
   Ground networks for various airports.
   Most of the liveries for the new C172p by HHS.
   AI Repaints for several 737's and C172's
+
 
 Dave Haskell <dave@haskell.demon.co.uk>
   Original exterior textures for the Cessna 310 U-3A model. Only a few
@@ -276,6 +310,7 @@ Bruce Jackson of NASA <e.b.jackson@larc.nasa.gov>
   Developed the LaRCsim code under funding by NASA which we use to provide
   the flight model. Bruce has patiently answered my many, many questions.
   http://dcb.larc.nasa.gov/www/DCBStaff/ebj/ebj.html
+
 
 Ron Jensen
   Contributed to the piston engine code in JSBSim.
@@ -402,9 +437,11 @@ Phil Nelson  <phil@cs.wwu.edu>
   Author of GNU dbm.  gdbm is a set of database routines that use
   extendible hashing and works similar to the standard UNIX dbm routines.
 
+
 Tatsuhiro Nishioka
   Maintainer of the Mac port. 
   Contributed some very nice Japanese aircraft models.
+
 
 Alexei Novikov <anovikov@heron.itep.ru>
   Created European Scenery
@@ -445,8 +482,10 @@ Alex Perry <alex.perry@ieee.org>
   Contributed code to more accurately model VSI, DG, Altitude.
   Contributed to the Install and Getting Started manual.
 
+
 Pigeon <>
   Developed the multiplayer network infrastructure.
+
 
 Friedemann Reinhard <mpt218@faupt212.physik.uni-erlangen.de>
   Contributed beginnings of a textured instrument panel.
@@ -465,7 +504,6 @@ Frederic Bouvier <fredfgfs01@free.fr>
   the windows community.
 
 
-
 Petter Reinholdtsen <pere@games.no>
   Incorporated the Gnu automake/autoconf system (with libtool).
   This should streamline and standardize the build process for all
@@ -473,21 +511,31 @@ Petter Reinholdtsen <pere@games.no>
   environments since the don't use the Unix make system.
 
 
+Thorsten Renk
+  Created the local weather system, providing beautiful cloudscapes
+  and an accurate meteorological simulation.
+
+
 William Riley <riley@technologist.com>
   Contributed code to add "brakes". 
   Patch to support a first joystick with more than two axes.
   World scenery based on vmap0 data.
 
+
 Gijs de Rooy <>
   Contributed some very nice building models, including a very
   detailed layout of the Amsterdam airport terminals, and many
   downtown buildings.
-  Redid the Boeing 747-400 3D model
-  Very active first aid responder on the official Flightgear 
-  forum.
-  
+  Redid the Boeing 747-400 3D model.
+  Greatly contributed to the FlightGear community as a very active
+  first aid responder on the official Flightgear forum, as a forum
+  and wiki admin, and as the editor of the monthly FlightGear
+  newsletter.
+
+
 Gerard Robin <>
   Many nice Aircraft models
+
 
 Andy Ross <andy@plausible.org>
   Contributed a new configurable FDM, "YASim", based on geometry
@@ -497,18 +545,22 @@ Andy Ross <andy@plausible.org>
   Modified the UI code to allow a far more flexible grouping system.
   Added the Nasal scripting language and added FlightGear integration.
 
+
 Brian Schack <>
   Current maintainer of Atlas, the moving map program for FlightGear
-  
+
+
 Paul Schlyter <pausch@saaf.se>  
   Mr. Schlyter provided Durk Talsma with all the information 
   he needed to write the astro code. Mr. S. is also willing 
   to answer astro-related questions whenever one needs to.
   http://welcome.to/pausch
 
+
 Christian Schmitt <>
   Detailed Frankfurt airport buildings.
   Contributions to the custom scenery project.
+
 
 Chris Schoeneman <crs@millpond.engr.sgi.com>
   Contributed some 3d sound playing code for Irix, Win32, and Linux
@@ -519,7 +571,8 @@ Chris Schoeneman <crs@millpond.engr.sgi.com>
 Phil Schubert <philip@zedley.com>
   Contributed various textures and engine modelling.
   http://www.zedley.com/Philip/index.htm
- 
+
+
 Heiko Schulz <>
   Contributed AI traffic for EDDF
   EDDF Night lights
@@ -549,8 +602,10 @@ Martin Spott <Martin.Spott@uni-duisburg.de>
   Germany.
   Manages the "World Scenery" releases.
 
+
 Jon Stockill <>
   Maintainer of the object database.
+
 
 Martin Dressler <dr@musicabona.cz>
   Created some outstanding panel instrumentation textures
@@ -573,15 +628,18 @@ Durk Talsma <d.talsma@chello.nl>
   Full scale AI traffic demo for EHAM.
   Current FlightGear release manager.
 
+
 Gabor Toth <>
   Contributed some Livery repaints for AI Aircraft
   Contributed many ideas leading towards the Traffic Manager II format
   Runs FGTracker, an online flight tracking service for FlightGear
 
+
 James Turner <>
   Many code cleanups of the internal structure of the airport database,
   runway parsing, route management. 
   Is currently working on adding flightmanagement support.
+
 
 UIUC - Department of Aeronautical and Astronautical Engineering
   Contributed modifications to LaRCsim to allow loading of aircraft
@@ -683,13 +741,16 @@ Jean-Claude Wippler <jcw@equi4.com>
   X/MIT-style license.  Please see the following URL for more info:
   http://www.equi4.com/metakit
 
+
 Holger Wirtz <>
-Author of FGCom, a voice communication program intented for FlightGear 
-multiplayer/ATC.
+  Author of FGCom, a voice communication program intented for FlightGear 
+  multiplayer/ATC.
+
 
 John Wojnaroski <castle@mminternet.com>
   Open Glass Cockpit project
   3d clouds
+
 
 Marcus Zojer <>
    Contributed a B1B aircraft model.
@@ -783,7 +844,7 @@ SkyscraperPage.com  http://skyscraperpage.com
 WoodSoup Project  http://www.woodsoup.org
   [ FlightGear no longer uses woodsoup services, but we appreciate
   the support provided to our project during the time they hosted us. ]
-  Provided computing resources and services so that the Flight Gear 
+  Provided computing resources and services so that the FlightGear 
   project could have real home.  This includes, web services, 
   ftp services, shell accounts, email lists, dns services, etc.
 
@@ -802,12 +863,7 @@ THIS DOCUMENT WAS INITIALLY WRITTEN BY
 
 Curt L. Olson  <http://www.flightgear.org/~curt>
 
-
-THE CONTENTS WERE LASTLY RESEARCHED AND UPDATED MARCH, 8 2000
-
-Oliver Delise  <delise@mail.isis.de>
-
-
+Updated 2000-03-08 by Oliver Delise, delise@mail.isis.de
 Updated 2001-12-11 by David Megginson, david@megginson.com
 Updated 2003-04-17,
 Updated 2004-06-01,
