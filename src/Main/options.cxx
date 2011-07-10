@@ -1132,10 +1132,16 @@ fgOptDME( const char *arg )
         fgSetString("/instrumentation/dme/frequencies/source",
                     "/instrumentation/nav[1]/frequencies/selected-mhz");
     } else {
+        double frequency = atof(arg);
+        if (frequency==0.0)
+        {
+            SG_LOG(SG_INPUT, SG_ALERT, "Invalid DME frequency: '" << arg << "'.");
+            return FG_OPTIONS_ERROR;
+        }
         fgSetInt("/instrumentation/dme/switch-position", 2);
         fgSetString("/instrumentation/dme/frequencies/source",
                     "/instrumentation/dme/frequencies/selected-mhz");
-        fgSetString("/instrumentation/dme/frequencies/selected-mhz", arg);
+        fgSetDouble("/instrumentation/dme/frequencies/selected-mhz", frequency);
     }
     return FG_OPTIONS_OK;
 }
