@@ -726,15 +726,18 @@ static bool
 do_property_assign (const SGPropertyNode * arg)
 {
   SGPropertyNode * prop = get_prop(arg);
-  const SGPropertyNode * prop2 = get_prop2(arg);
   const SGPropertyNode * value = arg->getNode("value");
 
   if (value != 0)
       return prop->setUnspecifiedValue(value->getStringValue());
-  else if (prop2)
-      return prop->setUnspecifiedValue(prop2->getStringValue());
   else
-      return false;
+  {
+      const SGPropertyNode * prop2 = get_prop2(arg);
+      if (prop2)
+          return prop->setUnspecifiedValue(prop2->getStringValue());
+      else
+          return false;
+  }
 }
 
 
@@ -1064,14 +1067,9 @@ static bool
 do_add_model (const SGPropertyNode * arg)
 {
     SGPropertyNode * model = fgGetNode("models", true);
-    for (int i = 0;; i++) {
-        if (i < 0)
-            return false;
-        if (!model->getChild("model", i, false)) {
-            model = model->getChild("model", i, true);
-            break;
-        }
-    }
+    int i;
+    for (i = 0; model->hasChild("model",i); i++);
+    model = model->getChild("model", i, true);
     copyProperties(arg, model);
     if (model->hasValue("elevation-m"))
         model->setDoubleValue("elevation-ft", model->getDoubleValue("elevation-m")
