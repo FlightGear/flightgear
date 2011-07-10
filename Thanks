@@ -82,6 +82,11 @@ Matthias Boerner <>
   Germany.
 
 
+Thorsten Brehm
+  Thorsten provided the TCAS system and fixed an uncountable number of
+  bugs, closed memory leaks and helps creating new releases.
+
+
 Alexis Bory
   Very nice models, including the F14-B.
 
@@ -601,6 +606,8 @@ Martin Spott <Martin.Spott@uni-duisburg.de>
   Coorganizer of the FlightGear booth at the annual LinuxTag event in
   Germany.
   Manages the "World Scenery" releases.
+  Maintains world's biggest repository and toolchain for free and 
+  open map and scenery data at http://mapserver.flightgear.org/
 
 
 Jon Stockill <>
@@ -789,6 +796,7 @@ Mathias Fröhlich <Mathias.Froehlich@gmx.net>
   land on aircraft carriers.
   Modified YASim, JSBSim  and LaRCsim to support the groundcache code.
   Reorganized the code to eliminate the viewer jitter for close by objects.
+  Matthias is responsible for the transition to OSG and he added HLA support.
 
 
 Harald Johnsen <hjohnsen@evc.net>
