@@ -248,8 +248,10 @@ Ralf Gerlich <>
 
 
 Anders Gidenstam <>
-  Support for Lighter than Air vehicles.
-  Author of the ZeppelinNT.
+  Added support for lighter than air vehicles to JSBSim.
+  Contributed simulation of wildfires and a basic system for dual control
+  of an aircraft over the multiplayer network.
+  Author of several airships and one aircraft.
 
 
 Neetha Girish <neethagirish@usa.net>
