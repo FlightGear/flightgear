@@ -21,6 +21,11 @@
 #include <Navaids/positioned.hxx>
 #include <Autopilot/route_mgr.hxx>
 
+// select if the widget grabs keys necessary to fly aircraft from the keyboard,
+// or not. See http://code.google.com/p/flightgear-bugs/issues/detail?id=338
+// for discussion about why / what is going on.
+#define AVOID_FLIGHT_KEYS 1
+
 using namespace flightgear;
 
 enum {
@@ -659,6 +664,10 @@ int WaypointList::checkKey (int key, int updown )
   if ((updown == PU_UP) || !isVisible () || !isActive () || (window != puGetWindow())) {
     return FALSE ;
   }
+
+#ifdef AVOID_FLIGHT_KEYS
+    return FALSE;
+#endif
   
   switch (key)
   {
