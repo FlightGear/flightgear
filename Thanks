@@ -798,7 +798,7 @@ Mathias Fröhlich <Mathias.Froehlich@gmx.net>
   land on aircraft carriers.
   Modified YASim, JSBSim  and LaRCsim to support the groundcache code.
   Reorganized the code to eliminate the viewer jitter for close by objects.
-  Matthias is responsible for the transition to OSG and he added HLA support.
+  Mathias is responsible for the transition to OSG and he added HLA support.
 
 
 Harald Johnsen <hjohnsen@evc.net>
