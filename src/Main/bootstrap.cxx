@@ -93,6 +93,7 @@ static void handleFPE(int)
 }
 #elif defined(__linux__) && defined(__i386__)
 
+static void handleFPE(int);
 static void
 initFPE ()
 {
