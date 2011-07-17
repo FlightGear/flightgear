@@ -317,7 +317,7 @@ void FGAirwayNetwork::load(const SGPath& path)
 int FGAirwayNetwork::findNearestNode(const SGGeod& aPos)
 {
   double minDist = HUGE_VAL;
-  int index;
+  int index = -1;
   SGVec3d cart = SGVec3d::fromGeod(aPos);
   
   //cerr << "Lat " << lat << " lon " << lon << endl;

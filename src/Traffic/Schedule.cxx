@@ -221,7 +221,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
     // Check if this aircraft has been released. 
     FGTrafficManager *tmgr = (FGTrafficManager *) globals->get_subsystem("Traffic Manager");
     if (tmgr->isReleased(AIManagerRef)) {
-      AIManagerRef = NULL;
+      AIManagerRef = 0;
     } else {
       return true; // in visual range, let the AIManager handle it
     }
