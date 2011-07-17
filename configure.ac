@@ -583,7 +583,7 @@ if test "x$ac_cv_header_simgear_version_h" != "xyes"; then
     exit
 fi
 
-AC_MSG_CHECKING([for SimGear 2.3.0 or newer])
+AC_MSG_CHECKING([for SimGear 2.4.0 or newer])
 AC_TRY_RUN([
 #include <stdio.h>
 
