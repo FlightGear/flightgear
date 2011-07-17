@@ -29,7 +29,7 @@
 #include <simgear/io/iochannel.hxx>
 
 #include <FDM/flightProperties.hxx>
-
+#include <Environment/gravity.hxx>
 #include "ray.hxx"
 
 
@@ -76,7 +76,7 @@ bool FGRAY::gen_message() {
     double dt = 0.05; /* seconds */
 
     /* get basic information about gravity */
-    double grav_acc = -9.81;
+    double grav_acc = -Environment::Gravity::instance()->getGravity( f.getPosition() );
     double vert_acc = f.get_A_Z_pilot() * 0.3;
     if ( -3.0 < vert_acc )
 	vert_acc = -3.0;
