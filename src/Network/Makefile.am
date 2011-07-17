@@ -1,5 +1,4 @@
-EXTRA_DIST = jpg-httpd.cxx jpg-httpd.hxx \
-             multiplay.cxx multiplay.hxx
+EXTRA_DIST = jpg-httpd.cxx jpg-httpd.hxx
 
 noinst_LIBRARIES = libNetwork.a
 
