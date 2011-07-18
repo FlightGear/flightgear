@@ -59,7 +59,6 @@
 #include <Main/viewer.hxx>
 #include <Environment/presets.hxx>
 
-#include <simgear/version.h>
 #include <osg/Version>
 
 using std::string;
@@ -70,6 +69,7 @@ using std::endl;
 
 #if defined( HAVE_VERSION_H ) && HAVE_VERSION_H
 #  include <Include/version.h>
+#  include <simgear/version.h>
 #else
 #  include <Include/no_version.h>
 #endif
@@ -1341,7 +1341,9 @@ struct OptionDesc {
     {"airport",                      true,  OPTION_STRING, "/sim/presets/airport-id", false, "", 0 },
     {"runway",                       true,  OPTION_FUNC,   "", false, "", fgOptRunway },
     {"vor",                          true,  OPTION_FUNC,   "", false, "", fgOptVOR },
+    {"vor-frequency",                true,  OPTION_DOUBLE, "/sim/presets/vor-freq", false, "", fgOptVOR },
     {"ndb",                          true,  OPTION_FUNC,   "", false, "", fgOptNDB },
+    {"ndb-frequency",                true,  OPTION_DOUBLE, "/sim/presets/ndb-freq", false, "", fgOptVOR },
     {"carrier",                      true,  OPTION_FUNC,   "", false, "", fgOptCarrier },
     {"parkpos",                      true,  OPTION_FUNC,   "", false, "", fgOptParkpos },
     {"fix",                          true,  OPTION_FUNC,   "", false, "", fgOptFIX },
