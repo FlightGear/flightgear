@@ -19,7 +19,8 @@
 #define PACKAGE "FlightGear"
 
 /* Define to package version - use in main.cxx */
-#define FLIGHTGEAR_VERSION "MSVC9.0-WIN32-2.0.0"
+// define in version.h and no_version.h
+/* #define FLIGHTGEAR_VERSION "MSVC9.0-WIN32-2.0.0" */ 
 
 /* Define as the return type of signal handlers (int or void).  */
 #define RETSIGTYPE void
