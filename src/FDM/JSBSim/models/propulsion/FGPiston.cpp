@@ -771,6 +771,7 @@ void FGPiston::doEGT(void)
     heat_capacity_exhaust = (Cp_air * m_dot_air) + (Cp_fuel * m_dot_fuel);
     delta_T_exhaust = enthalpy_exhaust / heat_capacity_exhaust;
     ExhaustGasTemp_degK = T_amb + delta_T_exhaust;
+    ExhaustGasTemp_degK *= 0.444 + ((0.544 - 0.444) * PctPower);
   } else {  // Drop towards ambient - guess an appropriate time constant for now
     combustion_efficiency = 0;
     dEGTdt = (RankineToKelvin(Atmosphere->GetTemperature()) - ExhaustGasTemp_degK) / 100.0;
