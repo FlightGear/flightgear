@@ -66,12 +66,6 @@ else()
 	set(FG_NDEBUG 1)
 endif()
 
-if(WITH_FGPANEL)
-	message(STATUS "Will build fgpanel")
-else()
-	message(STATUS "Will NOT build fgpanel")
-endif()
-
 if(SP_FDMS)
 	set(ENABLE_SP_FDM 1)
 endif()
