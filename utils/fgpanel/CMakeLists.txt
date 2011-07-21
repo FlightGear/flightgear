@@ -14,6 +14,7 @@ add_executable(fgpanel main.cxx
 	panel_io.cxx)
 
 target_link_libraries(fgpanel 
+	-lrt
 	${PNG_LIBRARIES}
 	${GLUT_LIBRARIES}
 	${SIMGEAR_LIBRARIES}
