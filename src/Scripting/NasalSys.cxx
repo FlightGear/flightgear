@@ -31,8 +31,9 @@
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 #include <Scenery/scenery.hxx>
-#include <Navaids/navrecord.hxx>
+#include <Navaids/navlist.hxx>
 #include <Navaids/procedure.hxx>
+
 
 #include "NasalSys.hxx"
 
@@ -695,6 +696,91 @@ static naRef f_airportinfo(naContext c, naRef me, int argc, naRef* args)
 }
 
 
+// Returns vector of data hash for navaid of a <type>, nil on error
+// navaids sorted by ascending distance 
+// navinfo([<lat>,<lon>],[<type>],[<id>])
+// lat/lon (numeric): use latitude/longitude instead of ac position
+// type:              ("fix"|"vor"|"ndb"|"ils"|"dme"|"tacan"|"any")
+// id:                (partial) id of the fix
+// examples:
+// navinfo("vor")     returns all vors
+// navinfo("HAM")     return all navaids who's name start with "HAM"
+// navinfo("vor", "HAM") return all vor who's name start with "HAM"
+//navinfo(34,48,"vor","HAM") return all vor who's name start with "HAM" 
+//                           sorted by distance relative to lat=34, lon=48
+static naRef f_navinfo(naContext c, naRef me, int argc, naRef* args)
+{
+    static SGConstPropertyNode_ptr latn = fgGetNode("/position/latitude-deg", true);
+    static SGConstPropertyNode_ptr lonn = fgGetNode("/position/longitude-deg", true);
+    SGGeod pos;
+
+    if(argc >= 2 && naIsNum(args[0]) && naIsNum(args[1])) {
+        pos = SGGeod::fromDeg(args[1].num, args[0].num);
+        args += 2;
+        argc -= 2;
+    } else {
+        pos = SGGeod::fromDeg(lonn->getDoubleValue(), latn->getDoubleValue());
+    }
+
+    FGPositioned::Type type = FGPositioned::INVALID;
+    nav_list_type navlist;
+    const char * id = "";
+
+    if(argc > 0 && naIsString(args[0])) {
+        const char *s = naStr_data(args[0]);
+        if(!strcmp(s, "any")) type = FGPositioned::INVALID;
+        else if(!strcmp(s, "fix")) type = FGPositioned::FIX;
+        else if(!strcmp(s, "vor")) type = FGPositioned::VOR;
+        else if(!strcmp(s, "ndb")) type = FGPositioned::NDB;
+        else if(!strcmp(s, "ils")) type = FGPositioned::ILS;
+        else if(!strcmp(s, "dme")) type = FGPositioned::DME;
+        else if(!strcmp(s, "tacan")) type = FGPositioned::TACAN;
+        else id = s; // this is an id
+        ++args;
+        --argc;
+    } 
+
+    if(argc > 0 && naIsString(args[0])) {
+        if( *id != 0 ) {
+            naRuntimeError(c, "navinfo() called with navaid id");
+            return naNil();
+        }
+        id = naStr_data(args[0]);
+        ++args;
+        --argc;
+    }
+
+    if( argc > 0 ) {
+        naRuntimeError(c, "navinfo() called with too many arguments");
+        return naNil();
+    }
+
+    navlist = globals->get_navlist()->findByIdentAndFreq( pos, id, 0.0, type );
+
+    naRef reply = naNewVector(c);
+    for( nav_list_type::const_iterator it = navlist.begin(); it != navlist.end(); ++it ) {
+        const FGNavRecord * nav = *it;
+
+        // set navdata hash
+        naRef navdata = naNewHash(c);
+#define HASHSET(s,l,n) naHash_set(navdata, naStr_fromdata(naNewString(c),s,l),n)
+        HASHSET("id", 2, naStr_fromdata(naNewString(c),
+            const_cast<char *>(nav->ident().c_str()), nav->ident().length()));
+        HASHSET("name", 4, naStr_fromdata(naNewString(c),
+            const_cast<char *>(nav->name().c_str()), nav->name().length()));
+        HASHSET("lat", 3, naNum(nav->get_lat()));
+        HASHSET("lon", 3, naNum(nav->get_lon()));
+        HASHSET("elevation", 9, naNum(nav->get_elev_ft() * SG_FEET_TO_METER));
+        HASHSET("type", 4, naStr_fromdata(naNewString(c),
+            const_cast<char *>(nav->nameForType(nav->type())), strlen(nav->nameForType(nav->type()))));
+        HASHSET("distance", 8, naNum(SGGeodesy::distanceNm( pos, nav->geod() ) * SG_NM_TO_METER ) );
+        HASHSET("bearing", 7, naNum(SGGeodesy::courseDeg( pos, nav->geod() ) ) );
+#undef HASHSET
+        naVec_append( reply, navdata );
+    }
+    return reply;
+}
+
 // Table of extension functions.  Terminate with zeros.
 static struct { const char* name; naCFunction func; } funcs[] = {
     { "getprop",   f_getprop },
@@ -717,6 +803,7 @@ static struct { const char* name; naCFunction func; } funcs[] = {
     { "geodtocart", f_geodtocart },
     { "geodinfo", f_geodinfo },
     { "airportinfo", f_airportinfo },
+    { "navinfo", f_navinfo },
     { 0, 0 }
 };
 
@@ -1139,7 +1226,7 @@ naRef FGNasalSys::setListener(naContext c, int argc, naRef* args)
     FGNasalListener *nl = new FGNasalListener(node, code, this,
             gcSave(code), _listenerId, init, type);
 
-    node->addChangeListener(nl, init);
+    node->addChangeListener(nl, init != 0);
 
     _listener[_listenerId] = nl;
     return naNum(_listenerId++);
