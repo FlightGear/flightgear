@@ -33,6 +33,8 @@
 
 #include <Airports/runways.hxx>
 
+#include <algorithm>
+
 using std::string;
 
 // FGNavList ------------------------------------------------------------------
@@ -73,41 +75,74 @@ FGNavRecord *FGNavList::findByFreq( double freq, const SGGeod& position)
     return findNavFromList( position, stations );
 }
 
-class VORNDBFilter : public FGPositioned::Filter
+class TypeFilter : public FGPositioned::Filter
 {
 public:
+    TypeFilter( const FGPositioned::Type mintype, const FGPositioned::Type maxtype ) : _mintype(mintype), _maxtype(maxtype) {}
+
   virtual FGPositioned::Type minType() const {
-    return FGPositioned::VOR;
+    return _mintype;
   }
 
   virtual FGPositioned::Type maxType()  const {
-    return FGPositioned::NDB;
+    return _maxtype;
   }
+private:
+    FGPositioned::Type _mintype;
+    FGPositioned::Type _maxtype;
 };
 
 // Given an Ident and optional freqency, return the first matching
 // station.
-FGNavRecord *FGNavList::findByIdentAndFreq(const string& ident, const double freq )
+const nav_list_type FGNavList::findByIdentAndFreq(const string& ident, const double freq, const FGPositioned::Type type )
 {
   FGPositionedRef cur;
-  VORNDBFilter filter;
+  TypeFilter filter( 
+      type == FGPositioned::INVALID ? FGPositioned::VOR : type,
+      type == FGPositioned::INVALID ? FGPositioned::NDB : type );
+  nav_list_type reply;
+
   cur = FGPositioned::findNextWithPartialId(cur, ident, &filter);
-  
-  if (freq <= 0.0) {
-    return static_cast<FGNavRecord*>(cur.ptr()); // might be null
-  }
   
   int f = (int)(freq*100.0 + 0.5);
   while (cur) {
     FGNavRecord* nav = static_cast<FGNavRecord*>(cur.ptr());
-    if (nav->get_freq() == f) {
-      return nav;
+    if ( f <= 0.0 || nav->get_freq() == f) {
+        reply.push_back( nav );
     }
     
     cur = FGPositioned::findNextWithPartialId(cur, ident, &filter);
   }
 
-  return NULL;
+  return reply;
+}
+
+class NavRecordDistanceSortPredicate
+{
+public:
+    NavRecordDistanceSortPredicate( const SGGeod & position ) :
+    _position(SGVec3d::fromGeod(position)) {}
+
+    bool operator()( const nav_rec_ptr & n1, const nav_rec_ptr & n2 )
+    {
+        if( n1 == NULL || n2 == NULL ) return false;
+        return distSqr(n1->cart(), _position) < distSqr(n2->cart(), _position);
+    }
+private:
+    SGVec3d _position;
+
+};
+
+// Given an Ident and optional freqency and type , 
+// return a list of matching stations sorted by distance to the given position
+const nav_list_type FGNavList::findByIdentAndFreq( const SGGeod & position,
+        const std::string& ident, const double freq, const FGPositioned::Type type )
+{
+    nav_list_type reply = findByIdentAndFreq( ident, freq, type );
+    NavRecordDistanceSortPredicate sortPredicate( position );
+    std::sort( reply.begin(), reply.end(), sortPredicate );
+
+    return reply;
 }
 
 // discount navids if they conflict with another on the same frequency

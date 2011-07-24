@@ -8,6 +8,7 @@
 // placeholder values instead.
 
 #define FLIGHTGEAR_VERSION "development " __DATE__
+#define SIMGEAR_VERSION FLIGHTGEAR_VERSION
 
 #define HUDSON_BUILD_NUMBER 0
 #define HUDSON_BUILD_ID "none"

@@ -15,5 +15,18 @@ set(SOURCES
 	new_gui.cxx
 	property_list.cxx
 	)
-	
-flightgear_component(GUI "${SOURCES}")
+
+set(HEADERS
+	AirportList.hxx
+	MapWidget.hxx
+	SafeTexFont.hxx
+	WaypointList.hxx
+	dialog.hxx
+	gui.h
+	layout.hxx
+	menubar.hxx
+	new_gui.hxx
+	property_list.hxx
+	)
+    		
+flightgear_component(GUI "${SOURCES}" "${HEADERS}")

@@ -119,23 +119,29 @@ void FGXMLAutopilotGroupImplementation::initFrom( SGPropertyNode_ptr rootNode, c
         }
 
         SGPath config = globals->resolve_maybe_aircraft_path(pathNode->getStringValue());
+        if (config.isNull())
+        {
+            SG_LOG( SG_ALL, SG_ALERT, "Cannot find property-rule configuration file '" << pathNode->getStringValue() << "'." );
+        }
+        else
+        {
+            SG_LOG( SG_ALL, SG_INFO, "Reading property-rule configuration from " << config.str() );
 
-        SG_LOG( SG_ALL, SG_INFO, "Reading property-rule configuration from " << config.str() );
+            try {
+                SGPropertyNode_ptr root = new SGPropertyNode();
+                readProperties( config.str(), root );
 
-        try {
-            SGPropertyNode_ptr root = new SGPropertyNode();
-            readProperties( config.str(), root );
+                SG_LOG( SG_AUTOPILOT, SG_INFO, "adding  property-rule subsystem " << apName );
+                FGXMLAutopilot::Autopilot * ap = new FGXMLAutopilot::Autopilot( autopilotNodes[i], root );
+                ap->set_name( apName );
+                set_subsystem( apName, ap );
+                _autopilotNames.push_back( apName );
 
-            SG_LOG( SG_AUTOPILOT, SG_INFO, "adding  property-rule subsystem " << apName );
-            FGXMLAutopilot::Autopilot * ap = new FGXMLAutopilot::Autopilot( autopilotNodes[i], root );
-            ap->set_name( apName );
-            set_subsystem( apName, ap );
-            _autopilotNames.push_back( apName );
-
-        } catch (const sg_exception& e) {
-            SG_LOG( SG_AUTOPILOT, SG_ALERT, "Failed to load property-rule configuration: "
-                    << config.str() << ":" << e.getMessage() );
-            continue;
+            } catch (const sg_exception& e) {
+                SG_LOG( SG_AUTOPILOT, SG_ALERT, "Failed to load property-rule configuration: "
+                        << config.str() << ":" << e.getMessage() );
+                continue;
+            }
         }
     }
 }

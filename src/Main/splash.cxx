@@ -187,8 +187,19 @@ static osg::Node* fgCreateSplashCamera()
   fgSetString("/sim/startup/program-name", namestring);
   delete[] namestring;
 
-  SGPath tpath( globals->get_fg_root() );
-  if (splash_texture == NULL || !strcmp(splash_texture, "")) {
+  SGPath tpath;
+  if (splash_texture  && strcmp(splash_texture, "")) {
+      tpath = globals->resolve_maybe_aircraft_path(splash_texture);
+      if (tpath.isNull())
+      {
+          SG_LOG( SG_GENERAL, SG_ALERT, "Cannot find splash screen file '" << splash_texture
+                  << "'. Using default." );
+      }
+  }
+
+  if (tpath.isNull()) {
+    // no splash screen specified - select random image
+    tpath = globals->get_fg_root();
     // load in the texture data
     int num = (int)(sg_random() * 5.0 + 1.0);
     char num_str[5];
@@ -197,10 +208,8 @@ static osg::Node* fgCreateSplashCamera()
     tpath.append( "Textures/Splash" );
     tpath.concat( num_str );
     tpath.concat( ".png" );
-  } else {
-    tpath = globals->resolve_maybe_aircraft_path(splash_texture);
   }
-  
+
   osg::Texture2D* splashTexture = new osg::Texture2D;
   splashTexture->setImage(osgDB::readImageFile(tpath.c_str()));
 

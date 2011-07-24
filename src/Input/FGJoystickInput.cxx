@@ -305,7 +305,9 @@ void FGJoystickInput::update( double dt )
                                 // Do nothing if the axis position
                                 // is unchanged; only a change in
                                 // position fires the bindings.
-      if (fabs(axis_values[j] - a.last_value) > a.tolerance) {
+                                // But only if there are bindings
+      if (fabs(axis_values[j] - a.last_value) > a.tolerance
+         && a.bindings[KEYMOD_NONE].size() > 0 ) {
         a.last_value = axis_values[j];
         for (unsigned int k = 0; k < a.bindings[KEYMOD_NONE].size(); k++)
           a.bindings[KEYMOD_NONE][k]->fire(axis_values[j]);
@@ -329,7 +331,7 @@ void FGJoystickInput::update( double dt )
       FGButton &b = bindings[i].buttons[j];
       b.last_dt += dt;
       if(b.last_dt >= b.interval_sec) {
-        bindings[i].buttons[j].update( modifiers, (buttons & (1 << j)) > 0 );
+        bindings[i].buttons[j].update( modifiers, (buttons & (1u << j)) > 0 );
         b.last_dt -= b.interval_sec;
       }
     }

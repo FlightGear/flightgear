@@ -6,4 +6,10 @@ set(SOURCES
 	sunsolver.cxx
 	)
 	
-flightgear_component(Time "${SOURCES}")
+set(HEADERS
+	TimeManager.hxx
+	light.hxx
+	sunsolver.hxx
+	)
+    	
+flightgear_component(Time "${SOURCES}" "${HEADERS}")

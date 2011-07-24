@@ -90,29 +90,31 @@ main(int argc, char** argv)
     fog->setDensity(1e-6);
     camera->getOrCreateStateSet()->setAttribute(fog);
 
-    const char *fg_root_env = std::getenv("FG_ROOT");
     std::string fg_root;
-    if (fg_root_env)
+    if (arguments.read("--fg-root", fg_root)) {
+    } else if (const char *fg_root_env = std::getenv("FG_ROOT")) {
         fg_root = fg_root_env;
-    else
+    } else {
 #if defined(PKGDATADIR)
         fg_root = PKGDATADIR;
 #else
         fg_root = ".";
 #endif
+    }
 
-    osgDB::FilePathList filePathList;
-    filePathList.push_back(fg_root);
-
-    const char *fg_scenery_env = std::getenv("FG_SCENERY");
+    std::string fg_scenery;
     string_list path_list;
-    if (fg_scenery_env) {
+    if (arguments.read("--fg-scenery", fg_scenery)) {
+        path_list.push_back(fg_scenery);
+    } else if (const char *fg_scenery_env = std::getenv("FG_SCENERY")) {
         path_list = sgPathSplit(fg_scenery_env);
     } else {
         SGPath path(fg_root);
         path.append("Scenery");
         path_list.push_back(path.str());
     }
+    osgDB::FilePathList filePathList;
+    filePathList.push_back(fg_root);
     for (unsigned i = 0; i < path_list.size(); ++i) {
         SGPath pt(path_list[i]), po(path_list[i]);
         pt.append("Terrain");
@@ -152,6 +154,10 @@ main(int argc, char** argv)
     SGReaderWriterBTGOptions* btgOptions = new SGReaderWriterBTGOptions;
     btgOptions->getDatabasePathList() = filePathList;
     btgOptions->setMatlib(ml);
+
+    // Here, all arguments are processed
+    arguments.reportRemainingOptionsAsUnrecognized();
+    arguments.writeErrorMessages(std::cerr);
 
     // read the scene from the list of file specified command line args.
     osg::ref_ptr<osg::Node> loadedModel;

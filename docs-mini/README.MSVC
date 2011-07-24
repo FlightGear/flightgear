@@ -2,10 +2,10 @@ Use FlightGear.sln to compile fgfs executable for Win32 or x64 architectures wit
 Previous versions of Visual Studio are not officially supported anymore.
 
 Precompiled librairies and headers for compiling Win32 executables with VS2008 :
-ftp://ftp.ihg.uni-duisburg.de/FlightGear/Win32/MSVC/fgfs-win32-VS90-3rdParty+OSG-20110618.zip
+ftp://ftp.ihg.uni-duisburg.de/FlightGear/Win32/MSVC/fgfs-win32-VS90-3rdParty+OSG-20110703.zip
 
 Precompiled librairies and headers for compiling x64 executables with VS2008 :
-ftp://ftp.ihg.uni-duisburg.de/FlightGear/Win32/MSVC/fgfs-x64-VS90-3rdParty+OSG-20110618.zip
+ftp://ftp.ihg.uni-duisburg.de/FlightGear/Win32/MSVC/fgfs-x64-VS90-3rdParty+OSG-20110703.zip
 
 The VS2008 / v9.0 project files assume the directory layout below :
 

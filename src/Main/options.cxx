@@ -59,7 +59,6 @@
 #include <Main/viewer.hxx>
 #include <Environment/presets.hxx>
 
-#include <simgear/version.h>
 #include <osg/Version>
 
 using std::string;
@@ -70,6 +69,7 @@ using std::endl;
 
 #if defined( HAVE_VERSION_H ) && HAVE_VERSION_H
 #  include <Include/version.h>
+#  include <simgear/version.h>
 #else
 #  include <Include/no_version.h>
 #endif
@@ -1132,10 +1132,16 @@ fgOptDME( const char *arg )
         fgSetString("/instrumentation/dme/frequencies/source",
                     "/instrumentation/nav[1]/frequencies/selected-mhz");
     } else {
+        double frequency = atof(arg);
+        if (frequency==0.0)
+        {
+            SG_LOG(SG_INPUT, SG_ALERT, "Invalid DME frequency: '" << arg << "'.");
+            return FG_OPTIONS_ERROR;
+        }
         fgSetInt("/instrumentation/dme/switch-position", 2);
         fgSetString("/instrumentation/dme/frequencies/source",
                     "/instrumentation/dme/frequencies/selected-mhz");
-        fgSetString("/instrumentation/dme/frequencies/selected-mhz", arg);
+        fgSetDouble("/instrumentation/dme/frequencies/selected-mhz", frequency);
     }
     return FG_OPTIONS_OK;
 }
@@ -1335,7 +1341,9 @@ struct OptionDesc {
     {"airport",                      true,  OPTION_STRING, "/sim/presets/airport-id", false, "", 0 },
     {"runway",                       true,  OPTION_FUNC,   "", false, "", fgOptRunway },
     {"vor",                          true,  OPTION_FUNC,   "", false, "", fgOptVOR },
+    {"vor-frequency",                true,  OPTION_DOUBLE, "/sim/presets/vor-freq", false, "", fgOptVOR },
     {"ndb",                          true,  OPTION_FUNC,   "", false, "", fgOptNDB },
+    {"ndb-frequency",                true,  OPTION_DOUBLE, "/sim/presets/ndb-freq", false, "", fgOptVOR },
     {"carrier",                      true,  OPTION_FUNC,   "", false, "", fgOptCarrier },
     {"parkpos",                      true,  OPTION_FUNC,   "", false, "", fgOptParkpos },
     {"fix",                          true,  OPTION_FUNC,   "", false, "", fgOptFIX },

@@ -27,8 +27,36 @@ set(SOURCES
 	ray.cxx
 	rul.cxx
 	)
-	
-flightgear_component(Network "${SOURCES}")
+
+set(HEADERS
+	ATC-Inputs.hxx
+	ATC-Main.hxx
+	ATC-Outputs.hxx
+	AV400.hxx
+	AV400Sim.hxx
+	AV400WSim.hxx
+	atlas.hxx
+	garmin.hxx
+	generic.hxx
+	httpd.hxx
+	joyclient.hxx
+	jpg-httpd.hxx
+	jsclient.hxx
+	lfsglass.hxx
+	native.hxx
+	native_ctrls.hxx
+	native_fdm.hxx
+	native_gui.hxx
+	nmea.hxx
+	opengc.hxx
+	props.hxx
+	protocol.hxx
+	pve.hxx
+	ray.hxx
+	rul.hxx
+	)
+    	
+flightgear_component(Network "${SOURCES}" "${HEADERS}")
 
 if(RTI_FOUND)
   add_subdirectory(HLA)

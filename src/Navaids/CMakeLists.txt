@@ -2,7 +2,6 @@ include(FlightGearComponent)
 
 set(SOURCES
 	airways.cxx
-	awynet.cxx
 	fixlist.cxx
 	markerbeacon.cxx
 	navdb.cxx
@@ -16,4 +15,19 @@ set(SOURCES
 	PositionedBinding.cxx
 	)
 
-flightgear_component(Navaids "${SOURCES}")
+set(HEADERS
+    airways.hxx
+	fixlist.hxx
+	markerbeacon.hxx
+	navdb.hxx
+	navlist.hxx
+	navrecord.hxx
+	positioned.hxx
+	procedure.hxx
+	route.hxx
+	routePath.hxx
+	waypoint.hxx
+	PositionedBinding.hxx
+    )
+
+flightgear_component(Navaids "${SOURCES}" "${HEADERS}")

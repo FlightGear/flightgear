@@ -897,7 +897,8 @@ void FGNavRadio::updateAudio()
   }
   
   last_time = now;
-  play_count = ++play_count % NUM_IDENT_SLOTS;
+  play_count++;
+  play_count %= NUM_IDENT_SLOTS;
     
   // Previous ident is out of time;  if still playing, cut it off:
   _sgr->stop( nav_fx_name );

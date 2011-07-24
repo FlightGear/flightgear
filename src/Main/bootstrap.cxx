@@ -71,10 +71,10 @@ bool free_hostname = false;
 void fgExitCleanup();
 
 static bool fpeAbort = false;
-static void handleFPE(int);
 static void initFPE();
 
 #if defined(HAVE_FEENABLEEXCEPT)
+static void handleFPE(int);
 static void
 initFPE ()
 {
@@ -93,6 +93,7 @@ static void handleFPE(int)
 }
 #elif defined(__linux__) && defined(__i386__)
 
+static void handleFPE(int);
 static void
 initFPE ()
 {
@@ -115,10 +116,6 @@ handleFPE (int num)
   SG_LOG(SG_GENERAL, SG_ALERT, "Floating point interrupt (SIGFPE)");
 }
 #else
-static void handleFPE(int)
-{
-}
-
 static void initFPE()
 {
 }

@@ -6,6 +6,13 @@ set(SOURCES
 	scenery.cxx
 	tilemgr.cxx
 	)
-	
-flightgear_component(Scenery "${SOURCES}")
+
+set(HEADERS
+	SceneryPager.hxx
+	redout.hxx
+	scenery.hxx
+	tilemgr.hxx
+	)
+    		
+flightgear_component(Scenery "${SOURCES}" "${HEADERS}")
 

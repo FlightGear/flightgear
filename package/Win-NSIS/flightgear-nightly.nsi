@@ -102,6 +102,16 @@ Section "" ;No components page, name is not important
   File ${OSGPluginsDir}\osgdb_png.dll
   File ${OSGPluginsDir}\osgdb_dds.dll
   File ${OSGPluginsDir}\osgdb_txf.dll
+  File ${OSGPluginsDir}\osgdb_serializers_osg.dll
+  File ${OSGPluginsDir}\osgdb_serializers_osganimation.dll
+  File ${OSGPluginsDir}\osgdb_serializers_osgfx.dll
+  File ${OSGPluginsDir}\osgdb_serializers_osgmanipulator.dll
+  File ${OSGPluginsDir}\osgdb_serializers_osgparticle.dll
+  File ${OSGPluginsDir}\osgdb_serializers_osgshadow.dll
+  File ${OSGPluginsDir}\osgdb_serializers_osgsim.dll
+  File ${OSGPluginsDir}\osgdb_serializers_osgterrain.dll
+  File ${OSGPluginsDir}\osgdb_serializers_osgtext.dll
+  File ${OSGPluginsDir}\osgdb_serializers_osgvolume.dll
   File ${OSGPluginsDir}\osgdb_deprecated_osg.dll
   File ${OSGPluginsDir}\osgdb_deprecated_osgparticle.dll
   

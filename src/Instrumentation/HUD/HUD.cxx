@@ -346,6 +346,11 @@ int HUD::load(const char *file, float x, float y, int level, const string& inden
     const int MAXNEST = 10;
 
     SGPath path(globals->resolve_maybe_aircraft_path(file));
+    if (path.isNull())
+    {
+        SG_LOG(SG_INPUT, SG_ALERT, "HUD: Cannot find configuration file '" << file << "'.");
+        return 0x2;
+    }
 
     if (!level) {
         SG_LOG(SG_INPUT, TREE, endl << "load " << file);
@@ -362,7 +367,7 @@ int HUD::load(const char *file, float x, float y, int level, const string& inden
     int ret = 0;
     ifstream input(path.c_str());
     if (!input.good()) {
-        SG_LOG(SG_INPUT, SG_ALERT, "HUD: Cannot read configuration from " << path.str());
+        SG_LOG(SG_INPUT, SG_ALERT, "HUD: Cannot read configuration from '" << path.c_str() << "'");
         return 0x4;
     }
 

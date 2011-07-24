@@ -31,8 +31,29 @@ set(SOURCES
 	viewmgr.cxx
 	${RESOURCE_FILE}
 	)
-	
-add_executable(fgfs ${SOURCES})
+
+set(HEADERS
+	CameraGroup.hxx
+	FGEventHandler.hxx
+	WindowBuilder.hxx
+	WindowSystemAdapter.hxx
+	fg_commands.hxx
+	fg_init.hxx
+	fg_io.hxx
+	fg_props.hxx
+	fgviewer.hxx
+	globals.hxx
+	logger.hxx
+	main.hxx
+	options.hxx
+	renderer.hxx
+	splash.hxx
+	util.hxx
+	viewer.hxx
+	viewmgr.hxx
+	)
+
+add_executable(fgfs ${SOURCES} ${HEADERS})
 
 get_property(FG_LIBS GLOBAL PROPERTY FG_LIBS)
 #message(STATUS "fg libs ${FG_LIBS}")

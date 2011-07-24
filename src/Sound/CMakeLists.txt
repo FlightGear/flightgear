@@ -8,5 +8,14 @@ set(SOURCES
 	voice.cxx
 	voiceplayer.cxx
 	)
-	
-flightgear_component(Sound "${SOURCES}")
+
+set(HEADERS
+	beacon.hxx
+	fg_fx.hxx
+	morse.hxx
+	sample_queue.hxx
+	voice.hxx
+	voiceplayer.hxx
+	)
+    		
+flightgear_component(Sound "${SOURCES}" "${HEADERS}")

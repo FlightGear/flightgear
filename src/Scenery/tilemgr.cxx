@@ -87,9 +87,6 @@ FGTileMgr::FGTileMgr():
 
 FGTileMgr::~FGTileMgr()
 {
-    if (_terra_sync)
-        _terra_sync->setTileCache(NULL);
-
     // remove all nodes we might have left behind
     osg::Group* group = globals->get_scenery()->get_terrain_branch();
     group->removeChildren(0, group->getNumChildren());
