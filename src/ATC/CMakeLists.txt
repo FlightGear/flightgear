@@ -2,6 +2,7 @@ include(FlightGearComponent)
 
 set(SOURCES
 	atc_mgr.cxx
+	atcdialog.cxx
 	trafficcontrol.cxx
 	CommStation.cxx
 	)
