@@ -308,4 +308,5 @@ bool FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport 
   waypoints.push_back(wpt); 
   wpt = createInAir(ac, "BOD2", secondaryDescentPoint, alt, vCruise);
   waypoints.push_back(wpt); 
+  return true;
 }
