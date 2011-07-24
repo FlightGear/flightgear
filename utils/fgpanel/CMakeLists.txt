@@ -16,7 +16,7 @@ if(GLUT_FOUND)
 		panel_io.cxx)
 
 	target_link_libraries(fgpanel 
-		-lrt
+		${RT_LIBRARY}
 		${PNG_LIBRARIES}
 		${GLUT_LIBRARIES}
 		${SIMGEAR_LIBRARIES}
