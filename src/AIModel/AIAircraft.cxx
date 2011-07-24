@@ -285,6 +285,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
     if (! leadPointReached(curr)) {
         controlHeading(curr);
         controlSpeed(curr, next);
+            /*
             if (speed < 0) { 
                 cerr << getCallSign() 
                      << ": verifying lead distance to waypoint : " 
@@ -297,7 +298,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
                      << speed
                      << ". Minimum Bearing " << minBearing
                      << endl;
-            }
+            } */
     } else {
         if (curr->finished)      //end of the flight plan
         {

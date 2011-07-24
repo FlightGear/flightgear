@@ -51,6 +51,7 @@ private:
   FGAIAircraft ai_ac;
   FGATCController *controller; // The ATC controller that is responsible for the user's aircraft. 
   //FGATCDialogNew dialog;  // note that this variable should really replace the ugly global "currentATCDialog();
+  bool networkVisible;
 
 public:
   FGATCManager();

@@ -34,7 +34,7 @@
 
 
 FGATCManager::FGATCManager() {
-
+    networkVisible = false;
 }
 
 FGATCManager::~FGATCManager() {
@@ -76,7 +76,8 @@ void FGATCManager::init() {
     ai_ac.setAltitude ( altitude  );
     ai_ac.setPerformance("jet_transport");
 
-    // NEXT UP: Create a traffic Schedule and fill that with appropriate information. This we can use to flight plannign.
+    // NEXT UP: Create a traffic Schedule and fill that with appropriate information. This we can use to flight planning.
+    // Note that these are currently only defaults. 
     FGAISchedule *trafficRef = new FGAISchedule;
     trafficRef->setFlightType("gate");
 
@@ -179,16 +180,16 @@ void FGATCManager::update ( double time ) {
     /* test code : find out how the routing develops */
     int size = fp->getNrOfWayPoints();
     //cerr << "Setting pos" << pos << " ";
-    cerr << "setting intentions " ;
+    //cerr << "setting intentions " ;
     for (int i = 0; i < size; i++) {
         int val = fp->getRouteIndex(i);
-        cerr << val << " ";
+        //cerr << val << " ";
         //if ((val) && (val != pos)) {
             //intentions.push_back(val);
             //cerr << "[done ] " << endl;
         //}
     }
-    cerr << "[done ] " << endl;
+    //cerr << "[done ] " << endl;
     double longitude = fgGetDouble("/position/longitude-deg");
     double latitude  = fgGetDouble("/position/latitude-deg");
     double heading   = fgGetDouble("/orientation/heading-deg");
@@ -215,8 +216,14 @@ void FGATCManager::update ( double time ) {
         //string airport = fgGetString("/sim/presets/airport-id");
         //FGAirport *apt = FGAirport::findByIdent(airport); 
         // AT this stage we should update the flightplan, so that waypoint incrementing is conducted as well as leg loading. 
-
-       controller->render();
+       static SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
+            int n = trans_num->getIntValue();
+        if (n == 1) {
+            cerr << "Toggling ground network visibility " << networkVisible << endl;
+            networkVisible = !networkVisible;
+            trans_num->setIntValue(-1);
+        }
+        controller->render(networkVisible);
 
         //cerr << "Adding groundnetWork to the scenegraph::update" << endl;
    }

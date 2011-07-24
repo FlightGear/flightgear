@@ -469,7 +469,7 @@ bool FGATCInstruction::hasInstruction()
 
 FGATCController::FGATCController()
 {
-    cerr << "running FGATController constructor" << endl;
+    //cerr << "running FGATController constructor" << endl;
     dt_count = 0;
     available = true;
     lastTransmission = 0;
@@ -478,7 +478,7 @@ FGATCController::FGATCController()
 
 FGATCController::~FGATCController()
 {
-     cerr << "running FGATController destructor" << endl;
+     //cerr << "running FGATController destructor" << endl;
 }
 
 string FGATCController::getGateName(FGAIAircraft * ref)
@@ -906,8 +906,8 @@ FGATCInstruction FGTowerController::getInstruction(int id)
     return FGATCInstruction();
 }
 
-void FGTowerController::render() {
-    cerr << "FGTowerController::render function not yet implemented" << endl;
+void FGTowerController::render(bool visible) {
+    //cerr << "FGTowerController::render function not yet implemented" << endl;
 }
 
 
@@ -1033,7 +1033,7 @@ void FGStartupController::signOff(int id)
         SG_LOG(SG_GENERAL, SG_ALERT,
                "AI error: Aircraft without traffic record is signing off from tower");
     } else {
-        cerr << i->getAircraft()->getCallSign() << " signing off from startupcontroller" << endl;
+        //cerr << i->getAircraft()->getCallSign() << " signing off from startupcontroller" << endl;
         i = activeTraffic.erase(i);
     }
 }
@@ -1045,17 +1045,17 @@ bool FGStartupController::checkTransmissionState(int st, time_t now, time_t star
     if ((state == st) && available) {
         if ((msgDir == ATC_AIR_TO_GROUND) && isUserAircraft(i->getAircraft())) {
             
-            cerr << "Checking state " << st << " for " << i->getAircraft()->getCallSign() << endl;
+            //cerr << "Checking state " << st << " for " << i->getAircraft()->getCallSign() << endl;
             static SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
             int n = trans_num->getIntValue();
-            if (n >= 0) {
+            if (n == 0) {
                 trans_num->setIntValue(-1);
                  // PopupCallback(n);
-                 cerr << "Selected transmission message" << n << endl;
+                 cerr << "Selected transmission message " << n << endl;
                  FGATCManager *atc = (FGATCManager*) globals->get_subsystem("atc");
                  atc->getATCDialog()->removeEntry(1);
             } else {
-                cerr << "creading message for " << i->getAircraft()->getCallSign() << endl;
+                //cerr << "creading message for " << i->getAircraft()->getCallSign() << endl;
                 transmit(&(*i), msgId, msgDir, false);
                 return false;
             }
@@ -1161,7 +1161,7 @@ static void WorldCoordinate(osg::Matrix& obj_pos, double lat,
 }
 
 
-void FGStartupController::render()
+void FGStartupController::render(bool visible)
 {
 
     SGMaterialLib *matlib = globals->get_matlib();
@@ -1175,32 +1175,34 @@ void FGStartupController::render()
            //geode->releaseGLObjects();
            //group->removeChild(geode);
            //delete geode;
+        group = 0;
     }
-    group = new osg::Group;
+    if (visible) {
+        group = new osg::Group;
 
-    //for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
-    double dx = 0;
-    for   (TrafficVectorIterator i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
-        // Handle start point
-        int pos = i->getCurrentPosition();
-        //cerr << "rendering for " << i->getAircraft()->getCallSign() << "pos = " << pos << endl;
-        if (pos > 0) {
-            FGTaxiSegment *segment  = parent->getGroundNetwork()->findSegment(pos);
-            SGGeod start(SGGeod::fromDeg((i->getLongitude()), (i->getLatitude())));
-            SGGeod end  (SGGeod::fromDeg(segment->getEnd()->getLongitude(), segment->getEnd()->getLatitude()));
+        //for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
+        double dx = 0;
+        for   (TrafficVectorIterator i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
+            // Handle start point
+            int pos = i->getCurrentPosition();
+            //cerr << "rendering for " << i->getAircraft()->getCallSign() << "pos = " << pos << endl;
+            if (pos > 0) {
+                FGTaxiSegment *segment  = parent->getGroundNetwork()->findSegment(pos);
+                SGGeod start(SGGeod::fromDeg((i->getLongitude()), (i->getLatitude())));
+                SGGeod end  (SGGeod::fromDeg(segment->getEnd()->getLongitude(), segment->getEnd()->getLatitude()));
 
-            double length = SGGeodesy::distanceM(start, end);
-            //heading = SGGeodesy::headingDeg(start->getGeod(), end->getGeod());
+                double length = SGGeodesy::distanceM(start, end);
+                //heading = SGGeodesy::headingDeg(start->getGeod(), end->getGeod());
 
-            double az2, heading; //, distanceM;
-            SGGeodesy::inverse(start, end, heading, az2, length);
-            double coveredDistance = length * 0.5;
-            SGGeod center;
-            SGGeodesy::direct(start, heading, coveredDistance, center, az2);
-            //cerr << "Active Aircraft : Centerpoint = (" << center.getLatitudeDeg() << ", " << center.getLongitudeDeg() << "). Heading = " << heading << endl;
-            ///////////////////////////////////////////////////////////////////////////////
-            // Make a helper function out of this
-            osg::Matrix obj_pos;
+                double az2, heading; //, distanceM;
+                SGGeodesy::inverse(start, end, heading, az2, length);
+                double coveredDistance = length * 0.5;
+                SGGeod center;
+                SGGeodesy::direct(start, heading, coveredDistance, center, az2);
+                //cerr << "Active Aircraft : Centerpoint = (" << center.getLatitudeDeg() << ", " << center.getLongitudeDeg() << "). Heading = " << heading << endl;
+                ///////////////////////////////////////////////////////////////////////////////
+                // Make a helper function out of this
+                osg::Matrix obj_pos;
                 osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
                 obj_trans->setDataVariance(osg::Object::STATIC);
 
@@ -1226,49 +1228,49 @@ void FGStartupController::render()
                 // wire as much of the scene graph together as we can
                 //->addChild( obj_trans );
                 group->addChild( obj_trans );
-        /////////////////////////////////////////////////////////////////////
-        } else {
-             cerr << "BIG FAT WARNING: current position is here : " << pos << endl;
-        }
-        for(intVecIterator j = (i)->getIntentions().begin(); j != (i)->getIntentions().end(); j++) {
-             osg::Matrix obj_pos;
-            int k = (*j);
-            if (k > 0) {
-                //cerr << "rendering for " << i->getAircraft()->getCallSign() << "intention = " << k << endl;
-                osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
-                obj_trans->setDataVariance(osg::Object::STATIC);
-                FGTaxiSegment *segment  = parent->getGroundNetwork()->findSegment(k);
-                WorldCoordinate( obj_pos, segment->getLatitude(), segment->getLongitude(), parent->getElevation()+8+dx, -(segment->getHeading()) );
-
-                obj_trans->setMatrix( obj_pos );
-                //osg::Vec3 center(0, 0, 0)
-
-                float width = segment->getLength() /2.0;
-                osg::Vec3 corner(-width, 0, 0.25f);
-                osg::Vec3 widthVec(2*width + 1, 0, 0);
-                osg::Vec3 heightVec(0, 1, 0);
-                osg::Geometry* geometry;
-                geometry = osg::createTexturedQuadGeometry(corner, widthVec, heightVec);
-                simgear::EffectGeode* geode = new simgear::EffectGeode;
-                geode->setName("test");
-                geode->addDrawable(geometry);
-                //osg::Node *custom_obj;
-                SGMaterial *mat = matlib->find("UnidirectionalTaper");
-                if (mat)
-                    geode->setEffect(mat->get_effect());
-                obj_trans->addChild(geode);
-                // wire as much of the scene graph together as we can
-                //->addChild( obj_trans );
-                group->addChild( obj_trans );
+                /////////////////////////////////////////////////////////////////////
             } else {
-                cerr << "BIG FAT WARNING: k is here : " << pos << endl;
+                //cerr << "BIG FAT WARNING: current position is here : " << pos << endl;
             }
-        }
-        //dx += 0.1;
-    }
-    globals->get_scenery()->get_scene_graph()->addChild(group);
-}
+            for(intVecIterator j = (i)->getIntentions().begin(); j != (i)->getIntentions().end(); j++) {
+                osg::Matrix obj_pos;
+                int k = (*j);
+                if (k > 0) {
+                    //cerr << "rendering for " << i->getAircraft()->getCallSign() << "intention = " << k << endl;
+                    osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
+                    obj_trans->setDataVariance(osg::Object::STATIC);
+                    FGTaxiSegment *segment  = parent->getGroundNetwork()->findSegment(k);
+                    WorldCoordinate( obj_pos, segment->getLatitude(), segment->getLongitude(), parent->getElevation()+8+dx, -(segment->getHeading()) );
 
+                    obj_trans->setMatrix( obj_pos );
+                    //osg::Vec3 center(0, 0, 0)
+
+                    float width = segment->getLength() /2.0;
+                    osg::Vec3 corner(-width, 0, 0.25f);
+                    osg::Vec3 widthVec(2*width + 1, 0, 0);
+                    osg::Vec3 heightVec(0, 1, 0);
+                    osg::Geometry* geometry;
+                    geometry = osg::createTexturedQuadGeometry(corner, widthVec, heightVec);
+                    simgear::EffectGeode* geode = new simgear::EffectGeode;
+                    geode->setName("test");
+                    geode->addDrawable(geometry);
+                    //osg::Node *custom_obj;
+                    SGMaterial *mat = matlib->find("UnidirectionalTaper");
+                    if (mat)
+                        geode->setEffect(mat->get_effect());
+                    obj_trans->addChild(geode);
+                    // wire as much of the scene graph together as we can
+                    //->addChild( obj_trans );
+                    group->addChild( obj_trans );
+                } else {
+                    cerr << "BIG FAT WARNING: k is here : " << pos << endl;
+                }
+            }
+            //dx += 0.1;
+        }
+        globals->get_scenery()->get_scene_graph()->addChild(group);
+    }
+}
 
 /***************************************************************************
  * class FGApproachController
@@ -1461,6 +1463,6 @@ ActiveRunway *FGApproachController::getRunway(string name)
     return &(*rwy);
 }
 
-void FGApproachController::render() {
-    cerr << "FGApproachController::render function not yet implemented" << endl;
+void FGApproachController::render(bool visible) {
+    //cerr << "FGApproachController::render function not yet implemented" << endl;
 }

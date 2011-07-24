@@ -287,7 +287,7 @@ public:
   bool checkTransmissionState(int minState, int MaxState, TrafficVectorIterator i, time_t now, AtcMsgId msgId,
                                AtcMsgDir msgDir);
   bool checkForCircularWaits(int id);
-  virtual void render();
+  virtual void render(bool);
 
 };
 

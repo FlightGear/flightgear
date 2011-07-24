@@ -43,7 +43,7 @@ static bool doATCDialog(const SGPropertyNode* arg) {
 
 FGATCDialogNew::FGATCDialogNew()
 {
-  dialogVisible = false;
+  dialogVisible = true;
 }
 
 FGATCDialogNew::~FGATCDialogNew()
@@ -89,6 +89,7 @@ static SGPropertyNode *getNamedNode(SGPropertyNode *prop, const char *name) {
 void FGATCDialogNew::addEntry(int nr, string txt) {
     commands.clear();
     commands.push_back(txt);
+    commands.push_back(string("Toggle ground network visibility"));
 }
 
 void FGATCDialogNew::removeEntry(int nr) {
@@ -98,49 +99,6 @@ void FGATCDialogNew::removeEntry(int nr) {
 
 
 void FGATCDialogNew::PopupDialog() {
-    /*double onBoardRadioFreq0 =
-        fgGetDouble("/instrumentation/comm[0]/frequencies/selected-mhz");
-    double onBoardRadioFreq1 =
-        fgGetDouble("/instrumentation/comm[1]/frequencies/selected-mhz");
-
-    const char *dialog_name = "atc-dialog";
-    _gui = (NewGUI *)globals->get_subsystem("gui");
-    SGPropertyNode_ptr dlg = _gui->getDialogProperties(dialog_name);
-    if (!dlg)
-        return;
-
-    _gui->closeDialog(dialog_name);
-    SGPropertyNode_ptr button_group = getNamedNode(dlg, "transmission-choice");
-    button_group->removeChildren("button", false);
-
-    const int bufsize = 32;
-    char buf[bufsize];
-    int commandNr = 0;
-    // loop over all entries that should fill up the dialog; use 10 items for now...
-    for (StringVecIterator i = commands.begin(); i != commands.end(); i++) {
-        snprintf(buf, bufsize, "/sim/atc/opt[%d]", commandNr);
-            fgSetBool(buf, false);
-        SGPropertyNode *entry = button_group->getNode("button", commandNr, true);
-        copyProperties(button_group->getNode("button-template", true), entry);
-	entry->removeChildren("enabled", true);
-	entry->setStringValue("property", buf);
-	entry->setIntValue("keynum", '1' + commandNr);
-	if (commandNr == 0)
-	    entry->setBoolValue("default", true);
-
-	snprintf(buf, bufsize, "%d", 1 + commandNr);
-	string legend = string(buf) + (*i); //"; // + current->menuentry;
-	entry->setStringValue("legend", legend.c_str());
-	entry->setIntValue("binding/value", commandNr);
-        commandNr++;
-	//current++;
-    }
-*/
-    //if (dialogVisible) {
-    //    _gui->closeDialog(dialog_name);
-    //} else {
-    //    _gui->showDialog(dialog_name);
-    //}
     dialogVisible = !dialogVisible;
     return;
 }
