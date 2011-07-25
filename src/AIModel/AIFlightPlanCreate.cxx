@@ -452,8 +452,10 @@ bool FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
         double heading = ac->getTrafficRef()->getCourse();
         apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway,
                                             heading);
-        rwy = apt->getRunwayByIdent(activeRunway);
     }
+    rwy = apt->getRunwayByIdent(activeRunway);
+
+
 
     double airportElev = apt->getElevation();
     // Acceleration point, 105 meters into the runway,

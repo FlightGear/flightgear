@@ -118,6 +118,7 @@ void FGATCManager::init() {
                 fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
                 leg = 4;
                 string fltType = "ga";
+                fp->setRunway(runway);
                 fp->createTakeOff(&ai_ac, false, apt, 0, fltType);
             } else {
                 controller = apt->getDynamics()->getStartupController();
