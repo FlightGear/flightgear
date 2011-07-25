@@ -522,11 +522,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\ATCDCL\ATCDialog.cxx"
+				RelativePath="..\..\..\src\ATCDCL\ATCDialogOld.cxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\ATCDCL\ATCDialog.hxx"
+				RelativePath="..\..\..\src\ATCDCL\ATCDialogOld.hxx"
 				>
 			</File>
 			<File
@@ -4309,6 +4309,22 @@
 		<Filter
 			Name="Lib_ATC"
 			>
+			<File
+				RelativePath="..\..\..\src\ATC\atcdialog.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\ATC\atcdialog.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\ATC\atc_mgr.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\ATC\atc_mgr.hxx"
+				>
+			</File>
 			<File
 				RelativePath="..\..\..\src\ATC\CommStation.cxx"
 				>
