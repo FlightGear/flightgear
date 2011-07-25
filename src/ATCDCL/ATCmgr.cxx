@@ -31,7 +31,7 @@
 #include <Main/fg_props.hxx>
 
 #include "ATCmgr.hxx"
-#include "ATCDialog.hxx"
+#include "ATCDialogOld.hxx"
 #include "ATCutils.hxx"
 #include "atis.hxx"
 

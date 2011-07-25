@@ -31,7 +31,7 @@
 #include <GUI/gui.h>		// mkDialog
 #include <GUI/new_gui.hxx>
 
-#include "ATCDialog.hxx"
+#include "ATCDialogOld.hxx"
 #include "ATC.hxx"
 #include "ATCmgr.hxx"
 #include "ATCutils.hxx"

@@ -89,7 +89,7 @@ void FGATCManager::init() {
     flight->setCallSign(callsign);
     
     trafficRef->assign(flight);
-    FGAIFlightPlan *fp = new FGAIFlightPlan;
+    FGAIFlightPlan *fp = 0; 
     ai_ac.setTrafficRef(trafficRef);
     
     string flightPlanName = airport + "-" + airport + ".xml";
@@ -99,48 +99,51 @@ void FGATCManager::init() {
 
 
     FGAirport *apt = FGAirport::findByIdent(airport); 
-    FGAirportDynamics* dcs = apt->getDynamics();
-    int park_index = dcs->getNrOfParkings() - 1;
-    cerr << "found information: " << runway << " " << airport << ": parking = " << parking << endl;
-    if (onGround) {
-        while (park_index >= 0 && dcs->getParkingName(park_index) != parking) park_index--;
-            if (park_index < 0) {
-                  SG_LOG( SG_GENERAL, SG_ALERT,
-                          "Failed to find parking position " << parking <<
-                           " at airport " << airport );
-             }
-        if (parking.empty() || (park_index < 0)) {
-            controller = apt->getDynamics()->getTowerController();
-            int stationFreq = apt->getDynamics()->getTowerFrequency(2);
-            cerr << "Setting radio frequency to in airfrequency: " << stationFreq << endl;
-            fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
-            leg = 4;
-            string fltType = "ga";
-            fp->createTakeOff(&ai_ac, false, apt, 0, fltType);
-        } else {
-            controller = apt->getDynamics()->getStartupController();
-            int stationFreq = apt->getDynamics()->getGroundFrequency(2);
-            cerr << "Setting radio frequency to : " << stationFreq << endl;
-            fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
-            leg = 2;
-            //double, lat, lon, head; // Unused variables;
-            //int getId = apt->getDynamics()->getParking(gateId, &lat, &lon, &head);
-            FGParking* parking = dcs->getParking(park_index);
-            aircraftRadius = parking->getRadius();
-            string fltType = parking->getType(); // gate / ramp, ga, etc etc. 
-            string aircraftType; // Unused.
-            string airline;      // Currently used for gate selection, but a fallback mechanism will apply when not specified.
-            fp->setGate(park_index);
-            fp->createPushBack(&ai_ac,
-                               false, 
-                               apt, 
-                               latitude,
-                               longitude,
-                               aircraftRadius,
-                               fltType,
-                               aircraftType,
-                               airline);
-         } 
+    if (apt) {
+        FGAirportDynamics* dcs = apt->getDynamics();
+        int park_index = dcs->getNrOfParkings() - 1;
+        cerr << "found information: " << runway << " " << airport << ": parking = " << parking << endl;
+        if (onGround) {
+            fp = new FGAIFlightPlan;
+            while (park_index >= 0 && dcs->getParkingName(park_index) != parking) park_index--;
+                if (park_index < 0) {
+                      SG_LOG( SG_GENERAL, SG_ALERT,
+                            "Failed to find parking position " << parking <<
+                            " at airport " << airport );
+                }
+            if (parking.empty() || (park_index < 0)) {
+                controller = apt->getDynamics()->getTowerController();
+                int stationFreq = apt->getDynamics()->getTowerFrequency(2);
+                cerr << "Setting radio frequency to in airfrequency: " << stationFreq << endl;
+                fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
+                leg = 4;
+                string fltType = "ga";
+                fp->createTakeOff(&ai_ac, false, apt, 0, fltType);
+            } else {
+                controller = apt->getDynamics()->getStartupController();
+                int stationFreq = apt->getDynamics()->getGroundFrequency(2);
+                cerr << "Setting radio frequency to : " << stationFreq << endl;
+                fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
+                leg = 2;
+                //double, lat, lon, head; // Unused variables;
+                //int getId = apt->getDynamics()->getParking(gateId, &lat, &lon, &head);
+                FGParking* parking = dcs->getParking(park_index);
+                aircraftRadius = parking->getRadius();
+                string fltType = parking->getType(); // gate / ramp, ga, etc etc. 
+                string aircraftType; // Unused.
+                string airline;      // Currently used for gate selection, but a fallback mechanism will apply when not specified.
+                fp->setGate(park_index);
+                fp->createPushBack(&ai_ac,
+                                   false, 
+                                   apt, 
+                                   latitude,
+                                   longitude,
+                                   aircraftRadius,
+                                   fltType,
+                                   aircraftType,
+                                   airline);
+            } 
+        }
      } else {
         controller = 0;
      }
@@ -148,10 +151,11 @@ void FGATCManager::init() {
     // Create an initial flightplan and assign it to the ai_ac. We won't use this flightplan, but it is necessary to
     // keep the ATC code happy. 
     
-    
-    fp->restart();
-    fp->setLeg(leg);
-    ai_ac.SetFlightPlan(fp);
+    if (fp) {
+        fp->restart();
+        fp->setLeg(leg);
+        ai_ac.SetFlightPlan(fp);
+    }
     if (controller) {
         controller->announcePosition(ai_ac.getID(), fp, fp->getCurrentWaypoint()->routeIndex,
                                       ai_ac._getLatitude(), ai_ac._getLongitude(), heading, speed, altitude,
@@ -178,16 +182,18 @@ void FGATCManager::update ( double time ) {
     FGAIFlightPlan *fp = ai_ac.GetFlightPlan();
         
     /* test code : find out how the routing develops */
-    int size = fp->getNrOfWayPoints();
-    //cerr << "Setting pos" << pos << " ";
-    //cerr << "setting intentions " ;
-    for (int i = 0; i < size; i++) {
-        int val = fp->getRouteIndex(i);
-        //cerr << val << " ";
-        //if ((val) && (val != pos)) {
-            //intentions.push_back(val);
-            //cerr << "[done ] " << endl;
-        //}
+    if (fp) {
+        int size = fp->getNrOfWayPoints();
+        //cerr << "Setting pos" << pos << " ";
+        //cerr << "setting intentions " ;
+        for (int i = 0; i < size; i++) {
+            int val = fp->getRouteIndex(i);
+            //cerr << val << " ";
+            //if ((val) && (val != pos)) {
+                //intentions.push_back(val);
+                //cerr << "[done ] " << endl;
+            //}
+        }
     }
     //cerr << "[done ] " << endl;
     double longitude = fgGetDouble("/position/longitude-deg");
@@ -200,8 +206,8 @@ void FGATCManager::update ( double time ) {
     ai_ac.setAltitude(altitude);
     ai_ac.setHeading(heading);
     ai_ac.setSpeed(speed);
-    ai_ac.update(time);
     controller = ai_ac.getATCController();
+    ai_ac.update(time);
     currentATCDialog->update(time);
     if (controller) {
        
