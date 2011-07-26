@@ -48,9 +48,19 @@ using std::cerr;
 
 FGAIFlightPlan::FGAIFlightPlan() 
 {
-   sid = 0;
-   wpt_iterator = waypoints.begin();
-   isValid = true;
+    rwy = 0;
+    sid = 0;
+    repeat = false;
+    distance_to_go = 0;
+    lead_distance = 0;
+    start_time = 0;
+    arrivalTime = 0;
+    leg = 10;
+    gateId = 0;
+    lastNodeVisited = 0;
+    taxiRoute = 0;
+    wpt_iterator = waypoints.begin();
+    isValid = true;
 }
 
 FGAIFlightPlan::FGAIFlightPlan(const string& filename)
