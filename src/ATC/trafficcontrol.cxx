@@ -850,6 +850,7 @@ void FGTowerController::signOff(int id)
                "AI error: Aircraft without traffic record is signing off from tower");
     } else {
         i = activeTraffic.erase(i);
+        //cerr << "Signing off from tower controller" << endl;
     }
 }
 
@@ -1051,7 +1052,7 @@ bool FGStartupController::checkTransmissionState(int st, time_t now, time_t star
             if (n == 0) {
                 trans_num->setIntValue(-1);
                  // PopupCallback(n);
-                 cerr << "Selected transmission message " << n << endl;
+                 //cerr << "Selected transmission message " << n << endl;
                  FGATCManager *atc = (FGATCManager*) globals->get_subsystem("atc");
                  atc->getATCDialog()->removeEntry(1);
             } else {
@@ -1263,7 +1264,7 @@ void FGStartupController::render(bool visible)
                     //->addChild( obj_trans );
                     group->addChild( obj_trans );
                 } else {
-                    cerr << "BIG FAT WARNING: k is here : " << pos << endl;
+                    //cerr << "BIG FAT WARNING: k is here : " << pos << endl;
                 }
             }
             //dx += 0.1;
