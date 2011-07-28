@@ -116,7 +116,22 @@ void installCullVisitor(Camera* camera)
         = static_cast<osgViewer::Renderer*>(camera->getRenderer());
     for (int i = 0; i < 2; ++i) {
         osgUtil::SceneView* sceneView = renderer->getSceneView(i);
+#if SG_OSG_VERSION_LESS_THAN(3,0,0)
         sceneView->setCullVisitor(new simgear::EffectCullVisitor);
+#else
+        osg::ref_ptr<osgUtil::CullVisitor::Identifier> identifier;
+        identifier = sceneView->getCullVisitor()->getIdentifier();
+        sceneView->setCullVisitor(new simgear::EffectCullVisitor);
+        sceneView->getCullVisitor()->setIdentifier(identifier.get());
+
+        identifier = sceneView->getCullVisitorLeft()->getIdentifier();
+        sceneView->setCullVisitorLeft(sceneView->getCullVisitor()->clone());
+        sceneView->getCullVisitorLeft()->setIdentifier(identifier.get());
+
+        identifier = sceneView->getCullVisitorRight()->getIdentifier();
+        sceneView->setCullVisitorRight(sceneView->getCullVisitor()->clone());
+        sceneView->getCullVisitorRight()->setIdentifier(identifier.get());
+#endif
     }
 }
 }
@@ -653,12 +668,12 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
       // New style window declaration / definition
       window = wBuild->buildWindow(windowNode);
     }
-    
+
     if (!window) { // buildWindow can fail
       SG_LOG(SG_GENERAL, SG_WARN, "CameraGroup::buildGUICamera: failed to build a window");
       return NULL;
     }
-    
+
     Camera* camera = new Camera;
     camera->setAllowEventFocus(false);
     camera->setGraphicsContext(window->gc.get());
@@ -826,7 +841,7 @@ void warpGUIPointer(CameraGroup* cgroup, int x, int y)
         = dynamic_cast<GraphicsWindow*>(guiCamera->getGraphicsContext());
     if (!gw)
         return;
-    globals->get_renderer()->getEventHandler()->setMouseWarped();    
+    globals->get_renderer()->getEventHandler()->setMouseWarped();
     // Translate the warp request into the viewport of the GUI camera,
     // send the request to the window, then transform the coordinates
     // for the Viewer's event queue.
