@@ -625,7 +625,8 @@ int fgMainInit( int argc, char **argv ) {
              << "  Version " << base_version << " found at: " \
              << globals->get_fg_root() << endl \
              << "  Version " << required_version << " is required." << endl \
-             << "Please upgrade/downgrade base package." << endl;
+             << "Please upgrade/downgrade base package and set the path to your fgdata" << endl \
+             << "with --fg-root=path_to_your_fgdata" << endl;
 #ifdef _MSC_VER
         cerr << "Hit a key to continue..." << endl;
         cin.get();
