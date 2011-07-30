@@ -19,6 +19,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/props/props.hxx>
+#include <simgear/props/props_io.hxx>
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/timing/sg_time.hxx>

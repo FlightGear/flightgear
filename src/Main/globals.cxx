@@ -36,6 +36,7 @@
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/misc/ResourceManager.hxx>
 #include <simgear/props/propertyObject.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <Aircraft/controls.hxx>
 #include <Airports/runways.hxx>

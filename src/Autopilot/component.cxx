@@ -23,6 +23,7 @@
 #include "component.hxx"
 #include <Main/fg_props.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/props/condition.hxx>
 
 using namespace FGXMLAutopilot;
 

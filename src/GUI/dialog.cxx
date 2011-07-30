@@ -5,6 +5,8 @@
 #endif
 
 #include <simgear/structure/SGBinding.hxx>
+#include <simgear/props/props_io.hxx>
+
 #include <Scripting/NasalSys.hxx>
 #include <Main/fg_os.hxx>
 

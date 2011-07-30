@@ -60,6 +60,7 @@
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/sgstream.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <simgear/misc/interpolator.hxx>
 #include <simgear/scene/material/matlib.hxx>

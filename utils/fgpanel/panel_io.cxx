@@ -35,6 +35,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/props/condition.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include "panel.hxx"
 #include "panel_io.hxx"

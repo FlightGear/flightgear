@@ -34,6 +34,7 @@
 #include <Main/fg_props.hxx>
 
 #include <simgear/props/props.hxx>
+#include <simgear/props/props_io.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/sound/xmlsound.hxx>
