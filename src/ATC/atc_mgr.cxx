@@ -34,6 +34,8 @@
 
 
 FGATCManager::FGATCManager() {
+    controller = 0;
+    prevController = 0;
     networkVisible = false;
 }
 
@@ -115,16 +117,16 @@ void FGATCManager::init() {
             int stationFreq = apt->getDynamics()->getTowerFrequency(2);
             //cerr << "Setting radio frequency to in airfrequency: " << stationFreq << endl;
             fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
-            leg = 4;
+            leg = 3;
             string fltType = "ga";
             fp->setRunway(runway);
             fp->createTakeOff(&ai_ac, false, apt, 0, fltType);
         } else {
             controller = apt->getDynamics()->getStartupController();
-            int stationFreq = apt->getDynamics()->getGroundFrequency(2);
+            int stationFreq = apt->getDynamics()->getGroundFrequency(1);
             //cerr << "Setting radio frequency to : " << stationFreq << endl;
             fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
-            leg = 2;
+            leg = 1;
             //double, lat, lon, head; // Unused variables;
             //int getId = apt->getDynamics()->getParking(gateId, &lat, &lon, &head);
             FGParking* parking = dcs->getParking(park_index);
@@ -142,7 +144,9 @@ void FGATCManager::init() {
                                fltType,
                                aircraftType,
                                airline);
-        } 
+
+        }
+        fp->getLastWaypoint()->setName( fp->getLastWaypoint()->getName() + string("legend")); 
      } else {
         controller = 0;
      }
@@ -155,7 +159,7 @@ void FGATCManager::init() {
         ai_ac.SetFlightPlan(fp);
     }
     if (controller) {
-        controller->announcePosition(ai_ac.getID(), fp, fp->getCurrentWaypoint()->routeIndex,
+        controller->announcePosition(ai_ac.getID(), fp, fp->getCurrentWaypoint()->getRouteIndex(),
                                       ai_ac._getLatitude(), ai_ac._getLongitude(), heading, speed, altitude,
                                       aircraftRadius, leg, &ai_ac);
 
@@ -180,20 +184,23 @@ void FGATCManager::update ( double time ) {
     FGAIFlightPlan *fp = ai_ac.GetFlightPlan();
         
     /* test code : find out how the routing develops */
-    //if (fp) {
-    //    int size = fp->getNrOfWayPoints();
+    if (fp) {
+        int size = fp->getNrOfWayPoints();
     //    //cerr << "Setting pos" << pos << " ";
     //    //cerr << "setting intentions " ;
-    //    for (int i = 0; i < size; i++) {
+        for (int i = 0; i < size; i++) {
     //        int val = fp->getRouteIndex(i);
-    //        cerr << val << " ";
+            cerr << fp->getWayPoint(i)->getName() << " ";
             //if ((val) && (val != pos)) {
                 //intentions.push_back(val);
                 //cerr << "[done ] " << endl;
             //}
-    //    }
-    //}
-    //cerr << "[done ] " << endl;
+        }
+    }
+    cerr << "[done ] " << endl;
+    if (fp) {
+        cerr << "Currently at leg : " << fp->getLeg() << endl;
+    }
     double longitude = fgGetDouble("/position/longitude-deg");
     double latitude  = fgGetDouble("/position/latitude-deg");
     double heading   = fgGetDouble("/orientation/heading-deg");
@@ -208,9 +215,10 @@ void FGATCManager::update ( double time ) {
     controller = ai_ac.getATCController();
     currentATCDialog->update(time);
     if (controller) {
-       
+       cerr << "name of previous waypoint : " << fp->getPreviousWaypoint()->getName() << endl;
 
         //cerr << "Running FGATCManager::update()" << endl;
+        cerr << "Currently under control of " << controller->getName() << endl;
         controller->updateAircraftInformation(ai_ac.getID(),
                                               latitude,
                                               longitude,
@@ -227,9 +235,13 @@ void FGATCManager::update ( double time ) {
             networkVisible = !networkVisible;
             trans_num->setIntValue(-1);
         }
+        if ((controller != prevController) && (prevController)) {
+            prevController->render(false);
+        }
         controller->render(networkVisible);
 
         //cerr << "Adding groundnetWork to the scenegraph::update" << endl;
+        prevController = controller;
    }
    //globals->get_scenery()->get_scene_graph()->addChild(node);
 }

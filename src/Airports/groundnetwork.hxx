@@ -288,6 +288,7 @@ public:
                                AtcMsgDir msgDir);
   bool checkForCircularWaits(int id);
   virtual void render(bool);
+  virtual string getName();
 
 };
 

@@ -74,22 +74,10 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
                     return false;
                     char buffer[10];
                     snprintf (buffer, 10, "%d", gateId);
+                    SGGeod coord = coord.fromDeg(lon, lat);
                     //FGTaxiNode *tn = dep->getDynamics()->getGroundNetwork()->findNode(node);
-                    waypoint *wpt;
-                    wpt = new waypoint;
-                    wpt->name      = string(buffer); // fixme: should be the name of the taxiway
-                    wpt->latitude  = lat;
-                    wpt->longitude = lon;
-                    // Elevation is currently disregarded when on_ground is true
-                    // because the AIModel obtains a periodic ground elevation estimate.
-                   wpt->altitude  = dep->getElevation();
-                   wpt->speed = vTaxiBackward;
-                   wpt->crossat   = -10000;
-                   wpt->gear_down = true;
-                   wpt->flaps_down= true;
-                   wpt->finished  = false;
-                   wpt->on_ground = true;
-                   wpt->routeIndex = -1;
+                    FGAIWaypoint *wpt = createOnGround(ac, string(buffer), coord, dep->getElevation(), vTaxiBackward);
+                   wpt->setRouteIndex(-1);
                    waypoints.push_back(wpt);
             }
            //cerr << "Success : GateId = " << gateId << endl;
@@ -119,7 +107,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
 
 
         pushBackRoute = parking->getPushBackRoute();
-        if ((pushBackNode > 0) && (pushBackRoute == 0)) {
+        if ((pushBackNode > 0) && (pushBackRoute == 0)) {  // Load the already established route for this gate
             int node, rte;
             FGTaxiRoute route;
             //cerr << "Creating push-back for " << gateId << " (" << parking->getName() << ") using push-back point " << pushBackNode << endl;
@@ -134,7 +122,6 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
                 SG_LOG(SG_GENERAL, SG_WARN, "Using  " << pushBackNode);
             }
             pushBackRoute->first();
-            waypoint *wpt;
  	    while(pushBackRoute->next(&node, &rte))
 	      {
 		//FGTaxiNode *tn = apt->getDynamics()->getGroundNetwork()->findSegment(node)->getEnd();
@@ -142,122 +129,18 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
 		snprintf (buffer, 10, "%d", node);
 		FGTaxiNode *tn = dep->getDynamics()->getGroundNetwork()->findNode(node);
 		//ids.pop_back();  
-		wpt = new waypoint;
-		wpt->name      = string(buffer); // fixme: should be the name of the taxiway
-		wpt->latitude  = tn->getLatitude();
-		wpt->longitude = tn->getLongitude();
-		// Elevation is currently disregarded when on_ground is true
-		// because the AIModel obtains a periodic ground elevation estimate.
-		wpt->altitude  = dep->getElevation();
-		wpt->speed = vTaxiBackward;
-		wpt->crossat   = -10000;
-		wpt->gear_down = true;
-		wpt->flaps_down= true;
-		wpt->finished  = false;
-		wpt->on_ground = true;
-		wpt->routeIndex = rte;
+		//wpt = new waypoint;
+                SGGeod coord = coord.fromDeg(tn->getLongitude(), tn->getLatitude());
+                FGAIWaypoint *wpt = createOnGround(ac, string(buffer), coord, dep->getElevation(), vTaxiBackward);
+
+		wpt->setRouteIndex(rte);
 		waypoints.push_back(wpt);
 	      }
               // some special considerations for the last point:
-              wpt->name = string("PushBackPoint");
-              wpt->speed = vTaxi;
-              //for (wpt_vector_iterator i = waypoints.begin(); i != waypoints.end(); i++) {
-              //    cerr << "Waypoint Name: " << (*i)->name << endl;
-              //}
-        } else {
-           /*
-           string rwyClass = getRunwayClassFromTrafficType(fltType);
-
-           // Only set this if it hasn't been set by ATC already.
-          if (activeRunway.empty()) {
-               //cerr << "Getting runway for " << ac->getTrafficRef()->getCallSign() << " at " << apt->getId() << endl;
-              double depHeading = ac->getTrafficRef()->getCourse();
-             dep->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway,
-                                                 depHeading);
-           }
-           rwy = dep->getRunwayByIdent(activeRunway);
-           SGGeod runwayTakeoff = rwy->pointOnCenterline(5.0);
-
-          FGGroundNetwork *gn = dep->getDynamics()->getGroundNetwork();
-          if (!gn->exists()) {
-              createDefaultTakeoffTaxi(ac, dep, rwy);
-              return true;
-          }
-          int runwayId = gn->findNearestNode(runwayTakeoff);
-          int node = 0;
-           // Find out which node to start from
-          FGParking *park = dep->getDynamics()->getParking(gateId);
-        if (park) {
-            node = park->getPushBackPoint();
-        }
-
-        if (node == -1) {
-            node = gateId;
-        }
-        // HAndle case where parking doens't have a node
-        if ((node == 0) && park) {
-            if (firstFlight) {
-                node = gateId;
-            } else {
-                node = gateId;
-            }
-        }
-        //delete taxiRoute;
-        //taxiRoute = new FGTaxiRoute;
-        FGTaxiRoute tr = gn->findShortestRoute(node, runwayId);
-        int route;
-        FGTaxiNode *tn;
-        waypoint *wpt;
-        int nr = 0;
-        cerr << "Creating taxiroute from gate: " << gateId << " at " << dep->getId() << endl;
-        while (tr.next(&node, &route) && (nr++ < 3)) {
-            char buffer[10];
-            snprintf(buffer, 10, "%d", node);
-             tn = dep->getDynamics()->getGroundNetwork()->findNode(node);
-             wpt = createOnGround(ac, buffer, tn->getGeod(), dep->getElevation(),
-                               vTaxiReduced);
-            wpt->routeIndex = route;
-            waypoints.push_back(wpt);
-        }
-        wpt->name      = "PushBackPoint";
-        lastNodeVisited = tn->getIndex();
-           //FGTaxiNode *firstNode = findNode(gateId);
-           //FGTaxiNode *lastNode =  findNode(runwayId);
-           //cerr << "Creating direct forward departure route fragment" << endl;
-           */
+              waypoints.back()->setName(string("PushBackPoint"));
+              waypoints.back()->setSpeed(vTaxi);
+        } else {  // In case of a push forward departure...
            double lat2 = 0.0, lon2 = 0.0, az2 = 0.0;
-           waypoint *wpt;
-           geo_direct_wgs_84 ( 0, lat, lon, heading, 
-                               2, &lat2, &lon2, &az2 );
-           wpt = new waypoint;
-           wpt->name      = "park2";
-           wpt->latitude  = lat2;
-           wpt->longitude = lon2;
-           wpt->altitude  = dep->getElevation();
-           wpt->speed     = vTaxiReduced; 
-           wpt->crossat   = -10000;
-           wpt->gear_down = true;
-           wpt->flaps_down= true;
-           wpt->finished  = false;
-           wpt->on_ground = true;
-           wpt->routeIndex = 0;
-           waypoints.push_back(wpt); 
-
-           geo_direct_wgs_84 ( 0, lat, lon, heading, 
-                               4, &lat2, &lon2, &az2 );
-           wpt = new waypoint;
-           wpt->name      = "name";
-           wpt->latitude  = lat2;
-           wpt->longitude = lon2;
-           wpt->altitude  = dep->getElevation();
-           wpt->speed     = vTaxiReduced; 
-           wpt->crossat   = -10000;
-           wpt->gear_down = true;
-           wpt->flaps_down= true;
-           wpt->finished  = false;
-           wpt->on_ground = true;
-           wpt->routeIndex = 0;
-           waypoints.push_back(wpt);
 
            //cerr << "Creating final push forward point for gate " << gateId << endl;
 	   FGTaxiNode *tn = dep->getDynamics()->getGroundNetwork()->findNode(gateId);
@@ -273,21 +156,27 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
                SG_LOG(SG_GENERAL, SG_ALERT, "No valid taxinode found");
                exit(1);
            }
-           wpt = new waypoint;
-           wpt->name      = "PushBackPoint";
-           wpt->latitude  = tn->getLatitude();
-           wpt->longitude = tn->getLongitude();
-           wpt->altitude  = dep->getElevation();
-           wpt->speed     = vTaxiReduced; 
-           wpt->crossat   = -10000;
-           wpt->gear_down = true;
-           wpt->flaps_down= true;
-           wpt->finished  = false;
-           wpt->on_ground = true;
-           wpt->routeIndex = (*ts)->getIndex();
-           waypoints.push_back(wpt);
-        }
+           double distance = (*ts)->getLength();
+           cerr << "Length of push forward route = " << distance << " and heading is " << heading << endl;
+           lat2 =  tn->getLatitude();
+           lon2 =  tn->getLongitude();
 
+           for (int i = 1; i < 10; i++) {
+                geo_direct_wgs_84 ( 0, lat, lon, heading, 
+                                   ((i / 10.0) * distance), &lat2, &lon2, &az2 );
+                char buffer[16];
+                snprintf(buffer, 16, "pushback-%02d", i);
+                SGGeod coord = coord.fromDeg(lon2, lat2);
+                cerr << i << endl;
+                FGAIWaypoint *wpt = createOnGround(ac, string(buffer), coord, dep->getElevation(), vTaxiReduced);
+
+                wpt->setRouteIndex((*ts)->getIndex());
+                waypoints.push_back(wpt); 
+           }
+            cerr << "Done " << endl;
+           waypoints.back()->setName(string("PushBackPoint"));
+            cerr << "Done assinging new name" << endl;
+        }
     }
     return true;
 }
@@ -321,51 +210,26 @@ void FGAIFlightPlan::createPushBackFallBack(FGAIAircraft *ac, bool firstFlight, 
 
   heading += 180.0;
   if (heading > 360)
-    heading -= 360;
-  waypoint *wpt = new waypoint;
-  wpt->name      = "park";
-  wpt->latitude  = lat;
-  wpt->longitude = lon;
-  wpt->altitude  = dep->getElevation();
-  wpt->speed     = vTaxiBackward; 
-  wpt->crossat   = -10000;
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  wpt->finished  = false;
-  wpt->on_ground = true;
+        heading -= 360;
+
+  SGGeod coord = coord.fromDeg(lon, lat);
+  FGAIWaypoint *wpt = createOnGround(ac, string("park"), coord, dep->getElevation(), vTaxiBackward);
 
   waypoints.push_back(wpt); 
 
   geo_direct_wgs_84 ( 0, lat, lon, heading, 
  		      10, 
  		      &lat2, &lon2, &az2 );
-  wpt = new waypoint;
-  wpt->name      = "park2";
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = dep->getElevation();
-  wpt->speed     = vTaxiBackward; 
-  wpt->crossat   = -10000;
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  wpt->finished  = false;
-  wpt->on_ground = true;
-  wpt->routeIndex = 0;
+  coord = coord.fromDeg(lon2, lat2); 
+  wpt = createOnGround(ac, string("park2"), coord, dep->getElevation(), vTaxiBackward);
+
   waypoints.push_back(wpt); 
+
   geo_direct_wgs_84 ( 0, lat, lon, heading, 
  		      2.2*radius,           
  		      &lat2, &lon2, &az2 );
-  wpt = new waypoint;
-  wpt->name      = "taxiStart";
-  wpt->latitude  = lat2;
-  wpt->longitude = lon2;
-  wpt->altitude  = dep->getElevation();
-  wpt->speed     = vTaxiReduced; 
-  wpt->crossat   = -10000;
-  wpt->gear_down = true;
-  wpt->flaps_down= true;
-  wpt->finished  = false;
-  wpt->on_ground = true;
-  wpt->routeIndex = 0;
+  coord = coord.fromDeg(lon2, lat2); 
+  wpt = createOnGround(ac, string("taxiStart"), coord, dep->getElevation(), vTaxiReduced);
   waypoints.push_back(wpt);
+
 }

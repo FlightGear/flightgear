@@ -49,7 +49,7 @@ class FGATCManager : public SGSubsystem
 private:
   AtcVec activeStations;
   FGAIAircraft ai_ac;
-  FGATCController *controller; // The ATC controller that is responsible for the user's aircraft. 
+  FGATCController *controller, *prevController; // The ATC controller that is responsible for the user's aircraft. 
   //FGATCDialogNew dialog;  // note that this variable should really replace the ugly global "currentATCDialog();
   bool networkVisible;
 

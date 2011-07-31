@@ -51,9 +51,12 @@ using std::random_shuffle;
 
 FGAirportDynamics::FGAirportDynamics(FGAirport * ap):
     _ap(ap), rwyPrefs(ap), SIDs(ap),
+        startupController    (this),
+    towerController      (this),
+    approachController   (this),
     atisSequenceIndex(-1),
-    atisSequenceTimeStamp(0.0),
-    startupController(this)
+    atisSequenceTimeStamp(0.0)
+
 {
     lastUpdate = 0;
 }
@@ -493,25 +496,24 @@ const string & FGAirportDynamics::getId() const
 int FGAirportDynamics::getGroundFrequency(unsigned leg)
 {
     //return freqGround.size() ? freqGround[0] : 0; };
+    cerr << "Getting frequency for : " << leg << endl;
     int groundFreq = 0;
-    if (leg < 2) {
+    if (leg < 1) {
         SG_LOG(SG_ATC, SG_ALERT,
-               "Leg value is smaller than two at " << SG_ORIGIN);
+               "Leg value is smaller than one at " << SG_ORIGIN);
     }
     if (freqGround.size() == 0) {
         return 0;
     }
-    if ((freqGround.size() > leg - 1) && (leg > 1)) {
-        groundFreq = freqGround[leg - 1];
-    }
-    if ((freqGround.size() < leg - 1) && (leg > 1)) {
+
+    if ((freqGround.size() < leg) && (leg > 0)) {
         groundFreq =
             (freqGround.size() <
              (leg - 1)) ? freqGround[freqGround.size() -
-                                     1] : freqGround[leg - 2];
+                                     1] : freqGround[leg - 1];
     }
-    if ((freqGround.size() >= leg - 1) && (leg > 1)) {
-        groundFreq = freqGround[leg - 2];
+    if ((freqGround.size() >= leg) && (leg > 0)) {
+        groundFreq = freqGround[leg - 1];
     }
     return groundFreq;
 }

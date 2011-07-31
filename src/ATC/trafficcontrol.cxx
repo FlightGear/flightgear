@@ -514,15 +514,15 @@ void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
     sender = rec->getAircraft()->getTrafficRef()->getCallSign();
     //cerr << "transmitting for: " << sender << "Leg = " << rec->getLeg() << endl;
     switch (rec->getLeg()) {
+    case 1:
     case 2:
-    case 3:
         freqId = rec->getNextFrequency();
         stationFreq =
             rec->getAircraft()->getTrafficRef()->getDepartureAirport()->
             getDynamics()->getGroundFrequency(rec->getLeg() + freqId);
         taxiFreq =
             rec->getAircraft()->getTrafficRef()->getDepartureAirport()->
-            getDynamics()->getGroundFrequency(3);
+            getDynamics()->getGroundFrequency(2);
         receiver =
             rec->getAircraft()->getTrafficRef()->getDepartureAirport()->
             getName() + "-Ground";
@@ -530,7 +530,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
             rec->getAircraft()->getTrafficRef()->getDepartureAirport()->
             getDynamics()->getAtisSequence();
         break;
-    case 4:
+    case 3:
         receiver =
             rec->getAircraft()->getTrafficRef()->getDepartureAirport()->
             getName() + "-Tower";
@@ -716,9 +716,10 @@ void FGATCController::init()
  * class FGTowerController
  *
  **************************************************************************/
-FGTowerController::FGTowerController():
+FGTowerController::FGTowerController(FGAirportDynamics *par) :
 FGATCController()
 {
+    parent = par;
 }
 
 // 
@@ -910,6 +911,11 @@ FGATCInstruction FGTowerController::getInstruction(int id)
 void FGTowerController::render(bool visible) {
     //cerr << "FGTowerController::render function not yet implemented" << endl;
 }
+
+string FGTowerController::getName() {
+    return string(parent->getId() + "-tower");
+}
+
 
 
 /***************************************************************************
@@ -1273,13 +1279,19 @@ void FGStartupController::render(bool visible)
     }
 }
 
+string FGStartupController::getName() {
+    return string(parent->getId() + "-startup");
+}
+
+
 /***************************************************************************
  * class FGApproachController
  *
  **************************************************************************/
-FGApproachController::FGApproachController():
+FGApproachController::FGApproachController(FGAirportDynamics *par):
 FGATCController()
 {
+    parent = par;
 }
 
 // 
@@ -1466,4 +1478,10 @@ ActiveRunway *FGApproachController::getRunway(string name)
 
 void FGApproachController::render(bool visible) {
     //cerr << "FGApproachController::render function not yet implemented" << endl;
+}
+
+
+
+string FGApproachController::getName() {
+    return string(parent->getId() + "-approach");
 }

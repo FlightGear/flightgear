@@ -46,6 +46,29 @@
 
 using std::cerr;
 
+FGAIWaypoint::FGAIWaypoint() {
+  latitude    = 0;
+  longitude   = 0;
+  altitude    = 0;
+  speed       = 0;
+  crossat     = 0;
+  finished    = 0;
+  gear_down   = 0;
+  flaps_down  = 0;
+  on_ground   = 0;
+  routeIndex  = 0;
+  time_sec    = 0;
+  trackLength = 0;
+}
+
+bool FGAIWaypoint::contains(string target) {
+    size_t found = name.find(target);
+    if (found == string::npos)
+        return false;
+    else
+        return true;
+}
+
 FGAIFlightPlan::FGAIFlightPlan() 
 {
     rwy = 0;
@@ -88,22 +111,22 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename)
   SGPropertyNode * node = root.getNode("flightplan");
   for (i = 0; i < node->nChildren(); i++) { 
      //cout << "Reading waypoint " << i << endl;        
-     waypoint* wpt = new waypoint;
+     FGAIWaypoint* wpt = new FGAIWaypoint;
      SGPropertyNode * wpt_node = node->getChild(i);
-     wpt->name      = wpt_node->getStringValue("name", "END");
-     wpt->latitude  = wpt_node->getDoubleValue("lat", 0);
-     wpt->longitude = wpt_node->getDoubleValue("lon", 0);
-     wpt->altitude  = wpt_node->getDoubleValue("alt", 0);
-     wpt->speed     = wpt_node->getDoubleValue("ktas", 0);
-     wpt->crossat   = wpt_node->getDoubleValue("crossat", -10000);
-     wpt->gear_down = wpt_node->getBoolValue("gear-down", false);
-     wpt->flaps_down= wpt_node->getBoolValue("flaps-down", false);
-     wpt->on_ground = wpt_node->getBoolValue("on-ground", false);
-     wpt->time_sec   = wpt_node->getDoubleValue("time-sec", 0);
-     wpt->time       = wpt_node->getStringValue("time", "");
+     wpt->setName       (wpt_node->getStringValue("name", "END"     ));
+     wpt->setLatitude   (wpt_node->getDoubleValue("lat", 0          ));
+     wpt->setLongitude  (wpt_node->getDoubleValue("lon", 0          ));
+     wpt->setAltitude   (wpt_node->getDoubleValue("alt", 0          ));
+     wpt->setSpeed      (wpt_node->getDoubleValue("ktas", 0         ));
+     wpt->setCrossat    (wpt_node->getDoubleValue("crossat", -10000 ));
+     wpt->setGear_down  (wpt_node->getBoolValue("gear-down", false  ));
+     wpt->setFlaps_down (wpt_node->getBoolValue("flaps-down", false ));
+     wpt->setOn_ground  (wpt_node->getBoolValue("on-ground", false  ));
+     wpt->setTime_sec   (wpt_node->getDoubleValue("time-sec", 0     ));
+     wpt->setTime       (wpt_node->getStringValue("time", ""        ));
 
-     if (wpt->name == "END") wpt->finished = true;
-     else wpt->finished = false;
+     if (wpt->getName() == "END") wpt->setFinished(true);
+     else wpt->setFinished(false);
 
      waypoints.push_back( wpt );
    }
@@ -173,20 +196,19 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
 	  //waypoints.push_back( init_waypoint );
 	  for (int i = 0; i < node->nChildren(); i++) { 
 	    //cout << "Reading waypoint " << i << endl;
-	    waypoint* wpt = new waypoint;
+	    FGAIWaypoint* wpt = new FGAIWaypoint;
 	    SGPropertyNode * wpt_node = node->getChild(i);
-	    wpt->name      = wpt_node->getStringValue("name", "END");
-	    wpt->latitude  = wpt_node->getDoubleValue("lat", 0);
-	    wpt->longitude = wpt_node->getDoubleValue("lon", 0);
-	    wpt->altitude  = wpt_node->getDoubleValue("alt", 0);
-	    wpt->speed     = wpt_node->getDoubleValue("ktas", 0);
-	    //wpt->speed     = speed;
-	    wpt->crossat   = wpt_node->getDoubleValue("crossat", -10000);
-	    wpt->gear_down = wpt_node->getBoolValue("gear-down", false);
-	    wpt->flaps_down= wpt_node->getBoolValue("flaps-down", false);
+	    wpt->setName       (wpt_node->getStringValue("name", "END"     ));
+	    wpt->setLatitude   (wpt_node->getDoubleValue("lat", 0          ));
+	    wpt->setLongitude  (wpt_node->getDoubleValue("lon", 0          ));
+	    wpt->setAltitude   (wpt_node->getDoubleValue("alt", 0          ));
+	    wpt->setSpeed      (wpt_node->getDoubleValue("ktas", 0         ));
+	    wpt->setCrossat    (wpt_node->getDoubleValue("crossat", -10000 ));
+	    wpt->setGear_down  (wpt_node->getBoolValue("gear-down", false  ));
+	    wpt->setFlaps_down (wpt_node->getBoolValue("flaps-down", false ));
 	    
-	    if (wpt->name == "END") wpt->finished = true;
-	    else wpt->finished = false;
+	    if (wpt->getName() == "END") wpt->setFinished(true);
+	    else wpt->setFinished(false);
 	    waypoints.push_back(wpt);
 	  } // of node loop
           wpt_iterator = waypoints.begin();
@@ -324,8 +346,7 @@ FGAIFlightPlan::~FGAIFlightPlan()
 }
 
 
-FGAIFlightPlan::waypoint* const
-FGAIFlightPlan::getPreviousWaypoint( void ) const
+FGAIWaypoint* const FGAIFlightPlan::getPreviousWaypoint( void ) const
 {
   if (wpt_iterator == waypoints.begin()) {
     return 0;
@@ -335,14 +356,12 @@ FGAIFlightPlan::getPreviousWaypoint( void ) const
   }
 }
 
-FGAIFlightPlan::waypoint* const
-FGAIFlightPlan::getCurrentWaypoint( void ) const
+FGAIWaypoint* const FGAIFlightPlan::getCurrentWaypoint( void ) const
 {
   return *wpt_iterator;
 }
 
-FGAIFlightPlan::waypoint* const
-FGAIFlightPlan::getNextWaypoint( void ) const
+FGAIWaypoint* const FGAIFlightPlan::getNextWaypoint( void ) const
 {
   wpt_vector_iterator i = waypoints.end();
   i--;  // end() points to one element after the last one. 
@@ -394,14 +413,14 @@ void FGAIFlightPlan::DecrementWaypoint(bool eraseWaypoints )
 
 
 // gives distance in feet from a position to a waypoint
-double FGAIFlightPlan::getDistanceToGo(double lat, double lon, waypoint* wp) const{
+double FGAIFlightPlan::getDistanceToGo(double lat, double lon, FGAIWaypoint* wp) const{
   return SGGeodesy::distanceM(SGGeod::fromDeg(lon, lat), 
-      SGGeod::fromDeg(wp->longitude, wp->latitude));
+      SGGeod::fromDeg(wp->getLongitude(), wp->getLatitude()));
 }
 
 // sets distance in feet from a lead point to the current waypoint
 void FGAIFlightPlan::setLeadDistance(double speed, double bearing, 
-                                     waypoint* current, waypoint* next){
+                                     FGAIWaypoint* current, FGAIWaypoint* next){
   double turn_radius;
   // Handle Ground steering
   // At a turn rate of 30 degrees per second, it takes 12 seconds to do a full 360 degree turn
@@ -444,14 +463,14 @@ void FGAIFlightPlan::setLeadDistance(double distance_ft){
 }
 
 
-double FGAIFlightPlan::getBearing(waypoint* first, waypoint* second) const{
-  return getBearing(first->latitude, first->longitude, second);
+double FGAIFlightPlan::getBearing(FGAIWaypoint* first, FGAIWaypoint* second) const{
+  return getBearing(first->getLatitude(), first->getLongitude(), second);
 }
 
 
-double FGAIFlightPlan::getBearing(double lat, double lon, waypoint* wp) const{
+double FGAIFlightPlan::getBearing(double lat, double lon, FGAIWaypoint* wp) const{
   return SGGeodesy::courseDeg(SGGeod::fromDeg(lon, lat), 
-      SGGeod::fromDeg(wp->longitude, wp->latitude));
+      SGGeod::fromDeg(wp->getLongitude(), wp->getLatitude()));
 }
 
 void FGAIFlightPlan::deleteWaypoints()
@@ -469,19 +488,19 @@ void FGAIFlightPlan::resetWaypoints()
     return;
   else
     {
-      waypoint *wpt = new waypoint;
+      FGAIWaypoint *wpt = new FGAIWaypoint;
       wpt_vector_iterator i = waypoints.end();
       i--;
-      wpt->name      = (*i)->name;
-      wpt->latitude  = (*i)->latitude;
-      wpt->longitude =  (*i)->longitude;
-      wpt->altitude  =  (*i)->altitude;
-      wpt->speed     =  (*i)->speed;
-      wpt->crossat   =  (*i)->crossat;
-      wpt->gear_down =  (*i)->gear_down;
-      wpt->flaps_down=  (*i)->flaps_down;
-      wpt->finished  = false;
-      wpt->on_ground =  (*i)->on_ground;
+      wpt->setName        ( (*i)->getName()       );
+      wpt->setLatitude    ( (*i)->getLatitude()   );
+      wpt->setLongitude   ( (*i)->getLongitude()  );
+      wpt->setAltitude    ( (*i)->getAltitude()   );
+      wpt->setSpeed       ( (*i)->getSpeed()      );
+      wpt->setCrossat     ( (*i)->getCrossat()    );
+      wpt->setGear_down   ( (*i)->getGear_down()  );
+      wpt->setFlaps_down  ( (*i)->getFlaps_down() );
+      wpt->setFinished    ( false                 );
+      wpt->setOn_ground   ( (*i)->getOn_ground()  );
       //cerr << "Recycling waypoint " << wpt->name << endl;
       deleteWaypoints();
       waypoints.push_back(wpt);
@@ -504,7 +523,7 @@ void FGAIFlightPlan::deleteTaxiRoute()
 
 int FGAIFlightPlan::getRouteIndex(int i) {
   if ((i > 0) && (i < (int)waypoints.size())) {
-    return waypoints[i]->routeIndex;
+    return waypoints[i]->getRouteIndex();
   }
   else
     return 0;
@@ -517,8 +536,8 @@ double FGAIFlightPlan::checkTrackLength(string wptName) {
     wpt_vector_iterator wptvec = waypoints.begin();
     wptvec++;
     wptvec++;
-    while ((wptvec != waypoints.end()) && ((*wptvec)->name != wptName)) {
-           trackDistance += (*wptvec)->trackLength;
+    while ((wptvec != waypoints.end()) && (!((*wptvec)->contains(wptName)))) {
+           trackDistance += (*wptvec)->getTrackLength();
            wptvec++;
     }
     if (wptvec == waypoints.end()) {

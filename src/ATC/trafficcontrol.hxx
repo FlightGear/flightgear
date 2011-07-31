@@ -286,6 +286,8 @@ public:
   void transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir msgDir, bool audible);
   string getGateName(FGAIAircraft *aircraft);
   virtual void render(bool) = 0;
+  virtual string getName()  = 0;
+
 
 private:
 
@@ -300,9 +302,10 @@ class FGTowerController : public FGATCController
 private:
   TrafficVector activeTraffic;
   ActiveRunwayVec activeRunways;
+  FGAirportDynamics *parent;
   
 public:
-  FGTowerController();
+  FGTowerController(FGAirportDynamics *parent);
   virtual ~FGTowerController() {};
   virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
 				double lat, double lon,
@@ -315,6 +318,7 @@ public:
   virtual FGATCInstruction getInstruction(int id);
 
   virtual void render(bool);
+  virtual string getName();
   bool hasActiveTraffic() { return activeTraffic.size() != 0; };
   TrafficVector &getActiveTraffic() { return activeTraffic; };
 };
@@ -329,7 +333,7 @@ class FGStartupController : public FGATCController
 private:
   TrafficVector activeTraffic;
   //ActiveRunwayVec activeRunways;
-FGAirportDynamics *parent;
+  FGAirportDynamics *parent;
   
 public:
   FGStartupController(FGAirportDynamics *parent);
@@ -345,6 +349,7 @@ public:
   virtual FGATCInstruction getInstruction(int id);
 
   virtual void render(bool);
+  virtual string getName();
 
   bool hasActiveTraffic() { return activeTraffic.size() != 0; };
   TrafficVector &getActiveTraffic() { return activeTraffic; };
@@ -363,10 +368,11 @@ class FGApproachController : public FGATCController
 private:
   TrafficVector activeTraffic;
   ActiveRunwayVec activeRunways;
+  FGAirportDynamics *parent;
   
 public:
-  FGApproachController();
-  virtual ~FGApproachController() {};
+  FGApproachController(FGAirportDynamics * parent);
+  virtual ~FGApproachController() { };
   virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
 				double lat, double lon,
 				double hdg, double spd, double alt, double radius, int leg,
@@ -378,6 +384,7 @@ public:
   virtual FGATCInstruction getInstruction(int id);
 
   virtual void render(bool);
+  virtual string getName();
 
   ActiveRunway* getRunway(string name);
 

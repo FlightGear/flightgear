@@ -126,13 +126,13 @@ private:
     //subclasses to override specific behaviour
     bool fpExecutable(time_t now);
     void handleFirstWaypoint(void);
-    bool leadPointReached(FGAIFlightPlan::waypoint* curr);
-    bool handleAirportEndPoints(FGAIFlightPlan::waypoint* prev, time_t now);
+    bool leadPointReached(FGAIWaypoint* curr);
+    bool handleAirportEndPoints(FGAIWaypoint* prev, time_t now);
     bool reachedEndOfCruise(double&);
     bool aiTrafficVisible(void);
-    void controlHeading(FGAIFlightPlan::waypoint* curr);
-    void controlSpeed(FGAIFlightPlan::waypoint* curr,
-                      FGAIFlightPlan::waypoint* next);
+    void controlHeading(FGAIWaypoint* curr);
+    void controlSpeed(FGAIWaypoint* curr,
+                      FGAIWaypoint* next);
     
     void updatePrimaryTargetValues(bool& flightplanActive, bool& aiOutOfSight);
     

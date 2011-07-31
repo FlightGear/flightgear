@@ -46,6 +46,8 @@
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/AIFlightPlan.hxx>
 
+#include <ATC/atc_mgr.hxx>
+
 #include <Scenery/scenery.hxx>
 
 #include "groundnetwork.hxx"
@@ -510,6 +512,7 @@ void FGGroundNetwork::announcePosition(int id,
     }
 }
 
+
 void FGGroundNetwork::signOff(int id)
 {
     TrafficVectorIterator i = activeTraffic.begin();
@@ -538,7 +541,6 @@ bool FGGroundNetwork::checkTransmissionState(int minState, int maxState, Traffic
     int state = i->getState();
     if ((state >= minState) && (state <= maxState) && available) {
         if ((msgDir == ATC_AIR_TO_GROUND) && isUserAircraft(i->getAircraft())) {
-            
             //cerr << "Checking state " << state << " for " << i->getAircraft()->getCallSign() << endl;
             static SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
             int n = trans_num->getIntValue();
@@ -546,13 +548,14 @@ bool FGGroundNetwork::checkTransmissionState(int minState, int maxState, Traffic
                 trans_num->setIntValue(-1);
                  // PopupCallback(n);
                  cerr << "Selected transmission message " << n << endl;
+                 FGATCManager *atc = (FGATCManager*) globals->get_subsystem("atc");
+                 atc->getATCDialog()->removeEntry(1);
             } else {
                 //cerr << "creating message for " << i->getAircraft()->getCallSign() << endl;
                 transmit(&(*i), msgId, msgDir, false);
                 return false;
             }
         }
-        //cerr << "Transmitting startup msg" << endl;
         transmit(&(*i), msgId, msgDir, true);
         i->updateState();
         lastTransmission = now;
@@ -913,24 +916,6 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
             current->setState(0);
             current->setHoldPosition(false);
     }
-
-    /*if ((state == 1) && (available)) {
-        //cerr << "ACKNOWLEDGE HOLD" << endl;
-        transmit(&(*current), MSG_ACKNOWLEDGE_HOLD_POSITION, ATC_AIR_TO_GROUND, true);
-        current->setState(0);
-        current->setHoldPosition(true);
-        lastTransmission = now;
-        available = false;
-
-    }
-    if ((state == 2) && (available)) {
-        //cerr << "ACKNOWLEDGE RESUME" << endl;
-        transmit(&(*current), MSG_ACKNOWLEDGE_RESUME_TAXI, ATC_AIR_TO_GROUND, true);
-        current->setState(0);
-        current->setHoldPosition(false);
-        lastTransmission = now;
-        available = false;
-    }*/
 } 
 
 /**
@@ -1208,4 +1193,8 @@ void FGGroundNetwork::render(bool visible)
         }
         globals->get_scenery()->get_scene_graph()->addChild(group);
     }
+}
+
+string FGGroundNetwork::getName() {
+    return string(parent->getId() + "-ground");
 }
