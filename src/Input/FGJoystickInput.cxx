@@ -23,6 +23,8 @@
 // $Id$
 
 #include "FGJoystickInput.hxx"
+
+#include <simgear/props/props_io.hxx>
 #include "FGDeviceConfigurationMap.hxx"
 #include <Main/fg_props.hxx>
 #include <Scripting/NasalSys.hxx>

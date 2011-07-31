@@ -25,6 +25,9 @@
 
 #include "component.hxx"
 
+#include <simgear/props/props.hxx>
+#include <simgear/props/condition.hxx>
+
 namespace FGXMLAutopilot {
 
 /**

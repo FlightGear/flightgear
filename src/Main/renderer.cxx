@@ -440,6 +440,13 @@ FGRenderer::init( void )
 
     _cloud_status = fgGetNode("/environment/clouds/status", true);
     _visibility_m = fgGetNode("/environment/visibility-m", true);
+    
+    bool use_point_sprites = _point_sprites->getBoolValue();
+    bool enhanced_lighting = _enhanced_lighting->getBoolValue();
+    bool distance_attenuation = _distance_attenuation->getBoolValue();
+
+    SGConfigureDirectionalLights( use_point_sprites, enhanced_lighting,
+                                  distance_attenuation );
 }
 
 void
@@ -619,14 +626,17 @@ FGRenderer::update( bool refresh_camera_settings ) {
         _splash_alpha->setDoubleValue(sAlpha);
     }
 
-    bool skyblend = _skyblend->getBoolValue();
-    bool use_point_sprites = _point_sprites->getBoolValue();
-    bool enhanced_lighting = _enhanced_lighting->getBoolValue();
-    bool distance_attenuation = _distance_attenuation->getBoolValue();
-
-    // OSGFIXME
-    SGConfigureDirectionalLights( use_point_sprites, enhanced_lighting,
-                                  distance_attenuation );
+#if 0 // OSGFIXME
+    // OSGFIXME: features no longer available or no longer run-time configurable
+    {
+        bool use_point_sprites = _point_sprites->getBoolValue();
+        bool enhanced_lighting = _enhanced_lighting->getBoolValue();
+        bool distance_attenuation = _distance_attenuation->getBoolValue();
+    
+        SGConfigureDirectionalLights( use_point_sprites, enhanced_lighting,
+                                      distance_attenuation );
+    }
+#endif
 
     FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
 
@@ -653,6 +663,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
     }
     osg::Camera *camera = viewer->getCamera();
 
+    bool skyblend = _skyblend->getBoolValue();
     if ( skyblend ) {
 	
         if ( _textures->getBoolValue() ) {

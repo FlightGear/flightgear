@@ -28,7 +28,7 @@
 #endif
 
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/props/condition.hxx>
+#include <simgear/props/propsfwd.hxx>
 
 namespace FGXMLAutopilot {
 

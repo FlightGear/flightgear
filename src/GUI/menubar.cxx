@@ -7,6 +7,7 @@
 #include <plib/pu.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/SGBinding.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <Main/globals.hxx>
 

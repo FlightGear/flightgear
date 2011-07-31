@@ -31,6 +31,7 @@
 
 #include <simgear/constants.h>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/props/props_io.hxx>
 #include <osg/GLU>
 
 #include <Main/globals.hxx>

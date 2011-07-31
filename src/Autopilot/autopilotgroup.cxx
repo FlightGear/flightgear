@@ -31,6 +31,7 @@
 #include <string>
 #include <vector>
 
+#include <simgear/props/props_io.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/exception.hxx>
 #include <Main/fg_props.hxx>

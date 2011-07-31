@@ -1,6 +1,7 @@
 #ifndef GUI_MAPWIDGET_HXX
 #define GUI_MAPWIDGET_HXX
 
+#include <map>
 #include <simgear/compiler.h>
 #include <simgear/math/SGMath.hxx>
 #include <simgear/props/props.hxx>

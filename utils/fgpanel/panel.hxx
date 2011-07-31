@@ -33,6 +33,7 @@
 
 #include <plib/fnt.h>
 
+#include <simgear/props/propsfwd.hxx>
 #include <simgear/props/condition.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/interpolater.hxx>

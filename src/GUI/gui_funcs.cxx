@@ -43,6 +43,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/screen/screen-dump.hxx>
 #include <simgear/structure/event_mgr.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <Cockpit/panel.hxx>
 #include <Main/globals.hxx>
