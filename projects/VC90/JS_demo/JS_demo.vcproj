@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../;../../src/include;../../../3rdParty/include"
+				AdditionalIncludeDirectories="../../../../;../../../src/include;../../../../3rdParty/include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;NOMINMAX;FREEGLUT_STATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -66,93 +66,9 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="js.lib ul.lib advapi32.lib comdlg32.lib shell32.lib user32.lib winmm.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../../../3rdParty\lib"
+				AdditionalLibraryDirectories="../../../../3rdParty\lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
-				RandomizedBaseAddress="1"
-				FixedBaseAddress="1"
-				DataExecutionPrevention="0"
-				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="3"
-				EnableIntrinsicFunctions="false"
-				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="../../../;../../src/include;../../../3rdParty/include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX;FREEGLUT_STATIC"
-				StringPooling="true"
-				MinimalRebuild="true"
-				RuntimeLibrary="2"
-				BufferSecurityCheck="true"
-				EnableEnhancedInstructionSet="0"
-				FloatingPointModel="2"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="false"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="js.lib ul.lib advapi32.lib comdlg32.lib shell32.lib user32.lib winmm.lib"
-				LinkIncremental="0"
-				AdditionalLibraryDirectories="../../../3rdParty\lib"
-				GenerateDebugInformation="true"
-				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
 				RandomizedBaseAddress="1"
 				FixedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -205,7 +121,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../;../../src/include;../../../3rdParty/include"
+				AdditionalIncludeDirectories="../../../../;../../../src/include;../../../../3rdParty/include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;NOMINMAX;FREEGLUT_STATIC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -228,13 +144,97 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="js.lib ul.lib advapi32.lib comdlg32.lib shell32.lib user32.lib winmm.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../../../3rdParty.x64\lib"
+				AdditionalLibraryDirectories="../../../../3rdParty.x64\lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
 				FixedBaseAddress="1"
 				DataExecutionPrevention="0"
 				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="3"
+				EnableIntrinsicFunctions="false"
+				WholeProgramOptimization="false"
+				AdditionalIncludeDirectories="../../../../;../../../src/include;../../../../3rdParty/include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX;FREEGLUT_STATIC"
+				StringPooling="true"
+				MinimalRebuild="true"
+				RuntimeLibrary="2"
+				BufferSecurityCheck="true"
+				EnableEnhancedInstructionSet="0"
+				FloatingPointModel="2"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="false"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="js.lib ul.lib advapi32.lib comdlg32.lib shell32.lib user32.lib winmm.lib"
+				LinkIncremental="0"
+				AdditionalLibraryDirectories="../../../../3rdParty\lib"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				FixedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -285,7 +285,7 @@
 				Optimization="3"
 				EnableIntrinsicFunctions="false"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="../../../;../../src/include;../../../3rdParty/include"
+				AdditionalIncludeDirectories="../../../../;../../../src/include;../../../../3rdParty/include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;ENABLE_THREADS;HAVE_CONFIG_H;_CRT_SECURE_NO_DEPRECATE;_CONST_CORRECT_OVERLOADS;_USE_MATH_DEFINES;NOMINMAX;FREEGLUT_STATIC"
 				StringPooling="true"
 				MinimalRebuild="true"
@@ -311,7 +311,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="js.lib ul.lib advapi32.lib comdlg32.lib shell32.lib user32.lib winmm.lib"
 				LinkIncremental="0"
-				AdditionalLibraryDirectories="../../../3rdParty.x64\lib"
+				AdditionalLibraryDirectories="../../../../3rdParty.x64\lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -353,55 +353,55 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\src\main\fg_commands.hxx"
+				RelativePath="..\..\..\src\main\fg_commands.hxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\fg_init.hxx"
+				RelativePath="..\..\..\src\main\fg_init.hxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\fg_io.hxx"
+				RelativePath="..\..\..\src\main\fg_io.hxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\fg_os.hxx"
+				RelativePath="..\..\..\src\main\fg_os.hxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\fg_props.hxx"
+				RelativePath="..\..\..\src\main\fg_props.hxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\globals.hxx"
+				RelativePath="..\..\..\src\main\globals.hxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\main.hxx"
+				RelativePath="..\..\..\src\main\main.hxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\options.hxx"
+				RelativePath="..\..\..\src\main\options.hxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\renderer.hxx"
+				RelativePath="..\..\..\src\main\renderer.hxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\splash.hxx"
+				RelativePath="..\..\..\src\main\splash.hxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\util.hxx"
+				RelativePath="..\..\..\src\main\util.hxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\viewer.hxx"
+				RelativePath="..\..\..\src\main\viewer.hxx"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\viewmgr.hxx"
+				RelativePath="..\..\..\src\main\viewmgr.hxx"
 				>
 			</File>
 		</Filter>
@@ -417,7 +417,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\src\Input\js_demo.cxx"
+				RelativePath="..\..\..\src\Input\js_demo.cxx"
 				>
 			</File>
 		</Filter>
