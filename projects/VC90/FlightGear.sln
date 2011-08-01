@@ -61,7 +61,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fgpanel", "fgpanel\fgpanel.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JS_demo", "JS_demo.vcproj", "{7E64A670-D297-468D-AF5D-315A02AA668F}"
 EndProject
-
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -167,11 +166,9 @@ Global
 		{FA27B353-179C-4DE8-B3AC-E260F8F790DD}.Debug|Win32.ActiveCfg = Debug|Win32
 		{FA27B353-179C-4DE8-B3AC-E260F8F790DD}.Debug|Win32.Build.0 = Debug|Win32
 		{FA27B353-179C-4DE8-B3AC-E260F8F790DD}.Debug|x64.ActiveCfg = Debug|x64
-		{FA27B353-179C-4DE8-B3AC-E260F8F790DD}.Debug|x64.Build.0 = Debug|64
 		{FA27B353-179C-4DE8-B3AC-E260F8F790DD}.Release|Win32.ActiveCfg = Release|Win32
 		{FA27B353-179C-4DE8-B3AC-E260F8F790DD}.Release|Win32.Build.0 = Release|Win32
 		{FA27B353-179C-4DE8-B3AC-E260F8F790DD}.Release|x64.ActiveCfg = Release|x64
-		{FA27B353-179C-4DE8-B3AC-E260F8F790DD}.Release|x64.Build.0 = Debug|64
 		{7E64A670-D297-468D-AF5D-315A02AA668F}.Debug|Win32.ActiveCfg = Debug|Win32
 		{7E64A670-D297-468D-AF5D-315A02AA668F}.Debug|Win32.Build.0 = Debug|Win32
 		{7E64A670-D297-468D-AF5D-315A02AA668F}.Debug|x64.ActiveCfg = Debug|x64
