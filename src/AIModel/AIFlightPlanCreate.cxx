@@ -821,6 +821,7 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
         //cerr << "Repositioning to waypoint " << (*waypoints.begin())->name << endl;
         ac->resetPositionFromFlightPlan();
     }
+    waypoints[1]->setName( (waypoints[1]->getName() + string("legend"))); 
     return true;
 }
 

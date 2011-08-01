@@ -413,12 +413,12 @@ const char * FGAIAircraft::_getTransponderCode() const {
 bool FGAIAircraft::loadNextLeg(double distance) {
 
     int leg;
-    if ((leg = fp->getLeg())  == 10) {
+    if ((leg = fp->getLeg())  == 9) {
         if (!trafficRef->next()) {
             return false;
         }
         setCallSign(trafficRef->getCallSign());
-        leg = 1;
+        leg = 0;
         fp->setLeg(leg);
     }
 
