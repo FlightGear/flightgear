@@ -40,6 +40,7 @@ data-tar:
 	tar \
 	--exclude=CVS \
 	--exclude='*~' \
+	--exclude='*.bak' \
 	--exclude='*.tex' \
 	--exclude='*.xcf' \
 	--exclude='*/c172/Instruments.high' \
@@ -50,27 +51,28 @@ data-tar:
 	--exclude='*/Textures.high/*.save' \
 	--exclude='*/data/Data' \
 	--exclude='*/Docs/source' \
-        --exclude='*/Models/MNUAV' \
-        --exclude='*/Models/Airspace' \
+	--exclude='*/Models/MNUAV' \
+	--exclude='*/Models/Airspace' \
 	-cjvf FlightGear-data-$(VERSION).tar.bz2 \
 		data/AI \
-                data/Aircraft/Generic \
-                data/Aircraft/Instruments \
-                data/Aircraft/Instruments-3d \
-                data/Aircraft/UIUC \
+		data/Aircraft/Generic \
+		data/Aircraft/Instruments \
+		data/Aircraft/Instruments-3d \
+		data/Aircraft/UIUC \
 		data/Aircraft/777-200 \
 		data/Aircraft/A6M2 \
+		data/Aircraft/ASK13 \
 		data/Aircraft/b1900d \
-                data/Aircraft/bo105 \
-                data/Aircraft/c172p \
-                data/Aircraft/CitationX \
+		data/Aircraft/bo105 \
+		data/Aircraft/c172p \
+		data/Aircraft/CitationX \
 		data/Aircraft/Dragonfly \
 		data/Aircraft/dhc2 \
 		data/Aircraft/f-14b \
 		data/Aircraft/Cub \
 		data/Aircraft/SenecaII \
 		data/Aircraft/sopwithCamel \
-                data/Aircraft/ufo \
+		data/Aircraft/ufo \
 		data/Aircraft/ZLT-NT \
 		data/Airports \
 		data/Astro \
@@ -83,6 +85,7 @@ data-tar:
 		data/Environment \
 		data/Fonts \
 		data/gui \
+		data/HLA \
 		data/Huds \
 		data/Input \
 		data/joysticks.xml \
@@ -92,6 +95,7 @@ data-tar:
 		data/materials.xml \
 		data/mice.xml \
 		data/Models \
+		data/MP \
 		data/N* \
 		data/options.xml \
 		data/preferences.xml \
