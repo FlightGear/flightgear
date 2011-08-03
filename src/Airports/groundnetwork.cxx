@@ -710,6 +710,8 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
             }
         }
         //Check traffic at the tower controller
+        // Note, as of 2011-08-01, this should no longer be necessecary.
+        /*
         if (towerController->hasActiveTraffic()) {
             for (TrafficVectorIterator i =
                  towerController->getActiveTraffic().begin();
@@ -731,6 +733,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
             }
         }
         // Finally, check UserPosition
+        // Note, as of 2011-08-01, this should no longer be necessecary.
         double userLatitude = fgGetDouble("/position/latitude-deg");
         double userLongitude = fgGetDouble("/position/longitude-deg");
         SGGeod user(SGGeod::fromDeg(userLongitude, userLatitude));
@@ -745,7 +748,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
             minbearing = bearing;
             otherReasonToSlowDown = true;
         }
-
+        */
         current->clearSpeedAdjustment();
 
         if (current->checkPositionAndIntentions(*closest)
@@ -761,6 +764,8 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
                 if (closest->getId() != current->getId())
                     current->setSpeedAdjustment(closest->getSpeed() *
                                                 (mindist / 100));
+                    if (closest->getAircraft()->isScheduledForTakeoff())
+                        current->getAircraft()->scheduleForATCTowerDepartureControl();
                 else
                     current->setSpeedAdjustment(0);     // This can only happen when the user aircraft is the one closest
                 if (mindist < maxAllowableDistance) {

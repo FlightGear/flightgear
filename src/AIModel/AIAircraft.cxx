@@ -65,9 +65,10 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
     else
         groundOffset = 0;
 
-    fp = 0;
-    controller = 0;
-    prevController = 0;
+    fp              = 0;
+    controller      = 0;
+    prevController  = 0;
+    towerController = 0;
     dt_count = 0;
     dt_elev_count = 0;
     use_perf_vs = true;
@@ -92,6 +93,7 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
 
     _performance = 0; //TODO initialize to JET_TRANSPORT from PerformanceDB
     dt = 0;
+    scheduledForTakeoff = false;
 }
 
 
@@ -555,6 +557,25 @@ void FGAIAircraft::announcePositionToController() {
     }
 }
 
+void FGAIAircraft::scheduleForATCTowerDepartureControl() {
+    if (!scheduledForTakeoff) {
+        int leg = fp->getLeg();
+        if (trafficRef) {
+            if (trafficRef->getDepartureAirport()->getDynamics()) {
+                towerController = trafficRef->getDepartureAirport()->getDynamics()->getTowerController();
+            } else {
+                cerr << "Error: Could not find Dynamics at airport : " << trafficRef->getDepartureAirport()->getId() << endl;
+            }
+            if (towerController) {
+                towerController->announcePosition(getID(), fp, fp->getCurrentWaypoint()->getRouteIndex(),
+                                                   _getLatitude(), _getLongitude(), hdg, speed, altitude_ft,
+                                                    trafficRef->getRadius(), leg, this);
+            }
+        }
+    }
+    scheduledForTakeoff = true;
+}
+
 // Process ATC instructions and report back
 
 void FGAIAircraft::processATC(FGATCInstruction instruction) {
@@ -790,6 +811,9 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIWaypoint* prev, time_t now) {
     }
     if (prev->contains("legend")) {
         fp->incrementLeg();
+    }
+    if (prev->contains(string("DepartureHold"))) {
+        scheduleForATCTowerDepartureControl();
     }
 
     // This is the last taxi waypoint, and marks the the end of the flight plan

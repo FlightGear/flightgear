@@ -303,6 +303,10 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
             createOnGround(ac, buffer, tn->getGeod(), apt->getElevation(),
                            ac->getPerformance()->vTaxi());
         wpt->setRouteIndex(route);
+        if (taxiRoute->size() == 1) {
+            // Note that we actually have hold points in the ground network, but this is just an initial test.
+            wpt->setName( wpt->getName() + string("DepartureHold"));
+        }
         waypoints.push_back(wpt);
     }
     return true;

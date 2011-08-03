@@ -496,7 +496,7 @@ const string & FGAirportDynamics::getId() const
 int FGAirportDynamics::getGroundFrequency(unsigned leg)
 {
     //return freqGround.size() ? freqGround[0] : 0; };
-    cerr << "Getting frequency for : " << leg << endl;
+    //cerr << "Getting frequency for : " << leg << endl;
     int groundFreq = 0;
     if (leg < 1) {
         SG_LOG(SG_ATC, SG_ALERT,

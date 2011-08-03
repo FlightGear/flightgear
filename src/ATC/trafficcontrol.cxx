@@ -86,7 +86,7 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
                 }
             } else {
                 if ((((*j) - (*i)) > (separation * 2))) {       // found a potential slot
-                    // now check whether this slow is usable:
+                    // now check whether this slot is usable:
                     // 1) eta should fall between the two points
                     //    i.e. eta > i AND eta < j
                     //
@@ -755,6 +755,7 @@ void FGTowerController::announcePosition(int id,
         //rec.setCallSign(callsign);
         rec.setAircraft(ref);
         activeTraffic.push_back(rec);
+        cerr << ref->getTrafficRef()->getCallSign() << " You are number " << activeTraffic.size() <<  " for takeoff " << endl;
     } else {
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
     }

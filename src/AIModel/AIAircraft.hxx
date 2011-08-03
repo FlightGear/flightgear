@@ -77,6 +77,9 @@ public:
     bool getTaxiClearanceRequest() { return needsTaxiClearance; };
     FGAISchedule * getTrafficRef() { return trafficRef; };
     void setTrafficRef(FGAISchedule *ref) { trafficRef = ref; };
+    void scheduleForATCTowerDepartureControl();
+
+    inline bool isScheduledForTakeoff() { return scheduledForTakeoff; };
 
     virtual const char* getTypeString(void) const { return "aircraft"; }
 
@@ -104,7 +107,9 @@ protected:
 
 private:
     FGAISchedule *trafficRef;
-    FGATCController *controller, *prevController; 
+    FGATCController *controller, 
+                    *prevController,
+                    *towerController; // Only needed to make a pre-announcement
 
     bool hdg_lock;
     bool alt_lock;
@@ -147,6 +152,7 @@ private:
     void checkVisibility();
     inline bool isStationary() { return ((fabs(speed)<=0.0001)&&(fabs(tgt_speed)<=0.0001));}
     inline bool needGroundElevation() { if (!isStationary()) _needsGroundElevation=true;return _needsGroundElevation;}
+   
 
     double sign(double x);
 
@@ -167,6 +173,7 @@ private:
     bool reachedWaypoint;
     bool needsTaxiClearance;
     bool _needsGroundElevation;
+    bool scheduledForTakeoff;
     time_t timeElapsed;
 
     PerformanceData* _performance; // the performance data for this aircraft
