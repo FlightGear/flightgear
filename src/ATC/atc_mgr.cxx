@@ -190,16 +190,16 @@ void FGATCManager::update ( double time ) {
     //    //cerr << "setting intentions " ;
         for (int i = 0; i < size; i++) {
     //        int val = fp->getRouteIndex(i);
-            cerr << fp->getWayPoint(i)->getName() << " ";
+            //cerr << fp->getWayPoint(i)->getName() << " ";
             //if ((val) && (val != pos)) {
                 //intentions.push_back(val);
                 //cerr << "[done ] " << endl;
             //}
         }
     }
-    cerr << "[done ] " << endl;
+    //cerr << "[done ] " << endl;
     if (fp) {
-        cerr << "Currently at leg : " << fp->getLeg() << endl;
+        //cerr << "Currently at leg : " << fp->getLeg() << endl;
     }
     double longitude = fgGetDouble("/position/longitude-deg");
     double latitude  = fgGetDouble("/position/latitude-deg");
@@ -215,10 +215,10 @@ void FGATCManager::update ( double time ) {
     controller = ai_ac.getATCController();
     currentATCDialog->update(time);
     if (controller) {
-       cerr << "name of previous waypoint : " << fp->getPreviousWaypoint()->getName() << endl;
+       //cerr << "name of previous waypoint : " << fp->getPreviousWaypoint()->getName() << endl;
 
         //cerr << "Running FGATCManager::update()" << endl;
-        cerr << "Currently under control of " << controller->getName() << endl;
+        //cerr << "Currently under control of " << controller->getName() << endl;
         controller->updateAircraftInformation(ai_ac.getID(),
                                               latitude,
                                               longitude,

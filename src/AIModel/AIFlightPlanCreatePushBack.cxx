@@ -1,4 +1,4 @@
-/******************************************************************************
+/****************************************************************************
  * AIFlightPlanCreatePushBack.cxx
  * Written by Durk Talsma, started August 1, 2007.
  *
@@ -157,7 +157,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
                exit(1);
            }
            double distance = (*ts)->getLength();
-           cerr << "Length of push forward route = " << distance << " and heading is " << heading << endl;
+           //cerr << "Length of push forward route = " << distance << " and heading is " << heading << endl;
            lat2 =  tn->getLatitude();
            lon2 =  tn->getLongitude();
 
@@ -167,15 +167,15 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
                 char buffer[16];
                 snprintf(buffer, 16, "pushback-%02d", i);
                 SGGeod coord = coord.fromDeg(lon2, lat2);
-                cerr << i << endl;
+                //cerr << i << endl;
                 FGAIWaypoint *wpt = createOnGround(ac, string(buffer), coord, dep->getElevation(), vTaxiReduced);
 
                 wpt->setRouteIndex((*ts)->getIndex());
                 waypoints.push_back(wpt); 
            }
-            cerr << "Done " << endl;
+           // cerr << "Done " << endl;
            waypoints.back()->setName(string("PushBackPoint"));
-            cerr << "Done assinging new name" << endl;
+           // cerr << "Done assinging new name" << endl;
         }
     }
     return true;
