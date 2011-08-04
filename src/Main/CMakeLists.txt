@@ -57,6 +57,7 @@ target_link_libraries(fgfs
 	${ALUT_LIBRARY} 
 	${ZLIB_LIBRARIES}
 	${PLIB_LIBRARIES}
+	${LIBSVN_LIBRARIES}
 	${RT_LIBRARY})
 	
 install(TARGETS fgfs RUNTIME DESTINATION bin)
