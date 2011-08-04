@@ -55,7 +55,7 @@ option(ENABLE_YASIM "Set to ON to build FlightGear with YASIM FDM" ON)
 option(ENABLE_JSBSIM "Set to ON to build FlightGear with JSBSim FDM" ON)
 option(ENABLE_FGADMIN "Set to ON to build FlightGear with FGADMIN" ON)
 option(EVENT_INPUT "Set to ON to build FlightGear with event-based Input support" OFF)
-option(ENABLE_LIBSVN "Set to ON to build FlightGear/terrasync with libsvnclient support" OFF)
+option(ENABLE_LIBSVN "Set to ON to build FlightGear/terrasync with libsvnclient support" ON)
 option(WITH_FGPANEL "Set to ON to build the fgpanel application" ON)
 
 set(MSVC_3RDPARTY_ROOT NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
