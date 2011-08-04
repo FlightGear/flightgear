@@ -15,3 +15,7 @@ INSTALL
 Debug/
 *.o
 lib*.a
+CMakeFiles
+CMakeCache.txt
+*.cmake
+
