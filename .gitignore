@@ -15,7 +15,11 @@ INSTALL
 Debug/
 *.o
 lib*.a
+cmake_install.cmake
 CMakeFiles
 CMakeCache.txt
-*.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
+cmake_uninstall.cmake
+CTestTestfile.cmake
 
