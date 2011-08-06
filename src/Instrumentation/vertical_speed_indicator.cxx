@@ -32,6 +32,7 @@ VerticalSpeedIndicator::init ()
     _serviceable_node = node->getChild("serviceable", 0, true);
     _pressure_node = fgGetNode(_static_pressure.c_str(), true);
     _speed_node = node->getChild("indicated-speed-fpm", 0, true);
+    _speed_up_node = fgGetNode("/sim/speed-up", true);
 
                                 // Initialize at ambient pressure
     _internal_pressure_inhg = _pressure_node->getDoubleValue();
@@ -44,6 +45,9 @@ VerticalSpeedIndicator::update (double dt)
                                 // from 10000 to 10500 for manual factor
     if (_serviceable_node->getBoolValue()) {
         double pressure = _pressure_node->getDoubleValue();
+        double speed_up = _speed_up_node->getDoubleValue();
+        if( speed_up > 1 )
+            dt *= speed_up;
         _speed_node
             ->setDoubleValue((_internal_pressure_inhg - pressure) * 10500);
         _internal_pressure_inhg =
