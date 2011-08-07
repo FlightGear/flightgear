@@ -49,6 +49,7 @@ private:
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _pressure_node;
     SGPropertyNode_ptr _speed_node;
+    SGPropertyNode_ptr _speed_up_node;
     
 };
 
