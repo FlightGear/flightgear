@@ -309,7 +309,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="fltk.lib sg.lib comctl32.lib wsock32.lib"
+				AdditionalDependencies="fltk.lib comctl32.lib wsock32.lib zlib.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\..\3rdParty.x64\lib"
 				GenerateDebugInformation="false"
