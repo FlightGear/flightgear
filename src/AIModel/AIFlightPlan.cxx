@@ -226,8 +226,10 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
       
       if ((timeDiff > 60) && (timeDiff < 1200))
 	leg = 2;
-      else if ((timeDiff >= 1200) && (timeDiff < 1500))
+      else if ((timeDiff >= 1200) && (timeDiff < 1500)) {
 	leg = 3;
+        ac->setTakeOffStatus(2);
+      }
       else if ((timeDiff >= 1500) && (timeDiff < 2000))
 	leg = 4;
       else if (timeDiff >= 2000)

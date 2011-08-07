@@ -212,6 +212,8 @@ public:
   
   void first() { currNode = nodes.begin(); currRoute = routes.begin(); };
   int size() { return nodes.size(); };
+  int nodesLeft() { return nodes.end() - currNode; };
+
 //  int getDepth() { return depth; };
 };
 

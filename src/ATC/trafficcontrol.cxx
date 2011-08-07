@@ -193,6 +193,11 @@ void FGTrafficRecord::setPositionAndIntentions(int pos,
     }
     //exit(1);
 }
+/**
+ * Check if another aircraft is ahead of the current one, and on the same 
+ * return true / false is the is/isn't the case.
+ *
+ ****************************************************************************/
 
 bool FGTrafficRecord::checkPositionAndIntentions(FGTrafficRecord & other)
 {
@@ -509,9 +514,15 @@ void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
     string transponderCode;
     FGAIFlightPlan *fp;
     string fltRules;
+    string instructionText;
 
     //double commFreqD;
     sender = rec->getAircraft()->getTrafficRef()->getCallSign();
+    if (rec->getAircraft()->getTaxiClearanceRequest()) {
+        instructionText = "push-back and taxi";
+    } else {
+        instructionText = "taxi";
+    }
     //cerr << "transmitting for: " << sender << "Leg = " << rec->getLeg() << endl;
     switch (rec->getLeg()) {
     case 1:
@@ -588,7 +599,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
             receiver + ". Start-up approved. " + atisInformation +
             " correct, runway " + activeRunway + ", " + SID + ", squawk " +
             transponderCode + ". " +
-            "For push-back and taxi clearance call " + taxiFreqStr + ". " +
+            "For "+ instructionText + " clearance call " + taxiFreqStr + ". " +
             sender + " control.";
         break;
     case MSG_DENY_ENGINE_START:
@@ -606,11 +617,12 @@ void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
         taxiFreqStr = formatATCFrequency3_2(taxiFreq);
         activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
         transponderCode = rec->getAircraft()->GetTransponderCode();
+
         text =
             receiver + ". Start-up approved. " + atisInformation +
             " correct, runway " + activeRunway + ", " + SID + ", squawk " +
             transponderCode + ". " +
-            "For push-back and taxi clearance call " + taxiFreqStr + ". " +
+            "For " + instructionText + " clearance call " + taxiFreqStr + ". " +
             sender;
         break;
     case MSG_ACKNOWLEDGE_SWITCH_GROUND_FREQUENCY:
@@ -624,10 +636,18 @@ void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
         text = receiver + ". Roger. " + sender;
         break;
     case MSG_REQUEST_PUSHBACK_CLEARANCE:
-        text = receiver + ". Request push-back. " + sender;
+        if (rec->getAircraft()->getTaxiClearanceRequest()) {
+            text = receiver + ". Request push-back. " + sender;
+        } else {
+            text = receiver + ". Request Taxi clearance. " + sender;
+        }
         break;
     case MSG_PERMIT_PUSHBACK_CLEARANCE:
-        text = receiver + ". Push-back approved. " + sender;
+        if (rec->getAircraft()->getTaxiClearanceRequest()) {
+            text = receiver + ". Push-back approved. " + sender;
+        } else {
+            text = receiver + ". Cleared to Taxi." + sender;
+        }
         break;
     case MSG_HOLD_PUSHBACK_CLEARANCE:
         text = receiver + ". Standby. " + sender;
@@ -753,9 +773,29 @@ void FGTowerController::announcePosition(int id,
         rec.setRunway(intendedRoute->getRunway());
         rec.setLeg(leg);
         //rec.setCallSign(callsign);
+        rec.setRadius(radius);
         rec.setAircraft(ref);
         activeTraffic.push_back(rec);
-        cerr << ref->getTrafficRef()->getCallSign() << " You are number " << activeTraffic.size() <<  " for takeoff " << endl;
+        // Don't just schedule the aircraft for the tower controller, also assign if to the correct active runway. 
+        ActiveRunwayVecIterator rwy = activeRunways.begin();
+        if (activeRunways.size()) {
+            while (rwy != activeRunways.end()) {
+                if (rwy->getRunwayName() == intendedRoute->getRunway()) {
+                    break;
+                }
+                rwy++;
+            }
+        }
+        if (rwy == activeRunways.end()) {
+            ActiveRunway aRwy(intendedRoute->getRunway(), id);
+            aRwy.addToDepartureCue(ref);
+            activeRunways.push_back(aRwy);
+            rwy = (activeRunways.end()-1);
+        } else {
+            rwy->addToDepartureCue(ref);
+        }
+
+        cerr << ref->getTrafficRef()->getCallSign() << " You are number " << rwy->getDepartureCueSize() <<  " for takeoff " << endl;
     } else {
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
     }
@@ -788,29 +828,43 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
     }
     setDt(getDt() + dt);
 
-//    // see if we already have a clearance record for the currently active runway
+    // see if we already have a clearance record for the currently active runway
+    // NOTE: dd. 2011-08-07: Because the active runway has been constructed in the announcePosition function, we may safely assume that is
+    // already exists here. So, we can simplify the current code. 
     ActiveRunwayVecIterator rwy = activeRunways.begin();
-    // again, a map might be more efficient here
-    if (activeRunways.size()) {
-        //while ((rwy->getRunwayName() != current->getRunway()) && (rwy != activeRunways.end())) {
-        while (rwy != activeRunways.end()) {
-            if (rwy->getRunwayName() == current->getRunway()) {
-                break;
-            }
-            rwy++;
+    while (rwy != activeRunways.end()) {
+        if (rwy->getRunwayName() == current->getRunway()) {
+            break;
         }
+        rwy++;
     }
-    if (rwy == activeRunways.end()) {
-        ActiveRunway aRwy(current->getRunway(), id);
-        activeRunways.push_back(aRwy);  // Since there are no clearance records for this runway yet
-        current->setHoldPosition(false);        // Clear the current aircraft to continue
-    } else {
-        // Okay, we have a clearance record for this runway, so check
-        // whether the clearence ID matches that of the current aircraft
-        if (id == rwy->getCleared()) {
-            current->setHoldPosition(false);
+
+    // only bother running the following code if the current aircraft is the
+    // first in line for depature
+    /* if (current->getAircraft() == rwy->getFirstAircraftInDepartureCue()) {
+        if (rwy->getCleared()) {
+            if (id == rwy->getCleared()) {
+                current->setHoldPosition(false);
+            } else {
+                current->setHoldPosition(true);
+            }
         } else {
-            current->setHoldPosition(true);
+            // For now. At later stages, this will probably be the place to check for inbound traffc.
+            rwy->setCleared(id);
+        }
+    } */
+    // only bother with aircraft that have a takeoff status of 2, since those are essentially under tower control
+    if (current->getAircraft()->getTakeOffStatus() == 2) {
+        current->setHoldPosition(true);
+        int clearanceId = rwy->getCleared();
+        if (clearanceId) {
+            if (id == clearanceId) {
+                current->setHoldPosition(false);
+            }
+        } else {
+            if (current->getAircraft() == rwy->getFirstAircraftInDepartureCue()) {
+                rwy->setCleared(id);
+            }
         }
     }
 }
@@ -841,7 +895,8 @@ void FGTowerController::signOff(int id)
             rwy++;
         }
         if (rwy != activeRunways.end()) {
-            rwy = activeRunways.erase(rwy);
+            rwy->setCleared(0);
+            rwy->updateDepartureCue();
         } else {
             SG_LOG(SG_GENERAL, SG_ALERT,
                    "AI error: Attempting to erase non-existing runway clearance record in FGTowerController::signoff");
@@ -851,6 +906,7 @@ void FGTowerController::signOff(int id)
         SG_LOG(SG_GENERAL, SG_ALERT,
                "AI error: Aircraft without traffic record is signing off from tower");
     } else {
+        i->getAircraft()->resetTakeOffStatus();
         i = activeTraffic.erase(i);
         //cerr << "Signing off from tower controller" << endl;
     }

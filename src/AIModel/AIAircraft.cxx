@@ -93,7 +93,7 @@ FGAIAircraft::FGAIAircraft(FGAISchedule *ref) :
 
     _performance = 0; //TODO initialize to JET_TRANSPORT from PerformanceDB
     dt = 0;
-    scheduledForTakeoff = false;
+    takeOffStatus = 0;
 }
 
 
@@ -557,8 +557,8 @@ void FGAIAircraft::announcePositionToController() {
     }
 }
 
-void FGAIAircraft::scheduleForATCTowerDepartureControl() {
-    if (!scheduledForTakeoff) {
+void FGAIAircraft::scheduleForATCTowerDepartureControl(int state) {
+    if (!takeOffStatus) {
         int leg = fp->getLeg();
         if (trafficRef) {
             if (trafficRef->getDepartureAirport()->getDynamics()) {
@@ -570,10 +570,11 @@ void FGAIAircraft::scheduleForATCTowerDepartureControl() {
                 towerController->announcePosition(getID(), fp, fp->getCurrentWaypoint()->getRouteIndex(),
                                                    _getLatitude(), _getLongitude(), hdg, speed, altitude_ft,
                                                     trafficRef->getRadius(), leg, this);
+                cerr << "Scheduling " << trafficRef->getCallSign() << " for takeoff " << endl;
             }
         }
     }
-    scheduledForTakeoff = true;
+    takeOffStatus = state;
 }
 
 // Process ATC instructions and report back
@@ -804,16 +805,18 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIWaypoint* prev, time_t now) {
     // This waypoint marks the fact that the aircraft has passed the initial taxi
     // departure waypoint, so it can release the parking.
     //cerr << trafficRef->getCallSign() << " has passed waypoint " << prev->name << " at speed " << speed << endl;
+    //cerr << "Passing waypoint : " << prev->getName() << endl;
     if (prev->contains("PushBackPoint")) {
         dep->getDynamics()->releaseParking(fp->getGate());
         AccelTo(0.0);
-        setTaxiClearanceRequest(true);
+        //setTaxiClearanceRequest(true);
     }
     if (prev->contains("legend")) {
         fp->incrementLeg();
     }
     if (prev->contains(string("DepartureHold"))) {
-        scheduleForATCTowerDepartureControl();
+        cerr << "Passing point DepartureHold" << endl;
+        scheduleForATCTowerDepartureControl(2);
     }
 
     // This is the last taxi waypoint, and marks the the end of the flight plan
@@ -824,7 +827,7 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIWaypoint* prev, time_t now) {
         if (nextDeparture < (now+1200)) {
             nextDeparture = now + 1200;
         }
-        fp->setTime(nextDeparture); // should be "next departure"
+        fp->setTime(nextDeparture);
     }
 
     return true;

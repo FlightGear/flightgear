@@ -197,6 +197,8 @@ typedef vector<FGTrafficRecord>::iterator TrafficVectorIterator;
 typedef vector<time_t> TimeVector;
 typedef vector<time_t>::iterator TimeVectorIterator;
 
+typedef vector<FGAIAircraft*> AircraftVec;
+typedef vector<FGAIAircraft*>::iterator AircraftVecIterator;
 
 /***********************************************************************
  * Active runway, a utility class to keep track of which aircraft has
@@ -209,6 +211,8 @@ private:
   int currentlyCleared;
   double distanceToFinal;
   TimeVector estimatedArrivalTimes;
+  AircraftVec departureCue;
+
 public:
   ActiveRunway(string r, int cc) { rwy = r; currentlyCleared = cc; distanceToFinal = 6.0 * SG_NM_TO_METER; };
   
@@ -218,7 +222,13 @@ public:
   //time_t getEstApproachTime() { return estimatedArrival; };
 
   //void setEstApproachTime(time_t time) { estimatedArrival = time; };
+  void addToDepartureCue(FGAIAircraft *ac) { departureCue.push_back(ac); };
+  void setCleared(int number) { currentlyCleared = number; };
   time_t requestTimeSlot(time_t eta);
+
+   int getDepartureCueSize() { return departureCue.size(); };
+   FGAIAircraft* getFirstAircraftInDepartureCue() { return departureCue.size() ? *(departureCue.begin()) : NULL; };
+   void updateDepartureCue() { departureCue.erase(departureCue.begin()); }
 };
 
 typedef vector<ActiveRunway> ActiveRunwayVec;

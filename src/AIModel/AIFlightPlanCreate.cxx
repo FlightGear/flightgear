@@ -294,6 +294,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
 
     // push each node on the taxi route as a waypoint
     int route;
+    //cerr << "Building taxi route" << endl;
     while (taxiRoute->next(&node, &route)) {
         char buffer[10];
         snprintf(buffer, 10, "%d", node);
@@ -303,12 +304,20 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
             createOnGround(ac, buffer, tn->getGeod(), apt->getElevation(),
                            ac->getPerformance()->vTaxi());
         wpt->setRouteIndex(route);
-        if (taxiRoute->size() == 1) {
+        //cerr << "Nodes left " << taxiRoute->nodesLeft() << " ";
+        if (taxiRoute->nodesLeft() == 1) {
             // Note that we actually have hold points in the ground network, but this is just an initial test.
+            //cerr << "Setting departurehold point: " << endl;
             wpt->setName( wpt->getName() + string("DepartureHold"));
         }
         waypoints.push_back(wpt);
     }
+    // Acceleration point, 105 meters into the runway,
+    SGGeod accelPoint = rwy->pointOnCenterline(105.0);
+    FGAIWaypoint *wpt = createOnGround(ac, "accel", accelPoint, apt->getElevation(), ac->getPerformance()->vRotate());
+    waypoints.push_back(wpt);
+
+    //cerr << "[done]" << endl;
     return true;
 }
 
@@ -452,17 +461,13 @@ bool FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
 
 
     double airportElev = apt->getElevation();
-    // Acceleration point, 105 meters into the runway,
-    SGGeod accelPoint = rwy->pointOnCenterline(105.0);
-    wpt = createOnGround(ac, "accel", accelPoint, airportElev, vRotate);
-    waypoints.push_back(wpt);
-
+    
 
     accelDistance =
         (vTakeoffMetric * vTakeoffMetric -
          vTaxiMetric * vTaxiMetric) / (2 * accelMetric);
     //cerr << "Using " << accelDistance << " " << accelMetric << " " << vTakeoffMetric << endl;
-    accelPoint = rwy->pointOnCenterline(105.0 + accelDistance);
+    SGGeod accelPoint = rwy->pointOnCenterline(105.0 + accelDistance);
     wpt = createOnGround(ac, "rotate", accelPoint, airportElev, vTakeoff);
     waypoints.push_back(wpt);
 

@@ -121,6 +121,7 @@ void FGATCManager::init() {
             string fltType = "ga";
             fp->setRunway(runway);
             fp->createTakeOff(&ai_ac, false, apt, 0, fltType);
+            ai_ac.setTakeOffStatus(2);
         } else {
             controller = apt->getDynamics()->getStartupController();
             int stationFreq = apt->getDynamics()->getGroundFrequency(1);

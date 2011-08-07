@@ -139,7 +139,9 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
               // some special considerations for the last point:
               waypoints.back()->setName(string("PushBackPoint"));
               waypoints.back()->setSpeed(vTaxi);
+              ac->setTaxiClearanceRequest(true);
         } else {  // In case of a push forward departure...
+           ac->setTaxiClearanceRequest(false);
            double lat2 = 0.0, lon2 = 0.0, az2 = 0.0;
 
            //cerr << "Creating final push forward point for gate " << gateId << endl;

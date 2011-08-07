@@ -77,9 +77,11 @@ public:
     bool getTaxiClearanceRequest() { return needsTaxiClearance; };
     FGAISchedule * getTrafficRef() { return trafficRef; };
     void setTrafficRef(FGAISchedule *ref) { trafficRef = ref; };
-    void scheduleForATCTowerDepartureControl();
+    void resetTakeOffStatus() { takeOffStatus = 0;};
+    void setTakeOffStatus(int status) { takeOffStatus = status; };
+    void scheduleForATCTowerDepartureControl(int state);
 
-    inline bool isScheduledForTakeoff() { return scheduledForTakeoff; };
+    //inline bool isScheduledForTakeoff() { return scheduledForTakeoff; };
 
     virtual const char* getTypeString(void) const { return "aircraft"; }
 
@@ -97,6 +99,8 @@ public:
     inline double altitudeAGL() const { return props->getFloatValue("position/altitude-agl-ft");};
     inline double airspeed() const { return props->getFloatValue("velocities/airspeed-kt");};
     std::string atGate();
+
+    int getTakeOffStatus() { return takeOffStatus; };
 
     void checkTcas();
 
@@ -173,7 +177,7 @@ private:
     bool reachedWaypoint;
     bool needsTaxiClearance;
     bool _needsGroundElevation;
-    bool scheduledForTakeoff;
+    int  takeOffStatus; // 1 = joined departure cue; 2 = Passed DepartureHold waypoint; handover control to tower; 0 = any other state. 
     time_t timeElapsed;
 
     PerformanceData* _performance; // the performance data for this aircraft

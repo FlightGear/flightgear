@@ -173,6 +173,7 @@ bool FGTaxiRoute::next(int *nde, int *rte)
     return true;
 };
 
+
 void FGTaxiRoute::rewind(int route)
 {
     int currPoint;
@@ -534,7 +535,15 @@ void FGGroundNetwork::signOff(int id)
         i = activeTraffic.erase(i);
     }
 }
-
+/**
+ * The ground network can deal with the following states:
+ * 0 =  Normal; no action required
+ * 1 = "Acknowledge "Hold position
+ * 2 = "Acknowledge "Resume taxi".
+ * 3 = "Issue TaxiClearance"
+ * 4 = =Acknowledge Taxi Clearance"
+ *
+ *************************************************************************************************************************/
 bool FGGroundNetwork::checkTransmissionState(int minState, int maxState, TrafficVectorIterator i, time_t now, AtcMsgId msgId,
                                AtcMsgDir msgDir)
 {
@@ -634,7 +643,7 @@ void FGGroundNetwork::updateAircraftInformation(int id, double lat, double lon,
         if ((state == 5) && available) {
             current->setState(0);
             current->getAircraft()->setTaxiClearanceRequest(false);
-            current->setHoldPosition(true);
+            current->setHoldPosition(false);
             available = false;
         }
 
@@ -723,6 +732,10 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
                 if (bearing > 180)
                     bearing = 360 - bearing;
                 if ((dist < mindist) && (bearing < 60.0)) {
+                    //cerr << "Current aircraft " << current->getAircraft()->getTrafficRef()->getCallSign()
+                    //     << " is closest to " << i->getAircraft()->getTrafficRef()->getCallSign() 
+                    //     << ", which has status " << i->getAircraft()->isScheduledForTakeoff() 
+                    //     << endl;
                     mindist = dist;
                     closest = i;
                     minbearing = bearing;
@@ -760,13 +773,18 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
                     return;
                 else
                     current->setWaitsForId(closest->getId());
-                if (closest->getId() != current->getId())
+                if (closest->getId() != current->getId()) {
                     current->setSpeedAdjustment(closest->getSpeed() *
                                                 (mindist / 100));
-                    if (closest->getAircraft()->isScheduledForTakeoff())
-                        current->getAircraft()->scheduleForATCTowerDepartureControl();
-                else
+                    if ( 
+                        closest->getAircraft()->getTakeOffStatus() && 
+                        (current->getAircraft()->getTrafficRef()->getDepartureAirport() ==  closest->getAircraft()->getTrafficRef()->getDepartureAirport()) &&
+                        (current->getAircraft()->GetFlightPlan()->getRunway() == closest->getAircraft()->GetFlightPlan()->getRunway())
+                       )
+                            current->getAircraft()->scheduleForATCTowerDepartureControl(1); 
+                } else {
                     current->setSpeedAdjustment(0);     // This can only happen when the user aircraft is the one closest
+                }
                 if (mindist < maxAllowableDistance) {
                     //double newSpeed = (maxAllowableDistance-mindist);
                     //current->setSpeedAdjustment(newSpeed);
@@ -867,8 +885,10 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
                         //(!(current->getSpeedAdjustment())))
 
                     {
-                        current->setHoldPosition(true);
-                        current->setWaitsForId(i->getId());
+                        if (!(isUserAircraft(i->getAircraft()))) { // test code. Don't wait for the user, let the user wait for you.
+                            current->setHoldPosition(true);
+                            current->setWaitsForId(i->getId());
+                        }
                         //cerr << "Hold check 5: " << current->getCallSign() <<"  Setting Hold Position: distance to node ("  << node << ") "
                         //           << dist << " meters. Waiting for " << i->getCallSign();
                         //if (opposing)

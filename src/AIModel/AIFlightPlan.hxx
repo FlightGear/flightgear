@@ -1,4 +1,4 @@
-// // FGAIFlightPlan - class for loading and storing  AI flight plans
+// FGAIFlightPlan - class for loading and storing  AI flight plans
 // Written by David Culp, started May 2004
 // - davidculp2@comcast.net
 //
@@ -117,6 +117,7 @@ public:
 
    double getDistanceToGo(double lat, double lon, FGAIWaypoint* wp) const;
    int getLeg () const { return leg;};
+   
    void setLeadDistance(double speed, double bearing, FGAIWaypoint* current, FGAIWaypoint* next);
    void setLeadDistance(double distance_ft);
    double getLeadDistance( void ) const {return lead_distance;}
