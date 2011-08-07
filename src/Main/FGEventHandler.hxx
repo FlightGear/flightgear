@@ -113,6 +113,7 @@ protected:
     int statsType;
     int currentModifiers;
     std::map<int, int> numlockKeyMap;
+    std::map<int, int> noNumlockKeyMap;
     void handleKey(const osgGA::GUIEventAdapter& ea, int& key, int& modifiers);
     bool resizable;
     bool mouseWarped;
