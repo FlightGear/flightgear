@@ -31,7 +31,6 @@
 #endif
 
 #include <FL/Fl_File_Chooser.H>
-#include <plib/ul.h>
 
 #include <simgear/misc/sg_path.hxx>
 
@@ -142,11 +141,12 @@ void FGAdminUI::update_install_box() {
     install_box->clear();
 
     if ( source.length() ) {
-        ulDir *dir = ulOpenDir( source.c_str() ) ;
-        ulDirEnt *ent;
-        while ( dir != 0 && ( ent = ulReadDir( dir ) ) ) {
+        struct dirent **list;
+        int nb = fl_filename_list( source.c_str(), &list );
+        for ( int i = 0; i < nb; ++i ) {
             // find base name of archive file
             char base[FL_PATH_MAX];
+            dirent *ent = list[i];
             strncpy( base, ent->d_name, FL_PATH_MAX );
             const char *p = fl_filename_ext( base );
             int offset, expected_length = 0;
@@ -186,9 +186,10 @@ void FGAdminUI::update_install_box() {
                     // cout << install.str() << " exists." << endl;
                 }
             }
+            free( ent );
         }
+        free( list );
 
-        ulCloseDir( dir );
         for ( set<string>::iterator it = file_list.begin(); it != file_list.end(); ++it ) {
             install_box->add( it->c_str() );
         }
@@ -217,16 +218,18 @@ void FGAdminUI::update_remove_box() {
         set<string> dir_list;
         for ( int i = 0; i < 2; i++ ) {
             if ( !path[i].empty() ) {
-                ulDir *dir = ulOpenDir( path[i].c_str() ) ;
-                ulDirEnt *ent;
-                while ( dir != 0 && ( ent = ulReadDir( dir ) ) ) {
+                dirent **list;
+                int nb = fl_filename_list( path[i].c_str(), &list );
+                for ( int i = 0; i < nb; ++i ) {
+                    dirent *ent = list[i];
                     if ( strlen(ent->d_name) == 7 &&
                             ( ent->d_name[0] == 'e' || ent->d_name[0] == 'w' ) &&
                             ( ent->d_name[4] == 'n' || ent->d_name[4] == 's' ) ) {
                         dir_list.insert( ent->d_name );
                     }
+                    free( ent );
                 }
-                ulCloseDir( dir );
+                free( list );
             }
         }
 
@@ -279,23 +282,25 @@ void FGAdminUI::install_selected() {
 
 static unsigned long count_dir( const char *dir_name, bool top = true ) {
     unsigned long cnt = 0L;
-    ulDir *dir = ulOpenDir( dir_name ) ;
-    if ( dir ) {
-        ulDirEnt *ent;
-        while ( ent = ulReadDir( dir ) ) {
+    dirent **list;
+    int nb = fl_filename_list( dir_name, &list );
+    if ( nb != 0 ) {
+        for ( int i = 0; i < nb; ++i ) {
+            dirent *ent = list[i];
             if ( strcmp( ent->d_name, "." ) == 0 ) {
                 // ignore "."
             } else if ( strcmp( ent->d_name, ".." ) == 0 ) {
                 // ignore ".."
-            } else if ( ent->d_isdir ) {
+            } else if ( fl_filename_isdir( ent->d_name ) ) {
                 SGPath child( dir_name );
                 child.append( ent->d_name );
                 cnt += count_dir( child.c_str(), false );
             } else {
                 cnt += 1;
             }
+            free( ent );
         }
-        ulCloseDir( dir );
+        free( list );
     } else if ( top ) {
         string base = dir_name;
         size_t pos = base.rfind('/');
@@ -310,15 +315,16 @@ static unsigned long count_dir( const char *dir_name, bool top = true ) {
 }
 
 static void remove_dir( const char *dir_name, void (*step)(void*,int), void *data, bool top = true ) {
-    ulDir *dir = ulOpenDir( dir_name ) ;
-    if ( dir ) {
-        ulDirEnt *ent;
-        while ( ent = ulReadDir( dir ) ) {
+    dirent **list;
+    int nb = fl_filename_list( dir_name, &list );
+    if ( nb != 0 ) {
+        for ( int i = 0; i < nb; ++i ) {
+            dirent *ent = list[i];
             if ( strcmp( ent->d_name, "." ) == 0 ) {
                 // ignore "."
             } else if ( strcmp( ent->d_name, ".." ) == 0 ) {
                 // ignore ".."
-            } else if ( ent->d_isdir ) {
+            } else if ( fl_filename_isdir( ent->d_name ) ) {
                 SGPath child( dir_name );
                 child.append( ent->d_name );
                 remove_dir( child.c_str(), step, data, false );
@@ -328,8 +334,9 @@ static void remove_dir( const char *dir_name, void (*step)(void*,int), void *dat
                 unlink( child.c_str() );
                 if (step) step( data, 1 );
             }
+            free( ent );
         }
-        ulCloseDir( dir );
+        free( list );
         rmdir( dir_name );
     } else if ( top ) {
         string base = dir_name;

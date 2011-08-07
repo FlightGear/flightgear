@@ -65,7 +65,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="fltkd.lib ul_d.lib comctl32.lib wsock32.lib zlibd.lib sg_d.lib"
+				AdditionalDependencies="fltkd.lib comctl32.lib wsock32.lib zlibd.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\..\3rdParty\lib"
 				GenerateDebugInformation="true"
@@ -145,7 +145,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="fltkd.lib ul_d.lib comctl32.lib wsock32.lib zlibd.lib sg_d.lib"
+				AdditionalDependencies="fltkd.lib comctl32.lib wsock32.lib zlibd.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\..\3rdParty.x64\lib"
 				GenerateDebugInformation="true"
@@ -226,7 +226,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="fltk.lib ul.lib sg.lib comctl32.lib wsock32.lib zlib.lib"
+				AdditionalDependencies="fltk.lib comctl32.lib wsock32.lib zlib.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\..\3rdParty\lib"
 				GenerateDebugInformation="false"
@@ -309,7 +309,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="fltk.lib ul.lib sg.lib comctl32.lib wsock32.lib zlib.lib"
+				AdditionalDependencies="fltk.lib sg.lib comctl32.lib wsock32.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\..\3rdParty.x64\lib"
 				GenerateDebugInformation="false"
