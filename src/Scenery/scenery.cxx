@@ -28,8 +28,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <osg/Camera>
+#include <osg/Transform>
+#include <osg/MatrixTransform>
+#include <osg/PositionAttitudeTransform>
+#include <osg/CameraView>
 #include <osgViewer/Viewer>
-#include <osgUtil/IntersectVisitor>
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
@@ -38,6 +42,8 @@
 #include <simgear/scene/util/SGNodeMasks.hxx>
 #include <simgear/scene/util/SGSceneUserData.hxx>
 #include <simgear/scene/model/CheckSceneryVisitor.hxx>
+#include <simgear/scene/bvh/BVHNode.hxx>
+#include <simgear/scene/bvh/BVHLineSegmentVisitor.hxx>
 
 #include <Main/renderer.hxx>
 #include <Main/fg_props.hxx>
@@ -68,6 +74,138 @@ public:
 
     return true;
   }
+};
+
+class FGSceneryIntersect : public osg::NodeVisitor {
+public:
+    FGSceneryIntersect(const SGLineSegmentd& lineSegment,
+                       const osg::Node* skipNode) :
+        osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ACTIVE_CHILDREN),
+        _lineSegment(lineSegment),
+        _skipNode(skipNode),
+        _material(0),
+        _haveHit(false)
+    { }
+
+    bool getHaveHit() const
+    { return _haveHit; }
+    const SGLineSegmentd& getLineSegment() const
+    { return _lineSegment; }
+    const SGMaterial* getMaterial() const
+    { return _material; }
+
+    virtual void apply(osg::Node& node)
+    {
+        if (&node == _skipNode)
+            return;
+        if (!testBoundingSphere(node.getBound()))
+            return;
+
+        addBoundingVolume(node);
+    }
+
+    virtual void apply(osg::Group& group)
+    {
+        if (&group == _skipNode)
+            return;
+        if (!testBoundingSphere(group.getBound()))
+            return;
+
+        traverse(group);
+        addBoundingVolume(group);
+    }
+
+    virtual void apply(osg::Transform& transform)
+    { handleTransform(transform); }
+    virtual void apply(osg::Camera& camera)
+    {
+        if (camera.getRenderOrder() != osg::Camera::NESTED_RENDER)
+            return;
+        handleTransform(camera);
+    }
+    virtual void apply(osg::CameraView& transform)
+    { handleTransform(transform); }
+    virtual void apply(osg::MatrixTransform& transform)
+    { handleTransform(transform); }
+    virtual void apply(osg::PositionAttitudeTransform& transform)
+    { handleTransform(transform); }
+
+private:
+    void handleTransform(osg::Transform& transform)
+    {
+        if (&transform == _skipNode)
+            return;
+        // Hmm, may be this needs to be refined somehow ...
+        if (transform.getReferenceFrame() != osg::Transform::RELATIVE_RF)
+            return;
+
+        if (!testBoundingSphere(transform.getBound()))
+            return;
+
+        osg::Matrix inverseMatrix;
+        if (!transform.computeWorldToLocalMatrix(inverseMatrix, this))
+            return;
+        osg::Matrix matrix;
+        if (!transform.computeLocalToWorldMatrix(matrix, this))
+            return;
+
+        SGLineSegmentd lineSegment = _lineSegment;
+        bool haveHit = _haveHit;
+        const SGMaterial* material = _material;
+
+        _haveHit = false;
+        _lineSegment = lineSegment.transform(SGMatrixd(inverseMatrix.ptr()));
+
+        addBoundingVolume(transform);
+        traverse(transform);
+
+        if (_haveHit) {
+            _lineSegment = _lineSegment.transform(SGMatrixd(matrix.ptr()));
+        } else {
+            _lineSegment = lineSegment;
+            _material = material;
+            _haveHit = haveHit;
+        }
+    }
+
+    simgear::BVHNode* getNodeBoundingVolume(osg::Node& node)
+    {
+        SGSceneUserData* userData = SGSceneUserData::getSceneUserData(&node);
+        if (!userData)
+            return 0;
+        return userData->getBVHNode();
+    }
+    void addBoundingVolume(osg::Node& node)
+    {
+        simgear::BVHNode* bvNode = getNodeBoundingVolume(node);
+        if (!bvNode)
+            return;
+
+        // Find ground intersection on the bvh nodes
+        simgear::BVHLineSegmentVisitor lineSegmentVisitor(_lineSegment,
+                                                          0/*startTime*/);
+        bvNode->accept(lineSegmentVisitor);
+        if (!lineSegmentVisitor.empty()) {
+            _lineSegment = lineSegmentVisitor.getLineSegment();
+            _material = lineSegmentVisitor.getMaterial();
+            _haveHit = true;
+        }
+    }
+
+    bool testBoundingSphere(const osg::BoundingSphere& bound) const
+    {
+        if (!bound.valid())
+            return false;
+
+        SGSphered sphere(toVec3d(toSG(bound._center)), bound._radius);
+        return intersects(_lineSegment, sphere);
+    }
+
+    SGLineSegmentd _lineSegment;
+    const osg::Node* _skipNode;
+
+    const SGMaterial* _material;
+    bool _haveHit;
 };
 
 // Scenery Management system
@@ -138,43 +276,20 @@ FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
   SGGeod geodEnd = geod;
   geodEnd.setElevationM(SGMiscd::min(geod.getElevationM() - 10, -10000));
   SGVec3d end = SGVec3d::fromGeod(geodEnd);
-  
-  osgUtil::IntersectVisitor intersectVisitor;
+
+  FGSceneryIntersect intersectVisitor(SGLineSegmentd(start, end), butNotFrom);
   intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
-  osg::ref_ptr<osg::LineSegment> lineSegment;
-  lineSegment = new osg::LineSegment(toOsg(start), toOsg(end));
-  intersectVisitor.addLineSegment(lineSegment.get());
   get_scene_graph()->accept(intersectVisitor);
-  bool hits = false;
-  if (intersectVisitor.hits()) {
-    int nHits = intersectVisitor.getNumHits(lineSegment.get());
-    alt = -SGLimitsd::max();
-    for (int i = 0; i < nHits; ++i) {
-      const osgUtil::Hit& hit
-        = intersectVisitor.getHitList(lineSegment.get())[i];
-      if (butNotFrom &&
-          std::find(hit.getNodePath().begin(), hit.getNodePath().end(),
-                    butNotFrom) != hit.getNodePath().end())
-          continue;
 
-      // We might need the double variant of the intersection point.
-      // Thus we cannot use the float variant delivered by
-      // hit.getWorldIntersectPoint() but we have to redo that with osg::Vec3d.
-      osg::Vec3d point = hit.getLocalIntersectPoint();
-      if (hit.getMatrix())
-        point = point*(*hit.getMatrix());
-      SGGeod geod = SGGeod::fromCart(toSG(point));
-      double elevation = geod.getElevationM();
-      if (alt < elevation) {
-        alt = elevation;
-        hits = true;
-        if (material)
-          *material = SGMaterialLib::findMaterial(hit.getGeode());
-      }
-    }
-  }
+  if (!intersectVisitor.getHaveHit())
+      return false;
 
-  return hits;
+  geodEnd = SGGeod::fromCart(intersectVisitor.getLineSegment().getEnd());
+  alt = geod.getElevationM();
+  if (material)
+      *material = intersectVisitor.getMaterial();
+
+  return true;
 }
 
 bool
@@ -190,40 +305,16 @@ FGScenery::get_cart_ground_intersection(const SGVec3d& pos, const SGVec3d& dir,
   // computation of ground intersection.
   SGVec3d start = pos;
   SGVec3d end = start + 1e5*normalize(dir); // FIXME visibility ???
-  
-  osgUtil::IntersectVisitor intersectVisitor;
-  intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
-  osg::ref_ptr<osg::LineSegment> lineSegment;
-  lineSegment = new osg::LineSegment(toOsg(start), toOsg(end));
-  intersectVisitor.addLineSegment(lineSegment.get());
-  get_scene_graph()->accept(intersectVisitor);
-  bool hits = false;
-  if (intersectVisitor.hits()) {
-    int nHits = intersectVisitor.getNumHits(lineSegment.get());
-    double dist = SGLimitsd::max();
-    for (int i = 0; i < nHits; ++i) {
-      const osgUtil::Hit& hit
-        = intersectVisitor.getHitList(lineSegment.get())[i];
-      if (butNotFrom &&
-          std::find(hit.getNodePath().begin(), hit.getNodePath().end(),
-                    butNotFrom) != hit.getNodePath().end())
-          continue;
-      // We might need the double variant of the intersection point.
-      // Thus we cannot use the float variant delivered by
-      // hit.getWorldIntersectPoint() but we have to redo that with osg::Vec3d.
-      osg::Vec3d point = hit.getLocalIntersectPoint();
-      if (hit.getMatrix())
-        point = point*(*hit.getMatrix());
-      double newdist = length(start - toSG(point));
-      if (newdist < dist) {
-        dist = newdist;
-        nearestHit = toSG(point);
-        hits = true;
-      }
-    }
-  }
 
-  return hits;
+  FGSceneryIntersect intersectVisitor(SGLineSegmentd(start, end), butNotFrom);
+  intersectVisitor.setTraversalMask(SG_NODEMASK_TERRAIN_BIT);
+  get_scene_graph()->accept(intersectVisitor);
+
+  if (!intersectVisitor.getHaveHit())
+      return false;
+
+  nearestHit = intersectVisitor.getLineSegment().getEnd();
+  return true;
 }
 
 bool FGScenery::scenery_available(const SGGeod& position, double range_m)
