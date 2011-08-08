@@ -285,7 +285,7 @@ FGScenery::get_elevation_m(const SGGeod& geod, double& alt,
       return false;
 
   geodEnd = SGGeod::fromCart(intersectVisitor.getLineSegment().getEnd());
-  alt = geod.getElevationM();
+  alt = geodEnd.getElevationM();
   if (material)
       *material = intersectVisitor.getMaterial();
 
