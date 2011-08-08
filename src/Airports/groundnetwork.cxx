@@ -906,30 +906,30 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
         }
     }
     bool currStatus = current->hasHoldPosition();
-
+    current->setHoldPosition(origStatus);
     // Either a Hold Position or a resume taxi transmission has been issued
     time_t now = time(NULL) + fgGetLong("/sim/time/warp");
     if ((now - lastTransmission) > 2) {
         available = true;
     }
-    if ((origStatus != currStatus) && available) {
-        //cerr << "Issueing hold short instrudtion " << currStatus << " " << available << endl;
-        if (currStatus == true) { // No has a hold short instruction
-           transmit(&(*current), MSG_HOLD_POSITION, ATC_GROUND_TO_AIR, true);
-           //cerr << "Transmittin hold short instrudtion " << currStatus << " " << available << endl;
-           current->setState(1);
-        } else {
-           transmit(&(*current), MSG_RESUME_TAXI, ATC_GROUND_TO_AIR, true);
-           //cerr << "Transmittig resume instrudtion " << currStatus << " " << available << endl;
-           current->setState(2);
+    if (current->getState() == 0) {
+        if ((origStatus != currStatus) && available) {
+            cerr << "Issueing hold short instrudtion " << currStatus << " " << available << endl;
+            if (currStatus == true) { // No has a hold short instruction
+                transmit(&(*current), MSG_HOLD_POSITION, ATC_GROUND_TO_AIR, true);
+                cerr << "Transmittin hold short instrudtion " << currStatus << " " << available << endl;
+                current->setState(1);
+            } else {
+                transmit(&(*current), MSG_RESUME_TAXI, ATC_GROUND_TO_AIR, true);
+                cerr << "Transmittig resume instrudtion " << currStatus << " " << available << endl;
+                current->setState(2);
+            }
+            lastTransmission = now;
+            available = false;
+            // Don't act on the changed instruction until the transmission is confirmed
+            // So set back to original status
+            //cerr << "Current state " << current->getState() << endl;
         }
-        lastTransmission = now;
-        available = false;
-        // Don't act on the changed instruction until the transmission is confirmed
-        // So set back to original status
-        current->setHoldPosition(origStatus);
-        //cerr << "Current state " << current->getState() << endl;
-    } else {
     }
     //int state = current->getState();
     if (checkTransmissionState(1,1, current, now, MSG_ACKNOWLEDGE_HOLD_POSITION, ATC_AIR_TO_GROUND)) {
