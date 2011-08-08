@@ -441,6 +441,8 @@ sub serve()
 				$metar .= sprintf "$icao %02d%02d%02dZ ", $day, $hour, $min;
 				$metar .= $last_metar{$addr} || $METAR_DEFAULT;
 			}
+			
+			print $client "HTTP/1.0 200 OK\015\012";
 			print $client "Content-Type: text/plain\015\012"
 					. "X-MetarProxy: nasse Maus\015\012"
 					. "\015\012"
