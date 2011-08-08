@@ -219,6 +219,10 @@ FGEnvironmentMgr::bind ()
           &SGSky::get_3dCloudVisRange,
           &SGSky::set_3dCloudVisRange);
 
+  _tiedProperties.Tie("clouds3d-wrap", thesky,
+          &SGSky::get_3dCloudWrap,
+          &SGSky::set_3dCloudWrap);
+
 //  _tiedProperties.Tie("lightning-enable", &sgEnviro,
 //          &SGEnviro::get_lightning_enable_state,
 //          &SGEnviro::set_lightning_enable_state);

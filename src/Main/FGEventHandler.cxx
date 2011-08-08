@@ -60,6 +60,20 @@ FGEventHandler::FGEventHandler() :
     numlockKeyMap[GUIEventAdapter::KEY_KP_Home] = '7';
     numlockKeyMap[GUIEventAdapter::KEY_KP_Up] = '8';
     numlockKeyMap[GUIEventAdapter::KEY_KP_Page_Up] = '9';
+    numlockKeyMap[GUIEventAdapter::KEY_KP_Delete] = '.';
+
+    // mapping when NumLock is off
+    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Insert]     = PU_KEY_INSERT;
+    noNumlockKeyMap[GUIEventAdapter::KEY_KP_End]        = PU_KEY_END;
+    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Down]       = PU_KEY_DOWN;
+    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Page_Down]  = PU_KEY_PAGE_DOWN;
+    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Left]       = PU_KEY_LEFT;
+    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Begin]      = '5';
+    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Right]      = PU_KEY_RIGHT;
+    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Home]       = PU_KEY_HOME;
+    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Up]         = PU_KEY_UP;
+    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Page_Up]    = PU_KEY_PAGE_UP;
+    noNumlockKeyMap[GUIEventAdapter::KEY_KP_Delete]     = 127;
 
     for (int i = 0; i < 128; i++)
         release_keys[i] = i;
@@ -259,7 +273,6 @@ void FGEventHandler::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
     case GUIEventAdapter::KEY_F10:         key = PU_KEY_F10;       break;
     case GUIEventAdapter::KEY_F11:         key = PU_KEY_F11;       break;
     case GUIEventAdapter::KEY_F12:         key = PU_KEY_F12;       break;
-    case GUIEventAdapter::KEY_KP_Delete:   key = '.';  break;
     case GUIEventAdapter::KEY_KP_Enter:    key = '\r'; break;
     case GUIEventAdapter::KEY_KP_Add:      key = '+';  break;
     case GUIEventAdapter::KEY_KP_Divide:   key = '/';  break;
@@ -268,18 +281,30 @@ void FGEventHandler::handleKey(const osgGA::GUIEventAdapter& ea, int& key,
     }
     osgGA::GUIEventAdapter::EventType eventType = ea.getEventType();
 
-    std::map<int, int>::iterator numPadIter = numlockKeyMap.find(key);
-
-    if (numPadIter != numlockKeyMap.end()) {
 #ifdef __APPLE__
-        // Num Lock is always true on Mac
+    // Num Lock is always true on Mac
+    std::map<int, int>::iterator numPadIter = numlockKeyMap.find(key);
+    if (numPadIter != numlockKeyMap.end()) {
         key = numPadIter->second;
+    }
 #else
-        if (ea.getModKeyMask() & osgGA::GUIEventAdapter::MODKEY_NUM_LOCK) {
+    if (ea.getModKeyMask() & osgGA::GUIEventAdapter::MODKEY_NUM_LOCK)
+    {
+        // NumLock on: map to numeric keys
+        std::map<int, int>::iterator numPadIter = numlockKeyMap.find(key);
+        if (numPadIter != numlockKeyMap.end()) {
             key = numPadIter->second;
         }
-#endif
     }
+    else
+    {
+        // NumLock off: map to PU arrow keys
+        std::map<int, int>::iterator numPadIter = noNumlockKeyMap.find(key);
+        if (numPadIter != noNumlockKeyMap.end()) {
+            key = numPadIter->second;
+        }
+    }
+#endif
 
     modifiers = osgToFGModifiers(ea.getModKeyMask());
     currentModifiers = modifiers;
