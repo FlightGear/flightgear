@@ -684,15 +684,16 @@ void FGAIBallistic::Run(double dt) {
     if (_life_timer > life && life != -1){
 
         if (_report_expiry && !_expiry_reported && !_impact_reported && !_collision_reported){
-            //cout<<"AIBallistic run: name " << _name.c_str() << " expiry " << " pass " << _pass <<endl;
+            //cout<<"AIBallistic run: name " << _name.c_str() << " expiry " 
+                //<< " _life_timer " << _life_timer<< endl;
             handle_expiry();
         } else{
             //cout<<"AIBallistic run: name " << _name.c_str() 
-            //    << " die " <<  " _life_timer " << _life_timer << " pass " << _pass << endl;
+            //    << " die " <<  " _life_timer " << _life_timer << endl;
             setDie(true);
-            setTime(0);
         }
 
+        setTime(0);
     }
 
     //set the contents in the appropriate tank or other property in the parent to zero
@@ -982,7 +983,7 @@ void FGAIBallistic::handle_impact() {
 
 void FGAIBallistic::handle_expiry() {
 
-    SG_LOG(SG_GENERAL, SG_DEBUG, "AIBallistic: handle_expiry " << pos.getElevationM());
+    //SG_LOG(SG_GENERAL, SG_DEBUG, "AIBallistic: handle_expiry " << pos.getElevationM());
 
     report_impact(pos.getElevationM());
     _expiry_reported = true;
