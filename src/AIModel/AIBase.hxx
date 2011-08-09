@@ -300,9 +300,6 @@ public:
     inline double _getRange() { return range; };
     inline double _getBearing() { return bearing; };
 
-    virtual osg::Node* load3DModel(const string &path,
-        SGPropertyNode *prop_root);
-
     static bool _isNight();
 
      string & getCallSign();

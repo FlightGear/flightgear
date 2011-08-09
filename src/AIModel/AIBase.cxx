@@ -225,8 +225,22 @@ bool FGAIBase::init(bool search_in_AI_path) {
     else
         _installed = true;
 
-    model = load3DModel(f, props);
+    osg::Node * mdl = SGModelLib::loadPagedModel(f, props, new FGNasalModelData(props));
+    model = mdl;
 
+    double aiModelMaxRange = fgGetDouble("/sim/rendering/static-lod/ai", 0.0);
+    if( aiModelMaxRange > 0.0 ) {
+        osg::LOD * lod = new osg::LOD;
+        lod->setName("AI-model range animation node");
+
+        lod->addChild( mdl, 0, aiModelMaxRange );
+        lod->setCenterMode(osg::LOD::USE_BOUNDING_SPHERE_CENTER);
+        lod->setRangeMode(osg::LOD::DISTANCE_FROM_EYE_POINT);
+
+        model = lod;
+    }
+
+    initModel(mdl);
     if (model.valid() && _initialized == false) {
         aip.init( model.get() );
         aip.setVisible(true);
@@ -265,13 +279,6 @@ void FGAIBase::initModel(osg::Node *node)
     setDie(false);
 }
 
-
-osg::Node* FGAIBase::load3DModel(const string &path, SGPropertyNode *prop_root)
-{
-  model = SGModelLib::loadPagedModel(path, prop_root, new FGNasalModelData(prop_root));
-  initModel(model.get());
-  return model.get();
-}
 
 bool FGAIBase::isa( object_type otype ) {
     return otype == _otype;
