@@ -64,7 +64,7 @@ FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false)
     file_name = config+".xml";
     direction = tokens[2];
 
-    if (direction != "in" && direction != "out") {
+    if (direction != "in" && direction != "out" && direction != "bi") {
         SG_LOG(SG_GENERAL, SG_ALERT, "Unsuported protocol direction: "
                << direction);
     }
@@ -433,7 +433,9 @@ bool FGGeneric::open() {
 
     set_enabled( true );
 
-    if ( get_direction() == SG_IO_OUT && ! preamble.empty() ) {
+    if ( ((get_direction() == SG_IO_OUT )||
+          (get_direction() == SG_IO_BI))
+          && ! preamble.empty() ) {
         if ( ! io->write( preamble.c_str(), preamble.size() ) ) {
             SG_LOG( SG_IO, SG_WARN, "Error writing preamble." );
             return false;
@@ -448,13 +450,17 @@ bool FGGeneric::open() {
 bool FGGeneric::process() {
     SGIOChannel *io = get_io_channel();
 
-    if ( get_direction() == SG_IO_OUT ) {
+    if ( (get_direction() == SG_IO_OUT) ||
+         (get_direction() == SG_IO_BI) ) {
         gen_message();
         if ( ! io->write( buf, length ) ) {
             SG_LOG( SG_IO, SG_WARN, "Error writing data." );
             goto error_out;
         }
-    } else if ( get_direction() == SG_IO_IN ) {
+    }
+
+    if (( get_direction() == SG_IO_IN ) ||
+        (get_direction() == SG_IO_BI) ) {
         if ( io->get_type() == sgFileType ) {
             if (!binary_mode) {
                 length = io->readline( buf, FG_MAX_MSG_SIZE );
@@ -511,7 +517,9 @@ error_out:
 bool FGGeneric::close() {
     SGIOChannel *io = get_io_channel();
 
-    if ( get_direction() == SG_IO_OUT && ! postamble.empty() ) {
+    if ( ((get_direction() == SG_IO_OUT)||
+          (get_direction() == SG_IO_BI))
+          && ! postamble.empty() ) {
         if ( ! io->write( postamble.c_str(), postamble.size() ) ) {
             SG_LOG( SG_IO, SG_ALERT, "Error writing postamble." );
             return false;
