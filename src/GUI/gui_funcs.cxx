@@ -184,17 +184,13 @@ void helpCb ()
 #else // _WIN32
 
     // Look for favorite browser
-    char Dummy[1024], ExecName[1024], browserParameter[1024];
     char win32_name[1024];
 # ifdef __CYGWIN__
     cygwin32_conv_to_full_win32_path(path.c_str(),win32_name);
 # else
     strncpy(win32_name,path.c_str(), 1024);
 # endif
-    Dummy[0] = 0;
-    FindExecutable(win32_name, Dummy, ExecName);
-    snprintf(browserParameter, 1024, "file:///%s", win32_name);
-    ShellExecute ( NULL, "open", ExecName, browserParameter, Dummy,
+    ShellExecute ( NULL, "open", win32_name, NULL, NULL,
                    SW_SHOWNORMAL ) ;
 
 #endif
