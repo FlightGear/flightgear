@@ -73,23 +73,25 @@ void FGSidStar::load(SGPath filename) {
      fp->setName(name);
      SGPropertyNode * wpts_node = fpl_node->getNode("wpts");
      for (int j = 0; j < wpts_node->nChildren(); j++) { 
-          FGAIFlightPlan::waypoint* wpt = new FGAIFlightPlan::waypoint;
+          FGAIWaypoint* wpt = new FGAIWaypoint;
           SGPropertyNode * wpt_node = wpts_node->getChild(j);
           //cerr << "Reading waypoint " << j << wpt_node->getStringValue("name", "END") << endl;
-          wpt->name      = wpt_node->getStringValue("name", "END");
-          wpt->latitude  = wpt_node->getDoubleValue("lat", 0);
-          wpt->longitude = wpt_node->getDoubleValue("lon", 0);
-          wpt->altitude  = wpt_node->getDoubleValue("alt", 0);
-          wpt->speed     = wpt_node->getDoubleValue("ktas", 0);
-          wpt->crossat   = wpt_node->getDoubleValue("crossat", -10000);
-          wpt->gear_down = wpt_node->getBoolValue("gear-down", false);
-          wpt->flaps_down= wpt_node->getBoolValue("flaps-down", false);
-          wpt->on_ground = wpt_node->getBoolValue("on-ground", false);
-          wpt->time_sec   = wpt_node->getDoubleValue("time-sec", 0);
-          wpt->time       = wpt_node->getStringValue("time", "");
+          wpt->setName        (wpt_node->getStringValue("name", "END"));
+          wpt->setLatitude    (wpt_node->getDoubleValue("lat", 0));
+          wpt->setLongitude   (wpt_node->getDoubleValue("lon", 0));
+          wpt->setAltitude    (wpt_node->getDoubleValue("alt", 0));
+          wpt->setSpeed       (wpt_node->getDoubleValue("ktas", 0));
+          wpt->setCrossat     (wpt_node->getDoubleValue("crossat", -10000));
+          wpt->setGear_down   (wpt_node->getBoolValue("gear-down", false));
+          wpt->setFlaps_down  (wpt_node->getBoolValue("flaps-down", false));
+          wpt->setOn_ground   (wpt_node->getBoolValue("on-ground", false));
+          wpt->setTime_sec    (wpt_node->getDoubleValue("time-sec", 0));
+          wpt->setTime        (wpt_node->getStringValue("time", ""));
 
-          if (wpt->name == "END") wpt->finished = true;
-          else wpt->finished = false;
+          if (wpt->contains("END")) 
+                wpt->setFinished(true);
+          else 
+                wpt->setFinished(false);
 
           // 
           fp->addWaypoint( wpt );

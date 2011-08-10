@@ -81,9 +81,9 @@ public:
     double _missed_range, _tow_angle, _wait_count, _missed_count,_wp_range;
     double _dt_count, _next_run;
 
-    FGAIFlightPlan::waypoint* prev; // the one behind you
-    FGAIFlightPlan::waypoint* curr; // the one ahead
-    FGAIFlightPlan::waypoint* next; // the next plus 1
+    FGAIWaypoint* prev; // the one behind you
+    FGAIWaypoint* curr; // the one ahead
+    FGAIWaypoint* next; // the next plus 1
 
 protected:
 

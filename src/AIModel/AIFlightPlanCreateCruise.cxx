@@ -292,7 +292,7 @@ bool FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport 
 				  double alt, const string& fltType)
 {
   double vCruise = ac->getPerformance()->vCruise();
-  waypoint *wpt;
+  FGAIWaypoint *wpt;
   wpt = createInAir(ac, "Cruise", SGGeod::fromDeg(longitude, latitude), alt, vCruise);
   waypoints.push_back(wpt); 
   

@@ -280,7 +280,7 @@ bool FGAIGroundVehicle::getPitch() {
 
     } else {
 
-        if (prev->altitude == 0 || curr->altitude == 0) return false;
+        if (prev->getAltitude() == 0 || curr->getAltitude() == 0) return false;
 
         static double distance;
         static double d_alt;
@@ -289,20 +289,20 @@ bool FGAIGroundVehicle::getPitch() {
 
         if (_new_waypoint){
             //cout << "new waypoint, calculating pitch " << endl;
-            curr_alt = curr->altitude;
-            prev_alt = prev->altitude;
+            curr_alt = curr->getAltitude();
+            prev_alt = prev->getAltitude();
             //cout << "prev_alt" <<prev_alt << endl;
             d_alt = (curr_alt - prev_alt) * SG_METER_TO_FEET;
             //_elevation = prev->altitude;
-            distance = SGGeodesy::distanceM(SGGeod::fromDeg(prev->longitude, prev->latitude),
-            SGGeod::fromDeg(curr->longitude, curr->latitude));
+            distance = SGGeodesy::distanceM(SGGeod::fromDeg(prev->getLongitude(), prev->getLatitude()),
+            SGGeod::fromDeg(curr->getLongitude(), curr->getLatitude()));
             _pitch = atan2(d_alt, distance * SG_METER_TO_FEET) * SG_RADIANS_TO_DEGREES;
             //cout << "new waypoint, calculating pitch " <<  _pitch << 
             //    " " << _pitch_offset << " " << _elevation <<endl;
         }
 
         double distance_to_go = SGGeodesy::distanceM(SGGeod::fromDeg(pos.getLongitudeDeg(), pos.getLatitudeDeg()),
-            SGGeod::fromDeg(curr->longitude, curr->latitude));
+            SGGeod::fromDeg(curr->getLongitude(), curr->getLatitude()));
 
         /*cout << "tunnel " << _tunnel
              << " distance prev & curr " << prev->name << " " << curr->name << " " << distance * SG_METER_TO_FEET
@@ -385,13 +385,13 @@ void FGAIGroundVehicle::AdvanceFP(){
     double count = 0;
     string parent_next_name =_selected_ac->getStringValue("waypoint/name-next");
 
-    while(fp->getNextWaypoint() != 0 && fp->getNextWaypoint()->name != "END" && count < 5){
+    while(fp->getNextWaypoint() != 0 && fp->getNextWaypoint()->getName() != "END" && count < 5){
         SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
             <<" advancing waypoint to: " << parent_next_name);
 
-        if (fp->getNextWaypoint()->name == parent_next_name){
+        if (fp->getNextWaypoint()->getName() == parent_next_name){
             SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
-                << " not setting waypoint already at: " << fp->getNextWaypoint()->name);
+                << " not setting waypoint already at: " << fp->getNextWaypoint()->getName());
             return;
         }
 
@@ -400,9 +400,9 @@ void FGAIGroundVehicle::AdvanceFP(){
         curr = fp->getCurrentWaypoint();
         next = fp->getNextWaypoint();
 
-        if (fp->getNextWaypoint()->name == parent_next_name){
+        if (fp->getNextWaypoint()->getName() == parent_next_name){
             SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
-            << " waypoint set to: " << fp->getNextWaypoint()->name);
+            << " waypoint set to: " << fp->getNextWaypoint()->getName());
             return;
         }
 
@@ -410,15 +410,15 @@ void FGAIGroundVehicle::AdvanceFP(){
 
     }// end while loop
 
-    while(fp->getPreviousWaypoint() != 0 && fp->getPreviousWaypoint()->name != "END"
+    while(fp->getPreviousWaypoint() != 0 && fp->getPreviousWaypoint()->getName() != "END"
         && count > -10){
             SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
             << " retreating waypoint to: " << parent_next_name
-            << " at: " << fp->getNextWaypoint()->name);
+            << " at: " << fp->getNextWaypoint()->getName());
 
-        if (fp->getNextWaypoint()->name == parent_next_name){
+        if (fp->getNextWaypoint()->getName() == parent_next_name){
             SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
-                << " not setting waypoint already at:" << fp->getNextWaypoint()->name );
+                << " not setting waypoint already at:" << fp->getNextWaypoint()->getName() );
             return;
         }
 
@@ -427,9 +427,9 @@ void FGAIGroundVehicle::AdvanceFP(){
         curr = fp->getCurrentWaypoint();
         next = fp->getNextWaypoint();
 
-        if (fp->getNextWaypoint()->name == parent_next_name){
+        if (fp->getNextWaypoint()->getName() == parent_next_name){
             SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
-            << " waypoint set to: " << fp->getNextWaypoint()->name);
+            << " waypoint set to: " << fp->getNextWaypoint()->getName());
             return;
         }
 
@@ -488,7 +488,7 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
     }
 
     if(_parent == ""){
-        AccelTo(prev->speed);
+        AccelTo(prev->getSpeed());
         _dt_count = 0;
         return;
     }
@@ -499,7 +499,7 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
     bool parent_waiting = _selected_ac->getBoolValue("waypoint/waiting");
     //bool parent_restart = _selected_ac->getBoolValue("controls/restart"); 
 
-    if (parent_next_name == "END" && fp->getNextWaypoint()->name != "END" ){
+    if (parent_next_name == "END" && fp->getNextWaypoint()->getName() != "END" ){
         SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
             << " setting END: getting new waypoints ");
         AdvanceFP();
@@ -513,7 +513,7 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
         AdvanceFP();
         setWPNames();
         _waiting = true;
-    } else if (parent_next_name != "WAIT" && fp->getNextWaypoint()->name == "WAIT"){
+    } else if (parent_next_name != "WAIT" && fp->getNextWaypoint()->getName() == "WAIT"){
         SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
             << " wait done: getting new waypoints ");
         _waiting = false;
@@ -521,8 +521,8 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
         fp->IncrementWaypoint(false);
         next = fp->getNextWaypoint();
 
-        if (next->name == "WAITUNTIL" || next->name == "WAIT"
-            || next->name == "END"){
+        if (next->getName() == "WAITUNTIL" || next->getName() == "WAIT"
+            || next->getName() == "END"){
         } else {
             prev = curr;
             fp->IncrementWaypoint(false);

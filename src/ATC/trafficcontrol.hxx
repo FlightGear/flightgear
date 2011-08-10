@@ -197,6 +197,8 @@ typedef vector<FGTrafficRecord>::iterator TrafficVectorIterator;
 typedef vector<time_t> TimeVector;
 typedef vector<time_t>::iterator TimeVectorIterator;
 
+typedef vector<FGAIAircraft*> AircraftVec;
+typedef vector<FGAIAircraft*>::iterator AircraftVecIterator;
 
 /***********************************************************************
  * Active runway, a utility class to keep track of which aircraft has
@@ -209,6 +211,8 @@ private:
   int currentlyCleared;
   double distanceToFinal;
   TimeVector estimatedArrivalTimes;
+  AircraftVec departureCue;
+
 public:
   ActiveRunway(string r, int cc) { rwy = r; currentlyCleared = cc; distanceToFinal = 6.0 * SG_NM_TO_METER; };
   
@@ -218,7 +222,13 @@ public:
   //time_t getEstApproachTime() { return estimatedArrival; };
 
   //void setEstApproachTime(time_t time) { estimatedArrival = time; };
+  void addToDepartureCue(FGAIAircraft *ac) { departureCue.push_back(ac); };
+  void setCleared(int number) { currentlyCleared = number; };
   time_t requestTimeSlot(time_t eta);
+
+   int getDepartureCueSize() { return departureCue.size(); };
+   FGAIAircraft* getFirstAircraftInDepartureCue() { return departureCue.size() ? *(departureCue.begin()) : NULL; };
+   void updateDepartureCue() { departureCue.erase(departureCue.begin()); }
 };
 
 typedef vector<ActiveRunway> ActiveRunwayVec;
@@ -263,7 +273,13 @@ public:
       MSG_HOLD_POSITION,
       MSG_ACKNOWLEDGE_HOLD_POSITION,
       MSG_RESUME_TAXI,
-      MSG_ACKNOWLEDGE_RESUME_TAXI } AtcMsgId;
+      MSG_ACKNOWLEDGE_RESUME_TAXI,
+      MSG_REPORT_RUNWAY_HOLD_SHORT,
+      MSG_ACKNOWLEDGE_REPORT_RUNWAY_HOLD_SHORT,
+      MSG_SWITCH_TOWER_FREQUENCY,
+      MSG_ACKNOWLEDGE_SWITCH_TOWER_FREQUENCY
+  } AtcMsgId;
+
   typedef enum {
       ATC_AIR_TO_GROUND,
       ATC_GROUND_TO_AIR } AtcMsgDir;
@@ -286,6 +302,8 @@ public:
   void transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir msgDir, bool audible);
   string getGateName(FGAIAircraft *aircraft);
   virtual void render(bool) = 0;
+  virtual string getName()  = 0;
+
 
 private:
 
@@ -300,9 +318,10 @@ class FGTowerController : public FGATCController
 private:
   TrafficVector activeTraffic;
   ActiveRunwayVec activeRunways;
+  FGAirportDynamics *parent;
   
 public:
-  FGTowerController();
+  FGTowerController(FGAirportDynamics *parent);
   virtual ~FGTowerController() {};
   virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
 				double lat, double lon,
@@ -315,6 +334,7 @@ public:
   virtual FGATCInstruction getInstruction(int id);
 
   virtual void render(bool);
+  virtual string getName();
   bool hasActiveTraffic() { return activeTraffic.size() != 0; };
   TrafficVector &getActiveTraffic() { return activeTraffic; };
 };
@@ -329,7 +349,7 @@ class FGStartupController : public FGATCController
 private:
   TrafficVector activeTraffic;
   //ActiveRunwayVec activeRunways;
-FGAirportDynamics *parent;
+  FGAirportDynamics *parent;
   
 public:
   FGStartupController(FGAirportDynamics *parent);
@@ -345,6 +365,7 @@ public:
   virtual FGATCInstruction getInstruction(int id);
 
   virtual void render(bool);
+  virtual string getName();
 
   bool hasActiveTraffic() { return activeTraffic.size() != 0; };
   TrafficVector &getActiveTraffic() { return activeTraffic; };
@@ -363,10 +384,11 @@ class FGApproachController : public FGATCController
 private:
   TrafficVector activeTraffic;
   ActiveRunwayVec activeRunways;
+  FGAirportDynamics *parent;
   
 public:
-  FGApproachController();
-  virtual ~FGApproachController() {};
+  FGApproachController(FGAirportDynamics * parent);
+  virtual ~FGApproachController() { };
   virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
 				double lat, double lon,
 				double hdg, double spd, double alt, double radius, int leg,
@@ -378,6 +400,7 @@ public:
   virtual FGATCInstruction getInstruction(int id);
 
   virtual void render(bool);
+  virtual string getName();
 
   ActiveRunway* getRunway(string name);
 

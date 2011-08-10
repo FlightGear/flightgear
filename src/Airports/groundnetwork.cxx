@@ -46,6 +46,8 @@
 #include <AIModel/AIAircraft.hxx>
 #include <AIModel/AIFlightPlan.hxx>
 
+#include <ATC/atc_mgr.hxx>
+
 #include <Scenery/scenery.hxx>
 
 #include "groundnetwork.hxx"
@@ -170,6 +172,7 @@ bool FGTaxiRoute::next(int *nde, int *rte)
     currNode++;
     return true;
 };
+
 
 void FGTaxiRoute::rewind(int route)
 {
@@ -510,6 +513,7 @@ void FGGroundNetwork::announcePosition(int id,
     }
 }
 
+
 void FGGroundNetwork::signOff(int id)
 {
     TrafficVectorIterator i = activeTraffic.begin();
@@ -531,28 +535,40 @@ void FGGroundNetwork::signOff(int id)
         i = activeTraffic.erase(i);
     }
 }
-
+/**
+ * The ground network can deal with the following states:
+ * 0 =  Normal; no action required
+ * 1 = "Acknowledge "Hold position
+ * 2 = "Acknowledge "Resume taxi".
+ * 3 = "Issue TaxiClearance"
+ * 4 = Acknowledge Taxi Clearance"
+ * 5 = Post acknowlegde taxiclearance: Start taxiing
+ * 6 = Report runway
+ * 7 = Acknowledge report runway
+ * 8 = Switch tower frequency
+ * 9 = Acknowledge switch tower frequency
+ *************************************************************************************************************************/
 bool FGGroundNetwork::checkTransmissionState(int minState, int maxState, TrafficVectorIterator i, time_t now, AtcMsgId msgId,
                                AtcMsgDir msgDir)
 {
     int state = i->getState();
     if ((state >= minState) && (state <= maxState) && available) {
         if ((msgDir == ATC_AIR_TO_GROUND) && isUserAircraft(i->getAircraft())) {
-            
             //cerr << "Checking state " << state << " for " << i->getAircraft()->getCallSign() << endl;
             static SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
             int n = trans_num->getIntValue();
             if (n == 0) {
                 trans_num->setIntValue(-1);
                  // PopupCallback(n);
-                 cerr << "Selected transmission message " << n << endl;
+                 //cerr << "Selected transmission message " << n << endl;
+                 FGATCManager *atc = (FGATCManager*) globals->get_subsystem("atc");
+                 atc->getATCDialog()->removeEntry(1);
             } else {
                 //cerr << "creating message for " << i->getAircraft()->getCallSign() << endl;
                 transmit(&(*i), msgId, msgDir, false);
                 return false;
             }
         }
-        //cerr << "Transmitting startup msg" << endl;
         transmit(&(*i), msgId, msgDir, true);
         i->updateState();
         lastTransmission = now;
@@ -631,12 +647,11 @@ void FGGroundNetwork::updateAircraftInformation(int id, double lat, double lon,
         if ((state == 5) && available) {
             current->setState(0);
             current->getAircraft()->setTaxiClearanceRequest(false);
-            current->setHoldPosition(true);
+            current->setHoldPosition(false);
             available = false;
         }
 
     }
-
 }
 
 /**
@@ -720,6 +735,10 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
                 if (bearing > 180)
                     bearing = 360 - bearing;
                 if ((dist < mindist) && (bearing < 60.0)) {
+                    //cerr << "Current aircraft " << current->getAircraft()->getTrafficRef()->getCallSign()
+                    //     << " is closest to " << i->getAircraft()->getTrafficRef()->getCallSign() 
+                    //     << ", which has status " << i->getAircraft()->isScheduledForTakeoff() 
+                    //     << endl;
                     mindist = dist;
                     closest = i;
                     minbearing = bearing;
@@ -728,6 +747,8 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
             }
         }
         // Finally, check UserPosition
+        // Note, as of 2011-08-01, this should no longer be necessecary.
+        /*
         double userLatitude = fgGetDouble("/position/latitude-deg");
         double userLongitude = fgGetDouble("/position/longitude-deg");
         SGGeod user(SGGeod::fromDeg(userLongitude, userLatitude));
@@ -742,7 +763,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
             minbearing = bearing;
             otherReasonToSlowDown = true;
         }
-
+        */
         current->clearSpeedAdjustment();
 
         if (current->checkPositionAndIntentions(*closest)
@@ -755,11 +776,18 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
                     return;
                 else
                     current->setWaitsForId(closest->getId());
-                if (closest->getId() != current->getId())
+                if (closest->getId() != current->getId()) {
                     current->setSpeedAdjustment(closest->getSpeed() *
                                                 (mindist / 100));
-                else
+                    if ( 
+                        closest->getAircraft()->getTakeOffStatus() && 
+                        (current->getAircraft()->getTrafficRef()->getDepartureAirport() ==  closest->getAircraft()->getTrafficRef()->getDepartureAirport()) &&
+                        (current->getAircraft()->GetFlightPlan()->getRunway() == closest->getAircraft()->GetFlightPlan()->getRunway())
+                       )
+                            current->getAircraft()->scheduleForATCTowerDepartureControl(1); 
+                } else {
                     current->setSpeedAdjustment(0);     // This can only happen when the user aircraft is the one closest
+                }
                 if (mindist < maxAllowableDistance) {
                     //double newSpeed = (maxAllowableDistance-mindist);
                     //current->setSpeedAdjustment(newSpeed);
@@ -860,8 +888,10 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
                         //(!(current->getSpeedAdjustment())))
 
                     {
-                        current->setHoldPosition(true);
-                        current->setWaitsForId(i->getId());
+                        if (!(isUserAircraft(i->getAircraft()))) { // test code. Don't wait for the user, let the user wait for you.
+                            current->setHoldPosition(true);
+                            current->setWaitsForId(i->getId());
+                        }
                         //cerr << "Hold check 5: " << current->getCallSign() <<"  Setting Hold Position: distance to node ("  << node << ") "
                         //           << dist << " meters. Waiting for " << i->getCallSign();
                         //if (opposing)
@@ -879,31 +909,37 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
         }
     }
     bool currStatus = current->hasHoldPosition();
-
+    current->setHoldPosition(origStatus);
     // Either a Hold Position or a resume taxi transmission has been issued
     time_t now = time(NULL) + fgGetLong("/sim/time/warp");
     if ((now - lastTransmission) > 2) {
         available = true;
     }
-    if ((origStatus != currStatus) && available) {
-        //cerr << "Issueing hold short instrudtion " << currStatus << " " << available << endl;
-        if (currStatus == true) { // No has a hold short instruction
-           transmit(&(*current), MSG_HOLD_POSITION, ATC_GROUND_TO_AIR, true);
-           //cerr << "Transmittin hold short instrudtion " << currStatus << " " << available << endl;
-           current->setState(1);
-        } else {
-           transmit(&(*current), MSG_RESUME_TAXI, ATC_GROUND_TO_AIR, true);
-           //cerr << "Transmittig resume instrudtion " << currStatus << " " << available << endl;
-           current->setState(2);
+    if (current->getState() == 0) {
+        if ((origStatus != currStatus) && available) {
+            //cerr << "Issueing hold short instrudtion " << currStatus << " " << available << endl;
+            if (currStatus == true) { // No has a hold short instruction
+                transmit(&(*current), MSG_HOLD_POSITION, ATC_GROUND_TO_AIR, true);
+                //cerr << "Transmittin hold short instrudtion " << currStatus << " " << available << endl;
+                current->setState(1);
+            } else {
+                transmit(&(*current), MSG_RESUME_TAXI, ATC_GROUND_TO_AIR, true);
+                //cerr << "Transmittig resume instrudtion " << currStatus << " " << available << endl;
+                current->setState(2);
+            }
+            lastTransmission = now;
+            available = false;
+            // Don't act on the changed instruction until the transmission is confirmed
+            // So set back to original status
+            //cerr << "Current state " << current->getState() << endl;
         }
-        lastTransmission = now;
-        available = false;
-        // Don't act on the changed instruction until the transmission is confirmed
-        // So set back to original status
-        current->setHoldPosition(origStatus);
-        //cerr << "Current state " << current->getState() << endl;
-    } else {
+
     }
+    // 6 = Report runway
+    // 7 = Acknowledge report runway
+    // 8 = Switch tower frequency
+    //9 = Acknowledge switch tower frequency
+
     //int state = current->getState();
     if (checkTransmissionState(1,1, current, now, MSG_ACKNOWLEDGE_HOLD_POSITION, ATC_AIR_TO_GROUND)) {
             current->setState(0);
@@ -913,24 +949,22 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
             current->setState(0);
             current->setHoldPosition(false);
     }
-
-    /*if ((state == 1) && (available)) {
-        //cerr << "ACKNOWLEDGE HOLD" << endl;
-        transmit(&(*current), MSG_ACKNOWLEDGE_HOLD_POSITION, ATC_AIR_TO_GROUND, true);
-        current->setState(0);
-        current->setHoldPosition(true);
-        lastTransmission = now;
-        available = false;
-
+    if (current->getAircraft()->getTakeOffStatus() && (current->getState() == 0)) {
+            //cerr << "Scheduling " << current->getAircraft()->getCallSign() << " for hold short" << endl;
+            current->setState(6);
+        }
+    if (checkTransmissionState(6,6, current, now, MSG_REPORT_RUNWAY_HOLD_SHORT, ATC_AIR_TO_GROUND)) {
     }
-    if ((state == 2) && (available)) {
-        //cerr << "ACKNOWLEDGE RESUME" << endl;
-        transmit(&(*current), MSG_ACKNOWLEDGE_RESUME_TAXI, ATC_AIR_TO_GROUND, true);
-        current->setState(0);
-        current->setHoldPosition(false);
-        lastTransmission = now;
-        available = false;
-    }*/
+    if (checkTransmissionState(7,7, current, now, MSG_ACKNOWLEDGE_REPORT_RUNWAY_HOLD_SHORT, ATC_GROUND_TO_AIR)) {
+    }
+    if (checkTransmissionState(8,8, current, now, MSG_SWITCH_TOWER_FREQUENCY, ATC_GROUND_TO_AIR)) {
+    }
+    if (checkTransmissionState(9,9, current, now, MSG_ACKNOWLEDGE_SWITCH_TOWER_FREQUENCY, ATC_AIR_TO_GROUND)) {
+    }
+
+
+
+            //current->setState(0);
 } 
 
 /**
@@ -1208,4 +1242,8 @@ void FGGroundNetwork::render(bool visible)
         }
         globals->get_scenery()->get_scene_graph()->addChild(group);
     }
+}
+
+string FGGroundNetwork::getName() {
+    return string(parent->getId() + "-ground");
 }

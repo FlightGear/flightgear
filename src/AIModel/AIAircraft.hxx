@@ -77,6 +77,11 @@ public:
     bool getTaxiClearanceRequest() { return needsTaxiClearance; };
     FGAISchedule * getTrafficRef() { return trafficRef; };
     void setTrafficRef(FGAISchedule *ref) { trafficRef = ref; };
+    void resetTakeOffStatus() { takeOffStatus = 0;};
+    void setTakeOffStatus(int status) { takeOffStatus = status; };
+    void scheduleForATCTowerDepartureControl(int state);
+
+    //inline bool isScheduledForTakeoff() { return scheduledForTakeoff; };
 
     virtual const char* getTypeString(void) const { return "aircraft"; }
 
@@ -95,6 +100,8 @@ public:
     inline double airspeed() const { return props->getFloatValue("velocities/airspeed-kt");};
     std::string atGate();
 
+    int getTakeOffStatus() { return takeOffStatus; };
+
     void checkTcas();
 
     FGATCController * getATCController() { return controller; };
@@ -104,7 +111,9 @@ protected:
 
 private:
     FGAISchedule *trafficRef;
-    FGATCController *controller, *prevController; 
+    FGATCController *controller, 
+                    *prevController,
+                    *towerController; // Only needed to make a pre-announcement
 
     bool hdg_lock;
     bool alt_lock;
@@ -126,13 +135,13 @@ private:
     //subclasses to override specific behaviour
     bool fpExecutable(time_t now);
     void handleFirstWaypoint(void);
-    bool leadPointReached(FGAIFlightPlan::waypoint* curr);
-    bool handleAirportEndPoints(FGAIFlightPlan::waypoint* prev, time_t now);
+    bool leadPointReached(FGAIWaypoint* curr);
+    bool handleAirportEndPoints(FGAIWaypoint* prev, time_t now);
     bool reachedEndOfCruise(double&);
     bool aiTrafficVisible(void);
-    void controlHeading(FGAIFlightPlan::waypoint* curr);
-    void controlSpeed(FGAIFlightPlan::waypoint* curr,
-                      FGAIFlightPlan::waypoint* next);
+    void controlHeading(FGAIWaypoint* curr);
+    void controlSpeed(FGAIWaypoint* curr,
+                      FGAIWaypoint* next);
     
     void updatePrimaryTargetValues(bool& flightplanActive, bool& aiOutOfSight);
     
@@ -147,6 +156,7 @@ private:
     void checkVisibility();
     inline bool isStationary() { return ((fabs(speed)<=0.0001)&&(fabs(tgt_speed)<=0.0001));}
     inline bool needGroundElevation() { if (!isStationary()) _needsGroundElevation=true;return _needsGroundElevation;}
+   
 
     double sign(double x);
 
@@ -167,6 +177,7 @@ private:
     bool reachedWaypoint;
     bool needsTaxiClearance;
     bool _needsGroundElevation;
+    int  takeOffStatus; // 1 = joined departure cue; 2 = Passed DepartureHold waypoint; handover control to tower; 0 = any other state. 
     time_t timeElapsed;
 
     PerformanceData* _performance; // the performance data for this aircraft
