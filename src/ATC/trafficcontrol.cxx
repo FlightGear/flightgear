@@ -502,10 +502,12 @@ void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
     string sender, receiver;
     int stationFreq = 0;
     int taxiFreq = 0;
+    int towerFreq = 0;
     int freqId = 0;
     string atisInformation;
     string text;
     string taxiFreqStr;
+    string towerFreqStr;
     double heading = 0;
     string activeRunway;
     string fltType;
@@ -534,6 +536,9 @@ void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
         taxiFreq =
             rec->getAircraft()->getTrafficRef()->getDepartureAirport()->
             getDynamics()->getGroundFrequency(2);
+        towerFreq = 
+            rec->getAircraft()->getTrafficRef()->getDepartureAirport()->
+            getDynamics()->getTowerFrequency(2);
         receiver =
             rec->getAircraft()->getTrafficRef()->getDepartureAirport()->
             getName() + "-Ground";
@@ -673,7 +678,37 @@ void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
     case MSG_ACKNOWLEDGE_RESUME_TAXI:
         text = receiver + ". Continuing Taxi. " + sender;
         break;
+    case MSG_REPORT_RUNWAY_HOLD_SHORT:
+        activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
+        //activeRunway = "test";
+        text = receiver + ". Holding short runway " 
+                        + activeRunway 
+                        + ". " + sender;
+        //text = "test1";
+        //cerr << "1 Currently at leg " << rec->getLeg() << endl;
+        break;
+    case MSG_ACKNOWLEDGE_REPORT_RUNWAY_HOLD_SHORT:
+        activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
+        text = receiver + "Roger. Holding short runway " 
+        //                + activeRunway 
+                        + ". " + sender;
+        //text = "test2";
+        //cerr << "2 Currently at leg " << rec->getLeg() << endl;
+        break;
+    case MSG_SWITCH_TOWER_FREQUENCY:
+        towerFreqStr = formatATCFrequency3_2(towerFreq);
+        text = receiver + "Contact Tower at " + towerFreqStr + ". " + sender;
+        //text = "test3";
+        //cerr << "3 Currently at leg " << rec->getLeg() << endl;
+        break;
+    case MSG_ACKNOWLEDGE_SWITCH_TOWER_FREQUENCY:
+        towerFreqStr = formatATCFrequency3_2(towerFreq);
+        text = receiver + "Roger, switching to tower at " + towerFreqStr + ". " + sender;
+        //text = "test4";
+        //cerr << "4 Currently at leg " << rec->getLeg() << endl;
+        break;
     default:
+        //text = "test3";
         text = text + sender + ". Transmitting unknown Message";
         break;
     }
@@ -795,7 +830,7 @@ void FGTowerController::announcePosition(int id,
             rwy->addToDepartureCue(ref);
         }
 
-        cerr << ref->getTrafficRef()->getCallSign() << " You are number " << rwy->getDepartureCueSize() <<  " for takeoff " << endl;
+        //cerr << ref->getTrafficRef()->getCallSign() << " You are number " << rwy->getDepartureCueSize() <<  " for takeoff " << endl;
     } else {
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
     }

@@ -570,7 +570,7 @@ void FGAIAircraft::scheduleForATCTowerDepartureControl(int state) {
                 towerController->announcePosition(getID(), fp, fp->getCurrentWaypoint()->getRouteIndex(),
                                                    _getLatitude(), _getLongitude(), hdg, speed, altitude_ft,
                                                     trafficRef->getRadius(), leg, this);
-                cerr << "Scheduling " << trafficRef->getCallSign() << " for takeoff " << endl;
+                //cerr << "Scheduling " << trafficRef->getCallSign() << " for takeoff " << endl;
             }
         }
     }
@@ -815,7 +815,7 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIWaypoint* prev, time_t now) {
         fp->incrementLeg();
     }
     if (prev->contains(string("DepartureHold"))) {
-        cerr << "Passing point DepartureHold" << endl;
+        //cerr << "Passing point DepartureHold" << endl;
         scheduleForATCTowerDepartureControl(2);
     }
 

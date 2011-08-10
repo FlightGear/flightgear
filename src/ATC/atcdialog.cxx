@@ -36,7 +36,7 @@
 FGATCDialogNew *currentATCDialog;
 
 static bool doATCDialog(const SGPropertyNode* arg) {
-        cerr << "Running doATCDialog" << endl;
+        //cerr << "Running doATCDialog" << endl;
 	currentATCDialog->PopupDialog();
 	return(true);
 }
