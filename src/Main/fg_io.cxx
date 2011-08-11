@@ -87,7 +87,7 @@ FGIO::FGIO()
 
 FGIO::~FGIO()
 {
-    
+
 }
 
 
@@ -222,7 +222,7 @@ FGIO::parse_port_config( const string& config )
 	    int rate = atoi(tokens[2].c_str());
 	    string host = tokens[3];
 
-	     short port = atoi(tokens[4].c_str());    
+	     short port = atoi(tokens[4].c_str());
 
         // multiplay used to be handled by an FGProtocol, but no longer. This code
         // retains compatability with existing command-line syntax
@@ -283,7 +283,7 @@ FGIO::parse_port_config( const string& config )
 
 	SGSerial *ch = new SGSerial( device, baud );
 	io->set_io_channel( ch );
-        
+
         if ( protocol == "AV400WSimB" ) {
             if ( tokens.size() < 7 ) {
                 SG_LOG( SG_IO, SG_ALERT, "Missing second hz for AV400WSimB.");
@@ -345,7 +345,7 @@ FGIO::init()
     //         globals->get_channel_options_list()->size() << " requests." );
 
     _realDeltaTime = fgGetNode("/sim/time/delta-realtime-sec");
-    
+
     FGProtocol *p;
 
     // we could almost do this in a single step except pushing a valid
@@ -361,13 +361,14 @@ FGIO::init()
       if (!p) {
         continue;
       }
-      
+
       p->open();
       if ( !p->is_enabled() ) {
         SG_LOG( SG_IO, SG_ALERT, "I/O Channel config failed." );
         delete p;
+        continue;
       }
-      
+
       io_channels.push_back( p );
     } // of channel options iteration
 }
@@ -393,7 +394,7 @@ FGIO::update( double /* delta_time_sec */ )
       if (!p->is_enabled()) {
         continue;
       }
-      
+
 	    p->dec_count_down( delta_time_sec );
 	    double dt = 1 / p->get_hz();
 	    if ( p->get_count_down() < 0.33 * dt ) {
@@ -419,7 +420,7 @@ FGIO::shutdown()
       if ( p->is_enabled() ) {
           p->close();
       }
-      
+
       delete p;
     }
 
