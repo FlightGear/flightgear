@@ -75,6 +75,7 @@ const FGMouseInput::MouseCursorMap FGMouseInput::mouse_cursor_map[] = {
 FGMouseInput * FGMouseInput::mouseInput = NULL;
 
 FGMouseInput::FGMouseInput() :
+  haveWarped(false),
   xSizeNode(fgGetNode("/sim/startup/xsize", false ) ),
   ySizeNode(fgGetNode("/sim/startup/ysize", false ) ),
   xAccelNode(fgGetNode("/devices/status/mice/mouse/accel-x", true ) ),
@@ -180,6 +181,7 @@ void FGMouseInput::update ( double dt )
       m.x = (xSizeNode ? xSizeNode->getIntValue() : 800) / 2;
       m.y = (ySizeNode ? ySizeNode->getIntValue() : 600) / 2;
       fgWarpMouse(m.x, m.y);
+      haveWarped = true;
     } else {
       SG_LOG(SG_INPUT, SG_DEBUG, "Mouse mode " << mode << " out of range");
       fgSetMouseCursor(MOUSE_CURSOR_POINTER);
@@ -321,37 +323,51 @@ void FGMouseInput::doMouseMotion (int x, int y)
       m.y = y;
       return;
   }
-
+  
+  if (haveWarped)
+  {
+      // don't fire mouse-movement events at the first update after warping the mouse,
+      // just remember the new mouse position
+      haveWarped = false;
+  }
+  else
+  {
                                 // OK, PUI didn't want the event,
                                 // so we can play with it.
-  if (x != m.x) {
-    int delta = x - m.x;
-    xAccelNode->setIntValue( delta );
-    for (unsigned int i = 0; i < mode.x_bindings[modifiers].size(); i++)
-      mode.x_bindings[modifiers][i]->fire(double(delta), double(xsize));
+      if (x != m.x) {
+        int delta = x - m.x;
+        xAccelNode->setIntValue( delta );
+        for (unsigned int i = 0; i < mode.x_bindings[modifiers].size(); i++)
+          mode.x_bindings[modifiers][i]->fire(double(delta), double(xsize));
+      }
+      if (y != m.y) {
+        int delta = y - m.y;
+        yAccelNode->setIntValue( -delta );
+        for (unsigned int i = 0; i < mode.y_bindings[modifiers].size(); i++)
+          mode.y_bindings[modifiers][i]->fire(double(delta), double(ysize));
+      }
   }
-  if (y != m.y) {
-    int delta = y - m.y;
-    yAccelNode->setIntValue( -delta );
-    for (unsigned int i = 0; i < mode.y_bindings[modifiers].size(); i++)
-      mode.y_bindings[modifiers][i]->fire(double(delta), double(ysize));
-  }
-
                                 // Constrain the mouse if requested
   if (mode.constrained) {
+    int new_x=x,new_y=y;
+    
     bool need_warp = false;
     if (x <= (xsize * .25) || x >= (xsize * .75)) {
-      x = int(xsize * .5);
+      new_x = int(xsize * .5);
       need_warp = true;
     }
 
     if (y <= (ysize * .25) || y >= (ysize * .75)) {
-      y = int(ysize * .5);
+      new_y = int(ysize * .5);
       need_warp = true;
     }
 
     if (need_warp)
-      fgWarpMouse(x, y);
+    {
+      fgWarpMouse(new_x, new_y);
+      haveWarped = true;
+      SG_LOG(SG_INPUT, SG_DEBUG, "Mouse warp: " << x << ", " << y << " => " << new_x << ", " << new_y);
+    }
   }
 
   if (m.x != x)
