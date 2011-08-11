@@ -134,7 +134,7 @@ FGEnvironmentMgr::~FGEnvironmentMgr ()
 void
 FGEnvironmentMgr::init ()
 {
-  SG_LOG( SG_GENERAL, SG_INFO, "Initializing environment subsystem");
+  SG_LOG( SG_ENVIRONMENT, SG_INFO, "Initializing environment subsystem");
   SGSubsystemGroup::init();
   fgClouds->Init();
 
@@ -150,7 +150,7 @@ FGEnvironmentMgr::init ()
 void
 FGEnvironmentMgr::reinit ()
 {
-  SG_LOG( SG_GENERAL, SG_INFO, "Reinitializing environment subsystem");
+  SG_LOG( SG_ENVIRONMENT, SG_INFO, "Reinitializing environment subsystem");
   SGSubsystemGroup::reinit();
 }
 
@@ -265,7 +265,7 @@ FGEnvironmentMgr::update (double dt)
       // update closest airport information
       _positionTimeToLive = 30.0;
 
-      SG_LOG(SG_ALL, SG_INFO, "FGEnvironmentMgr::update: updating closest airport");
+      SG_LOG(SG_ENVIRONMENT, SG_INFO, "FGEnvironmentMgr::update: updating closest airport");
 
       SGGeod pos = SGGeod::fromDeg(_longitude_n->getDoubleValue(),
                                    _latitude_n->getDoubleValue());
@@ -273,7 +273,7 @@ FGEnvironmentMgr::update (double dt)
       FGAirport * nearestAirport = FGAirport::findClosest(pos, 100.0);
       if( nearestAirport == NULL )
       {
-          SG_LOG(SG_ALL,SG_WARN,"FGEnvironmentMgr::update: No airport within 100NM range");
+          SG_LOG(SG_ENVIRONMENT,SG_WARN,"FGEnvironmentMgr::update: No airport within 100NM range");
       }
       else
       {
@@ -428,7 +428,7 @@ void
 FGEnvironmentMgr::set_cloud_layer_coverage_type (int index, int type )
 {
   if( type < 0 || type >= SGCloudLayer::SG_MAX_CLOUD_COVERAGES ) {
-    SG_LOG(SG_ALL,SG_WARN,"Unknown cloud layer type " << type << " ignored" );
+    SG_LOG(SG_ENVIRONMENT,SG_WARN,"Unknown cloud layer type " << type << " ignored" );
     return;
   }
 

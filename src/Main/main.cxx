@@ -134,8 +134,8 @@ static void fgMainLoop( void ) {
     frame_signal->fireValueChanged();
     SGCloudLayer::enable_bump_mapping = fgGetBool("/sim/rendering/bump-mapping");
     
-    SG_LOG( SG_ALL, SG_DEBUG, "Running Main Loop");
-    SG_LOG( SG_ALL, SG_DEBUG, "======= ==== ====");
+    SG_LOG( SG_GENERAL, SG_DEBUG, "Running Main Loop");
+    SG_LOG( SG_GENERAL, SG_DEBUG, "======= ==== ====");
     
     
   // update "time"
@@ -242,7 +242,7 @@ static void fgMainLoop( void ) {
 
     simgear::AtomicChangeListener::fireChangeListeners();
 
-    SG_LOG( SG_ALL, SG_DEBUG, "" );
+    SG_LOG( SG_GENERAL, SG_DEBUG, "" );
 }
 
 void fgInitSoundManager()

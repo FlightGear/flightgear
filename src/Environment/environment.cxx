@@ -678,13 +678,13 @@ FGEnvironment::_recalc_sl_temperature ()
 
 #if 0
   {
-    SG_LOG(SG_GENERAL, SG_DEBUG, "recalc_sl_temperature: using "
+    SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "recalc_sl_temperature: using "
       << temperature_degc << " @ " << elevation_ft << " :: " << this);
   }
 #endif
 
   if (elevation_ft * atmodel::foot >= ISA_def[1].height) {
-    SG_LOG(SG_GENERAL, SG_ALERT, "recalc_sl_temperature: "
+    SG_LOG(SG_ENVIRONMENT, SG_ALERT, "recalc_sl_temperature: "
         << "valid only in troposphere, not " << elevation_ft);
     return;
   }
@@ -728,7 +728,7 @@ FGEnvironment::_recalc_sl_pressure ()
   using namespace atmodel;
 #if 0
   {
-    SG_LOG(SG_GENERAL, SG_ALERT, "recalc_sl_pressure: using "
+    SG_LOG(SG_ENVIRONMENT, SG_ALERT, "recalc_sl_pressure: using "
       << pressure_inhg << " and "
       << temperature_degc << " @ " << elevation_ft << " :: " << this);
   }
@@ -749,7 +749,7 @@ FGEnvironment::_recalc_alt_pt ()
   {
     static int count(0);
     if (++count % 1000 == 0) {
-      SG_LOG(SG_GENERAL, SG_ALERT, 
+      SG_LOG(SG_ENVIRONMENT, SG_ALERT, 
            "recalc_alt_pt for: " << elevation_ft
         << "  using "  << pressure_sea_level_inhg 
         << "  and "  << temperature_sea_level_degc

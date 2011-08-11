@@ -99,7 +99,7 @@ bool FGBeacon::init() {
         outer->set_reference_dist( 10.0 );
         outer->set_max_dist( 20.0 );
     } catch ( sg_io_exception &e ) {
-        SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
+        SG_LOG(SG_SOUND, SG_ALERT, e.getFormattedMessage());
     }
 
     return true;

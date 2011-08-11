@@ -279,9 +279,9 @@ FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
         string m(exc.getMessage());
         m += " ";
         m += exc.getLocation().asString();
-        SG_LOG( SG_ALL, SG_ALERT, m );
+        SG_LOG( SG_TERRAIN, SG_ALERT, m );
     } catch (const sg_exception& exc) { // XXX may be redundant
-        SG_LOG( SG_ALL, SG_ALERT, exc.getMessage());
+        SG_LOG( SG_TERRAIN, SG_ALERT, exc.getMessage());
     }
     return result;
 }
@@ -330,7 +330,7 @@ void FGTileMgr::update_queues()
             }
         } else
         {
-            SG_LOG(SG_INPUT, SG_ALERT, "Warning: empty tile in cache!");
+            SG_LOG(SG_TERRAIN, SG_ALERT, "Warning: empty tile in cache!");
         }
         tile_cache.next();
         sz++;

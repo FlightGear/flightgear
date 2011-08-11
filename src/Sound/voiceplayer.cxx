@@ -214,7 +214,7 @@ FGVoicePlayer::get_sample (const char *name)
         }
         catch (const sg_exception &e)
         {
-            SG_LOG(SG_INSTR, SG_ALERT, "Error loading sound sample \"" + filename + "\": " + e.getFormattedMessage());
+            SG_LOG(SG_SOUND, SG_ALERT, "Error loading sound sample \"" + filename + "\": " + e.getFormattedMessage());
             exit(1);
         }
 

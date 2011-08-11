@@ -36,7 +36,7 @@ FGSystemMgr::FGSystemMgr ()
     if (path_n) {
         SGPath config = globals->resolve_aircraft_path(path_n->getStringValue());
 
-        SG_LOG( SG_ALL, SG_INFO, "Reading systems from "
+        SG_LOG( SG_SYSTEMS, SG_INFO, "Reading systems from "
                 << config.str() );
         try {
             readProperties( config.str(), config_props );
@@ -44,21 +44,21 @@ FGSystemMgr::FGSystemMgr ()
             if ( build(config_props) ) {
                 enabled = true;
             } else {
-                SG_LOG( SG_ALL, SG_ALERT,
+                SG_LOG( SG_SYSTEMS, SG_ALERT,
                         "Detected an internal inconsistency in the systems");
-                SG_LOG( SG_ALL, SG_ALERT,
+                SG_LOG( SG_SYSTEMS, SG_ALERT,
                         " system specification file.  See earlier errors for" );
-                SG_LOG( SG_ALL, SG_ALERT,
+                SG_LOG( SG_SYSTEMS, SG_ALERT,
                         " details.");
                 exit(-1);
             }        
         } catch (const sg_exception&) {
-            SG_LOG( SG_ALL, SG_ALERT, "Failed to load systems system model: "
+            SG_LOG( SG_SYSTEMS, SG_ALERT, "Failed to load systems system model: "
                     << config.str() );
         }
 
     } else {
-        SG_LOG( SG_ALL, SG_WARN,
+        SG_LOG( SG_SYSTEMS, SG_WARN,
                 "No systems model specified for this model!");
     }
 
@@ -92,7 +92,7 @@ bool FGSystemMgr::build (SGPropertyNode* config_props)
             set_subsystem( "system" + temp.str(), 
                            new VacuumSystem( node ) );
         } else {
-            SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: " 
+            SG_LOG( SG_SYSTEMS, SG_ALERT, "Unknown top level section: " 
                     << name );
             return false;
         }

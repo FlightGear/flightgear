@@ -83,7 +83,7 @@ inline void MagneticVariation::recalc( double lon, double lat, double alt )
   // calculation of magnetic variation is expensive. Cache the position
   // and perform this calculation only if it has changed
   if( _lon != lon || _lat != lat || _alt != alt ) {
-    SG_LOG(SG_ALL, SG_DEBUG, "Recalculating magvar for lon=" << lon << ", lat=" << lat << ", alt=" << alt );
+    SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "Recalculating magvar for lon=" << lon << ", lat=" << lat << ", alt=" << alt );
     _lon = lon;
     _lat = lat;
     _alt = alt;
@@ -194,7 +194,7 @@ void MetarProperties::set_metar( const char * metar )
         m = new FGMetar( _metar );
     }
     catch( sg_io_exception ) {
-        SG_LOG( SG_GENERAL, SG_WARN, "Can't parse metar: " << _metar );
+        SG_LOG( SG_ENVIRONMENT, SG_WARN, "Can't parse metar: " << _metar );
         _metarValidNode->setBoolValue(false);
         return;
     }

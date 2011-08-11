@@ -71,19 +71,19 @@ FGFX::init()
 
     string path_str = node->getStringValue("path");
     if (path_str.empty()) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "No path in /sim/sound/path");
+        SG_LOG(SG_SOUND, SG_ALERT, "No path in /sim/sound/path");
         return;
     }
     
     SGPath path = globals->resolve_aircraft_path(path_str);
-    SG_LOG(SG_GENERAL, SG_INFO, "Reading sound " << node->getName()
+    SG_LOG(SG_SOUND, SG_INFO, "Reading sound " << node->getName()
            << " from " << path.str());
 
     SGPropertyNode root;
     try {
         readProperties(path.str(), &root);
     } catch (const sg_exception &) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_SOUND, SG_ALERT,
                "Error reading file '" << path.str() << '\'');
         return;
     }
@@ -99,7 +99,7 @@ FGFX::init()
   
                 _sound.push_back(sound);
             } catch ( sg_exception &e ) {
-                SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
+                SG_LOG(SG_SOUND, SG_ALERT, e.getFormattedMessage());
                 delete sound;
             }
         }

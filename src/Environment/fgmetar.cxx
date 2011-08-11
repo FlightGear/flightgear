@@ -148,11 +148,11 @@ FGMetar::FGMetar(const string& icao, const string& proxy, const string& port, co
 
 	_time = sgTimeGetGMT(_year - 1900, _month - 1, _day, _hour, _minute, 0);
 
-	SG_LOG(SG_GENERAL, SG_INFO, _data);
+	SG_LOG(SG_ENVIRONMENT, SG_INFO, _data);
 	if (_x_proxy)
-		SG_LOG(SG_GENERAL, SG_INFO, "METAR from proxy");
+		SG_LOG(SG_ENVIRONMENT, SG_INFO, "METAR from proxy");
 	else
-		SG_LOG(SG_GENERAL, SG_INFO, "METAR from weather.noaa.gov");
+		SG_LOG(SG_ENVIRONMENT, SG_INFO, "METAR from weather.noaa.gov");
 }
 
 

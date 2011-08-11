@@ -74,7 +74,12 @@ LogClassMapping log_class_mappings [] = {
   LogClassMapping(SG_CLIPPER, "clipper"),
   LogClassMapping(SG_NETWORK, "network"),
   LogClassMapping(SG_INSTR, "instrumentation"),
+  LogClassMapping(SG_ATC, "atc"),
+  LogClassMapping(SG_NASAL, "nasal"),
   LogClassMapping(SG_SYSTEMS, "systems"),
+  LogClassMapping(SG_AI, "ai"),
+  LogClassMapping(SG_ENVIRONMENT, "environment"),
+  LogClassMapping(SG_SOUND, "sound"),
   LogClassMapping(SG_UNDEFD, "")
 };
 

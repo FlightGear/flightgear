@@ -137,7 +137,7 @@ BasicRealWxController::BasicRealWxController( SGPropertyNode_ptr rootNode ) :
 
     PropertyList metars = rootNode->getChildren("metar");
     for( PropertyList::size_type i = 1; i < metars.size(); i++ ) {
-       SG_LOG( SG_ALL, SG_INFO, "Adding metar properties at " << metars[i]->getStringValue() );
+       SG_LOG( SG_ENVIRONMENT, SG_INFO, "Adding metar properties at " << metars[i]->getStringValue() );
         _metarProperties.push_back( new LiveMetarProperties( 
             fgGetNode( metars[i]->getStringValue(), true )));
     }
@@ -256,7 +256,7 @@ public:
         if (responseCode() == 200) {
             wxController->gotMetar(stationId, metar);
         } else {
-            SG_LOG(SG_IO, SG_WARN, "metar download failed:" << url() << ": reason:" << responseReason());
+            SG_LOG(SG_ENVIRONMENT, SG_WARN, "metar download failed:" << url() << ": reason:" << responseReason());
         }
     }
     
@@ -302,23 +302,23 @@ void NoaaMetarRealWxController::update( bool first, double dt )
 
     if( _positionTimeToLive <= 0.0 ) {
         // check nearest airport
-        SG_LOG(SG_ALL, SG_INFO, "NoaaMetarRealWxController::update(): (re) checking nearby airport with METAR" );
+        SG_LOG(SG_ENVIRONMENT, SG_INFO, "NoaaMetarRealWxController::update(): (re) checking nearby airport with METAR" );
         _positionTimeToLive = 60.0;
 
         SGGeod pos = SGGeod::fromDeg(_longitude_n->getDoubleValue(), _latitude_n->getDoubleValue());
 
         FGAirport * nearestAirport = FGAirport::findClosest(pos, 10000.0, MetarAirportFilter::instance() );
         if( nearestAirport == NULL ) {
-            SG_LOG(SG_ALL,SG_WARN,"RealWxController::update can't find airport with METAR within 10000NM"  );
+            SG_LOG(SG_ENVIRONMENT,SG_WARN,"RealWxController::update can't find airport with METAR within 10000NM"  );
             return;
         }
 
-        SG_LOG(SG_ALL, SG_INFO, 
+        SG_LOG(SG_ENVIRONMENT, SG_INFO, 
             "NoaaMetarRealWxController::update(): nearest airport with METAR is: " << nearestAirport->ident() );
 
         // if it has changed, invalidate the associated METAR
         if( _metarProperties[0]->getStationId() != nearestAirport->ident() ) {
-            SG_LOG(SG_ALL, SG_INFO, 
+            SG_LOG(SG_ENVIRONMENT, SG_INFO, 
                 "NoaaMetarRealWxController::update(): nearest airport with METAR has changed. Old: '" << 
                 _metarProperties[0]->getStationId() <<
                 "', new: '" << nearestAirport->ident() << "'" );
@@ -335,7 +335,7 @@ void NoaaMetarRealWxController::update( bool first, double dt )
             const std::string & stationId = p->getStationId();
             if( stationId.empty() ) continue;
 
-            SG_LOG(SG_ALL, SG_INFO, 
+            SG_LOG(SG_ENVIRONMENT, SG_INFO, 
                 "NoaaMetarRealWxController::update(): spawning load request for station-id '" << stationId << "'" );
             
             _http.makeRequest(new MetarGetRequest(this, stationId));
@@ -345,7 +345,7 @@ void NoaaMetarRealWxController::update( bool first, double dt )
 
 void NoaaMetarRealWxController::gotMetar(const string& stationId, const string& metar)
 {
-    SG_LOG( SG_ALL, SG_INFO, "NoaaMetarRwalWxController::update() received METAR for " << stationId << ": " << metar );
+    SG_LOG( SG_ENVIRONMENT, SG_INFO, "NoaaMetarRwalWxController::update() received METAR for " << stationId << ": " << metar );
     BOOST_FOREACH(LiveMetarProperties* p, _metarProperties) {
         if (p->getStationId() != stationId)
             continue;

@@ -66,7 +66,7 @@ FGLogger::init ()
     log.delimiter = delimiter.c_str()[0];
     log.output = new ofstream(filename.c_str());
     if (!log.output) {
-      SG_LOG(SG_INPUT, SG_ALERT, "Cannot write log to " << filename);
+      SG_LOG(SG_GENERAL, SG_ALERT, "Cannot write log to " << filename);
       continue;
     }
 
