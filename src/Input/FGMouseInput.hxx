@@ -118,6 +118,8 @@ private:
   } mouse_cursor_map[];
 
   mouse bindings[MAX_MICE];
+  
+  bool haveWarped;
 
   SGPropertyNode_ptr xSizeNode;
   SGPropertyNode_ptr ySizeNode;
