@@ -205,7 +205,12 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
             return true;
 #endif
         int button;
-        if (ea.getScrollingMotion() == osgGA::GUIEventAdapter::SCROLL_UP)
+        if (ea.getScrollingMotion() == osgGA::GUIEventAdapter::SCROLL_2D) {
+            if (ea.getScrollingDeltaY() > 0)
+                button = 3;
+            else
+                button = 4;
+        } else if (ea.getScrollingMotion() == osgGA::GUIEventAdapter::SCROLL_UP)
             button = 3;
         else
             button = 4;
