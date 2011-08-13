@@ -117,6 +117,8 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
     net->elevator_trim = node->getDoubleValue( "elevator-trim" );
     net->rudder_trim = node->getDoubleValue( "rudder-trim" );
     net->flaps = node->getDoubleValue( "flaps" );
+    net->speedbrake = node->getDoubleValue( "speedbrake" );
+    net->spoilers = node->getDoubleValue( "spoilers" );
     net->flaps_power
         = fgGetDouble( "/systems/electrical/outputs/flaps", 1.0 ) >= 1.0;
     net->flap_motor_ok = node->getBoolValue( "flaps-serviceable" );
@@ -233,6 +235,8 @@ void FGProps2NetCtrls( FGNetCtrls *net, bool honor_freezes,
         htond(net->elevator_trim);
         htond(net->rudder_trim);
         htond(net->flaps);
+        htond(net->speedbrake);
+        htond(net->spoilers);
         net->flaps_power = htonl(net->flaps_power);
         net->flap_motor_ok = htonl(net->flap_motor_ok);
 
@@ -300,6 +304,8 @@ void FGNetCtrls2Props( FGNetCtrls *net, bool honor_freezes,
         htond(net->elevator_trim);
         htond(net->rudder_trim);
         htond(net->flaps);
+        htond(net->speedbrake);
+        htond(net->spoilers);
         net->flaps_power = htonl(net->flaps_power);
         net->flap_motor_ok = htonl(net->flap_motor_ok);
 
