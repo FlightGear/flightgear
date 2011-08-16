@@ -3,7 +3,7 @@ noinst_LIBRARIES = libAutopilot.a
 libAutopilot_a_SOURCES = \
 	route_mgr.cxx route_mgr.hxx \
 	autopilotgroup.cxx autopilotgroup.hxx \
-	autopilot.cxx autopilot.hxx \
+	autopilot.cxx autopilot.hxx functor.hxx \
 	inputvalue.cxx inputvalue.hxx \
 	component.cxx component.hxx \
 	analogcomponent.cxx analogcomponent.hxx \
