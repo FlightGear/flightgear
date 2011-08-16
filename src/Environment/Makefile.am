@@ -16,7 +16,7 @@ libEnvironment_a_SOURCES = \
 	precipitation_mgr.cxx precipitation_mgr.hxx \
 	ridge_lift.cxx ridge_lift.hxx \
 	ephemeris.cxx ephemeris.hxx \
-	terrainsampler.cxx terrainsampler.cxx \
+	terrainsampler.cxx terrainsampler.hxx \
 	presets.cxx presets.hxx \
 	gravity.cxx gravity.hxx
 
