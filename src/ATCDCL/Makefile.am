@@ -7,7 +7,7 @@ libATCDCL_a_SOURCES = \
 	ATCVoice.hxx ATCVoice.cxx \
 	ATCmgr.hxx ATCmgr.cxx \
 	ATCutils.hxx ATCutils.cxx \
-	ATCProjection.hxx ATCProjection.cxx \
+	ATCProjection.hxx ATCProjection.cxx
 	
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
