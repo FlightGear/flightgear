@@ -2,7 +2,7 @@ noinst_LIBRARIES = libATCDCL.a
 
 libATCDCL_a_SOURCES = \
 	ATC.hxx ATC.cxx \
-	atis.hxx atis.cxx \
+	atis.hxx atis.cxx atis_lexicon.hxx atis_remap.hxx \
 	ATCDialogOld.hxx ATCDialogOld.cxx \
 	ATCVoice.hxx ATCVoice.cxx \
 	ATCmgr.hxx ATCmgr.cxx \
