@@ -99,7 +99,7 @@ Filename: "{app}\bin\oalinst.exe"; WorkingDir: "{app}"; Description: "Installing
 ;Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Description: "Launch FlightGear"; Flags: postinstall skipifsilent
 
 [Registry]
-Root: HKLM; Subkey: "Software\flightgear.org {#FGVER}"; ValueType: string; ValueName: "TerrasyncDir"; ValueData: "{code:TerrasyncDir}"
+Root: HKLM; Subkey: "Software\flightgear.org"; ValueType: string; ValueName: "TerrasyncDir"; ValueData: "{code:TerrasyncDir}"
 
 [Code]
 var
