@@ -849,16 +849,24 @@ FGMultiplayMgr::update(double dt)
     //  packet waiting to be processed.
     //////////////////////////////////////////////////
     simgear::IPAddress SenderAddress;
-    bytes = mSocket->recvfrom(msgBuf.Msg, sizeof(msgBuf.Msg), 0,
+    int RecvStatus = mSocket->recvfrom(msgBuf.Msg, sizeof(msgBuf.Msg), 0,
                               &SenderAddress);
     //////////////////////////////////////////////////
     //  no Data received
     //////////////////////////////////////////////////
-    if (bytes <= 0) {
+    if (RecvStatus == 0)
+        break;
+    // socket error reported?
+    if (RecvStatus < 0)
+    {
+      // errno isn't thread-safe - so only check its value when
+      // socket return status < 0 really indicates a failure.
       if (errno != EAGAIN && errno != 0) // MSVC output "NoError" otherwise
         perror("FGMultiplayMgr::MP_ProcessData");
       break;
     }
+    // status is positive: bytes received
+    bytes = (ssize_t) RecvStatus;
     if (bytes <= static_cast<ssize_t>(sizeof(T_MsgHdr))) {
       SG_LOG( SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - "
               << "received message with insufficient data" );
