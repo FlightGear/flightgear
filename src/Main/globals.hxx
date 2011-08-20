@@ -265,6 +265,8 @@ public:
         acmodel = model;
     }
 
+    const SGGeod & get_aircraft_position() const;
+
     inline FGModelMgr *get_model_mgr () { return model_mgr; }
 
     inline void set_model_mgr (FGModelMgr * mgr)

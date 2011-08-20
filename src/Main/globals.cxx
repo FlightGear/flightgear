@@ -37,6 +37,7 @@
 #include <simgear/misc/ResourceManager.hxx>
 #include <simgear/props/propertyObject.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/scene/model/placement.hxx>
 
 #include <Aircraft/controls.hxx>
 #include <Airports/runways.hxx>
@@ -361,6 +362,18 @@ FGGlobals::get_event_mgr () const
 {
     return event_mgr;
 }
+
+const SGGeod &
+FGGlobals::get_aircraft_position() const
+{
+    if( acmodel != NULL ) {
+        SGModelPlacement * mp = acmodel->get3DModel();
+        if( mp != NULL )
+            return mp->getPosition();
+    }
+    throw sg_exception("Can't get aircraft position", "FGGlobals::get_aircraft_position()" );
+}
+
 
 
 // Save the current state as the initial state.
