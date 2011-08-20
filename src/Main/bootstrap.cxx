@@ -25,6 +25,10 @@
 #  include <config.h>
 #endif
 
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
+#endif
+
 #if defined(HAVE_FEENABLEEXCEPT)
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -167,6 +171,11 @@ int _bootstrap_OSInit;
 // Main entry point; catch any exceptions that have made it this far.
 int main ( int argc, char **argv ) {
 #if _MSC_VER
+  // Don't show blocking "no disk in drive" error messages on Windows 7,
+  // silently return errors to application instead.
+  // See Microsoft MSDN #ms680621: "GUI apps should specify SEM_NOOPENFILEERRORBOX"
+  SetErrorMode(SEM_NOOPENFILEERRORBOX);
+
   // Windows has no $HOME aka %HOME%, so we have to construct the full path.
   // make sure it fits into the buffer. Max. path length is 255, but who knows
   // what's in these environment variables?
