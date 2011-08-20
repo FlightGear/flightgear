@@ -96,13 +96,16 @@ bool XMLLoader::findAirportData(const std::string& aICAO,
     aICAO.c_str(), fileName.c_str());
 
   for (string_list_iterator it = sc.begin(); it != sc.end(); ++it) {
-    SGPath path(*it);
-    path.append("Airports");
-    path.append(string(buffer));
-    if (path.exists()) {
-      aPath = path;
-      return true;
-    } // of path exists
+    // fg_senery contains empty strings as "markers" (see FGGlobals::set_fg_scenery)
+    if (!it->empty()) {
+        SGPath path(*it);
+        path.append("Airports");
+        path.append(string(buffer));
+        if (path.exists()) {
+          aPath = path;
+          return true;
+        } // of path exists
+    }
   } // of scenery path iteration
   return false;
 }

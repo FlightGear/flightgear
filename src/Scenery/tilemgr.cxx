@@ -255,12 +255,15 @@ FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
         string_list sc = globals->get_fg_scenery();
 
         for (string_list_iterator it = sc.begin(); it != sc.end(); ++it) {
-            SGPath tmpPath(*it);
-            tmpPath.append(modelPath);
-            if (tmpPath.exists()) {
-                fullPath = tmpPath;
-                break;
-            } 
+            // fg_senery contains empty strings as "markers" (see FGGlobals::set_fg_scenery)
+            if (!it->empty()) {
+                SGPath tmpPath(*it);
+                tmpPath.append(modelPath);
+                if (tmpPath.exists()) {
+                    fullPath = tmpPath;
+                    break;
+                }
+            }
         }
     } else {
          fullPath.append(modelPath);
