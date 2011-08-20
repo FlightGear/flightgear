@@ -420,24 +420,24 @@ FGMultiplayMgr::init (void)
   mTimeUntilSend = 0.0;
   
   mCallsign = fgGetString("/sim/multiplay/callsign");
-  if (!txAddress.empty()) {
+  if ((!txAddress.empty()) && (txAddress!="0")) {
     mServer.set(txAddress.c_str(), txPort);
     if (strncmp (mServer.getHost(), "0.0.0.0", 8) == 0) {
       mHaveServer = false;
-      SG_LOG(SG_NETWORK, SG_WARN,
-        "FGMultiplayMgr - could not resolve '"
-        << txAddress << "', Multiplayermode disabled");
+      SG_LOG(SG_NETWORK, SG_ALERT,
+        "FGMultiplayMgr - Could not resolve '"
+        << txAddress << "'. Multiplayer mode disabled.");
       return;
     } else {
-        SG_LOG(SG_NETWORK, SG_INFO, "have server");
+        SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr - have server");
       mHaveServer = true;
     }
     if (rxPort <= 0)
       rxPort = txPort;
   }
   if (rxPort <= 0) {
-    SG_LOG(SG_NETWORK, SG_DEBUG,
-      "FGMultiplayMgr - No receiver port, Multiplayermode disabled");
+    SG_LOG(SG_NETWORK, SG_ALERT,
+      "FGMultiplayMgr - No receiver port. Multiplayer mode disabled.");
     return;
   }
   if (mCallsign.empty())
@@ -451,14 +451,14 @@ FGMultiplayMgr::init (void)
   mSocket.reset(new simgear::Socket());
   if (!mSocket->open(false)) {
     SG_LOG( SG_NETWORK, SG_WARN,
-            "FGMultiplayMgr::init - Failed to create data socket" );
+            "FGMultiplayMgr - Failed to create data socket." );
     return;
   }
   mSocket->setBlocking(false);
   if (mSocket->bind(rxAddress.c_str(), rxPort) != 0) {
-    perror("bind");
-    SG_LOG( SG_NETWORK, SG_DEBUG,
-            "FGMultiplayMgr::Open - Failed to bind receive socket" );
+    SG_LOG( SG_NETWORK, SG_ALERT,
+            "FGMultiplayMgr - Failed to bind receive socket. Multiplayer mode disabled. "
+            << strerror(errno) << "(errno " << errno << ")");
     return;
   }
   
@@ -856,15 +856,24 @@ FGMultiplayMgr::update(double dt)
     //////////////////////////////////////////////////
     if (RecvStatus == 0)
         break;
+
     // socket error reported?
-    if (RecvStatus < 0)
+    // errno isn't thread-safe - so only check its value when
+    // socket return status < 0 really indicates a failure.
+    if ((RecvStatus < 0)&&
+        ((errno == EAGAIN) || (errno == 0))) // MSVC output "NoError" otherwise
     {
-      // errno isn't thread-safe - so only check its value when
-      // socket return status < 0 really indicates a failure.
-      if (errno != EAGAIN && errno != 0) // MSVC output "NoError" otherwise
-        perror("FGMultiplayMgr::MP_ProcessData");
-      break;
+        // ignore "normal" errors
+        break;
     }
+
+    if (RecvStatus<0)
+    {
+        SG_LOG(SG_NETWORK, SG_DEBUG, "FGMultiplayMgr::MP_ProcessData - Unable to receive data. "
+               << strerror(errno) << "(errno " << errno << ")");
+        break;
+    }
+
     // status is positive: bytes received
     bytes = (ssize_t) RecvStatus;
     if (bytes <= static_cast<ssize_t>(sizeof(T_MsgHdr))) {
