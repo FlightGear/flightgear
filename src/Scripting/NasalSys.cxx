@@ -768,6 +768,7 @@ static naRef f_navinfo(naContext c, naRef me, int argc, naRef* args)
             const_cast<char *>(nav->ident().c_str()), nav->ident().length()));
         HASHSET("name", 4, naStr_fromdata(naNewString(c),
             const_cast<char *>(nav->name().c_str()), nav->name().length()));
+        HASHSET("frequency", 9, naNum(nav->get_freq()));
         HASHSET("lat", 3, naNum(nav->get_lat()));
         HASHSET("lon", 3, naNum(nav->get_lon()));
         HASHSET("elevation", 9, naNum(nav->get_elev_ft() * SG_FEET_TO_METER));
