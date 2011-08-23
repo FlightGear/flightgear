@@ -36,6 +36,7 @@
 
 #include <sstream>
 #include <iostream>
+#include <errno.h>
 
 #include <Main/globals.hxx>
 #include <Main/viewmgr.hxx>

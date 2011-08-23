@@ -34,6 +34,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cstring>
+#include <errno.h>
 #include <osg/Math>             // isNaN
 
 #include <simgear/misc/stdint.hxx>
