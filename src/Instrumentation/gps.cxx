@@ -611,12 +611,11 @@ void GPS::updateReferenceNavaid(double dt)
   if (!_ref_navaid_set) {
     _ref_navaid_elapsed += dt;
     if (_ref_navaid_elapsed > 5.0) {
-      _ref_navaid_elapsed = 0.0;
 
       FGPositioned::TypeFilter vorFilter(FGPositioned::VOR);
       FGPositionedRef nav = FGPositioned::findClosest(_indicated_pos, 400.0, &vorFilter);
       if (!nav) {
-        SG_LOG(SG_INSTR, SG_INFO, "GPS couldn't find a reference navid");
+        SG_LOG(SG_INSTR, SG_INFO, "GPS couldn't find a reference navaid");
         _ref_navaid_id_node->setStringValue("");
         _ref_navaid_name_node->setStringValue("");
         _ref_navaid_bearing_node->setDoubleValue(0.0);
@@ -636,6 +635,10 @@ void GPS::updateReferenceNavaid(double dt)
       }
       
       _ref_navaid = nav;
+      // reset elapsed time (do not do that before updating the properties above, since their
+      // listeners may request another update (_ref_navaid_elapsed = 9999), which results in
+      // excessive load (FGPositioned::findClosest called in every update loop...)
+      _ref_navaid_elapsed = 0.0; 
     }
   }
   
