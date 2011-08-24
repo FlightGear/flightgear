@@ -237,8 +237,8 @@ fgSetDefaults ()
     fgSetBool("/sim/freeze/fuel", false);
 
     fgSetString("/sim/multiplay/callsign", "callsign");
-    fgSetString("/sim/multiplay/rxhost", "0");
-    fgSetString("/sim/multiplay/txhost", "0");
+    fgSetString("/sim/multiplay/rxhost", "");
+    fgSetString("/sim/multiplay/txhost", "");
     fgSetInt("/sim/multiplay/rxport", 0);
     fgSetInt("/sim/multiplay/txport", 0);
     
