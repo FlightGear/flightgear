@@ -136,7 +136,7 @@ bool GainFilterImplementation::configure( const std::string & nodeName, SGProper
 
 double ReciprocalFilterImplementation::compute(  double dt, double input )
 {
-  if( input >= -SGLimitsd::min() || input <= SGLimitsd::min() )
+  if( input >= -SGLimitsd::min() && input <= SGLimitsd::min() )
     return SGLimitsd::max();
 
   return _gainInput.get_value() / input;
