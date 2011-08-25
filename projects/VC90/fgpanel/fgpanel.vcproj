@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wsock32.lib zlibd.lib libpngd.lib fnt_d.lib ul_d.lib sg_d.lib pui_d.lib"
+				AdditionalDependencies="ws2_32.lib zlibd.lib libpngd.lib fnt_d.lib ul_d.lib sg_d.lib pui_d.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\..\install\msvc90\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib"
 				GenerateDebugInformation="true"
@@ -137,7 +137,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wsock32.lib net.lib sg.lib pui.lib fnt.lib ul.lib libpng.lib zlib.lib "
+				AdditionalDependencies="ws2_32.lib net.lib sg.lib pui.lib fnt.lib ul.lib libpng.lib zlib.lib "
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\..\install\msvc90\OpenSceneGraph\lib;..\..\..\..\3rdParty\lib"
 				GenerateDebugInformation="true"
