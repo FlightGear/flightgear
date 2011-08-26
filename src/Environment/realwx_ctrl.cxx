@@ -1,7 +1,7 @@
 // realwx_ctrl.cxx -- Process real weather data
 //
 // Written by David Megginson, started February 2002.
-// Rewritten by Torsten Dreyer, August 2010
+// Rewritten by Torsten Dreyer, August 2010, August 2011
 //
 // Copyright (C) 2002  David Megginson - david@megginson.com
 //
@@ -42,30 +42,67 @@
 
 #include <algorithm>
 
-using simgear::PropertyList;
-
 namespace Environment {
+/* -------------------------------------------------------------------------------- */
+
+class FGHTTPClient : public simgear::HTTP::Client {
+public:
+    FGHTTPClient();
+};
+
+FGHTTPClient::FGHTTPClient()
+{
+    string proxyHost(fgGetString("/sim/presets/proxy/host"));
+    int proxyPort(fgGetInt("/sim/presets/proxy/port"));
+    string proxyAuth(fgGetString("/sim/presets/proxy/auth"));
+    
+    if (!proxyHost.empty()) {
+        setProxy(proxyHost, proxyPort, proxyAuth);
+    }
+}
 
 /* -------------------------------------------------------------------------------- */
 
-class LiveMetarProperties : public MetarProperties {
+class MetarDataHandler {
 public:
-    LiveMetarProperties( SGPropertyNode_ptr rootNode );
+    virtual void handleMetarData( const std::string & data ) = 0;
+};
+
+class MetarRequester {
+public:
+    virtual void requestMetar( MetarDataHandler * metarDataHandler, const std::string & id ) = 0;
+};
+
+/* -------------------------------------------------------------------------------- */
+
+class LiveMetarProperties : public MetarProperties, MetarDataHandler {
+public:
+    LiveMetarProperties( SGPropertyNode_ptr rootNode, MetarRequester * metarRequester );
     virtual ~LiveMetarProperties();
     virtual void update( double dt );
 
     virtual double getTimeToLive() const { return _timeToLive; }
     virtual void setTimeToLive( double value ) { _timeToLive = value; }
+
+    // implementation of MetarDataHandler
+    virtual void handleMetarData( const std::string & data );
+
+    static const unsigned MAX_POLLING_INTERVAL_SECONDS = 10;
+    static const unsigned DEFAULT_TIME_TO_LIVE_SECONDS = 900;
+
 private:
     double _timeToLive;
-
+    double _pollingTimer;
+    MetarRequester * _metarRequester;
 };
 
 typedef SGSharedPtr<LiveMetarProperties> LiveMetarProperties_ptr;
 
-LiveMetarProperties::LiveMetarProperties( SGPropertyNode_ptr rootNode ) :
+LiveMetarProperties::LiveMetarProperties( SGPropertyNode_ptr rootNode, MetarRequester * metarRequester ) :
     MetarProperties( rootNode ),
-    _timeToLive(0.0)
+    _timeToLive(0.0),
+    _pollingTimer(0.0),
+    _metarRequester(metarRequester)
 {
     _tiedProperties.Tie("time-to-live", &_timeToLive );
 }
@@ -78,7 +115,22 @@ LiveMetarProperties::~LiveMetarProperties()
 void LiveMetarProperties::update( double dt )
 {
     _timeToLive -= dt;
-    if( _timeToLive < 0.0 ) _timeToLive = 0.0;
+    _pollingTimer -= dt;
+    if( _timeToLive < 0.0 ) {
+        _timeToLive = 0.0;
+        std::string stationId = getStationId();
+        if( stationId.empty() ) return;
+        if( _pollingTimer > 0.0 ) return;
+        _metarRequester->requestMetar( this, stationId );
+        _pollingTimer = MAX_POLLING_INTERVAL_SECONDS;
+    }
+}
+
+void LiveMetarProperties::handleMetarData( const std::string & data )
+{
+    SG_LOG( SG_ENVIRONMENT, SG_INFO, "LiveMetarProperties::handleMetarData() received METAR for " << getStationId() << ": " << data );
+    _timeToLive = DEFAULT_TIME_TO_LIVE_SECONDS;
+    setMetar( data );
 }
 
 /* -------------------------------------------------------------------------------- */
@@ -86,7 +138,7 @@ void LiveMetarProperties::update( double dt )
 class BasicRealWxController : public RealWxController
 {
 public:
-    BasicRealWxController( SGPropertyNode_ptr rootNode );
+    BasicRealWxController( SGPropertyNode_ptr rootNode, MetarRequester * metarRequester );
     virtual ~BasicRealWxController ();
 
     virtual void init ();
@@ -97,13 +149,11 @@ protected:
     void unbind();
     void update( double dt );
 
-    virtual void update( bool first, double dt ) = 0;
+    virtual void update (bool first, double delta_time_sec);
 
     long getMetarMaxAgeMin() const { return _max_age_n == NULL ? 0 : _max_age_n->getLongValue(); }
 
     SGPropertyNode_ptr _rootNode;
-    SGPropertyNode_ptr _longitude_n;
-    SGPropertyNode_ptr _latitude_n;
     SGPropertyNode_ptr _ground_elevation_n;
     SGPropertyNode_ptr _max_age_n;
 
@@ -112,7 +162,8 @@ protected:
     simgear::TiedPropertyList _tiedProperties;
     typedef std::vector<LiveMetarProperties_ptr> MetarPropertiesList;
     MetarPropertiesList _metarProperties;
-    
+private:
+    double _positionTimeToLive;
 };
 
 /* -------------------------------------------------------------------------------- */
@@ -122,24 +173,22 @@ Properties
  ~/metar[1..n]: string        Target property path for metar data
  */
 
-BasicRealWxController::BasicRealWxController( SGPropertyNode_ptr rootNode ) :
+BasicRealWxController::BasicRealWxController( SGPropertyNode_ptr rootNode, MetarRequester * metarRequester ) :
   _rootNode(rootNode),
-  _longitude_n( fgGetNode( "/position/longitude-deg", true )),
-  _latitude_n( fgGetNode( "/position/latitude-deg", true )),
   _ground_elevation_n( fgGetNode( "/position/ground-elev-m", true )),
   _max_age_n( fgGetNode( "/environment/params/metar-max-age-min", false ) ),
   _enabled(true),
-  __enabled(false)
+  __enabled(false),
+  _positionTimeToLive(0.0)
 {
     // at least instantiate MetarProperties for /environment/metar
     _metarProperties.push_back( new LiveMetarProperties( 
-            fgGetNode( rootNode->getStringValue("metar", "/environment/metar"), true ) ) );
+            fgGetNode( rootNode->getStringValue("metar", "/environment/metar"), true ), metarRequester ));
 
-    PropertyList metars = rootNode->getChildren("metar");
-    for( PropertyList::size_type i = 1; i < metars.size(); i++ ) {
-       SG_LOG( SG_ENVIRONMENT, SG_INFO, "Adding metar properties at " << metars[i]->getStringValue() );
+    BOOST_FOREACH( SGPropertyNode_ptr n, rootNode->getChildren("metar") ) {
+       SG_LOG( SG_ENVIRONMENT, SG_INFO, "Adding metar properties at " << n->getStringValue() );
         _metarProperties.push_back( new LiveMetarProperties( 
-            fgGetNode( metars[i]->getStringValue(), true )));
+            fgGetNode( n->getStringValue(), true ), metarRequester ));
     }
 }
 
@@ -175,11 +224,10 @@ void BasicRealWxController::update( double dt )
     bool firstIteration = !__enabled; // first iteration after being enabled?
 
     // clock tick for every METAR in stock
-    for( MetarPropertiesList::iterator it = _metarProperties.begin();
-          it != _metarProperties.end(); it++ ) {
+    BOOST_FOREACH(LiveMetarProperties* p, _metarProperties) {
       // first round? All received METARs are outdated
-      if( firstIteration ) (*it)->setTimeToLive( 0.0 );
-      (*it)->update(dt);
+      if( firstIteration ) p->setTimeToLive( 0.0 );
+      p->update(dt);
     }
 
     update( firstIteration, dt );
@@ -189,103 +237,62 @@ void BasicRealWxController::update( double dt )
   }
 }
 
-/* -------------------------------------------------------------------------------- */
-
-class NoaaMetarRealWxController : public BasicRealWxController {
-public:
-    NoaaMetarRealWxController( SGPropertyNode_ptr rootNode );
-    virtual ~NoaaMetarRealWxController();
-    virtual void update (bool first, double delta_time_sec);
-    virtual void shutdown ();
-
-    /**
-     * callback from MetarGetRequest when a download succeeds
-     */
-    void gotMetar(const string& stationId, const string& metar);
-private:
-    double _positionTimeToLive;
-    double _requestTimer;
-
-    simgear::HTTP::Client _http;
-};
-
-class MetarGetRequest : public simgear::HTTP::Request
+void BasicRealWxController::update( bool first, double dt )
 {
-public:
-    MetarGetRequest(NoaaMetarRealWxController* con, const string& s) :
-        Request(""),
-        stationId(s),
-        fromProxy(false),
-        wxController(con)
-    {
-        setUrl("http://weather.noaa.gov/pub/data/observations/metar/stations/" + stationId + ".TXT");
-    }
-    
-    virtual string_list requestHeaders() const
-    {
-        string_list r;
-        r.push_back("X-Time");
-        return r;
-    }
-    
-    virtual string header(const string& name) const
-    {
-        if (name == "X-Time") {
-            char buf[16];
-            snprintf(buf, 16, "%ld", globals->get_time_params()->get_cur_time());
-            return buf;
-        }
-        
-        return Request::header(name);     
-    }
-    
-    virtual void responseHeader(const string& key, const string& value)
-    {
-        if (key == "x-metarproxy") {
-            fromProxy = true;
-        }
-    }
-    
-    virtual void gotBodyData(const char* s, int n)
-    {
-        metar += string(s, n);
-    }
-    
-    virtual void responseComplete()
-    {
-        if (responseCode() == 200) {
-            wxController->gotMetar(stationId, metar);
-        } else {
-            SG_LOG(SG_ENVIRONMENT, SG_WARN, "metar download failed:" << url() << ": reason:" << responseReason());
-        }
-    }
-    
-    bool fromMetarProxy() const
-        { return fromProxy; }
-private:  
-    string stationId;
-    string metar;
-    bool fromProxy;
-    NoaaMetarRealWxController* wxController;
-};
+    _positionTimeToLive -= dt;
+
+    if( _positionTimeToLive <= 0.0 ) {
 
 
+        try {
+            const SGGeod & pos = globals->get_aircraft_position();
 
-NoaaMetarRealWxController::NoaaMetarRealWxController( SGPropertyNode_ptr rootNode ) :
-  BasicRealWxController(rootNode),
-  _positionTimeToLive(0.0),
-  _requestTimer(0.0)
-{
-    string proxyHost(fgGetString("/sim/presets/proxy/host"));
-    int proxyPort(fgGetInt("/sim/presets/proxy/port"));
-    string proxyAuth(fgGetString("/sim/presets/proxy/auth"));
-    
-    if (!proxyHost.empty()) {
-        _http.setProxy(proxyHost, proxyPort, proxyAuth);
+            // check nearest airport
+            SG_LOG(SG_ENVIRONMENT, SG_INFO, "NoaaMetarRealWxController::update(): (re) checking nearby airport with METAR" );
+            _positionTimeToLive = 60.0;
+
+            FGAirport * nearestAirport = FGAirport::findClosest(pos, 10000.0, MetarAirportFilter::instance() );
+            if( nearestAirport == NULL ) {
+                SG_LOG(SG_ENVIRONMENT,SG_WARN,"RealWxController::update can't find airport with METAR within 10000NM"  );
+                return;
+            }
+
+            SG_LOG(SG_ENVIRONMENT, SG_INFO, 
+                "NoaaMetarRealWxController::update(): nearest airport with METAR is: " << nearestAirport->ident() );
+
+            // if it has changed, invalidate the associated METAR
+            if( _metarProperties[0]->getStationId() != nearestAirport->ident() ) {
+                SG_LOG(SG_ENVIRONMENT, SG_INFO, 
+                    "NoaaMetarRealWxController::update(): nearest airport with METAR has changed. Old: '" << 
+                    _metarProperties[0]->getStationId() <<
+                    "', new: '" << nearestAirport->ident() << "'" );
+                _metarProperties[0]->setStationId( nearestAirport->ident() );
+                _metarProperties[0]->setTimeToLive( 0.0 );
+            }
+        }
+        catch( sg_exception & ) {
+            return;
+        }
     }
 }
 
-void NoaaMetarRealWxController::shutdown()
+/* -------------------------------------------------------------------------------- */
+
+class NoaaMetarRealWxController : public BasicRealWxController, MetarRequester {
+public:
+    NoaaMetarRealWxController( SGPropertyNode_ptr rootNode );
+    virtual ~NoaaMetarRealWxController();
+    virtual void update( double dt );
+
+    // implementation of MetarRequester
+    virtual void requestMetar( MetarDataHandler * metarDataHandler, const std::string & id );
+
+private:
+    FGHTTPClient _http;
+};
+
+NoaaMetarRealWxController::NoaaMetarRealWxController( SGPropertyNode_ptr rootNode ) :
+  BasicRealWxController(rootNode, this )
 {
 }
 
@@ -293,66 +300,77 @@ NoaaMetarRealWxController::~NoaaMetarRealWxController()
 {
 }
 
-void NoaaMetarRealWxController::update( bool first, double dt )
+void NoaaMetarRealWxController::update( double dt )
 {
     _http.update();
-    
-    _positionTimeToLive -= dt;
-    _requestTimer -= dt;
-
-    if( _positionTimeToLive <= 0.0 ) {
-        // check nearest airport
-        SG_LOG(SG_ENVIRONMENT, SG_INFO, "NoaaMetarRealWxController::update(): (re) checking nearby airport with METAR" );
-        _positionTimeToLive = 60.0;
-
-        SGGeod pos = SGGeod::fromDeg(_longitude_n->getDoubleValue(), _latitude_n->getDoubleValue());
-
-        FGAirport * nearestAirport = FGAirport::findClosest(pos, 10000.0, MetarAirportFilter::instance() );
-        if( nearestAirport == NULL ) {
-            SG_LOG(SG_ENVIRONMENT,SG_WARN,"RealWxController::update can't find airport with METAR within 10000NM"  );
-            return;
-        }
-
-        SG_LOG(SG_ENVIRONMENT, SG_INFO, 
-            "NoaaMetarRealWxController::update(): nearest airport with METAR is: " << nearestAirport->ident() );
-
-        // if it has changed, invalidate the associated METAR
-        if( _metarProperties[0]->getStationId() != nearestAirport->ident() ) {
-            SG_LOG(SG_ENVIRONMENT, SG_INFO, 
-                "NoaaMetarRealWxController::update(): nearest airport with METAR has changed. Old: '" << 
-                _metarProperties[0]->getStationId() <<
-                "', new: '" << nearestAirport->ident() << "'" );
-            _metarProperties[0]->setStationId( nearestAirport->ident() );
-            _metarProperties[0]->setTimeToLive( 0.0 );
-        }
-    }
-  
-    if( _requestTimer <= 0.0 ) {
-        _requestTimer = 10.0;
-        
-        BOOST_FOREACH(LiveMetarProperties* p, _metarProperties) {
-            if( p->getTimeToLive() > 0.0 ) continue;
-            const std::string & stationId = p->getStationId();
-            if( stationId.empty() ) continue;
-
-            SG_LOG(SG_ENVIRONMENT, SG_INFO, 
-                "NoaaMetarRealWxController::update(): spawning load request for station-id '" << stationId << "'" );
-            
-            _http.makeRequest(new MetarGetRequest(this, stationId));
-        } // of MetarProperties iteration
-    }
+    BasicRealWxController::update( dt );
 }
 
-void NoaaMetarRealWxController::gotMetar(const string& stationId, const string& metar)
+void NoaaMetarRealWxController::requestMetar( MetarDataHandler * metarDataHandler, const std::string & id )
 {
-    SG_LOG( SG_ENVIRONMENT, SG_INFO, "NoaaMetarRwalWxController::update() received METAR for " << stationId << ": " << metar );
-    BOOST_FOREACH(LiveMetarProperties* p, _metarProperties) {
-        if (p->getStationId() != stationId)
-            continue;
-            
-        p->setTimeToLive(900);
-        p->setMetar( metar );
-    }
+    class NoaaMetarGetRequest : public simgear::HTTP::Request
+    {
+    public:
+        NoaaMetarGetRequest(MetarDataHandler* metarDataHandler, const string& stationId ) :
+              Request("http://weather.noaa.gov/pub/data/observations/metar/stations/" + stationId + ".TXT"),
+              _fromProxy(false),
+              _metarDataHandler(metarDataHandler)
+          {
+          }
+
+          virtual string_list requestHeaders() const
+          {
+              string_list reply;
+              reply.push_back("X-TIME");
+              return reply;
+          }
+
+          virtual std::string header(const std::string& name) const
+          {
+              string reply;
+
+              if( name == "X-TIME" ) {
+                  ostringstream buf;
+                  buf <<  globals->get_time_params()->get_cur_time();
+                  reply = buf.str();
+              }
+
+              return reply;
+          }
+
+          virtual void responseHeader(const string& key, const string& value)
+          {
+              if (key == "x-metarproxy") {
+                  _fromProxy = true;
+              }
+          }
+
+          virtual void gotBodyData(const char* s, int n)
+          {
+              _metar += string(s, n);
+          }
+
+          virtual void responseComplete()
+          {
+              if (responseCode() == 200) {
+                  _metarDataHandler->handleMetarData( _metar);
+              } else {
+                  SG_LOG(SG_ENVIRONMENT, SG_WARN, "metar download failed:" << url() << ": reason:" << responseReason());
+              }
+          }
+
+          bool fromMetarProxy() const
+          { return _fromProxy; }
+    private:  
+        string _metar;
+        bool _fromProxy;
+        MetarDataHandler * _metarDataHandler;
+    };
+
+
+    SG_LOG(SG_ENVIRONMENT, SG_INFO, 
+        "NoaaMetarRealWxController::update(): spawning load request for station-id '" << id << "'" );
+    _http.makeRequest(new NoaaMetarGetRequest(metarDataHandler, id));
 }
 
 /* -------------------------------------------------------------------------------- */
