@@ -381,14 +381,13 @@ void FGJSBsim::init()
      << ", " << fdmex->GetAtmosphere()->GetDensity() );
 
 // deprecate egt_degf for egt-degf to have consistent naming
-// TODO: remove this by end of 2011
+// TODO: remove this for 2.6.0
     for (unsigned int i=0; i < Propulsion->GetNumEngines(); i++) {
       SGPropertyNode * node = fgGetNode("engines/engine", i, true);
       SGPropertyNode * egtn = node->getNode( "egt_degf" );
       if( egtn != NULL ) {
         SG_LOG(SG_FLIGHT,SG_ALERT,
-               "Aircraft uses deprecated node egt_degf. Please upgrade to egt-degf");
-        node->getNode("egt-degf", true)->alias( egtn );
+               "*** Aircraft uses deprecated and now unsupported node egt_degf. Please upgrade to egt-degf");
       }
     }
 // end of egt_degf deprecation patch
