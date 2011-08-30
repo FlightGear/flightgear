@@ -61,24 +61,25 @@ get_property(FG_LIBS GLOBAL PROPERTY FG_LIBS)
 #message(STATUS "SG libs ${SIMGEAR_LIBRARIES}")
 
 if(RTI_FOUND)
-  find_sg_component(hla13 SIMGEAR_LIBRARIES)
   find_sg_component(hla SIMGEAR_LIBRARIES)
+  find_sg_component(rti13 SIMGEAR_LIBRARIES)
+  find_sg_component(rti SIMGEAR_LIBRARIES)
   set(HLA_LIBRARIES ${RTI_LIBRARIES})
 else()
   set(HLA_LIBRARIES "")
 endif()
 
-target_link_libraries(fgfs 
+target_link_libraries(fgfs
 	${FG_LIBS}
 	${HLA_LIBRARIES}
 	${SIMGEAR_LIBRARIES}
-	${OPENSCENEGRAPH_LIBRARIES} 
-	${OPENAL_LIBRARY} 
+	${OPENSCENEGRAPH_LIBRARIES}
+	${OPENAL_LIBRARY}
 	${OPENGL_LIBRARIES}
-	${ALUT_LIBRARY} 
+	${ALUT_LIBRARY}
 	${ZLIB_LIBRARIES}
 	${PLIB_LIBRARIES}
 	${LIBSVN_LIBRARIES}
 	${RT_LIBRARY})
-	
+
 install(TARGETS fgfs RUNTIME DESTINATION bin)
