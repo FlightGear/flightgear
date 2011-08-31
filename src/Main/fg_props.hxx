@@ -557,7 +557,7 @@ extern bool fgSetFloat (const char * name, float val);
  */
 inline bool fgSetFloat (const std::string & name, float val)
 {
-    return fgSetBool( name.c_str(), val );
+    return fgSetFloat( name.c_str(), val );
 }
 
 
