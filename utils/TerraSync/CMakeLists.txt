@@ -4,6 +4,7 @@ add_executable(terrasync terrasync.cxx)
 
 target_link_libraries(terrasync 
 	${SIMGEAR_LIBRARIES}
+  ${OPENTHREADS_LIBRARIES}
 	${ZLIB_LIBRARIES}
     ${WINSOCK_LIBRARY})
 
