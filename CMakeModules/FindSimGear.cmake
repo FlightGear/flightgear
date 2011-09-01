@@ -1,7 +1,7 @@
 # Locate SimGear
 # This module defines
 # SIMGEAR_LIBRARIES
-# SIMGEAR_FOUND, if false, do not try to link to SimGear 
+# SIMGEAR_FOUND, if false, do not try to link to SimGear
 # SIMGEAR_INCLUDE_DIR, where to find the headers
 #
 # $SIMGEAR_DIR is an environment variable that would
@@ -30,7 +30,7 @@
 # /System/Library/Frameworks/SimGear.framework/Headers
 #
 # On OS X, this will prefer the Framework version (if found) over others.
-# People will have to manually change the cache values of 
+# People will have to manually change the cache values of
 # SimGear_LIBRARIES to override this selection or set the CMake environment
 # CMAKE_INCLUDE_PATH to modify the search paths.
 
@@ -38,7 +38,7 @@ include(SelectLibraryConfigurations)
 
 FIND_PATH(SIMGEAR_INCLUDE_DIR simgear/math/SGMath.hxx
   HINTS $ENV{SIMGEAR_DIR}
-  PATH_SUFFIXES include 
+  PATH_SUFFIXES include
   PATHS
   ~/Library/Frameworks
   /Library/Frameworks
@@ -103,9 +103,9 @@ macro(find_sg_component comp libs)
 endmacro()
 
 
-if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")  
+if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
     set(SIMGEAR_LIBRARIES "") # clear value
-    
+
     if(NOT MSVC)
         # Olaf indicates that linking the threads libs causes failures
         # on MSVC builds
@@ -115,7 +115,7 @@ if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
   # note the order here affects the order Simgear libraries are
   # linked in, and hence ability to link when using a traditional
   # linker such as GNU ld on Linux
-    set(comps 
+    set(comps
         ephem
         tsync
         environment
@@ -123,13 +123,12 @@ if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
         sky
         material
         tgdb
-        model    
+        model
         screen
         bucket
         bvh
         util route
         timing
-        ${thread_lib}
         io
         serial
         sound
@@ -137,10 +136,11 @@ if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
         props
         xml
         misc
-        debug 
+        ${thread_lib}
+        debug
         magvar
         math)
-    
+
     foreach(component ${comps})
         find_sg_component(${component} SIMGEAR_LIBRARIES)
     endforeach()
@@ -157,14 +157,14 @@ SET(CMAKE_REQUIRED_INCLUDES ${SIMGEAR_INCLUDE_DIR})
 check_cxx_source_runs(
     "#include <cstdio>
     #include \"simgear/version.h\"
-    
+
     #define xstr(s) str(s)
     #define str(s) #s
-     
+
     #define MIN_MAJOR ${SimGear_FIND_VERSION_MAJOR}
     #define MIN_MINOR ${SimGear_FIND_VERSION_MINOR}
     #define MIN_MICRO ${SimGear_FIND_VERSION_PATCH}
-    
+
     int main() {
         int major, minor, micro;
 
@@ -185,6 +185,6 @@ check_cxx_source_runs(
     SIMGEAR_VERSION_OK)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(SimGear DEFAULT_MSG 
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(SimGear DEFAULT_MSG
      SIMGEAR_LIBRARIES SIMGEAR_INCLUDE_DIR SIMGEAR_VERSION_OK)
 

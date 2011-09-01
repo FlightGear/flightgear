@@ -16,14 +16,13 @@ if(GLUT_FOUND)
 		panel_io.cxx)
 
 	target_link_libraries(fgpanel 
-		${RT_LIBRARY}
 		${PNG_LIBRARIES}
 		${GLUT_LIBRARIES}
 		${SIMGEAR_LIBRARIES}
-    ${OPENTHREADS_LIBRARIES}
 		${OPENGL_LIBRARIES}
 		${ZLIB_LIBRARIES}
 		${PLIB_LIBRARIES}
+		${RT_LIBRARY}
 		)
 
 	install(TARGETS fgpanel RUNTIME DESTINATION bin)

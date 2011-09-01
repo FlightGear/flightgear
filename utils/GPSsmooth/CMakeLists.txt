@@ -3,10 +3,11 @@ add_executable(GPSsmooth gps.cxx gps_main.cxx)
 add_executable(MIDGsmooth MIDG-II.cxx MIDG_main.cxx)
 add_executable(UGsmooth UGear.cxx UGear_command.cxx UGear_main.cxx UGear_telnet.cxx)
 
-target_link_libraries(GPSsmooth 
+target_link_libraries(GPSsmooth
 	${SIMGEAR_IO_LIBRARY}
 	${SIMGEAR_MISC_LIBRARY}
 	${SIMGEAR_STRUCTURE_LIBRARY}
+	${SIMGEAR_THREADS_LIBRARY}
 	${SIMGEAR_TIMING_LIBRARY}
 	${SIMGEAR_DEBUG_LIBRARY}
 	${PLIB_SG_LIBRARY}
@@ -15,18 +16,17 @@ target_link_libraries(GPSsmooth
 	${WINMM_LIBRARY}
 	${WINSOCK_LIBRARY}
 	${ZLIB_LIBRARIES}
-  ${OPENTHREADS_LIBRARIES}
 	${RT_LIBRARY}
 )
 
-target_link_libraries(MIDGsmooth 
+target_link_libraries(MIDGsmooth
 	${SIMGEAR_IO_LIBRARY}
 	${SIMGEAR_MATH_LIBRARY}
 	${SIMGEAR_SERIAL_LIBRARY}
 	${SIMGEAR_STRUCTURE_LIBRARY}
+	${SIMGEAR_THREADS_LIBRARY}
 	${SIMGEAR_TIMING_LIBRARY}
 	${SIMGEAR_DEBUG_LIBRARY}
-  ${OPENTHREADS_LIBRARIES}
 	${PLIB_SG_LIBRARY}
 	${PLIB_UL_LIBRARY}
 	${WINMM_LIBRARY}
@@ -34,15 +34,15 @@ target_link_libraries(MIDGsmooth
 	${RT_LIBRARY}
 )
 
-target_link_libraries(UGsmooth 
+target_link_libraries(UGsmooth
 	${SIMGEAR_DEBUG_LIBRARY}
 	${SIMGEAR_IO_LIBRARY}
 	${SIMGEAR_MATH_LIBRARY}
 	${SIMGEAR_MISC_LIBRARY}
 	${SIMGEAR_SERIAL_LIBRARY}
 	${SIMGEAR_STRUCTURE_LIBRARY}
+	${SIMGEAR_THREADS_LIBRARY}
 	${SIMGEAR_TIMING_LIBRARY}
-  ${OPENTHREADS_LIBRARIES}
 	${PLIB_SG_LIBRARY}
 	${PLIB_UL_LIBRARY}
 	${WINMM_LIBRARY}
