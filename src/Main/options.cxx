@@ -215,6 +215,7 @@ fgSetDefaults ()
     fgSetBool("/sim/rendering/enhanced-lighting", false);
     fgSetBool("/sim/rendering/distance-attenuation", false);
     fgSetBool("/sim/rendering/specular-highlight", true);
+    fgSetString("/sim/rendering/materials-file", "materials.xml");
     fgSetInt("/sim/startup/xsize", 800);
     fgSetInt("/sim/startup/ysize", 600);
     fgSetInt("/sim/rendering/bits-per-pixel", 16);
@@ -1407,6 +1408,7 @@ struct OptionDesc {
     {"texture-filtering",            false, OPTION_INT,    "/sim/rendering/filtering", 1, "", 0 },
     {"disable-wireframe",            false, OPTION_BOOL,   "/sim/rendering/wireframe", false, "", 0 },
     {"enable-wireframe",             false, OPTION_BOOL,   "/sim/rendering/wireframe", true, "", 0 },
+    {"materials-file",               true,  OPTION_STRING, "/sim/rendering/materials-file", false, "", 0 },
     {"disable-terrasync",            false, OPTION_BOOL,   "/sim/terrasync/enabled", false, "", 0 },
     {"enable-terrasync",             false, OPTION_BOOL,   "/sim/terrasync/enabled", true, "", 0 },
     {"terrasync-dir",                true,  OPTION_STRING, "/sim/terrasync/scenery-dir", false, "", 0 },

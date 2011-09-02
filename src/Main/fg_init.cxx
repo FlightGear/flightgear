@@ -1362,10 +1362,11 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
 
     SGPath mpath( globals->get_fg_root() );
-    mpath.append( "materials.xml" );
+    mpath.append( fgGetString("/sim/rendering/materials-file") );
     if ( ! globals->get_matlib()->load(globals->get_fg_root(), mpath.str(),
             globals->get_props()) ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Error loading material lib!" );
+        SG_LOG( SG_GENERAL, SG_ALERT,
+                "Error loading materials file " << mpath.str() );
         exit(-1);
     }
 
