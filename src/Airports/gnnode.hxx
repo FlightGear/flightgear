@@ -44,6 +44,7 @@ private:
   FGTaxiNode* previousNode;
   FGTaxiSegment* previousSeg;
 
+
 public:
   FGTaxiNode() :
       index(0),
@@ -69,14 +70,14 @@ public:
 
 FGTaxiNode &operator =(const FGTaxiNode &other)
 {
-   geod          = other.geod;
-   index        = other.index;
-   isOnRunway   = other.isOnRunway;
-   holdType     = other.holdType;
-   next         = other.next;
-   pathScore    = other.pathScore;
-   previousNode = other.previousNode;
-   previousSeg  = other.previousSeg;
+   geod                               = other.geod;
+   index                              = other.index;
+   isOnRunway                         = other.isOnRunway;
+   holdType                           = other.holdType;
+   next                               = other.next;
+   pathScore                          = other.pathScore;
+   previousNode                       = other.previousNode;
+   previousSeg                        = other.previousSeg;
    return *this;
 };
 
@@ -113,7 +114,6 @@ FGTaxiNode &operator =(const FGTaxiNode &other)
   FGTaxiSegmentVectorIterator getEndRoute()   { return next.end();   }; 
   bool operator<(const FGTaxiNode &other) const { return index < other.index; };
 
-  //void sortEndSegments(bool);
 
 };
 

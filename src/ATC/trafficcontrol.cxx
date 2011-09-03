@@ -1249,7 +1249,7 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
 
 // Note that this function is copied from simgear. for maintanance purposes, it's probabtl better to make a general function out of that.
 static void WorldCoordinate(osg::Matrix& obj_pos, double lat,
-                            double lon, double elev, double hdg)
+                            double lon, double elev, double hdg, double slope)
 {
     SGGeod geod = SGGeod::fromDegM(lon, lat, elev);
     obj_pos = geod.makeZUpFrame();
@@ -1257,6 +1257,8 @@ static void WorldCoordinate(osg::Matrix& obj_pos, double lat,
     // around the Z axis
     obj_pos.preMult(osg::Matrix::rotate(hdg * SGD_DEGREES_TO_RADIANS,
                                         0.0, 0.0, 1.0));
+    obj_pos.preMult(osg::Matrix::rotate(slope * SGD_DEGREES_TO_RADIANS,
+                                        0.0, 1.0, 0.0));
 }
 
 
@@ -1269,7 +1271,7 @@ void FGStartupController::render(bool visible)
         globals->get_scenery()->get_scene_graph()->removeChild(group);
         //while (group->getNumChildren()) {
         //  cerr << "Number of children: " << group->getNumChildren() << endl;
-        simgear::EffectGeode* geode = (simgear::EffectGeode*) group->getChild(0);
+        //simgear::EffectGeode* geode = (simgear::EffectGeode*) group->getChild(0);
           //osg::MatrixTransform *obj_trans = (osg::MatrixTransform*) group->getChild(0);
            //geode->releaseGLObjects();
            //group->removeChild(geode);
@@ -1278,6 +1280,10 @@ void FGStartupController::render(bool visible)
     }
     if (visible) {
         group = new osg::Group;
+        FGScenery * local_scenery = globals->get_scenery();
+        double elevation_meters = 0.0;
+        double elevation_feet = 0.0;
+
 
         //for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
         double dx = 0;
@@ -1304,8 +1310,36 @@ void FGStartupController::render(bool visible)
                 osg::Matrix obj_pos;
                 osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
                 obj_trans->setDataVariance(osg::Object::STATIC);
+                // Experimental: Calculate slope here, based on length, and the individual elevations
+                double elevationStart;
+                if (isUserAircraft((i)->getAircraft())) {
+                    elevationStart = fgGetDouble("/position/ground-elev-m");
+                } else {
+                    elevationStart = ((i)->getAircraft()->_getAltitude()); 
+                }
+                double elevationEnd   = segment->getEnd()->getElevation();
+                if (elevationEnd == 0) {
+                    SGGeod center2 = end;
+                    center2.setElevationM(SG_MAX_ELEVATION_M);
+                    if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
+                        elevation_feet = elevationEnd * SG_METER_TO_FEET + 0.5;
+                            //elevation_meters += 0.5;
+                    }
+                    else { 
+                        elevationEnd = parent->getElevation()+8+dx;
+                    }
+                    segment->getEnd()->setElevation(elevationEnd);
+                }
 
-                WorldCoordinate( obj_pos, center.getLatitudeDeg(), center.getLongitudeDeg(), parent->getElevation()+8+dx, -(heading) );
+                double elevationMean  = (elevationStart + elevationEnd) / 2.0;
+                double elevDiff       = elevationEnd - elevationStart;
+               
+               double slope = atan2(elevDiff, length) * SGD_RADIANS_TO_DEGREES;
+                
+               //cerr << "1. Using mean elevation : " << elevationMean << " and " << slope << endl;
+
+                WorldCoordinate( obj_pos, center.getLatitudeDeg(), center.getLongitudeDeg(), elevationMean + 0.5, -(heading), slope );
+;
 
                 obj_trans->setMatrix( obj_pos );
                 //osg::Vec3 center(0, 0, 0)
@@ -1339,7 +1373,45 @@ void FGStartupController::render(bool visible)
                     osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
                     obj_trans->setDataVariance(osg::Object::STATIC);
                     FGTaxiSegment *segment  = parent->getGroundNetwork()->findSegment(k);
-                    WorldCoordinate( obj_pos, segment->getLatitude(), segment->getLongitude(), parent->getElevation()+8+dx, -(segment->getHeading()) );
+
+                    double elevationStart = segment->getStart()->getElevation();
+                    double elevationEnd   = segment->getEnd  ()->getElevation();
+                    if (elevationStart == 0) {
+                        SGGeod center2 = segment->getStart()->getGeod();
+                        center2.setElevationM(SG_MAX_ELEVATION_M);
+                        if (local_scenery->get_elevation_m( center2, elevationStart, NULL )) {
+                            elevation_feet = elevationStart * SG_METER_TO_FEET + 0.5;
+                            //elevation_meters += 0.5;
+                        }
+                        else { 
+                            elevationStart = parent->getElevation()+8+dx;
+                        }
+                        segment->getStart()->setElevation(elevationStart);
+                    }
+                    if (elevationEnd == 0) {
+                        SGGeod center2 = segment->getEnd()->getGeod();
+                        center2.setElevationM(SG_MAX_ELEVATION_M);
+                        if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
+                            elevation_feet = elevationEnd * SG_METER_TO_FEET + 0.5;
+                            //elevation_meters += 0.5;
+                        }
+                        else { 
+                            elevationEnd = parent->getElevation()+8+dx;
+                        }
+                        segment->getEnd()->setElevation(elevationEnd);
+                    }
+ 
+                    double elevationMean  = (elevationStart + elevationEnd) / 2.0;
+                    double elevDiff       = elevationEnd - elevationStart;
+                    double length         = segment->getLength();
+                    double slope = atan2(elevDiff, length) * SGD_RADIANS_TO_DEGREES;
+                
+                    //cerr << "2. Using mean elevation : " << elevationMean << " and " << slope << endl;
+
+
+                    WorldCoordinate( obj_pos, segment->getLatitude(), segment->getLongitude(), elevationMean + 0.5, -(segment->getHeading()), slope );
+
+                    //WorldCoordinate( obj_pos, segment->getLatitude(), segment->getLongitude(), parent->getElevation()+8+dx, -(segment->getHeading()) );
 
                     obj_trans->setMatrix( obj_pos );
                     //osg::Vec3 center(0, 0, 0)

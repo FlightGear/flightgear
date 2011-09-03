@@ -100,6 +100,8 @@ void FGTaxiSegment::setDimensions(double elevation)
     SGGeodesy::inverse(start->getGeod(), end->getGeod(), heading, az2, length);
     double coveredDistance = length * 0.5;
     SGGeodesy::direct(start->getGeod(), heading, coveredDistance, center, az2);
+    //start->setElevation(elevation);
+    //end->setElevation(elevation);
     //cerr << "Centerpoint = (" << center.getLatitudeDeg() << ", " << center.getLongitudeDeg() << "). Heading = " << heading << endl;
 }
 
@@ -214,13 +216,40 @@ FGGroundNetwork::FGGroundNetwork()
     count = 0;
     currTraffic = activeTraffic.begin();
     group = 0;
+    networkInitialized = false;
 
 }
 
 FGGroundNetwork::~FGGroundNetwork()
 {
+    //cerr << "Running Groundnetwork Destructor " << endl;
+    bool saveData = false;
+    ofstream cachefile;
+    if (fgGetBool("/sim/ai/groundnet-cache")) {
+        SGPath cacheData(fgGetString("/sim/fg-home"));
+        cacheData.append("ai");
+        string airport = parent->getId();
+
+        if ((airport) != "") {
+            char buffer[128];
+            ::snprintf(buffer, 128, "%c/%c/%c/",
+                       airport[0], airport[1], airport[2]);
+            cacheData.append(buffer);
+            if (!cacheData.exists()) {
+                cacheData.create_dir(0777);
+            }
+            cacheData.append(airport + "-groundnet-cache.txt");
+            cachefile.open(cacheData.str().c_str());
+            saveData = true;
+        }
+    }
     for (FGTaxiNodeVectorIterator node = nodes.begin();
          node != nodes.end(); node++) {
+         if (saveData) {
+            cachefile << (*node)->getIndex     () << " "
+                      << (*node)->getElevation ()   << " " 
+                      << endl;
+         }
         delete(*node);
     }
     nodes.clear();
@@ -230,6 +259,44 @@ FGGroundNetwork::~FGGroundNetwork()
         delete(*seg);
     }
     segments.clear();
+    if (saveData) {
+        cachefile.close();
+    }
+}
+
+void FGGroundNetwork::saveElevationCache() {
+    //cerr << "Running Groundnetwork Destructor " << endl;
+    bool saveData = false;
+    ofstream cachefile;
+    if (fgGetBool("/sim/ai/groundnet-cache")) {
+        SGPath cacheData(fgGetString("/sim/fg-home"));
+        cacheData.append("ai");
+        string airport = parent->getId();
+
+        if ((airport) != "") {
+            char buffer[128];
+            ::snprintf(buffer, 128, "%c/%c/%c/",
+                       airport[0], airport[1], airport[2]);
+            cacheData.append(buffer);
+            if (!cacheData.exists()) {
+                cacheData.create_dir(0777);
+            }
+            cacheData.append(airport + "-groundnet-cache.txt");
+            cachefile.open(cacheData.str().c_str());
+            saveData = true;
+        }
+    }
+    for (FGTaxiNodeVectorIterator node = nodes.begin();
+         node != nodes.end(); node++) {
+         if (saveData) {
+            cachefile << (*node)->getIndex     () << " "
+                      << (*node)->getElevation () << " " 
+                      << endl;
+         }
+    }
+    if (saveData) {
+        cachefile.close();
+    }
 }
 
 void FGGroundNetwork::addSegment(const FGTaxiSegment & seg)
@@ -261,7 +328,13 @@ void FGGroundNetwork::addNodes(FGParkingVec * parkings)
 
 void FGGroundNetwork::init()
 {
+    if (networkInitialized) {
+        FGATCController::init();
+        //cerr << "FGground network already initialized" << endl;
+        return;
+    }
     hasNetwork = true;
+    nextSave = 0;
     int index = 1;
     sort(nodes.begin(), nodes.end(), compare_nodes);
     //sort(segments.begin(), segments.end(), compare_segments());
@@ -269,7 +342,7 @@ void FGGroundNetwork::init()
     while (i != segments.end()) {
         (*i)->setStart(&nodes);
         (*i)->setEnd(&nodes);
-        (*i)->setDimensions(parent->getElevation());
+        (*i)->setDimensions(parent->getElevation() * SG_FEET_TO_METER);
         (*i)->setIndex(index);
         if ((*i)->isPushBack()) {
             pushBackNodes.push_back((*i)->getEnd());
@@ -310,6 +383,42 @@ void FGGroundNetwork::init()
     //}
     //cerr << "Done initializing ground network" << endl;
     //exit(1);
+    if (fgGetBool("/sim/ai/groundnet-cache")) {
+        SGPath cacheData(fgGetString("/sim/fg-home"));
+        cacheData.append("ai");
+        string airport = parent->getId();
+
+        if ((airport) != "") {
+            char buffer[128];
+            ::snprintf(buffer, 128, "%c/%c/%c/",
+                       airport[0], airport[1], airport[2]);
+            cacheData.append(buffer);
+            if (!cacheData.exists()) {
+                cacheData.create_dir(0777);
+            }
+            int index;
+            double elev;
+            cacheData.append(airport + "-groundnet-cache.txt");
+            if (cacheData.exists()) {
+                ifstream data(cacheData.c_str());
+                for (FGTaxiNodeVectorIterator i = nodes.begin();
+                     i != nodes.end(); 
+                     i++) {
+                    (*i)->setElevation(parent->getElevation() * SG_FEET_TO_METER);
+                    data >> index >> elev;
+                    if (data.eof())
+                        break;
+                    if (index != (*i)->getIndex()) {
+                        SG_LOG(SG_GENERAL, SG_ALERT, "Index read from ground network cache at airport " << airport << " does not match index in the network itself");
+                    } else {
+                        (*i)->setElevation(elev);
+                    }
+                }
+            }
+        }
+    }
+    //cerr << "Finished initializing " << parent->getId() << " groundnetwork " << endl;
+    networkInitialized = true;
 }
 
 int FGGroundNetwork::findNearestNode(const SGGeod & aGeod)
@@ -582,6 +691,11 @@ void FGGroundNetwork::updateAircraftInformation(int id, double lat, double lon,
                                                 double heading, double speed, double alt,
                                                 double dt)
 {
+    time_t currentTime = time(NULL);
+    if (nextSave < currentTime) {
+        saveElevationCache();
+        nextSave = currentTime + 100 + rand() % 200;
+    }
     // Check whether aircraft are on hold due to a preceding pushback. If so, make sure to 
     // Transmit air-to-ground "Ready to taxi request:
     // Transmit ground to air approval / hold
@@ -1124,7 +1238,7 @@ FGATCInstruction FGGroundNetwork::getInstruction(int id)
 
 // Note that this function is copied from simgear. for maintanance purposes, it's probabtl better to make a general function out of that.
 static void WorldCoordinate(osg::Matrix& obj_pos, double lat,
-                            double lon, double elev, double hdg)
+                            double lon, double elev, double hdg, double slope)
 {
     SGGeod geod = SGGeod::fromDegM(lon, lat, elev);
     obj_pos = geod.makeZUpFrame();
@@ -1132,6 +1246,8 @@ static void WorldCoordinate(osg::Matrix& obj_pos, double lat,
     // around the Z axis
     obj_pos.preMult(osg::Matrix::rotate(hdg * SGD_DEGREES_TO_RADIANS,
                                         0.0, 0.0, 1.0));
+    obj_pos.preMult(osg::Matrix::rotate(slope * SGD_DEGREES_TO_RADIANS,
+                                        0.0, 1.0, 0.0));
 }
 
 
@@ -1146,7 +1262,7 @@ void FGGroundNetwork::render(bool visible)
         globals->get_scenery()->get_scene_graph()->removeChild(group);
         //while (group->getNumChildren()) {
         //  cerr << "Number of children: " << group->getNumChildren() << endl;
-        simgear::EffectGeode* geode = (simgear::EffectGeode*) group->getChild(0);
+        //simgear::EffectGeode* geode = (simgear::EffectGeode*) group->getChild(0);
           //osg::MatrixTransform *obj_trans = (osg::MatrixTransform*) group->getChild(0);
            //geode->releaseGLObjects();
            //group->removeChild(geode);
@@ -1155,7 +1271,9 @@ void FGGroundNetwork::render(bool visible)
     }
     if (visible) {
         group = new osg::Group;
-
+        FGScenery * local_scenery = globals->get_scenery();
+        double elevation_meters = 0.0;
+        double elevation_feet = 0.0;
         //for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
         double dx = 0;
         for   (TrafficVectorIterator i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
@@ -1180,8 +1298,36 @@ void FGGroundNetwork::render(bool visible)
                 osg::Matrix obj_pos;
                 osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
                 obj_trans->setDataVariance(osg::Object::STATIC);
+                // Experimental: Calculate slope here, based on length, and the individual elevations
+                double elevationStart;
+                if (isUserAircraft((i)->getAircraft())) {
+                    elevationStart = fgGetDouble("/position/ground-elev-m");
+                } else {
+                    elevationStart = ((i)->getAircraft()->_getAltitude()); 
+                }
+                double elevationEnd   = segments[pos]->getEnd()->getElevation();
+                //cerr << "Using elevation " << elevationEnd << endl;
 
-                WorldCoordinate( obj_pos, center.getLatitudeDeg(), center.getLongitudeDeg(), parent->elevation()+8+dx, -(heading) );
+                if (elevationEnd == 0) {
+                    SGGeod center2 = end;
+                    center2.setElevationM(SG_MAX_ELEVATION_M);
+                    if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
+                        elevation_feet = elevationEnd * SG_METER_TO_FEET + 0.5;
+                            //elevation_meters += 0.5;
+                    }
+                    else { 
+                        elevationEnd = parent->getElevation()+8+dx;
+                    }
+                    segments[pos]->getEnd()->setElevation(elevationEnd);
+                }
+                double elevationMean  = (elevationStart + elevationEnd) / 2.0;
+                double elevDiff       = elevationEnd - elevationStart;
+               
+               double slope = atan2(elevDiff, length) * SGD_RADIANS_TO_DEGREES;
+                
+               //cerr << "1. Using mean elevation : " << elevationMean << " and " << slope << endl;
+
+                WorldCoordinate( obj_pos, center.getLatitudeDeg(), center.getLongitudeDeg(), elevationMean+ 0.5, -(heading), slope );
 
                 obj_trans->setMatrix( obj_pos );
                 //osg::Vec3 center(0, 0, 0)
@@ -1214,7 +1360,43 @@ void FGGroundNetwork::render(bool visible)
                     osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
                     obj_trans->setDataVariance(osg::Object::STATIC);
 
-                    WorldCoordinate( obj_pos, segments[k]->getLatitude(), segments[k]->getLongitude(), parent->elevation()+8+dx, -(segments[k]->getHeading()) );
+                    // Experimental: Calculate slope here, based on length, and the individual elevations
+                    double elevationStart = segments[k]->getStart()->getElevation();
+                    double elevationEnd   = segments[k]->getEnd  ()->getElevation();
+                    if (elevationStart == 0) {
+                        SGGeod center2 = segments[k]->getStart()->getGeod();
+                        center2.setElevationM(SG_MAX_ELEVATION_M);
+                        if (local_scenery->get_elevation_m( center2, elevationStart, NULL )) {
+                            elevation_feet = elevationStart * SG_METER_TO_FEET + 0.5;
+                            //elevation_meters += 0.5;
+                        }
+                        else { 
+                            elevationStart = parent->getElevation()+8+dx;
+                        }
+                        segments[k]->getStart()->setElevation(elevationStart);
+                    }
+                    if (elevationEnd == 0) {
+                        SGGeod center2 = segments[k]->getEnd()->getGeod();
+                        center2.setElevationM(SG_MAX_ELEVATION_M);
+                        if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
+                            elevation_feet = elevationEnd * SG_METER_TO_FEET + 0.5;
+                            //elevation_meters += 0.5;
+                        }
+                        else { 
+                            elevationEnd = parent->getElevation()+8+dx;
+                        }
+                        segments[k]->getEnd()->setElevation(elevationEnd);
+                    }
+
+                    double elevationMean  = (elevationStart + elevationEnd) / 2.0;
+                    double elevDiff       = elevationEnd - elevationStart;
+                    double length         = segments[k]->getLength();
+                    double slope = atan2(elevDiff, length) * SGD_RADIANS_TO_DEGREES;
+                
+                   // cerr << "2. Using mean elevation : " << elevationMean << " and " << slope << endl;
+
+
+                    WorldCoordinate( obj_pos, segments[k]->getLatitude(), segments[k]->getLongitude(), elevationMean+ 0.5, -(segments[k]->getHeading()), slope );
 
                     obj_trans->setMatrix( obj_pos );
                     //osg::Vec3 center(0, 0, 0)

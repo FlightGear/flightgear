@@ -1,6 +1,7 @@
 #include "gnnode.hxx"
 #include "groundnetwork.hxx"
 
+#include <iostream>
 #include <algorithm>
 using std::sort;
 
@@ -74,3 +75,5 @@ void FGTaxiNode::setLongitude(const string& val)
 //  else
 //    sort(next.begin(), next.end(), sortByHeadingDiff);
 //}
+
+

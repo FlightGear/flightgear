@@ -76,6 +76,7 @@ FGAirport::FGAirport(const string &id, const SGGeod& location, const SGGeod& tow
 
 FGAirport::~FGAirport()
 {
+    cerr << "Deleting Airport" << endl;
     delete _dynamics;
 }
 

@@ -150,6 +150,7 @@ public:
   void setCourseDiff(double crse);
 
 
+
   
 };
 
@@ -227,6 +228,8 @@ class FGGroundNetwork : public FGATCController
 {
 private:
   bool hasNetwork;
+  bool networkInitialized;
+  time_t nextSave;
   //int maxDepth;
   int count;
   FGTaxiNodeVector    nodes;
@@ -292,6 +295,7 @@ public:
   virtual void render(bool);
   virtual string getName();
 
+  void saveElevationCache();
 };
 
 

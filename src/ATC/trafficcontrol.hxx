@@ -241,9 +241,10 @@ typedef vector<ActiveRunway>::iterator ActiveRunwayVecIterator;
 class FGATCController
 {
 private:
-     bool initialized;
+    
 
 protected:
+  bool initialized;
   bool available;
   time_t lastTransmission;
 
