@@ -263,29 +263,30 @@ if test "x$with_rti13" != "xno"; then
     AC_MSG_CHECKING([for simgear HLA/RTI support])
     AC_LANG_PUSH(C++)
     AC_TRY_COMPILE([
-        #include <simgear/hla/HLA13Federate.hxx>
+        #include <simgear/hla/HLAFederate.hxx>
         ],[
-        new simgear::HLA13Federate;
+        new simgear::HLAFederate;
         ], simgear_hla=yes, simgear_hla=no)
     AC_MSG_RESULT($simgear_hla)
     if test "x$simgear_hla" = "xyes" ; then
         AC_MSG_CHECKING([for hla libraries])
         saved_LIBS="$LIBS"
         saved_LDFLAGS="$LDFLAGS"
+        have_rti13=no
         for rti13libs in "-lRTI-NG -lFedTime" "-lRTI-NGd -lFedTimed" ; do
             if test "x$hla_libs" = "x" ; then
-                LIBS="-lsghla13 -lsghla -lsgxml -lsgstructure -lsgmath -lsgdebug -lsgtiming $rti13libs -lrt $saved_LIBS"
+                LIBS="-lsghla -lsgrti13 -lsgrti -lsgxml -lsgstructure -lsgmath -lsgdebug -lsgtiming $rti13libs -lrt $saved_LIBS"
                 LDFLAGS="$HLA_LDFLAGS $saved_LDFLAGS"
                 AC_TRY_LINK([
-                    #include <simgear/hla/HLA13Federate.hxx>
+                    #include <simgear/hla/HLAFederate.hxx>
                     ],[
-                    new simgear::HLA13Federate;
+                    new simgear::HLAFederate;
                     ], [hla_libs="$rti13libs"; have_rti13=yes],)
             fi
         done
         LIBS="$saved_LIBS"
         LDFLAGS="$saved_LDFLAGS"
-        AC_MSG_RESULT($hla_libs)
+        AC_MSG_RESULT($have_rti13)
     fi
     AC_LANG_POP()
 fi
@@ -293,7 +294,7 @@ dnl Currently only the rti13 variant, but in the future also rti1516
 AM_CONDITIONAL(WITH_HLA, test "x$have_rti13" = "xyes")
 if test "x$have_rti13" = "xyes" ; then
     AC_DEFINE([FG_HAVE_HLA], 1, [Define if HLA/RTI is available.])
-    AC_SUBST(HLA_LIBS, "-lsghla13 -lsghla $hla_libs")
+    AC_SUBST(HLA_LIBS, "-lsghla -lsgrti13 -lsgrti $hla_libs")
 fi
 
 dnl EXPERIMENTAL fgpanel application

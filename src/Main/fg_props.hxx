@@ -85,6 +85,18 @@ extern bool fgLoadProps (const char * path, SGPropertyNode * props,
  */
 extern SGPropertyNode * fgGetNode (const char * path, bool create = false);
 
+/**
+ * Get a property node.
+ *
+ * @param path The path of the node, relative to root.
+ * @param create true to create the node if it doesn't exist.
+ * @return The node, or 0 if none exists and none was created.
+ */
+inline SGPropertyNode * fgGetNode (const std::string & path, bool create = false)
+{
+    return fgGetNode(path.c_str(), create );
+}
+
 
 /**
  * Get a property node with separate index.
@@ -103,6 +115,26 @@ extern SGPropertyNode * fgGetNode (const char * path, bool create = false);
 extern SGPropertyNode * fgGetNode (const char * path,
 				   int index, bool create = false);
 
+/**
+ * Get a property node with separate index.
+ *
+ * This method separates the index from the path string, to make it
+ * easier to iterate through multiple components without using sprintf
+ * to add indices.  For example, fgGetNode("foo[1]/bar", 3) will
+ * return the same result as fgGetNode("foo[1]/bar[3]").
+ *
+ * @param path The path of the node, relative to root.
+ * @param index The index for the last member of the path (overrides
+ * any given in the string).
+ * @param create true to create the node if it doesn't exist.
+ * @return The node, or 0 if none exists and none was created.
+ */
+inline SGPropertyNode * fgGetNode (const std::string & path,
+				   int index, bool create = false)
+{
+    return fgGetNode(path.c_str(), index, create );
+}
+
 
 /**
  * Test whether a given node exists.
@@ -111,6 +143,17 @@ extern SGPropertyNode * fgGetNode (const char * path,
  * @return true if the node exists, false otherwise.
  */
 extern bool fgHasNode (const char * path);
+
+/**
+ * Test whether a given node exists.
+ *
+ * @param path The path of the node, relative to root.
+ * @return true if the node exists, false otherwise.
+ */
+inline bool fgHasNode (const std::string & path)
+{
+    return fgHasNode( path.c_str() );
+}
 
 
 /**
@@ -124,6 +167,20 @@ extern bool fgHasNode (const char * path);
 extern void fgAddChangeListener (SGPropertyChangeListener * listener,
 				 const char * path);
 
+/**
+ * Add a listener to a node.
+ *
+ * @param listener The listener to add to the node.
+ * @param path The path of the node, relative to root.
+ * @param index The index for the last member of the path (overrides
+ * any given in the string).
+ */
+inline void fgAddChangeListener (SGPropertyChangeListener * listener,
+				 const std::string & path)
+{
+    fgAddChangeListener( listener, path.c_str() );
+}
+
 
 /**
  * Add a listener to a node.
@@ -135,6 +192,20 @@ extern void fgAddChangeListener (SGPropertyChangeListener * listener,
  */
 extern void fgAddChangeListener (SGPropertyChangeListener * listener,
 				 const char * path, int index);
+
+/**
+ * Add a listener to a node.
+ *
+ * @param listener The listener to add to the node.
+ * @param path The path of the node, relative to root.
+ * @param index The index for the last member of the path (overrides
+ * any given in the string).
+ */
+inline void fgAddChangeListener (SGPropertyChangeListener * listener,
+				 const std::string & path, int index)
+{
+    fgAddChangeListener( listener, path.c_str(), index );
+}
 
 
 /**
@@ -153,6 +224,25 @@ extern void fgAddChangeListener (SGPropertyChangeListener * listener,
  */
 extern bool fgGetBool (const char * name, bool defaultValue = false);
 
+/**
+ * Get a bool value for a property.
+ *
+ * This method is convenient but inefficient.  It should be used
+ * infrequently (i.e. for initializing, loading, saving, etc.),
+ * not in the main loop.  If you need to get a value frequently,
+ * it is better to look up the node itself using fgGetNode and then
+ * use the node's getBoolValue() method, to avoid the lookup overhead.
+ *
+ * @param name The property name.
+ * @param defaultValue The default value to return if the property
+ *        does not exist.
+ * @return The property's value as a bool, or the default value provided.
+ */
+inline bool fgGetBool (const std::string & name, bool defaultValue = false)
+{
+    return fgGetBool( name.c_str(), defaultValue );
+}
+
 
 /**
  * Get an int value for a property.
@@ -169,6 +259,25 @@ extern bool fgGetBool (const char * name, bool defaultValue = false);
  * @return The property's value as an int, or the default value provided.
  */
 extern int fgGetInt (const char * name, int defaultValue = 0);
+
+/**
+ * Get an int value for a property.
+ *
+ * This method is convenient but inefficient.  It should be used
+ * infrequently (i.e. for initializing, loading, saving, etc.),
+ * not in the main loop.  If you need to get a value frequently,
+ * it is better to look up the node itself using fgGetNode and then
+ * use the node's getIntValue() method, to avoid the lookup overhead.
+ *
+ * @param name The property name.
+ * @param defaultValue The default value to return if the property
+ *        does not exist.
+ * @return The property's value as an int, or the default value provided.
+ */
+inline int fgGetInt (const std::string & name, int defaultValue = 0)
+{
+    return fgGetInt( name.c_str(), defaultValue );
+}
 
 
 /**
@@ -187,6 +296,25 @@ extern int fgGetInt (const char * name, int defaultValue = 0);
  */
 extern int fgGetLong (const char * name, long defaultValue = 0L);
 
+/**
+ * Get a long value for a property.
+ *
+ * This method is convenient but inefficient.  It should be used
+ * infrequently (i.e. for initializing, loading, saving, etc.),
+ * not in the main loop.  If you need to get a value frequently,
+ * it is better to look up the node itself using fgGetNode and then
+ * use the node's getLongValue() method, to avoid the lookup overhead.
+ *
+ * @param name The property name.
+ * @param defaultValue The default value to return if the property
+ *        does not exist.
+ * @return The property's value as a long, or the default value provided.
+ */
+inline int fgGetLong (const std::string & name, long defaultValue = 0L)
+{
+    return fgGetLong( name.c_str(), defaultValue );
+}
+
 
 /**
  * Get a float value for a property.
@@ -204,6 +332,25 @@ extern int fgGetLong (const char * name, long defaultValue = 0L);
  */
 extern float fgGetFloat (const char * name, float defaultValue = 0.0);
 
+/**
+ * Get a float value for a property.
+ *
+ * This method is convenient but inefficient.  It should be used
+ * infrequently (i.e. for initializing, loading, saving, etc.),
+ * not in the main loop.  If you need to get a value frequently,
+ * it is better to look up the node itself using fgGetNode and then
+ * use the node's getFloatValue() method, to avoid the lookup overhead.
+ *
+ * @param name The property name.
+ * @param defaultValue The default value to return if the property
+ *        does not exist.
+ * @return The property's value as a float, or the default value provided.
+ */
+inline float fgGetFloat (const std::string & name, float defaultValue = 0.0)
+{
+    return fgGetFloat( name.c_str(), defaultValue );
+}
+
 
 /**
  * Get a double value for a property.
@@ -220,6 +367,25 @@ extern float fgGetFloat (const char * name, float defaultValue = 0.0);
  * @return The property's value as a double, or the default value provided.
  */
 extern double fgGetDouble (const char * name, double defaultValue = 0.0);
+
+/**
+ * Get a double value for a property.
+ *
+ * This method is convenient but inefficient.  It should be used
+ * infrequently (i.e. for initializing, loading, saving, etc.),
+ * not in the main loop.  If you need to get a value frequently,
+ * it is better to look up the node itself using fgGetNode and then
+ * use the node's getDoubleValue() method, to avoid the lookup overhead.
+ *
+ * @param name The property name.
+ * @param defaultValue The default value to return if the property
+ *        does not exist.
+ * @return The property's value as a double, or the default value provided.
+ */
+inline double fgGetDouble (const std::string & name, double defaultValue = 0.0)
+{
+    return fgGetDouble( name.c_str(), defaultValue );
+}
 
 
 /**
@@ -239,6 +405,26 @@ extern double fgGetDouble (const char * name, double defaultValue = 0.0);
 extern const char * fgGetString (const char * name,
 				 const char * defaultValue = "");
 
+/**
+ * Get a string value for a property.
+ *
+ * This method is convenient but inefficient.  It should be used
+ * infrequently (i.e. for initializing, loading, saving, etc.),
+ * not in the main loop.  If you need to get a value frequently,
+ * it is better to look up the node itself using fgGetNode and then
+ * use the node's getStringValue() method, to avoid the lookup overhead.
+ *
+ * @param name The property name.
+ * @param defaultValue The default value to return if the property
+ *        does not exist.
+ * @return The property's value as a string, or the default value provided.
+ */
+inline const char * fgGetString (const std::string & name,
+				 const std::string & defaultValue = string(""))
+{
+    return fgGetString( name.c_str(), defaultValue.c_str() );
+}
+
 
 /**
  * Set a bool value for a property.
@@ -254,6 +440,24 @@ extern const char * fgGetString (const char * name,
  * @return true if the assignment succeeded, false otherwise.
  */
 extern bool fgSetBool (const char * name, bool val);
+
+/**
+ * Set a bool value for a property.
+ *
+ * Assign a bool value to a property.  If the property does not
+ * yet exist, it will be created and its type will be set to
+ * BOOL; if it has a type of UNKNOWN, the type will also be set to
+ * BOOL; otherwise, the bool value will be converted to the property's
+ * type.
+ *
+ * @param name The property name.
+ * @param val The new value for the property.
+ * @return true if the assignment succeeded, false otherwise.
+ */
+inline bool fgSetBool (const std::string & name, bool val)
+{
+    return fgSetBool( name.c_str(), val );
+}
 
 
 /**
@@ -271,6 +475,23 @@ extern bool fgSetBool (const char * name, bool val);
  */
 extern bool fgSetInt (const char * name, int val);
 
+/**
+ * Set an int value for a property.
+ *
+ * Assign an int value to a property.  If the property does not
+ * yet exist, it will be created and its type will be set to
+ * INT; if it has a type of UNKNOWN, the type will also be set to
+ * INT; otherwise, the bool value will be converted to the property's
+ * type.
+ *
+ * @param name The property name.
+ * @param val The new value for the property.
+ * @return true if the assignment succeeded, false otherwise.
+ */
+inline bool fgSetInt (const std::string & name, int val)
+{
+    return fgSetInt( name.c_str(), val );
+}
 
 /**
  * Set a long value for a property.
@@ -286,6 +507,24 @@ extern bool fgSetInt (const char * name, int val);
  * @return true if the assignment succeeded, false otherwise.
  */
 extern bool fgSetLong (const char * name, long val);
+
+/**
+ * Set a long value for a property.
+ *
+ * Assign a long value to a property.  If the property does not
+ * yet exist, it will be created and its type will be set to
+ * LONG; if it has a type of UNKNOWN, the type will also be set to
+ * LONG; otherwise, the bool value will be converted to the property's
+ * type.
+ *
+ * @param name The property name.
+ * @param val The new value for the property.
+ * @return true if the assignment succeeded, false otherwise.
+ */
+inline bool fgSetLong (const std::string & name, long val)
+{
+    return fgSetLong( name.c_str(), val );
+}
 
 
 /**
@@ -303,6 +542,24 @@ extern bool fgSetLong (const char * name, long val);
  */
 extern bool fgSetFloat (const char * name, float val);
 
+/**
+ * Set a float value for a property.
+ *
+ * Assign a float value to a property.  If the property does not
+ * yet exist, it will be created and its type will be set to
+ * FLOAT; if it has a type of UNKNOWN, the type will also be set to
+ * FLOAT; otherwise, the bool value will be converted to the property's
+ * type.
+ *
+ * @param name The property name.
+ * @param val The new value for the property.
+ * @return true if the assignment succeeded, false otherwise.
+ */
+inline bool fgSetFloat (const std::string & name, float val)
+{
+    return fgSetFloat( name.c_str(), val );
+}
+
 
 /**
  * Set a double value for a property.
@@ -319,6 +576,24 @@ extern bool fgSetFloat (const char * name, float val);
  */
 extern bool fgSetDouble (const char * name, double val);
 
+/**
+ * Set a double value for a property.
+ *
+ * Assign a double value to a property.  If the property does not
+ * yet exist, it will be created and its type will be set to
+ * DOUBLE; if it has a type of UNKNOWN, the type will also be set to
+ * DOUBLE; otherwise, the double value will be converted to the property's
+ * type.
+ *
+ * @param name The property name.
+ * @param val The new value for the property.
+ * @return true if the assignment succeeded, false otherwise.
+ */
+inline bool fgSetDouble (const std::string & name, double val)
+{
+    return fgSetDouble( name.c_str(), val );
+}
+
 
 /**
  * Set a string value for a property.
@@ -334,6 +609,24 @@ extern bool fgSetDouble (const char * name, double val);
  * @return true if the assignment succeeded, false otherwise.
  */
 extern bool fgSetString (const char * name, const char * val);
+
+/**
+ * Set a string value for a property.
+ *
+ * Assign a string value to a property.  If the property does not
+ * yet exist, it will be created and its type will be set to
+ * STRING; if it has a type of UNKNOWN, the type will also be set to
+ * STRING; otherwise, the string value will be converted to the property's
+ * type.
+ *
+ * @param name The property name.
+ * @param val The new value for the property.
+ * @return true if the assignment succeeded, false otherwise.
+ */
+inline bool fgSetString (const std::string & name, const std::string & val)
+{
+    return fgSetString( name.c_str(), val.c_str() );
+}
 
 
 

@@ -37,7 +37,7 @@
 #include <simgear/structure/exception.hxx>
 #include <simgear/xml/easyxml.hxx>
 
-#include <simgear/hla/HLA13Federate.hxx>
+#include <simgear/hla/HLAFederate.hxx>
 #include <simgear/hla/HLAArrayDataElement.hxx>
 #include <simgear/hla/HLADataElement.hxx>
 #include <simgear/hla/HLADataType.hxx>
@@ -77,7 +77,7 @@ public:
 
     HLAVersion getRTIVersion() const
     { return _rtiVersion; }
-    const std::vector<std::string>& getRTIArguments() const
+    const std::list<std::string>& getRTIArguments() const
     { return _rtiArguments; }
 
     struct DataElement {
@@ -318,7 +318,7 @@ private:
 
     std::string _federateObjectModel;
     HLAVersion _rtiVersion;
-    std::vector<std::string> _rtiArguments;
+    std::list<std::string> _rtiArguments;
 
     ObjectClassConfigList _objectClassConfigList;
 };
@@ -818,7 +818,8 @@ private:
     sg::HLADataElement::IndexPathPair _mpPropertiesIndexPathPair;
 };
 
-FGHLA::FGHLA(const std::vector<std::string>& tokens)
+FGHLA::FGHLA(const std::vector<std::string>& tokens) :
+    _hlaFederate(new simgear::HLAFederate)
 {
     if (1 < tokens.size() && !tokens[1].empty())
         set_direction(tokens[1]);
@@ -919,14 +920,23 @@ FGHLA::open()
     // We need that to communicate to the rti
     switch (configReader.getRTIVersion()) {
     case RTI13:
-        _hlaFederate = new simgear::HLA13Federate;
+        if (!_hlaFederate->connect(simgear::HLAFederate::RTI13, configReader.getRTIArguments())) {
+            SG_LOG(SG_IO, SG_ALERT, "Could not connect to RTI13 federation.");
+            return false;
+        }
         break;
     case RTI1516:
-        SG_LOG(SG_IO, SG_ALERT, "HLA version RTI1516 not yet(!?) supported.");
-        return false;
+        if (!_hlaFederate->connect(simgear::HLAFederate::RTI1516, configReader.getRTIArguments())) {
+            SG_LOG(SG_IO, SG_ALERT, "Could not connect to RTI1516 federation.");
+            return false;
+        }
+        break;
     case RTI1516E:
-        SG_LOG(SG_IO, SG_ALERT, "HLA version RTI1516E not yet(!?) supported.");
-        return false;
+        if (!_hlaFederate->connect(simgear::HLAFederate::RTI1516E, configReader.getRTIArguments())) {
+            SG_LOG(SG_IO, SG_ALERT, "Could not connect to RTI1516E federation.");
+            return false;
+        }
+        break;
     }
 
     // Try to create a new federation execution
@@ -1264,7 +1274,7 @@ FGHLA::close()
     _hlaFederate->destroyFederationExecution(_federation);
 
     // throw away the HLAFederate
-    _hlaFederate = 0;
+    _hlaFederate->disconnect();
 
     set_enabled(false);
 

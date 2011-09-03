@@ -5,6 +5,7 @@ set(SP_FDM_SOURCES
 	SP/ACMS.cxx
 	SP/ADA.cxx
 	SP/Balloon.cxx
+	SP/BalloonSim.cpp
 	SP/MagicCarpet.cxx
 	)
 endif()

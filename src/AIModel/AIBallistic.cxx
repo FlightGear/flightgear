@@ -859,7 +859,7 @@ void FGAIBallistic::Run(double dt) {
         hs = 0;
 
     // adjust vertical speed for acceleration of gravity, buoyancy, and vertical force
-    double gravity = Environment::Gravity::instance()->getGravity(pos);
+    double gravity = SG_METER_TO_FEET * (Environment::Gravity::instance()->getGravity(pos));
     vs -= (gravity - _buoyancy - v_force_acc_fpss - normal_force_fpss) * dt;
 
     if (vs <= 0.00001 && vs >= -0.00001)
