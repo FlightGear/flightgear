@@ -734,7 +734,9 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
                 
         if ((onBoardRadioFreqI0 == stationFreq)
             || (onBoardRadioFreqI1 == stationFreq)) {
-        	double snr = calculate_attenuation(rec, parent, ground_to_air);
+        	
+            if (rec->allowTransmissions()) {
+            	double snr = calculate_attenuation(rec, parent, ground_to_air);
         	if (snr <= 0)
         		return;
         	if (snr > 0 && snr < 12) {
@@ -749,8 +751,6 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         		}
         		
         	}
-        	
-            if (rec->allowTransmissions()) {
                 fgSetString("/sim/messages/atc", text.c_str());
             }
         }
