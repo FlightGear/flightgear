@@ -49,7 +49,7 @@
 #include <Airports/groundnetwork.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/simple.hxx>
-
+#define WITH_POINT_TO_POINT
 #include "itm.cpp"
 
 using std::sort;
@@ -521,6 +521,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
     FGAIFlightPlan *fp;
     string fltRules;
     string instructionText;
+    int ground_to_air=0;
 
     //double commFreqD;
     sender = rec->getAircraft()->getTrafficRef()->getCallSign();
@@ -561,6 +562,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         string tmp = sender;
         sender = receiver;
         receiver = tmp;
+        ground_to_air=1;
     }
     switch (msgId) {
     case MSG_ANNOUNCE_ENGINE_START:
@@ -731,7 +733,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
                 
         if ((onBoardRadioFreqI0 == stationFreq)
             || (onBoardRadioFreqI1 == stationFreq)) {
-        	double snr = calculate_attenuation(rec, parent, msgDir);
+        	double snr = calculate_attenuation(rec, parent, ground_to_air);
         	if (snr <= 0)
         		return;
         	if (snr > 0 && snr < 10) {
@@ -751,8 +753,8 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
     }
 }
 
-int calculate_attenuation(FGTrafficRecord * rec, FGAirportDynamics *parent,
-                               AtcMsgDir msgDir) {
+int FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDynamics *parent,
+                               int ground_to_air) {
 	/////////////////////////////////////////////////
         ///  Implement radio attenuation
         ///  based on the Longley-Rice propagation model
@@ -773,15 +775,17 @@ int calculate_attenuation(FGTrafficRecord * rec, FGAirportDynamics *parent,
         // sender can be aircraft or ground station
         double sender_alt_ft,sender_alt;
         SGGeod sender_pos;
-        if(msgDir == ATC_GROUND_TO_AIR) {
+        if(ground_to_air) {
 		sender_alt_ft = parent->getElevation();
 		sender_alt = sender_alt_ft * SG_FEET_TO_METER;
-		sender_pos= SGGeod::fromDegM( parent->getLongitude(), parent->getLatitude(), sender_alt );
+		sender_pos= SGGeod::fromDegM( parent->getLongitude(),
+			parent->getLatitude(), sender_alt );
 	}
 	else {
 		sender_alt_ft = rec->getAltitude();
 		sender_alt = sender_alt_ft * SG_FEET_TO_METER;
-		sender_pos= SGGeod::fromDegM( rec->getLongitude(), rec->getLatitude(), sender_alt );
+		sender_pos= SGGeod::fromDegM( rec->getLongitude(),
+			rec->getLatitude(), sender_alt );
 	}
         double point_distance= 100.0; // regular SRTM is 90 meters
         double course = SGGeodesy::courseDeg(own_pos, sender_pos);
@@ -818,7 +822,7 @@ int calculate_attenuation(FGTrafficRecord * rec, FGAirportDynamics *parent,
 	_elevations.push_front(distance_m);
 	_elevations.push_front(num_points -1);
 	int size= _elevations.size();
-	double itm_elev[];
+	double itm_elev[size];
 	for(int i=0;i<size;i++) {
 		itm_elev[i]=_elevations[i];
 	}
@@ -827,7 +831,7 @@ int calculate_attenuation(FGTrafficRecord * rec, FGAirportDynamics *parent,
 	// later perhaps take them from tile materials?
 	double eps_dielect=15.0;
 	double sgm_conductivity = 0.005;
-	double eno_ns_surfref = 301.0;
+	double eno = 301.0;
 	double frq_mhz = 125.0; 	// middle of bandplan
 	int radio_climate = 5;		// continental temperate
 	int pol=1;	// assuming vertical polarization
@@ -857,7 +861,7 @@ int calculate_attenuation(FGTrafficRecord * rec, FGAirportDynamics *parent,
 
 	point_to_point(itm_elev, sender_alt, own_alt,
 		eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
-		pol, conf, rel, dbloss, strmode, errnum)
+		pol, conf, rel, dbloss, strmode, errnum);
 
 	cerr << "Attenuation: " << dbloss << ", Mode: " << strmode << ", Error: " << errnum << endl;
 	
@@ -1286,13 +1290,13 @@ bool FGStartupController::checkTransmissionState(int st, time_t now, time_t star
                  atc->getATCDialog()->removeEntry(1);
             } else {
                 //cerr << "creading message for " << i->getAircraft()->getCallSign() << endl;
-                transmit(&(*i), parent, msgId, msgDir, false);
+                transmit(&(*i), &(*parent), msgId, msgDir, false);
                 return false;
             }
         }
         if (now > startTime) {
             //cerr << "Transmitting startup msg" << endl;
-            transmit(&(*i), msgId, msgDir, true);
+            transmit(&(*i), &(*parent), msgId, msgDir, true);
             i->updateState();
             lastTransmission = now;
             available = false;
@@ -1361,11 +1365,11 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
         if (now > startTime + 200) {
             if (i->pushBackAllowed()) {
                 i->allowRepeatedTransmissions();
-                transmit(&(*i), MSG_PERMIT_PUSHBACK_CLEARANCE,
+                transmit(&(*i), &(*parent), MSG_PERMIT_PUSHBACK_CLEARANCE,
                          ATC_GROUND_TO_AIR, true);
                 i->updateState();
             } else {
-                transmit(&(*i), MSG_HOLD_PUSHBACK_CLEARANCE,
+                transmit(&(*i), &(*parent), MSG_HOLD_PUSHBACK_CLEARANCE,
                          ATC_GROUND_TO_AIR, true);
                 i->suppressRepeatedTransmissions();
             }
