@@ -5,6 +5,7 @@ set(SOURCES
 	atcdialog.cxx
 	trafficcontrol.cxx
 	CommStation.cxx
+	itm.cpp
 	)
 	
 flightgear_component(ATC "${SOURCES}")

@@ -25,6 +25,8 @@
 #endif
 
 #include <algorithm>
+#include <math.h>
+#include <deque>
 
 #include <osg/Geode>
 #include <osg/Geometry>
@@ -47,6 +49,8 @@
 #include <Airports/groundnetwork.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/simple.hxx>
+
+#include "itm.cpp"
 
 using std::sort;
 
@@ -496,7 +500,7 @@ bool FGATCController::isUserAircraft(FGAIAircraft* ac)
     return (ac->getCallSign() == fgGetString("/sim/multiplay/callsign")) ? true : false; 
 };
 
-void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
+void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent, AtcMsgId msgId,
                                AtcMsgDir msgDir, bool audible)
 {
     string sender, receiver;
@@ -724,8 +728,18 @@ void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
         // Display ATC message only when one of the radios is tuned
         // the relevant frequency.
         // Note that distance attenuation is currently not yet implemented
+                
         if ((onBoardRadioFreqI0 == stationFreq)
             || (onBoardRadioFreqI1 == stationFreq)) {
+        	double snr = calculate_attenuation(rec, parent, msgDir);
+        	if (snr <= 0)
+        		return;
+        	if (snr > 0 && snr < 10) {
+        		//for low snr values implement a way to make the conversation
+        		//hard to understand (perhaps eliminate letters from words or such
+        		return;
+        	}
+        	
             if (rec->allowTransmissions()) {
                 fgSetString("/sim/messages/atc", text.c_str());
             }
@@ -735,6 +749,123 @@ void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
         atc->getATCDialog()->addEntry(1, text);
         
     }
+}
+
+int calculate_attenuation(FGTrafficRecord * rec, FGAirportDynamics *parent,
+                               AtcMsgDir msgDir) {
+	/////////////////////////////////////////////////
+        ///  Implement radio attenuation
+        ///  based on the Longley-Rice propagation model
+        /////////////////////////////////////////////////
+        
+        FGScenery * scenery = globals->get_scenery();
+        // player aircraft position
+        double own_lat = fgGetDouble("/position/latitude-deg");
+        double own_lon = fgGetDouble("/position/longitude-deg");
+        double own_alt_ft = fgGetDouble("/position/altitude-ft");
+        double own_alt= own_alt_ft * SG_FEET_TO_METER;
+        
+        SGGeod own_pos = SGGeod::fromDegM( own_lon, own_lat, own_alt );
+        SGGeod max_own_pos = SGGeod::fromDegM( own_lon, own_lat, SG_MAX_ELEVATION_M );
+        SGGeoc center = SGGeoc::fromGeod( max_own_pos );
+        
+        // position of sender
+        // sender can be aircraft or ground station
+        double sender_alt_ft,sender_alt;
+        SGGeod sender_pos;
+        if(msgDir == ATC_GROUND_TO_AIR) {
+		sender_alt_ft = parent->getElevation();
+		sender_alt = sender_alt_ft * SG_FEET_TO_METER;
+		sender_pos= SGGeod::fromDegM( parent->getLongitude(), parent->getLatitude(), sender_alt );
+	}
+	else {
+		sender_alt_ft = rec->getAltitude();
+		sender_alt = sender_alt_ft * SG_FEET_TO_METER;
+		sender_pos= SGGeod::fromDegM( rec->getLongitude(), rec->getLatitude(), sender_alt );
+	}
+        double point_distance= 100.0; // regular SRTM is 90 meters
+        double course = SGGeodesy::courseDeg(own_pos, sender_pos);
+        double distance_m = SGGeodesy::distanceM(own_pos, sender_pos);
+        double max_points = distance_m / point_distance;
+        deque<double> _elevations;
+        
+        // If distance larger than this value (400 km), assume reception imposssible
+        // technically 400 km is no problem if LOS conditions exist,
+        // but we do this to spare resources
+        if (distance_m > 400000)
+        	return -1;
+        
+        while (_elevations.size() < (deque<double>::size_type)max_points) {
+		SGGeod probe = SGGeod::fromGeoc(center.advanceRadM( course, point_distance ));
+		
+		double elevation_m = 0.0;
+	
+		if (scenery->get_elevation_m( probe, elevation_m, NULL )) {
+			 _elevations.push_front(elevation_m);
+		}
+	}
+	
+	/*
+	double max_alt_between=0.0;
+	for( deque<double>::size_type i = 0; i < _elevations.size(); i++ ) {
+		if (_elevations[i] > max_alt_between) {
+			max_alt_between = _elevations[i];
+		}
+	}
+	*/
+	
+	double num_points= (int)_elevations.size();
+	_elevations.push_front(distance_m);
+	_elevations.push_front(num_points -1);
+	int size= _elevations.size();
+	double itm_elev[];
+	for(int i=0;i<size;i++) {
+		itm_elev[i]=_elevations[i];
+	}
+	
+	////////////// ITM default parameters //////////////
+	// later perhaps take them from tile materials?
+	double eps_dielect=15.0;
+	double sgm_conductivity = 0.005;
+	double eno_ns_surfref = 301.0;
+	double frq_mhz = 125.0; 	// middle of bandplan
+	int radio_climate = 5;		// continental temperate
+	int pol=1;	// assuming vertical polarization
+	double conf = 0.70;	// my own tests in Radiomobile have worked best with these values
+	double rel = 0.70;	// ^^
+	double dbloss;
+	char strmode[150];
+	int errnum;
+	
+	/////////// radio parameters ///////////
+	double receiver_sensitivity = -112.0;	// typical AM receiver sensitivity in dBm
+	// AM transmitter power in dBm.
+	// Note this value is calculated from the typical final transistor stage output
+	// !!! small aircraft have portable transmitters which operate at 36 dBm output (4 Watts)
+	// later store this value in aircraft description
+	// ATC comms usually operate high power equipment, thus making the link asymetrical; this is ignored for now
+	double transmitter_power = 43.0;
+	double link_budget = transmitter_power - receiver_sensitivity;	
+	
+	// first Fresnel zone radius
+	// frequency in the middle of the bandplan, more accuracy is not necessary
+	double fz_clr= 8.657 * sqrt(distance_m / 0.125);
+	
+	// TODO: If we clear the first Fresnel zone, we are into line of sight teritory
+
+	// else we need to calculate point to point link loss
+
+	point_to_point(itm_elev, sender_alt, own_alt,
+		eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
+		pol, conf, rel, dbloss, strmode, errnum)
+
+	cerr << "Attenuation: " << dbloss << ", Mode: " << strmode << ", Error: " << errnum << endl;
+	
+	if (errnum !=0 && errnum !=1)
+		return -1;
+	double snr = link_budget - dbloss;
+	return snr;
+
 }
 
 string FGATCController::formatATCFrequency3_2(int freq)
@@ -1155,7 +1286,7 @@ bool FGStartupController::checkTransmissionState(int st, time_t now, time_t star
                  atc->getATCDialog()->removeEntry(1);
             } else {
                 //cerr << "creading message for " << i->getAircraft()->getCallSign() << endl;
-                transmit(&(*i), msgId, msgDir, false);
+                transmit(&(*i), parent, msgId, msgDir, false);
                 return false;
             }
         }
