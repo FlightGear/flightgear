@@ -834,7 +834,7 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
         if (distance_m > 400000)
         	return -1.0;
         
-        int e_size = (deque<unsigned>::size_type)max_points;
+        unsigned int e_size = (deque<unsigned>::size_type)max_points;
         
         while (_elevations.size() < e_size) {
         	probe_distance += point_distance;
@@ -888,14 +888,16 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
 	// !!! small aircraft have portable transmitters which operate at 36 dBm output (4 Watts)
 	// later store this value in aircraft description
 	// ATC comms usually operate high power equipment, thus making the link asymetrical; this is ignored for now
+	double transmitter_power = 43.0;
+	double antenna_gain = 2.0;
 	if(ground_to_air)
-		double transmitter_power = 49.0;
+		transmitter_power = 49.0;
 	else
-		double transmitter_power = 43.0;
+		transmitter_power = 43.0;
 	if(ground_to_air)
-		double antenna_gain = 5.0; //pilot plane's antenna gain + Controller antenna gain
+		antenna_gain = 5.0; //pilot plane's antenna gain + Controller antenna gain
 	else
-		double antenna_gain = 2.0; //pilot plane's antenna gain + AI aircraft antenna gain
+		antenna_gain = 2.0; //pilot plane's antenna gain + AI aircraft antenna gain
 	double link_budget = transmitter_power - receiver_sensitivity + antenna_gain;	
 	
 	
