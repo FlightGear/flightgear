@@ -250,8 +250,9 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
 osg::Node*
 FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
 {
-    SGPath fullPath;
-    if (fgGetBool("/sim/paths/use-custom-scenery-data") == true) {
+    SGPath fullPath = modelPath;
+    if ((fullPath.isRelative())&&
+        (fgGetBool("/sim/paths/use-custom-scenery-data") == true)) {
         string_list sc = globals->get_fg_scenery();
 
         for (string_list_iterator it = sc.begin(); it != sc.end(); ++it) {
@@ -265,8 +266,6 @@ FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
                 }
             }
         }
-    } else {
-         fullPath.append(modelPath);
     }
     osg::Node* result = 0;
     try {
@@ -276,7 +275,7 @@ FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
                                       new FGNasalModelData);
         else
             result=
-                SGModelLib::loadPagedModel(modelPath, globals->get_props(),
+                SGModelLib::loadPagedModel(fullPath.str(), globals->get_props(),
                                            new FGNasalModelData);
     } catch (const sg_io_exception& exc) {
         string m(exc.getMessage());
