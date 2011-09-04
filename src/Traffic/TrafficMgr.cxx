@@ -109,6 +109,7 @@ FGTrafficManager::~FGTrafficManager()
             //cerr << "Saving AI traffic heuristics" << endl;
             saveData = true;
             cachefile.open(cacheData.str().c_str());
+            cachefile << "[TrafficManagerCachedata:ref:2011:09:04]" << endl;
         }
     }
     for (ScheduleVectorIterator sched = scheduledAircraft.begin();
@@ -116,7 +117,8 @@ FGTrafficManager::~FGTrafficManager()
         if (saveData) {
             cachefile << (*sched)->getRegistration() << " "
                 << (*sched)->getRunCount() << " "
-                << (*sched)->getHits() << endl;
+                << (*sched)->getHits() << " "
+                << (*sched)->getLastUsed() << endl;
         }
         delete(*sched);
     }
@@ -182,23 +184,31 @@ void FGTrafficManager::init()
                        airport[0], airport[1], airport[2]);
             cacheData.append(buffer);
             cacheData.append(airport + "-cache.txt");
+            string revisionStr;
             if (cacheData.exists()) {
                 ifstream data(cacheData.c_str());
-                while (1) {
-                    Heuristic h; // = new Heuristic;
-                    data >> h.registration >> h.runCount >> h.hits;
-                    if (data.eof())
-                        break;
-                    HeuristicMapIterator itr = heurMap.find(h.registration);
-                    if (itr != heurMap.end()) {
-                         SG_LOG(SG_GENERAL, SG_WARN,"Traffic Manager Warning: found duplicate tailnumber " << 
-                         h.registration << " for AI aircraft");
+                data >> revisionStr;
+                if (revisionStr != "[TrafficManagerCachedata:ref:2011:09:04]") {
+                    SG_LOG(SG_GENERAL, SG_ALERT,"Traffic Manager Warning: discarding outdated cachefile " << 
+                            cacheData.c_str() << " for Airport " << airport);
+                } else {
+                    while (1) {
+                        Heuristic h; // = new Heuristic;
+                        data >> h.registration >> h.runCount >> h.hits >> h.lastRun;
+                        if (data.eof())
+                            break;
+                        HeuristicMapIterator itr = heurMap.find(h.registration);
+                        if (itr != heurMap.end()) {
+                             SG_LOG(SG_GENERAL, SG_WARN,"Traffic Manager Warning: found duplicate tailnumber " << 
+                            h.registration << " for AI aircraft");
+                        } else {
+                            heurMap[h.registration] = h;
+                            heuristics.push_back(h);
+                        }
                     }
-                    heurMap[h.registration] = h;
-                    heuristics.push_back(h);
                 }
             }
-        }
+        } 
         for (currAircraft = scheduledAircraft.begin();
              currAircraft != scheduledAircraft.end(); currAircraft++) {
             string registration = (*currAircraft)->getRegistration();
@@ -209,25 +219,26 @@ void FGTrafficManager::init()
             } else {
                 (*currAircraft)->setrunCount(itr->second.runCount);
                 (*currAircraft)->setHits(itr->second.hits);
-                //cerr <<"Runcount " << itr->second->runCount << ".Hits " << itr->second->hits << endl;
+                (*currAircraft)->setLastUsed(itr->second.lastRun);
+                //cerr <<"Runcount " << itr->second.runCount << ". Hits " << itr->second.hits << ". Last run " << itr->second.lastRun<< endl;
             }
         }
         //cerr << "Done" << endl;
         //for (heuristicsVectorIterator hvi = heuristics.begin();
         //     hvi != heuristics.end(); hvi++) {
         //    delete(*hvi);
-        //}
+        //} 
     }
     // Do sorting and scoring separately, to take advantage of the "homeport| variable
     for (currAircraft = scheduledAircraft.begin();
          currAircraft != scheduledAircraft.end(); currAircraft++) {
         (*currAircraft)->setScore();
     }
+
     sort(scheduledAircraft.begin(), scheduledAircraft.end(),
          compareSchedules);
     currAircraft = scheduledAircraft.begin();
     currAircraftClosest = scheduledAircraft.begin();
-    
     inited = true;
 }
 

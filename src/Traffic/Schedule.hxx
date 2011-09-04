@@ -56,6 +56,7 @@ class FGAISchedule
   double score;
   unsigned int runCount;
   unsigned int hits;
+  unsigned int lastRun;
   bool firstRun;
   double courseToDest;
   bool initialized;
@@ -124,8 +125,10 @@ class FGAISchedule
   FGScheduledFlight*findAvailableFlight (const string &currentDestination, const string &req);
   // used to sort in decending order of score: I've probably found a better way to
   // decending order sorting, but still need to test that.
-  bool operator< (const FGAISchedule &other) const { return (score > other.score); };
+  bool operator< (const FGAISchedule &other) const;
     void taint() { valid = false; };
+    int getLastUsed() { return (int) valid;};
+    void setLastUsed(unsigned int val) {lastRun = val; }; 
   //void * getAiRef                 () { return AIManagerRef; };
   //FGAISchedule* getAddress        () { return this;};
 
