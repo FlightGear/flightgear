@@ -846,7 +846,7 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
         else
         	transmitter_height += Aircraft_HAAT;
         
-        cerr << "ITM:: RCVhgt: " << receiver_height << ", TRXhgt: " << transmitter_height << ", Distance: " << distance_m << endl;
+        cerr << "ITM:: RX-height: " << receiver_height << ", TX-height: " << transmitter_height << ", Distance: " << distance_m << endl;
         
         
         unsigned int e_size = (deque<unsigned>::size_type)max_points;
