@@ -64,6 +64,7 @@ public:
    std::string registration;
    unsigned int runCount;
    unsigned int hits;
+   unsigned int lastRun;
 };
 
 typedef std::vector<Heuristic> heuristicsVector;

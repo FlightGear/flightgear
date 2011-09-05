@@ -1503,7 +1503,7 @@ void FGStartupController::render(bool visible)
                     elevationStart = ((i)->getAircraft()->_getAltitude()); 
                 }
                 double elevationEnd   = segment->getEnd()->getElevation();
-                if (elevationEnd == 0) {
+                if ((elevationEnd == 0) || (elevationEnd == parent->getElevation())) {
                     SGGeod center2 = end;
                     center2.setElevationM(SG_MAX_ELEVATION_M);
                     if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
@@ -1511,7 +1511,7 @@ void FGStartupController::render(bool visible)
                             //elevation_meters += 0.5;
                     }
                     else { 
-                        elevationEnd = parent->getElevation()+8+dx;
+                        elevationEnd = parent->getElevation();
                     }
                     segment->getEnd()->setElevation(elevationEnd);
                 }
@@ -1561,7 +1561,7 @@ void FGStartupController::render(bool visible)
 
                     double elevationStart = segment->getStart()->getElevation();
                     double elevationEnd   = segment->getEnd  ()->getElevation();
-                    if (elevationStart == 0) {
+                    if ((elevationStart == 0) || (elevationStart == parent->getElevation())) {
                         SGGeod center2 = segment->getStart()->getGeod();
                         center2.setElevationM(SG_MAX_ELEVATION_M);
                         if (local_scenery->get_elevation_m( center2, elevationStart, NULL )) {
@@ -1569,11 +1569,11 @@ void FGStartupController::render(bool visible)
                             //elevation_meters += 0.5;
                         }
                         else { 
-                            elevationStart = parent->getElevation()+8+dx;
+                            elevationStart = parent->getElevation();
                         }
                         segment->getStart()->setElevation(elevationStart);
                     }
-                    if (elevationEnd == 0) {
+                    if ((elevationEnd == 0) || (elevationEnd == parent->getElevation())) {
                         SGGeod center2 = segment->getEnd()->getGeod();
                         center2.setElevationM(SG_MAX_ELEVATION_M);
                         if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
@@ -1581,7 +1581,7 @@ void FGStartupController::render(bool visible)
                             //elevation_meters += 0.5;
                         }
                         else { 
-                            elevationEnd = parent->getElevation()+8+dx;
+                            elevationEnd = parent->getElevation();
                         }
                         segment->getEnd()->setElevation(elevationEnd);
                     }

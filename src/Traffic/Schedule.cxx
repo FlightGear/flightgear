@@ -69,6 +69,7 @@ FGAISchedule::FGAISchedule()
   groundOffset = 0;
   distanceToUser = 0;
   valid = true;
+  lastRun = 0;
   //score = 0;
 }
 
@@ -120,6 +121,7 @@ FGAISchedule::FGAISchedule(string model,
   firstRun         = true;
   runCount         = 0;
   hits             = 0;
+  lastRun          = 0;
   initialized      = false;
   valid            = true;
 }
@@ -147,6 +149,7 @@ FGAISchedule::FGAISchedule(const FGAISchedule &other)
   firstRun           = other.firstRun;
   runCount           = other.runCount;
   hits               = other.hits;
+  lastRun            = other.lastRun;
   initialized        = other.initialized;
   valid              = other.valid;
 }
@@ -371,8 +374,7 @@ void FGAISchedule::scheduleFlights()
   if (!flights.empty()) {
     return;
   }
-  
-  SG_LOG(SG_GENERAL, SG_BULK, "Scheduling for : " << modelPath << " " <<  registration << " " << homePort);
+  SG_LOG(SG_GENERAL, SG_BULK, "Scheduling Flights for : " << modelPath << " " <<  registration << " " << homePort);
   FGScheduledFlight *flight = NULL;
   do {
     flight = findAvailableFlight(currentDestination, flightIdentifier);
@@ -400,14 +402,14 @@ void FGAISchedule::scheduleFlights()
 
     depT = depT.substr(0,24);
     arrT = arrT.substr(0,24);
-    SG_LOG(SG_GENERAL, SG_BULK, "  " << flight->getCallSign() << ":" 
-                             << "  " << flight->getDepartureAirport()->getId() << ":"
-                             << "  " << depT << ":"
-                             << " \"" << flight->getArrivalAirport()->getId() << "\"" << ":"
-                             << "  " << arrT << ":");
+    SG_LOG(SG_GENERAL, SG_BULK, "  Flight " << flight->getCallSign() << ":" 
+                             << "  "        << flight->getDepartureAirport()->getId() << ":"
+                             << "  "        << depT << ":"
+                             << " \""       << flight->getArrivalAirport()->getId() << "\"" << ":"
+                             << "  "        << arrT << ":");
   
     flights.push_back(flight);
-  } while (currentDestination != homePort);
+  } while (1); //while (currentDestination != homePort);
   SG_LOG(SG_GENERAL, SG_BULK, " Done ");
 }
 
@@ -488,7 +490,12 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
                    continue;
               }
           }
-          //TODO: check time
+          if (flights.size()) {
+            time_t arrival = flights.back()->getArrivalTime();
+            if ((*i)->getDepartureTime() < arrival)
+                continue;
+          }
+
           // So, if we actually get here, we have a winner
           //cerr << "found flight: " << req << " : " << currentDestination << " : " <<       
           //         (*i)->getArrivalAirport()->getId() << endl;
@@ -537,48 +544,11 @@ bool compareSchedules(FGAISchedule*a, FGAISchedule*b)
   return (*a) < (*b); 
 } 
 
-
-// void FGAISchedule::setClosestDistanceToUser()
-// {
-  
-  
-//   double course;
-//   double dist;
-
-//   time_t 
-//     totalTimeEnroute, 
-//     elapsedTimeEnroute;
- 
-//   double userLatitude  = fgGetDouble("/position/latitude-deg");
-//   double userLongitude = fgGetDouble("/position/longitude-deg");
-
-//   FGAirport *dep;
-  
-// #if defined( __CYGWIN__) || defined( __MINGW32__)
-//   #define HUGE HUGE_VAL
-// #endif
-//   distanceToUser = HUGE;
-//   FGScheduledFlightVecIterator i = flights.begin();
-//   while (i != flights.end())
-//     {
-//       dep = i->getDepartureAirport();
-//       //if (!(dep))
-//       //return HUGE;
-      
-//       SGWayPoint user (   userLongitude,
-// 			  userLatitude,
-// 			  i->getCruiseAlt());
-//       SGWayPoint current (dep->getLongitude(),
-// 			  dep->getLatitude(),
-// 			  0);
-//       user.CourseAndDistance(current, &course, &dist);
-//       if (dist < distanceToUser)
-// 	{
-// 	  distanceToUser = dist;
-// 	  //cerr << "Found closest distance to user for " << registration << " to be " << distanceToUser << " at airport " << dep->getId() << endl;
-// 	}
-//       i++;
-//     }
-//   //return distToUser;
-// }
+bool FGAISchedule::operator< (const FGAISchedule &other) const
+{ 
+    //cerr << "Sorting " << registration << " and "  << other.registration << endl;
+    double currentScore = score       * (1.5 - lastRun);
+    double otherScore   = other.score * (1.5 - other.lastRun);
+    return currentScore > otherScore;
+}
 

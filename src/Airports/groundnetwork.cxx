@@ -1,4 +1,3 @@
-
 // groundnet.cxx - Implimentation of the FlightGear airport ground handling code
 //
 // Written by Durk Talsma, started June 2005.
@@ -243,6 +242,7 @@ FGGroundNetwork::~FGGroundNetwork()
             saveData = true;
         }
     }
+    cachefile << "[GroundNetcachedata:ref:2011:09:04]" << endl;
     for (FGTaxiNodeVectorIterator node = nodes.begin();
          node != nodes.end(); node++) {
          if (saveData) {
@@ -286,6 +286,7 @@ void FGGroundNetwork::saveElevationCache() {
             saveData = true;
         }
     }
+    cachefile << "[GroundNetcachedata:ref:2011:09:04]" << endl;
     for (FGTaxiNodeVectorIterator node = nodes.begin();
          node != nodes.end(); node++) {
          if (saveData) {
@@ -401,17 +402,24 @@ void FGGroundNetwork::init()
             cacheData.append(airport + "-groundnet-cache.txt");
             if (cacheData.exists()) {
                 ifstream data(cacheData.c_str());
-                for (FGTaxiNodeVectorIterator i = nodes.begin();
-                     i != nodes.end(); 
-                     i++) {
-                    (*i)->setElevation(parent->getElevation() * SG_FEET_TO_METER);
-                    data >> index >> elev;
-                    if (data.eof())
-                        break;
-                    if (index != (*i)->getIndex()) {
-                        SG_LOG(SG_GENERAL, SG_ALERT, "Index read from ground network cache at airport " << airport << " does not match index in the network itself");
-                    } else {
-                        (*i)->setElevation(elev);
+                string revisionStr;
+                data >> revisionStr;
+                if (revisionStr != "[GroundNetcachedata:ref:2011:09:04]") {
+                    SG_LOG(SG_GENERAL, SG_ALERT,"GroundNetwork Warning: discarding outdated cachefile " << 
+                            cacheData.c_str() << " for Airport " << airport);
+                } else {
+                    for (FGTaxiNodeVectorIterator i = nodes.begin();
+                        i != nodes.end(); 
+                        i++) {
+                        (*i)->setElevation(parent->getElevation() * SG_FEET_TO_METER);
+                        data >> index >> elev;
+                        if (data.eof())
+                            break;
+                        if (index != (*i)->getIndex()) {
+                            SG_LOG(SG_GENERAL, SG_ALERT, "Index read from ground network cache at airport " << airport << " does not match index in the network itself");
+                        } else {
+                            (*i)->setElevation(elev);
+                        }
                     }
                 }
             }
@@ -1308,7 +1316,7 @@ void FGGroundNetwork::render(bool visible)
                 double elevationEnd   = segments[pos]->getEnd()->getElevation();
                 //cerr << "Using elevation " << elevationEnd << endl;
 
-                if (elevationEnd == 0) {
+                if ((elevationEnd == 0) || (elevationEnd = parent->getElevation())) {
                     SGGeod center2 = end;
                     center2.setElevationM(SG_MAX_ELEVATION_M);
                     if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
@@ -1316,7 +1324,7 @@ void FGGroundNetwork::render(bool visible)
                             //elevation_meters += 0.5;
                     }
                     else { 
-                        elevationEnd = parent->getElevation()+8+dx;
+                        elevationEnd = parent->getElevation();
                     }
                     segments[pos]->getEnd()->setElevation(elevationEnd);
                 }
@@ -1363,7 +1371,7 @@ void FGGroundNetwork::render(bool visible)
                     // Experimental: Calculate slope here, based on length, and the individual elevations
                     double elevationStart = segments[k]->getStart()->getElevation();
                     double elevationEnd   = segments[k]->getEnd  ()->getElevation();
-                    if (elevationStart == 0) {
+                    if ((elevationStart == 0)  || (elevationStart == parent->getElevation())) {
                         SGGeod center2 = segments[k]->getStart()->getGeod();
                         center2.setElevationM(SG_MAX_ELEVATION_M);
                         if (local_scenery->get_elevation_m( center2, elevationStart, NULL )) {
@@ -1371,11 +1379,11 @@ void FGGroundNetwork::render(bool visible)
                             //elevation_meters += 0.5;
                         }
                         else { 
-                            elevationStart = parent->getElevation()+8+dx;
+                            elevationStart = parent->getElevation();
                         }
                         segments[k]->getStart()->setElevation(elevationStart);
                     }
-                    if (elevationEnd == 0) {
+                    if ((elevationEnd == 0) || (elevationEnd == parent->getElevation())) {
                         SGGeod center2 = segments[k]->getEnd()->getGeod();
                         center2.setElevationM(SG_MAX_ELEVATION_M);
                         if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
@@ -1383,7 +1391,7 @@ void FGGroundNetwork::render(bool visible)
                             //elevation_meters += 0.5;
                         }
                         else { 
-                            elevationEnd = parent->getElevation()+8+dx;
+                            elevationEnd = parent->getElevation();
                         }
                         segments[k]->getEnd()->setElevation(elevationEnd);
                     }
