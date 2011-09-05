@@ -790,7 +790,7 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
         double ATC_HAAT = 30.0;
         double Aircraft_HAAT = 5.0;
         double sender_alt_ft,sender_alt;
-        double transceiver_height=0.0;
+        double transmitter_height=0.0;
         double receiver_height=0.0;
         SGGeod sender_pos;
         SGGeod max_sender_pos;
@@ -818,7 +818,6 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
         double distance_m = SGGeodesy::distanceM(own_pos, sender_pos);
         double probe_distance = 0.0;
         
-        //cerr << "ITM:: Distance: " << distance_m << endl;
         
         double max_points = distance_m / point_distance;
         deque<double> _elevations;
@@ -842,7 +841,7 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
         else
         	transmitter_height += Aircraft_HAAT;
         
-        cerr << "ITM:: RCVhgt: " << receiver_height << ", TRXhgt: " << transmitter_height << endl;
+        cerr << "ITM:: RCVhgt: " << receiver_height << ", TRXhgt: " << transmitter_height << ", Distance: " << distance_m << endl;
         // If distance larger than this value (400 km), assume reception imposssible
         // technically 400 km is no problem if LOS conditions exist,
         // but we do this to spare resources
@@ -928,7 +927,7 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
 		eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
 		pol, conf, rel, dbloss, strmode, errnum);
 
-	cerr << "ITM:: Attenuation: " << dbloss << " dBm, " << strmode << ", Error: " << errnum << endl;
+	cerr << "ITM:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, " << strmode << ", Error: " << errnum << endl;
 	
 	//if (errnum !=0 && errnum !=1)
 	//	return -1;
