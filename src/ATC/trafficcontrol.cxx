@@ -817,24 +817,29 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
         double course = SGGeodesy::courseRad(own_pos_c, sender_pos_c);
         double distance_m = SGGeodesy::distanceM(own_pos, sender_pos);
         double probe_distance = 0.0;
+        // If distance larger than this value (300 km), assume reception imposssible
+        // technically 300 km is no problem if LOS conditions exist,
+        // but we do this to spare resources
+        if (distance_m > 300000)
+        	return -1.0;
         
         
         double max_points = distance_m / point_distance;
         deque<double> _elevations;
         
-        //SGGeod probe_pilot = SGGeod::fromGeoc(center.advanceRadM( course, 0 ));
-        SGGeod probe_pilot = max_own_pos;
+        
         double elevation_under_pilot = 0.0;
-	if (scenery->get_elevation_m( probe_pilot, elevation_under_pilot, NULL )) {
+	if (scenery->get_elevation_m( max_own_pos, elevation_under_pilot, NULL )) {
 		receiver_height = own_alt - elevation_under_pilot + 3; //assume antenna located 3 meters above ground
 	}
 	
-	
-	//SGGeod probe_sender = SGGeod::fromGeoc(center.advanceRadM( course, distance_m ));
-	SGGeod probe_sender = max_sender_pos;
+
         double elevation_under_sender = 0.0;
-	if (scenery->get_elevation_m( probe_sender, elevation_under_sender, NULL )) {
+	if (scenery->get_elevation_m( max_sender_pos, elevation_under_sender, NULL )) {
 		transmitter_height = sender_alt - elevation_under_sender;
+	}
+	else {
+		transmitter_height = sender_alt;
 	}
         if(ground_to_air) 
         	transmitter_height += ATC_HAAT;
@@ -842,11 +847,7 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
         	transmitter_height += Aircraft_HAAT;
         
         cerr << "ITM:: RCVhgt: " << receiver_height << ", TRXhgt: " << transmitter_height << ", Distance: " << distance_m << endl;
-        // If distance larger than this value (400 km), assume reception imposssible
-        // technically 400 km is no problem if LOS conditions exist,
-        // but we do this to spare resources
-        if (distance_m > 400000)
-        	return -1.0;
+        
         
         unsigned int e_size = (deque<unsigned>::size_type)max_points;
         
@@ -859,6 +860,9 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
 		if (scenery->get_elevation_m( probe, elevation_m, NULL )) {
 			 _elevations.push_front(elevation_m);
 			 //cerr << "ITM:: Probe elev: " << elevation_m << endl;
+		}
+		else {
+			_elevations.push_front(0.0);
 		}
 	}
 	_elevations.push_back(elevation_under_pilot);
