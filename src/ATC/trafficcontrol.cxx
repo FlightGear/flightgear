@@ -742,6 +742,10 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         	if (snr > 0 && snr < 12) {
         		//for low SNR values implement a way to make the conversation
         		//hard to understand but audible
+        		//how this works in the real world, is the receiver AGC fails to capture the slope
+        		//and the signal, due to being amplitude modulated, decreases volume after demodulation
+        		//the implementation below is more akin to what would happen on a FM transmission
+        		//therefore the correct way would be to work on the volume
         		string hash_noise = " ";
         		int reps = fabs((int)snr - 11);
         		int t_size = text.size();
@@ -763,11 +767,10 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
 
 double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDynamics *parent,
                                int ground_to_air) {
-	//////////////////////////////////////////////////
-        ///  Implement radio attenuation		//
-        ///  based on the Longley-Rice propagation model//
-        //////////////////////////////////////////////////
-        
+
+        ///  Implement radio attenuation		
+        ///  based on the Longley-Rice propagation model
+       
         FGScenery * scenery = globals->get_scenery();
         // player aircraft position
         double own_lat = fgGetDouble("/position/latitude-deg");
@@ -775,7 +778,7 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
         double own_alt_ft = fgGetDouble("/position/altitude-ft");
         double own_alt= own_alt_ft * SG_FEET_TO_METER;
         
-        cerr << "ITM:: pilot Lat: " << own_lat << ", Lon: " << own_lon << ", Alt: " << own_alt << endl;
+        //cerr << "ITM:: pilot Lat: " << own_lat << ", Lon: " << own_lon << ", Alt: " << own_alt << endl;
         
         SGGeod own_pos = SGGeod::fromDegM( own_lon, own_lat, own_alt );
         SGGeod max_own_pos = SGGeod::fromDegM( own_lon, own_lat, SG_MAX_ELEVATION_M );
@@ -785,49 +788,61 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
         // position of sender radio antenna (HAAT)
         // sender can be aircraft or ground station
         double ATC_HAAT = 30.0;
-        double Aircraft_HAAT = 7.0;
+        double Aircraft_HAAT = 5.0;
         double sender_alt_ft,sender_alt;
         double transceiver_height=0.0;
         double receiver_height=0.0;
         SGGeod sender_pos;
+        SGGeod max_sender_pos;
         if(ground_to_air) {
 		sender_alt_ft = parent->getElevation();
-		sender_alt = sender_alt_ft * SG_FEET_TO_METER + ATC_HAAT;
+		sender_alt = sender_alt_ft * SG_FEET_TO_METER;
 		sender_pos= SGGeod::fromDegM( parent->getLongitude(),
 			parent->getLatitude(), sender_alt );
+		max_sender_pos = SGGeod::fromDegM( parent->getLongitude(),
+			parent->getLatitude(), SG_MAX_ELEVATION_M );
 	}
 	else {
 		sender_alt_ft = rec->getAltitude();
-		sender_alt = sender_alt_ft * SG_FEET_TO_METER + Aircraft_HAAT;
+		sender_alt = sender_alt_ft * SG_FEET_TO_METER;
 		sender_pos= SGGeod::fromDegM( rec->getLongitude(),
 			rec->getLatitude(), sender_alt );
+		max_sender_pos = SGGeod::fromDegM( rec->getLongitude(),
+			rec->getLatitude(), SG_MAX_ELEVATION_M );
 	}
 	SGGeoc sender_pos_c = SGGeoc::fromGeod( sender_pos );
-	cerr << "ITM:: sender Lat: " << parent->getLatitude() << ", Lon: " << parent->getLongitude() << ", Alt: " << sender_alt << endl;
+	//cerr << "ITM:: sender Lat: " << parent->getLatitude() << ", Lon: " << parent->getLongitude() << ", Alt: " << sender_alt << endl;
 	
         double point_distance= 90.0; // regular SRTM is 90 meters
         double course = SGGeodesy::courseRad(own_pos_c, sender_pos_c);
         double distance_m = SGGeodesy::distanceM(own_pos, sender_pos);
         double probe_distance = 0.0;
         
-        cerr << "ITM:: Distance: " << distance_m << endl;
+        //cerr << "ITM:: Distance: " << distance_m << endl;
         
         double max_points = distance_m / point_distance;
         deque<double> _elevations;
         
-        SGGeod probe_pilot = SGGeod::fromGeoc(center.advanceRadM( course, 0 ));
+        //SGGeod probe_pilot = SGGeod::fromGeoc(center.advanceRadM( course, 0 ));
+        SGGeod probe_pilot = max_own_pos;
         double elevation_under_pilot = 0.0;
 	if (scenery->get_elevation_m( probe_pilot, elevation_under_pilot, NULL )) {
-		receiver_height = own_alt - elevation_under_pilot;
+		receiver_height = own_alt - elevation_under_pilot + 3; //assume antenna located 3 meters above ground
 	}
-	_elevations.push_front(receiver_height);
 	
-	SGGeod probe_sender = SGGeod::fromGeoc(center.advanceRadM( course, distance_m ));
+	
+	//SGGeod probe_sender = SGGeod::fromGeoc(center.advanceRadM( course, distance_m ));
+	SGGeod probe_sender = max_sender_pos;
         double elevation_under_sender = 0.0;
 	if (scenery->get_elevation_m( probe_sender, elevation_under_sender, NULL )) {
-		transceiver_height = sender_alt - elevation_under_sender;
+		transmitter_height = sender_alt - elevation_under_sender;
 	}
+        if(ground_to_air) 
+        	transmitter_height += ATC_HAAT;
+        else
+        	transmitter_height += Aircraft_HAAT;
         
+        cerr << "ITM:: RCVhgt: " << receiver_height << ", TRXhgt: " << transmitter_height << endl;
         // If distance larger than this value (400 km), assume reception imposssible
         // technically 400 km is no problem if LOS conditions exist,
         // but we do this to spare resources
@@ -836,7 +851,7 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
         
         unsigned int e_size = (deque<unsigned>::size_type)max_points;
         
-        while (_elevations.size() < e_size) {
+        while (_elevations.size() <= e_size) {
         	probe_distance += point_distance;
 		SGGeod probe = SGGeod::fromGeoc(center.advanceRadM( course, probe_distance ));
 		
@@ -847,8 +862,8 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
 			 //cerr << "ITM:: Probe elev: " << elevation_m << endl;
 		}
 	}
-	
-	_elevations.push_front(transceiver_height);
+	_elevations.push_back(elevation_under_pilot);
+	_elevations.push_front(elevation_under_sender);
 	double max_alt_between=0.0;
 	for( deque<double>::size_type i = 0; i < _elevations.size(); i++ ) {
 		if (_elevations[i] > max_alt_between) {
@@ -857,7 +872,7 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
 	}
 	
 	double num_points= (double)_elevations.size();
-	cerr << "ITM:: Max alt between: " << max_alt_between << ", num points:" << num_points << endl;
+	//cerr << "ITM:: Max alt between: " << max_alt_between << ", num points:" << num_points << endl;
 	_elevations.push_front(point_distance);
 	_elevations.push_front(num_points -1);
 	int size = _elevations.size();
@@ -874,7 +889,7 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
 	double eno = 301.0;
 	double frq_mhz = 125.0; 	// middle of bandplan
 	int radio_climate = 5;		// continental temperate
-	int pol=1;	// assuming vertical polarization
+	int pol=1;	// assuming vertical polarization although this is more complex in reality
 	double conf = 0.90;	// my own tests in Radiomobile have worked best with these values
 	double rel = 0.80;	// ^^
 	double dbloss;
@@ -882,20 +897,20 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
 	int errnum;
 	
 	/////////// radio parameters ///////////
-	double receiver_sensitivity = -112.0;	// typical AM receiver sensitivity in dBm
+	double receiver_sensitivity = -110.0;	// typical AM receiver sensitivity seems to be 0.8 microVolt at 12dB SINAD
 	// AM transmitter power in dBm.
 	// Note this value is calculated from the typical final transistor stage output
 	// !!! small aircraft have portable transmitters which operate at 36 dBm output (4 Watts)
 	// later store this value in aircraft description
 	// ATC comms usually operate high power equipment, thus making the link asymetrical; this is ignored for now
 	double transmitter_power = 43.0;
-	double antenna_gain = 2.0;
+	double antenna_gain = 2.0;	//real-life gain for conventional monopole/dipole antenna
 	if(ground_to_air)
 		transmitter_power = 49.0;
 	else
 		transmitter_power = 43.0;
 	if(ground_to_air)
-		antenna_gain = 5.0; //pilot plane's antenna gain + Controller antenna gain
+		antenna_gain = 5.0; //pilot plane's antenna gain + ground station antenna gain
 	else
 		antenna_gain = 2.0; //pilot plane's antenna gain + AI aircraft antenna gain
 	double link_budget = transmitter_power - receiver_sensitivity + antenna_gain;	
@@ -909,7 +924,7 @@ double FGATCController::calculate_attenuation(FGTrafficRecord * rec, FGAirportDy
 
 	// else we need to calculate point to point link loss
 
-	point_to_point(itm_elev, sender_alt, own_alt,
+	point_to_point(itm_elev, transmitter_height, receiver_height,
 		eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
 		pol, conf, rel, dbloss, strmode, errnum);
 
