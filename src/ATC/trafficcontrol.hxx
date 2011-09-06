@@ -304,7 +304,6 @@ public:
   string getGateName(FGAIAircraft *aircraft);
   virtual void render(bool) = 0;
   virtual string getName()  = 0;
-  double calculate_attenuation(FGTrafficRecord * rec, FGAirportDynamics *parent, int ground_to_air);
 
 private:
 

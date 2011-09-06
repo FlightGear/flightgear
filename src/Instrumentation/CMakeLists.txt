@@ -1,6 +1,7 @@
 include(FlightGearComponent)
 
 set(SOURCES
+	itm.cpp
 	adf.cxx
 	agradar.cxx
 	airspeed_indicator.cxx
