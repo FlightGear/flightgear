@@ -16,7 +16,7 @@ GPSsmooth_SOURCES = \
 	gps_main.cxx
 
 GPSsmooth_LDADD = \
-        $(GPSsmooth_PLIB_LIBS) -lsgio -lsgtiming -lsgmisc -lsgdebug -lsgstructure \
+        $(GPSsmooth_PLIB_LIBS) -lsgio -lsgtiming -lsgmisc -lsgdebug -lsgstructure -lsgthreads \
 	$(joystick_LIBS) $(network_LIBS) $(base_LIBS) -lz
 
 MIDGsmooth_SOURCES = \
@@ -25,7 +25,7 @@ MIDGsmooth_SOURCES = \
 
 MIDGsmooth_LDADD = \
         $(MIDGsmooth_PLIB_LIBS) -lsgio -lsgserial -lsgtiming \
-        -lsgmath -lsgbucket -lsgmisc -lsgdebug -lsgstructure \
+        -lsgmath -lsgbucket -lsgmisc -lsgdebug -lsgstructure -lsgthreads \
 	$(joystick_LIBS) $(network_LIBS) $(base_LIBS) -lz
 
 UGsmooth_SOURCES = \
@@ -37,7 +37,7 @@ UGsmooth_SOURCES = \
 
 UGsmooth_LDADD = \
         $(UGsmooth_PLIB_LIBS) -lsgio -lsgserial -lsgtiming \
-        -lsgmath -lsgbucket -lsgmisc -lsgdebug -lsgstructure \
+        -lsgmath -lsgbucket -lsgmisc -lsgdebug -lsgstructure -lsgthreads \
         $(joystick_LIBS) $(network_LIBS) $(base_LIBS) -lz
 
 INCLUDES = -I$(top_srcdir)/src

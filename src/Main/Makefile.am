@@ -113,7 +113,7 @@ fgfs_LDADD = \
 	-lsgroute -lsgsky -lsgsound -lsgephem -lsgtgdb -lsgmodel -lsgbvh \
 	-lsgmaterial -lsgutil -lsgtiming -lsgio -lsgscreen -lsgmath -lsgbucket \
 	-lsgprops -lsgdebug -lsgmagvar -lsgmisc -lsgnasal -lsgxml -lsgsound \
-	-lsgserial -lsgstructure -lsgenvironment -lsgtsync\
+	-lsgserial -lsgstructure -lsgenvironment -lsgtsync -lsgthreads \
         $(fgfs_PLIB_LIBS) \
 	$(OSG_LIBS) \
 	$(thread_LIBS) \
