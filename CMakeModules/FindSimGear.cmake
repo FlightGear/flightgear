@@ -105,29 +105,19 @@ endmacro()
 
 if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
     set(SIMGEAR_LIBRARIES "") # clear value
-
-    if(NOT MSVC)
-        # Olaf indicates that linking the threads libs causes failures
-        # on MSVC builds
-        set(thread_lib threads)
-    endif(NOT MSVC)
-
+    set(SIMGEAR_CORE_LIBRARIES "") # clear value
+    
   # note the order here affects the order Simgear libraries are
   # linked in, and hence ability to link when using a traditional
   # linker such as GNU ld on Linux
     set(comps
-        ephem
         tsync
         environment
         nasal
-        sky
-        material
-        tgdb
-        model
-        screen
         bucket
         bvh
-        util route
+        util 
+        route
         timing
         io
         serial
@@ -136,14 +126,29 @@ if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
         props
         xml
         misc
-        ${thread_lib}
+        threads
         debug
         magvar
         math)
 
+    set(scene_comps
+        ephem
+        sky
+        material
+        tgdb
+        model
+        screen)
+            
     foreach(component ${comps})
+        find_sg_component(${component} SIMGEAR_CORE_LIBRARIES)
+    endforeach()
+        
+    foreach(component ${scene_comps})
         find_sg_component(${component} SIMGEAR_LIBRARIES)
     endforeach()
+    
+    # again link order matters - scene libraires depend on core ones
+    list(APPEND SIMGEAR_LIBRARIES ${SIMGEAR_CORE_LIBRARIES})
 endif()
 
 # now we've found SimGear, check its version

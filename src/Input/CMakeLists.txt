@@ -36,15 +36,15 @@ if(WIN32)
 endif(WIN32)
 
 target_link_libraries(fgjs 
+    ${SIMGEAR_CORE_LIBRARIES}
     ${SOCKETS_LIBRARY}
-	${SIMGEAR_LIBRARIES}
 	${PLIB_LIBRARIES}
 	${ZLIB_LIBRARY})
 
 add_executable(js_demo js_demo.cxx)
 
 target_link_libraries(js_demo 
-	${SIMGEAR_LIBRARIES}
+	${SIMGEAR_CORE_LIBRARIES}
 	${PLIB_LIBRARIES}
 	${ZLIB_LIBRARY})
 
