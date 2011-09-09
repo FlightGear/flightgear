@@ -80,6 +80,7 @@ target_link_libraries(fgfs
 	${ZLIB_LIBRARIES}
 	${PLIB_LIBRARIES}
 	${LIBSVN_LIBRARIES}
+	${WINSOCK_LIBRARY}
 	${RT_LIBRARY})
 
 install(TARGETS fgfs RUNTIME DESTINATION bin)
