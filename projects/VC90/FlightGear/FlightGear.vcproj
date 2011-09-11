@@ -837,6 +837,14 @@
 				Name="models"
 				>
 				<File
+					RelativePath="..\..\..\src\FDM\JSBSim\models\FGAccelerations.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\src\FDM\JSBSim\models\FGAccelerations.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\..\src\Fdm\JSBSim\models\FGAerodynamics.cpp"
 					>
 				</File>
@@ -1023,6 +1031,14 @@
 						RelativePath="..\..\..\src\Fdm\JSBSim\models\atmosphere\FGMSISData.cpp"
 						>
 					</File>
+					<File
+						RelativePath="..\..\..\src\FDM\JSBSim\models\atmosphere\FGWinds.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\src\FDM\JSBSim\models\atmosphere\FGWinds.h"
+						>
+					</File>
 				</Filter>
 				<Filter
 					Name="flight_control"
@@ -1081,14 +1097,6 @@
 					</File>
 					<File
 						RelativePath="..\..\..\src\Fdm\JSBSim\models\flight_control\FGGain.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\src\Fdm\JSBSim\models\flight_control\FGGradient.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\..\src\Fdm\JSBSim\models\flight_control\FGGradient.h"
 						>
 					</File>
 					<File
@@ -4310,19 +4318,19 @@
 			Name="Lib_ATC"
 			>
 			<File
-				RelativePath="..\..\..\src\ATC\atcdialog.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\ATC\atcdialog.hxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\ATC\atc_mgr.cxx"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\src\ATC\atc_mgr.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\ATC\atcdialog.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\ATC\atcdialog.hxx"
 				>
 			</File>
 			<File
