@@ -16,7 +16,7 @@ if(HAVE_APR_CONFIG)
         OUTPUT_STRIP_TRAILING_WHITESPACE)
     
 # clean up some vars, or other CMake pieces complain
-	string(STRIP ${RAW_APR_LIBS} APR_LIBS)
+	string(STRIP "${RAW_APR_LIBS}" APR_LIBS)
 
 else(HAVE_APR_CONFIG)
     message(STATUS "apr-1-config not found, implement manual search for APR")
