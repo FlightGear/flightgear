@@ -37,6 +37,7 @@ FGATCManager::FGATCManager() {
     controller = 0;
     prevController = 0;
     networkVisible = false;
+    initSucceeded  = false;
 }
 
 FGATCManager::~FGATCManager() {
@@ -136,7 +137,7 @@ void FGATCManager::init() {
             string aircraftType; // Unused.
             string airline;      // Currently used for gate selection, but a fallback mechanism will apply when not specified.
             fp->setGate(park_index);
-            fp->createPushBack(&ai_ac,
+            if (!(fp->createPushBack(&ai_ac,
                                false, 
                                apt, 
                                latitude,
@@ -144,7 +145,10 @@ void FGATCManager::init() {
                                aircraftRadius,
                                fltType,
                                aircraftType,
-                               airline);
+                               airline))) {
+                controller = 0;
+                return;
+            }
 
         }
         fp->getLastWaypoint()->setName( fp->getLastWaypoint()->getName() + string("legend")); 
@@ -170,6 +174,7 @@ void FGATCManager::init() {
    //cerr << "Adding groundnetWork to the scenegraph::init" << endl;
    //globals->get_scenery()->get_scene_graph()->addChild(node);
    }
+   initSucceeded = true;
 }
 
 void FGATCManager::addController(FGATCController *controller) {
