@@ -4,9 +4,8 @@ add_executable(terrasync terrasync.cxx)
 
 target_link_libraries(terrasync
 	${SIMGEAR_CORE_LIBRARIES}
-	${ZLIB_LIBRARIES}
-    ${WINSOCK_LIBRARY}
-    ${RT_LIBRARY})
+	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
+)
 
 if(LIBSVN_FOUND)
 	target_link_libraries(terrasync ${LIBSVN_LIBRARIES})

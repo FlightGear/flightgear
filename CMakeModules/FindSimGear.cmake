@@ -63,6 +63,10 @@ FIND_LIBRARY(SIMGEAR_LIBRARIES
   /opt
 )
 
+# dependent packages
+find_package(ZLIB REQUIRED)
+find_package(Threads REQUIRED)
+
 macro(find_sg_component comp libs)
     set(compLib "sg${comp}")
     string(TOUPPER "SIMGEAR_${comp}" compLibBase)
@@ -146,9 +150,29 @@ if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
     foreach(component ${scene_comps})
         find_sg_component(${component} SIMGEAR_LIBRARIES)
     endforeach()
-    
+
     # again link order matters - scene libraires depend on core ones
     list(APPEND SIMGEAR_LIBRARIES ${SIMGEAR_CORE_LIBRARIES})
+
+    set(SIMGEAR_CORE_LIBRARY_DEPENDENCIES
+        ${CMAKE_THREAD_LIBS_INIT}
+        ${ZLIB_LIBRARY})
+
+    if(WIN32)
+        list(APPEND SIMGEAR_CORE_LIBRARY_DEPENDENCIES ${WINSOCK_LIBRARY})
+    endif(WIN32)
+
+    if(NOT MSVC)
+        # basic timing routines on non windows systems, may be also cygwin?!
+        check_function_exists(clock_gettime clock_gettime_in_libc)
+        if(NOT clock_gettime_in_libc)
+            check_library_exists(rt clock_gettime "" have_rt)
+            if(have_rt)
+                list(APPEND SIMGEAR_CORE_LIBRARY_DEPENDENCIES rt)
+            endif(have_rt)
+        endif(NOT clock_gettime_in_libc)
+    endif(NOT MSVC)
+
 endif()
 
 # now we've found SimGear, check its version

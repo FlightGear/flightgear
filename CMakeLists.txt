@@ -158,33 +158,6 @@ check_cxx_source_compiles(
     "
     HAVE_CULLSETTINGS_CLEAR_MASK)
 
-# library required by simgear
-# XXX This should go in a module and only run if simgear is not shared.
-
-if(HAVE_UNISTD_H)
-set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH})
-check_cxx_source_compiles(
-   "#include <unistd.h>
-    #if !defined(_POSIX_TIMERS) || (0 >= _POSIX_TIMERS)
-    #error clock_gettime is not supported
-    #endif
-
-    int main() { return 0; }
-    "
-    HAVE_CLOCK_GETTIME)    
-endif(HAVE_UNISTD_H)
-
-set(RT_LIBRARY "")
-if(HAVE_CLOCK_GETTIME)
-check_function_exists(clock_gettime CLOCK_GETTIME_IN_LIBC)
-if(NOT CLOCK_GETTIME_IN_LIBC)
-check_library_exists(rt clock_gettime "" HAVE_RT)
-if(HAVE_RT)
-set(RT_LIBRARY rt)
-endif(HAVE_RT)
-endif(NOT CLOCK_GETTIME_IN_LIBC)
-endif(HAVE_CLOCK_GETTIME)
-
 if(ENABLE_RTI)
     find_package(RTI)
     if(RTI_FOUND)
@@ -211,7 +184,6 @@ if(WIN32)
     endif(MSVC)
 
     set(NOMINMAX 1)
-    set( WINSOCK_LIBRARY "ws2_32.lib" )
 endif(WIN32)    
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARNING_FLAGS} ${MSVC_FLAGS} -D_REENTRANT")
@@ -219,9 +191,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS} ${MSVC_FLAGS} -D_REENTR
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MSVC_LD_FLAGS}")
 
 include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
-    ${Boost_INCLUDE_DIRS}
+	${Boost_INCLUDE_DIRS}
 	${ZLIB_INCLUDE_DIR}
-    ${ALUT_INCLUDE_DIR}
+	${ALUT_INCLUDE_DIR}
 	${OPENAL_INCLUDE_DIR}
 	${SIMGEAR_INCLUDE_DIR}
 	${PLIB_INCLUDE_DIR} )

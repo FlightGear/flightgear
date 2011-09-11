@@ -31,22 +31,17 @@ set(FGJS_SOURCES
 	
 add_executable(fgjs ${FGJS_SOURCES})
 
-if(WIN32)
-   set(SOCKETS_LIBRARY wsock32.lib)
-endif(WIN32)
-
 target_link_libraries(fgjs 
     ${SIMGEAR_CORE_LIBRARIES}
-    ${SOCKETS_LIBRARY}
-	${PLIB_LIBRARIES}
-	${ZLIB_LIBRARY})
+    ${PLIB_LIBRARIES}
+    ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES})
 
 add_executable(js_demo js_demo.cxx)
 
 target_link_libraries(js_demo 
 	${SIMGEAR_CORE_LIBRARIES}
 	${PLIB_LIBRARIES}
-	${ZLIB_LIBRARY})
+	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES})
 
 flightgear_component(Input "${SOURCES}")
 

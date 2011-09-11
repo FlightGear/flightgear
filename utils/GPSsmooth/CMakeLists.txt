@@ -7,11 +7,8 @@ target_link_libraries(GPSsmooth
 	${SIMGEAR_CORE_LIBRARIES}
 	${PLIB_SG_LIBRARY}
 	${PLIB_UL_LIBRARY}
-	${ZLIB_LIBRARIES}
+	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
 	${WINMM_LIBRARY}
-	${WINSOCK_LIBRARY}
-	${ZLIB_LIBRARIES}
-	${RT_LIBRARY}
 )
 
 target_link_libraries(MIDGsmooth
@@ -19,8 +16,7 @@ target_link_libraries(MIDGsmooth
 	${PLIB_SG_LIBRARY}
 	${PLIB_UL_LIBRARY}
 	${WINMM_LIBRARY}
-	${WINSOCK_LIBRARY}
-	${RT_LIBRARY}
+	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
 )
 
 target_link_libraries(UGsmooth
@@ -28,9 +24,7 @@ target_link_libraries(UGsmooth
 	${PLIB_SG_LIBRARY}
 	${PLIB_UL_LIBRARY}
 	${WINMM_LIBRARY}
-	${WINSOCK_LIBRARY}
-	${ZLIB_LIBRARIES}
-	${RT_LIBRARY}
+	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
 )
 
 install(TARGETS GPSsmooth MIDGsmooth UGsmooth RUNTIME DESTINATION bin)
