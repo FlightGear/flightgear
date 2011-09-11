@@ -51,7 +51,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FCS "$Id: FGFCS.h,v 1.36 2011/05/20 03:18:36 jberndt Exp $"
+#define ID_FCS "$Id: FGFCS.h,v 1.39 2011/08/14 20:15:56 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -168,7 +168,7 @@ CLASS DOCUMENTATION
     @property gear/tailhook-pos-norm
 
     @author Jon S. Berndt
-    @version $Revision: 1.36 $
+    @version $Revision: 1.39 $
     @see FGActuator
     @see FGDeadBand
     @see FGFCSFunction
@@ -243,10 +243,14 @@ public:
       @return throttle command in range from 0 - 1.0 for the given engine */
   double GetThrottleCmd(int engine) const;
 
+  vector <double> GetThrottleCmd() const {return ThrottleCmd;}
+
   /** Gets the mixture command.
       @param engine engine ID number
       @return mixture command in range from 0 - 1.0 for the given engine */
   double GetMixtureCmd(int engine) const { return MixtureCmd[engine]; }
+
+  vector <double> GetMixtureCmd() const {return MixtureCmd;}
 
   /** Gets the prop pitch command.
       @param engine engine ID number
@@ -318,14 +322,20 @@ public:
       @return throttle position for the given engine in range from 0 - 1.0 */
   double GetThrottlePos(int engine) const;
 
+  vector <double> GetThrottlePos() const {return ThrottlePos;}
+
   /** Gets the mixture position.
       @param engine engine ID number
       @return mixture position for the given engine in range from 0 - 1.0 */
   double GetMixturePos(int engine) const { return MixturePos[engine]; }
 
+  vector <double> GetMixturePos() const {return MixturePos;}
+
   /** Gets the steering position.
       @return steering position in degrees */
   double GetSteerPosDeg(int gear) const { return SteerPosDeg[gear]; }
+
+  vector <double> GetSteerPosDeg() const {return SteerPosDeg;}
 
   /** Gets the gear position (0 up, 1 down), defaults to down
       @return gear position (0 up, 1 down) */
@@ -344,10 +354,14 @@ public:
       @return prop pitch position for the given engine in range from 0 - 1.0 */
   double GetPropAdvance(int engine) const { return PropAdvance[engine]; }
 
+  vector <double> GetPropAdvance() const { return PropAdvance; }
+
   /** Gets the prop feather position.
       @param engine engine ID number
       @return prop fether for the given engine (on / off)*/
   bool GetPropFeather(int engine) const { return PropFeather[engine]; }
+
+  vector <bool> GetPropFeather() const { return PropFeather; }
   //@}
 
   /** Retrieves all component names for inclusion in output stream
@@ -499,32 +513,34 @@ public:
   //@{
   /** Sets the left brake group
       @param cmd brake setting in percent (0.0 - 1.0) */
-  void SetLBrake(double cmd) {LeftBrake = cmd;}
+  void SetLBrake(double cmd) {BrakePos[FGLGear::bgLeft] = cmd;}
 
   /** Sets the right brake group
       @param cmd brake setting in percent (0.0 - 1.0) */
-  void SetRBrake(double cmd) {RightBrake = cmd;}
+  void SetRBrake(double cmd) {BrakePos[FGLGear::bgRight] = cmd;}
 
   /** Sets the center brake group
       @param cmd brake setting in percent (0.0 - 1.0) */
-  void SetCBrake(double cmd) {CenterBrake = cmd;}
+  void SetCBrake(double cmd) {BrakePos[FGLGear::bgCenter] = cmd;}
 
   /** Gets the brake for a specified group.
       @param bg which brakegroup to retrieve the command for
       @return the brake setting for the supplied brake group argument */
   double GetBrake(FGLGear::BrakeGroup bg);
 
+  vector <double> GetBrakePos() const {return BrakePos;}
+
   /** Gets the left brake.
       @return the left brake setting. */
-  double GetLBrake(void) const {return LeftBrake;}
+  double GetLBrake(void) const {return BrakePos[FGLGear::bgLeft];}
 
   /** Gets the right brake.
       @return the right brake setting. */
-  double GetRBrake(void) const {return RightBrake;}
+  double GetRBrake(void) const {return BrakePos[FGLGear::bgRight];}
 
   /** Gets the center brake.
       @return the center brake setting. */
-  double GetCBrake(void) const {return CenterBrake;}
+  double GetCBrake(void) const {return BrakePos[FGLGear::bgCenter];}
   //@}
 
   enum SystemType { stFCS, stSystem, stAutoPilot }; 
@@ -540,12 +556,16 @@ public:
   std::string FindSystemFullPathname(const std::string& system_filename);
 
   void AddThrottle(void);
-  void AddGear(void);
+  void AddGear(unsigned int NumGear);
   double GetDt(void);
 
   FGPropertyManager* GetPropertyManager(void) { return PropertyManager; }
 
   bool GetTrimStatus(void) const { return FDMExec->GetTrimStatus(); }
+
+  struct Inputs {
+    unsigned int NumGear;
+  } in;
 
 private:
   double DaCmd, DeCmd, DrCmd, DsCmd, DfCmd, DsbCmd, DspCmd;
@@ -562,6 +582,7 @@ private:
   std::vector <bool> PropFeather;
   std::vector <double> SteerPosDeg;
   double LeftBrake, RightBrake, CenterBrake; // Brake settings
+  vector <double> BrakePos; // left, center, right - defined by FGLGear:: enum
   double GearCmd,GearPos;
   double TailhookPos, WingFoldPos;
 

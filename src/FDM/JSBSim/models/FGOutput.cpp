@@ -39,9 +39,16 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <sstream>
+#include <iomanip>
+#include <cstring>
+#include <cstdlib>
+
 #include "FGOutput.h"
 #include "FGFDMExec.h"
 #include "FGAtmosphere.h"
+#include "FGAccelerations.h"
+#include "atmosphere/FGWinds.h"
 #include "FGFCS.h"
 #include "FGAerodynamics.h"
 #include "FGGroundReactions.h"
@@ -56,10 +63,6 @@ INCLUDES
 #include "models/propulsion/FGEngine.h"
 #include "models/propulsion/FGTank.h"
 #include "models/propulsion/FGPiston.h"
-#include <sstream>
-#include <iomanip>
-#include <cstring>
-#include <cstdlib>
 
 #if defined(WIN32) && !defined(__CYGWIN__)
 #  include <windows.h>
@@ -74,7 +77,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGOutput.cpp,v 1.55 2011/05/20 03:18:36 jberndt Exp $";
+static const char *IdSrc = "$Id: FGOutput.cpp,v 1.59 2011/08/14 20:15:56 jberndt Exp $";
 static const char *IdHdr = ID_OUTPUT;
 
 // (stolen from FGFS native_fdm.cxx)
@@ -246,9 +249,11 @@ void FGOutput::DelimitedOutput(const string& fname)
   const FGAuxiliary* Auxiliary = FDMExec->GetAuxiliary();
   const FGAircraft* Aircraft = FDMExec->GetAircraft();
   const FGAtmosphere* Atmosphere = FDMExec->GetAtmosphere();
+  const FGWinds* Winds = FDMExec->GetWinds();
   const FGPropulsion* Propulsion = FDMExec->GetPropulsion();
   const FGMassBalance* MassBalance = FDMExec->GetMassBalance();
   const FGPropagate* Propagate = FDMExec->GetPropagate();
+  const FGAccelerations* Accelerations = FDMExec->GetAccelerations();
   const FGFCS* FCS = FDMExec->GetFCS();
   const FGInertial* Inertial = FDMExec->GetInertial();
   const FGGroundReactions* GroundReactions = FDMExec->GetGroundReactions();
@@ -409,7 +414,7 @@ void FGOutput::DelimitedOutput(const string& fname)
   if (SubSystems & ssRates) {
     outstream << delimeter;
     outstream << (radtodeg*Propagate->GetPQR()).Dump(delimeter) << delimeter;
-    outstream << (radtodeg*Propagate->GetPQRdot()).Dump(delimeter) << delimeter;
+    outstream << (radtodeg*Accelerations->GetPQRdot()).Dump(delimeter) << delimeter;
     outstream << (radtodeg*Propagate->GetPQRi()).Dump(delimeter);
   }
   if (SubSystems & ssVelocities) {
@@ -453,9 +458,9 @@ void FGOutput::DelimitedOutput(const string& fname)
     outstream << Atmosphere->GetTemperature() << delimeter;
     outstream << Atmosphere->GetPressureSL() << delimeter;
     outstream << Atmosphere->GetPressure() << delimeter;
-    outstream << Atmosphere->GetTurbMagnitude() << delimeter;
-    outstream << Atmosphere->GetTurbDirection().Dump(delimeter) << delimeter;
-    outstream << Atmosphere->GetTotalWindNED().Dump(delimeter);
+    outstream << Winds->GetTurbMagnitude() << delimeter;
+    outstream << Winds->GetTurbDirection().Dump(delimeter) << delimeter;
+    outstream << Winds->GetTotalWindNED().Dump(delimeter);
   }
   if (SubSystems & ssMassProps) {
     outstream << delimeter;
@@ -477,7 +482,7 @@ void FGOutput::DelimitedOutput(const string& fname)
     outstream << ((FGColumnVector3)Propagate->GetInertialPosition()).Dump(delimeter) << delimeter;
     outstream << ((FGColumnVector3)Propagate->GetLocation()).Dump(delimeter) << delimeter;
     outstream.precision(14);
-    outstream << Inertial->GetEarthPositionAngleDeg() << delimeter;
+    outstream << Propagate->GetEarthPositionAngleDeg() << delimeter;
     outstream << Propagate->GetDistanceAGL() << delimeter;
     outstream << Propagate->GetTerrainElevation();
     outstream.precision(10);
@@ -733,8 +738,10 @@ void FGOutput::SocketOutput(void)
   const FGPropulsion* Propulsion = FDMExec->GetPropulsion();
   const FGMassBalance* MassBalance = FDMExec->GetMassBalance();
   const FGPropagate* Propagate = FDMExec->GetPropagate();
+  const FGAccelerations* Accelerations = FDMExec->GetAccelerations();
   const FGFCS* FCS = FDMExec->GetFCS();
   const FGAtmosphere* Atmosphere = FDMExec->GetAtmosphere();
+  const FGWinds* Winds = FDMExec->GetWinds();
   const FGAircraft* Aircraft = FDMExec->GetAircraft();
   const FGGroundReactions* GroundReactions = FDMExec->GetGroundReactions();
 
@@ -875,9 +882,9 @@ void FGOutput::SocketOutput(void)
     socket->Append(radtodeg*Propagate->GetPQR(eP));
     socket->Append(radtodeg*Propagate->GetPQR(eQ));
     socket->Append(radtodeg*Propagate->GetPQR(eR));
-    socket->Append(radtodeg*Propagate->GetPQRdot(eP));
-    socket->Append(radtodeg*Propagate->GetPQRdot(eQ));
-    socket->Append(radtodeg*Propagate->GetPQRdot(eR));
+    socket->Append(radtodeg*Accelerations->GetPQRdot(eP));
+    socket->Append(radtodeg*Accelerations->GetPQRdot(eQ));
+    socket->Append(radtodeg*Accelerations->GetPQRdot(eR));
   }
   if (SubSystems & ssVelocities) {
     socket->Append(Auxiliary->Getqbar());
@@ -910,9 +917,9 @@ void FGOutput::SocketOutput(void)
     socket->Append(Atmosphere->GetDensity());
     socket->Append(Atmosphere->GetPressureSL());
     socket->Append(Atmosphere->GetPressure());
-    socket->Append(Atmosphere->GetTurbMagnitude());
-    socket->Append(Atmosphere->GetTurbDirection().Dump(","));
-    socket->Append(Atmosphere->GetTotalWindNED().Dump(","));
+    socket->Append(Winds->GetTurbMagnitude());
+    socket->Append(Winds->GetTurbDirection().Dump(","));
+    socket->Append(Winds->GetTotalWindNED().Dump(","));
   }
   if (SubSystems & ssMassProps) {
     socket->Append(MassBalance->GetJ()(1,1));

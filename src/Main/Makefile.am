@@ -35,9 +35,9 @@ GFX_CODE = fg_os_osgviewer.cxx fg_os_common.cxx fg_os.hxx
 JSBSIM_LIBS = \
 	$(top_builddir)/src/FDM/JSBSim/libJSBSim.a \
         $(top_builddir)/src/FDM/JSBSim/initialization/libInit.a \
+        $(top_builddir)/src/FDM/JSBSim/models/atmosphere/libAtmosphere.a \
         $(top_builddir)/src/FDM/JSBSim/models/libModels.a \
         $(top_builddir)/src/FDM/JSBSim/models/flight_control/libFlightControl.a\
-        $(top_builddir)/src/FDM/JSBSim/models/atmosphere/libAtmosphere.a \
         $(top_builddir)/src/FDM/JSBSim/models/propulsion/libPropulsion.a \
         $(top_builddir)/src/FDM/JSBSim/input_output/libInputOutput.a \
         $(top_builddir)/src/FDM/JSBSim/math/libMath.a

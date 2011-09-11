@@ -60,6 +60,8 @@
 #include <FDM/JSBSim/models/FGLGear.h>
 #include <FDM/JSBSim/models/FGGroundReactions.h>
 #include <FDM/JSBSim/models/FGPropulsion.h>
+#include <FDM/JSBSim/models/FGAccelerations.h>
+#include <FDM/JSBSim/models/atmosphere/FGWinds.h>
 #include <FDM/JSBSim/models/propulsion/FGEngine.h>
 #include <FDM/JSBSim/models/propulsion/FGPiston.h>
 #include <FDM/JSBSim/models/propulsion/FGTurbine.h>
@@ -138,12 +140,11 @@ FGJSBsim::FGJSBsim( double dt )
 {
     bool result;
     if( TURBULENCE_TYPE_NAMES.empty() ) {
-        TURBULENCE_TYPE_NAMES["ttNone"]     = FGAtmosphere::ttNone;
-        TURBULENCE_TYPE_NAMES["ttStandard"] = FGAtmosphere::ttStandard;
-//      TURBULENCE_TYPE_NAMES["ttBerndt"]   = FGAtmosphere::ttBerndt;
-        TURBULENCE_TYPE_NAMES["ttCulp"]     = FGAtmosphere::ttCulp;
-        TURBULENCE_TYPE_NAMES["ttMilspec"]  = FGAtmosphere::ttMilspec;
-        TURBULENCE_TYPE_NAMES["ttTustin"]   = FGAtmosphere::ttTustin;
+        TURBULENCE_TYPE_NAMES["ttNone"]     = FGWinds::ttNone;
+        TURBULENCE_TYPE_NAMES["ttStandard"] = FGWinds::ttStandard;
+        TURBULENCE_TYPE_NAMES["ttCulp"]     = FGWinds::ttCulp;
+        TURBULENCE_TYPE_NAMES["ttMilspec"]  = FGWinds::ttMilspec;
+        TURBULENCE_TYPE_NAMES["ttTustin"]   = FGWinds::ttTustin;
     }
 
                                 // Set up the debugging level
@@ -177,6 +178,7 @@ FGJSBsim::FGJSBsim( double dt )
     fdmex->SetGroundCallback( new FGFSGroundCallback(this) );
 
     Atmosphere      = fdmex->GetAtmosphere();
+    Winds           = fdmex->GetWinds();
     FCS             = fdmex->GetFCS();
     MassBalance     = fdmex->GetMassBalance();
     Propulsion      = fdmex->GetPropulsion();
@@ -186,6 +188,7 @@ FGJSBsim::FGJSBsim( double dt )
     Inertial        = fdmex->GetInertial();
     Aerodynamics    = fdmex->GetAerodynamics();
     GroundReactions = fdmex->GetGroundReactions();
+    Accelerations   = fdmex->GetAccelerations();
 
     fgic=fdmex->GetIC();
     needTrim=true;
@@ -307,6 +310,7 @@ FGJSBsim::FGJSBsim( double dt )
     
     temperature = fgGetNode("/environment/temperature-degc",true);
     pressure = fgGetNode("/environment/pressure-inhg",true);
+    pressureSL = fgGetNode("/environment/pressure-sea-level-inhg",true);
     density = fgGetNode("/environment/density-slugft3",true);
     ground_wind = fgGetNode("/environment/config/boundary/entry[0]/wind-speed-kt",true);
     turbulence_gain = fgGetNode("/environment/turbulence/magnitude-norm",true);
@@ -354,21 +358,17 @@ void FGJSBsim::init()
     // init method first.
 
     if (fgGetBool("/environment/params/control-fdm-atmosphere")) {
-      Atmosphere->UseExternal();
-      Atmosphere->SetExTemperature(
-                  9.0/5.0*(temperature->getDoubleValue()+273.15) );
-      Atmosphere->SetExPressure(pressure->getDoubleValue()*70.726566);
-      Atmosphere->SetExDensity(density->getDoubleValue());
+      Atmosphere->SetTemperature(temperature->getDoubleValue(), get_Altitude(), FGAtmosphere::eCelsius);
+      Atmosphere->SetPressureSL(pressureSL->getDoubleValue(), FGAtmosphere::eInchesHg);
       // initialize to no turbulence, these values get set in the update loop
-      Atmosphere->SetTurbType(FGAtmosphere::ttNone);
-      Atmosphere->SetTurbGain(0.0);
-      Atmosphere->SetTurbRate(0.0);
-      Atmosphere->SetWindspeed20ft(0.0);
-      Atmosphere->SetProbabilityOfExceedence(0.0);
-    } else {
-      Atmosphere->UseInternal();
+      Winds->SetTurbType(FGWinds::ttNone);
+      Winds->SetTurbGain(0.0);
+      Winds->SetTurbRate(0.0);
+      Winds->SetWindspeed20ft(0.0);
+      Winds->SetProbabilityOfExceedence(0.0);
     }
 
+    fgic->SetSeaLevelRadiusFtIC( get_Sea_level_radius() );
     fgic->SetWindNEDFpsIC( -wind_from_north->getDoubleValue(),
                            -wind_from_east->getDoubleValue(),
                            -wind_from_down->getDoubleValue() );
@@ -409,14 +409,14 @@ void FGJSBsim::init()
 
     if ( startup_trim->getBoolValue() ) {
       FGLocation cart(fgic->GetLongitudeRadIC(), fgic->GetLatitudeRadIC(),
-                    fgic->GetSeaLevelRadiusFtIC() + fgic->GetAltitudeASLFtIC());
+                      get_Sea_level_radius() + fgic->GetAltitudeASLFtIC());
       double cart_pos[3], contact[3], d[3], vel[3], agl;
       update_ground_cache(cart, cart_pos, 0.01);
 
       get_agl_ft(fdmex->GetSimTime(), cart_pos, SG_METER_TO_FEET*2, contact,
                  d, vel, d, &agl);
       double terrain_alt = sqrt(contact[0]*contact[0] + contact[1]*contact[1]
-           + contact[2]*contact[2]) - fgic->GetSeaLevelRadiusFtIC();
+           + contact[2]*contact[2]) - get_Sea_level_radius();
 
       SG_LOG(SG_FLIGHT, SG_INFO, "Ready to trim, terrain elevation is: "
                                  << terrain_alt * SG_METER_TO_FEET );
@@ -664,30 +664,27 @@ bool FGJSBsim::copy_to_JSBsim()
 
     Propagate->SetSeaLevelRadius( get_Sea_level_radius() );
 
-    Atmosphere->SetExTemperature(
-                  9.0/5.0*(temperature->getDoubleValue()+273.15) );
-    Atmosphere->SetExPressure(pressure->getDoubleValue()*70.726566);
-    Atmosphere->SetExDensity(density->getDoubleValue());
+    Atmosphere->SetTemperature(temperature->getDoubleValue(), get_Altitude(), FGAtmosphere::eCelsius);
+    Atmosphere->SetPressureSL(pressureSL->getDoubleValue(), FGAtmosphere::eInchesHg);
 
-    Atmosphere->SetTurbType((FGAtmosphere::tType)TURBULENCE_TYPE_NAMES[turbulence_model->getStringValue()]);
-    switch( Atmosphere->GetTurbType() ) {
-//      case FGAtmosphere::ttBerndt:
-        case FGAtmosphere::ttStandard:
-        case FGAtmosphere::ttCulp: {
+    Winds->SetTurbType((FGWinds::tType)TURBULENCE_TYPE_NAMES[turbulence_model->getStringValue()]);
+    switch( Winds->GetTurbType() ) {
+        case FGWinds::ttStandard:
+        case FGWinds::ttCulp: {
             double tmp = turbulence_gain->getDoubleValue();
-            Atmosphere->SetTurbGain(tmp * tmp * 100.0);
-            Atmosphere->SetTurbRate(turbulence_rate->getDoubleValue());
+            Winds->SetTurbGain(tmp * tmp * 100.0);
+            Winds->SetTurbRate(turbulence_rate->getDoubleValue());
             break;
         }
-        case FGAtmosphere::ttMilspec:
-        case FGAtmosphere::ttTustin: {
+        case FGWinds::ttMilspec:
+        case FGWinds::ttTustin: {
             // milspec turbulence: 3=light, 4=moderate, 6=severe turbulence
             // turbulence_gain normalized: 0: none, 1/3: light, 2/3: moderate, 3/3: severe
             double tmp = turbulence_gain->getDoubleValue();
-            Atmosphere->SetProbabilityOfExceedence(
+            Winds->SetProbabilityOfExceedence(
               SGMiscd::roundToInt(TurbulenceSeverityTable.GetValue( tmp ) )
             );
-            Atmosphere->SetWindspeed20ft(ground_wind->getDoubleValue());
+            Winds->SetWindspeed20ft(ground_wind->getDoubleValue());
             break;
         }
 
@@ -695,9 +692,9 @@ bool FGJSBsim::copy_to_JSBsim()
             break;
     }
 
-    Atmosphere->SetWindNED( -wind_from_north->getDoubleValue(),
-                            -wind_from_east->getDoubleValue(),
-                            -wind_from_down->getDoubleValue() );
+    Winds->SetWindNED( -wind_from_north->getDoubleValue(),
+                       -wind_from_east->getDoubleValue(),
+                       -wind_from_down->getDoubleValue() );
 //    SG_LOG(SG_FLIGHT,SG_INFO, "Wind NED: "
 //                  << get_V_north_airmass() << ", "
 //                  << get_V_east_airmass()  << ", "
@@ -739,19 +736,19 @@ bool FGJSBsim::copy_from_JSBsim()
                       MassBalance->GetXYZcg(2),
                       MassBalance->GetXYZcg(3) );
 
-    _set_Accels_Body( Aircraft->GetBodyAccel(1),
-                      Aircraft->GetBodyAccel(2),
-                      Aircraft->GetBodyAccel(3) );
+    _set_Accels_Body( Accelerations->GetBodyAccel(1),
+                      Accelerations->GetBodyAccel(2),
+                      Accelerations->GetBodyAccel(3) );
 
-    _set_Accels_CG_Body_N ( Aircraft->GetNcg(1),
-                            Aircraft->GetNcg(2),
-                            Aircraft->GetNcg(3) );
+    _set_Accels_CG_Body_N ( Auxiliary->GetNcg(1),
+                            Auxiliary->GetNcg(2),
+                            Auxiliary->GetNcg(3) );
 
     _set_Accels_Pilot_Body( Auxiliary->GetPilotAccel(1),
                             Auxiliary->GetPilotAccel(2),
                             Auxiliary->GetPilotAccel(3) );
 
-    _set_Nlf( Aircraft->GetNlf() );
+    _set_Nlf( Auxiliary->GetNlf() );
 
     // Velocities
 
@@ -812,7 +809,7 @@ bool FGJSBsim::copy_from_JSBsim()
 
     _set_Gamma_vert_rad( Auxiliary->GetGamma() );
 
-    _set_Earth_position_angle( Inertial->GetEarthPositionAngle() );
+    _set_Earth_position_angle( Propagate->GetEarthPositionAngle() );
 
     _set_Climb_Rate( Propagate->Gethdot() );
 
@@ -1349,7 +1346,7 @@ bool FGJSBsim::update_ground_cache(FGLocation cart, double* cart_pos, double dt)
                       << fgic->GetAltitudeASLFtIC());
 
     SG_LOG(SG_FLIGHT, SG_WARN, "sea level radius = "
-                      << fgic->GetSeaLevelRadiusFtIC());
+                      << get_Sea_level_radius());
 
     SG_LOG(SG_FLIGHT, SG_WARN, "latitude         = "
                       << fgic->GetLatitudeRadIC());

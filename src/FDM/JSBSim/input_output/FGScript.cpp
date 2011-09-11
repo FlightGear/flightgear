@@ -41,20 +41,21 @@ COMMENTS, REFERENCES,  and NOTES
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <iostream>
+#include <cstdlib>
+#include <iomanip>
+
 #include "FGScript.h"
 #include "input_output/FGXMLElement.h"
 #include "input_output/FGXMLParse.h"
 #include "initialization/FGTrim.h"
-
-#include <iostream>
-#include <cstdlib>
-#include <iomanip>
+#include "models/FGInput.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGScript.cpp,v 1.46 2011/02/18 12:44:16 jberndt Exp $";
+static const char *IdSrc = "$Id: FGScript.cpp,v 1.48 2011/09/07 02:36:04 jberndt Exp $";
 static const char *IdHdr = ID_FGSCRIPT;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -379,7 +380,12 @@ bool FGScript::RunScript(void)
         for (i=0; i<Events[ev_ctr].SetValue.size(); i++) {
           Events[ev_ctr].OriginalValue[i] = Events[ev_ctr].SetParam[i]->getDoubleValue();
           if (Events[ev_ctr].Functions[i] != 0) { // Parameter should be set to a function value
-            Events[ev_ctr].SetValue[i] = Events[ev_ctr].Functions[i]->GetValue();
+            try {
+              Events[ev_ctr].SetValue[i] = Events[ev_ctr].Functions[i]->GetValue();
+            } catch (string msg) {
+              std::cerr << std::endl << "A problem occurred in the execution of the script. " << msg << endl;
+              throw;
+            }
           }
           switch (Events[ev_ctr].Type[i]) {
           case FG_VALUE:

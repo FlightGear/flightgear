@@ -44,10 +44,14 @@ HISTORY
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+#include <iostream>
+#include <sstream>
+#include <cstdlib>
+#include <iomanip>
+
+#include "FGFDMExec.h"
 #include "FGPropulsion.h"
-#include "models/FGFCS.h"
 #include "models/FGMassBalance.h"
-#include "models/propulsion/FGThruster.h"
 #include "models/propulsion/FGRocket.h"
 #include "models/propulsion/FGTurbine.h"
 #include "models/propulsion/FGPiston.h"
@@ -57,15 +61,12 @@ INCLUDES
 #include "input_output/FGPropertyManager.h"
 #include "input_output/FGXMLParse.h"
 #include "math/FGColumnVector3.h"
-#include <iostream>
-#include <sstream>
-#include <cstdlib>
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGPropulsion.cpp,v 1.46 2011/05/20 03:18:36 jberndt Exp $";
+static const char *IdSrc = "$Id: FGPropulsion.cpp,v 1.50 2011/08/03 03:21:06 jberndt Exp $";
 static const char *IdHdr = ID_PROPULSION;
 
 extern short debug_lvl;
@@ -87,7 +88,7 @@ FGPropulsion::FGPropulsion(FGFDMExec* exec) : FGModel(exec)
   tankJ.InitMatrix();
   refuel = dump = false;
   DumpRate = 0.0;
-  fuel_freeze = false;
+  FuelFreeze = false;
   TotalFuelQuantity = 0.0;
   IsBound =
   HavePistonEngine =
@@ -158,31 +159,130 @@ bool FGPropulsion::Run(bool Holding)
 
   RunPreFunctions();
 
-  double dt = FDMExec->GetDeltaT();
-
   vForces.InitMatrix();
   vMoments.InitMatrix();
 
   for (i=0; i<numEngines; i++) {
     Engines[i]->Calculate();
+    ConsumeFuel(Engines[i]);
     vForces  += Engines[i]->GetBodyForces();  // sum body frame forces
     vMoments += Engines[i]->GetMoments();     // sum body frame moments
   }
 
   TotalFuelQuantity = 0.0;
   for (i=0; i<numTanks; i++) {
-    Tanks[i]->Calculate( dt * rate );
+    Tanks[i]->Calculate( in.TotalDeltaT, in.TAT_c);
     if (Tanks[i]->GetType() == FGTank::ttFUEL) {
       TotalFuelQuantity += Tanks[i]->GetContents();
     }
   }
 
-  if (refuel) DoRefuel( dt * rate );
-  if (dump) DumpFuel( dt * rate );
+  if (refuel) DoRefuel( in.TotalDeltaT );
+  if (dump) DumpFuel( in.TotalDeltaT );
 
   RunPostFunctions();
 
   return false;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+//
+// The engine can tell us how much fuel it needs, but it is up to the propulsion
+// subsystem manager class FGPropulsion to manage fuel flow amongst tanks. Engines
+// May burn fuel from more than one tank at a time, and may burn from one tank
+// before another - that is, may burn from one tank until the tank is depleted,
+// then burn from the next highest priority tank. This can be accompished
+// by defining a fuel management system, but this way of specifying priorities
+// is more automatic from a user perspective.
+
+void FGPropulsion::ConsumeFuel(FGEngine* engine)
+{
+  if (FuelFreeze) return;
+  if (FDMExec->GetTrimStatus()) return;
+
+  unsigned int TanksWithFuel=0, CurrentFuelTankPriority=1;
+  unsigned int TanksWithOxidizer=0, CurrentOxidizerTankPriority=1;
+  vector <int> FeedListFuel, FeedListOxi;
+  bool Starved = true; // Initially set Starved to true. Set to false in code below.
+//  bool hasOxTanks = false;
+
+  // For this engine,
+  // 1) Count how many fuel tanks with the current priority level have fuel
+  // 2) If there none, then try next lower priority (higher number) - that is,
+  //    increment CurrentPriority.
+  // 3) Build the feed list.
+  // 4) Do the same for oxidizer tanks, if needed.
+
+  // Process fuel tanks, if any
+  while ((TanksWithFuel == 0) && (CurrentFuelTankPriority <= numTanks)) {
+    for (unsigned int i=0; i<engine->GetNumSourceTanks(); i++) {
+      unsigned int TankId = engine->GetSourceTank(i);
+      FGTank* Tank = Tanks[TankId];
+      unsigned int TankPriority = Tank->GetPriority();
+      if (TankPriority != 0) {
+        switch(Tank->GetType()) {
+        case FGTank::ttFUEL:
+          if ((Tank->GetContents() > 0.0) && Tank->GetSelected() && (TankPriority == CurrentFuelTankPriority)) {
+            TanksWithFuel++;
+            Starved = false;
+            FeedListFuel.push_back(TankId);
+          } 
+          break;
+        case FGTank::ttOXIDIZER:
+          // Skip this here (done below)
+          break;
+        }
+      }
+    }
+    if (TanksWithFuel == 0) CurrentFuelTankPriority++; // No tanks at this priority, try next priority
+  }
+
+  // Process Oxidizer tanks, if any
+  if (engine->GetType() == FGEngine::etRocket) {
+    while ((TanksWithOxidizer == 0) && (CurrentOxidizerTankPriority <= numTanks)) {
+      for (unsigned int i=0; i<engine->GetNumSourceTanks(); i++) {
+        unsigned int TankId = engine->GetSourceTank(i);
+        FGTank* Tank = Tanks[TankId];
+        unsigned int TankPriority = Tank->GetPriority();
+        if (TankPriority != 0) {
+          switch(Tank->GetType()) {
+          case FGTank::ttFUEL:
+            // Skip this here (done above)
+            break;
+          case FGTank::ttOXIDIZER:
+//            hasOxTanks = true;
+            if (Tank->GetContents() > 0.0 && Tank->GetSelected() && TankPriority == CurrentOxidizerTankPriority) {
+              TanksWithOxidizer++;
+              if (TanksWithFuel > 0) Starved = false;
+              FeedListOxi.push_back(TankId);
+            }
+            break;
+          }
+        }
+      }
+      if (TanksWithOxidizer == 0) CurrentOxidizerTankPriority++; // No tanks at this priority, try next priority
+    }
+  }
+
+  engine->SetStarved(Starved); // Tanks can be refilled, so be sure to reset engine Starved flag here.
+
+  // No fuel or fuel/oxidizer found at any priority!
+  if (Starved) return;
+
+  double FuelToBurn = engine->CalcFuelNeed();            // How much fuel does this engine need?
+  double FuelNeededPerTank = FuelToBurn / TanksWithFuel; // Determine fuel needed per tank.  
+  for (unsigned int i=0; i<FeedListFuel.size(); i++) {
+    Tanks[FeedListFuel[i]]->Drain(FuelNeededPerTank); 
+  }
+
+  if (engine->GetType() == FGEngine::etRocket) {
+    double OxidizerToBurn = engine->CalcOxidizerNeed();                // How much fuel does this engine need?
+    double OxidizerNeededPerTank = OxidizerToBurn / TanksWithOxidizer; // Determine fuel needed per tank.  
+    for (unsigned int i=0; i<FeedListOxi.size(); i++) {
+      Tanks[FeedListOxi[i]]->Drain(OxidizerNeededPerTank); 
+    }
+  }
+
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -201,28 +301,23 @@ bool FGPropulsion::GetSteadyState(void)
     FDMExec->SetTrimStatus(true);
 
     for (unsigned int i=0; i<numEngines; i++) {
-//      cout << "  Finding steady state for engine " << i << endl;
       steady=false;
       steady_count=0;
       j=0;
       while (!steady && j < 6000) {
         Engines[i]->Calculate();
         lastThrust = currentThrust;
-        currentThrust = Engines[i]->GetThruster()->GetThrust();
+        currentThrust = Engines[i]->GetThrust();
         if (fabs(lastThrust-currentThrust) < 0.0001) {
           steady_count++;
           if (steady_count > 120) {
             steady=true;
-//            cout << "    Steady state found at thrust: " << currentThrust << " lbs." << endl;
           }
         } else {
           steady_count=0;
         }
         j++;
       }
-//      if (j >= 6000) {
-//        cout << "    Could not find a steady state for this engine." << endl;
-//      }
       vForces  += Engines[i]->GetBodyForces();  // sum body frame forces
       vMoments += Engines[i]->GetMoments();     // sum body frame moments
     }
@@ -244,8 +339,10 @@ void FGPropulsion::InitRunning(int n)
     if (n >= (int)GetNumEngines() ) {
       throw(string("Tried to initialize a non-existent engine!"));
     }
-    FDMExec->GetFCS()->SetThrottleCmd(n,1);
-    FDMExec->GetFCS()->SetMixtureCmd(n,1);
+
+    in.ThrottleCmd[n] = in.ThrottlePos[n] = 1; // Set the throttle command and position
+    in.MixtureCmd[n] = in.MixturePos[n] = 1;   // Set the mixture command and position
+
     GetEngine(n)->InitRunning();
     GetSteadyState();
 
@@ -255,14 +352,14 @@ void FGPropulsion::InitRunning(int n)
   } else if (n < 0) { // -1 refers to "All Engines"
 
     for (unsigned int i=0; i<GetNumEngines(); i++) {
-      FDMExec->GetFCS()->SetThrottleCmd(i,1);
-      FDMExec->GetFCS()->SetMixtureCmd(i,1);
+      in.ThrottleCmd[i] = in.ThrottlePos[i] = 1; // Set the throttle command and position
+      in.MixtureCmd[i] = in.MixturePos[i] = 1;   // Set the mixture command and position
       GetEngine(i)->InitRunning();
     }
+
     GetSteadyState();
     InitializedEngines = -1;
     HasInitializedEngines = true;
-
   }
 }
 
@@ -301,6 +398,11 @@ bool FGPropulsion::Load(Element* el)
     }
 
     engine_filename = FindEngineFullPathname(engine_filename);
+    if (engine_filename.empty()) {
+      // error message already printed by FindEngineFullPathname()
+      return false;
+    }
+
     document = LoadXMLDocument(engine_filename);
     document->SetParent(engine_element);
 
@@ -309,23 +411,23 @@ bool FGPropulsion::Load(Element* el)
       if (type == "piston_engine") {
         HavePistonEngine = true;
         if (!IsBound) bind();
-        Engines.push_back(new FGPiston(FDMExec, document, numEngines));
+        Engines.push_back(new FGPiston(FDMExec, document, numEngines, in));
       } else if (type == "turbine_engine") {
         HaveTurbineEngine = true;
         if (!IsBound) bind();
-        Engines.push_back(new FGTurbine(FDMExec, document, numEngines));
+        Engines.push_back(new FGTurbine(FDMExec, document, numEngines, in));
       } else if (type == "turboprop_engine") {
         HaveTurboPropEngine = true;
         if (!IsBound) bind();
-        Engines.push_back(new FGTurboProp(FDMExec, document, numEngines));
+        Engines.push_back(new FGTurboProp(FDMExec, document, numEngines, in));
       } else if (type == "rocket_engine") {
         HaveRocketEngine = true;
         if (!IsBound) bind();
-        Engines.push_back(new FGRocket(FDMExec, document, numEngines));
+        Engines.push_back(new FGRocket(FDMExec, document, numEngines, in));
       } else if (type == "electric_engine") {
         HaveElectricEngine = true;
         if (!IsBound) bind();
-        Engines.push_back(new FGElectric(FDMExec, document, numEngines));
+        Engines.push_back(new FGElectric(FDMExec, document, numEngines, in));
       } else {
         cerr << "Unknown engine type: " << type << endl;
         exit(-5);
@@ -335,9 +437,6 @@ bool FGPropulsion::Load(Element* el)
       return false;
     }
 
-    FDMExec->GetFCS()->AddThrottle();
-    ThrottleAdded = true;
-
     numEngines++;
 
     engine_element = el->FindNextElement("engine");
@@ -345,7 +444,6 @@ bool FGPropulsion::Load(Element* el)
   }
 
   CalculateTankInertias();
-  if (!ThrottleAdded) FDMExec->GetFCS()->AddThrottle(); // need to have at least one throttle
 
   // Process fuel dump rate
   if (el->FindElement("dump-rate"))
@@ -455,6 +553,34 @@ string FGPropulsion::GetPropulsionValues(const string& delimiter) const
   }
 
   return PropulsionValues;
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+string FGPropulsion::GetPropulsionTankReport()
+{
+  string out="";
+  stringstream outstream;
+  for (unsigned int i=0; i<numTanks; i++)
+  {
+    FGTank* tank = Tanks[i];
+    string tankname="";
+    if (tank->GetType() == FGTank::ttFUEL && tank->GetGrainType() != FGTank::gtUNKNOWN) {
+      tankname = "Solid Fuel";
+    } else if (tank->GetType() == FGTank::ttFUEL) {
+      tankname = "Fuel";
+    } else if (tank->GetType() == FGTank::ttOXIDIZER) {
+      tankname = "Oxidizer";
+    } else {
+      tankname = "(Unknown tank type)";
+    }
+    outstream << highint << left << setw(4) << i << setw(30) << tankname << normint
+      << right << setw(10) << tank->GetContents() << setw(8) << tank->GetXYZ(eX)
+         << setw(8) << tank->GetXYZ(eY) << setw(8) << tank->GetXYZ(eZ)
+         << setw(12) << "*" << setw(12) << "*"
+         << setw(12) << "*" << endl;
+  }
+  return outstream.str();
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -633,7 +759,7 @@ void FGPropulsion::DumpFuel(double time_slice)
 
 void FGPropulsion::SetFuelFreeze(bool f)
 {
-  fuel_freeze = f;
+  FuelFreeze = f;
   for (unsigned int i=0; i<numEngines; i++) {
     Engines[i]->SetFuelFreeze(f);
   }

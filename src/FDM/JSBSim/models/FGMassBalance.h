@@ -49,7 +49,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_MASSBALANCE "$Id: FGMassBalance.h,v 1.23 2011/05/20 03:18:36 jberndt Exp $"
+#define ID_MASSBALANCE "$Id: FGMassBalance.h,v 1.25 2011/07/28 12:48:19 jberndt Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONSS
@@ -138,13 +138,13 @@ public:
       slugs at the given vector r in the structural frame. The units
       should be for the mass in slug and the vector in the structural
       frame as usual in inches.
-      @param slugs the mass of this single pointmass given in slugs
+      @param mass_sl the mass of this single pointmass given in slugs
       @param r the location of this single pointmass in the structural frame
    */
-  FGMatrix33 GetPointmassInertia(double slugs, const FGColumnVector3& r) const
+  FGMatrix33 GetPointmassInertia(double mass_sl, const FGColumnVector3& r) const
   {
     FGColumnVector3 v = StructuralToBody( r );
-    FGColumnVector3 sv = slugs*v;
+    FGColumnVector3 sv = mass_sl*v;
     double xx = sv(1)*v(1);
     double yy = sv(2)*v(2);
     double zz = sv(3)*v(3);
@@ -179,6 +179,15 @@ public:
   void SetAircraftBaseInertias(FGMatrix33 BaseJ) {baseJ = BaseJ;}
   void GetMassPropertiesReport(void) const;
   
+  struct Inputs {
+    double GasMass;
+    double TanksWeight;
+    FGColumnVector3 GasMoment;
+    FGMatrix33 GasInertia;
+    FGColumnVector3 TanksMoment;
+    FGMatrix33 TankInertia;
+  } in;
+
 private:
   double Weight;
   double EmptyWeight;
