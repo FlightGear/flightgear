@@ -1032,6 +1032,14 @@
 						>
 					</File>
 					<File
+						RelativePath="..\..\..\src\FDM\JSBSim\models\atmosphere\FGStandardAtmosphere.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\..\..\src\FDM\JSBSim\models\atmosphere\FGStandardAtmosphere.h"
+						>
+					</File>
+					<File
 						RelativePath="..\..\..\src\FDM\JSBSim\models\atmosphere\FGWinds.cpp"
 						>
 					</File>
