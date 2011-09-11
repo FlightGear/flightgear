@@ -124,7 +124,7 @@ Section "" ;No components page, name is not important
   
   WriteUninstaller "$INSTDIR\FlightGear_Uninstall.exe"
   
-  WriteRegStr HKLM ${UninstallKey} "DisplayName" "FlightGear Nightly"
+  WriteRegStr HKLM ${UninstallKey} "DisplayName" "FlightGear Nightly vs2010"
   WriteRegStr HKLM ${UninstallKey} "DisplayVersion" "${FGVersion}"
   WriteRegStr HKLM ${UninstallKey} "UninstallString" "$INSTDIR\FlightGear_Uninstall.exe"
   WriteRegStr HKLM ${UninstallKey} "UninstallPath" "$INSTDIR\FlightGear_Uninstall.exe"
