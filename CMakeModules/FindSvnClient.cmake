@@ -5,6 +5,30 @@ include (CheckFunctionExists)
 include (CheckIncludeFile)
 include (CheckLibraryExists)
 
+macro(find_static_component comp libs)
+    # account for alternative Windows svn distribution naming
+    if(MSVC)
+      set(compLib "lib${comp}")
+    else(MSVC)
+      set(compLib "${comp}")
+    endif(MSVC)
+    
+    string(TOUPPER "${comp}" compLibBase)
+    set( compLibName ${compLibBase}_LIBRARY )
+
+    FIND_LIBRARY(${compLibName}
+      NAMES ${compLib}
+      HINTS $ENV{PLIBDIR}
+      PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
+      PATHS
+      /usr/local
+      /usr
+      /opt
+    )
+
+	list(APPEND ${libs} ${${compLibName}})
+endmacro()
+
 find_program(HAVE_APR_CONFIG apr-1-config)
 if(HAVE_APR_CONFIG) 
         
@@ -33,25 +57,17 @@ if(HAVE_APR_CONFIG OR MSVC)
 	  /usr
 	  /opt
 	)
-
+	
+	set(LIBSVN_LIBRARIES "")
 	if (MSVC)
-		check_library_exists(libsvn_client-1 svn_client_checkout "${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib" HAVE_LIB_SVNCLIENT)
-		check_library_exists(libsvn_subr-1 svn_cmdline_init "${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib" HAVE_LIB_SVNSUBR)
-		check_library_exists(libsvn_ra-1 svn_ra_initialize "${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib" HAVE_LIB_SVNRA)
+		find_static_component("apr-1" LIBSVN_LIBRARIES)
 	else (MSVC)
-		check_library_exists(svn_client-1 svn_client_checkout "" HAVE_LIB_SVNCLIENT)
-		check_library_exists(svn_subr-1 svn_cmdline_init "" HAVE_LIB_SVNSUBR)
-		check_library_exists(svn_ra-1 svn_ra_initialize "" HAVE_LIB_SVNRA)
+		list(APPEND LIBSVN_LIBRARIES APR_LIBS)
 	endif (MSVC)
+	find_static_component("svn_client-1" LIBSVN_LIBRARIES)
+	find_static_component("svn_subr-1" LIBSVN_LIBRARIES)
+	find_static_component("svn_ra-1" LIBSVN_LIBRARIES)
 
 	include(FindPackageHandleStandardArgs)
-	FIND_PACKAGE_HANDLE_STANDARD_ARGS(LIBSVN DEFAULT_MSG 
-		HAVE_LIB_SVNSUBR 
-		HAVE_LIB_SVNCLIENT
-		HAVE_LIB_SVNRA 
-		LIBSVN_INCLUDE_DIR)
-
-	if(LIBSVN_FOUND)
-		set(LIBSVN_LIBRARIES "svn_client-1" "svn_subr-1" "svn_ra-1" ${APR_LIBS})
-	endif(LIBSVN_FOUND)
+	FIND_PACKAGE_HANDLE_STANDARD_ARGS(LIBSVN DEFAULT_MSG LIBSVN_LIBRARIES LIBSVN_INCLUDE_DIR)
 endif(HAVE_APR_CONFIG OR MSVC)
