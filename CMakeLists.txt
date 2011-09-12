@@ -33,6 +33,13 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
 # autoconf compatibility
 set(PKGLIBDIR "foo")
 
+# Change the default build type to something fast
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
+
 if($ENV{BUILD_ID})
 	set(HUDSON_BUILD_ID $ENV{BUILD_ID})
 	set(HUDSON_BUILD_NUMBER $ENV{BUILD_NUMBER})
