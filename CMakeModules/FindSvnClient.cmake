@@ -3,6 +3,7 @@
 
 include (CheckFunctionExists)
 include (CheckIncludeFile)
+include (CheckLibraryExists)
 
 find_program(HAVE_APR_CONFIG apr-1-config)
 if(HAVE_APR_CONFIG) 
@@ -22,7 +23,7 @@ else(HAVE_APR_CONFIG)
     message(STATUS "apr-1-config not found, implement manual search for APR")
 endif(HAVE_APR_CONFIG)
 
-if(HAVE_APR_CONFIG)
+if(HAVE_APR_CONFIG OR MSVC)
 	find_path(LIBSVN_INCLUDE_DIR svn_client.h
 	  HINTS
 	  $ENV{LIBSVN_DIR}
@@ -33,9 +34,15 @@ if(HAVE_APR_CONFIG)
 	  /opt
 	)
 
-	check_library_exists(svn_client-1 svn_client_checkout "" HAVE_LIB_SVNCLIENT)
-	check_library_exists(svn_subr-1 svn_cmdline_init "" HAVE_LIB_SVNSUBR)
-	check_library_exists(svn_ra-1 svn_ra_initialize "" HAVE_LIB_SVNRA)
+	if (MSVC)
+		check_library_exists(libsvn_client-1 svn_client_checkout "${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib" HAVE_LIB_SVNCLIENT)
+		check_library_exists(libsvn_subr-1 svn_cmdline_init "${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib" HAVE_LIB_SVNSUBR)
+		check_library_exists(libsvn_ra-1 svn_ra_initialize "${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib" HAVE_LIB_SVNRA)
+	else (MSVC)
+		check_library_exists(svn_client-1 svn_client_checkout "" HAVE_LIB_SVNCLIENT)
+		check_library_exists(svn_subr-1 svn_cmdline_init "" HAVE_LIB_SVNSUBR)
+		check_library_exists(svn_ra-1 svn_ra_initialize "" HAVE_LIB_SVNRA)
+	endif (MSVC)
 
 	include(FindPackageHandleStandardArgs)
 	FIND_PACKAGE_HANDLE_STANDARD_ARGS(LIBSVN DEFAULT_MSG 
@@ -47,4 +54,4 @@ if(HAVE_APR_CONFIG)
 	if(LIBSVN_FOUND)
 		set(LIBSVN_LIBRARIES "svn_client-1" "svn_subr-1" "svn_ra-1" ${APR_LIBS})
 	endif(LIBSVN_FOUND)
-endif(HAVE_APR_CONFIG)
+endif(HAVE_APR_CONFIG OR MSVC)
