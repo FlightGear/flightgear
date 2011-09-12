@@ -72,7 +72,21 @@ option(ENABLE_LIBSVN "Set to ON to build FlightGear/terrasync with libsvnclient 
 option(ENABLE_RTI "Set to ON to build SimGear with RTI support" OFF)
 option(WITH_FGPANEL "Set to ON to build the fgpanel application" ON)
 
-set(MSVC_3RDPARTY_ROOT NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
+if (MSVC)
+  GET_FILENAME_COMPONENT(PARENT_DIR ${PROJECT_SOURCE_DIR} PATH)
+  if (CMAKE_CL_64)
+    SET(TEST_3RDPARTY_DIR "${PARENT_DIR}/3rdparty.x64")
+  else (CMAKE_CL_64)
+    SET(TEST_3RDPARTY_DIR "${PARENT_DIR}/3rdparty")
+  endif (CMAKE_CL_64)
+  if (EXISTS ${TEST_3RDPARTY_DIR})
+    set(MSVC_3RDPARTY_ROOT ${PARENT_DIR} CACHE PATH "Location where the third-party dependencies are extracted")
+  else (EXISTS ${TEST_3RDPARTY_DIR})
+    set(MSVC_3RDPARTY_ROOT NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
+  endif (EXISTS ${TEST_3RDPARTY_DIR})
+else (MSVC)
+  set(MSVC_3RDPARTY_ROOT NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
+endif (MSVC)
 
 if(LOGGING)
 	# nothing
