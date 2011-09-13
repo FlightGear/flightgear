@@ -1,6 +1,7 @@
 noinst_LIBRARIES = libSound.a
 
 libSound_a_SOURCES = \
+	soundgenerator.cxx soundgenerator.hxx \
 	beacon.cxx beacon.hxx \
 	fg_fx.cxx fg_fx.hxx \
 	morse.cxx morse.hxx \

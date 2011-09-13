@@ -32,16 +32,10 @@
 #include <simgear/math/interpolater.hxx>
 #include <simgear/timing/timestamp.hxx>
 
-#include <Sound/beacon.hxx>
-#include <Sound/morse.hxx>
-
 class SGSampleGroup;
 
 class FGMarkerBeacon : public SGSubsystem
 {
-    FGBeacon beacon;
-    FGMorse morse;
-
     SGInterpTable *term_tbl;
     SGInterpTable *low_tbl;
     SGInterpTable *high_tbl;

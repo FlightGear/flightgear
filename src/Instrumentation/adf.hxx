@@ -16,7 +16,6 @@
 #include <simgear/props/props.hxx>
 
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <Sound/morse.hxx>
 
 using std::string;
 
@@ -93,7 +92,6 @@ private:
     SGVec3d _transmitter_cart;
     double _transmitter_range_nm;
 
-    FGMorse morse;
     int _ident_count;
     time_t _last_ident_time;
     float _last_volume;

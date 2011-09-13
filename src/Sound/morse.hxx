@@ -18,16 +18,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-// $Id$
 
 
 #ifndef _MORSE_HXX
 #define _MORSE_HXX
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
+#include "soundgenerator.hxx"
 #include <simgear/compiler.h>
 #include <simgear/sound/soundmgr_openal.hxx>
 
@@ -97,7 +93,7 @@ static const int LO_FREQUENCY = 1020;	 // AIM 1-1-7 (f) specified in Hz
 static const int HI_FREQUENCY = 1350;	 // AIM 1-1-7 (f) specified in Hz
 
 // manages everything we need to know for an individual sound sample
-class FGMorse {
+class FGMorse : public FGSoundGenerator {
 
 private:
 
@@ -110,15 +106,18 @@ private:
     unsigned char cust_dit[ DIT_SIZE ] ;
     unsigned char cust_dah[ DAH_SIZE ] ;
 
+    static FGMorse * _instance;
+
     bool cust_init( const int freq );
+    // allocate and initialize sound samples
+    bool init();
 
 public:
 
     FGMorse();
     ~FGMorse();
 
-    // allocate and initialize sound samples
-    bool init();
+    static FGMorse * instance();
 
     // make a SimpleSound morse code transmission for the specified string
     SGSoundSample *make_ident( const string& id,
@@ -126,20 +125,6 @@ public:
 };
 
 
-/**
- * \relates FGMorse
- * Make a tone of specified freq and total_len with trans_len ramp in
- * and out and only the first len bytes with sound, the rest with
- * silence.
- * @param buf unsigned char pointer to sound buffer
- * @param freq desired frequency of tone
- * @param len length of tone within sound
- * @param total_len total length of sound (anything more than len is padded
- *        with silence.
- * @param trans_len length of ramp up and ramp down to avoid audio "pop"
- */
-void make_tone( unsigned char *buf, int freq, 
-		int len, int total_len, int trans_len );
 
 #endif // _MORSE_HXX
 

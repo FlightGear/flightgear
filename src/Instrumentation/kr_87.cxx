@@ -36,6 +36,7 @@
 
 #include "kr_87.hxx"
 
+#include <Sound/morse.hxx>
 #include <string>
 using std::string;
 
@@ -119,7 +120,6 @@ void FGKR_87::init () {
     SGSoundMgr *smgr = globals->get_soundmgr();
     _sgr = smgr->find("avionics", true);
     _sgr->tie_to_listener();
-    morse.init();
 }
 
 
@@ -534,7 +534,7 @@ void FGKR_87::search() {
 		_sgr->remove( "adf-ident" );
 	    }
 	    SGSoundSample *sound;
-	    sound = morse.make_ident( trans_ident, LO_FREQUENCY );
+        sound = FGMorse::instance()->make_ident( trans_ident, LO_FREQUENCY );
 	    sound->set_volume( 0.3 );
 	    _sgr->add( sound, "adf-ident" );
 

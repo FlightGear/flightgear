@@ -3230,6 +3230,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\Sound\soundgenerator.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Sound\soundgenerator.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Sound\voice.cxx"
 				>
 			</File>

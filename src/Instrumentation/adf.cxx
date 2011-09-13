@@ -17,6 +17,8 @@
 #include <Navaids/navlist.hxx>
 
 #include "adf.hxx"
+#include <Sound/morse.hxx>
+
 
 #include <iostream>
 #include <string>
@@ -109,8 +111,6 @@ ADF::init ()
     SGSoundMgr *smgr = globals->get_soundmgr();
     _sgr = smgr->find("avionics", true);
     _sgr->tie_to_listener();
-
-    morse.init();
 
     std::ostringstream temp;
     temp << _name << _num;
@@ -252,7 +252,7 @@ ADF::search (double frequency_khz, double longitude_rad,
         }
 
         SGSoundSample *sound;
-        sound = morse.make_ident( ident, LO_FREQUENCY );
+        sound = FGMorse::instance()->make_ident( ident, LO_FREQUENCY );
         sound->set_volume(_last_volume = 0);
         _sgr->add( sound, _adf_ident );
 

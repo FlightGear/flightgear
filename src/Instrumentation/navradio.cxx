@@ -44,6 +44,7 @@
 #include <Airports/runways.hxx>
 #include <Navaids/navlist.hxx>
 #include <Main/util.hxx>
+#include <Sound/morse.hxx>
 
 
 using std::string;
@@ -174,8 +175,6 @@ FGNavRadio::init ()
     SGSoundMgr *smgr = globals->get_soundmgr();
     _sgr = smgr->find("avionics", true);
     _sgr->tie_to_listener();
-
-    morse.init();
 
     SGPropertyNode* node = _radio_node.get();
     bus_power_node = 
@@ -1014,7 +1013,7 @@ void FGNavRadio::audioNavidChanged()
   
   try {
     string trans_ident(_navaid->get_trans_ident());
-    SGSoundSample* sound = morse.make_ident(trans_ident, LO_FREQUENCY);
+    SGSoundSample* sound = FGMorse::instance()->make_ident(trans_ident, LO_FREQUENCY);
     sound->set_volume( 0.3 );
     if (!_sgr->add( sound, nav_fx_name )) {
       SG_LOG(SG_COCKPIT, SG_WARN, "Failed to add v1-vor-ident sound");
@@ -1024,7 +1023,7 @@ void FGNavRadio::audioNavidChanged()
       _sgr->remove( dme_fx_name );
     }
      
-    sound = morse.make_ident( trans_ident, HI_FREQUENCY );
+    sound = FGMorse::instance()->make_ident( trans_ident, HI_FREQUENCY );
     sound->set_volume( 0.3 );
     _sgr->add( sound, dme_fx_name );
 

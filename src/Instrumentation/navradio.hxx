@@ -26,7 +26,6 @@
 
 
 #include <Main/fg_props.hxx>
-#include "Sound/morse.hxx"
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -41,8 +40,6 @@ typedef SGSharedPtr<FGNavRecord> FGNavRecordPtr;
 
 class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
 {
-    FGMorse morse;
-
     SGInterpTable *term_tbl;
     SGInterpTable *low_tbl;
     SGInterpTable *high_tbl;
