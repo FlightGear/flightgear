@@ -23,7 +23,7 @@
 #include <simgear/sg_inlines.h>
 
 #include <Main/globals.hxx>
-#include <Sound/Morse.hxx>
+#include <Sound/morse.hxx>
 
 AudioIdent::AudioIdent( const std::string & fx_name, const double interval_secs, const int frequency_hz ) :
   _fx_name(fx_name),
