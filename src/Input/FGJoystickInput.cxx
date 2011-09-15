@@ -217,10 +217,19 @@ void FGJoystickInput::postinit()
       if (num_node != 0) {
           n_axis = num_node->getIntValue(TGT_PLATFORM, -1);
 
+        #ifdef SG_MAC
+          // Mac falls back to Unix by default - avoids specifying many
+          // duplicate <mac> entries in joystick config files
+          if (n_axis < 0) {
+              n_axis = num_node->getIntValue("unix", -1);
+          }
+        #endif
+          
           // Silently ignore platforms that are not specified within the
           // <number></number> section
-          if (n_axis < 0)
-             continue;
+          if (n_axis < 0) {
+              continue;
+          }
       }
 
       if (n_axis >= naxes) {

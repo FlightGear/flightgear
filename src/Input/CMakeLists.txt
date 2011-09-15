@@ -18,6 +18,17 @@ set(SOURCES
 	input.cxx	
 	)
 	
+set(HEADERS
+	FGButton.hxx
+    FGCommonInput.hxx
+    FGDeviceConfigurationMap.hxx
+    FGEventInput.hxx
+    FGJoystickInput.hxx
+    FGKeyboardInput.hxx
+    FGMouseInput.hxx
+    input.hxx
+	)
+    	
 if(EVENT_INPUT)
 	list(APPEND SOURCES ${EVENT_INPUT_SOURCES})
 	include_directories(${DBUS_INCLUDE_DIR} ${DBUS_ARCH_INCLUDE_DIR})
@@ -43,6 +54,6 @@ target_link_libraries(js_demo
 	${PLIB_LIBRARIES}
 	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES})
 
-flightgear_component(Input "${SOURCES}")
+flightgear_component(Input "${SOURCES}" "${HEADERS}")
 
 install(TARGETS fgjs js_demo RUNTIME DESTINATION bin)
