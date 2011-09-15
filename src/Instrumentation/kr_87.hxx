@@ -37,9 +37,6 @@ class SGSampleGroup;
 
 class FGKR_87 : public SGSubsystem
 {
-    SGPropertyNode_ptr lon_node;
-    SGPropertyNode_ptr lat_node;
-    SGPropertyNode_ptr alt_node;
     SGPropertyNode_ptr bus_power;
     SGPropertyNode_ptr serviceable;
 

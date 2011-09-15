@@ -75,23 +75,6 @@
 // Hz for the VOR ident.
 
 
-static const char DI = '1';
-static const char DIT = '1';
-static const char DA = '2';
-static const char DAH = '2';
-static const char END = '0';
-
-static const int BYTES_PER_SECOND = 22050;
-// static const int BEAT_LENGTH = 240; // milleseconds (5 wpm)
-static const int BEAT_LENGTH = 92;  // milleseconds (13 wpm)
-static const int TRANSITION_BYTES = (int)(0.005 * BYTES_PER_SECOND);
-static const int COUNT_SIZE = BYTES_PER_SECOND * BEAT_LENGTH / 1000;
-static const int DIT_SIZE = 2 * COUNT_SIZE;   // 2 counts
-static const int DAH_SIZE = 4 * COUNT_SIZE;   // 4 counts
-static const int SPACE_SIZE = 3 * COUNT_SIZE; // 3 counts
-static const int LO_FREQUENCY = 1020;	 // AIM 1-1-7 (f) specified in Hz
-static const int HI_FREQUENCY = 1350;	 // AIM 1-1-7 (f) specified in Hz
-
 // manages everything we need to know for an individual sound sample
 class FGMorse : public FGSoundGenerator {
 
@@ -113,6 +96,17 @@ private:
     bool init();
 
 public:
+    static const int BYTES_PER_SECOND = 22050;
+    // static const int BEAT_LENGTH = 240; // milleseconds (5 wpm)
+    static const int BEAT_LENGTH = 92;  // milleseconds (13 wpm)
+    static const int TRANSITION_BYTES = (int)(0.005 * BYTES_PER_SECOND);
+    static const int COUNT_SIZE = BYTES_PER_SECOND * BEAT_LENGTH / 1000;
+    static const int DIT_SIZE = 2 * COUNT_SIZE;   // 2 counts
+    static const int DAH_SIZE = 4 * COUNT_SIZE;   // 4 counts
+    static const int SPACE_SIZE = 3 * COUNT_SIZE; // 3 counts
+    static const int LO_FREQUENCY = 1020;	 // AIM 1-1-7 (f) specified in Hz
+    static const int HI_FREQUENCY = 1350;	 // AIM 1-1-7 (f) specified in Hz
+
 
     FGMorse();
     ~FGMorse();

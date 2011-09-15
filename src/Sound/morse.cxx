@@ -26,6 +26,12 @@
 
 #include <cstring>
 
+static const char DI = '1';
+static const char DIT = '1';
+static const char DA = '2';
+static const char DAH = '2';
+static const char END = '0';
+
 static const char alphabet[26][4] = {
     { DI, DAH, END, END },	/* A */ 
     { DA, DI, DI, DIT },	/* B */ 

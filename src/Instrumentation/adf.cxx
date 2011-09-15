@@ -252,7 +252,7 @@ ADF::search (double frequency_khz, double longitude_rad,
         }
 
         SGSoundSample *sound;
-        sound = FGMorse::instance()->make_ident( ident, LO_FREQUENCY );
+        sound = FGMorse::instance()->make_ident( ident, FGMorse::LO_FREQUENCY );
         sound->set_volume(_last_volume = 0);
         _sgr->add( sound, _adf_ident );
 

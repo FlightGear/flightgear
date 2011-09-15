@@ -3198,6 +3198,14 @@
 			Name="Lib_Sound"
 			>
 			<File
+				RelativePath="..\..\..\src\Sound\audioident.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Sound\audioident.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Sound\beacon.cxx"
 				>
 			</File>

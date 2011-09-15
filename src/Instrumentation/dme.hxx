@@ -10,7 +10,6 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
-
 /**
  * Model a DME radio.
  *
@@ -44,12 +43,6 @@ public:
 
 private:
 
-    void search (double frequency, double longitude_rad,
-                 double latitude_rad, double altitude_m);
-
-    SGPropertyNode_ptr _longitude_node;
-    SGPropertyNode_ptr _latitude_node;
-    SGPropertyNode_ptr _altitude_node;
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _electrical_node;
     SGPropertyNode_ptr _source_node;
@@ -59,20 +52,19 @@ private:
     SGPropertyNode_ptr _distance_node;
     SGPropertyNode_ptr _speed_node;
     SGPropertyNode_ptr _time_node;
+    SGPropertyNode_ptr _ident_btn_node;
+    SGPropertyNode_ptr _volume_node;
 
     double _last_distance_nm;
     double _last_frequency_mhz;
     double _time_before_search_sec;
 
-    bool _transmitter_valid;
-    SGVec3d _transmitter;
-    double _transmitter_elevation_ft;
-    double _transmitter_range_nm;
-    double _transmitter_bias;
+    FGNavRecord * _navrecord;
 
     string _name;
     int _num;
 
+    class AudioIdent * _audioIdent;
 };
 
 

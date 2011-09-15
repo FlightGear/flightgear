@@ -45,9 +45,6 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     SGInterpTable *high_tbl;
 
     SGPropertyNode_ptr _radio_node;
-    SGPropertyNode_ptr lon_node;
-    SGPropertyNode_ptr lat_node;
-    SGPropertyNode_ptr alt_node;
     SGPropertyNode_ptr bus_power_node;
 
     // property inputs
@@ -65,7 +62,6 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     SGPropertyNode_ptr cdi_serviceable_node;
     SGPropertyNode_ptr gs_serviceable_node;
     SGPropertyNode_ptr tofrom_serviceable_node;
-    SGPropertyNode_ptr dme_serviceable_node;
     
     // property outputs
     SGPropertyNode_ptr fmt_freq_node;     // formated frequency
@@ -131,9 +127,6 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     FGNavRecordPtr _navaid;
     FGNavRecordPtr _gs;
     
-    string nav_fx_name;
-    string dme_fx_name;
-
     double target_radial;
     double effective_range;
     double target_gs;
@@ -152,9 +145,6 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
 
     SGVec3d _gsCart, _gsAxis, _gsVertical, _gsBaseline;
 
-    FGNavRecordPtr _dme;
-    bool _dmeInRange;
-    
     // CDI properties
     bool _toFlag, _fromFlag;
     double _cdiDeflection;
@@ -162,9 +152,8 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     double _gsNeedleDeflection;
     double _gsNeedleDeflectionNorm;
     double _gsDirect;
-    
-    SGSharedPtr<SGSampleGroup> _sgr;
-    std::vector<SGPropertyNode_ptr> _tiedNodes;
+
+    class AudioIdent * _audioIdent;
     
     bool updateWithPower(double aDt);
 
@@ -176,11 +165,9 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     double adjustILSRange( double stationElev, double aircraftElev,
 			   double offsetDegrees, double distance );
 
-    void updateAudio();
-    void audioNavidChanged();
+    void updateAudio( double dt );
 
     void updateReceiver(double dt);
-    void updateDME(const SGVec3d& aircraft);
     void updateGlideSlope(double dt, const SGVec3d& aircraft, double signal_quality_norm);
     void updateGPSSlaved();
     void updateCDI(double dt);
@@ -193,17 +180,6 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     bool isOperable() const
       { return _operable; }
       
-    /**
-     * Tied-properties helper, record nodes which are tied for easy un-tie-ing
-     */
-    template <typename T>
-    void tie(const char* aRelPath, const SGRawValue<T>& aRawValue)
-    {
-      SGPropertyNode_ptr nd = _radio_node->getNode(aRelPath, true);
-      _tiedNodes.push_back(nd);
-      nd->tie(aRawValue);
-    }
-    
   // implement SGPropertyChangeListener
     virtual void valueChanged (SGPropertyNode * prop);
 public:
