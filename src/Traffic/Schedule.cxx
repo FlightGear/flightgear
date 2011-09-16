@@ -321,7 +321,7 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
   mp_ai.append(modelPath);
 
   if (!mp.exists() && !mp_ai.exists()) {
-    SG_LOG(SG_INPUT, SG_WARN, "TrafficManager: Could not load model " << mp.str());
+    SG_LOG(SG_GENERAL, SG_WARN, "TrafficManager: Could not load model " << mp.str());
     return true;
   }
 
@@ -371,9 +371,11 @@ void FGAISchedule::setHeading()
 
 void FGAISchedule::scheduleFlights()
 {
+  string startingPort;
   if (!flights.empty()) {
     return;
   }
+  // change back to bulk
   SG_LOG(SG_GENERAL, SG_BULK, "Scheduling Flights for : " << modelPath << " " <<  registration << " " << homePort);
   FGScheduledFlight *flight = NULL;
   do {
@@ -381,7 +383,11 @@ void FGAISchedule::scheduleFlights()
     if (!flight) {
       break;
     }
-    
+    if (startingPort.empty()) {
+        startingPort = flight->getDepartureAirport()->getId();
+    }
+
+   
     currentDestination = flight->getArrivalAirport()->getId();
     if (!initialized) {
         string departurePort = flight->getDepartureAirport()->getId();
@@ -409,7 +415,7 @@ void FGAISchedule::scheduleFlights()
                              << "  "        << arrT << ":");
   
     flights.push_back(flight);
-  } while (1); //while (currentDestination != homePort);
+  } while (currentDestination != startingPort);
   SG_LOG(SG_GENERAL, SG_BULK, " Done ");
 }
 
@@ -492,7 +498,7 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
           }
           if (flights.size()) {
             time_t arrival = flights.back()->getArrivalTime();
-            if ((*i)->getDepartureTime() < arrival)
+            if ((*i)->getDepartureTime() < (arrival+(20*60)))
                 continue;
           }
 
