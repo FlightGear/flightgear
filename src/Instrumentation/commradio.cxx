@@ -45,7 +45,7 @@ FGCommRadio::FGCommRadio(SGPropertyNode *node) {
 	//pilot plane's antenna gain + AI aircraft antenna gain
 	//real-life gain for conventional monopole/dipole antenna
 	_antenna_gain = 2.0;
-	_propagation_model = 2; // in the future choose between models via option: realistic radio on/off
+	_propagation_model = 2; //  choose between models via option: realistic radio on/off
 	
 }
 
@@ -65,6 +65,9 @@ void FGCommRadio::bind ()
 
 void FGCommRadio::update ()
 {
+	if (dt <= 0.0) {
+		return; // paused
+    }
 }
 
 double FGCommRadio::getFrequency(int radio) {
@@ -86,7 +89,7 @@ double FGCommRadio::getFrequency(int radio) {
 
 
 
-void FGCommRadio::receive(SGGeod tx_pos, double freq, string text,
+void FGCommRadio::receive_text(SGGeod tx_pos, double freq, string text,
 	int ground_to_air) {
 
 	comm1 = getFrequency(1);
@@ -105,6 +108,7 @@ void FGCommRadio::receive(SGGeod tx_pos, double freq, string text,
 			//and the signal, due to being amplitude modulated, decreases volume after demodulation
 			//the implementation below is more akin to what would happen on a FM transmission
 			//therefore the correct way would be to work on the volume
+			/*
 			string hash_noise = " ";
 			int reps = fabs((int)signal - 11);
 			int t_size = text.size();
@@ -112,6 +116,7 @@ void FGCommRadio::receive(SGGeod tx_pos, double freq, string text,
 				int pos = rand() % t_size -1;
 				text.replace(pos,1, hash_noise);
 			}
+			*/
 			
 		}
 		fgSetString("/sim/messages/atc", text.c_str());
@@ -120,7 +125,7 @@ void FGCommRadio::receive(SGGeod tx_pos, double freq, string text,
 }
 
 double FGCommRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
-                               int ground_to_air) {
+                               int transmission_type) {
 
 	///  Implement radio attenuation		
 	///  based on the Longley-Rice propagation model
@@ -146,10 +151,10 @@ double FGCommRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 	double tx_pow,ant_gain;
 	double signal = 0.0;
 	
-	if(ground_to_air)
+	if(transmission_type == 1)
 		tx_pow = _transmitter_power + 6.0;
 
-	if(ground_to_air)
+	if((transmission_type == 1) || (transmission_type == 3))
 		ant_gain = _antenna_gain + 3.0; //pilot plane's antenna gain + ground station antenna gain
 	
 	double link_budget = tx_pow - _receiver_sensitivity + ant_gain;	
@@ -215,7 +220,7 @@ double FGCommRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 		transmitter_height = sender_alt;
 	}
 	
-	if(ground_to_air) 
+	if(transmission_type == 1) 
 		transmitter_height += ATC_HAAT;
 	else
 		transmitter_height += Aircraft_HAAT;
@@ -231,15 +236,31 @@ double FGCommRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 		double elevation_m = 0.0;
 	
 		if (scenery->get_elevation_m( probe, elevation_m, NULL )) {
-			 _elevations.push_front(elevation_m);
-			 //cerr << "ITM:: Probe elev: " << elevation_m << endl;
+			if((transmission_type == 3) || (transmission_type == 4)) {
+				_elevations.push_back(elevation_m);
+			}
+			else {
+				 _elevations.push_front(elevation_m);
+			}
 		}
 		else {
+			if((transmission_type == 3) || (transmission_type == 4)) {
+				_elevations.push_back(elevation_m);
+			}
+			else {
 			_elevations.push_front(0.0);
+			}
 		}
 	}
-	_elevations.push_back(elevation_under_pilot);
-	_elevations.push_front(elevation_under_sender);
+	if((transmission_type == 3) || (transmission_type == 4)) {
+		_elevations.push_front(elevation_under_pilot);
+		_elevations.push_back(elevation_under_sender);
+	}
+	else {
+		_elevations.push_back(elevation_under_pilot);
+		_elevations.push_front(elevation_under_sender);
+	}
+	
 	
 	double max_alt_between=0.0;
 	for( deque<double>::size_type i = 0; i < _elevations.size(); i++ ) {
@@ -267,10 +288,19 @@ double FGCommRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 	// TODO: If we clear the first Fresnel zone, we are into line of sight teritory
 
 	// else we need to calculate point to point link loss
+	if((transmission_type == 3) || (transmission_type == 4)) {
+		// the sender and receiver roles are switched
+		point_to_point(itm_elev, receiver_height, transmitter_height,
+			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
+			pol, conf, rel, dbloss, strmode, errnum);
+		
+	}
+	else {
 
-	point_to_point(itm_elev, transmitter_height, receiver_height,
-		eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
-		pol, conf, rel, dbloss, strmode, errnum);
+		point_to_point(itm_elev, transmitter_height, receiver_height,
+			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
+			pol, conf, rel, dbloss, strmode, errnum);
+	}
 
 	cerr << "ITM:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, " << strmode << ", Error: " << errnum << endl;
 	
