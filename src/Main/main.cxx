@@ -510,6 +510,8 @@ static void fgIdleFunction ( void ) {
         // runway selection as for AI traffic. However, this code belongs to
         // somewhere(?) else - if I only new where...
         if( true == fgGetBool( "/environment/metar/valid" ) ) {
+            SG_LOG(SG_ENVIRONMENT, SG_INFO,
+                "Using METAR for runway selection: '" << fgGetString("/environment/metar/data") << "'" );
             // the realwx_ctrl fetches metar in the foreground on init,
             // If it was able to fetch a metar or one was given on the commandline,
             // the valid flag is set here, otherwise it is false
@@ -525,6 +527,9 @@ static void fgIdleFunction ( void ) {
                 extern bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg );
                 fgSetPosFromAirportIDandHdg( apt, hdg );
             }
+        } else {
+            SG_LOG(SG_ENVIRONMENT, SG_INFO,
+                "No METAR available to pick active runway" );
         }
 
         fgSplashProgress("initializing graphics engine");
