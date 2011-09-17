@@ -901,18 +901,38 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
     FGAirportDynamics* dcs = apt->getDynamics();
     if (!dcs) {
         SG_LOG( SG_GENERAL, SG_ALERT,
-                "Failed to find parking position " << parkpos <<
-                " at airport " << id );
+                "Airport " << id << "does not appear to have parking information available");
         return false;
     }
     
     int park_index = dcs->getNrOfParkings() - 1;
-    while (park_index >= 0 && dcs->getParkingName(park_index) != parkpos) park_index--;
-    if (park_index < 0) {
-        SG_LOG( SG_GENERAL, SG_ALERT,
-                "Failed to find parking position " << parkpos <<
-                " at airport " << id );
-        return false;
+    bool succes;
+    double radius = fgGetDouble("/sim/atc/acradius");
+    //cerr << "Using radius " << radius << endl;
+    //cerr << "Checking parkpos comparison " << (bool) (parkpos == string("AVAILABLE")) << endl;
+    if ((parkpos == string("AVAILABLE")) && (radius > 0)) {
+        double lat, lon, heading;
+        string fltType = fgGetString("/sim/atc/flight-type");
+        string airline = fgGetString("/sim/atc/airline" );
+        string acType; // Currently not used by findAvailable parking, so safe to leave empty. 
+        succes = dcs->getAvailableParking(&lat, &lon, &heading, &park_index, radius, fltType, acType, airline);
+        if (succes) {
+            fgGetString("/sim/presets/parkpos");
+            fgSetString("/sim/presets/parkpos", dcs->getParking(park_index)->getName());
+        } else {
+            SG_LOG( SG_GENERAL, SG_ALERT,
+                    "Failed to find a suitable parking at airport " << id );
+            return false;
+        }
+    } else {
+        //cerr << "We shouldn't get here when AVAILABLE" << endl;
+        while (park_index >= 0 && dcs->getParkingName(park_index) != parkpos) park_index--;
+        if (park_index < 0) {
+            SG_LOG( SG_GENERAL, SG_ALERT,
+                    "Failed to find parking position " << parkpos <<
+                    " at airport " << id );
+            return false;
+        }
     }
     FGParking* parking = dcs->getParking(park_index);
     parking->setAvailable(false);

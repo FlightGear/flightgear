@@ -201,7 +201,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
   if (!valid) {
     return false;
   }
-  scheduleFlights();
+  scheduleFlights(now);
   if (flights.empty()) { // No flights available for this aircraft
       valid = false;
       return false;
@@ -369,17 +369,24 @@ void FGAISchedule::setHeading()
     courseToDest = SGGeodesy::courseDeg((*flights.begin())->getDepartureAirport()->geod(), (*flights.begin())->getArrivalAirport()->geod());
 }
 
-void FGAISchedule::scheduleFlights()
+void FGAISchedule::scheduleFlights(time_t now)
 {
-  string startingPort;
   if (!flights.empty()) {
     return;
   }
-  // change back to bulk
+  string startingPort;
+  string userPort = fgGetString("/sim/presets/airport-id");
   SG_LOG(SG_GENERAL, SG_BULK, "Scheduling Flights for : " << modelPath << " " <<  registration << " " << homePort);
   FGScheduledFlight *flight = NULL;
   do {
-    flight = findAvailableFlight(currentDestination, flightIdentifier);
+    if (currentDestination.empty()) {
+        flight = findAvailableFlight(userPort, flightIdentifier, now, (now+6400));
+        if (!flight)
+            flight = findAvailableFlight(currentDestination, flightIdentifier);
+    } else {
+        flight = findAvailableFlight(currentDestination, flightIdentifier);
+    }
+    
     if (!flight) {
       break;
     }
@@ -389,11 +396,12 @@ void FGAISchedule::scheduleFlights()
 
    
     currentDestination = flight->getArrivalAirport()->getId();
+    //cerr << "Current destination " <<  currentDestination << endl;
     if (!initialized) {
         string departurePort = flight->getDepartureAirport()->getId();
        //cerr << "Scheduled " << registration <<  " " << score << " for Flight " 
        //     << flight-> getCallSign() << " from " << departurePort << " to " << currentDestination << endl;
-        if (fgGetString("/sim/presets/airport-id") == departurePort) {
+        if (userPort == departurePort) {
             hits++;
         }
         //runCount++;
@@ -452,7 +460,8 @@ bool FGAISchedule::next()
 }
 
 FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDestination,
-                                                      const string &req)
+                                                      const string &req,
+                                                     time_t min, time_t max)
 {
     time_t now = time(NULL) + fgGetLong("/sim/time/warp");
 
@@ -500,6 +509,11 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
             time_t arrival = flights.back()->getArrivalTime();
             if ((*i)->getDepartureTime() < (arrival+(20*60)))
                 continue;
+          }
+          if (min != 0) {
+              time_t dep = (*i)->getDepartureTime();
+              if ((dep < min) || (dep > max))
+                  continue;
           }
 
           // So, if we actually get here, we have a winner

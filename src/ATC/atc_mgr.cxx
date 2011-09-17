@@ -111,7 +111,7 @@ void FGATCManager::init() {
             if (park_index < 0) {
                   SG_LOG( SG_GENERAL, SG_ALERT,
                         "Failed to find parking position " << parking <<
-                        " at airport " << airport );
+                        " at airport " << airport << "at " << SG_ORIGIN);
             }
         if (parking.empty() || (park_index < 0)) {
             controller = apt->getDynamics()->getTowerController();
