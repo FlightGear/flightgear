@@ -55,8 +55,7 @@ public:
     // touch window or camera settings.  This is useful for the tiled
     // renderer which needs to set the view frustum itself.
     void update( bool refresh_camera_settings);
-    static void update();
-
+  
     /** Just pick into the scene and return the pick callbacks on the way ...
      */
     bool pick( std::vector<SGSceneryPick>& pickList,

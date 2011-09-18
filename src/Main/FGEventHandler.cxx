@@ -12,6 +12,7 @@
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"
 #include "WindowSystemAdapter.hxx"
+#include "renderer.hxx"
 
 #if !defined(X_DISPLAY_MISSING)
 #define X_DOUBLE_SCROLL_BUG 1
@@ -29,8 +30,6 @@ const int printStatsKey = 2;
 
 FGEventHandler::FGEventHandler() :
     idleHandler(0),
-    drawHandler(0),
-    windowResizeHandler(0),
     keyHandler(0),
     mouseClickHandler(0),
     mouseMotionHandler(0),
@@ -233,8 +232,8 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
         return true;
     case osgGA::GUIEventAdapter::RESIZE:
         CameraGroup::getDefault()->resized();
-        if (resizable && windowResizeHandler)
-            (*windowResizeHandler)(ea.getWindowWidth(), ea.getWindowHeight());
+        if (resizable)
+          globals->get_renderer()->resize(ea.getWindowWidth(), ea.getWindowHeight());
         return true;
      case osgGA::GUIEventAdapter::CLOSE_WINDOW:
     case osgGA::GUIEventAdapter::QUIT_APPLICATION:

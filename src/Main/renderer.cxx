@@ -595,12 +595,6 @@ FGRenderer::setupView( void )
     stateSet->setAttributeAndModes(new osg::Program, osg::StateAttribute::ON);
 }
 
-void
-FGRenderer::update()
-{
-    globals->get_renderer()->update(true);
-}
-
 // Update all Visuals (redraws anything graphics related)
 void
 FGRenderer::update( bool refresh_camera_settings ) {

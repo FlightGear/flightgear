@@ -551,11 +551,6 @@ static void fgIdleFunction ( void ) {
     }
 }
 
-static void fgWinResizeFunction(int width, int height)
-{
-    globals->get_renderer()->resize(width, height);
-}
-
 static void upper_case_property(const char *name)
 {
     using namespace simgear;
@@ -646,9 +641,7 @@ int fgMainInit( int argc, char **argv ) {
     fgOSInit(&argc, argv);
     _bootstrap_OSInit++;
 
-    fgRegisterWindowResizeHandler( &fgWinResizeFunction );
     fgRegisterIdleHandler( &fgIdleFunction );
-    fgRegisterDrawHandler( &FGRenderer::update );
 
     // Initialize sockets (WinSock needs this)
     simgear::Socket::initSockets();
