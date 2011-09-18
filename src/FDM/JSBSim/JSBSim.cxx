@@ -311,7 +311,6 @@ FGJSBsim::FGJSBsim( double dt )
     temperature = fgGetNode("/environment/temperature-degc",true);
     pressure = fgGetNode("/environment/pressure-inhg",true);
     pressureSL = fgGetNode("/environment/pressure-sea-level-inhg",true);
-    density = fgGetNode("/environment/density-slugft3",true);
     ground_wind = fgGetNode("/environment/config/boundary/entry[0]/wind-speed-kt",true);
     turbulence_gain = fgGetNode("/environment/turbulence/magnitude-norm",true);
     turbulence_rate = fgGetNode("/environment/turbulence/rate-hz",true);
@@ -368,7 +367,6 @@ void FGJSBsim::init()
       Winds->SetProbabilityOfExceedence(0.0);
     }
 
-    fgic->SetSeaLevelRadiusFtIC( get_Sea_level_radius() );
     fgic->SetWindNEDFpsIC( -wind_from_north->getDoubleValue(),
                            -wind_from_east->getDoubleValue(),
                            -wind_from_down->getDoubleValue() );
@@ -376,9 +374,9 @@ void FGJSBsim::init()
     //Atmosphere->SetExTemperature(get_Static_temperature());
     //Atmosphere->SetExPressure(get_Static_pressure());
     //Atmosphere->SetExDensity(get_Density());
-    SG_LOG(SG_FLIGHT,SG_INFO,"T,p,rho: " << fdmex->GetAtmosphere()->GetTemperature()
-     << ", " << fdmex->GetAtmosphere()->GetPressure()
-     << ", " << fdmex->GetAtmosphere()->GetDensity() );
+    SG_LOG(SG_FLIGHT,SG_INFO,"T,p,rho: " << Atmosphere->GetTemperature()
+     << ", " << Atmosphere->GetPressure()
+     << ", " << Atmosphere->GetDensity() );
 
 // deprecate egt_degf for egt-degf to have consistent naming
 // TODO: remove this for 2.6.0
@@ -394,7 +392,9 @@ void FGJSBsim::init()
 
     FCS->SetDfPos( ofNorm, globals->get_controls()->get_flaps() );
 
+    needTrim = startup_trim->getBoolValue();
     common_init();
+    fgic->SetSeaLevelRadiusFtIC( get_Sea_level_radius() );
 
     copy_to_JSBsim();
     fdmex->RunIC();     //loop JSBSim once w/o integrating
@@ -407,7 +407,7 @@ void FGJSBsim::init()
       }
     }
 
-    if ( startup_trim->getBoolValue() ) {
+    if ( needTrim ) {
       FGLocation cart(fgic->GetLongitudeRadIC(), fgic->GetLatitudeRadIC(),
                       get_Sea_level_radius() + fgic->GetAltitudeASLFtIC());
       double cart_pos[3], contact[3], d[3], vel[3], agl;
@@ -785,8 +785,8 @@ bool FGJSBsim::copy_from_JSBsim()
 
     // Positions of Visual Reference Point
     FGLocation l = Auxiliary->GetLocationVRP();
-    _updateGeocentricPosition( l.GetLatitude(), l.GetLongitude(),
-                               l.GetRadius() - get_Sea_level_radius() );
+    _updatePosition(SGGeoc::fromRadFt( l.GetLongitude(), l.GetLatitude(),
+                                       l.GetRadius() ));
 
     _set_Altitude_AGL( Propagate->GetDistanceAGL() );
     {
@@ -1006,26 +1006,26 @@ bool FGJSBsim::ToggleDataLogging(bool state)
 void FGJSBsim::set_Latitude(double lat)
 {
   static SGConstPropertyNode_ptr altitude = fgGetNode("/position/altitude-ft");
-  double alt;
+  double alt = altitude->getDoubleValue();
   double sea_level_radius_meters, lat_geoc;
 
-  if ( altitude->getDoubleValue() > -9990 )
-    alt = altitude->getDoubleValue();
-  else
-    alt = 0.0;
+  if ( alt < -9990 ) alt = 0.0;
 
   SG_LOG(SG_FLIGHT,SG_INFO,"FGJSBsim::set_Latitude: " << lat );
   SG_LOG(SG_FLIGHT,SG_INFO," cur alt (ft) =  " << alt );
 
   sgGeodToGeoc( lat, alt * SG_FEET_TO_METER,
                     &sea_level_radius_meters, &lat_geoc );
-  _set_Sea_level_radius( sea_level_radius_meters * SG_METER_TO_FEET  );
+
+  double sea_level_radius_ft = sea_level_radius_meters * SG_METER_TO_FEET;
+  _set_Sea_level_radius( sea_level_radius_ft );
 
   if (needTrim) {
-    fgic->SetSeaLevelRadiusFtIC( sea_level_radius_meters * SG_METER_TO_FEET  );
+    fgic->SetSeaLevelRadiusFtIC( sea_level_radius_ft );
     fgic->SetLatitudeRadIC( lat_geoc );
   }
   else {
+    Propagate->SetSeaLevelRadius( sea_level_radius_ft );
     Propagate->SetLatitude(lat_geoc);
     FGInterface::set_Latitude(lat);
   }
