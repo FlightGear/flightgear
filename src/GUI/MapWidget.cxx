@@ -8,6 +8,7 @@
 #include <algorithm> // for std::sort
 #include <plib/puAux.h>
 
+#include <simgear/sg_inlines.h>
 #include <simgear/route/waypoint.hxx>
 #include <simgear/sg_inlines.h>
 #include <simgear/misc/strutils.hxx>
@@ -383,7 +384,6 @@ MapWidget::MapWidget(int x, int y, int maxX, int maxY) :
   _route = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));
   _gps = fgGetNode("/instrumentation/gps");
 
-  _zoom = 6;
   _width = maxX - x;
   _height = maxY - y;
   _hasPanned = false;
@@ -402,6 +402,11 @@ MapWidget::~MapWidget()
 void MapWidget::setProperty(SGPropertyNode_ptr prop)
 {
   _root = prop;
+  int zoom = _root->getBoolValue("zoom", -1);
+  if (zoom < 0) {
+    _root->setIntValue("zoom", 6); // default zoom
+  }
+  
   _root->setBoolValue("centre-on-aircraft", true);
   _root->setBoolValue("draw-data", false);
   _root->setBoolValue("magnetic-headings", true);
@@ -501,24 +506,29 @@ void MapWidget::pan(const SGVec2d& delta)
   _projectionCenter = unproject(-delta);
 }
 
+int MapWidget::zoom() const
+{
+  int z = _root->getIntValue("zoom");
+  SG_CLAMP_RANGE(z, 0, MAX_ZOOM);
+  return z;
+}
+
 void MapWidget::zoomIn()
 {
-  if (_zoom <= 0) {
+  if (zoom() <= 0) {
     return;
   }
 
-  --_zoom;
-  SG_LOG(SG_GENERAL, SG_INFO, "zoom is now:" << _zoom);
+  _root->setIntValue("zoom", zoom() - 1);
 }
 
 void MapWidget::zoomOut()
 {
-  if (_zoom >= MAX_ZOOM) {
+  if (zoom() >= MAX_ZOOM) {
     return;
   }
 
-  ++_zoom;
-  SG_LOG(SG_GENERAL, SG_INFO, "zoom is now:" << _zoom);
+  _root->setIntValue("zoom", zoom() + 1);
 }
 
 void MapWidget::draw(int dx, int dy)
@@ -532,8 +542,7 @@ void MapWidget::draw(int dx, int dy)
       _root->setBoolValue("centre-on-aircraft", false);
       _hasPanned = false;
   }
-  else
-  if (_root->getBoolValue("centre-on-aircraft")) {
+  else if (_root->getBoolValue("centre-on-aircraft")) {
     _projectionCenter = _aircraft;
   }
 
@@ -547,6 +556,7 @@ void MapWidget::draw(int dx, int dy)
     _upHeading = 0.0;
   }
 
+  _cachedZoom = zoom();
   SGGeod topLeft = unproject(SGVec2d(_width/2, _height/2));
   // compute draw range, including a fudge factor for ILSs and other 'long'
   // symbols
@@ -1028,7 +1038,7 @@ void MapWidget::drawFix(FGFix* fix)
   glColor3f(0.0, 0.0, 0.0);
   circleAt(pos, 3, 6);
 
-  if (_zoom > SHOW_DETAIL_ZOOM) {
+  if (_cachedZoom > SHOW_DETAIL_ZOOM) {
     return; // hide fix labels beyond a certain zoom level
   }
 
@@ -1126,7 +1136,7 @@ void MapWidget::drawAirport(FGAirport* apt)
 	// draw tower location
 	SGVec2d towerPos = project(apt->getTowerLocation());
 
-  if (_zoom <= SHOW_DETAIL_ZOOM) {
+  if (_cachedZoom <= SHOW_DETAIL_ZOOM) {
     glColor3f(1.0, 1.0, 1.0);
     glLineWidth(1.0);
 
@@ -1152,7 +1162,7 @@ void MapWidget::drawAirport(FGAirport* apt)
     d->setAnchor(towerPos);
   }
 
-  if (_zoom > SHOW_DETAIL_ZOOM) {
+  if (_cachedZoom > SHOW_DETAIL_ZOOM) {
     return;
   }
 
@@ -1318,7 +1328,7 @@ void MapWidget::drawTraffic()
     return;
   }
 
-  if (_zoom > SHOW_DETAIL_ZOOM) {
+  if (_cachedZoom > SHOW_DETAIL_ZOOM) {
     return;
   }
 
@@ -1477,7 +1487,7 @@ SGGeod MapWidget::unproject(const SGVec2d& p) const
 
 double MapWidget::currentScale() const
 {
-  return 1.0 / pow(2.0, _zoom);
+  return 1.0 / pow(2.0, _cachedZoom);
 }
 
 void MapWidget::circleAt(const SGVec2d& center, int nSides, double r)

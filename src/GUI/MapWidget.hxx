@@ -32,6 +32,8 @@ public:
     
   void setProperty(SGPropertyNode_ptr prop);
 private:
+  int zoom() const;
+  
   void handlePan(int x, int y);
   
   void pan(const SGVec2d& delta);
@@ -82,7 +84,7 @@ private:
   void drawLegendBox(const SGVec2d& pos, const std::string& t);
   
   int _width, _height;
-  int _zoom;
+  int _cachedZoom;
   double _drawRangeNm;
   double _upHeading; // true heading corresponding to +ve y-axis
   bool _magneticHeadings;
