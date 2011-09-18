@@ -132,7 +132,6 @@ static void fgMainLoop( void ) {
         = fgGetNode("/sim/timing-statistics/min-time-ms", true);
 
     frame_signal->fireValueChanged();
-    SGCloudLayer::enable_bump_mapping = fgGetBool("/sim/rendering/bump-mapping");
     
     SG_LOG( SG_GENERAL, SG_DEBUG, "Running Main Loop");
     SG_LOG( SG_GENERAL, SG_DEBUG, "======= ==== ====");
