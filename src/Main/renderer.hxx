@@ -51,10 +51,7 @@ public:
 
     void resize(int width, int height );
 
-    // calling update( refresh_camera_settings = false ) will not
-    // touch window or camera settings.  This is useful for the tiled
-    // renderer which needs to set the view frustum itself.
-    void update( bool refresh_camera_settings);
+    void update();
   
     /** Just pick into the scene and return the pick callbacks on the way ...
      */

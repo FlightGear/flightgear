@@ -215,10 +215,7 @@ public:
     virtual double get_h_fov();    // Get horizontal fov, in degrees.
     virtual double get_v_fov();    // Get vertical fov, in degrees.
 
-    virtual void set_aspect_ratio( double r ) {
-	_aspect_ratio = r;
-    }
-    virtual double get_aspect_ratio() const { return _aspect_ratio; }
+    virtual double get_aspect_ratio() const;
 
     virtual void set_aspect_ratio_multiplier( double m ) {
 	_aspect_ratio_multiplier = m;
@@ -304,11 +301,6 @@ private:
 
     // the nominal field of view (angle, in degrees)
     double _fov_deg;
-
-    // Ratio of window width and height; height = width *
-    // aspect_ratio.  This value is automatically calculated based on
-    // window dimentions.
-    double _aspect_ratio;
 
     // default = 1.0, this value is user configurable and is
     // multiplied into the aspect_ratio to get the actual vertical fov

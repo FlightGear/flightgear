@@ -281,7 +281,7 @@ int fgOSMainLoop()
         fgIdleHandler idleFunc = manipulator->getIdleHandler();
         if (idleFunc)
             (*idleFunc)();
-        globals->get_renderer()->update(true);
+        globals->get_renderer()->update();
         viewer->frame();
     }
     

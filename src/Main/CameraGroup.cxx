@@ -263,6 +263,22 @@ void CameraGroup::setCameraParameters(float vfov, float aspectRatio)
                                                1.0f / aspectRatio,
                                                _zNear, _zFar);
 }
+    
+double CameraGroup::getMasterAspectRatio() const
+{
+    if (_cameras.empty())
+        return 0.0;
+    
+    const CameraInfo* info = _cameras.front();
+    
+    const osg::Viewport* viewport = info->camera->getViewport();
+    if (!viewport) {
+        return 0.0;
+    }
+    
+    return static_cast<double>(viewport->height()) / viewport->width();
+}
+    
 }
 
 namespace

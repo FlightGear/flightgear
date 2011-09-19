@@ -65,7 +65,6 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
     _pitch_deg(0),
     _heading_deg(0),
     _scaling_type(FG_SCALING_MAX),
-    _aspect_ratio(0),
     _cameraGroup(CameraGroup::getDefault())
 {
     _absolute_view_pos = SGVec3d(0, 0, 0);
@@ -102,7 +101,7 @@ FGViewer::FGViewer( fgViewType Type, bool from_model, int from_model_index,
     } else {
       _fov_deg = 55;
     }
-    _aspect_ratio = 1;
+
     _aspect_ratio_multiplier = aspect_ratio_multiplier;
     _target_offset_m.x() = target_x_offset_m;
     _target_offset_m.y() = target_y_offset_m;
@@ -539,18 +538,19 @@ FGViewer::updateDampOutput(double dt)
 double
 FGViewer::get_h_fov()
 {
+    double aspectRatio = _cameraGroup->getMasterAspectRatio();
     switch (_scaling_type) {
     case FG_SCALING_WIDTH:  // h_fov == fov
 	return _fov_deg;
     case FG_SCALING_MAX:
-	if (_aspect_ratio < 1.0) {
+	if (aspectRatio < 1.0) {
 	    // h_fov == fov
 	    return _fov_deg;
 	} else {
 	    // v_fov == fov
 	    return
                 atan(tan(_fov_deg/2 * SG_DEGREES_TO_RADIANS)
-                     / (_aspect_ratio*_aspect_ratio_multiplier))
+                     / (aspectRatio*_aspect_ratio_multiplier))
                 * SG_RADIANS_TO_DEGREES * 2;
 	}
     default:
@@ -564,18 +564,19 @@ FGViewer::get_h_fov()
 double
 FGViewer::get_v_fov()
 {
+    double aspectRatio = _cameraGroup->getMasterAspectRatio();
     switch (_scaling_type) {
     case FG_SCALING_WIDTH:  // h_fov == fov
 	return 
             atan(tan(_fov_deg/2 * SG_DEGREES_TO_RADIANS)
-                 * (_aspect_ratio*_aspect_ratio_multiplier))
+                 * (aspectRatio*_aspect_ratio_multiplier))
             * SG_RADIANS_TO_DEGREES * 2;
     case FG_SCALING_MAX:
-	if (_aspect_ratio < 1.0) {
+	if (aspectRatio < 1.0) {
 	    // h_fov == fov
 	    return
                 atan(tan(_fov_deg/2 * SG_DEGREES_TO_RADIANS)
-                     * (_aspect_ratio*_aspect_ratio_multiplier))
+                     * (aspectRatio*_aspect_ratio_multiplier))
                 * SG_RADIANS_TO_DEGREES * 2;
 	} else {
 	    // v_fov == fov
@@ -670,4 +671,9 @@ FGViewer::update (double dt)
     _cameraGroup->update(toOsg(_absolute_view_pos), toOsg(mViewOrientation));
     _cameraGroup->setCameraParameters(get_v_fov(), get_aspect_ratio());
   }
+}
+
+double FGViewer::get_aspect_ratio() const
+{
+    return _cameraGroup->getMasterAspectRatio();
 }
