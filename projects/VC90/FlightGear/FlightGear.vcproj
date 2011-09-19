@@ -3762,6 +3762,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\Instrumentation\NavDisplay.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Instrumentation\NavDisplay.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Instrumentation\rad_alt.cxx"
 				>
 			</File>
