@@ -2,8 +2,12 @@ include(FlightGearComponent)
 
 IF(APPLE)
 	set(EVENT_INPUT_SOURCES FGMacOSXEventInput.cxx)
+	set(EVENT_INPUT_HEADERS FGMacOSXEventInput.hxx)
+else(MSVC)
+    message(STATUS "EventInput not implemented for Windows yet")
 else()
 	set(EVENT_INPUT_SOURCES FGLinuxEventInput.cxx)
+	set(EVENT_INPUT_HEADERS FGLinuxEventInput.hxx)
 endif()
 
 
@@ -31,6 +35,7 @@ set(HEADERS
     	
 if(EVENT_INPUT)
 	list(APPEND SOURCES ${EVENT_INPUT_SOURCES})
+	list(APPEND SOURCES ${EVENT_INPUT_HEADERS})
 	include_directories(${DBUS_INCLUDE_DIR} ${DBUS_ARCH_INCLUDE_DIR})
 endif()
 	

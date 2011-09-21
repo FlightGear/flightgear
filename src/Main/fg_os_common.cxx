@@ -39,16 +39,6 @@ void fgRegisterIdleHandler(fgIdleHandler func)
     globals->get_renderer()->getEventHandler()->setIdleHandler(func);
 }
 
-void fgRegisterDrawHandler(fgDrawHandler func)
-{
-    globals->get_renderer()->getEventHandler()->setDrawHandler(func);
-}
-
-void fgRegisterWindowResizeHandler(fgWindowResizeHandler func)
-{
-    globals->get_renderer()->getEventHandler()->setWindowResizeHandler(func);
-}
-
 void fgRegisterKeyHandler(fgKeyHandler func)
 {
     globals->get_renderer()->getEventHandler()->setKeyHandler(func);

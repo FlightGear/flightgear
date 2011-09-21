@@ -34,26 +34,6 @@ public:
 	    return idleHandler;
 	}
 
-    void setDrawHandler(fgDrawHandler drawHandler)
-	{
-	    this->drawHandler = drawHandler;
-	}
-
-    fgDrawHandler getDrawHandler() const
-	{
-	    return drawHandler;
-	}
-
-    void setWindowResizeHandler(fgWindowResizeHandler windowResizeHandler)
-	{
-	    this->windowResizeHandler = windowResizeHandler;
-	}
-    
-    fgWindowResizeHandler getWindowResizeHandler() const
-	{
-	    return windowResizeHandler;
-	}
-
     void setKeyHandler(fgKeyHandler keyHandler)
 	{
 	    this->keyHandler = keyHandler;
@@ -103,8 +83,6 @@ public:
 protected:
     osg::ref_ptr<osg::Node> _node;
     fgIdleHandler idleHandler;
-    fgDrawHandler drawHandler;
-    fgWindowResizeHandler windowResizeHandler;
     fgKeyHandler keyHandler;
     fgMouseClickHandler mouseClickHandler;
     fgMouseMotionHandler mouseMotionHandler;

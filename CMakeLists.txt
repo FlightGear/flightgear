@@ -49,6 +49,12 @@ else()
 	set(HUDSON_BUILD_ID "none")
 endif()
 
+IF(APPLE)
+    set(EVENT_INPUT_DEFAULT 1)
+elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    set(EVENT_INPUT_DEFAULT 1)
+endif()
+
 find_package(Git)
 if (GIT_FOUND)
 	execute_process(COMMAND git --git-dir ${PROJECT_SOURCE_DIR}/.git rev-parse  HEAD
@@ -67,7 +73,7 @@ option(ENABLE_LARCSIM "Set to ON to build FlightGear with LaRCsim FDM" ON)
 option(ENABLE_YASIM "Set to ON to build FlightGear with YASIM FDM" ON)
 option(ENABLE_JSBSIM "Set to ON to build FlightGear with JSBSim FDM" ON)
 option(ENABLE_FGADMIN "Set to ON to build FlightGear with FGADMIN" ON)
-option(EVENT_INPUT "Set to ON to build FlightGear with event-based Input support" OFF)
+option(EVENT_INPUT "Set to ON to build FlightGear with event-based Input support" ${EVENT_INPUT_DEFAULT})
 option(ENABLE_LIBSVN "Set to ON to build FlightGear/terrasync with libsvnclient support" ON)
 option(ENABLE_RTI "Set to ON to build SimGear with RTI support" OFF)
 option(WITH_FGPANEL "Set to ON to build the fgpanel application" ON)
@@ -98,20 +104,6 @@ if(SP_FDMS)
 	set(ENABLE_SP_FDM 1)
 endif()
 
-if(EVENT_INPUT)
-	message(STATUS "checking event-based Input")
-	find_package(DBus)
-	IF(APPLE)
-
-	elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-
-	else()
-		message(WARNING "event input is not supported on this platform yet")
-	endif()
-else(EVENT_INPUT)
-	set(ENABLE_PLIB_JOYSTICK 1)
-endif(EVENT_INPUT)
-
 if (MSVC AND MSVC_3RDPARTY_ROOT)
   message(STATUS "3rdparty files located in ${MSVC_3RDPARTY_ROOT}")
   set( OSG_MSVC "msvc" )
@@ -135,6 +127,24 @@ if (MSVC AND MSVC_3RDPARTY_ROOT)
   set (OPENAL_LIBRARY_DIR ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib)
 endif (MSVC AND MSVC_3RDPARTY_ROOT)
 
+if(EVENT_INPUT)
+	message(STATUS "checking event-based Input")
+	
+	IF(APPLE)
+
+	elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
+        find_package(DBus)
+        if(NOT DBUS_FOUND)
+            message(WARNING "DBus not found, event input will be disabled")
+            set(EVENT_INPUT 0)
+        endif()
+        
+	else()
+		message(WARNING "event input is not supported on this platform yet")
+	endif()
+else(EVENT_INPUT)
+	set(ENABLE_PLIB_JOYSTICK 1)
+endif(EVENT_INPUT)
 
 # check required dependencies
 find_package(Boost REQUIRED)

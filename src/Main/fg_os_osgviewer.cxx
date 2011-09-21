@@ -279,11 +279,9 @@ int fgOSMainLoop()
         viewer->realize();
     while (!viewer->done()) {
         fgIdleHandler idleFunc = manipulator->getIdleHandler();
-        fgDrawHandler drawFunc = manipulator->getDrawHandler();
         if (idleFunc)
             (*idleFunc)();
-        if (drawFunc)
-            (*drawFunc)();
+        globals->get_renderer()->update();
         viewer->frame();
     }
     
