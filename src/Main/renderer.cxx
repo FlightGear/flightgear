@@ -384,10 +384,17 @@ static osg::ref_ptr<osg::Group> mRealRoot = new osg::Group;
 
 static osg::ref_ptr<osg::Group> mRoot = new osg::Group;
 
+#ifdef FG_JPEG_SERVER
+static void updateRenderer()
+{
+    globals->get_renderer()->update();
+}
+#endif
+
 FGRenderer::FGRenderer()
 {
 #ifdef FG_JPEG_SERVER
-   jpgRenderFrame = FGRenderer::update;
+   jpgRenderFrame = updateRenderer;
 #endif
    eventHandler = new FGEventHandler;
 }
