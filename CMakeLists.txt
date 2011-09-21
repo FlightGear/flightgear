@@ -134,6 +134,11 @@ if(EVENT_INPUT)
 
 	elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
         find_package(DBus)
+        if(NOT DBUS_FOUND)
+            message(WARNING "DBus not found, event input will be disabled")
+            set(EVENT_INPUT 0)
+        endif()
+        
 	else()
 		message(WARNING "event input is not supported on this platform yet")
 	endif()
