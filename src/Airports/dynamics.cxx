@@ -508,7 +508,7 @@ int FGAirportDynamics::getGroundFrequency(unsigned leg)
 
     if ((freqGround.size() < leg) && (leg > 0)) {
         groundFreq =
-            (freqGround.size() <
+            (freqGround.size() <=
              (leg - 1)) ? freqGround[freqGround.size() -
                                      1] : freqGround[leg - 1];
     }
