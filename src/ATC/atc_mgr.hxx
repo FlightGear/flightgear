@@ -50,7 +50,6 @@ private:
   AtcVec activeStations;
   FGAIAircraft ai_ac;
   FGATCController *controller, *prevController; // The ATC controller that is responsible for the user's aircraft. 
-  //FGATCDialogNew dialog;  // note that this variable should really replace the ugly global "currentATCDialog();
   bool networkVisible;
   bool initSucceeded;
 
@@ -60,7 +59,6 @@ public:
   void init();
   void addController(FGATCController *controller);
   void update(double time);
-  FGATCDialogNew * getATCDialog() {  return currentATCDialog; };
 };
   
 #endif // _ATC_MRG_HXX_

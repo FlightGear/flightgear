@@ -299,7 +299,8 @@ bool FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport 
   string rwyClass = getRunwayClassFromTrafficType(fltType);
   double heading = ac->getTrafficRef()->getCourse();
   arr->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway, heading);
-  rwy = arr->getRunwayByIdent(activeRunway);
+  FGRunway* rwy = arr->getRunwayByIdent(activeRunway);
+  assert( rwy != NULL );
   // begin descent 110km out
   SGGeod beginDescentPoint     = rwy->pointOnCenterline(0);
   SGGeod secondaryDescentPoint = rwy->pointOnCenterline(-10000);

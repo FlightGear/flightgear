@@ -226,7 +226,8 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
         apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway,
                                             depHeading);
     }
-    rwy = apt->getRunwayByIdent(activeRunway);
+    FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
+    assert( rwy != NULL );
     SGGeod runwayTakeoff = rwy->pointOnCenterline(5.0);
 
     FGGroundNetwork *gn = apt->getDynamics()->getGroundNetwork();
@@ -456,9 +457,8 @@ bool FGAIFlightPlan::createTakeOff(FGAIAircraft * ac, bool firstFlight,
         apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway,
                                             heading);
     }
-    rwy = apt->getRunwayByIdent(activeRunway);
-
-
+    FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
+    assert( rwy != NULL );
 
     double airportElev = apt->getElevation();
     
@@ -513,7 +513,6 @@ bool FGAIFlightPlan::createClimb(FGAIAircraft * ac, bool firstFlight,
         double heading = ac->getTrafficRef()->getCourse();
         apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway,
                                             heading);
-        rwy = apt->getRunwayByIdent(activeRunway);
     }
     if (sid) {
         for (wpt_vector_iterator i = sid->getFirstWayPoint();
@@ -522,6 +521,9 @@ bool FGAIFlightPlan::createClimb(FGAIAircraft * ac, bool firstFlight,
             //cerr << " Cloning waypoint " << endl;
         }
     } else {
+        FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
+        assert( rwy != NULL );
+
         SGGeod climb1 = rwy->pointOnCenterline(10 * SG_NM_TO_METER);
         wpt = createInAir(ac, "10000ft climb", climb1, vClimb, 10000);
         wpt->setGear_down(true);
@@ -560,9 +562,8 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     double heading = ac->getTrafficRef()->getCourse();
     apt->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway,
                                         heading);
-    rwy = apt->getRunwayByIdent(activeRunway);
-
-
+    FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
+    assert( rwy != NULL );
 
     // Create a slow descent path that ends 250 lateral to the runway.
     double initialTurnRadius = getTurnRadius(vDescent, true);
@@ -859,6 +860,9 @@ bool FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
     char buffer[12];
     for (int i = 1; i < 10; i++) {
         snprintf(buffer, 12, "wpt%d", i);
+        FGRunway * rwy = apt->getRunwayByIdent(activeRunway);
+        assert( rwy != NULL );
+
         coord = rwy->pointOnCenterline(rwy->lengthM() * (i / 10.0));
         wpt = createOnGround(ac, buffer, coord, aptElev, (vTouchdown / i));
         wpt->setCrossat(apt->getElevation());

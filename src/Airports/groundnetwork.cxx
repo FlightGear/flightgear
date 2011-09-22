@@ -679,7 +679,7 @@ bool FGGroundNetwork::checkTransmissionState(int minState, int maxState, Traffic
                  // PopupCallback(n);
                  //cerr << "Selected transmission message " << n << endl;
                  FGATCManager *atc = (FGATCManager*) globals->get_subsystem("atc");
-                 atc->getATCDialog()->removeEntry(1);
+                 FGATCDialogNew::instance()->removeEntry(1);
             } else {
                 //cerr << "creating message for " << i->getAircraft()->getCallSign() << endl;
                 transmit(&(*i), msgId, msgDir, false);

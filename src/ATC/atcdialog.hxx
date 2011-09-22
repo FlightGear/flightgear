@@ -43,13 +43,14 @@
 typedef vector<string> StringVec;
 typedef vector<string>:: iterator StringVecIterator;
 
-static bool doATCDialog(const SGPropertyNode* arg);
 
 class FGATCDialogNew {
 private:
      NewGUI *_gui;
      bool dialogVisible;
      StringVec commands;
+
+     static FGATCDialogNew *_instance;
 public:
 
     FGATCDialogNew();
@@ -61,8 +62,19 @@ public:
     void PopupDialog();
     void addEntry(int, string);
     void removeEntry(int);
+
+    static bool popup( const SGPropertyNode * ) {
+        instance()->PopupDialog();
+        return true;
+    }
+
+    inline static FGATCDialogNew * instance() {
+        if( _instance != NULL ) return _instance;
+        _instance = new FGATCDialogNew();
+        _instance->init();
+        return _instance;
+    }
 };
 
-extern FGATCDialogNew *currentATCDialog;
 
 #endif // _ATC_DIALOG_HXX_

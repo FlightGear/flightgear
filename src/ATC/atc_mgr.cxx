@@ -46,8 +46,6 @@ FGATCManager::~FGATCManager() {
 
 void FGATCManager::init() {
     SGSubsystem::init();
-    currentATCDialog = new FGATCDialogNew;
-    currentATCDialog->init();
 
     int leg = 0;
 
@@ -219,7 +217,7 @@ void FGATCManager::update ( double time ) {
     ai_ac.setSpeed(speed);
     ai_ac.update(time);
     controller = ai_ac.getATCController();
-    currentATCDialog->update(time);
+    FGATCDialogNew::instance()->update(time);
     if (controller) {
        //cerr << "name of previous waypoint : " << fp->getPreviousWaypoint()->getName() << endl;
 

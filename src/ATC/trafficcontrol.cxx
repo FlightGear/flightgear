@@ -731,9 +731,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
             }
         }
     } else {
-        FGATCManager *atc = (FGATCManager*) globals->get_subsystem("atc");
-        atc->getATCDialog()->addEntry(1, text);
-        
+        FGATCDialogNew::instance()->addEntry(1, text);
     }
 }
 
@@ -1151,8 +1149,7 @@ bool FGStartupController::checkTransmissionState(int st, time_t now, time_t star
                 trans_num->setIntValue(-1);
                  // PopupCallback(n);
                  //cerr << "Selected transmission message " << n << endl;
-                 FGATCManager *atc = (FGATCManager*) globals->get_subsystem("atc");
-                 atc->getATCDialog()->removeEntry(1);
+                 FGATCDialogNew::instance()->removeEntry(1);
             } else {
                 //cerr << "creading message for " << i->getAircraft()->getCallSign() << endl;
                 transmit(&(*i), msgId, msgDir, false);
