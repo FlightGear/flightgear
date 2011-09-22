@@ -936,8 +936,8 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
         }
         if (acOperator.empty() || fltType == "NONE") {
             SG_LOG(SG_GENERAL, SG_INFO,
-                "Aircraft type information not found in: " << acData.str() << ". Using default value");
-                acOperator = fgGetString("/sim/aircraft-class"   );
+                "Aircraft operator information not found in: " << acData.str() << ". Using default value");
+                acOperator = fgGetString("/sim/aircraft-operator"   );
         }
 
         cerr << "Running aircraft " << fltType << " of livery " << acOperator << endl;
