@@ -907,15 +907,42 @@ static bool fgSetPosFromAirportIDandParkpos( const string& id, const string& par
     
     int park_index = dcs->getNrOfParkings() - 1;
     bool succes;
-    double radius = fgGetDouble("/sim/atc/acradius");
-    //cerr << "Using radius " << radius << endl;
-    //cerr << "Checking parkpos comparison " << (bool) (parkpos == string("AVAILABLE")) << endl;
+    double radius = fgGetDouble("/sim/dimensions/radius-m");
     if ((parkpos == string("AVAILABLE")) && (radius > 0)) {
         double lat, lon, heading;
-        string fltType = fgGetString("/sim/atc/flight-type");
-        string airline = fgGetString("/sim/atc/airline" );
+        string fltType;
+        string acOperator;
+        SGPath acData;
+        try {
+            acData = fgGetString("/sim/fg-home");
+            acData.append("aircraft-data");
+            string acfile = fgGetString("/sim/aircraft") + string(".xml");
+            acData.append(acfile);
+            SGPropertyNode root;
+            readProperties(acData.str(), &root);
+            SGPropertyNode * node = root.getNode("sim");
+            fltType    = node->getStringValue("aircraft-class", "NONE"     );
+            acOperator = node->getStringValue("aircraft-operator", "NONE"     );
+        } catch (const sg_exception &) {
+            SG_LOG(SG_GENERAL, SG_INFO,
+                "Could not load aircraft aircrat type and operator information from: " << acData.str() << ". Using defaults");
+
+       // cout << path.str() << endl;
+        }
+        if (fltType.empty() || fltType == "NONE") {
+            SG_LOG(SG_GENERAL, SG_INFO,
+                "Aircraft type information not found in: " << acData.str() << ". Using default value");
+                fltType = fgGetString("/sim/aircraft-class"   );
+        }
+        if (acOperator.empty() || fltType == "NONE") {
+            SG_LOG(SG_GENERAL, SG_INFO,
+                "Aircraft type information not found in: " << acData.str() << ". Using default value");
+                acOperator = fgGetString("/sim/aircraft-class"   );
+        }
+
+        cerr << "Running aircraft " << fltType << " of livery " << acOperator << endl;
         string acType; // Currently not used by findAvailable parking, so safe to leave empty. 
-        succes = dcs->getAvailableParking(&lat, &lon, &heading, &park_index, radius, fltType, acType, airline);
+        succes = dcs->getAvailableParking(&lat, &lon, &heading, &park_index, radius, fltType, acType, acOperator);
         if (succes) {
             fgGetString("/sim/presets/parkpos");
             fgSetString("/sim/presets/parkpos", dcs->getParking(park_index)->getName());
