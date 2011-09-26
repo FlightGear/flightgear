@@ -52,7 +52,8 @@ endif()
 IF(APPLE)
     set(EVENT_INPUT_DEFAULT 1)
 elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-    set(EVENT_INPUT_DEFAULT 1)
+    # disabled while DBus / HAL / udev issues are decided
+    #set(EVENT_INPUT_DEFAULT 1)
 endif()
 
 find_package(Git)
