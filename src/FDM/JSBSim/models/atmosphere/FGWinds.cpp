@@ -284,13 +284,8 @@ void FGWinds::Turbulence(double h)
     double
       T_V = in.totalDeltaT, // for compatibility of nomenclature
       sig_p = 1.9/sqrt(L_w*b_w)*sig_w, // Yeager1998, eq. (8)
-<<<<<<< FGWinds.cpp
-//    sig_q = sqrt(M_PI/2/L_w/b_w), // eq. (14)
-///   sig_r = sqrt(2*M_PI/3/L_w/b_w), // eq. (17)
-=======
       //sig_q = sqrt(M_PI/2/L_w/b_w), // eq. (14)
       //sig_r = sqrt(2*M_PI/3/L_w/b_w), // eq. (17)
->>>>>>> 1.5
       L_p = sqrt(L_w*b_w)/2.6, // eq. (10)
       tau_u = L_u/in.V, // eq. (6)
       tau_w = L_w/in.V, // eq. (3)
