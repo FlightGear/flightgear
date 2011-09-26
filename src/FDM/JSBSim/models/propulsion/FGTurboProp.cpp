@@ -53,7 +53,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGTurboProp.cpp,v 1.22 2011/08/04 13:45:42 jberndt Exp $";
+static const char *IdSrc = "$Id: FGTurboProp.cpp,v 1.24 2011/09/25 23:56:11 jentron Exp $";
 static const char *IdHdr = ID_TURBOPROP;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -170,7 +170,8 @@ void FGTurboProp::Calculate(void)
 
   ThrottlePos = in.ThrottlePos[EngineNumber];
 
-  RPM = Thruster->GetRPM() * Thruster->GetGearRatio();
+/* The thruster controls the engine RPM because it encapsulates the gear ratio and other transmission variables */
+  RPM = Thruster->GetEngineRPM();
   if (thrusterType == FGThruster::ttPropeller) {
     ((FGPropeller*)Thruster)->SetAdvance(in.PropAdvance[EngineNumber]);
     ((FGPropeller*)Thruster)->SetFeather(in.PropFeather[EngineNumber]);
@@ -409,6 +410,7 @@ double FGTurboProp::CalcFuelNeed(void)
 {
   FuelFlowRate = FuelFlow_pph / 3600.0;
   FuelExpended = FuelFlowRate * in.TotalDeltaT;
+  if (!Starved) FuelUsedLbs += FuelExpended;
   return FuelExpended;
 }
 
