@@ -253,16 +253,26 @@ void FGATCMgr::FreqSearch(const string navcomm, const int unit) {
 
     class RangeFilter : public CommStation::Filter {
     public:
-        RangeFilter( const SGGeod & pos ) : CommStation::Filter(), _pos(pos) {}
-        virtual bool pass(FGPositioned* aPos) const {
+        RangeFilter( const SGGeod & pos ) : 
+          CommStation::Filter(), 
+          _cart(SGVec3d::fromGeod(pos)),
+          _pos(pos)
+        {}
+      
+        virtual bool pass(FGPositioned* aPos) const
+        {
             flightgear::CommStation * stn = dynamic_cast<flightgear::CommStation*>(aPos);
             if( NULL == stn ) return false;
-            double dist = SGGeodesy::distanceNm( stn->geod(), _pos );
-            // if range is not configured, assume at least 10NM range
-            // TODO: maybe ramp down range with proximity to ground?
-            return dist <= SGMiscd::max( stn->rangeNm(), 10.0 );
+          // do the range check in cartesian space, since the distances are potentially
+          // large enough that the geodetic functions become unstable
+          // (eg, station on opposite side of the planet)
+            double rangeM = SGMiscd::max( stn->rangeNm(), 10.0 ) * SG_NM_TO_METER;
+            double d2 = distSqr( aPos->cart(), _cart);
+          
+            return d2 <= (rangeM * rangeM);
         }
     private:
+        SGVec3d _cart;
         SGGeod _pos;
     };
 

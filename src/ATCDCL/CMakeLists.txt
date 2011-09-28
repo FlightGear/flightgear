@@ -9,5 +9,17 @@ set(SOURCES
 	ATCutils.cxx
 	ATCProjection.cxx
 	)
-	
-flightgear_component(ATCDCL "${SOURCES}")
+
+set(HEADERS
+	ATC.hxx
+	atis.hxx
+	ATCDialogOld.hxx
+	ATCVoice.hxx
+	ATCmgr.hxx
+	ATCutils.hxx
+	ATCProjection.hxx
+	atis_lexicon.hxx
+	atis_remap.hxx
+	)
+    	
+flightgear_component(ATCDCL "${SOURCES}" "${HEADERS}")
