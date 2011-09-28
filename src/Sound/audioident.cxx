@@ -135,6 +135,11 @@ VORAudioIdent::VORAudioIdent( const std::string & fx_name )
 //FIXME: LOCAudioIdent at approx 7wpm (ICAO Annex 10 - 3.1.3.9.4)
 // not less than six times per minute at approx equal intervals
 // frequency 1020+/-50Hz (3.1.3.9.2)
+LOCAudioIdent::LOCAudioIdent( const std::string & fx_name )
+: AudioIdent( fx_name, 10, FGMorse::LO_FREQUENCY )
+{
+}
+
 
 // FIXME: NDBAudioIdent at approx 7 wpm (ICAO ANNEX 10 - 3.4.5.1)
 // at least once every 10s (3.4.5.2.1)

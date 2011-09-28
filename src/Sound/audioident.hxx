@@ -62,4 +62,9 @@ public:
     VORAudioIdent( const std::string & fx_name );
 };
 
+class LOCAudioIdent : public AudioIdent {
+public:
+    LOCAudioIdent( const std::string & fx_name );
+};
+
 #endif // _FGAUDIOIDENT_HXX
