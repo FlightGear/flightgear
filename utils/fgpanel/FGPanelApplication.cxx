@@ -90,6 +90,15 @@ FGPanelApplication::FGPanelApplication( int argc, char ** argv ) :
     throw exception();
   }
 
+  // see if we got a valid fgdata path
+  SGPath BaseCheck(ApplicationProperties::root);
+  BaseCheck.append("version");
+  if (!BaseCheck.exists())
+  {
+      cerr << "Missing base package. Use --fg-root=path_to_fgdata" << endl; 
+      throw exception();
+  }
+
   try {
     SGPath tpath = ApplicationProperties::GetRootPath( panelFilename.c_str() );
     readProperties( tpath.str(), ApplicationProperties::Properties );
@@ -284,8 +293,12 @@ double ApplicationProperties::getDouble( const char * name, double def )
   if( n == NULL ) return def;
   return n->getDoubleValue();
 }
+
 SGPath ApplicationProperties::GetRootPath( const char * sub )
 {
+  SGPath subpath( sub );
+  if ( subpath.isAbsolute() )
+    return subpath;
   SGPath path( ApplicationProperties::root );
   if( sub != NULL )
     path.append( sub );

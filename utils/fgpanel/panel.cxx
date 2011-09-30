@@ -804,6 +804,11 @@ FGTextLayer::draw ()
     transform();
 
     text_renderer.setFont(ApplicationProperties::fontCache.getTexFont(_font_name.c_str()));
+    if (!text_renderer.getFont())
+    {
+        SG_LOG( SG_COCKPIT, SG_ALERT, "Missing font file: " << _font_name );
+        return;
+    }
 
     text_renderer.setPointSize(_pointSize);
     text_renderer.begin();
