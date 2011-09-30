@@ -478,25 +478,30 @@ private:
     int freqKhz = atoi(token[1].c_str());
     int rangeNm = 50;
     FGPositioned::Type ty;
-    switch (lineId) {
-    case 50:
-        ty = FGPositioned::FREQ_AWOS;
-        if (token[2] == "ATIS") {
-            ty = FGPositioned::FREQ_ATIS;
-        }
-        break;
-        
-    case 51:    ty = FGPositioned::FREQ_UNICOM; break;
-    case 52:    ty = FGPositioned::FREQ_CLEARANCE; break;
-    case 53:    ty = FGPositioned::FREQ_GROUND; break;
-    case 54:    ty = FGPositioned::FREQ_TOWER; break;
-    case 55:    
-    case 56:    ty = FGPositioned::FREQ_APP_DEP; break;   
-    default:
-        throw sg_range_exception("unupported apt.dat comm station type");
-    }
+    // Make sure we only pass on stations with at least a name
+    if (token.size() >2){
 
-    commStations.push_back(new flightgear::CommStation(token[2], ty, pos, rangeNm, freqKhz));
+        switch (lineId) {
+            case 50:
+                ty = FGPositioned::FREQ_AWOS;
+                if (token[2] == "ATIS") {
+                    ty = FGPositioned::FREQ_ATIS;
+                }
+                break;
+
+            case 51:    ty = FGPositioned::FREQ_UNICOM; break;
+            case 52:    ty = FGPositioned::FREQ_CLEARANCE; break;
+            case 53:    ty = FGPositioned::FREQ_GROUND; break;
+            case 54:    ty = FGPositioned::FREQ_TOWER; break;
+            case 55:
+            case 56:    ty = FGPositioned::FREQ_APP_DEP; break;
+            default:
+                throw sg_range_exception("unupported apt.dat comm station type");
+        }
+
+        commStations.push_back(new flightgear::CommStation(token[2], ty, pos, rangeNm, freqKhz));
+    }
+    else SG_LOG( SG_GENERAL, SG_DEBUG, "Found unnamed comm. Skipping: " << lineId);
   }
 
 };
