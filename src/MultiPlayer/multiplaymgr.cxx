@@ -172,6 +172,8 @@ static const IdPropertyList sIdPropertyList[] = {
 
   {1300, "tanker", simgear::props::INT},
 
+  {1400, "scenery/events", simgear::props::STRING},
+
   {10001, "sim/multiplay/transmission-freq-hz",  simgear::props::STRING},
   {10002, "sim/multiplay/chat",  simgear::props::STRING},
 
