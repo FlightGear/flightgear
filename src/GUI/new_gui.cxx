@@ -22,7 +22,7 @@
 
 #include <Main/fg_props.hxx>
 
-#ifndef _WIN32
+#if defined(SG_UNIX) && !defined(SG_MAC) 
 #include "GL/glx.h"
 #endif
 
@@ -421,7 +421,7 @@ FGFontCache::FGFontCache() :
 
 FGFontCache::~FGFontCache()
 {
-#ifndef _WIN32
+#if defined(SG_UNIX) && !defined(SG_MAC) 
    // Ugly workaround for a crash on exit with multiple screens configured
    if (!glXGetCurrentContext())
       return;
