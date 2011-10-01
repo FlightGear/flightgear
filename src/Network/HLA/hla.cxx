@@ -920,30 +920,28 @@ FGHLA::open()
     // We need that to communicate to the rti
     switch (configReader.getRTIVersion()) {
     case RTI13:
-        if (!_hlaFederate->connect(simgear::HLAFederate::RTI13, configReader.getRTIArguments())) {
-            SG_LOG(SG_IO, SG_ALERT, "Could not connect to RTI13 federation.");
-            return false;
-        }
+        _hlaFederate->setVersion(simgear::HLAFederate::RTI13);
         break;
     case RTI1516:
-        if (!_hlaFederate->connect(simgear::HLAFederate::RTI1516, configReader.getRTIArguments())) {
-            SG_LOG(SG_IO, SG_ALERT, "Could not connect to RTI1516 federation.");
-            return false;
-        }
+        _hlaFederate->setVersion(simgear::HLAFederate::RTI1516);
         break;
     case RTI1516E:
-        if (!_hlaFederate->connect(simgear::HLAFederate::RTI1516E, configReader.getRTIArguments())) {
-            SG_LOG(SG_IO, SG_ALERT, "Could not connect to RTI1516E federation.");
-            return false;
-        }
+        _hlaFederate->setVersion(simgear::HLAFederate::RTI1516E);
         break;
     }
+    _hlaFederate->setConnectArguments(configReader.getRTIArguments());
+    _hlaFederate->setFederationExecutionName(_federation);
+    _hlaFederate->setFederationObjectModel(objectModel);
+    _hlaFederate->setFederateType(_federate);
 
-    // Try to create a new federation execution
-    _hlaFederate->createFederationExecution(_federation, objectModel);
+    // Now that it is paramtrized, connect
+    if (!_hlaFederate->connect()) {
+        SG_LOG(SG_IO, SG_ALERT, "Could not connect to rti.");
+        return false;
+    }
 
-    // Try to join
-    if (!_hlaFederate->join(_federate, _federation)) {
+    // Try to create and join the new federation execution
+    if (!_hlaFederate->createJoinFederationExecution()) {
         SG_LOG(SG_IO, SG_ALERT, "Could not join federation");
         return false;
     }
@@ -1240,8 +1238,8 @@ FGHLA::process()
         }
     }
 
-    // Then get news from others ...
-    if (get_direction() & SG_IO_IN) {
+    // Then get news from others and process possible update requests
+    if (get_direction() & (SG_IO_IN|SG_IO_OUT)) {
 
         // I hoped that the tick call itself would do that job with the timestamps, but this way it works
         SGTimeStamp timestamp = SGTimeStamp::now();
@@ -1267,11 +1265,9 @@ FGHLA::close()
         _localAircraftInstance = 0;
     }
 
-    // Leave the federation
-    _hlaFederate->resign();
-
-    // Try to destroy the federation execution. Only works if no federate is joined
-    _hlaFederate->destroyFederationExecution(_federation);
+    // Leave the federation and try to destroy the federation execution.
+    // Only works if no federate is joined
+    _hlaFederate->resignDestroyFederationExecution();
 
     // throw away the HLAFederate
     _hlaFederate->disconnect();
