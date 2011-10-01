@@ -552,6 +552,7 @@ public:
 
     inline double get_V_ground_speed() const { return v_ground_speed; }
     inline double get_V_ground_speed_kt() const { return v_ground_speed * SG_FEET_TO_METER * 3600 * SG_METER_TO_NM; }
+    inline void   set_V_ground_speed_kt(double ground_speed) { v_ground_speed = ground_speed / ( SG_FEET_TO_METER * 3600 * SG_METER_TO_NM); }
 
     inline double get_V_equiv_kts() const { return v_equiv_kts; }
 
