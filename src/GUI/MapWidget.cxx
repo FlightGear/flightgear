@@ -397,6 +397,7 @@ MapWidget::MapWidget(int x, int y, int maxX, int maxY) :
 MapWidget::~MapWidget()
 {
   delete _magVar;
+  clearData();
 }
 
 void MapWidget::setProperty(SGPropertyNode_ptr prop)
@@ -535,10 +536,14 @@ void MapWidget::draw(int dx, int dy)
 {
   _aircraft = SGGeod::fromDeg(fgGetDouble("/position/longitude-deg"),
     fgGetDouble("/position/latitude-deg"));
-  _magneticHeadings = _root->getBoolValue("magnetic-headings");
-
-  if (_hasPanned)
-  {
+    
+  bool mag = _root->getBoolValue("magnetic-headings");
+  if (mag != _magneticHeadings) {
+    clearData(); // flush cached data text, since it often includes heading
+    _magneticHeadings =  mag;
+  }
+  
+  if (_hasPanned) {
       _root->setBoolValue("centre-on-aircraft", false);
       _hasPanned = false;
   }
@@ -630,14 +635,9 @@ void MapWidget::paintRuler()
 
   double dist, az, az2;
   SGGeodesy::inverse(_aircraft, _clickGeod, az, az2, dist);
-  if (_magneticHeadings) {
-    az -= _magVar->get_magvar();
-    SG_NORMALIZE_RANGE(az, 0.0, 360.0);
-  }
-
   char buffer[1024];
 	::snprintf(buffer, 1024, "%03d/%.1fnm",
-		SGMiscd::roundToInt(az), dist * SG_METER_TO_NM);
+		displayHeading(az), dist * SG_METER_TO_NM);
 
   MapData* d = getOrCreateDataForKey((void*) RULER_LEGEND_KEY);
   d->setLabel(buffer);
@@ -1243,13 +1243,13 @@ void MapWidget::drawRunway(FGRunway* rwy)
     setAnchorForKey(rwy, (p1 + p2) * 0.5);
     return;
   }
-
+  
 	char buffer[1024];
-	::snprintf(buffer, 1024, "%s/%s\n%3.0f/%3.0f\n%.0f'",
+	::snprintf(buffer, 1024, "%s/%s\n%03d/%03d\n%.0f'",
 		rwy->ident().c_str(),
 		rwy->reciprocalRunway()->ident().c_str(),
-		rwy->headingDeg(),
-		rwy->reciprocalRunway()->headingDeg(),
+		displayHeading(rwy->headingDeg()),
+		displayHeading(rwy->reciprocalRunway()->headingDeg()),
 		rwy->lengthFt());
 
   MapData* d = createDataForKey(rwy);
@@ -1311,8 +1311,10 @@ void MapWidget::drawILS(bool tuned, FGRunway* rwy)
   }
 
 	char buffer[1024];
-	::snprintf(buffer, 1024, "%s\n%s\n%3.2fMHz",
-		loc->name().c_str(), loc->ident().c_str(),loc->get_freq()/100.0);
+	::snprintf(buffer, 1024, "%s\n%s\n%03d - %3.2fMHz",
+		loc->ident().c_str(), loc->name().c_str(),
+    displayHeading(radial),
+    loc->get_freq()/100.0);
 
   MapData* d = createDataForKey(loc);
   d->setPriority(40);
@@ -1679,4 +1681,24 @@ MapData* MapWidget::createDataForKey(void* key)
   _dataQueue.push_back(d);
   d->resetAge();
   return d;
+}
+
+void MapWidget::clearData()
+{
+  KeyDataMap::iterator it = _mapData.begin();
+  for (; it != _mapData.end(); ++it) {
+    delete it->second;
+  }
+  
+  _mapData.clear();
+}
+
+int MapWidget::displayHeading(double h) const
+{
+  if (_magneticHeadings) {
+    h -= _magVar->get_magvar() * SG_RADIANS_TO_DEGREES;
+  }
+  
+  SG_NORMALIZE_RANGE(h, 0.0, 360.0);
+  return SGMiscd::roundToInt(h);
 }
