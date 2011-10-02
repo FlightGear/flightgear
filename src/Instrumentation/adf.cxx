@@ -124,6 +124,7 @@ ADF::update (double delta_time_sec)
     if (_electrical_node->getDoubleValue() < 8.0
             || !_serviceable_node->getBoolValue()
             || !_power_btn_node->getBoolValue()     ) {
+        _in_range_node->setBoolValue(false);
         _ident_node->setStringValue("");
         return;
     }
@@ -131,6 +132,7 @@ ADF::update (double delta_time_sec)
     string mode = _mode_node->getStringValue();
     if (mode == "ant" || mode == "test") set_bearing(delta_time_sec, 90);
     if (mode != "bfo" && mode != "adf") {
+        _in_range_node->setBoolValue(false);
         _ident_node->setStringValue("");
         return;
     }
@@ -155,6 +157,7 @@ ADF::update (double delta_time_sec)
         search(frequency_khz, longitude_rad, latitude_rad, altitude_m);
 
     if (!_transmitter_valid) {
+        _in_range_node->setBoolValue(false);
         _ident_node->setStringValue("");
         return;
     }
