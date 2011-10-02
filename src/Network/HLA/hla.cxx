@@ -1240,14 +1240,7 @@ FGHLA::process()
 
     // Then get news from others and process possible update requests
     if (get_direction() & (SG_IO_IN|SG_IO_OUT)) {
-
-        // I hoped that the tick call itself would do that job with the timestamps, but this way it works
-        SGTimeStamp timestamp = SGTimeStamp::now();
-        timestamp += SGTimeStamp::fromSec(0.01);
-        do {
-            if (!_hlaFederate->tick(0.0, 0.0))
-                break;
-        } while (SGTimeStamp::now() <= timestamp);
+        _hlaFederate->processMessages();
     }
 
     return true;
