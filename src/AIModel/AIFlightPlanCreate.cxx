@@ -62,6 +62,11 @@ bool FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
     case 1:
         retVal = createPushBack(ac, firstFlight, dep, latitude, longitude,
                                 radius, fltType, aircraftType, airline);
+        // Pregenerate the 
+        if (retVal) {
+            waypoints.back()->setName( waypoints.back()->getName() + string("legend")); 
+            retVal = createTakeoffTaxi(ac, false, dep, radius, fltType, aircraftType, airline);
+        }
         break;
     case 2:
         retVal =  createTakeoffTaxi(ac, firstFlight, dep, radius, fltType,

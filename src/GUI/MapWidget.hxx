@@ -73,10 +73,13 @@ private:
   MapData* getOrCreateDataForKey(void* key);
   MapData* createDataForKey(void* key);
   void setAnchorForKey(void* key, const SGVec2d& anchor);
+  void clearData();
   
   SGVec2d project(const SGGeod& geod) const;
   SGGeod unproject(const SGVec2d& p) const;
   double currentScale() const;
+  
+  int displayHeading(double trueHeading) const;
   
   void circleAt(const SGVec2d& center, int nSides, double r);
   void circleAtAlt(const SGVec2d& center, int nSides, double r, double r2);

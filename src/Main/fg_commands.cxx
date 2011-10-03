@@ -318,14 +318,32 @@ do_resume (const SGPropertyNode * arg)
 
 #endif
 
+/**
+ * Built-in command: replay the FDR buffer
+ */
+static bool
+do_replay (const SGPropertyNode * arg)
+{
+    FGReplay *r = (FGReplay *)(globals->get_subsystem( "replay" ));
+    return r->start();
+}
+
+/**
+ * Built-in command: pause/unpause the sim
+ */
 static bool
 do_pause (const SGPropertyNode * arg)
 {
     bool paused = fgGetBool("/sim/freeze/master",true) || fgGetBool("/sim/freeze/clock",true);
-    fgSetBool("/sim/freeze/master",!paused);
-    fgSetBool("/sim/freeze/clock",!paused);
-    if (fgGetBool("/sim/freeze/replay-state",false))
-        fgSetBool("/sim/replay/disable",true);
+    if (paused && (fgGetInt("/sim/freeze/replay-state",0)>0))
+    {
+        do_replay(NULL);
+    }
+    else
+    {
+        fgSetBool("/sim/freeze/master",!paused);
+        fgSetBool("/sim/freeze/clock",!paused);
+    }
     return true;
 }
 
@@ -1168,24 +1186,6 @@ do_log_level (const SGPropertyNode * arg)
    sglog().setLogLevels( SG_ALL, (sgDebugPriority)arg->getIntValue() );
 
    return true;
-}
-
-/**
- * Built-in command: replay the FDR buffer
- */
-static bool
-do_replay (const SGPropertyNode * arg)
-{
-    // freeze the fdm, resume from sim pause 
-    fgSetInt( "/sim/freeze/replay-state", 1 );
-    fgSetBool("/sim/freeze/master", 0 );
-    fgSetBool("/sim/freeze/clock", 0 );
-    fgSetDouble( "/sim/replay/time", -1 );
-
-    // cout << "start = " << r->get_start_time()
-    //      << "  end = " << r->get_end_time() << endl;
-
-    return true;
 }
 
 /*

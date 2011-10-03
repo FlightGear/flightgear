@@ -60,98 +60,143 @@ typedef vector<FGTaxiSegment*>::iterator FGTaxiSegmentVectorIterator;
 class FGTaxiSegment
 {
 private:
-  int startNode;
-  int endNode;
-  double length;
-  double heading;
-  SGGeod center;
-  bool isActive;
-  bool isPushBackRoute;
-  FGTaxiNode *start;
-  FGTaxiNode *end;
-  int index;
-  FGTaxiSegment *oppositeDirection;
+    int startNode;
+    int endNode;
+    double length;
+    double heading;
+    SGGeod center;
+    bool isActive;
+    bool isPushBackRoute;
+    bool isBlocked;
+    FGTaxiNode *start;
+    FGTaxiNode *end;
+    int index;
+    FGTaxiSegment *oppositeDirection;
 
- 
+
 
 public:
-  FGTaxiSegment() :
-      startNode(0),
-      endNode(0),
-      length(0),
-      heading(0),
-      isActive(0),
-      isPushBackRoute(0),
-      start(0),
-      end(0),
-      index(0),
-      oppositeDirection(0)
-  {
-  };
+    FGTaxiSegment() :
+            startNode(0),
+            endNode(0),
+            length(0),
+            heading(0),
+            isActive(0),
+            isPushBackRoute(0),
+            isBlocked(0),
+            start(0),
+            end(0),
+            index(0),
+            oppositeDirection(0)
+    {
+    };
 
-  FGTaxiSegment         (const FGTaxiSegment &other) :
-      startNode         (other.startNode),
-      endNode           (other.endNode),
-      length            (other.length),
-      heading           (other.heading),
-      center            (other.center),
-      isActive          (other.isActive),
-      isPushBackRoute   (other.isPushBackRoute),
-      start             (other.start),
-      end               (other.end),
-      index             (other.index),
-      oppositeDirection (other.oppositeDirection)
-  {
-  };
+    FGTaxiSegment         (const FGTaxiSegment &other) :
+            startNode         (other.startNode),
+            endNode           (other.endNode),
+            length            (other.length),
+            heading           (other.heading),
+            center            (other.center),
+            isActive          (other.isActive),
+            isPushBackRoute   (other.isPushBackRoute),
+            isBlocked         (other.isBlocked),
+            start             (other.start),
+            end               (other.end),
+            index             (other.index),
+            oppositeDirection (other.oppositeDirection)
+    {
+    };
 
-  FGTaxiSegment& operator=(const FGTaxiSegment &other)
-  {
-      startNode          = other.startNode;
-      endNode            = other.endNode;
-      length             = other.length;
-      heading            = other.heading;
-      center             = other.center;
-      isActive           = other.isActive;
-      isPushBackRoute    = other.isPushBackRoute;
-      start              = other.start;
-      end                = other.end;
-      index              = other.index;
-      oppositeDirection  = other.oppositeDirection;
-      return *this;
-  };
+    FGTaxiSegment& operator=(const FGTaxiSegment &other)
+    {
+        startNode          = other.startNode;
+        endNode            = other.endNode;
+        length             = other.length;
+        heading            = other.heading;
+        center             = other.center;
+        isActive           = other.isActive;
+        isPushBackRoute    = other.isPushBackRoute;
+        isBlocked          = other.isBlocked;
+        start              = other.start;
+        end                = other.end;
+        index              = other.index;
+        oppositeDirection  = other.oppositeDirection;
+        return *this;
+    };
 
-  void setIndex        (int val) { index     = val; };
-  void setStartNodeRef (int val) { startNode = val; };
-  void setEndNodeRef   (int val) { endNode   = val; };
+    void setIndex        (int val) {
+        index     = val;
+    };
+    void setStartNodeRef (int val) {
+        startNode = val;
+    };
+    void setEndNodeRef   (int val) {
+        endNode   = val;
+    };
 
-  void setOpposite(FGTaxiSegment *opp) { oppositeDirection = opp; };
+    void setOpposite(FGTaxiSegment *opp) {
+        oppositeDirection = opp;
+    };
 
-  void setStart(FGTaxiNodeVector *nodes);
-  void setEnd  (FGTaxiNodeVector *nodes);
-  void setPushBackType(bool val) { isPushBackRoute = val; };
-  void setDimensions(double elevation);
+    void setStart(FGTaxiNodeVector *nodes);
+    void setEnd  (FGTaxiNodeVector *nodes);
+    void setPushBackType(bool val) {
+        isPushBackRoute = val;
+    };
+    void setDimensions(double elevation);
+    void block() {
+        isBlocked = true;
+    }
+    void unblock() {
+        isBlocked = false;
+    };
+    bool hasBlock() {
+        return isBlocked;
+    };
 
-  FGTaxiNode * getEnd() { return end;};
-  FGTaxiNode * getStart() { return start; };
-  double getLength() { return length; };
-  int getIndex() { return index; };
-  double getLatitude()  { return center.getLatitudeDeg();  };
-  double getLongitude() { return center.getLongitudeDeg(); };
-  double getHeading()   { return heading; }; 
-  bool isPushBack() { return isPushBackRoute; };
+    FGTaxiNode * getEnd() {
+        return end;
+    };
+    FGTaxiNode * getStart() {
+        return start;
+    };
+    double getLength() {
+        return length;
+    };
+    int getIndex() {
+        return index;
+    };
+    double getLatitude()  {
+        return center.getLatitudeDeg();
+    };
+    double getLongitude() {
+        return center.getLongitudeDeg();
+    };
+    double getHeading()   {
+        return heading;
+    };
+    bool isPushBack() {
+        return isPushBackRoute;
+    };
 
-  int getPenalty(int nGates);
+    int getPenalty(int nGates);
 
-  FGTaxiSegment *getAddress() { return this;};
+    FGTaxiSegment *getAddress() {
+        return this;
+    };
 
-  bool operator<(const FGTaxiSegment &other) const { return index < other.index; };
-  //bool hasSmallerHeadingDiff (const FGTaxiSegment &other) const { return headingDiff < other.headingDiff; };
-  FGTaxiSegment *opposite() { return oppositeDirection; };
-  void setCourseDiff(double crse);
+    bool operator<(const FGTaxiSegment &other) const {
+        return index < other.index;
+    };
+    //bool hasSmallerHeadingDiff (const FGTaxiSegment &other) const { return headingDiff < other.headingDiff; };
+    FGTaxiSegment *opposite() {
+        return oppositeDirection;
+    };
+    void setCourseDiff(double crse);
 
 
 
-  
+
 };
 
 
@@ -168,52 +213,67 @@ typedef vector<int>::iterator intVecIterator;
 class FGTaxiRoute
 {
 private:
-  intVec nodes;
-  intVec routes;
-  double distance;
+    intVec nodes;
+    intVec routes;
+    double distance;
 //  int depth;
-  intVecIterator currNode;
-  intVecIterator currRoute;
+    intVecIterator currNode;
+    intVecIterator currRoute;
 
 public:
-  FGTaxiRoute() { distance = 0; currNode = nodes.begin(); currRoute = routes.begin();};
-  FGTaxiRoute(intVec nds, intVec rts, double dist, int dpth) { 
-    nodes = nds; 
-    routes = rts;
-    distance = dist; 
-    currNode = nodes.begin();
-    currRoute = routes.begin();
+    FGTaxiRoute() {
+        distance = 0;
+        currNode = nodes.begin();
+        currRoute = routes.begin();
+    };
+    FGTaxiRoute(intVec nds, intVec rts, double dist, int dpth) {
+        nodes = nds;
+        routes = rts;
+        distance = dist;
+        currNode = nodes.begin();
+        currRoute = routes.begin();
 //    depth = dpth;
-  };
+    };
 
-  FGTaxiRoute& operator= (const FGTaxiRoute &other) {
-    nodes = other.nodes;
-    routes = other.routes;
-    distance = other.distance;
+    FGTaxiRoute& operator= (const FGTaxiRoute &other) {
+        nodes = other.nodes;
+        routes = other.routes;
+        distance = other.distance;
 //    depth = other.depth;
-    currNode = nodes.begin();
-    currRoute = routes.begin();
-    return *this;
-  };
+        currNode = nodes.begin();
+        currRoute = routes.begin();
+        return *this;
+    };
 
-  FGTaxiRoute(const FGTaxiRoute& copy) :
-    nodes(copy.nodes),
-    routes(copy.routes),
-    distance(copy.distance),
+    FGTaxiRoute(const FGTaxiRoute& copy) :
+            nodes(copy.nodes),
+            routes(copy.routes),
+            distance(copy.distance),
 //    depth(copy.depth),
-    currNode(nodes.begin()),
-    currRoute(routes.begin())
-  {};
+            currNode(nodes.begin()),
+            currRoute(routes.begin())
+    {};
 
-  bool operator< (const FGTaxiRoute &other) const {return distance < other.distance; };
-  bool empty () { return nodes.begin() == nodes.end(); };
-  bool next(int *nde); 
-  bool next(int *nde, int *rte);
-  void rewind(int legNr);
-  
-  void first() { currNode = nodes.begin(); currRoute = routes.begin(); };
-  int size() { return nodes.size(); };
-  int nodesLeft() { return nodes.end() - currNode; };
+    bool operator< (const FGTaxiRoute &other) const {
+        return distance < other.distance;
+    };
+    bool empty () {
+        return nodes.begin() == nodes.end();
+    };
+    bool next(int *nde);
+    bool next(int *nde, int *rte);
+    void rewind(int legNr);
+
+    void first() {
+        currNode = nodes.begin();
+        currRoute = routes.begin();
+    };
+    int size() {
+        return nodes.size();
+    };
+    int nodesLeft() {
+        return nodes.end() - currNode;
+    };
 
 //  int getDepth() { return depth; };
 };
@@ -227,75 +287,84 @@ typedef vector<FGTaxiRoute>::iterator TaxiRouteVectorIterator;
 class FGGroundNetwork : public FGATCController
 {
 private:
-  bool hasNetwork;
-  bool networkInitialized;
-  time_t nextSave;
-  //int maxDepth;
-  int count;
-  FGTaxiNodeVector    nodes;
-  FGTaxiNodeVector    pushBackNodes;
-  FGTaxiSegmentVector segments;
-  //intVec route;
-  //intVec nodesStack;
-  //intVec routesStack;
-  TaxiRouteVector routes;
-  TrafficVector activeTraffic;
-  TrafficVectorIterator currTraffic;
+    bool hasNetwork;
+    bool networkInitialized;
+    time_t nextSave;
+    //int maxDepth;
+    int count;
+    FGTaxiNodeVector    nodes;
+    FGTaxiNodeVector    pushBackNodes;
+    FGTaxiSegmentVector segments;
+    //intVec route;
+    //intVec nodesStack;
+    //intVec routesStack;
+    TaxiRouteVector routes;
+    TrafficVector activeTraffic;
+    TrafficVectorIterator currTraffic;
 
-  bool foundRoute;
-  double totalDistance, maxDistance;
-  FGTowerController *towerController;
-  FGAirport *parent;
+    bool foundRoute;
+    double totalDistance, maxDistance;
+    FGTowerController *towerController;
+    FGAirport *parent;
 
 
-  //void printRoutingError(string);
+    //void printRoutingError(string);
 
-  void checkSpeedAdjustment(int id, double lat, double lon, 
-			    double heading, double speed, double alt);
-  void checkHoldPosition(int id, double lat, double lon, 
-			 double heading, double speed, double alt);
+    void checkSpeedAdjustment(int id, double lat, double lon,
+                              double heading, double speed, double alt);
+    void checkHoldPosition(int id, double lat, double lon,
+                           double heading, double speed, double alt);
 
 
 
 public:
-  FGGroundNetwork();
-  ~FGGroundNetwork();
+    FGGroundNetwork();
+    ~FGGroundNetwork();
 
-  void addNode   (const FGTaxiNode& node);
-  void addNodes  (FGParkingVec *parkings);
-  void addSegment(const FGTaxiSegment& seg); 
+    void addNode   (const FGTaxiNode& node);
+    void addNodes  (FGParkingVec *parkings);
+    void addSegment(const FGTaxiSegment& seg);
 
-  void init();
-  bool exists() { return hasNetwork; };
-  void setTowerController(FGTowerController *twrCtrlr) { towerController = twrCtrlr; };
+    void init();
+    bool exists() {
+        return hasNetwork;
+    };
+    void setTowerController(FGTowerController *twrCtrlr) {
+        towerController = twrCtrlr;
+    };
 
-  int findNearestNode(double lat, double lon);
-  int findNearestNode(const SGGeod& aGeod);
+    int findNearestNode(double lat, double lon);
+    int findNearestNode(const SGGeod& aGeod);
 
-  FGTaxiNode *findNode(unsigned idx);
-  FGTaxiSegment *findSegment(unsigned idx);
-  FGTaxiRoute findShortestRoute(int start, int end, bool fullSearch=true);
-  //void trace(FGTaxiNode *, int, int, double dist);
+    FGTaxiNode *findNode(unsigned idx);
+    FGTaxiSegment *findSegment(unsigned idx);
+    FGTaxiRoute findShortestRoute(int start, int end, bool fullSearch=true);
+    //void trace(FGTaxiNode *, int, int, double dist);
 
-  int getNrOfNodes() { return nodes.size(); };
+    int getNrOfNodes() {
+        return nodes.size();
+    };
 
-  void setParent(FGAirport *par) { parent = par; };
+    void setParent(FGAirport *par) {
+        parent = par;
+    };
 
-  virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute, 
-				double lat, double lon, double hdg, double spd, double alt, 
-				double radius, int leg, FGAIAircraft *aircraft);
-  virtual void signOff(int id);
-  virtual void updateAircraftInformation(int id, double lat, double lon, double heading, double speed, double alt, double dt);
-  virtual bool hasInstruction(int id);
-  virtual FGATCInstruction getInstruction(int id);
+    virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
+                                  double lat, double lon, double hdg, double spd, double alt,
+                                  double radius, int leg, FGAIAircraft *aircraft);
+    virtual void signOff(int id);
+    virtual void updateAircraftInformation(int id, double lat, double lon, double heading, double speed, double alt, double dt);
+    virtual bool hasInstruction(int id);
+    virtual FGATCInstruction getInstruction(int id);
 
-  bool checkTransmissionState(int minState, int MaxState, TrafficVectorIterator i, time_t now, AtcMsgId msgId,
-                               AtcMsgDir msgDir);
-  bool checkForCircularWaits(int id);
-  virtual void render(bool);
-  virtual string getName();
+    bool checkTransmissionState(int minState, int MaxState, TrafficVectorIterator i, time_t now, AtcMsgId msgId,
+                                AtcMsgDir msgDir);
+    bool checkForCircularWaits(int id);
+    virtual void render(bool);
+    virtual string getName();
+    virtual void update(double dt);
 
-  void saveElevationCache();
+    void saveElevationCache();
 };
 
 

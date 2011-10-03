@@ -109,7 +109,7 @@ void FGATCManager::init() {
             if (park_index < 0) {
                   SG_LOG( SG_GENERAL, SG_ALERT,
                         "Failed to find parking position " << parking <<
-                        " at airport " << airport << "at " << SG_ORIGIN);
+                        " at airport " << airport << " at " << SG_ORIGIN);
             }
         if (parking.empty() || (park_index < 0)) {
             controller = apt->getDynamics()->getTowerController();
@@ -247,5 +247,7 @@ void FGATCManager::update ( double time ) {
         //cerr << "Adding groundnetWork to the scenegraph::update" << endl;
         prevController = controller;
    }
-   //globals->get_scenery()->get_scene_graph()->addChild(node);
+   for (AtcVecIterator atc = activeStations.begin(); atc != activeStations.end(); atc++) {
+       (*atc)->update(time);
+   }
 }

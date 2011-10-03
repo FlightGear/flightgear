@@ -393,6 +393,14 @@
 				RelativePath="..\..\..\src\Aircraft\replay.hxx"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\src\Aircraft\flightrecorder.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Aircraft\flightrecorder.hxx"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Lib_Airports"

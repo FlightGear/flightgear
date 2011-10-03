@@ -380,7 +380,7 @@ void FGAISchedule::scheduleFlights(time_t now)
   FGScheduledFlight *flight = NULL;
   do {
     if (currentDestination.empty()) {
-        flight = findAvailableFlight(userPort, flightIdentifier, now, (now+6400));
+        //flight = findAvailableFlight(userPort, flightIdentifier, now, (now+1800));
         if (!flight)
             flight = findAvailableFlight(currentDestination, flightIdentifier);
     } else {
@@ -423,7 +423,7 @@ void FGAISchedule::scheduleFlights(time_t now)
                              << "  "        << arrT << ":");
   
     flights.push_back(flight);
-  } while (currentDestination != startingPort);
+  } while (1); //(currentDestination != startingPort);
   SG_LOG(SG_GENERAL, SG_BULK, " Done ");
 }
 

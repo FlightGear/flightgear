@@ -305,7 +305,8 @@ FGInterface::bind ()
   
                                 // Ground speed knots
   fgTie("/velocities/groundspeed-kt", this,
-        &FGInterface::get_V_ground_speed_kt); // read-only
+        &FGInterface::get_V_ground_speed_kt,
+        &FGInterface::set_V_ground_speed_kt); // read-only
 
 				// Calibrated airspeed
   fgTie("/velocities/airspeed-kt", this,
