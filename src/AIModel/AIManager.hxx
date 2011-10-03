@@ -27,6 +27,7 @@
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
+#include <simgear/props/props_io.hxx>
 
 #include <Main/fg_props.hxx>
 
@@ -66,6 +67,7 @@ public:
     void bind();
     void unbind();
     void update(double dt);
+    void updateLOD(SGPropertyNode* node);
     void attach(FGAIBase *model);
 
     void destroyObject( int ID );
@@ -135,6 +137,8 @@ private:
     double strength;
     void processThermal( FGAIThermal* thermal ); 
 
+    SGPropertyChangeCallback<FGAIManager> cb_ai_bare;
+    SGPropertyChangeCallback<FGAIManager> cb_ai_detailed;
 };
 
 #endif  // _FG_AIMANAGER_HXX
