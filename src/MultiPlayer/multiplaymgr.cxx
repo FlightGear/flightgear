@@ -638,7 +638,8 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
 
   strncpy(PosMsg->Model, fgGetString("/sim/model/path"), MAX_MODEL_NAME_LEN);
   PosMsg->Model[MAX_MODEL_NAME_LEN - 1] = '\0';
-  if (fgGetBool("/sim/freeze/replay-state", true))
+  if (fgGetBool("/sim/freeze/replay-state", true)&&
+      fgGetBool("/sim/multiplay/freeze-on-replay",true))
   {
       // do not send position updates during replay
       for (unsigned i = 0 ; i < 3; ++i)

@@ -64,6 +64,7 @@ public:
     virtual void unbind();
     virtual void reinit() {}
 
+    void updateLOD();
     void setManager(FGAIManager* mgr, SGPropertyNode* p);
     void setPath( const char* model );
     void setSMPath( const string& p );
@@ -186,7 +187,6 @@ protected:
     double ht_diff;		 // value used by radar display instrument
 
     string model_path;	   //Path to the 3D model
-    osg::ref_ptr<osg::Node> model; //The 3D model object
     SGModelPlacement aip;
 
     bool delete_me;
@@ -222,6 +222,7 @@ private:
     int _refID;
     object_type _otype;
     bool _initialized;
+    osg::ref_ptr<osg::LOD> _model; //The 3D model LOD object
 
 public:
     object_type getType();

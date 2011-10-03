@@ -323,6 +323,34 @@ private:
     ObjectClassConfigList _objectClassConfigList;
 };
 
+class PropertyReferenceSet : public SGReferenced {
+public:
+    void insert(const std::string& relativePath, const SGSharedPtr<sg::HLAPropertyDataElement>& dataElement)
+    {
+        if (_rootNode.valid())
+            dataElement->setPropertyNode(_rootNode->getNode(relativePath, true));
+        _pathDataElementPairList.push_back(PathDataElementPair(relativePath, dataElement));
+    }
+
+    void setRootNode(SGPropertyNode* rootNode)
+    {
+        _rootNode = rootNode;
+        for (PathDataElementPairList::iterator i = _pathDataElementPairList.begin();
+             i != _pathDataElementPairList.end(); ++i) {
+            i->second->setPropertyNode(_rootNode->getNode(i->first, true));
+        }
+    }
+    SGPropertyNode* getRootNode()
+    { return _rootNode.get(); }
+
+private:
+    SGSharedPtr<SGPropertyNode> _rootNode;
+
+    typedef std::pair<std::string, SGSharedPtr<sg::HLAPropertyDataElement> > PathDataElementPair;
+    typedef std::list<PathDataElementPair> PathDataElementPairList;
+    PathDataElementPairList _pathDataElementPairList;
+};
+
 class AbstractSimTime : public SGReferenced {
 public:
     virtual ~AbstractSimTime() {}
@@ -533,7 +561,7 @@ private:
 // Factory class that is used to create an apternative data element for the multiplayer property attribute
 class MPPropertyVariantDataElementFactory : public sg::HLAVariantArrayDataElement::AlternativeDataElementFactory {
 public:
-    MPPropertyVariantDataElementFactory(sg::HLAPropertyReferenceSet* propertyReferenceSet) :
+    MPPropertyVariantDataElementFactory(PropertyReferenceSet* propertyReferenceSet) :
         _propertyReferenceSet(propertyReferenceSet)
     { }
 
@@ -551,19 +579,19 @@ public:
 
         // The relative property path should be in the semantics field name
         std::string relativePath = dataType->getAlternativeSemantics(index);
-        sg::HLAPropertyReference* propertyReference = new sg::HLAPropertyReference(relativePath);
-        _propertyReferenceSet->insert(propertyReference);
-        return new sg::HLAPropertyDataElement(alternativeDataType, propertyReference);
+        sg::HLAPropertyDataElement* dataElement = new sg::HLAPropertyDataElement(alternativeDataType, (SGPropertyNode*)0);
+        _propertyReferenceSet->insert(relativePath, dataElement);
+        return dataElement;
     }
 
 private:
-    SGSharedPtr<sg::HLAPropertyReferenceSet> _propertyReferenceSet;
+    SGSharedPtr<PropertyReferenceSet> _propertyReferenceSet;
 };
 
 class MPAttributeCallback : public sg::HLAObjectInstance::AttributeCallback {
 public:
     MPAttributeCallback() :
-        _propertyReferenceSet(new sg::HLAPropertyReferenceSet),
+        _propertyReferenceSet(new PropertyReferenceSet),
         _mpProperties(new sg::HLAVariantArrayDataElement)
     {
         _mpProperties->setAlternativeDataElementFactory(new MPPropertyVariantDataElementFactory(_propertyReferenceSet.get()));
@@ -595,7 +623,7 @@ public:
     sg::HLAVariantArrayDataElement* getMPProperties() const
     { return _mpProperties.get(); }
 
-    SGSharedPtr<sg::HLAPropertyReferenceSet> _propertyReferenceSet;
+    SGSharedPtr<PropertyReferenceSet> _propertyReferenceSet;
 
 protected:
     SGSharedPtr<sg::HLAAbstractLocation> _location;
@@ -792,7 +820,7 @@ private:
 
         objectInstance.setAttributes(attributePathElementMap);
     }
-    void attachPropertyDataElements(sg::HLAPropertyReferenceSet& propertyReferenceSet,
+    void attachPropertyDataElements(PropertyReferenceSet& propertyReferenceSet,
                                     sg::HLAAttributePathElementMap& attributePathElementMap,
                                     const AttributePathPropertyMap& attributePathPropertyMap)
     {
@@ -800,10 +828,9 @@ private:
              i != attributePathPropertyMap.end(); ++i) {
             for (PathPropertyMap::const_iterator j = i->second.begin();
                  j != i->second.end(); ++j) {
-                SGSharedPtr<sg::HLAPropertyReference> propertyReference;
-                propertyReference = new sg::HLAPropertyReference(j->second);
-                propertyReferenceSet.insert(propertyReference);
-                attributePathElementMap[i->first][j->first] = new sg::HLAPropertyDataElement(propertyReference);
+                sg::HLAPropertyDataElement* dataElement = new sg::HLAPropertyDataElement;
+                propertyReferenceSet.insert(j->second, dataElement);
+                attributePathElementMap[i->first][j->first] = dataElement;
             }
         }
     }
@@ -1240,14 +1267,7 @@ FGHLA::process()
 
     // Then get news from others and process possible update requests
     if (get_direction() & (SG_IO_IN|SG_IO_OUT)) {
-
-        // I hoped that the tick call itself would do that job with the timestamps, but this way it works
-        SGTimeStamp timestamp = SGTimeStamp::now();
-        timestamp += SGTimeStamp::fromSec(0.01);
-        do {
-            if (!_hlaFederate->tick(0.0, 0.0))
-                break;
-        } while (SGTimeStamp::now() <= timestamp);
+        _hlaFederate->processMessages();
     }
 
     return true;

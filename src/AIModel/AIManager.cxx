@@ -43,7 +43,12 @@
 #include "AIGroundVehicle.hxx"
 #include "AIEscort.hxx"
 
-FGAIManager::FGAIManager() {
+FGAIManager::FGAIManager() :
+    cb_ai_bare(SGPropertyChangeCallback<FGAIManager>(this,&FGAIManager::updateLOD,
+               fgGetNode("/sim/rendering/static-lod/ai-bare", true))),
+    cb_ai_detailed(SGPropertyChangeCallback<FGAIManager>(this,&FGAIManager::updateLOD,
+                   fgGetNode("/sim/rendering/static-lod/ai-detailed", true)))
+{
     _dt = 0.0;
     mNumAiModels = 0;
 
@@ -179,6 +184,18 @@ FGAIManager::update(double dt) {
     }
 
     thermal_lift_node->setDoubleValue( strength );  // for thermals
+}
+
+/** update LOD settings of all AI/MP models */
+void
+FGAIManager::updateLOD(SGPropertyNode* node)
+{
+    ai_list_iterator ai_list_itr = ai_list.begin();
+    while(ai_list_itr != ai_list.end())
+    {
+        (*ai_list_itr)->updateLOD();
+        ++ai_list_itr;
+    }
 }
 
 void
