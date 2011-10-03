@@ -773,10 +773,10 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr) {
     } 
     if (trafficRef) {
          //cerr << "Tracking callsign : \"" << fgGetString("/ai/track-callsign") << "\"" << endl;
-/*         if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
+         if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
               cerr << trafficRef->getCallSign() << " " << tgt_altitude_ft << " " << _getSpeed() << " " 
-                   << _getAltitude() << " "<< _getLatitude() << " " << _getLongitude() << " " << dist_to_go << " " << lead_dist << " " << curr->name << " " << vs << " " << tgt_vs << " " << bearing << " " << minBearing << " " << speedFraction << endl; 
-         }*/
+                   << _getAltitude() << " "<< _getLatitude() << " " << _getLongitude() << " " << dist_to_go << " " << lead_dist << " " << curr->getName() << " " << vs << " " << tgt_vs << " " << bearing << " " << minBearing << " " << speedFraction << " " << invisible << endl; 
+         }
      }
     if ((dist_to_go < lead_dist) || (bearing > (minBearing * 1.1))) {
         minBearing = 360;
@@ -1223,20 +1223,20 @@ bool FGAIAircraft::reachedEndOfCruise(double &distance) {
         double distanceCovered   = descentSpeed * descentTimeNeeded; 
 
         //cerr << "Tracking  : " << fgGetString("/ai/track-callsign");
-        if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
-            cerr << "Checking for end of cruise stage for :" << trafficRef->getCallSign() << endl;
-            cerr << "Descent rate      : " << descentRate << endl;
-            cerr << "Descent speed     : " << descentSpeed << endl;
-            cerr << "VerticalDistance  : " << verticalDistance << ". Altitude : " << altitude_ft << ". Elevation " << trafficRef->getArrivalAirport()->getElevation() << endl;
-            cerr << "DecentTimeNeeded  : " << descentTimeNeeded << endl;
-            cerr << "DistanceCovered   : " << distanceCovered   << endl;
-        }
+//         if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
+//             cerr << "Checking for end of cruise stage for :" << trafficRef->getCallSign() << endl;
+//             cerr << "Descent rate      : " << descentRate << endl;
+//             cerr << "Descent speed     : " << descentSpeed << endl;
+//             cerr << "VerticalDistance  : " << verticalDistance << ". Altitude : " << altitude_ft << ". Elevation " << trafficRef->getArrivalAirport()->getElevation() << endl;
+//             cerr << "DecentTimeNeeded  : " << descentTimeNeeded << endl;
+//             cerr << "DistanceCovered   : " << distanceCovered   << endl;
+//         }
         //cerr << "Distance = " << distance << endl;
         distance = distanceCovered;
         if (dist < distanceCovered) {
-              if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
-                   //exit(1);
-              }
+//               if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
+//                    //exit(1);
+//               }
               return true;
         } else {
               return false;
@@ -1290,8 +1290,8 @@ time_t FGAIAircraft::checkForArrivalTime(string wptName) {
      
      time_t ete = tracklength / ((speed * SG_NM_TO_METER) / 3600.0); 
      time_t secondsToGo = arrivalTime - now;
-     if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {    
-          cerr << "Checking arrival time: ete " << ete << ". Time to go : " << secondsToGo << ". Track length = " << tracklength << endl;
-     }
+//      if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {    
+//           cerr << "Checking arrival time: ete " << ete << ". Time to go : " << secondsToGo << ". Track length = " << tracklength << endl;
+//      }
      return (ete - secondsToGo); // Positive when we're too slow...
 }

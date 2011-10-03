@@ -38,11 +38,14 @@
 #include <simgear/structure/SGReferenced.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 
+
 #include <string>
 #include <vector>
+#include <list>
 
 using std::string;
 using std::vector;
+using std::list;
 
 
 typedef vector<int> intVec;
@@ -62,43 +65,79 @@ class FGAirportDynamics;
 class FGATCInstruction
 {
 private:
-  bool holdPattern;
-  bool holdPosition;
-  bool changeSpeed;
-  bool changeHeading;
-  bool changeAltitude;
-  bool resolveCircularWait;
+    bool holdPattern;
+    bool holdPosition;
+    bool changeSpeed;
+    bool changeHeading;
+    bool changeAltitude;
+    bool resolveCircularWait;
 
-  double speed;
-  double heading;
-  double alt;
+    double speed;
+    double heading;
+    double alt;
 public:
 
-  FGATCInstruction();
-  bool hasInstruction   ();
-  bool getHoldPattern   () { return holdPattern;    };
-  bool getHoldPosition  () { return holdPosition;   };
-  bool getChangeSpeed   () { return changeSpeed;    };
-  bool getChangeHeading () { return changeHeading;  };
-  bool getChangeAltitude() { return changeAltitude; };
+    FGATCInstruction();
+    bool hasInstruction   ();
+    bool getHoldPattern   () {
+        return holdPattern;
+    };
+    bool getHoldPosition  () {
+        return holdPosition;
+    };
+    bool getChangeSpeed   () {
+        return changeSpeed;
+    };
+    bool getChangeHeading () {
+        return changeHeading;
+    };
+    bool getChangeAltitude() {
+        return changeAltitude;
+    };
 
-  double getSpeed       () { return speed; };
-  double getHeading     () { return heading; };
-  double getAlt         () { return alt; };
+    double getSpeed       () {
+        return speed;
+    };
+    double getHeading     () {
+        return heading;
+    };
+    double getAlt         () {
+        return alt;
+    };
 
-  bool getCheckForCircularWait() { return resolveCircularWait; };
+    bool getCheckForCircularWait() {
+        return resolveCircularWait;
+    };
 
-  void setHoldPattern   (bool val) { holdPattern    = val; };
-  void setHoldPosition  (bool val) { holdPosition   = val; };
-  void setChangeSpeed   (bool val) { changeSpeed    = val; };
-  void setChangeHeading (bool val) { changeHeading  = val; };
-  void setChangeAltitude(bool val) { changeAltitude = val; };
+    void setHoldPattern   (bool val) {
+        holdPattern    = val;
+    };
+    void setHoldPosition  (bool val) {
+        holdPosition   = val;
+    };
+    void setChangeSpeed   (bool val) {
+        changeSpeed    = val;
+    };
+    void setChangeHeading (bool val) {
+        changeHeading  = val;
+    };
+    void setChangeAltitude(bool val) {
+        changeAltitude = val;
+    };
 
-  void setResolveCircularWait (bool val) { resolveCircularWait = val; }; 
+    void setResolveCircularWait (bool val) {
+        resolveCircularWait = val;
+    };
 
-  void setSpeed       (double val) { speed   = val; };
-  void setHeading     (double val) { heading = val; };
-  void setAlt         (double val) { alt     = val; };
+    void setSpeed       (double val) {
+        speed   = val;
+    };
+    void setHeading     (double val) {
+        heading = val;
+    };
+    void setAlt         (double val) {
+        alt     = val;
+    };
 };
 
 
@@ -111,88 +150,175 @@ public:
 class FGTrafficRecord
 {
 private:
-  int id, waitsForId;
-  int currentPos;
-  int leg;
-  int frequencyId;
-  int state;
-  bool allowTransmission;
-  time_t timer;
-  intVec intentions;
-  FGATCInstruction instruction;
-  double latitude, longitude, heading, speed, altitude, radius;
-  string runway;
-  //FGAISchedule *trafficRef;
-  FGAIAircraft *aircraft;
-  
-  
+    int id, waitsForId;
+    int currentPos;
+    int leg;
+    int frequencyId;
+    int state;
+    bool allowTransmission;
+    bool allowPushback;
+    int priority;
+    time_t timer;
+    intVec intentions;
+    FGATCInstruction instruction;
+    double latitude, longitude, heading, speed, altitude, radius;
+    string runway;
+    //FGAISchedule *trafficRef;
+    FGAIAircraft *aircraft;
+
+
 public:
-  FGTrafficRecord();
-  
-  void setId(int val)  { id = val; };
-  void setRadius(double rad) { radius = rad;};
-  void setPositionAndIntentions(int pos, FGAIFlightPlan *route);
-  void setRunway(string rwy) { runway = rwy;};
-  void setLeg(int lg) { leg = lg;};
-  int getId() { return id;};
-  int getState() { return state;};
-  void setState(int s) { state = s;}
-  FGATCInstruction getInstruction() { return instruction;};
-  bool hasInstruction() { return instruction.hasInstruction(); };
-  void setPositionAndHeading(double lat, double lon, double hdg, double spd, double alt);
-  bool checkPositionAndIntentions(FGTrafficRecord &other);
-  int  crosses                   (FGGroundNetwork *, FGTrafficRecord &other); 
-  bool isOpposing                (FGGroundNetwork *, FGTrafficRecord &other, int node);
+    FGTrafficRecord();
 
-  bool onRoute(FGGroundNetwork *, FGTrafficRecord &other);
+    void setId(int val)  {
+        id = val;
+    };
+    void setRadius(double rad) {
+        radius = rad;
+    };
+    void setPositionAndIntentions(int pos, FGAIFlightPlan *route);
+    void setRunway(string rwy) {
+        runway = rwy;
+    };
+    void setLeg(int lg) {
+        leg = lg;
+    };
+    int getId() {
+        return id;
+    };
+    int getState() {
+        return state;
+    };
+    void setState(int s) {
+        state = s;
+    }
+    FGATCInstruction getInstruction() {
+        return instruction;
+    };
+    bool hasInstruction() {
+        return instruction.hasInstruction();
+    };
+    void setPositionAndHeading(double lat, double lon, double hdg, double spd, double alt);
+    bool checkPositionAndIntentions(FGTrafficRecord &other);
+    int  crosses                   (FGGroundNetwork *, FGTrafficRecord &other);
+    bool isOpposing                (FGGroundNetwork *, FGTrafficRecord &other, int node);
+    
+    bool isActive(int margin);
 
-  bool getSpeedAdjustment() { return instruction.getChangeSpeed(); };
-  
-  double getLatitude () { return latitude ; };
-  double getLongitude() { return longitude; };
-  double getHeading  () { return heading  ; };
-  double getSpeed    () { return speed    ; };
-  double getAltitude () { return altitude ; };
-  double getRadius   () { return radius   ; };
+    bool onRoute(FGGroundNetwork *, FGTrafficRecord &other);
 
-  int getWaitsForId  () { return waitsForId; };
+    bool getSpeedAdjustment() {
+        return instruction.getChangeSpeed();
+    };
 
-  void setSpeedAdjustment(double spd);
-  void setHeadingAdjustment(double heading);
-  void clearSpeedAdjustment  () { instruction.setChangeSpeed  (false); };
-  void clearHeadingAdjustment() { instruction.setChangeHeading(false); };
+    double getLatitude () {
+        return latitude ;
+    };
+    double getLongitude() {
+        return longitude;
+    };
+    double getHeading  () {
+        return heading  ;
+    };
+    double getSpeed    () {
+        return speed    ;
+    };
+    double getAltitude () {
+        return altitude ;
+    };
+    double getRadius   () {
+        return radius   ;
+    };
 
-  bool hasHeadingAdjustment() { return instruction.getChangeHeading(); };
-  bool hasHoldPosition() { return instruction.getHoldPosition(); };
-  void setHoldPosition (bool inst) { instruction.setHoldPosition(inst); };
+    int getWaitsForId  () {
+        return waitsForId;
+    };
 
-  void setWaitsForId(int id) { waitsForId = id; };
+    void setSpeedAdjustment(double spd);
+    void setHeadingAdjustment(double heading);
+    void clearSpeedAdjustment  () {
+        instruction.setChangeSpeed  (false);
+    };
+    void clearHeadingAdjustment() {
+        instruction.setChangeHeading(false);
+    };
 
-  void setResolveCircularWait()   { instruction.setResolveCircularWait(true);  };
-  void clearResolveCircularWait() { instruction.setResolveCircularWait(false); };
+    bool hasHeadingAdjustment() {
+        return instruction.getChangeHeading();
+    };
+    bool hasHoldPosition() {
+        return instruction.getHoldPosition();
+    };
+    void setHoldPosition (bool inst) {
+        instruction.setHoldPosition(inst);
+    };
 
-  string getRunway() { return runway; };
-  //void setCallSign(string clsgn) { callsign = clsgn; };
-  void setAircraft(FGAIAircraft *ref) { aircraft = ref;};
-  void updateState() { state++; allowTransmission=true; };
-  //string getCallSign() { return callsign; };
-  FGAIAircraft *getAircraft() { return aircraft;};
-  int getTime() { return timer; };
-  int getLeg() { return leg; };
-  void setTime(time_t time) { timer = time; };
+    void setWaitsForId(int id) {
+        waitsForId = id;
+    };
 
-  bool pushBackAllowed();
-  bool allowTransmissions() { return allowTransmission; };
-  void suppressRepeatedTransmissions () { allowTransmission=false; };
-  void allowRepeatedTransmissions () { allowTransmission=true; };
-  void nextFrequency() { frequencyId++; };
-  int  getNextFrequency() { return frequencyId; };
-  intVec& getIntentions() { return intentions; };
-  int getCurrentPosition() { return currentPos; };
+    void setResolveCircularWait()   {
+        instruction.setResolveCircularWait(true);
+    };
+    void clearResolveCircularWait() {
+        instruction.setResolveCircularWait(false);
+    };
+
+    string getRunway() {
+        return runway;
+    };
+    //void setCallSign(string clsgn) { callsign = clsgn; };
+    void setAircraft(FGAIAircraft *ref) {
+        aircraft = ref;
+    };
+    void updateState() {
+        state++;
+        allowTransmission=true;
+    };
+    //string getCallSign() { return callsign; };
+    FGAIAircraft *getAircraft() {
+        return aircraft;
+    };
+    int getTime() {
+        return timer;
+    };
+    int getLeg() {
+        return leg;
+    };
+    void setTime(time_t time) {
+        timer = time;
+    };
+
+    bool pushBackAllowed();
+    bool allowTransmissions() {
+        return allowTransmission;
+    };
+    void allowPushBack() { allowPushback =true;};
+    void denyPushBack () { allowPushback = false;};
+    void suppressRepeatedTransmissions () {
+        allowTransmission=false;
+    };
+    void allowRepeatedTransmissions () {
+        allowTransmission=true;
+    };
+    void nextFrequency() {
+        frequencyId++;
+    };
+    int  getNextFrequency() {
+        return frequencyId;
+    };
+    intVec& getIntentions() {
+        return intentions;
+    };
+    int getCurrentPosition() {
+        return currentPos;
+    };
+    void setPriority(int p) { priority = p; };
+    int getPriority()       { return priority; };
 };
 
-typedef vector<FGTrafficRecord> TrafficVector;
-typedef vector<FGTrafficRecord>::iterator TrafficVectorIterator;
+typedef list<FGTrafficRecord> TrafficVector;
+typedef list<FGTrafficRecord>::iterator TrafficVectorIterator;
 
 typedef vector<time_t> TimeVector;
 typedef vector<time_t>::iterator TimeVectorIterator;
@@ -207,28 +333,48 @@ typedef vector<FGAIAircraft*>::iterator AircraftVecIterator;
 class ActiveRunway
 {
 private:
-  string rwy;
-  int currentlyCleared;
-  double distanceToFinal;
-  TimeVector estimatedArrivalTimes;
-  AircraftVec departureCue;
+    string rwy;
+    int currentlyCleared;
+    double distanceToFinal;
+    TimeVector estimatedArrivalTimes;
+    AircraftVec departureCue;
 
 public:
-  ActiveRunway(string r, int cc) { rwy = r; currentlyCleared = cc; distanceToFinal = 6.0 * SG_NM_TO_METER; };
-  
-  string getRunwayName() { return rwy; };
-  int    getCleared   () { return currentlyCleared; };
-  double getApproachDistance() { return distanceToFinal; };
-  //time_t getEstApproachTime() { return estimatedArrival; };
+    ActiveRunway(string r, int cc) {
+        rwy = r;
+        currentlyCleared = cc;
+        distanceToFinal = 6.0 * SG_NM_TO_METER;
+    };
 
-  //void setEstApproachTime(time_t time) { estimatedArrival = time; };
-  void addToDepartureCue(FGAIAircraft *ac) { departureCue.push_back(ac); };
-  void setCleared(int number) { currentlyCleared = number; };
-  time_t requestTimeSlot(time_t eta);
+    string getRunwayName() {
+        return rwy;
+    };
+    int    getCleared   () {
+        return currentlyCleared;
+    };
+    double getApproachDistance() {
+        return distanceToFinal;
+    };
+    //time_t getEstApproachTime() { return estimatedArrival; };
 
-   int getDepartureCueSize() { return departureCue.size(); };
-   FGAIAircraft* getFirstAircraftInDepartureCue() { return departureCue.size() ? *(departureCue.begin()) : NULL; };
-   void updateDepartureCue() { departureCue.erase(departureCue.begin()); }
+    //void setEstApproachTime(time_t time) { estimatedArrival = time; };
+    void addToDepartureCue(FGAIAircraft *ac) {
+        departureCue.push_back(ac);
+    };
+    void setCleared(int number) {
+        currentlyCleared = number;
+    };
+    time_t requestTimeSlot(time_t eta);
+
+    int getDepartureCueSize() {
+        return departureCue.size();
+    };
+    FGAIAircraft* getFirstAircraftInDepartureCue() {
+        return departureCue.size() ? *(departureCue.begin()) : NULL;
+    };
+    void updateDepartureCue() {
+        departureCue.erase(departureCue.begin());
+    }
 };
 
 typedef vector<ActiveRunway> ActiveRunwayVec;
@@ -236,79 +382,86 @@ typedef vector<ActiveRunway>::iterator ActiveRunwayVecIterator;
 
 /**
  * class FGATCController
- * NOTE: this class serves as an abstraction layer for all sorts of ATC controllers. 
+ * NOTE: this class serves as an abstraction layer for all sorts of ATC controllers.
  *************************************************************************************/
 class FGATCController
 {
 private:
-    
+
 
 protected:
-  bool initialized;
-  bool available;
-  time_t lastTransmission;
+    bool initialized;
+    bool available;
+    time_t lastTransmission;
 
-  double dt_count;
-  osg::Group* group;
+    double dt_count;
+    osg::Group* group;
 
-  string formatATCFrequency3_2(int );
-  string genTransponderCode(string fltRules);
-  bool isUserAircraft(FGAIAircraft*); 
+    string formatATCFrequency3_2(int );
+    string genTransponderCode(string fltRules);
+    bool isUserAircraft(FGAIAircraft*);
 
 public:
-  typedef enum {
-      MSG_ANNOUNCE_ENGINE_START,
-      MSG_REQUEST_ENGINE_START,
-      MSG_PERMIT_ENGINE_START,
-      MSG_DENY_ENGINE_START,
-      MSG_ACKNOWLEDGE_ENGINE_START,
-      MSG_REQUEST_PUSHBACK_CLEARANCE,
-      MSG_PERMIT_PUSHBACK_CLEARANCE,
-      MSG_HOLD_PUSHBACK_CLEARANCE,
-      MSG_ACKNOWLEDGE_SWITCH_GROUND_FREQUENCY,
-      MSG_INITIATE_CONTACT,
-      MSG_ACKNOWLEDGE_INITIATE_CONTACT,
-      MSG_REQUEST_TAXI_CLEARANCE,
-      MSG_ISSUE_TAXI_CLEARANCE,
-      MSG_ACKNOWLEDGE_TAXI_CLEARANCE,
-      MSG_HOLD_POSITION,
-      MSG_ACKNOWLEDGE_HOLD_POSITION,
-      MSG_RESUME_TAXI,
-      MSG_ACKNOWLEDGE_RESUME_TAXI,
-      MSG_REPORT_RUNWAY_HOLD_SHORT,
-      MSG_ACKNOWLEDGE_REPORT_RUNWAY_HOLD_SHORT,
-      MSG_SWITCH_TOWER_FREQUENCY,
-      MSG_ACKNOWLEDGE_SWITCH_TOWER_FREQUENCY
-  } AtcMsgId;
+    typedef enum {
+        MSG_ANNOUNCE_ENGINE_START,
+        MSG_REQUEST_ENGINE_START,
+        MSG_PERMIT_ENGINE_START,
+        MSG_DENY_ENGINE_START,
+        MSG_ACKNOWLEDGE_ENGINE_START,
+        MSG_REQUEST_PUSHBACK_CLEARANCE,
+        MSG_PERMIT_PUSHBACK_CLEARANCE,
+        MSG_HOLD_PUSHBACK_CLEARANCE,
+        MSG_ACKNOWLEDGE_SWITCH_GROUND_FREQUENCY,
+        MSG_INITIATE_CONTACT,
+        MSG_ACKNOWLEDGE_INITIATE_CONTACT,
+        MSG_REQUEST_TAXI_CLEARANCE,
+        MSG_ISSUE_TAXI_CLEARANCE,
+        MSG_ACKNOWLEDGE_TAXI_CLEARANCE,
+        MSG_HOLD_POSITION,
+        MSG_ACKNOWLEDGE_HOLD_POSITION,
+        MSG_RESUME_TAXI,
+        MSG_ACKNOWLEDGE_RESUME_TAXI,
+        MSG_REPORT_RUNWAY_HOLD_SHORT,
+        MSG_ACKNOWLEDGE_REPORT_RUNWAY_HOLD_SHORT,
+        MSG_SWITCH_TOWER_FREQUENCY,
+        MSG_ACKNOWLEDGE_SWITCH_TOWER_FREQUENCY
+    } AtcMsgId;
 
-  typedef enum {
-      ATC_AIR_TO_GROUND,
-      ATC_GROUND_TO_AIR } AtcMsgDir;
-  FGATCController();
-  virtual ~FGATCController();
-  void init();
+    typedef enum {
+        ATC_AIR_TO_GROUND,
+        ATC_GROUND_TO_AIR
+    } AtcMsgDir;
+    FGATCController();
+    virtual ~FGATCController();
+    void init();
 
-  virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
-                                double lat, double lon,
-                                double hdg, double spd, double alt, double radius, int leg,
-                                FGAIAircraft *aircraft) = 0;
-  virtual void             signOff(int id) = 0;
-  virtual void             updateAircraftInformation(int id, double lat, double lon, 
-                                                     double heading, double speed, double alt, double dt) = 0;
-  virtual bool             hasInstruction(int id) = 0;
-  virtual FGATCInstruction getInstruction(int id) = 0;
+    virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
+                                  double lat, double lon,
+                                  double hdg, double spd, double alt, double radius, int leg,
+                                  FGAIAircraft *aircraft) = 0;
+    virtual void             signOff(int id) = 0;
+    virtual void             updateAircraftInformation(int id, double lat, double lon,
+            double heading, double speed, double alt, double dt) = 0;
+    virtual bool             hasInstruction(int id) = 0;
+    virtual FGATCInstruction getInstruction(int id) = 0;
 
-  double getDt() { return dt_count; };
-  void   setDt(double dt) { dt_count = dt;};
-  void transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir msgDir, bool audible);
-  string getGateName(FGAIAircraft *aircraft);
-  virtual void render(bool) = 0;
-  virtual string getName()  = 0;
+    double getDt() {
+        return dt_count;
+    };
+    void   setDt(double dt) {
+        dt_count = dt;
+    };
+    void transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir msgDir, bool audible);
+    string getGateName(FGAIAircraft *aircraft);
+    virtual void render(bool) = 0;
+    virtual string getName()  = 0;
+
+    virtual void update(double) = 0;
 
 
 private:
 
- AtcMsgDir lastTransmissionDirection;
+    AtcMsgDir lastTransmissionDirection;
 };
 
 /******************************************************************************
@@ -317,65 +470,75 @@ private:
 class FGTowerController : public FGATCController
 {
 private:
-  TrafficVector activeTraffic;
-  ActiveRunwayVec activeRunways;
-  FGAirportDynamics *parent;
-  
-public:
-  FGTowerController(FGAirportDynamics *parent);
-  virtual ~FGTowerController() {};
-  virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
-				double lat, double lon,
-				double hdg, double spd, double alt, double radius, int leg,
-				FGAIAircraft *aircraft);
-  virtual void             signOff(int id);
-  virtual void             updateAircraftInformation(int id, double lat, double lon, 
-				  double heading, double speed, double alt, double dt);
-  virtual bool             hasInstruction(int id);
-  virtual FGATCInstruction getInstruction(int id);
+    TrafficVector activeTraffic;
+    ActiveRunwayVec activeRunways;
+    FGAirportDynamics *parent;
 
-  virtual void render(bool);
-  virtual string getName();
-  bool hasActiveTraffic() { return activeTraffic.size() != 0; };
-  TrafficVector &getActiveTraffic() { return activeTraffic; };
+public:
+    FGTowerController(FGAirportDynamics *parent);
+    virtual ~FGTowerController() {};
+    virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
+                                  double lat, double lon,
+                                  double hdg, double spd, double alt, double radius, int leg,
+                                  FGAIAircraft *aircraft);
+    virtual void             signOff(int id);
+    virtual void             updateAircraftInformation(int id, double lat, double lon,
+            double heading, double speed, double alt, double dt);
+    virtual bool             hasInstruction(int id);
+    virtual FGATCInstruction getInstruction(int id);
+
+    virtual void render(bool);
+    virtual string getName();
+    virtual void update(double dt);
+    bool hasActiveTraffic() {
+        return activeTraffic.size() != 0;
+    };
+    TrafficVector &getActiveTraffic() {
+        return activeTraffic;
+    };
 };
 
 /******************************************************************************
  * class FGStartupController
- * handle 
+ * handle
  *****************************************************************************/
 
 class FGStartupController : public FGATCController
 {
 private:
-  TrafficVector activeTraffic;
-  //ActiveRunwayVec activeRunways;
-  FGAirportDynamics *parent;
-  
+    TrafficVector activeTraffic;
+    //ActiveRunwayVec activeRunways;
+    FGAirportDynamics *parent;
+
 public:
-  FGStartupController(FGAirportDynamics *parent);
-  virtual ~FGStartupController() {};
-  virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
-				double lat, double lon,
-				double hdg, double spd, double alt, double radius, int leg,
-				FGAIAircraft *aircraft);
-  virtual void             signOff(int id);
-  virtual void             updateAircraftInformation(int id, double lat, double lon, 
-				  double heading, double speed, double alt, double dt);
-  virtual bool             hasInstruction(int id);
-  virtual FGATCInstruction getInstruction(int id);
+    FGStartupController(FGAirportDynamics *parent);
+    virtual ~FGStartupController() {};
+    virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
+                                  double lat, double lon,
+                                  double hdg, double spd, double alt, double radius, int leg,
+                                  FGAIAircraft *aircraft);
+    virtual void             signOff(int id);
+    virtual void             updateAircraftInformation(int id, double lat, double lon,
+            double heading, double speed, double alt, double dt);
+    virtual bool             hasInstruction(int id);
+    virtual FGATCInstruction getInstruction(int id);
 
-  virtual void render(bool);
-  virtual string getName();
+    virtual void render(bool);
+    virtual string getName();
+    virtual void update(double dt);
 
-  bool hasActiveTraffic() { return activeTraffic.size() != 0; };
-  TrafficVector &getActiveTraffic() { return activeTraffic; };
+    bool hasActiveTraffic() {
+        return activeTraffic.size() != 0;
+    };
+    TrafficVector &getActiveTraffic() {
+        return activeTraffic;
+    };
 
-  // Hpoefully, we can move this function to the base class, but I need to verify what is needed for the other controllers before doing so.
-  bool checkTransmissionState(int st, time_t now, time_t startTime, TrafficVectorIterator i, AtcMsgId msgId,
-                               AtcMsgDir msgDir);
+    // Hpoefully, we can move this function to the base class, but I need to verify what is needed for the other controllers before doing so.
+    bool checkTransmissionState(int st, time_t now, time_t startTime, TrafficVectorIterator i, AtcMsgId msgId,
+                                AtcMsgDir msgDir);
 
-}; 
+};
 
 /******************************************************************************
  * class FGTowerControl
@@ -383,30 +546,35 @@ public:
 class FGApproachController : public FGATCController
 {
 private:
-  TrafficVector activeTraffic;
-  ActiveRunwayVec activeRunways;
-  FGAirportDynamics *parent;
-  
+    TrafficVector activeTraffic;
+    ActiveRunwayVec activeRunways;
+    FGAirportDynamics *parent;
+
 public:
-  FGApproachController(FGAirportDynamics * parent);
-  virtual ~FGApproachController() { };
-  virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
-				double lat, double lon,
-				double hdg, double spd, double alt, double radius, int leg,
-				FGAIAircraft *aircraft);
-  virtual void             signOff(int id);
-  virtual void             updateAircraftInformation(int id, double lat, double lon, 
-				  double heading, double speed, double alt, double dt);
-  virtual bool             hasInstruction(int id);
-  virtual FGATCInstruction getInstruction(int id);
+    FGApproachController(FGAirportDynamics * parent);
+    virtual ~FGApproachController() { };
+    virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
+                                  double lat, double lon,
+                                  double hdg, double spd, double alt, double radius, int leg,
+                                  FGAIAircraft *aircraft);
+    virtual void             signOff(int id);
+    virtual void             updateAircraftInformation(int id, double lat, double lon,
+            double heading, double speed, double alt, double dt);
+    virtual bool             hasInstruction(int id);
+    virtual FGATCInstruction getInstruction(int id);
 
-  virtual void render(bool);
-  virtual string getName();
+    virtual void render(bool);
+    virtual string getName();
+    virtual void update(double dt);
 
-  ActiveRunway* getRunway(string name);
+    ActiveRunway* getRunway(string name);
 
-  bool hasActiveTraffic() { return activeTraffic.size() != 0; };
-  TrafficVector &getActiveTraffic() { return activeTraffic; };
+    bool hasActiveTraffic() {
+        return activeTraffic.size() != 0;
+    };
+    TrafficVector &getActiveTraffic() {
+        return activeTraffic;
+    };
 };
 
 

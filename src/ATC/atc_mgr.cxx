@@ -247,5 +247,7 @@ void FGATCManager::update ( double time ) {
         //cerr << "Adding groundnetWork to the scenegraph::update" << endl;
         prevController = controller;
    }
-   //globals->get_scenery()->get_scene_graph()->addChild(node);
+   for (AtcVecIterator atc = activeStations.begin(); atc != activeStations.end(); atc++) {
+       (*atc)->update(time);
+   }
 }
