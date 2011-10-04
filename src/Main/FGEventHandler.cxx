@@ -18,6 +18,12 @@
 #define X_DOUBLE_SCROLL_BUG 1
 #endif
 
+#ifdef SG_MAC
+// hack - during interactive resize on Mac, OSG queues and then flushes
+// a large number of resize events, without doing any drawing.
+extern void puCleanUpJunk ( void ) ;
+#endif
+
 namespace flightgear
 {
 const int displayStatsKey = 1;
@@ -234,6 +240,12 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
         CameraGroup::getDefault()->resized();
         if (resizable)
           globals->get_renderer()->resize(ea.getWindowWidth(), ea.getWindowHeight());
+      #ifdef SG_MAC
+        // work around OSG Cocoa-Viewer issue with resize event handling,
+        // where resize events are queued up, then dispatched in a batch, with
+        // no interveningd drawing calls.
+        puCleanUpJunk();
+      #endif
         return true;
      case osgGA::GUIEventAdapter::CLOSE_WINDOW:
     case osgGA::GUIEventAdapter::QUIT_APPLICATION:
