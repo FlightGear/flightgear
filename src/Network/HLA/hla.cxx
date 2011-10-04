@@ -710,7 +710,6 @@ public:
             aiMgr->attach(_aiMultiplayer.get());
 
             _propertyReferenceSet->setRootNode(_aiMultiplayer->getPropertyRoot());
-            objectInstance.requestAttributeUpdate();
         }
     }
 
@@ -739,7 +738,6 @@ public:
         MPInAttributeCallback* attributeCallback = new MPInAttributeCallback;
         objectInstance.setAttributeCallback(attributeCallback);
         attachDataElements(objectInstance, *attributeCallback, false);
-        objectInstance.requestAttributeUpdate();
     }
 
     virtual void removeInstance(const sg::HLAObjectClass& objectClass, sg::HLAObjectInstance& objectInstance, const sg::RTIData& tag)
