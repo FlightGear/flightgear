@@ -81,13 +81,13 @@ void FGInstrumentMgr::init()
   try {
     readProperties( config.str(), config_props );
     if (!build(config_props)) {
-      throw sg_error(
+      throw sg_exception(
                     "Detected an internal inconsistency in the instrumentation\n"
                     "system specification file.  See earlier errors for details.");
     }
-  } catch (const sg_exception&) {
+  } catch (const sg_exception& e) {
     SG_LOG(SG_COCKPIT, SG_ALERT, "Failed to load instrumentation system model: "
-                    << config.str() );
+                    << config.str() << ":" << e.getFormattedMessage() );
   }
 
 

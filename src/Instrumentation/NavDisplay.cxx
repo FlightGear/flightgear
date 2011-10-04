@@ -124,12 +124,12 @@ static string formatPropertyValue(SGPropertyNode* nd, const string& format)
 {
     assert(nd);
     static char buf[512];
-    if (format.find('d') >= 0) {
+    if (format.find('d') != string::npos) {
         ::snprintf(buf, 512, format.c_str(), nd->getIntValue());
         return buf;
     }
     
-    if (format.find('s') >= 0) {
+    if (format.find('s') != string::npos) {
         ::snprintf(buf, 512, format.c_str(), nd->getStringValue());
         return buf;
     }
@@ -150,7 +150,7 @@ static osg::Vec2 mult(const osg::Vec2& v, const osg::Matrixf& m)
 class SymbolDef
 {
 public:
-    void initFromNode(SGPropertyNode* node)
+    bool initFromNode(SGPropertyNode* node)
     {
         type = node->getStringValue("type");
         enable = sgReadCondition(fgGetNode("/"), node->getChild("enable"));
@@ -202,6 +202,8 @@ public:
             stretchV2 = node->getFloatValue("v2");
             stretchV3 = node->getFloatValue("v3");
         }
+      
+        return true;
     }
     
     SGCondition* enable;
@@ -279,27 +281,27 @@ public:
         assert(definition->hasText);
         string r;
         
-        int pos = 0;
+        size_t pos = 0;
         int lastPos = 0;
         
-        for (; pos < (int) definition->textTemplate.size();) {
+        for (; pos < definition->textTemplate.size();) {
             pos = definition->textTemplate.find('{', pos);
-            if (pos == -1) { // no more replacements
+          if (pos == string::npos) { // no more replacements
                 r.append(definition->textTemplate.substr(lastPos));
                 break;
             }
             
             r.append(definition->textTemplate.substr(lastPos, pos - lastPos));
             
-            int endReplacement = definition->textTemplate.find('}', pos+1);
+            size_t endReplacement = definition->textTemplate.find('}', pos+1);
             if (endReplacement <= pos) {
                 return "bad replacement";
             }
 
             string spec = definition->textTemplate.substr(pos + 1, endReplacement - (pos + 1));
         // look for formatter in spec
-            int colonPos = spec.find(':');
-            if (colonPos < 0) {
+            size_t colonPos = spec.find(':');
+          if (colonPos == string::npos) {
             // simple replacement
                 r.append(props->getStringValue(spec));
             } else {
@@ -343,6 +345,18 @@ NavDisplay::NavDisplay(SGPropertyNode *node) :
     INITFONT("color/alpha", 1, Float);
 #undef INITFONT
 
+    SGPropertyNode* symbolsNode = node->getNode("symbols");
+    SGPropertyNode* symbol;
+  
+    for (int i = 0; (symbol = symbolsNode->getChild("symbol", i)) != NULL; ++i) {
+        SymbolDef* def = new SymbolDef;
+        if (!def->initFromNode(symbol)) {
+          delete def;
+          continue;
+        }
+        
+        _rules.push_back(def);
+    } // of symbol definition parsing
 }
 
 
@@ -542,12 +556,8 @@ NavDisplay::updateFont()
         tpath = path;
     }
 
-#if (FG_OSG_VERSION >= 21000)
     osg::ref_ptr<osgDB::ReaderWriter::Options> fontOptions = new osgDB::ReaderWriter::Options("monochrome");
     osg::ref_ptr<osgText::Font> font = osgText::readFontFile(tpath.c_str(), fontOptions.get());
-#else
-    osg::ref_ptr<osgText::Font> font = osgText::readFontFile(tpath.c_str());
-#endif
 
     if (font != 0) {
         _font = font;
