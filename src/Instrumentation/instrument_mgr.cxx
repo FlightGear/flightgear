@@ -37,7 +37,7 @@
 #include "kt_70.hxx"
 #include "mag_compass.hxx"
 #include "marker_beacon.hxx"
-#include "navradio.hxx"
+#include "newnavradio.hxx"
 #include "slip_skid_ball.hxx"
 #include "transponder.hxx"
 #include "turn_indicator.hxx"
@@ -188,7 +188,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             set_subsystem( id, new FGMarkerBeacon( node ) );
 
         } else if ( name == "nav-radio" ) {
-            set_subsystem( id, new FGNavRadio( node ) );
+            set_subsystem( id, Instrumentation::NavRadio::createInstance( node ) );
 
         } else if ( name == "slip-skid-ball" ) {
             set_subsystem( id, new SlipSkidBall( node ) );

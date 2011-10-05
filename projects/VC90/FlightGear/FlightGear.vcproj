@@ -3762,6 +3762,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\Instrumentation\newnavradio.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Instrumentation\newnavradio.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Instrumentation\od_gauge.cxx"
 				>
 			</File>
