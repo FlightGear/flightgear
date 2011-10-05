@@ -1,4 +1,4 @@
-// FGAIAircraft - FGAIBase-derived class creates an AI airplane
+// // FGAIAircraft - FGAIBase-derived class creates an AI airplane
 //
 // Written by David Culp, started October 2003.
 //
@@ -48,8 +48,6 @@ using std::string;
 #include "performancedata.hxx"
 #include "performancedb.hxx"
 
-
-#define TGT_VS_CUTOFF 10000
 //#include <Airports/trafficcontroller.hxx>
 
 static string tempReg;
@@ -157,7 +155,6 @@ void FGAIAircraft::setPerformance(const std::string& acclass) {
 
 
  void FGAIAircraft::Run(double dt) {
-      
       FGAIAircraft::dt = dt;
     
      bool outOfSight = false, 
@@ -358,14 +355,9 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
             tgt_altitude_ft = prev->getAltitude();
             if (curr->getCrossat() > -1000.0) {
                 use_perf_vs = false;
-//                 tgt_vs = (curr->getCrossat() - altitude_ft) / (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)
-//                          / 6076.0 / speed*60.0);
-//                 if (fabs(tgt_vs) > TGT_VS_CUTOFF) { SG_LOG(SG_GENERAL, SG_ALERT, "Rediculously high vertical speed caculated at " << SG_ORIGIN << ". Corresponding to " << (tgt_vs * .005) << "degrees of pitch angle" << prev->getName()); };
-//                 if (tgt_vs < -1500)
-//                     tgt_vs = -1500;
-//                 if (tgt_vs > 1500) 
-//                     tgt_vs = 1500;
-//                 checkTcas();
+                tgt_vs = (curr->getCrossat() - altitude_ft) / (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)
+                         / 6076.0 / speed*60.0);
+                checkTcas();
                 tgt_altitude_ft = curr->getCrossat();
             } else {
                 use_perf_vs = true;
@@ -505,7 +497,6 @@ void FGAIAircraft::getGroundElev(double dt) {
 
 
 void FGAIAircraft::doGroundAltitude() {
-
     if ((fabs(altitude_ft - (tgt_altitude_ft+groundOffset)) > 1000.0)||
         (isStationary()))
         altitude_ft = (tgt_altitude_ft + groundOffset);
@@ -685,11 +676,10 @@ void FGAIAircraft::handleFirstWaypoint() {
     if (curr->getCrossat() > -1000.0) //use a calculated descent/climb rate
     {
         use_perf_vs = false;
-/*        tgt_vs = (curr->getCrossat() - prev->getAltitude())
+        tgt_vs = (curr->getCrossat() - prev->getAltitude())
                  / (fp->getDistanceToGo(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr)
                     / 6076.0 / prev->getSpeed()*60.0);
-        if (fabs(tgt_vs) > TGT_VS_CUTOFF) { SG_LOG(SG_GENERAL, SG_ALERT, "Rediculously high vertical speed caculated at " << SG_ORIGIN); };
-        checkTcas();*/
+        checkTcas();
         tgt_altitude_ft = curr->getCrossat();
     } else {
         use_perf_vs = true;
@@ -773,10 +763,10 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr) {
     } 
     if (trafficRef) {
          //cerr << "Tracking callsign : \"" << fgGetString("/ai/track-callsign") << "\"" << endl;
-         if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
+/*         if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
               cerr << trafficRef->getCallSign() << " " << tgt_altitude_ft << " " << _getSpeed() << " " 
-                   << _getAltitude() << " "<< _getLatitude() << " " << _getLongitude() << " " << dist_to_go << " " << lead_dist << " " << curr->getName() << " " << vs << " " << tgt_vs << " " << bearing << " " << minBearing << " " << speedFraction << " " << invisible << endl; 
-         }
+                   << _getAltitude() << " "<< _getLatitude() << " " << _getLongitude() << " " << dist_to_go << " " << lead_dist << " " << curr->name << " " << vs << " " << tgt_vs << " " << bearing << " " << minBearing << " " << speedFraction << endl; 
+         }*/
      }
     if ((dist_to_go < lead_dist) || (bearing > (minBearing * 1.1))) {
         minBearing = 360;
@@ -1223,20 +1213,20 @@ bool FGAIAircraft::reachedEndOfCruise(double &distance) {
         double distanceCovered   = descentSpeed * descentTimeNeeded; 
 
         //cerr << "Tracking  : " << fgGetString("/ai/track-callsign");
-//         if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
-//             cerr << "Checking for end of cruise stage for :" << trafficRef->getCallSign() << endl;
-//             cerr << "Descent rate      : " << descentRate << endl;
-//             cerr << "Descent speed     : " << descentSpeed << endl;
-//             cerr << "VerticalDistance  : " << verticalDistance << ". Altitude : " << altitude_ft << ". Elevation " << trafficRef->getArrivalAirport()->getElevation() << endl;
-//             cerr << "DecentTimeNeeded  : " << descentTimeNeeded << endl;
-//             cerr << "DistanceCovered   : " << distanceCovered   << endl;
-//         }
+        if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
+            cerr << "Checking for end of cruise stage for :" << trafficRef->getCallSign() << endl;
+            cerr << "Descent rate      : " << descentRate << endl;
+            cerr << "Descent speed     : " << descentSpeed << endl;
+            cerr << "VerticalDistance  : " << verticalDistance << ". Altitude : " << altitude_ft << ". Elevation " << trafficRef->getArrivalAirport()->getElevation() << endl;
+            cerr << "DecentTimeNeeded  : " << descentTimeNeeded << endl;
+            cerr << "DistanceCovered   : " << distanceCovered   << endl;
+        }
         //cerr << "Distance = " << distance << endl;
         distance = distanceCovered;
         if (dist < distanceCovered) {
-//               if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
-//                    //exit(1);
-//               }
+              if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
+                   //exit(1);
+              }
               return true;
         } else {
               return false;
@@ -1290,8 +1280,8 @@ time_t FGAIAircraft::checkForArrivalTime(string wptName) {
      
      time_t ete = tracklength / ((speed * SG_NM_TO_METER) / 3600.0); 
      time_t secondsToGo = arrivalTime - now;
-//      if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {    
-//           cerr << "Checking arrival time: ete " << ete << ". Time to go : " << secondsToGo << ". Track length = " << tracklength << endl;
-//      }
+     if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {    
+          cerr << "Checking arrival time: ete " << ete << ". Time to go : " << secondsToGo << ". Track length = " << tracklength << endl;
+     }
      return (ete - secondsToGo); // Positive when we're too slow...
 }
