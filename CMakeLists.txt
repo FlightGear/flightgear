@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 2.6.4)
 
 include (CheckFunctionExists)
 include (CheckCSourceCompiles)
@@ -10,14 +10,20 @@ project(FlightGear)
 
 set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "add a postfix, usually d on windows")
 set(CMAKE_RELEASE_POSTFIX "" CACHE STRING "add a postfix, usually empty on windows")
-set(CMAKE_RELWITHDEBINFO_POSTFIX "rd" CACHE STRING "add a postfix, usually empty on windows")
-set(CMAKE_MINSIZEREL_POSTFIX "s" CACHE STRING "add a postfix, usually empty on windows")
+set(CMAKE_RELWITHDEBINFO_POSTFIX "" CACHE STRING "add a postfix, usually empty on windows")
+set(CMAKE_MINSIZEREL_POSTFIX "" CACHE STRING "add a postfix, usually empty on windows")
 
 # read 'version' file into a variable (stripping any newlines or spaces)
 file(READ version versionFile)
 string(STRIP ${versionFile} FLIGHTGEAR_VERSION) 
 
 #packaging
+
+# split version string into components, note CMAKE_MATCH_0 is the entire regexp match
+string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)" CPACK_PACKAGE_VERSION ${FLIGHTGEAR_VERSION} )
+set(CPACK_PACKAGE_VERSION_MAJOR ${CMAKE_MATCH_1}) 
+set(CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_2})
+set(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_3})
 SET(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
 SET(CPACK_RESOURCE_FILE_README "${PROJECT_SOURCE_DIR}/README")
 
@@ -27,6 +33,13 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
 # autoconf compatibility
 set(PKGLIBDIR "foo")
 
+# Change the default build type to something fast
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING
+      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
+
 if($ENV{BUILD_ID})
 	set(HUDSON_BUILD_ID $ENV{BUILD_ID})
 	set(HUDSON_BUILD_NUMBER $ENV{BUILD_NUMBER})
@@ -34,6 +47,13 @@ if($ENV{BUILD_ID})
 else()
 	set(HUDSON_BUILD_NUMBER 0)
 	set(HUDSON_BUILD_ID "none")
+endif()
+
+IF(APPLE)
+    set(EVENT_INPUT_DEFAULT 1)
+elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    # disabled while DBus / HAL / udev issues are decided
+    #set(EVENT_INPUT_DEFAULT 1)
 endif()
 
 find_package(Git)
@@ -54,11 +74,27 @@ option(ENABLE_LARCSIM "Set to ON to build FlightGear with LaRCsim FDM" ON)
 option(ENABLE_YASIM "Set to ON to build FlightGear with YASIM FDM" ON)
 option(ENABLE_JSBSIM "Set to ON to build FlightGear with JSBSim FDM" ON)
 option(ENABLE_FGADMIN "Set to ON to build FlightGear with FGADMIN" ON)
-option(EVENT_INPUT "Set to ON to build FlightGear with event-based Input support" OFF)
+option(EVENT_INPUT "Set to ON to build FlightGear with event-based Input support" ${EVENT_INPUT_DEFAULT})
 option(ENABLE_LIBSVN "Set to ON to build FlightGear/terrasync with libsvnclient support" ON)
+option(ENABLE_RTI "Set to ON to build SimGear with RTI support" OFF)
 option(WITH_FGPANEL "Set to ON to build the fgpanel application" ON)
 
-set(MSVC_3RDPARTY_ROOT NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
+
+if (MSVC)
+  GET_FILENAME_COMPONENT(PARENT_DIR ${PROJECT_SOURCE_DIR} PATH)
+  if (CMAKE_CL_64)
+    SET(TEST_3RDPARTY_DIR "${PARENT_DIR}/3rdparty.x64")
+  else (CMAKE_CL_64)
+    SET(TEST_3RDPARTY_DIR "${PARENT_DIR}/3rdparty")
+  endif (CMAKE_CL_64)
+  if (EXISTS ${TEST_3RDPARTY_DIR})
+    set(MSVC_3RDPARTY_ROOT ${PARENT_DIR} CACHE PATH "Location where the third-party dependencies are extracted")
+  else (EXISTS ${TEST_3RDPARTY_DIR})
+    set(MSVC_3RDPARTY_ROOT NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
+  endif (EXISTS ${TEST_3RDPARTY_DIR})
+else (MSVC)
+  set(MSVC_3RDPARTY_ROOT NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
+endif (MSVC)
 
 if(LOGGING)
 	# nothing
@@ -69,20 +105,6 @@ endif()
 if(SP_FDMS)
 	set(ENABLE_SP_FDM 1)
 endif()
-
-if(EVENT_INPUT)
-	message(STATUS "checking event-based Input")
-	find_package(DBus)
-	IF(APPLE)
-
-	elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-
-	else()
-		message(WARNING "event input is not supported on this platform yet")
-	endif()
-else(EVENT_INPUT)
-	set(ENABLE_PLIB_JOYSTICK 1)
-endif(EVENT_INPUT)
 
 if (MSVC AND MSVC_3RDPARTY_ROOT)
   message(STATUS "3rdparty files located in ${MSVC_3RDPARTY_ROOT}")
@@ -107,6 +129,24 @@ if (MSVC AND MSVC_3RDPARTY_ROOT)
   set (OPENAL_LIBRARY_DIR ${MSVC_3RDPARTY_ROOT}/${MSVC_3RDPARTY_DIR}/lib)
 endif (MSVC AND MSVC_3RDPARTY_ROOT)
 
+if(EVENT_INPUT)
+	message(STATUS "checking event-based Input")
+	
+	IF(APPLE)
+
+	elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
+        find_package(DBus)
+        if(NOT DBUS_FOUND)
+            message(WARNING "DBus not found, event input will be disabled")
+            set(EVENT_INPUT 0)
+        endif()
+        
+	else()
+		message(WARNING "event input is not supported on this platform yet")
+	endif()
+else(EVENT_INPUT)
+	set(ENABLE_PLIB_JOYSTICK 1)
+endif(EVENT_INPUT)
 
 # check required dependencies
 find_package(Boost REQUIRED)
@@ -151,37 +191,12 @@ check_cxx_source_compiles(
     "
     HAVE_CULLSETTINGS_CLEAR_MASK)
 
-# library required by simgear
-# XXX This should go in a module and only run if simgear is not shared.
-
-if(HAVE_UNISTD_H)
-set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH})
-check_cxx_source_compiles(
-   "#include <unistd.h>
-    #if !defined(_POSIX_TIMERS) || (0 >= _POSIX_TIMERS)
-    #error clock_gettime is not supported
-    #endif
-
-    int main() { return 0; }
-    "
-    HAVE_CLOCK_GETTIME)    
-endif(HAVE_UNISTD_H)
-
-set(RT_LIBRARY "")
-if(HAVE_CLOCK_GETTIME)
-check_function_exists(clock_gettime CLOCK_GETTIME_IN_LIBC)
-if(NOT CLOCK_GETTIME_IN_LIBC)
-check_library_exists(rt clock_gettime "" HAVE_RT)
-if(HAVE_RT)
-set(RT_LIBRARY rt)
-endif(HAVE_RT)
-endif(NOT CLOCK_GETTIME_IN_LIBC)
-endif(HAVE_CLOCK_GETTIME)
-
-find_package(RTI)
-if(RTI_FOUND)
-  set(FG_HAVE_HLA 1)
-endif()
+if(ENABLE_RTI)
+    find_package(RTI)
+    if(RTI_FOUND)
+        set(FG_HAVE_HLA 1)
+    endif(RTI_FOUND)
+endif(ENABLE_RTI)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(WARNING_FLAGS -Wall)
@@ -202,7 +217,6 @@ if(WIN32)
     endif(MSVC)
 
     set(NOMINMAX 1)
-    set( WINSOCK_LIBRARY "ws2_32.lib" )
 endif(WIN32)    
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARNING_FLAGS} ${MSVC_FLAGS} -D_REENTRANT")
@@ -210,9 +224,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS} ${MSVC_FLAGS} -D_REENTR
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MSVC_LD_FLAGS}")
 
 include_directories(${OPENSCENEGRAPH_INCLUDE_DIRS}
-    ${Boost_INCLUDE_DIRS}
+	${Boost_INCLUDE_DIRS}
 	${ZLIB_INCLUDE_DIR}
-    ${ALUT_INCLUDE_DIR}
+	${ALUT_INCLUDE_DIR}
 	${OPENAL_INCLUDE_DIR}
 	${SIMGEAR_INCLUDE_DIR}
 	${PLIB_INCLUDE_DIR} )

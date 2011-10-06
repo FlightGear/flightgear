@@ -32,6 +32,8 @@ public:
     
   void setProperty(SGPropertyNode_ptr prop);
 private:
+  int zoom() const;
+  
   void handlePan(int x, int y);
   
   void pan(const SGVec2d& delta);
@@ -71,10 +73,13 @@ private:
   MapData* getOrCreateDataForKey(void* key);
   MapData* createDataForKey(void* key);
   void setAnchorForKey(void* key, const SGVec2d& anchor);
+  void clearData();
   
   SGVec2d project(const SGGeod& geod) const;
   SGGeod unproject(const SGVec2d& p) const;
   double currentScale() const;
+  
+  int displayHeading(double trueHeading) const;
   
   void circleAt(const SGVec2d& center, int nSides, double r);
   void circleAtAlt(const SGVec2d& center, int nSides, double r, double r2);
@@ -82,7 +87,7 @@ private:
   void drawLegendBox(const SGVec2d& pos, const std::string& t);
   
   int _width, _height;
-  int _zoom;
+  int _cachedZoom;
   double _drawRangeNm;
   double _upHeading; // true heading corresponding to +ve y-axis
   bool _magneticHeadings;

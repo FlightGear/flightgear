@@ -161,7 +161,7 @@ if(${haveJs} GREATER -1)
         find_library(CF_LIBRARY CoreFoundation)
         set(JS_LIBS ${IOKIT_LIBRARY} ${CF_LIBRARY})
     elseif(WIN32)
-        find_library(WINMM_LIBRARY winmm)
+        set(WINMM_LIBRARY winmm)
         set(JS_LIBS ${WINMM_LIBRARY})
     elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
         # anything needed here?

@@ -1,10 +1,10 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
- Header:       FGGradient.h
- Author:       
- Date started: 
+ Header:       LaGrangeMultiplier.h
+ Author:       Bertrand Coconnier
+ Date started: 07/01/11
 
- ------------- Copyright (C)  -------------
+ ------------- Copyright (C) 2011  Bertrand Coconnier -------------
 
  This program is free software; you can redistribute it and/or modify it under
  the terms of the GNU Lesser General Public License as published by the Free Software
@@ -23,28 +23,22 @@
  Further information about the GNU Lesser General Public License can also be found on
  the world wide web at http://www.gnu.org.
 
-HISTORY
---------------------------------------------------------------------------------
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 SENTRY
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifndef FGGRADIENT_H
-#define FGGRADIENT_H
+#ifndef LAGRANGEMULTIPLIER_H
+#define LAGRANGEMULTIPLIER_H
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 INCLUDES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#include "FGFCSComponent.h"
-#include "input_output/FGXMLElement.h"
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_GRADIENT "$Id: FGGradient.h,v 1.5 2009/10/02 10:30:09 jberndt Exp $"
+#define ID_LAGRANGEMULTIPLIER "$Id: LagrangeMultiplier.h,v 1.2 2011/08/21 15:13:22 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -52,29 +46,22 @@ FORWARD DECLARATIONS
 
 namespace JSBSim {
 
-class FGFCS;
-
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DOCUMENTATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-/** Encapsulates a gradient component for the flight control system.
-  */
-
+  
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS DECLARATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-class FGGradient  : public FGFCSComponent
-{
-public:
-  FGGradient(FGFCS* fcs, Element* element);
-  ~FGGradient();
-
-  bool Run (void);
-
-private:
-  void Debug(int from);
+struct LagrangeMultiplier {
+  FGColumnVector3 ForceJacobian;
+  FGColumnVector3 MomentJacobian;
+  double Min;
+  double Max;
+  double value;
 };
-}
+
+} // namespace
+
 #endif

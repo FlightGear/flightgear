@@ -56,6 +56,8 @@ FGGLApplication::FGGLApplication( const char * aName, int argc, char ** argv ) :
 
 FGGLApplication::~FGGLApplication()
 {
+    if (gameMode)
+        glutLeaveGameMode();
 }
 
 void FGGLApplication::DisplayCallback()

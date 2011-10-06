@@ -46,7 +46,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_THRUSTER "$Id: FGThruster.h,v 1.16 2011/03/10 01:35:25 dpculp Exp $"
+#define ID_THRUSTER "$Id: FGThruster.h,v 1.18 2011/09/24 14:26:46 jentron Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -74,7 +74,7 @@ CLASS DOCUMENTATION
     1.57 (pi/2) results in no thrust at all.
  
     @author Jon Berndt
-    @version $Id: FGThruster.h,v 1.16 2011/03/10 01:35:25 dpculp Exp $
+    @version $Id: FGThruster.h,v 1.18 2011/09/24 14:26:46 jentron Exp $
     */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -98,6 +98,7 @@ public:
   }
   void SetName(string name) {Name = name;}
   virtual void SetRPM(double rpm) {};
+  virtual void SetEngineRPM(double rpm) {};
   virtual double GetPowerRequired(void) {return 0.0;}
   virtual void SetdeltaT(double dt) {deltaT = dt;}
   double GetThrust(void) const {return Thrust;}
@@ -108,9 +109,24 @@ public:
   double GetClutchCtrl(void) const { return ClutchCtrlNorm; }
   void SetClutchCtrl(double c) { ClutchCtrlNorm = c; }
   virtual double GetRPM(void) const { return 0.0; };
+  virtual double GetEngineRPM(void) const { return 0.0; };
   double GetGearRatio(void) {return GearRatio; }
   virtual string GetThrusterLabels(int id, string delimeter);
   virtual string GetThrusterValues(int id, string delimeter);
+
+  struct Inputs {
+    double TotalDeltaT;
+    double H_agl;
+    FGColumnVector3 PQR;
+    FGColumnVector3 AeroPQR;
+    FGColumnVector3 AeroUVW;
+    double Density;
+    double Pressure;
+    double Soundspeed;
+    double Alpha;
+    double Beta;
+    double Vt;
+  } in;
 
 protected:
   eType Type;

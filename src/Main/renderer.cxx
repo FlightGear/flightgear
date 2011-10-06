@@ -384,10 +384,17 @@ static osg::ref_ptr<osg::Group> mRealRoot = new osg::Group;
 
 static osg::ref_ptr<osg::Group> mRoot = new osg::Group;
 
+#ifdef FG_JPEG_SERVER
+static void updateRenderer()
+{
+    globals->get_renderer()->update();
+}
+#endif
+
 FGRenderer::FGRenderer()
 {
 #ifdef FG_JPEG_SERVER
-   jpgRenderFrame = FGRenderer::update;
+   jpgRenderFrame = updateRenderer;
 #endif
    eventHandler = new FGEventHandler;
 }
@@ -595,15 +602,9 @@ FGRenderer::setupView( void )
     stateSet->setAttributeAndModes(new osg::Program, osg::StateAttribute::ON);
 }
 
-void
-FGRenderer::update()
-{
-    globals->get_renderer()->update(true);
-}
-
 // Update all Visuals (redraws anything graphics related)
 void
-FGRenderer::update( bool refresh_camera_settings ) {
+FGRenderer::update( ) {
     if (!(_scenery_loaded->getBoolValue() || 
            _scenery_override->getBoolValue()))
     {
@@ -655,12 +656,7 @@ FGRenderer::update( bool refresh_camera_settings ) {
     FGViewer *current__view = globals->get_current_view();
     // Force update of center dependent values ...
     current__view->set_dirty();
-
-    if ( refresh_camera_settings ) {
-        // update view port
-        resize( _xsize->getIntValue(),
-                _ysize->getIntValue() );
-    }
+  
     osg::Camera *camera = viewer->getCamera();
 
     bool skyblend = _skyblend->getBoolValue();
@@ -777,40 +773,15 @@ FGRenderer::update( bool refresh_camera_settings ) {
     CameraGroup::getDefault()->setCameraCullMasks(cullMask);
 }
 
-
-
-// options.cxx needs to see this for toggle_panel()
-// Handle new window size or exposure
 void
-FGRenderer::resize( int width, int height ) {
-
-// the following breaks aspect-ratio of the main 3D scenery window when 2D panels are moved
-// in y direction - causing issues for aircraft with 2D panels (/sim/virtual_cockpit=false).
-// Disabling for now. Seems this useful for the pre-OSG time only.
-//    if ( (!_virtual_cockpit->getBoolValue())
-//         && fgPanelVisible() && idle_state == 1000 ) {
-//        view_h = (int)(height * (globals->get_current_panel()->getViewHeight() -
-//                             globals->get_current_panel()->getYOffset()) / 768.0);
-//    }
-
+FGRenderer::resize( int width, int height )
+{
     int curWidth = _xsize->getIntValue(),
         curHeight = _ysize->getIntValue();
     if ((curHeight != height) || (curWidth != width)) {
     // must guard setting these, or PLIB-PUI fails with too many live interfaces
         _xsize->setIntValue(width);
         _ysize->setIntValue(height);
-    }
-    
-    // must set view aspect ratio each frame, or initial values are wrong.
-    // should probably be fixed 'smarter' during view setup.
-    double aspect = height / (double) width;
-
-    // for all views
-    FGViewMgr *viewmgr = globals->get_viewmgr();
-    if (viewmgr) {
-        for ( int i = 0; i < viewmgr->size(); ++i ) {
-            viewmgr->get_view(i)->set_aspect_ratio(aspect);
-        }
     }
 }
 

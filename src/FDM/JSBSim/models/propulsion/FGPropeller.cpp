@@ -39,16 +39,13 @@ INCLUDES
 #include <sstream>
 
 #include "FGPropeller.h"
-#include "models/FGPropagate.h"
-#include "models/FGAtmosphere.h"
-#include "models/FGAuxiliary.h"
 #include "input_output/FGXMLElement.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGPropeller.cpp,v 1.34 2011/06/16 14:54:06 jentron Exp $";
+static const char *IdSrc = "$Id: FGPropeller.cpp,v 1.38 2011/09/24 14:26:46 jentron Exp $";
 static const char *IdHdr = ID_PROPELLER;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -102,7 +99,7 @@ FGPropeller::FGPropeller(FGFDMExec* exec, Element* prop_element, int num)
     ConstantSpeed = (int)prop_element->FindElementValueAsNumber("constspeed");
   if (prop_element->FindElement("reversepitch"))
     ReversePitch = prop_element->FindElementValueAsNumber("reversepitch");
-  while(table_element = prop_element->FindNextElement("table")) {
+  while((table_element = prop_element->FindNextElement("table")) != 0) {
     name = table_element->GetAttributeValue("name");
     try {
       if (name == "C_THRUST") {
@@ -150,6 +147,8 @@ FGPropeller::FGPropeller(FGFDMExec* exec, Element* prop_element, int num)
 
   string property_name, base_property_name;
   base_property_name = CreateIndexedPropertyName("propulsion/engine", EngineNum);
+  property_name = base_property_name + "/engine-rpm";
+  PropertyManager->Tie( property_name.c_str(), this, &FGPropeller::GetEngineRPM );
   property_name = base_property_name + "/advance-ratio";
   PropertyManager->Tie( property_name.c_str(), &J );
   property_name = base_property_name + "/blade-angle";
@@ -195,19 +194,18 @@ FGPropeller::~FGPropeller()
 
 double FGPropeller::Calculate(double EnginePower)
 {
-  double omega, alpha, beta, PowerAvailable;
+  double omega, PowerAvailable;
 
-  double Vel = fdmex->GetAuxiliary()->GetAeroUVW(eU);
-  double rho = fdmex->GetAtmosphere()->GetDensity();
+  double Vel = in.AeroUVW(eU);
+  double rho = in.Density;
   double RPS = RPM/60.0;
-
-  PowerAvailable = EnginePower - GetPowerRequired();
 
   // Calculate helical tip Mach
   double Area = 0.25*Diameter*Diameter*M_PI;
   double Vtip = RPS * Diameter * M_PI;
-  HelicalTipMach = sqrt(Vtip*Vtip + Vel*Vel) / 
-                   fdmex->GetAtmosphere()->GetSoundSpeed(); 
+  HelicalTipMach = sqrt(Vtip*Vtip + Vel*Vel) / in.Soundspeed; 
+
+  PowerAvailable = EnginePower - GetPowerRequired();
 
   if (RPS > 0.0) J = Vel / (Diameter * RPS); // Calculate J normally
   else           J = Vel / Diameter;      
@@ -225,10 +223,8 @@ double FGPropeller::Calculate(double EnginePower)
   if (CtMach) ThrustCoeff *= CtMach->GetValue(HelicalTipMach);
 
   if (P_Factor > 0.0001) {
-    alpha = fdmex->GetAuxiliary()->Getalpha();
-    beta  = fdmex->GetAuxiliary()->Getbeta();
-    SetActingLocationY( GetLocationY() + P_Factor*alpha*Sense);
-    SetActingLocationZ( GetLocationZ() + P_Factor*beta*Sense);
+    SetActingLocationY( GetLocationY() + P_Factor*in.Alpha*Sense);
+    SetActingLocationZ( GetLocationZ() + P_Factor*in.Beta*Sense);
   }
 
   Thrust = ThrustCoeff*RPS*RPS*D4*rho;
@@ -258,7 +254,7 @@ double FGPropeller::Calculate(double EnginePower)
 
   // Transform Torque and momentum first, as PQR is used in this
   // equation and cannot be transformed itself.
-  vMn = fdmex->GetPropagate()->GetPQR()*(Transform()*vH) + Transform()*vTorque;
+  vMn = in.PQR*(Transform()*vH) + Transform()*vTorque;
 
   return Thrust; // return thrust in pounds
 }
@@ -268,8 +264,8 @@ double FGPropeller::Calculate(double EnginePower)
 double FGPropeller::GetPowerRequired(void)
 {
   double cPReq, J;
-  double rho = fdmex->GetAtmosphere()->GetDensity();
-  double Vel = fdmex->GetAuxiliary()->GetAeroUVW(eU);
+  double rho = in.Density;
+  double Vel = in.AeroUVW(eU);
   double RPS = RPM / 60.0;
 
   if (RPS != 0.0) J = Vel / (Diameter * RPS);

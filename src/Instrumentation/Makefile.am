@@ -22,6 +22,7 @@ libInstrumentation_a_SOURCES = \
         marker_beacon.cxx marker_beacon.hxx \
 	mrg.cxx mrg.hxx\
         navradio.cxx navradio.hxx \
+        newnavradio.cxx newnavradio.hxx \
         slip_skid_ball.cxx slip_skid_ball.hxx \
 	transponder.cxx transponder.hxx \
         turn_indicator.cxx turn_indicator.hxx \
@@ -34,6 +35,7 @@ libInstrumentation_a_SOURCES = \
 	groundradar.cxx groundradar.hxx \
 	agradar.cxx agradar.hxx rad_alt.cxx rad_alt.hxx \
 	rnav_waypt_controller.cxx rnav_waypt_controller.hxx \
-	tcas.cxx tcas.hxx
+	tcas.cxx tcas.hxx \
+	NavDisplay.cxx NavDisplay.hxx
 
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src -I$(top_builddir)/src

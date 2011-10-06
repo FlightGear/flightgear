@@ -323,6 +323,34 @@ private:
     ObjectClassConfigList _objectClassConfigList;
 };
 
+class PropertyReferenceSet : public SGReferenced {
+public:
+    void insert(const std::string& relativePath, const SGSharedPtr<sg::HLAPropertyDataElement>& dataElement)
+    {
+        if (_rootNode.valid())
+            dataElement->setPropertyNode(_rootNode->getNode(relativePath, true));
+        _pathDataElementPairList.push_back(PathDataElementPair(relativePath, dataElement));
+    }
+
+    void setRootNode(SGPropertyNode* rootNode)
+    {
+        _rootNode = rootNode;
+        for (PathDataElementPairList::iterator i = _pathDataElementPairList.begin();
+             i != _pathDataElementPairList.end(); ++i) {
+            i->second->setPropertyNode(_rootNode->getNode(i->first, true));
+        }
+    }
+    SGPropertyNode* getRootNode()
+    { return _rootNode.get(); }
+
+private:
+    SGSharedPtr<SGPropertyNode> _rootNode;
+
+    typedef std::pair<std::string, SGSharedPtr<sg::HLAPropertyDataElement> > PathDataElementPair;
+    typedef std::list<PathDataElementPair> PathDataElementPairList;
+    PathDataElementPairList _pathDataElementPairList;
+};
+
 class AbstractSimTime : public SGReferenced {
 public:
     virtual ~AbstractSimTime() {}
@@ -533,7 +561,7 @@ private:
 // Factory class that is used to create an apternative data element for the multiplayer property attribute
 class MPPropertyVariantDataElementFactory : public sg::HLAVariantArrayDataElement::AlternativeDataElementFactory {
 public:
-    MPPropertyVariantDataElementFactory(sg::HLAPropertyReferenceSet* propertyReferenceSet) :
+    MPPropertyVariantDataElementFactory(PropertyReferenceSet* propertyReferenceSet) :
         _propertyReferenceSet(propertyReferenceSet)
     { }
 
@@ -551,19 +579,19 @@ public:
 
         // The relative property path should be in the semantics field name
         std::string relativePath = dataType->getAlternativeSemantics(index);
-        sg::HLAPropertyReference* propertyReference = new sg::HLAPropertyReference(relativePath);
-        _propertyReferenceSet->insert(propertyReference);
-        return new sg::HLAPropertyDataElement(alternativeDataType, propertyReference);
+        sg::HLAPropertyDataElement* dataElement = new sg::HLAPropertyDataElement(alternativeDataType, (SGPropertyNode*)0);
+        _propertyReferenceSet->insert(relativePath, dataElement);
+        return dataElement;
     }
 
 private:
-    SGSharedPtr<sg::HLAPropertyReferenceSet> _propertyReferenceSet;
+    SGSharedPtr<PropertyReferenceSet> _propertyReferenceSet;
 };
 
 class MPAttributeCallback : public sg::HLAObjectInstance::AttributeCallback {
 public:
     MPAttributeCallback() :
-        _propertyReferenceSet(new sg::HLAPropertyReferenceSet),
+        _propertyReferenceSet(new PropertyReferenceSet),
         _mpProperties(new sg::HLAVariantArrayDataElement)
     {
         _mpProperties->setAlternativeDataElementFactory(new MPPropertyVariantDataElementFactory(_propertyReferenceSet.get()));
@@ -595,7 +623,7 @@ public:
     sg::HLAVariantArrayDataElement* getMPProperties() const
     { return _mpProperties.get(); }
 
-    SGSharedPtr<sg::HLAPropertyReferenceSet> _propertyReferenceSet;
+    SGSharedPtr<PropertyReferenceSet> _propertyReferenceSet;
 
 protected:
     SGSharedPtr<sg::HLAAbstractLocation> _location;
@@ -682,7 +710,6 @@ public:
             aiMgr->attach(_aiMultiplayer.get());
 
             _propertyReferenceSet->setRootNode(_aiMultiplayer->getPropertyRoot());
-            objectInstance.requestAttributeUpdate();
         }
     }
 
@@ -711,7 +738,6 @@ public:
         MPInAttributeCallback* attributeCallback = new MPInAttributeCallback;
         objectInstance.setAttributeCallback(attributeCallback);
         attachDataElements(objectInstance, *attributeCallback, false);
-        objectInstance.requestAttributeUpdate();
     }
 
     virtual void removeInstance(const sg::HLAObjectClass& objectClass, sg::HLAObjectInstance& objectInstance, const sg::RTIData& tag)
@@ -792,7 +818,7 @@ private:
 
         objectInstance.setAttributes(attributePathElementMap);
     }
-    void attachPropertyDataElements(sg::HLAPropertyReferenceSet& propertyReferenceSet,
+    void attachPropertyDataElements(PropertyReferenceSet& propertyReferenceSet,
                                     sg::HLAAttributePathElementMap& attributePathElementMap,
                                     const AttributePathPropertyMap& attributePathPropertyMap)
     {
@@ -800,10 +826,9 @@ private:
              i != attributePathPropertyMap.end(); ++i) {
             for (PathPropertyMap::const_iterator j = i->second.begin();
                  j != i->second.end(); ++j) {
-                SGSharedPtr<sg::HLAPropertyReference> propertyReference;
-                propertyReference = new sg::HLAPropertyReference(j->second);
-                propertyReferenceSet.insert(propertyReference);
-                attributePathElementMap[i->first][j->first] = new sg::HLAPropertyDataElement(propertyReference);
+                sg::HLAPropertyDataElement* dataElement = new sg::HLAPropertyDataElement;
+                propertyReferenceSet.insert(j->second, dataElement);
+                attributePathElementMap[i->first][j->first] = dataElement;
             }
         }
     }
@@ -920,30 +945,28 @@ FGHLA::open()
     // We need that to communicate to the rti
     switch (configReader.getRTIVersion()) {
     case RTI13:
-        if (!_hlaFederate->connect(simgear::HLAFederate::RTI13, configReader.getRTIArguments())) {
-            SG_LOG(SG_IO, SG_ALERT, "Could not connect to RTI13 federation.");
-            return false;
-        }
+        _hlaFederate->setVersion(simgear::HLAFederate::RTI13);
         break;
     case RTI1516:
-        if (!_hlaFederate->connect(simgear::HLAFederate::RTI1516, configReader.getRTIArguments())) {
-            SG_LOG(SG_IO, SG_ALERT, "Could not connect to RTI1516 federation.");
-            return false;
-        }
+        _hlaFederate->setVersion(simgear::HLAFederate::RTI1516);
         break;
     case RTI1516E:
-        if (!_hlaFederate->connect(simgear::HLAFederate::RTI1516E, configReader.getRTIArguments())) {
-            SG_LOG(SG_IO, SG_ALERT, "Could not connect to RTI1516E federation.");
-            return false;
-        }
+        _hlaFederate->setVersion(simgear::HLAFederate::RTI1516E);
         break;
     }
+    _hlaFederate->setConnectArguments(configReader.getRTIArguments());
+    _hlaFederate->setFederationExecutionName(_federation);
+    _hlaFederate->setFederationObjectModel(objectModel);
+    _hlaFederate->setFederateType(_federate);
 
-    // Try to create a new federation execution
-    _hlaFederate->createFederationExecution(_federation, objectModel);
+    // Now that it is paramtrized, connect
+    if (!_hlaFederate->connect()) {
+        SG_LOG(SG_IO, SG_ALERT, "Could not connect to rti.");
+        return false;
+    }
 
-    // Try to join
-    if (!_hlaFederate->join(_federate, _federation)) {
+    // Try to create and join the new federation execution
+    if (!_hlaFederate->createJoinFederationExecution()) {
         SG_LOG(SG_IO, SG_ALERT, "Could not join federation");
         return false;
     }
@@ -1240,16 +1263,9 @@ FGHLA::process()
         }
     }
 
-    // Then get news from others ...
-    if (get_direction() & SG_IO_IN) {
-
-        // I hoped that the tick call itself would do that job with the timestamps, but this way it works
-        SGTimeStamp timestamp = SGTimeStamp::now();
-        timestamp += SGTimeStamp::fromSec(0.01);
-        do {
-            if (!_hlaFederate->tick(0.0, 0.0))
-                break;
-        } while (SGTimeStamp::now() <= timestamp);
+    // Then get news from others and process possible update requests
+    if (get_direction() & (SG_IO_IN|SG_IO_OUT)) {
+        _hlaFederate->processMessages();
     }
 
     return true;
@@ -1267,11 +1283,9 @@ FGHLA::close()
         _localAircraftInstance = 0;
     }
 
-    // Leave the federation
-    _hlaFederate->resign();
-
-    // Try to destroy the federation execution. Only works if no federate is joined
-    _hlaFederate->destroyFederationExecution(_federation);
+    // Leave the federation and try to destroy the federation execution.
+    // Only works if no federate is joined
+    _hlaFederate->resignDestroyFederationExecution();
 
     // throw away the HLAFederate
     _hlaFederate->disconnect();

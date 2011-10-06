@@ -18,7 +18,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-// $Id$
 
 
 #include <simgear/constants.h>
@@ -26,6 +25,12 @@
 #include "morse.hxx"
 
 #include <cstring>
+
+static const char DI = '1';
+static const char DIT = '1';
+static const char DA = '2';
+static const char DAH = '2';
+static const char END = '0';
 
 static const char alphabet[26][4] = {
     { DI, DAH, END, END },	/* A */ 
@@ -76,44 +81,6 @@ FGMorse::FGMorse() {
 
 // destructor
 FGMorse::~FGMorse() {
-}
-
-
-// Make a tone of specified freq and total_len with trans_len ramp in
-// and out and only the first len bytes with sound, the rest with
-// silence
-void make_tone( unsigned char *buf, int freq, 
-		int len, int total_len, int trans_len )
-{
-    int i, j;
-
-    for ( i = 0; i < trans_len; ++i ) {
-	float level = ( sin( (double) i * SGD_2PI / (BYTES_PER_SECOND / freq) ) )
-	    * ((double)i / trans_len) / 2.0 + 0.5;
-
-	/* Convert to unsigned byte */
-	buf[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-
-    for ( i = trans_len; i < len - trans_len; ++i ) {
-	float level = ( sin( (double) i * SGD_2PI / (BYTES_PER_SECOND / freq) ) )
-	    / 2.0 + 0.5;
-
-	/* Convert to unsigned byte */
-	buf[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-    j = trans_len;
-    for ( i = len - trans_len; i < len; ++i ) {
-	float level = ( sin( (double) i * SGD_2PI / (BYTES_PER_SECOND / freq) ) )
-	    * ((double)j / trans_len) / 2.0 + 0.5;
-	--j;
-
-	/* Convert to unsigned byte */
-	buf[ i ] = (unsigned char) ( level * 255.0 ) ;
-    }
-    for ( i = len; i < total_len; ++i ) {
-	buf[ i ] = (unsigned char) ( 0.5 * 255.0 ) ;
-    }
 }
 
 
@@ -269,4 +236,15 @@ SGSoundSample *FGMorse::make_ident( const string& id, const int freq ) {
     sample->set_max_dist( 20.0 );
 
     return sample;
+}
+
+FGMorse * FGMorse::_instance = NULL;
+
+FGMorse * FGMorse::instance()
+{
+    if( _instance == NULL ) {
+        _instance = new FGMorse();
+        _instance->init();
+    }
+    return _instance;
 }

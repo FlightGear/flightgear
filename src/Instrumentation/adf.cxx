@@ -17,6 +17,8 @@
 #include <Navaids/navlist.hxx>
 
 #include "adf.hxx"
+#include <Sound/morse.hxx>
+
 
 #include <iostream>
 #include <string>
@@ -110,8 +112,6 @@ ADF::init ()
     _sgr = smgr->find("avionics", true);
     _sgr->tie_to_listener();
 
-    morse.init();
-
     std::ostringstream temp;
     temp << _name << _num;
     _adf_ident = temp.str();
@@ -124,6 +124,7 @@ ADF::update (double delta_time_sec)
     if (_electrical_node->getDoubleValue() < 8.0
             || !_serviceable_node->getBoolValue()
             || !_power_btn_node->getBoolValue()     ) {
+        _in_range_node->setBoolValue(false);
         _ident_node->setStringValue("");
         return;
     }
@@ -131,6 +132,7 @@ ADF::update (double delta_time_sec)
     string mode = _mode_node->getStringValue();
     if (mode == "ant" || mode == "test") set_bearing(delta_time_sec, 90);
     if (mode != "bfo" && mode != "adf") {
+        _in_range_node->setBoolValue(false);
         _ident_node->setStringValue("");
         return;
     }
@@ -155,6 +157,7 @@ ADF::update (double delta_time_sec)
         search(frequency_khz, longitude_rad, latitude_rad, altitude_m);
 
     if (!_transmitter_valid) {
+        _in_range_node->setBoolValue(false);
         _ident_node->setStringValue("");
         return;
     }
@@ -252,7 +255,7 @@ ADF::search (double frequency_khz, double longitude_rad,
         }
 
         SGSoundSample *sound;
-        sound = morse.make_ident( ident, LO_FREQUENCY );
+        sound = FGMorse::instance()->make_ident( ident, FGMorse::LO_FREQUENCY );
         sound->set_volume(_last_volume = 0);
         _sgr->add( sound, _adf_ident );
 

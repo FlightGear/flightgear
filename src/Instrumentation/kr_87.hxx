@@ -32,17 +32,11 @@
 #include <simgear/timing/timestamp.hxx>
 
 #include <Navaids/navlist.hxx>
-#include <Sound/morse.hxx>
 
 class SGSampleGroup;
 
 class FGKR_87 : public SGSubsystem
 {
-    FGMorse morse;
-
-    SGPropertyNode_ptr lon_node;
-    SGPropertyNode_ptr lat_node;
-    SGPropertyNode_ptr alt_node;
     SGPropertyNode_ptr bus_power;
     SGPropertyNode_ptr serviceable;
 

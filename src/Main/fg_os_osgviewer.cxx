@@ -45,6 +45,7 @@
 #include <osg/View>
 #include <osgViewer/ViewerEventHandlers>
 #include <osgViewer/Viewer>
+#include <osgViewer/GraphicsWindow>
 
 #include <Scenery/scenery.hxx>
 #include "fg_os.hxx"
@@ -279,11 +280,9 @@ int fgOSMainLoop()
         viewer->realize();
     while (!viewer->done()) {
         fgIdleHandler idleFunc = manipulator->getIdleHandler();
-        fgDrawHandler drawFunc = manipulator->getDrawHandler();
         if (idleFunc)
             (*idleFunc)();
-        if (drawFunc)
-            (*drawFunc)();
+        globals->get_renderer()->update();
         viewer->frame();
     }
     
@@ -315,24 +314,23 @@ void fgOSFullScreen()
 {
 }
 
-static void setMouseCursor(osg::Camera* camera, int cursor)
+static void setMouseCursor(osgViewer::GraphicsWindow* gw, int cursor)
 {
-    if (!camera)
+    if (!gw) {
         return;
-    osg::GraphicsContext* gc = camera->getGraphicsContext();
-    if (!gc)
-        return;
-    osgViewer::GraphicsWindow* gw;
-    gw = dynamic_cast<osgViewer::GraphicsWindow*>(gc);
-    if (!gw)
-        return;
-    
+    }
+  
     osgViewer::GraphicsWindow::MouseCursor mouseCursor;
     mouseCursor = osgViewer::GraphicsWindow::InheritCursor;
-    if     (cursor == MOUSE_CURSOR_NONE)
+    if (cursor == MOUSE_CURSOR_NONE)
         mouseCursor = osgViewer::GraphicsWindow::NoCursor;
     else if(cursor == MOUSE_CURSOR_POINTER)
+#ifdef SG_MAC
+        // osgViewer-Cocoa lacks RightArrowCursor, use Left
+        mouseCursor = osgViewer::GraphicsWindow::LeftArrowCursor;
+#else
         mouseCursor = osgViewer::GraphicsWindow::RightArrowCursor;
+#endif
     else if(cursor == MOUSE_CURSOR_WAIT)
         mouseCursor = osgViewer::GraphicsWindow::WaitCursor;
     else if(cursor == MOUSE_CURSOR_CROSSHAIR)
@@ -364,9 +362,12 @@ static int _cursor = -1;
 void fgSetMouseCursor(int cursor)
 {
     _cursor = cursor;
-    setMouseCursor(viewer->getCamera(), cursor);
-    for (unsigned i = 0; i < viewer->getNumSlaves(); ++i)
-        setMouseCursor(viewer->getSlave(i)._camera.get(), cursor);
+  
+    std::vector<osgViewer::GraphicsWindow*> windows;
+    viewer->getWindows(windows);
+    BOOST_FOREACH(osgViewer::GraphicsWindow* gw, windows) {
+        setMouseCursor(gw, cursor);
+    }
 }
 
 int fgGetMouseCursor()

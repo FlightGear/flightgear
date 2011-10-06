@@ -12,9 +12,16 @@
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"
 #include "WindowSystemAdapter.hxx"
+#include "renderer.hxx"
 
 #if !defined(X_DISPLAY_MISSING)
 #define X_DOUBLE_SCROLL_BUG 1
+#endif
+
+#ifdef SG_MAC
+// hack - during interactive resize on Mac, OSG queues and then flushes
+// a large number of resize events, without doing any drawing.
+extern void puCleanUpJunk ( void ) ;
 #endif
 
 namespace flightgear
@@ -29,8 +36,6 @@ const int printStatsKey = 2;
 
 FGEventHandler::FGEventHandler() :
     idleHandler(0),
-    drawHandler(0),
-    windowResizeHandler(0),
     keyHandler(0),
     mouseClickHandler(0),
     mouseMotionHandler(0),
@@ -233,8 +238,14 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
         return true;
     case osgGA::GUIEventAdapter::RESIZE:
         CameraGroup::getDefault()->resized();
-        if (resizable && windowResizeHandler)
-            (*windowResizeHandler)(ea.getWindowWidth(), ea.getWindowHeight());
+        if (resizable)
+          globals->get_renderer()->resize(ea.getWindowWidth(), ea.getWindowHeight());
+      #ifdef SG_MAC
+        // work around OSG Cocoa-Viewer issue with resize event handling,
+        // where resize events are queued up, then dispatched in a batch, with
+        // no interveningd drawing calls.
+        puCleanUpJunk();
+      #endif
         return true;
      case osgGA::GUIEventAdapter::CLOSE_WINDOW:
     case osgGA::GUIEventAdapter::QUIT_APPLICATION:

@@ -20,23 +20,16 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-// $Id$
-
 
 #ifndef _BEACON_HXX
 #define _BEACON_HXX
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include "soundgenerator.hxx"
 
 #include <simgear/compiler.h>
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/structure/SGReferenced.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
-
-#include "morse.hxx"
-
 
 // Quoting from http://www.smartregs.com/data/sa326.htm
 // Smart REGS Glossary - marker beacon
@@ -77,35 +70,35 @@
 // (See instrument landing system) (Refer to AIM.)
 
 
-static const int INNER_FREQ = 3000;
-static const int MIDDLE_FREQ = 1300;
-static const int OUTER_FREQ = 400;
-
-static const int INNER_SIZE = BYTES_PER_SECOND;
-static const int MIDDLE_SIZE = (int)(BYTES_PER_SECOND * 60 / 95 );
-static const int OUTER_SIZE = BYTES_PER_SECOND;
-
-static const int INNER_DIT_LEN = (int)(BYTES_PER_SECOND / 6.0);
-static const int MIDDLE_DIT_LEN = (int)(MIDDLE_SIZE / 3.0);
-static const int MIDDLE_DAH_LEN = (int)(MIDDLE_SIZE * 2 / 3.0);
-static const int OUTER_DAH_LEN = (int)(BYTES_PER_SECOND / 2.0);
-
 // manages everything we need to know for an individual sound sample
-class FGBeacon {
+class FGBeacon : public FGSoundGenerator {
 
 private:
+    static const int INNER_FREQ = 3000;
+    static const int MIDDLE_FREQ = 1300;
+    static const int OUTER_FREQ = 400;
+
+    static const int INNER_SIZE = BYTES_PER_SECOND;
+    static const int MIDDLE_SIZE = (int)(BYTES_PER_SECOND * 60 / 95 );
+    static const int OUTER_SIZE = BYTES_PER_SECOND;
+
+    static const int INNER_DIT_LEN = (int)(BYTES_PER_SECOND / 6.0);
+    static const int MIDDLE_DIT_LEN = (int)(MIDDLE_SIZE / 3.0);
+    static const int MIDDLE_DAH_LEN = (int)(MIDDLE_SIZE * 2 / 3.0);
+    static const int OUTER_DAH_LEN = (int)(BYTES_PER_SECOND / 2.0);
 
     SGSharedPtr<SGSoundSample> inner;
     SGSharedPtr<SGSoundSample> middle;
     SGSharedPtr<SGSoundSample> outer;
 
+    // allocate and initialize sound samples
+    bool init();
+    static FGBeacon * _instance;
 public:
 
     FGBeacon();
     ~FGBeacon();
-
-    // allocate and initialize sound samples
-    bool init();
+    static FGBeacon * instance();
 
     SGSoundSample *get_inner() { return inner; }
     SGSoundSample *get_middle() { return middle; }

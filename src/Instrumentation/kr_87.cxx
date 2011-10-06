@@ -18,7 +18,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-// $Id$
 
 
 #ifdef HAVE_CONFIG_H
@@ -36,6 +35,7 @@
 
 #include "kr_87.hxx"
 
+#include <Sound/morse.hxx>
 #include <string>
 using std::string;
 
@@ -70,9 +70,6 @@ static double kludgeRange ( double stationElev, double aircraftElev,
 
 // Constructor
 FGKR_87::FGKR_87( SGPropertyNode *node ) :
-    lon_node(fgGetNode("/position/longitude-deg", true)),
-    lat_node(fgGetNode("/position/latitude-deg", true)),
-    alt_node(fgGetNode("/position/altitude-ft", true)),
     bus_power(fgGetNode("/systems/electrical/outputs/adf", true)),
     serviceable(fgGetNode("/instrumentation/adf/serviceable", true)),
     need_update(true),
@@ -119,7 +116,6 @@ void FGKR_87::init () {
     SGSoundMgr *smgr = globals->get_soundmgr();
     _sgr = smgr->find("avionics", true);
     _sgr->tie_to_listener();
-    morse.init();
 }
 
 
@@ -249,9 +245,7 @@ void FGKR_87::unbind () {
 
 // Update the various nav values based on position and valid tuned in navs
 void FGKR_87::update( double dt_sec ) {
-    SGGeod acft = SGGeod::fromDegFt(lon_node->getDoubleValue(),
-                                    lat_node->getDoubleValue(),
-                                    alt_node->getDoubleValue());
+    SGGeod acft = globals->get_aircraft_position();
 
     need_update = false;
 
@@ -497,8 +491,7 @@ void FGKR_87::update( double dt_sec ) {
 
 // Update current nav/adf radio stations based on current postition
 void FGKR_87::search() {
-  SGGeod pos = SGGeod::fromDegFt(lon_node->getDoubleValue(), 
-    lat_node->getDoubleValue(), alt_node->getDoubleValue());
+  SGGeod pos = globals->get_aircraft_position();
   
 				// FIXME: the panel should handle this
     static string last_ident = "";
@@ -534,7 +527,7 @@ void FGKR_87::search() {
 		_sgr->remove( "adf-ident" );
 	    }
 	    SGSoundSample *sound;
-	    sound = morse.make_ident( trans_ident, LO_FREQUENCY );
+        sound = FGMorse::instance()->make_ident( trans_ident, FGMorse::LO_FREQUENCY );
 	    sound->set_volume( 0.3 );
 	    _sgr->add( sound, "adf-ident" );
 

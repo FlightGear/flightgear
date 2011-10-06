@@ -961,7 +961,7 @@ FGDialog::setupObject (puObject *object, SGPropertyNode *props)
         SGPropertyNode_ptr node = fgGetNode(propname, true);
         if (type == "map") {
           // mapWidget binds to a sub-tree of properties, and
-          // ignroes the puValue mechanism, so special case things here
+          // ignores the puValue mechanism, so special case things here
           MapWidget* mw = static_cast<MapWidget*>(object);
           mw->setProperty(node);
         } else {

@@ -46,7 +46,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_ROTOR "$Id: FGRotor.h,v 1.9 2011/03/10 01:35:25 dpculp Exp $"
+#define ID_ROTOR "$Id: FGRotor.h,v 1.11 2011/09/24 14:26:46 jentron Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -68,6 +68,8 @@ CLASS DOCUMENTATION
   <numblades> {number} </numblades>
   <gearratio> {number} </gearratio>
   <nominalrpm> {number} </nominalrpm>
+  <minrpm> {number} </minrpm>
+  <maxrpm> {number} </maxrpm>
   <chord unit="{LENGTH}"> {number} </chord>
   <liftcurveslope Xunit="1/RAD"> {number} </liftcurveslope>
   <twist unit="{ANGLE}"> {number} </twist>
@@ -102,7 +104,9 @@ CLASS DOCUMENTATION
     \<diameter>           - Rotor disk diameter (2x R).
     \<numblades>          - Number of blades (b).
     \<gearratio>          - Ratio of (engine rpm) / (rotor rpm), usually > 1.
-    \<nominalrpm>         - RPM at which the rotor usally operates. 
+    \<nominalrpm>         - RPM at which the rotor usally operates.
+    \<minrpm>             - Lowest RPM used in the model, optional and defaults to 1.
+    \<maxrpm>             - Largest RPM used in the model, optional and defaults to 2 x nominalrpm.
     \<chord>              - Blade chord, (c).
     \<liftcurveslope>     - Slope of curve of section lift against section angle of attack,
                              per rad (a).
@@ -201,7 +205,7 @@ CLASS DOCUMENTATION
     </dl>
 
     @author Thomas Kreitler
-    @version $Id: FGRotor.h,v 1.9 2011/03/10 01:35:25 dpculp Exp $
+    @version $Id: FGRotor.h,v 1.11 2011/09/24 14:26:46 jentron Exp $
   */
 
 
@@ -234,11 +238,11 @@ public:
 
   /// Retrieves the RPMs of the rotor.
   double GetRPM(void) const { return RPM; }
-  
-  // void   SetRPM(double rpm) { RPM = rpm; }
+  void   SetRPM(double rpm) { RPM = rpm; }
   
   /// Retrieves the RPMs of the Engine, as seen from this rotor.
   double GetEngineRPM(void) const { return GearRatio*RPM; } // bit of a hack.
+  void SetEngineRPM(double rpm) { RPM = rpm/GearRatio; } // bit of a hack.
   /// Tells the rotor's gear ratio, usually the engine asks for this.
   double GetGearRatio(void) { return GearRatio; }
   /// Retrieves the thrust of the rotor.
@@ -339,6 +343,8 @@ private:
 
   double Sense;
   double NominalRPM;
+  double MinimalRPM;
+  double MaximalRPM;
   int    ExternalRPM;
   int    RPMdefinition;
   FGPropertyManager* ExtRPMsource;

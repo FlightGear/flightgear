@@ -34,6 +34,7 @@
 #include <Navaids/navlist.hxx>
 
 #include "marker_beacon.hxx"
+#include <Sound/beacon.hxx>
 
 #include <string>
 using std::string;
@@ -120,8 +121,6 @@ FGMarkerBeacon::init ()
     _sgr = smgr->find("avionics", true);
     _sgr->tie_to_listener();
 
-    morse.init();
-    beacon.init();
     blink.stamp();
 
     outer_marker = middle_marker = inner_marker = false;
@@ -317,7 +316,7 @@ void FGMarkerBeacon::search()
             // cout << "OUTER MARKER" << endl;
             if ( last_beacon != OUTER ) {
                 if ( ! _sgr->exists( current_sound_name ) ) {
-                    SGSoundSample *sound = beacon.get_outer();
+                    SGSoundSample *sound = FGBeacon::instance()->get_outer();
                     if ( sound ) {
                         _sgr->add( sound, current_sound_name );
                     }
@@ -336,7 +335,7 @@ void FGMarkerBeacon::search()
             // cout << "MIDDLE MARKER" << endl;
             if ( last_beacon != MIDDLE ) {
                 if ( ! _sgr->exists( current_sound_name ) ) {
-                    SGSoundSample *sound = beacon.get_middle();
+                    SGSoundSample *sound = FGBeacon::instance()->get_middle();
                     if ( sound ) {
                         _sgr->add( sound, current_sound_name );
                     }
@@ -355,7 +354,7 @@ void FGMarkerBeacon::search()
             // cout << "INNER MARKER" << endl;
             if ( last_beacon != INNER ) {
                 if ( ! _sgr->exists( current_sound_name ) ) {
-                    SGSoundSample *sound = beacon.get_inner();
+                    SGSoundSample *sound = FGBeacon::instance()->get_inner();
                     if ( sound ) {
                         _sgr->add( sound, current_sound_name );
                     }

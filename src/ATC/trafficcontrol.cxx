@@ -65,7 +65,7 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
         TimeVectorIterator i = estimatedArrivalTimes.begin();
         //cerr << "Checking eta slots " << eta << ": " << endl;
         for (i = estimatedArrivalTimes.begin();
-             i != estimatedArrivalTimes.end(); i++) {
+                i != estimatedArrivalTimes.end(); i++) {
             //cerr << "Stored time : " << (*i) << endl;
         }
         i = estimatedArrivalTimes.begin();
@@ -144,18 +144,20 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
  * FGTrafficRecord
  **************************************************************************/
 FGTrafficRecord::FGTrafficRecord():
-id(0), waitsForId(0),
-currentPos(0),
-leg(0),
-frequencyId(0),
-state(0),
-allowTransmission(true),
-latitude(0), longitude(0), heading(0), speed(0), altitude(0), radius(0)
+        id(0), waitsForId(0),
+        currentPos(0),
+        leg(0),
+        frequencyId(0),
+        state(0),
+        allowTransmission(true),
+        allowPushback(true),
+        priority(0),
+        latitude(0), longitude(0), heading(0), speed(0), altitude(0), radius(0)
 {
 }
 
 void FGTrafficRecord::setPositionAndIntentions(int pos,
-                                               FGAIFlightPlan * route)
+        FGAIFlightPlan * route)
 {
 
     currentPos = pos;
@@ -166,7 +168,7 @@ void FGTrafficRecord::setPositionAndIntentions(int pos,
                    "Error in FGTrafficRecord::setPositionAndIntentions");
             //cerr << "Pos : " << pos << " Curr " << *(intentions.begin())  << endl;
             for (intVecIterator i = intentions.begin();
-                 i != intentions.end(); i++) {
+                    i != intentions.end(); i++) {
                 //cerr << (*i) << " ";
             }
             //cerr << endl;
@@ -194,7 +196,7 @@ void FGTrafficRecord::setPositionAndIntentions(int pos,
     //exit(1);
 }
 /**
- * Check if another aircraft is ahead of the current one, and on the same 
+ * Check if another aircraft is ahead of the current one, and on the same
  * return true / false is the is/isn't the case.
  *
  ****************************************************************************/
@@ -207,10 +209,10 @@ bool FGTrafficRecord::checkPositionAndIntentions(FGTrafficRecord & other)
         //cerr << callsign << ": Check Position and intentions: we are on the same taxiway" << other.callsign << "Index = " << currentPos << endl;
         result = true;
     }
-    //  else if (other.intentions.size()) 
+    //  else if (other.intentions.size())
     //     {
     //       cerr << "Start check 2" << endl;
-    //       intVecIterator i = other.intentions.begin(); 
+    //       intVecIterator i = other.intentions.begin();
     //       while (!((i == other.intentions.end()) || ((*i) == currentPos)))
     //     i++;
     //       if (i != other.intentions.end()) {
@@ -237,8 +239,8 @@ bool FGTrafficRecord::checkPositionAndIntentions(FGTrafficRecord & other)
 }
 
 void FGTrafficRecord::setPositionAndHeading(double lat, double lon,
-                                            double hdg, double spd,
-                                            double alt)
+        double hdg, double spd,
+        double alt)
 {
     latitude = lat;
     longitude = lon;
@@ -251,12 +253,12 @@ int FGTrafficRecord::crosses(FGGroundNetwork * net,
                              FGTrafficRecord & other)
 {
     if (checkPositionAndIntentions(other)
-        || (other.checkPositionAndIntentions(*this)))
+            || (other.checkPositionAndIntentions(*this)))
         return -1;
     intVecIterator i, j;
     int currentTargetNode = 0, otherTargetNode = 0;
     if (currentPos > 0)
-        currentTargetNode = net->findSegment(currentPos)->getEnd()->getIndex(); // OKAY,... 
+        currentTargetNode = net->findSegment(currentPos)->getEnd()->getIndex(); // OKAY,...
     if (other.currentPos > 0)
         otherTargetNode = net->findSegment(other.currentPos)->getEnd()->getIndex();     // OKAY,...
     if ((currentTargetNode == otherTargetNode) && currentTargetNode > 0)
@@ -265,7 +267,7 @@ int FGTrafficRecord::crosses(FGGroundNetwork * net,
         for (i = intentions.begin(); i != intentions.end(); i++) {
             if ((*i) > 0) {
                 if ((currentTargetNode ==
-                     net->findSegment(*i)->getEnd()->getIndex())) {
+                        net->findSegment(*i)->getEnd()->getIndex())) {
                     //cerr << "Current crosses at " << currentTargetNode <<endl;
                     return currentTargetNode;
                 }
@@ -274,10 +276,10 @@ int FGTrafficRecord::crosses(FGGroundNetwork * net,
     }
     if (other.intentions.size()) {
         for (i = other.intentions.begin(); i != other.intentions.end();
-             i++) {
+                i++) {
             if ((*i) > 0) {
                 if (otherTargetNode ==
-                    net->findSegment(*i)->getEnd()->getIndex()) {
+                        net->findSegment(*i)->getEnd()->getIndex()) {
                     //cerr << "Other crosses at " << currentTargetNode <<endl;
                     return otherTargetNode;
                 }
@@ -287,7 +289,7 @@ int FGTrafficRecord::crosses(FGGroundNetwork * net,
     if (intentions.size() && other.intentions.size()) {
         for (i = intentions.begin(); i != intentions.end(); i++) {
             for (j = other.intentions.begin(); j != other.intentions.end();
-                 j++) {
+                    j++) {
                 //cerr << "finding segment " << *i << " and " << *j << endl;
                 if (((*i) > 0) && ((*j) > 0)) {
                     currentTargetNode =
@@ -318,7 +320,7 @@ bool FGTrafficRecord::onRoute(FGGroundNetwork * net,
         return true;
     if (other.intentions.size()) {
         for (intVecIterator i = other.intentions.begin();
-             i != other.intentions.end(); i++) {
+                i != other.intentions.end(); i++) {
             if (*i > 0) {
                 othernode = net->findSegment(*i)->getEnd()->getIndex();
                 if ((node == othernode) && (node > -1))
@@ -332,7 +334,7 @@ bool FGTrafficRecord::onRoute(FGGroundNetwork * net,
     //  {
     //    for (intVecIterator i = intentions.begin(); i != intentions.end(); i++)
     //    {
-    //      if (*i > 0) 
+    //      if (*i > 0)
     //        {
     //          node = net->findSegment(*i)->getEnd()->getIndex();
     //          if ((node == othernode) && (node > -1))
@@ -358,13 +360,13 @@ bool FGTrafficRecord::isOpposing(FGGroundNetwork * net,
         }
 
         for (intVecIterator i = intentions.begin(); i != intentions.end();
-             i++) {
+                i++) {
             if ((opp = net->findSegment(other.currentPos)->opposite())) {
                 if ((*i) > 0)
                     if (opp->getIndex() ==
-                        net->findSegment(*i)->getIndex()) {
+                            net->findSegment(*i)->getIndex()) {
                         if (net->findSegment(*i)->getStart()->getIndex() ==
-                            node) {
+                                node) {
                             {
                                 //cerr << "Found the node " << node << endl;
                                 return true;
@@ -374,17 +376,17 @@ bool FGTrafficRecord::isOpposing(FGGroundNetwork * net,
             }
             if (other.intentions.size()) {
                 for (intVecIterator j = other.intentions.begin();
-                     j != other.intentions.end(); j++) {
+                        j != other.intentions.end(); j++) {
                     // cerr << "Current segment 1 " << (*i) << endl;
                     if ((*i) > 0) {
                         if ((opp = net->findSegment(*i)->opposite())) {
                             if (opp->getIndex() ==
-                                net->findSegment(*j)->getIndex()) {
+                                    net->findSegment(*j)->getIndex()) {
                                 //cerr << "Nodes " << net->findSegment(*i)->getIndex()
                                 //   << " and  " << net->findSegment(*j)->getIndex()
                                 //   << " are opposites " << endl;
                                 if (net->findSegment(*i)->getStart()->
-                                    getIndex() == node) {
+                                        getIndex() == node) {
                                     {
                                         //cerr << "Found the node " << node << endl;
                                         return true;
@@ -400,6 +402,14 @@ bool FGTrafficRecord::isOpposing(FGGroundNetwork * net,
     return false;
 }
 
+bool FGTrafficRecord::isActive(int margin)
+{
+    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
+    time_t deptime = aircraft->getTrafficRef()->getDepartureTime();
+    return ((now + margin) > deptime);
+}
+
+
 void FGTrafficRecord::setSpeedAdjustment(double spd)
 {
     instruction.setChangeSpeed(true);
@@ -414,28 +424,9 @@ void FGTrafficRecord::setHeadingAdjustment(double heading)
 
 bool FGTrafficRecord::pushBackAllowed()
 {
-    // With the user ATC / AI integration, checking whether the user's aircraft is near no longer works, because
-    // this will effectively block the user's aircraft itself from receiving pushback clearance. 
-    // So, what can we do?
-    /*
-    double course, az2, dist;
-    SGGeod curr(SGGeod::fromDegM(getLongitude(),
-                                 getLatitude(), getAltitude()));
-
-    double userLatitude = fgGetDouble("/position/latitude-deg");
-    double userLongitude = fgGetDouble("/position/longitude-deg");
-    SGGeod user(SGGeod::fromDeg(userLongitude, userLatitude));
-    SGGeodesy::inverse(curr, user, course, az2, dist);
-    //cerr << "Distance to user : " << dist << endl;
-    return (dist > 250);
-    */
-
-
-    // In essence, we should check whether the pusbback route itself, as well as the associcated
-    // taxiways near the pushback point are free of traffic. 
-    // To do so, we need to 
-    return true;
+    return allowPushback;
 }
+
 
 
 
@@ -483,7 +474,7 @@ FGATCController::FGATCController()
 
 FGATCController::~FGATCController()
 {
-     //cerr << "running FGATController destructor" << endl;
+    //cerr << "running FGATController destructor" << endl;
 }
 
 string FGATCController::getGateName(FGAIAircraft * ref)
@@ -491,9 +482,9 @@ string FGATCController::getGateName(FGAIAircraft * ref)
     return ref->atGate();
 }
 
-bool FGATCController::isUserAircraft(FGAIAircraft* ac) 
-{ 
-    return (ac->getCallSign() == fgGetString("/sim/multiplay/callsign")) ? true : false; 
+bool FGATCController::isUserAircraft(FGAIAircraft* ac)
+{
+    return (ac->getCallSign() == fgGetString("/sim/multiplay/callsign")) ? true : false;
 };
 
 void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent, AtcMsgId msgId,
@@ -537,7 +528,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         taxiFreq =
             rec->getAircraft()->getTrafficRef()->getDepartureAirport()->
             getDynamics()->getGroundFrequency(2);
-        towerFreq = 
+        towerFreq =
             rec->getAircraft()->getTrafficRef()->getDepartureAirport()->
             getDynamics()->getTowerFrequency(2);
         receiver =
@@ -587,11 +578,11 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
             getRunwayClassFromTrafficType(fltType);
 
         rec->getAircraft()->getTrafficRef()->getDepartureAirport()->
-            getDynamics()->getActiveRunway(rwyClass, 1, activeRunway,
-                                           heading);
+        getDynamics()->getActiveRunway(rwyClass, 1, activeRunway,
+                                       heading);
         rec->getAircraft()->GetFlightPlan()->setRunway(activeRunway);
         fp = rec->getAircraft()->getTrafficRef()->getDepartureAirport()->
-            getDynamics()->getSID(activeRunway, heading);
+             getDynamics()->getSID(activeRunway, heading);
         rec->getAircraft()->GetFlightPlan()->setSID(fp);
         if (fp) {
             SID = fp->getName() + " departure";
@@ -683,17 +674,17 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
     case MSG_REPORT_RUNWAY_HOLD_SHORT:
         activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
         //activeRunway = "test";
-        text = receiver + ". Holding short runway " 
-                        + activeRunway 
-                        + ". " + sender;
+        text = receiver + ". Holding short runway "
+               + activeRunway
+               + ". " + sender;
         //text = "test1";
         //cerr << "1 Currently at leg " << rec->getLeg() << endl;
         break;
     case MSG_ACKNOWLEDGE_REPORT_RUNWAY_HOLD_SHORT:
         activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
-        text = receiver + "Roger. Holding short runway " 
-        //                + activeRunway 
-                        + ". " + sender;
+        text = receiver + "Roger. Holding short runway "
+               //                + activeRunway
+               + ". " + sender;
         //text = "test2";
         //cerr << "2 Currently at leg " << rec->getLeg() << endl;
         break;
@@ -728,17 +719,14 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         // Note that distance attenuation is currently not yet implemented
                 
         if ((onBoardRadioFreqI0 == stationFreq)
-            || (onBoardRadioFreqI1 == stationFreq)) {
-        	
+                || (onBoardRadioFreqI1 == stationFreq)) {
             if (rec->allowTransmissions()) {
             	
                 fgSetString("/sim/messages/atc", text.c_str());
             }
         }
     } else {
-        FGATCManager *atc = (FGATCManager*) globals->get_subsystem("atc");
-        atc->getATCDialog()->addEntry(1, text);
-        
+        FGATCDialogNew::instance()->addEntry(1, text);
     }
 }
 
@@ -751,7 +739,7 @@ string FGATCController::formatATCFrequency3_2(int freq)
 }
 
 // TODO: Set transponder codes according to real-world routes.
-// The current version just returns a random string of four octal numbers. 
+// The current version just returns a random string of four octal numbers.
 string FGATCController::genTransponderCode(string fltRules)
 {
     if (fltRules == "VFR") {
@@ -764,12 +752,12 @@ string FGATCController::genTransponderCode(string fltRules)
     }
 }
 
-void FGATCController::init() 
+void FGATCController::init()
 {
-   if (!initialized) {
-       FGATCManager *mgr = (FGATCManager*) globals->get_subsystem("ATC");
-       mgr->addController(this);
-       initialized = true;
+    if (!initialized) {
+        FGATCManager *mgr = (FGATCManager*) globals->get_subsystem("ATC");
+        mgr->addController(this);
+        initialized = true;
     }
 }
 
@@ -778,19 +766,19 @@ void FGATCController::init()
  *
  **************************************************************************/
 FGTowerController::FGTowerController(FGAirportDynamics *par) :
-FGATCController()
+        FGATCController()
 {
     parent = par;
 }
 
-// 
+//
 void FGTowerController::announcePosition(int id,
-                                         FGAIFlightPlan * intendedRoute,
-                                         int currentPosition, double lat,
-                                         double lon, double heading,
-                                         double speed, double alt,
-                                         double radius, int leg,
-                                         FGAIAircraft * ref)
+        FGAIFlightPlan * intendedRoute,
+        int currentPosition, double lat,
+        double lon, double heading,
+        double speed, double alt,
+        double radius, int leg,
+        FGAIAircraft * ref)
 {
     init();
     TrafficVectorIterator i = activeTraffic.begin();
@@ -817,7 +805,7 @@ void FGTowerController::announcePosition(int id,
         rec.setRadius(radius);
         rec.setAircraft(ref);
         activeTraffic.push_back(rec);
-        // Don't just schedule the aircraft for the tower controller, also assign if to the correct active runway. 
+        // Don't just schedule the aircraft for the tower controller, also assign if to the correct active runway.
         ActiveRunwayVecIterator rwy = activeRunways.begin();
         if (activeRunways.size()) {
             while (rwy != activeRunways.end()) {
@@ -843,8 +831,8 @@ void FGTowerController::announcePosition(int id,
 }
 
 void FGTowerController::updateAircraftInformation(int id, double lat, double lon,
-                                                  double heading, double speed, double alt,
-                                                  double dt)
+        double heading, double speed, double alt,
+        double dt)
 {
     TrafficVectorIterator i = activeTraffic.begin();
     // Search whether the current id has an entry
@@ -871,7 +859,7 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
 
     // see if we already have a clearance record for the currently active runway
     // NOTE: dd. 2011-08-07: Because the active runway has been constructed in the announcePosition function, we may safely assume that is
-    // already exists here. So, we can simplify the current code. 
+    // already exists here. So, we can simplify the current code.
     ActiveRunwayVecIterator rwy = activeRunways.begin();
     while (rwy != activeRunways.end()) {
         if (rwy->getRunwayName() == current->getRunway()) {
@@ -907,6 +895,8 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
                 rwy->setCleared(id);
             }
         }
+    } else {
+        
     }
 }
 
@@ -955,7 +945,7 @@ void FGTowerController::signOff(int id)
 
 // NOTE:
 // IF WE MAKE TRAFFICRECORD A MEMBER OF THE BASE CLASS
-// THE FOLLOWING THREE FUNCTIONS: SIGNOFF, HAS INSTRUCTION AND GETINSTRUCTION CAN 
+// THE FOLLOWING THREE FUNCTIONS: SIGNOFF, HAS INSTRUCTION AND GETINSTRUCTION CAN
 // BECOME DEVIRTUALIZED AND BE A MEMBER OF THE BASE ATCCONTROLLER CLASS
 // WHICH WOULD SIMPLIFY CODE MAINTENANCE.
 // Note that this function is probably obsolete
@@ -1014,6 +1004,11 @@ string FGTowerController::getName() {
     return string(parent->getId() + "-tower");
 }
 
+void FGTowerController::update(double dt)
+{
+
+}
+
 
 
 /***************************************************************************
@@ -1021,18 +1016,18 @@ string FGTowerController::getName() {
  *
  **************************************************************************/
 FGStartupController::FGStartupController(FGAirportDynamics *par):
-    FGATCController()
+        FGATCController()
 {
     parent = par;
 }
 
 void FGStartupController::announcePosition(int id,
-                                           FGAIFlightPlan * intendedRoute,
-                                           int currentPosition, double lat,
-                                           double lon, double heading,
-                                           double speed, double alt,
-                                           double radius, int leg,
-                                           FGAIAircraft * ref)
+        FGAIFlightPlan * intendedRoute,
+        int currentPosition, double lat,
+        double lon, double heading,
+        double speed, double alt,
+        double radius, int leg,
+        FGAIAircraft * ref)
 {
     init();
     TrafficVectorIterator i = activeTraffic.begin();
@@ -1069,7 +1064,7 @@ void FGStartupController::announcePosition(int id,
 
 // NOTE:
 // IF WE MAKE TRAFFICRECORD A MEMBER OF THE BASE CLASS
-// THE FOLLOWING THREE FUNCTIONS: SIGNOFF, HAS INSTRUCTION AND GETINSTRUCTION CAN 
+// THE FOLLOWING THREE FUNCTIONS: SIGNOFF, HAS INSTRUCTION AND GETINSTRUCTION CAN
 // BECOME DEVIRTUALIZED AND BE A MEMBER OF THE BASE ATCCONTROLLER CLASS
 // WHICH WOULD SIMPLIFY CODE MAINTENANCE.
 // Note that this function is probably obsolete
@@ -1144,21 +1139,20 @@ void FGStartupController::signOff(int id)
 }
 
 bool FGStartupController::checkTransmissionState(int st, time_t now, time_t startTime, TrafficVectorIterator i, AtcMsgId msgId,
-                               AtcMsgDir msgDir)
+        AtcMsgDir msgDir)
 {
     int state = i->getState();
     if ((state == st) && available) {
         if ((msgDir == ATC_AIR_TO_GROUND) && isUserAircraft(i->getAircraft())) {
-            
+
             //cerr << "Checking state " << st << " for " << i->getAircraft()->getCallSign() << endl;
             static SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
             int n = trans_num->getIntValue();
             if (n == 0) {
                 trans_num->setIntValue(-1);
-                 // PopupCallback(n);
-                 //cerr << "Selected transmission message " << n << endl;
-                 FGATCManager *atc = (FGATCManager*) globals->get_subsystem("atc");
-                 atc->getATCDialog()->removeEntry(1);
+                // PopupCallback(n);
+                //cerr << "Selected transmission message " << n << endl;
+                FGATCDialogNew::instance()->removeEntry(1);
             } else {
                 //cerr << "creading message for " << i->getAircraft()->getCallSign() << endl;
                 transmit(&(*i), &(*parent), msgId, msgDir, false);
@@ -1178,8 +1172,8 @@ bool FGStartupController::checkTransmissionState(int st, time_t now, time_t star
 }
 
 void FGStartupController::updateAircraftInformation(int id, double lat, double lon,
-                                                    double heading, double speed, double alt,
-                                                    double dt)
+        double heading, double speed, double alt,
+        double dt)
 {
     TrafficVectorIterator i = activeTraffic.begin();
     // Search search if the current id has an entry
@@ -1207,11 +1201,11 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
 
     int state = i->getState();
 
-    // The user controlled aircraft should have crased here, because it doesn't have a traffic reference. 
+    // The user controlled aircraft should have crased here, because it doesn't have a traffic reference.
     // NOTE: if we create a traffic schedule for the user aircraft, we can use this to plan a flight.
     time_t startTime = i->getAircraft()->getTrafficRef()->getDepartureTime();
     time_t now = time(NULL) + fgGetLong("/sim/time/warp");
-    //cerr << i->getAircraft()->getTrafficRef()->getCallSign() 
+    //cerr << i->getAircraft()->getTrafficRef()->getCallSign()
     //     << " is scheduled to depart in " << startTime-now << " seconds. Available = " << available
     //     << " at parking " << getGateName(i->getAircraft()) << endl;
 
@@ -1231,7 +1225,7 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
     checkTransmissionState(7, now, (startTime + 180), i, MSG_REQUEST_PUSHBACK_CLEARANCE,                ATC_AIR_TO_GROUND);
 
 
-   
+
     if ((state == 8) && available) {
         if (now > startTime + 200) {
             if (i->pushBackAllowed()) {
@@ -1278,10 +1272,10 @@ void FGStartupController::render(bool visible)
         //while (group->getNumChildren()) {
         //  cerr << "Number of children: " << group->getNumChildren() << endl;
         //simgear::EffectGeode* geode = (simgear::EffectGeode*) group->getChild(0);
-          //osg::MatrixTransform *obj_trans = (osg::MatrixTransform*) group->getChild(0);
-           //geode->releaseGLObjects();
-           //group->removeChild(geode);
-           //delete geode;
+        //osg::MatrixTransform *obj_trans = (osg::MatrixTransform*) group->getChild(0);
+        //geode->releaseGLObjects();
+        //group->removeChild(geode);
+        //delete geode;
         group = 0;
     }
     if (visible) {
@@ -1294,135 +1288,64 @@ void FGStartupController::render(bool visible)
         //for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
         double dx = 0;
         for   (TrafficVectorIterator i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
-            // Handle start point
-            int pos = i->getCurrentPosition();
-            //cerr << "rendering for " << i->getAircraft()->getCallSign() << "pos = " << pos << endl;
-            if (pos > 0) {
-                FGTaxiSegment *segment  = parent->getGroundNetwork()->findSegment(pos);
-                SGGeod start(SGGeod::fromDeg((i->getLongitude()), (i->getLatitude())));
-                SGGeod end  (SGGeod::fromDeg(segment->getEnd()->getLongitude(), segment->getEnd()->getLatitude()));
+            if (i->isActive(300)) {
+                // Handle start point
+                int pos = i->getCurrentPosition();
+                //cerr << "rendering for " << i->getAircraft()->getCallSign() << "pos = " << pos << endl;
+                if (pos > 0) {
+                    FGTaxiSegment *segment  = parent->getGroundNetwork()->findSegment(pos);
+                    SGGeod start(SGGeod::fromDeg((i->getLongitude()), (i->getLatitude())));
+                    SGGeod end  (SGGeod::fromDeg(segment->getEnd()->getLongitude(), segment->getEnd()->getLatitude()));
 
-                double length = SGGeodesy::distanceM(start, end);
-                //heading = SGGeodesy::headingDeg(start->getGeod(), end->getGeod());
+                    double length = SGGeodesy::distanceM(start, end);
+                    //heading = SGGeodesy::headingDeg(start->getGeod(), end->getGeod());
 
-                double az2, heading; //, distanceM;
-                SGGeodesy::inverse(start, end, heading, az2, length);
-                double coveredDistance = length * 0.5;
-                SGGeod center;
-                SGGeodesy::direct(start, heading, coveredDistance, center, az2);
-                //cerr << "Active Aircraft : Centerpoint = (" << center.getLatitudeDeg() << ", " << center.getLongitudeDeg() << "). Heading = " << heading << endl;
-                ///////////////////////////////////////////////////////////////////////////////
-                // Make a helper function out of this
-                osg::Matrix obj_pos;
-                osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
-                obj_trans->setDataVariance(osg::Object::STATIC);
-                // Experimental: Calculate slope here, based on length, and the individual elevations
-                double elevationStart;
-                if (isUserAircraft((i)->getAircraft())) {
-                    elevationStart = fgGetDouble("/position/ground-elev-m");
-                } else {
-                    elevationStart = ((i)->getAircraft()->_getAltitude()); 
-                }
-                double elevationEnd   = segment->getEnd()->getElevation();
-                if ((elevationEnd == 0) || (elevationEnd == parent->getElevation())) {
-                    SGGeod center2 = end;
-                    center2.setElevationM(SG_MAX_ELEVATION_M);
-                    if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
-                        elevation_feet = elevationEnd * SG_METER_TO_FEET + 0.5;
-                            //elevation_meters += 0.5;
-                    }
-                    else { 
-                        elevationEnd = parent->getElevation();
-                    }
-                    segment->getEnd()->setElevation(elevationEnd);
-                }
-
-                double elevationMean  = (elevationStart + elevationEnd) / 2.0;
-                double elevDiff       = elevationEnd - elevationStart;
-               
-               double slope = atan2(elevDiff, length) * SGD_RADIANS_TO_DEGREES;
-                
-               //cerr << "1. Using mean elevation : " << elevationMean << " and " << slope << endl;
-
-                WorldCoordinate( obj_pos, center.getLatitudeDeg(), center.getLongitudeDeg(), elevationMean + 0.5, -(heading), slope );
-;
-
-                obj_trans->setMatrix( obj_pos );
-                //osg::Vec3 center(0, 0, 0)
-
-                float width = length /2.0;
-                osg::Vec3 corner(-width, 0, 0.25f);
-                osg::Vec3 widthVec(2*width + 1, 0, 0);
-                osg::Vec3 heightVec(0, 1, 0);
-                osg::Geometry* geometry;
-                geometry = osg::createTexturedQuadGeometry(corner, widthVec, heightVec);
-                simgear::EffectGeode* geode = new simgear::EffectGeode;
-                geode->setName("test");
-                geode->addDrawable(geometry);
-                //osg::Node *custom_obj;
-                SGMaterial *mat = matlib->find("UnidirectionalTaper");
-                if (mat)
-                    geode->setEffect(mat->get_effect());
-                obj_trans->addChild(geode);
-                // wire as much of the scene graph together as we can
-                //->addChild( obj_trans );
-                group->addChild( obj_trans );
-                /////////////////////////////////////////////////////////////////////
-            } else {
-                //cerr << "BIG FAT WARNING: current position is here : " << pos << endl;
-            }
-            for(intVecIterator j = (i)->getIntentions().begin(); j != (i)->getIntentions().end(); j++) {
-                osg::Matrix obj_pos;
-                int k = (*j);
-                if (k > 0) {
-                    //cerr << "rendering for " << i->getAircraft()->getCallSign() << "intention = " << k << endl;
+                    double az2, heading; //, distanceM;
+                    SGGeodesy::inverse(start, end, heading, az2, length);
+                    double coveredDistance = length * 0.5;
+                    SGGeod center;
+                    SGGeodesy::direct(start, heading, coveredDistance, center, az2);
+                    //cerr << "Active Aircraft : Centerpoint = (" << center.getLatitudeDeg() << ", " << center.getLongitudeDeg() << "). Heading = " << heading << endl;
+                    ///////////////////////////////////////////////////////////////////////////////
+                    // Make a helper function out of this
+                    osg::Matrix obj_pos;
                     osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
                     obj_trans->setDataVariance(osg::Object::STATIC);
-                    FGTaxiSegment *segment  = parent->getGroundNetwork()->findSegment(k);
-
-                    double elevationStart = segment->getStart()->getElevation();
-                    double elevationEnd   = segment->getEnd  ()->getElevation();
-                    if ((elevationStart == 0) || (elevationStart == parent->getElevation())) {
-                        SGGeod center2 = segment->getStart()->getGeod();
-                        center2.setElevationM(SG_MAX_ELEVATION_M);
-                        if (local_scenery->get_elevation_m( center2, elevationStart, NULL )) {
-                            elevation_feet = elevationStart * SG_METER_TO_FEET + 0.5;
-                            //elevation_meters += 0.5;
-                        }
-                        else { 
-                            elevationStart = parent->getElevation();
-                        }
-                        segment->getStart()->setElevation(elevationStart);
+                    // Experimental: Calculate slope here, based on length, and the individual elevations
+                    double elevationStart;
+                    if (isUserAircraft((i)->getAircraft())) {
+                        elevationStart = fgGetDouble("/position/ground-elev-m");
+                    } else {
+                        elevationStart = ((i)->getAircraft()->_getAltitude() * SG_FEET_TO_METER);
                     }
+                    double elevationEnd   = segment->getEnd()->getElevation();
                     if ((elevationEnd == 0) || (elevationEnd == parent->getElevation())) {
-                        SGGeod center2 = segment->getEnd()->getGeod();
+                        SGGeod center2 = end;
                         center2.setElevationM(SG_MAX_ELEVATION_M);
                         if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
                             elevation_feet = elevationEnd * SG_METER_TO_FEET + 0.5;
                             //elevation_meters += 0.5;
                         }
-                        else { 
+                        else {
                             elevationEnd = parent->getElevation();
                         }
                         segment->getEnd()->setElevation(elevationEnd);
                     }
- 
+
                     double elevationMean  = (elevationStart + elevationEnd) / 2.0;
                     double elevDiff       = elevationEnd - elevationStart;
-                    double length         = segment->getLength();
+
                     double slope = atan2(elevDiff, length) * SGD_RADIANS_TO_DEGREES;
-                
-                    //cerr << "2. Using mean elevation : " << elevationMean << " and " << slope << endl;
 
+                    //cerr << "1. Using mean elevation : " << elevationMean << " and " << slope << endl;
 
-                    WorldCoordinate( obj_pos, segment->getLatitude(), segment->getLongitude(), elevationMean + 0.5, -(segment->getHeading()), slope );
-
-                    //WorldCoordinate( obj_pos, segment->getLatitude(), segment->getLongitude(), parent->getElevation()+8+dx, -(segment->getHeading()) );
+                    WorldCoordinate( obj_pos, center.getLatitudeDeg(), center.getLongitudeDeg(), elevationMean + 0.5 + dx, -(heading), slope );
+                    ;
 
                     obj_trans->setMatrix( obj_pos );
                     //osg::Vec3 center(0, 0, 0)
 
-                    float width = segment->getLength() /2.0;
+                    float width = length /2.0;
                     osg::Vec3 corner(-width, 0, 0.25f);
                     osg::Vec3 widthVec(2*width + 1, 0, 0);
                     osg::Vec3 heightVec(0, 1, 0);
@@ -1432,18 +1355,101 @@ void FGStartupController::render(bool visible)
                     geode->setName("test");
                     geode->addDrawable(geometry);
                     //osg::Node *custom_obj;
-                    SGMaterial *mat = matlib->find("UnidirectionalTaper");
+                    SGMaterial *mat;
+                    if (segment->hasBlock()) {
+                        mat = matlib->find("UnidirectionalTaperRed");
+                    } else {
+                        mat = matlib->find("UnidirectionalTaperGreen");
+                    }
                     if (mat)
                         geode->setEffect(mat->get_effect());
                     obj_trans->addChild(geode);
                     // wire as much of the scene graph together as we can
                     //->addChild( obj_trans );
                     group->addChild( obj_trans );
+                    /////////////////////////////////////////////////////////////////////
                 } else {
-                    //cerr << "BIG FAT WARNING: k is here : " << pos << endl;
+                    //cerr << "BIG FAT WARNING: current position is here : " << pos << endl;
                 }
+                for (intVecIterator j = (i)->getIntentions().begin(); j != (i)->getIntentions().end(); j++) {
+                    osg::Matrix obj_pos;
+                    int k = (*j);
+                    if (k > 0) {
+                        //cerr << "rendering for " << i->getAircraft()->getCallSign() << "intention = " << k << endl;
+                        osg::MatrixTransform *obj_trans = new osg::MatrixTransform;
+                        obj_trans->setDataVariance(osg::Object::STATIC);
+                        FGTaxiSegment *segment  = parent->getGroundNetwork()->findSegment(k);
+
+                        double elevationStart = segment->getStart()->getElevation();
+                        double elevationEnd   = segment->getEnd  ()->getElevation();
+                        if ((elevationStart == 0) || (elevationStart == parent->getElevation())) {
+                            SGGeod center2 = segment->getStart()->getGeod();
+                            center2.setElevationM(SG_MAX_ELEVATION_M);
+                            if (local_scenery->get_elevation_m( center2, elevationStart, NULL )) {
+                                elevation_feet = elevationStart * SG_METER_TO_FEET + 0.5;
+                                //elevation_meters += 0.5;
+                            }
+                            else {
+                                elevationStart = parent->getElevation();
+                            }
+                            segment->getStart()->setElevation(elevationStart);
+                        }
+                        if ((elevationEnd == 0) || (elevationEnd == parent->getElevation())) {
+                            SGGeod center2 = segment->getEnd()->getGeod();
+                            center2.setElevationM(SG_MAX_ELEVATION_M);
+                            if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
+                                elevation_feet = elevationEnd * SG_METER_TO_FEET + 0.5;
+                                //elevation_meters += 0.5;
+                            }
+                            else {
+                                elevationEnd = parent->getElevation();
+                            }
+                            segment->getEnd()->setElevation(elevationEnd);
+                        }
+
+                        double elevationMean  = (elevationStart + elevationEnd) / 2.0;
+                        double elevDiff       = elevationEnd - elevationStart;
+                        double length         = segment->getLength();
+                        double slope = atan2(elevDiff, length) * SGD_RADIANS_TO_DEGREES;
+
+                        //cerr << "2. Using mean elevation : " << elevationMean << " and " << slope << endl;
+
+
+                        WorldCoordinate( obj_pos, segment->getLatitude(), segment->getLongitude(), elevationMean + 0.5 + dx, -(segment->getHeading()), slope );
+
+                        //WorldCoordinate( obj_pos, segment->getLatitude(), segment->getLongitude(), parent->getElevation()+8+dx, -(segment->getHeading()) );
+
+                        obj_trans->setMatrix( obj_pos );
+                        //osg::Vec3 center(0, 0, 0)
+
+                        float width = segment->getLength() /2.0;
+                        osg::Vec3 corner(-width, 0, 0.25f);
+                        osg::Vec3 widthVec(2*width + 1, 0, 0);
+                        osg::Vec3 heightVec(0, 1, 0);
+                        osg::Geometry* geometry;
+                        geometry = osg::createTexturedQuadGeometry(corner, widthVec, heightVec);
+                        simgear::EffectGeode* geode = new simgear::EffectGeode;
+                        geode->setName("test");
+                        geode->addDrawable(geometry);
+                        //osg::Node *custom_obj;
+                        SGMaterial *mat;
+                        if (segment->hasBlock()) {
+                            mat = matlib->find("UnidirectionalTaperRed");
+                        } else {
+                            mat = matlib->find("UnidirectionalTaperGreen");
+                        }
+                        if (mat)
+                            geode->setEffect(mat->get_effect());
+                        obj_trans->addChild(geode);
+                        // wire as much of the scene graph together as we can
+                        //->addChild( obj_trans );
+                        group->addChild( obj_trans );
+                    } else {
+                        //cerr << "BIG FAT WARNING: k is here : " << pos << endl;
+                    }
+                }
+                dx += 0.2;
             }
-            //dx += 0.1;
         }
         globals->get_scenery()->get_scene_graph()->addChild(group);
     }
@@ -1453,25 +1459,31 @@ string FGStartupController::getName() {
     return string(parent->getId() + "-startup");
 }
 
+void FGStartupController::update(double dt)
+{
+
+}
+
+
 
 /***************************************************************************
  * class FGApproachController
  *
  **************************************************************************/
 FGApproachController::FGApproachController(FGAirportDynamics *par):
-FGATCController()
+        FGATCController()
 {
     parent = par;
 }
 
-// 
+//
 void FGApproachController::announcePosition(int id,
-                                            FGAIFlightPlan * intendedRoute,
-                                            int currentPosition,
-                                            double lat, double lon,
-                                            double heading, double speed,
-                                            double alt, double radius,
-                                            int leg, FGAIAircraft * ref)
+        FGAIFlightPlan * intendedRoute,
+        int currentPosition,
+        double lat, double lon,
+        double heading, double speed,
+        double alt, double radius,
+        int leg, FGAIAircraft * ref)
 {
     init();
     TrafficVectorIterator i = activeTraffic.begin();
@@ -1503,8 +1515,8 @@ void FGApproachController::announcePosition(int id,
 }
 
 void FGApproachController::updateAircraftInformation(int id, double lat, double lon,
-                                                     double heading, double speed, double alt,
-                                                     double dt)
+        double heading, double speed, double alt,
+        double dt)
 {
     TrafficVectorIterator i = activeTraffic.begin();
     // Search search if the current id has an entry
@@ -1576,6 +1588,10 @@ void FGApproachController::signOff(int id)
     }
 }
 
+void FGApproachController::update(double dt)
+{
+
+}
 
 
 

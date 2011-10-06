@@ -1,6 +1,8 @@
 include(FlightGearComponent)
 
 set(SOURCES
+	audioident.cxx
+	soundgenerator.cxx
 	beacon.cxx
 	fg_fx.cxx
 	morse.cxx
@@ -10,6 +12,8 @@ set(SOURCES
 	)
 
 set(HEADERS
+	audioident.hxx
+	soundgenerator.hxx
 	beacon.hxx
 	fg_fx.hxx
 	morse.hxx

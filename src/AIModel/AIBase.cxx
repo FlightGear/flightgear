@@ -179,6 +179,27 @@ void FGAIBase::update(double dt) {
     ft_per_deg_lon = 365228.16 * cos(pos.getLatitudeRad());
 }
 
+/** update LOD properties of the model */
+void FGAIBase::updateLOD()
+{
+    double maxRangeDetail = fgGetDouble("/sim/rendering/static-lod/ai-detailed", 10000.0);
+    double maxRangeBare   = fgGetDouble("/sim/rendering/static-lod/ai-bare", 20000.0);
+    if (_model.valid())
+    {
+        if( maxRangeDetail == 0.0 )
+        {
+            // disable LOD
+            _model->setRange(0, 0.0,     FLT_MAX);
+            _model->setRange(1, FLT_MAX, FLT_MAX);
+        }
+        else
+        {
+            _model->setRange(0, 0.0, maxRangeDetail);
+            _model->setRange(1, maxRangeDetail,maxRangeBare);
+        }
+    }
+}
+
 void FGAIBase::Transform() {
 
     if (!invisible) {
@@ -226,23 +247,22 @@ bool FGAIBase::init(bool search_in_AI_path) {
         _installed = true;
 
     osg::Node * mdl = SGModelLib::loadPagedModel(f, props, new FGNasalModelData(props));
-    model = mdl;
 
-    double aiModelMaxRange = fgGetDouble("/sim/rendering/static-lod/ai", 0.0);
-    if( aiModelMaxRange > 0.0 ) {
-        osg::LOD * lod = new osg::LOD;
-        lod->setName("AI-model range animation node");
+    _model = new osg::LOD;
+    _model->setName("AI-model range animation node");
 
-        lod->addChild( mdl, 0, aiModelMaxRange );
-        lod->setCenterMode(osg::LOD::USE_BOUNDING_SPHERE_CENTER);
-        lod->setRangeMode(osg::LOD::DISTANCE_FROM_EYE_POINT);
-
-        model = lod;
-    }
+    _model->addChild( mdl, 0, FLT_MAX );
+    _model->setCenterMode(osg::LOD::USE_BOUNDING_SPHERE_CENTER);
+    _model->setRangeMode(osg::LOD::DISTANCE_FROM_EYE_POINT);
+//    We really need low-resolution versions of AI/MP aircraft.
+//    Or at least dummy "stubs" with some default silhouette.
+//        _model->addChild( SGModelLib::loadPagedModel(fgGetString("/sim/multiplay/default-model", default_model),
+//                                                    props, new FGNasalModelData(props)), FLT_MAX, FLT_MAX);
+    updateLOD();
 
     initModel(mdl);
-    if (model.valid() && _initialized == false) {
-        aip.init( model.get() );
+    if (_model.valid() && _initialized == false) {
+        aip.init( _model.get() );
         aip.setVisible(true);
         invisible = false;
         globals->get_scenery()->get_scene_graph()->addChild(aip.getSceneGraph());
@@ -260,7 +280,7 @@ bool FGAIBase::init(bool search_in_AI_path) {
 
 void FGAIBase::initModel(osg::Node *node)
 {
-    if (model.valid()) { 
+    if (_model.valid()) { 
 
         if( _path != ""){
             props->setStringValue("submodels/path", _path.c_str());
@@ -523,7 +543,7 @@ SGVec3d FGAIBase::getCartPos() const {
 bool FGAIBase::getGroundElevationM(const SGGeod& pos, double& elev,
                                    const SGMaterial** material) const {
     return globals->get_scenery()->get_elevation_m(pos, elev, material,
-                                                   model.get());
+                                                   _model.get());
 }
 
 double FGAIBase::_getCartPosX() const {

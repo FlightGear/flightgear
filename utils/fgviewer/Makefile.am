@@ -19,5 +19,5 @@ endif
 fgviewer_SOURCES = fgviewer.cxx
 fgviewer_LDADD = \
 	-lsgtgdb -lsgmaterial -lsgmodel -lsgbvh -lsgutil -lsgio -lsgbucket \
-	-lsgmath -lsgprops -lsgdebug -lsgmisc -lsgxml -lsgstructure \
+	-lsgmath -lsgprops -lsgdebug -lsgmisc -lsgxml -lsgstructure -lsgthreads \
 	$(fgviewer_PLIB_LIBS) $(OSG_LIBS) $(opengl_LIBS) $(thread_LIBS) -lz

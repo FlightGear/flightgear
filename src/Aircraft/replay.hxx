@@ -1,6 +1,6 @@
 // replay.hxx - a system to record and replay FlightGear flights
 //
-// Written by Curtis Olson, started Juley 2003.
+// Written by Curtis Olson, started July 2003.
 //
 // Copyright (C) 2003  Curtis L. Olson  - http://www.flightgear.org/~curt
 //
@@ -36,20 +36,15 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 
-#include <Network/net_ctrls.hxx>
-#include <Network/net_fdm.hxx>
-
 using std::deque;
 
+class FGFlightRecorder;
 
-class FGReplayData {
-
-public:
-
+typedef struct {
     double sim_time;
-    FGNetFDM fdm;
-    FGNetCtrls ctrls;
-};
+    char   raw_data;
+    /* more data here, hidden to the outside world */
+} FGReplayData;
 
 typedef deque < FGReplayData *> replay_list_type;
 
@@ -73,21 +68,17 @@ public:
     virtual void bind();
     virtual void unbind();
     virtual void update( double dt );
+    bool start();
+
+private:
+    void clear();
+    FGReplayData* record(double time);
+    void interpolate(double time, const replay_list_type &list);
+    void replay(double time, FGReplayData* pCurrentFrame, FGReplayData* pOldFrame=NULL);
 
     bool replay( double time );
     double get_start_time();
     double get_end_time();
-    
-private:
-    void clear();
-
-    static const double st_list_time;   // 60 secs of high res data
-    static const double mt_list_time;  // 10 mins of 1 fps data
-    static const double lt_list_time; // 1 hr of 10 spf data
-
-    // short term sample rate is as every frame
-    static const double mt_dt; // medium term sample rate (sec)
-    static const double lt_dt; // long term sample rate (sec)
 
     double sim_time;
     double last_mt_time;
@@ -101,7 +92,18 @@ private:
     SGPropertyNode_ptr disable_replay;
     SGPropertyNode_ptr replay_master;
     SGPropertyNode_ptr replay_time;
+    SGPropertyNode_ptr replay_time_str;
     SGPropertyNode_ptr replay_looped;
+    SGPropertyNode_ptr speed_up;
+
+    double m_high_res_time;    // default: 60 secs of high res data
+    double m_medium_res_time;  // default: 10 mins of 1 fps data
+    double m_low_res_time;     // default: 1 hr of 10 spf data
+    // short term sample rate is as every frame
+    double m_medium_sample_rate; // medium term sample rate (sec)
+    double m_long_sample_rate;   // long term sample rate (sec)
+
+    FGFlightRecorder* m_pRecorder;
 };
 
 

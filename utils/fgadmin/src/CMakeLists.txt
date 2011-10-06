@@ -7,9 +7,9 @@ add_dependencies(fgadmin FGAdminUI)
 
 target_link_libraries(fgadmin FGAdminUI
 	${SIMGEAR_LIBRARIES}
-	${ZLIB_LIBRARIES}
 	${PLIB_LIBRARIES}
 	${FLTK_LIBRARIES}
+	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
 )
 	
 install(TARGETS fgadmin RUNTIME DESTINATION bin)

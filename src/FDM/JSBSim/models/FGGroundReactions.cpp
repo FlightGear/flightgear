@@ -39,55 +39,15 @@ INCLUDES
 #include <iomanip>
 
 #include "FGGroundReactions.h"
-#include "FGFCS.h"
+#include "FGLGear.h"
 #include "input_output/FGPropertyManager.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGGroundReactions.cpp,v 1.32 2011/05/20 03:18:36 jberndt Exp $";
+static const char *IdSrc = "$Id: FGGroundReactions.cpp,v 1.36 2011/08/21 15:13:22 bcoconni Exp $";
 static const char *IdHdr = ID_GROUNDREACTIONS;
-
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-CLASS IMPLEMENTATION for MultiplierIterator (See below for FGGroundReactions)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
-MultiplierIterator::MultiplierIterator(FGGroundReactions* GndReactions)
-: GroundReactions(GndReactions),
-  multiplier(NULL),
-  gearNum(0),
-  entry(0)
-{
-  for (int i=0; i < GroundReactions->GetNumGearUnits(); i++) {
-		FGLGear* gear = GroundReactions->GetGearUnit(i);
-
-		if (!gear->GetWOW()) continue;
-
-    gearNum = i;
-    multiplier = gear->GetMultiplierEntry(0);
-    break;
-  }
-}
-
-MultiplierIterator& MultiplierIterator::operator++()
-{
-  for (int i=gearNum; i < GroundReactions->GetNumGearUnits(); i++) {
-		FGLGear* gear = GroundReactions->GetGearUnit(i);
-
-    if (!gear->GetWOW()) continue;
-
-    multiplier = gear->GetMultiplierEntry(++entry);
-    if (multiplier) {
-      gearNum = i;
-      break;
-    }
-    else
-      entry = -1;
-  }
-
-  return *this;
-}
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CLASS IMPLEMENTATION
@@ -131,6 +91,8 @@ bool FGGroundReactions::Run(bool Holding)
   vForces.InitMatrix();
   vMoments.InitMatrix();
 
+  multipliers.clear();
+
   // Sum forces and moments for all gear, here.
   // Some optimizations may be made here - or rather in the gear code itself.
   // The gear ::Run() method is called several times - once for each gear.
@@ -161,20 +123,6 @@ bool FGGroundReactions::GetWOW(void) const
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-// This function must be called after friction forces are resolved in order to
-// include them in the ground reactions total force and moment.
-void FGGroundReactions::UpdateForcesAndMoments(void)
-{
-  vForces.InitMatrix();
-  vMoments.InitMatrix();
-
-  for (unsigned int i=0; i<lGear.size(); i++) {
-    vForces  += lGear[i]->UpdateForces();
-    vMoments += lGear[i]->GetMoments();
-  }
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bool FGGroundReactions::Load(Element* el)
 {
@@ -182,14 +130,17 @@ bool FGGroundReactions::Load(Element* el)
 
   Debug(2);
 
+  unsigned int numContacts = el->GetNumElements("contact");
+  lGear.resize(numContacts);
   Element* contact_element = el->FindElement("contact");
-  while (contact_element) {
-    lGear.push_back(new FGLGear(contact_element, FDMExec, num++));
-    FDMExec->GetFCS()->AddGear(); // make the FCS aware of the landing gear
+  for (unsigned int idx=0; idx<numContacts; idx++) {
+    lGear[idx] = new FGLGear(contact_element, FDMExec, num++, in);
     contact_element = el->FindNextElement("contact");
   }
-  
+
   FGModel::Load(el); // Perform base class Load
+
+  in.vWhlBodyVec.resize(lGear.size());
 
   for (unsigned int i=0; i<lGear.size();i++) lGear[i]->bind();
 
@@ -275,12 +226,6 @@ void FGGroundReactions::bind(void)
   typedef double (FGGroundReactions::*PMF)(int) const;
   PropertyManager->Tie("gear/num-units", this, &FGGroundReactions::GetNumGearUnits);
   PropertyManager->Tie("gear/wow", this, &FGGroundReactions::GetWOW);
-  PropertyManager->Tie("moments/l-gear-lbsft", this, eL, (PMF)&FGGroundReactions::GetMoments);
-  PropertyManager->Tie("moments/m-gear-lbsft", this, eM, (PMF)&FGGroundReactions::GetMoments);
-  PropertyManager->Tie("moments/n-gear-lbsft", this, eN, (PMF)&FGGroundReactions::GetMoments);
-  PropertyManager->Tie("forces/fbx-gear-lbs", this, eX, (PMF)&FGGroundReactions::GetForces);
-  PropertyManager->Tie("forces/fby-gear-lbs", this, eY, (PMF)&FGGroundReactions::GetForces);
-  PropertyManager->Tie("forces/fbz-gear-lbs", this, eZ, (PMF)&FGGroundReactions::GetForces);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

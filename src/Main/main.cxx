@@ -132,7 +132,6 @@ static void fgMainLoop( void ) {
         = fgGetNode("/sim/timing-statistics/min-time-ms", true);
 
     frame_signal->fireValueChanged();
-    SGCloudLayer::enable_bump_mapping = fgGetBool("/sim/rendering/bump-mapping");
     
     SG_LOG( SG_GENERAL, SG_DEBUG, "Running Main Loop");
     SG_LOG( SG_GENERAL, SG_DEBUG, "======= ==== ====");
@@ -510,6 +509,8 @@ static void fgIdleFunction ( void ) {
         // runway selection as for AI traffic. However, this code belongs to
         // somewhere(?) else - if I only new where...
         if( true == fgGetBool( "/environment/metar/valid" ) ) {
+            SG_LOG(SG_ENVIRONMENT, SG_INFO,
+                "Using METAR for runway selection: '" << fgGetString("/environment/metar/data") << "'" );
             // the realwx_ctrl fetches metar in the foreground on init,
             // If it was able to fetch a metar or one was given on the commandline,
             // the valid flag is set here, otherwise it is false
@@ -525,6 +526,9 @@ static void fgIdleFunction ( void ) {
                 extern bool fgSetPosFromAirportIDandHdg( const string& id, double tgt_hdg );
                 fgSetPosFromAirportIDandHdg( apt, hdg );
             }
+        } else {
+            SG_LOG(SG_ENVIRONMENT, SG_INFO,
+                "No METAR available to pick active runway" );
         }
 
         fgSplashProgress("initializing graphics engine");
@@ -549,11 +553,6 @@ static void fgIdleFunction ( void ) {
         fgSetBool("sim/sceneryloaded", false);
         fgRegisterIdleHandler( fgMainLoop );
     }
-}
-
-static void fgWinResizeFunction(int width, int height)
-{
-    globals->get_renderer()->resize(width, height);
 }
 
 static void upper_case_property(const char *name)
@@ -646,9 +645,7 @@ int fgMainInit( int argc, char **argv ) {
     fgOSInit(&argc, argv);
     _bootstrap_OSInit++;
 
-    fgRegisterWindowResizeHandler( &fgWinResizeFunction );
     fgRegisterIdleHandler( &fgIdleFunction );
-    fgRegisterDrawHandler( &FGRenderer::update );
 
     // Initialize sockets (WinSock needs this)
     simgear::Socket::initSockets();

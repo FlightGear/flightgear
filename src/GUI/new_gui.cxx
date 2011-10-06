@@ -22,6 +22,10 @@
 
 #include <Main/fg_props.hxx>
 
+#if defined(SG_UNIX) && !defined(SG_MAC) 
+#include "GL/glx.h"
+#endif
+
 #include "menubar.hxx"
 #include "dialog.hxx"
 
@@ -417,6 +421,11 @@ FGFontCache::FGFontCache() :
 
 FGFontCache::~FGFontCache()
 {
+#if defined(SG_UNIX) && !defined(SG_MAC) 
+   // Ugly workaround for a crash on exit with multiple screens configured
+   if (!glXGetCurrentContext())
+      return;
+#endif
    PuFontMap::iterator it, end = _puFonts.end();
    for (it = _puFonts.begin(); it != end; ++it)
        delete it->second;

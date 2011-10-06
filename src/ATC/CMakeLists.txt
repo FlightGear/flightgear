@@ -6,5 +6,12 @@ set(SOURCES
 	trafficcontrol.cxx
 	CommStation.cxx
 	)
-	
-flightgear_component(ATC "${SOURCES}")
+
+set(HEADERS
+	atc_mgr.hxx
+	atcdialog.hxx
+	trafficcontrol.hxx
+	CommStation.hxx
+	)
+    	
+flightgear_component(ATC "${SOURCES}" "${HEADERS}")

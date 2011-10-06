@@ -16,7 +16,7 @@ fgpanel_SOURCES = main.cxx \
 #LIBS =
 
 fgpanel_LDADD = \
-	-lGLU -lglut -lsgmath -lsgprops -lsgio -lsgdebug -lsgmisc -lsgstructure -lsgxml -lsgtiming \
-	-lplibpu -lplibfnt -lplibul \
-	-lrt -lpng
+	-lGLU -lGL -lglut -lsgmath -lsgprops -lsgio -lsgdebug -lsgmisc -lsgstructure -lsgxml -lsgtiming \
+	-lplibpu -lplibfnt -lplibul -lsgthreads \
+	-lz -lrt -lpng
 endif

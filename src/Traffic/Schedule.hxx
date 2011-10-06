@@ -62,7 +62,7 @@ class FGAISchedule
   bool initialized;
   bool valid;
 
-  void scheduleFlights();
+  void scheduleFlights(time_t now);
   
   /**
    * Transition this schedule from distant mode to AI mode;
@@ -122,7 +122,7 @@ class FGAISchedule
   void         setHeading (); 
   void         assign         (FGScheduledFlight *ref) { flights.push_back(ref); };
   void         setFlightType  (string val            ) { flightType = val; };
-  FGScheduledFlight*findAvailableFlight (const string &currentDestination, const string &req);
+  FGScheduledFlight*findAvailableFlight (const string &currentDestination, const string &req, time_t min=0, time_t max=0);
   // used to sort in decending order of score: I've probably found a better way to
   // decending order sorting, but still need to test that.
   bool operator< (const FGAISchedule &other) const;

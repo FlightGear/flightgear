@@ -58,6 +58,7 @@ FORWARD DECLARATIONS
 
 namespace JSBSim {
 class FGAtmosphere;
+class FGWinds;
 class FGFCS;
 class FGPropulsion;
 class FGMassBalance;
@@ -69,6 +70,7 @@ class FGAuxiliary;
 class FGOutput;
 class FGInitialCondition;
 class FGLocation;
+class FGAccelerations;
 }
 
 // Adding it here will cause a namespace clash in FlightGear -EMH-
@@ -221,16 +223,18 @@ private:
     JSBSim::FGInitialCondition *fgic;
     bool needTrim;
 
-    JSBSim::FGAtmosphere*   Atmosphere;
-    JSBSim::FGFCS*          FCS;
-    JSBSim::FGPropulsion*   Propulsion;
-    JSBSim::FGMassBalance*  MassBalance;
-    JSBSim::FGAircraft*     Aircraft;
-    JSBSim::FGPropagate*    Propagate;
-    JSBSim::FGAuxiliary*    Auxiliary;
-    JSBSim::FGAerodynamics* Aerodynamics;
+    JSBSim::FGAtmosphere*      Atmosphere;
+    JSBSim::FGWinds*           Winds;
+    JSBSim::FGFCS*             FCS;
+    JSBSim::FGPropulsion*      Propulsion;
+    JSBSim::FGMassBalance*     MassBalance;
+    JSBSim::FGAircraft*        Aircraft;
+    JSBSim::FGPropagate*       Propagate;
+    JSBSim::FGAuxiliary*       Auxiliary;
+    JSBSim::FGAerodynamics*    Aerodynamics;
     JSBSim::FGGroundReactions* GroundReactions;
-    JSBSim::FGInertial*     Inertial;
+    JSBSim::FGInertial*        Inertial;
+    JSBSim::FGAccelerations*   Accelerations;
 
     int runcount;
     double trim_elev;
@@ -269,7 +273,7 @@ private:
 
     SGPropertyNode_ptr temperature;
     SGPropertyNode_ptr pressure;
-    SGPropertyNode_ptr density;
+    SGPropertyNode_ptr pressureSL;
     SGPropertyNode_ptr ground_wind;
     SGPropertyNode_ptr turbulence_gain;
     SGPropertyNode_ptr turbulence_rate;

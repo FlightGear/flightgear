@@ -37,6 +37,7 @@ FGATCManager::FGATCManager() {
     controller = 0;
     prevController = 0;
     networkVisible = false;
+    initSucceeded  = false;
 }
 
 FGATCManager::~FGATCManager() {
@@ -45,8 +46,6 @@ FGATCManager::~FGATCManager() {
 
 void FGATCManager::init() {
     SGSubsystem::init();
-    currentATCDialog = new FGATCDialogNew;
-    currentATCDialog->init();
 
     int leg = 0;
 
@@ -110,7 +109,7 @@ void FGATCManager::init() {
             if (park_index < 0) {
                   SG_LOG( SG_GENERAL, SG_ALERT,
                         "Failed to find parking position " << parking <<
-                        " at airport " << airport );
+                        " at airport " << airport << " at " << SG_ORIGIN);
             }
         if (parking.empty() || (park_index < 0)) {
             controller = apt->getDynamics()->getTowerController();
@@ -136,7 +135,7 @@ void FGATCManager::init() {
             string aircraftType; // Unused.
             string airline;      // Currently used for gate selection, but a fallback mechanism will apply when not specified.
             fp->setGate(park_index);
-            fp->createPushBack(&ai_ac,
+            if (!(fp->createPushBack(&ai_ac,
                                false, 
                                apt, 
                                latitude,
@@ -144,7 +143,10 @@ void FGATCManager::init() {
                                aircraftRadius,
                                fltType,
                                aircraftType,
-                               airline);
+                               airline))) {
+                controller = 0;
+                return;
+            }
 
         }
         fp->getLastWaypoint()->setName( fp->getLastWaypoint()->getName() + string("legend")); 
@@ -170,6 +172,7 @@ void FGATCManager::init() {
    //cerr << "Adding groundnetWork to the scenegraph::init" << endl;
    //globals->get_scenery()->get_scene_graph()->addChild(node);
    }
+   initSucceeded = true;
 }
 
 void FGATCManager::addController(FGATCController *controller) {
@@ -214,7 +217,7 @@ void FGATCManager::update ( double time ) {
     ai_ac.setSpeed(speed);
     ai_ac.update(time);
     controller = ai_ac.getATCController();
-    currentATCDialog->update(time);
+    FGATCDialogNew::instance()->update(time);
     if (controller) {
        //cerr << "name of previous waypoint : " << fp->getPreviousWaypoint()->getName() << endl;
 
@@ -244,5 +247,7 @@ void FGATCManager::update ( double time ) {
         //cerr << "Adding groundnetWork to the scenegraph::update" << endl;
         prevController = controller;
    }
-   //globals->get_scenery()->get_scene_graph()->addChild(node);
+   for (AtcVecIterator atc = activeStations.begin(); atc != activeStations.end(); atc++) {
+       (*atc)->update(time);
+   }
 }

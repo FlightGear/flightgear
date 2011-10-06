@@ -1,7 +1,7 @@
 # Locate SimGear
 # This module defines
 # SIMGEAR_LIBRARIES
-# SIMGEAR_FOUND, if false, do not try to link to SimGear 
+# SIMGEAR_FOUND, if false, do not try to link to SimGear
 # SIMGEAR_INCLUDE_DIR, where to find the headers
 #
 # $SIMGEAR_DIR is an environment variable that would
@@ -30,7 +30,7 @@
 # /System/Library/Frameworks/SimGear.framework/Headers
 #
 # On OS X, this will prefer the Framework version (if found) over others.
-# People will have to manually change the cache values of 
+# People will have to manually change the cache values of
 # SimGear_LIBRARIES to override this selection or set the CMake environment
 # CMAKE_INCLUDE_PATH to modify the search paths.
 
@@ -38,7 +38,7 @@ include(SelectLibraryConfigurations)
 
 FIND_PATH(SIMGEAR_INCLUDE_DIR simgear/math/SGMath.hxx
   HINTS $ENV{SIMGEAR_DIR}
-  PATH_SUFFIXES include 
+  PATH_SUFFIXES include
   PATHS
   ~/Library/Frameworks
   /Library/Frameworks
@@ -62,6 +62,10 @@ FIND_LIBRARY(SIMGEAR_LIBRARIES
   /usr
   /opt
 )
+
+# dependent packages
+find_package(ZLIB REQUIRED)
+find_package(Threads REQUIRED)
 
 macro(find_sg_component comp libs)
     set(compLib "sg${comp}")
@@ -103,33 +107,22 @@ macro(find_sg_component comp libs)
 endmacro()
 
 
-if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")  
+if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
     set(SIMGEAR_LIBRARIES "") # clear value
+    set(SIMGEAR_CORE_LIBRARIES "") # clear value
     
-    if(NOT MSVC)
-        # Olaf indicates that linking the threads libs causes failures
-        # on MSVC builds
-        set(thread_lib threads)
-    endif(NOT MSVC)
-
   # note the order here affects the order Simgear libraries are
   # linked in, and hence ability to link when using a traditional
   # linker such as GNU ld on Linux
-    set(comps 
-        ephem
+    set(comps
         tsync
         environment
         nasal
-        sky
-        material
-        tgdb
-        model    
-        screen
         bucket
         bvh
-        util route
+        util 
+        route
         timing
-        ${thread_lib}
         io
         serial
         sound
@@ -137,13 +130,49 @@ if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
         props
         xml
         misc
-        debug 
+        threads
+        debug
         magvar
         math)
-    
+
+    set(scene_comps
+        ephem
+        sky
+        material
+        tgdb
+        model
+        screen)
+            
     foreach(component ${comps})
+        find_sg_component(${component} SIMGEAR_CORE_LIBRARIES)
+    endforeach()
+        
+    foreach(component ${scene_comps})
         find_sg_component(${component} SIMGEAR_LIBRARIES)
     endforeach()
+
+    # again link order matters - scene libraires depend on core ones
+    list(APPEND SIMGEAR_LIBRARIES ${SIMGEAR_CORE_LIBRARIES})
+
+    set(SIMGEAR_CORE_LIBRARY_DEPENDENCIES
+        ${CMAKE_THREAD_LIBS_INIT}
+        ${ZLIB_LIBRARY})
+
+    if(WIN32)
+        list(APPEND SIMGEAR_CORE_LIBRARY_DEPENDENCIES ws2_32.lib)
+    endif(WIN32)
+
+    if(NOT MSVC)
+        # basic timing routines on non windows systems, may be also cygwin?!
+        check_function_exists(clock_gettime clock_gettime_in_libc)
+        if(NOT clock_gettime_in_libc)
+            check_library_exists(rt clock_gettime "" have_rt)
+            if(have_rt)
+                list(APPEND SIMGEAR_CORE_LIBRARY_DEPENDENCIES rt)
+            endif(have_rt)
+        endif(NOT clock_gettime_in_libc)
+    endif(NOT MSVC)
+
 endif()
 
 # now we've found SimGear, check its version
@@ -157,14 +186,14 @@ SET(CMAKE_REQUIRED_INCLUDES ${SIMGEAR_INCLUDE_DIR})
 check_cxx_source_runs(
     "#include <cstdio>
     #include \"simgear/version.h\"
-    
+
     #define xstr(s) str(s)
     #define str(s) #s
-     
+
     #define MIN_MAJOR ${SimGear_FIND_VERSION_MAJOR}
     #define MIN_MINOR ${SimGear_FIND_VERSION_MINOR}
     #define MIN_MICRO ${SimGear_FIND_VERSION_PATCH}
-    
+
     int main() {
         int major, minor, micro;
 
@@ -185,6 +214,6 @@ check_cxx_source_runs(
     SIMGEAR_VERSION_OK)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(SimGear DEFAULT_MSG 
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(SimGear DEFAULT_MSG
      SIMGEAR_LIBRARIES SIMGEAR_INCLUDE_DIR SIMGEAR_VERSION_OK)
 

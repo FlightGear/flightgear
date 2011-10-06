@@ -18,8 +18,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-// $Id$
-
 
 #include <stdlib.h>
 #include <cstring>
@@ -103,4 +101,15 @@ bool FGBeacon::init() {
     }
 
     return true;
+}
+
+FGBeacon * FGBeacon::_instance = NULL;
+
+FGBeacon * FGBeacon::instance()
+{
+    if( _instance == NULL ) {
+        _instance = new FGBeacon();
+        _instance->init();
+    }
+    return _instance;
 }

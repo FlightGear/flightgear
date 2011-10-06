@@ -201,7 +201,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
   if (!valid) {
     return false;
   }
-  scheduleFlights();
+  scheduleFlights(now);
   if (flights.empty()) { // No flights available for this aircraft
       valid = false;
       return false;
@@ -321,7 +321,7 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
   mp_ai.append(modelPath);
 
   if (!mp.exists() && !mp_ai.exists()) {
-    SG_LOG(SG_INPUT, SG_WARN, "TrafficManager: Could not load model " << mp.str());
+    SG_LOG(SG_GENERAL, SG_WARN, "TrafficManager: Could not load model " << mp.str());
     return true;
   }
 
@@ -369,25 +369,39 @@ void FGAISchedule::setHeading()
     courseToDest = SGGeodesy::courseDeg((*flights.begin())->getDepartureAirport()->geod(), (*flights.begin())->getArrivalAirport()->geod());
 }
 
-void FGAISchedule::scheduleFlights()
+void FGAISchedule::scheduleFlights(time_t now)
 {
   if (!flights.empty()) {
     return;
   }
+  string startingPort;
+  string userPort = fgGetString("/sim/presets/airport-id");
   SG_LOG(SG_GENERAL, SG_BULK, "Scheduling Flights for : " << modelPath << " " <<  registration << " " << homePort);
   FGScheduledFlight *flight = NULL;
   do {
-    flight = findAvailableFlight(currentDestination, flightIdentifier);
+    if (currentDestination.empty()) {
+        //flight = findAvailableFlight(userPort, flightIdentifier, now, (now+1800));
+        if (!flight)
+            flight = findAvailableFlight(currentDestination, flightIdentifier);
+    } else {
+        flight = findAvailableFlight(currentDestination, flightIdentifier);
+    }
+    
     if (!flight) {
       break;
     }
-    
+    if (startingPort.empty()) {
+        startingPort = flight->getDepartureAirport()->getId();
+    }
+
+   
     currentDestination = flight->getArrivalAirport()->getId();
+    //cerr << "Current destination " <<  currentDestination << endl;
     if (!initialized) {
         string departurePort = flight->getDepartureAirport()->getId();
        //cerr << "Scheduled " << registration <<  " " << score << " for Flight " 
        //     << flight-> getCallSign() << " from " << departurePort << " to " << currentDestination << endl;
-        if (fgGetString("/sim/presets/airport-id") == departurePort) {
+        if (userPort == departurePort) {
             hits++;
         }
         //runCount++;
@@ -409,7 +423,7 @@ void FGAISchedule::scheduleFlights()
                              << "  "        << arrT << ":");
   
     flights.push_back(flight);
-  } while (1); //while (currentDestination != homePort);
+  } while (1); //(currentDestination != startingPort);
   SG_LOG(SG_GENERAL, SG_BULK, " Done ");
 }
 
@@ -446,7 +460,8 @@ bool FGAISchedule::next()
 }
 
 FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDestination,
-                                                      const string &req)
+                                                      const string &req,
+                                                     time_t min, time_t max)
 {
     time_t now = time(NULL) + fgGetLong("/sim/time/warp");
 
@@ -492,8 +507,13 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
           }
           if (flights.size()) {
             time_t arrival = flights.back()->getArrivalTime();
-            if ((*i)->getDepartureTime() < arrival)
+            if ((*i)->getDepartureTime() < (arrival+(20*60)))
                 continue;
+          }
+          if (min != 0) {
+              time_t dep = (*i)->getDepartureTime();
+              if ((dep < min) || (dep > max))
+                  continue;
           }
 
           // So, if we actually get here, we have a winner

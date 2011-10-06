@@ -35,9 +35,9 @@ GFX_CODE = fg_os_osgviewer.cxx fg_os_common.cxx fg_os.hxx
 JSBSIM_LIBS = \
 	$(top_builddir)/src/FDM/JSBSim/libJSBSim.a \
         $(top_builddir)/src/FDM/JSBSim/initialization/libInit.a \
+        $(top_builddir)/src/FDM/JSBSim/models/atmosphere/libAtmosphere.a \
         $(top_builddir)/src/FDM/JSBSim/models/libModels.a \
         $(top_builddir)/src/FDM/JSBSim/models/flight_control/libFlightControl.a\
-        $(top_builddir)/src/FDM/JSBSim/models/atmosphere/libAtmosphere.a \
         $(top_builddir)/src/FDM/JSBSim/models/propulsion/libPropulsion.a \
         $(top_builddir)/src/FDM/JSBSim/input_output/libInputOutput.a \
         $(top_builddir)/src/FDM/JSBSim/math/libMath.a
@@ -113,7 +113,7 @@ fgfs_LDADD = \
 	-lsgroute -lsgsky -lsgsound -lsgephem -lsgtgdb -lsgmodel -lsgbvh \
 	-lsgmaterial -lsgutil -lsgtiming -lsgio -lsgscreen -lsgmath -lsgbucket \
 	-lsgprops -lsgdebug -lsgmagvar -lsgmisc -lsgnasal -lsgxml -lsgsound \
-	-lsgserial -lsgstructure -lsgenvironment -lsgtsync\
+	-lsgserial -lsgstructure -lsgenvironment -lsgtsync -lsgthreads \
         $(fgfs_PLIB_LIBS) \
 	$(OSG_LIBS) \
 	$(thread_LIBS) \
@@ -129,8 +129,8 @@ fgfs_LDFLAGS = $(fgfs_PLIB_FW) $(fgfs_OSG_FW) $(LDFLAGS)
 metar_SOURCES = metar_main.cxx
 
 metar_LDADD = \
-        -lsgenvironment -lsgio -lsgbucket -lsgmisc -lsgstructure -lsgdebug \
-        $(network_LIBS) \
+        -lsgenvironment -lsgio -lsgthreads -lsgbucket -lsgmisc -lsgstructure \
+        -lsgdebug $(network_LIBS) $(thread_LIBS) \
         -lz $(base_LIBS)
 
 

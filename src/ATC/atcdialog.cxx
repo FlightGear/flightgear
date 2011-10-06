@@ -35,11 +35,12 @@
 
 FGATCDialogNew *currentATCDialog;
 
-static bool doATCDialog(const SGPropertyNode* arg) {
+/*static bool doATCDialog(const SGPropertyNode* arg) {
         //cerr << "Running doATCDialog" << endl;
 	currentATCDialog->PopupDialog();
 	return(true);
-}
+}*/
+FGATCDialogNew * FGATCDialogNew::_instance = NULL;
 
 FGATCDialogNew::FGATCDialogNew()
 {
@@ -54,7 +55,7 @@ FGATCDialogNew::~FGATCDialogNew()
 
 void FGATCDialogNew::init() {
 	// Add ATC-dialog to the command list
-	globals->get_commands()->addCommand("ATC-dialog", doATCDialog);
+    globals->get_commands()->addCommand("ATC-dialog", FGATCDialogNew::popup );
 	// Add ATC-freq-search to the command list
 	//globals->get_commands()->addCommand("ATC-freq-search", do_ATC_freq_search);
 

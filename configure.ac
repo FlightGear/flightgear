@@ -530,7 +530,7 @@ case "${host}" in
 
 esac
 
-if test "$OPENAL_OK" == "no"; then
+if test "$OPENAL_OK" = "no"; then
     echo
     echo "You *must* have the openal library installed on your system to build"
     echo "SimGear!"
@@ -541,7 +541,7 @@ if test "$OPENAL_OK" == "no"; then
     exit
 fi
 
-if test "$ALUT_OK" == "no"; then
+if test "$ALUT_OK" = "no"; then
     echo
     echo "You *must* have the alut library installed on your system to build"
     echo "SimGear!"

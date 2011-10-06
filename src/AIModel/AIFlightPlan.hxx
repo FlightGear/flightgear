@@ -166,7 +166,6 @@ public:
   FGAIWaypoint *getLastWaypoint() { return waypoints.back(); };
 
 private:
-  FGRunway* rwy;
   FGAIFlightPlan *sid;
   typedef std::vector <FGAIWaypoint*> wpt_vector_type;
   typedef wpt_vector_type::const_iterator wpt_vector_iterator;

@@ -43,19 +43,20 @@ INCLUDES
 #include "models/FGAtmosphere.h"
 #include "FGInitialCondition.h"
 #include "FGTrimAxis.h"
-#include "models/FGAircraft.h"
 #include "models/FGPropulsion.h"
 #include "models/FGAerodynamics.h"
 #include "models/FGFCS.h"
 #include "models/propulsion/FGEngine.h"
 #include "models/FGAuxiliary.h"
 #include "models/FGGroundReactions.h"
+#include "models/FGPropagate.h"
+#include "models/FGAccelerations.h"
 
 using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGTrimAxis.cpp,v 1.10 2010/07/08 11:36:28 jberndt Exp $";
+static const char *IdSrc = "$Id: FGTrimAxis.cpp,v 1.13 2011/07/28 12:48:19 jberndt Exp $";
 static const char *IdHdr = ID_TRIMAXIS;
 
 /*****************************************************************************/
@@ -167,14 +168,14 @@ FGTrimAxis::~FGTrimAxis(void)
 
 void FGTrimAxis::getState(void) {
   switch(state) {
-  case tUdot: state_value=fdmex->GetPropagate()->GetUVWdot(1)-state_target; break;
-  case tVdot: state_value=fdmex->GetPropagate()->GetUVWdot(2)-state_target; break;
-  case tWdot: state_value=fdmex->GetPropagate()->GetUVWdot(3)-state_target; break;
-  case tQdot: state_value=fdmex->GetPropagate()->GetPQRdot(2)-state_target;break;
-  case tPdot: state_value=fdmex->GetPropagate()->GetPQRdot(1)-state_target; break;
-  case tRdot: state_value=fdmex->GetPropagate()->GetPQRdot(3)-state_target; break;
+  case tUdot: state_value=fdmex->GetAccelerations()->GetUVWdot(1)-state_target; break;
+  case tVdot: state_value=fdmex->GetAccelerations()->GetUVWdot(2)-state_target; break;
+  case tWdot: state_value=fdmex->GetAccelerations()->GetUVWdot(3)-state_target; break;
+  case tQdot: state_value=fdmex->GetAccelerations()->GetPQRdot(2)-state_target;break;
+  case tPdot: state_value=fdmex->GetAccelerations()->GetPQRdot(1)-state_target; break;
+  case tRdot: state_value=fdmex->GetAccelerations()->GetPQRdot(3)-state_target; break;
   case tHmgt: state_value=computeHmgt()-state_target; break;
-  case tNlf:  state_value=fdmex->GetAircraft()->GetNlf()-state_target; break;
+  case tNlf:  state_value=fdmex->GetAuxiliary()->GetNlf()-state_target; break;
   case tAll: break;
   }
 }
@@ -423,9 +424,12 @@ void FGTrimAxis::setThrottlesPct(void) {
   for(unsigned i=0;i<fdmex->GetPropulsion()->GetNumEngines();i++) {
       tMin=fdmex->GetPropulsion()->GetEngine(i)->GetThrottleMin();
       tMax=fdmex->GetPropulsion()->GetEngine(i)->GetThrottleMax();
-      //cout << "setThrottlespct: " << i << ", " << control_min << ", " << control_max << ", " << control_value;
+
+      // Both the main throttle setting in FGFCS and the copy of the position
+      // in the Propulsion::Inputs structure need to be set at this time.
       fdmex->GetFCS()->SetThrottleCmd(i,tMin+control_value*(tMax-tMin));
-      //cout << "setThrottlespct: " << fdmex->GetFCS()->GetThrottleCmd(i) << endl;
+      fdmex->GetPropulsion()->in.ThrottlePos[i] = tMin +control_value*(tMax - tMin);
+
       fdmex->RunIC(); //apply throttle change
       fdmex->GetPropulsion()->GetSteadyState();
   }

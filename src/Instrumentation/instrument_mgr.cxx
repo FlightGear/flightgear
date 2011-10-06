@@ -37,7 +37,7 @@
 #include "kt_70.hxx"
 #include "mag_compass.hxx"
 #include "marker_beacon.hxx"
-#include "navradio.hxx"
+#include "newnavradio.hxx"
 #include "slip_skid_ball.hxx"
 #include "transponder.hxx"
 #include "turn_indicator.hxx"
@@ -52,6 +52,7 @@
 #include "agradar.hxx"
 #include "rad_alt.hxx"
 #include "tcas.hxx"
+#include "NavDisplay.hxx"
 
 FGInstrumentMgr::FGInstrumentMgr () :
   _explicitGps(false)
@@ -80,13 +81,13 @@ void FGInstrumentMgr::init()
   try {
     readProperties( config.str(), config_props );
     if (!build(config_props)) {
-      throw sg_error(
+      throw sg_exception(
                     "Detected an internal inconsistency in the instrumentation\n"
                     "system specification file.  See earlier errors for details.");
     }
-  } catch (const sg_exception&) {
+  } catch (const sg_exception& e) {
     SG_LOG(SG_COCKPIT, SG_ALERT, "Failed to load instrumentation system model: "
-                    << config.str() );
+                    << config.str() << ":" << e.getFormattedMessage() );
   }
 
 
@@ -187,7 +188,7 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
             set_subsystem( id, new FGMarkerBeacon( node ) );
 
         } else if ( name == "nav-radio" ) {
-            set_subsystem( id, new FGNavRadio( node ) );
+            set_subsystem( id, Instrumentation::NavRadio::createInstance( node ) );
 
         } else if ( name == "slip-skid-ball" ) {
             set_subsystem( id, new SlipSkidBall( node ) );
@@ -227,7 +228,10 @@ bool FGInstrumentMgr::build (SGPropertyNode* config_props)
 
         } else if ( name == "tcas" ) {
             set_subsystem( id, new TCAS( node ) );
-
+        
+        } else if ( name == "navigation-display" ) {
+            set_subsystem( id, new NavDisplay( node ) );
+            
         } else {
             SG_LOG( SG_ALL, SG_ALERT, "Unknown top level section: "
                     << name );

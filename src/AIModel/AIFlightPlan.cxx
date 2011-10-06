@@ -71,7 +71,6 @@ bool FGAIWaypoint::contains(string target) {
 
 FGAIFlightPlan::FGAIFlightPlan() 
 {
-    rwy = 0;
     sid = 0;
     repeat = false;
     distance_to_go = 0;

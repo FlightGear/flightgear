@@ -37,8 +37,8 @@ add_executable(yasim yasim-test.cpp)
 
 target_link_libraries(yasim 
 	fgYASim
-	${SIMGEAR_LIBRARIES}
-	${ZLIB_LIBRARIES})
+	${SIMGEAR_CORE_LIBRARIES}
+        ${SIMGEAR_CORE_LIBRARY_DEPENDENCIES})
 
 install(TARGETS yasim RUNTIME DESTINATION bin)
 	

@@ -322,7 +322,7 @@ void fgHiResDump()
         int curColumn = trGet(tr, TR_CURRENT_COLUMN);
         // int curRow =  trGet(tr, TR_CURRENT_ROW);
 
-        renderer->update( false );
+        renderer->update();
         // OSGFIXME
 //         if ( do_hud )
 //             fgUpdateHUD( curColumn*hud_col_step,      curRow*hud_row_step,

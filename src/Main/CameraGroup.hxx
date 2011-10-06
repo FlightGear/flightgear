@@ -183,6 +183,11 @@ public:
 
     void buildDistortionCamera(const SGPropertyNode* psNode,
                                osg::Camera* camera);
+  
+    /**
+     * get aspect ratio of master camera's viewport
+     */
+    double getMasterAspectRatio() const;
 protected:
     CameraList _cameras;
     osg::ref_ptr<osgViewer::Viewer> _viewer;
