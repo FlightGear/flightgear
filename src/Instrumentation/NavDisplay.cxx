@@ -150,10 +150,18 @@ static osg::Vec2 mult(const osg::Vec2& v, const osg::Matrixf& m)
 class SymbolDef
 {
 public:
+  SymbolDef() :
+      enable(NULL)
+    {}
+  
     bool initFromNode(SGPropertyNode* node)
     {
         type = node->getStringValue("type");
-        enable = sgReadCondition(fgGetNode("/"), node->getChild("enable"));
+        SGPropertyNode* enableNode = node->getChild("enable");
+        if (enableNode) { 
+            enable = sgReadCondition(fgGetNode("/"), enableNode);
+        }
+      
         int n=0;
         while (node->hasChild("state", n)) {
             string m = node->getChild("state", n++)->getStringValue();
@@ -245,7 +253,7 @@ public:
         string_set::const_iterator it = states.begin(),
             end = states.end();
         for (; it != end; ++it) {
-            if (required_states.count(*it) == 0) {
+            if (!required_states.empty() && (required_states.count(*it) == 0)) {
             // required state not matched
                 return false;
             }
@@ -396,6 +404,9 @@ NavDisplay::init ()
     _navRadio1Node = fgGetNode("/instrumentation/nav[0]", true);
     _navRadio2Node = fgGetNode("/instrumentation/nav[1]", true);
     
+    _excessDataNode = _Instrument->getChild("excess-data", 0, true);
+    _excessDataNode->setBoolValue(false);
+  
 // OSG geometry setup
     _radarGeode = new osg::Geode;
 
@@ -506,9 +517,9 @@ NavDisplay::update (double delta_time_sec)
   _projectMat = osg::Matrixf::scale(_scale, _scale, 1.0) * 
       degRotation(-_view_heading) * _centerTrans;
   
-    _pos = SGGeod::fromDegFt(_user_lon_node->getDoubleValue(),
-                                      _user_lat_node->getDoubleValue(),
-                                      _user_alt_node->getDoubleValue());
+  _pos = SGGeod::fromDegFt(_user_lon_node->getDoubleValue(),
+                           _user_lat_node->getDoubleValue(),
+                           _user_alt_node->getDoubleValue());
     
   _vertices->clear();
   _lineVertices->clear();
@@ -517,7 +528,11 @@ NavDisplay::update (double delta_time_sec)
   _textGeode->removeDrawables(0, _textGeode->getNumDrawables());
   
   BOOST_FOREACH(SymbolDef* def, _rules) {
+    if (def->enable) {
       def->enabled = def->enable->test();
+    } else {
+      def->enabled = true;
+    }
   }
   
   processRoute();
@@ -674,7 +689,7 @@ public:
 
 void NavDisplay::limitDisplayedSymbols()
 {
-    unsigned int maxSymbols = _Instrument->getIntValue("max-symbols");
+    unsigned int maxSymbols = _Instrument->getIntValue("max-symbols", 100);
     if (_symbols.size() <= maxSymbols) {
         _excessDataNode->setBoolValue(false);
         return;
@@ -792,7 +807,7 @@ void NavDisplay::processRoute()
         }
         
         SymbolDefVector rules;
-        findRules(wpt->type() , state, rules);
+        findRules("waypoint" , state, rules);
         if (rules.empty()) {
             return; // no rules matched, we can skip this item
         }
@@ -886,7 +901,7 @@ bool NavDisplay::anyRuleMatches(const string& type, const string_set& states) co
 void NavDisplay::findRules(const string& type, const string_set& states, SymbolDefVector& rules)
 {
     BOOST_FOREACH(SymbolDef* candidate, _rules) {
-        if (!candidate->enabled) {
+        if (!candidate->enabled || (candidate->type != type)) {
             continue;
         }
         
