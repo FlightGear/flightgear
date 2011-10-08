@@ -103,6 +103,7 @@ public:
     int getTakeOffStatus() { return takeOffStatus; };
 
     void checkTcas();
+    double calcVerticalSpeed(double vert_ft, double dist_m, double speed, double error);
 
     FGATCController * getATCController() { return controller; };
     
@@ -181,6 +182,8 @@ private:
     time_t timeElapsed;
 
     PerformanceData* _performance; // the performance data for this aircraft
+    
+   void assertSpeed(double speed);
 };
 
 

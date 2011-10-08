@@ -372,9 +372,11 @@ public:
     FGAIAircraft* getFirstAircraftInDepartureCue() {
         return departureCue.size() ? *(departureCue.begin()) : NULL;
     };
+    FGAIAircraft* getFirstOfStatus(int stat);
     void updateDepartureCue() {
         departureCue.erase(departureCue.begin());
     }
+    void printDepartureCue();
 };
 
 typedef vector<ActiveRunway> ActiveRunwayVec;

@@ -130,7 +130,7 @@ double PerformanceData::actualVerticalSpeed(FGAIAircraft* ac, double tgt_vs, dou
     double vs = ac->getVerticalSpeed();
     double vs_diff = tgt_vs - vs;
 
-    if (fabs(vs_diff) > 10.0) {
+    if (fabs(vs_diff) > .001) {
         if (vs_diff > 0.0) {
             vs += _climbRate * dt / 3.0; //TODO avoid hardcoded 3 secs to attain climb rate from level flight
 
