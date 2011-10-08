@@ -38,6 +38,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props_io.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/misc/ResourceManager.hxx>
 
 #include <iostream>
 
@@ -84,6 +85,8 @@ FGPanelApplication::FGPanelApplication( int argc, char ** argv ) :
 
   if( fgRoot.length() > 0 )
     ApplicationProperties::root = fgRoot;
+
+  simgear::ResourceManager::instance()->addBasePath(ApplicationProperties::root);
 
   if( panelFilename.length() == 0 ) {
     cerr << "Need a panel filename. Use --panel=path_to_filename" << endl; 
@@ -294,14 +297,45 @@ double ApplicationProperties::getDouble( const char * name, double def )
   return n->getDoubleValue();
 }
 
+SGPath ApplicationProperties::GetCwd()
+{
+  SGPath path(".");
+  char buf[512], *cwd = getcwd(buf, 511);
+  buf[511] = '\0';
+  if (cwd)
+  {
+    path = cwd;
+  }
+  return path;
+}
+
 SGPath ApplicationProperties::GetRootPath( const char * sub )
 {
-  SGPath subpath( sub );
-  if ( subpath.isAbsolute() )
-    return subpath;
+  if( sub != NULL )
+  {
+    SGPath subpath( sub );
+
+    // relative path to current working dir?
+    if (subpath.isRelative())
+    {
+      SGPath path = GetCwd();
+      path.append( sub );
+      if (path.exists())
+        return path;
+    }
+    else
+    if ( subpath.exists() )
+    {
+      // absolute path
+      return subpath;
+    }
+  }
+
+  // default: relative path to FGROOT
   SGPath path( ApplicationProperties::root );
   if( sub != NULL )
     path.append( sub );
+
   return path;
 }
 

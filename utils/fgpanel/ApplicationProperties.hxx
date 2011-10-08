@@ -24,6 +24,7 @@ class ApplicationProperties {
 public:
   static double getDouble( const char * name, double def = 0.0 );
   static SGPath GetRootPath( const char * subDir = NULL );
+  static SGPath GetCwd();
   static SGPropertyNode_ptr Properties;
   static std::string root;
   static FGFontCache fontCache;
