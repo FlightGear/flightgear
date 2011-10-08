@@ -22,6 +22,7 @@
 
 #ifdef HAVE_WINDOWS_H
 #include <windows.h>
+#include <direct.h>
 #endif
 
 #include "FGGLApplication.hxx"
