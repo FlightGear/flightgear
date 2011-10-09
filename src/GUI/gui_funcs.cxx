@@ -156,46 +156,60 @@ void guiErrorMessage (const char *txt, const sg_throwable &throwable)
 the Gui callback functions 
 ____________________________________________________________________*/
 
-
-// Hier Neu :-) This is my newly added code
-// Added by David Findlay <nedz@bigpond.com>
-// on Sunday 3rd of December
-
-
-void helpCb ()
+void helpCb()
 {
-    string command;
-	
-    SGPath path( globals->get_fg_root() );
-    path.append( "Docs/index.html" );
-	
+    openBrowser( "Docs/index.html" );
+}
+
+bool openBrowser(string address)
+{
+    bool ok = true;
+
+    // do not resolve addresses with given protocol, i.e. "http://...", "ftp://..."
+    if (address.find("://")==string::npos)
+    {
+        // resolve local file path
+        SGPath path(address);
+        path = globals->resolve_maybe_aircraft_path(address);
+        if (!path.isNull())
+            address = path.str();
+        else
+        {
+            mkDialog ("Sorry, file not found!");
+            SG_LOG(SG_GENERAL, SG_ALERT, "openBrowser: Cannot find requested file '"  
+                    << address << "'.");
+            return false;
+        }
+    }
+
 #ifndef _WIN32
 
-    command = globals->get_browser();
+    string command = globals->get_browser();
     string::size_type pos;
     if ((pos = command.find("%u", 0)) != string::npos)
-        command.replace(pos, 2, path.str());
+        command.replace(pos, 2, address);
     else
-        command += " " + path.str();
+        command += " " + address;
 
     command += " &";
-    system( command.c_str() );
+    ok = (system( command.c_str() ) == 0);
 
 #else // _WIN32
 
     // Look for favorite browser
     char win32_name[1024];
 # ifdef __CYGWIN__
-    cygwin32_conv_to_full_win32_path(path.c_str(),win32_name);
+    cygwin32_conv_to_full_win32_path(address.c_str(),win32_name);
 # else
-    strncpy(win32_name,path.c_str(), 1024);
+    strncpy(win32_name,address.c_str(), 1024);
 # endif
     ShellExecute ( NULL, "open", win32_name, NULL, NULL,
                    SW_SHOWNORMAL ) ;
 
 #endif
-	
-    mkDialog ("Help started in your web browser window.");
+
+    mkDialog("The file is shown in your web browser window.");
+    return ok;
 }
 
 #if defined( TR_HIRES_SNAP)
