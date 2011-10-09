@@ -81,6 +81,7 @@ void FDMShell::init()
   _pressure_inhg    = _props->getNode("environment/pressure-inhg",          true);
   _density_slugft   = _props->getNode("environment/density-slugft3",        true);
   _data_logging     = _props->getNode("/sim/temp/fdm-data-logging",         true);
+  _replay_master    = _props->getNode("/sim/freeze/replay-state",           true);
 
   createImplementation();
 }
@@ -170,8 +171,20 @@ void FDMShell::update(double dt)
     _impl->ToggleDataLogging(doLog);
   }
 
-  if (!_impl->is_suspended())
-      _impl->update(dt);
+  switch(_replay_master->getIntValue())
+  {
+      case 0:
+          // normal FDM operation
+          _impl->update(dt);
+          break;
+      case 3:
+          // resume FDM operation at current replay position
+          _impl->reinit();
+          break;
+      default:
+          // replay is active
+          break;
+  }
 }
 
 void FDMShell::createImplementation()
@@ -260,15 +273,4 @@ void FDMShell::createImplementation()
                + "', cannot init flight dynamics model.");
     }
 
-}
-
-/*
- * Return FDM subsystem.
- */
-
-SGSubsystem* FDMShell::getFDM()
-{
-    /* FIXME we could drop/replace this method, when _impl was a added
-     * to the global subsystem manager - like other proper subsystems... */
-    return _impl;
 }

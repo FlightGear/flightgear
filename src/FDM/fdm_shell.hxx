@@ -41,7 +41,7 @@ class FDMShell : public SGSubsystem
 {
 public:
   FDMShell();
-  ~FDMShell();
+  virtual ~FDMShell();
   
   virtual void init();
   virtual void reinit();
@@ -50,7 +50,6 @@ public:
   virtual void unbind();
   
   virtual void update(double dt);
-  SGSubsystem* getFDM();
 
 private:
 
@@ -63,7 +62,7 @@ private:
   
   SGPropertyNode_ptr _wind_north, _wind_east,_wind_down;
   SGPropertyNode_ptr _control_fdm_atmo,_temp_degc,_pressure_inhg;
-  SGPropertyNode_ptr _density_slugft, _data_logging;
+  SGPropertyNode_ptr _density_slugft, _data_logging, _replay_master;
 };
 
 #endif // of FG_FDM_SHELL_HXX

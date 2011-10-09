@@ -31,7 +31,6 @@
 #include <simgear/structure/exception.hxx>
 
 #include <Main/fg_props.hxx>
-#include <FDM/fdm_shell.hxx>
 
 #include "replay.hxx"
 #include "flightrecorder.hxx"
@@ -235,43 +234,52 @@ FGReplay::update( double dt )
 
     if ( disable_replay->getBoolValue() )
     {
-        current_replay_state = replay_master->getIntValue();
-        replay_master->setIntValue(0);
-        replay_time->setDoubleValue(0);
-        replay_time_str->setStringValue("");
-        disable_replay->setBoolValue(0);
-        speed_up->setDoubleValue(1.0);
-        fgSetString("/sim/messages/copilot", "Replay stopped");
+        if (fgGetBool("/sim/freeze/master",false)||
+            fgGetBool("/sim/freeze/clock",false))
+        {
+            fgSetBool("/sim/freeze/master",false);
+            fgSetBool("/sim/freeze/clock",false);
+            last_replay_state = 1;
+        }
+        else
+        if ((replay_master->getIntValue() != 3)||
+            (last_replay_state == 3))
+        {
+            current_replay_state = replay_master->getIntValue();
+            replay_master->setIntValue(0);
+            replay_time->setDoubleValue(0);
+            replay_time_str->setStringValue("");
+            disable_replay->setBoolValue(0);
+            speed_up->setDoubleValue(1.0);
+            speed_up->setDoubleValue(1.0);
+            if (fgGetBool("/sim/replay/mute",false))
+            {
+                fgSetBool("/sim/sound/enabled",true);
+                fgSetBool("/sim/replay/mute",false);
+            }
+            fgSetString("/sim/messages/copilot", "Replay stopped. Your controls!");
+        }
     }
 
     int replay_state = replay_master->getIntValue();
-
-    if ((replay_state > 0)&&
-       (last_replay_state == 0))
-    {
-        // replay is starting, suspend FDM
-        /* FIXME we need to suspend/resume the FDM - not the entire FDM shell.
-         * FDM isn't available via the global subsystem manager yet, so need a
-         * method at the FDMshell for now */
-        ((FDMShell*) globals->get_subsystem("flight"))->getFDM()->suspend();
-    }
-    else
     if ((replay_state == 0)&&
         (last_replay_state > 0))
     {
         if (current_replay_state == 3)
         {
-            // "my controls!" requested: pilot takes control at current replay position...
+            // take control at current replay position ("My controls!").
             // May need to uncrash the aircraft here :)
             fgSetBool("/sim/crashed", false);
         }
         else
         {
-            // replay was active, restore most recent frame
+            // normal replay exit, restore most recent frame
             replay(DBL_MAX);
         }
-        // replay is finished, resume FDM
-        ((FDMShell*) globals->get_subsystem("flight"))->getFDM()->resume();
+
+        // replay is finished
+        last_replay_state = replay_state;
+        return;
     }
 
     // remember recent state
@@ -282,7 +290,8 @@ FGReplay::update( double dt )
         case 0:
             // replay inactive, keep recording
             break;
-        case 1:
+        case 1: // normal replay
+        case 3: // prepare to resume normal flight at current replay position 
         {
             // replay active
             double current_time = replay_time->getDoubleValue();
@@ -312,8 +321,6 @@ FGReplay::update( double dt )
             return; // don't record the replay session 
         }
         case 2: // normal replay operation
-        case 3: // replay operation, prepare to resume normal flight at current replay position 
-            // replay paused, no-op
             return; // don't record the replay session
         default:
             throw sg_range_exception("unknown FGReplay state");
