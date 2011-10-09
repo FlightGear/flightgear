@@ -1040,6 +1040,20 @@ do_dialog_update (const SGPropertyNode * arg)
     }
 }
 
+static bool
+do_open_browser (const SGPropertyNode * arg)
+{
+    string path;
+    if (arg->hasValue("path"))
+        path = arg->getStringValue("path");
+    else
+    if (arg->hasValue("url"))
+        path = arg->getStringValue("url");
+    else
+        return false;
+
+    return openBrowser(path);
+}
 
 /**
  * Apply a value in the active XML-configured dialog.
@@ -1468,6 +1482,7 @@ static struct {
     { "dialog-close", do_dialog_close },
     { "dialog-update", do_dialog_update },
     { "dialog-apply", do_dialog_apply },
+    { "open-browser", do_open_browser },
     { "gui-redraw", do_gui_redraw },
     { "add-model", do_add_model },
     { "set-cursor", do_set_cursor },

@@ -284,16 +284,20 @@ void Gear::calcForce(RigidBody* body, State *s, float* v, float* rot)
 
     // Don't bother if it's not down
     if(_extension < 1)
-	return;
+    {
+        _wow = 0;
+        _frac = 0;
+        return;
+    }
 
     // Dont bother if we are in the "wrong" ground
     if (!((_onWater&&!_ground_isSolid)||(_onSolid&&_ground_isSolid)))  {
-	_wow = 0;
-	_frac = 0;
+         _wow = 0;
+         _frac = 0;
         _compressDist = 0;
         _rollSpeed = 0;
         _casterAngle = 0;
-	return;
+        return;
     }
 
     // The ground plane transformed to the local frame.

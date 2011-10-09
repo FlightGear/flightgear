@@ -195,9 +195,10 @@ void YASim::update(double dt)
     int iterations = _calc_multiloop(dt);
 
     // If we're crashed, then we don't care
-    if(_fdm->getAirplane()->getModel()->isCrashed()) {
+    if(fgGetBool("/sim/crashed") || _fdm->getAirplane()->getModel()->isCrashed()) {
         if(!fgGetBool("/sim/crashed"))
             fgSetBool("/sim/crashed", true);
+        _fdm->getAirplane()->getModel()->setCrashed(false);
         return;
     }
 
@@ -311,7 +312,7 @@ void YASim::copyToYASim(bool copyState)
     Math::set3(v, s.v);
 
     if(copyState || needCopy)
-	model->setState(&s);
+        model->setState(&s);
 
     // wind
     Math::tmul33(xyz2ned, wind, wind);
@@ -504,4 +505,20 @@ void YASim::copyFromYASim()
         node->setBoolValue("strop", l->getStrop());
     }
 
+}
+
+/** Reinit the FDM.
+ * This is only used after a replay session and when the user requested to resume at
+ * a past point of time. In thise case the FDM must reload all values from the property
+ * tree (as given by the replay system). */
+void YASim::reinit()
+{
+    // Process inputs. Use excessive value for dt to make sure all transition effects
+    // have reached their final state (i.e. gear is extended/retracted) - which is vital
+    // for many properties to be complete before the first FDM run (otherwise the gear may
+    // still be up, thrust-reversers/speed-brakes/... may still be partially deployed...).
+    _fdm->getExternalInput(1000);
+
+    // get current FDM values from the property tree
+    copyToYASim(true);
 }

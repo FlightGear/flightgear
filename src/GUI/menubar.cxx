@@ -37,14 +37,6 @@ do_hires_snapshot_dialog (const SGPropertyNode * arg)
 }
 #endif // TR_HIRES_SNAP
 
-extern void helpCb ();
-static bool
-do_help_dialog (const SGPropertyNode * arg)
-{
-    helpCb();
-    return true;
-}
-
 static struct {
     const char * name;
     SGCommandMgr::command_t command;
@@ -52,7 +44,6 @@ static struct {
 #if defined(TR_HIRES_SNAP)
     { "old-hires-snapshot-dialog", do_hires_snapshot_dialog },
 #endif
-    { "old-help-dialog", do_help_dialog },
     { 0, 0 }
 };
 
