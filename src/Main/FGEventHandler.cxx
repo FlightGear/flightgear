@@ -215,11 +215,13 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
                 button = 3;
             else if (ea.getScrollingDeltaY() < 0)
                 button = 4;
+            else
+                button = -1;
         } else if (ea.getScrollingMotion() == osgGA::GUIEventAdapter::SCROLL_UP)
             button = 3;
         else
             button = 4;
-        if (mouseClickHandler) {
+        if (mouseClickHandler && button != -1) {
             (*mouseClickHandler)(button, 0, x, y, mainWindow, &ea);
             (*mouseClickHandler)(button, 1, x, y, mainWindow, &ea);
         }
