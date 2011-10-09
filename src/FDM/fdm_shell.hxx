@@ -58,8 +58,12 @@ private:
   
   TankPropertiesList _tankProperties;
   FGInterface* _impl;
-  SGPropertyNode* _props; // root property tree for this FDM instance
+  SGPropertyNode_ptr _props; // root property tree for this FDM instance
   bool _dataLogging;
+  
+  SGPropertyNode_ptr _wind_north, _wind_east,_wind_down;
+  SGPropertyNode_ptr _control_fdm_atmo,_temp_degc,_pressure_inhg;
+  SGPropertyNode_ptr _density_slugft, _data_logging;
 };
 
 #endif // of FG_FDM_SHELL_HXX
