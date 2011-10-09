@@ -3,7 +3,7 @@
 // Written by Curtis Olson, started April 2000.
 // Rewritten by Torsten Dreyer, August 2011
 //
-// Copyright (C) 2000 - 2002  Curtis L. Olson - http://www.flightgear.org/~curt
+// Copyright (C) 2000 - 2011  Curtis L. Olson - http://www.flightgear.org/~curt
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -33,6 +33,7 @@
 #include <simgear/math/interpolater.hxx>
 #include <simgear/sg_inlines.h>
 #include <simgear/props/propertyObject.hxx>
+#include <simgear/misc/strutils.hxx>
 
 #include <Main/fg_props.hxx>
 #include <Navaids/navlist.hxx>
@@ -144,6 +145,7 @@ public:
   virtual double getRange_nm( const SGGeod & aircraftPosition );
   virtual void   display( NavIndicator & navIndicator ) = 0;
   virtual bool   valid() const { return NULL != _navRecord && true == _serviceable; }
+  virtual const std::string getIdent() const { return _ident; }
 
 protected:
   virtual double computeSignalQuality_norm( const SGGeod & aircraftPosition );
@@ -220,7 +222,7 @@ void NavRadioComponentWithIdent::update( double dt, const SGGeod & aircraftPosit
       _audioIdent->setIdent("", 0.0 );
       return;
   }
-  _audioIdent->setIdent( _navRecord->get_trans_ident(), SGMiscd::clip(_identVolume, 0.0, 1.0) );
+  _audioIdent->setIdent( _ident, SGMiscd::clip(_identVolume, 0.0, 1.0) );
 }
 
 NavRadioComponent::NavRadioComponent( const std::string & name, SGPropertyNode_ptr rootNode ) :
@@ -851,6 +853,11 @@ private:
       NavRadioImpl * _navRadioImpl;
       SGPropertyNode_ptr is_valid_node;
       SGPropertyNode_ptr nav_serviceable_node;
+      SGPropertyNode_ptr nav_id_node;
+      SGPropertyNode_ptr id_c1_node;
+      SGPropertyNode_ptr id_c2_node;
+      SGPropertyNode_ptr id_c3_node;
+      SGPropertyNode_ptr id_c4_node;
   } _legacy;
 
   const static int VOR_COMPONENT = 0;
@@ -937,13 +944,19 @@ void NavRadioImpl::update( double dt )
   if( _stationTTL <= 0.0 )
       _stationTTL = 30.0;
 
-  _legacy.init();
+  _legacy.update( dt );
 }
 
 void NavRadioImpl::Legacy::init()
 {
     is_valid_node = _navRadioImpl->_rootNode->getChild("data-is-valid", 0, true);
     nav_serviceable_node = _navRadioImpl->_rootNode->getChild("serviceable", 0, true);
+
+    nav_id_node = _navRadioImpl->_rootNode->getChild("nav-id", 0, true );
+    id_c1_node = _navRadioImpl->_rootNode->getChild("nav-id_asc1", 0, true );
+    id_c2_node = _navRadioImpl->_rootNode->getChild("nav-id_asc2", 0, true );
+    id_c3_node = _navRadioImpl->_rootNode->getChild("nav-id_asc3", 0, true );
+    id_c4_node = _navRadioImpl->_rootNode->getChild("nav-id_asc4", 0, true );
 
 }
 
@@ -952,6 +965,18 @@ void NavRadioImpl::Legacy::update( double dt )
     is_valid_node->setBoolValue( 
         _navRadioImpl->_components[VOR_COMPONENT]->valid() || _navRadioImpl->_components[LOC_COMPONENT]->valid()  
         );
+
+    string ident = _navRadioImpl->_components[VOR_COMPONENT]->getIdent();
+    if( ident.empty() )
+        ident = _navRadioImpl->_components[LOC_COMPONENT]->getIdent();
+
+    nav_id_node->setStringValue( ident );
+
+    ident = simgear::strutils::rpad( ident, 4, ' ' );
+    id_c1_node->setIntValue( (int)ident[0] );
+    id_c2_node->setIntValue( (int)ident[1] );
+    id_c3_node->setIntValue( (int)ident[2] );
+    id_c4_node->setIntValue( (int)ident[3] );
 }
 
 
