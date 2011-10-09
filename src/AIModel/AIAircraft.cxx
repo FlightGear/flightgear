@@ -805,7 +805,7 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr) {
     //          << lead_dist << " " << curr->name 
     //          << " Ground target speed " << groundTargetSpeed << endl;
     double bearing = 0;
-    if (speed > 50) { // don't do bearing calculations for ground traffic
+     // don't do bearing calculations for ground traffic
        bearing = getBearing(fp->getBearing(pos.getLatitudeDeg(), pos.getLongitudeDeg(), curr));
        if (bearing < minBearing) {
             minBearing = bearing;
@@ -817,8 +817,7 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr) {
             } else {
                 speedFraction = 1.0;
             }
-       }
-    } 
+       } 
     if (trafficRef) {
          //cerr << "Tracking callsign : \"" << fgGetString("/ai/track-callsign") << "\"" << endl;
 /*         if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
@@ -826,11 +825,14 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr) {
                    << _getAltitude() << " "<< _getLatitude() << " " << _getLongitude() << " " << dist_to_go << " " << lead_dist << " " << curr->name << " " << vs << " " << tgt_vs << " " << bearing << " " << minBearing << " " << speedFraction << endl; 
          }*/
      }
-    if ((dist_to_go < lead_dist) || (bearing > (minBearing * 1.1))) {
+    if ((dist_to_go < lead_dist) ||
+        ((dist_to_go > prev_dist_to_go) && (bearing > (minBearing * 1.1))) ) {
         minBearing = 360;
         speedFraction = 1.0;
+        prev_dist_to_go = HUGE_VAL;
         return true;
     } else {
+        prev_dist_to_go = dist_to_go;
         return false;
     }
 }
@@ -880,6 +882,11 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIWaypoint* prev, time_t now) {
     if (prev->contains(string("Accel"))) {
         takeOffStatus = 3;
     }
+    //if (prev->contains(string("landing"))) {
+    //    if (speed < _performance->vTaxi() * 2) {
+    //        fp->shortenToFirst(2, "legend");
+    //    }
+    //}
     /*if (prev->contains(string("final"))) {
         
          cerr << getCallSign() << " " 
@@ -1114,6 +1121,9 @@ void FGAIAircraft::updateHeading() {
                 //     << hdg << ". Target " << tgt_heading <<  ". Diff " << fabs(sum - tgt_heading) << ". Speed " << speed << "Heading change rate : " << headingChangeRate << " bacnk sence " << bank_sense << endl;
 	    hdg += headingChangeRate * dt * sqrt(fabs(speed) / 15);
             headingError = headingDiff;
+            if (fabs(headingError) < 1.0) {
+                hdg = tgt_heading;
+            }
         } else {
             if (fabs(speed) > 1.0) {
                 turn_radius_ft = 0.088362 * speed * speed

@@ -292,6 +292,7 @@ private:
     time_t nextSave;
     //int maxDepth;
     int count;
+    int version;
     FGTaxiNodeVector    nodes;
     FGTaxiNodeVector    pushBackNodes;
     FGTaxiSegmentVector segments;
@@ -324,6 +325,9 @@ public:
     void addNode   (const FGTaxiNode& node);
     void addNodes  (FGParkingVec *parkings);
     void addSegment(const FGTaxiSegment& seg);
+    void setVersion (int v) { version = v;};
+    
+    int getVersion() { return version; };
 
     void init();
     bool exists() {
@@ -335,6 +339,7 @@ public:
 
     int findNearestNode(double lat, double lon);
     int findNearestNode(const SGGeod& aGeod);
+    int findNearestNodeOnRunway(const SGGeod& aGeod);
 
     FGTaxiNode *findNode(unsigned idx);
     FGTaxiSegment *findSegment(unsigned idx);
@@ -365,6 +370,7 @@ public:
     virtual void update(double dt);
 
     void saveElevationCache();
+    void addVersion(int v) {version = v; };
 };
 
 

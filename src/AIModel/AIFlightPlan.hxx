@@ -164,6 +164,8 @@ public:
   FGAIFlightPlan* getSID() { return sid; };
   FGAIWaypoint *getWayPoint(int i) { return waypoints[i]; };
   FGAIWaypoint *getLastWaypoint() { return waypoints.back(); };
+  
+  void shortenToFirst(unsigned int number, std::string name);
 
 private:
   FGAIFlightPlan *sid;
@@ -195,6 +197,7 @@ private:
   bool createParking(FGAIAircraft *, FGAirport *, double radius);
   void deleteWaypoints(); 
   void resetWaypoints();
+  void eraseLastWaypoint();
 
   bool createLandingTaxi(FGAIAircraft *, FGAirport *apt, double radius, const std::string& fltType, const std::string& acType, const std::string& airline);
   void createDefaultLandingTaxi(FGAIAircraft *, FGAirport* aAirport);

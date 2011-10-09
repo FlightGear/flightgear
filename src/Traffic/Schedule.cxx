@@ -423,7 +423,7 @@ void FGAISchedule::scheduleFlights(time_t now)
                              << "  "        << arrT << ":");
   
     flights.push_back(flight);
-  } while (1); //(currentDestination != startingPort);
+  } while (currentDestination != startingPort);
   SG_LOG(SG_GENERAL, SG_BULK, " Done ");
 }
 
@@ -507,7 +507,8 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
           }
           if (flights.size()) {
             time_t arrival = flights.back()->getArrivalTime();
-            if ((*i)->getDepartureTime() < (arrival+(20*60)))
+            int groundTime = groundTimeFromRadius();
+            if ((*i)->getDepartureTime() < (arrival+(groundTime)))
                 continue;
           }
           if (min != 0) {
@@ -530,6 +531,23 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
      //cerr << "Ack no flight found: " << endl;
      return NULL;
 }
+
+int FGAISchedule::groundTimeFromRadius()
+{
+    if (radius < 10) 
+        return 15 * 60;
+    else if (radius < 15)
+        return 20 * 60;
+    else if (radius < 20)
+        return 30 * 60;
+    else if (radius < 25)
+        return 50 * 60;
+    else if (radius < 30)
+        return 90 * 60;
+    else 
+        return 120 * 60;
+}
+
 
 double FGAISchedule::getSpeed()
 {

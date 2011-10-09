@@ -409,8 +409,17 @@ void FGAIFlightPlan::DecrementWaypoint(bool eraseWaypoints )
     }
     else
         wpt_iterator--;
-
 }
+
+void FGAIFlightPlan::eraseLastWaypoint()
+{
+    delete (waypoints.back());
+    waypoints.pop_back();;
+    wpt_iterator = waypoints.begin();
+    wpt_iterator++;
+}
+
+
 
 
 // gives distance in feet from a position to a waypoint
@@ -545,4 +554,12 @@ double FGAIFlightPlan::checkTrackLength(string wptName) {
         trackDistance = 0; // name not found
     }
     return trackDistance;
+}
+
+void FGAIFlightPlan::shortenToFirst(unsigned int number, string name)
+{
+    while (waypoints.size() > number + 3) {
+        eraseLastWaypoint();
+    }
+    (waypoints.back())->setName((waypoints.back())->getName() + name);
 }

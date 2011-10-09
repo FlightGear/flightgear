@@ -63,6 +63,7 @@ class FGAISchedule
   bool valid;
 
   void scheduleFlights(time_t now);
+  int groundTimeFromRadius();
   
   /**
    * Transition this schedule from distant mode to AI mode;

@@ -36,6 +36,7 @@
 
 #include <Environment/environment_mgr.hxx>
 #include <Environment/environment.hxx>
+#include <FDM/LaRCsim/basic_aero.h>
 
 
 /* FGAIFlightPlan::create()
@@ -242,7 +243,12 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
     }
 
     intVec ids;
-    int runwayId = gn->findNearestNode(runwayTakeoff);
+    int runwayId = 0;
+    if (gn->getVersion() > 0) {
+        runwayId = gn->findNearestNodeOnRunway(runwayTakeoff);
+    } else {
+        runwayId = gn->findNearestNode(runwayTakeoff);
+    }
 
     // A negative gateId indicates an overflow parking, use a
     // fallback mechanism for this. 
@@ -379,7 +385,13 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
     }
 
     intVec ids;
-    int runwayId = gn->findNearestNode(lastWptPos);
+    int runwayId = 0;
+    if (gn->getVersion() == 1) {
+        runwayId = gn->findNearestNodeOnRunway(lastWptPos);
+    } else {
+        runwayId = gn->findNearestNode(lastWptPos);
+    }
+    //cerr << "Using network node " << runwayId << endl;
     // A negative gateId indicates an overflow parking, use a
     // fallback mechanism for this. 
     // Starting from gate 0 is a bit of a hack...
@@ -878,7 +890,12 @@ bool FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
                                    const string & fltType)
 {
     double vTouchdown = ac->getPerformance()->vTouchdown();
-    //double vTaxi = ac->getPerformance()->vTaxi();
+    double vTaxi      = ac->getPerformance()->vTaxi();
+    double decel     = ac->getPerformance()->deceleration() * 1.5;
+    
+    double vTouchdownMetric = (vTouchdown  * SG_NM_TO_METER) / 3600;
+    double vTaxiMetric      = (vTaxi       * SG_NM_TO_METER) / 3600;
+    double decelMetric      = (decel       * SG_NM_TO_METER) / 3600;
 
     //string rwyClass = getRunwayClassFromTrafficType(fltType);
     //double heading = ac->getTrafficRef()->getCourse();
@@ -917,15 +934,50 @@ bool FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
         coord = rwy->pointOnCenterline((currentDist * (i / nPoints)));
         wpt = createInAir(ac, buffer, coord, currentAltitude, (vTouchdown));
     }*/
-    
-    for (int i = 1; i < 10; i++) {
-        snprintf(buffer, 12, "wpt%d", i);
+    double rolloutDistance =
+        (vTouchdownMetric * vTouchdownMetric - vTaxiMetric * vTaxiMetric) / (2 * decelMetric);
+    //cerr << " touchdown speed = " << vTouchdown << ". Rollout distance " << rolloutDistance << endl;
+    int nPoints = 50;
+    for (int i = 1; i < nPoints; i++) {
+        snprintf(buffer, 12, "landing03%d", i);
         
-        coord = rwy->pointOnCenterline((rwy->lengthM() * 0.9) * (i / 10.0));
-        wpt = createOnGround(ac, buffer, coord, currElev, (vTouchdown / i));
-        wpt->setCrossat(apt->getElevation());
+        coord = rwy->pointOnCenterline((rolloutDistance * ((double) i / (double) nPoints)));
+        wpt = createOnGround(ac, buffer, coord, currElev, vTaxi);
+        wpt->setCrossat(currElev);
         waypoints.push_back(wpt);
     }
+    double mindist = 1.1 * rolloutDistance;
+    double maxdist = rwy->lengthM();
+    //cerr << "Finding nearest exit" << endl;
+    FGGroundNetwork *gn = apt->getDynamics()->getGroundNetwork();
+    if (gn) {
+        double min = 0;
+        for (int i = ceil(mindist); i < floor(maxdist); i++) {
+            coord = rwy->pointOnCenterline(mindist);
+            int nodeId = 0;
+            if (gn->getVersion() > 0) {
+                nodeId = gn->findNearestNodeOnRunway(coord);
+            } else {
+                nodeId = gn->findNearestNode(coord);
+            }
+            if (tn)
+                tn = gn->findNode(nodeId);
+            else {
+                break;
+            }
+            
+            double dist = SGGeodesy::distanceM(coord, tn->getGeod());
+            if (dist < (min + 0.75)) {
+                break;
+            }
+            min = dist;
+        }
+        if (tn) {
+            wpt = createOnGround(ac, buffer, tn->getGeod(), currElev, vTaxi);
+            waypoints.push_back(wpt);
+        }
+    }
+    cerr << "Done. " << endl;
 
     /*
        //Runway Threshold

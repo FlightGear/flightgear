@@ -220,6 +220,7 @@ FGGroundNetwork::FGGroundNetwork()
     count = 0;
     currTraffic = activeTraffic.begin();
     group = 0;
+    version = 0;
     networkInitialized = false;
 
 }
@@ -451,6 +452,28 @@ int FGGroundNetwork::findNearestNode(const SGGeod & aGeod)
 
     return index;
 }
+
+int FGGroundNetwork::findNearestNodeOnRunway(const SGGeod & aGeod)
+{
+    double minDist = HUGE_VAL;
+    int index = -1;
+
+    for (FGTaxiNodeVectorIterator itr = nodes.begin(); itr != nodes.end();
+            itr++) {
+        if (!((*itr)->getIsOnRunway())) {
+            continue;
+        }
+        double d = SGGeodesy::distanceM(aGeod, (*itr)->getGeod());
+        if (d < minDist) {
+            minDist = d;
+            index = (*itr)->getIndex();
+            //cerr << "Minimum distance of " << minDist << " for index " << index << endl;
+        }
+    }
+
+    return index;
+}
+
 
 int FGGroundNetwork::findNearestNode(double lat, double lon)
 {
