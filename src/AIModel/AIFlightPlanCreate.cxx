@@ -575,6 +575,7 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     FGAIWaypoint *wpt;
     double vDescent = ac->getPerformance()->vDescent();
     double vApproach = ac->getPerformance()->vApproach();
+    double vTouchdown = ac->getPerformance()->vTouchdown();
 
 
     //Beginning of Descent 
@@ -821,6 +822,7 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
 
     // The approach leg should bring the aircraft to approximately 4-6 nm out, after which the landing phase should take over. 
     //cerr << "Phase 3: Approach" << endl;
+    double tgt_speed = vApproach;
     distanceOut -= distanceCovered;
     double touchDownPoint = 0; //(rwy->lengthM() * 0.1);
     for (int i = 1; i < nPoints; i++) {
@@ -831,7 +833,10 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
         double alt = currentAltitude -  (i * 2000 / (nPoints - 1));
         snprintf(buffer, 16, "final%03d", i);
         result = rwy->pointOnCenterline((-distanceOut) + currentDist + touchDownPoint);
-        wpt = createInAir(ac, buffer, result, alt, vApproach);
+        if (i == nPoints - 30) {
+            tgt_speed = vTouchdown;
+        }
+        wpt = createInAir(ac, buffer, result, alt, tgt_speed);
         wpt->setCrossat(alt);
         wpt->setTrackLength((distanceOut / nPoints));
         // account for the extra distance due to an extended downwind leg
@@ -891,7 +896,7 @@ bool FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
 {
     double vTouchdown = ac->getPerformance()->vTouchdown();
     double vTaxi      = ac->getPerformance()->vTaxi();
-    double decel     = ac->getPerformance()->deceleration() * 1.5;
+    double decel     = ac->getPerformance()->deceleration() * 1.4;
     
     double vTouchdownMetric = (vTouchdown  * SG_NM_TO_METER) / 3600;
     double vTaxiMetric      = (vTaxi       * SG_NM_TO_METER) / 3600;
@@ -936,16 +941,17 @@ bool FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
     }*/
     double rolloutDistance =
         (vTouchdownMetric * vTouchdownMetric - vTaxiMetric * vTaxiMetric) / (2 * decelMetric);
-    //cerr << " touchdown speed = " << vTouchdown << ". Rollout distance " << rolloutDistance << endl;
+    cerr << " touchdown speed = " << vTouchdown << ". Rollout distance " << rolloutDistance << endl;
     int nPoints = 50;
     for (int i = 1; i < nPoints; i++) {
         snprintf(buffer, 12, "landing03%d", i);
         
         coord = rwy->pointOnCenterline((rolloutDistance * ((double) i / (double) nPoints)));
-        wpt = createOnGround(ac, buffer, coord, currElev, vTaxi);
+        wpt = createOnGround(ac, buffer, coord, currElev, 2*vTaxi);
         wpt->setCrossat(currElev);
         waypoints.push_back(wpt);
     }
+    wpt->setSpeed(vTaxi);
     double mindist = 1.1 * rolloutDistance;
     double maxdist = rwy->lengthM();
     //cerr << "Finding nearest exit" << endl;

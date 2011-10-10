@@ -887,17 +887,17 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIWaypoint* prev, time_t now) {
     //        fp->shortenToFirst(2, "legend");
     //    }
     //}
-    /*if (prev->contains(string("final"))) {
-        
-         cerr << getCallSign() << " " 
-            << fp->getPreviousWaypoint()->getName() 
-            << ". Alt = " << altitude_ft 
-            << " vs " << vs 
-            << " horizontal speed " << speed 
-            << "Previous crossAT " << fp->getPreviousWaypoint()->getCrossat()
-            << "Airport elevation" << getTrafficRef()->getArrivalAirport()->getElevation() 
-            << "Altitude difference " << (altitude_ft -  fp->getPreviousWaypoint()->getCrossat()) << endl;
-    }*/
+    //if (prev->contains(string("final"))) {
+    //    
+    //     cerr << getCallSign() << " " 
+    //        << fp->getPreviousWaypoint()->getName() 
+    //        << ". Alt = " << altitude_ft 
+    //        << " vs " << vs 
+    //        << " horizontal speed " << speed 
+    //        << "Previous crossAT " << fp->getPreviousWaypoint()->getCrossat()
+    //        << "Airport elevation" << getTrafficRef()->getArrivalAirport()->getElevation() 
+    //        << "Altitude difference " << (altitude_ft -  fp->getPreviousWaypoint()->getCrossat()) << endl;
+    //q}
     // This is the last taxi waypoint, and marks the the end of the flight plan
     // so, the schedule should update and wait for the next departure time.
     if (prev->contains("END")) {

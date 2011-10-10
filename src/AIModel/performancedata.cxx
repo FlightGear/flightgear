@@ -6,6 +6,13 @@
 #include "performancedata.hxx"
 #include "AIAircraft.hxx"
 
+
+// For now, make this a define
+// Later on, additional class variables can simulate settings such as braking power
+// also, the performance parameters can be tweaked a little to add some personality
+// to the AIAircraft.
+#define BRAKE_SETTING 1.6
+
 PerformanceData::PerformanceData(double acceleration,
                                 double deceleration,
                                 double climbRate,
@@ -59,7 +66,7 @@ double PerformanceData::actualSpeed(FGAIAircraft* ac, double tgt_speed, double d
     } else if (speed_diff < 0.0) { // decelerate
         if (ac->onGround()) {
             // deceleration performance is better due to wheel brakes.
-            speed -= 3 * _deceleration * dt;
+            speed -= BRAKE_SETTING * _deceleration * dt;
         } else {
             speed -= _deceleration * dt;
         }
