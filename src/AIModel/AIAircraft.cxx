@@ -190,7 +190,7 @@ void FGAIAircraft::checkVisibility()
 
 void FGAIAircraft::AccelTo(double speed) {
     tgt_speed = speed;
-    assertSpeed(speed);
+    //assertSpeed(speed);
     if (!isStationary())
         _needsGroundElevation = true;
 }
@@ -412,7 +412,7 @@ void FGAIAircraft::assertSpeed(double speed)
             << "speedFraction << " << speedFraction << " "
             << "Currecnt speed << " << speed << " "
             << endl;
-       raise(SIGSEGV);
+       //raise(SIGSEGV);
     }
 }
 
@@ -787,7 +787,7 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr) {
           if (tgt_speed > -0.5) {
                 tgt_speed = -0.5;
           }
-          assertSpeed(tgt_speed);
+          //assertSpeed(tgt_speed);
           if (fp->getPreviousWaypoint()->getSpeed() < tgt_speed) {
               fp->getPreviousWaypoint()->setSpeed(tgt_speed);
           }
@@ -956,7 +956,7 @@ void FGAIAircraft::controlSpeed(FGAIWaypoint* curr, FGAIWaypoint* next) {
 
     if (fabs(speed_diff) > 10) {
         prevSpeed = speed;
-        assertSpeed(speed);
+        //assertSpeed(speed);
         if (next) {
             fp->setLeadDistance(speed, tgt_heading, curr, next);
         }
@@ -1085,14 +1085,14 @@ void FGAIAircraft::updateHeading() {
             //         << hdg << ". Target " << tgt_heading <<  ". Diff " << fabs(sum - tgt_heading) << ". Speed " << speed << endl;
             //if (headingDiff > 60) {
             groundTargetSpeed = tgt_speed; // * cos(headingDiff * SG_DEGREES_TO_RADIANS);
-            assertSpeed(groundTargetSpeed);
+            //assertSpeed(groundTargetSpeed);
                 //groundTargetSpeed = tgt_speed - tgt_speed * (headingDiff/180);
             //} else {
             //    groundTargetSpeed = tgt_speed;
             //}
             if (sign(groundTargetSpeed) != sign(tgt_speed))
                 groundTargetSpeed = 0.21 * sign(tgt_speed); // to prevent speed getting stuck in 'negative' mode
-            assertSpeed(groundTargetSpeed);
+            //assertSpeed(groundTargetSpeed);
             // Only update the target values when we're not moving because otherwise we might introduce an enormous target change rate while waiting a the gate, or holding.
             if (speed != 0) {
                 if (headingDiff > 30.0) {
@@ -1277,7 +1277,7 @@ void FGAIAircraft::updateActualState() {
         speed = _performance->actualSpeed(this, groundTargetSpeed, dt);
     else
         speed = _performance->actualSpeed(this, (tgt_speed *speedFraction), dt);
-    assertSpeed(speed);
+    //assertSpeed(speed);
     updateHeading();
     roll = _performance->actualBankAngle(this, tgt_roll, dt);
 
