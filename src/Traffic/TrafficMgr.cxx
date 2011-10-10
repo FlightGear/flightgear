@@ -270,10 +270,6 @@ void FGTrafficManager::update(double /*dt */ )
     //cerr << "Processing << " << (*currAircraft)->getRegistration() << " with score " << (*currAircraft)->getScore() << endl;
     if (!((*currAircraft)->update(now, userCart))) {
         (*currAircraft)->taint();
-        // NOTE: With traffic manager II, this statement below is no longer true
-        // after proper initialization, we shouldnt get here.
-        // But let's make sure
-        //SG_LOG( SG_GENERAL, SG_ALERT, "Failed to update aircraft schedule in traffic manager");
     }
     currAircraft++;
 }

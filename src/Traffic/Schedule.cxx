@@ -379,19 +379,10 @@ void FGAISchedule::scheduleFlights(time_t now)
   SG_LOG(SG_GENERAL, SG_BULK, "Scheduling Flights for : " << modelPath << " " <<  registration << " " << homePort);
   FGScheduledFlight *flight = NULL;
   do {
-    if (currentDestination.empty()) {
-        //flight = findAvailableFlight(userPort, flightIdentifier, now, (now+1800));
-        if (!flight)
-            flight = findAvailableFlight(currentDestination, flightIdentifier);
-    } else {
-        flight = findAvailableFlight(currentDestination, flightIdentifier);
-    }
+    flight = findAvailableFlight(currentDestination, flightIdentifier);
     
     if (!flight) {
       break;
-    }
-    if (startingPort.empty()) {
-        startingPort = flight->getDepartureAirport()->getId();
     }
 
    
@@ -423,7 +414,7 @@ void FGAISchedule::scheduleFlights(time_t now)
                              << "  "        << arrT << ":");
   
     flights.push_back(flight);
-  } while (currentDestination != startingPort);
+  } while (currentDestination != homePort);
   SG_LOG(SG_GENERAL, SG_BULK, " Done ");
 }
 
