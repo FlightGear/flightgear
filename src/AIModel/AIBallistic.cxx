@@ -970,7 +970,7 @@ void FGAIBallistic::handle_impact() {
         return;
 
     if (_ht_agl_ft <= 0) {
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AIBallistic: terrain impact material" << _mat_name);
+        SG_LOG(SG_AI, SG_DEBUG, "AIBallistic: terrain impact material" << _mat_name);
         report_impact(_elevation_m);
         _impact_reported = true;
 
@@ -983,7 +983,7 @@ void FGAIBallistic::handle_impact() {
 
 void FGAIBallistic::handle_expiry() {
 
-    //SG_LOG(SG_GENERAL, SG_DEBUG, "AIBallistic: handle_expiry " << pos.getElevationM());
+    //SG_LOG(SG_AI, SG_DEBUG, "AIBallistic: handle_expiry " << pos.getElevationM());
 
     report_impact(pos.getElevationM());
     _expiry_reported = true;
@@ -1024,7 +1024,7 @@ void FGAIBallistic::report_impact(double elevation, const FGAIBase *object)
     else
         n->setStringValue("type", "terrain");
 
-    SG_LOG(SG_GENERAL, SG_DEBUG, "AIBallistic: object impact " << _name 
+    SG_LOG(SG_AI, SG_DEBUG, "AIBallistic: object impact " << _name 
         << " lon " <<_impact_lon << " lat " <<_impact_lat << " sec " << _life_timer);
 
     n->setDoubleValue("longitude-deg", _impact_lon);

@@ -314,7 +314,7 @@ void FGAIEscort::setStationSpeed(){
     // these are the AI rules for the manoeuvring of escorts
 
     if (_MPControl && _tgtrange > 4 * _stn_limit){
-        SG_LOG(SG_GENERAL, SG_ALERT, "AIEscort: " << _name
+        SG_LOG(SG_AI, SG_ALERT, "AIEscort: " << _name
             << " re-aligning to MP pos");
         pos = _tgtpos;
         speed = 0;

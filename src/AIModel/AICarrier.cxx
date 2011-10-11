@@ -134,7 +134,7 @@ void FGAICarrier::update(double dt) {
     FGAIShip::update(dt);
 
     //automatic turn into wind with a target wind of 25 kts otd
-    //SG_LOG(SG_GENERAL, SG_ALERT, "AICarrier: MPControl " << MPControl << " AIControl " << AIControl);
+    //SG_LOG(SG_AI, SG_ALERT, "AICarrier: MPControl " << MPControl << " AIControl " << AIControl);
     if (!MPControl && AIControl){
 
         if(turn_to_launch_hdg){
@@ -496,7 +496,7 @@ void FGAICarrier::ReturnToBox(){
 bool FGAICarrier::OutsideBox() { //returns true if the carrier is outside operating box
 
     if ( max_lat == 0 && min_lat == 0 && max_long == 0 && min_long == 0) {
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AICarrier: No Operating Box defined" );
+        SG_LOG(SG_AI, SG_DEBUG, "AICarrier: No Operating Box defined" );
         return false;
     }
 
@@ -530,7 +530,7 @@ bool FGAICarrier::OutsideBox() { //returns true if the carrier is outside operat
             return true;
     }
 
-    SG_LOG(SG_GENERAL, SG_DEBUG, "AICarrier: Inside Operating Box" );
+    SG_LOG(SG_AI, SG_DEBUG, "AICarrier: Inside Operating Box" );
     return false;
 
 } // end OutsideBox

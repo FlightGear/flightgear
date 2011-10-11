@@ -414,7 +414,7 @@ void FGAIWingman::Join(double dt) {
             _formate_to_ac = true;
             _join = false;
 
-            SG_LOG(SG_GENERAL, SG_ALERT, _name << " joined " << " RANGE " << distance
+            SG_LOG(SG_AI, SG_ALERT, _name << " joined " << " RANGE " << distance
             << " SPEED " << speed );
 
             return;

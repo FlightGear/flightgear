@@ -296,7 +296,7 @@ bool FGAIBase::init(bool search_in_AI_path) {
         _initialized = true;
 
     } else if (!model_path.empty()) {
-        SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);
+        SG_LOG(SG_AI, SG_WARN, "AIBase: Could not load model " << model_path);
         // not properly installed...
         _installed = false;
     }
@@ -311,7 +311,7 @@ void FGAIBase::initModel(osg::Node *node)
 
         if( _path != ""){
             props->setStringValue("submodels/path", _path.c_str());
-            SG_LOG(SG_INPUT, SG_DEBUG, "AIBase: submodels/path " << _path);
+            SG_LOG(SG_AI, SG_DEBUG, "AIBase: submodels/path " << _path);
         }
 
         if( _parent!= ""){
@@ -320,7 +320,7 @@ void FGAIBase::initModel(osg::Node *node)
 
         fgSetString("/ai/models/model-added", props->getPath().c_str());
     } else if (!model_path.empty()) {
-        SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);
+        SG_LOG(SG_AI, SG_WARN, "AIBase: Could not load model " << model_path);
     }
 
     setDie(false);
@@ -609,7 +609,7 @@ void FGAIBase::_setSubID( int s ) {
 bool FGAIBase::setParentNode() {
 
     if (_parent == ""){
-       SG_LOG(SG_GENERAL, SG_ALERT, "AIBase: " << _name
+       SG_LOG(SG_AI, SG_ALERT, "AIBase: " << _name
             << " parent not set ");
        return false;
     }
@@ -644,7 +644,7 @@ bool FGAIBase::setParentNode() {
         const string name = _selected_ac->getStringValue("name");
         return true;
     } else {
-        SG_LOG(SG_GENERAL, SG_ALERT, "AIBase: " << _name
+        SG_LOG(SG_AI, SG_ALERT, "AIBase: " << _name
             << " parent not found: dying ");
         setDie(true);
         return false;
