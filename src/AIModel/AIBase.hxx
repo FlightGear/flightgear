@@ -216,6 +216,8 @@ protected:
     void CalculateMach();
     double UpdateRadar(FGAIManager* manager);
 
+    void removeModel();
+
     static int _newAIModelID();
 
 private:

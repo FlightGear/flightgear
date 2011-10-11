@@ -129,9 +129,7 @@ FGAIBase::FGAIBase(object_type ot, bool enableHot) :
 
 FGAIBase::~FGAIBase() {
     // Unregister that one at the scenery manager
-    if (globals->get_scenery()) {
-        globals->get_scenery()->get_scene_graph()->removeChild(aip.getSceneGraph());
-    }
+    removeModel();
 
     if (props) {
         SGPropertyNode* parent = props->getParent();
@@ -141,6 +139,29 @@ FGAIBase::~FGAIBase() {
     }
     delete fp;
     fp = 0;
+}
+
+/** Cleanly remove the model
+ * and let the scenery database pager do the clean-up work.
+ */
+void
+FGAIBase::removeModel()
+{
+    FGScenery* pSceneryManager = globals->get_scenery();
+    if (pSceneryManager)
+    {
+        osg::ref_ptr<osg::Object> temp = _model.get();
+        pSceneryManager->get_scene_graph()->removeChild(aip.getSceneGraph());
+        // withdraw from SGModelPlacement and drop own reference (unref)
+        aip.init( 0 );
+        _model = 0;
+        // pass it on to the pager, to be be deleted in the pager thread
+        pSceneryManager->getPagerSingleton()->queueDeleteRequest(temp);
+    }
+    else
+    {
+        SG_LOG(SG_AI, SG_ALERT, "AIBase: Could not unload model. Missing scenery manager!");
+    }
 }
 
 void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
@@ -247,6 +268,12 @@ bool FGAIBase::init(bool search_in_AI_path) {
         _installed = true;
 
     osg::Node * mdl = SGModelLib::loadPagedModel(f, props, new FGNasalModelData(props));
+
+    if (_model.valid())
+    {
+        // reinit, dump the old model
+        removeModel();
+    }
 
     _model = new osg::LOD;
     _model->setName("AI-model range animation node");
