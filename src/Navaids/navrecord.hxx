@@ -50,7 +50,6 @@ class FGNavRecord : public FGPositioned
     FGRunway* mRunway;        // associated runway, if there is one
 
     bool serviceable;		// for failure modeling
-    std::string trans_ident;         // for failure modeling
 
   /**
    * Helper to init data when a navrecord is associated with an airport
@@ -79,7 +78,7 @@ public:
     inline const char *get_ident() const { return ident().c_str(); }
 
     inline bool get_serviceable() const { return serviceable; }
-    inline const char *get_trans_ident() const { return trans_ident.c_str(); }
+    inline const char *get_trans_ident() const { return get_ident(); }
 
   virtual const std::string& name() const
   { return _name; }
