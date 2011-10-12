@@ -148,8 +148,9 @@ void FGLight::bind () {
     prop->tie("/rendering/scene/scattering",SGRawValuePointer<float>(&_scattering));
     prop->tie("/rendering/scene/overcast",SGRawValuePointer<float>(&_overcast));
 
+    _sunAngleRad = prop->getNode("/sim/time/sun-angle-rad", true);
+  
     // Read Only
-    prop->tie("/sim/time/sun-angle-rad",SGRawValuePointer<double>(&_sun_angle));
     prop->tie("/rendering/scene/ambient/red",SGRawValuePointer<float>(&_scene_ambient[0]));
     prop->tie("/rendering/scene/ambient/green",SGRawValuePointer<float>(&_scene_ambient[1]));
     prop->tie("/rendering/scene/ambient/blue",SGRawValuePointer<float>(&_scene_ambient[2]));
@@ -181,8 +182,6 @@ void FGLight::unbind () {
     prop->untie("/rendering/scene/saturation");
     prop->untie("/rendering/scene/scattering");
     prop->untie("/rendering/scene/overcast");
-
-    prop->untie("/sim/time/sun-angle-rad");
     prop->untie("/rendering/scene/ambient/red");
     prop->untie("/rendering/scene/ambient/green");
     prop->untie("/rendering/scene/ambient/blue");
@@ -453,4 +452,6 @@ void FGLight::updateSunPos()
 
     // cout << "  Sky needs to rotate = " << _sun_rotation << " rads = "
     //      << _sun_rotation * SGD_RADIANS_TO_DEGREES << " degrees." << endl;
+  
+    _sunAngleRad->setDoubleValue(_sun_angle);
 }
