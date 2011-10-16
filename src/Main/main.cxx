@@ -609,36 +609,12 @@ int fgMainInit( int argc, char **argv ) {
     upper_case_property("/sim/tower/airport-id");
     upper_case_property("/autopilot/route-manager/input");
 
-    // Scan the config file(s) and command line options to see if
-    // fg_root was specified (ignore all other options for now)
-    fgInitFGRoot(argc, argv);
-
-    // Check for the correct base package version
-    static char required_version[] = "2.5.0";
-    string base_version = fgBasePackageVersion();
-    if ( !(base_version == required_version) ) {
-        // tell the operator how to use this application
-
-        SG_LOG( SG_GENERAL, SG_ALERT, "" ); // To popup the console on windows
-        cerr << endl << "Base package check failed:" << endl \
-             << "  Version " << base_version << " found at: " \
-             << globals->get_fg_root() << endl \
-             << "  Version " << required_version << " is required." << endl \
-             << "Please upgrade/downgrade base package and set the path to your fgdata" << endl \
-             << "with --fg-root=path_to_your_fgdata" << endl;
-#ifdef _MSC_VER
-        cerr << "Hit a key to continue..." << endl;
-        cin.get();
-#endif
-        exit(-1);
-    }
-
     // Load the configuration parameters.  (Command line options
     // override config file options.  Config file options override
     // defaults.)
     if ( !fgInitConfig(argc, argv) ) {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Config option parsing failed ..." );
-        exit(-1);
+      SG_LOG( SG_GENERAL, SG_ALERT, "Config option parsing failed ..." );
+      exit(-1);
     }
 
     // Initialize the Window/Graphics environment.

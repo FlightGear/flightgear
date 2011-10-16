@@ -32,11 +32,6 @@ class SGPropertyNode;
 class SGTime;
 class SGPath;
 
-// Read in configuration (files and command line optoins) but only set
-// fg_root
-bool fgInitFGRoot ( int argc, char **argv );
-
-
 // Return the current base package version
 std::string fgBasePackageVersion();
 

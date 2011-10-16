@@ -194,7 +194,7 @@ public:
     void set_fg_root (const std::string &root);
 
     inline const string_list &get_fg_scenery () const { return fg_scenery; }
-    void set_fg_scenery (const std::string &scenery);
+    void append_fg_scenery (const std::string &scenery);
 
     const string_list& get_aircraft_paths() const { return fg_aircraft_dirs; }
     void append_aircraft_path(const std::string& path);

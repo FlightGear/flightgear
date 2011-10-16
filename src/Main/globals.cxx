@@ -24,6 +24,9 @@
 #  include <config.h>
 #endif
 
+#include <boost/foreach.hpp>
+#include <algorithm>
+
 #include <simgear/structure/commands.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sg_dir.hxx>
@@ -236,26 +239,30 @@ void FGGlobals::set_fg_root (const string &root) {
       simgear::ResourceManager::PRIORITY_DEFAULT);
 }
 
-void FGGlobals::set_fg_scenery (const string &scenery)
+void FGGlobals::append_fg_scenery (const string &paths)
 {
-    SGPath s;
-    if (scenery.empty()) {
-        s.set( fg_root );
-        s.append( "Scenery" );
-    } else
-        s.set( scenery );
-
-    string_list path_list = sgPathSplit( s.str() );
-    fg_scenery.clear();
+//    fg_scenery.clear();
     SGPropertyNode* sim = fgGetNode("/sim", true);
-    
-    for (unsigned i = 0; i < path_list.size(); i++) {
-        SGPath path(path_list[i]);
+
+  // find first unused fg-scenery property in /sim
+    int propIndex = 0;
+    while (sim->getChild("fg-scenery", propIndex) != NULL) {
+      ++propIndex; 
+    }
+  
+    BOOST_FOREACH(const SGPath& path, sgPathSplit( paths )) {
         if (!path.exists()) {
           SG_LOG(SG_GENERAL, SG_WARN, "scenery path not found:" << path.str());
           continue;
         }
 
+      // check for duplicates
+      string_list::const_iterator ex = std::find(fg_scenery.begin(), fg_scenery.end(), path.str());
+      if (ex != fg_scenery.end()) {
+        SG_LOG(SG_GENERAL, SG_INFO, "skipping duplicate add of scenery path:" << path.str());
+        continue;
+      }
+      
         simgear::Dir dir(path);
         SGPath terrainDir(dir.file("Terrain"));
         SGPath objectsDir(dir.file("Objects"));
@@ -280,8 +287,7 @@ void FGGlobals::set_fg_scenery (const string &scenery)
         fg_scenery.push_back("");
         
       // make scenery dirs available to Nasal
-        sim->removeChild("fg-scenery", i, false);
-        SGPropertyNode* n = sim->getChild("fg-scenery", i, true);
+        SGPropertyNode* n = sim->getChild("fg-scenery", propIndex++, true);
         n->setStringValue(path.str());
         n->setAttribute(SGPropertyNode::WRITE, false);
     } // of path list iteration
