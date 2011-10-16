@@ -182,9 +182,9 @@ fgSetDefaults ()
 #elif defined(sgi)
     fgSetString("/sim/startup/browser-app", "launchWebJumper");
 #else
-    envp = ::getenv( "WEBBROWSER" );
-    if (!envp) envp = "netscape";
-    fgSetString("/sim/startup/browser-app", envp);
+    char* browserEnv = ::getenv( "WEBBROWSER" );
+    if (!browserEnv) browserEnv = "netscape";
+    fgSetString("/sim/startup/browser-app", browserEnv);
 #endif
     fgSetString("/sim/logging/priority", "alert");
 
