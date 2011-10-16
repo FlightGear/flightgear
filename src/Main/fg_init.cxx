@@ -559,6 +559,13 @@ bool fgInitConfig ( int argc, char **argv ) {
       }
     }
     
+  // check for a config file in app data
+    SGPath appDataConfig(dataPath);
+    appDataConfig.append("fgfsrc");
+    if (appDataConfig.exists()) {
+      flightgear::Options::sharedInstance()->readConfig(appDataConfig);
+    }
+  
   // Scan user config files and command line for a specified aircraft.
     flightgear::Options::sharedInstance()->initAircraft();
       
