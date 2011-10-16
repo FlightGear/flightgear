@@ -457,6 +457,7 @@ static SGPath platformDefaultDataPath()
   char *envp = ::getenv( "APPDATA" );
   SGPath config( envp );
   config.append( "flightgear.org" );
+  return config;
 }
 #elif __APPLE__
 
@@ -485,6 +486,7 @@ static SGPath platformDefaultDataPath()
 {
   SGPath config( homedir );
   config.append( ".fgfs" );
+  return config;
 }
 #endif
 
