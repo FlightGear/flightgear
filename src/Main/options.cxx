@@ -1953,9 +1953,33 @@ void Options::processOptions()
   if (envp) {
     globals->append_fg_scenery(envp);
   }
+    
+// terrasync directory fixup
+  if (fgGetBool("/sim/terrasync/enabled")) {
+    string terrasyncDir = fgGetString("/sim/terrasync/scenery-dir");
+    if (terrasyncDir.empty()) {
+      SGPath p(fgGetString("/sim/fg-home"));
+      p.append("TerraSync");
+      if (!p.exists()) {
+        simgear::Dir dd(p);
+        dd.create(0700);
+      }
+      
+      terrasyncDir = p.str();
+      SG_LOG(SG_GENERAL, SG_INFO,
+             "Using default TerraSync dir: " << terrasyncDir);
+      fgSetString("/sim/terrasync/scenery-dir", terrasyncDir);
+    }
+    
+    const string_list& scenery_paths(globals->get_fg_scenery());
+    if (std::find(scenery_paths.begin(), scenery_paths.end(), terrasyncDir) == scenery_paths.end()) {
+      // terrasync dir is not in the scenery paths, add it
+      globals->append_fg_scenery(terrasyncDir);
+    }
+  }
   
   if (globals->get_fg_scenery().empty()) {
-  // no scenery paths set *at all*, use the data in FG_ROOT
+    // no scenery paths set *at all*, use the data in FG_ROOT
     SGPath root(globals->get_fg_root());
     root.append("Scenery");
     globals->append_fg_scenery(root.str());
