@@ -451,6 +451,43 @@ private:
   SGPropertyNode* _cache;
 };
 
+#ifdef _WIN32
+static SGPath platformDefaultDataPath()
+{
+  char *envp = ::getenv( "APPDATA" );
+  SGPath config( envp );
+  config.append( "flightgear.org" );
+}
+#elif __APPLE__
+
+#include <CoreServices/CoreServices.h>
+
+static SGPath platformDefaultDataPath()
+{
+  FSRef ref;
+  OSErr err = FSFindFolder(kUserDomain, kApplicationSupportFolderType, false, &ref);
+  if (err) {
+    return SGPath();
+  }
+  
+  unsigned char path[1024];
+  if (FSRefMakePath(&ref, path, 1024) != noErr) {
+    return SGPath();
+  }
+  
+  SGPath appData;
+  appData.set((const char*) path);
+  appData.append("flightgear.org");
+  return appData;
+}
+#else
+static SGPath platformDefaultDataPath()
+{
+  SGPath config( homedir );
+  config.append( ".fgfs" );
+}
+#endif
+
 // Read in configuration (file and command line)
 bool fgInitConfig ( int argc, char **argv ) {
 
@@ -467,42 +504,34 @@ bool fgInitConfig ( int argc, char **argv ) {
     }
 
     SGPropertyNode autosave;
-#ifdef _WIN32
-    char *envp = ::getenv( "APPDATA" );
-    if (envp != NULL ) {
-        SGPath config( envp );
-        config.append( "flightgear.org" );
-#else
-    if ( homedir != NULL ) {
-        SGPath config( homedir );
-        config.append( ".fgfs" );
-#endif
-        const char *fg_home = getenv("FG_HOME");
-        if (fg_home)
-            config = fg_home;
+    SGPath dataPath = platformDefaultDataPath();
+  
+    const char *fg_home = getenv("FG_HOME");
+    if (fg_home)
+        dataPath = fg_home;
+  
+    simgear::Dir exportDir(simgear::Dir(dataPath).file("Export"));
+    if (!exportDir.exists()) {
+      exportDir.create(0777);
+    }
 
-        SGPath home_export(config.str());
-        home_export.append("Export/dummy");
-        home_export.create_dir(0777);
+    // Set /sim/fg-home and don't allow malign code to override it until
+    // Nasal security is set up.  Use FG_HOME if necessary.
+    SGPropertyNode *home = fgGetNode("/sim", true);
+    home->removeChild("fg-home", 0, false);
+    home = home->getChild("fg-home", 0, true);
+    home->setStringValue(dataPath.c_str());
+    home->setAttribute(SGPropertyNode::WRITE, false);
 
-        // Set /sim/fg-home and don't allow malign code to override it until
-        // Nasal security is set up.  Use FG_HOME if necessary.
-        SGPropertyNode *home = fgGetNode("/sim", true);
-        home->removeChild("fg-home", 0, false);
-        home = home->getChild("fg-home", 0, true);
-        home->setStringValue(config.c_str());
-        home->setAttribute(SGPropertyNode::WRITE, false);
-
-        config.append( "autosave.xml" );
-        if (config.exists()) {
-          SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << config.str());
-          try {
-              readProperties(config.str(), &autosave, SGPropertyNode::USERARCHIVE);
-          } catch (sg_exception& e) {
-              SG_LOG(SG_INPUT, SG_WARN, "failed to read user settings:" << e.getMessage()
-                << "(from " << e.getOrigin() << ")");
-          }
-        }
+    SGPath autosaveFile = simgear::Dir(dataPath).file("autosave.xml");
+    if (autosaveFile.exists()) {
+      SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << autosaveFile.str());
+      try {
+          readProperties(autosaveFile.str(), &autosave, SGPropertyNode::USERARCHIVE);
+      } catch (sg_exception& e) {
+          SG_LOG(SG_INPUT, SG_WARN, "failed to read user settings:" << e.getMessage()
+            << "(from " << e.getOrigin() << ")");
+      }
     }
     
   // Scan user config files and command line for a specified aircraft.

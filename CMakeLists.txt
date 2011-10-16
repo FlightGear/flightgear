@@ -51,6 +51,10 @@ endif()
 
 IF(APPLE)
     set(EVENT_INPUT_DEFAULT 1)
+    
+    find_library(CORESERVICES_LIBRARY CoreServices)
+    list(APPEND PLATFORM_LIBS ${CORESERVICES_LIBRARY})
+
 elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
     # disabled while DBus / HAL / udev issues are decided
     #set(EVENT_INPUT_DEFAULT 1)
