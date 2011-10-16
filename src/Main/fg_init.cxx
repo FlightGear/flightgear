@@ -338,6 +338,29 @@ public:
     }
     
     _searchAircraft = aircraft + "-set.xml";
+    std::string aircraftDir = fgGetString("/sim/aircraft-dir", "");
+    if (!aircraftDir.empty()) {
+      // aircraft-dir was set, skip any searching at all, if it's valid
+      simgear::Dir acPath(aircraftDir);
+      SGPath setFile = acPath.file(_searchAircraft);
+      if (setFile.exists()) {
+        SG_LOG(SG_GENERAL, SG_INFO, "found aircraft in dir: " << aircraftDir );
+        
+        try {
+          readProperties(setFile.str(), globals->get_props());
+        } catch ( const sg_exception &e ) {
+          SG_LOG(SG_INPUT, SG_ALERT, "Error reading aircraft: " << e.getFormattedMessage());
+          return false;
+        }
+        
+        return true;
+      } else {
+        SG_LOG(SG_GENERAL, SG_ALERT, "aircraft '" << _searchAircraft << 
+               "' not found in specified dir:" << aircraftDir);
+        return false;
+      }
+    }
+    
     if (!checkCache()) {
       // prepare cache for re-scan
       SGPropertyNode *n = _cache->getNode("fg-root", true);

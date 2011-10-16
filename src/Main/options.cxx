@@ -1395,7 +1395,7 @@ struct OptionDesc {
     {"fg-aircraft",                  true,  OPTION_IGNORE | OPTION_MULTI,   "", false, "", 0 },
     {"fdm",                          true,  OPTION_STRING, "/sim/flight-model", false, "", 0 },
     {"aero",                         true,  OPTION_STRING, "/sim/aero", false, "", 0 },
-    {"aircraft-dir",                 true,  OPTION_STRING, "/sim/aircraft-dir", false, "", 0 },
+    {"aircraft-dir",                 true,  OPTION_IGNORE,   "", false, "", 0 },
     {"model-hz",                     true,  OPTION_INT,    "/sim/model-hz", false, "", 0 },
     {"speed",                        true,  OPTION_INT,    "/sim/speed-up", false, "", 0 },
     {"trim",                         false, OPTION_BOOL,   "/sim/presets/trim", true, "", 0 },
@@ -1763,6 +1763,11 @@ void Options::initAircraft()
     path.append("Aircraft");
     fgShowAircraft(path);
     exit(0);
+  }
+  
+  if (isOptionSet("aircraft-dir")) {
+    // set this now, so it's available in FindAndCacheAircraft
+    fgSetString("/sim/aircraft-dir", valueForOption("aircraft-dir"));
   }
 }
   
