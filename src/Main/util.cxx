@@ -28,7 +28,6 @@
 #include <cstdlib>
 
 #include <vector>
-using std::vector;
 
 #include <simgear/debug/logstream.hxx>
 #include <simgear/math/SGLimits.hxx>
@@ -42,6 +41,8 @@ using std::vector;
 #ifdef OSG_LIBRARY_STATIC
 #include "osgDB/Registry"
 #endif
+
+using std::vector;
 
 // Originally written by Alex Perry.
 double
@@ -71,10 +72,10 @@ fgGetLowPass (double current, double target, double timeratio)
 }
 
 
-string
+std::string
 fgUnescape (const char *s)
 {
-    string r;
+    std::string r;
     while (*s) {
         if (*s != '\\') {
             r += *s++;

@@ -51,7 +51,7 @@ public:
     virtual void valueChanged(SGPropertyNode *);
 
 protected:
-    string _name;
+    std::string _name;
     int _num;
     double _time;
     double _interval;
@@ -90,7 +90,7 @@ protected:
     SGPropertyNode *getInstrumentNode(const char *name, DefaultType value);
 
 private:
-    string _texture_path;
+    std::string _texture_path;
 
     typedef enum { ARC, MAP, PLAN, ROSE, BSCAN} DisplayMode;
     DisplayMode _display_mode;

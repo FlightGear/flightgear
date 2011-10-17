@@ -18,7 +18,7 @@
 #include "tacan.hxx"
 
 using std::vector;
-
+using std::string;
 
 /**
  * Adjust the range.

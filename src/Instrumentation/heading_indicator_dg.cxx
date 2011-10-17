@@ -25,8 +25,8 @@ HeadingIndicatorDG::HeadingIndicatorDG ( SGPropertyNode *node ) :
     int i;
     for ( i = 0; i < node->nChildren(); ++i ) {
         SGPropertyNode *child = node->getChild(i);
-        string cname = child->getName();
-        string cval = child->getStringValue();
+        std::string cname = child->getName();
+        std::string cval = child->getStringValue();
         if ( cname == "name" ) {
             name = cval;
         } else if ( cname == "number" ) {
@@ -51,7 +51,7 @@ HeadingIndicatorDG::~HeadingIndicatorDG ()
 void
 HeadingIndicatorDG::init ()
 {
-    string branch;
+    std::string branch;
     branch = "/instrumentation/" + name;
 
     _heading_in_node = fgGetNode("/orientation/heading-deg", true);
@@ -81,7 +81,7 @@ void
 HeadingIndicatorDG::bind ()
 {
     std::ostringstream temp;
-    string branch;
+    std::string branch;
     temp << num;
     branch = "/instrumentation/" + name + "[" + temp.str() + "]";
 
@@ -95,7 +95,7 @@ void
 HeadingIndicatorDG::unbind ()
 {
     std::ostringstream temp;
-    string branch;
+    std::string branch;
     temp << num;
     branch = "/instrumentation/" + name + "[" + temp.str() + "]";
 

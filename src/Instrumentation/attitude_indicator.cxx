@@ -18,6 +18,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 
+using std::string;
 
 AttitudeIndicator::AttitudeIndicator ( SGPropertyNode *node )
     :

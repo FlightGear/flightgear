@@ -49,12 +49,12 @@ public:
 
 private:
 
-    string _name;
+    std::string _name;
     int _num;
     string_list _rpms;
     double _scale;
     SGPropertyNode_ptr _serviceable_node;
-    vector<SGPropertyNode_ptr> _rpm_nodes;
+    std::vector<SGPropertyNode_ptr> _rpm_nodes;
     SGPropertyNode_ptr _pressure_node;
     SGPropertyNode_ptr _suction_node;
     

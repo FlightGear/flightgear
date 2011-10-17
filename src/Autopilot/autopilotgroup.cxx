@@ -36,7 +36,8 @@
 #include <simgear/structure/exception.hxx>
 #include <Main/fg_props.hxx>
 
-
+using std::vector;
+using std::string;
 using simgear::PropertyList;
 
 class FGXMLAutopilotGroupImplementation : public FGXMLAutopilotGroup
@@ -111,7 +112,7 @@ void FGXMLAutopilotGroupImplementation::initFrom( SGPropertyNode_ptr rootNode, c
           // check for duplicate names
           string name = apName;
           for( unsigned i = 0; get_subsystem( apName.c_str() ) != NULL; i++ ) {
-              ostringstream buf;
+              std::ostringstream buf;
               buf <<  name << "_" << i;
               apName = buf.str();
           }

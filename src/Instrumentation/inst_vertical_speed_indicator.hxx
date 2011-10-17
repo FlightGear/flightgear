@@ -62,7 +62,7 @@ public:
 
 private:
 
-    string _name;
+    std::string _name;
     int _num;
 
     double _internal_pressure_inhg;

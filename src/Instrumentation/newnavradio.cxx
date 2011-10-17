@@ -808,7 +808,7 @@ public:
   void valueChanged (SGPropertyNode * prop)
   {
     // format as fixed decimal "nnn.nn"
-    ostringstream buf;
+    std::ostringstream buf;
     buf << std::fixed 
         << std::setw(5) 
         << std::setfill('0') 
@@ -922,7 +922,7 @@ void NavRadioImpl::update( double dt )
   try {
     position = globals->get_aircraft_position();
   }
-  catch( exception & ) {
+  catch( std::exception & ) {
     return;
   }
 

@@ -135,7 +135,7 @@ double FGClouds::buildCloud(SGPropertyNode *cloud_def_root, SGPropertyNode *box_
 			double c = abox->getDoubleValue("count", 5);
 			int count = (int) (c + (sg_random() - 0.5) * c);
 
-			extent = max(w*w, extent);
+			extent = std::max(w*w, extent);
 
 			for (int j = 0; j < count; j++)	{
 

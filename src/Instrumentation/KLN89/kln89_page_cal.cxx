@@ -28,6 +28,8 @@
 #include <Main/fg_props.hxx>
 #include "kln89_page_cal.hxx"
 
+using std::string;
+
 KLN89CalPage::KLN89CalPage(KLN89* parent)
 : KLN89Page(parent) {
 	_nSubPages = 8;

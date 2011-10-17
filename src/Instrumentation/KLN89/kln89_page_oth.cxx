@@ -27,6 +27,8 @@
 
 #include "kln89_page_oth.hxx"
 
+using std::string;
+
 KLN89OthPage::KLN89OthPage(KLN89* parent)
 : KLN89Page(parent) {
 	_nSubPages = 12;

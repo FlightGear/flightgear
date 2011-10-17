@@ -14,8 +14,9 @@
 #include "new_gui.hxx"
 #include "menubar.hxx"
 
-
-
+using std::vector;
+using std::string;
+using std::map;
 ////////////////////////////////////////////////////////////////////////
 // FIXME!!
 //

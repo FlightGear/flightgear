@@ -35,7 +35,7 @@ void
 VacuumSystem::init()
 {
     unsigned int i;
-    string branch;
+    std::string branch;
     branch = "/systems/" + _name;
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );

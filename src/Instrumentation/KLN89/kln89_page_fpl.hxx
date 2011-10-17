@@ -48,7 +48,7 @@ public:
 	// Override the base class GetId function to return the waypoint ID under the cursor
 	// on FPL0 page, if there is one and the cursor is on.
 	// Otherwise return an empty string.
-	inline const string& GetId() { return(_fp0SelWpId); } 
+	inline const std::string& GetId() { return(_fp0SelWpId); } 
 	
 private:
 	int _fpMode;	// 0 = Dis, 1 = Dtk
@@ -56,7 +56,7 @@ private:
 	
 	bool _bEntWp;	// set true when a waypoint is being entered
 	bool _bEntExp;	// Set true when ent is expected to set the currently entered waypoint as entered.
-	string _entWpStr;  // The currently entered wp ID (need not be valid) 
+	std::string _entWpStr;  // The currently entered wp ID (need not be valid) 
 	GPSWaypoint* _entWp;	// Waypoint being currently entered
 	
 	// The position of the cursor in a waypoint being entered
@@ -83,9 +83,9 @@ private:
 	void Calc();
 	
 	// The ID of the waypoint under the cursor in fpl0, if those conditions exist!
-	string _fp0SelWpId;
+	std::string _fp0SelWpId;
 	
-	vector<string> _params;
+  std::vector<std::string> _params;
 };
 
 #endif	// _KLN89_PAGE_FPL_HXX

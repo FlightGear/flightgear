@@ -33,6 +33,7 @@
 #include <simgear/math/SGMath.hxx>
 
 using simgear::PropertyList;
+using std::string;
 
 void FGCommonInput::read_bindings (const SGPropertyNode * node, binding_list_t * binding_list, int modifiers, const string & module )
 {

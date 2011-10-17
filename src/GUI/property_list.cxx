@@ -31,8 +31,10 @@
 #include <iomanip>
 #include <iostream>
 #include <string>
+
 using std::string;
 using std::cout;
+using std::endl;
 
 typedef string stdString;      // puObject has a "string" member
 
@@ -95,7 +97,7 @@ static void dumpProperties(const SGPropertyNode *node)
         case props::VEC3D:
         case props::VEC4D:
         {
-            streamsize precision = cout.precision(15);
+            std::streamsize precision = cout.precision(15);
             c->printOn(cout);
             cout.precision(precision);
         }

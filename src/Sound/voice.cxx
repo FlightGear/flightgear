@@ -28,6 +28,7 @@
 
 #define VOICE "/sim/sound/voices"
 
+using std::string;
 
 /// MANAGER ///
 
@@ -67,7 +68,7 @@ void FGVoiceMgr::init()
 	try {
 		for (unsigned int i = 0; i < voices.size(); i++)
 			_voices.push_back(new FGVoice(this, voices[i]));
-	} catch (const string& s) {
+	} catch (const std::string& s) {
 		SG_LOG(SG_SOUND, SG_ALERT, "VOICE: " << s);
 	}
 

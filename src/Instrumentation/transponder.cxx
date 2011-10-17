@@ -24,6 +24,8 @@
 
 #include "transponder.hxx"
 
+using std::string;
+
 Transponder::Transponder(SGPropertyNode *node)
     :
     _name(node->getStringValue("name", "transponder")),

@@ -37,7 +37,7 @@ Clock::~Clock ()
 void
 Clock::init ()
 {
-    string branch;
+    std::string branch;
     branch = "/instrumentation/" + _name;
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );

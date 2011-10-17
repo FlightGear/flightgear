@@ -11,8 +11,6 @@
 #include <iostream>
 #include <iomanip>
 
-using std::setprecision;
-
 #ifdef TEST_DEBUG
 #include <stdio.h>
 #endif
@@ -20,7 +18,8 @@ using std::setprecision;
 #include <iostream>
 #include <sstream>
 
-
+using std::setprecision;
+using std::endl;
 
 namespace yasim {
 
@@ -732,7 +731,7 @@ void Rotor::setParameter(const char *parametername, float value)
         p(rotor_correction_factor,1)
         SG_LOG(SG_INPUT, SG_ALERT,
             "internal error in parameter set up for rotor: '" << 
-            parametername <<"'" << endl);
+               parametername <<"'" << std::endl);
 #undef p
 }
 

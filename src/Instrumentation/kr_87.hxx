@@ -43,8 +43,8 @@ class FGKR_87 : public SGSubsystem
     bool need_update;
 
     // internal values
-    string ident;
-    string trans_ident;
+    std::string ident;
+    std::string trans_ident;
     bool valid;
     bool inrange;
     double stn_lon;
@@ -115,7 +115,7 @@ public:
     void search ();
 
     // internal values
-    inline const string& get_ident() const { return ident; }
+    inline const std::string& get_ident() const { return ident; }
     inline bool get_valid() const { return valid; }
     inline bool get_inrange() const { return inrange; }
     inline double get_stn_lon() const { return stn_lon; }

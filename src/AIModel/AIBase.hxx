@@ -134,7 +134,7 @@ public:
     string _path;
     string _callsign;
     string _submodel;
-    string _name;
+    std::string _name;
     string _parent;
 
     SGGeod userpos;

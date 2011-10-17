@@ -32,6 +32,8 @@
 #include <Scripting/NasalSys.hxx>
 
 using simgear::PropertyList;
+using std::cout;
+using std::endl;
 
 FGEventSetting::FGEventSetting( SGPropertyNode_ptr base ) :
   value(0.0)

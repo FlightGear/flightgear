@@ -28,6 +28,8 @@
 #include "kln89_page_dir.hxx"
 #include <Main/fg_props.hxx>
 
+using std::string;
+
 KLN89DirPage::KLN89DirPage(KLN89* parent)
 : KLN89Page(parent) {
 	_nSubPages = 1;

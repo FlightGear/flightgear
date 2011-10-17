@@ -51,6 +51,8 @@
 #include <ATC/CommStation.hxx>
 
 using std::vector;
+using std::pair;
+
 using namespace flightgear;
 
 // magic import of a helper which uses FGPositioned internals
@@ -76,7 +78,6 @@ FGAirport::FGAirport(const string &id, const SGGeod& location, const SGGeod& tow
 
 FGAirport::~FGAirport()
 {
-    cerr << "Deleting Airport" << endl;
     delete _dynamics;
 }
 
@@ -552,7 +553,7 @@ FGAirport::selectSID(const SGGeod& aDest, FGRunway* aRwy)
       << (aRwy ? aRwy->ident() : "no runway preference"));
   }
   
-  return make_pair(sid, enroute);
+  return std::make_pair(sid, enroute);
 }
     
 pair<STAR*, WayptRef>
@@ -584,7 +585,7 @@ FGAirport::selectSTAR(const SGGeod& aOrigin, FGRunway* aRwy)
     }
   } // of STAR iteration
   
-  return make_pair(star, enroute);
+  return std::make_pair(star, enroute);
 }
 
 

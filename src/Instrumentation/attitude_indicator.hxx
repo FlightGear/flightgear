@@ -51,9 +51,9 @@ public:
 
 private:
 
-    string _name;
+    std::string _name;
     int _num;
-    string _suction;
+    std::string _suction;
 
     Gyro _gyro;
 

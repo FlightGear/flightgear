@@ -45,7 +45,7 @@ public:
 private:
     void computeMach(double ias);
 
-    string _name;
+    std::string _name;
     unsigned int _num;
     string _total_pressure;
     string _static_pressure;

@@ -212,9 +212,10 @@ private:
     };
 
     puFont *_font;
-    map<const char*,FGColor*, ltstr> _colors;
-    typedef map<const char*,FGColor*, ltstr>::iterator _itt_t;
-    typedef map<const char*,FGColor*, ltstr>::const_iterator _citt_t;
+    typedef std::map<const char*,FGColor*, ltstr> ColourDict;
+    ColourDict _colors;
+    typedef ColourDict::iterator _itt_t;
+    typedef ColourDict::const_iterator _citt_t;
 
     void clear_colors();
 
@@ -311,8 +312,8 @@ private:
     // Path to the font directory
     SGPath _path;
 
-    typedef map<const string, fntTexFont*> TexFontMap;
-    typedef map<const FntParams, fnt*, FntParamsLess> PuFontMap;
+    typedef std::map<const std::string, fntTexFont*> TexFontMap;
+    typedef std::map<const FntParams, fnt*, FntParamsLess> PuFontMap;
     TexFontMap _texFonts;
     PuFontMap _puFonts;
 

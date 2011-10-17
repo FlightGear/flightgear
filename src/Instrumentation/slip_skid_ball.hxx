@@ -43,7 +43,7 @@ private:
 
     double _last_pos;
 
-    string _name;
+    std::string _name;
     int _num;
 
     SGPropertyNode_ptr _serviceable_node;

@@ -24,6 +24,7 @@
 #endif
 #include "presets.hxx"
 
+#include <cmath>
 #include <simgear/math/SGMisc.hxx>
 #include <Main/fg_props.hxx>
 

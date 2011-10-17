@@ -7,6 +7,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 
+using std::string;
 
 SlipSkidBall::SlipSkidBall ( SGPropertyNode *node)
     :

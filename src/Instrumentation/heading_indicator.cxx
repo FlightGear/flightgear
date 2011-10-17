@@ -29,7 +29,7 @@ HeadingIndicator::~HeadingIndicator ()
 void
 HeadingIndicator::init ()
 {
-    string branch;
+    std::string branch;
     branch = "/instrumentation/" + _name;
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
@@ -47,7 +47,7 @@ void
 HeadingIndicator::bind ()
 {
     std::ostringstream temp;
-    string branch;
+    std::string branch;
     temp << _num;
     branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 
@@ -61,7 +61,7 @@ void
 HeadingIndicator::unbind ()
 {
     std::ostringstream temp;
-    string branch;
+    std::string branch;
     temp << _num;
     branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
 

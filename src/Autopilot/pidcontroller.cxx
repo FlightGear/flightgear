@@ -25,6 +25,9 @@
 
 using namespace FGXMLAutopilot;
 
+using std::endl;
+using std::cout;
+
 PIDController::PIDController():
     AnalogComponent(),
     alpha( 0.1 ),

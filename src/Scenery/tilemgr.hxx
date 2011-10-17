@@ -117,7 +117,7 @@ public:
     bool schedule_scenery(const SGGeod& position, double range_m, double duration=0.0);
 
     // Load a model for a tile
-    osg::Node* loadTileModel(const string& modelPath, bool cacheModel);
+    osg::Node* loadTileModel(const std::string& modelPath, bool cacheModel);
 
     // Returns true if tiles around current view position have been loaded
     bool isSceneryLoaded();

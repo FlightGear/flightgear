@@ -41,6 +41,8 @@
 #include <Main/globals.hxx>
 #include <Time/sunsolver.hxx>
 
+using std::string;
+
 static bool do_timeofday (const SGPropertyNode * arg)
 {
     const string &offset_type = arg->getStringValue("timeofday", "noon");

@@ -58,7 +58,7 @@ bool Component::configure( SGPropertyNode_ptr configNode )
 
 bool Component::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
 {
-  SG_LOG( SG_AUTOPILOT, SG_BULK, "Component::configure(" << nodeName << ")" << endl );
+  SG_LOG( SG_AUTOPILOT, SG_BULK, "Component::configure(" << nodeName << ")" << std::endl );
 
   if ( nodeName == "name" ) {
     _name = configNode->getStringValue();
@@ -97,7 +97,7 @@ bool Component::configure( const std::string & nodeName, SGPropertyNode_ptr conf
     return true;
   } // enable
 
-  SG_LOG( SG_AUTOPILOT, SG_BULK, "Component::configure(" << nodeName << ") [unhandled]" << endl );
+  SG_LOG( SG_AUTOPILOT, SG_BULK, "Component::configure(" << nodeName << ") [unhandled]" << std::endl );
   return false;
 }
 

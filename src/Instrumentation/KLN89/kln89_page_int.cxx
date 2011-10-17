@@ -29,6 +29,8 @@
 #include <Navaids/fix.hxx>
 #include <Navaids/navrecord.hxx>
 
+using std::string;
+
 KLN89IntPage::KLN89IntPage(KLN89* parent) 
 : KLN89Page(parent) {
 	_nSubPages = 2;

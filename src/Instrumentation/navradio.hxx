@@ -137,7 +137,7 @@ class FGNavRadio : public SGSubsystem, public SGPropertyChangeListener
     double xrate_ms;
     double _localizerWidth; // cached localizer width in degrees
     
-    string _name;
+    std::string _name;
     int _num;
 
     // internal periodic station search timer

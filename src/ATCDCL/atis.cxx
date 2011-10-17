@@ -59,6 +59,8 @@
 #include "ATCutils.hxx"
 #include "ATCmgr.hxx"
 
+using std::string;
+using std::map;
 using std::cout;
 using std::cout;
 using boost::ref;
