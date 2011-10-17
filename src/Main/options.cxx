@@ -79,6 +79,7 @@ using std::sort;
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::vector;
 
 #define NEW_DEFAULT_MODEL_HZ 120
 
@@ -182,7 +183,7 @@ fgSetDefaults ()
 #elif defined(sgi)
     fgSetString("/sim/startup/browser-app", "launchWebJumper");
 #else
-    char* browserEnv = ::getenv( "WEBBROWSER" );
+    const char* browserEnv = ::getenv( "WEBBROWSER" );
     if (!browserEnv) browserEnv = "netscape";
     fgSetString("/sim/startup/browser-app", browserEnv);
 #endif
@@ -1661,7 +1662,8 @@ Options::Options() :
 // build option map
   OptionDesc *desc = &fgOptionArray[ 0 ];
   while ( desc->option != 0 ) {
-    p->options[ desc->option ] = desc++;
+    p->options[ desc->option ] = desc;
+    ++desc;
   }
 }
   
