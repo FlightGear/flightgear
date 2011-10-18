@@ -262,6 +262,15 @@ configure_file (
 add_subdirectory(src)
 add_subdirectory(utils)
 
+set (INSTALL_DOCS 
+    README
+	README.OpenAL
+	README.plib
+	README.OSG
+	README.SimGear)
+
+INSTALL(FILES ${INSTALL_DOCS} DESTINATION doc OPTIONAL)
+
 #-----------------------------------------------------------------------------
 ### uninstall target
 #-----------------------------------------------------------------------------
