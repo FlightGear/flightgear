@@ -53,9 +53,15 @@ To set an optional feature, do
 
     cmake ../flightgear -DFEATURE_NAME=ON
 
-The easiest way to see the features that can be configured, is by running one
-of the cmake GUIs - either ncurses or graphical. You can also check the root
-CMakeLists.txt file.
+To see the variables that can be configured / are currently defined, you can
+run one of the GUI front ends, or the following command:
+
+    cmake ../flighgear -L
+
+Add 'A' to see all the options (including advanced options), or 'H' to see
+the help for each option (similar to running configure --help under autoconf):
+
+    cmake ../flightgear -LH
 
 Build Targets
 
@@ -100,8 +106,9 @@ You can set a property on an individual source file:
 Detecting Features / Libraries
 
 For most standard libraries (Gtk, wxWidget, Python, GDAL, Qt, libXml, Boost),
-cmake provides a standard helper. Check your cmake 'modules' directory to see
-the extensive list. 
+cmake provides a standard helper. To see the available modules, run:
+
+     cmake --help-module-list
 
 In the root CMakeLists file, use a statement like:
 
@@ -113,7 +120,8 @@ might have different names (eg, OPENSCENEGRAPH_LIBRARIES).
 
 If there's no standard helper for a library you need, find a similar one, copy
 it to CMakeModules/FindABC.cmake, and modify the code to fit. Generally this
-is pretty straightforward.
+is pretty straightforward. The built-in modules reside in the Cmake 'share'
+directory, eg /usr/share/cmake/modules on Unix systems.
 
 Note libraries support by pkg-config can be handled directly, with no need
 to create a custom FindABC helper.
