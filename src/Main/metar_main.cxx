@@ -576,6 +576,7 @@ int main(int argc, char *argv[])
 
 			try {
                 MetarRequest* mr = new MetarRequest(argv[i]);
+                HTTP::Request_ptr own(mr);
                 http.makeRequest(mr);
                 
             // spin until the request completes, fails or times out
