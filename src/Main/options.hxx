@@ -48,7 +48,7 @@ public:
   /**
    * pass command line arguments, read default config files
    */
-  void init(int argc, char* argv[]);
+  void init(int argc, char* argv[], const SGPath& appDataPath);
   
   /**
     * parse a config file (eg, .fgfsrc) 
