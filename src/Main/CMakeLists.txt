@@ -84,3 +84,13 @@ target_link_libraries(fgfs
 )
 
 install(TARGETS fgfs RUNTIME DESTINATION bin)
+
+add_executable(metar metar_main.cxx)
+target_link_libraries(metar
+	${SIMGEAR_LIBRARIES}
+	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
+	${PLATFORM_LIBS}
+)
+
+install(TARGETS metar RUNTIME DESTINATION bin)
+
