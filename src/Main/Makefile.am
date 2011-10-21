@@ -129,7 +129,7 @@ fgfs_LDFLAGS = $(fgfs_PLIB_FW) $(fgfs_OSG_FW) $(LDFLAGS)
 metar_SOURCES = metar_main.cxx
 
 metar_LDADD = \
-        -lsgenvironment -lsgio -lsgthreads -lsgbucket -lsgmisc -lsgstructure \
+        -lsgenvironment -lsgio -lsgtiming -lsgthreads -lsgbucket -lsgmisc -lsgstructure \
         -lsgdebug $(network_LIBS) $(thread_LIBS) \
         -lz $(base_LIBS)
 
