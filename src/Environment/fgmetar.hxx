@@ -37,8 +37,7 @@ using std::string;
 
 class FGMetar : public SGMetar, public SGReferenced {
 public:
-	FGMetar(const string& icao, const string& proxy = "", const string& port = "",
-			const string &auth = "");
+	FGMetar(const string& icao);
 
 	long	getAge_min()			const;
 	time_t	getTime()			const { return _time; }
