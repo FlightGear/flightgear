@@ -127,7 +127,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
     init_waypoint->flaps_down= false;
     init_waypoint->finished  = false;
     init_waypoint->on_ground = false;
-    waypoints.push_back(init_waypoint);
+    pushBackWaypoint(init_waypoint);
     routefile.append("Data/AI/FlightPlans");
     snprintf(buffer, 32, "%s-%s.txt",
 	     dep->getId().c_str(),
@@ -221,7 +221,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
 	    wpt->flaps_down= false;
 	    wpt->finished  = false;
 	    wpt->on_ground = false;
-	    waypoints.push_back(wpt);
+	    pushBackWaypoint(wpt);
 	  }
 
 	  if (!(routefile.exists()))
@@ -274,7 +274,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
     wpt->flaps_down= false;
     wpt->finished  = false;
     wpt->on_ground = false;
-    waypoints.push_back(wpt);
+    pushBackWaypoint(wpt);
 }
 */
 
@@ -294,7 +294,7 @@ bool FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport 
   double vCruise = ac->getPerformance()->vCruise();
   FGAIWaypoint *wpt;
   wpt = createInAir(ac, "Cruise", SGGeod::fromDeg(longitude, latitude), alt, vCruise);
-  waypoints.push_back(wpt); 
+  pushBackWaypoint(wpt); 
   
   string rwyClass = getRunwayClassFromTrafficType(fltType);
   double heading = ac->getTrafficRef()->getCourse();
@@ -306,8 +306,8 @@ bool FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport 
   SGGeod secondaryDescentPoint = rwy->pointOnCenterline(-10000);
   
   wpt = createInAir(ac, "BOD", beginDescentPoint,  alt, vCruise);
-  waypoints.push_back(wpt); 
+  pushBackWaypoint(wpt); 
   wpt = createInAir(ac, "BOD2", secondaryDescentPoint, alt, vCruise);
-  waypoints.push_back(wpt); 
+  pushBackWaypoint(wpt); 
   return true;
 }

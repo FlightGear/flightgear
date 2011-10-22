@@ -78,7 +78,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
 		    //FGTaxiNode *tn = dep->getDynamics()->getGroundNetwork()->findNode(node);
 		    FGAIWaypoint *wpt = createOnGround(ac, string(buffer), coord, dep->getElevation(), vTaxiBackward);
 		  wpt->setRouteIndex(-1);
-		  waypoints.push_back(wpt);
+		  pushBackWaypoint(wpt);
 	    }
 	  //cerr << "Success : GateId = " << gateId << endl;
 	  SG_LOG(SG_INPUT, SG_WARN, "Warning: Succesfully found a parking for a " << 
@@ -134,7 +134,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
 		FGAIWaypoint *wpt = createOnGround(ac, string(buffer), coord, dep->getElevation(), vTaxiBackward);
 
 		wpt->setRouteIndex(rte);
-		waypoints.push_back(wpt);
+		pushBackWaypoint(wpt);
 	      }
 	      // some special considerations for the last point:
 	      waypoints.back()->setName(string("PushBackPoint"));
@@ -176,7 +176,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
 		FGAIWaypoint *wpt = createOnGround(ac, string(buffer), coord, dep->getElevation(), vTaxiReduced);
 
 		wpt->setRouteIndex((*ts)->getIndex());
-		waypoints.push_back(wpt); 
+		pushBackWaypoint(wpt); 
 	  }
 	  // cerr << "Done " << endl;
 	  waypoints.back()->setName(string("PushBackPoint"));
@@ -220,7 +220,7 @@ void FGAIFlightPlan::createPushBackFallBack(FGAIAircraft *ac, bool firstFlight, 
   SGGeod coord = coord.fromDeg(lon, lat);
   FGAIWaypoint *wpt = createOnGround(ac, string("park"), coord, dep->getElevation(), vTaxiBackward);
 
-  waypoints.push_back(wpt); 
+  pushBackWaypoint(wpt); 
 
   geo_direct_wgs_84 ( 0, lat, lon, heading, 
 		      10, 
@@ -228,13 +228,13 @@ void FGAIFlightPlan::createPushBackFallBack(FGAIAircraft *ac, bool firstFlight, 
   coord = coord.fromDeg(lon2, lat2); 
   wpt = createOnGround(ac, string("park2"), coord, dep->getElevation(), vTaxiBackward);
 
-  waypoints.push_back(wpt); 
+  pushBackWaypoint(wpt); 
 
   geo_direct_wgs_84 ( 0, lat, lon, heading, 
 		      2.2*radius,           
 		      &lat2, &lon2, &az2 );
   coord = coord.fromDeg(lon2, lat2); 
   wpt = createOnGround(ac, string("taxiStart"), coord, dep->getElevation(), vTaxiReduced);
-  waypoints.push_back(wpt);
+  pushBackWaypoint(wpt);
 
 }
