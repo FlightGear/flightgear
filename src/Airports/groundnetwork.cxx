@@ -853,6 +853,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
         SGGeod curr(SGGeod::fromDegM(lon, lat, alt));
         //TrafficVector iterator closest;
         closest = current;
+        closestOnNetwork = current;
         for (TrafficVectorIterator i = activeTraffic.begin();
                 i != activeTraffic.end(); i++) {
             if (i == current) {
@@ -953,7 +954,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
                 }
             }
         }
-        if ((closest == closestOnNetwork) && (current->getPriority() < closest->getPriority()) && needBraking) {
+        if ((closest->getId() == closestOnNetwork->getId()) && (current->getPriority() < closest->getPriority()) && needBraking) {
             swap(current, closest);
         }
     }
