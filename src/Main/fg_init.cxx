@@ -514,9 +514,28 @@ static SGPath platformDefaultDataPath()
 #endif
 
 // Read in configuration (file and command line)
-bool fgInitConfig ( int argc, char **argv ) {
-
-    flightgear::Options::sharedInstance()->init(argc, argv);
+bool fgInitConfig ( int argc, char **argv )
+{
+    SGPath dataPath = platformDefaultDataPath();
+    
+    const char *fg_home = getenv("FG_HOME");
+    if (fg_home)
+      dataPath = fg_home;
+    
+    simgear::Dir exportDir(simgear::Dir(dataPath).file("Export"));
+    if (!exportDir.exists()) {
+      exportDir.create(0777);
+    }
+    
+    // Set /sim/fg-home and don't allow malign code to override it until
+    // Nasal security is set up.  Use FG_HOME if necessary.
+    SGPropertyNode *home = fgGetNode("/sim", true);
+    home->removeChild("fg-home", 0, false);
+    home = home->getChild("fg-home", 0, true);
+    home->setStringValue(dataPath.c_str());
+    home->setAttribute(SGPropertyNode::WRITE, false);
+  
+    flightgear::Options::sharedInstance()->init(argc, argv, dataPath);
   
     // Read global preferences from $FG_ROOT/preferences.xml
     SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences");
@@ -529,24 +548,7 @@ bool fgInitConfig ( int argc, char **argv ) {
     }
 
     SGPropertyNode autosave;
-    SGPath dataPath = platformDefaultDataPath();
-  
-    const char *fg_home = getenv("FG_HOME");
-    if (fg_home)
-        dataPath = fg_home;
-  
-    simgear::Dir exportDir(simgear::Dir(dataPath).file("Export"));
-    if (!exportDir.exists()) {
-      exportDir.create(0777);
-    }
 
-    // Set /sim/fg-home and don't allow malign code to override it until
-    // Nasal security is set up.  Use FG_HOME if necessary.
-    SGPropertyNode *home = fgGetNode("/sim", true);
-    home->removeChild("fg-home", 0, false);
-    home = home->getChild("fg-home", 0, true);
-    home->setStringValue(dataPath.c_str());
-    home->setAttribute(SGPropertyNode::WRITE, false);
 
     SGPath autosaveFile = simgear::Dir(dataPath).file("autosave.xml");
     if (autosaveFile.exists()) {
@@ -557,13 +559,6 @@ bool fgInitConfig ( int argc, char **argv ) {
           SG_LOG(SG_INPUT, SG_WARN, "failed to read user settings:" << e.getMessage()
             << "(from " << e.getOrigin() << ")");
       }
-    }
-    
-  // check for a config file in app data
-    SGPath appDataConfig(dataPath);
-    appDataConfig.append("fgfsrc");
-    if (appDataConfig.exists()) {
-      flightgear::Options::sharedInstance()->readConfig(appDataConfig);
     }
   
   // Scan user config files and command line for a specified aircraft.

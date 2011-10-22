@@ -1671,7 +1671,7 @@ Options::~Options()
 {
 }
   
-void Options::init(int argc, char **argv)
+void Options::init(int argc, char **argv, const SGPath& appDataPath)
 {
   fgSetDefaults();
   
@@ -1715,6 +1715,13 @@ void Options::init(int argc, char **argv)
     config.set(homedir);
     config.append(".fgfsrc");
     readConfig(config);
+  }
+  
+// check for a config file in app data
+  SGPath appDataConfig(appDataPath);
+  appDataConfig.append("fgfsrc");
+  if (appDataConfig.exists()) {
+    readConfig(appDataConfig);
   }
   
 // setup FG_ROOT
