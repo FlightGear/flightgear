@@ -198,6 +198,7 @@ private:
   void deleteWaypoints(); 
   void resetWaypoints();
   void eraseLastWaypoint();
+  void pushBackWaypoint(FGAIWaypoint *wpt);
 
   bool createLandingTaxi(FGAIAircraft *, FGAirport *apt, double radius, const std::string& fltType, const std::string& acType, const std::string& airline);
   void createDefaultLandingTaxi(FGAIAircraft *, FGAirport* aAirport);

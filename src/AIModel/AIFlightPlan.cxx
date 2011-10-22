@@ -127,7 +127,7 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename)
      if (wpt->getName() == "END") wpt->setFinished(true);
      else wpt->setFinished(false);
 
-     waypoints.push_back( wpt );
+     pushBackWaypoint( wpt );
    }
 
   wpt_iterator = waypoints.begin();
@@ -192,7 +192,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
 	  
 	  SGPropertyNode * node = root.getNode("flightplan");
 	  
-	  //waypoints.push_back( init_waypoint );
+	  //pushBackWaypoint( init_waypoint );
 	  for (int i = 0; i < node->nChildren(); i++) { 
 	    //cout << "Reading waypoint " << i << endl;
 	    FGAIWaypoint* wpt = new FGAIWaypoint;
@@ -208,7 +208,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
 	    
 	    if (wpt->getName() == "END") wpt->setFinished(true);
 	    else wpt->setFinished(false);
-	    waypoints.push_back(wpt);
+	    pushBackWaypoint(wpt);
 	  } // of node loop
           wpt_iterator = waypoints.begin();
 	} catch (const sg_exception &e) {
@@ -305,7 +305,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
 	{
 	  if ((dist > 100.0) && (useInitialWayPoint))
 	    {
-	      //waypoints.push_back(init_waypoint);;
+	      //pushBackWaypoint(init_waypoint);;
 	      waypoints.insert(i, init_waypoint);
 	      //cerr << "Using waypoint : " << init_waypoint->name <<  endl;
 	    }
@@ -313,7 +313,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
 	  // {
 	  //    (*i)->speed = dist; // A hack
 	  //  }
-	  //waypoints.push_back( wpt );
+	  //pushBackWaypoint( wpt );
 	  //cerr << "Using waypoint : " << (*i)->name 
 	  //  << ": course diff : " << crsDiff 
 	  //   << "Course = " << course
@@ -513,8 +513,18 @@ void FGAIFlightPlan::resetWaypoints()
       wpt->setOn_ground   ( (*i)->getOn_ground()  );
       //cerr << "Recycling waypoint " << wpt->name << endl;
       deleteWaypoints();
-      waypoints.push_back(wpt);
+      pushBackWaypoint(wpt);
     }
+}
+
+void FGAIFlightPlan::pushBackWaypoint(FGAIWaypoint *wpt)
+{
+  // std::vector::push_back invalidates waypoints
+  //  so we should restore wpt_iterator after push_back
+  //  (or it could be an index in the vector)
+  size_t pos = wpt_iterator - waypoints.begin();
+  waypoints.push_back(wpt);
+  wpt_iterator = waypoints.begin() + pos;
 }
 
 // Start flightplan over from the beginning
