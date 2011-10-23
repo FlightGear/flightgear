@@ -62,7 +62,8 @@ inline DigitalOutput::DigitalOutput() : _inverted(false)
 
 inline void DigitalOutput::setProperty( SGPropertyNode_ptr node ) 
 { 
-  _node->setBoolValue( (_node = node)->getBoolValue() );
+  _node = node;
+  _node->setBoolValue( node->getBoolValue() );
 }
 
 inline bool DigitalOutput::getValue() const 
