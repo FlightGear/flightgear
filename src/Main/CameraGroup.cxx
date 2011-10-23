@@ -1,4 +1,5 @@
 // Copyright (C) 2008  Tim Moore
+// Copyright (C) 2011  Mathias Froehlich
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -232,6 +233,10 @@ void CameraGroup::update(const osg::Vec3d& position,
             double left, right, bottom, top, parentNear, parentFar;
             projectionMatrix.getFrustum(left, right, bottom, top,
                                         parentNear, parentFar);
+            if ((info->flags & FIXED_NEAR_FAR) == 0) {
+                parentNear = _zNear;
+                parentFar = _zFar;
+            }
             if (parentFar < _nearField || _nearField == 0.0f) {
                 camera->setProjectionMatrix(projectionMatrix);
                 camera->setCullMask(camera->getCullMask()
@@ -602,7 +607,7 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         double aspectRatio = projectionNode->getDoubleValue("aspect-ratio",
                                                             1.0);
         double zNear = projectionNode->getDoubleValue("near", 0.0);
-        double zFar = projectionNode->getDoubleValue("far", 0.0);
+        double zFar = projectionNode->getDoubleValue("far", zNear + 20000);
         double offsetX = projectionNode->getDoubleValue("offset-x", 0.0);
         double offsetY = projectionNode->getDoubleValue("offset-y", 0.0);
         double tan_fovy = tan(DegreesToRadians(fovy*0.5));
@@ -612,6 +617,8 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         double bottom = -tan_fovy * zNear + offsetY;
         pOff.makeFrustum(left, right, bottom, top, zNear, zFar);
         cameraFlags |= PROJECTION_ABSOLUTE;
+        if (projectionNode->getBoolValue("fixed-near-far", true))
+            cameraFlags |= FIXED_NEAR_FAR;
     } else if ((projectionNode = cameraNode->getNode("frustum")) != 0
                || (projectionNode = cameraNode->getNode("ortho")) != 0) {
         double top = projectionNode->getDoubleValue("top", 0.0);
@@ -619,7 +626,7 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         double left = projectionNode->getDoubleValue("left", 0.0);
         double right = projectionNode->getDoubleValue("right", 0.0);
         double zNear = projectionNode->getDoubleValue("near", 0.0);
-        double zFar = projectionNode->getDoubleValue("far", 0.0);
+        double zFar = projectionNode->getDoubleValue("far", zNear + 20000);
         if (cameraNode->getNode("frustum")) {
             pOff.makeFrustum(left, right, bottom, top, zNear, zFar);
             cameraFlags |= PROJECTION_ABSOLUTE;
@@ -627,6 +634,8 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
             pOff.makeOrtho(left, right, bottom, top, zNear, zFar);
             cameraFlags |= (PROJECTION_ABSOLUTE | ORTHO);
         }
+        if (projectionNode->getBoolValue("fixed-near-far", true))
+            cameraFlags |= FIXED_NEAR_FAR;
     } else {
         // old style shear parameters
         double shearx = cameraNode->getDoubleValue("shear-x", 0);

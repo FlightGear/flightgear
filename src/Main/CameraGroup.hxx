@@ -94,8 +94,10 @@ public:
         PROJECTION_ABSOLUTE = 0x2, /**< The projection is absolute. */
         ORTHO = 0x4,               /**< The projection is orthographic */
         GUI = 0x8,                 /**< Camera draws the GUI. */
-        DO_INTERSECTION_TEST = 0x10 /**< scene intersection tests this
+        DO_INTERSECTION_TEST = 0x10,/**< scene intersection tests this
                                        camera. */
+        FIXED_NEAR_FAR = 0x20      /**< take the near far values in the
+                                      projection for real. */
     };
     /** Create a camera group associated with an osgViewer::Viewer.
      * @param viewer the viewer
