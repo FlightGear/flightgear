@@ -138,6 +138,11 @@ window, camera, or gui tags.
    and other background elements may not be drawn if the view plane is
    closer than 120km.
 
+   fixed-near-far - bool
+   If true the near and far values are taken from above, if false
+   near and far are adapted from the scene and visibility.
+   Defaults to true.
+
    offset-x, offset-y - double
    Offsets of the viewing volume specified by the other parameters in
    the near plane, in meters.
@@ -154,9 +159,19 @@ window, camera, or gui tags.
    near, far - double
    The near and far planes, in meters from the camera eye point.
 
+   fixed-near-far - bool
+   If true the near and far values are taken from above, if false
+   near and far are adapted from the scene and visibility.
+   Defaults to true.
+
   ortho
   This specifies an orthographic view. The parameters are the sames as
   the frustum node's.
+
+   fixed-near-far - bool
+   If true the near and far values are taken from above, if false
+   near and far are adapted from the scene and visibility.
+   Defaults to true.
 
   master-perspective
   Defines a persective projection matrix for use as the leading display
