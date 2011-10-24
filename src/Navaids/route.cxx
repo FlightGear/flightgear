@@ -65,6 +65,10 @@ Waypt::Waypt(Route* aOwner) :
 {
 }
 
+Waypt::~Waypt()
+{
+}
+  
 std::string Waypt::ident() const
 {
   return "";
