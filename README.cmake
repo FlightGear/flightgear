@@ -20,9 +20,19 @@ Note the install prefix is automatically searched for required libraries
 and header files, so if you install PLIB, OpenSceneGraph and SimGear to the
 same prefix, most configuration options are unnecessary.
 
-To specify that a particular dependency is in a non-standard location, most
-libraries support an environment variable - eg PLIBDIR or OSG_ROOT - to
-allow precise selection.
+If for some reason you have a dependency (or several) at a different prefix,
+you can specify one or more via CMAKE_PREFIX_PATH:
+
+    cmake ../flightgear -DCMAKE_PREFIX_PATH="/opt/local;/opt/fgfs"
+
+(note the use of semi-colons to specify multiple prefix paths)
+
+Standard prefixes are searched automatically (/usr, /usr/local, /opt/local)
+
+Most dependencies also expose an environment variable to specify their
+installation directory explicitly eg OSG_DIR or PLIBDIR. Any of the methods
+described above will work, but specifying an INSTALL_PREFIX or PREFIX_PATH is
+usually simpler.
 
 By default, we select a release build. To create a debug build, use
 
@@ -34,7 +44,8 @@ Debug builds will automatically use corresponding debug builds of required
 libraries, if they are available. For example you can install debug builds of
 SimGear and OpenSceneGraph, and a debug FlightGear build will use them.
 
-(Debug builds of libraries have the 'd' suffix by default)
+(Debug builds of libraries have the 'd' suffix by default - Release builds
+have no additional suffix)
 
 Note most IDE projects (eg Xcode and Visual Studio) support building all the
 build types from the same project, so you can omit the CMAKE_BUILD_TYPE option
@@ -51,7 +62,9 @@ configurations, eg
 
 To set an optional feature, do
 
-    cmake ../flightgear -DFEATURE_NAME=ON
+    cmake ../flightgear -DFEATURE_NAME=ON 
+
+(or 'OFF' to disable )
 
 To see the variables that can be configured / are currently defined, you can
 run one of the GUI front ends, or the following command:
