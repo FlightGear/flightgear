@@ -67,7 +67,7 @@ private:
     SGGeod center;
     bool isActive;
     bool isPushBackRoute;
-    bool isBlocked;
+    time_t isBlocked;
     FGTaxiNode *start;
     FGTaxiNode *end;
     int index;
@@ -144,14 +144,21 @@ public:
         isPushBackRoute = val;
     };
     void setDimensions(double elevation);
-    void block() {
-        isBlocked = true;
+    void block(time_t time) {
+        if (isBlocked) {
+            if (time < isBlocked) {
+                isBlocked = time;
+            }
+        } else {
+            isBlocked = time;
+        }
     }
-    void unblock() {
-        isBlocked = false;
+    void unblock(time_t now) {
+        if ((now - isBlocked) > 60)
+            isBlocked = 0;
     };
-    bool hasBlock() {
-        return isBlocked;
+    bool hasBlock(time_t now) {
+        return isBlocked ? (isBlocked < now) : 0;
     };
 
     FGTaxiNode * getEnd() {

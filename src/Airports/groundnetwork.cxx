@@ -43,6 +43,7 @@
 #include <Airports/dynamics.hxx>
 
 #include <AIModel/AIAircraft.hxx>
+#include <AIModel/performancedata.hxx>
 #include <AIModel/AIFlightPlan.hxx>
 
 #include <ATC/atc_mgr.hxx>
@@ -50,6 +51,7 @@
 #include <Scenery/scenery.hxx>
 
 #include "groundnetwork.hxx"
+
 
 /***************************************************************************
  * FGTaxiSegment
@@ -651,7 +653,11 @@ void FGGroundNetwork::announcePosition(int id,
         rec.setPositionAndHeading(lat, lon, heading, speed, alt);
         rec.setRadius(radius);  // only need to do this when creating the record.
         rec.setAircraft(aircraft);
-        activeTraffic.push_front(rec);
+        if (leg == 2) {
+            activeTraffic.push_front(rec);
+        } else {
+            activeTraffic.push_back(rec);   
+        }
         
     } else {
         i->setPositionAndIntentions(currentPosition, intendedRoute);
@@ -985,6 +991,7 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
     } else {
         return;
     }
+    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
         SG_LOG(SG_GENERAL, SG_ALERT,
                "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkHoldPosition at " << SG_ORIGIN);
@@ -996,7 +1003,9 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
         return;
     }
     if (current->getAircraft()->getTakeOffStatus() == 2) {
+        //cerr << current->getAircraft()->getCallSign() << ". Taxi in position and hold" << endl;
         current->setHoldPosition(false);
+        current->clearSpeedAdjustment();
         return;
     }
     bool origStatus = current->hasHoldPosition();
@@ -1017,7 +1026,7 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
         } else {
             nx = tx;
         }
-        if (tx->hasBlock() || nx->hasBlock() ) {
+        if (tx->hasBlock(now) || nx->hasBlock(now) ) {
             current->setHoldPosition(true);
         }
     }
@@ -1099,7 +1108,6 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
     bool currStatus = current->hasHoldPosition();
     current->setHoldPosition(origStatus);
     // Either a Hold Position or a resume taxi transmission has been issued
-    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
     if ((now - lastTransmission) > 2) {
         available = true;
     }
@@ -1348,6 +1356,7 @@ void FGGroundNetwork::render(bool visible)
         FGScenery * local_scenery = globals->get_scenery();
         double elevation_meters = 0.0;
         double elevation_feet = 0.0;
+        time_t now = time(NULL) + fgGetLong("/sim/time/warp");
         //for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
         double dx = 0;
         for   (TrafficVectorIterator i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
@@ -1417,7 +1426,7 @@ void FGGroundNetwork::render(bool visible)
                 geode->addDrawable(geometry);
                 //osg::Node *custom_obj;
                 SGMaterial *mat;
-                if (segments[pos]->hasBlock()) {
+                if (segments[pos]->hasBlock(now)) {
                     mat = matlib->find("UnidirectionalTaperRed");
                 } else {
                     mat = matlib->find("UnidirectionalTaperGreen");
@@ -1491,7 +1500,7 @@ void FGGroundNetwork::render(bool visible)
                     geode->addDrawable(geometry);
                     //osg::Node *custom_obj;
                     SGMaterial *mat;
-                    if (segments[k]->hasBlock()) {
+                    if (segments[k]->hasBlock(now)) {
                         mat = matlib->find("UnidirectionalTaperRed");
                     } else {
                         mat = matlib->find("UnidirectionalTaperGreen");
@@ -1516,8 +1525,9 @@ string FGGroundNetwork::getName() {
 
 void FGGroundNetwork::update(double dt)
 {
+    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
     for (FGTaxiSegmentVectorIterator tsi = segments.begin(); tsi != segments.end(); tsi++) {
-        (*tsi)->unblock();
+        (*tsi)->unblock(now);
     }
     int priority = 1;
     //sort(activeTraffic.begin(), activeTraffic.end(), compare_trafficrecords);
@@ -1527,6 +1537,8 @@ void FGGroundNetwork::update(double dt)
             i != parent->getDynamics()->getStartupController()->getActiveTraffic().end(); i++) {
         i->allowPushBack();
         i->setPriority(priority++);
+        // in meters per second;
+        double vTaxi = (i->getAircraft()->getPerformance()->vTaxi() * SG_NM_TO_METER) / 3600;
         if (i->isActive(60)) {
 
             // Check for all active aircraft whether it's current pos segment is
@@ -1540,7 +1552,7 @@ void FGGroundNetwork::update(double dt)
                         for (intVecIterator k = i->getIntentions().begin(); k != i->getIntentions().end(); k++) {
                             if ((*k) == posReverse) {
                                 i->denyPushBack();
-                                segments[posReverse-1]->block();
+                                segments[posReverse-1]->block(now);
                             }
                         }
                     }
@@ -1548,13 +1560,15 @@ void FGGroundNetwork::update(double dt)
             }
             // if the current aircraft is still allowed to pushback, we can start reserving a route for if by blocking all the entry taxiways.
             if (i->pushBackAllowed()) {
+                double length = 0;
                 int pos = i->getCurrentPosition();
                 if (pos > 0) {
                     FGTaxiSegment *seg = segments[pos-1];
                     FGTaxiNode *node = seg->getEnd();
+                    length = seg->getLength();
                     for (FGTaxiSegmentVectorIterator tsi = segments.begin(); tsi != segments.end(); tsi++) {
                         if (((*tsi)->getEnd() == node) && ((*tsi) != seg)) {
-                            (*tsi)->block();
+                            (*tsi)->block(now);
                         }
                     }
                 }
@@ -1563,9 +1577,11 @@ void FGGroundNetwork::update(double dt)
                     if (pos > 0) {
                         FGTaxiSegment *seg = segments[pos-1];
                         FGTaxiNode *node = seg->getEnd();
+                        length += seg->getLength();
+                        time_t blockTime = now + (length / vTaxi);
                         for (FGTaxiSegmentVectorIterator tsi = segments.begin(); tsi != segments.end(); tsi++) {
                             if (((*tsi)->getEnd() == node) && ((*tsi) != seg)) {
-                                (*tsi)->block();
+                                (*tsi)->block(blockTime-30);
                             }
                         }
                     }
@@ -1574,10 +1590,13 @@ void FGGroundNetwork::update(double dt)
         }
     }
     for   (TrafficVectorIterator i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
+        double length = 0;
+        double vTaxi = (i->getAircraft()->getPerformance()->vTaxi() * SG_NM_TO_METER) / 3600;
         i->setPriority(priority++);
         int pos = i->getCurrentPosition();
         if (pos > 0) {
-            if (segments[pos-1]->hasBlock()) {
+            length = segments[pos-1]->getLength();
+            if (segments[pos-1]->hasBlock(now)) {
                 //SG_LOG(SG_GENERAL, SG_ALERT, "Taxiway incursion for AI aircraft" << i->getAircraft()->getCallSign());
             }
 
@@ -1586,7 +1605,7 @@ void FGGroundNetwork::update(double dt)
         for (ivi = i->getIntentions().begin(); ivi != i->getIntentions().end(); ivi++) {
             int segIndex = (*ivi);
             if (segIndex > 0) {
-                if (segments[segIndex-1]->hasBlock())
+                if (segments[segIndex-1]->hasBlock(now))
                     break;
             }
         }
@@ -1596,9 +1615,11 @@ void FGGroundNetwork::update(double dt)
             if (pos > 0) {
                 FGTaxiSegment *seg = segments[pos-1];
                 FGTaxiNode *node = seg->getEnd();
+                length += seg->getLength();
                 for (FGTaxiSegmentVectorIterator tsi = segments.begin(); tsi != segments.end(); tsi++) {
                     if (((*tsi)->getEnd() == node) && ((*tsi) != seg)) {
-                        (*tsi)->block();
+                        time_t blockTime = now + (length / vTaxi);
+                        (*tsi)->block(blockTime - 30);
                     }
                 }
             }
