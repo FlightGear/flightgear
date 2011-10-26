@@ -838,11 +838,12 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr) {
 }
 
 
-bool FGAIAircraft::aiTrafficVisible() {
-  SGGeod userPos(SGGeod::fromDeg(fgGetDouble("/position/longitude-deg"), 
-    fgGetDouble("/position/latitude-deg")));
-  
-  return (SGGeodesy::distanceNm(userPos, pos) <= TRAFFICTOAIDISTTODIE);
+bool FGAIAircraft::aiTrafficVisible()
+{
+    SGVec3d cartPos = SGVec3d::fromGeod(pos);
+    const double d2 = (TRAFFICTOAIDISTTODIE * SG_NM_TO_METER) *
+        (TRAFFICTOAIDISTTODIE * SG_NM_TO_METER);
+    return (distSqr(cartPos, globals->get_aircraft_positon_cart()) < d2);
 }
 
 
