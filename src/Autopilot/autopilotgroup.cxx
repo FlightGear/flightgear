@@ -35,6 +35,7 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/structure/exception.hxx>
 #include <Main/fg_props.hxx>
+#include <boost/foreach.hpp>
 
 using std::vector;
 using std::string;
@@ -43,6 +44,8 @@ using simgear::PropertyList;
 class FGXMLAutopilotGroupImplementation : public FGXMLAutopilotGroup
 {
 public:
+    virtual void addAutopilot( const std::string & name, SGPropertyNode_ptr apNode, SGPropertyNode_ptr config );
+    virtual void removeAutopilot( const std::string & name );
     void init();
     void reinit();
     void update( double dt );
@@ -51,6 +54,30 @@ private:
     vector<string> _autopilotNames;
 
 };
+
+void FGXMLAutopilotGroupImplementation::addAutopilot( const std::string & name, SGPropertyNode_ptr apNode, SGPropertyNode_ptr config )
+{
+    BOOST_FOREACH( std::string & n, _autopilotNames ) {
+        if( n == name ) {
+            SG_LOG(SG_ALL, SG_ALERT, "NOT adding duplicate property rule name " << name );
+            return;
+        }
+    }
+    FGXMLAutopilot::Autopilot * ap = new FGXMLAutopilot::Autopilot( apNode, config );
+    ap->set_name( name );
+    set_subsystem( name, ap );
+    _autopilotNames.push_back( name );
+}
+
+void FGXMLAutopilotGroupImplementation::removeAutopilot( const std::string & name )
+{
+    FGXMLAutopilot::Autopilot * ap = (FGXMLAutopilot::Autopilot*)get_subsystem( name );
+    if( ap == NULL ) return; // ?
+    remove_subsystem( name );
+    delete ap;
+}
+
+
 
 void FGXMLAutopilotGroupImplementation::update( double dt )
 {
@@ -63,10 +90,7 @@ void FGXMLAutopilotGroupImplementation::reinit()
     SGSubsystemGroup::unbind();
 
     for( vector<string>::size_type i = 0; i < _autopilotNames.size(); i++ ) {
-      FGXMLAutopilot::Autopilot * ap = (FGXMLAutopilot::Autopilot*)get_subsystem( _autopilotNames[i] );
-      if( ap == NULL ) continue; // ?
-      remove_subsystem( _autopilotNames[i] );
-      delete ap;
+      removeAutopilot( _autopilotNames[i] );
     }
     _autopilotNames.clear();
     init();
@@ -90,21 +114,20 @@ void FGXMLAutopilotGroupImplementation::initFrom( SGPropertyNode_ptr rootNode, c
     if( rootNode == NULL )
         return;
 
-    PropertyList autopilotNodes = rootNode->getChildren(childName);
-    for( PropertyList::size_type i = 0; i < autopilotNodes.size(); i++ ) {
-        SGPropertyNode_ptr pathNode = autopilotNodes[i]->getNode( "path" );
+    BOOST_FOREACH( SGPropertyNode_ptr autopilotNode, rootNode->getChildren(childName) ) {
+        SGPropertyNode_ptr pathNode = autopilotNode->getNode( "path" );
         if( pathNode == NULL ) {
             SG_LOG( SG_ALL, SG_WARN, "No configuration file specified for this property-rule!");
             continue;
         }
 
         string apName;
-        SGPropertyNode_ptr nameNode = autopilotNodes[i]->getNode( "name" );
+        SGPropertyNode_ptr nameNode = autopilotNode->getNode( "name" );
         if( nameNode != NULL ) {
             apName = nameNode->getStringValue();
         } else {
           std::ostringstream buf;
-          buf <<  "unnamed_autopilot_" << i;
+          buf <<  "unnamed_autopilot_" << autopilotNode->getIndex();
           apName = buf.str();
         }
 
@@ -120,31 +143,31 @@ void FGXMLAutopilotGroupImplementation::initFrom( SGPropertyNode_ptr rootNode, c
             SG_LOG( SG_ALL, SG_WARN, "Duplicate property-rule configuration name " << name << ", renamed to " << apName );
         }
 
-        SGPath config = globals->resolve_maybe_aircraft_path(pathNode->getStringValue());
-        if (config.isNull())
-        {
-            SG_LOG( SG_ALL, SG_ALERT, "Cannot find property-rule configuration file '" << pathNode->getStringValue() << "'." );
-        }
-        else
-        {
-            SG_LOG( SG_ALL, SG_INFO, "Reading property-rule configuration from " << config.str() );
+        addAutopilotFromFile( apName, autopilotNode, pathNode->getStringValue() );
+    }
+}
 
-            try {
-                SGPropertyNode_ptr root = new SGPropertyNode();
-                readProperties( config.str(), root );
+void FGXMLAutopilotGroup::addAutopilotFromFile( const std::string & name, SGPropertyNode_ptr apNode, const char * path )
+{
+    SGPath config = globals->resolve_maybe_aircraft_path(path);
+    if (config.isNull())
+    {
+        SG_LOG( SG_ALL, SG_ALERT, "Cannot find property-rule configuration file '" << path << "'." );
+        return;
+    }
+    SG_LOG( SG_ALL, SG_INFO, "Reading property-rule configuration from " << config.str() );
 
-                SG_LOG( SG_AUTOPILOT, SG_INFO, "adding  property-rule subsystem " << apName );
-                FGXMLAutopilot::Autopilot * ap = new FGXMLAutopilot::Autopilot( autopilotNodes[i], root );
-                ap->set_name( apName );
-                set_subsystem( apName, ap );
-                _autopilotNames.push_back( apName );
+    try {
+        SGPropertyNode_ptr configNode = new SGPropertyNode();
+        readProperties( config.str(), configNode );
 
-            } catch (const sg_exception& e) {
-                SG_LOG( SG_AUTOPILOT, SG_ALERT, "Failed to load property-rule configuration: "
-                        << config.str() << ":" << e.getMessage() );
-                continue;
-            }
-        }
+        SG_LOG( SG_AUTOPILOT, SG_INFO, "adding  property-rule subsystem " << name );
+        addAutopilot( name, apNode, configNode );
+
+    } catch (const sg_exception& e) {
+        SG_LOG( SG_AUTOPILOT, SG_ALERT, "Failed to load property-rule configuration: "
+            << config.str() << ":" << e.getMessage() );
+        return;
     }
 }
 
