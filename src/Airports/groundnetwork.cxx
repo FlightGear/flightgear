@@ -115,6 +115,44 @@ void FGTaxiSegment::setDimensions(double elevation)
 //        headingDiff = fabs(headingDiff - 360);
 //}
 
+void FGTaxiSegment::block(int id, time_t blockTime, time_t now)
+{
+    BlockListIterator i = blockTimes.begin();
+    while (i != blockTimes.end()) {
+        if (i->getId() == id) 
+            break;
+        i++;
+    }
+    if (i == blockTimes.end()) {
+        blockTimes.push_back(Block(id, blockTime, now));
+        sort(blockTimes.begin(), blockTimes.end());
+    } else {
+        i->updateTimeStamps(blockTime, now);
+    }
+}
+
+// The segment has a block if any of the block times listed in the block list is
+// smaller than the current time.
+bool FGTaxiSegment::hasBlock(time_t now)
+{
+    for (BlockListIterator i = blockTimes.begin(); i != blockTimes.end(); i++) {
+        if (i->getBlockTime() < now)
+            return true;
+    }
+    return false;
+}
+
+void FGTaxiSegment::unblock(time_t now)
+{
+    if (blockTimes.size()) {
+        BlockListIterator i = blockTimes.begin();
+        if (i->getTimeStamp() < (now - 30)) {
+            blockTimes.erase(i);
+        }
+    }
+}
+
+
 
 /***************************************************************************
  * FGTaxiRoute
@@ -713,7 +751,7 @@ bool FGGroundNetwork::checkTransmissionState(int minState, int maxState, Traffic
                 trans_num->setIntValue(-1);
                 // PopupCallback(n);
                 //cerr << "Selected transmission message " << n << endl;
-                FGATCManager *atc = (FGATCManager*) globals->get_subsystem("atc");
+                //FGATCManager *atc = (FGATCManager*) globals->get_subsystem("atc");
                 FGATCDialogNew::instance()->removeEntry(1);
             } else {
                 //cerr << "creating message for " << i->getAircraft()->getCallSign() << endl;
@@ -1026,85 +1064,29 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
         } else {
             nx = tx;
         }
-        if (tx->hasBlock(now) || nx->hasBlock(now) ) {
+        //if (tx->hasBlock(now) || nx->hasBlock(now) ) {
+        //   current->setHoldPosition(true);
+        //}
+        SGGeod start(SGGeod::fromDeg((i->getLongitude()), (i->getLatitude())));
+        SGGeod end  (SGGeod::fromDeg(nx->getStart()->getLongitude(), nx->getStart()->getLatitude()));
+
+        double distance = SGGeodesy::distanceM(start, end);
+        if (nx->hasBlock(now) && (distance < i->getRadius() * 4)) {
             current->setHoldPosition(true);
-        }
-    }
-
-
-    /*    for (i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
-            if (i->getId() != current->getId()) {
-                int node = current->crosses(this, *i);
-                if (node != -1) {
-                    FGTaxiNode *taxiNode = findNode(node);
-
-                    // Determine whether it's save to continue or not.
-                    // If we have a crossing route, there are two possibilities:
-                    // 1) This is an interestion
-                    // 2) This is oncoming two-way traffic, using the same taxiway.
-                    //cerr << "Hold check 1 : " << id << " has common node " << node << endl;
-
-                    SGGeod other(SGGeod::
-                                 fromDegM(i->getLongitude(), i->getLatitude(),
-                                          i->getAltitude()));
-                    bool needsToWait;
-                    bool opposing;
-                    if (current->isOpposing(this, *i, node)) {
-                        needsToWait = true;
-                        opposing = true;
-                        //cerr << "Hold check 2 : " << node << "  has opposing segment " << endl;
-                        // issue a "Hold Position" as soon as we're close to the offending node
-                        // For now, I'm doing this as long as the other aircraft doesn't
-                        // have a hold instruction as soon as we're within a reasonable
-                        // distance from the offending node.
-                        // This may be a bit of a conservative estimate though, as it may
-                        // be well possible that both aircraft can both continue to taxi
-                        // without crashing into each other.
-                    } else {
-                        opposing = false;
-                        if (SGGeodesy::distanceM(other, taxiNode->getGeod()) > 200) // 2.0*i->getRadius())
-                        {
-                            needsToWait = false;
-                            //cerr << "Hold check 3 : " << id <<"  Other aircraft approaching node is still far away. (" << dist << " nm). Can safely continue "
-                            //           << endl;
-                        } else {
-                            needsToWait = true;
-                            //cerr << "Hold check 4: " << id << "  Would need to wait for other aircraft : distance = " << dist << " meters" << endl;
-                        }
-                    }
-
-                    double dist =
-                        SGGeodesy::distanceM(curr, taxiNode->getGeod());
-                    if (!(i->hasHoldPosition())) {
-
-                        if ((dist < 200) && //2.5*current->getRadius()) &&
-                            (needsToWait) && (i->onRoute(this, *current)) &&
-                            //((i->onRoute(this, *current)) || ((!(i->getSpeedAdjustment())))) &&
-                            (!(current->getId() == i->getWaitsForId())))
-                            //(!(i->getSpeedAdjustment()))) // &&
-                            //(!(current->getSpeedAdjustment())))
-
-                        {
-                            if (!(isUserAircraft(i->getAircraft()))) { // test code. Don't wait for the user, let the user wait for you.
-                                current->setHoldPosition(true);
-                                current->setWaitsForId(i->getId());
-                            }
-                            //cerr << "Hold check 5: " << current->getCallSign() <<"  Setting Hold Position: distance to node ("  << node << ") "
-                            //           << dist << " meters. Waiting for " << i->getCallSign();
-                            //if (opposing)
-                            //cerr <<" [opposing] " << endl;
-                            //else
-                            //        cerr << "[non-opposing] " << endl;
-                            //if (i->hasSpeefAdjustment())
-                            //        {
-                            //          cerr << " (which in turn waits for ) " << i->
-                        } else {
-                            //cerr << "Hold check 6: " << id << "  No need to hold yet: Distance to node : " << dist << " nm"<< endl;
-                        }
+        } else {
+            intVecIterator ivi = i->getIntentions().begin();
+            while (ivi != i->getIntentions().end()) {
+                if ((*ivi) > 0) {
+                    distance += segments[(*ivi)-1]->getLength();
+                    if ((segments[(*ivi)-1]->hasBlock(now)) && (distance < i->getRadius() * 4)) {
+                        current->setHoldPosition(true);
+                        break;
                     }
                 }
+                ivi++;
             }
-        } */
+        } 
+    }
     bool currStatus = current->hasHoldPosition();
     current->setHoldPosition(origStatus);
     // Either a Hold Position or a resume taxi transmission has been issued
@@ -1552,7 +1534,7 @@ void FGGroundNetwork::update(double dt)
                         for (intVecIterator k = i->getIntentions().begin(); k != i->getIntentions().end(); k++) {
                             if ((*k) == posReverse) {
                                 i->denyPushBack();
-                                segments[posReverse-1]->block(now);
+                                segments[posReverse-1]->block(i->getId(), now, now);
                             }
                         }
                     }
@@ -1568,7 +1550,7 @@ void FGGroundNetwork::update(double dt)
                     length = seg->getLength();
                     for (FGTaxiSegmentVectorIterator tsi = segments.begin(); tsi != segments.end(); tsi++) {
                         if (((*tsi)->getEnd() == node) && ((*tsi) != seg)) {
-                            (*tsi)->block(now);
+                            (*tsi)->block(i->getId(), now, now);
                         }
                     }
                 }
@@ -1581,7 +1563,7 @@ void FGGroundNetwork::update(double dt)
                         time_t blockTime = now + (length / vTaxi);
                         for (FGTaxiSegmentVectorIterator tsi = segments.begin(); tsi != segments.end(); tsi++) {
                             if (((*tsi)->getEnd() == node) && ((*tsi) != seg)) {
-                                (*tsi)->block(blockTime-30);
+                                (*tsi)->block(i->getId(), blockTime-30, now);
                             }
                         }
                     }
@@ -1619,7 +1601,7 @@ void FGGroundNetwork::update(double dt)
                 for (FGTaxiSegmentVectorIterator tsi = segments.begin(); tsi != segments.end(); tsi++) {
                     if (((*tsi)->getEnd() == node) && ((*tsi) != seg)) {
                         time_t blockTime = now + (length / vTaxi);
-                        (*tsi)->block(blockTime - 30);
+                        (*tsi)->block(i->getId(), blockTime - 30, now);
                     }
                 }
             }
