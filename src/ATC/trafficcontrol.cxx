@@ -187,12 +187,12 @@ void FGTrafficRecord::setPositionAndIntentions(int pos,
         if ((*i) != pos) {
             SG_LOG(SG_GENERAL, SG_ALERT,
                    "Error in FGTrafficRecord::setPositionAndIntentions at " << SG_ORIGIN);
-            //cerr << "Pos : " << pos << " Curr " << *(intentions.begin())  << endl;
+            cerr << "Pos : " << pos << " Curr " << *(intentions.begin())  << endl;
             for (intVecIterator i = intentions.begin();
                     i != intentions.end(); i++) {
-                //cerr << (*i) << " ";
+                cerr << (*i) << " ";
             }
-            //cerr << endl;
+            cerr << endl;
         }
         intentions.erase(i);
     } else {
@@ -878,11 +878,11 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
     // already exists here. So, we can simplify the current code.
     
     ActiveRunwayVecIterator rwy = activeRunways.begin();
-    if (parent->getId() == fgGetString("/sim/presets/airport-id")) {
-        //for (rwy = activeRunways.begin(); rwy != activeRunways.end(); rwy++) {
-        //    rwy->printDepartureCue();
-        //}
-    }
+    //if (parent->getId() == fgGetString("/sim/presets/airport-id")) {
+    //    for (rwy = activeRunways.begin(); rwy != activeRunways.end(); rwy++) {
+    //        rwy->printDepartureCue();
+    //    }
+    //}
     
     rwy = activeRunways.begin();
     while (rwy != activeRunways.end()) {
@@ -1318,6 +1318,7 @@ void FGStartupController::render(bool visible)
 
         //for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
         double dx = 0;
+        time_t now = time(NULL) + fgGetLong("/sim/time/warp");
         for   (TrafficVectorIterator i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
             if (i->isActive(300)) {
                 // Handle start point
@@ -1387,7 +1388,7 @@ void FGStartupController::render(bool visible)
                     geode->addDrawable(geometry);
                     //osg::Node *custom_obj;
                     SGMaterial *mat;
-                    if (segment->hasBlock()) {
+                    if (segment->hasBlock(now)) {
                         mat = matlib->find("UnidirectionalTaperRed");
                     } else {
                         mat = matlib->find("UnidirectionalTaperGreen");
@@ -1464,7 +1465,7 @@ void FGStartupController::render(bool visible)
                         geode->addDrawable(geometry);
                         //osg::Node *custom_obj;
                         SGMaterial *mat;
-                        if (segment->hasBlock()) {
+                        if (segment->hasBlock(now)) {
                             mat = matlib->find("UnidirectionalTaperRed");
                         } else {
                             mat = matlib->find("UnidirectionalTaperGreen");

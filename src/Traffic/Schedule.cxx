@@ -374,18 +374,24 @@ void FGAISchedule::scheduleFlights(time_t now)
   if (!flights.empty()) {
     return;
   }
-  string startingPort;
+  //string startingPort;
   string userPort = fgGetString("/sim/presets/airport-id");
   SG_LOG(SG_GENERAL, SG_BULK, "Scheduling Flights for : " << modelPath << " " <<  registration << " " << homePort);
   FGScheduledFlight *flight = NULL;
   do {
-    flight = findAvailableFlight(currentDestination, flightIdentifier);
-    
+    if (currentDestination.empty()) {
+        flight = findAvailableFlight(userPort, flightIdentifier, now, (now+6400));
+        if (!flight)
+            flight = findAvailableFlight(currentDestination, flightIdentifier);
+    } else {
+        flight = findAvailableFlight(currentDestination, flightIdentifier);
+    }
     if (!flight) {
       break;
     }
-
-   
+    //if (startingPort.empty()) {
+    //    startingPort = flight->getDepartureAirport()->getId();
+    //}
     currentDestination = flight->getArrivalAirport()->getId();
     //cerr << "Current destination " <<  currentDestination << endl;
     if (!initialized) {
@@ -393,7 +399,10 @@ void FGAISchedule::scheduleFlights(time_t now)
        //cerr << "Scheduled " << registration <<  " " << score << " for Flight " 
        //     << flight-> getCallSign() << " from " << departurePort << " to " << currentDestination << endl;
         if (userPort == departurePort) {
+            lastRun = 1;
             hits++;
+        } else {
+            lastRun = 0;
         }
         //runCount++;
         initialized = true;

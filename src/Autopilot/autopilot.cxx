@@ -41,12 +41,25 @@ using std::string;
 
 using namespace FGXMLAutopilot;
 
+class ComponentForge : public map<string,FunctorBase<Component> *> {
+public:
+    virtual ~ ComponentForge();
+};
+
+ComponentForge::~ComponentForge()
+{
+    for( iterator it = begin(); it != end(); ++it )
+        delete it->second;
+}
+
+static ComponentForge componentForge;
+
 Autopilot::Autopilot( SGPropertyNode_ptr rootNode, SGPropertyNode_ptr configNode ) :
   _name("unnamed autopilot"),
   _serviceable(true),
   _rootNode(rootNode)
 {
-  map<string,FunctorBase<Component> *> componentForge;
+
   componentForge["pid-controller"]       = new CreateAndConfigureFunctor<PIDController,Component>();
   componentForge["pi-simple-controller"] = new CreateAndConfigureFunctor<PISimpleController,Component>();
   componentForge["predict-simple"]       = new CreateAndConfigureFunctor<Predictor,Component>();

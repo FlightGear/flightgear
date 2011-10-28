@@ -128,7 +128,7 @@ class FGAISchedule
   // decending order sorting, but still need to test that.
   bool operator< (const FGAISchedule &other) const;
     void taint() { valid = false; };
-    int getLastUsed() { return (int) valid;};
+    int getLastUsed() { return lastRun; };
     void setLastUsed(unsigned int val) {lastRun = val; }; 
   //void * getAiRef                 () { return AIManagerRef; };
   //FGAISchedule* getAddress        () { return this;};

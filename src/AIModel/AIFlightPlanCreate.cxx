@@ -941,7 +941,7 @@ bool FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
     }*/
     double rolloutDistance =
         (vTouchdownMetric * vTouchdownMetric - vTaxiMetric * vTaxiMetric) / (2 * decelMetric);
-    cerr << " touchdown speed = " << vTouchdown << ". Rollout distance " << rolloutDistance << endl;
+    //cerr << " touchdown speed = " << vTouchdown << ". Rollout distance " << rolloutDistance << endl;
     int nPoints = 50;
     for (int i = 1; i < nPoints; i++) {
         snprintf(buffer, 12, "landing03%d", i);
@@ -983,7 +983,7 @@ bool FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
             pushBackWaypoint(wpt);
         }
     }
-    cerr << "Done. " << endl;
+    //cerr << "Done. " << endl;
 
     /*
        //Runway Threshold

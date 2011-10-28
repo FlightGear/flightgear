@@ -35,8 +35,7 @@ public:
 };
 
 template <class TClass,class TBase> class CreateAndConfigureFunctor : 
-  public FunctorBase<TBase>,
-  SGReferenced {
+  public FunctorBase<TBase> {
 public:
   virtual TBase * operator()( SGPropertyNode_ptr configNode ) { 
     TBase * base = new TClass();
