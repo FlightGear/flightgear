@@ -34,7 +34,6 @@
 #include <simgear/io/HTTPClient.hxx>
 #include <simgear/io/HTTPRequest.hxx>
 #include <simgear/timing/timestamp.hxx>
-#include <simgear/misc/sg_sleep.hxx>
 
 using namespace std;
 using namespace simgear;
@@ -586,7 +585,7 @@ int main(int argc, char *argv[])
                     if (mr->complete || mr->failed) {
                         break;
                     }
-                    sleepForMSec(1);
+                    SGTimeStamp::sleepForMSec(1);
                 }
                 
                 if (!mr->complete) {

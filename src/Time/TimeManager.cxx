@@ -24,13 +24,6 @@
 
 #include "TimeManager.hxx"
 
-#ifdef _WIN32
-#  define WIN32_LEAN_AND_MEAN
-#  include <windows.h> // for Sleep()
-#else
-#  include <unistd.h> // for usleep()
-#endif
-
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/misc/sg_path.hxx>
@@ -284,69 +277,13 @@ void TimeManager::computeFrameRate()
 
 void TimeManager::throttleUpdateRate()
 {
-  double throttle_hz = fgGetDouble("/sim/frame-rate-throttle-hz", 0.0);
-  SGTimeStamp currentStamp;
-  
   // common case, no throttle requested
-  if (throttle_hz <= 0.0) {
+  double throttle_hz = fgGetDouble("/sim/frame-rate-throttle-hz", 0.0);
+  if (throttle_hz <= 0)
     return; // no-op
-  }
-  
-  double frame_us = 1000000.0 / throttle_hz;
-#define FG_SLEEP_BASED_TIMING 1
-#if defined(FG_SLEEP_BASED_TIMING)
-  // sleep based timing loop.
-  //
-  // Calling sleep, even usleep() on linux is less accurate than
-  // we like, but it does free up the cpu for other tasks during
-  // the sleep so it is desirable.  Because of the way sleep()
-  // is implemented in consumer operating systems like windows
-  // and linux, you almost always sleep a little longer than the
-  // requested amount.
-  //
-  // To combat the problem of sleeping too long, we calculate the
-  // desired wait time and shorten it by 2000us (2ms) to avoid
-  // [hopefully] over-sleep'ing.  The 2ms value was arrived at
-  // via experimentation.  We follow this up at the end with a
-  // simple busy-wait loop to get the final pause timing exactly
-  // right.
-  //
-  // Assuming we don't oversleep by more than 2000us, this
-  // should be a reasonable compromise between sleep based
-  // waiting, and busy waiting.
 
-  // sleep() will always overshoot by a bit so undersleep by
-  // 2000us in the hopes of never oversleeping.
-  frame_us -= 2000.0;
-  if ( frame_us < 0.0 ) {
-      frame_us = 0.0;
-  }
-  
-  currentStamp.stamp();
-
-  double elapsed_us = (currentStamp - _lastStamp).toUSecs();
-  if ( elapsed_us < frame_us ) {
-    double requested_us = frame_us - elapsed_us;
- 
-#ifdef _WIN32
-    Sleep ((int)(requested_us / 1000.0)) ;
-#else
-    usleep(requested_us) ;
-#endif
-  }
-#endif
-
-  // busy wait timing loop.
-  //
-  // This yields the most accurate timing.  If the previous
-  // ulMilliSecondSleep() call is omitted this will peg the cpu
-  // (which is just fine if FG is the only app you care about.)
-  currentStamp.stamp();
-  SGTimeStamp next_time_stamp = _lastStamp;
-  next_time_stamp += SGTimeStamp::fromSec(1e-6*frame_us);
-  while ( currentStamp < next_time_stamp ) {
-      currentStamp.stamp();
-  }
+  // sleep for exactly 1/hz seconds relative to the past valid timestamp
+  SGTimeStamp::sleepUntil(_lastStamp + SGTimeStamp::fromSec(1/throttle_hz));
 }
 
 // periodic time updater wrapper
