@@ -47,11 +47,11 @@
 #include <simgear/props/AtomicChangeListener.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/timing/sg_time.hxx>
+#include <simgear/timing/timestamp.hxx>
 #include <simgear/magvar/magvar.hxx>
 #include <simgear/math/sg_random.h>
 #include <simgear/io/raw_socket.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
-#include <simgear/misc/sg_sleep.hxx>
 
 #include <Time/light.hxx>
 #include <Aircraft/replay.hxx>
@@ -214,7 +214,7 @@ static void fgMainLoop( void ) {
         {
             fgSplashProgress("loading scenery");
             // be nice to loader threads while waiting for initial scenery, reduce to 2fps
-            simgear::sleepForMSec(500);
+            SGTimeStamp::sleepForMSec(500);
         }
     }
 
