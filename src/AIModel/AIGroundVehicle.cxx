@@ -166,7 +166,7 @@ bool FGAIGroundVehicle::init(bool search_in_AI_path) {
 }
 
 void FGAIGroundVehicle::update(double dt) {
-    //    SG_LOG(SG_GENERAL, SG_ALERT, "updating GroundVehicle: " << _name );
+    //    SG_LOG(SG_AI, SG_ALERT, "updating GroundVehicle: " << _name );
     FGAIShip::update(dt);
 
     RunGroundVehicle(dt);
@@ -386,11 +386,11 @@ void FGAIGroundVehicle::AdvanceFP(){
     string parent_next_name =_selected_ac->getStringValue("waypoint/name-next");
 
     while(fp->getNextWaypoint() != 0 && fp->getNextWaypoint()->getName() != "END" && count < 5){
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
+        SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
             <<" advancing waypoint to: " << parent_next_name);
 
         if (fp->getNextWaypoint()->getName() == parent_next_name){
-            SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
+            SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
                 << " not setting waypoint already at: " << fp->getNextWaypoint()->getName());
             return;
         }
@@ -401,7 +401,7 @@ void FGAIGroundVehicle::AdvanceFP(){
         next = fp->getNextWaypoint();
 
         if (fp->getNextWaypoint()->getName() == parent_next_name){
-            SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
+            SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
             << " waypoint set to: " << fp->getNextWaypoint()->getName());
             return;
         }
@@ -412,12 +412,12 @@ void FGAIGroundVehicle::AdvanceFP(){
 
     while(fp->getPreviousWaypoint() != 0 && fp->getPreviousWaypoint()->getName() != "END"
         && count > -10){
-            SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
+            SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
             << " retreating waypoint to: " << parent_next_name
             << " at: " << fp->getNextWaypoint()->getName());
 
         if (fp->getNextWaypoint()->getName() == parent_next_name){
-            SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
+            SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
                 << " not setting waypoint already at:" << fp->getNextWaypoint()->getName() );
             return;
         }
@@ -428,7 +428,7 @@ void FGAIGroundVehicle::AdvanceFP(){
         next = fp->getNextWaypoint();
 
         if (fp->getNextWaypoint()->getName() == parent_next_name){
-            SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
+            SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
             << " waypoint set to: " << fp->getNextWaypoint()->getName());
             return;
         }
@@ -500,7 +500,7 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
     //bool parent_restart = _selected_ac->getBoolValue("controls/restart"); 
 
     if (parent_next_name == "END" && fp->getNextWaypoint()->getName() != "END" ){
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
+        SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
             << " setting END: getting new waypoints ");
         AdvanceFP();
         setWPNames();
@@ -508,13 +508,13 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
         if(_restart) _missed_count = 200;
         /*} else if (parent_next_name == "WAIT" && fp->getNextWaypoint()->name != "WAIT" ){*/
     } else if (parent_waiting && !_waiting){
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
+        SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
             << " setting WAIT/WAITUNTIL: getting new waypoints ");
         AdvanceFP();
         setWPNames();
         _waiting = true;
     } else if (parent_next_name != "WAIT" && fp->getNextWaypoint()->getName() == "WAIT"){
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AIGroundVeh1cle: " << _name
+        SG_LOG(SG_AI, SG_DEBUG, "AIGroundVeh1cle: " << _name
             << " wait done: getting new waypoints ");
         _waiting = false;
         _wait_count = 0;
@@ -533,7 +533,7 @@ void FGAIGroundVehicle::RunGroundVehicle(double dt){
         setWPNames();
     } else if (_range_ft > (_x_offset +_parent_x_offset)* 4
         ){
-        SG_LOG(SG_GENERAL, SG_ALERT, "AIGroundVeh1cle: " << _name
+        SG_LOG(SG_AI, SG_ALERT, "AIGroundVeh1cle: " << _name
             << " rescue: reforming train " << _range_ft 
             );
 

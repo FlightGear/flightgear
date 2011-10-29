@@ -36,14 +36,30 @@
 
 #include "Main/fg_props.hxx"
 
+using std::map;
+using std::string;
+
 using namespace FGXMLAutopilot;
+
+class ComponentForge : public map<string,FunctorBase<Component> *> {
+public:
+    virtual ~ ComponentForge();
+};
+
+ComponentForge::~ComponentForge()
+{
+    for( iterator it = begin(); it != end(); ++it )
+        delete it->second;
+}
+
+static ComponentForge componentForge;
 
 Autopilot::Autopilot( SGPropertyNode_ptr rootNode, SGPropertyNode_ptr configNode ) :
   _name("unnamed autopilot"),
   _serviceable(true),
   _rootNode(rootNode)
 {
-  map<string,FunctorBase<Component> *> componentForge;
+
   componentForge["pid-controller"]       = new CreateAndConfigureFunctor<PIDController,Component>();
   componentForge["pi-simple-controller"] = new CreateAndConfigureFunctor<PISimpleController,Component>();
   componentForge["predict-simple"]       = new CreateAndConfigureFunctor<Predictor,Component>();
@@ -58,13 +74,13 @@ Autopilot::Autopilot( SGPropertyNode_ptr rootNode, SGPropertyNode_ptr configNode
     SGPropertyNode_ptr node = configNode->getChild(i);
     string childName = node->getName();
     if( componentForge.count(childName) == 0 ) {
-      SG_LOG( SG_AUTOPILOT, SG_BULK, "unhandled element <" << childName << ">" << endl );
+      SG_LOG( SG_AUTOPILOT, SG_BULK, "unhandled element <" << childName << ">" << std::endl );
       continue;
     }
 
     Component * component = (*componentForge[childName])(node);
     if( component->get_name().length() == 0 ) {
-      ostringstream buf;
+      std::ostringstream buf;
       buf <<  "unnamed_component_" << i;
       component->set_name( buf.str() );
     }
@@ -96,7 +112,7 @@ void Autopilot::add_component( Component * component )
   // check for duplicate name
   std::string name = component->get_name();
   for( unsigned i = 0; get_subsystem( name.c_str() ) != NULL; i++ ) {
-      ostringstream buf;
+      std::ostringstream buf;
       buf <<  component->get_name() << "_" << i;
       name = buf.str();
   }

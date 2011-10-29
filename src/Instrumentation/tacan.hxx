@@ -46,10 +46,10 @@ private:
 
     void search (double frequency, double longitude_rad,
                  double latitude_rad, double altitude_m);
-    double searchChannel (const string& channel);
+  double searchChannel (const std::string& channel);
     void valueChanged (SGPropertyNode *);
 
-    string _name;
+    std::string _name;
     unsigned int _num;
 
     SGPropertyNode_ptr _longitude_node;
@@ -85,7 +85,7 @@ private:
     SGPropertyNode_ptr _mp_callsign_node;		// FIXME
 
     bool _new_frequency;
-    string _channel;
+    std::string _channel;
     double _last_distance_nm;
     double _frequency_mhz;
     double _time_before_search_sec;
@@ -98,16 +98,16 @@ private:
     double _transmitter_range_nm;
     double _transmitter_bearing_deg;
     double _transmitter_bias;
-    string _transmitter_name;
-    string _transmitter_ident;
+    std::string _transmitter_name;
+    std::string _transmitter_ident;
 
     double _mobile_lat, _mobile_lon;
     double _mobile_elevation_ft;
     double _mobile_range_nm;
     double _mobile_bearing_deg;
     double _mobile_bias;
-    string _mobile_name;
-    string _mobile_ident;
+    std::string _mobile_name;
+    std::string _mobile_ident;
 
     int _listener_active;
 };

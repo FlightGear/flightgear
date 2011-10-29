@@ -150,10 +150,18 @@ static osg::Vec2 mult(const osg::Vec2& v, const osg::Matrixf& m)
 class SymbolDef
 {
 public:
+  SymbolDef() :
+      enable(NULL)
+    {}
+  
     bool initFromNode(SGPropertyNode* node)
     {
         type = node->getStringValue("type");
-        enable = sgReadCondition(fgGetNode("/"), node->getChild("enable"));
+        SGPropertyNode* enableNode = node->getChild("enable");
+        if (enableNode) { 
+            enable = sgReadCondition(fgGetNode("/"), enableNode);
+        }
+      
         int n=0;
         while (node->hasChild("state", n)) {
             string m = node->getChild("state", n++)->getStringValue();
@@ -164,11 +172,20 @@ public:
             }
         } // of matches parsing
         
-        xy0.x()  = node->getFloatValue("x0", -5);
-        xy0.y()  = node->getFloatValue("y0", -5);
+      if (node->hasChild("width")) {
+        float w = node->getFloatValue("width");
+        float h = node->getFloatValue("height", w);
+        xy0.x() = -w * 0.5;
+        xy0.y() = -h * 0.5;
+        xy1.x() = w * 0.5;
+        xy1.y() = h * 0.5;
+      } else {
+        xy0.x()  = node->getFloatValue("x0", 0.0);
+        xy0.y()  = node->getFloatValue("y0", 0.0);
         xy1.x()  = node->getFloatValue("x1", 5);
         xy1.y()  = node->getFloatValue("y1", 5);
-        
+      }
+      
         double texSize = node->getFloatValue("texture-size", 1.0);
         
         uv0.x()  = node->getFloatValue("u0", 0) / texSize;
@@ -193,7 +210,7 @@ public:
         
         drawLine = node->getBoolValue("draw-line", false);
         lineColor = readColor(node->getChild("line-color"), color);
-        drawRouteLeg = node->getBoolValue("draw-line", false);
+        drawRouteLeg = node->getBoolValue("draw-leg", false);
         
         stretchSymbol = node->getBoolValue("stretch-symbol", false);
         if (stretchSymbol) {
@@ -242,21 +259,19 @@ public:
     
     bool matches(const string_set& states) const
     {
-        string_set::const_iterator it = states.begin(),
-            end = states.end();
-        for (; it != end; ++it) {
-            if (required_states.count(*it) == 0) {
-            // required state not matched
+        BOOST_FOREACH(const string& s, required_states) {
+            if (states.count(s) == 0) {
                 return false;
             }
-            
-            if (excluded_states.count(*it) > 0) {
-            // excluded state matched
+        }
+        
+        BOOST_FOREACH(const string& s, excluded_states) {
+            if (states.count(s) != 0) {
                 return false;
             }
-        } // of applicable states iteration
-    
-        return true; // matches!
+        }
+        
+        return true;
     }
 };
 
@@ -279,14 +294,12 @@ public:
     string text() const
     {
         assert(definition->hasText);
-        string r;
+        string r;        
+        size_t lastPos = 0;
         
-        size_t pos = 0;
-        int lastPos = 0;
-        
-        for (; pos < definition->textTemplate.size();) {
-            pos = definition->textTemplate.find('{', pos);
-          if (pos == string::npos) { // no more replacements
+        while (true) {
+            size_t pos = definition->textTemplate.find('{', lastPos);
+            if (pos == string::npos) { // no more replacements
                 r.append(definition->textTemplate.substr(lastPos));
                 break;
             }
@@ -301,7 +314,7 @@ public:
             string spec = definition->textTemplate.substr(pos + 1, endReplacement - (pos + 1));
         // look for formatter in spec
             size_t colonPos = spec.find(':');
-          if (colonPos == string::npos) {
+            if (colonPos == string::npos) {
             // simple replacement
                 r.append(props->getStringValue(spec));
             } else {
@@ -378,7 +391,10 @@ NavDisplay::init ()
     string path = _Instrument->getStringValue("symbol-texture-path",
         "Aircraft/Instruments/Textures/nd-symbols.png");
     SGPath tpath = globals->resolve_aircraft_path(path);
-
+    if (!tpath.exists()) {
+      SG_LOG(SG_INSTR, SG_WARN, "ND symbol texture not found:" << path);
+    }
+  
     // no mipmap or else alpha will mix with pixels on the border of shapes, ruining the effect
     _symbolTexture = SGLoadTexture2D(tpath, NULL, false, false);
 
@@ -396,6 +412,9 @@ NavDisplay::init ()
     _navRadio1Node = fgGetNode("/instrumentation/nav[0]", true);
     _navRadio2Node = fgGetNode("/instrumentation/nav[1]", true);
     
+    _excessDataNode = _Instrument->getChild("excess-data", 0, true);
+    _excessDataNode->setBoolValue(false);
+  
 // OSG geometry setup
     _radarGeode = new osg::Geode;
 
@@ -416,6 +435,7 @@ NavDisplay::init ()
     _geom->setTexCoordArray(0, _texCoords);
     
     _quadColors = new osg::Vec4Array;
+    _quadColors->setDataVariance(osg::Object::DYNAMIC);
     _geom->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
     _geom->setColorArray(_quadColors);
     
@@ -425,6 +445,7 @@ NavDisplay::init ()
     
     _geom->setInitialBound(osg::BoundingBox(osg::Vec3f(-256.0f, -256.0f, 0.0f),
         osg::Vec3f(256.0f, 256.0f, 0.0f)));
+  
     _radarGeode->addDrawable(_geom);
     _odg->allocRT();
     // Texture in the 2D panel system
@@ -506,18 +527,23 @@ NavDisplay::update (double delta_time_sec)
   _projectMat = osg::Matrixf::scale(_scale, _scale, 1.0) * 
       degRotation(-_view_heading) * _centerTrans;
   
-    _pos = SGGeod::fromDegFt(_user_lon_node->getDoubleValue(),
-                                      _user_lat_node->getDoubleValue(),
-                                      _user_alt_node->getDoubleValue());
+  _pos = SGGeod::fromDegFt(_user_lon_node->getDoubleValue(),
+                           _user_lat_node->getDoubleValue(),
+                           _user_alt_node->getDoubleValue());
     
   _vertices->clear();
   _lineVertices->clear();
   _lineColors->clear();
+  _quadColors->clear();
   _texCoords->clear();
   _textGeode->removeDrawables(0, _textGeode->getNumDrawables());
   
   BOOST_FOREACH(SymbolDef* def, _rules) {
+    if (def->enable) {
       def->enabled = def->enable->test();
+    } else {
+      def->enabled = true;
+    }
   }
   
   processRoute();
@@ -594,7 +620,7 @@ void NavDisplay::addSymbolToScene(SymbolInstance* sym)
     _texCoords->push_back(osg::Vec2(def->uv1.x(), def->uv0.y()));
     _texCoords->push_back(def->uv1);
     _texCoords->push_back(osg::Vec2(def->uv0.x(), def->uv1.y()));
-    
+
     for (int i=0; i<4; ++i) {
         _vertices->push_back(verts[i] + pos);
         _quadColors->push_back(def->color);
@@ -674,7 +700,7 @@ public:
 
 void NavDisplay::limitDisplayedSymbols()
 {
-    unsigned int maxSymbols = _Instrument->getIntValue("max-symbols");
+    unsigned int maxSymbols = _Instrument->getIntValue("max-symbols", 100);
     if (_symbols.size() <= maxSymbols) {
         _excessDataNode->setBoolValue(false);
         return;
@@ -728,6 +754,8 @@ osg::Vec2 NavDisplay::projectGeod(const SGGeod& geod) const
 class Filter : public FGPositioned::Filter
 {
 public:
+    double minRunwayLengthFt;
+  
     virtual bool pass(FGPositioned* aPos) const
     {
         if (aPos->type() == FGPositioned::FIX) {
@@ -738,6 +766,13 @@ public:
             }
         }
 
+        if (aPos->type() == FGPositioned::AIRPORT) {
+          FGAirport* apt = (FGAirport*) aPos;
+          if (!apt->hasHardRunwayOfLengthFt(minRunwayLengthFt)) {
+            return false;
+          }
+        }
+      
         return true;
     }
 
@@ -753,6 +788,8 @@ public:
 void NavDisplay::findItems()
 {
     Filter filt;
+    filt.minRunwayLengthFt = 2000;
+  
     FGPositioned::List items = 
         FGPositioned::findWithinRange(_pos, _rangeNm, &filt);
 
@@ -792,7 +829,7 @@ void NavDisplay::processRoute()
         }
         
         SymbolDefVector rules;
-        findRules(wpt->type() , state, rules);
+        findRules("waypoint" , state, rules);
         if (rules.empty()) {
             return; // no rules matched, we can skip this item
         }
@@ -886,7 +923,7 @@ bool NavDisplay::anyRuleMatches(const string& type, const string_set& states) co
 void NavDisplay::findRules(const string& type, const string_set& states, SymbolDefVector& rules)
 {
     BOOST_FOREACH(SymbolDef* candidate, _rules) {
-        if (!candidate->enabled) {
+        if (!candidate->enabled || (candidate->type != type)) {
             continue;
         }
         
@@ -935,7 +972,8 @@ void NavDisplay::computePositionedPropsAndHeading(FGPositioned* pos, SGPropertyN
     
     switch (pos->type()) {
     case FGPositioned::VOR:
-    case FGPositioned::LOC: {
+    case FGPositioned::LOC: 
+    case FGPositioned::TACAN: {
         FGNavRecord* nav = static_cast<FGNavRecord*>(pos);
         nd->setDoubleValue("frequency-mhz", nav->get_freq());
         

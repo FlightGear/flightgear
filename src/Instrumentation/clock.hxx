@@ -35,7 +35,7 @@ public:
     virtual void update(double dt);
 
 private:
-    string _name;
+    std::string _name;
     unsigned int _num;
 
     bool _is_serviceable;

@@ -25,6 +25,8 @@
 #include "FGMouseInput.hxx"
 #include "Main/globals.hxx"
 
+using std::ios_base;
+
 void ActivePickCallbacks::init( int b, const osgGA::GUIEventAdapter* ea )
 {
   // Get the list of hit callbacks. Take the first callback that

@@ -35,9 +35,12 @@
 
 #include <string>
 #include <vector>
+#include <list>
 
+class Block;
 using std::string;
 using std::vector;
+using std::list;
 
 #include "gnnode.hxx"
 #include "parking.hxx"
@@ -54,6 +57,25 @@ typedef vector<FGTaxiSegment*>::iterator FGTaxiSegmentVectorIterator;
 //typedef vector<FGTaxiSegment*> FGTaxiSegmentPointerVector;
 //typedef vector<FGTaxiSegment*>::iterator FGTaxiSegmentPointerVectorIterator;
 
+class Block
+{
+private:
+    int id;
+    time_t blocktime;
+    time_t touch;
+public:
+    Block(int i, time_t bt, time_t curr) { id = i; blocktime= bt; touch = curr; };
+    ~Block() {};
+    int getId() { return id; };
+    void updateTimeStamps(time_t bt, time_t now) { blocktime = (bt < blocktime) ? bt : blocktime; touch = now; };
+    const time_t getBlockTime() const { return blocktime; };
+    time_t getTimeStamp() { return touch; };
+    bool operator< (const Block &other) const { return blocktime < other.blocktime; };
+};
+
+typedef vector<Block> BlockList;
+typedef BlockList::iterator BlockListIterator;
+
 /***************************************************************************************
  * class FGTaxiSegment
  **************************************************************************************/
@@ -67,7 +89,7 @@ private:
     SGGeod center;
     bool isActive;
     bool isPushBackRoute;
-    bool isBlocked;
+    BlockList blockTimes;
     FGTaxiNode *start;
     FGTaxiNode *end;
     int index;
@@ -83,7 +105,6 @@ public:
             heading(0),
             isActive(0),
             isPushBackRoute(0),
-            isBlocked(0),
             start(0),
             end(0),
             index(0),
@@ -99,7 +120,7 @@ public:
             center            (other.center),
             isActive          (other.isActive),
             isPushBackRoute   (other.isPushBackRoute),
-            isBlocked         (other.isBlocked),
+            blockTimes        (other.blockTimes),
             start             (other.start),
             end               (other.end),
             index             (other.index),
@@ -116,7 +137,7 @@ public:
         center             = other.center;
         isActive           = other.isActive;
         isPushBackRoute    = other.isPushBackRoute;
-        isBlocked          = other.isBlocked;
+        blockTimes         = other.blockTimes;
         start              = other.start;
         end                = other.end;
         index              = other.index;
@@ -144,15 +165,9 @@ public:
         isPushBackRoute = val;
     };
     void setDimensions(double elevation);
-    void block() {
-        isBlocked = true;
-    }
-    void unblock() {
-        isBlocked = false;
-    };
-    bool hasBlock() {
-        return isBlocked;
-    };
+    void block(int id, time_t blockTime, time_t now);
+    void unblock(time_t now); 
+    bool hasBlock(time_t now);
 
     FGTaxiNode * getEnd() {
         return end;
@@ -292,6 +307,7 @@ private:
     time_t nextSave;
     //int maxDepth;
     int count;
+    int version;
     FGTaxiNodeVector    nodes;
     FGTaxiNodeVector    pushBackNodes;
     FGTaxiSegmentVector segments;
@@ -324,6 +340,9 @@ public:
     void addNode   (const FGTaxiNode& node);
     void addNodes  (FGParkingVec *parkings);
     void addSegment(const FGTaxiSegment& seg);
+    void setVersion (int v) { version = v;};
+    
+    int getVersion() { return version; };
 
     void init();
     bool exists() {
@@ -335,6 +354,7 @@ public:
 
     int findNearestNode(double lat, double lon);
     int findNearestNode(const SGGeod& aGeod);
+    int findNearestNodeOnRunway(const SGGeod& aGeod);
 
     FGTaxiNode *findNode(unsigned idx);
     FGTaxiSegment *findSegment(unsigned idx);
@@ -365,6 +385,7 @@ public:
     virtual void update(double dt);
 
     void saveElevationCache();
+    void addVersion(int v) {version = v; };
 };
 
 

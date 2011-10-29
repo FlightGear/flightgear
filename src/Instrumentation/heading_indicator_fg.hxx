@@ -51,7 +51,7 @@ private:
     Gyro _gyro;
     double _last_heading_deg;
 
-    string name;
+    std::string name;
     int num;
     
     SGPropertyNode_ptr _offset_node;

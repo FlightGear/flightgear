@@ -101,7 +101,8 @@ FGTaxiNode &operator =(const FGTaxiNode &other)
   double getPathScore() { return pathScore; };
   double getLatitude() { return geod.getLatitudeDeg();};
   double getLongitude(){ return geod.getLongitudeDeg();};
-  double getElevation() { return geod.getElevationM();};
+  double getElevationM (double refelev=0);
+  double getElevationFt(double refelev=0);
 
   const SGGeod& getGeod() const { return geod; }
 

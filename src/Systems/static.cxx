@@ -4,6 +4,9 @@
 // This file is in the Public Domain and comes with no warranty.
 
 #include "static.hxx"
+
+#include <string>
+
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 
@@ -24,8 +27,7 @@ StaticSystem::~StaticSystem ()
 void
 StaticSystem::init ()
 {
-    string branch;
-    branch = "/systems/" + _name;
+    std::string branch = "/systems/" + _name;
 
     SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
     _serviceable_node = node->getChild("serviceable", 0, true);

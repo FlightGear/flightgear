@@ -62,7 +62,7 @@ public:
     virtual void update(double dt);
 
 protected:
-    string _name;
+    std::string _name;
     int _num;
     double _time;
     double _updateInterval;
@@ -110,7 +110,7 @@ private:
     
     void updateFont();
     
-    string _texture_path;
+    std::string _texture_path;
 
 
     float _scale;   // factor to convert nm to display units

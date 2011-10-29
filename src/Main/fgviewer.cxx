@@ -188,7 +188,6 @@ fgviewerMain(int argc, char** argv)
 
     globals = new FGGlobals;
 
-    fgInitFGRoot(arguments.argc(), arguments.argv());
     if ( !fgInitConfig(arguments.argc(), arguments.argv()) ) {
         SG_LOG( SG_GENERAL, SG_ALERT, "Config option parsing failed ..." );
         exit(-1);

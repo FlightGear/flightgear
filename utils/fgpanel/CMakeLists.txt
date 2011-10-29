@@ -6,14 +6,23 @@ if(GLUT_FOUND)
 	message(STATUS "found glut")
 
 	add_executable(fgpanel main.cxx
+	    ApplicationProperties.hxx
 		FGGLApplication.cxx 
+		FGGLApplication.hxx
 		FGPanelApplication.cxx 
+		FGPanelApplication.hxx
 		FGPNGTextureLoader.cxx 
-		FGRGBTextureLoader.cxx 
+		FGPNGTextureLoader.hxx
+		FGRGBTextureLoader.cxx
+		FGRGBTextureLoader.hxx 
 		FGPanelProtocol.cxx
+		FGPanelProtocol.hxx
 		FGFontCache.cxx
+		FGFontCache.hxx
 		panel.cxx 
-		panel_io.cxx)
+		panel.hxx
+		panel_io.cxx
+		panel_io.hxx)
 
 	target_link_libraries(fgpanel 
 		${PNG_LIBRARIES}

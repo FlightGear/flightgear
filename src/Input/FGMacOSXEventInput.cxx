@@ -22,6 +22,9 @@
 
 #include "FGMacOSXEventInput.hxx"
 
+using std::stringstream;
+using std::map;
+using std::string;
 
 #define GetHIDElementLongValue(element, key) ({ \
       long value = 0; \
@@ -612,7 +615,7 @@ void FGMacOSXInputDevice::Open() {
 	
   if (ret != kIOReturnSuccess) {
     SG_LOG(SG_INPUT, SG_ALERT, "Error creating a plugin for HID : " << GetName());
-    throw exception();
+    throw std::exception();
     return;
   }
 
@@ -626,14 +629,14 @@ void FGMacOSXInputDevice::Open() {
   (*plugin)->Release(plugin); // don't leak a ref
   if (devInterface == NULL) {
     return;
-    throw exception();
+    throw std::exception();
   }
 	
   // store the interface in this instance
   ret = (*devInterface)->open(devInterface, 0);
   if (ret != kIOReturnSuccess) {
     SG_LOG(SG_INPUT, SG_ALERT, "Error opening device interface: " << GetName());
-    throw exception();
+    throw std::exception();
     return;
   }
   CFDictionaryRef props = getProperties();

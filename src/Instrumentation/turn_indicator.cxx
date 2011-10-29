@@ -12,6 +12,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 
+using std::string;
 
 // Use a bigger number to be more responsive, or a smaller number
 // to be more sluggish.

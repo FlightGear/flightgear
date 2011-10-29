@@ -51,7 +51,7 @@ double AnalogComponent::clamp( double value ) const
 
 bool AnalogComponent::configure( const std::string & nodeName, SGPropertyNode_ptr configNode )
 {
-  SG_LOG( SG_AUTOPILOT, SG_BULK, "AnalogComponent::configure(" << nodeName << ")" << endl );
+  SG_LOG( SG_AUTOPILOT, SG_BULK, "AnalogComponent::configure(" << nodeName << ")" );
   if( Component::configure( nodeName, configNode ) )
     return true;
 
@@ -108,6 +108,6 @@ bool AnalogComponent::configure( const std::string & nodeName, SGPropertyNode_pt
     return true;
   }
 
-  SG_LOG( SG_AUTOPILOT, SG_BULK, "AnalogComponent::configure(" << nodeName << ") [unhandled]" << endl );
+  SG_LOG( SG_AUTOPILOT, SG_BULK, "AnalogComponent::configure(" << nodeName << ") [unhandled]" );
   return false;
 }

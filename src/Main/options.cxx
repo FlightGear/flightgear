@@ -31,6 +31,8 @@
 #include <simgear/timing/sg_time.hxx>
 #include <simgear/misc/sg_dir.hxx>
 
+#include <boost/foreach.hpp>
+
 #include <math.h>		// rint()
 #include <stdio.h>
 #include <stdlib.h>		// atof(), atoi()
@@ -61,12 +63,6 @@
 
 #include <osg/Version>
 
-using std::string;
-using std::sort;
-using std::cout;
-using std::cerr;
-using std::endl;
-
 #if defined( HAVE_VERSION_H ) && HAVE_VERSION_H
 #  include <Include/version.h>
 #  include <simgear/version.h>
@@ -74,7 +70,22 @@ using std::endl;
 #  include <Include/no_version.h>
 #endif
 
+#ifdef __APPLE__
+#  include <CoreFoundation/CoreFoundation.h>
+#endif
+
+using std::string;
+using std::sort;
+using std::cout;
+using std::cerr;
+using std::endl;
+using std::vector;
+
 #define NEW_DEFAULT_MODEL_HZ 120
+
+// defined in bootstrap.cxx
+extern char *homedir;
+extern char *hostname;
 
 enum
 {
@@ -86,6 +97,8 @@ enum
     FG_OPTIONS_SHOW_AIRCRAFT = 5,
     FG_OPTIONS_SHOW_SOUND_DEVICES = 6
 };
+
+static flightgear::Options* shared_instance = NULL;
 
 static double
 atof( const string& str )
@@ -108,20 +121,9 @@ static int fgSetupProxy( const char *arg );
  * in case, we provide some initial sane values here. This method
  * should be invoked *before* reading any init files.
  */
-void
+static void
 fgSetDefaults ()
 {
-    // set a possibly independent location for scenery data
-    const char *envp = ::getenv( "FG_SCENERY" );
-
-    if ( envp != NULL ) {
-	// fg_root could be anywhere, so default to environmental
-	// variable $FG_ROOT if it is set.
-        globals->set_fg_scenery(envp);
-    } else {
-	// Otherwise, default to Scenery being in $FG_ROOT/Scenery
-	globals->set_fg_scenery("");
-    }
 
 				// Position (deliberately out of range)
     fgSetDouble("/position/longitude-deg", 9999.0);
@@ -181,9 +183,9 @@ fgSetDefaults ()
 #elif defined(sgi)
     fgSetString("/sim/startup/browser-app", "launchWebJumper");
 #else
-    envp = ::getenv( "WEBBROWSER" );
-    if (!envp) envp = "netscape";
-    fgSetString("/sim/startup/browser-app", envp);
+    const char* browserEnv = ::getenv( "WEBBROWSER" );
+    if (!browserEnv) browserEnv = "netscape";
+    fgSetString("/sim/startup/browser-app", browserEnv);
 #endif
     fgSetString("/sim/logging/priority", "alert");
 
@@ -249,7 +251,9 @@ fgSetDefaults ()
     fgSetString("/sim/version/revision", REVISION);
     fgSetInt("/sim/version/build-number", HUDSON_BUILD_NUMBER);
     fgSetString("/sim/version/build-id", HUDSON_BUILD_ID);
-    if( (envp = ::getenv( "http_proxy" )) != NULL )
+  
+  char* envp = ::getenv( "http_proxy" );
+    if( envp != NULL )
       fgSetupProxy( envp );
 }
 
@@ -741,24 +745,10 @@ fgOptRoc( const char *arg )
 }
 
 static int
-fgOptFgRoot( const char *arg )
-{
-    // this option is dealt with by fgInitFGRoot
-    return FG_OPTIONS_OK;
-}
-
-static int
 fgOptFgScenery( const char *arg )
 {
-    globals->set_fg_scenery(arg);
+    globals->append_fg_scenery(arg);
     return FG_OPTIONS_OK;
-}
-
-static int
-fgOptFgAircraft(const char* arg)
-{
-  // this option is dealt with by fgInitFGAircraft
-  return FG_OPTIONS_OK;
 }
 
 static int
@@ -1225,20 +1215,6 @@ fgOptVersion( const char *arg )
 }
 
 static int
-fgOptFpe(const char* arg)
-{
-    // Actually handled in bootstrap.cxx
-    return FG_OPTIONS_OK;
-}
-
-static int
-fgOptFgviewer(const char* arg)
-{
-    // Actually handled in bootstrap.cxx
-    return FG_OPTIONS_OK;
-}
-
-static int
 fgOptCallSign(const char * arg)
 {
     int i;
@@ -1260,7 +1236,54 @@ fgOptCallSign(const char * arg)
 }
 
 
-static map<string,size_t> fgOptionMap;
+// Set a property for the --prop: option. Syntax: --prop:[<type>:]<name>=<value>
+// <type> can be "double" etc. but also only the first letter "d".
+// Examples:  --prop:alpha=1  --prop:bool:beta=true  --prop:d:gamma=0.123
+static int
+fgOptSetProperty(const char* raw)
+{
+  string arg(raw);
+  string::size_type pos = arg.find('=');
+  if (pos == arg.npos || pos == 0 || pos + 1 == arg.size())
+    return FG_OPTIONS_ERROR;
+  
+  string name = arg.substr(0, pos);
+  string value = arg.substr(pos + 1);
+  string type;
+  pos = name.find(':');
+  
+  if (pos != name.npos && pos != 0 && pos + 1 != name.size()) {
+    type = name.substr(0, pos);
+    name = name.substr(pos + 1);
+  }
+  SGPropertyNode *n = fgGetNode(name.c_str(), true);
+  
+  bool writable = n->getAttribute(SGPropertyNode::WRITE);
+  if (!writable)
+    n->setAttribute(SGPropertyNode::WRITE, true);
+  
+  bool ret = false;
+  if (type.empty())
+    ret = n->setUnspecifiedValue(value.c_str());
+  else if (type == "s" || type == "string")
+    ret = n->setStringValue(value.c_str());
+  else if (type == "d" || type == "double")
+    ret = n->setDoubleValue(strtod(value.c_str(), 0));
+  else if (type == "f" || type == "float")
+    ret = n->setFloatValue(atof(value.c_str()));
+  else if (type == "l" || type == "long")
+    ret =  n->setLongValue(strtol(value.c_str(), 0, 0));
+  else if (type == "i" || type == "int")
+    ret =  n->setIntValue(atoi(value.c_str()));
+  else if (type == "b" || type == "bool")
+    ret =  n->setBoolValue(value == "true" || atoi(value.c_str()) != 0);
+  
+  if (!writable)
+    n->setAttribute(SGPropertyNode::WRITE, false);
+  return ret ? FG_OPTIONS_OK : FG_OPTIONS_ERROR;
+}
+
+
 
 /*
    option       has_param type        property         b_param s_param  func
@@ -1289,11 +1312,13 @@ where:
     argument.
 */
 
-enum OptionType { OPTION_BOOL, OPTION_STRING, OPTION_DOUBLE, OPTION_INT, OPTION_CHANNEL, OPTION_FUNC };
+enum OptionType { OPTION_BOOL = 0, OPTION_STRING, OPTION_DOUBLE, OPTION_INT, OPTION_CHANNEL, OPTION_FUNC, OPTION_IGNORE };
+const int OPTION_MULTI = 1 << 17;
+
 struct OptionDesc {
     const char *option;
     bool has_param;
-    enum OptionType type;
+    int type;
     const char *property;
     bool b_param;
     const char *s_param;
@@ -1366,12 +1391,12 @@ struct OptionDesc {
     {"pitch",                        true,  OPTION_DOUBLE, "/sim/presets/pitch-deg", false, "", 0 },
     {"glideslope",                   true,  OPTION_DOUBLE, "/sim/presets/glideslope-deg", false, "", 0 },
     {"roc",                          true,  OPTION_FUNC,   "", false, "", fgOptRoc },
-    {"fg-root",                      true,  OPTION_FUNC,   "", false, "", fgOptFgRoot },
-    {"fg-scenery",                   true,  OPTION_FUNC,   "", false, "", fgOptFgScenery },
-    {"fg-aircraft",                  true,  OPTION_FUNC,   "", false, "", fgOptFgAircraft },
+    {"fg-root",                      true,  OPTION_IGNORE,   "", false, "", 0 },
+    {"fg-scenery",                   true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptFgScenery },
+    {"fg-aircraft",                  true,  OPTION_IGNORE | OPTION_MULTI,   "", false, "", 0 },
     {"fdm",                          true,  OPTION_STRING, "/sim/flight-model", false, "", 0 },
     {"aero",                         true,  OPTION_STRING, "/sim/aero", false, "", 0 },
-    {"aircraft-dir",                 true,  OPTION_STRING, "/sim/aircraft-dir", false, "", 0 },
+    {"aircraft-dir",                 true,  OPTION_IGNORE,   "", false, "", 0 },
     {"model-hz",                     true,  OPTION_INT,    "/sim/model-hz", false, "", 0 },
     {"speed",                        true,  OPTION_INT,    "/sim/speed-up", false, "", 0 },
     {"trim",                         false, OPTION_BOOL,   "/sim/presets/trim", true, "", 0 },
@@ -1460,19 +1485,19 @@ struct OptionDesc {
     {"trace-read",                   true,  OPTION_FUNC,   "", false, "", fgOptTraceRead },
     {"trace-write",                  true,  OPTION_FUNC,   "", false, "", fgOptTraceWrite },
     {"log-level",                    true,  OPTION_FUNC,   "", false, "", fgOptLogLevel },
-    {"view-offset",                  true,  OPTION_FUNC,   "", false, "", fgOptViewOffset },
+    {"view-offset",                  true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptViewOffset },
     {"visibility",                   true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMeters },
     {"visibility-miles",             true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMiles },
     {"random-wind",                  false, OPTION_FUNC,   "", false, "", fgOptRandomWind },
-    {"wind",                         true,  OPTION_FUNC,   "", false, "", fgOptWind },
+    {"wind",                         true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptWind },
     {"turbulence",                   true,  OPTION_FUNC,   "", false, "", fgOptTurbulence },
     {"ceiling",                      true,  OPTION_FUNC,   "", false, "", fgOptCeiling },
-    {"wp",                           true,  OPTION_FUNC,   "", false, "", fgOptWp },
+    {"wp",                           true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptWp },
     {"flight-plan",                  true,  OPTION_STRING,   "/autopilot/route-manager/file-path", false, "", NULL },
-    {"config",                       true,  OPTION_FUNC,   "", false, "", fgOptConfig },
+    {"config",                       true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptConfig },
     {"aircraft",                     true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
     {"vehicle",                      true,  OPTION_STRING, "/sim/aircraft", false, "", 0 },
-    {"failure",                      true,  OPTION_FUNC,   "", false, "", fgOptFailure },
+    {"failure",                      true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptFailure },
     {"com1",                         true,  OPTION_DOUBLE, "/instrumentation/comm[0]/frequencies/selected-mhz", false, "", 0 },
     {"com2",                         true,  OPTION_DOUBLE, "/instrumentation/comm[1]/frequencies/selected-mhz", false, "", 0 },
     {"nav1",                         true,  OPTION_FUNC,   "", false, "", fgOptNAV1 },
@@ -1483,413 +1508,702 @@ struct OptionDesc {
     {"dme",                          true,  OPTION_FUNC,   "", false, "", fgOptDME },
     {"min-status",                   true,  OPTION_STRING,  "/sim/aircraft-min-status", false, "all", 0 },
     {"livery",                       true,  OPTION_FUNC,   "", false, "", fgOptLivery },
-    {"ai-scenario",                  true,  OPTION_FUNC,   "", false, "", fgOptScenario },
+    {"ai-scenario",                  true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptScenario },
     {"disable-ai-scenarios",         false, OPTION_FUNC,   "", false, "", fgOptNoScenarios},
     {"parking-id",                   true,  OPTION_FUNC,   "", false, "", fgOptParking  },
     {"version",                      false, OPTION_FUNC,   "", false, "", fgOptVersion },
-    {"enable-fpe",                   false, OPTION_FUNC,   "", false, "", fgOptFpe},
-    {"fgviewer",                     false, OPTION_FUNC,   "", false, "", fgOptFgviewer},
+    {"enable-fpe",                   false, OPTION_IGNORE,   "", false, "", 0},
+    {"fgviewer",                     false, OPTION_IGNORE,   "", false, "", 0},
+    {"prop",                         true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptSetProperty},
     {0}
 };
 
 
-// Set a property for the --prop: option. Syntax: --prop:[<type>:]<name>=<value>
-// <type> can be "double" etc. but also only the first letter "d".
-// Examples:  --prop:alpha=1  --prop:bool:beta=true  --prop:d:gamma=0.123
-static bool
-set_property(const string& arg)
+namespace flightgear
 {
-    string::size_type pos = arg.find('=');
-    if (pos == arg.npos || pos == 0 || pos + 1 == arg.size())
-        return false;
 
-    string name = arg.substr(0, pos);
-    string value = arg.substr(pos + 1);
-    string type;
-    pos = name.find(':');
+/**
+ * internal storage of a value->option binding
+ */
+class OptionValue 
+{
+public:
+  OptionValue(OptionDesc* d, const string& v) :
+    desc(d), value(v)
+  {;}
+  
+  OptionDesc* desc;
+  string value;
+};
 
-    if (pos != name.npos && pos != 0 && pos + 1 != name.size()) {
-        type = name.substr(0, pos);
-        name = name.substr(pos + 1);
+typedef std::vector<OptionValue> OptionValueVec;
+typedef std::map<string, OptionDesc*> OptionDescDict;
+  
+class Options::OptionsPrivate
+{
+public:
+  
+  OptionValueVec::const_iterator findValue(const string& key) const
+  {
+    OptionValueVec::const_iterator it = values.begin();
+    for (; it != values.end(); ++it) {
+      if (it->desc->option == key) {
+        return it;
+      }
+    } // of set values iteration
+    
+    return it; // not found
+  }
+  
+  OptionDesc* findOption(const string& key) const
+  {
+    OptionDescDict::const_iterator it = options.find(key);
+    if (it == options.end()) {
+      return NULL;
     }
-    SGPropertyNode *n = fgGetNode(name.c_str(), true);
-
-    bool writable = n->getAttribute(SGPropertyNode::WRITE);
-    if (!writable)
-        n->setAttribute(SGPropertyNode::WRITE, true);
-
-    bool ret = false;
-    if (type.empty())
-        ret = n->setUnspecifiedValue(value.c_str());
-    else if (type == "s" || type == "string")
-        ret = n->setStringValue(value.c_str());
-    else if (type == "d" || type == "double")
-        ret = n->setDoubleValue(strtod(value.c_str(), 0));
-    else if (type == "f" || type == "float")
-        ret = n->setFloatValue(atof(value.c_str()));
-    else if (type == "l" || type == "long")
-        ret =  n->setLongValue(strtol(value.c_str(), 0, 0));
-    else if (type == "i" || type == "int")
-        ret =  n->setIntValue(atoi(value.c_str()));
-    else if (type == "b" || type == "bool")
-        ret =  n->setBoolValue(value == "true" || atoi(value.c_str()) != 0);
-
-    if (!writable)
-        n->setAttribute(SGPropertyNode::WRITE, false);
-    return ret;
+    
+    return it->second;
+  }
+  
+  int processOption(OptionDesc* desc, const string& arg_value)
+  {
+    switch ( desc->type & 0xffff ) {
+      case OPTION_BOOL:
+        fgSetBool( desc->property, desc->b_param );
+        break;
+      case OPTION_STRING:
+        if ( desc->has_param && !arg_value.empty() ) {
+          fgSetString( desc->property, arg_value.c_str() );
+        } else if ( !desc->has_param && arg_value.empty() ) {
+          fgSetString( desc->property, desc->s_param );
+        } else if ( desc->has_param ) {
+          SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << desc->option << "' needs a parameter" );
+          return FG_OPTIONS_ERROR;
+        } else {
+          SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << desc->option << "' does not have a parameter" );
+          return FG_OPTIONS_ERROR;
+        }
+        break;
+      case OPTION_DOUBLE:
+        if ( !arg_value.empty() ) {
+          fgSetDouble( desc->property, atof( arg_value ) );
+        } else {
+          SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << desc->option << "' needs a parameter" );
+          return FG_OPTIONS_ERROR;
+        }
+        break;
+      case OPTION_INT:
+        if ( !arg_value.empty() ) {
+          fgSetInt( desc->property, atoi( arg_value ) );
+        } else {
+          SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << desc->option << "' needs a parameter" );
+          return FG_OPTIONS_ERROR;
+        }
+        break;
+      case OPTION_CHANNEL:
+        // XXX return value of add_channel should be checked?
+        if ( desc->has_param && !arg_value.empty() ) {
+          add_channel( desc->option, arg_value );
+        } else if ( !desc->has_param && arg_value.empty() ) {
+          add_channel( desc->option, desc->s_param );
+        } else if ( desc->has_param ) {
+          SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << desc->option << "' needs a parameter" );
+          return FG_OPTIONS_ERROR;
+        } else {
+          SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << desc->option << "' does not have a parameter" );
+          return FG_OPTIONS_ERROR;
+        }
+        break;
+      case OPTION_FUNC:
+        if ( desc->has_param && !arg_value.empty() ) {
+          return desc->func( arg_value.c_str() );
+        } else if ( !desc->has_param && arg_value.empty() ) {
+          return desc->func( desc->s_param );
+        } else if ( desc->has_param ) {
+          SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << desc->option << "' needs a parameter" );
+          return FG_OPTIONS_ERROR;
+        } else {
+          SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << desc->option << "' does not have a parameter" );
+          return FG_OPTIONS_ERROR;
+        }
+        break;
+        
+      case OPTION_IGNORE:
+        break;
+    }
+    
+    return FG_OPTIONS_OK;
+  }
+  
+  bool showHelp,
+    verbose,
+    showAircraft;
+  OptionDescDict options;
+  OptionValueVec values;
+  simgear::PathList propertyFiles;
+};
+  
+Options* Options::sharedInstance()
+{
+  if (shared_instance == NULL) {
+    shared_instance = new Options;
+  }
+  
+  return shared_instance;
 }
-
-
-// Parse a single option
-static int
-parse_option (const string& arg)
+  
+Options::Options() :
+  p(new OptionsPrivate())
 {
-    if ( fgOptionMap.size() == 0 ) {
-        size_t i = 0;
-        OptionDesc *pt = &fgOptionArray[ 0 ];
-        while ( pt->option != 0 ) {
-            fgOptionMap[ pt->option ] = i;
-            i += 1;
-            pt += 1;
-        }
+  p->showHelp = false;
+  p->verbose = false;
+  p->showAircraft = false;
+  
+// build option map
+  OptionDesc *desc = &fgOptionArray[ 0 ];
+  while ( desc->option != 0 ) {
+    p->options[ desc->option ] = desc;
+    ++desc;
+  }
+}
+  
+Options::~Options()
+{
+}
+  
+void Options::init(int argc, char **argv, const SGPath& appDataPath)
+{
+  fgSetDefaults();
+  
+// first, process the command line
+  bool inOptions = true;
+  for (int i=1; i<argc; ++i) {
+    if (inOptions && (argv[i][0] == '-')) {
+      if (strcmp(argv[i], "--") == 0) { // end of options delimiter
+        inOptions = true;
+        continue;
+      }
+      
+      int result = parseOption(argv[i]);
+      processArgResult(result);
+    } else {
+    // XML properties file
+      SGPath f(argv[i]);
+      if (!f.exists()) {
+        SG_LOG(SG_GENERAL, SG_ALERT, "config file not found:" << f.str());
+        return;
+      }
+      
+      p->propertyFiles.push_back(f);
     }
+  } // of arguments iteration
+  
+// then config files
+  SGPath config;
+  
+  if( homedir && hostname && strlen(hostname) > 0 ) {
+    // Check for ~/.fgfsrc.hostname
+    config.set(homedir);
+    config.append(".fgfsrc");
+    config.concat( "." );
+    config.concat( hostname );
+    readConfig(config);
+  }
+  
+// Check for ~/.fgfsrc
+  if( homedir ) {
+    config.set(homedir);
+    config.append(".fgfsrc");
+    readConfig(config);
+  }
+  
+// check for a config file in app data
+  SGPath appDataConfig(appDataPath);
+  appDataConfig.append("fgfsrc");
+  if (appDataConfig.exists()) {
+    readConfig(appDataConfig);
+  }
+  
+// setup FG_ROOT
+  setupRoot();
+  
+// system.fgfsrc handling
+  if( hostname && strlen(hostname) > 0 ) {
+    config.set(globals->get_fg_root());
+    config.append( "system.fgfsrc" );
+    config.concat( "." );
+    config.concat( hostname );
+    readConfig(config);
+  }
 
-    // General Options
-    if ( (arg == "--help") || (arg == "-h") ) {
-	// help/usage request
-	return(FG_OPTIONS_HELP);
-    } else if ( (arg == "--verbose") || (arg == "-v") ) {
-        // verbose help/usage request
-        return(FG_OPTIONS_VERBOSE_HELP);
-    } else if ( arg.find( "--show-aircraft") == 0) {
-        return(FG_OPTIONS_SHOW_AIRCRAFT);
-    } else if ( arg.find( "--show-sound-devices") == 0) {
-        return(FG_OPTIONS_SHOW_SOUND_DEVICES);
-    } else if ( arg.find( "--prop:" ) == 0 ) {
-        if (!set_property(arg.substr(7))) {
-            SG_LOG( SG_GENERAL, SG_ALERT, "Bad property assignment: " << arg );
-            return FG_OPTIONS_ERROR;
-        }
-    } else if ( arg.find("-psn_") == 0) {
+  config.set(globals->get_fg_root());
+  config.append( "system.fgfsrc" );
+  readConfig(config);
+}
+  
+void Options::initAircraft()
+{
+  BOOST_FOREACH(const string& paths, valuesForOption("fg-aircraft")) {
+    globals->append_aircraft_paths(paths);
+  }
+  
+  const char* envp = ::getenv("FG_AIRCRAFT");
+  if (envp) {
+    globals->append_aircraft_paths(envp);
+  }
+
+  string aircraft;
+  if (isOptionSet("aircraft")) {
+    aircraft = valueForOption("aircraft");
+  } else if (isOptionSet("vehicle")) {
+    aircraft = valueForOption("vehicle");
+  }
+    
+  if (!aircraft.empty()) {
+    SG_LOG(SG_INPUT, SG_INFO, "aircraft = " << aircraft );
+    fgSetString("/sim/aircraft", aircraft.c_str() );
+  } else {
+    SG_LOG(SG_INPUT, SG_INFO, "No user specified aircraft, using default" );
+  }
+  
+  if (p->showAircraft) {
+    fgOptLogLevel( "alert" );
+    SGPath path( globals->get_fg_root() );
+    path.append("Aircraft");
+    fgShowAircraft(path);
+    exit(0);
+  }
+  
+  if (isOptionSet("aircraft-dir")) {
+    // set this now, so it's available in FindAndCacheAircraft
+    fgSetString("/sim/aircraft-dir", valueForOption("aircraft-dir"));
+  }
+}
+  
+void Options::processArgResult(int result)
+{
+  if ((result == FG_OPTIONS_HELP) || (result == FG_OPTIONS_ERROR))
+    p->showHelp = true;
+  else if (result == FG_OPTIONS_VERBOSE_HELP)
+    p->verbose = true;
+  else if (result == FG_OPTIONS_SHOW_AIRCRAFT) {
+    p->showAircraft = true;    
+  } else if (result == FG_OPTIONS_SHOW_SOUND_DEVICES) {
+    SGSoundMgr smgr;
+    
+    smgr.init();
+    string vendor = smgr.get_vendor();
+    string renderer = smgr.get_renderer();
+    cout << renderer << " provided by " << vendor << endl;
+    cout << endl << "No. Device" << endl;
+    
+    vector <const char*>devices = smgr.get_available_devices();
+    for (vector <const char*>::size_type i=0; i<devices.size(); i++) {
+      cout << i << ".  \"" << devices[i] << "\"" << endl;
+    }
+    devices.clear();
+    exit(0);
+  } else if (result == FG_OPTIONS_EXIT) {
+    exit(0);
+  }
+}
+  
+void Options::readConfig(const SGPath& path)
+{
+  sg_gzifstream in( path.str() );
+  if ( !in.is_open() ) {
+    return;
+  }
+  
+  SG_LOG( SG_GENERAL, SG_INFO, "Processing config file: " << path.str() );
+  
+  in >> skipcomment;
+  while ( ! in.eof() ) {
+    string line;
+    getline( in, line, '\n' );
+    
+    // catch extraneous (DOS) line ending character
+    int i;
+    for (i = line.length(); i > 0; i--)
+      if (line[i - 1] > 32)
+        break;
+    line = line.substr( 0, i );
+    
+    if ( parseOption( line ) == FG_OPTIONS_ERROR ) {
+      cerr << endl << "Config file parse error: " << path.str() << " '"
+      << line << "'" << endl;
+	    p->showHelp = true;
+    }
+    in >> skipcomment;
+  }
+
+}
+  
+int Options::parseOption(const string& s)
+{
+  if ((s == "--help") || (s=="-h")) {
+    return FG_OPTIONS_HELP;
+  } else if ( (s == "--verbose") || (s == "-v") ) {
+    // verbose help/usage request
+    return FG_OPTIONS_VERBOSE_HELP;
+  } else if (s.find("-psn") == 0) {
     // on Mac, when launched from the GUI, we are passed the ProcessSerialNumber
     // as an argument (and no others). Silently ignore the argument here.
-        return FG_OPTIONS_OK;
-    } else if ( arg.find( "--" ) == 0 ) {
-        size_t pos = arg.find( '=' );
-        string arg_name, arg_value;
-        if ( pos == string::npos ) {
-            arg_name = arg.substr( 2 );
-        } else {
-            arg_name = arg.substr( 2, pos - 2 );
-            arg_value = arg.substr( pos + 1);
-        }
-        map<string,size_t>::iterator it = fgOptionMap.find( arg_name );
-        if ( it != fgOptionMap.end() ) {
-            OptionDesc *pt = &fgOptionArray[ it->second ];
-            switch ( pt->type ) {
-                case OPTION_BOOL:
-                    fgSetBool( pt->property, pt->b_param );
-                    break;
-                case OPTION_STRING:
-                    if ( pt->has_param && !arg_value.empty() ) {
-                        fgSetString( pt->property, arg_value.c_str() );
-                    } else if ( !pt->has_param && arg_value.empty() ) {
-                        fgSetString( pt->property, pt->s_param );
-                    } else if ( pt->has_param ) {
-                        SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
-                        return FG_OPTIONS_ERROR;
-                    } else {
-                        SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' does not have a parameter" );
-                        return FG_OPTIONS_ERROR;
-                    }
-                    break;
-                case OPTION_DOUBLE:
-                    if ( !arg_value.empty() ) {
-                        fgSetDouble( pt->property, atof( arg_value ) );
-                    } else {
-                        SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
-                        return FG_OPTIONS_ERROR;
-                    }
-                    break;
-                case OPTION_INT:
-                    if ( !arg_value.empty() ) {
-                        fgSetInt( pt->property, atoi( arg_value ) );
-                    } else {
-                        SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
-                        return FG_OPTIONS_ERROR;
-                    }
-                    break;
-                case OPTION_CHANNEL:
-                    // XXX return value of add_channel should be checked?
-                    if ( pt->has_param && !arg_value.empty() ) {
-                        add_channel( pt->option, arg_value );
-                    } else if ( !pt->has_param && arg_value.empty() ) {
-                        add_channel( pt->option, pt->s_param );
-                    } else if ( pt->has_param ) {
-                        SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
-                        return FG_OPTIONS_ERROR;
-                    } else {
-                        SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' does not have a parameter" );
-                        return FG_OPTIONS_ERROR;
-                    }
-                    break;
-                case OPTION_FUNC:
-                    if ( pt->has_param && !arg_value.empty() ) {
-                        return pt->func( arg_value.c_str() );
-                    } else if ( !pt->has_param && arg_value.empty() ) {
-                        return pt->func( pt->s_param );
-                    } else if ( pt->has_param ) {
-                        SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' needs a parameter" );
-                        return FG_OPTIONS_ERROR;
-                    } else {
-                        SG_LOG( SG_GENERAL, SG_ALERT, "Option '" << arg << "' does not have a parameter" );
-                        return FG_OPTIONS_ERROR;
-                    }
-                    break;
-            }
-        } else {
-            SG_LOG( SG_GENERAL, SG_ALERT, "Unknown option '" << arg << "'" );
-            return FG_OPTIONS_ERROR;
-        }
-    } else {
-        SG_LOG( SG_GENERAL, SG_ALERT, "Unknown option '" << arg << "'" );
-        return FG_OPTIONS_ERROR;
-    }
-
     return FG_OPTIONS_OK;
+  } else if ( s.find( "--show-aircraft") == 0) {
+    return(FG_OPTIONS_SHOW_AIRCRAFT);
+  } else if ( s.find( "--show-sound-devices") == 0) {
+    return(FG_OPTIONS_SHOW_SOUND_DEVICES);
+  } else if ( s.find( "--prop:") == 0) {
+    // property setting has a slightly different syntax, so fudge things
+    OptionDesc* desc = p->findOption("prop");
+    if (s.find("=", 7) == string::npos) { // no equals token
+      SG_LOG(SG_GENERAL, SG_ALERT, "malformed property option:" << s);
+      return FG_OPTIONS_ERROR;
+    }
+    
+    p->values.push_back(OptionValue(desc, s.substr(7)));
+    return FG_OPTIONS_OK;
+  } else if ( s.find( "--" ) == 0 ) {
+    size_t eqPos = s.find( '=' );
+    string key, value;
+    if (eqPos == string::npos) {
+      key = s.substr(2);
+    } else {
+      key = s.substr( 2, eqPos - 2 );
+      value = s.substr( eqPos + 1);
+    }
+    
+    return addOption(key, value);
+  } else {
+    SG_LOG(SG_GENERAL, SG_ALERT, "unknown option:" << s);
+    return FG_OPTIONS_ERROR;
+  }
+}
+  
+int Options::addOption(const string &key, const string &value)
+{
+  OptionDesc* desc = p->findOption(key);
+  if (!desc) {
+    return FG_OPTIONS_ERROR;
+  }
+  
+  if (!(desc->type & OPTION_MULTI)) {
+    OptionValueVec::const_iterator it = p->findValue(key);
+    if (it != p->values.end()) {
+      SG_LOG(SG_GENERAL, SG_INFO, "multiple values forbidden for option:" << key << ", ignoring:" << value);
+      return FG_OPTIONS_OK;
+    }
+  }
+  
+  p->values.push_back(OptionValue(desc, value));
+  return FG_OPTIONS_OK;
+}
+  
+bool Options::isOptionSet(const string &key) const
+{
+  OptionValueVec::const_iterator it = p->findValue(key);
+  return (it != p->values.end());
+}
+  
+string Options::valueForOption(const string& key, const string& defValue) const
+{
+  OptionValueVec::const_iterator it = p->findValue(key);
+  if (it == p->values.end()) {
+    return defValue;
+  }
+  
+  return it->value;
 }
 
-
-// Parse the command line options
-void
-fgParseArgs (int argc, char **argv)
+string_list Options::valuesForOption(const std::string& key) const
 {
-    bool in_options = true;
-    bool verbose = false;
-    bool help = false;
+  string_list result;
+  OptionValueVec::const_iterator it = p->values.begin();
+  for (; it != p->values.end(); ++it) {
+    if (it->desc->option == key) {
+      result.push_back(it->value);
+    }
+  }
+  
+  return result;
+}
+  
+void Options::processOptions()
+{
+  // now FG_ROOT is setup, process various command line options that bail us
+  // out quickly, but rely on aircraft / root settings
+  if (p->showHelp) {
+    showUsage();
+    exit(0);
+  }
+  
+  BOOST_FOREACH(const OptionValue& v, p->values) {
+    int result = p->processOption(v.desc, v.value);
+    if (result == FG_OPTIONS_ERROR) {
+      showUsage();
+      exit(-1);
+    }
+  }
+  
+  BOOST_FOREACH(const SGPath& file, p->propertyFiles) {
+    if (!file.exists()) {
+      SG_LOG(SG_GENERAL, SG_ALERT, "config file not found:" << file.str());
+      continue;
+    }
+    
+    SG_LOG(SG_GENERAL, SG_INFO,
+           "Reading command-line property file " << file.str());
+	  readProperties(file.str(), globals->get_props());
+  }
 
-    SG_LOG(SG_GENERAL, SG_ALERT, "Processing command line arguments");
-
-    for (int i = 1; i < argc; i++) {
-        string arg = argv[i];
-
-	if (in_options && (arg.find('-') == 0)) {
-	  if (arg == "--") {
-	    in_options = false;
-	  } else {
-	    int result = parse_option(arg);
-	    if ((result == FG_OPTIONS_HELP) || (result == FG_OPTIONS_ERROR))
-              help = true;
-
-            else if (result == FG_OPTIONS_VERBOSE_HELP)
-              verbose = true;
-
-            else if (result == FG_OPTIONS_SHOW_AIRCRAFT) {
-              fgOptLogLevel( "alert" );
-              SGPath path( globals->get_fg_root() );
-              path.append("Aircraft");
-              fgShowAircraft(path);
-              exit(0);
-
-            } else if (result == FG_OPTIONS_SHOW_SOUND_DEVICES) {
-              SGSoundMgr smgr;
-
-              smgr.init();
-              string vendor = smgr.get_vendor();
-              string renderer = smgr.get_renderer();
-              cout << renderer << " provided by " << vendor << endl;
-              cout << endl << "No. Device" << endl;
-
-              vector <const char*>devices = smgr.get_available_devices();
-              for (vector <const char*>::size_type i=0; i<devices.size(); i++) {
-                cout << i << ".  \"" << devices[i] << "\"" << endl;
+// now options are process, do supplemental fixup
+  const char *envp = ::getenv( "FG_SCENERY" );
+  if (envp) {
+    globals->append_fg_scenery(envp);
+  }
+    
+// terrasync directory fixup
+  if (fgGetBool("/sim/terrasync/enabled")) {
+    string terrasyncDir = fgGetString("/sim/terrasync/scenery-dir");
+    if (terrasyncDir.empty()) {
+      SGPath p(fgGetString("/sim/fg-home"));
+      p.append("TerraSync");
+      if (!p.exists()) {
+        simgear::Dir dd(p);
+        dd.create(0700);
+      }
+      
+      terrasyncDir = p.str();
+      SG_LOG(SG_GENERAL, SG_INFO,
+             "Using default TerraSync dir: " << terrasyncDir);
+      fgSetString("/sim/terrasync/scenery-dir", terrasyncDir);
+    }
+    
+    const string_list& scenery_paths(globals->get_fg_scenery());
+    if (std::find(scenery_paths.begin(), scenery_paths.end(), terrasyncDir) == scenery_paths.end()) {
+      // terrasync dir is not in the scenery paths, add it
+      globals->append_fg_scenery(terrasyncDir);
+    }
+  }
+  
+  if (globals->get_fg_scenery().empty()) {
+    // no scenery paths set *at all*, use the data in FG_ROOT
+    SGPath root(globals->get_fg_root());
+    root.append("Scenery");
+    globals->append_fg_scenery(root.str());
+  }
+}
+  
+void Options::showUsage() const
+{
+  fgOptLogLevel( "alert" );
+  
+  SGPropertyNode *locale = globals->get_locale();
+  SGPropertyNode options_root;
+  
+  SG_LOG( SG_GENERAL, SG_ALERT, "" ); // To popup the console on Windows
+  cout << endl;
+  
+  try {
+    fgLoadProps("options.xml", &options_root);
+  } catch (const sg_exception &) {
+    cout << "Unable to read the help file." << endl;
+    cout << "Make sure the file options.xml is located in the FlightGear base directory," << endl;
+    cout << "and the location of the base directory is specified by setting $FG_ROOT or" << endl;
+    cout << "by adding --fg-root=path as a program argument." << endl;
+    
+    exit(-1);
+  }
+  
+  SGPropertyNode *options = options_root.getNode("options");
+  if (!options) {
+    SG_LOG( SG_GENERAL, SG_ALERT,
+           "Error reading options.xml: <options> directive not found." );
+    exit(-1);
+  }
+  
+  SGPropertyNode *usage = locale->getNode(options->getStringValue("usage"));
+  if (usage) {
+    cout << "Usage: " << usage->getStringValue() << endl;
+  }
+  
+  vector<SGPropertyNode_ptr>section = options->getChildren("section");
+  for (unsigned int j = 0; j < section.size(); j++) {
+    string msg = "";
+    
+    vector<SGPropertyNode_ptr>option = section[j]->getChildren("option");
+    for (unsigned int k = 0; k < option.size(); k++) {
+      
+      SGPropertyNode *name = option[k]->getNode("name");
+      SGPropertyNode *short_name = option[k]->getNode("short");
+      SGPropertyNode *key = option[k]->getNode("key");
+      SGPropertyNode *arg = option[k]->getNode("arg");
+      bool brief = option[k]->getNode("brief") != 0;
+      
+      if ((brief || p->verbose) && name) {
+        string tmp = name->getStringValue();
+        
+        if (key){
+          tmp.append(":");
+          tmp.append(key->getStringValue());
+        }
+        if (arg) {
+          tmp.append("=");
+          tmp.append(arg->getStringValue());
+        }
+        if (short_name) {
+          tmp.append(", -");
+          tmp.append(short_name->getStringValue());
+        }
+        
+        if (tmp.size() <= 25) {
+          msg+= "   --";
+          msg += tmp;
+          msg.append( 27-tmp.size(), ' ');
+        } else {
+          msg += "\n   --";
+          msg += tmp + '\n';
+          msg.append(32, ' ');
+        }
+        // There may be more than one <description> tag assosiated
+        // with one option
+        
+        vector<SGPropertyNode_ptr> desc;
+        desc = option[k]->getChildren("description");
+        if (desc.size() > 0) {
+          for ( unsigned int l = 0; l < desc.size(); l++) {
+            
+            // There may be more than one translation line.
+            
+            string t = desc[l]->getStringValue();
+            SGPropertyNode *n = locale->getNode("strings");
+            vector<SGPropertyNode_ptr>trans_desc =
+            n->getChildren(t.substr(8).c_str());
+            
+            for ( unsigned int m = 0; m < trans_desc.size(); m++ ) {
+              string t_str = trans_desc[m]->getStringValue();
+              
+              if ((m > 0) || ((l > 0) && m == 0)) {
+                msg.append( 32, ' ');
               }
-              devices.clear();
-              exit(0);
+              
+              // If the string is too large to fit on the screen,
+              // then split it up in several pieces.
+              
+              while ( t_str.size() > 47 ) {
+                
+                string::size_type m = t_str.rfind(' ', 47);
+                msg += t_str.substr(0, m) + '\n';
+                msg.append( 32, ' ');
+                
+                t_str.erase(t_str.begin(), t_str.begin() + m + 1);
+              }
+              msg += t_str + '\n';
             }
-
-            else if (result == FG_OPTIONS_EXIT)
-               exit(0);
-	  }
-	} else {
-	  in_options = false;
-	  SG_LOG(SG_GENERAL, SG_INFO,
-		 "Reading command-line property file " << arg);
-	  readProperties(arg, globals->get_props());
-	}
+          }
+        }
+      }
     }
-
-    if (help) {
-       fgOptLogLevel( "alert" );
-       fgUsage(verbose);
-       exit(0);
+    
+    SGPropertyNode *name;
+    name = locale->getNode(section[j]->getStringValue("name"));
+    
+    if (!msg.empty() && name) {
+      cout << endl << name->getStringValue() << ":" << endl;
+      cout << msg;
+      msg.erase();
     }
-
-    SG_LOG(SG_GENERAL, SG_INFO, "Finished command line arguments");
-}
-
-
-// Parse config file options
-void
-fgParseOptions (const string& path) {
-    sg_gzifstream in( path );
-    if ( !in.is_open() ) {
-        return;
-    }
-
-    SG_LOG( SG_GENERAL, SG_INFO, "Processing config file: " << path );
-
-    in >> skipcomment;
-    while ( ! in.eof() ) {
-	string line;
-	getline( in, line, '\n' );
-
-        // catch extraneous (DOS) line ending character
-        int i;
-        for (i = line.length(); i > 0; i--)
-            if (line[i - 1] > 32)
-                break;
-        line = line.substr( 0, i );
-
-	if ( parse_option( line ) == FG_OPTIONS_ERROR ) {
-            cerr << endl << "Config file parse error: " << path << " '"
-		    << line << "'" << endl;
-	    fgUsage();
-	    exit(-1);
-	}
-	in >> skipcomment;
-    }
-}
-
-
-// Print usage message
-void
-fgUsage (bool verbose)
-{
-    SGPropertyNode *locale = globals->get_locale();
-
-    SGPropertyNode options_root;
-
-    SG_LOG( SG_GENERAL, SG_ALERT, "" ); // To popup the console on Windows
+  }
+  
+  if ( !p->verbose ) {
     cout << endl;
-
-    try {
-        fgLoadProps("options.xml", &options_root);
-    } catch (const sg_exception &) {
-        cout << "Unable to read the help file." << endl;
-        cout << "Make sure the file options.xml is located in the FlightGear base directory," << endl;
-        cout << "and the location of the base directory is specified by setting $FG_ROOT or" << endl;
-        cout << "by adding --fg-root=path as a program argument." << endl;
-
-        exit(-1);
-    }
-
-    SGPropertyNode *options = options_root.getNode("options");
-    if (!options) {
-        SG_LOG( SG_GENERAL, SG_ALERT,
-                "Error reading options.xml: <options> directive not found." );
-        exit(-1);
-    }
-
-    SGPropertyNode *usage = locale->getNode(options->getStringValue("usage"));
-    if (usage) {
-        cout << "Usage: " << usage->getStringValue() << endl;
-    }
-
-    vector<SGPropertyNode_ptr>section = options->getChildren("section");
-    for (unsigned int j = 0; j < section.size(); j++) {
-        string msg = "";
-
-        vector<SGPropertyNode_ptr>option = section[j]->getChildren("option");
-        for (unsigned int k = 0; k < option.size(); k++) {
-
-            SGPropertyNode *name = option[k]->getNode("name");
-            SGPropertyNode *short_name = option[k]->getNode("short");
-            SGPropertyNode *key = option[k]->getNode("key");
-            SGPropertyNode *arg = option[k]->getNode("arg");
-            bool brief = option[k]->getNode("brief") != 0;
-
-            if ((brief || verbose) && name) {
-                string tmp = name->getStringValue();
-
-                if (key){
-                    tmp.append(":");
-                    tmp.append(key->getStringValue());
-                }
-                if (arg) {
-                    tmp.append("=");
-                    tmp.append(arg->getStringValue());
-                }
-                if (short_name) {
-                    tmp.append(", -");
-                    tmp.append(short_name->getStringValue());
-                }
-
-                if (tmp.size() <= 25) {
-                    msg+= "   --";
-                    msg += tmp;
-                    msg.append( 27-tmp.size(), ' ');
-                } else {
-                    msg += "\n   --";
-                    msg += tmp + '\n';
-                    msg.append(32, ' ');
-                }
-                // There may be more than one <description> tag assosiated
-                // with one option
-
-                vector<SGPropertyNode_ptr> desc;
-                desc = option[k]->getChildren("description");
-                if (desc.size() > 0) {
-                   for ( unsigned int l = 0; l < desc.size(); l++) {
-
-                      // There may be more than one translation line.
-
-                      string t = desc[l]->getStringValue();
-                      SGPropertyNode *n = locale->getNode("strings");
-                      vector<SGPropertyNode_ptr>trans_desc =
-                               n->getChildren(t.substr(8).c_str());
-
-                      for ( unsigned int m = 0; m < trans_desc.size(); m++ ) {
-                         string t_str = trans_desc[m]->getStringValue();
-
-                         if ((m > 0) || ((l > 0) && m == 0)) {
-                            msg.append( 32, ' ');
-                         }
-
-                         // If the string is too large to fit on the screen,
-                         // then split it up in several pieces.
-
-                         while ( t_str.size() > 47 ) {
-
-                            string::size_type m = t_str.rfind(' ', 47);
-                            msg += t_str.substr(0, m) + '\n';
-                            msg.append( 32, ' ');
-
-                            t_str.erase(t_str.begin(), t_str.begin() + m + 1);
-                        }
-                        msg += t_str + '\n';
-                     }
-                  }
-               }
-            }
-        }
-
-        SGPropertyNode *name;
-        name = locale->getNode(section[j]->getStringValue("name"));
-
-        if (!msg.empty() && name) {
-           cout << endl << name->getStringValue() << ":" << endl;
-           cout << msg;
-           msg.erase();
-        }
-    }
-
-    if ( !verbose ) {
-        cout << endl;
-        cout << "For a complete list of options use --help --verbose" << endl;
-    }
+    cout << "For a complete list of options use --help --verbose" << endl;
+  }
 #ifdef _MSC_VER
-    cout << "Hit a key to continue..." << endl;
-    cin.get();
+  cout << "Hit a key to continue..." << endl;
+  cin.get();
 #endif
 }
+  
+#if defined(__CYGWIN__)
+string Options::platformDefaultRoot() const
+{
+  return "../data";
+}
+
+#elif defined(_WIN32)
+string Options::platformDefaultRoot() const
+{
+  return "..\\data";
+}
+#elif defined(__APPLE__)
+string Options::platformDefaultRoot() const
+{
+  /*
+   The following code looks for the base package inside the application 
+   bundle, in the standard Contents/Resources location. 
+   */
+  CFURLRef resourcesUrl = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
+  
+  // look for a 'data' subdir
+  CFURLRef dataDir = CFURLCreateCopyAppendingPathComponent(NULL, resourcesUrl, CFSTR("data"), true);
+  
+  // now convert down to a path, and the a c-string
+  CFStringRef path = CFURLCopyFileSystemPath(dataDir, kCFURLPOSIXPathStyle);
+  string root = CFStringGetCStringPtr(path, CFStringGetSystemEncoding());
+  
+  CFRelease(resourcesUrl);
+  CFRelease(dataDir);
+  CFRelease(path);
+  
+  return root;
+}
+#else
+string Options::platformDefaultRoot() const
+{
+  return PKGLIBDIR;
+}
+#endif
+  
+void Options::setupRoot()
+{
+  string root;
+  if (isOptionSet("fg-root")) {
+    root = valueForOption("fg-root"); // easy!
+  } else {
+  // Next check if fg-root is set as an env variable
+    char *envp = ::getenv( "FG_ROOT" );
+    if ( envp != NULL ) {
+      root = envp;
+    } else {
+      root = platformDefaultRoot();
+    }
+  } 
+  
+  SG_LOG(SG_INPUT, SG_INFO, "fg_root = " << root );
+  globals->set_fg_root(root);
+  
+// validate it
+  static char required_version[] = "2.5.0";
+  string base_version = fgBasePackageVersion();
+  if ( !(base_version == required_version) ) {
+    // tell the operator how to use this application
+    
+    SG_LOG( SG_GENERAL, SG_ALERT, "" ); // To popup the console on windows
+    cerr << endl << "Base package check failed:" << endl \
+    << "  Version " << base_version << " found at: " \
+    << globals->get_fg_root() << endl \
+    << "  Version " << required_version << " is required." << endl \
+    << "Please upgrade/downgrade base package and set the path to your fgdata" << endl \
+    << "with --fg-root=path_to_your_fgdata" << endl;
+#ifdef _MSC_VER
+    cerr << "Hit a key to continue..." << endl;
+    cin.get();
+#endif
+    exit(-1);
+  }
+}
+  
+} // of namespace flightgear
+

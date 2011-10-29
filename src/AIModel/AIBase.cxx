@@ -129,9 +129,7 @@ FGAIBase::FGAIBase(object_type ot, bool enableHot) :
 
 FGAIBase::~FGAIBase() {
     // Unregister that one at the scenery manager
-    if (globals->get_scenery()) {
-        globals->get_scenery()->get_scene_graph()->removeChild(aip.getSceneGraph());
-    }
+    removeModel();
 
     if (props) {
         SGPropertyNode* parent = props->getParent();
@@ -141,6 +139,29 @@ FGAIBase::~FGAIBase() {
     }
     delete fp;
     fp = 0;
+}
+
+/** Cleanly remove the model
+ * and let the scenery database pager do the clean-up work.
+ */
+void
+FGAIBase::removeModel()
+{
+    FGScenery* pSceneryManager = globals->get_scenery();
+    if (pSceneryManager)
+    {
+        osg::ref_ptr<osg::Object> temp = _model.get();
+        pSceneryManager->get_scene_graph()->removeChild(aip.getSceneGraph());
+        // withdraw from SGModelPlacement and drop own reference (unref)
+        aip.init( 0 );
+        _model = 0;
+        // pass it on to the pager, to be be deleted in the pager thread
+        pSceneryManager->getPagerSingleton()->queueDeleteRequest(temp);
+    }
+    else
+    {
+        SG_LOG(SG_AI, SG_ALERT, "AIBase: Could not unload model. Missing scenery manager!");
+    }
 }
 
 void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
@@ -248,6 +269,12 @@ bool FGAIBase::init(bool search_in_AI_path) {
 
     osg::Node * mdl = SGModelLib::loadPagedModel(f, props, new FGNasalModelData(props));
 
+    if (_model.valid())
+    {
+        // reinit, dump the old model
+        removeModel();
+    }
+
     _model = new osg::LOD;
     _model->setName("AI-model range animation node");
 
@@ -269,7 +296,7 @@ bool FGAIBase::init(bool search_in_AI_path) {
         _initialized = true;
 
     } else if (!model_path.empty()) {
-        SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);
+        SG_LOG(SG_AI, SG_WARN, "AIBase: Could not load model " << model_path);
         // not properly installed...
         _installed = false;
     }
@@ -284,7 +311,7 @@ void FGAIBase::initModel(osg::Node *node)
 
         if( _path != ""){
             props->setStringValue("submodels/path", _path.c_str());
-            SG_LOG(SG_INPUT, SG_DEBUG, "AIBase: submodels/path " << _path);
+            SG_LOG(SG_AI, SG_DEBUG, "AIBase: submodels/path " << _path);
         }
 
         if( _parent!= ""){
@@ -293,7 +320,7 @@ void FGAIBase::initModel(osg::Node *node)
 
         fgSetString("/ai/models/model-added", props->getPath().c_str());
     } else if (!model_path.empty()) {
-        SG_LOG(SG_INPUT, SG_WARN, "AIBase: Could not load model " << model_path);
+        SG_LOG(SG_AI, SG_WARN, "AIBase: Could not load model " << model_path);
     }
 
     setDie(false);
@@ -582,7 +609,7 @@ void FGAIBase::_setSubID( int s ) {
 bool FGAIBase::setParentNode() {
 
     if (_parent == ""){
-       SG_LOG(SG_GENERAL, SG_ALERT, "AIBase: " << _name
+       SG_LOG(SG_AI, SG_ALERT, "AIBase: " << _name
             << " parent not set ");
        return false;
     }
@@ -617,7 +644,7 @@ bool FGAIBase::setParentNode() {
         const string name = _selected_ac->getStringValue("name");
         return true;
     } else {
-        SG_LOG(SG_GENERAL, SG_ALERT, "AIBase: " << _name
+        SG_LOG(SG_AI, SG_ALERT, "AIBase: " << _name
             << " parent not found: dying ");
         setDie(true);
         return false;

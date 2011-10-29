@@ -29,7 +29,7 @@
 class FGRunway;
 
 struct AptFreq {
-	string service;
+	std::string service;
 	unsigned short int freq;
 };
 
@@ -49,15 +49,15 @@ public:
 	void Knob2Left1();
 	void Knob2Right1();
 	
-	void SetId(const string& s);
+	void SetId(const std::string& s);
 	
 private:
 	// Update the cached airport details
-	void UpdateAirport(const string& id);
+	void UpdateAirport(const std::string& id);
 
-	string _apt_id;
-	string _last_apt_id;
-	string _save_apt_id;
+	std::string _apt_id;
+	std::string _last_apt_id;
+	std::string _save_apt_id;
 	const FGAirport* ap;
 	
 	vector<FGRunway*> _aptRwys;

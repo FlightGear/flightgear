@@ -7,6 +7,9 @@
 
 
 #include "Hitch.hpp"
+
+using std::vector;
+
 namespace yasim {
 Hitch::Hitch(const char *name)
 {

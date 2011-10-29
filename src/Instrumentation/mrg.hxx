@@ -51,7 +51,7 @@ private:
 
     static const double gravity; //conversion factor
 
-    string _name;
+    std::string _name;
     int _num;
 
     double _last_roll;

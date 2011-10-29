@@ -50,9 +50,9 @@ private:
     SGPropertyNode_ptr flightLevelNode;
 
     // Internal
-    string _name;
+    std::string _name;
     int _num;
-    string _mode_c_altitude;
+    std::string _mode_c_altitude;
 };
 
 #endif // TRANSPONDER_HXX

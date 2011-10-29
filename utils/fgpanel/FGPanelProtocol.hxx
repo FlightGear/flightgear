@@ -23,7 +23,7 @@
 #include <simgear/io/iochannel.hxx>
 class PropertySetter;
 
-typedef vector<PropertySetter*> PropertySetterVector;
+typedef std::vector<PropertySetter*> PropertySetterVector;
 class FGPanelProtocol : public SGSubsystem {
 public:
   FGPanelProtocol( SGPropertyNode_ptr root );

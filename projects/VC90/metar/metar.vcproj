@@ -65,7 +65,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="sg_d.lib ul_d.lib net_d.lib ws2_32.lib"
+				AdditionalDependencies="sg_d.lib ul_d.lib net_d.lib ws2_32.lib winmm.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\..\3rdParty\lib"
 				GenerateDebugInformation="true"
@@ -145,7 +145,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="sg_d.lib ul_d.lib net_d.lib ws2_32.lib"
+				AdditionalDependencies="sg_d.lib ul_d.lib net_d.lib ws2_32.lib winmm.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\..\3rdParty.x64\lib"
 				GenerateDebugInformation="true"
@@ -221,7 +221,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="sg.lib ul.lib net.lib ws2_32.lib"
+				AdditionalDependencies="sg.lib ul.lib net.lib ws2_32.lib winmm.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\..\3rdParty\lib"
 				GenerateDebugInformation="true"
@@ -299,7 +299,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="sg.lib ul.lib net.lib ws2_32.lib"
+				AdditionalDependencies="sg.lib ul.lib net.lib ws2_32.lib winmm.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\..\3rdParty.x64\lib"
 				GenerateDebugInformation="true"

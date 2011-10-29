@@ -112,6 +112,8 @@ private:
     // properties for chrome light; not a tie because I want to fire
     // property listeners when the values change.
     SGPropertyNode_ptr _chromeProps[4];
+  
+    SGPropertyNode_ptr _sunAngleRad;
 public:
 
     FGLight ();

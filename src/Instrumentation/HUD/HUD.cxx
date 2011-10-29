@@ -40,6 +40,8 @@
 
 #include "HUD.hxx"
 
+using std::endl;
+using std::ifstream;
 
 static float clamp(float f)
 {

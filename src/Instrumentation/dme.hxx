@@ -61,7 +61,7 @@ private:
 
     FGNavRecord * _navrecord;
 
-    string _name;
+    std::string _name;
     int _num;
 
     class AudioIdent * _audioIdent;

@@ -43,8 +43,8 @@
 #include "fgmetar.hxx"
 
 
-FGMetar::FGMetar(const string& icao, const string& proxy, const string& port, const string& auth) :
-	SGMetar(icao, proxy, port, auth, _rq_time = globals->get_time_params()->get_cur_time()),
+FGMetar::FGMetar(const string& icao) :
+	SGMetar(icao),
 	_snow_cover(false)
 {
 	int i;

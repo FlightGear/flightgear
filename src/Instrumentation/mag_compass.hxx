@@ -51,7 +51,7 @@ private:
     double _error_deg;
     double _rate_degps;
 
-    string _name;
+    std::string _name;
     int _num;
 
     SGPropertyNode_ptr _serviceable_node;

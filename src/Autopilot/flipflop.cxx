@@ -24,6 +24,11 @@
 #include "inputvalue.hxx"
 #include <Main/fg_props.hxx>
 
+using std::map;
+using std::string;
+using std::endl;
+using std::cout;
+
 namespace FGXMLAutopilot {
 
 /**

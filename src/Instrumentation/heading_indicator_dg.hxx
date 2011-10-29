@@ -49,7 +49,7 @@ private:
     Gyro _gyro;
     double _last_heading_deg;
 
-    string name;
+    std::string name;
     int num;
     //string vacuum_system;
 

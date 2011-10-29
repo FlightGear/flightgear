@@ -121,224 +121,8 @@
 #include "main.hxx"
 
 
-#ifdef __APPLE__
-#  include <CoreFoundation/CoreFoundation.h>
-#endif
-
 using std::string;
 using namespace boost::algorithm;
-
-extern const char *default_root;
-
-
-// Scan the command line options for the specified option and return
-// the value.
-static string fgScanForOption( const string& option, int argc, char **argv ) {
-    int i = 1;
-
-    if (hostname == NULL)
-    {
-        char _hostname[256];
-        if( gethostname(_hostname, 256) >= 0 ) {
-            hostname = strdup(_hostname);
-            free_hostname = true;
-        }
-    }
-
-    SG_LOG(SG_GENERAL, SG_INFO, "Scanning command line for: " << option );
-
-    int len = option.length();
-
-    while ( i < argc ) {
-	SG_LOG( SG_GENERAL, SG_DEBUG, "argv[" << i << "] = " << argv[i] );
-
-	string arg = argv[i];
-	if ( arg.find( option ) == 0 ) {
-	    return arg.substr( len );
-	}
-
-	i++;
-    }
-
-    return "";
-}
-
-
-// Scan the user config files for the specified option and return
-// the value.
-static string fgScanForOption( const string& option, const string& path ) {
-    sg_gzifstream in( path );
-    if ( !in.is_open() ) {
-        return "";
-    }
-
-    SG_LOG( SG_GENERAL, SG_INFO, "Scanning " << path << " for: " << option );
-
-    int len = option.length();
-
-    in >> skipcomment;
-    while ( ! in.eof() ) {
-	string line;
-	getline( in, line, '\n' );
-
-        // catch extraneous (DOS) line ending character
-        if ( line[line.length() - 1] < 32 ) {
-            line = line.substr( 0, line.length()-1 );
-        }
-
-	if ( line.find( option ) == 0 ) {
-	    return line.substr( len );
-	}
-
-	in >> skipcomment;
-    }
-
-    return "";
-}
-
-// Scan the user config files for the specified option and return
-// the value.
-static string fgScanForOption( const string& option ) {
-    string arg("");
-
-#if defined( unix ) || defined( __CYGWIN__ ) || defined(_MSC_VER)
-    // Next check home directory for .fgfsrc.hostname file
-    if ( arg.empty() ) {
-        if ( homedir != NULL && hostname != NULL && strlen(hostname) > 0) {
-            SGPath config( homedir );
-            config.append( ".fgfsrc" );
-            config.concat( "." );
-            config.concat( hostname );
-            arg = fgScanForOption( option, config.str() );
-        }
-    }
-#endif
-
-    // Next check home directory for .fgfsrc file
-    if ( arg.empty() ) {
-        if ( homedir != NULL ) {
-            SGPath config( homedir );
-            config.append( ".fgfsrc" );
-            arg = fgScanForOption( option, config.str() );
-        }
-    }
-
-    if ( arg.empty() ) {
-        // Check for $fg_root/system.fgfsrc
-        SGPath config( globals->get_fg_root() );
-        config.append( "system.fgfsrc" );
-        arg = fgScanForOption( option, config.str() );
-    }
-
-    return arg;
-}
-
-
-// Read in configuration (files and command line options) but only set
-// fg_root and aircraft_paths, which are needed *before* do_options() is called
-// in fgInitConfig
-
-bool fgInitFGRoot ( int argc, char **argv ) {
-    string root;
-
-    // First parse command line options looking for --fg-root=, this
-    // will override anything specified in a config file
-    root = fgScanForOption( "--fg-root=", argc, argv);
-
-    // Check in one of the user configuration files.
-    if (root.empty() )
-        root = fgScanForOption( "--fg-root=" );
-    
-    // Next check if fg-root is set as an env variable
-    if ( root.empty() ) {
-        char *envp = ::getenv( "FG_ROOT" );
-        if ( envp != NULL ) {
-            root = envp;
-        }
-    }
-
-    // Otherwise, default to a random compiled-in location if we can't
-    // find fg-root any other way.
-    if ( root.empty() ) {
-#if defined( __CYGWIN__ )
-        root = "../data";
-#elif defined( _WIN32 )
-        root = "..\\data";
-#elif defined(__APPLE__) 
-        /*
-        The following code looks for the base package inside the application 
-        bundle, in the standard Contents/Resources location. 
-        */
-        CFURLRef resourcesUrl = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
-
-        // look for a 'data' subdir
-        CFURLRef dataDir = CFURLCreateCopyAppendingPathComponent(NULL, resourcesUrl, CFSTR("data"), true);
-
-        // now convert down to a path, and the a c-string
-        CFStringRef path = CFURLCopyFileSystemPath(dataDir, kCFURLPOSIXPathStyle);
-        root = CFStringGetCStringPtr(path, CFStringGetSystemEncoding());
-
-        CFRelease(resourcesUrl);
-        CFRelease(dataDir);
-        CFRelease(path);
-#else
-        root = PKGLIBDIR;
-#endif
-    }
-
-    SG_LOG(SG_INPUT, SG_INFO, "fg_root = " << root );
-    globals->set_fg_root(root);
-    
-    return true;
-}
-
-
-// Read in configuration (files and command line options) but only set
-// aircraft
-bool fgInitFGAircraft ( int argc, char **argv ) {
-    
-    string aircraftDir = fgScanForOption("--fg-aircraft=", argc, argv);
-    if (aircraftDir.empty()) {
-      aircraftDir =  fgScanForOption("--fg-aircraft="); 
-    }
-
-    const char* envp = ::getenv("FG_AIRCRAFT");
-    if (aircraftDir.empty() && envp) {
-      globals->append_aircraft_paths(envp);
-    }
-    
-    if (!aircraftDir.empty()) {
-      globals->append_aircraft_paths(aircraftDir);
-    }
-    
-    string aircraft;
-
-    // First parse command line options looking for --aircraft=, this
-    // will override anything specified in a config file
-    aircraft = fgScanForOption( "--aircraft=", argc, argv );
-    if ( aircraft.empty() ) {
-        // check synonym option
-        aircraft = fgScanForOption( "--vehicle=", argc, argv );
-    }
-
-    // Check in one of the user configuration files.
-    if ( aircraft.empty() ) {
-        aircraft = fgScanForOption( "--aircraft=" );
-    }
-    if ( aircraft.empty() ) {
-        aircraft = fgScanForOption( "--vehicle=" );
-    }
-
-    // if an aircraft was specified, set the property name
-    if ( !aircraft.empty() ) {
-        SG_LOG(SG_INPUT, SG_INFO, "aircraft = " << aircraft );
-        fgSetString("/sim/aircraft", aircraft.c_str() );
-    } else {
-        SG_LOG(SG_INPUT, SG_INFO, "No user specified aircraft, using default" );
-    }
-
-    return true;
-}
 
 
 // Return the current base package version
@@ -477,45 +261,6 @@ bool fgDetectLanguage() {
     return true;
 }
 
-// Attempt to locate and parse the various non-XML config files in order
-// from least precidence to greatest precidence
-static void
-do_options (int argc, char ** argv)
-{
-    // Check for $fg_root/system.fgfsrc
-    SGPath config( globals->get_fg_root() );
-    config.append( "system.fgfsrc" );
-    fgParseOptions(config.str());
-
-#if defined( unix ) || defined( __CYGWIN__ ) || defined(_MSC_VER)
-    if( hostname != NULL && strlen(hostname) > 0 ) {
-        config.concat( "." );
-        config.concat( hostname );
-        fgParseOptions(config.str());
-    }
-#endif
-
-    // Check for ~/.fgfsrc
-    if ( homedir != NULL ) {
-        config.set( homedir );
-        config.append( ".fgfsrc" );
-        fgParseOptions(config.str());
-    }
-
-#if defined( unix ) || defined( __CYGWIN__ ) || defined(_MSC_VER)
-    if( hostname != NULL && strlen(hostname) > 0 ) {
-        // Check for ~/.fgfsrc.hostname
-        config.concat( "." );
-        config.concat( hostname );
-        fgParseOptions(config.str());
-    }
-#endif
-
-    // Parse remaining command line options
-    // These will override anything specified in a config file
-    fgParseArgs(argc, argv);
-}
-
 template <class T>
 bool fgFindAircraftInDir(const SGPath& dirPath, T* obj, bool (T::*pred)(const SGPath& p))
 {
@@ -593,6 +338,29 @@ public:
     }
     
     _searchAircraft = aircraft + "-set.xml";
+    std::string aircraftDir = fgGetString("/sim/aircraft-dir", "");
+    if (!aircraftDir.empty()) {
+      // aircraft-dir was set, skip any searching at all, if it's valid
+      simgear::Dir acPath(aircraftDir);
+      SGPath setFile = acPath.file(_searchAircraft);
+      if (setFile.exists()) {
+        SG_LOG(SG_GENERAL, SG_INFO, "found aircraft in dir: " << aircraftDir );
+        
+        try {
+          readProperties(setFile.str(), globals->get_props());
+        } catch ( const sg_exception &e ) {
+          SG_LOG(SG_INPUT, SG_ALERT, "Error reading aircraft: " << e.getFormattedMessage());
+          return false;
+        }
+        
+        return true;
+      } else {
+        SG_LOG(SG_GENERAL, SG_ALERT, "aircraft '" << _searchAircraft << 
+               "' not found in specified dir:" << aircraftDir);
+        return false;
+      }
+    }
+    
     if (!checkCache()) {
       // prepare cache for re-scan
       SGPropertyNode *n = _cache->getNode("fg-root", true);
@@ -706,12 +474,69 @@ private:
   SGPropertyNode* _cache;
 };
 
+#ifdef _WIN32
+static SGPath platformDefaultDataPath()
+{
+  char *envp = ::getenv( "APPDATA" );
+  SGPath config( envp );
+  config.append( "flightgear.org" );
+  return config;
+}
+#elif __APPLE__
+
+#include <CoreServices/CoreServices.h>
+
+static SGPath platformDefaultDataPath()
+{
+  FSRef ref;
+  OSErr err = FSFindFolder(kUserDomain, kApplicationSupportFolderType, false, &ref);
+  if (err) {
+    return SGPath();
+  }
+  
+  unsigned char path[1024];
+  if (FSRefMakePath(&ref, path, 1024) != noErr) {
+    return SGPath();
+  }
+  
+  SGPath appData;
+  appData.set((const char*) path);
+  appData.append("flightgear.org");
+  return appData;
+}
+#else
+static SGPath platformDefaultDataPath()
+{
+  SGPath config( homedir );
+  config.append( ".fgfs" );
+  return config;
+}
+#endif
+
 // Read in configuration (file and command line)
-bool fgInitConfig ( int argc, char **argv ) {
-
-    // First, set some sane default values
-    fgSetDefaults();
-
+bool fgInitConfig ( int argc, char **argv )
+{
+    SGPath dataPath = platformDefaultDataPath();
+    
+    const char *fg_home = getenv("FG_HOME");
+    if (fg_home)
+      dataPath = fg_home;
+    
+    simgear::Dir exportDir(simgear::Dir(dataPath).file("Export"));
+    if (!exportDir.exists()) {
+      exportDir.create(0777);
+    }
+    
+    // Set /sim/fg-home and don't allow malign code to override it until
+    // Nasal security is set up.  Use FG_HOME if necessary.
+    SGPropertyNode *home = fgGetNode("/sim", true);
+    home->removeChild("fg-home", 0, false);
+    home = home->getChild("fg-home", 0, true);
+    home->setStringValue(dataPath.c_str());
+    home->setAttribute(SGPropertyNode::WRITE, false);
+  
+    flightgear::Options::sharedInstance()->init(argc, argv, dataPath);
+  
     // Read global preferences from $FG_ROOT/preferences.xml
     SG_LOG(SG_INPUT, SG_INFO, "Reading global preferences");
     fgLoadProps("preferences.xml", globals->get_props());
@@ -723,46 +548,22 @@ bool fgInitConfig ( int argc, char **argv ) {
     }
 
     SGPropertyNode autosave;
-#ifdef _WIN32
-    char *envp = ::getenv( "APPDATA" );
-    if (envp != NULL ) {
-        SGPath config( envp );
-        config.append( "flightgear.org" );
-#else
-    if ( homedir != NULL ) {
-        SGPath config( homedir );
-        config.append( ".fgfs" );
-#endif
-        const char *fg_home = getenv("FG_HOME");
-        if (fg_home)
-            config = fg_home;
 
-        SGPath home_export(config.str());
-        home_export.append("Export/dummy");
-        home_export.create_dir(0777);
 
-        // Set /sim/fg-home and don't allow malign code to override it until
-        // Nasal security is set up.  Use FG_HOME if necessary.
-        SGPropertyNode *home = fgGetNode("/sim", true);
-        home->removeChild("fg-home", 0, false);
-        home = home->getChild("fg-home", 0, true);
-        home->setStringValue(config.c_str());
-        home->setAttribute(SGPropertyNode::WRITE, false);
-
-        config.append( "autosave.xml" );
-        if (config.exists()) {
-          SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << config.str());
-          try {
-              readProperties(config.str(), &autosave, SGPropertyNode::USERARCHIVE);
-          } catch (sg_exception& e) {
-              SG_LOG(SG_INPUT, SG_WARN, "failed to read user settings:" << e.getMessage()
-                << "(from " << e.getOrigin() << ")");
-          }
-        }
+    SGPath autosaveFile = simgear::Dir(dataPath).file("autosave.xml");
+    if (autosaveFile.exists()) {
+      SG_LOG(SG_INPUT, SG_INFO, "Reading user settings from " << autosaveFile.str());
+      try {
+          readProperties(autosaveFile.str(), &autosave, SGPropertyNode::USERARCHIVE);
+      } catch (sg_exception& e) {
+          SG_LOG(SG_INPUT, SG_WARN, "failed to read user settings:" << e.getMessage()
+            << "(from " << e.getOrigin() << ")");
+      }
     }
-    
-    // Scan user config files and command line for a specified aircraft.
-    fgInitFGAircraft(argc, argv);
+  
+  // Scan user config files and command line for a specified aircraft.
+    flightgear::Options::sharedInstance()->initAircraft();
+      
     FindAndCacheAircraft f(&autosave);
     if (!f.loadAircraft()) {
       return false;
@@ -772,8 +573,8 @@ bool fgInitConfig ( int argc, char **argv ) {
 
     // parse options after loading aircraft to ensure any user
     // overrides of defaults are honored.
-    do_options(argc, argv);
-
+    flightgear::Options::sharedInstance()->processOptions();
+      
     return true;
 }
 

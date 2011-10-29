@@ -81,6 +81,31 @@ window, camera, or gui tags.
    width, height - int
    The dimensions of the viewport
 
+  physical-dimensions
+  The physical dimension of the projection surface.
+  Use this together with the master-perspective, right-of-perspective
+  left-of-perspective, above-perspective, below-perspective or
+  reference-points-perspective
+
+   width, height - double
+   The dimensions of the projection plane, if unset the veiwport values
+   are taken as default.
+
+   bezel
+   Gives informantion about the bezel of monitors for a seamless view.
+
+    right
+    right bezel with in the same units than with and height above
+
+    left
+    left bezel with in the same units than with and height above
+
+    top
+    top bezel with in the same units than with and height above
+
+    bottom
+    bottom bezel with in the same units than with and height above
+
   view
   The view node specifies the origin and direction of the camera in
   relation to the whole camera group. The coordinate system is +y up,
@@ -113,6 +138,11 @@ window, camera, or gui tags.
    and other background elements may not be drawn if the view plane is
    closer than 120km.
 
+   fixed-near-far - bool
+   If true the near and far values are taken from above, if false
+   near and far are adapted from the scene and visibility.
+   Defaults to true.
+
    offset-x, offset-y - double
    Offsets of the viewing volume specified by the other parameters in
    the near plane, in meters.
@@ -129,9 +159,76 @@ window, camera, or gui tags.
    near, far - double
    The near and far planes, in meters from the camera eye point.
 
+   fixed-near-far - bool
+   If true the near and far values are taken from above, if false
+   near and far are adapted from the scene and visibility.
+   Defaults to true.
+
   ortho
   This specifies an orthographic view. The parameters are the sames as
   the frustum node's.
+
+   fixed-near-far - bool
+   If true the near and far values are taken from above, if false
+   near and far are adapted from the scene and visibility.
+   Defaults to true.
+
+  master-perspective
+  Defines a persective projection matrix for use as the leading display
+  in a seamless multiscreen configuration. This kind of perspective
+  projection is zoomable.
+
+   eye-distance - double
+   The distance of the eyepoint from the projection surface in units of
+   the physical-dimensions values above.
+
+   x-offset, y-offset - double
+   Offset of the eyelpint from the center of the screen in units of
+   the physical-dimensions values above.
+
+  left-of-perspective, right-of-perspective, above-perspective,
+  below-perspective
+  Defines a perspective projection matrix for use as derived display
+  in a seamless multiscreen configuration. The projection matrix
+  is computed so that the respective edge of this display matches the
+  assiciated other edge of the other display. For example the right edge
+  of a left-of-perspective display matches the left edge of the parent
+  display. This also works with different zoom levels, leading to distorted
+  but still seamless multiview configurations.
+  The bezel with configured in the physical dimensions of this screen and
+  the parent screen are taken into account for this type of projection.
+
+   parent-camera - string
+   Name of the parent camera.
+
+  reference-points-perspective
+  Defines a perspective projection matrix for use as derived display
+  in a seamless multiscreen configuration. This type is very similar to
+  left-of-perspective and friends. It is just a more flexible but less
+  convenient way to get the same effect. A child display is configured
+  by 2 sets of reference points one in this current camera and one in
+  the parrent camera which should match in the final view.
+
+   parent-camera - string
+   Name of the parent camera.
+
+   this
+   reference points for this projection.
+
+    point - array of two points
+
+     x, y - double
+     x and y coodinates of the reference points in units of this
+     physical-dimensions.
+
+   parent
+   reference points for the parent projection.
+
+    point - array of two points
+
+     x, y - double
+     x and y coodinates of the reference points in units of the
+     parents physical-dimensions.
 
   texture
   This tag indicates that the camera renders to a texture instead of the
@@ -395,3 +492,170 @@ This example renders the scene for projection onto a spherical screen.
   </sim>
 </PropertyList>
  
+Here is an example for a 3 screen seamless zoomable multiscreen
+configuration using 3 533mmx300mm displays each with a 23mm bezel.
+The side views are angled with 45 deg.
+The commented out reference-points-perspective shows the
+aequivalent configuration than the active right-of-perspective.
+This is done by just using two reference points at the outer
+edge of the bezel of the respective display.
+
+<PropertyList>
+  <sim>
+    <view n="0">
+      <config>
+        <pitch-offset-deg>0.0</pitch-offset-deg>
+      </config>
+    </view>
+
+    <rendering>
+      <camera-group>
+        <window>
+          <name type="string">0.0</name>
+          <host-name type="string"></host-name>
+          <display>0</display>
+          <screen>0</screen>
+          <fullscreen type="bool">true</fullscreen>
+        </window>
+
+        <window>
+          <name type="string">0.1</name>
+          <host-name type="string"></host-name>
+          <display>0</display>
+          <screen>1</screen>
+          <fullscreen type="bool">true</fullscreen>
+        </window>
+
+        <camera>
+          <name type="string">CenterCamera</name>
+          <window>
+            <name>0.0</name>
+          </window>
+          <viewport>
+            <x>0</x>
+            <y>0</y>
+            <width>1920</width>
+            <height>1080</height>
+          </viewport>
+          <view>
+            <heading-deg type="double">0.0</heading-deg>
+            <roll-deg type="double">0.0</roll-deg>
+            <pitch-deg type="double">0.0</pitch-deg>
+          </view>
+          <physical-dimensions>
+            <!-- The size of the projection plane: 533mm 300mm -->
+            <width>533</width>
+            <height>300</height>
+            <bezel>
+              <right>23</right>
+              <left>23</left>
+              <top>23</top>
+              <bottom>23</bottom>
+            </bezel>
+          </physical-dimensions>
+          <master-perspective>
+            <!-- Cheating, the real distance is about 800mm.
+                 But then the screen does not show what is needed to fly.
+                 By shortening this pictures get bigger but the view also gets
+                 less realistic.
+            -->
+            <eye-distance>450</eye-distance>
+            <x-offset>0</x-offset>
+            <y-offset>130</y-offset>
+          </master-perspective>
+        </camera>
+        <camera>
+          <name type="string">RightCamera</name>
+          <window>
+            <name>0.0</name>
+          </window>
+          <viewport>
+            <x>1920</x>
+            <y>0</y>
+            <width>1920</width>
+            <height>1080</height>
+          </viewport>
+          <view>
+            <heading-deg type="double">-45</heading-deg>
+            <roll-deg type="double">0</roll-deg>
+            <pitch-deg type="double">0</pitch-deg>
+          </view>
+          <physical-dimensions>
+            <!-- The size of the projection plane: 533mm 300mm -->
+            <width>533</width>
+            <height>300</height>
+            <bezel>
+              <right>23</right>
+              <left>23</left>
+              <top>23</top>
+              <bottom>23</bottom>
+            </bezel>
+          </physical-dimensions>
+          <right-of-perspective>
+            <parent-camera type="string">CenterCamera</parent-camera>
+          </right-of-perspective>
+          <!-- <reference-points-perspective> -->
+          <!--   <parent-camera type="string">CenterCamera</parent-camera> -->
+          <!--   <parent> -->
+          <!--     <point n="0"> -->
+          <!--       <x>289.5</x> -->
+          <!--       <y>100</y> -->
+          <!--     </point> -->
+          <!--     <point n="1"> -->
+          <!--       <x>289.5</x> -->
+          <!--       <y>-100</y> -->
+          <!--     </point> -->
+          <!--   </parent> -->
+          <!--   <this> -->
+          <!--     <point n="0"> -->
+          <!--       <x>-289.5</x> -->
+          <!--       <y>100</y> -->
+          <!--     </point> -->
+          <!--     <point n="1"> -->
+          <!--       <x>-289.5</x> -->
+          <!--       <y>-100</y> -->
+          <!--     </point> -->
+          <!--   </this> -->
+          <!-- </reference-points-perspective> -->
+        </camera>
+
+        <camera>
+          <name type="string">LeftCamera</name>
+          <window>
+            <name>0.1</name>
+          </window>
+          <viewport>
+            <x>0</x>
+            <y>0</y>
+            <width>1920</width>
+            <height>1080</height>
+          </viewport>
+          <view>
+            <heading-deg type="double">45</heading-deg>
+            <roll-deg type="double">0</roll-deg>
+            <pitch-deg type="double">0</pitch-deg>
+          </view>
+          <physical-dimensions>
+            <!-- The size of the projection plane: 533mm 300mm -->
+            <width>533</width>
+            <height>300</height>
+            <bezel>
+              <right>23</right>
+              <left>23</left>
+              <top>23</top>
+              <bottom>23</bottom>
+            </bezel>
+          </physical-dimensions>
+          <left-of-perspective>
+            <parent-camera type="string">CenterCamera</parent-camera>
+          </left-of-perspective>
+        </camera>
+        <gui>
+          <window>
+            <name type="string">0.0</name>
+          </window>
+        </gui>
+      </camera-group>
+    </rendering>
+  </sim>
+</PropertyList>

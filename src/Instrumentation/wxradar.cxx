@@ -45,12 +45,14 @@
 
 #include <sstream>
 #include <iomanip>
+
 using std::stringstream;
 using std::endl;
 using std::setprecision;
 using std::fixed;
 using std::setw;
 using std::setfill;
+using std::string;
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>

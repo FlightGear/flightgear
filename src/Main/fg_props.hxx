@@ -420,7 +420,7 @@ extern const char * fgGetString (const char * name,
  * @return The property's value as a string, or the default value provided.
  */
 inline const char * fgGetString (const std::string & name,
-				 const std::string & defaultValue = string(""))
+                                 const std::string & defaultValue = std::string(""))
 {
     return fgGetString( name.c_str(), defaultValue.c_str() );
 }

@@ -63,7 +63,7 @@ private:
     void search (double frequency, double longitude_rad,
                  double latitude_rad, double altitude_m);
 
-    string _name;
+    std::string _name;
     unsigned int _num;
 
     SGPropertyNode_ptr _longitude_node;

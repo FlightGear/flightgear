@@ -52,8 +52,7 @@ FGNavRecord::FGNavRecord(Type aTy, const std::string& aIdent,
   multiuse(aMultiuse),
   _name(aName),
   mRunway(NULL),
-  serviceable(true),
-  trans_ident(aIdent)
+  serviceable(true)
 { 
   initAirportRelation();
 

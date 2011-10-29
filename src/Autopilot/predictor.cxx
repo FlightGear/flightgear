@@ -25,6 +25,9 @@
 
 using namespace FGXMLAutopilot;
 
+using std::endl;
+using std::cout;
+
 Predictor::Predictor () :
     AnalogComponent(),
     _average(0.0)

@@ -40,8 +40,8 @@
 #include <GUI/gui.h>		// mkDialog
 #include <GUI/new_gui.hxx>
 
-typedef vector<string> StringVec;
-typedef vector<string>:: iterator StringVecIterator;
+typedef std::vector<std::string> StringVec;
+typedef StringVec::iterator StringVecIterator;
 
 
 class FGATCDialogNew {

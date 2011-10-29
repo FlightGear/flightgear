@@ -54,7 +54,9 @@
 #include "ATC-Main.hxx"
 
 using std::string;
-
+using std::cout;
+using std::endl;
+using std::vector;
 
 // Lock the ATC hardware
 static int fgATCMainLock( int fd ) {

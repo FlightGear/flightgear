@@ -52,6 +52,7 @@
 #include <Airports/simple.hxx>
 
 using std::cout;
+using std::string;
 
 // Command callbacks for FlightGear
 

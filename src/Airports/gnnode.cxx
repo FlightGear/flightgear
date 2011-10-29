@@ -3,6 +3,11 @@
 
 #include <iostream>
 #include <algorithm>
+
+#include <osg/Geode>
+#include <Main/globals.hxx>
+#include <Scenery/scenery.hxx>
+
 using std::sort;
 
 /*****************************************************************************
@@ -68,12 +73,26 @@ void FGTaxiNode::setLongitude(const string& val)
   geod.setLongitudeDeg(processPosition(val));
 }
   
-//void FGTaxiNode::sortEndSegments(bool byLength)
-//{
-//  if (byLength)
-//    sort(next.begin(), next.end(), sortByLength);
-//  else
-//    sort(next.begin(), next.end(), sortByHeadingDiff);
-//}
+double FGTaxiNode::getElevationFt(double refelev)
+{
+    double elevF = geod.getElevationFt();
+    double elevationEnd = 0;
+    if ((elevF == 0) || (elevF == refelev)) {
+        SGGeod center2 = geod;
+        FGScenery * local_scenery = globals->get_scenery();
+        center2.setElevationM(SG_MAX_ELEVATION_M);
+        if (local_scenery->get_elevation_m( center2, elevationEnd, NULL )) {
+            geod.setElevationM(elevationEnd);
+        }
+    }
+    //cerr << "Returning elevation : " << geod.getElevationM() << ". Ref elev (feet) = " << refelev << endl;
+    return geod.getElevationFt();
+}
 
-
+double FGTaxiNode::getElevationM(double refelev)
+{
+    double refelevFt = refelev * SG_METER_TO_FEET;
+    double retval = getElevationFt(refelevFt);
+    //cerr << "Returning elevation : " << geod.getElevationM() << ". Ref elev (meters) = " << refelev << endl;
+    return geod.getElevationM();
+}

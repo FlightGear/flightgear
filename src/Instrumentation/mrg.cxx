@@ -22,6 +22,8 @@
 
 const double MasterReferenceGyro::gravity = -32.1740485564;
 
+using std::string;
+
 MasterReferenceGyro::MasterReferenceGyro ( SGPropertyNode *node ) :
 _name(node->getStringValue("name", "master-reference-gyro")),
 _num(node->getIntValue("number", 0))

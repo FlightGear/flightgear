@@ -52,9 +52,15 @@ struct CameraInfo : public osg::Referenced
 {
     CameraInfo(unsigned flags_, osg::Camera* camera_ = 0)
         : flags(flags_), camera(camera_), slaveIndex(-1), farSlaveIndex(-1),
-          x(0.0), y(0.0), width(0.0), height(0.0)
+          x(0.0), y(0.0), width(0.0), height(0.0),
+          physicalWidth(0), physicalHeight(0), bezelHeightTop(0),
+          bezelHeightBottom(0), bezelWidthLeft(0), bezelWidthRight(0),
+          relativeCameraParent(~0u)
     {
     }
+    /** The name as given in the config file.
+     */
+    std::string name;
     /** Properties of the camera. @see CameraGroup::Flags.
      */
     unsigned flags;
@@ -76,6 +82,23 @@ struct CameraInfo : public osg::Referenced
     double y;
     double width;
     double height;
+    /** Physical size parameters.
+     */
+    double physicalWidth;
+    double physicalHeight;
+    double bezelHeightTop;
+    double bezelHeightBottom;
+    double bezelWidthLeft;
+    double bezelWidthRight;
+    /** The parent camera for relative camera configurations.
+     */
+    unsigned relativeCameraParent;
+    /** The reference points in the parents projection space.
+     */
+    osg::Vec2d parentReference[2];
+    /** The reference points in the current projection space.
+     */
+    osg::Vec2d thisReference[2];
 };
 
 /** Update the OSG cameras from the camera info.
@@ -94,8 +117,11 @@ public:
         PROJECTION_ABSOLUTE = 0x2, /**< The projection is absolute. */
         ORTHO = 0x4,               /**< The projection is orthographic */
         GUI = 0x8,                 /**< Camera draws the GUI. */
-        DO_INTERSECTION_TEST = 0x10 /**< scene intersection tests this
+        DO_INTERSECTION_TEST = 0x10,/**< scene intersection tests this
                                        camera. */
+        FIXED_NEAR_FAR = 0x20,     /**< take the near far values in the
+                                      projection for real. */
+        ENABLE_MASTER_ZOOM = 0x40  /**< Can apply the zoom algorithm. */
     };
     /** Create a camera group associated with an osgViewer::Viewer.
      * @param viewer the viewer

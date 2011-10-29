@@ -46,7 +46,7 @@ public:
 
 private:
 
-    string _name;
+    std::string _name;
     int _num;
     double _tau;
     SGPropertyNode_ptr _serviceable_node;

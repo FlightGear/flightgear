@@ -39,7 +39,7 @@ public:
 
 private:
 
-    string _name;
+    std::string _name;
     int _num;
     string _static_pressure;
     double _tau;

@@ -41,6 +41,8 @@
 #include <sstream>
 
 using std::ostringstream;
+using std::cerr;
+using std::endl;
 
 FGATCDialog *current_atcdialog;
 

@@ -288,7 +288,7 @@ FGViewMgr::unbind ()
   fgUntie("/sim/current-view/viewer-y-m");
   fgUntie("/sim/current-view/viewer-z-m");
 
-  list<const char*>::const_iterator it;
+  std::list<const char*>::const_iterator it;
   for (it = tied_props.begin(); it != tied_props.end(); it++){
     fgUntie(*it);
   }

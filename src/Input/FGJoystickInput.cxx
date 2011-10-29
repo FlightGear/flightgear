@@ -193,7 +193,7 @@ void FGJoystickInput::postinit()
     //
     // Initialize nasal groups.
     //
-    ostringstream str;
+    std::ostringstream str;
     str << "__js" << i;
     string module = str.str();
     nasalsys->createModule(module.c_str(), module.c_str(), "", 0);

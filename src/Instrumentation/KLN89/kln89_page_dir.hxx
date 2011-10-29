@@ -34,7 +34,7 @@ public:
 	
 	void Update(double dt);
 	
-	void SetId(const string& s);
+	void SetId(const std::string& s);
 	
 	void CrsrPressed();
 	void ClrPressed();

@@ -4,7 +4,7 @@ include (CheckFunctionExists)
 include (CheckCSourceCompiles)
 include (CheckCXXSourceCompiles)
 include (CheckIncludeFile)
-include (CPack)
+
 
 project(FlightGear)
 
@@ -26,6 +26,13 @@ set(CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_2})
 set(CPACK_PACKAGE_VERSION_PATCH ${CMAKE_MATCH_3})
 SET(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/COPYING")
 SET(CPACK_RESOURCE_FILE_README "${PROJECT_SOURCE_DIR}/README")
+
+set(CPACK_SOURCE_GENERATOR TBZ2 ZIP)
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "flightgear-${FLIGHTGEAR_VERSION}" CACHE INTERNAL "tarball basename")
+set(CPACK_SOURCE_IGNORE_FILES
+  "^${PROJECT_SOURCE_DIR}/.git;\\\\.gitignore;Makefile.am;~$;${CPACK_SOURCE_IGNORE_FILES}")
+
+include (CPack)
 
 # We have some custom .cmake scripts not in the official distribution.
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
@@ -51,6 +58,10 @@ endif()
 
 IF(APPLE)
     set(EVENT_INPUT_DEFAULT 1)
+    
+    find_library(CORESERVICES_LIBRARY CoreServices)
+    list(APPEND PLATFORM_LIBS ${CORESERVICES_LIBRARY})
+
 elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
     # disabled while DBus / HAL / udev issues are decided
     #set(EVENT_INPUT_DEFAULT 1)
@@ -92,6 +103,7 @@ if (MSVC)
   else (EXISTS ${TEST_3RDPARTY_DIR})
     set(MSVC_3RDPARTY_ROOT NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
   endif (EXISTS ${TEST_3RDPARTY_DIR})
+  list(APPEND PLATFORM_LIBS "winmm.lib")
 else (MSVC)
   set(MSVC_3RDPARTY_ROOT NOT_FOUND CACHE PATH "Location where the third-party dependencies are extracted")
 endif (MSVC)
@@ -257,6 +269,15 @@ configure_file (
 
 add_subdirectory(src)
 add_subdirectory(utils)
+
+set (INSTALL_DOCS 
+    README
+	README.OpenAL
+	README.plib
+	README.OSG
+	README.SimGear)
+
+INSTALL(FILES ${INSTALL_DOCS} DESTINATION doc OPTIONAL)
 
 #-----------------------------------------------------------------------------
 ### uninstall target

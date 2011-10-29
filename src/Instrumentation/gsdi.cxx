@@ -49,7 +49,7 @@ GSDI::~GSDI()
 
 void GSDI::init()
 {
-	string branch;
+  std::string branch;
 	branch = "/instrumentation/" + _name;
 	SGPropertyNode *n = fgGetNode(branch.c_str(), _num, true);
 	_serviceableN = n->getNode("serviceable", true);

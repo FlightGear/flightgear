@@ -68,9 +68,9 @@ typedef enum {
 
 class HIDElement;
 struct FGMacOSXEventData : public FGEventData {
-  FGMacOSXEventData(string name, double value, double dt, int modifiers) : 
+  FGMacOSXEventData(std::string name, double value, double dt, int modifiers) : 
     FGEventData(value, dt, modifiers), name(name) {}
-  string name;
+  std::string name;
 };
 
 //
@@ -92,7 +92,7 @@ public:
   HIDElement(CFDictionaryRef element, long page, long usage);
   virtual ~HIDElement() {}
   bool isUpdated();
-  string getName() { return name; }
+  std::string getName() { return name; }
   virtual void generateEvent(FGMacOSXInputDevice *device, double dt, int modifiers);
   virtual long read(IOHIDDeviceInterface **interface);
   virtual void write(IOHIDDeviceInterface **interface, double value) { 
@@ -106,7 +106,7 @@ protected:
   float value;
   float lastValue;
 
-  string name;
+  std::string name;
 };
 
 class AxisElement : public HIDElement {
@@ -182,7 +182,7 @@ public:
 private:
   io_object_t device;
   IOHIDDeviceInterface **devInterface;
-  map<string, HIDElement *> elements; // maps eventName and its relevant element for Send()
+  std::map<std::string, HIDElement *> elements; // maps eventName and its relevant element for Send()
 };
 
 //
@@ -225,22 +225,22 @@ private:
   io_iterator_t removedIterator;
 
   // maps FG device property ID (i.e. /input/events/device[ID]) with io_object for detaching devices
-  map<io_object_t, unsigned> deviceIndices; 
+  std::map<io_object_t, unsigned> deviceIndices; 
 };
 
 
 //
 // For obtaining event name and type from both HID element page and usage
 // 
-class HIDTypeByID : public map<long, pair<HIDUsageType, const char *>*> {
+class HIDTypeByID : public std::map<long, std::pair<HIDUsageType, const char *>*> {
 public:
   HIDTypeByID(struct HIDTypes *table) {
     for( int i = 0; table[i].key!= -1; i++ )
-      (*this)[table[i].key] = new pair<HIDUsageType, const char *>(table[i].type, table[i].eventName);
+      (*this)[table[i].key] = new std::pair<HIDUsageType, const char *>(table[i].type, table[i].eventName);
   }
 
   ~HIDTypeByID() {
-    map<long, pair<HIDUsageType, const char *>*>::iterator it;
+    std::map<long, std::pair<HIDUsageType, const char *>*>::iterator it;
     for (it = this->begin(); it != this->end(); it++) {
       delete (*it).second;
     }
@@ -249,7 +249,7 @@ public:
 
   // key = (HID_element_page) << 16 | HID_element_usage)
   const char *getName(long key) {
-    pair<HIDUsageType, const char *> *usageType = (*this)[key];
+    std::pair<HIDUsageType, const char *> *usageType = (*this)[key];
     if (usageType == NULL) {
       return "";
     } else {
@@ -258,7 +258,7 @@ public:
   }
 
   const HIDUsageType getType(long key) {
-    pair<HIDUsageType, const char *> *usageType = (*this)[key];
+    std::pair<HIDUsageType, const char *> *usageType = (*this)[key];
     if (usageType == NULL) {
       return kHIDUsageNotSupported;
     } else {

@@ -13,6 +13,7 @@ public:
     // Load externally set stuff into the FDM
     virtual void init();
     virtual void bind();
+    virtual void reinit();
 
     // Run an iteration
     virtual void update(double dt);

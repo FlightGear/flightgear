@@ -85,6 +85,8 @@ typedef enum {
 class Waypt : public SGReferenced
 {
 public:
+  virtual ~Waypt();
+  
 	Route* owner() const 
 		{ return _owner; }
   

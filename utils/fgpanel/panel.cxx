@@ -285,7 +285,7 @@ GLuint FGPanel::getInitDisplayList()
 void
 FGPanel::update (double dt)
 {
-  glCallList(getInitDisplayList());
+  /*glCallList*/(getInitDisplayList());
 
   // Draw the instruments.
   // Syd Adams: added instrument clipping

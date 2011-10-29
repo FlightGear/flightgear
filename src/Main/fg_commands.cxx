@@ -191,27 +191,18 @@ do_exit (const SGPropertyNode * arg)
     fgSetBool("/sim/signals/exit", true);
 
     if (fgGetBool("/sim/startup/save-on-exit")) {
-#ifdef _WIN32
-        char* envp = ::getenv( "APPDATA" );
-        if ( envp != NULL ) {
-            SGPath config( envp );
-            config.append( "flightgear.org" );
-#else
-        if ( homedir != NULL ) {
-            SGPath config( homedir );
-            config.append( ".fgfs" );
-#endif
-            config.append( "autosave.xml" );
-            config.create_dir( 0700 );
-            SG_LOG(SG_IO, SG_INFO, "Saving user settings to " << config.str());
-            try {
-                writeProperties(config.str(), globals->get_props(), false, SGPropertyNode::USERARCHIVE);
-            } catch (const sg_exception &e) {
-                guiErrorMessage("Error writing autosave.xml: ", e);
-            }
+      SGPath autosaveFile(fgGetString("/sim/fg-home"));
+      autosaveFile.append( "autosave.xml" );
+      autosaveFile.create_dir( 0700 );
+      SG_LOG(SG_IO, SG_INFO, "Saving user settings to " << autosaveFile.str());
+      try {
+        writeProperties(autosaveFile.str(), globals->get_props(), false, SGPropertyNode::USERARCHIVE);
+      } catch (const sg_exception &e) {
+        guiErrorMessage("Error writing autosave.xml: ", e);
+      }
+      
+      SG_LOG(SG_INPUT, SG_DEBUG, "Finished Saving user settings");
 
-            SG_LOG(SG_INPUT, SG_DEBUG, "Finished Saving user settings");
-        }
     }
     
     fgOSExit(arg->getIntValue("status", 0));
@@ -1040,6 +1031,20 @@ do_dialog_update (const SGPropertyNode * arg)
     }
 }
 
+static bool
+do_open_browser (const SGPropertyNode * arg)
+{
+    string path;
+    if (arg->hasValue("path"))
+        path = arg->getStringValue("path");
+    else
+    if (arg->hasValue("url"))
+        path = arg->getStringValue("url");
+    else
+        return false;
+
+    return openBrowser(path);
+}
 
 /**
  * Apply a value in the active XML-configured dialog.
@@ -1468,6 +1473,7 @@ static struct {
     { "dialog-close", do_dialog_close },
     { "dialog-update", do_dialog_update },
     { "dialog-apply", do_dialog_apply },
+    { "open-browser", do_open_browser },
     { "gui-redraw", do_gui_redraw },
     { "add-model", do_add_model },
     { "set-cursor", do_set_cursor },

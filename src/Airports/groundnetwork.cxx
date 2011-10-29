@@ -43,6 +43,7 @@
 #include <Airports/dynamics.hxx>
 
 #include <AIModel/AIAircraft.hxx>
+#include <AIModel/performancedata.hxx>
 #include <AIModel/AIFlightPlan.hxx>
 
 #include <ATC/atc_mgr.hxx>
@@ -50,6 +51,7 @@
 #include <Scenery/scenery.hxx>
 
 #include "groundnetwork.hxx"
+
 
 /***************************************************************************
  * FGTaxiSegment
@@ -112,6 +114,44 @@ void FGTaxiSegment::setDimensions(double elevation)
 //    if (headingDiff > 180)
 //        headingDiff = fabs(headingDiff - 360);
 //}
+
+void FGTaxiSegment::block(int id, time_t blockTime, time_t now)
+{
+    BlockListIterator i = blockTimes.begin();
+    while (i != blockTimes.end()) {
+        if (i->getId() == id) 
+            break;
+        i++;
+    }
+    if (i == blockTimes.end()) {
+        blockTimes.push_back(Block(id, blockTime, now));
+        sort(blockTimes.begin(), blockTimes.end());
+    } else {
+        i->updateTimeStamps(blockTime, now);
+    }
+}
+
+// The segment has a block if any of the block times listed in the block list is
+// smaller than the current time.
+bool FGTaxiSegment::hasBlock(time_t now)
+{
+    for (BlockListIterator i = blockTimes.begin(); i != blockTimes.end(); i++) {
+        if (i->getBlockTime() < now)
+            return true;
+    }
+    return false;
+}
+
+void FGTaxiSegment::unblock(time_t now)
+{
+    if (blockTimes.size()) {
+        BlockListIterator i = blockTimes.begin();
+        if (i->getTimeStamp() < (now - 30)) {
+            blockTimes.erase(i);
+        }
+    }
+}
+
 
 
 /***************************************************************************
@@ -220,6 +260,7 @@ FGGroundNetwork::FGGroundNetwork()
     count = 0;
     currTraffic = activeTraffic.begin();
     group = 0;
+    version = 0;
     networkInitialized = false;
 
 }
@@ -252,7 +293,7 @@ FGGroundNetwork::~FGGroundNetwork()
             node != nodes.end(); node++) {
         if (saveData) {
             cachefile << (*node)->getIndex     () << " "
-            << (*node)->getElevation ()   << " "
+            << (*node)->getElevationM (parent->getElevation()*SG_FEET_TO_METER)   << " "
             << endl;
         }
         delete(*node);
@@ -296,7 +337,7 @@ void FGGroundNetwork::saveElevationCache() {
             node != nodes.end(); node++) {
         if (saveData) {
             cachefile << (*node)->getIndex     () << " "
-            << (*node)->getElevation () << " "
+            << (*node)->getElevationM (parent->getElevation()*SG_FEET_TO_METER) << " "
             << endl;
         }
     }
@@ -323,7 +364,7 @@ void FGGroundNetwork::addNodes(FGParkingVec * parkings)
         n.setIndex(i->getIndex());
         n.setLatitude(i->getLatitude());
         n.setLongitude(i->getLongitude());
-        n.setElevation(parent->getElevation());
+        n.setElevation(parent->getElevation()*SG_FEET_TO_METER);
         nodes.push_back(new FGTaxiNode(n));
 
         i++;
@@ -451,6 +492,28 @@ int FGGroundNetwork::findNearestNode(const SGGeod & aGeod)
 
     return index;
 }
+
+int FGGroundNetwork::findNearestNodeOnRunway(const SGGeod & aGeod)
+{
+    double minDist = HUGE_VAL;
+    int index = -1;
+
+    for (FGTaxiNodeVectorIterator itr = nodes.begin(); itr != nodes.end();
+            itr++) {
+        if (!((*itr)->getIsOnRunway())) {
+            continue;
+        }
+        double d = SGGeodesy::distanceM(aGeod, (*itr)->getGeod());
+        if (d < minDist) {
+            minDist = d;
+            index = (*itr)->getIndex();
+            //cerr << "Minimum distance of " << minDist << " for index " << index << endl;
+        }
+    }
+
+    return index;
+}
+
 
 int FGGroundNetwork::findNearestNode(double lat, double lon)
 {
@@ -628,7 +691,11 @@ void FGGroundNetwork::announcePosition(int id,
         rec.setPositionAndHeading(lat, lon, heading, speed, alt);
         rec.setRadius(radius);  // only need to do this when creating the record.
         rec.setAircraft(aircraft);
-        activeTraffic.push_front(rec);
+        if (leg == 2) {
+            activeTraffic.push_front(rec);
+        } else {
+            activeTraffic.push_back(rec);   
+        }
         
     } else {
         i->setPositionAndIntentions(currentPosition, intendedRoute);
@@ -653,7 +720,7 @@ void FGGroundNetwork::signOff(int id)
     }
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
         SG_LOG(SG_GENERAL, SG_ALERT,
-               "AI error: Aircraft without traffic record is signing off");
+               "AI error: Aircraft without traffic record is signing off at " << SG_ORIGIN);
     } else {
         i = activeTraffic.erase(i);
     }
@@ -684,7 +751,7 @@ bool FGGroundNetwork::checkTransmissionState(int minState, int maxState, Traffic
                 trans_num->setIntValue(-1);
                 // PopupCallback(n);
                 //cerr << "Selected transmission message " << n << endl;
-                FGATCManager *atc = (FGATCManager*) globals->get_subsystem("atc");
+                //FGATCManager *atc = (FGATCManager*) globals->get_subsystem("atc");
                 FGATCDialogNew::instance()->removeEntry(1);
             } else {
                 //cerr << "creating message for " << i->getAircraft()->getCallSign() << endl;
@@ -733,7 +800,7 @@ void FGGroundNetwork::updateAircraftInformation(int id, double lat, double lon,
     // update position of the current aircraft
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
         SG_LOG(SG_GENERAL, SG_ALERT,
-               "AI error: updating aircraft without traffic record");
+               "AI error: updating aircraft without traffic record at " << SG_ORIGIN);
     } else {
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
         current = i;
@@ -818,7 +885,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
     }
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
         SG_LOG(SG_GENERAL, SG_ALERT,
-               "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkSpeedAdjustment");
+               "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkSpeedAdjustment at " << SG_ORIGIN);
     }
     current = i;
     //closest = current;
@@ -830,6 +897,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
         SGGeod curr(SGGeod::fromDegM(lon, lat, alt));
         //TrafficVector iterator closest;
         closest = current;
+        closestOnNetwork = current;
         for (TrafficVectorIterator i = activeTraffic.begin();
                 i != activeTraffic.end(); i++) {
             if (i == current) {
@@ -910,12 +978,13 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
                     current->setSpeedAdjustment(closest->getSpeed() *
                                                 (mindist / 100));
                     needBraking = true;
-                    if (
-                        closest->getAircraft()->getTakeOffStatus() &&
-                        (current->getAircraft()->getTrafficRef()->getDepartureAirport() ==  closest->getAircraft()->getTrafficRef()->getDepartureAirport()) &&
-                        (current->getAircraft()->GetFlightPlan()->getRunway() == closest->getAircraft()->GetFlightPlan()->getRunway())
-                    )
-                        current->getAircraft()->scheduleForATCTowerDepartureControl(1);
+                    
+//                     if (
+//                         closest->getAircraft()->getTakeOffStatus() &&
+//                         (current->getAircraft()->getTrafficRef()->getDepartureAirport() ==  closest->getAircraft()->getTrafficRef()->getDepartureAirport()) &&
+//                         (current->getAircraft()->GetFlightPlan()->getRunway() == closest->getAircraft()->GetFlightPlan()->getRunway())
+//                     )
+//                         current->getAircraft()->scheduleForATCTowerDepartureControl(1);
                 } else {
                     current->setSpeedAdjustment(0);     // This can only happen when the user aircraft is the one closest
                 }
@@ -929,7 +998,7 @@ void FGGroundNetwork::checkSpeedAdjustment(int id, double lat,
                 }
             }
         }
-        if ((closest == closestOnNetwork) && (current->getPriority() < closest->getPriority()) && needBraking) {
+        if ((closest->getId() == closestOnNetwork->getId()) && (current->getPriority() < closest->getPriority()) && needBraking) {
             swap(current, closest);
         }
     }
@@ -960,11 +1029,23 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
     } else {
         return;
     }
+    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
         SG_LOG(SG_GENERAL, SG_ALERT,
-               "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkHoldPosition");
+               "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkHoldPosition at " << SG_ORIGIN);
     }
     current = i;
+    // 
+    if (current->getAircraft()->getTakeOffStatus() == 1) {
+        current->setHoldPosition(true);
+        return;
+    }
+    if (current->getAircraft()->getTakeOffStatus() == 2) {
+        //cerr << current->getAircraft()->getCallSign() << ". Taxi in position and hold" << endl;
+        current->setHoldPosition(false);
+        current->clearSpeedAdjustment();
+        return;
+    }
     bool origStatus = current->hasHoldPosition();
     current->setHoldPosition(false);
     SGGeod curr(SGGeod::fromDegM(lon, lat, alt));
@@ -983,89 +1064,32 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
         } else {
             nx = tx;
         }
-        if (tx->hasBlock() || nx->hasBlock() ) {
+        //if (tx->hasBlock(now) || nx->hasBlock(now) ) {
+        //   current->setHoldPosition(true);
+        //}
+        SGGeod start(SGGeod::fromDeg((i->getLongitude()), (i->getLatitude())));
+        SGGeod end  (SGGeod::fromDeg(nx->getStart()->getLongitude(), nx->getStart()->getLatitude()));
+
+        double distance = SGGeodesy::distanceM(start, end);
+        if (nx->hasBlock(now) && (distance < i->getRadius() * 4)) {
             current->setHoldPosition(true);
-        }
-    }
-
-
-    /*    for (i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
-            if (i->getId() != current->getId()) {
-                int node = current->crosses(this, *i);
-                if (node != -1) {
-                    FGTaxiNode *taxiNode = findNode(node);
-
-                    // Determine whether it's save to continue or not.
-                    // If we have a crossing route, there are two possibilities:
-                    // 1) This is an interestion
-                    // 2) This is oncoming two-way traffic, using the same taxiway.
-                    //cerr << "Hold check 1 : " << id << " has common node " << node << endl;
-
-                    SGGeod other(SGGeod::
-                                 fromDegM(i->getLongitude(), i->getLatitude(),
-                                          i->getAltitude()));
-                    bool needsToWait;
-                    bool opposing;
-                    if (current->isOpposing(this, *i, node)) {
-                        needsToWait = true;
-                        opposing = true;
-                        //cerr << "Hold check 2 : " << node << "  has opposing segment " << endl;
-                        // issue a "Hold Position" as soon as we're close to the offending node
-                        // For now, I'm doing this as long as the other aircraft doesn't
-                        // have a hold instruction as soon as we're within a reasonable
-                        // distance from the offending node.
-                        // This may be a bit of a conservative estimate though, as it may
-                        // be well possible that both aircraft can both continue to taxi
-                        // without crashing into each other.
-                    } else {
-                        opposing = false;
-                        if (SGGeodesy::distanceM(other, taxiNode->getGeod()) > 200) // 2.0*i->getRadius())
-                        {
-                            needsToWait = false;
-                            //cerr << "Hold check 3 : " << id <<"  Other aircraft approaching node is still far away. (" << dist << " nm). Can safely continue "
-                            //           << endl;
-                        } else {
-                            needsToWait = true;
-                            //cerr << "Hold check 4: " << id << "  Would need to wait for other aircraft : distance = " << dist << " meters" << endl;
-                        }
-                    }
-
-                    double dist =
-                        SGGeodesy::distanceM(curr, taxiNode->getGeod());
-                    if (!(i->hasHoldPosition())) {
-
-                        if ((dist < 200) && //2.5*current->getRadius()) &&
-                            (needsToWait) && (i->onRoute(this, *current)) &&
-                            //((i->onRoute(this, *current)) || ((!(i->getSpeedAdjustment())))) &&
-                            (!(current->getId() == i->getWaitsForId())))
-                            //(!(i->getSpeedAdjustment()))) // &&
-                            //(!(current->getSpeedAdjustment())))
-
-                        {
-                            if (!(isUserAircraft(i->getAircraft()))) { // test code. Don't wait for the user, let the user wait for you.
-                                current->setHoldPosition(true);
-                                current->setWaitsForId(i->getId());
-                            }
-                            //cerr << "Hold check 5: " << current->getCallSign() <<"  Setting Hold Position: distance to node ("  << node << ") "
-                            //           << dist << " meters. Waiting for " << i->getCallSign();
-                            //if (opposing)
-                            //cerr <<" [opposing] " << endl;
-                            //else
-                            //        cerr << "[non-opposing] " << endl;
-                            //if (i->hasSpeefAdjustment())
-                            //        {
-                            //          cerr << " (which in turn waits for ) " << i->
-                        } else {
-                            //cerr << "Hold check 6: " << id << "  No need to hold yet: Distance to node : " << dist << " nm"<< endl;
-                        }
+        } else {
+            intVecIterator ivi = i->getIntentions().begin();
+            while (ivi != i->getIntentions().end()) {
+                if ((*ivi) > 0) {
+                    distance += segments[(*ivi)-1]->getLength();
+                    if ((segments[(*ivi)-1]->hasBlock(now)) && (distance < i->getRadius() * 4)) {
+                        current->setHoldPosition(true);
+                        break;
                     }
                 }
+                ivi++;
             }
-        } */
+        } 
+    }
     bool currStatus = current->hasHoldPosition();
     current->setHoldPosition(origStatus);
     // Either a Hold Position or a resume taxi transmission has been issued
-    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
     if ((now - lastTransmission) > 2) {
         available = true;
     }
@@ -1154,7 +1178,7 @@ bool FGGroundNetwork::checkForCircularWaits(int id)
     }
     if (i == activeTraffic.end() || (trafficSize == 0)) {
         SG_LOG(SG_GENERAL, SG_ALERT,
-               "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkForCircularWaits");
+               "AI error: Trying to access non-existing aircraft in FGGroundNetwork::checkForCircularWaits at " << SG_ORIGIN);
     }
 
     current = i;
@@ -1246,7 +1270,7 @@ bool FGGroundNetwork::hasInstruction(int id)
     }
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
         SG_LOG(SG_GENERAL, SG_ALERT,
-               "AI error: checking ATC instruction for aircraft without traffic record");
+               "AI error: checking ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
     } else {
         return i->hasInstruction();
     }
@@ -1269,7 +1293,7 @@ FGATCInstruction FGGroundNetwork::getInstruction(int id)
     }
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
         SG_LOG(SG_GENERAL, SG_ALERT,
-               "AI error: requesting ATC instruction for aircraft without traffic record");
+               "AI error: requesting ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
     } else {
         return i->getInstruction();
     }
@@ -1314,6 +1338,7 @@ void FGGroundNetwork::render(bool visible)
         FGScenery * local_scenery = globals->get_scenery();
         double elevation_meters = 0.0;
         double elevation_feet = 0.0;
+        time_t now = time(NULL) + fgGetLong("/sim/time/warp");
         //for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
         double dx = 0;
         for   (TrafficVectorIterator i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
@@ -1345,7 +1370,7 @@ void FGGroundNetwork::render(bool visible)
                 } else {
                     elevationStart = ((i)->getAircraft()->_getAltitude());
                 }
-                double elevationEnd   = segments[pos]->getEnd()->getElevation();
+                double elevationEnd   = segments[pos]->getEnd()->getElevationM(parent->getElevation()*SG_FEET_TO_METER);
                 //cerr << "Using elevation " << elevationEnd << endl;
 
                 if ((elevationEnd == 0) || (elevationEnd = parent->getElevation())) {
@@ -1383,7 +1408,7 @@ void FGGroundNetwork::render(bool visible)
                 geode->addDrawable(geometry);
                 //osg::Node *custom_obj;
                 SGMaterial *mat;
-                if (segments[pos]->hasBlock()) {
+                if (segments[pos]->hasBlock(now)) {
                     mat = matlib->find("UnidirectionalTaperRed");
                 } else {
                     mat = matlib->find("UnidirectionalTaperGreen");
@@ -1406,8 +1431,8 @@ void FGGroundNetwork::render(bool visible)
                     obj_trans->setDataVariance(osg::Object::STATIC);
 
                     // Experimental: Calculate slope here, based on length, and the individual elevations
-                    double elevationStart = segments[k]->getStart()->getElevation();
-                    double elevationEnd   = segments[k]->getEnd  ()->getElevation();
+                    double elevationStart = segments[k]->getStart()->getElevationM(parent->getElevation()*SG_FEET_TO_METER);
+                    double elevationEnd   = segments[k]->getEnd  ()->getElevationM(parent->getElevation()*SG_FEET_TO_METER);
                     if ((elevationStart == 0)  || (elevationStart == parent->getElevation())) {
                         SGGeod center2 = segments[k]->getStart()->getGeod();
                         center2.setElevationM(SG_MAX_ELEVATION_M);
@@ -1457,7 +1482,7 @@ void FGGroundNetwork::render(bool visible)
                     geode->addDrawable(geometry);
                     //osg::Node *custom_obj;
                     SGMaterial *mat;
-                    if (segments[k]->hasBlock()) {
+                    if (segments[k]->hasBlock(now)) {
                         mat = matlib->find("UnidirectionalTaperRed");
                     } else {
                         mat = matlib->find("UnidirectionalTaperGreen");
@@ -1482,8 +1507,9 @@ string FGGroundNetwork::getName() {
 
 void FGGroundNetwork::update(double dt)
 {
+    time_t now = time(NULL) + fgGetLong("/sim/time/warp");
     for (FGTaxiSegmentVectorIterator tsi = segments.begin(); tsi != segments.end(); tsi++) {
-        (*tsi)->unblock();
+        (*tsi)->unblock(now);
     }
     int priority = 1;
     //sort(activeTraffic.begin(), activeTraffic.end(), compare_trafficrecords);
@@ -1493,6 +1519,8 @@ void FGGroundNetwork::update(double dt)
             i != parent->getDynamics()->getStartupController()->getActiveTraffic().end(); i++) {
         i->allowPushBack();
         i->setPriority(priority++);
+        // in meters per second;
+        double vTaxi = (i->getAircraft()->getPerformance()->vTaxi() * SG_NM_TO_METER) / 3600;
         if (i->isActive(60)) {
 
             // Check for all active aircraft whether it's current pos segment is
@@ -1506,7 +1534,7 @@ void FGGroundNetwork::update(double dt)
                         for (intVecIterator k = i->getIntentions().begin(); k != i->getIntentions().end(); k++) {
                             if ((*k) == posReverse) {
                                 i->denyPushBack();
-                                segments[posReverse-1]->block();
+                                segments[posReverse-1]->block(i->getId(), now, now);
                             }
                         }
                     }
@@ -1514,13 +1542,15 @@ void FGGroundNetwork::update(double dt)
             }
             // if the current aircraft is still allowed to pushback, we can start reserving a route for if by blocking all the entry taxiways.
             if (i->pushBackAllowed()) {
+                double length = 0;
                 int pos = i->getCurrentPosition();
                 if (pos > 0) {
                     FGTaxiSegment *seg = segments[pos-1];
                     FGTaxiNode *node = seg->getEnd();
+                    length = seg->getLength();
                     for (FGTaxiSegmentVectorIterator tsi = segments.begin(); tsi != segments.end(); tsi++) {
                         if (((*tsi)->getEnd() == node) && ((*tsi) != seg)) {
-                            (*tsi)->block();
+                            (*tsi)->block(i->getId(), now, now);
                         }
                     }
                 }
@@ -1529,9 +1559,11 @@ void FGGroundNetwork::update(double dt)
                     if (pos > 0) {
                         FGTaxiSegment *seg = segments[pos-1];
                         FGTaxiNode *node = seg->getEnd();
+                        length += seg->getLength();
+                        time_t blockTime = now + (length / vTaxi);
                         for (FGTaxiSegmentVectorIterator tsi = segments.begin(); tsi != segments.end(); tsi++) {
                             if (((*tsi)->getEnd() == node) && ((*tsi) != seg)) {
-                                (*tsi)->block();
+                                (*tsi)->block(i->getId(), blockTime-30, now);
                             }
                         }
                     }
@@ -1540,11 +1572,14 @@ void FGGroundNetwork::update(double dt)
         }
     }
     for   (TrafficVectorIterator i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
+        double length = 0;
+        double vTaxi = (i->getAircraft()->getPerformance()->vTaxi() * SG_NM_TO_METER) / 3600;
         i->setPriority(priority++);
         int pos = i->getCurrentPosition();
         if (pos > 0) {
-            if (segments[pos-1]->hasBlock()) {
-                SG_LOG(SG_GENERAL, SG_ALERT, "Taxiway incursion for AI aircraft" << i->getAircraft()->getCallSign());
+            length = segments[pos-1]->getLength();
+            if (segments[pos-1]->hasBlock(now)) {
+                //SG_LOG(SG_GENERAL, SG_ALERT, "Taxiway incursion for AI aircraft" << i->getAircraft()->getCallSign());
             }
 
         }
@@ -1552,7 +1587,7 @@ void FGGroundNetwork::update(double dt)
         for (ivi = i->getIntentions().begin(); ivi != i->getIntentions().end(); ivi++) {
             int segIndex = (*ivi);
             if (segIndex > 0) {
-                if (segments[segIndex-1]->hasBlock())
+                if (segments[segIndex-1]->hasBlock(now))
                     break;
             }
         }
@@ -1562,9 +1597,11 @@ void FGGroundNetwork::update(double dt)
             if (pos > 0) {
                 FGTaxiSegment *seg = segments[pos-1];
                 FGTaxiNode *node = seg->getEnd();
+                length += seg->getLength();
                 for (FGTaxiSegmentVectorIterator tsi = segments.begin(); tsi != segments.end(); tsi++) {
                     if (((*tsi)->getEnd() == node) && ((*tsi) != seg)) {
-                        (*tsi)->block();
+                        time_t blockTime = now + (length / vTaxi);
+                        (*tsi)->block(i->getId(), blockTime - 30, now);
                     }
                 }
             }

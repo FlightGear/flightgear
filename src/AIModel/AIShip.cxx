@@ -103,7 +103,7 @@ void FGAIShip::readFromScenario(SGPropertyNode* scFileNode) {
     setSMPath(scFileNode->getStringValue("submodel-path", ""));
 
     if (!flightplan.empty()) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "getting flightplan: " << _name );
+        SG_LOG(SG_AI, SG_ALERT, "getting flightplan: " << _name );
 
         FGAIFlightPlan* fp = new FGAIFlightPlan(flightplan);
         setFlightPlan(fp);
@@ -245,7 +245,7 @@ void FGAIShip::unbind() {
 
 }
 void FGAIShip::update(double dt) {
-    //SG_LOG(SG_GENERAL, SG_ALERT, "updating Ship: " << _name <<hdg<<pitch<<roll);
+    //SG_LOG(SG_AI, SG_ALERT, "updating Ship: " << _name <<hdg<<pitch<<roll);
     // For computation of rotation speeds we just use finite differences here.
     // That is perfectly valid since this thing is not driven by accelerations
     // but by just apply discrete changes at its velocity variables.
@@ -580,7 +580,7 @@ void FGAIShip::setWPNames() {
         setCurrName(curr->getName());
     else{
         setCurrName("");
-        SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: current wp name error" );
+        SG_LOG(SG_AI, SG_ALERT, "AIShip: current wp name error" );
     }
 
     if (next != 0)
@@ -588,9 +588,9 @@ void FGAIShip::setWPNames() {
     else
         setNextName("");
 
-    SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: prev wp name " << prev->getName());
-    SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: current wp name " << curr->getName());
-    SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: next wp name " << next->getName());
+    SG_LOG(SG_AI, SG_DEBUG, "AIShip: prev wp name " << prev->getName());
+    SG_LOG(SG_AI, SG_DEBUG, "AIShip: current wp name " << curr->getName());
+    SG_LOG(SG_AI, SG_DEBUG, "AIShip: next wp name " << next->getName());
 
 }
 
@@ -612,10 +612,10 @@ double FGAIShip::getCourse(double lat, double lon, double lat2, double lon2) con
     geo_inverse_wgs_84(lat, lon, lat2, lon2, &course, &recip, &distance);
     if (tgt_speed >= 0) {
         return course;
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: course " << course);
+        SG_LOG(SG_AI, SG_DEBUG, "AIShip: course " << course);
     } else {
         return recip;
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: recip " << recip);
+        SG_LOG(SG_AI, SG_DEBUG, "AIShip: recip " << recip);
     }
 }
 
@@ -682,7 +682,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
         if (_next_name == "TUNNEL"){
             _tunnel = !_tunnel;
 
-            SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: " << _name << " " << sp_turn_radius_nm );
+            SG_LOG(SG_AI, SG_DEBUG, "AIShip: " << _name << " " << sp_turn_radius_nm );
 
             fp->IncrementWaypoint(false);
             next = fp->getNextWaypoint();
@@ -699,7 +699,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
         }else if(_next_name == "END" || fp->getNextWaypoint() == 0) {
 
             if (_repeat) {
-                SG_LOG(SG_GENERAL, SG_INFO, "AIShip: "<< _name << " Flightplan repeating ");
+                SG_LOG(SG_AI, SG_INFO, "AIShip: "<< _name << " Flightplan repeating ");
                 fp->restart();
                 prev = curr;
                 curr = fp->getCurrentWaypoint();
@@ -713,11 +713,11 @@ void FGAIShip::ProcessFlightPlan(double dt) {
                 _lead_angle = 0;
                 AccelTo(prev->getSpeed());
             } else if (_restart){
-                SG_LOG(SG_GENERAL, SG_INFO, "AIShip: " << _name << " Flightplan restarting ");
+                SG_LOG(SG_AI, SG_INFO, "AIShip: " << _name << " Flightplan restarting ");
                 _missed_count = 0;
                 initFlightPlan();
             } else {
-                SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: " << _name << " Flightplan dying ");
+                SG_LOG(SG_AI, SG_ALERT, "AIShip: " << _name << " Flightplan dying ");
                 setDie(true);
                 _dt_count = 0;
                 return;
@@ -726,7 +726,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
         } else if (_next_name == "WAIT") {
 
             if (_wait_count < next->getTime_sec()) {
-                SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: " << _name << " waiting ");
+                SG_LOG(SG_AI, SG_DEBUG, "AIShip: " << _name << " waiting ");
                 setSpeed(0);
                 _waiting = true;
                 _wait_count += _dt_count;
@@ -734,7 +734,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
                 _lead_angle = 0;
                 return;
             } else {
-                SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: " << _name
+                SG_LOG(SG_AI, SG_DEBUG, "AIShip: " << _name
                     << " wait done: getting new waypoints ");
                 _waiting = false;
                 _wait_count = 0;
@@ -757,7 +757,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
             _until_time = next->getTime();
             setUntilTime(next->getTime());
             if (until_time_sec > time_sec) {
-                SG_LOG(SG_GENERAL, SG_INFO, "AIShip: " << _name << " "
+                SG_LOG(SG_AI, SG_INFO, "AIShip: " << _name << " "
                     << curr->getName() << " waiting until: "
                     << _until_time << " " << until_time_sec << " now " << time_sec );
                 setSpeed(0);
@@ -765,7 +765,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
                 _waiting = true;
                 return;
             } else {
-                SG_LOG(SG_GENERAL, SG_INFO, "AIShip: "
+                SG_LOG(SG_AI, SG_INFO, "AIShip: "
                     << _name << " wait until done: getting new waypoints ");
                 setUntilTime("");
                 fp->IncrementWaypoint(false);
@@ -787,7 +787,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
 
         } else {
             //now reorganise the waypoints, so that next becomes current and so on
-            SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: " << _name << " getting new waypoints ");
+            SG_LOG(SG_AI, SG_DEBUG, "AIShip: " << _name << " getting new waypoints ");
             fp->IncrementWaypoint(false);
             prev = fp->getPreviousWaypoint(); //first waypoint
             curr = fp->getCurrentWaypoint();  //second waypoint
@@ -820,14 +820,14 @@ void FGAIShip::ProcessFlightPlan(double dt) {
     if (finite(_course))
         TurnTo(_course);
     else
-        SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: Bearing or Range is not a finite number");
+        SG_LOG(SG_AI, SG_ALERT, "AIShip: Bearing or Range is not a finite number");
 
     _dt_count = 0;
 } // end Processing FlightPlan
 
 bool FGAIShip::initFlightPlan() {
 
-    SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: " << _name << " initializing waypoints ");
+    SG_LOG(SG_AI, SG_ALERT, "AIShip: " << _name << " initializing waypoints ");
 
     bool init = false;
     _start_sec = 0;
@@ -841,7 +841,7 @@ bool FGAIShip::initFlightPlan() {
     next = fp->getNextWaypoint();     //third waypoint (might not exist!)
 
     while (curr->getName() == "WAIT" || curr->getName() == "WAITUNTIL") {  // don't wait when initialising
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AIShip: " << _name << " re-initializing waypoints ");
+        SG_LOG(SG_AI, SG_DEBUG, "AIShip: " << _name << " re-initializing waypoints ");
         fp->IncrementWaypoint(false);
         curr = fp->getCurrentWaypoint();
         next = fp->getNextWaypoint();
@@ -889,7 +889,7 @@ bool FGAIShip::initFlightPlan() {
     _missed_count = 0;
     _new_waypoint = true;
 
-    SG_LOG(SG_GENERAL, SG_ALERT, "AIShip: " << _name << " done initialising waypoints " << _tunnel);
+    SG_LOG(SG_AI, SG_ALERT, "AIShip: " << _name << " done initialising waypoints " << _tunnel);
     if (prev)
         init = true;
 

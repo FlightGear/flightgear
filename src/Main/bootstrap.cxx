@@ -38,6 +38,10 @@
 #  include <fpu_control.h>
 #endif
 
+#ifndef _WIN32
+#  include <unistd.h> // for gethostname()
+#endif
+
 #include <errno.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -61,14 +65,8 @@ using std::endl;
 
 #include "fg_os.hxx"
 
-#ifdef _MSC_VER
-char homepath[256] = "";
-char * homedir = homepath;
-char *hostname = ::getenv( "COMPUTERNAME" );
-#else
-char *homedir = ::getenv( "HOME" );
-char *hostname = ::getenv( "HOSTNAME" );
-#endif
+char *homedir = NULL;
+char *hostname = NULL;
 bool free_hostname = false;
 
 // foreward declaration.
@@ -179,9 +177,23 @@ int main ( int argc, char **argv ) {
   // Windows has no $HOME aka %HOME%, so we have to construct the full path.
   // make sure it fits into the buffer. Max. path length is 255, but who knows
   // what's in these environment variables?
+  char homepath[256] = "";
   homepath[sizeof(homepath)-1] = 0;
   strncpy( homepath, ::getenv("APPDATA"), sizeof(homepath)-1 );
   strncat( homepath, "\\flightgear.org", sizeof(homepath)-strlen(homepath)-1 );
+  
+  homedir = strdup(homepath);
+  hostname = ::getenv( "COMPUTERNAME" );
+#else
+  // Unix(alike) systems
+  char _hostname[256];
+  gethostname(_hostname, 256);
+  hostname = strdup(_hostname);
+  free_hostname = true;
+  
+  homedir = ::getenv( "HOME" );
+  
+  signal(SIGPIPE, SIG_IGN);
 #endif
 
 #ifdef PTW32_STATIC_LIB
@@ -202,9 +214,6 @@ int main ( int argc, char **argv ) {
         }
     }
     initFPE();
-#endif
-#ifndef _WIN32
-    signal(SIGPIPE, SIG_IGN);
 #endif
 
 #if defined(sgi)
@@ -230,6 +239,7 @@ int main ( int argc, char **argv ) {
 #if defined( HAVE_BC5PLUS )
     _control87(MCW_EM, MCW_EM);  /* defined in float.h */
 #endif
+  
     bool fgviewer = false;
     for (int i = 0; i < argc; ++i) {
         if (!strcmp("--fgviewer", argv[i])) {

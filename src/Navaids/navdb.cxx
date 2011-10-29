@@ -47,6 +47,7 @@
 #include <Main/fg_props.hxx>
 
 using std::string;
+using std::vector;
 
 typedef std::map<FGAirport*, SGPropertyNode_ptr> AirportPropertyMap;
 

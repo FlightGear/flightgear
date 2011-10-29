@@ -127,7 +127,7 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename)
      if (wpt->getName() == "END") wpt->setFinished(true);
      else wpt->setFinished(false);
 
-     waypoints.push_back( wpt );
+     pushBackWaypoint( wpt );
    }
 
   wpt_iterator = waypoints.begin();
@@ -192,7 +192,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
 	  
 	  SGPropertyNode * node = root.getNode("flightplan");
 	  
-	  //waypoints.push_back( init_waypoint );
+	  //pushBackWaypoint( init_waypoint );
 	  for (int i = 0; i < node->nChildren(); i++) { 
 	    //cout << "Reading waypoint " << i << endl;
 	    FGAIWaypoint* wpt = new FGAIWaypoint;
@@ -208,7 +208,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
 	    
 	    if (wpt->getName() == "END") wpt->setFinished(true);
 	    else wpt->setFinished(false);
-	    waypoints.push_back(wpt);
+	    pushBackWaypoint(wpt);
 	  } // of node loop
           wpt_iterator = waypoints.begin();
 	} catch (const sg_exception &e) {
@@ -223,12 +223,12 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
       time_t timeDiff = now-start; 
       leg = 1;
       
-      if ((timeDiff > 60) && (timeDiff < 1200))
+      if ((timeDiff > 60) && (timeDiff < 1500))
 	leg = 2;
-      else if ((timeDiff >= 1200) && (timeDiff < 1500)) {
-	leg = 3;
-        ac->setTakeOffStatus(2);
-      }
+      //else if ((timeDiff >= 1200) && (timeDiff < 1500)) {
+	//leg = 3;
+        //ac->setTakeOffStatus(2);
+      //}
       else if ((timeDiff >= 1500) && (timeDiff < 2000))
 	leg = 4;
       else if (timeDiff >= 2000)
@@ -305,7 +305,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
 	{
 	  if ((dist > 100.0) && (useInitialWayPoint))
 	    {
-	      //waypoints.push_back(init_waypoint);;
+	      //pushBackWaypoint(init_waypoint);;
 	      waypoints.insert(i, init_waypoint);
 	      //cerr << "Using waypoint : " << init_waypoint->name <<  endl;
 	    }
@@ -313,7 +313,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
 	  // {
 	  //    (*i)->speed = dist; // A hack
 	  //  }
-	  //waypoints.push_back( wpt );
+	  //pushBackWaypoint( wpt );
 	  //cerr << "Using waypoint : " << (*i)->name 
 	  //  << ": course diff : " << crsDiff 
 	  //   << "Course = " << course
@@ -409,8 +409,17 @@ void FGAIFlightPlan::DecrementWaypoint(bool eraseWaypoints )
     }
     else
         wpt_iterator--;
-
 }
+
+void FGAIFlightPlan::eraseLastWaypoint()
+{
+    delete (waypoints.back());
+    waypoints.pop_back();;
+    wpt_iterator = waypoints.begin();
+    wpt_iterator++;
+}
+
+
 
 
 // gives distance in feet from a position to a waypoint
@@ -504,8 +513,18 @@ void FGAIFlightPlan::resetWaypoints()
       wpt->setOn_ground   ( (*i)->getOn_ground()  );
       //cerr << "Recycling waypoint " << wpt->name << endl;
       deleteWaypoints();
-      waypoints.push_back(wpt);
+      pushBackWaypoint(wpt);
     }
+}
+
+void FGAIFlightPlan::pushBackWaypoint(FGAIWaypoint *wpt)
+{
+  // std::vector::push_back invalidates waypoints
+  //  so we should restore wpt_iterator after push_back
+  //  (or it could be an index in the vector)
+  size_t pos = wpt_iterator - waypoints.begin();
+  waypoints.push_back(wpt);
+  wpt_iterator = waypoints.begin() + pos;
 }
 
 // Start flightplan over from the beginning
@@ -545,4 +564,12 @@ double FGAIFlightPlan::checkTrackLength(string wptName) {
         trackDistance = 0; // name not found
     }
     return trackDistance;
+}
+
+void FGAIFlightPlan::shortenToFirst(unsigned int number, string name)
+{
+    while (waypoints.size() > number + 3) {
+        eraseLastWaypoint();
+    }
+    (waypoints.back())->setName((waypoints.back())->getName() + name);
 }

@@ -40,12 +40,12 @@ public:
 	void Knob2Left1();
 	void Knob2Right1();
 	
-	void SetId(const string& s);
+	void SetId(const std::string& s);
 	
 private:
-	string _vor_id;
-	string _last_vor_id;
-	string _save_vor_id;
+	std::string _vor_id;
+	std::string _last_vor_id;
+	std::string _save_vor_id;
 	FGNavRecord* np;
 };
 

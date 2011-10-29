@@ -1388,21 +1388,15 @@ void MapWidget::drawAIAircraft(const SGPropertyNode* model, const SGGeod& pos, d
     drawLine(p, project(advance));
   }
 
-  if (validDataForKey((void*) model)) {
-    setAnchorForKey((void*) model, p);
-    return;
-  }
 
   // draw callsign / altitude / speed
-
-
   char buffer[1024];
 	::snprintf(buffer, 1024, "%s\n%d'\n%dkts",
 		model->getStringValue("callsign", "<>"),
 		static_cast<int>(pos.getElevationFt() / 50.0) * 50,
     speedKts);
 
-  MapData* d = createDataForKey((void*) model);
+  MapData* d = getOrCreateDataForKey((void*) model);
   d->setText(buffer);
   d->setLabel(model->getStringValue("callsign", "<>"));
   d->setPriority(speedKts > 5 ? 60 : 10); // low priority for parked aircraft
@@ -1434,18 +1428,13 @@ void MapWidget::drawAIShip(const SGPropertyNode* model, const SGGeod& pos, doubl
     drawLine(p, project(advance));
   }
 
-  if (validDataForKey((void*) model)) {
-    setAnchorForKey((void*) model, p);
-    return;
-  }
-
   // draw callsign / speed
   char buffer[1024];
 	::snprintf(buffer, 1024, "%s\n%dkts",
 		model->getStringValue("name", "<>"),
     speedKts);
 
-  MapData* d = createDataForKey((void*) model);
+  MapData* d = getOrCreateDataForKey((void*) model);
   d->setText(buffer);
   d->setLabel(model->getStringValue("name", "<>"));
   d->setPriority(speedKts > 2 ? 30 : 10); // low priority for slow moving ships

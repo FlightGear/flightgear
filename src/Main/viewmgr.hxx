@@ -76,7 +76,7 @@ public:
 private:
     void do_bind();
     
-    list<const char*> tied_props;
+    std::list<const char*> tied_props;
 
     double axis_long;
     double axis_lat;
@@ -140,7 +140,7 @@ private:
     
     bool inited;
     SGPropertyNode_ptr view_number;
-    vector<SGPropertyNode_ptr> config_list;
+    std::vector<SGPropertyNode_ptr> config_list;
     typedef std::vector<FGViewerPtr> viewer_list;
     viewer_list views;
     SGVec3d abs_viewer_position;

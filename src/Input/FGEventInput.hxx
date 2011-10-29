@@ -24,6 +24,9 @@
 #define __FGEVENTINPUT_HXX
 
 #include "FGCommonInput.hxx"
+
+#include <vector>
+
 #include "FGButton.hxx"
 #include "FGDeviceConfigurationMap.hxx"
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -57,7 +60,7 @@ protected:
 };
 
 typedef SGSharedPtr<FGEventSetting> FGEventSetting_ptr;
-typedef vector<FGEventSetting_ptr> setting_list_t;
+typedef std::vector<FGEventSetting_ptr> setting_list_t;
 
 /*
  * A wrapper class for a configured event. 
@@ -99,12 +102,12 @@ public:
   /*
    * access for the name property
    */
-  string GetName() const { return name; }
+  std::string GetName() const { return name; }
 
   /*
    * access for the description property
    */
-  string GetDescription() const { return desc; }
+  std::string GetDescription() const { return desc; }
 
   virtual void update( double dt );
 
@@ -113,10 +116,10 @@ public:
 protected:
   virtual void fire( SGBinding * binding, FGEventData & eventData );
   /* A more or less meaningfull description of the event */
-  string desc;
+  std::string desc;
 
   /* One of the predefined names of the event */
-  string name;
+  std::string name;
 
   /* A list of SGBinding objects */
   binding_list_t bindings[KEYMOD_MAX];
@@ -184,7 +187,7 @@ typedef class SGSharedPtr<FGInputEvent> FGInputEvent_ptr;
 class FGInputDevice : public SGReferenced {
 public:
   FGInputDevice() : debugEvents(false), grab(false) {}
-  FGInputDevice( string aName ) : name(aName) {}
+  FGInputDevice( std::string aName ) : name(aName) {}
     
   virtual ~FGInputDevice();
 
@@ -193,15 +196,15 @@ public:
 
   virtual void Send( const char * eventName, double value ) = 0;
 
-  inline void Send( const string & eventName, double value ) {
+  inline void Send( const std::string & eventName, double value ) {
     Send( eventName.c_str(), value );
   }
 
   virtual const char * TranslateEventName( FGEventData & eventData ) = 0;
 
 
-  void SetName( string name );
-  string & GetName() { return name; }
+  void SetName( std::string name );
+  std::string & GetName() { return name; }
 
   void HandleEvent( FGEventData & eventData );
 
@@ -218,14 +221,14 @@ public:
 
   bool GetGrab() const { return grab; }
 
-  const string & GetNasalModule() const { return nasalModule; }
+  const std::string & GetNasalModule() const { return nasalModule; }
 
 private:
   // A map of events, this device handles
-  map<string,FGInputEvent_ptr> handledEvents;
+  std::map<std::string,FGInputEvent_ptr> handledEvents;
 
   // the device has a name to be recognized
-  string name;
+  std::string name;
 
   // print out events comming in from the device
   // if true
@@ -236,7 +239,7 @@ private:
   bool   grab;
 
   SGPropertyNode_ptr deviceNode;
-  string nasalModule;
+  std::string nasalModule;
 };
 
 typedef SGSharedPtr<FGInputDevice> FGInputDevice_ptr;
@@ -261,7 +264,7 @@ protected:
   unsigned AddDevice( FGInputDevice * inputDevice );
   void RemoveDevice( unsigned index );
 
-  map<int,FGInputDevice*> input_devices;
+  std::map<int,FGInputDevice*> input_devices;
   FGDeviceConfigurationMap configMap;
 
   SGPropertyNode_ptr nasalClose;

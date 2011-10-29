@@ -9,6 +9,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>
 
+using std::string;
 
 VerticalSpeedIndicator::VerticalSpeedIndicator ( SGPropertyNode *node )
     : _internal_pressure_inhg(29.92),

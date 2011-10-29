@@ -68,7 +68,7 @@ enum GPSAppWpType {
     GPS_APP_NONE    // Not part of the approach sequence - the default.
 };
 
-ostream& operator << (ostream& os, GPSAppWpType type);
+std::ostream& operator << (std::ostream& os, GPSAppWpType type);
 
 struct GPSWaypoint {
     GPSWaypoint();
@@ -78,23 +78,23 @@ struct GPSWaypoint {
   static GPSWaypoint* createFromPositioned(const FGPositioned* aFix);
   
     ~GPSWaypoint();
-	string GetAprId();	// Returns the id with i, f, m or h added if appropriate. (Initial approach fix, final approach fix, etc)
-	string id;
+  std::string GetAprId();	// Returns the id with i, f, m or h added if appropriate. (Initial approach fix, final approach fix, etc)
+  std::string id;
 	float lat;	// Radians
 	float lon;	// Radians
 	GPSWpType type;
 	GPSAppWpType appType;	// only used for waypoints that are part of an approach sequence
 };
 
-typedef vector < GPSWaypoint* > gps_waypoint_array;
+typedef std::vector < GPSWaypoint* > gps_waypoint_array;
 typedef gps_waypoint_array::iterator gps_waypoint_array_iterator;
-typedef map < string, gps_waypoint_array > gps_waypoint_map;
+typedef std::map < std::string, gps_waypoint_array > gps_waypoint_map;
 typedef gps_waypoint_map::iterator gps_waypoint_map_iterator;
 typedef gps_waypoint_map::const_iterator gps_waypoint_map_const_iterator;
 
 class GPSFlightPlan {
 public:
-	vector<GPSWaypoint*> waypoints;
+  std::vector<GPSWaypoint*> waypoints;
 	inline bool IsEmpty() { return(waypoints.size() == 0); }
 };
 
@@ -106,10 +106,10 @@ public:
 	virtual ~FGIAP() = 0;
 //protected:
 
-	string _aptIdent;	// The ident of the airport this approach is for
-	string _ident;	// The approach ident.
-	string _name;	// The full approach name.
-	string _rwyStr;	// The string used to specify the rwy - eg "B" in this instance.
+	std::string _aptIdent;	// The ident of the airport this approach is for
+	std::string _ident;	// The approach ident.
+	std::string _name;	// The full approach name.
+	std::string _rwyStr;	// The string used to specify the rwy - eg "B" in this instance.
 	bool _precision;	// True for precision approach, false for non-precision.
 };
 
@@ -120,14 +120,14 @@ public:
 	~FGNPIAP();
 //private:
 public:
-	vector<GPSFlightPlan*> _approachRoutes;	// The approach route(s) from the IAF(s) to the IF.
+	std::vector<GPSFlightPlan*> _approachRoutes;	// The approach route(s) from the IAF(s) to the IF.
 											// NOTE: It is an assumption in the code that uses this that there is a unique IAF per approach route.
-	vector<GPSWaypoint*> _IAP;	// The compulsory waypoints of the approach procedure (may duplicate one of the above).
+	std::vector<GPSWaypoint*> _IAP;	// The compulsory waypoints of the approach procedure (may duplicate one of the above).
 								// _IAP includes the FAF and MAF, and the missed approach waypoints.
 };
 
-typedef vector < FGIAP* > iap_list_type;
-typedef map < string, iap_list_type > iap_map_type;
+typedef std::vector < FGIAP* > iap_list_type;
+typedef std::map < std::string, iap_list_type > iap_map_type;
 typedef iap_map_type::iterator iap_map_iterator;
 
 //	A class to encapsulate hr:min representation of time. 
@@ -157,7 +157,7 @@ public:
         ClockTime t2(diff / 60, diff % 60);
         return(t2);
     }
-    friend ostream& operator<< (ostream& out, const ClockTime& t);
+    friend std::ostream& operator<< (std::ostream& out, const ClockTime& t);
 
 private:
     int _hr;
@@ -181,12 +181,12 @@ public:
 	virtual void update(double dt);
 	
 	// Expand a SIAP ident to the full procedure name.
-	string ExpandSIAPIdent(const string& ident);
+	std::string ExpandSIAPIdent(const std::string& ident);
 
 	// Render string s in display field field at position x, y
 	// WHERE POSITION IS IN CHARACTER UNITS!
 	// zero y at bottom?
-	virtual void DrawText(const string& s, int field, int px, int py, bool bold = false);
+	virtual void DrawText(const std::string& s, int field, int px, int py, bool bold = false);
 	
 	// Render a char at a given position as above
 	virtual void DrawChar(char c, int field, int px, int py, bool bold = false);
@@ -214,7 +214,7 @@ public:
 	// Returns -1 if no active waypoint.
 	int GetActiveWaypointIndex();
 	// Ditto for an arbitrary waypoint id
-	int GetWaypointIndex(const string& id);
+	int GetWaypointIndex(const std::string& id);
 	
 	// Returns meters
 	float GetDistToActiveWaypoint();
@@ -232,7 +232,7 @@ public:
 	// returns -1 if groundspeed is less than 30kts.
 	// If the waypoint is an unreached part of the active flight plan the time will be via each leg.
 	// otherwise it will be a direct-to time.
-	double GetTimeToWaypoint(const string& id);
+	double GetTimeToWaypoint(const std::string& id);
 	
 	// Return true if waypoint alerting is occuring
 	inline bool GetWaypointAlert() const { return(_waypointAlert); }
@@ -253,7 +253,7 @@ public:
 	inline bool GetToFlag() const { return(_headingBugTo); }
 	
 	// Initiate Direct To operation to the supplied ID.
-	virtual void DtoInitiate(const string& id);
+	virtual void DtoInitiate(const std::string& id);
 	// Cancel Direct To operation
 	void DtoCancel();
 	
@@ -286,7 +286,7 @@ protected:
 	// CDI full-scale deflection, specified either as an index into a vector of values (standard values) or as a double precision float (intermediate values).
 	// This will influence how an externally driven CDI will display as well as the NAV1 page.
 	// Hence the variables are located here, not in the nav page class.
-	vector<float> _cdiScales;
+	std::vector<float> _cdiScales;
 	unsigned int _currentCdiScaleIndex;
 	bool _cdiScaleTransition;		// Set true when the floating CDI value is used during transitions
 	double _currentCdiScale;	// The floating value to use.
@@ -305,13 +305,13 @@ protected:
 	void LoadApproachData();
 
 	// Find first of any type of waypoint by id.  (TODO - Possibly we should return multiple waypoints here).
-	GPSWaypoint* FindFirstById(const string& id) const;
-	GPSWaypoint* FindFirstByExactId(const string& id) const;
+	GPSWaypoint* FindFirstById(const std::string& id) const;
+	GPSWaypoint* FindFirstByExactId(const std::string& id) const;
    
-	FGNavRecord* FindFirstVorById(const string& id, bool &multi, bool exact = false);
-	FGNavRecord* FindFirstNDBById(const string& id, bool &multi, bool exact = false);
-	const FGAirport* FindFirstAptById(const string& id, bool &multi, bool exact = false);
-	const FGFix* FindFirstIntById(const string& id, bool &multi, bool exact = false);
+	FGNavRecord* FindFirstVorById(const std::string& id, bool &multi, bool exact = false);
+	FGNavRecord* FindFirstNDBById(const std::string& id, bool &multi, bool exact = false);
+	const FGAirport* FindFirstAptById(const std::string& id, bool &multi, bool exact = false);
+	const FGFix* FindFirstIntById(const std::string& id, bool &multi, bool exact = false);
 	// Find the closest VOR to a position in RADIANS.
 	FGNavRecord* FindClosestVor(double lat_rad, double lon_rad);
 
@@ -388,7 +388,7 @@ protected:
 	// Flightplans
 	// GPS can have up to _maxFlightPlans flightplans stored, PLUS an active FP which may or my not be one of the stored ones.
 	// This is from KLN89, but is probably not far off the mark for most if not all GPS.
-	vector<GPSFlightPlan*> _flightPlans;
+	std::vector<GPSFlightPlan*> _flightPlans;
 	unsigned int _maxFlightPlans;
 	GPSFlightPlan* _activeFP;
 	
@@ -414,7 +414,7 @@ protected:
 	bool _headingBugTo;		// Set true when the heading bug is TO, false when FROM.
 	bool _waypointAlert;	// Set true when waypoint alerting is happening. (This is a variable NOT a user-setting).
 	bool _departed;		// Set when groundspeed first exceeds 30kts.
-	string _departureTimeString;	// Ditto.
+	std::string _departureTimeString;	// Ditto.
 	double _elapsedTime;	// Elapsed time in seconds since departure
 	ClockTime _powerOnTime;		// Time (hr:min) of unit power-up.
 	bool _powerOnTimerSet;		// Indicates that we have set the above following power-up.
@@ -437,9 +437,9 @@ protected:
 	// Magvar stuff.  Might get some of this stuff (such as time) from FG in future.
 	SGTime* _time;
 	
-	list<string> _messageStack;
+  std::list<std::string> _messageStack;
 	
-	virtual void CreateFlightPlan(GPSFlightPlan* fp, vector<string> ids, vector<GPSWpType> wps);
+	virtual void CreateFlightPlan(GPSFlightPlan* fp, std::vector<std::string> ids, std::vector<GPSWpType> wps);
 	
 	// Orientate the GPS unit to a flightplan - ie. figure out from current position
 	// and possibly orientation which leg of the FP we are on.
@@ -460,10 +460,10 @@ protected:
 								// the scale change, but it's in the manual...
 	bool _approachActive;	// Set true when in approach-active mode
 	GPSFlightPlan* _approachFP;	// Current approach - not necessarily loaded.
-	string _approachID;		// ID of the airport we have an approach loaded for - bit of a hack that can hopefully be removed in future.
+	std::string _approachID;		// ID of the airport we have an approach loaded for - bit of a hack that can hopefully be removed in future.
 	// More hackery since we aren't actually storing an approach class... Doh!
-	string _approachAbbrev;
-	string _approachRwyStr;
+	std::string _approachAbbrev;
+	std::string _approachRwyStr;
 };
 
 #endif  // _DCLGPS_HXX

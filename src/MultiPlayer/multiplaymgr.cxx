@@ -439,7 +439,7 @@ FGMultiplayMgr::init (void)
       rxPort = txPort;
   }
   if (rxPort <= 0) {
-    SG_LOG(SG_NETWORK, SG_ALERT,
+    SG_LOG(SG_NETWORK, SG_INFO,
       "FGMultiplayMgr - No receiver port. Multiplayer mode disabled.");
     return;
   }
@@ -454,7 +454,7 @@ FGMultiplayMgr::init (void)
   mSocket.reset(new simgear::Socket());
   if (!mSocket->open(false)) {
     SG_LOG( SG_NETWORK, SG_WARN,
-            "FGMultiplayMgr - Failed to create data socket." );
+            "FGMultiplayMgr - Failed to create data socket. Multiplayer mode disabled." );
     return;
   }
   mSocket->setBlocking(false);
@@ -471,6 +471,8 @@ FGMultiplayMgr::init (void)
   
   fgSetBool("/sim/multiplay/online", true);
   mInitialised = true;
+
+  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer mode active!");
 } // FGMultiplayMgr::init()
 //////////////////////////////////////////////////////////////////////
 

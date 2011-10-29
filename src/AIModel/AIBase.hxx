@@ -134,7 +134,7 @@ public:
     string _path;
     string _callsign;
     string _submodel;
-    string _name;
+    std::string _name;
     string _parent;
 
     SGGeod userpos;
@@ -215,6 +215,8 @@ protected:
     void Transform();
     void CalculateMach();
     double UpdateRadar(FGAIManager* manager);
+
+    void removeModel();
 
     static int _newAIModelID();
 

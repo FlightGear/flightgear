@@ -1,4 +1,5 @@
 // Copyright (C) 2008  Tim Moore
+// Copyright (C) 2011  Mathias Froehlich
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -20,6 +21,7 @@
 
 #include "CameraGroup.hxx"
 
+#include "fg_props.hxx"
 #include "globals.hxx"
 #include "renderer.hxx"
 #include "FGEventHandler.hxx"
@@ -52,6 +54,71 @@
 
 #include <osgViewer/GraphicsWindow>
 #include <osgViewer/Renderer>
+
+static osg::Matrix
+invert(const osg::Matrix& matrix)
+{
+    return osg::Matrix::inverse(matrix);
+}
+
+/// Returns the zoom factor of the master camera.
+/// The reference fov is the historic 55 deg
+static double
+zoomFactor()
+{
+    double fov = fgGetDouble("/sim/current-view/field-of-view", 55);
+    if (fov < 1)
+        fov = 1;
+    return tan(55*0.5*SG_DEGREES_TO_RADIANS)/tan(fov*0.5*SG_DEGREES_TO_RADIANS);
+}
+
+static osg::Vec2d
+preMult(const osg::Vec2d& v, const osg::Matrix& m)
+{
+  osg::Vec3d tmp = m.preMult(osg::Vec3(v, 0));
+  return osg::Vec2d(tmp[0], tmp[1]);
+}
+
+static osg::Matrix
+relativeProjection(const osg::Matrix& P0, const osg::Matrix& R, const osg::Vec2d ref[2],
+                   const osg::Matrix& pP, const osg::Matrix& pR, const osg::Vec2d pRef[2])
+{
+  // Track the way from one projection space to the other:
+  // We want
+  //  P = T*S*P0
+  // where P0 is the projection template sensible for the given window size,
+  // T is a translation matrix and S a scale matrix.
+  // We need to determine T and S so that the reference points in the parents
+  // projection space match the two reference points in this cameras projection space.
+
+  // Starting from the parents camera projection space, we get into this cameras
+  // projection space by the transform matrix:
+  //  P*R*inv(pP*pR) = T*S*P0*R*inv(pP*pR)
+  // So, at first compute that matrix without T*S and determine S and T from that
+
+  // Ok, now osg uses the inverse matrix multiplication order, thus:
+  osg::Matrix PtoPwithoutTS = invert(pR*pP)*R*P0;
+  // Compute the parents reference points in the current projection space
+  // without the yet unknown T and S
+  osg::Vec2d pRefInThis[2] = {
+    preMult(pRef[0], PtoPwithoutTS),
+    preMult(pRef[1], PtoPwithoutTS)
+  };
+
+  // To get the same zoom, rescale to match the parents size
+  double s = (ref[0] - ref[1]).length()/(pRefInThis[0] - pRefInThis[1]).length();
+  osg::Matrix S = osg::Matrix::scale(s, s, 1);
+
+  // For the translation offset, incorporate the now known scale
+  // and recompute the position ot the first reference point in the
+  // currents projection space without the yet unknown T.
+  pRefInThis[0] = preMult(pRef[0], PtoPwithoutTS*S);
+  // The translation is then the difference of the reference points
+  osg::Matrix T = osg::Matrix::translate(osg::Vec3d(ref[0] - pRefInThis[0], 0));
+
+  // Compose and return the desired final projection matrix
+  return P0*S*T;
+}
 
 namespace flightgear
 {
@@ -204,6 +271,7 @@ void CameraGroup::update(const osg::Vec3d& position,
                             * osg::Matrix::rotate(orientation.inverse()));
     _viewer->getCamera()->setViewMatrix(masterView);
     const Matrix& masterProj = _viewer->getCamera()->getProjectionMatrix();
+    double masterZoomFactor = zoomFactor();
     for (CameraList::iterator i = _cameras.begin(); i != _cameras.end(); ++i) {
         const CameraInfo* info = i->get();
         const View::Slave& slave = _viewer->getSlave(info->slaveIndex);
@@ -219,10 +287,33 @@ void CameraGroup::update(const osg::Vec3d& position,
             viewMatrix = masterView * slave._viewOffset;
         camera->setViewMatrix(viewMatrix);
         Matrix projectionMatrix;
-        if ((info->flags & PROJECTION_ABSOLUTE) != 0)
-            projectionMatrix = slave._projectionOffset;
-        else
+        if ((info->flags & PROJECTION_ABSOLUTE) != 0) {
+            if (info->flags & ENABLE_MASTER_ZOOM) {
+                if (info->relativeCameraParent < _cameras.size()) {
+                    // template projection matrix and view matrix of the current camera
+                    osg::Matrix P0 = slave._projectionOffset;
+                    osg::Matrix R = viewMatrix;
+
+                    // The already known projection and view matrix of the parent camera
+                    const CameraInfo* parentInfo = _cameras[info->relativeCameraParent].get();
+                    osg::Matrix pP = parentInfo->camera->getProjectionMatrix();
+                    osg::Matrix pR = parentInfo->camera->getViewMatrix();
+                    
+                    // And the projection matrix derived from P0 so that the reference points match
+                    projectionMatrix = relativeProjection(P0, R, info->thisReference,
+                                                          pP, pR, info->parentReference);
+                    
+                } else {
+                    // We want to zoom, so take the original matrix and apply the zoom to it.
+                    projectionMatrix = slave._projectionOffset;
+                    projectionMatrix.postMultScale(osg::Vec3d(masterZoomFactor, masterZoomFactor, 1));
+                }
+            } else {
+                projectionMatrix = slave._projectionOffset;
+            }
+        } else {
             projectionMatrix = masterProj * slave._projectionOffset;
+        }
 
         if (!info->farCamera.valid()) {
             camera->setProjectionMatrix(projectionMatrix);
@@ -232,6 +323,10 @@ void CameraGroup::update(const osg::Vec3d& position,
             double left, right, bottom, top, parentNear, parentFar;
             projectionMatrix.getFrustum(left, right, bottom, top,
                                         parentNear, parentFar);
+            if ((info->flags & FIXED_NEAR_FAR) == 0) {
+                parentNear = _zNear;
+                parentFar = _zFar;
+            }
             if (parentFar < _nearField || _nearField == 0.0f) {
                 camera->setProjectionMatrix(projectionMatrix);
                 camera->setCullMask(camera->getCullMask()
@@ -570,7 +665,6 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
 #endif
                                    ));
 
-    osg::Matrix pOff;
     osg::Matrix vOff;
     const SGPropertyNode* viewNode = cameraNode->getNode("view");
     if (viewNode) {
@@ -596,13 +690,37 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         double heading = cameraNode->getDoubleValue("heading-deg", 0.0);
         vOff.makeRotate(DegreesToRadians(heading), osg::Vec3(0, 1, 0));
     }
-    const SGPropertyNode* projectionNode = 0;
+    // Configuring the physical dimensions of a monitor
+    SGPropertyNode* viewportNode = cameraNode->getNode("viewport", true);
+    double physicalWidth = viewportNode->getDoubleValue("width", 1024);
+    double physicalHeight = viewportNode->getDoubleValue("height", 768);
+    double bezelHeightTop = 0;
+    double bezelHeightBottom = 0;
+    double bezelWidthLeft = 0;
+    double bezelWidthRight = 0;
+    const SGPropertyNode* physicalDimensionsNode = 0;
+    if ((physicalDimensionsNode = cameraNode->getNode("physical-dimensions")) != 0) {
+        physicalWidth = physicalDimensionsNode->getDoubleValue("width", physicalWidth);
+        physicalHeight = physicalDimensionsNode->getDoubleValue("height", physicalHeight);
+        const SGPropertyNode* bezelNode = 0;
+        if ((bezelNode = physicalDimensionsNode->getNode("bezel")) != 0) {
+            bezelHeightTop = bezelNode->getDoubleValue("top", bezelHeightTop);
+            bezelHeightBottom = bezelNode->getDoubleValue("bottom", bezelHeightBottom);
+            bezelWidthLeft = bezelNode->getDoubleValue("left", bezelWidthLeft);
+            bezelWidthRight = bezelNode->getDoubleValue("right", bezelWidthRight);
+        }
+    }
+    osg::Matrix pOff;
+    unsigned parentCameraIndex = ~0u;
+    osg::Vec2d parentReference[2];
+    osg::Vec2d thisReference[2];
+    SGPropertyNode* projectionNode = 0;
     if ((projectionNode = cameraNode->getNode("perspective")) != 0) {
         double fovy = projectionNode->getDoubleValue("fovy-deg", 55.0);
         double aspectRatio = projectionNode->getDoubleValue("aspect-ratio",
                                                             1.0);
         double zNear = projectionNode->getDoubleValue("near", 0.0);
-        double zFar = projectionNode->getDoubleValue("far", 0.0);
+        double zFar = projectionNode->getDoubleValue("far", zNear + 20000);
         double offsetX = projectionNode->getDoubleValue("offset-x", 0.0);
         double offsetY = projectionNode->getDoubleValue("offset-y", 0.0);
         double tan_fovy = tan(DegreesToRadians(fovy*0.5));
@@ -612,6 +730,8 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         double bottom = -tan_fovy * zNear + offsetY;
         pOff.makeFrustum(left, right, bottom, top, zNear, zFar);
         cameraFlags |= PROJECTION_ABSOLUTE;
+        if (projectionNode->getBoolValue("fixed-near-far", true))
+            cameraFlags |= FIXED_NEAR_FAR;
     } else if ((projectionNode = cameraNode->getNode("frustum")) != 0
                || (projectionNode = cameraNode->getNode("ortho")) != 0) {
         double top = projectionNode->getDoubleValue("top", 0.0);
@@ -619,7 +739,7 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
         double left = projectionNode->getDoubleValue("left", 0.0);
         double right = projectionNode->getDoubleValue("right", 0.0);
         double zNear = projectionNode->getDoubleValue("near", 0.0);
-        double zFar = projectionNode->getDoubleValue("far", 0.0);
+        double zFar = projectionNode->getDoubleValue("far", zNear + 20000);
         if (cameraNode->getNode("frustum")) {
             pOff.makeFrustum(left, right, bottom, top, zNear, zFar);
             cameraFlags |= PROJECTION_ABSOLUTE;
@@ -627,6 +747,85 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
             pOff.makeOrtho(left, right, bottom, top, zNear, zFar);
             cameraFlags |= (PROJECTION_ABSOLUTE | ORTHO);
         }
+        if (projectionNode->getBoolValue("fixed-near-far", true))
+            cameraFlags |= FIXED_NEAR_FAR;
+    } else if ((projectionNode = cameraNode->getNode("master-perspective")) != 0) {
+        double zNear = projectionNode->getDoubleValue("eye-distance", 0.4*physicalWidth);
+        double xoff = projectionNode->getDoubleValue("x-offset", 0);
+        double yoff = projectionNode->getDoubleValue("y-offset", 0);
+        double left = -0.5*physicalWidth - xoff;
+        double right = 0.5*physicalWidth - xoff;
+        double bottom = -0.5*physicalHeight - yoff;
+        double top = 0.5*physicalHeight - yoff;
+        pOff.makeFrustum(left, right, bottom, top, zNear, zNear*1000);
+        cameraFlags |= PROJECTION_ABSOLUTE | ENABLE_MASTER_ZOOM;
+    } else if ((projectionNode = cameraNode->getNode("right-of-perspective"))
+               || (projectionNode = cameraNode->getNode("left-of-perspective"))
+               || (projectionNode = cameraNode->getNode("above-perspective"))
+               || (projectionNode = cameraNode->getNode("below-perspective"))
+               || (projectionNode = cameraNode->getNode("reference-points-perspective"))) {
+        std::string name = projectionNode->getStringValue("parent-camera");
+        for (unsigned i = 0; i < _cameras.size(); ++i) {
+            if (_cameras[i]->name != name)
+                continue;
+            parentCameraIndex = i;
+        }
+        if (_cameras.size() <= parentCameraIndex) {
+            SG_LOG(SG_GENERAL, SG_ALERT, "CameraGroup::buildCamera: "
+                   "failed to find parent camera for relative camera!");
+            return 0;
+        }
+        const CameraInfo* parentInfo = _cameras[parentCameraIndex].get();
+        if (projectionNode->getNameString() == "right-of-perspective") {
+            double tmp = (parentInfo->physicalWidth + 2*parentInfo->bezelWidthRight)/parentInfo->physicalWidth;
+            parentReference[0] = osg::Vec2d(tmp, -1);
+            parentReference[1] = osg::Vec2d(tmp, 1);
+            tmp = (physicalWidth + 2*bezelWidthLeft)/physicalWidth;
+            thisReference[0] = osg::Vec2d(-tmp, -1);
+            thisReference[1] = osg::Vec2d(-tmp, 1);
+        } else if (projectionNode->getNameString() == "left-of-perspective") {
+            double tmp = (parentInfo->physicalWidth + 2*parentInfo->bezelWidthLeft)/parentInfo->physicalWidth;
+            parentReference[0] = osg::Vec2d(-tmp, -1);
+            parentReference[1] = osg::Vec2d(-tmp, 1);
+            tmp = (physicalWidth + 2*bezelWidthRight)/physicalWidth;
+            thisReference[0] = osg::Vec2d(tmp, -1);
+            thisReference[1] = osg::Vec2d(tmp, 1);
+        } else if (projectionNode->getNameString() == "above-perspective") {
+            double tmp = (parentInfo->physicalHeight + 2*parentInfo->bezelHeightTop)/parentInfo->physicalHeight;
+            parentReference[0] = osg::Vec2d(-1, tmp);
+            parentReference[1] = osg::Vec2d(1, tmp);
+            tmp = (physicalHeight + 2*bezelHeightBottom)/physicalHeight;
+            thisReference[0] = osg::Vec2d(-1, -tmp);
+            thisReference[1] = osg::Vec2d(1, -tmp);
+        } else if (projectionNode->getNameString() == "below-perspective") {
+            double tmp = (parentInfo->physicalHeight + 2*parentInfo->bezelHeightBottom)/parentInfo->physicalHeight;
+            parentReference[0] = osg::Vec2d(-1, -tmp);
+            parentReference[1] = osg::Vec2d(1, -tmp);
+            tmp = (physicalHeight + 2*bezelHeightTop)/physicalHeight;
+            thisReference[0] = osg::Vec2d(-1, tmp);
+            thisReference[1] = osg::Vec2d(1, tmp);
+        } else if (projectionNode->getNameString() == "reference-points-perspective") {
+            SGPropertyNode* parentNode = projectionNode->getNode("parent", true);
+            SGPropertyNode* thisNode = projectionNode->getNode("this", true);
+            SGPropertyNode* pointNode;
+
+            pointNode = parentNode->getNode("point", 0, true);
+            parentReference[0][0] = pointNode->getDoubleValue("x", 0)*2/parentInfo->physicalWidth;
+            parentReference[0][1] = pointNode->getDoubleValue("y", 0)*2/parentInfo->physicalHeight;
+            pointNode = parentNode->getNode("point", 1, true);
+            parentReference[1][0] = pointNode->getDoubleValue("x", 0)*2/parentInfo->physicalWidth;
+            parentReference[1][1] = pointNode->getDoubleValue("y", 0)*2/parentInfo->physicalHeight;
+
+            pointNode = thisNode->getNode("point", 0, true);
+            thisReference[0][0] = pointNode->getDoubleValue("x", 0)*2/physicalWidth;
+            thisReference[0][1] = pointNode->getDoubleValue("y", 0)*2/physicalHeight;
+            pointNode = thisNode->getNode("point", 1, true);
+            thisReference[1][0] = pointNode->getDoubleValue("x", 0)*2/physicalWidth;
+            thisReference[1][1] = pointNode->getDoubleValue("y", 0)*2/physicalHeight;
+        }
+
+        pOff = osg::Matrix::perspective(45, physicalWidth/physicalHeight, 1, 20000);
+        cameraFlags |= PROJECTION_ABSOLUTE | ENABLE_MASTER_ZOOM;
     } else {
         // old style shear parameters
         double shearx = cameraNode->getDoubleValue("shear-x", 0);
@@ -659,10 +858,21 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
     bool useMasterSceneGraph = !psNode;
     CameraInfo* info = addCamera(cameraFlags, camera, vOff, pOff,
                                  useMasterSceneGraph);
+    info->name = cameraNode->getStringValue("name");
+    info->physicalWidth = physicalWidth;
+    info->physicalHeight = physicalHeight;
+    info->bezelHeightTop = bezelHeightTop;
+    info->bezelHeightBottom = bezelHeightBottom;
+    info->bezelWidthLeft = bezelWidthLeft;
+    info->bezelWidthRight = bezelWidthRight;
+    info->relativeCameraParent = parentCameraIndex;
+    info->parentReference[0] = parentReference[0];
+    info->parentReference[1] = parentReference[1];
+    info->thisReference[0] = thisReference[0];
+    info->thisReference[1] = thisReference[1];
     // If a viewport isn't set on the camera, then it's hard to dig it
     // out of the SceneView objects in the viewer, and the coordinates
     // of mouse events are somewhat bizzare.
-    SGPropertyNode* viewportNode = cameraNode->getNode("viewport", true);
     buildViewport(info, viewportNode, window->gc->getTraits());
     updateCameras(info);
     // Distortion camera needs the viewport which is created by addCamera().

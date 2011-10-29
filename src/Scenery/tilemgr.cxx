@@ -209,7 +209,7 @@ void FGTileMgr::schedule_needed(const SGBucket& curr_bucket, double vis)
     // cout << "tile width = " << tile_width << "  tile_height = "
     //      << tile_height << endl;
 
-    double tileRangeM = min(vis,_maxTileRangeM->getDoubleValue());
+    double tileRangeM = std::min(vis,_maxTileRangeM->getDoubleValue());
     xrange = (int)(tileRangeM / tile_width) + 1;
     yrange = (int)(tileRangeM / tile_height) + 1;
     if ( xrange < 1 ) { xrange = 1; }

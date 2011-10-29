@@ -72,6 +72,17 @@ void FDMShell::init()
 {
   _props = globals->get_props();
   fgSetBool("/sim/fdm-initialized", false);
+
+  _wind_north       = _props->getNode("environment/wind-from-north-fps",    true);
+  _wind_east        = _props->getNode("environment/wind-from-east-fps",     true);
+  _wind_down        = _props->getNode("environment/wind-from-down-fps",     true);
+  _control_fdm_atmo = _props->getNode("environment/params/control-fdm-atmosphere", true);
+  _temp_degc        = _props->getNode("environment/temperature-degc",       true);
+  _pressure_inhg    = _props->getNode("environment/pressure-inhg",          true);
+  _density_slugft   = _props->getNode("environment/density-slugft3",        true);
+  _data_logging     = _props->getNode("/sim/temp/fdm-data-logging",         true);
+  _replay_master    = _props->getNode("/sim/freeze/replay-state",           true);
+
   createImplementation();
 }
 
@@ -138,30 +149,42 @@ void FDMShell::update(double dt)
 
 // pull environmental data in, since the FDMs are lazy
   _impl->set_Velocities_Local_Airmass(
-      _props->getDoubleValue("environment/wind-from-north-fps", 0.0),
-      _props->getDoubleValue("environment/wind-from-east-fps", 0.0),
-      _props->getDoubleValue("environment/wind-from-down-fps", 0.0));
+          _wind_north->getDoubleValue(),
+          _wind_east->getDoubleValue(),
+          _wind_down->getDoubleValue());
 
-  if (_props->getBoolValue("environment/params/control-fdm-atmosphere")) {
+  if (_control_fdm_atmo->getBoolValue()) {
     // convert from Rankine to Celsius
-    double tempDegC = _props->getDoubleValue("environment/temperature-degc");
+    double tempDegC = _temp_degc->getDoubleValue();
     _impl->set_Static_temperature((9.0/5.0) * (tempDegC + 273.15));
     
     // convert from inHG to PSF
-    double pressureInHg = _props->getDoubleValue("environment/pressure-inhg");
+    double pressureInHg = _pressure_inhg->getDoubleValue();
     _impl->set_Static_pressure(pressureInHg * 70.726566);
     // keep in slugs/ft^3
-    _impl->set_Density(_props->getDoubleValue("environment/density-slugft3"));
+    _impl->set_Density(_density_slugft->getDoubleValue());
   }
 
-  bool doLog = _props->getBoolValue("/sim/temp/fdm-data-logging", false);
+  bool doLog = _data_logging->getBoolValue();
   if (doLog != _dataLogging) {
     _dataLogging = doLog;
     _impl->ToggleDataLogging(doLog);
   }
 
-  if (!_impl->is_suspended())
-      _impl->update(dt);
+  switch(_replay_master->getIntValue())
+  {
+      case 0:
+          // normal FDM operation
+          _impl->update(dt);
+          break;
+      case 3:
+          // resume FDM operation at current replay position
+          _impl->reinit();
+          break;
+      default:
+          // replay is active
+          break;
+  }
 }
 
 void FDMShell::createImplementation()
@@ -250,15 +273,4 @@ void FDMShell::createImplementation()
                + "', cannot init flight dynamics model.");
     }
 
-}
-
-/*
- * Return FDM subsystem.
- */
-
-SGSubsystem* FDMShell::getFDM()
-{
-    /* FIXME we could drop/replace this method, when _impl was a added
-     * to the global subsystem manager - like other proper subsystems... */
-    return _impl;
 }

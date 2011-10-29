@@ -30,7 +30,12 @@
 #include <deque>
 
 #include "terrainsampler.hxx"
+
 using simgear::PropertyList;
+using std::deque;
+using std::vector;
+using std::ostringstream;
+using std::string;
 
 #include <simgear/props/tiedpropertylist.hxx>
 

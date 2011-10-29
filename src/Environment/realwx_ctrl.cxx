@@ -330,7 +330,7 @@ void NoaaMetarRealWxController::requestMetar( MetarDataHandler * metarDataHandle
               string reply;
 
               if( name == "X-TIME" ) {
-                  ostringstream buf;
+                  std::ostringstream buf;
                   buf <<  globals->get_time_params()->get_cur_time();
                   reply = buf.str();
               }

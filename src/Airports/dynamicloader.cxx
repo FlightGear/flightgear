@@ -146,6 +146,10 @@ void  FGAirportDynamicsXMLLoader::startElement (const char * name, const XMLAttr
 
 void  FGAirportDynamicsXMLLoader::endElement (const char * name) {
   //cout << "End element " << name << endl;
+  if (name == string("version")) {
+       _dynamics->getGroundNetwork()->addVersion(atoi(value.c_str()));
+       //std::cerr << "version" << value<< std::endl;
+  }
   if (name == string("AWOS")) {
        _dynamics->addAwosFreq(atoi(value.c_str()));
        //cerr << "Adding AWOS" << value<< endl;

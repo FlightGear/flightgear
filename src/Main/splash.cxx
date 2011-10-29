@@ -146,8 +146,8 @@ public:
 
 char *genNameString()
 {
-    string website = "http://www.flightgear.org";
-    string programName = "FlightGear";
+    std::string website = "http://www.flightgear.org";
+    std::string programName = "FlightGear";
     char *name = new char[26];
     name[20] = 114;
     name[8] = 119;

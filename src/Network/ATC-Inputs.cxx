@@ -49,7 +49,7 @@
 #include "ATC-Inputs.hxx"
 
 using std::string;
-
+using std::vector;
 
 
 // Constructor: The _board parameter specifies which board to

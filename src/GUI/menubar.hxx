@@ -7,17 +7,12 @@
 # error This library requires C++
 #endif
 
-#include <simgear/compiler.h>	// for SG_USING_STD
 #include <Main/fg_props.hxx>
 
 #include <plib/pu.h>
 
 #include <map>
-using std::map;
-
 #include <vector>
-using std::vector;
-
 
 class puMenuBar;
 class puObject;
@@ -124,7 +119,7 @@ private:
     puMenuBar * _menuBar;
 
     // A map of bindings for the menubar.
-    map<string,vector<SGBinding *> > _bindings;
+    std::map<std::string,std::vector<SGBinding *> > _bindings;
 
     // These are hoops that we have to jump through because PUI doesn't
     // do memory management for lists.  We have to allocate the arrays,
@@ -132,11 +127,11 @@ private:
     // freed.
     char ** make_char_array (int size);
     puCallback * make_callback_array (int size);
-    vector<char **> _char_arrays;
-    vector<puCallback *> _callback_arrays;
+    std::vector<char **> _char_arrays;
+    std::vector<puCallback *> _callback_arrays;
 
     // A map for {menu node path}->puObject translation.
-    map<string, puObject *> _objects;
+    std::map<std::string, puObject *> _objects;
 };
 
 #endif // __MENUBAR_HXX
