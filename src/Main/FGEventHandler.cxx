@@ -39,7 +39,7 @@ FGEventHandler::FGEventHandler() :
     keyHandler(0),
     mouseClickHandler(0),
     mouseMotionHandler(0),
-    statsHandler(new osgViewer::StatsHandler),
+    statsHandler(new FGStatsHandler),
     statsEvent(new osgGA::GUIEventAdapter),
     statsType(osgViewer::StatsHandler::NO_STATS),
     currentModifiers(0),
