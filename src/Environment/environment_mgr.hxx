@@ -56,6 +56,7 @@ public:
 
   virtual void init ();
   virtual void reinit ();
+  virtual void shutdown ();
   virtual void bind ();
   virtual void unbind ();
   virtual void update (double dt);
@@ -74,7 +75,8 @@ public:
 
   virtual FGEnvironment getEnvironment(const SGGeod& aPos) const;
 private:
-
+  void updateClosestAirport();
+  
   double get_cloud_layer_span_m (int index) const;
   void set_cloud_layer_span_m (int index, double span_m);
   double get_cloud_layer_elevation_ft (int index) const;
@@ -98,7 +100,6 @@ private:
   SGPropertyNode_ptr _altitude_n;
   SGPropertyNode_ptr _longitude_n;
   SGPropertyNode_ptr _latitude_n;
-  double _positionTimeToLive;
   simgear::TiedPropertyList _tiedProperties;
   SGPropertyChangeListener * _3dCloudsEnableListener;
 };

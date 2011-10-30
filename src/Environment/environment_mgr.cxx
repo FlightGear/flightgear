@@ -28,6 +28,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/scene/sky/sky.hxx>
 #include <simgear/scene/model/particles.hxx>
+#include <simgear/structure/event_mgr.hxx>
 
 #include <Main/main.hxx>
 #include <Main/fg_props.hxx>
@@ -90,7 +91,6 @@ FGEnvironmentMgr::FGEnvironmentMgr () :
   _altitude_n(fgGetNode("/position/altitude-ft", true)),
   _longitude_n(fgGetNode( "/position/longitude-deg", true )),
   _latitude_n( fgGetNode( "/position/latitude-deg", true )),
-  _positionTimeToLive(0.0),
   _3dCloudsEnableListener(new FG3DCloudsListener(fgClouds) )
 {
   set_subsystem("controller", Environment::LayerInterpolateController::createInstance( fgGetNode("/environment/config", true ) ));
@@ -145,6 +145,15 @@ FGEnvironmentMgr::init ()
   _altitude_n->setDoubleValue(fgGetDouble("/sim/presets/altitude-ft"));
   _longitude_n->setDoubleValue(fgGetDouble("/sim/presets/longitude-deg"));
   _latitude_n->setDoubleValue(fgGetDouble("/sim/presets/latitude-deg"));
+  
+  globals->get_event_mgr()->addTask("updateClosestAirport", this,
+                                    &FGEnvironmentMgr::updateClosestAirport, 30 );
+}
+
+void
+FGEnvironmentMgr::shutdown()
+{
+  globals->get_event_mgr()->removeTask("updateClosestAirport");
 }
 
 void
@@ -258,33 +267,30 @@ FGEnvironmentMgr::update (double dt)
       _latitude_n->getDoubleValue(),
       _altitude_n->getDoubleValue()
   )));
+}
 
-  _positionTimeToLive -= dt;
-  if( _positionTimeToLive <= 0.0 )
+void
+FGEnvironmentMgr::updateClosestAirport()
+{
+  SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "FGEnvironmentMgr::update: updating closest airport");
+  
+  SGGeod pos = globals->get_aircraft_position();
+  FGAirport * nearestAirport = FGAirport::findClosest(pos, 100.0);
+  if( nearestAirport == NULL )
   {
-      // update closest airport information
-      _positionTimeToLive = 30.0;
-
-      SG_LOG(SG_ENVIRONMENT, SG_INFO, "FGEnvironmentMgr::update: updating closest airport");
-
-      SGGeod pos = SGGeod::fromDeg(_longitude_n->getDoubleValue(),
-                                   _latitude_n->getDoubleValue());
-
-      FGAirport * nearestAirport = FGAirport::findClosest(pos, 100.0);
-      if( nearestAirport == NULL )
-      {
-          SG_LOG(SG_ENVIRONMENT,SG_WARN,"FGEnvironmentMgr::update: No airport within 100NM range");
-      }
-      else
-      {
-          const string currentId = fgGetString("/sim/airport/closest-airport-id", "");
-          if (currentId != nearestAirport->ident())
-          {
-              fgSetString("/sim/airport/closest-airport-id",
-                      nearestAirport->ident().c_str());
-          }
-      }
+    SG_LOG(SG_ENVIRONMENT,SG_WARN,"FGEnvironmentMgr::update: No airport within 100NM range");
   }
+  else
+  {
+    const string currentId = fgGetString("/sim/airport/closest-airport-id", "");
+    if (currentId != nearestAirport->ident())
+    {
+      SG_LOG(SG_ENVIRONMENT, SG_INFO, "FGEnvironmentMgr::updateClosestAirport: selected:" << nearestAirport->ident());
+      fgSetString("/sim/airport/closest-airport-id",
+                  nearestAirport->ident().c_str());
+    }
+  }
+
 }
 
 FGEnvironment
