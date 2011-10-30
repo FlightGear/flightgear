@@ -70,7 +70,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGFDMExec.cpp,v 1.115 2011/09/25 11:56:00 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGFDMExec.cpp,v 1.118 2011/10/22 15:11:23 bcoconni Exp $";
 static const char *IdHdr = ID_FDMEXEC;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -85,7 +85,7 @@ FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root)
 
   Frame           = 0;
   Error           = 0;
-  GroundCallback  = 0;
+  GroundCallback  = new FGDefaultGroundCallback();
   IC              = 0;
   Trim            = 0;
   Script          = 0;
@@ -186,6 +186,9 @@ FGFDMExec::~FGFDMExec()
 
   if (FDMctr > 0) (*FDMctr)--;
 
+  if(GroundCallback)
+     delete GroundCallback;
+
   Debug(1);
 }
 
@@ -210,7 +213,7 @@ bool FGFDMExec::Allocate(void)
   Models[ePropulsion]        = new FGPropulsion(this);
   Models[eAerodynamics]      = new FGAerodynamics (this);
 
-  GroundCallback  = new FGGroundCallback(((FGInertial*)Models[eInertial])->GetRefRadius());
+  GroundCallback->SetSeaLevelRadius(((FGInertial*)Models[eInertial])->GetRefRadius());
 
   Models[eGroundReactions]   = new FGGroundReactions(this);
   Models[eExternalReactions] = new FGExternalReactions(this);
@@ -266,8 +269,6 @@ bool FGFDMExec::DeAllocate(void)
   delete IC;
   delete Trim;
 
-  delete GroundCallback;
-
   Error       = 0;
 
   modelLoaded = false;
@@ -303,10 +304,10 @@ bool FGFDMExec::Run(void)
     firstPass = false;
   }
 
+  IncrTime();
+
   // returns true if success, false if complete
   if (Script != 0 && !IntegrationSuspended()) success = Script->RunScript();
-
-  IncrTime();
 
   for (unsigned int i = 0; i < Models.size(); i++) {
     LoadInputs(i);
@@ -563,9 +564,7 @@ void FGFDMExec::Initialize(FGInitialCondition *FGIC)
   Propagate->InitializeDerivatives();
   LoadInputs(eAtmosphere);
   Atmosphere->Run(false);
-  Winds->SetWindNED( FGIC->GetWindNFpsIC(),
-                     FGIC->GetWindEFpsIC(),
-                     FGIC->GetWindDFpsIC() );
+  Winds->SetWindNED(FGIC->GetWindNEDFpsIC());
   Auxiliary->Run(false);
 }
 

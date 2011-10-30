@@ -297,7 +297,6 @@ private:
 
     void do_trim(void);
 
-    double getMachFromVcas(double vcas);
     bool update_ground_cache(JSBSim::FGLocation cart, double* cart_pos, double dt);
     void init_gear(void);
     void update_gear(void);
