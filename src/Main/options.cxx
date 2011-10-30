@@ -333,7 +333,6 @@ parseIntValue(char** ppParserPos, int* pValue,int min, int max, const char* fiel
     }
 }
 
-#ifndef HAVE_RINT
 // parse a time string ([+/-]%f[:%f[:%f]]) into hours
 static double
 parse_time(const string& time_in) {
@@ -414,7 +413,6 @@ parse_time(const string& time_in) {
 
     return(sign * result);
 }
-#endif
 
 // parse a date string (yyyy:mm:dd:hh:mm:ss) into a time_t (seconds)
 static long int
