@@ -380,7 +380,7 @@ FGGlobals::get_aircraft_position() const
     throw sg_exception("Can't get aircraft position", "FGGlobals::get_aircraft_position()" );
 }
 
-const SGVec3d&
+SGVec3d
 FGGlobals::get_aircraft_positon_cart() const
 {
     return SGVec3d::fromGeod(get_aircraft_position());
