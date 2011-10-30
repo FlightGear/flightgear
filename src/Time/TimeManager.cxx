@@ -302,12 +302,12 @@ void TimeManager::updateLocalTime()
 void TimeManager::initTimeOffset()
 {
 
-  int offset = fgGetInt("/sim/startup/time-offset");
+  long int offset = fgGetLong("/sim/startup/time-offset");
   string offset_type = fgGetString("/sim/startup/time-offset-type");
   setTimeOffset(offset_type, offset);
 }
 
-void TimeManager::setTimeOffset(const std::string& offset_type, int offset)
+void TimeManager::setTimeOffset(const std::string& offset_type, long int offset)
 {
   // Handle potential user specified time offsets
   int orig_warp = _warp->getIntValue();
