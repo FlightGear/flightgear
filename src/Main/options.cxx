@@ -1951,14 +1951,17 @@ void Options::processOptions()
     exit(0);
   }
   
-  BOOST_FOREACH(const OptionValue& v, p->values) {
-    int result = p->processOption(v.desc, v.value);
+  // proces options in LIFO order, so earlier (first in) options are processed
+  // after, and hence override, later specified options.
+  OptionValueVec::const_reverse_iterator it = p->values.rbegin();
+  for (; it != p->values.rend(); ++it) {
+    int result = p->processOption(it->desc, it->value);
     if (result == FG_OPTIONS_ERROR) {
       showUsage();
       exit(-1);
     }
   }
-  
+
   BOOST_FOREACH(const SGPath& file, p->propertyFiles) {
     if (!file.exists()) {
       SG_LOG(SG_GENERAL, SG_ALERT, "config file not found:" << file.str());
