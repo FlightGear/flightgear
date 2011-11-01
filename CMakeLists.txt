@@ -37,8 +37,12 @@ include (CPack)
 # We have some custom .cmake scripts not in the official distribution.
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
 
-# autoconf compatibility
-set(PKGLIBDIR "foo")
+if (FG_DATA_DIR)
+    message(STATUS "Using explicit data-dir: ${FG_DATA_DIR}")
+else()
+    set(FG_DATA_DIR "${CMAKE_INSTALL_PREFIX}/lib/FlightGear")
+    message(STATUS "Using default data-dir:  ${FG_DATA_DIR}")
+endif()
 
 # Change the default build type to something fast
 if(NOT CMAKE_BUILD_TYPE)

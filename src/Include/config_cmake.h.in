@@ -33,6 +33,6 @@
 #cmakedefine HAVE_SVN_CLIENT_H
 #cmakedefine HAVE_LIBSVN_CLIENT_1
 
-#define PKGLIBDIR "@PKGLIBDIR"
+#define PKGLIBDIR "@FG_DATA_DIR@"
 
 #cmakedefine FG_HAVE_HLA
