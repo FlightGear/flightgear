@@ -43,12 +43,21 @@
 #endif
 #include <FDM/ExternalNet/ExternalNet.hxx>
 #include <FDM/ExternalPipe/ExternalPipe.hxx>
+
+#ifdef ENABLE_JSBSIM
 #include <FDM/JSBSim/JSBSim.hxx>
+#endif
+
+#ifdef ENABLE_LARCSIM
 #include <FDM/LaRCsim/LaRCsim.hxx>
+#endif
+
 #include <FDM/UFO.hxx>
 #include <FDM/NullFDM.hxx>
-#include <FDM/YASim/YASim.hxx>
 
+#ifdef ENABLE_YASIM
+#include <FDM/YASim/YASim.hxx>
+#endif
 
 /*
  * Evil global variable required by Network/FGNative,
@@ -194,12 +203,77 @@ void FDMShell::createImplementation()
   double dt = 1.0 / fgGetInt("/sim/model-hz");
   string model = fgGetString("/sim/flight-model");
 
-    if ( model == "larcsim" ) {
+  if ( model == "ufo" ) {
+    _impl = new FGUFO( dt );
+  } else if ( model == "external" ) {
+    // external is a synonym for "--fdm=null" and is
+    // maintained here for backwards compatibility
+    _impl = new FGNullFDM( dt );
+  } else if ( model.find("network") == 0 ) {
+    string host = "localhost";
+    int port1 = 5501;
+    int port2 = 5502;
+    int port3 = 5503;
+    string net_options = model.substr(8);
+    string::size_type begin, end;
+    begin = 0;
+    // host
+    end = net_options.find( ",", begin );
+    if ( end != string::npos ) {
+      host = net_options.substr(begin, end - begin);
+      begin = end + 1;
+    }
+    // port1
+    end = net_options.find( ",", begin );
+    if ( end != string::npos ) {
+      port1 = atoi( net_options.substr(begin, end - begin).c_str() );
+      begin = end + 1;
+    }
+    // port2
+    end = net_options.find( ",", begin );
+    if ( end != string::npos ) {
+      port2 = atoi( net_options.substr(begin, end - begin).c_str() );
+      begin = end + 1;
+    }
+    // port3
+    end = net_options.find( ",", begin );
+    if ( end != string::npos ) {
+      port3 = atoi( net_options.substr(begin, end - begin).c_str() );
+      begin = end + 1;
+    }
+    _impl = new FGExternalNet( dt, host, port1, port2, port3 );
+  } else if ( model.find("pipe") == 0 ) {
+    // /* old */ string pipe_path = model.substr(5);
+    // /* old */ _impl = new FGExternalPipe( dt, pipe_path );
+    string pipe_path = "";
+    string pipe_protocol = "";
+    string pipe_options = model.substr(5);
+    string::size_type begin, end;
+    begin = 0;
+    // pipe file path
+    end = pipe_options.find( ",", begin );
+    if ( end != string::npos ) {
+      pipe_path = pipe_options.substr(begin, end - begin);
+      begin = end + 1;
+    }
+    // protocol (last option)
+    pipe_protocol = pipe_options.substr(begin);
+    _impl = new FGExternalPipe( dt, pipe_path, pipe_protocol );
+  } else if ( model == "null" ) {
+    _impl = new FGNullFDM( dt );
+  } 
+#ifdef ENABLE_LARCSIM
+    else if ( model == "larcsim" ) {
         _impl = new FGLaRCsim( dt );
-    } else if ( model == "jsb" ) {
+    } 
+#endif
+#ifdef ENABLE_JSBSIM
+    else if ( model == "jsb" ) {
         _impl = new FGJSBsim( dt );
+    } 
+#endif
 #ifdef ENABLE_SP_FDM
-    } else if ( model == "ada" ) {
+    else if ( model == "ada" ) {
         _impl = new FGADA( dt );
     } else if ( model == "acms" ) {
         _impl = new FGACMS( dt );
@@ -207,68 +281,14 @@ void FDMShell::createImplementation()
         _impl = new FGBalloonSim( dt );
     } else if ( model == "magic" ) {
         _impl = new FGMagicCarpet( dt );
+    }
 #endif
-    } else if ( model == "ufo" ) {
-        _impl = new FGUFO( dt );
-    } else if ( model == "external" ) {
-        // external is a synonym for "--fdm=null" and is
-        // maintained here for backwards compatibility
-        _impl = new FGNullFDM( dt );
-    } else if ( model.find("network") == 0 ) {
-        string host = "localhost";
-        int port1 = 5501;
-        int port2 = 5502;
-        int port3 = 5503;
-        string net_options = model.substr(8);
-        string::size_type begin, end;
-        begin = 0;
-        // host
-        end = net_options.find( ",", begin );
-        if ( end != string::npos ) {
-            host = net_options.substr(begin, end - begin);
-            begin = end + 1;
-        }
-        // port1
-        end = net_options.find( ",", begin );
-        if ( end != string::npos ) {
-            port1 = atoi( net_options.substr(begin, end - begin).c_str() );
-            begin = end + 1;
-        }
-        // port2
-        end = net_options.find( ",", begin );
-        if ( end != string::npos ) {
-            port2 = atoi( net_options.substr(begin, end - begin).c_str() );
-            begin = end + 1;
-        }
-        // port3
-        end = net_options.find( ",", begin );
-        if ( end != string::npos ) {
-            port3 = atoi( net_options.substr(begin, end - begin).c_str() );
-            begin = end + 1;
-        }
-        _impl = new FGExternalNet( dt, host, port1, port2, port3 );
-    } else if ( model.find("pipe") == 0 ) {
-        // /* old */ string pipe_path = model.substr(5);
-        // /* old */ _impl = new FGExternalPipe( dt, pipe_path );
-        string pipe_path = "";
-        string pipe_protocol = "";
-        string pipe_options = model.substr(5);
-        string::size_type begin, end;
-        begin = 0;
-        // pipe file path
-        end = pipe_options.find( ",", begin );
-        if ( end != string::npos ) {
-            pipe_path = pipe_options.substr(begin, end - begin);
-            begin = end + 1;
-        }
-        // protocol (last option)
-        pipe_protocol = pipe_options.substr(begin);
-        _impl = new FGExternalPipe( dt, pipe_path, pipe_protocol );
-    } else if ( model == "null" ) {
-        _impl = new FGNullFDM( dt );
-    } else if ( model == "yasim" ) {
+#ifdef ENABLE_YASIM
+    else if ( model == "yasim" ) {
         _impl = new YASim( dt );
-    } else {
+    } 
+#endif
+    else {
         throw sg_exception(string("Unrecognized flight model '") + model
                + "', cannot init flight dynamics model.");
     }
