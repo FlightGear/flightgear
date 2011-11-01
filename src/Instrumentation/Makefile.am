@@ -23,6 +23,7 @@ libInstrumentation_a_SOURCES = \
 	mrg.cxx mrg.hxx\
         navradio.cxx navradio.hxx \
         newnavradio.cxx newnavradio.hxx \
+        commradio.cxx commradio.hxx \
         slip_skid_ball.cxx slip_skid_ball.hxx \
 	transponder.cxx transponder.hxx \
         turn_indicator.cxx turn_indicator.hxx \

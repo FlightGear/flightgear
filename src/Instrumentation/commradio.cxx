@@ -1,5 +1,5 @@
 // commradio.cxx -- implementation of FGCommRadio
-//
+// Class to manage radio propagation using the ITM model
 // Written by Adrian Musceac, started August 2011.
 //
 // This program is free software; you can redistribute it and/or
@@ -89,7 +89,7 @@ double FGCommRadio::getFrequency(int radio) {
 
 
 
-void FGCommRadio::receive_text(SGGeod tx_pos, double freq, string text,
+void FGCommRadio::receiveText(SGGeod tx_pos, double freq, string text,
 	int ground_to_air) {
 
 	comm1 = getFrequency(1);
