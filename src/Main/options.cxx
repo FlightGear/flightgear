@@ -1491,7 +1491,7 @@ struct OptionDesc {
     {"jsclient",                     true,  OPTION_CHANNEL, "", false, "", 0 },
     {"proxy",                        true,  OPTION_FUNC,    "", false, "", fgSetupProxy },
     {"callsign",                     true,  OPTION_FUNC,    "", false, "", fgOptCallSign},
-    {"multiplay",                    true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"multiplay",                    true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
 #ifdef FG_HAVE_HLA
     {"hla",                          true,  OPTION_CHANNEL, "", false, "", 0 },
 #endif
