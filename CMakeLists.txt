@@ -273,6 +273,7 @@ configure_file (
 
 add_subdirectory(src)
 add_subdirectory(utils)
+add_subdirectory(man)
 
 set (INSTALL_DOCS 
     README
