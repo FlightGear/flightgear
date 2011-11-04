@@ -1,4 +1,4 @@
-include(GnuInstallDirs)
+include(GNUInstallDirs)
 
 set(MANPAGES
     est-epsilon.1
