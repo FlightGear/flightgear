@@ -105,7 +105,20 @@ extern int _bootstrap_OSInit;
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
 static void fgMainLoop( void ) {
-          
+    
+    static SGConstPropertyNode_ptr longitude
+        = fgGetNode("/position/longitude-deg");
+    static SGConstPropertyNode_ptr latitude
+        = fgGetNode("/position/latitude-deg");
+    static SGConstPropertyNode_ptr altitude
+        = fgGetNode("/position/altitude-ft");
+    static SGConstPropertyNode_ptr vn_fps
+        = fgGetNode("/velocities/speed-north-fps");
+    static SGConstPropertyNode_ptr ve_fps
+        = fgGetNode("/velocities/speed-east-fps");
+    static SGConstPropertyNode_ptr vd_fps
+        = fgGetNode("/velocities/speed-down-fps");
+      
     static SGPropertyNode_ptr frame_signal
         = fgGetNode("/sim/signals/frame", true);
 
@@ -132,7 +145,11 @@ static void fgMainLoop( void ) {
     timeMgr->computeTimeDeltas(sim_dt, real_dt);
 
     // update magvar model
-    globals->get_mag()->update( globals->get_aircraft_position(),
+    globals->get_mag()->update( longitude->getDoubleValue()
+                                * SGD_DEGREES_TO_RADIANS,
+                                latitude->getDoubleValue()
+                                * SGD_DEGREES_TO_RADIANS,
+                                altitude->getDoubleValue() * SG_FEET_TO_METER,
                                 globals->get_time_params()->getJD() );
 
     // Run ATC subsystem
@@ -430,11 +447,16 @@ static void fgIdleFunction ( void ) {
         globals->set_mag( magvar );
 
 
-        // kludge to initialize mag compass
-        // (should only be done for in-flight
-        // startup)
+                                    // kludge to initialize mag compass
+                                    // (should only be done for in-flight
+                                    // startup)
         // update magvar model
-        globals->get_mag()->update( globals->get_aircraft_position(),
+        globals->get_mag()->update( fgGetDouble("/position/longitude-deg")
+                                    * SGD_DEGREES_TO_RADIANS,
+                                    fgGetDouble("/position/latitude-deg")
+                                    * SGD_DEGREES_TO_RADIANS,
+                                    fgGetDouble("/position/altitude-ft")
+                                    * SG_FEET_TO_METER,
                                     globals->get_time_params()->getJD() );
         double var = globals->get_mag()->get_magvar() * SGD_RADIANS_TO_DEGREES;
         fgSetDouble("/instrumentation/heading-indicator/offset-deg", -var);
