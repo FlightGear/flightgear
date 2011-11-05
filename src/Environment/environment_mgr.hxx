@@ -38,6 +38,7 @@ class FGMetarCtrl;
 class FGMetarFetcher;
 class FGClouds;
 class FGPrecipitationMgr;
+class SGSky;
 
 /**
  * Manage environment information.
@@ -102,6 +103,8 @@ private:
   SGPropertyNode_ptr _latitude_n;
   simgear::TiedPropertyList _tiedProperties;
   SGPropertyChangeListener * _3dCloudsEnableListener;
+  SGSky* _sky;
+    
 };
 
 #endif // _ENVIRONMENT_MGR_HXX
