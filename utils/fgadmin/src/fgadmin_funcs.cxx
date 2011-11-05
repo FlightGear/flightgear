@@ -256,7 +256,11 @@ void FGAdminUI::install_selected() {
             SGPath file( source );
             file.append( f );
             struct stat info;
+#if (FL_MAJOR_VERSION > 1 || ( FL_MAJOR_VERSION == 1 && FL_MINOR_VERSION >= 3 ))
             fl_stat( file.str().c_str(), &info );
+#else
+            stat( file.str().c_str(), &info );
+#endif
             float old_max = progress->maximum();
             progress->maximum( info.st_size );
             progress_label = "Installing ";
