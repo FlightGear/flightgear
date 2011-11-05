@@ -40,7 +40,7 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
 if (FG_DATA_DIR)
     message(STATUS "Using explicit data-dir: ${FG_DATA_DIR}")
 else()
-    set(FG_DATA_DIR "${CMAKE_INSTALL_PREFIX}/lib/FlightGear")
+    set(FG_DATA_DIR "${CMAKE_INSTALL_PREFIX}/lib/FlightGear" CACHE PATH "Default location where data files are located")
     message(STATUS "Using default data-dir:  ${FG_DATA_DIR}")
 endif()
 
@@ -93,7 +93,7 @@ option(EVENT_INPUT "Set to ON to build FlightGear with event-based Input support
 option(ENABLE_LIBSVN "Set to ON to build FlightGear/terrasync with libsvnclient support" ON)
 option(ENABLE_RTI "Set to ON to build SimGear with RTI support" OFF)
 option(WITH_FGPANEL "Set to ON to build the fgpanel application" ON)
-
+option(JPEG_FACTORY "Enable JPEG-factory support" OFF)
 
 if (MSVC)
   GET_FILENAME_COMPONENT(PARENT_DIR ${PROJECT_SOURCE_DIR} PATH)
@@ -189,6 +189,22 @@ endif(ENABLE_LIBSVN)
 
 find_package(PLIB REQUIRED puaux pu js fnt)
 find_package(SimGear 2.5.0 REQUIRED)
+
+if (JPEG_FACTORY)
+    # check simgear was built with JPEG-factory support
+    find_package(JPEG REQUIRED)
+    include_directories(${JPEG_INCLUDE_DIR})
+    
+    set(CMAKE_REQUIRED_INCLUDES ${SIMGEAR_INCLUDE_DIR} ${JPEG_INCLUDE_DIR})
+    check_cxx_source_compiles(
+        "#include <simgear/screen/jpgfactory.hxx>
+        int main()    { return 0; } "
+        FG_JPEG_SERVER)
+        
+    if (NOT FG_JPEG_SERVER)
+        message(STATUS "JPEG server support requested, but SimGear was built without JPEG support")
+    endif()
+endif()
 
 check_include_file(unistd.h HAVE_UNISTD_H)
 check_include_file(sys/time.h HAVE_SYS_TIME_H)
