@@ -197,7 +197,7 @@ if (JPEG_FACTORY)
     
     set(CMAKE_REQUIRED_INCLUDES 
         ${SIMGEAR_INCLUDE_DIR} 
-        ${JPEG_INCLUDE_DIR}) 
+        ${JPEG_INCLUDE_DIR} 
         ${OPENSCENEGRAPH_INCLUDE_DIRS})
         
     check_cxx_source_compiles(
