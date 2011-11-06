@@ -195,7 +195,11 @@ if (JPEG_FACTORY)
     find_package(JPEG REQUIRED)
     include_directories(${JPEG_INCLUDE_DIR})
     
-    set(CMAKE_REQUIRED_INCLUDES ${SIMGEAR_INCLUDE_DIR} ${JPEG_INCLUDE_DIR})
+    set(CMAKE_REQUIRED_INCLUDES 
+        ${SIMGEAR_INCLUDE_DIR} 
+        ${JPEG_INCLUDE_DIR}) 
+        ${OPENSCENEGRAPH_INCLUDE_DIRS})
+        
     check_cxx_source_compiles(
         "#include <simgear/screen/jpgfactory.hxx>
         int main()    { return 0; } "
