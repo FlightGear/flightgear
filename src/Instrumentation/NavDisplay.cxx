@@ -145,6 +145,22 @@ static osg::Vec2 mult(const osg::Vec2& v, const osg::Matrixf& m)
     return osg::Vec2(r.x(), r.y());
 }
 
+class NavDisplay::CacheListener : public SGPropertyChangeListener
+{
+public:
+    CacheListener(NavDisplay *nd) : 
+        _nd(nd)
+    {}
+    
+    virtual void valueChanged (SGPropertyNode * prop)
+    {
+        _nd->invalidatePositionedCache();
+        SG_LOG(SG_INSTR, SG_INFO, "invalidating NavDisplay cache");
+    }
+private:
+    NavDisplay* _nd;
+};
+
 ///////////////////////////////////////////////////////////////////
 
 class SymbolDef
@@ -381,8 +397,14 @@ NavDisplay::~NavDisplay()
 void
 NavDisplay::init ()
 {
+    _cachedItemsValid = false;
+    _cacheListener.reset(new CacheListener(this));
+    
     _serviceable_node = _Instrument->getNode("serviceable", true);
-
+    _rangeNode = _Instrument->getNode("range", true);
+    _rangeNode->setDoubleValue(40.0);
+    _rangeNode->addChangeListener(_cacheListener.get());
+    
     // texture name to use in 2D and 3D instruments
     _texture_path = _Instrument->getStringValue("radar-texture-path",
         "Aircraft/Instruments/Textures/od_wxradar.rgb");
@@ -401,11 +423,6 @@ NavDisplay::init ()
     FGInstrumentMgr *imgr = (FGInstrumentMgr *)globals->get_subsystem("instrumentation");
     _odg = (FGODGauge *)imgr->get_subsystem("od_gauge");
     _odg->setSize(_Instrument->getIntValue("texture-size", 512));
-
-
-    _user_lat_node = fgGetNode("/position/latitude-deg", true);
-    _user_lon_node = fgGetNode("/position/longitude-deg", true);
-    _user_alt_node = fgGetNode("/position/altitude-ft", true);
 
     _route = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));
     
@@ -508,7 +525,7 @@ NavDisplay::update (double delta_time_sec)
   }
   _time -= _updateInterval;
 
-  _rangeNm = _Instrument->getFloatValue("range", 40.0);
+  _rangeNm = _rangeNode->getFloatValue();
   if (_Instrument->getBoolValue("aircraft-heading-up", true)) {
     _view_heading = fgGetDouble("/orientation/heading-deg");
   } else {
@@ -527,9 +544,17 @@ NavDisplay::update (double delta_time_sec)
   _projectMat = osg::Matrixf::scale(_scale, _scale, 1.0) * 
       degRotation(-_view_heading) * _centerTrans;
   
-  _pos = SGGeod::fromDegFt(_user_lon_node->getDoubleValue(),
-                           _user_lat_node->getDoubleValue(),
-                           _user_alt_node->getDoubleValue());
+  _pos = globals->get_aircraft_position();
+
+    // invalidate the cache of positioned items, if we travelled more than 1nm
+    if (_cachedItemsValid) {
+        SGVec3d cartNow(SGVec3d::fromGeod(_pos));
+        double movedNm = dist(_cachedPos, cartNow) * SG_METER_TO_NM;
+        _cachedItemsValid = (movedNm < 1.0);
+        if (!_cachedItemsValid) {
+            SG_LOG(SG_INSTR, SG_INFO, "invalidating NavDisplay cache due to moving: " << movedNm);
+        }
+    }
     
   _vertices->clear();
   _lineVertices->clear();
@@ -538,6 +563,11 @@ NavDisplay::update (double delta_time_sec)
   _texCoords->clear();
   _textGeode->removeDrawables(0, _textGeode->getNumDrawables());
   
+  BOOST_FOREACH(SymbolInstance* si, _symbols) {
+      delete si;
+  }
+  _symbols.clear();
+    
   BOOST_FOREACH(SymbolDef* def, _rules) {
     if (def->enable) {
       def->enabled = def->enable->test();
@@ -787,15 +817,17 @@ public:
 
 void NavDisplay::findItems()
 {
-    Filter filt;
-    filt.minRunwayLengthFt = 2000;
-  
-    FGPositioned::List items = 
-        FGPositioned::findWithinRange(_pos, _rangeNm, &filt);
-
-    FGPositioned::List::const_iterator it;
-    for (it = items.begin(); it != items.end(); ++it) {
-        foundPositionedItem(*it);
+    if (!_cachedItemsValid) {
+        SG_LOG(SG_INSTR, SG_INFO, "re-validating NavDisplay cache");
+        Filter filt;
+        filt.minRunwayLengthFt = 2000;
+        _itemsInRange = FGPositioned::findWithinRange(_pos, _rangeNm, &filt);
+        _cachedItemsValid = true;
+        _cachedPos = SGVec3d::fromGeod(_pos);
+    }
+    
+    BOOST_FOREACH(FGPositioned* pos, _itemsInRange) {
+        foundPositionedItem(pos);
     }
 }
 
@@ -1118,11 +1150,26 @@ void NavDisplay::computeAIStates(const SGPropertyNode* ai, string_set& states)
     }
 }
 
-void NavDisplay::addSymbolInstance(const osg::Vec2& proj, double heading, SymbolDef* def, SGPropertyNode* vars)
+bool NavDisplay::addSymbolInstance(const osg::Vec2& proj, double heading, SymbolDef* def, SGPropertyNode* vars)
 {
+    if (isProjectedClipped(proj)) {
+        return false;
+    }
+    
     SymbolInstance* sym = new SymbolInstance(proj, heading, def, vars);
     _symbols.push_back(sym);
+    return true;
 }
+
+bool NavDisplay::isProjectedClipped(const osg::Vec2& projected) const
+{
+    double size = _odg->size();
+    return (projected.x() < 0.0) ||
+        (projected.y() < 0.0) ||
+        (projected.x() >= size) ||
+            (projected.y() >= size);
+}
+
 
 
 
