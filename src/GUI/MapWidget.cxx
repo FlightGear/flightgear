@@ -374,7 +374,7 @@ int MapData::_fontDescender = 0;
 
 ///////////////////////////////////////////////////////////////////////////
 
-const int MAX_ZOOM = 16;
+const int MAX_ZOOM = 12;
 const int SHOW_DETAIL_ZOOM = 8;
 const int CURSOR_PAN_STEP = 32;
 
@@ -403,11 +403,13 @@ MapWidget::~MapWidget()
 void MapWidget::setProperty(SGPropertyNode_ptr prop)
 {
   _root = prop;
-  int zoom = _root->getBoolValue("zoom", -1);
+  int zoom = _root->getIntValue("zoom", -1);
   if (zoom < 0) {
     _root->setIntValue("zoom", 6); // default zoom
   }
   
+// expose MAX_ZOOM to the UI
+  _root->setIntValue("max-zoom", MAX_ZOOM);
   _root->setBoolValue("centre-on-aircraft", true);
   _root->setBoolValue("draw-data", false);
   _root->setBoolValue("magnetic-headings", true);
@@ -516,20 +518,20 @@ int MapWidget::zoom() const
 
 void MapWidget::zoomIn()
 {
-  if (zoom() <= 0) {
-    return;
-  }
-
-  _root->setIntValue("zoom", zoom() - 1);
-}
-
-void MapWidget::zoomOut()
-{
   if (zoom() >= MAX_ZOOM) {
     return;
   }
 
   _root->setIntValue("zoom", zoom() + 1);
+}
+
+void MapWidget::zoomOut()
+{
+  if (zoom() <= 0) {
+    return;
+  }
+
+  _root->setIntValue("zoom", zoom() - 1);
 }
 
 void MapWidget::draw(int dx, int dy)
@@ -561,7 +563,7 @@ void MapWidget::draw(int dx, int dy)
     _upHeading = 0.0;
   }
 
-  _cachedZoom = zoom();
+  _cachedZoom = MAX_ZOOM - zoom();
   SGGeod topLeft = unproject(SGVec2d(_width/2, _height/2));
   // compute draw range, including a fudge factor for ILSs and other 'long'
   // symbols
