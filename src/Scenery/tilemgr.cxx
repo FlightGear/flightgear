@@ -29,6 +29,7 @@
 #include <functional>
 
 #include <osgViewer/Viewer>
+#include <osgDB/Registry>
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
@@ -275,8 +276,8 @@ FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
                                       new FGNasalModelData);
         else
             result=
-                SGModelLib::loadPagedModel(fullPath.str(), globals->get_props(),
-                                           new FGNasalModelData);
+                SGModelLib::loadDeferedModel(fullPath.str(), globals->get_props(),
+                                             new FGNasalModelData);
     } catch (const sg_io_exception& exc) {
         string m(exc.getMessage());
         m += " ";
