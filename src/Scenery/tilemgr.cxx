@@ -276,7 +276,7 @@ FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
                                       new FGNasalModelData);
         else
             result=
-                SGModelLib::loadDeferedModel(fullPath.str(), globals->get_props(),
+                SGModelLib::loadDeferredModel(fullPath.str(), globals->get_props(),
                                              new FGNasalModelData);
     } catch (const sg_io_exception& exc) {
         string m(exc.getMessage());

@@ -149,7 +149,8 @@ void FGLight::bind () {
     prop->tie("/rendering/scene/overcast",SGRawValuePointer<float>(&_overcast));
 
     _sunAngleRad = prop->getNode("/sim/time/sun-angle-rad", true);
-  
+    _sunAngleRad->setDoubleValue(_sun_angle);
+    
     // Read Only
     prop->tie("/rendering/scene/ambient/red",SGRawValuePointer<float>(&_scene_ambient[0]));
     prop->tie("/rendering/scene/ambient/green",SGRawValuePointer<float>(&_scene_ambient[1]));

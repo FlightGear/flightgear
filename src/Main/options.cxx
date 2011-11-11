@@ -1560,6 +1560,10 @@ public:
   {
     OptionValueVec::const_iterator it = values.begin();
     for (; it != values.end(); ++it) {
+      if (!it->desc) {
+        continue; // ignore markers
+      }
+      
       if (it->desc->option == key) {
         return it;
       }
@@ -1580,6 +1584,10 @@ public:
   
   int processOption(OptionDesc* desc, const string& arg_value)
   {
+    if (!desc) {
+      return FG_OPTIONS_OK; // tolerate marker options
+    }
+    
     switch ( desc->type & 0xffff ) {
       case OPTION_BOOL:
         fgSetBool( desc->property, desc->b_param );
@@ -1647,10 +1655,36 @@ public:
     
     return FG_OPTIONS_OK;
   }
+    
+  /**
+   * insert a marker value into the values vector. This is necessary
+   * when processing options, to ensure the correct ordering, where we scan
+   * for marker values in reverse, and then forwards within each group.
+   */
+  void insertGroupMarker()
+  {
+    values.push_back(OptionValue(NULL, "-"));
+  }
+  
+  /**
+   * given a current iterator into the values, find the preceeding group marker,
+   * or return the beginning of the value vector.
+   */
+  OptionValueVec::const_iterator rfindGroup(OptionValueVec::const_iterator pos) const
+  {
+    while (--pos != values.begin()) {
+      if (pos->desc == NULL) {
+        return pos; // found a marker, we're done
+      }
+    }
+    
+    return pos;
+  }
   
   bool showHelp,
     verbose,
     showAircraft;
+
   OptionDescDict options;
   OptionValueVec values;
   simgear::PathList propertyFiles;
@@ -1710,6 +1744,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
       p->propertyFiles.push_back(f);
     }
   } // of arguments iteration
+  p->insertGroupMarker(); // command line is one group
   
 // then config files
   SGPath config;
@@ -1850,6 +1885,7 @@ void Options::readConfig(const SGPath& path)
     in >> skipcomment;
   }
 
+  p->insertGroupMarker(); // each config file is a group
 }
   
 int Options::parseOption(const string& s)
@@ -1898,6 +1934,7 @@ int Options::addOption(const string &key, const string &value)
 {
   OptionDesc* desc = p->findOption(key);
   if (!desc) {
+    SG_LOG(SG_GENERAL, SG_ALERT, "unknown option:" << key);
     return FG_OPTIONS_ERROR;
   }
   
@@ -1934,6 +1971,10 @@ string_list Options::valuesForOption(const std::string& key) const
   string_list result;
   OptionValueVec::const_iterator it = p->values.begin();
   for (; it != p->values.end(); ++it) {
+    if (!it->desc) {
+      continue; // ignore marker values
+    }
+    
     if (it->desc->option == key) {
       result.push_back(it->value);
     }
@@ -1951,17 +1992,28 @@ void Options::processOptions()
     exit(0);
   }
   
-  // proces options in LIFO order, so earlier (first in) options are processed
-  // after, and hence override, later specified options.
-  OptionValueVec::const_reverse_iterator it = p->values.rbegin();
-  for (; it != p->values.rend(); ++it) {
-    int result = p->processOption(it->desc, it->value);
-    if (result == FG_OPTIONS_ERROR) {
-      showUsage();
-      exit(-1);
+  // processing order is complicated. We must process groups LIFO, but the
+  // values *within* each group in FIFO order, to retain consistency with
+  // older versions of FG, and existing user configs.
+  // in practice this means system.fgfsrc must be *processed* before
+  // .fgfsrc, which must be processed before the command line args, and so on.
+  OptionValueVec::const_iterator groupEnd = p->values.end();
+    
+  while (groupEnd != p->values.begin()) {
+    OptionValueVec::const_iterator groupBegin = p->rfindGroup(groupEnd);
+  // run over the group in FIFO order
+    OptionValueVec::const_iterator it;
+    for (it = groupBegin; it != groupEnd; ++it) {      
+      int result = p->processOption(it->desc, it->value);
+      if (result == FG_OPTIONS_ERROR) {
+        showUsage();
+        exit(-1);
+      }
     }
+    
+    groupEnd = groupBegin;
   }
-
+  
   BOOST_FOREACH(const SGPath& file, p->propertyFiles) {
     if (!file.exists()) {
       SG_LOG(SG_GENERAL, SG_ALERT, "config file not found:" << file.str());
