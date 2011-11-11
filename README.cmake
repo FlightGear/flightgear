@@ -187,7 +187,7 @@ Source and build directories can be located anywhere.
 
 The suggested inputs to cmake are :
       MSVC_3RDPARTY_ROOT : location of the above directory structure
-	  CMAKE_INSTALL_PREFIX : ${MSVC_3RDPARTY_ROOT}/install/msvc100/FlightGear (or any variation for the compiler version described above )
+      CMAKE_INSTALL_PREFIX : ${MSVC_3RDPARTY_ROOT}/install/msvc100/FlightGear (or any variation for the compiler version described above )
 
 
 1. Set up a work directory as described above
