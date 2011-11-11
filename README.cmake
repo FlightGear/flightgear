@@ -162,7 +162,7 @@ SPECIAL INSTRUCTIONS TO BUILD UNDER WINDOWS WITH VISUAL STUDIO
 ==============================================================
 
 On Windows, assumptions on the directory structure are made to automate the discovery of dependencies.
-This recognized directory structure is described below :
+This recommended directory structure is described below:
 
 ${MSVC_3RDPARTY_ROOT} /
       3rdParty /                 ( includes plib, fltk, zlib, libpng, libjpeg, libtiff, freetype, libsvn, gdal, ...
@@ -183,43 +183,43 @@ ${MSVC_3RDPARTY_ROOT} /
                include /
                lib /
 
-Source and build directories can be located anywhere.
+If you do not use the recommended structure you will need to enter paths by hand. Source and build directories can be located anywhere.
 
 The suggested inputs to cmake are :
       MSVC_3RDPARTY_ROOT : location of the above directory structure
       CMAKE_INSTALL_PREFIX : ${MSVC_3RDPARTY_ROOT}/install/msvc100/FlightGear (or any variation for the compiler version described above )
 
 
-1. Set up a work directory as described above
+1. Set up a work directory as described above.
 
-2. Open the Cmake gui
+2. Open the Cmake gui.
 
-3. Set "Where is the source code" to wherever you put the FlightGear sources (from the released tarball or the git repository)
+3. Set "Where is the source code" to wherever you put the FlightGear sources (from the released tarball or the git repository).
 
-4. Set "Where to build the binaries" to an empty directory
+4. Set "Where to build the binaries" to an empty directory.
 
 5. Press the "Configure" button. The first time that the project is configured, Cmake will bring up a window asking which compiler you wish to use. Normally just accept Cmakes suggestion, and press Finish. Cmake will now do a check on your system and will produce a preliminary build configuration.
 
-6. Cmake adds new configuration variables in red. Some have a value ending with -NOTFOUND. These variable should receive your attention. Some errors will prevent FlightGear to build and others will simply invalidate some options without provoking build errors. First check the MSVC_3RDPARTY_ROOT variable. If it is not set, chances are that there will be a lot of -NOTFOUND errors. Instead of trying to fix every error individually, set that variable and press the "Configure" button again.
+6. Cmake adds new configuration variables in red. Some have a value ending with -NOTFOUND. These variables should receive your attention. Some errors will prevent FlightGear to build and others will simply invalidate some options without provoking build errors. First check the MSVC_3RDPARTY_ROOT variable. If it is not set, chances are that there will be a lot of -NOTFOUND errors. Instead of trying to fix every error individually, set that variable and press the "Configure" button again.
 
 7. Also check the lines with a checkbox. These are build options and may impact the feature set of the built program.
 
-8. Change the CMAKE_INSTALL_PREFIX to ${MSVC_3RDPARTY_ROOT}/install/msvc100/FlightGear because C:\Program Files is likely unwritable to simple Windows users and will integrate better with the above directory structure (this is mandatory for SimGear if you don't want to solve errors by hand)
+8. Change the CMAKE_INSTALL_PREFIX to ${MSVC_3RDPARTY_ROOT}/install/msvc100/FlightGear because C:\Program Files is likely unwritable to ordinary Windows users and will integrate better with the above directory structure (this is mandatory for SimGear if you don't want to solve errors by hand).
 
-10. repeat the process until the "Generate" button is enabled
+10. Repeat the process until the "Generate" button is enabled.
 
-11. press the "Generate" button.
+11. Press the "Generate" button.
 
 12. Start Visual Studio 2010 and load the FlightGear solution (FlightGear.sln) located in "Where to build the binaries" (point 4.)
 
 13. Choose the "Release" build in the VS2010 "Generation" toolbar
 
-14. Generate the solution
+14. Generate the solution.
 
 15. If there are build errors, return to Cmake, clear remaining errors, "Configure" and "Generate"
 
 16. When Visual Studio is able to build everything without errors, build the INSTALL project to put the product files in ${CMAKE_INSTALL_PREFIX}
 
-17. enjoy
+17. Enjoy!
 
-PS: When updating source from git, it is usually useless to restart Cmake as the solution is able to reconfigure itself when Cmake files are changed. Simply rebuild the solution from Visual Studio and accept the reload of updated projects. It also possible to edit CMakeList.txt files directly in Visual Studio as they also appear in the solution, and projects will be reconfigured on the next generation. To change build options or directory path, it is mandatory to use the Cmake Gui. In case of problems, locate the CMakeCache.txt in "Where to build the binaries” directory and delete it to reconfigure from scratch.
+PS: When updating the source from git, it is usually unnecessary to restart Cmake as the solution is able to reconfigure itself when Cmake files are changed. Simply rebuild the solution from Visual Studio and accept the reload of updated projects. It also possible to edit CMakeList.txt files directly in Visual Studio as they also appear in the solution, and projects will be reconfigured on the next generation. To change build options or directory path, it is mandatory to use the Cmake Gui. In case of problems, locate the CMakeCache.txt in "Where to build the binaries” directory and delete it to reconfigure from scratch or use the menu item File->Delete Cache.
