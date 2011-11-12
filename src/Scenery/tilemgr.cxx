@@ -35,7 +35,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/scene/model/modellib.hxx>
-#include <simgear/scene/tgdb/SGReaderWriterBTGOptions.hxx>
+#include <simgear/scene/util/SGReaderWriterOptions.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
 
 #include <Main/globals.hxx>
@@ -55,33 +55,11 @@ using simgear::TileEntry;
 using simgear::TileCache;
 
 
-// helper: listen to property changes affecting tile loading
-class LoaderPropertyWatcher : public SGPropertyChangeListener
-{
-public:
-    LoaderPropertyWatcher(FGTileMgr* pTileMgr) :
-        _pTileMgr(pTileMgr)
-    {
-    }
-
-    virtual void valueChanged(SGPropertyNode*)
-    {
-        _pTileMgr->configChanged();
-    }
-
-private:
-    FGTileMgr* _pTileMgr;
-};
-
-
 FGTileMgr::FGTileMgr():
     state( Start ),
     vis( 16000 ),
-    _terra_sync(NULL),
-    _propListener(new LoaderPropertyWatcher(this))
+    _terra_sync(NULL)
 {
-    _randomObjects = fgGetNode("/sim/rendering/random-objects", true);
-    _randomVegetation = fgGetNode("/sim/rendering/random-vegetation", true);
     _maxTileRangeM = fgGetNode("/sim/rendering/static-lod/bare", true);
 }
 
@@ -91,8 +69,6 @@ FGTileMgr::~FGTileMgr()
     // remove all nodes we might have left behind
     osg::Group* group = globals->get_scenery()->get_terrain_branch();
     group->removeChildren(0, group->getNumChildren());
-    delete _propListener;
-    _propListener = NULL;
     // clear OSG cache
     osgDB::Registry::instance()->clearObjectCache();
 }
@@ -102,12 +78,9 @@ FGTileMgr::~FGTileMgr()
 void FGTileMgr::init() {
     SG_LOG( SG_TERRAIN, SG_INFO, "Initializing Tile Manager subsystem." );
 
-    _options = new SGReaderWriterBTGOptions;
-    _options->setMatlib(globals->get_matlib());
-
-    _randomObjects.get()->addChangeListener(_propListener, false);
-    _randomVegetation.get()->addChangeListener(_propListener, false);
-    configChanged();
+    _options = new simgear::SGReaderWriterOptions;
+    _options->setMaterialLib(globals->get_matlib());
+    _options->setPropertyNode(globals->get_props());
 
     osgDB::FilePathList &fp = _options->getDatabasePathList();
     const string_list &sc = globals->get_fg_scenery();
@@ -151,12 +124,6 @@ void FGTileMgr::reinit()
 
     // force an update now
     update(0.0);
-}
-
-void FGTileMgr::configChanged()
-{
-    _options->setUseRandomObjects(_randomObjects.get()->getBoolValue());
-    _options->setUseRandomVegetation(_randomVegetation.get()->getBoolValue());
 }
 
 /* schedule a tile for loading, keep request for given amount of time.

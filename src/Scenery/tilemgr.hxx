@@ -31,8 +31,6 @@
 #include <simgear/scene/tgdb/TileEntry.hxx>
 #include <simgear/scene/tgdb/TileCache.hxx>
 
-class SGReaderWriterBTGOptions;
-
 namespace osg
 {
 class Node;
@@ -41,6 +39,7 @@ class Node;
 namespace simgear
 {
 class SGTerraSync;
+class SGReaderWriterOptions;
 }
 
 class FGTileMgr : public SGSubsystem, public simgear::ModelLoadHelper {
@@ -65,7 +64,7 @@ private:
     SGBucket previous_bucket;
     SGBucket current_bucket;
     SGBucket pending;
-    osg::ref_ptr<SGReaderWriterBTGOptions> _options;
+    osg::ref_ptr<simgear::SGReaderWriterOptions> _options;
 
     // x and y distance of tiles to load/draw
     float vis;
@@ -89,9 +88,6 @@ private:
     static void refresh_tile(void* tileMgr, long tileIndex);
 
     SGPropertyNode* _visibilityMeters;
-    SGPropertyChangeListener* _propListener;
-    SGPropertyNode_ptr _randomObjects;
-    SGPropertyNode_ptr _randomVegetation;
     SGPropertyNode_ptr _maxTileRangeM;
     
 public:
@@ -104,9 +100,6 @@ public:
     virtual void reinit();
 
     virtual void update(double dt);
-
-    // update loader configuration options
-    void configChanged();
 
     int schedule_tiles_at(const SGGeod& location, double rangeM);
 
