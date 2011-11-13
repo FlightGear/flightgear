@@ -80,6 +80,7 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::vector;
+using std::cin;
 
 #define NEW_DEFAULT_MODEL_HZ 120
 
@@ -2189,8 +2190,8 @@ void Options::showUsage() const
     cout << "For a complete list of options use --help --verbose" << endl;
   }
 #ifdef _MSC_VER
-  cout << "Hit a key to continue..." << endl;
-  cin.get();
+  std::cout << "Hit a key to continue..." << std::endl;
+  std::cin.get();
 #endif
 }
   
