@@ -45,7 +45,6 @@ using std::vector;
 #include <Airports/runways.hxx>     // FGRunway
 #include <GUI/gui.h>                // fntRenderer ?   guiErrorMessage()
 #include <GUI/new_gui.hxx>          // FGFontCache, FGColor
-#include <Include/fg_typedefs.h>
 #include <Main/fg_props.hxx>
 
 
