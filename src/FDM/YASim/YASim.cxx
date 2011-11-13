@@ -139,7 +139,14 @@ void YASim::init()
     SGPath f(fgGetString("/sim/aircraft-dir"));
     f.append(fgGetString("/sim/aero"));
     f.concat(".xml");
-    readXML(f.str(), *_fdm);
+    try {
+        readXML(f.str(), *_fdm);
+    } catch (const sg_exception &e) {
+        SG_LOG(SG_GENERAL, SG_ALERT,
+               "Error reading YASim FDM: '" << f.str() << "'" << endl
+               << e.getFormattedMessage());
+        throw e;
+    }
 
     // Compile it into a real airplane, and tell the user what they got
     a->compile();
