@@ -85,7 +85,9 @@ private:
     // Update the various queues maintained by the tilemagr (private
     // internal function, do not call directly.)
     void update_queues();
-    
+
+    static void refresh_tile(void* tileMgr, long tileIndex);
+
     SGPropertyNode* _visibilityMeters;
     SGPropertyChangeListener* _propListener;
     SGPropertyNode_ptr _randomObjects;

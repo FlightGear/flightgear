@@ -121,6 +121,10 @@ void FGTileMgr::init() {
     reinit();
 }
 
+void FGTileMgr::refresh_tile(void* tileMgr, long tileIndex)
+{
+    ((FGTileMgr*) tileMgr)->tile_cache.refresh_tile(tileIndex);
+}
 
 void FGTileMgr::reinit()
 {
@@ -143,7 +147,7 @@ void FGTileMgr::reinit()
 
     _terra_sync = (simgear::SGTerraSync*) globals->get_subsystem("terrasync");
     if (_terra_sync)
-        _terra_sync->setTileCache(&tile_cache);
+        _terra_sync->setTileRefreshCb(&refresh_tile, this);
 
     // force an update now
     update(0.0);
