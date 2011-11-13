@@ -143,7 +143,7 @@ void YASim::init()
         readXML(f.str(), *_fdm);
     } catch (const sg_exception &e) {
         SG_LOG(SG_GENERAL, SG_ALERT,
-               "Error reading YASim FDM: '" << f.str() << "'" << endl
+               "Error reading YASim FDM: '" << f.str() << "'" << std::endl
                << e.getFormattedMessage());
         throw e;
     }
