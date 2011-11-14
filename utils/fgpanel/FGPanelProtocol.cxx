@@ -32,6 +32,8 @@
 #include <simgear/io/sg_socket.hxx>
 #include <simgear/misc/strutils.hxx>
 
+using namespace std;
+
 class PropertySetter {
 public:
   PropertySetter( SGPropertyNode_ptr node ) : _node(node) {}
