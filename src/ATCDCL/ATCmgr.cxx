@@ -52,6 +52,7 @@ FGATCMgr::FGATCMgr() :
 }
 
 FGATCMgr::~FGATCMgr() {
+    globals->set_ATC_mgr(NULL);
     delete v1;
 }
 
