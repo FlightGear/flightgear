@@ -1,7 +1,20 @@
 #!/bin/sh
 
-BASE="/home/curt/Projects/FlightGear/"
-VERSION="2.5"
+echo $1 $2
+
+if [ "x$1" != "x" ]; then
+    BASE="$1"
+else
+    BASE="/home/curt/Projects/FlightGear/"
+fi
+
+if [ "x$2" != "x" ]; then
+    VERSION="$2"
+else
+    VERSION="2.5"
+fi
+
+echo base dir = $BASE, version = $VERSION
 
 cd $BASE
 
@@ -21,7 +34,7 @@ tar \
 	--exclude='*/Docs/source' \
 	--exclude='*/Models/MNUAV' \
 	--exclude='*/Models/Airspace' \
-	-cjvf FlightGear-data-$(VERSION).tar.bz2 \
+	-cjvf FlightGear-data-${VERSION}.tar.bz2 \
 		data/AI \
 		data/Aircraft/Generic \
 		data/Aircraft/Instruments \
