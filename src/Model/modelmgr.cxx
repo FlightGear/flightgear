@@ -75,7 +75,7 @@ FGModelMgr::add_model (SGPropertyNode * node)
   osg::Node *object;
 
   try {
-    object = SGModelLib::loadPagedModel(path, globals->get_props());
+      object = SGModelLib::loadDeferredModel(path, globals->get_props());
   } catch (const sg_throwable& t) {
     SG_LOG(SG_GENERAL, SG_ALERT, "Error loading " << path << ":\n  "
         << t.getFormattedMessage() << t.getOrigin());

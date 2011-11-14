@@ -26,6 +26,7 @@
 
 #include <math.h>
 #include <algorithm>
+#include <fstream>
 
 
 #include <osg/Geode>

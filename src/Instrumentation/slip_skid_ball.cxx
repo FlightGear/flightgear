@@ -3,6 +3,10 @@
 //
 // This file is in the Public Domain and comes with no warranty.
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "slip_skid_ball.hxx"
 #include <Main/fg_props.hxx>
 #include <Main/util.hxx>

@@ -225,7 +225,7 @@ static struct enbet {
 };
 
 
-class EventNameByEventType : public map<unsigned,const char*> {
+class EventNameByEventType : public std::map<unsigned,const char*> {
 public:
   EventNameByEventType() {
     for( unsigned i = 0; i < sizeof(EVENT_NAMES_BY_EVENT_TYPE)/sizeof(EVENT_NAMES_BY_EVENT_TYPE[0]); i++ )
@@ -234,7 +234,7 @@ public:
 };
 static EventNameByEventType EVENT_NAME_BY_EVENT_TYPE;
 
-class EventNameByType : public map<TypeCode,const char*> {
+class EventNameByType : public std::map<TypeCode,const char*> {
 public:
   EventNameByType() {
     for( unsigned i = 0; i < sizeof(EVENT_TYPES)/sizeof(EVENT_TYPES[0]); i++ )
@@ -246,11 +246,11 @@ static EventNameByType EVENT_NAME_BY_TYPE;
 
 struct ltstr {
   bool operator()(const char * s1, const char * s2 ) const {
-    return string(s1).compare( s2 ) < 0;
+    return std::string(s1).compare( s2 ) < 0;
   }
 };
 
-class EventTypeByName : public map<const char *,TypeCode,ltstr> {
+class EventTypeByName : public std::map<const char *,TypeCode,ltstr> {
 public:
   EventTypeByName() {
     for( unsigned i = 0; i < sizeof(EVENT_TYPES)/sizeof(EVENT_TYPES[0]); i++ )
@@ -260,7 +260,7 @@ public:
 static EventTypeByName EVENT_TYPE_BY_NAME;
 
 
-FGLinuxInputDevice::FGLinuxInputDevice( string aName, string aDevname ) :
+FGLinuxInputDevice::FGLinuxInputDevice( std::string aName, std::string aDevname ) :
   FGInputDevice(aName),
   devname( aDevname ),
   fd(-1)
@@ -290,7 +290,7 @@ void FGLinuxInputDevice::Open()
 {
   if( fd != -1 ) return;
   if( (fd = ::open( devname.c_str(), O_RDWR )) == -1 ) { 
-    throw exception();
+    throw std::exception();
   }
 
   if( GetGrab() && ioctl( fd, EVIOCGRAB, 2 ) == -1 ) {
@@ -440,7 +440,7 @@ const char * FGLinuxInputDevice::TranslateEventName( FGEventData & eventData )
   return EVENT_NAME_BY_TYPE[typeCode];
 }
 
-void FGLinuxInputDevice::SetDevname( string name )
+void FGLinuxInputDevice::SetDevname( std::string name )
 {
   this->devname = name; 
 }
@@ -540,8 +540,8 @@ void FGLinuxEventInput::update( double dt )
   // index the input devices by the associated fd and prepare
   // the pollfd array by filling in the file descriptor
   struct pollfd fds[input_devices.size()];
-  map<int,FGLinuxInputDevice*> devicesByFd;
-  map<int,FGInputDevice*>::const_iterator it;
+  std::map<int,FGLinuxInputDevice*> devicesByFd;
+  std::map<int,FGInputDevice*>::const_iterator it;
   int i;
   for( i=0, it = input_devices.begin(); it != input_devices.end(); ++it, i++ ) {
     FGInputDevice* p = (*it).second;

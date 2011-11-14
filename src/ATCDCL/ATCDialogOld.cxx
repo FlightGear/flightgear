@@ -205,7 +205,13 @@ void FGATCDialog::PopupDialog() {
 	button_group->removeChildren("button", false);
 
 	string label;
-	FGATC* atcptr = globals->get_ATC_mgr()->GetComm1ATCPointer();	// Hardwired to comm1 at the moment
+	FGATCMgr* pAtcMgr = globals->get_ATC_mgr();
+	if (!pAtcMgr)
+	{
+	    SG_LOG(SG_ATC, SG_ALERT, "ERROR! No ATC manager! Oops...");
+	    return;
+	}
+	FGATC* atcptr = pAtcMgr->GetComm1ATCPointer();	// Hardwired to comm1 at the moment
 
 	if (!atcptr) {
 		label = "Not currently tuned to any ATC service";
@@ -260,7 +266,13 @@ void FGATCDialog::PopupDialog() {
 }
 
 void FGATCDialog::PopupCallback(int num) {
-	FGATC* atcptr = globals->get_ATC_mgr()->GetComm1ATCPointer();	// FIXME - Hardwired to comm1 at the moment
+    FGATCMgr* pAtcMgr = globals->get_ATC_mgr();
+    if (!pAtcMgr)
+    {
+        SG_LOG(SG_ATC, SG_ALERT, "ERROR! No ATC manager! Oops...");
+        return;
+    }
+	FGATC* atcptr = pAtcMgr->GetComm1ATCPointer();	// FIXME - Hardwired to comm1 at the moment
 
 	if (!atcptr)
 		return;

@@ -25,7 +25,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/material/matlib.hxx>
-#include <simgear/scene/tgdb/SGReaderWriterBTGOptions.hxx>
+#include <simgear/scene/util/SGReaderWriterOptions.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
 #include <simgear/scene/tgdb/TileEntry.hxx>
 #include <simgear/scene/model/ModelRegistry.hxx>
@@ -223,15 +223,14 @@ fgviewerMain(int argc, char** argv)
     // The file path list must be set in the registry.
     osgDB::Registry::instance()->getDataFilePathList() = filePathList;
 
-    SGReaderWriterBTGOptions* btgOptions = new SGReaderWriterBTGOptions;
-    btgOptions->getDatabasePathList() = filePathList;
-    btgOptions->setMatlib(globals->get_matlib());
-    btgOptions->setUseRandomObjects(fgGetBool("/sim/rendering/random-objects", false));
-    btgOptions->setUseRandomVegetation(fgGetBool("/sim/rendering/random-vegetation", false));
+    simgear::SGReaderWriterOptions* options = new simgear::SGReaderWriterOptions;
+    options->getDatabasePathList() = filePathList;
+    options->setMaterialLib(globals->get_matlib());
+    options->setPropertyNode(globals->get_props());
 
     // read the scene from the list of file specified command line args.
     osg::ref_ptr<osg::Node> loadedModel;
-    loadedModel = osgDB::readNodeFiles(dataFiles, btgOptions);
+    loadedModel = osgDB::readNodeFiles(dataFiles, options);
 
     // if no model has been successfully loaded report failure.
     if (!loadedModel.valid()) {
