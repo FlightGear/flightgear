@@ -43,7 +43,7 @@ struct FGLinuxEventData : public FGEventData {
 class FGLinuxInputDevice : public FGInputDevice {
 public:
   FGLinuxInputDevice();
-  FGLinuxInputDevice( string name, string devname );
+  FGLinuxInputDevice( std::string name, std::string devname );
   virtual ~FGLinuxInputDevice();
 
   virtual void Open();
@@ -51,17 +51,17 @@ public:
   virtual void Send( const char * eventName, double value );
   virtual const char * TranslateEventName( FGEventData & eventData );
 
-  void SetDevname( const string name );
-  string GetDevname() const { return devname; }
+  void SetDevname( const std::string name );
+  std::string GetDevname() const { return devname; }
 
   int GetFd() { return fd; }
 
   double Normalize( struct input_event & event );
 private:
-  string devname;
+  std::string devname;
   int fd;
 
-  map<unsigned int,input_absinfo> absinfo;
+  std::map<unsigned int,input_absinfo> absinfo;
 };
 
 class FGLinuxEventInput : public FGEventInput {
