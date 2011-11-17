@@ -89,7 +89,7 @@ Section "" ;No components page, name is not important
   ; VC runtime redistributables
   File "$%VCINSTALLDIR%\redist\x86\Microsoft.VC100.CRT\*.dll"
   
-  File /r ${FGRunDir}\share
+  File /r ${FGRunDir}\share\locale
   
   SetOutPath $INSTDIR\osgPlugins-${OSGVersion}
   File ${OSGPluginsDir}\osgdb_ac.dll
