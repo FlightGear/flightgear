@@ -102,6 +102,7 @@ Section "" ;No components page, name is not important
   File ${OSGPluginsDir}\osgdb_png.dll
   File ${OSGPluginsDir}\osgdb_dds.dll
   File ${OSGPluginsDir}\osgdb_txf.dll
+  File ${OSGPluginsDir}\osgdb_freetype.dll
   File ${OSGPluginsDir}\osgdb_serializers_osg.dll
   File ${OSGPluginsDir}\osgdb_serializers_osganimation.dll
   File ${OSGPluginsDir}\osgdb_serializers_osgfx.dll
