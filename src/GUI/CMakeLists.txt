@@ -13,6 +13,7 @@ set(SOURCES
 	layout-props.cxx
 	layout.cxx
 	menubar.cxx
+	FGPUIMenuBar.cxx
 	new_gui.cxx
 	property_list.cxx
 	FGFontCache.cxx
@@ -29,6 +30,7 @@ set(HEADERS
 	gui.h
 	layout.hxx
 	menubar.hxx
+	FGPUIMenuBar.hxx
 	new_gui.hxx
 	property_list.hxx
 	FGFontCache.hxx

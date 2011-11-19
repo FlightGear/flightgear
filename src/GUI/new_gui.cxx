@@ -26,7 +26,7 @@
 #include "GL/glx.h"
 #endif
 
-#include "menubar.hxx"
+#include "FGPUIMenuBar.hxx"
 #include "FGPUIDialog.hxx"
 #include "FGFontCache.hxx"
 #include "FGColor.hxx"
@@ -41,14 +41,13 @@ using std::string;
 
 
 NewGUI::NewGUI ()
-    : _menubar(new FGMenuBar),
+    : _menubar(new FGPUIMenuBar),
       _active_dialog(0)
 {
 }
 
 NewGUI::~NewGUI ()
 {
-    delete _menubar;
     _dialog_props.clear();
     for (_itt_t it = _colors.begin(); it != _colors.end(); ++it)
         delete it->second;
@@ -92,8 +91,7 @@ NewGUI::reset (bool reload)
     setStyle();
 
     unbind();
-    delete _menubar;
-    _menubar = new FGMenuBar;
+    _menubar.reset(new FGPUIMenuBar);
 
     if (reload) {
         _dialog_props.clear();
@@ -214,7 +212,7 @@ NewGUI::getActiveDialog ()
 FGMenuBar *
 NewGUI::getMenuBar ()
 {
-    return _menubar;
+    return _menubar.get();
 }
 
 bool

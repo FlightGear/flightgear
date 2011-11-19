@@ -219,7 +219,7 @@ private:
     // Read all the configuration files in a directory.
     void readDir (const SGPath& path);
 
-    FGMenuBar * _menubar;
+    std::auto_ptr<FGMenuBar> _menubar;
     FGDialog * _active_dialog;
     std::map<std::string,FGDialog *> _active_dialogs;
     std::map<std::string,SGPropertyNode_ptr> _dialog_props;
