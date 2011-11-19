@@ -102,6 +102,7 @@ void TimeManager::init()
   // frame-rate / worst-case latency / update-rate counters
   _frameRate = fgGetNode("/sim/frame-rate", true);
   _frameLatency = fgGetNode("/sim/frame-latency-max-ms", true);
+  _frameRateWorst = fgGetNode("/sim/frame-rate-worst", true);
   _lastFrameTime = 0;
   _frameLatencyMax = 0.0;
   _frameCount = 0;
@@ -267,6 +268,8 @@ void TimeManager::computeFrameRate()
   if ((_impl->get_cur_time() != _lastFrameTime)) {
     _frameRate->setIntValue(_frameCount);
     _frameLatency->setDoubleValue(_frameLatencyMax*1000);
+    if (_frameLatencyMax>0)
+        _frameRateWorst->setIntValue(1/_frameLatencyMax);
     _frameCount = 0;
     _frameLatencyMax = 0.0;
   }

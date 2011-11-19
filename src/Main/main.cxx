@@ -108,15 +108,6 @@ static void fgMainLoop( void )
     static SGPropertyNode_ptr frame_signal
         = fgGetNode("/sim/signals/frame", true);
 
-    static SGPropertyNode_ptr _statisticsFlag
-        = fgGetNode("/sim/timing-statistics/enabled", true);
-    static SGPropertyNode_ptr _statisticsInterval
-        = fgGetNode("/sim/timing-statistics/interval-s", true);
-    static SGPropertyNode_ptr _statiticsMinJitter
-        = fgGetNode("/sim/timing-statistics/min-jitter-ms", true);
-    static SGPropertyNode_ptr _statiticsMinTime
-        = fgGetNode("/sim/timing-statistics/min-time-ms", true);
-
     frame_signal->fireValueChanged();
     
     SG_LOG( SG_GENERAL, SG_DEBUG, "Running Main Loop");
@@ -194,27 +185,6 @@ static void fgMainLoop( void )
             fgSplashProgress("loading scenery");
             // be nice to loader threads while waiting for initial scenery, reduce to 2fps
             SGTimeStamp::sleepForMSec(500);
-        }
-    }
-
-    // print timing statistics
-    static bool _lastStatisticsFlag = false;
-    if (_lastStatisticsFlag != _statisticsFlag->getBoolValue())
-    {
-        // flag has changed, update subsystem manager
-        _lastStatisticsFlag = _statisticsFlag->getBoolValue();
-        globals->get_subsystem_mgr()->collectDebugTiming(_lastStatisticsFlag);
-    }
-    if (_lastStatisticsFlag)
-    {
-        static double elapsed = 0;
-        elapsed += real_dt;
-        if (elapsed >= _statisticsInterval->getDoubleValue())
-        {
-            // print and reset timing statistics
-            globals->get_subsystem_mgr()->printTimingStatistics(_statiticsMinTime->getDoubleValue(),
-                                                                _statiticsMinJitter->getDoubleValue());
-            elapsed = 0;
         }
     }
 

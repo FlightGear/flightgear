@@ -701,7 +701,7 @@ public:
             if (modelPath.empty())
                 return;
             FGAIManager *aiMgr;
-            aiMgr = static_cast<FGAIManager*>(globals->get_subsystem("ai_model"));
+            aiMgr = static_cast<FGAIManager*>(globals->get_subsystem("ai-model"));
             if (!aiMgr)
                 return;
 

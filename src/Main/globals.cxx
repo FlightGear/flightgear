@@ -167,7 +167,7 @@ FGGlobals::~FGGlobals()
     // deallocation of AIModel objects. To ensure we can safely
     // shut down all subsystems, make sure we take down the 
     // AIModels system first.
-    SGSubsystem* ai = subsystem_mgr->remove("ai_model");
+    SGSubsystem* ai = subsystem_mgr->remove("ai-model");
     if (ai) {
         ai->unbind();
         delete ai;
