@@ -27,7 +27,7 @@
 #endif
 
 #include "menubar.hxx"
-#include "dialog.hxx"
+#include "FGPUIDialog.hxx"
 #include "FGFontCache.hxx"
 #include "FGColor.hxx"
 
@@ -80,7 +80,7 @@ void
 NewGUI::reset (bool reload)
 {
     map<string,FGDialog *>::iterator iter;
-    vector<string> dlg;
+    std::vector<string> dlg;
     // close all open dialogs and remember them ...
     for (iter = _active_dialogs.begin(); iter != _active_dialogs.end(); ++iter)
         dlg.push_back(iter->first);
@@ -138,7 +138,7 @@ NewGUI::showDialog (const string &name)
         return false;
     } else {
         if(!_active_dialogs[name])
-            _active_dialogs[name] = new FGDialog(_dialog_props[name]);
+            _active_dialogs[name] = new FGPUIDialog(_dialog_props[name]);
         return true;
     }
 }

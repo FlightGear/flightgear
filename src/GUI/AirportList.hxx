@@ -5,7 +5,7 @@
 
 #include <simgear/compiler.h>
 #include <plib/puAux.h>
-#include "dialog.hxx"
+#include "FGPUIDialog.hxx"
 
 class FGAirportList;
 

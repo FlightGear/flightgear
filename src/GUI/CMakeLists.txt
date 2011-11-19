@@ -6,6 +6,7 @@ set(SOURCES
 	SafeTexFont.cxx
 	WaypointList.cxx
 	dialog.cxx
+	FGPUIDialog.cxx
 	fonts.cxx
 	gui.cxx
 	gui_funcs.cxx
@@ -24,6 +25,7 @@ set(HEADERS
 	SafeTexFont.hxx
 	WaypointList.hxx
 	dialog.hxx
+	FGPUIDialog.hxx
 	gui.h
 	layout.hxx
 	menubar.hxx
