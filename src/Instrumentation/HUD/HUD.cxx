@@ -34,9 +34,12 @@
 #include <simgear/props/props_io.hxx>
 #include <osg/GLU>
 
+#include <plib/fnt.h>
+
 #include <Main/globals.hxx>
 #include <Main/viewmgr.hxx>
 #include <Main/viewer.hxx>
+#include <GUI/FGFontCache.hxx>
 
 #include "HUD.hxx"
 

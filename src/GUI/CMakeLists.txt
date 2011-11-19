@@ -14,6 +14,8 @@ set(SOURCES
 	menubar.cxx
 	new_gui.cxx
 	property_list.cxx
+	FGFontCache.cxx
+	FGColor.cxx
 	)
 
 set(HEADERS
@@ -27,6 +29,8 @@ set(HEADERS
 	menubar.hxx
 	new_gui.hxx
 	property_list.hxx
+	FGFontCache.hxx
+	FGColor.hxx
 	)
     		
 flightgear_component(GUI "${SOURCES}" "${HEADERS}")

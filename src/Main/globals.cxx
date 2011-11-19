@@ -47,7 +47,7 @@
 #include <ATCDCL/ATCmgr.hxx>
 #include <Autopilot/route_mgr.hxx>
 #include <Cockpit/panel.hxx>
-#include <GUI/new_gui.hxx>
+#include <GUI/FGFontCache.hxx>
 #include <Model/acmodel.hxx>
 #include <Model/modelmgr.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
@@ -220,7 +220,7 @@ void FGGlobals::set_fg_root (const string &root) {
     SGPath tmp( fg_root );
     tmp.append( "data" );
     tmp.append( "version" );
-    if ( ulFileExists( tmp.c_str() ) ) {
+    if ( tmp.exists() ) {
         fgGetNode("BAD_FG_ROOT", true)->setStringValue(fg_root);
         fg_root += "/data";
         fgGetNode("GOOD_FG_ROOT", true)->setStringValue(fg_root);

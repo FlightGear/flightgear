@@ -82,7 +82,7 @@
 #include "fg_os.hxx"
 #include "WindowSystemAdapter.hxx"
 #include <Main/viewer.hxx>
-
+#include <Main/fg_props.hxx>
 
 using namespace flightgear;
 

@@ -44,6 +44,7 @@
 #include <Main/fg_props.hxx>
 #include <Main/WindowSystemAdapter.hxx>
 #include <GUI/new_gui.hxx>
+#include <GUI/FGFontCache.hxx>
 
 #include "gui.h"
 #include "layout.hxx"

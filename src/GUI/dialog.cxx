@@ -9,6 +9,8 @@
 
 #include <Scripting/NasalSys.hxx>
 #include <Main/fg_os.hxx>
+#include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 
 #include "dialog.hxx"
 #include "new_gui.hxx"
@@ -17,6 +19,8 @@
 #include "layout.hxx"
 #include "WaypointList.hxx"
 #include "MapWidget.hxx"
+#include "FGFontCache.hxx"
+#include "FGColor.hxx"
 
 enum format_type { f_INVALID, f_INT, f_LONG, f_FLOAT, f_DOUBLE, f_STRING };
 static const int FORMAT_BUFSIZE = 255;
