@@ -7,6 +7,7 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/misc/sg_path.hxx>
 
+#include <string.h>
 #include <functional>
 #include <vector>
 #include <map>
