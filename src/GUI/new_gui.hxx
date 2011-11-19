@@ -11,6 +11,7 @@
 #include <functional>
 #include <vector>
 #include <map>
+#include <memory> // for auto_ptr on some systems
 
 class SGBinding;
 
