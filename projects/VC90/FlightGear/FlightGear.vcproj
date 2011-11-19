@@ -386,19 +386,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Aircraft\replay.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Aircraft\replay.hxx"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\src\Aircraft\flightrecorder.cxx"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\src\Aircraft\flightrecorder.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Aircraft\replay.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Aircraft\replay.hxx"
 				>
 			</File>
 		</Filter>
@@ -2526,6 +2526,38 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\GUI\FGColor.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\GUI\FGColor.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\GUI\FGFontCache.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\GUI\FGFontCache.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\GUI\FGPUIDialog.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\GUI\FGPUIDialog.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\GUI\FGPUIMenuBar.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\GUI\FGPUIMenuBar.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Gui\fonts.cxx"
 				>
 			</File>
@@ -3754,6 +3786,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\Instrumentation\NavDisplay.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Instrumentation\NavDisplay.hxx"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\Instrumentation\navradio.cxx"
 				>
 			</File>
@@ -3775,14 +3815,6 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\Instrumentation\od_gauge.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Instrumentation\NavDisplay.cxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Instrumentation\NavDisplay.hxx"
 				>
 			</File>
 			<File
