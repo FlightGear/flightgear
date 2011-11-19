@@ -1206,7 +1206,7 @@ bool fgInitSubsystems() {
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("performance-mon",
             new SGPerformanceMonitor(globals->get_subsystem_mgr(),
-                                     fgGetNode("/sim/performance", true)));
+                                     fgGetNode("/sim/performance-monitor", true)));
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the material property subsystem.
