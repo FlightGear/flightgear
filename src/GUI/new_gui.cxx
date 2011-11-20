@@ -27,6 +27,11 @@
 #endif
 
 #include "FGPUIMenuBar.hxx"
+
+#if defined(SG_MAC)
+#include "FGCocoaMenuBar.hxx"
+#endif
+
 #include "FGPUIDialog.hxx"
 #include "FGFontCache.hxx"
 #include "FGColor.hxx"
@@ -40,10 +45,14 @@ using std::string;
 
 
 
-NewGUI::NewGUI ()
-    : _menubar(new FGPUIMenuBar),
-      _active_dialog(0)
+NewGUI::NewGUI () :
+  _active_dialog(0)
 {
+#if defined(SG_MAC)
+  _menubar.reset(new FGCocoaMenuBar);
+#else
+  _menubar.reset(new FGPUIMenuBar);
+#endif
 }
 
 NewGUI::~NewGUI ()
@@ -91,7 +100,13 @@ NewGUI::reset (bool reload)
     setStyle();
 
     unbind();
+#if defined(SG_MAC)
+    if (reload) {
+        _menubar.reset(new FGCocoaMenuBar);
+    }
+#else
     _menubar.reset(new FGPUIMenuBar);
+#endif
 
     if (reload) {
         _dialog_props.clear();

@@ -37,4 +37,9 @@ set(HEADERS
 	FGColor.hxx
 	)
     		
+if (APPLE)
+    list(APPEND HEADERS FGCocoaMenuBar.hxx)
+    list(APPEND SOURCES FGCocoaMenuBar.mm)
+endif()
+    		
 flightgear_component(GUI "${SOURCES}" "${HEADERS}")
