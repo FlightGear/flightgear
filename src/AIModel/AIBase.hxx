@@ -43,6 +43,7 @@ using std::list;
 class SGMaterial;
 class FGAIManager;
 class FGAIFlightPlan;
+class FGFX;
 
 class FGAIBase : public SGReferenced {
 
@@ -225,6 +226,7 @@ private:
     object_type _otype;
     bool _initialized;
     osg::ref_ptr<osg::LOD> _model; //The 3D model LOD object
+    SGSharedPtr<FGFX>  _fx;
 
 public:
     object_type getType();

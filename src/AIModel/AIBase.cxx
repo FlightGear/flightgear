@@ -42,6 +42,7 @@
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 #include <Scripting/NasalSys.hxx>
+#include <Sound/fg_fx.hxx>
 
 #include "AIBase.hxx"
 #include "AIManager.hxx"
@@ -70,7 +71,8 @@ FGAIBase::FGAIBase(object_type ot, bool enableHot) :
     _impact_speed(0),
     _refID( _newAIModelID() ),
     _otype(ot),
-    _initialized(false)
+    _initialized(false),
+    _fx(0)
 
 {
     tgt_heading = hdg = tgt_altitude_ft = tgt_speed = 0.0;
@@ -137,6 +139,9 @@ FGAIBase::~FGAIBase() {
         if (parent)
             model_removed->setStringValue(props->getPath());
     }
+    delete _fx;
+    _fx = 0;
+
     delete fp;
     fp = 0;
 }
@@ -198,6 +203,19 @@ void FGAIBase::update(double dt) {
 
     ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.getLatitudeRad());
     ft_per_deg_lon = 365228.16 * cos(pos.getLatitudeRad());
+
+    if ( _fx )
+    {
+        // update model's audio sample values
+        _fx->set_position_geod( pos );
+
+        SGQuatd orient = SGQuatd::fromYawPitchRollDeg(hdg, pitch, roll);
+        _fx->set_orientation( orient );
+
+        SGVec3d velocity;
+        velocity = SGVec3d( speed_north_deg_sec, speed_east_deg_sec, pitch*speed );
+        _fx->set_velocity( velocity );
+    }
 }
 
 /** update LOD properties of the model */
@@ -293,6 +311,20 @@ bool FGAIBase::init(bool search_in_AI_path) {
         aip.setVisible(true);
         invisible = false;
         globals->get_scenery()->get_scene_graph()->addChild(aip.getSceneGraph());
+
+        // Get the sound-path tag from the configuration file and store it
+        // in the property tree.
+        string fxpath = props->getStringValue("/sim/sound/path");
+        if ( !fxpath.empty() )
+        {
+            props->setStringValue("sim/sound/path", fxpath.c_str());
+
+            // initialize the sound configuration
+            SGSoundMgr *smgr = globals->get_soundmgr();
+            _fx = new FGFX(smgr, "aifx:"+f, props);
+            _fx->init();
+        }
+
         _initialized = true;
 
     } else if (!model_path.empty()) {
@@ -400,7 +432,12 @@ void FGAIBase::bind() {
     props->setDoubleValue("controls/flight/target-alt", altitude_ft);
     props->setDoubleValue("controls/flight/target-pitch", pitch);
 
-   props->setDoubleValue("controls/flight/target-spd", speed);
+    props->setDoubleValue("controls/flight/target-spd", speed);
+
+    props->setBoolValue("sim/sound/avionics/enabled", false);
+    props->setDoubleValue("sim/sound/avionics/volume", 0.0);
+    props->setBoolValue("sim/sound/avionics/external-view", false);
+    props->setBoolValue("sim/current-view/internal", false);
 
 }
 
