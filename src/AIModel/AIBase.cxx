@@ -314,7 +314,7 @@ bool FGAIBase::init(bool search_in_AI_path) {
 
         // Get the sound-path tag from the configuration file and store it
         // in the property tree.
-        string fxpath = props->getStringValue("/sim/sound/path");
+        string fxpath = props->getStringValue("sim/sound/path");
         if ( !fxpath.empty() )
         {
             props->setStringValue("sim/sound/path", fxpath.c_str());
