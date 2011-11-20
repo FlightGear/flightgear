@@ -93,105 +93,10 @@ using std::cerr;
 // splash screen up and running right away.
 int idle_state = 0;
 
-
-void fgInitSoundManager();
-void fgSetNewSoundDevice(const char *);
-
 // The atexit() function handler should know when the graphical subsystem
 // is initialized.
 extern int _bootstrap_OSInit;
 
-// What should we do when we have nothing else to do?  Let's get ready
-// for the next move and update the display?
-static void fgMainLoop( void )
-{
-    static SGPropertyNode_ptr frame_signal
-        = fgGetNode("/sim/signals/frame", true);
-
-    frame_signal->fireValueChanged();
-    
-    SG_LOG( SG_GENERAL, SG_DEBUG, "Running Main Loop");
-    SG_LOG( SG_GENERAL, SG_DEBUG, "======= ==== ====");
-    
-    
-  // update "time"
-    double sim_dt, real_dt;
-    TimeManager* timeMgr = (TimeManager*) globals->get_subsystem("time");
-    // compute simulated time (allowing for pause, warp, etc) and
-    // real elapsed time
-    timeMgr->computeTimeDeltas(sim_dt, real_dt);
-
-    // update magvar model
-    globals->get_mag()->update( globals->get_aircraft_position(),
-                                globals->get_time_params()->getJD() );
-
-    globals->get_subsystem_mgr()->update(sim_dt);
-
-    // Update the sound manager last so it can use the CPU while the GPU
-    // is processing the scenery (doubled the frame-rate for me) -EMH-
-#ifdef ENABLE_AUDIO_SUPPORT
-    static bool smgr_init = true;
-    static SGPropertyNode *sound_working = fgGetNode("/sim/sound/working");
-    if (smgr_init == true) {
-        if (sound_working->getBoolValue() == true) {
-            fgInitSoundManager();
-            smgr_init = false;
-        }
-    } else {
-        static SGPropertyNode *sound_enabled = fgGetNode("/sim/sound/enabled");
-        static SGSoundMgr *smgr = globals->get_soundmgr();
-        static bool smgr_enabled = true;
-
-        if (sound_working->getBoolValue() == false) {	// request to reinit
-           smgr->reinit();
-           smgr->resume();
-           sound_working->setBoolValue(true);
-        }
-
-        if (smgr_enabled != sound_enabled->getBoolValue()) {
-            if (smgr_enabled == true) { // request to suspend
-                smgr->suspend();
-                smgr_enabled = false;
-            } else {
-                smgr->resume();
-                smgr_enabled = true;
-            }
-        }
-
-        if (smgr_enabled == true) {
-            static SGPropertyNode *volume = fgGetNode("/sim/sound/volume");
-            smgr->set_volume(volume->getFloatValue());
-            smgr->update(sim_dt);
-        }
-    }
-#endif
-
-    // END Tile Manager updates
-    bool scenery_loaded = fgGetBool("sim/sceneryloaded");
-    if (!scenery_loaded)
-    {
-        if (globals->get_tile_mgr()->isSceneryLoaded()
-             && fgGetBool("sim/fdm-initialized")) {
-            fgSetBool("sim/sceneryloaded",true);
-            fgSplashProgress("");
-            if (fgGetBool("/sim/sound/working")) {
-                globals->get_soundmgr()->activate();
-            }
-            globals->get_props()->tie("/sim/sound/devices/name",
-                  SGRawValueFunctions<const char *>(0, fgSetNewSoundDevice), false);
-        }
-        else
-        {
-            fgSplashProgress("loading scenery");
-            // be nice to loader threads while waiting for initial scenery, reduce to 2fps
-            SGTimeStamp::sleepForMSec(500);
-        }
-    }
-
-    simgear::AtomicChangeListener::fireChangeListeners();
-
-    SG_LOG( SG_GENERAL, SG_DEBUG, "" );
-}
 
 void fgInitSoundManager()
 {
@@ -210,10 +115,116 @@ void fgInitSoundManager()
 
 void fgSetNewSoundDevice(const char *device)
 {
-    globals->get_soundmgr()->suspend();
-    globals->get_soundmgr()->stop();
-    globals->get_soundmgr()->init(device);
-    globals->get_soundmgr()->resume();
+    SGSoundMgr *smgr = globals->get_soundmgr();
+    smgr->suspend();
+    smgr->stop();
+    smgr->init(device);
+    smgr->resume();
+}
+
+// Update sound manager state (init/suspend/resume) and propagate property values,
+// since the sound manager doesn't read any properties itself.
+// Actual sound update is triggered by the subsystem manager.
+static void fgUpdateSound(double dt)
+{
+#ifdef ENABLE_AUDIO_SUPPORT
+    static bool smgr_init = true;
+    static SGPropertyNode *sound_working = fgGetNode("/sim/sound/working");
+    if (smgr_init == true) {
+        if (sound_working->getBoolValue() == true) {
+            fgInitSoundManager();
+            smgr_init = false;
+        }
+    } else {
+        static SGPropertyNode *sound_enabled = fgGetNode("/sim/sound/enabled");
+        static SGSoundMgr *smgr = globals->get_soundmgr();
+        static bool smgr_enabled = true;
+
+        if (sound_working->getBoolValue() == false) {   // request to reinit
+           smgr->reinit();
+           smgr->resume();
+           sound_working->setBoolValue(true);
+        }
+
+        if (smgr_enabled != sound_enabled->getBoolValue()) {
+            if (smgr_enabled == true) { // request to suspend
+                smgr->suspend();
+                smgr_enabled = false;
+            } else {
+                smgr->resume();
+                smgr_enabled = true;
+            }
+        }
+
+        if (smgr_enabled == true) {
+            static SGPropertyNode *volume = fgGetNode("/sim/sound/volume");
+            smgr->set_volume(volume->getFloatValue());
+        }
+    }
+#endif
+}
+
+static void fgLoadInitialScenery()
+{
+    static SGPropertyNode_ptr scenery_loaded
+        = fgGetNode("sim/sceneryloaded", true);
+
+    if (!scenery_loaded->getBoolValue())
+    {
+        if (globals->get_tile_mgr()->isSceneryLoaded()
+             && fgGetBool("sim/fdm-initialized")) {
+            fgSetBool("sim/sceneryloaded",true);
+            fgSplashProgress("");
+            if (fgGetBool("/sim/sound/working")) {
+                globals->get_soundmgr()->activate();
+            }
+            globals->get_props()->tie("/sim/sound/devices/name",
+                  SGRawValueFunctions<const char *>(0, fgSetNewSoundDevice), false);
+        }
+        else
+        {
+            fgSplashProgress("loading scenery");
+            // be nice to loader threads while waiting for initial scenery, reduce to 2fps
+            SGTimeStamp::sleepForMSec(500);
+        }
+    }
+}
+
+// What should we do when we have nothing else to do?  Let's get ready
+// for the next move and update the display?
+static void fgMainLoop( void )
+{
+    static SGPropertyNode_ptr frame_signal
+        = fgGetNode("/sim/signals/frame", true);
+
+    frame_signal->fireValueChanged();
+
+    SG_LOG( SG_GENERAL, SG_DEBUG, "Running Main Loop");
+    SG_LOG( SG_GENERAL, SG_DEBUG, "======= ==== ====");
+
+    // compute simulated time (allowing for pause, warp, etc) and
+    // real elapsed time
+    double sim_dt, real_dt;
+    TimeManager* timeMgr = (TimeManager*) globals->get_subsystem("time");
+    timeMgr->computeTimeDeltas(sim_dt, real_dt);
+
+    // update magvar model
+    globals->get_mag()->update( globals->get_aircraft_position(),
+                                globals->get_time_params()->getJD() );
+
+    // Propagate sound manager properties (note: actual update is triggered
+    // by the subsystem manager).
+    fgUpdateSound(sim_dt);
+
+    // update all subsystems
+    globals->get_subsystem_mgr()->update(sim_dt);
+
+    // END Tile Manager updates
+    fgLoadInitialScenery();
+
+    simgear::AtomicChangeListener::fireChangeListeners();
+
+    SG_LOG( SG_GENERAL, SG_DEBUG, "" );
 }
 
 // Operation for querying OpenGL parameters. This must be done in a

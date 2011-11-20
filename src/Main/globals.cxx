@@ -125,7 +125,6 @@ FGGlobals::FGGlobals() :
     renderer( new FGRenderer ),
     subsystem_mgr( new SGSubsystemMgr ),
     event_mgr( new SGEventMgr ),
-    soundmgr( new SGSoundMgr ),
     sim_time_sec( 0.0 ),
     fg_root( "" ),
     time_params( NULL ),
@@ -151,7 +150,7 @@ FGGlobals::FGGlobals() :
     dmelist( NULL ),
     tacanlist( NULL ),
     carrierlist( NULL ),
-    channellist( NULL )    
+    channellist( NULL )
 {
   simgear::ResourceManager::instance()->addProvider(new AircraftResourceProvider());
   simgear::PropertyObjectBase::setDefaultRoot(props);
@@ -206,9 +205,6 @@ FGGlobals::~FGGlobals()
     delete tacanlist;
     delete carrierlist;
     delete channellist;
-
-    soundmgr->unbind();
-    delete soundmgr;
 }
 
 
@@ -360,7 +356,10 @@ FGGlobals::add_subsystem (const char * name,
 SGSoundMgr *
 FGGlobals::get_soundmgr () const
 {
-    return soundmgr;
+    if (subsystem_mgr)
+        return (SGSoundMgr*) subsystem_mgr->get_subsystem("sound");
+
+    return NULL;
 }
 
 SGEventMgr *

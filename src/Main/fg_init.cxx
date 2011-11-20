@@ -1182,6 +1182,15 @@ bool fgInitSubsystems() {
     SG_LOG( SG_GENERAL, SG_INFO, "========== ==========");
 
     ////////////////////////////////////////////////////////////////////
+    // Initialize the sound subsystem.
+    ////////////////////////////////////////////////////////////////////
+    // Sound manager uses an own subsystem group "SOUND" which is the last
+    // to be updated in every loop.
+    // Sound manager is updated last so it can use the CPU while the GPU
+    // is processing the scenery (doubled the frame-rate for me) -EMH-
+    globals->add_subsystem("sound", new SGSoundMgr, SGSubsystemMgr::SOUND);
+
+    ////////////////////////////////////////////////////////////////////
     // Initialize the event manager subsystem.
     ////////////////////////////////////////////////////////////////////
 
