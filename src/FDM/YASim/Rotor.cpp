@@ -1,3 +1,8 @@
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <simgear/debug/logstream.hxx>
 
 #include "Math.hpp"

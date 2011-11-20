@@ -102,6 +102,7 @@ void TimeManager::init()
   // frame-rate / worst-case latency / update-rate counters
   _frameRate = fgGetNode("/sim/frame-rate", true);
   _frameLatency = fgGetNode("/sim/frame-latency-max-ms", true);
+  _frameRateWorst = fgGetNode("/sim/frame-rate-worst", true);
   _lastFrameTime = 0;
   _frameLatencyMax = 0.0;
   _frameCount = 0;
@@ -267,6 +268,8 @@ void TimeManager::computeFrameRate()
   if ((_impl->get_cur_time() != _lastFrameTime)) {
     _frameRate->setIntValue(_frameCount);
     _frameLatency->setDoubleValue(_frameLatencyMax*1000);
+    if (_frameLatencyMax>0)
+        _frameRateWorst->setIntValue(1/_frameLatencyMax);
     _frameCount = 0;
     _frameLatencyMax = 0.0;
   }
@@ -331,7 +334,7 @@ void TimeManager::setTimeOffset(const std::string& offset_type, long int offset)
   } else if ( offset_type == "noon" ) {
      warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 0.0, true ); 
   } else if ( offset_type == "afternoon" ) {
-    warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 60.0, false );  
+    warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 75.0, false );  
   } else if ( offset_type == "dusk" ) {
     warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 90.0, false );
   } else if ( offset_type == "evening" ) {

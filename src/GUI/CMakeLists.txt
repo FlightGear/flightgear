@@ -6,14 +6,18 @@ set(SOURCES
 	SafeTexFont.cxx
 	WaypointList.cxx
 	dialog.cxx
+	FGPUIDialog.cxx
 	fonts.cxx
 	gui.cxx
 	gui_funcs.cxx
 	layout-props.cxx
 	layout.cxx
 	menubar.cxx
+	FGPUIMenuBar.cxx
 	new_gui.cxx
 	property_list.cxx
+	FGFontCache.cxx
+	FGColor.cxx
 	)
 
 set(HEADERS
@@ -22,11 +26,15 @@ set(HEADERS
 	SafeTexFont.hxx
 	WaypointList.hxx
 	dialog.hxx
+	FGPUIDialog.hxx
 	gui.h
 	layout.hxx
 	menubar.hxx
+	FGPUIMenuBar.hxx
 	new_gui.hxx
 	property_list.hxx
+	FGFontCache.hxx
+	FGColor.hxx
 	)
     		
 flightgear_component(GUI "${SOURCES}" "${HEADERS}")

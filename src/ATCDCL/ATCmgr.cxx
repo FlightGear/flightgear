@@ -48,9 +48,11 @@ FGATCMgr::FGATCMgr() :
     voice(false),
 #endif
 {
+    globals->set_ATC_mgr(this);
 }
 
 FGATCMgr::~FGATCMgr() {
+    globals->set_ATC_mgr(NULL);
     delete v1;
 }
 

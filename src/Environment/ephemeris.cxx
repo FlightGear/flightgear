@@ -32,6 +32,10 @@ Ephemeris::Ephemeris() :
   _impl(NULL),
   _latProp(NULL)
 {
+    SGPath ephem_data_path(globals->get_fg_root());
+    ephem_data_path.append("Astro");
+    _impl = new SGEphemeris(ephem_data_path.c_str());
+    globals->set_ephem(_impl);
 }
 
 Ephemeris::~Ephemeris()
@@ -41,15 +45,6 @@ Ephemeris::~Ephemeris()
 
 void Ephemeris::init()
 {
-  if (_impl) {
-    return;
-  }
-  
-  SGPath ephem_data_path(globals->get_fg_root());
-  ephem_data_path.append("Astro");
-  _impl = new SGEphemeris(ephem_data_path.c_str());
-  globals->set_ephem(_impl);
-  
   _latProp = fgGetNode("/position/latitude-deg", true);
   update(0.0);
 }

@@ -93,6 +93,7 @@
 #include <GUI/new_gui.hxx>
 #include <Instrumentation/HUD/HUD.hxx>
 #include <Environment/precipitation_mgr.hxx>
+#include <Environment/environment_mgr.hxx>
 
 #include "splash.hxx"
 #include "renderer.hxx"
@@ -374,9 +375,6 @@ public:
 
 bool FGScenerySwitchCallback::scenery_enabled = false;
 
-// Sky structures
-SGSky *thesky;
-
 static osg::ref_ptr<osg::FrameStamp> mFrameStamp = new osg::FrameStamp;
 static osg::ref_ptr<SGUpdateVisitor> mUpdateVisitor= new SGUpdateVisitor;
 
@@ -391,7 +389,8 @@ static void updateRenderer()
 }
 #endif
 
-FGRenderer::FGRenderer()
+FGRenderer::FGRenderer() :
+    _sky(NULL)
 {
 #ifdef FG_JPEG_SERVER
    jpgRenderFrame = updateRenderer;
@@ -404,6 +403,7 @@ FGRenderer::~FGRenderer()
 #ifdef FG_JPEG_SERVER
    jpgRenderFrame = NULL;
 #endif
+    delete _sky;
 }
 
 // Initialize various GL/view parameters
@@ -411,7 +411,7 @@ FGRenderer::~FGRenderer()
 // critical parts of the scene graph in addition to the splash screen.
 void
 FGRenderer::splashinit( void ) {
-    osgViewer::Viewer* viewer = globals->get_renderer()->getViewer();
+    osgViewer::Viewer* viewer = getViewer();
     mRealRoot = dynamic_cast<osg::Group*>(viewer->getSceneData());
     mRealRoot->addChild(fgCreateSplashNode());
     mFrameStamp = viewer->getFrameStamp();
@@ -454,6 +454,20 @@ FGRenderer::init( void )
 
     SGConfigureDirectionalLights( use_point_sprites, enhanced_lighting,
                                   distance_attenuation );
+    
+// create sky, but can't build until setupView, since we depend
+// on other subsystems to be inited, eg Ephemeris    
+    _sky = new SGSky;
+    
+    SGPath texture_path(globals->get_fg_root());
+    texture_path.append("Textures");
+    texture_path.append("Sky");
+    for (int i = 0; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
+        SGCloudLayer * layer = new SGCloudLayer(texture_path.str());
+        _sky->add_cloud_layer(layer);
+    }
+    
+    _sky->texture_path( texture_path.str() );
 }
 
 void
@@ -472,6 +486,17 @@ FGRenderer::setupView( void )
     if ( fgGetBool("/sim/startup/fullscreen") )
         fgOSFullScreen();
 
+// build the sky    
+    // The sun and moon diameters are scaled down numbers of the
+    // actual diameters. This was needed to fit both the sun and the
+    // moon within the distance to the far clip plane.
+    // Moon diameter:    3,476 kilometers
+    // Sun diameter: 1,390,000 kilometers
+    _sky->build( 80000.0, 80000.0,
+                  463.3, 361.8,
+                  *globals->get_ephem(),
+                  fgGetNode("/environment", true));
+    
     viewer->getCamera()
         ->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     
@@ -547,15 +572,17 @@ FGRenderer::setupView( void )
     sunLight->setUpdateCallback(new FGLightSourceUpdateCallback(true));
     sunLight->setReferenceFrame(osg::LightSource::RELATIVE_RF);
     sunLight->setLocalStateSetModes(osg::StateAttribute::ON);
+    
     // Hang a StateSet above the sky subgraph in order to turn off
     // light 0
     Group* skyGroup = new Group;
     StateSet* skySS = skyGroup->getOrCreateStateSet();
     skySS->setMode(GL_LIGHT0, StateAttribute::OFF);
-    skyGroup->addChild(thesky->getPreRoot());
+    skyGroup->addChild(_sky->getPreRoot());
     sunLight->addChild(skyGroup);
     mRoot->addChild(sceneGroup);
     mRoot->addChild(sunLight);
+    
     // Clouds are added to the scene graph later
     stateSet = globals->get_scenery()->get_scene_graph()->getOrCreateStateSet();
     stateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::ON);
@@ -594,7 +621,7 @@ FGRenderer::setupView( void )
     // The clouds are attached directly to the scene graph root
     // because, in theory, they don't want the same default state set
     // as the rest of the scene. This may not be true in practice.
-    mRealRoot->addChild(thesky->getCloudRoot());
+    mRealRoot->addChild(_sky->getCloudRoot());
     mRealRoot->addChild(FGCreateRedoutNode());
     // Attach empty program to the scene root so that shader programs
     // don't leak into state sets (effects) that shouldn't have one.
@@ -644,7 +671,7 @@ FGRenderer::update( ) {
     // update fog params
     double actual_visibility;
     if (_cloud_status->getBoolValue()) {
-        actual_visibility = thesky->get_visibility();
+        actual_visibility = _sky->get_visibility();
     } else {
         actual_visibility = _visibility_m->getDoubleValue();
     }
@@ -673,10 +700,10 @@ FGRenderer::update( ) {
 
     // update fog params if visibility has changed
     double visibility_meters = _visibility_m->getDoubleValue();
-    thesky->set_visibility(visibility_meters);
+    _sky->set_visibility(visibility_meters);
 
     double altitude_m = _altitude_ft->getDoubleValue() * SG_FEET_TO_METER;
-    thesky->modify_vis( altitude_m, 0.0 /* time factor, now unused */);
+    _sky->modify_vis( altitude_m, 0.0 /* time factor, now unused */);
 
     // update the sky dome
     if ( skyblend ) {
@@ -720,8 +747,8 @@ FGRenderer::update( ) {
         scolor.moon_angle  = l->get_moon_angle();
   
         double delta_time_sec = _sim_delta_sec->getDoubleValue();
-        thesky->reposition( sstate, *globals->get_ephem(), delta_time_sec );
-        thesky->repaint( scolor, *globals->get_ephem() );
+        _sky->reposition( sstate, *globals->get_ephem(), delta_time_sec );
+        _sky->repaint( scolor, *globals->get_ephem() );
 
             //OSGFIXME
 //         shadows->setupShadows(

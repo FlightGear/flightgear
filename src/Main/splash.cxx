@@ -46,7 +46,10 @@
 #include <simgear/math/sg_random.h>
 #include <simgear/misc/sg_path.hxx>
 
-#include <GUI/new_gui.hxx>
+#include <plib/fnt.h>
+
+#include "GUI/FGFontCache.hxx"
+#include "GUI/FGColor.hxx"
 
 #include "globals.hxx"
 #include "fg_props.hxx"

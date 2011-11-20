@@ -35,7 +35,6 @@ class FGEventHandler;
 }
 
 class SGSky;
-extern SGSky *thesky;
 
 class FGRenderer {
 
@@ -73,6 +72,8 @@ public:
     */
     void addCamera(osg::Camera* camera, bool useSceneData);
 
+    SGSky* getSky() const { return _sky; }
+    
 protected:
     osg::ref_ptr<osgViewer::Viewer> viewer;
     osg::ref_ptr<flightgear::FGEventHandler> eventHandler;
@@ -85,6 +86,7 @@ protected:
     SGPropertyNode_ptr _panel_hotspots, _sim_delta_sec, _horizon_effect, _altitude_ft;
     SGPropertyNode_ptr _virtual_cockpit;
     SGTimeStamp _splash_time;
+    SGSky* _sky;
 };
 
 bool fgDumpSceneGraphToFile(const char* filename);

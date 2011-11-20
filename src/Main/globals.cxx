@@ -47,7 +47,7 @@
 #include <ATCDCL/ATCmgr.hxx>
 #include <Autopilot/route_mgr.hxx>
 #include <Cockpit/panel.hxx>
-#include <GUI/new_gui.hxx>
+#include <GUI/FGFontCache.hxx>
 #include <Model/acmodel.hxx>
 #include <Model/modelmgr.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
@@ -160,17 +160,14 @@ FGGlobals::FGGlobals() :
 
 // Destructor
 FGGlobals::~FGGlobals() 
-{
-    delete renderer;
-    renderer = NULL;
-    
+{    
 // The AIModels manager performs a number of actions upon
     // Shutdown that implicitly assume that other subsystems
     // are still operational (Due to the dynamic allocation and
     // deallocation of AIModel objects. To ensure we can safely
     // shut down all subsystems, make sure we take down the 
     // AIModels system first.
-    SGSubsystem* ai = subsystem_mgr->remove("ai_model");
+    SGSubsystem* ai = subsystem_mgr->remove("ai-model");
     if (ai) {
         ai->unbind();
         delete ai;
@@ -179,6 +176,9 @@ FGGlobals::~FGGlobals()
     subsystem_mgr->shutdown();
     subsystem_mgr->unbind();
     delete subsystem_mgr;
+    
+    delete renderer;
+    renderer = NULL;
     
     delete time_params;
     delete mag;
@@ -220,7 +220,7 @@ void FGGlobals::set_fg_root (const string &root) {
     SGPath tmp( fg_root );
     tmp.append( "data" );
     tmp.append( "version" );
-    if ( ulFileExists( tmp.c_str() ) ) {
+    if ( tmp.exists() ) {
         fgGetNode("BAD_FG_ROOT", true)->setStringValue(fg_root);
         fg_root += "/data";
         fgGetNode("GOOD_FG_ROOT", true)->setStringValue(fg_root);

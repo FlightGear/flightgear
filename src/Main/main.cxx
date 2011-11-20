@@ -67,7 +67,6 @@
 #include <ATCDCL/ATCmgr.hxx>
 #include <Time/TimeManager.hxx>
 #include <Environment/environment_mgr.hxx>
-#include <Environment/ephemeris.hxx>
 #include <GUI/gui.h>
 #include <GUI/new_gui.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
@@ -83,7 +82,7 @@
 #include "fg_os.hxx"
 #include "WindowSystemAdapter.hxx"
 #include <Main/viewer.hxx>
-
+#include <Main/fg_props.hxx>
 
 using namespace flightgear;
 
@@ -104,32 +103,10 @@ extern int _bootstrap_OSInit;
 
 // What should we do when we have nothing else to do?  Let's get ready
 // for the next move and update the display?
-static void fgMainLoop( void ) {
-    
-    static SGConstPropertyNode_ptr longitude
-        = fgGetNode("/position/longitude-deg");
-    static SGConstPropertyNode_ptr latitude
-        = fgGetNode("/position/latitude-deg");
-    static SGConstPropertyNode_ptr altitude
-        = fgGetNode("/position/altitude-ft");
-    static SGConstPropertyNode_ptr vn_fps
-        = fgGetNode("/velocities/speed-north-fps");
-    static SGConstPropertyNode_ptr ve_fps
-        = fgGetNode("/velocities/speed-east-fps");
-    static SGConstPropertyNode_ptr vd_fps
-        = fgGetNode("/velocities/speed-down-fps");
-      
+static void fgMainLoop( void )
+{
     static SGPropertyNode_ptr frame_signal
         = fgGetNode("/sim/signals/frame", true);
-
-    static SGPropertyNode_ptr _statisticsFlag
-        = fgGetNode("/sim/timing-statistics/enabled", true);
-    static SGPropertyNode_ptr _statisticsInterval
-        = fgGetNode("/sim/timing-statistics/interval-s", true);
-    static SGPropertyNode_ptr _statiticsMinJitter
-        = fgGetNode("/sim/timing-statistics/min-jitter-ms", true);
-    static SGPropertyNode_ptr _statiticsMinTime
-        = fgGetNode("/sim/timing-statistics/min-time-ms", true);
 
     frame_signal->fireValueChanged();
     
@@ -145,16 +122,9 @@ static void fgMainLoop( void ) {
     timeMgr->computeTimeDeltas(sim_dt, real_dt);
 
     // update magvar model
-    globals->get_mag()->update( longitude->getDoubleValue()
-                                * SGD_DEGREES_TO_RADIANS,
-                                latitude->getDoubleValue()
-                                * SGD_DEGREES_TO_RADIANS,
-                                altitude->getDoubleValue() * SG_FEET_TO_METER,
+    globals->get_mag()->update( globals->get_aircraft_position(),
                                 globals->get_time_params()->getJD() );
 
-    // Run ATC subsystem
-    globals->get_ATC_mgr()->update(sim_dt);
-    
     globals->get_subsystem_mgr()->update(sim_dt);
 
     // Update the sound manager last so it can use the CPU while the GPU
@@ -215,27 +185,6 @@ static void fgMainLoop( void ) {
             fgSplashProgress("loading scenery");
             // be nice to loader threads while waiting for initial scenery, reduce to 2fps
             SGTimeStamp::sleepForMSec(500);
-        }
-    }
-
-    // print timing statistics
-    static bool _lastStatisticsFlag = false;
-    if (_lastStatisticsFlag != _statisticsFlag->getBoolValue())
-    {
-        // flag has changed, update subsystem manager
-        _lastStatisticsFlag = _statisticsFlag->getBoolValue();
-        globals->get_subsystem_mgr()->collectDebugTiming(_lastStatisticsFlag);
-    }
-    if (_lastStatisticsFlag)
-    {
-        static double elapsed = 0;
-        elapsed += real_dt;
-        if (elapsed >= _statisticsInterval->getDoubleValue())
-        {
-            // print and reset timing statistics
-            globals->get_subsystem_mgr()->printTimingStatistics(_statiticsMinTime->getDoubleValue(),
-                                                                _statiticsMinJitter->getDoubleValue());
-            elapsed = 0;
         }
     }
 
@@ -410,62 +359,26 @@ static void fgIdleFunction ( void ) {
 
     } else if ( idle_state == 6 ) {
         idle_state++;
-        // Initialize the sky
-
-        Ephemeris* eph = new Ephemeris;
-        globals->add_subsystem("ephemeris", eph);
-        eph->init(); // FIXME - remove this once SGSky code below is also a subsystem
-        eph->bind();
-
-        // TODO: move to environment mgr
-        thesky = new SGSky;
-        SGPath texture_path(globals->get_fg_root());
-        texture_path.append("Textures");
-        texture_path.append("Sky");
-        for (int i = 0; i < FGEnvironmentMgr::MAX_CLOUD_LAYERS; i++) {
-            SGCloudLayer * layer = new SGCloudLayer(texture_path.str());
-            thesky->add_cloud_layer(layer);
-        }
-
-        SGPath sky_tex_path( globals->get_fg_root() );
-        sky_tex_path.append( "Textures" );
-        sky_tex_path.append( "Sky" );
-        thesky->texture_path( sky_tex_path.str() );
-
-        // The sun and moon diameters are scaled down numbers of the
-        // actual diameters. This was needed to fit both the sun and the
-        // moon within the distance to the far clip plane.
-        // Moon diameter:    3,476 kilometers
-        // Sun diameter: 1,390,000 kilometers
-        thesky->build( 80000.0, 80000.0,
-                       463.3, 361.8,
-                       *globals->get_ephem(),
-                       fgGetNode("/environment", true));
-
+        
         // Initialize MagVar model
         SGMagVar *magvar = new SGMagVar();
         globals->set_mag( magvar );
-
-
-                                    // kludge to initialize mag compass
-                                    // (should only be done for in-flight
-                                    // startup)
+        
+        
+        // kludge to initialize mag compass
+        // (should only be done for in-flight
+        // startup)
         // update magvar model
         globals->get_mag()->update( fgGetDouble("/position/longitude-deg")
-                                    * SGD_DEGREES_TO_RADIANS,
-                                    fgGetDouble("/position/latitude-deg")
-                                    * SGD_DEGREES_TO_RADIANS,
-                                    fgGetDouble("/position/altitude-ft")
-                                    * SG_FEET_TO_METER,
-                                    globals->get_time_params()->getJD() );
+                                   * SGD_DEGREES_TO_RADIANS,
+                                   fgGetDouble("/position/latitude-deg")
+                                   * SGD_DEGREES_TO_RADIANS,
+                                   fgGetDouble("/position/altitude-ft")
+                                   * SG_FEET_TO_METER,
+                                   globals->get_time_params()->getJD() );
         double var = globals->get_mag()->get_magvar() * SGD_RADIANS_TO_DEGREES;
         fgSetDouble("/instrumentation/heading-indicator/offset-deg", -var);
         fgSetDouble("/instrumentation/heading-indicator-fg/offset-deg", -var);
-
-
-        // airport = new ssgBranch;
-        // airport->setName( "Airport Lighting" );
-        // lighting->addKid( airport );
 
         fgSplashProgress("initializing subsystems");
 

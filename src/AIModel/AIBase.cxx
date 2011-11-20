@@ -267,7 +267,7 @@ bool FGAIBase::init(bool search_in_AI_path) {
     else
         _installed = true;
 
-    osg::Node * mdl = SGModelLib::loadPagedModel(f, props, new FGNasalModelData(props));
+    osg::Node * mdl = SGModelLib::loadDeferredModel(f, props, new FGNasalModelData(props));
 
     if (_model.valid())
     {

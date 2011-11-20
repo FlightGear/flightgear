@@ -228,7 +228,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
     
   if (AIManagerRef) {
     // Check if this aircraft has been released. 
-    FGTrafficManager *tmgr = (FGTrafficManager *) globals->get_subsystem("Traffic Manager");
+    FGTrafficManager *tmgr = (FGTrafficManager *) globals->get_subsystem("traffic-manager");
     if (tmgr->isReleased(AIManagerRef)) {
       AIManagerRef = 0;
     } else {
@@ -347,7 +347,7 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
                                             airline);
   if (fp->isValidPlan()) {
         aircraft->SetFlightPlan(fp);
-        FGAIManager* aimgr = (FGAIManager *) globals-> get_subsystem("ai_model");
+        FGAIManager* aimgr = (FGAIManager *) globals-> get_subsystem("ai-model");
         aimgr->attach(aircraft);
         AIManagerRef = aircraft->getID();
         return true;
@@ -465,7 +465,7 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
 {
     time_t now = time(NULL) + fgGetLong("/sim/time/warp");
 
-    FGTrafficManager *tmgr = (FGTrafficManager *) globals->get_subsystem("Traffic Manager");
+    FGTrafficManager *tmgr = (FGTrafficManager *) globals->get_subsystem("traffic-manager");
     FGScheduledFlightVecIterator fltBegin, fltEnd;
     fltBegin = tmgr->getFirstFlight(req);
     fltEnd   = tmgr->getLastFlight(req);

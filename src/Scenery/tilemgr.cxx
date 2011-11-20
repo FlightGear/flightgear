@@ -29,12 +29,13 @@
 #include <functional>
 
 #include <osgViewer/Viewer>
+#include <osgDB/Registry>
 
 #include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/scene/model/modellib.hxx>
-#include <simgear/scene/tgdb/SGReaderWriterBTGOptions.hxx>
+#include <simgear/scene/util/SGReaderWriterOptions.hxx>
 #include <simgear/scene/tsync/terrasync.hxx>
 
 #include <Main/globals.hxx>
@@ -54,33 +55,11 @@ using simgear::TileEntry;
 using simgear::TileCache;
 
 
-// helper: listen to property changes affecting tile loading
-class LoaderPropertyWatcher : public SGPropertyChangeListener
-{
-public:
-    LoaderPropertyWatcher(FGTileMgr* pTileMgr) :
-        _pTileMgr(pTileMgr)
-    {
-    }
-
-    virtual void valueChanged(SGPropertyNode*)
-    {
-        _pTileMgr->configChanged();
-    }
-
-private:
-    FGTileMgr* _pTileMgr;
-};
-
-
 FGTileMgr::FGTileMgr():
     state( Start ),
     vis( 16000 ),
-    _terra_sync(NULL),
-    _propListener(new LoaderPropertyWatcher(this))
+    _terra_sync(NULL)
 {
-    _randomObjects = fgGetNode("/sim/rendering/random-objects", true);
-    _randomVegetation = fgGetNode("/sim/rendering/random-vegetation", true);
     _maxTileRangeM = fgGetNode("/sim/rendering/static-lod/bare", true);
 }
 
@@ -90,8 +69,6 @@ FGTileMgr::~FGTileMgr()
     // remove all nodes we might have left behind
     osg::Group* group = globals->get_scenery()->get_terrain_branch();
     group->removeChildren(0, group->getNumChildren());
-    delete _propListener;
-    _propListener = NULL;
     // clear OSG cache
     osgDB::Registry::instance()->clearObjectCache();
 }
@@ -101,12 +78,9 @@ FGTileMgr::~FGTileMgr()
 void FGTileMgr::init() {
     SG_LOG( SG_TERRAIN, SG_INFO, "Initializing Tile Manager subsystem." );
 
-    _options = new SGReaderWriterBTGOptions;
-    _options->setMatlib(globals->get_matlib());
-
-    _randomObjects.get()->addChangeListener(_propListener, false);
-    _randomVegetation.get()->addChangeListener(_propListener, false);
-    configChanged();
+    _options = new simgear::SGReaderWriterOptions;
+    _options->setMaterialLib(globals->get_matlib());
+    _options->setPropertyNode(globals->get_props());
 
     osgDB::FilePathList &fp = _options->getDatabasePathList();
     const string_list &sc = globals->get_fg_scenery();
@@ -120,6 +94,10 @@ void FGTileMgr::init() {
     reinit();
 }
 
+void FGTileMgr::refresh_tile(void* tileMgr, long tileIndex)
+{
+    ((FGTileMgr*) tileMgr)->tile_cache.refresh_tile(tileIndex);
+}
 
 void FGTileMgr::reinit()
 {
@@ -142,16 +120,10 @@ void FGTileMgr::reinit()
 
     _terra_sync = (simgear::SGTerraSync*) globals->get_subsystem("terrasync");
     if (_terra_sync)
-        _terra_sync->setTileCache(&tile_cache);
+        _terra_sync->setTileRefreshCb(&refresh_tile, this);
 
     // force an update now
     update(0.0);
-}
-
-void FGTileMgr::configChanged()
-{
-    _options->setUseRandomObjects(_randomObjects.get()->getBoolValue());
-    _options->setUseRandomVegetation(_randomVegetation.get()->getBoolValue());
 }
 
 /* schedule a tile for loading, keep request for given amount of time.
@@ -275,8 +247,8 @@ FGTileMgr::loadTileModel(const string& modelPath, bool cacheModel)
                                       new FGNasalModelData);
         else
             result=
-                SGModelLib::loadPagedModel(fullPath.str(), globals->get_props(),
-                                           new FGNasalModelData);
+                SGModelLib::loadDeferredModel(fullPath.str(), globals->get_props(),
+                                             new FGNasalModelData);
     } catch (const sg_io_exception& exc) {
         string m(exc.getMessage());
         m += " ";

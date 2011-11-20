@@ -18,8 +18,13 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <Main/fg_commands.hxx>
 #include <Main/globals.hxx>
+#include <Main/fg_props.hxx>
 
 #include <simgear/constants.h>
 #include <simgear/structure/commands.hxx>

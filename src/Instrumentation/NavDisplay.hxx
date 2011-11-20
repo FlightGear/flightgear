@@ -34,11 +34,13 @@
 
 #include <vector>
 #include <string>
+#include <memory>
+
+#include <Navaids/positioned.hxx>
 
 class FGODGauge;
 class FGRouteMgr;
 class FGNavRecord;
-class FGPositioned;
 
 class SymbolInstance;
 class SymbolDef;
@@ -61,6 +63,10 @@ public:
     virtual void init();
     virtual void update(double dt);
 
+    void invalidatePositionedCache()
+    {
+        _cachedItemsValid = false;
+    }
 protected:
     std::string _name;
     int _num;
@@ -70,11 +76,7 @@ protected:
     SGPropertyNode_ptr _serviceable_node;
     SGPropertyNode_ptr _Instrument;
     SGPropertyNode_ptr _radar_mode_control_node;
-
-    SGPropertyNode_ptr _user_lat_node;
-    SGPropertyNode_ptr _user_lon_node;
     SGPropertyNode_ptr _user_heading_node;
-    SGPropertyNode_ptr _user_alt_node;
 
     FGODGauge *_odg;
 
@@ -103,11 +105,11 @@ private:
     bool anyRuleMatches(const std::string& type, const string_set& states) const;
     void findRules(const std::string& type, const string_set& states, SymbolDefVector& rules);
     
-    void addSymbolInstance(const osg::Vec2& proj, double heading, SymbolDef* def, SGPropertyNode* vars);
+    bool addSymbolInstance(const osg::Vec2& proj, double heading, SymbolDef* def, SGPropertyNode* vars);
     void addLine(osg::Vec2 a, osg::Vec2 b, const osg::Vec4& color);
     osg::Vec2 projectBearingRange(double bearingDeg, double rangeNm) const;
     osg::Vec2 projectGeod(const SGGeod& geod) const;
-    
+    bool isProjectedClipped(const osg::Vec2& projected) const;
     void updateFont();
     
     std::string _texture_path;
@@ -154,13 +156,21 @@ private:
     FGRouteMgr* _route;
     SGGeod _pos;
     double _rangeNm;
-
+    SGPropertyNode_ptr _rangeNode;
+    
     SymbolDefVector _rules;
     FGNavRecord* _nav1Station;
     FGNavRecord* _nav2Station;
     std::vector<SymbolInstance*> _symbols;
     std::set<FGPositioned*> _routeSources;
+    
+    bool _cachedItemsValid;
+    SGVec3d _cachedPos;
+    FGPositioned::List _itemsInRange;
     SGPropertyNode_ptr _excessDataNode;
+    
+    class CacheListener;
+    std::auto_ptr<CacheListener> _cacheListener;
 };
 
 #endif // _INST_ND_HXX

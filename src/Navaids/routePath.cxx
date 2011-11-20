@@ -1,3 +1,8 @@
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <Navaids/routePath.hxx>
 
 #include <simgear/structure/exception.hxx>

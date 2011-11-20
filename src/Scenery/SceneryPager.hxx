@@ -28,7 +28,6 @@
 #include <osgDB/DatabasePager>
 
 #include <simgear/structure/OSGVersion.hxx>
-#include <simgear/scene/model/SGPagedLOD.hxx>
 
 namespace flightgear
 {
@@ -39,15 +38,6 @@ public:
     SceneryPager(const SceneryPager& rhs);
     // Unhide DatabasePager::requestNodeFile
     using osgDB::DatabasePager::requestNodeFile;
-    // reimplement to add readerWriterOptions from SGPagedLOD
-#if SG_PAGEDLOD_HAS_OPTIONS
-#else
-    virtual void requestNodeFile(const std::string& fileName, osg::Group* group,
-                                 float priority,
-                                 const osg::FrameStamp* framestamp,
-                                 osg::ref_ptr<osg::Referenced>& databaseRequest,
-                                 osgDB::ReaderWriter::Options* options);
-#endif
     void queueRequest(const std::string& fileName, osg::Group* node,
                       float priority, osg::FrameStamp* frameStamp,
                       osg::ref_ptr<osg::Referenced>& databaseRequest,

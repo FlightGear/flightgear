@@ -56,6 +56,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/event_mgr.hxx>
+#include <simgear/structure/SGPerfMon.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/sgstream.hxx>
@@ -106,7 +107,7 @@
 #include <Traffic/TrafficMgr.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
 #include <FDM/fdm_shell.hxx>
-
+#include <Environment/ephemeris.hxx>
 #include <Environment/environment_mgr.hxx>
 
 #include "fg_init.hxx"
@@ -1176,12 +1177,6 @@ bool fgInitGeneral() {
 // gear, its initialization call should located in this routine.
 // Returns non-zero if a problem encountered.
 bool fgInitSubsystems() {
-    // static const SGPropertyNode *longitude
-    //     = fgGetNode("/sim/presets/longitude-deg");
-    // static const SGPropertyNode *latitude
-    //     = fgGetNode("/sim/presets/latitude-deg");
-    // static const SGPropertyNode *altitude
-    //     = fgGetNode("/sim/presets/altitude-ft");
 
     SG_LOG( SG_GENERAL, SG_INFO, "Initialize Subsystems");
     SG_LOG( SG_GENERAL, SG_INFO, "========== ==========");
@@ -1204,6 +1199,14 @@ bool fgInitSubsystems() {
     // Add the FlightGear property utilities.
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("properties", new FGProperties);
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Add the performance monitoring system.
+    ////////////////////////////////////////////////////////////////////
+    globals->add_subsystem("performance-mon",
+            new SGPerformanceMonitor(globals->get_subsystem_mgr(),
+                                     fgGetNode("/sim/performance-monitor", true)));
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the material property subsystem.
@@ -1239,7 +1242,8 @@ bool fgInitSubsystems() {
 
     // Initialize the weather modeling subsystem
     globals->add_subsystem("environment", new FGEnvironmentMgr);
-
+    globals->add_subsystem("ephemeris", new Ephemeris);
+    
     ////////////////////////////////////////////////////////////////////
     // Initialize the aircraft systems and instrumentation (before the
     // autopilot.)
@@ -1287,9 +1291,7 @@ bool fgInitSubsystems() {
     // sub system infrastructure.
     ////////////////////////////////////////////////////////////////////
 
-    SG_LOG(SG_GENERAL, SG_INFO, "  ATC Manager");
-    globals->set_ATC_mgr(new FGATCMgr);
-    globals->get_ATC_mgr()->init(); 
+    globals->add_subsystem("ATC-old", new FGATCMgr, SGSubsystemMgr::INIT);
 
     ////////////////////////////////////////////////////////////////////
    // Initialize the ATC subsystem
@@ -1311,14 +1313,14 @@ bool fgInitSubsystems() {
     // Initialise the AI Model Manager
     ////////////////////////////////////////////////////////////////////
     SG_LOG(SG_GENERAL, SG_INFO, "  AI Model Manager");
-    globals->add_subsystem("ai_model", new FGAIManager, SGSubsystemMgr::POST_FDM);
-    globals->add_subsystem("submodel_mgr", new FGSubmodelMgr, SGSubsystemMgr::POST_FDM);
+    globals->add_subsystem("ai-model", new FGAIManager, SGSubsystemMgr::POST_FDM);
+    globals->add_subsystem("submodel-mgr", new FGSubmodelMgr, SGSubsystemMgr::POST_FDM);
 
 
     // It's probably a good idea to initialize the top level traffic manager
     // After the AI and ATC systems have been initialized properly.
     // AI Traffic manager
-    globals->add_subsystem("Traffic Manager", new FGTrafficManager, SGSubsystemMgr::POST_FDM);
+    globals->add_subsystem("traffic-manager", new FGTrafficManager, SGSubsystemMgr::POST_FDM);
 
     ////////////////////////////////////////////////////////////////////
     // Add a new 2D panel.
@@ -1453,7 +1455,7 @@ void fgReInitSubsystems()
     
     // Force reupdating the positions of the ai 3d models. They are used for
     // initializing ground level for the FDM.
-    globals->get_subsystem("ai_model")->reinit();
+    globals->get_subsystem("ai-model")->reinit();
 
     // Initialize the FDM
     globals->get_subsystem("flight")->reinit();

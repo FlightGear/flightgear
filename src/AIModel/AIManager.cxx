@@ -146,7 +146,7 @@ FGAIManager::update(double dt) {
     if (!enabled)
         return;
 
-    FGTrafficManager *tmgr = (FGTrafficManager*) globals->get_subsystem("Traffic Manager");
+    FGTrafficManager *tmgr = (FGTrafficManager*) globals->get_subsystem("traffic-manager");
     _dt = dt;
 
     ai_list_iterator ai_list_itr = ai_list.begin();

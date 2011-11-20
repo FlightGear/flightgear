@@ -22,6 +22,10 @@
 //
 // $Id$
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "FGKeyboardInput.hxx"
 #include <Main/fg_props.hxx>
 #include <Scripting/NasalSys.hxx>

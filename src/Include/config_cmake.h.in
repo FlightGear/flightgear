@@ -36,3 +36,4 @@
 #define PKGLIBDIR "@FG_DATA_DIR@"
 
 #cmakedefine FG_HAVE_HLA
+#cmakedefine FG_JPEG_SERVER

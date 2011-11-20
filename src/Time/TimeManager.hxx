@@ -82,6 +82,7 @@ private:
   
   // frame-rate / worst-case latency / update-rate counters
   SGPropertyNode_ptr _frameRate;
+  SGPropertyNode_ptr _frameRateWorst;
   SGPropertyNode_ptr _frameLatency;
   time_t _lastFrameTime;
   double _frameLatencyMax;

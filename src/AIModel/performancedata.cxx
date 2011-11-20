@@ -49,7 +49,7 @@ PerformanceData::PerformanceData( const std::string& filename)
 PerformanceData::~PerformanceData()
 {}
 
-double PerformanceData::actualSpeed(FGAIAircraft* ac, double tgt_speed, double dt) {
+double PerformanceData::actualSpeed(FGAIAircraft* ac, double tgt_speed, double dt, bool maxBrakes) {
     // if (tgt_speed > _vTaxi & ac->onGround()) // maximum taxi speed on ground
     //    tgt_speed = _vTaxi;
     // bad idea for a take off roll :-)
@@ -66,7 +66,13 @@ double PerformanceData::actualSpeed(FGAIAircraft* ac, double tgt_speed, double d
     } else if (speed_diff < 0.0) { // decelerate
         if (ac->onGround()) {
             // deceleration performance is better due to wheel brakes.
-            speed -= BRAKE_SETTING * _deceleration * dt;
+            double brakePower = 0;
+            if (maxBrakes) {
+                brakePower = 3;
+            } else {
+                brakePower = BRAKE_SETTING;
+            }
+            speed -= brakePower * _deceleration * dt;
         } else {
             speed -= _deceleration * dt;
         }

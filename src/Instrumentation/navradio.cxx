@@ -440,6 +440,7 @@ void FGNavRadio::updateReceiver(double dt)
     _gsNeedleDeflectionNorm = 0.0;
     heading_node->setDoubleValue(0.0);
     inrange_node->setBoolValue(false);
+    signal_quality_norm_node->setDoubleValue(0.0);
     return;
   }
 

@@ -45,7 +45,7 @@ FGSubmodelMgr::~FGSubmodelMgr()
 
 FGAIManager* FGSubmodelMgr::aiManager()
 {
-   return (FGAIManager*)globals->get_subsystem("ai_model");
+   return (FGAIManager*)globals->get_subsystem("ai-model");
 }
 
 void FGSubmodelMgr::init()

@@ -38,12 +38,11 @@
 #include <simgear/props/props_io.hxx>
 
 #include <Main/globals.hxx>
+#include <Main/renderer.hxx>
 #include <Airports/simple.hxx>
 #include <Main/util.hxx>
 
 #include "fgclouds.hxx"
-
-extern SGSky *thesky;
 
 static bool do_delete_3Dcloud (const SGPropertyNode *arg);
 static bool do_move_3Dcloud (const SGPropertyNode *arg);
@@ -182,6 +181,8 @@ void FGClouds::buildLayer(int iLayer, const string& name, double coverage) {
 	int CloudVarietyCount = 0;
 	double totalCount = 0.0;
 
+    SGSky* thesky = globals->get_renderer()->getSky();
+    
 	SGPropertyNode *cloud_def_root = fgGetNode("/environment/cloudlayers/clouds", false);
 	SGPropertyNode *box_def_root   = fgGetNode("/environment/cloudlayers/boxes", false);
 	SGPropertyNode *layer_def_root = fgGetNode("/environment/cloudlayers/layers", false);
@@ -274,6 +275,7 @@ void FGClouds::buildCloudLayers(void) {
 	double cumulus_base = 122.0 * (temperature_degc - dewpoint_degc);
 	double stratus_base = 100.0 * (100.0 - rel_humidity) * SG_FEET_TO_METER;
 
+    SGSky* thesky = globals->get_renderer()->getSky();
 	for(int iLayer = 0 ; iLayer < thesky->get_cloud_layer_count(); iLayer++) {
 		SGPropertyNode *cloud_root = fgGetNode("/environment/clouds/layer", iLayer, true);
 
@@ -366,7 +368,7 @@ bool FGClouds::get_3dClouds() const
 	 float x   = arg->getFloatValue("x-offset-m",  0.0f);
 	 float y   = arg->getFloatValue("y-offset-m",  0.0f);
 
-
+   SGSky* thesky = globals->get_renderer()->getSky();
    SGCloudField *layer = thesky->get_cloud_layer(l)->get_layer3D();
    SGNewCloud cld = SGNewCloud(texture_root, arg);
 	 bool success = layer->addCloud(lon, lat, alt, x, y, index, cld.genCloud());
@@ -392,6 +394,7 @@ bool FGClouds::get_3dClouds() const
    int l = arg->getIntValue("layer", 0);
    int i = arg->getIntValue("index", 0);
 
+   SGSky* thesky = globals->get_renderer()->getSky();
    SGCloudField *layer = thesky->get_cloud_layer(l)->get_layer3D();
 	 return layer->deleteCloud(i);
  }
@@ -410,7 +413,8 @@ bool FGClouds::get_3dClouds() const
  {
    int l = arg->getIntValue("layer", 0);
    int i = arg->getIntValue("index", 0);
-
+      SGSky* thesky = globals->get_renderer()->getSky();
+     
 	 float lon = arg->getFloatValue("lon-deg", 0.0f);
 	 float lat = arg->getFloatValue("lat-deg", 0.0f);
 	 float alt = arg->getFloatValue("alt-ft",  0.0f);
