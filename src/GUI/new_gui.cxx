@@ -100,11 +100,7 @@ NewGUI::reset (bool reload)
     setStyle();
 
     unbind();
-#if defined(SG_MAC)
-    if (reload) {
-        _menubar.reset(new FGCocoaMenuBar);
-    }
-#else
+#if !defined(SG_MAC)
     _menubar.reset(new FGPUIMenuBar);
 #endif
 
