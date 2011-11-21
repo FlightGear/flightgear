@@ -101,6 +101,7 @@ void FGAIShip::readFromScenario(SGPropertyNode* scFileNode) {
     setFixedTurnRadius(scFileNode->getDoubleValue("fixed-turn-radius-ft", 500));
     setSpeedConstant(scFileNode->getDoubleValue("speed-constant", 0.5));
     setSMPath(scFileNode->getStringValue("submodel-path", ""));
+    setRollFactor(scFileNode->getDoubleValue("roll-factor", 1));
 
     if (!flightplan.empty()) {
         SG_LOG(SG_AI, SG_ALERT, "getting flightplan: " << _name );
@@ -558,6 +559,10 @@ void FGAIShip::setSpeedConstant(double sc) {
 
 void FGAIShip::setFixedTurnRadius(double ftr) {
     _fixed_turn_radius = ftr;
+}
+
+void FGAIShip::setRollFactor(double rf) {
+    _roll_factor = rf * -0.0083335;
 }
 
 void FGAIShip::setInitialTunnel(bool t) {

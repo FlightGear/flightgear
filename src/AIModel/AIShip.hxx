@@ -61,11 +61,14 @@ public:
     void setRudderConstant(double rc);
     void setSpeedConstant(double sc);
     void setFixedTurnRadius(double ft);
+    void setRollFactor(double rf);
+
     void setTunnel(bool t);
     void setInitialTunnel(bool t);
 
     void setWPNames();
     void setWPPos();
+
     double sign(double x);
 
     bool _hdg_lock;
