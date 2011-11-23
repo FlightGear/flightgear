@@ -3,7 +3,7 @@ add_subdirectory(fgviewer)
 add_subdirectory(GPSsmooth)
 
 if (FLTK_FOUND)
-    if (EXISTS ${FLTK_BIN_DIR}/fluid)
+    if (EXISTS ${FLTK_FLUID_EXECUTABLE})
         add_subdirectory(fgadmin)
     else ()
         message(STATUS "fluid executable not found, disabling fgadmin")

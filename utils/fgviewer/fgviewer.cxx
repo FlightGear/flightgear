@@ -1,3 +1,25 @@
+// fgviewer.cxx -- alternative flightgear viewer application
+//
+// Copyright (C) 2009 - 2011  Mathias Froehlich
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <iostream>
 #include <cstdlib>
 
@@ -18,7 +40,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/material/EffectCullVisitor.hxx>
 #include <simgear/scene/material/matlib.hxx>
-#include <simgear/scene/tgdb/SGReaderWriterBTGOptions.hxx>
+#include <simgear/scene/util/SGReaderWriterOptions.hxx>
 #include <simgear/scene/tgdb/userdata.hxx>
 #include <simgear/scene/tgdb/TileEntry.hxx>
 #include <simgear/scene/model/ModelRegistry.hxx>
@@ -95,24 +117,23 @@ main(int argc, char** argv)
     } else if (const char *fg_root_env = std::getenv("FG_ROOT")) {
         fg_root = fg_root_env;
     } else {
-#if defined(PKGDATADIR)
-        fg_root = PKGDATADIR;
+#if defined(PKGLIBDIR)
+        fg_root = PKGLIBDIR;
 #else
         fg_root = ".";
 #endif
     }
 
     std::string fg_scenery;
-    string_list path_list;
     if (arguments.read("--fg-scenery", fg_scenery)) {
-        path_list.push_back(fg_scenery);
     } else if (const char *fg_scenery_env = std::getenv("FG_SCENERY")) {
-        path_list = sgPathSplit(fg_scenery_env);
+        fg_scenery = fg_scenery_env;
     } else {
         SGPath path(fg_root);
         path.append("Scenery");
-        path_list.push_back(path.str());
+        fg_scenery = path.str();
     }
+    string_list path_list = sgPathSplit(fg_scenery);
     osgDB::FilePathList filePathList;
     filePathList.push_back(fg_root);
     for (unsigned i = 0; i < path_list.size(); ++i) {
@@ -151,9 +172,10 @@ main(int argc, char** argv)
     // The file path list must be set in the registry.
     osgDB::Registry::instance()->getDataFilePathList() = filePathList;
 
-    SGReaderWriterBTGOptions* btgOptions = new SGReaderWriterBTGOptions;
-    btgOptions->getDatabasePathList() = filePathList;
-    btgOptions->setMatlib(ml);
+    simgear::SGReaderWriterOptions* options = new simgear::SGReaderWriterOptions;
+    options->getDatabasePathList() = filePathList;
+    options->setMaterialLib(ml);
+    options->setPropertyNode(props);
 
     // Here, all arguments are processed
     arguments.reportRemainingOptionsAsUnrecognized();
@@ -161,7 +183,7 @@ main(int argc, char** argv)
 
     // read the scene from the list of file specified command line args.
     osg::ref_ptr<osg::Node> loadedModel;
-    loadedModel = osgDB::readNodeFiles(arguments, btgOptions);
+    loadedModel = osgDB::readNodeFiles(arguments, options);
 
     // if no model has been successfully loaded report failure.
     if (!loadedModel.valid()) {

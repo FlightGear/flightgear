@@ -39,6 +39,7 @@
 #include <simgear/io/HTTPClient.hxx>
 #include <simgear/io/HTTPRequest.hxx>
 #include <simgear/timing/sg_time.hxx>
+#include <simgear/structure/event_mgr.hxx>
 
 #include <algorithm>
 
@@ -143,13 +144,14 @@ public:
 
     virtual void init ();
     virtual void reinit ();
-
+    virtual void shutdown ();
+    
 protected:
     void bind();
     void unbind();
     void update( double dt );
 
-    virtual void update (bool first, double delta_time_sec);
+    void checkNearbyMetar();
 
     long getMetarMaxAgeMin() const { return _max_age_n == NULL ? 0 : _max_age_n->getLongValue(); }
 
@@ -162,8 +164,7 @@ protected:
     simgear::TiedPropertyList _tiedProperties;
     typedef std::vector<LiveMetarProperties_ptr> MetarPropertiesList;
     MetarPropertiesList _metarProperties;
-private:
-    double _positionTimeToLive;
+
 };
 
 /* -------------------------------------------------------------------------------- */
@@ -178,8 +179,7 @@ BasicRealWxController::BasicRealWxController( SGPropertyNode_ptr rootNode, Metar
   _ground_elevation_n( fgGetNode( "/position/ground-elev-m", true )),
   _max_age_n( fgGetNode( "/environment/params/metar-max-age-min", false ) ),
   _enabled(true),
-  __enabled(false),
-  _positionTimeToLive(0.0)
+  __enabled(false)
 {
     // at least instantiate MetarProperties for /environment/metar
     _metarProperties.push_back( new LiveMetarProperties( 
@@ -200,11 +200,19 @@ void BasicRealWxController::init()
 {
     __enabled = false;
     update(0); // fetch data ASAP
+    
+    globals->get_event_mgr()->addTask("checkNearbyMetar", this,
+                                      &BasicRealWxController::checkNearbyMetar, 60 );
 }
 
 void BasicRealWxController::reinit()
 {
     __enabled = false;
+}
+    
+void BasicRealWxController::shutdown()
+{
+    globals->get_event_mgr()->removeTask("checkNearbyMetar");
 }
 
 void BasicRealWxController::bind()
@@ -230,50 +238,43 @@ void BasicRealWxController::update( double dt )
       p->update(dt);
     }
 
-    update( firstIteration, dt );
     __enabled = true;
   } else {
     __enabled = false;
   }
 }
 
-void BasicRealWxController::update( bool first, double dt )
+void BasicRealWxController::checkNearbyMetar()
 {
-    _positionTimeToLive -= dt;
+    try {
+      const SGGeod & pos = globals->get_aircraft_position();
 
-    if( _positionTimeToLive <= 0.0 ) {
+      // check nearest airport
+      SG_LOG(SG_ENVIRONMENT, SG_DEBUG, "NoaaMetarRealWxController::update(): (re) checking nearby airport with METAR" );
 
+      FGAirport * nearestAirport = FGAirport::findClosest(pos, 10000.0, MetarAirportFilter::instance() );
+      if( nearestAirport == NULL ) {
+          SG_LOG(SG_ENVIRONMENT,SG_WARN,"RealWxController::update can't find airport with METAR within 10000NM"  );
+          return;
+      }
 
-        try {
-            const SGGeod & pos = globals->get_aircraft_position();
+      SG_LOG(SG_ENVIRONMENT, SG_DEBUG, 
+          "NoaaMetarRealWxController::update(): nearest airport with METAR is: " << nearestAirport->ident() );
 
-            // check nearest airport
-            SG_LOG(SG_ENVIRONMENT, SG_INFO, "NoaaMetarRealWxController::update(): (re) checking nearby airport with METAR" );
-            _positionTimeToLive = 60.0;
-
-            FGAirport * nearestAirport = FGAirport::findClosest(pos, 10000.0, MetarAirportFilter::instance() );
-            if( nearestAirport == NULL ) {
-                SG_LOG(SG_ENVIRONMENT,SG_WARN,"RealWxController::update can't find airport with METAR within 10000NM"  );
-                return;
-            }
-
-            SG_LOG(SG_ENVIRONMENT, SG_INFO, 
-                "NoaaMetarRealWxController::update(): nearest airport with METAR is: " << nearestAirport->ident() );
-
-            // if it has changed, invalidate the associated METAR
-            if( _metarProperties[0]->getStationId() != nearestAirport->ident() ) {
-                SG_LOG(SG_ENVIRONMENT, SG_INFO, 
-                    "NoaaMetarRealWxController::update(): nearest airport with METAR has changed. Old: '" << 
-                    _metarProperties[0]->getStationId() <<
-                    "', new: '" << nearestAirport->ident() << "'" );
-                _metarProperties[0]->setStationId( nearestAirport->ident() );
-                _metarProperties[0]->setTimeToLive( 0.0 );
-            }
-        }
-        catch( sg_exception & ) {
-            return;
-        }
+      // if it has changed, invalidate the associated METAR
+      if( _metarProperties[0]->getStationId() != nearestAirport->ident() ) {
+          SG_LOG(SG_ENVIRONMENT, SG_INFO, 
+              "NoaaMetarRealWxController::update(): nearest airport with METAR has changed. Old: '" << 
+              _metarProperties[0]->getStationId() <<
+              "', new: '" << nearestAirport->ident() << "'" );
+          _metarProperties[0]->setStationId( nearestAirport->ident() );
+          _metarProperties[0]->setTimeToLive( 0.0 );
+      }
     }
+    catch( sg_exception & ) {
+      return;
+    }
+    
 }
 
 /* -------------------------------------------------------------------------------- */

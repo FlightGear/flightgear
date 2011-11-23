@@ -100,7 +100,7 @@ void FGATCManager::init() {
 
 
     FGAirport *apt = FGAirport::findByIdent(airport); 
-    if (apt && onGround) {
+    if (apt && onGround && !runway.empty()) {
         FGAirportDynamics* dcs = apt->getDynamics();
         int park_index = dcs->getNrOfParkings() - 1;
         //cerr << "found information: " << runway << " " << airport << ": parking = " << parking << endl;

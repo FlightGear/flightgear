@@ -76,7 +76,14 @@ FGATIS::FGATIS() :
   _prev_display(0),
   refname("atis")
 {
-  _vPtr = globals->get_ATC_mgr()->GetVoicePointer(ATIS);
+  FGATCMgr* pAtcMgr = globals->get_ATC_mgr();
+  if (!pAtcMgr)
+  {
+      SG_LOG(SG_ATC, SG_ALERT, "ERROR! No ATC manager! Oops...");
+      _vPtr = NULL;
+  }
+  else
+      _vPtr = pAtcMgr->GetVoicePointer(ATIS);
   _voiceOK = (_vPtr == NULL ? false : true);
   if (!(_type != ATIS || _type == AWOS)) {
        SG_LOG(SG_ATC, SG_ALERT, "ERROR - _type not ATIS or AWOS in atis.cxx");

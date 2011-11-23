@@ -48,7 +48,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGAerodynamics.cpp,v 1.41 2011/08/04 12:46:32 jberndt Exp $";
+static const char *IdSrc = "$Id: FGAerodynamics.cpp,v 1.44 2011/10/23 14:23:13 jentron Exp $";
 static const char *IdHdr = ID_AERODYNAMICS;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -208,13 +208,15 @@ bool FGAerodynamics::Run(bool Holding)
   if ( fabs(vFw(eDrag)) > 0.0) lod = fabs( vFw(eLift) / vFw(eDrag) );
 
   // Calculate aerodynamic reference point shift, if any. The shift
-  // takes place in the body axis. That is, if the shift is negative,
+  // takes place in the structual axis. That is, if the shift is positive,
   // it is towards the back (tail) of the vehicle. The AeroRPShift
   // function should be non-dimensionalized by the wing chord. The
   // calculated vDeltaRP will be in feet.
   if (AeroRPShift) vDeltaRP(eX) = AeroRPShift->GetValue()*in.Wingchord;
 
-  vDXYZcg = in.RPBody + vDeltaRP;
+  vDXYZcg(eX) = in.RPBody(eX) - vDeltaRP(eX); // vDeltaRP is given in the structural frame
+  vDXYZcg(eY) = in.RPBody(eY) + vDeltaRP(eY);
+  vDXYZcg(eZ) = in.RPBody(eZ) - vDeltaRP(eZ);
 
   vMoments = vDXYZcg*vForces; // M = r X F
 
@@ -382,7 +384,7 @@ string FGAerodynamics::GetAeroFunctionValues(const string& delimeter) const
   for (unsigned int axis = 0; axis < 6; axis++) {
     for (unsigned int sd = 0; sd < AeroFunctions[axis].size(); sd++) {
       if (buf.tellp() > 0) buf << delimeter;
-      buf << setw(9) << AeroFunctions[axis][sd]->GetValue();
+      buf << AeroFunctions[axis][sd]->GetValue();
     }
   }
 

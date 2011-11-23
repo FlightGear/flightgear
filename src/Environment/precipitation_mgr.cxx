@@ -39,12 +39,10 @@
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
+#include <Main/renderer.hxx>
 #include <Scenery/scenery.hxx>
 
 #include "precipitation_mgr.hxx"
-
-extern SGSky *thesky;
-
 
 /** 
  * @brief FGPrecipitation Manager constructor 
@@ -141,6 +139,8 @@ float FGPrecipitationMgr::getPrecipitationAtAltitudeMax(void)
     max = SGCloudLayer::SG_MAX_CLOUD_COVERAGES;
     result = 0;
 
+     SGSky* thesky = globals->get_renderer()->getSky();
+    
     // To avoid messing up
     if (thesky == NULL)
         return result;

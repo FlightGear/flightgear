@@ -89,7 +89,7 @@ Section "" ;No components page, name is not important
   ; VC runtime redistributables
   File "$%VCINSTALLDIR%\redist\x86\Microsoft.VC100.CRT\*.dll"
   
-  File /r ${FGRunDir}\share
+  File /r ${FGRunDir}\share\locale
   
   SetOutPath $INSTDIR\osgPlugins-${OSGVersion}
   File ${OSGPluginsDir}\osgdb_ac.dll
@@ -102,6 +102,7 @@ Section "" ;No components page, name is not important
   File ${OSGPluginsDir}\osgdb_png.dll
   File ${OSGPluginsDir}\osgdb_dds.dll
   File ${OSGPluginsDir}\osgdb_txf.dll
+  File ${OSGPluginsDir}\osgdb_freetype.dll
   File ${OSGPluginsDir}\osgdb_serializers_osg.dll
   File ${OSGPluginsDir}\osgdb_serializers_osganimation.dll
   File ${OSGPluginsDir}\osgdb_serializers_osgfx.dll

@@ -820,10 +820,10 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr) {
        } 
     if (trafficRef) {
          //cerr << "Tracking callsign : \"" << fgGetString("/ai/track-callsign") << "\"" << endl;
-/*         if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
-              cerr << trafficRef->getCallSign() << " " << tgt_altitude_ft << " " << _getSpeed() << " " 
-                   << _getAltitude() << " "<< _getLatitude() << " " << _getLongitude() << " " << dist_to_go << " " << lead_dist << " " << curr->name << " " << vs << " " << tgt_vs << " " << bearing << " " << minBearing << " " << speedFraction << endl; 
-         }*/
+         //if (trafficRef->getCallSign() == fgGetString("/ai/track-callsign")) {
+              //cerr << trafficRef->getCallSign() << " " << tgt_altitude_ft << " " << _getSpeed() << " " 
+              //     << _getAltitude() << " "<< _getLatitude() << " " << _getLongitude() << " " << dist_to_go << " " << lead_dist << " " << curr->getName() << " " << vs << " " << //tgt_vs << " " << bearing << " " << minBearing << " " << speedFraction << endl; 
+         //}
      }
     if ((dist_to_go < lead_dist) ||
         ((dist_to_go > prev_dist_to_go) && (bearing > (minBearing * 1.1))) ) {
@@ -1275,9 +1275,9 @@ void FGAIAircraft::updateActualState() {
     updatePosition();
 
     if (onGround())
-        speed = _performance->actualSpeed(this, groundTargetSpeed, dt);
+        speed = _performance->actualSpeed(this, groundTargetSpeed, dt, holdPos);
     else
-        speed = _performance->actualSpeed(this, (tgt_speed *speedFraction), dt);
+        speed = _performance->actualSpeed(this, (tgt_speed *speedFraction), dt, false);
     //assertSpeed(speed);
     updateHeading();
     roll = _performance->actualBankAngle(this, tgt_roll, dt);

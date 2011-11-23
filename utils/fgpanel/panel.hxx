@@ -41,7 +41,7 @@
 #include "FGTextureLoaderInterface.hxx"
 
 class FGPanelInstrument;
-
+using namespace std;
 
 ////////////////////////////////////////////////////////////////////////
 // Texture management.

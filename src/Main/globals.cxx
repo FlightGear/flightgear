@@ -160,10 +160,7 @@ FGGlobals::FGGlobals() :
 
 // Destructor
 FGGlobals::~FGGlobals() 
-{
-    delete renderer;
-    renderer = NULL;
-    
+{    
 // The AIModels manager performs a number of actions upon
     // Shutdown that implicitly assume that other subsystems
     // are still operational (Due to the dynamic allocation and
@@ -179,6 +176,9 @@ FGGlobals::~FGGlobals()
     subsystem_mgr->shutdown();
     subsystem_mgr->unbind();
     delete subsystem_mgr;
+    
+    delete renderer;
+    renderer = NULL;
     
     delete time_params;
     delete mag;
@@ -380,7 +380,7 @@ FGGlobals::get_aircraft_position() const
     throw sg_exception("Can't get aircraft position", "FGGlobals::get_aircraft_position()" );
 }
 
-const SGVec3d&
+SGVec3d
 FGGlobals::get_aircraft_positon_cart() const
 {
     return SGVec3d::fromGeod(get_aircraft_position());

@@ -5,11 +5,26 @@
 #include <osg/Quat>
 #include <osgGA/GUIEventHandler>
 #include <osgViewer/ViewerEventHandlers>
+#include <simgear/structure/OSGVersion.hxx>
 
 #include "fg_os.hxx"
 
 namespace flightgear
 {
+    class FGStatsHandler : public osgViewer::StatsHandler
+    {
+        public:
+            FGStatsHandler()
+            {
+#if (SG_OSG_VERSION >= 30000)
+                // Adjust font type/size for >=OSG3.
+                // OSG defaults aren't working/available for FG.
+                _font = "Fonts/helvetica_medium.txf";
+                _characterSize = 12.0f;
+#endif
+            }
+    };
+
 class FGEventHandler : public osgGA::GUIEventHandler {
 public:
     FGEventHandler();
@@ -86,7 +101,7 @@ protected:
     fgKeyHandler keyHandler;
     fgMouseClickHandler mouseClickHandler;
     fgMouseMotionHandler mouseMotionHandler;
-    osg::ref_ptr<osgViewer::StatsHandler> statsHandler;
+    osg::ref_ptr<FGStatsHandler> statsHandler;
     osg::ref_ptr<osgGA::GUIEventAdapter> statsEvent;
     int statsType;
     int currentModifiers;

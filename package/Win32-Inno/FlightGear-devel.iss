@@ -20,7 +20,8 @@
 ;     C:\> subst X: /d
 ;
 
-#define FGVER "v20110324"
+#define FGVER "v20111024"
+;#define FGVER "2.4.0"
 
 [Setup]
 AppId=FlightGear {#FGVER}

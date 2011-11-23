@@ -102,6 +102,7 @@ bool FGAirportDynamics::getAvailableParking(double *lat, double *lon,
         //cerr << "Could not find parking spot at " << _ap->getId() << endl;
         *lat = _ap->getLatitude();
         *lon = _ap->getLongitude();
+        * gateId = -1;
         *heading = 0;
         found = true;
     } else {

@@ -39,7 +39,7 @@ FGEventHandler::FGEventHandler() :
     keyHandler(0),
     mouseClickHandler(0),
     mouseMotionHandler(0),
-    statsHandler(new osgViewer::StatsHandler),
+    statsHandler(new FGStatsHandler),
     statsEvent(new osgGA::GUIEventAdapter),
     statsType(osgViewer::StatsHandler::NO_STATS),
     currentModifiers(0),
@@ -242,6 +242,7 @@ bool FGEventHandler::handle(const osgGA::GUIEventAdapter& ea,
         CameraGroup::getDefault()->resized();
         if (resizable)
           globals->get_renderer()->resize(ea.getWindowWidth(), ea.getWindowHeight());
+        statsHandler->handle(ea, us);
       #ifdef SG_MAC
         // work around OSG Cocoa-Viewer issue with resize event handling,
         // where resize events are queued up, then dispatched in a batch, with

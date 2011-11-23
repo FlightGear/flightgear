@@ -149,7 +149,8 @@ void FGLight::bind () {
     prop->tie("/rendering/scene/overcast",SGRawValuePointer<float>(&_overcast));
 
     _sunAngleRad = prop->getNode("/sim/time/sun-angle-rad", true);
-  
+    _sunAngleRad->setDoubleValue(_sun_angle);
+    
     // Read Only
     prop->tie("/rendering/scene/ambient/red",SGRawValuePointer<float>(&_scene_ambient[0]));
     prop->tie("/rendering/scene/ambient/green",SGRawValuePointer<float>(&_scene_ambient[1]));
@@ -290,6 +291,8 @@ void FGLight::update_sky_color () {
     _scene_ambient[3] = 1.0;
     gamma_correct_rgb( _scene_ambient.data() );
 
+    SGSky* thesky = globals->get_renderer()->getSky();
+    
     SGVec4f color = thesky->get_scene_color();
     _scene_diffuse[0] = color[0] * diffuse;
     _scene_diffuse[1] = color[1] * diffuse;
@@ -361,6 +364,7 @@ void FGLight::update_adj_fog_color () {
 
     // revert to unmodified values before using them.
     //
+    SGSky* thesky = globals->get_renderer()->getSky();
     SGVec4f color = thesky->get_scene_color();
 
     gamma_restore_rgb( _fog_color.data(), gamma );

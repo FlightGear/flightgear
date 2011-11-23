@@ -501,7 +501,7 @@ TCAS::AdvisoryCoordinator::update(int mode)
     }
 
     /* [TCASII]: "Aural annunciations are inhibited below 500+/-100 feet AGL." */
-    if ((tcas->threatDetector.getAlt() > 500)&&
+    if ((tcas->threatDetector.getRadarAlt() > 500)&&
         (mode >= SwitchTaOnly))
         tcas->annunciator.trigger(current, revertedRA);
     else
@@ -525,8 +525,10 @@ TCAS::AdvisoryCoordinator::update(int mode)
 
 TCAS::ThreatDetector::ThreatDetector(TCAS* _tcas) :
     tcas(_tcas),
+    checkCount(0),
     pAlarmThresholds(&sensitivityLevels[0])
 {
+    self.radarAltFt = 0.0;
     unitTest();
 }
 
@@ -535,7 +537,8 @@ TCAS::ThreatDetector::init(void)
 {
     nodeLat         = fgGetNode("/position/latitude-deg",          true);
     nodeLon         = fgGetNode("/position/longitude-deg",         true);
-    nodeAlt         = fgGetNode("/position/altitude-ft",           true);
+    nodePressureAlt = fgGetNode("/position/altitude-ft",           true);
+    nodeRadarAlt    = fgGetNode("/position/altitude-agl-ft",       true);
     nodeHeading     = fgGetNode("/orientation/heading-deg",        true);
     nodeVelocity    = fgGetNode("/velocities/airspeed-kt",         true);
     nodeVerticalFps = fgGetNode("/velocities/vertical-speed-fps",  true);
@@ -548,18 +551,30 @@ void
 TCAS::ThreatDetector::update(void)
 {
     // update local position
-    self.lat         = nodeLat->getDoubleValue();
-    self.lon         = nodeLon->getDoubleValue();
-    self.altFt       = nodeAlt->getDoubleValue();
-    self.heading     = nodeHeading->getDoubleValue();
-    self.velocityKt  = nodeVelocity->getDoubleValue();
-    self.verticalFps = nodeVerticalFps->getDoubleValue();
+    self.lat           = nodeLat->getDoubleValue();
+    self.lon           = nodeLon->getDoubleValue();
+    self.pressureAltFt = nodePressureAlt->getDoubleValue();
+    self.heading       = nodeHeading->getDoubleValue();
+    self.velocityKt    = nodeVelocity->getDoubleValue();
+    self.verticalFps   = nodeVerticalFps->getDoubleValue();
 
+    /* radar altimeter provides a lot of spikes due to uneven terrain
+     * MK-VIII GPWS-spec requires smoothing the radar altitude with a
+     * 10second moving average. Likely the TCAS spec requires the same.
+     * => We use a cheap 10 second exponential average method.
+     */
+    const double SmoothingFactor = 0.3;
+    self.radarAltFt = nodeRadarAlt->getDoubleValue()*SmoothingFactor +
+            (1-SmoothingFactor)*self.radarAltFt;
+
+#ifdef FEATURE_TCAS_DEBUG_THREAT_DETECTOR
+    printf("TCAS::ThreatDetector::update: radarAlt = %f\n",self.radarAltFt);
     checkCount = 0;
+#endif
 
     // determine current altitude's "Sensitivity Level Definition and Alarm Thresholds" 
     int sl=0;
-    for (sl=0;((self.altFt > sensitivityLevels[sl].maxAltitude)&&
+    for (sl=0;((self.radarAltFt > sensitivityLevels[sl].maxAltitude)&&
                (sensitivityLevels[sl].maxAltitude));sl++);
     pAlarmThresholds = &sensitivityLevels[sl];
     tcas->advisoryGenerator.setAlarmThresholds(pAlarmThresholds);
@@ -597,7 +612,9 @@ TCAS::ThreatDetector::checkTransponder(const SGPropertyNode* pModel, float veloc
 int
 TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
 {
+#ifdef FEATURE_TCAS_DEBUG_THREAT_DETECTOR
     checkCount++;
+#endif
     
     float velocityKt  = pModel->getDoubleValue("velocities/true-airspeed-kt");
 
@@ -606,7 +623,7 @@ TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
 
     int threatLevel = ThreatNone;
     float altFt = pModel->getDoubleValue("position/altitude-ft");
-    currentThreat.relativeAltitudeFt = altFt - self.altFt;
+    currentThreat.relativeAltitudeFt = altFt - self.pressureAltFt;
 
     // save computation time: don't care when relative altitude is excessive
     if (fabs(currentThreat.relativeAltitudeFt) > 10000)
@@ -638,7 +655,7 @@ TCAS::ThreatDetector::checkThreat(int mode, const SGPropertyNode* pModel)
 
     /* do not detect any threats when in standby or on ground and taxiing */
     if ((mode <= SwitchStandby)||
-        ((self.altFt < 360)&&(self.velocityKt < 40)))
+        ((self.radarAltFt < 360)&&(self.velocityKt < 40)))
     {
         return threatLevel;
     }
@@ -1032,7 +1049,7 @@ TCAS::AdvisoryGenerator::resolution(int mode, int threatLevel, float rangeNm, fl
 
         /* [EUROACAS]: "Certain RAs are inhibited at altitudes based on inputs from the radio altimeter:
          *   [..] (c)1000ft (+/- 100ft) and below, all RAs are inhibited;" */
-        if (pSelf->altFt < 1000)
+        if (pSelf->radarAltFt < 1000)
             threatLevel = ThreatTA;
         
         // RAs only issued in mode "Auto" (= "TA/RA" mode)
@@ -1100,7 +1117,7 @@ TCAS::AdvisoryGenerator::resolution(int mode, int threatLevel, float rangeNm, fl
         /* [TCASII]: "TCAS is designed to inhibit Increase Descent RAs below 1450 feet AGL; */
         
         /* [TCASII]: "Descend RAs below 1100 feet AGL;" (inhibited) */
-        if (pSelf->altFt < 1100)
+        if (pSelf->radarAltFt < 1100)
         {
             RA &= ~AdvisoryDescend;
             //TODO Support "Do not descend" RA
@@ -1291,8 +1308,8 @@ TCAS::selfTest(void)
     newAdvisory.threatLevel = ThreatRA;
     newAdvisory.RA          = AdvisoryClear;
     newAdvisory.RAOption    = OptionNone;
-    // TCAS audio is disabled below 500ft
-    threatDetector.setAlt(501);
+    // TCAS audio is disabled below 500ft AGL
+    threatDetector.setRadarAlt(501);
 
     // trigger various advisories
     switch(selfTestStep)

@@ -302,12 +302,12 @@ void TimeManager::updateLocalTime()
 void TimeManager::initTimeOffset()
 {
 
-  int offset = fgGetInt("/sim/startup/time-offset");
+  long int offset = fgGetLong("/sim/startup/time-offset");
   string offset_type = fgGetString("/sim/startup/time-offset-type");
   setTimeOffset(offset_type, offset);
 }
 
-void TimeManager::setTimeOffset(const std::string& offset_type, int offset)
+void TimeManager::setTimeOffset(const std::string& offset_type, long int offset)
 {
   // Handle potential user specified time offsets
   int orig_warp = _warp->getIntValue();
@@ -331,7 +331,7 @@ void TimeManager::setTimeOffset(const std::string& offset_type, int offset)
   } else if ( offset_type == "noon" ) {
      warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 0.0, true ); 
   } else if ( offset_type == "afternoon" ) {
-    warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 60.0, false );  
+    warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 75.0, false );  
   } else if ( offset_type == "dusk" ) {
     warp = fgTimeSecondsUntilSunAngle( cur_time, lon, lat, 90.0, false );
   } else if ( offset_type == "evening" ) {

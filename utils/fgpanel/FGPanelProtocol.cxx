@@ -32,6 +32,8 @@
 #include <simgear/io/sg_socket.hxx>
 #include <simgear/misc/strutils.hxx>
 
+using namespace std;
+
 class PropertySetter {
 public:
   PropertySetter( SGPropertyNode_ptr node ) : _node(node) {}
@@ -123,15 +125,25 @@ FGPanelProtocol::~FGPanelProtocol()
 
 void FGPanelProtocol::update( double dt )
 {
-  char buf[8192];
+  char buf[2][8192];
 
   if( io == NULL )
     return;
 
-  int length = io->readline( buf, sizeof(buf)-1 );
-  buf[sizeof(buf)-1] = 0;
-  if ( length > 0 ) {
-    vector<string> tokens = simgear::strutils::split( buf, "," );
+  // read all available lines, keep last one
+  int Page = 0;
+  bool HaveData = false;
+  while ( io->readline( buf[Page], sizeof(buf[Page])-1 ) > 0 )
+  {
+      HaveData = true;
+      Page ^= 1;
+  }
+
+  if ( HaveData ) {
+    // process most recent line of data
+    Page ^= 1;
+    buf[Page][sizeof(buf[Page])-1] = 0;
+    vector<string> tokens = simgear::strutils::split( buf[Page], "," );
     for( vector<string>::size_type i = 0; i < tokens.size(); i++ ) {
       if( i < propertySetterVector.size() )
         propertySetterVector[i]->setValue( tokens[i].c_str() );

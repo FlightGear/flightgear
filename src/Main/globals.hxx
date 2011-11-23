@@ -267,7 +267,7 @@ public:
 
     const SGGeod & get_aircraft_position() const;
 
-    const SGVec3d& get_aircraft_positon_cart() const;
+    SGVec3d get_aircraft_positon_cart() const;
     
     inline FGModelMgr *get_model_mgr () { return model_mgr; }
 

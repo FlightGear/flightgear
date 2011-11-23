@@ -29,7 +29,7 @@ public:
     PerformanceData(const std::string& filename);
     ~PerformanceData();
 
-    double actualSpeed(FGAIAircraft* ac, double tgt_speed, double dt);
+    double actualSpeed(FGAIAircraft* ac, double tgt_speed, double dt, bool needMaxBrake);
     double actualBankAngle(FGAIAircraft* ac, double tgt_roll, double dt);
     double actualPitch(FGAIAircraft* ac, double tgt_pitch, double dt);
     double actualHeading(FGAIAircraft* ac, double tgt_heading, double dt);

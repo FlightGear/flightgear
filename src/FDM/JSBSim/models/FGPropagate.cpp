@@ -68,7 +68,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGPropagate.cpp,v 1.96 2011/09/17 15:36:35 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGPropagate.cpp,v 1.98 2011/10/22 15:11:24 bcoconni Exp $";
 static const char *IdHdr = ID_PROPAGATE;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -77,8 +77,6 @@ CLASS IMPLEMENTATION
 
 FGPropagate::FGPropagate(FGFDMExec* fdmex)
   : FGModel(fdmex),
-    LocalTerrainRadius(0),
-    SeaLevelRadius(0),
     VehicleRadius(0)
 {
   Debug(0);
@@ -115,10 +113,9 @@ FGPropagate::~FGPropagate(void)
 bool FGPropagate::InitModel(void)
 {
   // For initialization ONLY:
-  SeaLevelRadius = LocalTerrainRadius = in.RefRadius;
-  FDMExec->GetGroundCallback()->SetTerrainGeoCentRadius(LocalTerrainRadius);
+  VState.vLocation.SetRadius( FDMExec->GetGroundCallback()->
+                              GetTerrainGeoCentRadius(0.0,VState.vLocation) + 4.0 );
 
-  VState.vLocation.SetRadius( LocalTerrainRadius + 4.0 );
   VState.vLocation.SetEllipse(in.SemiMajor, in.SemiMinor);
 
   vInertialVelocity.InitMatrix();
@@ -145,11 +142,7 @@ void FGPropagate::SetInitialState(const FGInitialCondition *FGIC)
   // Initialize the State Vector elements and the transformation matrices
 
   // Set the position lat/lon/radius
-  VState.vLocation.SetPosition( FGIC->GetLongitudeRadIC(),
-                                FGIC->GetLatitudeRadIC(),
-                                FGIC->GetAltitudeASLFtIC() + SeaLevelRadius);
-
-  VState.vLocation.SetEarthPositionAngle(0.0);
+  VState.vLocation = FGIC->GetPosition();
 
   Ti2ec = VState.vLocation.GetTi2ec(); // ECI to ECEF transform
   Tec2i = Ti2ec.Transposed();          // ECEF to ECI frame transform
@@ -161,31 +154,24 @@ void FGPropagate::SetInitialState(const FGInitialCondition *FGIC)
   // Set the orientation from the euler angles (is normalized within the
   // constructor). The Euler angles represent the orientation of the body
   // frame relative to the local frame.
-  VState.qAttitudeLocal = FGQuaternion( FGIC->GetPhiRadIC(),
-                                        FGIC->GetThetaRadIC(),
-                                        FGIC->GetPsiRadIC() );
+  VState.qAttitudeLocal = FGIC->GetOrientation();
 
   VState.qAttitudeECI = Ti2l.GetQuaternion()*VState.qAttitudeLocal;
   UpdateBodyMatrices();
 
   // Set the velocities in the instantaneus body frame
-  VState.vUVW = FGColumnVector3( FGIC->GetUBodyFpsIC(),
-                                 FGIC->GetVBodyFpsIC(),
-                                 FGIC->GetWBodyFpsIC() );
+  VState.vUVW = FGIC->GetUVWFpsIC();
 
   // Compute the local frame ECEF velocity
   vVel = Tb2l * VState.vUVW;
 
-  // Recompute the LocalTerrainRadius.
-  RecomputeLocalTerrainRadius();
-
+  // Compute local terrain velocity
+  RecomputeLocalTerrainVelocity();
   VehicleRadius = GetRadius();
 
   // Set the angular velocities of the body frame relative to the ECEF frame,
   // expressed in the body frame.
-  VState.vPQR = FGColumnVector3( FGIC->GetPRadpsIC(),
-                                 FGIC->GetQRadpsIC(),
-                                 FGIC->GetRRadpsIC() );
+  VState.vPQR = FGIC->GetPQRRadpsIC();
 
   VState.vPQRi = VState.vPQR + Ti2b * in.vOmegaPlanet;
 
@@ -269,8 +255,7 @@ bool FGPropagate::Run(bool Holding)
   CalculateUVW();
 
   // Set auxilliary state variables
-  RecomputeLocalTerrainRadius();
-
+  RecomputeLocalTerrainVelocity();
   VehicleRadius = GetRadius(); // Calculate current aircraft radius from center of planet
 
   VState.vPQR = VState.vPQRi - Ti2b * in.vOmegaPlanet;
@@ -410,39 +395,79 @@ void FGPropagate::SetInertialRates(FGColumnVector3 vRates) {
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-void FGPropagate::RecomputeLocalTerrainRadius(void)
+void FGPropagate::RecomputeLocalTerrainVelocity()
 {
-  FGLocation contactloc;
-  FGColumnVector3 dummy;
-  double t = FDMExec->GetSimTime();
-
-  // Get the LocalTerrain radius.
-  FDMExec->GetGroundCallback()->GetAGLevel(t, VState.vLocation, contactloc,
-                      dummy, LocalTerrainVelocity, LocalTerrainAngularVelocity);
-  LocalTerrainRadius = contactloc.GetRadius();
-  FDMExec->GetGroundCallback()->SetTerrainGeoCentRadius(LocalTerrainRadius);
+   FGLocation contact;
+   FGColumnVector3 normal;
+   FDMExec->GetGroundCallback()->GetAGLevel(FDMExec->GetSimTime(),
+                                            VState.vLocation,
+                                            contact, normal,
+                                            LocalTerrainVelocity,
+                                            LocalTerrainAngularVelocity);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 void FGPropagate::SetTerrainElevation(double terrainElev)
 {
-  LocalTerrainRadius = terrainElev + SeaLevelRadius;
-  FDMExec->GetGroundCallback()->SetTerrainGeoCentRadius(LocalTerrainRadius);
+  double radius = terrainElev + FDMExec->GetGroundCallback()->GetSeaLevelRadius(VState.vLocation);
+  FDMExec->GetGroundCallback()->SetTerrainGeoCentRadius(radius);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPropagate::SetSeaLevelRadius(double tt)
+{
+  FDMExec->GetGroundCallback()->SetSeaLevelRadius(tt);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGPropagate::GetLocalTerrainRadius(void) const
+{
+  return FDMExec->GetGroundCallback()->GetTerrainGeoCentRadius(FDMExec->GetSimTime(),
+                                                               VState.vLocation);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double FGPropagate::GetTerrainElevation(void) const
 {
-  return FDMExec->GetGroundCallback()->GetTerrainGeoCentRadius()-SeaLevelRadius;
+  return GetLocalTerrainRadius()
+       - FDMExec->GetGroundCallback()->GetSeaLevelRadius(VState.vLocation);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 double FGPropagate::GetDistanceAGL(void) const
 {
-  return VState.vLocation.GetRadius() - LocalTerrainRadius;
+  FGColumnVector3 dummy;
+  FGLocation dummyloc;
+  double t = FDMExec->GetSimTime();
+  return FDMExec->GetGroundCallback()->GetAGLevel(t, VState.vLocation, dummyloc,
+                                                  dummy, dummy, dummy);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPropagate::SetAltitudeASL(double altASL)
+{
+  SetRadius(altASL + FDMExec->GetGroundCallback()->GetSeaLevelRadius(VState.vLocation));
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+double FGPropagate::GetAltitudeASL(void) const
+{
+  return VState.vLocation.GetRadius()
+       - FDMExec->GetGroundCallback()->GetSeaLevelRadius(VState.vLocation);
+}
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+void FGPropagate::SetDistanceAGL(double tt)
+{
+  SetAltitudeASL(tt + GetTerrainElevation());
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -456,7 +481,7 @@ void FGPropagate::SetVState(const VehicleState& vstate)
   Tec2i = Ti2ec.Transposed();
   UpdateLocationMatrices();
   SetInertialOrientation(vstate.qAttitudeECI);
-  RecomputeLocalTerrainRadius();
+  RecomputeLocalTerrainVelocity();
   VehicleRadius = GetRadius();
   VState.vUVW = vstate.vUVW;
   vVel = Tb2l * VState.vUVW;
@@ -469,7 +494,7 @@ void FGPropagate::SetVState(const VehicleState& vstate)
 
 void FGPropagate::UpdateVehicleState(void)
 {
-  RecomputeLocalTerrainRadius();
+  RecomputeLocalTerrainVelocity();
   VehicleRadius = GetRadius();
   VState.vInertialPosition = Tec2i * VState.vLocation;
   UpdateLocationMatrices();

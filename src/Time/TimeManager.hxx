@@ -44,7 +44,7 @@ public:
 // SGPropertyChangeListener overrides
   virtual void valueChanged(SGPropertyNode *);
   
-  void setTimeOffset(const std::string& offset_type, int offset);
+  void setTimeOffset(const std::string& offset_type, long int offset);
 private:
   
   /**

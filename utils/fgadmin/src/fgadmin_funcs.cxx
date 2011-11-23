@@ -24,6 +24,7 @@
 #include <iostream>
 #include <string>
 #include <set>
+#include <sys/stat.h>
 
 #ifdef _WIN32
 #  include <direct.h>
@@ -255,8 +256,12 @@ void FGAdminUI::install_selected() {
             f = install_box->text( i );
             SGPath file( source );
             file.append( f );
-            struct stat info;
+            struct ::stat info;
+#if (FL_MAJOR_VERSION > 1 || ( FL_MAJOR_VERSION == 1 && FL_MINOR_VERSION >= 3 ))
             fl_stat( file.str().c_str(), &info );
+#else
+            stat( file.str().c_str(), &info );
+#endif
             float old_max = progress->maximum();
             progress->maximum( info.st_size );
             progress_label = "Installing ";

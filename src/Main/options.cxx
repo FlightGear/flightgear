@@ -80,6 +80,7 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::vector;
+using std::cin;
 
 #define NEW_DEFAULT_MODEL_HZ 120
 
@@ -283,6 +284,56 @@ parse_wind (const string &wind, double * min_hdg, double * max_hdg,
   return true;
 }
 
+static bool
+parseIntValue(char** ppParserPos, int* pValue,int min, int max, const char* field, const char* argument)
+{
+    if ( !strlen(*ppParserPos) )
+        return true;
+
+    char num[256];
+    int i = 0;
+
+    while ( isdigit((*ppParserPos)[0]) && (i<255) )
+    {
+        num[i] = (*ppParserPos)[0];
+        (*ppParserPos)++;
+        i++;
+    }
+    num[i] = '\0';
+
+    switch ((*ppParserPos)[0])
+    {
+        case 0:
+            break;
+        case ':':
+            (*ppParserPos)++;
+            break;
+        default:
+            SG_LOG(SG_GENERAL, SG_ALERT, "Illegal character in time string for " << field << ": '" <<
+                    (*ppParserPos)[0] << "'.");
+            // invalid field - skip rest of string to avoid further errors
+            while ((*ppParserPos)[0])
+                (*ppParserPos)++;
+            return false;
+    }
+
+    if (i<=0)
+        return true;
+
+    int value = atoi(num);
+    if ((value < min)||(value > max))
+    {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Invalid " << field << " in '" << argument <<
+               "'. Valid range is " << min << "-" << max << ".");
+        return false;
+    }
+    else
+    {
+        *pValue = value;
+        return true;
+    }
+}
+
 // parse a time string ([+/-]%f[:%f[:%f]]) into hours
 static double
 parse_time(const string& time_in) {
@@ -364,112 +415,63 @@ parse_time(const string& time_in) {
     return(sign * result);
 }
 
-
 // parse a date string (yyyy:mm:dd:hh:mm:ss) into a time_t (seconds)
 static long int
-parse_date( const string& date)
+parse_date( const string& date, const char* timeType)
 {
-    struct tm gmt;
-    char * date_str, num[256];
-    int i;
-    // initialize to zero
-    gmt.tm_sec = 0;
-    gmt.tm_min = 0;
-    gmt.tm_hour = 0;
-    gmt.tm_mday = 0;
-    gmt.tm_mon = 0;
-    gmt.tm_year = 0;
+    struct tm gmt,*pCurrentTime;
+    int year,month,day,hour,minute,second;
+    char *argument, *date_str;
+
+    SGTime CurrentTime = SGTime();
+    CurrentTime.update(0,0,0,0);
+
+    // FIXME This should obtain system/aircraft/GMT time depending on timeType
+    pCurrentTime = CurrentTime.getGmt();
+
+    // initialize all fields with current time
+    year   = pCurrentTime->tm_year + 1900;
+    month  = pCurrentTime->tm_mon + 1;
+    day    = pCurrentTime->tm_mday;
+    hour   = pCurrentTime->tm_hour;
+    minute = pCurrentTime->tm_min;
+    second = pCurrentTime->tm_sec;
+
+    argument = (char *)date.c_str();
+    date_str = argument;
+
+    // start with parsing year
+    if (!strlen(date_str) ||
+        !parseIntValue(&date_str,&year,0,9999,"year",argument))
+    {
+        return -1;
+    }
+
+    if (year < 1970)
+    {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Invalid year '" << year << "'. Use 1970 or later.");
+        return -1;
+    }
+
+    parseIntValue(&date_str, &month,  1, 12, "month",  argument);
+    parseIntValue(&date_str, &day,    1, 31, "day",    argument);
+    parseIntValue(&date_str, &hour,   0, 23, "hour",   argument);
+    parseIntValue(&date_str, &minute, 0, 59, "minute", argument);
+    parseIntValue(&date_str, &second, 0, 59, "second", argument);
+
+    gmt.tm_sec  = second;
+    gmt.tm_min  = minute;
+    gmt.tm_hour = hour;
+    gmt.tm_mday = day;
+    gmt.tm_mon  = month - 1;
+    gmt.tm_year = year -1900;
     gmt.tm_isdst = 0; // ignore daylight savings time for the moment
-    date_str = (char *)date.c_str();
-    // get year
-    if ( strlen(date_str) ) {
-	i = 0;
-	while ( (date_str[0] != ':') && (date_str[0] != '\0') ) {
-	    num[i] = date_str[0];
-	    date_str++;
-	    i++;
-	}
-	if ( date_str[0] == ':' ) {
-	    date_str++;
-	}
-	num[i] = '\0';
-	gmt.tm_year = atoi(num) - 1900;
-    }
-    // get month
-    if ( strlen(date_str) ) {
-	i = 0;
-	while ( (date_str[0] != ':') && (date_str[0] != '\0') ) {
-	    num[i] = date_str[0];
-	    date_str++;
-	    i++;
-	}
-	if ( date_str[0] == ':' ) {
-	    date_str++;
-	}
-	num[i] = '\0';
-	gmt.tm_mon = atoi(num) -1;
-    }
-    // get day
-    if ( strlen(date_str) ) {
-	i = 0;
-	while ( (date_str[0] != ':') && (date_str[0] != '\0') ) {
-	    num[i] = date_str[0];
-	    date_str++;
-	    i++;
-	}
-	if ( date_str[0] == ':' ) {
-	    date_str++;
-	}
-	num[i] = '\0';
-	gmt.tm_mday = atoi(num);
-    }
-    // get hour
-    if ( strlen(date_str) ) {
-	i = 0;
-	while ( (date_str[0] != ':') && (date_str[0] != '\0') ) {
-	    num[i] = date_str[0];
-	    date_str++;
-	    i++;
-	}
-	if ( date_str[0] == ':' ) {
-	    date_str++;
-	}
-	num[i] = '\0';
-	gmt.tm_hour = atoi(num);
-    }
-    // get minute
-    if ( strlen(date_str) ) {
-	i = 0;
-	while ( (date_str[0] != ':') && (date_str[0] != '\0') ) {
-	    num[i] = date_str[0];
-	    date_str++;
-	    i++;
-	}
-	if ( date_str[0] == ':' ) {
-	    date_str++;
-	}
-	num[i] = '\0';
-	gmt.tm_min = atoi(num);
-    }
-    // get second
-    if ( strlen(date_str) ) {
-	i = 0;
-	while ( (date_str[0] != ':') && (date_str[0] != '\0') ) {
-	    num[i] = date_str[0];
-	    date_str++;
-	    i++;
-	}
-	if ( date_str[0] == ':' ) {
-	    date_str++;
-	}
-	num[i] = '\0';
-	gmt.tm_sec = atoi(num);
-    }
+
     time_t theTime = sgTimeGetGMT( gmt.tm_year, gmt.tm_mon, gmt.tm_mday,
-				   gmt.tm_hour, gmt.tm_min, gmt.tm_sec );
-    //printf ("Date is %s\n", ctime(&theTime));
-    //printf ("in seconds that is %d\n", theTime);
-    //exit(1);
+                                   gmt.tm_hour, gmt.tm_min, gmt.tm_sec );
+
+    SG_LOG(SG_GENERAL, SG_INFO, "Configuring startup time to " << ctime(&theTime));
+
     return (theTime);
 }
 
@@ -486,9 +488,9 @@ parse_degree( const string& degree_str) {
 
 
 // parse time offset string into seconds
-static int
+static long int
 parse_time_offset( const string& time_str) {
-    int result;
+   long int result;
 
     // printf("time offset = %s\n", time_str);
 
@@ -811,7 +813,7 @@ fgOptBpp( const char *arg )
 static int
 fgOptTimeOffset( const char *arg )
 {
-    fgSetInt("/sim/startup/time-offset",
+    fgSetLong("/sim/startup/time-offset",
                 parse_time_offset( arg ));
     fgSetString("/sim/startup/time-offset-type", "system-offset");
     return FG_OPTIONS_OK;
@@ -820,24 +822,36 @@ fgOptTimeOffset( const char *arg )
 static int
 fgOptStartDateSys( const char *arg )
 {
-    fgSetInt("/sim/startup/time-offset", parse_date( arg ) );
-    fgSetString("/sim/startup/time-offset-type", "system");
+    long int theTime = parse_date( arg, "system" );
+    if (theTime>=0)
+    {
+        fgSetLong("/sim/startup/time-offset",  theTime);
+        fgSetString("/sim/startup/time-offset-type", "system");
+    }
     return FG_OPTIONS_OK;
 }
 
 static int
 fgOptStartDateLat( const char *arg )
 {
-    fgSetInt("/sim/startup/time-offset", parse_date( arg ) );
-    fgSetString("/sim/startup/time-offset-type", "latitude");
+    long int theTime = parse_date( arg, "latitude" );
+    if (theTime>=0)
+    {
+        fgSetLong("/sim/startup/time-offset", theTime);
+        fgSetString("/sim/startup/time-offset-type", "latitude");
+    }
     return FG_OPTIONS_OK;
 }
 
 static int
 fgOptStartDateGmt( const char *arg )
 {
-    fgSetInt("/sim/startup/time-offset", parse_date( arg ) );
-    fgSetString("/sim/startup/time-offset-type", "gmt");
+    long int theTime = parse_date( arg, "gmt" );
+    if (theTime>=0)
+    {
+        fgSetLong("/sim/startup/time-offset", theTime);
+        fgSetString("/sim/startup/time-offset-type", "gmt");
+    }
     return FG_OPTIONS_OK;
 }
 
@@ -1457,20 +1471,20 @@ struct OptionDesc {
 #ifdef FG_JPEG_SERVER
     {"jpg-httpd",                    true,  OPTION_CHANNEL, "", false, "", 0 },
 #endif
-    {"native",                       true,  OPTION_CHANNEL, "", false, "", 0 },
-    {"native-ctrls",                 true,  OPTION_CHANNEL, "", false, "", 0 },
-    {"native-fdm",                   true,  OPTION_CHANNEL, "", false, "", 0 },
-    {"native-gui",                   true,  OPTION_CHANNEL, "", false, "", 0 },
-    {"opengc",                       true,  OPTION_CHANNEL, "", false, "", 0 },
-    {"AV400",                        true,  OPTION_CHANNEL, "", false, "", 0 },
-    {"AV400Sim",                     true,  OPTION_CHANNEL, "", false, "", 0 },
-    {"AV400WSimA",                   true,  OPTION_CHANNEL, "", false, "", 0 },
-    {"AV400WSimB",                   true,  OPTION_CHANNEL, "", false, "", 0 },
-    {"garmin",                       true,  OPTION_CHANNEL, "", false, "", 0 },
-    {"nmea",                         true,  OPTION_CHANNEL, "", false, "", 0 },
-    {"generic",                      true,  OPTION_CHANNEL, "", false, "", 0 },
-    {"props",                        true,  OPTION_CHANNEL, "", false, "", 0 },
-    {"telnet",                       true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"native",                       true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
+    {"native-ctrls",                 true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
+    {"native-fdm",                   true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
+    {"native-gui",                   true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
+    {"opengc",                       true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
+    {"AV400",                        true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
+    {"AV400Sim",                     true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
+    {"AV400WSimA",                   true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
+    {"AV400WSimB",                   true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
+    {"garmin",                       true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
+    {"nmea",                         true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
+    {"generic",                      true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
+    {"props",                        true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
+    {"telnet",                       true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"pve",                          true,  OPTION_CHANNEL, "", false, "", 0 },
     {"ray",                          true,  OPTION_CHANNEL, "", false, "", 0 },
     {"rul",                          true,  OPTION_CHANNEL, "", false, "", 0 },
@@ -1478,12 +1492,12 @@ struct OptionDesc {
     {"jsclient",                     true,  OPTION_CHANNEL, "", false, "", 0 },
     {"proxy",                        true,  OPTION_FUNC,    "", false, "", fgSetupProxy },
     {"callsign",                     true,  OPTION_FUNC,    "", false, "", fgOptCallSign},
-    {"multiplay",                    true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"multiplay",                    true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
 #ifdef FG_HAVE_HLA
     {"hla",                          true,  OPTION_CHANNEL, "", false, "", 0 },
 #endif
-    {"trace-read",                   true,  OPTION_FUNC,   "", false, "", fgOptTraceRead },
-    {"trace-write",                  true,  OPTION_FUNC,   "", false, "", fgOptTraceWrite },
+    {"trace-read",                   true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptTraceRead },
+    {"trace-write",                  true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptTraceWrite },
     {"log-level",                    true,  OPTION_FUNC,   "", false, "", fgOptLogLevel },
     {"view-offset",                  true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptViewOffset },
     {"visibility",                   true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMeters },
@@ -1547,6 +1561,10 @@ public:
   {
     OptionValueVec::const_iterator it = values.begin();
     for (; it != values.end(); ++it) {
+      if (!it->desc) {
+        continue; // ignore markers
+      }
+      
       if (it->desc->option == key) {
         return it;
       }
@@ -1567,6 +1585,10 @@ public:
   
   int processOption(OptionDesc* desc, const string& arg_value)
   {
+    if (!desc) {
+      return FG_OPTIONS_OK; // tolerate marker options
+    }
+    
     switch ( desc->type & 0xffff ) {
       case OPTION_BOOL:
         fgSetBool( desc->property, desc->b_param );
@@ -1634,10 +1656,36 @@ public:
     
     return FG_OPTIONS_OK;
   }
+    
+  /**
+   * insert a marker value into the values vector. This is necessary
+   * when processing options, to ensure the correct ordering, where we scan
+   * for marker values in reverse, and then forwards within each group.
+   */
+  void insertGroupMarker()
+  {
+    values.push_back(OptionValue(NULL, "-"));
+  }
+  
+  /**
+   * given a current iterator into the values, find the preceeding group marker,
+   * or return the beginning of the value vector.
+   */
+  OptionValueVec::const_iterator rfindGroup(OptionValueVec::const_iterator pos) const
+  {
+    while (--pos != values.begin()) {
+      if (pos->desc == NULL) {
+        return pos; // found a marker, we're done
+      }
+    }
+    
+    return pos;
+  }
   
   bool showHelp,
     verbose,
     showAircraft;
+
   OptionDescDict options;
   OptionValueVec values;
   simgear::PathList propertyFiles;
@@ -1697,6 +1745,7 @@ void Options::init(int argc, char **argv, const SGPath& appDataPath)
       p->propertyFiles.push_back(f);
     }
   } // of arguments iteration
+  p->insertGroupMarker(); // command line is one group
   
 // then config files
   SGPath config;
@@ -1837,6 +1886,7 @@ void Options::readConfig(const SGPath& path)
     in >> skipcomment;
   }
 
+  p->insertGroupMarker(); // each config file is a group
 }
   
 int Options::parseOption(const string& s)
@@ -1885,6 +1935,7 @@ int Options::addOption(const string &key, const string &value)
 {
   OptionDesc* desc = p->findOption(key);
   if (!desc) {
+    SG_LOG(SG_GENERAL, SG_ALERT, "unknown option:" << key);
     return FG_OPTIONS_ERROR;
   }
   
@@ -1921,6 +1972,10 @@ string_list Options::valuesForOption(const std::string& key) const
   string_list result;
   OptionValueVec::const_iterator it = p->values.begin();
   for (; it != p->values.end(); ++it) {
+    if (!it->desc) {
+      continue; // ignore marker values
+    }
+    
     if (it->desc->option == key) {
       result.push_back(it->value);
     }
@@ -1938,12 +1993,26 @@ void Options::processOptions()
     exit(0);
   }
   
-  BOOST_FOREACH(const OptionValue& v, p->values) {
-    int result = p->processOption(v.desc, v.value);
-    if (result == FG_OPTIONS_ERROR) {
-      showUsage();
-      exit(-1);
+  // processing order is complicated. We must process groups LIFO, but the
+  // values *within* each group in FIFO order, to retain consistency with
+  // older versions of FG, and existing user configs.
+  // in practice this means system.fgfsrc must be *processed* before
+  // .fgfsrc, which must be processed before the command line args, and so on.
+  OptionValueVec::const_iterator groupEnd = p->values.end();
+    
+  while (groupEnd != p->values.begin()) {
+    OptionValueVec::const_iterator groupBegin = p->rfindGroup(groupEnd);
+  // run over the group in FIFO order
+    OptionValueVec::const_iterator it;
+    for (it = groupBegin; it != groupEnd; ++it) {      
+      int result = p->processOption(it->desc, it->value);
+      if (result == FG_OPTIONS_ERROR) {
+        showUsage();
+        exit(-1);
+      }
     }
+    
+    groupEnd = groupBegin;
   }
   
   BOOST_FOREACH(const SGPath& file, p->propertyFiles) {
@@ -2121,8 +2190,8 @@ void Options::showUsage() const
     cout << "For a complete list of options use --help --verbose" << endl;
   }
 #ifdef _MSC_VER
-  cout << "Hit a key to continue..." << endl;
-  cin.get();
+  std::cout << "Hit a key to continue..." << std::endl;
+  std::cin.get();
 #endif
 }
   

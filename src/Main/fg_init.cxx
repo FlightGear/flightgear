@@ -106,7 +106,7 @@
 #include <Traffic/TrafficMgr.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
 #include <FDM/fdm_shell.hxx>
-
+#include <Environment/ephemeris.hxx>
 #include <Environment/environment_mgr.hxx>
 
 #include "fg_init.hxx"
@@ -1176,12 +1176,6 @@ bool fgInitGeneral() {
 // gear, its initialization call should located in this routine.
 // Returns non-zero if a problem encountered.
 bool fgInitSubsystems() {
-    // static const SGPropertyNode *longitude
-    //     = fgGetNode("/sim/presets/longitude-deg");
-    // static const SGPropertyNode *latitude
-    //     = fgGetNode("/sim/presets/latitude-deg");
-    // static const SGPropertyNode *altitude
-    //     = fgGetNode("/sim/presets/altitude-ft");
 
     SG_LOG( SG_GENERAL, SG_INFO, "Initialize Subsystems");
     SG_LOG( SG_GENERAL, SG_INFO, "========== ==========");
@@ -1239,7 +1233,8 @@ bool fgInitSubsystems() {
 
     // Initialize the weather modeling subsystem
     globals->add_subsystem("environment", new FGEnvironmentMgr);
-
+    globals->add_subsystem("ephemeris", new Ephemeris);
+    
     ////////////////////////////////////////////////////////////////////
     // Initialize the aircraft systems and instrumentation (before the
     // autopilot.)
@@ -1287,9 +1282,7 @@ bool fgInitSubsystems() {
     // sub system infrastructure.
     ////////////////////////////////////////////////////////////////////
 
-    SG_LOG(SG_GENERAL, SG_INFO, "  ATC Manager");
-    globals->set_ATC_mgr(new FGATCMgr);
-    globals->get_ATC_mgr()->init(); 
+    globals->add_subsystem("Old ATC", new FGATCMgr, SGSubsystemMgr::INIT);
 
     ////////////////////////////////////////////////////////////////////
    // Initialize the ATC subsystem
