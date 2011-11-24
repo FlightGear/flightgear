@@ -291,7 +291,7 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmiss
 	
 	SG_LOG(SG_GENERAL, SG_BULK,
 			"ITM:: RX-height: " << receiver_height << " meters, TX-height: " << transmitter_height << " meters, Distance: " << distance_m << " meters");
-	cerr << "ITM:: RX-height: " << receiver_height << " meters, TX-height: " << transmitter_height << " meters, Distance: " << distance_m << " meters" << endl;
+	//cerr << "ITM:: RX-height: " << receiver_height << " meters, TX-height: " << transmitter_height << " meters, Distance: " << distance_m << " meters" << endl;
 	
 	unsigned int e_size = (deque<unsigned>::size_type)max_points;
 	
@@ -363,7 +363,6 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmiss
 		
 	}
 	else {
-
 		point_to_point(itm_elev, transmitter_height, receiver_height,
 			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
 			pol, conf, rel, dbloss, strmode, errnum);
@@ -442,7 +441,7 @@ double FGRadio::LOS_calculate_attenuation(SGGeod pos, double freq, int transmiss
 	signal = link_budget - dbloss;
 	SG_LOG(SG_GENERAL, SG_BULK,
 			"LOS:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm ");
-	cerr << "LOS:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm " << endl;
+	//cerr << "LOS:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm " << endl;
 	return signal;
 	
 }
