@@ -82,6 +82,22 @@ void FGRadio::receiveChat(SGGeod tx_pos, double freq, string text,
 
 }
 
+/*** TODO: receive navaid 
+***/
+double FGRadio::receiveNav(SGGeod tx_pos, double freq, int transmission_type) {
+	
+	// need to implement transmitter power
+	if ( _propagation_model == 1) {
+		return LOS_calculate_attenuation(tx_pos, freq, 1);
+	}
+	else if ( _propagation_model == 2) {
+		return ITM_calculate_attenuation(tx_pos, freq, 1);
+	}
+	
+	return -1;
+
+}
+
 /*** Receive ATC radio communication as text
 ***/
 void FGRadio::receiveATC(SGGeod tx_pos, double freq, string text,
