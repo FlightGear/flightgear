@@ -76,16 +76,22 @@ double FGRadio::getFrequency(int radio) {
 void FGRadio::receiveText(SGGeod tx_pos, double freq, string text,
 	int ground_to_air) {
 
+	/*
 	double comm1 = getFrequency(1);
 	double comm2 = getFrequency(2);
 	if ( (freq != comm1) &&  (freq != comm2) ) {
+		cerr << "Frequency not tuned: " << freq << " Radio1: " << comm1 << " Radio2: " << comm2 << endl;
 		return;
 	}
 	else {
+	*/
 		double signal = ITM_calculate_attenuation(tx_pos, freq, ground_to_air);
-		if (signal <= 0)
+		//cerr << "Signal: " << signal << endl;
+		if (signal <= 0.0) {
+			//cerr << "Signal below sensitivity: " << signal << " dBm" << endl;
 			return;
-		if ((signal > 0) && (signal < 12)) {
+		}
+		if ((signal > 0.0) && (signal < 12.0)) {
 			//for low SNR values implement a way to make the conversation
 			//hard to understand but audible
 			//how this works in the real world, is the receiver AGC fails to capture the slope
@@ -94,17 +100,28 @@ void FGRadio::receiveText(SGGeod tx_pos, double freq, string text,
 			//therefore the correct way would be to work on the volume
 			/*
 			string hash_noise = " ";
-			int reps = fabs((int)signal - 11);
+			int reps = (int) (fabs(floor(signal - 11.0)) * 2);
+			cerr << "Reps: " << reps << endl;
 			int t_size = text.size();
-			for (int n=1;n<=reps * 2;n++) {
-				int pos = rand() % t_size -1;
+			for (int n = 1; n <= reps; ++n) {
+				int pos = rand() % (t_size -1);
+				cerr << "Pos: " << pos << endl;
 				text.replace(pos,1, hash_noise);
 			}
 			*/
-			
+			double volume = (fabs(signal - 12.0) / 12);
+			double old_volume = fgGetDouble("/sim/sound/voices/voice/volume");
+			//cerr << "Usable signal at limit: " << signal << endl;
+			fgSetDouble("/sim/sound/voices/voice/volume", volume);
+			fgSetString("/sim/messages/atc", text.c_str());
+			fgSetDouble("/sim/sound/voices/voice/volume", old_volume);
 		}
-		fgSetString("/sim/messages/atc", text.c_str());
-	}
+		else {
+			//cerr << "Signal completely readable: " << signal << " dBm" << endl;
+			fgSetString("/sim/messages/atc", text.c_str());
+		}
+		
+	//}
 	
 }
 
@@ -181,9 +198,10 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 	// If distance larger than this value (300 km), assume reception imposssible 
 	if (distance_m > 300000)
 		return -1.0;
-	// If above 9000, consider LOS mode and calculate free-space att
-	if (own_alt > 9000) {
+	// If above 8000, consider LOS mode and calculate free-space att
+	if (own_alt > 8000) {
 		dbloss = 20 * log10(distance_m) +20 * log10(frq_mhz) -27.55;
+		cerr << "LOS-mode:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, free-space attenuation" << endl;
 		signal = link_budget - dbloss;
 		return signal;
 	}
@@ -210,7 +228,7 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 	else
 		transmitter_height += Aircraft_HAAT;
 	
-	cerr << "ITM:: RX-height: " << receiver_height << ", TX-height: " << transmitter_height << ", Distance: " << distance_m << endl;
+	cerr << "ITM:: RX-height: " << receiver_height << " meters, TX-height: " << transmitter_height << " meters, Distance: " << distance_m << " meters" << endl;
 	
 	unsigned int e_size = (deque<unsigned>::size_type)max_points;
 	

@@ -744,7 +744,8 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
                 || (onBoardRadioFreqI1 == stationFreq)) {
             if (rec->allowTransmissions()) {
             	
-            	if( fgGetBool( "/instrumentation/use-itm-attenuation", false ) ) {
+            	if( fgGetBool( "/sim/radio/use-itm-attenuation", false ) ) {
+            		//cerr << "Using ITM radio propagation" << endl;
             		FGRadio* radio = new FGRadio();
             		SGGeod sender_pos;
             		double sender_alt_ft, sender_alt;
@@ -760,7 +761,8 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
 			              sender_pos= SGGeod::fromDegM( rec->getLongitude(),
 			                     rec->getLatitude(), sender_alt );
 			      	}
-            		radio->receiveText(sender_pos, stationFreq, text, ground_to_air);
+			      	double frequency = ((double)stationFreq) / 100;
+            		radio->receiveText(sender_pos, frequency, text, ground_to_air);
             		delete radio;
             	}
             	else {

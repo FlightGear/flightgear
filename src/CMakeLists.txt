@@ -6,9 +6,9 @@ include_directories(${PROJECT_SOURCE_DIR})
 foreach( mylibfolder 
 		Airports
 		Aircraft
-		Radio
 		ATC
 		ATCDCL
+		Radio
 		Autopilot
 		Cockpit
 		Environment
