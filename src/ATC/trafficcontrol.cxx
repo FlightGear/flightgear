@@ -743,7 +743,27 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
                 || (onBoardRadioFreqI1 == stationFreq)) {
             if (rec->allowTransmissions()) {
             	
-                fgSetString("/sim/messages/atc", text.c_str());
+            	if( fgGetBool( "/instrumentation/use-itm-attenuation", false ) ) {
+            		FGRadio* radio = new FGRadio();
+            		SGGeod sender_pos;
+            		double sender_alt_ft, sender_alt;
+            		if(ground_to_air) {
+			              sender_alt_ft = parent->getElevation();
+			              sender_alt = sender_alt_ft * SG_FEET_TO_METER;
+			              sender_pos= SGGeod::fromDegM( parent->getLongitude(),
+		                      parent->getLatitude(), sender_alt );
+			        }
+			        else {
+			              sender_alt_ft = rec->getAltitude();
+			              sender_alt = sender_alt_ft * SG_FEET_TO_METER;
+			              sender_pos= SGGeod::fromDegM( rec->getLongitude(),
+			                     rec->getLatitude(), sender_alt );
+			      	}
+            		radio->receiveText(sender_pos, stationFreq, text, ground_to_air);
+            	}
+            	else {
+            		fgSetString("/sim/messages/atc", text.c_str());
+            	}
             }
         }
     } else {

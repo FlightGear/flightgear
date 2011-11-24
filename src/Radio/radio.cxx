@@ -54,7 +54,7 @@ FGRadio::~FGRadio()
 }
 
 
-double FGCommRadio::getFrequency(int radio) {
+double FGRadio::getFrequency(int radio) {
 	double freq = 118.0;
 	switch (radio) {
 		case 1:
