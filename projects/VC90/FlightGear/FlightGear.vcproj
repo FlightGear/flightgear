@@ -3865,14 +3865,6 @@
 				RelativePath="..\..\..\src\Instrumentation\wxradar.hxx"
 				>
 			</File>
-			<File
-				RelativePath="..\..\..\src\Instrumentation\commradio.hxx"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\src\Instrumentation\commradio.cxx"
-				>
-			</File>
 			<Filter
 				Name="Lib_HUD"
 				>
