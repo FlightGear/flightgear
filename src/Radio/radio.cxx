@@ -177,7 +177,7 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 	double course = SGGeodesy::courseRad(own_pos_c, sender_pos_c);
 	double distance_m = SGGeodesy::distanceM(own_pos, sender_pos);
 	double probe_distance = 0.0;
-	// If distance larger than this value (300 km), assume reception imposssible to preserve resources
+	// If distance larger than this value (300 km), assume reception imposssible 
 	if (distance_m > 300000)
 		return -1.0;
 	// If above 9000, consider LOS mode and calculate free-space att
