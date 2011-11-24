@@ -34,14 +34,15 @@
 
 FGRadio::FGRadio() {
 	
-	/** radio parameters (which should probably be set for each radio via constructor) */
+	/** radio parameters (which should probably be set for each radio) */
+	
 	_receiver_sensitivity = -110.0;	// typical AM receiver sensitivity seems to be 0.8 microVolt at 12dB SINAD
 	
 	/** AM transmitter power in dBm.
 	*  	Note this value is calculated from the typical final transistor stage output
 	*  	small aircraft have portable transmitters which operate at 36 dBm output (4 Watts)
-	*  	later store this value in aircraft description
-	*  	ATC comms usually operate high power equipment, thus making the link asymetrical; this is ignored for now
+	*  	later possibly store this value in aircraft description
+	*  	ATC comms usually operate high power equipment, thus making the link asymetrical; this is taken care of in propagation routines
 	**/
 	_transmitter_power = 43.0;
 	
@@ -74,10 +75,16 @@ double FGRadio::getFrequency(int radio) {
 	return freq;
 }
 
+/*** TODO: receive multiplayer chat message and voice
+***/
+void FGRadio::receiveChat(SGGeod tx_pos, double freq, string text,
+	int ground_to_air) {
 
+}
 
-
-void FGRadio::receiveText(SGGeod tx_pos, double freq, string text,
+/*** Receive ATC radio communication as text
+***/
+void FGRadio::receiveATC(SGGeod tx_pos, double freq, string text,
 	int ground_to_air) {
 
 	/*
@@ -93,7 +100,19 @@ void FGRadio::receiveText(SGGeod tx_pos, double freq, string text,
 			fgSetString("/sim/messages/atc", text.c_str());
 		}
 		else if ( _propagation_model == 1 ) {
-			// free space, round earth
+			// TODO: free space, round earth
+			double signal = LOS_calculate_attenuation(tx_pos, freq, ground_to_air);
+			if (signal <= 0.0) {
+				SG_LOG(SG_GENERAL, SG_BULK, "Signal below receiver minimum sensitivity: " << signal);
+				//cerr << "Signal below receiver minimum sensitivity: " << signal << endl;
+				return;
+			}
+			else {
+				SG_LOG(SG_GENERAL, SG_BULK, "Signal completely readable: " << signal);
+				//cerr << "Signal completely readable: " << signal << endl;
+				fgSetString("/sim/messages/atc", text.c_str());
+				fgSetDouble("/sim/radio/comm1-signal", signal);
+			}
 		}
 		else if ( _propagation_model == 2 ) {
 			// Use ITM propagation model
@@ -126,12 +145,14 @@ void FGRadio::receiveText(SGGeod tx_pos, double freq, string text,
 				//cerr << "Usable signal at limit: " << signal << endl;
 				fgSetDouble("/sim/sound/voices/voice/volume", volume);
 				fgSetString("/sim/messages/atc", text.c_str());
+				fgSetDouble("/sim/radio/comm1-signal", signal);
 				fgSetDouble("/sim/sound/voices/voice/volume", old_volume);
 			}
 			else {
 				SG_LOG(SG_GENERAL, SG_BULK, "Signal completely readable: " << signal);
 				//cerr << "Signal completely readable: " << signal << endl;
 				fgSetString("/sim/messages/atc", text.c_str());
+				fgSetDouble("/sim/radio/comm1-signal", signal);
 			}
 			
 		}
@@ -221,8 +242,8 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 	if (own_alt > 8000) {
 		dbloss = 20 * log10(distance_m) +20 * log10(frq_mhz) -27.55;
 		SG_LOG(SG_GENERAL, SG_BULK,
-			"LOS-mode:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, free-space attenuation");
-		//cerr << "LOS-mode:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, free-space attenuation" << endl;
+			"ITM Free-space mode:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, free-space attenuation");
+		//cerr << "ITM Free-space mode:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, free-space attenuation" << endl;
 		signal = link_budget - dbloss;
 		return signal;
 	}
@@ -337,4 +358,73 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 	signal = link_budget - dbloss;
 	return signal;
 
+}
+
+/*** implement simple LOS propagation model (WIP)
+***/
+double FGRadio::LOS_calculate_attenuation(SGGeod pos, double freq,
+                               int transmission_type) {
+	double frq_mhz;
+	if( (freq < 118.0) || (freq > 137.0) )
+		frq_mhz = 125.0; 	// sane value, middle of bandplan
+	else
+		frq_mhz = freq;
+	double dbloss;
+	double tx_pow = _transmitter_power;
+	double ant_gain = _antenna_gain;
+	double signal = 0.0;
+	double ATC_HAAT = 30.0;
+	double Aircraft_HAAT = 5.0;
+	double sender_alt_ft,sender_alt;
+	double transmitter_height=0.0;
+	double receiver_height=0.0;
+	double own_lat = fgGetDouble("/position/latitude-deg");
+	double own_lon = fgGetDouble("/position/longitude-deg");
+	double own_alt_ft = fgGetDouble("/position/altitude-ft");
+	double own_alt= own_alt_ft * SG_FEET_TO_METER;
+	
+	if(transmission_type == 1)
+		tx_pow = _transmitter_power + 6.0;
+
+	if((transmission_type == 1) || (transmission_type == 3))
+		ant_gain = _antenna_gain + 3.0; //pilot plane's antenna gain + ground station antenna gain
+	
+	double link_budget = tx_pow - _receiver_sensitivity + ant_gain;	
+
+	//cerr << "ITM:: pilot Lat: " << own_lat << ", Lon: " << own_lon << ", Alt: " << own_alt << endl;
+	
+	SGGeod own_pos = SGGeod::fromDegM( own_lon, own_lat, own_alt );
+	
+	SGGeod sender_pos = pos;
+	
+	sender_alt_ft = sender_pos.getElevationFt();
+	sender_alt = sender_alt_ft * SG_FEET_TO_METER;
+	
+	receiver_height = own_alt;
+	transmitter_height = sender_alt;
+	
+	double distance_m = SGGeodesy::distanceM(own_pos, sender_pos);
+	
+	if(transmission_type == 1) 
+		transmitter_height += ATC_HAAT;
+	else
+		transmitter_height += Aircraft_HAAT;
+	
+	/** radio horizon calculation with wave bending k=4/3 */
+	double receiver_horizon = 4.12 * sqrt(receiver_height);
+	double transmitter_horizon = 4.12 * sqrt(transmitter_height);
+	double total_horizon = receiver_horizon + transmitter_horizon;
+	
+	if (distance_m > total_horizon) {
+		return -1;
+	}
+	
+	// free-space loss (distance calculation should be changed)
+	dbloss = 20 * log10(distance_m) +20 * log10(frq_mhz) -27.55;
+	signal = link_budget - dbloss;
+	SG_LOG(SG_GENERAL, SG_BULK,
+			"LOS:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm ");
+	cerr << "LOS:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm " << endl;
+	return signal;
+	
 }

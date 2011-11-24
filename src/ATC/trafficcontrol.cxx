@@ -762,7 +762,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
 			                     rec->getLatitude(), sender_alt );
 			      	}
 			      	double frequency = ((double)stationFreq) / 100;
-            		radio->receiveText(sender_pos, frequency, text, ground_to_air);
+            		radio->receiveATC(sender_pos, frequency, text, ground_to_air);
             		delete radio;
             	}
             	else {

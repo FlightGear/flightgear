@@ -46,6 +46,7 @@ private:
 	
 	int _propagation_model; /// 0 none, 1 round Earth, 2 ITM
 	double ITM_calculate_attenuation(SGGeod tx_pos, double freq, int ground_to_air);
+	double LOS_calculate_attenuation(SGGeod tx_pos, double freq, int ground_to_air);
 	
 public:
 
@@ -56,8 +57,9 @@ public:
     void setFrequency(double freq, int radio);
     double getFrequency(int radio);
     void setTxPower(double txpower) { _transmitter_power = txpower; };
-    // transmission_type: 1 for ground to air, 2 for air to air, 3 for pilot to ground, 4 for pilot to air
-    void receiveText(SGGeod tx_pos, double freq, string text, int transmission_type);
+    // transmission_type: 0 for air to ground 1 for ground to air, 2 for air to air, 3 for pilot to ground, 4 for pilot to air
+    void receiveATC(SGGeod tx_pos, double freq, string text, int transmission_type);
+    void receiveChat(SGGeod tx_pos, double freq, string text, int transmission_type);
     void setPropagationModel(int model) { _propagation_model = model; };
     
 };
