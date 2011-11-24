@@ -32,7 +32,7 @@
 #include "itm.cpp"
 
 
-FGCommRadio::FGCommRadio(SGPropertyNode *node) {
+FGRadio::FGRadio() {
 	
 	/////////// radio parameters ///////////
 	_receiver_sensitivity = -110.0;	// typical AM receiver sensitivity seems to be 0.8 microVolt at 12dB SINAD
@@ -49,7 +49,7 @@ FGCommRadio::FGCommRadio(SGPropertyNode *node) {
 	
 }
 
-FGCommRadio::~FGCommRadio() 
+FGRadio::~FGRadio() 
 {
 }
 
@@ -73,7 +73,7 @@ double FGCommRadio::getFrequency(int radio) {
 
 
 
-void FGCommRadio::receiveText(SGGeod tx_pos, double freq, string text,
+void FGRadio::receiveText(SGGeod tx_pos, double freq, string text,
 	int ground_to_air) {
 
 	double comm1 = getFrequency(1);
@@ -108,7 +108,7 @@ void FGCommRadio::receiveText(SGGeod tx_pos, double freq, string text,
 	
 }
 
-double FGCommRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
+double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
                                int transmission_type) {
 
 	///  Implement radio attenuation		

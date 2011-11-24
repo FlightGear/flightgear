@@ -33,7 +33,7 @@
 using std::string;
 
 
-class FGCommRadio 
+class FGRadio 
 {
 private:
 	bool isOperable() const
@@ -49,8 +49,8 @@ private:
 	
 public:
 
-    FGCommRadio(SGPropertyNode *node);
-    ~FGCommRadio();
+    FGRadio();
+    ~FGRadio();
 
     
     void setFrequency(double freq, int radio);

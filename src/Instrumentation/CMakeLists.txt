@@ -26,7 +26,6 @@ set(SOURCES
     mrg.cxx
     navradio.cxx
     newnavradio.cxx
-    commradio.cxx
     od_gauge.cxx
     rad_alt.cxx
     render_area_2d.cxx
@@ -94,7 +93,6 @@ set(HEADERS
     mrg.hxx
     navradio.hxx
     newnavradio.hxx
-    commradio.hxx
     od_gauge.hxx
     rad_alt.hxx
     render_area_2d.hxx
