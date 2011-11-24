@@ -34,16 +34,20 @@
 
 FGRadio::FGRadio() {
 	
-	/////////// radio parameters ///////////
+	/** radio parameters (which should probably be set for each radio via constructor) */
 	_receiver_sensitivity = -110.0;	// typical AM receiver sensitivity seems to be 0.8 microVolt at 12dB SINAD
-	// AM transmitter power in dBm.
-	// Note this value is calculated from the typical final transistor stage output
-	// !!! small aircraft have portable transmitters which operate at 36 dBm output (4 Watts)
-	// later store this value in aircraft description
-	// ATC comms usually operate high power equipment, thus making the link asymetrical; this is ignored for now
+	
+	/** AM transmitter power in dBm.
+	*  	Note this value is calculated from the typical final transistor stage output
+	*  	small aircraft have portable transmitters which operate at 36 dBm output (4 Watts)
+	*  	later store this value in aircraft description
+	*  	ATC comms usually operate high power equipment, thus making the link asymetrical; this is ignored for now
+	**/
 	_transmitter_power = 43.0;
-	//pilot plane's antenna gain + AI aircraft antenna gain
-	//real-life gain for conventional monopole/dipole antenna
+	
+	/** pilot plane's antenna gain + AI aircraft antenna gain
+	* 	real-life gain for conventional monopole/dipole antenna
+	**/
 	_antenna_gain = 2.0;
 	_propagation_model = 2; //  choose between models via option: realistic radio on/off
 	
@@ -85,54 +89,68 @@ void FGRadio::receiveText(SGGeod tx_pos, double freq, string text,
 	}
 	else {
 	*/
-		double signal = ITM_calculate_attenuation(tx_pos, freq, ground_to_air);
-		//cerr << "Signal: " << signal << endl;
-		if (signal <= 0.0) {
-			//cerr << "Signal below sensitivity: " << signal << " dBm" << endl;
-			return;
+		if ( _propagation_model == 0) {
+			fgSetString("/sim/messages/atc", text.c_str());
 		}
-		if ((signal > 0.0) && (signal < 12.0)) {
-			//for low SNR values implement a way to make the conversation
-			//hard to understand but audible
-			//how this works in the real world, is the receiver AGC fails to capture the slope
-			//and the signal, due to being amplitude modulated, decreases volume after demodulation
-			//the implementation below is more akin to what would happen on a FM transmission
-			//therefore the correct way would be to work on the volume
-			/*
-			string hash_noise = " ";
-			int reps = (int) (fabs(floor(signal - 11.0)) * 2);
-			//cerr << "Reps: " << reps << endl;
-			int t_size = text.size();
-			for (int n = 1; n <= reps; ++n) {
-				int pos = rand() % (t_size -1);
-				//cerr << "Pos: " << pos << endl;
-				text.replace(pos,1, hash_noise);
+		else if ( _propagation_model == 1 ) {
+			// free space, round earth
+		}
+		else if ( _propagation_model == 2 ) {
+			// Use ITM propagation model
+			double signal = ITM_calculate_attenuation(tx_pos, freq, ground_to_air);
+			if (signal <= 0.0) {
+				SG_LOG(SG_GENERAL, SG_BULK, "Signal below receiver minimum sensitivity: " << signal);
+				//cerr << "Signal below receiver minimum sensitivity: " << signal << endl;
+				return;
 			}
-			*/
-			double volume = (fabs(signal - 12.0) / 12);
-			double old_volume = fgGetDouble("/sim/sound/voices/voice/volume");
-			//cerr << "Usable signal at limit: " << signal << endl;
-			fgSetDouble("/sim/sound/voices/voice/volume", volume);
-			fgSetString("/sim/messages/atc", text.c_str());
-			fgSetDouble("/sim/sound/voices/voice/volume", old_volume);
-		}
-		else {
-			//cerr << "Signal completely readable: " << signal << " dBm" << endl;
-			fgSetString("/sim/messages/atc", text.c_str());
+			if ((signal > 0.0) && (signal < 12.0)) {
+				/** for low SNR values implement a way to make the conversation
+				*	hard to understand but audible
+				*	in the real world, the receiver AGC fails to capture the slope
+				*	and the signal, due to being amplitude modulated, decreases volume after demodulation
+				*	the workaround below is more akin to what would happen on a FM transmission
+				*	therefore the correct way would be to work on the volume
+				**/
+				/*
+				string hash_noise = " ";
+				int reps = (int) (fabs(floor(signal - 11.0)) * 2);
+				int t_size = text.size();
+				for (int n = 1; n <= reps; ++n) {
+					int pos = rand() % (t_size -1);
+					text.replace(pos,1, hash_noise);
+				}
+				*/
+				double volume = (fabs(signal - 12.0) / 12);
+				double old_volume = fgGetDouble("/sim/sound/voices/voice/volume");
+				SG_LOG(SG_GENERAL, SG_BULK, "Usable signal at limit: " << signal);
+				//cerr << "Usable signal at limit: " << signal << endl;
+				fgSetDouble("/sim/sound/voices/voice/volume", volume);
+				fgSetString("/sim/messages/atc", text.c_str());
+				fgSetDouble("/sim/sound/voices/voice/volume", old_volume);
+			}
+			else {
+				SG_LOG(SG_GENERAL, SG_BULK, "Signal completely readable: " << signal);
+				//cerr << "Signal completely readable: " << signal << endl;
+				fgSetString("/sim/messages/atc", text.c_str());
+			}
+			
 		}
 		
 	//}
 	
 }
 
+/***  Implement radio attenuation		
+	  based on the Longley-Rice propagation model
+***/
 double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
                                int transmission_type) {
 
-	///  Implement radio attenuation		
-	///  based on the Longley-Rice propagation model
 	
-	////////////// ITM default parameters //////////////
-	// in the future perhaps take them from tile materials?
+	
+	/** ITM default parameters 
+		TODO: take them from tile materials (especially for sea)?
+	**/
 	double eps_dielect=15.0;
 	double sgm_conductivity = 0.005;
 	double eno = 301.0;
@@ -176,8 +194,9 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 	SGGeoc center = SGGeoc::fromGeod( max_own_pos );
 	SGGeoc own_pos_c = SGGeoc::fromGeod( own_pos );
 	
-	// position of sender radio antenna (HAAT)
-	// sender can be aircraft or ground station
+	/** 	position of sender radio antenna (HAAT)
+			sender can be aircraft or ground station
+	**/
 	double ATC_HAAT = 30.0;
 	double Aircraft_HAAT = 5.0;
 	double sender_alt_ft,sender_alt;
@@ -195,13 +214,15 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 	double course = SGGeodesy::courseRad(own_pos_c, sender_pos_c);
 	double distance_m = SGGeodesy::distanceM(own_pos, sender_pos);
 	double probe_distance = 0.0;
-	// If distance larger than this value (300 km), assume reception imposssible 
+	/** If distance larger than this value (300 km), assume reception imposssible */
 	if (distance_m > 300000)
 		return -1.0;
-	// If above 8000, consider LOS mode and calculate free-space att
+	/** If above 8000 meters, consider LOS mode and calculate free-space att */
 	if (own_alt > 8000) {
 		dbloss = 20 * log10(distance_m) +20 * log10(frq_mhz) -27.55;
-		cerr << "LOS-mode:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, free-space attenuation" << endl;
+		SG_LOG(SG_GENERAL, SG_BULK,
+			"LOS-mode:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, free-space attenuation");
+		//cerr << "LOS-mode:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, free-space attenuation" << endl;
 		signal = link_budget - dbloss;
 		return signal;
 	}
@@ -228,6 +249,8 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 	else
 		transmitter_height += Aircraft_HAAT;
 	
+	SG_LOG(SG_GENERAL, SG_BULK,
+			"ITM:: RX-height: " << receiver_height << " meters, TX-height: " << transmitter_height << " meters, Distance: " << distance_m << " meters");
 	cerr << "ITM:: RX-height: " << receiver_height << " meters, TX-height: " << transmitter_height << " meters, Distance: " << distance_m << " meters" << endl;
 	
 	unsigned int e_size = (deque<unsigned>::size_type)max_points;
@@ -284,8 +307,9 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 	}
 
 	
-	// first Fresnel zone radius
-	// frequency in the middle of the bandplan, more accuracy is not necessary
+	/** first Fresnel zone radius
+		frequency in the middle of the bandplan, more accuracy is not necessary
+	*/
 	double fz_clr= 8.657 * sqrt(distance_m / 0.125);
 	
 	// TODO: If we clear the first Fresnel zone, we are into line of sight territory
@@ -304,10 +328,11 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
 			pol, conf, rel, dbloss, strmode, errnum);
 	}
-
+	SG_LOG(SG_GENERAL, SG_BULK,
+			"ITM:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, " << strmode << ", Error: " << errnum);
 	cerr << "ITM:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, " << strmode << ", Error: " << errnum << endl;
 	
-	//if (errnum == 4)
+	//if (errnum == 4)	// if parameters are outside sane values for lrprop, the alternative method is used
 	//	return -1;
 	signal = link_budget - dbloss;
 	return signal;
