@@ -1309,7 +1309,7 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
   mp->setCallSign(callsign);
   mMultiPlayerMap[callsign] = mp;
 
-  FGAIManager *aiMgr = (FGAIManager*)globals->get_subsystem("ai_model");
+  FGAIManager *aiMgr = (FGAIManager*)globals->get_subsystem("ai-model");
   if (aiMgr) {
     aiMgr->attach(mp);
 

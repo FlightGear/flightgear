@@ -53,7 +53,12 @@ static bool do_timeofday (const SGPropertyNode * arg)
 
 TimeManager::TimeManager() :
   _inited(false),
-  _impl(NULL)
+  _impl(NULL),
+  _sceneryLoaded("sim/sceneryloaded"),
+  _sceneryLoadOverride("sim/sceneryloaded-override"),
+  _modelHz("sim/model-hz"),
+  _timeDelta("sim/time/delta-realtime-sec"),
+  _simTimeDelta("sim/time/delta-sec")
 {
   SGCommandMgr::instance()->addCommand("timeofday", do_timeofday);
 }
@@ -102,6 +107,7 @@ void TimeManager::init()
   // frame-rate / worst-case latency / update-rate counters
   _frameRate = fgGetNode("/sim/frame-rate", true);
   _frameLatency = fgGetNode("/sim/frame-latency-max-ms", true);
+  _frameRateWorst = fgGetNode("/sim/frame-rate-worst", true);
   _lastFrameTime = 0;
   _frameLatencyMax = 0.0;
   _frameCount = 0;
@@ -157,9 +163,7 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
     _lastClockFreeze = _clockFreeze->getBoolValue();
   }
 
-  bool scenery_loaded = fgGetBool("sim/sceneryloaded");
-  bool wait_for_scenery = !(scenery_loaded || fgGetBool("sim/sceneryloaded-override"));
-  
+  bool wait_for_scenery = !(_sceneryLoaded || _sceneryLoadOverride);
   if (!wait_for_scenery) {
     throttleUpdateRate();
   }
@@ -189,20 +193,18 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
   if (0 < dtMax && dtMax < dt) {
     dt = dtMax;
   }
-  
-  int model_hz = fgGetInt("/sim/model-hz");
-  
+    
   SGSubsystemGroup* fdmGroup = 
     globals->get_subsystem_mgr()->get_group(SGSubsystemMgr::FDM);
-  fdmGroup->set_fixed_update_time(1.0 / model_hz);
+  fdmGroup->set_fixed_update_time(1.0 / _modelHz);
   
 // round the real time down to a multiple of 1/model-hz.
 // this way all systems are updated the _same_ amount of dt.
   dt += _dtRemainder;
-  int multiLoop = long(floor(dt * model_hz));
+  int multiLoop = long(floor(dt * _modelHz));
   multiLoop = SGMisc<long>::max(0, multiLoop);
-  _dtRemainder = dt - double(multiLoop)/double(model_hz);
-  dt = double(multiLoop)/double(model_hz);
+  _dtRemainder = dt - double(multiLoop)/double(_modelHz);
+  dt = double(multiLoop)/double(_modelHz);
 
   realDt = dt;
   if (_clockFreeze->getBoolValue() || wait_for_scenery) {
@@ -215,8 +217,8 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
   globals->inc_sim_time_sec(simDt);
 
 // These are useful, especially for Nasal scripts.
-  fgSetDouble("/sim/time/delta-realtime-sec", realDt);
-  fgSetDouble("/sim/time/delta-sec", simDt);
+  _timeDelta = realDt;
+  _simTimeDelta = simDt;
 }
 
 void TimeManager::update(double dt)
@@ -267,6 +269,8 @@ void TimeManager::computeFrameRate()
   if ((_impl->get_cur_time() != _lastFrameTime)) {
     _frameRate->setIntValue(_frameCount);
     _frameLatency->setDoubleValue(_frameLatencyMax*1000);
+    if (_frameLatencyMax>0)
+        _frameRateWorst->setIntValue(1/_frameLatencyMax);
     _frameCount = 0;
     _frameLatencyMax = 0.0;
   }

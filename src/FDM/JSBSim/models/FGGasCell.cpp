@@ -261,8 +261,8 @@ FGGasCell::~FGGasCell()
 void FGGasCell::Calculate(double dt)
 {
   const double AirTemperature = in.Temperature;  // [Rankine]
-  const double AirPressure    = in.Pressure;     // [lbs/ft²]
-  const double AirDensity     = in.Density;      // [slug/ft³]
+  const double AirPressure    = in.Pressure;     // [lbs/ft^2]
+  const double AirDensity     = in.Density;      // [slug/ft^3]
   const double g = in.gravity;                   // [lbs/slug]
 
   const double OldTemperature = Temperature;
@@ -689,8 +689,8 @@ FGBallonet::~FGBallonet()
 
 void FGBallonet::Calculate(double dt)
 {
-  const double ParentPressure = Parent->GetPressure(); // [lbs/ft²]
-  const double AirPressure    = Pressure;              // [lbs/ft²]
+  const double ParentPressure = Parent->GetPressure(); // [lbs/ft^2]
+  const double AirPressure    = in.Pressure;           // [lbs/ft^2]
 
   const double OldTemperature = Temperature;
   const double OldPressure    = Pressure;

@@ -10,7 +10,7 @@
 
 #include <plib/pu.h>
 
-#include "dialog.hxx" // for GUI_ID
+#include "FGPUIDialog.hxx" // for GUI_ID
 
 // forward decls
 class puaScrollBar;

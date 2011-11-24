@@ -3,17 +3,15 @@
 #ifndef __NEW_GUI_HXX
 #define __NEW_GUI_HXX 1
 
-#include <plib/pu.h>
-
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/misc/sg_path.hxx>
 
+#include <string.h>
 #include <functional>
 #include <vector>
 #include <map>
-
-#include <Main/fg_props.hxx>
+#include <memory> // for auto_ptr on some systems
 
 class SGBinding;
 
@@ -21,7 +19,7 @@ class FGMenuBar;
 class FGDialog;
 class FGColor;
 class FGFontCache;
-
+class puFont;
 
 /**
  * XML-configured GUI subsystem.
@@ -222,123 +220,11 @@ private:
     // Read all the configuration files in a directory.
     void readDir (const SGPath& path);
 
-    FGMenuBar * _menubar;
+    std::auto_ptr<FGMenuBar> _menubar;
     FGDialog * _active_dialog;
     std::map<std::string,FGDialog *> _active_dialogs;
     std::map<std::string,SGPropertyNode_ptr> _dialog_props;
 
-};
-
-
-class FGColor {
-public:
-    FGColor() { clear(); }
-    FGColor(float r, float g, float b, float a = 1.0f) { set(r, g, b, a); }
-    FGColor(const SGPropertyNode *prop) { set(prop); }
-    FGColor(FGColor *c) { 
-        if (c) set(c->_red, c->_green, c->_blue, c->_alpha);
-    }
-
-    inline void clear() { _red = _green = _blue = _alpha = -1.0f; }
-    // merges in non-negative components from property with children <red> etc.
-    bool merge(const SGPropertyNode *prop);
-    bool merge(const FGColor *color);
-
-    bool set(const SGPropertyNode *prop) { clear(); return merge(prop); };
-    bool set(const FGColor *color) { clear(); return merge(color); }
-    bool set(float r, float g, float b, float a = 1.0f) {
-        _red = r, _green = g, _blue = b, _alpha = a;
-        return true;
-    }
-    bool isValid() const {
-        return _red >= 0.0 && _green >= 0.0 && _blue >= 0.0;
-    }
-    void print() const;
-
-    inline void setRed(float red) { _red = red; }
-    inline void setGreen(float green) { _green = green; }
-    inline void setBlue(float blue) { _blue = blue; }
-    inline void setAlpha(float alpha) { _alpha = alpha; }
-
-    inline float red() const { return clamp(_red); }
-    inline float green() const { return clamp(_green); }
-    inline float blue() const { return clamp(_blue); }
-    inline float alpha() const { return _alpha < 0.0 ? 1.0 : clamp(_alpha); }
-
-protected:
-    float _red, _green, _blue, _alpha;
-
-private:
-    float clamp(float f) const { return f < 0.0 ? 0.0 : f > 1.0 ? 1.0 : f; }
-};
-
-
-
-/**
- * A class to keep all fonts available for future use.
- * This also assures a font isn't resident more than once.
- */
-class FGFontCache {
-private:
-    // The parameters of a request to the cache.
-    struct FntParams
-    {
-        const std::string name;
-        const float size;
-        const float slant;
-        FntParams() : size(0.0f), slant(0.0f) {}
-        FntParams(const FntParams& rhs)
-            : name(rhs.name), size(rhs.size), slant(rhs.slant)
-        {
-        }
-        FntParams(const std::string& name_, float size_, float slant_)
-            : name(name_), size(size_), slant(slant_)
-        {
-        }
-    };
-    struct FntParamsLess
-        : public std::binary_function<const FntParams, const FntParams, bool>
-    {
-        bool operator() (const FntParams& f1, const FntParams& f2) const;
-    };
-    struct fnt {
-        fnt(puFont *pu = 0) : pufont(pu), texfont(0) {}
-        ~fnt() { if (texfont) { delete pufont; delete texfont; } }
-        // Font used by plib GUI code
-        puFont *pufont;
-        // TXF font
-        fntTexFont *texfont;
-    };
-    // Path to the font directory
-    SGPath _path;
-
-    typedef std::map<const std::string, fntTexFont*> TexFontMap;
-    typedef std::map<const FntParams, fnt*, FntParamsLess> PuFontMap;
-    TexFontMap _texFonts;
-    PuFontMap _puFonts;
-
-    bool _initialized;
-    struct fnt *getfnt(const char *name, float size, float slant);
-    void init();
-
-public:
-    FGFontCache();
-    ~FGFontCache();
-
-    puFont *get(const char *name, float size=15.0, float slant=0.0);
-    puFont *get(SGPropertyNode *node);
-
-    fntTexFont *getTexFont(const char *name, float size=15.0, float slant=0.0);
-
-    SGPath getfntpath(const char *name);
-    /**
-     * Preload all the fonts in the FlightGear font directory. It is
-     * important to load the font textures early, with the proper
-     * graphics context current, so that no plib (or our own) code
-     * tries to load a font from disk when there's no current graphics
-     * context.
-     */
-    bool initializeFonts();
 };
 
 

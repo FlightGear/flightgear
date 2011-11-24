@@ -20,6 +20,7 @@ string(STRIP ${versionFile} FLIGHTGEAR_VERSION)
 #packaging
 
 # split version string into components, note CMAKE_MATCH_0 is the entire regexp match
+file(READ .gitignore CPACK_SOURCE_IGNORE_FILES)
 string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)" CPACK_PACKAGE_VERSION ${FLIGHTGEAR_VERSION} )
 set(CPACK_PACKAGE_VERSION_MAJOR ${CMAKE_MATCH_1}) 
 set(CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_2})
@@ -29,8 +30,8 @@ SET(CPACK_RESOURCE_FILE_README "${PROJECT_SOURCE_DIR}/README")
 
 set(CPACK_SOURCE_GENERATOR TBZ2 ZIP)
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "flightgear-${FLIGHTGEAR_VERSION}" CACHE INTERNAL "tarball basename")
-set(CPACK_SOURCE_IGNORE_FILES
-  "^${PROJECT_SOURCE_DIR}/.git;\\\\.gitignore;Makefile.am;~$;${CPACK_SOURCE_IGNORE_FILES}")
+#set(CPACK_SOURCE_IGNORE_FILES
+#  "^${PROJECT_SOURCE_DIR}/.git;\\\\.gitignore;Makefile.am;~$;${CPACK_SOURCE_IGNORE_FILES}")
 
 include (CPack)
 
@@ -64,7 +65,8 @@ IF(APPLE)
     set(EVENT_INPUT_DEFAULT 1)
     
     find_library(CORESERVICES_LIBRARY CoreServices)
-    list(APPEND PLATFORM_LIBS ${CORESERVICES_LIBRARY})
+    find_library(COCOA_LIBRARY Cocoa)
+    list(APPEND PLATFORM_LIBS ${COCOA_LIBRARY} ${CORESERVICES_LIBRARY})
 
 elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
     # disabled while DBus / HAL / udev issues are decided

@@ -30,6 +30,7 @@
 #include <Main/globals.hxx>
 #include <GUI/gui.h>		// mkDialog
 #include <GUI/new_gui.hxx>
+#include <Main/fg_props.hxx>
 
 #include "ATCDialogOld.hxx"
 #include "ATC.hxx"

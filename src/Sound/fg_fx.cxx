@@ -39,19 +39,27 @@
 #include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/sound/xmlsound.hxx>
 
-FGFX::FGFX ( SGSoundMgr *smgr, const string &refname ) :
+FGFX::FGFX ( SGSoundMgr *smgr, const string &refname, SGPropertyNode *props ) :
+    _props( props ),
     _enabled( fgGetNode("/sim/sound/effects/enabled", true) ),
-    _volume( fgGetNode("/sim/sound/effects/volume", true) ),
-    _avionics_enabled( fgGetNode("/sim/sound/avionics/enabled", true) ),
-    _avionics_volume( fgGetNode("/sim/sound/avionics/volume", true) ),
-    _avionics_external( fgGetNode("/sim/sound/avionics/external-view", true) ),
-    _internal( fgGetNode("/sim/current-view/internal", true) )
+    _volume( fgGetNode("/sim/sound/effects/volume", true) )
 {
+    if (!props) _props = globals->get_props();
+
+    _avionics_enabled = _props->getNode("sim/sound/avionics/enabled", true);
+    _avionics_volume = _props->getNode("sim/sound/avionics/volume", true);
+    _avionics_ext = _props->getNode("sim/sound/avionics/external-view", true);
+    _internal = _props->getNode("sim/current-view/internal", true);
+
     SGSampleGroup::_smgr = smgr;
     SGSampleGroup::_refname = refname;
     SGSampleGroup::_smgr->add(this, refname);
-    _avionics = _smgr->find("avionics", true);
-    _avionics->tie_to_listener();
+
+    if (_avionics_enabled->getBoolValue())
+    {
+        _avionics = _smgr->find("avionics", true);
+        _avionics->tie_to_listener();
+    }
 }
 
 
@@ -67,7 +75,7 @@ FGFX::~FGFX ()
 void
 FGFX::init()
 {
-    SGPropertyNode *node = fgGetNode("/sim/sound", true);
+    SGPropertyNode *node = _props->getNode("sim/sound", true);
 
     string path_str = node->getStringValue("path");
     if (path_str.empty()) {
@@ -121,14 +129,21 @@ FGFX::reinit()
 void
 FGFX::update (double dt)
 {
-    bool active = _avionics_external->getBoolValue() ||
+    bool active = _avionics_ext->getBoolValue() ||
                   _internal->getBoolValue();
 
-    if ( active && _avionics_enabled->getBoolValue() )
-        _avionics->resume(); // no-op if already in resumed state
-    else
-        _avionics->suspend();
-    _avionics->set_volume( _avionics_volume->getFloatValue() );
+    if (_avionics_enabled->getBoolValue()) {
+        if (!_avionics) {
+            _avionics = _smgr->find("avionics", true);
+            _avionics->tie_to_listener();
+        }
+
+        if ( active )
+            _avionics->resume(); // no-op if already in resumed state
+        else
+            _avionics->suspend();
+        _avionics->set_volume( _avionics_volume->getFloatValue() );
+    }
 
     if ( _enabled->getBoolValue() ) {
         set_volume( _volume->getDoubleValue() );

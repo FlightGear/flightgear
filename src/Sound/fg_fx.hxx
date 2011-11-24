@@ -49,7 +49,7 @@ class FGFX : public SGSampleGroup
 
 public:
 
-    FGFX ( SGSoundMgr *smgr, const string &refname );
+    FGFX ( SGSoundMgr *smgr, const string &refname, SGPropertyNode *props = 0 );
     virtual ~FGFX ();
 
     virtual void init ();
@@ -61,11 +61,12 @@ private:
     SGSharedPtr<SGSampleGroup> _avionics;
     std::vector<SGXmlSound *> _sound;
 
+    SGPropertyNode_ptr _props;
     SGPropertyNode_ptr _enabled;
     SGPropertyNode_ptr _volume;
     SGPropertyNode_ptr _avionics_enabled;
     SGPropertyNode_ptr _avionics_volume;
-    SGPropertyNode_ptr _avionics_external;
+    SGPropertyNode_ptr _avionics_ext;
     SGPropertyNode_ptr _internal;
 };
 

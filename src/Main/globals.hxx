@@ -91,7 +91,6 @@ private:
     FGRenderer *renderer;
     SGSubsystemMgr *subsystem_mgr;
     SGEventMgr *event_mgr;
-    SGSoundMgr *soundmgr;
 
     // Number of milliseconds elapsed since the start of the program.
     double sim_time_sec;

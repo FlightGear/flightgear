@@ -17,10 +17,12 @@
 
 #include <simgear/math/SGMath.hxx>
 #include <simgear/misc/sg_path.hxx>
-#include <simgear/props/props.hxx>
 
+#include <map>
+#include <algorithm>
 
-// forward declare only!
+// forward decls
+class SGPropertyNode;
 class puFont;
 class fntTexFont;
 
@@ -54,6 +56,7 @@ private:
     struct fnt {
         fnt(puFont *pu = 0) : pufont(pu), texfont(0) {}
         ~fnt();
+        
         // Font used by plib GUI code
         puFont *pufont;
         // TXF font

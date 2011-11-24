@@ -47,7 +47,7 @@
 #include <ATCDCL/ATCmgr.hxx>
 #include <Autopilot/route_mgr.hxx>
 #include <Cockpit/panel.hxx>
-#include <GUI/new_gui.hxx>
+#include <GUI/FGFontCache.hxx>
 #include <Model/acmodel.hxx>
 #include <Model/modelmgr.hxx>
 #include <MultiPlayer/multiplaymgr.hxx>
@@ -125,7 +125,6 @@ FGGlobals::FGGlobals() :
     renderer( new FGRenderer ),
     subsystem_mgr( new SGSubsystemMgr ),
     event_mgr( new SGEventMgr ),
-    soundmgr( new SGSoundMgr ),
     sim_time_sec( 0.0 ),
     fg_root( "" ),
     time_params( NULL ),
@@ -151,7 +150,7 @@ FGGlobals::FGGlobals() :
     dmelist( NULL ),
     tacanlist( NULL ),
     carrierlist( NULL ),
-    channellist( NULL )    
+    channellist( NULL )
 {
   simgear::ResourceManager::instance()->addProvider(new AircraftResourceProvider());
   simgear::PropertyObjectBase::setDefaultRoot(props);
@@ -167,7 +166,7 @@ FGGlobals::~FGGlobals()
     // deallocation of AIModel objects. To ensure we can safely
     // shut down all subsystems, make sure we take down the 
     // AIModels system first.
-    SGSubsystem* ai = subsystem_mgr->remove("ai_model");
+    SGSubsystem* ai = subsystem_mgr->remove("ai-model");
     if (ai) {
         ai->unbind();
         delete ai;
@@ -206,9 +205,6 @@ FGGlobals::~FGGlobals()
     delete tacanlist;
     delete carrierlist;
     delete channellist;
-
-    soundmgr->unbind();
-    delete soundmgr;
 }
 
 
@@ -220,7 +216,7 @@ void FGGlobals::set_fg_root (const string &root) {
     SGPath tmp( fg_root );
     tmp.append( "data" );
     tmp.append( "version" );
-    if ( ulFileExists( tmp.c_str() ) ) {
+    if ( tmp.exists() ) {
         fgGetNode("BAD_FG_ROOT", true)->setStringValue(fg_root);
         fg_root += "/data";
         fgGetNode("GOOD_FG_ROOT", true)->setStringValue(fg_root);
@@ -360,7 +356,10 @@ FGGlobals::add_subsystem (const char * name,
 SGSoundMgr *
 FGGlobals::get_soundmgr () const
 {
-    return soundmgr;
+    if (subsystem_mgr)
+        return (SGSoundMgr*) subsystem_mgr->get_subsystem("sound");
+
+    return NULL;
 }
 
 SGEventMgr *

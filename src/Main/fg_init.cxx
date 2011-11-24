@@ -56,6 +56,7 @@
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/structure/event_mgr.hxx>
+#include <simgear/structure/SGPerfMon.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/misc/sgstream.hxx>
@@ -1181,6 +1182,15 @@ bool fgInitSubsystems() {
     SG_LOG( SG_GENERAL, SG_INFO, "========== ==========");
 
     ////////////////////////////////////////////////////////////////////
+    // Initialize the sound subsystem.
+    ////////////////////////////////////////////////////////////////////
+    // Sound manager uses an own subsystem group "SOUND" which is the last
+    // to be updated in every loop.
+    // Sound manager is updated last so it can use the CPU while the GPU
+    // is processing the scenery (doubled the frame-rate for me) -EMH-
+    globals->add_subsystem("sound", new SGSoundMgr, SGSubsystemMgr::SOUND);
+
+    ////////////////////////////////////////////////////////////////////
     // Initialize the event manager subsystem.
     ////////////////////////////////////////////////////////////////////
 
@@ -1198,6 +1208,14 @@ bool fgInitSubsystems() {
     // Add the FlightGear property utilities.
     ////////////////////////////////////////////////////////////////////
     globals->add_subsystem("properties", new FGProperties);
+
+
+    ////////////////////////////////////////////////////////////////////
+    // Add the performance monitoring system.
+    ////////////////////////////////////////////////////////////////////
+    globals->add_subsystem("performance-mon",
+            new SGPerformanceMonitor(globals->get_subsystem_mgr(),
+                                     fgGetNode("/sim/performance-monitor", true)));
 
     ////////////////////////////////////////////////////////////////////
     // Initialize the material property subsystem.
@@ -1282,7 +1300,7 @@ bool fgInitSubsystems() {
     // sub system infrastructure.
     ////////////////////////////////////////////////////////////////////
 
-    globals->add_subsystem("Old ATC", new FGATCMgr, SGSubsystemMgr::INIT);
+    globals->add_subsystem("ATC-old", new FGATCMgr, SGSubsystemMgr::INIT);
 
     ////////////////////////////////////////////////////////////////////
    // Initialize the ATC subsystem
@@ -1304,14 +1322,14 @@ bool fgInitSubsystems() {
     // Initialise the AI Model Manager
     ////////////////////////////////////////////////////////////////////
     SG_LOG(SG_GENERAL, SG_INFO, "  AI Model Manager");
-    globals->add_subsystem("ai_model", new FGAIManager, SGSubsystemMgr::POST_FDM);
-    globals->add_subsystem("submodel_mgr", new FGSubmodelMgr, SGSubsystemMgr::POST_FDM);
+    globals->add_subsystem("ai-model", new FGAIManager, SGSubsystemMgr::POST_FDM);
+    globals->add_subsystem("submodel-mgr", new FGSubmodelMgr, SGSubsystemMgr::POST_FDM);
 
 
     // It's probably a good idea to initialize the top level traffic manager
     // After the AI and ATC systems have been initialized properly.
     // AI Traffic manager
-    globals->add_subsystem("Traffic Manager", new FGTrafficManager, SGSubsystemMgr::POST_FDM);
+    globals->add_subsystem("traffic-manager", new FGTrafficManager, SGSubsystemMgr::POST_FDM);
 
     ////////////////////////////////////////////////////////////////////
     // Add a new 2D panel.
@@ -1446,7 +1464,7 @@ void fgReInitSubsystems()
     
     // Force reupdating the positions of the ai 3d models. They are used for
     // initializing ground level for the FDM.
-    globals->get_subsystem("ai_model")->reinit();
+    globals->get_subsystem("ai-model")->reinit();
 
     // Initialize the FDM
     globals->get_subsystem("flight")->reinit();

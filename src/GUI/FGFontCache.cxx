@@ -17,27 +17,25 @@
 #  include <config.h>
 #endif
 
-#include "FGGLApplication.hxx"
 #ifdef HAVE_WINDOWS_H
 #include <windows.h>
 #endif
 
-#include <map>
-#include <algorithm>
+#include "FGFontCache.hxx"
 
 #include <plib/fnt.h>
 #include <plib/pu.h>
 
-#include "ApplicationProperties.hxx"
-#include "FGFontCache.hxx"
+#include <simgear/props/props.hxx>
 
+#include <Main/globals.hxx>
 
 ////////////////////////////////////////////////////////////////////////
 // FGFontCache class.
 ////////////////////////////////////////////////////////////////////////
 
-//extern puFont FONT_HELVETICA_14;
-//extern puFont FONT_SANS_12B;
+extern puFont FONT_HELVETICA_14;
+extern puFont FONT_SANS_12B;
 
 namespace
 {
@@ -65,20 +63,12 @@ const GuiFont guifonts[] = {
     { "TIMES_24",     &PUFONT_TIMES_ROMAN_24 },
     { "HELVETICA_10", &PUFONT_HELVETICA_10 },
     { "HELVETICA_12", &PUFONT_HELVETICA_12 },
-//    { "HELVETICA_14", &FONT_HELVETICA_14 },
-    { "HELVETICA_18", &PUFONT_HELVETICA_18 }
-//    { "SANS_12B",     &FONT_SANS_12B }
+    { "HELVETICA_14", &FONT_HELVETICA_14 },
+    { "HELVETICA_18", &PUFONT_HELVETICA_18 },
+    { "SANS_12B",     &FONT_SANS_12B }
 };
 
 const GuiFont* guifontsEnd = &guifonts[sizeof(guifonts)/ sizeof(guifonts[0])];
-}
-
-FGFontCache::fnt::~fnt()
-{
-    if (texfont) { 
-        delete pufont; 
-        delete texfont;
-    }
 }
 
 FGFontCache::FGFontCache() :
@@ -176,7 +166,8 @@ void FGFontCache::init()
         if (envp != NULL) {
             _path.set(envp);
         } else {
-            _path.set(ApplicationProperties::GetRootPath("Fonts").str());
+            _path.set(globals->get_fg_root());
+            _path.append("Fonts");
         }
         _initialized = true;
     }
@@ -222,5 +213,11 @@ bool FGFontCache::initializeFonts()
     return true;
 }
 
-// end of new_gui.cxx
+FGFontCache::fnt::~fnt()
+{
+    if (texfont) { 
+        delete pufont; 
+        delete texfont;
+    }
+}
 
