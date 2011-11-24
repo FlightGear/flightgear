@@ -77,8 +77,7 @@ double FGRadio::getFrequency(int radio) {
 
 /*** TODO: receive multiplayer chat message and voice
 ***/
-void FGRadio::receiveChat(SGGeod tx_pos, double freq, string text,
-	int ground_to_air) {
+void FGRadio::receiveChat(SGGeod tx_pos, double freq, string text, int ground_to_air) {
 
 }
 
@@ -100,18 +99,17 @@ double FGRadio::receiveNav(SGGeod tx_pos, double freq, int transmission_type) {
 
 /*** Receive ATC radio communication as text
 ***/
-void FGRadio::receiveATC(SGGeod tx_pos, double freq, string text,
-	int ground_to_air) {
+void FGRadio::receiveATC(SGGeod tx_pos, double freq, string text, int ground_to_air) {
 
-	/*
+	
 	double comm1 = getFrequency(1);
 	double comm2 = getFrequency(2);
-	if ( (freq != comm1) &&  (freq != comm2) ) {
-		cerr << "Frequency not tuned: " << freq << " Radio1: " << comm1 << " Radio2: " << comm2 << endl;
+	if ( !(fabs(freq - comm1) <= 0.0001) &&  !(fabs(freq - comm2) <= 0.0001) ) {
+		//cerr << "Frequency not tuned: " << freq << " Radio1: " << comm1 << " Radio2: " << comm2 << endl;
 		return;
 	}
 	else {
-	*/
+	
 		if ( _propagation_model == 0) {
 			fgSetString("/sim/messages/atc", text.c_str());
 		}
@@ -127,6 +125,9 @@ void FGRadio::receiveATC(SGGeod tx_pos, double freq, string text,
 				SG_LOG(SG_GENERAL, SG_BULK, "Signal completely readable: " << signal);
 				//cerr << "Signal completely readable: " << signal << endl;
 				fgSetString("/sim/messages/atc", text.c_str());
+				/** write signal strength above threshold to the property tree
+				*	to implement a simple S-meter just divide by 3 dB per grade (VHF norm)
+				**/
 				fgSetDouble("/sim/radio/comm1-signal", signal);
 			}
 		}
@@ -168,20 +169,22 @@ void FGRadio::receiveATC(SGGeod tx_pos, double freq, string text,
 				SG_LOG(SG_GENERAL, SG_BULK, "Signal completely readable: " << signal);
 				//cerr << "Signal completely readable: " << signal << endl;
 				fgSetString("/sim/messages/atc", text.c_str());
+				/** write signal strength above threshold to the property tree
+				*	to implement a simple S-meter just divide by 3 dB per grade (VHF norm)
+				**/
 				fgSetDouble("/sim/radio/comm1-signal", signal);
 			}
 			
 		}
 		
-	//}
+	}
 	
 }
 
 /***  Implement radio attenuation		
 	  based on the Longley-Rice propagation model
 ***/
-double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
-                               int transmission_type) {
+double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmission_type) {
 
 	
 	
@@ -378,8 +381,7 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 
 /*** implement simple LOS propagation model (WIP)
 ***/
-double FGRadio::LOS_calculate_attenuation(SGGeod pos, double freq,
-                               int transmission_type) {
+double FGRadio::LOS_calculate_attenuation(SGGeod pos, double freq, int transmission_type) {
 	double frq_mhz;
 	if( (freq < 118.0) || (freq > 137.0) )
 		frq_mhz = 125.0; 	// sane value, middle of bandplan
