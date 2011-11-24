@@ -1,4 +1,4 @@
-// commradio.hxx -- class to manage a comm radio instance
+// radio.hxx -- FGRadio: class to manage radio propagation
 //
 // Written by Adrian Musceac, started August 2011.
 //

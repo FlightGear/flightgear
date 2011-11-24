@@ -1,4 +1,4 @@
-// commradio.cxx -- implementation of FGCommRadio
+// radio.cxx -- implementation of FGRadio
 // Class to manage radio propagation using the ITM model
 // Written by Adrian Musceac, started August 2011.
 //
@@ -101,11 +101,11 @@ void FGRadio::receiveText(SGGeod tx_pos, double freq, string text,
 			/*
 			string hash_noise = " ";
 			int reps = (int) (fabs(floor(signal - 11.0)) * 2);
-			cerr << "Reps: " << reps << endl;
+			//cerr << "Reps: " << reps << endl;
 			int t_size = text.size();
 			for (int n = 1; n <= reps; ++n) {
 				int pos = rand() % (t_size -1);
-				cerr << "Pos: " << pos << endl;
+				//cerr << "Pos: " << pos << endl;
 				text.replace(pos,1, hash_noise);
 			}
 			*/
