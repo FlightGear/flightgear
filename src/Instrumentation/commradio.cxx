@@ -53,22 +53,6 @@ FGCommRadio::~FGCommRadio()
 {
 }
 
-void FGCommRadio::init ()
-{
-}
-
-
-void FGCommRadio::bind ()
-{
-}
-
-
-void FGCommRadio::update ()
-{
-	if (dt <= 0.0) {
-		return; // paused
-    }
-}
 
 double FGCommRadio::getFrequency(int radio) {
 	double freq = 118.0;
@@ -92,8 +76,8 @@ double FGCommRadio::getFrequency(int radio) {
 void FGCommRadio::receiveText(SGGeod tx_pos, double freq, string text,
 	int ground_to_air) {
 
-	comm1 = getFrequency(1);
-	comm2 = getFrequency(2);
+	double comm1 = getFrequency(1);
+	double comm2 = getFrequency(2);
 	if ( (freq != comm1) &&  (freq != comm2) ) {
 		return;
 	}
@@ -143,7 +127,7 @@ double FGCommRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 	int radio_climate = 5;		// continental temperate
 	int pol=1;	// assuming vertical polarization although this is more complex in reality
 	double conf = 0.90;	// 90% of situations and time, take into account speed
-	double rel = 0.90;	// ^^
+	double rel = 0.90;	
 	double dbloss;
 	char strmode[150];
 	int errnum;

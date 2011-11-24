@@ -28,13 +28,12 @@
 
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/debug/logstream.hxx>
-#include <string>
 
 
 using std::string;
 
 
-class FGCommRadio : public SGSubsystem, public SGPropertyChangeListener
+class FGCommRadio 
 {
 private:
 	bool isOperable() const
@@ -53,10 +52,6 @@ public:
     FGCommRadio(SGPropertyNode *node);
     ~FGCommRadio();
 
-    void init ();
-    void bind ();
-    void unbind ();
-    void update (double dt);
     
     void setFrequency(double freq, int radio);
     double getFrequency(int radio);
