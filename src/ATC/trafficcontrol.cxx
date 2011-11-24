@@ -47,6 +47,7 @@
 #include <Airports/groundnetwork.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/simple.hxx>
+#include <Radio/radio.hxx>
 
 using std::sort;
 
@@ -760,6 +761,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
 			                     rec->getLatitude(), sender_alt );
 			      	}
             		radio->receiveText(sender_pos, stationFreq, text, ground_to_air);
+            		delete radio;
             	}
             	else {
             		fgSetString("/sim/messages/atc", text.c_str());

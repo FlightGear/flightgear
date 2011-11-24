@@ -25,7 +25,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <deque>
-
+#include "radio.hxx"
 #include <Scenery/scenery.hxx>
 
 #define WITH_POINT_TO_POINT 1
@@ -132,7 +132,8 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 	char strmode[150];
 	int errnum;
 	
-	double tx_pow,ant_gain;
+	double tx_pow = _transmitter_power;
+	double ant_gain = _antenna_gain;
 	double signal = 0.0;
 	
 	if(transmission_type == 1)
@@ -269,7 +270,7 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq,
 	// frequency in the middle of the bandplan, more accuracy is not necessary
 	double fz_clr= 8.657 * sqrt(distance_m / 0.125);
 	
-	// TODO: If we clear the first Fresnel zone, we are into line of sight teritory
+	// TODO: If we clear the first Fresnel zone, we are into line of sight territory
 
 	// else we need to calculate point to point link loss
 	if((transmission_type == 3) || (transmission_type == 4)) {

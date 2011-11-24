@@ -45,7 +45,7 @@ private:
 	double _antenna_gain;
 	
 	int _propagation_model; /// 0 none, 1 round Earth, 2 ITM
-	double ITM_calculate_attenuation(SGGeod tx_pos, double freq, int ground_to_air)
+	double ITM_calculate_attenuation(SGGeod tx_pos, double freq, int ground_to_air);
 	
 public:
 
