@@ -1,4 +1,10 @@
-include(GNUInstallDirs)
+if(${CMAKE_VERSION} VERSION_GREATER 2.8.4)
+    # use official include provided by latest CMake
+    include(GNUInstallDirs)
+else(${CMAKE_VERSION} VERSION_GREATER 2.8.4)
+    # backward compatibility: use our own module for older cmake versions
+    include(OldGNUInstallDirs)
+endif(${CMAKE_VERSION} VERSION_GREATER 2.8.4)
 
 set(MANPAGES
     est-epsilon.1
