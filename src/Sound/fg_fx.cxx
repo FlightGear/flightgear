@@ -79,7 +79,7 @@ FGFX::init()
 
     string path_str = node->getStringValue("path");
     if (path_str.empty()) {
-        SG_LOG(SG_SOUND, SG_ALERT, "No path in /sim/sound/path");
+        SG_LOG(SG_SOUND, SG_ALERT, "No path in sim/sound/path");
         return;
     }
     

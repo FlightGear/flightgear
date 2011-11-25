@@ -34,6 +34,7 @@
 #include <simgear/math/sg_geodesy.hxx>
 
 
+#include <Scripting/NasalSys.hxx>
 #include <Main/fg_props.hxx>
 
 
@@ -44,6 +45,8 @@ class SGMaterial;
 class FGAIManager;
 class FGAIFlightPlan;
 class FGFX;
+class FGAIModelData;	// define dblow
+
 
 class FGAIBase : public SGReferenced {
 
@@ -226,6 +229,10 @@ private:
     object_type _otype;
     bool _initialized;
     osg::ref_ptr<osg::LOD> _model; //The 3D model LOD object
+
+    FGAIModelData* _aimodel;
+
+    string _fxpath;
     SGSharedPtr<FGFX>  _fx;
 
 public:
@@ -440,5 +447,22 @@ inline double FGAIBase::calcRecipBearingDeg(double bearing){
 inline void FGAIBase::setMaxSpeed(double m) {
     _max_speed = m;
 }
+
+
+class FGAIModelData : public simgear::SGModelData {
+public:
+    FGAIModelData(SGPropertyNode *root = 0)
+       : _nasal( new FGNasalModelData(root) ),
+         _path("") {};
+    ~FGAIModelData() {
+        delete _nasal;
+    };
+    void modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *n);
+    inline string& get_sound_path() { return _path; };
+
+private:
+    FGNasalModelData *_nasal;
+    string _path;
+};
 
 #endif	// _FG_AIBASE_HXX
