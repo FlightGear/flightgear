@@ -47,7 +47,6 @@ INCLUDES
 #include "initialization/FGTrim.h"
 #include "FGJSBBase.h"
 #include "input_output/FGPropertyManager.h"
-#include "input_output/FGGroundCallback.h"
 #include "input_output/FGXMLFileRead.h"
 #include "models/FGPropagate.h"
 #include "math/FGColumnVector3.h"
@@ -56,7 +55,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.72 2011/10/14 22:46:49 bcoconni Exp $"
+#define ID_FDMEXEC "$Id: FGFDMExec.h,v 1.74 2011/11/09 21:58:26 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -181,7 +180,7 @@ CLASS DOCUMENTATION
                                 property actually maps toa function call of DoTrim().
 
     @author Jon S. Berndt
-    @version $Revision: 1.72 $
+    @version $Revision: 1.74 $
 */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -268,10 +267,14 @@ public:
       @return true if successful */
   bool RunIC(void);
 
-  /** Sets the ground callback pointer.
-      @param gc A pointer to a ground callback object.
+  /** Sets the ground callback pointer. For optimal memory management, a shared
+      pointer is used internally that maintains a reference counter. The calling
+      application must therefore use FGGroundCallback_ptr 'smart pointers' to
+      manage their copy of the ground callback.
+      @param gc A pointer to a ground callback object
+      @see FGGroundCallback
    */
-  void SetGroundCallback(FGGroundCallback* gc);
+  void SetGroundCallback(FGGroundCallback* gc) { FGLocation::SetGroundCallback(gc); }
 
   /** Loads an aircraft model.
       @param AircraftPath path to the aircraft/ directory. For instance:
@@ -328,7 +331,7 @@ public:
   bool SetSystemsPath(const string& path)   { SystemsPath = RootDir + path; return true; }
   
   /// @name Top-level executive State and Model retrieval mechanism
-  //@{
+  ///@{
   /// Returns the FGAtmosphere pointer.
   FGAtmosphere* GetAtmosphere(void)    {return (FGAtmosphere*)Models[eAtmosphere];}
   /// Returns the FGAccelerations pointer.
@@ -359,15 +362,19 @@ public:
   FGAuxiliary* GetAuxiliary(void)      {return (FGAuxiliary*)Models[eAuxiliary];}
   /// Returns the FGInput pointer.
   FGInput* GetInput(void)              {return (FGInput*)Models[eInput];}
-  /// Returns the FGGroundCallback pointer.
-  FGGroundCallback* GetGroundCallback(void) {return GroundCallback;}
+  /** Get a pointer to the ground callback currently used. It is recommanded
+      to store the returned pointer in a 'smart pointer' FGGroundCallback_ptr.
+      @return A pointer to the current ground callback object.
+      @see FGGroundCallback
+   */
+  FGGroundCallback* GetGroundCallback(void) {return FGLocation::GetGroundCallback();}
   /// Retrieves the script object
   FGScript* GetScript(void) {return Script;}
-  // Returns a pointer to the FGInitialCondition object
+  /// Returns a pointer to the FGInitialCondition object
   FGInitialCondition* GetIC(void)      {return IC;}
-  // Returns a pointer to the FGTrim object
+  /// Returns a pointer to the FGTrim object
   FGTrim* GetTrim(void);
-  //@}
+  ///@}
 
   /// Retrieves the engine path.
   const string& GetEnginePath(void)    {return EnginePath;}
@@ -391,7 +398,7 @@ public:
   }
 
   /// Returns the model name.
-  const string& GetModelName(void) { return modelName; }
+  const string& GetModelName(void) const { return modelName; }
 /*
   /// Returns the current time.
   double GetSimTime(void);
@@ -404,9 +411,9 @@ public:
   /// Returns a vector of strings representing the names of all loaded models (future)
   vector <string> EnumerateFDMs(void);
   /// Gets the number of child FDMs.
-  int GetFDMCount(void) {return (int)ChildFDMList.size();}
+  int GetFDMCount(void) const {return (int)ChildFDMList.size();}
   /// Gets a particular child FDM.
-  childData* GetChildFDM(int i) {return ChildFDMList[i];}
+  childData* GetChildFDM(int i) const {return ChildFDMList[i];}
   /// Marks this instance of the Exec object as a "child" object.
   void SetChild(bool ch) {IsChild = ch;}
 
@@ -503,7 +510,7 @@ public:
   double GetSimTime(void) const { return sim_time; }
 
   /// Returns the simulation delta T.
-  double GetDeltaT(void) {return dT;}
+  double GetDeltaT(void) const {return dT;}
 
   /// Suspends the simulation and sets the delta T to zero.
   void SuspendIntegration(void) {saved_dT = dT; dT = 0.0;}
@@ -513,7 +520,7 @@ public:
 
   /** Returns the simulation suspension state.
       @return true if suspended, false if executing  */
-  bool IntegrationSuspended(void) {return dT == 0.0;}
+  bool IntegrationSuspended(void) const {return dT == 0.0;}
 
   /** Sets the current sim time.
       @param cur_time the current time
@@ -588,7 +595,6 @@ private:
   bool trim_status;
   int ta_mode;
 
-  FGGroundCallback*   GroundCallback;
   FGScript*           Script;
   FGInitialCondition* IC;
   FGTrim*             Trim;
