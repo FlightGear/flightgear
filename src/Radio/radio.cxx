@@ -40,9 +40,15 @@ FGRadio::FGRadio() {
 	
 	/** AM transmitter power in dBm.
 	*  	Note this value is calculated from the typical final transistor stage output
-	*  	small aircraft have portable transmitters which operate at 36 dBm output (4 Watts)
+	*  	small aircraft have portable transmitters which operate at 36 dBm output (4 Watts) others operate in the range 10-20 W
 	*  	later possibly store this value in aircraft description
 	*  	ATC comms usually operate high power equipment, thus making the link asymetrical; this is taken care of in propagation routines
+	*	Typical output powers for ATC ground equipment, VHF-UHF:
+	*	40 dBm - 10 W (ground, clearance)
+	*	44 dBm - 20 W (tower)
+	*	47 dBm - 50 W (center, sectors)
+	*	50 dBm - 100 W (center, sectors)
+	*	53 dBm - 200 W (sectors, on directional arrays)
 	**/
 	_transmitter_power = 43.0;
 	
@@ -85,7 +91,9 @@ void FGRadio::receiveChat(SGGeod tx_pos, double freq, string text, int ground_to
 ***/
 double FGRadio::receiveNav(SGGeod tx_pos, double freq, int transmission_type) {
 	
-	// need to implement transmitter power
+	// typical VOR/LOC transmitter power appears to be 200 Watt ~ 53 dBm
+	// vor/loc typical sensitivity between -107 and -101 dBm
+	// glideslope sensitivity between -85 and -81 dBm
 	if ( _propagation_model == 1) {
 		return LOS_calculate_attenuation(tx_pos, freq, 1);
 	}
