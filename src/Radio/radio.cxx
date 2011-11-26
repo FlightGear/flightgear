@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <deque>
 #include "radio.hxx"
+#include <simgear/scene/material/mat.hxx>
 #include <Scenery/scenery.hxx>
 
 #define WITH_POINT_TO_POINT 1
@@ -213,8 +214,11 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmiss
 	double rel = 0.90;	
 	double dbloss;
 	char strmode[150];
+	int p_mode = 0; // propgation mode selector: 0 LOS, 1 diffraction dominant, 2 troposcatter
+	double horizons[2];
 	int errnum;
 	
+	double clutter_loss; 	// loss due to vegetation and urban
 	double tx_pow = _transmitter_power;
 	double ant_gain = _antenna_gain;
 	double signal = 0.0;
@@ -278,6 +282,8 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmiss
 		
 	double max_points = distance_m / point_distance;
 	deque<double> _elevations;
+	deque<string> materials;
+	
 
 	double elevation_under_pilot = 0.0;
 	if (scenery->get_elevation_m( max_own_pos, elevation_under_pilot, NULL )) {
@@ -306,23 +312,39 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmiss
 	while (_elevations.size() <= e_size) {
 		probe_distance += point_distance;
 		SGGeod probe = SGGeod::fromGeoc(center.advanceRadM( course, probe_distance ));
-		
+		const SGMaterial *mat = 0;
 		double elevation_m = 0.0;
 	
-		if (scenery->get_elevation_m( probe, elevation_m, NULL )) {
+		if (scenery->get_elevation_m( probe, elevation_m, &mat )) {
 			if((transmission_type == 3) || (transmission_type == 4)) {
 				_elevations.push_back(elevation_m);
+				if(mat) {
+					const std::vector<string> mat_names = mat->get_names();
+					materials.push_back(mat_names[0]);
+				}
+				else {
+					materials.push_back("None");
+				}
 			}
 			else {
 				 _elevations.push_front(elevation_m);
+				 if(mat) {
+				 	 const std::vector<string> mat_names = mat->get_names();
+				 	 materials.push_front(mat_names[0]);
+				}
+				else {
+					materials.push_front("None");
+				}
 			}
 		}
 		else {
 			if((transmission_type == 3) || (transmission_type == 4)) {
-				_elevations.push_back(elevation_m);
+				_elevations.push_back(0.0);
+				materials.push_back("None");
 			}
 			else {
-			_elevations.push_front(0.0);
+				_elevations.push_front(0.0);
+				materials.push_front("None");
 			}
 		}
 	}
@@ -367,23 +389,203 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmiss
 		// the sender and receiver roles are switched
 		point_to_point(itm_elev, receiver_height, transmitter_height,
 			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
-			pol, conf, rel, dbloss, strmode, errnum);
+			pol, conf, rel, dbloss, strmode, p_mode, horizons, errnum);
 		
 	}
 	else {
 		point_to_point(itm_elev, transmitter_height, receiver_height,
 			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
-			pol, conf, rel, dbloss, strmode, errnum);
+			pol, conf, rel, dbloss, strmode, p_mode, horizons, errnum);
 	}
 	SG_LOG(SG_GENERAL, SG_BULK,
 			"ITM:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, " << strmode << ", Error: " << errnum);
 	cerr << "ITM:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, " << strmode << ", Error: " << errnum << endl;
 	
+	clutterLoss(frq_mhz, distance_m, itm_elev, materials, transmitter_height, receiver_height, p_mode, horizons, clutter_loss);
+	cerr << "Clutter loss: " << clutter_loss << endl;
 	//if (errnum == 4)	// if parameters are outside sane values for lrprop, the alternative method is used
 	//	return -1;
-	signal = link_budget - dbloss;
+	signal = link_budget - dbloss - clutter_loss;
 	return signal;
 
+}
+
+/*** Calculate losses due to vegetation and urban clutter (WIP)
+*	 We are only worried about clutter loss, terrain influence 
+*	 on the first Fresnel zone is calculated in the ITM functions
+***/
+void FGRadio::clutterLoss(double freq, double distance_m, double itm_elev[], deque<string> materials,
+	double transmitter_height, double receiver_height, int p_mode,
+	double horizons[], double &clutter_loss) {
+	
+	if (p_mode == 0) {	// LOS: take each point and see how clutter height affects first Fresnel zone
+		int j=1; // first point is TX elevation, last is RX elevation
+		for (int k=3;k < (int)itm_elev[0];k++) {
+			
+			double clutter_height = 0.0;	// clutter height hard-coded to 15 for now
+			double clutter_density = 0.0;	// percent of reflected wave
+			get_material_properties(materials[j-1], clutter_height, clutter_density);
+			//cerr << "Clutter:: material: " << materials[j-1] << " height: " << clutter_height << ", density: " << clutter_density << endl;
+			double grad = fabs(itm_elev[2] + transmitter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m;
+			// First Fresnel radius
+			double frs_rad = 548 * sqrt( (j * itm_elev[1] * (itm_elev[0] - j) * itm_elev[1] / 1000000) / (  distance_m * freq / 1000) );
+			//cerr << "Clutter:: fresnel radius: " << frs_rad << endl;
+			//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
+			
+			double min_elev = SGMiscd::min(itm_elev[2] + transmitter_height, itm_elev[(int)itm_elev[0] + 2] + receiver_height);
+			double d1 = j * itm_elev[1];
+			if (fabs(min_elev - itm_elev[2]) <= 0.0001) 
+				d1 = (itm_elev[0] - j) * itm_elev[1];
+			double ray_height = (grad * d1) + min_elev;
+			//cerr << "Clutter:: ray height: " << ray_height << " ground height:" << itm_elev[k] << endl;
+			double clearance = ray_height - (itm_elev[k] + clutter_height) - frs_rad;		
+			double intrusion = fabs(clearance);
+			//cerr << "Clutter:: clearance: " << clearance << endl;
+			if (clearance >= 0) {
+				clutter_loss +=0.0;
+			}
+			else if (clearance < 0 && (intrusion < clutter_height)) {
+				
+				clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * freq/100;
+			}
+			else if (clearance < 0 && (intrusion > clutter_height)) {
+				clutter_loss += clutter_density * (clutter_height / (frs_rad *2 ) ) * freq/100;
+			}
+			else {
+				clutter_loss += 0.0;
+			}
+			j++;
+		}
+		
+	}
+	else if (p_mode == 1) {		// diffraction
+		
+		if (horizons[1] == 0.0) {	//	single horizon: same as above, except pass twice using the highest point
+			
+		}
+		else {	// double horizon: same as single horizon, except there are 3 segments
+			
+		}
+	}
+	else if (p_mode == 2) {		//	troposcatter: use the first smooth earth horizon as mid point
+		
+	}
+	
+}
+
+/*** 	Material properties database
+*		height: median clutter height
+*		density: radiowave attenuation factor
+***/
+void FGRadio::get_material_properties(string mat_name, double &height, double &density) {
+	
+	if(mat_name == "Landmass") {
+		height = 15.0;
+		density = 0.2;
+	}
+
+	else if(mat_name == "SomeSort") {
+		height = 15.0;
+		density = 0.2;
+	}
+
+	else if(mat_name == "Island") {
+		height = 15.0;
+		density = 0.2;
+	}
+	else if(mat_name == "Default") {
+		height = 15.0;
+		density = 0.2;
+	}
+	else if(mat_name == "EvergreenBroadCover") {
+		height = 20.0;
+		density = 0.2;
+	}
+	else if(mat_name == "EvergreenForest") {
+		height = 20.0;
+		density = 0.2;
+	}
+	else if(mat_name == "DeciduousBroadCover") {
+		height = 15.0;
+		density = 0.3;
+	}
+	else if(mat_name == "DeciduousForest") {
+		height = 15.0;
+		density = 0.3;
+	}
+	else if(mat_name == "MixedForestCover") {
+		height = 20.0;
+		density = 0.25;
+	}
+	else if(mat_name == "MixedForest") {
+		height = 15.0;
+		density = 0.25;
+	}
+	else if(mat_name == "RainForest") {
+		height = 25.0;
+		density = 0.55;
+	}
+	else if(mat_name == "EvergreenNeedleCover") {
+		height = 15.0;
+		density = 0.2;
+	}
+	else if(mat_name == "WoodedTundraCover") {
+		height = 5.0;
+		density = 0.15;
+	}
+	else if(mat_name == "DeciduousNeedleCover") {
+		height = 5.0;
+		density = 0.2;
+	}
+	else if(mat_name == "ScrubCover") {
+		height = 3.0;
+		density = 0.15;
+	}
+	else if(mat_name == "BuiltUpCover") {
+		height = 30.0;
+		density = 0.7;
+	}
+	else if(mat_name == "Urban") {
+		height = 30.0;
+		density = 0.7;
+	}
+	else if(mat_name == "Construction") {
+		height = 30.0;
+		density = 0.7;
+	}
+	else if(mat_name == "Industrial") {
+		height = 30.0;
+		density = 0.7;
+	}
+	else if(mat_name == "Port") {
+		height = 30.0;
+		density = 0.7;
+	}
+	else if(mat_name == "Town") {
+		height = 10.0;
+		density = 0.5;
+	}
+	else if(mat_name == "SubUrban") {
+		height = 10.0;
+		density = 0.5;
+	}
+	else if(mat_name == "CropWoodCover") {
+		height = 10.0;
+		density = 0.1;
+	}
+	else if(mat_name == "CropWood") {
+		height = 10.0;
+		density = 0.1;
+	}
+	else if(mat_name == "AgroForest") {
+		height = 10.0;
+		density = 0.1;
+	}
+	else {
+		height = 0.0;
+		density = 0.0;
+	}
+	
 }
 
 /*** implement simple LOS propagation model (WIP)
@@ -451,5 +653,12 @@ double FGRadio::LOS_calculate_attenuation(SGGeod pos, double freq, int transmiss
 			"LOS:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm ");
 	//cerr << "LOS:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm " << endl;
 	return signal;
+	
+}
+
+/*** Material properties database
+***/
+void FGRadio::set_material_properties() {
+	
 	
 }

@@ -1519,6 +1519,8 @@ void point_to_point(double elev[],
                     double rel,                // 0.01 .. .99, Fractions of time
                     double &dbloss,
                     char *strmode,
+                    int &p_mode,				// propagation mode selector
+                    double (&horizons)[2],			// horizon distances
                     int &errnum)
 {
 	// radio_climate: 1-Equatorial, 2-Continental Subtropical, 3-Maritime Tropical,
@@ -1568,22 +1570,38 @@ void point_to_point(double elev[],
 	fs = 32.45 + 20.0 * log10(frq_mhz) + 20.0 * log10(prop.d / 1000.0);
 	q = prop.d - prop.d_L;
 
+	horizons[0] = 0.0;
+	horizons[1] = 0.0;
 	if (int(q) < 0.0) {
 		strcpy(strmode, "Line-Of-Sight Mode");
+		p_mode = 0;
 	} else {
-		if (int(q) == 0.0)
+		if (int(q) == 0.0) {
 			strcpy(strmode, "Single Horizon");
+			horizons[0] = prop.d_Lj[0];
+			p_mode = 1;
+		}
 
-		else
-			if (int(q) > 0.0)
+		else {
+			if (int(q) > 0.0) {
 				strcpy(strmode, "Double Horizon");
+				horizons[0] = prop.d_Lj[0];
+				horizons[1] = prop.d_Lj[1];
+				p_mode = 1;
+			}
+		}
 
-		if (prop.d <= prop.d_Ls || prop.d <= prop.dx)
+		if (prop.d <= prop.d_Ls || prop.d <= prop.dx) {
 			strcat(strmode, ", Diffraction Dominant");
+			p_mode = 1;
+		}
 
-		else
-		if (prop.d > prop.dx)
-			strcat(strmode, ", Troposcatter Dominant");
+		else {
+			if (prop.d > prop.dx) {
+				strcat(strmode, ", Troposcatter Dominant");
+				p_mode = 2;
+			}
+		}
 	}
 
 	dbloss = avar(zr, 0.0, zc, prop, propv) + fs;

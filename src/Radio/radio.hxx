@@ -23,7 +23,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
-
+#include <deque>
 #include <Main/fg_props.hxx>
 
 #include <simgear/math/sg_geodesy.hxx>
@@ -43,10 +43,16 @@ private:
 	double _receiver_sensitivity;
 	double _transmitter_power;
 	double _antenna_gain;
+	std::map<string, double[2]> _mat_database;
 	
 	int _propagation_model; /// 0 none, 1 round Earth, 2 ITM
 	double ITM_calculate_attenuation(SGGeod tx_pos, double freq, int ground_to_air);
 	double LOS_calculate_attenuation(SGGeod tx_pos, double freq, int ground_to_air);
+	void clutterLoss(double freq, double distance_m, double itm_elev[], std::deque<string> materials,
+			double transmitter_height, double receiver_height, int p_mode,
+			double horizons[], double &clutter_loss);
+	void set_material_properties();
+	void get_material_properties(string mat_name, double &height, double &density);
 	
 public:
 
