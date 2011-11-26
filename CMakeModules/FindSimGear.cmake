@@ -126,14 +126,15 @@ if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
         io
         serial
         sound
-        structure
+        math
         props
+        structure
         xml
         misc
         threads
         debug
         magvar
-        math)
+    )
 
     set(scene_comps
         ephem
@@ -146,7 +147,7 @@ if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
     foreach(component ${comps})
         find_sg_component(${component} SIMGEAR_CORE_LIBRARIES)
     endforeach()
-        
+
     foreach(component ${scene_comps})
         find_sg_component(${component} SIMGEAR_LIBRARIES)
     endforeach()
