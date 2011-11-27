@@ -54,7 +54,7 @@ FIND_LIBRARY(SIMGEAR_LIBRARIES
   NAMES simgear SimGear
   HINTS
   $ENV{SIMGEAR_DIR}
-  PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
+  PATH_SUFFIXES ${CMAKE_INSTALL_LIBDIR} libs64 libs libs/Win32 libs/Win64
   PATHS
   ~/Library/Frameworks
   /Library/Frameworks
@@ -75,7 +75,7 @@ macro(find_sg_component comp libs)
     FIND_LIBRARY(${compLibName}_DEBUG
       NAMES ${compLib}${CMAKE_DEBUG_POSTFIX}
       HINTS $ENV{SIMGEAR_DIR}
-      PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
+      PATH_SUFFIXES ${CMAKE_INSTALL_LIBDIR} libs64 libs libs/Win32 libs/Win64
       PATHS
       /usr/local
       /usr
@@ -84,7 +84,7 @@ macro(find_sg_component comp libs)
     FIND_LIBRARY(${compLibName}_RELEASE
       NAMES ${compLib}${CMAKE_RELEASE_POSTFIX}
       HINTS $ENV{SIMGEAR_DIR}
-      PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
+      PATH_SUFFIXES ${CMAKE_INSTALL_LIBDIR} libs64 libs libs/Win32 libs/Win64
       PATHS
       /usr/local
       /usr
@@ -126,14 +126,15 @@ if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
         io
         serial
         sound
-        structure
+        math
         props
+        structure
         xml
         misc
         threads
         debug
         magvar
-        math)
+    )
 
     set(scene_comps
         ephem
@@ -146,7 +147,7 @@ if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
     foreach(component ${comps})
         find_sg_component(${component} SIMGEAR_CORE_LIBRARIES)
     endforeach()
-        
+
     foreach(component ${scene_comps})
         find_sg_component(${component} SIMGEAR_LIBRARIES)
     endforeach()

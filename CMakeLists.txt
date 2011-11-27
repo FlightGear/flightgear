@@ -173,7 +173,7 @@ find_package(Threads REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(ALUT REQUIRED)
-find_package(OpenSceneGraph 2.8.1 REQUIRED osgText osgSim osgDB osgParticle osgFX osgUtil osgViewer osgGA)
+find_package(OpenSceneGraph 3.0.0 REQUIRED osgText osgSim osgDB osgParticle osgFX osgUtil osgViewer osgGA)
 
 if(ENABLE_FGADMIN)
   find_package(FLTK)
@@ -298,7 +298,7 @@ add_subdirectory(utils)
 add_subdirectory(man)
 
 set (INSTALL_DOCS 
-    README
+	README
 	README.OpenAL
 	README.plib
 	README.OSG

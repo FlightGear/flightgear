@@ -6,10 +6,10 @@ add_executable(fgadmin fgadmin_funcs.cxx main.cxx untarka.c)
 add_dependencies(fgadmin FGAdminUI)
 
 target_link_libraries(fgadmin FGAdminUI
-	${SIMGEAR_LIBRARIES}
+	${SIMGEAR_CORE_LIBRARIES}
 	${PLIB_LIBRARIES}
 	${FLTK_LIBRARIES}
 	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
 )
-	
+
 install(TARGETS fgadmin RUNTIME DESTINATION bin)
