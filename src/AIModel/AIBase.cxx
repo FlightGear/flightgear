@@ -894,6 +894,17 @@ int FGAIBase::_newAIModelID() {
 }
 
 
+FGAIModelData::FGAIModelData(SGPropertyNode *root)
+  : _nasal( new FGNasalModelData(root) ),
+    _path("")
+{
+}
+
+FGAIModelData::~FGAIModelData()
+{
+    delete _nasal;
+}
+
 void FGAIModelData::modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *n)
 {
     const char* fxpath = prop->getStringValue("sound/path");
