@@ -45,7 +45,7 @@ class SGMaterial;
 class FGAIManager;
 class FGAIFlightPlan;
 class FGFX;
-class FGAIModelData;	// define dblow
+class FGAIModelData;	// defined below
 
 
 class FGAIBase : public SGReferenced {
