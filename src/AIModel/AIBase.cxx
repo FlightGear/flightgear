@@ -38,6 +38,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
+#include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/props/props.hxx>
 
@@ -144,11 +145,13 @@ FGAIBase::~FGAIBase() {
             model_removed->setStringValue(props->getPath());
     }
 
+    if (_refID != 0 && _refID !=  1) {
+        SGSoundMgr *smgr = globals->get_soundmgr();
+        smgr->remove("aifx:"+_refID);
+    }
+
     delete fp;
     fp = 0;
-
-//  delete _fx;
-//  _fx = 0;
 }
 
 /** Cleanly remove the model
@@ -231,7 +234,7 @@ void FGAIBase::update(double dt) {
 
             // initialize the sound configuration
             SGSoundMgr *smgr = globals->get_soundmgr();
-            _fx = new FGFX(smgr, "aifx:"+_name+"-"+_callsign, props);
+            _fx = new FGFX(smgr, "aifx:"+_refID, props);
             _fx->init();
         }
     }
