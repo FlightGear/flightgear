@@ -65,7 +65,7 @@ FGRadioTransmission::FGRadioTransmission() {
 	
 }
 
-FGRadio::~FGRadio() 
+FGRadioTransmission::~FGRadioTransmission() 
 {
 }
 

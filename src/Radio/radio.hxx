@@ -57,8 +57,8 @@ private:
 	
 public:
 
-    FGRadio();
-    ~FGRadio();
+    FGRadioTransmission();
+    ~FGRadioTransmission();
 
     
     void setFrequency(double freq, int radio);
