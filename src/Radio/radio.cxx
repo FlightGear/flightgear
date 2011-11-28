@@ -33,7 +33,7 @@
 #include "itm.cpp"
 
 
-FGRadio::FGRadio() {
+FGRadioTransmission::FGRadioTransmission() {
 	
 	/** radio parameters (which should probably be set for each radio) */
 	
@@ -53,6 +53,10 @@ FGRadio::FGRadio() {
 	**/
 	_transmitter_power = 43.0;
 	
+	_tx_antenna_height = 2.0; // TX antenna height above ground level
+	
+	_rx_antenna_height = 2.0; // RX antenna height above ground level
+	
 	/** pilot plane's antenna gain + AI aircraft antenna gain
 	* 	real-life gain for conventional monopole/dipole antenna
 	**/
@@ -66,7 +70,7 @@ FGRadio::~FGRadio()
 }
 
 
-double FGRadio::getFrequency(int radio) {
+double FGRadioTransmission::getFrequency(int radio) {
 	double freq = 118.0;
 	switch (radio) {
 		case 1:
@@ -84,13 +88,13 @@ double FGRadio::getFrequency(int radio) {
 
 /*** TODO: receive multiplayer chat message and voice
 ***/
-void FGRadio::receiveChat(SGGeod tx_pos, double freq, string text, int ground_to_air) {
+void FGRadioTransmission::receiveChat(SGGeod tx_pos, double freq, string text, int ground_to_air) {
 
 }
 
 /*** TODO: receive navaid 
 ***/
-double FGRadio::receiveNav(SGGeod tx_pos, double freq, int transmission_type) {
+double FGRadioTransmission::receiveNav(SGGeod tx_pos, double freq, int transmission_type) {
 	
 	// typical VOR/LOC transmitter power appears to be 200 Watt ~ 53 dBm
 	// vor/loc typical sensitivity between -107 and -101 dBm
@@ -108,7 +112,7 @@ double FGRadio::receiveNav(SGGeod tx_pos, double freq, int transmission_type) {
 
 /*** Receive ATC radio communication as text
 ***/
-void FGRadio::receiveATC(SGGeod tx_pos, double freq, string text, int ground_to_air) {
+void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, int ground_to_air) {
 
 	
 	double comm1 = getFrequency(1);
@@ -193,7 +197,7 @@ void FGRadio::receiveATC(SGGeod tx_pos, double freq, string text, int ground_to_
 /***  Implement radio attenuation		
 	  based on the Longley-Rice propagation model
 ***/
-double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmission_type) {
+double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, int transmission_type) {
 
 	
 	
@@ -407,7 +411,7 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmiss
 *	 We are only worried about clutter loss, terrain influence 
 *	 on the first Fresnel zone is calculated in the ITM functions
 ***/
-void FGRadio::clutterLoss(double freq, double distance_m, double itm_elev[], deque<string> materials,
+void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm_elev[], deque<string> materials,
 	double transmitter_height, double receiver_height, int p_mode,
 	double horizons[], double &clutter_loss) {
 	
@@ -701,7 +705,7 @@ void FGRadio::clutterLoss(double freq, double distance_m, double itm_elev[], deq
 *		height: median clutter height
 *		density: radiowave attenuation factor
 ***/
-void FGRadio::get_material_properties(string mat_name, double &height, double &density) {
+void FGRadioTransmission::get_material_properties(string mat_name, double &height, double &density) {
 	
 	if(mat_name == "Landmass") {
 		height = 15.0;
@@ -814,7 +818,7 @@ void FGRadio::get_material_properties(string mat_name, double &height, double &d
 
 /*** implement simple LOS propagation model (WIP)
 ***/
-double FGRadio::LOS_calculate_attenuation(SGGeod pos, double freq, int transmission_type) {
+double FGRadioTransmission::LOS_calculate_attenuation(SGGeod pos, double freq, int transmission_type) {
 	double frq_mhz;
 	if( (freq < 118.0) || (freq > 137.0) )
 		frq_mhz = 125.0; 	// sane value, middle of bandplan

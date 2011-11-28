@@ -33,7 +33,7 @@
 using std::string;
 
 
-class FGRadio 
+class FGRadioTransmission 
 {
 private:
 	bool isOperable() const
@@ -42,6 +42,8 @@ private:
 	
 	double _receiver_sensitivity;
 	double _transmitter_power;
+	double _tx_antenna_height;
+	double _rx_antenna_height;
 	double _antenna_gain;
 	std::map<string, double[2]> _mat_database;
 	
@@ -62,6 +64,9 @@ public:
     void setFrequency(double freq, int radio);
     double getFrequency(int radio);
     void setTxPower(double txpower) { _transmitter_power = txpower; };
+    void setRxSensitivity(double sensitivity) { _receiver_sensitivity = sensitivity; };
+    void setTxAntennaHeight(double tx_antenna_height) { _tx_antenna_height = tx_antenna_height; };
+    void setRxAntennaHeight(double rx_antenna_height) { _rx_antenna_height = rx_antenna_height; };
     void setPropagationModel(int model) { _propagation_model = model; };
     // transmission_type: 0 for air to ground 1 for ground to air, 2 for air to air, 3 for pilot to ground, 4 for pilot to air
     void receiveATC(SGGeod tx_pos, double freq, string text, int transmission_type);
