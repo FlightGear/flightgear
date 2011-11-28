@@ -1,6 +1,8 @@
 # Locate SimGear
 # This module defines
-# SIMGEAR_LIBRARIES
+
+# SIMGEAR_CORE_LIBRARIES, a list of the core static libraries
+# SIMGEAR_LIBRARIES, a list of all the static libraries (core + scene)
 # SIMGEAR_FOUND, if false, do not try to link to SimGear
 # SIMGEAR_INCLUDE_DIR, where to find the headers
 #
@@ -23,49 +25,7 @@
 # (To distributed this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
-# Per my request, CMake should search for frameworks first in
-# the following order:
-# ~/Library/Frameworks/SimGear.framework/Headers
-# /Library/Frameworks/SimGear.framework/Headers
-# /System/Library/Frameworks/SimGear.framework/Headers
-#
-# On OS X, this will prefer the Framework version (if found) over others.
-# People will have to manually change the cache values of
-# SimGear_LIBRARIES to override this selection or set the CMake environment
-# CMAKE_INCLUDE_PATH to modify the search paths.
-
 include(SelectLibraryConfigurations)
-
-FIND_PATH(SIMGEAR_INCLUDE_DIR simgear/math/SGMath.hxx
-  HINTS $ENV{SIMGEAR_DIR}
-  PATH_SUFFIXES include
-  PATHS
-  ~/Library/Frameworks
-  /Library/Frameworks
-  /usr/local
-  /usr
-  /opt
-)
-
-message(STATUS ${SIMGEAR_INCLUDE_DIR})
-
-# check for dynamic framework/library
-FIND_LIBRARY(SIMGEAR_LIBRARIES
-  NAMES simgear SimGear
-  HINTS
-  $ENV{SIMGEAR_DIR}
-  PATH_SUFFIXES ${CMAKE_INSTALL_LIBDIR} libs64 libs libs/Win32 libs/Win64
-  PATHS
-  ~/Library/Frameworks
-  /Library/Frameworks
-  /usr/local
-  /usr
-  /opt
-)
-
-# dependent packages
-find_package(ZLIB REQUIRED)
-find_package(Threads REQUIRED)
 
 macro(find_sg_component comp libs)
     set(compLib "sg${comp}")
@@ -106,10 +66,62 @@ macro(find_sg_component comp libs)
     endif()
 endmacro()
 
+FIND_PATH(SIMGEAR_INCLUDE_DIR simgear/math/SGMath.hxx
+  HINTS $ENV{SIMGEAR_DIR}
+  PATH_SUFFIXES include
+  PATHS
+  ~/Library/Frameworks
+  /Library/Frameworks
+  /usr/local
+  /usr
+  /opt
+)
 
-if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
+message(STATUS ${SIMGEAR_INCLUDE_DIR})
+
+# dependent packages
+find_package(ZLIB REQUIRED)
+find_package(Threads REQUIRED)
+
+if(SIMGEAR_SHARED)
+    message(STATUS "looking for shared Simgear libraries")
+
+    # check for dynamic framework/library (experimental!)
+    FIND_LIBRARY(SIMGEAR_SHARED_CORE_LIBRARY
+      NAMES simgearCore SimGearCore
+      HINTS
+      $ENV{SIMGEAR_DIR}
+      PATH_SUFFIXES ${CMAKE_INSTALL_LIBDIR} libs64 libs libs/Win32 libs/Win64
+      PATHS
+      ~/Library/Frameworks
+      /Library/Frameworks
+      /usr/local
+      /usr
+      /opt
+    )
+
+    FIND_LIBRARY(SIMGEAR_SHARED_SCENE_LIBRARY
+      NAMES simgearScene SimGearScene
+      HINTS
+      $ENV{SIMGEAR_DIR}
+      PATH_SUFFIXES ${CMAKE_INSTALL_LIBDIR} libs64 libs libs/Win32 libs/Win64
+      PATHS
+      ~/Library/Frameworks
+      /Library/Frameworks
+      /usr/local
+      /usr
+      /opt
+    )
+    
+    set(SIMGEAR_CORE_LIBRARIES ${SIMGEAR_SHARED_CORE_LIBRARY})
+    set(SIMGEAR_LIBRARIES ${SIMGEAR_SHARED_SCENE_LIBRARY} ${SIMGEAR_SHARED_CORE_LIBRARY})
+    set(SIMGEAR_CORE_LIBRARY_DEPENDENCIES "")
+    
+else(SIMGEAR_SHARED)
+
     set(SIMGEAR_LIBRARIES "") # clear value
     set(SIMGEAR_CORE_LIBRARIES "") # clear value
+    message(STATUS "looking for static Simgear libraries")
     
   # note the order here affects the order Simgear libraries are
   # linked in, and hence ability to link when using a traditional
@@ -173,8 +185,7 @@ if(${SIMGEAR_LIBRARIES} STREQUAL "SIMGEAR_LIBRARIES-NOTFOUND")
             endif(have_rt)
         endif(NOT clock_gettime_in_libc)
     endif(NOT MSVC)
-
-endif()
+endif(SIMGEAR_SHARED)
 
 # now we've found SimGear, check its version
 
