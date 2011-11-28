@@ -381,18 +381,20 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmiss
 		point_to_point(itm_elev, receiver_height, transmitter_height,
 			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
 			pol, conf, rel, dbloss, strmode, p_mode, horizons, errnum);
-		
+		if( fgGetBool( "/sim/radio/use-clutter-attenuation", false ) )
+			clutterLoss(frq_mhz, distance_m, itm_elev, materials, receiver_height, transmitter_height, p_mode, horizons, clutter_loss);
 	}
 	else {
 		point_to_point(itm_elev, transmitter_height, receiver_height,
 			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
 			pol, conf, rel, dbloss, strmode, p_mode, horizons, errnum);
+		if( fgGetBool( "/sim/radio/use-clutter-attenuation", false ) )
+			clutterLoss(frq_mhz, distance_m, itm_elev, materials, transmitter_height, receiver_height, p_mode, horizons, clutter_loss);
 	}
 	SG_LOG(SG_GENERAL, SG_BULK,
 			"ITM:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, " << strmode << ", Error: " << errnum);
 	cerr << "ITM:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, " << strmode << ", Error: " << errnum << endl;
 	
-	clutterLoss(frq_mhz, distance_m, itm_elev, materials, transmitter_height, receiver_height, p_mode, horizons, clutter_loss);
 	cerr << "Clutter loss: " << clutter_loss << endl;
 	//if (errnum == 4)	// if parameters are outside sane values for lrprop, the alternative method is used
 	//	return -1;
