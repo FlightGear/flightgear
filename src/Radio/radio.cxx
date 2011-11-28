@@ -880,9 +880,4 @@ double FGRadio::LOS_calculate_attenuation(SGGeod pos, double freq, int transmiss
 	
 }
 
-/*** Material properties database
-***/
-void FGRadio::set_material_properties() {
-	
-	
-}
+
