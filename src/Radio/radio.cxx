@@ -70,7 +70,7 @@ FGRadioTransmission::FGRadioTransmission() {
 	_tx_line_losses = 2.0;
 	
 	_propagation_model = 2; //  choose between models via option: realistic radio on/off
-	_terrain_sampling_distance = 90.0; // regular SRTM is 90 meters
+	_terrain_sampling_distance = fgGetDouble("/sim/radio/sampling-distance", 90.0); // regular SRTM is 90 meters
 }
 
 FGRadioTransmission::~FGRadioTransmission() 
@@ -428,20 +428,21 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 	double horizons[], double &clutter_loss) {
 	
 	distance_m = itm_elev[0] * itm_elev[1]; // only consider elevation points
+	
 	if (p_mode == 0) {	// LOS: take each point and see how clutter height affects first Fresnel zone
 		int mat = 0;
-		int j=1; // first point is TX elevation, last is RX elevation
+		int j=1; 
 		for (int k=3;k < (int)(itm_elev[0]) + 2;k++) {
 			
 			double clutter_height = 0.0;	// mean clutter height for a certain terrain type
 			double clutter_density = 0.0;	// percent of reflected wave
 			get_material_properties(materials[mat], clutter_height, clutter_density);
-			//cerr << "Clutter:: material: " << materials[mat] << " height: " << clutter_height << ", density: " << clutter_density << endl;
+			
 			double grad = fabs(itm_elev[2] + transmitter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m;
 			// First Fresnel radius
 			double frs_rad = 548 * sqrt( (j * itm_elev[1] * (itm_elev[0] - j) * itm_elev[1] / 1000000) / (  distance_m * freq / 1000) );
 			assert(frs_rad > 0);
-			//cerr << "Clutter:: fresnel radius: " << frs_rad << endl;
+			
 			//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
 			
 			double min_elev = SGMiscd::min(itm_elev[2] + transmitter_height, itm_elev[(int)itm_elev[0] + 2] + receiver_height);
@@ -450,19 +451,19 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 				d1 = (itm_elev[0] - j) * itm_elev[1];
 			}
 			double ray_height = (grad * d1) + min_elev;
-			//cerr << "Clutter:: ray height: " << ray_height << " ground height:" << itm_elev[k] << endl;
+			
 			double clearance = ray_height - (itm_elev[k] + clutter_height) - frs_rad * 8/10;		
 			double intrusion = fabs(clearance);
-			//cerr << "Clutter:: clearance: " << clearance << endl;
+			
 			if (clearance >= 0) {
 				// no losses
 			}
 			else if (clearance < 0 && (intrusion < clutter_height)) {
 				
-				clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * freq/100;
+				clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * (freq/100) * (itm_elev[1]/100);
 			}
 			else if (clearance < 0 && (intrusion > clutter_height)) {
-				clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * freq/100;
+				clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * (freq/100) * (itm_elev[1]/100);
 			}
 			else {
 				// no losses
@@ -481,19 +482,19 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 			int last = 1;
 			/** perform the first pass */
 			int mat = 0;
-			int j=1; // first point is TX elevation, 2nd is obstruction elevation
+			int j=1; 
 			for (int k=3;k < num_points_1st + 2;k++) {
 				if (num_points_1st < 1)
 					break;
 				double clutter_height = 0.0;	// mean clutter height for a certain terrain type
 				double clutter_density = 0.0;	// percent of reflected wave
 				get_material_properties(materials[mat], clutter_height, clutter_density);
-				//cerr << "Clutter:: material: " << materials[mat] << " height: " << clutter_height << ", density: " << clutter_density << endl;
+				
 				double grad = fabs(itm_elev[2] + transmitter_height - itm_elev[num_points_1st + 2] + clutter_height) / distance_m;
 				// First Fresnel radius
 				double frs_rad = 548 * sqrt( (j * itm_elev[1] * (num_points_1st - j) * itm_elev[1] / 1000000) / ( num_points_1st * itm_elev[1] * freq / 1000) );
 				assert(frs_rad > 0);
-				//cerr << "Clutter:: fresnel radius: " << frs_rad << endl;
+				
 				//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
 				
 				double min_elev = SGMiscd::min(itm_elev[2] + transmitter_height, itm_elev[num_points_1st + 2] + clutter_height);
@@ -502,19 +503,19 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 					d1 = (num_points_1st - j) * itm_elev[1];
 				}
 				double ray_height = (grad * d1) + min_elev;
-				//cerr << "Clutter:: ray height: " << ray_height << " ground height:" << itm_elev[k] << endl;
+				
 				double clearance = ray_height - (itm_elev[k] + clutter_height) - frs_rad * 8/10;		
 				double intrusion = fabs(clearance);
-				//cerr << "Clutter:: clearance: " << clearance << endl;
+				
 				if (clearance >= 0) {
 					// no losses
 				}
 				else if (clearance < 0 && (intrusion < clutter_height)) {
 					
-					clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * freq/100;
+					clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * (freq/100) * (itm_elev[1]/100);
 				}
 				else if (clearance < 0 && (intrusion > clutter_height)) {
-					clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * freq/100;
+					clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * (freq/100) * (itm_elev[1]/100);
 				}
 				else {
 					// no losses
@@ -533,12 +534,12 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 				double clutter_height = 0.0;	// mean clutter height for a certain terrain type
 				double clutter_density = 0.0;	// percent of reflected wave
 				get_material_properties(materials[mat], clutter_height, clutter_density);
-				//cerr << "Clutter:: material: " << materials[mat] << " height: " << clutter_height << ", density: " << clutter_density << endl;
+				
 				double grad = fabs(itm_elev[last+1] + clutter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m;
 				// First Fresnel radius
 				double frs_rad = 548 * sqrt( (j * itm_elev[1] * (num_points_2nd - j) * itm_elev[1] / 1000000) / (  num_points_2nd * itm_elev[1] * freq / 1000) );
 				assert(frs_rad > 0);
-				//cerr << "Clutter:: fresnel radius: " << frs_rad << endl;
+				
 				//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
 				
 				double min_elev = SGMiscd::min(itm_elev[last+1] + clutter_height, itm_elev[(int)itm_elev[0] + 2] + receiver_height);
@@ -547,19 +548,19 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 					d1 = (num_points_2nd - j) * itm_elev[1];
 				}
 				double ray_height = (grad * d1) + min_elev;
-				//cerr << "Clutter:: ray height: " << ray_height << " ground height:" << itm_elev[k] << endl;
+				
 				double clearance = ray_height - (itm_elev[k] + clutter_height) - frs_rad * 8/10;		
 				double intrusion = fabs(clearance);
-				//cerr << "Clutter:: clearance: " << clearance << endl;
+				
 				if (clearance >= 0) {
 					// no losses
 				}
 				else if (clearance < 0 && (intrusion < clutter_height)) {
 					
-					clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * freq/100;
+					clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * (freq/100) * (itm_elev[1]/100);
 				}
 				else if (clearance < 0 && (intrusion > clutter_height)) {
-					clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * freq/100;
+					clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * (freq/100) * (itm_elev[1]/100);
 				}
 				else {
 					// no losses
@@ -572,10 +573,10 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 		else {	// double horizon: same as single horizon, except there are 3 segments
 			
 			int num_points_1st = (int)floor( horizons[0] * itm_elev[0] / distance_m ); 
-			int num_points_2nd = (int)ceil( (horizons[1] - horizons[0]) * itm_elev[0] / distance_m ); 
+			int num_points_2nd = (int)floor(horizons[1] * itm_elev[0] / distance_m ); 
 			int num_points_3rd = (int)itm_elev[0] - num_points_1st - num_points_2nd; 
-			
-			cerr << "Clutter:: points1: " << num_points_1st << " points2: " << num_points_2nd << " points3: " << num_points_3rd << endl;
+			cerr << "Double horizon:: horizon1: " << horizons[0] << " horizon2: " << horizons[1] << " distance: " << distance_m << endl;
+			cerr << "Double horizon:: points1: " << num_points_1st << " points2: " << num_points_2nd << " points3: " << num_points_3rd << endl;
 			int last = 1;
 			/** perform the first pass */
 			int mat = 0;
@@ -586,12 +587,12 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 				double clutter_height = 0.0;	// mean clutter height for a certain terrain type
 				double clutter_density = 0.0;	// percent of reflected wave
 				get_material_properties(materials[mat], clutter_height, clutter_density);
-				//cerr << "Clutter:: material: " << materials[mat] << " height: " << clutter_height << ", density: " << clutter_density << endl;
+				
 				double grad = fabs(itm_elev[2] + transmitter_height - itm_elev[num_points_1st + 2] + clutter_height) / distance_m;
 				// First Fresnel radius
 				double frs_rad = 548 * sqrt( (j * itm_elev[1] * (num_points_1st - j) * itm_elev[1] / 1000000) / (  num_points_1st * itm_elev[1] * freq / 1000) );
 				assert(frs_rad > 0);
-				//cerr << "Clutter:: fresnel radius: " << frs_rad << endl;
+				
 				//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
 				
 				double min_elev = SGMiscd::min(itm_elev[2] + transmitter_height, itm_elev[num_points_1st + 2] + clutter_height);
@@ -600,19 +601,19 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 					d1 = (num_points_1st - j) * itm_elev[1];
 				}
 				double ray_height = (grad * d1) + min_elev;
-				//cerr << "Clutter:: ray height: " << ray_height << " ground height:" << itm_elev[k] << endl;
+				
 				double clearance = ray_height - (itm_elev[k] + clutter_height) - frs_rad * 8/10;		
 				double intrusion = fabs(clearance);
-				//cerr << "Clutter:: clearance: " << clearance << endl;
+				
 				if (clearance >= 0) {
 					// no losses
 				}
 				else if (clearance < 0 && (intrusion < clutter_height)) {
 					
-					clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * freq/100;
+					clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * (freq/100) * (itm_elev[1]/100);
 				}
 				else if (clearance < 0 && (intrusion > clutter_height)) {
-					clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * freq/100;
+					clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * (freq/100) * (itm_elev[1]/100);
 				}
 				else {
 					// no losses
@@ -630,11 +631,11 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 				double clutter_height = 0.0;	// mean clutter height for a certain terrain type
 				double clutter_density = 0.0;	// percent of reflected wave
 				get_material_properties(materials[mat], clutter_height, clutter_density);
-				//cerr << "Clutter:: material: " << materials[mat] << " height: " << clutter_height << ", density: " << clutter_density << endl;
+				
 				double grad = fabs(itm_elev[last+1] + clutter_height - itm_elev[num_points_1st + num_points_2nd + 2] + clutter_height) / distance_m;
 				// First Fresnel radius
 				double frs_rad = 548 * sqrt( (j * itm_elev[1] * (num_points_2nd - j) * itm_elev[1] / 1000000) / (  num_points_2nd * itm_elev[1] * freq / 1000) );
-				//cerr << "Clutter:: fresnel radius: " << frs_rad << " points2: " << num_points_2nd << " j: " << j << endl;
+				//cerr << "Double horizon second pass:: fresnel radius: " << frs_rad << " points2: " << num_points_2nd << " j: " << j << endl;
 				assert(frs_rad > 0);
 				//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
 				
@@ -644,19 +645,19 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 					d1 = (num_points_2nd - j) * itm_elev[1];
 				}
 				double ray_height = (grad * d1) + min_elev;
-				//cerr << "Clutter:: ray height: " << ray_height << " ground height:" << itm_elev[k] << endl;
+				
 				double clearance = ray_height - (itm_elev[k] + clutter_height) - frs_rad * 8/10;		
 				double intrusion = fabs(clearance);
-				//cerr << "Clutter:: clearance: " << clearance << endl;
+				
 				if (clearance >= 0) {
 					// no losses
 				}
 				else if (clearance < 0 && (intrusion < clutter_height)) {
 					
-					clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * freq/100;
+					clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * (freq/100) * (itm_elev[1]/100);
 				}
 				else if (clearance < 0 && (intrusion > clutter_height)) {
-					clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * freq/100;
+					clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * (freq/100) * (itm_elev[1]/100);
 				}
 				else {
 					// no losses
@@ -675,13 +676,13 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 				double clutter_height = 0.0;	// mean clutter height for a certain terrain type
 				double clutter_density = 0.0;	// percent of reflected wave
 				get_material_properties(materials[mat], clutter_height, clutter_density);
-				//cerr << "Clutter:: material: " << materials[mat] << " height: " << clutter_height << ", density: " << clutter_density << endl;
+				
 				double grad = fabs(itm_elev[last2+1] + clutter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m;
 				// First Fresnel radius
 				double frs_rad = 548 * sqrt( (j * itm_elev[1] * (num_points_3rd - j) * itm_elev[1] / 1000000) / (  num_points_3rd * itm_elev[1] * freq / 1000) );
-				cerr << "Clutter:: fresnel radius: " << frs_rad << " points2: " << num_points_3rd << " j: " << j << endl;
+				//cerr << "Double horizon third pass:: fresnel radius: " << frs_rad << " points3: " << num_points_3rd << " j: " << j << endl;
 				assert(frs_rad > 0);
-				//cerr << "Clutter:: fresnel radius: " << frs_rad << endl;
+				
 				//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
 				
 				double min_elev = SGMiscd::min(itm_elev[last2+1] + clutter_height, itm_elev[(int)itm_elev[0] + 2] + receiver_height);
@@ -690,19 +691,19 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 					d1 = (num_points_3rd - j) * itm_elev[1];
 				}
 				double ray_height = (grad * d1) + min_elev;
-				//cerr << "Clutter:: ray height: " << ray_height << " ground height:" << itm_elev[k] << endl;
+				
 				double clearance = ray_height - (itm_elev[k] + clutter_height) - frs_rad * 8/10;		
 				double intrusion = fabs(clearance);
-				//cerr << "Clutter:: clearance: " << clearance << endl;
+				
 				if (clearance >= 0) {
 					// no losses
 				}
 				else if (clearance < 0 && (intrusion < clutter_height)) {
 					
-					clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * freq/100;
+					clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * (freq/100) * (itm_elev[1]/100);
 				}
 				else if (clearance < 0 && (intrusion > clutter_height)) {
-					clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * freq/100;
+					clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * (freq/100) * (itm_elev[1]/100);
 				}
 				else {
 					// no losses
