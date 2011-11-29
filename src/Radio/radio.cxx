@@ -23,6 +23,7 @@
 #endif
 
 #include <math.h>
+#define NDEBUG
 #include <assert.h>
 #include <stdlib.h>
 #include <deque>
@@ -478,7 +479,7 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 		if (horizons[1] == 0.0) {	//	single horizon: same as above, except pass twice using the highest point
 			int num_points_1st = (int)floor( horizons[0] * itm_elev[0]/ distance_m ); 
 			int num_points_2nd = (int)ceil( (distance_m - horizons[0]) * itm_elev[0] / distance_m ); 
-			cerr << "Diffraction 1 horizon:: points1: " << num_points_1st << " points2: " << num_points_2nd << endl;
+			//cerr << "Diffraction 1 horizon:: points1: " << num_points_1st << " points2: " << num_points_2nd << endl;
 			int last = 1;
 			/** perform the first pass */
 			int mat = 0;
@@ -575,8 +576,8 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 			int num_points_1st = (int)floor( horizons[0] * itm_elev[0] / distance_m ); 
 			int num_points_2nd = (int)floor(horizons[1] * itm_elev[0] / distance_m ); 
 			int num_points_3rd = (int)itm_elev[0] - num_points_1st - num_points_2nd; 
-			cerr << "Double horizon:: horizon1: " << horizons[0] << " horizon2: " << horizons[1] << " distance: " << distance_m << endl;
-			cerr << "Double horizon:: points1: " << num_points_1st << " points2: " << num_points_2nd << " points3: " << num_points_3rd << endl;
+			//cerr << "Double horizon:: horizon1: " << horizons[0] << " horizon2: " << horizons[1] << " distance: " << distance_m << endl;
+			//cerr << "Double horizon:: points1: " << num_points_1st << " points2: " << num_points_2nd << " points3: " << num_points_3rd << endl;
 			int last = 1;
 			/** perform the first pass */
 			int mat = 0;
@@ -635,7 +636,7 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 				double grad = fabs(itm_elev[last+1] + clutter_height - itm_elev[num_points_1st + num_points_2nd + 2] + clutter_height) / distance_m;
 				// First Fresnel radius
 				double frs_rad = 548 * sqrt( (j * itm_elev[1] * (num_points_2nd - j) * itm_elev[1] / 1000000) / (  num_points_2nd * itm_elev[1] * freq / 1000) );
-				//cerr << "Double horizon second pass:: fresnel radius: " << frs_rad << " points2: " << num_points_2nd << " j: " << j << endl;
+				
 				assert(frs_rad > 0);
 				//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
 				
@@ -680,7 +681,7 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 				double grad = fabs(itm_elev[last2+1] + clutter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m;
 				// First Fresnel radius
 				double frs_rad = 548 * sqrt( (j * itm_elev[1] * (num_points_3rd - j) * itm_elev[1] / 1000000) / (  num_points_3rd * itm_elev[1] * freq / 1000) );
-				//cerr << "Double horizon third pass:: fresnel radius: " << frs_rad << " points3: " << num_points_3rd << " j: " << j << endl;
+				
 				assert(frs_rad > 0);
 				
 				//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
