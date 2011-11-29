@@ -45,6 +45,11 @@ private:
 	double _tx_antenna_height;
 	double _rx_antenna_height;
 	double _antenna_gain;
+	double _rx_antenna_gain;
+	double _tx_antenna_gain;
+	double _rx_line_losses;
+	double _tx_line_losses;
+	double _terrain_sampling_distance;
 	std::map<string, double[2]> _mat_database;
 	
 	int _propagation_model; /// 0 none, 1 round Earth, 2 ITM
