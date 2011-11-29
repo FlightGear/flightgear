@@ -116,6 +116,7 @@ if(SIMGEAR_SHARED)
     set(SIMGEAR_CORE_LIBRARIES ${SIMGEAR_SHARED_CORE_LIBRARY})
     set(SIMGEAR_LIBRARIES ${SIMGEAR_SHARED_SCENE_LIBRARY} ${SIMGEAR_SHARED_CORE_LIBRARY})
     set(SIMGEAR_CORE_LIBRARY_DEPENDENCIES "")
+    set(SIMGEAR_SCENE_LIBRARY_DEPENDENCIES "")
     
 else(SIMGEAR_SHARED)
 
@@ -127,17 +128,13 @@ else(SIMGEAR_SHARED)
   # linked in, and hence ability to link when using a traditional
   # linker such as GNU ld on Linux
     set(comps
-        tsync
         environment
         nasal
         bucket
-        bvh
-        util 
         route
         timing
         io
         serial
-        sound
         math
         props
         structure
@@ -149,12 +146,16 @@ else(SIMGEAR_SHARED)
     )
 
     set(scene_comps
+        tsync
         ephem
         sky
         material
         tgdb
         model
-        screen)
+        screen
+        bvh
+        util
+        sound)
             
     foreach(component ${comps})
         find_sg_component(${component} SIMGEAR_CORE_LIBRARIES)
@@ -170,6 +171,11 @@ else(SIMGEAR_SHARED)
     set(SIMGEAR_CORE_LIBRARY_DEPENDENCIES
         ${CMAKE_THREAD_LIBS_INIT}
         ${ZLIB_LIBRARY})
+
+    set(SIMGEAR_SCENE_LIBRARY_DEPENDENCIES 
+        ${ALUT_LIBRARY} 
+    	${OPENAL_LIBRARY}
+    	${LIBSVN_LIBRARIES})
 
     if(WIN32)
         list(APPEND SIMGEAR_CORE_LIBRARY_DEPENDENCIES ws2_32.lib)
