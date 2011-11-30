@@ -27,13 +27,11 @@
 
 include(SelectLibraryConfigurations)
 
-macro(find_sg_component comp libs)
-    set(compLib "sg${comp}")
-    string(TOUPPER "SIMGEAR_${comp}" compLibBase)
-    set( compLibName ${compLibBase}_LIBRARY )
-
-    FIND_LIBRARY(${compLibName}_DEBUG
-      NAMES ${compLib}${CMAKE_DEBUG_POSTFIX}
+macro(find_sg_library libName varName libs)
+    set(libVarName "${varName}_LIBRARY")
+    
+    FIND_LIBRARY(${libVarName}_DEBUG
+      NAMES ${libName}${CMAKE_DEBUG_POSTFIX}
       HINTS $ENV{SIMGEAR_DIR}
       PATH_SUFFIXES ${CMAKE_INSTALL_LIBDIR} libs64 libs libs/Win32 libs/Win64
       PATHS
@@ -41,8 +39,8 @@ macro(find_sg_component comp libs)
       /usr
       /opt
     )
-    FIND_LIBRARY(${compLibName}_RELEASE
-      NAMES ${compLib}${CMAKE_RELEASE_POSTFIX}
+    FIND_LIBRARY(${libVarName}_RELEASE
+      NAMES ${libName}${CMAKE_RELEASE_POSTFIX}
       HINTS $ENV{SIMGEAR_DIR}
       PATH_SUFFIXES ${CMAKE_INSTALL_LIBDIR} libs64 libs libs/Win32 libs/Win64
       PATHS
@@ -50,20 +48,35 @@ macro(find_sg_component comp libs)
       /usr
       /opt
     )
-    select_library_configurations( ${compLibBase} )
+    
+   # message(STATUS "before: Simgear ${${libVarName}_RELEASE} ")
+  #  message(STATUS "before: Simgear ${${libVarName}_DEBUG} ")
+    
+    select_library_configurations( ${varName} )
 
-    set(componentLibRelease ${${compLibName}_RELEASE})
-    #message(STATUS "Simgear ${compLibName}_RELEASE ${componentLibRelease}")
-    set(componentLibDebug ${${compLibName}_DEBUG})
-    #message(STATUS "Simgear ${compLibName}_DEBUG ${componentLibDebug}")
-    if (NOT ${compLibName}_DEBUG)
-        if (NOT ${compLibName}_RELEASE)
+  #  message(STATUS "after:Simgear ${${libVarName}_RELEASE} ")
+  #  message(STATUS "after:Simgear ${${libVarName}_DEBUG} ")
+
+    set(componentLibRelease ${${libVarName}_RELEASE})
+  #  message(STATUS "Simgear ${libVarName}_RELEASE ${componentLibRelease}")
+    set(componentLibDebug ${${libVarName}_DEBUG})
+   # message(STATUS "Simgear ${libVarName}_DEBUG ${componentLibDebug}")
+    
+    if (NOT ${libVarName}_DEBUG)
+        if (NOT ${libVarName}_RELEASE)
             #message(STATUS "found ${componentLib}")
             list(APPEND ${libs} ${componentLibRelease})
         endif()
     else()
         list(APPEND ${libs} optimized ${componentLibRelease} debug ${componentLibDebug})
     endif()
+endmacro()
+
+macro(find_sg_component comp libs)
+    set(compLib "sg${comp}")
+    string(TOUPPER "SIMGEAR_${comp}" libVar)
+    
+    find_sg_library(${compLib} ${libVar} ${libs})
 endmacro()
 
 FIND_PATH(SIMGEAR_INCLUDE_DIR simgear/math/SGMath.hxx
@@ -77,7 +90,7 @@ FIND_PATH(SIMGEAR_INCLUDE_DIR simgear/math/SGMath.hxx
   /opt
 )
 
-message(STATUS ${SIMGEAR_INCLUDE_DIR})
+# message(STATUS ${SIMGEAR_INCLUDE_DIR})
 
 # dependent packages
 find_package(ZLIB REQUIRED)
@@ -86,38 +99,16 @@ find_package(Threads REQUIRED)
 if(SIMGEAR_SHARED)
     message(STATUS "looking for shared Simgear libraries")
 
-    # check for dynamic framework/library (experimental!)
-    FIND_LIBRARY(SIMGEAR_SHARED_CORE_LIBRARY
-      NAMES simgearCore SimGearCore
-      HINTS
-      $ENV{SIMGEAR_DIR}
-      PATH_SUFFIXES ${CMAKE_INSTALL_LIBDIR} libs64 libs libs/Win32 libs/Win64
-      PATHS
-      ~/Library/Frameworks
-      /Library/Frameworks
-      /usr/local
-      /usr
-      /opt
-    )
+    find_sg_library(SimGearCore SIMGEAR_CORE SIMGEAR_CORE_LIBRARIES)
+    find_sg_library(SimGearScene SIMGEAR_SCENE SIMGEAR_LIBRARIES)
 
-    FIND_LIBRARY(SIMGEAR_SHARED_SCENE_LIBRARY
-      NAMES simgearScene SimGearScene
-      HINTS
-      $ENV{SIMGEAR_DIR}
-      PATH_SUFFIXES ${CMAKE_INSTALL_LIBDIR} libs64 libs libs/Win32 libs/Win64
-      PATHS
-      ~/Library/Frameworks
-      /Library/Frameworks
-      /usr/local
-      /usr
-      /opt
-    )
-    
-    set(SIMGEAR_CORE_LIBRARIES ${SIMGEAR_SHARED_CORE_LIBRARY})
-    set(SIMGEAR_LIBRARIES ${SIMGEAR_SHARED_SCENE_LIBRARY} ${SIMGEAR_SHARED_CORE_LIBRARY})
+ 
+    list(APPEND SIMGEAR_LIBRARIES ${SIMGEAR_CORE_LIBRARIES})
     set(SIMGEAR_CORE_LIBRARY_DEPENDENCIES "")
     set(SIMGEAR_SCENE_LIBRARY_DEPENDENCIES "")
     
+   # message(STATUS "core lib ${SIMGEAR_CORE_LIBRARIES}")
+  #  message(STATUS "all libs ${SIMGEAR_LIBRARIES}")
 else(SIMGEAR_SHARED)
 
     set(SIMGEAR_LIBRARIES "") # clear value
@@ -165,9 +156,12 @@ else(SIMGEAR_SHARED)
         find_sg_component(${component} SIMGEAR_LIBRARIES)
     endforeach()
 
-    # again link order matters - scene libraires depend on core ones
+    
+    # again link order matters - scene libraries depend on core ones
     list(APPEND SIMGEAR_LIBRARIES ${SIMGEAR_CORE_LIBRARIES})
 
+    #message(STATUS "all libs ${SIMGEAR_LIBRARIES}")
+    
     set(SIMGEAR_CORE_LIBRARY_DEPENDENCIES
         ${CMAKE_THREAD_LIBS_INIT}
         ${ZLIB_LIBRARY})
