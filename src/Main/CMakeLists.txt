@@ -88,6 +88,7 @@ add_executable(metar metar_main.cxx)
 target_link_libraries(metar
 	${SIMGEAR_LIBRARIES}
 	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
+	${SIMGEAR_SCENE_LIBRARY_DEPENDENCIES}
 	${PLATFORM_LIBS}
 )
 
