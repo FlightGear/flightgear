@@ -7,6 +7,9 @@ include (CheckIncludeFile)
 
 project(FlightGear)
 
+# We have some custom .cmake scripts not in the official distribution.
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
+
 if(${CMAKE_VERSION} VERSION_GREATER 2.8.4)
     # use official include provided by latest CMake
     include(GNUInstallDirs)
@@ -45,9 +48,6 @@ set(CPACK_SOURCE_GENERATOR TBZ2 ZIP)
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "flightgear-${FLIGHTGEAR_VERSION}" CACHE INTERNAL "tarball basename")
 
 include (CPack)
-
-# We have some custom .cmake scripts not in the official distribution.
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
 
 if (FG_DATA_DIR)
     message(STATUS "Using explicit data-dir: ${FG_DATA_DIR}")
