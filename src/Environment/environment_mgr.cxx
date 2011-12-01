@@ -55,16 +55,12 @@ public:
 
 private:
   FGClouds * _fgClouds;
-  SGPropertyNode_ptr _shaderNode;
   SGPropertyNode_ptr _enableNode;
 };
 
 FG3DCloudsListener::FG3DCloudsListener( FGClouds * fgClouds ) :
     _fgClouds( fgClouds ) 
 {
-  _shaderNode = fgGetNode( "/sim/rendering/shader-effects", true );
-  _shaderNode->addChangeListener( this );
-
   _enableNode = fgGetNode( "/sim/rendering/clouds3d-enable", true );
   _enableNode->addChangeListener( this );
 
@@ -74,12 +70,11 @@ FG3DCloudsListener::FG3DCloudsListener( FGClouds * fgClouds ) :
 FG3DCloudsListener::~FG3DCloudsListener()
 {
   _enableNode->removeChangeListener( this );
-  _shaderNode->removeChangeListener( this );
 }
 
 void FG3DCloudsListener::valueChanged( SGPropertyNode * node )
 {
-  _fgClouds->set_3dClouds( _enableNode->getBoolValue() && _shaderNode->getBoolValue() );
+  _fgClouds->set_3dClouds( _enableNode->getBoolValue() );
 }
 
 FGEnvironmentMgr::FGEnvironmentMgr () :

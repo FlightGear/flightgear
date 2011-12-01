@@ -5,8 +5,18 @@ include (CheckCSourceCompiles)
 include (CheckCXXSourceCompiles)
 include (CheckIncludeFile)
 
-
 project(FlightGear)
+
+# We have some custom .cmake scripts not in the official distribution.
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
+
+if(${CMAKE_VERSION} VERSION_GREATER 2.8.4)
+    # use official include provided by latest CMake
+    include(GNUInstallDirs)
+else(${CMAKE_VERSION} VERSION_GREATER 2.8.4)
+    # backward compatibility: use our own module for older cmake versions
+    include(OldGNUInstallDirs)
+endif(${CMAKE_VERSION} VERSION_GREATER 2.8.4)
 
 set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "add a postfix, usually d on windows")
 set(CMAKE_RELEASE_POSTFIX "" CACHE STRING "add a postfix, usually empty on windows")
@@ -18,9 +28,15 @@ file(READ version versionFile)
 string(STRIP ${versionFile} FLIGHTGEAR_VERSION) 
 
 #packaging
+if(EXISTS ${PROJECT_SOURCE_DIR}/.gitignore)
+    file(READ .gitignore CPACK_SOURCE_IGNORE_FILES)
+else()
+    # clean tar-balls do not contain SCM (.git/.gitignore/...) files.
+    set(CPACK_SOURCE_IGNORE_FILES
+      "^${PROJECT_SOURCE_DIR}/.git;\\\\.gitignore;Makefile.am;~$;${CPACK_SOURCE_IGNORE_FILES}")
+endif()
 
 # split version string into components, note CMAKE_MATCH_0 is the entire regexp match
-file(READ .gitignore CPACK_SOURCE_IGNORE_FILES)
 string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)" CPACK_PACKAGE_VERSION ${FLIGHTGEAR_VERSION} )
 set(CPACK_PACKAGE_VERSION_MAJOR ${CMAKE_MATCH_1}) 
 set(CPACK_PACKAGE_VERSION_MINOR ${CMAKE_MATCH_2})
@@ -30,13 +46,8 @@ SET(CPACK_RESOURCE_FILE_README "${PROJECT_SOURCE_DIR}/README")
 
 set(CPACK_SOURCE_GENERATOR TBZ2 ZIP)
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "flightgear-${FLIGHTGEAR_VERSION}" CACHE INTERNAL "tarball basename")
-#set(CPACK_SOURCE_IGNORE_FILES
-#  "^${PROJECT_SOURCE_DIR}/.git;\\\\.gitignore;Makefile.am;~$;${CPACK_SOURCE_IGNORE_FILES}")
 
 include (CPack)
-
-# We have some custom .cmake scripts not in the official distribution.
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}")
 
 if (FG_DATA_DIR)
     message(STATUS "Using explicit data-dir: ${FG_DATA_DIR}")
@@ -173,7 +184,7 @@ find_package(Threads REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(ALUT REQUIRED)
-find_package(OpenSceneGraph 2.8.1 REQUIRED osgText osgSim osgDB osgParticle osgFX osgUtil osgViewer osgGA)
+find_package(OpenSceneGraph 3.0.0 REQUIRED osgText osgSim osgDB osgParticle osgFX osgUtil osgViewer osgGA)
 
 if(ENABLE_FGADMIN)
   find_package(FLTK)
@@ -298,13 +309,13 @@ add_subdirectory(utils)
 add_subdirectory(man)
 
 set (INSTALL_DOCS 
-    README
+	README
 	README.OpenAL
 	README.plib
 	README.OSG
 	README.SimGear)
 
-INSTALL(FILES ${INSTALL_DOCS} DESTINATION doc OPTIONAL)
+INSTALL(FILES ${INSTALL_DOCS} DESTINATION ${CMAKE_INSTALL_DOCDIR} OPTIONAL)
 
 #-----------------------------------------------------------------------------
 ### uninstall target

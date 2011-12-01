@@ -24,6 +24,8 @@
 #  include <config.h>
 #endif
 
+#include <string.h>
+
 #include <simgear/compiler.h>
 
 #include <string>
@@ -36,6 +38,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/model/modellib.hxx>
 #include <simgear/scene/util/SGNodeMasks.hxx>
+#include <simgear/sound/soundmgr_openal.hxx>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/props/props.hxx>
 
@@ -72,6 +75,8 @@ FGAIBase::FGAIBase(object_type ot, bool enableHot) :
     _refID( _newAIModelID() ),
     _otype(ot),
     _initialized(false),
+    _aimodel(0),
+    _fxpath(""),
     _fx(0)
 
 {
@@ -139,8 +144,11 @@ FGAIBase::~FGAIBase() {
         if (parent)
             model_removed->setStringValue(props->getPath());
     }
-    delete _fx;
-    _fx = 0;
+
+    if (_refID != 0 && _refID !=  1) {
+        SGSoundMgr *smgr = globals->get_soundmgr();
+        smgr->remove("aifx:"+_refID);
+    }
 
     delete fp;
     fp = 0;
@@ -216,6 +224,20 @@ void FGAIBase::update(double dt) {
         velocity = SGVec3d( speed_north_deg_sec, speed_east_deg_sec, pitch*speed );
         _fx->set_velocity( velocity );
     }
+    else if (_aimodel)
+    {
+        string fxpath = _aimodel->get_sound_path();
+        if (fxpath != "")
+        {
+            _fxpath = fxpath;
+            props->setStringValue("sim/sound/path", _fxpath.c_str());
+
+            // initialize the sound configuration
+            SGSoundMgr *smgr = globals->get_soundmgr();
+            _fx = new FGFX(smgr, "aifx:"+_refID, props);
+            _fx->init();
+        }
+    }
 }
 
 /** update LOD properties of the model */
@@ -285,7 +307,8 @@ bool FGAIBase::init(bool search_in_AI_path) {
     else
         _installed = true;
 
-    osg::Node * mdl = SGModelLib::loadDeferredModel(f, props, new FGNasalModelData(props));
+    _aimodel = new FGAIModelData(props);
+    osg::Node * mdl = SGModelLib::loadDeferredModel(f, props, _aimodel);
 
     if (_model.valid())
     {
@@ -314,17 +337,6 @@ bool FGAIBase::init(bool search_in_AI_path) {
 
         // Get the sound-path tag from the configuration file and store it
         // in the property tree.
-        string fxpath = props->getStringValue("sim/sound/path");
-        if ( !fxpath.empty() )
-        {
-            props->setStringValue("sim/sound/path", fxpath.c_str());
-
-            // initialize the sound configuration
-            SGSoundMgr *smgr = globals->get_soundmgr();
-            _fx = new FGFX(smgr, "aifx:"+f, props);
-            _fx->init();
-        }
-
         _initialized = true;
 
     } else if (!model_path.empty()) {
@@ -884,3 +896,26 @@ int FGAIBase::_newAIModelID() {
     return id;
 }
 
+
+FGAIModelData::FGAIModelData(SGPropertyNode *root)
+  : _nasal( new FGNasalModelData(root) ),
+    _path("")
+{
+}
+
+FGAIModelData::~FGAIModelData()
+{
+    delete _nasal;
+}
+
+void FGAIModelData::modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *n)
+{
+    const char* fxpath = prop->getStringValue("sound/path");
+    if (fxpath) {
+        string sound_path = string(fxpath);
+        if (sound_path != "") {
+            _path = "/AI/"+sound_path;
+        }
+    }
+    _nasal->modelLoaded(path, prop, n);
+}

@@ -47,7 +47,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_WINDS "$Id: FGWinds.h,v 1.6 2011/10/22 15:11:24 bcoconni Exp $"
+#define ID_WINDS "$Id: FGWinds.h,v 1.9 2011/11/19 14:14:57 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -154,7 +154,7 @@ public:
   virtual void SetWindNED(const FGColumnVector3& wind) { vWindNED=wind; }
 
   /// Retrieves the wind components in NED frame.
-  virtual FGColumnVector3& GetWindNED(void) { return vWindNED; }
+  virtual const FGColumnVector3& GetWindNED(void) const { return vWindNED; }
 
   /// Retrieves a wind component in NED frame.
   virtual double GetWindNED(int idx) const {return vWindNED(idx);}
@@ -194,7 +194,7 @@ public:
   virtual double GetTurbNED(int idx) const {return vTurbulenceNED(idx);}
 
   /// Retrieves the gust components in NED frame.
-  virtual FGColumnVector3& GetGustNED(void) {return vGustNED;}
+  virtual const FGColumnVector3& GetGustNED(void) const {return vGustNED;}
 
   /** Turbulence models available: ttNone, ttStandard, ttBerndt, ttCulp, ttMilspec, ttTustin */
   virtual void   SetTurbType(tType tt) {turbType = tt;}
@@ -264,7 +264,14 @@ public:
     double ringRadius;                             ///<- The radius of the ring (feet).
     double ringCoreRadius;                         ///<- The cross-section "core" radius of the ring (feet).
     double circulation;                            ///<- The circulation (gamma) (feet-squared per second).
-    struct OneMinusCosineProfile oneMCosineProfile;
+    struct OneMinusCosineProfile oneMCosineProfile;///<- A gust profile structure.
+    UpDownBurst() {                                ///<- Constructor
+      ringLatitude = ringLongitude = 0.0;
+      ringAltitude = 1000.0;
+      ringRadius = 2000.0;
+      ringCoreRadius = 100.0;
+      circulation = 100000.0;
+    }
   };
 
   // 1 - Cosine gust setters
@@ -293,11 +300,17 @@ public:
   /// Specifies the Z component of velocity in the specified gust frame (ft/sec).
   virtual void GustZComponent(double z) {oneMinusCosineGust.vWind(eZ) = z;}
 
+  // Up- Down-burst functions
+  void NumberOfUpDownburstCells(int num);
+
   struct Inputs {
     double V;
     double wingspan;
     double DistanceAGL;
     double AltitudeASL;
+    double longitude;
+    double latitude;
+    double planetRadius;
     FGMatrix33 Tl2b;
     FGMatrix33 Tw2b;
     double totalDeltaT;
@@ -320,6 +333,7 @@ private:
   FGColumnVector3 vTurbPQR;
 
   struct OneMinusCosineGust oneMinusCosineGust;
+  std::vector <struct UpDownBurst*> UpDownBurstCells;
 
   // Dryden turbulence model
   double windspeed_at_20ft; ///< in ft/s
@@ -334,12 +348,13 @@ private:
   FGColumnVector3 vBurstGust;
   FGColumnVector3 vTurbulenceNED;
 
-  /// Get T, P and rho for a standard atmosphere at the given altitude.
   void Turbulence(double h);
+  void UpDownBurst();
 
   void CosineGust();
   double CosineGustProfile( double startDuration, double steadyDuration,
                             double endDuration, double elapsedTime);
+  double DistanceFromRingCenter(double lat, double lon);
 
   virtual void bind(void);
   void Debug(int from);

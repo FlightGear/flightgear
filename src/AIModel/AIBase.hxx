@@ -26,13 +26,13 @@
 #include <simgear/constants.h>
 #include <simgear/math/SGMath.hxx>
 #include <simgear/scene/model/placement.hxx>
+#include <simgear/scene/model/modellib.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/structure/SGReferenced.hxx>
 #include <simgear/sg_inlines.h>
 
 #include <simgear/math/sg_geodesy.hxx>
-
 
 #include <Main/fg_props.hxx>
 
@@ -44,6 +44,9 @@ class SGMaterial;
 class FGAIManager;
 class FGAIFlightPlan;
 class FGFX;
+class FGNasalModelData;
+class FGAIModelData;	// defined below
+
 
 class FGAIBase : public SGReferenced {
 
@@ -226,6 +229,10 @@ private:
     object_type _otype;
     bool _initialized;
     osg::ref_ptr<osg::LOD> _model; //The 3D model LOD object
+
+    FGAIModelData* _aimodel;
+
+    string _fxpath;
     SGSharedPtr<FGFX>  _fx;
 
 public:
@@ -440,5 +447,18 @@ inline double FGAIBase::calcRecipBearingDeg(double bearing){
 inline void FGAIBase::setMaxSpeed(double m) {
     _max_speed = m;
 }
+
+
+class FGAIModelData : public simgear::SGModelData {
+public:
+    FGAIModelData(SGPropertyNode *root = 0);
+    ~FGAIModelData();
+    void modelLoaded(const string& path, SGPropertyNode *prop, osg::Node *n);
+    inline string& get_sound_path() { return _path; };
+
+private:
+    FGNasalModelData *_nasal;
+    string _path;
+};
 
 #endif	// _FG_AIBASE_HXX

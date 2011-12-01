@@ -49,7 +49,7 @@ INCLUDES
 DEFINITIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#define ID_PROPAGATE "$Id: FGPropagate.h,v 1.64 2011/10/14 22:46:49 bcoconni Exp $"
+#define ID_PROPAGATE "$Id: FGPropagate.h,v 1.67 2011/11/09 22:07:17 bcoconni Exp $"
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FORWARD DECLARATIONS
@@ -93,7 +93,7 @@ CLASS DOCUMENTATION
     @endcode
 
     @author Jon S. Berndt, Mathias Froehlich, Bertrand Coconnier
-    @version $Id: FGPropagate.h,v 1.64 2011/10/14 22:46:49 bcoconni Exp $
+    @version $Id: FGPropagate.h,v 1.67 2011/11/09 22:07:17 bcoconni Exp $
   */
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -257,7 +257,7 @@ public:
       @param idx the index of the velocity component desired (1-based).
       @return The body frame velocity component.
   */
-  double GetUVW   (int idx) const { return VState.vUVW(idx); }
+  double GetUVW(int idx) const { return VState.vUVW(idx); }
 
   /** Retrieves a Local frame velocity component.
       Retrieves a Local frame velocity component. The velocity returned is
@@ -286,14 +286,14 @@ public:
 
   /** Calculates and retrieves the velocity vector relative to the earth centered earth fixed (ECEF) frame.
   */
-  const FGColumnVector3 GetECEFVelocity(void) const {return Tb2ec * VState.vUVW; }
+  FGColumnVector3 GetECEFVelocity(void) const {return Tb2ec * VState.vUVW; }
 
   /** Returns the current altitude above sea level.
       This function returns the altitude above sea level.
       units ft
       @return The current altitude above sea level in feet.
   */
-  double GetAltitudeASL(void)   const;
+  double GetAltitudeASL(void) const { return VState.vLocation.GetAltitudeASL(); }
 
   /** Returns the current altitude above sea level.
       This function returns the altitude above sea level.
@@ -387,7 +387,7 @@ public:
   const FGColumnVector3& GetTerrainAngularVelocity(void) const { return LocalTerrainAngularVelocity; }
   void RecomputeLocalTerrainVelocity();
 
-  double GetTerrainElevation(void) const;
+  double GetTerrainElevation(void) const { return GetLocalTerrainRadius() - VState.vLocation.GetSeaLevelRadius(); }
   double GetDistanceAGL(void)  const;
   double GetRadius(void) const {
       if (VState.vLocation.GetRadius() == 0) return 1.0;
@@ -467,21 +467,21 @@ public:
 
   void SetEarthPositionAngle(double epa) {VState.vLocation.SetEarthPositionAngle(epa);}
 
-  void SetInertialOrientation(FGQuaternion Qi);
-  void SetInertialVelocity(FGColumnVector3 Vi);
-  void SetInertialRates(FGColumnVector3 vRates);
+  void SetInertialOrientation(const FGQuaternion& Qi);
+  void SetInertialVelocity(const FGColumnVector3& Vi);
+  void SetInertialRates(const FGColumnVector3& vRates);
 
   const FGQuaternion GetQuaternion(void) const { return VState.qAttitudeLocal; }
   const FGQuaternion GetQuaternionECI(void) const { return VState.qAttitudeECI; }
 
   void SetPQR(unsigned int i, double val) {
-      if ((i>=1) && (i<=3) )
-          VState.vPQR(i) = val;
+    VState.vPQR(i) = val;
+    VState.vPQRi = VState.vPQR + Ti2b * in.vOmegaPlanet;
   }
 
   void SetUVW(unsigned int i, double val) {
-      if ((i>=1) && (i<=3) )
-          VState.vUVW(i) = val;
+    VState.vUVW(i) = val;
+    CalculateInertialVelocity();
   }
 
 // SET functions
@@ -505,7 +505,11 @@ public:
     VState.vInertialPosition = Tec2i * VState.vLocation;
   }
 
-  void SetAltitudeASL(double altASL);
+  void SetAltitudeASL(double altASL)
+  {
+    VState.vLocation.SetAltitudeASL(altASL);
+    UpdateVehicleState();
+  }
   void SetAltitudeASLmeters(double altASL) { SetAltitudeASL(altASL/fttom); }
 
   void SetSeaLevelRadius(double tt);
@@ -525,7 +529,7 @@ public:
       SetLocation(l);
   }
 
-  void NudgeBodyLocation(FGColumnVector3 deltaLoc) {
+  void NudgeBodyLocation(const FGColumnVector3& deltaLoc) {
     VState.vInertialPosition -= Tb2i*deltaLoc;
     VState.vLocation -= Tb2ec*deltaLoc;
   }

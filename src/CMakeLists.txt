@@ -17,8 +17,8 @@ foreach( mylibfolder
 		Instrumentation
 		Model
 		MultiPlayer
-    AIModel
-    Navaids
+		AIModel
+		Navaids
 		Network
 		Scenery
 		Scripting

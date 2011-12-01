@@ -70,7 +70,7 @@ using namespace std;
 
 namespace JSBSim {
 
-static const char *IdSrc = "$Id: FGFDMExec.cpp,v 1.118 2011/10/22 15:11:23 bcoconni Exp $";
+static const char *IdSrc = "$Id: FGFDMExec.cpp,v 1.120 2011/11/10 12:06:13 jberndt Exp $";
 static const char *IdHdr = ID_FDMEXEC;
 
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -82,10 +82,9 @@ CLASS IMPLEMENTATION
 
 FGFDMExec::FGFDMExec(FGPropertyManager* root, unsigned int* fdmctr) : Root(root), FDMctr(fdmctr)
 {
-
   Frame           = 0;
   Error           = 0;
-  GroundCallback  = new FGDefaultGroundCallback();
+  SetGroundCallback(new FGDefaultGroundCallback());
   IC              = 0;
   Trim            = 0;
   Script          = 0;
@@ -186,9 +185,6 @@ FGFDMExec::~FGFDMExec()
 
   if (FDMctr > 0) (*FDMctr)--;
 
-  if(GroundCallback)
-     delete GroundCallback;
-
   Debug(1);
 }
 
@@ -213,7 +209,7 @@ bool FGFDMExec::Allocate(void)
   Models[ePropulsion]        = new FGPropulsion(this);
   Models[eAerodynamics]      = new FGAerodynamics (this);
 
-  GroundCallback->SetSeaLevelRadius(((FGInertial*)Models[eInertial])->GetRefRadius());
+  GetGroundCallback()->SetSeaLevelRadius(((FGInertial*)Models[eInertial])->GetRefRadius());
 
   Models[eGroundReactions]   = new FGGroundReactions(this);
   Models[eExternalReactions] = new FGExternalReactions(this);
@@ -612,14 +608,6 @@ string FGFDMExec::GetOutputFileName(void)
 {
   if (Outputs.size() > 0) return Outputs[0]->GetOutputFileName();
   else return string("");
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-void FGFDMExec::SetGroundCallback(FGGroundCallback* p)
-{
-  delete GroundCallback;
-  GroundCallback = p;
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1137,7 +1125,7 @@ void FGFDMExec::ForceOutput(int idx)
 {
   if (idx >= (int)0 && idx < (int)Outputs.size()) Outputs[idx]->Print();
 }
-	
+
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bool FGFDMExec::SetOutputDirectives(const string& fname)

@@ -25,7 +25,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/math/sg_geodesy.hxx>
-#include <simgear/math/project.hxx>
+#include <simgear/scene/util/project.hxx>
 
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>

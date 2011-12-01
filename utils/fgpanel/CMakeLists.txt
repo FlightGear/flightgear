@@ -6,7 +6,7 @@ if(GLUT_FOUND)
 	message(STATUS "found glut")
 
 	add_executable(fgpanel main.cxx
-	    ApplicationProperties.hxx
+		ApplicationProperties.hxx
 		FGGLApplication.cxx 
 		FGGLApplication.hxx
 		FGPanelApplication.cxx 
@@ -22,7 +22,8 @@ if(GLUT_FOUND)
 		panel.cxx 
 		panel.hxx
 		panel_io.cxx
-		panel_io.hxx)
+		panel_io.hxx
+	)
 
 	target_link_libraries(fgpanel 
 		${PNG_LIBRARIES}
@@ -31,7 +32,7 @@ if(GLUT_FOUND)
 		${OPENGL_LIBRARIES}
 		${PLIB_LIBRARIES}
 		${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
-		)
+	)
 
 	install(TARGETS fgpanel RUNTIME DESTINATION bin)
 else()
