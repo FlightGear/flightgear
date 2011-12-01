@@ -23,8 +23,7 @@
 #endif
 
 #include <math.h>
-#define NDEBUG
-#include <assert.h>
+
 #include <stdlib.h>
 #include <deque>
 #include "radio.hxx"
@@ -37,15 +36,10 @@
 
 FGRadioTransmission::FGRadioTransmission() {
 	
-	/** radio parameters (which should probably be set for each radio) */
 	
 	_receiver_sensitivity = -110.0;	// typical AM receiver sensitivity seems to be 0.8 microVolt at 12dB SINAD
 	
 	/** AM transmitter power in dBm.
-	*  	Note this value is calculated from the typical final transistor stage output
-	*  	small aircraft have portable transmitters which operate at 36 dBm output (4 Watts) others operate in the range 10-20 W
-	*  	later possibly store this value in aircraft description
-	*  	ATC comms usually operate high power equipment, thus making the link asymetrical; this is taken care of in propagation routines
 	*	Typical output powers for ATC ground equipment, VHF-UHF:
 	*	40 dBm - 10 W (ground, clearance)
 	*	44 dBm - 20 W (tower)
@@ -59,18 +53,14 @@ FGRadioTransmission::FGRadioTransmission() {
 	
 	_rx_antenna_height = 2.0; // RX antenna height above ground level
 	
-	/** pilot plane's antenna gain + AI aircraft antenna gain
-	* 	real-life gain for conventional monopole/dipole antenna
-	**/
-	_antenna_gain = 2.0;
 	
-	_rx_antenna_gain = 1.0;
+	_rx_antenna_gain = 1.0;	// gain expressed in dBi
 	_tx_antenna_gain = 1.0;
 	
 	_rx_line_losses = 2.0;	// to be configured for each station
 	_tx_line_losses = 2.0;
 	
-	_propagation_model = 2; //  choose between models via option: realistic radio on/off
+	_propagation_model = 2; 
 	_terrain_sampling_distance = fgGetDouble("/sim/radio/sampling-distance", 90.0); // regular SRTM is 90 meters
 }
 
@@ -124,10 +114,16 @@ double FGRadioTransmission::receiveNav(SGGeod tx_pos, double freq, int transmiss
 void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, int ground_to_air) {
 
 	
+	if(ground_to_air == 1) {
+		_transmitter_power += 6.0;
+		_tx_antenna_height += 30.0;
+		_tx_antenna_gain += 3.0; 
+	}
+	
+	
 	double comm1 = getFrequency(1);
 	double comm2 = getFrequency(2);
 	if ( !(fabs(freq - comm1) <= 0.0001) &&  !(fabs(freq - comm2) <= 0.0001) ) {
-		//cerr << "Frequency not tuned: " << freq << " Radio1: " << comm1 << " Radio2: " << comm2 << endl;
 		return;
 	}
 	else {
@@ -139,13 +135,10 @@ void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, in
 			// TODO: free space, round earth
 			double signal = LOS_calculate_attenuation(tx_pos, freq, ground_to_air);
 			if (signal <= 0.0) {
-				SG_LOG(SG_GENERAL, SG_BULK, "Signal below receiver minimum sensitivity: " << signal);
-				//cerr << "Signal below receiver minimum sensitivity: " << signal << endl;
 				return;
 			}
 			else {
-				SG_LOG(SG_GENERAL, SG_BULK, "Signal completely readable: " << signal);
-				//cerr << "Signal completely readable: " << signal << endl;
+				
 				fgSetString("/sim/messages/atc", text.c_str());
 				/** write signal strength above threshold to the property tree
 				*	to implement a simple S-meter just divide by 3 dB per grade (VHF norm)
@@ -157,8 +150,6 @@ void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, in
 			// Use ITM propagation model
 			double signal = ITM_calculate_attenuation(tx_pos, freq, ground_to_air);
 			if (signal <= 0.0) {
-				SG_LOG(SG_GENERAL, SG_BULK, "Signal below receiver minimum sensitivity: " << signal);
-				//cerr << "Signal below receiver minimum sensitivity: " << signal << endl;
 				return;
 			}
 			if ((signal > 0.0) && (signal < 12.0)) {
@@ -188,8 +179,6 @@ void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, in
 				fgSetDouble("/sim/sound/voices/voice/volume", old_volume);
 			}
 			else {
-				SG_LOG(SG_GENERAL, SG_BULK, "Signal completely readable: " << signal);
-				//cerr << "Signal completely readable: " << signal << endl;
 				fgSetString("/sim/messages/atc", text.c_str());
 				/** write signal strength above threshold to the property tree
 				*	to implement a simple S-meter just divide by 3 dB per grade (VHF norm)
@@ -233,16 +222,11 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	
 	double clutter_loss = 0.0; 	// loss due to vegetation and urban
 	double tx_pow = _transmitter_power;
-	double ant_gain = _antenna_gain;
+	double ant_gain = _rx_antenna_gain + _tx_antenna_gain;
 	double signal = 0.0;
 	
-	if(transmission_type == 1)
-		tx_pow = _transmitter_power + 6.0;
-
-	if((transmission_type == 1) || (transmission_type == 3))
-		ant_gain = _antenna_gain + 3.0; //pilot plane's antenna gain + ground station antenna gain
 	
-	double link_budget = tx_pow - _receiver_sensitivity + ant_gain;	
+	double link_budget = tx_pow - _receiver_sensitivity - _rx_line_losses - _tx_line_losses + ant_gain;	
 
 	FGScenery * scenery = globals->get_scenery();
 	
@@ -259,11 +243,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	SGGeoc center = SGGeoc::fromGeod( max_own_pos );
 	SGGeoc own_pos_c = SGGeoc::fromGeod( own_pos );
 	
-	/** 	position of sender radio antenna (HAAT)
-			sender can be aircraft or ground station
-	**/
-	double ATC_HAAT = 30.0;
-	double Aircraft_HAAT = 5.0;
+	
 	double sender_alt_ft,sender_alt;
 	double transmitter_height=0.0;
 	double receiver_height=0.0;
@@ -302,7 +282,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 
 	double elevation_under_pilot = 0.0;
 	if (scenery->get_elevation_m( max_own_pos, elevation_under_pilot, NULL )) {
-		receiver_height = own_alt - elevation_under_pilot + 3; //assume antenna located 3 meters above ground
+		receiver_height = own_alt - elevation_under_pilot; 
 	}
 
 	double elevation_under_sender = 0.0;
@@ -313,10 +293,10 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 		transmitter_height = sender_alt;
 	}
 	
-	if(transmission_type == 1) 
-		transmitter_height += ATC_HAAT;
-	else
-		transmitter_height += Aircraft_HAAT;
+	
+	transmitter_height += _tx_antenna_height;
+	receiver_height += _rx_antenna_height;
+	
 	
 	SG_LOG(SG_GENERAL, SG_BULK,
 			"ITM:: RX-height: " << receiver_height << " meters, TX-height: " << transmitter_height << " meters, Distance: " << distance_m << " meters");
@@ -383,7 +363,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	}
 	
 	double num_points= (double)_elevations.size();
-	//cerr << "ITM:: Max alt between: " << max_alt_between << ", num points:" << num_points << endl;
+
 	_elevations.push_front(point_distance);
 	_elevations.push_front(num_points -1);
 	int size = _elevations.size();
@@ -442,7 +422,6 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 			double grad = fabs(itm_elev[2] + transmitter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m;
 			// First Fresnel radius
 			double frs_rad = 548 * sqrt( (j * itm_elev[1] * (itm_elev[0] - j) * itm_elev[1] / 1000000) / (  distance_m * freq / 1000) );
-			assert(frs_rad > 0);
 			
 			//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
 			
@@ -494,7 +473,6 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 				double grad = fabs(itm_elev[2] + transmitter_height - itm_elev[num_points_1st + 2] + clutter_height) / distance_m;
 				// First Fresnel radius
 				double frs_rad = 548 * sqrt( (j * itm_elev[1] * (num_points_1st - j) * itm_elev[1] / 1000000) / ( num_points_1st * itm_elev[1] * freq / 1000) );
-				assert(frs_rad > 0);
 				
 				//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
 				
@@ -539,7 +517,6 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 				double grad = fabs(itm_elev[last+1] + clutter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m;
 				// First Fresnel radius
 				double frs_rad = 548 * sqrt( (j * itm_elev[1] * (num_points_2nd - j) * itm_elev[1] / 1000000) / (  num_points_2nd * itm_elev[1] * freq / 1000) );
-				assert(frs_rad > 0);
 				
 				//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
 				
@@ -592,7 +569,6 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 				double grad = fabs(itm_elev[2] + transmitter_height - itm_elev[num_points_1st + 2] + clutter_height) / distance_m;
 				// First Fresnel radius
 				double frs_rad = 548 * sqrt( (j * itm_elev[1] * (num_points_1st - j) * itm_elev[1] / 1000000) / (  num_points_1st * itm_elev[1] * freq / 1000) );
-				assert(frs_rad > 0);
 				
 				//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
 				
@@ -637,7 +613,6 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 				// First Fresnel radius
 				double frs_rad = 548 * sqrt( (j * itm_elev[1] * (num_points_2nd - j) * itm_elev[1] / 1000000) / (  num_points_2nd * itm_elev[1] * freq / 1000) );
 				
-				assert(frs_rad > 0);
 				//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
 				
 				double min_elev = SGMiscd::min(itm_elev[last+1] + clutter_height, itm_elev[num_points_1st + num_points_2nd +2] + clutter_height);
@@ -682,7 +657,6 @@ void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm
 				// First Fresnel radius
 				double frs_rad = 548 * sqrt( (j * itm_elev[1] * (num_points_3rd - j) * itm_elev[1] / 1000000) / (  num_points_3rd * itm_elev[1] * freq / 1000) );
 				
-				assert(frs_rad > 0);
 				
 				//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
 				
@@ -847,10 +821,9 @@ double FGRadioTransmission::LOS_calculate_attenuation(SGGeod pos, double freq, i
 		frq_mhz = freq;
 	double dbloss;
 	double tx_pow = _transmitter_power;
-	double ant_gain = _antenna_gain;
+	double ant_gain = _rx_antenna_gain + _tx_antenna_gain;
 	double signal = 0.0;
-	double ATC_HAAT = 30.0;
-	double Aircraft_HAAT = 5.0;
+	
 	double sender_alt_ft,sender_alt;
 	double transmitter_height=0.0;
 	double receiver_height=0.0;
@@ -859,13 +832,8 @@ double FGRadioTransmission::LOS_calculate_attenuation(SGGeod pos, double freq, i
 	double own_alt_ft = fgGetDouble("/position/altitude-ft");
 	double own_alt= own_alt_ft * SG_FEET_TO_METER;
 	
-	if(transmission_type == 1)
-		tx_pow = _transmitter_power + 6.0;
-
-	if((transmission_type == 1) || (transmission_type == 3))
-		ant_gain = _antenna_gain + 3.0; //pilot plane's antenna gain + ground station antenna gain
 	
-	double link_budget = tx_pow - _receiver_sensitivity + ant_gain;	
+	double link_budget = tx_pow - _receiver_sensitivity - _rx_line_losses - _tx_line_losses + ant_gain;	
 
 	//cerr << "ITM:: pilot Lat: " << own_lat << ", Lon: " << own_lon << ", Alt: " << own_alt << endl;
 	
@@ -881,10 +849,10 @@ double FGRadioTransmission::LOS_calculate_attenuation(SGGeod pos, double freq, i
 	
 	double distance_m = SGGeodesy::distanceM(own_pos, sender_pos);
 	
-	if(transmission_type == 1) 
-		transmitter_height += ATC_HAAT;
-	else
-		transmitter_height += Aircraft_HAAT;
+	
+	transmitter_height += _tx_antenna_height;
+	receiver_height += _rx_antenna_height;
+	
 	
 	/** radio horizon calculation with wave bending k=4/3 */
 	double receiver_horizon = 4.12 * sqrt(receiver_height);

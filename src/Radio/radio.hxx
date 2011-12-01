@@ -44,7 +44,6 @@ private:
 	double _transmitter_power;
 	double _tx_antenna_height;
 	double _rx_antenna_height;
-	double _antenna_gain;
 	double _rx_antenna_gain;
 	double _tx_antenna_gain;
 	double _rx_line_losses;
@@ -72,6 +71,10 @@ public:
     void setRxSensitivity(double sensitivity) { _receiver_sensitivity = sensitivity; };
     void setTxAntennaHeight(double tx_antenna_height) { _tx_antenna_height = tx_antenna_height; };
     void setRxAntennaHeight(double rx_antenna_height) { _rx_antenna_height = rx_antenna_height; };
+    void setTxAntennaGain(double tx_antenna_gain) { _tx_antenna_gain = tx_antenna_gain; };
+    void setRxAntennaGain(double rx_antenna_gain) { _rx_antenna_gain = rx_antenna_gain; };
+    void setTxLineLosses(double tx_line_losses) { _tx_line_losses = tx_line_losses; };
+    void setRxLineLosses(double rx_line_losses) { _rx_line_losses = rx_line_losses; };
     void setPropagationModel(int model) { _propagation_model = model; };
     // transmission_type: 0 for air to ground 1 for ground to air, 2 for air to air, 3 for pilot to ground, 4 for pilot to air
     void receiveATC(SGGeod tx_pos, double freq, string text, int transmission_type);
