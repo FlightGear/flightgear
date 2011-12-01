@@ -357,13 +357,6 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	}
 	
 	
-	double max_alt_between=0.0;
-	for( deque<double>::size_type i = 0; i < _elevations.size(); i++ ) {
-		if (_elevations[i] > max_alt_between) {
-			max_alt_between = _elevations[i];
-		}
-	}
-	
 	double num_points= (double)_elevations.size();
 
 	_elevations.push_front(point_distance);
@@ -873,6 +866,25 @@ double FGRadioTransmission::LOS_calculate_attenuation(SGGeod pos, double freq, i
 	//cerr << "LOS:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm " << endl;
 	return signal;
 	
+}
+
+/*** calculate loss due to polarization mismatch
+*	this function is only reliable for vertical polarization
+*	due to the V-shape of horizontally polarized antennas
+***/
+double FGRadioTransmission::polarization_loss() {
+	
+	double theta_deg;
+	double roll = fgGetDouble("/orientation/roll-deg");
+	double pitch = fgGetDouble("/orientation/pitch-deg");
+	double theta = acos( sqrt( cos(roll) * cos(roll) + cos(pitch) * cos(pitch) ));
+	if (_polarization == 1)
+		theta_deg = 90.0 - theta;
+	else
+		theta_deg = theta;
+	if (fabs(theta_deg) > 85.0)	// we don't want to converge into infinity
+		theta_deg = 85.0;
+	return 10 * log10(cos(theta_deg) * cos(theta_deg));
 }
 
 

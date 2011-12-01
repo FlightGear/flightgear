@@ -15,3 +15,39 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+#ifndef __cplusplus
+# error This library requires C++
+#endif
+
+#include <simgear/compiler.h>
+#include <simgear/structure/subsystem_mgr.hxx>
+#include <Main/fg_props.hxx>
+
+#include <simgear/math/sg_geodesy.hxx>
+#include <simgear/debug/logstream.hxx>
+
+class FGRadioAntenna
+{
+private:
+	void _load_antenna_pattern();
+	int _mirror_y;
+	int _mirror_z;
+	double _heading;
+	struct AntennaGain {
+		double azimuth;
+		double elevation_angle;
+		double gain;
+	};
+	
+	typedef std::vector<AntennaGain> AntennaPattern;
+	AntennaPattern _pattern;
+	
+public:
+	
+	FGRadioAntenna();
+    ~FGRadioAntenna();
+	double calculate_gain(double azimuth, double theta);
+	
+	
+};

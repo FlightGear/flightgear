@@ -15,3 +15,37 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#include <math.h>
+
+#include <stdlib.h>
+
+#include <Scenery/scenery.hxx>
+#include "antenna.hxx"
+
+
+FGRadioAntenna::FGRadioAntenna() {
+	
+	_mirror_y = 1;
+	_mirror_z = 1;
+}
+
+FGRadioAntenna::~FGRadioAntenna() {
+	
+}
+
+double FGRadioAntenna::calculate_gain(double azimuth, double theta) {
+	return 0;
+}
+
+
+
+
+void FGRadioAntenna::_load_antenna_pattern() {
+	
+}

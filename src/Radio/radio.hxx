@@ -53,6 +53,7 @@ private:
 	std::map<string, double[2]> _mat_database;
 	
 	int _propagation_model; /// 0 none, 1 round Earth, 2 ITM
+	double polarization_loss();
 	double ITM_calculate_attenuation(SGGeod tx_pos, double freq, int ground_to_air);
 	double LOS_calculate_attenuation(SGGeod tx_pos, double freq, int ground_to_air);
 	void clutterLoss(double freq, double distance_m, double itm_elev[], std::deque<string> materials,
