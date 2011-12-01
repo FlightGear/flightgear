@@ -60,6 +60,8 @@ FGRadioTransmission::FGRadioTransmission() {
 	_rx_line_losses = 2.0;	// to be configured for each station
 	_tx_line_losses = 2.0;
 	
+	_polarization = 1; // default vertical
+	
 	_propagation_model = 2; 
 	_terrain_sampling_distance = fgGetDouble("/sim/radio/sampling-distance", 90.0); // regular SRTM is 90 meters
 }
@@ -211,7 +213,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	else
 		frq_mhz = freq;
 	int radio_climate = 5;		// continental temperate
-	int pol=1;	// assuming vertical polarization although this is more complex in reality
+	int pol= _polarization;	
 	double conf = 0.90;	// 90% of situations and time, take into account speed
 	double rel = 0.90;	
 	double dbloss;

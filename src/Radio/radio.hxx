@@ -49,6 +49,7 @@ private:
 	double _rx_line_losses;
 	double _tx_line_losses;
 	double _terrain_sampling_distance;
+	int _polarization;
 	std::map<string, double[2]> _mat_database;
 	
 	int _propagation_model; /// 0 none, 1 round Earth, 2 ITM
@@ -76,6 +77,7 @@ public:
     void setTxLineLosses(double tx_line_losses) { _tx_line_losses = tx_line_losses; };
     void setRxLineLosses(double rx_line_losses) { _rx_line_losses = rx_line_losses; };
     void setPropagationModel(int model) { _propagation_model = model; };
+    void setPolarization(int polarization) { _polarization = polarization; };
     // transmission_type: 0 for air to ground 1 for ground to air, 2 for air to air, 3 for pilot to ground, 4 for pilot to air
     void receiveATC(SGGeod tx_pos, double freq, string text, int transmission_type);
     void receiveChat(SGGeod tx_pos, double freq, string text, int transmission_type);
