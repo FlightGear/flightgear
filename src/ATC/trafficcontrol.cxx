@@ -746,7 +746,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
             	
             	if( fgGetBool( "/sim/radio/use-itm-attenuation", false ) ) {
             		//cerr << "Using ITM radio propagation" << endl;
-            		FGRadio* radio = new FGRadio();
+            		FGRadioTransmission* radio = new FGRadioTransmission();
             		SGGeod sender_pos;
             		double sender_alt_ft, sender_alt;
             		if(ground_to_air) {

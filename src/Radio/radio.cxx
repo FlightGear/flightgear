@@ -23,26 +23,23 @@
 #endif
 
 #include <math.h>
+
 #include <stdlib.h>
 #include <deque>
 #include "radio.hxx"
+#include <simgear/scene/material/mat.hxx>
 #include <Scenery/scenery.hxx>
 
 #define WITH_POINT_TO_POINT 1
 #include "itm.cpp"
 
 
-FGRadio::FGRadio() {
+FGRadioTransmission::FGRadioTransmission() {
 	
-	/** radio parameters (which should probably be set for each radio) */
 	
 	_receiver_sensitivity = -110.0;	// typical AM receiver sensitivity seems to be 0.8 microVolt at 12dB SINAD
 	
 	/** AM transmitter power in dBm.
-	*  	Note this value is calculated from the typical final transistor stage output
-	*  	small aircraft have portable transmitters which operate at 36 dBm output (4 Watts) others operate in the range 10-20 W
-	*  	later possibly store this value in aircraft description
-	*  	ATC comms usually operate high power equipment, thus making the link asymetrical; this is taken care of in propagation routines
 	*	Typical output powers for ATC ground equipment, VHF-UHF:
 	*	40 dBm - 10 W (ground, clearance)
 	*	44 dBm - 20 W (tower)
@@ -52,20 +49,27 @@ FGRadio::FGRadio() {
 	**/
 	_transmitter_power = 43.0;
 	
-	/** pilot plane's antenna gain + AI aircraft antenna gain
-	* 	real-life gain for conventional monopole/dipole antenna
-	**/
-	_antenna_gain = 2.0;
-	_propagation_model = 2; //  choose between models via option: realistic radio on/off
+	_tx_antenna_height = 2.0; // TX antenna height above ground level
 	
+	_rx_antenna_height = 2.0; // RX antenna height above ground level
+	
+	
+	_rx_antenna_gain = 1.0;	// gain expressed in dBi
+	_tx_antenna_gain = 1.0;
+	
+	_rx_line_losses = 2.0;	// to be configured for each station
+	_tx_line_losses = 2.0;
+	
+	_propagation_model = 2; 
+	_terrain_sampling_distance = fgGetDouble("/sim/radio/sampling-distance", 90.0); // regular SRTM is 90 meters
 }
 
-FGRadio::~FGRadio() 
+FGRadioTransmission::~FGRadioTransmission() 
 {
 }
 
 
-double FGRadio::getFrequency(int radio) {
+double FGRadioTransmission::getFrequency(int radio) {
 	double freq = 118.0;
 	switch (radio) {
 		case 1:
@@ -83,13 +87,13 @@ double FGRadio::getFrequency(int radio) {
 
 /*** TODO: receive multiplayer chat message and voice
 ***/
-void FGRadio::receiveChat(SGGeod tx_pos, double freq, string text, int ground_to_air) {
+void FGRadioTransmission::receiveChat(SGGeod tx_pos, double freq, string text, int ground_to_air) {
 
 }
 
 /*** TODO: receive navaid 
 ***/
-double FGRadio::receiveNav(SGGeod tx_pos, double freq, int transmission_type) {
+double FGRadioTransmission::receiveNav(SGGeod tx_pos, double freq, int transmission_type) {
 	
 	// typical VOR/LOC transmitter power appears to be 200 Watt ~ 53 dBm
 	// vor/loc typical sensitivity between -107 and -101 dBm
@@ -107,13 +111,19 @@ double FGRadio::receiveNav(SGGeod tx_pos, double freq, int transmission_type) {
 
 /*** Receive ATC radio communication as text
 ***/
-void FGRadio::receiveATC(SGGeod tx_pos, double freq, string text, int ground_to_air) {
+void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, int ground_to_air) {
 
+	
+	if(ground_to_air == 1) {
+		_transmitter_power += 6.0;
+		_tx_antenna_height += 30.0;
+		_tx_antenna_gain += 3.0; 
+	}
+	
 	
 	double comm1 = getFrequency(1);
 	double comm2 = getFrequency(2);
 	if ( !(fabs(freq - comm1) <= 0.0001) &&  !(fabs(freq - comm2) <= 0.0001) ) {
-		//cerr << "Frequency not tuned: " << freq << " Radio1: " << comm1 << " Radio2: " << comm2 << endl;
 		return;
 	}
 	else {
@@ -125,13 +135,10 @@ void FGRadio::receiveATC(SGGeod tx_pos, double freq, string text, int ground_to_
 			// TODO: free space, round earth
 			double signal = LOS_calculate_attenuation(tx_pos, freq, ground_to_air);
 			if (signal <= 0.0) {
-				SG_LOG(SG_GENERAL, SG_BULK, "Signal below receiver minimum sensitivity: " << signal);
-				//cerr << "Signal below receiver minimum sensitivity: " << signal << endl;
 				return;
 			}
 			else {
-				SG_LOG(SG_GENERAL, SG_BULK, "Signal completely readable: " << signal);
-				//cerr << "Signal completely readable: " << signal << endl;
+				
 				fgSetString("/sim/messages/atc", text.c_str());
 				/** write signal strength above threshold to the property tree
 				*	to implement a simple S-meter just divide by 3 dB per grade (VHF norm)
@@ -143,8 +150,6 @@ void FGRadio::receiveATC(SGGeod tx_pos, double freq, string text, int ground_to_
 			// Use ITM propagation model
 			double signal = ITM_calculate_attenuation(tx_pos, freq, ground_to_air);
 			if (signal <= 0.0) {
-				SG_LOG(SG_GENERAL, SG_BULK, "Signal below receiver minimum sensitivity: " << signal);
-				//cerr << "Signal below receiver minimum sensitivity: " << signal << endl;
 				return;
 			}
 			if ((signal > 0.0) && (signal < 12.0)) {
@@ -174,8 +179,6 @@ void FGRadio::receiveATC(SGGeod tx_pos, double freq, string text, int ground_to_
 				fgSetDouble("/sim/sound/voices/voice/volume", old_volume);
 			}
 			else {
-				SG_LOG(SG_GENERAL, SG_BULK, "Signal completely readable: " << signal);
-				//cerr << "Signal completely readable: " << signal << endl;
 				fgSetString("/sim/messages/atc", text.c_str());
 				/** write signal strength above threshold to the property tree
 				*	to implement a simple S-meter just divide by 3 dB per grade (VHF norm)
@@ -192,7 +195,7 @@ void FGRadio::receiveATC(SGGeod tx_pos, double freq, string text, int ground_to_
 /***  Implement radio attenuation		
 	  based on the Longley-Rice propagation model
 ***/
-double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmission_type) {
+double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, int transmission_type) {
 
 	
 	
@@ -213,19 +216,17 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmiss
 	double rel = 0.90;	
 	double dbloss;
 	char strmode[150];
+	int p_mode = 0; // propgation mode selector: 0 LOS, 1 diffraction dominant, 2 troposcatter
+	double horizons[2];
 	int errnum;
 	
+	double clutter_loss = 0.0; 	// loss due to vegetation and urban
 	double tx_pow = _transmitter_power;
-	double ant_gain = _antenna_gain;
+	double ant_gain = _rx_antenna_gain + _tx_antenna_gain;
 	double signal = 0.0;
 	
-	if(transmission_type == 1)
-		tx_pow = _transmitter_power + 6.0;
-
-	if((transmission_type == 1) || (transmission_type == 3))
-		ant_gain = _antenna_gain + 3.0; //pilot plane's antenna gain + ground station antenna gain
 	
-	double link_budget = tx_pow - _receiver_sensitivity + ant_gain;	
+	double link_budget = tx_pow - _receiver_sensitivity - _rx_line_losses - _tx_line_losses + ant_gain;	
 
 	FGScenery * scenery = globals->get_scenery();
 	
@@ -242,11 +243,7 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmiss
 	SGGeoc center = SGGeoc::fromGeod( max_own_pos );
 	SGGeoc own_pos_c = SGGeoc::fromGeod( own_pos );
 	
-	/** 	position of sender radio antenna (HAAT)
-			sender can be aircraft or ground station
-	**/
-	double ATC_HAAT = 30.0;
-	double Aircraft_HAAT = 5.0;
+	
 	double sender_alt_ft,sender_alt;
 	double transmitter_height=0.0;
 	double receiver_height=0.0;
@@ -258,7 +255,7 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmiss
 	SGGeoc sender_pos_c = SGGeoc::fromGeod( sender_pos );
 	//cerr << "ITM:: sender Lat: " << parent->getLatitude() << ", Lon: " << parent->getLongitude() << ", Alt: " << sender_alt << endl;
 	
-	double point_distance= 90.0; // regular SRTM is 90 meters
+	double point_distance= _terrain_sampling_distance; 
 	double course = SGGeodesy::courseRad(own_pos_c, sender_pos_c);
 	double distance_m = SGGeodesy::distanceM(own_pos, sender_pos);
 	double probe_distance = 0.0;
@@ -276,12 +273,16 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmiss
 	}
 	
 		
-	double max_points = distance_m / point_distance;
+	int max_points = (int)floor(distance_m / point_distance);
+	double delta_last = fmod(distance_m, point_distance);
+	
 	deque<double> _elevations;
+	deque<string> materials;
+	
 
 	double elevation_under_pilot = 0.0;
 	if (scenery->get_elevation_m( max_own_pos, elevation_under_pilot, NULL )) {
-		receiver_height = own_alt - elevation_under_pilot + 3; //assume antenna located 3 meters above ground
+		receiver_height = own_alt - elevation_under_pilot; 
 	}
 
 	double elevation_under_sender = 0.0;
@@ -292,47 +293,65 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmiss
 		transmitter_height = sender_alt;
 	}
 	
-	if(transmission_type == 1) 
-		transmitter_height += ATC_HAAT;
-	else
-		transmitter_height += Aircraft_HAAT;
+	
+	transmitter_height += _tx_antenna_height;
+	receiver_height += _rx_antenna_height;
+	
 	
 	SG_LOG(SG_GENERAL, SG_BULK,
 			"ITM:: RX-height: " << receiver_height << " meters, TX-height: " << transmitter_height << " meters, Distance: " << distance_m << " meters");
-	//cerr << "ITM:: RX-height: " << receiver_height << " meters, TX-height: " << transmitter_height << " meters, Distance: " << distance_m << " meters" << endl;
+	cerr << "ITM:: RX-height: " << receiver_height << " meters, TX-height: " << transmitter_height << " meters, Distance: " << distance_m << " meters" << endl;
 	
 	unsigned int e_size = (deque<unsigned>::size_type)max_points;
 	
 	while (_elevations.size() <= e_size) {
 		probe_distance += point_distance;
 		SGGeod probe = SGGeod::fromGeoc(center.advanceRadM( course, probe_distance ));
-		
+		const SGMaterial *mat = 0;
 		double elevation_m = 0.0;
 	
-		if (scenery->get_elevation_m( probe, elevation_m, NULL )) {
+		if (scenery->get_elevation_m( probe, elevation_m, &mat )) {
 			if((transmission_type == 3) || (transmission_type == 4)) {
 				_elevations.push_back(elevation_m);
+				if(mat) {
+					const std::vector<string> mat_names = mat->get_names();
+					materials.push_back(mat_names[0]);
+				}
+				else {
+					materials.push_back("None");
+				}
 			}
 			else {
 				 _elevations.push_front(elevation_m);
+				 if(mat) {
+				 	 const std::vector<string> mat_names = mat->get_names();
+				 	 materials.push_front(mat_names[0]);
+				}
+				else {
+					materials.push_front("None");
+				}
 			}
 		}
 		else {
 			if((transmission_type == 3) || (transmission_type == 4)) {
-				_elevations.push_back(elevation_m);
+				_elevations.push_back(0.0);
+				materials.push_back("None");
 			}
 			else {
-			_elevations.push_front(0.0);
+				_elevations.push_front(0.0);
+				materials.push_front("None");
 			}
 		}
 	}
 	if((transmission_type == 3) || (transmission_type == 4)) {
 		_elevations.push_front(elevation_under_pilot);
-		_elevations.push_back(elevation_under_sender);
+		if (delta_last > (point_distance / 2) )			// only add last point if it's farther than half point_distance
+			_elevations.push_back(elevation_under_sender);
 	}
 	else {
 		_elevations.push_back(elevation_under_pilot);
-		_elevations.push_front(elevation_under_sender);
+		if (delta_last > (point_distance / 2) )
+			_elevations.push_front(elevation_under_sender);
 	}
 	
 	
@@ -344,7 +363,7 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmiss
 	}
 	
 	double num_points= (double)_elevations.size();
-	//cerr << "ITM:: Max alt between: " << max_alt_between << ", num points:" << num_points << endl;
+
 	_elevations.push_front(point_distance);
 	_elevations.push_front(num_points -1);
 	int size = _elevations.size();
@@ -354,41 +373,447 @@ double FGRadio::ITM_calculate_attenuation(SGGeod pos, double freq, int transmiss
 		//cerr << "ITM:: itm_elev: " << _elevations[i] << endl;
 	}
 
-	
-	/** first Fresnel zone radius
-		frequency in the middle of the bandplan, more accuracy is not necessary
-	*/
-	double fz_clr= 8.657 * sqrt(distance_m / 0.125);
-	
-	// TODO: If we clear the first Fresnel zone, we are into line of sight territory
-
-	// else we need to calculate point to point link loss
 	if((transmission_type == 3) || (transmission_type == 4)) {
 		// the sender and receiver roles are switched
 		point_to_point(itm_elev, receiver_height, transmitter_height,
 			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
-			pol, conf, rel, dbloss, strmode, errnum);
-		
+			pol, conf, rel, dbloss, strmode, p_mode, horizons, errnum);
+		if( fgGetBool( "/sim/radio/use-clutter-attenuation", false ) )
+			clutterLoss(frq_mhz, distance_m, itm_elev, materials, receiver_height, transmitter_height, p_mode, horizons, clutter_loss);
 	}
 	else {
 		point_to_point(itm_elev, transmitter_height, receiver_height,
 			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
-			pol, conf, rel, dbloss, strmode, errnum);
+			pol, conf, rel, dbloss, strmode, p_mode, horizons, errnum);
+		if( fgGetBool( "/sim/radio/use-clutter-attenuation", false ) )
+			clutterLoss(frq_mhz, distance_m, itm_elev, materials, transmitter_height, receiver_height, p_mode, horizons, clutter_loss);
 	}
 	SG_LOG(SG_GENERAL, SG_BULK,
 			"ITM:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, " << strmode << ", Error: " << errnum);
 	cerr << "ITM:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, " << strmode << ", Error: " << errnum << endl;
 	
+	cerr << "Clutter loss: " << clutter_loss << endl;
 	//if (errnum == 4)	// if parameters are outside sane values for lrprop, the alternative method is used
 	//	return -1;
-	signal = link_budget - dbloss;
+	signal = link_budget - dbloss - clutter_loss;
 	return signal;
 
 }
 
+/*** Calculate losses due to vegetation and urban clutter (WIP)
+*	 We are only worried about clutter loss, terrain influence 
+*	 on the first Fresnel zone is calculated in the ITM functions
+***/
+void FGRadioTransmission::clutterLoss(double freq, double distance_m, double itm_elev[], deque<string> materials,
+	double transmitter_height, double receiver_height, int p_mode,
+	double horizons[], double &clutter_loss) {
+	
+	distance_m = itm_elev[0] * itm_elev[1]; // only consider elevation points
+	
+	if (p_mode == 0) {	// LOS: take each point and see how clutter height affects first Fresnel zone
+		int mat = 0;
+		int j=1; 
+		for (int k=3;k < (int)(itm_elev[0]) + 2;k++) {
+			
+			double clutter_height = 0.0;	// mean clutter height for a certain terrain type
+			double clutter_density = 0.0;	// percent of reflected wave
+			get_material_properties(materials[mat], clutter_height, clutter_density);
+			
+			double grad = fabs(itm_elev[2] + transmitter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m;
+			// First Fresnel radius
+			double frs_rad = 548 * sqrt( (j * itm_elev[1] * (itm_elev[0] - j) * itm_elev[1] / 1000000) / (  distance_m * freq / 1000) );
+			
+			//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
+			
+			double min_elev = SGMiscd::min(itm_elev[2] + transmitter_height, itm_elev[(int)itm_elev[0] + 2] + receiver_height);
+			double d1 = j * itm_elev[1];
+			if ((itm_elev[2] + transmitter_height) > ( itm_elev[(int)itm_elev[0] + 2] + receiver_height) ) {
+				d1 = (itm_elev[0] - j) * itm_elev[1];
+			}
+			double ray_height = (grad * d1) + min_elev;
+			
+			double clearance = ray_height - (itm_elev[k] + clutter_height) - frs_rad * 8/10;		
+			double intrusion = fabs(clearance);
+			
+			if (clearance >= 0) {
+				// no losses
+			}
+			else if (clearance < 0 && (intrusion < clutter_height)) {
+				
+				clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * (freq/100) * (itm_elev[1]/100);
+			}
+			else if (clearance < 0 && (intrusion > clutter_height)) {
+				clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * (freq/100) * (itm_elev[1]/100);
+			}
+			else {
+				// no losses
+			}
+			j++;
+			mat++;
+		}
+		
+	}
+	else if (p_mode == 1) {		// diffraction
+		
+		if (horizons[1] == 0.0) {	//	single horizon: same as above, except pass twice using the highest point
+			int num_points_1st = (int)floor( horizons[0] * itm_elev[0]/ distance_m ); 
+			int num_points_2nd = (int)ceil( (distance_m - horizons[0]) * itm_elev[0] / distance_m ); 
+			//cerr << "Diffraction 1 horizon:: points1: " << num_points_1st << " points2: " << num_points_2nd << endl;
+			int last = 1;
+			/** perform the first pass */
+			int mat = 0;
+			int j=1; 
+			for (int k=3;k < num_points_1st + 2;k++) {
+				if (num_points_1st < 1)
+					break;
+				double clutter_height = 0.0;	// mean clutter height for a certain terrain type
+				double clutter_density = 0.0;	// percent of reflected wave
+				get_material_properties(materials[mat], clutter_height, clutter_density);
+				
+				double grad = fabs(itm_elev[2] + transmitter_height - itm_elev[num_points_1st + 2] + clutter_height) / distance_m;
+				// First Fresnel radius
+				double frs_rad = 548 * sqrt( (j * itm_elev[1] * (num_points_1st - j) * itm_elev[1] / 1000000) / ( num_points_1st * itm_elev[1] * freq / 1000) );
+				
+				//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
+				
+				double min_elev = SGMiscd::min(itm_elev[2] + transmitter_height, itm_elev[num_points_1st + 2] + clutter_height);
+				double d1 = j * itm_elev[1];
+				if ( (itm_elev[2] + transmitter_height) > (itm_elev[num_points_1st + 2] + clutter_height) ) {
+					d1 = (num_points_1st - j) * itm_elev[1];
+				}
+				double ray_height = (grad * d1) + min_elev;
+				
+				double clearance = ray_height - (itm_elev[k] + clutter_height) - frs_rad * 8/10;		
+				double intrusion = fabs(clearance);
+				
+				if (clearance >= 0) {
+					// no losses
+				}
+				else if (clearance < 0 && (intrusion < clutter_height)) {
+					
+					clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * (freq/100) * (itm_elev[1]/100);
+				}
+				else if (clearance < 0 && (intrusion > clutter_height)) {
+					clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * (freq/100) * (itm_elev[1]/100);
+				}
+				else {
+					// no losses
+				}
+				j++;
+				mat++;
+				last = k;
+			}
+			
+			/** and the second pass */
+			mat +=1;
+			j =1; // first point is diffraction edge, 2nd the RX elevation
+			for (int k=last+2;k < (int)(itm_elev[0]) + 2;k++) {
+				if (num_points_2nd < 1)
+					break;
+				double clutter_height = 0.0;	// mean clutter height for a certain terrain type
+				double clutter_density = 0.0;	// percent of reflected wave
+				get_material_properties(materials[mat], clutter_height, clutter_density);
+				
+				double grad = fabs(itm_elev[last+1] + clutter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m;
+				// First Fresnel radius
+				double frs_rad = 548 * sqrt( (j * itm_elev[1] * (num_points_2nd - j) * itm_elev[1] / 1000000) / (  num_points_2nd * itm_elev[1] * freq / 1000) );
+				
+				//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
+				
+				double min_elev = SGMiscd::min(itm_elev[last+1] + clutter_height, itm_elev[(int)itm_elev[0] + 2] + receiver_height);
+				double d1 = j * itm_elev[1];
+				if ( (itm_elev[last+1] + clutter_height) > (itm_elev[(int)itm_elev[0] + 2] + receiver_height) ) { 
+					d1 = (num_points_2nd - j) * itm_elev[1];
+				}
+				double ray_height = (grad * d1) + min_elev;
+				
+				double clearance = ray_height - (itm_elev[k] + clutter_height) - frs_rad * 8/10;		
+				double intrusion = fabs(clearance);
+				
+				if (clearance >= 0) {
+					// no losses
+				}
+				else if (clearance < 0 && (intrusion < clutter_height)) {
+					
+					clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * (freq/100) * (itm_elev[1]/100);
+				}
+				else if (clearance < 0 && (intrusion > clutter_height)) {
+					clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * (freq/100) * (itm_elev[1]/100);
+				}
+				else {
+					// no losses
+				}
+				j++;
+				mat++;
+			}
+			
+		}
+		else {	// double horizon: same as single horizon, except there are 3 segments
+			
+			int num_points_1st = (int)floor( horizons[0] * itm_elev[0] / distance_m ); 
+			int num_points_2nd = (int)floor(horizons[1] * itm_elev[0] / distance_m ); 
+			int num_points_3rd = (int)itm_elev[0] - num_points_1st - num_points_2nd; 
+			//cerr << "Double horizon:: horizon1: " << horizons[0] << " horizon2: " << horizons[1] << " distance: " << distance_m << endl;
+			//cerr << "Double horizon:: points1: " << num_points_1st << " points2: " << num_points_2nd << " points3: " << num_points_3rd << endl;
+			int last = 1;
+			/** perform the first pass */
+			int mat = 0;
+			int j=1; // first point is TX elevation, 2nd is obstruction elevation
+			for (int k=3;k < num_points_1st +2;k++) {
+				if (num_points_1st < 1)
+					break;
+				double clutter_height = 0.0;	// mean clutter height for a certain terrain type
+				double clutter_density = 0.0;	// percent of reflected wave
+				get_material_properties(materials[mat], clutter_height, clutter_density);
+				
+				double grad = fabs(itm_elev[2] + transmitter_height - itm_elev[num_points_1st + 2] + clutter_height) / distance_m;
+				// First Fresnel radius
+				double frs_rad = 548 * sqrt( (j * itm_elev[1] * (num_points_1st - j) * itm_elev[1] / 1000000) / (  num_points_1st * itm_elev[1] * freq / 1000) );
+				
+				//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
+				
+				double min_elev = SGMiscd::min(itm_elev[2] + transmitter_height, itm_elev[num_points_1st + 2] + clutter_height);
+				double d1 = j * itm_elev[1];
+				if ( (itm_elev[2] + transmitter_height) > (itm_elev[num_points_1st + 2] + clutter_height) ) {
+					d1 = (num_points_1st - j) * itm_elev[1];
+				}
+				double ray_height = (grad * d1) + min_elev;
+				
+				double clearance = ray_height - (itm_elev[k] + clutter_height) - frs_rad * 8/10;		
+				double intrusion = fabs(clearance);
+				
+				if (clearance >= 0) {
+					// no losses
+				}
+				else if (clearance < 0 && (intrusion < clutter_height)) {
+					
+					clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * (freq/100) * (itm_elev[1]/100);
+				}
+				else if (clearance < 0 && (intrusion > clutter_height)) {
+					clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * (freq/100) * (itm_elev[1]/100);
+				}
+				else {
+					// no losses
+				}
+				j++;
+				last = k;
+			}
+			mat +=1;
+			/** and the second pass */
+			int last2=1;
+			j =1; // first point is 1st obstruction elevation, 2nd is 2nd obstruction elevation
+			for (int k=last+2;k < num_points_1st + num_points_2nd +2;k++) {
+				if (num_points_2nd < 1)
+					break;
+				double clutter_height = 0.0;	// mean clutter height for a certain terrain type
+				double clutter_density = 0.0;	// percent of reflected wave
+				get_material_properties(materials[mat], clutter_height, clutter_density);
+				
+				double grad = fabs(itm_elev[last+1] + clutter_height - itm_elev[num_points_1st + num_points_2nd + 2] + clutter_height) / distance_m;
+				// First Fresnel radius
+				double frs_rad = 548 * sqrt( (j * itm_elev[1] * (num_points_2nd - j) * itm_elev[1] / 1000000) / (  num_points_2nd * itm_elev[1] * freq / 1000) );
+				
+				//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
+				
+				double min_elev = SGMiscd::min(itm_elev[last+1] + clutter_height, itm_elev[num_points_1st + num_points_2nd +2] + clutter_height);
+				double d1 = j * itm_elev[1];
+				if ( (itm_elev[last+1] + clutter_height) > (itm_elev[num_points_1st + num_points_2nd + 2] + clutter_height) ) { 
+					d1 = (num_points_2nd - j) * itm_elev[1];
+				}
+				double ray_height = (grad * d1) + min_elev;
+				
+				double clearance = ray_height - (itm_elev[k] + clutter_height) - frs_rad * 8/10;		
+				double intrusion = fabs(clearance);
+				
+				if (clearance >= 0) {
+					// no losses
+				}
+				else if (clearance < 0 && (intrusion < clutter_height)) {
+					
+					clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * (freq/100) * (itm_elev[1]/100);
+				}
+				else if (clearance < 0 && (intrusion > clutter_height)) {
+					clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * (freq/100) * (itm_elev[1]/100);
+				}
+				else {
+					// no losses
+				}
+				j++;
+				mat++;
+				last2 = k;
+			}
+			
+			/** third and final pass */
+			mat +=1;
+			j =1; // first point is 2nd obstruction elevation, 3rd is RX elevation
+			for (int k=last2+2;k < (int)itm_elev[0] + 2;k++) {
+				if (num_points_3rd < 1)
+					break;
+				double clutter_height = 0.0;	// mean clutter height for a certain terrain type
+				double clutter_density = 0.0;	// percent of reflected wave
+				get_material_properties(materials[mat], clutter_height, clutter_density);
+				
+				double grad = fabs(itm_elev[last2+1] + clutter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m;
+				// First Fresnel radius
+				double frs_rad = 548 * sqrt( (j * itm_elev[1] * (num_points_3rd - j) * itm_elev[1] / 1000000) / (  num_points_3rd * itm_elev[1] * freq / 1000) );
+				
+				
+				//double earth_h = distance_m * (distance_m - j * itm_elev[1]) / ( 1000000 * 12.75 * 1.33 );	// K=4/3
+				
+				double min_elev = SGMiscd::min(itm_elev[last2+1] + clutter_height, itm_elev[(int)itm_elev[0] + 2] + receiver_height);
+				double d1 = j * itm_elev[1];
+				if ( (itm_elev[last2+1] + clutter_height) > (itm_elev[(int)itm_elev[0] + 2] + receiver_height) ) { 
+					d1 = (num_points_3rd - j) * itm_elev[1];
+				}
+				double ray_height = (grad * d1) + min_elev;
+				
+				double clearance = ray_height - (itm_elev[k] + clutter_height) - frs_rad * 8/10;		
+				double intrusion = fabs(clearance);
+				
+				if (clearance >= 0) {
+					// no losses
+				}
+				else if (clearance < 0 && (intrusion < clutter_height)) {
+					
+					clutter_loss += clutter_density * (intrusion / (frs_rad * 2) ) * (freq/100) * (itm_elev[1]/100);
+				}
+				else if (clearance < 0 && (intrusion > clutter_height)) {
+					clutter_loss += clutter_density * (clutter_height / (frs_rad * 2 ) ) * (freq/100) * (itm_elev[1]/100);
+				}
+				else {
+					// no losses
+				}
+				j++;
+				mat++;
+				
+			}
+			
+		}
+	}
+	else if (p_mode == 2) {		//	troposcatter: ignore ground clutter for now...
+		clutter_loss = 0.0;
+	}
+	
+}
+
+/*** 	Temporary material properties database
+*		height: median clutter height
+*		density: radiowave attenuation factor
+***/
+void FGRadioTransmission::get_material_properties(string mat_name, double &height, double &density) {
+	
+	if(mat_name == "Landmass") {
+		height = 15.0;
+		density = 0.2;
+	}
+
+	else if(mat_name == "SomeSort") {
+		height = 15.0;
+		density = 0.2;
+	}
+
+	else if(mat_name == "Island") {
+		height = 15.0;
+		density = 0.2;
+	}
+	else if(mat_name == "Default") {
+		height = 15.0;
+		density = 0.2;
+	}
+	else if(mat_name == "EvergreenBroadCover") {
+		height = 20.0;
+		density = 0.2;
+	}
+	else if(mat_name == "EvergreenForest") {
+		height = 20.0;
+		density = 0.2;
+	}
+	else if(mat_name == "DeciduousBroadCover") {
+		height = 15.0;
+		density = 0.3;
+	}
+	else if(mat_name == "DeciduousForest") {
+		height = 15.0;
+		density = 0.3;
+	}
+	else if(mat_name == "MixedForestCover") {
+		height = 20.0;
+		density = 0.25;
+	}
+	else if(mat_name == "MixedForest") {
+		height = 15.0;
+		density = 0.25;
+	}
+	else if(mat_name == "RainForest") {
+		height = 25.0;
+		density = 0.55;
+	}
+	else if(mat_name == "EvergreenNeedleCover") {
+		height = 15.0;
+		density = 0.2;
+	}
+	else if(mat_name == "WoodedTundraCover") {
+		height = 5.0;
+		density = 0.15;
+	}
+	else if(mat_name == "DeciduousNeedleCover") {
+		height = 5.0;
+		density = 0.2;
+	}
+	else if(mat_name == "ScrubCover") {
+		height = 3.0;
+		density = 0.15;
+	}
+	else if(mat_name == "BuiltUpCover") {
+		height = 30.0;
+		density = 0.7;
+	}
+	else if(mat_name == "Urban") {
+		height = 30.0;
+		density = 0.7;
+	}
+	else if(mat_name == "Construction") {
+		height = 30.0;
+		density = 0.7;
+	}
+	else if(mat_name == "Industrial") {
+		height = 30.0;
+		density = 0.7;
+	}
+	else if(mat_name == "Port") {
+		height = 30.0;
+		density = 0.7;
+	}
+	else if(mat_name == "Town") {
+		height = 10.0;
+		density = 0.5;
+	}
+	else if(mat_name == "SubUrban") {
+		height = 10.0;
+		density = 0.5;
+	}
+	else if(mat_name == "CropWoodCover") {
+		height = 10.0;
+		density = 0.1;
+	}
+	else if(mat_name == "CropWood") {
+		height = 10.0;
+		density = 0.1;
+	}
+	else if(mat_name == "AgroForest") {
+		height = 10.0;
+		density = 0.1;
+	}
+	else {
+		height = 0.0;
+		density = 0.0;
+	}
+	
+}
+
 /*** implement simple LOS propagation model (WIP)
 ***/
-double FGRadio::LOS_calculate_attenuation(SGGeod pos, double freq, int transmission_type) {
+double FGRadioTransmission::LOS_calculate_attenuation(SGGeod pos, double freq, int transmission_type) {
 	double frq_mhz;
 	if( (freq < 118.0) || (freq > 137.0) )
 		frq_mhz = 125.0; 	// sane value, middle of bandplan
@@ -396,10 +821,9 @@ double FGRadio::LOS_calculate_attenuation(SGGeod pos, double freq, int transmiss
 		frq_mhz = freq;
 	double dbloss;
 	double tx_pow = _transmitter_power;
-	double ant_gain = _antenna_gain;
+	double ant_gain = _rx_antenna_gain + _tx_antenna_gain;
 	double signal = 0.0;
-	double ATC_HAAT = 30.0;
-	double Aircraft_HAAT = 5.0;
+	
 	double sender_alt_ft,sender_alt;
 	double transmitter_height=0.0;
 	double receiver_height=0.0;
@@ -408,13 +832,8 @@ double FGRadio::LOS_calculate_attenuation(SGGeod pos, double freq, int transmiss
 	double own_alt_ft = fgGetDouble("/position/altitude-ft");
 	double own_alt= own_alt_ft * SG_FEET_TO_METER;
 	
-	if(transmission_type == 1)
-		tx_pow = _transmitter_power + 6.0;
-
-	if((transmission_type == 1) || (transmission_type == 3))
-		ant_gain = _antenna_gain + 3.0; //pilot plane's antenna gain + ground station antenna gain
 	
-	double link_budget = tx_pow - _receiver_sensitivity + ant_gain;	
+	double link_budget = tx_pow - _receiver_sensitivity - _rx_line_losses - _tx_line_losses + ant_gain;	
 
 	//cerr << "ITM:: pilot Lat: " << own_lat << ", Lon: " << own_lon << ", Alt: " << own_alt << endl;
 	
@@ -430,10 +849,10 @@ double FGRadio::LOS_calculate_attenuation(SGGeod pos, double freq, int transmiss
 	
 	double distance_m = SGGeodesy::distanceM(own_pos, sender_pos);
 	
-	if(transmission_type == 1) 
-		transmitter_height += ATC_HAAT;
-	else
-		transmitter_height += Aircraft_HAAT;
+	
+	transmitter_height += _tx_antenna_height;
+	receiver_height += _rx_antenna_height;
+	
 	
 	/** radio horizon calculation with wave bending k=4/3 */
 	double receiver_horizon = 4.12 * sqrt(receiver_height);
@@ -453,3 +872,5 @@ double FGRadio::LOS_calculate_attenuation(SGGeod pos, double freq, int transmiss
 	return signal;
 	
 }
+
+

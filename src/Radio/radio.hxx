@@ -23,7 +23,7 @@
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
-
+#include <deque>
 #include <Main/fg_props.hxx>
 
 #include <simgear/math/sg_geodesy.hxx>
@@ -33,7 +33,7 @@
 using std::string;
 
 
-class FGRadio 
+class FGRadioTransmission 
 {
 private:
 	bool isOperable() const
@@ -42,21 +42,39 @@ private:
 	
 	double _receiver_sensitivity;
 	double _transmitter_power;
-	double _antenna_gain;
+	double _tx_antenna_height;
+	double _rx_antenna_height;
+	double _rx_antenna_gain;
+	double _tx_antenna_gain;
+	double _rx_line_losses;
+	double _tx_line_losses;
+	double _terrain_sampling_distance;
+	std::map<string, double[2]> _mat_database;
 	
 	int _propagation_model; /// 0 none, 1 round Earth, 2 ITM
 	double ITM_calculate_attenuation(SGGeod tx_pos, double freq, int ground_to_air);
 	double LOS_calculate_attenuation(SGGeod tx_pos, double freq, int ground_to_air);
+	void clutterLoss(double freq, double distance_m, double itm_elev[], std::deque<string> materials,
+			double transmitter_height, double receiver_height, int p_mode,
+			double horizons[], double &clutter_loss);
+	void get_material_properties(string mat_name, double &height, double &density);
 	
 public:
 
-    FGRadio();
-    ~FGRadio();
+    FGRadioTransmission();
+    ~FGRadioTransmission();
 
     
     void setFrequency(double freq, int radio);
     double getFrequency(int radio);
     void setTxPower(double txpower) { _transmitter_power = txpower; };
+    void setRxSensitivity(double sensitivity) { _receiver_sensitivity = sensitivity; };
+    void setTxAntennaHeight(double tx_antenna_height) { _tx_antenna_height = tx_antenna_height; };
+    void setRxAntennaHeight(double rx_antenna_height) { _rx_antenna_height = rx_antenna_height; };
+    void setTxAntennaGain(double tx_antenna_gain) { _tx_antenna_gain = tx_antenna_gain; };
+    void setRxAntennaGain(double rx_antenna_gain) { _rx_antenna_gain = rx_antenna_gain; };
+    void setTxLineLosses(double tx_line_losses) { _tx_line_losses = tx_line_losses; };
+    void setRxLineLosses(double rx_line_losses) { _rx_line_losses = rx_line_losses; };
     void setPropagationModel(int model) { _propagation_model = model; };
     // transmission_type: 0 for air to ground 1 for ground to air, 2 for air to air, 3 for pilot to ground, 4 for pilot to air
     void receiveATC(SGGeod tx_pos, double freq, string text, int transmission_type);
