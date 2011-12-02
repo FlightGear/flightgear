@@ -33,10 +33,12 @@ private:
 	void _load_antenna_pattern();
 	int _mirror_y;
 	int _mirror_z;
-	double _heading;
+	int _invert_ground;
+	double _heading_deg;
+	double _elevation_angle_deg;
 	struct AntennaGain {
 		double azimuth;
-		double elevation_angle;
+		double elevation;
 		double gain;
 	};
 	
@@ -47,7 +49,7 @@ public:
 	
 	FGRadioAntenna();
     ~FGRadioAntenna();
-	double calculate_gain(double azimuth, double theta);
+	double calculate_gain(double azimuth, double elevation);
 	
 	
 };

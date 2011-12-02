@@ -51,7 +51,7 @@ private:
 	double _terrain_sampling_distance;
 	int _polarization;
 	std::map<string, double[2]> _mat_database;
-	
+	SGPropertyNode *_root_node;
 	int _propagation_model; /// 0 none, 1 round Earth, 2 ITM
 	double polarization_loss();
 	double ITM_calculate_attenuation(SGGeod tx_pos, double freq, int ground_to_air);

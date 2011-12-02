@@ -63,7 +63,9 @@ FGRadioTransmission::FGRadioTransmission() {
 	_polarization = 1; // default vertical
 	
 	_propagation_model = 2; 
-	_terrain_sampling_distance = fgGetDouble("/sim/radio/sampling-distance", 90.0); // regular SRTM is 90 meters
+	
+	_root_node = fgGetNode("sim/radio", true);
+	_terrain_sampling_distance = _root_node->getDoubleValue("sampling-distance", 90.0); // regular SRTM is 90 meters
 }
 
 FGRadioTransmission::~FGRadioTransmission() 
@@ -145,7 +147,7 @@ void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, in
 				/** write signal strength above threshold to the property tree
 				*	to implement a simple S-meter just divide by 3 dB per grade (VHF norm)
 				**/
-				fgSetDouble("/sim/radio/comm1-signal", signal);
+				_root_node->setDoubleValue("station[0]/signal", signal);
 			}
 		}
 		else if ( _propagation_model == 2 ) {
@@ -177,7 +179,7 @@ void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, in
 				//cerr << "Usable signal at limit: " << signal << endl;
 				fgSetDouble("/sim/sound/voices/voice/volume", volume);
 				fgSetString("/sim/messages/atc", text.c_str());
-				fgSetDouble("/sim/radio/comm1-signal", signal);
+				_root_node->setDoubleValue("station[0]/signal", signal);
 				fgSetDouble("/sim/sound/voices/voice/volume", old_volume);
 			}
 			else {
@@ -185,7 +187,7 @@ void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, in
 				/** write signal strength above threshold to the property tree
 				*	to implement a simple S-meter just divide by 3 dB per grade (VHF norm)
 				**/
-				fgSetDouble("/sim/radio/comm1-signal", signal);
+				_root_node->setDoubleValue("station[0]/signal", signal);
 			}
 			
 		}
@@ -302,7 +304,10 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	
 	SG_LOG(SG_GENERAL, SG_BULK,
 			"ITM:: RX-height: " << receiver_height << " meters, TX-height: " << transmitter_height << " meters, Distance: " << distance_m << " meters");
-	cerr << "ITM:: RX-height: " << receiver_height << " meters, TX-height: " << transmitter_height << " meters, Distance: " << distance_m << " meters" << endl;
+	//cerr << "ITM:: RX-height: " << receiver_height << " meters, TX-height: " << transmitter_height << " meters, Distance: " << distance_m << " meters" << endl;
+	_root_node->setDoubleValue("station[0]/rx-height", receiver_height);
+	_root_node->setDoubleValue("station[0]/tx-height", transmitter_height);
+	_root_node->setDoubleValue("station[0]/distance", distance_m);
 	
 	unsigned int e_size = (deque<unsigned>::size_type)max_points;
 	
@@ -373,24 +378,33 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 		point_to_point(itm_elev, receiver_height, transmitter_height,
 			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
 			pol, conf, rel, dbloss, strmode, p_mode, horizons, errnum);
-		if( fgGetBool( "/sim/radio/use-clutter-attenuation", false ) )
+		if( _root_node->getBoolValue( "use-clutter-attenuation", false ) )
 			clutterLoss(frq_mhz, distance_m, itm_elev, materials, receiver_height, transmitter_height, p_mode, horizons, clutter_loss);
 	}
 	else {
 		point_to_point(itm_elev, transmitter_height, receiver_height,
 			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
 			pol, conf, rel, dbloss, strmode, p_mode, horizons, errnum);
-		if( fgGetBool( "/sim/radio/use-clutter-attenuation", false ) )
+		if( _root_node->getBoolValue( "use-clutter-attenuation", false ) )
 			clutterLoss(frq_mhz, distance_m, itm_elev, materials, transmitter_height, receiver_height, p_mode, horizons, clutter_loss);
+	}
+	
+	double pol_loss = 0.0;
+	if (_polarization == 1) {
+		pol_loss = polarization_loss();
 	}
 	SG_LOG(SG_GENERAL, SG_BULK,
 			"ITM:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, " << strmode << ", Error: " << errnum);
-	cerr << "ITM:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, " << strmode << ", Error: " << errnum << endl;
-	
-	cerr << "Clutter loss: " << clutter_loss << endl;
+	//cerr << "ITM:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, " << strmode << ", Error: " << errnum << endl;
+	_root_node->setDoubleValue("station[0]/link-budget", link_budget);
+	_root_node->setDoubleValue("station[0]/terrain-attenuation", dbloss);
+	_root_node->setStringValue("station[0]/prop-mode", strmode);
+	_root_node->setDoubleValue("station[0]/clutter-attenuation", clutter_loss);
+	_root_node->setDoubleValue("station[0]/polarization-attenuation", pol_loss);
+	//cerr << "Clutter loss: " << clutter_loss << endl;
 	//if (errnum == 4)	// if parameters are outside sane values for lrprop, the alternative method is used
 	//	return -1;
-	signal = link_budget - dbloss - clutter_loss;
+	signal = link_budget - dbloss - clutter_loss + pol_loss;
 	return signal;
 
 }
@@ -876,15 +890,25 @@ double FGRadioTransmission::polarization_loss() {
 	
 	double theta_deg;
 	double roll = fgGetDouble("/orientation/roll-deg");
+	if (fabs(roll) > 85.0)
+		roll = 85.0;
 	double pitch = fgGetDouble("/orientation/pitch-deg");
-	double theta = acos( sqrt( cos(roll) * cos(roll) + cos(pitch) * cos(pitch) ));
-	if (_polarization == 1)
+	if (fabs(pitch) > 85.0)
+		pitch = 85.0;
+	double theta = fabs( atan( sqrt( 
+		pow(tan(roll * SGD_DEGREES_TO_RADIANS), 2) + 
+		pow(tan(pitch * SGD_DEGREES_TO_RADIANS), 2) )) * SGD_RADIANS_TO_DEGREES);
+	
+	if (_polarization == 0)
 		theta_deg = 90.0 - theta;
 	else
 		theta_deg = theta;
-	if (fabs(theta_deg) > 85.0)	// we don't want to converge into infinity
+	if (theta_deg > 85.0)	// we don't want to converge into infinity
 		theta_deg = 85.0;
-	return 10 * log10(cos(theta_deg) * cos(theta_deg));
+	
+	double loss = 10 * log10( pow(cos(theta_deg * SGD_DEGREES_TO_RADIANS), 2) );
+	//cerr << "Polarization loss: " << loss << " dBm " << endl;
+	return loss;
 }
 
 
