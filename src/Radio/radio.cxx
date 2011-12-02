@@ -871,10 +871,13 @@ double FGRadioTransmission::LOS_calculate_attenuation(SGGeod pos, double freq, i
 	if (distance_m > total_horizon) {
 		return -1;
 	}
-	
+	double pol_loss = 0.0;
+	if (_polarization == 1) {
+		pol_loss = polarization_loss();
+	}
 	// free-space loss (distance calculation should be changed)
 	dbloss = 20 * log10(distance_m) +20 * log10(frq_mhz) -27.55;
-	signal = link_budget - dbloss;
+	signal = link_budget - dbloss + pol_loss;
 	SG_LOG(SG_GENERAL, SG_BULK,
 			"LOS:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm ");
 	//cerr << "LOS:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm " << endl;
@@ -909,6 +912,19 @@ double FGRadioTransmission::polarization_loss() {
 	double loss = 10 * log10( pow(cos(theta_deg * SGD_DEGREES_TO_RADIANS), 2) );
 	//cerr << "Polarization loss: " << loss << " dBm " << endl;
 	return loss;
+}
+
+
+double FGRadioTransmission::power_to_dbm(double power_watt) {
+	return 10 * log10(1000 * power_watt);	// returns dbm
+}
+
+double FGRadioTransmission::dbm_to_power(double dbm) {
+	return exp( (dbm-30) * log(10) / 10);	// returns Watts
+}
+
+double FGRadioTransmission::dbm_to_microvolt(double dbm) {
+	return sqrt(dbm_to_power(dbm) * 50) * 1000000;	// returns microvolts
 }
 
 

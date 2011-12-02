@@ -66,7 +66,7 @@ public:
     FGRadioTransmission();
     ~FGRadioTransmission();
 
-    
+    // a couple of setters and getters for convenience
     void setFrequency(double freq, int radio);
     double getFrequency(int radio);
     void setTxPower(double txpower) { _transmitter_power = txpower; };
@@ -79,6 +79,12 @@ public:
     void setRxLineLosses(double rx_line_losses) { _rx_line_losses = rx_line_losses; };
     void setPropagationModel(int model) { _propagation_model = model; };
     void setPolarization(int polarization) { _polarization = polarization; };
+    // accessory functions for unit conversions
+    double power_to_dbm(double power_watt);
+    double dbm_to_power(double dbm);
+    double dbm_to_microvolt(double dbm);
+    
+    
     // transmission_type: 0 for air to ground 1 for ground to air, 2 for air to air, 3 for pilot to ground, 4 for pilot to air
     void receiveATC(SGGeod tx_pos, double freq, string text, int transmission_type);
     void receiveChat(SGGeod tx_pos, double freq, string text, int transmission_type);
