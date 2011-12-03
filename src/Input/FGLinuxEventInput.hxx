@@ -25,7 +25,6 @@
 
 #include "FGEventInput.hxx"
 #include <linux/input.h>
-#include <hal/libhal.h>
 
 struct FGLinuxEventData : public FGEventData {
   FGLinuxEventData( struct input_event & event, double dt, int modifiers ) :
@@ -71,10 +70,7 @@ public:
   virtual void update (double dt);
   virtual void postinit();
 
-  void AddHalDevice( const char * udi );
 protected:
-  LibHalContext *halcontext;
-
 };
 
 #endif
