@@ -133,10 +133,11 @@ void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, in
 	else {
 	
 		if ( _propagation_model == 0) {
+			// skip propagation routines entirely
 			fgSetString("/sim/messages/atc", text.c_str());
 		}
 		else if ( _propagation_model == 1 ) {
-			// TODO: free space, round earth
+			// Use free-space, round earth
 			double signal = LOS_calculate_attenuation(tx_pos, freq, ground_to_air);
 			if (signal <= 0.0) {
 				return;
@@ -231,6 +232,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	
 	
 	double link_budget = tx_pow - _receiver_sensitivity - _rx_line_losses - _tx_line_losses + ant_gain;	
+	double signal_strength = tx_pow - _rx_line_losses - _tx_line_losses + ant_gain;	
 
 	FGScenery * scenery = globals->get_scenery();
 	
@@ -405,6 +407,10 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	//if (errnum == 4)	// if parameters are outside sane values for lrprop, the alternative method is used
 	//	return -1;
 	signal = link_budget - dbloss - clutter_loss + pol_loss;
+	double signal_strength_dbm = signal_strength - dbloss - clutter_loss + pol_loss;
+	double field_strength_uV = dbm_to_microvolt(signal_strength_dbm);
+	_root_node->setDoubleValue("station[0]/signal-dbm", signal_strength_dbm);
+	_root_node->setDoubleValue("station[0]/field-strength-uV", field_strength_uV);
 	return signal;
 
 }

@@ -30,7 +30,7 @@
 class FGRadioAntenna
 {
 private:
-	void _load_antenna_pattern();
+	void load_antenna_pattern();
 	int _mirror_y;
 	int _mirror_z;
 	int _invert_ground;
