@@ -58,6 +58,7 @@ public:
 
 private:
 
+    bool _is_aimodel;
     SGSharedPtr<SGSampleGroup> _avionics;
     std::vector<SGXmlSound *> _sound;
 
