@@ -132,8 +132,8 @@ double FORTRAN_DIM(const double &x, const double &y)
 		return 0.0;
 }
 
-#define set_warn(txt, err) printf("%s:%d %s\n", __func__, __LINE__, txt);
-
+//#define set_warn(txt, err) printf("%s:%d %s\n", __func__, __LINE__, txt);
+#define set_warn(txt, err) 1;
 
 // :13: single-knife attenuation, page 6
 /*
