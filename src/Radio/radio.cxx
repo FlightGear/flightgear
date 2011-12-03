@@ -119,9 +119,9 @@ void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, in
 
 	
 	if(ground_to_air == 1) {
-		_transmitter_power += 6.0;
+		_transmitter_power += 4.0;
 		_tx_antenna_height += 30.0;
-		_tx_antenna_gain += 3.0; 
+		_tx_antenna_gain += 2.0; 
 	}
 	
 	
