@@ -80,8 +80,8 @@ public:
     void setPropagationModel(int model) { _propagation_model = model; };
     void setPolarization(int polarization) { _polarization = polarization; };
     // accessory functions for unit conversions
-    double power_to_dbm(double power_watt);
-    double dbm_to_power(double dbm);
+    double watt_to_dbm(double power_watt);
+    double dbm_to_watt(double dbm);
     double dbm_to_microvolt(double dbm);
     
     

@@ -145,10 +145,7 @@ void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, in
 			else {
 				
 				fgSetString("/sim/messages/atc", text.c_str());
-				/** write signal strength above threshold to the property tree
-				*	to implement a simple S-meter just divide by 3 dB per grade (VHF norm)
-				**/
-				_root_node->setDoubleValue("station[0]/signal", signal);
+				
 			}
 		}
 		else if ( _propagation_model == 2 ) {
@@ -180,15 +177,10 @@ void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, in
 				//cerr << "Usable signal at limit: " << signal << endl;
 				fgSetDouble("/sim/sound/voices/voice/volume", volume);
 				fgSetString("/sim/messages/atc", text.c_str());
-				_root_node->setDoubleValue("station[0]/signal", signal);
 				fgSetDouble("/sim/sound/voices/voice/volume", old_volume);
 			}
 			else {
 				fgSetString("/sim/messages/atc", text.c_str());
-				/** write signal strength above threshold to the property tree
-				*	to implement a simple S-meter just divide by 3 dB per grade (VHF norm)
-				**/
-				_root_node->setDoubleValue("station[0]/signal", signal);
 			}
 			
 		}
@@ -233,6 +225,8 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	
 	double link_budget = tx_pow - _receiver_sensitivity - _rx_line_losses - _tx_line_losses + ant_gain;	
 	double signal_strength = tx_pow - _rx_line_losses - _tx_line_losses + ant_gain;	
+	double tx_erp = dbm_to_watt(tx_pow + _tx_antenna_gain - _tx_line_losses);
+	
 
 	FGScenery * scenery = globals->get_scenery();
 	
@@ -309,7 +303,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	//cerr << "ITM:: RX-height: " << receiver_height << " meters, TX-height: " << transmitter_height << " meters, Distance: " << distance_m << " meters" << endl;
 	_root_node->setDoubleValue("station[0]/rx-height", receiver_height);
 	_root_node->setDoubleValue("station[0]/tx-height", transmitter_height);
-	_root_node->setDoubleValue("station[0]/distance", distance_m);
+	_root_node->setDoubleValue("station[0]/distance", distance_m / 1000);
 	
 	unsigned int e_size = (deque<unsigned>::size_type)max_points;
 	
@@ -411,6 +405,8 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	double field_strength_uV = dbm_to_microvolt(signal_strength_dbm);
 	_root_node->setDoubleValue("station[0]/signal-dbm", signal_strength_dbm);
 	_root_node->setDoubleValue("station[0]/field-strength-uV", field_strength_uV);
+	_root_node->setDoubleValue("station[0]/signal", signal);
+	_root_node->setDoubleValue("station[0]/tx-erp", tx_erp);
 	return signal;
 
 }
@@ -921,16 +917,16 @@ double FGRadioTransmission::polarization_loss() {
 }
 
 
-double FGRadioTransmission::power_to_dbm(double power_watt) {
+double FGRadioTransmission::watt_to_dbm(double power_watt) {
 	return 10 * log10(1000 * power_watt);	// returns dbm
 }
 
-double FGRadioTransmission::dbm_to_power(double dbm) {
+double FGRadioTransmission::dbm_to_watt(double dbm) {
 	return exp( (dbm-30) * log(10) / 10);	// returns Watts
 }
 
 double FGRadioTransmission::dbm_to_microvolt(double dbm) {
-	return sqrt(dbm_to_power(dbm) * 50) * 1000000;	// returns microvolts
+	return sqrt(dbm_to_watt(dbm) * 50) * 1000000;	// returns microvolts
 }
 
 
