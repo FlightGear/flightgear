@@ -147,7 +147,10 @@ FGAIBase::~FGAIBase() {
 
     if (_refID != 0 && _refID !=  1) {
         SGSoundMgr *smgr = globals->get_soundmgr();
-        smgr->remove("aifx:"+_refID);
+        stringstream name; 
+        name <<  "aifx:";
+        name << _refID;
+        smgr->remove(name.str());
     }
 
     delete fp;
@@ -221,7 +224,8 @@ void FGAIBase::update(double dt) {
         _fx->set_orientation( orient );
 
         SGVec3d velocity;
-        velocity = SGVec3d( speed_north_deg_sec, speed_east_deg_sec, pitch*speed );
+        velocity = SGVec3d( speed_north_deg_sec, speed_east_deg_sec,
+                            pitch*speed );
         _fx->set_velocity( velocity );
     }
     else if (_aimodel)
@@ -234,7 +238,10 @@ void FGAIBase::update(double dt) {
 
             // initialize the sound configuration
             SGSoundMgr *smgr = globals->get_soundmgr();
-            _fx = new FGFX(smgr, "aifx:"+_refID, props);
+            stringstream name;
+            name <<  "aifx:";
+            name << _refID;
+            _fx = new FGFX(smgr, name.str(), props);
             _fx->init();
         }
     }
