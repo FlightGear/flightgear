@@ -70,7 +70,15 @@ void AudioIdent::setVolumeNorm( double volumeNorm )
 
 void AudioIdent::setIdent( const std::string & ident, double volumeNorm )
 {
-    if( _ident == ident ) {
+    // Signal may flicker very frequently (due to our realistic newnavradio...).
+    // Avoid recreating identical sound samples all the time, instead turn off
+    // volume when signal is lost, and save the most recent sample.
+    if (ident.empty())
+        volumeNorm = 0;
+
+    if(( _ident == ident )||
+       (volumeNorm == 0))  // don't bother with sounds when volume is OFF anyway...
+    {
         if( false == _ident.empty() )
             setVolumeNorm( volumeNorm );
         return;
@@ -88,6 +96,7 @@ void AudioIdent::setIdent( const std::string & ident, double volumeNorm )
             sound->set_volume( volumeNorm );
             if (!_sgr->add( sound, _fx_name )) {
                 SG_LOG(SG_SOUND, SG_WARN, "Failed to add sound '" << _fx_name << "' for ident '" << ident << "'" );
+                delete sound;
                 return;
             }
 
