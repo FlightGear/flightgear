@@ -8,6 +8,7 @@ foreach( mylibfolder
 		Aircraft
 		ATC
 		ATCDCL
+		Radio
 		Autopilot
 		Cockpit
 		Environment

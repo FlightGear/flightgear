@@ -756,11 +756,11 @@ bool FGGroundNetwork::checkTransmissionState(int minState, int maxState, Traffic
                 FGATCDialogNew::instance()->removeEntry(1);
             } else {
                 //cerr << "creating message for " << i->getAircraft()->getCallSign() << endl;
-                transmit(&(*i), msgId, msgDir, false);
+                transmit(&(*i), &(*parent->getDynamics()), msgId, msgDir, false);
                 return false;
             }
         }
-        transmit(&(*i), msgId, msgDir, true);
+        transmit(&(*i), &(*parent->getDynamics()), msgId, msgDir, true);
         i->updateState();
         lastTransmission = now;
         available = false;
@@ -1098,11 +1098,11 @@ void FGGroundNetwork::checkHoldPosition(int id, double lat,
         if ((origStatus != currStatus) && available) {
             //cerr << "Issueing hold short instrudtion " << currStatus << " " << available << endl;
             if (currStatus == true) { // No has a hold short instruction
-                transmit(&(*current), MSG_HOLD_POSITION, ATC_GROUND_TO_AIR, true);
+                transmit(&(*current), &(*parent->getDynamics()), MSG_HOLD_POSITION, ATC_GROUND_TO_AIR, true);
                 //cerr << "Transmittin hold short instrudtion " << currStatus << " " << available << endl;
                 current->setState(1);
             } else {
-                transmit(&(*current), MSG_RESUME_TAXI, ATC_GROUND_TO_AIR, true);
+                transmit(&(*current), &(*parent->getDynamics()), MSG_RESUME_TAXI, ATC_GROUND_TO_AIR, true);
                 //cerr << "Transmittig resume instrudtion " << currStatus << " " << available << endl;
                 current->setState(2);
             }

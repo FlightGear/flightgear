@@ -47,6 +47,7 @@
 #include <Airports/groundnetwork.hxx>
 #include <Airports/dynamics.hxx>
 #include <Airports/simple.hxx>
+#include <Radio/radio.hxx>
 
 using std::sort;
 
@@ -508,7 +509,7 @@ bool FGATCController::isUserAircraft(FGAIAircraft* ac)
     return (ac->getCallSign() == fgGetString("/sim/multiplay/callsign")) ? true : false;
 };
 
-void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
+void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent, AtcMsgId msgId,
                                AtcMsgDir msgDir, bool audible)
 {
     string sender, receiver;
@@ -529,6 +530,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
     FGAIFlightPlan *fp;
     string fltRules;
     string instructionText;
+    int ground_to_air=0;
 
     //double commFreqD;
     sender = rec->getAircraft()->getTrafficRef()->getCallSign();
@@ -569,6 +571,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
         string tmp = sender;
         sender = receiver;
         receiver = tmp;
+        ground_to_air=1;
     }
     switch (msgId) {
     case MSG_ANNOUNCE_ENGINE_START:
@@ -736,16 +739,42 @@ void FGATCController::transmit(FGTrafficRecord * rec, AtcMsgId msgId,
         // Display ATC message only when one of the radios is tuned
         // the relevant frequency.
         // Note that distance attenuation is currently not yet implemented
+                
         if ((onBoardRadioFreqI0 == stationFreq)
                 || (onBoardRadioFreqI1 == stationFreq)) {
             if (rec->allowTransmissions()) {
-                fgSetString("/sim/messages/atc", text.c_str());
+            	
+            	if( fgGetBool( "/sim/radio/use-itm-attenuation", false ) ) {
+            		//cerr << "Using ITM radio propagation" << endl;
+            		FGRadioTransmission* radio = new FGRadioTransmission();
+            		SGGeod sender_pos;
+            		double sender_alt_ft, sender_alt;
+            		if(ground_to_air) {
+			              sender_alt_ft = parent->getElevation();
+			              sender_alt = sender_alt_ft * SG_FEET_TO_METER;
+			              sender_pos= SGGeod::fromDegM( parent->getLongitude(),
+		                      parent->getLatitude(), sender_alt );
+			        }
+			        else {
+			              sender_alt_ft = rec->getAltitude();
+			              sender_alt = sender_alt_ft * SG_FEET_TO_METER;
+			              sender_pos= SGGeod::fromDegM( rec->getLongitude(),
+			                     rec->getLatitude(), sender_alt );
+			      	}
+			      	double frequency = ((double)stationFreq) / 100;
+            		radio->receiveATC(sender_pos, frequency, text, ground_to_air);
+            		delete radio;
+            	}
+            	else {
+            		fgSetString("/sim/messages/atc", text.c_str());
+            	}
             }
         }
     } else {
         FGATCDialogNew::instance()->addEntry(1, text);
     }
 }
+
 
 string FGATCController::formatATCFrequency3_2(int freq)
 {
@@ -1186,13 +1215,13 @@ bool FGStartupController::checkTransmissionState(int st, time_t now, time_t star
                 FGATCDialogNew::instance()->removeEntry(1);
             } else {
                 //cerr << "creading message for " << i->getAircraft()->getCallSign() << endl;
-                transmit(&(*i), msgId, msgDir, false);
+                transmit(&(*i), &(*parent), msgId, msgDir, false);
                 return false;
             }
         }
         if (now > startTime) {
             //cerr << "Transmitting startup msg" << endl;
-            transmit(&(*i), msgId, msgDir, true);
+            transmit(&(*i), &(*parent), msgId, msgDir, true);
             i->updateState();
             lastTransmission = now;
             available = false;
@@ -1261,11 +1290,11 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
         if (now > startTime + 200) {
             if (i->pushBackAllowed()) {
                 i->allowRepeatedTransmissions();
-                transmit(&(*i), MSG_PERMIT_PUSHBACK_CLEARANCE,
+                transmit(&(*i), &(*parent), MSG_PERMIT_PUSHBACK_CLEARANCE,
                          ATC_GROUND_TO_AIR, true);
                 i->updateState();
             } else {
-                transmit(&(*i), MSG_HOLD_PUSHBACK_CLEARANCE,
+                transmit(&(*i), &(*parent), MSG_HOLD_PUSHBACK_CLEARANCE,
                          ATC_GROUND_TO_AIR, true);
                 i->suppressRepeatedTransmissions();
             }

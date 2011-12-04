@@ -453,7 +453,7 @@ public:
     void   setDt(double dt) {
         dt_count = dt;
     };
-    void transmit(FGTrafficRecord *rec, AtcMsgId msgId, AtcMsgDir msgDir, bool audible);
+    void transmit(FGTrafficRecord *rec, FGAirportDynamics *parent, AtcMsgId msgId, AtcMsgDir msgDir, bool audible);
     string getGateName(FGAIAircraft *aircraft);
     virtual void render(bool) = 0;
     virtual string getName()  = 0;
