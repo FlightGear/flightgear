@@ -171,7 +171,8 @@ FGGlobals::~FGGlobals()
         ai->unbind();
         delete ai;
     }
-    
+    SGSubsystem* sound = subsystem_mgr->remove("sound");
+
     subsystem_mgr->shutdown();
     subsystem_mgr->unbind();
     delete subsystem_mgr;
@@ -205,6 +206,7 @@ FGGlobals::~FGGlobals()
     delete tacanlist;
     delete carrierlist;
     delete channellist;
+    delete sound;
 }
 
 

@@ -228,7 +228,7 @@ void FGAIBase::update(double dt) {
                             pitch*speed );
         _fx->set_velocity( velocity );
     }
-    else if (_aimodel)
+    else if ((_aimodel)&&(fgGetBool("/sim/sound/aimodels/enabled",false)))
     {
         string fxpath = _aimodel->get_sound_path();
         if (fxpath != "")
@@ -492,6 +492,8 @@ void FGAIBase::unbind() {
 
     props->setBoolValue("/sim/controls/radar/", true);
 
+    // drop reference to sound effects now
+    _fx = 0;
 }
 
 double FGAIBase::UpdateRadar(FGAIManager* manager) {
