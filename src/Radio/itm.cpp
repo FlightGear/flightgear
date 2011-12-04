@@ -39,8 +39,8 @@
 #include <assert.h>
 #include <stdio.h>
 
-const float THIRD = (1.0/3.0);
-const float f_0 = 47.7; // 47.7 MHz from [Alg 1.1], to convert frequency into wavenumber and vica versa
+const double THIRD = (1.0/3.0);
+const double f_0 = 47.7; // 47.7 MHz from [Alg 1.1], to convert frequency into wavenumber and vica versa
 
 
 using namespace std;

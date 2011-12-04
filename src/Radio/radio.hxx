@@ -58,7 +58,7 @@ private:
 	double polarization_loss();
 	double ITM_calculate_attenuation(SGGeod tx_pos, double freq, int ground_to_air);
 	double LOS_calculate_attenuation(SGGeod tx_pos, double freq, int ground_to_air);
-	void clutterLoss(double freq, double distance_m, double itm_elev[], std::deque<string> materials,
+	void clutterLoss(double freq, double itm_elev[], std::deque<string> materials,
 			double transmitter_height, double receiver_height, int p_mode,
 			double horizons[], double &clutter_loss);
 	void get_material_properties(string mat_name, double &height, double &density);

@@ -100,7 +100,7 @@ void FGATCManager::init() {
 
 
     FGAirport *apt = FGAirport::findByIdent(airport); 
-    if (apt && onGround && !runway.empty()) {
+    if (apt && onGround) {// && !runway.empty()) {
         FGAirportDynamics* dcs = apt->getDynamics();
         int park_index = dcs->getNrOfParkings() - 1;
         //cerr << "found information: " << runway << " " << airport << ": parking = " << parking << endl;
@@ -111,16 +111,21 @@ void FGATCManager::init() {
                         "Failed to find parking position " << parking <<
                         " at airport " << airport << " at " << SG_ORIGIN);
             }
+        // No valid parking location, so either at the runway or at a random location.
         if (parking.empty() || (park_index < 0)) {
-            controller = apt->getDynamics()->getTowerController();
-            int stationFreq = apt->getDynamics()->getTowerFrequency(2);
-            //cerr << "Setting radio frequency to in airfrequency: " << stationFreq << endl;
-            fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
-            leg = 3;
-            string fltType = "ga";
-            fp->setRunway(runway);
-            fp->createTakeOff(&ai_ac, false, apt, 0, fltType);
-            ai_ac.setTakeOffStatus(2);
+            if (!runway.empty()) {
+                controller = apt->getDynamics()->getTowerController();
+                int stationFreq = apt->getDynamics()->getTowerFrequency(2);
+                //cerr << "Setting radio frequency to in airfrequency: " << stationFreq << endl;
+                fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", ((double) stationFreq / 100.0));
+                leg = 3;
+                string fltType = "ga";
+                fp->setRunway(runway);
+                fp->createTakeOff(&ai_ac, false, apt, 0, fltType);
+                ai_ac.setTakeOffStatus(2);
+            } else {
+                // We're on the ground somewhere. Handle this case later.
+            }
         } else {
             controller = apt->getDynamics()->getStartupController();
             int stationFreq = apt->getDynamics()->getGroundFrequency(1);

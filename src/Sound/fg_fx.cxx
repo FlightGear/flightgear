@@ -40,11 +40,21 @@
 #include <simgear/sound/xmlsound.hxx>
 
 FGFX::FGFX ( SGSoundMgr *smgr, const string &refname, SGPropertyNode *props ) :
-    _props( props ),
-    _enabled( fgGetNode("/sim/sound/effects/enabled", true) ),
-    _volume( fgGetNode("/sim/sound/effects/volume", true) )
+    _props( props )
 {
-    if (!props) _props = globals->get_props();
+    if (!props) {
+        _is_aimodel = false;
+        _props = globals->get_props();
+        _enabled = fgGetNode("/sim/sound/effects/enabled", true);
+        _volume = fgGetNode("/sim/sound/effects/volume", true);
+    } else {
+        _is_aimodel = true;
+        _enabled = _props->getNode("/sim/sound/aimodels/enabled", true);
+        _enabled->setBoolValue(fgGetBool("/sim/sound/effects/enabled"));
+         _volume = _props->getNode("/sim/sound/aimodels/volume", true);
+        _volume->setFloatValue(fgGetFloat("/sim/sound/effects/volume"));
+_volume->setFloatValue(0.1f);
+    }
 
     _avionics_enabled = _props->getNode("sim/sound/avionics/enabled", true);
     _avionics_volume = _props->getNode("sim/sound/avionics/volume", true);
@@ -97,18 +107,17 @@ FGFX::init()
     }
 
     node = root.getNode("fx");
-    if(node) {
+    if(node && !_is_aimodel) {
         for (int i = 0; i < node->nChildren(); ++i) {
-            SGXmlSound *sound = new SGXmlSound();
+            SGXmlSound *soundfx = new SGXmlSound();
   
             try {
-                sound->init(globals->get_props(), node->getChild(i), this,
-                            _avionics, path.dir());
-  
-                _sound.push_back(sound);
+                soundfx->init( _props, node->getChild(i), this, _avionics,
+                               path.dir() );
+                _sound.push_back( soundfx );
             } catch ( sg_exception &e ) {
                 SG_LOG(SG_SOUND, SG_ALERT, e.getFormattedMessage());
-                delete sound;
+                delete soundfx;
             }
         }
     }
