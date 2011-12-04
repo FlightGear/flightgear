@@ -27,10 +27,12 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/debug/logstream.hxx>
 
+using std::string;
+
 class FGRadioAntenna
 {
 private:
-	void load_antenna_pattern();
+	void load_antenna_pattern(string type);
 	int _mirror_y;
 	int _mirror_z;
 	int _invert_ground;
@@ -41,13 +43,13 @@ private:
 		double elevation;
 		double gain;
 	};
-	
+	SGPath _pattern_file;
 	typedef std::vector<AntennaGain> AntennaPattern;
 	AntennaPattern _pattern;
 	
 public:
 	
-	FGRadioAntenna();
+	FGRadioAntenna(string type);
     ~FGRadioAntenna();
 	double calculate_gain(double azimuth, double elevation);
 	
