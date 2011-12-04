@@ -32,17 +32,37 @@ using namespace std;
 
 FGRadioAntenna::FGRadioAntenna(string type) {
 	
-	_mirror_y = 1;
+	_mirror_y = 1;	// normally we want to mirror these axis because the pattern is simetric
 	_mirror_z = 1;
-	_invert_ground = 0;
+	_invert_ground = 0;		
 	load_antenna_pattern(type);
 }
 
 FGRadioAntenna::~FGRadioAntenna() {
+	_pattern.clear();
 	
 }
 
-double FGRadioAntenna::calculate_gain(double azimuth, double elevation) {
+double FGRadioAntenna::calculate_gain(double bearing, double angle) {
+	
+	// TODO: what if the pattern is assimetric?
+	bearing = fabs(bearing);
+	if (bearing > 180)
+		bearing = 360 - bearing;
+	// for plots with 2 degrees resolution:
+	int azimuth = (int)floor(bearing);
+	azimuth += azimuth % 2;
+	int elevation = (int)floor(angle);
+	elevation += elevation % 2;
+	
+	for (unsigned int i =0; i < _pattern.size(); i++) {
+		AntennaGain point_gain = _pattern[i];
+		
+		if ( (azimuth == point_gain.azimuth) && (elevation == point_gain.elevation)) {
+			return point_gain.gain;
+		}
+	}
+		
 	return 0;
 }
 
@@ -63,10 +83,16 @@ void FGRadioAntenna::load_antenna_pattern(string type) {
 	double gain;
 	while(!file_in.eof()) {
 		file_in >> heading >> elevation >> gain;
-		cerr << "head: " << heading << " elev: " << elevation << " gain: " << gain << endl;
+		if( (_mirror_y == 1) && (heading > 180) ) {
+			continue;
+		}
+		if ( (_mirror_z == 1) && (elevation < 0) ) {
+			continue;
+		}
+		//cerr << "head: " << heading << " elev: " << elevation << " gain: " << gain << endl;
 		AntennaGain datapoint;
 		datapoint.azimuth = heading;
-		datapoint.elevation = elevation;
+		datapoint.elevation = 90.0 - fabs(elevation);
 		datapoint.gain = gain;
 		_pattern.push_back(datapoint);
 	}

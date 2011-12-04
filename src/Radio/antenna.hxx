@@ -51,7 +51,7 @@ public:
 	
 	FGRadioAntenna(string type);
     ~FGRadioAntenna();
-	double calculate_gain(double azimuth, double elevation);
-	
-	
+	double calculate_gain(double bearing, double angle);
+	void set_heading(double heading_deg) {_heading_deg = heading_deg ;};
+	void set_elevation_angle(double elevation_angle_deg) {_elevation_angle_deg = elevation_angle_deg ;};
 };

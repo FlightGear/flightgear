@@ -66,6 +66,8 @@ FGRadioTransmission::FGRadioTransmission() {
 	
 	_root_node = fgGetNode("sim/radio", true);
 	_terrain_sampling_distance = _root_node->getDoubleValue("sampling-distance", 90.0); // regular SRTM is 90 meters
+	
+	
 }
 
 FGRadioTransmission::~FGRadioTransmission() 
@@ -202,11 +204,8 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	double eps_dielect=15.0;
 	double sgm_conductivity = 0.005;
 	double eno = 301.0;
-	double frq_mhz;
-	if( (freq < 118.0) || (freq > 137.0) )
-		frq_mhz = 125.0; 	// sane value, middle of bandplan
-	else
-		frq_mhz = freq;
+	double frq_mhz = freq;
+	
 	int radio_climate = 5;		// continental temperate
 	int pol= _polarization;	
 	double conf = 0.90;	// 90% of situations and time, take into account speed
@@ -233,6 +232,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	double own_lat = fgGetDouble("/position/latitude-deg");
 	double own_lon = fgGetDouble("/position/longitude-deg");
 	double own_alt_ft = fgGetDouble("/position/altitude-ft");
+	double own_heading = fgGetDouble("/orientation/heading-deg");
 	double own_alt= own_alt_ft * SG_FEET_TO_METER;
 	
 	
@@ -257,6 +257,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	
 	double point_distance= _terrain_sampling_distance; 
 	double course = SGGeodesy::courseRad(own_pos_c, sender_pos_c);
+	double reverse_course = SGGeodesy::courseRad(sender_pos_c, own_pos_c);
 	double distance_m = SGGeodesy::distanceM(own_pos, sender_pos);
 	double probe_distance = 0.0;
 	/** If distance larger than this value (300 km), assume reception imposssible */
@@ -400,6 +401,22 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	//cerr << "Clutter loss: " << clutter_loss << endl;
 	//if (errnum == 4)	// if parameters are outside sane values for lrprop, the alternative method is used
 	//	return -1;
+	double sender_heading = 270.0; // due West
+	double tx_antenna_bearing = sender_heading - reverse_course;
+	double rx_antenna_bearing = own_heading - course;
+	double rx_elev_angle = atan((itm_elev[2] + transmitter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m) * SGD_RADIANS_TO_DEGREES;
+	double tx_elev_angle = 0.0 - rx_elev_angle;
+	_TX_antenna = new FGRadioAntenna("Plot2");
+	_TX_antenna->set_heading(sender_heading);
+	_TX_antenna->set_elevation_angle(0);
+	double tx_pattern_gain = _TX_antenna->calculate_gain(tx_antenna_bearing, tx_elev_angle);
+	_RX_antenna = new FGRadioAntenna("Plot2");
+	_RX_antenna->set_heading(own_heading);
+	_RX_antenna->set_elevation_angle(fgGetDouble("/orientation/pitch-deg"));
+	double rx_pattern_gain = _RX_antenna->calculate_gain(rx_antenna_bearing, rx_elev_angle);
+	
+	delete _TX_antenna;
+	delete _RX_antenna;
 	signal = link_budget - dbloss - clutter_loss + pol_loss;
 	double signal_strength_dbm = signal_strength - dbloss - clutter_loss + pol_loss;
 	double field_strength_uV = dbm_to_microvolt(signal_strength_dbm);
@@ -407,6 +424,8 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	_root_node->setDoubleValue("station[0]/field-strength-uV", field_strength_uV);
 	_root_node->setDoubleValue("station[0]/signal", signal);
 	_root_node->setDoubleValue("station[0]/tx-erp", tx_erp);
+	_root_node->setDoubleValue("station[0]/tx-pattern-gain", tx_pattern_gain);
+	_root_node->setDoubleValue("station[0]/rx-pattern-gain", rx_pattern_gain);
 	return signal;
 
 }

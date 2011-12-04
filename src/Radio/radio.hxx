@@ -28,7 +28,7 @@
 
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/debug/logstream.hxx>
-
+#include "antenna.hxx"
 
 using std::string;
 
@@ -48,6 +48,8 @@ private:
 	double _tx_antenna_gain;
 	double _rx_line_losses;
 	double _tx_line_losses;
+	FGRadioAntenna* _TX_antenna;
+	FGRadioAntenna* _RX_antenna;
 	double _terrain_sampling_distance;
 	int _polarization;
 	std::map<string, double[2]> _mat_database;
