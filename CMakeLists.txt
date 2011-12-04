@@ -80,8 +80,11 @@ IF(APPLE)
     list(APPEND PLATFORM_LIBS ${COCOA_LIBRARY} ${CORESERVICES_LIBRARY})
 
 elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-    # disabled while DBus / HAL / udev issues are decided
-    #set(EVENT_INPUT_DEFAULT 1)
+	find_package(UDev)
+
+	if(UDEV_FOUND)
+		set(EVENT_INPUT_DEFAULT 1)
+	endif(UDEV_FOUND)
 endif()
 
 find_package(Git)
@@ -160,19 +163,23 @@ endif (MSVC AND MSVC_3RDPARTY_ROOT)
 
 if(EVENT_INPUT)
 	message(STATUS "checking event-based Input")
-	
+
 	IF(APPLE)
 
 	elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-        find_package(DBus)
-        if(NOT DBUS_FOUND)
-            message(WARNING "DBus not found, event input will be disabled")
-            set(EVENT_INPUT 0)
-        endif()
-        
+		if(NOT UDEV_FOUND)
+			message(WARNING "UDev not found, event input is disabled!")
+			set(EVENT_INPUT 0)
+		else()
+			set(EVENT_INPUT_LIBRARIES ${UDEV_LIBRARIES})
+		endif()
+
 	else()
 		message(WARNING "event input is not supported on this platform yet")
 	endif()
+
+	# Keep PLIB INPUT enabled as long as EventInput does not replace current joystick configurations.
+	set(ENABLE_PLIB_JOYSTICK 1)
 else(EVENT_INPUT)
 	set(ENABLE_PLIB_JOYSTICK 1)
 endif(EVENT_INPUT)

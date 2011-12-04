@@ -61,12 +61,12 @@ get_property(FG_LIBS GLOBAL PROPERTY FG_LIBS)
 #message(STATUS "SG libs ${SIMGEAR_LIBRARIES}")
 
 if(RTI_FOUND)
-  find_sg_component(hla SIMGEAR_LIBRARIES)
-  find_sg_component(rti13 SIMGEAR_LIBRARIES)
-  find_sg_component(rti SIMGEAR_LIBRARIES)
-  set(HLA_LIBRARIES ${RTI_LIBRARIES})
+	find_sg_component(hla SIMGEAR_LIBRARIES)
+	find_sg_component(rti13 SIMGEAR_LIBRARIES)
+	find_sg_component(rti SIMGEAR_LIBRARIES)
+	set(HLA_LIBRARIES ${RTI_LIBRARIES})
 else()
-  set(HLA_LIBRARIES "")
+	set(HLA_LIBRARIES "")
 endif()
 
 target_link_libraries(fgfs
@@ -77,6 +77,7 @@ target_link_libraries(fgfs
 	${PLIB_LIBRARIES}
 	${JPEG_LIBRARY}
 	${HLA_LIBRARIES}
+	${EVENT_INPUT_LIBRARIES}
 	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
 	${SIMGEAR_SCENE_LIBRARY_DEPENDENCIES}
 	${PLATFORM_LIBS}
