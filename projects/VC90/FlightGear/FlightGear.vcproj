@@ -3199,6 +3199,30 @@
 			</File>
 		</Filter>
 		<Filter
+			Name="Lib_Radio"
+			>
+			<File
+				RelativePath="..\..\..\src\Radio\antenna.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Radio\antenna.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Radio\radio.cxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Radio\radio.hxx"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\Radio\itm.cpp"
+				>
+			</File>
+		</Filter>
+		<Filter
 			Name="Lib_Scenery"
 			>
 			<File
