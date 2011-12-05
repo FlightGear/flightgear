@@ -48,8 +48,7 @@ private:
 	double _tx_antenna_gain;
 	double _rx_line_losses;
 	double _tx_line_losses;
-	FGRadioAntenna* _TX_antenna;
-	FGRadioAntenna* _RX_antenna;
+	
 	double _terrain_sampling_distance;
 	int _polarization;
 	std::map<string, double[2]> _mat_database;

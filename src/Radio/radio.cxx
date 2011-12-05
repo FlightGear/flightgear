@@ -54,7 +54,7 @@ FGRadioTransmission::FGRadioTransmission() {
 	_rx_antenna_height = 2.0; // RX antenna height above ground level
 	
 	
-	_rx_antenna_gain = 1.0;	// gain expressed in dBi
+	_rx_antenna_gain = 1.0;	// maximum antenna gain expressed in dBi
 	_tx_antenna_gain = 1.0;
 	
 	_rx_line_losses = 2.0;	// to be configured for each station
@@ -277,7 +277,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	int max_points = (int)floor(distance_m / point_distance);
 	double delta_last = fmod(distance_m, point_distance);
 	
-	deque<double> _elevations;
+	deque<double> elevations;
 	deque<string> materials;
 	
 
@@ -308,7 +308,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	
 	unsigned int e_size = (deque<unsigned>::size_type)max_points;
 	
-	while (_elevations.size() <= e_size) {
+	while (elevations.size() <= e_size) {
 		probe_distance += point_distance;
 		SGGeod probe = SGGeod::fromGeoc(center.advanceRadM( course, probe_distance ));
 		const SGMaterial *mat = 0;
@@ -316,7 +316,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	
 		if (scenery->get_elevation_m( probe, elevation_m, &mat )) {
 			if((transmission_type == 3) || (transmission_type == 4)) {
-				_elevations.push_back(elevation_m);
+				elevations.push_back(elevation_m);
 				if(mat) {
 					const std::vector<string> mat_names = mat->get_names();
 					materials.push_back(mat_names[0]);
@@ -326,7 +326,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 				}
 			}
 			else {
-				 _elevations.push_front(elevation_m);
+				 elevations.push_front(elevation_m);
 				 if(mat) {
 				 	 const std::vector<string> mat_names = mat->get_names();
 				 	 materials.push_front(mat_names[0]);
@@ -338,36 +338,36 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 		}
 		else {
 			if((transmission_type == 3) || (transmission_type == 4)) {
-				_elevations.push_back(0.0);
+				elevations.push_back(0.0);
 				materials.push_back("None");
 			}
 			else {
-				_elevations.push_front(0.0);
+				elevations.push_front(0.0);
 				materials.push_front("None");
 			}
 		}
 	}
 	if((transmission_type == 3) || (transmission_type == 4)) {
-		_elevations.push_front(elevation_under_pilot);
+		elevations.push_front(elevation_under_pilot);
 		if (delta_last > (point_distance / 2) )			// only add last point if it's farther than half point_distance
-			_elevations.push_back(elevation_under_sender);
+			elevations.push_back(elevation_under_sender);
 	}
 	else {
-		_elevations.push_back(elevation_under_pilot);
+		elevations.push_back(elevation_under_pilot);
 		if (delta_last > (point_distance / 2) )
-			_elevations.push_front(elevation_under_sender);
+			elevations.push_front(elevation_under_sender);
 	}
 	
 	
-	double num_points= (double)_elevations.size();
+	double num_points= (double)elevations.size();
 
-	_elevations.push_front(point_distance);
-	_elevations.push_front(num_points -1);
-	int size = _elevations.size();
+	elevations.push_front(point_distance);
+	elevations.push_front(num_points -1);
+	int size = elevations.size();
 	double itm_elev[size];
 	for(int i=0;i<size;i++) {
-		itm_elev[i]=_elevations[i];
-		//cerr << "ITM:: itm_elev: " << _elevations[i] << endl;
+		itm_elev[i]=elevations[i];
+		//cerr << "ITM:: itm_elev: " << elevations[i] << endl;
 	}
 
 	if((transmission_type == 3) || (transmission_type == 4)) {
@@ -398,34 +398,40 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	_root_node->setStringValue("station[0]/prop-mode", strmode);
 	_root_node->setDoubleValue("station[0]/clutter-attenuation", clutter_loss);
 	_root_node->setDoubleValue("station[0]/polarization-attenuation", pol_loss);
-	//cerr << "Clutter loss: " << clutter_loss << endl;
 	//if (errnum == 4)	// if parameters are outside sane values for lrprop, the alternative method is used
 	//	return -1;
-	double sender_heading = 270.0; // due West
-	double tx_antenna_bearing = sender_heading - reverse_course;
-	double rx_antenna_bearing = own_heading - course;
-	double rx_elev_angle = atan((itm_elev[2] + transmitter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m) * SGD_RADIANS_TO_DEGREES;
-	double tx_elev_angle = 0.0 - rx_elev_angle;
-	_TX_antenna = new FGRadioAntenna("Plot2");
-	_TX_antenna->set_heading(sender_heading);
-	_TX_antenna->set_elevation_angle(0);
-	double tx_pattern_gain = _TX_antenna->calculate_gain(tx_antenna_bearing, tx_elev_angle);
-	_RX_antenna = new FGRadioAntenna("Plot2");
-	_RX_antenna->set_heading(own_heading);
-	_RX_antenna->set_elevation_angle(fgGetDouble("/orientation/pitch-deg"));
-	double rx_pattern_gain = _RX_antenna->calculate_gain(rx_antenna_bearing, rx_elev_angle);
+	double tx_pattern_gain = 0.0;
+	double rx_pattern_gain = 0.0;
+	if (_root_node->getBoolValue("use-antenna-pattern", false)) {
+		double sender_heading = 270.0; // due West
+		double tx_antenna_bearing = sender_heading - reverse_course * SGD_RADIANS_TO_DEGREES;
+		double rx_antenna_bearing = own_heading - course * SGD_RADIANS_TO_DEGREES;
+		double rx_elev_angle = atan((itm_elev[2] + transmitter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m) * SGD_RADIANS_TO_DEGREES;
+		double tx_elev_angle = 0.0 - rx_elev_angle;
+		FGRadioAntenna* TX_antenna;
+		FGRadioAntenna* RX_antenna;
+		TX_antenna = new FGRadioAntenna("Plot2");
+		TX_antenna->set_heading(sender_heading);
+		TX_antenna->set_elevation_angle(0);
+		tx_pattern_gain = TX_antenna->calculate_gain(tx_antenna_bearing, tx_elev_angle);
+		RX_antenna = new FGRadioAntenna("Plot2");
+		RX_antenna->set_heading(own_heading);
+		RX_antenna->set_elevation_angle(fgGetDouble("/orientation/pitch-deg"));
+		rx_pattern_gain = RX_antenna->calculate_gain(rx_antenna_bearing, rx_elev_angle);
+		
+		delete TX_antenna;
+		delete RX_antenna;
+	}
 	
-	delete _TX_antenna;
-	delete _RX_antenna;
-	signal = link_budget - dbloss - clutter_loss + pol_loss;
-	double signal_strength_dbm = signal_strength - dbloss - clutter_loss + pol_loss;
+	signal = link_budget - dbloss - clutter_loss + pol_loss + rx_pattern_gain + tx_pattern_gain;
+	double signal_strength_dbm = signal_strength - dbloss - clutter_loss + pol_loss + rx_pattern_gain + tx_pattern_gain;
 	double field_strength_uV = dbm_to_microvolt(signal_strength_dbm);
 	_root_node->setDoubleValue("station[0]/signal-dbm", signal_strength_dbm);
 	_root_node->setDoubleValue("station[0]/field-strength-uV", field_strength_uV);
 	_root_node->setDoubleValue("station[0]/signal", signal);
 	_root_node->setDoubleValue("station[0]/tx-erp", tx_erp);
-	_root_node->setDoubleValue("station[0]/tx-pattern-gain", tx_pattern_gain);
-	_root_node->setDoubleValue("station[0]/rx-pattern-gain", rx_pattern_gain);
+	//_root_node->setDoubleValue("station[0]/tx-pattern-gain", tx_pattern_gain);
+	//_root_node->setDoubleValue("station[0]/rx-pattern-gain", rx_pattern_gain);
 	return signal;
 
 }
