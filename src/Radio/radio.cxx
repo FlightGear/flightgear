@@ -376,14 +376,14 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
 			pol, conf, rel, dbloss, strmode, p_mode, horizons, errnum);
 		if( _root_node->getBoolValue( "use-clutter-attenuation", false ) )
-			clutterLoss(frq_mhz, itm_elev, materials, receiver_height, transmitter_height, p_mode, horizons, clutter_loss);
+			calculate_clutter_loss(frq_mhz, itm_elev, materials, receiver_height, transmitter_height, p_mode, horizons, clutter_loss);
 	}
 	else {
 		point_to_point(itm_elev, transmitter_height, receiver_height,
 			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
 			pol, conf, rel, dbloss, strmode, p_mode, horizons, errnum);
 		if( _root_node->getBoolValue( "use-clutter-attenuation", false ) )
-			clutterLoss(frq_mhz, itm_elev, materials, transmitter_height, receiver_height, p_mode, horizons, clutter_loss);
+			calculate_clutter_loss(frq_mhz, itm_elev, materials, transmitter_height, receiver_height, p_mode, horizons, clutter_loss);
 	}
 	
 	double pol_loss = 0.0;
@@ -440,7 +440,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 *	 We are only worried about clutter loss, terrain influence 
 *	 on the first Fresnel zone is calculated in the ITM functions
 ***/
-void FGRadioTransmission::clutterLoss(double freq, double itm_elev[], deque<string> materials,
+void FGRadioTransmission::calculate_clutter_loss(double freq, double itm_elev[], deque<string> &materials,
 	double transmitter_height, double receiver_height, int p_mode,
 	double horizons[], double &clutter_loss) {
 	
