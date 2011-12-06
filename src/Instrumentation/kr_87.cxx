@@ -524,7 +524,9 @@ void FGKR_87::search() {
 	    xyz = adf->cart();
 
 	    if ( _sgr->exists( "adf-ident" ) ) {
-		_sgr->remove( "adf-ident" );
+	        // stop is required! -- remove alone wouldn't stop immediately
+	        _sgr->stop( "adf-ident" );
+	        _sgr->remove( "adf-ident" );
 	    }
 	    SGSoundSample *sound;
         sound = FGMorse::instance()->make_ident( trans_ident, FGMorse::LO_FREQUENCY );

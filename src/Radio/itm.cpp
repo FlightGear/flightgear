@@ -1000,7 +1000,7 @@ double avar(double zzt, double zzl, double zzc, prop_type &prop, propv_type &pro
 			kdv = propv.mdvar;
 			no_situation_variability = kdv >= 20;
 			if (no_situation_variability)
-				no_situation_variability -= 20;
+				kdv -= 20;
 
 			no_location_variability = kdv >= 10;
 			if (no_location_variability)
