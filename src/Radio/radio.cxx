@@ -37,7 +37,7 @@
 FGRadioTransmission::FGRadioTransmission() {
 	
 	
-	_receiver_sensitivity = -110.0;	// typical AM receiver sensitivity seems to be 0.8 microVolt at 12dB SINAD
+	_receiver_sensitivity = -105.0;	// typical AM receiver sensitivity seems to be 0.8 microVolt at 12dB SINAD
 	
 	/** AM transmitter power in dBm.
 	*	Typical output powers for ATC ground equipment, VHF-UHF:
@@ -362,15 +362,15 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	double num_points= (double)elevations.size();
 
 
-	_elevations.push_front(point_distance);
-	_elevations.push_front(num_points -1);
+	elevations.push_front(point_distance);
+	elevations.push_front(num_points -1);
 
-	int size = _elevations.size();
+	int size = elevations.size();
 	double *itm_elev;
 	itm_elev = new double[size];
 
 	for(int i=0;i<size;i++) {
-		itm_elev[i]=_elevations[i];
+		itm_elev[i]=elevations[i];
 		
 
 	}

@@ -39,6 +39,10 @@ FGRadioAntenna::FGRadioAntenna(string type) {
 }
 
 FGRadioAntenna::~FGRadioAntenna() {
+	for (unsigned i =0; i < _pattern.size(); i++) {
+		AntennaGain *point_gain = _pattern[i];
+		delete point_gain;
+	}
 	_pattern.clear();
 	
 }
@@ -55,11 +59,11 @@ double FGRadioAntenna::calculate_gain(double bearing, double angle) {
 	int elevation = (int)floor(angle);
 	elevation += elevation % 2;
 	cerr << "Bearing: " << bearing << " angle: " << angle << " azimuth: " << azimuth << " elevation: " << elevation << endl;
-	for (unsigned int i =0; i < _pattern.size(); i++) {
-		AntennaGain point_gain = _pattern[i];
+	for (unsigned i =0; i < _pattern.size(); i++) {
+		AntennaGain *point_gain = _pattern[i];
 		
-		if ( (azimuth == point_gain.azimuth) && (elevation == point_gain.elevation)) {
-			return point_gain.gain;
+		if ( (azimuth == point_gain->azimuth) && (elevation == point_gain->elevation)) {
+			return point_gain->gain;
 		}
 	}
 		
@@ -90,10 +94,10 @@ void FGRadioAntenna::load_antenna_pattern(string type) {
 			continue;
 		}
 		//cerr << "head: " << heading << " elev: " << elevation << " gain: " << gain << endl;
-		AntennaGain datapoint;
-		datapoint.azimuth = heading;
-		datapoint.elevation = 90.0 - fabs(elevation);
-		datapoint.gain = gain;
+		AntennaGain *datapoint = new AntennaGain;
+		datapoint->azimuth = heading;
+		datapoint->elevation = 90.0 - fabs(elevation);
+		datapoint->gain = gain;
 		_pattern.push_back(datapoint);
 	}
 		

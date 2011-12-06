@@ -44,7 +44,7 @@ private:
 		double gain;
 	};
 	SGPath _pattern_file;
-	typedef std::vector<AntennaGain> AntennaPattern;
+	typedef std::vector<AntennaGain*> AntennaPattern;
 	AntennaPattern _pattern;
 	
 public:
