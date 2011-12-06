@@ -236,7 +236,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	double own_alt= own_alt_ft * SG_FEET_TO_METER;
 	
 	
-	//cerr << "ITM:: pilot Lat: " << own_lat << ", Lon: " << own_lon << ", Alt: " << own_alt << endl;
+	
 	
 	SGGeod own_pos = SGGeod::fromDegM( own_lon, own_lat, own_alt );
 	SGGeod max_own_pos = SGGeod::fromDegM( own_lon, own_lat, SG_MAX_ELEVATION_M );
@@ -253,7 +253,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	sender_alt = sender_alt_ft * SG_FEET_TO_METER;
 	SGGeod max_sender_pos = SGGeod::fromGeodM( pos, SG_MAX_ELEVATION_M );
 	SGGeoc sender_pos_c = SGGeoc::fromGeod( sender_pos );
-	//cerr << "ITM:: sender Lat: " << parent->getLatitude() << ", Lon: " << parent->getLongitude() << ", Alt: " << sender_alt << endl;
+	
 	
 	double point_distance= _terrain_sampling_distance; 
 	double course = SGGeodesy::courseRad(own_pos_c, sender_pos_c);
@@ -361,15 +361,20 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	
 	double num_points= (double)elevations.size();
 
-	elevations.push_front(point_distance);
-	elevations.push_front(num_points -1);
-	int size = elevations.size();
-	double itm_elev[size];
-	for(int i=0;i<size;i++) {
-		itm_elev[i]=elevations[i];
-		//cerr << "ITM:: itm_elev: " << elevations[i] << endl;
-	}
 
+	_elevations.push_front(point_distance);
+	_elevations.push_front(num_points -1);
+
+	int size = _elevations.size();
+	double *itm_elev;
+	itm_elev = new double[size];
+
+	for(int i=0;i<size;i++) {
+		itm_elev[i]=_elevations[i];
+		
+
+	}
+	
 	if((transmission_type == 3) || (transmission_type == 4)) {
 		// the sender and receiver roles are switched
 		point_to_point(itm_elev, receiver_height, transmitter_height,
@@ -430,8 +435,12 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	_root_node->setDoubleValue("station[0]/field-strength-uV", field_strength_uV);
 	_root_node->setDoubleValue("station[0]/signal", signal);
 	_root_node->setDoubleValue("station[0]/tx-erp", tx_erp);
+
 	//_root_node->setDoubleValue("station[0]/tx-pattern-gain", tx_pattern_gain);
 	//_root_node->setDoubleValue("station[0]/rx-pattern-gain", rx_pattern_gain);
+
+	delete[] itm_elev;
+
 	return signal;
 
 }
@@ -947,7 +956,7 @@ double FGRadioTransmission::watt_to_dbm(double power_watt) {
 }
 
 double FGRadioTransmission::dbm_to_watt(double dbm) {
-	return exp( (dbm-30) * log(10) / 10);	// returns Watts
+	return exp( (dbm-30) * log(10.0) / 10.0);	// returns Watts
 }
 
 double FGRadioTransmission::dbm_to_microvolt(double dbm) {
