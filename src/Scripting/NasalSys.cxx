@@ -515,8 +515,9 @@ static naRef f_radioTransmission(naContext c, naRef me, int argc, naRef* args)
     elev = naNumValue(args[2]).num;
     heading = naNumValue(args[3]).num;
     pitch = naNumValue(args[4]).num;
+    SGGeod geod = SGGeod::fromDegM(lon, lat, elev * SG_FEET_TO_METER);
     FGRadioTransmission *radio = new FGRadioTransmission;
-    double signal = radio->receiveBeacon(lat,lon,elev,heading,pitch);
+    double signal = radio->receiveBeacon(geod, heading, pitch);
     delete radio;
     return naNum(signal);
 }

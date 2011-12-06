@@ -37,7 +37,7 @@
 FGRadioTransmission::FGRadioTransmission() {
 	
 	
-	_receiver_sensitivity = -105.0;	// typical AM receiver sensitivity seems to be 0.8 microVolt at 12dB SINAD
+	_receiver_sensitivity = -105.0;	// typical AM receiver sensitivity seems to be 0.8 microVolt at 12dB SINAD or less
 	
 	/** AM transmitter power in dBm.
 	*	Typical output powers for ATC ground equipment, VHF-UHF:
@@ -91,17 +91,15 @@ double FGRadioTransmission::getFrequency(int radio) {
 	return freq;
 }
 
-/*** TODO: receive multiplayer chat message and voice
-***/
+
 void FGRadioTransmission::receiveChat(SGGeod tx_pos, double freq, string text, int ground_to_air) {
 
 }
 
-/*** TODO: receive navaid 
-***/
+
 double FGRadioTransmission::receiveNav(SGGeod tx_pos, double freq, int transmission_type) {
 	
-	// typical VOR/LOC transmitter power appears to be 200 Watt ~ 53 dBm
+	// typical VOR/LOC transmitter power appears to be 100 - 200 Watt i.e 50 - 53 dBm
 	// vor/loc typical sensitivity between -107 and -101 dBm
 	// glideslope sensitivity between -85 and -81 dBm
 	if ( _propagation_model == 1) {
@@ -115,39 +113,41 @@ double FGRadioTransmission::receiveNav(SGGeod tx_pos, double freq, int transmiss
 
 }
 
-double FGRadioTransmission::receiveBeacon(double lat, double lon, double elev, double heading, double pitch) {
+
+double FGRadioTransmission::receiveBeacon(SGGeod &tx_pos, double heading, double pitch) {
 	
+	// these properties should be set by an instrument
+	_receiver_sensitivity = _root_node->getDoubleValue("station[0]/rx-sensitivity", _receiver_sensitivity);
+	_transmitter_power = watt_to_dbm(_root_node->getDoubleValue("station[0]/tx-power-watt", _transmitter_power));
+	_polarization = _root_node->getIntValue("station[0]/polarization", 1);
+	_tx_antenna_height += _root_node->getDoubleValue("station[0]/tx-antenna-height", 0);
+	_rx_antenna_height += _root_node->getDoubleValue("station[0]/rx-antenna-height", 0);
+	_tx_antenna_gain += _root_node->getDoubleValue("station[0]/tx-antenna-gain", 0);
+	_rx_antenna_gain += _root_node->getDoubleValue("station[0]/rx-antenna-gain", 0);
 	
-	_transmitter_power = 36;
-	_tx_antenna_height += 0.0;
-	_tx_antenna_gain += 0.5; 
-	elev = elev * SG_FEET_TO_METER;
-	double freq = _root_node->getDoubleValue("station[0]/frequency", 118.0);
-	int ground_to_air = 1;
-	string text = "Beacon1";
+	double freq = _root_node->getDoubleValue("station[0]/frequency", 144.8);	// by default stay in the ham 2 meter band
+	
 	double comm1 = getFrequency(1);
 	double comm2 = getFrequency(2);
 	if ( !(fabs(freq - comm1) <= 0.0001) &&  !(fabs(freq - comm2) <= 0.0001) ) {
 		return -1;
 	}
-	SGGeod tx_pos = SGGeod::fromDegM( lon, lat, elev );
-	double signal = ITM_calculate_attenuation(tx_pos, freq, ground_to_air);
+	
+	double signal = ITM_calculate_attenuation(tx_pos, freq, 1);
 	
 	return signal;
 }
 
 
-/*** Receive ATC radio communication as text
-***/
+
 void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, int ground_to_air) {
 
-	
+	// adjust some default parameters in case the ATC code does not set them
 	if(ground_to_air == 1) {
 		_transmitter_power += 4.0;
 		_tx_antenna_height += 30.0;
 		_tx_antenna_gain += 2.0; 
 	}
-	
 	
 	double comm1 = getFrequency(1);
 	double comm2 = getFrequency(2);
@@ -156,30 +156,27 @@ void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, in
 	}
 	else {
 	
-		if ( _propagation_model == 0) {
-			// skip propagation routines entirely
+		if ( _propagation_model == 0) {		// skip propagation routines entirely
 			fgSetString("/sim/messages/atc", text.c_str());
 		}
-		else if ( _propagation_model == 1 ) {
-			// Use free-space, round earth
+		else if ( _propagation_model == 1 ) {		// Use free-space, round earth
+			
 			double signal = LOS_calculate_attenuation(tx_pos, freq, ground_to_air);
 			if (signal <= 0.0) {
 				return;
 			}
 			else {
-				
 				fgSetString("/sim/messages/atc", text.c_str());
-				
 			}
 		}
-		else if ( _propagation_model == 2 ) {
-			// Use ITM propagation model
+		else if ( _propagation_model == 2 ) {	// Use ITM propagation model
+			
 			double signal = ITM_calculate_attenuation(tx_pos, freq, ground_to_air);
 			if (signal <= 0.0) {
 				return;
 			}
 			if ((signal > 0.0) && (signal < 12.0)) {
-				/** for low SNR values implement a way to make the conversation
+				/** for low SNR values need a way to make the conversation
 				*	hard to understand but audible
 				*	in the real world, the receiver AGC fails to capture the slope
 				*	and the signal, due to being amplitude modulated, decreases volume after demodulation
@@ -195,27 +192,21 @@ void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, in
 					text.replace(pos,1, hash_noise);
 				}
 				*/
-				double volume = (fabs(signal - 12.0) / 12);
-				double old_volume = fgGetDouble("/sim/sound/voices/voice/volume");
-				SG_LOG(SG_GENERAL, SG_BULK, "Usable signal at limit: " << signal);
-				//cerr << "Usable signal at limit: " << signal << endl;
-				fgSetDouble("/sim/sound/voices/voice/volume", volume);
+				//double volume = (fabs(signal - 12.0) / 12);
+				//double old_volume = fgGetDouble("/sim/sound/voices/voice/volume");
+				
+				//fgSetDouble("/sim/sound/voices/voice/volume", volume);
 				fgSetString("/sim/messages/atc", text.c_str());
-				fgSetDouble("/sim/sound/voices/voice/volume", old_volume);
+				//fgSetDouble("/sim/sound/voices/voice/volume", old_volume);
 			}
 			else {
 				fgSetString("/sim/messages/atc", text.c_str());
 			}
-			
 		}
-		
 	}
-	
 }
 
-/***  Implement radio attenuation		
-	  based on the Longley-Rice propagation model
-***/
+
 double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, int transmission_type) {
 
 	
@@ -282,10 +273,10 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	double reverse_course = SGGeodesy::courseRad(sender_pos_c, own_pos_c);
 	double distance_m = SGGeodesy::distanceM(own_pos, sender_pos);
 	double probe_distance = 0.0;
-	/** If distance larger than this value (300 km), assume reception imposssible */
+	/** If distance larger than this value (300 km), assume reception imposssible to spare CPU cycles */
 	if (distance_m > 300000)
 		return -1.0;
-	/** If above 8000 meters, consider LOS mode and calculate free-space att */
+	/** If above 8000 meters, consider LOS mode and calculate free-space att to spare CPU cycles */
 	if (own_alt > 8000) {
 		dbloss = 20 * log10(distance_m) +20 * log10(frq_mhz) -27.55;
 		SG_LOG(SG_GENERAL, SG_BULK,
@@ -320,9 +311,6 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	transmitter_height += _tx_antenna_height;
 	receiver_height += _rx_antenna_height;
 	
-	
-	SG_LOG(SG_GENERAL, SG_BULK,
-			"ITM:: RX-height: " << receiver_height << " meters, TX-height: " << transmitter_height << " meters, Distance: " << distance_m << " meters");
 	//cerr << "ITM:: RX-height: " << receiver_height << " meters, TX-height: " << transmitter_height << " meters, Distance: " << distance_m << " meters" << endl;
 	_root_node->setDoubleValue("station[0]/rx-height", receiver_height);
 	_root_node->setDoubleValue("station[0]/tx-height", transmitter_height);
@@ -393,8 +381,6 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 
 	for(int i=0;i<size;i++) {
 		itm_elev[i]=elevations[i];
-		
-
 	}
 	
 	if((transmission_type == 3) || (transmission_type == 4)) {
@@ -414,39 +400,43 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	}
 	
 	double pol_loss = 0.0;
+	// TODO: remove this check after we check a bit the axis calculations in this function
 	if (_polarization == 1) {
 		pol_loss = polarization_loss();
 	}
-	SG_LOG(SG_GENERAL, SG_BULK,
-			"ITM:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, " << strmode << ", Error: " << errnum);
+	//SG_LOG(SG_GENERAL, SG_BULK,
+	//		"ITM:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, " << strmode << ", Error: " << errnum);
 	//cerr << "ITM:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm, " << strmode << ", Error: " << errnum << endl;
 	_root_node->setDoubleValue("station[0]/link-budget", link_budget);
 	_root_node->setDoubleValue("station[0]/terrain-attenuation", dbloss);
 	_root_node->setStringValue("station[0]/prop-mode", strmode);
 	_root_node->setDoubleValue("station[0]/clutter-attenuation", clutter_loss);
 	_root_node->setDoubleValue("station[0]/polarization-attenuation", pol_loss);
-	//if (errnum == 4)	// if parameters are outside sane values for lrprop, the alternative method is used
+	//if (errnum == 4)	// if parameters are outside sane values for lrprop, bail out fast
 	//	return -1;
+	
+	// temporary, keep this antenna radiation pattern code here
 	double tx_pattern_gain = 0.0;
 	double rx_pattern_gain = 0.0;
-	if (_root_node->getBoolValue("use-antenna-pattern", false)) {
-		double sender_heading = 270.0; // due West
-		double tx_antenna_bearing = sender_heading - reverse_course * SGD_RADIANS_TO_DEGREES;
-		double rx_antenna_bearing = own_heading - course * SGD_RADIANS_TO_DEGREES;
-		double rx_elev_angle = atan((itm_elev[2] + transmitter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m) * SGD_RADIANS_TO_DEGREES;
-		double tx_elev_angle = 0.0 - rx_elev_angle;
+	double sender_heading = 270.0; // due West
+	double tx_antenna_bearing = sender_heading - reverse_course * SGD_RADIANS_TO_DEGREES;
+	double rx_antenna_bearing = own_heading - course * SGD_RADIANS_TO_DEGREES;
+	double rx_elev_angle = atan((itm_elev[2] + transmitter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m) * SGD_RADIANS_TO_DEGREES;
+	double tx_elev_angle = 0.0 - rx_elev_angle;
+	if (_root_node->getBoolValue("use-tx-antenna-pattern", false)) {
 		FGRadioAntenna* TX_antenna;
-		FGRadioAntenna* RX_antenna;
 		TX_antenna = new FGRadioAntenna("Plot2");
 		TX_antenna->set_heading(sender_heading);
 		TX_antenna->set_elevation_angle(0);
 		tx_pattern_gain = TX_antenna->calculate_gain(tx_antenna_bearing, tx_elev_angle);
+		delete TX_antenna;
+	}
+	if (_root_node->getBoolValue("use-rx-antenna-pattern", false)) {
+		FGRadioAntenna* RX_antenna;
 		RX_antenna = new FGRadioAntenna("Plot2");
 		RX_antenna->set_heading(own_heading);
 		RX_antenna->set_elevation_angle(fgGetDouble("/orientation/pitch-deg"));
 		rx_pattern_gain = RX_antenna->calculate_gain(rx_antenna_bearing, rx_elev_angle);
-		
-		delete TX_antenna;
 		delete RX_antenna;
 	}
 	
@@ -467,10 +457,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 
 }
 
-/*** Calculate losses due to vegetation and urban clutter (WIP)
-*	 We are only worried about clutter loss, terrain influence 
-*	 on the first Fresnel zone is calculated in the ITM functions
-***/
+
 void FGRadioTransmission::calculate_clutter_loss(double freq, double itm_elev[], deque<string> &materials,
 	double transmitter_height, double receiver_height, int p_mode,
 	double horizons[], double &clutter_loss) {
@@ -757,16 +744,13 @@ void FGRadioTransmission::calculate_clutter_loss(double freq, double itm_elev[],
 			
 		}
 	}
-	else if (p_mode == 2) {		//	troposcatter: ignore ground clutter for now...
+	else if (p_mode == 2) {		//	troposcatter: ignore ground clutter for now... maybe do something with weather
 		clutter_loss = 0.0;
 	}
 	
 }
 
-/*** 	Temporary material properties database
-*		height: median clutter height
-*		density: radiowave attenuation factor
-***/
+
 void FGRadioTransmission::get_material_properties(string mat_name, double &height, double &density) {
 	
 	if(mat_name == "Landmass") {
@@ -878,14 +862,10 @@ void FGRadioTransmission::get_material_properties(string mat_name, double &heigh
 	
 }
 
-/*** implement simple LOS propagation model (WIP)
-***/
+
 double FGRadioTransmission::LOS_calculate_attenuation(SGGeod pos, double freq, int transmission_type) {
-	double frq_mhz;
-	if( (freq < 118.0) || (freq > 137.0) )
-		frq_mhz = 125.0; 	// sane value, middle of bandplan
-	else
-		frq_mhz = freq;
+	
+	double frq_mhz = freq;
 	double dbloss;
 	double tx_pow = _transmitter_power;
 	double ant_gain = _rx_antenna_gain + _tx_antenna_gain;
@@ -936,8 +916,7 @@ double FGRadioTransmission::LOS_calculate_attenuation(SGGeod pos, double freq, i
 	// free-space loss (distance calculation should be changed)
 	dbloss = 20 * log10(distance_m) +20 * log10(frq_mhz) -27.55;
 	signal = link_budget - dbloss + pol_loss;
-	SG_LOG(SG_GENERAL, SG_BULK,
-			"LOS:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm ");
+
 	//cerr << "LOS:: Link budget: " << link_budget << ", Attenuation: " << dbloss << " dBm " << endl;
 	return signal;
 	
