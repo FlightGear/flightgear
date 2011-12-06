@@ -92,7 +92,7 @@ public:
     // returns signal quality
     // transmission_type: 0 for VOR, 1 for ILS
     double receiveNav(SGGeod tx_pos, double freq, int transmission_type);
-    
+    double receiveBeacon(double lat, double lon, double elev, double heading, double pitch);
 };
 
 

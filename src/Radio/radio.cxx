@@ -115,6 +115,28 @@ double FGRadioTransmission::receiveNav(SGGeod tx_pos, double freq, int transmiss
 
 }
 
+double FGRadioTransmission::receiveBeacon(double lat, double lon, double elev, double heading, double pitch) {
+	
+	
+	_transmitter_power = 36;
+	_tx_antenna_height += 0.0;
+	_tx_antenna_gain += 0.5; 
+	elev = elev * SG_FEET_TO_METER;
+	double freq = _root_node->getDoubleValue("station[0]/frequency", 118.0);
+	int ground_to_air = 1;
+	string text = "Beacon1";
+	double comm1 = getFrequency(1);
+	double comm2 = getFrequency(2);
+	if ( !(fabs(freq - comm1) <= 0.0001) &&  !(fabs(freq - comm2) <= 0.0001) ) {
+		return -1;
+	}
+	SGGeod tx_pos = SGGeod::fromDegM( lon, lat, elev );
+	double signal = ITM_calculate_attenuation(tx_pos, freq, ground_to_air);
+	
+	return signal;
+}
+
+
 /*** Receive ATC radio communication as text
 ***/
 void FGRadioTransmission::receiveATC(SGGeod tx_pos, double freq, string text, int ground_to_air) {
