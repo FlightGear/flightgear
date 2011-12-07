@@ -82,6 +82,7 @@ Name: "{group}\Tools\UGsmooth"; Filename: "cmd"; Parameters: "/k ""{app}\bin\UGs
 Name: "{group}\Tools\MIDSsmooth"; Filename: "cmd"; Parameters: "/k ""{app}\bin\MIDSsmooth.exe"" -h"; WorkingDir: "{app}\bin";
 Name: "{group}\Tools\metar"; Filename: "cmd"; Parameters: "/k ""{app}\bin\metar.exe"" -h"; WorkingDir: "{app}\bin";
 Name: "{group}\Tools\yasim"; Filename: "cmd"; Parameters: "/k ""{app}\bin\yasim.exe"" -h"; WorkingDir: "{app}\bin";
+Name: "{group}\Tools\fgpanel"; Filename: "cmd"; Parameters: "/k ""{app}\bin\fgpanel.exe"" -h"; WorkingDir: "{app}\bin";
 
 Name: "{group}\Tools\Explore Documentation Folder"; Filename: "{app}\data\Docs"
 
