@@ -501,27 +501,6 @@ static naRef f_carttogeod(naContext c, naRef me, int argc, naRef* args)
     return vec;
 }
 
-// Convert a cartesian point to a geodetic lat/lon/altitude.
-static naRef f_radioTransmission(naContext c, naRef me, int argc, naRef* args)
-{
-    double lat, lon, elev, heading, pitch;
-    if(argc != 5) naRuntimeError(c, "radioTransmission() expects 5 arguments");
-    for(int i=0; i<argc; i++) {
-        if(naIsNil(args[i]))
-        	return naNil();
-    }
-    lat = naNumValue(args[0]).num;
-    lon = naNumValue(args[1]).num;
-    elev = naNumValue(args[2]).num;
-    heading = naNumValue(args[3]).num;
-    pitch = naNumValue(args[4]).num;
-    SGGeod geod = SGGeod::fromDegM(lon, lat, elev * SG_FEET_TO_METER);
-    FGRadioTransmission *radio = new FGRadioTransmission;
-    double signal = radio->receiveBeacon(geod, heading, pitch);
-    delete radio;
-    return naNum(signal);
-}
-
 // Convert a geodetic lat/lon/altitude to a cartesian point.
 static naRef f_geodtocart(naContext c, naRef me, int argc, naRef* args)
 {
@@ -575,6 +554,27 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
     naVec_append(vec, matdata);
     return vec;
 #undef HASHSET
+}
+
+// Expose a radio transmission interface to Nasal.
+static naRef f_radioTransmission(naContext c, naRef me, int argc, naRef* args)
+{
+    double lat, lon, elev, heading, pitch;
+    if(argc != 5) naRuntimeError(c, "radioTransmission() expects 5 arguments");
+    for(int i=0; i<argc; i++) {
+        if(naIsNil(args[i]))
+        	return naNil();
+    }
+    lat = naNumValue(args[0]).num;
+    lon = naNumValue(args[1]).num;
+    elev = naNumValue(args[2]).num;
+    heading = naNumValue(args[3]).num;
+    pitch = naNumValue(args[4]).num;
+    SGGeod geod = SGGeod::fromDegM(lon, lat, elev * SG_FEET_TO_METER);
+    FGRadioTransmission *radio = new FGRadioTransmission;
+    double signal = radio->receiveBeacon(geod, heading, pitch);
+    delete radio;
+    return naNum(signal);
 }
 
 
