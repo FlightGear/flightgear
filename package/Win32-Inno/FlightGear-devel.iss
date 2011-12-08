@@ -20,7 +20,7 @@
 ;     C:\> subst X: /d
 ;
 
-#define FGVER "v20111024"
+#define FGVER "v20111205"
 ;#define FGVER "2.4.0"
 
 [Setup]
@@ -42,7 +42,7 @@ WizardImageFile=X:\setupimg.bmp
 WizardImageStretch=No
 WizardSmallImageFile=X:\setupsmall.bmp
 VersionInfoCompany=The FlightGear Team
-UninstallDisplayIcon={app}\bin\Win32\fgrun.exe
+UninstallDisplayIcon={app}\bin\fgrun.exe
 
 [Tasks]
 ; NOTE: The following entry contains English phrases ("Create a desktop icon" and "Additional icons"). You are free to translate them into another language if required.
@@ -52,7 +52,7 @@ Name: "insoal"; Description: "Install OpenAL (the sound engine)"
 [Files]
 ; NOTE: run subst X: F:\ (or whatever path the expanded tree resides at)
 Source: "X:\*.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "X:\bin\Win32\*.*"; DestDir: "{app}\bin\Win32"; Flags: ignoreversion recursesubdirs
+Source: "X:\bin\*.*"; DestDir: "{app}\bin"; Flags: ignoreversion recursesubdirs
 ;;; Source: "X:\bin\vcredist_x86.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "X:\bin\oalinst.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "X:\data\*.*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs
@@ -64,40 +64,41 @@ Name: "{app}\scenery"; Permissions: everyone-modify
 Name: "{code:TerrasyncDir}"; Permissions: everyone-modify
 
 [Icons]
-Name: "{group}\FlightGear {#FGVER}"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}";
-; Name: "{group}\FlightGear"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}";
+Name: "{group}\FlightGear {#FGVER}"; Filename: "{app}\bin\fgrun.exe"; WorkingDir: "{app}";
+; Name: "{group}\FlightGear"; Filename: "{app}\bin\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}";
 Name: "{group}\FlightGear Manual"; Filename: "{app}\data\Docs\getstart.pdf"
 Name: "{group}\FlightGear Documentation"; Filename: "{app}\data\Docs\index.html"
 Name: "{group}\Flightgear Wiki"; Filename: "http://wiki.flightgear.org"
-Name: "{userdesktop}\FlightGear {#FGVER}"; Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{userdesktop}\FlightGear {#FGVER}"; Filename: "{app}\bin\fgrun.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
-Name: "{group}\Tools\Install & Uninstall Scenery"; Filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}";
-Name: "{group}\Tools\TerraSync"; Filename: "{app}\bin\Win32\terrasync.exe"; Parameters: "-S -p 5505 -d ""{app}\terrasync"""; WorkingDir: "{app}";
+Name: "{group}\Tools\Install & Uninstall Scenery"; Filename: "{app}\bin\fgadmin.exe"; WorkingDir: "{app}";
+Name: "{group}\Tools\TerraSync"; Filename: "{app}\bin\terrasync.exe"; Parameters: "-S -p 5505 -d ""{app}\terrasync"""; WorkingDir: "{app}";
 Name: "{group}\Tools\Uninstall FlightGear {#FGVER}"; Filename: "{uninstallexe}"
 
-Name: "{group}\Tools\js_demo"; Filename: "{app}\bin\Win32\js_demo.exe"
-Name: "{group}\Tools\fgjs"; Filename: "cmd"; Parameters: "/k fgjs.exe ""--fg-root={app}\data"""; WorkingDir: "{app}\bin\Win32";
-Name: "{group}\Tools\GPSsmooth"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\GPSsmooth.exe"" -h"; WorkingDir: "{app}\bin\Win32";
-Name: "{group}\Tools\UGsmooth"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\UGsmooth.exe"" -h"; WorkingDir: "{app}\bin\Win32";
-Name: "{group}\Tools\MIDSsmooth"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\MIDSsmooth.exe"" -h"; WorkingDir: "{app}\bin\Win32";
-Name: "{group}\Tools\metar"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\metar.exe"" -h"; WorkingDir: "{app}\bin\Win32";
-Name: "{group}\Tools\yasim"; Filename: "cmd"; Parameters: "/k ""{app}\bin\Win32\yasim.exe"" -h"; WorkingDir: "{app}\bin\Win32";
+Name: "{group}\Tools\js_demo"; Filename: "{app}\bin\js_demo.exe"
+Name: "{group}\Tools\fgjs"; Filename: "cmd"; Parameters: "/k fgjs.exe ""--fg-root={app}\data"""; WorkingDir: "{app}\bin";
+Name: "{group}\Tools\GPSsmooth"; Filename: "cmd"; Parameters: "/k ""{app}\bin\GPSsmooth.exe"" -h"; WorkingDir: "{app}\bin";
+Name: "{group}\Tools\UGsmooth"; Filename: "cmd"; Parameters: "/k ""{app}\bin\UGsmooth.exe"" -h"; WorkingDir: "{app}\bin";
+Name: "{group}\Tools\MIDSsmooth"; Filename: "cmd"; Parameters: "/k ""{app}\bin\MIDSsmooth.exe"" -h"; WorkingDir: "{app}\bin";
+Name: "{group}\Tools\metar"; Filename: "cmd"; Parameters: "/k ""{app}\bin\metar.exe"" -h"; WorkingDir: "{app}\bin";
+Name: "{group}\Tools\yasim"; Filename: "cmd"; Parameters: "/k ""{app}\bin\yasim.exe"" -h"; WorkingDir: "{app}\bin";
+Name: "{group}\Tools\fgpanel"; Filename: "cmd"; Parameters: "/k ""{app}\bin\fgpanel.exe"" -h"; WorkingDir: "{app}\bin";
 
 Name: "{group}\Tools\Explore Documentation Folder"; Filename: "{app}\data\Docs"
 
 ; For running flightgear directly
-; Name: "{userdesktop}\FlightGear {#FGVER}"; Filename: "{app}\bin\Win32\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}"; Tasks: desktopicon
+; Name: "{userdesktop}\FlightGear {#FGVER}"; Filename: "{app}\bin\fgfs.exe"; Parameters: "--fg-root=."; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-;;; Filename: "{app}\bin\vcredist_x86.exe"; WorkingDir: "{app}"; Parameters: "/qb!"; Description: "Installing Flightgear prerequisites"
+Filename: "{app}\bin\vcredist_x86.exe"; WorkingDir: "{app}"; Parameters: "/passive /norestart"; Description: "Installing MS Visual C++ runtime components"
 
 ; Put installation directory into the fgrun.prefs
-filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--fg-exe={app}\bin\Win32\fgfs.exe"" ""--ts-exe={app}\bin\Win32\terrasync.exe"" ""--fg-root={app}\data"" ""--fg-scenery={app}\data\Scenery;{app}\scenery;{code:TerrasyncDir}"" --ts-dir=3"
+Filename: "{app}\bin\fgrun.exe"; WorkingDir: "{app}\bin"; Parameters: "--silent ""--fg-exe={app}\bin\fgfs.exe"" ""--ts-exe={app}\bin\terrasync.exe"" ""--fg-root={app}\data"" ""--fg-scenery={app}\data\Scenery;{app}\scenery;{code:TerrasyncDir}"" --ts-dir=3"
 
 ; Put installation and source directories into the fgadmin.prefs
-filename: "{app}\bin\Win32\fgadmin.exe"; WorkingDir: "{app}\bin\Win32"; Parameters: "--silent ""--install-source={src}\..\Scenery"" ""--scenery-dest={app}\scenery"""
+Filename: "{app}\bin\fgadmin.exe"; WorkingDir: "{app}\bin"; Parameters: "--silent ""--install-source={src}\..\Scenery"" ""--scenery-dest={app}\scenery"""
 Filename: "{app}\bin\oalinst.exe"; WorkingDir: "{app}"; Description: "Installing OpenAL"; Tasks: insoal
-;Filename: "{app}\bin\Win32\fgrun.exe"; WorkingDir: "{app}"; Description: "Launch FlightGear"; Flags: postinstall skipifsilent
+;Filename: "{app}\bin\fgrun.exe"; WorkingDir: "{app}"; Description: "Launch FlightGear"; Flags: postinstall skipifsilent
 
 [Registry]
 Root: HKLM; Subkey: "Software\flightgear.org"; ValueType: string; ValueName: "TerrasyncDir"; ValueData: "{code:TerrasyncDir}"
