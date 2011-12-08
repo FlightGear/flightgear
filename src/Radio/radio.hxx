@@ -1,6 +1,6 @@
 // radio.hxx -- FGRadio: class to manage radio propagation
 //
-// Written by Adrian Musceac, started August 2011.
+// Written by Adrian Musceac YO8RZZ, started August 2011.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -74,7 +74,7 @@ private:
 *	@param: frequency, elevation data, terrain type, horizon distances, calculated loss
 *	@return: none
 ***/
-	void calculate_clutter_loss(double freq, double itm_elev[], std::deque<string> &materials,
+	void calculate_clutter_loss(double freq, double itm_elev[], std::deque<string*> &materials,
 			double transmitter_height, double receiver_height, int p_mode,
 			double horizons[], double &clutter_loss);
 	
@@ -82,7 +82,7 @@ private:
 *		@param: terrain type, median clutter height, radiowave attenuation factor
 *		@return: none
 ***/
-	void get_material_properties(string mat_name, double &height, double &density);
+	void get_material_properties(string* mat_name, double &height, double &density);
 	
 	
 public:

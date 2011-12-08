@@ -1,6 +1,6 @@
 // radio.cxx -- implementation of FGRadio
 // Class to manage radio propagation using the ITM model
-// Written by Adrian Musceac, started August 2011.
+// Written by Adrian Musceac YO8RZZ, started August 2011.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License as
@@ -291,7 +291,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	double delta_last = fmod(distance_m, point_distance);
 	
 	deque<double> elevations;
-	deque<string> materials;
+	deque<string*> materials;
 	
 
 	double elevation_under_pilot = 0.0;
@@ -329,42 +329,48 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 				elevations.push_back(elevation_m);
 				if(mat) {
 					const std::vector<string> mat_names = mat->get_names();
-					materials.push_back(mat_names[0]);
+					string* name = new string(mat_names[0]);
+					materials.push_back(name);
 				}
 				else {
-					materials.push_back("None");
+					string* no_material = new string("None"); 
+					materials.push_back(no_material);
 				}
 			}
 			else {
 				 elevations.push_front(elevation_m);
 				 if(mat) {
 				 	 const std::vector<string> mat_names = mat->get_names();
-				 	 materials.push_front(mat_names[0]);
+				 	 string* name = new string(mat_names[0]);
+				 	 materials.push_front(name);
 				}
 				else {
-					materials.push_front("None");
+					string* no_material = new string("None"); 
+					materials.push_front(no_material);
 				}
 			}
 		}
 		else {
 			if((transmission_type == 3) || (transmission_type == 4)) {
 				elevations.push_back(0.0);
-				materials.push_back("None");
+				string* no_material = new string("None"); 
+				materials.push_back(no_material);
 			}
 			else {
+				string* no_material = new string("None"); 
 				elevations.push_front(0.0);
-				materials.push_front("None");
+				materials.push_front(no_material);
 			}
 		}
 	}
 	if((transmission_type == 3) || (transmission_type == 4)) {
 		elevations.push_front(elevation_under_pilot);
-		if (delta_last > (point_distance / 2) )			// only add last point if it's farther than half point_distance
+		//if (delta_last > (point_distance / 2) )			// only add last point if it's farther than half point_distance
 			elevations.push_back(elevation_under_sender);
 	}
 	else {
 		elevations.push_back(elevation_under_pilot);
-		if (delta_last > (point_distance / 2) )
+		//if (delta_last > (point_distance / 2) )
 			elevations.push_front(elevation_under_sender);
 	}
 	
@@ -452,18 +458,21 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	//_root_node->setDoubleValue("station[0]/rx-pattern-gain", rx_pattern_gain);
 
 	delete[] itm_elev;
-
+	for (unsigned i =0; i < materials.size(); i++) {
+		delete materials[i];
+	}
+	
 	return signal;
 
 }
 
 
-void FGRadioTransmission::calculate_clutter_loss(double freq, double itm_elev[], deque<string> &materials,
+void FGRadioTransmission::calculate_clutter_loss(double freq, double itm_elev[], deque<string*> &materials,
 	double transmitter_height, double receiver_height, int p_mode,
 	double horizons[], double &clutter_loss) {
 	
 	double distance_m = itm_elev[0] * itm_elev[1]; // only consider elevation points
-	
+	unsigned mat_size = materials.size();
 	if (p_mode == 0) {	// LOS: take each point and see how clutter height affects first Fresnel zone
 		int mat = 0;
 		int j=1; 
@@ -471,6 +480,9 @@ void FGRadioTransmission::calculate_clutter_loss(double freq, double itm_elev[],
 			
 			double clutter_height = 0.0;	// mean clutter height for a certain terrain type
 			double clutter_density = 0.0;	// percent of reflected wave
+			if((unsigned)mat >= mat_size) {
+				break;
+			}
 			get_material_properties(materials[mat], clutter_height, clutter_density);
 			
 			double grad = fabs(itm_elev[2] + transmitter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m;
@@ -522,6 +534,10 @@ void FGRadioTransmission::calculate_clutter_loss(double freq, double itm_elev[],
 					break;
 				double clutter_height = 0.0;	// mean clutter height for a certain terrain type
 				double clutter_density = 0.0;	// percent of reflected wave
+				
+				if((unsigned)mat >= mat_size) {
+					break;
+				}
 				get_material_properties(materials[mat], clutter_height, clutter_density);
 				
 				double grad = fabs(itm_elev[2] + transmitter_height - itm_elev[num_points_1st + 2] + clutter_height) / distance_m;
@@ -566,6 +582,10 @@ void FGRadioTransmission::calculate_clutter_loss(double freq, double itm_elev[],
 					break;
 				double clutter_height = 0.0;	// mean clutter height for a certain terrain type
 				double clutter_density = 0.0;	// percent of reflected wave
+				
+				if((unsigned)mat >= mat_size) {
+					break;
+				}
 				get_material_properties(materials[mat], clutter_height, clutter_density);
 				
 				double grad = fabs(itm_elev[last+1] + clutter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m;
@@ -618,6 +638,9 @@ void FGRadioTransmission::calculate_clutter_loss(double freq, double itm_elev[],
 					break;
 				double clutter_height = 0.0;	// mean clutter height for a certain terrain type
 				double clutter_density = 0.0;	// percent of reflected wave
+				if((unsigned)mat >= mat_size) {
+					break;
+				}
 				get_material_properties(materials[mat], clutter_height, clutter_density);
 				
 				double grad = fabs(itm_elev[2] + transmitter_height - itm_elev[num_points_1st + 2] + clutter_height) / distance_m;
@@ -650,6 +673,7 @@ void FGRadioTransmission::calculate_clutter_loss(double freq, double itm_elev[],
 					// no losses
 				}
 				j++;
+				mat++;
 				last = k;
 			}
 			mat +=1;
@@ -661,6 +685,9 @@ void FGRadioTransmission::calculate_clutter_loss(double freq, double itm_elev[],
 					break;
 				double clutter_height = 0.0;	// mean clutter height for a certain terrain type
 				double clutter_density = 0.0;	// percent of reflected wave
+				if((unsigned)mat >= mat_size) {
+					break;
+				}
 				get_material_properties(materials[mat], clutter_height, clutter_density);
 				
 				double grad = fabs(itm_elev[last+1] + clutter_height - itm_elev[num_points_1st + num_points_2nd + 2] + clutter_height) / distance_m;
@@ -705,6 +732,9 @@ void FGRadioTransmission::calculate_clutter_loss(double freq, double itm_elev[],
 					break;
 				double clutter_height = 0.0;	// mean clutter height for a certain terrain type
 				double clutter_density = 0.0;	// percent of reflected wave
+				if((unsigned)mat >= mat_size) {
+					break;
+				}
 				get_material_properties(materials[mat], clutter_height, clutter_density);
 				
 				double grad = fabs(itm_elev[last2+1] + clutter_height - itm_elev[(int)itm_elev[0] + 2] + receiver_height) / distance_m;
@@ -751,107 +781,110 @@ void FGRadioTransmission::calculate_clutter_loss(double freq, double itm_elev[],
 }
 
 
-void FGRadioTransmission::get_material_properties(string mat_name, double &height, double &density) {
+void FGRadioTransmission::get_material_properties(string* mat_name, double &height, double &density) {
 	
-	if(mat_name == "Landmass") {
+	if(!mat_name)
+		return;
+	
+	if(*mat_name == "Landmass") {
 		height = 15.0;
 		density = 0.2;
 	}
 
-	else if(mat_name == "SomeSort") {
+	else if(*mat_name == "SomeSort") {
 		height = 15.0;
 		density = 0.2;
 	}
 
-	else if(mat_name == "Island") {
+	else if(*mat_name == "Island") {
 		height = 15.0;
 		density = 0.2;
 	}
-	else if(mat_name == "Default") {
+	else if(*mat_name == "Default") {
 		height = 15.0;
 		density = 0.2;
 	}
-	else if(mat_name == "EvergreenBroadCover") {
+	else if(*mat_name == "EvergreenBroadCover") {
 		height = 20.0;
 		density = 0.2;
 	}
-	else if(mat_name == "EvergreenForest") {
+	else if(*mat_name == "EvergreenForest") {
 		height = 20.0;
 		density = 0.2;
 	}
-	else if(mat_name == "DeciduousBroadCover") {
+	else if(*mat_name == "DeciduousBroadCover") {
 		height = 15.0;
 		density = 0.3;
 	}
-	else if(mat_name == "DeciduousForest") {
+	else if(*mat_name == "DeciduousForest") {
 		height = 15.0;
 		density = 0.3;
 	}
-	else if(mat_name == "MixedForestCover") {
+	else if(*mat_name == "MixedForestCover") {
 		height = 20.0;
 		density = 0.25;
 	}
-	else if(mat_name == "MixedForest") {
+	else if(*mat_name == "MixedForest") {
 		height = 15.0;
 		density = 0.25;
 	}
-	else if(mat_name == "RainForest") {
+	else if(*mat_name == "RainForest") {
 		height = 25.0;
 		density = 0.55;
 	}
-	else if(mat_name == "EvergreenNeedleCover") {
+	else if(*mat_name == "EvergreenNeedleCover") {
 		height = 15.0;
 		density = 0.2;
 	}
-	else if(mat_name == "WoodedTundraCover") {
+	else if(*mat_name == "WoodedTundraCover") {
 		height = 5.0;
 		density = 0.15;
 	}
-	else if(mat_name == "DeciduousNeedleCover") {
+	else if(*mat_name == "DeciduousNeedleCover") {
 		height = 5.0;
 		density = 0.2;
 	}
-	else if(mat_name == "ScrubCover") {
+	else if(*mat_name == "ScrubCover") {
 		height = 3.0;
 		density = 0.15;
 	}
-	else if(mat_name == "BuiltUpCover") {
+	else if(*mat_name == "BuiltUpCover") {
 		height = 30.0;
 		density = 0.7;
 	}
-	else if(mat_name == "Urban") {
+	else if(*mat_name == "Urban") {
 		height = 30.0;
 		density = 0.7;
 	}
-	else if(mat_name == "Construction") {
+	else if(*mat_name == "Construction") {
 		height = 30.0;
 		density = 0.7;
 	}
-	else if(mat_name == "Industrial") {
+	else if(*mat_name == "Industrial") {
 		height = 30.0;
 		density = 0.7;
 	}
-	else if(mat_name == "Port") {
+	else if(*mat_name == "Port") {
 		height = 30.0;
 		density = 0.7;
 	}
-	else if(mat_name == "Town") {
+	else if(*mat_name == "Town") {
 		height = 10.0;
 		density = 0.5;
 	}
-	else if(mat_name == "SubUrban") {
+	else if(*mat_name == "SubUrban") {
 		height = 10.0;
 		density = 0.5;
 	}
-	else if(mat_name == "CropWoodCover") {
+	else if(*mat_name == "CropWoodCover") {
 		height = 10.0;
 		density = 0.1;
 	}
-	else if(mat_name == "CropWood") {
+	else if(*mat_name == "CropWood") {
 		height = 10.0;
 		density = 0.1;
 	}
-	else if(mat_name == "AgroForest") {
+	else if(*mat_name == "AgroForest") {
 		height = 10.0;
 		density = 0.1;
 	}
