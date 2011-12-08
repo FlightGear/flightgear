@@ -39,11 +39,13 @@
 #include <assert.h>
 #include <stdio.h>
 
-const double THIRD = (1.0/3.0);
-const double f_0 = 47.7; // 47.7 MHz from [Alg 1.1], to convert frequency into wavenumber and vica versa
-
 
 using namespace std;
+
+namespace ITM {
+	
+const double THIRD = (1.0/3.0);
+const double f_0 = 47.7; // 47.7 MHz from [Alg 1.1], to convert frequency into wavenumber and vica versa
 
 
 struct prop_type {
@@ -1849,3 +1851,5 @@ void area(long ModVar, double deltaH, double tht_m, double rht_m, double dist_km
 		errnum = prop.kwx;
 }
 #endif
+
+}

@@ -391,14 +391,14 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	
 	if((transmission_type == 3) || (transmission_type == 4)) {
 		// the sender and receiver roles are switched
-		point_to_point(itm_elev, receiver_height, transmitter_height,
+		ITM::point_to_point(itm_elev, receiver_height, transmitter_height,
 			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
 			pol, conf, rel, dbloss, strmode, p_mode, horizons, errnum);
 		if( _root_node->getBoolValue( "use-clutter-attenuation", false ) )
 			calculate_clutter_loss(frq_mhz, itm_elev, materials, receiver_height, transmitter_height, p_mode, horizons, clutter_loss);
 	}
 	else {
-		point_to_point(itm_elev, transmitter_height, receiver_height,
+		ITM::point_to_point(itm_elev, transmitter_height, receiver_height,
 			eps_dielect, sgm_conductivity, eno, frq_mhz, radio_climate,
 			pol, conf, rel, dbloss, strmode, p_mode, horizons, errnum);
 		if( _root_node->getBoolValue( "use-clutter-attenuation", false ) )
