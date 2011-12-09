@@ -134,7 +134,11 @@ void FGAIEscort::unbind() {
 bool FGAIEscort::init(bool search_in_AI_path) {
     if (!FGAIShip::init(search_in_AI_path))
         return false;
+    reinit();
+    return true;
+}
 
+void FGAIEscort::reinit() {
     invisible = false;
     no_roll = false;
 
@@ -147,7 +151,7 @@ bool FGAIEscort::init(bool search_in_AI_path) {
         hdg = _parent_hdg;
     }
 
-    return true;
+    FGAIShip::reinit();
 }
 
 void FGAIEscort::update(double dt) {

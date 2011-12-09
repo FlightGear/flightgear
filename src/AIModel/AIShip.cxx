@@ -113,6 +113,12 @@ void FGAIShip::readFromScenario(SGPropertyNode* scFileNode) {
 }
 
 bool FGAIShip::init(bool search_in_AI_path) {
+    reinit();
+    return FGAIBase::init(search_in_AI_path);
+}
+
+void FGAIShip::reinit()
+{
     prev = 0; // the one behind you
     curr = 0; // the one ahead
     next = 0; // the next plus 1
@@ -134,7 +140,7 @@ bool FGAIShip::init(bool search_in_AI_path) {
     if (fp)
         _fp_init = initFlightPlan();
 
-    return FGAIBase::init(search_in_AI_path);
+    FGAIBase::reinit();
 }
 
 void FGAIShip::bind() {

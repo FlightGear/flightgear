@@ -230,7 +230,7 @@ private:
     bool _initialized;
     osg::ref_ptr<osg::LOD> _model; //The 3D model LOD object
 
-    FGAIModelData* _aimodel;
+    osg::ref_ptr<FGAIModelData> _aimodel;
 
     string _fxpath;
     SGSharedPtr<FGFX>  _fx;
