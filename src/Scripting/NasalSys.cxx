@@ -33,7 +33,6 @@
 #include <Scenery/scenery.hxx>
 #include <Navaids/navlist.hxx>
 #include <Navaids/procedure.hxx>
-#include <Radio/radio.hxx>
 
 
 #include "NasalSys.hxx"
@@ -556,27 +555,6 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
 #undef HASHSET
 }
 
-// Expose a radio transmission interface to Nasal.
-static naRef f_radioTransmission(naContext c, naRef me, int argc, naRef* args)
-{
-    double lat, lon, elev, heading, pitch;
-    if(argc != 5) naRuntimeError(c, "radioTransmission() expects 5 arguments");
-    for(int i=0; i<argc; i++) {
-        if(naIsNil(args[i]))
-        	return naNil();
-    }
-    lat = naNumValue(args[0]).num;
-    lon = naNumValue(args[1]).num;
-    elev = naNumValue(args[2]).num;
-    heading = naNumValue(args[3]).num;
-    pitch = naNumValue(args[4]).num;
-    SGGeod geod = SGGeod::fromDegM(lon, lat, elev * SG_FEET_TO_METER);
-    FGRadioTransmission *radio = new FGRadioTransmission;
-    double signal = radio->receiveBeacon(geod, heading, pitch);
-    delete radio;
-    return naNum(signal);
-}
-
 
 class AirportInfoFilter : public FGAirport::AirportFilter
 {
@@ -827,7 +805,6 @@ static struct { const char* name; naCFunction func; } funcs[] = {
     { "geodinfo", f_geodinfo },
     { "airportinfo", f_airportinfo },
     { "navinfo", f_navinfo },
-    { "radioTransmission", f_radioTransmission },
     { 0, 0 }
 };
 
