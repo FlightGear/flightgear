@@ -164,6 +164,9 @@ FGAIBase::~FGAIBase() {
 void
 FGAIBase::removeModel()
 {
+    if (!_model.valid())
+        return;
+
     FGScenery* pSceneryManager = globals->get_scenery();
     if (pSceneryManager)
     {
@@ -292,7 +295,7 @@ bool FGAIBase::init(bool search_in_AI_path)
 {
     if (_model.valid())
     {
-        SG_LOG(SG_AI, SG_WARN, "AIBase: Cannot initialize a model multiple times! " << model_path);
+        SG_LOG(SG_AI, SG_ALERT, "AIBase: Cannot initialize a model multiple times! " << model_path);
         return false;
     }
 
