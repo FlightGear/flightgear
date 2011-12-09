@@ -20,7 +20,7 @@
 // and 8 bytes for double.
 
 
-const uint32_t FG_NET_GUI_VERSION = 7;
+const uint32_t FG_NET_GUI_VERSION = 8;
 
 
 // Define a structure containing the top level flight dynamics model
@@ -36,23 +36,33 @@ public:
         FG_MAX_TANKS = 4
     };
 
-    uint32_t version;		// increment when data values change
+// Note: align fields properly and manually to avoid incompatibilities
+// between 32bit and 64bit CPUs. Make sure that each field is already
+// placed on an offset which is a multiple of the size of its data
+// type, i.e. uint32/float need to have on offset of 4, doubles need
+// an offset of 8. This guarantees that compilers will _not_ add
+// CPU-specific padding bytes. Whenever in doubt about padding rules,
+// check "data structure alignment" in Wikipedia/Google :).
 
-    // Positions
-    double longitude;		// geodetic (radians)
-    double latitude;		// geodetic (radians)
-    float altitude;		// above sea level (meters)
-    float agl;			// above ground level (meters)
-    float phi;			// roll (radians)
-    float theta;		// pitch (radians)
-    float psi;			// yaw or true heading (radians)
+    uint32_t version;           // increment when data values change
+    uint32_t padding1;          // 4 padding bytes, so the next (64bit) var is aligned to 8
+
+    // Positions (note: offset for these doubles is already aligned to 8 - to avoid architecture specific alignments)
+    double longitude;           // geodetic (radians)
+    double latitude;            // geodetic (radians)
+
+    float altitude;             // above sea level (meters)
+    float agl;                  // above ground level (meters)
+    float phi;                  // roll (radians)
+    float theta;                // pitch (radians)
+    float psi;                  // yaw or true heading (radians)
 
     // Velocities
     float vcas;
-    float climb_rate;		// feet per second
+    float climb_rate;           // feet per second
 
     // Consumables
-    uint32_t num_tanks;		// Max number of fuel tanks
+    uint32_t num_tanks;         // Max number of fuel tanks
     float fuel_quantity[FG_MAX_TANKS];
 
     // Environment
