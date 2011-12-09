@@ -288,8 +288,14 @@ void FGAIBase::Transform() {
 
 }
 
-bool FGAIBase::init(bool search_in_AI_path) {
-    
+bool FGAIBase::init(bool search_in_AI_path)
+{
+    if (_model.valid())
+    {
+        SG_LOG(SG_AI, SG_WARN, "AIBase: Cannot initialize a model multiple times! " << model_path);
+        return false;
+    }
+
     string f;
     if(search_in_AI_path)
     {
@@ -317,12 +323,6 @@ bool FGAIBase::init(bool search_in_AI_path) {
 
     _aimodel = new FGAIModelData(props);
     osg::Node * mdl = SGModelLib::loadDeferredModel(f, props, _aimodel);
-
-    if (_model.valid())
-    {
-        // reinit, dump the old model
-        removeModel();
-    }
 
     _model = new osg::LOD;
     _model->setName("AI-model range animation node");

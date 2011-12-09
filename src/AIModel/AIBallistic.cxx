@@ -126,7 +126,11 @@ void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
 
 bool FGAIBallistic::init(bool search_in_AI_path) {
     FGAIBase::init(search_in_AI_path);
+    reinit();
+    return true;
+}
 
+void FGAIBallistic::reinit() {
     _impact_reported = false;
     _collision_reported = false;
     _expiry_reported = false;
@@ -179,7 +183,7 @@ bool FGAIBallistic::init(bool search_in_AI_path) {
 
     setParentNodes(_selected_ac);
 
-    return true;
+    FGAIBase::reinit();
 }
 
 void FGAIBallistic::bind() {

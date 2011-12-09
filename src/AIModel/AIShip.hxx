@@ -41,8 +41,9 @@ public:
     virtual void bind();
     virtual void unbind();
     virtual void update(double dt);
+    virtual void reinit();
+
     void setFlightPlan(FGAIFlightPlan* f);
-//    void setName(const string&);
     void setRudder(float r);
     void setRoll(double rl);
     void ProcessFlightPlan( double dt);
@@ -90,13 +91,8 @@ public:
 
 protected:
 
-//    string _name; // The name of this ship.
-
 private:
 
-
-
-    virtual void reinit() { init(); }
 
     void setRepeat(bool r);
     void setRestart(bool r);

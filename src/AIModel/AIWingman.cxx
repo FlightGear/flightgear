@@ -203,7 +203,11 @@ void FGAIWingman::unbind() {
 bool FGAIWingman::init(bool search_in_AI_path) {
     if (!FGAIBallistic::init(search_in_AI_path))
         return false;
+    reinit();
+    return true;
+}
 
+void FGAIWingman::reinit() {
     invisible = false;
 
     _tgt_x_offset = _x_offset;
@@ -223,7 +227,8 @@ bool FGAIWingman::init(bool search_in_AI_path) {
 
     props->setStringValue("submodels/path", _path.c_str());
     user_WoW_node      = fgGetNode("gear/gear[1]/wow", true);
-    return true;
+
+    FGAIBallistic::reinit();
 }
 
 void FGAIWingman::update(double dt) {

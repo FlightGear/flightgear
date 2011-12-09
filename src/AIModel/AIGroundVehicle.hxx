@@ -37,16 +37,16 @@ public:
     virtual ~FGAIGroundVehicle();
 
     virtual void readFromScenario(SGPropertyNode* scFileNode);
-    virtual void bind();
-    virtual void unbind();
-    virtual const char* getTypeString(void) const { return "groundvehicle"; }
 
     bool init(bool search_in_AI_path=false);
+    virtual void bind();
+    virtual void unbind();
+    virtual void reinit();
+    virtual void update (double dt);
+
+    virtual const char* getTypeString(void) const { return "groundvehicle"; }
 
 private:
-
-    virtual void reinit() { init(); }
-    virtual void update (double dt);
 
     void setNoRoll(bool nr);
     void setContactX1offset(double x1);
