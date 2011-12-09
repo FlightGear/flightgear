@@ -145,7 +145,7 @@ FGAIBase::~FGAIBase() {
             model_removed->setStringValue(props->getPath());
     }
 
-    if (_refID != 0 && _refID !=  1) {
+    if (_fx && _refID != 0 && _refID !=  1) {
         SGSoundMgr *smgr = globals->get_soundmgr();
         stringstream name; 
         name <<  "aifx:";
@@ -153,7 +153,8 @@ FGAIBase::~FGAIBase() {
         smgr->remove(name.str());
     }
 
-    delete fp;
+    if (fp)
+        delete fp;
     fp = 0;
 }
 
@@ -163,6 +164,9 @@ FGAIBase::~FGAIBase() {
 void
 FGAIBase::removeModel()
 {
+    if (!_model.valid())
+        return;
+
     FGScenery* pSceneryManager = globals->get_scenery();
     if (pSceneryManager)
     {
@@ -287,8 +291,14 @@ void FGAIBase::Transform() {
 
 }
 
-bool FGAIBase::init(bool search_in_AI_path) {
-    
+bool FGAIBase::init(bool search_in_AI_path)
+{
+    if (_model.valid())
+    {
+        SG_LOG(SG_AI, SG_ALERT, "AIBase: Cannot initialize a model multiple times! " << model_path);
+        return false;
+    }
+
     string f;
     if(search_in_AI_path)
     {
@@ -316,12 +326,6 @@ bool FGAIBase::init(bool search_in_AI_path) {
 
     _aimodel = new FGAIModelData(props);
     osg::Node * mdl = SGModelLib::loadDeferredModel(f, props, _aimodel);
-
-    if (_model.valid())
-    {
-        // reinit, dump the old model
-        removeModel();
-    }
 
     _model = new osg::LOD;
     _model->setName("AI-model range animation node");

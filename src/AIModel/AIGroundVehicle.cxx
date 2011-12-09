@@ -142,7 +142,11 @@ void FGAIGroundVehicle::unbind() {
 bool FGAIGroundVehicle::init(bool search_in_AI_path) {
     if (!FGAIShip::init(search_in_AI_path))
         return false;
+    reinit();
+    return true;
+}
 
+void FGAIGroundVehicle::reinit() {
     invisible = false;
     _limit = 200;
     no_roll = true;
@@ -162,7 +166,7 @@ bool FGAIGroundVehicle::init(bool search_in_AI_path) {
         setParent();
     }
 
-    return true;
+    FGAIShip::reinit();
 }
 
 void FGAIGroundVehicle::update(double dt) {

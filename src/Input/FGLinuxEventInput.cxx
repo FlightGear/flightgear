@@ -469,7 +469,7 @@ void FGLinuxEventInput::postinit()
     dev = udev_device_get_parent( dev );
     const char * name = udev_device_get_sysattr_value(dev,"name");
 
-    SG_LOG(SG_INPUT,SG_ALERT, "name=" << (name?name:"<null>") << ", node=" << (node?node:"<null>"));
+    SG_LOG(SG_INPUT,SG_DEBUG, "name=" << (name?name:"<null>") << ", node=" << (node?node:"<null>"));
     if( name && node )
       AddDevice( new FGLinuxInputDevice(name, node) );
 
