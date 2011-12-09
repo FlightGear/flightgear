@@ -145,7 +145,7 @@ FGAIBase::~FGAIBase() {
             model_removed->setStringValue(props->getPath());
     }
 
-    if (_refID != 0 && _refID !=  1) {
+    if (_fx && _refID != 0 && _refID !=  1) {
         SGSoundMgr *smgr = globals->get_soundmgr();
         stringstream name; 
         name <<  "aifx:";
@@ -153,7 +153,8 @@ FGAIBase::~FGAIBase() {
         smgr->remove(name.str());
     }
 
-    delete fp;
+    if (fp)
+        delete fp;
     fp = 0;
 }
 
