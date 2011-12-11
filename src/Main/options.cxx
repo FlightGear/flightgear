@@ -1466,7 +1466,7 @@ struct OptionDesc {
     {"hud-tris",                     false, OPTION_STRING, "/sim/hud/frame-stat-type", false, "tris", 0 },
     {"hud-culled",                   false, OPTION_STRING, "/sim/hud/frame-stat-type", false, "culled", 0 },
     {"atcsim",                       true,  OPTION_CHANNEL, "", false, "dummy", 0 },
-    {"atlas",                        true,  OPTION_CHANNEL, "", false, "", 0 },
+    {"atlas",                        true,  OPTION_CHANNEL | OPTION_MULTI, "", false, "", 0 },
     {"httpd",                        true,  OPTION_CHANNEL, "", false, "", 0 },
 #ifdef FG_JPEG_SERVER
     {"jpg-httpd",                    true,  OPTION_CHANNEL, "", false, "", 0 },
