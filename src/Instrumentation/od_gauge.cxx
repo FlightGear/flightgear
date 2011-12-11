@@ -97,10 +97,10 @@ void FGODGauge::allocRT () {
 //         rt->Reset("rgba ctt");
 
 //     if( rt->Initialize(256, 256, true) ) {
-//         SG_LOG(SG_ALL, SG_INFO, "FGODGauge:Initialize sucessfull");
+//         SG_LOG(SG_INSTR, SG_INFO, "FGODGauge:Initialize sucessfull");
 //         if (rt->BeginCapture())
 //         {
-//             SG_LOG(SG_ALL, SG_INFO, "FGODGauge:BeginCapture sucessfull, RTT available");
+//             SG_LOG(SG_INSTR, SG_INFO, "FGODGauge:BeginCapture sucessfull, RTT available");
 //             rtAvailable = true;
 //             glViewport(0, 0, textureWH, textureWH);
 //             glMatrixMode(GL_PROJECTION);
@@ -124,9 +124,9 @@ void FGODGauge::allocRT () {
 //             glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
 //             rt->EndCapture();
 //         } else
-//             SG_LOG(SG_ALL, SG_WARN, "FGODGauge:BeginCapture failed, RTT not available, using backbuffer");
+//             SG_LOG(SG_INSTR, SG_WARN, "FGODGauge:BeginCapture failed, RTT not available, using backbuffer");
 //     } else
-//         SG_LOG(SG_ALL, SG_WARN, "FGODGauge:Initialize failed, RTT not available, using backbuffer");
+//         SG_LOG(SG_INSTR, SG_WARN, "FGODGauge:Initialize failed, RTT not available, using backbuffer");
 }
 
 FGODGauge::~FGODGauge() {

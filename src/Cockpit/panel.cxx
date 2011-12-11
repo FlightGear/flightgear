@@ -1176,7 +1176,7 @@ FGTextLayer::setFontName(const string &name)
   FGFontCache *fc = globals->get_fontcache();
   fntFont* font = fc->getTexFont(_font_name.c_str());
   if (!font) {
-      SG_LOG(SG_GENERAL, SG_WARN, "unable to find font:" << name);
+      SG_LOG(SG_COCKPIT, SG_WARN, "unable to find font:" << name);
   }
 }
 

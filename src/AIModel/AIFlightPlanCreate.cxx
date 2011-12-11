@@ -98,7 +98,7 @@ bool FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
         break;
     default:
         //exit(1);
-        SG_LOG(SG_INPUT, SG_ALERT,
+        SG_LOG(SG_AI, SG_ALERT,
                "AIFlightPlan::create() attempting to create unknown leg"
                " this is probably an internal program error");
     }
@@ -215,7 +215,7 @@ bool FGAIFlightPlan::createTakeoffTaxi(FGAIAircraft * ac, bool firstFlight,
                                                       &heading, &gateId,
                                                       radius, fltType,
                                                       acType, airline))) {
-            SG_LOG(SG_INPUT, SG_WARN, "Could not find parking for a " <<
+            SG_LOG(SG_AI, SG_WARN, "Could not find parking for a " <<
                    acType <<
                    " of flight type " << fltType <<
                    " of airline     " << airline <<

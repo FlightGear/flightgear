@@ -54,7 +54,7 @@ public:
     ai_list_type ai_list;
 
     inline const ai_list_type& get_ai_list() const {
-        SG_LOG(SG_GENERAL, SG_DEBUG, "AI Manager: AI model return list size " << ai_list.size());
+        SG_LOG(SG_AI, SG_DEBUG, "AI Manager: AI model return list size " << ai_list.size());
         return ai_list;
     }
 

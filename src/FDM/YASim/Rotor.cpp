@@ -1307,7 +1307,7 @@ void Rotor::compile()
         &(torque[1]),&(lift[1])); //pitch b
     rps[0]->calculateAlpha(v_wind,rho_null,0,0,0,
         &(torque[3]),&(lift[3])); //pitch 0
-    SG_LOG(SG_GENERAL, SG_INFO,
+    SG_LOG(SG_FLIGHT, SG_INFO,
         "Rotor: coefficients for airfoil:" << endl << setprecision(6)
         << " drag0: " << _dragcoef0*_number_of_parts/_number_of_blades/_c2
         << " drag1: " << _dragcoef1*_number_of_parts/_number_of_blades/_c2

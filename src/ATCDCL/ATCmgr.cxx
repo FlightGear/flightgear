@@ -155,7 +155,7 @@ void FGATCMgr::ZapOtherService(const string ncunit, const string svc_name){
         //cout << "Eradicating service: '" << svc->first << "'" << endl;
         svc->second->SetNoDisplay();
         svc->second->Update(0);     // one last update
-        SG_LOG(SG_GENERAL, SG_INFO, "would have erased ATC service:" << svc->second->get_name()<< "/"
+        SG_LOG(SG_ATC, SG_INFO, "would have erased ATC service:" << svc->second->get_name()<< "/"
           << svc->second->get_ident());
         // delete svc->second;
         atc_list->erase(svc);

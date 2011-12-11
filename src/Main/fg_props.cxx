@@ -127,7 +127,7 @@ addLoggingClass (const string &name)
 /**
  * Set the logging classes.
  */
-static void
+void
 setLoggingClasses (const char * c)
 {
   string classes = c;
@@ -147,12 +147,16 @@ setLoggingClasses (const char * c)
 
   string rest = classes;
   string name = "";
-  int sep = rest.find('|');
-  while (sep > 0) {
+  string::size_type sep = rest.find('|');
+  if (sep == string::npos)
+    sep = rest.find(',');
+  while (sep != string::npos) {
     name = rest.substr(0, sep);
     rest = rest.substr(sep+1);
     addLoggingClass(name);
     sep = rest.find('|');
+    if (sep == string::npos)
+      sep = rest.find(',');
   }
   addLoggingClass(rest);
   SG_LOG(SG_GENERAL, SG_INFO, "Set logging classes to "
@@ -188,7 +192,7 @@ getLoggingPriority ()
 /**
  * Set the logging priority.
  */
-static void
+void
 setLoggingPriority (const char * p)
 {
   if (p == 0)

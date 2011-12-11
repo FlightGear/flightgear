@@ -70,6 +70,8 @@ extern bool fgLoadFlight (std::istream &input);
 extern bool fgLoadProps (const char * path, SGPropertyNode * props,
                          bool in_fg_root = true, int default_mode = 0);
 
+void setLoggingClasses (const char * c);
+void setLoggingPriority (const char * p);
 
 
 ////////////////////////////////////////////////////////////////////////

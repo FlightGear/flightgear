@@ -200,7 +200,7 @@ ADF::update (double delta_time_sec)
             if ( sound != NULL )
                 sound->set_volume( volume );
             else
-                SG_LOG( SG_GENERAL, SG_ALERT, "Can't find adf-ident sound" );
+                SG_LOG( SG_INSTR, SG_ALERT, "Can't find adf-ident sound" );
         }
 
         time_t cur_time = globals->get_time_params()->get_cur_time();
