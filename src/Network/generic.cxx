@@ -55,7 +55,7 @@ FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false)
     }
 
     if (configToken >= tokens.size()) {
-       SG_LOG(SG_GENERAL, SG_ALERT,
+       SG_LOG(SG_NETWORK, SG_ALERT,
               "Not enough tokens passed for generic protocol");
        return;
     }
@@ -65,7 +65,7 @@ FGGeneric::FGGeneric(vector<string> tokens) : exitOnError(false)
     direction = tokens[2];
 
     if (direction != "in" && direction != "out" && direction != "bi") {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Unsuported protocol direction: "
+        SG_LOG(SG_NETWORK, SG_ALERT, "Unsuported protocol direction: "
                << direction);
     }
 
@@ -543,14 +543,14 @@ FGGeneric::reinit()
     path.append("Protocol");
     path.append(file_name.c_str());
 
-    SG_LOG(SG_GENERAL, SG_INFO, "Reading communication protocol from "
+    SG_LOG(SG_NETWORK, SG_INFO, "Reading communication protocol from "
                                 << path.str());
 
     SGPropertyNode root;
     try {
         readProperties(path.str(), &root);
     } catch (const sg_exception & ex) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_NETWORK, SG_ALERT,
          "Unable to load the protocol configuration file: " << ex.getFormattedMessage() );
          return;
     }

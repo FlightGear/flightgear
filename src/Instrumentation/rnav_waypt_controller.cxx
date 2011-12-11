@@ -86,12 +86,12 @@ bool geocRadialIntersection(const SGGeoc& a, double r1, const SGGeoc& b, double 
   double ang2 = SGMiscd::normalizeAngle2(crs21-crs23);
     
   if ((sin(ang1) == 0.0) && (sin(ang2) == 0.0)) {
-    SG_LOG(SG_GENERAL, SG_WARN, "geocRadialIntersection: infinity of intersections");
+    SG_LOG(SG_INSTR, SG_WARN, "geocRadialIntersection: infinity of intersections");
     return false;
   }
   
   if ((sin(ang1)*sin(ang2))<0.0) {
-    SG_LOG(SG_GENERAL, SG_WARN, "geocRadialIntersection: intersection ambiguous");
+    SG_LOG(SG_INSTR, SG_WARN, "geocRadialIntersection: intersection ambiguous");
     return false;
   }
   
@@ -320,21 +320,21 @@ public:
     case RESTRICT_AT: {
       double d = curAlt - _waypt->altitudeFt();
       if (fabs(d) < 50.0) {
-        SG_LOG(SG_GENERAL, SG_INFO, "ConstHdgToAltCtl, reached target altitude " << _waypt->altitudeFt());
+        SG_LOG(SG_INSTR, SG_INFO, "ConstHdgToAltCtl, reached target altitude " << _waypt->altitudeFt());
         setDone();
       }
     } break;
       
     case RESTRICT_ABOVE:
       if (curAlt >= _waypt->altitudeFt()) {
-        SG_LOG(SG_GENERAL, SG_INFO, "ConstHdgToAltCtl, above target altitude " << _waypt->altitudeFt());
+        SG_LOG(SG_INSTR, SG_INFO, "ConstHdgToAltCtl, above target altitude " << _waypt->altitudeFt());
         setDone();
       }
       break;
       
     case RESTRICT_BELOW:
       if (curAlt <= _waypt->altitudeFt()) {
-        SG_LOG(SG_GENERAL, SG_INFO, "ConstHdgToAltCtl, below target altitude " << _waypt->altitudeFt());
+        SG_LOG(SG_INSTR, SG_INFO, "ConstHdgToAltCtl, below target altitude " << _waypt->altitudeFt());
         setDone();
       }
       break;
@@ -395,7 +395,7 @@ public:
     double r = SGGeodesy::courseDeg(_waypt->position(), _rnav->position());
     SG_LOG(SG_AUTOPILOT, SG_INFO, "current radial=" << r);
     if (fabs(r - _trueRadial) < 0.5) {
-      SG_LOG(SG_GENERAL, SG_INFO, "InterceptCtl, intercepted radial " << _trueRadial);
+      SG_LOG(SG_INSTR, SG_INFO, "InterceptCtl, intercepted radial " << _trueRadial);
       setDone();
     }
   }
@@ -440,7 +440,7 @@ public:
     _distanceNm = SGGeodesy::distanceNm(_rnav->position(), _dme->position());
     double d = fabs(_distanceNm - _dme->dmeDistanceNm());
     if (d < 0.1) {
-      SG_LOG(SG_GENERAL, SG_INFO, "DMEInterceptCtl, intercepted DME " << _dme->dmeDistanceNm());
+      SG_LOG(SG_INSTR, SG_INFO, "DMEInterceptCtl, intercepted DME " << _dme->dmeDistanceNm());
       setDone();
     }
   }

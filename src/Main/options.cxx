@@ -900,29 +900,20 @@ fgOptTraceRead( const char *arg )
 static int
 fgOptLogLevel( const char *arg )
 {
-    fgSetString("/sim/logging/classes", "all");
     fgSetString("/sim/logging/priority", arg);
-
-    string priority = arg;
-    logbuf::set_log_classes(SG_ALL);
-    if (priority == "bulk") {
-      logbuf::set_log_priority(SG_BULK);
-    } else if (priority == "debug") {
-      logbuf::set_log_priority(SG_DEBUG);
-    } else if (priority == "info") {
-      logbuf::set_log_priority(SG_INFO);
-    } else if (priority == "warn") {
-      logbuf::set_log_priority(SG_WARN);
-    } else if (priority == "alert") {
-      logbuf::set_log_priority(SG_ALERT);
-    } else {
-      SG_LOG(SG_GENERAL, SG_WARN, "Unknown logging priority " << priority);
-    }
-    SG_LOG(SG_GENERAL, SG_DEBUG, "Logging priority is " << priority);
+    setLoggingPriority(arg);
 
     return FG_OPTIONS_OK;
 }
 
+static int
+fgOptLogClasses( const char *arg )
+{
+    fgSetString("/sim/logging/classes", arg);
+    setLoggingClasses (arg);
+
+    return FG_OPTIONS_OK;
+}
 
 static int
 fgOptTraceWrite( const char *arg )
@@ -1499,6 +1490,7 @@ struct OptionDesc {
     {"trace-read",                   true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptTraceRead },
     {"trace-write",                  true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptTraceWrite },
     {"log-level",                    true,  OPTION_FUNC,   "", false, "", fgOptLogLevel },
+    {"log-class",                    true,  OPTION_FUNC,   "", false, "", fgOptLogClasses },
     {"view-offset",                  true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptViewOffset },
     {"visibility",                   true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMeters },
     {"visibility-miles",             true,  OPTION_FUNC,   "", false, "", fgOptVisibilityMiles },

@@ -66,7 +66,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
                     &heading, &gateId,
                     radius, fltType,
                     aircraftType, airline))) {
-                SG_LOG(SG_INPUT, SG_WARN, "Warning: Could not find parking for a " <<
+                SG_LOG(SG_AI, SG_WARN, "Warning: Could not find parking for a " <<
                        aircraftType <<
                        " of flight type " << fltType <<
                        " of airline     " << airline <<
@@ -81,7 +81,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
                 pushBackWaypoint(wpt);
             }
             //cerr << "Success : GateId = " << gateId << endl;
-            SG_LOG(SG_INPUT, SG_WARN, "Warning: Succesfully found a parking for a " <<
+            SG_LOG(SG_AI, SG_WARN, "Warning: Succesfully found a parking for a " <<
                    aircraftType <<
                    " of flight type " << fltType <<
                    " of airline     " << airline <<
@@ -118,8 +118,8 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
             pushBackRoute = parking->getPushBackRoute();
             int size = pushBackRoute->size();
             if (size < 2) {
-                SG_LOG(SG_GENERAL, SG_WARN, "Push back route from gate " << gateId << " has only " << size << " nodes.");
-                SG_LOG(SG_GENERAL, SG_WARN, "Using  " << pushBackNode);
+                SG_LOG(SG_AI, SG_WARN, "Push back route from gate " << gateId << " has only " << size << " nodes.");
+                SG_LOG(SG_AI, SG_WARN, "Using  " << pushBackNode);
             }
             pushBackRoute->first();
             while (pushBackRoute->next(&node, &rte))
@@ -151,14 +151,14 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
             // if the starting node equals the ending node, then there aren't any routes for this parking.
             // in cases like these we should flag the gate as being inoperative and return false
             if (ts == te) {
-                SG_LOG(SG_GENERAL, SG_ALERT, "Gate " << gateId << "doesn't seem to have routes associated with it.");
+                SG_LOG(SG_AI, SG_ALERT, "Gate " << gateId << "doesn't seem to have routes associated with it.");
                 parking->setAvailable(false);
                 return false;
             }
             tn = (*ts)->getEnd();
             lastNodeVisited = tn->getIndex();
             if (tn == NULL) {
-                SG_LOG(SG_GENERAL, SG_ALERT, "No valid taxinode found");
+                SG_LOG(SG_AI, SG_ALERT, "No valid taxinode found");
                 exit(1);
             }
             double distance = (*ts)->getLength();

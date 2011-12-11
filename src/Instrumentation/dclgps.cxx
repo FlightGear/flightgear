@@ -808,7 +808,7 @@ void DCLGPS::LoadApproachData() {
 											w.lat = rwy->begin().getLatitudeRad();
 											w.lon = rwy->begin().getLongitudeRad();
 										} catch(const sg_exception&) {
-											SG_LOG(SG_GENERAL, SG_WARN, "Unable to find runway " << w.id.substr(2, 2) << " at airport " << iap->_aptIdent);
+											SG_LOG(SG_INSTR, SG_WARN, "Unable to find runway " << w.id.substr(2, 2) << " at airport " << iap->_aptIdent);
 											//cout << "Unable to find runway " << w.id.substr(2, 2) << " at airport " << iap->_aptIdent << " ( w.id = " << w.id << ", rwystr = " << rwystr << " )\n";
 											wp_error = true;
 										}

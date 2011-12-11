@@ -101,7 +101,7 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename)
   try {
       readProperties(path.str(), &root);
   } catch (const sg_exception &) {
-      SG_LOG(SG_GENERAL, SG_ALERT,
+      SG_LOG(SG_AI, SG_ALERT,
        "Error reading AI flight plan: " << path.str());
        // cout << path.str() << endl;
      return;
@@ -212,7 +212,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
 	  } // of node loop
           wpt_iterator = waypoints.begin();
 	} catch (const sg_exception &e) {
-      SG_LOG(SG_GENERAL, SG_WARN, "Error reading AI flight plan: " << 
+      SG_LOG(SG_AI, SG_WARN, "Error reading AI flight plan: " <<
         e.getMessage() << " from " << e.getOrigin());
     }
   } else {
@@ -237,7 +237,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
       if (timeDiff >= 2000)
           leg = 5;
       */
-      SG_LOG(SG_GENERAL, SG_INFO, "Route from " << dep->getId() << " to " << arr->getId() << ". Set leg to : " << leg << " " << ac->getTrafficRef()->getCallSign());
+      SG_LOG(SG_AI, SG_INFO, "Route from " << dep->getId() << " to " << arr->getId() << ". Set leg to : " << leg << " " << ac->getTrafficRef()->getCallSign());
       wpt_iterator = waypoints.begin();
       bool dist = 0;
       isValid = create(ac, dep,arr, leg, alt, speed, lat, lon,

@@ -107,7 +107,7 @@ void FGATCManager::init() {
         fp = new FGAIFlightPlan;
         while (park_index >= 0 && dcs->getParkingName(park_index) != parking) park_index--;
             if (park_index < 0) {
-                  SG_LOG( SG_GENERAL, SG_ALERT,
+                  SG_LOG( SG_ATC, SG_ALERT,
                         "Failed to find parking position " << parking <<
                         " at airport " << airport << " at " << SG_ORIGIN);
             }

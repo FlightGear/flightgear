@@ -234,12 +234,12 @@ static string fgScanForOption( const string& option, int argc, char **argv ) {
         free_hostname = true;
     }
 
-    SG_LOG(SG_GENERAL, SG_INFO, "Scanning command line for: " << option );
+    SG_LOG(SG_INPUT, SG_INFO, "Scanning command line for: " << option );
 
     int len = option.length();
 
     while ( i < argc ) {
-        SG_LOG( SG_GENERAL, SG_DEBUG, "argv[" << i << "] = " << argv[i] );
+        SG_LOG( SG_INPUT, SG_DEBUG, "argv[" << i << "] = " << argv[i] );
 
         string arg = argv[i];
         if ( arg.find( option ) == 0 ) {
@@ -260,7 +260,7 @@ static string fgScanForOption( const string& option, const string& path ) {
         return "";
     }
 
-    SG_LOG( SG_GENERAL, SG_INFO, "Scanning " << path << " for: " << option );
+    SG_LOG( SG_INPUT, SG_INFO, "Scanning " << path << " for: " << option );
 
     int len = option.length();
 

@@ -67,9 +67,9 @@ FGAircraftModel::init ()
     osg::Node *model = fgLoad3DModelPanel( path, globals->get_props());
     _aircraft->init( model );
   } catch (const sg_exception &ex) {
-    SG_LOG(SG_GENERAL, SG_ALERT, "Failed to load aircraft from " << path << ':');
-    SG_LOG(SG_GENERAL, SG_ALERT, "  " << ex.getFormattedMessage());
-    SG_LOG(SG_GENERAL, SG_ALERT, "(Falling back to glider.ac.)");
+    SG_LOG(SG_AIRCRAFT, SG_ALERT, "Failed to load aircraft from " << path << ':');
+    SG_LOG(SG_AIRCRAFT, SG_ALERT, "  " << ex.getFormattedMessage());
+    SG_LOG(SG_AIRCRAFT, SG_ALERT, "(Falling back to glider.ac.)");
     osg::Node *model = fgLoad3DModelPanel( "Models/Geometry/glider.ac",
                                            globals->get_props());
     _aircraft->init( model );

@@ -147,7 +147,7 @@ void HttpdChannel::foundTerminator (void) {
                             if ( !globals->get_commands()
                                  ->execute(urlDecode(b).c_str(), &args) )
                             {
-                                SG_LOG( SG_GENERAL, SG_ALERT,
+                                SG_LOG( SG_NETWORK, SG_ALERT,
                                         "Command " << urlDecode(b)
                                         << " failed.");
                             }
