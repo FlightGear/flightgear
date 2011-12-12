@@ -94,6 +94,12 @@ FGFX::init()
     }
     
     SGPath path = globals->resolve_aircraft_path(path_str);
+    if (path.isNull())
+    {
+        SG_LOG(SG_SOUND, SG_ALERT,
+               "File not found: '" << path_str);
+        return;
+    }
     SG_LOG(SG_SOUND, SG_INFO, "Reading sound " << node->getName()
            << " from " << path.str());
 

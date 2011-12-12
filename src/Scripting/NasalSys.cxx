@@ -216,7 +216,7 @@ static naRef f_getprop(naContext c, naRef me, int argc, naRef* args)
         {
         double dv = p->getDoubleValue();
         if (osg::isNaN(dv)) {
-          SG_LOG(SG_GENERAL, SG_ALERT, "Nasal getprop: property " << p->getPath() << " is NaN");
+          SG_LOG(SG_NASAL, SG_ALERT, "Nasal getprop: property " << p->getPath() << " is NaN");
           return naNil();
         }
         
@@ -295,7 +295,7 @@ static naRef f_print(naContext c, naRef me, int argc, naRef* args)
         if(naIsNil(s)) continue;
         buf += naStr_data(s);
     }
-    SG_LOG(SG_GENERAL, SG_ALERT, buf);
+    SG_LOG(SG_NASAL, SG_ALERT, buf);
     return naNum(buf.length());
 }
 

@@ -202,7 +202,7 @@ MasterReferenceGyro::update (double dt)
     } else {
         _g_error += (max_g_error /(erect_time * 0.33)) * dt * 2; 
 
-        //SG_LOG(SG_GENERAL, SG_ALERT,_num <<
+        //SG_LOG(SG_INSTR, SG_ALERT,_num <<
         //    " g input " << _g_in_node->getDoubleValue() * gravity
         //    <<" _erect_time " << _erect_time 
         //    << " yaw " <<   yaw_rate
@@ -230,7 +230,7 @@ MasterReferenceGyro::update (double dt)
         if ( diff < -180.0 ) { diff += 360.0; }
         if ( diff > 180.0 ) { diff -= 360.0; }
         _error_out_node->setDoubleValue( diff );
-        //SG_LOG(SG_GENERAL, SG_ALERT,
+        //SG_LOG(SG_INSTR, SG_ALERT,
         //"autopilot input " << bnode->getDoubleValue() 
         //<< " output " << _error_out_node->getDoubleValue()<<);
     }

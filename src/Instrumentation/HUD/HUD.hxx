@@ -218,8 +218,8 @@ private:
     deque<Item *> _items;
     deque<Item *> _ladders;
 
-    SGPropertyNode_ptr _path;
-    SGPropertyNode_ptr _current;
+    SGPropertyNode_ptr _currentPath;
+    SGPropertyNode_ptr _currentColor;
     SGPropertyNode_ptr _visibility;
     SGPropertyNode_ptr _3DenabledN;
     SGPropertyNode_ptr _antialiasing;

@@ -226,7 +226,7 @@ void FGATC::Render(string& msg, const float volume,
 				_sgr->add(simple, refname);
 				_sgr->play(refname, repeating);
 			} catch ( sg_io_exception &e ) {
-				SG_LOG(SG_GENERAL, SG_ALERT, e.getFormattedMessage());
+				SG_LOG(SG_ATC, SG_ALERT, e.getFormattedMessage());
 			}
 		}
 	}
@@ -300,7 +300,7 @@ std::istream& operator >> ( std::istream& fin, ATCData& a )
 		a.type = INVALID;
 		return fin >> skipeol;
 	default:
-		SG_LOG(SG_GENERAL, SG_ALERT, "Warning - unknown type \'" << tp << "\' found whilst reading ATC frequency data!\n");
+		SG_LOG(SG_ATC, SG_ALERT, "Warning - unknown type \'" << tp << "\' found whilst reading ATC frequency data!\n");
 		a.type = INVALID;
 		return fin >> skipeol;
 	}

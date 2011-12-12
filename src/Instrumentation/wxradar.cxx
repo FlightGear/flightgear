@@ -356,7 +356,7 @@ wxRadarBg::update (double delta_time_sec)
                 _radar_centre_node->setBoolValue(false);
             }
 
-            //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: displacement "
+            //SG_LOG(SG_INSTR, SG_DEBUG, "Radar: displacement "
             //        << _x_offset <<", "<<_y_offset
             //        << " user_speed_east_fps * SG_FPS_TO_KT "
             //        << user_speed_east_fps * SG_FPS_TO_KT
@@ -538,7 +538,7 @@ wxRadarBg::update_weather()
                     * wxRotate(angle) * _centerTrans);
                 addQuad(_vertices, _texCoords, m, texBase);
 
-                //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: drawing clouds"
+                //SG_LOG(SG_INSTR, SG_DEBUG, "Radar: drawing clouds"
                 //        << " ID=" << cloudId
                 //        << " x=" << x
                 //        << " y="<< y
@@ -917,7 +917,7 @@ wxRadarBg::update_tacan()
         * wxRotate(angle) * _centerTrans);
     addQuad(_vertices, _texCoords, m, texBase);
 
-    //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:     drawing TACAN"
+    //SG_LOG(SG_INSTR, SG_DEBUG, "Radar:     drawing TACAN"
     //        << " dist=" << radius
     //        << " view_heading=" << _view_heading * SG_RADIANS_TO_DEGREES
     //        << " bearing=" << angle * SG_RADIANS_TO_DEGREES
@@ -940,7 +940,7 @@ wxRadarBg::update_heading_marker()
     m *= _centerTrans;
     addQuad(_vertices, _texCoords, m, texBase);
 
-    //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar:   drawing heading marker"
+    //SG_LOG(SG_INSTR, SG_DEBUG, "Radar:   drawing heading marker"
     //        << " x,y " << x <<","<< y
     //        << " dist" << dist
     //        << " view_heading" << _view_heading * SG_RADIANS_TO_DEGREES
@@ -989,7 +989,7 @@ wxRadarBg::withinRadarHorizon(double user_alt, double alt, double range_nm)
         alt = 0; // to allow some vertical extent of target
 
     double radarhorizon = 1.23 * (sqrt(alt) + sqrt(user_alt));
-//    SG_LOG(SG_GENERAL, SG_ALERT, "Radar: radar horizon " << radarhorizon);
+//    SG_LOG(SG_INSTR, SG_ALERT, "Radar: radar horizon " << radarhorizon);
     return radarhorizon >= range_nm;
 }
 
@@ -1017,7 +1017,7 @@ wxRadarBg::inRadarRange(double sigma, double range_nm)
         constant = 35;
 
     double maxrange = constant * pow(sigma, 0.25);
-    //SG_LOG(SG_GENERAL, SG_DEBUG, "Radar: max range " << maxrange);
+    //SG_LOG(SG_INSTR, SG_DEBUG, "Radar: max range " << maxrange);
     return maxrange >= range_nm;
 }
 

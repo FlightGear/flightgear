@@ -186,7 +186,7 @@ void FGTrafficRecord::setPositionAndIntentions(int pos,
     if (intentions.size()) {
         intVecIterator i = intentions.begin();
         if ((*i) != pos) {
-            SG_LOG(SG_GENERAL, SG_ALERT,
+            SG_LOG(SG_ATC, SG_ALERT,
                    "Error in FGTrafficRecord::setPositionAndIntentions at " << SG_ORIGIN);
             cerr << "Pos : " << pos << " Curr " << *(intentions.begin())  << endl;
             for (intVecIterator i = intentions.begin();
@@ -894,7 +894,7 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
     }
 //    // update position of the current aircraft
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_ATC, SG_ALERT,
                "AI error: updating aircraft without traffic record at " << SG_ORIGIN);
     } else {
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
@@ -989,12 +989,12 @@ void FGTowerController::signOff(int id)
             rwy->setCleared(0);
             rwy->updateDepartureCue();
         } else {
-            SG_LOG(SG_GENERAL, SG_ALERT,
+            SG_LOG(SG_ATC, SG_ALERT,
                    "AI error: Attempting to erase non-existing runway clearance record in FGTowerController::signoff at " << SG_ORIGIN);
         }
     }
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_ATC, SG_ALERT,
                "AI error: Aircraft without traffic record is signing off from tower at " << SG_ORIGIN);
     } else {
         i->getAircraft()->resetTakeOffStatus();
@@ -1024,7 +1024,7 @@ bool FGTowerController::hasInstruction(int id)
         }
     }
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_ATC, SG_ALERT,
                "AI error: checking ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
     } else {
         return i->hasInstruction();
@@ -1048,7 +1048,7 @@ FGATCInstruction FGTowerController::getInstruction(int id)
         }
     }
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_ATC, SG_ALERT,
                "AI error: requesting ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
     } else {
         return i->getInstruction();
@@ -1143,7 +1143,7 @@ bool FGStartupController::hasInstruction(int id)
         }
     }
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_ATC, SG_ALERT,
                "AI error: checking ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
     } else {
         return i->hasInstruction();
@@ -1167,7 +1167,7 @@ FGATCInstruction FGStartupController::getInstruction(int id)
         }
     }
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_ATC, SG_ALERT,
                "AI error: requesting ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
     } else {
         return i->getInstruction();
@@ -1190,7 +1190,7 @@ void FGStartupController::signOff(int id)
         }
     }
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_ATC, SG_ALERT,
                "AI error: Aircraft without traffic record is signing off from tower at " << SG_ORIGIN);
     } else {
         //cerr << i->getAircraft()->getCallSign() << " signing off from startupcontroller" << endl;
@@ -1251,7 +1251,7 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
 //    // update position of the current aircraft
 
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_ATC, SG_ALERT,
                "AI error: updating aircraft without traffic record at " << SG_ORIGIN);
     } else {
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
@@ -1594,7 +1594,7 @@ void FGApproachController::updateAircraftInformation(int id, double lat, double 
     }
 //    // update position of the current aircraft
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_ATC, SG_ALERT,
                "AI error: updating aircraft without traffic record at " << SG_ORIGIN);
     } else {
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
@@ -1642,7 +1642,7 @@ void FGApproachController::signOff(int id)
         }
     }
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_ATC, SG_ALERT,
                "AI error: Aircraft without traffic record is signing off from approach at " << SG_ORIGIN);
     } else {
         i = activeTraffic.erase(i);
@@ -1671,7 +1671,7 @@ bool FGApproachController::hasInstruction(int id)
         }
     }
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_ATC, SG_ALERT,
                "AI error: checking ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
     } else {
         return i->hasInstruction();
@@ -1695,7 +1695,7 @@ FGATCInstruction FGApproachController::getInstruction(int id)
         }
     }
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
-        SG_LOG(SG_GENERAL, SG_ALERT,
+        SG_LOG(SG_ATC, SG_ALERT,
                "AI error: requesting ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
     } else {
         return i->getInstruction();

@@ -68,7 +68,7 @@ FGModelMgr::init ()
 void
 FGModelMgr::add_model (SGPropertyNode * node)
 {
-  SG_LOG(SG_GENERAL, SG_INFO,
+  SG_LOG(SG_AIRCRAFT, SG_INFO,
          "Adding model " << node->getStringValue("name", "[unnamed]"));
 
   const char *path = node->getStringValue("path", "Models/Geometry/glider.ac");
@@ -77,7 +77,7 @@ FGModelMgr::add_model (SGPropertyNode * node)
   try {
       object = SGModelLib::loadDeferredModel(path, globals->get_props());
   } catch (const sg_throwable& t) {
-    SG_LOG(SG_GENERAL, SG_ALERT, "Error loading " << path << ":\n  "
+    SG_LOG(SG_AIRCRAFT, SG_ALERT, "Error loading " << path << ":\n  "
         << t.getFormattedMessage() << t.getOrigin());
     return;
   }
@@ -181,7 +181,7 @@ struct UpdateFunctor : public std::unary_function<FGModelMgr::Instance*, void>
         } catch (const sg_range_exception&) {
             const char *path = instance->node->getStringValue("path",
                                                               "unknown");
-            SG_LOG(SG_GENERAL, SG_INFO, "Instance of model " << path
+            SG_LOG(SG_AIRCRAFT, SG_INFO, "Instance of model " << path
                    << " has invalid values");
             return;
         }

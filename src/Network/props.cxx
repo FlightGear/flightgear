@@ -292,7 +292,7 @@ PropsChannel::foundTerminator()
                     if ( !globals->get_commands()
                              ->execute( "reinit", &args) )
                     {
-                        SG_LOG( SG_GENERAL, SG_ALERT,
+                        SG_LOG( SG_NETWORK, SG_ALERT,
                                 "Command " << tokens[1] << " failed.");
                         if ( mode == PROMPT ) {
                             tmp += "*failed*";
@@ -357,7 +357,7 @@ PropsChannel::foundTerminator()
                     if ( !globals->get_commands()
                              ->execute(tokens[1].c_str(), &args) )
                     {
-                        SG_LOG( SG_GENERAL, SG_ALERT,
+                        SG_LOG( SG_NETWORK, SG_ALERT,
                                 "Command " << tokens[1] << " failed.");
                         if ( mode == PROMPT ) {
                             tmp += "*failed*";

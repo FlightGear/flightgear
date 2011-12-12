@@ -103,11 +103,11 @@ FGAIManager::postinit() {
             continue;
 
         if (scenarios.find(name) != scenarios.end()) {
-            SG_LOG(SG_GENERAL, SG_DEBUG, "won't load scenario '" << name << "' twice");
+            SG_LOG(SG_AI, SG_DEBUG, "won't load scenario '" << name << "' twice");
             continue;
         }
 
-        SG_LOG(SG_GENERAL, SG_ALERT, "loading scenario '" << name << '\'');
+        SG_LOG(SG_AI, SG_ALERT, "loading scenario '" << name << '\'');
         processScenario(name);
         scenarios[name] = true;
     }
@@ -376,7 +376,7 @@ FGAIManager::loadScenarioFile(const std::string& filename)
         readProperties(path.str(), root);
         return root;
     } catch (const sg_exception &t) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "Failed to load scenario '"
+        SG_LOG(SG_AI, SG_ALERT, "Failed to load scenario '"
             << path.str() << "': " << t.getFormattedMessage());
         return 0;
     }
@@ -437,7 +437,7 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
 
         if (fabs(tgt_alt - alt) > tgt_ht[type] || type == FGAIBase::otBallistic
             || type == FGAIBase::otStorm || type == FGAIBase::otThermal ) {
-                //SG_LOG(SG_GENERAL, SG_DEBUG, "AIManager: skipping "
+                //SG_LOG(SG_AI, SG_DEBUG, "AIManager: skipping "
                 //    << fabs(tgt_alt - alt)
                 //    << " "
                 //    << type
@@ -452,7 +452,7 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
 
         double range = calcRange(lat, lon, tgt_lat, tgt_lon);
 
-        //SG_LOG(SG_GENERAL, SG_DEBUG, "AIManager:  AI list size "
+        //SG_LOG(SG_AI, SG_DEBUG, "AIManager:  AI list size "
         //    << ai_list.size()
         //    << " type " << type
         //    << " ID " << id
@@ -464,7 +464,7 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
         tgt_length[type] += fuse_range;
 
         if (range < tgt_length[type]){
-            SG_LOG(SG_GENERAL, SG_DEBUG, "AIManager: HIT! "
+            SG_LOG(SG_AI, SG_DEBUG, "AIManager: HIT! "
                 << " type " << type
                 << " ID " << id
                 << " range " << range
