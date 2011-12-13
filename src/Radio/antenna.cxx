@@ -94,7 +94,7 @@ void FGRadioAntenna::load_NEC_antenna_pattern(string type) {
 		//cerr << "head: " << heading << " elev: " << elevation << " gain: " << gain << endl;
 		AntennaGain *datapoint = new AntennaGain;
 		datapoint->azimuth = heading;
-		datapoint->elevation = 90.0 - fabs(elevation);
+		datapoint->elevation = 90.0 - abs(elevation);
 		datapoint->gain = gain;
 		_pattern.push_back(datapoint);
 	}
