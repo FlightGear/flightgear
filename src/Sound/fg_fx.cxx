@@ -53,7 +53,6 @@ FGFX::FGFX ( SGSoundMgr *smgr, const string &refname, SGPropertyNode *props ) :
         _enabled->setBoolValue(fgGetBool("/sim/sound/effects/enabled"));
          _volume = _props->getNode("/sim/sound/aimodels/volume", true);
         _volume->setFloatValue(fgGetFloat("/sim/sound/effects/volume"));
-_volume->setFloatValue(0.1f);
     }
 
     _avionics_enabled = _props->getNode("sim/sound/avionics/enabled", true);
@@ -113,7 +112,7 @@ FGFX::init()
     }
 
     node = root.getNode("fx");
-    if(node && !_is_aimodel) {
+    if(node) {
         for (int i = 0; i < node->nChildren(); ++i) {
             SGXmlSound *soundfx = new SGXmlSound();
   
