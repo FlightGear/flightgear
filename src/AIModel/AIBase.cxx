@@ -925,10 +925,7 @@ void FGAIModelData::modelLoaded(const string& path, SGPropertyNode *prop, osg::N
 {
     const char* fxpath = prop->getStringValue("sound/path");
     if (fxpath) {
-        string sound_path = string(fxpath);
-        if (sound_path != "") {
-            _path = "/AI/"+sound_path;
-        }
+        _path = string(fxpath);
     }
     _nasal->modelLoaded(path, prop, n);
 }
