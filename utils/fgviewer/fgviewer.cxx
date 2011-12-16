@@ -197,5 +197,9 @@ main(int argc, char** argv)
     // pass the loaded scene graph to the viewer.
     viewer.setSceneData(loadedModel.get());
 
+    // We want on demand database paging
+    viewer.setDatabasePager(new osgDB::DatabasePager);
+    viewer.getDatabasePager()->setUpThreads(1, 1);
+
     return viewer.run();
 }
