@@ -30,6 +30,7 @@
 #include <osgViewer/ViewerEventHandlers>
 #include <osgViewer/Renderer>
 #include <osgGA/KeySwitchMatrixManipulator>
+#include <osgGA/StateSetManipulator>
 #include <osgGA/TrackballManipulator>
 #include <osgGA/FlightManipulator>
 #include <osgGA/DriveManipulator>
@@ -91,6 +92,7 @@ main(int argc, char** argv)
     viewer.setCameraManipulator(keyswitchManipulator);
 
     // Usefull stats
+    viewer.addEventHandler(new osgGA::StateSetManipulator(viewer.getCamera()->getOrCreateStateSet()));
     viewer.addEventHandler(new osgViewer::HelpHandler);
     viewer.addEventHandler(new osgViewer::StatsHandler);
     viewer.addEventHandler(new osgViewer::ThreadingHandler);
