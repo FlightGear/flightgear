@@ -164,6 +164,9 @@ void FGLight::bind () {
     prop->tie("/rendering/dome/sky/red",SGRawValuePointer<float>(&_sky_color[0]));
     prop->tie("/rendering/dome/sky/green",SGRawValuePointer<float>(&_sky_color[1]));
     prop->tie("/rendering/dome/sky/blue",SGRawValuePointer<float>(&_sky_color[2]));
+    prop->tie("/rendering/dome/cloud/red",SGRawValuePointer<float>(&_cloud_color[0]));
+    prop->tie("/rendering/dome/cloud/green",SGRawValuePointer<float>(&_cloud_color[1]));
+    prop->tie("/rendering/dome/cloud/blue",SGRawValuePointer<float>(&_cloud_color[2]));
     prop->tie("/rendering/dome/fog/red",SGRawValuePointer<float>(&_fog_color[0]));
     prop->tie("/rendering/dome/fog/green",SGRawValuePointer<float>(&_fog_color[1]));
     prop->tie("/rendering/dome/fog/blue",SGRawValuePointer<float>(&_fog_color[2]));
@@ -198,6 +201,9 @@ void FGLight::unbind () {
     prop->untie("/rendering/dome/sky/red");
     prop->untie("/rendering/dome/sky/green");
     prop->untie("/rendering/dome/sky/blue");
+    prop->untie("/rendering/dome/cloud/red");
+    prop->untie("/rendering/dome/cloud/green");
+    prop->untie("/rendering/dome/cloud/blue");
     prop->untie("/rendering/dome/fog/red");
     prop->untie("/rendering/dome/fog/green");
     prop->untie("/rendering/dome/fog/blue");
@@ -271,6 +277,7 @@ void FGLight::update_sky_color () {
     _sky_color[3] = base_sky_color[3];
     gamma_correct_rgb( _sky_color.data() );
 
+    sqrt_sky_brightness /= _scattering;
     _cloud_color[0] = base_fog_color[0] * sky_brightness;
     _cloud_color[1] = base_fog_color[1] * sky_brightness;
     _cloud_color[2] = base_fog_color[2] * sky_brightness;
