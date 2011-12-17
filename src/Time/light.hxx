@@ -89,6 +89,7 @@ private:
     SGVec4f _scene_chrome;
 
     // clear sky, fog and cloud color
+    SGVec4f _sun_color;
     SGVec4f _sky_color;
     SGVec4f _fog_color;
     SGVec4f _cloud_color;

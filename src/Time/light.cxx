@@ -71,6 +71,7 @@ FGLight::FGLight ()
       _scene_diffuse(0, 0, 0, 0),
       _scene_specular(0, 0, 0, 0),
       _scene_chrome(0, 0, 0, 0),
+      _sun_color(1, 1, 1, 0),
       _sky_color(0, 0, 0, 0),
       _fog_color(0, 0, 0, 0),
       _cloud_color(0, 0, 0, 0),
@@ -161,6 +162,9 @@ void FGLight::bind () {
     prop->tie("/rendering/scene/specular/red",SGRawValuePointer<float>(&_scene_specular[0]));
     prop->tie("/rendering/scene/specular/green",SGRawValuePointer<float>(&_scene_specular[1]));
     prop->tie("/rendering/scene/specular/blue",SGRawValuePointer<float>(&_scene_specular[2]));
+    prop->tie("/rendering/dome/sun/red",SGRawValuePointer<float>(&_sun_color[0]));
+    prop->tie("/rendering/dome/sun/green",SGRawValuePointer<float>(&_sun_color[1]));
+    prop->tie("/rendering/dome/sun/blue",SGRawValuePointer<float>(&_sun_color[2]));
     prop->tie("/rendering/dome/sky/red",SGRawValuePointer<float>(&_sky_color[0]));
     prop->tie("/rendering/dome/sky/green",SGRawValuePointer<float>(&_sky_color[1]));
     prop->tie("/rendering/dome/sky/blue",SGRawValuePointer<float>(&_sky_color[2]));
@@ -315,10 +319,10 @@ void FGLight::update_sky_color () {
             _chromeProps[i]->setValue(static_cast<double>(_scene_chrome[i]));
     }
 
-    color = thesky->get_sun_color();
-    _scene_specular[0] = color[0] * specular;
-    _scene_specular[1] = color[1] * specular;
-    _scene_specular[2] = color[2] * specular;
+    // _sun_color = thesky->get_sun_color();
+    _scene_specular[0] = _sun_color[0] * specular;
+    _scene_specular[1] = _sun_color[1] * specular;
+    _scene_specular[2] = _sun_color[2] * specular;
     _scene_specular[3] = 1.0;
     gamma_correct_rgb( _scene_specular.data() );
 }
@@ -380,9 +384,9 @@ void FGLight::update_adj_fog_color () {
     // Calculate the fog color in the direction of the sun for
     // sunrise/sunset effects.
     //
-    float s_red =   color[0]*color[0]*color[0];
-    float s_green = color[1]*color[1]*color[1];
-    float s_blue =  color[2]*color[2];
+    _sun_color[0] = color[0]*color[0]*color[0];
+    _sun_color[1] = color[1]*color[1]*color[1];
+    _sun_color[2] = color[2]*color[2];
 
     // interpolate between the sunrise/sunset color and the color
     // at the opposite direction of this effect. Take in account
@@ -402,9 +406,9 @@ void FGLight::update_adj_fog_color () {
     float rf3 = 1.0 - rf2;
 
     gamma = system_gamma * (0.9 - sif*avf);
-    _adj_fog_color[0] = rf3 * _fog_color[0] + rf2 * s_red;
-    _adj_fog_color[1] = rf3 * _fog_color[1] + rf2 * s_green;
-    _adj_fog_color[2] = rf3 * _fog_color[2] + rf2 * s_blue;
+    _adj_fog_color[0] = rf3 * _fog_color[0] + rf2 * _sun_color[0];
+    _adj_fog_color[1] = rf3 * _fog_color[1] + rf2 * _sun_color[1];
+    _adj_fog_color[2] = rf3 * _fog_color[2] + rf2 * _sun_color[2];
     gamma_correct_rgb( _adj_fog_color.data(), gamma);
 
     // make sure the colors have their original value before they are being
