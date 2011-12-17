@@ -57,6 +57,7 @@ using simgear::TileCache;
 
 FGTileMgr::FGTileMgr():
     state( Start ),
+    last_state( Running ),
     vis( 16000 ),
     _terra_sync(NULL)
 {
@@ -341,7 +342,6 @@ void FGTileMgr::update_queues()
 // disk.
 void FGTileMgr::update(double)
 {
-    SG_LOG( SG_TERRAIN, SG_DEBUG, "FGTileMgr::update()" );
     SGVec3d viewPos = globals->get_current_view()->get_view_pos();
     double vis = _visibilityMeters->getDoubleValue();
     schedule_tiles_at(SGGeod::fromCart(viewPos), vis);
@@ -373,7 +373,10 @@ int FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
     // do tile load scheduling.
     // Note that we need keep track of both viewer buckets and fdm buckets.
     if ( state == Running ) {
-        SG_LOG( SG_TERRAIN, SG_DEBUG, "State == Running" );
+        if (last_state != state)
+        {
+            SG_LOG( SG_TERRAIN, SG_DEBUG, "State == Running" );
+        }
         if (current_bucket != previous_bucket) {
             // We've moved to a new bucket, we need to schedule any
             // needed tiles for loading.
@@ -386,11 +389,12 @@ int FGTileMgr::schedule_tiles_at(const SGGeod& location, double range_m)
         // save bucket
         previous_bucket = current_bucket;
     } else if ( state == Start || state == Inited ) {
-        SG_LOG( SG_TERRAIN, SG_INFO, "State == Start || Inited" );
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "State == Start || Inited" );
         // do not update bucket yet (position not valid in initial loop)
         state = Running;
         previous_bucket.make_bad();
     }
+    last_state = state;
 
     return 1;
 }

@@ -53,8 +53,8 @@ private:
 	Running = 2
     };
 
-    load_state state;
-    
+    load_state state, last_state;
+
     // schedule a tile for loading, returns true when tile is already loaded
     bool sched_tile( const SGBucket& b, double priority,bool current_view, double request_time);
 

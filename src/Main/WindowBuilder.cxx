@@ -90,6 +90,7 @@ WindowBuilder::makeDefaultTraits(bool stencil)
         traits->supportsResize = false;
         traits->width = screenwidth;
         traits->height = screenheight;
+        SG_LOG(SG_VIEW,SG_DEBUG,"Using full screen size for window: " << screenwidth << " x " << screenheight);
     } else {
         // window
         int w = fgGetInt("/sim/startup/xsize");
@@ -102,6 +103,7 @@ WindowBuilder::makeDefaultTraits(bool stencil)
             traits->x = ((unsigned)w>screenwidth) ? 0 : (screenwidth-w)/3;
             traits->y = ((unsigned)h>screenheight) ? 0 : (screenheight-h)/3;
         }
+        SG_LOG(SG_VIEW,SG_DEBUG,"Using initial window size: " << w << " x " << h);
     }
     return traits;
 }
@@ -245,7 +247,7 @@ GraphicsWindow* WindowBuilder::getDefaultWindow()
             ->registerWindow(gc, defaultWindowName);
         return defaultWindow;
     } else {
-        SG_LOG(SG_GENERAL, SG_ALERT, "getDefaultWindow: failed to create GraphicsContext");
+        SG_LOG(SG_VIEW, SG_ALERT, "getDefaultWindow: failed to create GraphicsContext");
         return 0;
     }
 }
