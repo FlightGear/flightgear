@@ -195,7 +195,7 @@ static osg::Node* fgCreateSplashCamera()
       tpath = globals->resolve_maybe_aircraft_path(splash_texture);
       if (tpath.isNull())
       {
-          SG_LOG( SG_GENERAL, SG_ALERT, "Cannot find splash screen file '" << splash_texture
+          SG_LOG( SG_VIEW, SG_ALERT, "Cannot find splash screen file '" << splash_texture
                   << "'. Using default." );
       }
   }
@@ -366,11 +366,11 @@ osg::Node* fgCreateSplashNode() {
 
 // Initialize the splash screen
 void fgSplashInit () {
-  SG_LOG( SG_GENERAL, SG_INFO, "Initializing splash screen" );
+  SG_LOG( SG_VIEW, SG_INFO, "Initializing splash screen" );
   globals->get_renderer()->splashinit();
 }
 
 void fgSplashProgress ( const char *text ) {
-  SG_LOG( SG_GENERAL, SG_INFO, "Splash screen progress " << text );
+  SG_LOG( SG_VIEW, SG_INFO, "Splash screen progress " << text );
   fgSetString("/sim/startup/splash-progress-text", text);
 }

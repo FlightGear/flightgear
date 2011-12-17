@@ -58,7 +58,7 @@ void
 FGViewMgr::init ()
 {
   if (inited) {
-    SG_LOG(SG_GENERAL, SG_WARN, "duplicate init of view manager");
+    SG_LOG(SG_VIEW, SG_WARN, "duplicate init of view manager");
     return;
   }
   

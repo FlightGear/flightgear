@@ -245,7 +245,7 @@ GraphicsWindow* WindowBuilder::getDefaultWindow()
             ->registerWindow(gc, defaultWindowName);
         return defaultWindow;
     } else {
-        SG_LOG(SG_GENERAL, SG_ALERT, "getDefaultWindow: failed to create GraphicsContext");
+        SG_LOG(SG_VIEW, SG_ALERT, "getDefaultWindow: failed to create GraphicsContext");
         return 0;
     }
 }

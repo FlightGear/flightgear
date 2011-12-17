@@ -771,7 +771,7 @@ CameraInfo* CameraGroup::buildCamera(SGPropertyNode* cameraNode)
             parentCameraIndex = i;
         }
         if (_cameras.size() <= parentCameraIndex) {
-            SG_LOG(SG_GENERAL, SG_ALERT, "CameraGroup::buildCamera: "
+            SG_LOG(SG_VIEW, SG_ALERT, "CameraGroup::buildCamera: "
                    "failed to find parent camera for relative camera!");
             return 0;
         }
@@ -896,7 +896,7 @@ CameraInfo* CameraGroup::buildGUICamera(SGPropertyNode* cameraNode,
     }
 
     if (!window) { // buildWindow can fail
-      SG_LOG(SG_GENERAL, SG_WARN, "CameraGroup::buildGUICamera: failed to build a window");
+      SG_LOG(SG_VIEW, SG_WARN, "CameraGroup::buildGUICamera: failed to build a window");
       return NULL;
     }
 
