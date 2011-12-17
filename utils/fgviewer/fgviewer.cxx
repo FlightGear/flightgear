@@ -171,13 +171,18 @@ main(int argc, char** argv)
     }
     simgear::SGModelLib::init(fg_root, props);
 
-    // The file path list must be set in the registry.
-    osgDB::Registry::instance()->getDataFilePathList() = filePathList;
-
-    simgear::SGReaderWriterOptions* options = new simgear::SGReaderWriterOptions;
+    // Set up the reader/writer options
+    osg::ref_ptr<simgear::SGReaderWriterOptions> options;
+    if (osgDB::Options* ropt = osgDB::Registry::instance()->getOptions())
+        options = new simgear::SGReaderWriterOptions(*ropt);
+    else
+        options = new simgear::SGReaderWriterOptions;
     options->getDatabasePathList() = filePathList;
     options->setMaterialLib(ml);
     options->setPropertyNode(props);
+    options->setPluginStringData("SimGear::FG_ROOT", fg_root);
+    options->setPluginStringData("SimGear::FG_SCENERY", fg_scenery);
+    osgDB::Registry::instance()->setOptions(options.get());
 
     // Here, all arguments are processed
     arguments.reportRemainingOptionsAsUnrecognized();
@@ -185,7 +190,7 @@ main(int argc, char** argv)
 
     // read the scene from the list of file specified command line args.
     osg::ref_ptr<osg::Node> loadedModel;
-    loadedModel = osgDB::readNodeFiles(arguments, options);
+    loadedModel = osgDB::readNodeFiles(arguments, options.get());
 
     // if no model has been successfully loaded report failure.
     if (!loadedModel.valid()) {
