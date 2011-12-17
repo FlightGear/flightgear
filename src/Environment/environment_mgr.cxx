@@ -222,9 +222,25 @@ FGEnvironmentMgr::bind ()
           &SGSky::get_3dCloudVisRange,
           &SGSky::set_3dCloudVisRange);
 
+  _tiedProperties.Tie("clouds3d-impostor-range", _sky,
+          &SGSky::get_3dCloudImpostorDistance,
+          &SGSky::set_3dCloudImpostorDistance);
+
+  _tiedProperties.Tie("clouds3d-lod1-range", _sky,
+          &SGSky::get_3dCloudLoD1Range,
+          &SGSky::set_3dCloudLoD1Range);
+
+  _tiedProperties.Tie("clouds3d-lod2-range", _sky,
+          &SGSky::get_3dCloudLoD2Range,
+          &SGSky::set_3dCloudLoD2Range);
+
   _tiedProperties.Tie("clouds3d-wrap", _sky,
           &SGSky::get_3dCloudWrap,
           &SGSky::set_3dCloudWrap);
+
+  _tiedProperties.Tie("clouds3d-use-impostors", _sky,
+          &SGSky::get_3dCloudUseImpostors,
+          &SGSky::set_3dCloudUseImpostors);
 
 //  _tiedProperties.Tie("lightning-enable", &sgEnviro,
 //          &SGEnviro::get_lightning_enable_state,
