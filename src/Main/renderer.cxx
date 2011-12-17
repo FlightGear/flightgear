@@ -805,6 +805,7 @@ FGRenderer::resize( int width, int height )
 {
     int curWidth = _xsize->getIntValue(),
         curHeight = _ysize->getIntValue();
+    SG_LOG(SG_VIEW, SG_DEBUG, "FGRenderer::resize: new size " << width << " x " << height);
     if ((curHeight != height) || (curWidth != width)) {
     // must guard setting these, or PLIB-PUI fails with too many live interfaces
         _xsize->setIntValue(width);
