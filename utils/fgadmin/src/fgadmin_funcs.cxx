@@ -123,7 +123,7 @@ void FGAdminUI::select_install_dest() {
     }
 }
 
-
+#if 0
 // Like strcmp, but for strings
 static int stringCompare(const void *string1, const void *string2)
 {
@@ -133,7 +133,7 @@ static int stringCompare(const void *string1, const void *string2)
     // Compare name first, and then index.
     return strcmp(s1->c_str(), s2->c_str());
 }
-
+#endif
 
 void FGAdminUI::update_install_box() {
     set<string> file_list;
@@ -149,7 +149,8 @@ void FGAdminUI::update_install_box() {
             dirent *ent = list[i];
             strncpy( base, ent->d_name, FL_PATH_MAX );
             const char *p = fl_filename_ext( base );
-            int offset, expected_length = 0;
+            int offset;
+            string::size_type expected_length = 0;
             if ( strcmp( p, ".gz" ) == 0 ) {
                 offset = p - base;
                 base[offset] = '\0';

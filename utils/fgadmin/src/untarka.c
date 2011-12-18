@@ -99,6 +99,8 @@
 #  endif
 #endif
 
+#include "untarka.h"
+
 static void error OF((const char *msg));
 
 static unsigned long total_read;
@@ -997,13 +999,12 @@ static void error(const char *msg) {
   exit(1);
 }
 
+#ifdef DOSISH
 /* This will give a benign warning */
-
 static char *TGZprefix[] = { "\0", ".tgz", ".tar.gz", ".tar.bz2", ".tar.Z", ".tar", NULL };
 
 /* Return the real name of the TGZ archive */
 /* or NULL if it does not exist. */
-
 static char *TGZfname OF((const char *fname))
 {
   static char buffer[1024];
@@ -1034,6 +1035,7 @@ static void TGZnotfound OF((const char *fname))
             TGZprefix[i]);
   exit(1);
 }
+#endif
 
 
 /* help functions */
@@ -1178,7 +1180,7 @@ static int tar (Readable* rin,int action,int arg,int argc,char **argv, char cons
   int    remaining = 0;
   FILE   *outfile = NULL;
   char   fname[BLOCKSIZE];
-  time_t tartime;
+  time_t tartime = 0;
   unsigned long last_read;
 
 #if 0
@@ -1359,6 +1361,7 @@ static int tar (Readable* rin,int action,int arg,int argc,char **argv, char cons
 }
 
 
+#ifdef DOSISH
 /* =========================================================== */
 
 static void help(int exitval)
@@ -1382,7 +1385,6 @@ static void help(int exitval)
 
 /* ====================================================================== */
 
-#ifdef DOSISH
 extern int _CRT_glob;
 int _CRT_glob = 0;	/* disable globbing of the arguments */
 #endif
@@ -1453,7 +1455,7 @@ int main(int argc,char **argv) {
 #endif
 
 void
-tarextract(char *TGZfile,char *dest,int verbose, void (*step)(void *), void *data)
+tarextract(char *TGZfile,char *dest,int verbose, void (*step)(void *,int), void *data)
 {
    Readable    r;
    if (xOpen4Read(&r,TGZfile) == 0)
