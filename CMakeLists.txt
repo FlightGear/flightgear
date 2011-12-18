@@ -195,6 +195,13 @@ find_package(OpenSceneGraph 3.0.0 REQUIRED osgText osgSim osgDB osgParticle osgF
 
 if(ENABLE_FGADMIN)
   find_package(FLTK)
+
+	if ( FLTK_FOUND )
+
+		set( CMAKE_REQUIRED_INCLUDES ${FLTK_INCLUDE_DIR} )
+		set( CMAKE_REQUIRED_LIBRARIES ${FLTK_LIBRARIES} ${X11_Xinerama_LIB} ${X11_Xft_LIB} )
+
+	endif ( FLTK_FOUND )
 endif(ENABLE_FGADMIN)
 
 if(ENABLE_LIBSVN)
