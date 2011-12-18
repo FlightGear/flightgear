@@ -12,6 +12,7 @@ target_link_libraries(fgadmin FGAdminUI
 	${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
 	${X11_Xinerama_LIB}
 	${X11_Xft_LIB}
+	${ZLIB_LIBRARY}
 )
 
 install(TARGETS fgadmin RUNTIME DESTINATION bin)
