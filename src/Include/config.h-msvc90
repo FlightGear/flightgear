@@ -172,4 +172,7 @@
 
 #define FG_GLUT_H <GL/glut.h>
 
+#define ENABLE_JSBSIM 1
+#define ENABLE_YASIM 1
+
 // eof - config.h-msvc90 - single flightgear config.h file
