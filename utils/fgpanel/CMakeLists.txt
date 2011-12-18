@@ -34,6 +34,8 @@ if(GLUT_FOUND)
 		${SIMGEAR_CORE_LIBRARY_DEPENDENCIES}
 	)
 
+	include_directories(${PNG_INCLUDE_DIR})
+
 	install(TARGETS fgpanel RUNTIME DESTINATION bin)
 else()
 	message(STATUS "glut NOT found, can't build fgpanel")
