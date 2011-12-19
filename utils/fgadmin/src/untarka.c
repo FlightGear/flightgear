@@ -847,16 +847,17 @@ static unsigned lz_read(struct lz_reader_t* reader, char* outbuf, unsigned obufs
 
       if (code >= freeent) {    /* Special case for KwKwK string.    */
         if (code > freeent) {
-            REG1 char_type         *p;
-
             posbits -= n_bits;
-            p = &inbuf[posbits>>3];
-
 #if 0
-            fprintf(stderr, "uncompress: insize:%d posbits:%d inbuf:%02X %02X %02X %02X %02X (%d)\n", insize, posbits,
-                    p[-1],p[0],p[1],p[2],p[3], (posbits&07));
-            fprintf(stderr, "uncompress: corrupt input\n");
-            abort();
+            {
+                REG1 char_type         *p;
+                p = &inbuf[posbits>>3];
+
+                fprintf(stderr, "uncompress: insize:%d posbits:%d inbuf:%02X %02X %02X %02X %02X (%d)\n", insize, posbits,
+                        p[-1],p[0],p[1],p[2],p[3], (posbits&07));
+                fprintf(stderr, "uncompress: corrupt input\n");
+                abort();
+            }
 #else
             return reader->rsize=-1;
 #endif
