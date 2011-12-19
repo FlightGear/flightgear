@@ -1,4 +1,4 @@
-.\" Copyright (C) 2002 Cameron Moore
+.\" Copyright (C) 2011 Thorsten Brehm
 .\"
 .\" This program is free software; you can redistribute it and/or
 .\" modify it under the terms of the GNU General Public License
@@ -13,24 +13,36 @@
 .\" You should have received a copy of the GNU General Public License
 .\" along with this program; if not, write to the Free Software
 .\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-.\" Or try here: http://www.fsf.org/copyleft/gpl.html
+.\" Or see here: http://www.fsf.org/copyleft/gpl.html
 .\"
-.TH FGJS 1 "January 2002" "@VERSION@" "@PACKAGE@"
+.TH FGPANEL 1 "February 2012" "@VERSION@" "@PACKAGE@"
 .SH NAME
-fgjs \- FlightGear Joystick Utility
+fgpanel \- FlightGear Flight Simulator Panel Rendering Engine
 .SH SYNOPSIS
-.B fgjs
+.B "fgpanel "
+[\-\-\fIfg-root\fP=path] [\-\-\fIprop\fP:name=value] \-\-\fIpanel\fP=file
 .SH DESCRIPTION
-.B fgjs
-is a joystick utility for the FlightGear Flight Simulator.  It allows
-you to generate an appropriate configuration file for your joystick.
-For more information visit <http://wiki.flightgear.org/Joystick>.
+.B FlightGear Panel
+is a free, open-source, multi-platform, and lightweight panel rendering engine
+to draw 2D panels on a low-cost computer/graphic card without 3D acceleration
+at reasonable frame rates.
+For more information visit <http://wiki.flightgear.org/FGPanel>.
+.SH OPTIONS
+.TP
+.BI "--fg-root=" "path"
+Specify the root path for data files.
+.TP
+.BI "--panel=" "file"
+Specify the panel description file to be displayed.
+.TP
+.BI "--prop:" "name=value"
+set property <name> to <value>.
 .SH BUGS
 Send bug reports to <flightgear-devel@lists.sourceforge.net> or visit
 <http://code.google.com/p/flightgear-bugs>.
 .SH SEE ALSO
-fgfs(1), fgpanel(1), js_demo(1), terrasync(1)
+fgfs(1), fgjs(1), js_demo(1), terrasync(1)
 .SH AUTHORS
-Tony Peden, et al.  See
+Torsten Dreyer, et al.  See
 .I Thanks
 file for a list of contributors.

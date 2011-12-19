@@ -1,4 +1,4 @@
-.\" Copyright (C) 2002 Cameron Moore
+.\" Copyright (C) 2011 Thorsten Brehm
 .\"
 .\" This program is free software; you can redistribute it and/or
 .\" modify it under the terms of the GNU General Public License
@@ -13,24 +13,35 @@
 .\" You should have received a copy of the GNU General Public License
 .\" along with this program; if not, write to the Free Software
 .\" Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-.\" Or try here: http://www.fsf.org/copyleft/gpl.html
+.\" Or see here: http://www.fsf.org/copyleft/gpl.html
 .\"
-.TH FGJS 1 "January 2002" "@VERSION@" "@PACKAGE@"
+.TH TERRASYNC 1 "February 2012" "@VERSION@" "@PACKAGE@"
 .SH NAME
-fgjs \- FlightGear Joystick Utility
+terrasync \- FlightGear Flight Simulator Terrain Synchronization
 .SH SYNOPSIS
-.B fgjs
+.B "terrasync "
+[\-\fId\fP path] [\-\fIp\fP port] [\-\fIv\fP]
 .SH DESCRIPTION
-.B fgjs
-is a joystick utility for the FlightGear Flight Simulator.  It allows
-you to generate an appropriate configuration file for your joystick.
-For more information visit <http://wiki.flightgear.org/Joystick>.
+.B FlightGear TerraSync
+is a utility that automatically downloads the newest version of the FlightGear
+scenery while the simulator is running.
+For more information visit <http://wiki.flightgear.org/TerraSync>.
+.SH OPTIONS
+.TP
+.BI "-d" " path"
+Specify the path where to store the scenery data.
+.TP
+.BI "-p" " port"
+Specify the UDP port where terrasync listens for a FlightGear Flight Simulator connection.
+.TP
+.BI "-v"
+Enable verbose output.
 .SH BUGS
 Send bug reports to <flightgear-devel@lists.sourceforge.net> or visit
 <http://code.google.com/p/flightgear-bugs>.
 .SH SEE ALSO
-fgfs(1), fgpanel(1), js_demo(1), terrasync(1)
+fgfs(1), fgjs(1), js_demo(1), terrasync(1)
 .SH AUTHORS
-Tony Peden, et al.  See
+Curt L. Olson, et al.  See
 .I Thanks
 file for a list of contributors.

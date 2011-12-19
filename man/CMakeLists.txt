@@ -7,12 +7,12 @@ else(${CMAKE_VERSION} VERSION_GREATER 2.8.4)
 endif(${CMAKE_VERSION} VERSION_GREATER 2.8.4)
 
 set(MANPAGES
-    est-epsilon.1
     fgfs.1
     fgjs.1
+    fgpanel.1
     gl-info.1
     js_demo.1
-    pstest.1)
+    terrasync.1)
 
 # map some variables to what the man-pages expect
 set(PACKAGE ${CMAKE_PROJECT_NAME})
@@ -23,8 +23,7 @@ foreach(man ${MANPAGES})
         "${PROJECT_SOURCE_DIR}/man/${man}.in"
         "${PROJECT_BINARY_DIR}/man/${man}"
         )
-    
+
     install(FILES ${PROJECT_BINARY_DIR}/man/${man}
           DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 COMPONENT doc)
 endforeach()
-  
