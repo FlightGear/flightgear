@@ -909,7 +909,7 @@ bool FGAIFlightPlan::createLanding(FGAIAircraft * ac, FGAirport * apt,
 
 
     FGAIWaypoint *wpt;
-    double aptElev = apt->getElevation();
+    //double aptElev = apt->getElevation();
     double currElev = 0;
     char buffer[12];
     FGRunway * rwy = apt->getRunwayByIdent(activeRunway);

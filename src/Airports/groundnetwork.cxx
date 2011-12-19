@@ -1337,11 +1337,11 @@ void FGGroundNetwork::render(bool visible)
     if (visible) {
         group = new osg::Group;
         FGScenery * local_scenery = globals->get_scenery();
-        double elevation_meters = 0.0;
+        // double elevation_meters = 0.0;
         double elevation_feet = 0.0;
         time_t now = time(NULL) + fgGetLong("/sim/time/warp");
         //for ( FGTaxiSegmentVectorIterator i = segments.begin(); i != segments.end(); i++) {
-        double dx = 0;
+        //double dx = 0;
         for   (TrafficVectorIterator i = activeTraffic.begin(); i != activeTraffic.end(); i++) {
             // Handle start point
             int pos = i->getCurrentPosition() - 1;

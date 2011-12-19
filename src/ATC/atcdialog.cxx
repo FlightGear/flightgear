@@ -110,10 +110,10 @@ void FGATCDialogNew::PopupDialog() {
 }
 
 void FGATCDialogNew::update(double dt) {
- double onBoardRadioFreq0 =
-        fgGetDouble("/instrumentation/comm[0]/frequencies/selected-mhz");
-    double onBoardRadioFreq1 =
-        fgGetDouble("/instrumentation/comm[1]/frequencies/selected-mhz");
+//  double onBoardRadioFreq0 =
+//      fgGetDouble("/instrumentation/comm[0]/frequencies/selected-mhz");
+//  double onBoardRadioFreq1 =
+//      fgGetDouble("/instrumentation/comm[1]/frequencies/selected-mhz");
 
     const char *dialog_name = "atc-dialog";
     _gui = (NewGUI *)globals->get_subsystem("gui");

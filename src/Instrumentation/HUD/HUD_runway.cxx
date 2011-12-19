@@ -75,7 +75,8 @@ void HUD::Runway::draw()
         return;
 
     glPushAttrib(GL_LINE_STIPPLE | GL_LINE_STIPPLE_PATTERN | GL_LINE_WIDTH);
-    float modelView[4][4], projMat[4][4];
+    float projMat[4][4]={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};
+    float modelView[4][4];
     bool anyLines;
     //Get the current view
 //    FGViewer* curr_view = globals->get_viewmgr()->get_current_view();

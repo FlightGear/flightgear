@@ -135,7 +135,7 @@ double FORTRAN_DIM(const double &x, const double &y)
 }
 
 //#define set_warn(txt, err) printf("%s:%d %s\n", __func__, __LINE__, txt);
-#define set_warn(txt, err) 1;
+#define set_warn(txt, err)
 
 // :13: single-knife attenuation, page 6
 /*
@@ -813,6 +813,7 @@ void qlra(int kst[], int klimx, int mdvarx, prop_type &prop, propv_type &propv)
  * computers," Princeton Univ. Press, 1955) and the maximum error should be
  * 4.5e-4.
  */
+#if 1
 static
 double qerfi(double q)
 {
@@ -834,6 +835,7 @@ double qerfi(double q)
 
 	return v;
 }
+#endif
 
 
 // :41: preparatory routine, page 20
@@ -850,6 +852,7 @@ double qerfi(double q)
  *   surface impedance @zgnd
  * It may be used with either the area prediction or the point-to-point mode.
  */
+#if 1
 static
 void qlrps(double fmhz, double zsys, double en0, int ipol, double eps, double sgm, prop_type &prop)
 
@@ -882,6 +885,7 @@ void qlrps(double fmhz, double zsys, double en0, int ipol, double eps, double sg
 	prop.Z_g_real = prop_zgnd.real();
 	prop.Z_g_imag = prop_zgnd.imag();
 }
+#endif
 
 
 // :30: Function curv, page 15
@@ -901,6 +905,7 @@ double curve(double const &c1, double const &c2, double const &x1, double const 
 
 
 // :28: Area variablity, page 14
+#if 1
 static
 double avar(double zzt, double zzl, double zzc, prop_type &prop, propv_type &propv)
 {
@@ -1167,7 +1172,7 @@ double avar(double zzt, double zzl, double zzc, prop_type &prop, propv_type &pro
 
 	return avarv;
 }
-
+#endif
 
 // :45: Find to horizons, page 24
 /*
@@ -1428,6 +1433,7 @@ double dlthx(double pfl[], const double &x1, const double &x2)
  *   pfl[0] = np, the number of points in the path
  *   pfl[1] = xi, the length of each increment
 */
+#if 1
 static
 void qlrpfl(double pfl[], int klimx, int mdvarx, prop_type &prop, propv_type &propv)
 {
@@ -1498,6 +1504,7 @@ void qlrpfl(double pfl[], int klimx, int mdvarx, prop_type &prop, propv_type &pr
 
 	lrprop(0.0, prop);
 }
+#endif
 
 
 //********************************************************

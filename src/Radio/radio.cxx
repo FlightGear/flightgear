@@ -289,7 +289,7 @@ double FGRadioTransmission::ITM_calculate_attenuation(SGGeod pos, double freq, i
 	
 		
 	int max_points = (int)floor(distance_m / point_distance);
-	double delta_last = fmod(distance_m, point_distance);
+	//double delta_last = fmod(distance_m, point_distance);
 	
 	deque<double> elevations;
 	deque<string*> materials;

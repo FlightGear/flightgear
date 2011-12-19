@@ -379,7 +379,7 @@ double FGAIAircraft::calcVerticalSpeed(double vert_ft, double dist_m, double spe
 {
     // err is negative when we passed too high
     double vert_m = vert_ft * SG_FEET_TO_METER;
-    double err_m  = err     * SG_FEET_TO_METER;
+    //double err_m  = err     * SG_FEET_TO_METER;
     //double angle = atan2(vert_m, dist_m);
     double speedMs = (speed * SG_NM_TO_METER) / 3600;
     //double vs = cos(angle) * speedMs; // Now in m/s

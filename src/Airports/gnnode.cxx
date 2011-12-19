@@ -91,8 +91,8 @@ double FGTaxiNode::getElevationFt(double refelev)
 
 double FGTaxiNode::getElevationM(double refelev)
 {
-    double refelevFt = refelev * SG_METER_TO_FEET;
-    double retval = getElevationFt(refelevFt);
+    //double refelevFt = refelev * SG_METER_TO_FEET;
+    //double retval = getElevationFt(refelevFt);
     //cerr << "Returning elevation : " << geod.getElevationM() << ". Ref elev (meters) = " << refelev << endl;
     return geod.getElevationM();
 }

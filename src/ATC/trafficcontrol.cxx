@@ -1341,7 +1341,7 @@ void FGStartupController::render(bool visible)
     if (visible) {
         group = new osg::Group;
         FGScenery * local_scenery = globals->get_scenery();
-        double elevation_meters = 0.0;
+        //double elevation_meters = 0.0;
         double elevation_feet = 0.0;
 
 

@@ -48,6 +48,7 @@ using std::endl;
 FGATCDialog *current_atcdialog;
 
 // For the command manager - maybe eventually this should go in the built in command list
+#if 0
 static bool do_ATC_dialog(const SGPropertyNode* arg) {
         cerr << "Running ATCDCL do_ATC_dialog" << endl;
 	current_atcdialog->PopupDialog();
@@ -58,6 +59,7 @@ static bool do_ATC_freq_search(const SGPropertyNode* arg) {
 	current_atcdialog->FreqDialog();
 	return(true);
 }
+#endif
 
 ATCMenuEntry::ATCMenuEntry() {
   stationid    = "";

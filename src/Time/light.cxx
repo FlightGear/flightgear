@@ -281,7 +281,6 @@ void FGLight::update_sky_color () {
     _sky_color[3] = base_sky_color[3];
     gamma_correct_rgb( _sky_color.data() );
 
-    sqrt_sky_brightness /= _scattering;
     _cloud_color[0] = base_fog_color[0] * sky_brightness;
     _cloud_color[1] = base_fog_color[1] * sky_brightness;
     _cloud_color[2] = base_fog_color[2] * sky_brightness;
