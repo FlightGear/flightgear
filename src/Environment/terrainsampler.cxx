@@ -371,6 +371,7 @@ void TerrainSamplerImplementation::reinit()
         if( subsys == NULL )
             break;
         remove_subsystem( subsystemName );
+        subsys->unbind();
         delete subsys;
     }
     

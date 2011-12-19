@@ -55,6 +55,8 @@ FGAircraftModel::FGAircraftModel ()
 
 FGAircraftModel::~FGAircraftModel ()
 {
+  // drop reference
+  _fx = 0;
   deinit();
 }
 
@@ -91,9 +93,6 @@ FGAircraftModel::reinit()
 void
 FGAircraftModel::deinit()
 {
-  // drop reference
-  _fx = 0;
-
   if (!_aircraft) {
     return;
   }
