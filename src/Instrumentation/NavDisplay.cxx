@@ -42,6 +42,7 @@
 #include <simgear/scene/model/model.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/strutils.hxx>
 #include <simgear/math/sg_geodesy.hxx>
 
 #include <sstream>
@@ -431,6 +432,8 @@ NavDisplay::init ()
     
     _excessDataNode = _Instrument->getChild("excess-data", 0, true);
     _excessDataNode->setBoolValue(false);
+    _testModeNode = _Instrument->getChild("test-mode", 0, true);
+    _testModeNode->setBoolValue(false);
   
 // OSG geometry setup
     _radarGeode = new osg::Geode;
@@ -526,18 +529,32 @@ NavDisplay::update (double delta_time_sec)
   _time -= _updateInterval;
 
   _rangeNm = _rangeNode->getFloatValue();
-  if (_Instrument->getBoolValue("aircraft-heading-up", true)) {
+  if (_testModeNode->getBoolValue()) {
+    _view_heading = 90;
+  } else if (_Instrument->getBoolValue("aircraft-heading-up", true)) {
     _view_heading = fgGetDouble("/orientation/heading-deg");
   } else {
     _view_heading = _Instrument->getFloatValue("heading-up-deg", 0.0);
   }
   
-  _scale = _odg->size() / _rangeNm;
-  
   double xCenterFrac = _Instrument->getDoubleValue("x-center", 0.5);
   double yCenterFrac = _Instrument->getDoubleValue("y-center", 0.5);
-  _centerTrans = osg::Matrixf::translate(xCenterFrac * _odg->size(), 
-      yCenterFrac * _odg->size(), 0.0);
+  int pixelSize = _odg->size();
+  
+  int rangePixels = _Instrument->getIntValue("range-pixels", -1);
+  if (rangePixels < 0) {
+    // hacky - assume (as is very common) that x-frac doesn't vary, and
+    // y-frac is used to position the center at either the top or bottom of
+    // the pixel area. Measure from the center to the furthest edge (top or bottom)
+    rangePixels = pixelSize * std::max(fabs(1.0 - yCenterFrac), fabs(yCenterFrac));
+  }
+  
+  _scale = rangePixels / _rangeNm;
+  _Instrument->setDoubleValue("scale", _scale);
+  
+  
+  _centerTrans = osg::Matrixf::translate(xCenterFrac * pixelSize, 
+      yCenterFrac * pixelSize, 0.0);
 
 // scale from nm to display units, rotate so aircraft heading is up
 // (as opposed to north), and compensate for centering
@@ -576,11 +593,16 @@ NavDisplay::update (double delta_time_sec)
     }
   }
   
-  processRoute();
-  processNavRadios();
-  processAI();
-  findItems();
-  limitDisplayedSymbols();
+  if (_testModeNode->getBoolValue()) {
+    addTestSymbols();
+  } else {
+    processRoute();
+    processNavRadios();
+    processAI();
+    findItems();
+    limitDisplayedSymbols();
+  }
+
   addSymbolsToScene();
   
   _symbolPrimSet->set(osg::PrimitiveSet::QUADS, 0, _vertices->size());
@@ -1170,6 +1192,55 @@ bool NavDisplay::isProjectedClipped(const osg::Vec2& projected) const
             (projected.y() >= size);
 }
 
+void NavDisplay::addTestSymbol(const std::string& type, const std::string& states, const SGGeod& pos, double heading, SGPropertyNode* vars)
+{
+  string_set stateSet;
+  BOOST_FOREACH(std::string s, simgear::strutils::split(states, ",")) {
+    stateSet.insert(s);
+  }
+  
+  SymbolDefVector rules;
+  findRules(type, stateSet, rules);
+  if (rules.empty()) {
+    return; // no rules matched, we can skip this item
+  }
+    
+  osg::Vec2 projected = projectGeod(pos);
+  BOOST_FOREACH(SymbolDef* r, rules) {
+    addSymbolInstance(projected, heading, r, vars);
+  }
+}
 
+void NavDisplay::addTestSymbols()
+{
+  _pos = SGGeod::fromDeg(-122.3748889, 37.6189722); // KSFO
+  
+  SGGeod a1;
+  double dummy;
+  SGGeodesy::direct(_pos, 45.0, 20.0 * SG_NM_TO_METER, a1, dummy);
+  
+  addTestSymbol("airport", "", a1, 0.0, NULL);
+  
+  SGGeodesy::direct(_pos, 95.0, 40.0 * SG_NM_TO_METER, a1, dummy);
+  
+  addTestSymbol("vor", "", a1, 0.0, NULL);
+  
+  SGGeodesy::direct(_pos, 120, 80.0 * SG_NM_TO_METER, a1, dummy);
+  
+  addTestSymbol("airport", "destination", a1, 0.0, NULL);
+  
+  SGGeodesy::direct(_pos, 80.0, 20.0 * SG_NM_TO_METER, a1, dummy);  
+  addTestSymbol("fix", "", a1, 0.0, NULL);
+
+  
+  SGGeodesy::direct(_pos, 140.0, 20.0 * SG_NM_TO_METER, a1, dummy);  
+  addTestSymbol("fix", "", a1, 0.0, NULL);
+  
+  SGGeodesy::direct(_pos, 110.0, 10.0 * SG_NM_TO_METER, a1, dummy);  
+  addTestSymbol("fix", "", a1, 0.0, NULL);
+  
+  SGGeodesy::direct(_pos, 110.0, 5.0 * SG_NM_TO_METER, a1, dummy);  
+  addTestSymbol("fix", "", a1, 0.0, NULL);
+}
 
 

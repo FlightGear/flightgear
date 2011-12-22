@@ -77,7 +77,8 @@ protected:
     SGPropertyNode_ptr _Instrument;
     SGPropertyNode_ptr _radar_mode_control_node;
     SGPropertyNode_ptr _user_heading_node;
-
+    SGPropertyNode_ptr _testModeNode;
+  
     FGODGauge *_odg;
 
     // Convenience function for creating a property node with a
@@ -112,6 +113,9 @@ private:
     bool isProjectedClipped(const osg::Vec2& projected) const;
     void updateFont();
     
+    void addTestSymbol(const std::string& type, const std::string& states, const SGGeod& pos, double heading, SGPropertyNode* vars);
+    void addTestSymbols();
+  
     std::string _texture_path;
 
 
