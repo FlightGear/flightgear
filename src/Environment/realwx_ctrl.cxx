@@ -186,9 +186,22 @@ BasicRealWxController::BasicRealWxController( SGPropertyNode_ptr rootNode, Metar
             fgGetNode( rootNode->getStringValue("metar", "/environment/metar"), true ), metarRequester ));
 
     BOOST_FOREACH( SGPropertyNode_ptr n, rootNode->getChildren("metar") ) {
-       SG_LOG( SG_ENVIRONMENT, SG_INFO, "Adding metar properties at " << n->getStringValue() );
-        _metarProperties.push_back( new LiveMetarProperties( 
-            fgGetNode( n->getStringValue(), true ), metarRequester ));
+       SGPropertyNode_ptr metarNode = fgGetNode( n->getStringValue(), true );
+
+       // check for duplicate entries
+       bool existingElement = false;
+       BOOST_FOREACH( LiveMetarProperties_ptr p, _metarProperties ) {
+         if( p->get_root_node()->getPath() == metarNode->getPath() ) {
+           existingElement = true;
+           break;
+         }
+       }
+
+       if( existingElement )
+         continue;
+
+       SG_LOG( SG_ENVIRONMENT, SG_INFO, "Adding metar properties at " << metarNode->getPath() );
+        _metarProperties.push_back( new LiveMetarProperties( metarNode, metarRequester ));
     }
 }
 
