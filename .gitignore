@@ -1,5 +1,8 @@
 Makefile
 Debug/
+Build
+build
+.*.swp
 *.o
 lib*.a
 cmake_install.cmake
