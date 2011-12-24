@@ -106,11 +106,6 @@ void FGATCManager::init() {
         //cerr << "found information: " << runway << " " << airport << ": parking = " << parking << endl;
         fp = new FGAIFlightPlan;
         while (park_index >= 0 && dcs->getParkingName(park_index) != parking) park_index--;
-            if (park_index < 0) {
-                  SG_LOG( SG_ATC, SG_ALERT,
-                        "Failed to find parking position " << parking <<
-                        " at airport " << airport << " at " << SG_ORIGIN);
-            }
         // No valid parking location, so either at the runway or at a random location.
         if (parking.empty() || (park_index < 0)) {
             if (!runway.empty()) {
