@@ -755,8 +755,8 @@ readPanel (const SGPropertyNode * root)
           int y = node->getIntValue("y", -1);
           int real_w = node->getIntValue("w", -1);
           int real_h = node->getIntValue("h", -1);
-          int w = node->getIntValue("w-base", -1);
-          int h = node->getIntValue("h-base", -1);
+//          int w = node->getIntValue("w-base", -1);
+//          int h = node->getIntValue("h-base", -1);
           
           if (x == -1 || y == -1) {
             SG_LOG( SG_COCKPIT, SG_ALERT,
@@ -764,15 +764,15 @@ readPanel (const SGPropertyNode * root)
             return 0;
           }
           
-          float w_scale = 1.0;
-          float h_scale = 1.0;
+//          float w_scale = 1.0;
+//          float h_scale = 1.0;
           if (real_w != -1) {
-            w_scale = float(real_w) / float(w);
-            w = real_w;
+//            w_scale = float(real_w) / float(w);
+//            w = real_w;
           }
           if (real_h != -1) {
-            h_scale = float(real_h) / float(h);
-            h = real_h;
+//            h_scale = float(real_h) / float(h);
+//            h = real_h;
           }
           
           SG_LOG( SG_COCKPIT, SG_BULK, "Reading instrument " << name );

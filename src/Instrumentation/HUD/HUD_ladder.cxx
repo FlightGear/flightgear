@@ -138,7 +138,7 @@ void HUD::Ladder::draw(void)
     //****************************************************************
     //velocity vector reticle - computations
     float xvvr, /* yvvr, */ Vxx = 0.0, Vyy = 0.0, Vzz = 0.0;
-    float Axx = 0.0, Ayy = 0.0, Azz = 0.0, total_vel = 0.0, pot_slope, t1;
+    float Axx = 0.0, Ayy = 0.0, Azz = 0.0, total_vel = 0.0, pot_slope; //, t1;
     float up_vel, ground_vel, actslope = 0.0, psi = 0.0;
     float vel_x = 0.0, vel_y = 0.0, drift;
     float alpha;
@@ -320,10 +320,10 @@ void HUD::Ladder::draw(void)
 
     if (_energy_marker) {
         if (total_vel < 5.0) {
-            t1 = 0;
+//            t1 = 0;
             t2 = 0;
         } else {
-            t1 = up_vel / total_vel;
+//            t1 = up_vel / total_vel;
             t2 = asin((Vxx * Axx + Vyy * Ayy + Vzz * Azz) / (9.81 * total_vel));
         }
         pot_slope = ((t2 / 3) * SGD_RADIANS_TO_DEGREES) * _compression + vel_y;

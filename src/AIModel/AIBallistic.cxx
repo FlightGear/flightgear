@@ -639,21 +639,21 @@ void FGAIBallistic::slaveToAC(double dt){
     if (invisible)
         return;
 
-    double hdg, pch, rll, agl = 0;
+    double hdg, pch, rll;//, agl = 0;
 
     if (_pnode != 0) {
         setParentPos();
         hdg = _p_hdg_node->getDoubleValue();
         pch = _p_pch_node->getDoubleValue();
         rll = _p_rll_node->getDoubleValue();
-        agl = _p_agl_node->getDoubleValue();
+//        agl = _p_agl_node->getDoubleValue();
         setOffsetPos(_parentpos, hdg, pch, rll);
         setSpeed(_p_spd_node->getDoubleValue());
     }else {
         hdg = manager->get_user_heading();
         pch = manager->get_user_pitch();
         rll = manager->get_user_roll();
-        agl = manager->get_user_agl();
+//        agl = manager->get_user_agl();
         setOffsetPos(userpos, hdg, pch, rll);
         setSpeed(manager->get_user_speed());
     }

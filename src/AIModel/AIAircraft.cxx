@@ -1057,7 +1057,7 @@ void FGAIAircraft::updateHeading() {
         // If on ground, calculate heading change directly
         if (onGround()) {
             double headingDiff = fabs(hdg-tgt_heading);
-            double bank_sense = 0.0;
+//            double bank_sense = 0.0;
         /*
         double diff = fabs(hdg - tgt_heading);
         if (diff > 180)
@@ -1077,9 +1077,9 @@ void FGAIAircraft::updateHeading() {
             if (sum > 360.0) 
                 sum -= 360.0;
             if (fabs(sum - tgt_heading) > 0.0001) {
-                bank_sense = -1.0;
+//                bank_sense = -1.0;
             } else {
-                bank_sense = 1.0;
+//                bank_sense = 1.0;
             }
             //if (trafficRef)
             //	cerr << trafficRef->getCallSign() << " Heading " 

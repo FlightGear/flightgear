@@ -123,9 +123,9 @@ void HUD::Runway::draw()
     }
 
     //Calculate the 2D points via gluProject
-    int result = GL_TRUE;
+//    int result = GL_TRUE;
     for (int i = 0; i < 6; i++) {
-        result = simgear::project(_points3d[i][0], _points3d[i][1], _points3d[i][2],
+        /*result = */simgear::project(_points3d[i][0], _points3d[i][1], _points3d[i][2],
                                   _mm, _pm, _view,
                                   &_points2d[i][0], &_points2d[i][1], &_points2d[i][2]);
     }

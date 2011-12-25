@@ -965,10 +965,10 @@ FGMultiplayMgr::Send()
     }
 
     double sim_time = globals->get_sim_time_sec();
-    static double lastTime = 0.0;
+//    static double lastTime = 0.0;
     
    // SG_LOG(SG_GENERAL, SG_INFO, "actual dt=" << sim_time - lastTime);
-    lastTime = sim_time;
+//    lastTime = sim_time;
     
     FlightProperties ifce;
 

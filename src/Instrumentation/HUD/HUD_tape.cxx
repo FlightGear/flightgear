@@ -89,7 +89,7 @@ void HUD::Tape::draw(void) //  (HUD_scale * pscale)
 
 void HUD::Tape::draw_vertical(float value)
 {
-    float vmin = 0.0, vmax = 0.0;
+    float vmin = 0.0;//, vmax = 0.0;
     float marker_xs;
     float marker_xe;
     float marker_ye;
@@ -101,16 +101,16 @@ void HUD::Tape::draw_vertical(float value)
 
     if (!_pointer) {
         vmin = value - _half_width_units; // width units == needle travel
-        vmax = value + _half_width_units; // or picture unit span.
+//        vmax = value + _half_width_units; // or picture unit span.
         text_y = _center_y;
 
     } else if (_pointer_type == MOVING) {
         vmin = _input.min();
-        vmax = _input.max();
+//        vmax = _input.max();
 
     } else { // FIXED
         vmin = value - _half_width_units; // width units == needle travel
-        vmax = value + _half_width_units; // or picture unit span.
+//        vmax = value + _half_width_units; // or picture unit span.
         text_y = _center_y;
     }
 
@@ -348,12 +348,12 @@ void HUD::Tape::draw_vertical(float value)
 
 void HUD::Tape::draw_horizontal(float value)
 {
-    float vmin = 0.0, vmax = 0.0;
+    float vmin = 0.0;//, vmax = 0.0;
     float marker_xs;
-    float marker_xe;
+//    float marker_xe;
     float marker_ys;
     float marker_ye;
-    float text_y = 0.0;
+//    float text_y = 0.0;
 
     float top = _y + _h;
     float right = _x + _w;
@@ -361,17 +361,17 @@ void HUD::Tape::draw_horizontal(float value)
 
     if (!_pointer) {
         vmin = value - _half_width_units; // width units == needle travel
-        vmax = value + _half_width_units; // or picture unit span.
-        text_y = _center_y;
+//        vmax = value + _half_width_units; // or picture unit span.
+//        text_y = _center_y;
 
     } else if (_pointer_type == MOVING) {
         vmin = _input.min();
-        vmax = _input.max();
+//        vmax = _input.max();
 
     } else { // FIXED
         vmin = value - _half_width_units; // width units == needle travel
-        vmax = value + _half_width_units; // or picture unit span.
-        text_y = _center_y;
+//        vmax = value + _half_width_units; // or picture unit span.
+//        text_y = _center_y;
     }
 
     // left tick bar
@@ -384,7 +384,7 @@ void HUD::Tape::draw_horizontal(float value)
 
     marker_ys = _y;    // Starting point for
     marker_ye = top;           // tick y location calcs
-    marker_xe = right;
+//    marker_xe = right;
     marker_xs = _x + ((value - vmin) * factor());
 
     if (option_top()) {
